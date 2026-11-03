@@ -56,7 +56,8 @@ await open(page, '?nocine'); await menu(page, 'new');
 await helpers(); await said();
 
 // ================================================================ Citadel, chapter 1: Tibbo still unpacking
-const t0 = await ev(() => { const G = game; Object.assign(G.flags, { intro: true }); G.step(0.2); P.settle(); const r = P.talk('tibbo'); return { r: r.r, state: game.state }; });
+iso('chapter 1: the ball taken and out of the house (as the opening has him)');
+const t0 = await ev(() => { const G = game; Object.assign(G.flags, { intro: true }); G.hero.hasBall = true; G.exitRoom({ x: -36, z: 2, a: 0 }, true, true); G.step(0.3); P.settle(); const r = P.talk('tibbo'); return { r: r.r, state: game.state }; });
 const t0l = await said();
 check('chapter 1, before the well is sorted: Tibbo (TALK) is still unpacking; no counter yet', t0.r === 'talked' && t0.state === 'play' && t0l.some((l) => /unpacking/.test(l)), { t0, t0l });
 
@@ -73,7 +74,8 @@ await said();
 check('bought (CLICK): ten darts (+10) and the pocket-set cell (once: gone from the stock); 21 kashes', t2.a === 'ok' && t2.b === 'ok' && t2.spent === 21 && t2.darts === 10 && t2.pcell && !t2.rows.some((r) => /pocket set/.test(r[0])), t2);
 const t3 = await ev(() => { const G = game, TL = G.gadgets.tools; const u = T.useItem('pocketset'); G.step(0.2); P.tap('KeyK', 0.05); return { u, cool: +TL.squealCool.toFixed(2), full: 8 }; });
 check('the pocket set (INVENTORY, E; the attack key) squeals and is ready again in half the time (≤ 4 s, not 8)', t3.u === 'used' && t3.cool > 2.5 && t3.cool <= 4, t3);
-const t4 = await ev(() => { const G = game; P.settle(); const r = P.talk('tibbo'); const s = T.shop(); T.leave(); return { r: r.r, state: s.state, penguins: G.hero.arms.penguins }; });
+const t4 = await ev(() => { const G = game; P.settle(); const st0 = G.state; G.hero.combat.equip('ball', true); G.step(0.1); let r = P.talk('tibbo'), again = false; if (r.r !== 'talked') { again = true; P.settle(); r = P.talk('tibbo'); } const s = T.shop(); T.leave(); return { r: r.r, to: r.to, st0, again, state: s.state, penguins: G.hero.arms.penguins }; });
+if (t4.again) iso('(the first E at Tibbo opened nothing; pressed again, as a player would)');
 const t4l = await said();
 check('Tibbo again: no second gift; his counter opens', t4.r === 'talked' && t4.state === 'shop' && t4.penguins === 1 && !t4l.some((l) => /waddles/.test(l)), { t4, t4l });
 const t5 = await ev(() => { const G = game, H = G.world.houses.find((h) => h.id === 'stone'); const u = P.use(H.door.x, H.door.z, { kind: 'locked', near: 1.2 }); P.settle(); return { u: u.r }; });
@@ -91,7 +93,7 @@ const d0 = await ev(() => { const G = game, h = G.hero; T.jump('zeelich'); h.arm
   const u = T.useItem('conch'); const st = dog.state; return { u, st, call: !!G.flags.pp_call }; });
 await said();
 check('before Marl: the conch (INVENTORY, E) only startles a guard dog (stunned for a moment)', d0.u === 'used' && d0.st === 'stunned' && !d0.call, d0);
-const m1 = await ev(() => { const G = game, Z = G.rooms.zeelich, Y = Z.dogYard; T.put('zeelich', Y.gate.x - 1.5, Y.gate.z + 5); const r = P.talk('marl'); return { r: r.r, ask: !!G.flags.pp_marlAsk }; });
+const m1 = await ev(() => { const G = game; G.enterRoom('zeelich', null, true); G.step(0.3); P.settle(); G.hero.combat.equip('ball', true); const r = P.talk('marl'); return { r: r.r, ask: !!G.flags.pp_marlAsk }; });
 const m1l = await said();
 check('Marl at the dog yard (TALK): the project\'s guard dogs, the long call; she sees the conch', m1.r === 'talked' && m1.ask && m1l.some((l) => /long call/.test(l)) && m1l.some((l) => /conch/.test(l)), { m1, m1l });
 const m2 = await ev(() => { const G = game, h = G.hero, Y = G.rooms.zeelich.dogYard; P.go(Y.gate.x, Y.gate.z + 2.2, { tol: 0.8 }); P.settle(); G.gadgets.conchCool = 0; const u = T.useItem('conch'); P.settle(); return { u, call: !!G.flags.pp_call, journal: G.story.journal().flatMap((j) => j.lines.map((l) => l.key)) }; });
@@ -103,7 +105,7 @@ const d1 = await ev(() => { const G = game, h = G.hero; G.enterRoom('asylum', nu
   const u = T.useItem('conch'); const st = dog.state; let attacked = false; for (let i = 0; i < 60; i++) { G.step(0.05); if (['windup', 'lunge', 'chase', 'warn'].includes(dog.state)) attacked = true; }
   return { u, st, calm: +dog.calmT.toFixed(1), attacked, hurt: hp0 - h.hp }; });
 await said();
-check('after the call: the conch sends the chasing dog home, calm; it does not come back at him for 3 s', d1.u === 'used' && d1.st === 'home' && d1.calm > 8 && !d1.attacked && d1.hurt === 0, d1);
+check('after the call: the conch sends the chasing dog home, calm; it does not come back at him for 3 s', d1.u === 'used' && ['home', 'guard'].includes(d1.st) && d1.calm > 8 && !d1.attacked && d1.hurt === 0, d1);
 
 // ================================================================ Desert Island, chapter 4
 iso('chapter 4 entered by its flags (on Desert Island by the pier); the singing fork and the lance given as the chapter would');

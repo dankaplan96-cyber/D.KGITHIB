@@ -93,7 +93,7 @@ export class Shops extends ChapterBase {
       case 'flask': case 'tea': h.mp = h.mpMax; g.audio.play('heal'); break;
       case 'clover': h.clovers = Math.min(9, h.clovers + 1); g.audio.play('heal'); break;
       case 'darts10': { const A = h.arms; A.darts = Math.min(ARMS.max.darts, A.darts + 10); g.audio.play('coin'); g.hud.toast('a_toast_darts', { n: 10 }); break; }
-      case 'pcell': f.sh_pcell = true; g.found('pcell', 'it_pcell'); break;
+      case 'pcell': f.sh_pcell = true; g.audio.play('coin'); g.hud.toast('a_toast_got', { n: t('it_pcell') }); break;   // (a toast, as the other goods: no found box over the counter)
       case 'honey': case 'ticket': {
         const k = 'sh_' + it.id; f[k] = Math.min(CARRY, (f[k] || 0) + 1);
         g.audio.play('coin'); g.hud.toast('sh_toast_carry', { n: t('it_' + it.id), c: f[k] }); break;
