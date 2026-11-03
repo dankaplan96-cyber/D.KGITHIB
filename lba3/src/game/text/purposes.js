@@ -31,6 +31,7 @@ Object.assign(STR.en, {
   pp_oni_thanks: "It's bright again! I'll tell Ker'aooc. She owes us pupils a favour, and now she owes you one.",
   pp_oni_after: "We can read again. Joss is learning the wind spell properly. Hats everywhere are safe.",
   rs_oni_0: "The dormitory's ours. Nineteen beds and one snorer. I won't say who.",
+  rs_oni_1: "Master says a crystal only sings for someone who listens first.",
   pp_lamp_look: "A study crystal, dark and cold. It hums very faintly, like something asleep.",
   pp_lamp_lit: "The pupils' study crystal, bright and humming.",
   pp_lamp_ball: "It rang for a moment, then went dark again. A ball isn't a pure note.",
@@ -53,6 +54,7 @@ Object.assign(STR.en, {
   pp_marl_learned: "See? Down, all three. Every dog from my yard knows that call. Even the ones at the project's posts.",
   pp_marl_after: "Mind, the long call only sends them home. Hit one and it forgets every lesson.",
   rs_marl_0: "The project pays well for a dog that barks at the right people.",
+  rs_marl_1: "A dog that knows your call won't need a fence. Ask me at the gate.",
   pp_toast_call: 'Learned: the long call. The conch sends guard dogs home to lie down.',
   pp_j_call: "Marl, the dog trainer on Zeelich, teaches the long call: one long note on a conch sends a guard dog home.",
 

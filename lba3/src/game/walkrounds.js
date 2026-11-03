@@ -194,6 +194,8 @@ export function citadelRoster(game) {
       return [{ id: 'tibbo', char: 'farmerA', tint: '#e8f0ff', speed: 0.85, start: 0, color: '#f0d070', stops: [
         D('tibbo_counter', c.x, c.z, { a: A(c.x, c.z, out.x, out.z), dur: [30, 45] }),
         D('tibbo_bench', b.x, b.z, { a: A(b.x, b.z, out.x, out.z), act: 'tinker', dur: [8, 12] }),
+        // (a look at the square's well now and then: the town's news, and who might need darts)
+        ...(W.well ? [D('tibbo_well', W.well.x - 2.2, W.well.z - 1.8, { a: A(W.well.x - 2.2, W.well.z - 1.8, W.well.x, W.well.z), dur: [6, 9] })] : []),
       ] }];
     })(),
     // the old woman: two benches by the lane's middle and what she sees from each
