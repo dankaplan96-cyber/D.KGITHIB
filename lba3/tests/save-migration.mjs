@@ -159,7 +159,7 @@ const cardN = await card();
 const n1 = await view();
 await ev(() => game.save(false));
 console.log('chapter-10 start loaded:', JSON.stringify({ n0, cardN, n1 }));
-check('loading the chapter-10 start: chapter 10 of the expanded campaign plays (Borrowed Time: Mira\'s call), the network comes after it', n0.key === 'throttle' && n1.key === 'throttle' && n1.chapter === 9 && n1.exp === 1 && !n1.base && n1.og && n1.next === 'network', { n0: [n0.key, n0.room], n1: [n1.key, n1.chapter, n1.n, n1.og, n1.next], cardN });
+check('loading the chapter-10 start: chapter 10 of the expanded campaign plays (Borrowed Time: Mira\'s call), chapter 11 (OG-2) comes after it', n0.key === 'throttle' && n1.key === 'throttle' && n1.chapter === 9 && n1.exp === 1 && !n1.base && n1.og && n1.next === 'survey', { n0: [n0.key, n0.room], n1: [n1.key, n1.chapter, n1.n, n1.og, n1.next], cardN });
 check('…nothing of the later chapters: no network flags, no pulse tool, no hop-pack, the magic still 3, kashes as saved (123: nothing paid for the later chapters)', n1.c10 === 0 && !n1.pulse && !n1.jet && n1.lv === 3 && n1.coins === 123 && n1.owed.length === 0, n1);
 check('…the journal has a page for chapter 10 ("10. Borrowed Time") and none for the three empty shells after it', n1.journal.includes('10. Borrowed Time') && !n1.journal.some((t) => /Under the Well|Ballastra|Balances/.test(t)) && n1.journal.includes('9. The Council'), n1.journal);
 
