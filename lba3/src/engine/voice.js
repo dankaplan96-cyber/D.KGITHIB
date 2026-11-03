@@ -82,7 +82,7 @@ export const STYLES = {
   soft: { bw: 2.2, cons: 0.35, tilt: 0.55, bright: 2600, rate: 0.82, legato: 0.8, atk: 1.6, rel: 1.6, vib: 0.7, range: 0.85, breath: 0.6, level: 0.8, pres: 0 },
   hum: { bw: 3.2, cons: 0, tilt: 1.1, bright: 1500, rate: 0.68, legato: 0.92, atk: 2.2, rel: 2.2, vib: 0.55, range: 0.75, breath: 0.25, level: 0.28, pres: -2, hum: true },
 };
-let STYLE = STYLES.classic;
+let STYLE = STYLES.soft;   // (the user, 3.11: of A classic, B soft, C hum, "B is the closest to the direction")
 export function setVoiceStyle(name) { STYLE = STYLES[name] || STYLES.classic; return STYLE; }
 export function voiceStyle() { return STYLE; }
 function styled(v) {
