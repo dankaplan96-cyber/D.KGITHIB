@@ -1,6 +1,6 @@
 // Chapter 9 (The Council, Zeelich): the street folk, Baldino's petition, Nara's stamp, Oku's stamp (free the three
 // mills: ball), the council house, the clerk, the hearing, the archive in a borrowed coat (the BORE cabinet),
-// back to the council → chapter 10.
+// back to the council → chapter 10 (the expanded campaign's "Borrowed Time": segment 12b).
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['street folk', () => ['zbee1', 'zmole1', 'ztri1'].map((id) => P.talk(id, { run: true }).r)],
@@ -23,5 +23,7 @@ export const steps = [
       for (let t = 0; w?.active && t < 90 && !(w.wp === 0 && w.npc.pos.z < p3[1] - 0.4 && w.npc.pos.z > p0[1] + 1.5 && w.suspicion < 0.2); t += 0.1) { G.step(0.1); waited += 0.1; if (G.state !== 'play') P.settle(); }
       r = P.use(c.x, c.z, { kind: 'c9cab', near: 0.8, run: true }); P.settle(); if (!G.flags.c9_plans) misses++; }
     return { ...r, misses, waited: +waited.toFixed(1), plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
-  ['back to the council → chapter 10', () => { P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30); return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'network' ? null : 'no chapter 10' }; }],
+  // (a new game plays the expanded campaign: after the vote comes chapter 10 "Borrowed Time" — Mira's call, the ship
+  // home — segment 12b; on a base-game save, exp_base, the network)
+  ['back to the council → chapter 10', () => { P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30); const want = game.story.inCampaign('throttle') ? 'throttle' : 'network'; return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, room: P.here(), fail: game.flags.chapterKey === want ? null : 'no chapter 10 (' + want + ')' }; }],
 ];
