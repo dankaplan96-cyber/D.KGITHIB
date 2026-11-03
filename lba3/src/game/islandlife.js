@@ -227,7 +227,7 @@ function avoidList(R, name, o) {
   if (R.pad) out.push({ x: R.pad.x, z: R.pad.z, r: 3.7 });
   if (R.board) out.push({ x: R.board.x, z: R.board.z, r: 2.0 });
   for (const d of R.shutDoors || []) out.push({ x: d.x, z: d.z, r: 1.5 });
-  for (const g of R.givers || []) out.push({ x: g.x, z: g.z, r: 1.4 });
+  for (const g of R.givers || []) out.push({ x: g.x, z: g.z, r: 3.0 });   // (out of talk reach, 2.6 m: a hop by a giver is not taken for a talk)
   for (const s of R.searches || []) if (s.x != null) out.push({ x: s.x, z: s.z, r: 1.6 });
   for (const [x, z, r] of ISLE_PEOPLE[name]?.avoid || []) out.push({ x: o.x + x, z: o.z + z, r });
   for (const t of Object.values(ISLE_THINGS[name] || {})) if (t?.x != null && t.prompt) out.push({ x: t.x, z: t.z, r: 1.6 });
