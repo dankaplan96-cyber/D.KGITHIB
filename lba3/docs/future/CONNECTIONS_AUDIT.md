@@ -130,6 +130,9 @@ Every proposal keeps the alignment rules: 80 % likeness for what is kept, places
 joined only by spaceship, FunFrock dead and Vesk the villain, no Earth-style night, Esmer and Wannies.
 
 ### The sewers (the user's example), in order of value
+**Built on `sewers-1` (SEWERS-1, 3.11):** S-1, S-2, S-3, S-4 (code-only: the pink door → the Works door at the east
+pier's head; Fosse the sewer man in the hall), S-5 (the globe's room, a new small room `sewerglobe` in the vault's kit, no
+lamp of its own; the key is Bersimon's) and C-2. Flags `sw_*`; `tests/sewers-ways.mjs`.
 | # | Gap | Proposal | Purpose | Chapter | Cost |
 |---|---|---|---|---|---|
 | S-1 | Bersimon's tent has no way down (LBA2 row 16) | A trapdoor under Bersimon's rug, a stair down to the hall's west end. He has felt the warm air rising under the town (his bible line) and sends Twinsen to look: the grate's side story gets a second, grown-up hook, and the tent becomes the sewers' way in and out from the plateau. | story beat (optional), a shortcut plateau ⇄ lower town | 1–2 hook, every chapter after | M · code (trapdoor prop and prompt in `wizards.js`; a doorway and stair in the hall's west wall in `sewers.js`; two exits) |

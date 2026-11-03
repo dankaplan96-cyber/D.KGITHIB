@@ -22,7 +22,12 @@
 //   SEWER.hatch {x, z, y, open, deckY, setOpen(b), setDeck(d), setLever(t), deckTop(), lever}   (SEWER-LIFT: the grate and its lift)
 //   SEWER.hall (the hall's room) {valve, gate, setValve(b, instant)}
 //   SEWER.vault (the treasure room) {chest, setChest(b)}
-//   sewerDoors() / sewerExit(to)   no door (the lift's lever takes him down: story/sewers.js); 'sewer-out' leads back up onto the deck
+//   SEWER.hall also {bolt, works, gdoor, setDoor(id, b, instant), doorOpen(id), splash()}; R.entries {fall, pink, stoneup,
+//     wtent, sewerglobe}; R.npcSpots.fosse   (SEWERS-1: the terrace bolt, the Works door, the globe's door, the west stair)
+//   SEWER.globe (the globe's room, sewerglobe) {globe, cock, setClear(b, instant), setSky(state), clear}
+//   sewerDoors(W, f) / sewerExit(to, W)   the grate is no door (the lift's lever takes him down: story/sewers.js);
+//     'sewer-out' leads back up onto the deck; the pink house's door (always) and the terrace porch (sw_bolt) lead in,
+//     'sewer-pink' / 'sewer-stoneup' lead out before them
 import * as THREE from 'three';
 import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
