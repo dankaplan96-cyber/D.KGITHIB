@@ -1739,3 +1739,10 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
   save-migration PASS; again here: epilogue-home, save-migration, chapter3 PASS.
 - Still open: no person has played the two ISO-finished fights; chapter 8's new gathering spot not looked at closely;
   chapter 5's objective runs ahead of the hangar's glider and hatch; chapters 11–12 have no stars (rooms in a line).
+
+### ZEELICH-1-WANNIE rebuilt on origin 35aaa16 (3.11.2026)
+DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-SKY` first, then `ZEELICH-1-WANNIE`
+(both checked on a fresh worktree of 35aaa16; CAMPAIGN-2 applies after them too). The only overlap was the end of
+`buildIsland`: the temple's portal line and the platform's `R.wannie` block, both kept. With DOORS-1's houses in
+place the planner puts the mine and the lift's foot where it did before; every `R.wannie` handle stands on ground,
+clear of colliders; the lift goes to 0 and to 1 and its lever pulls. `tests/zislands.mjs` PASS on origin + SKY + WANNIE.
