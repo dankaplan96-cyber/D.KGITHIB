@@ -432,7 +432,7 @@ function sylGain(v, vk, f0) {
 }
 function consGain(v, C, f0) { return C.F ? Math.max(0.05, Math.min(8, Math.sqrt(REF / chainPower(v, null, f0, C.F)))) : 1; }
 const LEVEL = 0.37;       // the synthesis's peak syllable gain (Twinsen's "a": sylGain) into the voice bus (before the voice volume)
-const CLIP_LEVEL = 0.225; // the pre-rendered phrases' gain into the voice bus (they are normalised alike, tools/voice-render; VOICES-PIPER: 0.21 -> 0.225 keeps a chapter-1 conversation as loud as with the synthesised banks, -16.8 LUFS)
+const CLIP_LEVEL = 0.23;  // the pre-rendered phrases' gain into the voice bus (they are normalised alike, tools/voice-render; VOICES-PIPER: 0.21 -> 0.23 keeps a chapter-1 conversation as loud as with the synthesised banks, -16.8 LUFS)
 const LEAD = 0.03;        // schedule this far ahead of the audio clock (never in the past: no clicks)
 const CHANNELS = 3;       // pooled synthesis chains: one speaking, the others free or fading
 const FADE = 0.025;       // a line cut short (skipped, closed) fades with this time constant, its sources end 0.15 s later

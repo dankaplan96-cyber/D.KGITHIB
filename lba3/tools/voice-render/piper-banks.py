@@ -265,7 +265,7 @@ def compress(x, thr, knee, ratio, att, rel, sr=48000):
     g = np.interp(np.arange(len(x)), np.arange(n) * B + B / 2, g) if n else np.ones(len(x))
     return x * g * makeup
 def game_bus(y):
-    v = y * 0.225 * 0.8 * 2.2                                   # CLIP_LEVEL, the voice slider (0.8) x the bus boost
+    v = y * 0.23 * 0.8 * 2.2                                   # CLIP_LEVEL, the voice slider (0.8) x the bus boost
     v = compress(v, -20, 12, 3.5, 0.004, 0.18) * 2.2             # compressor, makeup
     return compress(v, -4, 4, 12, 0.003, 0.15) * 0.8             # limiter, master
 def attack(x):
