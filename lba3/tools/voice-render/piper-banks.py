@@ -21,7 +21,7 @@
 # has three speakers, and a resident always speaks with the same one (a hash of their id picks it).
 # The mouth: Piper's phoneme timings give each clip's syllables (onset, vowel, how far the vowel opens the mouth).
 # Comfort: the top tamed (a shelf down from 5 kHz, a low-pass at 7.5 kHz), sibilants held down (a de-esser), and of up to
-# four renderings of a clip (Piper's performances vary) the first without a hard attack.
+# six renderings of a clip (Piper's performances vary) the first without a hard attack.
 # Loudness: every clip to the same speech level, then every bank to the same integrated loudness (EBU R128, as the old
 # banks were), soft-limited under -1.5 dBFS. Robots and Mosquibees have no bank and keep the synthesis.
 import argparse, glob, json, os, random, re, subprocess, sys, tempfile, zlib
@@ -245,11 +245,31 @@ def median_f0(x):
     return int(round(float(np.median(out)))) if out else 0
 
 # a clip's hardest attack, as the game's click check measures it (tests/lib/voicelab.js: a sample's second difference
-# against the second difference around it, +-5 ms, at 48 kHz and the clip's in-game level): a voice onset straight after
-# a stop's silence can stand out like a click, and a clip's renderings differ in it
-ATTEMPTS, ATTACK_OK, GAME_GAIN = 4, 6.3, 0.225 * 0.8 * 2.2 * 0.8
+# against the second difference around it, +-5 ms, at 48 kHz), heard through the game's voice bus (audio.js: the
+# clip level and the voice slider, a compressor, makeup, a limiter; Web Audio's compressors add a makeup gain of their
+# own). A voice onset straight after a stop's silence, or a creaky phrase end lifted by the compressor, can stand out
+# like a click; a clip's renderings differ in it.
+ATTEMPTS, ATTACK_OK = 6, 6.3
+def compress(x, thr, knee, ratio, att, rel, sr=48000):
+    B = 48; n = len(x) // B
+    pk = np.abs(x[:n * B]).reshape(n, B).max(1)
+    env = np.empty(n); e = 0.0; ka, kr = np.exp(-B / (att * sr)), np.exp(-B / (rel * sr))
+    for i, v in enumerate(pk):
+        e = ka * e + (1 - ka) * v if v > e else kr * e + (1 - kr) * v
+        env[i] = e
+    def gr(lv):   # dB of gain reduction at a level (soft knee)
+        o = lv - thr
+        return np.where(o <= -knee / 2, 0, np.where(o >= knee / 2, o * (1 - 1 / ratio), (1 - 1 / ratio) * (o + knee / 2) ** 2 / (2 * knee)))
+    g = 10 ** (-gr(20 * np.log10(np.maximum(env, 1e-9))) / 20)
+    makeup = (1 / 10 ** (-gr(np.array(0.0)) / 20)) ** 0.6
+    g = np.interp(np.arange(len(x)), np.arange(n) * B + B / 2, g) if n else np.ones(len(x))
+    return x * g * makeup
+def game_bus(y):
+    v = y * 0.225 * 0.8 * 2.2                                   # CLIP_LEVEL, the voice slider (0.8) x the bus boost
+    v = compress(v, -20, 12, 3.5, 0.004, 0.18) * 2.2             # compressor, makeup
+    return compress(v, -4, 4, 12, 0.003, 0.15) * 0.8             # limiter, master
 def attack(x):
-    y = sox(x * (0.1 / speech_rms(x)), ['rate', '-v', '48000'], False).astype(np.float64) * GAME_GAIN
+    y = game_bus(sox(x * (0.1 / speech_rms(x)), ['rate', '-v', '48000'], False).astype(np.float64))
     d2 = np.zeros(len(y)); d2[2:] = y[2:] - 2 * y[1:-1] + y[:-2]
     half = 240; cum = np.concatenate([[0], np.cumsum(d2 * d2)])
     i = np.arange(len(y)); lo = np.maximum(0, i - half); hi = np.minimum(len(y), i + half + 1)
@@ -279,7 +299,7 @@ def build_bank(voice, Cfg, bid, spec, inv, people_sounds, family=None):
                 ls = spec['ls'] * pace * rng.uniform(0.94, 1.06)
                 ns = max(0.4, spec['ns'] + rng.uniform(-0.08, 0.08))
                 nw = rng.uniform(0.75, 1.0)
-                # (Piper's performances vary from one rendering to the next: of up to four, the first without a hard
+                # (Piper's performances vary from one rendering to the next: of up to six, the first without a hard
                 #  attack, else the softest)
                 best = None
                 for _ in range(ATTEMPTS):
