@@ -1568,7 +1568,7 @@ sea's three layers and its shore puffs take the style's `cloudTint` (white as be
 - The others (Knartas, the CX islet, the Lift Dock, Under Celebration's own env) unchanged.
 - Checked: pictures of Otringal, Celebration and the platform from the play camera (on the laptop; none to the user).
 
-### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026
+### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2, after SKY)
 `requests/ZEELICH-1-WANNIE.diff` (`props-esmer.js`, `zislands.js`). **Apply `ZEELICH-1-SKY.diff` first**: both touch
 the platform's style line (its env and gas colours are item 6's); checked on a fresh worktree of origin 3e5f458: SKY
 alone applies, then WANNIE applies on it (WANNIE alone does not).
