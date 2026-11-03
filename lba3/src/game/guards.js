@@ -64,7 +64,8 @@ export class Guard extends Actor {
     this.rig.plantIfFits();
     this.sync();
   }
-  get alive() { return this.state !== 'dead'; }
+  // (STAND-DOWN: a guard who stands down is out of the fight from that moment: no target, no hits, not solid, not beaten)
+  get alive() { return this.state !== 'dead' && this.state !== 'yield'; }
   get aimY() { return this.grobo ? 1.3 : 1.15; }
   get markY() { return this.grobo ? 2.6 : 2.25; }
   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
@@ -123,8 +124,32 @@ export class Guard extends Actor {
     return this.game.physics.lineOfSight(this.pos.x, this.pos.y + 1.6, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
   }
 
+  // STAND-DOWN (the campaign): someone he answers to tells him to stand aside. He lowers the rifle, walks to `to` (his
+  // cabin's door) and is gone. Nothing drops: he was not beaten. (A reload leaves him out: the story's `when` does.)
+  standDown(to) {
+    if (!this.alive) return;
+    this.state = 'yield'; this.stateT = 0; this.yieldTo = to || this.home;
+    this.aimLine.visible = false; this.rifle.userData.glow.emissiveIntensity = 0.2;
+    this.game.combatDir?.done(this);
+  }
+  updateYield(dt) {
+    const P = this.game.physics, to = this.yieldTo;
+    this.stateT += dt;
+    const dx = to.x - this.pos.x, dz = to.z - this.pos.z, far = Math.hypot(dx, dz) > 0.5;
+    if (!far || this.stateT > 8) { this.gone = true; this.rig.root.visible = false; this.shadow.visible = false; return; }
+    this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 4, dt);
+    const sp = this.stateT < 0.8 ? 0 : 1.3;   // (a beat with the rifle down, then he goes)
+    if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    P.fall?.(this, dt);
+    this.rig.play(sp ? 'walk' : 'idle');
+    this.placeRig();
+    this.rig.update(dt, sp);
+    this.sync();
+  }
+
   update(dt) {
     if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
+    if (this.state === 'yield') { if (this.present && !this.gone) this.updateYield(dt); return; }
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);

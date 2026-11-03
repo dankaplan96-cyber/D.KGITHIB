@@ -433,7 +433,7 @@ const SAME = 0.05;       // m: the chapter's place is still the mark the round s
 const CAST_NEAR = 40;    // m: outdoors a round runs only with the hero this near its mark (farther: back on the mark, unseen)
 const FIGHT_R = 25;      // m: no round with a foe this near that is after someone (not on its calm patrol)
 const PATROL_R = 12;     // m: nor with any foe this near (a watch, a patrol: the sneaks)
-const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant']);   // (enemies.js states with no one chased)
+const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant', 'yield']);   // (enemies.js states with no one chased)
 const DOOR_CLEAR = 1.0;  // m: a stop keeps this clear of a door's trigger (its reach and this)
 const samePlace = (p, m) => !!p && !!m && Math.hypot(p.x - m.x, p.z - m.z) < SAME;
 // a cast round's stops in the world: the mark (the chapter's place: its pose, its angle) and the others round it (dx, dz
