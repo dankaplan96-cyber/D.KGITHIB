@@ -154,6 +154,8 @@ export const VOICES = {
   ennu: { race: 'esmer', seed: 964, f0: 116, k: 1.06, rate: 0.88, contour: 'fall', legato: 0.53 },
   oshra: { race: 'esmer', seed: 965, f0: 217, k: 1.19, rate: 1.05, contour: 'sing', legato: 0.6 },
   sefa: { race: 'esmer', seed: 966, f0: 224, k: 1.02, rate: 0.82, contour: 'zigzag', legato: 0.67 },
+  tavi: { race: 'quetch', seed: 968, f0: 226, k: 1.12, rate: 1.1, contour: 'bounce', legato: 0.55 },   // the terminal's cafe keeper
+  pask: { race: 'esmer', seed: 969, f0: 131, k: 1.0, rate: 0.86, contour: 'fall', legato: 0.7 },        // the Zeelich terminal's porter
   // --- Rabbibunnies
   mira: { race: 'bunny', seed: 301, f0: 214, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
   pippa: { race: 'bunny', seed: 302, f0: 230, k: 1.22, rate: 1.2, contour: 'zigzag', range: 5, legato: 0.45 },                     // the merchant: quick patter
@@ -211,11 +213,11 @@ function rng(seed) {
 const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', 'oda', 'tilde', 'ilo', 'kira', 'ume', 'mira', 'pippa', 'farmer2', 'ilka',
   'weaver', 'odile', 'nara', 'maro',
   // (those still without a voice of their own: the fallback below gives them a woman's)
-  'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi']);
+  'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
-  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo']);
+  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;

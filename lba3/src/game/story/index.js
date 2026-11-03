@@ -9,6 +9,8 @@ import { bazooDoors, bazooExit } from '../bazoo.js';
 import { ticketDoors, ticketExit } from '../ticket.js';
 import { pharmacyDoors, pharmacyExit } from '../pharmacy.js';
 import { nbrhouseDoors, nbrhouseExit } from '../nbrhouse.js';
+import { zterminalDoors, zterminalExit } from '../zterminal.js';
+import { terminalDoors, terminalExit } from '../terminal.js';
 import { traluCaveDoors, traluCaveExit } from '../tralucave.js';
 import { baggageDoors, baggageExit } from '../baggage.js';
 import { nellhouseDoors, nellhouseExit } from '../nellhouse.js';
@@ -39,6 +41,7 @@ import { Arsenal } from './arsenal.js';
 import { MagicLevels } from './magic.js';
 import { SewerLife } from './sewers.js';
 import { ChapterBase } from './base.js';
+import { Shops } from './shops.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -85,6 +88,7 @@ export class Story {
     this.arsenal = new Arsenal(this);   // weapons and gadgets in the world: stalls, gifts, dark places (arsenal.js)
     this.magic = new MagicLevels(this);   // MAGIC-LEVELS: the story's magic levels, never sold (magic.js)
     this.sewers = new SewerLife(this);   // WA-14: Citadel's old sewers under the lane by the pump (sewers.js)
+    this.shops = new Shops(this);   // SHOPS-1: Citadel's shops and the Esmer trading house: a keeper's talk opens the shop (shops.js)
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -238,16 +242,18 @@ export class Story {
     if (ar.length) out.push({ title: t('a_title'), lines: ar });
     const sw = this.sewers.journal();
     if (sw.length) out.push({ title: t('sw_title'), lines: sw });
+    const sh = this.shops.journal();
+    if (sh.length) out.push({ title: t('sh_j_title'), lines: sh });
     return out;
   }
-  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items()]; }
+  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.shops.items()]; }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
   // WORLD-AUDIT: Twinsen's own front door opens in every chapter. The chapters set elsewhere (4–7, 9; 3, 11, 12) offer
   // no door of their own on Citadel, so on a visit home by ferry or ship it had no prompt at all while Zoé and Arthur
   // were inside on their marks.
-  doors() { const cur = this.cur.doors(), h0 = this.game.world?.houses?.[0]; if (h0?.door && !cur.some((d) => d.room === 'house')) cur.push({ house: h0.id, x: h0.door.x, z: h0.door.z, r: 0.9, room: 'house' }); return [...cur, ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world), ...traluCaveDoors(this.game.world)]; }
+  doors() { const cur = this.cur.doors(), h0 = this.game.world?.houses?.[0]; if (h0?.door && !cur.some((d) => d.room === 'house')) cur.push({ house: h0.id, x: h0.door.x, z: h0.door.z, r: 0.9, room: 'house' }); return [...cur, ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world), ...traluCaveDoors(this.game.world), ...terminalDoors(this.game.world), ...zterminalDoors(this.game.world)]; }
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
-  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world) || traluCaveExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world) || traluCaveExit(to, this.game.world) || terminalExit(to, this.game.world) || zterminalExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
   // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
   townDoors() {
@@ -257,14 +263,14 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.sewers.interactables(consider, dist); }
-  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.sewers.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.sewers.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.sewers.interactables(consider, dist); this.shops.interactables(consider, dist); }
+  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.sewers.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (this.shops.talkFirst(npc) || this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.sewers.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); this.shops.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
