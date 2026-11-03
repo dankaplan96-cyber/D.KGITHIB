@@ -1783,3 +1783,25 @@ and after LINE-CLEAR-1):
   PASS.
 - Text: Settings' hint for Camera distance (`set_h_cd`) speaks of the Follow camera only; it now sets the rooms' zoom
   too (the cloud's line to change, if wanted).
+
+## ASYLUM-2 · The asylum becomes the Joint Project's hostel for its Esmer workers · the user, 3.11.2026 · for the cloud
+The user played the asylum: "where is the main entrance and where is the side entrance, nothing there makes sense,
+and it's completely empty", then asked what it gives the game (today: an optional nostalgia stop; the register's line
+and a clover, Twinsen's cell, its marks and five kashes, the warm pipe as a hint of the dig, a giver; no quest goes
+through it, and no one stands in it: the header's guards, trooper and dogs were never placed), and decided it should be
+converted into something tied to Zeelich: **the Joint Project's hostel for its Esmer workers**, in the empty asylum
+because it was cheap.
+- **The laptop builds the place** (a request diff follows, with pictures): LBA1's two exits as they were, the main
+  entrance on the upper level (a real front door outside) and the low stair-well (the block-house) as the side
+  entrance, both ways; the rooms dressed as a lived-in hostel with Esmer touches (the cells as sleeping rooms,
+  Twinsen's cell kept as the workers' curiosity with a blank plaque, the office as the foreman's, the nurses' station
+  as the kitchen and mess, the project's store kept); `R.npcSpots` at the original actors' places (worker1…, cook,
+  foreman, a sleeper).
+- **Please (the story's part):**
+  - ASYLUM-1's lore ("bricked up and forgotten; the dig broke back into it") and its lines
+    (`asy_register1/2`, `as_cell1–3`) as fits a hostel: the register can stay the old one the workers found; the
+    breach is now theirs to complain about.
+  - The people: a foreman, a cook, three or four Esmer workers (off shift, homesick, curious about the hero whose
+    cell they keep), each with a line or a small favour; placed on the npcSpots, in the chapters where the project
+    has workers on Citadel. The plaque's text in Twinsen's cell.
+  - The front door's line or sign if it needs one ("JOINT PROJECT HOSTEL" or as you like).
