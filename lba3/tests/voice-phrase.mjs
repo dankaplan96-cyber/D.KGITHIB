@@ -21,9 +21,12 @@ optional(/nonexistent-voice-banks/, 'the missing-bank fallback check asks for ba
 const man = JSON.parse(readFileSync(ROOT + 'assets/voice/manifest.json', 'utf8'));
 const files = readdirSync(ROOT + 'assets/voice').filter((f) => f.endsWith('.ogg'));
 const bytes = files.reduce((a, f) => a + statSync(ROOT + 'assets/voice/' + f).size, 0) + statSync(ROOT + 'assets/voice/manifest.json').size;
-check('the phrase banks stay under 3 MB in all', bytes < 3 * 1024 * 1024, { MB: +(bytes / 1048576).toFixed(2), banks: files.length });
-const need = ['hero', 'zoe', 'arthur', 'baldino', 'vesk', 'sendell', 'quetch-m', 'quetch-f', 'quetch-kid', 'grobo-m', 'grobo-f', 'bunny-m', 'bunny-f', 'esmer-m', 'esmer-f'];
-check('a bank for each of the main cast and each resident family, its file present', need.every((b) => man.banks[b] && files.includes(man.banks[b].file)), need.filter((b) => !man.banks[b]));
+// (VOICES-PIPER: the user's budget for the Piper banks is about 6 MB, up from the synthesised banks' 3)
+check('the phrase banks stay under 6 MB in all', bytes < 6 * 1024 * 1024, { MB: +(bytes / 1048576).toFixed(2), banks: files.length });
+// (VOICES-PIPER: a resident family is several speakers' banks, listed in manifest.families)
+const fams = ['quetch-m', 'quetch-f', 'quetch-kid', 'grobo-m', 'grobo-f', 'bunny-m', 'bunny-f', 'esmer-m', 'esmer-f'];
+const need = ['hero', 'zoe', 'arthur', 'baldino', 'vesk', 'sendell', ...fams.flatMap((f) => man.families?.[f] || [f])];
+check('a bank for each of the main cast and each resident family (two speakers or more), its file present', need.every((b) => man.banks[b] && files.includes(man.banks[b].file)) && fams.every((f) => man.families?.[f]?.length >= 2), need.filter((b) => !man.banks[b]));
 const badClip = [];
 for (const [id, b] of Object.entries(man.banks)) for (const [k, c] of Object.entries(b.clips)) if (!(c.d > 0 && c.sp <= c.d && c.s.length >= 1 && c.s.every((s) => s[0] >= 0 && s[0] < c.d))) badClip.push(id + ':' + k);
 check('every clip has its speech inside its own span, and its syllables for the mouth', badClip.length === 0, badClip.slice(0, 5));
