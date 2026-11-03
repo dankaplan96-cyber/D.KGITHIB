@@ -5,13 +5,13 @@ Object.assign(STR.en, {
   n_farmer1: 'Farmer Joss', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
   p_lever: 'Pull', p_shelter: 'Inspect',
 
-  c8_narr: 'The glider skims the cliffs and comes down in the grass above the lighthouse. Below, Citadel is not the island Twinsen left.',
+  c8_narr: 'The glider skims the cliffs and comes down on the plateau above the town. Below, Citadel is not the island Twinsen left.',
   c8_hesk_1: "Project ships at your spaceport, and a queue down the whole bridge. I'll take the glider back south before they take her too. Good luck, Twinsen.",
   c8_tw_1: "The heat posts are dark. And the square is fenced off. Home first.",
 
   c8_zoe_1: 'You came back! Arthur, he came back!',
   c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
-  c8_zoe_2: "The project ships take only the list. The heat posts went dark yesterday, to save power for the bore. People on the list are queuing at the spaceport. Everyone else was told to wait.",
+  c8_zoe_2: "The project ships take only the list. Yesterday Vesk switched off the heat posts: every bit of power goes to his bore now. People on the list are queuing at the spaceport. Everyone else was told to wait.",
   c8_tw_z1: "Then we take everyone else. Where's safe?",
   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
@@ -47,8 +47,8 @@ Object.assign(STR.en, {
   c8_zoe_lh3: "So when I broadcast, the council heard me. They know. They just haven't decided anything.",
 
   c8_control_1: 'The control room. The screens flicker, and a face appears: Vesk, far below.',
-  c8_vesk_1: "This is Vesk. To all stations: the bore reaches full depth in three days. Evacuation of listed personnel continues. That is all.",
-  c8_tw_c1: 'Three days.',
+  c8_vesk_1: "This is Vesk, to all stations. Somebody has been opening FunFrock's old vents. The pressure is falling, and it changes nothing: every watt goes to the bore. Full depth in three days. Listed personnel, keep boarding. That is all.",
+  c8_tw_c1: "He knows the vents are open. So he drills faster. Three days.",
   c8_zoe_radio: "Twinsen, I heard. The lighthouse relays to Zeelich's council. If they order the bore reversed, the project has to obey. Go and make them listen. I'll keep everyone safe here.",
   c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one.",
 
@@ -68,6 +68,6 @@ Object.assign(STR.en, {
   c8_j_shelters: "Gilbert told me about FunFrock's two shelters, under the fortress and the depot, and I opened both. Mira promised water and gave me the key to the valve room, and Pippa sent supplies.",
   c8_j_farms: "Zoé brought the hill families and their animals up to the lighthouse cliffs.",
   c8_j_relay: "At the lighthouse Zoé found the transmitter still tuned to Zeelich's council chamber. The council heard her warning, but has decided nothing.",
-  c8_j_vesk: "Vesk came on the control-room screen: the bore reaches full depth in three days. Zoé said the council can order it reversed, so I will take a project ship to Zeelich.",
+  c8_j_vesk: "Vesk came on the control-room screen. He knows the vents are open, and instead of stopping he sends every watt to the bore: full depth in three days. Zoé said the council can order it reversed, so I will take a project ship to Zeelich.",
   it_valvekey: 'Valve room key', itd_valvekey: "Mira's key to FunFrock's valve control room.",
 });

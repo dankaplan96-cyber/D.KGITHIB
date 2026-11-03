@@ -1050,11 +1050,13 @@ export function esmerBuilding(P, o) {
   // openings (panel-local: x along, y up from the plinth)
   // (WORLD-FIX: nothing on a wall reaches into the tiled frieze under the cornice (its foot at friezeY) or across the
   // string course between the floors; a sign board takes the alfiz's place over a door; see tests/worldfit.mjs)
-  const friezeY = ph - 0.66, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null, courseY = row2 ? row2.y - 0.37 : Infinity;
+  // (DOORS-1: a low house (walls under 2.6 m, too low for a door under the frieze) has no frieze: its door and
+  // windows reach up under the cornice; taller houses are as before)
+  const low = ph < 2.6, friezeY = low ? ph - 0.22 : ph - 0.66, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null, courseY = row2 ? row2.y - 0.37 : Infinity;
   const dw = role === 'store' ? Math.min(2.1, W - 1.2) : Math.min(1.2, W - 0.8);
-  const dh = Math.min(role === 'store' ? 2.6 : 2.35, ph - 0.9, courseY - 0.22, o.sign ? friezeY - 0.85 : Infinity);
+  const dh = Math.min(role === 'store' ? 2.6 : 2.35, low ? ph - 0.46 : ph - 0.9, courseY - 0.22, o.sign ? friezeY - 0.85 : Infinity);
   const hasDoor = o.door !== false && dh >= 1.7 && dw >= 0.8, doorX = o.doorX ?? 0;
-  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: 0.82, h: Math.min(1.25, friezeY - 0.96, courseY - 0.96) };
+  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: low ? 0.78 : 0.82, h: Math.min(1.25, friezeY - (low ? 0.92 : 0.96), courseY - 0.96) };
   const ops = { front: [], back: [], left: [], right: [] };
   if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
   const balconySide = !solid && row2 && r() < 0.55 ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
@@ -1062,7 +1064,7 @@ export function esmerBuilding(P, o) {
     if (o.blind?.includes(sd.n)) continue;   // (WORLD-FIX: a wall set into the rise behind it has no windows)
     const n = Math.max(0, Math.floor((sd.len - 0.9) / 2.1));
     for (const row of [row1, row2]) {
-      if (!row || row.h < 0.8 || row.y + row.h + 0.14 > (row === row1 ? Math.min(friezeY, courseY) : friezeY)) continue;
+      if (!row || row.h < (low ? 0.55 : 0.8) || row.y + row.h + 0.14 > (row === row1 ? Math.min(friezeY, courseY) : friezeY)) continue;
       for (let q = 0; q < n; q++) {
         const u = (q - (n - 1) / 2) * 2.1;
         if (Math.abs(u) + ww / 2 > sd.len / 2 - 0.42) continue;
@@ -1098,7 +1100,7 @@ export function esmerBuilding(P, o) {
     add(panelGeo(+sd.len.toFixed(3), ph, t, ops[sd.n].map((op) => ({ x: op.x, y: op.y, w: op.w, h: op.h, horse: true }))), wallM, m);
     // the tiled frieze under the cornice, a string course between the floors
     const fl = sd.face - 0.5;
-    add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
+    if (!low) add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
     if (row2) add(bbox(fl, 0.1, 0.12, 0.02, 1.8), stone, T(m, 0, row2.y - 0.32, t + 0.04));
     if (row2) fx(sd.n, 'band', -fl / 2, fl / 2, row2.y - 0.37, row2.y - 0.27);
     for (const op of ops[sd.n]) {
@@ -1184,7 +1186,7 @@ export function esmerBuilding(P, o) {
     const [cx, cz] = P.pt(0, 0), piers = small >= 1.2 ? rp * 1.25 : 0, { ox = 0, oz = 0, ...reg } = o.fit;   // (ox, oz: the caller's group's place)
     fitAdd({ ...reg, x: cx + ox, z: cz + oz, ry: P.ry, oy: P.y + base, w, d, base: -base - bury, plinth: 0, floor: 0, steps: base + 0.1,
       sides: { front: W / 2 - piers, back: W / 2 - piers, left: D / 2 - piers, right: D / 2 - piers },
-      top: solid ? null : { front: ph - 0.66, back: ph - 0.66, left: ph - 0.66, right: ph - 0.66 },
+      top: solid ? null : { front: friezeY, back: friezeY, left: friezeY, right: friezeY },
       openings: solid ? [] : fitOps.filter((e) => e.kind !== 'band' || fitOps.some((q) => q.side === e.side && q.kind !== 'band')), solid, door: hasDoor && !solid, banked: o.blind || [] });
   }
   return { top, domed, solid, door: hasDoor ? { x: doorX, z: D / 2 } : null };

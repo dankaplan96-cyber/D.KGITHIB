@@ -649,6 +649,9 @@ export function* buildZeelichSteps(scene, physics) {
     workshopDoor: W(ws[0], ws[1]),
     councilDoor: W(houses[1].door[0], houses[1].door[1]),
     houseDoors: houses.filter((h) => h.door).map((h) => W(h.door[0], h.door[1])),   // (every house's door: tests/doorcull.mjs)
+    // (DOORS-1: a house door that leads nowhere says "Locked."; the council's and the workshop's are the story's
+    // doors in their chapters, offered instead there: story/prologue.js)
+    shutDoors: houses.filter((h) => h.door).map((h, i) => ({ id: 'zeelich-house' + i, ...W(h.door[0], h.door[1]), y: Y0 })),
     npcSpots: {
       esmer1: { ...W(-34.5, -3.2), a: Math.PI / 2 },
       esmer2: { ...W(-24, 7.0), a: Math.PI },

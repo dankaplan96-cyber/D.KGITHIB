@@ -28,6 +28,7 @@ import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
 import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 import { fitAdd } from './worldfit.js';
+import { buildCelPortal } from './celtemple.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -232,6 +233,16 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
       const r = apron(f), side = [at(r.x0, r.z0), at(r.x1, r.z0), at(r.x0, r.z1), at(r.x1, r.z1)];
       if (g1 == null || g2 == null || side.some((v) => v == null) || blocked(r)) continue;
       const sc = Math.abs(g1 - o.y) + 0.5 * Math.max(0, Math.abs(g2 - o.y) - 1) + (f === mid ? 0 : 0.35);
+      if (sc < best - 1e-6) { best = sc; o.face = f; }
+    }
+    // (DOORS-1: a house packed in on every side still has its door: onto the alley or lane beside it, where the
+    // ground goes on a metre out and no other house stands in a narrow strip before the door)
+    if (!o.face) for (const f of [mid, [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const g1 = at(o.x + f[0] * (o.sx / 2 + 0.9), o.z + f[1] * (o.sz / 2 + 0.9));
+      const r = f[0] ? { x0: Math.min(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), x1: Math.max(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), z0: o.z - 0.7, z1: o.z + 0.7 }
+        : { x0: o.x - 0.7, x1: o.x + 0.7, z0: Math.min(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)), z1: Math.max(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)) };
+      if (g1 == null || Math.abs(g1 - o.y) > 0.3 || [at(r.x0, r.z0), at(r.x1, r.z0), at(r.x0, r.z1), at(r.x1, r.z1)].some((v) => v == null) || blocked(r)) continue;
+      const sc = Math.abs(g1 - o.y) + (f === mid ? 0 : 0.35);
       if (sc < best - 1e-6) { best = sc; o.face = f; }
     }
     if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) o.face = mid;   // (the Grand Hall's portico stands toward the plaza)
@@ -1387,7 +1398,14 @@ function buildIsland(scene, physics, name, L, at) {
         // (sides banked into a rise behind them get no windows; world direction → the building's own sides)
         const sideOf = ([vx, vz]) => vx === toward[0] && vz === toward[1] ? 'front' : vx === -toward[0] && vz === -toward[1] ? 'back' : vx === toward[1] && vz === -toward[0] ? 'right' : 'left';
         const blind = (o.banked || []).map(sideOf);
-        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        // (DOORS-1: no door where the ground before it falls away well past a step)
+        // (as tests/worldfit.mjs measures it: 0.5–1 m out and 0.4 m either side, ground more than 0.1 under the floor)
+        const half = (toward[0] ? ex : ez) / 2;
+        const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
+        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
+        // place is offered instead))
+        if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry }); }
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
@@ -1649,6 +1667,23 @@ function buildIsland(scene, physics, name, L, at) {
   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
   R.board = plan.board ? { x: ox + plan.board.x, z: oz + plan.board.z } : null;
+  // DOORS-1 / PEOPLE-1: where people may stand (world x, z, y and a heading): before the house doors (facing out
+  // to the street), at the landmarks and beside the pad; on ground, clear of colliders, 4 m apart, up to 10. The
+  // story's people for the islands are the cloud's (none stand here yet); these are their places.
+  {
+    const cand = [];
+    for (const d of R.shutDoors || []) cand.push({ x: d.x + Math.sin(d.ry) * 1.0, z: d.z + Math.cos(d.ry) * 1.0, a: d.ry, y0: d.y, near: 'door' });
+    for (const p of R.pois) cand.push({ x: p.x, z: p.z, a: Math.atan2(R.pad.x - p.x, R.pad.z - p.z), near: 'landmark' });
+    for (const [dx, dz] of [[3.4, 0], [-3.4, 0], [0, 3.4], [0, -3.4]]) cand.push({ x: R.pad.x + dx, z: R.pad.z + dz, a: Math.atan2(-dx, -dz), near: 'pad' });
+    R.peopleSpots = [];
+    for (const c of cand) {
+      if (R.peopleSpots.length >= 10) break;
+      const y = physics.groundAt(c.x, c.z, (c.y0 ?? 50) + 2);
+      if (!(y > -1) || (c.y0 != null && Math.abs(y - c.y0) > 0.6) || !R.land(c.x, c.z) || physics.blockedAt(c.x, c.z, y + 0.3, 0.35)) continue;
+      if (R.peopleSpots.some((q) => Math.hypot(q.x - c.x, q.z - c.z) < 4)) continue;
+      R.peopleSpots.push({ x: +c.x.toFixed(2), z: +c.z.toFixed(2), y: +y.toFixed(2), a: +c.a.toFixed(3), near: c.near });
+    }
+  }
   R.ours = OURS.has(name);
   R.route = (plan.routes[0] || []).filter((_, i) => i % 4 === 0).map(([x, z]) => ({ x: ox + x, z: oz + z }));
   R.sample = R.sample.filter((p) => Math.hypot(p.x - R.pad.x, p.z - R.pad.z) > 4.4 && plan.items.every((it) => {
@@ -1697,5 +1732,6 @@ function buildIsland(scene, physics, name, L, at) {
     }
     shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
   }
+  if (name === 'celebration') R.templePortal = buildCelPortal(group, physics);   // (ZEELICH-1: the Dark Monk's temple's portal on the plaza; the hall is celtemple.js)
   return R;
 }

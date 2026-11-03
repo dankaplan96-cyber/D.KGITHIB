@@ -336,7 +336,10 @@ export class Prologue extends ChapterBase {
     } else {
       for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
       // (WORLD-80 step 3: an outdoor region's shut doors, Desert Island's old places: desertold.js)
-      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+      // (DOORS-1: every house door on Zeelich's islands and street is one; where the story has a door into the same
+      //  house (a bar, a hotel, a temple) that one is offered, not "Locked.")
+      const live = g.room.shutDoors?.length ? [...cur.doors(), ...(this.story.doors?.() || [])].filter((e) => e.x != null) : [];
+      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6 && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
     }
   }
   interactables(consider, dist) {
