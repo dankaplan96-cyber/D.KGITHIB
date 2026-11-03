@@ -2670,7 +2670,7 @@ function tunnelMouth(W, root, id, o) {
   const P = W.physics, grp = new THREE.Group(); grp.name = 'old-door-' + id; root.add(grp);
   const B = new Batch(grp);
   const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
-  const slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
   const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
   // the sill: the ground just before the face
   const y = W.H(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1;
