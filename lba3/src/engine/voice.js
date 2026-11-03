@@ -72,6 +72,28 @@ export const RACES = {
   beast: { k: 0.7, tilt: 2.4, breath: 0.08, bright: 1300, nasal: 0.6, rate: 0.55, legato: 0.95, swing: 0.2, contour: 'fall', range: 4, jit: 0.3, vib: [3.5, 30], glide: 0.1, level: 1.2 },
 };
 
+// VOICE-STYLE (the user, 3.11: "the characters' voices are still not pleasant to the ear"): how every voice is rendered,
+// on top of its own values. bw: formant bandwidth scale (wider = rounder, less whistly), cons: consonant noise (0 none),
+// tilt: added source roll-off, bright: a ceiling on the lowpass (Hz), rate: syllable rate scale, legato: a floor,
+// atk / rel: edge scale, vib: vibrato depth scale, range: melody range scale, breath: scale, level: scale, pres: the voice
+// bus's presence lift in dB (audio.js).
+export const STYLES = {
+  classic: { bw: 1, cons: 1, tilt: 0, bright: 99999, rate: 1, legato: 0, atk: 1, rel: 1, vib: 1, range: 1, breath: 1, level: 1, pres: 3 },
+  soft: { bw: 2.2, cons: 0.35, tilt: 0.55, bright: 2600, rate: 0.82, legato: 0.8, atk: 1.6, rel: 1.6, vib: 0.7, range: 0.85, breath: 0.6, level: 0.8, pres: 0 },
+  hum: { bw: 3.2, cons: 0, tilt: 1.1, bright: 1500, rate: 0.68, legato: 0.92, atk: 2.2, rel: 2.2, vib: 0.55, range: 0.75, breath: 0.25, level: 0.28, pres: -2, hum: true },
+};
+let STYLE = STYLES.classic;
+export function setVoiceStyle(name) { STYLE = STYLES[name] || STYLES.classic; return STYLE; }
+export function voiceStyle() { return STYLE; }
+function styled(v) {
+  const S = STYLE;
+  if (S === STYLES.classic) return v;
+  v.tilt += S.tilt; v.bright = Math.min(v.bright, S.bright * Math.sqrt(v.k)); v.rate *= S.rate; v.legato = Math.max(v.legato, S.legato);
+  v.atk *= S.atk; v.rel *= S.rel; v.vib = [v.vib[0], v.vib[1] * S.vib]; v.range *= S.range; v.breath *= S.breath; v.level *= S.level;
+  if (S.hum) { v.vowel = [v.vowel[0] * 0.85, v.vowel[1] * 0.8]; v.f3 *= 0.4; v.jit *= 0.7; }
+  return v;
+}
+
 // Every named speaker: race, a fixed seed and what sets them apart inside the race.
 export const VOICES = {
   // --- the family and the friends who must be unmistakable
@@ -280,7 +302,7 @@ export function voiceFor(nameKey) {
   }
   const v = sexed({ ...BASE, ...RACES[own.race || 'quetch'], ...own, id, radio: radio || id === 'radio' }, own.sex || (WOMEN.has(id) ? 'f' : MEN.has(id) ? 'm' : null));
   if (v.radio) v.level *= 0.9;
-  return v;
+  return styled(v);
 }
 
 // the glottal-like source: harmonics falling off as 1/n^tilt (a sawtooth is 1/n: buzzy; 2+ is soft and round)
@@ -417,7 +439,8 @@ export class Babble {
     ch.v = v;
     const s = (p, x) => p.setTargetAtTime(x, now, 0.005);
     s(ch.F[0].g.gain, 1); s(ch.F[1].g.gain, 0.6); s(ch.F[2].g.gain, 0.22 * v.f3);
-    s(ch.murG.gain, 0.06 + v.nasal * 0.3);
+    s(ch.murG.gain, 0.06 + v.nasal * 0.3 + (STYLE.hum ? 0.5 : 0));   // (VOICE-STYLE hum: a warm closed-mouth hum under the vowel)
+    ch.mur.frequency.value = STYLE.hum ? 480 * Math.sqrt(v.k) : 320;
     s(ch.breath.gain, v.breath * 2.2);
     ch.anti.frequency.value = 1050 * v.k; s(ch.anti.gain, -v.nasal * 10);
     if (v.radio) { ch.tone.type = 'bandpass'; ch.tone.frequency.value = 1700; ch.tone.Q.value = 0.9; }
@@ -529,8 +552,8 @@ export class Babble {
     const snuff = v.snuffle && (i === s0 || n === 0);
     const cd = hiss ? 0.045 : tap ? 0.016 : snuff ? 0.07 : 0;
     const peak = LEVEL * (stress ? 1.18 : 1) * (tail === '!' ? 1.15 : 1) * (0.92 + r() * 0.16);
-    if (cd && v.breath > 0) {
-      const cg = ch.consG.gain, ca = peak * (hiss ? 0.18 : snuff ? 0.3 : 0.3);
+    if (cd && v.breath > 0 && STYLE.cons > 0) {
+      const cg = ch.consG.gain, ca = peak * (hiss ? 0.18 : snuff ? 0.3 : 0.3) * STYLE.cons;
       ch.cons.frequency.setValueAtTime(snuff ? 900 : hiss ? 4600 * Math.sqrt(v.k) : 2300 * v.k, ts);
       cg.cancelScheduledValues(ts);
       cg.setTargetAtTime(ca, ts, 0.004);
@@ -556,7 +579,7 @@ export class Babble {
       const fp = ch.F[j].f.frequency, q = ch.F[j].f.Q;
       fp.cancelScheduledValues(tv); q.cancelScheduledValues(tv);
       fp.setTargetAtTime(F, tv, 0.018);
-      q.setTargetAtTime(F / (BW[j] * Math.sqrt(v.k)), tv, 0.018); // (bandwidths about constant in Hz)
+      q.setTargetAtTime(F / (BW[j] * STYLE.bw * Math.sqrt(v.k)), tv, 0.018); // (bandwidths about constant in Hz)
     }
 
     // ---- loudness: soft attack, a gentle droop, a soft release (exponential approaches only: no clicks)
