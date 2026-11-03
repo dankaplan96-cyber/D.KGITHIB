@@ -38,7 +38,7 @@ Object.assign(STR.en, {
   c3_sendell_4: 'Then turn it. I will hold on as long as I can.',
   c3_sendell_crystals: 'You carry six of her splinters. They sang to you, so she knows you. Go.',
   c3_bal_radio2: "Twinsen! The conversion plans. Three pylons around the core. Hit each one and it switches, but each needs power from up here.",
-  c3_bal_radio3: "Zoé's at the lighthouse for the signal. Mira's opening the valves. Oku and Nara are releasing the mills. You take the pylons.",
+  c3_bal_radio3: "Everyone is still at their station. Zoé has the lighthouse signal, Mira the valves, Oku the mills. You take the pylons.",
 
   // the core
   c3_core_vesk1: "You came all this way. Look, Twinsen. Under the shell lies the greatest source of power two worlds have ever had. I'm finishing the bore, and it will be ours.",
@@ -48,7 +48,7 @@ Object.assign(STR.en, {
   c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',
   c3_pylon_1: 'Signal is out. Sun, wave, star. Just like last time!',
   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
-  c3_pylon_3: 'The mills are free. Listen to that wind!',
+  c3_pylon_3: 'All three mills at full sail. Listen to that wind!',
   c3_toast_pylon: 'Pylon converted ({n}/3)',
   c3_exit_block: 'Not now. The pylons first.',
   c3_vesk_over1: "Three pylons. Clever. You think a sketch beats ten years of my work?",
