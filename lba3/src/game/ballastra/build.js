@@ -78,5 +78,7 @@ export function building(P, o) {
     for (const gx of [-1, 1]) for (const sg of [-1, 1]) P.add(cached(`blgbb${L}`, () => bbox(0.06, 0.2, L, 0.02, 1)), trim, gx * gw / 2, top + rise - (s / 2) * Math.tan(a) + 0.02, sg * s / 2, sg * a);
   }
   P.box(0, 0, w / 2 + 0.05, d / 2 + 0.05, top + rise, { seeThrough: false, noStand: true });
+  // (the roof with its eaves, for the play camera only to keep out of: above head height, nothing walks into it)
+  P.box(0, 0, w / 2 + over, d / 2 + over, top + rise + 0.2, { seeThrough: false, noStand: true, bottom: P.y + top - 0.3 });
   return { top, rise };
 }

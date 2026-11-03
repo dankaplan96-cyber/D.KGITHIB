@@ -31,7 +31,7 @@ export const BM = {
   rubble: () => tm('rubble', { color: '#cfc1a4', rough: 0.95 }),        // rough piers and the arch's rock
   deck: () => tm('planks', { color: '#d6b690', rough: 0.84 }),          // sun-bleached deck boards
   deckOld: () => tm('planks', { color: '#ae9474', rough: 0.88 }),       // older, greyer boards (patches, gangways)
-  post: () => tm('wood', { color: '#8a6848', rough: 0.86 }),            // posts, piles, beams
+  post: () => tm('wood', { color: '#a68462', rough: 0.86 }),            // posts, piles, beams
   timber: () => tm('wood', { color: '#bc946a', rough: 0.8 }),
   // painted boards (on grey boards, so the paint keeps its own hue): faded teal, ochre, brick red
   teal: () => pm('#b4ece0', 0.72, { map: TEX.planks('grey') }),

@@ -471,9 +471,6 @@ export function* buildBallastraSteps(scene, physics) {
     const sh = esmerShuttle({ landed: true, scale: 1.15 }); sh.position.set(PAD.cx, PD + 0.06, PAD.cz); sh.rotation.y = -0.6; sh.updateMatrixWorld(true);
     sh.traverse((m) => { if (m.isMesh) B.addM(m.geometry, m.material, m.matrixWorld.clone()); });
     col({ type: 'cyl', x: PAD.cx, z: PAD.cz, r: 3.6, top: PD + 4.6, noStand: true });
-    // the gangplank down from its hatch
-    const gp = P(PAD.cx + 3.6, PD, PAD.cz - 2.0, -0.6 + Math.PI / 2);
-    gp.add(cached('blgplank', () => bbox(1.0, 0.08, 2.0, 0.02, 2.2)), BM.deck(), 0, 0.3, 0.6, 0.18);
   }
   yield;
 

@@ -101,7 +101,7 @@ export function buildShedRoom(scene, physics) {
   const tiles = MAT.tiles('#9cc8b4', '#86b8a6', '#4a6a60', false, 6);
   B.shell({ W, D, H, t: 0.3, floor: MAT.planks('honey'), slab: MAT.rubble('grey'), body: boards, low: tiles, dado: 0.85, rail: MAT.wood('dark'), cap: MAT.wood('dark'), rimH: 0.45, rimMat: MAT.wood('honey'), beam: MAT.wood('dark'),
     posts: MAT.wood('dark'), postsAt: (L) => [L * 0.33, L * 0.66],
-    back: [{ at: W / 2 + WINX, w: 1.7, h: 1.0, y0: 1.05, kind: 'window', view: MAT.map(viewTex(), 0.9, { emissive: '#ffffff', emissiveMap: viewTex(), emissiveIntensity: 0.75 }), frame: MAT.paint('#e6b866', 0.6) }],
+    back: [{ at: WINX, w: 1.7, h: 1.0, y0: 1.05, kind: 'window', view: MAT.map(viewTex(), 0.9, { emissive: '#ffffff', emissiveMap: viewTex(), emissiveIntensity: 0.75 }), frame: MAT.paint('#e6b866', 0.6) }],
     left: [{ at: DOOR_Z, w: 1.1, h: 2.1, y0: 0, kind: 'door', frame: MAT.paint('#e6b866', 0.6), sill: MAT.wood('dark') }] });
   // --- the door (the left wall, near the front)
   const doorZ = DOOR_Z;
