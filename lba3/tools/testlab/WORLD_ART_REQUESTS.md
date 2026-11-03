@@ -1555,3 +1555,48 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
   wanted on this shape.
 - Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
   user (Zeelich).
+
+### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026
+`requests/ZEELICH-1-SKY.diff` against origin (`zislands.js` only; applies alone): the island's `R` now carries
+`grade` / `gradeTint` from its style (main.js already calls `setGrade(R.grade, R.gradeTint)` on entering), and the cloud
+sea's three layers and its shore puffs take the style's `cloudTint` (white as before where none is set).
+- **Otringal:** overcast, misty and pale grey (LBA2): grey fog and sky light, a softer sun, grade 0.82, a grey cloud sea.
+- **Celebration:** a warm haze, the light lava-tinted (tint 1.04 / 0.98 / 0.93), a warm cloud sea.
+- **The platform (the Wannies' island, under the gas):** dim, warm and hazy, the fog and sky light amber-brown, grade
+  0.9, an amber gas sea under it (a first darker try clashed with the pink sea; the sea is tinted now too).
+- **Mosquibee:** LBA2 puts the Mosquibees under the gas: a mildly warmer, hazier light; the meadow keeps its colour.
+- The others (Knartas, the CX islet, the Lift Dock, Under Celebration's own env) unchanged.
+- Checked: pictures of Otringal, Celebration and the platform from the play camera (on the laptop; none to the user).
+
+### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026
+`requests/ZEELICH-1-WANNIE.diff` (`props-esmer.js`, `zislands.js`). **Apply `ZEELICH-1-SKY.diff` first**: both touch
+the platform's style line (its env and gas colours are item 6's); checked on a fresh worktree of origin 3e5f458: SKY
+alone applies, then WANNIE applies on it (WANNIE alone does not).
+- **The platform re-dressed as LBA2's Wannies' island:** the yard is the Building Company's (its board "BUILDING
+  COMPANY" over the yard, the arrival target), the ore crates by the lift's foot, barrels and warnings ("MINE", "KEEP
+  CLEAR", "NO NAKED FLAMES") round the mine; the ramp down to the village of low houses; the chapel (the village's
+  southernmost house, up on its terrace, its stair from the east) with a bell frame below it; signs VILLAGE, CHAPEL.
+- **New pieces (props-esmer):** `mineMouth` (compact rock over a timbered mouth, the word MINE, rails with an ore cart, a
+  lamp; 5.8 × 3.8 m), `bellFrame`, `boardSign`. The planner places them: the yard itself is all routes and the pad's
+  ways, so the mine stands on the ramp down to the village (local 27.5, −9.5, facing west) and the lift's foot at the
+  ramp's head (26.9, −21.5); both pass the planner's route checks (nothing cut off).
+- **The lift (`liftTower`, also on the Lift Dock):** its cage now drops 18 m through a hatch at the foot. `R.lift` (on
+  `liftdock` and on `platform`): `setLevel(t, instant)` (1 = top, 0 = the bottom; the cage moves 0.1 a second; until
+  first called it idles up and down as before), `level`, `moving`, `setLever(b)` / `pulled`, `top` {x, z, y}, `lever`
+  {x, z} (the lever's post beside the tower: OP-7's plate), `front` {x, z, a}. The ride itself (the hero in the cage, the
+  cut to the platform) is the cloud's: `liftdock.lift.top` is where he boards, `wannie.liftBottom` where he steps off.
+- **Handles `R.wannie` (world coordinates, each with `a`):** `liftBottom`, `mine` (before the mouth, clear of the cart),
+  `chapelDoor` (on the terrace before the door), `crates`, `npcSpots` {miner1, miner2, foreman, villager1, villager2,
+  chaplain}.
+- Checked on the laptop (numbers): every handle stands on ground and is clear of colliders (radius 0.3); the chapel's
+  door is reachable (its stair: no step up over 0.32); `setLevel(0)` then `(1)` reaches 0 and 1, the lever pulls; the
+  Lift Dock's `R.lift` exists. On a copy with every ZEELICH-1 diff and both terminals: `tests/zislands.mjs`
+  passes; `tests/zeelich-life.mjs` fails one check (chapter 9: "the street argues about the council", another speaker
+  answers), and fails the same way on clean origin 3e5f458: not these diffs.
+- Not done: pictures (the headless browser here does not redraw the island; none to the user anyway, Zeelich). The
+  company office front is the target house with its board, not a new facade.
+
+### ZEELICH-1 · where it stands (3.11.2026)
+Items 1 (bar), 2 (temple + its portal), 3 (hotel), 5 (the Wannies' island, the lift) and 6 (skies) are built as request
+diffs. Item 4: see item 2's note (the summit is already the festival plaza; say if a carved crater, a lava glow or the
+trail are still wanted).
