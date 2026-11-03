@@ -81,7 +81,7 @@ export class Epilogue extends ChapterBase {
     g.setState('ending');
     g.hud.show(false);
     document.querySelector('#ending h1').textContent = t('ep_end_title');
-    document.querySelector('#ending p').innerHTML = t('ep_end_text');
+    document.querySelector('#ending p').innerHTML = t('ep_end_text', { vesk: t(this.f.c3_veskHelped ? 'ep_vesk_helped' : 'ep_vesk_left') });   // (VESK-CHOICE)
     g.showScreen('ending');
     g.audio.setMood?.('ending');
   }
@@ -89,6 +89,8 @@ export class Epilogue extends ChapterBase {
 
   talk(npc) {
     if (!this.on()) return false;
+    // (VESK-CHOICE: pulled clear at the core, Vesk sends Baldino corrections from his cell)
+    if (npc.def.id === 'baldino' && this.f.c3_veskHelped) { this.chain([['baldino', 'ep_baldino_vesk']]); return true; }
     const key = LINES[npc.def.id];
     if (!key) return false;
     this.chain([[npc.def.id, key]]);

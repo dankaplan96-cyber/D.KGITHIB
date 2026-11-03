@@ -241,7 +241,9 @@ export class Chapter3 extends ChapterBase {
   overload() {
     const g = this.game, f = this.f;
     f.c3_overload = true; f.c3_coil = 0;
-    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3']], () => {
+    // (FINALE-ALLIES: the overload pulls on every station; Ilka and Dallan bleed it off through the desert vent, Pim and Sefa
+    //  keep the dome's light on the relay: the two stations not wired to a pylon are heard holding the line)
+    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3'], ['ilkaradio', 'c3_ilka_hold'], ['pimradio', 'c3_pim_hold']], () => {
       this.ensureCoil();
       const gd = this.guardian;
       if (gd) { gd.setLevel?.(4); gd.state = 'chase'; gd.stateT = 0; gd.coolT = 1.5; }
@@ -282,13 +284,28 @@ export class Chapter3 extends ChapterBase {
     g.particles.burst(C.console.x, (C.floorY ?? 0) + 1.6, C.console.z, '#ffd080', 40, 6);
     g.audio.play('break'); g.camRig.shake(0.45);
     if (fx) { fx.burst(); fx.throwVesk(vesk); } else vesk?.rig?.play?.('hurt');
-    this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down'], ['hero', 'c3_tw_switch']], () => {
+    this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down']], () => this.veskChoice(() => this.chain([['hero', 'c3_tw_switch']], () => {
       g.hero?.act?.('use', 0.8);
       C.drill?.setMode?.('shield');
       C.field?.setLevel?.(1);
       g.audio.play('horn'); g.camRig.shake(0.3);
       this.chain([['sendell', 'c3_sendell_end'], ['balradio', 'c3_bal_end']], () => this.finish());
-    });
+    })));
+  }
+  // VESK-CHOICE (the campaign): the console sparks over Vesk where he fell. Twinsen pulls him clear, or leaves him for the
+  // council's guards; Vesk answers as himself (the engineer who would have left him), and the ending remembers it (the end
+  // card; Baldino after the ending). E takes the first; the menu can't be closed without a choice. Not saved on its own: a
+  // load before the chapter ends replays the fight's end (applyFlags).
+  veskChoice(done) {
+    const g = this.game, f = this.f;
+    const items = [{ key: 'c3_choice_help', id: 'help' }, { key: 'c3_choice_leave', id: 'leave' }];
+    const pick = (it) => {
+      g.setState('play');
+      f.c3_veskHelped = it.id === 'help';
+      this.chain(f.c3_veskHelped ? [['narrator', 'c3_help_narr'], ['vesk', 'c3_vesk_helped']] : [['vesk', 'c3_vesk_left']], done);
+    };
+    const open = () => { g.setState('shop'); g.hud.openMenu('c3_choice_title', items, pick, open); };
+    open();
   }
   finish() {
     const g = this.game, f = this.f;
