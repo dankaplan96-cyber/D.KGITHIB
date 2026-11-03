@@ -693,7 +693,7 @@ export function playOpening(story) {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
     // (R5: the gesture ends with the voice, a beat after its last syllable, not with the subtitle: the voice of a short
     // line is heard for about a third of the time its text stays up, and the hands went on talking in silence)
-    const end = tt + Math.min(d - 0.15, voiceSeconds(t(key), d) + 0.35);
+    const end = tt + Math.min(d - 0.15, voiceSeconds(t(key), d, 'n_' + id) + 0.35);
     if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(end, () => { if (a.rig.anim === 'talk') { play(a, 'idle'); a.rig.blendT = 0.3; } }); }
   };
   say(14.6, 'resident', 'op_res_1', 2.3, resident, 4);   // (hands together: asking, not waving)
