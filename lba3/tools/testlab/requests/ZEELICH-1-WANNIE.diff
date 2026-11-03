@@ -1,0 +1,199 @@
+diff --git a/lba3/src/game/props-esmer.js b/lba3/src/game/props-esmer.js
+index e500e1ba..0b772097 100644
+--- a/lba3/src/game/props-esmer.js
++++ b/lba3/src/game/props-esmer.js
+@@ -903,13 +903,69 @@ export function liftTower(P, { h = 11, w = 2.8 } = {}) {
+   add(cached('eliftcageroof' + cw, () => bbox(cw + 0.1, 0.1, cw + 0.1, 0.02, 1)), brassM(), 0, 2.05, 0);
+   add(cached('eliftcrates', () => tint(compose([[bbox(0.8, 0.7, 0.8, 0.04), -0.35, 0.5, 0.2], [bbox(0.6, 0.55, 0.6, 0.04), 0.4, 0.42, -0.3, 0, 0.4]]), '#b88850')), VC(), 0, 0, 0);
+   const cable = add(cached('eliftcable', () => cyl(0.02, 0.02, 1, 4)), EM.dark(), 0, 0, 0);
++  // ZEELICH-1 item 5: the story's lift. Until setLevel is called the cage idles up and down its tower as before; then
++  // level 1 holds it at the deck (where one boards) and 0 at the foot of its shaft, DROP m below, under the clouds
++  // (the ride down to the Wannies' island). The lever on its post beside the tower: setLever(b) pulls it.
++  const DROP = 18;
++  P.add(cached('eliftshaft' + cw, () => bbox(cw + 0.1, 0.03, cw + 0.1, 0.01, 1)), EM.dark(), 0, 0.02, 0);
++  P.add(cached('eleverpost', () => compose([[bbox(0.34, 0.1, 0.34, 0.02), 0, 0.05, 0], [bbox(0.14, 1.0, 0.14, 0.02), 0, 0.5, 0]])), EM.rust(), w / 2 + 0.75, 0, w / 2 - 0.2);
++  const arm = new THREE.Group(); arm.position.set(w / 2 + 0.75, 1.0, w / 2 - 0.2);
++  const armM = new THREE.Mesh(cached('eleverarm', () => compose([[cyl(0.03, 0.03, 0.7, 6), 0, 0.35, 0], [new THREE.SphereGeometry(0.07, 8, 6), 0, 0.72, 0]])), EM.brass());
++  arm.add(armM); arm.rotation.x = -0.6;
++  const levG = new THREE.Group(); levG.position.set(P.x, P.y, P.z); levG.rotation.y = P.ry; levG.add(arm);
++  P.cyl(w / 2 + 0.75, w / 2 - 0.2, 0.22, 1.1);
++  const L = { level: null, target: null, pulled: false,
++    setLevel(t, instant) { this.target = Math.max(0, Math.min(1, t)); if (instant || this.level == null) this.level = this.target; },
++    setLever(b) { this.pulled = !!b; },
++    get moving() { return this.target != null && Math.abs(this.target - this.level) > 1e-3; },
++    local: { x: P.x, z: P.z, ry: P.ry, lever: P.pt(w / 2 + 0.75, w / 2 - 0.2), front: P.pt(0, w / 2 + 1.1), y: P.y } };
++  P.lift = L;
++  P.extra.push({ obj: levG, update: (dt) => { arm.rotation.x += ((L.pulled ? 0.6 : -0.6) - arm.rotation.x) * Math.min(1, dt * 6); } });
+   P.extra.push({ obj: cage, update: (dt, t) => {
+-    const u = 0.5 - 0.5 * Math.cos(t * 0.26), y = 0.2 + u * (h - 2.6);
++    let y;
++    if (L.target == null) { const u = 0.5 - 0.5 * Math.cos(t * 0.26); y = 0.2 + u * (h - 2.6); }
++    else { L.level += Math.sign(L.target - L.level) * Math.min(Math.abs(L.target - L.level), dt * 0.1); y = 0.2 - (1 - L.level) * DROP; }
+     cage.position.y = P.y + y; cable.scale.y = Math.max(0.1, h - y - 2.1); cable.position.y = 2.1 + (h - y - 2.1) / 2;
+   } });
+   P.box(0, 0, w / 2 + 0.1, w / 2 + 0.1, h + 3, { seeThrough: false }); P.r = w;
+   return P;
+ }
++// ZEELICH-1 item 5 (the Wannies' island): the gem mine's mouth — a mound of dark rock with a timber-framed tunnel, rails
++// coming out of it with an ore cart, a lamp and the MINE board; faces +z (its front spot: P.pt(0, 3.0))
++export function mineMouth(P) {
++  // (compact: its rock spans 5.8 × 3.8 m round the piece's centre; the mouth faces +z, the rails run out before it)
++  const rock = tm('rock', { color: '#5a4a44', rough: 0.95 }), timber = tm('planks', { color: '#8a6040' }), Z = 1.3;
++  for (const [x, y, z, sx, sy, sz] of [[0, 1.6, -1.4, 2.6, 2.4, 1.8], [-1.9, 1.0, -0.9, 1.2, 1.5, 1.3], [1.9, 1.1, -1.0, 1.2, 1.6, 1.3], [0, 3.3, -1.8, 1.9, 1.1, 1.3]])
++    P.add(cached('emound', () => new THREE.SphereGeometry(1, 12, 9)), rock, x, y, z + Z, 0, 0, 0, sx, sy, sz);
++  P.add(cached('eminehole', () => bbox(2.0, 2.3, 0.1, 0.02, 1)), EM.dark(), 0, 1.15, 0.05 + Z);
++  P.add(cached('eminefr', () => compose([[bbox(0.3, 2.6, 0.3, 0.03), -1.15, 1.3, 0.2], [bbox(0.3, 2.6, 0.3, 0.03), 1.15, 1.3, 0.2], [bbox(2.9, 0.34, 0.36, 0.03), 0, 2.72, 0.2]])), timber, 0, 0, Z);
++  P.add(wordPlane('MINE', 1.4, 0.34), signMat(), 0, 3.22, 0.4 + Z);
++  for (let i = 0; i < 6; i++) P.add(cached('eslpr', () => bbox(1.3, 0.08, 0.18, 0.01)), timber, 0, 0.04, 0.4 + Z + i * 0.5);
++  for (const sx of [-0.45, 0.45]) P.add(cached('erail3', () => bbox(0.06, 0.08, 3.0, 0.01)), EM.rust(), sx, 0.12, 1.6 + Z);
++  P.add(cached('eorecart', () => compose([[bbox(1.0, 0.6, 1.4, 0.05), 0, 0.55, 0], [cyl(0.16, 0.16, 1.2, 10).rotateZ(Math.PI / 2), 0, 0.18, -0.45], [cyl(0.16, 0.16, 1.2, 10).rotateZ(Math.PI / 2), 0, 0.18, 0.45]])), EM.rust(), 0, 0, 2.6 + Z);
++  P.add(cached('eore', () => compose([[new THREE.SphereGeometry(0.22, 7, 5), -0.2, 0.92, -0.2], [new THREE.SphereGeometry(0.2, 7, 5), 0.2, 0.9, 0.1], [new THREE.SphereGeometry(0.18, 7, 5), 0, 0.95, 0.35]])), tm('rock', { color: '#6a8a9a', rough: 0.6 }), 0, 0, 2.6 + Z);
++  P.add(cached('eminelamp', () => compose([[cyl(0.05, 0.06, 2.4, 6), 0, 1.2, 0]])), EM.rust(), 1.9, 0, 1.0 + Z);
++  P.add(cached('eminelampg', () => new THREE.SphereGeometry(0.16, 10, 8)), EM.glow(), 1.9, 2.5, 1.0 + Z);
++  P.box(0, -1.4 + Z, 2.9, 1.9, 4.2); P.box(0, 2.6 + Z, 0.55, 0.75, 1.0); P.r = 3.0;
++  return P;
++}
++// the chapel's bell: a timber frame with a little roof and a bronze bell, set before the chapel's door
++export function bellFrame(P) {
++  const timber = tm('planks', { color: '#8a6040' });
++  P.add(cached('ebellfr', () => compose([[bbox(0.18, 2.8, 0.18, 0.02), -0.7, 1.4, 0], [bbox(0.18, 2.8, 0.18, 0.02), 0.7, 1.4, 0], [bbox(1.7, 0.18, 0.22, 0.02), 0, 2.7, 0]])), timber);
++  P.add(cached('ebellroof', () => compose([[bbox(1.2, 0.08, 0.8, 0.02), -0.42, 3.05, 0, 0, 0, 0.55], [bbox(1.2, 0.08, 0.8, 0.02), 0.42, 3.05, 0, 0, 0, -0.55]])), tm('roof', { color: '#7a4a3a' }));
++  P.add(cached('ebell', () => lathe([[0.001, 0], [0.32, 0], [0.3, 0.06], [0.22, 0.3], [0.16, 0.5], [0.001, 0.54]], 14)), EM.brass(), 0, 2.05, 0);
++  P.cyl(-0.7, 0, 0.14, 2.8); P.cyl(0.7, 0, 0.14, 2.8); P.r = 1.0;
++  return P;
++}
++// a lettered board on two posts (faces +z)
++export function boardSign(P, { text = 'VILLAGE', w = 2.6 } = {}) {
++  P.add(cached('eboardposts' + w, () => compose([[bbox(0.14, 2.5, 0.14, 0.02), -w / 2 + 0.1, 1.25, 0], [bbox(0.14, 2.5, 0.14, 0.02), w / 2 - 0.1, 1.25, 0]])), tm('planks', { color: '#8a6040' }));
++  P.add(cached('eboard' + w, () => bbox(w, 0.6, 0.08, 0.02, 0.9)), tm('planks', { color: '#c8a070' }), 0, 2.15, 0.04);
++  P.add(wordPlane(text, w - 0.3, 0.36), signMat(), 0, 2.15, 0.09);
++  P.box(0, 0, w / 2, 0.14, 2.5); P.r = w / 2 + 0.2;
++  return P;
++}
+ // a deck rail between two island-local points at height y: posts and two brass rails
+ export function railRun(B, ax, az, bx, bz, y, { h = 1.0 } = {}) {
+   const len = Math.hypot(bx - ax, bz - az); if (len < 0.3) return;
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index 7df76106..05715c67 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -332,7 +332,8 @@ function shapeOf(o, S = {}) {
+ const ESMER_WORDS = ['SHUTTLE', 'GRAND HALL', 'MARKET', 'FOUNTAIN', 'HARBOUR', 'VILLAGE', 'LIGHTHOUSE', 'HIVES',
+   'MEADOW', 'HONEY', 'FESTIVAL', 'STAGE', 'GAS WORKS', 'PUMP HOUSE', 'OUTPOST', 'RADIO MAST', 'DEPOT', 'CRANE',
+   'LOADING DECK', 'KEEP CLEAR', 'NO NAKED FLAMES', 'MIND THE EDGE', 'CRANE AREA', 'LOOKOUT', 'BRIDGE', 'HIGH TOWN',
+-  'LIFT', 'CARGO DOCK', 'TRADING POST', 'QUAY', 'WEIGH BEAM', 'ORCHARD', 'PRESS HOUSE', 'CLOUD CATCHER', 'OLD WATCH', 'TELESCOPE', 'THE FIGURE'];
++  'LIFT', 'CARGO DOCK', 'TRADING POST', 'QUAY', 'WEIGH BEAM', 'ORCHARD', 'PRESS HOUSE', 'CLOUD CATCHER', 'OLD WATCH', 'TELESCOPE', 'THE FIGURE',
++  'MINE', 'BUILDING COMPANY', 'CHAPEL', 'ORE'];   // (ZEELICH-1 item 5: the Wannies' island)
+ const STYLE = {
+   otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
+     // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
+@@ -611,26 +612,37 @@ const STYLE = {
+       api.signs([]);
+     },
+   },
+-  platform: {   // the High Platform: an industrial deck — cranes, cargo crates, barriers and warning signs
++  platform: {   // ZEELICH-1 item 5: the Wannies' island under the gas (LBA2's PLATFORM: the Building Company's yard by the
++    // gem mine, the Wannie village of low houses, its chapel; it was "the High Platform", an industrial deck). The lift
++    // from the Lift Dock (ASCENCE) comes down here: its foot by the company's yard. Handles: R.wannie (below)
+     // (ZEELICH-1 item 6: under the gas — LBA2's Wannies' island: dim, warm and hazy, the light from below the gas)
+     env: { fog: '#a08a74', sun: '#ffc080', hemiSky: '#ac927a', hemiGround: '#4a3628', sunI: 1.9, hemiI: 1.05, fogRange: [55, 220] }, grade: 0.9, gradeTint: [1.02, 0.97, 0.91], cloudTint: ['#b08e6e', '#c09c7a', '#d0ae8c'],
+-    trees: '#e0e8e4', ground: ['#d8dcc0', '#ccd0b4', '#d8ccb8'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
+-    walls: ['#d8dce0', '#e0e4e8', '#e8e0d8'], domes: [['#4a6a8a', '#b8d0e8'], ['#2f8a9a', '#a8e8ee']],
+-    target: { x: 36.4, z: -29, word: 'LOADING DECK' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
+-    crates: 'cargo', lines: ['#f0c040', '#2a2a2a'],
++    trees: '#d8d0b8', ground: ['#b8a888', '#a89878', '#c0ac90'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
++    walls: ['#d8ccc0', '#cfc4b4', '#e0d4c4'], domes: [['#6a5a4a', '#c8b098'], ['#4a6a6a', '#a8c8c0']],
++    target: { x: 27, z: -26, word: 'BUILDING COMPANY' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
++    crates: 'wood', lines: ['#c8a050', '#5a4a3a'],
+     landmark(api) {
+       const pois = [{ ...api.S.target }];
+-      const c = api.near('crane', 36.5, -23, 0, { h: 9, jib: 7 }, 2.5);
+-      if (c) pois.push({ x: c.x - 3, z: c.z, word: 'CRANE', at: c });
++      // the company's board over its yard, before the long building facing the pad
++      api.near('boardSign', 27, -27.2, 0, { text: 'BUILDING COMPANY', w: 3.6 }, 1.5);
++      // the gem mine's mouth on the ramp down to the village, facing west; the lift's foot at the ramp's head
++      // (the yard itself is all routes: these are the planner's nearest free spots)
++      const m = api.near('mineMouth', 27.5, -9.5, -Math.PI / 2, {}, 3);
++      if (m) pois.push({ x: m.x - 3.5, z: m.z, word: 'MINE', at: m });
++      const lf = api.near('liftTower', 27, -21.5, Math.PI / 2, { h: 7, w: 3.0 }, 3);
++      if (lf) pois.push({ x: lf.x + 2.6, z: lf.z, word: 'LIFT', at: lf });
++      // the chapel: the village's southernmost house, up on its terrace (its door faces east); its bell below
++      api.near('bellFrame', 38.3, 29.8, 0, {}, 2);
+       return pois;
+     },
+     dress(api) {
+-      api.open('crates', 14, { lo: 1.0, space: 2.6, around: { x: 28, z: -30, r: 18 }, opts: (i) => ({ kind: i % 3 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 4 }) });
+-      api.open('barrier', 4, { lo: 1.0, space: 6, around: { x: 28, z: -32, r: 16 }, opts: () => ({ len: 2.4 }) });
+-      api.open('warn', 4, { lo: 1.0, space: 7, around: { x: 28, z: -32, r: 16 }, face: api.spawn, opts: (i) => ({ text: ['CRANE AREA', 'KEEP CLEAR', 'MIND THE EDGE', 'LOADING DECK'][i % 4] }) });
+-      api.open('barrels', 4, { lo: 1.2, space: 5, around: { x: 28, z: -32, r: 16 } });
+-      api.street({ benches: 2, clutter: 8, kinds: ['crates', 'barrels', 'bottles', 'bin'], lamps: 10, doors: 0.8, banners: 0, lines: false, cage: 4, fillSpacing: 6 });
+-      api.signs([{ word: 'BRIDGE', x: 42, z: 0 }]);
++      // the ore by the lift's foot and the mine, barrels, caged lamps, the miners' warnings; the village's benches and lines
++      api.open('crates', 8, { lo: 1.0, space: 2.6, around: { x: 24, z: -22, r: 8 }, opts: (i) => ({ kind: 'wood', n: 2 + (i % 2), seed: i + 40 }) });
++      api.open('barrels', 3, { lo: 1.2, space: 4, around: { x: 30, z: -11, r: 7 } });
++      api.open('warn', 3, { lo: 1.0, space: 7, around: { x: 29, z: -13, r: 9 }, face: api.spawn, opts: (i) => ({ text: ['MINE', 'KEEP CLEAR', 'NO NAKED FLAMES'][i % 3] }) });
++      api.open('cageLamp', 6, { lo: 1.0, space: 6, around: { x: 30, z: 0, r: 26 } });
++      api.street({ benches: 3, clutter: 6, kinds: ['crates', 'barrels', 'jars', 'bin'], lamps: 8, doors: 1, banners: 0, lines: true, fillSpacing: 6 });
++      api.signs([{ word: 'VILLAGE', x: 30, z: 18 }, { word: 'CHAPEL', x: 33.5, z: 25 }]);
+     },
+   },
+ };
+@@ -649,13 +661,16 @@ const FOOT = {
+   // ZL-ALL / CONNECT
+   shuttleBoard: () => ({ hw: 1.0, hd: 0.3 }), weighBeam: () => ({ r: 1.6 }), cloudCatcher: () => ({ r: 4.7 }), nectarPress: () => ({ hw: 1.15, hd: 0.9 }),
+   ruinedTower: () => ({ r: 2.6 }), telescope: () => ({ r: 1.8 }), brokenCol: () => ({ r: 0.5 }), fallenDome: () => ({ r: 2.3 }), liftTower: (o) => ({ r: (o.w ?? 3) * 0.75 }),
++  // ZEELICH-1 item 5
++  mineMouth: () => ({ hw: 3.0, hd: 2.0 }), bellFrame: () => ({ r: 1.0 }), boardSign: (o) => ({ hw: (o.w ?? 2.6) / 2 + 0.1, hd: 0.3 }),
+ };
+ // how tall each piece stands (for the camera's view: the big ones are kept out of a chosen view's foreground)
+ const HGT = { gasHolder: (o) => (o.r ?? 2.6) > 2.2 ? (o.h ?? 5.2) + 1.2 : (o.h ?? 4.2) + 1.2, crane: (o) => o.h ?? 9, mast: (o) => o.h ?? 8, waterTank: () => 3.6, beacon: () => 5.9,
+   greatHive: () => 5.2, stall: () => 2.6, pump: () => 2.8, liftTower: (o) => o.h ?? 11, cloudCatcher: (o) => o.h ?? 6.8, ruinedTower: (o) => o.h ?? 7.5,
+   weighBeam: () => 4.6, telescope: () => 2.4, stage: () => 2.0, nectarPress: () => 2.6, fountain: () => 3.6, plinth: () => 3.2, netRack: () => 2.3, laundry: () => 2.3,
+   colossus: (o) => o.h ?? 28, fallenDome: () => 2.0, hive: () => 1.3, crates: () => 1.3, barrels: () => 0.9, honey: () => 1.0, bench: () => 0.9, planter: () => 1.2,
+-  boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0 };
++  boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0,
++  mineMouth: () => 4.4, bellFrame: () => 3.2, boardSign: () => 2.6 };
+ const pieceH = (kind, o = {}) => HGT[kind]?.(o) ?? 1.0;
+ const THIN_PIECES = new Set(['lamp', 'cageLamp', 'banner', 'pole', 'signpost', 'flagPole', 'bollard', 'post', 'shuttleBoard', 'skiff', 'warn']);
+ const FS = 0.5;   // the plan's grid (m)
+@@ -1507,6 +1522,7 @@ function buildIsland(scene, physics, name, L, at) {
+     shuttleBoard: (P) => EP.shuttleBoard(P, { title: 'ESMER SHUTTLE · DEPARTURES', lines: ['zeelich', ...ISLES].map((n) => BOARD_NAME[n]) }),
+     weighBeam: EP.weighBeam, cloudCatcher: EP.cloudCatcher, nectarPress: EP.nectarPress, ruinedTower: EP.ruinedTower, telescope: EP.telescope,
+     brokenCol: EP.brokenCol, fallenDome: EP.fallenDome, liftTower: EP.liftTower,
++    mineMouth: EP.mineMouth, bellFrame: EP.bellFrame, boardSign: EP.boardSign,   // (ZEELICH-1 item 5)
+   };
+   const groundUnder = (x, z, rr) => { if (A.floorAt) return gy(x, z); let y = gy(x, z); for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2; y = Math.min(y, gy(x + Math.sin(a) * rr, z + Math.cos(a) * rr)); } return y; };
+   let pieces = 0;
+@@ -1531,6 +1547,8 @@ function buildIsland(scene, physics, name, L, at) {
+     f(P, it.o || {});
+     for (const c of P.cols) col(c);
+     for (const e of P.extra) { group.add(e.obj); updaters.push(e.update); }
++    // (ZEELICH-1 item 5: the story's lift, in world coordinates: R.lift.setLevel / setLever, its top, lever and front)
++    if (P.lift && !R.lift) { const Lw = P.lift.local, w2 = ([x, z]) => ({ x: ox + x, z: oz + z }); R.lift = Object.assign(P.lift, { top: { x: ox + Lw.x, z: oz + Lw.z, y: Lw.y }, lever: w2(Lw.lever), front: { ...w2(Lw.front), a: Lw.ry + Math.PI } }); }
+     pieces++;
+   }
+   for (const ln of plan.lines) EP.hangingLine(B, [ln.a.x, gy(ln.a.x, ln.a.z) + ln.a.h, ln.a.z], [ln.b.x, gy(ln.b.x, ln.b.z) + ln.b.h, ln.b.z], { kind: ln.o.kind, sag: ln.o.sag, colors: S.lines || undefined, seed: pieces + 1 });
+@@ -1707,5 +1725,23 @@ function buildIsland(scene, physics, name, L, at) {
+     }
+     shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
+   }
++  // ZEELICH-1 item 5: the Wannies' island's handles (world coordinates): where the lift sets him down, the mine's mouth,
++  // the chapel's door, the ore crates by the lift's foot, and six people's places
++  if (name === 'platform') {
++    const find = (k) => plan.items.find((it) => it.kind === k), W2 = (x, z, a = 0) => ({ x: ox + x, z: oz + z, a });
++    const fr = (it, d, side = 0) => { const fx = Math.sin(it.ry), fz = Math.cos(it.ry); return [it.x + fx * d + fz * side, it.z + fz * d - fx * side]; };
++    const m = find('mineMouth'), lf = find('liftTower');
++    const mf = m && fr(m, 2.6), lb = lf && fr(lf, 2.6);   // (clear of the ore cart on the rails, of the lift's lever)
++    R.wannie = {
++      liftBottom: lb ? W2(lb[0], lb[1], lf.ry) : null,
++      mine: mf ? W2(mf[0], mf[1], m.ry + Math.PI) : null,
++      chapelDoor: W2(32.7, 27.0, -Math.PI / 2),   // (on the terrace before the door; its stair climbs from the east)
++      crates: lf ? W2(...fr(lf, 0.5, 3.2)) : null,
++      npcSpots: {
++        miner1: m ? W2(...fr(m, 4.4, -1.6), m.ry) : null, miner2: m ? W2(...fr(m, 3.8, 2.2), m.ry + 2.6) : null,
++        foreman: W2(27, -25.4, Math.PI), villager1: W2(27.3, 7.6, Math.PI), villager2: W2(40.7, 14.5, Math.PI / 2), chaplain: W2(36.6, 28.0, Math.PI / 2),
++      },
++    };
++  }
+   return R;
+ }
