@@ -7,6 +7,7 @@
 // down are walked to by input (tests/lib/player.js), with Zoé and Arthur standing by (GATE-1 B-1).
 // Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
 // had to be beaten through its own rule (an ISO assist, logged), the run ends CHAPTER 10 ASSISTED with exit code 2.
+// It plays the base campaign (exp_base): the expanded campaign's chapter 14 adds OG-6 at the mill (tests/oren-coils.mjs).
 import { launch, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
@@ -79,7 +80,7 @@ await ev(() => { T.useOn = (x, z) => { const G = game; T.tp(x, z); G.step(0.2); 
   T.ship = (pid) => { const G = game, p = G.travel.points[pid], L = p.landing; T.tp((p.x + L.x) / 2, (p.z + L.z) / 2); G.hero.angle = Math.atan2(p.x - G.hero.pos.x, p.z - G.hero.pos.z); G.step(0.3); const it = G.findInteractable(); T.tap('KeyE'); G.step(0.2); if (G.state !== 'shop') return ['no menu: ' + G.state, it?.kind]; const items = [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent); document.querySelector('#shop .item[data-i="0"]').click(); for (let k = 0; k < 30; k++) { G.step(0.1); T.talkAll(); } return [G.room?.id ?? 'out', items]; }; });
 
 is('chapter 10 (network) starts in Baldino\'s workshop, the relays objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 12, chapterKey: 'balances', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
-    c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true });
+    c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true, exp_base: 1 }); delete G.flags.exp;   // (the base campaign's network: OG-6 changes the expanded campaign's mill station, tests/oren-coils.mjs)
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.flags.c10_started, T.obj()]; }), (v) => v[0] === 'network' && v[2] === true && v[3].length > 0);
 await shot('C10-00-workshop.png');
 is('Oku on Zeelich asks for the mill braked', await ev(() => { T.out(); T.talk('oku'); return [game.room?.id, game.flags.c10_okuAsk]; }), (v) => v[0] === 'zeelich' && v[1] === true);

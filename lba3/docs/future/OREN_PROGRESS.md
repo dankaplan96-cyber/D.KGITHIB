@@ -28,6 +28,8 @@ away from the user, who plays chapters 1–2 only.
 | C | The sleeping brother (WK-1) | to do | | needs W-9…W-12 (or labelled stand-ins) and W-1 |
 | 0b | Base merge for OG-2 | **done** (3.11) | `exp-og2` `544e3a8` (merge of `ccr-adf00ea7-37ebl3` at `32a9a1a`: BIGGER-1, WORLD-AUDIT, VOICE-1, LBA-DESERT-1, ANIM-AGGR-1, SPACEPORT-1/TRAVEL-1-CABIN/ZEELICH-1 requests) | no conflicts. On the merge: chapter1 23/23, chapter2 20/20, oren-first 21/21, save-migration 33/33, interior-life 94/94 |
 | D | Regional consequences (OG-2, OG-5, OG-6) and the Vesk/Oren split | **OG-2 done** (3.11); OG-5, OG-6 to do | `exp-og2` `4037a8e`, `0d2d5a5` | on `0d2d5a5`'s tree: oren-square 29/29, oren-first 21/21, walkers 37/37, chapter10 26/26, save-migration 33/33 (one expectation moved: after chapter 10 comes 11, not the network). Draw cost at the square +23 main / +7 shadow calls (SwiftShader counts, no fps). chapter 11 `survey` = OG-2 "The Fenced Square": `story/survey.js`, `text/oren.js` (og2_), `orenpresence.js` (`buildGateLock`), flags `og2_`; `tests/oren-square.mjs`. Chapter 10 now ends at the shelter's thanks; Baldino's call ends chapter 11. Bot floor 4.7 min game time (card to the network); first-time estimate stays R1's 12 min (not timed) |
+| 0c | Base merge for OG-6 | **done** (3.11) | `exp-og6` `90090b0` (merge of `ccr-adf00ea7-37ebl3` at `16247cb`: SHOPS-1, SPACEPORT-1 walk-in terminals, TRAVEL-1 cabin, ZEELICH-1 sky/Wannie requests, voices) | one conflict, `story/index.js` imports (kept `ChapterBase` and `Shops`). On the merge: chapter1 23/23, oren-first 21/21, oren-square 29/29, save-migration 33/33 |
+| D2 | OG-6 "Coils and Consent" | **done** (3.11) | `exp-og6` (see the OG-6 row's commit below) | VERDICTS_OG6 |
 | E | Underground discovery and preparation (SV-3 beat, UR-1, OG-7) | to do | | needs W-5, W-6 |
 | F | Finale and aftermath (FIN-1, EP-BL) | to do | | the base finale stays until F works end to end |
 
@@ -53,16 +55,34 @@ away from the user, who plays chapters 1–2 only.
 - The lever hold is a short scene (no save while held); letting go before a stroke is the failure, retry at will.
 - The lock, the draw-off, the board and the open gate show only in the expanded campaign from chapter 11 on.
 
+## Standing decisions made in OG-6 (the cloud's; reversible; details in R1.11 OG-6 "As built")
+- **Oren on Zeelich is second-hand.** No part on Zeelich is joined by metal to the bore (planets: spaceship only), so he
+  cannot hear, count or speak there. Zeelich's coils obey Vesk's central command (the project's channel), whose setting
+  comes from the bore's governors Oren holds on the strokes (rules 3-4): every coil grips on the drill's beat. The
+  "LOCAL SHUT-OFF · CENTRAL CONSENT" wheel is Vesk's design; it refuses because the centre is held. OG-6 has no Oren lines.
+- **"The ferry" is the Esmer shuttle pad's mooring clamp** (no sky-ferry runs from Zeelich since PLANET-1).
+- **Dead coupling** (oak and leather) is introduced by use at the mill: it turns a shaft or joins a pipe and carries
+  nothing else, "not a signal, not even warmth" (OG-5 relies on both). **Baldino's brass float** comes off his workshop
+  hoist; it feels only the shaft, can't guess the wind: somebody sets its band. The mill's band (CALM/BREEZE/GALE, Oku
+  reads the sails, one wind change) is NW-1's mill band, played; NW-1 should treat `og6_band >= 2` as done.
+- **The relay waits for the swap** in the expanded campaign (Baldino's relay runs on the mill's wind). The street's vote
+  is optional; only "one station at a time, a person at each lever" is agreed; names: mill Oku, pumps Pelleck, shuttle
+  clamp Tavo (FIN-1's roll call can use them). The pumps and the clamp keep their coils.
+- `story/coils.js` is a helper the network owns (`net.og6`), not a chapter; every hook is inert on `exp_base`.
+- `tests/chapter10.mjs` now plays the base campaign (`exp_base`): its purpose is the base network; the expanded mill
+  station is `tests/oren-coils.mjs`.
+- Known, not fixed here: `tests/zeelich-life.mjs` and playthrough segment 13 still go from the council straight to
+  the network, which the expanded campaign no longer does (since OG-1); they need `exp_base` or the new chapters.
+
 ## Blockers
 - Ballastra's places are the laptop's world orders (W-1 … W-12 in `EXPANSION_WORLD_SPEC.md`); W-1 waits on the user's
   approval of its pictures. C needs W-9…W-12 or labelled stand-ins.
 
 ## Next executable task
-**OG-6 "Coils and Consent"** (chapter 14 `network`, Zeelich: the mill, the depot pumps, the ferry — all existing
-places): Brum's constituents and Tavo object to pulling the coils (shown: heat cells, grain, the timetable); Twinsen
-and Baldino swap the mill's coil for a brass float and a dead coupling with Oku at the band; the street meeting agrees
-"one station at a time, a person at each lever" (rule 4 again, now Baldino's: R1.14). Needs no laptop-built place;
-it does need the network's NW-1 bands read first (`network.js`), and Baldino's dead coupling introduced by use there
-before OG-5 relies on it. Accept: the mill station completes without the street's vote.
-Then OG-5 (needs a W-8 shelter interior, or a labelled stand-in), BR-1…BR-4 once W-8a lands (moves OG-1's entry and
-OG-2's "why he goes"), and C (WK-1) once W-9…W-12 land.
+OG-6 is done. Every remaining OREN-GUARDIAN card now waits on a laptop-built place: OG-5 (a W-8 shelter interior),
+OG-3 / WK-1 / EP-BL (W-1, W-9…W-12), BR-1…BR-4 (W-8a). The next task that needs no new place is **NW-1 "Bands" for the
+other four stations** (`network.js`: Mira the gauge, Arthur the needle, Ilka the steam, Pim the mirror; a wrong band
+lights amber and a neighbour complains by radio; no fail), built the way OG-6 built the mill's band (`coils.js`
+`state()`/`read()`), with the mill taken as done when `og6_band >= 2`; plus `vm_3` and the B-1 lamp-room check per the
+NW-1 card. If the laptop's W-8 shelter interior lands first, OG-5 goes first: Baldino's dead coupling is introduced
+and its limits said in OG-6, as OG-5 needs.

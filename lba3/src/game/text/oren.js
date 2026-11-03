@@ -7,6 +7,12 @@
 //     og2_bram_3 (the draw-off's lever), og2_toast_hold and og2_tw_shut (hold on through a thump), og2_oren_shut (let go
 //     and he shuts it), og2_ume_2 and og2_tw_u1 (cold water from Mira's tap), og2_pico_2 (the ball on the bell latch),
 //     og2_oren_bell (a shock shakes his hold; the lock has no lever, so the bolt stays shut).
+//   OG-6: og6_bal_brief2 (the relay runs on the mill's wind: whatever holds her drive holds the signal), og6_bal_m2 and
+//     og6_tw_m1 (every coil ticks on the bore's beat; Oren holds the bore), og6_tw_m2 (nothing joins Zeelich to Twinsun
+//     but ships: he can't hear them there), og6_tw_m3 and og6_tw_grip (between ticks it lets go), og6_bal_c1 and
+//     og6_bal_c2 (the dead coupling carries nothing but the turn or the water: no signal, no warmth), og6_bal_f3 (the
+//     float can't guess the wind: somebody sets its band), og6_oku_race and og6_oku_crawl (which way to turn the band),
+//     og6_brum_3 (the meeting needs a machine without the tick and the three heard), og6_prop_one (the agreement).
 import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
@@ -212,4 +218,174 @@ Object.assign(STR.en, {
   og2_j_bell: "The ball on the gate's bell shook Oren's hold for a moment. The bolt stayed shut: the lock has no lever.",
   og2_j_open: 'Three people agreed and the gate opened. Nobody asked the rest of the town.',
   og2_j_board: 'Gilbert put a board on the gate, so the town can say no to him and not to a box. Baldino wants me back at his workshop.',
+
+  // ================================================================ OG-6 "Coils and Consent" (chapter 14, Zeelich)
+  p_loosen: 'Loosen', p_fit: 'Fit', p_band: 'Set band',
+  it_coupling: 'Dead coupling', itd_coupling: "Baldino's oak-and-leather coupling. It turns a shaft or joins a pipe, and carries nothing else: no signal, no current, no warmth.",
+
+  // Baldino's briefing, in the workshop
+  og6_tw_brief: "One more thing. The project's Ballastra parts answer to a voice called Oren. He held Citadel's mains, and Gilbert's gate.",
+  og6_bal_brief1: "Ballastra ware? The project's crews put one of their coils on my old mill last month. She's turned like a clock ever since.",
+  og6_bal_brief2: 'My relay runs on her wind. If something else holds her drive, it holds my signal as well.',
+  og6_bal_brief3: "So the coil comes off before the relay goes on. I'll meet you at her foot with something deaf.",
+  og6_tw_brief2: 'Deaf?',
+  og6_bal_brief4: 'Brass, oak and leather. Nothing from Ballastra.',
+
+  // Oku
+  og6_oku_1: "Baldino's gone ahead to my mill with a crate of brass. He wants the project's coil off her drive.",
+  og6_oku_2: "She's never ground so even. Still, I'd sooner it was my hand on her. Brake her first; you know how.",
+  og6_oku_brake: "That's her held. Baldino's waiting at her foot.",
+  og6_oku_wait: 'The brake first. The bullseye, with your ball.',
+  og6_oku_swap: "Baldino's at her foot. Mind his fingers; he won't.",
+  og6_oku_relay: "Coil's off? Then up the stones with his relay. I'll mind her.",
+  og6_oku_relay_race: "She's racing! Twinsen, the band on Baldino's float, down at her foot!",
+  og6_oku_race: "Still racing. The band's set for less wind than this.",
+  og6_oku_crawl: "Now she's crawling. The band's set for more wind than we've got.",
+  og6_oku_right1: "That's her. Listen to those stones.",
+  og6_oku_lull: "Wind's dropping. Now she's dragging her feet.",
+  og6_oku_right2: "There. Huh. So that's my job now: standing here, watching her.",
+  og6_oku_after: "She grinds rough and honest. I'm at her foot when the wind turns.",
+
+  // Baldino at the mill
+  og6_bal_brake: 'Oku wants her braked before anyone touches her. The ball, on the bullseye.',
+  og6_bal_m1: "There she is. Sails on one side, stones on the other, and the project's coil in between.",
+  og6_bal_m2: "Hear it tick? Every coil on the island ticks together. The project's channel keeps them in step with the bore.",
+  og6_tw_m1: "Then they're in step with Oren. He holds the bore's beat, the way he held the mains.",
+  og6_bal_m3: 'Can he hear us?',
+  og6_tw_m2: 'Not here. Nothing joins Zeelich to Twinsun but ships. All he can do from there is hold the beat.',
+  og6_tw_m3: "On the tick it grips. Between ticks it lets go. That's how Bram's lever beat him.",
+  og6_bal_m4: 'Between ticks, then. Three bolts on the clamp, and mind your fingers.',
+  og6_tw_grip: 'It grips on the tick. Between ticks, then.',
+  og6_bal_bolt1: 'One. Mind the tick.',
+  og6_bal_bolt2: "Two. She's sulking.",
+  og6_bal_out1: 'Out she comes. Heavier than she looks.',
+  og6_tw_out: "It's stopped ticking.",
+  og6_bal_out2: 'Nothing to keep in step with. Here, hold this.',
+  og6_bal_c1: 'My dead coupling. Oak and leather: it turns the stones with the sails, and carries nothing else.',
+  og6_bal_c2: 'Put one in a pipe and the water goes through, and nothing else does. Not a signal. Not even warmth.',
+  og6_bal_c3: 'I always say never trust a quiet coupler. This one is quiet on purpose.',
+  og6_fit: 'The coupling slides onto the shaft where the coil was. Leather creaks against oak.',
+  og6_bal_f1: "And my float, off the workshop hoist. Twenty years it's kept that hoist from dropping my work.",
+  og6_bal_f2: 'When she races, the oil climbs, the float lifts and the brake bites. It only feels her shaft.',
+  og6_bal_f3: "It can't guess the wind, mind. Somebody sets its band for the day. Now go and put my relay up.",
+  og6_bal_bolts: 'Between the ticks. Three bolts.',
+  og6_bal_fit: 'The coupling goes where the coil was.',
+  og6_bal_relay: 'Relay next. Up the stones, the way you know.',
+  og6_bal_band: 'Set her for the wind. Oku can read it off the sails.',
+  og6_bal_end: "That's the job. The coil did it without asking anybody.",
+  og6_tw_end: "That's what the street should hear.",
+  og6_tw_relaywait: 'Baldino wants the coil off her drive before his relay goes on.',
+
+  // the coils, looked at
+  og6_coil_look: "A glazed coil on the mill's drive, BALANCE WORKS · BALLASTRA. Its lamp blinks amber, and it ticks every few seconds.",
+  og6_beat: "That tick. It's the drill's beat, the same as the thumps at Gilbert's gate.",
+  og6_dead_look: 'The coil, off the shaft and quiet. Baldino has chalked OFF DUTY on it.',
+  og6_coupling_look: "Oak and leather on the drive. It turns, and that's all it does.",
+  og6_float_look: "Baldino's brass float, linked to the brake. Its band reads {b}.",
+  og6_pump_look: "The depot's feed pumps, on a Balance Works coil. A plate: LOCAL SHUT-OFF · CENTRAL CONSENT REQUIRED.",
+  og6_pump_try: 'The shut-off wheel turns, then turns itself back on the next tick.',
+  og6_tw_pump: 'Local shut-off, if the centre agrees. And the centre keeps saying no.',
+  og6_pad_look: "The shuttle pad's mooring clamp, on a Balance Works coil. Chalked on its slate: ON TIME 40 DAYS.",
+  og6_board_look: 'THE STREET AGREES. One station at a time, a person at each lever. Mill: Oku. Pumps: Pelleck. Shuttle clamp: Tavo.',
+  og6_band_calm: 'CALM', og6_band_breeze: 'BREEZE', og6_band_gale: 'GALE',
+  og6_toast_band: 'Band: {b}',
+  og6_nudge_bolt: 'Loosen a bolt just after the coil ticks, not on the tick.',
+  og6_nudge_band: 'Turn the band toward the wind Oku describes: racing wants a windier band.',
+
+  // the street: Councillor Brum, and the three he sends him to
+  og6_brum_1: "Twinsen. My constituents had their first warm winter on the project's heat, and now Baldino wants the coils off.",
+  og6_brum_2: 'Nobody pulls a coil on this street without the street saying so.',
+  og6_tw_brum: 'Then call the street together.',
+  og6_brum_3: 'Show me one machine that runs without that tick. And ask Snuff, Pelleck and Tavo, not just Baldino.',
+  og6_brum_need: 'Snuff, Pelleck and Tavo. All three, before I call anyone.',
+  og6_brum_mill: "One machine without the tick, Twinsen. Then we'll talk.",
+  og6_brum_ready: "A mill on brass and a miller at her foot. Fine. I'll call the street.",
+  og6_brum_again: "Well? The street's listening.",
+  og6_brum_after: 'One station at a time. The pumps next, with Pelleck on the lever. And a form, I expect.',
+  og6_tw_snuff: 'Brum says you have a view on the coils.',
+  og6_snuff_1: "Since the coil went on Oku's mill, the stones turn like a clock. My flour's never been so fine.",
+  og6_snuff_2: 'Before that, a gust and you got grit in the crust. Folk pay less for gritty bread.',
+  og6_tw_snuff2: 'And if someone watched the stones instead?',
+  og6_snuff_3: "Then someone's watching stones all day. Find me that someone.",
+  og6_tw_pel: 'Brum says you have figures on the coils.',
+  og6_pel_1: "The depot's feed pumps went on a coil last month. Not one heat cut-out on the street since.",
+  og6_pel_2: "Fourteen last winter. Filed. Brum's constituents filed most of them.",
+  og6_tw_pel2: 'And if the pumps came off the coil?',
+  og6_pel_3: "First cold wind up through the clouds, the posts go dark, and I file fifteen. I'd rather not.",
+  og6_tw_tavo: 'Brum says the shuttles care about the coils.',
+  og6_tavo_1: "The pad's clamp has a coil now. Holds a shuttle steady in a crosswind. Forty days on time.",
+  og6_tavo_2: "Snuff's rolls go out hot on the first shuttle. Before the clamp, they went out cold on the third.",
+  og6_tw_tavo2: 'Who held the shuttles before?',
+  og6_tavo_3: 'My cousin and me, on ropes. His arms were glad of the coil.',
+
+  // the street meeting, by the fountain
+  og6_meet_1: 'Everyone who eats bread, heats a house or catches a shuttle: listen.',
+  og6_meet_oku: "My mill's off the coil. She turns rougher, and somebody has to stand at her foot. That's me.",
+  og6_meet_snuff: "Rough flour I can bake with. Grit I can't.",
+  og6_meet_pel: "Pull the pumps' coil today and the posts go dark with the first cold wind. I have the figures.",
+  og6_meet_tavo: "And who holds the shuttles in a crosswind? My cousin's arms have retired.",
+  og6_meet_ask: 'Well, Twinsen? What do you propose?',
+  og6_menu_title: 'Propose',
+  og6_prop_all: 'Pull every coil on the island today.',
+  og6_prop_none: 'Leave the coils. They work.',
+  og6_prop_one: 'One station at a time, with a person at each lever.',
+  og6_re_all1: "Today? With the cold winds due? I'll file against you personally.",
+  og6_re_all2: 'No. Think again.',
+  og6_re_none1: "They work on a beat that isn't ours. If that beat says stop, nobody here can say no.",
+  og6_re_none2: 'No. Think again.',
+  og6_re_one1: 'If Oku can stand at a mill, I can stand at a clamp.',
+  og6_re_one2: "I'll take the depot pumps. I keep their books anyway.",
+  og6_re_one3: "And I'll bake the rough stuff. Somebody tell my customers.",
+  og6_re_one4: 'Agreed, then. One station at a time, a person at each lever. Pelleck, write it down.',
+  og6_re_one5: 'Already did. Two copies.',
+  og6_meet_cancel: "Think it over. The street isn't going anywhere.",
+
+  // the street afterwards (story/zeelife.js: agreed at the fountain, or done without asking)
+  zl_snuff_after_og6v: [
+    "Rough flour, like my mother's bread. The customers grumble and buy it anyway.",
+    'This house was built for watching people. Now it feeds them.',
+  ],
+  zl_snuff_after_og6n: [
+    "Oku's flour comes rough now. Nobody asked the street first. I'd have said yes, probably.",
+    'This house was built for watching people. Now it feeds them.',
+  ],
+  zl_pel_og6v: [
+    "The street's agreement: filed, two copies. Pumps: me. I stand at a lever on Thursdays.",
+    'Half a dome is still a dome.',
+  ],
+  zl_pel_og6n: [
+    "Oku's mill came off its coil and nobody asked the street. I've opened a file.",
+    'Half a dome is still a dome.',
+  ],
+  zl_grumm_og6v: [
+    'One station at a time. Ask the Wannies which one goes first. Nobody will. Ask anyway.',
+    'Up top they wait for heat. Down below we open the vents.',
+  ],
+  zl_grumm_og6n: [
+    "The old mill's off the project's coil. Good. Ask the Wannies next time.",
+    'Up top they wait for heat. Down below we open the vents.',
+  ],
+  zl_tavo_og6v: [
+    "The clamp's still on its coil. When its turn comes, I'm on the lever.",
+    'Nice day for a walk. Nicer with warm bread.',
+  ],
+  zl_tavo_og6n: [
+    "Oku's mill is off the coil, they say. Not my clamp. Not unless somebody asks me.",
+    'Nice day for a walk. Nicer with warm bread.',
+  ],
+
+  // objectives and journal
+  og6_sub_brake: 'Zeelich: brake the old mill with the ball (Oku)',
+  og6_sub_baldino: "Zeelich: Baldino, at the old mill's foot",
+  og6_sub_bolts: "Zeelich: loosen the coil's bolts between ticks ({n}/3)",
+  og6_sub_fit: 'Zeelich: fit the dead coupling where the coil was',
+  og6_sub_relay: "Zeelich: set the relay on the mill's balcony",
+  og6_sub_band: "Zeelich: set the float's band for the wind (Oku reads it)",
+  og6_sub_vote: "Zeelich (optional): Councillor Brum's street meeting",
+  og6_j_brief: "Baldino's old mill has a Balance Works coil on its drive. His relay runs on her wind, so the coil comes off first.",
+  og6_j_beat: "Every coil on Zeelich ticks on the drill's beat: the project's channel keeps them in step with the bore, and Oren holds the bore.",
+  og6_j_swap: "Between ticks we took the coil off the mill. Baldino's dead coupling and his brass float went in its place.",
+  og6_j_band: "The float can't guess the wind. Oku sets its band and watches her.",
+  og6_j_street: "Snuff, Pelleck and Tavo each gain by a coil: flour, heat and the shuttles' timetable.",
+  og6_j_vote: 'The street agreed by the fountain: one station at a time, a person at each lever.',
 });

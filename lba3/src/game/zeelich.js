@@ -1483,14 +1483,15 @@ export function* buildZeelichSteps(scene, physics) {
     MB.build();
     // spinning, with a slow wind-down when the brake is pulled
     const api = {
-      id: m.id, ...W(m.x, m.z), brake: { x: m.x + ox + bx, y: Y0 + by + 0.15, z: m.z + oz + bz }, spinning: true, speed: old ? 0.75 : 1.0,
+      id: m.id, ...W(m.x, m.z), brake: { x: m.x + ox + bx, y: Y0 + by + 0.15, z: m.z + oz + bz }, spinning: true, speed: old ? 0.75 : 1.0, goal: null,
       setSpinning(b) { this.spinning = !!b; },
     };
     const full = api.speed;
     let leverA = 0;
     updaters.push((dt) => {
-      const goal = api.spinning ? full : 0;
-      api.speed = api.spinning ? Math.min(goal, api.speed + dt * 0.4) : Math.max(0, api.speed - dt * 0.28);
+      // (api.goal: a speed the story holds her at instead of her own — OG-6, story/coils.js: a float's band against the wind)
+      const goal = api.spinning ? (api.goal ?? full) : 0;
+      api.speed = api.spinning ? (api.speed <= goal ? Math.min(goal, api.speed + dt * 0.4) : Math.max(goal, api.speed - dt * 0.4)) : Math.max(0, api.speed - dt * 0.28);
       spin.rotation.z -= api.speed * dt;
       leverA += ((api.spinning ? 0 : 0.9) - leverA) * (1 - Math.exp(-dt * 5));
       lever.rotation.x = leverA;

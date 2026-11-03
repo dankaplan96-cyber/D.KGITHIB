@@ -158,12 +158,18 @@ export class ZeelichLife extends ChapterBase {
   // ---------------------------------------------------------------- people (asked before the chapter)
   talkFirst(npc) {
     if (!this.open || !this.here()) return false;
+    // (OREN-GUARDIAN OG-6, story/coils.js: Brum sent him to hear this one out about the coils: the network's chapter first)
+    if (this.story.chapters.find((c) => c.key === 'network')?.og6?.claims(npc)) return false;
     const g = this.game, f = this.f, id = npc.def.id, ph = this.phase();
     const c = (lines, done) => { this.chain(lines.filter(Boolean), done); return true; };
     // one of a list, a different one each time
     const pick = (key) => { const a = t(key); return Array.isArray(a) ? a[(f['zl_n_' + key] = ((f['zl_n_' + key] ?? -1) + 1) % a.length)] : a; };
     const one = (spk, key) => { g.say('n_' + spk, [pick(key)], null, this.speaker(spk)); return true; };
-    const pk = (base) => base + '_' + (ph === 'late' ? 'network' : ph === 'post' ? 'pre' : ph);   // (shared line sets)
+    const pk0 = (base) => base + '_' + (ph === 'late' ? 'network' : ph === 'post' ? 'pre' : ph);   // (shared line sets)
+    // (OG-6, the expanded campaign: once Oku's mill turns on brass, the street talks about it: agreed at the fountain
+    //  (og6_vote) or done without asking the street)
+    const o6 = (f.og6_vote || (f.og6_band | 0) >= 2) && (ph === 'network' || ph === 'late') && this.story.inCampaign('throttle') ? (f.og6_vote ? '_og6v' : '_og6n') : '';
+    const pk = (base) => (o6 && ['zl_snuff_after', 'zl_pel', 'zl_grumm'].includes(base) ? base + o6 : pk0(base));
     switch (id) {
       case 'zmole2':   // Mother Snuff
         if (f.zl_done && !f.zl_paid) {
@@ -187,7 +193,7 @@ export class ZeelichLife extends ChapterBase {
         return c([['zbee1', 'zl_bz_i_' + (ph === 'post' ? 'pre' : ph)], ['zbee1', 'zl_bz_wait']]);
       case 'ztri1': return one('ztri1', pk('zl_pel'));     // Mr Pelleck
       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
-      case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
+      case 'ztri2': return f.zl_done ? one('ztri2', o6 ? 'zl_tavo' + o6 : 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
       // Nara and Oku when no chapter needs them (chapters 4–8 and after the network)
       case 'nara': return ph === 'mid' || ph === 'late' ? one('nara', 'zl_nara') : false;
       case 'oku': return ph === 'mid' || ph === 'late' ? one('oku', 'zl_oku') : false;

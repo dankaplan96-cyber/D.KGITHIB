@@ -120,6 +120,11 @@ export function buildGateLock() {
 }
 
 let PLATE = null;
+// the maker's plate, BALANCE WORKS · BALLASTRA (the governor's; OG-6's coils on Zeelich wear the same)
+export const plateMat = () => (PLATE ??= new THREE.MeshStandardMaterial({ map: canvasTex(256, 96, (x, w, h) => {
+  x.fillStyle = '#b8873e'; x.fillRect(0, 0, w, h); x.strokeStyle = '#5a3a14'; x.lineWidth = 6; x.strokeRect(5, 5, w - 10, h - 10);
+  x.fillStyle = '#3a2410'; x.textAlign = 'center'; x.font = 'bold 30px serif'; x.fillText('BALANCE WORKS', w / 2, 44); x.font = 'bold 20px serif'; x.fillText('BALLASTRA', w / 2, 74);
+}), roughness: 0.45, metalness: 0.5 }));
 export function buildGovernor() {
   const m = mats(), g = new THREE.Group();
   const add = (geo, mat, x, y, z, rx = 0) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.rotation.x = rx; o.castShadow = false; g.add(o); return o; };   // (only the body casts: it carries the silhouette)
@@ -127,10 +132,6 @@ export function buildGovernor() {
   add(lathe([[0.12, 0], [0.2, 0.08], [0.27, 0.32], [0.28, 0.55], [0.22, 0.82], [0.13, 0.98], [0.1, 1.1]], 18), m.glaze, 0, 0.12, 0).castShadow = true;   // the glazed body
   add(cyl(0.285, 0.285, 0.06, 18), m.bronze, 0, 0.66, 0);                                  // the bronze band
   add(cyl(0.16, 0.11, 0.08, 14), m.bronze, 0, 1.2, 0);                                     // the cap
-  PLATE ??= new THREE.MeshStandardMaterial({ map: canvasTex(256, 96, (x, w, h) => {
-    x.fillStyle = '#b8873e'; x.fillRect(0, 0, w, h); x.strokeStyle = '#5a3a14'; x.lineWidth = 6; x.strokeRect(5, 5, w - 10, h - 10);
-    x.fillStyle = '#3a2410'; x.textAlign = 'center'; x.font = 'bold 30px serif'; x.fillText('BALANCE WORKS', w / 2, 44); x.font = 'bold 20px serif'; x.fillText('BALLASTRA', w / 2, 74);
-  }), roughness: 0.45, metalness: 0.5 });
-  add(plane(0.3, 0.11), PLATE, 0, 0.46, 0.283);                                             // the maker's plate, on the front
+  add(plane(0.3, 0.11), plateMat(), 0, 0.46, 0.283);                                             // the maker's plate, on the front
   return g;
 }

@@ -967,7 +967,8 @@ Labels as in the header: **[canon]** LBA1/LBA2, **[approved]** this sequel's app
 | Ch. 10 `throttle` "Borrowed Time" | **OG-1 playable** (increment B, below); BR-1…BR-4 documents only | `tests/oren-first.mjs` |
 | Ch. 11 `survey` "Under the Well" | **OG-2 playable** (increment D, below); SV-1…SV-3 documents only | `tests/oren-square.mjs` |
 | Ch. 12–13 `ballastra`, `balances` | empty shells: the story passes straight through (batch 1) | save-migration |
-| Ch. 14 `network`, 15 `shell`, 16 `core`, epilogue `home` | playable, base game (no bands, no Wound, base core) | chapter10, chapter3 |
+| Ch. 14 `network` | playable; **OG-6 at the mill station** in the expanded campaign (the mill's band only; the other NW-1 bands are documents) | `tests/oren-coils.mjs`; chapter10 (base campaign) |
+| Ch. 15 `shell`, 16 `core`, epilogue `home` | playable, base game (no Wound, base core) | chapter3 |
 | Every card in §4 except OG-1 (BR, SV, N1–N6, NW, UR, CORE-1, EP-1, OP-1…7, DP-*) | **documents only** | — |
 | W-1 … W-8 | orders; nothing built (W-1 waits on the user's approval of its pictures) | `EXPANSION_WORLD_SPEC.md` |
 
@@ -1284,6 +1285,54 @@ rig behaves honestly, slower, needing a person at each band. That is the network
   turning, a little rougher. The street meeting agrees: one station at a time, a person at each lever.
 - Saves: `og6_*`. Accept: the mill station is completable without the street's vote (the vote changes lines and the
   Zeelich aftermath, not access).
+- **As built (OREN-GUARDIAN OG-6, `story/coils.js` owned by `story/network.js` as `net.og6`, `tests/oren-coils.mjs`).**
+  Decisions where the card left a choice or the world disagreed:
+  - *How Oren reaches Zeelich (an R1.4 refinement, not a new rule).* Nothing on Zeelich is joined by metal to the bore
+    (the planets are joined only by spaceship), so no part there carries him: he neither hears, counts nor speaks on
+    Zeelich (rules 2-3). Zeelich's coils obey Vesk's central command, the project's channel, whose setting comes from
+    the bore's governors at Citadel, which Oren holds on the drill's strokes (rule 3: a governor's setting; rule 4:
+    only on the strokes). So every coil on the island grips on the drill's beat and slackens between (the beat is
+    OG-2's 3.6 s stroke), and the depot pumps' wheel, "LOCAL SHUT-OFF · CENTRAL CONSENT REQUIRED", turns itself back on
+    the next tick. Central command is Vesk's design and his wrong (R1.6 C); "Zeelich's coils refuse shutdown" (R1.9)
+    is that wheel. Oren says nothing in OG-6; Twinsen names him to Baldino.
+  - *"The ferry" is the Esmer shuttle pad's mooring clamp.* No sky-ferry runs from Zeelich any more (PLANET-1;
+    `chapter2.js` hides the dock's ferry). Tavo's timetable is the island shuttles' (slate: ON TIME 40 DAYS).
+  - *The swap, made concrete.* The mill's coil is her drive coupling between the sail shaft and the stones (even
+    flour: Snuff). Baldino's **dead coupling** (oak and leather) takes its place: it turns a shaft or joins a pipe and
+    carries nothing else, "not a signal, not even warmth" (said here so OG-5's pipe use and its blanket line are
+    introduced by use). His **brass float** comes off the workshop hoist (a machine the player has seen): when she
+    races the oil climbs, the float lifts and the brake bites; it feels only her shaft and "can't guess the wind", so
+    somebody sets its band. Baldino learns rule 4 from Twinsen (R1.14: Baldino OG-6).
+  - *Why the coil comes off before the relay:* Baldino's relays run on the power where they stand (`c10_bal_3`); the
+    mill's relay runs on her wind, and whatever holds her drive holds the signal. In the expanded campaign the
+    balcony's relay is offered only after the fit (`og6relayWait` says why).
+  - *Play, in order (no fail, nothing missable):* Oku's ask (brake her) → the ball on the brake (as before) → Baldino
+    at her foot: the tick is the drill's beat → three clamp bolts **between** ticks (on a tick the wrench kicks back:
+    pushed off, no damage; OG-1 was "during the kick", this is the inverse, taught by OG-2's thump) → the coil comes
+    off and lies quiet; the coupling is found (the found box) → fit → climb, the relay (as before) → she races on
+    Baldino's BREEZE in a gale → **the band** (CALM · BREEZE · GALE, one notch a press, like the lighthouse dials): Oku
+    reads the sails ("racing": a windier band; "crawling": a calmer one), the wind drops once 6 s after the first
+    right setting and the band must follow → "So that's my job now" → `stationDone('mill')`. This is NW-1's mill band,
+    played: when NW-1 is built it should take `og6_band >= 2` as the mill's band done.
+  - *The street (optional).* Councillor Brum stands by the fountain from the chapter's start; he sends Twinsen to
+    Snuff (flour), Pelleck (heat: fourteen cut-outs last winter, none since the pumps' coil) and Tavo (the
+    timetable), whose hear-outs take their first talk only after Brum has asked (before that, Zeelich's street life
+    answers as before). With the mill on brass and the three heard, the street meets by the fountain (a scene change
+    gathers them); Twinsen proposes from three: "pull every coil today" and "leave the coils" are refused with
+    reasons and the choice comes back; only "one station at a time, with a person at each lever" is agreed. Pelleck
+    writes the names (mill: Oku, pumps: Pelleck, shuttle clamp: Tavo) and Brum's board goes up by the fountain. The
+    pumps and the clamp keep their coils (their swaps are later, one at a time; FIN-1's roll call can call
+    "Pumps"/"Clamp"). Menu Cancel: Brum lets him think; walked away, the street disperses.
+  - *Aftermath:* the coil lies by the mill with OFF DUTY chalked on it, the coupling and float stay on her drive, the
+    board stays, in every later chapter of the expanded campaign. Snuff, Pelleck, Grumm and Tavo's network/late lines
+    differ with the vote (`_og6v`) or without it (`_og6n`, "nobody asked the street").
+  - Flags: `og6_brief`, `og6_out`, `og6_beat`, `og6_plan`, `og6_bolt` (0-3), `og6_coilOut`, `og6_fitted`, `og6_relay`,
+    `og6_dial` (0-2), `og6_band` (0-2), `og6_lull`, `og6_pump`, `og6_brumAsk`, `og6_snuff`, `og6_pel`, `og6_tavo`,
+    `og6_vote`; item `coupling` while carried. No save inside a timing; a load sets every part from the flags.
+  - Old saves: a network save that set the mill's relay the old way (`c10_mill`, no `og6_relay`) keeps it; the coil
+    stays on and the meeting is never ready. The base campaign (exp_base) shows none of it and plays the old station.
+  - Cost: the three coils, the drive, the coupling, the float and the board in one Zeelich group; static parts merged
+    per material; every coil lamp is one material (they tick together); no lights, no transparency.
 
 **OG-7 · The Paired Stone** (ch. 15 `shell`, after UR-1) — Min 15 — needs a W-6 addition
 - The stone: a crystal column beside the bore's path, ringing on every stroke; Vesk's core coil clamps its base.
@@ -1352,6 +1401,11 @@ Twinsun residents (OG-2): Bram knows rule 4 from OG-2 (he held the draw-off's le
 OG-5); Ume and Pico know the box counts and talks, not the rules; Mira knows the tap's rate and blames the governor;
 Gilbert knows the ration was agreed by three people at the gate and put up his board. Nobody on Twinsun knows of the
 Cradles, the paired stone or the young one before the R1.14 points above.
+
+OG-6 (Zeelich): Baldino hears of Oren from Twinsen in his briefing and learns rule 4 from him at the mill; he knows the
+dead coupling's and the float's limits because he made them. Oku, Snuff, Pelleck, Tavo and Brum know the coils tick on
+"the project's beat" and that a person must stand at each swapped station; they never hear Oren's name (he cannot
+speak on Zeelich). Oku knows the band. Nobody on Zeelich knows of the Cradles or the young one.
 
 Before these points nobody mentions them.
 
