@@ -8,6 +8,8 @@
 export async function render(mod, nameKey, text, { sr = 32000, cps = 50, fps = 60, tail = 0.7, vol = 1, seed = 7, stopAt = null, lines = 1 } = {}) {
   const len = (lines * text.length) / cps + tail;
   let made = 0;
+  // (VOICE-PHRASE: the synthesis is measured here; the pre-rendered phrases have their own checks, tests/voice-phrase.mjs)
+  mod.voiceBanks?.(null);
   const off = new OfflineAudioContext(1, Math.ceil(len * sr), sr);
   let now = 0;
   // the game's Babble reads ctx.state / ctx.currentTime; offline, the clock is the simulated frame time

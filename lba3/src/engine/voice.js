@@ -1,40 +1,29 @@
-// Gibberish voices (in the spirit of LBA2's babble): while a line types out, the speaker "talks" in a voice of
-// their own. No speech synthesis and no recordings: a soft glottal-like tone (a harmonic wave with a steep
-// roll-off, not a buzzing saw or square) and a little breath noise through three vowel formants, shaped into
-// syllables with soft attacks and releases. The vowel comes from the letters being typed (so a line "sounds" like
-// itself), consonants are a short soft hiss or tap, the pitch follows the speaker's own melody over the phrase and
-// rises on a question.
+// Gibberish voices (in the spirit of LBA2's babble): when a character takes a turn they "talk" in a voice of their
+// own. No speech engine and no recordings: original gibberish, synthesised.
+//
+// VOICE-PHRASE (the user, 3.11: "the characters' voices are still not pleasant to the ear"): the phrase is the unit of
+// speech, not the typed letter. Before, every few typed letters started a syllable of its own that rose from and fell
+// back to silence (measured: most joins between syllables dropped 15–22 dB, evenly spaced, the voice exactly as long
+// as the typing): a stream of blips. Now a line is planned whole when it starts (voiceplan.js: clauses, their
+// intentions, connected gestures of syllables in the speaker's own sounds, pace and melody) and is played either
+//   - from the speaker's pre-rendered phrases (assets/voice, made offline by tools/voice-render from the same plans
+//     with a sample-level formant synthesiser): one clip per clause, chosen by intention and length, or
+//   - synthesised live on a pooled chain (below), the whole line scheduled at once: one tone per line, voicing
+//     carried through the voiced consonants, a soft release at the end of each clause.
+// The typing no longer drives the voice; skipping the text or closing the box releases it (a 25 ms fade).
 //
 // A voice = its race's colour (RACES) + the character's own values (VOICES): pitch f0 (Hz) and range (semitones),
 // formant scale k (bigger = smaller head), source tilt (higher = darker, softer), breath, brightness, nasality,
-// syllable rate, legato and swing (rhythm), an intonation contour, vibrato and a fixed seed. The same line always
-// gets the same melody from the same speaker (seeded per line), like a recorded line.
+// syllable rate, legato, an intonation contour, vibrato, a fixed seed, and for the main cast their sounds (cons, vow),
+// their manner (hesitate, momentum, clipped, spacious, sharp) and how they ask (rise, high). The same line from the
+// same speaker always gets the same plan, like a recorded line.
 //
-// Cost: nothing per frame. Work happens only when a character is typed (chars(), as before). The filter chains
-// are built once per audio context and pooled (two channels: one speaking, one releasing); a speaker's tone and
-// noise sources are made once per utterance, kept running across its syllables and stopped after the last one.
+// Cost: nothing per frame (pump only checks a line waiting for its bank). Synthesis: the filter chains are built once
+// per audio context and pooled; a line makes its few sources. Phrases: a bank is fetched and decoded once, off the
+// main thread; a line makes one buffer source per clause.
+import { VOWELS, CONS, MOUTH_OPEN, MOUTH_ROUND, planLine, hashStr } from './voiceplan.js';
 
-// vowel formants F1–F3 (Hz, an adult voice; scaled by k)
-const VOWELS = { a: [730, 1100, 2450], e: [530, 1840, 2480], i: [310, 2200, 2950], o: [540, 880, 2400], u: [340, 870, 2250], y: [330, 1900, 2500] };
-const HISS = new Set('szcxfjšžh'), STOP = new Set('tkpdbgq'), NASAL = new Set('mn');
-const PUNCT = new Set('.,;:!?…'), BREAK = new Set(' \t\n.,;:!?…—-"\'()');
-const PENTA = [0, 2, 4, 7, 9];
-const BW = [90, 120, 170]; // formant bandwidths (Hz)
-// FACES-HANDS: how far each vowel opens a talking mouth (0-1) and how round it holds the lips (+ rounded o/u, - spread i/e)
-const MOUTH_OPEN = { a: 1, e: 0.72, i: 0.46, o: 0.86, u: 0.56, y: 0.46 };
-const MOUTH_ROUND = { a: 0, e: -0.35, i: -0.8, o: 1, u: 0.8, y: -0.5 };
-const LIPS = new Set('mbpw');   // lips together on these: a shallower opening
-const VOWEL_KEYS = Object.keys(VOWELS);
-// the vowel a syllable at text[i] is sung on: the next vowel letter within four, else by the character (scripts without written vowels)
-function vowelKey(text, i) {
-  for (let k = i; k < Math.min(text.length, i + 4); k++) { const l = text[k].normalize('NFD')[0].toLowerCase(); if (VOWELS[l]) return l; }
-  return VOWEL_KEYS[(text.charCodeAt(i) + i) % VOWEL_KEYS.length];
-}
-
-const LEVEL = 0.19;      // a syllable's peak gain into the voice bus (before the voice volume; VOICE-SOFT: 0.21 was too present)
-const LEAD = 0.03;       // schedule this far ahead of the audio clock (never in the past: no clicks)
-const MAXQ = 0.22;       // the text ran ahead of the voice by more than this: drop the syllable, don't queue
-const CHANNELS = 2;      // pooled filter chains
+const BW = [90, 120, 170]; // the synthesis's formant bandwidths (Hz)
 
 // Race colours. Fields: k formant scale, vowel [F1, F2] multipliers (rounded / closed mouths), f3 third-formant
 // weight, tilt (source roll-off exponent), breath, bright (lowpass Hz), nasal (0–1: hum + anti-formant), rate
@@ -76,17 +65,19 @@ export const RACES = {
 // on top of its own values. bw: formant bandwidth scale (wider = rounder, less whistly), cons: consonant noise (0 none),
 // tilt: added source roll-off, bright: a ceiling on the lowpass (Hz), rate: syllable rate scale, legato: a floor,
 // atk / rel: edge scale, vib: vibrato depth scale, range: melody range scale, breath: scale, level: scale, pres: the voice
-// bus's presence lift in dB (audio.js).
+// bus's presence lift in dB (audio.js). Of the three heard side by side the user found `soft` "the closest to the
+// direction": it is the default, and the base the phrases (VOICE-PHRASE) are rendered on. (classic: the voice before.)
 export const STYLES = {
   classic: { bw: 1, cons: 1, tilt: 0, bright: 99999, rate: 1, legato: 0, atk: 1, rel: 1, vib: 1, range: 1, breath: 1, level: 1, pres: 3 },
   soft: { bw: 2.2, cons: 0.35, tilt: 0.4, bright: 2600, brightK: 0.62, rate: 0.9, legato: 0.8, legAdd: 0.08, atk: 1.6, rel: 1.6, vib: 0.7, range: 1, breath: 0.6, level: 0.8, pres: 0 },
   hum: { bw: 3.2, cons: 0, tilt: 1.1, bright: 1500, rate: 0.68, legato: 0.92, atk: 2.2, rel: 2.2, vib: 0.55, range: 0.75, breath: 0.25, level: 0.28, pres: -2, hum: true },
 };
-let STYLE = STYLES.classic;   // (the user, 3.11, of A classic, B soft, C hum: "B is the closest to the direction"; soft becomes the default with VOICES-1, which keeps the voices apart under it)
-export function setVoiceStyle(name) { STYLE = STYLES[name] || STYLES.classic; return STYLE; }
+let STYLE = STYLES.soft;   // (the user, 3.11, of A classic, B soft, C hum: "B is the closest to the direction")
+export function setVoiceStyle(name) { STYLE = STYLES[name] || STYLES.soft; return STYLE; }
 export function voiceStyle() { return STYLE; }
 function styled(v) {
   const S = STYLE;
+  v.consLvl = S.cons; v.bwScale = S.bw / 2.2;   // (the offline phrase synthesiser's consonant noise and formant widths)
   if (S === STYLES.classic) return v;
   // (soft keeps the voices apart: brightness and legato move by the same ratio or step for everyone, not to one ceiling or
   //  floor, so the voices test's distances between speakers survive; the hum flattens them on purpose)
@@ -102,11 +93,16 @@ function styled(v) {
 export const VOICES = {
   // --- the family and the friends who must be unmistakable
   // Twinsen and Zoé keep the original's median pitch (measured from the English voices: about 195 and 254 Hz)
-  hero: { race: 'quetch', seed: 101, f0: 195 },                                  // clear and warm, an easy arc
-  zoe: { race: 'quetch', seed: 102, f0: 252, k: 1.14, contour: 'sing', range: 7, rate: 1.08, legato: 0.86, breath: 0.13, tilt: 1.55, bright: 4800, vib: [5.8, 18], swing: 0.08, level: 0.8 }, // light, sing-song
-  arthur: { race: 'quetch', seed: 103, kid: true, f0: 350, k: 1.35, contour: 'bounce', range: 7, rate: 1.15, legato: 0.62, swing: 0.3, tilt: 1.5, bright: 6000, vib: [6.5, 14], level: 1.2 }, // a bouncy boy
-  baldino: { race: 'grobo', seed: 104, f0: 132, k: 0.9, nasal: 0.95, contour: 'zigzag', range: 8, rate: 1.3, legato: 0.42, swing: 0.08, foot: 2, tilt: 1.6, bright: 3200, vib: [6.8, 32], glide: 0.02, level: 0.85 }, // nasal, fast, wobbly, excitable
-  vesk: { race: 'quetch', seed: 105, f0: 98, k: 0.86, contour: 'flat', range: 2, rate: 0.62, legato: 0.95, swing: 0.02, foot: 4, tilt: 2.25, breath: 0.16, bright: 2100, nasal: 0.1, vib: [3.8, 5], glide: 0.09, jit: 0.2, level: 1.5 }, // low, smooth, level
+  // (VOICE-PHRASE: cons / vow: their own sounds, most used first; manner; ask: how a question goes)
+  hero: { race: 'quetch', seed: 101, f0: 195, cons: 'mnldbvt', vow: 'aeoi', manner: 'hesitate', ask: 'rise' },   // warm, direct, lightly curious; may hesitate before an answer
+  zoe: { race: 'quetch', seed: 102, f0: 252, k: 1.14, contour: 'sing', range: 6, rate: 1.08, legato: 0.86, breath: 0.1, tilt: 1.55, bright: 4800, vib: [5.8, 14], swing: 0.08, level: 0.8,
+    cons: 'lndmvs', vow: 'eaiy', manner: 'sharp', ask: 'mix' },                    // clear and assured, connected; concern sharpens her, never shrill
+  arthur: { race: 'quetch', seed: 103, kid: true, f0: 335, k: 1.32, contour: 'bounce', range: 4, rate: 1.18, legato: 0.62, swing: 0.3, tilt: 1.6, bright: 6000, vib: [6.5, 12], level: 1.2,
+    cons: 'pbtdkn', vow: 'aieo', ask: 'rise' },                                    // lively and quick, a comfortable pitch (no squeaks)
+  baldino: { race: 'grobo', seed: 104, f0: 132, k: 0.9, nasal: 0.6, contour: 'zigzag', range: 6, rate: 1.3, legato: 0.3, swing: 0.08, foot: 2, tilt: 1.7, bright: 3200, vib: [6.2, 18], glide: 0.03, level: 0.85,
+    cons: 'bdgmnrz', vow: 'oaei', manner: 'momentum', ask: 'rise' },               // gathers speed on an idea, stops short before the awkward part
+  vesk: { race: 'quetch', seed: 105, f0: 98, k: 0.86, contour: 'flat', range: 3, rate: 0.7, legato: 0.95, swing: 0.02, foot: 4, tilt: 2.25, breath: 0.12, bright: 2100, nasal: 0.1, vib: [3.8, 5], glide: 0.09, jit: 0.2, level: 1.5,
+    cons: 'vsnmrlt', vow: 'aeo', manner: 'clipped', ask: 'high' },                 // measured, persuasive; clipped and decisive when challenged
   // --- Quetch villagers
   gilbert: { race: 'quetch', seed: 106, f0: 132, k: 0.97, contour: 'fall', rate: 0.95 },
   tim: { race: 'quetch', seed: 107, kid: true, f0: 318, k: 1.27, rate: 1.15, contour: 'zigzag', range: 6, legato: 0.6 },
@@ -116,7 +112,7 @@ export const VOICES = {
   worker: { race: 'quetch', seed: 111, f0: 138, k: 0.98, rate: 1.05, legato: 0.6, contour: 'fall' },
   archivist: { race: 'quetch', seed: 112, f0: 150, rate: 0.82, legato: 0.85, contour: 'flat', range: 3, tilt: 1.9 },
   councilB: { race: 'quetch', seed: 113, f0: 205, k: 1.08, contour: 'arc', rate: 0.9 },                           // Councillor Sela
-  farmer1: { race: 'quetch', seed: 114, f0: 128, k: 0.96, rate: 0.92, contour: 'fall', swing: 0.2 },             // Farmer Joss
+  farmer1: { race: 'quetch', seed: 114, f0: 128, k: 0.96, rate: 1.15, contour: 'fall', swing: 0.2, legato: 0.28},             // Farmer Joss
   lhar1: { race: 'quetch', seed: 115, f0: 152, k: 1.0, rate: 1.0, contour: 'sing', range: 4 },                    // Tashi
   lhar2: { race: 'quetch', seed: 116, f0: 215, k: 1.1, contour: 'sing', range: 5, breath: 0.1 },                  // Dawa
   tarra: { race: 'quetch', seed: 117, f0: 222, k: 1.12, rate: 0.95, contour: 'arc', range: 5 },
@@ -127,7 +123,7 @@ export const VOICES = {
   resident: { race: 'quetch', seed: 122, f0: 172, k: 1.04, rate: 1.1, legato: 0.6, contour: 'bounce', range: 5, swing: 0.2 }, // the opening's harbour-row resident (OPEN-2)
   // --- Grobos
   doran: { race: 'grobo', seed: 201, f0: 92, k: 0.78, rate: 0.75, vib: [4.8, 26], legato: 0.7, range: 6 },                                 // old harbour master
-  guard: { race: 'grobo', seed: 202, f0: 118, k: 0.84, rate: 0.95, legato: 0.55, contour: 'flat', range: 2, swing: 0.05, foot: 2 }, // clipped orders
+  guard: { race: 'grobo', seed: 202, f0: 118, k: 0.78, rate: 0.95, legato: 0.55, contour: 'flat', range: 2, swing: 0.05, foot: 2 }, // clipped orders
   councilC: { race: 'grobo', seed: 203, f0: 122, k: 0.82, rate: 0.82 },                                             // Councillor Brum
   farmer3: { race: 'grobo', seed: 204, f0: 110, k: 0.8, vib: [4.6, 18] },                                            // Grull
   yorna: { race: 'grobo', seed: 205, f0: 190, k: 0.9, rate: 0.9, contour: 'arc', range: 4 },
@@ -219,8 +215,8 @@ export const VOICES = {
   up_esmer: { race: 'esmer', seed: 1131, f0: 112, k: 0.98, rate: 0.74, contour: 'fall', legato: 0.84, vib: [4.8, 22] },
   up_guard: { race: 'esmer', seed: 1132, f0: 130, k: 0.9, rate: 0.88, contour: 'flat', legato: 0.42 },
   // --- Rabbibunnies
-  mira: { race: 'bunny', seed: 301, f0: 214, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
-  pippa: { race: 'bunny', seed: 302, f0: 230, k: 1.22, rate: 1.2, contour: 'zigzag', range: 5, legato: 0.45 },                     // the merchant: quick patter
+  mira: { race: 'bunny', seed: 301, f0: 236, k: 1.25, rate: 1.6, contour: 'bounce', legato: 0.25, bright: 5600, range: 2, vol: 1.12 },
+  pippa: { race: 'bunny', seed: 302, f0: 210, k: 1.22, rate: 1.4, contour: 'zigzag', range: 8, legato: 0.45, vol: 1.1 },                     // the merchant: quick patter
   bersimon: { race: 'bunny', seed: 303, f0: 150, k: 1.1, rate: 0.95, vib: [5.8, 26], contour: 'sing' },
   magus: { race: 'bunny', seed: 304, f0: 125, k: 1.06, rate: 0.85, legato: 0.75, contour: 'fall' },                 // Rector Hougo
   farmer2: { race: 'bunny', seed: 305, f0: 214, k: 1.16, rate: 1.05 },                                               // Mother Bryn
@@ -229,29 +225,29 @@ export const VOICES = {
   weaver: { race: 'bunny', seed: 308, f0: 180, k: 1.14, rate: 0.95, contour: 'sing' },                              // Lumi
   odile: { race: 'bunny', seed: 309, f0: 198, k: 1.16, rate: 1.1, legato: 0.45, contour: 'flat', range: 3 },         // the officer
   // --- Spheros
-  sphero1: { race: 'sphero', seed: 401, f0: 200, rate: 1.15 },                                                       // Pom
+  sphero1: { race: 'sphero', seed: 401, f0: 250, rate: 1.15, range: 14, legato: 0.2},                                                       // Pom
   sphero2: { race: 'sphero', seed: 402, f0: 250, k: 1.18, rate: 1.0, range: 7 },                                     // Madam Rondo
   // --- Esmers
-  nara: { race: 'esmer', seed: 501, f0: 262, k: 1.16 },
+  nara: { race: 'esmer', seed: 501, f0: 330, k: 1.16 },
   oku: { race: 'esmer', seed: 502, f0: 128, k: 0.92, rate: 0.75, vib: [5, 26], level: 1.4 },
   xil: { race: 'esmer', seed: 503, f0: 178, k: 1.04, rate: 1.0 },
   chair: { race: 'esmer', seed: 504, f0: 134, k: 0.98, rate: 0.8 },                                                 // Councillor Amaru
   clerk: { race: 'esmer', seed: 505, f0: 168, k: 1.03, rate: 1.1, legato: 0.75 },                                  // Clerk Ottavo
   keeper: { race: 'esmer', seed: 506, f0: 126, k: 0.96, rate: 0.85, vib: [5, 20] },                               // Sefa
   // --- Mosquibees
-  zbee1: { race: 'bee', seed: 601, f0: 380, rate: 1.45 },                                                            // Bzizz
+  zbee1: { race: 'bee', seed: 601, f0: 470, rate: 1.8, range: 7 },                                                            // Bzizz
   zbee2: { race: 'bee', seed: 602, f0: 280, k: 1.3, rate: 1.25, contour: 'arc' },                                   // Madam Zuzzara
   // --- the moles
   zmole1: { race: 'mole', seed: 701, f0: 128, k: 0.9, rate: 0.8, vib: [4.5, 18] },                                  // Old Grumm
-  zmole2: { race: 'mole', seed: 702, f0: 220, k: 1.05, rate: 0.95, contour: 'arc' },                               // Mother Snuff
+  zmole2: { race: 'mole', seed: 702, f0: 270, k: 1.05, rate: 0.95, contour: 'arc' },                               // Mother Snuff
   // --- elves, gnomes and wizards
-  joe: { race: 'elf', seed: 801, f0: 185, rate: 1.25, vib: [6, 20], legato: 0.4, range: 7, nasal: 0.5 },
+  joe: { race: 'elf', seed: 801, f0: 230, rate: 1.25, vib: [6, 20], legato: 0.7, range: 7, nasal: 0.5 },
   keraooc: { race: 'elf', seed: 802, f0: 175, k: 1.15, rate: 1.05, contour: 'sing', vib: [5.5, 22] },
   // --- Zeelich's triangle-heads
-  ztri1: { race: 'tri', seed: 901, f0: 142, rate: 1.15 },                                                           // Mr Pelleck
+  ztri1: { race: 'tri', seed: 901, f0: 165, rate: 1.45, k: 1.2, legato: 0.35 },                                                           // Mr Pelleck
   ztri2: { race: 'tri', seed: 902, f0: 170, k: 1.06, rate: 1.0, contour: 'arc', quant: null },                      // Tavo
   // --- others
-  sendell: { race: 'spirit', seed: 1001, f0: 410 },
+  sendell: { race: 'spirit', seed: 1001, f0: 410, manner: 'spacious', ask: 'high', vol: 0.72 },   // calm and spacious, clear even when quiet (no echo)
   drones: { race: 'robot', seed: 1002, f0: 300 },
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
 };
@@ -260,13 +256,6 @@ const ALIAS = { bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: 
 // names that are not people (signs, notes, places): no voice
 const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
   'lighthouse', 'cliffs', 'orchard', 'depot', 'station', 'fort', 'pipe', 'camp']);
-
-const hashStr = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
-// a small seeded generator (mulberry32)
-function rng(seed) {
-  let a = seed >>> 0;
-  return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
 
 // the voice for a speaker's name key ('n_zoe', 'n_zoeradio', ''), or null
 // VOICE-SEX (the user 2.11: "tell men and women apart more"): the grown women and men among the named speakers. A woman's
@@ -311,6 +300,10 @@ export function voiceFor(nameKey) {
   if (v.radio) v.level *= 0.9;
   return styled(v);
 }
+// a voice from values of its own (the phrase banks' resident families, the cast sampler): as voiceFor makes one
+export function makeVoice(own, id = 'custom') {
+  return styled(sexed({ ...BASE, ...RACES[own.race || 'quetch'], ...own, id, radio: false }, own.sex || null));
+}
 
 // the glottal-like source: harmonics falling off as 1/n^tilt (a sawtooth is 1/n: buzzy; 2+ is soft and round)
 const WAVES = new WeakMap();
@@ -328,47 +321,168 @@ function waveFor(ctx, tilt) {
   return w;
 }
 
-// a melody value (semitones) snapped to a scale
-function quantize(st, mode) {
-  if (mode === 'whole') return Math.round(st / 2) * 2;
-  if (mode !== 'penta') return st;
-  const o = Math.floor(st / 12), r = st - o * 12;
-  let best = 0, bd = 99;
-  for (const p of [...PENTA, 12]) { const d = Math.abs(p - r); if (d < bd) { bd = d; best = p; } }
-  return o * 12 + best;
+// ---------------------------------------------------------------- the pre-rendered phrases (VOICE-PHRASE)
+// assets/voice/manifest.json lists one bank per voice: the main cast's own, and the residents' families (a resident
+// speaks with the family of their people, sex and age, moved to their own pitch: the same person every visit).
+// A bank is one Ogg Opus file of short phrases (a "sprite"), fetched when its speaker is first heard of (prepare) and
+// decoded off the main thread at the game's own sample rate; at most BANKS_KEPT stay decoded (about 11 MB a bank of the
+// main cast's, 6 MB a family's).
+// A voice without a bank (the rarer peoples, machines), or whose bank isn't ready in time, is synthesised.
+const BANKS_KEPT = 5;
+const BANK_WAIT = 0.3;   // a line whose bank is still decoding waits at most this long, then is synthesised
+let BANK_URL = (typeof window !== 'undefined' && window.LBA_VOICE_URL) || 'assets/voice/';
+let MANIFEST = null, MANIFEST_P = null;
+const BANKS = new Map();  // id -> { state: 'loading' | 'ready' | 'failed', buf, used, p }
+const DECODERS = new Map();   // sample rate -> an OfflineAudioContext that only decodes
+// where the banks are (tests and the render tools; null: none, synthesis only)
+export function voiceBanks(url) { BANK_URL = url; MANIFEST = null; MANIFEST_P = null; BANKS.clear(); }
+function manifest() {
+  if (MANIFEST || MANIFEST_P || !BANK_URL || typeof fetch !== 'function') return MANIFEST_P;
+  MANIFEST_P = fetch(BANK_URL + 'manifest.json').then((r) => (r.ok ? r.json() : null)).catch(() => null).then((m) => (MANIFEST = m));
+  return MANIFEST_P;
 }
+// the bank a voice speaks from: [bank id, playback rate] or null
+const FAMILY_RACES = new Set(['quetch', 'grobo', 'bunny', 'esmer']);
+export function bankOf(v) {
+  if (!v || !MANIFEST) return null;
+  const B = MANIFEST.banks;
+  if (B[v.id] && !B[v.id].family) return [v.id, 1];
+  if (!FAMILY_RACES.has(v.race)) return null;
+  const sex = v.kid ? 'kid' : v.sex === 'f' || WOMEN.has(v.id) ? 'f' : v.sex === 'm' || MEN.has(v.id) ? 'm' : v.f0 >= 190 ? 'f' : 'm';
+  let fam = `${v.race}-${sex}`;
+  if (!B[fam]) fam = sex === 'kid' ? 'quetch-kid' : `quetch-${sex}`;
+  if (!B[fam]) return null;
+  // (moved to the resident's own pitch, within two semitones of the family's)
+  const st = Math.max(-2, Math.min(2, 12 * Math.log2(v.f0 / B[fam].f0)));
+  return [fam, Math.pow(2, st / 12)];
+}
+function loadBank(id, sr = 48000) {
+  let e = BANKS.get(id);
+  if (e) { e.used = Date.now(); return e.p; }
+  const info = MANIFEST?.banks?.[id];
+  if (!info) return Promise.resolve(null);
+  e = { state: 'loading', buf: null, used: Date.now() };
+  e.p = fetch(BANK_URL + info.file).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then((ab) => {
+      // (decoded by a context of its own, off the main thread, at the rate it will play at: played from 16 kHz, the
+      //  browser's linear resampling left images at 12–20 kHz, about 52 dB down)
+      let D = DECODERS.get(sr);
+      if (!D) DECODERS.set(sr, (D = new OfflineAudioContext(1, 1, sr)));
+      return new Promise((res, rej) => D.decodeAudioData(ab, res, rej));
+    })
+    .then((buf) => { e.buf = buf; e.state = 'ready'; evict(); return buf; })
+    .catch((err) => { console.warn('voice bank failed', id, err); e.state = 'failed'; return null; });
+  BANKS.set(id, e);
+  return e.p;
+}
+function evict() {
+  // (the least recently wanted go first, and only those nobody asked for in the last half minute: a scene's whole cast
+  //  stays, however large)
+  const now = Date.now(), ready = [...BANKS.entries()].filter(([, b]) => b.state === 'ready');
+  const old = ready.filter(([, b]) => now - b.used > 30000).sort((x, y) => x[1].used - y[1].used);
+  for (const [k] of old.slice(0, Math.max(0, ready.length - BANKS_KEPT))) BANKS.delete(k);
+}
+// the clip for a clause: its intention, the nearest length, a variant not used lately
+function clipFor(bank, intent, n, recent, seed) {
+  const key = bank.len[intent] ? intent : 'tell', L = bank.len[key];
+  let best = L[0]; for (const l of L) if (Math.abs(l - n) < Math.abs(best - n)) best = l;
+  const nv = bank.var[key] || 1;
+  let vi = seed % nv;
+  for (let k = 0; k < nv; k++) { const id = `${key}.${best}.${(vi + k) % nv}`; if (!recent.includes(id)) { vi = (vi + k) % nv; break; } }
+  const id = `${key}.${best}.${vi}`;
+  recent.push(id); if (recent.length > 6) recent.shift();
+  return bank.clips[id] ? { id, ...bank.clips[id] } : null;
+}
+
+// ---------------------------------------------------------------- the voices
+// VOICE-PHRASE: the synthesis's loudness, syllable by syllable. Through the chain below (a tone whose harmonics fall as
+// 1/n^tilt, three formant band-passes and a nasal hum, a brightness low-pass) a vowel's loudness depends on where its
+// formants sit against the voice's harmonics: measured, an "i" or "u" came out about 12 dB louder than an "a", a high
+// voice louder than a low one, and the line rose and fell in loudness with its melody. Each syllable's gain now divides
+// out the chain's power for its vowel at its pitch and gives the vowel its natural weight instead (an open "a" the
+// fullest); every voice and vowel is brought to the level of Twinsen's "a". (Before, each voice's `level` was set by
+// hand.) A voiced consonant's dip is measured against its own formants the same way.
+const VOWEL_WEIGHT = { a: 1, o: 0.92, e: 0.86, u: 0.72, i: 0.68, y: 0.7, m: 0.5 };
+function chainPower(v, vk, f0, Fc = null) {
+  const bp = (f, fc, Q) => 1 / (1 + Q * Q * (f / fc - fc / f) ** 2);                          // |H|^2, a band-pass of peak 1
+  const lp = (f, fc, Q) => 1 / ((1 - (f / fc) ** 2) ** 2 + (f / (fc * Q)) ** 2);               // |H|^2, a two-pole low-pass
+  const F = Fc || VOWELS[vk] || VOWELS.a, G = [1, 0.36, 0.0484 * v.f3 * v.f3], mur = (0.06 + v.nasal * 0.3) ** 2;
+  const Fz = Fc ? [Fc[0] * Math.sqrt(v.k), Fc[1] * v.k, Fc[2] * v.k] : [0, 1, 2].map((j) => F[j] * v.k * (j < 2 ? v.vowel[j] : 1));
+  const Q = Fz.map((x, j) => x / (BW[j] * STYLE.bw * Math.sqrt(v.k)));
+  let P = 0;
+  for (let n = 1; n < 40; n++) {
+    const f = n * f0; if (f > 12000) break;
+    const h = G[0] * bp(f, Fz[0], Q[0]) + G[1] * bp(f, Fz[1], Q[1]) + G[2] * bp(f, Fz[2], Q[2]) + mur * lp(f, 320, 0.6);
+    P += Math.pow(n, -2 * v.tilt) * h * (v.radio ? bp(f, 1700, 0.9) : lp(f, v.bright, 0.5));
+  }
+  return P;
+}
+let REF = 0;
+function sylGain(v, vk, f0) {
+  REF ||= chainPower(voiceFor('n_hero'), 'a', 195);
+  return Math.max(0.05, Math.min(8, Math.sqrt(REF / chainPower(v, vk, f0)))) * (VOWEL_WEIGHT[vk] ?? 0.8);
+}
+function consGain(v, C, f0) { return C.F ? Math.max(0.05, Math.min(8, Math.sqrt(REF / chainPower(v, null, f0, C.F)))) : 1; }
+const LEVEL = 0.37;       // the synthesis's peak syllable gain (Twinsen's "a": sylGain) into the voice bus (before the voice volume)
+const CLIP_LEVEL = 0.21;  // the pre-rendered phrases' gain into the voice bus (they are normalised alike, tools/voice-render)
+const LEAD = 0.03;        // schedule this far ahead of the audio clock (never in the past: no clicks)
+const CHANNELS = 3;       // pooled synthesis chains: one speaking, the others free or fading
+const FADE = 0.025;       // a line cut short (skipped, closed) fades with this time constant, its sources end 0.15 s later
+let LAST_HEARD = { key: null, intent: null };   // (Twinsen hesitates before answering a question or a worry)
 
 export class Babble {
   constructor(audio) {
     this.audio = audio;
-    this.v = null; this.acc = 0; this.count = 0;
-    this.ctx = null; this.chans = null; this.ci = 0; this.cur = null;
-    this.text = null; this.lineHash = 0; this.syl = 0; this.tNext = 0;
-    this.mev = []; this.clk = null; this.key = null; this.mt = 0;   // (FACES-HANDS: the talking mouth syllables; the clock tNext is on; the speaker name key; the game clock, set each frame by driveMouth)
+    this.v = null; this.count = 0; this.key = null; this.text = null; this.opts = {};
+    this.ctx = null; this.chans = null; this.utt = null; this.waiting = null;
+    this.mev = []; this.mt = 0;   // (FACES-HANDS: the talking mouth's syllables; the game clock, set each frame by driveMouth)
+    this.recent = new Map();      // bank id -> the clips it used last (no immediate repeats)
+    this.clips = new Set();       // clip sources alive
+    this.lines = 0;               // lines spoken (tests)
+    this.played = [];             // the last phrases played (bank.clip ids; tests and the render tools)
   }
 
-  // a new speaker: the previous one (if any) is released softly
-  start(nameKey) {
+  // a new speaker (a dialogue box opens, a subtitle starts): the previous voice is released softly.
+  // opts.maxDur: the line must fit this many seconds (a cinematic's subtitle)
+  start(nameKey, opts = {}) {
     this.hush();
     this.key = nameKey;
     this.v = voiceFor(nameKey);
-    this.cur = null; this.acc = 0; this.text = null; this.tNext = 0;
+    this.text = null; this.opts = opts;
     this.audio.duck?.(!!this.v);
+    if (this.v) this.prepare([nameKey]);
   }
   // the speaker is done (dialogue closed, scene over): silence now, softly
-  stop() { this.hush(); this.v = null; this.cur = null; this.audio.duck?.(false); }
-  // VOICE-LEN (the user: "long lines, short gibberish"): the text types faster than a voice speaks, so the
-  // syllables it gets ahead by wait here and are spoken at the voice's own pace, after the text has finished
-  // typing too, until the line is closed (stop) or skipped (hush). Called every frame while a line is up.
-  pump() {
-    if (!this.v || !this.text || !this.pend?.length) return;
-    const now = this._clock();
-    while (this.pend.length && Math.max(now + LEAD, this.tNext) <= now + MAXQ) this.syllable(this.text, this.pend.shift());
+  stop() { this.hush(); this.v = null; this.audio.duck?.(false); }
+  // load the banks these speakers will need (a scene's people, a cinematic's cast); { wait: true } resolves when ready
+  prepare(keys, o = {}) {
+    const mp = manifest();
+    const sr = this.audio.ctx?.sampleRate;
+    const go = () => Promise.all(keys.map((k) => { const b = bankOf(voiceFor(k)); return b ? loadBank(b[0], sr) : null; }));
+    if (MANIFEST) return o.wait ? go() : (go(), null);
+    return mp ? (o.wait ? mp.then(go) : (mp.then(go), null)) : null;
   }
-  // FACES-HANDS: the clock the syllables are scheduled on: the audio clock while the voice can be heard, the game clock (mt)
+  // FACES-HANDS: the clock the voice is scheduled on: the audio clock while the voice can be heard, the game clock (mt)
   // when it can't (muted, a suspended or missing audio context), so the mouth moves in time with the line either way
   _live() { const A = this.audio, c = A.ctx; return !!(c && c.state === 'running' && A.vol.voice > 0 && A.voiceBus); }
-  _clock() { return this._live() ? this.audio.ctx.currentTime : this.mt; }
+
+  // the line `text` has typed out from `from` to `to` characters. VOICE-PHRASE: the typing no longer drives the voice:
+  // the first characters of a line start its whole utterance, planned at once; later calls change nothing.
+  // Returns true when this speaker has a voice (the plain typing blip is then not needed).
+  chars(text, from, to) {
+    if (!this.v) return false;
+    if (text !== this.text || from === 0) { this.text = text; this._line(text); }
+    return true;
+  }
+  // called every frame while a line is up: a line waiting for its bank starts when the bank is ready, or synthesised
+  // once it has waited BANK_WAIT
+  pump() {
+    const W = this.waiting;
+    if (!W) return;
+    const e = BANKS.get(W.bank[0]);
+    const now = this._live() ? this.audio.ctx.currentTime : this.mt;
+    if (e?.state === 'ready' || e?.state === 'failed' || now - W.t >= BANK_WAIT) { this.waiting = null; this._speak(W.plan, W.text); }
+  }
   // the talking mouth now: {o: how open (0-1), r: how round}; the visible syllables are the audible ones, same timing
   mouth(now = this.mt) {
     const L = this.mev;
@@ -383,43 +497,115 @@ export class Babble {
     }
     return { o, r };
   }
-  // is a line being spoken: syllables due or still waiting
-  get speaking() { return !!this.v && (this.mev.length > 0 || !!this.pend?.length); }
+  // is a line being spoken (or about to be)
+  get speaking() { return !!this.v && (!!this.waiting || this.mev.some((e) => e.a + e.d > this.mt)); }
   // stop the sound but keep the speaker (the text was skipped to its end, the game paused)
   hush() {
-    this.pend = []; this.mev.length = 0;
-    const ctx = this.ctx;
-    if (!ctx || !this.chans) return;
-    const now = ctx.currentTime;
-    for (const ch of this.chans) this._release(ch, now);
-    this.cur = null; this.tNext = 0;
+    this.mev.length = 0; this.waiting = null;
+    const ctx = this.audio.ctx;
+    if (this.utt && ctx) this._release(this.utt, ctx.currentTime);
+    this.utt = null;
   }
-  // number of tone sources alive (for tests: 0 a moment after stop / hush)
-  get live() { return this.chans ? this.chans.filter((c) => c.src).length : 0; }
+  // sources alive (for tests: 0 a moment after stop / hush): the synthesis's tones and the phrases playing
+  get live() { return (this.chans ? this.chans.filter((c) => c.src).length : 0) + this.clips.size; }
+  // utterances that can still be heard, not fading (for tests: never more than one)
+  get active() { const t = this.audio.ctx?.currentTime ?? 0; return (this.utt && !this.utt.released && this.utt.end > t ? 1 : 0); }
 
-  // the line `text` has typed out from `from` to `to` characters: babble the syllables in between.
-  // Returns true when this speaker has a voice (the plain typing blip is then not needed).
-  chars(text, from, to) {
+  // ---------------------------------------------------------------- a line
+  _line(text) {
+    this.hush();   // (a new line of the same speaker: the last one's voice is released)
     const v = this.v;
-    if (!v) return false;
-    if (text !== this.text) { this.text = text; this.lineHash = hashStr(text); this.syl = 0; this.acc = 4 - v.rate; this.pend = []; }
-    for (let i = from; i < to; i++) {
-      const c = text[i] || ' ';
-      if (BREAK.has(c)) { if (PUNCT.has(c)) this.acc = -1.2; continue; } // a pause at punctuation, a breath between words
-      this.acc += v.rate;
-      if (this.acc < 4) continue; // ≈ 9.5 syllables a second at the normal text speed, scaled by the voice's rate (VOICE-SOFT: 10 was a clatter)
-      this.acc = 0;
-      this.syllable(text, i);
+    // Twinsen hesitates, sometimes, before answering a question or a worry
+    const heard = LAST_HEARD;
+    const hes = v.manner === 'hesitate' && heard.key && heard.key !== this.key && (heard.intent === 'ask' || heard.intent === 'worry') && (hashStr(text) % 3) !== 0;
+    const plan = planLine(v, text, { maxDur: this.opts.maxDur, hesitate: hes });
+    LAST_HEARD = { key: this.key, intent: plan.phrases.length ? plan.phrases[plan.phrases.length - 1].intent : null };
+    this.lines++;
+    if (!plan.phrases.length) return;
+    // the pre-rendered phrases when this voice has them (waiting a moment for a bank still decoding)
+    const bank = this._live() && bankOf(v);
+    if (bank) {
+      const e = BANKS.get(bank[0]);
+      if (!e || e.state === 'loading') {
+        if (!e) loadBank(bank[0], this.audio.ctx.sampleRate);
+        this.waiting = { plan, text, bank, t: this.audio.ctx.currentTime };
+        return;
+      }
     }
-    return true;
+    this._speak(plan, text);
+  }
+  _speak(plan, text) {
+    const live = this._live(), A = this.audio, ctx = A.ctx;
+    const now = live ? ctx.currentTime : this.mt;
+    const T0 = now + LEAD;
+    let syl = null;
+    if (live) {
+      const b = bankOf(this.v), e = b && BANKS.get(b[0]);
+      if (e?.state === 'ready') { e.used = Date.now(); syl = this._clips(plan, text, b, e, T0); }
+      if (!syl) syl = this._synth(plan, T0);
+      this.count += syl.filter((s) => !s.hum).length;
+    } else syl = plan.syl;
+    // the talking mouth: one open-and-close per syllable, as far as its vowel opens it, lips shut on m b p v w
+    const wall = this.mt + (T0 - now), v = this.v;
+    for (const s of syl) {
+      const C = s.c && CONS[s.c];
+      this.mev.push({ a: wall + s.t + s.cd * 0.5, d: Math.max(0.07, s.vd + s.cd * 0.5), o: (MOUTH_OPEN[s.vk] ?? 0.6) * (C?.lips ? 0.55 : 1) * (s.stress ? 1 : 0.88) * Math.min(1, 0.7 + 0.3 * s.amp) * v.mouth, r: MOUTH_ROUND[s.vk] ?? 0 });
+    }
   }
 
-  // ---------------------------------------------------------------- the pooled chains
+  // ---------------------------------------------------------------- the pre-rendered phrases
+  // each clause: the bank's phrase of the same intention and about the same length, one after another with the
+  // clause's pause between; returns the syllables (for the mouth), timed from T0
+  _clips(plan, text, [id, rate], bank, T0) {
+    const ctx = this.audio.ctx, info = MANIFEST.banks[id];
+    const recent = this.recent.get(id) || []; this.recent.set(id, recent);
+    const h = hashStr(text);
+    const out = ctx.createGain(); out.gain.value = CLIP_LEVEL * (info.gain ?? 1) * (this.v.radio ? 1.6 : 1) * (plan.phrases[0]?.quiet ? 0.72 : 1);   // (an aside in parentheses, under the breath)
+    let dest = out;
+    if (this.v.radio) { const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9; out.connect(bp); dest = bp; }
+    dest.connect(this.audio.voiceBus);
+    const utt = { gain: out, srcs: [], released: false, end: T0, nodes: dest === out ? [out] : [out, dest] };
+    const syl = [];
+    let t = 0, i = 0, alive = 0;
+    const play = (c, r) => {
+      const s = ctx.createBufferSource(); s.buffer = bank.buf; s.playbackRate.value = r;
+      s.connect(out);
+      s.start(T0 + t, c.o, c.d);
+      this.clips.add(s); alive++;
+      // (the utterance's own nodes go when its last phrase has ended)
+      s.onended = () => { s.disconnect(); this.clips.delete(s); if (--alive === 0) for (const n of utt.nodes) n.disconnect(); };
+      utt.srcs.push(s);
+      this.played.push(`${id}:${c.id}`); if (this.played.length > 128) this.played.shift();
+      for (const [st, cd, vd, vk, c0, amp] of c.s) syl.push({ t: t + st / r, cd: cd / r, vd: vd / r, vk, c: c0, amp, stress: amp > 1, hum: vk === 'm' && !c0 });
+    };
+    // Twinsen's hesitation: his short "hm", then the answer
+    if (plan.phrases[0]?.g.syl[0]?.hum && info.len.hm) {
+      const c = clipFor(info, 'hm', 1, recent, h);
+      if (c) { play(c, rate); t += c.sp + 0.12; }
+    }
+    for (const ph of plan.phrases) {
+      const c = clipFor(info, ph.intent, ph.n, recent, h + i * 31);
+      i++;
+      if (!c) continue;
+      // (a touch of variety each time: within a third of a semitone)
+      const r = rate * Math.pow(2, (((h >>> (i % 16)) % 7) - 3) * 0.1 / 12);
+      play(c, r);
+      // the next clause after this one's speech (its tail of release overlaps the pause) and the pause
+      const next = plan.phrases[i];
+      t += c.sp / r + (next ? Math.max(0.08, next.t0 - (ph.t0 + ph.g.dur)) : 0);
+    }
+    if (!alive) for (const n of utt.nodes) n.disconnect();
+    utt.end = T0 + t + 0.25;
+    this.utt = utt;
+    return syl;
+  }
+
+  // ---------------------------------------------------------------- the synthesis
   _build(ctx) {
     this.ctx = ctx;
     this.chans = [];
     for (let c = 0; c < CHANNELS; c++) {
-      const ch = { src: null, v: null };
+      const ch = { src: null, v: null, free: 0 };
       ch.in = ctx.createGain();                                   // tone + breath
       ch.breath = ctx.createGain(); ch.breath.gain.value = 0; ch.breath.connect(ch.in);
       ch.env = ctx.createGain(); ch.env.gain.value = 0;           // the syllables
@@ -436,40 +622,60 @@ export class Babble {
       ch.cons = ctx.createBiquadFilter(); ch.cons.type = 'bandpass'; ch.cons.Q.value = 1.2;   // consonant noise
       ch.consG = ctx.createGain(); ch.consG.gain.value = 0; ch.cons.connect(ch.consG); ch.consG.connect(ch.tone);
       ch.out = ctx.createGain(); ch.tone.connect(ch.out);
-      ch.out.connect(this.audio.voiceBus);
+      ch.gate = ctx.createGain(); ch.gate.gain.value = 0; ch.out.connect(ch.gate);   // (a line cut short fades here)
+      ch.gate.connect(this.audio.voiceBus);
       this.chans.push(ch);
     }
   }
-
-  // set a channel to a voice (the channel is silent: its envelope is at 0)
-  _configure(ch, v, now) {
-    ch.v = v;
-    const s = (p, x) => p.setTargetAtTime(x, now, 0.005);
-    s(ch.F[0].g.gain, 1); s(ch.F[1].g.gain, 0.6); s(ch.F[2].g.gain, 0.22 * v.f3);
-    s(ch.murG.gain, 0.06 + v.nasal * 0.3 + (STYLE.hum ? 0.5 : 0));   // (VOICE-STYLE hum: a warm closed-mouth hum under the vowel)
-    ch.mur.frequency.value = STYLE.hum ? 480 * Math.sqrt(v.k) : 320;
-    s(ch.breath.gain, v.breath * 2.2);
-    ch.anti.frequency.value = 1050 * v.k; s(ch.anti.gain, -v.nasal * 10);
+  // fade an utterance out and let its sources end (never revive an ended one)
+  _release(u, now) {
+    if (u.released) return;
+    u.released = true;
+    // (held where it is now, then faded: reading .value and setting it again jumped when the value read was a render
+    //  quantum stale, e.g. a line released just as it began; a click)
+    const g = u.gain.gain;
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(now); else g.cancelScheduledValues(now);
+    g.setTargetAtTime(0, now, FADE);
+    const until = now + 0.15;
+    for (const s of u.srcs) { if (!s.until || s.until > until) { s.until = until; try { s.stop(until); } catch { /* not started */ } } }
+    if (u.ch) u.ch.free = until + 0.01;
+    if (u.src) u.src.until = Math.min(u.src.until, until);
+  }
+  // the whole planned line on one pooled chain: one tone for the line, its syllables joined (voicing carries through
+  // the voiced consonants inside a word), pitch and formants gliding; scheduled now, nothing per frame
+  _synth(plan, T0) {
+    const ctx = this.audio.ctx, v = this.v;
+    if (ctx !== this.ctx) this._build(ctx);
+    const now = ctx.currentTime;
+    // the chain that is free soonest (a line cut short a moment ago may still be fading on another)
+    const ch = this.chans.reduce((a, b) => (b.free < a.free ? b : a));
+    const t0 = Math.max(T0, ch.free);
+    const S = STYLE, dur = plan.dur;
+    // ---- configure the chain for this voice
+    const P = [ch.env.gain, ch.consG.gain, ch.murG.gain, ch.gate.gain, ...ch.F.flatMap((F) => [F.f.frequency, F.f.Q])];
+    for (const p of P) p.cancelScheduledValues(now);
+    ch.env.gain.setValueAtTime(0, t0); ch.consG.gain.setValueAtTime(0, t0);
+    ch.gate.gain.setValueAtTime(1, t0);   // (t0 is after anything still fading on this chain has ended)
+    ch.F[0].g.gain.value = 1; ch.F[1].g.gain.value = 0.6; ch.F[2].g.gain.value = 0.22 * v.f3;
+    const mur = 0.06 + v.nasal * 0.3 + (S.hum ? 0.5 : 0);
+    ch.murG.gain.setValueAtTime(mur, t0);
+    ch.mur.frequency.value = S.hum ? 480 * Math.sqrt(v.k) : 320;
+    ch.breath.gain.value = v.breath * 2.2;
+    ch.anti.frequency.value = 1050 * v.k; ch.anti.gain.value = -v.nasal * 10;
     if (v.radio) { ch.tone.type = 'bandpass'; ch.tone.frequency.value = 1700; ch.tone.Q.value = 0.9; }
     else { ch.tone.type = 'lowpass'; ch.tone.frequency.value = v.bright; ch.tone.Q.value = 0.5; }
-    s(ch.out.gain, v.level * (v.radio ? 1.6 : 1));
-  }
-
-  // fade a channel out and let its sources end
-  _release(ch, now) {
-    for (const p of [ch.env.gain, ch.consG.gain]) { p.cancelScheduledValues(now); p.setTargetAtTime(0, now, 0.015); }
-    const s = ch.src;
-    if (s && s.until > now + 0.15) { s.until = now + 0.15; for (const n of s.nodes) n.stop(s.until); } // (never revive an ended one)
-  }
-
-  // the tone, vibrato, noise (and flutter) of one utterance, feeding a channel; ended and disconnected by themselves
-  _sources(ch, v, f, t) {
-    const ctx = this.ctx;
-    if (ch.src) { for (const n of ch.src.nodes) n.stop(t); } // (an old one still tailing off: it ends as this begins)
-    const o = ctx.createOscillator(); o.setPeriodicWave(waveFor(ctx, v.tilt)); o.frequency.setValueAtTime(f, t);
+    ch.out.gain.value = v.radio ? 1.6 : 1;   // (each syllable's own gain balances the voices: sylGain)
+    ch.v = v;
+    // ---- the sources: one tone (with its vibrato), the noise, a bee's flutter, for the whole line
+    if (ch.src && ch.src.until > t0) for (const n of ch.src.nodes) { try { n.stop(t0); } catch { /* ended */ } }   // (never later than it was to stop)
+    const end = t0 + dur + 0.45;
+    const o = ctx.createOscillator(); o.setPeriodicWave(waveFor(ctx, v.tilt));
+    const f = (st) => v.f0 * Math.pow(2, st / 12);
+    o.frequency.setValueAtTime(f(plan.syl[0].a), t0);
     o.connect(ch.in);
     const vib = ctx.createOscillator(); vib.frequency.value = v.vib[0] || 5;
     const vg = ctx.createGain(); vg.gain.value = 0; vib.connect(vg); vg.connect(o.detune);
+    vg.gain.setValueAtTime(0, t0); vg.gain.setTargetAtTime(v.vib[1], t0 + 0.08, 0.15);
     const nodes = [o, vib], all = [o, vib, vg];
     let n = null;
     if (this.audio.noiseBuf) {
@@ -479,122 +685,60 @@ export class Babble {
     if (v.trem) {
       const tl = ctx.createOscillator(); tl.frequency.value = v.trem[0];
       const tg = ctx.createGain(); tg.gain.value = v.trem[1] / 2; tl.connect(tg); tg.connect(ch.trem.gain);
-      ch.trem.gain.setValueAtTime(1 - v.trem[1] / 2, t);
+      ch.trem.gain.setValueAtTime(1 - v.trem[1] / 2, t0);
       nodes.push(tl); all.push(tl, tg);
-    } else ch.trem.gain.setValueAtTime(1, t);
-    const s = { o, vg, vib, nodes, until: t + 0.5 };
-    for (const x of nodes) x === n ? x.start(t, (this.lineHash % 997) / 997) : x.start(t);
-    o.onended = () => { for (const x of all) x.disconnect(); if (ch.src === s) ch.src = null; };
-    ch.src = s;
-    return s;
-  }
-
-  syllable(text, i) {
-    const A = this.audio, v = this.v, live = this._live(), ctx = A.ctx;
-    if (live && ctx !== this.ctx) this._build(ctx);
-    // (FACES-HANDS: a voice nobody can hear is still timed, on the game clock, so its speaker's mouth moves)
-    const now = live ? ctx.currentTime : this.mt;
-    if (this.clk !== live) { this.clk = live; this.tNext = 0; }
-    const ts = Math.max(now + LEAD, this.tNext);
-    if (ts > now + MAXQ) { (this.pend ||= []).push(i); return; } // (VOICE-LEN: queued, spoken once the voice catches up)
-    if (live) this.count++;
-    const n = this.syl++;
-    const r = rng(v.seed ^ this.lineHash ^ Math.imul(i + 1, 0x9e3779b1));
-
-    // ---- where in the phrase (between punctuation) this syllable sits, and how the phrase ends
-    let s0 = i, e = i;
-    while (s0 > 0 && !PUNCT.has(text[s0 - 1])) s0--;
-    while (e < text.length && !PUNCT.has(text[e])) e++;
-    const p = (i - s0) / Math.max(1, e - s0), tail = text[e] || '.';
-    const stress = n % v.foot === 0;
-
-    // ---- melody (semitones around f0): the speaker's contour over the phrase, a little seeded freedom
-    let st;
-    switch (v.contour) {
-      case 'sing': st = 0.75 * Math.sin(2 * Math.PI * (p * 1.3 + (v.seed % 7) / 7)); break;
-      case 'bounce': st = (n % 2 ? 0.45 : -0.45) + 0.25 * (0.5 - p); break;
-      case 'zigzag': st = [0.9, -0.55, 0.3, -0.2][n % 4]; break;
-      case 'flat': st = 0.1 - 0.3 * p; break;
-      case 'fall': st = 0.55 - 1.0 * p; break;
-      case 'boing': st = 0.35 * Math.sin(Math.PI * p) + (n % 3 === 0 ? 0.3 : 0); break;
-      case 'step': st = 0.2 - 0.4 * p; break;
-      default: st = 0.9 * Math.sin(Math.PI * Math.min(1, p * 1.15)) - 0.4 * p - 0.35; // 'arc'
+    } else ch.trem.gain.setValueAtTime(1, t0);
+    const src = { nodes, until: end };
+    for (const x of nodes) { x === n ? x.start(t0, (hashStr(this.text || '') % 997) / 997) : x.start(t0); x.stop(end); }
+    o.onended = () => { for (const x of all) x.disconnect(); if (ch.src === src) ch.src = null; };
+    ch.src = src;
+    ch.free = end;
+    // ---- the syllables
+    const env = ch.env.gain, fr = o.frequency, cg = ch.consG.gain, mg = ch.murG.gain;
+    const atk = v.atk / 3, rel = v.rel / 3, dip = Math.min(1.25, 0.35 + 0.8 * Math.min(1.1, v.legato));   // (a legato voice keeps more voicing through a consonant)
+    let first = true;
+    const syl = plan.syl;
+    for (let i = 0; i < syl.length; i++) {
+      const s = syl[i], C = s.c ? CONS[s.c] : null, T = t0 + s.t, Tv = T + s.cd;
+      const peak = LEVEL * (v.vol ?? 1) * s.amp * sylGain(v, s.vk, f((s.a + s.b) / 2)), prev = syl[i - 1];
+      const joined = prev && s.t - (prev.t + prev.cd + prev.vd + (prev.coda ? 0.05 : 0)) < 0.02;   // (no pause before)
+      // the consonant: voicing carries on through a voiced one (lower), stops for a voiceless one
+      if (C) {
+        const lvl = (C.k === 'nasal' ? 0.22 : C.k === 'liquid' ? 0.28 : C.k === 'glide' ? 0.34 : C.k === 'fric' && C.vo ? 0.15 : C.k === 'stop' && C.vo ? 0.06 : 0.02) * dip;
+        const pc = LEVEL * (v.vol ?? 1) * s.amp * consGain(v, C, f(s.a));
+        env.setTargetAtTime(pc * lvl, T, first || !joined ? atk : 0.01);
+        if (C.F) for (let j = 0; j < 3; j++) { const Fz = (j === 0 ? C.F[0] * Math.sqrt(v.k) : C.F[j] * v.k); ch.F[j].f.frequency.setTargetAtTime(Fz, T, 0.015); ch.F[j].f.Q.setTargetAtTime(Fz / (BW[j] * S.bw * Math.sqrt(v.k)), T, 0.015); }
+        if (C.k === 'nasal') { mg.setTargetAtTime(mur + 0.12, T, 0.012); mg.setTargetAtTime(mur, Tv, 0.02); }
+        if (C.nz && S.cons > 0) {
+          const ca = peak * (C.k === 'stop' ? 0.25 : C.vo ? 0.12 : 0.2) * S.cons;
+          const ta = C.k === 'stop' ? Tv - 0.012 : T + 0.005, td = C.k === 'stop' ? 0.008 : s.cd * 0.6;
+          ch.cons.frequency.setValueAtTime(C.nz * Math.sqrt(v.k), ta);
+          cg.setTargetAtTime(ca, ta, 0.004); cg.setTargetAtTime(0, ta + td, 0.012);
+        }
+      } else if (!first && joined) env.setTargetAtTime(peak * 0.3 * dip, T - 0.015, 0.008);  // (a vowel after a vowel: a light break)
+      else if (first || !joined) env.setTargetAtTime(0, T, 0.005);
+      // the vowel: formants (and the pitch) glide to it, the voice opens to its peak, then eases off a little
+      const vow = VOWELS[s.vk] || VOWELS.a;
+      for (let j = 0; j < 3; j++) {
+        const Fz = vow[j] * v.k * (j < 2 ? v.vowel[j] : 1);
+        ch.F[j].f.frequency.setTargetAtTime(Fz, Tv - 0.008, 0.02);
+        ch.F[j].f.Q.setTargetAtTime(Fz / (BW[j] * S.bw * Math.sqrt(v.k)), Tv - 0.008, 0.02);
+      }
+      if (s.hum) { mg.setTargetAtTime(mur + 0.45, Tv, 0.02); mg.setTargetAtTime(mur, Tv + s.vd, 0.03); }
+      fr.setTargetAtTime(f(s.a), Math.max(t0, Tv - 0.025), Math.max(0.008, v.glide / 3));
+      fr.setTargetAtTime(f(s.b), Tv + s.vd * 0.35, s.vd * 0.35);
+      env.setTargetAtTime(peak, Tv, first || !joined ? atk : 0.012);
+      env.setTargetAtTime(peak * 0.84, Tv + Math.max(0.04, s.vd * 0.3), s.vd * 0.6);
+      // the end of a clause (or before a pause): a soft release
+      const next = syl[i + 1];
+      const gapAfter = next ? next.t - (s.t + s.cd + s.vd) : 1;
+      if (s.coda) { const cF = CONS[s.coda].F; ch.F[1].f.frequency.setTargetAtTime(cF[1] * v.k, Tv + s.vd, 0.015); env.setTargetAtTime(peak * 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur + 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur, Tv + s.vd + 0.06, 0.02); }
+      if (gapAfter > 0.07 || s.last) env.setTargetAtTime(0, Tv + s.vd * 0.85 + (s.coda ? 0.05 : 0), rel * (s.last ? 1.4 : 1));
+      first = false;
     }
-    st = st * v.range + (r() - 0.5) * 2 * v.jit * v.range * 0.5;
-    if (tail === '?') st += Math.min(5, v.range * 0.8) * Math.max(0, (p - 0.55) / 0.45); // a question rises at the end
-    else if (tail === '.' || tail === '…') st -= v.range * 0.4 * p * p;              // a statement settles
-    if (tail === '!') st += 1.5;
-    if (stress) st += 0.5;
-    st = quantize(st, v.quant);
-    const f = v.f0 * Math.pow(2, st / 12);
-    const leg = v.race === 'tri' || v.race === 'robot' ? v.legato : Math.max(v.legato, 0.55);   // (VOICE-SOFT: a person's syllables join a little; the triangle-heads and machines stay clipped by design)
-
-    // ---- rhythm: syllable length from the voice's rate, swing (long-short) and stress
-    const swing = 1 + v.swing * (n % 2 ? -1 : 1);
-    const dur = Math.min(0.24, Math.max(0.055, (0.088 / Math.pow(v.rate, 0.7)) * swing * (stress ? 1.15 : 1) * (0.92 + r() * 0.16)));
-    // the next syllable waits for this one's release (a clear dip between syllables), at most for its length
-    this.tNext = ts + Math.min(dur, dur * leg + v.rel * 0.8);
-
-    // ---- the mouth (FACES-HANDS): one open-and-close per syllable, as far as its vowel opens it, shut lips on m/b/p/w
-    {
-      const vk = vowelKey(text, i), cm = (text[i] || '').toLowerCase();
-      const wall = this.mt + (ts - now);
-      this.mev.push({ a: wall + (HISS.has(cm) ? 0.03 : 0.012), d: Math.max(0.07, Math.min(dur, dur * leg + 0.04)),
-        o: MOUTH_OPEN[vk] * (LIPS.has(cm) ? 0.55 : 1) * (stress ? 1 : 0.88) * v.mouth, r: MOUTH_ROUND[vk] });
-      if (this.mev.length > 24) this.mev.shift();
-    }
-    if (!live) return;
-
-    // ---- the channel and its sources for this utterance
-    let ch = this.cur;
-    if (!ch) { this.ci = (this.ci + 1) % CHANNELS; ch = this.cur = this.chans[this.ci]; this._configure(ch, v, now); }
-    let src = ch.src;
-    if (!src || src.until < ts + 0.04) src = this._sources(ch, v, f, ts);
-    src.until = ts + dur + 0.4;
-    for (const x of src.nodes) x.stop(src.until);
-
-    // ---- consonant onset: a short, soft hiss or tap, then the vowel
-    const c0 = (text[i] || '').toLowerCase();
-    const hiss = HISS.has(c0), tap = STOP.has(c0), nas = NASAL.has(c0);
-    const snuff = v.snuffle && (i === s0 || n === 0);
-    const cd = hiss ? 0.045 : tap ? 0.016 : snuff ? 0.07 : 0;
-    const peak = LEVEL * (stress ? 1.18 : 1) * (tail === '!' ? 1.15 : 1) * (0.92 + r() * 0.16);
-    if (cd && v.breath > 0 && STYLE.cons > 0) {
-      const cg = ch.consG.gain, ca = peak * (hiss ? 0.18 : snuff ? 0.3 : 0.3) * STYLE.cons;
-      ch.cons.frequency.setValueAtTime(snuff ? 900 : hiss ? 4600 * Math.sqrt(v.k) : 2300 * v.k, ts);
-      cg.cancelScheduledValues(ts);
-      cg.setTargetAtTime(ca, ts, 0.004);
-      cg.setTargetAtTime(0, ts + cd * 0.6, cd * 0.3);
-    }
-    const tv = ts + cd * 0.55;   // the vowel starts as the consonant ends
-
-    // ---- pitch: glide to the note, then the syllable's own small fall (or a Sphero's bounce up)
-    const fr = src.o.frequency;
-    fr.cancelScheduledValues(tv);
-    if (v.contour === 'boing') { fr.setTargetAtTime(f * 0.88, tv, 0.008); fr.setTargetAtTime(f * 1.06, tv + 0.012, dur * 0.35); }
-    else { fr.setTargetAtTime(f, tv, v.glide / 3); fr.setTargetAtTime(f * (stress ? 0.97 : 0.985), tv + dur * 0.45, dur * 0.4); }
-    // vibrato: little at the onset, blooming on the held part
-    const vg = src.vg.gain;
-    vg.cancelScheduledValues(tv);
-    vg.setTargetAtTime(v.vib[1] * 0.3, tv, 0.01);
-    vg.setTargetAtTime(v.vib[1], tv + Math.min(0.05, dur * 0.4), 0.04);
-
-    // ---- the vowel: formants glide (coarticulation), from the next vowel letter in the text
-    const vow = VOWELS[vowelKey(text, i)];
-    for (let j = 0; j < 3; j++) {
-      const F = vow[j] * v.k * (j < 2 ? v.vowel[j] : 1) * (nas && j === 0 ? 0.85 : 1);
-      const fp = ch.F[j].f.frequency, q = ch.F[j].f.Q;
-      fp.cancelScheduledValues(tv); q.cancelScheduledValues(tv);
-      fp.setTargetAtTime(F, tv, 0.018);
-      q.setTargetAtTime(F / (BW[j] * STYLE.bw * Math.sqrt(v.k)), tv, 0.018); // (bandwidths about constant in Hz)
-    }
-
-    // ---- loudness: soft attack, a gentle droop, a soft release (exponential approaches only: no clicks)
-    const g = ch.env.gain;
-    g.cancelScheduledValues(tv);
-    g.setTargetAtTime(peak, tv, v.atk / 3);
-    g.setTargetAtTime(peak * 0.78, tv + v.atk, dur * 0.5);
-    g.setTargetAtTime(0, tv + Math.max(v.atk, dur * leg), v.rel / 3);
+    const utt = { gain: ch.gate, srcs: nodes, released: false, end: t0 + dur + 0.1, ch, src };
+    this.utt = utt;
+    return syl.map((s) => ({ ...s, t: s.t + (t0 - T0) }));
   }
 }
 
@@ -605,7 +749,14 @@ export class Babble {
 export function driveMouth(game) {
   const B = game.audio?.babble, v = B?.v;
   if (B) B.mt = game.time;
-  if (!v || v.radio || !(B.mev.length || B.pend?.length)) return;
+  // VOICE-PHRASE: once a second, the phrase banks of the family and of the people near Twinsen load ahead of their lines
+  if (B && game.audio.ctx && !(game.time < (B._nearT ?? 0))) {
+    B._nearT = game.time + 1;
+    const h = game.hero?.pos, keys = ['n_hero', 'n_zoe', 'n_arthur'];
+    if (h) for (const n of game.npcs || []) if (n.present && n.def?.id && n.pos && n.pos.distanceToSquared?.(h) < 400) keys.push('n_' + n.def.id);
+    B.prepare(keys);
+  }
+  if (!v || v.radio || !B.mev.length) return;
   const { o, r } = B.mouth();
   let a = game.state === 'dialog' ? game.speaker : null;
   if (!a && B.key?.startsWith('n_')) {
