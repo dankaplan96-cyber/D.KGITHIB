@@ -20,6 +20,8 @@
 # nearest length, never the one just used. The main cast have one bank each; each resident family (people x m/f/kid)
 # has three speakers, and a resident always speaks with the same one (a hash of their id picks it).
 # The mouth: Piper's phoneme timings give each clip's syllables (onset, vowel, how far the vowel opens the mouth).
+# Comfort: the top tamed (a shelf down from 5 kHz, a low-pass at 7.5 kHz), sibilants held down (a de-esser), and of up to
+# four renderings of a clip (Piper's performances vary) the first without a hard attack.
 # Loudness: every clip to the same speech level, then every bank to the same integrated loudness (EBU R128, as the old
 # banks were), soft-limited under -1.5 dBFS. Robots and Mosquibees have no bank and keep the synthesis.
 import argparse, glob, json, os, random, re, subprocess, sys, tempfile, zlib
@@ -163,6 +165,18 @@ def syllables(al, start):
         res.append([round(max(0.0, t), 3), round(cd, 3), round(max(0.04, s['end'] - s['v0']), 3), s['vk'], s['c'], s['amp']])
     return res
 
+# a de-esser: the band above 4 kHz is held under a share of the clip's speech level, 5 ms at a time (an "s" stays an
+# "s", only softer; the vowels keep their brightness). Under the game's voice compressor (4 ms of attack, then a
+# makeup gain) a loud sibilant otherwise came through as a hard, hissing burst.
+def deess(x, share=0.12, fc=4000):
+    n = 101; k = np.arange(n) - n // 2
+    h = np.sinc(2 * fc / SR * k) * (2 * fc / SR) * np.hamming(n); h /= h.sum()       # linear-phase low-pass
+    lo = np.convolve(x, h, 'same'); hi = x - lo
+    w = int(0.005 * SR); env = np.sqrt(np.convolve(hi * hi, np.ones(w) / w, 'same')) + 1e-9
+    g = np.minimum(1.0, share * speech_rms(x) / env)
+    g = np.convolve(g, np.hanning(2 * w) / np.hanning(2 * w).sum(), 'same')            # (smoothed: no zipper)
+    return (lo + hi * g).astype(np.float32)
+
 def sox(x, args, same_length=True):
     if not args: return x
     p = subprocess.run(['sox', '-q', '-t', 'raw', '-r', str(SR), '-e', 'floating-point', '-b', '32', '-c', '1', '-',
@@ -198,6 +212,7 @@ def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None):
     if room is not None:                                              # (the room's own short tail, then silence)
         y = y[:len(x)]
         f = int(0.06 * SR); y[-f:] *= np.linspace(1, 0, f)
+    y = deess(y)
     syl = syllables(al, a0 - pad) if al else []
     syl = [s for s in syl if s[0] < (pad + speech) / SR]
     return y.astype(np.float32), (pad + speech) / SR, syl
