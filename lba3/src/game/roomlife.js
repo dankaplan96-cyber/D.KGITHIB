@@ -68,6 +68,7 @@ import { NELLHOUSE_PLAN } from './nellhouse.js';
 import { BAGGAGE_PLAN } from './baggage.js';
 import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
+import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // the seats a person sits on, as walkers.js BENCH_RED: the seat's top over the floor, its back's front face and its front
@@ -282,6 +283,9 @@ export const ROOMS = {
       ] },
     ],
   },
+  // WC-3 (storylife.js): the School of Magic's classroom (from chapter 4) and the council's antechamber (chapter 9)
+  school: SCHOOL_ROOM,
+  upper: UPPER_ROOM,
 };
 
 // ------------------------------------------------------------------ the spaceports (outdoors)

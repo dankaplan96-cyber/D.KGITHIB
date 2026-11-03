@@ -40,6 +40,7 @@ export class WalkNav {
     this.soft = [];             // [{x, z}] the story's people where they stand now: a route keeps 2 m from them when it can
     this.sig = '';              // what the cast looks like (a route planned for another is not reused)
     this.levels = [];           // [{x0, x1, y}] where the ground is floor bricks over open sea (Zeelich): the level people walk at
+    this.shores = [];           // WC-3: [{x0, x1, z0, z1, min}] boxes of low dry land (paving under MIN_GROUND): the shore's line there is `min`
   }
   addLevel(x0, x1, y) { if (!this.levels.some((l) => l.x0 === x0 && l.x1 === x1)) { this.levels.push({ x0, x1, y }); this.cells.clear(); this.cache.clear(); } }
   levelAt(x, z) {
@@ -53,6 +54,14 @@ export class WalkNav {
     this.floors.push({ x0: F.x0, x1: F.x1, z0: F.z0, z1: F.z1, y: F.y });
     this.cells.clear(); this.cache.clear();
   }
+  // WC-3 (storylife.js): low paving above the sea but under the shore's line (the School's plaza at 0.3 m) is land in this
+  // box; every other open-air rule is unchanged there
+  addShore(B) {
+    if (this.shores.some((b) => b.x0 === B.x0 && b.x1 === B.x1 && b.z0 === B.z0 && b.z1 === B.z1)) return;
+    this.shores.push({ x0: B.x0, x1: B.x1, z0: B.z0, z1: B.z1, min: B.min });
+    this.cells.clear(); this.cache.clear();
+  }
+  minGround(x, z) { for (const b of this.shores) if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1) return b.min; return MIN_GROUND; }
   floorAt(x, z) { for (const f of this.floors) if (x >= f.x0 && x <= f.x1 && z >= f.z0 && z <= f.z1) return f; return null; }
   get P() { return this.game.physics; }
   cellOf(x, z) { return [Math.round(x / this.cell), Math.round(z / this.cell)]; }
@@ -76,7 +85,8 @@ export class WalkNav {
       // (a low brick standing on land — a bench, a step-up crate, a planter's rim — is something to walk round, not over: the
       //  hero may climb it, a resident does not; a pier's planks over water, and a quay's floor, are the way)
       const base = th >= WATER_FLOOR - 1 ? th : yref - 0.3;
-      let ok = g >= MIN_GROUND && !(base >= MIN_GROUND && ((gi.brick && g - base > 0.3) || this.lowBrick(x, z, base))) && !P.blockedAt(x, z, g, this.safeR) && !P.steepAt(x, z, g + 0.05, MAX_SLOPE);
+      const minG = this.shores.length ? this.minGround(x, z) : MIN_GROUND;
+      let ok = g >= minG && !(base >= minG && ((gi.brick && g - base > 0.3) || this.lowBrick(x, z, base))) && !P.blockedAt(x, z, g, this.safeR) && !P.steepAt(x, z, g + 0.05, MAX_SLOPE);
       if (ok) for (const d of this.keepOut) if (Math.hypot(x - d.x, z - d.z) < d.r) { ok = false; break; }
       c.ok = ok;
       if (ok) {
