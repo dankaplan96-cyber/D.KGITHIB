@@ -39,6 +39,7 @@ import { WorkshopLife } from './workshop.js';
 import { KeshLife } from './kesh.js';
 import { ZeelichLife } from './zeelife.js';
 import { Arsenal } from './arsenal.js';
+import { Kit2 } from './kit2.js';
 import { MagicLevels } from './magic.js';
 import { SewerLife } from './sewers.js';
 import { Shops } from './shops.js';
@@ -66,6 +67,7 @@ export class Story {
     this.kesh = new KeshLife(this);   // Kesh on Desert Island twelve years on: the cool room's wind-catcher (kesh.js)
     this.zlife = new ZeelichLife(this);   // Zeelich's street twelve years on: the watch house bakery (zeelife.js)
     this.arsenal = new Arsenal(this);   // weapons and gadgets in the world: stalls, gifts, dark places (arsenal.js)
+    this.kit2 = new Kit2(this);   // EQUIP-2a: Arthur's pocket set and Bram's pump lance in the world (kit2.js; the tools: tools.js)
     this.magic = new MagicLevels(this);   // MAGIC-LEVELS: the story's magic levels, never sold (magic.js)
     this.sewers = new SewerLife(this);   // WA-14: Citadel's old sewers under the lane by the pump (sewers.js)
     this.shops = new Shops(this);   // SHOPS-1: Citadel's shops and the Esmer trading house: a keeper's talk opens the shop (shops.js)
@@ -90,7 +92,7 @@ export class Story {
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
-  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.citizens.decorate(); }
+  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.citizens.decorate(); }
 
   // ---- flow
   start() {
@@ -198,7 +200,8 @@ export class Story {
     const zl = this.zlife.journal();
     if (zl.length) out.push({ title: t('zl_title'), lines: zl });
     const ar = this.arsenal.journal();
-    if (ar.length) out.push({ title: t('a_title'), lines: ar });
+    const k2 = this.kit2.journal();
+    if (ar.length || k2.length) out.push({ title: t('a_title'), lines: [...ar, ...k2] });
     const sw = this.sewers.journal();
     if (sw.length) out.push({ title: t('sw_title'), lines: sw });
     const sh = this.shops.journal();
@@ -222,14 +225,15 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.sewers.interactables(consider, dist); this.shops.interactables(consider, dist); }
-  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.sewers.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.shops.talkFirst(npc) || this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.sewers.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.sewers.interactables(consider, dist); this.shops.interactables(consider, dist); }
+  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.sewers.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (this.shops.talkFirst(npc) || this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
+  jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); this.shops.update(dt); this.citizens.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.sewers.update(dt); this.shops.update(dt); this.citizens.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
@@ -239,11 +243,12 @@ export class Story {
     this.kesh.applyFlags();
     this.zlife.applyFlags();
     this.arsenal.applyFlags();
+    this.kit2.applyFlags();
     this.sewers.applyFlags();
     this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
     this.refreshCast();
   }
   afterEnding() { this.cur.afterEnding?.(); }
   // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it
-  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.sewers]) c.regionBuilt?.(ids); }
+  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.sewers]) c.regionBuilt?.(ids); }
 }
