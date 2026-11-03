@@ -26,7 +26,9 @@
 //     board {x,z,r}     the departures board's read spot
 //     seats [{x,z,a}]   10 sitting spots (a: facing)
 //     npcSpots {clerk, guard, cafe} {x,z,a}
-//     notice {setVisible(b)}   the GROUNDED notice on the left wall
+//     notice {setVisible(b)}   the GROUNDED notice on the left wall; WC-4: setKind('grounded' | 'list' | null) — in the
+//                       evacuation it reads the project's boarding by its list, and the list itself hangs on the gate's
+//                       pillar; `visible` stays SPACEPORT-1's meaning (the GROUNDED notice is up), `kind` says which
 //   TERMINAL_PLAN                       the layout in the room's frame (the builder's own numbers): roomlife.js places the
 //                                       terminal's people from it (BIGGER-1's way), so a change of the layout carries them
 import * as THREE from 'three';
@@ -80,6 +82,21 @@ const noticeTex = () => canvasTex(256, 320, (x, W, H) => {
   x.fillStyle = '#c8452f'; x.font = 'bold 44px sans-serif'; x.textAlign = 'center'; x.fillText('GROUNDED', W / 2, 78);
   x.fillStyle = '#3a3a40'; x.font = '22px sans-serif';
   ['Passenger flights', 'suspended by the', 'Joint Project.', '', 'Project ships only.'].forEach((s, i) => x.fillText(s, W / 2, 140 + i * 32));
+});
+// WC-4, the evacuation: the project's notice (boarding by its list) and the list itself, a sheet of names on the gate
+const listNoticeTex = () => canvasTex(256, 320, (x, W) => {
+  x.fillStyle = '#f2ead6'; x.fillRect(0, 0, W, 320); x.strokeStyle = '#2f6a9a'; x.lineWidth = 14; x.strokeRect(7, 7, W - 14, 306);
+  x.fillStyle = '#2f6a9a'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.fillText('PROJECT', W / 2, 62); x.fillText('SHIPS', W / 2, 100);
+  x.fillStyle = '#3a3a40'; x.font = '22px sans-serif';
+  ['Boarding by the', "project's list only.", '', 'Names are read', 'at the gate.'].forEach((t, i) => x.fillText(t, W / 2, 150 + i * 30));
+});
+const listSheetTex = () => canvasTex(128, 192, (x, W, H) => {
+  x.fillStyle = '#fbf8ee'; x.fillRect(0, 0, W, H); x.fillStyle = '#2f6a9a'; x.fillRect(0, 0, W, 22);
+  x.fillStyle = '#ffffff'; x.font = 'bold 15px sans-serif'; x.textAlign = 'center'; x.fillText('THE LIST', W / 2, 16);
+  for (let i = 0; i < 14; i++) {
+    const y = 34 + i * 11; x.fillStyle = '#5a5a66'; x.fillRect(12, y, 52 + ((i * 37) % 40), 3);
+    x.fillStyle = i % 4 === 2 ? '#c8452f' : '#3f9a5a'; x.fillRect(104, y - 2, 8, 6);   // (ticks: on; a red mark: not yet)
+  }
 });
 // LBA2's glass-block band: pale blue blocks in a white grid
 const blocksTex = () => canvasTex(256, 128, (x, W, H) => {
@@ -181,6 +198,10 @@ export function buildTerminalRoom(scene, physics) {
   k.add(plane(2.8, 1.5), MAT.map(boardTex(), 0.7, { emissive: '#ffffff', emissiveMap: boardTex(), emissiveIntensity: 0.35 }), LX + 0.16, 2.35, BRDZ, Math.PI / 2);
   k.add(cyl(0.18, 0.28, 0.24, 12, true), MAT.steel(), LX + 0.5, 3.55, BRDZ, 0, { rz: -0.9 });
   const notice = k.mesh(plane(0.62, 0.78), MAT.map(noticeTex(), 0.8), P.notice.x, 1.75, P.notice.z, Math.PI / 2);
+  // (WC-4: the project's list on the hall's face of the gate's inner pillar, shown in the evacuation)
+  const sheet = k.mesh(plane(0.3, 0.45), MAT.map(listSheetTex(), 0.8), LX + 0.6, 1.4, GATEZ + 1.15 + 0.222, 0);
+  sheet.visible = false;
+  const noticeMat = { grounded: notice.material, list: null };
 
   // --- the waiting seats: two rows of five facing the board, planters at their ends, a luggage trolley
   const seats = [];
@@ -214,7 +235,17 @@ export function buildTerminalRoom(scene, physics) {
     board: { x: B.cx + LX + 1.6, z: B.cz + BRDZ, r: 1.2 },
     seats,
     npcSpots: Object.fromEntries(['clerk', 'guard', 'cafe'].map((k) => [k, { x: B.cx + P[k].x, z: B.cz + P[k].z, a: P[k].a }])),
-    notice: { setVisible(b) { notice.visible = !!b; }, get visible() { return notice.visible; } },
+    notice: {
+      setKind(kind) {
+        if (kind === 'list') notice.material = (noticeMat.list ||= MAT.map(listNoticeTex(), 0.8));
+        else if (kind) notice.material = noticeMat.grounded;
+        notice.visible = !!kind; sheet.visible = kind === 'list'; this._kind = kind || null;
+      },
+      setVisible(b) { this.setKind(b ? 'grounded' : null); },
+      get visible() { return notice.visible && this._kind === 'grounded'; },
+      get kind() { return notice.visible ? this._kind : null; },
+      _kind: 'grounded',
+    },
   });
   R.npcSpots = TERMINAL.npcSpots;
   return { terminal: B.finish() };

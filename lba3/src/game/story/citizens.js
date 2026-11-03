@@ -8,6 +8,7 @@ import '../text/walkers.js';
 import { ambientDefs } from '../walkrounds.js';
 import { TownBusy } from '../townbusy.js';
 import { storyDefs, dressStoryLife } from '../storylife.js';
+import { portPhase } from '../roomlife.js';
 import '../text/storylife.js';
 
 export const EVAC_STAY = new Set(['maro', 'tilde']);
@@ -94,7 +95,7 @@ export class Citizens extends ChapterBase {
   }
   // what is said first depends on the town (the well is dry before chapter 2's heat) and on what the resident is doing
   linesFor(npc) {
-    const id = npc.def.id, f = this.f, has = (k) => t(k) !== k;
+    const id = npc.def.lines || npc.def.id, f = this.f, has = (k) => t(k) !== k;   // (WC-4: one of the town's people in another place has lines of its own there)
     const dry = this.story.index === 0 || (this.story.index === 1 && !f.c1_water);
     const hot = !dry && this.story.index === 1;   // (chapter 2, the water back: the town's talk is the heat)
     const gone = hot && !!f.c1_veskGone;          // (TOWN-LIFE-2: then the light over the fortress that took Vesk away)
@@ -108,8 +109,11 @@ export class Citizens extends ChapterBase {
     if (dry && has(`rs_${id}_dry`)) keys.push(`rs_${id}_dry`);
     if (gone && has(`rs_${id}_gone`)) keys.push(`rs_${id}_gone`);
     if (hot && has(`rs_${id}_hot`)) keys.push(`rs_${id}_hot`);
-    // (INTERIOR-LIFE: the spaceports' people: `_g0…` while passenger flights are grounded, chapters 1–3; `_f0…` once they run)
-    const fl = this.story.index >= 3 ? 'f' : 'g';
+    // (INTERIOR-LIFE: the spaceports' people: `_g0…` while passenger flights are grounded, chapters 1–3; `_f0…` once they run.
+    //  WC-4: `_e0…` in the evacuation, `_c0…` in chapter 9, `_a0…` in chapter 10 and the epilogue; one who has none of
+    //  that state's lines says the flying ones)
+    const ph = portPhase(this.story), L = { grounded: 'g', flying: 'f', evac: 'e', council: 'c', after: 'a' }[ph];
+    const fl = ph === 'grounded' || has(`rs_${id}_${L}0`) ? L : 'f';
     for (let i = 0; i < 4 && has(`rs_${id}_${fl}${i}`); i++) keys.push(`rs_${id}_${fl}${i}`);
     for (let i = 0; i < 6 && has(`rs_${id}_${i}`); i++) keys.push(`rs_${id}_${i}`);
     return keys;

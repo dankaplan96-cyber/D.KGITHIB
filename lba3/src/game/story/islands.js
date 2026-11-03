@@ -15,6 +15,7 @@ import { FILMS } from '../travelfilm.js';
 import { TERMINAL } from '../terminal.js';
 import { ZTERMINAL } from '../zterminal.js';
 import { t } from '../i18n.js';
+import { portPhase } from '../roomlife.js';
 import '../text/islands.js';
 
 // each terminal: its handle, the travel point outside, its gate's exit, its clerk, what the clerk says while grounded,
@@ -58,7 +59,8 @@ export class IslandShuttle {
   }
   interact(it) {
     const g = this.game;
-    if (it.kind === 'termBoard') { g.audio.play('select'); g.say('', [t(it.tm.board)]); return true; }
+    // (WC-4: a board reads the port's state when it has a line for it: the evacuation's, the council's checks)
+    if (it.kind === 'termBoard') { const k = `${it.tm.board}_${portPhase(this.story)}`; g.audio.play('select'); g.say('', [t(t(k) !== k ? k : it.tm.board)]); return true; }
     if (it.kind === 'termCounter') return this.counter(it.tm);
     if (it.kind === 'portGrounded') { g.audio.play('deny'); g.say('', [t('port_grounded')]); return true; }
     if (it.kind !== 'isleShuttle') return false;

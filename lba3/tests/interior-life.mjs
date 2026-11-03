@@ -69,8 +69,8 @@ const roomInfo = await ev(() => Object.fromEntries(Object.entries(RL.ROOMS).map(
 
 // ---- the cast: everyone listed, hidden until their place is built (nothing built for them)
 const cast = await ev(() => { const W = game.roomWalkers, G = game; return { n: W.res.length, ids: W.res.map((r) => r.def.id), pending: W.res.filter((r) => r.def.pending).map((r) => r.def.id), built: ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'].filter((id) => G.regions.built(id)), street: G.walkers.res.length, clash: W.res.filter((r) => G.npcs.some((n) => n !== r && n.def.id === r.def.id)).map((r) => r.def.id) }; });
-check('the rooms\' and the ports\' people are in the cast (36: the terminals\' 8 and WC-3\'s School classroom and council antechamber 8 among them), none sharing an id; those of places not built yet wait hidden (31); nothing was built for them; the street\'s residents are their own (41: WC-3\'s 24 among them)', cast.n === 36 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 31 && cast.street === 41, cast);
-const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t('n_' + r.def.id) === 'n_' + r.def.id).map((r) => r.def.id); });
+check('the rooms\' and the ports\' people are in the cast (40: the terminals\' 12 — WC-4\'s evacuation queue and council guards among them — and WC-3\'s School classroom and council antechamber 8), none sharing an id; those of places not built yet wait hidden (35); nothing was built for them; the street\'s residents are their own (41: WC-3\'s 24 among them)', cast.n === 40 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 35 && cast.street === 41, cast);
+const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t(r.def.name) === r.def.name).map((r) => r.def.id); });
 check('every one of them has a name', names.length === 0, names);
 
 // ---- each room in chapter 1, chapter 2 and the evacuation
@@ -131,7 +131,7 @@ console.log(`MEASURE rooms' and ports' people (${cost.people}): hero in the tave
 check('cost: in the tavern its people are simulated in full; with the hero on the street no room\'s person is (they are stepped twice a second, abstract)', cost.inFull.length === 0 && cost.tavern.full > 0, cost);
 
 // ---- Citadel Spaceport
-const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'dov'], flying: ['gurt', 'esren', 'gunda', 'bibi'] }));
+const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'dov'], flying: ['gurt', 'esren', 'gunda', 'bibi'], evac: ['gurt', 'dov', 'gunda', 'bibi'] }));   // (WC-4: the evacuation's deck: the mechanic, Dov, the family)
 const portCheck = async (label, key, extra, want, talk) => {
   await ev(([key, extra]) => { setChapter(key, extra); const G = game; G.exitRoom({ x: -16, z: 40, a: Math.PI / 2 }, true, true); G.step(0.3); }, [key, extra]);
   iso(`Citadel Spaceport, ${label}: the hero put on the deck by the bridge (exitRoom)`);
@@ -144,7 +144,7 @@ const portCheck = async (label, key, extra, want, talk) => {
   check(`Citadel Spaceport, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r.here);
   check(`Citadel Spaceport, ${label}: each on the deck, off the furniture, facing sensibly; nobody stands on the walkway, in the pad's ring or on the board's reading spot`, r.bad.length === 0 && r.clear.length === 0, { bad: r.bad, clear: r.clear });
   if (talk && want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`Citadel Spaceport, ${label}: each answers a talk (INPUT), the line fits the flights (${key})`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { const G = game; G.exitRoom({ x: -12.5, z: 39.5, a: Math.PI / 2 + 0.3 }, true, true); for (let i = 0; i < 10; i++) G.step(0.5); });
@@ -157,7 +157,7 @@ check('Citadel Spaceport: no stop on the walkway, in the pad\'s ring, on the boa
 await portCheck('chapter 1 (flights grounded)', 'well', {}, portSets.grounded, true);
 await portCheck('chapter 2', 'project', { c1_water: true }, portSets.grounded, false);
 await portCheck('chapter 4 (flights run)', 'dig', {}, portSets.flying, true);
-await portCheck('the evacuation', 'evacuation', {}, [], false);
+await portCheck('the evacuation', 'evacuation', {}, portSets.evac, true);
 
 // ---- Zeelich Spaceport
 for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapter 9 (flights run)', 'council']]) {
@@ -175,13 +175,21 @@ for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapt
 }
 
 // ---- SPACEPORT-1: the terminals' people (terminal.js, zterminal.js; roomlife.js ROOMS.terminal / zterminal)
+// (WC-4: by the port's state, roomlife.js portPhase; the last column is the notice up: 'grounded', the evacuation's
+//  'list' at Citadel, the council's order on Zeelich in chapter 9, or none)
 const TERM = [
-  ['terminal', 'chapter 1 (grounded)', 'well', {}, ['ama', 'tavi', 'bern', 'lomba'], true],
-  ['terminal', 'chapter 2 (grounded)', 'project', { c1_water: true }, ['ama', 'tavi', 'bern', 'lomba'], true],
-  ['terminal', 'chapter 4 (flying)', 'dig', {}, ['ama', 'tavi', 'ressa', 'ollo'], false],
-  ['terminal', 'the evacuation', 'evacuation', {}, [], null],
-  ['zterminal', 'chapter 3 (grounded)', 'zeelich', {}, ['velo', 'pask'], true],
-  ['zterminal', 'chapter 9 (flying)', 'council', {}, ['velo', 'pask'], false],
+  ['terminal', 'chapter 1 (grounded)', 'well', {}, ['ama', 'tavi', 'bern', 'lomba'], 'grounded'],
+  ['terminal', 'chapter 2 (grounded)', 'project', { c1_water: true }, ['ama', 'tavi', 'bern', 'lomba'], 'grounded'],
+  ['terminal', 'chapter 4 (flying)', 'dig', {}, ['ama', 'tavi', 'ressa', 'ollo'], null],
+  ['terminal', 'the evacuation (the queue for the project\'s ships)', 'evacuation', {}, ['ama', 'tavi', 'bern', 'lomba', 'ressa', 'ollo', 'rollo_q', 'pell_q'], 'list'],
+  ['terminal', 'chapter 9 (flying)', 'council', {}, ['ama', 'tavi', 'ressa', 'ollo'], null],
+  ['terminal', 'chapter 10 (back to normal, Mrs Lomba home)', 'network', {}, ['ama', 'tavi', 'lomba', 'ressa', 'ollo'], null],
+  ['terminal', 'the epilogue', 'home', {}, ['ama', 'tavi', 'lomba', 'ressa', 'ollo'], null],
+  ['zterminal', 'chapter 3 (grounded)', 'zeelich', {}, ['velo', 'pask'], 'grounded'],
+  ['zterminal', 'chapter 4 (flying)', 'dig', {}, ['velo', 'pask'], null],
+  ['zterminal', 'the evacuation (quieter: its staff)', 'evacuation', {}, ['velo', 'pask'], null],
+  ['zterminal', 'chapter 9 (the council\'s guards)', 'council', {}, ['velo', 'pask', 'zt_guard', 'zt_guard2'], 'council'],
+  ['zterminal', 'chapter 10 (back to normal)', 'network', {}, ['velo', 'pask'], null],
 ];
 for (const [room, label, key, extra, want, notice] of TERM) {
   const r = await ev(async ([room, key, extra]) => {
@@ -201,24 +209,24 @@ for (const [room, label, key, extra, want, notice] of TERM) {
     const spots = { counter: [H.counter, 0.9], board: [H.board, 0.9], door: [H.door, 1.6], gate: [H.gate, 1.6], gateIn: [R.entries.gate, 1.0] };
     out.clear = people(room).filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').flatMap((q) => Object.entries(spots).filter(([, [p, d]]) => Math.hypot(q.pos.x - p.x, q.pos.z - p.z) < d).map(([k]) => q.def.id + '@' + k));
     out.stopsClear = people(room).flatMap((q) => q.stops.flatMap((s) => Object.entries(spots).filter(([, [p, d]]) => Math.hypot(s.x - p.x, s.z - p.z) < d).map(([k]) => s.id + '@' + k)));
-    out.notice = H.notice.visible;
+    out.notice = H.notice.kind ?? null; out.grounded = H.notice.visible;
     out.logs = Object.fromEntries(people(room).map((q) => [q.def.id, q.log.filter((l) => / at |seated|chat over/.test(l)).length]));
     return out;
   }, [room, key, extra]);
   iso(`${room}, ${label}: chapter set by its flags; the hero put on the deck before its door and walked in (INPUT: ${r.enter})`);
   check(`${room}, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, r.room === room && JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r);
   check(`${room}, ${label}: each on the hall's floor or the counter's platform, off the walls and the furniture, facing sensibly; nobody (and no stop) on the counter's or the board's spot, the door or the gate`, r.bad.length === 0 && r.clear.length === 0 && r.stopsClear.length === 0, { bad: r.bad, clear: r.clear, stopsClear: r.stopsClear });
-  if (notice !== null) check(`${room}, ${label}: the GROUNDED notice is ${notice ? 'up' : 'down'}`, r.notice === notice, r.notice);
+  check(`${room}, ${label}: the notice ${notice ? `is up and reads ${notice === 'grounded' ? 'GROUNDED' : notice === 'list' ? 'the project\'s boarding by its list' : 'the council\'s order'}` : 'is down'} (the GROUNDED one ${notice === 'grounded' ? 'up' : 'down'})`, r.notice === notice && r.grounded === (notice === 'grounded'), { kind: r.notice, grounded: r.grounded });
   for (const [id, n] of Object.entries(r.logs)) visits[id] = (visits[id] || 0) + n;
   if (want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`${room}, ${label}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  ${room} ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { for (let i = 0; i < 6; i++) game.step(0.5); });
     await shot(`${room}-${key}`);
   }
 }
-check('the terminals\' people keep their rounds: each visited a stop (seated, at a stop)', ['ama', 'tavi', 'bern', 'lomba', 'ressa', 'ollo', 'velo', 'pask'].every((id) => (visits[id] || 0) >= 1), visits);
+check('the terminals\' people keep their rounds: each visited a stop (seated, at a stop)', ['ama', 'tavi', 'bern', 'lomba', 'ressa', 'ollo', 'rollo_q', 'pell_q', 'velo', 'pask', 'zt_guard', 'zt_guard2'].every((id) => (visits[id] || 0) >= 1), visits);
 
 // ---- Zoé's household round (chapter 2's free play: story/chapter1.js puts her on her mark at home)
 await ev(() => { setChapter('project'); const G = game;
