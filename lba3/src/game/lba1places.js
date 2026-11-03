@@ -30,10 +30,10 @@ const marksTex = () => canvasTex(256, 128, (x, W, H) => {
     const gx = 14 + (g % 5) * 46, gy = 14 + Math.floor(g / 5) * 58, n = g === 8 ? 3 : 5;
     for (let i = 0; i < Math.min(4, n); i++) {
       const px = gx + i * 8 + r() * 2;
-      x.strokeStyle = 'rgba(30,26,22,0.85)'; x.lineWidth = 3.2; x.beginPath(); x.moveTo(px, gy + r() * 3); x.lineTo(px + r() * 3 - 1, gy + 40 + r() * 4); x.stroke();
-      x.strokeStyle = 'rgba(235,228,214,0.55)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(px + 1.5, gy + 2); x.lineTo(px + 2, gy + 40); x.stroke();
+      x.strokeStyle = 'rgba(240,232,214,0.95)'; x.lineWidth = 4.6; x.beginPath(); x.moveTo(px, gy + r() * 3); x.lineTo(px + r() * 3 - 1, gy + 40 + r() * 4); x.stroke();
+      x.strokeStyle = 'rgba(24,20,18,0.7)'; x.lineWidth = 1.4; x.beginPath(); x.moveTo(px + 1.5, gy + 2); x.lineTo(px + 2, gy + 40); x.stroke();
     }
-    if (n === 5) { x.strokeStyle = 'rgba(30,26,22,0.85)'; x.lineWidth = 3.2; x.beginPath(); x.moveTo(gx - 4, gy + 34); x.lineTo(gx + 32, gy + 8); x.stroke(); }
+    if (n === 5) { x.strokeStyle = 'rgba(240,232,214,0.95)'; x.lineWidth = 4.6; x.beginPath(); x.moveTo(gx - 4, gy + 34); x.lineTo(gx + 32, gy + 8); x.stroke(); }
   }
 });
 const breachTex = () => canvasTex(256, 256, (x, W, H) => {
@@ -176,7 +176,7 @@ function asylumNow(R, physics) {
     add(plane(0.9, 0.28), MAT.map(signTex(['JOINT PROJECT', 'Survey cut 3 · keep out']), 0.8, { side: THREE.DoubleSide }), [sp[0] + 0.03, sp[1] + 1.12, sp[2]], Math.PI / 2 + 0.5, false); }
   // Twinsen's cell: his marks on the west wall over the bed, and the warm pipe along the corridor and through the cell
   const mk = at(52.0, 5.6, 52.05);
-  add(plane(1.3, 0.65), MAT.map(marksTex(), 0.9, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), [mk[0] + 0.015, mk[1], mk[2]], Math.PI / 2, false);
+  add(plane(1.5, 0.75), MAT.map(marksTex(), 0.9, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), [mk[0] + 0.015, mk[1], mk[2]], Math.PI / 2, false);
   const pipe = (pts) => { const P = pts.map((p) => at(...p)); add(tube(P, 0.075, 8, 1), copper, [0, 0, 0], 0, false); return P; };
   pipe([[47.9, 5.35, 49.75], [52.0, 5.35, 49.75], [55.6, 5.35, 49.75], [55.9, 5.35, 50.2]]);
   const P2 = pipe([[55.9, 3.35, 50.8], [55.9, 3.35, 51.2], [57.0, 3.35, 51.2], [58.85, 3.35, 51.2], [58.95, 3.35, 50.9]]);
