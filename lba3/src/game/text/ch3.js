@@ -115,6 +115,7 @@ Object.assign(STR.en, {
   ep_zoe_idle: "Arthur wants to be an engineer now. A good one, he says. Not like Vesk.",
   ep_j_home: 'Home for dinner. A few days late.',
   // EPILOGUE-HOME: free roam, everyone back where they live (story/epilogue.js place; baseTalk's idle_<id>_home)
+  ep_lighthouse: "(Zoé's microphone. On the dial, in Arthur's chalk: STATION READY. Nobody has wiped it off.)",
   ep_vesk_left: "Vesk waits in a Zeelich cell for the joint council's judgement.",
   ep_vesk_helped: "Vesk waits in a Zeelich cell for the joint council's judgement. He has asked to see the shield's readings every day.",
   ep_baldino_vesk: "Vesk sends me notes from his cell. Corrections to my shield. Two of the three were right. I hate that.",
