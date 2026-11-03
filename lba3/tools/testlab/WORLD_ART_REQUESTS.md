@@ -1648,3 +1648,31 @@ line about the island, a small favour), on `R.peopleSpots` (DOORS-1) and the ite
 the platform, the bar's and hotel's `npcSpots`). Rooms with nobody, for you to judge (most are caves, mazes, sewers
 or machine rooms where that is right): well, office, control, workshop, lighttop, cellar, the c3 rooms, the
 condensers, butemple, asylum, bumaze/buhalls, valves, arena, sewer, tralucave.
+
+## CAMPAIGN-1 · The campaign director's fixes · the laptop, 3.11.2026 (the user's ask: the lba-campaign-director agent)
+`requests/CAMPAIGN-1.diff` (story/epilogue.js, evacuation.js, network.js, zeelife.js, storylife.js, guards.js,
+roomlife.js, text ch3/ch8/ch10; tests chapter8, chapter10, cast-rounds, playthrough/11, the new epilogue-home.mjs; and
+docs/campaign/CAMPAIGN_DIRECTOR.md: the story as now played, the coverage table, every fix with its before/after and
+route, the motive table, the opening's promises against the ending, what is open). Applies alone on origin a8ca37a5
+and after the laptop's chain above. The agent played the whole campaign by input from a new game to Keep Exploring
+(tests/playthrough 01–14 chained through real saves, all PASS; the Zeelich depot's fight and the bore's partly finished
+by ISO, logged).
+- **EPILOGUE-HOME** (the biggest gap): after the ending Gilbert still stood at the fortress shelter, Tim and Lulu at
+  the depot, Ilka and Dallan at the bore, Lhar's people in the monks' camp; Doran, Nara, Oku, Hesk, Pim were nowhere;
+  Baldino behind a door with no prompt; everyone off Citadel said only "Hello, Twinsen." Now everyone is home with a
+  line of their own (Dallan carries Kesh's water; Tarra has not forgiven him), Baldino's workshop and Sefa's dome open,
+  the end card answers the 30 % plan (half heat for every house).
+- **C8 LIGHTHOUSE-GATHER:** Zoé's hill families gathered on the northern plateau, 150 m from the lighthouse that her
+  words, the objective and the signposts point to; now below the lighthouse headland.
+- **C8 VESK-ANSWERS:** Vesk's broadcast answers the vents Twinsen opened (and drills on); Zoé says Vesk switched the
+  heat posts off: his decision, seen.
+- **C10 STAND-DOWN:** at the bore Dallan orders his old Grobo guard to stand down under the council's order; he walks
+  back to his cabin and stays gone after a load (`c10_guardDown`); only FunFrock's clone and the sentry fight.
+- **C12 ALLIES-STILL-THERE:** the core's radio no longer has Oku "releasing the mills" a third time.
+- Checked again here on the agent's branch: `epilogue-home`, `save-migration` (old v4 epilogue saves too), `chapter10`
+  PASS. The agent also ran chapter8 and cast-rounds (chapter 8) PASS.
+- Open (in the doc): no map marker outside Citadel in chapters 3–7 and 9–12 (read in the code only); the old mill's
+  stair-stone hop missed by the bot in 2 of 3 runs (needs a person); the ISO-finished fights never balance-tested by a
+  person; only three allies heard at the core; the Hebrew synopsis (five pylons, chapters 11–12 twice) and STORY_MAP
+  (the Core inside the Shell) not updated; Dallan's chapter-9 trip thin, no Vesk scene after the coil; the lighthouse
+  lamp room shut after the ending.

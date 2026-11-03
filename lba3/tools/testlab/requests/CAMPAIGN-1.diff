@@ -1,0 +1,785 @@
+diff --git a/lba3/docs/campaign/CAMPAIGN_DIRECTOR.md b/lba3/docs/campaign/CAMPAIGN_DIRECTOR.md
+new file mode 100644
+index 00000000..527272df
+--- /dev/null
++++ b/lba3/docs/campaign/CAMPAIGN_DIRECTOR.md
+@@ -0,0 +1,209 @@
++# Campaign director: LBA3 The Awakening, opening to aftermath (3.11.2026)
++
++Branch `campaign/director` (cut from `8077139`). Base game only: the Ballastra/Oren expansion is on hold and is not
++reviewed or touched here. Evidence words used below: **Played** = reached by input from a new game, segment after
++segment, each continuing from the previous one's real save (tests/playthrough/01–14 through `tests/lib/seg.mjs`; fights
++the bot loses are finished by a logged ISO assist, never counted as input). **Reproduced separately** = reached with
++chapter flags set by a test (ISO), then played from there. **Source-reviewed only** = read in the code and text, not run.
++
++## 1. The story as the player now experiences it
++
++Citadel, twelve years after LBA2. Zoé's tap coughs warm and stops; the neighbours' kettle is furred with warm crystals.
++Twinsen proves to Mira that the fault is at the spring, kicks the rusted lid open, trades Doran's stamp for Xil's rope,
++learns from Tim (in Discreet mode) that he threw a humming stone into the well, and climbs down: crystal mites, three
++crystals woken with the ball, and Sendell's first words in twelve years: "Someone has reached her."
++
++Vesk arrives on a ferry that runs on light. He is useful first: he admits his bore diverted the water and sends Twinsen
++to open FunFrock's three bypass valves. The water comes back hot, and the project's heat posts light every door; Zoé
++"could almost like this Vesk". At the station the same crystals grow in his pipes and he calls the shell readings
++calibration noise. Zoé (played) sneaks into the project office and finds the evacuation plan: ships for 30 %, chosen by
++him. Confronted, he leaves by the beam. Arthur's repaired radio brings Baldino's call; Doran flies Twinsen to Zeelich.
++
++On Zeelich the plan is confiscated at the dock and recovered from the depot; Oku and Nara read it and side with him.
++Baldino explains the shell. The cog, the code cylinder, three mills braked with the ball, Zoé's broadcast from Citadel's
++lighthouse (played: sun, wave, star), the platform shield down. Vesk will not stop: his thirty percent is "everyone who
++can be saved". He flies home and seals the shaft at Citadel from below; only a code from every project station at once
++opens it. Baldino gives the next move: learn what the shell is from the professor the project sacked, on Desert Island.
++
++In Kesh nobody talks to someone off the project's ferry until Twinsen restarts the wind-pump the test bore's tremors
++broke (Sani hears which gear grinds). Hesk's sand-yacht, Ilka's notebook stolen from the research post in a sandstorm,
++the dig's gate, three warm seals, and the Temple of Bù's carving: the shell has vents, and the project is closing them by
++drawing all the heat to one point. Dallan, Vesk's foreman, throws them out but admits he knows the 30 %. In chapter 5
++Dallan requisitions the ferry for project staff only; Kesh is not on the list. Twinsen routes the capped bore's steam
++through FunFrock's condensers so the oasis does not boil; Dallan, who knows his list leaves sixty people behind, opens
++the gate, and then the ferry leaves without him too. The vent breathes, Zoé reads the second vent off the carving, and
++Hesk flies FunFrock's glider north.
++
++In the Hamalayi the ice melts from below and Lhar is moving to the monastery. A felled tree, Pim's kite for the
++project's missing fuse (the project's heating station, never switched on, now thaws the lift's winch), two winch trips
++with ice mites between. At the observatory Sendell speaks openly: she holds the shell with her own light and is fading.
++Mirrors, the telescope, a project drone, and the second vent opens; the ground stops shaking. Arthur radios: the project
++ships are evacuating Citadel by the list.
++
++Home is changed: queues at the spaceport, the square fenced, the heat posts dark. **Vesk switched them off** to send every
++watt to his bore. Gilbert's FunFrock tunnels become shelters, Mira brings water, Pippa supplies, and Zoé (played) leads
++the hill families to the lighthouse cliffs, where she finds the transmitter still tuned to Zeelich's council. In the
++control room **Vesk answers the opened vents**: the pressure is falling, it changes nothing, full depth in three days.
++
++On Zeelich the council will not act on a story: a petition, two stamps (Oku's for freeing the mills Twinsen braked),
++the hearing, the project archive in a borrowed coat, the master plans ("Integrity: not assessed"), and Dallan with Ilka's
++proof. The council orders the bore reversed, but only Vesk's console at the bottom can do it. Baldino's network: five
++relays at five places the player already knows, each held by a friend (Oku, Mira, Zoé and Arthur, Ilka and Dallan, Pim
++and Sefa). At the bore on Desert Island the project's drones and Vesk's men still fight for him; **Dallan orders his old
++guard to stand down**, and only FunFrock's machines keep fighting. The doors open; the shaft, the machinery, the crystal
++galleries, Sendell (the child under the shell is not ready to wake), the core: three pylons powered by Zoé, Mira and Oku
++above, Vesk's guardian, his overload coil broken, and Twinsen switches the bore to a shield himself.
++
++Four days later, dinner at home. The end card answers the 30 %: the heat posts glow again at half heat for every house,
++Kesh has its oasis, Lhar its village, Vesk waits in a cell. In Keep Exploring everyone is back where they live and says
++so: Gilbert by his cool well, Doran on his quay, the hill families at their farms, Baldino at his bench, Nara and Oku on
++the street, Ilka, Dallan (carrying water for the people he left off his list), Tarra and Hesk in Kesh, Yorna, Pim and
++Lhar's people home in their village.
++
++## 2. Chapter coverage
++
++One chain from a new game to Keep Exploring, 3.11.2026, on this branch with the fixes in place (LIGHTHOUSE-GATHER was
++made after segment 11 had run, so that segment was played again from the chain's chapter-7 save), served at
++http://localhost:8130/, headless Chromium (SwiftShader). The segments of tests/playthrough/ each continue from the
++previous one's real save (Esc → Save & quit → Continue).
++
++| Chapter | Status | Evidence (segment: verdict) | ISO assists, retries |
++|---|---|---|---|
++| 1 The Well | Played | 01 surface: PASS, 02 cave: PASS | none (01 ran twice: the first run's reload after Save & quit timed out under load; its play passed both times) |
++| 2 The Joint Project | Played | 03, 04, 05: PASS | none (03 ran twice, the same reload timeout) |
++| 3 Zeelich | Played | 06: PASS on the third run | the depot fight: 2 of 4 enemies finished by ISO (bot at 2 HP). The old mill: the bot missed the hop from the 6th to the 7th stair-stone on every attempt in runs 1 and 2 (STOP: climb) and made it by input in run 3; the same hop works 5/5 from a standing start (probe) |
++| 4 The Dig | Played | 07: PASS | none |
++| 5 Steam and Sand | Played | 08: PASS | none |
++| 6 The Pass | Played | 09: PASS | none |
++| 7 The Observatory | Played | 10: PASS | none |
++| 8 Evacuation | Played | 11: PASS in the chain, PASS again from the chapter-7 save with the gathering moved | none |
++| 9 The Council | Played | 12: PASS | none |
++| 10 Baldino's Network | Played | 13: PASS (the guard stood down: `c10_guardDown` in the kept save) | the bore: one drone, the clone and the sentry by ISO (bot at 1–4 HP) |
++| 11 The Shell | Played | 14: PASS | none; the stepping stones crossed by input this time |
++| 12 The Core | Played | 14: PASS | none |
++| Epilogue, Keep Exploring on Citadel | Played | 14: PASS (dinner, The End, free roam, "See how everyone is doing") | none |
++| Keep Exploring on Zeelich, Desert Island, the Hamalayi | Reproduced separately | the chain's final save, the travel network's own move (ISO), a talk with each person; tests/epilogue-home.mjs | — |
++| Ballastra / Oren expansion | Not reviewed | on hold by instruction | — |
++
++Routes off the ideal path that were run: Save & quit → Continue at the 13 segment boundaries; old saves (v1; v4 in the
++core, the shell and the epilogue; a missing room; a corrupt save: tests/save-migration.mjs PASS); a reload into chapter 8
++with the new gathering (segment 11 replayed). Read in the source only: a save made mid wave 2 at the bore before this
++branch (the guard is stood down when he appears), a save during Zoé's run (applyFlags restarts her run, as before).
++
++## 3. The important fixes
++
++**1. Zoé's gathering was not at the lighthouse (chapter 8, LIGHTHOUSE-GATHER, `bc17a5da`).**
++*Before:* Zoé says she will take the hill families to "the lighthouse cliffs"; the objective says "Zoé: go to the
++lighthouse"; every signpost marks LIGHTHOUSE on the south-west headland, a short walk from her own door. Her run ended
++only within 6 m of (-66, -55), on the northern plateau by the glider field, 150 m away past the town and the fort, and the
++farmers marched north. A player following the words or the signs reaches the tower and nothing happens. (The bot never
++noticed: it walks to coordinates.)
++*Change:* the gathering is on the lighthouse path's last flat stretch below the headland (-89, 96.5); the farmers'
++lanes lead there (A* routes from each farm); they face the lighthouse; the landing line no longer calls the plateau
++"above the lighthouse"; the tests read the spot from the game.
++*Verified:* tests/playthrough/11-evacuation.mjs by input from the chain's chapter-7 save: PASS (the gathering 2 s after the
++last farm instead of 15 s across the island); tests/chapter8.mjs PASS (13); tests/cast-rounds.mjs `ONLY='chapter 8'` PASS
++(38); two wide screenshots of the families on the sand below the headland.
++
++**2. The ending did not reach the people the player helped (EPILOGUE-HOME, `e1c9df76`).**
++*Before (played: the chain's final save, talking to each in turn):* Gilbert at the fortress shelter's door, Tim and Lulu at
++the depot bunker, Ilka and Dallan at the bore, Yorna and Lhar's villagers in the monastery yard; Doran, Nara, Oku, Hesk
++and Pim not in the world; Baldino at his bench behind a door with no prompt; everyone away from Citadel said "Hello,
++Twinsen." Zoé's dinner line had everyone "back from the hills" though the town had gone into FunFrock's tunnels. The end
++card never answered Vesk's last threat ("doomed two worlds to the cold").
++*Change:* the epilogue puts everyone back where they live, each with one line about what changed: Dallan carries Kesh's
++water every morning and Tarra has not forgiven him ("It will take a great many jars"); Yorna's village is home again;
++Nara reports the council's vote for half heat for everyone, docks included; Baldino was hired as the shield's engineer.
++Lhar's residents come home with them. Baldino's workshop and Sefa's dome open again. The end card: the heat posts glow
++again at half heat for every house, on the list or not; Kesh has its oasis and Lhar its village. The objective: "See how
++everyone is doing".
++*Verified:* tests/epilogue-home.mjs (new): 11 passed; the chain's final save probed before and after.
++
++**3. The antagonist reacted to nothing the player did between chapters 3 and 12 (chapter 8, VESK-ANSWERS, `4e063ed7`).**
++*Before:* Twinsen opened two vents (chapters 5 and 7) that the carving says relieve the shell; Vesk's broadcast only gave
++the deadline, and the heat posts were dark "to save power", nobody's decision.
++*Change:* Vesk says somebody is opening FunFrock's old vents, the pressure is falling, and it changes nothing: every watt
++to the bore, three days. Zoé says Vesk switched off the heat posts. Twinsen: "He knows the vents are open. So he drills
++faster."
++*Verified:* played in segment 11 (the chain, and the replay); text only.
++
++**4. Every opponent fought on like a machine after the council's vote (chapter 10, STAND-DOWN, `eb7dc5e8`).**
++*Before:* at the bore Vesk's guard, FunFrock's clone and the sentry all came at Twinsen, while Dallan, who turned in
++chapter 5 and spoke at the hearing, stood by. Wave 2 was the hardest stretch of the late game for the bot (QA.md).
++*Change:* when the Grobo guard comes out of his cabin, Dallan orders him to stand down under the council's order ("you
++were on my roster for a year"); he lowers his rifle and walks back in, nothing drops, he stays gone after a reload.
++Twinsen notes that the clone and the sentry are FunFrock's machines still keeping old orders, and those are fought.
++*Verified:* tests/chapter10.mjs with a new check: 27 passed; played in segment 13 (the guard never fought, `c10_guardDown`
++in the kept save).
++
++**5. The core's radio repeated a solved errand (chapter 12, ALLIES-STILL-THERE, `2494703d`).** Baldino had Oku and Nara
++"releasing the mills" that Twinsen freed in chapter 9 and that turned for the relay in chapter 10; now the friends are
++"still at their stations". Played in segment 14.
++
++What each fix carries forward from LBA1/LBA2: a familiar place changed on return (the epilogue's homes, Lhar lived in
++again), a person solving what a fight would (Dallan and his old guard, as LBA2's inhabitants open ways the ball can't),
++and the island's own landmarks meaning what they say (the lighthouse).
++
++## 4. The opposition: motives in play
++
++| Who | Wants | Who supports them, and why | Afraid of losing | The harmful decision they make | After Twinsen interferes | Where the player sees, challenges or suffers it |
++|---|---|---|---|---|---|---|
++| Vesk, chief engineer | the power under the shell for the project ("it will be ours"), and his chosen 30 % warm forever | the Zeelich upper districts and Councillor Brum (first warm winter), drill crews and their families (jobs), Councillor Sela (trusts his charts), Dallan (orders) | ten years of work; the bore | the 30 % list (ch 2); sealing the shaft behind him (ch 3); switching off Citadel's heat posts and drilling faster once the vents open (ch 8); the overload (ch 12) | flies home and seals the shaft (ch 3); a drone at the second vent (ch 7); answers the opened vents by drilling faster (ch 8); sends the guardian, then the overload (ch 12) | valves and heat posts (useful, ch 2); the plan in the office (ch 2); the platform (ch 3); dark posts and the queue (ch 8); the control-room screen (ch 8); the core fight (ch 12) |
++| Dallan, project foreman on Desert Island | to follow the plan | his guards (he signed their roster) | his post; being blamed | caps the test bore and keeps Kesh off the list (ch 4–5) | left off his own list, opens the gate (ch 5); brings Ilka's proof to the council (ch 9); stands down the bore guard (ch 10) | the memo on his desk, the dig (ch 4); the requisitioned ferry (ch 5); the hearing (ch 9); the bore fight (ch 10); carrying Kesh's water after the end, not forgiven |
++| The Zeelich council (Amaru, Sela, Brum) | heat for Zeelich | citizens who had their first warm winter | the cold | refuse to act on "a story" (ch 9) | demand proof; Brum turns when his cousin on the bore is named; vote to reverse (ch 9); vote half heat for everyone after (epilogue, Nara) | the hearing and the archive (ch 9) |
++| Project guards and workers | wages, orders | — | their jobs | confiscate the plan (ch 3); guard the depot, the post, the bore | the platform guard gives way (ch 3); Bren stands down to Dallan (ch 10) | the dock (ch 3); the research post in the storm (ch 4); the bore (ch 10) |
++| FunFrock's machines (drones, clones, the sentry), reactivated by the project | nothing: old orders | — | — | attack anything not the project's | they never change: the contrast with the people who do (ch 10) | depot (ch 2–3), condenser hall (ch 5), the bore (ch 10) |
++| Vesk's bore guardian | — (his tool) | — | — | keeps Twinsen from the pylons, then overloaded on Vesk's order | — | the core (ch 12) |
++| Crystal and ice mites | creatures of the cracks where heat leaks | — | — | swarm where the shell leaks | — | the well (ch 1), the pass (ch 6), the ridge (ch 10), the galleries (ch 11) |
++
++Sendell is not an adversary: she asks for help instead of saving everyone (ch 7, 11).
++
++## 5. The opening's promises against the ending
++
++| The opening shows | Paid off |
++|---|---|
++| Zoé's tap stops, then runs warm; the well is dry | the well returns hot (ch 2) and runs cool at the end (Gilbert wants his refund) |
++| A resident asks when the harbour row gets the heat: "every home gets it, Vesk promised" | the heat posts light the town (ch 2), go dark by Vesk's order (ch 8), and glow again at half heat for every house (the end card; Nara on Zeelich) |
++| "What's that hum?" "Just the drill." Lulu: digging to the middle of the world | the bore through the shell to the child Sendell guards (ch 11), turned into a shield (ch 12) |
++| Sendell: "Someone has reached her." | her shrine (ch 7) and her chamber (ch 11): the child is not ready to wake; "She is asleep again" (ch 12) |
++| Arthur wants to see something interesting; Grandpa's radio | Baldino's call (ch 2), the project channel (ch 3), radios for Bug Street (ch 5), the evacuation call (ch 7), "Station ready!" at the lighthouse (ch 10), "can I fix the next radio too?" |
++| Zoé goes next door and comes back with proof | the evacuation plan (ch 2), the warning broadcast (ch 3), the hill families and the council relay (ch 8), the frequency (ch 10) |
++| "Take your magic ball. Just in case." | every chapter's mechanisms; the core's bank shots off brass under fire (ch 12) |
++| Arthur's model boat ("now the sail") | not paid off (small; left as it is) |
++
++## 6. Runs and verdicts (this branch)
++
++| Run | Verdict |
++|---|---|
++| tests/playthrough 01–14 chained from a new game (a scratch copy of tests/lib/seg.mjs that waits longer for the reload after Save & quit; one retry per segment) | all 14 PASS; reruns: 01 and 03 (reload timeouts; the play passed), 06 (the bot missed a stair-stone hop twice; PASS by input on the third run) |
++| tests/playthrough/11-evacuation.mjs again from the chain's chapter-7 save, with LIGHTHOUSE-GATHER | PASS |
++| tests/epilogue-home.mjs (new) | PASS, 11 checks |
++| tests/chapter10.mjs | PASS, 27 checks (with the stand-down) |
++| tests/chapter8.mjs | PASS, 13 checks |
++| tests/cast-rounds.mjs `ONLY='chapter 8'` | PASS, 38 checks |
++| tests/save-migration.mjs | PASS, 11 checks |
++
++Not run (the laptop): the whole of cast-rounds, residents (Lhar's residents now go home after the ending: only that branch
++of storylife.js changed), chapter3.mjs (its epilogue path is segment 14's), the other chapter tests.
++
++## 7. Unresolved
++
++- **No objective marker on the map outside Citadel.** Chapters 3–7 and 9–12 return no markers (the story modules'
++  `markers()`), and the holomap only shows Citadel (main.js `mapMarkers`). The objective text carries the hints; a player
++  lost on Desert Island or Zeelich has nothing on the map. Source-reviewed only.
++- **The old mill's stair-stones (chapter 3, again in 10):** the bot missed the hop from the 6th to the 7th stone on all
++  attempts in two of three runs of segment 06, and made it in the third; from a standing start it works 5/5. Probably the
++  bot's run-up, but the spot deserves a human try.
++- **Fights finished by ISO:** the Zeelich depot (chapter 3) and the bore (chapter 10, now one enemy fewer), with the bot at
++  1–4 HP. Balance by a human is still untested (as QA.md says).
++- **Allies at the core:** three pylons (Zoé, Mira, Oku); Ilka and Dallan, Pim and Sefa, who held relays in chapter 10, are
++  not heard in the finale. The Hebrew synopsis still describes five pylons and repeats chapters 11 and 12; STORY_MAP.md
++  still says the Core sits inside the Shell. Docs not changed here.
++- **Dallan's way to Zeelich in chapter 9** ("Ilka sent me on the second ship") is thin after he was stranded in Kesh.
++- **Vesk's fate** is told by Baldino's radio line and the end card; there is no scene with him after the coil.
++- **The lighthouse lamp room** stays shut after the ending (CONNECTIONS_AUDIT C-3).
++- **The new gathering spot:** the cart and bundles there were not checked from close up (two wide screenshots show the
++  families on the sand below the headland).
++- Chapter 5: after the valves the objective jumps to the relief valve while the hangar's glider and hatch are still in
++  front of the player (segment 08); minor.
++- Text for chapters 3, 8, 10 and the epilogue is English only.
+diff --git a/lba3/src/game/guards.js b/lba3/src/game/guards.js
+index 854336c1..7c668b94 100644
+--- a/lba3/src/game/guards.js
++++ b/lba3/src/game/guards.js
+@@ -64,7 +64,8 @@ export class Guard extends Actor {
+     this.rig.plantIfFits();
+     this.sync();
+   }
+-  get alive() { return this.state !== 'dead'; }
++  // (STAND-DOWN: a guard who stands down is out of the fight from that moment: no target, no hits, not solid, not beaten)
++  get alive() { return this.state !== 'dead' && this.state !== 'yield'; }
+   get aimY() { return this.grobo ? 1.3 : 1.15; }
+   get markY() { return this.grobo ? 2.6 : 2.25; }
+   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
+@@ -123,8 +124,32 @@ export class Guard extends Actor {
+     return this.game.physics.lineOfSight(this.pos.x, this.pos.y + 1.6, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
+   }
+ 
++  // STAND-DOWN (the campaign): someone he answers to tells him to stand aside. He lowers the rifle, walks to `to` (his
++  // cabin's door) and is gone. Nothing drops: he was not beaten. (A reload leaves him out: the story's `when` does.)
++  standDown(to) {
++    if (!this.alive) return;
++    this.state = 'yield'; this.stateT = 0; this.yieldTo = to || this.home;
++    this.aimLine.visible = false; this.rifle.userData.glow.emissiveIntensity = 0.2;
++    this.game.combatDir?.done(this);
++  }
++  updateYield(dt) {
++    const P = this.game.physics, to = this.yieldTo;
++    this.stateT += dt;
++    const dx = to.x - this.pos.x, dz = to.z - this.pos.z, far = Math.hypot(dx, dz) > 0.5;
++    if (!far || this.stateT > 8) { this.gone = true; this.rig.root.visible = false; this.shadow.visible = false; return; }
++    this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 4, dt);
++    const sp = this.stateT < 0.8 ? 0 : 1.3;   // (a beat with the rifle down, then he goes)
++    if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
++    P.fall?.(this, dt);
++    this.rig.play(sp ? 'walk' : 'idle');
++    this.placeRig();
++    this.rig.update(dt, sp);
++    this.sync();
++  }
++
+   update(dt) {
+     if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
++    if (this.state === 'yield') { if (this.present && !this.gone) this.updateYield(dt); return; }
+     if (!this.present || !this.alive) return;
+     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
+     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
+diff --git a/lba3/src/game/roomlife.js b/lba3/src/game/roomlife.js
+index 353ec61d..168abdc7 100644
+--- a/lba3/src/game/roomlife.js
++++ b/lba3/src/game/roomlife.js
+@@ -433,7 +433,7 @@ const SAME = 0.05;       // m: the chapter's place is still the mark the round s
+ const CAST_NEAR = 40;    // m: outdoors a round runs only with the hero this near its mark (farther: back on the mark, unseen)
+ const FIGHT_R = 25;      // m: no round with a foe this near that is after someone (not on its calm patrol)
+ const PATROL_R = 12;     // m: nor with any foe this near (a watch, a patrol: the sneaks)
+-const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant']);   // (enemies.js states with no one chased)
++const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant', 'yield']);   // (enemies.js states with no one chased)
+ const DOOR_CLEAR = 1.0;  // m: a stop keeps this clear of a door's trigger (its reach and this)
+ const samePlace = (p, m) => !!p && !!m && Math.hypot(p.x - m.x, p.z - m.z) < SAME;
+ // a cast round's stops in the world: the mark (the chapter's place: its pose, its angle) and the others round it (dx, dz
+diff --git a/lba3/src/game/story/epilogue.js b/lba3/src/game/story/epilogue.js
+index 796cd756..6937d67a 100644
+--- a/lba3/src/game/story/epilogue.js
++++ b/lba3/src/game/story/epilogue.js
+@@ -13,13 +13,44 @@ const LINES = {
+ export class Epilogue extends ChapterBase {
+   on() { return this.reached(); }
+ 
++  // EPILOGUE-HOME (the campaign): four days on, everyone the later chapters moved is back where they live, and has a
++  // word about it (idle_<id>_home, said through baseTalk where the epilogue has no line of its own). Before, the last
++  // chapter to place someone kept him there for good: Gilbert at the fortress shelter's door, Tim and Lulu at the depot
++  // bunker, the hill families up by the plateau, Mira down in the valve room, Ilka and Dallan at the bore, Oku on his
++  // mill, Pim holding the dome's mirror, Yorna's village in the monks' camp; and Doran, Baldino, Nara and Oku were not
++  // in the world at all. (Each spot is read from its own area: an area not built yet makes him wait for it, refreshCast.)
+   place(id) {
+     if (!this.on()) return undefined;
+-    const H = this.game.rooms.house?.npcSpots || {};
++    const g = this.game, R = g.rooms, W = g.world;
++    const H = R.house?.npcSpots || {};
++    const def = () => { const n = this.npc(id); return n ? { x: n.def.x, z: n.def.z, a: n.def.angle ?? 0 } : undefined; };
+     switch (id) {
+       case 'zoe': return H.zoe || undefined;
+       case 'arthur': return H.arthur || undefined;
+-      case 'vesk': case 'baldino': case 'nara': case 'oku': case 'guard': case 'worker': return null;
++      case 'vesk': case 'guard': case 'worker': return null;
++      // Citadel: the well, the water office, the harbour, the street
++      case 'gilbert': return { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'wipe' };
++      case 'mira': return R.office?.npcSpots?.mira;
++      case 'doran': return { x: W.pierStart.x, z: W.pierStart.z + 2.2, a: Math.PI };
++      case 'tim': case 'lulu': case 'xil': case 'farmer1': case 'farmer2': case 'farmer3': return def();
++      // Zeelich: Baldino at his bench, Nara and Oku on the street
++      case 'baldino': return R.workshop?.npcSpots?.baldino ?? R.zeelich?.npcSpots?.baldinoOut;
++      case 'nara': return R.zeelich?.npcSpots?.esmer1;
++      case 'oku': return R.zeelich?.npcSpots?.esmer2;
++      // Desert Island: Kesh's square (Ilka and Dallan as after the vent, chapter 5)
++      case 'ilka': case 'dallan': case 'tarra': case 'hesk': {
++        const D = R.desert; if (!D) return undefined;
++        const pz = D.plaza, S = D.npcSpots;
++        if (id === 'ilka') return { x: pz.x + 2.2, z: pz.z + 1.0, a: -1.2 };
++        if (id === 'dallan') return { x: pz.x - 2.4, z: pz.z + 1.6, a: 1.4 };
++        return S[id];
++      }
++      // the Hamalayi: Lhar lived in again (its people were in the monks' camp since chapter 6)
++      case 'yorna': case 'pim': case 'lhar1': case 'lhar2': case 'lhar3': {
++        const M = R.hamalayi; if (!M) return undefined;
++        const S = M.npcSpots;
++        return { yorna: S.yorna, pim: S.pim, lhar1: S.v1, lhar2: S.v2, lhar3: S.v3 }[id];
++      }
+     }
+     return undefined;
+   }
+@@ -64,7 +95,15 @@ export class Epilogue extends ChapterBase {
+     return true;
+   }
+   applyFlags() { this.game.world.bunting?.setVisible(this.on()); if (this.on()) this.game.world.station?.setActive?.(true); } // (the bore runs as a shield: the heat posts glow again)
+-  doors() { return this.story.townDoors(); }
++  // (Citadel's town doors, and the two rooms where someone waits with a word after the ending: Baldino's workshop on
++  //  Zeelich and Sefa's dome in the Hamalayi; their doors belonged to their chapters only, so Baldino stood at his bench
++  //  behind a door with no prompt. Their exits are the chapters' own: Story.exitTo looks back through them.)
++  doors() {
++    const out = this.story.townDoors(), RG = this.game.regions, Z = RG.built('zeelich'), M = RG.built('hamalayi');
++    if (Z && RG.has('workshop')) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
++    if (M?.observatory && RG.has('obsv')) out.push({ region: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z, r: 1.0, room: 'obsv' });
++    return out;
++  }
+   objective() { return this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
+   journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }]; }
+ }
+diff --git a/lba3/src/game/story/evacuation.js b/lba3/src/game/story/evacuation.js
+index 1d0c9fa4..58e02ae2 100644
+--- a/lba3/src/game/story/evacuation.js
++++ b/lba3/src/game/story/evacuation.js
+@@ -17,12 +17,18 @@ import { crossByShip } from '../travelfilm.js';
+ 
+ // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
+ const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
+-const LANDING = { x: -58, z: -60 }, GATHER = { x: -66, z: -55 };
+-// the farmers set off for the gather point along the roads (the first stretch is what is seen; out of sight, or after
+-// MARCH_T s, they are there)
+-const ROAD = [[-39.5, 9], [-42, -4], [-37, -20], [-34, -36], [-42, -50], [-48, -56], [-58, -66], [-66, -58]];
+-// (each farmer's first leg: out of his farm to the lane east of the south house, and up it; round the houses and fences)
+-const LEAD = [[[-47, 32.5], [-39.5, 32.5], [-39.5, 19]], [[-38, 42], [-39.5, 33], [-39.5, 19]], [[-55, 47], [-48, 43], [-40, 40], [-39.5, 33], [-39.5, 19]]];
++// LIGHTHOUSE-GATHER (the campaign): the hill families gather where Zoé says they will, by the lighthouse on the south-west
++// headland (island.js LIGHTHOUSE, -107.5, 90.5), on the lighthouse path's last flat stretch before the tower (its door at
++// -107.5, 94.2): the way every signpost marks LIGHTHOUSE, a short walk from the family's house. It was on the northern
++// plateau by the glider field (-66, -55), 150 m from the lighthouse, past the town and the fort: a player told "Zoé: go
++// to the lighthouse" followed the signs to the tower and found nothing there.
++const LANDING = { x: -58, z: -60 }, GATHER = { x: -89, z: 96.5 };
++// the farmers set off for the gather point along the lanes (the first stretch is what is seen; out of sight, or after
++// MARCH_T s, they are there). The way the bot's planner walks it from each farm (A* over the collision, 0.5 m cells):
++// down to the house's lane, west past the bay to the lighthouse path.
++const ROAD = [[-70.8, 91.4], [-74, 93.2], [-79.5, 94.2], [-87, 95.6]];
++// (each farmer's first leg: out of his farm and down to the lighthouse path; round the houses and fences)
++const LEAD = [[[-52.1, 35], [-61.1, 44.5], [-67.1, 64.5], [-68.1, 82]], [[-32, 47.7], [-37.5, 55.2], [-42.5, 57.7], [-44, 57.2], [-63.5, 77.2]], [[-68, 72.7], [-68, 81.7]]];
+ const MARCH_SPEED = 2.1, MARCH_T = 20, MARCH_FAR = 26;
+ // (the lever and its cistern stand on the yard's floor, clear of the station's tanks as rebuilt to the original layout)
+ const FORT = { door: { x: -50, z: -71 }, lever: { x: -33, z: -70 } };
+@@ -37,6 +43,7 @@ const DEPOT_F = shelterFrame(DEPOT_C.x, DEPOT_C.z, DEPOT_RY);
+ 
+ export class Evacuation extends ChapterBase {
+   get W() { return this.game.world; }
++  get gather() { return { ...GATHER }; }   // (where Zoé's run ends: tests read it here)
+   outdoors() { return !this.game.room; }
+   farmsDone() { return FARMS.filter((p) => this.f['c8_' + p.id]).length; }
+   townDone() { const f = this.f; return !!(f.c8_gilbert && f.c8_fort && f.c8_depot && f.c8_mira && f.c8_pippa); }
+@@ -128,7 +135,7 @@ export class Evacuation extends ChapterBase {
+       if (!this.reached()) return null;
+       const k = FARMS.indexOf(farm);
+       if (this.march?.some((m) => m.npc.def.id === id)) return undefined;   // (on the road: left where he is)
+-      return f['c8_' + id] ? { x: GATHER.x + k * 1.6 - 1.6, z: GATHER.z + 1, a: Math.PI } : { x: farm.x, z: farm.z, a: farm.a };
++      return f['c8_' + id] ? { x: GATHER.x + k * 1.6 - 1.6, z: GATHER.z + 1, a: -Math.PI / 2 } : { x: farm.x, z: farm.z, a: farm.a };   // (facing the lighthouse)
+     }
+     if (!this.reached()) return undefined;
+     const V = W.well, S = W.stall, Q = W.pierStart; // (the quay, where the pier starts)
+diff --git a/lba3/src/game/story/network.js b/lba3/src/game/story/network.js
+index b75d2b62..85412fc6 100644
+--- a/lba3/src/game/story/network.js
++++ b/lba3/src/game/story/network.js
+@@ -46,7 +46,8 @@ export class Network extends ChapterBase {
+   done() { return STATIONS.filter((s) => this.f['c10_' + s]).length; }
+   boreDrones() { return this.game.enemies.filter((e) => /^ndrone/.test(e.def?.id || '')); }
+   // the bore fight, wave 2: Vesk's guards out of the cabins (the clone and the Grobo guard) and the sentry at the gate
+-  boreGuards() { return this.game.enemies.filter((e) => /^(nclone|nguard|nsentry)$/.test(e.def?.id || '')); }
++  // (the Grobo guard is left out once Dallan has stood him down: STAND-DOWN, update)
++  boreGuards() { return this.game.enemies.filter((e) => /^(nclone|nguard|nsentry)$/.test(e.def?.id || '') && !(e.def.id === 'nguard' && this.f.c10_guardDown && !this.guardLeaving)); }
+   boreFoes() { return [...this.boreDrones(), ...this.boreGuards()]; }
+   ridgeMites() { return this.game.enemies.filter((e) => /^nmite|^ncrawler/.test(e.def?.id || '')); }
+ 
+@@ -115,7 +116,10 @@ export class Network extends ChapterBase {
+       const face = (x, z) => Math.atan2(b.x - x, b.z - z);
+       const cl = { x: b.x - 5.4, z: b.z - 9.3 }, gd = { x: b.x + 10.1, z: b.z - 9.4 };
+       out.push({ id: 'nclone', kind: 'fclone', group: 'nbore', x: cl.x, z: cl.z, angle: face(cl.x, cl.z), hp: 4, armour: 1, when: (f) => live(f) && !!f.c10_boreW2 });
+-      out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: gd.x, z: gd.z, angle: face(gd.x, gd.z), when: (f) => live(f) && !!f.c10_boreW2 && (this.boreWant ?? 2) > 1 });
++      // (STAND-DOWN: the guard is a man of Dallan's old roster. When he comes out, Dallan, at the bore, orders him to stand
++      //  down under the council's order, and he walks back to his cabin: the clone and the sentry are FunFrock's machines,
++      //  reactivated by the project, and they keep to their old orders. Once he is gone he stays gone, after a load too.)
++      out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: gd.x, z: gd.z, angle: face(gd.x, gd.z), when: (f) => live(f) && !!f.c10_boreW2 && (this.boreWant ?? 2) > 1 && (!f.c10_guardDown || !!this.guardLeaving) });
+     }
+     if (D?.bore && D.post) {
+       // the sentry automaton at the post's gate: the last of the second wave (it keeps its post: it comes at him when he walks to it)
+@@ -415,6 +419,20 @@ export class Network extends ChapterBase {
+     g.audio.play('alert');
+     this.chain([['ilka', 'c10_ilka_w2']], () => { g.updateObjective(); g.save(false); });
+   }
++  // STAND-DOWN: a second after the Grobo guard comes out of his cabin, Dallan (at the bore) orders him to stand down, and he
++  // walks back to his cabin's door. Dallan was project security on this island for a year: the guard answers to him, the
++  // machines do not. (Only while Dallan is there and the guard is up; once, saved as c10_guardDown.)
++  standDownGuard(dt) {
++    const g = this.game, f = this.f;
++    const gd = g.enemies.find((e) => e.def?.id === 'nguard'), dl = this.npc('dallan');
++    if (this.guardLeaving && (!gd || gd.gone || !gd.present)) { this.guardLeaving = false; this.story.refreshCast(); }
++    if (f.c10_guardDown || !gd || !gd.present || !gd.alive || !dl?.present) { this.guardSeen = 0; return; }
++    this.guardSeen = (this.guardSeen || 0) + dt;
++    if (this.guardSeen < 1.0 || g.state !== 'play') return;
++    f.c10_guardDown = true; this.guardLeaving = true;
++    gd.standDown({ x: gd.def.x, z: gd.def.z - 1.0 });   // (his cabin's door: 1 m behind where he came out)
++    this.chain([['dallan', 'c10_dallan_stand'], ['narrator', 'c10_guard_stand'], ['hero', 'c10_tw_stand']]);
++  }
+   update(dt = 0) {
+     const g = this.game, f = this.f;
+     if (!this.isCur()) return;
+@@ -440,6 +458,7 @@ export class Network extends ChapterBase {
+           g.giveBonus(['life'], 1, clone.pos.x, clone.pos.y + 0.8, clone.pos.z, g.hero.pos, { loot: 'c10-bore-heart2' });
+         }
+         if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
++        this.standDownGuard(dt);
+         const foes = this.boreFoes();
+         if (foes.length && foes.every((e) => !e.alive)) { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }
+       }
+diff --git a/lba3/src/game/story/zeelife.js b/lba3/src/game/story/zeelife.js
+index 42f2d33e..41e954e7 100644
+--- a/lba3/src/game/story/zeelife.js
++++ b/lba3/src/game/story/zeelife.js
+@@ -188,9 +188,10 @@ export class ZeelichLife extends ChapterBase {
+       case 'ztri1': return one('ztri1', pk('zl_pel'));     // Mr Pelleck
+       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
+       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
+-      // Nara and Oku when no chapter needs them (chapters 4–8 and after the network)
+-      case 'nara': return ph === 'mid' || ph === 'late' ? one('nara', 'zl_nara') : false;
+-      case 'oku': return ph === 'mid' || ph === 'late' ? one('oku', 'zl_oku') : false;
++      // Nara and Oku when no chapter needs them (chapters 4–8 and after the network; after the ending they have their
++      // own word about it: story/epilogue.js EPILOGUE-HOME)
++      case 'nara': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('nara', 'zl_nara') : false;
++      case 'oku': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('oku', 'zl_oku') : false;
+     }
+     return false;
+   }
+diff --git a/lba3/src/game/storylife.js b/lba3/src/game/storylife.js
+index cba3210e..3631e84e 100644
+--- a/lba3/src/game/storylife.js
++++ b/lba3/src/game/storylife.js
+@@ -213,11 +213,13 @@ const SCHOOL_PLAZA = { x0: -62.35, x1: -54.7, z0: -80.45, z1: -68.4, min: 0.2 };
+ const H3 = { x: -22.59, z: 22.54 }, H4 = { x: 4.29, z: 20.46 };
+ export const MON_CAMP = { fire: { x: 50, z: -40 }, rack: { x: 51.5, z: -31.6 }, wood: { x: 57, z: -43.5 }, sledge: { x: 46.6, z: -46 }, crates: { x: 45.6, z: -35.4 }, tag: { x: 55.2, z: -36.6, r: 2.0 } };
+ const MC = MON_CAMP, LHAR_TAG = { x: -4, z: 27.5, r: 2.0 };
+-// (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up)
++// (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up; home in
++//  Lhar again after the ending, with Yorna, Pim and the story's villagers: story/epilogue.js EPILOGUE-HOME)
+ const village = (trip) => (f, S) => {
+   const i = S.index, p = idx(S, 'pass');
+   if (i < p) return 'lhar';
+   if (S.cur?.key === 'pass') return f[trip] ? 'mon' : 'lhar';
++  if (S.cur?.key === 'home') return 'lhar';
+   return 'mon';
+ };
+ const HAMALAYI_PEOPLE = [
+diff --git a/lba3/src/game/text/ch10.js b/lba3/src/game/text/ch10.js
+index c4264c1f..cad6214d 100644
+--- a/lba3/src/game/text/ch10.js
++++ b/lba3/src/game/text/ch10.js
+@@ -58,6 +58,9 @@ Object.assign(STR.en, {
+   c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. There's a heart by your feet. Breathe, then take them one at a time.",
+   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
+   c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
++  c10_dallan_stand: "Bren! Rifle down. The council has ordered the bore reversed, and you were on my roster for a year. Back inside.",
++  c10_guard_stand: "The guard looks from Dallan to the bore. He lowers his rifle and walks back to his cabin.",
++  c10_tw_stand: "(The clone and the sentry won't listen. They're FunFrock's machines, still keeping old orders.)",
+ 
+   // The Hamalayi: the dome
+   c10_yorna_1: "Back again, and with a box on your back. Sefa's dome?",
+diff --git a/lba3/src/game/text/ch3.js b/lba3/src/game/text/ch3.js
+index 77fc2219..9deeedaf 100644
+--- a/lba3/src/game/text/ch3.js
++++ b/lba3/src/game/text/ch3.js
+@@ -38,7 +38,7 @@ Object.assign(STR.en, {
+   c3_sendell_4: 'Then turn it. I will hold on as long as I can.',
+   c3_sendell_crystals: 'You carry six of her splinters. They sang to you, so she knows you. Go.',
+   c3_bal_radio2: "Twinsen! The conversion plans. Three pylons around the core. Hit each one and it switches, but each needs power from up here.",
+-  c3_bal_radio3: "Zoé's at the lighthouse for the signal. Mira's opening the valves. Oku and Nara are releasing the mills. You take the pylons.",
++  c3_bal_radio3: "Everyone is still at their station. Zoé has the lighthouse signal, Mira the valves, Oku the mills. You take the pylons.",
+ 
+   // the core
+   c3_core_vesk1: "You came all this way. Look, Twinsen. Under the shell lies the greatest source of power two worlds have ever had. I'm finishing the bore, and it will be ours.",
+@@ -48,7 +48,7 @@ Object.assign(STR.en, {
+   c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',
+   c3_pylon_1: 'Signal is out. Sun, wave, star. Just like last time!',
+   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
+-  c3_pylon_3: 'The mills are free. Listen to that wind!',
++  c3_pylon_3: 'All three mills at full sail. Listen to that wind!',
+   c3_toast_pylon: 'Pylon converted ({n}/3)',
+   c3_exit_block: 'Not now. The pylons first.',
+   c3_vesk_over1: "Three pylons. Clever. You think a sketch beats ten years of my work?",
+@@ -89,12 +89,12 @@ Object.assign(STR.en, {
+   ep_tw_1: "I am back for dinner. Just not that one.",
+   ep_ar_1: 'Dad! Did you really see Sendell? Did the drill really turn into a shield? Can I go down there?',
+   ep_tw_2: 'Yes, yes, and no.',
+-  ep_zoe_2: 'Everyone came back from the hills. Gilbert says the well water is finally cold. He wants his refund.',
++  ep_zoe_2: "The tunnels are empty again, and the hill families brought their goats down from the lighthouse. Gilbert says the well water is finally cold. He wants his refund.",
+   ep_zoe_3: 'Sit. Eat. Then tell us everything. Slowly.',
+   ep_end_title: 'The End',
+-  ep_end_text: 'The bore still turns under the island, now as a shield run by both worlds. Vesk waits in a Zeelich cell for the joint council\'s judgement. The well runs cool.<br><br>Thanks for playing LBA3: The Awakening.',
++  ep_end_text: 'The bore still turns under the island, now as a shield run by both worlds. The heat posts glow again at half heat, for every house, on the list or not. Kesh has its oasis and Lhar its village. Vesk waits in a Zeelich cell for the joint council\'s judgement. The well runs cool.<br><br>Thanks for playing LBA3: The Awakening.',
+   ep_obj_home: 'Go home. Dinner is waiting',
+-  ep_obj_free: 'Explore Citadel Island',
++  ep_obj_free: 'See how everyone is doing',
+   ep_gilbert: "My refund came. Two months' worth. I almost miss having something to complain about.",
+   ep_mira: 'My report says the water office saved the island. Nobody has argued yet.',
+   ep_doran: "The ferry's back. I'm back. Everyone's back. I'm going to sleep for a week.",
+@@ -105,4 +105,21 @@ Object.assign(STR.en, {
+   ep_arthur: 'Dad, can I fix the next radio too?',
+   ep_zoe_idle: "Arthur wants to be an engineer now. A good one, he says. Not like Vesk.",
+   ep_j_home: 'Home for dinner. A few days late.',
++  // EPILOGUE-HOME: free roam, everyone back where they live (story/epilogue.js place; baseTalk's idle_<id>_home)
++  idle_baldino_home: "Both councils want a shield engineer. I said I'm an inventor. They said that's worse, and hired me anyway.",
++  idle_nara_home: "Half heat for everyone now, the docks too. Councillor Brum complained for an hour, then voted for it. Your flower's free.",
++  idle_oku_home: "The mills grind flour again. Only flour. Listen: lazy and happy.",
++  idle_ilka_home: "The council gave me my job back. I took it on one condition: this time I keep the gate code.",
++  idle_dallan_home: "I carry water for the old ones every morning. Tarra lets me. She hasn't said she forgives me, and I haven't asked.",
++  idle_tarra_home: "Dallan carries our water now. Two jars every morning. It will take a great many jars.",
++  idle_hesk_home: "The project wants FunFrock's glider back. I told them FunFrock isn't asking.",
++  idle_yorna_home: "We're home. The slides stopped the day the vent opened. The monks sent us down with cheese nobody asked for.",
++  idle_pim_home: "Sefa says I held the mirror for the whole minute. Now everyone wants me to hold things.",
++  idle_lhar1_home: "Home again. The waterfall froze last night, like a proper winter.",
++  idle_lhar2_home: "The goats walked back down before we did. They knew first.",
++  idle_lhar3_home: "The mountain is cold underneath again. Good. Mountains should be cold.",
++  idle_keeper_home: "The stars have gone quiet. That is how I know she sleeps.",
++  idle_farmer1_home: "The goats are back in their field. They won't look at the lighthouse. Can't blame them.",
++  idle_farmer2_home: "The children want to go back up the cliffs. For fun, they say. Fun!",
++  idle_farmer3_home: "Grull is home. Grull stays home now.",
+ });
+diff --git a/lba3/src/game/text/ch8.js b/lba3/src/game/text/ch8.js
+index 9f063bca..b8a1785e 100644
+--- a/lba3/src/game/text/ch8.js
++++ b/lba3/src/game/text/ch8.js
+@@ -5,13 +5,13 @@ Object.assign(STR.en, {
+   n_farmer1: 'Farmer Joss', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
+   p_lever: 'Pull', p_shelter: 'Inspect',
+ 
+-  c8_narr: 'The glider skims the cliffs and comes down in the grass above the lighthouse. Below, Citadel is not the island Twinsen left.',
++  c8_narr: 'The glider skims the cliffs and comes down on the plateau above the town. Below, Citadel is not the island Twinsen left.',
+   c8_hesk_1: "Project ships at your spaceport, and a queue down the whole bridge. I'll take the glider back south before they take her too. Good luck, Twinsen.",
+   c8_tw_1: "The heat posts are dark. And the square is fenced off. Home first.",
+ 
+   c8_zoe_1: 'You came back! Arthur, he came back!',
+   c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
+-  c8_zoe_2: "The project ships take only the list. The heat posts went dark yesterday, to save power for the bore. People on the list are queuing at the spaceport. Everyone else was told to wait.",
++  c8_zoe_2: "The project ships take only the list. Yesterday Vesk switched off the heat posts: every bit of power goes to his bore now. People on the list are queuing at the spaceport. Everyone else was told to wait.",
+   c8_tw_z1: "Then we take everyone else. Where's safe?",
+   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
+   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
+@@ -47,8 +47,8 @@ Object.assign(STR.en, {
+   c8_zoe_lh3: "So when I broadcast, the council heard me. They know. They just haven't decided anything.",
+ 
+   c8_control_1: 'The control room. The screens flicker, and a face appears: Vesk, far below.',
+-  c8_vesk_1: "This is Vesk. To all stations: the bore reaches full depth in three days. Evacuation of listed personnel continues. That is all.",
+-  c8_tw_c1: 'Three days.',
++  c8_vesk_1: "This is Vesk, to all stations. Somebody has been opening FunFrock's old vents. The pressure is falling, and it changes nothing: every watt goes to the bore. Full depth in three days. Listed personnel, keep boarding. That is all.",
++  c8_tw_c1: "He knows the vents are open. So he drills faster. Three days.",
+   c8_zoe_radio: "Twinsen, I heard. The lighthouse relays to Zeelich's council. If they order the bore reversed, the project has to obey. Go and make them listen. I'll keep everyone safe here.",
+   c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one.",
+ 
+@@ -68,6 +68,6 @@ Object.assign(STR.en, {
+   c8_j_shelters: "Gilbert told me about FunFrock's two shelters, under the fortress and the depot, and I opened both. Mira promised water and gave me the key to the valve room, and Pippa sent supplies.",
+   c8_j_farms: "Zoé brought the hill families and their animals up to the lighthouse cliffs.",
+   c8_j_relay: "At the lighthouse Zoé found the transmitter still tuned to Zeelich's council chamber. The council heard her warning, but has decided nothing.",
+-  c8_j_vesk: "Vesk came on the control-room screen: the bore reaches full depth in three days. Zoé said the council can order it reversed, so I will take a project ship to Zeelich.",
++  c8_j_vesk: "Vesk came on the control-room screen. He knows the vents are open, and instead of stopping he sends every watt to the bore: full depth in three days. Zoé said the council can order it reversed, so I will take a project ship to Zeelich.",
+   it_valvekey: 'Valve room key', itd_valvekey: "Mira's key to FunFrock's valve control room.",
+ });
+diff --git a/lba3/tests/cast-rounds.mjs b/lba3/tests/cast-rounds.mjs
+index 1d3091cf..8e768c7d 100644
+--- a/lba3/tests/cast-rounds.mjs
++++ b/lba3/tests/cast-rounds.mjs
+@@ -310,7 +310,7 @@ if (!ONLY || ONLY.test('chapter 8, the hill farms')) {
+     out.jump = jumps; out.marching = !!n.controlled; out.told = !!G.flags.c8_farmer1;
+     n.placeAt = own;
+     G.story.cur.finishMarch(); G.step(0.2);
+-    const k = 0, gx = -66 + k * 1.6 - 1.6, gz = -55 + 1;
++    const Gp = G.story.cur.gather, k = 0, gx = Gp.x + k * 1.6 - 1.6, gz = Gp.z + 1;
+     out.atGather = +Math.hypot(n.pos.x - gx, n.pos.z - gz).toFixed(2); out.round = R.defFor(n)?.id ?? null;
+     return out;
+   });
+diff --git a/lba3/tests/chapter10.mjs b/lba3/tests/chapter10.mjs
+index aa2a03a6..c487f7e8 100644
+--- a/lba3/tests/chapter10.mjs
++++ b/lba3/tests/chapter10.mjs
+@@ -154,6 +154,13 @@ const guards = await ev((MAXT) => { const G = game; const r = beat(G.story.cur.b
+   for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
+   return [...r, G.story.cur.boreFoes().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }, MAX_THROWS);
+ is("wave 2 (clone, guard, sentry) beaten, the bore relay done (4/5)", guards, (v) => v[2].every((a) => a === false) && v[3] === true && v[4].length > 0);
++// STAND-DOWN (docs/campaign/CAMPAIGN_DIRECTOR.md): the Grobo guard is a man of Dallan's old roster. Dallan, at the bore, orders
++// him to stand down; he walks back to his cabin, is not beaten (nothing drops for him) and stays gone. Only FunFrock's machines
++// (the clone, the sentry) are fought.
++is('wave 2: Dallan stood the guard down (not beaten, nothing dropped, gone); the clone and the sentry were fought', await ev(() => {
++  const G = game, gd = G.enemies.find((e) => e.def?.id === 'nguard');
++  return { down: !!G.flags.c10_guardDown, state: gd?.state, gone: !!gd?.gone, visible: !!gd?.rig.root.visible, beaten: !!gd?.ko, foes: G.story.cur.boreFoes().map((e) => e.def.id) };
++}), (v) => v.down && v.state === 'yield' && !v.beaten && !v.visible && !v.foes.includes('nguard'));
+ for (const a of guards[1]) { assists.push('guard ' + a); log('ISO  guard ' + a); }
+ await shot('C10-06-bore.png');
+ is('the glider to the Hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(2); }), (v) => v === 'hamalayi');
+diff --git a/lba3/tests/chapter8.mjs b/lba3/tests/chapter8.mjs
+index 64124899..4ab4d36d 100644
+--- a/lba3/tests/chapter8.mjs
++++ b/lba3/tests/chapter8.mjs
+@@ -64,7 +64,7 @@ is('Pippa: supplies, an objective set', await ev(() => { T.talk('pippa'); return
+ is("Zoé's run starts: playing Zoé outside", await ev(() => { T.door(game.world.houses[0].door); T.talk('zoe'); game.step(1); T.talkAll(); return [game.flags.c8_zoeStart, game.hero.body, game.room?.id ?? 'out', T.obj()]; }), (v) => v[0] === true && v[1] === 'zoe' && v[2] === 'out' && v[3].length > 0);
+ is('the three hill farms told', await ev(() => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { T.talk(id); game.step(1); T.talkAll(); } return [game.story.cur.farmsDone(), T.obj()]; }), (v) => v[0] === 3 && v[1].length > 0);
+ await shot('C8-03-farms.png');
+-is('the lighthouse relay; back to Twinsen', await ev(() => { const G = game; T.tp(-66, -53); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }), (v) => v[0] === true && v[1] === 'twinsen' && v[2].length > 0);
++is('the lighthouse relay; back to Twinsen', await ev(() => { const G = game; { const Gp = G.story.chapters.find((c) => c.key === 'evacuation').gather; T.tp(Gp.x, Gp.z + 1); } for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }), (v) => v[0] === true && v[1] === 'twinsen' && v[2].length > 0);
+ is('the control room: Vesk, an objective set', await ev(() => { const r = T.door(game.world.station.control.door); game.step(0.5); T.talkAll(); return [r, game.flags.c8_vesk, T.obj()]; }), (v) => v[0] === 'control' && v[1] === true && v[2].length > 0);
+ // (PLANET-1: the project ships leave from Citadel Spaceport; Zeelich is another planet)
+ is('chapter 8 ends on a project ship: the next chapter (council) on Zeelich, at its spaceport', await ev(() => { T.out(); const p = game.world.spaceport.pad; T.tp(p.x - 4.2, p.z, Math.PI / 2); const it = game.findInteractable()?.kind; T.tap('KeyE'); game.step(1.5); T.talkAll(); const L = game.rooms.zeelich.spaceport.landing, h = game.hero; return [it, game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out', +Math.hypot(h.pos.x - L.x, h.pos.z - L.z).toFixed(1)]; }), (v) => v[0] === 'c8ship' && v[1] === true && v[2] === 'council' && v[3] === 'zeelich' && v[4] < 3);
+diff --git a/lba3/tests/epilogue-home.mjs b/lba3/tests/epilogue-home.mjs
+new file mode 100644
+index 00000000..1a708c50
+--- /dev/null
++++ b/lba3/tests/epilogue-home.mjs
+@@ -0,0 +1,128 @@
++// EPILOGUE-HOME (the campaign, docs/campaign/CAMPAIGN_DIRECTOR.md): after the ending, everyone the later chapters moved
++// is back where they live, and has a word about it. Before, the last chapter to place someone kept him there for good
++// (Gilbert at the fortress shelter, Tim and Lulu at the depot bunker, the hill families by the plateau, Mira in the valve
++// room, Ilka and Dallan at the bore, Oku on his mill, Pim at the dome's telescope, Lhar's people in the monks' camp), and
++// Doran, Baldino, Nara and Oku were not in the world at all; the allies away from Citadel only said "Hello, Twinsen."
++// A LOGIC test: the chapters before are set by flags (ISO), the epilogue is played from its start (the dinner, the end
++// screen, Keep Exploring), the regions are reached by the travel network's own move (ISO), the talks by E.
++import { launch, open, menu, checker } from './lib/boot.mjs';
++const { browser, page } = await launch({ width: 960, height: 540 });
++const { check, done } = checker({ info: 'always' });
++const ev = (f, a) => page.evaluate(f, a);
++const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
++await open(page, '?nocine');
++await menu(page, 'new');
++await ev(() => {
++  const G = window.game; G.testFreeze = true;
++  window.T = {
++    tap(c) { G.input.taps.add(c); G.step(1 / 60); },
++    talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play' && G.state !== 'ending'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
++    npc(id) { return G.npcs.find((n) => n.def.id === id); },
++    said: [],
++    // stand 1.4 m from the NPC, facing them, where the prompt is theirs; E; what was said
++    talk(id) {
++      const n = T.npc(id), h = G.hero, P = G.physics;
++      if (!n?.present) return { id, present: false };
++      let spot = null;
++      for (let k = 0; k < 12 && !spot; k++) {
++        const a = n.angle + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 6, x = n.pos.x + Math.sin(a) * 1.4, z = n.pos.z + Math.cos(a) * 1.4;
++        if (P.blockedAt(x, z, n.pos.y, 0.3)) continue;
++        h.pos.set(x, n.pos.y, z); h.onGround = true; h.vy = 0; h.angle = Math.atan2(n.pos.x - x, n.pos.z - z);
++        if (G.findInteractable()?.npc === n) spot = [x, z];
++      }
++      if (!spot) return { id, present: true, prompt: false };
++      T.said.length = 0; G.step(0.3); T.tap('KeyE'); G.step(0.05);
++      const text = document.querySelector('#dialog-text')?.textContent || T.said.join(' ');
++      T.talkAll();
++      return { id, present: true, prompt: true, text: (T.said.join(' ') || text).slice(0, 120) };
++    },
++    at(id) { const n = T.npc(id); return n?.placed ? { x: +n.placed.x.toFixed(1), z: +n.placed.z.toFixed(1) } : null; },
++  };
++  const os = G.say.bind(G);
++  G.say = (name, text, ...r) => { T.said.push([].concat(text).join(' ')); return os(name, text, ...r); };
++});
++
++// ISO: the story through chapter 12, with the states that moved people: the shelters, the hill families, the relays
++is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the end screen)', await ev(() => {
++  const G = game; T.talkAll();
++  Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 11, chapterKey: 'core',
++    c1_started: true, c1_done: true, c1_water: true, c1_radio: true, c1_veskGone: true, c1_plan: true, c2_shield: true, c2_veskDown: true,
++    c4_pump: true, c4_notebook: true, c4_carving: true, c5_planned: true, c5_vent: true, c5_glider: true,
++    c6_trip1: true, c6_trip2: true, c6_up: true, c7_vent: true,
++    c8_home: true, c8_gilbert: true, c8_pippa: true, c8_farmer1: true, c8_farmer2: true, c8_farmer3: true, c8_zoeDone: true, c8_vesk: true,
++    c9_heard: true, c9_dallan: true, c9_vote: true,
++    c10_started: true, c10_okuAsk: true, c10_miraAsk: true, c10_pim: true, c10_mill: true, c10_valves: true, c10_light: true, c10_bore: true, c10_dome: true, c10_done: true,
++    c3_turned: true, c3_done: true });
++  G.hero.hasBall = true; G.story.nextChapter();
++  for (let i = 0; i < 20 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); }
++  return [G.flags.chapterKey, G.flags.ep_dinner, G.state];
++}), (v) => v[0] === 'home' && v[1] === true && v[2] === 'ending');
++is('Keep Exploring: free roam, the objective sends him round everyone', await ev(() => {
++  const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5);
++  if (game.room) { const e = game.room.exits.find((x) => !x.room) || game.room.exits[0]; const h = game.hero; h.pos.set(e.x, h.pos.y, e.z); game.step(1.6); T.talkAll(); }
++  return [game.state, game.flags.ep_free, document.querySelector('#pause-objective')?.textContent || '', game.room?.id ?? 'citadel'];
++}), (v) => v[0] === 'play' && v[1] === true && /everyone/i.test(v[2]) && v[3] === 'citadel');
++
++// Citadel: home again
++const cit = await ev(() => {
++  const G = game, W = G.world, near = (id, p, r = 2) => { const n = T.npc(id); return !!n?.present && Math.hypot(n.pos.x - p.x, n.pos.z - p.z) < r; };
++  const def = (id) => { const n = T.npc(id); return { x: n.def.x, z: n.def.z }; };
++  return {
++    gilbert: near('gilbert', W.well, 4), doran: near('doran', { x: W.pierStart.x, z: W.pierStart.z + 2.2 }),
++    tim: near('tim', def('tim')), lulu: near('lulu', def('lulu')), xil: near('xil', def('xil')),
++    farmers: ['farmer1', 'farmer2', 'farmer3'].map((id) => near(id, def(id))),
++    mira: T.at('mira'), miraOffice: G.rooms.office?.npcSpots?.mira ? T.at('mira')?.x === +G.rooms.office.npcSpots.mira.x.toFixed(1) : 'office not built',
++    heat: !!G.world.station?.active,
++  };
++});
++is('Citadel: Gilbert by his well, Doran on his quay, the kids and Xil on their spots, the hill families at their farms', cit, (v) => v.gilbert && v.doran && v.tim && v.lulu && v.xil && v.farmers.every(Boolean));
++is('Citadel: Mira back at the water office, not in the valve room', cit, (v) => v.miraOffice === true || v.miraOffice === 'office not built');
++const citTalk = await ev(() => ['gilbert', 'doran', 'farmer1', 'farmer3'].map((id) => T.talk(id)));
++is('Citadel: they talk about being home (Gilbert, Doran, two farmers)', citTalk, (v) => /refund/i.test(v[0].text) && /back/i.test(v[1].text) && /goats/i.test(v[2].text) && /home/i.test(v[3].text));
++
++// Zeelich (ISO travel: the network's own move)
++const zee = await ev(() => {
++  const G = game; G.story.isles.go('zeelich'); for (let i = 0; i < 30 && (G.trans || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
++  G.story.refreshCast();
++  const room = G.room?.id, talk = ['nara', 'oku'].map((id) => T.talk(id));
++  // into the workshop by its door (the room is built as he goes in, and its people placed: LAZY-REGIONS)
++  const h = G.hero, d = G.rooms.zeelich.workshopDoor;
++  h.pos.set(d.x, h.pos.y, d.z + 1.5); G.step(1.2); h.pos.set(d.x, h.pos.y, d.z); G.step(1.6); T.talkAll();
++  const inside = G.room?.id, b = T.npc('baldino'), sp = G.rooms.workshop?.npcSpots?.baldino;
++  return { room, inside, baldino: !!b?.present, atBench: sp && b ? +Math.hypot(b.pos.x - sp.x, b.pos.z - sp.z).toFixed(2) : null, talk: [...talk, T.talk('baldino')] };
++});
++is('Zeelich: Nara and Oku on the street, Baldino back at his bench, each with a word about it', zee, (v) => v.room === 'zeelich' && v.inside === 'workshop' && v.baldino && v.atBench != null && v.atBench < 1 && /heat/i.test(v.talk[0].text) && /flour/i.test(v.talk[1].text) && /inventor/i.test(v.talk[2].text));
++
++// Desert Island: Kesh's square
++const des = await ev(() => {
++  const G = game; if (G.room?.id === 'workshop') { const e = G.room.exits[0]; G.hero.pos.set(e.x, G.hero.pos.y, e.z); G.step(1.6); T.talkAll(); }
++  G.story.isles.go('desert_ferry'); for (let i = 0; i < 30 && (G.trans || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
++  G.story.refreshCast(); G.step(0.3);
++  const pz = G.rooms.desert.plaza, bore = G.rooms.desert.bore;
++  const d = (id, p) => { const n = T.npc(id); return n?.present ? +Math.hypot(n.pos.x - p.x, n.pos.z - p.z).toFixed(1) : null; };
++  return { room: G.room?.id, ilka: d('ilka', pz), dallan: d('dallan', pz), ilkaBore: d('ilka', bore), talk: ['ilka', 'dallan', 'tarra', 'hesk'].map((id) => T.talk(id)) };
++});
++is('Desert Island: Ilka and Dallan in Kesh, not at the bore', des, (v) => v.room === 'desert' && v.ilka != null && v.ilka < 5 && v.dallan != null && v.dallan < 5 && v.ilkaBore > 10);
++is('Desert Island: Ilka, Dallan, Tarra and Hesk each have a word (Dallan carries the water; Tarra has not forgotten)', des, (v) => /gate code/i.test(v.talk[0].text) && /water/i.test(v.talk[1].text) && /jars/i.test(v.talk[2].text) && /glider/i.test(v.talk[3].text));
++
++// the Hamalayi: Lhar lived in again
++const ham = await ev(() => {
++  const G = game; G.story.isles.go('hamalayi_glider'); for (let i = 0; i < 30 && (G.trans || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
++  G.story.refreshCast(); G.step(0.3);
++  const M = G.rooms.hamalayi, S = M.npcSpots, y = M.monastery.yard;
++  const d = (id, p) => { const n = T.npc(id); return n?.present ? +Math.hypot(n.pos.x - p.x, n.pos.z - p.z).toFixed(1) : null; };
++  return { room: G.room?.id, yorna: d('yorna', S.yorna), pim: d('pim', S.pim), lhar1: d('lhar1', S.v1), yornaYard: d('yorna', y), talk: ['yorna', 'pim', 'lhar3'].map((id) => T.talk(id)) };
++});
++is('The Hamalayi: Yorna, Pim and Lhar\'s people home in the village, not in the monastery yard', ham, (v) => v.room === 'hamalayi' && v.yorna != null && v.yorna < 3 && v.pim != null && v.pim < 3 && v.lhar1 != null && v.lhar1 < 3 && v.yornaYard > 10);
++is('The Hamalayi: they talk about being home', ham, (v) => /home/i.test(v.talk[0].text) && /mirror/i.test(v.talk[1].text) && /cold/i.test(v.talk[2].text));
++const dome = await ev(() => {
++  const G = game, h = G.hero, d = G.rooms.hamalayi.observatory.door;
++  h.pos.set(d.x, G.physics.groundAt(d.x, d.z + 2.2, h.pos.y + 30), d.z + 2.2); h.onGround = true; G.step(1.2);
++  h.pos.set(d.x, G.physics.groundAt(d.x, d.z, h.pos.y + 2), d.z); G.step(1.6); T.talkAll();
++  return { inside: G.room?.id, talk: T.talk('keeper') };
++});
++is("The Hamalayi: Sefa's dome opens after the ending, and Sefa has a word", dome, (v) => v.inside === 'obsv' && /sleeps/i.test(v.talk.text || ''));
++
++const fails = done();
++await browser.close();
++process.exit(fails ? 1 : 0);
+diff --git a/lba3/tests/playthrough/11-evacuation.mjs b/lba3/tests/playthrough/11-evacuation.mjs
+index 1df78aa2..9a83d6a0 100644
+--- a/lba3/tests/playthrough/11-evacuation.mjs
++++ b/lba3/tests/playthrough/11-evacuation.mjs
+@@ -12,7 +12,7 @@ export const steps = [
+   ['Pippa', () => { if (P.here() !== 'citadel') P.enter('citadel'); const r = P.talk('pippa', { run: true }); P.settle(); if (game.state === 'shop') P.tap('Escape', 0.2); P.settle(); return { ...r, pippa: game.flags.c8_pippa, fail: game.flags.c8_pippa ? null : 'pippa' }; }],
+   ['Zoé starts her run', () => { const r = P.talk('zoe', { run: true }); P.wait(1); P.settle(); return { ...r, start: game.flags.c8_zoeStart, body: game.hero.body, fail: game.flags.c8_zoeStart ? null : 'zoe' }; }],
+   ['the three farms', () => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { P.talk(id, { run: true }); P.wait(1); P.settle(); } return { done: game.story.cur.farmsDone(), fail: game.story.cur.farmsDone() >= 3 ? null : 'farms' }; }],
+-  ['the lighthouse gathering', () => { const G = game; P.go(-66, -53, { tol: 2, run: true, maxT: 200 }); let t = 0; while (!G.flags.c8_relay && t < 20) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle(); return { relay: G.flags.c8_relay, body: G.hero.body, fail: G.flags.c8_relay ? null : 'relay' }; }],
++  ['the lighthouse gathering', () => { const G = game; const Gp = G.story.chapters.find((c) => c.key === 'evacuation').gather; P.go(Gp.x, Gp.z + 1, { tol: 2, run: true, maxT: 200 }); let t = 0; while (!G.flags.c8_relay && t < 20) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle(); return { relay: G.flags.c8_relay, body: G.hero.body, fail: G.flags.c8_relay ? null : 'relay' }; }],
+   ['the control room', () => { P.enter('control', { run: true }); P.wait(0.5); P.settle(); return { vesk: game.flags.c8_vesk, fail: game.flags.c8_vesk ? null : 'control' }; }],
+   ['a project ship at the spaceport → chapter 9', () => { if (P.here() !== 'citadel') P.enter('citadel'); const p = game.world.spaceport.pad; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(p.x - 4.2, p.z, { run: true, kind: 'c8ship' }); P.settle(60); P.settle(30); } return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'council' ? null : 'no chapter 9' }; }],
+ ];
