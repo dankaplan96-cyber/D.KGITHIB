@@ -1556,7 +1556,7 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
 - Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
   user (Zeelich).
 
-### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026
+### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2)
 `requests/ZEELICH-1-SKY.diff` against origin (`zislands.js` only; applies alone): the island's `R` now carries
 `grade` / `gradeTint` from its style (main.js already calls `setGrade(R.grade, R.gradeTint)` on entering), and the cloud
 sea's three layers and its shore puffs take the style's `cloudTint` (white as before where none is set).
