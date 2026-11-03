@@ -190,7 +190,9 @@ def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None):
     x = np.concatenate([np.zeros(pad, np.float32), x, np.zeros(int(TAIL * SR), np.float32)])
     fx = ['highpass', '70']
     if ps: fx += ['pitch', str(int(ps * 100))]
-    fx += ['treble', '-2', '6500']                                   # (tame the top; nothing piercing)
+    # (tame the top: nothing piercing on laptop speakers, and no sharp sample-to-sample steps where the game's voice
+    #  compressor, 4 ms of attack, lets a syllable's onset through before it acts)
+    fx += ['treble', '-4', '5000', 'lowpass', '7500']
     if room is not None: fx += ['reverb', '18', '60', '25', '0', '8', str(room)]
     y = sox(x, fx)
     if room is not None:                                              # (the room's own short tail, then silence)
