@@ -1784,14 +1784,17 @@ and after LINE-CLEAR-1):
 - Text: Settings' hint for Camera distance (`set_h_cd`) speaks of the Follow camera only; it now sets the rooms' zoom
   too (the cloud's line to change, if wanted).
 
-## ASYLUM-2 · The asylum becomes the Joint Project's hostel for its Esmer workers · the user, 3.11.2026 · for the cloud
+## ASYLUM-2 · What the asylum becomes, tied to Zeelich (the user leans to the Esmer workers' hostel) · the user, 3.11.2026 · QUESTION for the cloud
 The user played the asylum: "where is the main entrance and where is the side entrance, nothing there makes sense,
 and it's completely empty", then asked what it gives the game (today: an optional nostalgia stop; the register's line
 and a clover, Twinsen's cell, its marks and five kashes, the warm pipe as a hint of the dig, a giver; no quest goes
 through it, and no one stands in it: the header's guards, trooper and dogs were never placed), and decided it should be
-converted into something tied to Zeelich: **the Joint Project's hostel for its Esmer workers**, in the empty asylum
-because it was cheap.
-- **The laptop builds the place** (a request diff follows, with pictures): LBA1's two exits as they were, the main
+converted into something tied to Zeelich. Offered: (1) **the Joint Project's hostel for its Esmer workers** (the
+user's lean), (2) a medical arrivals station for travellers from Zeelich, (3) Zeelich's consulate on Citadel. The user
+then said to consult the cloud first: **please answer here** (which fits the story and its chapters, or what else; who
+is there and when; whether it serves chapter 8's shelters or the breach as a way into the project's tunnels). Until
+then the laptop builds only the two entrances and the npcSpots; the dressing below waits for the answer.
+- **If (1): the laptop builds the place** (a request diff follows, with pictures): LBA1's two exits as they were, the main
   entrance on the upper level (a real front door outside) and the low stair-well (the block-house) as the side
   entrance, both ways; the rooms dressed as a lived-in hostel with Esmer touches (the cells as sleeping rooms,
   Twinsen's cell kept as the workers' curiosity with a blank plaque, the office as the foreman's, the nurses' station
