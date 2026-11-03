@@ -1911,7 +1911,7 @@ class Game {
       if (!(d < 2.6)) continue;   // (STABILIZATION: out of reach either way — consider() takes 2.6 m at most, faced 2.2 —: no prompt object a frame for each of the ~70 people)
       const a = aim(n.pos.x, n.pos.z);
       // (behind: in the half-plane at his back, not right on top of him)
-      const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
+      const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' || this.story.shops?.sells(n) ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
       // (G1-QUEST #17: someone at his back gets the prompt only at arm's length: 1.5 m behind him, "Talk" showed with
       //  nobody in front of him)
       consider(dist(n.pos.x, n.pos.z) + (n.ambient ? 0.45 : 0) + (o.behind ? 0.6 : 0), 2.6, o);   // (a walking resident gives way to the story's people on a tie: WORLD-LIFE)
@@ -2074,7 +2074,8 @@ class Game {
   // I-24: Twinsen receives a real inventory object: the found-object box and dance (found.js), then `then`
   found(id, nameKey, then = null, opts = {}) { this.foundObj.give(id, nameKey, then, opts); }
 
-  // where: 'citadel' (Pippa's stall: her stock, then the arsenal's) or another stall the arsenal keeps (story/arsenal.js)
+  // where: 'citadel' (Pippa's stall: her stock, then the arsenal's), another stall the arsenal keeps (story/arsenal.js)
+  // or one of the town's shops (SHOPS-1, story/shops.js: their goods; a disabled one may say why: it.why)
   openShop(where = 'citadel') {
     const h = this.hero;
     this.setState('shop');
@@ -2083,18 +2084,19 @@ class Game {
       const it = { ...s };
       if (s.id === 'clover') it.disabled = h.clovers >= 9;
       return it;
-    }), ...(this.story.arsenal?.shopItems(where) || [])];
+    }), ...(this.story.shops?.stock(where) || []), ...(this.story.arsenal?.shopItems(where) || [])];
     this.hud.openShop(items, (it) => {
-      if (it.disabled) { this.hud.toast('shop_max'); this.audio.play('deny'); return; }
+      if (it.disabled) { this.hud.toast(it.why || 'shop_max'); this.audio.play('deny'); return; }
       if (h.coins < it.price) { this.hud.toast('shop_poor'); this.audio.play('deny'); return; }
       h.coins -= it.price;
       if (it.arsenal) { this.story.arsenal.buy(it); this.save(false); return; }
+      if (it.shop) { this.story.shops.buy(it); this.save(false); return; }
       if (it.id === 'potion') h.hp = h.maxHp;
       if (it.id === 'flask') h.mp = h.mpMax;
       if (it.id === 'clover') h.clovers++;
       this.audio.play('heal');
       this.save(false);
-    }, () => this.setState('play'), where === 'citadel' ? 'shop_title' : 'a_shop_' + where);
+    }, () => this.setState('play'), where === 'citadel' ? 'shop_title' : this.story.shops?.title(where) || 'a_shop_' + where);
   }
 
   // a choice list (the story's travel menus); onPick(item) runs back in play

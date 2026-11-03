@@ -219,6 +219,32 @@ const LOOKS = {
     put(g, new THREE.BoxGeometry(0.12, 0.05, 0.004), M('#e8d8b0', { roughness: 0.9 }), 0.02, 0.06, 0.017);   // (its label)
     return g;
   },
+  // SHOPS-1: the town's goods (story/shops.js)
+  honey: () => {
+    const g = new THREE.Group();
+    put(g, lathe([[0, 0], [0.075, 0.004], [0.095, 0.05], [0.09, 0.13], [0.06, 0.16], [0.06, 0.18]], 18), M('#e8a030', { emissive: '#7a4008', emissiveIntensity: 0.25, roughness: 0.2 }), 0, -0.1);
+    put(g, new THREE.CylinderGeometry(0.096, 0.096, 0.025, 18), M('#2f8a9a', { roughness: 0.3 }), 0, -0.02);   // (the glaze's teal band)
+    put(g, new THREE.CylinderGeometry(0.07, 0.07, 0.03, 16), M('#f2e8cc', { roughness: 0.9 }), 0, 0.095);       // (the cloth cap)
+    put(g, new THREE.TorusGeometry(0.066, 0.006, 5, 16), M('#8a5a30'), 0, 0.085, 0, Math.PI / 2);
+    return g;
+  },
+  tea: () => {
+    const g = new THREE.Group(), glaze = M('#2f8a9a', { roughness: 0.18, metalness: 0.1 });
+    put(g, lathe([[0, 0], [0.06, 0.004], [0.1, 0.07], [0.085, 0.14], [0.045, 0.17], [0.05, 0.19]], 18), glaze, 0, -0.1);
+    put(g, new THREE.CylinderGeometry(0.103, 0.103, 0.02, 18), M('#e8b84a', { metalness: 0.6, roughness: 0.35 }), 0, -0.03);
+    put(g, new THREE.SphereGeometry(0.05, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), M('#f4eee0', { roughness: 0.4 }), 0, 0.09);
+    put(g, new THREE.SphereGeometry(0.015, 8, 6), M('#e8b84a', { metalness: 0.6, roughness: 0.35 }), 0, 0.145);
+    return g;
+  },
+  ticket: () => paper('ticket', 0.36, 0.2, 0.02, '#f2e8cc'),
+  parcel: () => {
+    const g = new THREE.Group(), band = brass();
+    put(g, new THREE.BoxGeometry(0.26, 0.17, 0.2), M('#2f7a84', { roughness: 0.6 }));
+    for (const x of [-0.08, 0.08]) put(g, new THREE.BoxGeometry(0.02, 0.175, 0.205), band, x, 0, 0);
+    put(g, new THREE.CylinderGeometry(0.035, 0.035, 0.004, 14), M('#c03030', { roughness: 0.7 }), 0, 0.087, 0.04);   // (Odile's two stamps)
+    put(g, new THREE.CylinderGeometry(0.03, 0.03, 0.004, 14), M('#3a5ab0', { roughness: 0.7 }), 0.02, 0.087, -0.05);
+    return g;
+  },
   radio: () => {
     const g = new THREE.Group();
     put(g, new THREE.BoxGeometry(0.26, 0.17, 0.1), M('#8a3a2a', { roughness: 0.6 }));
@@ -228,7 +254,7 @@ const LOOKS = {
     return g;
   },
 };
-const TILT = { sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
+const TILT = { ticket: -0.2, sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
 // an item's look: its own when it has one, otherwise its painted icon's (inventory.js icon kinds)
 const BY_ID = { lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
   kashes: 'coin', clovers: 'clover', crystals: 'crystal', kscreen: 'cloth', relay: 'cog' };
