@@ -942,6 +942,7 @@ export function* buildDesertSteps(scene, physics) {
       const em = new THREE.Mesh(emq(), emblemMaterial()); em.scale.setScalar(0.9);
       em.position.set(cb.x, postY + 2.1, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.06)); if (cb.ry) em.rotation.y = Math.PI; group.add(em);
       col({ type: 'box', x: cb.x, z: cb.z, hw: cb.w / 2, hd: cb.d / 2, top: postY + 3 });
+      (R.postDoors ||= []).push({ id: 'post-cabin' + ci, ...W(cb.x + cb.w / 2 - 0.9, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.8)), y: postY });
       cover.push({ x: ox + cb.x, z: oz + cb.z, r: Math.max(cb.w, cb.d) / 2 });
     }
     R.post = {
@@ -1461,6 +1462,10 @@ export function* buildDesertSteps(scene, physics) {
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
   };
   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt });
+  // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
+  //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
+  for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });
+  for (const d of R.postDoors || []) R.shutDoors.push(d);
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   B.build();
