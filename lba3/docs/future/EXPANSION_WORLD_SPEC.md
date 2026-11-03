@@ -96,7 +96,109 @@ everything after it, so build it to the final standard: handcrafted, readable, a
 **Pictures:** the play camera from the pad, the quay, the lift with the boat stuck, the lift balanced, the shed outside
 and inside, and Tessa's lookdev.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 3.11.2026, branch `exp-w1-place`; the place only — Tessa and the dockers are the
+character artist's, their stand spots are ready)
+
+*Files* (all new, `src/game/ballastra/`):
+- `harbor.js`: the region `ballastra` (its own lazy group at x 3 000, z −3 000, built in 12 steps), the layout, the lift,
+  the cranes, the walkway, the shortcut, the boat, the life props, the soft edge, the handle `BALLASTRA.harbor`.
+- `shed.js`: the room `bl_shed` (at x 3 800, z −3 000), the furnished interior.
+- `sea.js`: the shallow sea (a drawn bed, the game's kind of water in Ballastra's green-blue, foam in the shallows, the
+  arch mirrored in it) and the physics' deep water; `skyline.js`: the great arch, the district on stilts (scenery for
+  W-2), a second far arch; `look.js`: Ballastra's materials and small pieces; `build.js`: the small buildings (the
+  shed, the customs hut); `common.js`: `BALLASTRA` and `BALLASTRA_AT`.
+- `tests/ballastra-harbor.mjs`: the place's own probe (19 checks, below). Pictures: `docs/future/world/W-1/`.
+
+*The place* (three heights: floats 0.6 m, pad 1.4, quay, lift walls and walkway 2.2; the inner basin's water 1.7):
+- the pad (south-west): a stone platform with a glazed landing ring, the project's ship on it (the existing model);
+- the pontoon row to the cargo quay (stairs up), its middle section hinged in front of the lift's entrance;
+- the cargo quay: crane A over a moored barge, crane B by the lift with its latch, crates, jar crates, sacks, nets,
+  ballast pots, a barrow; the customs hut at the top of the stairs (cobalt glazed tiles, cream walls, a blue hip roof,
+  a hatch with a striped awning, a slate and a bell, a cargo balance beside it);
+- the lift: a stone chamber; a timber caisson with its own water and a stair on its east side; the gantry, three
+  wheels, chains (they scroll as they run), the counterweight in its shaft with painted bands (high, middle, low), the
+  winch (the crank; its handles turn), the level dial, the inner gate (opens for the boat), the outer gate; the
+  stranded working boat on the deck;
+- the hinged walkway over the lift's outer entrance (hinges and counterbalance on the quay), stairs down to the shed's
+  float; Tessa's shed (tiled dado, painted boards, a thick roof with eaves, the stove pipe, a hoist beam, her sign);
+  a gangway on to the district's edge, its gate shut (W-2 beyond); the shortcut's low piers and swing bridge.
+- The walkway is the only link between the quay side (pad, pontoons, quay) and the shed side (shed, district's edge)
+  until the shortcut opens: that is what the swung load cuts.
+- Life: gulls (gulls.js: 7 on 13 perches), washing, nets, herbs in pots and on rafts, lanterns (glazed, a warm glow,
+  no lights), skiffs, buoys and herb rafts on the swell (one shader, one draw), the mechanisms' sounds (the game's own:
+  grind, clunk, rope creak, clang, thump). Day light with a soft sea haze (fog 70–300 m); no weather or light cycle
+  (weather.js gives none to a place without its own); no night.
+
+*The lift's rule* (the world's, as ordered): `level = clamp(cw − 1 + (released ? 2 : 0), 0, 3)`, `cw` 0 high, 1 middle,
+2 low; level 0 low (the outer water), 1 halfway (stranded: the start, low and latched), 2 top (level with the basin),
+3 over (too high). The counterweight alone is too light for the boat's deck; crane B's load, swung onto its cradle,
+adds two steps. Balanced is only released + middle: the load seats on the counterweight, clear of the walkway;
+released any other way it rests on the walkway. The deck moves in about 1.5 s a step.
+
+*Handles* (`BALLASTRA.harbor`, world coordinates):
+- `rooms` ['ballastra', 'bl_shed'] · `spawns` {pad, shedDoorOut, shedIn, districtEdge} · `doors` {shedOut, shedIn,
+  shed.setLocked(b)} (the door works both ways by itself, as room exits) · `safe` (4 points).
+- `stands` {tessa_shed (in bl_shed, at the bench), tessa_quay (by the crank), tessa_lift (the east wall over the deck),
+  docker1 (by crane A), docker2 (by crane B's crates), customs (at the hatch), boatOwner (by the lift),
+  boatOwner_moored (an extra: where the boat moors)}.
+- `spots` {crank, liftLever, boat (follows the boat), shedBench} · `craneLatch` {x, y, z, r} (not a room ball target:
+  the story decides what a hit does).
+- `counterweight.set(pos, instant)`, `.pos` · `crane.release(instant)`, `crane.reset(instant)`, `.released` ·
+  `lift.level`, `.levelName`, `.y`, `.moving` · `walkway.blocked`, `.solid` · `balanced` · `boat.sailOut(instant)`,
+  `boat.reset(instant)` (an extra, so nothing stays out of reach), `.out`, `.free`, `.sailing` · `sailPath` ·
+  `shortcut.setOpen(b, instant)`, `.open`, `.swinging` · `onChange(fn)`.
+- Collision follows the state: the caisson's rims and stair at the deck's height; the load solid on the walkway while
+  it rests there; the bridge walkable where it points (shut: a dead end), off while it swings; the boat solid aboard.
+  The caisson's stair reaches the quay's height from any level: nobody is stranded on the deck.
+
+*Hooks* (shared files): `src/game/regions.js` only — the import, `REF.ballastra`, `AT.bl_shed`, `OUT_AT.ballastra` and
+one `add('ballastra', …)` line, each commented (registered like the other areas; the cloud owns registration and may
+move it).
+
+*Checks*:
+- `tests/ballastra-harbor.mjs` (SwiftShader) 19/19 PASS: the region builds lazily, > 600 m from every other area; every
+  handle present; every counterweight × crane state gives the rule's level, the deck's collision at its height, the
+  walkway blocked and solid exactly when released and not middle, one balanced case at the top; animated moves
+  ~1.5 s; everything resets; he walks the whole harbour by input (P.go: pad, pontoons, stairs, quay, crank, dial,
+  walkway, shed float, gangway, district's edge, the shortcut's far pier, and back); in and out of the shed and to its
+  bench; onto the deck at the top, ridden down, off by its stair at every level; the blocked walkway cuts the shed's
+  side off (no plan, no walk) and balancing reopens it; the shortcut shut links nothing, open (it swings ~4 s) he walks
+  it, it shuts again; the boat sails out (~10 s) and back; the soft edge eases him off the water; a second visit
+  builds nothing.
+- `tests/chapter1.mjs` 23/23 PASS and `tests/transitions.mjs` 6/6 PASS on this branch (SwiftShader; run locally with
+  the Playwright path changed for this laptop, not committed).
+
+*Numbers* (the laptop: Ryzen 5 3500U, Vega 8; the installed Chrome, fullscreen 1366×768, Medium, the follow camera at
+Far, the game's own benchmark window per route, all routes in one run; **plugged in only** — battery not measured this
+time; the display paced at 57.8 Hz, so every route reads ~57 fps and the GPU time is the comparison):
+
+| view | fps | frame p50 / p95 ms | GPU ms p50 / p95 | render submit CPU ms | draw calls (shadow) | triangles |
+|---|---|---|---|---|---|---|
+| Citadel street (the budget) | 56.3 | 17.6 / 18.3 | 10.72 / 16.39 | 8.0 | 127 (23) | 396k |
+| Twinsen's house (interior) | 56.5 | 17.7 / 18.3 | 9.26 / 12.74 | 2.7 | 51 (1) | 214k |
+| the pad | 56.7 | 17.6 / 18.2 | 8.77 / 11.41 | 1.9 | 28 (4) | 186k |
+| the quay | 56.5 | 17.7 / 18.3 | 9.25 / 10.79 | 2.2 | 50 (19) | 203k |
+| the lift | 56.9 | 17.5 / 18.2 | 9.05 / 11.04 | 2.4 | 97 (35) | 239k |
+| the shed (interior) | 57.6 | 17.2 / 18.1 | 8.51 / 9.19 | 1.5 | 24 (2) | 22k |
+
+Every view is under the street in GPU time, CPU submission, draw calls and triangles; no frame over 33 ms in any
+harbour route. First visit: 464 ms of build work in 12 steps, the longest 146 ms (the laptop, Chrome); 1.5–2.1 s on
+SwiftShader. The first entry compiles 2 shader programs (the water, the floating pieces): the pad route's warm-up had
+one 1.2 s frame — behind the arrival's black in play, but worth adding to the arrival's warm-up when the cloud wires
+the travel. New resources: about a dozen small canvas textures (≤ 512²) and a 256² height texture; no lights outdoors, 3 in the shed.
+
+*Pictures* (`docs/future/world/W-1/`, the play camera — Follow at Far — on the laptop's GPU, Medium): `W-1-01-pad`,
+`W-1-02-quay`, `W-1-03-lift-stuck`, `W-1-04-lift-balanced`, `W-1-05-shed-outside`, `W-1-06-shed-inside`,
+`W-1-07-district-edge`, `W-1-08-blocked-walkway`; and `W-1-09-skyline-free-camera` (the free camera, low). The play
+camera's frame ends a few degrees over the horizon, so from the harbour it shows the district and the arch's legs,
+and the arch in the water's mirror, never its span. Tessa's lookdev is the character artist's.
+
+*Left / not done:*
+- the people (Tessa, the dockers) and their lookdev; a travel route to Ballastra (`travel.js`, the cloud's): today he
+  gets there only by `enterRoom('ballastra')`.
+- battery measurements; one run per view (the laptop: no fps chasing).
+- the arch's span is seen only in the water and from a story camera (`W-1-09`); the district is scenery (W-2).
+- the latch, the crank and the dial are spots: the story wires the inputs (the ball's hit, E at the crank).
 
 ---
 
@@ -728,3 +830,5 @@ safely by hand. About 20 minutes (WK-1 steps 4–7) and the aftermath's quiet gl
 ## Hooks (shared files touched, by either side)
 
 _(file, line or function, why)_
+- `src/game/regions.js` (W-1, the World Builder): the import of `ballastra/harbor.js`, `REF.ballastra`, `AT.bl_shed`,
+  `OUT_AT.ballastra`, one `add('ballastra', ['ballastra', 'bl_shed'], …)` line: Float Harbor's lazy group (built in steps).
