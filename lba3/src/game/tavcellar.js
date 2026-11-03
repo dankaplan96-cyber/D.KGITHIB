@@ -78,13 +78,18 @@ export function buildTavCellarRoom(scene, physics) {
   k.add(rbox(W / 2 - SX1 + 0.04, 0.1, D + 0.04, 0.02), cap, (SX1 + W / 2) / 2, SH - 0.05, 0);
   k.add(plane(W / 2 - SX1 - 0.2, D - 0.2), MAT.stone('grey', 2), (SX1 + W / 2) / 2, SH + 0.005, 0, 0, { rx: -Math.PI / 2 });
   B.col((SX1 + W / 2) / 2, 0, (W / 2 - SX1) / 2, D / 2, SH);
-  // --- the dark drop between the walkway and the store (the original's void), railed off on every side
+  // --- the dark drop between the walkway and the store (the original's void), railed off on every side but one
+  //     stretch of the walkway's railing, broken off long ago (SEWERS-1, S-2: as LBA2's, the hole drops into the old
+  //     sewers' hall: story/sewers.js takes him there as he falls; Old Fenn in the tavern warns about it)
   k.add(plane(SX1 - AX1, D / 2 - AZ1), MAT.flat('#121216', 0.95), (AX1 + SX1) / 2, 0.01, (AZ1 + D / 2) / 2, 0, { rx: -Math.PI / 2 });
-  const railM = TEAL();
-  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
+  const railM = TEAL(), GZ = 1.0, GW = 0.65;   // (the gap: 1.3 m of the walkway's railing, in the middle of its run)
+  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, GZ + GW]], { h: 0.95, mat: railM, step: 0.45 }));
+  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, GZ - GW], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
+  k.add(rbox(0.05, 0.05, 0.9, 0.01), railM, AX1 + 0.6, 0.03, GZ + 0.2, 0.5);   // (the broken rail, down on the cellar floor)
+  R.drop = { x0: B.cx + AX1 + 0.1, x1: B.cx + SX1, z0: B.cz + AZ1 + 0.1, z1: B.cz + D / 2, y: WH, edge: { x: B.cx + AX1 - 0.45, z: B.cz + GZ } };
   railing(k, [[SX0, AZ1 + 0.05], [SX1, AZ1 + 0.05]], { h: 0.95 + (WH - SH), mat: railM, step: 0.45 });
   k.at(0, SH, 0, 0, () => railing(k, [[SX1 + 0.05, AZ1 + 0.05], [SX1 + 0.05, D / 2 - 0.12], [W / 2 - 0.4, D / 2 - 0.12]], { h: 0.95, mat: railM, step: 0.45 }));
-  B.col(AX1 + 0.05, (AZ1 + D / 2) / 2, 0.06, (D / 2 - AZ1) / 2, WH + 1.0, { seeThrough: true, noStand: true });
+  for (const [z0, z1] of [[GZ + GW, D / 2], [AZ1, GZ - GW]]) B.col(AX1 + 0.05, (z0 + z1) / 2, 0.06, (z1 - z0) / 2, WH + 1.0, { seeThrough: true, noStand: true });
   B.col((AX1 + SX1) / 2, AZ1 + 0.05, (SX1 - AX1) / 2, 0.06, WH + 1.0, { seeThrough: true, noStand: true });
   B.col(SX1 + 0.05, (AZ1 + D / 2) / 2, 0.06, (D / 2 - AZ1) / 2, SH + 1.0, { seeThrough: true, noStand: true });
   B.col((SX1 + W / 2) / 2, D / 2 - 0.12, (W / 2 - SX1) / 2, 0.06, SH + 1.0, { seeThrough: true, noStand: true });

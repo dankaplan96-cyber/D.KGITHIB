@@ -2296,7 +2296,7 @@ class Game {
       const region = this.room?.id;
       for (const d of this.story.doors()) {
         if ((d.region || undefined) !== region) continue;
-        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room); this.walkNext = false; return; }
+        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room, d.spawn || null); this.walkNext = false; return; }   // (a door may name where in the room it lands: SEWERS-1)
       }
     }
   }

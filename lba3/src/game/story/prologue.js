@@ -65,6 +65,8 @@ export class Prologue extends ChapterBase {
       // Twinsun's wizards (src/game/wizards.js): Bersimon in his tent; the rector and Ker'aooc at the School of Magic
       { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...(R.wtent?.npcSpots?.bersimon || { x: 0, z: 0, a: 0, pending: true }), angle: R.wtent?.npcSpots?.bersimon?.a ?? 0 },
       { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...(R.school?.npcSpots?.magus || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.magus?.a ?? 0 },
+      // SEWERS-1 (S-4): Fosse, the sewer man (LBA2's grumbling sewer worker, twelve years on), at the old hall's east pier
+      { id: 'fosse', name: 'n_fosse', char: 'farmerC', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
       { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...(R.school?.npcSpots?.keraooc || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.keraooc?.a ?? 0 },
     ];
   }

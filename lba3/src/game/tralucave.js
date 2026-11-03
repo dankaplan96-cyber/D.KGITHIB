@@ -141,6 +141,17 @@ export function buildTraluCaveRoom(scene, physics) {
   B.put(5.4 * F, -4.8 * F + 0.9, 0, (kk) => bench(kk, { w: 1.5, pal: 'honey' }));
   for (const x of [3.6, 7.2]) B.put(x * F, -5.0 * F, 0, (kk) => candleStand(kk));
   B.put(8.2 * F, -6.2 * F, 0.3, (kk) => { kk.add(rbox(0.75, 0.6, 0.6, 0.02), MAT.paint('#7a5a36', 0.8), 0, 0.3, 0); kk.add(cyl(0.2, 0.2, 0.12, 14, true), MAT.paint('#b89a6a', 0.9), 0, 0.66, 0); kk.add(rbox(0.12, 0.2, 0.12, 0.02), MAT.glow('#ffe0a0', '#ffb040', 0.9), 0.2, 0.7, 0.15); return { hw: 0.38, hd: 0.3, top: 0.75 }; });
+  // SEWERS-1 (C-2): an echo of LBA2's rescue: the old guitar case of the lighthouse keeper the monster once held here,
+  // leaning on the back wall; and the crate under the lantern is someone's cache (story/sewers.js: a clover, once)
+  k.at(10.2, 0, BZ + 0.32, 0, () => {
+    const lm = MAT.paint('#4a2c1c', 0.7), br = MAT.brass();
+    k.add(sphere(0.27, 12, 8), lm, 0, 0.32, 0, 0, { sx: 1, sy: 1.15, sz: 0.32, rx: -0.16 });
+    k.add(sphere(0.2, 12, 8), lm, 0, 0.72, -0.06, 0, { sx: 1, sy: 1.1, sz: 0.36, rx: -0.16 });
+    k.add(rbox(0.15, 0.48, 0.1, 0.03), lm, 0, 1.08, -0.12, 0, { rx: -0.16 });
+    for (const y of [0.3, 0.7]) k.add(rbox(0.06, 0.04, 0.03, 0.01), br, 0.22, y, 0.08 - y * 0.16);
+  });
+  B.ccol(10.2, BZ + 0.32, 0.3, 1.3);
+  R.cache = { case: { ...B.world(10.2, BZ + 1.15) }, crate: { ...B.world(8.2 * F, -6.2 * F + 0.95), at: B.world(8.2 * F, -6.2 * F) } };
 
   // --- the lower cave: the railed pool at the front right, globe posts at its corners, spike clusters, boulders
   const PX0 = 3.0 * F, PX1 = 7.4 * F, PZ0 = 2.0 * F, PZ1 = 5.4 * F, kerb = 0.3;

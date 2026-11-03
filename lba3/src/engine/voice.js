@@ -213,6 +213,7 @@ export const VOICES = {
   up_courier: { race: 'esmer', seed: 1129, f0: 141, k: 1.02, rate: 1.08, contour: 'arc', legato: 0.48 },
   up_wait: { race: 'bunny', seed: 1130, f0: 219, k: 1.13, rate: 0.86, contour: 'flat', legato: 0.74 },
   up_esmer: { race: 'esmer', seed: 1131, f0: 112, k: 0.98, rate: 0.74, contour: 'fall', legato: 0.84, vib: [4.8, 22] },
+  fosse: { race: 'grobo', seed: 1135, f0: 98, k: 0.8, rate: 0.82, contour: 'fall', range: 3, legato: 0.6 },   // the sewer man: a grumble
   up_guard: { race: 'esmer', seed: 1132, f0: 130, k: 0.9, rate: 0.88, contour: 'flat', legato: 0.42 },
   // --- Rabbibunnies
   mira: { race: 'bunny', seed: 301, f0: 236, k: 1.25, rate: 1.6, contour: 'bounce', legato: 0.25, bright: 5600, range: 2, vol: 1.12 },
@@ -269,7 +270,7 @@ const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', '
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
-  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
+  'luc', 'hobb', 'fenn', 'fosse', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
   'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)

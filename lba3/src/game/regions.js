@@ -62,7 +62,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], buhalls: [7400, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0] };
+  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0] };
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.indexOf(id.slice(5)); return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -109,7 +109,7 @@ function groupDefs() {
   add('upper', ['upper', 'council', 'archive'], buildUpper3);
   add('valves', ['valves'], (S, P) => ({ valves: buildValveRoom(S, P) }));
   add('arena', ['arena'], (S, P) => ({ arena: buildArena(S, P) }));
-  add('sewer', ['sewer', 'sewervault'], buildSewerRooms);   // (WA-14: Citadel's old sewers and their treasure room)
+  add('sewer', ['sewer', 'sewervault', 'sewerglobe'], buildSewerRooms);   // (WA-14: Citadel's old sewers and their treasure room)
   add('tavern', ['tavern'], buildTavernRoom);   // (LBA-CITADEL-1: Chez Luc, LBA2's scene 3, in the 'south' house)
   add('bazoo', ['bazoo'], buildBazooRoom);   // (LBA-CITADEL-2: Mr Bazoo's shop, LBA2's scene 14, in the 'museum' building)
   add('ticket', ['ticket'], buildTicketRoom);   // (LBA-CITADEL-3: the ticket office, LBA2's scene 8, in the 'baggage' building)
