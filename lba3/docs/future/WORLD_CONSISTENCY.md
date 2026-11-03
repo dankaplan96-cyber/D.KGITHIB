@@ -17,6 +17,7 @@ the user only by chapter number and kind of gap, never by place, person or event
 | R8 | Lamps hand over with fades; weather per planet held by the story's scenes; never dark | LAMP-FADE, WEATHER-1 | yes |
 | R9 | LBA2's gaits (discreet walk), planted feet, busy NPCs turn only when spoken to | DISCREET-WALK, STOP-ROBUST, GAME-1 | yes |
 | R10 | The story connects: the shaft starts at Citadel's station, every later chapter agrees | SHAFT-CITADEL (da0f308) | text and story |
+| R11 | Every place has a meaning for the journey, even a small one (a hint, a find tied to a quest, a person who points somewhere useful, a shortcut); no superfluous LBA1/LBA2 places, no cacophony of buildings; what has none is cut | the user, 3.11.2026 (CLUTTER_AUDIT.md) | per place |
 
 R8 and R9 live in the engine, so every chapter has them already (DISCREET-WALK lands with its merge). R7 was checked
 on 2.11 (`grep` over `src/game/text`): no "mole", and the only "night" is chapter 2's dial riddle, kept on purpose.
