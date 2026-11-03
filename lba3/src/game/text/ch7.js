@@ -31,6 +31,7 @@ Object.assign(STR.en, {
   c7_tw_ar1: 'Arthur, slow down. What is it?',
   c7_arthur_2: "The project ships came this morning. They're evacuating Citadel. Only the people on the list. The others have to stay. Gilbert's not on it. Mira's not on it. WE'RE not on it!",
   c7_tw_ar2: "I'm coming home. Tell your mother. Tell everyone: nobody gets left behind.",
+  c7_hesk_go: "Dug out, patched, and pointed downhill. Climb in. It's a long glide to Citadel.",
   c7_hesk_radio: "Hesk here. The glider's dug out, and the monks have a slope steep enough to launch from. Meet me at the monastery!",
 
   c7_obj_ridge: 'Climb the ridge to the observatory',

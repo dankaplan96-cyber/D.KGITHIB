@@ -19,6 +19,7 @@
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import { esmerShuttle } from '../shuttle.js';
+import { crossByShip } from '../travelfilm.js';
 import '../text/ch2.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
@@ -457,7 +458,13 @@ export class Chapter2 extends ChapterBase {
       f.c2_done = true;
       this.game.world.station?.setSealed?.(true, true);
       g.save(false);
-      g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
+      const go = (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then);
+      // WC-1: the crossing seen (TRAVEL-1): Doran's ship takes off from Zeelich Spaceport with them (the take-off, the
+      // cabin, space: travelfilm.js crossByShip), then the project's ferry is seen coming in to Kesh's pier, where
+      // chapter 4 starts (its card waits for the film). The chapter changes under the black as before.
+      if (g.room?.id !== 'zeelich') { go(); return; }
+      const doran = this.npc('doran');
+      crossByShip(g, go, { aboard: [doran], onward: { to: 'desert_ferry', mode: 'ferry', landWith: [doran] } });
     }, (i, id, key) => { if (key === 'c2_sealed_1') g.audio.play('deny'); });
   }
 

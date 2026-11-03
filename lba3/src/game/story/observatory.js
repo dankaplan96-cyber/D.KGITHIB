@@ -8,7 +8,11 @@
 // project is evacuating Citadel by its list. Hesk has the glider ready on the monastery slope. → chapter 8.
 import { ChapterBase } from './base.js';
 import '../text/ch7.js';
+import { storyJourney } from '../travelfilm.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
+
+// (WC-1) the glider on the monks' slope for its departure film, from the monastery's gate, and where it is watched from
+const SLOPE = { x: 5, z: 3, a: 0, lx: 13, lz: 2 };   // (on the terrace's lip east of the gate, clear of the rope lift's winch, nose south over the drop to Lhar)
 
 export class Observatory extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
@@ -138,7 +142,20 @@ export class Observatory extends ChapterBase {
     const g = this.game, f = this.f;
     if (f.c7_done) return;
     f.c7_done = true;
-    this.chain([['hesk', 'c6_hesk_1']], () => { g.save(false); g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); });
+    this.chain([['hesk', 'c7_hesk_go']], () => {
+      g.save(false);
+      // WC-1: the glider's film (TRAVEL-1): Hesk's glider runs off the terrace's lip by the monastery's gate and is seen coming
+      // down on Citadel's glider field on the plateau, where chapter 8 starts (Hesk flies on south: he stays aboard)
+      storyJourney(g, { from: this.slopeSpot(), to: 'citadel_glider', mode: 'glider', aboard: [this.npc('hesk')] },
+        (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then));
+    });
+  }
+  // the monks' slope: the glider stands on the terrace's lip beside the monastery's gate, its nose over the drop to Lhar
+  // (a hill to jump from, as Hesk wanted); watched from by the gate
+  slopeSpot() {
+    const M = this.game.regions?.built('hamalayi'), gt = M?.monastery?.gate;
+    if (!gt) return null;
+    return { id: 'c7_slope', region: 'hamalayi', mode: 'glider', craft: 'glider', x: gt.x + SLOPE.x, z: gt.z + SLOPE.z, a: SLOPE.a, landing: { x: gt.x + SLOPE.lx, z: gt.z + SLOPE.lz, a: 0 } };
   }
   update() {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)

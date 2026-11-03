@@ -11,8 +11,12 @@
 import { ChapterBase } from './base.js';
 import { t as t5 } from '../i18n.js';
 import '../text/ch5.js';
+import { storyJourney } from '../travelfilm.js';
 
 const GOOD = { 1: true, 2: false, 3: true, 4: true };
+// (WC-1) the glider's spot for its departure film, from the buried hall's centre (desert.js R.ruins), and the spot it is
+// watched from beside it
+const ROOF = { x: 2, z: 7, a: -Math.PI / 2, lx: 2, lz: 12 };   // (nose west: its run is the flat sand toward the sea)
 
 export class Steam extends ChapterBase {
   get D() { return this.game.rooms.desert; }
@@ -188,8 +192,20 @@ export class Steam extends ChapterBase {
     this.Bh.glider.uncover();
     this.chain([['narrator', 'c5_board_1'], ['hesk', 'c5_hesk_board']], () => {
       f.c5_done = true; g.save(false);
-      g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
+      // WC-1: the glider's film (TRAVEL-1): out of the hangar's roof hatch onto the dunes over FunFrock's buried hall, off
+      // into the hot wind, and down in the Hamalayi foothills where chapter 6 starts (Hesk steps off with him)
+      const hesk = this.npc('hesk');
+      storyJourney(g, { from: this.roofSpot(), to: 'hamalayi_glider', mode: 'glider', aboard: [hesk], landWith: [hesk] },
+        (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then));
     });
+  }
+  // where the glider is seen leaving from: the open sand in front of the buried hall on Desert Island (the hangar's roof
+  // hatch opens onto the dunes there), its nose west along the flat run to the sea; watched from the shore south of it,
+  // the hall and its plumes behind
+  roofSpot() {
+    const D = this.game.regions?.built('desert'), r = D?.ruins;
+    if (!r) return null;
+    return { id: 'c5_hangar', region: 'desert', mode: 'glider', craft: 'glider', x: r.x + ROOF.x, z: r.z + ROOF.z, a: ROOF.a, landing: { x: r.x + ROOF.lx, z: r.z + ROOF.lz, a: Math.PI } };
   }
 
   talk(npc) {
