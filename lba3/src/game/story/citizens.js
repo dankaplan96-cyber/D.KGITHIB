@@ -7,6 +7,8 @@ import { t } from '../i18n.js';
 import '../text/walkers.js';
 import { ambientDefs } from '../walkrounds.js';
 import { TownBusy } from '../townbusy.js';
+import { storyDefs, dressStoryLife } from '../storylife.js';
+import '../text/storylife.js';
 
 export const EVAC_STAY = new Set(['maro', 'tilde']);
 
@@ -20,10 +22,12 @@ export class Citizens extends ChapterBase {
   }
   npcDefs() {
     // (rebuilt when an area its residents live in has just been built; otherwise the same list)
-    const key = (this.game.regions?.built('zeelich') ? 1 : 0) + (this.game.regions?.built('desert') ? 2 : 0);
-    if (!this._defs || this._key !== key) { this._key = key; this._defs = ambientDefs(this.game); }
+    const R = this.game.regions, key = (R?.built('zeelich') ? 1 : 0) + (R?.built('desert') ? 2 : 0) + (R?.built('hamalayi') ? 4 : 0);
+    if (!this._defs || this._key !== key) { this._key = key; this._defs = [...ambientDefs(this.game), ...storyDefs(this.game)]; }
     return this._defs;
   }
+  // WC-3: the places' things the story residents work at (storylife.js), once per area as it is built
+  decorate() { for (const a of ['desert', 'hamalayi']) dressStoryLife(this.game, a); }
   // the streets are empty while everyone is mustered at the depot (the evacuation); then back where their rounds start
   // (TOWN-LIFE-3: but two neighbours, Maro and Tilde, are still packing: bundles out of their houses, a word at the plaza's
   //  benches about it, back for more: walkrounds.js their stops of the town's state 2)
@@ -31,9 +35,62 @@ export class Citizens extends ChapterBase {
   place(id) {
     const n = this.game.npcs.find((x) => x.def.id === id);
     if (!n?.ambient || n.def.indoor) return undefined;   // (INTERIOR-LIFE: the rooms' and the ports' people are story/interiors.js's)
+    if (n.def.story) return this.placeStory(n);
     if (this.gone && !EVAC_STAY.has(id)) { n.away = 'story'; return null; }
     if (n.away === 'story') { n.away = null; return n.reset(); }
     return undefined;
+  }
+  // ---------------------------------------------------------------- WC-3: the residents where the story goes (storylife.js)
+  // Each has a state of its area read from the chapter and the story's flags (`phase`: a round, or null: not here). A
+  // change takes it at once where nobody can see it (another area, a scene change's black, out of the camera's view);
+  // in view it carries on with what it was doing and changes as soon as it (and where it is going) is out of sight
+  // (update). Nothing is saved: after a load the state is read again and the round starts over.
+  placeStory(n) {
+    const d = n.def;
+    if (!d.rounds) return undefined;   // (its area not built yet: hidden, refreshCast leaves it so)
+    const want = d.phase(this.f, this.story) ?? null;
+    if (n.phaseKey !== undefined && want === n.phaseKey && n.away !== 'story') { n.wantPhase = undefined; return undefined; }
+    if (n.phaseKey !== undefined && this.seen(n, want)) { n.wantPhase = want; return undefined; }
+    return this.applyPhase(n, want);
+  }
+  applyPhase(n, want) {
+    n.wantPhase = undefined; n.phaseKey = want;
+    n.engaged = false; n.inside = false; n.hold = 0; n.sit = null; n.path = null; n.job = null; n.insideT = 0;
+    if (want == null) { n.away = 'story'; return null; }
+    n.away = null;   // (asleep or away: here now; update puts it to sleep again if the hero is in another area)
+    n.setRound(n.def.rounds[want].map((s) => ({ ...s })), n.def.start || 0);
+    const s = n.stop;
+    return { x: s.x, z: s.z, a: s.a ?? n.angle };
+  }
+  // could the player see this resident now (where it stands, or where its new round starts)?
+  seen(n, want) {
+    const g = this.game, W = g.walkers;
+    if (!W || !n.present || n.away || n.inside || g.trans || (g.state !== 'play' && g.state !== 'dialog')) return false;
+    if ((g.room?.id ?? 'citadel') !== n.def.area) return false;
+    W.prep();
+    if (!W.unseen(n.pos.x, n.pos.z, n.pos.y)) return true;
+    const st = want != null ? n.def.rounds[want] : null, s0 = st?.[(n.def.start || 0) % st.length];
+    return !!s0 && !W.unseen(s0.x, s0.z, g.physics.groundAt(s0.x, s0.z));
+  }
+  // a waiting change made out of sight; and out of its area a story resident sleeps (no update at all: walkers.js skips
+  // anyone `away`), carrying on where it was when the hero comes back
+  update(dt) {
+    if ((this._t = (this._t || 0) + dt) < 0.25) return;
+    this._t = 0;
+    const g = this.game, here = g.room?.id ?? 'citadel';
+    this._story ||= g.npcs.filter((n) => n.def?.story);
+    if (this._storyN !== g.npcs.length) { this._storyN = g.npcs.length; this._story = g.npcs.filter((n) => n.def?.story); }
+    for (const n of this._story) {
+      if (!n.def.rounds) continue;
+      if (n.wantPhase !== undefined && !this.seen(n, n.wantPhase)) {
+        const p = this.applyPhase(n, n.wantPhase);
+        n.setPresent(!!p); n.placed = p;
+        if (p) n.placeAt(p);
+      }
+      if (n.away === 'story') continue;
+      if (here !== n.def.area) { if (!n.away) n.away = 'sleep'; }
+      else if (n.away === 'sleep') n.away = null;
+    }
   }
   // what is said first depends on the town (the well is dry before chapter 2's heat) and on what the resident is doing
   linesFor(npc) {
@@ -44,6 +101,7 @@ export class Citizens extends ChapterBase {
     const evac = this.story.cur?.key === 'evacuation', home = this.story.cur?.key === 'home';   // (TOWN-LIFE-3: packing; the party)
     const busy = ['seated', 'sitin', 'chat'].includes(npc.st) || !!npc.carrying || /tend|water|draw|put/.test(npc.stop?.act || '');
     const keys = [];
+    if (npc.phaseKey && has(`rs_${id}_${npc.phaseKey}`)) keys.push(`rs_${id}_${npc.phaseKey}`);   // (WC-3: the area's state: Lhar or the monastery, at work or packing)
     if (evac && has(`rs_${id}_evac`)) keys.push(`rs_${id}_evac`);
     if (home && has(`rs_${id}_home`)) keys.push(`rs_${id}_home`);
     if (busy && has(`rs_${id}_work`)) keys.push(`rs_${id}_work`);

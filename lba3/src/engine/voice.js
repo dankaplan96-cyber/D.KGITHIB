@@ -156,6 +156,39 @@ export const VOICES = {
   sefa: { race: 'esmer', seed: 966, f0: 224, k: 1.02, rate: 0.82, contour: 'zigzag', legato: 0.67 },
   tavi: { race: 'quetch', seed: 968, f0: 226, k: 1.12, rate: 1.1, contour: 'bounce', legato: 0.55 },   // the terminal's cafe keeper
   pask: { race: 'esmer', seed: 969, f0: 131, k: 1.0, rate: 0.86, contour: 'fall', legato: 0.7 },        // the Zeelich terminal's porter
+  // --- WC-3: the residents where the story goes (src/game/storylife.js)
+  dg_surv: { race: 'quetch', seed: 1101, f0: 138, k: 0.98, rate: 0.92, contour: 'flat', legato: 0.62 },
+  dg_rod: { race: 'quetch', seed: 1102, f0: 116, k: 0.93, rate: 1.04, contour: 'bounce', legato: 0.5 },
+  dg_cook: { race: 'bunny', seed: 1103, f0: 228, k: 1.17, rate: 1.08, contour: 'sing', legato: 0.6 },
+  dg_haul: { race: 'grobo', seed: 1104, f0: 96, k: 0.8, rate: 0.78, contour: 'fall', legato: 0.74 },
+  dg_porter: { race: 'quetch', seed: 1105, f0: 150, k: 1.02, rate: 1.16, contour: 'zigzag', legato: 0.48 },
+  dg_mech: { race: 'quetch', seed: 1106, f0: 109, k: 0.95, rate: 0.88, contour: 'arc', legato: 0.68 },
+  dg_dig: { race: 'quetch', seed: 1107, f0: 126, k: 0.9, rate: 0.98, contour: 'fall', legato: 0.56 },
+  dg_clerk: { race: 'quetch', seed: 1108, f0: 145, k: 1.06, rate: 1.2, contour: 'flat', legato: 0.44 },
+  sc_master: { race: 'bunny', seed: 1109, f0: 118, k: 1.0, rate: 0.8, contour: 'sing', legato: 0.8, vib: [5, 18] },
+  sc_pupa: { race: 'quetch', seed: 1110, kid: true, f0: 312, k: 1.25, rate: 1.12, contour: 'sing', legato: 0.6 },
+  sc_pupb: { race: 'quetch', seed: 1111, kid: true, f0: 284, k: 1.18, rate: 1.18, contour: 'bounce', legato: 0.5 },
+  sc_pupc: { race: 'quetch', seed: 1112, kid: true, f0: 296, k: 1.21, rate: 1.24, contour: 'zigzag', legato: 0.46 },
+  sc_in1: { race: 'quetch', seed: 1113, kid: true, f0: 318, k: 1.27, rate: 1.04, contour: 'arc', legato: 0.62 },
+  sc_in2: { race: 'quetch', seed: 1114, kid: true, f0: 276, k: 1.16, rate: 1.0, contour: 'fall', legato: 0.58 },
+  sc_in3: { race: 'quetch', seed: 1115, kid: true, f0: 326, k: 1.3, rate: 1.14, contour: 'bounce', legato: 0.54 },
+  lh_bero: { race: 'quetch', seed: 1116, f0: 112, k: 0.92, rate: 0.9, contour: 'arc', legato: 0.66 },
+  lh_sana: { race: 'quetch', seed: 1117, f0: 232, k: 1.14, rate: 1.0, contour: 'fall', legato: 0.64 },
+  lh_old: { race: 'bunny', seed: 1118, f0: 132, k: 1.04, rate: 0.72, contour: 'fall', legato: 0.82, vib: [5.4, 24] },
+  lh_tam: { race: 'quetch', seed: 1119, f0: 154, k: 0.97, rate: 1.1, contour: 'bounce', legato: 0.52 },
+  lh_kid1: { race: 'quetch', seed: 1120, kid: true, f0: 306, k: 1.24, rate: 1.26, contour: 'zigzag', legato: 0.5 },
+  lh_kid2: { race: 'grobo', seed: 1121, kid: true, f0: 298, k: 1.08, rate: 1.16, contour: 'sing', legato: 0.56 },
+  lh_mira: { race: 'bunny', seed: 1122, f0: 238, k: 1.2, rate: 0.98, contour: 'arc', legato: 0.7 },
+  lh_grum: { race: 'grobo', seed: 1123, f0: 101, k: 0.82, rate: 0.84, contour: 'flat', legato: 0.6 },
+  zc_guard: { race: 'esmer', seed: 1124, f0: 120, k: 0.94, rate: 0.82, contour: 'flat', legato: 0.5 },
+  zc_clerk: { race: 'esmer', seed: 1125, f0: 152, k: 1.08, rate: 1.14, contour: 'zigzag', legato: 0.72 },
+  zc_courier: { race: 'esmer', seed: 1126, f0: 236, k: 1.16, rate: 1.22, contour: 'bounce', legato: 0.56 },
+  zc_petit: { race: 'quetch', seed: 1127, f0: 224, k: 1.1, rate: 1.06, contour: 'zigzag', legato: 0.66 },
+  up_clerk: { race: 'esmer', seed: 1128, f0: 160, k: 1.12, rate: 1.18, contour: 'sing', legato: 0.62 },
+  up_courier: { race: 'esmer', seed: 1129, f0: 141, k: 1.02, rate: 1.08, contour: 'arc', legato: 0.48 },
+  up_wait: { race: 'bunny', seed: 1130, f0: 219, k: 1.13, rate: 0.86, contour: 'flat', legato: 0.74 },
+  up_esmer: { race: 'esmer', seed: 1131, f0: 112, k: 0.98, rate: 0.74, contour: 'fall', legato: 0.84, vib: [4.8, 22] },
+  up_guard: { race: 'esmer', seed: 1132, f0: 130, k: 0.9, rate: 0.88, contour: 'flat', legato: 0.42 },
   // --- Rabbibunnies
   mira: { race: 'bunny', seed: 301, f0: 214, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
   pippa: { race: 'bunny', seed: 302, f0: 230, k: 1.22, rate: 1.2, contour: 'zigzag', range: 5, legato: 0.45 },                     // the merchant: quick patter
@@ -213,11 +246,14 @@ function rng(seed) {
 const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', 'oda', 'tilde', 'ilo', 'kira', 'ume', 'mira', 'pippa', 'farmer2', 'ilka',
   'weaver', 'odile', 'nara', 'maro',
   // (those still without a voice of their own: the fallback below gives them a woman's)
-  'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi']);
+  'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi',
+  'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
-  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask']);
+  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
+  'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
+  'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;

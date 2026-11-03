@@ -72,6 +72,27 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
     the shaft once the network is done), so it is not cheap. No parked glider stands on the monks' slope before the
     film (the craft is built for the film).
 
+- **WC-3 done (3.11, branch `wc-3`):** residents with rounds where chapters 4–9 go (`src/game/storylife.js`, driven by
+  the existing walkers: the street's manager outdoors, the rooms' manager in the School and the antechamber;
+  `tests/residents.mjs`). Data only, nothing saved: each resident's state is read from the chapter and the story's flags.
+  - Desert Island, the project's yard between the research post and the dig: eight of the crew (surveyor and staff man
+    on the dig's rim, cook at a field kitchen, two porters carrying crates between two piles, a fitter, a digger, a site
+    clerk), all outside the post's fence (its inside is chapter 4's sneak). They shelter while a sandstorm blows.
+    Chapter 5 once Dallan's order has taken the ferry (`c5_planned`): two have gone with it, six pack up.
+  - The School of Magic from chapter 4: a master and three pupils on its plaza (a spell in pairs, the herb bed watered
+    from the channel), three pupils in the classroom before Rector Hougo. Nobody walks between the plaza and the hall
+    (the planner does not cross the bridge's split steps); counted together.
+  - The Hamalayi: eight villagers. In Lhar they pack (sacks to the hand cart, crates, the washing, wood, water) and two
+    children play tag; each goes up with one of the story's two lift trips (`c6_trip1`, `c6_trip2`) and lives in a camp
+    on the terrace east of the monastery's yard (the yard is the story villagers'; the terrace's lip is chapter 7's
+    glider take-off: kept clear). Chapter 7 on: settled there.
+  - Zeelich, chapter 9: before the council house a council guard on post, a clerk in and out of its door, a courier
+    (bridge, council house, dock), a petitioner; in the antechamber a junior clerk, a courier, two petitioners, a guard
+    by the council's door (never the archive's).
+  - A state change the player could see waits until the resident is out of sight; away from its area a story resident
+    sleeps (no update at all). Talk stops and turns them (the existing resident talk); 32 new named speakers, each with
+    its own voice.
+
 ## Work orders (in this order; at most two agents at a time)
 1. **WC-1 Journeys (done 3.11, above).** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter

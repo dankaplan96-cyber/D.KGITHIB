@@ -25,7 +25,7 @@ export class InteriorLife extends ChapterBase {
   }
   npcDefs() {
     // (rebuilt when a place its people live in has just been built; otherwise the same list)
-    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'];
+    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich', 'school', 'upper'];
     const key = ids.map((id) => (R?.built(id) ? 1 : 0)).join('') + (this.game.world?.spaceport ? 1 : 0) + (R?.built('zeelich')?.spaceport ? 1 : 0);
     if (!this._defs || this._key !== key) { this._key = key; this._defs = placeDefs(this.game); }
     return this._defs;
@@ -36,6 +36,7 @@ export class InteriorLife extends ChapterBase {
     if (this.evac) return !!d.stays;
     if (d.when === 'grounded') return this.story.index < 3;
     if (d.when === 'flying') return this.story.index >= 3;
+    if (typeof d.when === 'function') return !!d.when(this.f, this.story);   // (WC-3: the School's and the antechamber's people, storylife.js)
     return true;
   }
   place(id) {
