@@ -5,7 +5,7 @@ Object.assign(STR.en, {
   n_farmer1: 'Farmer Joss', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
   p_lever: 'Pull', p_shelter: 'Inspect',
 
-  c8_narr: 'The glider skims the cliffs and comes down in the grass above the lighthouse. Below, Citadel is not the island Twinsen left.',
+  c8_narr: 'The glider skims the cliffs and comes down on the plateau above the town. Below, Citadel is not the island Twinsen left.',
   c8_hesk_1: "Project ships at your spaceport, and a queue down the whole bridge. I'll take the glider back south before they take her too. Good luck, Twinsen.",
   c8_tw_1: "The heat posts are dark. And the square is fenced off. Home first.",
 

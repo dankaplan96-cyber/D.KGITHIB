@@ -310,7 +310,7 @@ if (!ONLY || ONLY.test('chapter 8, the hill farms')) {
     out.jump = jumps; out.marching = !!n.controlled; out.told = !!G.flags.c8_farmer1;
     n.placeAt = own;
     G.story.cur.finishMarch(); G.step(0.2);
-    const k = 0, gx = -66 + k * 1.6 - 1.6, gz = -55 + 1;
+    const Gp = G.story.cur.gather, k = 0, gx = Gp.x + k * 1.6 - 1.6, gz = Gp.z + 1;
     out.atGather = +Math.hypot(n.pos.x - gx, n.pos.z - gz).toFixed(2); out.round = R.defFor(n)?.id ?? null;
     return out;
   });
