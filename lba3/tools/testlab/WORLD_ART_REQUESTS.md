@@ -1697,3 +1697,25 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
 - a window that is really hidden or behind another stays at BG_FPS as before.
 - Checked: `tests/bg-stuck.mjs` PASS (a stale report ends on a key press; on its own within the second; a hidden page
   stays in the background).
+
+## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue")
+`requests/CAMPAIGN-2.diff` (after CAMPAIGN-1, which is merged; applies alone on origin 35aaa16). The agent's open items:
+- **GUIDE:** away from Citadel no chapter showed its objective on the holomap or minimap (Desert Island's "Find the
+  professor" had no pointer at all). Each chapter 3–7, 9, 10 now puts a gold star on what its objective needs (the
+  person, the object, the next door, chapter 10's unfinished stations, the code box); `ChapterBase.star/starNpc/stars`.
+- **C12 FINALE-ALLIES:** the overload is answered on the radio by Ilka and Dallan (the desert vent) and Pim and Sefa
+  (the dome), the two stations without a pylon.
+- **C12 VESK-CHOICE:** after the coil a choice that can't be dismissed: pull Vesk clear, or leave him for the
+  council's guards (`c3_veskHelped`); he answers as himself; the end card and Baldino after the ending remember it.
+  Saves without the flag read as before.
+- **C9 DALLAN'S WAY:** Dallan says how he reached Zeelich (Hesk's glider from Kesh, then a project ship).
+- **LIGHTHOUSE-OPEN:** the lamp room opens after the ending (a line at Zoé's microphone); it found a real bug: the
+  stair out sent Twinsen through chapter 3's exit to Baldino's workshop; the epilogue has its own way out now.
+- Measured and left: the old mill's hop (seven identical hops, 1.09 m up and 1.71 m apart; the jump rises 1.19 m:
+  a 0.5 s window at a run; the misses were the bot's run-up), the ISO-finished fights (one step harder than their
+  neighbours, not clearly harsher).
+- Docs: STORY_MAP.md (chapters 11 and 12 apart); the Hebrew synopsis's corrections listed in CAMPAIGN_DIRECTOR.md.
+- Checked: the agent replayed playthrough 06–14 by input with everything live (9 PASS), chapter3, epilogue-home,
+  save-migration PASS; again here: epilogue-home, save-migration, chapter3 PASS.
+- Still open: no person has played the two ISO-finished fights; chapter 8's new gathering spot not looked at closely;
+  chapter 5's objective runs ahead of the hangar's glider and hatch; chapters 11–12 have no stars (rooms in a line).
