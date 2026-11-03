@@ -22,17 +22,22 @@
 //   SEWER.hatch {x, z, y, open, deckY, setOpen(b), setDeck(d), setLever(t), deckTop(), lever}   (SEWER-LIFT: the grate and its lift)
 //   SEWER.hall (the hall's room) {valve, gate, setValve(b, instant)}
 //   SEWER.vault (the treasure room) {chest, setChest(b)}
-//   sewerDoors() / sewerExit(to)   no door (the lift's lever takes him down: story/sewers.js); 'sewer-out' leads back up onto the deck
+//   SEWER.hall also {bolt, works, gdoor, setDoor(id, b, instant), doorOpen(id), splash()}; R.entries {fall, pink, stoneup,
+//     wtent, sewerglobe}; R.npcSpots.fosse   (SEWERS-1: the terrace bolt, the Works door, the globe's door, the west stair)
+//   SEWER.globe (the globe's room, sewerglobe) {globe, cock, setClear(b, instant), setSky(state), clear}
+//   sewerDoors(W, f) / sewerExit(to, W)   the grate is no door (the lift's lever takes him down: story/sewers.js);
+//     'sewer-out' leads back up onto the deck; the pink house's door (always) and the terrace porch (sw_bolt) lead in,
+//     'sewer-pink' / 'sewer-stoneup' lead out before them
 import * as THREE from 'three';
-import { RoomBuilder, blueRocks } from './interiors.js';
+import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
 import * as P from './props.js';
 import { textures } from '../engine/textures.js';
 
-export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 } };
+export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 }, sewerglobe: { x: 5960, z: 0 } };
 // the grate: Bug Street, a few steps north of where the project's heat pipe dives under the lane (townlife.js PUMP)
 export const HATCH = { x: -45.4, z: 56.6 };
-export const SEWER = { hatch: null, hall: null, vault: null };
+export const SEWER = { hatch: null, hall: null, vault: null, globe: null };
 
 // ------------------------------------------------------------------ materials (dark, muted; colour only in the water and lamps)
 const std = (map, color, rough, tile, extra = {}) => { const m = new THREE.MeshStandardMaterial({ map, color, roughness: rough, ...extra }); m.userData.tile = tile; return m; };
@@ -136,6 +141,11 @@ const WY = -0.55;              // the water's surface (the walkways stand 0.55 m
 const BASE = -1.6;             // how far the stone goes down under the water
 const U = 1.65, ISL = 0.45, PLAT = 1.15;
 const GATE = { x: 10.5, w: 1.6, h: 2.4 };
+// SEWERS-1 (CONNECTIONS_AUDIT.md S-1…S-5): LBA2's other ways in and out of the hall, and the globe's room
+const WD = { x: -4, w: 1.1, h: 2.0 };        // S-3 the terrace door on the raised walkway (to the porch above the stone house)
+const WORKS = { x: 7.75, w: 1.3, h: 2.0 };   // S-4 the Works door at the east pier's head (the street door in the lower town)
+const GLOBE = { x: 13.0, w: 1.2, h: 2.0 };   // S-5 Bersimon's little door (the globe's room)
+const WEST = { z: 6, w: 1.1, h: 2.1 };       // S-1 the stair up to the wizard's tent, in the west wall across from the bridge
 
 function buildHall(scene, physics) {
   const { x: CX, z: CZ } = SEWER_AT.sewer;
@@ -201,9 +211,16 @@ function buildHall(scene, physics) {
   // ---- the walls: two tall far walls (north, west), low near rims (south, east)
   const wallBox = (x0, x1, z0, z1, y0, y1, m = stoneM()) => k.add(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), m, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
   // north: openings at floor level in the north-east (two barred arches and the gate between)
-  const arches = [{ x: 7.75, w: 1.3, h: 2.0 }, { x: GATE.x, w: GATE.w, h: GATE.h }, { x: 13.0, w: 1.2, h: 2.0 }];
+  const arches = [{ ...WORKS, door: 'works' }, { x: GATE.x, w: GATE.w, h: GATE.h }, { ...GLOBE, door: 'globe' }];
   {
-    let x = X0 - T;
+    // (S-3: the terrace door's opening on the raised walkway)
+    wallBox(X0 - T, WD.x - WD.w / 2, Z0 - T, Z0, BASE, H);
+    wallBox(WD.x - WD.w / 2, WD.x + WD.w / 2, Z0 - T, Z0, BASE, U);
+    wallBox(WD.x - WD.w / 2, WD.x + WD.w / 2, Z0 - T, Z0, U + WD.h, H);
+    k.add(plane(WD.w, WD.h), MAT.flat('#0c0f10', 1), WD.x, U + WD.h / 2, Z0 - T + 0.02);
+    for (const sx of [-1, 1]) k.add(rbox(0.16, WD.h, 0.14, 0.03), capM(), WD.x + sx * (WD.w / 2 + 0.06), U + WD.h / 2, Z0 + 0.04);
+    k.add(rbox(WD.w + 0.3, 0.18, 0.16, 0.03), capM(), WD.x, U + WD.h + 0.09, Z0 + 0.04);
+    let x = WD.x + WD.w / 2;
     for (const a of arches) {
       wallBox(x, a.x - a.w / 2, Z0 - T, Z0, BASE, H);
       wallBox(a.x - a.w / 2, a.x + a.w / 2, Z0 - T, Z0, a.h, H);
@@ -217,8 +234,8 @@ function buildHall(scene, physics) {
       k.add(plane(a.w, a.h), MAT.flat('#0c0f10', 1), a.x, a.h / 2, Z0 - T + 0.02);
       wallBox(a.x - a.w / 2, a.x + a.w / 2, Z0 - T - 1.6, Z0 - T, BASE, 0, rubbleM());
       if (a.x !== GATE.x) {
-        for (let bx = a.x - a.w / 2 + 0.15; bx < a.x + a.w / 2 - 0.05; bx += 0.2) k.add(cyl(0.022, 0.022, a.h - 0.1, 5), rustM(), bx, (a.h - 0.1) / 2, Z0 - 0.25);
-        for (const y of [0.5, 1.3]) k.add(rbox(a.w, 0.05, 0.05, 0.01), rustM(), a.x, y, Z0 - 0.25);
+        if (!a.door) for (let bx = a.x - a.w / 2 + 0.15; bx < a.x + a.w / 2 - 0.05; bx += 0.2) k.add(cyl(0.022, 0.022, a.h - 0.1, 5), rustM(), bx, (a.h - 0.1) / 2, Z0 - 0.25);
+        if (!a.door) for (const y of [0.5, 1.3]) k.add(rbox(a.w, 0.05, 0.05, 0.01), rustM(), a.x, y, Z0 - 0.25);
         B.col(a.x, Z0 - T / 2, a.w / 2, T / 2, H);
       }
     }
@@ -230,7 +247,14 @@ function buildHall(scene, physics) {
     wallBox(GATE.x + GATE.w / 2, GATE.x + GATE.w / 2 + 0.3, Z0 - T - 1.6, Z0 - T, 0, GATE.h);
   }
   // west
-  wallBox(X0 - T, X0, Z0 - T, Z1 + T, BASE, H);
+  wallBox(X0 - T, X0, Z0 - T, WEST.z - WEST.w / 2, BASE, H);
+  wallBox(X0 - T, X0, WEST.z + WEST.w / 2, Z1 + T, BASE, H);
+  wallBox(X0 - T, X0, WEST.z - WEST.w / 2, WEST.z + WEST.w / 2, WEST.h, H);
+  // (S-1: the stair up to the wizard's tent: an open arch, treads rising into the dark)
+  k.add(plane(WEST.w, WEST.h + 0.6), MAT.flat('#0c0f10', 1), X0 - T - 1.2, WEST.h / 2 + 0.3, WEST.z, Math.PI / 2);
+  for (let i = 0; i < 4; i++) k.add(rbox(0.3, 0.2 * (i + 1), WEST.w, 0.02), rubbleM(), X0 - T + 0.15 - i * 0.3, 0.1 * (i + 1), WEST.z);
+  for (const sz of [-1, 1]) k.add(rbox(0.14, WEST.h - WEST.w / 2 + 0.05, 0.22, 0.03), capM(), X0 + 0.04, (WEST.h - WEST.w / 2 + 0.05) / 2, WEST.z + sz * (WEST.w / 2 + 0.06));
+  k.add(torus(WEST.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), X0 + 0.04, WEST.h - WEST.w / 2 + 0.05, WEST.z, Math.PI / 2);
   B.col(X0 - T / 2, 0, T / 2, D / 2 + T, H);
   // near rims (low: the camera sees over them), with a coping
   const RIM = 0.55;
@@ -243,7 +267,8 @@ function buildHall(scene, physics) {
   // masonry rhythm on the far walls: buttresses, a string course, the cap
   for (const x of [-10, -6, -2, 2]) { k.add(rbox(0.55, H - U, 0.22, 0.04), stoneM(), x, U + (H - U) / 2, Z0 + 0.11); B.col(x, Z0 + 0.11, 0.28, 0.12, H); }
   for (const z of [-8, -4, 0, 4, 8]) { k.add(rbox(0.22, H, 0.55, 0.04), stoneM(), X0 + 0.11, H / 2, z); B.col(X0 + 0.11, z, 0.12, 0.28, H); }
-  k.add(rbox(W + T, 0.16, 0.18, 0.04), capM(), 0, 3.4, Z0 + 0.09);
+  { const a = X0 - T / 2, b = WD.x - WD.w / 2 - 0.15, c = WD.x + WD.w / 2 + 0.15, d = X1 + T / 2;   // (the string course, broken by the terrace door)
+    k.add(rbox(b - a, 0.16, 0.18, 0.04), capM(), (a + b) / 2, 3.4, Z0 + 0.09); k.add(rbox(d - c, 0.16, 0.18, 0.04), capM(), (c + d) / 2, 3.4, Z0 + 0.09); }
   k.add(rbox(0.18, 0.16, D + T, 0.04), capM(), X0 + 0.09, 3.4, 0);
   k.add(rbox(W + 2 * T + 0.1, 0.2, T + 0.14, 0.05), capM(), 0, H + 0.08, Z0 - T / 2);
   k.add(rbox(T + 0.14, 0.2, D + 2 * T + 0.1, 0.05), capM(), X0 - T / 2, H + 0.08, 0);
@@ -373,6 +398,51 @@ function buildHall(scene, physics) {
   R.exits.push({ ...B.world(GATE.x, Z0 - 0.75), r: 0.55, room: 'sewervault' });
   R.entries = { sewervault: { ...B.world(GATE.x, Z0 + 1.6), a: 0 } };
 
+  // ---- SEWERS-1: the other ways in and out (story/sewers.js says which are open)
+  // a door leaf hinged at its west edge in an opening of the north wall; it swings back into the passage
+  const leaf = (o, y0, build) => {
+    const g = new THREE.Group(); g.position.set(o.x - o.w / 2 + 0.04, y0, Z0 - 0.16); B.group.add(g);
+    const lk = new P.Kit(g); build(lk, o.w - 0.08, o.h - 0.04); lk.flush();
+    return { g, t: 0, open: 0 };
+  };
+  const leaves = {
+    // S-3: planks and iron bands; the bolt on the hall's side
+    bolt: leaf(WD, U, (lk, w, h) => {
+      lk.add(rbox(w, h, 0.07, 0.01), MAT.wood('dark'), w / 2, h / 2, 0);
+      for (const y of [0.3, h / 2, h - 0.3]) lk.add(rbox(w + 0.02, 0.07, 0.09, 0.01), ironM(), w / 2, y, 0);
+      lk.add(rbox(0.12, 0.16, 0.05, 0.01), ironM(), w - 0.14, 1.0, 0.06);
+    }),
+    // S-4: an iron grille door with a keyhole and no handle on this side
+    works: leaf(WORKS, 0, (lk, w, h) => {
+      for (let bx = 0.08; bx < w - 0.03; bx += 0.17) lk.add(cyl(0.024, 0.024, h, 5), rustM(), bx, h / 2, 0);
+      for (const y of [0.25, h / 2, h - 0.12]) lk.add(rbox(w, 0.06, 0.05, 0.01), rustM(), w / 2, y, 0);
+      lk.add(rbox(0.16, 0.24, 0.07, 0.01), ironM(), w - 0.16, 1.0, 0.02);
+    }),
+    // S-5: a small door painted night blue with a brass star on it
+    globe: leaf(GLOBE, 0, (lk, w, h) => {
+      lk.add(rbox(w, h, 0.07, 0.01), MAT.paint('#1c3550', 0.6), w / 2, h / 2, 0);
+      lk.add(torus(0.18, 0.03, 4, 5), MAT.brass(), w / 2, 1.3, 0.05);
+      lk.add(rbox(0.1, 0.14, 0.04, 0.01), MAT.brass(), w - 0.15, 0.95, 0.05);
+    }),
+  };
+  const bolt = new THREE.Mesh(rbox(0.5, 0.06, 0.06, 0.01), ironM()); bolt.position.set(WD.w - 0.08 - 0.14, 1.0, 0.1); bolt.castShadow = true; leaves.bolt.g.add(bolt);
+  const gated = (e) => (on) => { const i = R.exits.indexOf(e); if (on && i < 0) R.exits.push(e); else if (!on && i >= 0) R.exits.splice(i, 1); };
+  const exitOn = {
+    bolt: gated({ ...B.world(WD.x, Z0 + 0.1), r: 0.55, to: 'sewer-stoneup' }),
+    works: gated({ ...B.world(WORKS.x, Z0 + 0.1), r: 0.6, to: 'sewer-pink' }),
+    globe: gated({ ...B.world(GLOBE.x, Z0 + 0.1), r: 0.6, room: 'sewerglobe' }),
+  };
+  // S-1: the stair to the tent is always open (LBA2: both ways from the start)
+  R.exits.push({ ...B.world(X0 + 0.15, WEST.z), r: 0.6, room: 'wtent' });
+  Object.assign(R.entries, {
+    wtent: { ...B.world(X0 + 1.5, WEST.z), a: Math.PI / 2 },
+    sewerglobe: { ...B.world(GLOBE.x, Z0 + 1.3), a: 0 },
+    pink: { ...B.world(WORKS.x, Z0 + 1.3), a: 0 },
+    stoneup: { ...B.world(WD.x, Z0 + 1.1), a: 0 },
+    fall: { ...B.world(7.5, 7.4), a: Math.PI },   // (S-2: out of the water onto the east pier)
+  });
+  R.npcSpots = { fosse: { ...B.world(9.1, -9.7), a: -0.7 } };   // (S-4: the sewer man, at the pier's head by his door)
+
   // ---- lamps (some dead), barrels, blue rocks, spiked rings, plaques
   const lamps = [[-4.6, 4.0, ISL, 1], [-0.45, -2.6, PLAT, 1], [3.2, -2.6, PLAT, 0], [-12.9, 1.0, 0, 1], [-6.0, -11.2, U, 0], [1.4, -11.2, U, 1],
     [9.35, -11.4, 0, 1], [11.65, -11.4, 0, 0], [8.1, 3.0, 0, 1]];
@@ -385,7 +455,7 @@ function buildHall(scene, physics) {
   for (const [x, z, r, y] of [[12.7, -9.2, 0.34, 0], [13.35, -8.4, 0.3, 0], [-12.9, 10.6, 0.34, 0], [-4.2, 7.1, 0.3, ISL]]) { B.put(x, z, 0, P.barrel, { r, h: r * 2.6, pal: 'honey', y, noCol: true }); B.ccol(x, z, r, y + r * 2.6); }
   // (a giver's r is its container's radius + 1.05, as containers.js: the bonus then pops from outside the barrel's collider)
   R.givers.push({ id: 'sw_barrels', ...B.world(12.7, -9.2), y: 0, r: 0.34 + 1.05, top: 0.9, kinds: ['money', 'life'], n: 2 });
-  for (const [x, z, s, y] of [[13.1, -10.8, 1.1, 0], [-12.9, -2.4, 1.0, 0], [4.2, 7.0, 0.9, ISL], [7.9, 10.8, 0.8, 0], [-13.0, -10.6, 0.8, U]]) {
+  for (const [x, z, s, y] of [[13.6, -10.15, 0.8, 0], [-12.9, -2.4, 1.0, 0], [4.2, 7.0, 0.9, ISL], [7.9, 10.8, 0.8, 0], [-13.0, -10.6, 0.8, U]]) {
     k.add(blueRocks(), softMat, x, y, z, x, { sx: s, sy: s, sz: s });
     B.ccol(x, z, 0.42 * s, y + 0.6 * s);
   }
@@ -400,7 +470,10 @@ function buildHall(scene, physics) {
   //      once the valve is eased (story/sewers.js plays the sound and counts the beat)
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.32, 24), new THREE.MeshBasicMaterial({ color: '#e8fbff', transparent: true, opacity: 0, depthWrite: false }));
   ring.rotation.x = -Math.PI / 2; ring.position.set(WN.x - 0.3, WY + 0.02, -3.6); B.group.add(ring);
-  const H_ = { valve, gate, gateCol, ring, open: 0, opening: false, knockT: 99, quiet: false };
+  // (S-2: the splash where he fell in, beside the east pier)
+  const splash = new THREE.Mesh(ring.geometry, ring.material.clone());
+  splash.rotation.x = -Math.PI / 2; splash.position.set(9.4, WY + 0.02, 7.4); splash.visible = false; B.group.add(splash);
+  const H_ = { valve, gate, gateCol, ring, open: 0, opening: false, knockT: 99, quiet: false, splashT: 99 };
   R.updaters.push((dt) => {
     // the jolt (0.25 s) and the ring (1.2 s)
     H_.knockT += dt;
@@ -409,6 +482,13 @@ function buildHall(scene, physics) {
     const rk = H_.knockT / 1.2;
     ring.visible = rk < 1; if (ring.visible) { ring.scale.setScalar(1 + rk * 4); ring.material.opacity = (1 - rk) * 0.5; }
     // the gate rises over 2.4 s once the winch turns
+    H_.splashT += dt; const sk = H_.splashT / 1.6;
+    splash.visible = sk < 1; if (splash.visible) { splash.scale.setScalar(1.5 + sk * 7); splash.material.opacity = (1 - sk) * 0.7; }
+    for (const [id, L] of Object.entries(leaves)) {   // (a door swings open over 0.8 s; the bolt slides back first)
+      if (id === 'bolt') bolt.position.x = WD.w - 0.22 - 0.3 * Math.min(1, L.t * 3);
+      if (L.open && L.t < 1) L.t = Math.min(1, L.t + dt / 0.8);
+      const e = L.t * L.t * (3 - 2 * L.t); L.g.rotation.y = (id === 'works' ? 1.35 : 1.6) * Math.max(0, (e - (id === 'bolt' ? 0.3 : 0)) / (id === 'bolt' ? 0.7 : 1));
+    }
     if (H_.opening && H_.open < 1) { H_.open = Math.min(1, H_.open + dt / 2.4); gate.position.y = GATE.h * 0.92 * (H_.open * H_.open * (3 - 2 * H_.open)); if (H_.open >= 1) gateCol.enabled = false; }
   });
   R.hall = {
@@ -423,6 +503,13 @@ function buildHall(scene, physics) {
       if (instant) { H_.open = 1; gate.position.y = GATE.h * 0.92; gateCol.enabled = false; }
     },
     get gateOpen() { return H_.open >= 1; },
+    // SEWERS-1: the doors (instant: from a save), where to stand to use them, the splash of a fall
+    bolt: { ...B.world(WD.x, Z0 + 0.75), y: U },
+    works: { ...B.world(WORKS.x, Z0 + 0.7), y: 0 },
+    gdoor: { ...B.world(GLOBE.x, Z0 + 0.7), y: 0 },
+    setDoor(id, b, instant = false) { const L = leaves[id]; L.open = b; if (!b || instant) L.t = b ? 1 : 0; exitOn[id](b); },
+    doorOpen(id) { return leaves[id].open && leaves[id].t >= 1; },
+    splash() { H_.splashT = 0; },
   };
   return B.finish();
 }
@@ -509,10 +596,86 @@ function buildVault(scene, physics) {
   return B.finish();
 }
 
+// ------------------------------------------------------------------ the globe's room (S-5, LBA2's second room off the hall)
+// SEWERS-1: behind the little blue door at the east end. In LBA2 the Weather Wizard kept an enchanted globe in a secret
+// room of the sewers. Ours: a small paved room in the vault's kit (no lamp of its own: the stone's own light and the
+// globe's), the globe on a pedestal in the middle; twelve years on the project's heat pipe runs along its back wall and a
+// bleed cock on it puffs warm air at the globe, which has clouded over. Shut, the cloud thins and the globe shows the
+// sky over Citadel as it is (src/game/weather.js): the way Bersimon reads the weather from his tent.
+const SKY = { clear: '#8fd4ff', haze: '#c4d2da', rain: '#7c90a8', wind: '#a6d6ec', storm: '#56607a' };
+function buildGlobeRoom(scene, physics) {
+  const { x: CX, z: CZ } = SEWER_AT.sewerglobe;
+  const B = new RoomBuilder(scene, physics, 'sewerglobe', CX, CZ);
+  const R = B.room, k = B.k;
+  const W = 6.4, D = 5.4, H = 3.2, DOOR = 0;
+  R.view = 9.5; R.follow = 0.3; R.cave = true; R.music = 'cave'; R.surface = 'stone';
+  B.shell({
+    W, D, H, t: 0.45, slabH: 0.8,
+    floor: vaultFloorM(), slab: rubbleM(), rimMat: rubbleM(), body: stoneM(), rail: capM(), cap: capM(), rimH: 0.75,
+    rimGaps: [{ x: DOOR, w: 1.3 }],
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  R.exits.push({ ...B.world(DOOR, D / 2 - 0.2), r: 0.6, room: 'sewer' });
+  R.spawn = { ...B.world(DOOR, D / 2 - 1.35), a: Math.PI };
+  R.entries = { sewer: R.spawn };
+  // the pedestal, its brass stand, the globe: an inner sky (two suns in it) under a cloudy shell that thins when cleared
+  const G = { x: 0, z: -0.7, y: 1.42 };
+  k.add(cyl(0.34, 0.42, 0.9, 12), stoneM(), G.x, 0.45, G.z);
+  k.add(cyl(0.44, 0.44, 0.1, 12), capM(), G.x, 0.95, G.z);
+  for (const r of [0, Math.PI / 2]) k.add(torus(0.5, 0.018, 4, 24), MAT.brass(), G.x, G.y, G.z, r);
+  k.add(torus(0.5, 0.022, 4, 24), MAT.brass(), G.x, G.y, G.z, 0, { rx: Math.PI / 2 });
+  B.ccol(G.x, G.z, 0.5, 1.95);
+  const skyM = new THREE.MeshStandardMaterial({ color: '#203040', emissive: SKY.clear, emissiveIntensity: 0.9, roughness: 0.4 });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(0.36, 20, 14), skyM); sky.position.set(G.x, G.y, G.z); B.group.add(sky);
+  for (const [dx, dy] of [[-0.12, 0.14], [0.15, 0.06]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), MAT.glow('#fff6d0', '#ffd860', 2.0)); s.position.set(G.x + dx, G.y + dy, G.z + 0.33); B.group.add(s); }
+  const fogM = new THREE.MeshStandardMaterial({ color: '#e8eef0', emissive: '#9aa6aa', emissiveIntensity: 0.5, roughness: 0.6, transparent: true, opacity: 0.94, depthWrite: false });
+  fogM.userData.noShadow = true;
+  const fog = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 14), fogM); fog.position.set(G.x, G.y, G.z); B.group.add(fog);
+  // the heat pipe along the back wall, down to a bleed cock that puffs at the globe
+  P.pipeline(k, [[LX + 0.2, 2.5, BZ + 0.22], [1.2, 2.5, BZ + 0.22], [1.2, 1.5, BZ + 0.22], [W / 2 - 0.2, 1.5, BZ + 0.22]], 0.08, MAT.copper(), MAT.brass());
+  for (const x of [-2.2, -0.4, 2.4]) k.add(rbox(0.06, 0.18, 0.12, 0.01), ironM(), x, x < 1 ? 2.5 : 1.5, BZ + 0.1);
+  const CK = { x: 1.2, y: 1.5, z: BZ + 0.42 };
+  k.add(cyl(0.05, 0.05, 0.3, 8), MAT.brass(), CK.x, CK.y, CK.z - 0.08, 0, { rx: Math.PI / 2 });
+  const cock = new THREE.Group(); cock.position.set(CK.x, CK.y + 0.14, CK.z); B.group.add(cock);
+  { const ck = new P.Kit(cock); P.valveWheel(ck, { r: 0.1, color: '#b8302a' }); ck.flush(); }
+  const puff = glowSprite('#f4f8ff', 0.7, 0.5); puff.position.set(CK.x - 0.3, CK.y + 0.1, CK.z + 0.3); B.group.add(puff);
+  // Bersimon's things: a star cloth on the wall, a weather vane in the corner, a stool, blue rocks and spiked rings
+  k.at(LX + 0.03, 1.8, -0.6, Math.PI / 2, () => {
+    k.add(P.disc(0.42, 24), MAT.flat('#1a2c3c', 0.6), 0, 0, 0.0);
+    k.add(torus(0.43, 0.04, 6, 24), MAT.brass(), 0, 0, 0.01);
+  });
+  k.add(plane(0.8, 0.8), M('sw_starP2', () => new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, alphaTest: 0.1 })), -1.6, 1.9, BZ + 0.03);
+  k.at(W / 2 - 0.6, 0, BZ + 0.7, 0, () => {
+    k.add(cyl(0.025, 0.03, 1.7, 6), ironM(), 0, 0.85, 0);
+    k.add(rbox(0.5, 0.03, 0.03, 0.005), MAT.brass(), 0, 1.6, 0); k.add(rbox(0.03, 0.03, 0.5, 0.005), MAT.brass(), 0, 1.6, 0);
+    k.add(lathe([[0.001, 0], [0.06, 0.02], [0.001, 0.28]], 6), MAT.brass(), 0, 1.75, 0, 0, { rz: Math.PI / 2 });
+  });
+  B.ccol(W / 2 - 0.6, BZ + 0.7, 0.15, 1.8);
+  for (const [x, z, s] of [[LX + 0.6, BZ + 0.6, 0.9], [-2.3, D / 2 - 0.9, 0.7]]) { k.add(blueRocks(), softMat, x, 0, z, x, { sx: s, sy: s, sz: s }); B.ccol(x, z, 0.42 * s, 0.6 * s); }
+  for (let x = LX + 1.2; x < DOOR - 0.8; x += 0.7) spikedRing(k, x, 0, D / 2 - 0.25, x);
+  for (let x = DOOR + 0.9; x < W / 2 - 0.3; x += 0.7) spikedRing(k, x, 0, D / 2 - 0.25, x);
+  const S_ = { clear: 0, t: 0, puffT: 0 };
+  R.updaters.push((dt, t) => {
+    if (S_.clear && S_.t < 1) S_.t = Math.min(1, S_.t + dt / 2.5);
+    fogM.opacity = 0.94 - 0.82 * S_.t; fog.visible = fogM.opacity > 0.02;
+    puff.visible = !S_.clear; if (puff.visible) { S_.puffT = (S_.puffT + dt) % 1.4; const u = S_.puffT / 1.4; puff.position.set(CK.x - 0.3 - u * 0.6, CK.y + 0.1 + u * 0.15, CK.z + 0.3 + u * 0.3); puff.material.opacity = 0.5 * (1 - u); puff.scale.setScalar(0.5 + u * 0.8); }
+    sky.rotation.y = t * 0.1;
+  });
+  R.globe = {
+    globe: { ...B.world(G.x, G.z + 0.95), y: 0, face: Math.PI },
+    cock: { ...B.world(CK.x, CK.z + 0.75), y: 0, face: Math.PI },
+    // shut the bleed cock: the cloud thins (instant: from a save); the sky shows the weather it is given
+    setClear(b, instant = false) { S_.clear = b; if (!b || instant) S_.t = b ? 1 : 0; cock.rotation.z = b ? 1.6 : 0; },
+    setSky(state) { skyM.emissive.set(SKY[state] || SKY.clear); },
+    get clear() { return S_.clear && S_.t >= 1; },
+  };
+  return B.finish();
+}
+
 export function buildSewerRooms(scene, physics) {
-  const sewer = buildHall(scene, physics), sewervault = buildVault(scene, physics);
-  SEWER.hall = sewer.hall; SEWER.vault = sewervault.vault;
-  return { sewer, sewervault };
+  const sewer = buildHall(scene, physics), sewervault = buildVault(scene, physics), sewerglobe = buildGlobeRoom(scene, physics);
+  SEWER.hall = sewer.hall; SEWER.vault = sewervault.vault; SEWER.globe = sewerglobe.globe;
+  return { sewer, sewervault, sewerglobe };
 }
 
 // ------------------------------------------------------------------ the grate in Bug Street (Citadel)
@@ -665,8 +828,20 @@ export function buildSewerHatch(scene, physics, world) {
 }
 
 // (SEWER-LIFT: the grate is no longer a door: on the deck, the lever takes him down: story/sewers.js)
-export function sewerDoors() { return []; }
-export function sewerExit(to) {
+// SEWERS-1: the lower town's street door (pink, S-4) always leads in, to the Works door at the east pier's head; the
+// terrace porch (stoneup, S-3) once the bolt below is drawn. Each lands at its own door in the hall (R.entries).
+const house = (W, id) => W?.houses?.find((h) => h.id === id);
+export function sewerDoors(W, f = {}) {
+  const out = [];
+  for (const [id, on] of [['pink', true], ['stoneup', !!f.sw_bolt]]) {
+    const h = house(W, id);
+    if (on && h?.door) out.push({ house: id, x: h.door.x, z: h.door.z, r: 0.9, room: 'sewer', spawn: (R) => R.entries?.[id] });
+  }
+  return out;
+}
+export function sewerExit(to, W) {
+  const id = { 'sewer-pink': 'pink', 'sewer-stoneup': 'stoneup' }[to], hs = id && house(W, id);
+  if (hs?.door) return { x: hs.door.x + Math.sin(hs.ry) * 1.2, z: hs.door.z + Math.cos(hs.ry) * 1.2, a: hs.ry };
   const h = SEWER.hatch;
   // back up the shaft: on the deck in the grate (story/sewers.js brings it up the last stretch)
   if (to === 'sewer-out' && h) return { x: h.x, z: h.z, a: Math.PI / 2 };

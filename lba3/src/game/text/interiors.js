@@ -30,6 +30,7 @@ Object.assign(STR.en, {
   rs_luc_0: 'Chez Luc. Same sign, same stools. Older landlord.',
   rs_luc_1: 'The dock crews drink here now. Louder than the old crowd, but they tip in Zeelich coin.',
   rs_luc_2: "The cellar's full of Esmer crates these days. I can't read the labels. I serve them anyway.",
+  rs_luc_3: "Raph from the lighthouse left his guitar in that cave behind the depot. Says he'll fetch it when he stops dreaming about it.",
 
   rs_hobb_dry: "Hauled water crates all morning. Now I'm the one who's dry.",
   rs_hobb_hot: 'Hot water on the quay! I washed my hands twice. Didn\'t need to. Just could.',
@@ -47,6 +48,7 @@ Object.assign(STR.en, {
   rs_fenn_work: "I'm resting. Fishermen rest professionally.",
   rs_fenn_0: 'Forty years on the boats. Now I sit on this sofa and tell the young ones they\'re doing it wrong.',
   rs_fenn_1: 'That jukebox plays three tunes. Kip thinks it plays four.',
+  rs_fenn_2: "Mind the hole in Luc's cellar, by the walkway. Goes straight down to the old sewers. Luc calls it drainage.",
 
   rs_kip_hot: "Has the hot water reached the harbour row yet? No? Then I'm still washing at my aunt's.",
   rs_kip_work: "Shh, this is the good bit.",
