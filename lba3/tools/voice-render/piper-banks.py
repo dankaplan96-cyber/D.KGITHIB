@@ -163,12 +163,12 @@ def syllables(al, start):
         res.append([round(max(0.0, t), 3), round(cd, 3), round(max(0.04, s['end'] - s['v0']), 3), s['vk'], s['c'], s['amp']])
     return res
 
-def sox(x, args):
+def sox(x, args, same_length=True):
     if not args: return x
     p = subprocess.run(['sox', '-q', '-t', 'raw', '-r', str(SR), '-e', 'floating-point', '-b', '32', '-c', '1', '-',
                         '-t', 'raw', '-'] + args, input=x.astype(np.float32).tobytes(), capture_output=True, check=True)
     y = np.frombuffer(p.stdout, np.float32).copy()
-    return y[:len(x)] if 'pad' not in args else y
+    return y[:len(x)] if same_length else y
 
 def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None):
     pcm, al = [], []
@@ -227,6 +227,18 @@ def median_f0(x):
         if c[k] > 0.3 * c[0]: out.append(SR / k)
     return int(round(float(np.median(out)))) if out else 0
 
+# a clip's hardest attack, as the game's click check measures it (tests/lib/voicelab.js: a sample's second difference
+# against the second difference around it, +-5 ms, at 48 kHz and the clip's in-game level): a voice onset straight after
+# a stop's silence can stand out like a click, and a clip's renderings differ in it
+ATTEMPTS, ATTACK_OK, GAME_GAIN = 4, 6.3, 0.225 * 0.8 * 2.2 * 0.8
+def attack(x):
+    y = sox(x * (0.1 / speech_rms(x)), ['rate', '-v', '48000'], False).astype(np.float64) * GAME_GAIN
+    d2 = np.zeros(len(y)); d2[2:] = y[2:] - 2 * y[1:-1] + y[:-2]
+    half = 240; cum = np.concatenate([[0], np.cumsum(d2 * d2)])
+    i = np.arange(len(y)); lo = np.maximum(0, i - half); hi = np.minimum(len(y), i + half + 1)
+    a = np.abs(d2); loc = np.sqrt(np.maximum(1e-12, (cum[hi] - cum[lo] - a * a) / (hi - lo - 1)))
+    return float(np.where(a >= 0.004, a / loc, 0).max())
+
 # ------------------------------------------------------------------------------------------------ a bank
 def build_bank(voice, Cfg, bid, spec, inv, people_sounds, family=None):
     clips, parts, lens, nvars, pos = {}, [], {}, {}, 0.0
@@ -249,7 +261,16 @@ def build_bank(voice, Cfg, bid, spec, inv, people_sounds, family=None):
                 text = gibberish(rng, n, cons, vows, intent, ends[k % len(ends)], spec.get('trail') and intent in ('tell', 'excl'))
                 ls = spec['ls'] * pace * rng.uniform(0.94, 1.06)
                 ns = max(0.4, spec['ns'] + rng.uniform(-0.08, 0.08))
-                x, sp, syl = render(voice, Cfg, spec['sid'], text, ls, ns, rng.uniform(0.75, 1.0), spec.get('ps', 0), spec.get('room'))
+                nw = rng.uniform(0.75, 1.0)
+                # (Piper's performances vary from one rendering to the next: of up to four, the first without a hard
+                #  attack, else the softest)
+                best = None
+                for _ in range(ATTEMPTS):
+                    r = render(voice, Cfg, spec['sid'], text, ls, ns, nw, spec.get('ps', 0), spec.get('room'))
+                    c = attack(r[0])
+                    if best is None or c < best[0]: best = (c, r)
+                    if c < ATTACK_OK: break
+                x, sp, syl = best[1]
                 rendered.append((f'{intent}.{n}.{k}', x, sp, syl, text))
     if spec.get('hm'):
         lens['hm'] = [1]; nvars['hm'] = 2
