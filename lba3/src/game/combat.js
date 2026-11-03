@@ -67,15 +67,16 @@ export const MOVES = {
 export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'], glove: ['glove1', 'glove2'] };
 export const HEAVY_HOLD = 0.72; // s from the press, holding attack with the sword through the first strike → a heavy strike on release
 
-export const WEAPONS = ['ball', 'sword', 'pulse', 'fists', 'blowgun', 'laser', 'glove', 'lightning', 'pocketset', 'lance'];
+export const WEAPONS = ['ball', 'sword', 'pulse', 'fists', 'blowgun', 'laser', 'glove', 'lightning', 'pocketset', 'lance', 'fork', 'line', 'heatflask'];
 export const WEAPON_INFO = {
   fists: { icon: '✊' }, ball: { icon: '✦' }, sword: { icon: '⚔' }, pulse: { icon: '⌁' },
   blowgun: { icon: '➶' }, laser: { icon: '✺' }, glove: { icon: '✋' }, lightning: { icon: '☇' },
   pocketset: { icon: '♫' }, lance: { icon: '≈' },   // (EQUIP-2a: tools.js)
+  fork: { icon: 'Ψ' }, line: { icon: '⊸' }, heatflask: { icon: '♨' },   // (EQUIP-2b: tools.js)
 };
 const MELEE = new Set(['fists', 'sword', 'glove']);
 const SHOOT = new Set(['blowgun', 'laser', 'lightning']);   // fired by weapons.js
-const TOOLS = new Set(['pocketset', 'lance']);              // worked by tools.js (EQUIP-2a)
+const TOOLS = new Set(['pocketset', 'lance', 'fork', 'line', 'heatflask']);   // worked by tools.js (EQUIP-2a, 2b)
 
 // ------------------------------------------------------------------ input buffer
 export class InputBuffer {
@@ -435,7 +436,8 @@ export class HeroCombat {
         else if (g.weapons?.fire(w, aim)) { const D = g.weapons.def(w); this.shotCool = D.cool; this.pulseT = D.lock; }
         else this.notReady();
       } else if (TOOLS.has(w)) {
-        // Arthur's pocket set (a squeal), Bram's pump lance (a jet): tools.js keeps their cooldowns and the tank
+        // Arthur's pocket set (a squeal), Bram's pump lance (a jet), Ilka's fork (a note), the Esmer line (a cast), the heat
+        // flask (a blast): tools.js keeps their cooldowns, the tank and the heat
         this.buf.take('attack', this.now);
         const T = g.gadgets?.tools;
         if (T?.fire(w, aim)) this.pulseT = w === 'lance' ? 0.3 : 0.35;

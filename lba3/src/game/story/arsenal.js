@@ -6,7 +6,7 @@
 //     Nitro-Meca-Penguin (4, LBA2's price), a brass lantern (10). Added under her own stock (main.js openShop).
 //   Nara's case, Zeelich's street (from chapter 3, when Twinsen reaches Zeelich): the Esmer laser pistol with a crystal
 //     cell (30), cells (5: five shots), darts, penguins; from chapter 6 the Blowtron (35, Mosquibee work). With Nara
-//     away the case is an honesty box.
+//     away the case is an honesty box. EQUIP-2b: the Esmer line (25) too, until he has it (story/kit2b.js).
 //   Arthur's conch, on the table by his radio at home (from chapter 2): Arthur lends it (or his note does).
 //   The School of Magic, Desert Island (from chapter 4): Rector Hougo gives a pearl of incandescence for Bersimon;
 //     Ker'aooc teaches the protection ward (20 kashes, for the school's roof).
@@ -27,6 +27,7 @@ import { ChapterBase } from './base.js';
 import { Kit, MAT, rbox, cyl, sphere, torus, crate, canvasTex } from '../props.js';
 import { ARMS } from '../weapons.js';
 import { jetpackModel } from '../jetpack.js';
+import { LINE_PRICE } from './kit2b.js';
 import { rockGeometry } from '../vegetation.js';
 import '../text/arsenal.js';
 
@@ -309,6 +310,7 @@ export class Arsenal extends ChapterBase {
       if (A.blowgun) it('darts', PRICE.darts, A.darts >= M.darts);
       it('penguin', PRICE.penguin, A.penguins >= M.penguins);
       if (A.blowgun && !A.blowtron && this.at('pass')) it('blowtron', PRICE.blowtron);
+      if (!A.line && this.story.kit2b) it('line', LINE_PRICE);   // (EQUIP-2b: the Esmer line, story/kit2b.js)
     }
     return out;
   }
@@ -322,6 +324,7 @@ export class Arsenal extends ChapterBase {
       case 'laser': A.charge = Math.min(M.charge, A.charge + 5); this.gain('laser', 'it_laser'); return;
       case 'cell': A.charge = Math.min(M.charge, A.charge + 5); g.hud.toast('a_toast_got', { n: t('a_sh_cell') }); break;
       case 'blowtron': this.gain('blowtron', 'it_blowtron'); return;
+      case 'line': this.story.kit2b?.gainLine(); return;
     }
     g.audio.play('coin');
   }
@@ -380,7 +383,9 @@ export class Arsenal extends ChapterBase {
         if (!there) return hero(['a_case_away'], open);
         const lines = [['nara', f.a_naraMet ? 'a_nara_2' : 'a_nara_1']];
         if (tron) lines.push(['nara', 'a_nara_tron']);
-        this.chain(lines, () => { f.a_naraMet = true; if (tron) f.a_tronSaid = true; open(); });
+        const tip = A.line && !f.e2b_tip;   // (EQUIP-2b: once he has the line, where to try it)
+        if (tip) lines.push(['nara', 'e2b_nara_tip']);
+        this.chain(lines, () => { f.a_naraMet = true; if (tron) f.a_tronSaid = true; if (tip) f.e2b_tip = true; open(); });
         return true;
       }
       case 'a_nook': {

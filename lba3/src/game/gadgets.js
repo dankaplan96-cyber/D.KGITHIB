@@ -95,7 +95,7 @@ export class Gadgets {
       case 'conch': return this.blowConch();
       case 'lantern': return this.toggleLantern();
       case 'jetpack': return this.jet.toggleWorn();
-      case 'pocketset': case 'lance': return this.hold(id);
+      case 'pocketset': case 'lance': case 'fork': case 'line': case 'heatflask': return this.hold(id);
     }
     return false;
   }
