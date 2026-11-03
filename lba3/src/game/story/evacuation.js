@@ -155,8 +155,11 @@ export class Evacuation extends ChapterBase {
 
   begin() {
     const g = this.game, W = this.W;
-    if (g.room) g.exitRoom({ x: LANDING.x, z: LANDING.z, a: Math.PI }, true);
-    else { g.hero.pos.set(LANDING.x, g.physics.groundAt(LANDING.x, LANDING.z), LANDING.z); }
+    // WC-1: Hesk's glider comes down on Citadel's glider field on the plateau, due north of the lighthouse (travel.js
+    // citadel_glider): he steps off on its landing spot, where the glider's journey film leaves him
+    const L = g.travel?.points.citadel_glider?.landing || { ...LANDING, a: Math.PI };
+    if (g.room) g.exitRoom({ x: L.x, z: L.z, a: L.a }, true);
+    else { g.hero.pos.set(L.x, g.physics.groundAt(L.x, L.z), L.z); g.hero.angle = L.a; }
     g.hero.swapBody?.('twinsen'); g.hero.hasBall = true;
     W.station?.setActive?.(false);
     W.ferry?.setVisible?.(true);

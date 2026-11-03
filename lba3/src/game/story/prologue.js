@@ -13,7 +13,8 @@
 // Sendell speaks. Every step is a flag (saved); a save from before CH1-LONGER plays the steps it hasn't passed.
 import * as THREE from 'three';
 import { POI } from '../world.js';
-import { t } from '../i18n.js';
+import { t, STR } from '../i18n.js';
+const hasStr = (k) => STR.en[k] !== undefined;
 import { ChapterBase } from './base.js';
 import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
@@ -324,11 +325,11 @@ export class Prologue extends ChapterBase {
       const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d) => d.house));
       // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
       if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
-      W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
+      W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
       // from the door's own level, not from the slope above it)
       // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })
-      for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+      for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', id: d.id, label: 'p_door' });
       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
     } else {
       for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
@@ -414,12 +415,17 @@ export class Prologue extends ChapterBase {
   baseInteract(it) {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
-      case 'locked':
-        g.say('n_hero', t('pr_locked'), null, h);
+      // (C-4, CONNECTIONS_AUDIT.md: a locked door names its reason in one line, text/world.js w_door_<id>; the
+      //  neighbours' line about the well is chapter 1's only)
+      case 'locked': {
+        if (it.id === 'nbr' && this.story.index === 0) { g.say('n_hero', t('pr_locked'), null, h); return true; }
+        g.audio.play('deny');
+        g.say('', [hasStr('w_door_' + it.id) ? t('w_door_' + it.id) : t('w_door_shut')]);
         return true;
+      }
       case 'shut':
         g.audio.play('deny');
-        g.say('', [t('w_door_shut')]);
+        g.say('', [hasStr('w_door_' + it.id) ? t('w_door_' + it.id) : t('w_door_shut')]);
         return true;
       case 'chest':
         g.world.chest.open = true;
