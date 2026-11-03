@@ -326,8 +326,10 @@ function waveFor(ctx, tilt) {
 // assets/voice/manifest.json lists one bank per voice: the main cast's own, and the residents' families (a resident
 // speaks with the family of their people, sex and age, moved to their own pitch: the same person every visit).
 // A bank is one Ogg Opus file of short phrases (a "sprite"), fetched when its speaker is first heard of (prepare) and
-// decoded off the main thread at the game's own sample rate; at most BANKS_KEPT stay decoded (about 11 MB a bank of the
-// main cast's, 6 MB a family's).
+// decoded off the main thread at the game's own sample rate; at most BANKS_KEPT stay decoded (about 14 MB a bank of the
+// main cast's, 6 MB a family speaker's, at 48 kHz).
+// VOICES-PIPER: the phrases are made-up words spoken by Piper (offline, the LibriTTS-R voice model, CC BY 4.0), rendered
+// by tools/voice-render/piper-banks.py; a resident family has several speakers, and a resident keeps theirs.
 // A voice without a bank (the rarer peoples, machines), or whose bank isn't ready in time, is synthesised.
 const BANKS_KEPT = 5;
 const BANK_WAIT = 0.3;   // a line whose bank is still decoding waits at most this long, then is synthesised
@@ -350,12 +352,17 @@ export function bankOf(v) {
   if (B[v.id] && !B[v.id].family) return [v.id, 1];
   if (!FAMILY_RACES.has(v.race)) return null;
   const sex = v.kid ? 'kid' : v.sex === 'f' || WOMEN.has(v.id) ? 'f' : v.sex === 'm' || MEN.has(v.id) ? 'm' : v.f0 >= 190 ? 'f' : 'm';
+  // VOICES-PIPER: a family has several speakers (manifest.families); the resident's id picks one, the same every visit
+  const F = MANIFEST.families || {};
   let fam = `${v.race}-${sex}`;
-  if (!B[fam]) fam = sex === 'kid' ? 'quetch-kid' : `quetch-${sex}`;
-  if (!B[fam]) return null;
-  // (moved to the resident's own pitch, within two semitones of the family's)
-  const st = Math.max(-2, Math.min(2, 12 * Math.log2(v.f0 / B[fam].f0)));
-  return [fam, Math.pow(2, st / 12)];
+  if (!F[fam] && !B[fam]) fam = sex === 'kid' ? 'quetch-kid' : `quetch-${sex}`;
+  const list = (F[fam] || [fam]).filter((b) => B[b]);
+  if (!list.length) return null;
+  const bid = list[(hashStr(v.id) >>> 3) % list.length];
+  // (moved toward the resident's own pitch, within a semitone and a half of the speaker's: a recorded voice moved
+  //  further begins to sound sped up)
+  const st = Math.max(-1.5, Math.min(1.5, 12 * Math.log2(v.f0 / (B[bid].f0 || v.f0))));
+  return [bid, Math.pow(2, st / 12)];
 }
 function loadBank(id, sr = 48000) {
   let e = BANKS.get(id);
@@ -425,7 +432,7 @@ function sylGain(v, vk, f0) {
 }
 function consGain(v, C, f0) { return C.F ? Math.max(0.05, Math.min(8, Math.sqrt(REF / chainPower(v, null, f0, C.F)))) : 1; }
 const LEVEL = 0.37;       // the synthesis's peak syllable gain (Twinsen's "a": sylGain) into the voice bus (before the voice volume)
-const CLIP_LEVEL = 0.21;  // the pre-rendered phrases' gain into the voice bus (they are normalised alike, tools/voice-render)
+const CLIP_LEVEL = 0.225; // the pre-rendered phrases' gain into the voice bus (they are normalised alike, tools/voice-render; VOICES-PIPER: 0.21 -> 0.225 keeps a chapter-1 conversation as loud as with the synthesised banks, -16.8 LUFS)
 const LEAD = 0.03;        // schedule this far ahead of the audio clock (never in the past: no clicks)
 const CHANNELS = 3;       // pooled synthesis chains: one speaking, the others free or fading
 const FADE = 0.025;       // a line cut short (skipped, closed) fades with this time constant, its sources end 0.15 s later

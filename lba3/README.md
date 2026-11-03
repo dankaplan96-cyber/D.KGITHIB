@@ -91,6 +91,13 @@ python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly
 in a headless browser. The scripts in `tests/` do this for the prologue, chapters 1 and 2 and the save
 migration; each checks story flags, objectives and page errors along the way.
 
+## Voices
+
+Character voices generated with Piper (offline) using the LibriTTS-R voice model (CC BY 4.0). The characters
+speak made-up words: `tools/voice-render/piper-banks.py` renders each speaker's short phrases once, offline, into
+`assets/voice/` (Ogg Opus), and the game only plays those files; neither Piper nor the model ships with it, and
+nothing is fetched from the network at play time. Robots and Mosquibees keep their synthesised voices.
+
 ## About the original engine
 
 The LBA2 engine source was released under GPLv2 in 2021 (`github.com/2point21/lba2-classic`). The

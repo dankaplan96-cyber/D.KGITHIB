@@ -1,4 +1,6 @@
 // VOICE-PHRASE: renders the phrase banks the game speaks from (assets/voice/*.ogg + manifest.json).
+// (VOICES-PIPER: superseded for the game by tools/voice-render/piper-banks.py, which renders the banks with Piper; kept
+// for the synthesis it shares with the live fallback. Running it would replace Piper banks with synthesised ones.)
 //   node tools/voice-render/build-banks.mjs [bank ...]      (no names: all of them)
 //
 // Each bank holds one voice's short performances: for each intention a few lengths (in syllables) and a few variants,
