@@ -2144,7 +2144,10 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 # build_zoe below is the earlier Zoé, kept as the rollback: it is built only when named, `cast_poly.py <skel> <out> zoe`;
 # Baldino is skipped likewise (his look is now a Grobo on his own skeleton: the generic build would replace his model)
 OWN = ('zoe', 'baldino')
-names = [n for n in ALL if n != 'twinsen' and (n in ONLY if ONLY else n not in OWN)]
+# (Ballastra's canal dwellers have their own script, ballastra_poly.py; a look that reuses another's model (poly: 'x', e.g.
+# blTrader) has no model of its own to build)
+names = [n for n in ALL if n != 'twinsen' and ALL[n]['look'].get('race') != 'canal' and ALL[n]['look'].get('poly', n) == n
+         and (n in ONLY if ONLY else n not in OWN)]
 built = [build_any(n) for n in names]
 # (a build of only some characters goes to its own file, so it never replaces the whole cast's)
 blend = os.environ.get('CAST_BLEND') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'art', 'characters', 'cast_poly.blend' if not ONLY else 'cast_poly_' + '_'.join(ONLY) + '.blend')

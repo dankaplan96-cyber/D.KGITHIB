@@ -322,7 +322,47 @@ export const LOOKS = {
     race: 'quetch', outfit: 'tunic', hem: 0.58, slim: true, tunic: '#c8602a', tunicTrim: '#7a3a1a', belt: '#4a3a2a', buckle: '#b8b8c0', pants: '#3a4a5a', shoes: '#2a2a2a',
     hair: '#2a1a3a', skin: '#e8b890', hairStyle: 'tail', nose: 'button', eyes: '#3a2a1a', apron: '#8a5a3a', goggles: true, height: 0.92, neck: 0.08,
   },
+  // ---- Ballastra (the expansion, W-1 Float Harbor; tools/blender/ballastra_poly.py, EXPANSION_ART_DECISIONS.md D4/D9)
+  // The canal dwellers, Ballastra's own people (D4): shoulder-high to Twinsen (about 1.45 m), compact and broad, a big
+  // round face (wide cheeks, a short broad nose, a soft jaw), fan ears that stand out from the head and waft (an ear bone
+  // each side, the rig's Grobo ear swing), short sturdy legs set wide on broad feet. The skeleton is the shared one (same
+  // names and hierarchy) with these proportions: short legs and torso, a short neck, broad shoulders, short arms.
+  // Tessa (D9): a compact mechanic, a little narrower than the dockers, carried forward (stoop) as she works: a mustard
+  // shirt with the sleeves rolled above the elbow, a short teal canvas apron with a wrench and a screwdriver in its
+  // pocket, a hammer hung at her right hip, a rust headband over short dark hair, broad work boots.
+  tessa: {
+    race: 'canal', outfit: 'tunic', hem: 0.36, tunic: '#d4a03c', tunicTrim: '#a87a26', belt: '#4a3020', buckle: '#a8acb4', pants: '#6a4a34', shoes: '#5a3a24',
+    skin: '#c8946a', hair: '#6a3020', eyes: '#2a3a2e', apron: '#2f5a6a', headband: '#b8402a',
+    legLen: 0.6, torsoLen: 0.76, neck: 0.05, headS: 1.3, shoulders: 1.05, legX: 0.11, armLen: 0.88, armSpread: 0.14, stoop: 0.11,
+    earBones: [0.152, 1.216, 0.079], height: 0.95, radius: 0.4,
+  },
+  // The dockers: ONE body (the same skeleton and base mesh, built by the same function) in three outfits, each with its own
+  // face settings (brows, nose, mouth, ear set), skin tone and height. 1: a sea-green oilskin smock, a knit cap, tall
+  // rubber boots. 2: a leather vest over a sleeveless undershirt, knee shorts, a straw cone hat, a rope coil on the
+  // shoulder, bare broad feet. 3 (older: grey hair and sideburns, heavier brows): a leather tabard over a slate shirt,
+  // work gloves, a headband, rolled trousers and sandals, a cargo hook at the belt.
+  docker1: {
+    race: 'canal', outfit: 'tunic', hem: 0.34, tunic: '#4f8a6a', tunicTrim: '#3a6a50', belt: '#3a2a20', pants: '#3a4a5a', shoes: '#2a3434',
+    skin: '#b9875f', hair: '#2a1c14', eyes: '#2a2a22', cap: '#c8502a',
+    legLen: 0.6, torsoLen: 0.78, neck: 0.05, headS: 1.35, shoulders: 1.15, legX: 0.12, armLen: 0.86, armSpread: 0.16,
+    earBones: [0.158, 1.232, -0.02], height: 0.97, radius: 0.42,
+  },
+  docker2: {
+    race: 'canal', outfit: 'tunic', hem: 0.5, tunic: '#e4d6b4', tunicTrim: '#8a5a3a', belt: '#5a3a1a', pants: '#3a6a8a', shoes: '#d1a27a',
+    skin: '#d1a27a', hair: '#3a2416', eyes: '#2a2a1a', vest: '#8a5a3a', strawHat: '#d8c080', rope: '#c8b080',
+    legLen: 0.6, torsoLen: 0.78, neck: 0.05, headS: 1.35, shoulders: 1.15, legX: 0.12, armLen: 0.86, armSpread: 0.16,
+    earBones: [0.158, 1.232, -0.02], height: 0.93, radius: 0.42,
+  },
+  docker3: {
+    race: 'canal', outfit: 'tunic', hem: 0.3, tunic: '#56687a', tunicTrim: '#3e4e5e', belt: '#3a2a1a', buckle: '#9a9aa0', pants: '#4a4038', shoes: '#6a4a2a',
+    skin: '#a87a58', hair: '#c8c4b8', eyes: '#2a2018', tabard: '#7a4a2a', glove: '#5a4030', headband: '#e8e0c8',
+    legLen: 0.6, torsoLen: 0.78, neck: 0.05, headS: 1.35, shoulders: 1.15, legX: 0.12, armLen: 0.86, armSpread: 0.16,
+    earBones: [0.158, 1.232, -0.02], height: 1.0, radius: 0.42,
+  },
 };
+// A Twinsun trader at the harbour (W-1): the Desert Island trader's existing body as it is (a visitor reads by its own
+// silhouette, D4); the same look, so the same skeleton the model was built on
+LOOKS.blTrader = { ...LOOKS.desertTrader, poly: 'desertTrader' };
 
 LOOKS.twinsenSculpt = { ...LOOKS.twinsen, poly: null };
 
