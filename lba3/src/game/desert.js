@@ -1461,7 +1461,7 @@ export function* buildDesertSteps(scene, physics) {
     for (const k of [-1.25, 1.25]) rod(B, [x + c * k, y, z - s * k], [x + c * k, y + 1.95, z - s * k], 0.05, darkWood);
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
   };
-  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt });
+  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
   //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
   for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });

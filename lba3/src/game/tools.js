@@ -192,7 +192,7 @@ export class Tools {
     return null;
   }
   cool(w) {
-    if (w === 'pocketset') return this.squealCool / POCKET.cool;
+    if (w === 'pocketset') return this.squealCool / (POCKET.cool * (this.game.flags?.sh_pcell ? 0.5 : 1));
     if (w === 'fork') return this.forkCool / FORK.cool;
     if (w === 'line') return this.zip || this.cord ? 1 : this.castCool / LINE.cool;
     if (w === 'heatflask') return this.blastCool / FLASK.cool;
@@ -213,7 +213,7 @@ export class Tools {
   squeal(aim) {
     const g = this.game, h = this.h, P = POCKET;
     if (this.squealCool > 0) return false;
-    this.squealCool = P.cool;
+    this.squealCool = P.cool * (g.flags?.sh_pcell ? 0.5 : 1);   // (Tibbo's fresh cell for it: story/shops.js)
     if (aim) h.angle = Math.atan2(aim.x, aim.z);
     h.rig.play('pulse'); h.rig.actionT = 0;
     this.sound('squeal');

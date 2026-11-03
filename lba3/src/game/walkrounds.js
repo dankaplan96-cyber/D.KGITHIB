@@ -185,6 +185,17 @@ export function citadelRoster(game) {
       look('sefa_quay', -108.8, 40.2, QUAY_PILE.x, QUAY_PILE.z, [8, 12]),   // (the goods landed for the house: a look at the quay's pile)
       look('sefa_crates', -80.2, 41.0, -80.9, 43.4, [8, 12], { act: 'tinker' }),   // (in front of the crate stacks, clear of their colliders)
     ]) },
+    // PURPOSES (3.11.2026): Tibbo at his counter under the 'shop' house's awning (story/shops.js), with a turn at the parts
+    // on his bench beside it; he faces the street. (2 m and more from his door: its prompt is the counter's.)
+    ...(() => {
+      const S = W.houses.find((h) => h.id === 'shop'); if (!S) return [];
+      const at = (lx, lz) => ({ x: S.x + Math.sin(S.ry) * lz + Math.cos(S.ry) * lx, z: S.z + Math.cos(S.ry) * lz - Math.sin(S.ry) * lx });
+      const c = at(1.0, S.d / 2 + 1.5), b = at(0.2, S.d / 2 + 1.8), out = at(0.6, S.d / 2 + 8);
+      return [{ id: 'tibbo', char: 'farmerA', tint: '#e8f0ff', speed: 0.85, start: 0, color: '#f0d070', stops: [
+        D('tibbo_counter', c.x, c.z, { a: A(c.x, c.z, out.x, out.z), dur: [30, 45] }),
+        D('tibbo_bench', b.x, b.z, { a: A(b.x, b.z, out.x, out.z), act: 'tinker', dur: [8, 12] }),
+      ] }];
+    })(),
     // the old woman: two benches by the lane's middle and what she sees from each
     { id: 'ume', char: 'lharElder', tint: '#ffffff', speed: 0.75, start: 0, color: '#c8a0f0', stops: ok([
       bench('ume_b1', -34.6, 43.6, [30, 46]),
@@ -265,6 +276,7 @@ export function desertRoster(game) {
       look('bas_loom', -62.6, -2.0, -58.2, -0.4, [20, 30], { act: 'rest' }),
       look('bas_oasis', -48.6, -8.2, -42, -12, [8, 12]),
       look('bas_porch', -72.2, -0.8, -70.5, -2.8, [12, 18]),
+      look('bas_home', -42.2, -38.0, -39.4, -38.6, [14, 20]),   // (PURPOSES: his own door, the old house S40: desertold.js)
     ] },
   ];
 }

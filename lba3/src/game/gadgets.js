@@ -25,7 +25,7 @@ import { offScene, CALM } from './offscene.js';
 export const GADGET = {
   penguin: { life: 7, speed: 1.3, lureR: 11, hp: 2, popR: 2.2, popDmg: 2 },
   protect: { mp: 3, dur: 15, k: 0.5 },
-  conch: { cool: 4, dogR: 14, dogStun: 3, folkR: 16, dinoR: 70 },
+  conch: { cool: 4, dogR: 14, dogStun: 3, folkR: 16, dinoR: 70, calm: 15 },   // (calm: Marl's long call, once learned: story/purposes.js)
   lantern: { color: '#ffcf80', intensity: 3.2, distance: 8, decay: 1.4 },
 };
 
@@ -219,8 +219,10 @@ export class Gadgets {
     for (const e of g.enemies) {
       if (!e.alive || !e.present || e.def?.kind !== 'gdog' || !e.pulse) continue;
       if (Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) > C.dogR) continue;
-      e.pulse({ stun: C.dogStun }); dogs++;
-      g.hud.float('?', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#ffe35a');
+      // (Marl's long call learned on Zeelich: the dog goes home and lies down; otherwise it is only startled)
+      if (g.flags?.pp_call && e.calm) { e.calm(C.calm); g.hud.float('♪', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#9fe8a0'); }
+      else { e.pulse({ stun: C.dogStun }); g.hud.float('?', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#ffe35a'); }
+      dogs++;
     }
     for (const n of g.npcs) {
       if (!n.present || n.talking || Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) > C.folkR) continue;
@@ -242,6 +244,7 @@ export class Gadgets {
     }
     this.stats.conchDogs += dogs; this.stats.conchFolk += folk;
     this.lastConch = { dogs, folk, dino };
+    g.story?.purposes?.conchBlown?.();   // (Marl's yard on Zeelich listens for it)
     return true;
   }
 

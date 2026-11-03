@@ -1273,10 +1273,10 @@ class Game {
     this.restoreLoot(s.loot);
     if (this.flags.target) this.hitTarget(true);
     this.story.applyFlags();
-    let at = { x: s.hero.x, z: s.hero.z, a: 0 };
-    if (s.respawn && this.rooms[s.room]?.spawn) at = { ...this.rooms[s.room].spawn };   // (DECLUTTER: a cut place's save: migrateSave)
+    const at = { x: s.hero.x, z: s.hero.z, a: 0 };
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
-    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, at, true);
+    // (DECLUTTER: a save in a cut place lands at its region's spawn, read once the region is built: migrateSave)
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, s.respawn ? (R) => ({ ...(R.spawn || at) }) : at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)

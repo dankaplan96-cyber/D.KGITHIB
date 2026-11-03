@@ -208,3 +208,84 @@ Baldino's workshop. These frame the world and each has a use.
 `tests/zislands.mjs` (the island list and shuttle menu), `tests/lba1rooms.mjs` (bumaze, buhalls), `tests/asylum.mjs`,
 `tests/containers.mjs` (ISLES_AT, the desert finds), `tools/worldscore` (desertold's landmarks), the holomap. Saves keep
 an island by its index in ISLES: cut islands must leave their slot (or a save on a cut island must land on Zeelich).
+
+## The user's decision and what was done (DECLUTTER + PURPOSES, 3.11.2026)
+The user: "OK, but whatever stays must give something to the journey, not just a superfluous place." Then (relayed):
+"Every place in the game must have meaning, even a small one, over the course of the game." A flavour line alone is
+not a meaning: a meaning is a quest step, a puzzle, an item or tool use, a shortcut, a pointer that leads somewhere
+useful, or a story beat the player acts in.
+
+**Cut** (commit "DECLUTTER: cut the places with no use"): the CX islet and Tralu Rock (`zislands.js` SLOTS keeps the
+other islands' indices; the menus show 9 islands), Otringal's bar office (the back door stays, staff only), the
+Hamalayi's LBA1 gantry and rebels' camp (the old gate and the waystone stay), Citadel's west islet dome (the robed
+figure stays on the skyline, with no prompt), six of Desert Island's nine shut doors with their buildings (house B49,
+the walled compound S24 with its two houses and gate, the hut S113, the islet door with its figure and pillar), and
+Bù's dark halls merged into the maze (the halls' chest at the maze's far end, which leads back up). A save standing in
+a cut place loads at its region's spawn (`main.js` REMOVED_ROOMS, `s.respawn`).
+
+## Purposes: what each kept place gives the journey
+Built in `src/game/story/purposes.js`, `story/shops.js` and `text/purposes.js`; the residents in `storylife.js` and
+`walkrounds.js`; tested by `tests/purposes.mjs`.
+
+1. **Citadel's 'shop' house → Tibbo's Fix and Fill** (from the end of chapter 1; open in the evacuation). Tibbo stands
+   at his counter under the awning; his door opens the counter. Stock: ten darts 9 (blowgun owners), a
+   Nitro-Meca-Penguin 4, a crystal cell 5 (laser owners: the only cells on Twinsun), and once a fresh cell for Arthur's
+   pocket set 12 (its squeal recharges in half the time, `tools.js`). First visit: a penguin on the house (five darts if
+   the pockets are full), with the tip that the project's guards watch anything that waddles: chapter 2's station.
+   Before the well is sorted he is still unpacking (one line, no counter). The stone house is his home; its door note
+   sends the player to the counter.
+2. **The School's second building → the pupils' dormitory** (chapter 4 on). Oni waits on the rim walk: the study
+   crystal by the door went to sleep in the last storm, and only a pure note wakes it; she points to the dig's singing
+   fork (Ilka's). Clues: Oni, the crystal's Look ("hums like something asleep"), a knock at the door, Bashir's line.
+   The fork struck within reach wakes it; the ball only makes it ring (the failure says why). Reward: Ker'aooc's ward
+   costs 10 instead of 20; if he already has it, her treatment refills his magic too. Any order works (the fork before
+   talking to Oni also wakes it).
+3. **Zeelich's dog-training yard → Marl, who trains the project's guard dogs** (chapter 3 on). She teaches the long
+   call: one long low note means "go home and lie down". With Arthur's conch blown by her gate after talking to her,
+   the call is learned. From then on the conch sends a guard dog home and keeps it calm for 15 s (it ignores Twinsen
+   until hurt), where before it only startled it for 3 s: a quiet way past the project's dogs (the asylum, the desert
+   post, later chapters). Without the conch she says what kind of thing carries the note.
+4. **The three kept Desert Island houses** (chapter 4 on). **S40** is Bashir's home (his round has a stop at his door; a
+   knock points to him at the loom; his lines point to the dormitory). **S28** is the dig crew's bunkhouse: the board by
+   its door holds Surveyor Anko's sketch of FunFrock's old pipes (a find, kept in the inventory and journal: line two
+   runs to the oasis, never open it), an early clue for chapter 5's valve puzzle. **The great hall** is the dormitory
+   (item 2).
+
+## Every other kept place: its small meaning
+| Place | Meaning now | Status |
+|---|---|---|
+| Citadel: the statue | Its plaque is read: it names FunFrock's asylum, and Twinsen wonders why the project guards it (a pointer to the asylum's finds) | built |
+| Citadel: FunFrock's asylum | The plaque and both passage doors point to it; inside, the register's clover and the cell's coins | built (pointers) |
+| Citadel: stone house | Tibbo's home: its door note sends the player to his counter | built |
+| Citadel: the passage's hatch and north tunnel mouth | Their lines say the passage ran to the asylum, where the project posts guards | built |
+| Citadel: the west islet figure; the project barge and lift | Skyline and decor, no prompt (not places) | — |
+| Citadel: ticket office | The cabin ticket: full life and magic on the ferry's arrival | exists |
+| Citadel: Nell's home | Wim at his bench; the coupler quest at her stall outside | exists |
+| Citadel: Tralu's cave | A cache and Raph's guitar case (C-2) | exists |
+| Desert: the old corral (troughs, tank) | Its troughs still hold water: Bram's lance refills there, the nearest water to the dig's mites | built |
+| Desert: the gateway over the dig track | The waymark on the track to the dig | exists |
+| Desert: two standing figures, twin pillars | Scenery, no prompt (not places); candidates to cut if the user wants fewer | — |
+| Hamalayi: the old gate | Frames the walk from the landing to the gorge | exists |
+| Hamalayi: the waystone | A find in its lit niche (a clover or kashes) | card |
+| Zeelich: the bakery, sky pier, gateway | The Second Bake; the shuttle | exists |
+| Otringal: harbour bar, Imperial Hotel | The coin machines sell life and magic through the shops; the bar's boss gives OP-7's first lead | card (OP-7) |
+| Celebration: the Dark Monk's temple | The lectern's line about the murals: OP-7 step 6 | card (OP-7) |
+| The Platform, the Lift Dock | OP-7 "The Lift Below" (EXPANSION_PLAN.md); the lever's plate LIFT RESERVED | card (OP-7) |
+
+## Cards for later (design only, not built; PEOPLE-1 style)
+**Mosquibee Island and the Nectar Orchard, merged** (chapter 4 on). *Residents:* Bzzra, the hive keeper (a Mosquibee);
+Pell, the Esmer press-master at the orchard's press house; two pickers. *Trade:* honey from the hives (cheaper than
+Sefa's once the hives are calm), nectar cordial at the press (refills magic). *Quest:* the hives are restless because
+the project's shuttles pass too low over the meadow; Twinsen turns the landing beacon on the cloud-catcher's mast (a
+ball target) so they swing wide. Reward: a jar of royal honey (a full heal, carried) and the lower honey price. *Name:*
+one island, "Mosquibee Orchard", so it no longer repeats Citadel's orchard.
+
+**Knartas** (chapter 9 on). *Residents:* Harbourmaster Quill (Esmer), a net-mender, a family of three. *Trade:* a boat
+hire across the F-quay (a shortcut to the high town). *Quest:* the light at the quay's end is dark: its lens was sold to
+the project. Twinsen buys it back at Otringal's bar and fits it. Reward: the high town's door opens (one resident's
+home) and a clover. *Thinning:* keep the quay and a dozen houses; the rest become silhouette.
+
+**The Old Watch** (`expansion/ballastra` only). *Residents:* Sergeant Vael, an old council lookout, and her apprentice.
+*Use:* the expansion's lookout over the Ballastra ship's arrival: the telescope on the south horn shows where it will
+dock (the expansion's first objective), and Vael's log names the day. *Quest:* re-seat the telescope's fallen mirror
+(the Esmer line pulls it up from a ledge). *Name:* when it is built, rename Zeelich's bakery from "the old watch house" so the two do not clash.

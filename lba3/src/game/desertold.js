@@ -86,7 +86,7 @@ function ringOf(hwIn, hwOut, sp, over = 0.3) {   // the surround between two hor
 // ------------------------------------------------------------------ build
 // C: { R, B, col, H, W, palm(x, z, s, ry), signAt(text, x, z, ry, bg) } from desert.js (B the island's batch; H the ground)
 export function buildOldPlaces(C) {
-  const { R, B, col, H, W } = C;
+  const { R, B, col, H, W } = C;   // (C.group: the region's group, local frame)
   R.shutDoors = [];
   R.figures = [];
   // materials: the island's own (kit.js caches by name and options: the same objects desert.js draws with), plus a
@@ -183,7 +183,8 @@ export function buildOldPlaces(C) {
   // a low adobe garden wall piece (S40's), its collider
   const lowWall = (x, z, len, ry, h = 1.2, mat = M.adobe('#e6b07e')) => { const g = H(x, z); B.add(bbox(len, h + 0.3, 0.32, 0.05, 2.2), mat, x, g + (h - 0.3) / 2, z, 0, ry, 0); B.add(bbox(len + 0.06, 0.12, 0.42, 0, 1), M.stone, x, g + h + 0.04, z, 0, ry, 0); col({ type: 'box', x, z, hw: len / 2, hd: 0.2, rot: ry, top: g + h, noStand: true, seeThrough: true }); };
   // a wooden trough on legs
-  const trough = (x, z, ry, len = 3.2) => { const g = H(x, z); B.add(bbox(len, 0.5, 0.8, 0.04, 1), M.plank, x, g + 0.75, z, 0, ry, 0); const f = frame(x, z, ry); for (const s of [-1, 1]) for (const t of [-1, 1]) { const [px, pz] = f(s * (len / 2 - 0.3), t * 0.3); B.add(cyl(0.05, 0.05, 0.6, 6), M.darkWood, px, g + 0.3, pz); } col({ type: 'box', x, z, hw: len / 2, hd: 0.45, rot: ry, top: g + 1.0, noStand: true, seeThrough: true }); };
+  // (PURPOSES: the corral's troughs still hold water: Bram's lance fills at them, story/kit2.js waterNear)
+  const trough = (x, z, ry, len = 3.2) => { (R.troughs ||= []).push({ ...W(x, z), y: H(x, z) }); const g = H(x, z); B.add(bbox(len, 0.5, 0.8, 0.04, 1), M.plank, x, g + 0.75, z, 0, ry, 0); const f = frame(x, z, ry); for (const s of [-1, 1]) for (const t of [-1, 1]) { const [px, pz] = f(s * (len / 2 - 0.3), t * 0.3); B.add(cyl(0.05, 0.05, 0.6, 6), M.darkWood, px, g + 0.3, pz); } col({ type: 'box', x, z, hw: len / 2, hd: 0.45, rot: ry, top: g + 1.0, noStand: true, seeThrough: true }); };
 
   // ================================================================ the School of Magic
   {
@@ -266,6 +267,17 @@ export function buildOldPlaces(C) {
       B.add(bbox(3.4, 0.5, 1.6, 0.04, 1.5), M.stone, Hh.x, sill - 0.25, dz0 - 0.7); col({ type: 'box', x: Hh.x, z: dz0 - 0.7, hw: 1.7, hd: 0.8, top: sill });
       col({ type: 'box', x: Hh.x, z: Hh.z, hw: Hh.w / 2 + 0.5, hd: Hh.d / 2 + 0.5, top: roofTop, camSkip: true });
       shut('hall', Hh.x, sill, dz0, Math.PI, 1.2);
+      // PURPOSES: the pupils' study crystal on an iron bracket beside the doorway: asleep (dim) until a pure note wakes it
+      // (story/purposes.js, the singing fork). Its glow is the material's own: no light.
+      {
+        const lx = Hh.x + 1.75, lz = dz0 - 0.32, ly = sill + 2.55;
+        B.add(bbox(0.08, 0.08, 0.42, 0, 1), M.iron, lx, ly - 0.32, dz0 - 0.2);
+        const mat = new THREE.MeshStandardMaterial({ color: '#9fb0bc', roughness: 0.35, emissive: '#22303a', emissiveIntensity: 0.5 });
+        const gem = new THREE.Mesh(cached('pp-crystal', () => new THREE.OctahedronGeometry(0.2, 0).scale(1, 1.7, 1)), mat);
+        gem.position.set(lx, ly, lz); C.group?.add(gem);
+        R.studyLamp = { ...W(lx, lz), y: ly, mesh: gem,
+          wake(on) { mat.color.set(on ? '#e8fcff' : '#9fb0bc'); mat.emissive.set(on ? '#7fd8ff' : '#22303a'); mat.emissiveIntensity = on ? 1.8 : 0.5; } };
+      }
       fitAdd({ region: 'desert', name: 'the school hall', x: W(Hh.x, Hh.z).x, z: W(Hh.x, Hh.z).z, ry: 0, oy: sill, w: Hh.w, d: Hh.d, base: -3.6, plinth: 0.0, floor: 0.0, steps: 0.6, openings: [{ side: 'back', kind: 'door', x0: -1.6, x1: 1.6, y0: 0, y1: 3.4 }] });
       // the rim walk's parapet along the pool, east of the hall and down the east rim (a low tiled wall; he keeps dry)
       const par = (x, z, len, ry) => { const g2 = H(x, z); B.add(bbox(len, 0.75, 0.3, 0.04, 1.5), M.stone, x, g2 + 0.2, z, 0, ry, 0); B.add(bbox(len + 0.04, 0.1, 0.42, 0, 1), M.blue, x, g2 + 0.62, z, 0, ry, 0); col({ type: 'box', x, z, hw: len / 2, hd: 0.2, rot: ry, top: g2 + 0.7, noStand: true, seeThrough: true }); };
@@ -370,5 +382,8 @@ export function buildOldPlaces(C) {
   // Kesh's south houses: jars at their corners (clear of their doors, the containers and the people's places)
   for (const [x, z, c] of [[-33.0, 12.4, '#d8a050'], [-32.4, 13.2, '#c86a3a'], [-39.4, 18.2, '#a85030'], [-46.6, 19.4, '#d8a050'], [-47.4, 18.6, '#c86a3a']]) jar(x, z, c, 0.9);
 
+  // PURPOSES (3.11.2026): the three old doors kept are lived in; their doors are story/purposes.js's (d.own: no "Locked.")
+  const own = (id) => { const d = R.shutDoors.find((e) => e.id === id); if (d) d.own = true; return d || null; };
+  R.oldHomes = { s40: own('house s40'), s28: own('s28'), hall: own('hall') };
   R.school = W(SCHOOL_SITE.x, SCHOOL_SITE.z);
 }

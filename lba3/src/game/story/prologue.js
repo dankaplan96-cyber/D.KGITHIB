@@ -327,7 +327,8 @@ export class Prologue extends ChapterBase {
       const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d) => d.house));
       // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
       if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
-      W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
+      // (PURPOSES: the 'shop' house is Tibbo's counter, its door story/shops.js's)
+      W.houses.forEach((h, i) => { if (i > 0 && h.id !== 'shop' && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
       // from the door's own level, not from the slope above it)
       // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })
@@ -339,7 +340,8 @@ export class Prologue extends ChapterBase {
       // (DOORS-1: every house door on Zeelich's islands and street is one; where the story has a door into the same
       //  house (a bar, a hotel, a temple) that one is offered, not "Locked.")
       const live = g.room.shutDoors?.length ? [...cur.doors(), ...(this.story.doors?.() || [])].filter((e) => e.x != null) : [];
-      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6 && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+      // (PURPOSES: the kept old houses on Desert Island are lived in: their doors are story/purposes.js's, d.own)
+      for (const d of g.room.shutDoors || []) if (!d.own && Math.abs(g.hero.pos.y - d.y) < 1.6 && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
     }
   }
   interactables(consider, dist) {
