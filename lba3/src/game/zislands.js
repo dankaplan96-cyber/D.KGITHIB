@@ -897,6 +897,27 @@ function planIsland(name, L, A, debug = false) {
   };
   const lines = [];
   const lineItem = (a, ha, b, hb, o = {}) => lines.push({ kind: 'line', a: { x: a.x, z: a.z, h: ha }, b: { x: b.x, z: b.z, h: hb }, o });
+  // (LINE-CLEAR: nothing stands up into a pennant line's path: no lamp's head or arm, no roof, no tree. Along the line,
+  // a metre clear of its two posts, at its height under the sag (the pennants hang 0.45 m below the rope), the tallest
+  // thing within 0.8 m either side must stay under it. The user saw a lamp's head inside one on Zeelich, 3.11.)
+  // (the thin uprights are not in `tall` (the camera sees past them): lamps with their arms, poles, banners, posts, the
+  //  original's and ours, each its top and a reach round it)
+  const uprights = () => [
+    ...items.filter((it) => THIN_PIECES.has(it.kind)).map((it) => ({ x: it.x, z: it.z, top: (hAt(it.x, it.z) ?? 0) + pieceH(it.kind, it.o), r: it.kind === 'lamp' || it.kind === 'cageLamp' ? 0.8 : 0.4 })),
+    ...A.decor.filter((o) => ['lamp', 'pole', 'post', 'spire'].includes(o.shape)).map((o) => ({ x: o.x, z: o.z, top: o.y + o.sy, r: o.shape === 'lamp' ? 0.8 : 0.4 })),
+  ];
+  const clearUnder = (a, ha, b, hb, sag) => {
+    const ya = (hAt(a.x, a.z) ?? 0) + ha, yb = (hAt(b.x, b.z) ?? 0) + hb, d = Math.hypot(b.x - a.x, b.z - a.z);
+    const ux = (b.x - a.x) / d, uz = (b.z - a.z) / d, n = Math.ceil(d / 0.25);
+    const ups = uprights().filter((u) => Math.hypot(u.x - a.x, u.z - a.z) > 0.3 && Math.hypot(u.x - b.x, u.z - b.z) > 0.3);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n; if (t * d < 1.0 || (1 - t) * d < 1.0) continue;
+      const y = ya + (yb - ya) * t - sag * 4 * t * (1 - t) - 0.45, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t;
+      for (const w of [-0.8, -0.4, 0, 0.4, 0.8]) { const k = K(x - uz * w, z + ux * w); if (k >= 0 && tall[k] > y) return false; }
+      for (const u of ups) if (u.top > y && Math.hypot(u.x - x, u.z - z) < u.r) return false;
+    }
+    return true;
+  };
   const pipe = (pts) => {
     const m = pts[Math.floor(pts.length / 2)]; items.push({ kind: 'pipe', pts, x: m.x, z: m.z, ry: 0, o: {} });
     for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; line(a.x, a.z, b.x, b.z, (k) => { tall[k] = Math.max(tall[k], (hAt(wx(k % fx), wz(Math.floor(k / fx))) ?? 0) + Math.max(a.h, b.h) + 0.2); return true; }); }
@@ -1084,12 +1105,17 @@ function planIsland(name, L, A, debug = false) {
     fill(fillSpacing);
     // pennant lines (or lantern strings) between neighbouring lamps and banners along a route
     if (withLines && S.lines) {
-      const posts = [...ls.map((p) => ({ ...p, h: 3.3 })), ...bn.map((p) => ({ ...p, h: 4.8 }))];
+      const posts = [...ls.map((p) => ({ ...p, h: 3.3, arm: true })), ...bn.map((p) => ({ ...p, h: 4.8 }))];
+      // (LINE-CLEAR: the rope is tied to a lamp's pole under its arm; leaving on the arm's side it ran through the lamp's
+      //  head (the user's picture, 3.11): only on the other side. The arm reaches along the lamp's local +x)
+      const offArm = (p, q) => !p.arm || (Math.cos(p.ry) * (q.x - p.x) - Math.sin(p.ry) * (q.z - p.z)) / Math.hypot(q.x - p.x, q.z - p.z) < 0.35;
       const used = new Set();
       for (const a of posts) for (const b of posts) {
         if (a === b || used.has(a) || used.has(b)) continue;
         const d = Math.hypot(a.x - b.x, a.z - b.z); if (d < 4 || d > 11) continue;
-        lineItem(a, a.h, b, b.h, { kind: lanterns && lines.length % 2 ? 'lanterns' : 'pennants', sag: 0.35 + d * 0.03 }); used.add(a); used.add(b);
+        const sag = 0.35 + d * 0.03;
+        if (!offArm(a, b) || !offArm(b, a) || !clearUnder(a, a.h, b, b.h, sag)) continue;
+        lineItem(a, a.h, b, b.h, { kind: lanterns && lines.length % 2 ? 'lanterns' : 'pennants', sag }); used.add(a); used.add(b);
       }
     }
   };

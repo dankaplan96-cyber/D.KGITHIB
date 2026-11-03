@@ -1754,7 +1754,7 @@ DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-S
 place the planner puts the mine and the lift's foot where it did before; every `R.wannie` handle stands on ground,
 clear of colliders; the lift goes to 0 and to 1 and its lever pulls. `tests/zislands.mjs` PASS on origin + SKY + WANNIE.
 
-## LINE-CLEAR-1 · A street lamp inside a pennant line · the laptop, 3.11.2026 (the user's picture)
+## LINE-CLEAR-1 · A street lamp inside a pennant line · the laptop, 3.11.2026 (the user's picture) — applied by the cloud (3.11)
 The user's picture (an Esmer island street): a lamp's head inside the pennant line strung from it. The lines are
 strung between neighbouring lamps and banner poles (`api.street`, `lines: true`), tied to a lamp's pole at 3.3 m,
 under its arm; a line leaving the lamp on the arm's side runs through the lamp's head. Counted from the planner's own
