@@ -40,10 +40,14 @@ Object.assign(STR.en, {
   // Joe the Elf (LBA2), still in town
   asy_register1: '(The asylum\'s old register. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',
   asy_register2: 'Cell 2. I remember the bed was terrible. There\'s a clover pressed between the pages... for luck, I suppose.',
+  // ASYLUM-1: his old cell (src/game/lba1places.js), the marks he scratched there in LBA1
+  as_cell1: 'Twelve years. My marks are still on the wall.',
+  as_cell2: 'This pipe is warm. Whatever the project is digging under the fort, it runs hot.',
+  as_cell3: 'Kashes behind the loose brick. Not mine. I never had a kash in here.',
   n_sphero1: 'Pom',
   idle_sphero1: ['Twinsen! You remember us Spheros? Most of us went south after FunFrock fell. I came back for the fish.', 'In FunFrock\'s day they cloned us in his factories. My cousin met his own clone once. They didn\'t get along.', 'The ground hums when the town is quiet. Spheros feel it in the knees. We have very sensitive knees.', 'Round is the best shape. Nothing to bump into.'],
   n_sphero2: 'Madam Rondo',
-  idle_sphero2: ['Fifi! Don\'t yap at the nice man. That\'s Twinsen, Fifi. He saved the world. Twice.', 'My grandmother kept her striped uniform from FunFrock\'s asylum. A souvenir of better days, she says. Better days!', 'Spheros are round so the wind can\'t knock us over. Most days.', 'Fifi only eats fish from Doran\'s boat. She has standards.'],
+  idle_sphero2: ['Fifi! Don\'t yap at the nice man. That\'s Twinsen, Fifi. He saved the world. Twice.', 'My grandmother kept her striped uniform from FunFrock\'s asylum. A souvenir of better days, she says. Better days!', 'After FunFrock fell they bricked up his asylum and forgot it. Now the project\'s diggers have broken right back into it. Fifi won\'t go near the fort.', 'Spheros are round so the wind can\'t knock us over. Most days.', 'Fifi only eats fish from Doran\'s boat. She has standards.'],
   n_bersimon: 'Bersimon the Weather Wizard',
   idle_bersimon: ['Twinsen! Come in, come in. A wizard\'s tent is always bigger on the inside. It\'s in the contract.', 'The winds are wrong this year. Warm air rising where it shouldn\'t, as if the island were breathing out.', 'Sit by the cauldron a moment. There. Weather wizards never run dry; it\'s all the rain.', 'I dipped a pearl of incandescence in this cauldron once. Lightning everywhere. My eyebrows still haven\'t forgiven me.', 'If you see Joe, tell him I want my umbrella back.'],
   n_magus: 'Rector Hougo',
