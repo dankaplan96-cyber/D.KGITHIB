@@ -11,12 +11,14 @@
 //     signpost; the white blocks (bodies 46) and the fallen cubes (45) on the mask's terrace, horned stone pillars
 //     (body 32 and two of ours), a water channel at the mask's foot with an arched stone bridge in front of the door.
 //   - Around Kesh: the big house S40 with its stoop, garden wall, palm and pillar; the tall building at S28 (a tower in
-//     its hollow under the ridge); the house of body 49; two 5.2 m standing figures on the knolls west of the village.
+//     its hollow under the ridge); two 5.2 m standing figures on the knolls west of the village.
 //   - North of the research post: the twin 5.2 m pillars, the old corral's post-and-rail fences on the original's
 //     lines (bodies 78), its gate, troughs, water tank and lean-to.
-//   - The north-east: the walled compound S24 (two houses joined by walls round a yard with a well, palms, pillars).
-//   - The gateway over the track to the dig (body 64: two posts under a 9 m lintel); the hut on the north-west
-//     plateau (S113); the islet's door in its cove with the 4.6 m figure and a pillar before it.
+//   - The gateway over the track to the dig (body 64: two posts under a 9 m lintel).
+//   DECLUTTER (the user, 3.11.2026): six of the nine shut doors are cut with their buildings (the house of body 49, the
+//   walled compound S24 with its two houses and gate, the hut S113, the islet's door with its figure and pillar). The
+//   three kept have a use (story/purposes.js): S40 is Bashir's home in Kesh, S28 the dig crew's bunkhouse, the great
+//   hall the School's dormitory.
 // Every door that leads nowhere is shut: R.shutDoors (the base interactions answer "Locked.", story/prologue.js).
 // Every building is registered (worldfit.js fitAdd) and every figure kept as a spot, so tools/worldscore.mjs can
 // match them to the original's landmarks (tools/worldscore/landmarks.json). All geometry goes into the island's one
@@ -36,7 +38,6 @@ const COVE = { x0: 113.5, x1: 119.3, z0: -124.6, z1: -119.4 };        // the isl
 const RILL = { x0: -65.0, x1: -62.4, z0: -80.0, z1: -68.6 };        // the water channel at the mask's foot
 const FORECOURT = { x0: -67.4, x1: -65.0, z0: -76.2, z1: -69.2 };   // the stone forecourt before the chin door (1.3 m, the terrace's level)
 const PLAZA = { x0: -62.4, x1: -54.5, z0: -80.5, z1: -68.3 };       // the paved plaza east of the channel (0.3 m, the original's level)
-const COMPOUND_YARD = { x0: 43.5, x1: 50.2, z0: -122.2, z1: -115.2 };
 
 // rocks of the old places, drawn by the island's LOD-instanced rock tiles (desert.js, with their colliders): the
 // boulders flanking the mask's rock wall, and small rocks by S40, Hesk's berth and the south-west grove
@@ -50,16 +51,16 @@ export const OLD_ROCKS = [
 const inRect = (r, x, z, pad = 0) => x > r.x0 - pad && x < r.x1 + pad && z > r.z0 - pad && z < r.z1 + pad;
 // 0..1 inside a rectangle, falling to 0 over `soft` m outside it
 const rectW = (r, x, z, soft) => { const d = Math.max(r.x0 - x, x - r.x1, r.z0 - z, z - r.z1); return 1 - smoothstep(0, soft, d); };
-// how much the ground is paved here (the School's plaza and forecourt, the rim walk round the pool, the compound's yard)
+// how much the ground is paved here (the School's plaza and forecourt, the rim walk round the pool)
 export function pavedAt(x, z) {
-  let p = Math.max(rectW(PLAZA, x, z, 0.8), rectW(FORECOURT, x, z, 0.6), rectW(COMPOUND_YARD, x, z, 0.6));
+  let p = Math.max(rectW(PLAZA, x, z, 0.8), rectW(FORECOURT, x, z, 0.6));
   const d = Math.max(POOL.x0 - x, x - POOL.x1, POOL.z0 - z, z - POOL.z1);   // (+ outside the pool: the walk is its 2.6 m rim)
   if (d > -0.5 && d < 3.2) p = Math.max(p, 1 - smoothstep(2.4, 3.2, d));
   return p;
 }
 // how deep the water channel cuts here (0..1)
 export function rillAt(x, z) { return rectW(RILL, x, z, 0.7); }
-// the islet's cove floor (0..1): held at 0.75 m, above the water and the cliff-foot rule (desert.js groundGrid)
+// the islet's cove floor (0..1; its door is cut, the cove stays): held at 0.75 m, above the water and the cliff-foot rule (desert.js groundGrid)
 export function coveAt(x, z) { return rectW(COVE, x, z, 1.0); }
 
 // the sides of a building, in worldfit's convention: the front is local +z; (u along the wall from its middle, v out)
@@ -179,7 +180,7 @@ export function buildOldPlaces(C) {
     for (const y of [h - 0.08, h * 0.55]) B.add(bbox(len - 0.1, 0.08, 0.06, 0, 1), M.wood, x, g + y, z, 0, ry, 0);
     col({ type: 'box', x, z, hw: len / 2, hd: 0.24, rot: ry, top: g + h, noStand: true, seeThrough: true });
   };
-  // a low adobe garden wall piece (S40's and the compound's), its collider
+  // a low adobe garden wall piece (S40's), its collider
   const lowWall = (x, z, len, ry, h = 1.2, mat = M.adobe('#e6b07e')) => { const g = H(x, z); B.add(bbox(len, h + 0.3, 0.32, 0.05, 2.2), mat, x, g + (h - 0.3) / 2, z, 0, ry, 0); B.add(bbox(len + 0.06, 0.12, 0.42, 0, 1), M.stone, x, g + h + 0.04, z, 0, ry, 0); col({ type: 'box', x, z, hw: len / 2, hd: 0.2, rot: ry, top: g + h, noStand: true, seeThrough: true }); };
   // a wooden trough on legs
   const trough = (x, z, ry, len = 3.2) => { const g = H(x, z); B.add(bbox(len, 0.5, 0.8, 0.04, 1), M.plank, x, g + 0.75, z, 0, ry, 0); const f = frame(x, z, ry); for (const s of [-1, 1]) for (const t of [-1, 1]) { const [px, pz] = f(s * (len / 2 - 0.3), t * 0.3); B.add(cyl(0.05, 0.05, 0.6, 6), M.darkWood, px, g + 0.3, pz); } col({ type: 'box', x, z, hw: len / 2, hd: 0.45, rot: ry, top: g + 1.0, noStand: true, seeThrough: true }); };
@@ -303,9 +304,6 @@ export function buildOldPlaces(C) {
     shut('s28', T.x - T.w / 2, gy, T.z - 1.5, -Math.PI / 2, 1.0);
     fitAdd({ region: 'desert', name: 'tower s28', x: W(T.x, T.z).x, z: W(T.x, T.z).z, ry: 0, oy: gy, w: T.w, d: T.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6, openings: [{ side: 'left', kind: 'door', x0: -2.3, x1: -0.7, y0: 0, y1: 2.4 }] });
   }
-  // the house of body 49, north of the pool, its door to the south
-  adobe({ name: 'house b49', x: -47.8, z: -76.9, w: 7.46, d: 7.71, h: 4.64, ry: 0, tint: '#f0c898', shutter: '#2f7a9a', door: { side: 'front', u: -1.2 }, shut: true,
-    windows: [{ side: 'front', u: 1.6 }, { side: 'front', u: 1.8, up: true }, { side: 'front', u: -1.4, up: true }, { side: 'right', u: -1.5 }, { side: 'right', u: 1.2, up: true }, { side: 'left', u: 0.8, up: true }] });
   for (const [x, z] of [[-55.7, -73.9], [-58.1, -74.1]]) { const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }
   // the two standing figures on the knolls west of the village (bodies 0 and 33), looking out over the beach
   stoneFigure(-117.8, -31.9, Math.PI / 2, 5.18, M.grey);
@@ -330,21 +328,6 @@ export function buildOldPlaces(C) {
     C.palm(56.1, -80.9, 1.0, 1.4); C.palm(60.4, -82.9, 0.9, 3.1); C.palm(49.2, -74.4, 1.05, 0.2);
   }
 
-  // ================================================================ the north-east: the walled compound S24
-  {
-    const a = adobe({ name: 'compound house 94', x: 40.2, z: -119.3, w: 6.69, d: 7.43, h: 4.64, ry: Math.PI / 2, tint: '#e2a878', shutter: '#2f7a9a', door: { side: 'front', u: 0.4 }, shut: true,
-      windows: [{ side: 'front', u: -2.0 }, { side: 'front', u: -1.8, up: true }, { side: 'front', u: 1.9, up: true }, { side: 'back', u: 1.4 }, { side: 'back', u: -1.6, up: true }] });
-    adobe({ name: 'compound house 95', x: 52.4, z: -118.2, w: 4.46, d: 7.43, h: 3.72, ry: -Math.PI / 2, tint: '#f2d2a8', shutter: '#e8b84a', door: { side: 'front', u: 0.3 }, shut: true,
-      windows: [{ side: 'front', u: -2.0 }, { side: 'back', u: 1.6 }, { side: 'back', u: -1.6 }] });
-    // the walls joining them round the yard (bodies 98, 99), the well in the yard (100), its door toward the south (S24)
-    for (const z of [-122.2, -115.2]) lowWall((43.5 + 50.2) / 2, z, 50.2 - 43.5 - 0.1, 0, 2.6, M.adobe('#e6b07e'));
-    { const x = 45.9, z = -119.0, g = a.gy; B.add(cyl(1.0, 1.1, 0.9, 14, 1.5), M.stone, x, g + 0.45, z); B.add(cyl(0.72, 0.72, 0.2, 14, 0), M.dark, x, g + 0.85, z); for (const s of [-1, 1]) B.add(cyl(0.07, 0.07, 2.2, 6), M.darkWood, x + s * 0.9, g + 1.1, z); B.add(bbox(2.1, 0.12, 0.3, 0, 1), M.darkWood, x, g + 2.2, z); col({ type: 'cyl', x, z, r: 1.1, top: g + 0.9, noStand: true }); }
-    { const g = H(53.9, -122.4); shut('compound-s', 53.9, g, -121.9 - 0.05, Math.PI, 1.0); B.add(bbox(1.3, 2.1, 0.3, 0, 1), M.dark, 53.9, g + 1.05, -121.9 - 0.08); B.add(bbox(1.2, 2.0, 0.08, 0, TILE.planks), M.darkWood, 53.9, g + 1.0, -121.9 - 0.22); B.add(bbox(1.6, 0.16, 0.4, 0, 1), M.wood, 53.9, g + 2.18, -121.9 - 0.2); }
-    for (const [x, z, ry] of [[36.5, -125.0, 0], [55.2, -112.6, 0]]) hornedPillar(x, z, ry, 4.25);
-    C.palm(47.0, -126.8, 1.0, 0.9); C.palm(43.2, -112.0, 1.05, 2.0); C.palm(59.0, -122.5, 0.95, 4.1); C.palm(41.4, -127.1, 0.9, 1.6); C.palm(49.7, -108.5, 1.0, 5.0);
-    for (const [x, z] of [[51.4, -123.0], [64.9, -116.1]]) { const g = H(x, z); B.add(bbox(0.95, 0.95, 0.95, 0.04, 1), M.plank, x, g + 0.48, z, 0, 0.4, 0); col({ type: 'box', x, z, hw: 0.5, hd: 0.5, top: g + 0.95 }); }
-  }
-
   // ================================================================ the gateway over the track to the dig (body 64)
   {
     // centred on the track's last leg ((36, 22) → (44, 25)): two stone posts 4.5 m either side of its line, the lintel over
@@ -364,13 +347,8 @@ export function buildOldPlaces(C) {
     R.gateway = W(cx, cz);
   }
 
-  // ================================================================ the hut on the north-west plateau (S113)
-  // (on the plateau's west brink: its floor between the plateau and the slope below, on a plinth down the slope, its door at the
-  //  south wall's east end where the ground meets the floor)
-  adobe({ name: 'hut s113', x: -115.3, z: -99.6, w: 6.08, d: 5.14, h: 2.36, ry: 0, gy: 4.6, tint: '#f2d2a8', shutter: '#c84a3a', door: { side: 'front', u: 2.1 }, shut: true, windows: [{ side: 'right', u: 0.6 }, { side: 'back', u: -1.4 }] });
-
   // ================================================================ small things where the original's cells are fuller than ours
-  // (docs/WORLD_SIMILARITY.md, the objects part): water jars at the big houses' doors and under the compound's walls,
+  // (docs/WORLD_SIMILARITY.md, the objects part): water jars at the big houses' doors,
   // Hesk's spare gear by his berth, a palm grove with its rocks on the south-west shore where the School's mesa stood,
   // barrels and sacks in the corral, jars by Kesh's south houses. Each a collider of its kind (a jar or a crate stops
   // him; a sack is stepped over).
@@ -389,25 +367,8 @@ export function buildOldPlaces(C) {
   for (const [x, z, s, ry] of [[-70.5, 38.5, 1.0, 0.4], [-66.2, 42.8, 1.1, 2.2], [-73.4, 44.6, 0.9, 1.1], [-68.0, 48.2, 1.0, 3.5], [-62.8, 38.0, 0.95, 5.0]]) C.palm(x, z, s, ry);
   // the corral: barrels and sacks by the troughs
   barrel(50.8, -56.6); barrel(51.6, -57.0); sack(47.2, -57.4, 0.3); sack(48.0, -58.1, 1.5); crate(57.4, -58.2, 0.4); crate(58.3, -58.2, 0.4, 0.7);
-  // the compound: jars under the yard walls, a crate stack by the east house
-  for (const [x, z, c] of [[44.6, -121.4, '#c86a3a'], [45.4, -121.5, '#d8a050'], [48.8, -115.9, '#a85030'], [49.6, -116.0, '#c86a3a']]) jar(x, z, c, 0.9);
-  crate(56.2, -116.4, 0.2); crate(56.3, -115.3, 0.2, 0.7); sack(56.0, -120.6, 0.8);
   // Kesh's south houses: jars at their corners (clear of their doors, the containers and the people's places)
   for (const [x, z, c] of [[-33.0, 12.4, '#d8a050'], [-32.4, 13.2, '#c86a3a'], [-39.4, 18.2, '#a85030'], [-46.6, 19.4, '#d8a050'], [-47.4, 18.6, '#c86a3a']]) jar(x, z, c, 0.9);
 
-  // ================================================================ the islet: its door in the cove's cliff, the figure and the pillar before it
-  {
-    const x = 119.0, z = -120.8, g = H(118.0, -120.8), ry = -Math.PI / 2;   // (the door faces west over the cove)
-    B.add(bbox(0.9, 2.6, 2.4, 0.08, TILE.stone), M.grey, x + 0.2, g + 1.3, z, 0, 0, 0);
-    B.add(bbox(0.3, 2.3, 1.4, 0, 1), M.dark, x - 0.3, g + 1.15, z);
-    B.add(bbox(0.08, 2.2, 1.3, 0, TILE.planks), M.darkWood, x - 0.45, g + 1.1, z);
-    B.add(bbox(0.3, 0.3, 2.0, 0, 1), M.stone, x - 0.4, g + 2.45, z);
-    for (const s of [-1, 1]) B.add(bbox(0.3, 2.5, 0.3, 0, 1), M.stone, x - 0.4, g + 1.2, z + s * 0.85);
-    B.add(bbox(1.62, 1.5, 1.54, 0.05, 1), M.white, x - 0.1, g + 3.3, z);   // (body 105, over the door)
-    col({ type: 'box', x: x + 0.1, z, hw: 0.6, hd: 1.3, top: g + 4.2 });
-    shut('islet', x - 0.45, g, z, ry, 1.0);
-    stoneFigure(118.3, -122.3, Math.PI * 0.4, 4.55, M.grey);
-    hornedPillar(118.2, -119.3, 0, 4.05);
-  }
   R.school = W(SCHOOL_SITE.x, SCHOOL_SITE.z);
 }

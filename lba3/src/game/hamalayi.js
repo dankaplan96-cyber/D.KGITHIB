@@ -27,7 +27,7 @@ import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh,
 import { viewCull } from '../engine/viewinst.js';
 import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
-import { gantry, oldGate, rebelCamp, waystone } from './props-lba1hamalayi.js';
+import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
 import { makeTree } from './hamalayi-tree.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
@@ -625,10 +625,9 @@ export function* buildHamalayiSteps(scene, physics) {
   R.basin = W(BASIN.x, BASIN.z);
   col({ type: 'cyl', x: VENT.x, z: VENT.z, r: 3.4, top: H(VENT.x, VENT.z) + 1.2, noStand: true });
 
-  // ---- four places of LBA1's Hamalayi, rebuilt from the numbers of its scenes in our style (props-lba1hamalayi.js; the
-  // user's decision of 26.10.2026, docs/WORLD_SIMILARITY.md): the gantry (a long narrow causeway and its arcade, scene 65) on
-  // the east foothills, the old gate (scene 69) across the walk from the landing to the gorge, the rebels' camp (scene 9)
-  // west of the landing, the waystone (scenes 9, 65) on the monastery terrace. Nothing the story uses is moved: they stand
+  // ---- two places of LBA1's Hamalayi, rebuilt from the numbers of its scenes in our style (props-lba1hamalayi.js; the
+  // user's decision of 26.10.2026, docs/WORLD_SIMILARITY.md; DECLUTTER cut the gantry and the rebels' camp, 3.11.2026):
+  // the old gate (scene 69) across the walk from the landing to the gorge, the waystone (scenes 9, 65) on the monastery terrace. Nothing the story uses is moved: they stand
   // on bare snow clear of every walk and spot (checked below), the pines and rocks keep out of them, and each is one Kit
   // (a few merged meshes, the materials the village already uses).
   const lba1 = { zones: [], places: {}, within(x, z, pad = 0) { return this.zones.some((q) => { const dx = x - q.x, dz = z - q.z, c = Math.cos(q.ry), s = Math.sin(q.ry); return Math.abs(dx * c - dz * s) < q.hw + pad && Math.abs(dx * s + dz * c) < q.hd + pad; }); } };
@@ -637,7 +636,7 @@ export function* buildHamalayiSteps(scene, physics) {
     const place = (id, x, z, ry, builder, probe, area = 'lba1') => {
       let gy = 1e9;
       for (const [lx, lz] of probe) { const [px, pz] = loc(x, z, ry, lx, lz); gy = Math.min(gy, H(px, pz)); }
-      const info = kitOf(area).at(x, gy, z, ry, () => builder(kitOf(area)));   // (one kit for the gantry, the gate and the stone; the camp, which now has many parts, its own: it is culled apart)
+      const info = kitOf(area).at(x, gy, z, ry, () => builder(kitOf(area)));   // (one kit for the gate and the stone)
       for (const c of info.colliders) {
         const [px, pz] = loc(x, z, ry, c.x, c.z);
         if (c.bottom == null && c.top > 1) check(id, px, pz, Math.max(c.hw, c.hd) * 1.4);
@@ -648,12 +647,9 @@ export function* buildHamalayiSteps(scene, physics) {
       const at = (lx, ly, lz) => { const [px, pz] = loc(x, z, ry, lx, lz); return [px, gy + ly, pz]; };
       return (lba1.places[id] = { ...info, ...W(x, z), ry, gy, at, world: (lx, lz) => { const [px, pz] = loc(x, z, ry, lx, lz); return W(px, pz); } });
     };
-    // the gantry: the arcade across z, the causeway east to a T with a lantern; a prayer-flag line from a mast on the platform to the lantern
-    const gt = place('lba1-gantry', 50, 62, 0, (k) => gantry(k), [[-9.4, 0], [-8.8, 0.9], [-8.8, -0.9], [-7.5, 0], [-6, 0]]);
-    flagLine(gt.at(gt.mast.x, gt.mast.y, gt.mast.z), gt.at(gt.lantern.x, gt.lantern.y + 0.4, gt.lantern.z), 1.4, 0.7);
+    // (DECLUTTER, 3.11.2026: the gantry's causeway that led nowhere and the rebels' empty camp are cut; the gate and the stone stay)
     // the old gate, centred on the walk (the landing → the tree bridge), its opening across it
     place('lba1-gate', -5.5, 58, 0, (k) => oldGate(k), [[-2.6, 0], [0, 0], [2.6, 0]]);
-    place('lba1-camp', -47, 64, 0.3, (k) => rebelCamp(k), [[-3.1, -4.4], [3.1, -4.4], [-3.1, 4.4], [3.1, 4.4], [0, 0]], 'lba1camp');
     place('lba1-waystone', 62, -50, 0.5, (k) => waystone(k), [[-2.1, -1.5], [2.1, -1.5], [-2.1, 1.5], [2.1, 1.5], [0, 0]]);
   }
 

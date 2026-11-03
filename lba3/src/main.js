@@ -128,13 +128,23 @@ export function migrateSave(raw) {
       s.room = null; s.hero.x = SHAFT_TOP.x + 1.4; s.hero.z = SHAFT_TOP.z + 4.3;
     }
   }
+  // DECLUTTER (3.11.2026; not a format change, idempotent): a save standing in a place cut from the build goes to its
+  // region's spawn (applySave reads s.respawn): the CX islet and Tralu Rock → Zeelich, Bù's dark halls → the maze,
+  // Otringal's bar office → the bar; on the Hamalayi's cut LBA1 gantry or camp → the Hamalayi's landing.
+  {
+    const to = REMOVED_ROOMS[s.room];
+    if (to) { s.room = to; s.respawn = true; }
+    const hx = (s.hero.x ?? 0) - 4300, hz = s.hero.z ?? 0;
+    if (s.room === 'hamalayi' && (Math.hypot(hx - 50, hz - 62) < 18 || Math.hypot(hx + 47, hz - 64) < 8)) s.respawn = true;
+  }
   s.v = v;
   return s;
 }
+export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
-const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', buhalls: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
@@ -1263,7 +1273,8 @@ class Game {
     this.restoreLoot(s.loot);
     if (this.flags.target) this.hitTarget(true);
     this.story.applyFlags();
-    const at = { x: s.hero.x, z: s.hero.z, a: 0 };
+    let at = { x: s.hero.x, z: s.hero.z, a: 0 };
+    if (s.respawn && this.rooms[s.room]?.spawn) at = { ...this.rooms[s.room].spawn };   // (DECLUTTER: a cut place's save: migrateSave)
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
     if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)

@@ -26,7 +26,7 @@ import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
-import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
+import { placeLayout, PLACES, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 import { fitAdd } from './worldfit.js';
 import { buildCelPortal } from './celtemple.js';
 
@@ -35,10 +35,15 @@ import { buildCelPortal } from './celtemple.js';
 // saves keep a position on an island.)
 //   liftdock    the original's ASCENCE: a cargo lift dock on stilts at the cloud line (ZL-ALL)
 //   celebration is the original's CELEBRA2 since ZL-ALL: Celebration Island after the great figure rose from it
-export const ISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform', 'liftdock', ...PLACES];
+// DECLUTTER (the user, 3.11.2026: "whatever stays must give something to the journey"): the CX islet and Tralu Rock are
+// cut. SLOTS keeps every island's old index, so an island's place in the world (ISLE_AT) and a save on it stay as they
+// were; a save made on a cut island lands on Zeelich (main.js migrateSave, REMOVED_ROOMS).
+export const SLOTS = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform', 'liftdock', 'tralu', 'orchard', 'oldwatch'];
+export const CUT_ISLES = new Set(['cxislet', 'tralu']);
+export const ISLES = SLOTS.filter((n) => !CUT_ISLES.has(n));
 export const OURS = new Set(PLACES);
 // the names on the shuttles' departures boards (the menus use the text table: text/islands.js)
-export const BOARD_NAME = { zeelich: 'ZEELICH SPACEPORT', otringal: 'OTRINGAL', knartas: 'KNARTAS', mosquibee: 'MOSQUIBEE', celebration: 'CELEBRATION', undergas: 'UNDER CELEBRATION', cxislet: 'CX ISLET', platform: 'THE PLATFORM', liftdock: 'THE LIFT DOCK', tralu: 'TRALU ROCK', orchard: 'NECTAR ORCHARD', oldwatch: 'THE OLD WATCH' };
+export const BOARD_NAME = { zeelich: 'ZEELICH SPACEPORT', otringal: 'OTRINGAL', knartas: 'KNARTAS', mosquibee: 'MOSQUIBEE', celebration: 'CELEBRATION', undergas: 'UNDER CELEBRATION', platform: 'THE PLATFORM', liftdock: 'THE LIFT DOCK', orchard: 'NECTAR ORCHARD', oldwatch: 'THE OLD WATCH' };
 // far from every other region and from each other (the biggest patch is ≈ 210 m across)
 export const ISLE_AT = (i) => ({ x: 1900 + i * 330, z: 1800 });
 const SEA = -9;            // the ground under the clouds, past every island's edge
@@ -72,7 +77,7 @@ export function buildIslands(scene, physics) {
 // island's words, so it is the same whichever island is built first.
 export function buildIsle(scene, physics, n) {
   EP.setSignWords(ESMER_WORDS);
-  return buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(ISLES.indexOf(n)));
+  return buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(SLOTS.indexOf(n)));
 }
 
 // ================================================================== layout analysis (on the data grid)
@@ -496,36 +501,6 @@ const STYLE = {
     },
   },
   // ---- our own places (src/game/zplaces.js; not in LBA2) -------------------------------------------------------
-  tralu: {   // Tralu Rock, an Esmer trading post: the market on the crown round a great weigh-beam, a crane lowering
-    // goods to the quay shelf below, skiffs tied up in the clouds, a ramp curving round the south face
-    trees: '#ffe8c8', ground: ['#f0e0b0', '#e6d6a4', '#e8cdb8'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x, z) < 10.5,
-    walls: ['#fbefe0', '#f6e0cc', '#f8e8f0'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc']],
-    target: { x: 2.6, z: 1.6, word: 'TRADING POST' }, near: 8, far: 16, D: [8, 7, 6.5, 6], ahead: 3, padClear: 3.2, padSlope: 1.6,
-    crates: 'wood', lines: ['#d89a30', '#2f8a9a', '#f4eee0', '#c84a7a'],
-    landmark(api) {
-      const b = api.near('weighBeam', 2.6, 1.6, 0.3, {}, 3);
-      const pois = [b ? { x: b.x, z: b.z + 3.4, word: 'WEIGH BEAM', at: b } : { ...api.S.target }];
-      const qa = TRALU.quayA, c = api.near('crane', Math.cos(qa) * 11.2, Math.sin(qa) * 11.2, -Math.PI / 2, { h: 6, jib: 8.5 }, 2.5);
-      pois.push({ x: Math.cos(qa) * 20, z: Math.sin(qa) * 20, word: 'QUAY', at: c });
-      return pois;
-    },
-    dress(api) {
-      const b = api.pois[0].at || api.S.target;
-      api.open('stall', 4, { lo: 2.4, space: 6, around: { x: 0, z: 0, r: 11 }, face: b, opts: (i) => ({ goods: ['cloth', 'jars', 'fruit', 'honey'][i % 4], a: ['#2f8a9a', '#d89a30', '#e8608a', '#9a5ac8'][i % 4], b: '#f8eee4', seed: i + 31 }) });
-      // the quay: bollards along its brink, skiffs tied up below, crates and barrels waiting
-      const qa = TRALU.quayA;
-      for (let k = -3; k <= 3; k++) { const a = qa + k * 0.16; api.near('bollard', Math.cos(a) * 22.4, Math.sin(a) * 22.4, 0, {}, 1.2); }
-      for (const [k, c] of [[-2, '#c84a3a'], [0.5, '#2f7f86'], [2.5, '#d89a30']]) { const a = qa + k * 0.18; api.add('skiff', Math.cos(a) * 26.5, Math.sin(a) * 26.5, a, { color: c }); }
-      api.open('crates', 5, { lo: 1.2, space: 3.5, around: { x: Math.cos(qa) * 19, z: Math.sin(qa) * 19, r: 7 }, opts: (i) => ({ kind: i % 2 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 41 }) });
-      api.open('barrels', 2, { lo: 1.2, space: 4, around: { x: Math.cos(qa) * 19, z: Math.sin(qa) * 19, r: 7 } });
-      api.open('crates', 4, { lo: 1.4, space: 4, around: { x: -2, z: -4, r: 9 }, opts: (i) => ({ kind: 'wood', n: 2 + (i % 3), seed: i + 51 }) });
-      // the ramp's lamps (it climbs the south face)
-      for (let k = 0; k < 5; k++) { const a = TRALU.ramp.a0 + 0.2 + k * 0.45, rr = TRALU.ramp.r + 1.2; api.near('lamp', Math.cos(a) * rr, Math.sin(a) * rr, 0, {}, 0.8); }
-      api.street({ benches: 3, clutter: 6, kinds: ['crates', 'jars', 'barrels', 'planter', 'bin'], lamps: 9, doors: 0.9, banners: 4, lines: true, fillSpacing: 7 });
-      api.giver(['money'], -2.0, 0.5, 1);
-      api.signs([{ word: 'QUAY', x: Math.cos(qa) * 20, z: Math.sin(qa) * 20 }]);
-    },
-  },
   orchard: {   // the Nectar Orchard: a rounded hill of nectar trees in rows along its contours, the press house at its
     // foot, a cloud-catcher on the crown that combs water from the passing cloud for the trees
     trees: '#ffc8e0', ground: ['#d8eca0', '#cfe498', '#e8dcb8'], pave: 'concrete', paveAt: () => false,
@@ -603,24 +578,6 @@ const STYLE = {
       api.open('warn', 3, { lo: 1.2, space: 8, around: { x: -14, z: -26, r: 10 }, face: api.spawn, opts: (i) => ({ text: ['NO NAKED FLAMES', 'KEEP CLEAR', 'MIND THE EDGE'][i % 3] }) });
       api.street({ benches: 2, clutter: 8, kinds: ['barrels', 'crates', 'bottles', 'bin'], lamps: 0, cage: 10, doors: 0.8, banners: 0, lines: false });
       api.signs([{ word: 'LOOKOUT', x: 20, z: -10 }]);
-    },
-  },
-  cxislet: {   // a small outpost: a radio mast, a flag, a water tank, the depot's crates under the old tower
-    trees: '#eef0d8', ground: ['#ece4b8', '#e0d8ac', '#e8d0b0'], pave: 'concrete', paveAt: () => false,
-    walls: ['#e8e0d0', '#f0e8d8'], domes: [['#3a6a5a', '#b8e0c8'], ['#2f8a9a', '#a8e8ee']],
-    target: { x: -6, z: -9.5, word: 'OUTPOST' }, near: 10, far: 24, D: [8.0, 7.0, 6.5],
-    crates: 'cargo', lines: ['#3a8a9a', '#f0c040', '#f4eee0'],
-    landmark(api) {
-      const pois = [{ ...api.S.target }];
-      const m = api.near('mast', -8.5, -8.5, 0, { h: 8 }, 3);
-      if (m) { api.near('flagPole', m.x + 3.0, m.z + 1.0, 0, { h: 6 }, 1.5); api.near('waterTank', m.x - 0.5, m.z + 3.4, 0, {}, 2); }
-      return pois;
-    },
-    dress(api) {
-      api.open('crates', 6, { lo: 1.2, space: 3.5, around: { x: 0, z: 0, r: 18 }, opts: (i) => ({ kind: i % 2 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 2 }) });
-      api.open('barrels', 3, { lo: 1.2, space: 4, around: { x: 0, z: 0, r: 18 } });
-      api.street({ benches: 2, clutter: 6, kinds: ['crates', 'barrels', 'jars', 'bin'], lamps: 8, doors: 1, banners: 0, lines: false, fillSpacing: 6 });
-      api.signs([]);
     },
   },
   platform: {   // ZEELICH-1 item 5: the Wannies' island under the gas (LBA2's PLATFORM: the Building Company's yard by the
@@ -1166,7 +1123,6 @@ const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
 function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
 const BARE = {
   otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
-  cxislet: { rock: 0.2, pave: 0.4, stone: '#c8c0cc' },
   knartas: { rock: 0.45, pave: 0.1, stone: '#b4b0ac' },      // grey rock, a tiled terrace
   mosquibee: { rock: 0.4, pave: 0, stone: '#b8b0a4' },
   celebration: { rock: 0.65, pave: 0.05, stone: '#8c8490' }, // dark rock (and lava)

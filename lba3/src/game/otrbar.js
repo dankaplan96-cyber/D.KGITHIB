@@ -1,5 +1,5 @@
 // ZEELICH-1 item 1 (the cloud's order; OP-7 "The Lift Below" is set here): the harbour bar at Otringal, after LBA2's
-// scene 136, and its boss's office after scene 137, about 80 % alike. Our own geometry, from a study of the originals'
+// scene 136, about 80 % alike. Our own geometry, from a study of the originals'
 // layout (numbers and descriptions only; nothing copied). Its door: the domed house by the harbour pier on Otringal's
 // lower west terrace (zislands.js: the house at local (−42.2, −0.4), its door facing the island's middle).
 // As the game's camera sees it:
@@ -10,13 +10,12 @@
 //     two slot machines against the left wall; more booths in the middle
 //   - the L-shaped bar at the front left (a green top, bottles and urns, stools), the aquarium with its sullen creature
 //     in the middle right, tall leaf plants, globe sconces, two framed pictures
-//   - the door from the harbour in the left wall; the office's door in the back wall beside the stage
-// The office: dark walls with a painted wave, a curtained alcove with a basin, the boss's desk with a globe lamp and
-// two armchairs, a picture, a plant. Twelve years on (ours): nothing changed but the faces; the boss still runs it.
+//   - the door from the harbour in the left wall; a back door (staff only) beside the stage
+// (Its boss's office, after scene 137, was cut by DECLUTTER, 3.11.2026: an empty second room. The door stays, staff only.)
 //
 // CONTRACT (world coordinates)
-//   OTRBAR_AT, OTROFFICE_AT              where the rooms stand (regions.js)
-//   buildOtrBarRoom / buildOtrOfficeRoom(scene, physics) → { otrbar } / { otroffice }
+//   OTRBAR_AT                            where the room stands (regions.js)
+//   buildOtrBarRoom(scene, physics) → { otrbar }
 //   otrBarDoors() / otrBarExit(to)       the harbour house's door leads in (region isle_otringal; found in the island's
 //                                        building list, so there is no door until the island is built); 'otrbar-out'
 //   BAR (filled when the bar is built):
@@ -28,7 +27,7 @@ import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, counter, jar, pottedPlant, railing } from './props.js';
 import { FIT } from './worldfit.js';
 
-export const OTRBAR_AT = { x: 9000, z: 0 }, OTROFFICE_AT = { x: 9200, z: 0 };
+export const OTRBAR_AT = { x: 9000, z: 0 };
 export const BAR = {};
 
 const GREEN = () => MAT.flat('#1f6a52', 0.45, { emissive: '#06140f' }), WOOD = () => MAT.paint('#8a4a2a', 0.5);
@@ -143,13 +142,11 @@ export function buildOtrBarRoom(scene, physics) {
   k.add(cyl(0.16, 0.16, 0.36, 12), MAT.iron(), WX, WY, WZ, 0, { rz: Math.PI / 2 });
   k.add(rbox(0.04, 0.3, 0.04, 0.01), MAT.brass(), WX + 0.22, WY - 0.1, WZ + 0.1);
   for (let i = 0; i < 4; i++) { const x = GX0 + 0.8 + i * ((GX1 - GX0 - 1.6) / 3); k.add(cyl(0.1, 0.13, 0.12, 10), MAT.iron(), x, GH + 0.06, GZ1 - 0.15); k.add(sphere(0.08, 8, 6), MAT.glow('#fff4d8', '#ffd890', 1.2), x, GH + 0.14, GZ1 - 0.12); }
-  // the office door in the back wall between the raised floor and the stage
+  // the back door between the raised floor and the stage (staff only: DECLUTTER cut the empty office behind it, 3.11.2026)
   const OX = 1.0;
   k.add(rbox(1.3, 2.4, 0.12, 0.02), MAT.flat('#14141a', 0.9), OX, 1.2, BZ + 0.08);
   for (const sx of [-1, 1]) k.add(rbox(0.14, 2.5, 0.16, 0.02), WOOD(), OX + sx * 0.72, 1.25, BZ + 0.1);
   k.add(rbox(1.6, 0.16, 0.16, 0.02), WOOD(), OX, 2.52, BZ + 0.1);
-  R.exits.push({ x: B.cx + OX, z: B.cz + BZ + 0.45, r: 0.6, room: 'otroffice' });
-  R.entries = { otroffice: { x: B.cx + OX, z: B.cz + BZ + 1.3, a: 0 } };
 
   // --- the middle: booths in a row, the aquarium, plants
   for (const x of [-3.2, 0.2]) { B.put(x, 0.4, 0, (kk) => booth(kk, 1.8)); B.put(x, 1.55, 0, (kk) => barTable(kk)); }
@@ -194,38 +191,6 @@ export function buildOtrBarRoom(scene, physics) {
   R.npcSpots = BAR.npcSpots;
   R.ballTargets = R.ballTargets || [];
   return { otrbar: B.finish() };
-}
-
-export function buildOtrOfficeRoom(scene, physics) {
-  const B = new RoomBuilder(scene, physics, 'otroffice', OTROFFICE_AT.x, OTROFFICE_AT.z);
-  const R = B.room, k = B.k;
-  const W = 9, D = 7.5, H = 3.6;
-  R.view = 10; R.follow = 0.5; R.music = 'home';
-  const dark = M('oo_wall', () => { const t = TEX.plaster('#3a4a52'), m = new THREE.MeshStandardMaterial({ map: t, color: '#4a5a62', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.12 }); m.userData.tile = 2; return m; });
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 2.2;
-  B.shell({ floor: MAT.planks('dark'), slab: MAT.rubble('slate'), body: dark, low: MAT.rubble('slate'), rail: WOOD(), cap: MAT.paint('#2a2e34', 0.5), H, t: 0.5, dado: 0.9, rimH: 0.45, rimMat: MAT.rubble('slate'), W, D,
-    left: [{ at: DOORZ, w: 1.2, h: 2.4, y0: 0, kind: 'door', frame: WOOD() }] });
-  R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.7, room: 'otrbar', back: true });
-  R.spawn = { x: B.cx + LX + 1.3, z: B.cz + DOORZ, a: Math.PI / 2 };
-  R.entries = { otrbar: R.spawn };
-  // a painted wave on the left wall
-  k.add(plane(3.0, 0.9), MAT.paper('#2a3a44', '#0e1418', 'leaf'), LX + 0.03, 1.6, -0.6, Math.PI / 2);
-  // the curtained alcove with a basin at the back
-  const AX = -0.6;
-  k.add(rbox(1.6, 2.4, 0.4, 0.02), MAT.paint('#e8e2d8', 0.5), AX, 1.2, BZ + 0.22);
-  k.add(lathe([[0.001, 0], [0.26, 0.02], [0.3, 0.16], [0.001, 0.18]], 14), MAT.paint('#f4f0e8', 0.3), AX, 0.95, BZ + 0.4);
-  const curtain = MAT.flat('#e0703a', 0.7, { emissive: '#3a1408' });
-  for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) k.add(cyl(0.08, 0.08, 2.5, 8), curtain, AX + sx * (0.95 + i * 0.12), 1.25, BZ + 0.5);
-  // the boss's desk with a globe lamp, two armchairs, a picture, a plant
-  B.put(0.9, 0.2, 0.15, (kk) => { kk.add(rbox(2.2, 0.76, 0.9, 0.04), MAT.wood('dark'), 0, 0.38, 0); kk.add(rbox(2.3, 0.05, 1.0, 0.02), MAT.paint('#c8b8a0', 0.4), 0, 0.78, 0); return { hw: 1.1, hd: 0.45, top: 0.8 }; });
-  k.at(0.4, 0.8, 0.1, 0, () => { k.add(cyl(0.08, 0.12, 0.3, 10), MAT.brass(), 0, 0.15, 0); k.add(sphere(0.18, 14, 10), MAT.glow('#fff4e0', '#ffd890', 1.0), 0, 0.42, 0); });
-  const arm = (kk) => { kk.add(rbox(0.8, 0.42, 0.75, 0.15), MAT.cloth('#e8d4b8', '#c8b498'), 0, 0.25, 0); kk.add(rbox(0.8, 0.6, 0.2, 0.12), MAT.cloth('#e8d4b8', '#c8b498'), 0, 0.62, -0.28); for (const sx of [-1, 1]) kk.add(rbox(0.16, 0.55, 0.75, 0.08), MAT.cloth('#e8d4b8', '#c8b498'), sx * 0.36, 0.38, 0); return { hw: 0.42, hd: 0.4, top: 0.9 }; };
-  B.put(1.4, -1.0, Math.PI, arm); B.put(-0.8, 1.4, 0.4, arm);
-  k.add(rbox(0.9, 1.1, 0.06, 0.02), MAT.brass(), 3.0, 1.9, BZ + 0.04); k.add(plane(0.76, 0.96), MAT.paper('#d8e4f0', '#2a3a5a', 'star'), 3.0, 1.9, BZ + 0.08);
-  B.put(W / 2 - 0.6, BZ + 0.6, 0, (kk) => leafPlant(kk));
-  B.light('#ffe8c8', 4, 10, 0.4, 2.6, 0.4); B.light('#ffd8a0', 2, 6, AX, 2.2, BZ + 1.0);
-  R.npcSpots = { boss: { x: B.cx + 0.9, z: B.cz - 0.6, a: 0 } };
-  return { otroffice: B.finish() };
 }
 
 // the harbour house's door (Otringal's island, built from the original's layout: the building list in worldfit.js)

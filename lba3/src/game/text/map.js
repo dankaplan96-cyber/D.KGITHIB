@@ -75,7 +75,6 @@ Object.assign(STR.en, {
   room_condB: 'Condenser hangar',
   room_butemple: 'Temple of Bù',
   room_bumaze: 'The spiked maze',
-  room_buhalls: 'The dark halls',
   room_wtent: "Bersimon's tent",
   room_school: 'School of Magic',
   room_asylum: 'Citadel Asylum',

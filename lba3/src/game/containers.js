@@ -33,7 +33,7 @@ import { Kit } from './props.js';
 import { streetDist } from './town.js';
 import { lifeClear } from './townlife.js';
 import { ZEELICH } from './zeelich.js';
-import { ISLES, ISLE_AT } from './zislands.js';
+import { ISLES, SLOTS, ISLE_AT } from './zislands.js';
 import * as EP from './props-esmer.js';
 import { Batch, tm, pm, bbox, cyl } from './kit.js';
 import { DESERT, coastDist, trackDist } from './desert.js';
@@ -91,10 +91,6 @@ export const ISLES_AT = {
   platform: [
     { x: 46.2, z: 9.0, kinds: ANY, n: 1 },                   // scene 99
     { x: 8.1, z: 15.0, kinds: ANY, n: 1 },                   // scene 99
-  ],
-  cxislet: [
-    { x: 2.1, z: 4.7, kinds: ANY, n: 5 },                    // scene 110
-    { x: -4.7, z: -2.1, kinds: ['money'], n: 2 },            // scene 110 (CONTAINERS-2)
   ],
 };
 // Zeelich (our own island; local metres from zeelich.js): on pieces already there, else one of ours
@@ -385,7 +381,7 @@ export function buildRegionContainers(rooms, physics) {
   const Z = rooms.zeelich;
   if (Z) ZEELICH_AT.forEach((c, k) => put(Z, c.id, ZEELICH.x + c.x, ZEELICH.z + c.z, c.kinds, c.n, k));
   for (const [name, list] of Object.entries(ISLES_AT)) {
-    const R = rooms['isle_' + name], i = ISLES.indexOf(name);
+    const R = rooms['isle_' + name], i = ISLES.includes(name) ? SLOTS.indexOf(name) : -1;
     if (!R || i < 0) continue;
     const at = ISLE_AT(i);
     list.forEach((c, k) => put(R, name + '-c' + k, at.x + c.x, at.z + c.z, c.kinds, c.n, k));

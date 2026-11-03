@@ -27,10 +27,8 @@ Object.assign(STR.en, {
   isle_mosquibee: 'Mosquibee Island',
   isle_celebration: 'Celebration Island',
   isle_undergas: 'Under Celebration',
-  isle_cxislet: 'The CX Islet',
   isle_platform: 'The Platform',
   isle_liftdock: 'The Lift Dock',
-  isle_tralu: 'Tralu Rock',
   isle_orchard: 'The Nectar Orchard',
   isle_oldwatch: 'The Old Watch',
   // the Holomap (VP-9): the planet he is on

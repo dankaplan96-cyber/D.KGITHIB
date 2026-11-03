@@ -2611,8 +2611,8 @@ function buildDressing(W, root, r) {
 }
 
 // ================================================================== WORLD-80: the original's old places
-// Where the original island has a landmark or a door we had not built (docs/WORLD_SIMILARITY.md): the great dome on
-// the west islet (LBA2's scene 26 door, a 19 × 19 m body 12.9 m tall) and the 4.4 m figure beside it; the plateau's
+// Where the original island has a landmark or a door we had not built (docs/WORLD_SIMILARITY.md): the 4.4 m figure on
+// the west islet (its great dome, LBA2's scene 26 door, was cut by DECLUTTER, 3.11.2026: skyline only, a door to nowhere); the plateau's
 // door (scene 2) in the bank behind the depot; the two ends of the passage through the plateau (scene 51): a cellar
 // trapdoor in the fort's yard and a tunnel mouth in the north face. Places and sizes from the original's numbers
 // only (tools/worldscore/ref/citadel.json, LAYOUT applied), built in the fort's kit and materials. Every door is
@@ -2630,65 +2630,15 @@ export const OLD_DOORS = {
 function shutDoor(W, id, x, y, z, ry, out = 0.8) { (W.shutDoors ||= []).push({ id, x: x + Math.sin(ry) * out, y, z: z + Math.cos(ry) * out, ry }); }
 
 function buildWestIslet(W, root) {
-  const D = ISLET.dome, P = W.physics, R = D.r;
+  const P = W.physics;
   const grp = new THREE.Group(); grp.name = 'west-islet'; root.add(grp);
   const B = new Batch(grp);
-  // (the town's warm stone and its blue scale tiles, not the fort's cold ashlar: an old building of the island's own)
-  const stoneM = tm('stone', { color: '#e8e4dc' }), trimM = tm('stone', { color: '#d8d4cc' }), slateM = tm('roofBlue', { color: '#e8eef8', rough: 0.8 });
-  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
-  const g = W.H(D.x, D.z);
-  // the dome: a stepped plinth, a drum with pilasters and a cornice, a slate dome, a lantern and a finial (12.9 m)
-  const PL = 0.5, DR = 3.6, TOP = D.h;
-  B.add(lathe([[0, -1.6], [R + 0.5, -1.6], [R + 0.5, 0.22], [R + 0.38, 0.28], [R + 0.38, PL], [0, PL]], 48, TILE.stone), trimM, D.x, g, D.z);
-  B.add(lathe([[0, PL], [R, PL], [R, DR], [R + 0.22, DR + 0.08], [R + 0.3, DR + 0.42], [R - 0.05, DR + 0.5], [0, DR + 0.5]], 48, TILE.stone), stoneM, D.x, g, D.z);
-  const dome = [], rx = R - 0.12, ry0 = DR + 0.5, rise = TOP - 1.25 - ry0;
-  for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI / 2; dome.push([Math.max(0.0001, rx * Math.cos(a)), ry0 + rise * Math.sin(a)]); }
-  B.add(lathe(dome, 40, TILE.roof), slateM, D.x, g, D.z);
-  // eight stone ribs down the dome, and the lantern on its crown
-  for (let k = 0; k < 8; k++) {
-    const a = (k / 8) * Math.PI * 2 + Math.PI / 8, pts = [];
-    for (let i = 0; i <= 8; i++) { const t2 = (i / 8) * 0.92 * Math.PI / 2, rr = rx * Math.cos(t2) + 0.08, yy = ry0 + rise * Math.sin(t2) + 0.05; pts.push([D.x + Math.sin(a) * rr, g + yy, D.z + Math.cos(a) * rr]); }
-    B.add(tube(pts, 0.16, 5, TILE.stone), trimM);
-  }
-  B.add(lathe([[0, 0], [1.25, 0], [1.25, 0.2], [1.0, 0.25], [1.0, 0.75], [1.2, 0.8], [1.2, 0.95], [0.25, 1.15], [0, 1.2]], 16, TILE.stone), trimM, D.x, g + TOP - 1.4, D.z);
-  B.add(lathe([[0, 0], [0.12, 0], [0.08, 0.15], [0.14, 0.25], [0.04, 0.4], [0, 0.42]], 8), ironM, D.x, g + TOP - 0.42, D.z);
-  // pilasters round the drum, round windows between them (none over the door)
-  for (let k = 0; k < 16; k++) {
-    const a = (k / 16) * Math.PI * 2 + Math.PI / 16;
-    B.add(bbox(0.55, DR - PL - 0.05, 0.3, 0.04, 1), trimM, D.x + Math.sin(a) * (R + 0.08), g + (PL + DR) / 2, D.z + Math.cos(a) * (R + 0.08), 0, a, 0);
-    const w = a + Math.PI / 16;
-    if (Math.abs(Math.atan2(Math.sin(w), Math.cos(w))) < 0.45) continue;
-    B.add(cached('w80-ocu', () => new THREE.CircleGeometry(0.42, 14)), slitM, D.x + Math.sin(w) * (R + 0.02), g + 2.35, D.z + Math.cos(w) * (R + 0.02), 0, w, 0);
-    B.add(cached('w80-ocr', () => new THREE.TorusGeometry(0.48, 0.09, 6, 16)), trimM, D.x + Math.sin(w) * (R + 0.04), g + 2.35, D.z + Math.cos(w) * (R + 0.04), 0, w, 0);
-  }
-  // the door, to the south (the original's door zone): a stone porch with an arched, shut double door, two steps
-  {
-    const pz = D.z + R + 0.05, dw = 1.5, dh = 2.6;
-    B.add(bbox(3.2, DR + 0.3, 1.1, 0.05, 1), stoneM, D.x, g + (DR + 0.3) / 2, pz - 0.3);
-    B.add(bbox(3.5, 0.3, 1.3, 0.04, 1), trimM, D.x, g + DR + 0.42, pz - 0.3);
-    B.add(bbox(1.2, 0.5, 0.5, 0.04, 1), trimM, D.x, g + DR + 0.82, pz - 0.15);   // (the porch's pediment stone)
-    const ring = new THREE.Shape(), hw = dw / 2, sp = PL + dh - hw;
-    ring.absarc(0, sp, hw + 0.32, 0, Math.PI, false); ring.lineTo(-hw, sp); ring.absarc(0, sp, hw, Math.PI, 0, true); ring.lineTo(hw + 0.32, sp);
-    B.add(extrude(ring, 0.14, 1.4, 0.02), trimM, D.x, g, pz + 0.26);
-    for (const s of [-1, 1]) B.add(bbox(0.32, dh - hw, 0.16, 0.03, 1), trimM, D.x + s * (hw + 0.16), g + PL + (dh - hw) / 2, pz + 0.33);
-    const leaf = new THREE.Shape(); leaf.moveTo(-hw, PL); leaf.lineTo(hw, PL); leaf.lineTo(hw, sp); leaf.absarc(0, sp, hw, 0, Math.PI, false); leaf.lineTo(-hw, PL);
-    B.add(extrude(leaf, 0.08, TILE.wood), woodM, D.x, g, pz + 0.255);
-    B.add(bbox(0.04, dh - 0.1, 0.03, 0.01, 1), slitM, D.x, g + PL + (dh - 0.1) / 2, pz + 0.345);   // (the two leaves' meeting)
-    for (const hy of [0.7, 1.7]) B.add(bbox(dw - 0.1, 0.07, 0.03, 0.01, 1), ironM, D.x, g + PL + hy, pz + 0.35);
-    for (const s of [-1, 1]) B.add(cached('w80-ring', () => new THREE.TorusGeometry(0.1, 0.02, 4, 10)), ironM, D.x + s * 0.2, g + PL + 1.25, pz + 0.38);
-    // the sill, then two steps down to the islet's ground
-    B.add(bbox(2.0, 0.3, 0.32, 0.03, 1), trimM, D.x, g + PL - 0.15, pz + 0.41);
-    for (const k of [0, 1]) { const top = PL - 0.17 * (k + 1); B.add(bbox(2.6 + k * 0.5, top + 0.3, 0.5, 0.03, 1), trimM, D.x, g + top - (top + 0.3) / 2, pz + 0.82 + k * 0.5); }
-    P.add({ type: 'box', x: D.x, z: pz - 0.3, hw: 1.6, hd: 0.55, top: g + DR + 0.6, camSkip: true });
-    shutDoor(W, 'dome', D.x, g + PL, pz + 0.3, 0, 1.0);
-  }
-  B.build();
-  const c = P.add({ type: 'cyl', x: D.x, z: D.z, r: R + 0.45, top: g + TOP, camSkip: true });
-  addOccluder(W, { kind: 'rev', x: D.x, z: D.z, y0: g - 2, base: g, profile: [[0, TOP], [1.25, TOP - 1.2], [3.0, TOP - 1.25 - 0.6], [5.5, ry0 + rise * 0.78], [7.6, ry0 + rise * 0.55], [9.0, ry0 + rise * 0.25], [R + 0.3, DR + 0.42], [R + 0.5, PL]], name: 'islet dome' }, c);
-  fitAdd({ region: 'citadel', name: 'the west islet dome', round: true, x: D.x, z: D.z, ry: 0, oy: g, w: 2 * (R + 0.5), d: 2 * (R + 0.5), base: -1.6, plinth: PL, floor: PL, steps: 0.6 });
-  W.isletDome = { x: D.x, z: D.z, y: g, r: R };
+  // (the town's warm stone, not the fort's cold ashlar: an old figure of the island's own)
+  const stoneM = tm('stone', { color: '#e8e4dc' }), trimM = tm('stone', { color: '#d8d4cc' });
+  const slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  // (DECLUTTER, 3.11.2026: the great dome and its door that never opened are cut; the figure stays on the skyline)
 
-  // the figure beside it: a robed stone figure with a staff on a square plinth, facing the town (4.4 m)
+  // the figure on the islet's rim: a robed stone figure with a staff on a square plinth, facing the town (4.4 m)
   {
     const F = ISLET.figure, fg = W.H(F.x, F.z), f = frame(F.x, F.z, F.ry), ph = 0.9;
     B.add(bbox(1.7, ph + 0.4, 1.7, 0.06, 1), trimM, F.x, fg + (ph - 0.4) / 2, F.z, 0, F.ry, 0);
@@ -2720,7 +2670,7 @@ function tunnelMouth(W, root, id, o) {
   const P = W.physics, grp = new THREE.Group(); grp.name = 'old-door-' + id; root.add(grp);
   const B = new Batch(grp);
   const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
-  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  const slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
   const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
   // the sill: the ground just before the face
   const y = W.H(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1;
