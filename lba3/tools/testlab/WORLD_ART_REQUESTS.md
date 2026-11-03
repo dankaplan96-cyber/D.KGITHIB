@@ -1766,3 +1766,20 @@ plan on origin 3ea2f99: Otringal 1, Knartas 1, Tralu 4 such lines. Nothing check
 - a pair that fails is not strung; the others are as before.
 - After: no line through a lamp's head on any island; the lines left: Otringal 2 → 1, Knartas 1 → 0, Celebration
   14 → 13, Tralu 11 → 9 (the rest have none). `tests/zislands.mjs` PASS.
+
+## ISO-CLOSE-1 · Twinsen tiny in the big rooms · the laptop, 3.11.2026 (the user: "Twinsen is very small against the map, maybe zoom in")
+The user's picture: the asylum (LBA1), whose fixed indoor view shows 24 m (`R.view`); the homes show 10–12. Measured
+(Twinsen's height as a share of the screen's, 1280×720, the room's spawn): the house 0.149, the tavern 0.133, the
+asylum 0.065, the Bu halls 0.064, the Bu maze and the temple 0.101, the sewer 0.094, the arena 0.066.
+`requests/ISO-CLOSE-1.diff` (`engine/camera.js`, `game/arena.js`, `game/underground.js`; applies alone on ea569d3,
+and after LINE-CLEAR-1):
+- the fixed indoor view shows at most `ISO_MAX` by Settings → Camera distance: far (the default) 14 m, medium 12.5,
+  near 11; a room built wider is shown at that, and the view then follows him more (follow ≥ 0.85, the frame's
+  keep-him-in-the-middle margins from the shown size);
+- rooms under it (the homes, the shops: 9.5–13) are as before; `R.wide` keeps a room's own view: the arena and the
+  underground's boss ring (a fight that needs the whole floor).
+- After: the asylum 0.113, the Bu halls 0.111, the Bu maze, the temple and the sewer 0.114; the house 0.149 and the
+  tavern 0.133 unchanged; the arena 0.066 (wide). `tests/lba1rooms.mjs` (walks the asylum) and `tests/transitions.mjs`
+  PASS.
+- Text: Settings' hint for Camera distance (`set_h_cd`) speaks of the Follow camera only; it now sets the rooms' zoom
+  too (the cloud's line to change, if wanted).
