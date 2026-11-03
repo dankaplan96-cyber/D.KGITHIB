@@ -18,12 +18,15 @@
 //   FILMS.log: [{ n, part: 'depart' | 'arrive', mode, from, to, length, t, skipped, … }] the last 60 films played
 //   (tests; n counts every film since the page loaded: FILMS.n)
 //   playJourney(game, { from, to, mode }, start)  start(then) begins the scene change (Game.startTransition with then)
+//   crossByShip(game, start, { aboard, onward })  a story's crossing between the planets (below)
+//   storyJourney(game, { from, to, mode, aboard, landWith }, start)  a story's crossing by glider or ferry (WC-1, below)
 import * as THREE from 'three';
 import { Cinematic } from '../engine/cinematic.js';
 import { mergeStatic } from '../engine/merge.js';
 import { esmerShuttle } from './shuttle.js';
 import { buildShipCabin } from './shipcabin.js';
 import { createCharacter } from './characters.js';
+import { buildGlider } from './valveroom.js';
 
 export const FILMS = {
   on: !(typeof location !== 'undefined' && new URLSearchParams(location.search).has('nocine')),
@@ -46,6 +49,7 @@ export const LEN = {
 // ---------------------------------------------------------------- the parked craft and its flying twin
 // the craft standing at a travel point (null: none found — the film then flies a fresh one from the point)
 function vehicleOf(g, p) {
+  if (p.craft) return null;   // (a story's own spot: its craft is built for the film, storyCraft)
   const T = g.travel, R = p.region === 'citadel' ? null : g.regions?.built?.(p.region);
   if (T?.vehicles?.[p.id]) return T.vehicles[p.id];
   if (p.id === 'citadel_port') return g.world.spaceport?.ship || null;
@@ -77,13 +81,24 @@ function glowDisc(r) {
   const m = new THREE.Mesh(GLOW.geo, GLOW.mat.clone()); m.scale.setScalar(r); m.position.y = 0.3; m.renderOrder = 3; m.material.opacity = 0;
   return m;
 }
+// WC-1: the craft standing at a story's own spot (not a travel point): Hesk's glider (valveroom.js, the same craft as
+// the glider fields' and the Hamalayi landing's), built once and kept for the session; only its twin is ever shown
+const STORY_CRAFT = {};
+function storyCraft(kind) {
+  if (kind === 'glider') return (STORY_CRAFT.glider ??= buildGlider());
+  return null;
+}
 function freeTwin(t) { t.parent?.remove(t); t.traverse((o) => { if (o.userData.ownInst) o.dispose(); if (o.userData.glow) o.material.dispose(); }); }
 
 // the craft at a point, set up for a film: its twin in the scene at the parked one's place, the parked one hidden
 function stageCraft(g, p, mode) {
   const parked = vehicleOf(g, p);
   let src = parked;
-  if (!src) {   // (nothing parked here: a fresh craft stands at the point)
+  if (!src && p.craft) {   // (a story's spot: its craft stands there for the film, on the ground, its nose to p.a)
+    src = storyCraft(p.craft);
+    if (!src) return null;
+    src.position.set(p.x, g.physics.groundAt(p.x, p.z), p.z); src.rotation.set(0, p.a ?? 0, 0); src.updateMatrixWorld(true);
+  } else if (!src) {   // (nothing parked here: a fresh craft stands at the point)
     if (mode !== 'ship' && mode !== 'shuttle') return null;
     src = esmerShuttle({ landed: true, scale: mode === 'ship' ? 1.4 : 1 }); src.position.set(p.x, g.physics.groundAt(p.x, p.z), p.z); src.updateMatrixWorld(true);
   } else src.updateWorldMatrix(true, false);   // (its area's matrices too: a region shown for the first time this frame)
@@ -483,7 +498,7 @@ function arriveFilm(g, ride) {
   const shots = [{ t0: 0, t1: tBlend, from: W.shot }, { t0: tBlend, t1: length, to: 'game' }];
   const events = [
     { t: 0, fn: (c) => { c.focus = C.pos; g.audio.play(mode === 'ferry' ? 'horn' : mode === 'glider' ? 'whoosh' : 'rumble'); } },
-    { t: tStep, fn: (c) => { g.audio.play(mode === 'ferry' ? 'clunk' : 'thump'); if (mode !== 'ferry') g.camRig.shake(0.12); h.rig.root.visible = true; h.shadow.visible = true; h.rig.play('walk'); c.focus = h.pos; } },
+    { t: tStep, fn: (c) => { g.audio.play(mode === 'ferry' ? 'clunk' : 'thump'); if (mode !== 'ferry') g.camRig.shake(0.12); h.rig.root.visible = true; h.shadow.visible = true; h.rig.play('walk'); c.focus = h.pos; ride.onStep?.(); } },
     { t: tBlend, fn: () => { h.rig.play('idle'); h.rig.root.position.copy(h.pos); h.rig.root.rotation.y = h.angle; h.sync(); g.camRig.snap(); } },
   ];
   const tracks = [
@@ -499,7 +514,7 @@ function arriveFilm(g, ride) {
   shots[0].from = (t) => { const s = W.shot(t); if (t >= tStep) s.look.lerp(V(h.rig.root.position.x, h.rig.root.position.y + 1.1, h.rig.root.position.z), smooth((t - tStep) / 0.6)); return s; };
   const cine = new Film(g, {
     length, events, tracks, shots,
-    prepare() { showCraft(g, C); heroShow(g, false); move(0); },
+    prepare() { showCraft(g, C); heroShow(g, false); move(0); ride.onStart?.(); },
     finish(skipped) {
       log.t = +cine.t.toFixed(2); log.skipped = skipped;
       endCraft(C);
@@ -508,6 +523,7 @@ function arriveFilm(g, ride) {
       g.hud.show(true); $('#touch')?.classList.toggle('hidden', !g.touch);
       cine.focus = null;
       g.setState('play');
+      try { ride.onEnd?.(skipped); } catch (e) { console.error('journey film (story arrival) end failed', e); }
     },
   });
   return cine;
@@ -537,13 +553,73 @@ export function playJourney(game, ride, start) {
 // ship's departure film from the spaceport he is at — the take-off, the cabin, space — then the story's own scene
 // change, start() (it calls Game.startTransition; the chapter's arrival is the story's, so no arrival film).
 // aboard: the people of the story who board with him (their bodies are hidden while the ship leaves without them).
-export function crossByShip(game, start, { aboard = [] } = {}) {
+// onward (WC-1): a further leg seen arriving after the ship, { to, mode, landWith } (chapter 3's end: the ferry coming in
+// to Desert Island's pier): start(then) is then given its arrival film for the scene change's `then` (storyArrival).
+// A skip of the ship's film ends the whole journey's film: no onward film then.
+export function crossByShip(game, start, { aboard = [], onward = null } = {}) {
   const g = game, T = g.travel, onZ = (g.room?.id ?? 'citadel') === 'zeelich';
   const from = T?.points[onZ ? 'zeelich_port' : 'citadel_port'], to = T?.points[onZ ? 'citadel_port' : 'zeelich_port'];
   if (!FILMS.on || !from || !to) { start(); return; }
-  const hidden = aboard.filter((n) => n?.present && n.rig.root.visible);
+  const back = hideAboard(aboard);
+  playJourney(g, { from, to, mode: 'ship' }, (then) => { back(); start(then && onward ? storyArrival(g, onward) : undefined); });
+}
+// the story's people who leave with him: hidden (those standing in view) until back() (their own place is the story's)
+function hideAboard(aboard) {
+  const hidden = aboard.filter((n) => n?.present && n.rig?.root.visible);
   for (const n of hidden) { n.rig.root.visible = false; if (n.shadow) n.shadow.visible = false; }
-  playJourney(g, { from, to, mode: 'ship' }, () => { for (const n of hidden) { n.rig.root.visible = true; if (n.shadow) n.shadow.visible = true; } start(); });
+  return () => { for (const n of hidden.splice(0)) { n.rig.root.visible = true; if (n.shadow) n.shadow.visible = true; } };
+}
+
+// WC-1 — the story's crossings by glider or ferry (chapter 5's end: Hesk's glider from Desert Island to the Hamalayi;
+// chapter 7's: from the monastery's slope home to Citadel's glider field), with the journey's films around the story's
+// own scene change, start(then) (it calls Game.startTransition(mid, need, then): the chapter changes under the black
+// exactly as without films):
+//   from  a travel point (or its id), or a story's own spot { id, region, x, z, a, landing, craft: 'glider' } where the
+//         story's craft stands for the film (no craft parked there: one is built for the film, storyCraft); null: no
+//         departure film. A spot outside the room he is in (Hesk's glider leaves FunFrock's hangar by its roof hatch,
+//         on the dunes over it) is entered quietly under the film's black: no save, no story hook.
+//   to    the travel point (or its id) he arrives at: its landing spot is where the next chapter puts him. The arrival
+//         film plays on the next chapter's first frame; its chapter card and first line wait for it (storyArrival).
+//   aboard    the story's people who fly with him (hidden while the craft leaves); landWith: those who step off with
+//         him (hidden until he steps off: the next chapter has put them by the landing).
+// Films off (?nocine), or no arrival point: start() at once, as before. A skip ends the whole journey's film.
+export function storyJourney(game, { from = null, to = null, mode, aboard = [], landWith = [] }, start) {
+  const g = game, P = g.travel?.points || {};
+  const pf = typeof from === 'string' ? P[from] : from, pt = typeof to === 'string' ? P[to] : to;
+  if (!FILMS.on || !pt) { start(); return; }
+  if (pf && pf.region !== (g.room?.id ?? 'citadel')) {
+    try {
+      const l = pf.landing || { x: pf.x, z: pf.z, a: 0 };
+      if (pf.region === 'citadel') g.exitRoom(l, true, true); else g.enterRoom(pf.region, l, true, true);
+    } catch (e) { console.error('journey film (story): the departure area failed', e); }
+  }
+  const back = hideAboard(aboard);
+  playJourney(g, { from: pf, to: pt, mode }, (then) => { back(); start(then ? storyArrival(g, { to: pt, mode, landWith }) : undefined); });
+}
+// The arrival film of a story's crossing, as the scene change's `then`: the next chapter has begun under the black (he
+// stands on the landing spot; its title card is up and its first line waits for it: Story.holdForCard). The card is
+// put away while the craft comes in, and comes back when the film ends, its line after it as always. No film (an error,
+// a scene of the chapter's own already running): straight on, as after a plain scene change.
+export function storyArrival(game, { to, mode, landWith = [] }) {
+  const g = game;
+  return () => {
+    const p = typeof to === 'string' ? g.travel?.points[to] : to;
+    const card = $('#chapter'), held = !!card?.classList.contains('show');
+    let back = () => {};
+    const end = () => {
+      back();
+      if (g.cutscene) { if (held) card.classList.add('show'); if (g.state !== 'cutscene') g.setState('cutscene'); }
+      else afterNoFilm(g);
+    };
+    let f = null;
+    if (p && (g.state === 'play' || (g.state === 'cutscene' && held))) {
+      const ride = { from: null, to: p, mode, skipped: false,
+        onStart: () => { if (held) card.classList.remove('show'); back = hideAboard(landWith); },
+        onStep: () => back(), onEnd: end };
+      try { f = arriveFilm(g, ride); } catch (e) { console.error('journey film (story arrival) failed', e); f = null; }
+    }
+    if (f) f.start(); else end();
+  };
 }
 // (an arrival with no film to play: control back as after a plain transition)
 function afterNoFilm(g) { g.hud.show(true); if (g.state !== 'play') g.setState('play'); }
