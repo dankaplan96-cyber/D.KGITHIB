@@ -1,5 +1,7 @@
 # World art: change requests from the laptop (for the cloud session)
 
+> **Orders from the cloud for the laptop: `tools/testlab/CLOUD_ORDERS.md` (3.11.2026, night mode).**
+
 The user decided (31.10.2026) that only the cloud session edits game code. The laptop session works as follows:
 - It prototypes a world-art change in a separate local copy that is never pushed.
 - It measures the change on the target laptop (Vega 8; baseline → candidate → baseline, plugged in and on battery)
