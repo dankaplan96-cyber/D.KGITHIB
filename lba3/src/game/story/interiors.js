@@ -12,8 +12,14 @@
 //     evacuation (the project's boarding queue is the story's: evacuation.js);
 //   - Zeelich Spaceport and its terminal: whenever Zeelich is built, but the evacuation (the terminal's notice too in
 //     chapters 1–3).
+//   - WC-4 (the spaceports per chapter): each port person's `when` names the port's states they are there in
+//     (roomlife.js portPhase, from the chapter: grounded, flying, evac, council, after). In the evacuation Citadel's
+//     terminal has the queue for the project's ships (its guard with the list, travellers with luggage, one turned
+//     away) and the deck its mechanic and a waiting family; Zeelich's terminal only its two staff. Chapter 9 puts two of
+//     the council's guards in Zeelich's terminal. The notices follow the same states: GROUNDED (1–3), the project's
+//     list by Citadel's gate (8), the council's order in Zeelich's terminal (9).
 import { ChapterBase } from './base.js';
-import { placeDefs, StoryRounds } from '../roomlife.js';
+import { placeDefs, StoryRounds, portPhase, whenPhases } from '../roomlife.js';
 import { TERMINAL } from '../terminal.js';
 import { ZTERMINAL } from '../zterminal.js';
 import '../text/interiors.js';
@@ -33,11 +39,10 @@ export class InteriorLife extends ChapterBase {
   get evac() { return this.story.cur?.key === 'evacuation'; }
   // is this person in their place in the chapter in progress?
   here(d) {
-    if (this.evac) return !!d.stays;
-    if (d.when === 'grounded') return this.story.index < 3;
-    if (d.when === 'flying') return this.story.index >= 3;
-    if (typeof d.when === 'function') return !!d.when(this.f, this.story);   // (WC-3: the School's and the antechamber's people, storylife.js)
-    return true;
+    if (typeof d.when === 'function') return !this.evac && !!d.when(this.f, this.story);   // (WC-3: the School's and the antechamber's people, storylife.js)
+    const ph = whenPhases(d.when);   // (WC-4: the port's states they are there in)
+    if (this.evac) return !!d.stays || !!ph?.includes('evac');
+    return ph ? ph.includes(portPhase(this.story)) : true;
   }
   place(id) {
     const n = this.game.npcs.find((x) => x.def.id === id);
@@ -50,10 +55,18 @@ export class InteriorLife extends ChapterBase {
   keeps(n, p) { return this.rounds.keeps(n, p); }
   // the terminals' GROUNDED notices: up while passenger flights are grounded (chapters 1–3), as the clerks say
   get grounded() { return this.story.index < 3; }
+  // WC-4: what each terminal's notice says now (null: none): GROUNDED (chapters 1–3); in the evacuation the project's
+  // boarding by its list (Citadel's); in chapter 9 the council's order (Zeelich's)
+  noticeKind(T) {
+    const ph = portPhase(this.story);
+    if (ph === 'grounded') return 'grounded';
+    if (ph === 'evac' && T === TERMINAL) return 'list';
+    if (ph === 'council' && T === ZTERMINAL) return 'council';
+    return null;
+  }
   update(dt) {
     this.rounds.update(dt);
-    const g = this.grounded;
     // (each notice once per change, or when its room was built anew)
-    for (const T of [TERMINAL, ZTERMINAL]) if (T.notice && T.notice._shown !== g) { T.notice._shown = g; T.notice.setVisible(g); }
+    for (const T of [TERMINAL, ZTERMINAL]) { const k = T.notice ? this.noticeKind(T) : undefined; if (T.notice && T.notice._shown !== k) { T.notice._shown = k; T.notice.setKind(k); } }
   }
 }

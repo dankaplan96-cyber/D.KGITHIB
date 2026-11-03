@@ -156,6 +156,9 @@ export const VOICES = {
   sefa: { race: 'esmer', seed: 966, f0: 224, k: 1.02, rate: 0.82, contour: 'zigzag', legato: 0.67 },
   tavi: { race: 'quetch', seed: 968, f0: 226, k: 1.12, rate: 1.1, contour: 'bounce', legato: 0.55 },   // the terminal's cafe keeper
   pask: { race: 'esmer', seed: 969, f0: 131, k: 1.0, rate: 0.86, contour: 'fall', legato: 0.7 },        // the Zeelich terminal's porter
+  // --- WC-4: the council's guards in Zeelich Spaceport's terminal (chapter 9)
+  zt_guard: { race: 'esmer', seed: 1133, f0: 124, k: 0.92, rate: 0.84, contour: 'fall', legato: 0.46 },
+  zt_guard2: { race: 'esmer', seed: 1134, f0: 145, k: 1.04, rate: 0.98, contour: 'arc', legato: 0.58 },
   // --- WC-3: the residents where the story goes (src/game/storylife.js)
   dg_surv: { race: 'quetch', seed: 1101, f0: 138, k: 0.98, rate: 0.92, contour: 'flat', legato: 0.62 },
   dg_rod: { race: 'quetch', seed: 1102, f0: 116, k: 0.93, rate: 1.04, contour: 'bounce', legato: 0.5 },
@@ -253,7 +256,7 @@ const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farme
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
   'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
-  'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard']);
+  'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;
