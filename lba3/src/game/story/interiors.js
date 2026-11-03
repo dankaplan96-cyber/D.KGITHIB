@@ -31,7 +31,7 @@ export class InteriorLife extends ChapterBase {
   }
   npcDefs() {
     // (rebuilt when a place its people live in has just been built; otherwise the same list)
-    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich', 'school', 'upper'];
+    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich', 'school', 'upper', 'otrbar', 'otrhotel'];
     const key = ids.map((id) => (R?.built(id) ? 1 : 0)).join('') + (this.game.world?.spaceport ? 1 : 0) + (R?.built('zeelich')?.spaceport ? 1 : 0);
     if (!this._defs || this._key !== key) { this._key = key; this._defs = placeDefs(this.game); }
     return this._defs;
@@ -39,7 +39,7 @@ export class InteriorLife extends ChapterBase {
   get evac() { return this.story.cur?.key === 'evacuation'; }
   // is this person in their place in the chapter in progress?
   here(d) {
-    if (typeof d.when === 'function') return !this.evac && !!d.when(this.f, this.story);   // (WC-3: the School's and the antechamber's people, storylife.js)
+    if (typeof d.when === 'function') return (!this.evac || !!d.stays) && !!d.when(this.f, this.story);   // (PEOPLE-1: Otringal's rooms stay open in the evacuation, which is Twinsun's: `stays`)   // (WC-3: the School's and the antechamber's people, storylife.js)
     const ph = whenPhases(d.when);   // (WC-4: the port's states they are there in)
     if (this.evac) return !!d.stays || !!ph?.includes('evac');
     return ph ? ph.includes(portPhase(this.story)) : true;
