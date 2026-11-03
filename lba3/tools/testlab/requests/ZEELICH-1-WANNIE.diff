@@ -1,5 +1,5 @@
 diff --git a/lba3/src/game/props-esmer.js b/lba3/src/game/props-esmer.js
-index e500e1ba..0b772097 100644
+index c9de7b76..45f39928 100644
 --- a/lba3/src/game/props-esmer.js
 +++ b/lba3/src/game/props-esmer.js
 @@ -903,13 +903,69 @@ export function liftTower(P, { h = 11, w = 2.8 } = {}) {
@@ -74,10 +74,10 @@ index e500e1ba..0b772097 100644
  export function railRun(B, ax, az, bx, bz, y, { h = 1.0 } = {}) {
    const len = Math.hypot(bx - ax, bz - az); if (len < 0.3) return;
 diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
-index 7df76106..05715c67 100644
+index 2f458613..12f39872 100644
 --- a/lba3/src/game/zislands.js
 +++ b/lba3/src/game/zislands.js
-@@ -332,7 +332,8 @@ function shapeOf(o, S = {}) {
+@@ -343,7 +343,8 @@ function shapeOf(o, S = {}) {
  const ESMER_WORDS = ['SHUTTLE', 'GRAND HALL', 'MARKET', 'FOUNTAIN', 'HARBOUR', 'VILLAGE', 'LIGHTHOUSE', 'HIVES',
    'MEADOW', 'HONEY', 'FESTIVAL', 'STAGE', 'GAS WORKS', 'PUMP HOUSE', 'OUTPOST', 'RADIO MAST', 'DEPOT', 'CRANE',
    'LOADING DECK', 'KEEP CLEAR', 'NO NAKED FLAMES', 'MIND THE EDGE', 'CRANE AREA', 'LOOKOUT', 'BRIDGE', 'HIGH TOWN',
@@ -87,7 +87,7 @@ index 7df76106..05715c67 100644
  const STYLE = {
    otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
      // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
-@@ -611,26 +612,37 @@ const STYLE = {
+@@ -622,26 +623,37 @@ const STYLE = {
        api.signs([]);
      },
    },
@@ -138,7 +138,7 @@ index 7df76106..05715c67 100644
      },
    },
  };
-@@ -649,13 +661,16 @@ const FOOT = {
+@@ -660,13 +672,16 @@ const FOOT = {
    // ZL-ALL / CONNECT
    shuttleBoard: () => ({ hw: 1.0, hd: 0.3 }), weighBeam: () => ({ r: 1.6 }), cloudCatcher: () => ({ r: 4.7 }), nectarPress: () => ({ hw: 1.15, hd: 0.9 }),
    ruinedTower: () => ({ r: 2.6 }), telescope: () => ({ r: 1.8 }), brokenCol: () => ({ r: 0.5 }), fallenDome: () => ({ r: 2.3 }), liftTower: (o) => ({ r: (o.w ?? 3) * 0.75 }),
@@ -156,7 +156,7 @@ index 7df76106..05715c67 100644
  const pieceH = (kind, o = {}) => HGT[kind]?.(o) ?? 1.0;
  const THIN_PIECES = new Set(['lamp', 'cageLamp', 'banner', 'pole', 'signpost', 'flagPole', 'bollard', 'post', 'shuttleBoard', 'skiff', 'warn']);
  const FS = 0.5;   // the plan's grid (m)
-@@ -1507,6 +1522,7 @@ function buildIsland(scene, physics, name, L, at) {
+@@ -1525,6 +1540,7 @@ function buildIsland(scene, physics, name, L, at) {
      shuttleBoard: (P) => EP.shuttleBoard(P, { title: 'ESMER SHUTTLE · DEPARTURES', lines: ['zeelich', ...ISLES].map((n) => BOARD_NAME[n]) }),
      weighBeam: EP.weighBeam, cloudCatcher: EP.cloudCatcher, nectarPress: EP.nectarPress, ruinedTower: EP.ruinedTower, telescope: EP.telescope,
      brokenCol: EP.brokenCol, fallenDome: EP.fallenDome, liftTower: EP.liftTower,
@@ -164,7 +164,7 @@ index 7df76106..05715c67 100644
    };
    const groundUnder = (x, z, rr) => { if (A.floorAt) return gy(x, z); let y = gy(x, z); for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2; y = Math.min(y, gy(x + Math.sin(a) * rr, z + Math.cos(a) * rr)); } return y; };
    let pieces = 0;
-@@ -1531,6 +1547,8 @@ function buildIsland(scene, physics, name, L, at) {
+@@ -1549,6 +1565,8 @@ function buildIsland(scene, physics, name, L, at) {
      f(P, it.o || {});
      for (const c of P.cols) col(c);
      for (const e of P.extra) { group.add(e.obj); updaters.push(e.update); }
@@ -173,10 +173,10 @@ index 7df76106..05715c67 100644
      pieces++;
    }
    for (const ln of plan.lines) EP.hangingLine(B, [ln.a.x, gy(ln.a.x, ln.a.z) + ln.a.h, ln.a.z], [ln.b.x, gy(ln.b.x, ln.b.z) + ln.b.h, ln.b.z], { kind: ln.o.kind, sag: ln.o.sag, colors: S.lines || undefined, seed: pieces + 1 });
-@@ -1707,5 +1725,23 @@ function buildIsland(scene, physics, name, L, at) {
-     }
+@@ -1743,5 +1761,23 @@ function buildIsland(scene, physics, name, L, at) {
      shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
    }
+   if (name === 'celebration') R.templePortal = buildCelPortal(group, physics);   // (ZEELICH-1: the Dark Monk's temple's portal on the plaza; the hall is celtemple.js)
 +  // ZEELICH-1 item 5: the Wannies' island's handles (world coordinates): where the lift sets him down, the mine's mouth,
 +  // the chapel's door, the ore crates by the lift's foot, and six people's places
 +  if (name === 'platform') {
