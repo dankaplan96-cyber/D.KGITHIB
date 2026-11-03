@@ -83,4 +83,5 @@ honest measurements (SwiftShader here: no fps claims).
    shell, Baldino's twelve-years-on workshop, Arthur's radio, the Esmers' craft; later the expansion's world), each with
    a job in puzzles and fights that the old arsenal does not do, taught safely, spread over the chapters, saved with the
    hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
+   Concepts: `EQUIP2_CONCEPTS.md` (five items, waiting for the user's approval).
 5. **BIGGER-1: done (265a870).** The rooms 1.5x; the interiors' people read from each room's exported plan (`*_PLAN`).
