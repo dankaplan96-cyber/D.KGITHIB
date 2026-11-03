@@ -1524,6 +1524,18 @@ class Game {
     addEventListener('keydown', (e) => { if (e.code === 'F9') { e.preventDefault(); if (!e.repeat) this.perf.overlay(); } });
     if (new URLSearchParams(location.search).has('perf')) this.perf.overlay(true);
     addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); this._blurred = true; this.setBackground(); });
+    // (BG-STUCK: a window that takes a key, a click or a moved mouse is the one in use, whatever the last report said: a
+    //  "blur" whose "focus" never came (the user, 3.11: Esc in the desktop app, then 8 fps, BG_FPS, until the window
+    //  was focused again) ends there)
+    const inUse = (e) => { if (this.background && e.isTrusted !== false && !document.hidden) this.foreground(); };
+    for (const ev of ['keydown', 'pointerdown', 'wheel']) addEventListener(ev, inUse, true);
+    addEventListener('pointermove', (e) => { if (e.movementX || e.movementY) inUse(e); }, true);
+  }
+  // back in front: the window shows and has the keyboard (BG-STUCK: also checked once a second while in the background)
+  foreground() {
+    this._blurred = false;
+    if (this._win) this._win = { ...this._win, focused: true, minimized: false, visible: true };
+    this.setBackground();
   }
   setBackground() {
     const W = this._win, bg = !!(document.hidden || this._blurred || (W && (!W.focused || W.minimized || !W.visible)));
@@ -2323,6 +2335,7 @@ class Game {
     // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
     // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
     // screen every other refresh is drawn, an even 33 ms.
+    if (this.background && !this.testFreeze && now - (this._bgCheck ?? 0) > 1000) { this._bgCheck = now; if (!document.hidden && document.hasFocus()) this.foreground(); }   // (BG-STUCK)
     const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
     if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {

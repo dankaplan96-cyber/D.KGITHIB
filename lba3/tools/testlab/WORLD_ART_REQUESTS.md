@@ -1705,7 +1705,7 @@ entry twice). Order, each checked with `git apply --check` on a fresh worktree o
 `CAMPAIGN-1` → `BG-STUCK-1`. SKY, DOORS-1, CAMPAIGN-1 and BG-STUCK-1 also apply alone. On the whole chain the game
 boots and every new room builds and is entered (and the sewer and tavern still do), no page errors.
 
-## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report)
+## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report) — applied by the cloud (3.11)
 The user: after Esc the game runs at 8 fps (first blamed on a talk with Pippa, then found to be Esc). 8 is `BG_FPS`,
 the frame rate PERF-BATTERY draws at while the window is in the background (`setBackground`: document hidden, the DOM
 blur, or the desktop app's `lba3:window` report not focused). A "not focused" that is never followed by its "focus"
