@@ -8,6 +8,7 @@ import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
 import { stage, lookOf, TURN } from './itemlook.js';
+import { TOOL_IDS } from './tools.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -118,7 +119,8 @@ export class HUD {
     if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
     // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
     const a = h.arms || {};
-    const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : w === 'lance' ? `${a.water}/8` : '';
+    // (EQUIP-2b: the heat flask's carried heat, the seconds it has left; '—' cold)
+    const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : w === 'lance' ? `${a.water}/8` : w === 'heatflask' ? (a.heat > 0 ? `${Math.ceil(a.heat)}s` : '—') : '';
     let ae = el.querySelector('.ammo');
     if (!ae) { ae = document.createElement('span'); ae.className = 'ammo'; ae.style.cssText = 'font-weight:800;color:#ffe35a;font-size:13px;min-width:1ch'; el.querySelector('.name').after(ae); }
     if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
@@ -130,7 +132,7 @@ export class HUD {
     const ballOut = h.hasBall && !g.ball.ready;
     r.classList.toggle('out', w === 'ball' && ballOut);
     const shoot = w === 'blowgun' || w === 'laser' || w === 'lightning';
-    const tool = (w === 'pocketset' || w === 'lance') && g.gadgets?.tools;   // (EQUIP-2a: the squeal's recharge, an empty tank)
+    const tool = TOOL_IDS.includes(w) && g.gadgets?.tools;   // (EQUIP-2a/2b: a recharge, an empty tank, a cold flask)
     r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0 || shoot && (c.shotCool > 0 || !!g.weapons?.short(w)) || !!tool && (tool.cool(w) > 0 || !!tool.short(w)));
     if (w === 'pulse') r.style.setProperty('--k', `${100 * (1 - c.pulseCool / 5)}%`);
     else if (shoot) r.style.setProperty('--k', g.weapons?.short(w) ? '0%' : `${100 * (1 - c.shotCool / (g.weapons?.def(w)?.cool || 1))}%`);
@@ -174,16 +176,18 @@ export class HUD {
     // eight slots: the four first weapons on the axes, the arsenal's four (weapons.js) on the diagonals; EQUIP-2a's two
     // tools (tools.js) in small slots either side of the pulse tool, a sixteenth of a turn off it (ds, dt): the stick
     // reaches them between down and a lower diagonal (when they are owned); the keys' eight directions keep their old
-    // slots; the mouse wheel, the swap key and the inventory reach every one
-    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists', ur: 'blowgun', dr: 'laser', dl: 'glove', ul: 'lightning', ds: 'pocketset', dt: 'lance' };
-    const ANG = { up: 0, ur: 2, right: 4, dr: 6, ds: 7, down: 8, dt: 9, dl: 10, left: 12, ul: 14 };   // (sixteenths of a turn, clockwise from up)
-    const SMALL = new Set(['ds', 'dt']);
+    // slots; the mouse wheel, the swap key and the inventory reach every one. EQUIP-2b's three take small slots the same
+    // way: the line between the blowgun and the sword (ru), the fork between the sword and the laser (rd), the flask
+    // between the glove and the fists (ld). The ball keeps the top to itself.
+    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists', ur: 'blowgun', dr: 'laser', dl: 'glove', ul: 'lightning', ds: 'pocketset', dt: 'lance', ru: 'line', rd: 'fork', ld: 'heatflask' };
+    const ANG = { up: 0, ur: 2, ru: 3, right: 4, rd: 5, dr: 6, ds: 7, down: 8, dt: 9, dl: 10, ld: 11, left: 12, ul: 14 };   // (sixteenths of a turn, clockwise from up)
+    const SMALL = new Set(['ds', 'dt', 'ru', 'rd', 'ld']);
     if (open) {
       if (!this.wselOpen) {
         this.wselOpen = true; this.wselPick = h.combat.weapon; el.classList.remove('hidden');
-        if (!el.querySelector('.slot[data-dir="ds"]')) {
-          // a wider ring (the four axis slots are re-placed on it too): eight round slots, the two small ones further out
-          for (const d of ['ur', 'dr', 'dl', 'ul', 'ds', 'dt']) if (!el.querySelector(`.slot[data-dir="${d}"]`)) { const s = document.createElement('div'); s.className = 'slot'; s.dataset.dir = d; el.insertBefore(s, el.querySelector('.mid')); }
+        if (!el.querySelector('.slot[data-dir="ld"]')) {
+          // a wider ring (the four axis slots are re-placed on it too): eight round slots, the small ones further out
+          for (const d of ['ur', 'dr', 'dl', 'ul', 'ds', 'dt', 'ru', 'rd', 'ld']) if (!el.querySelector(`.slot[data-dir="${d}"]`)) { const s = document.createElement('div'); s.className = 'slot'; s.dataset.dir = d; el.insertBefore(s, el.querySelector('.mid')); }
           Object.assign(el.style, { width: '330px', height: '330px', margin: '-165px 0 0 -165px' });
           for (const s of el.querySelectorAll('.slot')) {
             const k = ANG[s.dataset.dir] * Math.PI / 8, sm = SMALL.has(s.dataset.dir), sz = sm ? 46 : 66, r = sm ? 148 : 108, c = 165 - sz / 2;

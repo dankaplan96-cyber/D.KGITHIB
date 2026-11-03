@@ -1,4 +1,4 @@
-# EQUIP-2: LBA3's own weapons and gadgets (concepts; items 1 and 2 approved and built as EQ2-a)
+# EQUIP-2: LBA3's own weapons and gadgets (concepts; items 1–2 built as EQ2-a, items 3–5 as EQ2-b)
 
 The user (2.11.2026): "Weapons and accessories that make the third game its own, not only copies of the first and
 second." Weapons need not come earlier; there must be some through the game. Nothing here is built until the user
@@ -76,3 +76,42 @@ No new lights; effects from the soft particle pool; synth sounds that end by the
 - Pump lance: the condensers' overheated valves (5), the meltwater basin that weighs a gate open (6), the evacuation's
   tunnels (8: a jammed wheel turned by a jet; dust), the core's cooling valves (11, optional help). A chapter takes a
   jet through its own `jetHit(o)` (story/index.js asks the chapter first, then kit2).
+
+## EQ2-b: built (the singing fork, the Esmer line, the heat flask)
+Code: `src/game/tools.js` (rules, models, sounds; `FORK`, `LINE`, `FLASK`), `src/game/story/kit2b.js` (where they come
+from, lessons, puzzles), `src/game/text/kit2b.js`; hooks in `enemies.js` (`Mite.forkRing`/`shudder`, `Sentry.forkRing`/
+`yank`) and `actors.js` (the line's reel takes the body: `Tools.zipStep`); test `tests/equip2b.mjs`. Held tools as EQ2-a:
+small wheel slots (the line between the blowgun and the sword, the fork between the sword and the laser, the flask
+between the glove and the fists; the ball keeps the top) or E in the inventory; the attack key works them. Saved with
+the hero: `hero.arms.fork`, `line`, `heatflask` (the id `flask` is the shop's magic flask) and `heat` (seconds left);
+older saves have none. No new lights; the soft particle pool; synth sounds that end by themselves.
+
+- **Singing fork.** Ilka gives it on the next talk once her notebook is back (chapter 4), then says what the chapter has
+  her say; an older save past that: any later talk with her. Lesson: her old sample niche beside the dig's warm crack:
+  a strike cracks its crystal crust, a second (5 s later) wakes the sleeping crystal as a lamp (the lantern also shows
+  it), her tin: a clover or 10 kashes, once. Fights: mites and crawlers within 6 m shudder 1.5 s (a bite or slam cut
+  short); a sentry's guard drops for one hit (or 2.5 s). Later: the crystal galleries (chapter 11): a slab with a stuck
+  crystal wheel turns and sinks (20 kashes, once).
+- **Esmer line.** Nara's case from chapter 3 (25 kashes; she then tells where to try it); chapter 9 on, her gift after
+  her stamp if never bought. 14 m; only rings, loose things, light enemies (mites, guard dogs, drones but not the
+  hauler). A ring reels him along a route checked for clearance before he leaves and stepped at most 0.2 m at a time
+  (never through anything solid at 10 fps; a blocked route: the cord holds and it says so; interrupted: he falls and the
+  fall's recovery catches him; a save mid-reel keeps the ground he left). Lesson: the old cloud canal at the island's
+  edge nearest her case (found, not fixed: open shore, nothing over the cloud): a mooring rock across a gap of cloud
+  nobody walks, jumps or hops over, a ring on an arch each side; from the rock a cargo crate on a further rock comes to
+  his feet (a clover and 12 kashes, once). Later: a ring on a davit at the old mill's gallery (one pull up; the
+  stair-stones stay). On the rock without the line (an odd save) he is put back on the shore. Fights: a light enemy
+  hauled to 1.5 m; a sentry's shield yanked aside; anything heavier only twangs the cord.
+- **Heat flask.** Tashi, Lhar's smith, once Yorna has told of the frozen winch (chapters 6–7): Baldino radioed the
+  drawing to the monastery; a project heat cell inside. E draws heat at the steam crack by Lhar's falls, the project
+  heat post once it runs, the monks' brazier, the glacier vent once open; one charge, fading in 90 s (the HUD counts it,
+  the cell window glows). Lesson: let out at the frozen winch's ice, it thaws it (the chapter's own thaw follows; no
+  fuse or kite needed; the old way stays). Later: a chest frozen into the ice by the monastery yard (a clover and 10
+  kashes, once). Fights: 2 damage within 2.5 m in front, ice creatures (the Hamalayi's mites) 4; cold, it only clicks.
+
+### Later uses still open (notes)
+- Fork: the core's pylons (12) as an optional help; an awake crystal as a beacon on the network's relays (10).
+- Line: the cloud lifts (9), the pass's ice bridges (6). `kit2b.lineTargets()` is where a place adds a ring
+  ({ kind: 'ring', x, y, z, route(from) → points, arrived() }) or a loose thing ({ kind: 'thing', x, y, z, pull() }).
+- Flask: the observatory's mirror (7), the valve room (8), the deep installation (11). A chapter takes the heat (or the
+  fork's note) through its own `heatHit(o)` / `forkHit(o)` (story/index.js asks the chapter first, then kit2b).

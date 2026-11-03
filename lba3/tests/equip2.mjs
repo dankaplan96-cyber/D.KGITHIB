@@ -93,7 +93,7 @@ const w1 = await ev(() => { const G = game, h = G.hero, H = G.hud; const mv = (d
   const at157 = pick(157.5), at202 = pick(202.5);
   const slots = [...document.querySelectorAll('#wsel .slot')].map((s) => s.dataset.dir);
   return { at157, at202, slots, weapon: h.combat.weapon }; });
-check('the weapon wheel: the pocket set and the lance in small slots beside the pulse tool (stick at 157.5° / 202.5°); the eight old slots stay', w1.at157 === 'pocketset' && w1.at202 === 'lance' && w1.slots.length === 10, w1);
+check('the weapon wheel: the pocket set and the lance in small slots beside the pulse tool (stick at 157.5° / 202.5°); the eight old slots stay (13 slots with EQUIP-2b\'s three)', w1.at157 === 'pocketset' && w1.at202 === 'lance' && w1.slots.length === 13, w1);
 
 // ---- its lesson: the lane's stop-cock, too hot to touch
 const v1 = await ev(() => { const G = game, V = G.story.kit2.valve; G.hero.combat.equip('ball', true); const r = P.use(V.x, V.z, { kind: 'e2_valve', near: 1.0 }); P.settle(); return { r: r.r, open: !!G.flags.e2_valve, journal: G.story.journal().flatMap((j) => j.lines).map((l) => l.key) }; });

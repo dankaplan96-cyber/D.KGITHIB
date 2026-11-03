@@ -7,6 +7,7 @@
 //   blowgun, blowtron, laser, glove, lightning, protect, conch, lantern, jetpack (owned: true/false), jetpackOn (worn)
 //   darts (blowgun ammo, max 30), charge (laser shots from crystal cells, max 20), penguins (max 5), lanternOn
 //   pocketset, lance (EQUIP-2a, tools.js: owned), water (the lance's tank, max 8)
+//   fork, line, flask (EQUIP-2b, tools.js: owned), heat (the flask's carried heat: seconds left, 0..90)
 // Where each comes from: src/game/story/arsenal.js. The gadgets (penguin, protection, conch, lantern): gadgets.js.
 //
 // Rules worth knowing when balancing:
@@ -21,7 +22,7 @@
 import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { angleDiff } from '../engine/math.js';
-import { pocketSetModel, lanceModel } from './tools.js';
+import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel, TOOL_IDS } from './tools.js';
 
 export const ARMS = {
   blowgun: { dmg: 1, speed: 24, range: 17, cool: 0.55, lock: 0.24 },
@@ -33,7 +34,7 @@ export const ARMS = {
 };
 export const RANGED = new Set(['blowgun', 'laser', 'lightning']);
 
-const KEYS = ['blowgun', 'blowtron', 'laser', 'glove', 'lightning', 'protect', 'conch', 'lantern', 'lanternOn', 'jetpack', 'jetpackOn', 'pocketset', 'lance'];
+const KEYS = ['blowgun', 'blowtron', 'laser', 'glove', 'lightning', 'protect', 'conch', 'lantern', 'lanternOn', 'jetpack', 'jetpackOn', 'pocketset', 'lance', 'fork', 'line', 'heatflask'];
 // what a save holds (anything missing or odd becomes the empty default; counts are clamped)
 export function freshArms(a = {}) {
   const o = {};
@@ -43,6 +44,8 @@ export function freshArms(a = {}) {
   if (!o.jetpack) o.jetpackOn = false;   // (Baldino's hop-pack, jetpack.js: owned, and worn)
   if (!o.blowgun) o.blowtron = false;
   if (!o.lance) o.water = 0;
+  // (EQUIP-2b: the heat flask's carried heat, seconds left of tools.js FLASK.keep; none without the flask)
+  o.heat = o.heatflask ? Math.max(0, Math.min(90, +a?.heat || 0)) : 0;
   return o;
 }
 
@@ -185,7 +188,7 @@ export class Weapons {
   get h() { return this.game.hero; }
   get arms() { return this.h.arms || (this.h.arms = freshArms()); }
   // (not while the player is Zoé, or Twinsen in a borrowed technician's coat: chapter 9)
-  owns(w) { const a = this.arms; if (this.h.body === 'zoe' || this.h.body === 'worker') return false; return w === 'blowgun' ? a.blowgun : w === 'laser' ? a.laser : w === 'glove' ? a.glove : w === 'lightning' ? a.lightning : w === 'pocketset' ? a.pocketset : w === 'lance' ? a.lance : false; }
+  owns(w) { const a = this.arms; if (this.h.body === 'zoe' || this.h.body === 'worker') return false; return w === 'blowgun' ? a.blowgun : w === 'laser' ? a.laser : w === 'glove' ? a.glove : w === 'lightning' ? a.lightning : w === 'pocketset' ? a.pocketset : w === 'lance' ? a.lance : w === 'fork' ? a.fork : w === 'line' ? a.line : w === 'heatflask' ? a.heatflask : false; }
   def(w) { return w === 'blowgun' ? (this.arms.blowtron ? ARMS.blowtron : ARMS.blowgun) : ARMS[w]; }
   // what a shot of `w` would cost right now, and whether it can be paid: null = fine, else a toast key
   short(w) {
@@ -318,10 +321,10 @@ export class Weapons {
     const h = this.h, hand = h.rig.j?.armR?.hand, a = this.arms;
     if (!hand) return;
     const w = h.combat?.weapon, other = h.body === 'zoe' || h.body === 'worker';
-    const want = other ? null : w === 'blowgun' ? (a.blowtron ? 'blowtron' : 'blowgun') : w === 'laser' || w === 'glove' || w === 'pocketset' || w === 'lance' ? w : null;
+    const want = other ? null : w === 'blowgun' ? (a.blowtron ? 'blowtron' : 'blowgun') : w === 'laser' || w === 'glove' || TOOL_IDS.includes(w) ? w : null;
     for (const [k, m] of Object.entries(this.models)) m.visible = k === want;
     if (want && !this.models[want]) {
-      const m = want === 'laser' ? pistolModel() : want === 'glove' ? gloveModel() : want === 'pocketset' ? pocketSetModel() : want === 'lance' ? lanceModel() : blowgunModel(want === 'blowtron');
+      const m = want === 'laser' ? pistolModel() : want === 'glove' ? gloveModel() : want === 'pocketset' ? pocketSetModel() : want === 'lance' ? lanceModel() : want === 'fork' ? forkModel() : want === 'line' ? lineModel() : want === 'heatflask' ? flaskModel() : blowgunModel(want === 'blowtron');
       this.models[want] = m;
     }
     const m = want && this.models[want];

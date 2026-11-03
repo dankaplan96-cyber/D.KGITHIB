@@ -219,6 +219,8 @@ export class Hero extends Actor {
       if (this.deathT > 0 && (this.deathT -= dt) <= 0) g.gameOver();
       return;
     }
+    // the Esmer line reeling him to a cord ring (EQUIP-2b, tools.js): it moves and draws him until he lands
+    if (g.gadgets?.tools?.zip && g.gadgets.tools.zipStep(this, dt)) return;
 
     // behaviour switching (1-4, Tab, gamepad bumpers, LBA-style Ctrl + left/right)
     const wheel = input.down('wheel');

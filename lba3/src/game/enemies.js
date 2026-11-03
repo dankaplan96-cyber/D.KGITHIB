@@ -154,6 +154,32 @@ export class Mite extends Actor {
     this.frozenT = t; this.kb.set(0, 0); this.rig.hitFlash();
     return true;
   }
+  // Ilka's singing fork (tools.js, EQUIP-2b): its crystals ring with the note: it shudders where it stands, crystals
+  // flaring, for a while (a bite or a slam cut short), then carries on; blows land as ever meanwhile
+  forkRing(t) {
+    if (!this.alive) return false;
+    if (this.state === 'windup' || this.state === 'lunge' || this.state === 'slam') {
+      this.state = 'chase'; this.bit = false; this.slammed = false;
+      if (this.ring?.isMesh) this.ring.visible = false;
+      this.game.combatDir?.done(this);
+    }
+    this.ringT = t; this.kb.set(0, 0); this.rig.hitFlash();
+    return true;
+  }
+  // a frame of that shudder (Mite and Crawler update): true while it lasts
+  shudder(dt) {
+    if (!(this.ringT > 0)) return false;
+    const g = this.game, P = this.rig.parts;
+    this.ringT = Math.max(0, this.ringT - dt);
+    const k = Math.min(1, this.ringT * 2);
+    P.body.rotation.z = Math.sin(g.time * 38) * 0.12 * k;
+    P.crystal.emissiveIntensity = 1.1 + 2.5 * k + Math.sin(g.time * 30) * 0.6 * k;
+    if (Math.random() < dt * 6) g.particles.burst(this.pos.x, this.pos.y + 0.6 * this.rig.root.scale.y, this.pos.z, '#bff8ff', 1, 1.2);
+    if (this.ringT === 0) P.body.rotation.z = 0;
+    this.applyKnockback(dt);
+    g.physics.fall(this, dt); this.sync();
+    return true;
+  }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
@@ -176,6 +202,7 @@ export class Mite extends Actor {
       g.physics.fall(this, dt); this.sync();
       return;
     }
+    if (this.shudder(dt)) return;   // (the singing fork: EQUIP-2b)
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.coolT = Math.max(0, this.coolT - dt);
     this.recentHitT = Math.max(0, this.recentHitT - dt);
@@ -728,6 +755,22 @@ export class Sentry extends Actor {
     this.damage(ball.damage, p); return 'hit';
   }
   pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.shieldDown; this.rig.hitFlash(); this.game.combatDir?.done(this); }
+  // EQUIP-2b (tools.js). The singing fork: the crystal cells in its armour ring, and the shield arm drops — open for
+  // one hit (or 2.5 s), then the guard comes back up. The Esmer line: the cord yanks the shield aside (the opening a
+  // bash leaves, 1.4 s). Neither while it is already open or knocked about.
+  forkRing() {
+    if (!this.alive || !this.guarding()) return false;
+    this.state = 'open'; this.stateT = 0; this.openFor = 2.5; this.rung = true;
+    this.rig.hitFlash(); this.game.combatDir?.done(this);
+    this.game.particles.burst(this.pos.x, this.pos.y + 1.55, this.pos.z, '#9ff4ff', 8, 1.6);
+    return true;
+  }
+  yank() {
+    if (!this.alive || !this.guarding()) return false;
+    this.state = 'open'; this.stateT = 0; this.openFor = 1.4; this.rung = false;
+    this.rig.hitFlash(); this.game.combatDir?.done(this);
+    return true;
+  }
   blocked(from) {
     this.rig.hitFlash(); this.recentHitT = 2;
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
@@ -739,6 +782,8 @@ export class Sentry extends Actor {
     const g = this.game;
     this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5; this.hurtT = 0.2;
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 3, Math.cos(a) * 3); } // heavy: barely moves
+    // (opened by the singing fork: that was its one hit; the guard comes back up)
+    if (this.rung && this.state === 'open') { this.rung = false; this.openFor = 0; this.state = 'chase'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6); }
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
     if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
   }
@@ -775,7 +820,7 @@ export class Sentry extends Actor {
         // the opening: shield down, panting steam
         this.rig.play('open');
         if (Math.random() < dt * 6) g.particles.burst(this.pos.x, this.pos.y + 1.5, this.pos.z, '#e8e8e8', 1, 1);
-        if (this.stateT > 1.1) { this.state = 'chase'; this.stateT = 0; this.coolT = 1.4 * DF.cool; }
+        if (this.stateT > (this.openFor || 1.1)) { this.state = 'chase'; this.stateT = 0; this.coolT = 1.4 * DF.cool; this.openFor = 0; this.rung = false; }
         break;
       case 'stagger':
         this.rig.play('stagger');
@@ -838,6 +883,7 @@ export class Crawler extends Mite {
     if (koActive(this)) { this.ring.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
+    if (this.shudder(dt)) return;   // (the singing fork: EQUIP-2b)
     this.hurtT = Math.max(0, this.hurtT - dt); this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt);
     const d = this.distTo(hero);
     this.stateT += dt;
