@@ -1933,3 +1933,14 @@ unchanged there since the agent's base fdad24e).
 - Left: the high town and the south terrace are not on the landing's walkable area (silhouette and dressing there);
   Otringal's random dressing is reshuffled (a bench near the arrival view); the yard wall could take a gate arch;
   WORLD_SIMILARITY's objects score for Otringal not re-run; real-GPU timing not measured.
+
+## JUMP-CAPE-1 · Twinsen's tunic in the jump · the laptop, 4.11.2026 (the user: "when Twinsen jumps the tunic looks strange at the arms")
+Pictured in lookdev (Twinsen, jumpPrep / jump 0.1 and 0.3 / fall, four sides): the robed jump (rig.js, `j.skirt`) puts
+the arms out to the sides for balance (`armOut 0.7`, arms −1.3/−1.1); Twinsen's cape sides are tied to the arms
+(WA-16, outfit 'lba'), so they were pulled into flat wings from the body to the wrists, their dark undersides showing.
+`requests/JUMP-CAPE-1.diff` (`engine/rig.js`, `game/characters.js`; applies alone on origin):
+- `rig.capeArms` (set for looks with outfit 'lba': Twinsen); in the jump and the fall his arms stay in and a little
+  forward, elbows bent (arms −0.7/−0.6 up, −0.5 falling, elbows −1.0, armOut 0.2); the landing reach keeps them in
+  (armOut 0.25 instead of 0.75). Other robed characters as before.
+- After (the same lookdev frames): the cape keeps hanging and folds forward with the arms; no wings. Not run: the
+  animation tests (a pose-number change only); worth a look in play and in anim-polish when you merge.
