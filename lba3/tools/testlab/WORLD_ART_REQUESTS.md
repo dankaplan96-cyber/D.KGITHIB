@@ -1897,3 +1897,39 @@ origin aba783e and after HARBOUR-1).
   text (`asy_register1/2`, `as_cell1–3`, Madam Rondo's `idle_sphero2`, `room_asylum` in text/map.js, STORY_BIBLE
   line 278, COMBAT line 529, CONNECTIONS_AUDIT's asylum rows). Grass grows to the front step (`keepClearNew` in
   island.js would clear it; left alone).
+
+### CLOUD_ORDERS 5 and a new one · the user's corrections (4.11.2026)
+- **Order 5 is the climb up to the asylum, not the tavern.** The user: "not to the tavern but up to the asylum; see how
+  it is in the second game." The laptop is paving the way from the town up to the old fort's terrace and the
+  asylum's front door as LBA2's climb north of the square (one straight paved way, dressed stone steps or ramp, stone
+  retaining walls, capped posts, a railing). Request diff to follow (CLIMB-1).
+- **New: no tree inside a house.** The user found a tree inside Twinsen's house. The laptop is checking every tree and
+  plant against every building and room in every area and fixing them at the cause (TREES-1 to follow).
+
+## OTRINGAL-1 · Fewer buildings, each a kind (CLOUD_ORDERS 3, "Cacophony") · the laptop, 4.11.2026
+`requests/OTRINGAL-1.diff` (`zislands.js`: Otringal's layout, house kinds, `yardWall`, per-cell batching; `props-esmer.js`:
+optional `balconyP`/`awningP`, defaults as before; applies clean on origin 1babed1; zislands.js and props-esmer.js
+unchanged there since the agent's base fdad24e).
+- **52 → 28 registered buildings.** The cargo yard's wall (the original's body 146, 20 lengths 1.34 m thick, which
+  our size rule had made into 18 arcaded house shells and two barges) is a wall again: a stone footing, plaster, a
+  tiled band and coping, stone piers with brass knobs at its open corners; the same colliders.
+- **Merges:** the high town's three slivers into one domed hall (a small square west of it, a lane north); two
+  high-town houses into one flat two-storey house; two south-terrace houses into one long house; the lower town's two
+  identical copies into the TRADING POST store; the hotel's neighbour and the high town's store off the walls they
+  shared. One 2 m box on the high town's rim dropped.
+- **Kinds:** warehouses by the harbour and the yard (dressed stone, a wide door, a hoist, flat roofs); stores
+  TRADING POST and MARKET (the island's word list); civic halls with cream domes; houses with flat roofs and parapets,
+  awnings on six, balconies on three. Domes 24 → 10 (the Grand Hall, the hotel, the bar and four others keep theirs
+  for the silhouette). Crate stacks and barrels in the yard. Every door's front kept clear.
+- **Unchanged:** the bar `house (-42.2, -0.4)` and the hotel `house (-15.4, -10.2)` (place, size, facing, doors, FIT);
+  `R.shutDoors` 31 → 26 and `R.peopleSpots` (10) from the doors as before; every other island identical (objects,
+  meshes, triangles, colliders, FIT, doors, spots, samples, POIs compared).
+- **Draw calls and triangles** (SwiftShader, 1280×720 Medium, eight play-camera views): every view down, e.g. the pad
+  37 → 35 calls (340.7k → 332.6k triangles), the plaza 35 → 31, the harbour 27 → 22, the lower town 30 → 26
+  (291k → 242k). Otringal's pieces are batched per 48 m cell (`S.cellBatch`), so a rare wall colour no longer makes one
+  island-wide batch drawn from everywhere.
+- Checked: `tests/zislands.mjs` PASS 13/13; by input the bar's and the hotel's doors lead in; worldfit's scan on
+  Otringal finds nothing (small overlaps 129 → 60).
+- Left: the high town and the south terrace are not on the landing's walkable area (silhouette and dressing there);
+  Otringal's random dressing is reshuffled (a bench near the arrival view); the yard wall could take a gate arch;
+  WORLD_SIMILARITY's objects score for Otringal not re-run; real-GPU timing not measured.
