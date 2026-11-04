@@ -12,7 +12,7 @@ export function buildArena(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'arena', 6200, 0);
   const R = B.room, k = B.k;
   const W = 30, D = 24, H = 3.2;
-  R.view = 24; R.follow = 0.55; R.music = 'facility';
+  R.view = 24; R.wide = true; R.follow = 0.55; R.music = 'facility';
   B.shell({ floor: MAT.tiles('#c8c0b0', '#a8a090', '#7a7468', true, 2), slab: MAT.stone('grey'), body: MAT.stone('sand', 2), low: MAT.stone('slate', 1), rail: MAT.iron(), cap: MAT.stone('grey'), W, D, H, t: 0.5, dado: 1.0, rimH: 0.5 });
   R.spawn = { x: B.cx - 10, z: B.cz + 8, a: Math.PI };
   // a wall with a corner (cover, line of sight, ricochets)

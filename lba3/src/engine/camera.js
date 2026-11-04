@@ -108,6 +108,10 @@ const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, 
 // is out further than it wants, the heading turns slower (to a fifth of CH_VMAX at CH_LAG m out). The pipeline's tube
 // keeps CH_PIPE m more (its stays and saddles stand outside its volume).
 const CH_DIST = { near: { arm: 7.0, pitch: 0.34 }, medium: { arm: 8.75, pitch: 0.42 }, far: { arm: 10.75, pitch: 0.5 } };
+// ISO-CLOSE: the most a room's fixed view shows (its height in metres) at each Camera distance; a room built wider (the
+// asylum and the Bu halls at 24) is shown at this and the view follows him more (the user, 3.11: "Twinsen is tiny
+// against the map, zoom in"). A room marked `wide` (a fight that needs the whole arena) keeps its own.
+const ISO_MAX = { near: 11, medium: 12.5, far: 14 };
 const CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
 const CH_DEAD = 0.25, CH_HW = 4, CH_BACK = (110 * Math.PI) / 180, CH_HOLD_OUT = (95 * Math.PI) / 180;
 const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
@@ -282,7 +286,7 @@ export class CameraRig {
   }
 
   // CAM-FOLLOW: the Follow camera's distance and height (Settings → Camera distance: near, medium, far)
-  setFollowDistance(d) { this.chDist = CH_DIST[d] ?? CH_DIST.medium; }
+  setFollowDistance(d) { this.chDist = CH_DIST[d] ?? CH_DIST.medium; this.isoMax = ISO_MAX[d] ?? ISO_MAX.far; }
   setMode(m) { this.mode = m === 'free' || m === 'follow' ? m : 'lba'; this.lba.init = false; if (this.fr) this.fr.init = false; if (this.ch) this.ch.init = false; }
   // Interiors: fixed isometric view rotated 45°, like LBA2's indoor scenes.
   setIso(room) { this.iso = room; this.snap(); }
@@ -1535,10 +1539,10 @@ export class CameraRig {
 
   _iso(dt, hero) {
     const cam = this.cam, R = this.iso;
-    const dist = 90;
-    cam.fov = (2 * Math.atan((R.view / 2) / dist) * 180) / Math.PI;
+    const dist = 90, view = R.wide ? R.view : Math.min(R.view, this.isoMax ?? ISO_MAX.far), closer = view < R.view;   // (ISO-CLOSE)
+    cam.fov = (2 * Math.atan((view / 2) / dist) * 180) / Math.PI;
     cam.updateProjectionMatrix();
-    const goal = R.center.clone().lerp(hero, R.follow ?? 0.3);
+    const goal = R.center.clone().lerp(hero, closer ? Math.max(R.follow ?? 0.3, 0.85) : R.follow ?? 0.3);
     // the view rises and falls with the floor under the hero (rooms on several levels: a gallery, a stair), not
     // with his jumps
     const gy = this.physics ? this.physics.groundAt(hero.x, hero.z, hero.y + 0.3) : R.center.y;
@@ -1551,7 +1555,7 @@ export class CameraRig {
     {
       const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw), rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
       const dx = hero.x - goal.x, dz = hero.z - goal.z, dr = dx * rx + dz * rz, df = dx * fx + dz * fz;
-      const half = R.view / 2, maxR = half * (cam.aspect || 1.78) * 0.42, maxF = (half * 0.36) / Math.sin(pitch);
+      const half = view / 2, maxR = half * (cam.aspect || 1.78) * 0.42, maxF = (half * 0.36) / Math.sin(pitch);
       const er = dr - clamp(dr, -maxR, maxR), ef = df - clamp(df, -maxF, maxF);
       goal.x += er * rx + ef * fx; goal.z += er * rz + ef * fz;
     }

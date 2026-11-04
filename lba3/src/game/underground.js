@@ -1435,7 +1435,7 @@ function buildCore(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'c3core', 2200, 0);
   const R = B.room, k = B.k, kt = new Kit(B.group);
   const Rr = 12.2, ringIn = 11.6, DX = 12.4, DYh = 9.6;
-  R.view = 22.5; R.follow = 0.25; R.cave = true; R.music = 'boss';
+  R.view = 22.5; R.wide = true; R.follow = 0.25; R.cave = true; R.music = 'boss';
   const rock = rockMat('#9c90a8'), rockD = rockMat('#6c6078');
   const F0 = (3 * Math.PI) / 4, F1 = (7 * Math.PI) / 4, N0 = -Math.PI / 4;
   const ENT = Math.PI * 0.78;
