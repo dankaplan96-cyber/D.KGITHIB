@@ -121,7 +121,8 @@ export const ISLE_PEOPLE = {
   // ---------------------------------------------------------------- the Mosquibee Orchard (cloud catcher 0, 0; press house door 8.1, 27.5)
   orchard: { people: [
     { id: 'or_pell', char: 'oku', tint: '#fff0dc', color: '#e8b070', speed: 0.8, rounds: {
-      ord: [at('pe_press', 4.1, 18.6, 'browse', [16, 22], { d: 1.2, gest: ['nod'] }), at('pe_crates', -0.4, 15.6, 'put', [6, 9], { d: 1.0 }), at('pe_honey', 6.1, 17.1, 'browse', [6, 9], { d: 1.0 })],
+      // (his round keeps to the press yard's west side: the press house's giver, by its door, stays out of talk reach)
+      ord: [at('pe_crates', -0.4, 15.6, 'browse', [16, 22], { d: 1.0, dir: -PI / 2, gest: ['nod'] }), at('pe_crates2', -4.4, 18.1, 'put', [6, 9], { d: 1.0 }), at('pe_bed', -1.4, 13.1, 'browse', [6, 9], { d: 1.4, dir: -PI / 2 })],
     } },
     { id: 'or_pick1', char: 'nara', tint: '#fffbe6', color: '#f0d880', speed: 0.9, rounds: {
       ord: [at('p1_bed', -3.9, 7.6, 'tend', [10, 14], { d: 1.4 }), at('p1_bed2', 4.6, 7.6, 'tend', [10, 14], { d: 1.4, carry: 'basket' }), at('p1_crates', -4.4, 18.1, 'put', [5, 7], { carry: null, d: 1.0 })],
@@ -227,7 +228,7 @@ function avoidList(R, name, o) {
   if (R.pad) out.push({ x: R.pad.x, z: R.pad.z, r: 3.7 });
   if (R.board) out.push({ x: R.board.x, z: R.board.z, r: 2.0 });
   for (const d of R.shutDoors || []) out.push({ x: d.x, z: d.z, r: 1.5 });
-  for (const g of R.givers || []) out.push({ x: g.x, z: g.z, r: 3.0 });   // (out of talk reach, 2.6 m: a hop by a giver is not taken for a talk)
+  for (const g of R.givers || []) out.push({ x: g.x, z: g.z, r: 3.6 });   // (well out of talk reach, 2.6 m: a hop by a giver is not taken for a talk)
   for (const s of R.searches || []) if (s.x != null) out.push({ x: s.x, z: s.z, r: 1.6 });
   for (const [x, z, r] of ISLE_PEOPLE[name]?.avoid || []) out.push({ x: o.x + x, z: o.z + z, r });
   for (const t of Object.values(ISLE_THINGS[name] || {})) if (t?.x != null && t.prompt) out.push({ x: t.x, z: t.z, r: 1.6 });
