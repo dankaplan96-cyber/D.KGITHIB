@@ -1833,3 +1833,67 @@ is missing from LBA2 be clear. That and the hostel fit together, so the decision
   offices, the plaque and the sign as objects, and `R.npcSpots` (worker1…, cook, foreman, sleeper, guard1–2,
   hiddenCrate, veskDesk, plaque). The cloud writes the people, lines, the notebook, the crate find, the guards'
   patrol and the chapter states on those handles, after the diff is merged. Text in English, short; Esmer naming.
+
+## HARBOUR-1 · Citadel's harbour wing in one language (CLOUD_ORDERS 3, "Cacophony") · the laptop, 4.11.2026
+`requests/HARBOUR-1.diff` (island.js `cargoLift` only, harbourshed.js, town.js the `wing2` row, townlife.js Nell's
+roof, travel.js the Citadel stop board, citydress.js; applies clean on origin fdad24e). The wing now reads as LBA2's
+harbour: stone and rubble houses under slate and boards, plank sheds, the Esmer trading house as the one foreign
+building, the project shown by its emblems and crate stack. No story place, door, interaction spot, flag or line moved.
+- The barge and its slewing lift **kept** (the opening uses them, 13–29 s: `W.cargoLift.pose/shake`, the crate,
+  `cratePierW`): the look only, shapes, sizes, poses and colliders unchanged. The teal column and arm become a dark
+  timber mast and boom with iron straps; the brass winch housing slate-grey iron (the emblem kept); the teal hull a
+  darker plank lighter with a rubbing strake (the emblem kept).
+- The harbour master's shed: the blue tile roof becomes weathered boards (one material fewer).
+- Nell's home (`wing2`): block stone becomes rubble (as LBA2's body 49), pairing with Doran's shed.
+- Nell's stall: the orange painted roof becomes boards with a little old red paint (its own material: the fade works).
+- The ferry stop board faces the quay and the way from town (the camera saw only its blank back); timber posts.
+- **Removed:** citydress's second ferry timetable board, 6 m from the stop's own board (nothing used it).
+- Left as they were: the ticket office (LBA2's ashlar hall), Mr Bazoo's, the customs booth, the project ferry, the
+  quay's project crate stack (the story shows and hides it), the Esmer trading house with its dome (approved, WA-15b).
+- Draw calls (SwiftShader, one frame, main / shadow): customs 128/48 → 127/48, pier 107/59 → 106/59, trading house
+  180/48 = , ticket office and Nell's 133/56 → 132/56, Bazoo's 152/54 = ; triangles about −0.1 %.
+- Checked on the agent's base f520b75: chapter1 PASS, shops PASS, worldfit only the existing house-nbr failure. On
+  fdad24e: the diff applies clean, the game boots without errors (13 minutes under the night's load: chapter1 and
+  opening timed out waiting for the boot, not on a check). To rerun on fdad24e when the laptop is quiet: chapter1,
+  opening (the lift), shops.
+- Left (notes): the customs booth's navy roof; the town's blue-globe lamps (LBA2's harbour lamps were warm yellow);
+  the project ferry's teal hull. Cut 9 (the ticket office into the baggage claim, Nell's interior) is the story's.
+
+### ASYLUM-2 · Built: the hostel, Vesk's store, the two entrances · the laptop, 4.11.2026
+`requests/ASYLUM-2.diff` (new `src/game/asylumhostel.js`; `lba1places.js`; `WORLD_MAP.md`'s row; applies alone on
+origin aba783e and after HARBOUR-1).
+- **Two entrances as LBA1:** the front door, a brick portico with a slate pediment, an Esmer tile roundel and the sign
+  "JOINT PROJECT · WORKERS' HOSTEL", against the old fort's south wall at (−26.5, −50.6) facing south: where the only
+  stair onto the fort's terrace (`ASYLUM_STEPS`) arrives, the first thing seen on the way up; inside, LBA1's tall
+  portal at the upper walk's east end (`asylum-front`). The block-house on the east wall is the side door (its sign
+  "Joint Project / Service stair · staff only"). Both ways, every chapter; `lba1Doors` lists the front first.
+- **The hostel:** the dormitory (bunks on LBA1's brick bed plinths, lockers, a washing line, a shrine), the common
+  room (hammocks), the hall, the kitchen and mess in the nurses' station, cell A as a sleeping room (a door cut, a step
+  down), Twinsen's cell kept as the workers' curiosity (a rope barrier, a brass plaque "CELL 2"; ASYLUM-1's marks,
+  pipe and look untouched), the foreman's office (ledgers, a duty board, the clone statues in the corner with coats
+  on them), the service hall by the side stair with the Council's plaque at the broken bricking. Warm lamps; the
+  room's grade 0.32 → 0.45, a little warm.
+- **Vesk's store:** in the boiler room under the side stair, crate stacks stamped ZEELICH in two aisles with cover,
+  two guard posts, the humming crate behind the boiler; **Vesk's office** (LBA1's sealed room, a door cut at z 30):
+  his desk, notebook, FunFrock's plans, a strongbox, an open crate of crystals.
+- **Handles:** `R.npcSpots` foreman, worker1–4 (worker4 'sit'), cook, sleeper ('lie'), guard1, guard2 (each with x, y,
+  z, a, role and the LBA1 place it came from); `R.ways.front/side`; `R.asylumHostel.spots` hiddenCrate, veskDesk,
+  plaque, register, cellPlaque (`{x, z, r}`); `R.asylumHostel.veskOffice.door.setOpen(b, instant)` (shut at first,
+  collision follows); `R.asylumHostel.store.setCleared(b)` (the crates, the humming crate and the guard posts and
+  their 9 colliders); `R.asylumHostel.hum.setOn(b)`. No save state of its own.
+- **Draw calls** (SwiftShader, one frame, 11 spots in the room): 134–191 → 206–292; triangles about 70–86k →
+  220–300k; outside the front door 202 → 216. The room was already the heaviest LBA1 room (its cut-away meshes); real
+  GPU numbers follow with the night's hardware checks.
+- Checked on b9bf660 (the agent's base): lba1rooms 8/8 (the plateau stair, in by the front, out by the stair-well),
+  transitions 6/6, asylum 10/10 (save → quit → Continue); by input both doors both ways, the cell, the register, the
+  giver, the store's aisles and the hidden crate, Vesk's office shut and open. On aba783e: the merge (the DECLUTTER
+  header and `LBA1_AT` without the Bu halls) and a smoke run (the room builds, both doors, every handle, no page
+  errors); the full tests to rerun when the laptop is quiet.
+- **For the cloud:** `lba1EnemyDefs` still posts Quetch guards at all seven nurse spots, an fclone and two dogs (one
+  dog at cell (30, 5, 30) is inside a wall): per your answer, two of Vesk's guards on guard1/guard2 in chapters 1–2,
+  none in 3–7 (and `lba1rooms.mjs`'s "8 or more guards" with it); the people, lines and chapters on the npcSpots; the
+  finds (the hidden crate, the notebook, a look at the Council plaque, the cell plaque's text); the chapter states
+  (Vesk's door, `store.setCleared(true)` in 3–7, set on each entry; close Vesk's door only with Twinsen outside); the
+  text (`asy_register1/2`, `as_cell1–3`, Madam Rondo's `idle_sphero2`, `room_asylum` in text/map.js, STORY_BIBLE
+  line 278, COMBAT line 529, CONNECTIONS_AUDIT's asylum rows). Grass grows to the front step (`keepClearNew` in
+  island.js would clear it; left alone).
