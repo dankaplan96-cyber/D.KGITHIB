@@ -11,6 +11,10 @@ import { Babble, voiceStyle } from './voice.js';
 const VOICE_BOOST = 2.2, MUSIC_DUCK = 0.5; // VOICE-MIX
 const VOICE_MAKEUP = 2.2; // VOICE-MIX-2: after the voice compressor (see the voice chain below)
 const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
+// AUDIO-FIX: what keeps the room on the audio thread is its length in frames (Chromium's ReverbConvolver hands frames
+// past 8192 + 4096 to a background thread), not in seconds: 0.25 s is 12000 frames at 48 kHz but 24000 at 96 kHz and
+// 48000 at 192 kHz, rates a Windows laptop's output may run at. The impulse is held under the limit at any rate.
+const REVERB_MAX_FRAMES = 12000;
 
 export class AudioEngine {
   constructor() {
@@ -92,9 +96,34 @@ export class AudioEngine {
     this.sfxBus.connect(this.reverb); // the music files carry their own room
     this.noiseBuf = this._noise(2);
     this.applyVolumes();
+    this._watchPlayout();
     this._ambient();
     this.music.start();
     this.music.setMood(this.mood);
+  }
+
+  // AUDIO-FIX: the crackle measured where it happens. Chromium counts the output's underruns (frames the device had to
+  // fill because the page's audio came late: AudioContext.playoutStats, on in the desktop build, desktop/main.js;
+  // behind a flag in Chrome). Every 5 s the count is read; a rise is logged once with what the context runs at, and
+  // stats() gives the totals (tests, the user's console: game.audio.stats()).
+  _watchPlayout() {
+    const ps = this.ctx.playoutStats;
+    this.playout = { supported: !!ps, events: 0, ms: 0, at: [] };
+    if (!ps) return;
+    const base = { e: ps.fallbackFramesEvents || 0, ms: ps.fallbackFramesDuration || 0 };
+    setInterval(() => {
+      const e = (ps.fallbackFramesEvents || 0) - base.e, ms = (ps.fallbackFramesDuration || 0) - base.ms;
+      if (e > this.playout.events) {
+        this.playout.at.push({ t: +this.ctx.currentTime.toFixed(1), n: e - this.playout.events });
+        if (this.playout.at.length > 50) this.playout.at.shift();
+        console.info(`audio: ${e} underruns (${ms.toFixed(0)} ms) since start; ${this.ctx.sampleRate} Hz, buffer ${(this.ctx.baseLatency * 1000).toFixed(0)} ms, output ${((ps.averageLatency || 0)).toFixed(0)} ms`);
+      }
+      this.playout.events = e; this.playout.ms = ms;
+    }, 5000);
+  }
+  stats() {
+    const c = this.ctx;
+    return c ? { sampleRate: c.sampleRate, baseLatency: c.baseLatency, outputLatency: c.outputLatency, reverbFrames: this.reverb?.buffer?.length, ...this.playout } : null;
   }
 
   applyVolumes() {
@@ -115,7 +144,7 @@ export class AudioEngine {
 
   _impulse(sec) {
     const ctx = this.ctx;
-    const len = ctx.sampleRate * sec;
+    const len = Math.min(Math.round(ctx.sampleRate * sec), REVERB_MAX_FRAMES);
     const b = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let c = 0; c < 2; c++) {
       const d = b.getChannelData(c);

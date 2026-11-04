@@ -8,6 +8,15 @@ const ev = (f, a) => page.evaluate(f, a);
 await open(page, '?nocine'); await menu(page, 'new');
 const ok = await ev(() => !!game.audio.ctx);
 check('the audio context starts with the first click (New Game)', ok, await ev(() => game.audio.ctx?.state));
+// AUDIO-FIX: the effects' room stays on the audio thread (≤ 12000 frames: Chromium's convolver hands frames past
+// 12288 to a background thread) at this context's rate and at the rates a laptop's output may run at; the underrun
+// watcher is there (playoutStats: counted where the browser offers it)
+const room = await ev(async () => {
+  const A = game.audio, out = { here: A.stats() };
+  for (const sr of [44100, 96000, 192000]) { const c = new OfflineAudioContext(2, 1, sr); out[sr] = A._impulse.call({ ctx: c }, 0.25).length; }
+  return out;
+});
+check('the effects room is ≤ 12000 frames at the context rate and at 44.1 / 96 / 192 kHz; stats() reports the context', room.here?.reverbFrames <= 12000 && room[44100] <= 12000 && room[96000] <= 12000 && room[192000] <= 12000 && room.here.sampleRate > 0 && 'events' in room.here, room);
 
 // volumes through the settings sliders
 await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
