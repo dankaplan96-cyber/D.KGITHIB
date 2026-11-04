@@ -26,7 +26,10 @@ const take = async (pick) => ev((pick) => {
   const id = G.room?.id, R = G.room, p = id === 'zeelich' ? R.shuttlePad : R.pad;
   const ready = () => P.target()?.kind === 'isleShuttle';
   const r = P.go(p.x, p.z, { tol: 3.6, stopWhen: ready, maxT: 120 }); P.face(p.x, p.z);
-  if (!ready()) return { fail: 'no prompt', r, at: [h.pos.x, h.pos.z] };
+  // (stopped at the very edge of the prompt's reach, turning to the pad can lose it: a step closer, as a player would)
+  if (!ready()) { P.go(p.x, p.z, { tol: 2.2, stopWhen: ready, maxT: 30 }); P.face(p.x, p.z); }
+  if (!ready()) { const t = P.target(); return { fail: 'no prompt', r, at: [h.pos.x, h.pos.z], dPad: +Math.hypot(p.x - h.pos.x, p.z - h.pos.z).toFixed(2), y: +h.pos.y.toFixed(2), padY: p.y, target: t && (t.kind + ':' + (t.npc?.def?.id || t.label)), state: G.state, beh: h.behaviour, body: h.body, trans: !!G.trans,
+    npcs: G.npcs.filter((n) => n.present && Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) < 4).map((n) => n.def.id), foes: G.enemies.filter((e) => e.present && Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 12).map((e) => e.def.id) }; }
   P.tap('KeyE', 0.1);
   const items = [...document.querySelectorAll('#shop .item')].map((b, i) => ({ i, text: b.textContent, disabled: b.disabled }));
   const i = items.findIndex((it) => it.text.startsWith(pick));
