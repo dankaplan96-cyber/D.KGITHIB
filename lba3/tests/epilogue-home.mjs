@@ -109,7 +109,8 @@ is('Zeelich: Nara and Oku on the street, Baldino back at his bench, each with a 
 
 // Desert Island: Kesh's square
 const des = await ev(() => {
-  const G = game; if (G.room?.id === 'workshop') { const e = G.room.exits[0]; G.hero.pos.set(e.x, G.hero.pos.y, e.z); G.step(1.6); T.talkAll(); }
+  const G = game; G.hero.arms.fork = true;   // (a player at the epilogue has Ilka's fork from chapter 4: EQUIP-2b; without it she would give it now instead of her word)
+  if (G.room?.id === 'workshop') { const e = G.room.exits[0]; G.hero.pos.set(e.x, G.hero.pos.y, e.z); G.step(1.6); T.talkAll(); }
   G.story.isles.go('desert_ferry'); for (let i = 0; i < 30 && (G.trans || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
   G.story.refreshCast(); G.step(0.3);
   const pz = G.rooms.desert.plaza, bore = G.rooms.desert.bore;
