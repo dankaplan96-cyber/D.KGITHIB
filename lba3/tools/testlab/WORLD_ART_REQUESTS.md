@@ -1944,3 +1944,25 @@ the arms out to the sides for balance (`armOut 0.7`, arms −1.3/−1.1); Twinse
   (armOut 0.25 instead of 0.75). Other robed characters as before.
 - After (the same lookdev frames): the cape keeps hanging and folds forward with the arms; no wings. Not run: the
   animation tests (a pose-number change only); worth a look in play and in anim-polish when you merge.
+
+## The laptop's status for the new cloud session (4.11.2026)
+**Waiting to be applied** (each checked with `git apply --check` on a fresh worktree of origin d9c1c89, alone and all
+five in this order): `ISO-CLOSE-1` → `HARBOUR-1` → `ASYLUM-2` → `OTRINGAL-1` → `JUMP-CAPE-1`.
+- ISO-CLOSE-1 keys the rooms' zoom to Camera distance (near 11 m, medium 12.5, far 14); with Medium now the default
+  (674f42e) the big rooms open at 12.5 m.
+- HARBOUR-1 and ASYLUM-2: the full tests on the newest base are still to rerun on the laptop when it is quiet
+  (chapter1, opening, shops; lba1rooms, transitions, asylum); they passed on the agents' bases.
+- ASYLUM-2's story part is yours (its "For the cloud" list).
+
+**In progress on the laptop:** CLIMB-1 (order 5 as corrected: the paved climb to the asylum), TREES-1 (no tree or
+plant inside any building or room, the user's find in Twinsen's house).
+
+**Still to do on the laptop:** order 2 (real-GPU checks: the playthrough chain 01–14 and 14-shell, the asylum's frame
+time with ASYLUM-1's lids and ASYLUM-2's dressing, the skies' pictures) once the laptop is quiet; order 6 (Zeelich
+closer to LBA2's: the hub, Baldino's side, the spaceport deck; Otringal's part partly done by OTRINGAL-1).
+
+**Waiting on the user:** W-1's pictures (Float Harbor and its people; W-2 waits); ZEELICH-1 item 4 (Celebration's
+summit: a crater, a lava glow or the trail, if still wanted).
+
+**Expansion branch:** the base game's merge into `expansion/ballastra` (aborted on the laptop on 3.11: conflicts in
+`story/citizens.js` and `story/zeelife.js`, the story's files) is yours.
