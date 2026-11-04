@@ -201,7 +201,8 @@ class Beat {
   apply(dt) {
     const g = this.game, rig = this.rig, cam = rig.cam, G = this.G;
     // lost the scene it was made for: gone, with nothing to undo (the camera is the play camera's this frame)
-    if (g.room?.id !== this.room || g.state === 'title' || g.state === 'loading' || g.state === 'gameover' || g.hero?.dead) { this.end(); return; }
+    // (outdoors there is no room: undefined and null are the same scene)
+    if ((g.room?.id ?? null) !== this.room || g.state === 'title' || g.state === 'loading' || g.state === 'gameover' || g.hero?.dead) { this.end(); return; }
     dt = Math.min(dt, 0.1);
     this.t += dt;
     G.pos.copy(cam.position); G.quat.copy(cam.quaternion); G.fov = cam.fov; G.look.copy(rig.look); G.ok = true;
@@ -222,7 +223,9 @@ class Beat {
     cam.position.copy(M.look).addScaledVector(M.dir, M.d);
     cam.lookAt(M.look);
     const fov = (2 * Math.atan(M.h / (2 * M.d))) / DEG;
-    if (Math.abs(cam.fov - fov) > 1e-4) { cam.fov = fov; cam.updateProjectionMatrix(); }
+    // (the play camera's near cut, camera.js NEAR-CUT, is for the follow view: a framing of its own draws all of its people)
+    const near = rig.near0 ?? cam.near;
+    if (Math.abs(cam.fov - fov) > 1e-4 || cam.near !== near) { cam.fov = fov; cam.near = near; cam.updateProjectionMatrix(); }
     rig.look.copy(M.look);
   }
 }
