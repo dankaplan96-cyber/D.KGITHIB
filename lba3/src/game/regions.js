@@ -34,7 +34,7 @@ import { buildObsRoom } from './obsroom.js';
 import { buildUpper3 } from './upper.js';
 import { buildValveRoom } from './valveroom.js';
 import { buildArena } from './arena.js';
-import { ISLES, hasIsland, buildIsle } from './zislands.js';
+import { ISLES, SLOTS, hasIsland, buildIsle } from './zislands.js';
 import { buildSewerRooms } from './sewers.js';
 import { buildTavernRoom } from './tavern.js';
 import { buildBazooRoom } from './bazoo.js';
@@ -43,6 +43,9 @@ import { buildPharmacyRoom } from './pharmacy.js';
 import { buildNbrHouseRoom } from './nbrhouse.js';
 import { buildZTerminalRoom } from './zterminal.js';
 import { buildTerminalRoom } from './terminal.js';
+import { buildOtrBarRoom } from './otrbar.js';
+import { buildOtrHotelRoom } from './otrhotel.js';
+import { buildCelTempleRoom } from './celtemple.js';
 import { buildTraluCaveRoom } from './tralucave.js';
 import { buildBaggageRoom } from './baggage.js';
 import { buildTavCellarRoom } from './tavcellar.js';
@@ -53,8 +56,8 @@ import { buildBallastra, buildBallastraSteps } from './ballastra/harbor.js';   /
 // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
 const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, workshop: 180, lighttop: 140, cellar: 70,
   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
-  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
-  isle_celebration: 160, isle_undergas: 320, isle_cxislet: 80, isle_platform: 180, isle_liftdock: 120, isle_tralu: 290,
+  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, otrbar: 120, otrhotel: 120, celtemple: 120, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
+  isle_celebration: 160, isle_undergas: 320, isle_platform: 180, isle_liftdock: 120,
   isle_orchard: 230, isle_oldwatch: 90, isle: 250, ballastra: 420 };
 // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
 // data-only questions such as "which scene is this point in" (regions.sceneOf; the tests' harness). Checked against
@@ -62,10 +65,10 @@ const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, w
 const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [1300, 0], control: [1400, 0], workshop: [1500, 0],
   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
-  bumaze: [7200, 0], buhalls: [7400, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], bl_shed: [3800, -3000] };
+  bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
+  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], bl_shed: [3800, -3000] };
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000] };
-const isleAt = (id) => { const i = ISLES.indexOf(id.slice(5)); return i >= 0 ? [1900 + i * 330, 1800] : null; };
+const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
 
 // The areas a chapter's own code works in while it is the chapter in progress (its cast's spots, its doors, its
@@ -105,14 +108,13 @@ function groupDefs() {
   add('butemple', ['butemple'], buildTemple);
   for (const [id, fn] of Object.entries(WIZARD_ROOMS)) add(id, [id], (S, P) => ({ [id]: fn(S, P) }));
   if (hasLba1Room('asylum')) add('asylum', ['asylum'], buildLba1Asylum);
-  const bu = ['bumaze', 'buhalls'].filter(hasLba1Room);
-  if (bu.length) add('bumaze', bu, buildLba1Temple);
+  if (hasLba1Room('bumaze')) add('bumaze', ['bumaze'], buildLba1Temple);   // (DECLUTTER: the dark halls are merged into the maze)
   { const st = one('hamalayi', buildHamalayiSteps); add('hamalayi', ['hamalayi'], whole(st), st); }
   add('obsv', ['obsv'], buildObsRoom);
   add('upper', ['upper', 'council', 'archive'], buildUpper3);
   add('valves', ['valves'], (S, P) => ({ valves: buildValveRoom(S, P) }));
   add('arena', ['arena'], (S, P) => ({ arena: buildArena(S, P) }));
-  add('sewer', ['sewer', 'sewervault'], buildSewerRooms);   // (WA-14: Citadel's old sewers and their treasure room)
+  add('sewer', ['sewer', 'sewervault', 'sewerglobe'], buildSewerRooms);   // (WA-14: Citadel's old sewers and their treasure room)
   add('tavern', ['tavern'], buildTavernRoom);   // (LBA-CITADEL-1: Chez Luc, LBA2's scene 3, in the 'south' house)
   add('bazoo', ['bazoo'], buildBazooRoom);   // (LBA-CITADEL-2: Mr Bazoo's shop, LBA2's scene 14, in the 'museum' building)
   add('ticket', ['ticket'], buildTicketRoom);   // (LBA-CITADEL-3: the ticket office, LBA2's scene 8, in the 'baggage' building)
@@ -125,6 +127,9 @@ function groupDefs() {
   add('zterminal', ['zterminal'], buildZTerminalRoom);   // (SPACEPORT-1: the terminal at Zeelich Spaceport, after LBA2's departure and arrival halls (scenes 78, 82))
   add('terminal', ['terminal'], buildTerminalRoom);   // (SPACEPORT-1: the terminal at Citadel Spaceport, after LBA2's departure hall (scene 78))
   add('ballastra', ['ballastra', 'bl_shed'], buildBallastra, buildBallastraSteps);   // (EXPANSION W-1: Float Harbor and Tessa's shed, src/game/ballastra/)
+  add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
+  add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
+  add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)
   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
   return G;
 }

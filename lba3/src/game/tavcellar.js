@@ -20,6 +20,7 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, railing } from './props.js';
+import { sackPile, boxStack, goodsShelf } from './roomdress.js';
 
 export const TAVCELLAR_AT = { x: 8000, z: 0 };
 
@@ -44,8 +45,10 @@ export function buildTavCellarRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, a fifth higher, the camera closer and
   //  following Twinsen; the crates and drums keep their size)
-  const F = 1.5, W = 15 * F, D = 8.6 * F, H = 5.4;
-  R.view = 12; R.follow = 0.65; R.music = 'home';
+  // (ROOMS-FULL, the user 3.11, "the rooms feel empty … maybe shrink a little and add detail": 1.25 times, the store
+  //  stocked further)
+  const F = 1.25, W = 15 * F, D = 8.6 * F, H = 5.0;
+  R.view = 11.5; R.follow = 0.65; R.music = 'home';
   // (the tavern's pale grey blocks)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
@@ -78,13 +81,18 @@ export function buildTavCellarRoom(scene, physics) {
   k.add(rbox(W / 2 - SX1 + 0.04, 0.1, D + 0.04, 0.02), cap, (SX1 + W / 2) / 2, SH - 0.05, 0);
   k.add(plane(W / 2 - SX1 - 0.2, D - 0.2), MAT.stone('grey', 2), (SX1 + W / 2) / 2, SH + 0.005, 0, 0, { rx: -Math.PI / 2 });
   B.col((SX1 + W / 2) / 2, 0, (W / 2 - SX1) / 2, D / 2, SH);
-  // --- the dark drop between the walkway and the store (the original's void), railed off on every side
+  // --- the dark drop between the walkway and the store (the original's void), railed off on every side but one
+  //     stretch of the walkway's railing, broken off long ago (SEWERS-1, S-2: as LBA2's, the hole drops into the old
+  //     sewers' hall: story/sewers.js takes him there as he falls; Old Fenn in the tavern warns about it)
   k.add(plane(SX1 - AX1, D / 2 - AZ1), MAT.flat('#121216', 0.95), (AX1 + SX1) / 2, 0.01, (AZ1 + D / 2) / 2, 0, { rx: -Math.PI / 2 });
-  const railM = TEAL();
-  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
+  const railM = TEAL(), GZ = 1.0, GW = 0.65;   // (the gap: 1.3 m of the walkway's railing, in the middle of its run)
+  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, GZ + GW]], { h: 0.95, mat: railM, step: 0.45 }));
+  k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, GZ - GW], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
+  k.add(rbox(0.05, 0.05, 0.9, 0.01), railM, AX1 + 0.6, 0.03, GZ + 0.2, 0.5);   // (the broken rail, down on the cellar floor)
+  R.drop = { x0: B.cx + AX1 + 0.1, x1: B.cx + SX1, z0: B.cz + AZ1 + 0.1, z1: B.cz + D / 2, y: WH, edge: { x: B.cx + AX1 - 0.45, z: B.cz + GZ } };
   railing(k, [[SX0, AZ1 + 0.05], [SX1, AZ1 + 0.05]], { h: 0.95 + (WH - SH), mat: railM, step: 0.45 });
   k.at(0, SH, 0, 0, () => railing(k, [[SX1 + 0.05, AZ1 + 0.05], [SX1 + 0.05, D / 2 - 0.12], [W / 2 - 0.4, D / 2 - 0.12]], { h: 0.95, mat: railM, step: 0.45 }));
-  B.col(AX1 + 0.05, (AZ1 + D / 2) / 2, 0.06, (D / 2 - AZ1) / 2, WH + 1.0, { seeThrough: true, noStand: true });
+  for (const [z0, z1] of [[GZ + GW, D / 2], [AZ1, GZ - GW]]) B.col(AX1 + 0.05, (z0 + z1) / 2, 0.06, (z1 - z0) / 2, WH + 1.0, { seeThrough: true, noStand: true });
   B.col((AX1 + SX1) / 2, AZ1 + 0.05, (SX1 - AX1) / 2, 0.06, WH + 1.0, { seeThrough: true, noStand: true });
   B.col(SX1 + 0.05, (AZ1 + D / 2) / 2, 0.06, (D / 2 - AZ1) / 2, SH + 1.0, { seeThrough: true, noStand: true });
   B.col((SX1 + W / 2) / 2, D / 2 - 0.12, (W / 2 - SX1) / 2, 0.06, SH + 1.0, { seeThrough: true, noStand: true });
@@ -100,9 +108,15 @@ export function buildTavCellarRoom(scene, physics) {
   for (const x of [-4.0 * F, 0.5 * F, 4.5 * F]) { k.add(rbox(0.6, 0.7, 0.12, 0.05), cap, x, 4.0, BZ + 0.06); k.add(sphere(0.16, 12, 8), MAT.glow('#fff4e0', '#ffd890', 1.1), x, 4.0, BZ + 0.12); B.light('#ffe8c8', 2.8, 8, x, 3.8, BZ + 0.6); }
   for (const x of [SX1 + 0.05, W / 2 - 0.35]) { k.add(rbox(0.6, SH + 2.0, 0.6, 0.05), stone, x, (SH + 2.0) / 2, D / 2 - 0.3); k.add(sphere(0.26, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.0), x, SH + 2.25, D / 2 - 0.3); B.col(x, D / 2 - 0.3, 0.3, 0.3, SH + 2.3, { noStand: true }); }
   // twelve years on: the project's copper heat pipe along the back wall
-  k.add(cyl(0.06, 0.06, W - 0.4, 10), MAT.copper(), 0, 4.9, BZ + 0.15, 0, { rz: Math.PI / 2 });
-  for (const x of [-9, -3, 3, 9]) k.add(rbox(0.06, 0.2, 0.12, 0.01), MAT.iron(), x, 4.9, BZ + 0.1);
+  k.add(cyl(0.06, 0.06, W - 0.4, 10), MAT.copper(), 0, 4.6, BZ + 0.15, 0, { rz: Math.PI / 2 });
+  for (const x of [-9, -3, 3, 9]) k.add(rbox(0.06, 0.2, 0.12, 0.01), MAT.iron(), x * F / 1.5, 4.6, BZ + 0.1);
 
+  // ROOMS-FULL: the store stocked further — sacks by the stair's foot and the balustrade, parcels in the far corner, a
+  // second rack of bottles on the back wall
+  B.put(2.6 * F, 3.2 * F, 0.3, (kk) => sackPile(kk, { seed: 3 }), { y: SH });
+  B.put(6.0 * F, -3.6 * F, 1.2, (kk) => sackPile(kk, { seed: 7 }), { y: SH });
+  B.put(W / 2 - 0.5, 3.4 * F, 0.1, (kk) => boxStack(kk, { n: 3, seed: 6, w: 0.6 }), { y: SH });
+  B.put(3.6 * F, BZ + 0.2, 0, (kk) => goodsShelf(kk, { w: 1.2, h: 1.9, d: 0.34, rows: 4, pal: 'dark', goods: (g, w, y, row) => { for (let i = 0; i < 6; i++) jar(g, -w / 2 + 0.1 + i * ((w - 0.2) / 5), y, 0.02, 'bottle', ['#2f8a9a', '#2f7a74', '#7a3a2a'][(i + row) % 3], 1.0); } }), { y: SH });
   B.light('#ffe2b8', 4.5, 15, 4.5 * F, 4.4, 0.5); B.light('#ffe2b8', 3.5, 12, -5.0 * F, 4.6, 0.5);
   return { tavcellar: B.finish() };
 }

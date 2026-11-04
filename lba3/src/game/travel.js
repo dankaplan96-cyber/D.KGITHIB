@@ -34,7 +34,7 @@ import './text/islands.js';
 export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)] };
 export const planetOf = (region) => (PLANETS.zeelich.includes(region) ? 'zeelich' : 'twinsun');
 // interiors and the regions they open from (the rest of the interiors are on Citadel)
-const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', zterminal: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', buhalls: 'desert', school: 'desert', obsv: 'hamalayi' };
+const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', zterminal: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', school: 'desert', obsv: 'hamalayi' };
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;
@@ -48,7 +48,9 @@ export const lastOutdoorPos = () => lastPos;
 // ================================================================== the travel points
 // (world coordinates; Zeelich's spaceport is ours: a deck over the clouds off the terminal island's south shore)
 const ZPORT = { x0: -14, x1: 6, z0: 33, z1: 51, bridge: { x: -4, z0: 26.0, z1: 33, hw: 1.8 }, pad: { x: -4, z: 44 } };
-const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, -Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
+// (HARBOUR-ONE: the Citadel ferry board faces east, toward the quay and the way from town, where the play camera looks
+// from: facing the pier, only its blank back was ever seen; same place, same collider (an unturned box))
+const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
   glider: { x: -107, z: -64, plane: [-111.5, -62.5, 0.2], board: [-102.6, -61.4, -2.2], sock: [-103.5, -67.5], land: { x: -105.2, z: -64.6, a: -Math.PI / 2 } } };
 const DES = { ferry: { x: 3320.5, z: 4, board: [3323.4, 8.2, Math.PI], land: null }, glider: { x: 3340, z: -35, plane: [3342, -40, 0.3], board: [3334.4, -30.6, Math.PI * 0.8], sock: [3346.5, -31], land: { x: 3337.4, z: -33.2, a: Math.PI * 0.75 } } };
 
@@ -97,7 +99,7 @@ export function buildTravel(game) {
   if (W.spaceport) pt('citadel_port', { region: 'citadel', mode: 'ship', x: W.spaceport.pad.x, z: W.spaceport.pad.z, r: 5.0, landing: W.spaceport.landing, name: 'tr_citadel_port' });
   {
     const f = CIT.ferry; pt('citadel_ferry', { region: 'citadel', mode: 'ferry', x: f.x, z: f.z, r: 3.2, landing: f.land, name: 'tr_citadel_harbour' });
-    boardMesh(W.root, f.board[0], gy(f.board[0], f.board[1]), f.board[1], f.board[2], { title: 'FERRY', lines: ['DESERT ISLAND', 'FROM THIS QUAY'] });
+    boardMesh(W.root, f.board[0], gy(f.board[0], f.board[1]), f.board[1], f.board[2], { title: 'FERRY', lines: ['DESERT ISLAND', 'FROM THIS QUAY'], frame: '#6e5238' });   // (HARBOUR-ONE: timber posts, as the quay's; they were blue)
     P.add({ type: 'box', x: f.board[0], z: f.board[1], hw: 0.15, hd: 1.1, top: gy(f.board[0], f.board[1]) + 2.7, noStand: true });
     const g = CIT.glider; pt('citadel_glider', { region: 'citadel', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_citadel_field' });
     const pl = buildGlider(); pl.position.set(g.plane[0], gy(g.plane[0], g.plane[1]), g.plane[1]); pl.rotation.y = g.plane[2]; W.root.add(pl); G.travel.vehicles.citadel_glider = pl;

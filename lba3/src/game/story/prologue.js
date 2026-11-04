@@ -19,6 +19,7 @@ import { ChapterBase } from './base.js';
 import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
 import { mergeStatic } from '../../engine/merge.js';
+import { revealBeat, solidAt } from './revealcam.js';
 import '../text/well.js';
 
 const V = POI.village;
@@ -65,6 +66,8 @@ export class Prologue extends ChapterBase {
       // Twinsun's wizards (src/game/wizards.js): Bersimon in his tent; the rector and Ker'aooc at the School of Magic
       { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...(R.wtent?.npcSpots?.bersimon || { x: 0, z: 0, a: 0, pending: true }), angle: R.wtent?.npcSpots?.bersimon?.a ?? 0 },
       { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...(R.school?.npcSpots?.magus || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.magus?.a ?? 0 },
+      // SEWERS-1 (S-4): Fosse, the sewer man (LBA2's grumbling sewer worker, twelve years on), at the old hall's east pier
+      { id: 'fosse', name: 'n_fosse', char: 'farmerC', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
       { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...(R.school?.npcSpots?.keraooc || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.keraooc?.a ?? 0 },
     ];
   }
@@ -210,6 +213,7 @@ export class Prologue extends ChapterBase {
     f.intro = true; f.opening = true;
     if (!this.game.hero.hasBall) f.ballHint = true; // (Zoé said "Take your magic ball": the objective shows that step)
     this.opening = null;
+    this.ferryAway();
     this.story.refreshCast();
     g.hud.show(true);
     document.querySelector('#touch')?.classList.toggle('hidden', !g.touch);
@@ -325,16 +329,21 @@ export class Prologue extends ChapterBase {
       const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d) => d.house));
       // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
       if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
-      W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
+      // (PURPOSES: the 'shop' house is Tibbo's counter, its door story/shops.js's)
+      W.houses.forEach((h, i) => { if (i > 0 && h.id !== 'shop' && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
       // from the door's own level, not from the slope above it)
       // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })
       for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', id: d.id, label: 'p_door' });
       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
     } else {
-      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
+      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: s.label || 'p_search' });
       // (WORLD-80 step 3: an outdoor region's shut doors, Desert Island's old places: desertold.js)
-      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+      // (DOORS-1: every house door on Zeelich's islands and street is one; where the story has a door into the same
+      //  house (a bar, a hotel, a temple) that one is offered, not "Locked.")
+      const live = g.room.shutDoors?.length ? [...cur.doors(), ...(this.story.doors?.() || [])].filter((e) => e.x != null) : [];
+      // (PURPOSES: the kept old houses on Desert Island are lived in: their doors are story/purposes.js's, d.own)
+      for (const d of g.room.shutDoors || []) if (!d.own && Math.abs(g.hero.pos.y - d.y) < 1.6 && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
     }
   }
   interactables(consider, dist) {
@@ -356,11 +365,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
       case 'roomsearch':
-        if (it.spot.id === 'asylum_register') {   // FunFrock's asylum (LBA1): the old register in the office
-          g.searched.push(it.spot.id); g.audio.play('chest');
-          this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
-          return true;
-        }
+        if (this.asylumSearch(it)) return true;
         if (it.spot.id !== 'cupboard') return false;
         g.searched.push(it.spot.id);
         h.hasBall = true;
@@ -412,6 +417,26 @@ export class Prologue extends ChapterBase {
     return false;
   }
 
+  // FunFrock's asylum (LBA1), in every chapter (ASYLUM-1: from chapter 1 on, the generic search below took them and
+  // said "Nothing here."): the old register in the office; Twinsen's old cell, his marks, the warm pipe, a find
+  asylumSearch(it) {
+    const g = this.game, f = this.f, h = g.hero;
+    if (it.spot.id === 'asylum_register') {
+      g.searched.push(it.spot.id); g.audio.play('chest');
+      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+      return true;
+    }
+    if (it.spot.id === 'as_cell') {
+      g.searched.push(it.spot.id); f.as_cell = true;
+      this.chain([['hero', 'as_cell1'], ['hero', 'as_cell2'], ['hero', 'as_cell3']], () => {
+        g.audio.play('chest');
+        for (let i = 0; i < 5; i++) g.pickups.spawn('coin', it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z, h.pos.y + 1) + 1, it.spot.z, { pop: true });
+        g.save(false);
+      });
+      return true;
+    }
+    return false;
+  }
   baseInteract(it) {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
@@ -435,6 +460,7 @@ export class Prologue extends ChapterBase {
         g.say('', [t('pr_chest')]);
         return true;
       case 'roomsearch':
+        if (this.asylumSearch(it)) return true;
         g.searched.push(it.spot.id);
         g.audio.play('chest');
         if (it.spot.reward) g.pickups.spawn(it.spot.reward, it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z) + 1, it.spot.z, { pop: true });
@@ -589,9 +615,15 @@ export class Prologue extends ChapterBase {
     this.pending = { t: 0.5, fn: () => this.chain([['hero', 'pr_lid_kicked'], ...(gil?.present && gil.distTo(h) < 9 ? [['gilbert', 'pr_gil_told']] : [])], () => { g.updateObjective(); g.save(false); }) };
   }
 
+  // FERRY-1 (the user, 4.11: the project's ship stood docked all through chapter 1, then "arrived" again in chapter 2):
+  // the ferry the resident boards in the opening sails on its round once the opening is over (nobody is at the harbour
+  // to see it go: the opening ends in the house), and chapter 2 brings it back with Vesk (chapter1.js startArrival).
+  ferryAway() { this.game.world.ferry?.setVisible?.(false); }
+
   // restore world state from saved flags
   applyFlags() {
     const g = this.game, f = this.f;
+    if (this.isCur() && f.opening) this.ferryAway();
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
     g.hero.hasKey = !!f.key;
     this.setLid(this.lidState());
@@ -680,6 +712,59 @@ export class Prologue extends ChapterBase {
     g.audio.play('rumble');
     this.veinTarget = new THREE.Vector3(R.vein.x + 0.3, R.vein.y + 0.3, R.vein.z - 0.7);
     g.audio.cue('revelation');
+    this.glow = { on: false, k: 0 };
+    if (!R.updaters.includes(this.glowU)) R.updaters.push(this.glowU ??= (dt2) => this.sendellGlow(dt2));
+    this.sendellShots();
+    this.shot?.('hand');
+  }
+
+  // SENDELL-CINE (the user, 4.11: "make it cinematic: close-ups, a more impressive staging and camera"): the call as a
+  // run of shots laid over the same clock and the same lines (revealcam.js beats: no flag, line or save changes; with
+  // beats off — ?nocine, the tests' fixed stepping — it plays in the room's view as before). The wind-up over his
+  // shoulder, the ball's flight from the side, the vein taking it in close, then his face and the vein in turn as Sendell
+  // speaks: Twinsen always on the left looking right at the vein (one screen direction). Every lens stands inside the
+  // last chamber, out of the rock, and looks north or west, into the cave's standing walls (its south and east walls
+  // are cut away for the play view); the hero stands still all through, so the spots are worked out once.
+  sendellShots() {
+    const g = this.game, h = g.hero, R = g.rooms.well, V = R.vein, T = this.veinTarget, B = g.ball;
+    const beat = revealBeat(g, { room: 'well', in: 0.45 });
+    this.beat = beat;
+    this.shot = null;
+    if (!beat) return;
+    const cx = V.x - 8, cz = V.z + 5.1;   // (the cave's centre: the vein stands at (8, -5.1) in its frame, interiors.js)
+    const box = { x0: cx + 5.0, x1: cx + 10.05, z0: cz - 6.0, z1: cz + 6.4 };
+    const H = h.pos.clone(), fy = H.y;
+    let fx = T.x - H.x, fz = T.z - H.z; const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+    // (the side a lens stands on: square to his line to the vein, toward the chamber's open east side)
+    let sx = -fz, sz = fx; if (sx < 0) { sx = -sx; sz = -sz; }
+    const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+    const at = (f, s, y) => V3(H.x + fx * f + sx * s, fy + y, H.z + fz * f + sz * s);
+    // in the chamber and out of the rock: drawn toward what it looks at until it is
+    const fit = (p, look) => {
+      p.x = Math.min(box.x1, Math.max(box.x0, p.x)); p.z = Math.min(box.z1, Math.max(box.z0, p.z)); p.y = Math.max(fy + 0.3, Math.min(fy + 3.4, p.y));
+      for (let i = 0; i < 24 && solidAt(g, p.x, p.y, p.z, 0.3); i++) p.lerp(look, 0.12);
+      return p;
+    };
+    const head = V3(H.x, fy + 1.9, H.z);   // (his eyes stand about 2 m up)
+    const ballAt = () => (B.mesh.visible ? B.mesh.position : T);
+    // a framing that eases its lens `creep` m toward what it looks at over `secs`, from the moment it is shown
+    const still = (pos, look, fov, creep = 0, secs = 4) => { const p0 = fit(pos.clone(), look), lk = look.clone(), s0 = t0; return () => { const k = Math.min(1, (beat.t - s0) / secs), e = k * (2 - k); return { pos: p0.clone().lerp(lk, (creep / Math.max(0.1, p0.distanceTo(lk))) * e), look: lk, fov }; }; };
+    let t0 = 0;
+    const S = {
+      // the wind-up, low over his right shoulder: the ball trembling in his raised hand, the vein beyond
+      hand: () => { const p = fit(at(-2.0, 1.2, 1.4), head); return () => ({ pos: p, look: ballAt().clone().lerp(T, 0.35), fov: 46 }); },
+      // the flight, from behind and beside him, panning with the ball as it is drawn from him to the wall
+      fly: () => { const p = fit(at(-1.5, 2.8, 1.6), T), mid = head.clone().lerp(T, 0.5); return () => ({ pos: p, look: mid.clone().lerp(ballAt(), 0.45), fov: 54 }); },
+      // the vein taking it in, from high over his shoulder (the crystals' fan stands out a metre or two from the wall)
+      sink: () => still(V3(T.x - fx * 4.2 + sx * 0.6, T.y + 1.3, T.z - fz * 4.2 + sz * 0.6), V3(T.x, T.y + 0.1, T.z), 40, 0.6, 1.2),
+      // his face in profile, lit by the vein, room ahead of his look
+      face: () => still(at(0.35, 2.7, 1.95), V3(H.x + fx * 0.35, fy + 1.8, H.z + fz * 0.35), 36, 0.2, 3),
+      // Sendell: low behind him, the vein blazing over him (he is small against it)
+      vein: () => still(at(-2.4, 1.3, 0.45), head.clone().lerp(T, 0.62).add(V3(0, 0.55, 0)), 52, 0.5, 5),
+      // her words: in on the vein, slowly
+      close: () => still(V3(T.x - fx * 3.2 + sx * 1.6, T.y + 0.1, T.z - fz * 3.2 + sz * 1.6), V3(T.x, T.y + 0.25, T.z), 44, 0.8, 4.5),
+    };
+    this.shot = (k, secs = 0.35) => { if (!beat.active || !S[k]) return; t0 = beat.t; beat.show(S[k](), secs); };
   }
   updateSendell(dt) {
     const g = this.game, h = g.hero, R = g.rooms.well, B = g.ball;
@@ -699,7 +784,7 @@ export class Prologue extends ChapterBase {
       B.mesh.scale.setScalar(1 + w * 0.3);
       B.mat.emissiveIntensity = 2.5 + w * 3;
       R.vein.power = w * 0.35;
-      if (c >= T_REL) { this.released = true; this.p0 = this.handPos.clone(); B.flash(this.p0.x, this.p0.y, this.p0.z, 0.45, false); }
+      if (c >= T_REL) { this.released = true; this.p0 = this.handPos.clone(); B.flash(this.p0.x, this.p0.y, this.p0.z, 0.45, false); this.shot?.('fly', 0.3); }
     }
     if (this.released && !this.absorbed) {
       const k = Math.min(1, (c - T_REL) / T_FLY), e = ease(k);
@@ -716,7 +801,7 @@ export class Prologue extends ChapterBase {
       B.mat.emissiveIntensity = 5.5 + e * 3;
       R.vein.power = 0.35 + e * 0.5;
       g.camRig.shake(0.05 * Math.sin(k * Math.PI));
-      if (c >= T_IN) { this.absorbed = true; this.landPos = B.mesh.position.clone(); B.flash(this.landPos.x, this.landPos.y, this.landPos.z, 2.2); g.camRig.shake(0.3); g.audio.play('heal'); }
+      if (c >= T_IN) { this.absorbed = true; this.landPos = B.mesh.position.clone(); B.flash(this.landPos.x, this.landPos.y, this.landPos.z, 2.2); g.camRig.shake(0.3); g.audio.play('heal'); this.shot?.('sink', 0.25); }
     }
     if (this.absorbed) {
       // into the crystal: it goes a little further in as it shrinks and dims, the vein flaring as it takes it
@@ -730,7 +815,28 @@ export class Prologue extends ChapterBase {
     if (c > 2.6 && !this.spoke) {
       this.spoke = true;
       g.cutscene = null;
-      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue());
+      // (each line its shot; while Sendell speaks the vein swells and motes of light rise off it: sendellGlow)
+      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue(),
+        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close'][i], i === 0 ? 0.6 : 0.3); });
+    }
+  }
+  // the vein while Sendell speaks: brighter, breathing with the words, a few motes of light drifting up off it (the
+  // vein's own light: no new one)
+  sendellGlow(dt) {
+    const g = this.game, R = g.rooms.well, V = R.vein, G = this.glow;
+    // (the ball's flashes and trail are aged in play only: through the scene and its lines they age here, or the release's
+    // ring stood frozen round his hand, and the vein's over the crystals)
+    if (g.state !== 'play' && this.f.sendellHeard && !this.f.prologueDone) g.ball.fx?.(dt);
+    if (!G || (this.f.prologueDone && !G.on && G.k <= 0)) return;
+    G.k = Math.max(0, Math.min(1, G.k + (G.on ? 1.6 : -1.2) * dt));
+    if (G.k <= 0) { if (G.lit) { G.lit = false; V.power = 0; } return; }
+    G.lit = true;
+    V.power = Math.max(V.power ?? 0, G.k * (0.75 + 0.3 * Math.sin(g.time * 3.3)));
+    G.acc = (G.acc ?? 0) + dt * 14 * G.k;
+    for (; G.acc >= 1; G.acc--) {
+      const u = Math.random() * 2 - 1;
+      g.particles.spawn({ x: V.x + u * 2.0, y: 0.3 + Math.random() * 2.4, z: V.z + 0.9 + Math.random() * 0.6, vx: (Math.random() - 0.5) * 0.12, vy: 0.35 + Math.random() * 0.35, vz: 0.12,
+        color: Math.random() < 0.25 ? '#d8b8ff' : '#c8faff', a: 0.75, s0: 0.07, s1: 0.025, life: 2.0 + Math.random(), grav: -0.05, drag: 0.4, drift: 0.25, add: 1, cell: 0, fi: 0.2, fo: 0.4 });
     }
   }
   endPrologue() {
@@ -738,7 +844,9 @@ export class Prologue extends ChapterBase {
     this.f.prologueDone = true;
     g.ball.state = 'idle';
     g.ball.mesh.visible = false; g.ball.track = false; g.ball.span = 0.4; g.ball.mesh.scale.setScalar(1);
+    for (const fl of g.ball.flashes || []) fl.glow.visible = fl.ring.visible = false;
     g.rooms.well.vein.power = 0;
+    if (this.glow) this.glow.on = false;
     g.audio.play('victory');
     // on to chapter 1: fade out of the cave, title card, morning in the square
     g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());

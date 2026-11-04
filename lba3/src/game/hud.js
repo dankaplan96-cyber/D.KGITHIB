@@ -8,6 +8,7 @@ import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
 import { stage, lookOf, TURN } from './itemlook.js';
+import { TOOL_IDS } from './tools.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -118,7 +119,8 @@ export class HUD {
     if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
     // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
     const a = h.arms || {};
-    const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : '';
+    // (EQUIP-2b: the heat flask's carried heat, the seconds it has left; '—' cold)
+    const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : w === 'lance' ? `${a.water}/8` : w === 'heatflask' ? (a.heat > 0 ? `${Math.ceil(a.heat)}s` : '—') : '';
     let ae = el.querySelector('.ammo');
     if (!ae) { ae = document.createElement('span'); ae.className = 'ammo'; ae.style.cssText = 'font-weight:800;color:#ffe35a;font-size:13px;min-width:1ch'; el.querySelector('.name').after(ae); }
     if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
@@ -130,10 +132,12 @@ export class HUD {
     const ballOut = h.hasBall && !g.ball.ready;
     r.classList.toggle('out', w === 'ball' && ballOut);
     const shoot = w === 'blowgun' || w === 'laser' || w === 'lightning';
-    r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0 || shoot && (c.shotCool > 0 || !!g.weapons?.short(w)));
+    const tool = TOOL_IDS.includes(w) && g.gadgets?.tools;   // (EQUIP-2a/2b: a recharge, an empty tank, a cold flask)
+    r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0 || shoot && (c.shotCool > 0 || !!g.weapons?.short(w)) || !!tool && (tool.cool(w) > 0 || !!tool.short(w)));
     if (w === 'pulse') r.style.setProperty('--k', `${100 * (1 - c.pulseCool / 5)}%`);
     else if (shoot) r.style.setProperty('--k', g.weapons?.short(w) ? '0%' : `${100 * (1 - c.shotCool / (g.weapons?.def(w)?.cool || 1))}%`);
-    r.style.display = w === 'ball' || w === 'pulse' || shoot ? '' : 'none';
+    else if (tool) r.style.setProperty('--k', tool.short(w) ? '0%' : `${100 * (1 - tool.cool(w))}%`);
+    r.style.display = w === 'ball' || w === 'pulse' || shoot || tool ? '' : 'none';
     this.weaponShowT = Math.max(0, (this.weaponShowT || 0) - 1 / 60);
     const engaged = c.busy || g.targeting?.lock || g.combat > 0.3;
     el.classList.toggle('show', this.weaponShowT > 0 || !!engaged);
@@ -169,25 +173,36 @@ export class HUD {
   // the selector ring: open while held; returns the chosen weapon when it closes
   weaponSelect(open, h, input) {
     const el = $('#wsel'); if (!el) return null;
-    // eight slots: the four first weapons on the axes, the arsenal's four (weapons.js) on the diagonals
-    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists', ur: 'blowgun', dr: 'laser', dl: 'glove', ul: 'lightning' };
-    const ANG = { up: 0, ur: 1, right: 2, dr: 3, down: 4, dl: 5, left: 6, ul: 7 };   // (eighths of a turn, clockwise from up)
+    // eight slots: the four first weapons on the axes, the arsenal's four (weapons.js) on the diagonals; EQUIP-2a's two
+    // tools (tools.js) in small slots either side of the pulse tool, a sixteenth of a turn off it (ds, dt): the stick
+    // reaches them between down and a lower diagonal (when they are owned); the keys' eight directions keep their old
+    // slots; the mouse wheel, the swap key and the inventory reach every one. EQUIP-2b's three take small slots the same
+    // way: the line between the blowgun and the sword (ru), the fork between the sword and the laser (rd), the flask
+    // between the glove and the fists (ld). The ball keeps the top to itself.
+    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists', ur: 'blowgun', dr: 'laser', dl: 'glove', ul: 'lightning', ds: 'pocketset', dt: 'lance', ru: 'line', rd: 'fork', ld: 'heatflask' };
+    const ANG = { up: 0, ur: 2, ru: 3, right: 4, rd: 5, dr: 6, ds: 7, down: 8, dt: 9, dl: 10, ld: 11, left: 12, ul: 14 };   // (sixteenths of a turn, clockwise from up)
+    const SMALL = new Set(['ds', 'dt', 'ru', 'rd', 'ld']);
     if (open) {
       if (!this.wselOpen) {
         this.wselOpen = true; this.wselPick = h.combat.weapon; el.classList.remove('hidden');
-        if (!el.querySelector('.slot[data-dir="ur"]')) {
-          // a wider ring of eight (the four axis slots are re-placed on it too)
-          for (const d of ['ur', 'dr', 'dl', 'ul']) { const s = document.createElement('div'); s.className = 'slot'; s.dataset.dir = d; el.insertBefore(s, el.querySelector('.mid')); }
-          Object.assign(el.style, { width: '300px', height: '300px', margin: '-150px 0 0 -150px' });
-          for (const s of el.querySelectorAll('.slot')) { const k = ANG[s.dataset.dir] * Math.PI / 4; Object.assign(s.style, { width: '66px', height: '66px', right: 'auto', bottom: 'auto', left: `${117 + Math.sin(k) * 108}px`, top: `${117 - Math.cos(k) * 108}px`, fontSize: '22px' }); }
-          Object.assign(el.querySelector('.mid').style, { left: '130px', top: '130px' });
+        if (!el.querySelector('.slot[data-dir="ld"]')) {
+          // a wider ring (the four axis slots are re-placed on it too): eight round slots, the small ones further out
+          for (const d of ['ur', 'dr', 'dl', 'ul', 'ds', 'dt', 'ru', 'rd', 'ld']) if (!el.querySelector(`.slot[data-dir="${d}"]`)) { const s = document.createElement('div'); s.className = 'slot'; s.dataset.dir = d; el.insertBefore(s, el.querySelector('.mid')); }
+          Object.assign(el.style, { width: '330px', height: '330px', margin: '-165px 0 0 -165px' });
+          for (const s of el.querySelectorAll('.slot')) {
+            const k = ANG[s.dataset.dir] * Math.PI / 8, sm = SMALL.has(s.dataset.dir), sz = sm ? 46 : 66, r = sm ? 148 : 108, c = 165 - sz / 2;
+            Object.assign(s.style, { width: `${sz}px`, height: `${sz}px`, right: 'auto', bottom: 'auto', left: `${c + Math.sin(k) * r}px`, top: `${c - Math.cos(k) * r}px`, fontSize: sm ? '18px' : '22px' });
+          }
+          Object.assign(el.querySelector('.mid').style, { left: '145px', top: '145px' });
         }
         for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${this.wpName(h, w)}</small>` : ''; }
       }
       const mv = input.move();
       if (Math.hypot(mv.x, mv.y) > 0.5) {
-        const e8 = (Math.round(Math.atan2(mv.x, mv.y) / (Math.PI / 4)) + 8) % 8;
-        const dir = Object.keys(ANG).find((k) => ANG[k] === e8);
+        const a = Math.atan2(mv.x, mv.y), e16 = (Math.round(a / (Math.PI / 8)) + 16) % 16;
+        // a small slot only when it holds a tool; otherwise the nearest of the eight
+        let dir = Object.keys(ANG).find((k) => SMALL.has(k) && ANG[k] === e16 && h.combat.has(DIRS[k]));
+        if (!dir) { const e8 = (Math.round(a / (Math.PI / 4)) + 8) % 8; dir = Object.keys(ANG).find((k) => !SMALL.has(k) && ANG[k] === e8 * 2); }
         if (h.combat.has(DIRS[dir]) && this.wselPick !== DIRS[dir]) { this.wselPick = DIRS[dir]; this.game.audio.play('blip'); }
       }
       if (input.wheelSteps) { const own = h.combat.owned(); const i = own.indexOf(this.wselPick); this.wselPick = own[(i + (input.wheelSteps > 0 ? 1 : own.length - 1)) % own.length]; }

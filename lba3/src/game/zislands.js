@@ -26,18 +26,24 @@ import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
-import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
+import { placeLayout, PLACES, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 import { fitAdd } from './worldfit.js';
+import { buildCelPortal } from './celtemple.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
 // saves keep a position on an island.)
 //   liftdock    the original's ASCENCE: a cargo lift dock on stilts at the cloud line (ZL-ALL)
 //   celebration is the original's CELEBRA2 since ZL-ALL: Celebration Island after the great figure rose from it
-export const ISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform', 'liftdock', ...PLACES];
+// DECLUTTER (the user, 3.11.2026: "whatever stays must give something to the journey"): the CX islet and Tralu Rock are
+// cut. SLOTS keeps every island's old index, so an island's place in the world (ISLE_AT) and a save on it stay as they
+// were; a save made on a cut island lands on Zeelich (main.js migrateSave, REMOVED_ROOMS).
+export const SLOTS = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform', 'liftdock', 'tralu', 'orchard', 'oldwatch'];
+export const CUT_ISLES = new Set(['cxislet', 'tralu']);
+export const ISLES = SLOTS.filter((n) => !CUT_ISLES.has(n));
 export const OURS = new Set(PLACES);
 // the names on the shuttles' departures boards (the menus use the text table: text/islands.js)
-export const BOARD_NAME = { zeelich: 'ZEELICH SPACEPORT', otringal: 'OTRINGAL', knartas: 'KNARTAS', mosquibee: 'MOSQUIBEE', celebration: 'CELEBRATION', undergas: 'UNDER CELEBRATION', cxislet: 'CX ISLET', platform: 'THE PLATFORM', liftdock: 'THE LIFT DOCK', tralu: 'TRALU ROCK', orchard: 'NECTAR ORCHARD', oldwatch: 'THE OLD WATCH' };
+export const BOARD_NAME = { zeelich: 'ZEELICH SPACEPORT', otringal: 'OTRINGAL', knartas: 'KNARTAS', mosquibee: 'MOSQUIBEE', celebration: 'CELEBRATION', undergas: 'UNDER CELEBRATION', platform: 'THE PLATFORM', liftdock: 'THE LIFT DOCK', orchard: 'NECTAR ORCHARD', oldwatch: 'THE OLD WATCH' };
 // far from every other region and from each other (the biggest patch is ≈ 210 m across)
 export const ISLE_AT = (i) => ({ x: 1900 + i * 330, z: 1800 });
 const SEA = -9;            // the ground under the clouds, past every island's edge
@@ -71,7 +77,7 @@ export function buildIslands(scene, physics) {
 // island's words, so it is the same whichever island is built first.
 export function buildIsle(scene, physics, n) {
   EP.setSignWords(ESMER_WORDS);
-  return buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(ISLES.indexOf(n)));
+  return buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(SLOTS.indexOf(n)));
 }
 
 // ================================================================== layout analysis (on the data grid)
@@ -234,6 +240,16 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
       const sc = Math.abs(g1 - o.y) + 0.5 * Math.max(0, Math.abs(g2 - o.y) - 1) + (f === mid ? 0 : 0.35);
       if (sc < best - 1e-6) { best = sc; o.face = f; }
     }
+    // (DOORS-1: a house packed in on every side still has its door: onto the alley or lane beside it, where the
+    // ground goes on a metre out and no other house stands in a narrow strip before the door)
+    if (!o.face) for (const f of [mid, [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const g1 = at(o.x + f[0] * (o.sx / 2 + 0.9), o.z + f[1] * (o.sz / 2 + 0.9));
+      const r = f[0] ? { x0: Math.min(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), x1: Math.max(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), z0: o.z - 0.7, z1: o.z + 0.7 }
+        : { x0: o.x - 0.7, x1: o.x + 0.7, z0: Math.min(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)), z1: Math.max(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)) };
+      if (g1 == null || Math.abs(g1 - o.y) > 0.3 || [at(r.x0, r.z0), at(r.x1, r.z0), at(r.x0, r.z1), at(r.x1, r.z1)].some((v) => v == null) || blocked(r)) continue;
+      const sc = Math.abs(g1 - o.y) + (f === mid ? 0 : 0.35);
+      if (sc < best - 1e-6) { best = sc; o.face = f; }
+    }
     if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) o.face = mid;   // (the Grand Hall's portico stands toward the plaza)
     o.noDoor = !o.face; o.face ??= mid;
     const i0 = Math.max(0, Math.floor(gx(o.x - o.sx / 2 - FIT_M))), i1 = Math.min(nx - 1, Math.ceil(gx(o.x + o.sx / 2 + FIT_M)));
@@ -332,13 +348,113 @@ function shapeOf(o, S = {}) {
 const ESMER_WORDS = ['SHUTTLE', 'GRAND HALL', 'MARKET', 'FOUNTAIN', 'HARBOUR', 'VILLAGE', 'LIGHTHOUSE', 'HIVES',
   'MEADOW', 'HONEY', 'FESTIVAL', 'STAGE', 'GAS WORKS', 'PUMP HOUSE', 'OUTPOST', 'RADIO MAST', 'DEPOT', 'CRANE',
   'LOADING DECK', 'KEEP CLEAR', 'NO NAKED FLAMES', 'MIND THE EDGE', 'CRANE AREA', 'LOOKOUT', 'BRIDGE', 'HIGH TOWN',
-  'LIFT', 'CARGO DOCK', 'TRADING POST', 'QUAY', 'WEIGH BEAM', 'ORCHARD', 'PRESS HOUSE', 'CLOUD CATCHER', 'OLD WATCH', 'TELESCOPE', 'THE FIGURE'];
+  'LIFT', 'CARGO DOCK', 'TRADING POST', 'QUAY', 'WEIGH BEAM', 'ORCHARD', 'PRESS HOUSE', 'CLOUD CATCHER', 'OLD WATCH', 'TELESCOPE', 'THE FIGURE',
+  'MINE', 'BUILDING COMPANY', 'CHAPEL', 'ORE'];   // (ZEELICH-1 item 5: the Wannies' island)
+// OTR-VARIETY (the cloud's night order 3, "Cacophony"; docs/future/CLUTTER_AUDIT.md): Otringal's original house
+// positions were all drawn as the same domed Esmer shell, a field of copies. On the original's numbers (its big masses
+// where they were, ~80 %): neighbours built wall to wall become one building (some kept off the walls they met face to
+// face), a filler is left out, and the yard's twenty wall lengths (the original's body 146, 1.34 m thick: drawn as
+// houses only because they were not thinner) are the cargo yard's wall again. Each building has a kind that says what
+// it is: warehouses by the quay and in the yard (dressed stone, a wide door and a hoist, a flat roof), stores with a
+// sign, houses up the lanes (flat roofs with a parapet, balconies, awnings), and domes only on the civic buildings
+// round the plaza and a few landmarks of the high town.
+// The harbour bar's and the Imperial Hotel's houses (otrbar.js, otrhotel.js find their doors by these names) are
+// not touched. Otringal only: its STYLE's layout, shape and house below.
+// (no new materials: a kind takes one of the island's wall colours, or the stone a warehouse is built of; each new
+// material would be one more island-wide mesh drawn from every view)
+const OTR_CIVIC = 3, OTR_COOL = 4;   // (STYLE.otringal.walls: the pale cream, the lilac grey)
+const OTR = {
+  // the original's buildings (x, z) built as one, in the box round them or the box given ([x0, x1, z0, z1]: kept off
+  // the neighbours' walls, which they met face to face, and opening a lane or a small square beside them)
+  merge: [
+    { of: [[48.62, -60.41], [53.01, -58.33], [53.22, -53.98]], box: [48.6, 55.33, -64.59, -55.8] },   // the high town's hall (three slivers; a square west of it, a lane north)
+    { of: [[55.6, -45.33], [55.62, -50.47]], box: [52.13, 58.7, -51.6, -41.86] },   // a high town house
+    { of: [[-3.1, -52.82], [1.92, -52.82]], box: [-6.21, 3.82, -55.8, -49.41] },     // the south terrace's long house
+    { of: [[-5.56, 56.29], [1.74, 56.29]] },                                         // the lower town's trading post (two copies side by side)
+    { of: [[-20.79, -10.21]], box: [-23.47, -18.4, -13.05, -7.37] },                 // the hotel's neighbour, off its wall
+    { of: [[62.77, -45.1]], box: [59.07, 66.47, -48.3, -41.4] },                     // the high town's store, off the house behind it
+  ],
+  drop: [[38.97, -52.01]],   // a 2 m box on the high town's rim (the 1.4 m sliver beside the bar stays: it keeps the bar's door where it is)
+  // each kept building's kind (at its place, merged ones at their first part's): sy its new height (m)
+  kinds: [
+    // the harbour and the yard: warehouses
+    { at: [-54.99, -14.66], kind: 'warehouse' },
+    { at: [39.75, 43.23], kind: 'warehouse' },
+    // the plaza: the Grand Hall's twin over the lower town and the hall across from the hotel are civic; the hotel's
+    // neighbour a flat two-storey house
+    { at: [3.79, 30.88], kind: 'civic' }, { at: [3.77, 25.54], kind: 'civic' }, { at: [3.82, -10.88], kind: 'civic' },
+    { at: [-20.79, -10.21], kind: 'house', flat: true, sy: 6.3, wall: OTR_COOL, balconyP: 1 },
+    { at: [15.83, 6.17], kind: 'house', flat: true, sy: 5.0 },
+    // the south terrace
+    { at: [-3.1, -52.82], kind: 'house', flat: true, sy: 5.4, awningP: 1 },
+    { at: [3.42, -59.34], kind: 'house', flat: true, awningP: 1, wall: OTR_COOL },
+    { at: [16.7, -71.48], kind: 'house', flat: true, awningP: 1 },
+    // the high town: its domed hall and two domed houses on the skyline, the rest flat, one store
+    { at: [48.62, -60.41], kind: 'civic' },
+    { at: [55.6, -45.33], kind: 'house', flat: true, sy: 6.2, balconyP: 1 },
+    { at: [45.02, -52.27], kind: 'house', flat: true, sy: 6.2, balconyP: 1, wall: OTR_COOL },
+    { at: [59.43, -59.52], kind: 'house', flat: true, sy: 4.3, awningP: 1 },
+    { at: [62.77, -45.1], kind: 'store', sign: 'MARKET', sy: 5.4 },
+    // the lower town: the trading post, two houses
+    { at: [-5.56, 56.29], kind: 'store', sign: 'TRADING POST' },
+    { at: [2.78, 64.63], kind: 'house', flat: true, sy: 4.4, awningP: 1, wall: OTR_COOL },
+    { at: [11.88, 43.21], kind: 'house', flat: true, awningP: 1 },
+  ],
+};
+let OTR_SPEC = [];   // (the last layout's kinds at the buildings' places: S.house reads them)
+const near0 = (o, [x, z], r = 0.2) => Math.abs(o[0] - x) < r && Math.abs(o[1] - z) < r;
+function otrLayout(L) {
+  const decor = L.decor.filter((d) => !(d[7] === 'building' && OTR.drop.some((p) => near0(d, p)))).map((d) => (d[8] === 146 ? [...d] : d));   // (the yard's lengths copied: trimmed below)
+  const spec = [];
+  for (const m of OTR.merge) {
+    const parts = m.of.map((p) => decor.find((d) => d[7] === 'building' && near0(d, p))).filter(Boolean);
+    if (parts.length !== m.of.length) continue;
+    const [x0, x1, z0, z1] = m.box || [Math.min(...parts.map((d) => d[0] - d[3] / 2)), Math.max(...parts.map((d) => d[0] + d[3] / 2)), Math.min(...parts.map((d) => d[1] - d[5] / 2)), Math.max(...parts.map((d) => d[1] + d[5] / 2))];
+    const y = Math.min(...parts.map((d) => d[2])), top = Math.max(...parts.map((d) => d[2] + d[4])), a = parts[0];
+    const one = [+((x0 + x1) / 2).toFixed(2), +((z0 + z1) / 2).toFixed(2), y, +(x1 - x0).toFixed(2), +(top - y).toFixed(2), +(z1 - z0).toFixed(2), a[6], a[7], a[8]];
+    decor.splice(decor.indexOf(a), 1, one);
+    for (const d of parts.slice(1)) decor.splice(decor.indexOf(d), 1);
+    const k = OTR.kinds.find((q) => near0(a, q.at)); if (k) k.place = [one[0], one[1]];
+  }
+  // the yard's wall lengths stop at a building they ran into (two met the moored barges' hulls)
+  const yard = decor.filter((d) => d[8] === 146), solid = decor.filter((d) => d[7] === 'building' && d[8] !== 146 && d[4] >= 1);
+  for (const w of yard) {
+    for (const b of solid) {
+      const ox = Math.min(w[0] + w[3] / 2, b[0] + b[3] / 2) - Math.max(w[0] - w[3] / 2, b[0] - b[3] / 2), oz = Math.min(w[1] + w[5] / 2, b[1] + b[5] / 2) - Math.max(w[1] - w[5] / 2, b[1] - b[5] / 2);
+      if (ox <= 0.02 || oz <= 0.02) continue;
+      const i = w[3] >= w[5] ? 0 : 1, s = i ? 5 : 3, sg = Math.sign(w[i] - b[i]) || 1, edge = b[i] + sg * (b[s] / 2 + 0.3), far = w[i] + sg * w[s] / 2;
+      w[s] = +Math.abs(far - edge).toFixed(2); w[i] = +((far + edge) / 2).toFixed(2);
+      if (Math.sign(far - edge) !== sg) w[s] = 0;
+    }
+  }
+  const out = decor.filter((d) => !(d[8] === 146 && (Math.min(d[3], d[5]) < 0.5 || Math.max(d[3], d[5]) < 1.2)));   // (a length cut away to nothing is gone)
+  for (const k of OTR.kinds) {
+    const p = k.place || k.at, d = out.find((q) => q[7] === 'building' && near0(q, p, 0.3)); if (!d) continue;
+    if (k.sy) { const i = out.indexOf(d); out[i] = [...d]; out[i][4] = k.sy; }
+    spec.push({ x: p[0], z: p[1], k });
+  }
+  OTR_SPEC = spec;
+  return { ...L, decor: out };
+}
+// a building's look by its kind (merged over look(o) in buildIsland's house; M: its materials: walls, stone)
+function otrHouse(o, M) {
+  const s = OTR_SPEC.find((q) => Math.hypot(q.x - o.x, q.z - o.z) < 1.2)?.k; if (!s) return null;
+  const wall = (i) => M.walls[i % M.walls.length];
+  if (s.kind === 'warehouse') return { role: 'store', domed: false, wall: M.stone, trim: '#7a7884', awningP: 0, balconyP: 0 };
+  if (s.kind === 'store') return { role: 'store', domed: false, sign: s.sign, balconyP: 0, ...(s.wall ? { wall: wall(s.wall) } : {}) };
+  if (s.kind === 'civic') return { wall: wall(OTR_CIVIC), balconyP: 0, awningP: 0 };
+  return { ...(s.flat ? { domed: false } : {}), ...(s.wall ? { wall: wall(s.wall) } : {}), balconyP: s.balconyP ?? 0.55, awningP: s.awningP ?? 0.6 };
+}
 const STYLE = {
   otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
+    // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
+    env: { fog: '#d6d6de', sun: '#ecebf2', hemiSky: '#dedee8', hemiGround: '#787884', sunI: 1.9, hemiI: 1.35, fogRange: [70, 260] }, grade: 0.82, gradeTint: [0.98, 0.98, 1.02], cloudTint: ['#d4d2dc', '#dcdae2', '#e4e2ea'],
     trees: '#ffe4ec', ground: ['#f2e6b4', '#e6dcaa', '#e8d4c0'], pave: 'cobble', paveAt: (x, z) => x > -29 && x < 16 && z > -21 && z < 28,
     walls: ['#fbf0ea', '#f8e8d8', '#f6dce6', '#fff4e0', '#f1e2f6'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#8a5ac0', '#e8c8ff']],
     grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
     crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
+    // (OTR-VARIETY: fewer buildings, each of a kind; the yard's wall lengths a wall: OTR above)
+    layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : null), cellBatch: 48,
     landmark(api) {
       const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
       const pois = [{ ...api.S.target }];
@@ -355,7 +471,13 @@ const STYLE = {
       }
       // the market: stalls in the open plaza, facing the fountain, crates and jars behind them
       api.open('stall', 4, { lo: 3.0, space: 7, around: { x: -12, z: 8, r: 18 }, face: f || api.S.target, opts: (i) => ({ goods: ['fruit', 'cloth', 'jars', 'fruit'][i % 4], a: ['#e8608a', '#3fa8b8', '#f0c040', '#9a5ac8'][i % 4], b: '#f8eee4', seed: i + 1 }) });
-      api.street({ benches: 4, clutter: 10, kinds: ['jars', 'crates', 'planter', 'bin', 'barrels'], lamps: 11, doors: 0.8, banners: 9, lines: true, fillSpacing: 8 });
+      // (OTR-VARIETY: what the yard and the high town's square are for: cargo stacked by the yard's wall, a stall)
+      // (the yard is a patch of its own over the moored barges, not the landing's walkable area: its stacks are set down)
+      for (const [x, z, ry, i] of [[40.6, 37.2, 0, 0], [44.2, 37.0, 0.3, 1], [62.4, 37.6, -0.2, 2], [65.0, 62.2, 1.6, 3]]) api.add('crates', x, z, ry, { kind: 'wood', n: 2 + (i % 3), seed: i + 21 });
+      api.add('barrels', 61.0, 63.0, 0.4, {});
+      api.open('stall', 1, { lo: 2.6, space: 6, around: { x: 45, z: -60, r: 4 }, face: { x: 51.9, z: -60.2 }, opts: () => ({ goods: 'cloth', a: '#2f8a9a', b: '#f8eee4', seed: 9 }) });
+      // (OTR-VARIETY: doors 1, every door's front kept clear: at 0.8 a door could lose it to a bench, as the hotel's did)
+      api.street({ benches: 4, clutter: 10, kinds: ['jars', 'crates', 'planter', 'bin', 'barrels'], lamps: 11, doors: 1, banners: 9, lines: true, fillSpacing: 8 });
       api.signs([{ word: 'MARKET', x: -14, z: 8 }]);
     },
   },
@@ -392,6 +514,8 @@ const STYLE = {
     },
   },
   mosquibee: {   // the Mosquibees' honey island: a hive meadow on the broad top, flower beds and hives on the ledges
+    // (ZEELICH-1 item 6: LBA2 has the Mosquibees under the gas: a warmer, hazier light; mild, the meadow keeps its colour)
+    env: { fog: '#e2c8a8', sun: '#ffe0b0', hemiSky: '#f0dcc4', hemiGround: '#8a6a4a', sunI: 2.2, hemiI: 1.15, fogRange: [75, 280] }, gradeTint: [1.02, 0.99, 0.93], cloudTint: ['#fff0dc', '#fff2e0', '#fff4e8'],
     mainNear: { x: 28, z: -20 },
     trees: '#fff0b8', ground: ['#eef2a0', '#f4e890', '#e8d8b0'], pave: 'concrete', paveAt: () => false,
     walls: ['#fff4d8', '#f8e8c0', '#f4f0e0'], domes: [['#d89a30', '#ffe6a8'], ['#c8a020', '#fff0a0']],
@@ -415,6 +539,8 @@ const STYLE = {
     },
   },
   celebration: {   // Celebration Island: the original's ground (CELEBRAT) with the great figure of its later state
+    // (ZEELICH-1 item 6: the volcano's island: a warm haze, the light lava-tinted)
+    env: { fog: '#f2cbb4', sun: '#ffd8b0', hemiSky: '#ffdcc8', hemiGround: '#a05a44', sunI: 2.5, hemiI: 1.25, fogRange: [80, 290] }, gradeTint: [1.04, 0.98, 0.93], cloudTint: ['#ffe2d4', '#ffe8dc', '#fff0e4'],
     // (CELEBRA2's new objects, kept as "risen"): twelve years on the figure still stands, its pit filled and paved
     // round its feet, and the island holds its festival there — masts round it, garlands up to the figure
     trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 10,
@@ -478,36 +604,6 @@ const STYLE = {
     },
   },
   // ---- our own places (src/game/zplaces.js; not in LBA2) -------------------------------------------------------
-  tralu: {   // Tralu Rock, an Esmer trading post: the market on the crown round a great weigh-beam, a crane lowering
-    // goods to the quay shelf below, skiffs tied up in the clouds, a ramp curving round the south face
-    trees: '#ffe8c8', ground: ['#f0e0b0', '#e6d6a4', '#e8cdb8'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x, z) < 10.5,
-    walls: ['#fbefe0', '#f6e0cc', '#f8e8f0'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc']],
-    target: { x: 2.6, z: 1.6, word: 'TRADING POST' }, near: 8, far: 16, D: [8, 7, 6.5, 6], ahead: 3, padClear: 3.2, padSlope: 1.6,
-    crates: 'wood', lines: ['#d89a30', '#2f8a9a', '#f4eee0', '#c84a7a'],
-    landmark(api) {
-      const b = api.near('weighBeam', 2.6, 1.6, 0.3, {}, 3);
-      const pois = [b ? { x: b.x, z: b.z + 3.4, word: 'WEIGH BEAM', at: b } : { ...api.S.target }];
-      const qa = TRALU.quayA, c = api.near('crane', Math.cos(qa) * 11.2, Math.sin(qa) * 11.2, -Math.PI / 2, { h: 6, jib: 8.5 }, 2.5);
-      pois.push({ x: Math.cos(qa) * 20, z: Math.sin(qa) * 20, word: 'QUAY', at: c });
-      return pois;
-    },
-    dress(api) {
-      const b = api.pois[0].at || api.S.target;
-      api.open('stall', 4, { lo: 2.4, space: 6, around: { x: 0, z: 0, r: 11 }, face: b, opts: (i) => ({ goods: ['cloth', 'jars', 'fruit', 'honey'][i % 4], a: ['#2f8a9a', '#d89a30', '#e8608a', '#9a5ac8'][i % 4], b: '#f8eee4', seed: i + 31 }) });
-      // the quay: bollards along its brink, skiffs tied up below, crates and barrels waiting
-      const qa = TRALU.quayA;
-      for (let k = -3; k <= 3; k++) { const a = qa + k * 0.16; api.near('bollard', Math.cos(a) * 22.4, Math.sin(a) * 22.4, 0, {}, 1.2); }
-      for (const [k, c] of [[-2, '#c84a3a'], [0.5, '#2f7f86'], [2.5, '#d89a30']]) { const a = qa + k * 0.18; api.add('skiff', Math.cos(a) * 26.5, Math.sin(a) * 26.5, a, { color: c }); }
-      api.open('crates', 5, { lo: 1.2, space: 3.5, around: { x: Math.cos(qa) * 19, z: Math.sin(qa) * 19, r: 7 }, opts: (i) => ({ kind: i % 2 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 41 }) });
-      api.open('barrels', 2, { lo: 1.2, space: 4, around: { x: Math.cos(qa) * 19, z: Math.sin(qa) * 19, r: 7 } });
-      api.open('crates', 4, { lo: 1.4, space: 4, around: { x: -2, z: -4, r: 9 }, opts: (i) => ({ kind: 'wood', n: 2 + (i % 3), seed: i + 51 }) });
-      // the ramp's lamps (it climbs the south face)
-      for (let k = 0; k < 5; k++) { const a = TRALU.ramp.a0 + 0.2 + k * 0.45, rr = TRALU.ramp.r + 1.2; api.near('lamp', Math.cos(a) * rr, Math.sin(a) * rr, 0, {}, 0.8); }
-      api.street({ benches: 3, clutter: 6, kinds: ['crates', 'jars', 'barrels', 'planter', 'bin'], lamps: 9, doors: 0.9, banners: 4, lines: true, fillSpacing: 7 });
-      api.giver(['money'], -2.0, 0.5, 1);
-      api.signs([{ word: 'QUAY', x: Math.cos(qa) * 20, z: Math.sin(qa) * 20 }]);
-    },
-  },
   orchard: {   // the Nectar Orchard: a rounded hill of nectar trees in rows along its contours, the press house at its
     // foot, a cloud-catcher on the crown that combs water from the passing cloud for the trees
     trees: '#ffc8e0', ground: ['#d8eca0', '#cfe498', '#e8dcb8'], pave: 'concrete', paveAt: () => false,
@@ -587,42 +683,37 @@ const STYLE = {
       api.signs([{ word: 'LOOKOUT', x: 20, z: -10 }]);
     },
   },
-  cxislet: {   // a small outpost: a radio mast, a flag, a water tank, the depot's crates under the old tower
-    trees: '#eef0d8', ground: ['#ece4b8', '#e0d8ac', '#e8d0b0'], pave: 'concrete', paveAt: () => false,
-    walls: ['#e8e0d0', '#f0e8d8'], domes: [['#3a6a5a', '#b8e0c8'], ['#2f8a9a', '#a8e8ee']],
-    target: { x: -6, z: -9.5, word: 'OUTPOST' }, near: 10, far: 24, D: [8.0, 7.0, 6.5],
-    crates: 'cargo', lines: ['#3a8a9a', '#f0c040', '#f4eee0'],
+  platform: {   // ZEELICH-1 item 5: the Wannies' island under the gas (LBA2's PLATFORM: the Building Company's yard by the
+    // gem mine, the Wannie village of low houses, its chapel; it was "the High Platform", an industrial deck). The lift
+    // from the Lift Dock (ASCENCE) comes down here: its foot by the company's yard. Handles: R.wannie (below)
+    // (ZEELICH-1 item 6: under the gas — LBA2's Wannies' island: dim, warm and hazy, the light from below the gas)
+    env: { fog: '#a08a74', sun: '#ffc080', hemiSky: '#ac927a', hemiGround: '#4a3628', sunI: 1.9, hemiI: 1.05, fogRange: [55, 220] }, grade: 0.9, gradeTint: [1.02, 0.97, 0.91], cloudTint: ['#b08e6e', '#c09c7a', '#d0ae8c'],
+    trees: '#d8d0b8', ground: ['#b8a888', '#a89878', '#c0ac90'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
+    walls: ['#d8ccc0', '#cfc4b4', '#e0d4c4'], domes: [['#6a5a4a', '#c8b098'], ['#4a6a6a', '#a8c8c0']],
+    target: { x: 27, z: -26, word: 'BUILDING COMPANY' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
+    crates: 'wood', lines: ['#c8a050', '#5a4a3a'],
     landmark(api) {
       const pois = [{ ...api.S.target }];
-      const m = api.near('mast', -8.5, -8.5, 0, { h: 8 }, 3);
-      if (m) { api.near('flagPole', m.x + 3.0, m.z + 1.0, 0, { h: 6 }, 1.5); api.near('waterTank', m.x - 0.5, m.z + 3.4, 0, {}, 2); }
+      // the company's board over its yard, before the long building facing the pad
+      api.near('boardSign', 27, -27.2, 0, { text: 'BUILDING COMPANY', w: 3.6 }, 1.5);
+      // the gem mine's mouth on the ramp down to the village, facing west; the lift's foot at the ramp's head
+      // (the yard itself is all routes: these are the planner's nearest free spots)
+      const m = api.near('mineMouth', 27.5, -9.5, -Math.PI / 2, {}, 3);
+      if (m) pois.push({ x: m.x - 3.5, z: m.z, word: 'MINE', at: m });
+      const lf = api.near('liftTower', 27, -21.5, Math.PI / 2, { h: 7, w: 3.0 }, 3);
+      if (lf) pois.push({ x: lf.x + 2.6, z: lf.z, word: 'LIFT', at: lf });
+      // the chapel: the village's southernmost house, up on its terrace (its door faces east); its bell below
+      api.near('bellFrame', 38.3, 29.8, 0, {}, 2);
       return pois;
     },
     dress(api) {
-      api.open('crates', 6, { lo: 1.2, space: 3.5, around: { x: 0, z: 0, r: 18 }, opts: (i) => ({ kind: i % 2 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 2 }) });
-      api.open('barrels', 3, { lo: 1.2, space: 4, around: { x: 0, z: 0, r: 18 } });
-      api.street({ benches: 2, clutter: 6, kinds: ['crates', 'barrels', 'jars', 'bin'], lamps: 8, doors: 1, banners: 0, lines: false, fillSpacing: 6 });
-      api.signs([]);
-    },
-  },
-  platform: {   // the High Platform: an industrial deck — cranes, cargo crates, barriers and warning signs
-    trees: '#e0e8e4', ground: ['#d8dcc0', '#ccd0b4', '#d8ccb8'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
-    walls: ['#d8dce0', '#e0e4e8', '#e8e0d8'], domes: [['#4a6a8a', '#b8d0e8'], ['#2f8a9a', '#a8e8ee']],
-    target: { x: 36.4, z: -29, word: 'LOADING DECK' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
-    crates: 'cargo', lines: ['#f0c040', '#2a2a2a'],
-    landmark(api) {
-      const pois = [{ ...api.S.target }];
-      const c = api.near('crane', 36.5, -23, 0, { h: 9, jib: 7 }, 2.5);
-      if (c) pois.push({ x: c.x - 3, z: c.z, word: 'CRANE', at: c });
-      return pois;
-    },
-    dress(api) {
-      api.open('crates', 14, { lo: 1.0, space: 2.6, around: { x: 28, z: -30, r: 18 }, opts: (i) => ({ kind: i % 3 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 4 }) });
-      api.open('barrier', 4, { lo: 1.0, space: 6, around: { x: 28, z: -32, r: 16 }, opts: () => ({ len: 2.4 }) });
-      api.open('warn', 4, { lo: 1.0, space: 7, around: { x: 28, z: -32, r: 16 }, face: api.spawn, opts: (i) => ({ text: ['CRANE AREA', 'KEEP CLEAR', 'MIND THE EDGE', 'LOADING DECK'][i % 4] }) });
-      api.open('barrels', 4, { lo: 1.2, space: 5, around: { x: 28, z: -32, r: 16 } });
-      api.street({ benches: 2, clutter: 8, kinds: ['crates', 'barrels', 'bottles', 'bin'], lamps: 10, doors: 0.8, banners: 0, lines: false, cage: 4, fillSpacing: 6 });
-      api.signs([{ word: 'BRIDGE', x: 42, z: 0 }]);
+      // the ore by the lift's foot and the mine, barrels, caged lamps, the miners' warnings; the village's benches and lines
+      api.open('crates', 8, { lo: 1.0, space: 2.6, around: { x: 24, z: -22, r: 8 }, opts: (i) => ({ kind: 'wood', n: 2 + (i % 2), seed: i + 40 }) });
+      api.open('barrels', 3, { lo: 1.2, space: 4, around: { x: 30, z: -11, r: 7 } });
+      api.open('warn', 3, { lo: 1.0, space: 7, around: { x: 29, z: -13, r: 9 }, face: api.spawn, opts: (i) => ({ text: ['MINE', 'KEEP CLEAR', 'NO NAKED FLAMES'][i % 3] }) });
+      api.open('cageLamp', 6, { lo: 1.0, space: 6, around: { x: 30, z: 0, r: 26 } });
+      api.street({ benches: 3, clutter: 6, kinds: ['crates', 'barrels', 'jars', 'bin'], lamps: 8, doors: 1, banners: 0, lines: true, fillSpacing: 6 });
+      api.signs([{ word: 'VILLAGE', x: 30, z: 18 }, { word: 'CHAPEL', x: 33.5, z: 25 }]);
     },
   },
 };
@@ -641,13 +732,16 @@ const FOOT = {
   // ZL-ALL / CONNECT
   shuttleBoard: () => ({ hw: 1.0, hd: 0.3 }), weighBeam: () => ({ r: 1.6 }), cloudCatcher: () => ({ r: 4.7 }), nectarPress: () => ({ hw: 1.15, hd: 0.9 }),
   ruinedTower: () => ({ r: 2.6 }), telescope: () => ({ r: 1.8 }), brokenCol: () => ({ r: 0.5 }), fallenDome: () => ({ r: 2.3 }), liftTower: (o) => ({ r: (o.w ?? 3) * 0.75 }),
+  // ZEELICH-1 item 5
+  mineMouth: () => ({ hw: 3.0, hd: 2.0 }), bellFrame: () => ({ r: 1.0 }), boardSign: (o) => ({ hw: (o.w ?? 2.6) / 2 + 0.1, hd: 0.3 }),
 };
 // how tall each piece stands (for the camera's view: the big ones are kept out of a chosen view's foreground)
 const HGT = { gasHolder: (o) => (o.r ?? 2.6) > 2.2 ? (o.h ?? 5.2) + 1.2 : (o.h ?? 4.2) + 1.2, crane: (o) => o.h ?? 9, mast: (o) => o.h ?? 8, waterTank: () => 3.6, beacon: () => 5.9,
   greatHive: () => 5.2, stall: () => 2.6, pump: () => 2.8, liftTower: (o) => o.h ?? 11, cloudCatcher: (o) => o.h ?? 6.8, ruinedTower: (o) => o.h ?? 7.5,
   weighBeam: () => 4.6, telescope: () => 2.4, stage: () => 2.0, nectarPress: () => 2.6, fountain: () => 3.6, plinth: () => 3.2, netRack: () => 2.3, laundry: () => 2.3,
   colossus: (o) => o.h ?? 28, fallenDome: () => 2.0, hive: () => 1.3, crates: () => 1.3, barrels: () => 0.9, honey: () => 1.0, bench: () => 0.9, planter: () => 1.2,
-  boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0 };
+  boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0,
+  mineMouth: () => 4.4, bellFrame: () => 3.2, boardSign: () => 2.6 };
 const pieceH = (kind, o = {}) => HGT[kind]?.(o) ?? 1.0;
 const THIN_PIECES = new Set(['lamp', 'cageLamp', 'banner', 'pole', 'signpost', 'flagPole', 'bollard', 'post', 'shuttleBoard', 'skiff', 'warn']);
 const FS = 0.5;   // the plan's grid (m)
@@ -906,6 +1000,27 @@ function planIsland(name, L, A, debug = false) {
   };
   const lines = [];
   const lineItem = (a, ha, b, hb, o = {}) => lines.push({ kind: 'line', a: { x: a.x, z: a.z, h: ha }, b: { x: b.x, z: b.z, h: hb }, o });
+  // (LINE-CLEAR: nothing stands up into a pennant line's path: no lamp's head or arm, no roof, no tree. Along the line,
+  // a metre clear of its two posts, at its height under the sag (the pennants hang 0.45 m below the rope), the tallest
+  // thing within 0.8 m either side must stay under it. The user saw a lamp's head inside one on Zeelich, 3.11.)
+  // (the thin uprights are not in `tall` (the camera sees past them): lamps with their arms, poles, banners, posts, the
+  //  original's and ours, each its top and a reach round it)
+  const uprights = () => [
+    ...items.filter((it) => THIN_PIECES.has(it.kind)).map((it) => ({ x: it.x, z: it.z, top: (hAt(it.x, it.z) ?? 0) + pieceH(it.kind, it.o), r: it.kind === 'lamp' || it.kind === 'cageLamp' ? 0.8 : 0.4 })),
+    ...A.decor.filter((o) => ['lamp', 'pole', 'post', 'spire'].includes(o.shape)).map((o) => ({ x: o.x, z: o.z, top: o.y + o.sy, r: o.shape === 'lamp' ? 0.8 : 0.4 })),
+  ];
+  const clearUnder = (a, ha, b, hb, sag) => {
+    const ya = (hAt(a.x, a.z) ?? 0) + ha, yb = (hAt(b.x, b.z) ?? 0) + hb, d = Math.hypot(b.x - a.x, b.z - a.z);
+    const ux = (b.x - a.x) / d, uz = (b.z - a.z) / d, n = Math.ceil(d / 0.25);
+    const ups = uprights().filter((u) => Math.hypot(u.x - a.x, u.z - a.z) > 0.3 && Math.hypot(u.x - b.x, u.z - b.z) > 0.3);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n; if (t * d < 1.0 || (1 - t) * d < 1.0) continue;
+      const y = ya + (yb - ya) * t - sag * 4 * t * (1 - t) - 0.45, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t;
+      for (const w of [-0.8, -0.4, 0, 0.4, 0.8]) { const k = K(x - uz * w, z + ux * w); if (k >= 0 && tall[k] > y) return false; }
+      for (const u of ups) if (u.top > y && Math.hypot(u.x - x, u.z - z) < u.r) return false;
+    }
+    return true;
+  };
   const pipe = (pts) => {
     const m = pts[Math.floor(pts.length / 2)]; items.push({ kind: 'pipe', pts, x: m.x, z: m.z, ry: 0, o: {} });
     for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; line(a.x, a.z, b.x, b.z, (k) => { tall[k] = Math.max(tall[k], (hAt(wx(k % fx), wz(Math.floor(k / fx))) ?? 0) + Math.max(a.h, b.h) + 0.2); return true; }); }
@@ -1093,12 +1208,17 @@ function planIsland(name, L, A, debug = false) {
     fill(fillSpacing);
     // pennant lines (or lantern strings) between neighbouring lamps and banners along a route
     if (withLines && S.lines) {
-      const posts = [...ls.map((p) => ({ ...p, h: 3.3 })), ...bn.map((p) => ({ ...p, h: 4.8 }))];
+      const posts = [...ls.map((p) => ({ ...p, h: 3.3, arm: true })), ...bn.map((p) => ({ ...p, h: 4.8 }))];
+      // (LINE-CLEAR: the rope is tied to a lamp's pole under its arm; leaving on the arm's side it ran through the lamp's
+      //  head (the user's picture, 3.11): only on the other side. The arm reaches along the lamp's local +x)
+      const offArm = (p, q) => !p.arm || (Math.cos(p.ry) * (q.x - p.x) - Math.sin(p.ry) * (q.z - p.z)) / Math.hypot(q.x - p.x, q.z - p.z) < 0.35;
       const used = new Set();
       for (const a of posts) for (const b of posts) {
         if (a === b || used.has(a) || used.has(b)) continue;
         const d = Math.hypot(a.x - b.x, a.z - b.z); if (d < 4 || d > 11) continue;
-        lineItem(a, a.h, b, b.h, { kind: lanterns && lines.length % 2 ? 'lanterns' : 'pennants', sag: 0.35 + d * 0.03 }); used.add(a); used.add(b);
+        const sag = 0.35 + d * 0.03;
+        if (!offArm(a, b) || !offArm(b, a) || !clearUnder(a, a.h, b, b.h, sag)) continue;
+        lineItem(a, a.h, b, b.h, { kind: lanterns && lines.length % 2 ? 'lanterns' : 'pennants', sag }); used.add(a); used.add(b);
       }
     }
   };
@@ -1132,7 +1252,6 @@ const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
 function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
 const BARE = {
   otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
-  cxislet: { rock: 0.2, pave: 0.4, stone: '#c8c0cc' },
   knartas: { rock: 0.45, pave: 0.1, stone: '#b4b0ac' },      // grey rock, a tiled terrace
   mosquibee: { rock: 0.4, pave: 0, stone: '#b8b0a4' },
   celebration: { rock: 0.65, pave: 0.05, stone: '#8c8490' }, // dark rock (and lava)
@@ -1142,6 +1261,17 @@ const BARE = {
 };
 
 // ================================================================== one island
+// (OTR-VARIETY: S.cellBatch, the island's pieces merged per square of that size (drawbatch.js's CELL, on the world's
+// grid) instead of island-wide. A material that only a few buildings far apart use was one piece across the whole
+// island, under drawbatch.js's 3000-triangle cut: its cell's batch had the island's bounds and was drawn from
+// everywhere. Same interface as kit.js Batch for the builders: add, addM, build)
+class CellBatch {
+  constructor(parent, size, ox, oz) { this.parent = parent; this.size = size; this.ox = ox; this.oz = oz; this.cells = new Map(); }
+  at(x, z) { const k = Math.floor((x + this.ox) / this.size) + ',' + Math.floor((z + this.oz) / this.size); let b = this.cells.get(k); if (!b) this.cells.set(k, (b = new Batch(this.parent))); return b; }
+  add(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) { this.at(x, z).add(geo, mat, x, y, z, rx, ry, rz, sx, sy, sz); return this; }
+  addM(geo, mat, m) { this.at(m.elements[12], m.elements[14]).addM(geo, mat, m); return this; }
+  build() { const out = []; for (const b of this.cells.values()) out.push(...b.build()); return out; }
+}
 function buildIsland(scene, physics, name, L, at) {
   const ox = at.x, oz = at.z;
   const S = STYLE[name] || {};
@@ -1243,6 +1373,7 @@ function buildIsland(scene, physics, name, L, at) {
     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'zeelich', cloudY: CLOUD_Y,
     env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300], ...(S.env || {}) },
+    grade: S.grade ?? null, gradeTint: S.gradeTint ?? null,   // (ZEELICH-1 item 6: an island's own palette, applied as it is entered: main.js setGrade)
     terrain, H: (x, z) => terrain.heightAt(x - ox, z - oz),
     land: (x, z) => land(x - ox, z - oz),
     size: [w, d], objects: A.decor.length, edges,
@@ -1259,7 +1390,7 @@ function buildIsland(scene, physics, name, L, at) {
   R.env.fogColor = new THREE.Color(R.env.fog);
 
   // --- the objects, as our pieces
-  const B = new Batch(group);
+  const B = S.cellBatch ? new CellBatch(group, S.cellBatch, ox, oz) : new Batch(group);
   const walls = (S.walls || ['#fbf0f0', '#f1e2f6', '#f8e8d8', '#e6f0f4', '#f6dce6']).map((c) => tm('plasterWall', { color: c, rough: 0.95 }));
   // (each dome colour its own material: kit.tm keys a texture by name, which made all four the first one)
   const domes = (S.domes || [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']]).map(([a, b]) => EP.cm(domeTex(a, b), { rough: 0.4 }));
@@ -1300,6 +1431,8 @@ function buildIsland(scene, physics, name, L, at) {
   // thinner, so no two share a plane; what they collide with is unchanged)
   const jy = (o) => (((o.body * 7 + Math.round(o.x * 13 + o.z * 17 + o.y * 29)) % 8 + 8) % 8) * 0.003;
   const landFrac = (o) => { let n = 0, t = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) { t++; if (raw(o.x + a * o.sx, o.z + b * o.sz) != null) n++; } return n / t; };
+  // (OTR-VARIETY: the ends of Otringal's yard-wall lengths; where one ends with no other meeting it, a gate pier)
+  const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
     if (o.shape === 'skip') continue;   // (drawn by the style's own piece, or left out: a rail, a beam)
@@ -1370,6 +1503,26 @@ function buildIsland(scene, physics, name, L, at) {
         if (o.sy > 4.5) EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM });
         break;
       }
+      case 'yardWall': {   // (OTR-VARIETY: a length of Otringal's cargo-yard wall: plaster in the island's colour on a
+        // stone footing down to the ground, a tiled band and a stone coping; a pier where it ends free (the yard's
+        // gateways). Its collider is the original's box, as when it was drawn as a house)
+        const al = ex >= ez, len = al ? ex : ez, th = al ? ez : ex, hh = o.sy;
+        const ends = [[o.x - (al ? len / 2 : 0), o.z - (al ? 0 : len / 2)], [o.x + (al ? len / 2 : 0), o.z + (al ? 0 : len / 2)]];
+        let g = y0; for (const [px, pz] of [...ends, [o.x, o.z]]) g = Math.min(g, Math.max(tgy(px, pz), CLOUD_Y - 1));
+        const foot = y0 - g + 0.5, box = (l, h, t, rr = 0.04) => (al ? bbox(l, h, t, rr, 1.8) : bbox(t, h, l, rr, 1.8));
+        B.add(box(len, foot, th + 0.1), stoneM, o.x, y0 + 0.5 - foot / 2 + jy(o), o.z);
+        B.add(box(len - 0.03, hh - 0.66, th - 0.14, 0.02), pick(o, walls), o.x, y0 + 0.5 + (hh - 0.66) / 2 - 0.02, o.z);
+        B.add(box(len - 0.4, 0.26, th - 0.06, 0.01), EP.EM.tiles(), o.x, y0 + hh - 0.48, o.z);
+        B.add(box(len + 0.02, 0.18, th + 0.16), stoneM, o.x, y0 + hh - 0.09 + jy(o), o.z);
+        for (const [px, pz] of ends) {
+          if (yardEnds.filter(([qx, qz]) => Math.hypot(qx - px, qz - pz) < 0.4).length > 1) continue;
+          const pw = th + 0.2, cx = px - (al ? Math.sign(px - o.x) * (pw / 2 - 0.05) : 0), cz = pz - (al ? 0 : Math.sign(pz - o.z) * (pw / 2 - 0.05)), y1 = y0 + 0.5 - foot, y2 = top + 0.4;
+          B.add(bbox(pw, y2 - y1, pw, 0.05, 1.8), stoneM, cx, (y1 + y2) / 2, cz);
+          B.add(cached('isle-yardknob', () => new THREE.SphereGeometry(0.26, 12, 8)), brass, cx, y2 + 0.2, cz);
+        }
+        col({ type: 'box', x: o.x, z: o.z, hw: ex / 2, hd: ez / 2, top, noStand: true });
+        break;
+      }
       case 'pole': {
         if (S.flowerTrees) { const P = new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2); EP.giantFlower(P, { h: o.sy, color: ['#f0c030', '#e8608a', '#f4eee0', '#c050d0'][o.body % 4], seed: o.body + 1 }); }
         else { const P = new EP.Place(B, o.x, y0, o.z, 0); EP.pole(P, { h: o.sy, flag: (S.lines || ['#e8608a'])[o.body % (S.lines || [1]).length] }); }
@@ -1387,7 +1540,14 @@ function buildIsland(scene, physics, name, L, at) {
         // (sides banked into a rise behind them get no windows; world direction → the building's own sides)
         const sideOf = ([vx, vz]) => vx === toward[0] && vz === toward[1] ? 'front' : vx === -toward[0] && vz === -toward[1] ? 'back' : vx === toward[1] && vz === -toward[0] ? 'right' : 'left';
         const blind = (o.banked || []).map(sideOf);
-        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        // (DOORS-1: no door where the ground before it falls away well past a step)
+        // (as tests/worldfit.mjs measures it: 0.5–1 m out and 0.4 m either side, ground more than 0.1 under the floor)
+        const half = (toward[0] ? ex : ez) / 2;
+        const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
+        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), ...(S.house?.(o, { walls, stone: stoneM }) || {}), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
+        // place is offered instead))
+        if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry }); }
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
@@ -1498,6 +1658,7 @@ function buildIsland(scene, physics, name, L, at) {
     shuttleBoard: (P) => EP.shuttleBoard(P, { title: 'ESMER SHUTTLE · DEPARTURES', lines: ['zeelich', ...ISLES].map((n) => BOARD_NAME[n]) }),
     weighBeam: EP.weighBeam, cloudCatcher: EP.cloudCatcher, nectarPress: EP.nectarPress, ruinedTower: EP.ruinedTower, telescope: EP.telescope,
     brokenCol: EP.brokenCol, fallenDome: EP.fallenDome, liftTower: EP.liftTower,
+    mineMouth: EP.mineMouth, bellFrame: EP.bellFrame, boardSign: EP.boardSign,   // (ZEELICH-1 item 5)
   };
   const groundUnder = (x, z, rr) => { if (A.floorAt) return gy(x, z); let y = gy(x, z); for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2; y = Math.min(y, gy(x + Math.sin(a) * rr, z + Math.cos(a) * rr)); } return y; };
   let pieces = 0;
@@ -1522,6 +1683,8 @@ function buildIsland(scene, physics, name, L, at) {
     f(P, it.o || {});
     for (const c of P.cols) col(c);
     for (const e of P.extra) { group.add(e.obj); updaters.push(e.update); }
+    // (ZEELICH-1 item 5: the story's lift, in world coordinates: R.lift.setLevel / setLever, its top, lever and front)
+    if (P.lift && !R.lift) { const Lw = P.lift.local, w2 = ([x, z]) => ({ x: ox + x, z: oz + z }); R.lift = Object.assign(P.lift, { top: { x: ox + Lw.x, z: oz + Lw.z, y: Lw.y }, lever: w2(Lw.lever), front: { ...w2(Lw.front), a: Lw.ry + Math.PI } }); }
     pieces++;
   }
   for (const ln of plan.lines) EP.hangingLine(B, [ln.a.x, gy(ln.a.x, ln.a.z) + ln.a.h, ln.a.z], [ln.b.x, gy(ln.b.x, ln.b.z) + ln.b.h, ln.b.z], { kind: ln.o.kind, sag: ln.o.sag, colors: S.lines || undefined, seed: pieces + 1 });
@@ -1649,6 +1812,23 @@ function buildIsland(scene, physics, name, L, at) {
   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
   R.board = plan.board ? { x: ox + plan.board.x, z: oz + plan.board.z } : null;
+  // DOORS-1 / PEOPLE-1: where people may stand (world x, z, y and a heading): before the house doors (facing out
+  // to the street), at the landmarks and beside the pad; on ground, clear of colliders, 4 m apart, up to 10. The
+  // story's people for the islands are the cloud's (none stand here yet); these are their places.
+  {
+    const cand = [];
+    for (const d of R.shutDoors || []) cand.push({ x: d.x + Math.sin(d.ry) * 1.0, z: d.z + Math.cos(d.ry) * 1.0, a: d.ry, y0: d.y, near: 'door' });
+    for (const p of R.pois) cand.push({ x: p.x, z: p.z, a: Math.atan2(R.pad.x - p.x, R.pad.z - p.z), near: 'landmark' });
+    for (const [dx, dz] of [[3.4, 0], [-3.4, 0], [0, 3.4], [0, -3.4]]) cand.push({ x: R.pad.x + dx, z: R.pad.z + dz, a: Math.atan2(-dx, -dz), near: 'pad' });
+    R.peopleSpots = [];
+    for (const c of cand) {
+      if (R.peopleSpots.length >= 10) break;
+      const y = physics.groundAt(c.x, c.z, (c.y0 ?? 50) + 2);
+      if (!(y > -1) || (c.y0 != null && Math.abs(y - c.y0) > 0.6) || !R.land(c.x, c.z) || physics.blockedAt(c.x, c.z, y + 0.3, 0.35)) continue;
+      if (R.peopleSpots.some((q) => Math.hypot(q.x - c.x, q.z - c.z) < 4)) continue;
+      R.peopleSpots.push({ x: +c.x.toFixed(2), z: +c.z.toFixed(2), y: +y.toFixed(2), a: +c.a.toFixed(3), near: c.near });
+    }
+  }
   R.ours = OURS.has(name);
   R.route = (plan.routes[0] || []).filter((_, i) => i % 4 === 0).map(([x, z]) => ({ x: ox + x, z: oz + z }));
   R.sample = R.sample.filter((p) => Math.hypot(p.x - R.pad.x, p.z - R.pad.z) > 4.4 && plan.items.every((it) => {
@@ -1665,10 +1845,11 @@ function buildIsland(scene, physics, name, L, at) {
       pl.position.y = y; pl.renderOrder = transparent ? -1 : 0; group.add(pl);
       updaters.push((dt, t) => { map.offset.set(t * speed, t * speed * 0.6); });
     };
-    mk(cloudTex(true), CLOUD_Y - 2.5, 14, '#ffffff', 1, 0.0012, false);
-    mk(cloudTex(false), CLOUD_Y, 10, '#ffffff', 0.9, 0.002, true);
-    mk(cloudTex(false), CLOUD_Y + 1.1, 6, '#fff0f6', 0.45, -0.0015, true);
-    const puffM = new THREE.SpriteMaterial({ map: puffTex(), color: '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
+    const ct = S.cloudTint || ['#ffffff', '#ffffff', '#fff0f6'];   // (ZEELICH-1 item 6: an island's own cloud sea: grey over Otringal, amber gas below)
+    mk(cloudTex(true), CLOUD_Y - 2.5, 14, ct[0], 1, 0.0012, false);
+    mk(cloudTex(false), CLOUD_Y, 10, ct[1], 0.9, 0.002, true);
+    mk(cloudTex(false), CLOUD_Y + 1.1, 6, ct[2], 0.45, -0.0015, true);
+    const puffM = new THREE.SpriteMaterial({ map: puffTex(), color: S.cloudTint ? ct[2] : '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
     const puffs = [], spots = [];
     for (let j = 0; j < L.nz; j += 4) for (let i = 0; i < L.nx; i += 4) {
       const k = j * L.nx + i; if (H[k] != null) continue;
@@ -1696,6 +1877,25 @@ function buildIsland(scene, physics, name, L, at) {
       updaters.push((dt, t) => { map.offset.set(Math.sin(t * 0.05) * 0.08, t * 0.006); });
     }
     shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
+  }
+  if (name === 'celebration') R.templePortal = buildCelPortal(group, physics);   // (ZEELICH-1: the Dark Monk's temple's portal on the plaza; the hall is celtemple.js)
+  // ZEELICH-1 item 5: the Wannies' island's handles (world coordinates): where the lift sets him down, the mine's mouth,
+  // the chapel's door, the ore crates by the lift's foot, and six people's places
+  if (name === 'platform') {
+    const find = (k) => plan.items.find((it) => it.kind === k), W2 = (x, z, a = 0) => ({ x: ox + x, z: oz + z, a });
+    const fr = (it, d, side = 0) => { const fx = Math.sin(it.ry), fz = Math.cos(it.ry); return [it.x + fx * d + fz * side, it.z + fz * d - fx * side]; };
+    const m = find('mineMouth'), lf = find('liftTower');
+    const mf = m && fr(m, 2.6), lb = lf && fr(lf, 2.6);   // (clear of the ore cart on the rails, of the lift's lever)
+    R.wannie = {
+      liftBottom: lb ? W2(lb[0], lb[1], lf.ry) : null,
+      mine: mf ? W2(mf[0], mf[1], m.ry + Math.PI) : null,
+      chapelDoor: W2(32.7, 27.0, -Math.PI / 2),   // (on the terrace before the door; its stair climbs from the east)
+      crates: lf ? W2(...fr(lf, 0.5, 3.2)) : null,
+      npcSpots: {
+        miner1: m ? W2(...fr(m, 4.4, -1.6), m.ry) : null, miner2: m ? W2(...fr(m, 3.8, 2.2), m.ry + 2.6) : null,
+        foreman: W2(27, -25.4, Math.PI), villager1: W2(27.3, 7.6, Math.PI), villager2: W2(40.7, 14.5, Math.PI / 2), chaplain: W2(36.6, 28.0, Math.PI / 2),
+      },
+    };
   }
   return R;
 }

@@ -59,7 +59,10 @@ await ev(async () => {
     }
     return out;
   };
-  window.__place = (s) => { G.exitRoom({ x: s.x, z: s.z, a: s.a }, true, true); G.step(0.5); G.hero.angle = s.a; G.camRig.lba.init = false; G.step(1.2); };
+  // (SEWERS-1: the pink house's door is a live door into the sewers, r 0.9: placed 0.5 m off it, he went in on the
+  // second step — the sewer's first-visit talk then held every later walk still. The doors are held off while he is
+  // placed (the 1.7 s below), so each check runs with him outside, at the spot it names)
+  window.__place = (s) => { G.exitRoom({ x: s.x, z: s.z, a: s.a }, true, true); G.doorCool = 2; G.step(0.5); G.hero.angle = s.a; G.camRig.lba.init = false; G.step(1.2); };
 });
 
 // (a) at every house's door
@@ -68,8 +71,8 @@ for (const id of houses) {
   for (const facing of ['out', 'in']) {
     const r = await ev(([id, facing]) => { const h = game.world.houses.find((q) => q.id === id); const a = Math.atan2(h.door.x - h.x, h.door.z - h.z);
       const s = { x: h.door.x + Math.sin(a) * 0.5, z: h.door.z + Math.cos(a) * 0.5, a: facing === 'out' ? a : a + Math.PI };
-      window.__place(s); return { st: window.__houseState(h) }; }, [id, facing]);
-    checkVisual(`(a) at the ${id} house's door facing ${facing}: the house stays drawn whole (${r.st.meshes} meshes)`, r.st.meshes > 0 && r.st.hidden === 0 && r.st.faded === 0, r);
+      window.__place(s); return { st: window.__houseState(h), room: game.room?.id || null, state: game.state }; }, [id, facing]);
+    checkVisual(`(a) at the ${id} house's door facing ${facing}: the house stays drawn whole (${r.st.meshes} meshes)`, !r.room && r.st.meshes > 0 && r.st.hidden === 0 && r.st.faded === 0, r);
     if (id === 'twinsen' && facing === 'out') await snap('test-a-door-twinsen-out');
   }
 }

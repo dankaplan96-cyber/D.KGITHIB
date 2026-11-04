@@ -144,6 +144,15 @@ export function migrateSave(raw) {
       s.room = null; s.hero.x = SHAFT_TOP.x + 1.4; s.hero.z = SHAFT_TOP.z + 4.3;
     }
   }
+  // DECLUTTER (3.11.2026; not a format change, idempotent): a save standing in a place cut from the build goes to its
+  // region's spawn (applySave reads s.respawn): the CX islet and Tralu Rock → Zeelich, Bù's dark halls → the maze,
+  // Otringal's bar office → the bar; on the Hamalayi's cut LBA1 gantry or camp → the Hamalayi's landing.
+  {
+    const to = REMOVED_ROOMS[s.room];
+    if (to) { s.room = to; s.respawn = true; }
+    const hx = (s.hero.x ?? 0) - 4300, hz = s.hero.z ?? 0;
+    if (s.room === 'hamalayi' && (Math.hypot(hx - 50, hz - 62) < 18 || Math.hypot(hx + 47, hz - 64) < 8)) s.respawn = true;
+  }
   // a key this build doesn't have: the last one before it in the order the save was written with (s.order, from
   // format 6) that this build knows; without that order, the stored position, as far as this build's order goes
   const f = s.flags;
@@ -194,10 +203,11 @@ export function expandedStart(raw) {
   s.v = SAVE_VERSION; s.order = ORDER;
   return s;
 }
+export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
-const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', buhalls: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
@@ -241,9 +251,11 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
-    if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'far';
+    // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
+    if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
+    if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'medium';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
     //  and only key bindings that aren't valid key codes are dropped)
@@ -1181,6 +1193,7 @@ class Game {
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;   // (CAM-DOORS: a direction held through the door keeps his way: Hero.inputYaw)
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
@@ -1209,6 +1222,7 @@ class Game {
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
@@ -1221,6 +1235,16 @@ class Game {
       if (this.state !== 'title') this.save(false);
     };
     if (instant) go(); else this.startTransition(go);
+  }
+
+  // ROOMS-FULL: is (x, z) on room R's floor (inside its shell, R.bounds) and clear of everything solid at his height?
+  // (rooms without bounds: yes)
+  onRoomFloor(R, p) {
+    if (!R?.bounds?.length || !Number.isFinite(p?.x) || !Number.isFinite(p?.z)) return !!R && Number.isFinite(p?.x);
+    if (!R.bounds.some((b) => p.x > b.x0 + 0.3 && p.x < b.x1 - 0.3 && p.z > b.z0 + 0.3 && p.z < b.z1 - 0.3)) return false;
+    const P = this.physics, y = P.groundAt(p.x, p.z);
+    for (const c of P.near(p.x, p.z)) if (c.enabled && c.top > y + 0.45 && (c.bottom ?? -Infinity) < y + 1.5 && P._inside(c, p.x, p.z, 0.3)) return false;
+    return true;
   }
 
   // somewhere to put the hero back after a fall: level ground for a metre all round, nothing steep next to it
@@ -1329,7 +1353,9 @@ class Game {
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
-    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, at, true);
+    // (ROOMS-FULL: a spot saved in a room that has been drawn smaller since, now off its floor or inside its furniture:
+    //  the room's own spawn instead; DECLUTTER: a save in a cut place lands at its region's spawn: migrateSave)
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (!s.respawn && this.onRoomFloor(R, at) ? at : { ...(R.spawn || at) }), true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
@@ -1588,6 +1614,18 @@ class Game {
     addEventListener('keydown', (e) => { if (e.code === 'F9') { e.preventDefault(); if (!e.repeat) this.perf.overlay(); } });
     if (new URLSearchParams(location.search).has('perf')) this.perf.overlay(true);
     addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); this._blurred = true; this.setBackground(); });
+    // (BG-STUCK: a window that takes a key, a click or a moved mouse is the one in use, whatever the last report said: a
+    //  "blur" whose "focus" never came (the user, 3.11: Esc in the desktop app, then 8 fps, BG_FPS, until the window
+    //  was focused again) ends there)
+    const inUse = (e) => { if (this.background && e.isTrusted !== false && !document.hidden) this.foreground(); };
+    for (const ev of ['keydown', 'pointerdown', 'wheel']) addEventListener(ev, inUse, true);
+    addEventListener('pointermove', (e) => { if (e.movementX || e.movementY) inUse(e); }, true);
+  }
+  // back in front: the window shows and has the keyboard (BG-STUCK: also checked once a second while in the background)
+  foreground() {
+    this._blurred = false;
+    if (this._win) this._win = { ...this._win, focused: true, minimized: false, visible: true };
+    this.setBackground();
   }
   setBackground() {
     const W = this._win, bg = !!(document.hidden || this._blurred || (W && (!W.focused || W.minimized || !W.visible)));
@@ -2397,7 +2435,7 @@ class Game {
       const region = this.room?.id;
       for (const d of this.story.doors()) {
         if ((d.region || undefined) !== region) continue;
-        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room); this.walkNext = false; return; }
+        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room, d.spawn || null); this.walkNext = false; return; }   // (a door may name where in the room it lands: SEWERS-1)
       }
     }
   }
@@ -2424,6 +2462,7 @@ class Game {
     // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
     // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
     // screen every other refresh is drawn, an even 33 ms.
+    if (this.background && !this.testFreeze && now - (this._bgCheck ?? 0) > 1000) { this._bgCheck = now; if (!document.hidden && document.hasFocus()) this.foreground(); }   // (BG-STUCK)
     const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
     if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {

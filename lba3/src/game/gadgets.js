@@ -13,16 +13,19 @@
 //    recompiles); it shows what the dark places hide (story/arsenal.js: the nooks).
 //  - Baldino's hop-pack (EQ-1, chapter 10): worn or taken off from here; it flies from Athletic's jump key. Its
 //    rules, model and flight live in jetpack.js (this.jet: updated and reset with the other gadgets).
+//  - EQUIP-2a, Arthur's pocket set and Bram's pump lance: held tools, worked with the attack key (tools.js; this.tools,
+//    updated and reset here too). E in the inventory puts one in his hand.
 import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { hitEnemy } from './weapons.js';
 import { Jetpack } from './jetpack.js';
+import { Tools } from './tools.js';
 import { offScene, CALM } from './offscene.js';
 
 export const GADGET = {
   penguin: { life: 7, speed: 1.3, lureR: 11, hp: 2, popR: 2.2, popDmg: 2 },
   protect: { mp: 3, dur: 15, k: 0.5 },
-  conch: { cool: 4, dogR: 14, dogStun: 3, folkR: 16, dinoR: 70 },
+  conch: { cool: 4, dogR: 14, dogStun: 3, folkR: 16, dinoR: 70, calm: 15 },   // (calm: Marl's long call, once learned: story/purposes.js)
   lantern: { color: '#ffcf80', intensity: 3.2, distance: 8, decay: 1.4 },
 };
 
@@ -77,6 +80,7 @@ export class Gadgets {
     this.light.name = 'lantern';
     game.scene.add(this.light);
     this.jet = new Jetpack(game);   // Baldino's hop-pack (Hero.update calls jet.step)
+    this.tools = new Tools(game);   // EQUIP-2a: the pocket set and the pump lance (tools.js)
   }
   get h() { return this.game.hero; }
   get arms() { return this.h.arms; }
@@ -91,8 +95,17 @@ export class Gadgets {
       case 'conch': return this.blowConch();
       case 'lantern': return this.toggleLantern();
       case 'jetpack': return this.jet.toggleWorn();
+      case 'pocketset': case 'lance': case 'fork': case 'line': case 'heatflask': return this.hold(id);
     }
     return false;
+  }
+
+  // a tool into his hand (the wheel does the same): already there, it says so
+  hold(id) {
+    const c = this.h.combat;
+    if (!c?.has(id)) { this.game.audio.play('deny'); return false; }
+    if (c.weapon !== id) c.equip(id); else this.game.hud.weapon?.(this.h);
+    return true;
   }
 
   placePenguin() {
@@ -206,8 +219,10 @@ export class Gadgets {
     for (const e of g.enemies) {
       if (!e.alive || !e.present || e.def?.kind !== 'gdog' || !e.pulse) continue;
       if (Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) > C.dogR) continue;
-      e.pulse({ stun: C.dogStun }); dogs++;
-      g.hud.float('?', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#ffe35a');
+      // (Marl's long call learned on Zeelich: the dog goes home and lies down; otherwise it is only startled)
+      if (g.flags?.pp_call && e.calm) { e.calm(C.calm); g.hud.float('♪', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#9fe8a0'); }
+      else { e.pulse({ stun: C.dogStun }); g.hud.float('?', { x: e.pos.x, y: e.pos.y + 1.3, z: e.pos.z }, '#ffe35a'); }
+      dogs++;
     }
     for (const n of g.npcs) {
       if (!n.present || n.talking || Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) > C.folkR) continue;
@@ -229,6 +244,7 @@ export class Gadgets {
     }
     this.stats.conchDogs += dogs; this.stats.conchFolk += folk;
     this.lastConch = { dogs, folk, dino };
+    g.story?.purposes?.conchBlown?.();   // (Marl's yard on Zeelich listens for it)
     return true;
   }
 
@@ -277,6 +293,7 @@ export class Gadgets {
     }
     this.updateLantern();
     this.jet.update(dt);
+    this.tools.update(dt);
   }
   // a scene change: the penguin stays behind (it is gone), the shell and the lantern go with him
   reset() {
@@ -284,6 +301,7 @@ export class Gadgets {
     for (const L of this.looks) if (L.npc.listenTo === this.h) L.npc.listenTo = null;
     this.looks = [];
     this.jet.reset();
+    this.tools.reset();
   }
   sound(kind) {
     const au = this.game.audio;

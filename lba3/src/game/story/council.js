@@ -276,6 +276,17 @@ export class Council extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- HUD
+  // GUIDE: Baldino, Nara, Oku, the mills, the council house on Zeelich's map (base.js star)
+  markers() {
+    const f = this.f, Z = this.game.regions?.built('zeelich');
+    if (!this.isCur() || !f.c9_started || !Z) return [];
+    if (this.stamps() >= 2 || f.c9_clerk) return this.stars(Z.councilDoor);
+    if (f.c9_form) {
+      const mills = f.c9_okuAsk && !f.c9_oku && this.millsFree() < 3 ? Z.mills.filter((m) => !f['c9_free_' + m.id]).map((m) => m.brake) : [];
+      return this.stars(!f.c9_nara && this.starNpc('nara'), !f.c9_oku && !mills.length && this.starNpc('oku'), mills);
+    }
+    return this.stars(Z.workshopDoor);
+  }
   objective() {
     const f = this.f;
     if (!f.c9_started) return '';

@@ -52,7 +52,8 @@ export class Network extends ChapterBase {
   done() { return STATIONS.filter((s) => this.f['c10_' + s]).length; }
   boreDrones() { return this.game.enemies.filter((e) => /^ndrone/.test(e.def?.id || '')); }
   // the bore fight, wave 2: Vesk's guards out of the cabins (the clone and the Grobo guard) and the sentry at the gate
-  boreGuards() { return this.game.enemies.filter((e) => /^(nclone|nguard|nsentry)$/.test(e.def?.id || '')); }
+  // (the Grobo guard is left out once Dallan has stood him down: STAND-DOWN, update)
+  boreGuards() { return this.game.enemies.filter((e) => /^(nclone|nguard|nsentry)$/.test(e.def?.id || '') && !(e.def.id === 'nguard' && this.f.c10_guardDown && !this.guardLeaving)); }
   boreFoes() { return [...this.boreDrones(), ...this.boreGuards()]; }
   ridgeMites() { return this.game.enemies.filter((e) => /^nmite|^ncrawler/.test(e.def?.id || '')); }
 
@@ -123,7 +124,10 @@ export class Network extends ChapterBase {
       const face = (x, z) => Math.atan2(b.x - x, b.z - z);
       const cl = { x: b.x - 5.4, z: b.z - 9.3 }, gd = { x: b.x + 10.1, z: b.z - 9.4 };
       out.push({ id: 'nclone', kind: 'fclone', group: 'nbore', x: cl.x, z: cl.z, angle: face(cl.x, cl.z), hp: 4, armour: 1, when: (f) => live(f) && !!f.c10_boreW2 });
-      out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: gd.x, z: gd.z, angle: face(gd.x, gd.z), when: (f) => live(f) && !!f.c10_boreW2 && (this.boreWant ?? 2) > 1 });
+      // (STAND-DOWN: the guard is a man of Dallan's old roster. When he comes out, Dallan, at the bore, orders him to stand
+      //  down under the council's order, and he walks back to his cabin: the clone and the sentry are FunFrock's machines,
+      //  reactivated by the project, and they keep to their old orders. Once he is gone he stays gone, after a load too.)
+      out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: gd.x, z: gd.z, angle: face(gd.x, gd.z), when: (f) => live(f) && !!f.c10_boreW2 && (this.boreWant ?? 2) > 1 && (!f.c10_guardDown || !!this.guardLeaving) });
     }
     if (D?.bore && D.post) {
       // the sentry automaton at the post's gate: the last of the second wave (it keeps its post: it comes at him when he walks to it)
@@ -434,6 +438,20 @@ export class Network extends ChapterBase {
     g.audio.play('alert');
     this.chain([['ilka', 'c10_ilka_w2']], () => { g.updateObjective(); g.save(false); });
   }
+  // STAND-DOWN: a second after the Grobo guard comes out of his cabin, Dallan (at the bore) orders him to stand down, and he
+  // walks back to his cabin's door. Dallan was project security on this island for a year: the guard answers to him, the
+  // machines do not. (Only while Dallan is there and the guard is up; once, saved as c10_guardDown.)
+  standDownGuard(dt) {
+    const g = this.game, f = this.f;
+    const gd = g.enemies.find((e) => e.def?.id === 'nguard'), dl = this.npc('dallan');
+    if (this.guardLeaving && (!gd || gd.gone || !gd.present)) { this.guardLeaving = false; this.story.refreshCast(); }
+    if (f.c10_guardDown || !gd || !gd.present || !gd.alive || !dl?.present) { this.guardSeen = 0; return; }
+    this.guardSeen = (this.guardSeen || 0) + dt;
+    if (this.guardSeen < 1.0 || g.state !== 'play') return;
+    f.c10_guardDown = true; this.guardLeaving = true;
+    gd.standDown({ x: gd.def.x, z: gd.def.z - 1.0 });   // (his cabin's door: 1 m behind where he came out)
+    this.chain([['dallan', 'c10_dallan_stand'], ['narrator', 'c10_guard_stand'], ['hero', 'c10_tw_stand']]);
+  }
   update(dt = 0) {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
@@ -461,6 +479,7 @@ export class Network extends ChapterBase {
           g.giveBonus(['life'], 1, clone.pos.x, clone.pos.y + 0.8, clone.pos.z, g.hero.pos, { loot: 'c10-bore-heart2' });
         }
         if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
+        this.standDownGuard(dt);
         const foes = this.boreFoes();
         if (foes.length && foes.every((e) => !e.alive)) {
           if (this.nw1.takes('bore')) this.nw1.lit('bore', [['ilka', 'nw1_ilka_won']]);   // (NW-1: the relay spits steam; the band next)
@@ -503,6 +522,14 @@ export class Network extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- HUD
+  // GUIDE: the five stations, then the code box at the station, each on its own region's map (base.js star)
+  markers() {
+    const f = this.f, g = this.game, RG = g.regions;
+    if (!this.isCur() || !f.c10_started) return [];
+    if (this.done() >= 5) return f.c10_done ? [] : this.stars(CODE_BOX);
+    const Z = RG?.built('zeelich'), D = RG?.built('desert'), M = RG?.built('hamalayi'), office = g.world?.houses?.find((h) => h.id === 'water')?.door;
+    return this.stars(!f.c10_mill && Z?.millTop, !f.c10_valves && office, !f.c10_light && LIGHTHOUSE_DOOR, !f.c10_bore && D?.bore, !f.c10_dome && M?.observatory?.door);
+  }
   objective() {
     const f = this.f;
     if (!f.c10_started) return this.goal('c10_obj_bal');

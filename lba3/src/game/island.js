@@ -719,47 +719,53 @@ function buildHarbour(W0, root, r) {
 }
 
 // ------------------------------------------------------------------ the Joint Project's cargo lift
-// A slewing lift on the pier that unloads the project barge moored beside the fishing boat: a teal column with a
-// brass motor housing and the project emblem, an arm, a cable and a hook. pose(u) runs one unload cycle
-// (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
+// A slewing lift on the pier that unloads the project barge moored beside the fishing boat. pose(u) runs one unload
+// cycle (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
 // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
+// HARBOUR-ONE (the cacophony order, CLUTTER_AUDIT.md): the opening needs it (13–29 s), so it stays where it was, the
+// same shapes and sizes; only its look changed. It was a teal column and arm with a brass housing, and the barge a teal
+// hull with a brass rim: the project's modules beside Citadel's old harbour. Now it is a harbour derrick in the quay's
+// own materials (a tarred timber mast and boom on the pier's iron, like the piles and the bitts), and the barge a plank
+// lighter; the project shows only in its details: the emblem on the iron winch housing, on the barge's side and on
+// the crates, and a brass lantern.
 function cargoLift(W, parent, r) {
   // (HEADING-LOAD: the lift's own group is no longer `keep`: its column, base and bracket never move, so they join the
   //  quay's static shadow and draw batches; what moves stays `keep`, below)
   const g = new THREE.Group(); g.name = 'cargoLift'; parent.add(g);
   const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
-  const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
-  // column on a bolted base
+  const timber = pm('#6e5238', 0.85), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2e3238', 0.45, { metalness: 0.6 });
+  const housingM = pm('#4c5660', 0.55, { metalness: 0.4 });   // (the winch housing: painted iron, a slate grey)
+  // the mast on a bolted iron base, three iron straps round it
   mesh(g, cyl(0.46, 0.52, 0.12, 16), dark, mx, deck + 0.06, mz);
-  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), brassM, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
-  mesh(g, cyl(0.15, 0.2, 3.1, 12), teal, mx, deck + 1.66, mz);
-  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), brassM, mx, deck + y, mz);
+  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), dark, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
+  mesh(g, cyl(0.15, 0.2, 3.1, 12), timber, mx, deck + 1.66, mz);
+  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), dark, mx, deck + y, mz);
   // a lantern on a bracket (it trembles with the vibration)
   mesh(g, bbox(0.5, 0.05, 0.05, 0.01), dark, mx - 0.25, deck + 2.3, mz, 0);
   const lantern = new THREE.Group(); lantern.position.set(mx - 0.46, deck + 2.27, mz); g.add(lantern);
   mesh(lantern, cyl(0.006, 0.006, 0.16, 4), dark, 0, -0.08, 0, 0, { cast: false });
   mesh(lantern, cyl(0.07, 0.09, 0.2, 6), brassM, 0, -0.26, 0);
   mesh(lantern, cyl(0.06, 0.06, 0.13, 6), pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), 0, -0.26, 0, 0, { cast: false });
-  // the slewing turret: motor housing with the emblem, the arm, the pulley
+  // the slewing head: the winch housing with the emblem (the project's mark), the boom, the pulley
   const turret = new THREE.Group(); turret.position.set(mx, deck + 3.2, mz); g.add(turret);
-  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), teal, 0, 0.12, -0.15);
-  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), brassM, 0, 0.4, -0.15);
+  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), housingM, 0, 0.12, -0.15);
+  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), dark, 0, 0.4, -0.15);
   for (const s2 of [-1, 1]) {
     const em = mesh(turret, new THREE.PlaneGeometry(0.34, 0.34), emblemMaterial(), s2 * 0.315, 0.12, -0.15, s2 * Math.PI / 2, { cast: false });
     em.renderOrder = 1;
   }
-  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), teal, 0, 0.32, ARM / 2 - 0.05);
-  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), brassM, 0.085, 0.32, 0.2 + i * 0.5);
-  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), brassM, 0, 0.26, ARM);
+  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), timber, 0, 0.32, ARM / 2 - 0.05);
+  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), dark, 0.085, 0.32, 0.2 + i * 0.5);
+  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), dark, 0, 0.26, ARM);
   // cable (scaled to length), hook block, hook
   const cable = mesh(turret, cyl(0.012, 0.012, 1, 4).translate(0, -0.5, 0), dark, 0, 0.2, ARM, 0, { cast: false });
   const hook = new THREE.Group(); turret.add(hook);
-  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), brassM, 0, -0.09, 0);
+  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), dark, 0, -0.09, 0);
   mesh(hook, new THREE.TorusGeometry(0.06, 0.014, 6, 12, Math.PI * 1.4), dark, 0, -0.24, 0, 0, { rz: Math.PI * 0.8 });
-  // the barge: a flat project lighter with fenders, one crate staying aboard, the emblem on its side
+  // the barge: a flat plank lighter with a rubbing strake and fenders, one crate staying aboard, the emblem on its side
   const barge = new THREE.Group(); barge.position.set(-85.3, 0, -0.6); g.add(barge);
-  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), pm('#2f6a78', 0.6, { metalness: 0.3 }), 0, 0.12, 0);
-  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), brassM, 0, 0.36, 0);
+  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), tm('planks', { color: '#8a6c52' }), 0, 0.12, 0);   // (the crates' planks, tarred darker: one texture, folded with them)
+  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), timber, 0, 0.36, 0);
   for (const [x, z] of [[-1.0, -0.88], [0.0, -0.88], [1.0, -0.88]]) mesh(barge, cyl(0.09, 0.09, 0.32, 8), dark, x, 0.2, z);
   const bem = mesh(barge, new THREE.PlaneGeometry(0.4, 0.4), emblemMaterial(), 0.6, 0.15, 0.861, 0, { cast: false }); bem.renderOrder = 1;
   const crateGeo = bbox(0.8, 0.8, 0.8, 0.04, 1), crateMat = tm('planks', { color: '#c89a68' });
@@ -2611,8 +2617,8 @@ function buildDressing(W, root, r) {
 }
 
 // ================================================================== WORLD-80: the original's old places
-// Where the original island has a landmark or a door we had not built (docs/WORLD_SIMILARITY.md): the great dome on
-// the west islet (LBA2's scene 26 door, a 19 × 19 m body 12.9 m tall) and the 4.4 m figure beside it; the plateau's
+// Where the original island has a landmark or a door we had not built (docs/WORLD_SIMILARITY.md): the 4.4 m figure on
+// the west islet (its great dome, LBA2's scene 26 door, was cut by DECLUTTER, 3.11.2026: skyline only, a door to nowhere); the plateau's
 // door (scene 2) in the bank behind the depot; the two ends of the passage through the plateau (scene 51): a cellar
 // trapdoor in the fort's yard and a tunnel mouth in the north face. Places and sizes from the original's numbers
 // only (tools/worldscore/ref/citadel.json, LAYOUT applied), built in the fort's kit and materials. Every door is
@@ -2630,65 +2636,15 @@ export const OLD_DOORS = {
 function shutDoor(W, id, x, y, z, ry, out = 0.8) { (W.shutDoors ||= []).push({ id, x: x + Math.sin(ry) * out, y, z: z + Math.cos(ry) * out, ry }); }
 
 function buildWestIslet(W, root) {
-  const D = ISLET.dome, P = W.physics, R = D.r;
+  const P = W.physics;
   const grp = new THREE.Group(); grp.name = 'west-islet'; root.add(grp);
   const B = new Batch(grp);
-  // (the town's warm stone and its blue scale tiles, not the fort's cold ashlar: an old building of the island's own)
-  const stoneM = tm('stone', { color: '#e8e4dc' }), trimM = tm('stone', { color: '#d8d4cc' }), slateM = tm('roofBlue', { color: '#e8eef8', rough: 0.8 });
-  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
-  const g = W.H(D.x, D.z);
-  // the dome: a stepped plinth, a drum with pilasters and a cornice, a slate dome, a lantern and a finial (12.9 m)
-  const PL = 0.5, DR = 3.6, TOP = D.h;
-  B.add(lathe([[0, -1.6], [R + 0.5, -1.6], [R + 0.5, 0.22], [R + 0.38, 0.28], [R + 0.38, PL], [0, PL]], 48, TILE.stone), trimM, D.x, g, D.z);
-  B.add(lathe([[0, PL], [R, PL], [R, DR], [R + 0.22, DR + 0.08], [R + 0.3, DR + 0.42], [R - 0.05, DR + 0.5], [0, DR + 0.5]], 48, TILE.stone), stoneM, D.x, g, D.z);
-  const dome = [], rx = R - 0.12, ry0 = DR + 0.5, rise = TOP - 1.25 - ry0;
-  for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI / 2; dome.push([Math.max(0.0001, rx * Math.cos(a)), ry0 + rise * Math.sin(a)]); }
-  B.add(lathe(dome, 40, TILE.roof), slateM, D.x, g, D.z);
-  // eight stone ribs down the dome, and the lantern on its crown
-  for (let k = 0; k < 8; k++) {
-    const a = (k / 8) * Math.PI * 2 + Math.PI / 8, pts = [];
-    for (let i = 0; i <= 8; i++) { const t2 = (i / 8) * 0.92 * Math.PI / 2, rr = rx * Math.cos(t2) + 0.08, yy = ry0 + rise * Math.sin(t2) + 0.05; pts.push([D.x + Math.sin(a) * rr, g + yy, D.z + Math.cos(a) * rr]); }
-    B.add(tube(pts, 0.16, 5, TILE.stone), trimM);
-  }
-  B.add(lathe([[0, 0], [1.25, 0], [1.25, 0.2], [1.0, 0.25], [1.0, 0.75], [1.2, 0.8], [1.2, 0.95], [0.25, 1.15], [0, 1.2]], 16, TILE.stone), trimM, D.x, g + TOP - 1.4, D.z);
-  B.add(lathe([[0, 0], [0.12, 0], [0.08, 0.15], [0.14, 0.25], [0.04, 0.4], [0, 0.42]], 8), ironM, D.x, g + TOP - 0.42, D.z);
-  // pilasters round the drum, round windows between them (none over the door)
-  for (let k = 0; k < 16; k++) {
-    const a = (k / 16) * Math.PI * 2 + Math.PI / 16;
-    B.add(bbox(0.55, DR - PL - 0.05, 0.3, 0.04, 1), trimM, D.x + Math.sin(a) * (R + 0.08), g + (PL + DR) / 2, D.z + Math.cos(a) * (R + 0.08), 0, a, 0);
-    const w = a + Math.PI / 16;
-    if (Math.abs(Math.atan2(Math.sin(w), Math.cos(w))) < 0.45) continue;
-    B.add(cached('w80-ocu', () => new THREE.CircleGeometry(0.42, 14)), slitM, D.x + Math.sin(w) * (R + 0.02), g + 2.35, D.z + Math.cos(w) * (R + 0.02), 0, w, 0);
-    B.add(cached('w80-ocr', () => new THREE.TorusGeometry(0.48, 0.09, 6, 16)), trimM, D.x + Math.sin(w) * (R + 0.04), g + 2.35, D.z + Math.cos(w) * (R + 0.04), 0, w, 0);
-  }
-  // the door, to the south (the original's door zone): a stone porch with an arched, shut double door, two steps
-  {
-    const pz = D.z + R + 0.05, dw = 1.5, dh = 2.6;
-    B.add(bbox(3.2, DR + 0.3, 1.1, 0.05, 1), stoneM, D.x, g + (DR + 0.3) / 2, pz - 0.3);
-    B.add(bbox(3.5, 0.3, 1.3, 0.04, 1), trimM, D.x, g + DR + 0.42, pz - 0.3);
-    B.add(bbox(1.2, 0.5, 0.5, 0.04, 1), trimM, D.x, g + DR + 0.82, pz - 0.15);   // (the porch's pediment stone)
-    const ring = new THREE.Shape(), hw = dw / 2, sp = PL + dh - hw;
-    ring.absarc(0, sp, hw + 0.32, 0, Math.PI, false); ring.lineTo(-hw, sp); ring.absarc(0, sp, hw, Math.PI, 0, true); ring.lineTo(hw + 0.32, sp);
-    B.add(extrude(ring, 0.14, 1.4, 0.02), trimM, D.x, g, pz + 0.26);
-    for (const s of [-1, 1]) B.add(bbox(0.32, dh - hw, 0.16, 0.03, 1), trimM, D.x + s * (hw + 0.16), g + PL + (dh - hw) / 2, pz + 0.33);
-    const leaf = new THREE.Shape(); leaf.moveTo(-hw, PL); leaf.lineTo(hw, PL); leaf.lineTo(hw, sp); leaf.absarc(0, sp, hw, 0, Math.PI, false); leaf.lineTo(-hw, PL);
-    B.add(extrude(leaf, 0.08, TILE.wood), woodM, D.x, g, pz + 0.255);
-    B.add(bbox(0.04, dh - 0.1, 0.03, 0.01, 1), slitM, D.x, g + PL + (dh - 0.1) / 2, pz + 0.345);   // (the two leaves' meeting)
-    for (const hy of [0.7, 1.7]) B.add(bbox(dw - 0.1, 0.07, 0.03, 0.01, 1), ironM, D.x, g + PL + hy, pz + 0.35);
-    for (const s of [-1, 1]) B.add(cached('w80-ring', () => new THREE.TorusGeometry(0.1, 0.02, 4, 10)), ironM, D.x + s * 0.2, g + PL + 1.25, pz + 0.38);
-    // the sill, then two steps down to the islet's ground
-    B.add(bbox(2.0, 0.3, 0.32, 0.03, 1), trimM, D.x, g + PL - 0.15, pz + 0.41);
-    for (const k of [0, 1]) { const top = PL - 0.17 * (k + 1); B.add(bbox(2.6 + k * 0.5, top + 0.3, 0.5, 0.03, 1), trimM, D.x, g + top - (top + 0.3) / 2, pz + 0.82 + k * 0.5); }
-    P.add({ type: 'box', x: D.x, z: pz - 0.3, hw: 1.6, hd: 0.55, top: g + DR + 0.6, camSkip: true });
-    shutDoor(W, 'dome', D.x, g + PL, pz + 0.3, 0, 1.0);
-  }
-  B.build();
-  const c = P.add({ type: 'cyl', x: D.x, z: D.z, r: R + 0.45, top: g + TOP, camSkip: true });
-  addOccluder(W, { kind: 'rev', x: D.x, z: D.z, y0: g - 2, base: g, profile: [[0, TOP], [1.25, TOP - 1.2], [3.0, TOP - 1.25 - 0.6], [5.5, ry0 + rise * 0.78], [7.6, ry0 + rise * 0.55], [9.0, ry0 + rise * 0.25], [R + 0.3, DR + 0.42], [R + 0.5, PL]], name: 'islet dome' }, c);
-  fitAdd({ region: 'citadel', name: 'the west islet dome', round: true, x: D.x, z: D.z, ry: 0, oy: g, w: 2 * (R + 0.5), d: 2 * (R + 0.5), base: -1.6, plinth: PL, floor: PL, steps: 0.6 });
-  W.isletDome = { x: D.x, z: D.z, y: g, r: R };
+  // (the town's warm stone, not the fort's cold ashlar: an old figure of the island's own)
+  const stoneM = tm('stone', { color: '#e8e4dc' }), trimM = tm('stone', { color: '#d8d4cc' });
+  const slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  // (DECLUTTER, 3.11.2026: the great dome and its door that never opened are cut; the figure stays on the skyline)
 
-  // the figure beside it: a robed stone figure with a staff on a square plinth, facing the town (4.4 m)
+  // the figure on the islet's rim: a robed stone figure with a staff on a square plinth, facing the town (4.4 m)
   {
     const F = ISLET.figure, fg = W.H(F.x, F.z), f = frame(F.x, F.z, F.ry), ph = 0.9;
     B.add(bbox(1.7, ph + 0.4, 1.7, 0.06, 1), trimM, F.x, fg + (ph - 0.4) / 2, F.z, 0, F.ry, 0);

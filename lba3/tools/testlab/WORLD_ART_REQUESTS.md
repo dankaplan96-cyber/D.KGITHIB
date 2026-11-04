@@ -1,5 +1,7 @@
 # World art: change requests from the laptop (for the cloud session)
 
+> **Orders from the cloud for the laptop: `tools/testlab/CLOUD_ORDERS.md` (3.11.2026, night mode).**
+
 The user decided (31.10.2026) that only the cloud session edits game code. The laptop session works as follows:
 - It prototypes a world-art change in a separate local copy that is never pushed.
 - It measures the change on the target laptop (Vega 8; baseline → candidate → baseline, plugged in and on battery)
@@ -1491,7 +1493,7 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
   pavilion's door leads in (region zeelich), the gate out to the pad's landing spot on the deck. Spoilers: no pictures to
   the user (Zeelich).
 
-### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026
+### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-BAR.diff` against origin 8db08db (applies alone; with SPACEPORT-1 applied first its hook lines in
 `regions.js` / `story/index.js` need `git apply -3`): `src/game/otrbar.js` (new), regions `otrbar` (REF 120, AT [9000,
 0]) and `otroffice` (REF 40, AT [9200, 0]), the director's `doors()` / `exitTo()`.
@@ -1514,7 +1516,7 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
 - Checked: Test Lab `artotrbar` (behind the bar, up on the stage, into the office and round it, back, out to the
   harbour) passes. Spoilers: no pictures to the user (Zeelich).
 
-### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026
+### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-HOTEL.diff` against origin (applies alone; with the bar or SPACEPORT-1 applied first, its hook lines
 need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, AT [9400, 0]), the director's hooks.
 - **The door:** the pink-domed house on the plaza's north-west side, `house (-15.4, -10.2)` (its door faces the plaza;
@@ -1531,7 +1533,7 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
 - Checked: Test Lab `artotrhotel` (the left strip's stair to the tables, along the back strip to the desk and the
   machines, down the other stair to the lounge, out to the plaza) passes. No pictures to the user (Zeelich).
 
-### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026
+### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-TEMPLE.diff` against origin (applies alone; with others applied first, `git apply -3`):
 `src/game/celtemple.js` (new), region `celtemple` (REF 120, AT [9600, 0]), the director's hooks, and one hook line in
 `zislands.js` (`if (name === 'celebration') R.templePortal = buildCelPortal(group, physics)`).
@@ -1556,7 +1558,7 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
 - Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
   user (Zeelich).
 
-### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026
+### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2)
 `requests/ZEELICH-1-SKY.diff` against origin (`zislands.js` only; applies alone): the island's `R` now carries
 `grade` / `gradeTint` from its style (main.js already calls `setGrade(R.grade, R.gradeTint)` on entering), and the cloud
 sea's three layers and its shore puffs take the style's `cloudTint` (white as before where none is set).
@@ -1568,7 +1570,7 @@ sea's three layers and its shore puffs take the style's `cloudTint` (white as be
 - The others (Knartas, the CX islet, the Lift Dock, Under Celebration's own env) unchanged.
 - Checked: pictures of Otringal, Celebration and the platform from the play camera (on the laptop; none to the user).
 
-### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026
+### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2, after SKY)
 `requests/ZEELICH-1-WANNIE.diff` (`props-esmer.js`, `zislands.js`). **Apply `ZEELICH-1-SKY.diff` first**: both touch
 the platform's style line (its env and gas colours are item 6's); checked on a fresh worktree of origin 3e5f458: SKY
 alone applies, then WANNIE applies on it (WANNIE alone does not).
@@ -1600,3 +1602,390 @@ alone applies, then WANNIE applies on it (WANNIE alone does not).
 Items 1 (bar), 2 (temple + its portal), 3 (hotel), 5 (the Wannies' island, the lift) and 6 (skies) are built as request
 diffs. Item 4: see item 2's note (the summit is already the festival plaza; say if a carved crater, a lava glow or the
 trail are still wanted).
+
+### The laptop's pending diffs · apply order (3.11.2026, against origin 5b0491c)
+SPACEPORT-1 is merged, so BAR, HOTEL and TEMPLE were rebuilt on top of it (their hook lines in `regions.js` and
+`story/index.js` follow the two terminals). Apply in this order; each was checked with `git apply --check` on a fresh
+worktree of origin 5b0491c with the ones before it applied: `ZEELICH-1-SKY` → `ZEELICH-1-WANNIE` → `ZEELICH-1-BAR` →
+`ZEELICH-1-HOTEL` → `ZEELICH-1-TEMPLE` → `DOORS-1`. SKY and DOORS-1 also apply alone; the other four need the ones
+before them (or `git apply -3`, keeping both sides of each list). On the whole chain: the game boots, every new room
+builds and is entered (terminal, zterminal, otrbar, otroffice, otrhotel, celtemple, the platform, Otringal,
+Celebration, the Lift Dock), no page errors; the bar's and the hotel's doors still lead in (no "Locked." there).
+
+## DOORS-1 · Every building an entrance and windows; every door answers · the laptop, 3.11.2026 (the user's ask) · Applied (the cloud, 3.11.2026, laptop-req)
+The user: "every place has people, every building has an entrance and windows". The audit (every building in the
+FIT registry, every outdoor area; numbers only) found on Zeelich's islands 107 houses: 44 with a door and windows, 29
+hollow ones with no door (packed between others, or too low for a door under the frieze), and no island or Zeelich door
+that answered anything (walking up to one did nothing). `requests/DOORS-1.diff` (`props-esmer.js`, `zislands.js`,
+`zeelich.js`, `desert.js`, `story/prologue.js`):
+- **Low houses (walls under 2.6 m):** no frieze; the door and windows reach up under the cornice (taller houses as
+  before).
+- **Packed houses:** when no side has open ground before it, the door goes onto the alley beside it (ground a metre
+  out within 0.3 m of the floor, a narrow strip free of other houses); none where the ground before it falls away
+  (the rule tests/worldfit.mjs uses: 0.5–1 m out, more than 0.1 m under the floor).
+- **Every door answers:** each island house door, Zeelich's street houses, Kesh's houses and the post's cabins are in
+  `R.shutDoors` ("Locked."). Where the story has a door into the same house (the bar, the hotel, the council, Tarra's
+  house, the workshop) that door is offered instead: the room branch of `baseInteractables` skips a shut door within
+  2.2 m of a story door entry.
+- **`R.peopleSpots`** on every island: up to 10 places for people (before house doors facing the street, at the
+  landmarks, beside the pad), on ground, clear of colliders, 4 m apart: Otringal 10, Knartas 10, the platform 7,
+  Mosquibee 5, Tralu 5, the orchard 3, Under the Gas 3, Celebration 2, the Lift Dock 2, the Old Watch 2, the CX
+  islet 1. See PEOPLE-1.
+- After: 65 houses with a door and windows, 6 hollow ones without a door (no side with ground at the floor's level),
+  0 doors without an answer on the islands and Zeelich. Left as they are: 34 solid pieces (6 × 1.3 m garden walls
+  and low blocks under 2.3 m), the 2 doors that would hang over a drop.
+- Checked (on origin 731a70d + DOORS-1): zislands, doorcull, desert-life, chapter1 pass; worldfit fails only on
+  Citadel's neighbours' house ("door overlaps window", the same on clean origin); in the game, P.target() is "shut" at
+  16 of 16 doors tried (Otringal 4, Knartas 4, Zeelich 4, Kesh 4). zeelich-life: under the laptop's load the reload
+  after save-and-quit did not finish in 5 minutes, the same on clean origin at the same time (15 checks passed before
+  it on both); earlier, unloaded, on the full copy it ran through with only the existing chapter-9 failure.
+- Not done here: Citadel's harbour shed and the project building's office doors (no answer; Citadel's doors are
+  C-4's), Hamalayi (its buildings are not in the FIT registry), Kesh's and the post's windows (drawn, but missing from
+  the registry only).
+
+## PEOPLE-1 · People on Zeelich's islands · for the cloud (the user's ask: "every place has people") · NOT applied (see below)
+No one stands on any of the 11 islands: no npcDefs there in any chapter (the cast by area: Citadel 30, Zeelich 12,
+Desert Island 10, Hamalayi 5, the islands 0). Please give each island its residents, with a purpose each (a trade, a
+line about the island, a small favour), on `R.peopleSpots` (DOORS-1) and the item-5 handles (`R.wannie.npcSpots` on
+the platform, the bar's and hotel's `npcSpots`). Rooms with nobody, for you to judge (most are caves, mazes, sewers
+or machine rooms where that is right): well, office, control, workshop, lighttop, cellar, the c3 rooms, the
+condensers, butemple, asylum, bumaze/buhalls, valves, arena, sewer, tralucave.
+
+## CAMPAIGN-1 · The campaign director's fixes · the laptop, 3.11.2026 (the user's ask: the lba-campaign-director agent) · Applied (the cloud, 3.11.2026, laptop-req)
+`requests/CAMPAIGN-1.diff` (story/epilogue.js, evacuation.js, network.js, zeelife.js, storylife.js, guards.js,
+roomlife.js, text ch3/ch8/ch10; tests chapter8, chapter10, cast-rounds, playthrough/11, the new epilogue-home.mjs; and
+docs/campaign/CAMPAIGN_DIRECTOR.md: the story as now played, the coverage table, every fix with its before/after and
+route, the motive table, the opening's promises against the ending, what is open). Applies alone on origin a8ca37a5
+and after the laptop's chain above. The agent played the whole campaign by input from a new game to Keep Exploring
+(tests/playthrough 01–14 chained through real saves, all PASS; the Zeelich depot's fight and the bore's partly finished
+by ISO, logged).
+- **EPILOGUE-HOME** (the biggest gap): after the ending Gilbert still stood at the fortress shelter, Tim and Lulu at
+  the depot, Ilka and Dallan at the bore, Lhar's people in the monks' camp; Doran, Nara, Oku, Hesk, Pim were nowhere;
+  Baldino behind a door with no prompt; everyone off Citadel said only "Hello, Twinsen." Now everyone is home with a
+  line of their own (Dallan carries Kesh's water; Tarra has not forgiven him), Baldino's workshop and Sefa's dome open,
+  the end card answers the 30 % plan (half heat for every house).
+- **C8 LIGHTHOUSE-GATHER:** Zoé's hill families gathered on the northern plateau, 150 m from the lighthouse that her
+  words, the objective and the signposts point to; now below the lighthouse headland.
+- **C8 VESK-ANSWERS:** Vesk's broadcast answers the vents Twinsen opened (and drills on); Zoé says Vesk switched the
+  heat posts off: his decision, seen.
+- **C10 STAND-DOWN:** at the bore Dallan orders his old Grobo guard to stand down under the council's order; he walks
+  back to his cabin and stays gone after a load (`c10_guardDown`); only FunFrock's clone and the sentry fight.
+- **C12 ALLIES-STILL-THERE:** the core's radio no longer has Oku "releasing the mills" a third time.
+- Checked again here on the agent's branch: `epilogue-home`, `save-migration` (old v4 epilogue saves too), `chapter10`
+  PASS. The agent also ran chapter8 and cast-rounds (chapter 8) PASS.
+- Open (in the doc): no map marker outside Citadel in chapters 3–7 and 9–12 (read in the code only); the old mill's
+  stair-stone hop missed by the bot in 2 of 3 runs (needs a person); the ISO-finished fights never balance-tested by a
+  person; only three allies heard at the core; the Hebrew synopsis (five pylons, chapters 11–12 twice) and STORY_MAP
+  (the Core inside the Shell) not updated; Dallan's chapter-9 trip thin, no Vesk scene after the coil; the lighthouse
+  lamp room shut after the ending.
+
+### The cloud applied the laptop's chain · 3.11.2026 (branch `laptop-req` from ccr-adf00ea7-37ebl3 895deb1; not pushed)
+One commit per request, in this order: CAMPAIGN-1 → DOORS-1 → ZEELICH-1-BAR → ZEELICH-1-HOTEL → ZEELICH-1-TEMPLE.
+- **CAMPAIGN-1:** applied as delivered (clean). No new speaker keys (`n_*`), so no new `VOICES` entry was needed.
+- **DOORS-1:** applied, one line adapted: the diff took the `id` off Citadel's shut doors in `story/prologue.js`
+  baseInteractables, which would have turned C-4's own lines (`text/world.js` `w_door_<id>`) back into "Locked.".
+  The `id` stays; the room branch (islands, Zeelich, Kesh, the post) is the diff's, with its 2.2 m story-door rule.
+- **BAR, HOTEL, TEMPLE:** the new files as delivered; the hook lines in `regions.js` (REF, AT, `add`) and
+  `story/index.js` (`doors()`, `exitTo()`) merged by hand onto the base (SEWERS-1 had changed `sewerDoors` /
+  `sewerExit` and added `sewerglobe` on the same lines). TEMPLE's `zislands.js` lines (the import and
+  `R.templePortal = buildCelPortal(...)`) applied by hand (the base moved). SKY and WANNIE were not part of this
+  batch and are still not applied; BAR, HOTEL and TEMPLE do not need them.
+- **Checked** (a snapshot of the chain's head, SwiftShader container): epilogue-home, chapter1, chapter2, chapter8,
+  chapter10, cast-rounds, world-consistency, interior-life, voices, sewers-ways, occluders, stability, zislands,
+  doorcull PASS. A scratch probe (not committed): the bar, the hotel and the temple are each walked into by their
+  door and out again (input); before the bar's door its house's shut door gives no "Locked." prompt; an Otringal
+  house door says "Locked." and Citadel's dome door still says its C-4 line (both with him placed a metre before the
+  door, ISO: the test harness's path planner reported "stuck" walking to 8 Otringal house doors, not looked into).
+- **PEOPLE-1: not applied.** There is no diff, and the entry asks for the islands' residents to be written (who,
+  what trade, what line, which chapters): story content of its own, not a mechanical change. The handles it needs
+  are now in (`R.peopleSpots`, the bar's and the hotel's `npcSpots`; `R.wannie.npcSpots` waits for WANNIE).
+### The laptop's pending diffs · apply order, again (3.11.2026, against origin 895deb15, after SEWERS-1)
+SEWERS-1 changed the same hook lines, so BAR, HOTEL and TEMPLE were rebuilt once more: their `doors()` / `exitTo()`
+lines and regions.js's REF / AT lines are now origin's lines with only the request's own entries added (checked: no
+entry twice). Order, each checked with `git apply --check` on a fresh worktree of 895deb15 with the ones before it:
+`ZEELICH-1-SKY` → `ZEELICH-1-WANNIE` → `ZEELICH-1-BAR` → `ZEELICH-1-HOTEL` → `ZEELICH-1-TEMPLE` → `DOORS-1` →
+`CAMPAIGN-1` → `BG-STUCK-1`. SKY, DOORS-1, CAMPAIGN-1 and BG-STUCK-1 also apply alone. On the whole chain the game
+boots and every new room builds and is entered (and the sewer and tavern still do), no page errors.
+
+## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report) — applied by the cloud (3.11)
+The user: after Esc the game runs at 8 fps (first blamed on a talk with Pippa, then found to be Esc). 8 is `BG_FPS`,
+the frame rate PERF-BATTERY draws at while the window is in the background (`setBackground`: document hidden, the DOM
+blur, or the desktop app's `lba3:window` report not focused). A "not focused" that is never followed by its "focus"
+keeps it there until the window is focused again. Not reproduced here: in the installed app 0.48.0 (bench profile)
+synthetic Esc presses left `background` false and the frame rate unchanged. What fires the stray blur on the user's
+machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) makes the state end on its own:
+- a trusted key press, click, wheel or moved mouse in the window brings it back to the front (`foreground()`);
+- while in the background, once a second: if the page is not hidden and has focus (`document.hasFocus()`), the same;
+- a window that is really hidden or behind another stays at BG_FPS as before.
+- Checked: `tests/bg-stuck.mjs` PASS (a stale report ends on a key press; on its own within the second; a hidden page
+  stays in the background).
+
+## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue") — applied by the cloud (3.11, branch laptop-req2)
+`requests/CAMPAIGN-2.diff` (after CAMPAIGN-1, which is merged; applies alone on origin 35aaa16). The agent's open items:
+- **GUIDE:** away from Citadel no chapter showed its objective on the holomap or minimap (Desert Island's "Find the
+  professor" had no pointer at all). Each chapter 3–7, 9, 10 now puts a gold star on what its objective needs (the
+  person, the object, the next door, chapter 10's unfinished stations, the code box); `ChapterBase.star/starNpc/stars`.
+- **C12 FINALE-ALLIES:** the overload is answered on the radio by Ilka and Dallan (the desert vent) and Pim and Sefa
+  (the dome), the two stations without a pylon.
+- **C12 VESK-CHOICE:** after the coil a choice that can't be dismissed: pull Vesk clear, or leave him for the
+  council's guards (`c3_veskHelped`); he answers as himself; the end card and Baldino after the ending remember it.
+  Saves without the flag read as before.
+- **C9 DALLAN'S WAY:** Dallan says how he reached Zeelich (Hesk's glider from Kesh, then a project ship).
+- **LIGHTHOUSE-OPEN:** the lamp room opens after the ending (a line at Zoé's microphone); it found a real bug: the
+  stair out sent Twinsen through chapter 3's exit to Baldino's workshop; the epilogue has its own way out now.
+- Measured and left: the old mill's hop (seven identical hops, 1.09 m up and 1.71 m apart; the jump rises 1.19 m:
+  a 0.5 s window at a run; the misses were the bot's run-up), the ISO-finished fights (one step harder than their
+  neighbours, not clearly harsher).
+- Docs: STORY_MAP.md (chapters 11 and 12 apart); the Hebrew synopsis's corrections listed in CAMPAIGN_DIRECTOR.md.
+- Checked: the agent replayed playthrough 06–14 by input with everything live (9 PASS), chapter3, epilogue-home,
+  save-migration PASS; again here: epilogue-home, save-migration, chapter3 PASS.
+- Still open: no person has played the two ISO-finished fights; chapter 8's new gathering spot not looked at closely;
+  chapter 5's objective runs ahead of the hangar's glider and hatch; chapters 11–12 have no stars (rooms in a line).
+- Applied by the cloud (branch laptop-req2): the diff applied cleanly on origin after VOICES-PIPER, SEWERS-1 and EQUIP-2a.
+  `tests/epilogue-home.mjs` failed "Keep Exploring" (and so the lamp room) on that base without this diff too: EQUIP-2a's
+  Arthur calls out once in the house, and the test walked to the door with the line still open. The test now hears the
+  line out (`T.talkAll()`) before the door, as a player would; every check as before. Then PASS. `tests/chapter3.mjs`
+  ("Keep Exploring: in play") failed the same way and got the same fix: PASS.
+
+### ZEELICH-1-WANNIE rebuilt on origin 35aaa16 (3.11.2026)
+DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-SKY` first, then `ZEELICH-1-WANNIE`
+(both checked on a fresh worktree of 35aaa16; CAMPAIGN-2 applies after them too). The only overlap was the end of
+`buildIsland`: the temple's portal line and the platform's `R.wannie` block, both kept. With DOORS-1's houses in
+place the planner puts the mine and the lift's foot where it did before; every `R.wannie` handle stands on ground,
+clear of colliders; the lift goes to 0 and to 1 and its lever pulls. `tests/zislands.mjs` PASS on origin + SKY + WANNIE.
+
+## LINE-CLEAR-1 · A street lamp inside a pennant line · the laptop, 3.11.2026 (the user's picture) — applied by the cloud (3.11)
+The user's picture (an Esmer island street): a lamp's head inside the pennant line strung from it. The lines are
+strung between neighbouring lamps and banner poles (`api.street`, `lines: true`), tied to a lamp's pole at 3.3 m,
+under its arm; a line leaving the lamp on the arm's side runs through the lamp's head. Counted from the planner's own
+plan on origin 3ea2f99: Otringal 1, Knartas 1, Tralu 4 such lines. Nothing checked what stands under a line either
+(lamps, poles and banners are not in the planner's height map, for the camera's sake). `requests/LINE-CLEAR-1.diff`
+(`zislands.js` only; applies alone on 3ea2f99, and after SKY → WANNIE → CAMPAIGN-2):
+- a line leaves a lamp only on the side away from its arm (the arm reaches along the lamp's local +x);
+- `clearUnder`: along the line (a metre clear of its posts), at its height under the sag less 0.45 m for the
+  pennants, nothing within 0.8 m either side stands higher: the height map (roofs, trees) and the thin uprights
+  (lamps with their arms, poles, banners, posts, the original's and ours);
+- a pair that fails is not strung; the others are as before.
+- After: no line through a lamp's head on any island; the lines left: Otringal 2 → 1, Knartas 1 → 0, Celebration
+  14 → 13, Tralu 11 → 9 (the rest have none). `tests/zislands.mjs` PASS.
+
+## ISO-CLOSE-1 · Twinsen tiny in the big rooms · the laptop, 3.11.2026 (the user: "Twinsen is very small against the map, maybe zoom in")
+The user's picture: the asylum (LBA1), whose fixed indoor view shows 24 m (`R.view`); the homes show 10–12. Measured
+(Twinsen's height as a share of the screen's, 1280×720, the room's spawn): the house 0.149, the tavern 0.133, the
+asylum 0.065, the Bu halls 0.064, the Bu maze and the temple 0.101, the sewer 0.094, the arena 0.066.
+`requests/ISO-CLOSE-1.diff` (`engine/camera.js`, `game/arena.js`, `game/underground.js`; applies alone on ea569d3,
+and after LINE-CLEAR-1):
+- the fixed indoor view shows at most `ISO_MAX` by Settings → Camera distance: far (the default) 14 m, medium 12.5,
+  near 11; a room built wider is shown at that, and the view then follows him more (follow ≥ 0.85, the frame's
+  keep-him-in-the-middle margins from the shown size);
+- rooms under it (the homes, the shops: 9.5–13) are as before; `R.wide` keeps a room's own view: the arena and the
+  underground's boss ring (a fight that needs the whole floor).
+- After: the asylum 0.113, the Bu halls 0.111, the Bu maze, the temple and the sewer 0.114; the house 0.149 and the
+  tavern 0.133 unchanged; the arena 0.066 (wide). `tests/lba1rooms.mjs` (walks the asylum) and `tests/transitions.mjs`
+  PASS.
+- Text: Settings' hint for Camera distance (`set_h_cd`) speaks of the Follow camera only; it now sets the rooms' zoom
+  too (the cloud's line to change, if wanted).
+
+## ASYLUM-2 · What the asylum becomes, tied to Zeelich (the user leans to the Esmer workers' hostel) · the user, 3.11.2026 · QUESTION for the cloud
+The user played the asylum: "where is the main entrance and where is the side entrance, nothing there makes sense,
+and it's completely empty", then asked what it gives the game (today: an optional nostalgia stop; the register's line
+and a clover, Twinsen's cell, its marks and five kashes, the warm pipe as a hint of the dig, a giver; no quest goes
+through it, and no one stands in it: the header's guards, trooper and dogs were never placed), and decided it should be
+converted into something tied to Zeelich. Offered: (1) **the Joint Project's hostel for its Esmer workers** (the
+user's lean), (2) a medical arrivals station for travellers from Zeelich, (3) Zeelich's consulate on Citadel. The user
+then said to consult the cloud first: **please answer here** (which fits the story and its chapters, or what else; who
+is there and when; whether it serves chapter 8's shelters or the breach as a way into the project's tunnels). Until
+then the laptop builds only the two entrances and the npcSpots; the dressing below waits for the answer.
+- **If (1): the laptop builds the place** (a request diff follows, with pictures): LBA1's two exits as they were, the main
+  entrance on the upper level (a real front door outside) and the low stair-well (the block-house) as the side
+  entrance, both ways; the rooms dressed as a lived-in hostel with Esmer touches (the cells as sleeping rooms,
+  Twinsen's cell kept as the workers' curiosity with a blank plaque, the office as the foreman's, the nurses' station
+  as the kitchen and mess, the project's store kept); `R.npcSpots` at the original actors' places (worker1…, cook,
+  foreman, a sleeper).
+- **Please (the story's part):**
+  - ASYLUM-1's lore ("bricked up and forgotten; the dig broke back into it") and its lines
+    (`asy_register1/2`, `as_cell1–3`) as fits a hostel: the register can stay the old one the workers found; the
+    breach is now theirs to complain about.
+  - The people: a foreman, a cook, three or four Esmer workers (off shift, homesick, curious about the hero whose
+    cell they keep), each with a line or a small favour; placed on the npcSpots, in the chapters where the project
+    has workers on Citadel. The plaque's text in Twinsen's cell.
+  - The front door's line or sign if it needs one ("JOINT PROJECT HOSTEL" or as you like).
+
+### ASYLUM-2 · the cloud's answer (3.11.2026)
+The user decided in the cloud session (same day) for **Vesk's hidden storehouse**, and asked that the reason the asylum
+is missing from LBA2 be clear. That and the hostel fit together, so the decision is **both, one place**:
+- **Why LBA2 never showed it:** a plaque at the old bricking by the stair-well: "SEALED BY ORDER OF THE CITADEL ISLAND
+  COUNCIL AFTER FUNFROCK'S FALL. NEVER AGAIN." (the bricking broken, as ASYLUM-1 built). Madam Rondo's line adds that
+  everyone was glad to forget it until the project's diggers broke in. Vesk's notebook says he found the sealed asylum
+  on FunFrock's old plans and chose it because no one would look there.
+- **Officially the project's hostel for its Esmer workers** (the laptop's dressing as proposed: the cells as sleeping
+  rooms, Twinsen's cell kept as their curiosity, the foreman's office, the kitchen and mess). Front door: a sign
+  "JOINT PROJECT · WORKERS' HOSTEL". This gives the Zeelich tie the user asked for on the laptop.
+- **Behind it, Vesk's storehouse:** the project's store (keep it) is his: crates of warm crystals stamped "ZEELICH"
+  that the workers are told are "pipe fittings", one hidden crate that hums (Arthur's pocket set finds it), and a
+  locked office (Vesk's, separate from the foreman's) with his notebook. Two of Vesk's guards on the store, not on
+  the hostel; a short sneak or the ball.
+- **Chapters:** 1–2 the hostel lived in (foreman, cook, 3–4 Esmer workers off shift) and the store guarded; 3–7 after
+  Vesk is gone the store is cleared (crates gone, guards gone), the workers still there, uneasy; 8 the hostel becomes
+  one of the shelters (it fits "FunFrock dug tunnels under everything": the workers help Twinsen open it); the later
+  "secret way into the fort" (ASYLUM-LATER in WORLD_CONSISTENCY.md) stays a later card. Epilogue: the workers.
+- **Split of work:** the laptop builds the two entrances, the hostel's dressing, the store's crates and the two
+  offices, the plaque and the sign as objects, and `R.npcSpots` (worker1…, cook, foreman, sleeper, guard1–2,
+  hiddenCrate, veskDesk, plaque). The cloud writes the people, lines, the notebook, the crate find, the guards'
+  patrol and the chapter states on those handles, after the diff is merged. Text in English, short; Esmer naming.
+
+## HARBOUR-1 · Citadel's harbour wing in one language (CLOUD_ORDERS 3, "Cacophony") · the laptop, 4.11.2026
+`requests/HARBOUR-1.diff` (island.js `cargoLift` only, harbourshed.js, town.js the `wing2` row, townlife.js Nell's
+roof, travel.js the Citadel stop board, citydress.js; applies clean on origin fdad24e). The wing now reads as LBA2's
+harbour: stone and rubble houses under slate and boards, plank sheds, the Esmer trading house as the one foreign
+building, the project shown by its emblems and crate stack. No story place, door, interaction spot, flag or line moved.
+- The barge and its slewing lift **kept** (the opening uses them, 13–29 s: `W.cargoLift.pose/shake`, the crate,
+  `cratePierW`): the look only, shapes, sizes, poses and colliders unchanged. The teal column and arm become a dark
+  timber mast and boom with iron straps; the brass winch housing slate-grey iron (the emblem kept); the teal hull a
+  darker plank lighter with a rubbing strake (the emblem kept).
+- The harbour master's shed: the blue tile roof becomes weathered boards (one material fewer).
+- Nell's home (`wing2`): block stone becomes rubble (as LBA2's body 49), pairing with Doran's shed.
+- Nell's stall: the orange painted roof becomes boards with a little old red paint (its own material: the fade works).
+- The ferry stop board faces the quay and the way from town (the camera saw only its blank back); timber posts.
+- **Removed:** citydress's second ferry timetable board, 6 m from the stop's own board (nothing used it).
+- Left as they were: the ticket office (LBA2's ashlar hall), Mr Bazoo's, the customs booth, the project ferry, the
+  quay's project crate stack (the story shows and hides it), the Esmer trading house with its dome (approved, WA-15b).
+- Draw calls (SwiftShader, one frame, main / shadow): customs 128/48 → 127/48, pier 107/59 → 106/59, trading house
+  180/48 = , ticket office and Nell's 133/56 → 132/56, Bazoo's 152/54 = ; triangles about −0.1 %.
+- Checked on the agent's base f520b75: chapter1 PASS, shops PASS, worldfit only the existing house-nbr failure. On
+  fdad24e: the diff applies clean, the game boots without errors (13 minutes under the night's load: chapter1 and
+  opening timed out waiting for the boot, not on a check). To rerun on fdad24e when the laptop is quiet: chapter1,
+  opening (the lift), shops.
+- Left (notes): the customs booth's navy roof; the town's blue-globe lamps (LBA2's harbour lamps were warm yellow);
+  the project ferry's teal hull. Cut 9 (the ticket office into the baggage claim, Nell's interior) is the story's.
+
+### ASYLUM-2 · Built: the hostel, Vesk's store, the two entrances · the laptop, 4.11.2026
+`requests/ASYLUM-2.diff` (new `src/game/asylumhostel.js`; `lba1places.js`; `WORLD_MAP.md`'s row; applies alone on
+origin aba783e and after HARBOUR-1).
+- **Two entrances as LBA1:** the front door, a brick portico with a slate pediment, an Esmer tile roundel and the sign
+  "JOINT PROJECT · WORKERS' HOSTEL", against the old fort's south wall at (−26.5, −50.6) facing south: where the only
+  stair onto the fort's terrace (`ASYLUM_STEPS`) arrives, the first thing seen on the way up; inside, LBA1's tall
+  portal at the upper walk's east end (`asylum-front`). The block-house on the east wall is the side door (its sign
+  "Joint Project / Service stair · staff only"). Both ways, every chapter; `lba1Doors` lists the front first.
+- **The hostel:** the dormitory (bunks on LBA1's brick bed plinths, lockers, a washing line, a shrine), the common
+  room (hammocks), the hall, the kitchen and mess in the nurses' station, cell A as a sleeping room (a door cut, a step
+  down), Twinsen's cell kept as the workers' curiosity (a rope barrier, a brass plaque "CELL 2"; ASYLUM-1's marks,
+  pipe and look untouched), the foreman's office (ledgers, a duty board, the clone statues in the corner with coats
+  on them), the service hall by the side stair with the Council's plaque at the broken bricking. Warm lamps; the
+  room's grade 0.32 → 0.45, a little warm.
+- **Vesk's store:** in the boiler room under the side stair, crate stacks stamped ZEELICH in two aisles with cover,
+  two guard posts, the humming crate behind the boiler; **Vesk's office** (LBA1's sealed room, a door cut at z 30):
+  his desk, notebook, FunFrock's plans, a strongbox, an open crate of crystals.
+- **Handles:** `R.npcSpots` foreman, worker1–4 (worker4 'sit'), cook, sleeper ('lie'), guard1, guard2 (each with x, y,
+  z, a, role and the LBA1 place it came from); `R.ways.front/side`; `R.asylumHostel.spots` hiddenCrate, veskDesk,
+  plaque, register, cellPlaque (`{x, z, r}`); `R.asylumHostel.veskOffice.door.setOpen(b, instant)` (shut at first,
+  collision follows); `R.asylumHostel.store.setCleared(b)` (the crates, the humming crate and the guard posts and
+  their 9 colliders); `R.asylumHostel.hum.setOn(b)`. No save state of its own.
+- **Draw calls** (SwiftShader, one frame, 11 spots in the room): 134–191 → 206–292; triangles about 70–86k →
+  220–300k; outside the front door 202 → 216. The room was already the heaviest LBA1 room (its cut-away meshes); real
+  GPU numbers follow with the night's hardware checks.
+- Checked on b9bf660 (the agent's base): lba1rooms 8/8 (the plateau stair, in by the front, out by the stair-well),
+  transitions 6/6, asylum 10/10 (save → quit → Continue); by input both doors both ways, the cell, the register, the
+  giver, the store's aisles and the hidden crate, Vesk's office shut and open. On aba783e: the merge (the DECLUTTER
+  header and `LBA1_AT` without the Bu halls) and a smoke run (the room builds, both doors, every handle, no page
+  errors); the full tests to rerun when the laptop is quiet.
+- **For the cloud:** `lba1EnemyDefs` still posts Quetch guards at all seven nurse spots, an fclone and two dogs (one
+  dog at cell (30, 5, 30) is inside a wall): per your answer, two of Vesk's guards on guard1/guard2 in chapters 1–2,
+  none in 3–7 (and `lba1rooms.mjs`'s "8 or more guards" with it); the people, lines and chapters on the npcSpots; the
+  finds (the hidden crate, the notebook, a look at the Council plaque, the cell plaque's text); the chapter states
+  (Vesk's door, `store.setCleared(true)` in 3–7, set on each entry; close Vesk's door only with Twinsen outside); the
+  text (`asy_register1/2`, `as_cell1–3`, Madam Rondo's `idle_sphero2`, `room_asylum` in text/map.js, STORY_BIBLE
+  line 278, COMBAT line 529, CONNECTIONS_AUDIT's asylum rows). Grass grows to the front step (`keepClearNew` in
+  island.js would clear it; left alone).
+
+### CLOUD_ORDERS 5 and a new one · the user's corrections (4.11.2026)
+- **Order 5 is the climb up to the asylum, not the tavern.** The user: "not to the tavern but up to the asylum; see how
+  it is in the second game." The laptop is paving the way from the town up to the old fort's terrace and the
+  asylum's front door as LBA2's climb north of the square (one straight paved way, dressed stone steps or ramp, stone
+  retaining walls, capped posts, a railing). Request diff to follow (CLIMB-1).
+- **New: no tree inside a house.** The user found a tree inside Twinsen's house. The laptop is checking every tree and
+  plant against every building and room in every area and fixing them at the cause (TREES-1 to follow).
+
+## OTRINGAL-1 · Fewer buildings, each a kind (CLOUD_ORDERS 3, "Cacophony") · the laptop, 4.11.2026
+`requests/OTRINGAL-1.diff` (`zislands.js`: Otringal's layout, house kinds, `yardWall`, per-cell batching; `props-esmer.js`:
+optional `balconyP`/`awningP`, defaults as before; applies clean on origin 1babed1; zislands.js and props-esmer.js
+unchanged there since the agent's base fdad24e).
+- **52 → 28 registered buildings.** The cargo yard's wall (the original's body 146, 20 lengths 1.34 m thick, which
+  our size rule had made into 18 arcaded house shells and two barges) is a wall again: a stone footing, plaster, a
+  tiled band and coping, stone piers with brass knobs at its open corners; the same colliders.
+- **Merges:** the high town's three slivers into one domed hall (a small square west of it, a lane north); two
+  high-town houses into one flat two-storey house; two south-terrace houses into one long house; the lower town's two
+  identical copies into the TRADING POST store; the hotel's neighbour and the high town's store off the walls they
+  shared. One 2 m box on the high town's rim dropped.
+- **Kinds:** warehouses by the harbour and the yard (dressed stone, a wide door, a hoist, flat roofs); stores
+  TRADING POST and MARKET (the island's word list); civic halls with cream domes; houses with flat roofs and parapets,
+  awnings on six, balconies on three. Domes 24 → 10 (the Grand Hall, the hotel, the bar and four others keep theirs
+  for the silhouette). Crate stacks and barrels in the yard. Every door's front kept clear.
+- **Unchanged:** the bar `house (-42.2, -0.4)` and the hotel `house (-15.4, -10.2)` (place, size, facing, doors, FIT);
+  `R.shutDoors` 31 → 26 and `R.peopleSpots` (10) from the doors as before; every other island identical (objects,
+  meshes, triangles, colliders, FIT, doors, spots, samples, POIs compared).
+- **Draw calls and triangles** (SwiftShader, 1280×720 Medium, eight play-camera views): every view down, e.g. the pad
+  37 → 35 calls (340.7k → 332.6k triangles), the plaza 35 → 31, the harbour 27 → 22, the lower town 30 → 26
+  (291k → 242k). Otringal's pieces are batched per 48 m cell (`S.cellBatch`), so a rare wall colour no longer makes one
+  island-wide batch drawn from everywhere.
+- Checked: `tests/zislands.mjs` PASS 13/13; by input the bar's and the hotel's doors lead in; worldfit's scan on
+  Otringal finds nothing (small overlaps 129 → 60).
+- Left: the high town and the south terrace are not on the landing's walkable area (silhouette and dressing there);
+  Otringal's random dressing is reshuffled (a bench near the arrival view); the yard wall could take a gate arch;
+  WORLD_SIMILARITY's objects score for Otringal not re-run; real-GPU timing not measured.
+
+## JUMP-CAPE-1 · Twinsen's tunic in the jump · the laptop, 4.11.2026 (the user: "when Twinsen jumps the tunic looks strange at the arms")
+Pictured in lookdev (Twinsen, jumpPrep / jump 0.1 and 0.3 / fall, four sides): the robed jump (rig.js, `j.skirt`) puts
+the arms out to the sides for balance (`armOut 0.7`, arms −1.3/−1.1); Twinsen's cape sides are tied to the arms
+(WA-16, outfit 'lba'), so they were pulled into flat wings from the body to the wrists, their dark undersides showing.
+`requests/JUMP-CAPE-1.diff` (`engine/rig.js`, `game/characters.js`; applies alone on origin):
+- `rig.capeArms` (set for looks with outfit 'lba': Twinsen); in the jump and the fall his arms stay in and a little
+  forward, elbows bent (arms −0.7/−0.6 up, −0.5 falling, elbows −1.0, armOut 0.2); the landing reach keeps them in
+  (armOut 0.25 instead of 0.75). Other robed characters as before.
+- After (the same lookdev frames): the cape keeps hanging and folds forward with the arms; no wings. Not run: the
+  animation tests (a pose-number change only); worth a look in play and in anim-polish when you merge.
+
+## The laptop's status for the new cloud session (4.11.2026)
+**Waiting to be applied** (each checked with `git apply --check` on a fresh worktree of origin d9c1c89, alone and all
+five in this order): `ISO-CLOSE-1` → `HARBOUR-1` → `ASYLUM-2` → `OTRINGAL-1` → `JUMP-CAPE-1`.
+- ISO-CLOSE-1 keys the rooms' zoom to Camera distance (near 11 m, medium 12.5, far 14); with Medium now the default
+  (674f42e) the big rooms open at 12.5 m.
+- HARBOUR-1 and ASYLUM-2: the full tests on the newest base are still to rerun on the laptop when it is quiet
+  (chapter1, opening, shops; lba1rooms, transitions, asylum); they passed on the agents' bases.
+- ASYLUM-2's story part is yours (its "For the cloud" list).
+
+**In progress on the laptop:** CLIMB-1 (order 5 as corrected: the paved climb to the asylum), TREES-1 (no tree or
+plant inside any building or room, the user's find in Twinsen's house).
+
+**Still to do on the laptop:** order 2 (real-GPU checks: the playthrough chain 01–14 and 14-shell, the asylum's frame
+time with ASYLUM-1's lids and ASYLUM-2's dressing, the skies' pictures) once the laptop is quiet; order 6 (Zeelich
+closer to LBA2's: the hub, Baldino's side, the spaceport deck; Otringal's part partly done by OTRINGAL-1).
+
+**Waiting on the user:** W-1's pictures (Float Harbor and its people; W-2 waits); ZEELICH-1 item 4 (Celebration's
+summit: a crater, a lava glow or the trail, if still wanted).
+
+**Expansion branch:** the base game's merge into `expansion/ballastra` (aborted on the laptop on 3.11: conflicts in
+`story/citizens.js` and `story/zeelife.js`, the story's files) is yours.
+
+## The cloud applied the five · and ASYLUM-2's story part (the new cloud session, 4.11.2026)
+Branch `ccr-c1c2c4b9-dep6ed` (from ccr-adf00ea7-37ebl3 5f7e611): `ISO-CLOSE-1` → `HARBOUR-1` → `ASYLUM-2` → `OTRINGAL-1`
+→ `JUMP-CAPE-1` applied clean in that order, a commit each. Settings' Camera distance hint (`set_h_cd`) now names the big
+rooms' view too.
+- **Checked on the applied five (SwiftShader):** asylum, lba1rooms, transitions, chapter1, opening PASS; zislands one
+  FAIL ("Knartas → back to Zeelich, beside its pad: no prompt"), compared against the base below.
+- **ASYLUM-2's story part** (`src/game/story/hostel.js`, `text/hostel.js`), on your handles, nothing of the place moved:
+  - People on `R.npcSpots` every chapter: Foreman Ordo (ztri1), Mama Pufa the cook (zmole2), Zizi (zbee1), Tellem (ztri2),
+    Gorro (zmole1, the hint: "something in the store sings"), Old Kesso (oku, sitting on the bench), Wix asleep in the
+    lower bunk (zbee2: no talk, a Listen). Lines by phase: chapters 1–2, 3–7 (uneasy), 8 (the hostel takes people in),
+    9 on. The cook's soup heals once a visit. NPCs now take `y` (the floor where floors lie over each other) and
+    `pin` (held there: 'sit', and a new rig pose 'sleep').
+  - Vesk's two guards on guard1 (Quetch) / guard2 (Grobo), chapters 1–2 after the prologue only; LBA1's nurse posts,
+    the trooper and both dogs removed (`lba1EnemyDefs`; lba1rooms expects 2; purposes' conch check uses the arena's dog).
+  - Finds (flags `hs_`): the humming crate (pocket set held: kit2 `hums()`; chapters 1–2) → Vesk's office key; his door
+    (`Unlock` from the corridor at cell (42, 31.3)) → the notebook (three lines: FunFrock's plans, "pipe fittings", the
+    readings) and the strongbox (20 kashes); the Council's plaque and the cell plaque are looks. From chapter 3:
+    `store.setCleared(true)`, the hum off, his door open (shut only with Twinsen outside).
+  - Text: the register, Madam Rondo's line, `room_asylum` = "Workers' Hostel (old asylum)", STORY_BIBLE, COMBAT,
+    CONNECTIONS_AUDIT.
+  - Not done: chapter 8's shelter as a mechanic (the workers' lines only; `story/shelters.js` untouched); grass to the
+    front step (left, as you said).

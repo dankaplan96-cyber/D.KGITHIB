@@ -135,7 +135,7 @@ await shot('C3-07-end.png');
 const buttons = await ev(() => [...document.querySelectorAll('#ending button')].filter((b) => b.offsetParent).map((b) => b.textContent.trim()));
 is('the end screen offers buttons (Keep Exploring)', buttons, (v) => v.length >= 2);
 // keep exploring
-is('Keep Exploring: in play, free roam, an objective set', await ev(() => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); return [game.state, game.flags.ep_free, T.obj()]; }), (v) => v[0] === 'play' && v[1] === true && v[2].length > 0);
+is('Keep Exploring: in play, free roam, an objective set', await ev(() => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); T.talkAll(); return [game.state, game.flags.ep_free, T.obj()]; /* (EQUIP-2a: Arthur's one call-out at home, heard out) */ }), (v) => v[0] === 'play' && v[1] === true && v[2].length > 0);
 is('free roam: talking to Gilbert ends back in play', await ev(() => { if (game.room) { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); } T.talk('gilbert'); return game.state; }), (v) => v === 'play');
 
 const fails = done();

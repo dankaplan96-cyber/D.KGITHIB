@@ -36,6 +36,16 @@
 //    queue is on the bridge then: story/evacuation.js). Zeelich Spaceport (travel.js builds its deck): two Esmer
 //    travellers, one with his case by the rail. Every stop keeps off the painted walkway from the bridge to the ship,
 //    the pad's ring and the departures board's reading spot.
+//    WC-4 (the spaceports per chapter, WORLD_CONSISTENCY.md work order 4): each spaceport's people follow the port's
+//    state, read from the chapter (portPhase; nothing saved): 'grounded' (chapters 1–3: passenger flights grounded, a
+//    few stranded travellers, staff with little to do, the GROUNDED notice), 'flying' (chapters 4–7, 9 on Citadel, 11–12:
+//    the usual comings and goings), 'evac' (chapter 8: at Citadel's terminal the queue for the project's ships, people
+//    with luggage, the port guard at the gate with the project's list, people on it and one turned away; Mrs Pell and
+//    Rollo, out of their emptied rooms, wait in it; on the deck the mechanic readies the ships, a family and Dov wait;
+//    Zeelich's terminal quieter: its staff only), 'council' (chapter 9: the council's guards in Zeelich's terminal, its
+//    order on the notice) and 'after' (chapter 10 and the epilogue: back to normal, Mrs Lomba home from Zeelich, the
+//    guards gone). A person's `when` names the phases they are there in (WHEN below); a stop's `stage` (the town's
+//    state, walkers.js: 2 in the evacuation) keeps the queue's stops to the evacuation.
 // 3. Household rounds (StoryRounds): the story's own people who stand all chapter at home or at work — Zoé and Arthur in
 //    the house, Gilbert and Mira in the Water Office (chapter 2) — walk a small round when no scene needs them: Zoé from
 //    the sink to the stove, the table, the window, the stairwell and her desk in the bedroom; Arthur from his boat to his
@@ -68,8 +78,25 @@ import { NELLHOUSE_PLAN } from './nellhouse.js';
 import { BAGGAGE_PLAN } from './baggage.js';
 import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
+import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
+import { OTRBAR_ROOM, OTRHOTEL_ROOM } from './islandlife.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+// WC-4: the spaceports' state for the chapter in progress (story/index.js Story): derived, never saved
+export const PORT_PHASES = ['grounded', 'flying', 'evac', 'council', 'after'];
+export function portPhase(S) {
+  const k = S?.cur?.key;
+  if ((S?.index ?? 0) < 3) return 'grounded';
+  if (k === 'evacuation') return 'evac';
+  if (k === 'council') return 'council';
+  if (k === 'network' || k === 'home') return 'after';
+  return 'flying';
+}
+// a port person's `when`: the phases they are there in (a list, or one of these names); none: every phase but the
+// evacuation (the rooms' own rule)
+const WHEN = { grounded: ['grounded'], flying: ['flying', 'council', 'after'], always: PORT_PHASES };
+export const whenPhases = (w) => (Array.isArray(w) ? w : (typeof w === 'string' && WHEN[w]) || null);
+const EVAC = 2;              // (the town's state in the evacuation: walkers.js stageNow)
 // the seats a person sits on, as walkers.js BENCH_RED: the seat's top over the floor, its back's front face and its front
 // edge along the way the sitter faces (m, from the seat's middle)
 export const SEAT = {
@@ -85,7 +112,8 @@ export const SEAT = {
 // ------------------------------------------------------------------ the rooms
 // each room: its walkable floors (its own frame; y the floor's height), and its people. A stop is walkrounds.js's
 // { id, x, z, a, act, dur, seat?, pair?/mate?, carry?, stage?, gest?, spot? } in the room's frame.
-// BIGGER-1 (the user 2.11, "make them bigger": every room 1.5 times the first cut, the furniture its own size): every
+// BIGGER-1 (the user 2.11, "make them bigger": every room 1.5 times the first cut, the furniture its own size; ROOMS-FULL,
+// the user 3.11: Citadel's rooms 1.25 times and furnished further): every
 // floor and stop is read from the room's own layout (its *_PLAN, the numbers its builder uses), so a change of the layout
 // carries its people along; the keeper's first stop names the room's spot for them (`spot`: R.npcSpots), and is put on
 // it as the room is built. Each stop keeps its own distance from the thing it is at (a counter's face, a shelf, a seat).
@@ -120,6 +148,19 @@ const tmSeat = (i) => TM.seats[i];   // (row 1's seats: the first ROWN)
 const ask = (id, dx, dur, o = {}) => L(id, TM.CX + dx, TM.PZ1 + 1.05, TM.CX + dx, TM.CZ, 'stand', dur, o);
 // the place to stand beside a chair (s: which side, d from its middle), to sit down from
 const beside = (c, s, d = 0.65) => [c.x + s * d * Math.cos(c.a), c.z - s * d * Math.sin(c.a)];
+// WC-4, the evacuation's queue in Citadel's terminal (its frame): the guard with the project's list 1.3 m into the hall
+// from the gate's way in (clear of it and of the gate's pillars: the way to the gate along the left wall stays 1.2 m
+// wide past him); the queue from him toward the seats, a metre apart (clear of the board's reading spot and of the
+// café's chairs); the one turned away at the café's end of the line
+const TQ = (() => {
+  const list = { x: TM.LX + 2.5, z: TM.GATEZ + 0.9 };
+  const q = [{ x: TM.LX + 2.4, z: TM.GATEZ + 1.95 }, { x: TM.LX + 2.3, z: TM.GATEZ + 2.95 }, { x: TM.LX + 2.8, z: TM.GATEZ + 3.85 }];
+  const refused = { x: TM.LX + 3.7, z: TM.GATEZ + 0.2 };
+  // (a place in the queue, facing the one in front: the first faces the guard)
+  const stop = (id, k, dur, o = {}) => { const a = k ? q[k - 1] : list; return L(id, q[k].x, q[k].z, a.x, a.z, 'stand', dur, { stage: EVAC, ...o }); };
+  return { list, q, refused, stop };
+})();
+export const TERMINAL_QUEUE = { list: TQ.list, q: TQ.q, refused: TQ.refused };
 
 export const ROOMS = {
   tavern: {
@@ -230,58 +271,96 @@ export const ROOMS = {
       ] },
     ],
   },
-  // Citadel Spaceport's terminal (chapters 1–3 grounded, from chapter 4 flying; nobody in the evacuation: the project's
-  // queue is outside on the bridge). Ama sells the tickets (or does not); Tavi keeps the café; the port guard keeps the
-  // gate while it is shut; Mrs Lomba waits it out, then Old Ressa and Ollo wait for their flight.
+  // Citadel Spaceport's terminal (chapters 1–3 grounded, from chapter 4 flying). Ama sells the tickets (or does not);
+  // Tavi keeps the café; the port guard keeps the gate while it is shut; Mrs Lomba waits it out, then Old Ressa and Ollo
+  // wait for their flight. WC-4, the evacuation (chapter 8): the queue for the project's ships from the gate into the
+  // hall (TQ), the guard at its head with the project's list; Mrs Lomba, Rollo and Mrs Pell in it with their luggage
+  // (on the list), Old Ressa between her seat and the café, Ollo turned away at the list; Ama and Tavi at work. Chapter
+  // 10 and the epilogue: Mrs Lomba home again, the travellers as usual.
   terminal: {
     floors: [deck(TM.PX0, TM.PX1, TM.BZ + 0.3, TM.PZ1, TM.PH), hall(TM)],
     people: [
-      { id: 'ama', char: 'councilB', tint: '#e4ecff', color: '#a0b8f0', speed: 0.85, start: 0, stops: [
+      { id: 'ama', char: 'councilB', tint: '#e4ecff', color: '#a0b8f0', speed: 0.85, start: 0, when: 'always', stops: [
         D('ama_till', TM.clerk.x, TM.clerk.z, TM.clerk.a, 'browse', [14, 22], { spot: 'clerk' }),   // (her spot, at the till)
         D('ama_print', TM.printer.x, TM.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),               // (the ticket printer)
         D('ama_forms', TM.cabinet.x, TM.cabinet.z + TM.cabinet.d / 2 + 0.5, Math.PI, 'reach', [6, 9]),   // (the cabinet of forms)
       ] },
-      { id: 'tavi', char: 'farmerB', tint: '#fff0e0', color: '#e8a878', speed: 0.85, start: 0, stops: [
+      { id: 'tavi', char: 'farmerB', tint: '#fff0e0', color: '#e8a878', speed: 0.85, start: 0, when: 'always', stops: [
         D('tavi_counter', TM.cafe.x, TM.cafe.z, TM.cafe.a, 'browse', [14, 20], { spot: 'cafe' }),     // (behind the café's counter)
         D('tavi_machine', TM.machine.x, TM.cafe.z, 0, 'reach', [6, 9], { gest: ['nod'] }),           // (the coffee machine)
         D('tavi_shelf', TM.shelf.x + 0.35, TM.cafe.z, Math.PI, 'reachHigh', [5, 8]),                // (the shelf of bottles behind)
       ] },
-      { id: 'bern', char: 'archivist', tint: '#d4dcee', color: '#90a8d0', speed: 0.85, start: 0, when: 'grounded', stops: [
-        D('bern_gate', TM.guard.x, TM.guard.z, TM.guard.a, 'stand', [20, 30], { spot: 'guard' }),   // (by the shut gate)
-        L('bern_notice', TM.notice.x + 1.3, TM.notice.z, TM.notice.x, TM.notice.z, 'stand', [8, 12], { gest: ['nod'] }),   // (the GROUNDED notice: "read it")
+      { id: 'bern', char: 'archivist', tint: '#d4dcee', color: '#90a8d0', speed: 0.85, start: 0, when: ['grounded', 'evac'], stops: [
+        D('bern_gate', TM.guard.x, TM.guard.z, TM.guard.a, 'stand', [20, 30], { spot: 'guard', stage: NOW }),   // (by the shut gate)
+        L('bern_notice', TM.notice.x + 1.3, TM.notice.z, TM.notice.x, TM.notice.z, 'stand', [8, 12], { gest: ['nod'], stage: NOW }),   // (the GROUNDED notice: "read it")
+        // (WC-4, the evacuation: at the queue's head with the project's list, reading it, then calling the next name)
+        L('bern_list', TQ.list.x, TQ.list.z, TQ.q[0].x, TQ.q[0].z, 'browse', [16, 24], { stage: EVAC }),
+        L('bern_call', TQ.list.x, TQ.list.z, TQ.q[0].x, TQ.q[0].z, 'stand', [6, 9], { gest: ['nod'], stage: EVAC }),
       ] },
-      { id: 'lomba', char: 'weaver', tint: '#fff0e6', color: '#e8b0c0', speed: 0.8, start: 0, when: 'grounded', stops: [
+      { id: 'lomba', char: 'weaver', tint: '#fff0e6', color: '#e8b0c0', speed: 0.8, start: 0, when: ['grounded', 'evac', 'after'], stops: [
         S('lomba_seat', by(tmSeat(1), -0.75, 0), seatOf(tmSeat(1), SEAT.termSeat), [30, 45], { carry: 'case' }),
-        ask('lomba_ask', 1.3, [8, 12], { gest: ['shrug', 'sigh'] }),                                  // (at the counter, again)
-        S('lomba_cafe', beside(TM.chairs[0], -1), seatOf(TM.chairs[0], SEAT.chair), [20, 30]),
+        ask('lomba_ask', 1.3, [8, 12], { gest: ['shrug', 'sigh'], stage: NOW }),                      // (at the counter, again)
+        S('lomba_cafe', beside(TM.chairs[0], -1), seatOf(TM.chairs[0], SEAT.chair), [20, 30], { stage: NOW }),
+        TQ.stop('lomba_queue', 0, [20, 30], { gest: ['nod'] }),                                         // (the evacuation: first in the queue, on the list)
       ] },
-      { id: 'ressa', char: 'tarra', tint: '#f0e8ff', color: '#c8a8e8', speed: 0.7, start: 0, when: 'flying', stops: [
+      { id: 'ressa', char: 'tarra', tint: '#f0e8ff', color: '#c8a8e8', speed: 0.7, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
         S('ressa_seat', by(tmSeat(0), -0.75, 0), seatOf(tmSeat(0), SEAT.termSeat), [40, 60]),
         S('ressa_cafe', beside(TM.chairs[1], -1), seatOf(TM.chairs[1], SEAT.chair), [30, 45]),
       ] },
-      { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: 'flying', stops: [
-        S('ollo_seat', by(tmSeat(3), -0.75, 0), seatOf(tmSeat(3), SEAT.termSeat), [30, 45]),
-        ask('ollo_ticket', 1.3, [6, 9]),                                                               // (his ticket)
+      { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+        S('ollo_seat', by(tmSeat(3), -0.75, 0), seatOf(tmSeat(3), SEAT.termSeat), [30, 45], { stage: NOW }),
+        ask('ollo_ticket', 1.3, [6, 9], { stage: NOW }),                                               // (his ticket)
         S('ollo_coffee', by(TM.stools[2], 0, 0.7), [TM.stools[2].x, TM.stools[2].z, Math.PI, SEAT.cafeStool], [20, 30]),
+        // (the evacuation: not on the list; at the guard's elbow again, then back to his coffee)
+        L('ollo_list', TQ.refused.x, TQ.refused.z, TQ.list.x, TQ.list.z, 'stand', [8, 12], { gest: ['shrug', 'sigh'], stage: EVAC }),
+      ] },
+      // WC-4, the evacuation only: two of the town's people whose rooms the evacuation empties (the ticket office's Rollo,
+      // Mr Bazoo's customer Mrs Pell: story/interiors.js hides them there) wait in the queue with their luggage: the same
+      // people (`as`: their names, text/interiors.js n_rollo_q, and their voices, voice.js ALIAS) with lines of their own
+      // here (`lines`)
+      { id: 'rollo_q', as: 'rollo', lines: 'rollo_q', char: 'desertTrader', tint: '#f2e2d2', color: '#d8b090', speed: 0.85, start: 0, when: ['evac'], stops: [
+        TQ.stop('rq_queue', 1, [25, 35], { gest: ['sigh'], carry: 'case' }),
+        S('rq_seat', by(tmSeat(4), -0.75, 0), seatOf(tmSeat(4), SEAT.termSeat), [20, 30], { carry: 'case', stage: EVAC }),
+      ] },
+      { id: 'pell_q', as: 'pell', lines: 'pell_q', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 1, when: ['evac'], stops: [
+        TQ.stop('pq_queue', 2, [20, 30], { gest: ['shrug'], carry: 'basket' }),
+        S('pq_seat', by(tmSeat(2), -0.75, 0), seatOf(tmSeat(2), SEAT.termSeat), [20, 30], { carry: 'basket', stage: EVAC }),
       ] },
     ],
   },
   // Zeelich Spaceport's terminal: Velo at the departures counter, Pask the porter taking cases down from the arrivals
-  // deck to the gate (the travellers wait outside on the deck: ZEELICH_PORT)
+  // deck to the gate (the travellers wait outside on the deck: ZEELICH_PORT). Both in every chapter (WC-4: the
+  // evacuation's quieter terminal is the two of them); chapter 9 adds two of the council's guards (below)
   zterminal: {
     floors: [deck(ZT.PX0, ZT.PX1, ZT.BZ + 0.3, ZT.PZ1, ZT.PH), deck(ZT.AX0, ZT.AX1, ZT.BZ + 0.3, ZT.AZ1, ZT.AH), hall(ZT)],
     people: [
-      { id: 'velo', char: 'councilChair', tint: '#f2ecff', color: '#c0a8f0', speed: 0.8, start: 0, stops: [
+      { id: 'velo', char: 'councilChair', tint: '#f2ecff', color: '#c0a8f0', speed: 0.8, start: 0, when: 'always', stops: [
         D('velo_till', ZT.clerk.x, ZT.clerk.z, ZT.clerk.a, 'browse', [14, 20], { spot: 'clerk' }),
         D('velo_print', ZT.printer.x, ZT.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),
       ] },
-      { id: 'pask', char: 'oku', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, stops: [
+      { id: 'pask', char: 'oku', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, when: 'always', stops: [
         D('pask_wait', ZT.porter.x, ZT.porter.z, ZT.porter.a, 'stand', [10, 16], { spot: 'porter' }),   // (at the arrivals stair's foot)
         D('pask_case', ZT.porter.x + 1.4, ZT.AZ1 + 0.6, Math.PI, 'reach', [4, 6], { carry: 'case' }),   // (a case off the arrivals deck's lip)
         L('pask_gate', ZT.LX + 2.6, ZT.GATEZ + 1.4, ZT.LX, ZT.GATEZ, 'put', [5, 7], { carry: null }),   // (set by the gate for the next ship)
       ] },
+      // WC-4, chapter 9: the council's guards. One by the gate, where every departure is checked (on post, a step toward
+      // the gate now and then); one between the door and the hall, watching who comes in. Clear of the gate's and the
+      // door's ways, the counter's and the board's spots and Pask's round
+      { id: 'zt_guard', char: 'keeper', tint: '#dde2ff', color: '#98a0e8', speed: 0.6, start: 0, when: ['council'], stops: [
+        D('ztg_post', ZT.guard.x, ZT.guard.z, ZT.guard.a, 'stand', [30, 45], { spot: 'guard' }),
+        D('ztg_look', ZT.LX + 1.7, ZT.GATEZ + 2.6, Math.PI / 2, 'stand', [8, 12], { gest: ['nod'] }),   // (a look down the hall: clear of Pask's cases by the gate)
+      ] },
+      { id: 'zt_guard2', char: 'keeper', tint: '#e6e0ff', color: '#a8a0e8', speed: 0.65, start: 1, when: ['council'], stops: [
+        L('ztg2_door', ZT.LX + 2.3, ZT.DOORZ - 1.5, ZT.LX, ZT.DOORZ, 'stand', [20, 30]),
+        L('ztg2_hall', 0.2, 0.6, ZT.CX, ZT.CZ, 'stand', [12, 18], { gest: ['sigh'] }),
+      ] },
     ],
   },
+  // WC-3 (storylife.js): the School of Magic's classroom (from chapter 4) and the council's antechamber (chapter 9)
+  school: SCHOOL_ROOM,
+  upper: UPPER_ROOM,
+  otrbar: OTRBAR_ROOM,     // (PEOPLE-1: Otringal's bar and hotel lobby, islandlife.js)
+  otrhotel: OTRHOTEL_ROOM,
 };
 
 // ------------------------------------------------------------------ the spaceports (outdoors)
@@ -292,7 +371,7 @@ export const ROOMS = {
 const CB = [-11.2, -7.4], CBZ = 33.05;   // (the two benches' middles: spaceport.js; BENCHES-1, 0.3 m further apart, clear of the tub between them)
 const SB = (id, bx, side, dur, o = {}) => S(id, [bx + side * 0.45, CBZ + 0.95], [bx + side * 0.45, CBZ, 0, SEAT.portBench], dur, o);
 const CITADEL_PORT = [
-  { id: 'gurt', char: 'hesk', tint: '#dfe6fb', color: '#e0a060', speed: 0.9, start: 1, stops: [
+  { id: 'gurt', char: 'hesk', tint: '#dfe6fb', color: '#e0a060', speed: 0.9, start: 1, when: 'always', stops: [
     L('gurt_crates', 9.0, 30.4, 10.45, 28.75, 'put', [5, 8], { carry: 'crate' }),
     L('gurt_trolley', 9.6, 35.4, 10.4, 34.4, 'put', [5, 7], { carry: null }),
     L('gurt_cargo', 11.0, 46.3, 12.6, 45.6, 'browse', [10, 14]),
@@ -300,7 +379,8 @@ const CITADEL_PORT = [
   ] },
   // (SPACEPORT-1: the clerk, the port guard and Mrs Lomba went inside, to the terminal's counter, gate and seats; Dov
   //  stays out on the bench, watching the grounded ship)
-  { id: 'dov', char: 'lharMan', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: 'grounded', stops: [
+  // (WC-4: and in the evacuation, not on the project's list: he waits where he always has)
+  { id: 'dov', char: 'lharMan', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
     SB('dov_bench', CB[1], 1, [30, 45]),
     L('dov_ship', -3.0, 35.8, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
     L('dov_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['sigh'] }),
@@ -310,11 +390,12 @@ const CITADEL_PORT = [
     L('esren_ship', -6.8, 36.0, 4.5, 41, 'stand', [8, 12]),
     L('esren_kiosk', -11.6, 43.0, 4.5, 41, 'stand', [8, 12]),
   ] },
-  { id: 'gunda', char: 'councilC', tint: '#e6eee4', color: '#b8c890', speed: 0.8, start: 0, when: 'flying', stops: [
+  // (WC-4: the family waits for a project ship in the evacuation too: on the list)
+  { id: 'gunda', char: 'councilC', tint: '#e6eee4', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
     SB('gunda_bench', CB[1], -1, [30, 45], { carry: 'case' }),
     L('gunda_kid', -4.0, 36.0, -3.0, 36.4, 'stand', [16, 24], { pair: 'family', mate: 'bibi' }),
   ] },
-  { id: 'bibi', char: 'pim', tint: '#dfe9ff', color: '#a8c0ff', speed: 1.3, start: 0, when: 'flying', stops: [
+  { id: 'bibi', char: 'pim', tint: '#dfe9ff', color: '#a8c0ff', speed: 1.3, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
     L('bibi_wait', -6.4, 34.6, -7.7, 33.05, 'stand', [14, 20]),
     L('bibi_parent', -3.0, 36.4, -4.0, 36.0, 'stand', [16, 24], { pair: 'family', mate: 'gunda' }),
   ] },
@@ -362,7 +443,7 @@ export function placeDefs(game) {
   const out = [], G = game.regions;
   const add = (p, place, round, extra = {}) => {
     const s0 = round ? round[p.start % round.length] : null;
-    out.push({ id: p.id, name: 'n_' + p.id, char: p.char, tint: p.tint, speed: p.speed, color: p.color, ambient: true, indoor: true, room: place,
+    out.push({ id: p.id, name: 'n_' + p.id, ...(p.lines ? { lines: p.lines } : {}), char: p.char, tint: p.tint, speed: p.speed, color: p.color, ambient: true, indoor: true, room: place,
       stays: !!p.stays, when: p.when || null, start: p.start || 0, ...(round ? { x: s0.x, z: s0.z, angle: s0.a ?? 0, round } : { x: 0, z: 0, angle: 0, pending: true }), ...extra });
   };
   for (const [rid, R] of Object.entries(ROOMS)) {
@@ -429,7 +510,7 @@ const SAME = 0.05;       // m: the chapter's place is still the mark the round s
 const CAST_NEAR = 40;    // m: outdoors a round runs only with the hero this near its mark (farther: back on the mark, unseen)
 const FIGHT_R = 25;      // m: no round with a foe this near that is after someone (not on its calm patrol)
 const PATROL_R = 12;     // m: nor with any foe this near (a watch, a patrol: the sneaks)
-const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant']);   // (enemies.js states with no one chased)
+const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant', 'yield']);   // (enemies.js states with no one chased)
 const DOOR_CLEAR = 1.0;  // m: a stop keeps this clear of a door's trigger (its reach and this)
 const samePlace = (p, m) => !!p && !!m && Math.hypot(p.x - m.x, p.z - m.z) < SAME;
 // a cast round's stops in the world: the mark (the chapter's place: its pose, its angle) and the others round it (dx, dz

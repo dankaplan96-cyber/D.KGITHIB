@@ -137,6 +137,26 @@ await ev(() => { const G = game; G.regions.ensure('zeelich', 'test'); G.step(0.3
 const o2 = await outDoor('zterminal');
 check('out of Zeelich\'s terminal by its door: on the deck before the pavilion, and he stays out', o2.at === 'zeelich' && o2.after === 'zeelich' && o2.fromDoor > o2.doorR, o2);
 
+// ---- WC-4, the evacuation (chapter 8): the queue for the project's ships in Citadel's terminal. From the door he walks
+// through the hall to the gate past the queue and out onto the deck (INPUT); the board reads the project's boarding.
+// Chapter 9: Zeelich's board reads the council's checks. (Who is there, by chapter: tests/interior-life.mjs.)
+const boardSays = (room) => ev((room) => { const G = game, H = TT[room], said = [], sv = G.say; G.say = function (n, l, ...a) { said.push(l.join(' ')); return sv.call(this, n, l, ...a); };
+  const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); G.say = sv; P.settle(); return { r: r.r, kind: r.target?.kind, said: said.join(' ') }; }, room);
+await setChapter('evacuation');
+await toDoor('terminal');
+const q8 = await ev(() => { const G = game; for (let i = 0; i < 30; i++) G.step(0.5);
+  const q = (G.roomWalkers?.res || []).filter((r) => r.def.room === 'terminal' && r.present && !r.away), inLine = q.filter((r) => /queue|_list|bern_call/.test(r.stop?.id || '') && r.st !== 'walk').map((r) => r.def.id);
+  const H = TT.terminal, g = P.through(H.gate.x, H.gate.z); P.settle(); const S = G.world.spaceport, h = G.hero;
+  return { here: q.map((r) => r.def.id), inLine, gate: g.r, room: G.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - S.landing.x, h.pos.z - S.landing.z).toFixed(2), trace: P.trace?.slice(-3) }; });
+check('WC-4, chapter 8: Citadel\'s terminal has the queue for the project\'s ships (8 people, the guard with the list and the queue at their places); from the door he walks past them to the gate and out onto the deck by the pad (INPUT)', q8.here.length === 8 && q8.inLine.length >= 2 && q8.room === 'citadel' && q8.d < 1.5, q8);
+await toDoor('terminal');
+const b8 = await boardSays('terminal');
+check('WC-4, chapter 8: the terminal\'s board reads the project\'s boarding by its list', b8.kind === 'termBoard' && /list/.test(b8.said), b8);
+await setChapter('council');
+await toDoor('zterminal');
+const b9 = await boardSays('zterminal');
+check('WC-4, chapter 9: Zeelich\'s terminal board reads the council\'s checks at the gate', b9.kind === 'termBoard' && /council/i.test(b9.said), b9);
+
 // save and reload in a terminal (a real page reload, Continue): back in the hall with its people and its notice
 const reloadIn = async (key, room, ids) => {
   await setChapter(key);
@@ -152,8 +172,8 @@ const rl1 = await reloadIn('project', 'terminal', ['ama', 'tavi', 'bern', 'lomba
 check('save and reload (Continue) in Citadel\'s terminal, chapter 2: back in the hall, its grounded people there, the notice up', rl1.room === 'terminal' && JSON.stringify([...rl1.here].sort()) === JSON.stringify([...rl1.want].sort()) && rl1.notice === true, rl1);
 const c5 = await counter('terminal');
 check('… and the counter still answers (grounded)', c5.st !== 'shop' && c5.said.some((x) => /^n_ama: .*grounded/i.test(x)), c5);
-const rl2 = await reloadIn('council', 'zterminal', ['velo', 'pask']);
-check('save and reload in Zeelich\'s terminal, chapter 9: back in the hall with Velo and Pask, the notice down', rl2.room === 'zterminal' && JSON.stringify([...rl2.here].sort()) === JSON.stringify([...rl2.want].sort()) && rl2.notice === false, rl2);
+const rl2 = await reloadIn('council', 'zterminal', ['velo', 'pask', 'zt_guard', 'zt_guard2']);
+check('save and reload in Zeelich\'s terminal, chapter 9: back in the hall with Velo, Pask and the council\'s two guards (WC-4), the GROUNDED notice down', rl2.room === 'zterminal' && JSON.stringify([...rl2.here].sort()) === JSON.stringify([...rl2.want].sort()) && rl2.notice === false, rl2);
 
 const fails = done(errs);
 await browser.close();

@@ -20,12 +20,15 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, noticeBoard } from './props.js';
+import { boxStack, sackPile, hanging } from './roomdress.js';
 
 export const BAGGAGE_AT = { x: 8200, z: 0 };
 // (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long already),
 //  the upper level a fifth higher; the furniture its own size)
+// (ROOMS-FULL, the user 3.11, "the rooms feel empty … maybe shrink a little and add detail": 1.25 times as wide and
+//  1.15 times as long as the first cut)
 export const BAGGAGE_PLAN = (() => {
-  const FX = 1.5, FZ = 1.25, W = 7.8 * FX, D = 21 * FZ, BZ = -D / 2, desk = { x: 0.4 * FX, z: -1.6 * FZ, a: 0.05 };
+  const FX = 1.25, FZ = 1.15, W = 7.8 * FX, D = 21 * FZ, BZ = -D / 2, desk = { x: 0.4 * FX, z: -1.6 * FZ, a: 0.05 };
   return { FX, FZ, W, D, LX: -W / 2, BZ, UY: 1.8, UZ1: 1.0 * FZ, DOORZ: 8.6 * FZ,   // (the upper level: from the back wall to UZ1, UY up)
     belt: { x: 1.4 * FX, z: BZ + 0.8, hw: 2.0, hd: 0.5 },          // (the luggage belt along the claim hall's back wall)
     desk, spot: { x: desk.x, z: desk.z - 0.9, a: 0 },              // (the office table; the clerk's spot behind it)
@@ -69,8 +72,8 @@ export function buildBaggageRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long
   //  already), the upper level a fifth higher, the camera close and following Twinsen; the furniture keeps its size)
-  const P = BAGGAGE_PLAN, { FX, FZ, W, D } = P, H = 5.6;
-  R.view = 12; R.follow = 0.65; R.music = 'home';
+  const P = BAGGAGE_PLAN, { FX, FZ, W, D } = P, H = 5.3;
+  R.view = 11.5; R.follow = 0.65; R.music = 'home';
   // (the tavern's pale grey blocks: Citadel's stone inside)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
@@ -135,6 +138,21 @@ export function buildBaggageRoom(scene, physics) {
   k.at(SX1 + 0.12, 1.35, 3.6 * FZ, -Math.PI / 2, () => noticeBoard(k, 0.7, 0.5, 19));
   // wall lamps on the long wall
   for (const z of [-8.0, -2.0, 5.0]) { k.add(sphere(0.15, 12, 8), MAT.glow('#fff4e0', '#ffd890', 1.0), LX + 0.12, z > 1 ? 2.4 : UY + 2.2, z * FZ); }
+  // --- ROOMS-FULL: the claim hall below, lived in: waiting benches under the upper level, a porter's cart with cases,
+  // stacked luggage and the mail's sacks by the platform, a striped cloth by the door (props only: no new lights)
+  for (const x of [-0.6, 1.0]) B.put(x, UZ1 + 0.4, 0, (kk) => bench(kk));
+  B.put(1.3, 9.2, 0.35, (kk) => {
+    kk.add(rbox(1.3, 0.08, 0.75, 0.02), MAT.wood('honey'), 0, 0.3, 0);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) kk.add(cyl(0.11, 0.11, 0.06, 12), DARK(), sx * 0.5, 0.11, sz * 0.32, 0, { rx: Math.PI / 2 });
+    for (const sz of [-1, 1]) kk.add(rbox(1.3, 0.04, 0.04, 0.01), MAT.steel(), 0, 0.25, sz * 0.36);
+    kk.add(cyl(0.02, 0.02, 0.8, 6), MAT.steel(), -0.68, 0.7, 0, 0, { rz: 0.25 });
+    [[-0.3, 0.0, 0.55, 0.32, '#a8302a'], [0.32, 0.0, 0.5, 0.3, '#2f8a9a'], [-0.05, 0.33, 0.45, 0.26, '#7a4a2a']].forEach(([x, y, w, h, c]) => { kk.add(rbox(w, h, 0.42, 0.04), MAT.paint(c, 0.55), x, 0.34 + y + h / 2, 0); kk.add(rbox(0.12, 0.03, 0.03, 0.01), MAT.brass(), x, 0.34 + y + h + 0.02, 0); });
+    return { hw: 0.7, hd: 0.4, top: 1.0 };
+  });
+  B.put(W / 2 - 0.55, 7.4, 0.2, (kk) => boxStack(kk, { n: 3, seed: 15, w: 0.6 }));
+  B.put(W / 2 - 0.6, 10.6, -0.3, (kk) => boxStack(kk, { n: 2, seed: 16, w: 0.65 }));
+  B.put(0.9, 4.3, 0.5, (kk) => sackPile(kk, { seed: 11 }));
+  k.at(LX + 0.04, 2.2, 7.5, Math.PI / 2, () => hanging(k, { w: 1.0, h: 1.2, bands: ['#b0302c', '#e8dcc0', '#2f6f74', '#e8dcc0', '#b0302c'] }));
   B.light('#ffe8c8', 5.5, 15, 0.5, UY + 3.0, -7.0 * FZ); B.light('#ffe8c8', 5, 14, 0.5, UY + 3.0, -1.5 * FZ); B.light('#ffe8c8', 5.5, 15, 0.0, 3.8, 6.0 * FZ);
   return { baggage: B.finish() };
 }

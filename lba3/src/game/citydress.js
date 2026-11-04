@@ -1,7 +1,7 @@
 // Citadel's street furniture, twelve years on (SD-1): the bare stretches of the town get what a lived-in Twinsun
 // town keeps outdoors — litter bins by the benches, flower tubs and planters beside front doors, sign posts at the
 // junctions (to the SQUARE, the HARBOUR, the SPACEPORT and the LIGHTHOUSE, pointing the way one actually walks), a
-// few notice boards, resting spots along the long lane south, and on the harbour quay a ferry timetable, mooring
+// few notice boards, resting spots along the long lane south, and on the harbour quay mooring
 // bollards, a hand cart and a bench by the water. The kit is src/game/props.js's street furniture.
 //
 // Every piece is fitted where nothing stands: it keeps off the paths' centre lines and the streets' middles, doors,
@@ -189,7 +189,8 @@ export function buildCityDressing(root, physics, W) {
   place('handcart', (k) => P.handCart(k, { load: 'sacks', seed: 7 }), -58.4, 30.2, 0.15, FP.cart);
   { const x = -105.6, z = 41.6;
     post(x, z, [{ text: 'PIER', a: -Math.PI / 2, color: '#2a8a7a' }, { text: 'SQUARE', a: heading(x, z, -90, 38), color: '#c8452f' }, { text: 'SPACEPORT', a: heading(x, z, -90, 38), color: '#7a52b0' }]); }
-  board(-110.4, 46.6, Math.PI / 2, 'ferry');     // the ferry timetable, in the open quay (read from its east side)
+  // (HARBOUR-ONE: the ferry timetable that stood here, 6 m from the ferry stop's own board (travel.js), is gone: two
+  // ferry boards side by side on the open quay; the stop's board now faces the quay and says it)
   binEnd(-110.5, 40.4, -1);   // the quay's bench (island.js): a bin at its east end (BENCHES-1: the west one was against a board)
   // a bench looking out over the basin, its back to the harbour master's shed, a bin at its south end
   // (BENCHES-1: it faced the sea from the quay's edge squeezed between the shed's corner, its bin, its tub and a bollard)

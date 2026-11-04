@@ -18,6 +18,8 @@
 // The runner owns the camera while it plays (CameraRig.cine), hides the HUD, shows subtitles and a "hold to
 // skip" prompt with the player's real binding, and pauses with the game (pause menu, lost tab focus).
 import * as THREE from 'three';
+import { voiceFor } from './voice.js';
+import { planLine } from './voiceplan.js';
 
 const HOLD = 0.9;                 // seconds to hold for a skip
 const PROMPT_SHOW = 3.5;          // the skip prompt fades after this long without input
@@ -36,7 +38,13 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quatern
 // how fast a line types out for its voice (characters a second: about 8 syllables a second, finishing a little before
 // the subtitle goes), and so how long the voice is heard — a scene ends a speaker's talk gesture with it (R5)
 export const lineCps = (text, d) => Math.min(50, Math.max(28, text.length / (d * 0.8)));
-export const voiceSeconds = (text, d) => text.length / lineCps(text, d);
+// how long a subtitle's voice speaks (VOICE-PHRASE: the speaker's planned phrase, fitted to the subtitle; without a speaker,
+// the typing time)
+export const voiceSeconds = (text, d, voice = null) => {
+  const v = voice && voiceFor(voice);
+  return v ? planLine(v, text, { maxDur: Math.max(0.6, d - 0.15) }).dur + LINE_LEAD : text.length / lineCps(text, d);
+};
+const LINE_LEAD = 0.03;
 
 export class Cinematic {
   constructor(game, def) {
@@ -51,6 +59,8 @@ export class Cinematic {
     this.subI = -1;
     this.capI = -1;
     this.voiced = [];        // syllables babbled per subtitle (index → count): every spoken line has a voice
+    // VOICE-PHRASE: the cast's phrase banks load now, ahead of their first line
+    game.audio?.babble?.prepare?.([...new Set((def.subs || []).map((x) => x.voice).filter(Boolean))]);
     this.hold = 0;
     this.promptT = PROMPT_SHOW;
     this.focus = null;      // where shadows / distance detail centre while the hero is elsewhere
@@ -167,10 +177,10 @@ export class Cinematic {
       const s = subs[i];
       el.innerHTML = (s.who ? `<b style="color:${s.color || '#fff'}">${s.who}</b> ` : '') + `<span>${s.text}</span>`;
       el.classList.add('show');
-      // the speaker babbles the line (voice.js), paced like dialogue typing out: about 8 syllables a second,
-      // finishing a little before the subtitle goes
+      // the speaker babbles the line (voice.js): the whole phrase starts with the subtitle (VOICE-PHRASE), fitted to its
+      // time; the text still types out at this pace
       this._say = { s, i, typed: 0, cps: lineCps(s.text, s.d), c0: B?.count ?? 0 };
-      if (s.voice) B?.start(s.voice);
+      if (s.voice) B?.start(s.voice, { maxDur: Math.max(0.6, s.d - 0.15) });   // (VOICE-PHRASE: the line's voice fits its subtitle)
     }
     const S = this._say;
     if (i < 0 || !S || !S.s.voice || !B) return;

@@ -27,10 +27,8 @@ Object.assign(STR.en, {
   isle_mosquibee: 'Mosquibee Island',
   isle_celebration: 'Celebration Island',
   isle_undergas: 'Under Celebration',
-  isle_cxislet: 'The CX Islet',
   isle_platform: 'The Platform',
   isle_liftdock: 'The Lift Dock',
-  isle_tralu: 'Tralu Rock',
   isle_orchard: 'The Nectar Orchard',
   isle_oldwatch: 'The Old Watch',
   // the Holomap (VP-9): the planet he is on
@@ -55,4 +53,7 @@ Object.assign(STR.en, {
   tm_pilot: "Unless you're the one Doran's waiting for. He's by the project ship, out through the gate.",
   zt_grounded: 'Passenger ships to Twinsun are held by the project. When they fly again, this counter will be the first to know.',
   zt_board: 'ZEELICH SPACEPORT · Departures: Twinsun, Citadel Spaceport, by spaceship from pad one. Zeelich\'s islands: Esmer shuttles from the dock.',
+  // (WC-4: the boards in the port's other states: the evacuation's project ships at Citadel, the council's checks on Zeelich)
+  port_board_evac: "CITADEL SPACEPORT · Project ships to Zeelich: boarding by the project's list at the gate. Passenger seats: ask at the counter.",
+  zt_board_council: "ZEELICH SPACEPORT · Departures: Twinsun, Citadel Spaceport, by spaceship from pad one. By order of the council, every departure is checked at the gate.",
 });

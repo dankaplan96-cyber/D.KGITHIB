@@ -1105,6 +1105,7 @@ function finishRig(L, def, root, mesh, bones, eyes) {
   rig.mesh = mesh;
   rig.height = def.bones.head.tip[1];
   if (L.armSpread != null) rig.armSpread = L.armSpread;
+  if (L.outfit === 'lba') rig.capeArms = true;   // (JUMP-CAPE: the cape's sides are tied to the arms: rig.js keeps them in)
   // his own timing where the original's clips give it (Baldino, ANIM.HQR 715/717/718: SRC-2)
   if (L.walkCycle) rig.walkCycle = L.walkCycle;
   if (L.idlePeriod) rig.idlePeriod = L.idlePeriod;

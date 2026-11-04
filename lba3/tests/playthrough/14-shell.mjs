@@ -51,6 +51,7 @@ export const steps = [
     // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)
     if (P.assist && tg && !tg.done && !G.hero.dead) { for (let n = 0; n < 3 && !tg.done; n++) { G.story.cur.hitCoil(tg); P.settle(); } P.note('ISO assist: the overload coil broken'); }
     P.settle(60); return { ...r, coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core → chapter 12' }],
-  ['the epilogue', () => { const G = game; let t = 0; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
+  // (VESK-CHOICE: the console sparks over Vesk; E takes the first choice, "Pull him clear")
+  ['the epilogue', () => { const G = game; let t = 0, choice = null; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'shop' && !choice) { choice = document.querySelector('#shop h2')?.textContent || 'menu'; P.tap('KeyE', 0.2); } if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, choice, helped: G.flags.c3_veskHelped, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
   ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
 ];

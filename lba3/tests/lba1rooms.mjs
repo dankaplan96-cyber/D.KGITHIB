@@ -33,19 +33,17 @@ const r = await page.evaluate(() => {
   G.enterRoom('butemple'); G.step(2);
   const st = G.rooms.butemple.exits.find((e) => e.room === 'bumaze');
   out.maze = stand(st.x, st.z, 5); out.mazeFloor = h.onGround && Math.abs(h.pos.y - G.physics.groundAt(h.pos.x, h.pos.z, h.pos.y + 1)) < 0.3;
-  out.halls = stand(G.rooms.bumaze.goal.x, G.rooms.bumaze.goal.z, 5);
-  out.mites = G.enemies.filter((e) => e.group === 'buhalls' && e.present).length;
-  const ex = G.rooms.buhalls.exits.find((e) => e.room === 'butemple');
-  out.back = stand(ex.x, ex.z, 12);
+  out.chest = G.rooms.bumaze.givers.some((v) => v.id === 'bu_halls'); out.hallsGone = !G.rooms.buhalls;
+  out.back = stand(G.rooms.bumaze.goal.x, G.rooms.bumaze.goal.z, 5);
   return out;
 });
 check('the asylum: in through the block-house on Citadel, standing on its floor', r.enter === 'asylum' && r.floor, r);
-check("the asylum's guards are posted (Quetch guards, the fat trooper, guard dogs)", r.guards >= 8 && ['fclone', 'gdog', 'guard'].every((k) => r.kinds.includes(k)), r);
+check("the asylum's guards are posted (ASYLUM-2: Vesk's two on his store, a Quetch and a Grobo)", r.guards === 2 && r.kinds.join() === 'guard,guardG', r);
 check('the old register in the office: a search, a clover', r.search === 'dialog' && r.clover, r);
 check('out by the stair-well, back on Citadel', r.out === 'citadel', r);
 check("the Temple of Bù: down the stair into the maze", r.maze === 'bumaze' && r.mazeFloor, r);
-check("through the maze to the halls, the crystal mites there", r.halls === 'buhalls' && r.mites >= 4, r);
-check('the far end of the halls leads back up to the temple', r.back === 'butemple', r);
+check("DECLUTTER: the dark halls are merged into the maze: the halls' chest stands at the maze's far end", r.chest && r.hallsGone, r);
+check('the far end of the maze leads back up to the temple', r.back === 'butemple', r);
 // WORLD-AUDIT: the block-house can be walked to. It stands on a terrace round the fort, above the plateau; the stair
 // up the ledge west of the fort (lba1places.js ASYLUM_STEPS) is the way. By input: the harness's A* over the game's
 // collision and the keys, from the plateau below the ledge, in through the door and out again.

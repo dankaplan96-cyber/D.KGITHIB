@@ -16,6 +16,7 @@ import { pickupModel, buildSword } from './actors.js';
 import { blowgunModel, pistolModel, gloveModel } from './weapons.js';
 import { penguinModel, lanternModel } from './gadgets.js';
 import { jetpackModel } from './jetpack.js';
+import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel } from './tools.js';
 import { paintIcon } from './inventory.js';
 
 export const TURN = { inventory: (Math.PI * 2) / 4.096, found: (Math.PI * 2) / 2.048 };   // rad/s
@@ -150,6 +151,9 @@ const LOOKS = {
   penguin: () => penguinModel(),
   lantern: () => lanternModel(),
   jetpack: () => jetpackModel(),
+  pocketset: () => pocketSetModel(),   // (EQUIP-2a: tools.js)
+  lance: () => lanceModel(),
+  fork: () => forkModel(), line: () => lineModel(), heatflask: () => flaskModel(),   // (EQUIP-2b: tools.js)
   darts: () => {
     const g = new THREE.Group();
     for (let i = -1; i <= 1; i++) {
@@ -254,10 +258,10 @@ const LOOKS = {
     return g;
   },
 };
-const TILT = { ticket: -0.2, sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
+const TILT = { lance: 1.0, pocketset: -0.2, fork: 0.5, line: 0.7, heatflask: 0.3, ticket: -0.2, sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
 // an item's look: its own when it has one, otherwise its painted icon's (inventory.js icon kinds)
 const BY_ID = { lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
-  kashes: 'coin', clovers: 'clover', crystals: 'crystal', kscreen: 'cloth', relay: 'cog' };
+  kashes: 'coin', clovers: 'clover', crystals: 'crystal', kscreen: 'cloth', relay: 'cog', survey: 'pipemap', pcell: 'crystal' };
 const BY_ICON = { map: 'pipemap', stamp: 'permit', part: 'cog', crystal: 'crystal' };
 export function lookOf(id, icon) { return LOOKS[id] ? id : BY_ID[id] || BY_ICON[icon] || (LOOKS[icon] ? icon : 'cog'); }
 export const hasLook = (k) => !!LOOKS[k];

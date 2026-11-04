@@ -13,7 +13,7 @@ await open(page, '?nocine'); await menu(page, 'new');
 
 // every island is built (LAZY-REGIONS: on first need; here all of them, through the game's own path)
 const isles = await ev(() => game.regions.ensureAll('test') || Object.values(game.rooms).filter((R) => R.isle).map((R) => ({ id: R.id, objects: R.objects, sample: R.sample.length, walk: Math.round(R.walk), spawnLand: R.land(R.spawn.x, R.spawn.z) })));
-check('all eleven Zeelich places are built (the original\'s 7 + the Lift Dock + our 3), each with a walkable area (≥ 100 m²) and its spawn on land', isles.length === 11 && isles.every((i) => i.sample >= 1 && i.walk >= 100 && i.spawnLand), isles);
+check('all nine Zeelich places are built (the original\'s 6 + the Lift Dock + our 2: DECLUTTER cut the CX islet and Tralu Rock), each with a walkable area (≥ 100 m²) and its spawn on land', isles.length === 9 && isles.every((i) => i.sample >= 1 && i.walk >= 100 && i.spawnLand), isles);
 
 // before chapter 4 the shuttle offers nothing (ISO: put on Zeelich in the prologue)
 const before = await ev(() => { const G = game, R = G.rooms.zeelich; P.settle(); G.enterRoom('zeelich', R.dock, true); P.settle();
@@ -36,7 +36,7 @@ const take = async (pick) => ev((pick) => {
 }, pick);
 await ev(() => { const G = game, f = G.flags; Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'dig' }); f.chapter = G.story.chapters.findIndex((c) => c.key === 'dig'); G.hero.hasBall = true; G.story.refreshCast(); G.enterRoom('zeelich', G.rooms.zeelich.dock, true); P.settle(); });
 const t1 = await take('Otringal');
-check('chapter 4: E at Zeelich\'s shuttle opens the shuttle menu (the spaceport island marked here, the 11 islands; no Twinsun stop)', t1.menuState === 'shop' && t1.items?.length === 12 && t1.items[0].endsWith('*') && t1.items.every((x) => !/Twinsun|Citadel/.test(x)), t1);
+check('chapter 4: E at Zeelich\'s shuttle opens the shuttle menu (the spaceport island marked here, the 9 islands; no Twinsun stop)', t1.menuState === 'shop' && t1.items?.length === 10 && t1.items[0].endsWith('*') && t1.items.every((x) => !/Twinsun|Citadel/.test(x)), t1);
 check('picking Otringal lands him there, in play, beside its shuttle', t1.room === 'isle_otringal' && t1.state === 'play', t1);
 
 // walk the island: to five far points of the main area (INPUT, the harness's A* over the game's own movement)
@@ -110,7 +110,7 @@ check('Knartas → back to Zeelich, beside its pad, in play', t3.room === 'zeeli
 // arrival he walks to every landmark (INPUT), and finds the place's giver (Space there in Normal: a hop gives a bonus, once)
 const places = await ev(() => {
   const G = game, out = [];
-  for (const id of ['isle_liftdock', 'isle_tralu', 'isle_orchard', 'isle_oldwatch', 'isle_celebration']) {
+  for (const id of ['isle_liftdock', 'isle_orchard', 'isle_oldwatch', 'isle_celebration']) {
     const R = G.rooms[id]; G.enterRoom(id, null, true); P.settle();
     const h = G.hero, walks = [];
     for (const p of R.pois) { G.enterRoom(id, null, true); P.settle(); const r = P.go(p.x, p.z, { tol: 1.4, run: true, maxT: 90 }); walks.push([p.word, r.r, +Math.hypot(h.pos.x - p.x, h.pos.z - p.z).toFixed(1)]); }
@@ -121,7 +121,7 @@ const places = await ev(() => {
   G.enterRoom('zeelich', G.story.isles.landing('zeelich'), true); P.settle();   // (back where the next step starts)
   return out;
 });
-check('the Lift Dock, Tralu Rock, the Nectar Orchard, the Old Watch and Celebration: every landmark walked to from the arrival (INPUT)', places.every((p) => p.walks.length >= 1 && p.walks.every((w) => w[1] === 'arrived' || w[2] < 2.0)), places);
+check('the Lift Dock, the Nectar Orchard, the Old Watch and Celebration: every landmark walked to from the arrival (INPUT)', places.every((p) => p.walks.length >= 1 && p.walks.every((w) => w[1] === 'arrived' || w[2] < 2.0)), places);
 check('each new place has a giver that gives once', places.filter((p) => p.id !== 'isle_celebration').every((p) => p.givers >= 1 && p.given), places.map((p) => [p.id, p.givers, p.given]));
 
 // save & Continue on an island (INPUT: Esc → Quit to title saves; Continue)

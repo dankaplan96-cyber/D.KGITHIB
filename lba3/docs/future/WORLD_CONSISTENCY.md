@@ -17,6 +17,7 @@ the user only by chapter number and kind of gap, never by place, person or event
 | R8 | Lamps hand over with fades; weather per planet held by the story's scenes; never dark | LAMP-FADE, WEATHER-1 | yes |
 | R9 | LBA2's gaits (discreet walk), planted feet, busy NPCs turn only when spoken to | DISCREET-WALK, STOP-ROBUST, GAME-1 | yes |
 | R10 | The story connects: the shaft starts at Citadel's station, every later chapter agrees | SHAFT-CITADEL (da0f308) | text and story |
+| R11 | Every place has a meaning for the journey, even a small one (a hint, a find tied to a quest, a person who points somewhere useful, a shortcut); no superfluous LBA1/LBA2 places, no cacophony of buildings; what has none is cut | the user, 3.11.2026 (CLUTTER_AUDIT.md) | per place |
 
 R8 and R9 live in the engine, so every chapter has them already (DISCREET-WALK lands with its merge). R7 was checked
 on 2.11 (`grep` over `src/game/text`): no "mole", and the only "night" is chapter 2's dial riddle, kept on purpose.
@@ -72,6 +73,55 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
     the shaft once the network is done), so it is not cheap. No parked glider stands on the monks' slope before the
     film (the craft is built for the film).
 
+- **WC-3 done (3.11, branch `wc-3`):** residents with rounds where chapters 4–9 go (`src/game/storylife.js`, driven by
+  the existing walkers: the street's manager outdoors, the rooms' manager in the School and the antechamber;
+  `tests/residents.mjs`). Data only, nothing saved: each resident's state is read from the chapter and the story's flags.
+  - Desert Island, the project's yard between the research post and the dig: eight of the crew (surveyor and staff man
+    on the dig's rim, cook at a field kitchen, two porters carrying crates between two piles, a fitter, a digger, a site
+    clerk), all outside the post's fence (its inside is chapter 4's sneak). They shelter while a sandstorm blows.
+    Chapter 5 once Dallan's order has taken the ferry (`c5_planned`): two have gone with it, six pack up.
+  - The School of Magic from chapter 4: a master and three pupils on its plaza (a spell in pairs, the herb bed watered
+    from the channel), three pupils in the classroom before Rector Hougo. Nobody walks between the plaza and the hall
+    (the planner does not cross the bridge's split steps); counted together.
+  - The Hamalayi: eight villagers. In Lhar they pack (sacks to the hand cart, crates, the washing, wood, water) and two
+    children play tag; each goes up with one of the story's two lift trips (`c6_trip1`, `c6_trip2`) and lives in a camp
+    on the terrace east of the monastery's yard (the yard is the story villagers'; the terrace's lip is chapter 7's
+    glider take-off: kept clear). Chapter 7 on: settled there.
+  - Zeelich, chapter 9: before the council house a council guard on post, a clerk in and out of its door, a courier
+    (bridge, council house, dock), a petitioner; in the antechamber a junior clerk, a courier, two petitioners, a guard
+    by the council's door (never the archive's).
+  - A state change the player could see waits until the resident is out of sight; away from its area a story resident
+    sleeps (no update at all). Talk stops and turns them (the existing resident talk); 32 new named speakers, each with
+    its own voice.
+
+- **WC-4 done (3.11, branch `wc-4`):** the spaceports' people follow the port's state, derived from the chapter
+  (`roomlife.js portPhase`; nothing saved; a person's `when` names the states they are there in, a stop's `stage` keeps
+  the queue's stops to the evacuation). Citadel's terminal / deck, Zeelich's terminal / deck:
+  - chapters 1–3 (grounded): Ama, Tavi, the port guard, Mrs Lomba / Gurt, Dov; Velo, Pask / Ennu, Oshra; GROUNDED notices.
+  - chapters 4–7 (flying), and 9 on Citadel: Ama, Tavi, Old Ressa, Ollo / Gurt, Esren, Gunda, Bibi; Velo, Pask / Ennu, Oshra.
+  - chapter 8 (evacuation): the queue for the project's ships from the gate (the port guard at its head with the
+    project's list, its sheet on the gate's pillar, the notice "boarding by the list"; Mrs Lomba, Rollo and Mrs Pell in
+    it with their luggage, on the list: Rollo and Mrs Pell out of their emptied rooms, the same people by name and voice;
+    Old Ressa between her seat and the café; Ollo turned away at the list), Ama, Tavi (8) / Gurt readying the ships,
+    Dov (not on the list), Gunda and Bibi (on it) (4); Zeelich quieter: Velo, Pask only (2 / 0). The queue keeps the
+    way from the door to the gate 1.2 m wide, off the board's reading spot and the gate's way in.
+  - chapter 9: two of the council's guards in Zeelich's terminal (the gate, the door; own voices), the council's order on
+    its notice and board: 4 inside / Ennu, Oshra.
+  - chapter 10 and the epilogue: back to normal, Mrs Lomba home from her sister's (Citadel 5 / 4); on Zeelich the guards
+    gone (Velo: "One left his chair").
+  Lines `_e`, `_c`, `_a` (text/interiors.js); boards by state (`port_board_evac`, `zt_board_council`).
+  - The story's crossings between the planets: chapter 2 → 3 walks the bridge and the deck past Citadel's terminal to
+    Doran at the pad (the clerk inside points him there); chapter 8 → 9 the same to the project ship (or through the
+    terminal and its gate); both arrive on Zeelich's deck at the landing beside the pavilion (no landing film: a cut).
+    Chapter 10's travel menu is at the pads and the terminals' counters. Not walked: chapter 3 → 4 starts from the drill
+    platform's console about 70 m east of Zeelich's pad (the ship's film cuts to the pad); not small (it would change
+    the chapter's ending and two tests): listed. Fixed: a save resumed after that console scene (`c2_done`) crossed
+    with a plain fade; it now plays the same films (`chapter2.js crossHome`).
+- **WC-5 done (3.11, branch `wc-4`):** `tests/world-consistency.mjs`, in the regression set (tests/README.md): residents
+  per area at each chapter's start (1–10, the epilogue), the cast with a round moving in 30 s, the story's
+  `startTransition` calls on an allow-list (films checked). Known gap it lists: chapter 10's glider menu
+  (`network.js fly`) between Twinsun's regions is a plain fade (no glider film).
+
 ## Work orders (in this order; at most two agents at a time)
 1. **WC-1 Journeys (done 3.11, above).** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter
@@ -109,3 +159,20 @@ honest measurements (SwiftShader here: no fps claims).
    hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
    Concepts: `EQUIP2_CONCEPTS.md` (five items, waiting for the user's approval).
 5. **BIGGER-1: done (265a870).** The rooms 1.5x; the interiors' people read from each room's exported plan (`*_PLAN`).
+6. **ASYLUM-LATER (written only; nothing built).** ASYLUM-1 gave FunFrock's asylum (LBA1 room 0) its reason in
+   chapters 1–2: bricked up after FunFrock fell, broken back into by the Joint Project's dig under the fort (the breach
+   in its west wall, the project's cable, Madam Rondo's line), and Twinsen's old cell as a memory (`as_cell`). Two later
+   uses, each needing a real playable path, quest state, save compatibility and an aftermath:
+   - **The secret way into the fort that only Twinsen knows** (he escaped this asylum in LBA1). The dig's breach (west
+     wall, `R.wayIn.breach` in `src/game/lba1places.js`) would open on a tunnel up into the station yard. Hosts: chapter 8
+     (`src/game/story/evacuation.js`: the station yard's cistern lever and its drones, the station's control room where
+     Vesk announces the depth) — a quiet way past the drones; chapter 10 (`src/game/story/network.js`: the blast doors
+     over the collar at Citadel's station, `W.station.setSealed`) — the collar reached from below while the yard is
+     held. Chapter 1's station tour (`src/game/story/chapter1.js`, `W.gate`) keeps the front gate as the only way in, so
+     the tunnel opens only from chapter 8 (a flag set when Gilbert, who knows FunFrock's shelters, names the dig's cut).
+   - **A shelter in the crisis.** Chapter 8 already has FunFrock's two shelters (`src/game/story/shelters.js`: the fort's
+     by the lever, the depot bunker's hatch wheel) and Zoé's plan sends the town underground; the asylum could take the
+     families the shelters cannot hold (its halls and cells, the block-house door outside the fort's east wall). Chapter
+     9's council cabinet already lists "FunFrock's old tunnels on every island" (`src/game/text/ch9.js`
+     `c9_cab_tunnels`), the place for the evidence. Needs: who goes there (a resident group from `citizens.js`), the
+     asylum's guards (`lba1EnemyDefs`, posted from the prologue's end) withdrawn first, the people seen there afterwards.

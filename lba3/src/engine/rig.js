@@ -1098,6 +1098,10 @@ export class Rig {
         // arms out to the sides for balance rather than both straight up
         T.legL = up ? -0.55 : -0.3; T.legR = up ? -0.4 : -0.2; T.kneeL = up ? 1.0 : 0.5; T.kneeR = up ? 0.85 : 0.45;
         T.armL = up ? -1.3 : -0.9; T.armR = up ? -1.1 : -1.0; T.elL = -0.5; T.elR = -0.5; armOut = 0.7;
+        // (JUMP-CAPE, the user 4.11: "when Twinsen jumps the tunic looks strange at the arms": his cape's sides are
+        //  tied to the arms, and arms out to the sides pulled them into flat wings. Arms in and a little forward,
+        //  elbows bent: the cape keeps hanging, as LBA2's jump)
+        if (this.capeArms) { T.armL = up ? -0.7 : -0.5; T.armR = up ? -0.6 : -0.5; T.elL = -1.0; T.elR = -1.0; armOut = 0.2; }
       }
       if (this.footPlant && up) {
         // the push-off: the legs drive straight and the toes point for the first 0.12 s (the crouch's spring), then tuck
@@ -1107,7 +1111,7 @@ export class Rig {
       } else if (this.footPlant) {
         // the ground is coming: the arms come down and out, the legs straighten and reach (a foot ahead, the toes down) to meet it
         const r = clamp(1 - this.groundGap / 0.7, 0, 1), e = r * r * (3 - 2 * r), m = (v, t) => v + (t - v) * e;
-        T.armL = m(T.armL, -0.6); T.armR = m(T.armR, -0.6); armOut = m(armOut, 0.75);
+        T.armL = m(T.armL, -0.6); T.armR = m(T.armR, -0.6); armOut = m(armOut, this.capeArms ? 0.25 : 0.75);
         T.legL = m(T.legL, -0.32); T.legR = m(T.legR, -0.12); T.kneeL = m(T.kneeL, 0.16); T.kneeR = m(T.kneeR, 0.12);
         T.footL = 0.4 * e; T.footR = 0.4 * e; torsoX = m(torsoX, 0.06);
       }
@@ -1304,6 +1308,10 @@ export class Rig {
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
+    } else if (a === 'sleep') {
+      // (ASYLUM-2: asleep on the back in a bunk, arms by the sides, a slow breath)
+      bodyRotX = -Math.PI / 2; hipsY = 0.3; torsoX = Math.sin(this.t * 1.1) * 0.02;
+      T.armL = 0.1; T.armR = 0.1; T.elL = -0.25; T.elR = -0.25; headX = -0.1;
     } else if (a === 'ko') {
       // an enemy knocked out (src/game/death.js drives the clock, ko.t, and picks the fall): the hit's recoil,
       // the fall with weight onto the back or the front (or a slump where there is no room), the impact's bounce,

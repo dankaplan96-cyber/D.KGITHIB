@@ -63,7 +63,7 @@ let w = await where();
 check('a new game: chapter 1, out of the house on Citadel', w.room === 'citadel' && w.chapter === 'well', w);
 
 // ---------------------------------------------------------------- 1. the grate
-let r = await ev(() => ({ doors: game.story.doors().filter((d) => d.room === 'sewer').length, hatch: { x: game.story.sewers.H.x, z: game.story.sewers.H.z }, open: game.story.sewers.H.open }));
+let r = await ev(() => ({ doors: game.story.doors().filter((d) => d.room === 'sewer' && !d.house).length, hatch: { x: game.story.sewers.H.x, z: game.story.sewers.H.z }, open: game.story.sewers.H.open }));
 check('the grate is there, shut: no way down yet', r.doors === 0 && !r.open && Number.isFinite(r.hatch.x), r);
 const HATCH = r.hatch;
 r = await ev((H) => P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }), HATCH);
@@ -74,7 +74,7 @@ await view('s1-grate');
 // ---------------------------------------------------------------- 2. down on the lift
 r = await onDeck(HATCH);
 let L = await lift();
-check('lifted: the lift\'s deck lies flush with the lane; standing on it, the prompt is "Go down" (no door to walk into)', L.open && L.deck === 0 && L.ground === 0 && L.off < 0.4 && r.t?.kind === 'swdown' && /Go down/.test(r.prompt) && !(await ev(() => game.story.doors().some((d) => d.room === 'sewer'))), { r, L });
+check('lifted: the lift\'s deck lies flush with the lane; standing on it, the prompt is "Go down" (no door to walk into)', L.open && L.deck === 0 && L.ground === 0 && L.off < 0.4 && r.t?.kind === 'swdown' && /Go down/.test(r.prompt) && !(await ev(() => game.story.doors().some((d) => d.room === 'sewer' && !d.house))), { r, L });
 r = await pressDown();
 check('E on the deck: he pulls the lever, the ride begins, the winch clanks (INPUT)', r.state === 'cutscene' && r.snd.includes('liftWinch'), r);
 await ev(() => game.step(0.7));
@@ -203,7 +203,7 @@ r = await ev(() => { P.settle(); return { room: game.room?.id, state: game.state
 check('and down again after the Retry (INPUT)', r.room === 'sewer' && r.state === 'play', r);
 await ev(() => { P.settle(); for (const k of Object.keys(game.flags)) if (k.startsWith('sw_')) delete game.flags[k]; P.exitTo('sewer-out'); P.settle(); game.save(false); });
 await boot('continue');
-r = await ev(() => ({ room: game.room?.id ?? 'citadel', open: game.story.sewers.H.open, doors: game.story.doors().some((d) => d.room === 'sewer'), chapter: game.flags.chapterKey, state: game.state, prompt: game.findInteractable()?.kind || null }));
+r = await ev(() => ({ room: game.room?.id ?? 'citadel', open: game.story.sewers.H.open, doors: game.story.doors().some((d) => d.room === 'sewer' && !d.house), chapter: game.flags.chapterKey, state: game.state, prompt: game.findInteractable()?.kind || null }));
 check('an old save (no sw_ flags): it loads, the grate shut, the chapter as it was', r.state === 'play' && !r.open && !r.doors && r.chapter === 'well', r);
 
 const fails = done();

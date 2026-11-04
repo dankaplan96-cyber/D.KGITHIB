@@ -151,7 +151,7 @@ function buildTempleRoom(scene, physics) {
     k.add(rbox(2.3, 0.3, 0.25, 0.04), rough, sx, 0.15, sz - 1.05);
     R.exits.push({ x: B.cx + sx, z: B.cz + sz + 0.4, r: 0.7, room: 'bumaze' });
     const back = { x: B.cx + sx + 1.6, z: B.cz + sz - 1.6, a: 0 };
-    R.entries = { bumaze: back, buhalls: back };
+    R.entries = { bumaze: back };
   }
   return B.finish();
 }

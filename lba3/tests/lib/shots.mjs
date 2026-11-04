@@ -41,7 +41,7 @@ const MAIN = [
 // Zeelich, the original's Zeelich islands (shuttle landings), the Hamalayi (spots from its contract, hamalayi.js)
 const ISLANDS = [
   ['z1-zeelich-dock', { room: 'zeelich', t: 2 }],
-  ...['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform'].map((k) => ['z-' + k, { room: 'isle_' + k, t: 2 }]),
+  ...['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'platform'].map((k) => ['z-' + k, { room: 'isle_' + k, t: 2 }]),
   ['h1-landing', { room: 'hamalayi', t: 2 }],
   ['h2-lhar', { room: 'hamalayi', near: 'lhar', dz: 6, a: Math.PI, t: 2 }],
   ['h3-monastery', { room: 'hamalayi', near: 'monastery.yard', dz: 4, a: Math.PI, t: 2 }],

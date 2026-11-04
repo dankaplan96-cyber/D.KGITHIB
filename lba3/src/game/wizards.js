@@ -18,7 +18,7 @@
 //   R.npcSpots: wtent {bersimon}, school {magus, keraooc}
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
-import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug, railing, barrel, M, TEX } from './props.js';
+import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug, railing, barrel, M, TEX, Kit } from './props.js';
 import { DESERT } from './desert.js';
 import { SCHOOL_SITE, SCHOOL_DOOR } from './desertold.js';
 
@@ -138,7 +138,25 @@ function buildTentRoom(scene, physics) {
   k.add(rbox(2.2, 0.06, 0.3, 0.02), MAT.wood('dark'), 4.4, 2.0, BZ + 0.18);
   for (let i = 0; i < 5; i++) jar(k, 3.5 + i * 0.42, 2.03, BZ + 0.18, i % 2 ? 'bottle' : 'jar', ['#3a7a8a', '#c8a050', '#7a4a8a', '#2a5a6a', '#8a5a3a'][i], 0.8);
   k.add(plane(0.8, 1.0), MAT.paper('#efe2c0', '#6a4a2a', 'star'), 4.4, 3.0, BZ + 0.03);
-  k.at(-3.8, 0.01, 2.2, 0.2, () => rug(k, 2.0, 1.3, ['#c89a4a', '#3a2a1a', '#d8a040', '#f0d890', '#2a1a0a'], 7));
+  // the spotted rug, and under it (SEWERS-1, S-1: LBA2's tent had its own way down into the sewers) a trapdoor to a
+  // stair down to the old water hall's west end. Opened (story/sewers.js: Bersimon rolls the rug back, or Twinsen
+  // pushes it up from below), the rug lies rolled beside it and the leaf stands up on its hinge.
+  const TD = { x: -3.8, z: 2.2, s: 0.95 };
+  const rugG = new THREE.Group(); rugG.position.set(TD.x, 0.01, TD.z); rugG.rotation.y = 0.2; B.group.add(rugG);
+  { const rk = new Kit(rugG); rug(rk, 2.0, 1.3, ['#c89a4a', '#3a2a1a', '#d8a040', '#f0d890', '#2a1a0a'], 7); rk.flush(); }
+  const rolled = new THREE.Mesh(cyl(0.11, 0.11, 1.3, 10), MAT.paint('#b08840', 0.9)); rolled.rotation.x = Math.PI / 2; rolled.position.set(TD.x + 0.85, 0.11, TD.z); rolled.visible = false; B.group.add(rolled);
+  const hole = new THREE.Mesh(plane(TD.s, TD.s), MAT.flat('#0c0a08', 1)); hole.rotation.x = -Math.PI / 2; hole.position.set(TD.x, 0.006, TD.z); hole.visible = false; B.group.add(hole);
+  const hatch = new THREE.Group(); hatch.position.set(TD.x, 0.004, TD.z - TD.s / 2); B.group.add(hatch);
+  { const hk = new Kit(hatch); hk.add(rbox(TD.s, 0.05, TD.s, 0.01), MAT.planks('honey'), 0, 0.025, TD.s / 2); for (const z of [0.15, TD.s - 0.15]) hk.add(rbox(TD.s + 0.02, 0.03, 0.07, 0.005), MAT.iron(), 0, 0.055, z); hk.add(cyl(0.05, 0.05, 0.02, 10), MAT.brass(), 0, 0.06, TD.s - 0.3); hk.flush(); }
+  const trapExit = { x: B.cx + TD.x, z: B.cz + TD.z, r: 0.45, room: 'sewer' };
+  R.entries = { sewer: { x: B.cx + TD.x, z: B.cz + TD.z + 1.35, a: 0 } };
+  R.trap = {
+    at: { x: B.cx + TD.x, z: B.cz + TD.z },
+    setOpen(b) {
+      rugG.visible = !b; rolled.visible = b; hole.visible = b; hatch.rotation.x = b ? -1.9 : 0;
+      const i = R.exits.indexOf(trapExit); if (b && i < 0) R.exits.push(trapExit); else if (!b && i >= 0) R.exits.splice(i, 1);
+    },
+  };
   R.npcSpots = { bersimon: { x: B.cx + 0.2, z: B.cz + BZ + 2.6, a: 0.2 } };
   B.giver('wt_shelf', 4.4, BZ + 0.9, ['magic', 'magic', 'money'], 1, { r: 1.1 });
   return B.finish();

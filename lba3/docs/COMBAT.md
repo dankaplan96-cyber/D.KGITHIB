@@ -526,8 +526,8 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
   one in the training arena.
 - Guard dogs, trotting the guards' loops: ch. 1 depot, ch. 2 Zeelich depot, ch. 4 post, ch. 8 crowd-control yard;
   one in the training arena. The yard on Zeelich trains them (those bark from behind the palisade).
-- LBA1's rooms (open in every chapter): FunFrock's asylum on Citadel, after the prologue: Quetch and Grobo guards
-  at the original nurses' spots, a fat trooper at the clone's, two guard dogs; the Temple of Bù's dark halls: six
+- LBA1's rooms (open in every chapter): FunFrock's asylum on Citadel (ASYLUM-2: the project's workers' hostel), after
+  the prologue and in chapters 1–2 only: two of Vesk's guards (a Quetch, a Grobo) on his store under it; the Temple of Bù's dark halls: six
   crystal mites.
 - Ch. 4 dig: mites in the trench.
 - Ch. 5 valve hall: drones among cover.

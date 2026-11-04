@@ -27,13 +27,10 @@ Object.assign(STR.en, {
   w_door_shut: 'Locked.',
   // C-4: each locked door says why (story/prologue.js baseInteract; ids from town.js HOUSES and island.js shutDoor)
   w_door_nbr: "The neighbours are out.",
-  w_door_stone: "Locked. A note on the door: 'Gone to the hill farms. Back for the harvest.'",
-  w_door_shop: "Locked. A card in the window: 'Back soon. Knock louder.'",
-  w_door_pink: "Locked. Someone inside is snoring.",
-  w_door_stoneup: "The porch door is bolted from the other side.",
+  w_door_stone: "Tibbo's house. A note on the door: 'At the counter by Pippa's stall. Darts, cells, spare parts.'",
+  w_door_stoneup: "The porch door is bolted from the other side. From below, by the draught.",
   w_door_water: "The water office. Closed for now.",
-  w_door_dome: "Sealed for longer than anyone remembers.",
   w_door_plateau: "An old door into the plateau, rusted shut.",
-  w_door_passageN: "FunFrock's old passage. Barred.",
-  w_door_passageS: "A trapdoor into FunFrock's old passage. Bolted from below.",
+  w_door_passageN: "FunFrock's old passage. Barred. It ran under the fort to his asylum, where the project posts guards now.",
+  w_door_passageS: "A trapdoor into FunFrock's old passage. Bolted from below. The asylum's block-house is just past the fort's east wall.",
 });

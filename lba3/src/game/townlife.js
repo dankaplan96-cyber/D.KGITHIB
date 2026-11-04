@@ -322,7 +322,10 @@ export function buildTownLife(root, physics, W) {
     // the roof: tall at the front so the bench and the coupler stay in view from the paths at the normal camera's
     // 26°; from the far view (46°) it fades while the coupler is on the bench and the roof is in the way of it, or
     // while Twinsen stands under it and it hides him (as the town's houses fade)
-    const roofM = MAT.paint('#c8602a', 0.6).clone(), signM = MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7).clone(), boardM = MAT.wood('dark').clone();
+    // (HARBOUR-ONE: boards, as the quay's other sheds have, a little red from old paint; it was a flat orange paint, a
+    // fourth colour on the quay beside the customs' navy and the two sheds; the sign keeps Nell's orange)
+    const roofM = MAT.planks('honey').clone(), signM = MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7).clone(), boardM = MAT.wood('dark').clone();
+    roofM.color.set('#c89478');
     const fadeM = [roofM, signM, boardM];
     {
       const rg = new THREE.Group(); rg.position.set(s.x, sy, s.z); rg.rotation.y = SRY; g.add(rg);

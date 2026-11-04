@@ -30,10 +30,14 @@ import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
+const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
 
 const DAY = 360;                       // seconds in a resident's "day": stops may keep to part of it (when: [from, to] of 0..1)
 const FULL_R = 60, REDUCED_R = 110;    // metres: simulated every frame / a third of the frames; beyond (or out of view): abstract
-const NEAR_R = 14;                     // metres: always simulated every frame, in view or not (it may be about to come round)
+const NEAR_R = 14;                     // metres: simulated every frame in view; out of the view a third of the frames (it may be about to come round)
+const CLOSE_R = 6;                     // metres: always simulated every frame, in view or not (WC-4: was NEAR_R for both)
+const STATICS_T = 0.1;                 // s: how often the list of the story's people near the hero is made again (their positions are read live)
+const OTHERS_R = 6;                    // m: the residents a walker steers round are those this near (its reach is under 3.5 m)
 const hashId = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
@@ -110,6 +114,7 @@ export class Walkers {
     this.stage = this.stageNow(); this.pippa = null;
     this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
     this.measure = false;         // (tests / the perf probe: time every resident's update)
+    this.debug = false;           // (debugging: each walker's last steering numbers, Resident.dbg; WC-4: no longer made while measuring)
     this.doors = indoor ? [] : (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
     this.nav.keepOut = this.doors;
   }
@@ -139,12 +144,16 @@ export class Walkers {
     cam.updateMatrixWorld();
     this._m.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
     this.frustum.setFromProjectionMatrix(this._m);
-    // the story's people near the hero: obstacles a resident walks round
-    this.statics.length = 0;
-    for (const n of g.npcs) {
-      if (n.ambient || !n.present) continue;
-      const dx = n.pos.x - h.pos.x, dz = n.pos.z - h.pos.z;
-      if (dx * dx + dz * dz < 4900) this.statics.push(n);
+    // the story's people near the hero: obstacles a resident walks round (WC-4: who they are is looked over ten times a
+    //  second, not every frame: their positions are read live, and they stand where they are put or walk a small round)
+    if (!(g.time - (this._statT ?? -9) < STATICS_T) || g.time < this._statT) {
+      this._statT = g.time;
+      this.statics.length = 0;
+      for (const n of g.npcs) {
+        if (n.ambient || !n.present) continue;
+        const dx = n.pos.x - h.pos.x, dz = n.pos.z - h.pos.z;
+        if (dx * dx + dz * dz < 4900) this.statics.push(n);
+      }
     }
     // the story's people on Citadel (where they stand now): routes keep clear of them; the cast's make-up is part of a route's key
     // (INTERIOR-LIFE: indoors none of this, nor the stall keeper's sorting below: the street's manager does it)
@@ -153,7 +162,9 @@ export class Walkers {
       this._castT = g.time;
       const soft = this.nav.soft; soft.length = 0; let sig = '';
       this.pippa = null;
-      for (const n of g.npcs) if (!n.ambient && n.present && Math.abs(n.pos.x) < 300) { soft.push(n.pos); sig += Math.round(n.pos.x) + ',' + Math.round(n.pos.z) + ';'; if (n.def.id === 'pippa') this.pippa = n; }
+      // (WC-4: where the chapter put them, n.placed, not where they stand now: a story person on a small round (WC-2) changed
+      //  the key every half second, and every resident's leg was planned again; the walk itself steers round them live)
+      for (const n of g.npcs) if (!n.ambient && n.present && Math.abs(n.pos.x) < 300) { const q = n.placed && n.placed.x != null ? n.placed : n.pos; soft.push(q); sig += Math.round(q.x) + ',' + Math.round(q.z) + ';'; if (n.def.id === 'pippa') this.pippa = n; }
       if (sig !== this.nav.sig) { this.nav.sig = sig; if (this.nav.cache.size > 300) this.nav.cache.clear(); }
     }
     this.nav.step(120);
@@ -193,8 +204,10 @@ export class Walkers {
     if (this.indoor && !r.def.outdoor) return r.def.room && r.def.room === this.hero.room ? 0 : 2;   // (INTERIOR-LIFE: the hero's room in full, the others abstract; a spaceport's people as the street's, below)
     const dx = r.pos.x - this.hero.x, dz = r.pos.z - this.hero.z, d = Math.hypot(dx, dz);
     if (this.hero.inside || d > REDUCED_R + 40) return 2;
-    if (d < NEAR_R) return 0;
-    if (!this.inView(r.pos.x, r.pos.y, r.pos.z)) return 2;
+    if (d < CLOSE_R) return 0;
+    // (WC-4: one 6–14 m off and out of the camera's view is stepped a third of the frames, with their time: nobody sees it,
+    //  and the frame it comes into view it is simulated in full again)
+    if (!this.inView(r.pos.x, r.pos.y, r.pos.z)) return d < NEAR_R ? 1 : 2;
     return d < FULL_R ? 0 : d < REDUCED_R ? 1 : 2;
   }
   // can the camera not see this point (a place to put a stuck resident back on its way)?
@@ -210,7 +223,9 @@ export class Walkers {
     const h = this.game.hero;
     out.push(h);
     for (const n of this.statics) out.push(n);
-    for (const r of this.res) if (r !== self && r.present && !r.away && !r.inside) out.push(r);   // (one the story or a test took off the streets is not there)
+    // (one the story or a test took off the streets is not there; WC-4: one further than OTHERS_R is out of its reach)
+    const sx = self.pos.x, sz = self.pos.z;
+    for (const r of this.res) if (r !== self && r.present && !r.away && !r.inside && Math.abs(r.pos.x - sx) < OTHERS_R && Math.abs(r.pos.z - sz) < OTHERS_R) out.push(r);
     return out;
   }
   // a resident's pair mate meets it: both leave together
@@ -477,7 +492,7 @@ export class Resident extends NPC {
       if (++this.skipN % 3 !== 0) return;
       dt = this.accB; this.accB = 0;
       W.stats.reduced++;
-    } else W.stats.full++;
+    } else { if (this.accB) { dt += this.accB; this.accB = 0; } W.stats.full++; }   // (back in full: the frames it skipped are its time too)
     this.tick(dt, tier);
   }
   // leaving the abstract state: stand on the ground it is over
@@ -549,7 +564,8 @@ export class Resident extends NPC {
       case 'knock': return 'tapTurn';
       case 'dip': return 'touchWater';
       case 'warm': return 'reach';   // (a hand held out to a heat post)
-      default: return 'idle';
+      // (the rooms' rounds name the rig's own work clips: they play as named, not as idle)
+      default: return DIRECT_ACTS.has(s.act) ? s.act : 'idle';
     }
   }
   animate(anim, dt, speed) {
@@ -751,7 +767,8 @@ export class Resident extends NPC {
         //  to, it turned back and forth, wedged between Twinsen and Gilbert by the well)
         let side = 1;
         if (!b.ambient || b.st !== 'walk') {
-          const ms = (this.passSides ||= new Map()), mem = ms.get(b);
+          const ms = (this.passSides ||= new Map());
+          let mem = ms.get(b);
           if (mem && g.time - mem.t < 1.0) side = mem.side;
           else {
             const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
@@ -760,7 +777,7 @@ export class Resident extends NPC {
               for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 1.3) n += 2; } return n; };   // (a person by it as much as a wall: it keeps a berth of 0.8 m from them, and half a metre more to pass between)
             if (crowd(1) > crowd(-1)) side = -1;
           }
-          ms.set(b, { side, t: g.time });
+          if (mem) { mem.side = side; mem.t = g.time; } else ms.set(b, { side, t: g.time });   // (WC-4: kept, not made anew each frame)
         }
         ax += -uz * w * 1.7 * side; az += ux * w * 1.7 * side;
         const gap = dd - rr;
@@ -795,7 +812,7 @@ export class Resident extends NPC {
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait += (v - this.gait) * Math.min(1, dt * 8);
     this.animate(this.gait > 0.12 ? 'walk' : 'idle', dt, this.gait > 0.12 ? this.gait : 0);
-    if (this.W.measure) this.dbg = { slow: +slow.toFixed(2), blocked, sp: +sp.toFixed(2), v: +v.toFixed(2), d: +d.toFixed(2), wi: this.wi, n: path.length, stuck: +this.stuckT.toFixed(1), vel: +this.vel.toFixed(2) };   // (tests: what it was doing)
+    if (this.W.debug) this.dbg = { slow: +slow.toFixed(2), blocked, sp: +sp.toFixed(2), v: +v.toFixed(2), d: +d.toFixed(2), wi: this.wi, n: path.length, stuck: +this.stuckT.toFixed(1), vel: +this.vel.toFixed(2) };   // (tests: what it was doing)
     // ------------------------------------------------ stuck: it wants to go and does not get anywhere
     if (sp > 0.3 * this.speed && v < 0.25 * sp && !blocked) this.stuckT += dt; else this.stuckT = Math.max(0, this.stuckT - dt * 0.5);
     if (this.stuckT > 1.4) this.unstick();

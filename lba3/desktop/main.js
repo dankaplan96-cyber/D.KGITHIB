@@ -20,6 +20,8 @@ const TYPES = {
 
 // browsers wait for a click before sound; a game window may play at once
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+// AUDIO-FIX: the output's underrun count (AudioContext.playoutStats, read by src/engine/audio.js): a crackle measured
+app.commandLine.appendSwitch('enable-blink-features', 'AudioContextPlayoutStats');
 // a game: always the graphics card (Chromium falls back to software rendering on a blocklisted driver, and
 // laptops with two GPUs may otherwise hand it the slower integrated one)
 app.commandLine.appendSwitch('ignore-gpu-blocklist');

@@ -15,7 +15,7 @@ import { TEX } from './props.js';
 
 export const CELL = 2.1 / 1240 * 512, CH = 2.1 / 1240 * 256;   // 0.867 m, 0.434 m
 const LAYOUTS = {};
-export async function preloadLba1Rooms(names = ['asylum', 'bumaze', 'buhalls']) {
+export async function preloadLba1Rooms(names = ['asylum', 'bumaze']) {
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/lba1/${n}.json`); if (r.ok) LAYOUTS[n] = await r.json(); } catch { /* the room is left out */ }
   }));
@@ -44,6 +44,8 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
     const [x, z] = k.split(',').map(Number);
     for (const [y, len, shape, col] of runs) for (let i = 0; i < len; i++) C.set(`${x},${y + i},${z}`, [shape, col]);
   }
+  // (opts.carve: [x0, y0, z0, x1, y1, z1] cell boxes, inclusive, taken out of the layout: a door broken through)
+  for (const [x0, y0, z0, x1, y1, z1] of opts.carve || []) for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) C.delete(`${x},${y},${z}`);
   // the camera's side (+x, +z): a column next to the outside is cut down to two cells above its floor
   const colTop = new Map(), colFloor = new Map();
   for (const [k, runs] of Object.entries(L.cols)) { colFloor.set(k, runs[0][0] + runs[0][1]); colTop.set(k, runs[runs.length - 1][0] + runs[runs.length - 1][1]); }
@@ -55,10 +57,89 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
     return near && y >= f + (opts.rim ?? 2);
   };
   const solidAt = (x, y, z) => { const c = C.get(`${x},${y},${z}`); return !!c && c[0] === SOLID && !cut(x, y, z); };
+  // ---- LIDS (ASYLUM-1): LBA1 shows the room the hero is in cut open above him. The original does it with its grid
+  // zones (type 3: while the hero is inside the box, a fragment without the ceiling replaces the bricks there). Here a
+  // lid is such a box (LBA1 cell coords, [x0, y0, z0, x1, y1, z1] as the zones give them) and `cut` (the cell height from
+  // which it is cut away; default its floor y0 + 2, the rim of our other rooms): the cells at or above `cut` over the
+  // box's floor (the ceiling, beams), and those of the walls on the camera's side (+x, +z) that stand in front of that
+  // floor, up to `near` cells beyond the box, go into meshes of their own that fade out while the hero is inside and
+  // back in when he leaves. Colliders are unchanged. opts.lids: [{ box, cut?, near?, sight?, name? }] (sight: also cut
+  // while its beams stand between him and the camera); opts.gridZones: the layout's own type-3 zones as lids too;
+  // opts.overhead: the ceilings and beams left over (over a walkable floor, at least OVER cells above it) grouped in
+  // OVER_CHUNK-cell squares, each cut while it stands between him and the camera (a beam over a corridor need not be
+  // over him to hide him).
+  const colStack = new Map();   // "x,z" → the top of the column's lowest unbroken stack of cells (its floor or wall top)
+  for (const k of Object.keys(L.cols)) {
+    const [x, z] = k.split(',').map(Number);
+    let y = 0; while (y < 25 && !C.has(`${x},${y},${z}`)) y++;
+    while (y < 25 && C.has(`${x},${y},${z}`)) y++;
+    colStack.set(k, y);
+  }
+  const lidDefs = [...(opts.gridZones ? (L.zones || []).filter((zn) => zn.type === 3).map((zn) => ({ box: zn.box, zone: zn.to })) : []), ...(opts.lids || [])];
+  const lidOf = new Map();      // "x,y,z" → [lid indices]
+  const addLid = (key, i) => { if (!lidOf.has(key)) lidOf.set(key, []); lidOf.get(key).push(i); };
+  // (the cells tested on his sight line, key (x·32 + y)·64 + z → their lid: the leftovers', and a `sight` lid's beams)
+  const overCell = new Map(), ock = (x, y, z) => (x * 32 + y) * 64 + z;
+  const lids = lidDefs.map((d, i) => {
+    const [bx0, by0, bz0, bx1, by1, bz1] = d.box, cutY = d.cut ?? by0 + 2, near = d.near ?? 2;
+    const X0 = Math.ceil(bx0 - 0.5), X1 = Math.floor(bx1 - 0.5), Z0 = Math.ceil(bz0 - 0.5), Z1 = Math.floor(bz1 - 0.5);
+    const inBox = (x, z) => x >= X0 && x <= X1 && z >= Z0 && z <= Z1;
+    const floorCol = (x, z) => { const t = colStack.get(`${x},${z}`); return t != null && t <= cutY; };
+    const inc = new Set();
+    // (walls in front of the floor from the camera: reached from the floor toward +x/+z, in order of x + z)
+    for (let s = X0 + Z0; s <= X1 + Z1 + 2 * near; s++) for (let x = X0; x <= X1 + near; x++) {
+      const z = s - x; if (z < Z0 || z > Z1 + near) continue;
+      const k = `${x},${z}`; if (!colStack.has(k)) continue;
+      if (inBox(x, z) && floorCol(x, z)) { inc.add(k); continue; }
+      if (!floorCol(x, z) && (inc.has(`${x - 1},${z}`) || inc.has(`${x},${z - 1}`) || inc.has(`${x - 1},${z - 1}`))) inc.add(k);   // (a wall only)
+    }
+    for (const k of inc) {
+      const [x, z] = k.split(',').map(Number);
+      for (let y = cutY; y < 25; y++) if (C.has(`${x},${y},${z}`)) {
+        addLid(`${x},${y},${z}`, i);
+        // (d.sight: the beams over its floor also cut it while they stand between him and the camera, as the leftovers)
+        if (d.sight && inBox(x, z) && floorCol(x, z) && !overCell.has(ock(x, y, z))) overCell.set(ock(x, y, z), i);
+      }
+    }
+    return { i, box: [bx0, by0, bz0, bx1, by1, bz1], cut: cutY, zone: d.zone, name: d.name, sight: !!d.sight, cols: inc.size, f: 1, active: false, hold: 0 };
+  });
+  if (opts.overhead) {   // the ceilings and beams no lid covers: by squares, cut while one is between him and the camera
+    const OVER = 4, OVER_CHUNK = 16, chunks = new Map();
+    for (const k of Object.keys(L.cols)) {
+      const [x, z] = k.split(',').map(Number), f = colStack.get(k);
+      let y = f; while (y < 25 && !C.has(`${x},${y},${z}`)) y++;
+      if (y >= 25 || y - f < OVER) continue;
+      const ck = `${Math.floor(x / OVER_CHUNK)},${Math.floor(z / OVER_CHUNK)}`;
+      for (; y < 25; y++) {
+        const key = `${x},${y},${z}`; if (!C.has(key) || lidOf.has(key)) continue;
+        if (!chunks.has(ck)) chunks.set(ck, { cells: [], low: 25 });
+        const c = chunks.get(ck); c.cells.push(key); c.low = Math.min(c.low, y);
+      }
+    }
+    for (const [ck, c] of chunks) {
+      const [i, j] = ck.split(',').map(Number), n = lids.length;
+      lids.push({ i: n, box: [i * OVER_CHUNK, 0, j * OVER_CHUNK, (i + 1) * OVER_CHUNK, 25, (j + 1) * OVER_CHUNK], cut: c.low, over: true, cells: c.cells.length, f: 1, active: false, hold: 0 });
+      for (const key of c.cells) { addLid(key, n); const [x, y, z] = key.split(',').map(Number); overCell.set(ock(x, y, z), n); }
+    }
+  }
+  const sigOf = (x, y, z) => { const l = lidOf.get(`${x},${y},${z}`); return l ? l.join('+') : ''; };
+  // a face between two solid cells is drawn when they are cut away apart (a lid's cell against the room's own: the
+  // room's face, which shows when the lid is gone; two lids: both)
+  const faceShown = (x, y, z, nx, ny, nz) => {
+    if (!solidAt(nx, ny, nz)) return true;
+    const a = sigOf(x, y, z), b = sigOf(nx, ny, nz);
+    return a !== b && b !== '';
+  };
   const pal = L.pal.map(([r, g, b]) => new THREE.Color(Math.min(1, r / 255 * tint * 1.25), Math.min(1, g / 255 * tint * 1.25), Math.min(1, b / 255 * tint * 1.25)).convertSRGBToLinear());
 
   // ---- faces: per direction, runs of exposed faces of one colour merged along x
-  const pos = { side: [], top: [] }, nrm = { side: [], top: [] }, colr = { side: [], top: [] }, uv = { side: [], top: [] };
+  const bufs = new Map();   // signature ('' the room, else its lids) → { pos, nrm, colr, uv } per kind
+  let pos, nrm, colr, uv;
+  const useSig = (sig) => {
+    if (!bufs.has(sig)) bufs.set(sig, { pos: { side: [], top: [] }, nrm: { side: [], top: [] }, colr: { side: [], top: [] }, uv: { side: [], top: [] } });
+    ({ pos, nrm, colr, uv } = bufs.get(sig));
+  };
+  useSig('');
   const quad = (kind, a, b, c, d, n, col, uvs) => {
     for (const p of [a, b, c, a, c, d]) pos[kind].push(p[0], p[1], p[2]);
     for (let i = 0; i < 6; i++) { nrm[kind].push(n[0], n[1], n[2]); colr[kind].push(col.r, col.g, col.b); }
@@ -70,8 +151,9 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
     const { x, y, z, shape } = c;
     if (cut(x, y, z)) continue;
     const col = pal[c.col] || pal[0];
+    useSig(sigOf(x, y, z));
     if (shape === SOLID) {
-      if (!solidAt(x, y + 1, z)) { const [a, b] = [W(x, y + 1, z), W(x + 1, y + 1, z + 1)]; quad('top', [a[0], a[1], a[2]], [a[0], a[1], b[2]], [b[0], a[1], b[2]], [b[0], a[1], a[2]], [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [a[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, a[2] / 1.7]]); }
+      if (faceShown(x, y, z, x, y + 1, z)) { const [a, b] = [W(x, y + 1, z), W(x + 1, y + 1, z + 1)]; quad('top', [a[0], a[1], a[2]], [a[0], a[1], b[2]], [b[0], a[1], b[2]], [b[0], a[1], a[2]], [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [a[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, a[2] / 1.7]]); }
       // the four sides (the bottom is never seen), each outward
       const F = {
         '1,0': [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1]],
@@ -80,7 +162,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
         '0,-1': [[x + 1, y, z], [x, y, z], [x, y + 1, z], [x + 1, y + 1, z]],
       };
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        if (solidAt(x + dx, y, z + dz)) continue;
+        if (!faceShown(x, y, z, x + dx, y, z + dz)) continue;
         const q = F[`${dx},${dz}`].map(([a1, b1, c1]) => W(a1, b1, c1));
         const h = (p) => (dx ? p[2] : p[0]) / 1.7;
         quad('side', q[0], q[1], q[2], q[3], [dx, 0, dz], col, q.map((p) => [h(p), p[1] / 1.7]));
@@ -100,16 +182,26 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(1.6);
   // (WORLD-ART-7: opts.topCol / opts.sideCol tint floors and walls apart; the measured brick colours alone make both the same grey)
   if (opts.topCol) mats.top.color.set(opts.topCol);
-  for (const kind of ['side', 'top']) {
-    if (!pos[kind].length) continue;
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos[kind], 3));
-    g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm[kind], 3));
-    g.setAttribute('color', new THREE.Float32BufferAttribute(colr[kind], 3));
-    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv[kind], 2));
-    for (const m of [mats[kind]]) { m.map = m.map.clone(); m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping; m.map.needsUpdate = true; }
-    const mesh = new THREE.Mesh(g, mats[kind]); mesh.castShadow = true; mesh.receiveShadow = true;
-    B.group.add(mesh);
+  for (const kind of ['side', 'top']) { const m = mats[kind]; m.map = m.map.clone(); m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping; m.map.needsUpdate = true; }
+  // a lid's meshes: transparent from the start (its fade changes only the opacity, never the program), writing depth
+  // as the room does; where one is drawn over the hero it clears his mark in the stencil, so his silhouette shows
+  // through it as through any wall (characters.js addSilhouette)
+  const lidMat = (m) => { const c = m.clone(); c.transparent = true; c.depthWrite = true; c.stencilWrite = true; c.stencilRef = 0; c.stencilFunc = THREE.AlwaysStencilFunc; c.stencilZPass = THREE.ReplaceStencilOp; return c; };
+  const lidMeshes = [];
+  for (const [sig, b] of bufs) {
+    const lm = sig ? { side: lidMat(mats.side), top: lidMat(mats.top) } : mats;
+    for (const kind of ['side', 'top']) {
+      if (!b.pos[kind].length) continue;
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(b.pos[kind], 3));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute(b.nrm[kind], 3));
+      g.setAttribute('color', new THREE.Float32BufferAttribute(b.colr[kind], 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(b.uv[kind], 2));
+      const mesh = new THREE.Mesh(g, lm[kind]); mesh.castShadow = true; mesh.receiveShadow = true;
+      // (userData.keep: a toggling part, so the shadow batches (shadowcull.js) and draw batches leave it on its own)
+      if (sig) { mesh.name = 'lid:' + sig; mesh.userData.keep = true; lidMeshes.push({ mesh, lids: sig.split('+').map(Number) }); }
+      B.group.add(mesh);
+    }
   }
 
   // ---- colliders: each column's runs of solid cells, merged into rectangles of equal runs
@@ -153,6 +245,49 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   R.spots = (L.actors || []).map((a) => ({ body: a.body, ...R.cell(a.at[0], a.at[1], a.at[2]) }));
   R.zoneBoxes = (L.zones || []).filter((z) => z.type === 0).map((z) => { const a = R.cell(z.box[0], z.box[1], z.box[2]), b = R.cell(z.box[3], z.box[4], z.box[5]); return { to: z.to, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: a.y, hw: Math.abs(b.x - a.x) / 2 + 0.4, hd: Math.abs(b.z - a.z) / 2 + 0.4 }; });
   R.view = opts.view ?? 22; R.follow = opts.follow ?? 0.7;   // (big rooms: the view travels with the hero)
+  // the lids: the one(s) over the hero fade out in LID_FADE s, the others back in (dt ≥ LID_FADE: at once)
+  R.lids = lids; R.lidMeshes = lidMeshes;
+  R.toCell = (wx, wy, wz) => ({ x: (wx - cx - ox) / CELL, y: wy / CH, z: (wz - cz - oz) / CELL });
+  if (lids.length) {
+    const LID_FADE = 0.25;
+    const seen = new Set();
+    R.updateLids = (hero, dt = 1, cam = globalThis.game?.camera) => {
+      const p = R.toCell(hero.pos.x, hero.pos.y + 0.05, hero.pos.z);
+      // the leftovers on the sight lines from his feet, chest and head to the camera
+      seen.clear();
+      if (overCell.size && cam) {
+        const c = R.toCell(cam.position.x, cam.position.y, cam.position.z);
+        // (his body is wider than a line: rays from across it, side to side as the camera sees him, ±0.4 m)
+        const dx = c.x - p.x, dz = c.z - p.z, dl = Math.hypot(dx, dz) || 1, sx = -dz / dl, sz = dx / dl;
+        for (const hy of [0.3, 1.0, 1.6]) for (const s of [-0.45, 0, 0.45]) {
+          const a = R.toCell(hero.pos.x, hero.pos.y + hy, hero.pos.z); a.x += sx * s; a.z += sz * s;
+          const tEnd = c.y > 25 ? (25 - a.y) / (c.y - a.y) : 1;   // (only up to the layout's top)
+          const n = Math.ceil(tEnd * Math.hypot(c.x - a.x, (c.y - a.y) * CH / CELL, c.z - a.z) / 0.3);
+          for (let k = 1; k <= n; k++) {
+            const t = (k / n) * tEnd, x = Math.floor(a.x + (c.x - a.x) * t), y = Math.floor(a.y + (c.y - a.y) * t), z = Math.floor(a.z + (c.z - a.z) * t);
+            if (y >= 25) break;
+            if (x < 0 || z < 0 || x >= 64 || z >= 64 || y < 0) continue;
+            const i = overCell.get(ock(x, y, z)); if (i != null) seen.add(i);
+          }
+        }
+      }
+      for (const l of lids) {
+        if (l.over) { l.hold = seen.has(l.i) ? 0.6 : Math.max(0, l.hold - dt); l.active = l.hold > 0; }   // (held a moment: no flicker)
+        else {
+          const [x0, y0, z0, x1, y1, z1] = l.box, m = l.active ? 0.3 : 0;   // (a little slack to leave: no flicker in a doorway)
+          l.active = p.x >= x0 - m && p.x <= x1 + m && p.z >= z0 - m && p.z <= z1 + m && p.y >= y0 - 1.5 && p.y <= y1 + 0.5;
+          if (l.sight) { l.hold = seen.has(l.i) ? 0.6 : Math.max(0, l.hold - dt); l.active ||= l.hold > 0; }
+        }
+        const goal = l.active ? 0 : 1;
+        l.f = dt >= LID_FADE ? goal : goal > l.f ? Math.min(goal, l.f + dt / LID_FADE) : Math.max(goal, l.f - dt / LID_FADE);
+      }
+      for (const { mesh, lids: ids } of lidMeshes) {
+        let f = 1; for (const i of ids) f = Math.min(f, lids[i].f);
+        mesh.visible = f > 0.01; mesh.material.opacity = f;
+      }
+    };
+    R.updaters.push((dt) => { const G = globalThis.game; if (G?.hero && G.room === R) R.updateLids(G.hero, dt); });
+  }
   // light: a few lamps spread over the room
   for (let i = 0; i < 9; i++) { const p = R.cell(SX * (1 + (i % 3) * 2) / 6, 0, SZ * (1 + Math.floor(i / 3) * 2) / 6); B.light(opts.lamp || '#ffe8c8', opts.lampI ?? 14, Math.max(SX, SZ) * CELL * 0.45, p.x - cx, 7.5, p.z - cz); }
   return B.finish();

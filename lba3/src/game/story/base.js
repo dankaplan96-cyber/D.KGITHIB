@@ -108,6 +108,13 @@ export class ChapterBase {
     next(0);
   }
 
+  // GUIDE (the campaign): the objective's place as a gold star on the holomap and the minimap, in whatever region it is
+  // (the maps draw a star only on the region it lies in). Chapters 1, 2 and 8 had stars on Citadel; the chapters away from
+  // it had none. markers() runs every frame: it reads areas with regions.built (never builds) and people only when present.
+  star(p) { return p && Number.isFinite(p.x) && Number.isFinite(p.z) ? { x: p.x, z: p.z, kind: 'star', color: '#ffcf4a', r: 7, edge: true } : null; }
+  starNpc(id) { const n = this.npc(id); return n?.present ? this.star(n.pos) : null; }
+  stars(...ps) { return ps.flat().map((p) => (p && p.kind === 'star' ? p : this.star(p))).filter(Boolean); }
+
   // objective line helpers
   goal(key, p) { return `<b>${t(key, p)}</b>`; }
   sub(ok, key, p) { return `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key, p)}</span>`; }

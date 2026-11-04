@@ -95,6 +95,9 @@ export class RoomBuilder {
     const [cx0, cz0] = o._off || [0, 0];
     const k = this.k, { W, D, H } = o, t = o.t ?? 0.4;
     this.W = W; this.D = D; this.H = H; this.t = t;
+    // (ROOMS-FULL: the floor's extent in the world, R.bounds: a saved spot no longer on it — a room drawn smaller since —
+    //  is put back at the room's spawn on load: Game.onRoomFloor)
+    (this.room.bounds ??= []).push({ x0: this.cx + cx0 - W / 2, x1: this.cx + cx0 + W / 2, z0: this.cz + cz0 - D / 2, z1: this.cz + cz0 + D / 2 });
     const sh = o.slabH ?? 0.7;
     // floor and slab, around a stairwell (o.hole: [x0, z0, x1, z1] in the builder's frame) if there is one
     const slabs = (x0, z0, x1, z1) => {

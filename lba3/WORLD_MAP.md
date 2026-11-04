@@ -18,14 +18,14 @@ the original doesn't have is ours:
 |---|---|---|
 | Town (−56…−29, −17…14) and the west shore by it | the low town; a promenade above the shore with lanterns and railings | the square and well; the street west climbs onto the promenade (the harbour stood here at first) |
 | Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end; Bersimon the Weather Wizard's tent (−100, −71, the original's S21; interior wtent: a stone room with the cauldron), open in every chapter |
-| Outside the old fort's east wall (−11.2, −65) | — (LBA2 has no door here) | FunFrock's asylum from LBA1 (interior asylum, LBA1 room 0 rebuilt from its layout): a squat stone block-house, "Citadel Asylum / Closed by order of the Council"; inside the grey brick halls, the stair, the office with the old register. Vesk's project keeps a store there: Quetch guards, a fat trooper and two guard dogs where FunFrock's nurses and clone stood (after the prologue). Open in every chapter |
+| The old fort's south wall (−26.5, −50.6) and east wall (−11.2, −65) | — (LBA2 has no door here) | FunFrock's asylum from LBA1 (interior asylum, LBA1 room 0 rebuilt from its layout), its two doors as LBA1's two exits: the front door, a brick portico against the fort's south wall at the top of the stair onto the fort's terrace ("JOINT PROJECT · WORKERS' HOSTEL"), into the upper level; the side door, the squat block-house outside the east wall, down the low stair-well. ASYLUM-2: officially the Joint Project's hostel for its Esmer workers (the cells as sleeping rooms, Twinsen's cell kept with a rope and a plaque, the foreman's office, the kitchen and mess in the nurses' station), behind it Vesk's store in the old boiler room (crates stamped ZEELICH, a humming crate) and his locked office (src/game/asylumhostel.js). Open in every chapter |
 | The plateau's southern rim (−56, −44) | the escarpment up from the town | the Whispering Cliffs: a rock stack (16.8 m) reached only by the stepping stones from (−68, −22) |
 | West shore below the plateau | quay wall, bollards | the water main comes down here to the meter (−72, −17) |
 | South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's house (door −45.6, 80) | Twinsen's house at its original place; the village houses by the original's doors (S3, S9, S14, S15, S17); the plaza with lamps, benches and tulips; fields and farmers (chapter 8) |
 | South-west headland (−107.5, 90.5) | the lighthouse "at the end of the island" | the lighthouse and the sage's cottage |
 | West wing (−121…−76, 21…54) | the original's pier and baggage-claim building | the baggage-claim building and its wing (S7/S8); the harbour at the pier's west end (quay −120…−107, z 34…54; pier west to −136.5 at z 43): Doran's boat, the project ferry and the lift; a path from the fields past the baggage claim |
 | The south-west islet, the bay beach, the southern hill | houses, sand | landscape (not used by the story yet) |
-| Dome islet (−176…−136, −34…16), the north-east islet | across the water | seen from the shore |
+| West islet (−176…−136, −34…16), the north-east islet | across the water; the robed stone figure on the west islet's rim (its dome was cut: DECLUTTER) | seen from the shore |
 
 
 | Place | Identity / landmark | Local problem / life | Story role | Changes after events |
@@ -115,16 +115,16 @@ planet he is on: the region's own map with his dot and the travel points, and an
 and the open links (ferry, glider, shuttle; the spaceship leaving the planet).
 
 ## Zeelich's other islands (no story; from chapter 4) ✅ (src/game/zislands.js; ZL-ALL)
-Seven islands after the original's Zeelich islands: **Otringal**, **Knartas Island**, **Mosquibee Island**,
-**Celebration Island**, **Under Celebration**, **the CX Islet**, **the Platform**; and **the Lift Dock** (the
-original's ASCENCE, added in ZL-ALL). The current Zeelich (the terminal island of the story) stays as it is; these
+Six islands after the original's Zeelich islands: **Otringal**, **Knartas Island**, **Mosquibee Island**,
+**Celebration Island**, **Under Celebration**, **the Platform**; and **the Lift Dock** (the original's ASCENCE,
+added in ZL-ALL). DECLUTTER (3.11.2026) cut the CX Islet and Tralu Rock (crates only, nobody there); a save on
+either lands on Zeelich. The current Zeelich (the terminal island of the story) stays as it is; these
 are extra regions, each reached by Esmer shuttle from the pad by Zeelich's dock or another island's pad.
 
 | Place | From | Identity / landmark | Reason to visit |
 |---|---|---|---|
 | The Lift Dock | LBA2 (ASCENCE, numbers) + ours (landing deck, stairs, rails, the tower's working cage) | decks on stilts at the cloud line, the lift tower, the crane over the east deck, a barge alongside | the view down the stilts into the clouds; crates by the stairs hide a find |
 | Celebration Island | LBA2 (CELEBRAT's ground + CELEBRA2's risen figure, numbers) + ours (the figure's look, the festival) | the great figure, its pit filled and paved; masts with pennants and garlands up to it | the festival at the figure's feet; a find by the stage |
-| **Tralu Rock** | *new invention (ours)* | an Esmer trading post on a tall rock: the weigh-beam market on the crown, a crane over the quay shelf, skiffs tied up, a ramp curving round the south face | the market; kashes in the traders' crates |
 | **The Nectar Orchard** | *new invention (ours)* | a round hill of blossom trees in contour rows, hives, the press house, the cloud-catcher on the crown | the orchard and the nets; a heart at the press |
 | **The Old Watch** | *new invention (ours)* | a crescent ridge: the broken watchtower and its fallen dome on the north horn, toppled columns, a telescope on the south horn | the view out over the clouds; magic by the telescope |
 
@@ -161,7 +161,7 @@ School of Magic's mesas are ours. Audit: docs/lba3-production/reviews/WORLD-SHAP
 | Hesk's sand-yacht | striped sail, three wheels | Hesk | rides between Kesh, Ilka's camp and the dig | parked where it last went |
 | Ilka's camp | ridge tent, telescope, sample crates under the north mesa | Professor Ilka | the crystals' discoverer | — |
 | The research post | fenced concrete pad, teal cabins, a test-bore derrick | Dallan (foreman), a gate guard, two drones | the notebook (stealth in sandstorms) | the gate opens in storms |
-| The dig: Temple-Park and the Temple of Bù (interior butemple) | three shored terraces down to the temple's slate gate and three stone seals; inside: dark slate halls, old mine rails and an ore cart, a great iron wheel, pale urns, pink-arch friezes, the great relief; a stair down to LBA1's Temple of Bù rebuilt from its layouts: the spiked maze (bumaze, LBA1 room 57) and past it the dark halls (buhalls, room 40) with crystal mites, whose far end leads back up | crystal mites; the Esmers' shuttles circle over Bald Mountain | the relief: Twinsun in section, the shell's five vents | the gate opens |
+| The dig: Temple-Park and the Temple of Bù (interior butemple) | three shored terraces down to the temple's slate gate and three stone seals; inside: dark slate halls, old mine rails and an ore cart, a great iron wheel, pale urns, pink-arch friezes, the great relief; a stair down to LBA1's Temple of Bù rebuilt from its layouts: the spiked maze (bumaze, LBA1 room 57), whose far end holds a chest and leads back up (DECLUTTER merged LBA1's dark halls into it) | crystal mites; the Esmers' shuttles circle over Bald Mountain | the relief: Twinsun in section, the shell's five vents | the gate opens |
 | FunFrock's condenser hall (interiors condA, condB) | a concrete arch half buried in a dune; inside a valve hall and a hangar with three condensers and a cargo glider | FunFrock's old drones | route the steam (valves 1, 3, 4), open the roof hatch, the glider north | plumes rise from the dunes once the vent is open |
 
 ## The Hamalayi (chapters 6–7) ✅ first version (src/game/hamalayi.js)

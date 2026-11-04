@@ -449,7 +449,8 @@ export class Chapter2 extends ChapterBase {
   // him home to Citadel Spaceport and takes the ferry south from there.
   toShell() {
     const g = this.game, f = this.f;
-    if (f.c2_done) { g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); return; }
+    // (WC-4: resumed from a save made after the scene (c2_done): the same crossing, its films and all; it was a plain fade)
+    if (f.c2_done) { this.crossHome(); return; }
     g.audio.play('select');
     const bal = this.npc('baldino')?.present ? 'baldino' : 'radio';
     const lines = [['narrator', 'c2_sealed_0'], ['narrator', 'c2_sealed_1'], ['arthurradio', 'c2_ar_sealed'], ['zoeradio', 'c2_zoe_sealed'], ['hero', 'c2_tw_sealed0'],
@@ -458,14 +459,17 @@ export class Chapter2 extends ChapterBase {
       f.c2_done = true;
       this.game.world.station?.setSealed?.(true, true);
       g.save(false);
-      const go = (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then);
-      // WC-1: the crossing seen (TRAVEL-1): Doran's ship takes off from Zeelich Spaceport with them (the take-off, the
-      // cabin, space: travelfilm.js crossByShip), then the project's ferry is seen coming in to Kesh's pier, where
-      // chapter 4 starts (its card waits for the film). The chapter changes under the black as before.
-      if (g.room?.id !== 'zeelich') { go(); return; }
-      const doran = this.npc('doran');
-      crossByShip(g, go, { aboard: [doran], onward: { to: 'desert_ferry', mode: 'ferry', landWith: [doran] } });
+      this.crossHome();
     }, (i, id, key) => { if (key === 'c2_sealed_1') g.audio.play('deny'); });
+  }
+  // WC-1: the crossing seen (TRAVEL-1): Doran's ship takes off from Zeelich Spaceport with them (the take-off, the
+  // cabin, space: travelfilm.js crossByShip), then the project's ferry is seen coming in to Kesh's pier, where chapter 4
+  // starts (its card waits for the film). The chapter changes under the black as before.
+  crossHome() {
+    const g = this.game, go = (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then);
+    if (g.room?.id !== 'zeelich') { go(); return; }
+    const doran = this.npc('doran');
+    crossByShip(g, go, { aboard: [doran], onward: { to: 'desert_ferry', mode: 'ferry', landWith: [doran] } });
   }
 
 
@@ -509,7 +513,17 @@ export class Chapter2 extends ChapterBase {
     if (f.c2_plan) return this.goal('c2_obj_parts') + this.sub(f.c2_cog, 'c2_sub_cog') + this.sub(f.c2_cyl, 'c2_sub_cyl') + this.sub(n >= 3, 'c2_sub_mills', { n });
     return this.goal('c2_obj_find');
   }
-  markers() { return []; }
+  // GUIDE: the parts, the mills, the console on Zeelich's map (base.js star)
+  markers() {
+    const f = this.f, Z = this.game.regions?.built('zeelich');
+    if (!this.isCur() || !f.c2_started || !Z || (f.c2_zoeStart && !f.c2_broadcast)) return [];
+    const mills = () => Z.mills.filter((m) => !f['c2_mill_' + m.id]).map((m) => m.brake);
+    if (f.c2_shield || (f.c2_key && this.millsBraked() >= 3)) return this.stars(Z.platform.console);
+    if (f.c2_key) return this.stars(mills());
+    if (f.c2_cog && f.c2_cyl) return this.stars(Z.workshopDoor);
+    if (f.c2_plan) return this.stars(!f.c2_cog && Z.millTop, !f.c2_cyl && Z.depot.locker, mills());
+    return this.stars(Z.workshopDoor);
+  }
   items() {
     const f = this.f, out = [];
     if (f.c2_cog && !f.c2_key) out.push({ id: 'cog', icon: 'part' });
