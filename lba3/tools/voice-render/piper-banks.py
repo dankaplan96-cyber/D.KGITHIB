@@ -53,10 +53,20 @@ CAST = {
     'arthur': dict(sid=693, ls=0.85, ns=0.95, c='bpdtkmn', v=['i', 'a', 'o', 'oo'], ps=2),
     # gathers momentum, then stops short at the awkward part (a comma and a trailing last word in long clips)
     'baldino': dict(sid=441, ls=0.82, ns=1.0, c='bdlnpz', v=['o', 'i', 'a', 'e'], trail=True),
-    # measured and persuasive; clipped and decisive when he refuses
-    'vesk': dict(sid=637, ls=1.15, ns=0.6, c='vskrtn', v=['e', 'a', 'o'], mods={'no': (0.84, ['.']), 'excl': (0.95, ['.', '!'])}),
-    # calm and spacious: a gentle voice, slower, a light pitch shift, a small room (not an echo)
-    'sendell': dict(sid=756, ls=1.25, ns=0.7, c='lmnvsh', v=['a', 'e', 'oo', 'ai'], ps=1, room=-10,
+    # measured and persuasive; clipped and decisive when he refuses. AUDIO-FIX (the user, 4.11: "Twinsen's and Vesk's
+    # voices are too similar"): another speaker, chosen from a survey of the model's 904 (median pitch and the shape of
+    # the spectrum, tools/voice-render/survey-speakers.py): 806, a low, dark voice (95 Hz, 5.6 semitones under Twinsen; his timbre
+    # the furthest of the low voices from Twinsen's, Gilbert's, Doran's and the male families'). Slower and steadier
+    # (less expressive, an even rhythm), his words ending on an s or a t (crisp, clipped; a k there measured as a click through the voice bus), a touch of nose (+3 dB at 1.1 kHz)
+    'vesk': dict(sid=806, ls=1.24, ns=0.5, nw=(0.55, 0.72), attempts=12, c='tkvsdrn', v=['e', 'a', 'o'], coda='stsn',
+                 fx={'eq': ['equalizer', '1100', '1.4q', '3', 'equalizer', '280', '1q', '-2']},
+                 mods={'no': (0.86, ['.']), 'excl': (0.95, ['.', '!']), 'ask': (1.04, ['?', '.'])}),
+    # calm and spacious. AUDIO-FIX (the user, 4.11: "Sendell isn't angelic enough ... a magical spirit"): a soft, breathy,
+    # steady voice (372: 220 Hz, the calmest of the breathy women, apart from Zoé, Mira and the families), three
+    # semitones up, slower; the spirit's chain (spirit(): a shimmer, a quiet octave above, a spacious room heard only
+    # as wet), the top left open (air, not tamed away)
+    'sendell': dict(sid=372, ls=1.4, ns=0.5, nw=(0.6, 0.8), c='lmnvsh', v=['a', 'e', 'oo', 'ai'], ps=3,
+                    fx={'tail': 0.75, 'top': ['treble', '-1', '6000', 'lowpass', '9000'], 'spirit': {'octave': -18, 'verb': (45, 75, -8)}},
                     mods={'excl': (1.05, ['.']), 'no': (1.1, ['.'])}),
     'gilbert': dict(sid=182, ls=1.1, ns=0.75, c='grbdhm', v=['o', 'u', 'a', 'oo']),
     'mira': dict(sid=595, ls=0.92, ns=0.9, c='mlrsvn', v=['a', 'i', 'e', 'ai']),
@@ -96,25 +106,25 @@ REAL = set('''a i o an am as at be by do go he if in is it me my no of on or so 
 mama papa nana dad mom man men lane lone line lean meal mile mine more most moon name nine none note load lead dead
 kill sin sex dam damn die dead tit nut not net ten tin ton sit set sat rat rot vat sea see sore sir son sun tea tie
 toe two too dino tina dora mona lisa lima rome oslo nice moto data diva viva solo memo demo item into onto also'''.split())
-def word(rng, n, cons, vows, first):
+def word(rng, n, cons, vows, first, coda='nlrs'):
     for _ in range(20):
         w = ''
         for i in range(n):
             if not (i == 0 and not first and rng.random() < 0.12):   # now and then a word starting on its vowel
                 w += rng.choice(cons)
             w += rng.choice(vows)
-        if rng.random() < 0.28: w += rng.choice('nlrs')
+        if rng.random() < 0.28: w += rng.choice(coda)
         if w.endswith('e') and not w.endswith('ee'): w += 'h'           # (a final e would be silent)
         if w not in REAL: return w
     return w
-def gibberish(rng, n, cons, vows, intent, end, trail=False):
+def gibberish(rng, n, cons, vows, intent, end, trail=False, coda='nlrs'):
     # n syllables in one to six words of one to three syllables
     lo, hi = max(1, -(-n // 3)), min(6, n)
     nw = rng.randint(lo, max(lo, min(hi, lo + 2)))
     sizes = [1] * nw
     for _ in range(n - nw):
         i = rng.choice([k for k in range(nw) if sizes[k] < 3] or [0]); sizes[i] += 1
-    words = [word(rng, s, cons, vows, i == 0) for i, s in enumerate(sizes)]
+    words = [word(rng, s, cons, vows, i == 0, coda) for i, s in enumerate(sizes)]
     if intent == 'no' and nw > 1: words[0] += ','                       # "Nah, ..." the refusal first, then why
     elif trail and nw >= 3 and rng.random() < 0.7: words[-2] += ','      # (Baldino: momentum, then the awkward part)
     elif nw >= 4 and rng.random() < 0.5: words[nw // 2 - 1] += ','       # a long one breathes in the middle
@@ -184,7 +194,20 @@ def sox(x, args, same_length=True):
     y = np.frombuffer(p.stdout, np.float32).copy()
     return y[:len(x)] if same_length else y
 
-def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None):
+TOP = ['treble', '-4', '5000', 'lowpass', '7500']
+# AUDIO-FIX (the user, 4.11: "Sendell isn't angelic enough"): a spirit's voice, built around the dry voice and never
+# over it: the voice itself through a slow, shallow chorus (a shimmer, not a double), a quiet octave-up layer
+# high-passed into a halo, and a spacious room heard only as wet (pre-delayed, its lows cut, well under the voice),
+# so the words' outline stays clear. Everything sox, offline.
+def spirit(d, sp):
+    ch = sox(d, ['chorus', '0.8', '0.9', '24', '0.32', '0.35', '1.6', '-t'])
+    octv = sox(d, ['pitch', '1200', 'highpass', '1800', 'lowpass', '7000']) * 10 ** (sp.get('octave', -18) / 20)
+    pre, rev, wet = sp.get('verb', (40, 72, -10))
+    w = sox((d + octv).astype(np.float32), ['highpass', '350', 'reverb', '-w', str(rev), '45', '95', '0', str(pre), '0'])
+    return ch * 0.85 + octv + w * 10 ** (wet / 20)
+
+def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None, fx=None):
+    fx_ = fx or {}
     pcm, al = [], []
     for ch in voice.synthesize(text, Cfg(speaker_id=spk, length_scale=ls, noise_scale=ns, noise_w_scale=nw), include_alignments=True):
         a = ch.audio_float_array.astype(np.float32)
@@ -201,17 +224,20 @@ def render(voice, Cfg, spk, text, ls, ns, nw, ps=0, room=None):
     f = int(0.005 * SR); x[:f] *= np.linspace(0, 1, f); f = int(0.03 * SR); x[-f:] *= np.linspace(1, 0, f)
     pad = int(LEAD * SR)
     speech = len(x)
-    x = np.concatenate([np.zeros(pad, np.float32), x, np.zeros(int(TAIL * SR), np.float32)])
-    fx = ['highpass', '70']
+    tail = fx_.get('tail', TAIL)
+    x = np.concatenate([np.zeros(pad, np.float32), x, np.zeros(int(tail * SR), np.float32)])
+    fx = ['highpass', str(fx_.get('hp', 70))]
     if ps: fx += ['pitch', str(int(ps * 100))]
+    fx += fx_.get('eq', [])                                           # (a speaker's own colour: Vesk's nose)
     # (tame the top: nothing piercing on laptop speakers, and no sharp sample-to-sample steps where the game's voice
     #  compressor, 4 ms of attack, lets a syllable's onset through before it acts)
-    fx += ['treble', '-4', '5000', 'lowpass', '7500']
+    fx += fx_.get('top', TOP)
     if room is not None: fx += ['reverb', '18', '60', '25', '0', '8', str(room)]
     y = sox(x, fx)
-    if room is not None:                                              # (the room's own short tail, then silence)
+    if fx_.get('spirit'): y = spirit(y, fx_['spirit']).astype(np.float32)
+    if room is not None or fx_.get('spirit'):                         # (the room's own tail, then silence)
         y = y[:len(x)]
-        f = int(0.06 * SR); y[-f:] *= np.linspace(1, 0, f)
+        f = int(min(0.06 if room is not None else 0.25, tail / 2) * SR); y[-f:] *= np.linspace(1, 0, f)
     y = deess(y)
     syl = syllables(al, a0 - pad) if al else []
     syl = [s for s in syl if s[0] < (pad + speech) / SR]
@@ -295,15 +321,15 @@ def build_bank(voice, Cfg, bid, spec, inv, people_sounds, family=None):
                 # this clip's palette: a few of the speaker's consonants and vowels
                 cons = rng.sample(people_sounds['c'], min(len(people_sounds['c']), rng.randint(4, 6)))
                 vows = rng.sample(people_sounds['v'], min(len(people_sounds['v']), rng.randint(2, 3)))
-                text = gibberish(rng, n, cons, vows, intent, ends[k % len(ends)], spec.get('trail') and intent in ('tell', 'excl'))
+                text = gibberish(rng, n, cons, vows, intent, ends[k % len(ends)], spec.get('trail') and intent in ('tell', 'excl'), spec.get('coda', 'nlrs'))
                 ls = spec['ls'] * pace * rng.uniform(0.94, 1.06)
                 ns = max(0.4, spec['ns'] + rng.uniform(-0.08, 0.08))
-                nw = rng.uniform(0.75, 1.0)
+                nw = rng.uniform(*spec.get('nw', (0.75, 1.0)))
                 # (Piper's performances vary from one rendering to the next: of up to six, the first without a hard
                 #  attack, else the softest)
                 best = None
-                for _ in range(ATTEMPTS):
-                    r = render(voice, Cfg, spec['sid'], text, ls, ns, nw, spec.get('ps', 0), spec.get('room'))
+                for _ in range(spec.get('attempts', ATTEMPTS)):
+                    r = render(voice, Cfg, spec['sid'], text, ls, ns, nw, spec.get('ps', 0), spec.get('room'), spec.get('fx'))
                     c = attack(r[0])
                     if best is None or c < best[0]: best = (c, r)
                     if c < ATTACK_OK: break
@@ -312,7 +338,7 @@ def build_bank(voice, Cfg, bid, spec, inv, people_sounds, family=None):
     if spec.get('hm'):
         lens['hm'] = [1]; nvars['hm'] = 2
         for k, t in enumerate(['Hmm.', 'Hm...']):
-            x, sp, syl = render(voice, Cfg, spec['sid'], t, spec['ls'] * 1.05, 0.6, 0.8, spec.get('ps', 0), spec.get('room'))
+            x, sp, syl = render(voice, Cfg, spec['sid'], t, spec['ls'] * 1.05, 0.6, 0.8, spec.get('ps', 0), spec.get('room'), spec.get('fx'))
             rendered.append((f'hm.1.{k}', x, sp, [[s[0], s[1], s[2], 'm', '', 0.8] for s in syl[:1]] or None, t))
     # every clip to the same speech level (a bank sounds even), then the bank to the target loudness
     for cid, x, sp, syl, text in rendered:

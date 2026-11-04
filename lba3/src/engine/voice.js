@@ -515,7 +515,7 @@ export class Babble {
   // load the banks these speakers will need (a scene's people, a cinematic's cast); { wait: true } resolves when ready
   prepare(keys, o = {}) {
     const mp = manifest();
-    const sr = this.audio.ctx?.sampleRate;
+    const sr = this.audio.ctx?.sampleRate ?? this.audio._pre?.sampleRate;   // (AUDIO-FIX: before init, the rate of the context made ahead, not 48 kHz)
     const go = () => Promise.all(keys.map((k) => { const b = bankOf(voiceFor(k)); return b ? loadBank(b[0], sr) : null; }));
     if (MANIFEST) return o.wait ? go() : (go(), null);
     return mp ? (o.wait ? mp.then(go) : (mp.then(go), null)) : null;
