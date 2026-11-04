@@ -215,7 +215,11 @@ and the arch in the water's mirror, never its span. Tessa's lookdev is the chara
 - Lookdev: `docs/future/world/W-1/W-1-tessa-lookdev.jpg`, `W-1-dockers-lookdev.jpg`, `W-1-cast-faces-indoor.jpg`,
   `W-1-cast-pose-tests.jpg`, `W-1-cast-lba2-camera.jpg`, `W-1-cast-in-citadel-*.jpg`.
 - For the animator: a two-handed crank motion, a slower ear motion in talk, a heavier walk (`walkCycle` in the look).
-- **The user's approval of the pictures:** asked 3.11; pending.
+- **Accepted by the user (4.11.2026)**, with a note for later (not now): "everything looks similar except the colours;
+  there's no real uniqueness." Ballastra's own look (shapes, materials, building types, the canal dwellers' world)
+  needs a pass of its own before or with W-2 so it doesn't read as the other worlds recoloured.
+- **For the coordinator:** W-2 (the Arch District) can be ordered now (W-1 is accepted); the laptop builds it once
+  it is marked **Ordered**.
 ---
 
 ## W-2 … W-8 · Draft, the coordinator reviews
