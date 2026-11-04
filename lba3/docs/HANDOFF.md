@@ -50,9 +50,23 @@ They were (for the record):
 - `audio-fix`: Sendell's voice more like a magical spirit; Vesk clearly different from Twinsen; the music crackling
   again (find the cause). Listening files go to the scratchpad `voices/8-sendell.mp3`, `9-twinsen-vesk.mp3`.
 
+## Done in the second cloud session (4.11.2026, branch `ccr-c1c2c4b9-dep6ed`, fast-forward of ccr-adf00ea7-37ebl3)
+- The laptop's five applied (ISO-CLOSE-1, HARBOUR-1, ASYLUM-2, OTRINGAL-1, JUMP-CAPE-1), a commit each; the Camera
+  distance hint names the big rooms' view too.
+- **ASYLUM-2's story part** (`story/hostel.js`, `text/hostel.js`): the hostel's seven people on the npcSpots with
+  lines by phase (1–2, 3–7, 8, 9 on), Vesk's two guards on his store in 1–2 only, the humming crate (pocket set) → his
+  key → his office (notebook, strongbox 20 kashes), the two plaques, the cook's soup; the store cleared from chapter 3.
+  NPCs take `y` and `pin` (sit, a new 'sleep' pose). Leftover: chapter 8's shelter as a mechanic (lines only).
+- Sendell's call: the "crystals take in the ball" shot is wide now (pictured in SwiftShader; the user hasn't seen it).
+- Artifact v35 published (the game files above; the page itself unchanged).
+- Tests (SwiftShader): asylum, lba1rooms, transitions, chapter1, opening, shops, purposes, anim-polish PASS;
+  zislands: one check timing-sensitive (a Knartas resident walking past the pad takes the prompt; the test now waits).
+- The expansion merge (base → `expansion/ballastra`): resolved (regions, citizens, story/index, zeelife, main.js
+  migrateSave, STORY_MAP); see the commit for its checks.
+
 ## Queue (after those)
-0. **Apply the laptop's new requests** in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
-1. **ASYLUM-2 story part:** the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
+0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
+1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
    plaque "SEALED BY ORDER OF THE CITADEL ISLAND COUNCIL AFTER FUNFROCK'S FALL. NEVER AGAIN.", `R.npcSpots`); the cloud
    then writes the people, lines, Vesk's notebook, the hidden humming crate (Arthur's pocket set), the two guards and
    the chapter states (answer in `WORLD_ART_REQUESTS.md`, "ASYLUM-2 · the cloud's answer").

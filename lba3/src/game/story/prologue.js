@@ -755,8 +755,9 @@ export class Prologue extends ChapterBase {
       hand: () => { const p = fit(at(-2.0, 1.2, 1.4), head); return () => ({ pos: p, look: ballAt().clone().lerp(T, 0.35), fov: 46 }); },
       // the flight, from behind and beside him, panning with the ball as it is drawn from him to the wall
       fly: () => { const p = fit(at(-1.5, 2.8, 1.6), T), mid = head.clone().lerp(T, 0.5); return () => ({ pos: p, look: mid.clone().lerp(ballAt(), 0.45), fov: 54 }); },
-      // the vein taking it in, from high over his shoulder (the crystals' fan stands out a metre or two from the wall)
-      sink: () => still(V3(T.x - fx * 4.2 + sx * 0.6, T.y + 1.3, T.z - fz * 4.2 + sz * 0.6), V3(T.x, T.y + 0.1, T.z), 40, 0.6, 1.2),
+      // the vein taking it in, wide from his open side and above: him on the left, the whole crystal fan and its flash
+      // to the right (the user, 4.11: the close one was too tight: all crystal and the top of his head)
+      sink: () => still(at(-1.2, 3.0, 2.9), head.clone().lerp(T, 0.7).add(V3(0, -0.2, 0)), 58, 0.25, 1.5),
       // his face in profile, lit by the vein, room ahead of his look
       face: () => still(at(0.35, 2.7, 1.95), V3(H.x + fx * 0.35, fy + 1.8, H.z + fz * 0.35), 36, 0.2, 3),
       // Sendell: low behind him, the vein blazing over him (he is small against it)
