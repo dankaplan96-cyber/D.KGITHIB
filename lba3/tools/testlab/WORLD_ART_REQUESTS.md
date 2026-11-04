@@ -1897,3 +1897,11 @@ origin aba783e and after HARBOUR-1).
   text (`asy_register1/2`, `as_cell1–3`, Madam Rondo's `idle_sphero2`, `room_asylum` in text/map.js, STORY_BIBLE
   line 278, COMBAT line 529, CONNECTIONS_AUDIT's asylum rows). Grass grows to the front step (`keepClearNew` in
   island.js would clear it; left alone).
+
+### CLOUD_ORDERS 5 and a new one · the user's corrections (4.11.2026)
+- **Order 5 is the climb up to the asylum, not the tavern.** The user: "not to the tavern but up to the asylum; see how
+  it is in the second game." The laptop is paving the way from the town up to the old fort's terrace and the
+  asylum's front door as LBA2's climb north of the square (one straight paved way, dressed stone steps or ramp, stone
+  retaining walls, capped posts, a railing). Request diff to follow (CLIMB-1).
+- **New: no tree inside a house.** The user found a tree inside Twinsen's house. The laptop is checking every tree and
+  plant against every building and room in every area and fixing them at the cause (TREES-1 to follow).
