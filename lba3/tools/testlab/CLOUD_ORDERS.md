@@ -34,3 +34,15 @@ small one; no superfluous LBA1/LBA2 places, no cacophony of buildings.** Apply i
   behind the bar, the west islet's dome, six Desert Island leftovers; new purposes for Citadel's shop house, the
   School's second building, Zeelich's dog yard, three Desert Island houses). Don't touch those files until they merge.
 - LINE-CLEAR-1 is queued in the cloud after `declutter` (it touches `zislands.js` too).
+
+## Added 4.11.2026 (the user's playtest notes; the laptop owns world art)
+5. **Citadel: the way up to the tavern.** The user: "In LBA2 the climb to the bar in Citadel was paved and orderly; now it's dirt again." Pave the
+   approach and steps up to the tavern (`south` house) as LBA2 has it (numbers and descriptions from CITADEL.ILE only),
+   in the town's paving kit; keep story spots and colliders.
+6. **Zeelich doesn't look like LBA2's Zeelich** (the user, after seeing it). Compare the hub (Zeelich street, Baldino's
+   workshop side, the spaceport deck) and Otringal against LBA2's references from the play camera; list the biggest
+   differences (silhouettes, colours, building types, ground, sky) and fix the top ones within ALIGNMENT.md's 80 %
+   likeness and R11 (every place a meaning). Pictures before/after for the user.
+The cloud is working on (don't touch): chapter 1–2 staging and cinematics (Vesk's ship and arrival, the crystal and
+Sendell scene, the beam pad after Vesk, Doran's walk, the follow camera against walls) and the audio (Sendell's voice,
+Vesk vs Twinsen, the music crackle).
