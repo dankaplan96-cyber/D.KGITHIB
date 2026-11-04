@@ -21,6 +21,8 @@ import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
+import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry } from './lba1places.js';
+import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -376,6 +378,38 @@ function islandColor(x, z, h, slope, c) {
   if (slope > 0.9) c.multiplyScalar(0.92 + Math.min(0.1, (h % LEVEL_STEP) * 0.03));
 }
 
+// CLIMB-1: the cliff rocks where masonry now stands (the asylum's climb, lba1places.js) are left out whole, after they are
+// all drawn (so no random draw and no other rock moves): each rock is a closed solid of its own triangles, found by the
+// corners they share; one that has a corner in the masonry goes, all of it. Only the triangles in box [x0, z0, x1, z1].
+function dropRocks(mesh, inside, [x0, z0, x1, z1]) {
+  const P = mesh.geometry.attributes.position, A = P.array, nT = P.count / 3, par = new Map(), near = [];
+  const key = (i) => `${A[i * 3].toFixed(4)},${A[i * 3 + 1].toFixed(4)},${A[i * 3 + 2].toFixed(4)}`;
+  const find = (k) => { let r = k; while (par.get(r) !== r) r = par.get(r); par.set(k, r); return r; };
+  for (let t = 0; t < nT; t++) {
+    const x = A[t * 9], z = A[t * 9 + 2];
+    if (x < x0 || x > x1 || z < z0 || z > z1) continue;
+    near.push(t);
+    const ks = [key(t * 3), key(t * 3 + 1), key(t * 3 + 2)];
+    for (const k of ks) if (!par.has(k)) par.set(k, k);
+    par.set(find(ks[1]), find(ks[0])); par.set(find(ks[2]), find(ks[0]));
+  }
+  const gone = new Set();
+  for (const t of near) for (let v = 0; v < 3; v++) { const i = t * 3 + v; if (inside(A[i * 3], A[i * 3 + 2])) gone.add(find(key(i))); }
+  if (!gone.size) return 0;
+  const drop = new Uint8Array(nT);
+  for (const t of near) if (gone.has(find(key(t * 3)))) drop[t] = 1;
+  const g = mesh.geometry, out = {};
+  for (const [name, at] of Object.entries(g.attributes)) {
+    const s = at.itemSize, src = at.array, dst = new Float32Array(src.length);
+    let o = 0;
+    for (let t = 0; t < nT; t++) if (!drop[t]) { dst.set(src.subarray(t * 3 * s, (t + 1) * 3 * s), o); o += 3 * s; }
+    out[name] = new THREE.Float32BufferAttribute(dst.subarray(0, o), s);
+  }
+  for (const [name, at] of Object.entries(out)) g.setAttribute(name, at);
+  g.computeBoundingBox(); g.computeBoundingSphere();
+  return drop.reduce((a, b) => a + b, 0);
+}
+
 // Splat weights: [grass, sand, rock, dirt, cobbles]
 function islandSplat(x, z, h, slope, w) {
   const n = fbm(x * 0.2, z * 0.2, 2);
@@ -398,6 +432,8 @@ function islandSplat(x, z, h, slope, w) {
   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
   w[4] = smoothstep(9.9, 9.0, vd) * 3; // the square, edged by a curb ring (town.js)
   if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, streetDist(x, z) + n * 0.25) * 3);
+  // CLIMB-1: the way up to the fort's terrace, paved as the streets (lba1places.js climbPaveDist)
+  w[4] = Math.max(w[4], smoothstep(0.3, -0.25, climbPaveDist(x, z) + n * 0.2) * 3);
   // in town the ground between the streets is brown soil with lawns (Citadel Island)
   if (vd < 36 && h > 0.8) {
     const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)); // never on the paving
@@ -587,6 +623,7 @@ export function* buildWorldSteps(parentScene) {
     decide: SG,
     skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
   });
+  dropRocks(W_cliffs.mesh, (x, z) => climbMasonry(x, z, 0.05), [-40, -54, -20, -16]);   // (CLIMB-1)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
@@ -885,6 +922,9 @@ export function* buildWorldSteps(parentScene) {
   // (WA-15: none where the harbour front's Zeelich buildings stand)
   for (const t of trees) if (!t.gone && zhClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && zhClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // (CLIMB-1: none in the climb's masonry or on its paved terrace, lba1places.js)
+  for (const t of trees) if (!t.gone && climbClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && climbClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   // (BENCHES-1: the original's benches, citadel-layout.js PROPS.benches, keep their room: no scattered bush and no
   //  scattered tree's trunk within 1.2 m of one — a bush stood 0.9 m before the harbour path's bench, a pine's trunk before
   //  the lighthouse's. The original's own trees stay; filtered after the scatter, so no random draw moves)
@@ -894,6 +934,32 @@ export function* buildWorldSteps(parentScene) {
   });
   for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // TREES-1 (the user, 4.11.2026: a tree stood inside Twinsen's house, its crown out through the thatch). okSpot keeps
+  // the scatter out of the square's ring (exclusions: POI.village) and the original's trees 1.6 m off the houses, but
+  // nothing kept the scattered trees and bushes out of the houses beyond the square: a tall tree grew in Twinsen's
+  // house and two in the harbour wing's neighbour, bushes in the museum and the stone house, crowns through the walls
+  // of the water house, the wing and the baggage hall. Now no tree, palm or bush stands within its crown's reach of a
+  // house's walls (the farthest leaf from its trunk, measured on the sculpts, at its scale and crown width; a leaf may
+  // touch the wall's face, 0.15 m, 0.1 for a bush: the original's tree by the harbour wing keeps its place), nor in the
+  // asylum's block-house or on the spaceport's footbridge (both built later, main.js; on the bridge only the trunk
+  // counts: a crown may lean over a deck at the ground). Filtered after the scatter like the rest above: no random
+  // draw moves and every other tree keeps its place. The grass, flowers and tulips keep out of the same floors below.
+  const BLOCKS = [...W.houses.map((h) => ({ x: h.x, z: h.z, ry: h.ry, w: h.w, d: h.d })),
+    { x: ASYLUM_DOOR.x - 0.3, z: ASYLUM_DOOR.z, ry: 0, w: 3.0, d: 3.6 },   // (lba1places.js asylumDoor: its stone block)
+    { x: (BRIDGE.x0 + BRIDGE.x1) / 2, z: BRIDGE.z, ry: 0, w: BRIDGE.x1 - BRIDGE.x0, d: BRIDGE.hw * 2, deck: true }];
+  // (how far (x, z) stands outside the nearest block's walls; inside, minus its depth)
+  const blockDist = (x, z, decks = true) => {
+    let m = Infinity;
+    for (const b of BLOCKS) {
+      if (b.deck && !decks) continue;
+      const dx = x - b.x, dz = z - b.z, c = Math.cos(b.ry), s = Math.sin(b.ry), ax = Math.abs(dx * c - dz * s) - b.w / 2, az = Math.abs(dx * s + dz * c) - b.d / 2;
+      m = Math.min(m, ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az));
+    }
+    return m;
+  };
+  const REACH = { round: 1.9, fruit: 1.9, tall: 0.9, pine: 1.67, palm: 2.87, bush: 0.85 };   // (vegetation.js, at scale 1)
+  for (const t of trees) if (!t.gone && (blockDist(t.x, t.z, false) < REACH[t.kind] * (CROWN[t.kind] ?? 1) * t.s - 0.15 || blockDist(t.x, t.z) < 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && blockDist(b.x, b.z) < REACH.bush * b.s - 0.1) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
@@ -945,6 +1011,8 @@ export function* buildWorldSteps(parentScene) {
   for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
   clearLife(grass); clearLife(flowers);
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
+  for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
+  for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
@@ -996,6 +1064,7 @@ export function* buildWorldSteps(parentScene) {
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
   const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7) lifeBeds.add(t.bed);
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
+  for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
   fillPools();   // (PERF-CALLS: the small kinds' pools made now, with the rest of the island: uploaded behind the loading screen)
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
@@ -1009,7 +1078,7 @@ export function* buildWorldSteps(parentScene) {
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
   // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face)
-  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55))) r.s = 1e-4;
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();

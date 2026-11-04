@@ -34,7 +34,7 @@ import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
 import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
 import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
-import { fitAdd } from './worldfit.js';
+import { fitAdd, FIT } from './worldfit.js';
 import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
@@ -843,6 +843,19 @@ export function* buildDesertSteps(scene, physics) {
     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
   }
   // dry shrubs and cacti
+  // TREES-1 (the user, 4.11.2026: no plant may grow in a house): a dry shrub stood in two of Kesh's houses, in the big
+  // house S40 and at the condenser hall's wall. The shrubs keep out of every building the island registers (worldfit.js
+  // FIT: Kesh's houses, the post's cabins, the original's old places, built further on) and the hall: their instances
+  // are made once the old places stand (plantShrubs, after buildOldPlaces). The random draws are made as before.
+  let plantShrubs = null;
+  const inBuilding = (x, z, r) => {
+    if (Math.abs(x - RUINS.x) < 3.5 + r && Math.abs(z - (RUINS.z - 1.0)) < 2.0 + r) return true;   // (the condenser hall's block, below)
+    return FIT.some((b) => {
+      if (b.region !== 'desert') return false;
+      const dx = x + ox - b.x, dz = z + oz - b.z, c = Math.cos(b.ry), sn = Math.sin(b.ry);
+      return Math.abs(dx * c - dz * sn) < b.w / 2 + r && Math.abs(dx * sn + dz * c) < b.d / 2 + r;
+    });
+  };
   {
     const shrubG = cached('shrub', () => new THREE.IcosahedronGeometry(0.5, 0).scale(1, 0.55, 1));
     const list = [];
@@ -860,7 +873,8 @@ export function* buildDesertSteps(scene, physics) {
       const h = H(x, z); if (h > BASE + 4) continue;
       list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
     }
-    cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
+    // (TREES-1: drawn once every building of the island stands, below: none in a house's walls)
+    plantShrubs = () => cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list.filter((t) => !inBuilding(t.x, t.z, 0.5 * t.s - 0.05)), { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
     const cactM = pm('#5a8a4a', 0.75);
     const CB = new Batch(group);
     for (let i = 0; i < 26; i++) {
@@ -1462,6 +1476,7 @@ export function* buildDesertSteps(scene, physics) {
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
   };
   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
+  plantShrubs();   // (TREES-1: every building registered now)
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
   //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
   for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });
