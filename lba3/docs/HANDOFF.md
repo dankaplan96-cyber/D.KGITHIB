@@ -49,6 +49,7 @@ Running when this was written (they report to the old session; if their branches
   again (find the cause). Listening files go to the scratchpad `voices/8-sendell.mp3`, `9-twinsen-vesk.mp3`.
 
 ## Queue (after those)
+0. **Apply the laptop's new requests** in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. **ASYLUM-2 story part:** the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
    plaque "SEALED BY ORDER OF THE CITADEL ISLAND COUNCIL AFTER FUNFROCK'S FALL. NEVER AGAIN.", `R.npcSpots`); the cloud
    then writes the people, lines, Vesk's notebook, the hidden humming crate (Arthur's pocket set), the two guards and
