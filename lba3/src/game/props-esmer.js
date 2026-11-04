@@ -1080,6 +1080,7 @@ export function domeStack(P, { x = 0, z = 0, base, h, R, wallM, domeM, drum = tr
 //   w, d (footprint along / across the front), h (its top: the parapet, or the finial's tip), wallH (a domed
 //   body's height), wall (plaster material), domeM (dome material: no dome without one), trim / accent (frame
 //   colours), seed, door (true), role ('house' | 'store'), sign (a word of the sign atlas), awning [a, b]
+//   (OTR-VARIETY: balconyP / awningP, the chances of a balcony and of the awning; 0.55 and 0.6 as before)
 export function esmerBuilding(P, o) {
   const r = rng(((o.seed | 0) + 1) * 7919 + 17);
   const { w, d, h } = o, small = Math.min(w, d), wallM = o.wall, stone = EM.stone(), vc = EM.vc(), lat = latticeM();
@@ -1115,7 +1116,7 @@ export function esmerBuilding(P, o) {
   const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: low ? 0.78 : 0.82, h: Math.min(1.25, friezeY - (low ? 0.92 : 0.96), courseY - 0.96) };
   const ops = { front: [], back: [], left: [], right: [] };
   if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
-  const balconySide = !solid && row2 && r() < 0.55 ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
+  const balconySide = !solid && row2 && r() < (o.balconyP ?? 0.55) ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
   if (!solid) for (const sd of sides) {
     if (o.blind?.includes(sd.n)) continue;   // (WORLD-FIX: a wall set into the rise behind it has no windows)
     const n = Math.max(0, Math.floor((sd.len - 0.9) / 2.1));
@@ -1231,7 +1232,7 @@ export function esmerBuilding(P, o) {
       add(bbox(0.16, 0.16, 1.1, 0.02, 1), EM.wood(), T(m, doorX, dh + 0.75, 0.5));
       add(cached('epulley', () => new THREE.TorusGeometry(0.12, 0.03, 5, 12)), EM.brass(), T(m, doorX, dh + 0.58, 0.98, Math.PI / 2));
       add(cached('ehoistrope', () => cyl(0.012, 0.012, 1.0, 4)), EM.wood(), T(m, doorX, dh + 0.05, 1.06));
-    } else if (o.awning && dh + 0.7 < ph && r() < 0.6) {
+    } else if (o.awning && dh + 0.7 < ph && r() < (o.awningP ?? 0.6)) {
       const aw = dw + 0.9;
       add(awningGeo(aw), EM.canvas(o.awning[0], o.awning[1]), T(m, doorX, dh + 0.62, 0.02));
       for (const s of [-1, 1]) add(cached('eawstrut', () => cyl(0.015, 0.015, 1.0, 4).rotateX(0.95)), EM.brass(), T(m, doorX + s * aw / 2 * 0.9, dh + 0.25, 0.36));
