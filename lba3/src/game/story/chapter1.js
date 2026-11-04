@@ -21,6 +21,7 @@ import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { Watcher } from '../enemies.js';
 import { crossByShip } from '../travelfilm.js';
+import { revealBeat, solidAt, twoShot } from './revealcam.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -63,11 +64,18 @@ export class Chapter1 extends ChapterBase {
     if (!this.reached()) return id === 'vesk' || id === 'worker' || id === 'guard' ? null : undefined;
     const pe = W.pierEnd, ps = W.pierStart, st = W.station;
     const gateIn = { x: W.gate.x + 3.2, z: W.gate.z };
+    // (on their way somewhere the story sent them: where they are, the rest of the way still to walk — walkOff)
+    const wk = this.walkers?.[id];
+    if (wk) return { x: wk.n.pos.x, z: wk.n.pos.z, a: wk.n.angle, track: wk.n.track ? wk.n.track.cmds.slice(wk.n.track.pc) : null };
+    // (STAGING-1, the user 4.11: after the talk Twinsen stood in the beam pad's light: Vesk waits off the pad, in front
+    //  of its arch (west), Zoé beside the way in; nobody has to step on the pad to talk to him)
+    const PAD = st ? { vesk: { x: st.beamPad.x - 3.4, z: st.beamPad.z + 0.3, a: -Math.PI / 2 }, zoe: { x: st.beamPad.x - 4.7, z: st.beamPad.z + 2.1, a: Math.atan2(1.3, -1.8) } } : null;
     switch (id) {
       case 'vesk':
+        if (this.arriving) return undefined;   // (on deck or on the gangway: startArrival moves him)
         if (f.c1_veskGone || !f.c1_arrived) return null;
-        if (!f.c1_water) return { x: ps.x - 2.5, z: ps.z + 1.2, a: -Math.PI / 2 };
-        if (f.c1_zoeDone) return st ? { x: st.beamPad.x + 1.6, z: st.beamPad.z, a: -Math.PI / 2 } : gateIn;
+        if (!f.c1_water) return { x: ps.x - 2.5, z: ps.z + 1.2, a: Math.PI / 2 };   // (facing the town, not the sea)
+        if (f.c1_zoeDone) return PAD ? PAD.vesk : gateIn;
         return R.control?.npcSpots?.vesk ?? gateIn;
       case 'worker':
         if (!f.c1_water) return { x: pe.x + 3.5, z: pe.z - 1.1, a: 0, anim: 'use' };
@@ -79,7 +87,7 @@ export class Chapter1 extends ChapterBase {
       case 'zoe':
         if (f.c1_zoeStart && !f.c1_zoeDone) return null; // the player is Zoe
         if (f.c1_needZoe && !f.c1_zoeStart) return { x: W.gate.x - 1.5, z: W.gate.z + 1.5, a: Math.PI / 2 };
-        if (f.c1_zoeDone && !f.c1_veskGone) return st ? { x: st.beamPad.x - 2.2, z: st.beamPad.z + 1.2, a: Math.PI / 2 } : undefined;
+        if (f.c1_zoeDone && !f.c1_veskGone) return PAD ? PAD.zoe : undefined;
         return R.house.npcSpots.zoe;
       case 'arthur':
         return R.house.npcSpots.arthur;
@@ -232,7 +240,13 @@ export class Chapter1 extends ChapterBase {
       case 'doran':
         // at the harbour he agrees and goes ahead to the spaceport; there, by the ship, he takes Twinsen aboard
         if (f.c1_ship) return c([['doran', 'c1_doran_board']], () => this.toZeelich());
-        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => { f.c1_ship = true; this.story.refreshCast(); g.updateObjective(); g.save(false); });
+        // (STAGING-1: he sets off up the quay toward the town and the spaceport, and is at the ship once out of sight)
+        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => {
+          f.c1_ship = true;
+          const ps = g.world.pierStart;
+          this.walkOff('doran', [{ x: ps.x + 5.5, z: ps.z + 2.6 }, { x: -95.8, z: 37.4 }, { x: -82.0, z: 36.0 }, { x: -67.9, z: 29.6 }], 1.15);
+          g.updateObjective(); g.save(false);
+        });
         return c([['doran', f.c1_valve_depot ? 'c1_doran_depot' : f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
       case 'xil': return c([['xil', f.c1_water ? 'c1_xil_2' : 'c1_xil_1']]);
       case 'pippa':
@@ -371,56 +385,180 @@ export class Chapter1 extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- Vesk arrives
-  // The project ferry glides in without a sound, a horn, the gangway, and Vesk
-  // walks down to the quay where half the town is waiting.
+  // The project ferry glides in without a sound, a horn, the gangway, and Vesk walks down to the quay.
+  // FERRY-1 (the user, 4.11): it sailed on its round after chapter 1's opening (prologue.js ferryAway), so this is its
+  // return, not a second arrival. It comes in from the open sea on one smooth curve (a Bézier, at a speed that eases
+  // off over its last 16 m), swings alongside and settles against the fenders with a small roll; the glow under its
+  // hull trails a pale mist, the funnel puffs, and at the berth the horn blows with a cloud of steam. Vesk rides on
+  // deck, a figure at the rail in the wide shot, and is revealed close: low at the gangway's foot as he comes down it,
+  // then walking into a medium shot at his mark for the speech (VESK-ENTRANCE). E / Space skips to the end state.
   startArrival() {
-    const g = this.game, W = g.world, F = W.ferry, h = g.hero, f = this.f;
+    const g = this.game, W = g.world, F = W.ferry, h = g.hero;
     this.arriving = true;
     g.setState('cutscene');
     F.setVisible(true);
-    F.cols?.forEach?.((c) => (c.enabled = false));
-    const base = F.group.position.clone();
-    const ps = W.pierStart;
+    const grp = F.group, base = grp.position.clone();
+    const ps = W.pierStart, pe = W.pierEnd;
     const vesk = this.npc('vesk');
-    const spot = { x: ps.x - 2.5, z: ps.z + 1.2 };
+    const mark = { x: ps.x - 2.5, z: ps.z + 1.2 };
     const gang = F.gangway || { x: F.x, z: F.z + 2 };
-    let tt = 0, spoke = false;
-    this._veskDue = null;
-    // the camera watches from the quay, over Twinsen's shoulder
-    const camPos = new THREE.Vector3(ps.x + 9, g.physics.groundAt(ps.x, ps.z) + 6.5, ps.z + 9);
-    g.camRig.override = { pos: camPos, look: new THREE.Vector3(gang.x, F.y ?? 1.2, gang.z) };
-    h.angle = Math.atan2(gang.x - h.pos.x, gang.z - h.pos.z);
-    g.cutscene = (dt) => {
-      tt += dt;
-      const k = Math.min(1, tt / 6), e = 1 - Math.pow(1 - k, 3);
-      F.group.position.set(base.x - (1 - e) * 34, base.y, base.z - (1 - e) * 6);
-      F.group.rotation.y = (1 - e) * 0.25;
-      if (tt > 0.2 && !this._horn1) { this._horn1 = true; g.audio.play('horn'); }
-      if (tt > 5.8 && !this._horn2) { this._horn2 = true; g.audio.play('horn'); g.camRig.shake(0.15); }
-      if (tt > 6.4 && !vesk.present) { vesk.setPresent(true); vesk.placeAt({ x: gang.x, z: gang.z, a: Math.atan2(spot.x - gang.x, spot.z - gang.z) }); }
-      if (vesk.present) {
-        const d = Math.hypot(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
-        // (if something blocks his path he is placed on his mark: the scene must never hang)
-        this._veskDue ??= tt + d / 1.5 + 3;
-        if (tt > this._veskDue && d > 0.3) vesk.placeAt({ x: spot.x, z: spot.z, a: vesk.angle });
-        else if (d > 0.3) {
-          vesk.angle = Math.atan2(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
-          g.physics.move(vesk, Math.sin(vesk.angle) * 1.5 * dt, Math.cos(vesk.angle) * 1.5 * dt);
-          vesk.controlled = true; vesk.rig.play('walk'); vesk.rig.update(dt, 1.5); vesk.sync();
-        } else if (!spoke) {
-          spoke = true;
-          vesk.controlled = false;
-          g.cutscene = null;
-          g.camRig.override = null;
-          F.group.position.copy(base); F.group.rotation.y = 0;
-          f.c1_arrived = true;
-          this.arriving = false;
-          F.setVisible(true);
-          this.story.refreshCast();
-          g.setState('play');
-          this.chain([['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']], () => { g.updateObjective(); g.save(false); });
+    const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+    const world = (lx, ly, lz) => { grp.updateMatrixWorld(true); return grp.localToWorld(V3(lx, ly, lz)); };
+    const ground = (x, z) => g.physics.groundAt(x, z);
+    const deckY = F.y ?? 1.73, pierY = ground(gang.x + 0.5, ps.z);
+    // the way in, in the harbour's frame (the ferry's bow is its local +x; it berths heading +x)
+    const P = [[-46, -24], [-26, -23], [-15, 0.15], [0, 0]].map(([dx, dz]) => ({ x: base.x + dx, z: base.z + dz }));
+    const bez = (u) => { const v = 1 - u, a = v * v * v, b = 3 * v * v * u, c = 3 * v * u * u, d = u * u * u; return { x: a * P[0].x + b * P[1].x + c * P[2].x + d * P[3].x, z: a * P[0].z + b * P[1].z + c * P[2].z + d * P[3].z }; };
+    const LUT = [0];
+    { let q = bez(0); for (let i = 1; i <= 200; i++) { const r = bez(i / 200); LUT.push(LUT[i - 1] + Math.hypot(r.x - q.x, r.z - q.z)); q = r; } }
+    const L = LUT[200], V0 = 8.5, DEC = 16;   // m/s gliding in, then easing to a stop over its last DEC m
+    const T_CRUISE = (L - DEC) / V0, T_SAIL = T_CRUISE + (2 * DEC) / V0;
+    const sAt = (t) => (t < T_CRUISE ? V0 * t : t < T_SAIL ? L - DEC + DEC * (1 - Math.pow(1 - (t - T_CRUISE) / (T_SAIL - T_CRUISE), 2)) : L);
+    const uAt = (s) => { let i = 1; while (i < 200 && LUT[i] < s) i++; const s0 = LUT[i - 1], s1 = LUT[i]; return (i - 1 + (s1 > s0 ? Math.min(1, (s - s0) / (s1 - s0)) : 0)) / 200; };
+    const SETTLE = 1.3;
+    let tt = 0, dock = null, prevYaw = null, puffT = 0, mistT = 0, walk = null, said = false, skip = false;
+    // Vesk aboard: at the rail by the gangway, looking at the town
+    const RIDE = { x: 1.0, z: 1.05 };
+    vesk.setPresent(true); vesk.controlled = true; vesk.forceAnim = null;
+    const ride = (dt = 0) => { const p = world(RIDE.x, deckY, RIDE.z); vesk.pos.copy(p); vesk.angle = grp.rotation.y; vesk.rig.play('idle'); vesk.rig.update(dt, 0); vesk.sync(); };
+    const shipAt = (t) => {
+      const s = sAt(Math.min(t, T_SAIL)), u = uAt(s), p = bez(u), q = bez(Math.min(1, u + 0.004)), r = bez(Math.max(0, u - 0.004));
+      const yaw = Math.atan2(-(q.z - r.z), q.x - r.x);
+      grp.position.x = p.x; grp.position.z = p.z; grp.rotation.y = yaw;
+      return { yaw, v: t < T_CRUISE ? V0 : t < T_SAIL ? V0 * (1 - (t - T_CRUISE) / (T_SAIL - T_CRUISE)) : 0 };
+    };
+    // steam from the funnel (a puff, or the berth's cloud)
+    const steam = (n, big = false) => {
+      for (let k = 0; k < n; k++) {
+        const p = world(-3.4 + (Math.random() - 0.5) * 0.4, deckY + 3.45, (Math.random() - 0.5) * 0.4);
+        g.particles.spawn({ x: p.x, y: p.y, z: p.z, vx: (Math.random() - 0.5) * (big ? 1.2 : 0.4), vy: (big ? 1.8 : 1.1) + Math.random() * 0.6, vz: (Math.random() - 0.5) * (big ? 1.2 : 0.4),
+          color: '#f2f0ea', a: big ? 0.6 : 0.4, s0: 0.35, s1: big ? 2.2 : 1.3, life: big ? 2.6 : 1.9, grav: -0.2, drag: 0.8, drift: 0.6, add: 0, cell: 1, fi: 0.1, fo: 0.4 });
+      }
+    };
+    // under way: mist from the glow under the hull, spray off the bow, the funnel's puffs
+    const fx = (dt, v) => {
+      const P2 = g.particles;
+      if (v > 0.4) {
+        mistT += dt * (6 + v * 1.6);
+        for (; mistT >= 1; mistT--) {
+          const lx = -5.8 + Math.random() * 9, sd = Math.random() < 0.5 ? -1 : 1, p = world(lx, 0.05, sd * 2.1);
+          P2.spawn({ x: p.x, y: p.y + 0.1, z: p.z, vx: (Math.random() - 0.5) * 0.4, vy: 0.25 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.4,
+            color: '#c4f2ff', a: 0.32, s0: 0.5, s1: 1.6, life: 1.4 + Math.random() * 0.8, grav: -0.05, drag: 1.2, drift: 0.4, add: 0.35, cell: 1, fi: 0.15, fo: 0.35 });
+        }
+        if (Math.random() < dt * v * 1.2) {
+          const p = world(6.1, 0.25, (Math.random() - 0.5) * 0.6);
+          P2.spawn({ x: p.x, y: p.y, z: p.z, vx: (Math.random() - 0.5) * 1.2, vy: 0.9 + Math.random(), vz: (Math.random() - 0.5) * 1.2, color: '#f4fbff', a: 0.55, s0: 0.25, s1: 0.7, life: 0.8, grav: 2.5, drag: 1.2, add: 0.2, cell: 1 });
         }
       }
+      puffT -= dt;
+      if (puffT <= 0 && v > 0.2) { puffT = 0.35; steam(1); }
+    };
+    // at the berth: mist rolls off the hull's pier side
+    const berthMist = () => {
+      for (let k = 0; k < 16; k++) {
+        const p = world(-5.5 + k * 0.72, 0.1, 2.25);
+        g.particles.spawn({ x: p.x, y: p.y + 0.2, z: p.z, vx: (Math.random() - 0.5) * 0.8, vy: 0.4 + Math.random() * 0.5, vz: 0.6 + Math.random() * 0.5, color: '#d2f6ff', a: 0.42, s0: 0.5, s1: 1.9, life: 1.8 + Math.random(), grav: -0.05, drag: 1.4, drift: 0.5, add: 0.3, cell: 1 });
+      }
+    };
+    // Vesk's way down: deck → the rail's gap → down the gangway → onto the pier → his mark (his height eased along the gangway)
+    const startWalk = () => {
+      const a = world(RIDE.x, deckY, RIDE.z), b = world(2.0, deckY, 1.3), c = world(2.0, deckY, 2.95), d = { x: c.x + 0.4, z: c.z + 0.6 };
+      walk = { i: 1, gang: 2, pts: [{ x: a.x, z: a.z, y: a.y }, { x: b.x, z: b.z, y: b.y }, { x: c.x, z: c.z, y: ground(c.x, c.z) }, { x: d.x, z: d.z, y: ground(d.x, d.z) }, { x: mark.x, z: mark.z, y: ground(mark.x, mark.z) }] };
+    };
+    const stepWalk = (dt) => {
+      const SPD = 1.5, p = vesk.pos;
+      let left = SPD * dt;
+      while (left > 1e-6 && walk.i < walk.pts.length) {
+        const A = walk.pts[walk.i - 1], B = walk.pts[walk.i], dx = B.x - p.x, dz = B.z - p.z, d = Math.hypot(dx, dz);
+        if (d > 0.05) { const ang = Math.atan2(dx, dz); vesk.angle += Math.atan2(Math.sin(ang - vesk.angle), Math.cos(ang - vesk.angle)) * Math.min(1, dt * 8); }
+        if (d <= left) { p.x = B.x; p.z = B.z; p.y = B.y; left -= d; walk.i++; continue; }
+        p.x += (dx / d) * left; p.z += (dz / d) * left; left = 0;
+        const seg = Math.hypot(B.x - A.x, B.z - A.z) || 1, k = 1 - Math.hypot(B.x - p.x, B.z - p.z) / seg;
+        p.y = walk.i === walk.gang ? A.y + (B.y - A.y) * k : walk.i < walk.gang ? A.y : ground(p.x, p.z);
+      }
+      vesk.rig.play('walk'); vesk.rig.update(dt, SPD); vesk.sync();
+      return walk.i >= walk.pts.length;
+    };
+    // ---- the shots (a revealcam beat; with beats off — ?nocine, the tests — the same framings drive the scripted
+    // camera, which smooths them)
+    const beat = revealBeat(g, { in: 0.6 });
+    const ov = beat ? null : (g.camRig.override = { pos: V3(0, 0, 0), look: V3(0, 0, 0) });
+    const vHead = (k = 1.55) => V3(vesk.pos.x, vesk.pos.y + k, vesk.pos.z);
+    const clear = (p, look) => { for (let i = 0; i < 16 && (solidAt(g, p.x, p.y, p.z, 0.3) || (h.pos.distanceTo(p) < 0.9 && p.y < h.pos.y + 2)); i++) { p.lerp(look, 0.1); p.y += 0.05; } return p; };
+    const dirM = (() => { const dx = mark.x - gang.x, dz = mark.z - gang.z, l = Math.hypot(dx, dz) || 1; return { x: dx / l, z: dz / l }; })();
+    // (the first spot that stands clear, 0.6 m round, and sees every point in `to` — a crate or a shed by the pier
+    //  filled half the frame from the first spot tried)
+    const pick = (cands, to) => {
+      const free = (p) => g.npcs.every((n) => !n.present || n === vesk || Math.hypot(n.pos.x - p.x, n.pos.z - p.z) > 1.4);   // (nobody standing at the lens)
+      for (const p of cands) if (!solidAt(g, p.x, p.y, p.z, 0.6) && h.pos.distanceTo(p) > 1.4 && free(p) && to.every((q) => g.physics.lineOfSight(p.x, p.y, p.z, q.x, q.y, q.z))) return p;
+      return clear(cands[0], to[0]);
+    };
+    const gTop = world(2.0, deckY + 1.6, 1.4), gFoot = V3(gang.x, pierY + 1.6, ps.z - 1.0);
+    const S = {
+      // out to sea from the pier's end: the ship coming in, Vesk a figure at its rail
+      sea: () => { const p = clear(V3(pe.x + 0.6, (pe.y ?? pierY) + 2.3, pe.z + 0.9), V3(pe.x - 4, 1, pe.z - 4)); return () => ({ pos: p, look: world(0.5, deckY + 1.2, 0), fov: 42 }); },
+      // from the pier's root, low, down the pier: it slides alongside toward us and settles
+      side: () => { const p = clear(V3(gang.x + 9.2, pierY + 1.35, ps.z - 1.0), V3(gang.x, deckY, gang.z)); return () => ({ pos: p, look: world(1.8, deckY + 0.9, 0.6), fov: 46 }); },
+      // the reveal: low at the gangway's foot, looking up as he comes down it toward us
+      reveal: () => { const y = pierY + 0.55, p = pick([V3(gang.x + 2.4, y, ps.z - 1.3), V3(gang.x + 3.2, y, ps.z - 1.2), V3(gang.x - 3.0, y, ps.z + 0.3), V3(gang.x - 2.2, y, ps.z + 1.1)], [gTop, gFoot]); return () => ({ pos: p, look: vHead(1.45), fov: 40 }); },
+      // he walks into a medium shot at his mark (the lens stands past it, to the quay's side)
+      lead: () => {
+        const y = ground(mark.x, mark.z) + 1.55, M = V3(mark.x, y, mark.z), c = (k, s2) => V3(mark.x + dirM.x * k + dirM.z * s2, y, mark.z + dirM.z * k - dirM.x * s2);
+        const p = pick([c(3.2, 1.2), c(3.2, -1.2), c(2.6, 1.9), c(2.6, -1.9), c(3.8, 0.6)], [M, V3(gang.x + dirM.x * 3, y, gang.z + dirM.z * 3 + 1.2)]);
+        return () => ({ pos: p, look: vHead(1.4), fov: 40 });
+      },
+      // the speech: Vesk and Twinsen together, eye to eye
+      speech: () => { const memo = {}; return ({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.35, z: vesk.pos.z }, { memo, ok: (x, y, z) => !solidAt(g, x, y, z, 0.35), height: 1.3, drop: 0.45, fov: 40, dist: 5.6, t }); },
+    };
+    let cur = null, fn = null;
+    const shot = (k, secs = 0.35) => { if (cur === k) return; cur = k; fn = S[k](); beat?.show(fn, secs); };
+    const frame = () => { if (ov && fn) { const f2 = fn({ t: tt }); ov.pos.copy(f2.pos); ov.look.copy(f2.look); } };
+    h.angle = Math.atan2(gang.x - h.pos.x, gang.z - h.pos.z);
+    // the end state: the ship at its berth, Vesk on his mark, the speech (where a skip comes to as well)
+    const done = () => {
+      g.cutscene = null;
+      grp.position.copy(base); grp.rotation.y = 0; grp.rotation.z = 0;
+      vesk.placeAt({ x: mark.x, z: mark.z, a: Math.atan2(h.pos.x - mark.x, h.pos.z - mark.z) });
+      vesk.controlled = false;
+      this.f.c1_arrived = true;
+      this.arriving = false;
+      F.setVisible(true);
+      this.story.refreshCast();
+      g.setState('play');
+      h.angle = Math.atan2(mark.x - h.pos.x, mark.z - h.pos.z);
+      if (ov) g.camRig.override = null;
+      shot('lead', skip ? 0.05 : 0.35);
+      this.chain([['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']], () => { beat?.release(1.4); g.updateObjective(); g.save(false); },
+        (i) => { if (i === 1) shot('speech', 0.9); else if (i === 2) beat?.release(1.4); });
+    };
+    shot('sea', 0.6); shipAt(0); ride(); frame();
+    if (ov) g.camRig.snap();
+    g.audio.play('horn');
+    g.cutscene = (dt) => {
+      tt += dt;
+      const I = g.input;
+      if (!said && tt > 0.8 && (I.pressed('interact') || I.pressed('action'))) { skip = true; said = true; done(); return; }
+      if (dock == null) {
+        const { yaw, v } = shipAt(tt);
+        // a lean into the turn, from how fast the heading changes
+        const turn = prevYaw == null ? 0 : Math.atan2(Math.sin(yaw - prevYaw), Math.cos(yaw - prevYaw)) / Math.max(dt, 1e-3);
+        prevYaw = yaw;
+        grp.rotation.z += (Math.max(-0.06, Math.min(0.06, -turn * 0.25)) - grp.rotation.z) * Math.min(1, dt * 3);
+        fx(dt, v);
+        ride(dt);
+        if (cur === 'sea' && L - sAt(tt) < 20) shot('side', 1.2);
+        if (tt >= T_SAIL) { dock = 0; g.audio.play('horn'); steam(10, true); berthMist(); g.camRig.shake(0.12); }
+      } else {
+        // against the fenders: a nudge toward the pier and back, a roll that dies away
+        dock += dt;
+        const k = dock / SETTLE, e = Math.exp(-dock * 2.6);
+        grp.position.x = base.x; grp.position.z = base.z + 0.12 * Math.sin(Math.min(1, k) * Math.PI) * e;
+        grp.rotation.y = 0; grp.rotation.z = 0.035 * Math.sin(dock * 5.2) * e;
+        if (!walk) { ride(dt); if (dock > 0.6) { startWalk(); shot('reveal', 0.45); } }
+        else if (stepWalk(dt)) { if (!said) { said = true; done(); return; } }
+        else if (cur === 'reveal' && walk.i >= 4 && Math.hypot(vesk.pos.x - gang.x, vesk.pos.z - gang.z) > 1.6) shot('lead', 0.5);
+      }
+      frame();
       h.rig.play('idle'); h.rig.update(dt, 0); h.sync();
     };
   }
@@ -514,40 +652,136 @@ export class Chapter1 extends ChapterBase {
     g.hud.behaviour(h.behaviour);
     this.story.refreshCast();
     const st = g.world.station;
-    if (st) { h.pos.set(st.beamPad.x - 3, g.physics.groundAt(st.beamPad.x - 3, st.beamPad.z), st.beamPad.z); h.angle = Math.PI / 2; }
+    if (st) { const x = st.beamPad.x - 6.2, z = st.beamPad.z + 0.4; h.pos.set(x, g.physics.groundAt(x, z), z); h.angle = Math.PI / 2; }
     g.updateObjective();
     g.save(false);
   }
 
-  // Vesk steps into the transit beam and is gone
+  // Vesk steps into the transit beam and is gone (STAGING-1, the user 4.11: Twinsen was left standing in the pad's light
+  // and Zoé vanished). He turns and walks up onto the pad through its arch; the beam rises round him as he reaches the
+  // middle and draws him up the light, shrinking into it; Twinsen, if he stood on the pad, steps back off it as the beam
+  // comes. Zoé's word and Twinsen's ("Let's go home, Zoé") and she sets off home, seen walking out of the yard — she is
+  // at home for Arthur's radio, put there only once nobody sees it (walkOff). Framed from the yard: the two who stay
+  // and the light, then the two of them (a revealcam beat; the play camera with beats off).
   veskLeaves() {
-    const g = this.game, f = this.f, W = g.world, vesk = this.npc('vesk');
+    const g = this.game, f = this.f, W = g.world, h = g.hero, vesk = this.npc('vesk');
     g.setState('cutscene');
-    W.station?.setBeam?.(true);
+    const st = W.station, pad = st?.beamPad || { x: vesk.pos.x, z: vesk.pos.z };
+    const padY = pad.y ?? g.physics.groundAt(pad.x, pad.z);
+    const from = { x: vesk.pos.x, z: vesk.pos.z }, wd = Math.hypot(pad.x - from.x, pad.z - from.z), WALK = 1.25;
+    const base = (vesk.baseScale ??= vesk.rig.root.scale.y || 1);
+    vesk.controlled = true;
     g.audio.play('rumble');
-    let tt = 0;
-    const pad = W.station?.beamPad || vesk.pos;
+    const beat = revealBeat(g, { in: 1.0 });
+    const ok = (x, y, z) => !solidAt(g, x, y, z, 0.35);
+    if (beat) { const memo = {}; beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: pad.x, y: padY + 1.5, z: pad.z }, { memo, ok, height: 1.45, drop: 0.15, fov: 46, dist: 7.6, t })); }
+    const turn = (a, b, k) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * Math.min(1, k);
+    let tt = 0, beamAt = null, gone = false;
     g.cutscene = (dt) => {
       tt += dt;
-      if (tt < 1.6) {
-        vesk.angle = Math.atan2(pad.x - vesk.pos.x, pad.z - vesk.pos.z);
-        g.physics.move(vesk, Math.sin(vesk.angle) * 1.2 * dt, Math.cos(vesk.angle) * 1.2 * dt);
-        vesk.rig.play('walk'); vesk.rig.update(dt, 1.2); vesk.sync();
-      } else if (tt < 2.6) {
-        vesk.rig.play('idle'); vesk.rig.update(dt, 0);
-        const k = 1 - (tt - 1.6);
-        vesk.rig.root.scale.setScalar(Math.max(0.01, k) * (vesk.baseScale ??= vesk.rig.root.scale.y || 1));
-        if (Math.random() < 0.4) g.particles.burst(vesk.pos.x, vesk.pos.y + 1, vesk.pos.z, '#9ff4ff', 3, 2);
-      } else {
-        g.cutscene = null;
-        vesk.rig.root.scale.setScalar(vesk.baseScale || 1);
-        f.c1_veskGone = true;
-        W.station?.setBeam?.(false);
-        this.story.refreshCast();
-        g.setState('play');
-        this.chain([['zoe', 'c1_after_zoe'], ['hero', 'c1_after_tw']], () => { g.updateObjective(); g.save(false); });
+      // Twinsen: off the pad if he stood on it (turned away from the light, a few steps), then facing it
+      const hr = Math.hypot(h.pos.x - pad.x, h.pos.z - pad.z), out = Math.atan2(h.pos.x - pad.x, h.pos.z - pad.z);
+      if (hr < 3.4 && tt < 4) {
+        h.angle = turn(h.angle, out, dt * 8);
+        g.physics.move(h, Math.sin(h.angle) * 1.7 * dt, Math.cos(h.angle) * 1.7 * dt); g.physics.fall?.(h, dt);
+        h.rig.play('walk'); h.rig.update(dt, 1.7);
+      } else { h.angle = turn(h.angle, out + Math.PI, dt * 5); h.rig.play('idle'); h.rig.update(dt, 0); }
+      h.sync();
+      if (gone) return;
+      // Vesk: across to the middle of the pad (his height follows the pad's steps), the beam rising as he nears it
+      const k = Math.min(1, (tt * WALK) / Math.max(0.01, wd));
+      if (beamAt == null) {
+        vesk.pos.x = from.x + (pad.x - from.x) * k; vesk.pos.z = from.z + (pad.z - from.z) * k;
+        vesk.pos.y = g.physics.groundAt(vesk.pos.x, vesk.pos.z);
+        vesk.angle = turn(vesk.angle, Math.atan2(pad.x - from.x, pad.z - from.z), dt * 6);
+        vesk.rig.play(k < 1 ? 'walk' : 'idle'); vesk.rig.update(dt, k < 1 ? WALK : 0); vesk.sync();
+        if (wd * (1 - k) < 1.4 && !st?.beam) { st?.setBeam?.(true); g.audio.play('shard'); }
+        if (k >= 1) { beamAt = tt; vesk.angle = turn(vesk.angle, out, 1); }
+        return;
       }
+      // drawn up the light: eased up 2 m, shrinking into it over its last second, sparks of the beam's colour
+      const u = (tt - beamAt) / 1.6, uu = Math.min(1, u), e = uu * uu * (3 - 2 * uu);
+      vesk.pos.y = padY + 2.0 * e;
+      vesk.rig.root.scale.setScalar(base * Math.max(0.02, 1 - Math.max(0, (u - 0.35) / 0.65)));
+      vesk.rig.play('idle'); vesk.rig.update(dt, 0); vesk.sync();
+      if (Math.random() < 0.5) g.particles.burst(vesk.pos.x, vesk.pos.y + 1, vesk.pos.z, '#9ff4ff', 2, 2);
+      if (u < 1) return;
+      gone = true;
+      vesk.rig.root.scale.setScalar(base);
+      vesk.controlled = false;
+      f.c1_veskGone = true;
+      // (Zoé stays where she is for her word with him, then walks home: held, not sent home by the refresh)
+      const zoe0 = this.npc('zoe');
+      if (zoe0?.present) this.walkOff('zoe', [], 0, true);
+      this.story.refreshCast();
+      st?.setBeam?.(false);
+      g.cutscene = null;
+      g.setState('play');
+      const zoe = this.npc('zoe');
+      if (beat && zoe?.present) { const memo = {}; beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: zoe.pos.x, y: zoe.pos.y + 1.1, z: zoe.pos.z }, { memo, ok, fov: 40, t }), 1.2); }
+      this.chain([['zoe', 'c1_after_zoe'], ['hero', 'c1_after_tw']], () => {
+        beat?.release(1.4);
+        // she sets off home: out through the yard and the gate, down the road
+        const G = W.gate;
+        const home = W.houses?.[0]?.door;
+        const far = home ? (() => { const dx = home.x - (G.x - 9), dz = home.z - G.z, l = Math.hypot(dx, dz) || 1, k = Math.min(l, 30) / l; return { x: G.x - 9 + dx * k, z: G.z + dz * k }; })() : null;
+        if (G) this.walkOff('zoe', [{ x: G.x + 3.2, z: G.z }, { x: G.x - 1.2, z: G.z }, { x: G.x - 9, z: G.z + 0.5 }, ...(far ? [far] : [])], 1.25);
+        g.updateObjective(); g.save(false);
+      });
     };
+  }
+
+  // STAGING-1 (the user, 4.11: "Doran teleports", "Zoé disappears"): someone the story sends elsewhere walks off along
+  // `pts` and is put in their next place (place()) only once that jump can't be seen — out of the camera's view or far
+  // from it, and the place they go to as well. While walking they keep walking through any refresh of the cast.
+  // (hold: kept where they stand, turning to whoever speaks, until a walkOff with points sends them)
+  walkOff(id, pts, speed = 1.1, hold = false) {
+    const n = this.npc(id);
+    if (!n?.present) { delete this.walkers?.[id]; this.story.refreshCast(); return; }
+    if (hold) { (this.walkers ??= {})[id] = { n, pts: [], i: 0, t: 0, speed: 0, stuck: 0, hold: true }; return; }
+    n.talking = false; n.listenTo = null; n.forceAnim = null; n.controlled = true;
+    (this.walkers ??= {})[id] = { n, pts, i: 0, t: 0, speed, stuck: 0 };
+  }
+  tickWalkers(dt) {
+    const g = this.game;
+    if (!this.walkers) return;
+    for (const id of Object.keys(this.walkers)) {
+      const w = this.walkers[id], n = w.n;
+      if (!n.present) { n.controlled = false; delete this.walkers[id]; continue; }
+      if (w.hold) continue;
+      w.t += dt;
+      const p = w.pts[w.i];
+      if (p && g.state === 'play') {
+        const dx = p.x - n.pos.x, dz = p.z - n.pos.z, d = Math.hypot(dx, dz);
+        if (d < 0.45) w.i++;
+        else {
+          const want = Math.atan2(dx, dz);
+          n.angle += Math.atan2(Math.sin(want - n.angle), Math.cos(want - n.angle)) * Math.min(1, dt * 6);
+          const x0 = n.pos.x, z0 = n.pos.z;
+          g.physics.move(n, Math.sin(n.angle) * w.speed * dt, Math.cos(n.angle) * w.speed * dt);
+          g.physics.fall?.(n, dt);
+          w.stuck = Math.hypot(n.pos.x - x0, n.pos.z - z0) < w.speed * dt * 0.3 ? w.stuck + dt : 0;
+          if (w.stuck > 1.5) { w.stuck = 0; w.i++; }   // (blocked: on toward the next point)
+          n.rig.play('walk'); n.rig.update(dt, w.speed); n.sync();
+        }
+      } else { n.rig.play('idle'); n.rig.update(dt, 0); n.sync(); }
+      if (w.i < w.pts.length && w.t < 30) continue;
+      // there (or long enough): to the next place as soon as neither here nor there is on screen
+      delete this.walkers[id];
+      const to = this.place(id);
+      if (!this.unseen(n.pos) || (to && Number.isFinite(to.x) && !this.unseen({ x: to.x, y: g.physics.groundAt(to.x, to.z), z: to.z }))) { this.walkers[id] = w; continue; }
+      n.controlled = false;
+      this.story.refreshCast();
+    }
+  }
+  unseen(p) {
+    const g = this.game;
+    if (g.room) return true;   // (he is in a room: the street is not on screen)
+    const cam = g.camRig.cam;
+    cam.updateMatrixWorld();
+    if (cam.position.distanceTo(p) > 70) return true;
+    const v = new THREE.Vector3(p.x, (p.y ?? 0) + 1, p.z).project(cam);
+    return !(Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.2 && v.z < 1);
   }
 
   // Doran flies Twinsen to Zeelich in the project's ship, from Citadel Spaceport
@@ -572,6 +806,7 @@ export class Chapter1 extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
+    this.tickWalkers(dt);
     if (this.waterT > 0 && g.state === 'play' && (this.waterT -= dt) <= 0) this.waterReturns();
     // the ferry is in the harbour once Vesk has arrived
     if (!this.arriving) W.ferry?.setVisible?.(!!f.c1_arrived);
