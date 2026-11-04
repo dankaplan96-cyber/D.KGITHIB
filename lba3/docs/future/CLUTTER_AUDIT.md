@@ -289,3 +289,25 @@ home) and a clover. *Thinning:* keep the quay and a dozen houses; the rest becom
 *Use:* the expansion's lookout over the Ballastra ship's arrival: the telescope on the south horn shows where it will
 dock (the expansion's first objective), and Vael's log names the day. *Quest:* re-seat the telescope's fallen mirror
 (the Esmer line pulls it up from a ledge). *Name:* when it is built, rename Zeelich's bakery from "the old watch house" so the two do not clash.
+
+## PEOPLE-1: the islands' people and what each island gives (built 3.11.2026)
+Residents in `src/game/islandlife.js` (rounds resolved on the planner's ground when an island is built; rigs made only
+then; asleep while Twinsen is elsewhere), lines and meanings in `story/islandpeople.js` and `text/islandpeople.js`,
+tested by `tests/island-people.mjs`. States: chapters 4–7 ordinary; 8 (Twinsun's evacuation, heard of) and 9 (the
+council) the crisis; chapter 10 on and the epilogue after. Before chapter 4 nobody (no shuttle). New save state: `pp_` flags only.
+
+| Island | People (max 8) | What it gives the journey | Flags |
+|---|---|---|---|
+| Otringal | Ulla and Mr Tanek at their stalls, Obo the sweeper, Ivo the porter; in the bar Sim and Madam Orla; in the hotel Clerk Edda and Zuzzi | the hotel's coin machines: life or magic, 5 kashes; from chapter 9 Madam Orla sells Knartas's lens | — |
+| Knartas | Harbourmaster Quill, Nessa the net-mender, Rook, Mila and Tem | the quay light: its lens bought back and fitted (chapter 9 on), a clover | pp_quill, pp_lens, pp_light |
+| The Lift Dock | Vash (the reserved lift), Mr Kett (crane), Dob, Bzick | Mr Kett's manifest: where the lens went; the bar's price drops from 20 to 8 | pp_manifest |
+| Mosquibee Island | Bzzra, Zizzo, Bzett, Vrizz | Bzzra's honey (6); the beacon quest (the card): royal honey (a full heal, carried) and honey at 4 | pp_bzzra, pp_bzzraDone, pp_royal |
+| The Nectar Orchard | Pello (the card's Pell, renamed: Citadel has a Mrs Pell), Sela, Orrin, Bzon | the beacon on the cloud catcher (the ball); Pello's nectar cordial: magic, 4; the lost crate the Old Watch shows | pp_beacon, pp_cache |
+| Celebration | Steward Lomo, Kiri and Yaro dancing, Zella | Zella's lantern (10) when Twinsen has none; her pointer to the old mine below | — |
+| Under Celebration | Foreman Grob, Dunt, Mossa, Rudd (Wannies) | the foreman's pointer to the old mine and its dark (the glove, story/arsenal.js) | — |
+| The Platform | Foreman Krum, Burr, Delve, Mother Pudd, Nib, Father Umber (Wannies) | the chapel bell's clapper by the ore cart, brought back: a clover | pp_bellAsk, pp_clapper, pp_bell |
+| The Old Watch | Old Oumi, Mr Halt, Tisa, Nim (the expansion's Sergeant Vael is not here) | the telescope shows a lost supply crate on the Orchard (15 kashes, a jar of honey) | pp_spied |
+
+Not done: Mosquibee Island and the Orchard are not merged into one region or renamed (the card's "one island"): they
+stay two shuttle stops sharing one community and one quest. Knartas's boat hire and the high town's door, the lift
+ride and OP-7 stay unbuilt.

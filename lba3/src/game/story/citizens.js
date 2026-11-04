@@ -8,6 +8,7 @@ import '../text/walkers.js';
 import { ambientDefs } from '../walkrounds.js';
 import { TownBusy } from '../townbusy.js';
 import { storyDefs, dressStoryLife } from '../storylife.js';
+import { isleDefs, islesKey, dressIsle, ISLE_PEOPLE } from '../islandlife.js';
 import { portPhase } from '../roomlife.js';
 import '../text/storylife.js';
 
@@ -23,12 +24,12 @@ export class Citizens extends ChapterBase {
   }
   npcDefs() {
     // (rebuilt when an area its residents live in has just been built; otherwise the same list)
-    const R = this.game.regions, key = (R?.built('zeelich') ? 1 : 0) + (R?.built('desert') ? 2 : 0) + (R?.built('hamalayi') ? 4 : 0);
-    if (!this._defs || this._key !== key) { this._key = key; this._defs = [...ambientDefs(this.game), ...storyDefs(this.game)]; }
+    const R = this.game.regions, key = (R?.built('zeelich') ? 1 : 0) + (R?.built('desert') ? 2 : 0) + (R?.built('hamalayi') ? 4 : 0) + '|' + islesKey(this.game);   // (PEOPLE-1: and which islands are built)
+    if (!this._defs || this._key !== key) { this._key = key; this._defs = [...ambientDefs(this.game), ...storyDefs(this.game), ...isleDefs(this.game)]; }
     return this._defs;
   }
   // WC-3: the places' things the story residents work at (storylife.js), once per area as it is built
-  decorate() { for (const a of ['desert', 'hamalayi']) dressStoryLife(this.game, a); }
+  decorate() { for (const a of ['desert', 'hamalayi']) dressStoryLife(this.game, a); for (const n of Object.keys(ISLE_PEOPLE)) dressIsle(this.game, n); }
   // the streets are empty while everyone is mustered at the depot (the evacuation); then back where their rounds start
   // (TOWN-LIFE-3: but two neighbours, Maro and Tilde, are still packing: bundles out of their houses, a word at the plaza's
   //  benches about it, back for more: walkrounds.js their stops of the town's state 2)

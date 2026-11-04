@@ -79,6 +79,7 @@ import { BAGGAGE_PLAN } from './baggage.js';
 import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
 import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
+import { OTRBAR_ROOM, OTRHOTEL_ROOM } from './islandlife.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // WC-4: the spaceports' state for the chapter in progress (story/index.js Story): derived, never saved
@@ -358,6 +359,8 @@ export const ROOMS = {
   // WC-3 (storylife.js): the School of Magic's classroom (from chapter 4) and the council's antechamber (chapter 9)
   school: SCHOOL_ROOM,
   upper: UPPER_ROOM,
+  otrbar: OTRBAR_ROOM,     // (PEOPLE-1: Otringal's bar and hotel lobby, islandlife.js)
+  otrhotel: OTRHOTEL_ROOM,
 };
 
 // ------------------------------------------------------------------ the spaceports (outdoors)
