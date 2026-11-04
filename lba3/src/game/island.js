@@ -719,47 +719,53 @@ function buildHarbour(W0, root, r) {
 }
 
 // ------------------------------------------------------------------ the Joint Project's cargo lift
-// A slewing lift on the pier that unloads the project barge moored beside the fishing boat: a teal column with a
-// brass motor housing and the project emblem, an arm, a cable and a hook. pose(u) runs one unload cycle
-// (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
+// A slewing lift on the pier that unloads the project barge moored beside the fishing boat. pose(u) runs one unload
+// cycle (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
 // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
+// HARBOUR-ONE (the cacophony order, CLUTTER_AUDIT.md): the opening needs it (13–29 s), so it stays where it was, the
+// same shapes and sizes; only its look changed. It was a teal column and arm with a brass housing, and the barge a teal
+// hull with a brass rim: the project's modules beside Citadel's old harbour. Now it is a harbour derrick in the quay's
+// own materials (a tarred timber mast and boom on the pier's iron, like the piles and the bitts), and the barge a plank
+// lighter; the project shows only in its details: the emblem on the iron winch housing, on the barge's side and on
+// the crates, and a brass lantern.
 function cargoLift(W, parent, r) {
   // (HEADING-LOAD: the lift's own group is no longer `keep`: its column, base and bracket never move, so they join the
   //  quay's static shadow and draw batches; what moves stays `keep`, below)
   const g = new THREE.Group(); g.name = 'cargoLift'; parent.add(g);
   const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
-  const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
-  // column on a bolted base
+  const timber = pm('#6e5238', 0.85), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2e3238', 0.45, { metalness: 0.6 });
+  const housingM = pm('#4c5660', 0.55, { metalness: 0.4 });   // (the winch housing: painted iron, a slate grey)
+  // the mast on a bolted iron base, three iron straps round it
   mesh(g, cyl(0.46, 0.52, 0.12, 16), dark, mx, deck + 0.06, mz);
-  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), brassM, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
-  mesh(g, cyl(0.15, 0.2, 3.1, 12), teal, mx, deck + 1.66, mz);
-  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), brassM, mx, deck + y, mz);
+  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), dark, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
+  mesh(g, cyl(0.15, 0.2, 3.1, 12), timber, mx, deck + 1.66, mz);
+  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), dark, mx, deck + y, mz);
   // a lantern on a bracket (it trembles with the vibration)
   mesh(g, bbox(0.5, 0.05, 0.05, 0.01), dark, mx - 0.25, deck + 2.3, mz, 0);
   const lantern = new THREE.Group(); lantern.position.set(mx - 0.46, deck + 2.27, mz); g.add(lantern);
   mesh(lantern, cyl(0.006, 0.006, 0.16, 4), dark, 0, -0.08, 0, 0, { cast: false });
   mesh(lantern, cyl(0.07, 0.09, 0.2, 6), brassM, 0, -0.26, 0);
   mesh(lantern, cyl(0.06, 0.06, 0.13, 6), pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), 0, -0.26, 0, 0, { cast: false });
-  // the slewing turret: motor housing with the emblem, the arm, the pulley
+  // the slewing head: the winch housing with the emblem (the project's mark), the boom, the pulley
   const turret = new THREE.Group(); turret.position.set(mx, deck + 3.2, mz); g.add(turret);
-  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), teal, 0, 0.12, -0.15);
-  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), brassM, 0, 0.4, -0.15);
+  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), housingM, 0, 0.12, -0.15);
+  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), dark, 0, 0.4, -0.15);
   for (const s2 of [-1, 1]) {
     const em = mesh(turret, new THREE.PlaneGeometry(0.34, 0.34), emblemMaterial(), s2 * 0.315, 0.12, -0.15, s2 * Math.PI / 2, { cast: false });
     em.renderOrder = 1;
   }
-  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), teal, 0, 0.32, ARM / 2 - 0.05);
-  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), brassM, 0.085, 0.32, 0.2 + i * 0.5);
-  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), brassM, 0, 0.26, ARM);
+  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), timber, 0, 0.32, ARM / 2 - 0.05);
+  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), dark, 0.085, 0.32, 0.2 + i * 0.5);
+  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), dark, 0, 0.26, ARM);
   // cable (scaled to length), hook block, hook
   const cable = mesh(turret, cyl(0.012, 0.012, 1, 4).translate(0, -0.5, 0), dark, 0, 0.2, ARM, 0, { cast: false });
   const hook = new THREE.Group(); turret.add(hook);
-  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), brassM, 0, -0.09, 0);
+  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), dark, 0, -0.09, 0);
   mesh(hook, new THREE.TorusGeometry(0.06, 0.014, 6, 12, Math.PI * 1.4), dark, 0, -0.24, 0, 0, { rz: Math.PI * 0.8 });
-  // the barge: a flat project lighter with fenders, one crate staying aboard, the emblem on its side
+  // the barge: a flat plank lighter with a rubbing strake and fenders, one crate staying aboard, the emblem on its side
   const barge = new THREE.Group(); barge.position.set(-85.3, 0, -0.6); g.add(barge);
-  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), pm('#2f6a78', 0.6, { metalness: 0.3 }), 0, 0.12, 0);
-  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), brassM, 0, 0.36, 0);
+  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), tm('planks', { color: '#8a6c52' }), 0, 0.12, 0);   // (the crates' planks, tarred darker: one texture, folded with them)
+  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), timber, 0, 0.36, 0);
   for (const [x, z] of [[-1.0, -0.88], [0.0, -0.88], [1.0, -0.88]]) mesh(barge, cyl(0.09, 0.09, 0.32, 8), dark, x, 0.2, z);
   const bem = mesh(barge, new THREE.PlaneGeometry(0.4, 0.4), emblemMaterial(), 0.6, 0.15, 0.861, 0, { cast: false }); bem.renderOrder = 1;
   const crateGeo = bbox(0.8, 0.8, 0.8, 0.04, 1), crateMat = tm('planks', { color: '#c89a68' });

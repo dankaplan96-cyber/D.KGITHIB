@@ -74,7 +74,9 @@ const HOUSES = [
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
   { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', pitch: 0.5, shutters: '#3b5bb8', chimney: false,
     windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'stone', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
+  // (HARBOUR-ONE: wing2 in rubble, as LBA2's body 49 is (rubble walls under a plank roof) and as Doran's shed beside
+  // it: the hall in ashlar under slate, the two smaller houses in rubble under boards, LBA2's harbour pair)
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
