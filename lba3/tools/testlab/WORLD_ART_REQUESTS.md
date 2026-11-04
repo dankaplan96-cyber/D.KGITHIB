@@ -1989,3 +1989,53 @@ rooms' view too.
     CONNECTIONS_AUDIT.
   - Not done: chapter 8's shelter as a mechanic (the workers' lines only; `story/shelters.js` untouched); grass to the
     front step (left, as you said).
+
+## TREES-1 · No tree, bush or grass inside a building · the laptop, 5.11.2026 (the user: "there's a tree inside Twinsen's house; send an agent that checks no tree stands in a house")
+The tree the user saw: a random tall tree at (−52.25, 83.67), trunk 0.83 m inside Twinsen's house, its crown through the
+thatch by the chimney; two random bushes in his north and west walls. Cause: world.js `okSpot` kept the scatter out of the
+square's ring only; no house further out was kept clear. A probe (every tree, palm, bush, shrub, pine, nectar tree, grass,
+flower and tulip against every building's walls, crown reach measured on the sculpts at its scale; 43 interiors' potted
+plants) found 384 cases → 0:
+- Citadel: 5 trees (Twinsen's, wing2 ×3, the water house), 10 bushes (Twinsen's ×2, museum ×3, stone house ×2, baggage
+  hall ×2, one up through the spaceport footbridge), 354 grass/flowers/tulips in house floors (100 in Twinsen's).
+- Desert: 4 shrubs (Kesh houses 2 and 3, S40, the condenser hall). Hamalayi: 1 pine into Lhar's third house.
+- Zeelich's islands (the original's layout objects): Otringal 2, Knartas 3, Platform 2, the Nectar Orchard 2 (press house
+  and store). Zeelich itself, Mosquibee, Celebration, Under-gas, the Lift Dock, the Old Watch: none.
+`requests/TREES-1.diff` (applies alone on origin ebcc06bf; **apply it before CLIMB-1**):
+- `world.js`: a keep-clear round every house, the asylum's block-house and the spaceport footbridge; a tree/palm/bush is
+  dropped (shrunk to nothing, no collider) when its trunk is nearer a wall than its crown's reach (0.15 m slack for trees,
+  0.1 for bushes, so the original's tree by the harbour wing stays); grass, flowers, tulips whose foot is in a floor go,
+  those at a wall's foot stay. All after the random draws: every other plant keeps its place.
+- `spaceport.js`: `BRIDGE` exported. `desert.js`: shrubs instanced after the old places, filtered against the FIT registry
+  and the condenser hall. `hamalayi.js`: pines kept their widest tier's reach from each house's eaves.
+- `zislands.js` `cutPlants`: a layout tree/bush/plant/nectar tree that reaches > 0.15 m into a house or tower, or up into
+  a deck, draws nothing and gets no collider (its colour is still drawn: the island's random sequence is unchanged).
+  7 of about 460 cut.
+- Draw calls unchanged at four spots round Twinsen's house (238/315/160/130), triangles −1 to −2 %; Citadel's leaf batch
+  186 → 171, live grass/flowers 2846 → 2492. `assets/bake.bin` needs no rebuild (no plant design changed).
+- Checked on ebcc06bf + TREES-1 (SwiftShader): the probe 0 cases; zislands, house, chapter1 PASS (also worldfit on the
+  old base: only the known "house nbr: door overlaps window").
+- Found in passing (not in this diff, ASYLUM-2's, the laptop will fix it): one potted plant in the hostel stands in a wall
+  collider (room point (2.25, −22.11), floor 2.17).
+
+## CLIMB-1 · The paved climb up to the asylum · the laptop, 5.11.2026 (CLOUD_ORDERS 5, the user's correction: "up to the asylum, look how it is in the second game")
+As LBA2's 31_game_bugstreet_north (its b29 capped posts, its rails at z −28): one straight paved way from the square to
+the hostel's front door, the ground heights unchanged. `requests/CLIMB-1.diff` (`lba1places.js`, `world.js`; **applies
+after TREES-1**, on origin ebcc06bf; the two only shared world.js's import line and the grass filter, both kept):
+- The ramp (world.js PATHS[0], square (−42, −4) → fork (−34, −36), 3.1 m): the town's cobbles instead of dirt, granite
+  kerbs like the streets; past the stone house's yard (a 3–4 m drop) a dressed-stone retaining wall with a cream coping,
+  capped posts every ~3 m and a teal iron railing.
+- `ASYLUM_STEPS`: straight on from the fork, (−33.0, −37.2) at ~9.5 m → (−31.5, −47.5) at the terrace's 15.9 m: 27
+  sandstone steps, 2.6 m clear, risers 0.23–0.25 m (the first 0.34), cheek walls with coping, capped posts at the foot,
+  half way and the top, railings where the ground beside falls more than 1.2 m; a 1.5 m landing level with the terrace.
+  The old 1 m stair is gone. Clear of the water main's legs, the stump's clover and the stone house's upper door.
+- The terrace, paved from the stair's top to the fort's south wall (ASYLUM-2's portico), a railing on a plinth along the
+  cliff edge. Scatter cleared in the masonry and on the paving (after the draws); the cliff rocks the stair passes
+  through dropped whole (126 of 10 366 triangles), every rock still a closed solid.
+- 4 merged meshes + 1 instanced kerb mesh, 3 casting shadows (the old stair: 6 meshes). Draw calls at four spots
+  71→76, 76→75, 100→99, 173→171; shadow calls −3 each.
+- Checked on ebcc06bf + CLIMB-1 (SwiftShader): lba1rooms 8/8 (its walk from the plateau now goes round by the fork and
+  up the new stair, in by the front door), asylum 10/10, chapter1 23/23; rocks.mjs PASS on the old base.
+- Changed for the player: from the plateau (−40, −46) there is no more scramble straight up the ledge onto the terrace;
+  the way is the stair. Left: the town's kerb ring round the square still crosses the ramp's mouth as a low line; no sign
+  boards (would need text: yours if you want one).
