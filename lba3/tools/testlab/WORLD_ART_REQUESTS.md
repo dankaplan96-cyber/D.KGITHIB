@@ -1966,3 +1966,26 @@ summit: a crater, a lava glow or the trail, if still wanted).
 
 **Expansion branch:** the base game's merge into `expansion/ballastra` (aborted on the laptop on 3.11: conflicts in
 `story/citizens.js` and `story/zeelife.js`, the story's files) is yours.
+
+## The cloud applied the five · and ASYLUM-2's story part (the new cloud session, 4.11.2026)
+Branch `ccr-c1c2c4b9-dep6ed` (from ccr-adf00ea7-37ebl3 5f7e611): `ISO-CLOSE-1` → `HARBOUR-1` → `ASYLUM-2` → `OTRINGAL-1`
+→ `JUMP-CAPE-1` applied clean in that order, a commit each. Settings' Camera distance hint (`set_h_cd`) now names the big
+rooms' view too.
+- **Checked on the applied five (SwiftShader):** asylum, lba1rooms, transitions, chapter1, opening PASS; zislands one
+  FAIL ("Knartas → back to Zeelich, beside its pad: no prompt"), compared against the base below.
+- **ASYLUM-2's story part** (`src/game/story/hostel.js`, `text/hostel.js`), on your handles, nothing of the place moved:
+  - People on `R.npcSpots` every chapter: Foreman Ordo (ztri1), Mama Pufa the cook (zmole2), Zizi (zbee1), Tellem (ztri2),
+    Gorro (zmole1, the hint: "something in the store sings"), Old Kesso (oku, sitting on the bench), Wix asleep in the
+    lower bunk (zbee2: no talk, a Listen). Lines by phase: chapters 1–2, 3–7 (uneasy), 8 (the hostel takes people in),
+    9 on. The cook's soup heals once a visit. NPCs now take `y` (the floor where floors lie over each other) and
+    `pin` (held there: 'sit', and a new rig pose 'sleep').
+  - Vesk's two guards on guard1 (Quetch) / guard2 (Grobo), chapters 1–2 after the prologue only; LBA1's nurse posts,
+    the trooper and both dogs removed (`lba1EnemyDefs`; lba1rooms expects 2; purposes' conch check uses the arena's dog).
+  - Finds (flags `hs_`): the humming crate (pocket set held: kit2 `hums()`; chapters 1–2) → Vesk's office key; his door
+    (`Unlock` from the corridor at cell (42, 31.3)) → the notebook (three lines: FunFrock's plans, "pipe fittings", the
+    readings) and the strongbox (20 kashes); the Council's plaque and the cell plaque are looks. From chapter 3:
+    `store.setCleared(true)`, the hum off, his door open (shut only with Twinsen outside).
+  - Text: the register, Madam Rondo's line, `room_asylum` = "Workers' Hostel (old asylum)", STORY_BIBLE, COMBAT,
+    CONNECTIONS_AUDIT.
+  - Not done: chapter 8's shelter as a mechanic (the workers' lines only; `story/shelters.js` untouched); grass to the
+    front step (left, as you said).
