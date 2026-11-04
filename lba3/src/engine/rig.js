@@ -1308,6 +1308,10 @@ export class Rig {
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
+    } else if (a === 'sleep') {
+      // (ASYLUM-2: asleep on the back in a bunk, arms by the sides, a slow breath)
+      bodyRotX = -Math.PI / 2; hipsY = 0.3; torsoX = Math.sin(this.t * 1.1) * 0.02;
+      T.armL = 0.1; T.armR = 0.1; T.elL = -0.25; T.elR = -0.25; headX = -0.1;
     } else if (a === 'ko') {
       // an enemy knocked out (src/game/death.js drives the clock, ko.t, and picks the fall): the hit's recoil,
       // the fall with weight onto the back or the front (or a slump where there is no room), the impact's bounce,

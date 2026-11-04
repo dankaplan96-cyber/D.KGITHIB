@@ -241,19 +241,14 @@ export function lba1Exit(to) {
   return null;
 }
 
-// the asylum's guards, where LBA1's nurses (bodies 9, 11) and clone (13) stood
+// the asylum's guards (ASYLUM-2, the cloud's answer): two of Vesk's guards on his store, not on the hostel, in chapters 1–2
+// (after the prologue) on the laptop's posts (R.npcSpots guard1 at the store's stair head, guard2 deep in by the
+// boiler); none from chapter 3 (the store cleared: story/hostel.js). LBA1's nurse posts, its trooper and dogs are gone.
 export function lba1EnemyDefs(rooms) {
-  const out = [], A = rooms.asylum;
-  const after = (f) => !!f.prologueDone;
-  if (A?.spots) {
-    let n = 0;
-    for (const s of A.spots) {
-      if (s.body === 9 || s.body === 11) out.push({ id: 'asy_g' + n++, kind: n % 3 === 0 ? 'guardG' : 'guard', group: 'asylum', x: s.x, z: s.z, patrol: [[s.x, s.z], [s.x + 1.6, s.z]], when: after });
-      else if (s.body === 13) out.push({ id: 'asy_fc', kind: 'fclone', group: 'asylum', x: s.x, z: s.z, patrol: [[s.x, s.z]], when: after });
-    }
-    const d1 = A.cell(30, 5, 30), d2 = A.cell(20, 5, 20);
-    out.push({ id: 'asy_dog1', kind: 'gdog', coat: 'grey', group: 'asylum', x: d1.x, z: d1.z, patrol: [[d1.x, d1.z], [d1.x + 3, d1.z]], when: after });
-    out.push({ id: 'asy_dog2', kind: 'gdog', coat: 'brown', group: 'asylum', x: d2.x, z: d2.z, patrol: [[d2.x, d2.z], [d2.x, d2.z + 3]], when: after });
-  }
+  const out = [], A = rooms.asylum, S = A?.npcSpots;
+  const early = (f) => (f.chapterKey ? f.chapterKey === 'well' || f.chapterKey === 'project' : (f.chapter || 0) <= 1);
+  const when = (f) => !!f.prologueDone && early(f);
+  if (S?.guard1) out.push({ id: 'asy_g0', kind: 'guard', group: 'asylum', x: S.guard1.x, z: S.guard1.z, angle: S.guard1.a, patrol: [[S.guard1.x, S.guard1.z]], when });
+  if (S?.guard2) out.push({ id: 'asy_g1', kind: 'guardG', group: 'asylum', x: S.guard2.x, z: S.guard2.z, angle: S.guard2.a, patrol: [[S.guard2.x, S.guard2.z]], when });
   return out;
 }

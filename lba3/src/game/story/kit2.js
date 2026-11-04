@@ -109,6 +109,7 @@ export class Kit2 extends ChapterBase {
   hums() {
     const out = [];
     if (this.tin && !this.f.e2_tin) out.push({ id: 'tin', room: 'cellar', x: this.tin.x, y: this.tin.y, z: this.tin.z });
+    out.push(...(this.story.hostel?.hums() || []));   // (ASYLUM-2: the humming crate in Vesk's store, story/hostel.js)
     return out;
   }
   journal() {

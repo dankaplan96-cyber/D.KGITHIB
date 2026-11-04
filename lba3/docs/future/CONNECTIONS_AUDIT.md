@@ -104,7 +104,7 @@ only confirms they are still open at `17ef25a`.
 | Pharmacy (`bug2`) | (−62.3, −8.2) | ✅ always | the pharmacist |
 | Neighbours (`nbr`) | (−33.6, 75.3) | ✅ after the prologue | Hedda |
 | Bersimon's tent | (−100, −71) | ✅ always | Bersimon (magic) |
-| Asylum block-house | (−11.2, −65) | ✅ always, but **could not be walked to** before this audit (fixed: a stair onto the fort's terrace) | guards from chapter 2, the register (a clover); ASYLUM-1: the dig's breach, Twinsen's old cell (`as_cell`, kashes once) |
+| Asylum block-house | (−11.2, −65) | ✅ always, but **could not be walked to** before this audit (fixed: a stair onto the fort's terrace) | ASYLUM-2: a front door on the terrace too; the workers' hostel (its people every chapter), Vesk's two guards on the store in chapters 1–2, the humming crate (his key), his office (notebook, 20 kashes), the register (a clover); ASYLUM-1: the dig's breach, Twinsen's old cell (`as_cell`, kashes once) |
 | Plateau door → Tralu's cave | (−80.7, −82.0) | ✅ always | an empty cave and guard house |
 | Station: control room, office | the fort | ✅ by chapter (2, 8, 10) | the project's rooms |
 | Lighthouse | (−107.5, 90.5) | ✅ chapter 10 (and chapter 3's scene) | the lamp room |

@@ -43,6 +43,7 @@ import { Kit2 } from './kit2.js';
 import { Kit2b } from './kit2b.js';
 import { MagicLevels } from './magic.js';
 import { SewerLife } from './sewers.js';
+import { HostelLife } from './hostel.js';
 import { Shops } from './shops.js';
 import { Purposes } from './purposes.js';
 import { IslandPeople } from './islandpeople.js';
@@ -74,6 +75,7 @@ export class Story {
     this.kit2b = new Kit2b(this);   // EQUIP-2b: Ilka's singing fork, the Esmer line, the heat flask in the world (kit2b.js; the tools: tools.js)
     this.magic = new MagicLevels(this);   // MAGIC-LEVELS: the story's magic levels, never sold (magic.js)
     this.sewers = new SewerLife(this);   // WA-14: Citadel's old sewers under the lane by the pump (sewers.js)
+    this.hostel = new HostelLife(this);   // ASYLUM-2: the workers' hostel in FunFrock's asylum, Vesk's store behind it (hostel.js)
     this.purposes = new Purposes(this);   // PURPOSES: what the kept places give the journey (purposes.js)
     this.ipeople = new IslandPeople(this);   // PEOPLE-1: the people of Zeelich's islands and what each island gives (islandpeople.js)
     this.shops = new Shops(this);   // SHOPS-1: Citadel's shops and the Esmer trading house: a keeper's talk opens the shop (shops.js)
@@ -94,7 +96,7 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of [...this.chapters, this.life, this.citizens, this.interiors]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
@@ -178,6 +180,7 @@ export class Story {
       }
       if (wait) { n.setPresent(false); continue; }
       if (n.def.pending && p === undefined) continue;   // (his own area not built yet: he stays hidden: Game.addActors)
+      if (p === undefined) p = this.hostel.place(n.def.id);   // (ASYLUM-2: the hostel's people, by the chapter)
       if (p === undefined) p = this.life.place(n.def.id);
       if (p === undefined) p = this.interiors.place(n.def.id);   // (INTERIOR-LIFE: a room's or a port's people out of their chapter, or back)
       if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
@@ -210,6 +213,8 @@ export class Story {
     if (ar.length || k2.length) out.push({ title: t('a_title'), lines: [...ar, ...k2] });
     const sw = this.sewers.journal();
     if (sw.length) out.push({ title: t('sw_title'), lines: sw });
+    const hs = this.hostel.journal();
+    if (hs.length) out.push({ title: t('hs_title'), lines: hs });
     const sh = this.shops.journal();
     if (sh.length) out.push({ title: t('sh_j_title'), lines: sh });
     const pp = this.purposes.journal();
@@ -218,7 +223,7 @@ export class Story {
     if (ip.length) out.push({ title: t('ip_title'), lines: ip });
     return out;
   }
-  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items()]; }
+  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.hostel.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items()]; }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
   // WORLD-AUDIT: Twinsen's own front door opens in every chapter. The chapters set elsewhere (4–7, 9; 3, 11, 12) offer
   // no door of their own on Citadel, so on a visit home by ferry or ship it had no prompt at all while Zoé and Arthur
@@ -235,9 +240,9 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.shops.interactables(consider, dist); }
-  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.shops.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.hostel.interactables(consider, dist); this.shops.interactables(consider, dist); }
+  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.hostel.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (this.shops.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
@@ -248,7 +253,7 @@ export class Story {
   lineTargets() { return this.kit2b.lineTargets(); }
   ballTargets() { return this.cur.ballTargets(); }
   update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
-  onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
+  onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
@@ -260,6 +265,7 @@ export class Story {
     this.kit2.applyFlags();
     this.kit2b.applyFlags();
     this.sewers.applyFlags();
+    this.hostel.applyFlags();
     this.purposes.applyFlags();
     this.ipeople.applyFlags();
     this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
@@ -267,5 +273,5 @@ export class Story {
   }
   afterEnding() { this.cur.afterEnding?.(); }
   // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it
-  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.purposes, this.ipeople]) c.regionBuilt?.(ids); }
+  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.hostel, this.purposes, this.ipeople]) c.regionBuilt?.(ids); }
 }

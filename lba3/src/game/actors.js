@@ -774,9 +774,12 @@ export class NPC extends Actor {
   }
   // busy at something of his own (a placement's anim other than standing or listening): he does not turn to a passer-by
   busy() { return !!this.forceAnim && this.forceAnim !== 'idle' && this.forceAnim !== 'listen'; }
-  // put the NPC somewhere (chapter placement): {x, z, a, anim, track}
+  // put the NPC somewhere (chapter placement): {x, z, a, anim, track, y?, pin?}. y: the floor to stand on where floors
+  // lie over each other (a room of LBA1's levels); pin: held at y (sitting on a bench, asleep in a bunk: ASYLUM-2)
   placeAt(p) {
-    this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
+    this.pos.set(p.x, p.y != null ? this.game.physics.groundAt(p.x, p.z, p.y + 0.3) : this.game.physics.groundAt(p.x, p.z), p.z);
+    this.pinY = p.pin && p.y != null ? p.y : null;
+    if (this.pinY != null) this.pos.y = this.pinY;
     if (p.a != null) this.angle = this.targetAngle = p.a;
     this.forceAnim = p.anim ?? null;
     if ('track' in p) this.track = p.track ? new TrackRunner(p.track) : null;
@@ -793,6 +796,8 @@ export class NPC extends Actor {
     const x0 = this.pos.x, z0 = this.pos.z;
     if (this.listenTo && this.listenTo !== this) {
       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
+    } else if (this.pinY != null) {
+      // (pinned, sitting or asleep: he keeps his place and his facing)
     } else if (this.talking || (near && !this.busy())) {
       // (GAME-1, the user: a person busy at something — Arthur kneeling at his boat — keeps at it when Twinsen walks
       //  by, and turns to him only once Twinsen talks to him)
@@ -805,12 +810,12 @@ export class NPC extends Actor {
         moving = true;
       } else if (this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
     }
-    this.game.physics.fall(this, dt);
+    if (this.pinY != null) { this.pos.y = this.pinY; this.onGround = true; this.vy = 0; } else this.game.physics.fall(this, dt);
     // the gait follows the ground actually covered (after collisions), smoothed; a blocked walker stands
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
     if (moving && this.gait < 0.15) moving = false;
-    this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
+    this.rig.play(this.pinY != null && this.forceAnim ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
     this.placeRig();
     this.rig.update(dt, moving ? this.gait : 0);
     this.sync();

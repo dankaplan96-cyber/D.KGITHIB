@@ -5,12 +5,12 @@
 //     Oni at the dormitory; the ball on the study crystal (it only rings); the singing fork wakes it; Ker'aooc's ward
 //     at half price; the corral's trough fills Bram's lance.
 //   - Zeelich (chapter 3): Marl at her dog yard (TALK), the conch at her gate teaches the long call; before it the conch
-//     only startles a guard dog (the asylum's), after it the dog goes home and stays calm.
+//     only startles a guard dog (the arena's), after it the dog goes home and stays calm.
 //   - Save & quit → Continue keeps all of it; a save standing in a cut place (Tralu Rock, Bù's dark halls) loads at
 //     its region's spawn.
 // ISO (logged): chapters are entered by their flags; tools a chapter gives (the fork, the conch, the lance, the
 // pocket set, the blowgun) are given as that chapter would; the hero is put in a region (enterRoom) and walks from
-// there by input; the asylum's other guards are stood down for the dog check.
+// there by input; the arena's other foes are stood down for the dog check.
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
 import os from 'node:os';
 import path from 'node:path';
@@ -86,9 +86,9 @@ const t6l = await said();
 check("the statue's plaque (WALK, E): read; it points to FunFrock's asylum", t6l.some((l) => /asylum/.test(l)), { t6, t6l });
 
 // ================================================================ Zeelich, chapter 3: the asylum's dog before the call, then Marl
-iso("chapter 3 entered by its flags; Arthur's conch given; the asylum's guards but one dog stood down");
-const d0 = await ev(() => { const G = game, h = G.hero; T.jump('zeelich'); h.arms.conch = true; G.regions.ensure('asylum'); G.enterRoom('asylum', null, true); G.step(0.3); P.settle();
-  const dog = G.enemies.find((e) => e.def.id === 'asy_dog1'); for (const e of G.enemies) if (e.group === 'asylum' && e !== dog) e.setPresent(false);
+iso("chapter 3 entered by its flags; Arthur's conch given; a guard dog: the arena's (the asylum's dogs went with ASYLUM-2), its other foes stood down");
+const d0 = await ev(() => { const G = game, h = G.hero; T.jump('zeelich'); h.arms.conch = true; const A = G.devArena(); G.step(0.3); P.settle();
+  const dog = A.find((e) => e.def.id === 'a_gdog'); for (const e of A) e.setPresent(e === dog);
   const p = dog.pos; h.pos.set(p.x - 6, G.physics.groundAt(p.x - 6, p.z, p.y + 1), p.z); h.onGround = true; G.gadgets.conchCool = 0; G.step(0.05);
   const u = T.useItem('conch'); const st = dog.state; return { u, st, call: !!G.flags.pp_call }; });
 await said();
@@ -99,8 +99,8 @@ check('Marl at the dog yard (TALK): the project\'s guard dogs, the long call; sh
 const m2 = await ev(() => { const G = game, h = G.hero, Y = G.rooms.zeelich.dogYard; P.go(Y.gate.x, Y.gate.z + 2.2, { tol: 0.8 }); P.settle(); G.gadgets.conchCool = 0; const u = T.useItem('conch'); P.settle(); return { u, call: !!G.flags.pp_call, journal: G.story.journal().flatMap((j) => j.lines.map((l) => l.key)) }; });
 const m2l = await said();
 check('the conch blown at her gate (WALK, INVENTORY, E): the long call is learned; Marl says so; the journal keeps it', m2.u === 'used' && m2.call && m2l.some((l) => /Down, all three/.test(l)) && m2.journal.includes('pp_j_call'), { m2, m2l });
-const d1 = await ev(() => { const G = game, h = G.hero; G.enterRoom('asylum', null, true); G.step(0.3); P.settle();
-  const dog = G.enemies.find((e) => e.def.id === 'asy_dog1'); for (const e of G.enemies) if (e.group === 'asylum' && e !== dog) e.setPresent(false);
+const d1 = await ev(() => { const G = game, h = G.hero; const A = G.devArena(); G.step(0.3); P.settle();
+  const dog = A.find((e) => e.def.id === 'a_gdog'); for (const e of A) e.setPresent(e === dog);
   dog.state = 'chase'; dog.stateT = 0; const p = dog.pos; h.pos.set(p.x - 4, G.physics.groundAt(p.x - 4, p.z, p.y + 1), p.z); h.onGround = true; const hp0 = h.hp; G.gadgets.conchCool = 0;
   const u = T.useItem('conch'); const st = dog.state; let attacked = false; for (let i = 0; i < 60; i++) { G.step(0.05); if (['windup', 'lunge', 'chase', 'warn'].includes(dog.state)) attacked = true; }
   return { u, st, calm: +dog.calmT.toFixed(1), attacked, hurt: hp0 - h.hp }; });

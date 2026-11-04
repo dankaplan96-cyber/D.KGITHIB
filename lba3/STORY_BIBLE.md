@@ -276,9 +276,15 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
   Citadel. Pom came back for the fish; Madam Rondo walks her poodle Fifi by the square (her grandmother kept her
   striped asylum uniform from FunFrock's day).
 - **FunFrock's asylum** (LBA1, where it all began): its halls under Citadel's old fort, rebuilt from LBA1's layout.
-  The Council closed it after FunFrock fell; Vesk's project reopened its cellars as a store and posts guards, a
-  fat trooper and dogs where FunFrock's nurses stood. The old register still lies in the office (its last page:
-  Twinsen, cell 2). The block-house door sits outside the fort's east wall.
+  The Council sealed it after FunFrock fell (a plaque: "NEVER AGAIN.") and everyone was glad to forget it, until the
+  project's diggers broke back in. ASYLUM-2: officially the Joint Project's hostel for its Esmer workers (Foreman Ordo,
+  Mama Pufa the cook, four workers off shift, a sleeper), with a front door on the fort's terrace and the block-house
+  as the side door; behind it Vesk's store in the old boiler room (crates of warm crystals stamped ZEELICH, "pipe
+  fittings" to the workers; one that hums, found with Arthur's pocket set, holds his office key) and his locked office
+  (his notebook: he chose the sealed asylum from FunFrock's plans because no one would look there). Two of his guards
+  on the store in chapters 1–2; from chapter 3 the store is cleared and the workers stay, uneasy; in chapter 8 the
+  hostel takes people in. The old register is the workers' relic (its last page: Twinsen, cell 2); his cell is roped
+  off as their curiosity.
 - **The Temple of Bù's lower levels** (LBA1): under the LBA2 temple the project dug into, a stair goes down to the
   old spiked maze and the dark halls past it, as Twinsen found them the first time; the crystal mites have moved
   in. The halls' far end comes back up into the temple.

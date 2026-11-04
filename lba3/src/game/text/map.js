@@ -77,7 +77,7 @@ Object.assign(STR.en, {
   room_bumaze: 'The spiked maze',
   room_wtent: "Bersimon's tent",
   room_school: 'School of Magic',
-  room_asylum: 'Citadel Asylum',
+  room_asylum: "Workers' Hostel (old asylum)",
   room_obsv: 'The observatory',
   room_upper: 'Council antechamber',
   room_council: 'Council chamber',

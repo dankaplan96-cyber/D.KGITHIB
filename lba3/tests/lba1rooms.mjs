@@ -38,7 +38,7 @@ const r = await page.evaluate(() => {
   return out;
 });
 check('the asylum: in through the block-house on Citadel, standing on its floor', r.enter === 'asylum' && r.floor, r);
-check("the asylum's guards are posted (Quetch guards, the fat trooper, guard dogs)", r.guards >= 8 && ['fclone', 'gdog', 'guard'].every((k) => r.kinds.includes(k)), r);
+check("the asylum's guards are posted (ASYLUM-2: Vesk's two on his store, a Quetch and a Grobo)", r.guards === 2 && r.kinds.join() === 'guard,guardG', r);
 check('the old register in the office: a search, a clover', r.search === 'dialog' && r.clover, r);
 check('out by the stair-well, back on Citadel', r.out === 'citadel', r);
 check("the Temple of Bù: down the stair into the maze", r.maze === 'bumaze' && r.mazeFloor, r);
