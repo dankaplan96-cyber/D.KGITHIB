@@ -40,7 +40,9 @@ ceiling), EQUIP-2 a+b (five new gadgets), the follow camera after doors, fuller 
 purposes (DECLUTTER), the laptop's requests (CAMPAIGN-1/2, DOORS-1, ZEELICH BAR/HOTEL/TEMPLE/SKY/WANNIE, BG-STUCK-1,
 LINE-CLEAR-1), Piper voices, Medium as the default camera distance. A 26-test regression passed on 4.11.
 
-Running when this was written (they report to the old session; if their branches exist unmerged, review and merge):
+Merged since (4.11): `audio-fix` (Sendell's and Vesk's voices; the reverb cap and an underrun counter, `game.audio.stats()`; the music crackle NOT reproduced here — ask the user for the counter if it recurs) and `ch12-staging` (below). Leftovers from them:
+- the shot where the crystals take in the ball is too tight; the follow camera near a wall still ends 1.25 m away with his back 0.9 m from Twinsen's house wall; a real fade of walls needs the merged-mesh owner (`merge.js`/`texarray.js`); near-lens culling within 1 m is in, the user hasn't approved it explicitly; `tests/prologue.mjs` "the well's mites beaten" fails on the base too.
+They were (for the record):
 - `ch12-staging`: chapter 1–2 staging fixes from the user's playtest: the crystal + Sendell scene as a cinematic with
   close-ups; Vesk's ship (docked in ch 1 then "arriving" again in ch 2) and its arrival animation; Vesk's entrance
   framed close; after the Vesk talk Twinsen left in the beam pad's light and Zoé vanishing; Doran teleporting after a
