@@ -1,5 +1,10 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
+> **4.11.2026: the cloud moves to a new session** (the user's decision). Talk to the cloud through the repository only
+> (`WORLD_ART_REQUESTS.md` for requests and questions, pushed); direct messages to the old cloud session will not be read.
+> The new session starts from `docs/HANDOFF.md`.
+
+
 The user, 3.11: "Give instructions and tasks to the local agent too. We're going into night mode." Work them in this
 order, one at a time, through the usual loop (`docs/future/LOCAL_EXPANSION_PROMPT.md`): build, picture, test, send the
 diff as a request in `WORLD_ART_REQUESTS.md`, push. The user's rules override everything (English player text, no
