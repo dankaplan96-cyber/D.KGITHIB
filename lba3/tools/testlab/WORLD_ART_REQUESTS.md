@@ -1833,3 +1833,28 @@ is missing from LBA2 be clear. That and the hostel fit together, so the decision
   offices, the plaque and the sign as objects, and `R.npcSpots` (worker1…, cook, foreman, sleeper, guard1–2,
   hiddenCrate, veskDesk, plaque). The cloud writes the people, lines, the notebook, the crate find, the guards'
   patrol and the chapter states on those handles, after the diff is merged. Text in English, short; Esmer naming.
+
+## HARBOUR-1 · Citadel's harbour wing in one language (CLOUD_ORDERS 3, "Cacophony") · the laptop, 4.11.2026
+`requests/HARBOUR-1.diff` (island.js `cargoLift` only, harbourshed.js, town.js the `wing2` row, townlife.js Nell's
+roof, travel.js the Citadel stop board, citydress.js; applies clean on origin fdad24e). The wing now reads as LBA2's
+harbour: stone and rubble houses under slate and boards, plank sheds, the Esmer trading house as the one foreign
+building, the project shown by its emblems and crate stack. No story place, door, interaction spot, flag or line moved.
+- The barge and its slewing lift **kept** (the opening uses them, 13–29 s: `W.cargoLift.pose/shake`, the crate,
+  `cratePierW`): the look only, shapes, sizes, poses and colliders unchanged. The teal column and arm become a dark
+  timber mast and boom with iron straps; the brass winch housing slate-grey iron (the emblem kept); the teal hull a
+  darker plank lighter with a rubbing strake (the emblem kept).
+- The harbour master's shed: the blue tile roof becomes weathered boards (one material fewer).
+- Nell's home (`wing2`): block stone becomes rubble (as LBA2's body 49), pairing with Doran's shed.
+- Nell's stall: the orange painted roof becomes boards with a little old red paint (its own material: the fade works).
+- The ferry stop board faces the quay and the way from town (the camera saw only its blank back); timber posts.
+- **Removed:** citydress's second ferry timetable board, 6 m from the stop's own board (nothing used it).
+- Left as they were: the ticket office (LBA2's ashlar hall), Mr Bazoo's, the customs booth, the project ferry, the
+  quay's project crate stack (the story shows and hides it), the Esmer trading house with its dome (approved, WA-15b).
+- Draw calls (SwiftShader, one frame, main / shadow): customs 128/48 → 127/48, pier 107/59 → 106/59, trading house
+  180/48 = , ticket office and Nell's 133/56 → 132/56, Bazoo's 152/54 = ; triangles about −0.1 %.
+- Checked on the agent's base f520b75: chapter1 PASS, shops PASS, worldfit only the existing house-nbr failure. On
+  fdad24e: the diff applies clean, the game boots without errors (13 minutes under the night's load: chapter1 and
+  opening timed out waiting for the boot, not on a check). To rerun on fdad24e when the laptop is quiet: chapter1,
+  opening (the lift), shops.
+- Left (notes): the customs booth's navy roof; the town's blue-globe lamps (LBA2's harbour lamps were warm yellow);
+  the project ferry's teal hull. Cut 9 (the ticket office into the baggage claim, Nell's interior) is the story's.
