@@ -70,6 +70,15 @@ They were (for the record):
   eaves). camfollow: five wall checks fail on the old base too (since ch12-staging's 3.2 m minimum): to reconcile with
   the user's choice, not a regression of this session.
 
+- 5.11 (the user: "make sure no open requests are left"): every diff in `tools/testlab/requests/` is applied or was
+  replaced by the user's choice (WA-15 → WA-15b); every section of `WORLD_ART_REQUESTS.md` is applied, answered or
+  set aside by the user; USER-ASKS of 2.11 all done (the lighthouse door: steps and a "locked" look, 5.11); WA-10's grey
+  rock handed to the laptop (CLOUD_ORDERS 13); the old test failures: prologue, chapter4 (54/54) and controls (92/92)
+  pass now. **Still open (the cloud's): `tests/solidnpc.mjs`, 13 checks, identical on the base before this session**:
+  its story-person case picks Zoé (indoors, ~1 km away in the house's room: the "launch" is that teleport, a stale
+  setup, not a game bug); "no free approach to tobb|marda|brix|dot" and "tilde|maro|ume" and the bench checks look
+  stale after BENCHES-1/DECLUTTER too. Fix the setup case by case; confirm each bench sitter on the seat in a picture.
+
 ## Queue (after those)
 0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
