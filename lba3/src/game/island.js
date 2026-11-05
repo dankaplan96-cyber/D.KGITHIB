@@ -2148,8 +2148,12 @@ function floodMast(W, B, x, z, ax, az, h = 7) {
 function chestGeo() {
   return cached('chest', () => {
     const wood = [], iron = [];
-    wood.push([boxUV(bbox(1.24, 0.66, 0.76, 0.04, 1), 0.9), 0, 0.37, 0]);
-    for (const x of [-0.42, 0, 0.42]) iron.push([bbox(0.08, 0.7, 0.8, 0.012, 1), x, 0.37, 0]);
+    // (CHEST-1: an open box under the lid, four walls and a floor, so the chest shows its inside once opened; the
+    // straps run down its front and back only, not over the opening)
+    for (const z of [-0.345, 0.345]) wood.push([boxUV(bbox(1.24, 0.66, 0.07, 0.02, 1), 0.9), 0, 0.37, z]);
+    for (const x of [-0.585, 0.585]) wood.push([boxUV(bbox(0.07, 0.66, 0.62, 0.02, 1), 0.9), x, 0.37, 0]);
+    wood.push([boxUV(bbox(1.12, 0.06, 0.64, 0.01, 1), 0.9), 0, 0.12, 0]);
+    for (const x of [-0.42, 0, 0.42]) for (const z of [-0.39, 0.39]) iron.push([bbox(0.08, 0.7, 0.025, 0.008, 1), x, 0.37, z]);
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) iron.push([bbox(0.16, 0.7, 0.16, 0.02, 1), sx * 0.58, 0.37, sz * 0.34]);
     iron.push([bbox(1.3, 0.06, 0.82, 0.015, 1), 0, 0.06, 0]);
     iron.push([bbox(0.24, 0.26, 0.05, 0.02, 1), 0, 0.56, 0.4]);
