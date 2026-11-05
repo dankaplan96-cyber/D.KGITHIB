@@ -61,6 +61,8 @@ const s0 = await ev(([F, O]) => {
   Object.assign(G.flags, F, O, { chapter: 9, chapterKey: 'throttle' }); G.hero.hasBall = true;
   G.story.applyFlags(); G.updateObjective();
   const t0 = G.time;
+  // (set-up: out by the asylum climb's foot, the way up since CLIMB-1 — the ledge west of it is no way up)
+  if (G.room) { G.exitRoom({ x: -33.3, z: -34.6, a: Math.PI }, true); G.step(0.5); P.settle(); } else P.go(-33.3, -36.4, { tol: 1.2, run: true });
   const r = P.talk('gilbert', { run: true });
   for (let i = 0; i < 30; i++) G.step(0.1); P.settle();
   return { r, ...T.view(), cards: [...window.__cards], said: window.__said.slice(-10), dt: G.time - t0 };
