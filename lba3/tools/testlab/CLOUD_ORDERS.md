@@ -114,6 +114,9 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    (b) "A strange gap": between the flight's east cheek (o = +1.7) and TERRACE_RAIL's first run (x −28.4, z −46.6 →
    −42.95) a trench 1.4–2 m wide down to the cliff rock, two railed walls side by side. Make it one: the terrace carried
    on to the cheek as a retaining wall (the flight cut into the terrace, as LBA2's climbs), or the cheek and the rail one
-   wall. The cloud's terrain fill helper is `lba1places.js climbRampFill` (applied last in `world.js islandHeight`). (c)
+   wall. (d) The camera at the top (the user: "going up the stairs the camera sticks to Twinsen"): the terrace
+   before the fort's south wall is only ~2.5 m deep behind the flight's top, the wall 5.6 m high, so Follow's arm has
+   no room and rises over his head at 1.4–3.2 m (camera.js MIN-VIEW, by design). If (a) squares the flight, give the
+   landing ≥ 4 m before the wall, or say so and the cloud makes the camera look along the terrace there. The cloud's terrain fill helper is `lba1places.js climbRampFill` (applied last in `world.js islandHeight`). (c)
    With (a)–(b), order 15's likeness to LBA2's climb. Before/after from the play camera (Follow, medium).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
