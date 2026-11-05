@@ -915,7 +915,15 @@ export class Chapter1 extends ChapterBase {
   markers() {
     const f = this.f, g = this.game, W = g.world, m = [];
     const gold = '#ffcf4a';
-    const npcAt = (id, label) => { const n = this.npc(id); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) }); };
+    // (POLISH-A: someone in a room — Vesk in the station's control room once the water is back — is starred at that room's
+    //  street door: the room's far-off coordinates fell off the map, and "Visit Vesk at the old fortress" had no star)
+    const npcAt = (id, label) => {
+      const n = this.npc(id); if (!n?.present) return;
+      let x = n.pos.x, z = n.pos.z;
+      const sc = g.regions?.sceneOf?.(x, z);
+      if (sc && sc !== 'citadel') { const d = this.story.doors().find((q) => q.room === sc && !q.region); if (!d) return; x = d.x; z = d.z; }
+      m.push({ x, z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) });
+    };
     if (!f.c1_started) return m;
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });
