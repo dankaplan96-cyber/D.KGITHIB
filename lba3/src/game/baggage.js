@@ -84,7 +84,7 @@ export function buildBaggageRoom(scene, physics) {
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
   // --- the upper level: the claim hall and the office, 1.5 m up over the back of the building
-  k.add(rbox(W, UY, UZ1 - BZ, 0.02), stone, 0, UY / 2, (BZ + UZ1) / 2);
+  k.add(rbox(W, UY - 0.02, UZ1 - BZ, 0.02), stone, 0, (UY - 0.02) / 2, (BZ + UZ1) / 2);   // (OVERLAP-1: the stone 2 cm inside its cap, not level with the cap's top: the two flickered; the steps the same)
   k.add(rbox(W + 0.04, 0.12, UZ1 - BZ + 0.04, 0.02), cap, 0, UY - 0.06, (BZ + UZ1) / 2);
   k.add(plane(W - 0.1, UZ1 - BZ - 0.1), floor, 0, UY + 0.004, (BZ + UZ1) / 2, 0, { rx: -Math.PI / 2 });
   B.col(0, (BZ + UZ1) / 2, W / 2, (UZ1 - BZ) / 2, UY);
@@ -92,7 +92,7 @@ export function buildBaggageRoom(scene, physics) {
   const SX0 = LX + 0.15, SX1 = LX + 1.55 * FX, N = 6, run = 0.6, rise = UY / N;
   for (let i = 0; i < N; i++) {
     const top = rise * (N - i), z = UZ1 + (i + 0.5) * run;
-    k.add(rbox(SX1 - SX0, top, run + 0.02, 0.015), stone, (SX0 + SX1) / 2, top / 2, z);
+    k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.015), stone, (SX0 + SX1) / 2, (top - 0.02) / 2, z);
     k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
     B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
   }

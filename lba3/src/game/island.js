@@ -1777,7 +1777,8 @@ function buildStation(W0, root, r) {
     }
     P.add({ type: 'box', x: BX, z: BZ, hw: 4.8, hd: 4.8, rot: 0, top: g + 0.29, seeThrough: true });
     // shaft collar: teal steel ring with a brass lip and bolted flange
-    const collar = lathe([[2.0, 0.0], [2.0, 1.05], [2.12, 1.16], [2.62, 1.16], [2.66, 1.06], [2.62, 0.4], [2.82, 0.3], [2.82, 0.0]], 40, TILE.teal);
+    // (OVERLAP-1: up the outside and down the inside, so its faces look out of the steel, as the pad's below)
+    const collar = lathe([[2.82, 0.0], [2.82, 0.3], [2.62, 0.4], [2.66, 1.06], [2.62, 1.16], [2.12, 1.16], [2.0, 1.05], [2.0, 0.0]], 40, TILE.teal);
     B.add(collar, tealM(), BX, g + 0.28, BZ);
     B.add(cached('lip', () => new THREE.TorusGeometry(2.38, 0.07, 6, 48).rotateX(Math.PI / 2)), brassM(), BX, g + 0.28 + 1.17, BZ);
     const bolts = [];
@@ -1916,7 +1917,10 @@ function buildStation(W0, root, r) {
   const BP = { x: 56.4, z: 40.4 };
   const padTop = g + 0.48;
   {
-    const plat = boxUV(lathe([[0, 0.48], [2.35, 0.48], [2.45, 0.44], [2.55, 0.26], [3.0, 0.26], [3.08, 0.2], [3.12, 0.0], [0, 0.0]], 48), TILE.deck);
+    // (OVERLAP-1: the profile runs from the foot up, so the faces look out: drawn from the top down it was inside out —
+    //  the top and the steps were not drawn from above and its floor, facing up at the ground's very height, flickered
+    //  with the ground)
+    const plat = boxUV(lathe([[0, 0.0], [3.12, 0.0], [3.08, 0.2], [3.0, 0.26], [2.55, 0.26], [2.45, 0.44], [2.35, 0.48], [0, 0.48]], 48), TILE.deck);
     B.add(plat, deck, BP.x, g, BP.z);
     B.add(cached('padring', () => { const gg = new THREE.RingGeometry(1.95, 2.3, 48, 1); gg.rotateX(-Math.PI / 2); return boxUV(gg, 0.9); }), haz, BP.x, padTop + 0.005, BP.z);
     B.add(cached('padedge', () => new THREE.TorusGeometry(2.42, 0.07, 6, 48).rotateX(Math.PI / 2)), brassM(), BP.x, padTop - 0.03, BP.z);
