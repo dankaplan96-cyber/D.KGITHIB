@@ -51,3 +51,37 @@ small one; no superfluous LBA1/LBA2 places, no cacophony of buildings.** Apply i
 The cloud is working on (don't touch): chapter 1–2 staging and cinematics (Vesk's ship and arrival, the crystal and
 Sendell scene, the beam pad after Vesk, Doran's walk, the follow camera against walls) and the audio (Sendell's voice,
 Vesk vs Twinsen, the music crackle).
+
+## Orders of 5.11.2026 (the second cloud session; the user: "give tasks to the local agent")
+Done since the last orders, so take them off your list: order 1 (ASYLUM-2: built by you, its story written by the
+cloud), order 3 (HARBOUR-1, OTRINGAL-1), order 5 as corrected (CLIMB-1), TREES-1. All applied on
+`ccr-adf00ea7-37ebl3` (25af69c); base your next diffs there. The cloud is no longer working on the chapter 1–2 staging
+or the audio: those files are free again. Work in this order, one at a time, the usual loop (build, picture, test,
+request diff in `WORLD_ART_REQUESTS.md`, push).
+
+7. **Real-GPU check of what the cloud changed (first, short; the cloud has SwiftShader only).** On the laptop's GPU,
+   Medium, plugged in: the asylum hostel with its seven people and two guards (frame time and draw calls at the
+   dormitory, the mess and the store: the room was the heaviest LBA1 room already); walk out of Twinsen's house and
+   two shop doors with Settings → Camera on Follow (`Game.doorStep`: he lands 1 m further out; the camera should start
+   behind him at a normal angle, not over his head; say if any door now puts him somewhere odd); Sendell's call
+   (the "crystals take in the ball" shot, now wide). Pictures of each for the user (chapters 1–2 only). Report in
+   `WORLD_ART_REQUESTS.md`; fix nothing of the cloud's, just report.
+8. **The hostel's leftovers (yours, ASYLUM-2):** the potted plant in a wall collider (room point (2.25, −22.11));
+   grass to the front step (`keepClearNew`); and look at Old Kesso sitting on the mess bench and Wix asleep in the
+   lower bunk (`R.npcSpots` worker4 'sit', sleeper 'lie': the cloud pins them at your `y`, a new rig pose 'sleep'):
+   if either floats or sinks into the furniture, correct the spot's `y` or `a` in `asylumhostel.js`.
+9. **Order 2's remainder:** the playthrough chain 01–14 and 14-shell on the GPU once; the skies' pictures (SKY,
+   WANNIE) from the play camera. Verdicts in `WORLD_ART_REQUESTS.md`.
+10. **Order 6 (as before): Zeelich closer to LBA2's** — the hub (Zeelich street, Baldino's workshop side, the
+   spaceport deck); Otringal's part is done by OTRINGAL-1. List the biggest differences first (silhouettes, colours,
+   building types, ground, sky), then fix the top ones within 80 % likeness and R11. Before/after pictures, but these
+   are chapter 3 on: put them in `docs/future/world/` and ask the user before showing (no spoilers past chapter 2).
+11. **Chapter 10's glider at Citadel (small; later chapter, no pictures to the user):** the glider film now flies the
+   parked glider (`network.js`, `CITADEL_LANDING` + (5, −3)); from the film's camera a pine and the cliff rock hide it
+   for part of the take-off. Move the parked glider (or that pine) so the take-off reads; keep Hesk's spot and the
+   landing. Same check at Desert Island and the Hamalayi.
+12. **Expansion (branch `expansion/ballastra`): W-2 "The Arch District" is Ordered** in `EXPANSION_WORLD_SPEC.md`
+   (5.11), with the user's note on W-1 as its brief: Ballastra must read as a city that lives by the water's level,
+   in form, not colour. Build it there after 7–9 (it is the longest); pictures to `docs/future/world/W-2/` and to
+   the user (they have seen Ballastra), canal levels 0 and 1 from the same spot.
+Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
