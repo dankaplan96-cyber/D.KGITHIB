@@ -494,6 +494,12 @@ export class Network extends ChapterBase {
   showProps() {
     const f = this.f, on = this.isCur();
     for (const gl of this.gliders || []) gl.visible = on;
+    // (each parked glider is solid while it stands there, as the Hamalayi's landing glider is (hamalayi.js): Twinsen
+    //  walked through their fuselages and wings. The box: the wing's span, the body's middle; rot is the glider's turn)
+    for (const [r, G] of Object.entries(this.gliderAt || {})) {
+      if (!G.col) G.col = this.game.physics.add({ type: 'box', x: G.x, z: G.z, hw: 4.8, hd: 1.4, rot: G.a, top: this.game.physics.groundAt(G.x, G.z) + 2, noStand: true });
+      G.col.enabled = on;
+    }
     // (Baldino's code box stays on the code line while he waits at the collar: through The Shell and The Core too)
     if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
