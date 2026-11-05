@@ -90,4 +90,13 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    cliff splat texture (`TX.cliff`) and the rock meshes. Make the outcrops grey (and more of them on the steep slopes)
    within 80 % likeness; before/after from above and from the play camera. Chapter 4 on: no pictures to the user
    unless asked.
+14. **The polish passes' visual leftovers (5.11; yours: art, lighting, placement; chapters 1–2 unless marked):**
+   (a) leaving the hostel by its north door with Follow: a cream band fills the bottom of the frame for a moment (the
+   camera behind the portico top, the 1 m near-cut slices it): `asylumhostel.js` portico or a camera nudge, say which;
+   (b) the lantern beside most street doors shows at the frame's lower right for a moment after leaving (cosmetic);
+   (c) the wizard tent's door: a tall grass blade and a bush in front of the Follow camera; (d) the tavern cellar's
+   lower floor near-black (R8 "never dark"); (e) `GL_INVALID_OPERATION: texture format/sampler type mismatch` warnings
+   in the console (SwiftShader only? check on the GPU); (f) Citadel landing (−58, −60): two low plant colliders overlap
+   the landing spot; (g) later chapter, no pictures to the user: the Hamalayi parked glider seems to cut into the
+   monastery wall by the frozen chest (with order 11). Report in `WORLD_ART_REQUESTS.md`.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.

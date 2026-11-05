@@ -79,6 +79,21 @@ They were (for the record):
   setup, not a game bug); "no free approach to tobb|marda|brix|dot" and "tilde|maro|ume" and the bench checks look
   stale after BENCHES-1/DECLUTTER too. Fix the setup case by case; confirm each bench sitter on the seat in a picture.
 
+- 5.11 (the user: "send an agent to test the whole game in depth"): **two polish passes** (agents A: Citadel, chapters
+  1–2, UI/cameras/transitions; B: chapters 3–12, the other regions, all equipment), merged. A: solidnpc's 13 failures
+  were the test's set-up (54/54 now; no game change); chapter 2's depot patrol stands down in view instead of vanishing;
+  the harbour worker no longer stands inside Xil (he took Xil's Talk prompt), the guard no longer in the bell post; the
+  fortress objective's map star (a person in a room is starred at its street door). B: held weapons and tools put away
+  in talks like the sword; the pulse tool shown in his hand; shots and the line leave from the hand; Zeelich residents
+  no longer 12 m under the street after a load; **`refreshCast({walk:true})`** for chapters 3–12 and the epilogue (a
+  person whose new spot or who is on screen walks there, `from`/`via` doors; chapters 1–2 keep instant placement);
+  the Hamalayi landing glider's collider mirrored; the epilogue reached straight through clears chapter 8's fences;
+  chapter 10's parked gliders solid; cast-round stops off the heat-flask prompts; "night" lines (R7). Then the cloud:
+  CHEST-1 applied (picture), walkers' stuck rescue never puts a resident on a point in view (the child seen sliding
+  30 m in chapter 10; not reproduced, the cause read from the code). Known failing, identical on the base: chapter5
+  (its teleport-and-use helper never turns valve 4; input segment 08 does), combat (dodge 30 vs 60 fps), camfollow
+  (5 wall checks), doorcull (too slow on SwiftShader). Visual leftovers → CLOUD_ORDERS 14.
+
 ## Queue (after those)
 0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the

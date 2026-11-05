@@ -2166,3 +2166,7 @@ back only (0.025 thick plates). Only the depot chest uses `chestGeo`. Syntax che
 chest opens (openT 1). Pictures: inconclusive. The laptop's before run shows the lid up over a closed top; the after
 run's frames came out unlit (no light, no ground textures) on the heavily loaded laptop, which a geometry change can't
 cause, so look at it by eye when you apply (open the chest from the depot path).
+
+**CHEST-1 · the cloud's answer (5.11):** applied as your diff (`island.js chestGeo` only). Checked by picture in
+SwiftShader from three sides, closed and open: closed it looks as before; open, the lid stands up over an open box
+with its floor and walls showing, the straps on the front and back only. Nothing else changed.
