@@ -17,6 +17,7 @@
 // stall's counter (Pippa), the lane's pump (Bram), the harbour's customs (Odile) and Nell's shop, and every front door
 // used is a house the story never sends Twinsen into (tests/walkers.mjs checks the stops against the doors and the cast).
 import { WalkNav } from './walknav.js';
+import { Walkers } from './walkers.js';
 import { ZEELICH_SEATS } from './zeelich.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
@@ -217,7 +218,10 @@ export function zeelichRoster(game) {
   const R = game.regions?.built('zeelich');
   if (!R) return null;
   const ox = R.group?.position.x ?? 2400, Y0 = R.group?.position.y ?? 0;
-  game.walkers?.nav.addLevel(ox - 62, ox + 66, 6.0);
+  // (the street's walkers made here if they are not yet: with `?.` a load that built Zeelich before any walker existed
+  //  left the level out, so its residents stood 12 m down on the terrain under the island until the hero came, then
+  //  popped up onto the street as the fade cleared: Resident.groundHint)
+  (game.walkers ||= new Walkers(game)).nav.addLevel(ox - 62, ox + 66, 6.0);
   const Wz = { seats: ZEELICH_SEATS.map(([x, z, ry]) => ({ x: ox + x, z, ry, spec: ZEELICH_BENCH })),
     houses: (R.houseDoors || []).map((d, i) => ({ door: d, ry: d.z < 0 ? 0 : Math.PI, x: d.x, z: d.z + (d.z < 0 ? -2.6 : 2.6), skip: i === 1 || i === 4 })).filter((h) => !h.skip) };
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(Wz, ox + x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
