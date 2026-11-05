@@ -43,6 +43,10 @@ export function playOpening(story) {
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
   const wv = (x, y, z) => V(WR.center.x + x, y, WR.center.z + z);   // well-cave-local → world
   const harbourFocus = HV(-82, 1.8, -3);
+  // (the user, 5.11: "in the opening film Vesk's ship is already in the harbour, it isn't logical": the project's
+  //  ferry brings him in chapter 2 — chapter1.js startArrival — so it is not at the pier in the opening; the barge
+  //  and the lift are being unloaded)
+  W.ferry?.setVisible?.(false);
   const bore = W.station.bore, boreY = g.physics.groundAt(bore.x, bore.z);
   const home = W.houses[0], nbr = W.houses.find((h) => h.id === 'nbr');
   const out = (hs, d) => ({ x: hs.door.x + Math.sin(hs.ry) * d, z: hs.door.z + Math.cos(hs.ry) * d });
@@ -346,7 +350,7 @@ export function playOpening(story) {
   track(62.4, 66.5, (k) => { WR.vein.power = Math.sin(k * Math.PI) * 0.9 + Math.max(0, Math.sin(k * Math.PI * 5)) * 0.25 * Math.sin(k * Math.PI); });
 
   // walks
-  // the resident waits by the lift for his word with the worker, then goes on to the ferry
+  // the resident waits by the lift for his word with the worker, then goes on down the pier
   // (the worker steps to the crate's side of the pier, by its west face, while the resident is still there; the
   // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
   walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);

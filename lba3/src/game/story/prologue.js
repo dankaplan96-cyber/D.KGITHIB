@@ -623,7 +623,7 @@ export class Prologue extends ChapterBase {
   // restore world state from saved flags
   applyFlags() {
     const g = this.game, f = this.f;
-    if (this.isCur() && f.opening) this.ferryAway();
+    if (this.isCur()) this.ferryAway();   // (not at the pier at all before chapter 2: the opening film doesn't show it either)
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
     g.world.well?.setWater?.(!!f.c1_water || (this.story.index ?? 0) > 1);   // (WELL-DRY: dry until chapter 2's water returns)
     g.hero.hasKey = !!f.key;
