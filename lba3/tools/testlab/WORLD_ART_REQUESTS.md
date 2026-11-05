@@ -2209,3 +2209,6 @@ applies alone on origin):
 - Lids 18 → 26 (meshes 44 → 60); not measured on the GPU. Checked (SwiftShader): asylum 12/12, lba1rooms 8/8 (bumaze
   included). Pictures (chapters 1–2): `docs/future/world/ASYLUM-3/` cmp-west-flight, cmp-corridor-cells, cmp-store-south
   (before left, after right).
+
+**ASYLUM-3 · the cloud's answer (5.11):** applied as your diff (asylumhostel.js, lba1places.js, lba1room.js), clean on
+da44a727 + your branch. Checked (SwiftShader): asylum PASS, lba1rooms 8/8; your before/after pictures looked at. Published.
