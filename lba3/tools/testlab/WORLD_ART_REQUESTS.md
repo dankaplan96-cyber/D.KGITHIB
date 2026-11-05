@@ -331,7 +331,8 @@ The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPAR
 - **File:** `src/game/desert.js`, the area's `env`:
   - before: `env: { fog: '#f0d2a2', sun: '#fff0d4', hemiSky: '#ffe6bc', hemiGround: '#b4845a', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },`
   - after: `env: { fog: '#eadcc6', sun: '#fff6ea', hemiSky: '#f2ece2', hemiGround: '#a68a72', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },   // (WORLD-ART-10: a less orange light; LBA2's sand is a pale pinkish beige, #d0aa83 from above)`
-- **Still open for the cloud:** the original has grey rock outcrops over about 24 % of the island; ours has almost
+- **Still open for the cloud:** (5.11: handed to the laptop as CLOUD_ORDERS 13: the vertex colour barely shows; it is
+  the cliff texture's) the original has grey rock outcrops over about 24 % of the island; ours has almost
   none. Rock on the steeper slopes (colorFn's `slope > 0.8` branch, with COL.rock a grey-beige rather than
   '#e0a080') would close part of that.
 
@@ -2047,3 +2048,103 @@ in a wall collider: yours, as you said.
 Also from the cloud since (not world art, for your base): out of a door he lands 1 m further out where that ground is
 open and level (`Game.doorStep`, main.js; the street spots the story gives are unchanged); journey films for the ends of
 chapters 2 and 8 (the ship's landing) and chapter 10's glider menu (the parked gliders fly: `network.js gliderSpot`).
+
+### USER-ASKS of 2.11 · where each stands (the cloud, 5.11.2026)
+1. Shops you can buy in: done (SHOPS-1, `story/shops.js`: Bazoo, the pharmacy, the ticket office, Pippa).
+2. The Esmer trading house: done (SHOPS-1: Sefa at its door; Tobb's rest stop, Odile's and Tobb's lines, WA-15b's purpose).
+3. The lighthouse's door in the air: the headland falls ~1.1 m in front of it; four stone steps now go up to the door
+   (`lighthouse.js` LH_STEPS, `world.js` their stair colliders), walked by input; where no chapter opens it, a look
+   says it is locked (`purposes.js` pp_lighthouse).
+4. Gadgets earlier: done (EQUIP-2a/b: five new gadgets, Arthur's pocket set from chapter 2).
+5. The old test failures: see the cloud's next note.
+
+## ZEELICH-2 · Zeelich closer to LBA2's (CLOUD_ORDERS 6 / 10) · the laptop, 5.11.2026
+Measured from LBA2's Otringal (the laptop's study maps, numbers only) against our play camera, the biggest gaps:
+1. **Ground and rock:** LBA2's Otringal has no grass: neutral grey granite (k-means #51504a–#a8a196, lights #dbd3c9),
+   pale lavender-grey paving (#d3ced9 / #afa5ad). Ours: green turf and violet cliffs; the hub one big lawn. Share in
+   the play shots (original: green 5 %, violet 0 %, saturation 0.17): Otringal before green 4–34 %, violet 0.4–38 %,
+   saturation 0.26–0.35 → after green 0–4.8 %, violet 0.8–4.7 %, saturation 0.14–0.24.
+2. **Buildings:** LBA2's walls are taupe stucco (#9e9795–#baafac) with glass-block bands (#68a9ce on a dark joint) and
+   teal glass; roofs low faceted octagonal caps, aqua (#78a1a7–#a1b9ba) or gold (#ab7945), a gold spike. Ours: cream
+   and lilac, violet lattice windows, tall onion domes (violet, rose, orange, teal) under scalloped merlons.
+3. **Wrong silhouettes on Otringal:** the size classifier drew the original's street lamps (body 1 ×15, heads
+   floating 2.5 m up), the golden fan plant (18 ×13, as 3.8 m jars), the plaza's covered market (86–95), posters (29),
+   planks (114/115/119) and house parts (12, 13, 48, 108) as terracotta jars; a mossy rock (8) as a crate, a flag (24)
+   as a floating rock.
+4. **Rails and plants:** LBA2 has grey posts with teal rails (body 5 ×90) and a hazard bar (50 ×16), street trees as
+   square planters with a golden plume (52–54 ×24). Ours: wooden fences, dark green trees; the hub's puff trees pink.
+5. Sky: Otringal already grey (ZEELICH-1-SKY); the hub's pink sky left (no original, and your ship-arrival films).
+`requests/ZEELICH-2.diff` (`props-esmer.js`, `zeelich.js`, `zeelife.js`, `zislands.js`; applies alone on 189dfd4):
+- `props-esmer.js`: a look switch `setLook`, on only while Otringal and the hub are built: `domeStack` an octagonal
+  drum, a glass-block band and a low cap instead of the onion; `esmerBuilding` glass-block frieze and door frames, teal
+  glass, a plain coping and a low hipped roof instead of merlons. New: `capParts`, `capSpike`, `capM`, `glassM`,
+  `tealGlassM`, `archTiles`, `windowM`, `frondTree`, `goldPlant`, `railing`. Every other island draws as before.
+- `zislands.js`: `OTR_LBA2` (palette, ground, rock, paving, rails) and the body map `OTR_SHAPE`/`otrShape` in
+  `STYLE.otringal`; `buildIsland` wraps `buildIsland0` to switch the look; `turfRock` grass → granite (`graniteTex`);
+  new kinds `frond`, `goldplant`, `canopy`, `poster`, `planks`, `annex`, `drum` (body 48), rails in `fence`; the lamp
+  case covers body 1; TREES-1's `cutPlants` covers the new plants.
+- `zeelich.js` (the hub): the same houses, places, sizes, doors and roles in stucco, glass-block bands, teal glass,
+  octagonal drums with aqua or gold caps (the council's gold), coping instead of merlons, steep caps on the minarets;
+  the gateway a glass-block arch; ground pale granite instead of the lawn, grey-white cliff strata, lavender paving,
+  grass in a few patches, golden puff trees. Left: the wooden pier, the dog yard, the mills, the depot, the sky.
+- `zeelife.js`: Mr Pelleck's half re-tiled dome follows the cap (aqua new tiles over five of its eight faces).
+- Otringal unchanged in play: objects 548, shut doors 26, people spots 10, landmarks GRAND HALL and FOUNTAIN; door
+  fronts as OTRINGAL-1 (only otringal-55--47 still blocked, as before).
+- Draw calls (main + shadow) / triangles, same spots, before → after: hub port 78→77 / 516k→469k, street 122→128 /
+  559k→512k, workshop 118→120, dock 191→192, mills 72→73, depot 93→93 (triangles −7 to −9 %); Otringal pad 61→54 /
+  1.02M→822k, plaza 139→139 / 1.14M→1.01M, harbour 122→120 / 612k→420k, the other five ±2 calls.
+- Checked (SwiftShader): zislands, doorcull, island-people PASS; worldfit only the known Citadel "house nbr: door
+  overlaps window" (the same on the base). zeelich-life 37/38: the one FAIL is "the street argues about the council"
+  (chapter 9): Pelleck's first talk now opens the petition (`text/ch9.js` "With a petition…") instead of his tilers
+  line; ZEELICH-2 touches no text or story, but the laptop's base run of that test stopped at a 300 s wait under load
+  before that check, so the base verdict is not measured: yours to look at. containers: no check failed, the run did
+  not finish (a Windows path bug in the test's `URL.pathname` for player.js, then a page-load timeout under load).
+- Pictures (chapter 3 on: **not shown to the user**, ask first): `docs/future/world/ZEELICH-2/sheet-compare-hub.jpg`,
+  `sheet-compare-otr.jpg` (before left, after right, 6 hub and 8 Otringal spots, play camera).
+
+## GPU-7 · The real-GPU check of the cloud's changes (CLOUD_ORDERS 7) · the laptop, 5.11.2026 · report only, nothing fixed
+Measured on 0b0393b (game code = 189dfd4): the installed Chrome 156, headed, fresh profile; ANGLE AMD Radeon Vega 8
+(D3D11), real GPU, GPU timer working (0 disjoint); fullscreen 1366×768, dpr 1; Medium, Auto off, full resolution,
+MSAA, Camera Follow at Medium; plugged in (AC) 100 % at start and end; no other test running. Chapter 2 reached by a
+save and `nextChapter` (as tests/asylum.mjs), the hostel in its chapter 1–2 phase: the store full, Quetch and Grobo on
+it. Each spot: 5 s settle, 10 s measured (~565 frames), two passes (pass 1 / pass 2):
+| spot | frame mean / p95 / p99 ms | draw calls | triangles | GPU ms p50 / p95 | CPU submit p50 |
+|---|---|---|---|---|---|
+| Twinsen's house (ref) | 17.6 / 18.2 / 18.5 | 55 | 219k | 9.6 / 12.4 | 2.5 |
+| Citadel square (ref) | 17.7 / 18.2 / 18.4 | 136 / 147 | 589k / 598k | 10.3 / 16.2 | 6.5 / 6.9 |
+| Hostel dormitory | 17.6 / 18.2 / 18.5 | 78 | 135k | 10.7 / 14.6 · 9.7 / 11.0 | 3.5 |
+| Hostel mess | 17.8 / 18.3 / 18.5 | 129 | 178k | 10.1 / 13.2 | 5.2 |
+| Vesk's store | 17.7 / 18.2 / 18.5 | 63 | 149k | 9.4 / 13.1 | 2.9 |
+- Every spot holds the display's refresh (frames 17.6–17.8 ms, the refresh measured 17.5–17.8): no hostel spot costs
+  more than the square. The mess is the heaviest by calls (129, 35 of them in the shadow pass) but below the square in
+  triangles and GPU time. One frame over 33 ms in all ten windows (36 ms, mess pass 2), none over 50. No page or
+  console errors. Shader programs 148 → 150 on the hostel's first visit.
+- **The store's view:** about 40 % of the frame is black void below the store's floor at the iso view's edge
+  (`GPU-7/hostel-store.jpg`): the laptop's (ASYLUM-2), taken into order 8.
+- **Doors (Follow, walked out holding ArrowUp so `Game.doorStep` runs):** at the swap the camera is ~2.2 m behind and
+  2.1 m above his head (~43° down), easing out to its normal ~2.9 m back, 2.0 m up (~35°) within 0.3 s of the picture
+  showing, always straight behind him; never over his head (before: ~4.3 m up, 1.3 m back). All three moved the full
+  1 m.
+  - Twinsen's house: (−44.75, 77.2) → (−43.75, 77.2); lands in the front garden facing the white picket fence 1.5–2 m
+    ahead, the path to his right: his first view is a fence (`door-house-full-3s.jpg`); the picture shows 0.58 s after
+    the swap (the shops 0.30 s); the door's lamp post big in the corner.
+  - Bazoo's (museum): → (−64.05, 41.1), open grass facing the square: fine.
+  - Pharmacy: → (−56.05, −8.8), a wedge of dirt edged by kerbs, the square ahead: not blocked, a little boxed in.
+- **Sendell's call, the wide shot** (`sendell-wide-a.jpg`): Twinsen left, side-on, the whole fan and the flash ring
+  centre-right, reads clearly. Weakening it: the top-right quarter is black void (the lens looks over the chamber's
+  wall), the tallest crystals' tops cut by the frame's top, a mite in the bottom-right corner; on screen only 1.8 → 2.6 s
+  before the first line's face shot. Frame times there: mean 17.7, p99 18.5, GPU 8.8 / 10.0 ms; 60 calls, 213k tris.
+- Noticed, NOT VERIFIED (chapter 2 reached by `nextChapter`, not by play): the prologue cave's four mites ("well")
+  still count as present and idle in chapter 2 (simulation 1.4–2.1 ms at the hostel, small).
+- Pictures in `docs/future/world/GPU-7/` (chapters 1–2): hostel-dorm, hostel-mess, hostel-store, door-house-full-3s,
+  door-bazoo-full-3s, door-pharmacy-full-3s, sendell-wide-a.
+
+### GPU-7 · the cloud's answer (5.11.2026)
+- Sendell's wide shot: fixed (a24f3e0): lower (1.6 m) and wider (64°), looking a little higher; from two standing spots
+  the cave's walls now stand behind the fan, no void beside the wall; the whole fan, the ring, Twinsen on the left.
+  The dark band at the frame's top is the cave's own dark (no ceiling drawn). The mite stays (the cave's life).
+- The door step at Twinsen's house (facing his fence 1.5–2 m on): kept; it is his garden, the path is a step to the
+  right, and the camera is behind him, which was the point. The pharmacy's kerbed wedge: kept.
+- The prologue's mites present in chapter 2: by design (the well's cave keeps its living mites if he goes back; the
+  ones he beat stay down); their 1.4–2.1 ms is noted, not acted on.
+- The store's void: yours (order 8), as you wrote.

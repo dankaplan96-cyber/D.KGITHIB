@@ -70,5 +70,7 @@ Object.assign(STR.en, {
 
   // ---- Citadel's small pointers
   pp_plaque: "The plaque: 'Twinsen and Zoé, who ended FunFrock's rule. It began in his asylum.'",
+  pp_lh_dark: "(The lighthouse door. Locked. The lamp up top has been dark for years.)",
+  pp_lh_lit: "(The lighthouse door. Locked. The lamp turns overhead: whoever keeps it is up there now.)",
   pp_plaque_tw: "The asylum's past the fort's east wall. The project has guards there now. I wonder why.",
 });

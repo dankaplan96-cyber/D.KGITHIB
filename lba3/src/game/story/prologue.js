@@ -757,7 +757,9 @@ export class Prologue extends ChapterBase {
       fly: () => { const p = fit(at(-1.5, 2.8, 1.6), T), mid = head.clone().lerp(T, 0.5); return () => ({ pos: p, look: mid.clone().lerp(ballAt(), 0.45), fov: 54 }); },
       // the vein taking it in, wide from his open side and above: him on the left, the whole crystal fan and its flash
       // to the right (the user, 4.11: the close one was too tight: all crystal and the top of his head)
-      sink: () => still(at(-1.2, 3.0, 2.9), head.clone().lerp(T, 0.7).add(V3(0, -0.2, 0)), 58, 0.25, 1.5),
+      // (GPU-7, the laptop's real-GPU picture: from 2.9 m up the lens looked over the chamber's wall into the void on the
+      //  right; lower and a little wider, the cave's walls stand behind the fan)
+      sink: () => still(at(-1.6, 3.2, 1.6), head.clone().lerp(T, 0.7).add(V3(0, 0.35, 0)), 64, 0.2, 1.5),
       // his face in profile, lit by the vein, room ahead of his look
       face: () => still(at(0.35, 2.7, 1.95), V3(H.x + fx * 0.35, fy + 1.8, H.z + fz * 0.35), 36, 0.2, 3),
       // Sendell: low behind him, the vein blazing over him (he is small against it)
