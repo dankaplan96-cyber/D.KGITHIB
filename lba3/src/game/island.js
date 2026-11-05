@@ -1440,7 +1440,10 @@ function buildFortress(W, root, g) {
     const s = new THREE.Shape();
     s.moveTo(-GATE.half, -2.6); s.lineTo(GATE.half, -2.6); s.lineTo(GATE.half, top); s.lineTo(-GATE.half, top); s.lineTo(-GATE.half, -2.6);
     const hole = new THREE.Path(), hw = GATE.w / 2;
-    hole.moveTo(-hw, 0); hole.lineTo(hw, 0); hole.lineTo(hw, GATE.h - hw); hole.absarc(0, GATE.h - hw, hw, 0, Math.PI, false); hole.lineTo(-hw, 0);
+    // (the user, 5.11: "two kinds of floor one on the other under the gate": the opening began at the ground's height, so
+    //  the masonry under the passage made a second floor in the very plane of the paving and the two flickered. It
+    //  starts 0.4 m down now: the paving is the passage's only floor)
+    hole.moveTo(-hw, -0.4); hole.lineTo(hw, -0.4); hole.lineTo(hw, GATE.h - hw); hole.absarc(0, GATE.h - hw, hw, 0, Math.PI, false); hole.lineTo(-hw, -0.4);
     s.holes.push(hole);
     const geo = new THREE.ExtrudeGeometry(s, { depth: D, bevelEnabled: false, curveSegments: 16 });
     geo.rotateY(Math.PI / 2);
