@@ -394,6 +394,8 @@ export class Environment {
     this.hemi.color.copy(this._pal('hemiSky', s));
     this.hemi.groundColor.copy(this._pal('hemiGround', s));
     if (on) { this._wxLight(W); this._light(FLOOR_CITADEL); }
+    // a room may ask for less of the day's light (Zoé's office after hours: `R.dim`, set by Game.enterRoom)
+    if (this.interior && this.roomDim != null) { this.sun.intensity *= this.roomDim; this.hemi.intensity *= this.roomDim; }
 
     // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
     this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);

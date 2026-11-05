@@ -36,7 +36,9 @@ const b = await page.evaluate(() => {
     const L = G.room.searches.find((s) => s.id === 'locker2');
     for (let k = 0; k < 6 && !f.c1_plan; k++) { out['sn' + k] = P.sneakTo(L.x, L.z, G.story.cur.watcher, { tol: 0.9 }); out['use' + k] = P.use(L.x, L.z, { near: 0.9 }); P.wait(1.5); P.settle(); }
     out.plan2 = f.c1_plan;
-    const e = G.room.exits[0]; out.sneakOut = P.sneakTo(e.x, e.z, G.story.cur.watcher, { tol: 0.6 }); out.exit = P.through(e.x, e.z);
+    // (caught on the way out she starts again by the door, as a player would try again: up to four tries, as the
+    //  playthrough's segment 05; the guard is harder since the user's "too easy", 5.11)
+    const e = G.room.exits[0]; for (let k = 0; k < 4 && G.room?.id === 'projoffice'; k++) { out['sneakOut' + k] = P.sneakTo(e.x, e.z, G.story.cur.watcher, { tol: 0.6 }); out['exit' + k] = P.through(e.x, e.z); P.settle(); }
   }
   out.final = P.state(); out.zoeDone = f.c1_zoeDone; out.bodyEnd = G.hero.body;
   return out;

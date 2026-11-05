@@ -1408,6 +1408,7 @@ function buildControl(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'control', 1400, 0);
   const R = B.room, k = B.k;
   const W = 12, D = 9, H = 3.6, t = 0.5;
+  R.dim = 0.55;    // (the user, 5.11: "Zoé's scene too brightly lit": the office after hours, less of the day's fill)
   R.view = 11.8;   // (G1-QUEST #21: 13.6 showed the whole room small in the middle of the screen; closer, the camera follows him more)
   R.follow = 0.5;
   const doorX = 4.3, winX = -1.6, winW = 3.8, winY = 0.8, winH = 2.2;
