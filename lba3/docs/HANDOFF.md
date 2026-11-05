@@ -94,6 +94,19 @@ They were (for the record):
   (its teleport-and-use helper never turns valve 4; input segment 08 does), combat (dodge 30 vs 60 fps), camfollow
   (5 wall checks), doorcull (too slow on SwiftShader). Visual leftovers → CLOUD_ORDERS 14.
 
+- 5.11 evening, the user's playtest (each fixed, pictured, published; artifact v39 → v47): build stamp on the title and
+  pause screens (`src/build-stamp.js`, `sh tools/stamp-build.sh` before every publish; a newer published copy says
+  "reload"); dialogue advances by itself (Settings → Game → Dialogue Advances, on by default, off under automation);
+  the town well dry until chapter 2's water (`town.js setWater`); Doran dozes on the ground (rig pose `doze`, sleeps
+  through talk); Tobb's smock violet (two red Grobos); Vesk's speech over Twinsen's shoulder; the jump leans and tucks,
+  running landings lighter; the well cave's lamp posts to the back wall; the climb ramp filled level to its wall
+  (`climbRampFill`, applied after the house pads); the opening has no ferry at the pier (Vesk brings it in ch. 2); the
+  water main's ground collars and end caps; the fort gate's passage has one floor; magic no longer regenerates (LBA2);
+  FIDGET-1, CHEST-1, ASYLUM-3 applied. `.claude/settings.json` allows the tools (the user asked; read at session start).
+  Open: laptop orders 14–16 (visual leftovers; the climb's likeness; the asylum flight's top: squared, the trench, the
+  camera with the fort wall 2.5 m behind — the user was offered a camera change there, no answer yet); the overlap
+  sweep (an agent, worktree) running; the expansion merge of 5.11 being tested.
+
 ## Queue (after those)
 0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
