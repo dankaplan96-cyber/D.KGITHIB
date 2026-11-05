@@ -39,7 +39,7 @@ export class Chapter1 extends ChapterBase {
     const pe = W.pierEnd;
     return [
       { id: 'vesk', name: 'n_vesk', char: 'vesk', color: '#c8a8ff', x: pe.x + 2, z: pe.z + 1, angle: Math.PI / 2 },
-      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', x: pe.x + 4, z: pe.z - 1.2, angle: 0, anim: 'use' },
+      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', x: pe.x + 6.5, z: pe.z + 0.9, angle: -1.42, anim: 'use' },
       { id: 'guard', name: 'n_guard', char: 'guard', color: '#9fe0d0', x: pe.x + 5, z: pe.z + 1.5, angle: Math.PI / 2 },
     ];
   }
@@ -79,10 +79,13 @@ export class Chapter1 extends ChapterBase {
         if (f.c1_zoeDone) return PAD ? PAD.vesk : gateIn;
         return R.control?.npcSpots?.vesk ?? gateIn;
       case 'worker':
-        if (!f.c1_water) return { x: pe.x + 3.5, z: pe.z - 1.1, a: 0, anim: 'use' };
+        // (POLISH-A: on the pier's north side, working toward the crane's mast, 3.4 m from Xil and clear of Vesk's way off
+        //  the gangway: he stood 0.6 m from Xil's middle, the two bodies in each other)
+        if (!f.c1_water) return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
         return R.control?.npcSpots?.worker ?? { x: gateIn.x + 2, z: gateIn.z + 2, a: 0 };
       case 'guard':
-        if (!f.c1_water) return { x: ps.x - 1, z: ps.z - 1.6, a: -Math.PI / 2 };
+        // (POLISH-A: on the quay beside the way onto the pier: he stood in the harbour bell's post and the mouth's pillar)
+        if (!f.c1_water) return { x: ps.x + 0.6, z: ps.z - 1.4, a: -Math.PI / 2 };
         if (f.c1_zoeStart && !f.c1_zoeDone) return R.projoffice ? { x: R.projoffice.patrol[0][0], z: R.projoffice.patrol[0][1], a: 0 } : null;
         return { x: W.gate.x + 1.2, z: W.gate.z + 2.6, a: -Math.PI / 2 };
       case 'zoe':
