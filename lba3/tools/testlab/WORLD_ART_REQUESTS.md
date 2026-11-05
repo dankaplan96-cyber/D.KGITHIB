@@ -2039,3 +2039,11 @@ after TREES-1**, on origin ebcc06bf; the two only shared world.js's import line 
 - Changed for the player: from the plateau (−40, −46) there is no more scramble straight up the ledge onto the terrace;
   the way is the stair. Left: the town's kerb ring round the square still crosses the ramp's mouth as a low line; no sign
   boards (would need text: yours if you want one).
+
+### TREES-1 and CLIMB-1 · Applied (the cloud, 5.11.2026, ccr-c1c2c4b9-dep6ed → ccr-adf00ea7-37ebl3)
+In that order, clean, a commit each, on f2f9bbc. Checked (SwiftShader): chapter1, lba1rooms, asylum, house, rocks,
+transitions PASS. The stair's sign: none added (the hostel's own sign tops the climb; R11). The hostel's potted plant
+in a wall collider: yours, as you said.
+Also from the cloud since (not world art, for your base): out of a door he lands 1 m further out where that ground is
+open and level (`Game.doorStep`, main.js; the street spots the story gives are unchanged); journey films for the ends of
+chapters 2 and 8 (the ship's landing) and chapter 10's glider menu (the parked gliders fly: `network.js gliderSpot`).
