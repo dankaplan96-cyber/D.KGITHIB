@@ -21,7 +21,7 @@ import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
-import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry } from './lba1places.js';
+import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
@@ -336,6 +336,8 @@ function islandHeight0(x, z) {
   if (k > 0) h = lerp(h, townCoreHeight(x, z), k);
   return h;
 }
+// the ramp's height on its axis, as islandHeight0 had it before the fill
+function rampAxisHeight(x, z) { let h = pathRamp(x, z, baseHeight(x, z)); const k = townKeep(x, z); return k > 0 ? lerp(h, townCoreHeight(x, z), k) : h; }
 // WORLD-FIX: every house stands on its own level floor (town.js HOUSE_FLATS): the ground under its footprint and a
 // margin round it at the height of the ground before its door, easing back to the land beyond. Applied last, so
 // no ramp, rise or town noise tilts a house again. (The ground round each house was measured by tests/worldfit.mjs.)
@@ -354,7 +356,8 @@ function houseFlats(x, z, h) {
   return h;
 }
 export function islandHeight(x, z) {
-  return houseFlats(x, z, islandHeight0(x, z));
+  // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
+  return climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight);
 }
 export const debugHeight = islandHeight;
 
