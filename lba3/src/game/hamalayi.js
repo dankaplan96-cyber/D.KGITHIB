@@ -294,7 +294,7 @@ export function* buildHamalayiSteps(scene, physics) {
     if (fp.smoke) { const [sx, sz] = loc(x, z, ry, fp.smoke[0], fp.smoke[2]); smokes.push({ x: sx, y: gy + fp.smoke[1], z: sz }); }
     const ridge = (s) => { const [px, pz] = loc(x, z, ry, s * (fp.ridge.hx - 0.1), 0); return [px, gy + fp.ridge.y + 0.05, pz]; };
     const cs = Math.cos(ry), sn = Math.sin(ry), dx = w * (o.door ?? 0.4) - w / 2 + 0.5;
-    const hs = { x, z, ry, w, d, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
+    const hs = { x, z, ry, w, d, hw: fp.hw ?? w / 2, hd: fp.hd ?? d / 2, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
     houses.push(hs); keep.push(['door', hs.door.x - ox, hs.door.z - oz, 1.1]);
     return hs;
   };
@@ -673,6 +673,11 @@ export function* buildHamalayiSteps(scene, physics) {
       list.push({ x, y: H(x, z) - 0.1, z, ry: (x * 7.3 + z) % 6, s, color: '#d8e4dc' });
     }
     for (let i = list.length - 1; i >= 0; i--) if (lba1.within(list[i].x, list[i].z, 1.2)) list.splice(i, 1);   // (the four places of LBA1's Hamalayi stand clear)
+    // TREES-1: no pine with its boughs through a house's walls (one stood 1.5 m off Lhar's third house, its lowest tiers
+    // half a metre into the wall): its trunk at least its widest tier's reach (1.67 m at scale 1, vegetation.js) from the
+    // house's eaves. Filtered like the two above: no random draw moves.
+    const eaves = (h, x, z) => { const dx = x - h.x, dz = z - h.z, c = Math.cos(h.ry), s = Math.sin(h.ry), ax = Math.abs(dx * c - dz * s) - h.hw, az = Math.abs(dx * s + dz * c) - h.hd; return ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az); };
+    for (let i = list.length - 1; i >= 0; i--) if (houses.some((h) => eaves(h, list[i].x, list[i].z) < 1.67 * list[i].s)) list.splice(i, 1);
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
     const rocks = [];

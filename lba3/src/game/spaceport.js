@@ -24,7 +24,7 @@ import { mergeStatic } from '../engine/merge.js';
 
 // the platform: east of the town over the bay (the shore is at x ≈ −26 at ground level 2.3 m)
 const DECK = { x0: -14, x1: 14, z0: 26, z1: 54 };
-const BRIDGE = { x0: -31, x1: -13.6, z: 40, hw: 2.0 };
+export const BRIDGE = { x0: -31, x1: -13.6, z: 40, hw: 2.0 };   // (world.js keeps the scatter off its deck: TREES-1)
 const PAD = { x: 4.5, z: 41 };
 const RAIL_H = 1.1;
 
