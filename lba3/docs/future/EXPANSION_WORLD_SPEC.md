@@ -248,11 +248,23 @@ player re-latch crane B and retry, N1).
 
 ---
 
-## W-2 · The Arch District (Draft, the coordinator reviews)
+## W-2 · The Arch District · **Ordered** (the coordinator, 5.11.2026, after the user accepted W-1 on 4.11)
 
 The district under and on Ballastra's great arch, the skyline anchor already seen from the harbour. About 25–30 minutes
 of play across N3 and OP-5, with return visits in N6 and the postgame. Lived in, not a set: homes, a market, a meeting
 place, and the old pump machinery under the arch that explains the planet's history without a panel.
+
+**The coordinator's review (the user's note on W-1: "Ballastra lacks real uniqueness beyond its colours").** W-2 is
+where Ballastra must read as itself, not as a recoloured Zeelich or Citadel. Its one idea is **a city that lives by the
+water's level**, and every part of the district shows it in form, not paint:
+- things built to rise and fall: floats on chains, stilts with several doorstep heights, boats tied at two levels,
+  gangways on hinges, washing lines that run from the high floor, not the low one;
+- the record of the water everywhere: bands of old water lines on every wall, a painted level gauge on the arch's
+  pier (no words), shells and weed dried at the old marks, doorsteps worn at three heights;
+- the arch's silhouette and the pump machinery (glazed ceramic and bronze, D3) as the only big shapes; no domes or
+  towers borrowed from the base game's places; houses narrow and tall with their living floor on top.
+In the pictures, show the district at canal levels 0 and 1 side by side from the same play-camera spot: the change
+should be readable at a glance. Measure as W-1 (at or under the Citadel street on the laptop's GPU).
 
 **The place.** Its own lazy group, `bl_arches`, entered from W-1's `districtEdge` and the shortcut.
 - **The arch:** one great weathered stone arch (D3), its feet in the water, its underside hung with homes.
