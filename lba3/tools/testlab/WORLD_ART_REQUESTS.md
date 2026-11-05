@@ -2282,3 +2282,38 @@ covers it):
 (reverted: your `R.indoor` lighting covers it); the cloud keeps Zoé's harder guard (enemies.js Watcher notice/cool/speed/
 glance, chapter1.js range 7.5, fov 0.82). The gate's flicker was already fixed (island.js: the hole starts 0.4 m down).
 Tests queued (SwiftShader); results in HANDOFF.
+
+## CHARS-1 · The Grobos' trunks and a pass over the cast · the laptop, 6.11.2026 (the user: "go over all the characters, mainly the elephants: their trunk doesn't look good")
+**Not a diff file: branch `laptop/CHARS-1`** (one commit, b5ca51e, on 4154e08): 38 model files in `assets/poly/` are
+single-line JSON, so the diff was 53 MB. Merge or cherry-pick it. Files: characters.js, rig.js (the trunk block only),
+tools/blender/{lbapoly,cast_poly,baldino_poly}.py, art/characters/skeletons.json (3 trunk bones added for the 10
+generic Grobos, nothing else changed), assets/poly (the 11 Grobos, 24 seam looks, vesk, zmole1, zmole2). Rebuilt with
+the repo's own Blender scripts through a small stand-in bpy/mathutils (no Blender on the laptop), checked first by
+rebuilding doran, guard and baldino from the old sources: same to 2.7 mm. `assets/bake.bin` untouched.
+- **What was wrong (measured):** LBA2's Grobo (body 99, numbers only): the trunk leaves the face just below the eyes
+  (0.72 H), arcs about 0.2 H out in front of the belly, hangs to the belt (0.29 H), about even thickness. Ours, the 10
+  generic Grobos (doran, guard, vguardG, councilC, farmerC, yorna, pim, hesk, desertTrader, bram): four straight thin
+  tubes (r 0.10 → 0.05) kinked at each join, two squashed balls like pipe clamps, a ball on the tip, hanging straight down
+  against the belly, rigid to the head, clipping into the body up to 16 cm. Baldino: nine 10-sided rings joined
+  straight (a fold where it turns down), a flat cut tip, height-only weights; it swayed 28° at the tip walking.
+- **The fix:** one smooth tube for every Grobo (`lbapoly.trunk_loft`: a curve through the control points, the radius
+  tapering on it, 10 sides, rings every 6.5 cm, three faint wrinkles, a rounded tip) with weights handed over along its
+  length (`trunk_weights`: head → trunk0 → trunk1 → trunk2). Generic Grobos: the curve from `grobo_trunk()` (cast_poly.py)
+  = `groboTrunk()` (characters.js, which places the bones on it; the build warns if they differ): out from the muzzle,
+  over the belly 8.5 cm clear, to the belt with the tip flicked forward, r 0.125 → 0.064. Baldino: his own centre line
+  on the smooth curve. rig.js: walk sway 0.35 → 0.21 per bone, each lower bone a little later (tip ~15–18°; Baldino 28.3
+  → 17.6°), a small idle breathing curl, a lift while talking, forward/back rotation capped at +0.02 so it never swings
+  into the belly. Clipping 0 for every Grobo in idle, walk and run (talk: 3.6 cm on pim, 0.3 on farmerC at the chin).
+- **The pass over the cast** (all 55 looks, idle/walk/run/talk, ranked by how visible in play): 2. the waist seam on 24
+  Quetch/Rabbibunny looks: the tunic top (torso bone) and skirt (hips bone) shared one ring, so walking opened a 3–5 cm
+  gap and the skirt edge poked through the belt: one torso-to-hips hand-over for both and for the belt, buckle, bow and
+  pouch (SEAM-1), tears 0 (≈1 cm left on tim, nell, lharWoman's hair). 3. Vesk's coat front: its violet strip spread to
+  a 20 cm wedge at the hem in every stride (stretched 13–15×): it moves with the coat's centre line now (≤ 3.5×). 4. The
+  moles (zmole1/2): sleeve and forearm 5–6 cm apart at the elbow running/talking: 0. Left: long robes and dresses
+  stretch ~3× between the legs (cloth would need a redesign); Twinsen's cape (JUMP-CAPE, as designed); lharWoman's hair
+  tail 3.3 cm in run; the Esmers' strong lean in walk.
+- Cost: draw calls unchanged (the trunk is in the body mesh); +1,120 triangles in all (Baldino +440). Tests
+  (SwiftShader): anim-polish, solidnpc, chapter1 PASS; npc-feet 2 FAIL in "residents in play" (foot slip, stops into
+  standing), which the base also failed once: traced to FarCull putting the walkers on the far animation rate (lodN 8)
+  differently from run to run; not settled, worth a run on your side.
+- Pictures (Citadel's cast, chapters 1–2): `docs/future/world/CHARS-1/` (before above, after below).
