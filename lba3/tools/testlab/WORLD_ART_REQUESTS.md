@@ -2170,3 +2170,15 @@ cause, so look at it by eye when you apply (open the chest from the depot path).
 **CHEST-1 · the cloud's answer (5.11):** applied as your diff (`island.js chestGeo` only). Checked by picture in
 SwiftShader from three sides, closed and open: closed it looks as before; open, the lid stands up over an open box
 with its floor and walls showing, the straps on the front and back only. Nothing else changed.
+## FIDGET-1 · People (and Twinsen) standing with their hands up · the laptop, 5.11.2026 (the user: "it's strange that the characters stand and raise their hands, it isn't natural, Twinsen too")
+Cause: rig.js's idle fidgets. Every idle rig picks one of five fidgets every 5–12 s, all equally likely; two of them
+raise the arms: 3, a head scratch (right arm −2.4 rad), and 4, a stretch with both arms straight up (−2.7 rad). So 40 %
+of fidgets were hands in the air, and in any group someone always had them up. `requests/FIDGET-1.diff` (rig.js only;
+applies alone on origin):
+- The pick is weighted to the quiet ones: a look round 35 %, the weight shifted 30 %, a glance up 20 %, a scratch 12 %,
+  3 % nothing. The stretch only once the rig has stood idle 30 s without a break (`_idleT0`, reset when idle stops for
+  0.5 s), and once in that wait (`_stretched`). 7–14 s between fidgets (was 5–12).
+- The scratch: the hand to the back of the head, the elbow out (arm −2.1, elbow −2.1). The stretch: the hands behind
+  the head (arms −2.0, elbows −1.7), no longer both arms straight up.
+- Tests that measure poses still switch the fidgets off with `fidgetT = 99` (anim-polish, npc-feet): unchanged. Syntax
+  checked; not run in the game yet (worth a look at the square's crowd when you merge).
