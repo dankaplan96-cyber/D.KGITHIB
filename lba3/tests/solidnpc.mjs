@@ -36,8 +36,11 @@ await ev(() => {
   // ISO: put Twinsen at (x, z) facing a, standing still
   SN.put = (x, z, a) => { const h = G.hero; P.release(); h.pos.set(x, Pk.groundAt(x, z, h.pos.y + 5), z); h.prevPos.copy(h.pos); h.angle = a; h.resetMotion(); h.onGround = true; h.vy = 0; h.passing = null; h.pressT = 0; h.sync(); G.step(1 / 30); };
   // a free approach to a body: the direction (of 16) whose 6 m line to it is clear of bricks and of other people
+  // (POLISH-A, 5.11: a line through a house's door is no approach: walking it takes him into the house — the old story-person
+  //  case picked Zoé at the neighbours' door, went in, and every check after it ran with the hero still "inside")
+  const DOORS = () => (G.world.houses || []).filter((q) => q.door).map((q) => q.door);
   SN.approach = (b, len = 6, alone = true) => {
-    const h = G.hero, out = [];
+    const h = G.hero, out = [], doors = DOORS();
     // (a body on its own: nobody else within 2.2 m, so going round it is going round one person)
     if (alone && G.npcs.some((n) => n !== b && n.present && Math.hypot(n.pos.x - b.pos.x, n.pos.z - b.pos.z) < 2.2)) return out;
     for (let i = 0; i < 16; i++) {
@@ -47,11 +50,30 @@ await ev(() => {
         const x = b.pos.x - ux * s, z = b.pos.z - uz * s;
         for (const w of [-0.6, 0, 0.6]) { const px = x + uz * w, pz = z - ux * w; if (Pk.blockedAt(px, pz, b.pos.y, 0.45) || Math.abs(Pk.groundAt(px, pz, b.pos.y + 0.5) - b.pos.y) > 0.4) ok = false; }
         for (const n of G.npcs) if (n !== b && n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 1.1) ok = false;
+        for (const d of doors) if (Math.hypot(d.x - x, d.z - z) < 1.6) ok = false;
       }
       if (ok) out.push(a);
     }
     return out;
   };
+  // ISO (POLISH-A, 5.11): an open place in the town for a body whose own place has no free approach. Since BENCHES-1 and
+  // DECLUTTER every resident's stop is by something (its bench, its door, a pile, the well, a sign: a brick within 1.5 m),
+  // so the walk-into cases put the body on open paving near the square for the walk (and put a story person back after).
+  SN.openSpot = (b) => {
+    const y0 = Pk.terrain.heightAt(-42, 8);
+    for (let ring = 6; ring <= 40; ring += 2) for (let k = 0; k < 24; k++) {
+      const a = (k / 24) * Math.PI * 2, x = -42 + Math.sin(a) * ring, z = 8 + Math.cos(a) * ring, y = Pk.groundAt(x, z, y0 + 2);
+      if (G.npcs.some((n) => n !== b && n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 3.5)) continue;
+      const save = { x: b.pos.x, y: b.pos.y, z: b.pos.z };
+      b.pos.set(x, y, z);
+      const n = SN.approach(b, 6, true).length;
+      b.pos.set(save.x, save.y, save.z);
+      if (n >= 6) return { x, y, z };
+    }
+    return null;
+  };
+  // the room he is in (null outdoors): every walk case starts and ends outdoors
+  SN.room = () => G.room?.id ?? null;
   // walk with the keys toward a moving or standing body (the direction fixed at the start: the player holds a heading)
   // mode: 'classic' (face, hold Up) | 'modern' (the arrow pair nearest the heading, read against the view each frame)
   SN.walk = (b, { a, off = 0, from = 3.5, T = 4, dt = 1 / 60, mode = 'classic', long = 0, run = false } = {}) => {
@@ -111,20 +133,29 @@ const report = [];
 const walkCase = async (label, setup, opts, expect = {}) => {
   const r = await ev(({ setup, opts }) => {
     const ids = setup.id.split('|');
-    let b = null;
-    for (const id of ids) { const n = SN.npc(id); if (n && n.present && !n.sit && !n.inside && SN.approach(n, 6).length) { b = n; break; } }
-    if (!b) return { err: 'no free approach to ' + setup.id };
+    let b = null, moved = null;
+    for (const id of ids) { const n = SN.npc(id); if (n && n.present && !n.sit && !n.inside && Math.abs(n.pos.x) < 300 && SN.approach(n, 6).length) { b = n; break; } }
+    if (!b) {   // (none has a free approach where it stands: the first of them on Citadel's streets, put on open paving: SN.openSpot)
+      const n = ids.map((id) => SN.npc(id)).find((q) => q && q.present && !q.sit && !q.inside && !q.away && Math.abs(q.pos.x) < 300);
+      const sp = n && SN.openSpot(n);
+      if (!sp) return { err: 'no free approach to ' + setup.id + ' and no open spot' };
+      b = n; moved = { x: b.pos.x, y: b.pos.y, z: b.pos.z, a: b.angle };
+      b.pos.set(sp.x, sp.y, sp.z); b.prevPos?.copy(b.pos); b.sync();
+    }
     if (b.ambient) SN.holdRes(b, 120);
     const as = SN.approach(b, 6);
     if (!as.length) return { err: 'no free approach to ' + setup.id };
     const a = as[setup.pick != null ? Math.min(setup.pick, as.length - 1) : Math.floor(as.length / 2)];
     const m = SN.walk(b, { a, ...opts });
     if (b.ambient) b.hold = 0;
-    return { id: b.def.id, a: +a.toFixed(2), ...m };
+    const room = SN.room();
+    if (moved && !b.ambient) { b.pos.set(moved.x, moved.y, moved.z); b.angle = moved.a; b.sync(); }
+    return { id: b.def.id, a: +a.toFixed(2), open: moved ? 'moved to open paving' : 'at its own place', room, ...m };
   }, { setup, opts });
   report.push([label, r]);
   console.log(label, JSON.stringify(r));
   if (r.err) { check(label + ': set up', false, r.err); return r; }
+  if (r.room) check(`${label}: the walk stays in the street (it went into ${r.room}: a test set-up error)`, false, r);
   check(`${label}: never inside the body (min gap ${r.minGap} m, overlapping frames ${r.overlapFrames})`, r.minGap > -0.03 && r.overlapFrames === 0, r);
   check(`${label}: never launched (fastest frame ${r.maxStep} m/s)`, r.maxStep < (opts.run ? 6.5 : 3.2), r.maxStep);
   check(`${label}: no jitter along the body (side changes in contact: ${r.flips})`, r.flips <= 1, r.flips);
@@ -191,7 +222,12 @@ check('the story\'s people stay where the story put them (never moved by him)', 
 // ---- talking: he can still get within talk range of each (the girth leaves the interaction distance reachable)
 const talks = await ev(() => { const out = {};
   for (const ids of ['tobb|marda|dot', 'sphero1|sphero2', 'gilbert|pippa|joe', 'tilde|maro|ume']) {
-    let b = null; for (const id of ids.split('|')) { const n = SN.npc(id); if (n && n.present && !n.sit && !n.inside && SN.approach(n, 4).length) { b = n; break; } }
+    let b = null; for (const id of ids.split('|')) { const n = SN.npc(id); if (n && n.present && !n.sit && !n.inside && Math.abs(n.pos.x) < 300 && SN.approach(n, 4).length) { b = n; break; } }
+    if (!b) {   // (as the walks: the first on the street, on open paving: SN.openSpot)
+      const n = ids.split('|').map((id) => SN.npc(id)).find((q) => q && q.present && !q.sit && !q.inside && !q.away && Math.abs(q.pos.x) < 300);
+      const sp = n && n.ambient && SN.openSpot(n);
+      if (sp) { b = n; b.pos.set(sp.x, sp.y, sp.z); b.sync(); }
+    }
     const id = b?.def.id || ids; if (!b) { out[id] = { err: 'no approach' }; continue; }
     if (b.ambient) SN.holdRes(b, 60);
     const as = SN.approach(b, 4); if (!as.length) { out[id] = { err: 'no approach' }; continue; }
@@ -207,27 +243,36 @@ check('walking up to each (Grobo, Sphero, story person, Rabbibunny) and pressing
 const walking = await ev(() => { const G = game, W = G.walkers, h = G.hero, out = [];
   W.force = 0;
   // a resident on a long straight leg (2.5 m ahead of it at least), in the open
-  const pickWalker = (minLeft = 6) => {
+  // where he starts for each kind of meeting (head on: 5 m up its leg; from the side: 3.2 m off its line where it will be
+  // in 2.4 s; in its way: 4 m up its leg)
+  const startFor = (kind, r, dx, dz) => {
+    if (kind === 'head on') return [r.pos.x + dx * 5, r.pos.z + dz * 5, Math.atan2(-dx, -dz)];
+    if (kind === 'from the side') { const t = 2.4 * r.speed; return [r.pos.x + dx * t + dz * 3.2, r.pos.z + dz * t - dx * 3.2, Math.atan2(-dz, dx)]; }
+    return [r.pos.x + dx * 4, r.pos.z + dz * 4, Math.atan2(-dx, -dz)];
+  };
+  // (POLISH-A, 5.11: the first walker on a long leg could have a wall where he was to start from the side: "start in a
+  //  brick". The pick now takes the first whose start for this kind is clear, on its ground, away from house doors)
+  const pickWalker = (kind, minLeft = 6) => {
     for (let k = 0; k < 900; k++) {
       for (const r of W.res) {
         if (r.st !== 'walk' || !r.path || r.tier !== 0 || Math.abs(r.pos.x) > 300) continue;
         const w = r.path[Math.min(r.wi, r.path.length - 1)], d = Math.hypot(w.x - r.pos.x, w.z - r.pos.z);
-        if (d > minLeft) return r;
+        if (d <= minLeft) continue;
+        const dx = (w.x - r.pos.x) / d, dz = (w.z - r.pos.z) / d, [hx, hz] = startFor(kind, r, dx, dz);
+        if (G.physics.blockedAt(hx, hz, r.pos.y, 0.5) || Math.abs(G.physics.groundAt(hx, hz, r.pos.y + 0.5) - r.pos.y) > 0.4) continue;
+        if ((G.world.houses || []).some((q) => q.door && Math.hypot(q.door.x - hx, q.door.z - hz) < 2)) continue;
+        return r;
       }
       G.step(1 / 30);
     }
     return null;
   };
   for (const kind of ['head on', 'from the side', 'standing in its way']) {
-    const r = pickWalker(); if (!r) { out.push({ kind, err: 'no walker on a long leg' }); continue; }
-    const w = r.path[r.wi], ux = (w.x - r.pos.x), uz = (w.z - r.pos.z), l = Math.hypot(ux, uz), dx = ux / l, dz = uz / l;
+    const r = pickWalker(kind); if (!r) { out.push({ kind, err: 'no walker on a long leg with a clear start' }); continue; }
+    const w = r.path[Math.min(r.wi, r.path.length - 1)], ux = (w.x - r.pos.x), uz = (w.z - r.pos.z), l = Math.hypot(ux, uz), dx = ux / l, dz = uz / l;
     const R = SN.R(r), m = { kind, id: r.def.id, minGap: 9, overlap: 0, heroMoved: 0, maxStep: 0, rMoved: 0, ri0: r.ri, wi0: r.wi };
     const r0 = { x: r.pos.x, z: r.pos.z };
-    let hx, hz, ha;
-    if (kind === 'head on') { hx = r.pos.x + dx * 5; hz = r.pos.z + dz * 5; ha = Math.atan2(-dx, -dz); }
-    else if (kind === 'from the side') { const t = 2.4 * r.speed; hx = r.pos.x + dx * t + dz * 3.2; hz = r.pos.z + dz * t - dx * 3.2; ha = Math.atan2(-dz, dx); }
-    else { hx = r.pos.x + dx * 4; hz = r.pos.z + dz * 4; ha = Math.atan2(-dx, -dz); }
-    if (G.physics.blockedAt(hx, hz, h.pos.y, 0.5)) { out.push({ kind, err: 'start in a brick' }); continue; }
+    const [hx, hz, ha] = startFor(kind, r, dx, dz);
     SN.put(hx, hz, ha);
     const hs = { x: h.pos.x, z: h.pos.z };
     let prev = { x: h.pos.x, z: h.pos.z };
@@ -258,13 +303,16 @@ for (const m of walking) {
 // ---- a resident he presses on gives way; nothing pushes a resident through a wall
 const give = await ev(() => { const G = game, W = G.walkers, h = G.hero;
   const r = SN.npc('garrick');   // (the gardener, at his flower bed or the well)
+  // (POLISH-A: where he is now may have no free line in — by a door, a bed's edge: he is put on open paving first, as the walks)
+  let open = 'at its own place';
+  if (!SN.approach(r, 6, false).length) { const sp = SN.openSpot(r); if (!sp) return { err: 'no free approach to garrick and no open spot' }; r.pos.set(sp.x, sp.y, sp.z); r.sync(); open = 'moved to open paving'; }
   const a = SN.approach(r, 6, false)[0];
   SN.holdRes(r, 30); const st = r.st;
   const s0 = { x: r.pos.x, z: r.pos.z };
   const m = SN.walk(r, { a, off: 0, T: 3 });
   const inBrick = G.physics.blockedAt(r.pos.x, r.pos.z, r.pos.y, 0.3);
   r.hold = 0;
-  return { st, gave: r.log.some((l) => l.includes('gives way')), moved: +Math.hypot(r.pos.x - s0.x, r.pos.z - s0.z).toFixed(2), inBrick, minGap: m.minGap, passed: m.passed };
+  return { st, open, gave: r.log.some((l) => l.includes('gives way')), moved: +Math.hypot(r.pos.x - s0.x, r.pos.z - s0.z).toFixed(2), inBrick, minGap: m.minGap, passed: m.passed };
 });
 console.log('give way', JSON.stringify(give));
 check('a resident standing at its stop that Twinsen walks on into steps out of his way (not into a wall), and he never overlaps it', give.gave && give.moved > 0.3 && give.minGap > -0.03 && !give.inBrick, give);
@@ -367,7 +415,8 @@ const benchCheck = async (filter, shotsOK) => {
           if (bz > sp.back && bz < sp.front) lowest = Math.min(lowest, y - top); } });
       const st = r.st;
       for (const q of W.res) q.away = null;
-      return { id, sid: s.id, char: r.def.char, carry, st, n, under, behind, deep: +deep.toFixed(3), dy: +dy.toFixed(2), rest: +lowest.toFixed(3), pos: [r.pos.x, r.pos.y, r.pos.z], a: r.angle };
+      const sits = r.canSit(), inBrick = !r.sit && G.physics.blockedAt(r.pos.x, r.pos.z, r.pos.y, 0.15);   // (one who cannot sit stands by the bench, clear of it)
+      return { id, sid: s.id, char: r.def.char, sits, inBrick, carry, st, n, under, behind, deep: +deep.toFixed(3), dy: +dy.toFixed(2), rest: +lowest.toFixed(3), pos: [r.pos.x, r.pos.y, r.pos.z], a: r.angle };
     }, { id, i });
     res.push(m);
     console.log('bench', JSON.stringify(m));
@@ -383,22 +432,35 @@ const benchCheck = async (filter, shotsOK) => {
   return res;
 };
 const benchC = await benchCheck('citadel', true);
-check(`Citadel: every resident seated at each of its ${benchC.length} bench stops sits ON the seat: no part of the body under the seat's top or behind the backrest, the bottom resting on the seat`,
-  benchC.length >= 10 && benchC.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchC.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+// (since 2.11 a long dress or robe to the ankles does not sit — walkers.js canSit, the user's photo by the statue: its rigid
+//  skirt went through the slats — Oda, Marda and Ume stand by their benches, as an Esmer does on Zeelich: checked clear of it)
+check(`Citadel: at each of its ${benchC.length} bench stops a resident sits ON the seat (no part of the body under the seat's top or behind the backrest, the bottom resting on the seat), or, one who cannot sit (a dress to the ankles), stands by the bench clear of it`,
+  benchC.length >= 10 && benchC.filter((m) => m.sits).length >= 6 && benchC.every((m) => m.sits ? m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06 : m.st === 'dwell' && m.under === 0 && m.behind === 0 && !m.inBrick), benchC.map((m) => [m.sid, m.char, m.sits ? 'sits' : 'stands', m.under, m.behind, m.rest, m.inBrick]));
 
-// two rounds share a bench (Brix's lane2 and Ume's b2): one sits, the other comes and stands by it (never two on one seat)
+// two rounds share a bench (Brix's lane2 and Ume's b2): one sits, the other comes and stands by it (never two on one seat).
+// (Ume, a robe to the ankles, no longer sits since 2.11: Brix sits first and Ume comes; then the seat-taken rule itself, with
+//  Dot, who does sit, sent to Brix's taken bench)
 const share = await ev(() => { const G = game, W = G.walkers, ume = W.res.find((r) => r.def.id === 'ume'), brix = W.res.find((r) => r.def.id === 'brix');
   const iu = ume.stops.findIndex((s) => s.id === 'ume_b2'), ib = brix.stops.findIndex((s) => s.id === 'brix_lane2');
   for (const q of W.res) if (q !== ume && q !== brix) q.away = 'test';
   brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.st = 'dwell'; brix.tmr = 999;   // (Brix up from any bench first)
+  brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.arrived(brix.stops[ib], true); brix.tmr = 999; G.step(1.0, 1 / 30); brix.tmr = 999;
   ume.ri = iu; ume.slotAt(ume.stops[iu]); ume.arrived(ume.stops[iu], true); ume.tmr = 999; G.step(1.0, 1 / 30); ume.tmr = 999;
-  brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.arrived(brix.stops[ib], true); brix.tmr = 999; G.step(1.0, 1 / 30);
   const d = Math.hypot(ume.pos.x - brix.pos.x, ume.pos.z - brix.pos.z), out = { ume: ume.st, brix: brix.st, d: +d.toFixed(2), R: +(ume.bodyR + brix.bodyR).toFixed(2) };
+  // (the rule for two who both sit: Dot, at Brix's taken bench, stands by it)
+  //  (Ume off the street for it; Dot given Brix's stop as a stop of its own for the moment, then its round back)
+  const dot = W.res.find((r) => r.def.id === 'dot'); dot.away = null; ume.away = 'test';
+  const s2 = { ...brix.stops[ib], id: 'test_share', pair: undefined, play: undefined, dur: [999, 999] };
+  const ri0 = dot.ri; dot.stops.push(s2); dot.ri = dot.stops.length - 1;
+  W.force = 0; dot.slotAt(s2); dot.arrived(s2, true); dot.tmr = 999; G.step(1.5, 1 / 30); W.force = null;
+  out.dot = dot.st; out.dotSits = dot.canSit(); out.d2 = +Math.hypot(dot.pos.x - brix.pos.x, dot.pos.z - brix.pos.z).toFixed(2); out.R2 = +(dot.bodyR + brix.bodyR).toFixed(2);
+  dot.stops.pop(); dot.ri = ri0; dot.reset();
   for (const q of W.res) q.away = null; brix.tmr = 0; ume.tmr = 0;
   return out; });
 console.log('shared bench', JSON.stringify(share));
-check('a bench two rounds share holds one sitter: the second stands by it, clear of the first', share.ume === 'seated' && share.brix === 'dwell' && share.d >= share.R - 0.05, share);
+check('a bench two rounds share holds one sitter: the second stands by it, clear of the first (Ume by Brix; Dot, who sits elsewhere, by Brix\'s taken seat)', share.brix === 'seated' && share.ume === 'dwell' && share.d >= share.R - 0.05 && share.dotSits && share.dot === 'dwell' && share.d2 >= share.R2 - 0.05, share);
 
+// (every Citadel resident who sits, once each: Brix, Maro, Tilde, Dot — four since 2.11's dress rule, five before)
 // a resident that sits down while nobody sees it (the abstract tier: far or out of the view) is on its seat when it comes
 // into view, not where it stood at the stop's slot, on the ground in the bench (the user, 30.10: "near the statue a woman
 // sits INSIDE the bench" — walkers.js abstract 'sitin')
@@ -416,7 +478,7 @@ const absSit = await ev(() => {
   return out; });
 console.log('abstract sit', JSON.stringify(absSit));
 check('a resident who sat down unseen (the abstract tier) is on its seat when seen, not in the bench at the stop\'s slot',
-  absSit.length >= 5 && absSit.every((m) => m.st === 'seated' && m.xz < 0.05 && Math.abs(m.y) < 0.05), absSit);
+  absSit.length >= 4 && absSit.every((m) => m.st === 'seated' && m.xz < 0.05 && Math.abs(m.y) < 0.05), absSit);
 
 // Zeelich's street (built for this check; its benches are of their own shape) — numbers only, no captures (not a chapter 1–2 place)
 const zb = await ev(async () => { const G = game; await G.regions.buildAsync(['zeelich'], 'test', async () => {}); G.enterRoom('zeelich', null, true, true); G.step(1.0);

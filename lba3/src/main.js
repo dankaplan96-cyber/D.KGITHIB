@@ -59,6 +59,7 @@ import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/i
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { t, setLang, getLang } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
+import { BUILT } from './build-stamp.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 6;
@@ -252,7 +253,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
     if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
@@ -409,6 +410,7 @@ class Game {
     // download is installed; the web copy has none
     this.version = VERSION + (window.LBA_BUILD ? ` (build ${window.LBA_BUILD})` : '');
     { const v = document.querySelector('#ver'); if (v) v.textContent = 'v' + this.version; }
+    this.showBuilt();
     this.bench = new Bench(this);
     this.audio = new AudioEngine();
     this.audio.setMood('title');
@@ -1208,6 +1210,28 @@ class Game {
     if (instant) go(); else this.startTransition(go, [id]);
   }
 
+  // BUILD-STAMP (the user, 5.11: "show the update's date and time in the game, I open it from the link and am not sure
+  // it's the newest"): when this copy was published (src/build-stamp.js, local time), on the title screen and in the
+  // pause menu; and a check of the published stamp (not from the cache): a newer one says "reload the page".
+  showBuilt() {
+    const d = new Date(BUILT), p2 = (n) => String(n).padStart(2, '0');
+    const when = isNaN(d) ? BUILT : `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+    const text = `Updated ${when}`;
+    const v = document.querySelector('#ver');
+    if (v) v.textContent = `v${this.version} · ${text}`;
+    const pause = document.querySelector('#pause');
+    let pv = document.querySelector('#pause-ver');
+    if (pause && !pv) { pv = document.createElement('div'); pv.id = 'pause-ver'; pv.style.cssText = 'position:absolute;right:12px;bottom:8px;font-size:12px;opacity:.6'; pause.appendChild(pv); }
+    if (pv) pv.textContent = text;
+    if (typeof fetch !== 'function' || location.protocol === 'file:') return;
+    fetch(new URL('build-stamp.js', import.meta.url).href + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((s) => {
+      const m = /BUILT = '([^']+)'/.exec(s);
+      if (!m || !(new Date(m[1]) > d)) return;
+      const note = ' · A newer version is out: reload the page';
+      if (v) { v.textContent += note; v.style.opacity = '1'; v.style.color = '#ffd060'; }
+      if (pv) { pv.textContent += note; pv.style.opacity = '1'; pv.style.color = '#ffd060'; }
+    }).catch(() => {});
+  }
   exitRoom(to, instant = false, quiet = false) {
     const go = () => {
       const R = this.room;
@@ -1997,6 +2021,10 @@ class Game {
     if (changed('hud')) this.hud.setStyle(s.hud === 'lba');
     // comfort: dialogue speed (LBA2 types 50 chars/s), subtitle size, camera shake
     this.hud.textRate = { slow: 28, normal: 50, fast: 95, instant: 1e9 }[s.textSpeed] ?? 50;
+    // AUTO-TALK (the user, 5.11: "when characters talk, the conversation should move on by itself unless the settings say
+    // otherwise"): a line done typing moves on after the time to read it (hud.js updateDialog); a key still skips. On by
+    // default (off under automation, so the tests' timings stay as they were; they turn it on to check it)
+    this.hud.autoTalk = s.autoTalk !== 'off';
     document.body.classList.toggle('big-text', s.textSize === 'large');
     this.camRig.shakeScale = { on: 1, reduced: 0.35, off: 0 }[s.shake] ?? 1;
     this.audio.vol.music = s.music;
@@ -2609,7 +2637,7 @@ class Game {
           // Twinsen gestures when he speaks and turns to whoever else is talking
           const h = this.hero, sp = this.speaker;
           if (sp && sp !== h && sp.pos && h.distTo(sp) < 6) h.angle = dampAngle(h.angle, h.angleTo(sp), 5, dt);
-          h.syncSword(); h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
+          h.syncSword(); this.weapons?.updateHeld(); h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
         }
         for (const n of this.npcs) n.update(dt);
         for (const e of this.enemies) if (e.ko && !e.ko.done) e.ko.update(dt);   // (a fall in progress lands; nothing else moves)

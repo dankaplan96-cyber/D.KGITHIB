@@ -65,7 +65,7 @@ export class Council extends ChapterBase {
     g.enterRoom('zeelich', Z.spaceport?.landing || Z.dock, true);   // (off the project ship, on Zeelich Spaceport's deck)
     g.hero.hasBall = true;
     this.freezeMills();
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c9_narr'], ['hero', 'c9_tw_arrive']], () => { this.f.c9_started = true; g.updateObjective(); g.save(false); });
   }
   // the mills are still braked from chapter 3 unless Oku's errand freed them
@@ -216,7 +216,7 @@ export class Council extends ChapterBase {
     if (this.busy) return;
     this.busy = true;
     this.chain([['hero', 'c9_tw_plans'], ['councilB', 'c9_councilB_2'], ['councilC', 'c9_councilC_2']], () => {
-      f.c9_dallan = true; this.story.refreshCast(); g.audio.play('door');
+      f.c9_dallan = true; this.story.refreshCast({ walk: true }); g.audio.play('door');
       this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ['councilC', 'c9_councilC_3'], ['chair', 'c9_chair_3']], () => {
         g.audio.cue?.('revelation');
         this.chain([['chair', 'c9_chair_4'], ['baldino', 'c9_bal_c2'], ['baldino', 'c9_bal_c3'], ['hero', 'c9_tw_c3']], () => {
@@ -248,7 +248,7 @@ export class Council extends ChapterBase {
   leaveArchive() {
     this.watcher?.stop();
     const arch = this.npc('archivist');
-    if (arch?.controlled) { arch.controlled = false; this.story.refreshCast(); }
+    if (arch?.controlled) { arch.controlled = false; this.story.refreshCast({ walk: true }); }
     if (this.game.hero.disguised) this.wearCoat(false);
   }
   spotted() {

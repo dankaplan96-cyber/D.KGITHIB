@@ -1440,7 +1440,10 @@ function buildFortress(W, root, g) {
     const s = new THREE.Shape();
     s.moveTo(-GATE.half, -2.6); s.lineTo(GATE.half, -2.6); s.lineTo(GATE.half, top); s.lineTo(-GATE.half, top); s.lineTo(-GATE.half, -2.6);
     const hole = new THREE.Path(), hw = GATE.w / 2;
-    hole.moveTo(-hw, 0); hole.lineTo(hw, 0); hole.lineTo(hw, GATE.h - hw); hole.absarc(0, GATE.h - hw, hw, 0, Math.PI, false); hole.lineTo(-hw, 0);
+    // (the user, 5.11: "two kinds of floor one on the other under the gate": the opening began at the ground's height, so
+    //  the masonry under the passage made a second floor in the very plane of the paving and the two flickered. It
+    //  starts 0.4 m down now: the paving is the passage's only floor)
+    hole.moveTo(-hw, -0.4); hole.lineTo(hw, -0.4); hole.lineTo(hw, GATE.h - hw); hole.absarc(0, GATE.h - hw, hw, 0, Math.PI, false); hole.lineTo(-hw, -0.4);
     s.holes.push(hole);
     const geo = new THREE.ExtrudeGeometry(s, { depth: D, bevelEnabled: false, curveSegments: 16 });
     geo.rotateY(Math.PI / 2);
@@ -2148,8 +2151,12 @@ function floodMast(W, B, x, z, ax, az, h = 7) {
 function chestGeo() {
   return cached('chest', () => {
     const wood = [], iron = [];
-    wood.push([boxUV(bbox(1.24, 0.66, 0.76, 0.04, 1), 0.9), 0, 0.37, 0]);
-    for (const x of [-0.42, 0, 0.42]) iron.push([bbox(0.08, 0.7, 0.8, 0.012, 1), x, 0.37, 0]);
+    // (CHEST-1: an open box under the lid, four walls and a floor, so the chest shows its inside once opened; the
+    // straps run down its front and back only, not over the opening)
+    for (const z of [-0.345, 0.345]) wood.push([boxUV(bbox(1.24, 0.66, 0.07, 0.02, 1), 0.9), 0, 0.37, z]);
+    for (const x of [-0.585, 0.585]) wood.push([boxUV(bbox(0.07, 0.66, 0.62, 0.02, 1), 0.9), x, 0.37, 0]);
+    wood.push([boxUV(bbox(1.12, 0.06, 0.64, 0.01, 1), 0.9), 0, 0.12, 0]);
+    for (const x of [-0.42, 0, 0.42]) for (const z of [-0.39, 0.39]) iron.push([bbox(0.08, 0.7, 0.025, 0.008, 1), x, 0.37, z]);
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) iron.push([bbox(0.16, 0.7, 0.16, 0.02, 1), sx * 0.58, 0.37, sz * 0.34]);
     iron.push([bbox(1.3, 0.06, 0.82, 0.015, 1), 0, 0.06, 0]);
     iron.push([bbox(0.24, 0.26, 0.05, 0.02, 1), 0, 0.56, 0.4]);
@@ -2310,6 +2317,29 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x + nx * 0.95, ga - 0.02, z + nz * 0.95);
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
     for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
+  }
+  // (the user, 5.11, a photo: "the pipe is hollow": the tube has no ends, and where it dives into the ground or comes up
+  //  out of it the ground cut it at a slant and the camera saw into it.) A concrete collar where the line crosses the
+  //  ground, and a closed end where the tube ends in the open
+  {
+    const collar = cached('pcollar' + r, () => cyl(r * 1.45, r * 1.45, 0.5, 16)), cap = cached('pcap' + r, () => cyl(r * 1.02, r * 1.02, 0.04, 14));
+    const steps = Math.ceil(len / 0.25);
+    let prev = null;
+    for (let k = 0; k <= steps; k++) {
+      const u = k / steps, p = curve.getPointAt(u), under = p.y + r * 0.2 < W.H(p.x, p.z);
+      if (prev != null && under !== prev) {
+        const t2 = curve.getTangentAt(u);
+        q.setFromUnitVectors(_uy, t2);
+        B.addM(collar, tm('concrete', { color: '#cfcac0' }), new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1)));
+      }
+      prev = under;
+    }
+    for (const u of [0, 1]) {
+      const p = curve.getPointAt(u);
+      if (p.y + r < W.H(p.x, p.z)) continue;
+      q.setFromUnitVectors(_uy, curve.getTangentAt(u));
+      B.addM(cap, tm('pipe', { rough: 0.5, metal: 0.35 }), new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1)));
+    }
   }
   // a buried run: round access covers over the line and a vent standpipe (so the main is known to be there)
   {

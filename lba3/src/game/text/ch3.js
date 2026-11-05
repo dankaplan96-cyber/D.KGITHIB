@@ -128,7 +128,7 @@ Object.assign(STR.en, {
   idle_hesk_home: "The project wants FunFrock's glider back. I told them FunFrock isn't asking.",
   idle_yorna_home: "We're home. The slides stopped the day the vent opened. The monks sent us down with cheese nobody asked for.",
   idle_pim_home: "Sefa says I held the mirror for the whole minute. Now everyone wants me to hold things.",
-  idle_lhar1_home: "Home again. The waterfall froze last night, like a proper winter.",
+  idle_lhar1_home: "Home again. The waterfall froze while we were gone, like a proper winter.",
   idle_lhar2_home: "The goats walked back down before we did. They knew first.",
   idle_lhar3_home: "The mountain is cold underneath again. Good. Mountains should be cold.",
   idle_keeper_home: "The stars have gone quiet. That is how I know she sleeps.",

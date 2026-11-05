@@ -54,7 +54,7 @@ export class Prologue extends ChapterBase {
       { id: 'gilbert', name: 'n_gilbert', char: 'gilbert', color: '#ffb070', x: well.x + 2.4, z: well.z + 1.6, angle: Math.atan2(-1.2, 1.3), look: { tunic: '#b8483b', pants: '#5a4a3a', hair: '#c0c0c0', beard: '#c0c0c0', skin: '#e6b993' }, anim: 'talk' },
       { id: 'mira', name: 'n_mira', char: 'mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
       { id: 'pippa', name: 'n_pippa', char: 'pippa', color: '#ffb070', x: W.stall.x, z: W.stall.z, angle: W.stall.a, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },
-      { id: 'doran', name: 'n_doran', char: 'doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'hide' },
+      { id: 'doran', name: 'n_doran', char: 'doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'doze' },
       { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 3.1, z: W.pierEnd.z - 0.65, angle: Math.PI / 2 + 0.3, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
       { id: 'tim', name: 'n_tim', char: 'tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
@@ -230,7 +230,7 @@ export class Prologue extends ChapterBase {
   place(id) {
     const f = this.f, g = this.game;
     // Doran naps by his shed until the bell (or, in a save from before CH1-LONGER, his stamp) wakes him
-    if (id === 'doran') { if (!this.isCur()) return undefined; const s = g.world.pierStart; return { x: s.x, z: s.z + 2.2, a: Math.PI, anim: f.pr_bell || f.stamp ? null : 'hide' }; }
+    if (id === 'doran') { if (!this.isCur()) return undefined; const s = g.world.pierStart; return { x: s.x, z: s.z + 2.2, a: Math.PI, anim: f.pr_bell || f.stamp ? null : 'doze' }; }
     if (id !== 'zoe' && id !== 'arthur') return undefined;
     const home = g.rooms.house.npcSpots[id];
     if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
@@ -623,8 +623,9 @@ export class Prologue extends ChapterBase {
   // restore world state from saved flags
   applyFlags() {
     const g = this.game, f = this.f;
-    if (this.isCur() && f.opening) this.ferryAway();
+    if (this.isCur()) this.ferryAway();   // (not at the pier at all before chapter 2: the opening film doesn't show it either)
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
+    g.world.well?.setWater?.(!!f.c1_water || (this.story.index ?? 0) > 1);   // (WELL-DRY: dry until chapter 2's water returns)
     g.hero.hasKey = !!f.key;
     this.setLid(this.lidState());
     if (this.bell) { this.bell.t = null; this.bell.swing.rotation.set(0, 0, 0); }

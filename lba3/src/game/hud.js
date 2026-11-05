@@ -349,16 +349,16 @@ export class HUD {
   _line() {
     const D = this.dialog;
     D.full = D.lines[D.i];
-    D.shown = 0;
+    D.shown = 0; D.readT = 0;
     D.text.textContent = '';
   }
   get talking() { return !this.dialog.el.classList.contains('hidden'); }
-  advance() {
+  advance(auto = false) {
     const D = this.dialog;
     if (!this.talking) return;
     if (D.shown < D.full.length) { D.shown = D.full.length; D.text.textContent = D.full; this.game.audio.babble?.hush?.(); return; } // (the voice stops with the skipped text)
     D.i++;
-    this.game.audio.play('select');
+    if (!auto) this.game.audio.play('select');
     if (D.i >= D.lines.length) {
       D.el.classList.add('hidden');
       this.game.audio.babble?.stop();
@@ -369,7 +369,16 @@ export class HUD {
   updateDialog(dt) {
     const D = this.dialog;
     if (this.talking) this.game.audio.babble?.pump?.();
-    if (!this.talking || D.shown >= D.full.length) return;
+    if (!this.talking) return;
+    if (D.shown >= D.full.length) {
+      // AUTO-TALK: the line typed out, it waits the time to read it (1.6 s and a word's worth a word, at most 7 s;
+      // the slower text speeds a little longer) and moves on, as a key would
+      if (!this.autoTalk || !D.full) return;
+      const words = D.full.split(/\s+/).length, slow = (this.textRate ?? 50) < 40 ? 1.3 : 1;
+      D.readT = (D.readT || 0) + dt;
+      if (D.readT >= Math.min(7, 1.6 + words * 0.28) * slow) { D.readT = 0; this.advance(true); }
+      return;
+    }
     const before = Math.floor(D.shown);
     D.shown = Math.min(D.full.length, D.shown + dt * (this.textRate ?? 50));
     const now = Math.floor(D.shown);

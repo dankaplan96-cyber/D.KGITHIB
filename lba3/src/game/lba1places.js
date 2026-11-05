@@ -122,6 +122,20 @@ const axis = ([ax, az], [bx, bz]) => {
   return { L, ux, uz, a: Math.atan2(ux, uz), at: (s, o = 0) => [ax + ux * s - uz * o, az + uz * s + ux * o], local: (x, z) => [(x - ax) * ux + (z - az) * uz, -(x - ax) * uz + (z - az) * ux] };
 };
 const FL = axis(ASYLUM_STEPS.a, ASYLUM_STEPS.b), RW = axis(CLIMB_RAMP[1], CLIMB_RAMP[2]);
+// (the user, 5.11, a photo: "there is still a hole here": the ramp was paved on its old ground, which falls away toward
+//  the retaining wall's foot, so the cobbles dipped into a trough between the walk and the wall.) The ground across the
+//  ramp beside the wall is filled up to the ramp's own height on its axis (never dug), easing out at the wall's ends and
+//  past the west kerb, under the wall and a cell past it; beyond, the yard's drop is as it was. world.js islandHeight0 asks this.
+export function climbRampFill(x, z, h, H) {
+  if (x < -44 || x > -28 || z < -40 || z > -14) return h;
+  const [rs, ro] = RW.local(x, z), S0 = CLIMB_WALL.s0 - 1.0, S1 = CLIMB_WALL.s1 + 1.0, E = 2.0;
+  if (rs < S0 - E || rs > S1 + E || ro < -CLIMB_HW - 1.2 || ro > CLIMB_WALL.o1 + 0.65) return h;   // (under the wall and one ground cell, 0.93 m, past it: the terrain's triangles fold at the last filled vertex)
+  const [ax, az] = RW.at(rs, 0), hc = H(ax, az);
+  if (hc <= h) return h;
+  const ss = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
+  const w = ss(S0 - E, S0, rs) * (1 - ss(S1, S1 + E, rs)) * (ro < -CLIMB_HW ? 1 - ss(-CLIMB_HW, -CLIMB_HW - 1.2, ro) : 1);
+  return h + (hc - h) * w;
+}
 // signed distance to the paved way (negative on it): the ramp, the apron at the flight's foot, the terrace (world.js)
 export function climbPaveDist(x, z) {
   if (x < -48 || x > -20 || z < -52 || z > 6) return 99;
@@ -322,7 +336,8 @@ export function buildLba1Asylum(scene, physics) {
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
       stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
-      gridZones: true, overhead: true,
+      gridZones: true, overhead: true, footing: { depth: 9, below: 1 },   // (order 8: the store's edge, its walls carried down into the dark)
+      clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
       //  room LBA1 kept behind a moving door, its door broken through the corridor wall at cells 41–42 of z 30)

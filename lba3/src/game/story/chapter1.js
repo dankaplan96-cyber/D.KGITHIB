@@ -22,6 +22,7 @@ import { ChapterBase } from './base.js';
 import { Watcher } from '../enemies.js';
 import { crossByShip } from '../travelfilm.js';
 import { revealBeat, solidAt, twoShot } from './revealcam.js';
+import { dampAngle } from '../../engine/math.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -38,7 +39,7 @@ export class Chapter1 extends ChapterBase {
     const pe = W.pierEnd;
     return [
       { id: 'vesk', name: 'n_vesk', char: 'vesk', color: '#c8a8ff', x: pe.x + 2, z: pe.z + 1, angle: Math.PI / 2 },
-      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', x: pe.x + 4, z: pe.z - 1.2, angle: 0, anim: 'use' },
+      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', x: pe.x + 6.5, z: pe.z + 0.9, angle: -1.42, anim: 'use' },
       { id: 'guard', name: 'n_guard', char: 'guard', color: '#9fe0d0', x: pe.x + 5, z: pe.z + 1.5, angle: Math.PI / 2 },
     ];
   }
@@ -78,10 +79,13 @@ export class Chapter1 extends ChapterBase {
         if (f.c1_zoeDone) return PAD ? PAD.vesk : gateIn;
         return R.control?.npcSpots?.vesk ?? gateIn;
       case 'worker':
-        if (!f.c1_water) return { x: pe.x + 3.5, z: pe.z - 1.1, a: 0, anim: 'use' };
+        // (POLISH-A: on the pier's north side, working toward the crane's mast, 3.4 m from Xil and clear of Vesk's way off
+        //  the gangway: he stood 0.6 m from Xil's middle, the two bodies in each other)
+        if (!f.c1_water) return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
         return R.control?.npcSpots?.worker ?? { x: gateIn.x + 2, z: gateIn.z + 2, a: 0 };
       case 'guard':
-        if (!f.c1_water) return { x: ps.x - 1, z: ps.z - 1.6, a: -Math.PI / 2 };
+        // (POLISH-A: on the quay beside the way onto the pier: he stood in the harbour bell's post and the mouth's pillar)
+        if (!f.c1_water) return { x: ps.x + 0.6, z: ps.z - 1.4, a: -Math.PI / 2 };
         if (f.c1_zoeStart && !f.c1_zoeDone) return R.projoffice ? { x: R.projoffice.patrol[0][0], z: R.projoffice.patrol[0][1], a: 0 } : null;
         return { x: W.gate.x + 1.2, z: W.gate.z + 2.6, a: -Math.PI / 2 };
       case 'zoe':
@@ -284,8 +288,48 @@ export class Chapter1 extends ChapterBase {
     g.hud.toast('c1_toast_valve', { n });
     g.updateObjective();
     g.save(false);
-    if (v.id === 'depot') this.story.refreshCast(); // the depot drones stand down
+    if (v.id === 'depot') this.depotStandDown(); // the depot drones stand down
     if (n >= 3) this.waterT = 0.9; // (game time: pauses with the game, see update)
+  }
+
+  // The depot's patrol stands down once its valve is open (POLISH-A; the user: nobody pops out of sight in view). It
+  // used to be a refresh of the cast: the two drones, the guard and his dog vanished mid-chase in front of him. Now the
+  // ones the camera can't see go at once; the others drop the chase (their own minds off: no shots, no bites, not a
+  // target) and go back to walking (flying) their round, calm, and are gone the moment they are out of view (25 s at
+  // most). Nothing is saved: after a load their `when` keeps them away, as before.
+  depotStandDown() {
+    const g = this.game;
+    this.standing = [];
+    for (const e of g.enemies) {
+      if (e.def?.group !== 'depot' || !e.present) continue;
+      if (!e.alive || e.gone || this.unseen(e.pos)) { e.setPresent(!!e.def.when?.(this.f)); continue; }
+      e.present = false;   // (its update stops here: drawn still, moved by tickStandDown)
+      if (e.aimLine) e.aimLine.visible = false;
+      g.combatDir?.done(e);
+      this.standing.push({ e, t: 0 });
+    }
+  }
+  tickStandDown(dt) {
+    const S = this.standing, g = this.game;
+    if (!S?.length) return;
+    for (let i = S.length - 1; i >= 0; i--) {
+      const s = S[i], e = s.e;
+      s.t += dt;
+      if (!e.rig.root.visible || !e.alive || (s.t > 0.6 && this.unseen(e.pos)) || s.t > 25) { e.setPresent(false); S.splice(i, 1); continue; }
+      if (g.state !== 'play') continue;
+      const pts = e.patrol?.length ? e.patrol : [[e.home.x, e.home.z]], [tx, tz] = pts[e.wp % pts.length];
+      const dx = tx - e.pos.x, dz = tz - e.pos.z, d = Math.hypot(dx, dz), flyer = e.hover != null;
+      if (d < 0.6 && pts.length > 1) e.wp = (e.wp + 1) % pts.length;
+      const sp = d < 0.6 || s.t < 0.8 ? 0 : flyer ? 1.6 : 1.3;   // (a beat where it stands, then its round at a walk)
+      e.angle = dampAngle(e.angle, Math.atan2(dx, dz), 4, dt);
+      if (sp) g.physics.move(e, Math.sin(e.angle) * sp * dt, Math.cos(e.angle) * sp * dt);
+      if (flyer) { e.rig.mood = 'calm'; e.rig.play?.('idle'); e.rig.update(dt); e.syncHover(); continue; }
+      g.physics.fall?.(e, dt);
+      e.rig.play(sp ? 'walk' : 'idle');
+      e.placeRig?.();
+      e.rig.update(dt, sp);
+      e.sync();
+    }
   }
 
   // the valve gives (G1-QUEST #5: it played the treasure chest's chime): a clunk and a knock in the pipe, the hiss of
@@ -331,7 +375,7 @@ export class Chapter1 extends ChapterBase {
     const A = g.audio, wl = W.well, gy = g.physics.groundAt(wl.x, wl.z), h = g.hero;
     let tt = 0, puffT = 0, lit = false;
     const light = () => { if (!lit) { lit = true; W.station?.setActive?.(true); } };   // (the posts warm up over the next seconds)
-    const cues = [[0.15, () => A.play('pipeKnock')], [0.45, () => A.play('pipeKnock')], [0.8, () => { A.play('gurgle'); g.particles.burst(wl.x, gy + 1.1, wl.z, '#cfefff', 14, 2.4); }], [1.0, () => A.play('waterRun')], [1.1, light]];
+    const cues = [[0.15, () => A.play('pipeKnock')], [0.45, () => A.play('pipeKnock')], [0.8, () => { A.play('gurgle'); W.well.setWater?.(true); g.particles.burst(wl.x, gy + 1.1, wl.z, '#cfefff', 14, 2.4); }], [1.0, () => A.play('waterRun')], [1.1, light]];
     // the well's steam goes on while the shot holds, under the narration's box too (world updaters run in every state)
     const steam = (dt) => { if ((puffT -= dt) <= 0) { puffT = 0.08; g.particles.burst(wl.x + (Math.random() - 0.5) * 0.8, gy + 1.0, wl.z + (Math.random() - 0.5) * 0.8, '#e8f4ff', 2, 1.4); } };
     W.updaters.push(steam);
@@ -508,7 +552,23 @@ export class Chapter1 extends ChapterBase {
         return () => ({ pos: p, look: vHead(1.4), fov: 40 });
       },
       // the speech: Vesk and Twinsen together, eye to eye
-      speech: () => { const memo = {}; return ({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.35, z: vesk.pos.z }, { memo, ok: (x, y, z) => !solidAt(g, x, y, z, 0.35), height: 1.3, drop: 0.45, fov: 40, dist: 5.6, t }); },
+      // (the user, 5.11, a photo: "the camera went from Vesk to here" — the two-shot's spot, 5.6 m off to the side, had
+      //  a post and the quay's passers-by in front of the lens and Vesk out of the frame. Now over Twinsen's shoulder
+      //  at Vesk, the first spot of a few that stands clear and sees his head; the two-shot only if none does)
+      speech: () => {
+        const memo = {}, vx = vesk.pos.x - h.pos.x, vz = vesk.pos.z - h.pos.z, l = Math.hypot(vx, vz) || 1, ux = vx / l, uz = vz / l;
+        const head = vHead(1.4), hy = h.pos.y + 1.6;
+        const cands = [[2.6, 1.35], [2.6, -1.35], [2.0, 1.5], [2.0, -1.5], [3.2, 1.2], [3.2, -1.2], [1.6, 2.2], [1.6, -2.2]].map(([b, s]) => V3(h.pos.x - ux * b + uz * s, hy, h.pos.z - uz * b - ux * s));
+        // (nobody at the lens, and nobody standing in the line to his head: Doran on the pier hid him from the first try)
+        const free = (p) => g.npcs.every((n) => {
+          if (!n.present || n === vesk) return true;
+          const sx = head.x - p.x, sz = head.z - p.z, L2 = sx * sx + sz * sz || 1, k = Math.max(0, Math.min(1, ((n.pos.x - p.x) * sx + (n.pos.z - p.z) * sz) / L2));
+          return Math.hypot(n.pos.x - p.x, n.pos.z - p.z) > 1.0 && (k > 0.92 || Math.hypot(p.x + sx * k - n.pos.x, p.z + sz * k - n.pos.z) > 0.75);
+        });
+        const p = cands.find((c) => !solidAt(g, c.x, c.y, c.z, 0.35) && free(c) && g.physics.lineOfSight(c.x, c.y, c.z, head.x, head.y, head.z));
+        if (p) return () => ({ pos: p, look: V3(head.x, head.y - 0.2, head.z), fov: 40 });
+        return ({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.35, z: vesk.pos.z }, { memo, ok: (x, y, z) => !solidAt(g, x, y, z, 0.35), height: 1.3, drop: 0.45, fov: 40, dist: 5.6, t });
+      },
     };
     let cur = null, fn = null;
     const shot = (k, secs = 0.35) => { if (cur === k) return; cur = k; fn = S[k](); beat?.show(fn, secs); };
@@ -808,6 +868,7 @@ export class Chapter1 extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
     this.tickWalkers(dt);
+    this.tickStandDown(dt);
     if (this.waterT > 0 && g.state === 'play' && (this.waterT -= dt) <= 0) this.waterReturns();
     // the ferry is in the harbour once Vesk has arrived
     if (!this.arriving) W.ferry?.setVisible?.(!!f.c1_arrived);
@@ -844,7 +905,7 @@ export class Chapter1 extends ChapterBase {
     const g = this.game, f = this.f, W = g.world;
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
     // a save from between the third valve and the water scene must not leave the chapter stuck
-    if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) f.c1_water = true;
+    if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) { f.c1_water = true; W.well?.setWater?.(true); }
     if (f.c1_water) { W.gate.open = true; W.station?.setActive?.(true); }
     // a save made during Zoe's segment resumes at its start (as Twinsen at the station gate: see update), with
     // the lockers to search again — a plan found and saved but not carried out must be findable again
@@ -870,7 +931,15 @@ export class Chapter1 extends ChapterBase {
   markers() {
     const f = this.f, g = this.game, W = g.world, m = [];
     const gold = '#ffcf4a';
-    const npcAt = (id, label) => { const n = this.npc(id); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) }); };
+    // (POLISH-A: someone in a room — Vesk in the station's control room once the water is back — is starred at that room's
+    //  street door: the room's far-off coordinates fell off the map, and "Visit Vesk at the old fortress" had no star)
+    const npcAt = (id, label) => {
+      const n = this.npc(id); if (!n?.present) return;
+      let x = n.pos.x, z = n.pos.z;
+      const sc = g.regions?.sceneOf?.(x, z);
+      if (sc && sc !== 'citadel') { const d = this.story.doors().find((q) => q.room === sc && !q.region); if (!d) return; x = d.x; z = d.z; }
+      m.push({ x, z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) });
+    };
     if (!f.c1_started) return m;
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });

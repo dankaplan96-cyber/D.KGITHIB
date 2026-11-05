@@ -209,7 +209,9 @@ export class Hero extends Actor {
     const P = g.physics;
     this.invuln = Math.max(0, this.invuln - dt);
     this.hurtT = Math.max(0, this.hurtT - dt);
-    this.mp = Math.min(this.mpMax, this.mp + dt * 0.35);
+    // (the user, 5.11: "the magic comes back by itself, it's too easy, do it as LBA2": no regeneration — as LBA2, magic
+    //  comes back only from flasks (crates, beaten enemies, the shops) and from those who give it: the wizard, Bersimon,
+    //  a magic-level moment. A throw without magic still works: the ball comes home at its first contact)
     this.coyote = this.onGround && !this.sliding ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
     this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
 
@@ -384,7 +386,10 @@ export class Hero extends Actor {
       else {
         // the knees take the landing by how far he fell (a jump's apex 1.14 m ≈ 0.97, the 0.96 it always had; a step off a ledge 0.3 m, a light touch; a long
         // drop, the full bend); a hard one lifts a small puff of dust (the soft smoke of Particles, not sparks)
-        const fall = Math.max(0, (this.airPeak ?? this.pos.y) - this.pos.y), s = clamp(0.3 + 0.8 * (fall - 0.3), 0.3, 1.2);
+        // (the user, 5.11: a running jump's landing read as a stumble, the full bend at a run: a run carries on through
+        //  it with a lighter dip)
+        const fall = Math.max(0, (this.airPeak ?? this.pos.y) - this.pos.y), run = Math.hypot(this.vel.x, this.vel.y) > 2.2 ? 0.55 : 1;
+        const s = clamp((0.3 + 0.8 * (fall - 0.3)) * run, 0.3, 1.2);
         if (fall > 0.2 || vf > 6) this.rig.land(s);
         if (vf > 6) g.audio.play('land');
         if (fall > 0.9 || vf > 6) g.particles.burst(this.pos.x, this.pos.y + 0.05, this.pos.z, '#b8a888', 8 + Math.round(6 * s), 1.2);
@@ -796,8 +801,8 @@ export class NPC extends Actor {
     const x0 = this.pos.x, z0 = this.pos.z;
     if (this.listenTo && this.listenTo !== this) {
       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
-    } else if (this.pinY != null) {
-      // (pinned, sitting or asleep: he keeps his place and his facing)
+    } else if (this.pinY != null || this.forceAnim === 'doze') {
+      // (pinned, sitting or asleep: he keeps his place and his facing; dozing, he sleeps through the talk too)
     } else if (this.talking || (near && !this.busy())) {
       // (GAME-1, the user: a person busy at something — Arthur kneeling at his boat — keeps at it when Twinsen walks
       //  by, and turns to him only once Twinsen talks to him)
@@ -815,7 +820,7 @@ export class NPC extends Actor {
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
     if (moving && this.gait < 0.15) moving = false;
-    this.rig.play(this.pinY != null && this.forceAnim ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
+    this.rig.play((this.pinY != null && this.forceAnim) || this.forceAnim === 'doze' ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
     this.placeRig();
     this.rig.update(dt, moving ? this.gait : 0);
     this.sync();

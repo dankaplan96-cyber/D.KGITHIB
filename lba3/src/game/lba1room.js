@@ -50,7 +50,11 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   const colTop = new Map(), colFloor = new Map();
   for (const [k, runs] of Object.entries(L.cols)) { colFloor.set(k, runs[0][0] + runs[0][1]); colTop.set(k, runs[runs.length - 1][0] + runs[runs.length - 1][1]); }
   const outside = (x, z) => !L.cols[`${x},${z}`];
+  // (opts.clear: [x0, z0, x1, z1, y] — the cells of that box at height y and up taken out, drawn and solid: ceiling beams
+  //  whose walls and pillars the cut-away took, left hanging over the rooms as slabs over nothing)
+  const cleared = (x, y, z) => !!opts.clear && opts.clear.some(([x0, z0, x1, z1, yc]) => y >= yc && x >= x0 && x <= x1 && z >= z0 && z <= z1);
   const cut = (x, y, z) => {
+    if (cleared(x, y, z)) return true;
     if (opts.noCut) return false;
     const k = `${x},${z}`, f = colFloor.get(k) ?? 0;
     const near = outside(x + 1, z) || outside(x, z + 1) || outside(x + 1, z + 1) || x >= SX - 1 || z >= SZ - 1;
@@ -109,15 +113,22 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       const [x, z] = k.split(',').map(Number), f = colStack.get(k);
       let y = f; while (y < 25 && !C.has(`${x},${y},${z}`)) y++;
       if (y >= 25 || y - f < OVER) continue;
-      const ck = `${Math.floor(x / OVER_CHUNK)},${Math.floor(z / OVER_CHUNK)}`;
+      const ci = Math.floor(x / OVER_CHUNK), cj = Math.floor(z / OVER_CHUNK);
       for (; y < 25; y++) {
-        const key = `${x},${y},${z}`; if (!C.has(key) || lidOf.has(key)) continue;
-        if (!chunks.has(ck)) chunks.set(ck, { cells: [], low: 25 });
+        const key = `${x},${y},${z}`; if (!C.has(key) || lidOf.has(key) || cleared(x, y, z)) continue;
+        // (order 8: a leftover he can stand on — a gallery's floor, a flight of steps up over a room — is a lid of its own,
+        //  apart from the beams round it: cut while it hides him below, kept while he stands on it. In one lid with the
+        //  beams over it, the beams on his sight line took his own floor away and left him in black void)
+        //  (a floor: open above, and a slab over nothing or a step of a flight; a wall's top, with its wall under it, is not)
+        let walk = !C.has(`${x},${y - 1},${z}`) || C.get(key)[0] >= 2;
+        for (let a = 1; a <= OVER && walk; a++) if (C.has(`${x},${y + a},${z}`)) walk = false;
+        const ck = `${ci},${cj}${walk ? ',w' : ''}`;
+        if (!chunks.has(ck)) chunks.set(ck, { cells: [], low: 25, i: ci, j: cj });
         const c = chunks.get(ck); c.cells.push(key); c.low = Math.min(c.low, y);
       }
     }
-    for (const [ck, c] of chunks) {
-      const [i, j] = ck.split(',').map(Number), n = lids.length;
+    for (const c of chunks.values()) {
+      const { i, j } = c, n = lids.length;
       lids.push({ i: n, box: [i * OVER_CHUNK, 0, j * OVER_CHUNK, (i + 1) * OVER_CHUNK, 25, (j + 1) * OVER_CHUNK], cut: c.low, over: true, cells: c.cells.length, f: 1, active: false, hold: 0 });
       for (const key of c.cells) { addLid(key, n); const [x, y, z] = key.split(',').map(Number); overCell.set(ock(x, y, z), n); }
     }
@@ -172,6 +183,26 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       const P = (u, v) => { const t = slopeTop(shape, u, v); const w = W(x + u, y + t, z + v); return [w[0], w[1], w[2]]; };
       const a = P(0, 0), b = P(0, 1), cc = P(1, 1), d = P(1, 0);
       quad('top', a, b, cc, d, [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [cc[0] / 1.7, cc[2] / 1.7], [d[0] / 1.7, d[2] / 1.7]]);
+      // (order 8: and its sides, up to the slope, where nothing stands beside it: a flight of steps over a room was its
+      //  tops alone, pale sheets hanging in the air)
+      //  A step hanging less than a man's height over the floor below (LBA1's flights: one cell of slope over nothing)
+      //  is filled down to that floor, sides and a collider, so the flight stands on the floor as a solid stair; one
+      //  higher up keeps the open way under it.
+      let yb = y;
+      if (!C.has(`${x},${y - 1},${z}`)) { let k = y - 1; while (k >= 0 && !C.has(`${x},${k},${z}`)) k--; if (k >= 0 && y - (k + 1) < 4) yb = k + 1; }
+      if (yb < y) B.col(ox + (x + 0.5) * CELL, oz + (z + 0.5) * CELL, CELL / 2, CELL / 2, y * CH, { bottom: yb * CH, seeThrough: true, noStand: true });
+      const S = {
+        '1,0': [[1, 1], [1, 0]], '-1,0': [[0, 0], [0, 1]], '0,1': [[0, 1], [1, 1]], '0,-1': [[1, 0], [0, 0]],
+      };
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const n = C.get(`${x + dx},${y},${z + dz}`);
+        if (n && (n[0] >= 2 || solidAt(x + dx, y, z + dz))) continue;
+        const [[u0, v0], [u1, v1]] = S[`${dx},${dz}`], t0 = slopeTop(shape, u0, v0), t1 = slopeTop(shape, u1, v1);
+        if (t0 + t1 < 0.02 && yb === y) continue;
+        const q = [W(x + u0, yb, z + v0), W(x + u1, yb, z + v1), W(x + u1, y + t1, z + v1), W(x + u0, y + t0, z + v0)];
+        const h = (p) => (dx ? p[2] : p[0]) / 1.7;
+        quad('side', q[0], q[1], q[2], q[3], [dx, 0, dz], col, q.map((p) => [h(p), p[1] / 1.7]));
+      }
     }
   }
   const mats = {
@@ -200,6 +231,59 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       const mesh = new THREE.Mesh(g, lm[kind]); mesh.castShadow = true; mesh.receiveShadow = true;
       // (userData.keep: a toggling part, so the shadow batches (shadowcull.js) and draw batches leave it on its own)
       if (sig) { mesh.name = 'lid:' + sig; mesh.userData.keep = true; lidMeshes.push({ mesh, lids: sig.split('+').map(Number) }); }
+      B.group.add(mesh);
+    }
+  }
+  // ---- the footing (opts.footing: { depth, below }): the outer walls on the camera's side (+x, +z) that stand on the
+  // grid's lowest levels (their bottom cell at or under `below`) carried on down `depth` m into the dark, fading to black.
+  // The grid's floors are one cell thick over nothing: where the view follows the hero to the edge of a big room (the
+  // asylum's store, at its lowest corner) the frame was 30–40 % black hole under the floor; now the building's mass goes
+  // down into the dark under its walls. One mesh, the room's wall material, no shadow.
+  if (opts.footing) {
+    const { depth = 9, below = 1 } = opts.footing, rows = [[0, 1], [depth / 3, 0.62], [depth, 0]];   // (down from the bottom: the colour's share)
+    const P = [], N = [], Co = [], U = [];
+    for (const [k, runs] of Object.entries(L.cols)) {
+      const [x, z] = k.split(',').map(Number), y0 = runs[0][0];
+      if (y0 > below) continue;
+      const col = pal[C.get(`${x},${y0},${z}`)?.[1] ?? runs[0][3]] || pal[0];
+      for (const [dx, dz] of [[1, 0], [0, 1]]) {
+        if (!outside(x + dx, z + dz)) continue;
+        const ends = dx ? [[x + 1, z], [x + 1, z + 1]] : [[x + 1, z + 1], [x, z + 1]];   // (wound to face the camera, as the room's own faces: a back face lit from behind read as a pale wedge)
+        const [a, b] = ends.map(([ex, ez]) => [ox + ex * CELL, oz + ez * CELL]), top = y0 * CH;
+        for (let i = 0; i < rows.length - 1; i++) {
+          const y1 = top - rows[i][0], y2 = top - rows[i + 1][0], f1 = rows[i][1], f2 = rows[i + 1][1];
+          for (const [p, y, f] of [[a, y1, f1], [b, y1, f1], [b, y2, f2], [a, y1, f1], [b, y2, f2], [a, y2, f2]]) {
+            P.push(p[0], y, p[1]); N.push(dx, 0, dz); Co.push(col.r * f, col.g * f, col.b * f); U.push((dx ? p[1] : p[0]) / 1.7, y / 1.7);
+          }
+        }
+      }
+    }
+    // (and where a floor runs out to the grid's edge on the camera's side with no wall of its own — the asylum's east
+    //  walk, its south end — the cut wall's rim the room's other edges have: a parapet two cells high, 0.25 m thick, its
+    //  face and top in the wall's stone, a collider so the floor no longer ends in a drop into black)
+    const T = 0.25 / CELL, RH = 2;
+    const quadP = (pts, n, c) => { for (const i of [0, 1, 2, 0, 2, 3]) { const [px, py, pz] = pts[i]; P.push(px, py, pz); N.push(n[0], n[1], n[2]); Co.push(c.r, c.g, c.b); U.push((n[1] ? px : n[0] ? pz : px) / 1.7, (n[1] ? pz : py) / 1.7); } };
+    for (const [k, runs] of Object.entries(L.cols)) {
+      const [x, z] = k.split(',').map(Number), f = colFloor.get(k);
+      if (colTop.get(k) !== f) continue;   // (a wall stands there: cut to its rim already)
+      const col = pal[C.get(`${x},${f - 1},${z}`)?.[1] ?? runs[runs.length - 1][3]] || pal[0];
+      for (const [dx, dz] of [[1, 0], [0, 1]]) {
+        if (!outside(x + dx, z + dz)) continue;
+        const X0 = dx ? x + 1 - T : x, X1 = x + 1, Z0 = dz ? z + 1 - T : z, Z1 = z + 1, y0 = f * CH, y1 = (f + RH) * CH;
+        const w = (cx2, y, cz2) => [ox + cx2 * CELL, y, oz + cz2 * CELL];
+        if (dx) quadP([w(X1, y0, Z1), w(X1, y0, Z0), w(X1, y1, Z0), w(X1, y1, Z1)], [1, 0, 0], col);   // (wound to face the camera)
+        else quadP([w(X0, y0, Z1), w(X1, y0, Z1), w(X1, y1, Z1), w(X0, y1, Z1)], [0, 0, 1], col);
+        quadP([w(X0, y1, Z0), w(X0, y1, Z1), w(X1, y1, Z1), w(X1, y1, Z0)], [0, 1, 0], col);
+        B.col(ox + (X0 + X1) / 2 * CELL, oz + (Z0 + Z1) / 2 * CELL, (X1 - X0) * CELL / 2 + 0.05, (Z1 - Z0) * CELL / 2 + 0.05, y1, { bottom: y0 - 0.2, seeThrough: true, noStand: true });
+      }
+    }
+    if (P.length) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+      g.setAttribute('color', new THREE.Float32BufferAttribute(Co, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
+      const mesh = new THREE.Mesh(g, mats.side); mesh.name = 'footing'; mesh.castShadow = false; mesh.receiveShadow = true;
       B.group.add(mesh);
     }
   }
@@ -271,8 +355,13 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
           }
         }
       }
+      // (order 8: never the leftover he stands on — its cell under his feet, or the step he is on: cut, it left him in
+      //  black void and took the flight away under him)
+      const fx = Math.floor(p.x), fz = Math.floor(p.z), fy = Math.floor(p.y);
+      const under = [...(lidOf.get(`${fx},${fy - 1},${fz}`) || []), ...(lidOf.get(`${fx},${fy},${fz}`) || [])];
+      for (const i of under) if (lids[i].over) seen.delete(i);
       for (const l of lids) {
-        if (l.over) { l.hold = seen.has(l.i) ? 0.6 : Math.max(0, l.hold - dt); l.active = l.hold > 0; }   // (held a moment: no flicker)
+        if (l.over) { l.hold = seen.has(l.i) ? 0.6 : under.includes(l.i) ? 0 : Math.max(0, l.hold - dt); l.active = l.hold > 0; }   // (held a moment: no flicker)
         else {
           const [x0, y0, z0, x1, y1, z1] = l.box, m = l.active ? 0.3 : 0;   // (a little slack to leave: no flicker in a doorway)
           l.active = p.x >= x0 - m && p.x <= x1 + m && p.z >= z0 - m && p.z <= z1 + m && p.y >= y0 - 1.5 && p.y <= y1 + 0.5;

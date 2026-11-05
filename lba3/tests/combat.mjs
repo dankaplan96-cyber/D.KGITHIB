@@ -258,7 +258,7 @@ r = await ev(() => {
   return out;
 });
 for (const [k, o] of Object.entries(r)) {
-  check(`ball (${k}): a held press never throws before charging; release throws charged`, !o.holdEarly && o.charging && o.holdShot?.charged && o.mp < 2.9, o); // (one point spent; magic regenerates meanwhile)
+  check(`ball (${k}): a held press never throws before charging; release throws charged`, !o.holdEarly && o.charging && o.holdShot?.charged && o.mp < 2.9, o); // (one point spent)
   check(`ball (${k}): tap throws quick at the release frame`, o.tap && !o.tap.charged && o.tap.t >= 0.15 && o.tap.t <= 0.2, o.tap);
   check(`ball (${k}): short hold throws quick right after the release`, o.short && !o.short.charged && o.shortLag <= 0.07, { short: o.short, lag: o.shortLag });
   check(`ball (${k}): release + press again does not charge`, o.repress && !o.repress.charged && o.repress.t < 0.3, o.repress);

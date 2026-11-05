@@ -1033,14 +1033,24 @@ export class Rig {
       // idle fidgets: look around, weight shift, scratch head
       if (a === 'idle' && !this.noFidget && !this.guard) { // (a story scene directs every movement itself; none in a fight)
         this.fidgetT -= dt;
-        if (this.fidgetT <= 0) { this.fidget = 1 + Math.floor(Math.random() * 5); this.fidgetT = 5 + Math.random() * 7; this.fidgetStart = this.t; }
+        // (FIDGET-1, the user: "standing and raising their hands is not natural"): mostly the quiet ones (a look round,
+        // the weight shifted, a glance up), a scratch now and then, the stretch only after half a minute stood still and
+        // once in that wait; a little longer between them. idleFor: how long this rig has stood idle without a break.
+        if (this._idleSeen == null || this.t - this._idleSeen > 0.5) { this._idleT0 = this.t; this._stretched = false; }
+        this._idleSeen = this.t;
+        if (this.fidgetT <= 0) {
+          const r = Math.random(), idleFor = this.t - this._idleT0;
+          this.fidget = r < 0.35 ? 1 : r < 0.65 ? 2 : r < 0.85 ? 5 : r < 0.97 ? 3 : 0;
+          if (!this.fidget && idleFor > 30 && !this._stretched) { this.fidget = 4; this._stretched = true; }
+          this.fidgetT = 7 + Math.random() * 7; this.fidgetStart = this.t;
+        }
         const ft = this.t - (this.fidgetStart ?? -99);
         if (this.fidget && ft < 2.2) {
           const k = Math.sin((ft / 2.2) * Math.PI);
           if (this.fidget === 1) headY = Math.sin(ft * 2.5) * 0.6 * k;
           if (this.fidget === 2) { torsoZ = 0.06 * k; T.legL = 0.12 * k; T.kneeL = 0.2 * k; }
-          if (this.fidget === 3) { T.armR = -2.4 * k; T.elR = -1.9 * k; headZ = 0.15 * k; }
-          if (this.fidget === 4) { T.armL = T.armR = -2.7 * k; T.elL = T.elR = -0.7 * k; torsoX = -0.1 * k; headX = -0.18 * k; hipsY = 0.95 + 0.01 * k; } // a stretch
+          if (this.fidget === 3) { T.armR = -2.1 * k; T.elR = -2.1 * k; headZ = 0.15 * k; }   // (the hand to the back of the head, the elbow out: FIDGET-1)
+          if (this.fidget === 4) { T.armL = T.armR = -2.0 * k; T.elL = T.elR = -1.7 * k; torsoX = -0.08 * k; headX = -0.14 * k; hipsY = 0.95 + 0.01 * k; } // a stretch, the hands behind the head (FIDGET-1: no longer both arms straight up)
           if (this.fidget === 5) { headX = -0.42 * k; headY = Math.sin(ft * 1.4) * 0.25 * k; torsoX = -0.04 * k; } // a glance at the sky
         } else this.fidget = 0;
       }
@@ -1102,6 +1112,21 @@ export class Rig {
         //  tied to the arms, and arms out to the sides pulled them into flat wings. Arms in and a little forward,
         //  elbows bent: the cape keeps hanging, as LBA2's jump)
         if (this.capeArms) { T.armL = up ? -0.7 : -0.5; T.armR = up ? -0.6 : -0.5; T.elL = -1.0; T.elR = -1.0; armOut = 0.2; }
+        // (the user, 5.11: "Twinsen's jump doesn't feel natural" — upright and set like a statue the whole way up and down.
+        //  Now he leans into it and the knees come up in turn as he rises, the lead leg higher; at the top they open, and
+        //  on the way down the legs reach and the arms come out a little for the landing; the arms swing against the legs)
+        if (this.capeArms) {
+          const r = clamp(this.actionT / 0.32, 0, 1), e = r * r * (3 - 2 * r);
+          if (up) {
+            torsoX = 0.18 + 0.2 * e; headX = -0.18 * e;
+            T.legL = -0.6 - 0.55 * e; T.legR = -0.3 - 0.2 * e; T.kneeL = 0.9 + 0.8 * e; T.kneeR = 0.6 + 0.6 * e;
+            T.armL = -0.4 - 0.35 * e; T.armR = -0.9 - 0.55 * e; T.elL = -0.8; T.elR = -1.0;
+          } else {
+            torsoX = 0.3 - 0.2 * e; headX = -0.1 + 0.15 * e;
+            T.legL = -1.0 + 0.6 * e; T.legR = -0.45 + 0.25 * e; T.kneeL = 1.5 - 0.9 * e; T.kneeR = 1.1 - 0.7 * e;
+            T.armL = -0.55 + 0.05 * e; T.armR = -0.75 + 0.2 * e; T.elL = -0.85; T.elR = -0.9; armOut = 0.2 + 0.15 * e;
+          }
+        }
       }
       if (this.footPlant && up) {
         // the push-off: the legs drive straight and the toes point for the first 0.12 s (the crouch's spring), then tuck
@@ -1308,6 +1333,13 @@ export class Rig {
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
+    } else if (a === 'doze') {
+      // (the user, 5.11, Doran asleep at the pier: "that's not how a sleeping person looks"): sat on the ground, legs out,
+      // leaning back, the chin on the chest, hands folded on the belly, a slow deep breath
+      const br = Math.sin(this.t * 1.3);
+      hipsY = 0.16; torsoX = -0.18 + br * 0.025; headX = 0.85 + br * 0.04; headZ = 0.22;
+      T.legL = -1.45; T.legR = -1.35; T.kneeL = 0.35; T.kneeR = 0.2;
+      T.armL = 0.2; T.armR = 0.2; T.elL = -0.35; T.elR = -0.35;   // (the arms hang slack by his sides)
     } else if (a === 'sleep') {
       // (ASYLUM-2: asleep on the back in a bunk, arms by the sides, a slow breath)
       bodyRotX = -Math.PI / 2; hipsY = 0.3; torsoX = Math.sin(this.t * 1.1) * 0.02;
@@ -1516,7 +1548,7 @@ export class Rig {
 
     // blinking
     this.blinkT -= dt;
-    const blink = this.blinkT < 0.12;
+    const blink = this.blinkT < 0.12 || this.anim === 'doze' || this.anim === 'sleep';   // (asleep: the eyes shut)
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
     for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
 

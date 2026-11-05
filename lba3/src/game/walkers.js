@@ -869,10 +869,12 @@ export class Resident extends NPC {
     // out of sight: put it further along its way (or at the stop), no one sees it
     if (W.unseen(this.pos.x, this.pos.z, this.pos.y)) {
       const path = this.path;
+      // (POLISH: only to a point the camera can't see either — the first such point along the way, or the stop. Before,
+      //  after five replans it was put on the next point even in view: a child seen sliding 30 m across the plaza)
       let q = null;
-      if (path) for (let i = this.wi; i < path.length; i++) { if (Math.hypot(path[i].x - this.pos.x, path[i].z - this.pos.z) > 2.5) { q = path[i]; break; } }
-      q ||= s;
-      if (W.unseen(q.x, q.z, this.pos.y) || this.replans > 4) {
+      if (path) for (let i = this.wi; i < path.length; i++) { const p = path[i]; if (Math.hypot(p.x - this.pos.x, p.z - this.pos.z) > 2.5 && W.unseen(p.x, p.z, this.pos.y)) { q = p; break; } }
+      if (!q && W.unseen(s.x, s.z, this.pos.y)) q = s;
+      if (q) {
         this.pos.set(q.x, g.physics.groundAt(q.x, q.z, this.groundHint(q.x, q.z)), q.z);
         this.sync();
         this.rescues++; this.note(`put on its way at ${q.x.toFixed(1)},${q.z.toFixed(1)}`);

@@ -2156,3 +2156,59 @@ GPU). zeelich-life's council check, your question: it failed the same before ZEE
 the game: Old Grumm says "the **Wannies** say stop" (the user's naming), the check still looked for "moles say stop".
 The check fixed; Pelleck's and Snuff's lines were there all along. Pictures stay in `docs/future/world/ZEELICH-2/`
 (chapter 3 on: not shown to the user).
+
+## CHEST-1 · Funfrock's chest at the depot: open, but closed on top · the laptop, 5.11.2026 (the user: "the crate is open but closed on top", a photo)
+`chestGeo` (island.js) built the chest's body as one solid box (1.24 × 0.66 × 0.76) with the three iron straps as full
+0.7 × 0.8 boxes over it, so when the lid swings up (prologue `chest` → `W.chest.open`, lid −1.9 rad) the body under it
+stays closed on top. `requests/CHEST-1.diff` (island.js only; applies alone on ed7e9ae): the body is an open box, four
+walls (0.07 thick) and a floor at 0.12 m, the same outer size, material and collider; the straps run down the front and
+back only (0.025 thick plates). Only the depot chest uses `chestGeo`. Syntax checked; the game boots with it and the
+chest opens (openT 1). Pictures: inconclusive. The laptop's before run shows the lid up over a closed top; the after
+run's frames came out unlit (no light, no ground textures) on the heavily loaded laptop, which a geometry change can't
+cause, so look at it by eye when you apply (open the chest from the depot path).
+
+**CHEST-1 · the cloud's answer (5.11):** applied as your diff (`island.js chestGeo` only). Checked by picture in
+SwiftShader from three sides, closed and open: closed it looks as before; open, the lid stands up over an open box
+with its floor and walls showing, the straps on the front and back only. Nothing else changed.
+## FIDGET-1 · People (and Twinsen) standing with their hands up · the laptop, 5.11.2026 (the user: "it's strange that the characters stand and raise their hands, it isn't natural, Twinsen too")
+Cause: rig.js's idle fidgets. Every idle rig picks one of five fidgets every 5–12 s, all equally likely; two of them
+raise the arms: 3, a head scratch (right arm −2.4 rad), and 4, a stretch with both arms straight up (−2.7 rad). So 40 %
+of fidgets were hands in the air, and in any group someone always had them up. `requests/FIDGET-1.diff` (rig.js only;
+applies alone on origin):
+- The pick is weighted to the quiet ones: a look round 35 %, the weight shifted 30 %, a glance up 20 %, a scratch 12 %,
+  3 % nothing. The stretch only once the rig has stood idle 30 s without a break (`_idleT0`, reset when idle stops for
+  0.5 s), and once in that wait (`_stretched`). 7–14 s between fidgets (was 5–12).
+- The scratch: the hand to the back of the head, the elbow out (arm −2.1, elbow −2.1). The stretch: the hands behind
+  the head (arms −2.0, elbows −1.7), no longer both arms straight up.
+- Tests that measure poses still switch the fidgets off with `fidgetT = 99` (anim-polish, npc-feet): unchanged. Syntax
+  checked; not run in the game yet (worth a look at the square's crowd when you merge).
+
+## ASYLUM-3 · The hostel's leftovers (CLOUD_ORDERS 8) and the user's "the stairs disappear", "this area is full of bugs" · the laptop, 5.11.2026
+`requests/ASYLUM-3.diff` (asylumhostel.js, lba1places.js, lba1room.js; applies alone on 4373bc5). The causes:
+- **Stairs and landings vanish (the user's photos):** lba1room.js put each 16-cell block's leftover ceilings into one lid,
+  floors Twinsen stands on included; on the west landing or the flight the beams beside him on his sight line cut that
+  lid, so his own floor faded and he stood in black (drawn floor 2.17 under him at 6.5). Now floors he can stand on (a
+  slab over nothing, a slope) are lids of their own, and the lid under his feet is never cut. Drawn floor = his feet
+  along the flight (6.5 / 6.07 / 5.2 / 4.34).
+- **Steps as bare floating tops:** slope cells were drawn as their top only. Now with side faces; a step hanging less
+  than 1.74 m over the floor is filled down to it, with a collider (seeThrough, noStand). Every LBA1 room; bumaze has
+  no slope cells, so only the asylum changes.
+- **Beams floating over the cells and corridor:** LBA1's ceiling beams rested on pillars the camera-side cut removes;
+  `opts.clear` (lba1room.js) clears x 44–63, z 30–62 from height 17 up for the asylum.
+- **Floors ending in black at the grid's edge, the store's void:** a two-cell parapet in the wall stone, with a
+  collider, where a floor reaches the camera-side edge with no wall; `opts.footing` carries the outer camera-side walls
+  of the lowest levels 9 m down into the dark (one mesh, +1 draw call, +564 tris). A fade, not a fill: the black share
+  at the store 56 % → 53.5 %.
+- **Undressed rooms:** LBA1's west room is the kitchen's larder (pantry shelves, jars, sacks, a work table, barrels
+  under the flight, a lamp); the loft over the dorm the linen loft (blankets, a washing line of sheets, a chest, a
+  basket); the landing at 9 a bench and a plant. New builders `sack`, `pantryShelf`, `linenShelf`.
+- Order 8's items: the common-room pot was half inside LBA1's cabinet collider: moved in front of it (all 8 pots now
+  clear); the front step's grass: none on CLIMB-1's paving, no change; Kesso (worker4, sit) sat 0.49 m over the bench
+  with his knees through the table: `y = Y + 0.08`; Wix (sleeper): hands 4 cm in the west wall, moved 0.12 cell toward
+  his feet (his lower half still 0.25 m in the mattress: raising him lifts his head off the pillow).
+- Lids 18 → 26 (meshes 44 → 60); not measured on the GPU. Checked (SwiftShader): asylum 12/12, lba1rooms 8/8 (bumaze
+  included). Pictures (chapters 1–2): `docs/future/world/ASYLUM-3/` cmp-west-flight, cmp-corridor-cells, cmp-store-south
+  (before left, after right).
+
+**ASYLUM-3 · the cloud's answer (5.11):** applied as your diff (asylumhostel.js, lba1places.js, lba1room.js), clean on
+da44a727 + your branch. Checked (SwiftShader): asylum PASS, lba1rooms 8/8; your before/after pictures looked at. Published.

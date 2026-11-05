@@ -11,7 +11,8 @@
 // pickup, wipe, potting, search; 'stand' is standing) for `dur` [min, max] s, and gestures (nod, shrug, sigh).
 //
 // The rules (the same as the household rounds): a talk stops them where they are and they turn to Twinsen; a scene, a
-// conversation, a cut-scene or a fight near holds them; a new place from the chapter takes them at once (refreshCast);
+// conversation, a cut-scene or a fight near holds them; a new place from the chapter takes them at once (refreshCast;
+// walked to when they are on screen: story/index.js walkOn);
 // the hero gone from the area (or 40 m off) puts them back on the mark unseen, so a scene that needs them finds them
 // there; nothing is saved (after a load they start on the mark). Every stop keeps clear of the doors (StoryRounds
 // leaves out a stop in a door's reach), of the chapter's prompts and puzzle pieces, of the mandatory ways and of the
@@ -101,7 +102,7 @@ export const CAST_ROUNDS = [
   // his kite is; the villagers packing at their doors
   { id: 'yorna', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'yorna'), speed: 0.9,
     when: (f) => !f.c6_thawed,
-    stops: [M([12, 18]), T('shrine', -0.6, 4.8, [-2.0, 7.0], 'stand', [6, 9], { gest: ['nod'] }), T('packing', -3.0, -1.6, [-6.1, -6.8], 'stand', [5, 8], { gest: ['nod'] })] },
+    stops: [M([12, 18]), T('shrine', -0.6, 4.8, [-2.0, 7.0], 'stand', [6, 9], { gest: ['nod'] }), T('packing', -3.4, 0.4, [-6.1, -6.8], 'stand', [5, 8], { gest: ['nod'] })] },   // (clear of the steam crack's prompt (kit2b.js): it stood 1.4 m from it)
   { id: 'pim', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'pim'), speed: 1.2,
     when: (f) => !f.c6_trip2,
     stops: [M([8, 12]), T('icefall', 1.5, -3.0, [-5.6, -20.9], 'stand', [5, 8], { gest: ['sigh', 'shrug'] }), T('square', 0.5, 4.0, [0.5, 5.5], 'pickup', [4, 6])] },
@@ -120,7 +121,7 @@ export const CAST_ROUNDS = [
   { id: 'lhar3', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(2), speed: 0.8, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip2,
     stops: [M([10, 16]), T('trough', 6.4, -2.4, [7.6, -2.4], 'touchWater', [6, 9]), T('wheels', 4.6, -4.6, [5.05, -6.05], 'reach', [6, 9])] },
   { id: 'yorna', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(3), speed: 0.9, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_up,
-    stops: [M([12, 18]), T('wheels', 3.6, -5.0, [3.55, -6.05], 'reach', [6, 9]), T('bench', 5.2, 0.6, [6.6, 1.0], 'stand', [6, 9], { gest: ['nod'] })] },
+    stops: [M([12, 18]), T('wheels', 3.6, -5.0, [3.55, -6.05], 'reach', [6, 9]), T('bench', 5.2, -0.6, [6.6, 1.0], 'stand', [6, 9], { gest: ['nod'] })] },   // (clear of the frozen chest's prompt (kit2b.js): it stood 1.75 m from it)
   { id: 'pim', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(4), speed: 1.2, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip2,
     stops: [M([8, 12]), T('sledge', -7.6, 3.4, [-8.8, 4.3], 'kneelWork', [7, 10]), T('trough', 3.6, -1.6, [4.6, -2.4], 'touchWater', [4, 6])] },
   // the observatory's keeper (chapter 7), along the hall's south wall: the telescope's side, the bookshelf by the door;
@@ -168,7 +169,7 @@ export const CAST_ROUNDS = [
   { id: 'hesk', ch: ['network'], room: 'desert', mark: heskSpot, speed: 1.0,
     stops: [M([10, 14]), T('wing', -1.6, -2.6, [-2.0, -5.2], 'tinker', [8, 12]), T('look', 4.5, -1.6, [10, -1.6], 'stand', [5, 8], { gest: ['nod'] })] },
   { id: 'hesk', ch: ['network'], room: 'hamalayi', mark: heskSpot, speed: 1.0,
-    stops: [M([10, 14]), T('wing', 5.0, 1.6, [7.8, 1.0], 'tinker', [8, 12]), T('look', 2.4, -1.4, [2.4, -8], 'stand', [5, 8], { gest: ['nod'] })] },
+    stops: [M([10, 14]), T('wing', 4.0, 3.2, [7.8, 1.0], 'tinker', [8, 12]), T('look', 2.4, -1.4, [2.4, -8], 'stand', [5, 8], { gest: ['nod'] })] },   // (wing: clear of the frozen chest's prompt, 1.2 m before)
   { id: 'hesk', ch: ['network'], room: 'citadel', mark: heskSpot, speed: 1.0,
     stops: [M([10, 14]), T('wing', 4.2, -1.2, [6.8, -3.0], 'tinker', [8, 12]), T('look', 1.0, 2.4, [1.0, 10], 'stand', [5, 8], { gest: ['nod'] })] },
 ];

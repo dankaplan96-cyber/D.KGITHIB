@@ -38,6 +38,7 @@
 // phase(f, story) → a key of `rounds` or null (not here now), rounds: { key: stops } } with stops as walkrounds.js's,
 // in the area's own frame (the region group's origin is added when it is built).
 import * as THREE from 'three';
+import { Walkers } from './walkers.js';
 import { Kit, MAT, rbox, cyl } from './props.js';
 import { woodpile, dryingRack, sledge } from './props-mountain.js';
 
@@ -379,8 +380,8 @@ export function storyDefs(game) {
   const out = [];
   for (const [area, people] of Object.entries(STORY_AREAS)) {
     const R = game.regions?.built(area), o = R?.group?.position;
-    if (R && area === 'zeelich') game.walkers?.nav.addLevel(o.x - 62, o.x + 66, 6.0);   // (Zeelich's floor bricks: as walkrounds.js zeelichRoster)
-    if (R && area === 'desert') { const F = SCHOOL_PLAZA; game.walkers?.nav.addShore({ x0: F.x0 + o.x, x1: F.x1 + o.x, z0: F.z0 + o.z, z1: F.z1 + o.z, min: F.min }); }
+    if (R && area === 'zeelich') (game.walkers ||= new Walkers(game)).nav.addLevel(o.x - 62, o.x + 66, 6.0);   // (Zeelich's floor bricks: as walkrounds.js zeelichRoster)
+    if (R && area === 'desert') { const F = SCHOOL_PLAZA; (game.walkers ||= new Walkers(game)).nav.addShore({ x0: F.x0 + o.x, x1: F.x1 + o.x, z0: F.z0 + o.z, z1: F.z1 + o.z, min: F.min }); }
     for (const p of people) {
       const base = { id: p.id, name: 'n_' + p.id, char: p.char, tint: p.tint, speed: p.speed, color: p.color, ambient: true, story: true, area, start: p.start || 0, phase: p.phase };
       if (!R) { out.push({ ...base, x: 0, z: 0, angle: 0, pending: true }); continue; }

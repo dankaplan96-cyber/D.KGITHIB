@@ -90,4 +90,33 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    cliff splat texture (`TX.cliff`) and the rock meshes. Make the outcrops grey (and more of them on the steep slopes)
    within 80 % likeness; before/after from above and from the play camera. Chapter 4 on: no pictures to the user
    unless asked.
+14. **The polish passes' visual leftovers (5.11; yours: art, lighting, placement; chapters 1–2 unless marked):**
+   (a) leaving the hostel by its north door with Follow: a cream band fills the bottom of the frame for a moment (the
+   camera behind the portico top, the 1 m near-cut slices it): `asylumhostel.js` portico or a camera nudge, say which;
+   (b) the lantern beside most street doors shows at the frame's lower right for a moment after leaving (cosmetic);
+   (c) the wizard tent's door: a tall grass blade and a bush in front of the Follow camera; (d) the tavern cellar's
+   lower floor near-black (R8 "never dark"); (e) `GL_INVALID_OPERATION: texture format/sampler type mismatch` warnings
+   in the console (SwiftShader only? check on the GPU); (f) Citadel landing (−58, −60): two low plant colliders overlap
+   the landing spot; (g) later chapter, no pictures to the user: the Hamalayi parked glider seems to cut into the
+   monastery wall by the frozen chest (with order 11). Report in `WORLD_ART_REQUESTS.md`.
+15. **CLIMB-1, the user's second look (5.11): "still a hole here, and it isn't like the structure in LBA2".** The hole is
+   fixed by the cloud (the ground across the ramp's second leg is filled level to its retaining wall: it fell 1.1 m
+   toward the wall's foot under the stone house's pad ease, `lba1places.js climbRampFill`, applied last in
+   `world.js islandHeight`). The likeness is yours: compare the ramp and its wall with LBA2's climb north of the square
+   (31_game_bugstreet_north: the build of its walls, posts and rails, the proportions, the steps), list the biggest
+   differences and fix the top ones within 80 % likeness and R11. Before/after pictures from the play camera (chapter 1–2
+   place: the user may see them).
+16. **The asylum flight's top (the user, 5.11, three photos; chapters 1–2: pictures may go to the user).** (a) "Still
+   crooked": the flight's axis (ASYLUM_STEPS a (−33.0, −37.2) → b (−31.5, −47.5)) is 8° off the terrace and the hostel's
+   portico, which stand square: at the top the sandstone landing meets the square grey terrace at a slant, a cheek post
+   stands in the way between the landing and the terrace. Square the flight to the portico if the water main's legs,
+   the stump's clover and the stone house's upper door allow it (move them if they must move), or square the landing.
+   (b) "A strange gap": between the flight's east cheek (o = +1.7) and TERRACE_RAIL's first run (x −28.4, z −46.6 →
+   −42.95) a trench 1.4–2 m wide down to the cliff rock, two railed walls side by side. Make it one: the terrace carried
+   on to the cheek as a retaining wall (the flight cut into the terrace, as LBA2's climbs), or the cheek and the rail one
+   wall. (d) The camera at the top (the user: "going up the stairs the camera sticks to Twinsen"): the terrace
+   before the fort's south wall is only ~2.5 m deep behind the flight's top, the wall 5.6 m high, so Follow's arm has
+   no room and rises over his head at 1.4–3.2 m (camera.js MIN-VIEW, by design). If (a) squares the flight, give the
+   landing ≥ 4 m before the wall, or say so and the cloud makes the camera look along the terrace there. The cloud's terrain fill helper is `lba1places.js climbRampFill` (applied last in `world.js islandHeight`). (c)
+   With (a)–(b), order 15's likeness to LBA2's climb. Before/after from the play camera (Follow, medium).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.

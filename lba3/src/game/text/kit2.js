@@ -13,7 +13,7 @@ Object.assign(STR.en, {
   e2_ar_set1: "It's a pocket set. I built it from my radio's spare parts.",
   e2_ar_set2: 'Hold it out. It whistles louder near things that hum, and the needle shows you where.',
   e2_tw_set: 'Things that hum?',
-  e2_ar_set3: 'Something in the cellar hums. I hear it at night. Find it!',
+  e2_ar_set3: 'Something in the cellar hums. I hear it when the house is quiet. Find it!',
   e2_ar_set4: 'And if you turn it right up, it squeals. Drones hate that.',
   e2_set_note: "A note under it, in Arthur's writing: DAD, IT WHISTLES AT THINGS THAT HUM. SOMETHING HUMS IN THE CELLAR. - A.",
   e2_toast_sethow: 'Pocket Set: choose it on the weapon wheel ({w}) or in the inventory. {k}: squeal',

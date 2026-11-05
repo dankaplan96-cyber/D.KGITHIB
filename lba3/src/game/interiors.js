@@ -906,7 +906,9 @@ function buildWell(scene, physics) {
     B.ccol(x, z, 0.14, 2.0);
     B.light('#8ac4ff', 3.5, 6, x, 1.9, z);
   };
-  lantern(-1.2, 5.2); lantern(7.2, 2.4);
+  // (the user, 5.11: "in the zoom inside the well Twinsen is hidden by a lamp, you can take it out": the two posts stood
+  //  on the camera's side of the cave, a 2 m post and globe between the lens and him; now by the back wall)
+  lantern(-1.2, -D / 2 + 0.45); lantern(2.6, -D / 2 + 0.45);
 
   // warm puddles ringed with stones, with steam
   const puddleMat = new THREE.MeshStandardMaterial({ color: '#4fb8c8', emissive: '#1a6a7a', emissiveIntensity: 0.6, roughness: 0.1, transparent: true, opacity: 0.85 });

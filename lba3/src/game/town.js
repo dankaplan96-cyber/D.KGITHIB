@@ -364,6 +364,11 @@ function well(parent, H, physics, x, z) {
   put(g, new THREE.LatheGeometry(ring, 24), texMat('stone', 3, 0.6), 0, 0, 0);
   const water = put(g, new THREE.CircleGeometry(0.88, 24), new THREE.MeshStandardMaterial({ color: '#1a3a4a', roughness: 0.2 }), 0, 0.45, 0, 0, false);
   water.rotation.x = -Math.PI / 2;
+  // WELL-DRY (the user, 5.11: "the water hasn't come back, but water is drawn"): the town's well is dry until chapter 2's
+  // valves bring the water back (chapter1.js c1_water); dry, the surface is a cracked mud bottom lower down the shaft
+  const wet = water.material, dry = new THREE.MeshStandardMaterial({ color: '#4a3d2e', roughness: 1 });
+  water.userData.keep = true;   // (not merged: it changes)
+  const setWater = (on) => { water.material = on ? wet : dry; water.position.y = on ? 0.45 : 0.14; water.updateMatrix(); water.updateMatrixWorld(true); };
   const wood = texMat('wood', 0.3, 2, '#b07848');
   for (const sx of [-1, 1]) put(g, new THREE.BoxGeometry(0.14, 2.3, 0.14), wood, sx * 1.0, 1.15, 0);
   const beam = put(g, new THREE.CylinderGeometry(0.07, 0.07, 2.3, 8), wood, 0, 1.75, 0); beam.rotation.z = Math.PI / 2;
@@ -377,6 +382,7 @@ function well(parent, H, physics, x, z) {
   put(roofG, new THREE.CylinderGeometry(0.07, 0.07, 2.7, 8), mat('#a8442c', 0.8), 0, 0.56, 0).rotation.x = Math.PI / 2;
   physics.add({ type: 'cyl', x, z, r: 1.25, top: H(x, z) + 0.95, noStand: true, seeThrough: true });
   mergeStatic(g, { recolor: true });   // (static: PERF-IGPU)
+  return setWater;
 }
 function curbs(parent, H) {
   // granite curb stones along both edges of each street, instanced
@@ -438,8 +444,9 @@ export function buildTown(scene, W) {
   // local → world helper for a house
   const at = (id, lx, lz) => { const h = houseInfo[id]; return [h.x + Math.cos(h.ry) * lx + Math.sin(h.ry) * lz, h.z - Math.sin(h.ry) * lx + Math.cos(h.ry) * lz]; };
 
-  well(scene, H, physics, V.x, V.z);
-  W.well = { x: V.x, z: V.z };
+  const setWellWater = well(scene, H, physics, V.x, V.z);
+  W.well = { x: V.x, z: V.z, setWater: setWellWater };
+  setWellWater(false);   // (the story sets it: story/prologue.js applyFlags, chapter1.js when the water returns)
 
   // Pippa's fruit stall at the edge of the square, facing the well
   {
