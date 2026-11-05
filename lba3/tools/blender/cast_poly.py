@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
-from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, refine, ring, smooth, sphere, strip, strip_tris, tube  # noqa: E402
+from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, refine, ring, smooth, sphere, strip, strip_tris, trunk_loft, trunk_weights, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUTDIR = args[0], args[1]
@@ -150,6 +150,34 @@ def glasses_on(part, front, ey, ex, r, rot=0.0, w=0.004):
     part.add([(-bw, ey + 0.004, front(0, ey) + 0.013), (bw, ey + 0.004, front(0, ey) + 0.013), (bw, ey - 0.002, front(0, ey) + 0.013), (-bw, ey - 0.002, front(0, ey) + 0.013)], [[0, 3, 2, 1]])
 
 
+def grobo_trunk(headY, hipsY, shY, neckY, kneeY, belly, slim=1.0):
+    """TRUNK-1: a Grobo's trunk, the centre line and radius [(y, z, r)]: its root buried in the muzzle, then the three
+    trunk bones' pivots, then the tip's two points. The same numbers as characters.js groboTrunk() (which places the
+    bones): change both together. LBA2's Grobo (body 99): the trunk leaves the face below the eyes, arcs well out in front
+    of the belly and hangs to the belt line, about as thick all the way down (±0.057 H); ours tapers a little more, keeps
+    clear of the belly by GAP (it sways with the walk) and flicks its tip forward."""
+    R, cy, cz, GAP = 0.3 * slim, headY - 0.02, 0.1, 0.085
+    F = [(kneeY + 0.02, 0.2), (kneeY + 0.1, 0.34), (hipsY - 0.12, 0.44), (hipsY + 0.05, 0.48), (hipsY + 0.3, 0.45), (shY - 0.08, 0.38), (shY + 0.06, 0.29), (neckY + 0.04, 0.18)]
+
+    def front(y):   # (the body's front at y: the blob's sections in build(), unrefined)
+        if y <= F[0][0]:
+            return F[0][1] + belly
+        for (ya, za), (yb, zb) in zip(F, F[1:]):
+            if y <= yb:
+                return za + (zb - za) * (y - ya) / (yb - ya) + belly
+        return F[-1][1] + belly
+    rad = [r * slim for r in (0.125, 0.112, 0.096, 0.083, 0.074, 0.064)]
+    y1, yT = cy - 1.2 * R, hipsY - 0.03
+    y2 = y1 + (yT - y1) * 0.55
+    p0 = (cy - 0.25 * R, cz + 0.8 * R + belly * 0.4)
+    p1 = (cy - 0.5 * R, cz + 1.32 * R + belly * 0.9)   # (a belly pushes the chest out under the chin: the trunk leaves the face over it)
+    p2 = (y1, max(front(y1) + rad[2] + GAP, p1[1] + 0.05))
+    p3 = (y2, max(front(y2) + rad[3] + GAP, p2[1]))
+    p4 = (yT + 0.07, max(front(yT + 0.07) + rad[4] + GAP, p3[1] - 0.02))
+    p5 = (yT - 0.01, p4[1] + 0.05)
+    return [(round(y, 4), round(z, 4), round(r, 4)) for (y, z), r in zip((p0, p1, p2, p3, p4, p5), rad)]
+
+
 def build(name):
     S = ALL[name]
     L, B = S['look'], S['bones']
@@ -184,11 +212,23 @@ def build(name):
     zc = lambda y: stoop * 0.5 * smooth(waistY, neckY, y)  # the stoop leans the chest forward
     N = 12   # (the tunic's rounded box, LBA2's townsfolk's: its flat front and corners are the design; finer, the apron and pockets laid on it sink in)
 
+    # SEAM-1: the tunic's top (torso) and its skirt (hips) met in one ring at the waist, each side rigid to its own bone, so
+    # walking (the torso turns against the hips) opened the seam 3-5 cm and the skirt's edge stuck out through the belt in
+    # jagged pieces. Both sides of it, the belt and the buckle over it, now hand over from torso to hips the same way
+    # across the waist (the hips' share: seam()), so the coincident corners stay together.
+    def seam(y):
+        return smooth(waistY + 0.07, waistY - 0.07, y)
+
+    def w_waist(p):
+        h = seam(p[1])
+        return {k: v for k, v in (('torso', 1 - h), ('hips', h)) if v > 1e-4}
+
     def w_torso(p):
         x, y, z = p
         arm = smooth(shX - 0.07, shX + 0.01, abs(x)) * smooth(chestY - 0.05, shY - 0.02, y)
         s = 'L' if x > 0 else 'R'
-        return {'torso': 1 - arm * 0.6, 'sh' + s: arm * 0.6}
+        h = seam(y)
+        return {k: v for k, v in (('torso', (1 - arm * 0.6) * (1 - h)), ('hips', (1 - arm * 0.6) * h), ('sh' + s, arm * 0.6)) if v > 1e-4}
 
     gown = outfit == 'gown'
     if grobo:
@@ -274,7 +314,8 @@ def build(name):
             # as LBA2 skins its robes, so it stays round the legs whatever they do: knocked out and lying, the skirt
             # bones alone held the stiff cone out from the legs (the hem stood off the body, the feet in the air)
             g = coat_legs * smooth(waistY - 0.1, hemY + 0.05, y) if coat_legs else 0.0
-            w = {'hips': 1 - k}
+            h = seam(y)
+            w = {'hips': (1 - k) * h, 'torso': (1 - k) * (1 - h)}   # (SEAM-1: at the waist as the tunic's top)
             for bn, v in (('skirtF', max(0, c) ** 2), ('skirtB', max(0, -c) ** 2), ('skirtL', max(0, s) ** 2), ('skirtR', max(0, -s) ** 2)):
                 if v > 0:
                     w[bn] = k * v * (1 - g)
@@ -343,7 +384,7 @@ def build(name):
                     fv = [(x, y, skirt_z(y, x) + 0.013) for y in (py0 + 0.012, py0 - 0.02) for x in (cols[0] - 0.004, cols[1] + 0.004)]
                     pf_.add(fv, [[0, 2, 3, 1]])
 
-        belt = b.P('belt', L.get('belt', '#5a3a1a'), 'torso', 50) if not gown else None
+        belt = b.P('belt', L.get('belt', '#5a3a1a'), w_waist, 50) if not gown else None
         if belt: loft(belt, [ring(waistY - 0.02, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY)),
                     ring(waistY + 0.035, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY))])
         if cp.get('strap'):   # a cross-strap from the right shoulder to the left hip (the guards' bandolier)
@@ -351,7 +392,7 @@ def build(name):
             for i in range(len(sp_) - 1):
                 tube(b.P('strap', cp['strap'], 'torso', 40), sp_[i], sp_[i + 1], 0.021, 0.021, 5, squash=0.35)
         if L.get('bow') or cp.get('bow'):  # a sash bow at the back of the waist
-            bw = b.P('bow', L.get('belt', '#f4d27a'), 'torso', 40)
+            bw = b.P('bow', L.get('belt', '#f4d27a'), w_waist, 40)
             bz = -0.1 * wide + zc(waistY)
             for sxx in (1, -1):
                 sphere(bw, (sxx * 0.05, waistY + 0.01, bz - 0.02), 0.045, 7, 5, (1.2, 0.7, 0.45))
@@ -361,12 +402,12 @@ def build(name):
             # (ARTHUR-12) a small tool pouch on the belt at his right hip, flap and all (the pliers' story): on the hips
             # bone, outside the tunic's flare, so a stride swings the cloth past it rather than through it
             px0 = -(max(tw * 1.12, legX + 0.1 * wide) + 0.004)
-            pc = b.P('pouch', L['pouch'], 'hips', 30)
+            pc = b.P('pouch', L['pouch'], w_waist, 30)
             box(pc, px0 - 0.034, px0, waistY - 0.13, waistY - 0.005, -0.045, 0.045)
-            box(b.P('pouchFlap', L.get('belt', '#5a3a1a'), 'hips', 30), px0 - 0.04, px0 - 0.026, waistY - 0.06, waistY + 0.004, -0.05, 0.05)
+            box(b.P('pouchFlap', L.get('belt', '#5a3a1a'), w_waist, 30), px0 - 0.04, px0 - 0.026, waistY - 0.06, waistY + 0.004, -0.05, 0.05)
         if (L.get('buckle') or cp.get('buckle')) and not (L.get('bow') or cp.get('bow')) and not gown:
             fz = 0.118 * wide + belly * 0.72 + zc(waistY)
-            box(b.P('buckle', L.get('buckle') or cp.get('buckle') or '#d8b04a', 'torso', 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
+            box(b.P('buckle', L.get('buckle') or cp.get('buckle') or '#d8b04a', w_waist, 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
         if L.get('apron'):
             # CAST-POLISH: an apron that follows the body: a bib on the chest with a strap over each shoulder, the skirt of it
             # laid on the tunic's skirt (it used to be a flat panel the flare cut through), a patch pocket, a trim along the hem
@@ -868,12 +909,21 @@ def build(name):
         hp = b.P('head', skin, head_w, 70)
         sphere(hp, c, R, 12, 8, (1.0, 0.92, 1.08))
         sphere(hp, (0, c[1] - R * 0.35, c[2] + R * 0.62), R * 0.55, 9, 6, (1.0, 0.85, 0.9))   # (the muzzle the trunk grows from)
-        tr = b.P('trunk', skin, head_w, 55)
-        bf = 0.48 + belly
-        pts = [(0, c[1] - R * 0.3, c[2] + R * 1.05), (0, c[1] - R * 0.95, c[2] + R * 1.25), (0, c[1] - R * 1.9, max(bf + 0.08, c[2] + R * 1.2)), (0, c[1] - R * 2.6, bf + 0.12), (0, c[1] - R * 3.0, bf + 0.18)]
-        rad = [0.1, 0.08, 0.065, 0.055, 0.05]
-        for i in range(len(pts) - 1):
-            tube(tr, pts[i], pts[i + 1], rad[i], rad[i + 1], 9)
+        # TRUNK-1 (the user, 5.11: "their trunk doesn't look good"): it was four straight tubes hung rigid from the head, thin
+        # (0.1 → 0.05), kinked at each joint, ringed by squashed balls like pipe clamps, hugging the belly to below the belt.
+        # Now one smooth tapering tube on the curve grobo_trunk() gives (out from the face, down in front of the belly to the
+        # belt, the tip flicked forward and rounded), three faint wrinkles on its top, weighted along its length to the
+        # trunk bones characters.js adds (so rig.js swings it as Baldino's)
+        tpts = grobo_trunk(headY, hipsY, shY, neckY, bp('kneeL')[1], belly, slim)
+        if 'trunk0' in B:
+            for k_ in range(3):   # (the skeleton's bones must sit on this curve: characters.js groboTrunk() has the same numbers)
+                by_, bz_ = B['trunk%d' % k_]['p'][1], B['trunk%d' % k_]['p'][2]
+                if abs(by_ - tpts[k_ + 1][0]) > 0.002 or abs(bz_ - tpts[k_ + 1][1]) > 0.002:
+                    print('WARNING', name, 'trunk%d' % k_, 'at', (by_, bz_), 'off the curve', tpts[k_ + 1][:2], '(re-dump the skeleton)')
+        tr = b.P('trunk', skin, head_w, 80)
+        tarc = trunk_loft(tr, tpts, 10, 0.065, ridges=((0.2, 0.07), (0.28, 0.07), (0.36, 0.06)))
+        if 'trunk0' in B:
+            tr.weights = trunk_weights(tarc, [tarc((0, B['trunk%d' % k_]['p'][1], B['trunk%d' % k_]['p'][2])) for k_ in range(3)])
         # the ears: great flat flaps, a little pulled forward at the outer edge, drooping to a rounded tip, a thick rim of skin round a
         # shallower dish in the inner colour (CAST-POLISH: the flat discs read as loudspeakers); CAST earTurn / earS
         eturn, eS = cp.get('earTurn', 0.3), cp.get('earS', 1.0)
@@ -897,7 +947,7 @@ def build(name):
         es_ = R * 0.15 * cp.get('eyeS', 1.0)
         eyes_on(front, c[1] + R * 0.3, R * 0.36, es_, eyec)
         # CAST-POLISH: heavy brows (a Grobo's are a ridge of its skin, darker), a wide mouth on the muzzle that flanks the trunk
-        # (its own mesh: it talks), the trunk's tip a little finger-lobe, wrinkles where it bends
+        # (its own mesh: it talks); (the trunk's rounded tip and wrinkles are trunk_loft's since TRUNK-1)
         if L.get('brows', True):
             brow_strips(b.P('brows', cp.get('browCol') or shade(skin, 0.6), head_w, 30), front, c[1] + R * 0.3, R * 0.36, es_ * 0.66, es_ * 0.36, cp.get('browS', 1.7), cp.get('browTilt', 0.0), cp.get('browArch', 0.0), 0.006)
         mc_ = (0, c[1] - R * 0.35, c[2] + R * 0.62)
@@ -910,9 +960,6 @@ def build(name):
             mp_, ml_, mt_ = mouth_lens(sxx * R * 0.42 * cp.get('mouthW', 1.0), gcy, R * 0.2, mhh, R * 0.07 * cp.get('mouthLift', 1.0), front, 9, 0.004)
             lens_.append(ml_)
         b.mouth((0.0, gcy, mp_[2]), [(lens_[0], cp.get('lip', '#5a2a30')), (lens_[1], cp.get('lip', '#5a2a30'))], rest=0.34, drop=-0.35 * mhh, tilt=mt_)
-        sphere(tr, (0, pts[-1][1] - 0.012, pts[-1][2] + 0.012), 0.047, 7, 5, (1.0, 1.0, 1.25))
-        for i in (2, 3):
-            sphere(tr, pts[i], rad[i] * 1.12, 8, 5, (1.0, 0.45, 1.0), exact=True)   # (rings round the trunk: their rim shows)
         if L.get('hat'):
             hs_ = cp.get('hatStyle', 'brim')
             ht = b.P('hat', L['hat'], head_w, 40)
@@ -1607,7 +1654,9 @@ def build_mole(name):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         out = lambda p, k: (p[0] + sx * k * H, p[1], p[2] + 0.06 * H)
         a0, e2, h2 = (sx * 0.16 * H, 0.74 * H, 0.06 * H), out(el, 0.12), out(hd, 0.14)
-        tube(b.P('upper' + s, robe, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), a0, e2, 0.055, 0.045, 8)
+        # (the sleeve's end is all the forearm's by the elbow, where the forearm starts: it was 60/40 there and the two came
+        # 5 cm apart when he gestured)
+        tube(b.P('upper' + s, robe, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.09, e + 0.005, p[1]), 'el' + s: smooth(e + 0.09, e + 0.005, p[1])}, 50), a0, e2, 0.055, 0.045, 8)
         tube(b.P('fore' + s, pale, 'el' + s, 50), e2, h2, 0.045, 0.04, 8)
         tube(b.P('cuff' + s, trimc, 'el' + s, 40), lerp(e2, h2, -0.02), lerp(e2, h2, 0.14), 0.05, 0.048, 8)
         pc = (h2[0], h2[1] - 0.03, h2[2])
@@ -1858,9 +1907,11 @@ def build_vesk(name):
     # the coat's front: a placket of violet lining down it and brass buttons, so the long black coat has a centre line
     csec = [(y, hw, zf + st * smooth(hipsY, neckY, y), zb) for y, hw, zf, zb in secs]
     cz = lambda x, y: ring_z(csec, 0.7, x, y)
-    surf_grid(b.P('placket', lining, w_coat, 40), [[-0.012, 0.012]] * 5, [0.1, 0.3, 0.55, 0.78, hipsY - 0.04], cz, 0.004)
+    # (the placket on the coat's centre line, where its halves part with the legs: weighted as the centre line itself, so it
+    # stays a narrow strip; weighted across the parting, it spread into a violet wedge 20 cm wide at the hem in every stride)
+    surf_grid(b.P('placket', lining, lambda p: w_coat((0.0, p[1], p[2])), 40), [[-0.012, 0.012]] * 5, [0.1, 0.3, 0.55, 0.78, hipsY - 0.04], cz, 0.004)
     for y_ in (0.18, 0.4, 0.62, 0.84):
-        facet(b.P('button', brass, w_coat, 30), (0, y_, cz(0, y_) + 0.007), (0, 0, 1), 0.016, 6)
+        facet(b.P('button', brass, lambda p: w_coat((0.0, p[1], p[2])), 30), (0, y_, cz(0, y_) + 0.007), (0, 0, 1), 0.016, 6)   # (on the centre line too)
     hl_ = bp('handL'); el_ = bp('elL')
     tube(b.P('cuffL', brass, 'elL', 30), lerp(el_, hl_, 0.74), lerp(el_, hl_, 0.88), 0.07, 0.068, 8, hard=True)
     os.makedirs(OUTDIR, exist_ok=True)

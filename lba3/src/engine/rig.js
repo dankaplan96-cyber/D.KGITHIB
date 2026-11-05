@@ -1576,10 +1576,17 @@ export class Rig {
       set(j.ears.L, e, 'y', 10); set(j.ears.R, -e, 'y', 10);
     }
     if (j.trunk) {
-      const sw = walkLike ? Math.sin(this.phase) * 0.35 : Math.sin(this.t * 0.9) * 0.05;
+      // TRUNK-1: the sway is the original's ±22–27° at the tip (it was up to ±42°: the trunk swung out past the head, seen
+      // from behind), each segment a little later than the one above it, so it swings as one curve rather than a rod
+      // hinged at the face. At rest it breathes with the idle (his clip 715 holds it curled −9°/+11°), and lifts a little
+      // and settles while he talks (a gesture, not lip-sync). It never swings back into the belly (+x).
+      const idleP = Math.PI * 2 / (this.idlePeriod || 2.4);
+      const talkLift = a === 'talk' ? 0.5 - 0.5 * Math.cos(this.actionT * Math.PI * 2 / 1.6) : 0;
       j.trunk.forEach((s, i) => {
-        set(s, sw * (0.4 + 0.3 * i) - this.roll * 0.4, 'z', 9 - 2 * i);
-        set(s, (walkLike ? -Math.min(speed, 4) * 0.03 : 0) - (this.lean || 0) * 0.3 * (i + 1), 'x', 8 - 2 * i);
+        const sw = walkLike ? Math.sin(this.phase - 0.45 * i) * 0.21 : Math.sin(this.t * 0.9 - 0.5 * i) * 0.035;
+        set(s, sw * (0.55 + 0.25 * i) - this.roll * 0.3, 'z', 9 - 2 * i);
+        const cx = (walkLike ? -Math.min(speed, 4) * 0.025 : -0.03 * (0.5 + 0.5 * Math.sin(this.t * idleP)) * i) - talkLift * 0.07 * i - (this.lean || 0) * 0.3 * (i + 1);
+        set(s, Math.min(0.02, cx), 'x', 8 - 2 * i);
       });
     }
 
