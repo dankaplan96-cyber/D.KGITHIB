@@ -222,8 +222,8 @@ export class Dig extends ChapterBase {
       g.cutscene = null;
       if (hesk) hesk.controlled = false;
       f.c4_yacht = to; f.c4_rode = true;
+      g.setState('play');   // (first: in the ride's state the cast is placed at once, and Hesk stepped 3 m off the yacht)
       this.story.refreshCast({ walk: true });
-      g.setState('play');
       g.updateObjective(); g.save(false);
     });
   }
