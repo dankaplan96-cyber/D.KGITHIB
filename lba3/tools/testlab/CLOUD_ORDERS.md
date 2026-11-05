@@ -99,4 +99,11 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    in the console (SwiftShader only? check on the GPU); (f) Citadel landing (−58, −60): two low plant colliders overlap
    the landing spot; (g) later chapter, no pictures to the user: the Hamalayi parked glider seems to cut into the
    monastery wall by the frozen chest (with order 11). Report in `WORLD_ART_REQUESTS.md`.
+15. **CLIMB-1, the user's second look (5.11): "still a hole here, and it isn't like the structure in LBA2".** The hole is
+   fixed by the cloud (the ground across the ramp's second leg is filled level to its retaining wall: it fell 1.1 m
+   toward the wall's foot under the stone house's pad ease, `lba1places.js climbRampFill`, applied last in
+   `world.js islandHeight`). The likeness is yours: compare the ramp and its wall with LBA2's climb north of the square
+   (31_game_bugstreet_north: the build of its walls, posts and rails, the proportions, the steps), list the biggest
+   differences and fix the top ones within 80 % likeness and R11. Before/after pictures from the play camera (chapter 1–2
+   place: the user may see them).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
