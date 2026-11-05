@@ -1112,6 +1112,21 @@ export class Rig {
         //  tied to the arms, and arms out to the sides pulled them into flat wings. Arms in and a little forward,
         //  elbows bent: the cape keeps hanging, as LBA2's jump)
         if (this.capeArms) { T.armL = up ? -0.7 : -0.5; T.armR = up ? -0.6 : -0.5; T.elL = -1.0; T.elR = -1.0; armOut = 0.2; }
+        // (the user, 5.11: "Twinsen's jump doesn't feel natural" — upright and set like a statue the whole way up and down.
+        //  Now he leans into it and the knees come up in turn as he rises, the lead leg higher; at the top they open, and
+        //  on the way down the legs reach and the arms come out a little for the landing; the arms swing against the legs)
+        if (this.capeArms) {
+          const r = clamp(this.actionT / 0.32, 0, 1), e = r * r * (3 - 2 * r);
+          if (up) {
+            torsoX = 0.18 + 0.2 * e; headX = -0.18 * e;
+            T.legL = -0.6 - 0.55 * e; T.legR = -0.3 - 0.2 * e; T.kneeL = 0.9 + 0.8 * e; T.kneeR = 0.6 + 0.6 * e;
+            T.armL = -0.4 - 0.35 * e; T.armR = -0.9 - 0.55 * e; T.elL = -0.8; T.elR = -1.0;
+          } else {
+            torsoX = 0.3 - 0.2 * e; headX = -0.1 + 0.15 * e;
+            T.legL = -1.0 + 0.6 * e; T.legR = -0.45 + 0.25 * e; T.kneeL = 1.5 - 0.9 * e; T.kneeR = 1.1 - 0.7 * e;
+            T.armL = -0.55 + 0.05 * e; T.armR = -0.75 + 0.2 * e; T.elL = -0.85; T.elR = -0.9; armOut = 0.2 + 0.15 * e;
+          }
+        }
       }
       if (this.footPlant && up) {
         // the push-off: the legs drive straight and the toes point for the first 0.12 s (the crouch's spring), then tuck
