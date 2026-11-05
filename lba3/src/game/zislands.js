@@ -22,7 +22,7 @@ import { rng, smoothstep, fbm } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo, BATCH } from './kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo, BATCH, ctex } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
@@ -209,7 +209,7 @@ function cutPlants(decor) {
   const under = (o, b) => { const t = Math.max(0.12, b.sy), bottom = b.y + b.sy - t; return o.y < bottom && o.y + o.sy > bottom - 0.05; };
   const blocks = decor.filter((o) => o.shape === 'house' || o.shape === 'tower' || o.shape === 'deck' || o.shape === 'slab');
   for (const o of decor) {
-    if (o.shape !== 'tree' && o.shape !== 'bush' && o.shape !== 'plant' && o.shape !== 'blossom') continue;
+    if (o.shape !== 'tree' && o.shape !== 'bush' && o.shape !== 'plant' && o.shape !== 'blossom' && o.shape !== 'frond' && o.shape !== 'goldplant') continue;   // (ZEELICH-2: Otringal's plants too)
     // (a nectar tree's crown is wider than its box: props-esmer.js blossomTree, 0.94 m at 1.6 m tall)
     const bl = o.shape === 'blossom' ? (0.94 * o.sy) / 1.6 : 0;
     const rx = bl || Math.max(0.3, o.sx) / 2, rz = bl || Math.max(0.3, o.sz) / 2, R = Math.max(rx, rz), ry = (o.beta / 4096) * Math.PI * 2, c = Math.cos(ry), sn = Math.sin(ry);
@@ -474,16 +474,68 @@ function otrHouse(o, M) {
   if (s.kind === 'civic') return { wall: wall(OTR_CIVIC), balconyP: 0, awningP: 0 };
   return { ...(s.flat ? { domed: false } : {}), ...(s.wall ? { wall: wall(s.wall) } : {}), balconyP: s.balconyP ?? 0.55, awningP: s.awningP ?? 0.6 };
 }
+// ZEELICH-2 (the cloud's order 6; the user, 4.11: "Zeelich doesn't look like LBA2's Zeelich"): Otringal as the original's
+// Otringal looks from the play camera, measured on its ground and bodies (lba-study, numbers only; layout unchanged):
+//   - ground: no grass at all (its textured ground a neutral grey granite, k-means #51504a–#a8a196 with #dbd3c9 lights;
+//     its paving a pale lavender grey, #d3ced9 / #afa5ad), where ours had green turf and violet cliffs;
+//   - buildings: taupe stucco walls (#9e9795–#baafac lit), glass-block bands (#68a9ce), low aqua (#78a1a7–#a1b9ba) or
+//     gold (#ab7945) caps and roofs (props-esmer.js setLook), where ours were cream and lilac under violet, rose and
+//     orange onions;
+//   - railings: grey posts and teal rails (body 5, 90 of them), a hazard bar (body 50, 16), where ours were wooden fences;
+//   - plants gold: street trees in square planters with a golden plume (bodies 52–54, 24) and a golden fan plant with
+//     red fruit (body 18, 13), where ours were dark green trees and 3.8 m terracotta jars;
+//   - the street lamps (body 1, 15) lamps, their heads (body 2, set on top of them) part of them, where ours drew both
+//     as jars, the head floating 2.5 m up; mossy rocks (bodies 7, 8, 99, 100) rocks, not jars and 4 m crates; the house
+//     parts the original keeps as objects (bodies 12, 13, 108) small doorless buildings and its round capped house
+//     (body 48) an octagonal drum under a cap, inside the jar's old collider (a box there blocked a house's door), not 5–6 m jars.
+// Twelve years on (80 %): the same kit as the rest of Zeelich, coloured and capped as LBA2's capital; the plaza, the
+// Grand Hall, the bar's and the hotel's doors and every kind (OTR) as they were.
+const OTR_LBA2 = {
+  look: true, turfRock: true, fence: 'rail',
+  ground: ['#f4f0e6', '#ece8de', '#e6e0d4'], rock: '#ece8de', rockHi: '#fffcf4', paveCol: '#f0eaf6',
+  // (the same five places in the list: OTR_CIVIC the pale one, OTR_COOL the grey one)
+  walls: ['#dccfc4', '#d4c8c0', '#e0d4cc', '#e6dcd2', '#ccc4c4'],
+  domes: [['#78a8ae', '#b4d8d8'], ['#b0824a', '#e6c47e'], ['#6c9ea8', '#a8d0d4'], ['#82b0b4', '#c0e0de']],
+};
+//   - the plaza's covered market (bodies 86–95: two rows of stone canopies) canopies, its poster boards (body 29) boards,
+//     its stacked planks (bodies 114, 115, 119) planks, a teal-banded bollard (141) a post, where ours drew all of them as
+//     2–3 m jars; a flag hung 2 m up (body 24) left out, where ours drew a rock floating there.
+const OTR_SHAPE = { 1: 'lamp', 2: 'skip', 18: 'goldplant', 52: 'frond', 53: 'frond', 54: 'frond', 7: 'rock', 8: 'rock', 99: 'rock', 100: 'rock', 12: 'annex', 13: 'annex', 48: 'drum', 108: 'annex',
+  86: 'canopy', 87: 'canopy', 88: 'canopy', 89: 'canopy', 90: 'canopy', 93: 'canopy', 94: 'canopy', 95: 'canopy', 29: 'poster', 114: 'planks', 115: 'planks', 119: 'planks', 141: 'post', 24: 'skip' };
+function otrShape(o) {
+  const s = OTR_SHAPE[o.body] || null;
+  if (s === 'lamp') o.lampPost = true;   // (the Esmer street lamp at any height: the original's post and head are 4.8 m)
+  return s;
+}
+// (ZEELICH-2: the original's Otringal rock, pale and speckled: a neutral grey with white and dark flecks and a little
+// moss grey, lit planes and cracks; used triplanar on the ground and cliffs where S.turfRock)
+const graniteTex = () => ctex('isle-granite', 512, 512, (x, S) => {
+  const r = rng(77);
+  x.fillStyle = '#bcb8b0'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 160; i++) {
+    const px = r() * S, py = r() * S, w = 18 + r() * 60, h = 10 + r() * 30, t = r();
+    x.fillStyle = t < 0.4 ? 'rgba(232,230,224,0.5)' : t < 0.7 ? 'rgba(120,118,110,0.35)' : 'rgba(150,154,138,0.35)';
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { x.beginPath(); x.ellipse(px + ox, py + oy, w / 2, h / 2, r() * 3, 0, 7); x.fill(); }
+  }
+  x.strokeStyle = 'rgba(70,68,62,0.5)'; x.lineWidth = 1.6;
+  for (let i = 0; i < 50; i++) {
+    let px = r() * S, py = r() * S; const pts = [[px, py]];
+    for (let k = 0; k < 5; k++) { px += 8 + r() * 20; py += (r() - 0.5) * 10; pts.push([px, py]); }
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a + ox, b + oy) : x.moveTo(a + ox, b + oy))); x.stroke(); }
+  }
+  for (let i = 0; i < 2600; i++) { const t = r(); x.fillStyle = t < 0.45 ? '#f2f0ea' : t < 0.8 ? '#6a6860' : '#7c8270'; x.fillRect(r() * S, r() * S, 1 + r() * 2, 1 + r() * 2); }
+});
 const STYLE = {
   otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
     // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
     env: { fog: '#d6d6de', sun: '#ecebf2', hemiSky: '#dedee8', hemiGround: '#787884', sunI: 1.9, hemiI: 1.35, fogRange: [70, 260] }, grade: 0.82, gradeTint: [0.98, 0.98, 1.02], cloudTint: ['#d4d2dc', '#dcdae2', '#e4e2ea'],
     trees: '#ffe4ec', ground: ['#f2e6b4', '#e6dcaa', '#e8d4c0'], pave: 'cobble', paveAt: (x, z) => x > -29 && x < 16 && z > -21 && z < 28,
     walls: ['#fbf0ea', '#f8e8d8', '#f6dce6', '#fff4e0', '#f1e2f6'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#8a5ac0', '#e8c8ff']],
+    ...OTR_LBA2,   // (ZEELICH-2: LBA2's colours over these)
     grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
     crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
     // (OTR-VARIETY: fewer buildings, each of a kind; the yard's wall lengths a wall: OTR above)
-    layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : null), cellBatch: 48,
+    layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : otrShape(o)), cellBatch: 48,
     landmark(api) {
       const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
       const pois = [{ ...api.S.target }];
@@ -1301,14 +1353,19 @@ class CellBatch {
   addM(geo, mat, m) { this.at(m.elements[12], m.elements[14]).addM(geo, mat, m); return this; }
   build() { const out = []; for (const b of this.cells.values()) out.push(...b.build()); return out; }
 }
+// (ZEELICH-2: an island in LBA2's Esmer look is built with props-esmer.js's look on, and off after)
 function buildIsland(scene, physics, name, L, at) {
+  EP.setLook(!!STYLE[name]?.look);
+  try { return buildIsland0(scene, physics, name, L, at); } finally { EP.setLook(null); }
+}
+function buildIsland0(scene, physics, name, L, at) {
   const ox = at.x, oz = at.z;
   const S = STYLE[name] || {};
   if (S.layout) L = S.layout(L);   // (Celebration: its later state's figure)
   if (S.decks) L = deckLayout(L, S);   // (the Lift Dock: its decks are its ground)
   const A = analyse(L, S), { w, d, H, cx, cz, gx, gz } = A;
   const plan = planIsland(name, L, A), pad = plan.pad;
-  const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}) };
+  const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}), ...(S.rock ? { rock: C(S.rock), rockHi: C(S.rockHi || S.rock), rim: C(S.rock).multiplyScalar(0.85) } : {}), ...(S.paveCol ? { pave: C(S.paveCol) } : {}) };
   // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares
   const route = new Float32Array(L.nx * L.nz).fill(9);
   for (const path of plan.routes) for (let q = 0; q < path.length; q += 2) {
@@ -1377,8 +1434,9 @@ function buildIsland(scene, physics, name, L, at) {
       const [r, p] = bare(x, z);
       wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p);
     }
+    if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
-  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: S.turfRock ? graniteTex() : TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite)
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
@@ -1422,7 +1480,7 @@ function buildIsland(scene, physics, name, L, at) {
   const B = S.cellBatch ? new CellBatch(group, S.cellBatch, ox, oz) : new Batch(group);
   const walls = (S.walls || ['#fbf0f0', '#f1e2f6', '#f8e8d8', '#e6f0f4', '#f6dce6']).map((c) => tm('plasterWall', { color: c, rough: 0.95 }));
   // (each dome colour its own material: kit.tm keys a texture by name, which made all four the first one)
-  const domes = (S.domes || [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']]).map(([a, b]) => EP.cm(domeTex(a, b), { rough: 0.4 }));
+  const domes = (S.domes || [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']]).map(([a, b]) => S.look ? EP.capM([a, b]) : EP.cm(domeTex(a, b), { rough: 0.4 }));   // (ZEELICH-2: caps in LBA2's look)
   const deckM = tm('deck', { color: '#e0d8e8', rough: 0.65, metal: 0.25 });
   const plankM = tm('planks', { color: '#d8b080' });
   const stoneM = tm('stone', { color: '#ecdce4' });
@@ -1524,7 +1582,7 @@ function buildIsland(scene, physics, name, L, at) {
         for (const s of [-1, 1]) {
           const P = new EP.Place(B, o.x + s * (ex / 2 - 0.44), y0, zc, s * Math.PI / 2);
           P.add(panelGeo(pw + 0.5, roof, 0.28, [arch]), m, 0, 0, 0);
-          P.add(frameGeo(arch, 0.22, 0.1), EP.EM.tiles(), 0, 0, 0.26);
+          P.add(frameGeo(arch, 0.22, 0.1), EP.archTiles(), 0, 0, 0.26);
         }
         // (WORLD-FIX: the vault's top 2 cm under the halves' roofs and the slab over it 1.5 cm proud of them: all three
         // shared one plane and z-fought)
@@ -1542,7 +1600,7 @@ function buildIsland(scene, physics, name, L, at) {
         const foot = y0 - g + 0.5, box = (l, h, t, rr = 0.04) => (al ? bbox(l, h, t, rr, 1.8) : bbox(t, h, l, rr, 1.8));
         B.add(box(len, foot, th + 0.1), stoneM, o.x, y0 + 0.5 - foot / 2 + jy(o), o.z);
         B.add(box(len - 0.03, hh - 0.66, th - 0.14, 0.02), pick(o, walls), o.x, y0 + 0.5 + (hh - 0.66) / 2 - 0.02, o.z);
-        B.add(box(len - 0.4, 0.26, th - 0.06, 0.01), EP.EM.tiles(), o.x, y0 + hh - 0.48, o.z);
+        B.add(box(len - 0.4, 0.26, th - 0.06, 0.01), EP.archTiles(), o.x, y0 + hh - 0.48, o.z);
         B.add(box(len + 0.02, 0.18, th + 0.16), stoneM, o.x, y0 + hh - 0.09 + jy(o), o.z);
         for (const [px, pz] of ends) {
           if (yardEnds.filter(([qx, qz]) => Math.hypot(qx - px, qz - pz) < 0.4).length > 1) continue;
@@ -1596,12 +1654,12 @@ function buildIsland(scene, physics, name, L, at) {
         const tfr = cached('isle-tfr' + lk.trim, () => tint(frameGeo(tw, 0.1, 0.06), lk.trim));
         for (let q = 0; q < 6; q++) {
           const a = da + Math.PI / 6 + (q / 6) * Math.PI * 2, y = y0 + H0 * 0.66, rf = rr - rr * 0.15 * 0.66;
-          B.add(fillGeo(tw, 0.02, 0), EP.latticeM(), o.x + Math.sin(a) * (rf + 0.01), y, o.z + Math.cos(a) * (rf + 0.01), 0, a);
+          B.add(fillGeo(tw, 0.02, 0), EP.windowM(), o.x + Math.sin(a) * (rf + 0.01), y, o.z + Math.cos(a) * (rf + 0.01), 0, a);
           B.add(tfr, EP.EM.vc(), o.x + Math.sin(a) * (rf - 0.01), y, o.z + Math.cos(a) * (rf - 0.01), 0, a);
         }
         const td = { x: 0, y: 0, w: 1.1, h: 2.15, horse: true };
         B.add(fillGeo(td, 0.03, 0.06), plankM, o.x + Math.sin(da) * (rr - 0.04), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.04), 0, da);
-        B.add(frameGeo(td, 0.18, 0.1), EP.EM.tiles(), o.x + Math.sin(da) * (rr - 0.02), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.02), 0, da);
+        B.add(frameGeo(td, 0.18, 0.1), EP.archTiles(), o.x + Math.sin(da) * (rr - 0.02), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.02), 0, da);
         col({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: true });
         fitAdd({ region: 'isle_' + name, name: `tower (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, round: true, x: o.x + ox, z: o.z + oz, ry: da, oy: y0, w: (rr + 0.12) * 2, d: (rr + 0.12) * 2, base: 0.3 - tb, plinth: 0.3, floor: 0.3, steps: 0.45 });
         break;
@@ -1635,7 +1693,7 @@ function buildIsland(scene, physics, name, L, at) {
       }
       case 'lamp': {
         // (a style's lamp posts: the Esmer street lamp, its arm turned with the original's object)
-        if (S.lampPosts && o.sy >= 3) { EP.lamp(new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2)); col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top: y0 + 3.4, noStand: true }); break; }
+        if ((S.lampPosts && o.sy >= 3) || o.lampPost) { EP.lamp(new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2)); col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top: y0 + 3.4, noStand: true }); break; }
         B.add(cyl(0.07, 0.09, o.sy - 0.4, 8), brass, o.x, y0 + (o.sy - 0.4) / 2, o.z);
         B.add(cached('isle-lamp', () => new THREE.SphereGeometry(0.22, 12, 8)), pm('#fff4d8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), o.x, top - 0.25, o.z);
         col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top, noStand: true });
@@ -1663,7 +1721,65 @@ function buildIsland(scene, physics, name, L, at) {
         if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: o.sy > 1.2 });
         break;
       }
+      case 'frond': {   // (ZEELICH-2: Otringal's street tree, props-esmer.js frondTree)
+        if (o.cut) break;
+        const P = new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2); EP.frondTree(P, { h: o.sy, s: Math.min(1.3, ex, ez), seed: o.body + Math.round(o.x) });
+        for (const c of P.cols) small(c);
+        break;
+      }
+      case 'goldplant': {   // (ZEELICH-2: Otringal's golden fan plant, props-esmer.js goldPlant)
+        if (o.cut) break;
+        const P = new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2); EP.goldPlant(P, { h: o.sy, w: Math.max(ex, ez), seed: Math.round(o.x * 3 + o.z) });
+        for (const c of P.cols) small(c);
+        break;
+      }
+      case 'canopy': {   // (ZEELICH-2: a stall of the plaza's covered market: two stone piers, a sloped stone canopy, a counter)
+        const al = ez >= ex, len = al ? ez : ex, dep = al ? ex : ez, P = new EP.Place(B, o.x, y0, o.z, al ? Math.PI / 2 : 0), hh = o.sy;
+        for (const u of [-len / 2 + 0.15, len / 2 - 0.15]) P.add(bbox(0.2, hh - 0.3, 0.2, 0.03, 1.8), stoneM, u, (hh - 0.3) / 2, -dep / 2 + 0.15);
+        P.add(bbox(len, 0.16, dep + 0.3, 0.04, 1.8), stoneM, 0, hh - 0.3, 0.05, 0.32);
+        P.add(bbox(len - 0.1, 0.12, 0.08, 0.02, 1), EP.archTiles(), 0, hh - 0.5, dep / 2 + 0.16);
+        P.add(bbox(len - 0.3, 0.9, 0.5, 0.03, 1.8), stoneM, 0, 0.45, -dep / 2 + 0.4);
+        col({ type: 'box', x: o.x, z: o.z, hw: ex / 2, hd: ez / 2, top: y0 + 0.9, noStand: true });
+        break;
+      }
+      case 'poster': {   // (ZEELICH-2: a poster board on a stone stand, as the original's)
+        const al = ex >= ez, P = new EP.Place(B, o.x, y0, o.z, al ? 0 : Math.PI / 2), wd = Math.max(ex, ez), hh = o.sy;
+        P.add(bbox(0.3, hh * 0.45, 0.3, 0.04, 1.8), stoneM, 0, hh * 0.225, 0);
+        P.add(bbox(wd, hh * 0.55, 0.12, 0.03, 1), EP.EM.dark(), 0, hh * 0.72, 0);
+        P.add(cached('isle-poster', () => tint(bbox(1, 1, 0.02, 0.005, 1), '#3c6a4a')), EP.EM.vc(), 0, hh * 0.72, 0.07, 0, 0, 0, wd * 0.9, hh * 0.47, 1);
+        P.add(bbox(wd + 0.1, 0.08, 0.16, 0.02, 1), brass, 0, hh * 0.995, 0);
+        col({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.15, ex / 2), hd: Math.max(0.15, ez / 2), top, noStand: true });
+        break;
+      }
+      case 'planks': {   // (ZEELICH-2: planks stood on end against a wall)
+        const al = ex >= ez, P = new EP.Place(B, o.x, y0, o.z, al ? 0 : Math.PI / 2), wd = Math.max(ex, ez);
+        for (const u of [-0.22, 0.2]) P.add(bbox(Math.min(0.32, wd * 0.4), o.sy * (u < 0 ? 1 : 0.92), 0.06, 0.01, 1), plankM, u * wd, o.sy * (u < 0 ? 0.5 : 0.46), 0, 0.05);
+        small({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.12, ex / 2), hd: Math.max(0.12, ez / 2), top, noStand: true });
+        break;
+      }
+      case 'drum': {   // (ZEELICH-2: the original's round capped house: an octagonal drum, a glass-block foot, a cap; within the old jar's collider)
+        // (in its box's north-west, 2.7 m across: the house door at its south-east corner keeps its front clear)
+        const lk = look(o), rr = Math.min(ex, ez) * 0.38, H0 = o.sy * 0.66, x = o.x - 0.35, z = o.z + 0.35;
+        B.add(cyl(rr, rr, H0 + 0.4, 8, 2.2).rotateY(Math.PI / 8), lk.wall, x, y0 + H0 / 2 - 0.2, z);
+        B.add(cyl(rr + 0.012, rr + 0.012, 0.6, 8, 1, true).rotateY(Math.PI / 8), EP.archTiles(), x, y0 + 0.3, z);
+        B.add(cyl(rr + 0.12, rr + 0.12, 0.18, 8, 1.8).rotateY(Math.PI / 8), stoneM, x, y0 + H0, z);
+        EP.domeStack(new EP.Place(B, x, y0, z, 0), { base: H0 + 0.09, h: o.sy, R: rr * 1.05, domeM: lk.domeM, drum: false });
+        col({ type: 'cyl', x, z, r: rr, top, noStand: true });
+        break;
+      }
+      case 'annex': {   // (ZEELICH-2: a building part the original keeps as an object: a small Esmer building without a door)
+        const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy;
+        EP.esmerBuilding(new EP.Place(B, o.x, y0, o.z, 0), { ...look(o), w: ex, d: ez, h: o.sy, wallH, door: false, bury: 0.4, fit: { region: 'isle_' + name, name: `annex (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
+        break;
+      }
       case 'fence': {
+        if (S.fence === 'rail') {   // (ZEELICH-2: Otringal's railings, props-esmer.js railing; the same collider)
+          const al = ex > ez, h = Math.min(o.sy, 1.3), P = new EP.Place(B, o.x + (al ? 0 : jy(o)), y0, o.z + (al ? jy(o) : 0), al ? 0 : Math.PI / 2);
+          EP.railing(P, { len: al ? ex : ez, h, hazard: o.body === 50 });
+          small({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.12, ex / 2), hd: Math.max(0.12, ez / 2), top: y0 + h, noStand: true });
+          break;
+        }
         // posts and two rails along its length
         const along = ex > ez, len = along ? ex : ez, n = Math.max(2, Math.round(len / 1.2) + 1), h = Math.min(o.sy, 1.3);
         for (let q = 0; q < n; q++) { const u = -len / 2 + (q / (n - 1)) * len; B.add(cyl(0.06, 0.07, h, 6), plankM, o.x + (along ? u : 0), y0 + h / 2, o.z + (along ? 0 : u)); }
