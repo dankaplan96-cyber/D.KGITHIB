@@ -2212,3 +2212,36 @@ applies alone on origin):
 
 **ASYLUM-3 · the cloud's answer (5.11):** applied as your diff (asylumhostel.js, lba1places.js, lba1room.js), clean on
 da44a727 + your branch. Checked (SwiftShader): asylum PASS, lba1rooms 8/8; your before/after pictures looked at. Published.
+
+## CLIMB-2 · The climb to the asylum, the user's photos and CLOUD_ORDERS 16 (a)(b)(d) · the laptop, 5.11.2026
+The user: "not good" (the ramp's paving folding into a pit by its wall), "a gap" at the top, "make a turn toward the door's
+forecourt, now it leads into a wall", "going up the stairs the camera sticks to Twinsen", "the stones flicker".
+`requests/CLIMB-2.diff` (lba1places.js, world.js; applies alone on 54af45d, your `climbRampFill` kept as is:
+`islandHeight` = `climbGround(climbRampFill(houseFlats(islandHeight0)))`):
+- **The ramp:** the ground inside its corridor (`climbGround`) is one smooth incline, level across within 1.8 m of the
+  centre line (never falling as it climbs), easing back to the natural ground by 2.6 m; physics walks the same
+  heightfield the cobbles are painted on. Cross-fall within 1.25 m of the centre ≤ 0.05 m (was up to 2.2 m at the
+  wall). The scatter still reads the old ground there (`scatterGround`): nothing else moves. A base course 8 cm proud at
+  the wall's foot; kerbs on the highest ground under them.
+- **The stair, square to the portico (16 a):** 23 steps due north from (−32.6, −35.0) to a landing on the low shelf
+  (~14.5 m, centred (−32.6, −45.2)), then 6 steps due east (x −31.3 → −29.0) onto the forecourt, the door ahead; risers
+  ~0.24 (≤ 0.26). No post between the stair top and the forecourt. New step texture: joints across the stair only (no
+  stripes), a 3 cm nosing, a darker riser.
+- **The trench (16 b):** gone: the terrace filled level both sides of the second flight behind dressed walls with coping
+  and railing; the south fill stops at TERRACE_RAIL.
+- **The camera (16 d):** he arrives ~5 m before the fort wall; Follow's arm there 8.70–8.72 m. Up both flights the arm
+  stays full (8.75 m). Railings and posts are `camSkip` (each wall a camera-solid stone collider plus a rail collider the
+  camera ignores), cheek colliders in shorter pieces; camera.js unchanged (a stair-steps-as-ground change was tried and
+  reverted: the steps never pulled it in). **Left for you:** going DOWN the first flight he faces south with the fort wall
+  and portico 6–10 m behind: arm min 4.05 m, 61/157 frames under 6 m (by camera.js's design); and the slow recovery
+  after an in-cut on stairs generally (0.6 s hold, ≤ 2.5 m/s; Zeelich's lift-dock stair going down: min 3.28 m).
+- **The flicker (the user's photo at the fort's west gate): yours, island.js:** the gatehouse's extruded arch leaves a
+  strip under the arched opening whose top lies exactly at ground level (15.88), coplanar with the ground in the passage
+  round (−41.6, −65.6), x −43.1…−38.7: start the hole below the ground or lower that strip ~5 cm. None of the climb's own
+  surfaces overlaps another within 2 cm (the fill's edge kept 15 cm over the ground; a kerb at 2 cm seated higher).
+  Next to the climb, not the laptop's: a pipeline footing at (−34.7, −44.6) 2 cm from the ground.
+- Checked on the final code (SwiftShader): the walk by input square → ramp → landing → second flight → front door in and
+  out → back to the square; lba1rooms 8/8, asylum 10/10, chapter1 23/23, rocks 8/8 (509 placements, deterministic).
+  Draw calls main/shadow: ramp wall 78/56, below 79/43, top 111/61, landing 99/59, climbing 101/58.
+- Left: a 15 cm lip where the north fill meets the terrace reads as a thin dark seam; order 15 (the ramp's likeness to
+  LBA2's) not started. Pictures (chapters 1–2): `docs/future/world/CLIMB-2/` cmp-1-ramp-wall, cmp-stair-door, climbing.
