@@ -1,5 +1,7 @@
 // WC-1 Journeys: the story's own crossings show their journey films (TRAVEL-1; src/game/travelfilm.js storyJourney,
-// crossByShip's onward leg, storyArrival). With the films on, each of the three crossings that were plain fades:
+// crossByShip's onward leg, storyArrival). With the films on, each of the crossings (the ends of chapters 2 and 8: the
+// project ship's flight and, since the second cloud session of 4.11, its landing on Zeelich Spaceport's pad, where
+// chapters 3 and 9 start; and the three that were plain fades):
 //   end of chapter 3 (Zeelich's platform console, story/chapter2.js toShell): Doran's ship leaves Zeelich Spaceport
 //     (take-off, cabin, space), then the ferry is seen coming in to Kesh's pier, where chapter 4 starts (Doran steps off)
 //   end of chapter 5 (FunFrock's hangar, story/steam.js board): Hesk's glider leaves from the dunes over the buried hall
@@ -88,6 +90,21 @@ const holdSkip = async () => {
 
 // ---------------------------------------------------------------- the three crossings
 const CROSS = {
+  // (the ship's own arrival: the end of chapter 2 and of chapter 8, Citadel → Zeelich Spaceport, where 3 and 9 start)
+  ch2: {
+    name: 'end of chapter 2 (Citadel → Zeelich by the project ship, with Doran)', next: 'zeelich', region: 'zeelich', who: 'doran', started: 'c2_started',
+    setup: () => ev(() => J.to('well', {}, { c1_started: true, c1_ship: true })),
+    go: () => ev(() => { const G = game; if (G.room) G.exitRoom({ x: -6, z: -65, a: 0 }, true); G.story.refreshCast(); G.step(0.2); G.story.cur.toZeelich(); G.step(1 / 30); }),
+    where: () => game.rooms.zeelich.spaceport.landing,
+    films: [['depart', 'ship', 'citadel_port', 'zeelich_port'], ['arrive', 'ship', null, 'zeelich_port']],
+  },
+  ch8: {
+    name: 'end of chapter 8 (Citadel → Zeelich by the project ship)', next: 'council', region: 'zeelich', who: null, started: 'c9_started',
+    setup: () => ev(() => J.to('observatory', { c7_done: true }, { c8_started: true, c8_relay: true, c8_vesk: true })),
+    go: () => ev(() => { const G = game; if (G.room) G.exitRoom({ x: -6, z: -65, a: 0 }, true); G.step(0.2); G.story.cur.interact({ kind: 'c8ship' }); G.step(1 / 30); }),
+    where: () => game.rooms.zeelich.spaceport.landing,
+    films: [['depart', 'ship', 'citadel_port', 'zeelich_port'], ['arrive', 'ship', null, 'zeelich_port']],
+  },
   ch3: {
     name: 'end of chapter 3 (Zeelich → Citadel by ship, the ferry to Desert Island)', next: 'dig', region: 'desert', who: 'doran', started: 'c4_started',
     setup: () => ev(() => J.to('project', { c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true },
@@ -124,7 +141,7 @@ for (const [id, C] of Object.entries(CROSS)) {
   await ev(() => J.begin(true));
   await C.go();
   if (SHOTS) {
-    const lenDep = id === 'ch3' ? 4.8 : 1.2;   // (the ship: in the cabin; the glider: on its run)
+    const lenDep = id === 'ch3' || id === 'ch2' || id === 'ch8' ? 4.8 : 1.2;   // (the ship: in the cabin; the glider: on its run)
     for (const t of (process.env.SHOT_T || '').split(',').filter(Boolean).map(Number)) if (await ev(([t, w]) => J.until('depart', t, w), [t, C.who])) await shot(`${id}-depart-${t}`);
     if (await ev(([t, w]) => J.until('depart', t, w), [lenDep, C.who])) await shot(`${id}-depart`);
     if (id === 'ch3' && await ev((w) => J.until('depart', 7.6, w), C.who)) await shot(`${id}-space`);
