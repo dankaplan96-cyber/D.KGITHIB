@@ -2156,3 +2156,13 @@ GPU). zeelich-life's council check, your question: it failed the same before ZEE
 the game: Old Grumm says "the **Wannies** say stop" (the user's naming), the check still looked for "moles say stop".
 The check fixed; Pelleck's and Snuff's lines were there all along. Pictures stay in `docs/future/world/ZEELICH-2/`
 (chapter 3 on: not shown to the user).
+
+## CHEST-1 · Funfrock's chest at the depot: open, but closed on top · the laptop, 5.11.2026 (the user: "the crate is open but closed on top", a photo)
+`chestGeo` (island.js) built the chest's body as one solid box (1.24 × 0.66 × 0.76) with the three iron straps as full
+0.7 × 0.8 boxes over it, so when the lid swings up (prologue `chest` → `W.chest.open`, lid −1.9 rad) the body under it
+stays closed on top. `requests/CHEST-1.diff` (island.js only; applies alone on ed7e9ae): the body is an open box, four
+walls (0.07 thick) and a floor at 0.12 m, the same outer size, material and collider; the straps run down the front and
+back only (0.025 thick plates). Only the depot chest uses `chestGeo`. Syntax checked; the game boots with it and the
+chest opens (openT 1). Pictures: inconclusive. The laptop's before run shows the lid up over a closed top; the after
+run's frames came out unlit (no light, no ground textures) on the heavily loaded laptop, which a geometry change can't
+cause, so look at it by eye when you apply (open the chest from the depot path).
