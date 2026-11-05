@@ -2091,3 +2091,40 @@ Measured from LBA2's Otringal (the laptop's study maps, numbers only) against ou
   not finish (a Windows path bug in the test's `URL.pathname` for player.js, then a page-load timeout under load).
 - Pictures (chapter 3 on: **not shown to the user**, ask first): `docs/future/world/ZEELICH-2/sheet-compare-hub.jpg`,
   `sheet-compare-otr.jpg` (before left, after right, 6 hub and 8 Otringal spots, play camera).
+
+## GPU-7 · The real-GPU check of the cloud's changes (CLOUD_ORDERS 7) · the laptop, 5.11.2026 · report only, nothing fixed
+Measured on 0b0393b (game code = 189dfd4): the installed Chrome 156, headed, fresh profile; ANGLE AMD Radeon Vega 8
+(D3D11), real GPU, GPU timer working (0 disjoint); fullscreen 1366×768, dpr 1; Medium, Auto off, full resolution,
+MSAA, Camera Follow at Medium; plugged in (AC) 100 % at start and end; no other test running. Chapter 2 reached by a
+save and `nextChapter` (as tests/asylum.mjs), the hostel in its chapter 1–2 phase: the store full, Quetch and Grobo on
+it. Each spot: 5 s settle, 10 s measured (~565 frames), two passes (pass 1 / pass 2):
+| spot | frame mean / p95 / p99 ms | draw calls | triangles | GPU ms p50 / p95 | CPU submit p50 |
+|---|---|---|---|---|---|
+| Twinsen's house (ref) | 17.6 / 18.2 / 18.5 | 55 | 219k | 9.6 / 12.4 | 2.5 |
+| Citadel square (ref) | 17.7 / 18.2 / 18.4 | 136 / 147 | 589k / 598k | 10.3 / 16.2 | 6.5 / 6.9 |
+| Hostel dormitory | 17.6 / 18.2 / 18.5 | 78 | 135k | 10.7 / 14.6 · 9.7 / 11.0 | 3.5 |
+| Hostel mess | 17.8 / 18.3 / 18.5 | 129 | 178k | 10.1 / 13.2 | 5.2 |
+| Vesk's store | 17.7 / 18.2 / 18.5 | 63 | 149k | 9.4 / 13.1 | 2.9 |
+- Every spot holds the display's refresh (frames 17.6–17.8 ms, the refresh measured 17.5–17.8): no hostel spot costs
+  more than the square. The mess is the heaviest by calls (129, 35 of them in the shadow pass) but below the square in
+  triangles and GPU time. One frame over 33 ms in all ten windows (36 ms, mess pass 2), none over 50. No page or
+  console errors. Shader programs 148 → 150 on the hostel's first visit.
+- **The store's view:** about 40 % of the frame is black void below the store's floor at the iso view's edge
+  (`GPU-7/hostel-store.jpg`): the laptop's (ASYLUM-2), taken into order 8.
+- **Doors (Follow, walked out holding ArrowUp so `Game.doorStep` runs):** at the swap the camera is ~2.2 m behind and
+  2.1 m above his head (~43° down), easing out to its normal ~2.9 m back, 2.0 m up (~35°) within 0.3 s of the picture
+  showing, always straight behind him; never over his head (before: ~4.3 m up, 1.3 m back). All three moved the full
+  1 m.
+  - Twinsen's house: (−44.75, 77.2) → (−43.75, 77.2); lands in the front garden facing the white picket fence 1.5–2 m
+    ahead, the path to his right: his first view is a fence (`door-house-full-3s.jpg`); the picture shows 0.58 s after
+    the swap (the shops 0.30 s); the door's lamp post big in the corner.
+  - Bazoo's (museum): → (−64.05, 41.1), open grass facing the square: fine.
+  - Pharmacy: → (−56.05, −8.8), a wedge of dirt edged by kerbs, the square ahead: not blocked, a little boxed in.
+- **Sendell's call, the wide shot** (`sendell-wide-a.jpg`): Twinsen left, side-on, the whole fan and the flash ring
+  centre-right, reads clearly. Weakening it: the top-right quarter is black void (the lens looks over the chamber's
+  wall), the tallest crystals' tops cut by the frame's top, a mite in the bottom-right corner; on screen only 1.8 → 2.6 s
+  before the first line's face shot. Frame times there: mean 17.7, p99 18.5, GPU 8.8 / 10.0 ms; 60 calls, 213k tris.
+- Noticed, NOT VERIFIED (chapter 2 reached by `nextChapter`, not by play): the prologue cave's four mites ("well")
+  still count as present and idle in chapter 2 (simulation 1.4–2.1 ms at the hostel, small).
+- Pictures in `docs/future/world/GPU-7/` (chapters 1–2): hostel-dorm, hostel-mess, hostel-store, door-house-full-3s,
+  door-bazoo-full-3s, door-pharmacy-full-3s, sendell-wide-a.
