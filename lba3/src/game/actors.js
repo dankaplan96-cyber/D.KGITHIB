@@ -796,8 +796,8 @@ export class NPC extends Actor {
     const x0 = this.pos.x, z0 = this.pos.z;
     if (this.listenTo && this.listenTo !== this) {
       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
-    } else if (this.pinY != null) {
-      // (pinned, sitting or asleep: he keeps his place and his facing)
+    } else if (this.pinY != null || this.forceAnim === 'doze') {
+      // (pinned, sitting or asleep: he keeps his place and his facing; dozing, he sleeps through the talk too)
     } else if (this.talking || (near && !this.busy())) {
       // (GAME-1, the user: a person busy at something — Arthur kneeling at his boat — keeps at it when Twinsen walks
       //  by, and turns to him only once Twinsen talks to him)
@@ -815,7 +815,7 @@ export class NPC extends Actor {
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
     if (moving && this.gait < 0.15) moving = false;
-    this.rig.play(this.pinY != null && this.forceAnim ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
+    this.rig.play((this.pinY != null && this.forceAnim) || this.forceAnim === 'doze' ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
     this.placeRig();
     this.rig.update(dt, moving ? this.gait : 0);
     this.sync();

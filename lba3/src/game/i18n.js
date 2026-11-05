@@ -19,7 +19,7 @@ export const STR = {
     music: 'מוזיקה', sfx: 'אפקטים',
     rebind_title: 'שינוי מקשים', rebind_hint: 'לחץ על מקש כדי לשנות אותו · Esc לביטול', rebind_press: 'לחץ מקש…', rebind_reset: 'איפוס מקשים',
     kb_up: 'קדימה', kb_down: 'אחורה', kb_left: 'שמאלה', kb_right: 'ימינה', kb_action: 'פעולת התנהגות', kb_interact: 'דיבור / שימוש', kb_ball: 'כדור קסם', kb_view: 'מצלמה קרובה/רחוקה', kb_recenter: 'מרכוז מצלמה', kb_map: 'הולומפה', kb_inventory: 'חפצים ויומן', kb_pause: 'הפסקה',
-    text_speed: 'מהירות טקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
+    auto_talk: 'שיחה מתקדמת לבד', at_on: 'כן', at_off: 'לא (במקש)', text_speed: 'מהירות טקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
     text_size: 'גודל כתוביות', tsz_normal: 'רגיל', tsz_large: 'גדול',
     shake_set: 'רעידות מצלמה', sh_on: 'מלאות', sh_reduced: 'מופחתות', sh_off: 'כבויות',
     disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. כל המודלים, הצלילים והמוזיקה נוצרו מחדש בקוד.',
@@ -101,7 +101,7 @@ export const STR = {
     music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',
     rebind_title: 'Key Bindings', rebind_hint: 'Click an action, then press a key. Esc cancels.', rebind_press: 'Press a key…', rebind_reset: 'Reset to Defaults',
     kb_up: 'Forward', kb_down: 'Back', kb_left: 'Left', kb_right: 'Right', kb_action: 'Action', kb_interact: 'Talk / Use', kb_ball: 'Throw Ball / Recall', kb_attack: 'Attack', kb_dodge: 'Dodge', kb_focus: 'Focus Target', kb_tswitch: 'Switch Target', kb_swap: 'Swap Weapon', kb_weapons: 'Weapon Wheel', kb_view: 'Camera Distance', kb_recenter: 'Recenter Camera', kb_map: 'Holomap', kb_inventory: 'Inventory', kb_pause: 'Pause',
-    text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
+    auto_talk: 'Dialogue Advances', at_on: 'Automatically', at_off: 'On a Key', text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
     text_size: 'Subtitle Size', tsz_normal: 'Normal', tsz_large: 'Large',
     shake_set: 'Camera Shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
     weather_set: 'Weather and light changes', wx_on: 'On', wx_off: 'Off',   // (WEATHER-1; the Hebrew table falls back to these)

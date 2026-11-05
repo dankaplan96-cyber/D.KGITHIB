@@ -242,8 +242,10 @@ export const LOOKS = {
     race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
     eyes: '#3a2a1a', apron: '#f4ecd8', height: 0.88,
   },
+  // (the user, 5.11: Tobb and Marda, both Grobos in red, "these two are too similar": Tobb's smock is a plum violet
+  //  with ochre trim and green-grey trousers, a dark straw hat; Marda keeps Yorna's red robe)
   farmerC: {
-    race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.12, skin: '#98a6b4', tunic: '#a84a3a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a4a5a', shoes: '#3a2a1a',
+    race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.12, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', hat: '#6a5a3a', height: 1.04,
   },
   // ---- the Hamalayi (chapters 6–7)

@@ -375,7 +375,7 @@ export class Chapter1 extends ChapterBase {
     const A = g.audio, wl = W.well, gy = g.physics.groundAt(wl.x, wl.z), h = g.hero;
     let tt = 0, puffT = 0, lit = false;
     const light = () => { if (!lit) { lit = true; W.station?.setActive?.(true); } };   // (the posts warm up over the next seconds)
-    const cues = [[0.15, () => A.play('pipeKnock')], [0.45, () => A.play('pipeKnock')], [0.8, () => { A.play('gurgle'); g.particles.burst(wl.x, gy + 1.1, wl.z, '#cfefff', 14, 2.4); }], [1.0, () => A.play('waterRun')], [1.1, light]];
+    const cues = [[0.15, () => A.play('pipeKnock')], [0.45, () => A.play('pipeKnock')], [0.8, () => { A.play('gurgle'); W.well.setWater?.(true); g.particles.burst(wl.x, gy + 1.1, wl.z, '#cfefff', 14, 2.4); }], [1.0, () => A.play('waterRun')], [1.1, light]];
     // the well's steam goes on while the shot holds, under the narration's box too (world updaters run in every state)
     const steam = (dt) => { if ((puffT -= dt) <= 0) { puffT = 0.08; g.particles.burst(wl.x + (Math.random() - 0.5) * 0.8, gy + 1.0, wl.z + (Math.random() - 0.5) * 0.8, '#e8f4ff', 2, 1.4); } };
     W.updaters.push(steam);
@@ -552,7 +552,23 @@ export class Chapter1 extends ChapterBase {
         return () => ({ pos: p, look: vHead(1.4), fov: 40 });
       },
       // the speech: Vesk and Twinsen together, eye to eye
-      speech: () => { const memo = {}; return ({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.35, z: vesk.pos.z }, { memo, ok: (x, y, z) => !solidAt(g, x, y, z, 0.35), height: 1.3, drop: 0.45, fov: 40, dist: 5.6, t }); },
+      // (the user, 5.11, a photo: "the camera went from Vesk to here" — the two-shot's spot, 5.6 m off to the side, had
+      //  a post and the quay's passers-by in front of the lens and Vesk out of the frame. Now over Twinsen's shoulder
+      //  at Vesk, the first spot of a few that stands clear and sees his head; the two-shot only if none does)
+      speech: () => {
+        const memo = {}, vx = vesk.pos.x - h.pos.x, vz = vesk.pos.z - h.pos.z, l = Math.hypot(vx, vz) || 1, ux = vx / l, uz = vz / l;
+        const head = vHead(1.4), hy = h.pos.y + 1.6;
+        const cands = [[2.6, 1.35], [2.6, -1.35], [2.0, 1.5], [2.0, -1.5], [3.2, 1.2], [3.2, -1.2], [1.6, 2.2], [1.6, -2.2]].map(([b, s]) => V3(h.pos.x - ux * b + uz * s, hy, h.pos.z - uz * b - ux * s));
+        // (nobody at the lens, and nobody standing in the line to his head: Doran on the pier hid him from the first try)
+        const free = (p) => g.npcs.every((n) => {
+          if (!n.present || n === vesk) return true;
+          const sx = head.x - p.x, sz = head.z - p.z, L2 = sx * sx + sz * sz || 1, k = Math.max(0, Math.min(1, ((n.pos.x - p.x) * sx + (n.pos.z - p.z) * sz) / L2));
+          return Math.hypot(n.pos.x - p.x, n.pos.z - p.z) > 1.0 && (k > 0.92 || Math.hypot(p.x + sx * k - n.pos.x, p.z + sz * k - n.pos.z) > 0.75);
+        });
+        const p = cands.find((c) => !solidAt(g, c.x, c.y, c.z, 0.35) && free(c) && g.physics.lineOfSight(c.x, c.y, c.z, head.x, head.y, head.z));
+        if (p) return () => ({ pos: p, look: V3(head.x, head.y - 0.2, head.z), fov: 40 });
+        return ({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.35, z: vesk.pos.z }, { memo, ok: (x, y, z) => !solidAt(g, x, y, z, 0.35), height: 1.3, drop: 0.45, fov: 40, dist: 5.6, t });
+      },
     };
     let cur = null, fn = null;
     const shot = (k, secs = 0.35) => { if (cur === k) return; cur = k; fn = S[k](); beat?.show(fn, secs); };
@@ -889,7 +905,7 @@ export class Chapter1 extends ChapterBase {
     const g = this.game, f = this.f, W = g.world;
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
     // a save from between the third valve and the water scene must not leave the chapter stuck
-    if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) f.c1_water = true;
+    if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) { f.c1_water = true; W.well?.setWater?.(true); }
     if (f.c1_water) { W.gate.open = true; W.station?.setActive?.(true); }
     // a save made during Zoe's segment resumes at its start (as Twinsen at the station gate: see update), with
     // the lockers to search again — a plan found and saved but not carried out must be findable again

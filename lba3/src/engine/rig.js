@@ -1308,6 +1308,13 @@ export class Rig {
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
+    } else if (a === 'doze') {
+      // (the user, 5.11, Doran asleep at the pier: "that's not how a sleeping person looks"): sat on the ground, legs out,
+      // leaning back, the chin on the chest, hands folded on the belly, a slow deep breath
+      const br = Math.sin(this.t * 1.3);
+      hipsY = 0.16; torsoX = -0.18 + br * 0.025; headX = 0.85 + br * 0.04; headZ = 0.22;
+      T.legL = -1.45; T.legR = -1.35; T.kneeL = 0.35; T.kneeR = 0.2;
+      T.armL = 0.2; T.armR = 0.2; T.elL = -0.35; T.elR = -0.35;   // (the arms hang slack by his sides)
     } else if (a === 'sleep') {
       // (ASYLUM-2: asleep on the back in a bunk, arms by the sides, a slow breath)
       bodyRotX = -Math.PI / 2; hipsY = 0.3; torsoX = Math.sin(this.t * 1.1) * 0.02;
@@ -1516,7 +1523,7 @@ export class Rig {
 
     // blinking
     this.blinkT -= dt;
-    const blink = this.blinkT < 0.12;
+    const blink = this.blinkT < 0.12 || this.anim === 'doze' || this.anim === 'sleep';   // (asleep: the eyes shut)
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
     for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
 
