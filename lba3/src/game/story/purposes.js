@@ -22,6 +22,7 @@ import '../text/purposes.js';
 
 const LAMP_REACH = 3.2;   // (how far above the hero's feet the crystal may be for the fork's note: it sits 2.5 m up)
 
+const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };   // (as network.js: the lamp room's door, now up its steps)
 export class Purposes extends ChapterBase {
   idx(key) { return this.story.chapters.findIndex((c) => c.key === key); }
   from(key) { const i = this.idx(key); return i >= 0 && this.story.index >= i; }
@@ -64,6 +65,9 @@ export class Purposes extends ChapterBase {
     if (here === 'citadel') {
       const S = g.world?.statue;
       if (S) { const px = S.x + Math.sin(S.ry) * 1.7, pz = S.z + Math.cos(S.ry) * 1.7; consider(dist(px, pz), 1.3, { kind: 'pp_plaque', label: 'p_read' }); }
+      // (USER-ASKS 3: the lighthouse's door, up its steps, when no chapter opens it: it says so)
+      const LD = LIGHTHOUSE_DOOR;
+      if (dist(LD.x, LD.z) < 2 && !this.story.doors().some((d) => d.room === 'lighttop')) consider(dist(LD.x, LD.z), 1.4, { kind: 'pp_lighthouse', label: 'p_look' });
       return;
     }
     if (here !== 'desert' || !this.from('dig') || !this.D) return;
@@ -79,6 +83,7 @@ export class Purposes extends ChapterBase {
     const say = (keys, done) => { this.chain(keys.map((k) => (Array.isArray(k) ? k : ['hero', k])), done); return true; };
     switch (it.kind) {
       case 'pp_plaque': return say([['narrator', 'pp_plaque'], 'pp_plaque_tw']);
+      case 'pp_lighthouse': return say([['narrator', (g.world?.lighthouse?.power || 0) > 0 ? 'pp_lh_lit' : 'pp_lh_dark']]);
       case 'pp_lamp': return say([f.pp_lamp ? 'pp_lamp_lit' : 'pp_lamp_look'], () => { if (!f.pp_lamp) f.pp_oniAsk = true; });
       case 'pp_door':
         if (it.what === 's40') return say([['narrator', 'pp_s40_door']]);

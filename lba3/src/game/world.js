@@ -13,7 +13,7 @@ import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS,
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
 import { buildDinoFly } from './dinofly.js';
-import { buildLighthouse } from './lighthouse.js';
+import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
@@ -1109,6 +1109,8 @@ export function* buildWorldSteps(parentScene) {
     const light = new THREE.PointLight('#ffe9b0', 0, 40, 1.5);
     light.position.y = lampY; grp.add(light);
     physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 20 });
+    physics.add({ type: 'box', x: L.x, z: L.z + 3.05, hw: LH_STEP_W / 2, hd: 0.25 + 0.12, rot: 0, top: g + 0.15, stair: true });   // (the doorstep, lighthouse.js, to z 3.3)
+    for (const S of LH_STEPS) physics.add({ type: 'box', x: L.x, z: L.z + (S.z0 + S.z1) / 2, hw: LH_STEP_W / 2, hd: (S.z1 - S.z0) / 2 + 0.12, rot: 0, top: g + S.top, stair: true });   // (the steps up to the door; +0.12: overlapping, no seam to drop through under groundAt's 5 cm shrink, as the rooms' stairs)
     W.lighthouse = { lampMat, beam, light, power: 0 };
     W.updaters.push((dt, t) => {
       const p = W.lighthouse.power;

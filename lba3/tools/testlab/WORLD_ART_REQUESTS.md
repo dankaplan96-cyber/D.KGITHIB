@@ -331,7 +331,8 @@ The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPAR
 - **File:** `src/game/desert.js`, the area's `env`:
   - before: `env: { fog: '#f0d2a2', sun: '#fff0d4', hemiSky: '#ffe6bc', hemiGround: '#b4845a', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },`
   - after: `env: { fog: '#eadcc6', sun: '#fff6ea', hemiSky: '#f2ece2', hemiGround: '#a68a72', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },   // (WORLD-ART-10: a less orange light; LBA2's sand is a pale pinkish beige, #d0aa83 from above)`
-- **Still open for the cloud:** the original has grey rock outcrops over about 24 % of the island; ours has almost
+- **Still open for the cloud:** (5.11: handed to the laptop as CLOUD_ORDERS 13: the vertex colour barely shows; it is
+  the cliff texture's) the original has grey rock outcrops over about 24 % of the island; ours has almost
   none. Rock on the steeper slopes (colorFn's `slope > 0.8` branch, with COL.rock a grey-beige rather than
   '#e0a080') would close part of that.
 
@@ -2047,3 +2048,12 @@ in a wall collider: yours, as you said.
 Also from the cloud since (not world art, for your base): out of a door he lands 1 m further out where that ground is
 open and level (`Game.doorStep`, main.js; the street spots the story gives are unchanged); journey films for the ends of
 chapters 2 and 8 (the ship's landing) and chapter 10's glider menu (the parked gliders fly: `network.js gliderSpot`).
+
+### USER-ASKS of 2.11 · where each stands (the cloud, 5.11.2026)
+1. Shops you can buy in: done (SHOPS-1, `story/shops.js`: Bazoo, the pharmacy, the ticket office, Pippa).
+2. The Esmer trading house: done (SHOPS-1: Sefa at its door; Tobb's rest stop, Odile's and Tobb's lines, WA-15b's purpose).
+3. The lighthouse's door in the air: the headland falls ~1.1 m in front of it; four stone steps now go up to the door
+   (`lighthouse.js` LH_STEPS, `world.js` their stair colliders), walked by input; where no chapter opens it, a look
+   says it is locked (`purposes.js` pp_lighthouse).
+4. Gadgets earlier: done (EQUIP-2a/b: five new gadgets, Arthur's pocket set from chapter 2).
+5. The old test failures: see the cloud's next note.

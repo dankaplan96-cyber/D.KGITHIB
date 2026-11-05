@@ -84,4 +84,10 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    (5.11), with the user's note on W-1 as its brief: Ballastra must read as a city that lives by the water's level,
    in form, not colour. Build it there after 7–9 (it is the longest); pictures to `docs/future/world/W-2/` and to
    the user (they have seen Ballastra), canal levels 0 and 1 from the same spot.
+13. **WA-10's open point, Desert Island's grey rock (handed back to you: it is texture work).** The original shows grey
+   rock outcrops over about 24 % of the island; ours are few and reddish-brown. The cloud tried the terrain's vertex
+   colour (`desert.js` COL.rock → grey-beige, slope from 0.65): almost no visible change, so the colour comes from the
+   cliff splat texture (`TX.cliff`) and the rock meshes. Make the outcrops grey (and more of them on the steep slopes)
+   within 80 % likeness; before/after from above and from the play camera. Chapter 4 on: no pictures to the user
+   unless asked.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.

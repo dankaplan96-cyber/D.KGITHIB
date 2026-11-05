@@ -14,6 +14,9 @@ export const LH = {
   DOOR_Y: 0.3,         // the sill, on the plinth
   CREAM: '#fbf5e6', RED: '#d04a33',
 };
+// the steps down from the doorstep (top 0.15, to z 3.3) to the path at about −1.1 (tops relative to the tower's foot)
+export const LH_STEP_W = 2.1;
+export const LH_STEPS = [{ z0: 3.3, z1: 3.75, top: -0.1 }, { z0: 3.75, z1: 4.2, top: -0.36 }, { z0: 4.2, z1: 4.65, top: -0.61 }, { z0: 4.65, z1: 5.1, top: -0.87 }];   // (treads 0.45: his 0.45 m body never meets two risers at once)
 const rAt = (y) => LH.R0 - LH.SLOPE * y;
 const bx = (w, h, d, tile = 1) => cached(`lhb${w},${h},${d},${tile}`, () => boxUV(new THREE.BoxGeometry(w, h, d), tile));   // a plain box with world-scaled UVs (the kit's bevelled bbox costs ~10x the triangles; these are small)
 
@@ -77,6 +80,9 @@ export function buildLighthouse(grp, lampMat) {
   for (const y of [0.55, 1.5]) BN.add(fe(bx(dw * 0.86, 0.09, 0.03, 1)), iron, 0, dy + y, rF + 0.085);   // straps
   BN.add(fe(new THREE.TorusGeometry(0.09, 0.02, 6, 12)), iron, dw * 0.28, dy + 1.05, rF + 0.1);
   BN.add(st(bx(dw + 1.0, 0.4, 0.55, 1), '#cfc5b0'), stone, 0, -0.05, 3.02);                       // the step, to z 3.3 (he stands >= 3.5 from the axis)
+  // (USER-ASKS 3, "a door in the air": the headland falls ~1.1 m in front of the door, so the step hung 1.3 m over the
+  //  path. LH_STEPS go down from it to the path, each a block buried into the slope; world.js gives each its collider)
+  for (const S of LH_STEPS) BN.add(st(bx(LH_STEP_W, S.top + 1.5, S.z1 - S.z0, 1), '#cfc5b0'), stone, 0, S.top - (S.top + 1.5) / 2, (S.z0 + S.z1) / 2);
   BN.add(st(bx(0.34, 0.26, 0.22, 1), '#e2d9c4'), dress, 0, dy + dh + 0.12, rF + 0.25);                // keystone
   BN.add(fe(bx(0.05, 0.05, 0.4, 1)), iron, 1.25, dy + 2.0, wz(1.25, dy + 2.0) + 0.1);                // a lantern bracket by the door
   BN.add(fe(new THREE.CylinderGeometry(0.08, 0.06, 0.24, 8)), iron, 1.25, dy + 1.85, wz(1.25, dy + 2.0) + 0.3);
