@@ -2047,3 +2047,47 @@ in a wall collider: yours, as you said.
 Also from the cloud since (not world art, for your base): out of a door he lands 1 m further out where that ground is
 open and level (`Game.doorStep`, main.js; the street spots the story gives are unchanged); journey films for the ends of
 chapters 2 and 8 (the ship's landing) and chapter 10's glider menu (the parked gliders fly: `network.js gliderSpot`).
+
+## ZEELICH-2 · Zeelich closer to LBA2's (CLOUD_ORDERS 6 / 10) · the laptop, 5.11.2026
+Measured from LBA2's Otringal (the laptop's study maps, numbers only) against our play camera, the biggest gaps:
+1. **Ground and rock:** LBA2's Otringal has no grass: neutral grey granite (k-means #51504a–#a8a196, lights #dbd3c9),
+   pale lavender-grey paving (#d3ced9 / #afa5ad). Ours: green turf and violet cliffs; the hub one big lawn. Share in
+   the play shots (original: green 5 %, violet 0 %, saturation 0.17): Otringal before green 4–34 %, violet 0.4–38 %,
+   saturation 0.26–0.35 → after green 0–4.8 %, violet 0.8–4.7 %, saturation 0.14–0.24.
+2. **Buildings:** LBA2's walls are taupe stucco (#9e9795–#baafac) with glass-block bands (#68a9ce on a dark joint) and
+   teal glass; roofs low faceted octagonal caps, aqua (#78a1a7–#a1b9ba) or gold (#ab7945), a gold spike. Ours: cream
+   and lilac, violet lattice windows, tall onion domes (violet, rose, orange, teal) under scalloped merlons.
+3. **Wrong silhouettes on Otringal:** the size classifier drew the original's street lamps (body 1 ×15, heads
+   floating 2.5 m up), the golden fan plant (18 ×13, as 3.8 m jars), the plaza's covered market (86–95), posters (29),
+   planks (114/115/119) and house parts (12, 13, 48, 108) as terracotta jars; a mossy rock (8) as a crate, a flag (24)
+   as a floating rock.
+4. **Rails and plants:** LBA2 has grey posts with teal rails (body 5 ×90) and a hazard bar (50 ×16), street trees as
+   square planters with a golden plume (52–54 ×24). Ours: wooden fences, dark green trees; the hub's puff trees pink.
+5. Sky: Otringal already grey (ZEELICH-1-SKY); the hub's pink sky left (no original, and your ship-arrival films).
+`requests/ZEELICH-2.diff` (`props-esmer.js`, `zeelich.js`, `zeelife.js`, `zislands.js`; applies alone on 189dfd4):
+- `props-esmer.js`: a look switch `setLook`, on only while Otringal and the hub are built: `domeStack` an octagonal
+  drum, a glass-block band and a low cap instead of the onion; `esmerBuilding` glass-block frieze and door frames, teal
+  glass, a plain coping and a low hipped roof instead of merlons. New: `capParts`, `capSpike`, `capM`, `glassM`,
+  `tealGlassM`, `archTiles`, `windowM`, `frondTree`, `goldPlant`, `railing`. Every other island draws as before.
+- `zislands.js`: `OTR_LBA2` (palette, ground, rock, paving, rails) and the body map `OTR_SHAPE`/`otrShape` in
+  `STYLE.otringal`; `buildIsland` wraps `buildIsland0` to switch the look; `turfRock` grass → granite (`graniteTex`);
+  new kinds `frond`, `goldplant`, `canopy`, `poster`, `planks`, `annex`, `drum` (body 48), rails in `fence`; the lamp
+  case covers body 1; TREES-1's `cutPlants` covers the new plants.
+- `zeelich.js` (the hub): the same houses, places, sizes, doors and roles in stucco, glass-block bands, teal glass,
+  octagonal drums with aqua or gold caps (the council's gold), coping instead of merlons, steep caps on the minarets;
+  the gateway a glass-block arch; ground pale granite instead of the lawn, grey-white cliff strata, lavender paving,
+  grass in a few patches, golden puff trees. Left: the wooden pier, the dog yard, the mills, the depot, the sky.
+- `zeelife.js`: Mr Pelleck's half re-tiled dome follows the cap (aqua new tiles over five of its eight faces).
+- Otringal unchanged in play: objects 548, shut doors 26, people spots 10, landmarks GRAND HALL and FOUNTAIN; door
+  fronts as OTRINGAL-1 (only otringal-55--47 still blocked, as before).
+- Draw calls (main + shadow) / triangles, same spots, before → after: hub port 78→77 / 516k→469k, street 122→128 /
+  559k→512k, workshop 118→120, dock 191→192, mills 72→73, depot 93→93 (triangles −7 to −9 %); Otringal pad 61→54 /
+  1.02M→822k, plaza 139→139 / 1.14M→1.01M, harbour 122→120 / 612k→420k, the other five ±2 calls.
+- Checked (SwiftShader): zislands, doorcull, island-people PASS; worldfit only the known Citadel "house nbr: door
+  overlaps window" (the same on the base). zeelich-life 37/38: the one FAIL is "the street argues about the council"
+  (chapter 9): Pelleck's first talk now opens the petition (`text/ch9.js` "With a petition…") instead of his tilers
+  line; ZEELICH-2 touches no text or story, but the laptop's base run of that test stopped at a 300 s wait under load
+  before that check, so the base verdict is not measured: yours to look at. containers: no check failed, the run did
+  not finish (a Windows path bug in the test's `URL.pathname` for player.js, then a page-load timeout under load).
+- Pictures (chapter 3 on: **not shown to the user**, ask first): `docs/future/world/ZEELICH-2/sheet-compare-hub.jpg`,
+  `sheet-compare-otr.jpg` (before left, after right, 6 hub and 8 Otringal spots, play camera).
