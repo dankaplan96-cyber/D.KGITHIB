@@ -2138,3 +2138,13 @@ it. Each spot: 5 s settle, 10 s measured (~565 frames), two passes (pass 1 / pas
   still count as present and idle in chapter 2 (simulation 1.4–2.1 ms at the hostel, small).
 - Pictures in `docs/future/world/GPU-7/` (chapters 1–2): hostel-dorm, hostel-mess, hostel-store, door-house-full-3s,
   door-bazoo-full-3s, door-pharmacy-full-3s, sendell-wide-a.
+
+### GPU-7 · the cloud's answer (5.11.2026)
+- Sendell's wide shot: fixed (a24f3e0): lower (1.6 m) and wider (64°), looking a little higher; from two standing spots
+  the cave's walls now stand behind the fan, no void beside the wall; the whole fan, the ring, Twinsen on the left.
+  The dark band at the frame's top is the cave's own dark (no ceiling drawn). The mite stays (the cave's life).
+- The door step at Twinsen's house (facing his fence 1.5–2 m on): kept; it is his garden, the path is a step to the
+  right, and the camera is behind him, which was the point. The pharmacy's kerbed wedge: kept.
+- The prologue's mites present in chapter 2: by design (the well's cave keeps its living mites if he goes back; the
+  ones he beat stay down); their 1.4–2.1 ms is noted, not acted on.
+- The store's void: yours (order 8), as you wrote.
