@@ -2315,6 +2315,29 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
     for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
   }
+  // (the user, 5.11, a photo: "the pipe is hollow": the tube has no ends, and where it dives into the ground or comes up
+  //  out of it the ground cut it at a slant and the camera saw into it.) A concrete collar where the line crosses the
+  //  ground, and a closed end where the tube ends in the open
+  {
+    const collar = cached('pcollar' + r, () => cyl(r * 1.45, r * 1.45, 0.5, 16)), cap = cached('pcap' + r, () => cyl(r * 1.02, r * 1.02, 0.04, 14));
+    const steps = Math.ceil(len / 0.25);
+    let prev = null;
+    for (let k = 0; k <= steps; k++) {
+      const u = k / steps, p = curve.getPointAt(u), under = p.y + r * 0.2 < W.H(p.x, p.z);
+      if (prev != null && under !== prev) {
+        const t2 = curve.getTangentAt(u);
+        q.setFromUnitVectors(_uy, t2);
+        B.addM(collar, tm('concrete', { color: '#cfcac0' }), new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1)));
+      }
+      prev = under;
+    }
+    for (const u of [0, 1]) {
+      const p = curve.getPointAt(u);
+      if (p.y + r < W.H(p.x, p.z)) continue;
+      q.setFromUnitVectors(_uy, curve.getTangentAt(u));
+      B.addM(cap, tm('pipe', { rough: 0.5, metal: 0.35 }), new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1)));
+    }
+  }
   // a buried run: round access covers over the line and a vent standpipe (so the main is known to be there)
   {
     let k = 0, lastM = -1e9;

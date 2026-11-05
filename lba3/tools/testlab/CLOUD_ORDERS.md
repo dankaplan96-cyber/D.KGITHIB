@@ -106,4 +106,14 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    (31_game_bugstreet_north: the build of its walls, posts and rails, the proportions, the steps), list the biggest
    differences and fix the top ones within 80 % likeness and R11. Before/after pictures from the play camera (chapter 1–2
    place: the user may see them).
+16. **The asylum flight's top (the user, 5.11, three photos; chapters 1–2: pictures may go to the user).** (a) "Still
+   crooked": the flight's axis (ASYLUM_STEPS a (−33.0, −37.2) → b (−31.5, −47.5)) is 8° off the terrace and the hostel's
+   portico, which stand square: at the top the sandstone landing meets the square grey terrace at a slant, a cheek post
+   stands in the way between the landing and the terrace. Square the flight to the portico if the water main's legs,
+   the stump's clover and the stone house's upper door allow it (move them if they must move), or square the landing.
+   (b) "A strange gap": between the flight's east cheek (o = +1.7) and TERRACE_RAIL's first run (x −28.4, z −46.6 →
+   −42.95) a trench 1.4–2 m wide down to the cliff rock, two railed walls side by side. Make it one: the terrace carried
+   on to the cheek as a retaining wall (the flight cut into the terrace, as LBA2's climbs), or the cheek and the rail one
+   wall. The cloud's terrain fill helper is `lba1places.js climbRampFill` (applied last in `world.js islandHeight`). (c)
+   With (a)–(b), order 15's likeness to LBA2's climb. Before/after from the play camera (Follow, medium).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
