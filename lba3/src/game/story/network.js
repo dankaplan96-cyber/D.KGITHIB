@@ -19,6 +19,7 @@ import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
 import { SHAFT_TOP } from '../island.js';
 import { Coils } from './coils.js';   // (OREN-GUARDIAN OG-6 "Coils and Consent": the mill station in the expanded campaign)
 import { Bands } from './bands.js';   // (NW-1 "Bands": the other four stations' bands in the expanded campaign)
+import { storyJourney } from '../travelfilm.js';
 import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
@@ -83,9 +84,11 @@ export class Network extends ChapterBase {
     this.gliders ??= []; this.relays ??= {};
     const put = (obj, parent, x, y, z, ry) => { obj.position.set(x - parent.position.x, y - parent.position.y, z - parent.position.z); obj.rotation.y = ry; obj.visible = false; parent.add(obj); return obj; };
     const gy = (x, z) => g.physics.groundAt(x, z);
-    if (D?.group && this.once('gl-desert')) { const l = this.landing('desert'); this.gliders.push(put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2)); }
-    if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING; this.gliders.push(put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6)); }
-    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'); this.gliders.push(put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4)); }
+    // (each remembered by its region with its world place and heading: the glider films fly it, gliderSpot)
+    const keep = (r, obj, x, z, a) => { this.gliders.push(obj); (this.gliderAt ??= {})[r] = { obj, x, z, a }; };
+    if (D?.group && this.once('gl-desert')) { const l = this.landing('desert'); keep('desert', put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2), l.x - 2, l.z - 7, -Math.PI / 2); }
+    if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING; keep('citadel', put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6), l.x + 5, l.z - 3, 0.6); }
+    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'); keep('hamalayi', put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4), l.x + 6, l.z + 1, 0.4); }
     // relays: one at each station
     const mt = Z?.millTop;
     if (mt && !this.relays.mill) this.relays.mill = put(buildRelay(), Z.group, mt.x + 0.5, mt.y - 0.05, mt.z + 0.3, 0);
@@ -208,7 +211,25 @@ export class Network extends ChapterBase {
     if (room.id === 'lighttop' && this.f.c10_zoeAsk && !this.f.c10_light && this.lightBusy) return false;
     return true;
   }
+  // the parked glider of a region as a travel spot for the journey films (travelfilm.js: its id names it in travel's
+  // vehicles, so the film flies its twin and hides it meanwhile; landing: where fly() sets him down)
+  gliderSpot(r) {
+    const G = this.gliderAt?.[r], T = this.game.travel;
+    if (!G || !T) return null;
+    const id = 'c10_glider_' + r;
+    (T.vehicles ??= {})[id] = G.obj;
+    return { id, region: r, mode: 'glider', x: G.x, z: G.z, a: G.a, landing: this.landing(r) };
+  }
+  // GLIDER-FILM (HANDOFF queue 4: the menu's flights were a plain fade): Hesk's glider seen taking off from where he
+  // is and coming down at the other landing (storyJourney, as chapters 5 and 7 end); Hesk flies with him. Films off, or
+  // a glider not there: the plain scene change as before. Hesk's word at the landing waits for the film (update).
   fly(dest) {
+    const g = this.game, here = this.region(), hesk = this.npc('hesk');
+    const from = ['citadel', 'desert', 'hamalayi'].includes(here) && (g.room?.id ?? 'citadel') === here ? this.gliderSpot(here) : null, to = from ? this.gliderSpot(dest) : null;
+    const go = (then) => this.flyTo(dest, then);
+    if (from && to) storyJourney(g, { from, to, mode: 'glider', aboard: [hesk], landWith: [hesk] }, go); else go();
+  }
+  flyTo(dest, then = null) {
     const g = this.game;
     g.startTransition(() => {
       const l = this.landing(dest);
@@ -218,8 +239,8 @@ export class Network extends ChapterBase {
       } else g.enterRoom(dest, l, true);
       this.story.refreshCast();
       g.audio.play('door');
-      this.chain([['hesk', 'c10_hesk_land']], () => { g.updateObjective(); g.save(false); });
-    });
+      this.landSay = true;   // (said once back in play: after the arrival film when there is one)
+    }, null, then);
   }
   openFlights() {
     const g = this.game, f = this.f, here = this.region();
@@ -457,6 +478,7 @@ export class Network extends ChapterBase {
     if (!this.isCur()) return;
     this.og6.update(dt);
     this.nw1.update(dt);
+    if (this.landSay && g.state === 'play' && !g.trans && !g.cine) { this.landSay = false; this.chain([['hesk', 'c10_hesk_land']], () => { g.updateObjective(); g.save(false); }); }
     if (this.room() === 'hamalayi') this.M.snow.focus = g.hero.pos;
     if (!f.c10_boreRelay || f.c10_bore || f.c10_lit_bore) { if (this.boreWant != null) { this.boreWant = undefined; this.boreT = 0; } }
     else if (g.state === 'play') {

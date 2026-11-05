@@ -789,7 +789,8 @@ export class Chapter1 extends ChapterBase {
   //  the chapter changes under the black as before)
   toZeelich() {
     const g = this.game, f = this.f;
-    crossByShip(g, () => g.startTransition(() => {
+    const doran = this.npc('doran');
+    crossByShip(g, (then) => g.startTransition(() => {
       if (this.story.chapters.length > 2) { this.story.nextChapter(); return; }
       // chapter 2 isn't in this build yet: close the chapter properly
       f.c1_done = true;
@@ -798,7 +799,7 @@ export class Chapter1 extends ChapterBase {
       g.hud.show(false);
       g.showScreen('ending');
       g.audio.setMood('ending');
-    }, this.story.nextAreas()), { aboard: [this.npc('doran')] });   // (LAZY-REGIONS: Zeelich built behind the black, under its card)
+    }, this.story.nextAreas(), then), { aboard: [doran], onward: { to: 'zeelich_port', mode: 'ship', landWith: [doran] } });   // (LAZY-REGIONS: Zeelich built behind the black, under its card; WC-1: the ship seen coming down on Zeelich Spaceport's pad, where chapter 3 starts)
   }
   afterEnding() { this.game.updateObjective(); }
 

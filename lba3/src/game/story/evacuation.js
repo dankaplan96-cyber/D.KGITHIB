@@ -201,7 +201,7 @@ export class Evacuation extends ChapterBase {
       case 'c8hatch': this.chain([['hero', 'c8_wheel_hint']]); return true;
       case 'c8ship':
         f.c8_done = true; g.save(false);
-        crossByShip(g, () => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()));   // (TRAVEL-1: the ship's departure film first)
+        crossByShip(g, (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then), { onward: { to: 'zeelich_port', mode: 'ship' } });   // (TRAVEL-1: the ship's departure film first; WC-1: then it is seen coming down on Zeelich Spaceport's pad, where chapter 9 starts)
         return true;
     }
     return false;

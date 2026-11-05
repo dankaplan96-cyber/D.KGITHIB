@@ -203,6 +203,7 @@ export function expandedStart(raw) {
   s.v = SAVE_VERSION; s.order = ORDER;
   return s;
 }
+const DOOR_STEP = 1.0;   // m (Game.doorStep)
 export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
@@ -1235,6 +1236,19 @@ class Game {
       if (this.state !== 'title') this.save(false);
     };
     if (instant) go(); else this.startTransition(go);
+  }
+
+  // DOOR-STEP (the follow camera's first half-second outside a door): an exit's street spot stands 1–1.5 m out of the
+  // door, under the eaves, so the chase camera, with his back to the wall, could only hang over his head (4.3 m up,
+  // 1.3 m back) until he had walked clear. Out of a door he lands DOOR_STEP m further along the way he faces when that
+  // ground is open and level (no brick at his height there or half-way, within 0.15 m of the spot's own height, above
+  // the water); else where the story said.
+  doorStep(to) {
+    if (!to || to.a == null || !Number.isFinite(to.x) || !Number.isFinite(to.z)) return to;
+    const P = this.physics, g0 = P.groundAt(to.x, to.z), sx = Math.sin(to.a), sz = Math.cos(to.a);
+    const open = (d) => { const x = to.x + sx * d, z = to.z + sz * d, g = P.groundAt(x, z, g0 + 0.5); return Math.abs(g - g0) < 0.15 && g > -0.2 && !P.blockedAt(x, z, g, 0.45) ? g : null; };
+    for (const d of [DOOR_STEP, DOOR_STEP * 0.6]) if (open(d) != null && open(d / 2) != null) return { ...to, x: to.x + sx * d, z: to.z + sz * d };
+    return to;
   }
 
   // ROOMS-FULL: is (x, z) on room R's floor (inside its shell, R.bounds) and clear of everything solid at his height?
@@ -2421,8 +2435,8 @@ class Game {
             const pr = this.regions.probe(() => this.story.exitTo(e.to)), ek = e.to;
             if (pr.error && !pr.misses.size) throw pr.error;
             this.walkNext = true;
-            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, to, true); else this.exitRoom(to, true); }, [...pr.misses]);
-            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to); }
+            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, to, true); else this.exitRoom(this.doorStep(to), true); }, [...pr.misses]);
+            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(this.doorStep(to)); }
             this.walkNext = false;   // (a story exit may have started its own scene instead)
           } else this.exitRefused = { e, room: this.room };
           this.doorCool = 1.5;

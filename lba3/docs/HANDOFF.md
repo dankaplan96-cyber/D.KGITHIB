@@ -64,6 +64,12 @@ They were (for the record):
 - The expansion merge (base → `expansion/ballastra`): resolved (regions, citizens, story/index, zeelife, main.js
   migrateSave, STORY_MAP); see the commit for its checks.
 
+- 5.11 (same session, night mode): TREES-1 and CLIMB-1 applied; the ship's landing film at the ends of chapters 2
+  and 8, chapter 10's glider flights as films (Hesk's parked gliders fly; his landing line after); `Game.doorStep`
+  (out of a door, 1 m further out on open level ground: the follow camera no longer hangs over his head under the
+  eaves). camfollow: five wall checks fail on the old base too (since ch12-staging's 3.2 m minimum): to reconcile with
+  the user's choice, not a regression of this session.
+
 ## Queue (after those)
 0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
@@ -73,5 +79,5 @@ They were (for the record):
 2. Laptop orders 5–6 (`CLOUD_ORDERS.md`): pave the way up to Citadel's tavern as LBA2; bring Zeelich closer to LBA2's.
 3. Expansion (`expansion/ballastra`, `docs/future/OREN_PROGRESS.md`): next NW-2 "Local Override" (needs a source the
    player saw, or BR-4); OG-5 when the laptop's W-8 lands; W-1 waits for the user's approval of its pictures.
-4. Smaller: chapter 10's glider menu has no glider film; arrival films for chapters 2→3 and 8→9; the follow camera's
-   very close first half-second outside a door.
+4. ~~Smaller: chapter 10's glider film; arrival films 2→3 and 8→9; the follow camera's first half-second outside a
+   door~~ (done 5.11).
