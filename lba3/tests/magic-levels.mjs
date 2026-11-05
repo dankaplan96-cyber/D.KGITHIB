@@ -111,12 +111,12 @@ check('chapter 4: one "Magic level 2" toast and Twinsen\'s line about the ball',
 check('the inventory tells where the green came from', /Temple of B/.test(seals.ball), seals.ball);
 const again = await ev(() => { const ch = game.story.cur; game.hero.mp = 0; ch.openSeal(2); T.talkAll(); game.story.magic.grant(2); T.talkAll(); return T.lv(); });
 const t4b = await toasts();
-check('chapter 4: the moment fires once (the hook and grant again: no second toast, level 2, no refill: only the slow regeneration)', again.lv === 2 && ups(t4b) === 0 && again.mp < 1, { again, t4b });   // (magic regenerates slowly while the lines play)
+check('chapter 4: the moment fires once (the hook and grant again: no second toast, level 2, no refill)', again.lv === 2 && ups(t4b) === 0 && again.mp < 1, { again, t4b });   
 // Save → Continue keeps it
 await ev(() => { game.hero.mp = 5; game.save(false); });
 await boot('continue');
 const rl = await ev(() => T.lv()), trl = await toasts();
-check('Save → Continue in chapter 4: level 2 and its step kept, the saved magic (5, plus regeneration), no toast', rl.lv === 2 && rl.ml.includes('ml_2') && rl.ch === 'dig' && rl.mp >= 5 && rl.mp < 6 && ups(trl) === 0, { rl, trl });
+check('Save → Continue in chapter 4: level 2 and its step kept, the saved magic (5), no toast', rl.lv === 2 && rl.ml.includes('ml_2') && rl.ch === 'dig' && rl.mp >= 5 && rl.mp < 6 && ups(trl) === 0, { rl, trl });
 
 // ---------------------------------------------------------------- chapter 7: Sendell (level 3)
 const c7 = await ev(() => { T.next('pass'); return T.lv(); });

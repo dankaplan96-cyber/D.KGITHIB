@@ -56,8 +56,8 @@ fight; Aggressive mode's Space still attacks with the same moves.
   - It can't be lost: a 4.2 s flight limit (Discreet's four tall hops take ~3.8 s), a 2.5 s return limit, and a
     reset on every scene change.
   - A full charge needs magic (the throw's 1 point). While charging, dots follow the whole first arc and a small ring
-    marks where it will first touch down (the same plan the throw uses). Magic regenerates slowly (ours; the
-    original refills only from flasks and givers).
+    marks where it will first touch down (the same plan the throw uses). Magic does not regenerate (as the
+    original, the user 5.11): it refills only from flasks (crates, enemies, shops) and givers (the wizard, Bersimon).
 - **Classic controls (LBA2's keys, default):** Twinsen aims the way he faces; holding the ball key (Alt)
   plants his feet and ←/→ turn him (90°/s, as LBA2 turns him while aiming); the release throws. No mouse aim in
   Classic. The tank controls themselves: "Movement and camera" below.

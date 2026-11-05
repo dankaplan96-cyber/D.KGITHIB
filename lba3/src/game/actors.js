@@ -209,7 +209,9 @@ export class Hero extends Actor {
     const P = g.physics;
     this.invuln = Math.max(0, this.invuln - dt);
     this.hurtT = Math.max(0, this.hurtT - dt);
-    this.mp = Math.min(this.mpMax, this.mp + dt * 0.35);
+    // (the user, 5.11: "the magic comes back by itself, it's too easy, do it as LBA2": no regeneration — as LBA2, magic
+    //  comes back only from flasks (crates, beaten enemies, the shops) and from those who give it: the wizard, Bersimon,
+    //  a magic-level moment. A throw without magic still works: the ball comes home at its first contact)
     this.coyote = this.onGround && !this.sliding ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
     this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
 
