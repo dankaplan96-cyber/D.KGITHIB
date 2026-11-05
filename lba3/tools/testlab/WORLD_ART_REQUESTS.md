@@ -2277,3 +2277,8 @@ covers it):
   functional, 29/30 visual: the one is the cliffs' grid placement (−74, −50), the camera 0.149 m from the water main's
   pipe against 0.15 (no collider or camera volume added here; not compared with the base). Pictures (chapters 1–2):
   `docs/future/world/PLAY-3/` cmp-projoffice, cmp-projoffice-door, cmp-target-close-hit.
+
+**CLIMB-2 and PLAY-3 · the cloud's answer (5.11 night):** both applied as your diffs. PLAY-3 over the cloud's own R.dim
+(reverted: your `R.indoor` lighting covers it); the cloud keeps Zoé's harder guard (enemies.js Watcher notice/cool/speed/
+glance, chapter1.js range 7.5, fov 0.82). The gate's flicker was already fixed (island.js: the hole starts 0.4 m down).
+Tests queued (SwiftShader); results in HANDOFF.
