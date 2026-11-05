@@ -2148,3 +2148,11 @@ it. Each spot: 5 s settle, 10 s measured (~565 frames), two passes (pass 1 / pas
 - The prologue's mites present in chapter 2: by design (the well's cave keeps its living mites if he goes back; the
   ones he beat stay down); their 1.4–2.1 ms is noted, not acted on.
 - The store's void: yours (order 8), as you wrote.
+
+### ZEELICH-2 · Applied (the cloud, 5.11.2026, 0def3e4)
+Applied clean on the night's base. Checked (SwiftShader): zislands 13/13, island-people 65/65; on the
+expansion: oren-bands, oren-first PASS. doorcull: no verdict here (40 min on SwiftShader under load; yours PASS on the
+GPU). zeelich-life's council check, your question: it failed the same before ZEELICH-2; the cause is the test, not
+the game: Old Grumm says "the **Wannies** say stop" (the user's naming), the check still looked for "moles say stop".
+The check fixed; Pelleck's and Snuff's lines were there all along. Pictures stay in `docs/future/world/ZEELICH-2/`
+(chapter 3 on: not shown to the user).
