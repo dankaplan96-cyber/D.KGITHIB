@@ -2245,3 +2245,35 @@ forecourt, now it leads into a wall", "going up the stairs the camera sticks to 
   Draw calls main/shadow: ramp wall 78/56, below 79/43, top 111/61, landing 99/59, climbing 101/58.
 - Left: a 15 cm lip where the north fill meets the terrace reads as a thin dark seam; order 15 (the ramp's likeness to
   LBA2's) not started. Pictures (chapters 1–2): `docs/future/world/CLIMB-2/` cmp-1-ramp-wall, cmp-stair-door, climbing.
+
+## PLAY-3 · The user's playtest photos: the project office's door and light, the "green ring on a stick" · the laptop, 5.11.2026
+`requests/PLAY-3.diff` (environment.js, interiors.js, windowviews.js, world.js, main.js; applies alone on the newest
+origin; one conflict with your own "Zoé's scene is too brightly lit" in buildProjOffice resolved to this version, which
+covers it):
+- **ROOM-LIGHT ("the room is too bright, it doesn't make sense with a lamp"):** `environment.js update()` applied the full
+  island sun (2.6) and sky fill (1.42) in every interior; `setInterior(on, light)` now takes a room's own `{ sun, hemi }`
+  (`R.indoor`, passed by `main.js enterRoom`; rooms without it unchanged). Project office `{ sun: 0.22, hemi: 0.42 }`:
+  each hanging lamp has its own light (22, range 6.5) at the lamp, the four sconces small cyan pools, the lampless corner
+  light gone, the hologram unchanged. Control room `{ sun: 0.4, hemi: 0.6 }` (its one window looks into the shaft). Mean
+  grey: project office 80 → 62 (a lamp pool 85 → 101, the lampless corner 87 → 39), control room 85 → 64; with only 2
+  lights (Low, battery) dim but readable. The water office (two windows, a street door) left as it was.
+- **The door onto a wall ("it looks like there's a wall there"):** the project office's and the control room's doors are
+  the real exits to the station yard, but their view was `outsideView('fort')`, a stone corridor painted 5 cm behind the
+  opening. New `station` tile in the window-view atlas (`windowviews.js`, free slot 7): the yard in daylight (the white
+  and teal block with portholes and a dish, a cyan lamp post, concrete slabs, the hazard line); both doors use it; each
+  door's small cyan light is a warm daylight spill.
+- **TARGET-1 (the photo of "a green ring on a stick"):** the Whispering Cliffs' ball target (world.js, (−69, −29)): a
+  bare brown pole up to the middle, a thick emissive torus and a pale disc, the torus turned green once hit. Now a straw
+  target board (red and cream rings round a gold middle, both sides) with a thin glowing hoop on its rim (orange, green
+  once hit), hung on a pin on a post braced by two stays (the post stops at the board's foot); the board rocks on the
+  pin. Position, `W.target`, collider and hit radius unchanged; static parts merged (draw calls 3 → 4).
+- **Hands up (the user: "they stand and raise their hands… it came down after a minute"):** not reproduced beyond the
+  idle fidgets: in Athletic, up the asylum flight and stood 90 s, the arms went up six times, each a fidget ≤ 2.2 s
+  (scratch, stretch): FIDGET-1 is the fix. Ruled out: slides and air states on the climb (1880 teleport spots, runs,
+  jumps), `found` (3 s), `cheer` (1.6 s), scripted anims. **Found in passing (CLIMB-1's shape, maybe gone with CLIMB-2):**
+  at (−29.5, −46.1), the steep ground outside the old flight's east cheek, he slides in place and after 1 s
+  `actors.js:377` respawns him for a life, in the `fall` pose with the arms spread.
+- Checked (SwiftShader): chapter1 PASS (with Zoé's segment in the project office), zoe-resume 5/5; camclear 14/14
+  functional, 29/30 visual: the one is the cliffs' grid placement (−74, −50), the camera 0.149 m from the water main's
+  pipe against 0.15 (no collider or camera volume added here; not compared with the base). Pictures (chapters 1–2):
+  `docs/future/world/PLAY-3/` cmp-projoffice, cmp-projoffice-door, cmp-target-close-hit.
