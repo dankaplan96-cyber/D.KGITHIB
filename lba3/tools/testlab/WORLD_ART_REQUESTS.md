@@ -2317,3 +2317,27 @@ rebuilding doran, guard and baldino from the old sources: same to 2.7 mm. `asset
   standing), which the base also failed once: traced to FarCull putting the walkers on the far animation rate (lodN 8)
   differently from run to run; not settled, worth a run on your side.
 - Pictures (Citadel's cast, chapters 1–2): `docs/future/world/CHARS-1/` (before above, after below).
+
+## GLIDER-1 · Chapter 10's glider take-off, and the Hamalayi glider in the monastery wall (CLOUD_ORDERS 11, 14 g) · the laptop, 6.11.2026
+`requests/GLIDER-1.diff` (story/network.js `decorate`, travelfilm.js `watchShot`; applies alone on the newest origin;
+your glider body collider follows `gliderAt`, so it moves with them). Rays from the film's camera to the glider every
+frame (78 take-off frames a place):
+- **Citadel, 30 hidden:** pine #49 of the tree batch at (−56.6, −57.9), 2.6 m from the landing (15 frames), the rock
+  shelf north of z −51 (14), grass (1). Parked glider landing + (5, −3) heading 0.6 → landing + (0, −7) = (−58, −67),
+  heading 3.3: it runs south down the open field (the small turn west keeps it off a bush collider at (−57.4, −68.8)).
+- **Desert Island, 17 hidden:** a notice board 4.7 m in front of the camera. (3318, −3) → (3316, −3), heading −π/2
+  kept: 2 m toward the pier, the camera clear of the board.
+- **Hamalayi, 2 hidden, and 14 (g):** the parked glider straddled the yard's east wall box (4343, −39.5), the south-east
+  corner pillar, the gate wall and its lantern (the "frozen chest" is the icy trough by the east wall). (4342, −36),
+  0.4 → (4337.5, −41.5), −0.3: inside the yard between the landing and the hall, its nose to the gate, touching nothing.
+- **travelfilm.js:** when the 250 ms camera search ran out before trying the high spots, the fallback kept y = 0, under
+  the ground (78/78 hidden on a slow machine): it now takes its height (`cam = high[1]; cam.y = max(B.y + cam.hi,
+  ground + 3)`). Drop it if you want order 11 alone.
+- Hidden frames before → after (full flights with Hesk aboard): Citadel 30 → 0 (mostly hidden 33 → 0, arrival 4 → 0),
+  Desert Island 17 → 0 (11 → 0), Hamalayi 2 → 0 (9 → 0, arrival 13 → 1). No glider footprint cuts a collider at any of
+  the three (the wheel and skid tips just under the ground). Hesk's spots, landings, text and flags unchanged; no tree
+  removed; world.js unchanged.
+- Checked (SwiftShader): chapter10 27/27, story-journeys 30/30. Left: the Hamalayi film still takes the high fallback
+  camera (11 spots tried; reads clearly, villagers crowd the tail); the Citadel glider now sits on a path junction
+  (−58, −66); Hesk 1.2 m from the Desert glider (was 0.4); the 250 ms camera budget is easily overrun under load, so the
+  shot picked can differ by machine. Pictures: chapter 10, not for the user (the laptop keeps them).
