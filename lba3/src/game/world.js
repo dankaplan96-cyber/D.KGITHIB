@@ -18,10 +18,11 @@ import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
+import { mergeStatic } from '../engine/merge.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
-import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill } from './lba1places.js';
+import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill, CLIMB_RAMP } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
@@ -357,7 +358,52 @@ function houseFlats(x, z, h) {
 }
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
-  return climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight);
+  return climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight));
+}
+
+// CLIMB-2 (the user's photo, 5.11: the cobbles folded into a pit beside the retaining wall): the paved ramp up to the
+// fort (lba1places.js CLIMB_RAMP) is one even surface. Inside its corridor the ground is the ramp's own smooth incline,
+// level across: its line is the ground along the ramp's middle as it was, smoothed and never falling on the way up; it
+// is the whole ground within 1.8 m of the middle (the paving, the kerbs, the wall's foot) and eases back to the land
+// by 2.6 m. Past the square's kerb ring to the fork; the ground everywhere else is unchanged, and the physics walks the
+// same heightfield the paving is painted on. (CLIMB_OFF: the ground as it stood before, for the scatter's view of it)
+let CLIMB_OFF = false, CLIMB_PROF = null;
+const CLIMB_S0 = 10.6, CLIMB_FULL = 1.8, CLIMB_EASE = 2.6, CLIMB_DS = 0.25;
+const CLIMB_BOX = [-41.8, -38.4, -30.6, -11.6];
+function climbLocal(x, z) {
+  let best = 1e9, bs = 0, s0 = 0;
+  for (let i = 0; i < CLIMB_RAMP.length - 1; i++) {
+    const [ax, az] = CLIMB_RAMP[i], [bx, bz] = CLIMB_RAMP[i + 1], dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz);
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (L * L))), d = Math.hypot(x - ax - dx * t, z - az - dz * t);
+    if (d < best) { best = d; bs = s0 + t * L; }
+    s0 += L;
+  }
+  return [bs, best, s0];
+}
+function climbProfile() {
+  const [, , L] = climbLocal(0, 0), n = Math.ceil(L / CLIMB_DS) + 1, at = (s) => {
+    let s0 = 0;
+    for (let i = 0; i < CLIMB_RAMP.length - 1; i++) {
+      const [ax, az] = CLIMB_RAMP[i], [bx, bz] = CLIMB_RAMP[i + 1], l = Math.hypot(bx - ax, bz - az);
+      if (s <= s0 + l || i === CLIMB_RAMP.length - 2) { const t = Math.min(1, (s - s0) / l); return [ax + (bx - ax) * t, az + (bz - az) * t]; }
+      s0 += l;
+    }
+  };
+  CLIMB_OFF = true;
+  let p = Array.from({ length: n }, (_, i) => islandHeight(...at(Math.min(L, i * CLIMB_DS))));
+  CLIMB_OFF = false;
+  for (let pass = 0; pass < 4; pass++) p = p.map((v, i) => { let a = 0, c = 0; for (let j = -6; j <= 6; j++) { const k = i + j; if (k >= 0 && k < n) { a += p[k]; c++; } } return a / c; });
+  for (let i = 1; i < n; i++) p[i] = Math.max(p[i], p[i - 1]);
+  return { p, L };
+}
+function climbGround(x, z, h) {
+  if (CLIMB_OFF || PRE80 || x < CLIMB_BOX[0] || x > CLIMB_BOX[2] || z < CLIMB_BOX[1] || z > CLIMB_BOX[3]) return h;
+  const [s, o, L] = climbLocal(x, z);
+  if (o >= CLIMB_EASE || s < CLIMB_S0 || s > L) return h;
+  CLIMB_PROF ??= climbProfile();
+  const P = CLIMB_PROF.p, f = s / CLIMB_DS, i = Math.min(P.length - 2, Math.floor(f)), ph = P[i] + (P[i + 1] - P[i]) * (f - i);
+  const w = (1 - smoothstep(CLIMB_FULL, CLIMB_EASE, o)) * smoothstep(CLIMB_S0, CLIMB_S0 + 1.6, s) * (1 - smoothstep(L - 1.2, L, s));
+  return lerp(h, ph, w);
 }
 export const debugHeight = islandHeight;
 
@@ -499,8 +545,19 @@ function scatterGround(T) {
       if (d !== 0) pre.set(k, T.heights[k] + d);
     }
   }
+  // (CLIMB-2: and the ramp's corridor as it stood before its even incline, so no random draw moves)
+  {
+    const [x0, z0, x1, z1] = CLIMB_BOX;
+    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      if (pre.has(k)) continue;
+      CLIMB_OFF = true; const before = islandHeight(x, z); CLIMB_OFF = false;
+      const d = before - islandHeight(x, z);
+      if (d !== 0) pre.set(k, T.heights[k] + d);
+    }
+  }
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => PRE80_BOXES.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -1208,15 +1265,38 @@ export function* buildWorldSteps(parentScene) {
     });
 
     // ball target
+    // (TARGET-1, the user 5.11: seen close it read as "a tree like a green ring on a stick", "it doesn't look good": a thick
+    //  glowing hoop round a blank pale disc on a bare brown pole, and once hit the hoop's green made it a crown. Now a target
+    //  as the villagers would make one: a straw butt with a painted face, red and cream rings round a gold middle, hung on a
+    //  pin at the top of a post braced by two stays. The thin hoop round its rim still glows, orange until it's hit, then
+    //  green; the board, not only the hoop, rocks on its pin until then. Its place, height and hit radius are unchanged.)
     const T = POI.target, g = H(T.x, T.z);
     const ty = g + 1.9;
-    add(scene, new THREE.CylinderGeometry(0.15, 0.2, 1.9, 8), mat('#6b4a2e'), T.x, g + 0.95, T.z);
-    const ringMat = new THREE.MeshStandardMaterial({ color: '#ff8a2a', emissive: '#ff6a00', emissiveIntensity: 2.2 });
-    const disc = add(scene, new THREE.TorusGeometry(0.6, 0.14, 10, 24), ringMat, T.x, ty, T.z, { ry: Math.PI / 2 });
-    add(scene, new THREE.CircleGeometry(0.5, 20), mat('#f4efe2', { side: THREE.DoubleSide }), T.x, ty, T.z, { ry: Math.PI / 2 });
+    const wood = mat('#6b4a2e');
+    const foot = ty - 0.6;   // (the post stops at the board's foot, where its pin is: it never shows through the face)
+    const stand = new THREE.Group(); scene.add(stand);   // (the post and its two stays: one draw, mergeStatic below)
+    add(stand, new THREE.CylinderGeometry(0.07, 0.12, foot - g, 8), wood, T.x, (g + foot) / 2, T.z);
+    for (const s of [-1, 1]) add(stand, new THREE.CylinderGeometry(0.045, 0.055, 1.18, 6), wood, T.x, g + 0.55, T.z + s * 0.27, { rx: -s * Math.atan2(0.42, 1.1) });
+    mergeStatic(stand);
+    const ringMat = new THREE.MeshStandardMaterial({ color: '#ff8a2a', emissive: '#ff6a00', emissiveIntensity: 1.6 });
+    const faceTex = (() => {
+      const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), S = 128;
+      ['#b8302a', '#f2ead6', '#b8302a', '#f2ead6', '#e0a83a'].forEach((col, i) => { x.fillStyle = col; x.beginPath(); x.arc(S / 2, S / 2, S / 2 - i * 12.5, 0, 7); x.fill(); });
+      x.strokeStyle = 'rgba(60,24,12,0.55)'; x.lineWidth = 1.5; for (let i = 0; i < 5; i++) { x.beginPath(); x.arc(S / 2, S / 2, S / 2 - i * 12.5 - 0.8, 0, 7); x.stroke(); }
+      x.strokeStyle = 'rgba(90,60,20,0.18)'; x.lineWidth = 1; for (let i = 0; i < 70; i++) { const a = i * 2.39996, r = 8 + (i * 37) % 54; x.beginPath(); x.moveTo(S / 2 + Math.cos(a) * r, S / 2 + Math.sin(a) * r); x.lineTo(S / 2 + Math.cos(a) * (r + 5), S / 2 + Math.sin(a + 0.3) * (r + 5)); x.stroke(); }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const disc = new THREE.Group(); disc.position.set(T.x, foot, T.z); disc.rotation.order = 'ZYX'; disc.rotation.y = Math.PI / 2; scene.add(disc);   // (ZYX: rotation.z then swings it about the horizontal across its face)
+    const part = (geo, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y + 0.6, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; disc.add(o); return o; };
+    part(new THREE.CylinderGeometry(0.56, 0.56, 0.11, 28).rotateX(Math.PI / 2), mat('#c8a464'), 0, 0, 0);   // the straw butt
+    const face = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.9 });
+    part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, 0.057); part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, -0.057, Math.PI);   // (painted both sides)
+    part(new THREE.TorusGeometry(0.575, 0.045, 8, 36), ringMat, 0, 0, 0);   // the hoop: its glow says hit or not
+    part(new THREE.BoxGeometry(0.1, 0.2, 0.18), wood, 0, -0.62, 0);   // the bracket over the post's pin
+    mergeStatic(disc, { recolor: true, retex: true });   // (the butt, the bracket and both faces: one draw; the hoop, whose glow changes, its own)
     physics.add({ type: 'cyl', x: T.x, z: T.z, r: 0.25, top: g + 2.4, seeThrough: true });
     W.target = { x: T.x, y: ty, z: T.z, ringMat, disc, hit: false };
-    W.updaters.push((dt, t) => { if (!W.target.hit) disc.rotation.x = Math.sin(t * 2) * 0.2; });
+    W.updaters.push((dt, t) => { if (!W.target.hit) disc.rotation.z = Math.sin(t * 2) * 0.07; });
 
     // shard pedestal on top of the plateau
     const pg = H(P.x, P.z);

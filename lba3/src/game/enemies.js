@@ -949,6 +949,10 @@ export class Watcher {
     this.range = opts.range ?? 6.5;
     this.fov = opts.fov ?? 0.75;
     this.onSpot = opts.onSpot;
+    // (the user, 5.11, Zoé's office: "too easy": how fast he notices, how slowly he calms, his pace, and whether he
+    //  stops on his round to look back over his shoulder)
+    this.notice = opts.notice ?? 1; this.cool = opts.cool ?? 0.6; this.speed = opts.speed ?? 1.2; this.glance = !!opts.glance;
+    this.glanceT = 4 + Math.random() * 3; this.lookBackT = 0;
     this.suspicion = 0;
     this.active = false;
     const geo = new THREE.CircleGeometry(this.range, 24, -this.fov, this.fov * 2);
@@ -965,16 +969,21 @@ export class Watcher {
     const [tx, tz] = this.patrol[this.wp];
     const d = Math.hypot(tx - n.pos.x, tz - n.pos.z);
     let moving = false;
+    if (this.glance && this.lookBackT <= 0 && d >= 0.4 && (this.glanceT -= dt) <= 0) { this.lookBackT = 1.4; this.backA = n.angle + Math.PI; this.glanceT = 4 + Math.random() * 3; }
     if (this.suspicion > 0.35) {
       // something caught their eye: stop and stare toward it
       n.angle = dampAngle(n.angle, n.angleTo(hero), 4, dt);
+    } else if (this.lookBackT > 0) {
+      // a look back over his shoulder on his round
+      this.lookBackT -= dt;
+      n.angle = dampAngle(n.angle, this.backA, 5, dt);
     } else if (d < 0.4) {
       this.waitT -= dt;
       n.angle = dampAngle(n.angle, n.angle + 1.2 * Math.sin(g.time * 0.8), 2, dt); // look around
       if (this.waitT <= 0) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = 1.5 + Math.random(); }
     } else {
       n.angle = dampAngle(n.angle, Math.atan2(tx - n.pos.x, tz - n.pos.z), 5, dt);
-      P.move(n, Math.sin(n.angle) * 1.2 * dt, Math.cos(n.angle) * 1.2 * dt);
+      P.move(n, Math.sin(n.angle) * this.speed * dt, Math.cos(n.angle) * this.speed * dt);
       moving = true;
     }
     // vision: cone + line of sight, slower to notice a sneaking or hidden player
@@ -982,11 +991,11 @@ export class Watcher {
     const inCone = hd < this.range && Math.abs(angleDiff(n.angle, n.angleTo(hero))) < this.fov
       && P.lineOfSight(n.pos.x, n.pos.y + 1.6, n.pos.z, hero.pos.x, hero.pos.y + (hero.hiding ? 0.6 : 1.2), hero.pos.z);
     const vis = hero.visibility();
-    const rate = inCone ? (hd < 2 ? 3 : 1.3) * Math.max(0.15, vis) * (1.2 - hd / this.range) : -0.6;
+    const rate = inCone ? (hd < 2 ? 3 : 1.3) * this.notice * Math.max(0.15, vis) * (1.2 - hd / this.range) : -this.cool;
     this.suspicion = clamp(this.suspicion + rate * dt, 0, 1);
     if (this.suspicion >= 1) { this.suspicion = 0; this.onSpot?.(); }
     n.rig.play(moving ? 'walk' : 'idle');
-    n.rig.update(dt, moving ? 1.2 : 0);
+    n.rig.update(dt, moving ? this.speed : 0);
     n.sync();
     this.cone.position.set(n.pos.x, n.pos.y + 0.04, n.pos.z);
     this.cone.rotation.y = n.angle;

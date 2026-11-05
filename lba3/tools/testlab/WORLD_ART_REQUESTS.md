@@ -2212,3 +2212,73 @@ applies alone on origin):
 
 **ASYLUM-3 · the cloud's answer (5.11):** applied as your diff (asylumhostel.js, lba1places.js, lba1room.js), clean on
 da44a727 + your branch. Checked (SwiftShader): asylum PASS, lba1rooms 8/8; your before/after pictures looked at. Published.
+
+## CLIMB-2 · The climb to the asylum, the user's photos and CLOUD_ORDERS 16 (a)(b)(d) · the laptop, 5.11.2026
+The user: "not good" (the ramp's paving folding into a pit by its wall), "a gap" at the top, "make a turn toward the door's
+forecourt, now it leads into a wall", "going up the stairs the camera sticks to Twinsen", "the stones flicker".
+`requests/CLIMB-2.diff` (lba1places.js, world.js; applies alone on 54af45d, your `climbRampFill` kept as is:
+`islandHeight` = `climbGround(climbRampFill(houseFlats(islandHeight0)))`):
+- **The ramp:** the ground inside its corridor (`climbGround`) is one smooth incline, level across within 1.8 m of the
+  centre line (never falling as it climbs), easing back to the natural ground by 2.6 m; physics walks the same
+  heightfield the cobbles are painted on. Cross-fall within 1.25 m of the centre ≤ 0.05 m (was up to 2.2 m at the
+  wall). The scatter still reads the old ground there (`scatterGround`): nothing else moves. A base course 8 cm proud at
+  the wall's foot; kerbs on the highest ground under them.
+- **The stair, square to the portico (16 a):** 23 steps due north from (−32.6, −35.0) to a landing on the low shelf
+  (~14.5 m, centred (−32.6, −45.2)), then 6 steps due east (x −31.3 → −29.0) onto the forecourt, the door ahead; risers
+  ~0.24 (≤ 0.26). No post between the stair top and the forecourt. New step texture: joints across the stair only (no
+  stripes), a 3 cm nosing, a darker riser.
+- **The trench (16 b):** gone: the terrace filled level both sides of the second flight behind dressed walls with coping
+  and railing; the south fill stops at TERRACE_RAIL.
+- **The camera (16 d):** he arrives ~5 m before the fort wall; Follow's arm there 8.70–8.72 m. Up both flights the arm
+  stays full (8.75 m). Railings and posts are `camSkip` (each wall a camera-solid stone collider plus a rail collider the
+  camera ignores), cheek colliders in shorter pieces; camera.js unchanged (a stair-steps-as-ground change was tried and
+  reverted: the steps never pulled it in). **Left for you:** going DOWN the first flight he faces south with the fort wall
+  and portico 6–10 m behind: arm min 4.05 m, 61/157 frames under 6 m (by camera.js's design); and the slow recovery
+  after an in-cut on stairs generally (0.6 s hold, ≤ 2.5 m/s; Zeelich's lift-dock stair going down: min 3.28 m).
+- **The flicker (the user's photo at the fort's west gate): yours, island.js:** the gatehouse's extruded arch leaves a
+  strip under the arched opening whose top lies exactly at ground level (15.88), coplanar with the ground in the passage
+  round (−41.6, −65.6), x −43.1…−38.7: start the hole below the ground or lower that strip ~5 cm. None of the climb's own
+  surfaces overlaps another within 2 cm (the fill's edge kept 15 cm over the ground; a kerb at 2 cm seated higher).
+  Next to the climb, not the laptop's: a pipeline footing at (−34.7, −44.6) 2 cm from the ground.
+- Checked on the final code (SwiftShader): the walk by input square → ramp → landing → second flight → front door in and
+  out → back to the square; lba1rooms 8/8, asylum 10/10, chapter1 23/23, rocks 8/8 (509 placements, deterministic).
+  Draw calls main/shadow: ramp wall 78/56, below 79/43, top 111/61, landing 99/59, climbing 101/58.
+- Left: a 15 cm lip where the north fill meets the terrace reads as a thin dark seam; order 15 (the ramp's likeness to
+  LBA2's) not started. Pictures (chapters 1–2): `docs/future/world/CLIMB-2/` cmp-1-ramp-wall, cmp-stair-door, climbing.
+
+## PLAY-3 · The user's playtest photos: the project office's door and light, the "green ring on a stick" · the laptop, 5.11.2026
+`requests/PLAY-3.diff` (environment.js, interiors.js, windowviews.js, world.js, main.js; applies alone on the newest
+origin; one conflict with your own "Zoé's scene is too brightly lit" in buildProjOffice resolved to this version, which
+covers it):
+- **ROOM-LIGHT ("the room is too bright, it doesn't make sense with a lamp"):** `environment.js update()` applied the full
+  island sun (2.6) and sky fill (1.42) in every interior; `setInterior(on, light)` now takes a room's own `{ sun, hemi }`
+  (`R.indoor`, passed by `main.js enterRoom`; rooms without it unchanged). Project office `{ sun: 0.22, hemi: 0.42 }`:
+  each hanging lamp has its own light (22, range 6.5) at the lamp, the four sconces small cyan pools, the lampless corner
+  light gone, the hologram unchanged. Control room `{ sun: 0.4, hemi: 0.6 }` (its one window looks into the shaft). Mean
+  grey: project office 80 → 62 (a lamp pool 85 → 101, the lampless corner 87 → 39), control room 85 → 64; with only 2
+  lights (Low, battery) dim but readable. The water office (two windows, a street door) left as it was.
+- **The door onto a wall ("it looks like there's a wall there"):** the project office's and the control room's doors are
+  the real exits to the station yard, but their view was `outsideView('fort')`, a stone corridor painted 5 cm behind the
+  opening. New `station` tile in the window-view atlas (`windowviews.js`, free slot 7): the yard in daylight (the white
+  and teal block with portholes and a dish, a cyan lamp post, concrete slabs, the hazard line); both doors use it; each
+  door's small cyan light is a warm daylight spill.
+- **TARGET-1 (the photo of "a green ring on a stick"):** the Whispering Cliffs' ball target (world.js, (−69, −29)): a
+  bare brown pole up to the middle, a thick emissive torus and a pale disc, the torus turned green once hit. Now a straw
+  target board (red and cream rings round a gold middle, both sides) with a thin glowing hoop on its rim (orange, green
+  once hit), hung on a pin on a post braced by two stays (the post stops at the board's foot); the board rocks on the
+  pin. Position, `W.target`, collider and hit radius unchanged; static parts merged (draw calls 3 → 4).
+- **Hands up (the user: "they stand and raise their hands… it came down after a minute"):** not reproduced beyond the
+  idle fidgets: in Athletic, up the asylum flight and stood 90 s, the arms went up six times, each a fidget ≤ 2.2 s
+  (scratch, stretch): FIDGET-1 is the fix. Ruled out: slides and air states on the climb (1880 teleport spots, runs,
+  jumps), `found` (3 s), `cheer` (1.6 s), scripted anims. **Found in passing (CLIMB-1's shape, maybe gone with CLIMB-2):**
+  at (−29.5, −46.1), the steep ground outside the old flight's east cheek, he slides in place and after 1 s
+  `actors.js:377` respawns him for a life, in the `fall` pose with the arms spread.
+- Checked (SwiftShader): chapter1 PASS (with Zoé's segment in the project office), zoe-resume 5/5; camclear 14/14
+  functional, 29/30 visual: the one is the cliffs' grid placement (−74, −50), the camera 0.149 m from the water main's
+  pipe against 0.15 (no collider or camera volume added here; not compared with the base). Pictures (chapters 1–2):
+  `docs/future/world/PLAY-3/` cmp-projoffice, cmp-projoffice-door, cmp-target-close-hit.
+
+**CLIMB-2 and PLAY-3 · the cloud's answer (5.11 night):** both applied as your diffs. PLAY-3 over the cloud's own R.dim
+(reverted: your `R.indoor` lighting covers it); the cloud keeps Zoé's harder guard (enemies.js Watcher notice/cool/speed/
+glance, chapter1.js range 7.5, fov 0.82). The gate's flicker was already fixed (island.js: the hole starts 0.4 m down).
+Tests queued (SwiftShader); results in HANDOFF.

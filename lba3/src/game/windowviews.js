@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { M, canvasTex } from './props.js';
 
 export const TILE = 256, GUTTER = 6;
-export const TILES = { sea: 0, harbour: 1, village: 2, garden: 3, orchard: 4, street: 5, yard: 6 };
+export const TILES = { sea: 0, harbour: 1, village: 2, garden: 3, orchard: 4, street: 5, yard: 6, station: 7 };
 const COLS = 4, ROWS = 2;
 
 // ------------------------------------------------------------------ small painter kit
@@ -268,6 +268,33 @@ const PAINT = {
     // blades of grass
     for (let i = 0; i < 160; i++) { const xx = r() * TILE, yy = 172 + r() * 84, hh = 5 + (yy - 172) * 0.16; x.strokeStyle = mix('#3f8a3a', '#a8d860', r()); x.lineWidth = 1 + (yy - 172) * 0.01; x.beginPath(); x.moveTo(xx, yy); x.lineTo(xx + (r() - 0.5) * 6, yy - hh); x.stroke(); }
     flowers(x, 190, 250, r, 22, ['#f2d24a', '#f4f0e8', '#e8643c']);
+  },
+  // (DOOR-VIEW, the user 5.11: "it looks like there's a wall there") the Joint Project's yard out of its offices' doors:
+  // the concrete yard in daylight, a lamp post, the hazard line by the pad, the other white-and-teal block across it
+  station(x, r) {
+    sky(x, '#4a9ee6', '#a8d8f4', 0, 100, '#f6efd6');
+    cloud(x, 64, 40, 42); cloud(x, 196, 60, 32, 0.8);
+    ridge(x, 118, 10, '#86b4a8', r, 140, 1.4);
+    haze(x, 90, 140, '#d8ecf8', 0.3);
+    // the block across the yard: white panels on teal, a round brass-rimmed window, a dish on its roof
+    const bx = 120, by = 150, bw = 112, bh = 46;
+    x.fillStyle = shade('#e8f4f2', 0.74); x.beginPath(); x.moveTo(bx + bw, by); x.lineTo(bx + bw + 22, by - 8); x.lineTo(bx + bw + 22, by - 8 - bh); x.lineTo(bx + bw, by - bh); x.closePath(); x.fill();
+    const wg = x.createLinearGradient(0, by - bh, 0, by); wg.addColorStop(0, '#eef8f6'); wg.addColorStop(1, '#cfe2de'); x.fillStyle = wg; x.fillRect(bx, by - bh, bw, bh);
+    x.fillStyle = '#3f8a86'; x.fillRect(bx, by - bh, bw, 5); x.fillRect(bx, by - 7, bw, 7);
+    x.strokeStyle = 'rgba(63,138,134,0.5)'; x.lineWidth = 1; for (let i = 1; i < 5; i++) { x.beginPath(); x.moveTo(bx + i * bw / 5, by - bh + 5); x.lineTo(bx + i * bw / 5, by - 7); x.stroke(); }
+    for (const cx of [bx + 22, bx + 90]) { x.fillStyle = '#c8a040'; x.beginPath(); x.arc(cx, by - 26, 8, 0, 7); x.fill(); x.fillStyle = '#7fd8e8'; x.beginPath(); x.arc(cx, by - 26, 5.5, 0, 7); x.fill(); }
+    x.fillStyle = '#3a4a52'; x.fillRect(bx + 48, by - 33, 17, 26); x.fillStyle = '#5ff4ff'; x.fillRect(bx + 50, by - 36, 13, 2);
+    x.fillStyle = '#9aa4a8'; x.fillRect(bx + 70, by - bh - 10, 3, 10); x.fillStyle = '#d8dcdc'; x.beginPath(); x.ellipse(bx + 71, by - bh - 14, 11, 6, -0.4, 0, 7); x.fill(); x.fillStyle = '#b8c0c4'; x.beginPath(); x.ellipse(bx + 72, by - bh - 13, 6, 3, -0.4, 0, 7); x.fill();
+    // the yard: concrete slabs to the door, a yellow-and-black line at the pad's edge
+    const yg = x.createLinearGradient(0, 148, 0, 256); yg.addColorStop(0, '#d8d4ca'); yg.addColorStop(1, '#aaa59a'); x.fillStyle = yg; x.fillRect(0, 148, TILE, 108);
+    x.strokeStyle = 'rgba(80,76,70,0.32)'; x.lineWidth = 1;
+    for (const y of [158, 172, 192, 220]) { x.beginPath(); x.moveTo(0, y); x.lineTo(TILE, y); x.stroke(); }
+    for (let i = -6; i <= 6; i++) { x.beginPath(); x.moveTo(128 + i * 30, 148); x.lineTo(128 + i * 62, 256); x.stroke(); }
+    for (let i = 0; i < 18; i++) { x.fillStyle = i % 2 ? '#2a2a2a' : '#f2c23a'; x.beginPath(); x.moveTo(i * 16 - 6, 182); x.lineTo(i * 16 + 10, 182); x.lineTo(i * 16 + 6, 188); x.lineTo(i * 16 - 10, 188); x.fill(); }
+    // a lamp post on the left, its cyan lamp
+    x.fillStyle = '#3f5a5a'; x.fillRect(44, 104, 4, 82); x.fillRect(38, 184, 16, 4); x.fillRect(44, 104, 18, 3);
+    x.fillStyle = '#5ff4ff'; x.beginPath(); x.arc(60, 110, 4, 0, 7); x.fill();
+    x.fillStyle = 'rgba(40,40,30,0.18)'; x.beginPath(); x.ellipse(52, 190, 22, 4, 0, 0, 7); x.fill();
   },
 };
 

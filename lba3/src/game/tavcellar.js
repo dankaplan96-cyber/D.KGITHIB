@@ -61,8 +61,8 @@ export function buildTavCellarRoom(scene, physics) {
 
   // --- the walkway: along the left wall and on along the back wall, 2 m up, on solid stone
   const AX1 = LX + 1.5 * F, AZ1 = BZ + 1.3 * F, SX0 = -1.0 * F;
-  k.add(rbox(AX1 - LX, WH, D, 0.02), stone, (LX + AX1) / 2, WH / 2, 0);
-  k.add(rbox(SX0 - AX1, WH, AZ1 - BZ, 0.02), stone, (AX1 + SX0) / 2, WH / 2, (BZ + AZ1) / 2);
+  k.add(rbox(AX1 - LX, WH - 0.02, D, 0.02), stone, (LX + AX1) / 2, (WH - 0.02) / 2, 0);   // (OVERLAP-1: the stone 2 cm inside its cap, not level with the cap's top: the two flickered; the steps and the store the same)
+  k.add(rbox(SX0 - AX1, WH - 0.02, AZ1 - BZ, 0.02), stone, (AX1 + SX0) / 2, (WH - 0.02) / 2, (BZ + AZ1) / 2);
   for (const [x0, x1, z0, z1] of [[LX, AX1, BZ, D / 2], [AX1, SX0, BZ, AZ1]]) {
     k.add(rbox(x1 - x0 + 0.04, 0.12, z1 - z0 + 0.04, 0.02), cap, (x0 + x1) / 2, WH - 0.06, (z0 + z1) / 2);
     B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, WH);
@@ -71,13 +71,13 @@ export function buildTavCellarRoom(scene, physics) {
   const N = 5, run = 0.75, rise = (WH - SH) / N;
   for (let i = 0; i < N - 1; i++) {
     const top = WH - rise * (i + 1), x = SX0 + (i + 0.5) * run;
-    k.add(rbox(run + 0.02, top, AZ1 - BZ, 0.015), stone, x, top / 2, (BZ + AZ1) / 2);
+    k.add(rbox(run + 0.02, top - 0.02, AZ1 - BZ, 0.015), stone, x, (top - 0.02) / 2, (BZ + AZ1) / 2);
     k.add(rbox(run + 0.04, 0.05, AZ1 - BZ + 0.04, 0.01), cap, x, top - 0.025, (BZ + AZ1) / 2);
     B.col(x, (BZ + AZ1) / 2, run / 2 + 0.12, (AZ1 - BZ) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink, no seam to drop through)
   }
   const SX1 = SX0 + (N - 1) * run;   // (the stair's foot: the store's platform begins)
   // --- the store: a stone platform 1 m up from the stair's foot to the right wall, a balustrade along its front
-  k.add(rbox(W / 2 - SX1, SH, D, 0.02), stone, (SX1 + W / 2) / 2, SH / 2, 0);
+  k.add(rbox(W / 2 - SX1, SH - 0.02, D, 0.02), stone, (SX1 + W / 2) / 2, (SH - 0.02) / 2, 0);
   k.add(rbox(W / 2 - SX1 + 0.04, 0.1, D + 0.04, 0.02), cap, (SX1 + W / 2) / 2, SH - 0.05, 0);
   k.add(plane(W / 2 - SX1 - 0.2, D - 0.2), MAT.stone('grey', 2), (SX1 + W / 2) / 2, SH + 0.005, 0, 0, { rx: -Math.PI / 2 });
   B.col((SX1 + W / 2) / 2, 0, (W / 2 - SX1) / 2, D / 2, SH);

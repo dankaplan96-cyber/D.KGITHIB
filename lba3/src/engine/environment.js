@@ -327,8 +327,12 @@ export class Environment {
     return this._sf.copy(right).multiplyScalar(u).addScaledVector(up, v).addScaledVector(d, w);
   }
   // indoors: no sky, sea, rain or fog; black around the room like LBA2's interiors
-  setInterior(on) {
+  // (ROOM-LIGHT, the user 5.11: "the room is too bright, it doesn't make sense with a lamp": every room was lit by the
+  //  island's full sun and sky fill, so its lamps added nothing you could see. light: the room's own { sun, hemi }
+  //  multipliers (interiors.js R.indoor), for a room whose lamps are meant to be its light; none: as before)
+  setInterior(on, light = null) {
     this.interior = on;
+    this.indoor = on ? light : null;
     this.water.visible = this.clouds.visible = !on && !this.region;
     this.scene.background = on ? (this._black ??= new THREE.Color('#000000')) : this.fog.color;
   }
@@ -394,6 +398,7 @@ export class Environment {
     this.hemi.color.copy(this._pal('hemiSky', s));
     this.hemi.groundColor.copy(this._pal('hemiGround', s));
     if (on) { this._wxLight(W); this._light(FLOOR_CITADEL); }
+    if (this.interior && this.indoor) { this.sun.intensity *= this.indoor.sun ?? 1; this.hemi.intensity *= this.indoor.hemi ?? 1; }   // (ROOM-LIGHT)
 
     // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
     this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);

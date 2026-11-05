@@ -1263,7 +1263,7 @@ function buildProjOffice(scene, physics) {
     floor: MAT.tiles('#b0684a', '#d8c09a', '#5a3a2a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
     body: MAT.stone('blue', 2), low: MAT.plates(teal, 1), dado: 1.15, rail: brass, cap: MAT.stone('slate', 1.4), beam: MAT.iron(),
     posts: MAT.iron(), postsAt: (len) => (len === L ? [-4.75, -1.92, 0.58, 3.2, 6.42].map((x) => x + W / 2 + t) : [-4.92, -1.2, 0.55, 3.0].map((z) => D / 2 + t - z)),
-    back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('fort'), sill: MAT.stone('slate', 1) }],
+    back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('station'), sill: MAT.stone('slate', 1) }],   // (DOOR-VIEW: the door out to the yard shows the yard, no longer a painted wall)
   });
   const BZ = -D / 2, LX = -W / 2;
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-projoffice' });
@@ -1383,12 +1383,20 @@ function buildProjOffice(scene, physics) {
   B.put(-4.5, 4.5, Math.PI, P.bench, { w: 1.4, pal: 'grey', noCol: true });
   B.col(-4.5, 4.5, 0.7, 0.2, 0.7, { noStand: true, seeThrough: true });
   // --- hanging industrial lamps and light
-  B.light('#e8f0ff', 4, 8, -3.6, 2.4, 3.0);
-  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
-  B.light('#e8f0ff', 7, 10, -3.2, 2.5, -1.8);
-  B.light('#e8f0ff', 6, 10, 2.6, 2.5, 1.4);
+  // (ROOM-LIGHT, the user 5.11: "the room is too bright, it doesn't make sense with a lamp". No window: the island's
+  //  daylight fill is cut to about a third (R.indoor, environment.js setInterior), so the light is the room's own: a pool under
+  //  each hanging lamp, the hologram's cyan over the table, a small cyan wash round each of the four sconces, and the
+  //  daylight that comes in at the open door. Every lamp now hangs where a light is; the corner light with no lamp is gone.
+  //  It also answers the cloud's own note of 5.11, "Zoé's scene is too brightly lit": the office after hours.)
+  R.indoor = { sun: 0.22, hemi: 0.42 };
+  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) {
+    k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
+    B.light('#f4ecdc', 22, 6.5, x, 2.45, z);
+  }
   const holoLight = B.light('#5ff4ff', 5, 6, tX, 1.9, tZ);
-  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
+  B.light('#fff2dc', 3.2, 4.5, doorX, 1.7, BZ + 0.7);   // (daylight in at the door)
+  for (const x of [-1.92, 3.2]) B.light('#bff6ff', 2.4, 3.4, x, 2.2, BZ + 0.35);
+  for (const z of [-1.2, 3.0]) B.light('#bff6ff', 2.4, 3.4, LX + 0.35, 2.2, z);
   R.updaters.push((dt, tt) => {
     fp.holo.rotation.y = tt * 0.4;
     fp.shell.rotation.x = Math.sin(tt * 0.3) * 0.15;
@@ -1418,7 +1426,7 @@ function buildControl(scene, physics) {
     posts: MAT.iron(), postsAt: (len) => (len === W + 2 * t ? [-5.9, 1.15, 3.3, 5.92].map((x) => x + W / 2 + t) : [-4.42, -1.9, 1.2, 3.0].map((z) => D / 2 + t - z)),
     back: [
       { kind: 'hatch', at: winX, w: winW, h: winH, y0: winY },
-      { kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, frame: MAT.iron(), view: outsideView('fort'), sill: MAT.stone('slate', 1) },
+      { kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, frame: MAT.iron(), view: outsideView('station'), sill: MAT.stone('slate', 1) },   // (DOOR-VIEW)
     ],
   });
   const BZ = -D / 2, LX = -W / 2;
@@ -1521,7 +1529,10 @@ function buildControl(scene, physics) {
 
   B.light('#ffe8c8', 7, 10, 1.6, 2.6, 1.0);
   B.light('#9ff4ff', 2.5, 4.5, LX + 1.2, 1.6, -0.4);
-  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
+  B.light('#fff2dc', 2.6, 4.5, doorX, 1.7, BZ + 0.7);   // (DOOR-VIEW: daylight in at the door, out to the yard)
+  // (ROOM-LIGHT: no window on daylight, the big hatch looks into the shaft: the island's sun and sky fill brought down so
+  //  the shaft's cyan and the hanging lamps light the room, as in the project office; a little more fill kept than there)
+  R.indoor = { sun: 0.4, hemi: 0.6 };
   const screens = ['shaft', 'wave', 'bars', 'radar', 'text', 'map'].map((kd) => MAT.screen(P.CANV.screen(kd)));
   R.updaters.push((dt, tt) => {
     shaftTex.offset.y = (tt * 0.12) % 1;
