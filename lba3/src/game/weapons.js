@@ -22,7 +22,7 @@
 import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { angleDiff } from '../engine/math.js';
-import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel, TOOL_IDS } from './tools.js';
+import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel, TOOL_IDS, HAND_OUT, handOut } from './tools.js';
 
 export const ARMS = {
   blowgun: { dmg: 1, speed: 24, range: 17, cool: 0.55, lock: 0.24 },
@@ -94,6 +94,18 @@ export function gloveModel() {
   part(g, new THREE.CylinderGeometry(0.1, 0.095, 0.09, 12), M('#6a3a22', { roughness: 0.8 }), 0, 0.07, 0);
   for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; part(g, new THREE.SphereGeometry(0.014, 6, 4), M('#e0b25a', { metalness: 0.8, roughness: 0.3 }), Math.cos(a) * 0.1, 0.07, Math.sin(a) * 0.1); }
   writeBodyStencil(g);
+  return g;
+}
+
+// Baldino's pulse tool (chapter 10): a wooden grip, a brass ring and a blue emitter (its inventory look, itemlook.js,
+// is this model). In the hand the emitter points along the forearm, as the pistol's muzzle does.
+export function pulseModel(inHand = true) {
+  const g = new THREE.Group(), b = M('#e0b25a', { metalness: 0.7, roughness: 0.33 });
+  part(g, new THREE.CylinderGeometry(0.03, 0.035, 0.34, 10), M('#5a3a24', { roughness: 0.8 }), 0, -0.05, 0);
+  part(g, new THREE.TorusGeometry(0.06, 0.012, 6, 16), b, 0, 0.13, 0, Math.PI / 2);
+  part(g, new THREE.CylinderGeometry(0.02, 0.02, 0.1, 8), b, 0, 0.16, 0);
+  part(g, new THREE.SphereGeometry(0.045, 12, 10), M('#bff4ff', { emissive: '#2a9aff', emissiveIntensity: 0.9, roughness: 0.15 }), 0, 0.22, 0);
+  if (inHand) { g.rotation.x = Math.PI - 0.15; g.position.y = -0.08; g.scale.setScalar(0.85); writeBodyStencil(g); }
   return g;
 }
 
@@ -198,8 +210,10 @@ export class Weapons {
     if (w === 'lightning') return h.mp >= ARMS.lightning.mp ? null : 'a_toast_nomp';
     return null;
   }
-  // from Twinsen's hands, along the aim; a target the aim means (lock or soft target) is aimed at directly
-  origin(aim) { const h = this.h; return new THREE.Vector3(h.pos.x + aim.x * 0.55, h.pos.y + 1.25, h.pos.z + aim.z * 0.55); }
+  // from Twinsen's right hand, along the aim; a target the aim means (lock or soft target) is aimed at directly
+  // (the hand as the shooting pose holds it out: HAND_OUT. A dart or bolt used to leave from the middle of his chest,
+  //  0.4 m left of the blowgun in his hand and 0.2 m under it)
+  origin(aim) { return handOut(this.h, aim); }
   dirTo(from, aim, range) {
     const g = this.game, T = g.targeting;
     const tg = T?.lock || (T && T.cone() > 0 ? T.pick(aim, range, Math.max(0.3, T.cone())) : null);
@@ -235,7 +249,7 @@ export class Weapons {
   lightning(aim) {
     const g = this.game, h = this.h, L = ARMS.lightning, T = g.targeting;
     const first = T?.lock && T.visible(T.lock, L.range) ? T.lock : T?.pick(aim, L.range, 0.6) || T?.nearest(Math.min(6, L.range));
-    const hand = new THREE.Vector3(h.pos.x + Math.sin(h.angle) * 0.4, h.pos.y + 1.45, h.pos.z + Math.cos(h.angle) * 0.4);
+    const hand = handOut(h, null, { fwd: 0.45, right: HAND_OUT.right, up: 1.45 });
     if (!first) {
       // nothing to strike: a crackle at the fingertips, no magic spent
       g.particles.burst(hand.x, hand.y, hand.z, '#dff6ff', 6, 1.6); g.audio.play('notReady');
@@ -316,15 +330,19 @@ export class Weapons {
       this.returned = (this.returned || 0) + 1;
     }
   }
-  // the weapon in Twinsen's hand (none for the ball, the fists, the pulse tool, the spell; EQUIP-2a's tools: tools.js)
+  // the weapon in Twinsen's hand (none for the ball, the fists, the spell; EQUIP-2a's tools: tools.js; Baldino's pulse
+  // tool since the polish pass: it was drawn in the inventory and the found box but his hand was empty when it fired)
+  // (put away while he talks, as the sword is (Hero.sheathed): a blowgun or a lance stayed in his hand through every
+  //  conversation, the sword alone was sheathed; main.js's dialogue frame calls this too, as it calls syncSword)
   updateHeld() {
     const h = this.h, hand = h.rig.j?.armR?.hand, a = this.arms;
     if (!hand) return;
     const w = h.combat?.weapon, other = h.body === 'zoe' || h.body === 'worker';
-    const want = other ? null : w === 'blowgun' ? (a.blowtron ? 'blowtron' : 'blowgun') : w === 'laser' || w === 'glove' || TOOL_IDS.includes(w) ? w : null;
-    for (const [k, m] of Object.entries(this.models)) m.visible = k === want;
+    const want = other ? null : w === 'blowgun' ? (a.blowtron ? 'blowtron' : 'blowgun') : w === 'laser' || w === 'glove' || w === 'pulse' || TOOL_IDS.includes(w) ? w : null;
+    const away = !!h.sheathed && want !== 'glove';   // (the glove is worn, not held: it stays on)
+    for (const [k, m] of Object.entries(this.models)) m.visible = k === want && !away;
     if (want && !this.models[want]) {
-      const m = want === 'laser' ? pistolModel() : want === 'glove' ? gloveModel() : want === 'pocketset' ? pocketSetModel() : want === 'lance' ? lanceModel() : want === 'fork' ? forkModel() : want === 'line' ? lineModel() : want === 'heatflask' ? flaskModel() : blowgunModel(want === 'blowtron');
+      const m = want === 'laser' ? pistolModel() : want === 'glove' ? gloveModel() : want === 'pulse' ? pulseModel() : want === 'pocketset' ? pocketSetModel() : want === 'lance' ? lanceModel() : want === 'fork' ? forkModel() : want === 'line' ? lineModel() : want === 'heatflask' ? flaskModel() : blowgunModel(want === 'blowtron');
       this.models[want] = m;
     }
     const m = want && this.models[want];

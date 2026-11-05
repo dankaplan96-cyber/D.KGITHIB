@@ -13,7 +13,7 @@
 // turn in 4.1 s), the found object two (a turn in 2.05 s).
 import * as THREE from 'three';
 import { pickupModel, buildSword } from './actors.js';
-import { blowgunModel, pistolModel, gloveModel } from './weapons.js';
+import { blowgunModel, pistolModel, gloveModel, pulseModel } from './weapons.js';
 import { penguinModel, lanternModel } from './gadgets.js';
 import { jetpackModel } from './jetpack.js';
 import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel } from './tools.js';
@@ -181,14 +181,7 @@ const LOOKS = {
   },
   // story things of later chapters (a look each, in the same style)
   sword: () => buildSword(),
-  pulse: () => {
-    const g = new THREE.Group(), b = brass();
-    put(g, new THREE.CylinderGeometry(0.03, 0.035, 0.34, 10), M('#5a3a24', { roughness: 0.8 }), 0, -0.05);
-    put(g, new THREE.TorusGeometry(0.06, 0.012, 6, 16), b, 0, 0.13, 0, Math.PI / 2);
-    put(g, new THREE.CylinderGeometry(0.02, 0.02, 0.1, 8), b, 0, 0.16);
-    put(g, new THREE.SphereGeometry(0.045, 12, 10), M('#bff4ff', { emissive: '#2a9aff', emissiveIntensity: 0.9, roughness: 0.15 }), 0, 0.22);
-    return g;
-  },
+  pulse: () => pulseModel(false),   // (the one in his hand: weapons.js)
   jar: () => {
     const g = new THREE.Group();
     put(g, lathe([[0, 0], [0.08, 0], [0.09, 0.03], [0.09, 0.16], [0.065, 0.19], [0.065, 0.21]], 18), M('#d8f0ff', { transparent: true, opacity: 0.5, roughness: 0.1, side: THREE.DoubleSide }), 0, -0.1);

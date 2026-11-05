@@ -41,6 +41,15 @@ export const FORK = { cool: 5, fightR: 6, stagger: 1.5, reach: 3.6 };
 export const LINE = { range: 14, cool: 0.9, zip: 9, out: 0.16, back: 0.22, pullTo: 1.5, pullSpeed: 8, cone: 0.42 };
 export const FLASK = { keep: 90, dmg: 2, r: 2.5, ice: 2, cool: 0.7, half: 1.05 };
 export const TOOL_IDS = ['pocketset', 'lance', 'fork', 'line', 'heatflask'];
+// where his right hand is in the shooting pose ('pulse': the arm out along the aim), from his feet, in metres along the
+// aim (fwd), to his right (right) and up: measured on the rig at 0.14 s into the pose (the hand at 0.52 / 0.44 / 1.47;
+// the release no further out along the aim than before (0.55 m), so a wall he faces stops a shot as it did)
+export const HAND_OUT = { fwd: 0.55, right: 0.4, up: 1.42 };
+export function handOut(h, aim = null, o = HAND_OUT) {
+  const fx = aim ? aim.x : Math.sin(h.angle), fz = aim ? aim.z : Math.cos(h.angle), l = Math.hypot(fx, fz) || 1, x = fx / l, z = fz / l;
+  // (his right, facing (x, z): (-z, x))
+  return new THREE.Vector3(h.pos.x + x * o.fwd - z * o.right, h.pos.y + o.up, h.pos.z + z * o.fwd + x * o.right);
+}
 // ice creatures (the flask's double): the Hamalayi's mites, or any def that says so
 export const isIce = (e) => !!e?.def?.ice || /^(imite|nmite)/.test(e?.def?.id || '');
 const UP = new THREE.Vector3(0, 1, 0);
@@ -338,7 +347,16 @@ export class Tools {
 
   // ---------------------------------------------------------------- the Esmer line (EQUIP-2b)
   // the hand the cord leaves from (and is reeled back to)
-  hand() { const h = this.h; return new THREE.Vector3(h.pos.x + Math.sin(h.angle) * 0.5, h.pos.y + 1.2, h.pos.z + Math.cos(h.angle) * 0.5); }
+  hand() { return handOut(this.h, null, { fwd: 0.5, right: HAND_OUT.right, up: 1.3 }); }   // (his right hand, held out: handOut)
+  // what is drawn leaving the tool (the cord, the flask's wisp): the tool in his right hand where it is shown (weapons.js
+  // updateHeld), else hand() (the cord was drawn from his chest's middle, a hand's width from the reel he holds)
+  heldAt(id) {
+    const m = this.game.weapons?.models?.[id];
+    if (!m?.visible || !m.parent) return this.hand();
+    const o = m.userData.tip || m.userData.neck || m;   // (the line's guide tube mouth)
+    o.updateWorldMatrix(true, false);
+    return o.getWorldPosition(new THREE.Vector3());
+  }
   cast(aim) {
     const g = this.game, h = this.h, P = g.physics, L = LINE;
     if (this.castCool > 0 || this.zip || this.cord) return false;
@@ -498,7 +516,7 @@ export class Tools {
     const C = this.cord, M = this.cordMesh, Tp = this.cordTip;
     if (!C) { M.visible = false; Tp.visible = false; return; }
     C.t += dt;
-    const hand = this.hand();
+    const hand = this.heldAt('line');
     const end = C.e ? new THREE.Vector3(C.e.pos.x, C.e.pos.y + (C.e.aimY ?? 0.8), C.e.pos.z) : C.end;
     let tip;
     if (C.phase === 'out') {
@@ -592,7 +610,7 @@ export class Tools {
       if (M.heatflask) M.heatflask.userData.cell.material.emissiveIntensity = A?.heat > 0 ? 0.5 + 2 * (A.heat / FLASK.keep) : 0;
       if (M.line) M.line.userData.tip.visible = !this.cord && !this.zip;
       // (a warm flask in hand breathes a faint shimmer at its neck, twice a second)
-      if (this.held() === 'heatflask' && A?.heat > 0 && g.state === 'play' && (this.wispT -= dt) <= 0) { this.wispT = 0.5; const p = this.hand(); g.particles.burst(p.x, p.y + 0.05, p.z, '#ffd0a0', 1, 0.35); }
+      if (this.held() === 'heatflask' && A?.heat > 0 && g.state === 'play' && (this.wispT -= dt) <= 0) { this.wispT = 0.5; const p = this.heldAt('heatflask'); g.particles.burst(p.x, p.y + 0.05, p.z, '#ffd0a0', 1, 0.35); }
     }
     // the jets' droplets: a few a frame from the nozzle while it sprays, falling a little over their run
     for (let i = this.sprays.length - 1; i >= 0; i--) {
