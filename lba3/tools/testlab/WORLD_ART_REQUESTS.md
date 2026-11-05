@@ -2182,3 +2182,30 @@ applies alone on origin):
   the head (arms −2.0, elbows −1.7), no longer both arms straight up.
 - Tests that measure poses still switch the fidgets off with `fidgetT = 99` (anim-polish, npc-feet): unchanged. Syntax
   checked; not run in the game yet (worth a look at the square's crowd when you merge).
+
+## ASYLUM-3 · The hostel's leftovers (CLOUD_ORDERS 8) and the user's "the stairs disappear", "this area is full of bugs" · the laptop, 5.11.2026
+`requests/ASYLUM-3.diff` (asylumhostel.js, lba1places.js, lba1room.js; applies alone on 4373bc5). The causes:
+- **Stairs and landings vanish (the user's photos):** lba1room.js put each 16-cell block's leftover ceilings into one lid,
+  floors Twinsen stands on included; on the west landing or the flight the beams beside him on his sight line cut that
+  lid, so his own floor faded and he stood in black (drawn floor 2.17 under him at 6.5). Now floors he can stand on (a
+  slab over nothing, a slope) are lids of their own, and the lid under his feet is never cut. Drawn floor = his feet
+  along the flight (6.5 / 6.07 / 5.2 / 4.34).
+- **Steps as bare floating tops:** slope cells were drawn as their top only. Now with side faces; a step hanging less
+  than 1.74 m over the floor is filled down to it, with a collider (seeThrough, noStand). Every LBA1 room; bumaze has
+  no slope cells, so only the asylum changes.
+- **Beams floating over the cells and corridor:** LBA1's ceiling beams rested on pillars the camera-side cut removes;
+  `opts.clear` (lba1room.js) clears x 44–63, z 30–62 from height 17 up for the asylum.
+- **Floors ending in black at the grid's edge, the store's void:** a two-cell parapet in the wall stone, with a
+  collider, where a floor reaches the camera-side edge with no wall; `opts.footing` carries the outer camera-side walls
+  of the lowest levels 9 m down into the dark (one mesh, +1 draw call, +564 tris). A fade, not a fill: the black share
+  at the store 56 % → 53.5 %.
+- **Undressed rooms:** LBA1's west room is the kitchen's larder (pantry shelves, jars, sacks, a work table, barrels
+  under the flight, a lamp); the loft over the dorm the linen loft (blankets, a washing line of sheets, a chest, a
+  basket); the landing at 9 a bench and a plant. New builders `sack`, `pantryShelf`, `linenShelf`.
+- Order 8's items: the common-room pot was half inside LBA1's cabinet collider: moved in front of it (all 8 pots now
+  clear); the front step's grass: none on CLIMB-1's paving, no change; Kesso (worker4, sit) sat 0.49 m over the bench
+  with his knees through the table: `y = Y + 0.08`; Wix (sleeper): hands 4 cm in the west wall, moved 0.12 cell toward
+  his feet (his lower half still 0.25 m in the mattress: raising him lifts his head off the pillow).
+- Lids 18 → 26 (meshes 44 → 60); not measured on the GPU. Checked (SwiftShader): asylum 12/12, lba1rooms 8/8 (bumaze
+  included). Pictures (chapters 1–2): `docs/future/world/ASYLUM-3/` cmp-west-flight, cmp-corridor-cells, cmp-store-south
+  (before left, after right).
