@@ -158,7 +158,8 @@ export class Network extends ChapterBase {
       case 'zoe': case 'arthur': return this.lightSpot(id);   // (the lamp room, by the stair top: LIGHT_CAST)
       case 'ilka': return D?.bore ? { x: D.bore.x - 2.6, z: D.bore.z + 2.4, a: 0.6 } : undefined;
       case 'dallan': return D?.bore ? { x: D.bore.x + 2.8, z: D.bore.z + 2.6, a: -0.6 } : undefined;
-      case 'pim': return f.c10_pim && R.obsv ? { x: R.obsv.telescope.x - 1.0, z: R.obsv.telescope.z + 1.1, a: Math.PI * 0.8 } : undefined;
+      // (up to the dome by its door, seen going: he vanished from the monastery's yard in front of Twinsen: story/index.js walkOn)
+      case 'pim': return f.c10_pim && R.obsv ? { x: R.obsv.telescope.x - 1.0, z: R.obsv.telescope.z + 1.1, a: Math.PI * 0.8, via: this.game.regions?.built('hamalayi')?.observatory?.door } : undefined;
       case 'vesk': case 'doran': return null;
     }
     return undefined;
@@ -169,12 +170,12 @@ export class Network extends ChapterBase {
     g.world.station?.setSealed?.(true, true);   // (SHAFT-CITADEL: still shut since chapter 3; the code below opens it)
     g.hero.swapBody?.('twinsen'); g.hero.hasBall = true; g.hero.disguised = false;
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     // (Twinsen got Baldino's test pair talking in chapter 3: he remembers it)
     this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
-      this.story.refreshCast(); g.updateObjective(); g.save(false);
+      this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
       g.found('pulse', 'it_pulse', () => g.hud.toast('c10_toast_pulse', { k: g.hud.key('weapons') }));   // (the relays: the objective panel names them)
     });
   }
@@ -228,7 +229,7 @@ export class Network extends ChapterBase {
         if (g.room) g.exitRoom(l, true);
         else { g.hero.pos.set(l.x, g.physics.groundAt(l.x, l.z), l.z); g.hero.angle = l.a; }
       } else g.enterRoom(dest, l, true);
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       g.audio.play('door');
       this.landSay = true;   // (said once back in play: after the arrival film when there is one)
     }, null, then);
@@ -243,8 +244,8 @@ export class Network extends ChapterBase {
     }));
     g.openMenu('fly_title', items, (it) => this.fly(it.id));
   }
-  onEnterRoom() { if (this.isCur()) this.story.refreshCast(); this.setupRoom(); }
-  onExitRoom() { if (this.isCur()) this.story.refreshCast(); }
+  onEnterRoom() { if (this.isCur()) this.story.refreshCast({ walk: true }); this.setupRoom(); }
+  onExitRoom() { if (this.isCur()) this.story.refreshCast({ walk: true }); }
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
@@ -304,7 +305,7 @@ export class Network extends ChapterBase {
       case 'c10bore':
         h.act('use', 1.0, () => {
           f.c10_boreRelay = true; this.lightRelay('bore'); this.boreT = 0; this.boreWant = undefined;
-          this.story.refreshCast(); g.audio.play('alert');
+          this.story.refreshCast({ walk: true }); g.audio.play('alert');
           this.chain([['narrator', 'c10_relay_bore'], ['hero', 'c10_drones']], () => { g.updateObjective(); g.save(false); });
         }, 0.5);
         return true;
@@ -331,8 +332,8 @@ export class Network extends ChapterBase {
     f['c10_' + s] = true;
     const n = this.done();
     g.hud.toast('c10_toast_station', { n });
-    this.story.refreshCast();
-    if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast(); this.showProps(); g.updateObjective(); g.save(false); });
+    this.story.refreshCast({ walk: true });
+    if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast({ walk: true }); this.showProps(); g.updateObjective(); g.save(false); });
     else { g.updateObjective(); g.save(false); }
   }
 
@@ -368,7 +369,7 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.isCur()) return false;
     const c = (lines, done) => { this.chain(lines, done); return true; };
-    const ok = () => { this.story.refreshCast(); g.updateObjective(); g.save(false); };
+    const ok = () => { this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false); };
     switch (id) {
       case 'hesk':
         if (!f.c10_started) return false;
@@ -435,7 +436,7 @@ export class Network extends ChapterBase {
     const a = h.angle + Math.PI, x = h.pos.x + Math.sin(a) * 1.1, z = h.pos.z + Math.cos(a) * 1.1, y = g.physics.groundAt(x, z, h.pos.y + 1) + 1.0;
     g.giveBonus(['life'], 1, x, y, z, null, { loot: 'c10-bore-heart' });
     g.giveBonus(['magic'], 1, x, y, z, null, { loot: 'c10-bore-flask' });
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     g.alertGroup('nbore', h.pos, 1);
     g.audio.play('alert');
     this.chain([['ilka', 'c10_ilka_w2']], () => { g.updateObjective(); g.save(false); });
@@ -446,7 +447,7 @@ export class Network extends ChapterBase {
   standDownGuard(dt) {
     const g = this.game, f = this.f;
     const gd = g.enemies.find((e) => e.def?.id === 'nguard'), dl = this.npc('dallan');
-    if (this.guardLeaving && (!gd || gd.gone || !gd.present)) { this.guardLeaving = false; this.story.refreshCast(); }
+    if (this.guardLeaving && (!gd || gd.gone || !gd.present)) { this.guardLeaving = false; this.story.refreshCast({ walk: true }); }
     if (f.c10_guardDown || !gd || !gd.present || !gd.alive || !dl?.present) { this.guardSeen = 0; return; }
     this.guardSeen = (this.guardSeen || 0) + dt;
     if (this.guardSeen < 1.0 || g.state !== 'play') return;
@@ -466,7 +467,7 @@ export class Network extends ChapterBase {
         // wave 1: the drones come one at a time (see enemyDefs); the next is there at once when one falls
         this.boreT = (this.boreT || 0) + dt;
         const dead = ds.filter((e) => !e.alive).length, want = Math.min(3, Math.max(1 + (this.boreT >= 8) + (this.boreT >= 16), dead + 1));
-        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
+        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast({ walk: true }); }
         if (ds.length && dead === ds.length) this.startBoreWave2();
       } else {
         // wave 2: the clone, then the Grobo guard 12 s later (at once when the clone falls, or after a load); the sentry holds the gate
@@ -479,7 +480,7 @@ export class Network extends ChapterBase {
           f.c10_boreH2 = true;
           g.giveBonus(['life'], 1, clone.pos.x, clone.pos.y + 0.8, clone.pos.z, g.hero.pos, { loot: 'c10-bore-heart2' });
         }
-        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
+        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast({ walk: true }); }
         this.standDownGuard(dt);
         const foes = this.boreFoes();
         if (foes.length && foes.every((e) => !e.alive)) { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }

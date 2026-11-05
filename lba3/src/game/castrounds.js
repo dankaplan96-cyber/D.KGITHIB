@@ -11,7 +11,8 @@
 // pickup, wipe, potting, search; 'stand' is standing) for `dur` [min, max] s, and gestures (nod, shrug, sigh).
 //
 // The rules (the same as the household rounds): a talk stops them where they are and they turn to Twinsen; a scene, a
-// conversation, a cut-scene or a fight near holds them; a new place from the chapter takes them at once (refreshCast);
+// conversation, a cut-scene or a fight near holds them; a new place from the chapter takes them at once (refreshCast;
+// walked to when they are on screen: story/index.js walkOn);
 // the hero gone from the area (or 40 m off) puts them back on the mark unseen, so a scene that needs them finds them
 // there; nothing is saved (after a load they start on the mark). Every stop keeps clear of the doors (StoryRounds
 // leaves out a stop in a door's reach), of the chapter's prompts and puzzle pieces, of the mandatory ways and of the

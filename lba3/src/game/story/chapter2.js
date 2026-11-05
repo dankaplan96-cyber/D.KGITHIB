@@ -76,14 +76,18 @@ export class Chapter2 extends ChapterBase {
     const plat = Z.platform;
     switch (id) {
       case 'baldino':
-        if (f.c2_shield) return { x: plat.gate.x - 1.6, z: plat.gate.z + 1.4, a: Math.PI / 2 };
+        // (from his workshop's door: with the shield down he comes out to the platform; he used to appear beside
+        //  Twinsen at the gate: story/index.js walkOn)
+        if (f.c2_shield) return { x: plat.gate.x - 1.6, z: plat.gate.z + 1.4, a: Math.PI / 2, from: Z.workshopDoor };
         return R.workshop?.npcSpots?.baldino ?? S.baldinoOut;
       case 'nara': return S.esmer1;
       case 'oku': return S.esmer2;
       case 'doran': { const L = this.arrival(); return { x: L.x - 1.8, z: L.z + 0.8, a: Math.PI / 2 }; }   // (by the ship he flew)
       case 'vesk': return f.c2_veskDown ? null : S.vesk;
       case 'guard':
-        if (f.c2_started && !f.c2_planTaken) { const L = this.arrival(); return { x: L.x + 0.6, z: L.z - 1.8, a: 0 }; } // (meets the ship)
+        // (meets the ship: there from the landing on, while he has the plan to take. It was put there only once Doran's
+        //  first lines were done, so he appeared out of nowhere beside Twinsen on the open deck)
+        if (!f.c2_planTaken && f.c1_plan) { const L = this.arrival(); return { x: L.x + 0.6, z: L.z - 1.8, a: 0 }; }
         return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
       case 'zoe': return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
       case 'worker': return null;
@@ -97,10 +101,10 @@ export class Chapter2 extends ChapterBase {
     g.enterRoom('zeelich', this.arrival(), true);
     g.hero.hasBall = true;
     Z.ferry?.setVisible?.(false);   // (the sky-ferry at the dock is not how he came: no ferry crosses to Twinsun)
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', 'c2_tw_arrive']], () => {
       this.f.c2_started = true;
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       this.confiscate();
     });
   }
@@ -111,7 +115,7 @@ export class Chapter2 extends ChapterBase {
     this.chain([['guard', 'c2_guard_dock1'], ['hero', 'c2_tw_dock1'], ['guard', 'c2_guard_dock2']], () => {
       f.c2_planTaken = true;
       g.audio.play('deny');
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       this.chain([['hero', 'c2_tw_dock2']], () => { g.updateObjective(); g.save(false); });
     });
   }
@@ -296,7 +300,7 @@ export class Chapter2 extends ChapterBase {
     if (!g.regions.has('lighttop')) { f.c2_zoeStart = true; f.c2_broadcast = true; g.updateObjective(); return; } // room not in this build
     f.c2_zoeStart = true;
     this.saved = { behaviour: h.behaviour, hasBall: h.hasBall };
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.dials = [1, 2, 0];
     g.rooms.lighttop.dials?.forEach((d, i) => d.set?.(this.dials[i]));
     g.rooms.lighttop.transmitter?.setOn?.(false);
@@ -322,7 +326,7 @@ export class Chapter2 extends ChapterBase {
       h.hasBall = true; h.noBehaviours = false;
       h.behaviour = this.saved?.behaviour || 'normal';
       g.hud.behaviour(h.behaviour);
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       if (g.regions.has('workshop')) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
       g.updateObjective();
       g.save(false);
@@ -334,7 +338,7 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, f = this.f;
     f.c2_shield = true;
     this.Z.platform.shield.setOn(false);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     if (silent) return;
     g.audio.play('rumble');
     g.camRig.shake(0.4);
@@ -394,7 +398,7 @@ export class Chapter2 extends ChapterBase {
           vesk.controlled = false;
           f.c2_veskDown = true;
           beat?.release(2.6);   // (a long hand-back: the low view and the isometric one are far apart)
-          this.story.refreshCast();
+          this.story.refreshCast({ walk: true });
           // SHAFT-CITADEL: his ship drops out of the berth under the deck and climbs away east, toward Twinsun
           this.launchShip();
           shipT = 0;

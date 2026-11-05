@@ -17,6 +17,8 @@ import { celTempleDoors, celTempleExit } from '../celtemple.js';
 import { traluCaveDoors, traluCaveExit } from '../tralucave.js';
 import { baggageDoors, baggageExit } from '../baggage.js';
 import { nellhouseDoors, nellhouseExit } from '../nellhouse.js';
+import * as THREE from 'three';
+import { TrackRunner } from '../../engine/scripts.js';
 import { t } from '../i18n.js';
 import { CHAPTER_AREAS } from '../regions.js';
 import { Prologue } from './prologue.js';
@@ -57,6 +59,9 @@ export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'obs
 export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
 // the order saves before format 3 used (flags.chapter was a position in this list)
 export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
+
+const MOVE_FAR = 150;   // (VISIBLE-MOVES: m; a longer move is a cut)
+const _sv = new THREE.Vector3(), _sm = new THREE.Matrix4(), _sf = new THREE.Frustum(), _ss = new THREE.Sphere();
 
 export class Story {
   constructor(game) {
@@ -119,7 +124,8 @@ export class Story {
     const c = this.cur;
     for (const id of CHAPTER_AREAS[c.key] || []) g.regions?.ensure(id, 'chapter');   // (built already when a scene change led here)
     this.magic.catchUp();   // (MAGIC-LEVELS: a step behind him that he hasn't had — normally none)
-    this.refreshCast();
+    this.noWalk = true;   // (the chapter's scene is set under its card: everyone straight to their places)
+    try { this.refreshCast(); } finally { this.noWalk = false; }
     // (the epilogue's card shows only its title)
     const n = NUMBER[c.key];
     g.hud.chapterCard(n ? t('chapter_n', { n }) : '', t('chapter_' + c.key));
@@ -127,8 +133,9 @@ export class Story {
     // (say is put back exactly as it was: a wrapper someone set on the game, e.g. a test recording lines, stays)
     const held = [], own = Object.prototype.hasOwnProperty.call(g, 'say') ? g.say : null;
     g.say = (...a) => { held.push(a); };
+    this.noWalk = true;
     try { c.begin(); } finally { if (own) g.say = own; else delete g.say; }
-    this.refreshCast();
+    try { this.refreshCast(); } finally { this.noWalk = false; }
     g.updateObjective();
     g.save(false);
     if (held.length) this.holdForCard(held);
@@ -162,7 +169,8 @@ export class Story {
   }
 
   // place/hide NPCs for the current chapter
-  refreshCast() {
+  // (walk: the later chapters' own calls, in play — a person on screen walks to a new place: walkOn below)
+  refreshCast({ walk = false } = {}) {
     const g = this.game, R = g.regions;
     for (const n of g.npcs) {
       let p, wait = false;
@@ -185,12 +193,15 @@ export class Story {
       if (p === undefined) p = this.interiors.place(n.def.id);   // (INTERIOR-LIFE: a room's or a port's people out of their chapter, or back)
       if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
       if (p === undefined) continue;
+      // (a walk to an earlier place, below, is over: this placement decides)
+      const mv = this.moving?.get(n); if (mv) { this.moving.delete(n); if (n.track === mv.track) n.track = null; }
+      const was = n.present;
       n.setPresent(!!p);
       // (INTERIOR-LIFE: the place the story gave is remembered; a household round's person whose place is still their
       //  usual mark carries on with the round instead of being put back on it: roomlife.js StoryRounds.keeps)
       const keep = !!p && this.interiors.keeps(n, p);
       n.placed = p;
-      if (p && !keep) n.placeAt(p);
+      if (p && !keep && !(walk && this.walkOn(n, p, was))) n.placeAt(p);
     }
     for (const e of g.enemies) if (e.def?.when) e.setPresent(!!e.def.when(this.f));
   }
@@ -252,7 +263,7 @@ export class Story {
   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o); }
   lineTargets() { return this.kit2b.lineTargets(); }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
+  update(dt) { this.stepMoves(dt); this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
@@ -269,7 +280,74 @@ export class Story {
     this.purposes.applyFlags();
     this.ipeople.applyFlags();
     this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
-    this.refreshCast();
+    this.noWalk = true;   // (a load: everyone on their places)
+    try { this.refreshCast(); } finally { this.noWalk = false; }
+  }
+  // VISIBLE-MOVES (polish; the user: "characters that teleport without reason"): a new place from the story, in the
+  // scene the hero is in, when the person or the place is in the camera's view, is walked to instead of jumped to
+  // (chapter 5's meeting round the plaza ended with all six popping to their posts in front of him). He is put on the
+  // place once there, or as soon as neither he nor the place is in view (never in view: blocked, he stops and waits).
+  // Taken at once as before: behind a fade or a scene, at a chapter's start, on a load, a place with a floor (y), a pin
+  // or a walk of its own, someone held by a scene (controlled), or a place in another scene. Nothing is saved: a load
+  // puts everyone on their places.
+  // Opt-in: the calls of chapters 3–12 and the epilogue pass { walk: true }; chapters 1–2's, the life modules' and the
+  // tests' calls place at once as before (the coordinator may extend it to them).
+  // A place may name `from`, a way in on the hero's scene (a door): someone arriving from elsewhere (another scene, or
+  // not shown before) while the place or that way in is in view comes out of it and walks over, instead of appearing;
+  // and `via`, a way out (a door) for someone the camera sees whose new place is in another scene: he walks to it and
+  // goes, instead of vanishing.
+  walkOn(n, p, was = n.present) {
+    const g = this.game;
+    if (this.noWalk || !n.present || n.controlled || n.pinY != null || p.y != null || p.pin || p.track) return false;
+    if ((g.state !== 'play' && g.state !== 'dialog') || g.trans || g.cutscene || g.reveal?.on || g.preparing) return false;
+    const R = g.regions, sc = R?.sceneOf(g.hero.pos.x, g.hero.pos.z);
+    if (!R) return false;
+    let arrive = false, to = p;
+    if (R.sceneOf(p.x, p.z) !== sc) {
+      // (to another scene: with a way out named (`via`, a door on this one) he walks to it, then goes)
+      if (!p.via || !was || R.sceneOf(n.pos.x, n.pos.z) !== sc || !this.seen(n.pos)) return false;
+      to = p.via;
+    } else if (p.from && (!was || R.sceneOf(n.pos.x, n.pos.z) !== sc)) {
+      if (!this.seen(p) && !this.seen(p.from)) return false;
+      n.placeAt({ x: p.from.x, z: p.from.z, a: Math.atan2(p.x - p.from.x, p.z - p.from.z) });
+      arrive = true;
+    } else if (!was) return false;
+    const d = Math.hypot(to.x - n.pos.x, to.z - n.pos.z);
+    if (d < 0.8 || d > MOVE_FAR) return false;
+    // (either end in view: he walks; out of view at both, he is put there at once. A place in view for someone out of
+    //  view — Yorna sent from Lhar to the winch beside him — had him appear there)
+    if (!arrive && (R.sceneOf(n.pos.x, n.pos.z) !== sc || (!this.seen(n.pos) && !this.seen(to)))) return false;
+    const track = new TrackRunner([{ op: 'goto', x: to.x, z: to.z, speed: 1 }]);
+    n.forceAnim = null; n.track = track;
+    (this.moving ??= new Map()).set(n, { p, to, t: 0, track, arrive });
+    return true;
+  }
+  stepMoves(dt) {
+    if (!this.moving?.size) return;
+    for (const [n, M] of this.moving) {
+      M.t += dt;
+      if (!n.present || n.placed !== M.p || (!M.stuck && n.track !== M.track)) { this.moving.delete(n); continue; }   // (decided otherwise since)
+      const there = Math.hypot(M.to.x - n.pos.x, M.to.z - n.pos.z) < 0.6;
+      if (there || (!this.seen(n.pos) && !this.seen(M.p))) { this.moving.delete(n); n.track = null; n.placeAt(M.p); continue; }
+      // (a straight walk that something blocks: he stops and waits there, not walking on the spot into it; he is put on
+      //  the place once out of view. Time beside the hero does not count: he stops to face him then, NPC.update)
+      M.last ??= { x: n.pos.x, z: n.pos.z };
+      if (M.stuck || n.distTo(this.game.hero) < 3.4) { M.chk = 0; M.last.x = n.pos.x; M.last.z = n.pos.z; continue; }
+      if ((M.chk = (M.chk ?? 0) + dt) >= 1.5) {
+        if (Math.hypot(n.pos.x - M.last.x, n.pos.z - M.last.z) < 0.5) { M.stuck = true; n.track = null; }
+        M.chk = 0; M.last.x = n.pos.x; M.last.z = n.pos.z;
+      }
+    }
+  }
+  // is a point in the camera's view (a sphere round a person standing there, within 70 m)?
+  seen(p) {
+    const c = this.game.camera; if (!c) return false;
+    const y = p.y ?? this.game.physics.groundAt(p.x, p.z);
+    _sv.set(p.x, y + 0.9, p.z);
+    if (c.position.distanceTo(_sv) > 70) return false;
+    c.updateMatrixWorld(); _sm.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse); _sf.setFromProjectionMatrix(_sm);
+    _ss.center.copy(_sv); _ss.radius = 1.2;
+    return _sf.intersectsSphere(_ss);
   }
   afterEnding() { this.cur.afterEnding?.(); }
   // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it

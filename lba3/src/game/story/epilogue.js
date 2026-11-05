@@ -65,7 +65,7 @@ export class Epilogue extends ChapterBase {
     g.world.bunting?.setVisible(true);
     g.enterRoom('house', null, true);
     g.audio.setMood?.('home');
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'ep_narr'], ['zoe', 'ep_zoe_1'], ['hero', 'ep_tw_1'], ['arthur', 'ep_ar_1'], ['hero', 'ep_tw_2'], ['zoe', 'ep_zoe_2'], ['zoe', 'ep_zoe_3']], () => {
       this.f.ep_dinner = true;
       g.save(false);

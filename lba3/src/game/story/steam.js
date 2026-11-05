@@ -50,7 +50,8 @@ export class Steam extends ChapterBase {
       case 'ilka': return f.c5_planned ? { x: pz.x + 2.2, z: pz.z + 1.0, a: -1.2 } : around(0);
       case 'tarra': return f.c5_planned ? S.tarra : around(1);
       case 'hesk':
-        if (f.c5_glider && this.Bh) { const g = this.Bh.glider; return { x: g.x - 1.2, z: g.z, a: Math.PI }; }
+        // (into the buried hall by its dug-out door, seen going: he vanished from Kesh in front of Twinsen: index.js walkOn)
+        if (f.c5_glider && this.Bh) { const g = this.Bh.glider; return { x: g.x - 1.2, z: g.z, a: Math.PI, via: D.ruins?.stand }; }
         return f.c5_planned ? S.hesk : around(2);
       case 'dallan':
         if (f.c5_vent) return { x: pz.x - 2.4, z: pz.z + 1.6, a: 1.4 };
@@ -66,12 +67,12 @@ export class Steam extends ChapterBase {
   begin() {
     const g = this.game, D = this.D;
     g.enterRoom('desert', { x: D.plaza.x + 1.5, z: D.plaza.z - 0.5, a: Math.PI }, true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c5_narr'], ['ilka', 'c5_ilka_1'], ['ilka', 'c5_ilka_2'], ['hesk', 'c5_hesk_1'], ['tarra', 'c5_tarra_1'],
       ['dallan', 'c5_dallan_1'], ['doran', 'c5_doran_1'], ['dallan', 'c5_dallan_2'], ['weaver', 'c5_weaver_1'], ['dallan', 'c5_dallan_3'], ['hero', 'c5_tw_1']], () => {
       this.f.c5_planned = true; this.f.c5_ferryTaken = true;
       D.ferry?.setVisible?.(false);
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       g.updateObjective(); g.save(false);
     });
   }
@@ -156,7 +157,7 @@ export class Steam extends ChapterBase {
     this.A.hangarDoor.open();
     for (const c of this.Bh.condensers) c.setSteam(0.4);
     g.audio.play('rumble'); g.camRig.shake(0.2);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['hero', 'c5_routed']], () => { g.updateObjective(); g.save(false); });
   }
   ballHit(p) {
@@ -234,7 +235,7 @@ export class Steam extends ChapterBase {
         if (f.c5_vent && !f.c5_radio) { this.radio(); return true; }
         return c([['ilka', f.c5_routed ? 'c5_ilka_2' : 'c5_ilka_1']]);
       case 'hesk':
-        if (f.c5_radio && !f.c5_glider) return c([['hesk', 'c5_hesk_k1'], ['hesk', 'c5_hesk_k2']], () => { f.c5_glider = true; this.story.refreshCast(); g.updateObjective(); g.save(false); });
+        if (f.c5_radio && !f.c5_glider) return c([['hesk', 'c5_hesk_k1'], ['hesk', 'c5_hesk_k2']], () => { f.c5_glider = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false); });
         if (f.c5_glider) return c([['hesk', 'c5_hesk_k2']]);
         return c([['hesk', 'c5_hesk_1']]);
       case 'doran': return c([['doran', 'c5_doran_1']]);
@@ -316,7 +317,7 @@ export class Steam extends ChapterBase {
     f.c5_vent = true; this._geys = [];
     D.ruins.setPlume(1);
     for (const c of this.Bh?.condensers || []) c.setSteam(1);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     if (silent) return;
     g.audio.play('horn');
     this.chain([['narrator', 'c5_vent_1'], ['hero', 'c5_tw_vent']], () => { g.updateObjective(); g.save(false); });

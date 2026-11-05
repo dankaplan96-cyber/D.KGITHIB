@@ -29,7 +29,7 @@ const LANDING = { x: -58, z: -60 }, GATHER = { x: -89, z: 96.5 };
 const ROAD = [[-70.8, 91.4], [-74, 93.2], [-79.5, 94.2], [-87, 95.6]];
 // (each farmer's first leg: out of his farm and down to the lighthouse path; round the houses and fences)
 const LEAD = [[[-52.1, 35], [-61.1, 44.5], [-67.1, 64.5], [-68.1, 82]], [[-32, 47.7], [-37.5, 55.2], [-42.5, 57.7], [-44, 57.2], [-63.5, 77.2]], [[-68, 72.7], [-68, 81.7]]];
-const MARCH_SPEED = 2.1, MARCH_T = 20, MARCH_FAR = 26;
+const MARCH_SPEED = 2.1, MARCH_T = 20, MARCH_FAR = 26, MARCH_HARD = 90;
 // (the lever and its cistern stand on the yard's floor, clear of the station's tanks as rebuilt to the original layout)
 const FORT = { door: { x: -50, z: -71 }, lever: { x: -33, z: -70 } };
 const DEPOT = { door: { x: -90, z: -72 } };
@@ -168,7 +168,7 @@ export class Evacuation extends ChapterBase {
     W.station?.setActive?.(false);
     W.ferry?.setVisible?.(true);
     this.showProps(true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c8_narr'], ['radio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => { this.f.c8_started = true; g.updateObjective(); g.save(false); });
   }
 
@@ -191,7 +191,7 @@ export class Evacuation extends ChapterBase {
       case 'c8lever':
         h.act('use', 1.0, () => {
           f.c8_fort = true; this.lever.rotation.z = 1.0; this.fortDoor.open(); g.audio.play('door'); g.camRig.shake(0.2);
-          this.story.refreshCast();
+          this.story.refreshCast({ walk: true });
           this.chain([['hero', 'c8_lever_1'], ['hero', 'c8_shelter_fort']], () => this.progress());
         }, 0.6);
         return true;
@@ -235,13 +235,13 @@ export class Evacuation extends ChapterBase {
         return c([['zoe', 'c8_zoe_4']]);
       case 'arthur': return c([['arthur', 'c8_ar_2']]);
       case 'gilbert':
-        if (f.c8_home && !f.c8_gilbert) return c([['gilbert', 'c8_gil_1'], ['hero', 'c8_tw_g1'], ['gilbert', 'c8_gil_2'], ['gilbert', 'c8_gil_3']], () => { f.c8_gilbert = true; this.story.refreshCast(); this.progress(); });
+        if (f.c8_home && !f.c8_gilbert) return c([['gilbert', 'c8_gil_1'], ['hero', 'c8_tw_g1'], ['gilbert', 'c8_gil_2'], ['gilbert', 'c8_gil_3']], () => { f.c8_gilbert = true; this.story.refreshCast({ walk: true }); this.progress(); });
         return c([['gilbert', f.c8_gilbert ? 'c8_gil_after' : 'c8_gil_1']]);
       case 'mira':
         if (f.c8_home && !f.c8_mira) return c([['mira', 'c8_mira_1'], ['hero', 'c8_tw_m1'], ['mira', 'c8_mira_2']], () => { f.c8_mira = true; g.found('valvekey', 'c8_toast_key'); this.progress(); });
         return c([['mira', f.c8_mira ? 'c8_mira_after' : 'c8_mira_1']]);
       case 'pippa':
-        if (f.c8_home && !f.c8_pippa) { this.chain([['pippa', 'c8_pippa_1']], () => { f.c8_pippa = true; this.story.refreshCast(); this.progress(); }); return true; }
+        if (f.c8_home && !f.c8_pippa) { this.chain([['pippa', 'c8_pippa_1']], () => { f.c8_pippa = true; this.story.refreshCast({ walk: true }); this.progress(); }); return true; }
         this.chain([['pippa', 'c8_pippa_after']], () => g.openShop()); return true;
     }
     return false;
@@ -254,14 +254,19 @@ export class Evacuation extends ChapterBase {
     if (!npc.present) return;
     this.march ??= [];
     npc.controlled = true;
-    this.march.push({ npc, k, t: 0, i: 0, route: [...LEAD[k], ...ROAD] });
+    this.march.push({ npc, k, t: 0, i: 0, route: [...LEAD[k], ...ROAD, [GATHER.x + k * 1.6 - 1.6, GATHER.z + 1]] });   // (to his own spot: no step at the end)
   }
   marchStep(dt) {
     const g = this.game, h = g.hero, P = g.physics;
     for (let n = (this.march?.length || 0) - 1; n >= 0; n--) {
       const m = this.march[n], a = m.npc, tg = m.route[m.i];
       m.t += dt;
-      let done = !tg || m.t > MARCH_T || Math.hypot(a.pos.x - h.pos.x, a.pos.z - h.pos.z) > MARCH_FAR;
+      // (put at his place only where nobody sees it happen: he and his place both out of the camera's view; in view he
+      //  walks on along the road. He popped to the gather point in front of Zoé when she walked with him for MARCH_T s,
+      //  or once 26 m off with the follow camera still on him. MARCH_HARD: a failsafe for a farmer stuck in view)
+      const W = g.walkers, unseen = (p) => !W || W.unseen(p.x, p.z, p.y ?? P.groundAt(p.x, p.z));
+      const late = m.t > MARCH_T || Math.hypot(a.pos.x - h.pos.x, a.pos.z - h.pos.z) > MARCH_FAR;
+      let done = !tg || m.t > MARCH_HARD || (late && unseen(a.pos) && unseen({ x: GATHER.x + m.k * 1.6 - 1.6, z: GATHER.z + 1 }));
       if (!done) {
         const dx = tg[0] - a.pos.x, dz = tg[1] - a.pos.z, d = Math.hypot(dx, dz);
         if (d < 1.0) m.i++;
@@ -300,7 +305,7 @@ export class Evacuation extends ChapterBase {
       // out of the front door (a fixed point here ended up inside the square's barrier ring after the Citadel rebuild)
       if (g.room) g.exitRoom(this.story.exitTo('outdoor'), true);
       h.swapBody('zoe'); h.hasBall = false; h.noBehaviours = true; h.behaviour = 'normal'; g.hud.behaviour('normal');
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       this.progress();   // (the objective panel: "Zoé: bring the hill families to the lighthouse")
     });
   }
@@ -313,7 +318,7 @@ export class Evacuation extends ChapterBase {
         h.swapBody('twinsen'); h.hasBall = true; h.noBehaviours = false; h.behaviour = this.saved?.behaviour || 'normal'; g.hud.behaviour(h.behaviour);
         const st = this.W.station;
         if (st) { const d = st.control.door; h.pos.set(d.x, g.physics.groundAt(d.x, d.z + 3), d.z + 3); h.angle = Math.PI; }
-        this.story.refreshCast();
+        this.story.refreshCast({ walk: true });
         this.progress();
       });
     });
