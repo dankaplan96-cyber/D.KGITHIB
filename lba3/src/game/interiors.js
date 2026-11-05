@@ -1383,10 +1383,12 @@ function buildProjOffice(scene, physics) {
   B.put(-4.5, 4.5, Math.PI, P.bench, { w: 1.4, pal: 'grey', noCol: true });
   B.col(-4.5, 4.5, 0.7, 0.2, 0.7, { noStand: true, seeThrough: true });
   // --- hanging industrial lamps and light
-  B.light('#e8f0ff', 4, 8, -3.6, 2.4, 3.0);
+  // (the user, 5.11: "Zoé's scene is too brightly lit": the office after hours, its lamps at about half; the hologram
+  //  and the door's light keep it from going dark (R8))
+  B.light('#e8f0ff', 2.2, 8, -3.6, 2.4, 3.0);
   for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
-  B.light('#e8f0ff', 7, 10, -3.2, 2.5, -1.8);
-  B.light('#e8f0ff', 6, 10, 2.6, 2.5, 1.4);
+  B.light('#e8f0ff', 3.6, 10, -3.2, 2.5, -1.8);
+  B.light('#e8f0ff', 3.1, 10, 2.6, 2.5, 1.4);
   const holoLight = B.light('#5ff4ff', 5, 6, tX, 1.9, tZ);
   B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
   R.updaters.push((dt, tt) => {
