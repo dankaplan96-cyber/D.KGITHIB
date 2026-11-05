@@ -214,7 +214,7 @@ export class Chapter3 extends ChapterBase {
   startFight() {
     const g = this.game, f = this.f;
     f.c3_fight = true;
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     const gd = this.guardian;
     if (gd) { gd.state = 'chase'; gd.stateT = 0; gd.coolT = 2.5; gd.setLevel?.(this.pylons()); }
     // (no toast: Baldino's radio said how; a stuck player gets a nudge later, update())
@@ -279,7 +279,7 @@ export class Chapter3 extends ChapterBase {
     f.c3_turned = true;
     this.coil = null;
     this.guardian?.powerDown?.();
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     const vesk = this.npc('vesk'), fx = this.fx;
     g.particles.burst(C.console.x, (C.floorY ?? 0) + 1.6, C.console.z, '#ffd080', 40, 6);
     g.audio.play('break'); g.camRig.shake(0.45);
@@ -406,7 +406,7 @@ export class Chapter3 extends ChapterBase {
     // a defeat during the fight respawns at the core's entrance with the fight still on (pylons kept)
     if (f.c3_fight && !f.c3_turned && g.room?.id === 'c3core') {
       const gd = this.guardian;
-      if (gd && !gd.present) this.story.refreshCast();
+      if (gd && !gd.present) this.story.refreshCast({ walk: true });
     }
   }
   applyFlags(past) {

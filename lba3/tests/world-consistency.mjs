@@ -45,7 +45,9 @@ const TRANSITIONS = [
   ['evacuation.js', 'startZoe', 'same', "chapter 8: Zoé's part, on Citadel"],
   ['evacuation.js', 'endZoe', 'same', "chapter 8: back to Twinsen at the station's control room, on Citadel"],
   ['islands.js', 'board', 'film:travelTo', "a terminal's counter: out through the gate under the black, then the travel's journey film from the pad"],
-  ['network.js', 'fly', 'gap', "chapter 10: Hesk's glider menu between Twinsun's regions fades plainly (no glider film; the travel network's gliders play theirs)"],
+  // (GLIDER-FILM, 5.11, split fly: fly plays the glider's film (storyJourney) and then calls flyTo, whose scene change
+  //  this is; with the films off, or no parked glider at either end, flyTo's plain fade alone)
+  ['network.js', 'flyTo', 'gap', "chapter 10: the scene change behind Hesk's glider film between Twinsun's regions (plain with the films off)"],
   ['network.js', 'talk', 'same', "chapter 10: Mira takes him down into FunFrock's valve room (a room of Citadel)"],
   ['network.js', 'sendCode', 'same', "chapter 10 → 11: Citadel's station → the shaft under it"],
   ['observatory.js', 'leave', 'film:storyJourney', "chapter 7 → 8: Hesk's glider from the monks' slope to Citadel's glider field (WC-1)"],

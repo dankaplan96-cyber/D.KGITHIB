@@ -101,7 +101,7 @@ export class Dig extends ChapterBase {
     g.enterRoom('desert', D.dock, true);
     g.hero.hasBall = true;
     D.ferry?.setVisible?.(true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c4_arrive'], ['doran', 'c4_doran_1'], ['hero', 'c4_tw_arrive']], () => {
       this.f.c4_started = true;
       g.updateObjective(); g.save(false);
@@ -143,7 +143,7 @@ export class Dig extends ChapterBase {
         return true;
       case 'c4desk':
         f.c4_notebook = true; g.found('notebook', 'c4_toast_notebook');
-        this.story.refreshCast();   // (Ilka goes to wait at the dig)
+        this.story.refreshCast({ walk: true });   // (Ilka goes to wait at the dig)
         this.chain([['hero', 'c4_desk_1'], ['hero', 'c4_dallan_note']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c4gate':
@@ -214,12 +214,16 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f, D = this.D;
     const hesk = this.npc('hesk');
     g.setState('cutscene');
+    // (held by the ride: his round let go of him once Twinsen was 40 m from its mark and put him back on it, so half way
+    //  he vanished from the yacht and stood again in the village, then popped up at the camp: roomlife.js castBlock)
+    if (hesk) hesk.controlled = true;
     g.cutscene = () => { if (hesk) { hesk.pos.set(g.hero.pos.x - 0.9, g.hero.pos.y, g.hero.pos.z - 0.4); hesk.sync(); } };
     D.yacht.ride(key, g.hero, () => {
       g.cutscene = null;
+      if (hesk) hesk.controlled = false;
       f.c4_yacht = to; f.c4_rode = true;
-      this.story.refreshCast();
-      g.setState('play');
+      g.setState('play');   // (first: in the ride's state the cast is placed at once, and Hesk stepped 3 m off the yacht)
+      this.story.refreshCast({ walk: true });
       g.updateObjective(); g.save(false);
     });
   }
@@ -292,7 +296,7 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f, D = this.D;
     if (key === 'c4_code_417') {
       f.c4_digOpen = true; D.dig.gate.open(); g.audio.play('select'); g.audio.play('door');
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       this.chain([['hero', 'c4_gate_open']], () => { g.updateObjective(); g.save(false); });
       return;
     }
@@ -329,7 +333,7 @@ export class Dig extends ChapterBase {
     if (n >= 3) {
       f.c4_seals3 = true; D.dig.reveal();
       g.audio.play('rumble'); g.camRig.shake(0.3);
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       // MAGIC-LEVELS (story/magic.js): the heat that opened the door stays in the ball: level 2, the green ball
       this.chain([['narrator', 'c4_seals_all']], () => this.story.magic.grant(2, { lines: [['hero', 'ml_c4']], same: [['hero', 'ml_c4_same']], done: () => { g.updateObjective(); g.save(false); } }));
     } else { g.updateObjective(); g.save(false); }   // (the count on the HUD follows each disc)
@@ -352,7 +356,7 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f;
     this.chain([['hero', 'c4_carving_1'], ['ilka', 'c4_ilka_c1'], ['ilka', 'c4_ilka_c2'], ['hero', 'c4_tw_cold'], ['hero', 'c4_tw_c1'], ['ilka', 'c4_ilka_c3']], () => {
       f.c4_carving = true;
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
       this.chain([['dallan', 'c4_dallan_1'], ['ilka', 'c4_ilka_d1'], ['dallan', 'c4_dallan_2'], ['hero', 'c4_tw_d1'], ['dallan', 'c4_dallan_3'], ['ilka', 'c4_ilka_end']], () => {
         f.c4_done = true;
         g.save(false);
@@ -388,7 +392,7 @@ export class Dig extends ChapterBase {
     if (stormy !== !!this.stormy) {
       this.stormy = stormy;
       if (stormy) D.post.gate.open(); else if (!f.c4_notebook) D.post.gate.close();
-      this.story.refreshCast();
+      this.story.refreshCast({ walk: true });
     }
     if (f.c4_notebook && !D.post.gate.isOpen) D.post.gate.open(); // (never trap him inside afterwards)
     // first steps down into the dig

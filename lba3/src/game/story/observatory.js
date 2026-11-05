@@ -47,7 +47,7 @@ export class Observatory extends ChapterBase {
   begin() {
     const g = this.game, M = this.M;
     g.enterRoom('hamalayi', { x: M.monastery.yard.x, z: M.monastery.yard.z + 2, a: Math.PI }, true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c7_narr'], ['yorna', 'c7_yorna_1']], () => { this.f.c7_started = true; g.updateObjective(); g.save(false); });
   }
   doors() {
@@ -87,13 +87,13 @@ export class Observatory extends ChapterBase {
       }
       case 'c7scope':
         f.c7_scope = true; this.M.vent.melt(); g.audio.play('door'); g.camRig.shake(0.3);
-        this.story.refreshCast();
+        this.story.refreshCast({ walk: true });
         this.chain([['narrator', 'c7_scope'], ['keeper', 'c7_keeper_5']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c7vent':
         h.act('use', 1.0, () => {
           f.c7_vent = true; this.M.vent.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
-          this.story.refreshCast();
+          this.story.refreshCast({ walk: true });
           this.chain([['hero', 'c7_vent_seal'], ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['radio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
         }, 0.6);
         return true;

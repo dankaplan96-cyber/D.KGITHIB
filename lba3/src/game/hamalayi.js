@@ -277,7 +277,10 @@ export function* buildHamalayiSteps(scene, physics) {
     GB.add(bbox(9.6, 0.05, 0.25, 0.01, 1), trim, 0, 1.92, -0.95);
     GB.add(bbox(2.6, 0.08, 0.8, 0.02, 1), body, 0, 1.3, 2.4);
     GB.build();
-    col({ type: 'box', x: LANDING.x + 5, z: LANDING.z - 2, hw: 4.8, hd: 1.4, rot: -0.6, top: H(LANDING.x + 5, LANDING.z - 2) + 2, noStand: true });
+    // (rot as the glider's own turn, 0.6: a box's rot is its mesh's rotation.y, as the houses' below. It was -0.6, the
+    //  mirror image: the wing was walked through on one side and an unseen wall stood across the snow on the other,
+    //  with Hesk's mark inside it)
+    col({ type: 'box', x: LANDING.x + 5, z: LANDING.z - 2, hw: 4.8, hd: 1.4, rot: 0.6, top: H(LANDING.x + 5, LANDING.z - 2) + 2, noStand: true });
   }
   R.landing = { ...W(LANDING.x, LANDING.z), a: Math.PI };
   R.glider = W(LANDING.x + 5, LANDING.z - 2);

@@ -90,7 +90,7 @@ export class Pass extends ChapterBase {
   begin() {
     const g = this.game, M = this.M;
     g.enterRoom('hamalayi', M.landing, true);
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c6_narr'], ['hesk', 'c6_hesk_1'], ['hero', 'c6_tw_1']], () => {
       this.f.c6_started = true; g.updateObjective(); g.save(false);
     });
@@ -114,9 +114,9 @@ export class Pass extends ChapterBase {
         return true;
       case 'c6winch':
         if (!f.c6_rope && f.c6_sword) { this.chain([['hero', 'c6_rope_frozen']]); return true; }
-        if (!f.c6_trip1) { this.trip(FIRST, 'c6_trip1', () => { f.c6_trip1 = true; this.story.refreshCast(); this.chain([['hero', 'c6_mites']], () => { g.updateObjective(); g.save(false); }); }); return true; }
+        if (!f.c6_trip1) { this.trip(FIRST, 'c6_trip1', () => { f.c6_trip1 = true; this.story.refreshCast({ walk: true }); this.chain([['hero', 'c6_mites']], () => { g.updateObjective(); g.save(false); }); }); return true; }
         if (this.mitesLeft() > 0) { this.chain([['hero', 'c6_trip_wait']]); return true; }
-        this.trip(SECOND, 'c6_trip2', () => { f.c6_trip2 = true; this.story.refreshCast(); this.chain([['yorna', 'c6_yorna_top']], () => { g.updateObjective(); g.save(false); }); });
+        this.trip(SECOND, 'c6_trip2', () => { f.c6_trip2 = true; this.story.refreshCast({ walk: true }); this.chain([['yorna', 'c6_yorna_top']], () => { g.updateObjective(); g.save(false); }); });
         return true;
     }
     return false;
@@ -180,7 +180,7 @@ export class Pass extends ChapterBase {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
     M.snow.focus = h.pos;
-    if (this.thawT > 0 && (this.thawT -= dt) <= 0) { f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast(); this.chain([['hero', 'c6_thawed']], () => { g.updateObjective(); g.save(false); }); }
+    if (this.thawT > 0 && (this.thawT -= dt) <= 0) { f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast({ walk: true }); this.chain([['hero', 'c6_thawed']], () => { g.updateObjective(); g.save(false); }); }
     // the mites are gone: say so on the objective line
     const left = f.c6_trip1 && !f.c6_trip2 ? this.mitesLeft() : -1;
     if (left !== this.lastLeft) { this.lastLeft = left; g.updateObjective(); }
@@ -192,7 +192,7 @@ export class Pass extends ChapterBase {
       g.setState('cutscene'); g.cutscene = () => {};
       M.lift.ride(true, [h], () => {
         g.cutscene = null; g.setState('play'); this.riding = false;
-        f.c6_up = true; this.story.refreshCast(); g.updateObjective(); g.save(false);
+        f.c6_up = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
       });
     }
     if (f.c6_up && !f.c6_done && Math.hypot(h.pos.x - M.monastery.yard.x, h.pos.z - M.monastery.yard.z) < 7) {

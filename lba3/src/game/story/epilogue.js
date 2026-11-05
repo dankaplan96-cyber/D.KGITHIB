@@ -63,9 +63,14 @@ export class Epilogue extends ChapterBase {
     h.hasBall = true; h.noBehaviours = false;
     this.sheathe();   // (at the family table he is unarmed; the weapon he chose is still equipped for free play)
     g.world.bunting?.setVisible(true);
+    // (as a load into the epilogue has it, applyFlags: the evacuation's fences round the square and its props are gone
+    //  and the heat posts glow again. Played straight through from chapter 12 the fences stood and the posts stayed dark
+    //  until the next load)
+    this.story.chapters.find((c) => c.key === 'evacuation')?.showProps?.(false);
+    g.world.station?.setActive?.(true);
     g.enterRoom('house', null, true);
     g.audio.setMood?.('home');
-    this.story.refreshCast();
+    this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'ep_narr'], ['zoe', 'ep_zoe_1'], ['hero', 'ep_tw_1'], ['arthur', 'ep_ar_1'], ['hero', 'ep_tw_2'], ['zoe', 'ep_zoe_2'], ['zoe', 'ep_zoe_3']], () => {
       this.f.ep_dinner = true;
       g.save(false);
