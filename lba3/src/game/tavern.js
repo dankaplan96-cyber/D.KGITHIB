@@ -96,7 +96,7 @@ export function buildTavernRoom(scene, physics) {
 
   // --- the gallery along the back wall: a stone deck 3 m up on a solid face, an arched door in its face
   const GX0 = LX + 0.3, GX1 = W / 2 - 0.3, GZ0 = BZ + 0.3, GZ1 = P.GZ1, GH = 3.0;
-  k.add(rbox(GX1 - GX0, GH, GZ1 - GZ0, 0.03), stone, (GX0 + GX1) / 2, GH / 2, (GZ0 + GZ1) / 2);
+  k.add(rbox(GX1 - GX0, GH - 0.02, GZ1 - GZ0, 0.03), stone, (GX0 + GX1) / 2, (GH - 0.02) / 2, (GZ0 + GZ1) / 2);   // (OVERLAP-1: its top 2 cm inside the cap, not in the cap's own top: the two flickered)
   k.add(rbox(GX1 - GX0 + 0.1, 0.14, GZ1 - GZ0 + 0.1, 0.03), cap, (GX0 + GX1) / 2, GH - 0.07, (GZ0 + GZ1) / 2);
   k.add(rbox(GX1 - GX0 - 0.2, 0.02, GZ1 - GZ0 - 0.2, 0.01), floor, (GX0 + GX1) / 2, GH + 0.005, (GZ0 + GZ1) / 2);
   B.col((GX0 + GX1) / 2, (GZ0 + GZ1) / 2, (GX1 - GX0) / 2, (GZ1 - GZ0) / 2, GH);
@@ -114,12 +114,12 @@ export function buildTavernRoom(scene, physics) {
   const SZ0 = GZ1, SZ1 = P.SZ1, N = 10, run = 0.55, rise = GH / N, SX0 = P.SX0;   // (its foot at x = SX0)
   for (let i = 0; i < N; i++) {
     const top = rise * (i + 1), x = SX0 - (i + 0.5) * run;
-    k.add(rbox(run + 0.02, top, SZ1 - SZ0, 0.015), stone, x, top / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
+    k.add(rbox(run + 0.02, top - 0.02, SZ1 - SZ0, 0.015), stone, x, (top - 0.02) / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
     k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), cap, x, top - 0.03, (SZ0 + SZ1) / 2);
     B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.12, (SZ1 - SZ0) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the landing under groundAt's 5 cm shrink; +0.04 left a 2 cm seam between steps, +0.08 one at the top step against the landing: both dropped Twinsen under the stair)
   }
   const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
-  k.add(rbox(LX1 - GX0, GH, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, GH / 2, (SZ0 + SZ1) / 2);
+  k.add(rbox(LX1 - GX0, GH - 0.02, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, (GH - 0.02) / 2, (SZ0 + SZ1) / 2);
   k.add(rbox(LX1 - GX0 + 0.06, 0.14, SZ1 - SZ0 + 0.06, 0.02), cap, (GX0 + LX1) / 2, GH - 0.07, (SZ0 + SZ1) / 2);
   B.col((GX0 + LX1) / 2, (SZ0 + SZ1) / 2, (LX1 - GX0) / 2, (SZ1 - SZ0) / 2, GH);
   // teal iron railings: the stair's open side and the landing's, the gallery's edge over the stair and on to the right

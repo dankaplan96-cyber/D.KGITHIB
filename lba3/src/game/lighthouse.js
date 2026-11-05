@@ -75,7 +75,9 @@ export function buildLighthouse(grp, lampMat) {
   // ---- the door (+z), recessed: an arched surround proud of the wall, the leaf set inside it, a step in front
   const wz = (x, y) => Math.sqrt(rAt(y) ** 2 - x * x);   // the wall's z at x (the wall is round)
   const dw = 1.1, dh = 2.3, dy = LH.DOOR_Y, rF = rAt(dy);   // rF: the footing's radius at the sill
-  BN.add(st(archFrame(dw, dh, 0.22, 0.55), '#d8cfba'), dress, 0, dy, rF - 0.3);
+  // (OVERLAP-1: the surround stands 3 cm down in the plinth: the foot of its opening lay in the plinth's top, the two
+  //  floors in one plane flickered in front of the door; now the plinth is the threshold's only floor)
+  BN.add(st(archFrame(dw, dh, 0.22, 0.55), '#d8cfba'), dress, 0, dy - 0.03, rF - 0.3);
   BN.add(wd(archSlab(dw, dh, 0.09)), wood, 0, dy, rF - 0.02);
   for (const y of [0.55, 1.5]) BN.add(fe(bx(dw * 0.86, 0.09, 0.03, 1)), iron, 0, dy + y, rF + 0.085);   // straps
   BN.add(fe(new THREE.TorusGeometry(0.09, 0.02, 6, 12)), iron, dw * 0.28, dy + 1.05, rF + 0.1);
