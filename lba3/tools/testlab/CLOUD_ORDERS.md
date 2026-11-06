@@ -168,4 +168,18 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    teleports him back (and costs a life) — the likeliest cause of the user's "the camera lost its balance" on the
    forecourt. Fill that strip level with the forecourt (climbGround / the fill) or close it with the cheek; check by
    standing and turning there, and walking the east flight both ways.
+22. **Desert Island, the cloud's player's-eye review (6.11; chapter 4+: pictures stay with you):** fixed by the cloud:
+   Hesk off the yacht and the glider, the yacht's collider turns with it, Oni and Doran placed, the NO FERRY slate in
+   chapter 5 only, the island's glider hidden until chapter 6. **Yours (art):** (a) the School sign "SCHOOL OF MAGIC"
+   (desertold.js:237 → desert.js `signAt` ~1531) reads mirrored from the bridge and on the way out: two front-facing
+   planes back to back instead of one double-sided; (b) the project ferry at the pier (desert.js 564–573): a teal box
+   with a roof floating over a thin white sliver of hull and a bright cyan disc: a closed hull with a deck, the disc
+   softened or gone; (c) the hangar tarp (condenser.js ~151, 10.5 × 6.2 m) overhangs the floor's rim and Twinsen's legs
+   are inside its edge at the boarding spot: ~9 × 5 or its edge raised; (d) the School's interior wall at (5588.2, 0–3,
+   −12…−2.8): two textures in one plane (wizards.js school shell); (e) the pump pipe (desert.js ~720, no collider) is
+   walked through at the joint: bury or lift it, or a thin collider; (f) the Bù maze (lba1places.js buildLba1Temple):
+   dark tops read as trenches and light floors as wall tops: darker floors or lighter wall tops (with order 20's LBA1
+   look); (g) the School's pits: piles of shiny black boulders; (h) the School pupils reuse Lulu and Tim (sc_pupa/
+   sc_pupb, sc_in1/sc_in2): other kid looks so Citadel's named children don't seem to be there. Report in
+   `WORLD_ART_REQUESTS.md` (REVIEW-DESERT-ART).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
