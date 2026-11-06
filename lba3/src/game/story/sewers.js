@@ -62,7 +62,9 @@ export class SewerLife extends ChapterBase {
     if (H) { H.setDoor('bolt', !!f.sw_bolt, true); H.setDoor('works', !!f.sw_works, true); H.setDoor('globe', !!f.sw_gdoor, true); }
     SEWER.vault?.setChest(!!f.sw_chest);
     SEWER.globe?.setClear(!!f.sw_globe, true);
-    this.game.rooms?.wtent?.trap?.setOpen(!!f.sw_trap);
+    // (regions.built never builds: reading rooms.wtent built the wizard's tent on access, LAZY-REGIONS — lazyregions.mjs)
+    const T = this.game.regions ? this.game.regions.built('wtent') : this.game.rooms?.wtent;
+    T?.trap?.setOpen(!!f.sw_trap);
   }
   regionBuilt(ids) { if (['sewer', 'sewervault', 'sewerglobe', 'wtent'].some((id) => ids.includes(id))) this.applyRooms(); }
   items() {

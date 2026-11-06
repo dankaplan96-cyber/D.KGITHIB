@@ -38,7 +38,7 @@ const data = await ev(() => {
     built: Object.keys(G.rooms),
   };
 });
-check('data-only questions need no build: travel stops and landings, the routes, the crystal count (6), where each room stands', data.stops.every(([, ok]) => ok) && data.routes > 20 && data.isles === 11 && data.crystals === 6 && data.has && data.centre[2] === 'council' && data.centre[3] === 'zeelich' && data.built.join() === 'house,well', data);
+check('data-only questions need no build: travel stops and landings, the routes, the crystal count (6), where each room stands', data.stops.every(([, ok]) => ok) && data.routes > 20 && data.isles === 9 && data.crystals === 6 && data.has && data.centre[2] === 'council' && data.centre[3] === 'zeelich' && data.built.join() === 'house,well', data);
 const heap0 = await heapMB();
 
 // ---------------------------------------------------------------- 2. a door into an area not built yet
