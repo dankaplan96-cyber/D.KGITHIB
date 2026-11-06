@@ -102,7 +102,8 @@ export class Dig extends ChapterBase {
       case 'dkid': return this.story.kesh?.saniSpot() || S.kid;   // (in the cool room's doorway once it draws: kesh.js)
       case 'dtrader': return S.trader;
       case 'weaver': return S.weaver;
-      case 'doran': return { x: D.dock.x + 1.2, z: D.dock.z + 1.4, a: Math.PI / 2 };
+      // (0.85 m in from the pier's rope rail at dock.z + 1.75: at + 1.4 his body stood through the rail)
+      case 'doran': return { x: D.dock.x + 1.2, z: D.dock.z + 0.9, a: Math.PI / 2 };
       // everyone else stays where the earlier chapters left them
     }
     return undefined;
