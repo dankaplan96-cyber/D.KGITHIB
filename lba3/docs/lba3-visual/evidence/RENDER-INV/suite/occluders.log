@@ -1,0 +1,35 @@
+PASS (a) at the twinsen house's door facing out: the house stays drawn whole (17 meshes) 
+PASS (a) at the twinsen house's door facing in: the house stays drawn whole (17 meshes) 
+PASS (a) at the bug house's door facing out: the house stays drawn whole (13 meshes) 
+PASS (a) at the bug house's door facing in: the house stays drawn whole (13 meshes) 
+PASS (a) at the stone house's door facing out: the house stays drawn whole (8 meshes) 
+PASS (a) at the stone house's door facing in: the house stays drawn whole (8 meshes) 
+PASS (a) at the shop house's door facing out: the house stays drawn whole (14 meshes) 
+PASS (a) at the shop house's door facing in: the house stays drawn whole (14 meshes) 
+PASS (a) at the water house's door facing out: the house stays drawn whole (18 meshes) 
+PASS (a) at the water house's door facing in: the house stays drawn whole (18 meshes) 
+PASS (a) at the pink house's door facing out: the house stays drawn whole (16 meshes) 
+PASS (a) at the pink house's door facing in: the house stays drawn whole (16 meshes) 
+PASS (a) at the south house's door facing out: the house stays drawn whole (16 meshes) 
+PASS (a) at the south house's door facing in: the house stays drawn whole (16 meshes) 
+PASS (a) at the nbr house's door facing out: the house stays drawn whole (16 meshes) 
+PASS (a) at the nbr house's door facing in: the house stays drawn whole (16 meshes) 
+PASS (a) at the baggage house's door facing out: the house stays drawn whole (18 meshes) 
+PASS (a) at the baggage house's door facing in: the house stays drawn whole (18 meshes) 
+PASS (a) at the wing2 house's door facing out: the house stays drawn whole (18 meshes) 
+PASS (a) at the wing2 house's door facing in: the house stays drawn whole (18 meshes) 
+PASS (a) at the museum house's door facing out: the house stays drawn whole (16 meshes) 
+PASS (a) at the museum house's door facing in: the house stays drawn whole (16 meshes) 
+PASS (b) behind the bug house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) behind the stone house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) behind the south house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) behind the pink house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) behind the shop house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) behind the twinsen house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole 
+PASS (b) walking round behind the bug house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (74 in view, 13 by silhouette) 
+PASS (b) walking round behind the stone house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (77 in view, 7 by silhouette) 
+PASS (b) walking round behind the south house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (85 in view, 11 by silhouette) 
+MEASURE the rise over the south house (1/60 s) {"frames":740,"mode":"2026","accMax":26.7,"accP95":24.2,"yawRateMax":0,"pitchDeg":[26.4,73.4]}
+PASS (b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s 
+no errors
+ALL PASSED

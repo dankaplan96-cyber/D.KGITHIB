@@ -1,0 +1,33 @@
+[0.3] go → (1091.0, -4.0) plan ok=false pts=4 left=0.85
+[0.3] threat: fight
+[2.0] fight mite2 d=2.6 st=chase aim=it e@1095.9,0.0,4.1 me@1093.4,0.0,3.3 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[3.4] fight mite2 d=2.6 st=dead aim=it e@1096.2,0.0,3.5 me@1093.4,0.0,3.3 ball=idle hp 1→0 me 11 mp 6.822500000000003
+[3.4] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[6.1] threat: fight
+[8.2] fight mite0 d=5.6 st=chase aim=it e@1095.4,0.0,-0.3 me@1092.9,0.0,0.1 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[9.4] fight mite0 d=2.6 st=dead aim=it e@1095.5,0.0,-0.8 me@1092.9,0.0,0.1 ball=idle hp 1→0 me 11 mp 6.752500000000003
+[9.4] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[17.0] stuck at (1092.1, -3.9): replan
+[19.9] stuck at (1091.8, -4.3): replan
+[22.8] stuck at (1092.1, -3.8): replan
+[28.2] stuck at (1091.9, -4.0): replan
+[33.6] stuck at (1092.2, -3.8): replan
+[36.5] stuck at (1091.8, -4.3): replan
+[42.5] go → (1096.5, -5.2) plan ok=true pts=3 left=0.46
+[46.7] go → (1098.5, -8.7) plan ok=false pts=3 left=3.32
+[48.8] threat: fight
+[50.7] fight mite3 d=4.7 st=chase aim=it e@1100.7,0.0,-3.8 me@1098.6,0.0,-5.4 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[51.9] fight mite3 d=2.6 st=dead aim=it e@1100.6,0.0,-3.3 me@1098.6,0.0,-5.4 ball=idle hp 1→0 me 11 mp 6.76416666666667
+[51.9] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[54.5] stuck at (1098.6, -5.4): replan
+[59.9] stuck at (1098.8, -5.6): replan
+[62.9] stuck at (1098.5, -5.6): replan
+[68.3] stuck at (1098.6, -5.6): replan
+[71.2] stuck at (1098.7, -5.4): replan
+[74.1] stuck at (1098.6, -5.6): replan
+[75.1] threat: fight
+[77.2] fight mite1 d=5.6 st=chase aim=it e@1100.1,0.0,-2.9 me@1098.5,0.0,-5.6 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[78.4] fight mite1 d=3.1 st=dead aim=it e@1100.1,0.0,-3.2 me@1098.5,0.0,-5.6 ball=idle hp 1→0 me 11 mp 6.752500000000003
+[78.4] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[84.0] go → (1097.0, 4.8) plan ok=true pts=3 left=0.4
+[94.3] go → (1107.2, -5.1) plan ok=true pts=3 left=0.43

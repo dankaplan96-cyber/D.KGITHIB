@@ -1,0 +1,3 @@
+project endPrologue {"title":"Chapter 2The Joint Project","cardOn":0.3,"cardOff":0.7,"lineAt":0.3,"framesWithLineOrBubbleOverCard":11}
+  0.1:-f0.33/play 0.2:-f0.67/play 0.3:CDBf1/dialog 0.4:CDBf0.67/dialog 0.5:CDBf0.33/dialog 0.6:CDB/dialog 0.7:-DB/dialog 0.8:-DB/dialog 0.9:-DB/dialog 1:-DB/dialog 1.1:-DB/dialog 1.2:-DB/dialog 1.3:-DB/dialog 1.4:-DB/dialog 1.5:-DB/dialog 1.6:-DB/dialog
+no page errors

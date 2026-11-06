@@ -1,0 +1,58 @@
+{
+ "otringal": [
+  {
+   "name": "landmark",
+   "x": 11.0,
+   "z": -14.5,
+   "a": -2.62
+  }
+ ],
+ "knartas": [
+  {
+   "name": "landmark",
+   "x": -11.58,
+   "z": -22.46,
+   "a": -1.323
+  }
+ ],
+ "mosquibee": [
+  {
+   "name": "landmark",
+   "x": 26.47,
+   "z": -8.18,
+   "a": 2.859
+  }
+ ],
+ "celebration": [
+  {
+   "name": "landmark",
+   "x": 1.71,
+   "z": 1.78,
+   "a": -2.769
+  }
+ ],
+ "undergas": [
+  {
+   "name": "landmark",
+   "x": -15.96,
+   "z": -24.96,
+   "a": 1.48
+  }
+ ],
+ "cxislet": [
+  {
+   "name": "landmark",
+   "x": -4.82,
+   "z": -9.15,
+   "a": -1.899
+  }
+ ],
+ "platform": [
+  {
+   "name": "landmark",
+   "x": 35.98,
+   "z": -29.84,
+   "a": 0.378
+  }
+ ]
+}

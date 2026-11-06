@@ -1,0 +1,104 @@
+{
+ "quality": "medium",
+ "out": {
+  "street": {
+   "batches": {
+    "d120b1": {
+     "batches": 62,
+     "pieces": 298,
+     "folded": 251,
+     "verts": 650107,
+     "buildMs": 239.1
+    }
+   },
+   "frames": 3,
+   "callsPerFrame": 276.7,
+   "byClass": {
+    "main | static mesh": 140.3,
+    "main | instanced": 54.7,
+    "main | character body (skinned)": 17,
+    "shadow | shadow batch": 13.3,
+    "main | character part (rigid)": 12,
+    "shadow | static mesh": 8.3,
+    "main | static mesh, transparent": 7.3,
+    "shadow | scene-level mesh": 6,
+    "main | scene-level mesh": 6,
+    "shadow | instanced": 5.7,
+    "shadow | batched (multi-draw)": 2,
+    "main | batched (multi-draw)": 2,
+    "shadow | character body (skinned)": 1,
+    "main | points/lines/sprites": 1
+   },
+   "trisK": {
+    "main | static mesh": 387,
+    "shadow | shadow batch": 224,
+    "main | instanced": 164,
+    "shadow | batched (multi-draw)": 109,
+    "main | batched (multi-draw)": 109,
+    "main | scene-level mesh": 97,
+    "main | character body (skinned)": 31,
+    "shadow | instanced": 27,
+    "shadow | character body (skinned)": 1,
+    "main | static mesh, transparent": 1,
+    "shadow | static mesh": 1,
+    "shadow | scene-level mesh": 0,
+    "main | character part (rigid)": 0,
+    "main | points/lines/sprites": 0
+   },
+   "infoTris": 5240460,
+   "perCellMergeSaves": 73.7,
+   "ofDraws": 102.3,
+   "topMaterials": []
+  },
+  "harbour": {
+   "batches": {
+    "d120b1": {
+     "batches": 62,
+     "pieces": 298,
+     "folded": 251,
+     "verts": 650107,
+     "buildMs": 239.1
+    }
+   },
+   "frames": 3,
+   "callsPerFrame": 258.7,
+   "byClass": {
+    "main | static mesh": 147,
+    "main | instanced": 42,
+    "main | character body (skinned)": 17,
+    "shadow | instanced": 15,
+    "shadow | shadow batch": 10,
+    "main | scene-level mesh": 9,
+    "shadow | static mesh": 4,
+    "shadow | scene-level mesh": 3,
+    "main | character part (rigid)": 3,
+    "main | static mesh, transparent": 2.7,
+    "shadow | batched (multi-draw)": 2,
+    "main | batched (multi-draw)": 2,
+    "shadow | character body (skinned)": 1,
+    "main | points/lines/sprites": 1
+   },
+   "trisK": {
+    "main | static mesh": 451,
+    "shadow | shadow batch": 193,
+    "main | instanced": 117,
+    "shadow | batched (multi-draw)": 109,
+    "main | batched (multi-draw)": 109,
+    "main | scene-level mesh": 97,
+    "shadow | instanced": 62,
+    "main | character body (skinned)": 31,
+    "shadow | character body (skinned)": 1,
+    "shadow | static mesh": 1,
+    "main | static mesh, transparent": 0,
+    "main | points/lines/sprites": 0,
+    "main | character part (rigid)": 0,
+    "shadow | scene-level mesh": 0
+   },
+   "infoTris": 8909025,
+   "perCellMergeSaves": 75.3,
+   "ofDraws": 110.7,
+   "topMaterials": []
+  }
+ },
+ "errors": []
+}

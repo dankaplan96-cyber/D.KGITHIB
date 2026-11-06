@@ -1,0 +1,177 @@
+{
+ "start": {
+  "state": "play",
+  "room": "house",
+  "pos": [
+   1001.55,
+   0,
+   -1.75
+  ],
+  "hp": 10,
+  "chapter": "well",
+  "obj": "Check the well",
+  "items": [],
+  "coins": 0,
+  "clovers": 2,
+  "l": {}
+ },
+ "house-prologue": {
+  "desk": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Zoé's board for the Water Office: a pin for every house waiting for the project's heat. Ours is near the top."
+   ]
+  },
+  "trunk": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: The old travel trunk. Desert Island, Zeelich... these days it holds seed packets."
+   ]
+  },
+  "mend": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Things to take back: Gilbert's kettle, the baker's scales. Gilbert will want the kettle before he wants to say thanks."
+   ]
+  },
+  "meter": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: The heat meter. Not connected yet. Zoé got us on the list."
+   ]
+  },
+  "bench": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Arthur's paddle boat, built to beat Lulu's. The plan says \"rudder needs pin (pliers?)\". So that's where my pliers went."
+   ]
+  }
+ },
+ "cupboard": {
+  "r": "used",
+  "ball": true
+ },
+ "exit": {
+  "r": "transition",
+  "from": "house",
+  "to": "citadel"
+ },
+ "life spots": {
+  "pump": [
+   -42,
+   65
+  ],
+  "box": [
+   -57.3,
+   84.80000000000001
+  ],
+  "crate": [
+   -108.2,
+   35.1
+  ],
+  "bench": [
+   -104.30000000000001,
+   36.75
+  ]
+ },
+ "pump look": {
+  "r": "used",
+  "target": {
+   "kind": "lpump",
+   "id": "p_look",
+   "label": "p_look"
+  },
+  "state": "play",
+  "lines": 2
+ },
+ "pump look lines": [
+  "n_hero: The old pump. Seized, and dry as the well."
+ ],
+ "bram": {
+  "r": "talked",
+  "to": "bram",
+  "state": "play",
+  "lines": 2
+ },
+ "bram lines": [
+  "n_bram: Dry as the well. Everything is, this morning."
+ ],
+ "boat box (prologue)": {
+  "r": "used",
+  "target": {
+   "kind": "lbox",
+   "id": "p_open",
+   "label": "p_open"
+  },
+  "pliers": true,
+  "items": [
+   "pliers"
+  ]
+ },
+ "boat box lines": [
+  "n_hero: Paint, string, a spare sail... and my pliers. Arthur.",
+  "TOAST l_toast_pliers"
+ ],
+ "pipe crossing": {
+  "r": "arrived",
+  "t": 2.53,
+  "x": -44.44,
+  "y": 2.33,
+  "pipeTop": 2.72,
+  "ground": 2.33
+ },
+ "odile": {
+  "r": "talked",
+  "to": "odile",
+  "state": "play",
+  "lines": 2
+ },
+ "odile lines": [
+  "TOAST pr_toast_tremor",
+  "n_odile: Cargo permits? Harbour master's stamp, not mine. Doran. If you can wake him."
+ ],
+ "crate (prologue)": null,
+ "nell": {
+  "r": "talked",
+  "to": "nell",
+  "state": "play",
+  "lines": 4
+ },
+ "nell lines": [
+  "n_nell: Arthur's dad, right? He still owes me a sprocket.",
+  "n_nell: Esmer engines are wonderful machines. Try getting a spare part for one, though. Three weeks, by shuttle."
+ ],
+ "end": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -106.26,
+   1.91,
+   35.85
+  ],
+  "hp": 10,
+  "chapter": "well",
+  "obj": "Check the well",
+  "items": [
+   "pliers"
+  ],
+  "coins": 0,
+  "clovers": 2,
+  "l": {
+   "l_benchSeen": true,
+   "l_pliers": true,
+   "l_nellMet": true
+  }
+ },
+ "errors": []
+}

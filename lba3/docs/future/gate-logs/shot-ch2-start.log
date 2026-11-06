@@ -1,0 +1,21 @@
+{
+ "state": "play",
+ "room": "citadel",
+ "pos": [
+  -40.2,
+  2.2,
+  -5.6
+ ],
+ "hp": 11,
+ "chapter": "project",
+ "obj": "Go home and tell Zoé"
+}
+
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     1 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+rc=0

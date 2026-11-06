@@ -1,0 +1,22 @@
+[0s +0s] continue (Desert Island): {"room":"desert","chapter":"dig"} | desert [3329.72,5.18,-2.53] hp 7 | Find Ilka's camp under the north mesa◆ Hesk can take you on his sand-yacht
+[1s +1s] Hesk: {"r":"talked","to":"hesk","state":"play","lines":4,"ask":true} | desert [3373.16,4.74,13.03] hp 7 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[3s +2s] the rope from the pier: {"r":"used","target":{"kind":"c4rope","id":"p_rope","label":"p_rope"},"state":"play","lines":2,"rope":true,"fail":null} | desert [3300.38,2,3.04] hp 7 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[5s +2s] the sand-yacht to the camp: {"r":"talked","to":"hesk","state":"play","lines":2,"yacht":"camp","fail":null} | desert [3390.92,5,-41.39] hp 7 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[5s +0s] Ilka: {"r":"talked","to":"ilka","state":"play","lines":14,"ilka":true,"fail":null} | desert [3391.86,5,-42.23] hp 7 | Get Ilka's notebook from the research post◆ Go in during a sandstorm
+[24s +19s] the notebook (in a sandstorm): {"waited":0,"stormy":false,"r":"used","target":{"kind":"c4desk","id":"p_desk","label":"p_desk"},"state":"play","lines":4,"notebook":true,"fail":null} | desert [3436.18,5.35,-27.18] hp 8 | Open the dig and reach the bottom
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[101.9] dodge a bolt
+[102.1] fight pguard1 d=5.2 st=recover aim=it e@3426.5,5.2,-20.9 me@3419.3,5.5,-21.9 ball=idle hp 3→3 me 9 mp 6.160833333333338
+[102.1] go → (3426.5, -20.9) plan ok=true pts=2 left=3.38
+[102.5] hurt 9→8 at (3418.5, 5.5, -22.0) near: pguard1:recover 
+[105.2] fight pguard1 d=5.9 st=chase aim=it e@3426.1,5.0,-21.1 me@3420.8,5.5,-21.9 ball=idle hp 3→2 me 8 mp 6.257500000000009
+[106.4] fight pguard1 d=5.3 st=chase aim=it e@3425.2,5.0,-21.3 me@3420.8,5.5,-21.9 ball=idle hp 2→1 me 8 mp 5.665833333333344
+[107.5] fight pguard1 d=4.5 st=dead aim=it e@3424.7,5.0,-21.4 me@3420.8,5.5,-21.9 ball=idle hp 1→0 me 8 mp 5.074166666666679
+[107.5] fight → {"left":0,"dead":false,"hp":8,"t":10.3}
+[111.3] go → (3436.6, -27.5) plan ok=true pts=2 left=0.46
+[115.0] go → (3436.6, -27.5) plan ok=true pts=2 left=0.31
+[115.4] go → (3436.6, -27.5) plan ok=true pts=2 left=0.08
+[115.4] go → (3436.6, -27.5) plan ok=true pts=2 left=0.08
+kept docs/lba3-production/reviews/REV-TY-4/save-k5.json
+no errors

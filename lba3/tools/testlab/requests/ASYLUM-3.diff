@@ -1,0 +1,270 @@
+diff --git a/lba3/src/game/asylumhostel.js b/lba3/src/game/asylumhostel.js
+index 51a4fac2..a1094a2e 100644
+--- a/lba3/src/game/asylumhostel.js
++++ b/lba3/src/game/asylumhostel.js
+@@ -32,7 +32,7 @@
+ //   }
+ import * as THREE from 'three';
+ import { Kit, MAT, rbox, plane, cyl, sphere, lathe, slab, canvasTex, pottedPlant, locker, rug, stove, dresser, table, bench, floorLamp, pot, kettle, plate,
+-  ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand } from './props.js';
++  ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand, bookcase, jar, barrel } from './props.js';
+ import { tileTex, cm, latticeM } from './props-esmer.js';
+ 
+ export const ASYLUM_FRONT = { x: -26.5, z: -50.58, a: 0 };   // (the fort's south wall, outer face at its foot; out = +z)
+@@ -266,6 +266,32 @@ function zcrate(k, { s = 0.72, open = false } = {}) {
+   if (open) for (let i = 0; i < 5; i++) k.add(lathe([[0, 0], [0.05, 0.05], [0.04, 0.16], [0, 0.22]], 5), warmGlow(), -0.18 + (i % 3) * 0.18, s - 0.12, -0.12 + Math.floor(i / 3) * 0.22, i, { rz: (i - 2) * 0.2 });
+   return { hw: s / 2, hd: s / 2, top: s };
+ }
++// a sack of grain (faces +z): a soft lump, its neck tied
++function sack(k, { s = 1 } = {}) {
++  const m = MAT.flat('#cdb88a', 0.95);
++  k.add(rbox(0.46 * s, 0.4 * s, 0.34 * s, 0.13 * s), m, 0, 0.2 * s, 0, 0, { jit: true });
++  k.add(rbox(0.2 * s, 0.1 * s, 0.16 * s, 0.04 * s), m, 0, 0.44 * s, 0);
++  k.add(cyl(0.06 * s, 0.07 * s, 0.03 * s, 8), MAT.flat('#8a6a3a', 0.95), 0, 0.41 * s, 0);
++  return { hw: 0.25 * s, hd: 0.19 * s, top: 0.5 * s };
++}
++// the larder's shelves (faces +z): an open case, jars and crocks on its shelves, a sack on the bottom one
++function pantryShelf(k, { w = 1.5, seed = 1 } = {}) {
++  const fp = bookcase(k, { w, h: 1.9, d: 0.4, pal: 'honey', shelves: 4, fill: false });
++  const r = rngOf(seed), step = (1.9 - 0.2) / 4, cols = ['#c8702a', '#2f8a9a', '#a8582a', '#e8b84a'];
++  for (let i = 1; i < 4; i++) for (let x = -w / 2 + 0.16; x < w / 2 - 0.12; x += 0.2 + r() * 0.12) jar(k, x, 0.12 + i * step, (r() - 0.5) * 0.12, r() < 0.4 ? 'crock' : 'jar', cols[Math.floor(r() * cols.length)], 0.8 + r() * 0.3);
++  k.at(-w / 4, 0.12, 0.02, 0.2, () => sack(k, { s: 0.6 })); k.at(w / 4, 0.12, 0.02, -0.3, () => sack(k, { s: 0.55 }));
++  return fp;
++}
++// the linen loft's shelves (faces +z): folded blankets in the bunks' colours
++function linenShelf(k, { w = 1.5, seed = 1 } = {}) {
++  const fp = bookcase(k, { w, h: 1.9, d: 0.4, pal: 'honey', shelves: 4, fill: false });
++  const r = rngOf(seed), step = (1.9 - 0.2) / 4, cols = ['#2f7f86', '#e8b84a', '#d8608a', '#f2e6c8', '#3a6fb0', '#efe6d2'];
++  for (let i = 0; i < 4; i++) for (let x = -w / 2 + 0.3; x < w / 2 - 0.2; x += 0.46) {
++    const n = 2 + Math.floor(r() * 3);
++    for (let j = 0; j < n; j++) k.add(rbox(0.38, 0.08, 0.3, 0.025), MAT.flat(cols[Math.floor(r() * cols.length)], 0.9), x + (r() - 0.5) * 0.04, 0.16 + i * step + j * 0.085, 0, (r() - 0.5) * 0.1);
++  }
++  return fp;
++}
+ // a guard's post: a stool, a lantern on an upturned crate, a flask
+ function guardPost(k) {
+   const md = MAT.wood('dark'), br = MAT.brass();
+@@ -339,7 +365,7 @@ export function dressAsylum(R, physics) {
+     put(A, 29.0, 6.6, 5, 0, hammock, { span: 2.6 });
+     put(A, 31.6, 15.6, 5, 0, hammock, { span: 2.6, cols: ['#2f8a9a', '#e8b84a', '#f2e6c8'] });
+     flatRug(A, 29.5, 11.5, 5, 2.6, 1.8, rugB, 5);
+-    put(A, 34.6, 6.0, 5, 0, pottedPlant, { kind: 'leafy', potColor: '#e8b84a' });
++    put(A, 34.8, 6.45, 5, 0, pottedPlant, { kind: 'leafy', potColor: '#e8b84a' });   // (in front of LBA1's cabinet at the room's corner, not half in it)
+   }
+   // ---- the long hall (LBA1's corridor, z 31–36): a runner, warm lamps and benches along its north side, clear of
+   //      the walk and of Vesk's door (x 41–42)
+@@ -423,6 +449,34 @@ export function dressAsylum(R, physics) {
+     const pw = W(13.97, 41.4), py = Y(13, 41.4, 5);
+     A.k.at(pw.x - o.x, py + 1.2, pw.z - o.z, -HALF, () => { const k = A.k; k.add(rbox(0.8, 0.54, 0.04, 0.01), MAT.brass(), 0, 0, 0); k.add(plane(0.74, 0.48), MAT.map(plaqueTex(COUNCIL_PLAQUE), 0.45), 0, 0, 0.022); });
+   }
++  // ---- (order 8) the rooms ASYLUM-2 had left bare, on the way up the west side: LBA1's room west of the nurses'
++  //      station (x 6–13, z 20–30), its flight up the west wall to a landing (x 1–4, z 20–24) and the loft over the
++  //      dorm's west end (x 1–8, z 3–18); and the landing at the top of the stair from the long hall (x 1–5, z 31–35).
++  //      The room is the kitchen's larder now (next door to it): shelves of jars, sacks, barrels and crates under the
++  //      flight; the loft is the hostel's linen loft (sheets drying, blankets on the shelves, the laundry basket)
++  {
++    const A = area('larder');
++    for (const [x, seed] of [[7.2, 1], [9.2, 2]]) put(A, x, 20.3, 5, 0, pantryShelf, { seed });
++    { const ty = Y(12.4, 20.5, 8); at(A, 12.4, 20.5, ty, 0.3, () => sack(A.k)); at(A, 11.6, 20.5, ty, -0.4, () => sack(A.k, { s: 0.85 }));
++      at(A, 13.2, 21.4, Y(13.2, 21.4, 8), 0, () => { jar(A.k, 0, 0, 0, 'crock', '#a8582a'); jar(A.k, 0.22, 0, 0.1, 'crock', '#2f8a9a', 0.8); }); }
++    const tb = put(A, 9.4, 25.2, 5, 0, table, { w: 1.6, d: 0.8 });
++    at(A, 9.4, 25.2, tb.y + 0.78, 0, () => { const k = A.k; pot(k, -0.45, 0, 0, { r: 0.12, h: 0.14 }); plate(k, 0.1, 0, 0.1, 0, '#f2ead6', 0.12, false); jar(k, 0.45, 0, -0.15, 'jar', '#c8702a'); k.at(0.25, 0, -0.2, 0.4, () => sack(k, { s: 0.55 })); });
++    for (const [x, z, ry, s] of [[13.55, 27.4, HALF, 1], [13.55, 28.3, HALF + 0.3, 0.9], [12.8, 27.8, 0.2, 0.8]]) put(A, x, z, 5, ry, sack, { s });
++    for (const [x, z] of [[2.0, 29.7], [3.0, 30.3]]) put(A, x, z, 5, 0, barrel, { r: 0.3, h: 0.82 });
++    for (const [x, z, s] of [[1.7, 28.2, 0.62], [2.7, 28.5, 0.5]]) put(A, x, z, 5, 0.25, (k) => crate(k, s));
++    put(A, 6.8, 29.6, 5, 0, floorLamp);
++  }
++  {
++    const A = area('loft');
++    put(A, 5.0, 3.3, 15, 0, linenShelf, { seed: 3 });
++    washAt(A, 5.4, 13.5, 15, HALF, { w: 3.0, cols: ['#f4eee0', '#efe6d2', '#2f7f86', '#f4eee0', '#e8b84a'] });
++    put(A, 7.0, 5.6, 15, -HALF, chest, { w: 0.9, d: 0.5, h: 0.48, pal: 'honey' });
++    put(A, 7.2, 8.6, 15, 0, barrel, { r: 0.28, h: 0.5, pal: 'pale' });   // (the laundry basket)
++    at(A, 7.2, 8.6, Y(7.2, 8.6, 15) + 0.46, 0.5, () => { for (const [dx, c] of [[-0.06, '#f4eee0'], [0.07, '#d8608a']]) A.k.add(rbox(0.36, 0.08, 0.3, 0.03), MAT.flat(c, 0.9), dx, 0, dx); });
++    // the landing at the top of the stair from the long hall
++    put(A, 1.3, 33.5, 9, HALF, bench, { w: 1.4 });
++    put(A, 1.6, 35.4, 9, 0, pottedPlant, { kind: 'leafy', potColor: '#3a8a9a' });
++  }
+   // ---- the upper walk to the front door (on the slab over the ward: it fades with the ward's lid), and the doors in
+   //      LBA1's tall portal (cells 37, 9–14): two leaves, lattice side lights, a glowing fanlight
+   const up = area('upper', true);
+@@ -545,12 +599,16 @@ export function dressAsylum(R, physics) {
+     cook: S(18.7, 5, 21.3, -HALF, "the cook at the old nurses' counter", [18, 5, 21]),
+     worker3: S(15.6, 14, 3.9, Math.PI * 0.85, 'a worker on the upper walk', [14, 14, 4.09]),
+     worker4: S(22.0, 5, 24.25, 0, 'a worker at the mess table, off shift (on the bench)', null, { pose: 'sit' }),
+-    sleeper: S(10.5, 5, 12, HALF, 'a sleeper in a lower bunk (a: from head to feet)', [14.06, 5, 10.28], { pose: 'lie' }),
++    sleeper: S(10.62, 5, 12, HALF, 'a sleeper in a lower bunk (a: from head to feet)', [14.06, 5, 10.28], { pose: 'lie' }),
+     guard1: S(2.4, 5, 45.6, 0, "Vesk's guard at the head of the store's stair", [2, 5, 45.88]),
+     guard2: S(11.6, 1, 49.2, -HALF, "Vesk's guard deep in the store, by the boiler", null),
+   };
+-  R.npcSpots.sleeper.y = Y(10.5, 12, 5) + 0.15 + 0.17;   // (on the lower bunk's mattress, on the plinth)
+-  R.npcSpots.worker4.y = Y(22.0, 24.25, 5) + 0.47;        // (on the bench)
++  // (the rig's poses, rig.js: 'sleep' lays the body flat at its root, so the root goes on the mattress; 'sit' holds the
++  //  hips 0.48 m over the root, a seat's height, so the root stays near the floor: at the bench's top + 0.47 he sat a
++  //  bench above it, his knees through the table. Wix 0.1 m toward his feet: his head on the pillow, his hands out of
++  //  the wall at the bunk's head)
++  R.npcSpots.sleeper.y = Y(10.62, 12, 5) + 0.15 + 0.17;   // (on the lower bunk's mattress, on the plinth)
++  R.npcSpots.worker4.y = Y(22.0, 24.25, 5) + 0.08;         // (his hips 0.1 m over the bench, his robe's hem at the floor)
+   // ---- the story's handles
+   const reg = R.searches.find((s) => s.id === 'asylum_register');
+   R.asylumHostel = {
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index 39de9e67..3aa97110 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -336,7 +336,8 @@ export function buildLba1Asylum(scene, physics) {
+     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
+     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
+       stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
+-      gridZones: true, overhead: true,
++      gridZones: true, overhead: true, footing: { depth: 9, below: 1 },   // (order 8: the store's edge, its walls carried down into the dark)
++      clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
+       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
+       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
+       //  room LBA1 kept behind a moving door, its door broken through the corridor wall at cells 41–42 of z 30)
+diff --git a/lba3/src/game/lba1room.js b/lba3/src/game/lba1room.js
+index 9aff5ccf..81827f43 100644
+--- a/lba3/src/game/lba1room.js
++++ b/lba3/src/game/lba1room.js
+@@ -50,7 +50,11 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+   const colTop = new Map(), colFloor = new Map();
+   for (const [k, runs] of Object.entries(L.cols)) { colFloor.set(k, runs[0][0] + runs[0][1]); colTop.set(k, runs[runs.length - 1][0] + runs[runs.length - 1][1]); }
+   const outside = (x, z) => !L.cols[`${x},${z}`];
++  // (opts.clear: [x0, z0, x1, z1, y] — the cells of that box at height y and up taken out, drawn and solid: ceiling beams
++  //  whose walls and pillars the cut-away took, left hanging over the rooms as slabs over nothing)
++  const cleared = (x, y, z) => !!opts.clear && opts.clear.some(([x0, z0, x1, z1, yc]) => y >= yc && x >= x0 && x <= x1 && z >= z0 && z <= z1);
+   const cut = (x, y, z) => {
++    if (cleared(x, y, z)) return true;
+     if (opts.noCut) return false;
+     const k = `${x},${z}`, f = colFloor.get(k) ?? 0;
+     const near = outside(x + 1, z) || outside(x, z + 1) || outside(x + 1, z + 1) || x >= SX - 1 || z >= SZ - 1;
+@@ -109,15 +113,22 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+       const [x, z] = k.split(',').map(Number), f = colStack.get(k);
+       let y = f; while (y < 25 && !C.has(`${x},${y},${z}`)) y++;
+       if (y >= 25 || y - f < OVER) continue;
+-      const ck = `${Math.floor(x / OVER_CHUNK)},${Math.floor(z / OVER_CHUNK)}`;
++      const ci = Math.floor(x / OVER_CHUNK), cj = Math.floor(z / OVER_CHUNK);
+       for (; y < 25; y++) {
+-        const key = `${x},${y},${z}`; if (!C.has(key) || lidOf.has(key)) continue;
+-        if (!chunks.has(ck)) chunks.set(ck, { cells: [], low: 25 });
++        const key = `${x},${y},${z}`; if (!C.has(key) || lidOf.has(key) || cleared(x, y, z)) continue;
++        // (order 8: a leftover he can stand on — a gallery's floor, a flight of steps up over a room — is a lid of its own,
++        //  apart from the beams round it: cut while it hides him below, kept while he stands on it. In one lid with the
++        //  beams over it, the beams on his sight line took his own floor away and left him in black void)
++        //  (a floor: open above, and a slab over nothing or a step of a flight; a wall's top, with its wall under it, is not)
++        let walk = !C.has(`${x},${y - 1},${z}`) || C.get(key)[0] >= 2;
++        for (let a = 1; a <= OVER && walk; a++) if (C.has(`${x},${y + a},${z}`)) walk = false;
++        const ck = `${ci},${cj}${walk ? ',w' : ''}`;
++        if (!chunks.has(ck)) chunks.set(ck, { cells: [], low: 25, i: ci, j: cj });
+         const c = chunks.get(ck); c.cells.push(key); c.low = Math.min(c.low, y);
+       }
+     }
+-    for (const [ck, c] of chunks) {
+-      const [i, j] = ck.split(',').map(Number), n = lids.length;
++    for (const c of chunks.values()) {
++      const { i, j } = c, n = lids.length;
+       lids.push({ i: n, box: [i * OVER_CHUNK, 0, j * OVER_CHUNK, (i + 1) * OVER_CHUNK, 25, (j + 1) * OVER_CHUNK], cut: c.low, over: true, cells: c.cells.length, f: 1, active: false, hold: 0 });
+       for (const key of c.cells) { addLid(key, n); const [x, y, z] = key.split(',').map(Number); overCell.set(ock(x, y, z), n); }
+     }
+@@ -172,6 +183,26 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+       const P = (u, v) => { const t = slopeTop(shape, u, v); const w = W(x + u, y + t, z + v); return [w[0], w[1], w[2]]; };
+       const a = P(0, 0), b = P(0, 1), cc = P(1, 1), d = P(1, 0);
+       quad('top', a, b, cc, d, [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [cc[0] / 1.7, cc[2] / 1.7], [d[0] / 1.7, d[2] / 1.7]]);
++      // (order 8: and its sides, up to the slope, where nothing stands beside it: a flight of steps over a room was its
++      //  tops alone, pale sheets hanging in the air)
++      //  A step hanging less than a man's height over the floor below (LBA1's flights: one cell of slope over nothing)
++      //  is filled down to that floor, sides and a collider, so the flight stands on the floor as a solid stair; one
++      //  higher up keeps the open way under it.
++      let yb = y;
++      if (!C.has(`${x},${y - 1},${z}`)) { let k = y - 1; while (k >= 0 && !C.has(`${x},${k},${z}`)) k--; if (k >= 0 && y - (k + 1) < 4) yb = k + 1; }
++      if (yb < y) B.col(ox + (x + 0.5) * CELL, oz + (z + 0.5) * CELL, CELL / 2, CELL / 2, y * CH, { bottom: yb * CH, seeThrough: true, noStand: true });
++      const S = {
++        '1,0': [[1, 1], [1, 0]], '-1,0': [[0, 0], [0, 1]], '0,1': [[0, 1], [1, 1]], '0,-1': [[1, 0], [0, 0]],
++      };
++      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
++        const n = C.get(`${x + dx},${y},${z + dz}`);
++        if (n && (n[0] >= 2 || solidAt(x + dx, y, z + dz))) continue;
++        const [[u0, v0], [u1, v1]] = S[`${dx},${dz}`], t0 = slopeTop(shape, u0, v0), t1 = slopeTop(shape, u1, v1);
++        if (t0 + t1 < 0.02 && yb === y) continue;
++        const q = [W(x + u0, yb, z + v0), W(x + u1, yb, z + v1), W(x + u1, y + t1, z + v1), W(x + u0, y + t0, z + v0)];
++        const h = (p) => (dx ? p[2] : p[0]) / 1.7;
++        quad('side', q[0], q[1], q[2], q[3], [dx, 0, dz], col, q.map((p) => [h(p), p[1] / 1.7]));
++      }
+     }
+   }
+   const mats = {
+@@ -203,6 +234,59 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+       B.group.add(mesh);
+     }
+   }
++  // ---- the footing (opts.footing: { depth, below }): the outer walls on the camera's side (+x, +z) that stand on the
++  // grid's lowest levels (their bottom cell at or under `below`) carried on down `depth` m into the dark, fading to black.
++  // The grid's floors are one cell thick over nothing: where the view follows the hero to the edge of a big room (the
++  // asylum's store, at its lowest corner) the frame was 30–40 % black hole under the floor; now the building's mass goes
++  // down into the dark under its walls. One mesh, the room's wall material, no shadow.
++  if (opts.footing) {
++    const { depth = 9, below = 1 } = opts.footing, rows = [[0, 1], [depth / 3, 0.62], [depth, 0]];   // (down from the bottom: the colour's share)
++    const P = [], N = [], Co = [], U = [];
++    for (const [k, runs] of Object.entries(L.cols)) {
++      const [x, z] = k.split(',').map(Number), y0 = runs[0][0];
++      if (y0 > below) continue;
++      const col = pal[C.get(`${x},${y0},${z}`)?.[1] ?? runs[0][3]] || pal[0];
++      for (const [dx, dz] of [[1, 0], [0, 1]]) {
++        if (!outside(x + dx, z + dz)) continue;
++        const ends = dx ? [[x + 1, z], [x + 1, z + 1]] : [[x + 1, z + 1], [x, z + 1]];   // (wound to face the camera, as the room's own faces: a back face lit from behind read as a pale wedge)
++        const [a, b] = ends.map(([ex, ez]) => [ox + ex * CELL, oz + ez * CELL]), top = y0 * CH;
++        for (let i = 0; i < rows.length - 1; i++) {
++          const y1 = top - rows[i][0], y2 = top - rows[i + 1][0], f1 = rows[i][1], f2 = rows[i + 1][1];
++          for (const [p, y, f] of [[a, y1, f1], [b, y1, f1], [b, y2, f2], [a, y1, f1], [b, y2, f2], [a, y2, f2]]) {
++            P.push(p[0], y, p[1]); N.push(dx, 0, dz); Co.push(col.r * f, col.g * f, col.b * f); U.push((dx ? p[1] : p[0]) / 1.7, y / 1.7);
++          }
++        }
++      }
++    }
++    // (and where a floor runs out to the grid's edge on the camera's side with no wall of its own — the asylum's east
++    //  walk, its south end — the cut wall's rim the room's other edges have: a parapet two cells high, 0.25 m thick, its
++    //  face and top in the wall's stone, a collider so the floor no longer ends in a drop into black)
++    const T = 0.25 / CELL, RH = 2;
++    const quadP = (pts, n, c) => { for (const i of [0, 1, 2, 0, 2, 3]) { const [px, py, pz] = pts[i]; P.push(px, py, pz); N.push(n[0], n[1], n[2]); Co.push(c.r, c.g, c.b); U.push((n[1] ? px : n[0] ? pz : px) / 1.7, (n[1] ? pz : py) / 1.7); } };
++    for (const [k, runs] of Object.entries(L.cols)) {
++      const [x, z] = k.split(',').map(Number), f = colFloor.get(k);
++      if (colTop.get(k) !== f) continue;   // (a wall stands there: cut to its rim already)
++      const col = pal[C.get(`${x},${f - 1},${z}`)?.[1] ?? runs[runs.length - 1][3]] || pal[0];
++      for (const [dx, dz] of [[1, 0], [0, 1]]) {
++        if (!outside(x + dx, z + dz)) continue;
++        const X0 = dx ? x + 1 - T : x, X1 = x + 1, Z0 = dz ? z + 1 - T : z, Z1 = z + 1, y0 = f * CH, y1 = (f + RH) * CH;
++        const w = (cx2, y, cz2) => [ox + cx2 * CELL, y, oz + cz2 * CELL];
++        if (dx) quadP([w(X1, y0, Z1), w(X1, y0, Z0), w(X1, y1, Z0), w(X1, y1, Z1)], [1, 0, 0], col);   // (wound to face the camera)
++        else quadP([w(X0, y0, Z1), w(X1, y0, Z1), w(X1, y1, Z1), w(X0, y1, Z1)], [0, 0, 1], col);
++        quadP([w(X0, y1, Z0), w(X0, y1, Z1), w(X1, y1, Z1), w(X1, y1, Z0)], [0, 1, 0], col);
++        B.col(ox + (X0 + X1) / 2 * CELL, oz + (Z0 + Z1) / 2 * CELL, (X1 - X0) * CELL / 2 + 0.05, (Z1 - Z0) * CELL / 2 + 0.05, y1, { bottom: y0 - 0.2, seeThrough: true, noStand: true });
++      }
++    }
++    if (P.length) {
++      const g = new THREE.BufferGeometry();
++      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
++      g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
++      g.setAttribute('color', new THREE.Float32BufferAttribute(Co, 3));
++      g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
++      const mesh = new THREE.Mesh(g, mats.side); mesh.name = 'footing'; mesh.castShadow = false; mesh.receiveShadow = true;
++      B.group.add(mesh);
++    }
++  }
+ 
+   // ---- colliders: each column's runs of solid cells, merged into rectangles of equal runs
+   const runs = new Map();
+@@ -271,8 +355,13 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+           }
+         }
+       }
++      // (order 8: never the leftover he stands on — its cell under his feet, or the step he is on: cut, it left him in
++      //  black void and took the flight away under him)
++      const fx = Math.floor(p.x), fz = Math.floor(p.z), fy = Math.floor(p.y);
++      const under = [...(lidOf.get(`${fx},${fy - 1},${fz}`) || []), ...(lidOf.get(`${fx},${fy},${fz}`) || [])];
++      for (const i of under) if (lids[i].over) seen.delete(i);
+       for (const l of lids) {
+-        if (l.over) { l.hold = seen.has(l.i) ? 0.6 : Math.max(0, l.hold - dt); l.active = l.hold > 0; }   // (held a moment: no flicker)
++        if (l.over) { l.hold = seen.has(l.i) ? 0.6 : under.includes(l.i) ? 0 : Math.max(0, l.hold - dt); l.active = l.hold > 0; }   // (held a moment: no flicker)
+         else {
+           const [x0, y0, z0, x1, y1, z1] = l.box, m = l.active ? 0.3 : 0;   // (a little slack to leave: no flicker in a doorway)
+           l.active = p.x >= x0 - m && p.x <= x1 + m && p.z >= z0 - m && p.z <= z1 + m && p.y >= y0 - 1.5 && p.y <= y1 + 0.5;

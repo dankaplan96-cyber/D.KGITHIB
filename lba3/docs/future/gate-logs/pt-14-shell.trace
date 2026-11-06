@@ -1,0 +1,104 @@
+[0.3] go → (1805.2, -6.0) plan ok=true pts=5 left=0.11
+[6.6] go: transition (c3shaft → c3shaft, trans true) at (1805.25, -5.04)
+[7.7] go → (1889.9, 2.3) plan ok=true pts=2 left=0.33
+[8.6] go → (1889.9, 2.3) plan ok=true pts=2 left=0.12
+[10.5] go → (1889.8, -2.4) plan ok=true pts=3 left=0.45
+[12.8] go → (1889.8, -2.4) plan ok=true pts=2 left=0.32
+[14.5] go → (1894.0, -4.1) plan ok=true pts=2 left=0.38
+[20.2] go → (1894.0, -1.5) plan ok=true pts=3 left=0.25
+[22.1] go → (1894.0, -6.7) plan ok=true pts=3 left=0.02
+[25.5] go → (1891.4, -7.2) plan ok=true pts=2 left=0.5
+[26.8] go → (1891.4, -7.2) plan ok=false pts=2 left=0.36
+[29.4] go → (1905.7, -7.5) plan ok=true pts=8 left=0.16
+[33.6] threat: fight
+[34.8] fight c3drone d=5.4 st=chase aim=it e@1895.4,0.0,0.8 me@1893.7,3.0,-5.0 ball=idle hp 3→3 me 11 mp 14
+[36.0] fight c3drone d=6.0 st=dead aim=it e@1895.5,0.0,1.0 me@1893.7,3.0,-5.0 ball=idle hp 3→-1 me 11 mp 13.344166666666668
+[36.0] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[45.2] go: transition (c3deep → c3deep, trans true) at (1904.93, -7.37)
+[46.7] go → (1996.9, -7.4) plan ok=false pts=4 left=2.03
+[46.7] threat: fight
+[48.2] fight c3mite0 d=5.4 st=dead aim=it e@1990.3,3.0,0.4 me@1988.9,3.0,4.1 ball=idle hp 2→-2 me 11 mp 13.344166666666668
+[48.2] fight → {"left":0,"dead":false,"hp":11,"t":1.2}
+[52.4] threat: fight
+[53.9] fight c3mite1 d=1.1 st=chase aim=it e@1992.5,3.0,-3.6 me@1993.0,3.0,-2.2 ball=idle hp 2→2 me 11 mp 14
+[55.3] fight c3mite1 d=1.4 st=dead aim=it e@1991.6,3.0,-3.9 me@1993.0,3.0,-2.2 ball=idle hp 2→-2 me 11 mp 13.344166666666668
+[55.3] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[62.9] stuck at (1994.6, -7.4): replan
+[68.3] stuck at (1994.9, -7.5): replan
+[71.2] stuck at (1994.6, -7.3): replan
+[76.6] stuck at (1994.6, -7.4): replan
+[82.0] stuck at (1994.7, -7.6): replan
+[87.5] stuck at (1994.7, -7.3): replan
+[93.3] go → (2000.2, -9.5) plan ok=false pts=2 left=5.33
+[98.4] stuck at (1994.9, -8.9): replan
+[101.3] stuck at (1994.7, -8.7): replan
+[102.1] hurt 12→10 at (1995.7, -0.3, -7.8) near: nobody 
+[104.3] stuck at (1995.4, -8.2): replan
+[117.2] stuck at (2001.6, -9.0): replan
+[120.2] stuck at (2001.7, -8.7): replan
+[125.6] stuck at (2001.3, -9.0): replan
+[130.6] go → (1997.2, -7.7) plan ok=true pts=5 left=0.32
+[139.9] go → (1999.3, -11.8) plan ok=false pts=2 left=2.96
+[145.0] stuck at (1998.9, -8.9): replan
+[150.5] stuck at (1998.8, -8.8): replan
+[153.4] stuck at (1998.8, -8.7): replan
+[156.4] stuck at (1998.9, -9.0): replan
+[159.3] stuck at (1998.9, -8.9): replan
+[162.2] stuck at (1998.9, -9.0): replan
+[167.5] go → (1996.2, -10.0) plan ok=false pts=2 left=1.32
+[172.5] stuck at (1996.4, -8.7): replan
+[175.5] stuck at (1996.1, -9.0): replan
+[180.9] stuck at (1996.3, -8.8): replan
+[183.9] stuck at (1996.3, -9.0): replan
+[189.3] stuck at (1996.1, -8.7): replan
+[192.2] stuck at (1996.1, -9.0): replan
+[200.5] go → (1995.7, 9.3) plan ok=false pts=4 left=1.03
+[215.7] stuck at (1996.7, 9.3): replan
+[217.0] go → (1995.7, 8.6) plan ok=true pts=2 left=0.12
+[217.6] go → (1995.7, 7.9) plan ok=true pts=2 left=0.22
+[218.1] go → (1995.7, 7.1) plan ok=true pts=2 left=0.26
+[218.4] go → (1995.7, 6.4) plan ok=true pts=2 left=0.24
+[218.8] go → (1995.7, 5.7) plan ok=true pts=2 left=0.23
+[219.2] go → (1995.7, 5.0) plan ok=true pts=2 left=0.22
+[219.5] go → (1993.8, 4.6) plan ok=false pts=3 left=1.45
+[224.6] stuck at (1995.2, 4.9): replan
+[225.3] hurt 10→8 at (1996.1, -0.3, 3.9) near: nobody 
+[227.5] stuck at (1995.7, 4.2): replan
+[240.5] stuck at (1995.3, 4.8): replan
+[242.4] go → (1994.5, 3.6) plan ok=true pts=2 left=0.28
+[248.1] go → (1996.4, 2.6) plan ok=true pts=2 left=0.2
+[252.2] go → (1998.1, 1.2) plan ok=true pts=2 left=0.15
+[255.6] go → (2000.0, 0.0) plan ok=true pts=2 left=0.17
+[258.5] go → (2001.6, -1.5) plan ok=true pts=2 left=0.18
+[262.7] go → (2003.8, -1.9) plan ok=true pts=2 left=0.03
+[266.2] go → (2008.6, -9.4) plan ok=false pts=3 left=0.64
+[268.6] hurt 8→7 at (2008.1, 3.0, -5.0) near: c3mite2:lunge 
+[271.3] go: transition (c3gallery → c3gallery, trans true) at (2008.50, -8.62)
+[274.7] go → (2098.5, -6.7) plan ok=false pts=3 left=0.31
+[279.5] go: transition (c3sendell → c3sendell, trans true) at (2098.28, -5.99)
+[286.7] go → (2200.0, -5.4) plan ok=true pts=2 left=0.21
+[292.0] dodge a bolt
+[292.1] dodge a bolt
+[292.1] dodge a bolt
+[293.7] go → (2195.4, -2.3) plan ok=true pts=2 left=0.07
+[302.0] dodge a bolt
+[302.1] dodge a bolt
+[303.7] go → (2197.4, 3.8) plan ok=true pts=2 left=0.29
+[308.4] dodge a bolt
+[308.5] dodge a bolt
+[308.5] dodge a bolt
+[310.7] go → (2197.4, 3.8) plan ok=true pts=2 left=0.26
+[316.0] core fight (pylons): {"stunThrows":5,"stuns":4,"shots":4,"hurt":2,"t":12.2}
+[318.4] dodge a bolt
+[318.5] dodge a bolt
+[320.0] dodge a bolt
+[320.1] dodge a bolt
+[321.7] dodge a bolt
+[321.7] go → (2206.2, 0.5) plan ok=true pts=2 left=0.3
+[322.2] hurt 9→8 at (2199.6, 0.3, 11.2) near: guardian:stunned 
+[325.3] go → (2206.3, 0.6) plan ok=true pts=2 left=0.52
+[329.5] dodge a bolt
+[329.5] dodge a bolt
+[330.6] go → (2206.2, 0.5) plan ok=true pts=2 left=0.37
+[335.4] go → (2206.1, 0.5) plan ok=true pts=2 left=0.26
+[347.1] core fight (coil): {"stunThrows":4,"stuns":3,"shots":4,"hurt":2,"t":10.6}

@@ -1,0 +1,18 @@
+{
+ "loaded at": {
+  "pos": [
+   -57.25,
+   5,
+   -0.08
+  ],
+  "blocked": false
+ },
+ "walk to the plaza": {
+  "r": "arrived",
+  "at": [
+   -50.99,
+   5,
+   1.88
+  ]
+ }
+}

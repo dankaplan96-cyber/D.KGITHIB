@@ -1,0 +1,12 @@
+low    street     calls  478 (p95 640, max 667, shadow 0) · GPU draws 561 · tris 693k (max 858k) · submit 14.4 ms · first frame 23 ms · new programs 0 · pr 0.85 · lamps 2
+low    interior   calls  118 (p95 123, max 123, shadow 0) · GPU draws 118 · tris 234k (max 254k) · submit 6.5 ms · first frame 21 ms · new programs 0 · pr 0.85 · lamps 2
+low    combat     calls  147 (p95 149, max 149, shadow 0) · GPU draws 147 · tris 151k (max 152k) · submit 6.6 ms · first frame 23 ms · new programs 0 · pr 0.85 · lamps 2
+low    transition calls  632 (p95 637, max 637, shadow 0) · GPU draws 809 · tris 922k (max 922k) · submit 12.3 ms · first frame 12 ms · new programs 0 · pr 0.85 · lamps 2
+medium street     calls  527 (p95 732, max 763, shadow 35) · GPU draws 709 · tris 1086k (max 1317k) · submit 18.1 ms · first frame 17 ms · new programs 0 · pr 1 · lamps 4
+medium interior   calls  122 (p95 127, max 127, shadow 3) · GPU draws 122 · tris 451k (max 472k) · submit 7.3 ms · first frame 29 ms · new programs 0 · pr 1 · lamps 4
+medium combat     calls  216 (p95 218, max 218, shadow 70) · GPU draws 216 · tris 260k (max 260k) · submit 9.8 ms · first frame 16 ms · new programs 0 · pr 1 · lamps 4
+medium transition calls  701 (p95 706, max 706, shadow 29) · GPU draws 984 · tris 1309k (max 1309k) · submit 14.5 ms · first frame 16 ms · new programs 0 · pr 1 · lamps 4
+high   street     calls  602 (p95 837, max 868, shadow 46) · GPU draws 817 · tris 1221k (max 1437k) · submit 21.7 ms · first frame 15 ms · new programs 0 · pr 1 · lamps 8
+high   interior   calls  136 (p95 142, max 142, shadow 3) · GPU draws 136 · tris 451k (max 472k) · submit 8.8 ms · first frame 32 ms · new programs 0 · pr 1 · lamps 8
+high   combat     calls  229 (p95 231, max 231, shadow 70) · GPU draws 229 · tris 260k (max 260k) · submit 7.8 ms · first frame 18 ms · new programs 0 · pr 1 · lamps 8
+high   transition calls  804 (p95 809, max 809, shadow 39) · GPU draws 1136 · tris 1549k (max 1549k) · submit 16.7 ms · first frame 16 ms · new programs 0 · pr 1 · lamps 8

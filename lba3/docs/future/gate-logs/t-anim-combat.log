@@ -1,0 +1,55 @@
+=== anim-combat start 2026-11-01T19:49:22Z
+MEASURE throw 30 fps {"fps":30,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.722,"up":1.741,"side":-0.342}},"freeAt":0.4,"backStep":null,"backFootCm":0,"maxLegStep60":0.273,"maxArmStep60":0.889,"nan":false}
+PASS throw 30 fps: the ball leaves at the release clock (0.16) {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.722,"up":1.741,"side":-0.342}}
+PASS throw 30 fps: from the hand, high and in front of him {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.722,"up":1.741,"side":-0.342}}
+PASS throw 30 fps: the controls come back at 0.36 s after the press, as before {"freeAt":0.4}
+PASS throw 30 fps: the planted back foot stays put while the throw holds him (< 3 cm) {"cm":0}
+PASS throw 30 fps: no joint jumps (legs/chest ≤ 0.9, arms ≤ 1.2 rad per 60 fps frame) {"fps":30,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.722,"up":1.741,"side":-0.342}},"freeAt":0.4,"backStep":null,"backFootCm":0,"maxLegStep60":0.273,"maxArmStep60":0.889,"nan":false}
+MEASURE throw 60 fps {"fps":60,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.558,"up":1.82,"side":-0.413}},"freeAt":0.383,"backStep":null,"backFootCm":0,"maxLegStep60":0.294,"maxArmStep60":0.738,"nan":false}
+PASS throw 60 fps: the ball leaves at the release clock (0.16) {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.558,"up":1.82,"side":-0.413}}
+PASS throw 60 fps: from the hand, high and in front of him {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.558,"up":1.82,"side":-0.413}}
+PASS throw 60 fps: the controls come back at 0.36 s after the press, as before {"freeAt":0.383}
+PASS throw 60 fps: the planted back foot stays put while the throw holds him (< 3 cm) {"cm":0}
+PASS throw 60 fps: no joint jumps (legs/chest ≤ 0.9, arms ≤ 1.2 rad per 60 fps frame) {"fps":60,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.558,"up":1.82,"side":-0.413}},"freeAt":0.383,"backStep":null,"backFootCm":0,"maxLegStep60":0.294,"maxArmStep60":0.738,"nan":false}
+MEASURE throw 120 fps {"fps":120,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.477,"up":1.849,"side":-0.448}},"freeAt":0.375,"backStep":null,"backFootCm":0,"maxLegStep60":0.412,"maxArmStep60":0.587,"nan":false}
+PASS throw 120 fps: the ball leaves at the release clock (0.16) {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.477,"up":1.849,"side":-0.448}}
+PASS throw 120 fps: from the hand, high and in front of him {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.477,"up":1.849,"side":-0.448}}
+PASS throw 120 fps: the controls come back at 0.36 s after the press, as before {"freeAt":0.375}
+PASS throw 120 fps: the planted back foot stays put while the throw holds him (< 3 cm) {"cm":0}
+PASS throw 120 fps: no joint jumps (legs/chest ≤ 0.9, arms ≤ 1.2 rad per 60 fps frame) {"fps":120,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.477,"up":1.849,"side":-0.448}},"freeAt":0.375,"backStep":null,"backFootCm":0,"maxLegStep60":0.412,"maxArmStep60":0.587,"nan":false}
+MEASURE throw on the move (walking) {"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.202,"up":1.838,"side":-0.456},"legs":"walk"},"nan":false}
+PASS throw on the move (walking): the legs walk, the ball leaves the hand at 0.16, over the head and not behind it {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.202,"up":1.838,"side":-0.456},"legs":"walk"}
+MEASURE throw on the move (sideways, locked) {"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.137,"up":1.842,"side":-0.491},"legs":"walk"},"nan":false}
+PASS throw on the move (sideways, locked): the legs walk, the ball leaves the hand at 0.16, over the head and not behind it {"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.137,"up":1.842,"side":-0.491},"legs":"walk"}
+MEASURE slash1 30 fps {"fps":30,"s":0.11,"a":0.1,"hitAt":0.1667,"yawFirst":0.82,"yawLast":-1.54,"yaws":[0.82,-0.5,-0.55,-1.54],"plantedGlideCm":3.4,"nan":false}
+PASS slash1 30 fps: the hit lands in the active frames (startup 0.11, active 0.1) {"hitAt":0.1667}
+PASS slash1 30 fps: the blade sweeps from his left to his right through the active frames {"first":0.82,"last":-1.54}
+PASS slash1 30 fps: the planted feet don't skate (< 12 cm over the strike and its step) {"cm":3.4}
+MEASURE slash1 60 fps {"fps":60,"s":0.11,"a":0.1,"hitAt":0.15,"yawFirst":1.87,"yawLast":-1.42,"yaws":[1.87,1.05,0.32,0.27,0.23,-0.42,-0.96,-1.42],"plantedGlideCm":5.7,"nan":false}
+PASS slash1 60 fps: the hit lands in the active frames (startup 0.11, active 0.1) {"hitAt":0.15}
+PASS slash1 60 fps: the blade sweeps from his left to his right through the active frames {"first":1.87,"last":-1.42}
+PASS slash1 60 fps: the planted feet don't skate (< 12 cm over the strike and its step) {"cm":5.7}
+MEASURE slash1 120 fps {"fps":120,"s":0.11,"a":0.1,"hitAt":0.15,"yawFirst":2.03,"yawLast":-1.36,"yaws":[2.03,1.62,1.21,0.82,0.46,0.43,0.4,0.37,0.34,0.31,-0.03,-0.34,-0.63,-0.89,-1.14,-1.36],"plantedGlideCm":4.2,"nan":false}
+PASS slash1 120 fps: the hit lands in the active frames (startup 0.11, active 0.1) {"hitAt":0.15}
+PASS slash1 120 fps: the blade sweeps from his left to his right through the active frames {"first":2.03,"last":-1.36}
+PASS slash1 120 fps: the planted feet don't skate (< 12 cm over the strike and its step) {"cm":4.2}
+MEASURE jab {"s":0.07,"a":0.08,"r":0.17,"reachFwd":0.85,"at":0.15}
+PASS jab: the fist is furthest out in (or a frame after) the active frames {"s":0.07,"a":0.08,"r":0.17,"reachFwd":0.85,"at":0.15}
+MEASURE interruptions {"hitInCoil":{"anim":"hurt","over":false,"ball":"idle","launched":0,"later":"idle","ballLater":"idle","busy":false,"nan":false},"deathInCharge":{"dead":true,"anim":"dead","ball":"idle","launched":0,"nan":false},"pause":{"frozen":true,"launched":0,"anim":"idle","ball":"idle","over":false,"nan":false},"dialogue":{"inTalk":"talk","after":"idle","busy":false,"nan":false},"swap":{"weapon":"ball","anim":"idle","busy":false,"sword":false,"nan":false},"mash":{"anim":"idle","busy":false,"ball":"idle","launched":0,"over":false,"nan":false},"scene":{"anim":"idle","ball":"idle","launched":0,"over":false,"nan":false,"feetW":1}}
+PASS a hit in the coil: no throw, no whip played on, the ball home, the reaction then the stance {"anim":"hurt","over":false,"ball":"idle","launched":0,"later":"idle","ballLater":"idle","busy":false,"nan":false}
+PASS death in a charge: falls, the ball is not left in the hand, nothing thrown {"dead":true,"anim":"dead","ball":"idle","launched":0,"nan":false}
+PASS pause in the coil: frozen while paused, called off on resume, back to the stance, ball home {"frozen":true,"launched":0,"anim":"idle","ball":"idle","over":false,"nan":false}
+PASS dialogue in a strike: he talks, then stands again (nothing stuck) {"inTalk":"talk","after":"idle","busy":false,"nan":false}
+PASS a weapon swap in a strike: the strike ends, the new weapon shows, idle {"weapon":"ball","anim":"idle","busy":false,"sword":false,"nan":false}
+PASS every button in one frame: no stuck pose, no ball left in the hand {"anim":"idle","busy":false,"ball":"idle","launched":0,"over":false,"nan":false}
+PASS a scene change in a charge: the ball home, nothing held, the feet re-planted {"anim":"idle","ball":"idle","launched":0,"over":false,"nan":false,"feetW":1}
+MEASURE stance {"calm":{"guard":false,"w":0},"locked":{"guard":true,"w":0.98,"headY":0.86},"after":{"guard":false,"w":0.01}}
+PASS combat stance: off at rest, on with a lock (the head turned toward the target on his left), off 2.5 s after {"calm":{"guard":false,"w":0},"locked":{"guard":true,"w":0.98,"headY":0.86},"after":{"guard":false,"w":0.01}}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 35 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== anim-combat end rc=0 wall=126s 2026-11-01T19:51:28Z

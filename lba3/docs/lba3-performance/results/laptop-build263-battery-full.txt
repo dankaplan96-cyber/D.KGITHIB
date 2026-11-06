@@ -1,0 +1,22 @@
+LBA3 benchmark (full) · build 0.38.0 (build 263) · 2026-10-29 20:09 · the user's Vega 8 / Ryzen 5 3500U, ON BATTERY (battery profile applied)
+display: OS 60 Hz · measured from rAF 55.9 Hz, with nothing drawn 56.2 Hz (17.8 ms) — the display/OS paced at ~56 on battery in this run
+
+summary · fps fixed / as played (auto resolution factor)
+             low                 medium              high
+  street     45.9 / 54.7 (×0.75) 47.1 / 53.9 (×0.5)  31.8 / 41.7 (×0.5)
+  interior   60 / 60             60 / 46.3 (×0.5)    51.9 / 52.1
+  combat     53.7 / 52.9         54.8 / 49.3         49 / 46.2
+  transition 58.6 / 59.5         56.1 / 50.9         54.8 / 50.1
+  arrival    32.5 / 46.5         44.8 / 42.4         40.1 / 39.2
+  hamalayi   56.3 / 59.3         55.8 / 54          45.1 / 47.9
+
+KEY: THE BATTERY PROFILE'S CUTS DO BUY GPU TIME ON BATTERY (correcting the reading of build 263's Auto run)
+  Medium street:   as is (cuts on) 45.5 fps, GPU 17.3 ms  ·  battery profile off 32.1 fps, GPU 25.8 ms
+  Medium interior: as is (cuts on) 53.2 fps, GPU 10.8 ms  ·  battery profile off 42.8 fps, GPU 20.2 ms
+  → MSAA 2× + PCF's 17-read filter cost ~9 ms of GPU on battery. Without the cuts Medium would run ~32 (street) / ~43 (interior).
+  Other levers (Medium street, cuts on): no shadows 49.1 (GPU 15.2, submit −3 ms) · res ×0.6 49.3 (GPU 13.9) · no lamps 48.9 ·
+  shadow map 512 47.8 · FXAA instead of MSAA 40.1 (FXAA's pass costs ~4 ms here) · draw batches off 45.8 (calls 207).
+  High: street 26.9 fps (GPU 26.8: 4096 shadow map 7.2 ms); not viable on battery.
+  Arrival: first visit 666 ms behind black (draw batches 297 + shadow batches 137); Low arrival 32.5 fixed.
+DECISION (LOOK-FIRST-2): on battery keep the cuts that are nearly invisible at 1366×768 (no MSAA, the 5-read shadow filter,
+  2 lamps), but never the ugly ones: shadows always on, resolution never below ×0.85 (was ×0.5), no Low/no-shadow profiles in Auto.

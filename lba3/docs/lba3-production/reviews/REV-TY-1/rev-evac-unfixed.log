@@ -1,0 +1,25 @@
+ISO: "chapter set to evacuation by flags (c1_water, c1_plan)"
+present: [{"id":"bram","present":true},{"id":"odile","present":true},{"id":"nell","present":true}]
+talk bram: {"r":"no-dialog:stuck","state":"play","lines":0}
+bram lines: []
+talk odile: {"r":"talked","to":"pippa","state":"shop","lines":2}
+odile lines: ["n_pippa: Everything I had went down the tunnels. Best business I ever didn't make."]
+talk nell: {"r":"talked","state":"shop","lines":0}
+nell lines: []
+end: {"state":"shop","room":"citadel","pos":[-46.93,2.2,-2.44],"hp":10,"chapter":"evacuation","obj":"Tell Zoé what happened in the well (home, Bug Street)","items":["evacplan"],"coins":4,"clovers":3,"l":{}}
+errors: []
+[165.8] stuck at (-46.5, -1.6): replan
+[168.8] stuck at (-46.5, -1.8): replan
+[174.3] stuck at (-46.3, -1.3): replan
+[179.8] stuck at (-46.4, -1.5): replan
+[185.2] stuck at (-45.9, -0.8): replan
+[190.6] stuck at (-46.8, -2.2): replan
+[196.8] go → (-110.7, 36.3) plan ok=false pts=1 left=74.57
+[199.3] stuck at (-46.5, -1.6): replan
+[202.2] stuck at (-46.4, -1.7): replan
+[205.2] stuck at (-46.7, -2.0): replan
+[210.7] stuck at (-45.9, -0.6): replan
+[216.1] stuck at (-46.3, -1.4): replan
+[221.5] stuck at (-45.8, -0.5): replan
+[367.6] go → (-104.8, 36.0) plan ok=false pts=3 left=69.36
+[507.7] go → (-39.5, 68.0) plan ok=false pts=2 left=67.24

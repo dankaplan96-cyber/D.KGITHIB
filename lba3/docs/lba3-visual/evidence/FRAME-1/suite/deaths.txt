@@ -1,0 +1,184 @@
+PASS guard: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":6.163,"who":"shR","at":0.117,"root":1.704}
+PASS guard: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0.217,"clip0":0,"down":0,"inWall":0}
+PASS guard: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard: lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard: gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.21}]
+MEASURE guard {"rate":6.163,"root":1.704,"clip":0,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS guardG: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guardG: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":11.535,"who":"shR","at":0.683,"root":4.618}
+PASS guardG: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.031,"at":0.25,"clip0":0.012,"down":0,"inWall":0}
+PASS guardG: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guardG: lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.72},"armOut":1.08,"mode":"fall"}
+PASS guardG: gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guardG: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.32}]
+MEASURE guardG {"rate":11.535,"root":4.618,"clip":0.031,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS fclone: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS fclone: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":11.535,"who":"shR","at":0.683,"root":4.243}
+PASS fclone: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.197,"at":0.017,"clip0":0.206,"down":0,"inWall":0}
+PASS fclone: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS fclone: lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.45},"armOut":1.08,"mode":"fall"}
+PASS fclone: gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS fclone: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.35}]
+MEASURE fclone {"rate":11.535,"root":4.243,"clip":0.197,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS gdog: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS gdog: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":8.049,"who":"Group","at":0.45,"root":6.262}
+PASS gdog: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.026,"at":0.167,"clip0":0.017,"down":0,"inWall":0}
+PASS gdog: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.95}
+PASS gdog: gone, out of the scene, nothing left behind, no listener added {"goneT":2.067,"inScene":0,"leftover":[],"listeners":0}
+PASS gdog: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.61}]
+MEASURE gdog {"rate":8.049,"root":6.262,"clip":0.026,"float":0.015,"slide":0,"impact":0.467,"gone":2.067}
+PASS mite: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS mite: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":12,"who":"Group","at":0.45,"root":4.405}
+PASS mite: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.014,"at":0.333,"clip0":0,"down":0,"inWall":0}
+PASS mite: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.9}
+PASS mite: gone, out of the scene, nothing left behind, no listener added {"goneT":1.667,"inScene":0,"leftover":[],"listeners":0}
+PASS mite: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.03}]
+MEASURE mite {"rate":12,"root":4.405,"clip":0.014,"float":0.015,"slide":0,"impact":0.433,"gone":1.667}
+PASS crawler: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS crawler: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":11.817,"who":"Group","at":0.617,"root":5.936}
+PASS crawler: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.045,"at":0.467,"clip0":0,"down":0,"inWall":0}
+PASS crawler: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS crawler: gone, out of the scene, nothing left behind, no listener added {"goneT":2.217,"inScene":0,"leftover":[],"listeners":0}
+PASS crawler: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.13}]
+MEASURE crawler {"rate":11.817,"root":5.936,"clip":0.045,"float":0.015,"slide":0,"impact":0.6,"gone":2.217}
+PASS drone: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS drone: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":3.626,"who":"Mesh","at":0.017,"root":6.111}
+PASS drone: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0,"clip0":0,"down":0,"inWall":0}
+PASS drone: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.024,"slide":0,"settledAt":0.6}
+PASS drone: gone, out of the scene, nothing left behind, no listener added {"goneT":2.517,"inScene":0,"leftover":[],"listeners":0}
+PASS drone: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.06}]
+MEASURE drone {"rate":3.626,"root":6.111,"clip":0,"float":0.024,"slide":0,"impact":0.25,"gone":2.517}
+PASS heavy: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS heavy: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":3.626,"who":"Mesh","at":0.017,"root":6.111}
+PASS heavy: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0,"clip0":0,"down":0,"inWall":0}
+PASS heavy: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.024,"slide":0,"settledAt":0.6}
+PASS heavy: gone, out of the scene, nothing left behind, no listener added {"goneT":2.517,"inScene":0,"leftover":[],"listeners":0}
+PASS heavy: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.05}]
+MEASURE heavy {"rate":3.626,"root":6.111,"clip":0,"float":0.024,"slide":0,"impact":0.25,"gone":2.517}
+PASS sentry: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS sentry: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":4.517,"who":"Group","at":0.767,"root":4.459}
+PASS sentry: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0.083,"clip0":0,"down":0,"inWall":0}
+PASS sentry: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.3}
+PASS sentry: gone, out of the scene, nothing left behind, no listener added {"goneT":2.367,"inScene":0,"leftover":[],"listeners":0}
+PASS sentry: one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.94}]
+MEASURE sentry {"rate":4.517,"root":4.459,"clip":0,"float":0.015,"slide":0,"impact":0.783,"gone":2.367}
+PASS guardian: leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guardian: no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":3.626,"who":"Mesh","at":0.017,"root":7.37}
+PASS guardian: never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.026,"at":0.3,"clip0":0,"down":0.026,"inWall":0}
+PASS guardian: lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":-0.007,"slide":0,"settledAt":0.75}
+PASS guardian: gone, out of the scene, nothing left behind, no listener added {"goneT":3.617,"inScene":0,"leftover":[],"listeners":0}
+PASS guardian: no bonus (as before) []
+MEASURE guardian {"rate":3.626,"root":7.37,"clip":0.026,"float":-0.007,"slide":0,"impact":0.3,"gone":3.617}
+PASS guard: 30 and 60 fps play the same fall (rest within 6 cm, gone within a frame) {"f60":{"rest":[6196.254,0.363,-9],"gone":2.167,"impact":0.633,"rate":6.045,"clip":0.006,"float":0.015},"f30":{"rest":[6196.268,0.363,-9],"gone":2.167,"impact":0.633,"rate":6.05,"clip":0.005,"float":0.015},"f20":{"rest":[6196.284,0.363,-9],"gone":2.15,"impact":0.65,"rate":6.198,"clip":0.001,"float":0.015}}
+PASS guard: long frames (1/20 s) still land it on the ground {"rest":[6196.284,0.363,-9],"gone":2.15,"impact":0.65,"rate":6.198,"clip":0.001,"float":0.015}
+PASS gdog: 30 and 60 fps play the same fall (rest within 6 cm, gone within a frame) {"f60":{"rest":[6196.359,0.505,-9],"gone":2.067,"impact":0.467,"rate":8.049,"clip":0.026,"float":0.015},"f30":{"rest":[6196.375,0.505,-9],"gone":2.067,"impact":0.467,"rate":7.554,"clip":0.026,"float":0.015},"f20":{"rest":[6196.396,0.505,-9],"gone":2.05,"impact":0.5,"rate":7.817,"clip":0.026,"float":0.015}}
+PASS gdog: long frames (1/20 s) still land it on the ground {"rest":[6196.396,0.505,-9],"gone":2.05,"impact":0.5,"rate":7.817,"clip":0.026,"float":0.015}
+PASS mite: 30 and 60 fps play the same fall (rest within 6 cm, gone within a frame) {"f60":{"rest":[6196.257,0.66,-9],"gone":1.667,"impact":0.433,"rate":12,"clip":0.014,"float":0.015},"f30":{"rest":[6196.268,0.66,-9],"gone":1.667,"impact":0.433,"rate":11.145,"clip":0.01,"float":0.015},"f20":{"rest":[6196.281,0.66,-9],"gone":1.65,"impact":0.45,"rate":11.093,"clip":0.007,"float":0.015}}
+PASS mite: long frames (1/20 s) still land it on the ground {"rest":[6196.281,0.66,-9],"gone":1.65,"impact":0.45,"rate":11.093,"clip":0.007,"float":0.015}
+PASS drone: 30 and 60 fps play the same fall (rest within 6 cm, gone within a frame) {"f60":{"rest":[6196.252,0.528,-9],"gone":2.517,"impact":0.25,"rate":3.626,"clip":0,"float":0.024},"f30":{"rest":[6196.247,0.544,-9],"gone":2.5,"impact":0.233,"rate":3.374,"clip":0,"float":0.025},"f20":{"rest":[6196.265,0.533,-9],"gone":2.55,"impact":0.25,"rate":3.144,"clip":0,"float":0.024}}
+PASS drone: long frames (1/20 s) still land it on the ground {"rest":[6196.265,0.533,-9],"gone":2.55,"impact":0.25,"rate":3.144,"clip":0,"float":0.024}
+PASS sentry: 30 and 60 fps play the same fall (rest within 6 cm, gone within a frame) {"f60":{"rest":[6196.12,0.459,-9],"gone":2.367,"impact":0.783,"rate":4.517,"clip":0,"float":0.015},"f30":{"rest":[6196.127,0.459,-9],"gone":2.367,"impact":0.8,"rate":4.489,"clip":0,"float":0.015},"f20":{"rest":[6196.134,0.459,-9],"gone":2.4,"impact":0.8,"rate":4.322,"clip":0,"float":0.015}}
+PASS sentry: long frames (1/20 s) still land it on the ground {"rest":[6196.134,0.459,-9],"gone":2.4,"impact":0.8,"rate":4.322,"clip":0,"float":0.015}
+PASS guard (killed in the air, 1.6 m up): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard (killed in the air, 1.6 m up): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":6.161,"who":"shR","at":0.117,"root":8.675}
+PASS guard (killed in the air, 1.6 m up): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0,"clip0":0,"down":0,"inWall":0}
+PASS guard (killed in the air, 1.6 m up): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard (killed in the air, 1.6 m up): lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard (killed in the air, 1.6 m up): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard (killed in the air, 1.6 m up): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.22}]
+MEASURE guard (killed in the air, 1.6 m up) {"rate":6.161,"root":8.675,"clip":0,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS gdog (killed in the air, 1.6 m up): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS gdog (killed in the air, 1.6 m up): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":8.049,"who":"Group","at":0.517,"root":8.687}
+PASS gdog (killed in the air, 1.6 m up): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.017,"at":0.25,"clip0":0,"down":0,"inWall":0}
+PASS gdog (killed in the air, 1.6 m up): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.95}
+PASS gdog (killed in the air, 1.6 m up): gone, out of the scene, nothing left behind, no listener added {"goneT":2.067,"inScene":0,"leftover":[],"listeners":0}
+PASS gdog (killed in the air, 1.6 m up): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.72}]
+MEASURE gdog (killed in the air, 1.6 m up) {"rate":8.049,"root":8.687,"clip":0.017,"float":0.015,"slide":0,"impact":0.533,"gone":2.067}
+PASS mite (killed in the air, 1.6 m up): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS mite (killed in the air, 1.6 m up): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":11.142,"who":"Group","at":0.233,"root":6.703}
+PASS mite (killed in the air, 1.6 m up): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0,"clip0":0,"down":0,"inWall":0}
+PASS mite (killed in the air, 1.6 m up): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.9}
+PASS mite (killed in the air, 1.6 m up): gone, out of the scene, nothing left behind, no listener added {"goneT":1.667,"inScene":0,"leftover":[],"listeners":0}
+PASS mite (killed in the air, 1.6 m up): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.99}]
+MEASURE mite (killed in the air, 1.6 m up) {"rate":11.142,"root":6.703,"clip":0,"float":0.015,"slide":0,"impact":0.367,"gone":1.667}
+PASS guard (on the lower step, falls down the stairs): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard (on the lower step, falls down the stairs): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":6.132,"who":"shR","at":0.117,"root":7.224}
+PASS guard (on the lower step, falls down the stairs): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.005,"at":0.25,"clip0":0,"down":0,"inWall":0}
+PASS guard (on the lower step, falls down the stairs): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard (on the lower step, falls down the stairs): lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard (on the lower step, falls down the stairs): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard (on the lower step, falls down the stairs): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":2.04}]
+MEASURE guard (on the lower step, falls down the stairs) {"rate":6.132,"root":7.224,"clip":0.005,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS gdog (on the stairs): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS gdog (on the stairs): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":8.049,"who":"Group","at":0.45,"root":11.245}
+PASS gdog (on the stairs): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.402,"at":0.017,"clip0":0.417,"down":0,"inWall":0}
+PASS gdog (on the stairs): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.95}
+PASS gdog (on the stairs): gone, out of the scene, nothing left behind, no listener added {"goneT":2.067,"inScene":0,"leftover":[],"listeners":0}
+PASS gdog (on the stairs): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.34}]
+MEASURE gdog (on the stairs) {"rate":8.049,"root":11.245,"clip":0.402,"float":0.015,"slide":0,"impact":0.467,"gone":2.067}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":6.136,"who":"shR","at":0.117,"root":1.739}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.04,"at":0.067,"clip0":0.029,"down":0,"inWall":0}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): lies down, arms never spread flat (no T-pose) {"lay":{"body":-1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":2.43}]
+MEASURE guard on a slope of 0.26 at -35,-40 (facing uphill, falls downhill) {"rate":6.136,"root":1.739,"clip":0.04,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":1}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":5.777,"who":"body","at":0.617,"root":4.723}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.023,"at":0.15,"clip0":0.011,"down":0,"inWall":0}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): lies down, arms never spread flat (no T-pose) {"lay":{"body":1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":2.47}]
+MEASURE guard on a slope of 0.26 at -35,-40 (facing downhill, falls uphill) {"rate":5.777,"root":4.723,"clip":0.023,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":-1}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":8.049,"who":"Group","at":0.45,"root":5.883}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.07,"at":0.017,"clip0":0.072,"down":0,"inWall":0}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.95}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): gone, out of the scene, nothing left behind, no listener added {"goneT":2.067,"inScene":0,"leftover":[],"listeners":0}
+PASS gdog on a slope of 0.26 at -35,-40 (across the slope): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.63}]
+MEASURE gdog on a slope of 0.26 at -35,-40 (across the slope) {"rate":8.049,"root":5.883,"clip":0.07,"float":0.015,"slide":0,"impact":0.467,"gone":2.067}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":4.517,"who":"Group","at":0.767,"root":5.326}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0,"at":0.233,"clip0":0,"down":0,"inWall":0}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.3}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): gone, out of the scene, nothing left behind, no listener added {"goneT":2.367,"inScene":0,"leftover":[],"listeners":0}
+PASS sentry on a slope of 0.26 at -35,-40 (facing uphill): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.99}]
+MEASURE sentry on a slope of 0.26 at -35,-40 (facing uphill) {"rate":4.517,"root":5.326,"clip":0,"float":0.015,"slide":0,"impact":0.783,"gone":2.367}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":12,"who":"Group","at":0.45,"root":3.891}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.017,"at":0.333,"clip0":0,"down":0,"inWall":0}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":0.9}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): gone, out of the scene, nothing left behind, no listener added {"goneT":1.667,"inScene":0,"leftover":[],"listeners":0}
+PASS mite on a slope of 0.26 at -35,-40 (uphill): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.03}]
+MEASURE mite on a slope of 0.26 at -35,-40 (uphill) {"rate":12,"root":3.891,"clip":0.017,"float":0.015,"slide":0,"impact":0.433,"gone":1.667}
+PASS guard (wall behind it): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guard (wall behind it): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":5.777,"who":"body","at":0.617,"root":6.313}
+PASS guard (wall behind it): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.004,"at":0.083,"clip0":0,"down":0.001,"inWall":0}
+PASS guard (wall behind it): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":0.015,"slide":0,"settledAt":1.27}
+PASS guard (wall behind it): lies down, arms never spread flat (no T-pose) {"lay":{"body":1.57,"hips":0.9},"armOut":0.82,"mode":"fall"}
+PASS guard (wall behind it): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guard (wall behind it): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":2.15}]
+MEASURE guard (wall behind it) {"rate":5.777,"root":6.313,"clip":0.004,"float":0.015,"slide":0,"impact":0.633,"gone":2.167,"mode":"fall","dir":-1}
+PASS guard (wall behind it): falls forward, away from the wall {"mode":"fall","dir":-1}
+PASS guardG (walls in front and behind): leaves the target lists at once {"alive":false,"aim":false,"pick":false,"hit":false,"lock":false}
+PASS guardG (walls in front and behind): no pop (joint rate ≤ 16 rad/s, root ≤ 12 m/s) {"rate":6.052,"who":"kneeL","at":0.25,"root":1.704}
+PASS guardG (walls in front and behind): never in the ground (≤ 0.05 m once down; standing no worse than before the blow) nor in a wall {"clip":0.039,"at":2.133,"clip0":0.01,"down":0.039,"inWall":0}
+PASS guardG (walls in front and behind): lies on the ground (lowest point ≤ 0.04 m) and still (≤ 0.05 m) {"float":-0.039,"slide":0,"settledAt":1.27}
+PASS guardG (walls in front and behind): lies down, arms never spread flat (no T-pose) {"lay":{"body":0,"hips":0.14},"armOut":0.42,"mode":"slump"}
+PASS guardG (walls in front and behind): gone, out of the scene, nothing left behind, no listener added {"goneT":2.167,"inScene":0,"leftover":[],"listeners":0}
+PASS guardG (walls in front and behind): one bonus, out of the body, landed on the ground [{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.32}]
+MEASURE guardG (walls in front and behind) {"rate":6.052,"root":1.704,"clip":0.039,"float":-0.039,"slide":0,"impact":0.633,"gone":2.167,"mode":"slump","dir":1}
+PASS guardG (walls in front and behind): slumps where it stands {"mode":"slump"}
+PASS pause mid-fall: the fall freezes and goes on after {"paused":{"state":"pause","dt":0},"resumed":0.5}
+PASS a dialogue starts mid-fall (it lands during the dialogue): finishes, lands, gone, bonus on the ground {"during":{"state":"dialog","t":0.98,"bonusFlying":true},"goneT":2.167,"inScene":0,"clip":0.006,"rate":6.043,"float":0.015,"bonus":[{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.35}]}
+PASS the player leaves the scene mid-fall (into the house): finishes, lands, gone, bonus on the ground {"during":{"state":"play","t":0.98,"bonusFlying":true},"goneT":2.167,"inScene":0,"clip":0.001,"rate":6.157,"float":0.015,"bonus":[{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":0.37}]}
+PASS the story changes the cast mid-fall (setPresent(false)): finishes, lands, gone, bonus on the ground {"during":{"state":"play","t":0.98,"bonusFlying":true},"goneT":2.167,"inScene":0,"clip":0.004,"rate":6.075,"float":0.015,"bonus":[{"type":"coin","flying":false,"above":0.3,"inWall":false,"dist":1.34}]}
+PASS a reload mid-fall: the kill is kept and the body is gone {"killed":true,"gone":true,"inScene":0}
+PASS the ball kills the auto-aimed mite; at once the aim moves on to the living one {"first":"k_mite_43","a":"k_mite_43","b":"k_mite_44","killedBy":"0.40","dyingAlive":false,"then":"k_mite_44","aimList":["k_mite_44"],"gone":true}
+PASS a beaten enemy given a living state again (the arena, tests) stands as before {"guard":{"alive":true,"inScene":true,"visible":true,"ko":false,"tilt":0},"mite":{"alive":true,"inScene":true,"visible":true,"ko":false,"tilt":0},"drone":{"alive":true,"inScene":true,"visible":true,"ko":false,"tilt":0}}
+no errors
+ALL PASSED

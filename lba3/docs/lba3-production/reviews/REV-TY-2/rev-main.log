@@ -1,0 +1,80 @@
+start: {"state":"play","room":"zeelich","pos":[2342.4,6,1.3],"hp":4,"chapter":"zeelich","obj":"Find Baldino's workshop on the Esmer street","flags":["c2_started","c2_planTaken"]}
+enter: {"r":"entered","room":"workshop"}
+enter lines: []
+vis@entry: {"lever":"seen","relayA_lamp":"seen","drawing":"seen","sync_lamps":"seen","coupler":"seen","drip_can":"seen","tin":"HIDDEN by ExtrudeGeometry @-2.53,1.26,3.25","relayB_low":"seen","relayB_high":"seen","hoist_crank":"seen","hoist_plate":"seen","fan":"seen","thunder_box":"HIDDEN by BufferGeometry @-3.57,2.44,-1.43","toy_mill":"seen","kettle":"seen","tea_wall_mid":"seen","tea_note":"seen","lid":"seen","ilo_perch":"seen","crate_label":"seen","crate_top":"seen","barrel_top":"seen"}
+vis@lever: {"prompt":"p_switch_on","lever":"seen","relayA_lamp":"seen","drawing":"seen","sync_lamps":"seen","coupler":"seen","drip_can":"seen","tin":"HIDDEN by ExtrudeGeometry @-2.53,1.27,3.26","relayB_low":"seen","relayB_high":"seen"}
+vis@tap: {"prompt":"p_tap_open","coupler":"seen","drip_can":"seen","sync_lamps":"seen"}
+vis@crank: {"prompt":"p_crank","hoist_crank":"seen","relayB_low":"seen","relayB_high":"seen","hoist_plate":"seen"}
+vis@fan: {"prompt":"p_look","fan":"seen"}
+vis@pulse: {"prompt":"p_look","thunder_box":"HIDDEN by BufferGeometry @-3.58,2.44,-1.43","toy_mill":"HIDDEN by BufferGeometry @-2.29,3.72,0.40"}
+vis@kettle: {"prompt":"p_look","kettle":"seen","tea_wall_mid":"seen","tea_note":"seen","lid":"seen"}
+vis@crate: {"prompt":"p_look","crate_label":"seen","crate_top":"seen","barrel_top":"seen"}
+collision: {"into_bar":[3.6,0,0.62],"into_cradle":[3.6,0,0.62],"past_cradle":[3.6,0,0.62],"stand_at_cradle":{"r":"arrived","at":[3.29,0,0.68]},"into_table":[-2.34,0,2.4],"into_fan":[-3.14,0,-0.62],"into_kettle":[0.71,0,-2.5],"into_perch":[-3.46,0,1.55],"to_crate_north":"arrived","at_crate_north":[3.35,0,1.09],"to_barrel":"arrived","back_to_door":"arrived"}
+crate giver: {"searched0":false,"beh":"normal","north_prompt":"p_look:wlook","north_searched":false,"west_prompt":"none:","west_searched":true,"pickups":[]}
+giver lines: ["n_hero: Esmer shuttle parts, stencilled \"SHUTTLE YARD, return to Ilo\". Some have been here a while.","n_baldino: Ilo lends me parts. I lend her opinions. She calls it a fair trade. She's being polite."]
+look fan: {"r":"used","tgt":"wlook","label":"p_look"}
+look fan lines: ["n_hero: A fan with three blades: brass, wood and a bit of tin. One from each repair.","n_baldino: It cools the tests. And me."]
+look pulse: {"r":"used","tgt":"wlook","label":"p_look"}
+look pulse lines: ["n_hero: A box with a brass horn, labelled \"THUNDER BOX\". Every so often it stops the toy mill beside it. For three seconds.","n_baldino: Then it needs ten to get its breath back. Not ready. One day it'll stop a real mill."]
+look kettle: {"r":"used","tgt":"wlook","label":"p_look"}
+look kettle lines: ["n_hero: A kettle wired to a coupler, black with soot. The lid is stuck in the ceiling.","n_hero: A note on the wall: \"TEA: BY HAND.\"","n_baldino: It boiled dry. Couplers hate dry. The lid went up at the third bell. The tea went everywhere else."]
+look crate: {"r":"used","tgt":"wlook","label":"p_look"}
+look crate lines: ["n_hero: Esmer shuttle parts, stencilled \"SHUTTLE YARD, return to Ilo\". Some have been here a while.","n_baldino: Ilo lends me parts. I lend her opinions. She calls it a fair trade. She's being polite."]
+talk 1: {"r":"talked","plan":true,"ask":false,"lines":["n_baldino: Twinsen! At last! Mind the... ah. Never mind, I have another one.","n_hero: Baldino, Vesk says the project brings heat and light. What is it really doing?","n_baldino: Look at the globe. Our planet sits inside a shell, like a nut. Beneath the shell sleeps the being Sendell watches over.","n_baldino: Vesk is drilling through the shell. He believes the being is waking and nothing can stop it, so he's saving whoever he can. The rest... he isn't.","n_hero: Then we stop the drill.","n_baldino: No, no, no! Stop it halfway and the shell cracks on its own. We have to go down there and reverse it. But first we need to get past the platform's shield.","n_baldino: That's why I built an override key. Well, almost. Two parts are missing: the cog from the top of the old mill, and the code cylinder in the project depot's locker.","n_baldino: The shield draws power from the three mills. Brake them with your ball, and the shield will be weak enough for the key to open it.","n_baldino: One more thing. Nobody on Citadel Island knows any of this. Zoé is waiting at the lighthouse. When the key is ready, she'll broadcast a warning to the whole island."]}
+talk 2: {"r":"talked","plan":true,"ask":true,"lines":["n_baldino: While you're here. My test pair, on the long table. Two relays: one talks, the other listens.","n_baldino: Or should. They won't hear each other. Have a look if you like. The lever starts them."]}
+talk 3: {"r":"talked","plan":true,"ask":true,"n":0,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: The hoist is older than Arthur. It lifts everything I build. Mostly back down again."]}
+talk 4: {"r":"talked","plan":true,"ask":true,"n":1,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: Ilo from the shuttle yard draws my housings. I draw the parts that catch fire."]}
+talk 5: {"r":"talked","plan":true,"ask":true,"n":2,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: That fan has had five blades. Never more than three at a time."]}
+talk 6: {"r":"talked","plan":true,"ask":true,"n":3,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: The radio? Seven repairs. It still hums in the wrong key. So do I."]}
+talk 7: {"r":"talked","plan":true,"ask":true,"n":4,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: Esmers knock twice and wait. Years here, and I still forget to answer."]}
+talk 8: {"r":"talked","plan":true,"ask":true,"n":5,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: Oil the hoist, kick the radio, and never trust a quiet coupler."]}
+talk 9: {"r":"talked","plan":true,"ask":true,"n":0,"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: The hoist is older than Arthur. It lifts everything I build. Mostly back down again."]}
+objective: "Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ Brake the three mills with the ball (0/3)"
+bench prompt: [[-0.4,"p_talk","npc"],[0,"p_search","roomsearch"],[0.4,"p_search","roomsearch"],[0.8,"p_look","wlook"]]
+lever (hoist down): {"r":"used","tgt":"wlever","label":"p_switch_on"}
+A state: {"on":true,"heat":0.22,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"ask":true,"trips":0,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+A lines: ["n_hero: The hanging one can't see this one. The flying machine's nose is in the way.","n_baldino: They talk by sight. Two old friends across a street: put a cart between them and they sulk."]
+left while running and came back: {"leave":{"on0":true,"h0":0.22,"out1":"zeelich","back":"workshop"},"st":{"on":false,"heat":0,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"ask":true,"trips":0,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}}
+lines: ["TOAST w_toast_hot"]
+lever: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+pause: {"s1":"pause","s2":"play","h0":0.346,"h1":0.346,"on":true}
+B (trip) state: {"on":false,"heat":0,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"ask":true,"trips":1,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+B lines: ["TOAST w_toast_hot","TOAST w_toast_trip","n_hero: It tripped. Too hot.","n_baldino: Couplers. Lovely until they're thirsty. That's what the drip is for."]
+lever after trip: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+C state: {"on":true,"heat":0.18,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"ask":true,"trips":1,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+switch off: {"r":"used","tgt":"wlever","label":"p_switch_off"}
+crank up: {"r":"used","tgt":"wcrank","label":"p_crank"}
+crank lines: ["n_hero: Baldino's old hoist. Older than Arthur, and it still turns sweetly."]
+tap open: {"r":"used","tgt":"wtap","label":"p_tap_open"}
+tap lines: ["n_hero: The tag on the tap says \"SHUT. Drips on my sandwich.\" Opened anyway."]
+switch on: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+linked+cool: {"on":true,"heat":0.16,"sync":0.12,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"ask":true,"trips":1,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+tap close mid-run: {"r":"used","tgt":"wtap","label":"p_tap_close"}
+tap closed: {"on":true,"heat":0.29,"sync":0.37,"lift":1,"up":true,"tap":false,"pair":false,"paid":false,"ask":true,"trips":1,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+after tap closed: {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":false,"pair":false,"paid":false,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+lines: ["TOAST w_toast_hot","TOAST w_toast_trip","n_hero: It tripped. Too hot.","n_baldino: The drip, Twinsen. The tap."]
+tap open again: {"r":"used","tgt":"wtap","label":"p_tap_open"}
+ready save kept: {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+switch on (for crank test): {"r":"used","tgt":"wlever","label":"p_switch_on"}
+to crank: {"sync":0.63,"target":"wcrank"}
+crank down mid-sync: {"s0":0.63,"s1":0,"up":false,"lift":0,"pair":false}
+crank up again: {"up":true}
+syncing: {"on":true,"heat":0.3,"sync":0.42,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+success state: {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[[-0.35,0.19,-1.84,5]]}
+success lines: ["Both lamps hold steady. The little panel fills, one light at a time.","n_baldino: Listen to that! They hear each other. Ilo owes me a dinner.","n_baldino: The shuttle yard pays for every pair that works. Half is yours.","TOAST w_toast_pair"]
+reward: {"c0":7,"got":12,"delta":5}
+talk after 0: {"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: Ilo from the shuttle yard draws my housings. I draw the parts that catch fire."],"st":{"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}}
+talk after 1: {"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: That fan has had five blades. Never more than three at a time."],"st":{"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}}
+talk after 2: {"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: The radio? Seven repairs. It still hums in the wrong key. So do I."],"st":{"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}}
+lever after: {"r":"used","tgt":"wlever","label":"p_look"}
+lever after lines: ["n_hero: The pair still talks. Baldino checks on it every time he passes."]
+tap after: {"r":"used","tgt":"wtap","label":"p_look"}
+tap after lines: ["n_hero: It's dripping nicely. I'll leave it."]
+crank after: {"r":"used","tgt":"wcrank","label":"p_look"}
+crank after lines: ["n_hero: Leave it up there. They're talking."]
+re-entered: {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}
+vis after (pair talking): {"relayA_lamp":"seen","relayB_high":"seen","sync_lamps":"seen","coupler":"seen"}
+journal: [["1. The Well",[{"key":"pr_j_well","done":true},{"key":"pr_j_key","done":true},{"key":"pr_j_rope","done":true},{"key":"pr_j_cave","done":true},{"key":"pr_j_sendell","done":true}]],["2. The Joint Project",[{"key":"c1_j_vesk","done":true},{"key":"c1_j_valves","done":true},{"key":"c1_j_station","done":true},{"key":"c1_j_plan","done":true},{"key":"c1_j_vesk_gone","done":true},{"key":"c1_j_radio","done":true}]],["3. Zeelich",[{"key":"c2_j_arrive","done":true},{"key":"c2_j_taken","done":true},{"key":"c2_j_bal","done":true},{"key":"c2_j_parts","done":false}]],["Baldino's workshop",[{"key":"w_j_pair","done":true},{"key":"w_j_rules","done":true}]]]
+end: {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}
+kept save-ws.json
+no errors

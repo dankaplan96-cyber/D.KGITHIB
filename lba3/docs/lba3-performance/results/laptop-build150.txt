@@ -1,0 +1,22 @@
+LBA3: The Awakening benchmark · build 0.31.0 (build 150) · 2026-10-25 20:00 (the user's laptop, plugged in, pasted in chat)
+GPU: AMD Radeon(TM) Vega 8 (D3D11) · window 1366×768 · Electron/43.7.9 · camera setting lba
+startup: build 18.5 s · shader preparation 11.8 s (the same numbers as the 19:54 battery run: one app start, so measured on battery)
+memory: 2236 geometries, 552 textures, 507 shader programs, JS heap 787 MB
+
+fps (GPU time p50 / p95 ms):
+                 low                  medium               high
+  street      60   (9.00 / 9.41)    60   (9.71 / 11.08)   56.5 (15.00 / 17.36)
+  interior    59   (8.18 / 8.83)    59   (8.74 / 9.64)    58.3 (10.41 / 11.31)
+  combat      60   (7.50 / 7.58)    60   (8.59 / 9.12)    60   (9.06 / 9.53)
+  transition  58.5 (8.30 / 9.99)    58.8 (8.84 / 10.24)   58   (11.67 / 14.15)
+  arrival     57.8 (8.53 / 9.57)    58.2 (9.40 / 12.88)   49.4 (12.92 / 20.19)
+every stall over 50 ms is behind the black fade; draw calls at medium: street 255, interior 103, combat 191, arrival 344 (p95 513)
+
+breakdown at Medium, street GPU p50: as is 9.47 · no shadows 9.65 · no lamps 9.16 · res x0.6 9.37 · no MSAA 9.73 · depth resolve on 20.06 (41 fps) · draw batches off 10.4 (55.5 fps)
+interior: every variant 56–57 fps with frame p50 17.6–17.8 ms while the GPU takes ~9 ms (not the GPU; the frame pacing of that run)
+
+Reading (Claude), against build 145 (plugged in, 25.10 17:41):
+- Medium: 60 / 59 / 60 / 58.8 / 58.2. Arrival improved from 53.5 (GPU p95 18.2 → 12.9 ms).
+- High: street 46.5 → 56.5, arrival 42.4 → 49.4. Arrival on High is the one route still under 55.
+- CONTAINERS-2 (52 outdoor containers) cost nothing measurable: street draw calls 249 → 255 at Medium, GPU time the same.
+- Startup 18.5 + 11.8 s was measured on battery; a plugged-in cold start is needed to compare with 145's 13.6 + 5.9 s.

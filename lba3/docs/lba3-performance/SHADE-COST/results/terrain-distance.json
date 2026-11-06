@@ -1,0 +1,154 @@
+{
+ "street-a": {
+  "pixels": 1049088,
+  "terrainPx": 698322,
+  "share": 0.666,
+  "perTerrainPx": {
+   "grass": 1,
+   "grassUsed": 0,
+   "cobble": 0.047,
+   "dirt": 0.218,
+   "sand": 0.023,
+   "rock": 0,
+   "texReads": 1.31
+  },
+  "combos": [
+   [
+    "g",
+    78.2
+   ],
+   [
+    "gD",
+    17.1
+   ],
+   [
+    "gCD",
+    2.4
+   ],
+   [
+    "gCDS",
+    2.3
+   ]
+  ]
+ },
+ "street-b": {
+  "pixels": 1049088,
+  "terrainPx": 494359,
+  "share": 0.471,
+  "perTerrainPx": {
+   "grass": 1,
+   "grassUsed": 0,
+   "cobble": 0.025,
+   "dirt": 0.113,
+   "sand": 0.019,
+   "rock": 0,
+   "texReads": 1.18
+  },
+  "combos": [
+   [
+    "g",
+    88.7
+   ],
+   [
+    "gD",
+    8.7
+   ],
+   [
+    "gCDS",
+    1.9
+   ],
+   [
+    "gCD",
+    0.6
+   ]
+  ]
+ },
+ "street-c": {
+  "pixels": 1049088,
+  "terrainPx": 483344,
+  "share": 0.461,
+  "perTerrainPx": {
+   "grass": 1,
+   "grassUsed": 0,
+   "cobble": 0.055,
+   "dirt": 0.17,
+   "sand": 0.042,
+   "rock": 0,
+   "texReads": 1.31
+  },
+  "combos": [
+   [
+    "g",
+    83
+   ],
+   [
+    "gD",
+    11.5
+   ],
+   [
+    "gCDS",
+    4.2
+   ],
+   [
+    "gCD",
+    1.3
+   ]
+  ]
+ },
+ "house-a": {
+  "pixels": 1049088,
+  "terrainPx": 210868,
+  "share": 0.201,
+  "perTerrainPx": {
+   "grass": 1,
+   "grassUsed": 0,
+   "cobble": 0,
+   "dirt": 0.03,
+   "sand": 0,
+   "rock": 0,
+   "texReads": 1.03
+  },
+  "combos": [
+   [
+    "g",
+    97
+   ],
+   [
+    "gD",
+    3
+   ]
+  ]
+ },
+ "house-b": {
+  "pixels": 1049088,
+  "terrainPx": 268410,
+  "share": 0.256,
+  "perTerrainPx": {
+   "grass": 1,
+   "grassUsed": 0,
+   "cobble": 0.107,
+   "dirt": 0.202,
+   "sand": 0.042,
+   "rock": 0,
+   "texReads": 1.39
+  },
+  "combos": [
+   [
+    "g",
+    79.8
+   ],
+   [
+    "gD",
+    9.5
+   ],
+   [
+    "gCD",
+    6.4
+   ],
+   [
+    "gCDS",
+    4.2
+   ]
+  ]
+ }
+}

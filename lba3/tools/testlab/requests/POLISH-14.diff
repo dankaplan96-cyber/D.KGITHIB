@@ -1,0 +1,118 @@
+diff --git a/lba3/src/game/asylumhostel.js b/lba3/src/game/asylumhostel.js
+index a1094a2e..aa11218e 100644
+--- a/lba3/src/game/asylumhostel.js
++++ b/lba3/src/game/asylumhostel.js
+@@ -111,6 +111,10 @@ export function buildAsylumFront(scene, physics) {
+   // collision: the piers and the lintel (world: the group only moves, no turn but F.a = 0), the step, the pots
+   const wx = (lx) => F.x + lx, wz = (lz) => F.z + lz;
+   for (const s of [-1, 1]) physics.add({ type: 'box', x: wx(s * (ow / 2 + (W - ow) / 4)), z: wz(zc + 0.04), hw: (W - ow) / 4 + 0.05, hd: D / 2 + 0.08, rot: 0, top: gy + H + 1.4 });
++  // (POLISH-14 a: and the lintel over the doorway, from the opening's head up; he walks under it. Without it the Follow
++  //  camera's first second out of the door stood inside the lintel's brick, 3.6 m up and 0.4–0.8 m behind its face,
++  //  and the architrave's and the pilasters' cream trim cut across the frame)
++  physics.add({ type: 'box', x: F.x, z: wz(zc + 0.04), hw: ow / 2 + 0.05, hd: D / 2 + 0.08, rot: 0, top: gy + H + 1.4, bottom: gy + oh, noStand: true });   // (noStand: nothing is put on its top)
+   physics.add({ type: 'box', x: F.x, z: wz(1.06), hw: ow / 2 + 0.5, hd: 0.86, rot: 0, top: gy + 0.13 });
+   for (const s of [-1, 1]) physics.add({ type: 'cyl', x: wx(s * (ow / 2 + 0.95)), z: wz(zf + 0.55), r: 0.3, top: gy + 0.5, noStand: true });
+   return { door: { x: F.x, z: wz(z0 + 1.05) }, out: { x: F.x, z: wz(zf + 1.35), a: F.a } };
+diff --git a/lba3/src/game/tavcellar.js b/lba3/src/game/tavcellar.js
+index fedb9b80..afb9580a 100644
+--- a/lba3/src/game/tavcellar.js
++++ b/lba3/src/game/tavcellar.js
+@@ -84,8 +84,17 @@ export function buildTavCellarRoom(scene, physics) {
+   // --- the dark drop between the walkway and the store (the original's void), railed off on every side but one
+   //     stretch of the walkway's railing, broken off long ago (SEWERS-1, S-2: as LBA2's, the hole drops into the old
+   //     sewers' hall: story/sewers.js takes him there as he falls; Old Fenn in the tavern warns about it)
+-  k.add(plane(SX1 - AX1, D / 2 - AZ1), MAT.flat('#121216', 0.95), (AX1 + SX1) / 2, 0.01, (AZ1 + D / 2) / 2, 0, { rx: -Math.PI / 2 });
+   const railM = TEAL(), GZ = 1.0, GW = 0.65;   // (the gap: 1.3 m of the walkway's railing, in the middle of its run)
++  // (POLISH-14 d, R8 "never dark": the drop's bottom was one flat near-black plane, read from the walkway as a black
++  //  floor. Now old rubble, lit a little by itself as the walls are (tv_stone), round a ragged black hole under the
++  //  railing's gap: the way down into the sewers' hall. Shape x, y = the room's x, −z; turned flat it faces up.)
++  const pit = M('tv_pit', () => { const t = TEX.rubble('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#a29fa8', roughness: 0.95, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.2 }); m.userData.tile = 2; return m; });
++  const HX = AX1 + 2.6, HR = 1.25, rim = [];   // (clear of the walkway's foot and the broken rail lying there)
++  for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2, r = HR + Math.sin(i * 2.7) * 0.18 + Math.cos(i * 1.3) * 0.12; rim.push(new THREE.Vector2(HX + Math.cos(a) * r, -(GZ + Math.sin(a) * r))); }
++  const pitS = new THREE.Shape([new THREE.Vector2(AX1, -AZ1), new THREE.Vector2(SX1, -AZ1), new THREE.Vector2(SX1, -D / 2), new THREE.Vector2(AX1, -D / 2)]);
++  pitS.holes.push(new THREE.Path(rim));
++  k.add(new THREE.ShapeGeometry(pitS), pit, 0, 0.01, 0, 0, { rx: -Math.PI / 2 });
++  k.add(new THREE.ShapeGeometry(new THREE.Shape(rim)), MAT.flat('#0b0c10', 0.95), 0, 0.01, 0, 0, { rx: -Math.PI / 2 });
+   k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, GZ + GW]], { h: 0.95, mat: railM, step: 0.45 }));
+   k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, GZ - GW], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
+   k.add(rbox(0.05, 0.05, 0.9, 0.01), railM, AX1 + 0.6, 0.03, GZ + 0.2, 0.5);   // (the broken rail, down on the cellar floor)
+diff --git a/lba3/src/game/town.js b/lba3/src/game/town.js
+index acf3f97d..e3cae9ff 100644
+--- a/lba3/src/game/town.js
++++ b/lba3/src/game/town.js
+@@ -220,6 +220,9 @@ function bunting(parent, W, lamps) {
+   for (const r of ropes) grp.add(new THREE.Mesh(r, rope));
+   return { group: grp, setVisible(on) { grp.visible = !!on; } };
+ }
++// (POLISH-14 b) where a house's heat post stands: HEAT_POST_OUT m out from its front wall, HEAT_POST_SIDES m beside the
++// door (the first clear of everything by HEAT_POST_R: a pot by the door)
++const HEAT_POST_OUT = 0.45, HEAT_POST_SIDES = [1.45, 1.85, -1.45, -1.85], HEAT_POST_R = 0.32;
+ function heatPosts(parent, W, spots) {
+   const { H, physics } = W;
+   const teal = mat('#2c7f86', 0.45, { metalness: 0.35 }), brass = mat('#c89a3c', 0.35, { metalness: 0.6 });
+@@ -584,10 +587,17 @@ export function buildTown(scene, W) {
+   // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at
+   // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is
+   // back), then they glow and breathe a little warm air: the benefit the town sees before the evacuation plan.
++  // (POLISH-14 b: each stands against the front wall beside the door, HEAT_POST_OUT m out from the wall — the door's
++  //  spot is 0.75 m out of it, architecture.js — HEAT_POST_SIDES[0] m to the right of the way out, or the next free of
++  //  HEAT_POST_SIDES. It stood 1 m out from the door's spot along the line from the house's middle to the door, 1.6–2 m
++  //  out from the wall and turned in toward the doorway on most houses (the door off the middle): just where the Follow
++  //  camera stands for the first second out of a door, so it filled the frame's lower right on the way out.)
+   W.heatPosts = heatPosts(scene, W, [
+     ...W.houses.filter((hs, i) => HOUSES[i].heat !== false).map((hs) => {
+-      let nx = hs.door.x - hs.x, nz = hs.door.z - hs.z; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
+-      return [hs.door.x + nx * 1.0 - nz * 1.45, hs.door.z + nz * 1.0 + nx * 1.45];
++      const nx = Math.sin(hs.ry), nz = Math.cos(hs.ry), y = H(hs.door.x, hs.door.z), o = HEAT_POST_OUT - 0.75;
++      const at = (s) => [hs.door.x + nx * o - nz * s, hs.door.z + nz * o + nx * s];
++      const free = ([x, z]) => !physics.near(x, z).some((c) => c.enabled && c.top > y + 0.2 && physics._inside(c, x, z, HEAT_POST_R));
++      return HEAT_POST_SIDES.map(at).find(free) ?? at(HEAT_POST_SIDES[0]);
+     }),
+     [W.stall.x + Math.cos(W.stall.a) * 2.3, W.stall.z - Math.sin(W.stall.a) * 2.3],
+   ]);
+diff --git a/lba3/src/game/walkrounds.js b/lba3/src/game/walkrounds.js
+index fc025995..5fbaf1cc 100644
+--- a/lba3/src/game/walkrounds.js
++++ b/lba3/src/game/walkrounds.js
+@@ -106,7 +106,7 @@ export function citadelRoster(game) {
+     // the old man: benches along the lane, the well, a long look at the pump
+     { id: 'brix', char: 'desertTrader', tint: '#d8f0d0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
+       bench('brix_benchE', -35.8, 2.6, [28, 44]),
+-      look('brix_warm', -34.0, -3.85, -33.87, -2.83, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit)
++      look('brix_warm', -33.25, 1.25, -33.25, 0.35, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit; POLISH-14 b: by the shop's wall north of the door now, he stands on its far side from the door, town.js)
+       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
+       bench('brix_lane', -47.8, 19.5, [28, 44]),
+       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
+@@ -169,7 +169,7 @@ export function citadelRoster(game) {
+       bench('marda_b1', -67.9, 28.4, [18, 26]),
+       look('marda_mid', -82.0, 36.0, -90, 33, [5, 8], { act: 'rest' }),
+       look('marda_gate', -95.8, 37.4, -102, 36, [6, 9]),
+-      look('marda_warm', -100.2, 34.0, -100.16, 32.95, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post)
++      look('marda_warm', -101.42, 31.48, -100.55, 31.25, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post; POLISH-14 b: by its front wall now, she stands on its far side from the door, town.js)
+       bench('marda_b2', -94.4, 30.3, [18, 26]),
+     ]) },
+     // the porter: a crate from the quay's pile to the pile at the stall's end, and back empty (TOWN-LIFE-2: the crate he takes
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index 735f6707..1aab84ff 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -114,6 +114,8 @@ function pathDistScatter(x, z) {
+   return d;
+ }
+ const newPathDist = (x, z) => { const p = PATHS[4]; let d = 1e9; for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1])); return d; };
++// (POLISH-14 f) the glider field's landing (story/network.js CITADEL_LANDING): kept clear of the scattered bushes
++const GLIDER_LANDING = { x: -58, z: -60 }, LANDING_CLEAR = 1.6;
+ const NEW_HOUSES = new Set(['bug', 'bug2', 'stoneup']);   // (moved or added by WORLD-80; 'bug' stood at town.js OLD_BUG)
+ 
+ // signed distance to an axis-aligned rectangle (negative inside)
+@@ -994,6 +996,10 @@ export function* buildWorldSteps(parentScene) {
+   });
+   for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+   for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
++  // (POLISH-14 f: the glider field's landing, story/network.js CITADEL_LANDING and evacuation.js LANDING, where he
++  //  steps down from the glider: no scattered bush within LANDING_CLEAR m of it — two stood on it, their colliders
++  //  over the spot he is put on. Filtered after the scatter, so no random draw moves)
++  for (const b of bushes) if (!b.gone && Math.hypot(b.x - GLIDER_LANDING.x, b.z - GLIDER_LANDING.z) < LANDING_CLEAR + 0.6 * b.s) { b.s = 1e-4; b.gone = true; }
+   // TREES-1 (the user, 4.11.2026: a tree stood inside Twinsen's house, its crown out through the thatch). okSpot keeps
+   // the scatter out of the square's ring (exclusions: POI.village) and the original's trees 1.6 m off the houses, but
+   // nothing kept the scattered trees and bushes out of the houses beyond the square: a tall tree grew in Twinsen's

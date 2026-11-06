@@ -1,0 +1,53 @@
+{ state: 'play', lines: 0 }
+{"hero":[1001.55,0,-1.75],"zoe":[-29.25,2.3594695384685807,75.3],"arthur":[1002.15,0,2.15],"searches":[[996.8,-1.6,null]],"exits":[[1001.2,11.35,"outdoor"],[996.55,8.9,"cellar"]],"hud":"block 240"}
+walk [["walk",1.98,1001.45,-1.74],["walk",2.33,1001.3,-1.73],["walk",2.39,1001.14,-1.71],["walk",2.4,1000.99,-1.7],["walk",2.4,1000.83,-1.69],["walk",2.4,1000.67,-1.67],["walk",2.4,1000.51,-1.66],["walk",2.4,1000.35,-1.64],["walk",2.4,1000.19,-1.63],["walk",2.4,1000.03,-1.62],["walk",2.4,999.87,-1.6],["walk",2.4,999.71,-1.59],["walk",2.4,999.55,-1.57],["walk",2.4,999.39,-1.56],["walk",0.42,999.33,-1.55],["idle",0.07,999.32,-1.55],["idle",0.01,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55],["idle",0,999.32,-1.55]]
+{
+  r: { r: 'arrived', t: 1.2000000000000004, early: true },
+  tg: {
+    kind: 'roomsearch',
+    id: 'p_search',
+    x: undefined,
+    z: undefined,
+    label: 'p_search'
+  },
+  f: {
+    t: 7.23,
+    st: 'play',
+    anim: 'walk',
+    spd: 2.4,
+    pos: [ 998.12, 0, -1.48 ],
+    ang: -1.59,
+    fade: '',
+    prompt: '',
+    trans: false,
+    room: 'house'
+  }
+}
+cupboard [["dialog","talk",true,"W Inspect","TwinsenThe▼",""],["dialog","talk",true,"","TwinsenThe ma▼",""],["dialog","talk",true,"","TwinsenThe magic ▼",""],["dialog","talk",true,"","TwinsenThe magic bal▼",""],["dialog","talk",true,"","TwinsenThe magic ball, ▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the ▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the hol▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holoma▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap..▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... an▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of du▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""],["dialog","talk",true,"","TwinsenThe magic ball, the holomap... and a lot of dust.▼",""]]
+{ state: 'play', lines: 3 }
+{
+  r: { r: 'arrived', t: 3.3999999999999977 },
+  tg: { kind: 'npc', id: 'arthur', x: 1002.15, z: 2.15, label: 'p_talk' },
+  st: 'dialog'
+}
+arthur [["dialog","arthur","listen","talk","ArthurDad, Tim tells L▼"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his▼"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets wh▼"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he think▼"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's ▼"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["dialog","arthur","listen","talk","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"],["play","-","idle","kneelWork","ArthurDad, Tim tells Lulu all his secrets when he thinks nobody's list"]]
+{ state: 'play', lines: 0 }
+{
+  r: { r: 'arrived', t: 3.8333333333333295 },
+  f: {
+    t: 20.6,
+    st: 'play',
+    anim: 'turnL',
+    spd: 0.07,
+    pos: [ 1001.79, 0, 9.99 ],
+    ang: -0.34,
+    fade: '',
+    prompt: 'W Talk',
+    trans: false,
+    room: 'house'
+  }
+}
+exit [["house","",false,"walk",1.77,"play"],["house","",false,"walk",2.23,"play"],["house","",false,"walk",2.35,"play"],["house","",false,"walk",2.39,"play"],["house","",false,"walk",2.4,"play"],["house","",false,"walk",2.4,"play"],["house","",true,"walk",2.4,"play"],["house","0.142857",true,"walk",2.2,"play"],["house","0.285714",true,"walk",2.2,"play"],["house","0.428571",true,"walk",2.2,"play"],["house","0.571429",true,"walk",2.2,"play"],["house","0.714286",true,"walk",2.2,"play"],["house","0.857143",true,"walk",2.2,"play"],["citadel","1",true,"walk",2.2,"play"],["citadel","0.857143",true,"walk",2.2,"play"],["citadel","0.714286",true,"walk",2.2,"play"],["citadel","0.571429",true,"walk",2.2,"play"],["citadel","0.428571",true,"walk",2.2,"play"],["citadel","0.285714",true,"walk",1.95,"play"],["citadel","0.142857",true,"walk",1.63,"play"],["citadel","",false,"walk",1.77,"play"],["citadel","",false,"walk",2.23,"play"],["citadel","",false,"walk",2.35,"play"],["citadel","",false,"walk",2.39,"play"],["citadel","",false,"walk",2.4,"play"],["citadel","",false,"walk",2.4,"play"],["citadel","",false,"walk",2.4,"play"],["citadel","",false,"walk",2.4,"play"]]
+{"state":"play","room":"citadel","pos":[-43.11,2.34,77.2],"hp":10,"chapter":"well","obj":"Check the well"}
+kept /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/vp0-save-01.json
+no page errors

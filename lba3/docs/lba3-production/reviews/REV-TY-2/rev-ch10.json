@@ -1,0 +1,30 @@
+{
+ "thunder box before ch10": true,
+ "ch10 opening": [
+  "Baldino's workshop, late into the night. Every bench is covered in wire.",
+  "n_baldino: Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
+  "n_baldino: I built these: relays. A box, a mast, a bit of genius. Each one listens for the others, and when all five hear each other at once, the shaft's blast doors will hear them too.",
+  "n_baldino: Now the limits, because there are always limits. A relay needs power from where it stands: water pressure, wind, steam, light. No power, no voice. And they only hold the signal together for a minute. So every station needs a friend standing by.",
+  "n_baldino: You've met my test pair. Same rules out there: give them a clear line, and keep the couplers cool.",
+  "n_hero: Then we need friends at five stations, and a way to reach them all.",
+  "n_baldino: Oh, and before I forget. Take this. My pulse tool: a little thunder in a box. It jams anything with gears or wires for a few seconds. Drones, automatons, mills, doors.",
+  "n_baldino: It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
+  "n_baldino: The way is already here. Listen.",
+  "n_heskradio: Hesk here! I got the council's message. The glider's moored on Zeelich, by the dock. I'll fly you anywhere with a flat bit of ground. Not into the shaft, mind. She's a glider, not a mole.",
+  "TOAST c10_toast_relays"
+ ],
+ "after": {
+  "room": "workshop",
+  "pulse": false,
+  "done": true,
+  "hasPulse": true
+ },
+ "pulse look": {
+  "r": "used",
+  "tgt": "wlook",
+  "label": "p_look"
+ },
+ "pulse look lines": [
+  "n_hero: The thunder box's spot on the shelf. Empty. It's in my pocket now."
+ ]
+}

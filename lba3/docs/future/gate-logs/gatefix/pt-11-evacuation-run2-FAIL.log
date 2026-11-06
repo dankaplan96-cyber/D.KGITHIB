@@ -1,0 +1,29 @@
+=== 11-evacuation start 2026-11-01T22:42:15Z LOAD=/dev/shm/gatefix/saves/f/10.json SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/11-evacuation.mjs
+[0s +0s] continue: {"chapter":"evacuation"} | citadel [-58.08,15.89,-59.48] hp 8 | Go home to Zoé
+[7s +7s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":14,"home":true,"fail":null} | house [998.93,0,-1.71] hp 8 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Ask Mira for water◆ Ask Pippa for supplies
+[13s +5s] Gilbert: {"r":"talked","to":"gilbert","state":"play","lines":8,"g":true,"fail":null} | citadel [-38.86,2.2,5.05] hp 8 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+[23s +10s] the fortress lever: {"r":"go:transition","at":[1394.6693338644313,-3.825511719494343],"fail":"lever"} | control [1394.67,0,-3.83] hp 12 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  STOP: lever
+FAIL the segment ran every step to its end "the fortress lever: lever"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[107.2] dodge a bolt
+[107.5] dodge a bolt
+[110.4] dodge a bolt
+[111.6] fight ccg2 d=1.7 st=aim aim=it e@-33.8,15.9,-65.6 me@-29.1,15.9,-61.4 ball=idle hp 1→1 me 1 mp 12
+[112.4] dodge a bolt
+[112.9] fight ccdog d=2.5 st=dead aim=it e@-30.8,15.9,-63.6 me@-27.8,15.9,-59.7 ball=idle hp 3→0 me 0 mp 11.344166666666668
+[115.1] dodge a bolt
+[115.8] dodge a bolt
+[115.9] fight ccg1 d=6.9 st=dead aim=it e@-30.7,15.9,-63.9 me@-26.5,15.9,-58.3 ball=idle hp 3→0 me 12 mp 11.315000000000001
+[116.5] go → (-31.8, -63.5) plan ok=false pts=4 left=1427.73
+[124.5] fight → {"left":0,"dead":false,"hp":12,"t":36.1}
+[124.5] go: transition (citadel → control, trans false) at (1394.67, -3.83)
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED
+=== 11-evacuation end rc=1 wall=148s 2026-11-01T22:44:43Z

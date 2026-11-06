@@ -1,0 +1,37 @@
+LBA3: The Awakening benchmark · build 0.33.0 (build 228) · 2026-10-28 04:32 (the user's Vega 8 laptop, pasted in chat), PLUGGED IN
+GPU AMD Radeon Vega 8 (D3D11) · window 1366×768 · dpr 1 · Electron 43.7.9 / Chrome 150 · first-start preset low, playing on medium
+static shadow cache on (High's 4096 map is NOT cached: "7073 frames without (High's 4096 map, Low, warm-ups)")
+startup: build 7.3 s (Citadel 4.4 s) · shader preparation 6.1 s · 77 programs at the title · JS heap 653 MB
+
+summary · fps at full resolution / as played (automatic resolution on: the factor it settled at)
+             low                     medium                  high
+  street     60 / 60 (×1)            60 / 60 (×1)            50.7 / 50.2 (×0.7)
+  interior   58.7 / 60 (×1)          59.5 / 60 (×1)          55.1 / 60 (×0.7)
+  combat     59.3 / 60 (×1)          60 / 57.2 (×1)          56.4 / 60 (×1)
+  transition 59.5 / 60 (×1)          59.5 / 56.9 (×1)        55 / 59.7 (×1)
+  arrival    49.1 / 60 (×1)          59 / 56.1 (×1)          48.7 / 55 (×0.6)
+  hamalayi   60 / 60 (×1)            60 / 56.5 (×1)          56.4 / 60 (×0.9)
+
+HIGH, fixed runs (the regression against build 220, where High street was 60 fps at GPU 13.1 ms):
+  street      50.7 fps · p50 17.9 p95 35.4 · >33ms 33 of 304 · sim CPU p50 3.5 (p95 7) · render submit CPU p50 14.9 · GPU p50 14.03 (p95 18.71) [scene 11.9 · shadow 1.88]
+              · lamps 2 · draw calls 238 (p95 264, shadow 79) · GPU draws 371 · tris 830k · limited by CPU (18.4 ms vs GPU 14.03)
+  interior    55.1 · p50 17.8 · submit 4.5 · GPU 12.05 [scene 10.97 · shadow 0.78] · lamps 8 · calls 96 (shadow 7) · tris 411k · limited by GPU
+  combat      56.4 · p50 17.7 p95 18.2 · submit 3.9 · GPU 8.91 · calls 155 (shadow 53) · tris 229k
+  transition  55   · p50 17.8 · submit 8.9 · GPU 11.79 (p95 17.35) · calls 181 (shadow 42) · GPU draws 385 · tris 649k · limited by CPU
+  arrival     48.7 · p50 17.9 p95 35.8 · sim 5.6 (p95 8.3) · submit 13.4 · GPU 16.34 (p95 22.47) · calls 314 (p95 383, shadow 31) · tris 612k · limited by CPU (19.0 vs 16.34)
+  hamalayi    56.4 · p50 17.7 p95 18.3 · submit 4.7 · GPU 12.94 · calls 96 (shadow 15) · tris 379k
+  as played: street 50.2 (res settled ×0.7, submit 14.9, calls 261, tris 866k) · arrival 55 (×0.6, submit 12.3, calls 313)
+
+MEDIUM fixed: street 60 (GPU 9.13, submit 7.4, calls 165, shadow 18, tris 410k) · interior 59.5 · combat 60 · transition 59.5 · arrival 59 (calls 313) · hamalayi 60
+LOW fixed: street 60 (GPU 8.92, submit 4.3, calls 129, tris 328k) · arrival 49.1 (stalls behind black 450/433 ms, sim 5.1, submit 7.2)
+
+THE ~56.5 FPS PLATEAU (not load): many runs sit at a steady frame p50 17.4–17.7 ms, p95 ~18.2, with GPU only 8.6–9.3 ms and CPU
+(sim + submit) 3–6 ms, and never a 33 ms frame (so not a missed vsync either):
+  Medium as played: combat 57.2, transition 56.9, arrival 56.1, hamalayi 56.5 (all p50 17.4–17.7) after street/interior at 60
+  High fixed: interior/combat/transition/hamalayi all p50 17.7–17.8, GPU 8.9–12.9
+  Medium breakdown, interior: "as is" 60 (16.7), then from "shadow filter 5 reads" on every variant 56.3–57.1 (p50 17.2–17.8) whatever it removes
+  High as played: back to 16.7 / 60 on interior, combat, transition, hamalayi
+  → frame pacing / timing source (display refresh, the browser's frame scheduling, a power or thermal state), not rendering cost
+
+Medium street breakdown (GPU ms): as is 8.98 · no shadows 9.25 · no lamps 8.97 · res ×0.6 8.76 · no MSAA 8.94 · depth resolve on 17.01 (51.7 fps)
+  · shadow map 512 8.97 · draw batches off 9.33 (calls 206) · shadow cache off 8.92 (calls 200, submit 8.1) · battery profile on 8.81

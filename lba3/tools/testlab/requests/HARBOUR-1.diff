@@ -1,0 +1,195 @@
+diff --git a/lba3/src/game/citydress.js b/lba3/src/game/citydress.js
+index 687a9308..1d92a0a0 100644
+--- a/lba3/src/game/citydress.js
++++ b/lba3/src/game/citydress.js
+@@ -1,7 +1,7 @@
+ // Citadel's street furniture, twelve years on (SD-1): the bare stretches of the town get what a lived-in Twinsun
+ // town keeps outdoors — litter bins by the benches, flower tubs and planters beside front doors, sign posts at the
+ // junctions (to the SQUARE, the HARBOUR, the SPACEPORT and the LIGHTHOUSE, pointing the way one actually walks), a
+-// few notice boards, resting spots along the long lane south, and on the harbour quay a ferry timetable, mooring
++// few notice boards, resting spots along the long lane south, and on the harbour quay mooring
+ // bollards, a hand cart and a bench by the water. The kit is src/game/props.js's street furniture.
+ //
+ // Every piece is fitted where nothing stands: it keeps off the paths' centre lines and the streets' middles, doors,
+@@ -189,7 +189,8 @@ export function buildCityDressing(root, physics, W) {
+   place('handcart', (k) => P.handCart(k, { load: 'sacks', seed: 7 }), -58.4, 30.2, 0.15, FP.cart);
+   { const x = -105.6, z = 41.6;
+     post(x, z, [{ text: 'PIER', a: -Math.PI / 2, color: '#2a8a7a' }, { text: 'SQUARE', a: heading(x, z, -90, 38), color: '#c8452f' }, { text: 'SPACEPORT', a: heading(x, z, -90, 38), color: '#7a52b0' }]); }
+-  board(-110.4, 46.6, Math.PI / 2, 'ferry');     // the ferry timetable, in the open quay (read from its east side)
++  // (HARBOUR-ONE: the ferry timetable that stood here, 6 m from the ferry stop's own board (travel.js), is gone: two
++  // ferry boards side by side on the open quay; the stop's board now faces the quay and says it)
+   binEnd(-110.5, 40.4, -1);   // the quay's bench (island.js): a bin at its east end (BENCHES-1: the west one was against a board)
+   // a bench looking out over the basin, its back to the harbour master's shed, a bin at its south end
+   // (BENCHES-1: it faced the sea from the quay's edge squeezed between the shed's corner, its bin, its tub and a bollard)
+diff --git a/lba3/src/game/harbourshed.js b/lba3/src/game/harbourshed.js
+index b4636a27..6ee49590 100644
+--- a/lba3/src/game/harbourshed.js
++++ b/lba3/src/game/harbourshed.js
+@@ -1,9 +1,12 @@
+ // The harbour master's shed on the quay (I-3, from AUDIT-CH12 #9): plank walls on a rubble plinth, a framed door with a
+-// brace and a step, a small shuttered window on each long wall, a blue roof with an overhang, a ridge cap and a
++// brace and a step, a small shuttered window on each long wall, a plank roof with an overhang, a ridge cap and a
+ // fascia, with a rain barrel and two crates against the front. It replaces the plain box and slab the prologue
+ // set here, on the same footprint (2.6 x 2.0 m, the collider unchanged).
+-// Built from the town's kit (kit.js Batch): one mesh per material, four in all (planks, roof, rubble, plain), and
++// Built from the town's kit (kit.js Batch): one mesh per material, three in all (planks, rubble, plain), and
+ // only the walls and the roof cast a shadow.
++// (HARBOUR-ONE: the roof was the town's blue tiles, a garden shed's look beside Doran's rubble shed; now weathered
++// boards, darker than the walls, like the plank roofs of LBA2's harbour houses and Doran's shed: one plank-shed
++// language on the quay, and one material fewer)
+ import * as THREE from 'three';
+ import { Batch, tm, pm, bbox, boxUV, tint, cached, cyl } from './kit.js';
+ 
+@@ -33,7 +36,7 @@ export function buildHarbourShed(parent, ry = 0) {
+   const { w, d, h, pitch, overhang, T } = SHED;
+   const g = new THREE.Group(); g.rotation.y = ry; parent.add(g);
+   const planks = tm('planks', { vc: true, rough: 0.9 });
+-  const roofM = tm('roofBlue', { vc: true, rough: 0.8 });
++  const roofM = planks;   // (HARBOUR-ONE: was tm('roofBlue'); the slabs and the cap tinted darker than the walls)
+   const stone = tm('rubble', { vc: true });
+   const plain = pm('#ffffff', 0.55, { vertexColors: true, metalness: 0.15 });
+   const BC = new Batch(g, { cast: true }), BN = new Batch(g, { cast: false });
+@@ -85,10 +88,10 @@ export function buildHarbourShed(parent, ry = 0) {
+   // ---- the roof: two thick slabs with overhang, a fascia along each eave, a ridge cap
+   const half = w / 2 + overhang, slope = Math.hypot(half, half * pitch), ang = Math.atan(pitch), len = d + overhang * 1.6;
+   for (const sx of [-1, 1]) {
+-    BC.add(tint(bx(slope, 0.11, len, 1.6), '#ffffff'), roofM, sx * (slope / 2) * Math.cos(ang), h + gableH + 0.0 - (slope / 2) * Math.sin(ang) - 0.05, 0, 0, 0, sx * -ang);
++    BC.add(tint(bx(slope, 0.11, len, 1.6), '#a88866'), roofM, sx * (slope / 2) * Math.cos(ang), h + gableH + 0.0 - (slope / 2) * Math.sin(ang) - 0.05, 0, 0, 0, sx * -ang);
+     BN.add(tint(bx(0.05, 0.16, len + 0.02, 1), '#7a5a3a'), planks, sx * (half - 0.02), h + gableH - half * pitch - 0.08, 0);   // fascia
+   }
+-  BN.add(tint(bx(0.2, 0.12, len + 0.04, 1), '#d8e4f2'), roofM, 0, h + gableH + 0.02, 0);
++  BN.add(tint(bx(0.2, 0.12, len + 0.04, 1), '#6e5238'), roofM, 0, h + gableH + 0.02, 0);
+ 
+   // ---- a rain barrel at the front corner and two crates against the wall (the local frame of the door side)
+   const barrel = { x: 1.33, z: 0.9, r: 0.3 };
+diff --git a/lba3/src/game/island.js b/lba3/src/game/island.js
+index 343a680b..1d494a96 100644
+--- a/lba3/src/game/island.js
++++ b/lba3/src/game/island.js
+@@ -719,47 +719,53 @@ function buildHarbour(W0, root, r) {
+ }
+ 
+ // ------------------------------------------------------------------ the Joint Project's cargo lift
+-// A slewing lift on the pier that unloads the project barge moored beside the fishing boat: a teal column with a
+-// brass motor housing and the project emblem, an arm, a cable and a hook. pose(u) runs one unload cycle
+-// (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
++// A slewing lift on the pier that unloads the project barge moored beside the fishing boat. pose(u) runs one unload
++// cycle (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
+ // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
++// HARBOUR-ONE (the cacophony order, CLUTTER_AUDIT.md): the opening needs it (13–29 s), so it stays where it was, the
++// same shapes and sizes; only its look changed. It was a teal column and arm with a brass housing, and the barge a teal
++// hull with a brass rim: the project's modules beside Citadel's old harbour. Now it is a harbour derrick in the quay's
++// own materials (a tarred timber mast and boom on the pier's iron, like the piles and the bitts), and the barge a plank
++// lighter; the project shows only in its details: the emblem on the iron winch housing, on the barge's side and on
++// the crates, and a brass lantern.
+ function cargoLift(W, parent, r) {
+   // (HEADING-LOAD: the lift's own group is no longer `keep`: its column, base and bracket never move, so they join the
+   //  quay's static shadow and draw batches; what moves stays `keep`, below)
+   const g = new THREE.Group(); g.name = 'cargoLift'; parent.add(g);
+   const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
+-  const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
+-  // column on a bolted base
++  const timber = pm('#6e5238', 0.85), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2e3238', 0.45, { metalness: 0.6 });
++  const housingM = pm('#4c5660', 0.55, { metalness: 0.4 });   // (the winch housing: painted iron, a slate grey)
++  // the mast on a bolted iron base, three iron straps round it
+   mesh(g, cyl(0.46, 0.52, 0.12, 16), dark, mx, deck + 0.06, mz);
+-  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), brassM, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
+-  mesh(g, cyl(0.15, 0.2, 3.1, 12), teal, mx, deck + 1.66, mz);
+-  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), brassM, mx, deck + y, mz);
++  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), dark, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
++  mesh(g, cyl(0.15, 0.2, 3.1, 12), timber, mx, deck + 1.66, mz);
++  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), dark, mx, deck + y, mz);
+   // a lantern on a bracket (it trembles with the vibration)
+   mesh(g, bbox(0.5, 0.05, 0.05, 0.01), dark, mx - 0.25, deck + 2.3, mz, 0);
+   const lantern = new THREE.Group(); lantern.position.set(mx - 0.46, deck + 2.27, mz); g.add(lantern);
+   mesh(lantern, cyl(0.006, 0.006, 0.16, 4), dark, 0, -0.08, 0, 0, { cast: false });
+   mesh(lantern, cyl(0.07, 0.09, 0.2, 6), brassM, 0, -0.26, 0);
+   mesh(lantern, cyl(0.06, 0.06, 0.13, 6), pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), 0, -0.26, 0, 0, { cast: false });
+-  // the slewing turret: motor housing with the emblem, the arm, the pulley
++  // the slewing head: the winch housing with the emblem (the project's mark), the boom, the pulley
+   const turret = new THREE.Group(); turret.position.set(mx, deck + 3.2, mz); g.add(turret);
+-  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), teal, 0, 0.12, -0.15);
+-  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), brassM, 0, 0.4, -0.15);
++  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), housingM, 0, 0.12, -0.15);
++  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), dark, 0, 0.4, -0.15);
+   for (const s2 of [-1, 1]) {
+     const em = mesh(turret, new THREE.PlaneGeometry(0.34, 0.34), emblemMaterial(), s2 * 0.315, 0.12, -0.15, s2 * Math.PI / 2, { cast: false });
+     em.renderOrder = 1;
+   }
+-  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), teal, 0, 0.32, ARM / 2 - 0.05);
+-  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), brassM, 0.085, 0.32, 0.2 + i * 0.5);
+-  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), brassM, 0, 0.26, ARM);
++  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), timber, 0, 0.32, ARM / 2 - 0.05);
++  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), dark, 0.085, 0.32, 0.2 + i * 0.5);
++  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), dark, 0, 0.26, ARM);
+   // cable (scaled to length), hook block, hook
+   const cable = mesh(turret, cyl(0.012, 0.012, 1, 4).translate(0, -0.5, 0), dark, 0, 0.2, ARM, 0, { cast: false });
+   const hook = new THREE.Group(); turret.add(hook);
+-  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), brassM, 0, -0.09, 0);
++  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), dark, 0, -0.09, 0);
+   mesh(hook, new THREE.TorusGeometry(0.06, 0.014, 6, 12, Math.PI * 1.4), dark, 0, -0.24, 0, 0, { rz: Math.PI * 0.8 });
+-  // the barge: a flat project lighter with fenders, one crate staying aboard, the emblem on its side
++  // the barge: a flat plank lighter with a rubbing strake and fenders, one crate staying aboard, the emblem on its side
+   const barge = new THREE.Group(); barge.position.set(-85.3, 0, -0.6); g.add(barge);
+-  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), pm('#2f6a78', 0.6, { metalness: 0.3 }), 0, 0.12, 0);
+-  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), brassM, 0, 0.36, 0);
++  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), tm('planks', { color: '#8a6c52' }), 0, 0.12, 0);   // (the crates' planks, tarred darker: one texture, folded with them)
++  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), timber, 0, 0.36, 0);
+   for (const [x, z] of [[-1.0, -0.88], [0.0, -0.88], [1.0, -0.88]]) mesh(barge, cyl(0.09, 0.09, 0.32, 8), dark, x, 0.2, z);
+   const bem = mesh(barge, new THREE.PlaneGeometry(0.4, 0.4), emblemMaterial(), 0.6, 0.15, 0.861, 0, { cast: false }); bem.renderOrder = 1;
+   const crateGeo = bbox(0.8, 0.8, 0.8, 0.04, 1), crateMat = tm('planks', { color: '#c89a68' });
+diff --git a/lba3/src/game/town.js b/lba3/src/game/town.js
+index 0f25c144..d1db23bb 100644
+--- a/lba3/src/game/town.js
++++ b/lba3/src/game/town.js
+@@ -74,7 +74,9 @@ const HOUSES = [
+   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
+   { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', pitch: 0.5, shutters: '#3b5bb8', chimney: false,
+     windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
+-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'stone', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
++  // (HARBOUR-ONE: wing2 in rubble, as LBA2's body 49 is (rubble walls under a plank roof) and as Doran's shed beside
++  // it: the hall in ashlar under slate, the two smaller houses in rubble under boards, LBA2's harbour pair)
++  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
+     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
+   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
+     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
+diff --git a/lba3/src/game/townlife.js b/lba3/src/game/townlife.js
+index b1ce060e..93e37fb3 100644
+--- a/lba3/src/game/townlife.js
++++ b/lba3/src/game/townlife.js
+@@ -322,7 +322,10 @@ export function buildTownLife(root, physics, W) {
+     // the roof: tall at the front so the bench and the coupler stay in view from the paths at the normal camera's
+     // 26°; from the far view (46°) it fades while the coupler is on the bench and the roof is in the way of it, or
+     // while Twinsen stands under it and it hides him (as the town's houses fade)
+-    const roofM = MAT.paint('#c8602a', 0.6).clone(), signM = MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7).clone(), boardM = MAT.wood('dark').clone();
++    // (HARBOUR-ONE: boards, as the quay's other sheds have, a little red from old paint; it was a flat orange paint, a
++    // fourth colour on the quay beside the customs' navy and the two sheds; the sign keeps Nell's orange)
++    const roofM = MAT.planks('honey').clone(), signM = MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7).clone(), boardM = MAT.wood('dark').clone();
++    roofM.color.set('#c89478');
+     const fadeM = [roofM, signM, boardM];
+     {
+       const rg = new THREE.Group(); rg.position.set(s.x, sy, s.z); rg.rotation.y = SRY; g.add(rg);
+diff --git a/lba3/src/game/travel.js b/lba3/src/game/travel.js
+index bb2b9237..e04e78c5 100644
+--- a/lba3/src/game/travel.js
++++ b/lba3/src/game/travel.js
+@@ -48,7 +48,9 @@ export const lastOutdoorPos = () => lastPos;
+ // ================================================================== the travel points
+ // (world coordinates; Zeelich's spaceport is ours: a deck over the clouds off the terminal island's south shore)
+ const ZPORT = { x0: -14, x1: 6, z0: 33, z1: 51, bridge: { x: -4, z0: 26.0, z1: 33, hw: 1.8 }, pad: { x: -4, z: 44 } };
+-const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, -Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
++// (HARBOUR-ONE: the Citadel ferry board faces east, toward the quay and the way from town, where the play camera looks
++// from: facing the pier, only its blank back was ever seen; same place, same collider (an unturned box))
++const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
+   glider: { x: -107, z: -64, plane: [-111.5, -62.5, 0.2], board: [-102.6, -61.4, -2.2], sock: [-103.5, -67.5], land: { x: -105.2, z: -64.6, a: -Math.PI / 2 } } };
+ const DES = { ferry: { x: 3320.5, z: 4, board: [3323.4, 8.2, Math.PI], land: null }, glider: { x: 3340, z: -35, plane: [3342, -40, 0.3], board: [3334.4, -30.6, Math.PI * 0.8], sock: [3346.5, -31], land: { x: 3337.4, z: -33.2, a: Math.PI * 0.75 } } };
+ 
+@@ -97,7 +99,7 @@ export function buildTravel(game) {
+   if (W.spaceport) pt('citadel_port', { region: 'citadel', mode: 'ship', x: W.spaceport.pad.x, z: W.spaceport.pad.z, r: 5.0, landing: W.spaceport.landing, name: 'tr_citadel_port' });
+   {
+     const f = CIT.ferry; pt('citadel_ferry', { region: 'citadel', mode: 'ferry', x: f.x, z: f.z, r: 3.2, landing: f.land, name: 'tr_citadel_harbour' });
+-    boardMesh(W.root, f.board[0], gy(f.board[0], f.board[1]), f.board[1], f.board[2], { title: 'FERRY', lines: ['DESERT ISLAND', 'FROM THIS QUAY'] });
++    boardMesh(W.root, f.board[0], gy(f.board[0], f.board[1]), f.board[1], f.board[2], { title: 'FERRY', lines: ['DESERT ISLAND', 'FROM THIS QUAY'], frame: '#6e5238' });   // (HARBOUR-ONE: timber posts, as the quay's; they were blue)
+     P.add({ type: 'box', x: f.board[0], z: f.board[1], hw: 0.15, hd: 1.1, top: gy(f.board[0], f.board[1]) + 2.7, noStand: true });
+     const g = CIT.glider; pt('citadel_glider', { region: 'citadel', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_citadel_field' });
+     const pl = buildGlider(); pl.position.set(g.plane[0], gy(g.plane[0], g.plane[1]), g.plane[1]); pl.rotation.y = g.plane[2]; W.root.add(pl); G.travel.vehicles.citadel_glider = pl;

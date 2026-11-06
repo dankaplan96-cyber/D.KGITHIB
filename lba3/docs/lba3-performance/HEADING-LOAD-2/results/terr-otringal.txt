@@ -1,0 +1,10 @@
+isle_otringal: 4 terrain tiles (10k, 8k, 8k, 6k)
+heading 0°: tiles drawn 4 / 31k tris · in view: 25-cell squares 15 / 16k · 50-cell squares 9 / 24k
+heading 45°: tiles drawn 3 / 25k tris · in view: 25-cell squares 13 / 14k · 50-cell squares 8 / 24k
+heading 90°: tiles drawn 3 / 25k tris · in view: 25-cell squares 13 / 15k · 50-cell squares 6 / 17k
+heading 135°: tiles drawn 4 / 31k tris · in view: 25-cell squares 14 / 13k · 50-cell squares 8 / 17k
+heading 180°: tiles drawn 4 / 31k tris · in view: 25-cell squares 15 / 12k · 50-cell squares 8 / 16k
+heading 225°: tiles drawn 4 / 31k tris · in view: 25-cell squares 15 / 11k · 50-cell squares 8 / 11k
+heading 270°: tiles drawn 4 / 31k tris · in view: 25-cell squares 18 / 14k · 50-cell squares 10 / 16k
+heading 315°: tiles drawn 4 / 31k tris · in view: 25-cell squares 16 / 14k · 50-cell squares 9 / 18k
+mean: drawn 29.3k · 25-cell squares 14.9 / 13.6k · 50-cell squares 8.3 / 17.8k

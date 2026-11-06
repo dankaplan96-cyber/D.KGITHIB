@@ -1,0 +1,134 @@
+{
+ "spots": {
+  "square": {
+   "pos": [
+    -42,
+    2.2,
+    -2
+   ],
+   "pitch": 36.6,
+   "calls": 946,
+   "tris": 1364477,
+   "ms50": 732.3,
+   "ms90": 4356.2,
+   "geos": 1012,
+   "texs": 499,
+   "progs": 123
+  },
+  "lane": {
+   "pos": [
+    -45.5,
+    2.39,
+    52
+   ],
+   "pitch": 36.6,
+   "calls": 928,
+   "tris": 1553320,
+   "ms50": 4665.4,
+   "ms90": 8792.8,
+   "geos": 1047,
+   "texs": 499,
+   "progs": 123
+  },
+  "harbour-lane": {
+   "pos": [
+    -80,
+    2.23,
+    37
+   ],
+   "pitch": 36.6,
+   "calls": 749,
+   "tris": 1256002,
+   "ms50": 18.3,
+   "ms90": 5259,
+   "geos": 1220,
+   "texs": 499,
+   "progs": 127
+  },
+  "customs": {
+   "pos": [
+    -107,
+    1.85,
+    37
+   ],
+   "pitch": 48.4,
+   "calls": 514,
+   "tris": 773601,
+   "ms50": 4115.5,
+   "ms90": 6569.2,
+   "geos": 1229,
+   "texs": 499,
+   "progs": 127
+  },
+  "deck-wait-n": {
+   "pos": [
+    -6.6,
+    2.35,
+    33.76
+   ],
+   "pitch": 62.8,
+   "calls": 334,
+   "tris": 704198,
+   "ms50": 628.7,
+   "ms90": 5332.1,
+   "geos": 1228,
+   "texs": 499,
+   "progs": 127
+  },
+  "door": {
+   "pos": [
+    1001.2,
+    0,
+    9.14
+   ],
+   "pitch": 34.1,
+   "calls": 261,
+   "tris": 467847,
+   "ms50": 23.8,
+   "ms90": 5952.5,
+   "geos": 1363,
+   "texs": 499,
+   "progs": 127
+  },
+  "fort-yard": {
+   "pos": [
+    -31,
+    18.22,
+    -56.6
+   ],
+   "pitch": 36.6,
+   "calls": 451,
+   "tris": 862894,
+   "ms50": 3796.7,
+   "ms90": 5288.2,
+   "geos": 1364,
+   "texs": 499,
+   "progs": 127
+  }
+ },
+ "cpu": {
+  "camRigUpdate": {
+   "n": 600,
+   "meanUs": 82.8,
+   "p95Us": 200,
+   "maxUs": 6000
+  },
+  "occluders": {
+   "n": 600,
+   "meanUs": 3.3,
+   "p95Us": 0,
+   "maxUs": 100
+  },
+  "gameStepMs": {
+   "mean": 2.47
+  },
+  "end": [
+   -47.4,
+   -10.2
+  ],
+  "leg": 1
+ },
+ "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+ "gpu": "Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver",
+ "quality": "high"
+}

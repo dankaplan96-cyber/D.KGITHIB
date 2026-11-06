@@ -1,0 +1,30 @@
+start: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":1,"k_turns":3,"k_sand":true,"k_screen":true},"cowl":1,"jars":5,"ferry":true,"items":["evacplan","kscreen"],"journal":[{"key":"k_j_cool","done":false},{"key":"k_j_screen","done":false}],"coins":7,"hp":"4/11","pos":[3342.63,5,-1.5],"lying":[],"state":"play"}
+fit (on the roof): {"r":"used","label":"p_fit","fit":true,"done":false,"dir":1}
+fit lines: ["n_hero: Lumi's screen, tied over the mouth.","n_hero: Now the mouth goes into the wind."]
+turn: {"label":"p_turn","dir":2,"done":false,"sand":true}
+turn lines: ["n_hero: The mouth faces away from the wind. Nothing comes down."]
+turn: {"label":"p_turn","dir":3,"done":false,"sand":true}
+turn lines: ["n_hero: Side-on to the wind. Barely a breath."]
+turn: {"label":"p_turn","dir":0,"done":true,"sand":true}
+turn lines: ["n_hero: Air pours down the tower through the screen. Below, the curtain in the door lifts.","TOAST k_toast_cool"]
+vis on the roof (draws): {"crank":"HIDDEN (BufferGeometry at 18.1 of 18.8 m)","cowlMouth":"HIDDEN (BufferGeometry at 17.8 of 20.0 m)","cowlTop":"VISIBLE 19.0 m, ndc -0.07,0.49","door":"HIDDEN (PlaneGeometry at 15.9 of 18.7 m)","pumpWheel":"OFF-SCREEN (ndc -1.71,1.52)","nearestPole":"OFF-SCREEN (ndc -0.71,2.37)"}
+crank after done: "p_look"
+crank done lines: ["n_hero: Tied off. It'll hold till the next storm."]
+down to the porch: "arrived"
+sani spot / door prompt: {"sani":[0,0],"anim":"kneelWork","prompt":null}
+drink at full hp: {"label":"p_drink","hp0":4,"hp":7,"max":11}
+drink lines: ["n_hero: Cold water, in the middle of the desert."]
+brosk pays: {"r":"talked","paid":true,"owe":0,"coins":5,"lying":[]}
+pay lines: ["n_dtrader: Cold dates! Cold water! Here, five kashes. Don't tell Tarra I paid. She'll want her share."]
+brosk again (E spam x3): {"owe":0,"coins":0,"lying":0}
+again lines: ["n_dtrader: People queue for cold water now. I sell them dates while they wait.","n_dtrader: FunFrock built that blockhouse to keep us out. Now it keeps the dates in.","n_dtrader: People queue for cold water now. I sell them dates while they wait."]
+doors on the island: [{"room":"school","x":-70,"z":38.5}]
+into a room and back: {"r1":"transition","inRoom":"school","lyingIn":0,"back":"desert","owe":0,"coins":0,"lying":0}
+room trip lines: []
+pick the coin up (walk): {"owe":0,"coins":0}
+after lines (each twice): 1
+after lines: ["n_dtrader: FunFrock built that blockhouse to keep us out. Now it keeps the dates in.","n_weaver: The dyes set better in the cool. Look at that red.","n_dkid: Best place in Kesh. I'm guarding it.","n_dtrader: People queue for cold water now. I sell them dates while they wait.","n_weaver: Mind the threads.","n_dkid: Mum says it was FunFrock's. Now it's ours."]
+journal: {"title":"Kesh","lines":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}]}
+end: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":12,"hp":"7/11","pos":[3329.72,5.18,-2.53],"lying":[],"state":"play"}
+kept save-k4.json
+no errors

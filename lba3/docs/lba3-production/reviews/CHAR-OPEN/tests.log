@@ -1,0 +1,10 @@
+# CHAR-OPEN regressions on the final tree (GAME_URL=http://localhost:8173/, one browser at a time)
+opening exit=0 865s pass=24 fail=0 ALL PASSED
+stability exit=0 98s pass=16 fail=0 ALL PASSED
+prologue exit=0 207s pass=0 fail=0 warning: THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supporte
+house exit=0 86s pass=2 fail=0 ALL PASSED
+jetpack exit=0 910s pass=48 fail=0 ALL PASSED
+combat exit=0 117s pass=59 fail=0 ALL PASSED
+zoe-resume exit=0 280s pass=5 fail=0 ALL PASSED
+deaths exit=0 pass=160 fail=0 ALL PASSED (deaths.log, after #4)
+prologue: played to its end into chapter 1 (chapter [1, true], save written), no page errors; it prints values, not PASS lines

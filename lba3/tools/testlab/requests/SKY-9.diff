@@ -1,0 +1,164 @@
+diff --git a/lba3/src/game/zeelich.js b/lba3/src/game/zeelich.js
+index e9c7c4b5..0778f95d 100644
+--- a/lba3/src/game/zeelich.js
++++ b/lba3/src/game/zeelich.js
+@@ -167,8 +167,11 @@ const sailTex = (a = '#f6eadc', b = '#e88aa4') => ctex('sail' + a + b, 128, 256,
+   x.fillStyle = 'rgba(80,50,40,0.35)'; for (let i = 0; i <= 8; i++) x.fillRect((i * W) / 8 - 1, 0, 1.5, H);
+   x.fillStyle = 'rgba(70,40,30,0.45)'; for (let j = 0; j < 4; j++) x.fillRect(0, (j * H) / 4, W, 2);
+ });
+-// soft cloud puffs, tileable, transparent (alpha) or on a solid ground
+-export const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
++// SKY-9: a cloud texture in greys (its luminance, alpha kept), for a cloud sea whose colour is its tint alone (the
++// Wannies' amber gas: the lavender billows came out pink and magenta under an amber tint)
++const toGrey = (x, S) => { const im = x.getImageData(0, 0, S, S), d = im.data; for (let i = 0; i < d.length; i += 4) { const l = d[i] * 0.2126 + d[i + 1] * 0.7152 + d[i + 2] * 0.0722; d[i] = d[i + 1] = d[i + 2] = l; } x.putImageData(im, 0, 0); };
++// soft cloud puffs, tileable, transparent (alpha) or on a solid ground; grey: in greys (above)
++export const cloudTex = (solid, grey = false) => ctex('cloud' + solid + (grey ? 'g' : ''), 512, 512, (x, S) => {
+   const r = rng(solid ? 77 : 78);
+   if (solid) { x.fillStyle = '#d0a0cc'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
+   // billows: a lavender shadow under each puff, then the sunlit puff with a soft rim
+@@ -184,8 +187,9 @@ export const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
+       x.fillStyle = g; x.fillRect(cx - q, cy - q, q * 2, q * 2);
+     });
+   }
++  if (grey) toGrey(x, S);
+ });
+-export const puffTex = () => ctex('puff', 128, 128, (x, S) => {
++export const puffTex = (grey = false) => ctex('puff' + (grey ? 'g' : ''), 128, 128, (x, S) => {
+   x.clearRect(0, 0, S, S);
+   const r = rng(3);
+   for (let k = 0; k < 9; k++) {
+@@ -194,6 +198,10 @@ export const puffTex = () => ctex('puff', 128, 128, (x, S) => {
+     g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.6, 'rgba(255,238,246,0.6)'); g.addColorStop(1, 'rgba(255,238,246,0)');
+     x.fillStyle = g; x.fillRect(cx - q, cy - q, q * 2, q * 2);
+   }
++  // SKY-9: faded out before the texture's border (some billows reached past it: a puff showed its quad's straight edges)
++  const e = x.createRadialGradient(64, 64, 40, 64, 64, 64); e.addColorStop(0, 'rgba(0,0,0,1)'); e.addColorStop(1, 'rgba(0,0,0,0)');
++  x.globalCompositeOperation = 'destination-in'; x.fillStyle = e; x.fillRect(0, 0, S, S); x.globalCompositeOperation = 'source-over';
++  if (grey) toGrey(x, S);
+ }, false);
+ // hexagonal energy field
+ const shieldTex = () => ctex('shield', 256, 256, (x, S) => {
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index 80b38485..8157e558 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -49,6 +49,10 @@ export const ISLE_AT = (i) => ({ x: 1900 + i * 330, z: 1800 });
+ const SEA = -9;            // the ground under the clouds, past every island's edge
+ const SHORE = -0.5;        // the sea next to land: just under the waterline (physics WATER_FLOOR -0.35)
+ const CLOUD_Y = -1.4;      // the sea of clouds, just under the original's level 0
++// SKY-9: an island may lay its cloud sea lower (S.cloudDrop, m): the Wannies' platform walks 0–6 m up and its channels
++// between the terraces are sea, so the gas at CLOUD_Y filled them 3–5 m under the paths like a pale floor. Its solid
++// layer (2.5 m under) stays over SEA. R.cloudY, the plinths, barges, skiffs and footings follow it.
++const cloudYOf = (S) => CLOUD_Y - Math.min(4.5, S?.cloudDrop || 0);
+ const MARGIN = 14;         // cells of sea round the island's grid
+ 
+ const LAYOUTS = {};
+@@ -305,7 +309,7 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
+     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+       const ex = Math.abs(cx(i) - o.x) - o.sx / 2, ez = Math.abs(cz(j) - o.z) - o.sz / 2;
+       if (Math.max(ex, ez) > R) continue;
+-      const v = H[j * nx + i]; lo = Math.min(lo, v == null ? CLOUD_Y - 0.6 : v);   // (over the cloud sea: down under the clouds)
++      const v = H[j * nx + i]; lo = Math.min(lo, v == null ? cloudYOf(S) - 0.6 : v);   // (over the cloud sea: down under the clouds)
+     }
+     o.bury = Math.min(10, Math.max(0.6, o.y - lo + 0.3));
+     // (every grid point whose cells reach a wall's foot: within a cell and a bit outside it, along its length)
+@@ -768,8 +772,15 @@ const STYLE = {
+     // gem mine, the Wannie village of low houses, its chapel; it was "the High Platform", an industrial deck). The lift
+     // from the Lift Dock (ASCENCE) comes down here: its foot by the company's yard. Handles: R.wannie (below)
+     // (ZEELICH-1 item 6: under the gas — LBA2's Wannies' island: dim, warm and hazy, the light from below the gas)
+-    env: { fog: '#a08a74', sun: '#ffc080', hemiSky: '#ac927a', hemiGround: '#4a3628', sunI: 1.9, hemiI: 1.05, fogRange: [55, 220] }, grade: 0.9, gradeTint: [1.02, 0.97, 0.91], cloudTint: ['#b08e6e', '#c09c7a', '#d0ae8c'],
++    // (SKY-9: dim and warm but readable, R8: the gas lights the island from below — a warm hemisphere ground, not a dark
++    //  one — and the haze is lighter than the ground; the cloud sea 4.5 m lower, under the island's edges (its channels
++    //  read as chasms down to the gas), its billows in greys so the amber tint alone colours it, a glowing orange apart
++    //  from the grey-tan paving, finer (cloudRep) so a narrow channel shows billows, not one flat patch; smaller puffs
++    //  that stay in the channels instead of cutting their walls)
++    env: { fog: '#b09a80', sun: '#ffcc98', hemiSky: '#ccb8a0', hemiGround: '#94704c', sunI: 2.4, hemiI: 1.6, fogRange: [50, 210] }, grade: 0.88, gradeTint: [1.02, 0.985, 0.94],
++    cloudTint: ['#7a5030', '#b07a48', '#d09a60'], cloudGrey: true, cloudDrop: 4.5, cloudRep: 2, cloudOp: [1, 0.85, 0.3], puffScale: 0.6,
+     trees: '#d8d0b8', ground: ['#b8a888', '#a89878', '#c0ac90'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
++    rock: '#b0a498', rockHi: '#c4b8a8',   // (SKY-9: a taupe stone, apart from the sandy ground and the amber gas; Zeelich's pink rock read magenta here)
+     walls: ['#d8ccc0', '#cfc4b4', '#e0d4c4'], domes: [['#6a5a4a', '#c8b098'], ['#4a6a6a', '#a8c8c0']],
+     target: { x: 27, z: -26, word: 'BUILDING COMPANY' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
+     crates: 'wood', lines: ['#c8a050', '#5a4a3a'],
+@@ -1360,7 +1371,7 @@ function buildIsland(scene, physics, name, L, at) {
+ }
+ function buildIsland0(scene, physics, name, L, at) {
+   const ox = at.x, oz = at.z;
+-  const S = STYLE[name] || {};
++  const S = STYLE[name] || {}, CY = cloudYOf(S);   // (SKY-9: this island's cloud sea)
+   if (S.layout) L = S.layout(L);   // (Celebration: its later state's figure)
+   if (S.decks) L = deckLayout(L, S);   // (the Lift Dock: its decks are its ground)
+   const A = analyse(L, S), { w, d, H, cx, cz, gx, gz } = A;
+@@ -1458,7 +1469,7 @@ function buildIsland0(scene, physics, name, L, at) {
+ 
+   const R = {
+     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
+-    music: 'zeelich', cloudY: CLOUD_Y,
++    music: 'zeelich', cloudY: CY,
+     env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300], ...(S.env || {}) },
+     grade: S.grade ?? null, gradeTint: S.gradeTint ?? null,   // (ZEELICH-1 item 6: an island's own palette, applied as it is entered: main.js setGrade)
+     terrain, H: (x, z) => terrain.heightAt(x - ox, z - oz),
+@@ -1532,7 +1543,7 @@ function buildIsland0(scene, physics, name, L, at) {
+       : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
+     switch (shape) {
+       case 'hulk': {   // a big object standing in the clouds by a quay: a moored barge
+-        const along = ez >= ex, P = new EP.Place(B, o.x, S.hulk ? S.hulk.y : CLOUD_Y + 0.4, o.z, along ? 0 : Math.PI / 2);
++        const along = ez >= ex, P = new EP.Place(B, o.x, S.hulk ? S.hulk.y : CY + 0.4, o.z, along ? 0 : Math.PI / 2);
+         EP.barge(P, { len: (along ? ez : ex) * 0.95, beam: (along ? ex : ez) * 0.8, h: S.hulk ? S.hulk.h : Math.min(4, o.sy * 0.5) });
+         for (const c of P.cols) col(c);
+         break;
+@@ -1596,7 +1607,7 @@ function buildIsland0(scene, physics, name, L, at) {
+         // gateways). Its collider is the original's box, as when it was drawn as a house)
+         const al = ex >= ez, len = al ? ex : ez, th = al ? ez : ex, hh = o.sy;
+         const ends = [[o.x - (al ? len / 2 : 0), o.z - (al ? 0 : len / 2)], [o.x + (al ? len / 2 : 0), o.z + (al ? 0 : len / 2)]];
+-        let g = y0; for (const [px, pz] of [...ends, [o.x, o.z]]) g = Math.min(g, Math.max(tgy(px, pz), CLOUD_Y - 1));
++        let g = y0; for (const [px, pz] of [...ends, [o.x, o.z]]) g = Math.min(g, Math.max(tgy(px, pz), CY - 1));
+         const foot = y0 - g + 0.5, box = (l, h, t, rr = 0.04) => (al ? bbox(l, h, t, rr, 1.8) : bbox(t, h, l, rr, 1.8));
+         B.add(box(len, foot, th + 0.1), stoneM, o.x, y0 + 0.5 - foot / 2 + jy(o), o.z);
+         B.add(box(len - 0.03, hh - 0.66, th - 0.14, 0.02), pick(o, walls), o.x, y0 + 0.5 + (hh - 0.66) / 2 - 0.02, o.z);
+@@ -1675,10 +1686,10 @@ function buildIsland0(scene, physics, name, L, at) {
+         // posts down to the ground (or into the clouds) under a deck that stands clear of it
+         const g = tgy(o.x, o.z);
+         if (A.floorAt && o.shape === 'deck') {   // (the Lift Dock: timber stilts every few metres, down into the clouds)
+-          const nxp = Math.max(2, Math.round(ex / 4) + 1), nzp = Math.max(2, Math.round(ez / 4) + 1), hh = top - t - (CLOUD_Y - 2);
+-          for (let a = 0; a < nxp; a++) for (let b = 0; b < nzp; b++) B.add(cyl(0.2, 0.26, hh, 8), plankM, o.x - ex / 2 + 0.35 + (a / (nxp - 1)) * (ex - 0.7), CLOUD_Y - 2 + hh / 2, o.z - ez / 2 + 0.35 + (b / (nzp - 1)) * (ez - 0.7));
++          const nxp = Math.max(2, Math.round(ex / 4) + 1), nzp = Math.max(2, Math.round(ez / 4) + 1), hh = top - t - (CY - 2);
++          for (let a = 0; a < nxp; a++) for (let b = 0; b < nzp; b++) B.add(cyl(0.2, 0.26, hh, 8), plankM, o.x - ex / 2 + 0.35 + (a / (nxp - 1)) * (ex - 0.7), CY - 2 + hh / 2, o.z - ez / 2 + 0.35 + (b / (nzp - 1)) * (ez - 0.7));
+         } else if (top - g > 1.0) for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+-          const px = o.x + sx * (ex / 2 - 0.3), pz = o.z + sz * (ez / 2 - 0.3), pg = Math.max(gy(px, pz), CLOUD_Y - 2);
++          const px = o.x + sx * (ex / 2 - 0.3), pz = o.z + sz * (ez / 2 - 0.3), pg = Math.max(gy(px, pz), CY - 2);
+           if (top - t - pg > 0.3) B.add(cyl(0.12, 0.14, top - t - pg, 8), brass, px, pg + (top - t - pg) / 2, pz);
+         }
+         // a walkable floor (held by its top) that one can pass under when it is high enough
+@@ -1814,7 +1825,7 @@ function buildIsland0(scene, physics, name, L, at) {
+     }
+     if (it.kind === 'skiff') {
+       // (on the clouds; in a harbour, afloat on its water and tied to the quay by a line)
+-      const y = it.o.harbour && S.harbour ? S.harbour.water - 0.28 : CLOUD_Y + 0.15;
++      const y = it.o.harbour && S.harbour ? S.harbour.water - 0.28 : CY + 0.15;
+       if (it.o.harbour) EP.mooredSkiff(new EP.Place(B, it.x, y, it.z, it.ry), { color: it.o.color });
+       if (it.o.tie) {   // (from the hull's end nearer the quay)
+         const [tx, tz] = it.o.tie, ux = Math.sin(it.ry), uz = Math.cos(it.ry), e = (ux * (tx - it.x) + uz * (tz - it.z) > 0 ? 1 : -1) * 1.7;
+@@ -1994,17 +2005,18 @@ function buildIsland0(scene, physics, name, L, at) {
+       updaters.push((dt, t) => { map.offset.set(t * speed, t * speed * 0.6); });
+     };
+     const ct = S.cloudTint || ['#ffffff', '#ffffff', '#fff0f6'];   // (ZEELICH-1 item 6: an island's own cloud sea: grey over Otringal, amber gas below)
+-    mk(cloudTex(true), CLOUD_Y - 2.5, 14, ct[0], 1, 0.0012, false);
+-    mk(cloudTex(false), CLOUD_Y, 10, ct[1], 0.9, 0.002, true);
+-    mk(cloudTex(false), CLOUD_Y + 1.1, 6, ct[2], 0.45, -0.0015, true);
+-    const puffM = new THREE.SpriteMaterial({ map: puffTex(), color: S.cloudTint ? ct[2] : '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
++    const rep = S.cloudRep || 1, op = S.cloudOp || [1, 0.9, 0.45];   // (SKY-9: an island's own billow size and layer opacities)
++    mk(cloudTex(true, !!S.cloudGrey), CY - 2.5, 14 * rep, ct[0], op[0], 0.0012, false);
++    mk(cloudTex(false, !!S.cloudGrey), CY, 10 * rep, ct[1], op[1], 0.002, true);
++    mk(cloudTex(false, !!S.cloudGrey), CY + 1.1, 6 * rep, ct[2], op[2], -0.0015, true);
++    const puffM = new THREE.SpriteMaterial({ map: puffTex(!!S.cloudGrey), color: S.cloudTint ? ct[2] : '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
+     const puffs = [], spots = [];
+     for (let j = 0; j < L.nz; j += 4) for (let i = 0; i < L.nx; i += 4) {
+       const k = j * L.nx + i; if (H[k] != null) continue;
+       // sea next to land
+       let near = false; for (let b = -3; b <= 3 && !near; b++) for (let a = -3; a <= 3; a++) { const m = (j + b) * L.nx + (i + a); if (i + a >= 0 && j + b >= 0 && i + a < L.nx && j + b < L.nz && H[m] != null) { near = true; break; } }
+       if (!near || r() < 0.4 || inHarbour(cx(i), cz(j), 3)) continue;   // (none in a harbour: its water shows)
+-      const s = 5 + r() * 6, y = CLOUD_Y + 0.6 + r() * 1.5;
++      const s = (5 + r() * 6) * (S.puffScale || 1), y = CY + 0.6 + r() * 1.5;
+       const x = cx(i) + (r() - 0.5) * 4, z = cz(j) + (r() - 0.5) * 4;
+       spots.push({ x, y, z, s, ph: r() * 6 });
+     }

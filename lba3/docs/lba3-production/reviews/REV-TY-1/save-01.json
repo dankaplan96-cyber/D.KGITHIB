@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8124",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"lba\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"textSize\":\"normal\",\"shake\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"keys\":{},\"v\":2}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":3,\"room\":\"well\",\"hero\":{\"x\":1093.4,\"z\":3.3,\"hp\":10,\"mp\":8,\"magicLevel\":1,\"clovers\":3,\"coins\":0,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\"},\"flags\":{\"chapter\":0,\"chapterKey\":\"well\",\"intro\":true,\"opening\":true,\"tremorSeen\":true,\"wellSeen\":true,\"key\":true,\"metXil\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"inWell\":true,\"nodes\":0},\"killed\":[],\"collected\":[],\"searched\":[\"cupboard\"],\"crates\":[]}"
+        }
+      ]
+    }
+  ]
+}

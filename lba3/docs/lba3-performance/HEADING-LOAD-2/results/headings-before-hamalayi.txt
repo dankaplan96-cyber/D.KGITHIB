@@ -1,0 +1,56 @@
+heading 0 (0°, camera yaw 6.28): main 43 calls 296k tris · shadow 1 calls 0k tris
+   trees 4/138k · scenery 28/97k · terrain 2/53k · characters 4/6k · transparent 2/2k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/138/0 · scenery 2/12/28/53/2 · terrain 0/0/0/53/0 · characters 6/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 1/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/137.9k · drawBatch:hamalayi@hamalayi 12/86.1k · Mesh:terrain@hamalayi 2/52.9k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 5/3.5k · Mesh:sd3-lhar@hamalayi 3/3.2k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hamalayi@hamalayi 2/0.8k · Mesh:sd3-lba1@hamalayi 1/0.3k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k
+   [no characters+no particles/blobs] main 36 calls 290k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/138k · scenery 28/97k · terrain 2/53k · transparent 2/2k
+heading 1 (45°, camera yaw 7.07): main 50 calls 339k tris · shadow 1 calls 0k tris
+   trees 4/169k · scenery 35/109k · terrain 2/53k · characters 4/6k · transparent 2/2k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/169/0 · scenery 1/14/28/62/4 · terrain 0/0/0/53/0 · characters 6/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 1/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/169.4k · drawBatch:hamalayi@hamalayi 16/90.2k · Mesh:terrain@hamalayi 2/52.9k · Mesh:sd3-lba1camp@hamalayi 3/7.3k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 6/3.5k · Mesh:sd3-lhar@hamalayi 3/3.2k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hamalayi@hamalayi 2/0.8k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k
+   [no characters+no particles/blobs] main 43 calls 333k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/169k · scenery 35/109k · terrain 2/53k · transparent 2/2k
+heading 2 (90°, camera yaw 7.85): main 44 calls 312k tris · shadow 1 calls 0k tris
+   trees 4/167k · scenery 30/86k · terrain 2/53k · characters 4/6k · transparent 1/0k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/167/0 · scenery 3/14/25/40/4 · terrain 0/0/0/53/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 1/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/167.2k · drawBatch:hamalayi@hamalayi 14/69.6k · Mesh:terrain@hamalayi 2/52.9k · Mesh:sd3-lba1camp@hamalayi 3/7.3k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 6/3.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k · Mesh:head@actors 2/0.1k
+   [no characters+no particles/blobs] main 37 calls 306k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/167k · scenery 30/86k · terrain 2/53k · transparent 1/0k
+heading 3 (135°, camera yaw 8.64): main 34 calls 179k tris · shadow 1 calls 0k tris
+   trees 4/76k · terrain 2/53k · scenery 20/44k · characters 4/6k · transparent 1/0k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/76/0 · terrain 0/0/0/53/0 · scenery 3/22/16/1/2 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 0/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/76.2k · Mesh:terrain@hamalayi 2/52.9k · drawBatch:hamalayi@hamalayi 8/35.2k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 5/3.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k · Mesh:head@actors 2/0.1k · Instanced:blobBatch 1/0.0k
+   [no characters+no particles/blobs] main 27 calls 173k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/76k · terrain 2/53k · scenery 20/44k · transparent 1/0k
+heading 4 (180°, camera yaw 9.42): main 30 calls 127k tris · shadow 1 calls 0k tris
+   terrain 2/53k · scenery 17/36k · trees 4/32k · characters 4/6k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/53/0 · scenery 13/11/10/0/2 · trees 0/0/0/32/0 · characters 6/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 0/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@hamalayi 2/52.9k · BatchedMesh:lodBatch@hamalayi 4/32.2k · drawBatch:hamalayi@hamalayi 6/27.8k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 2/2.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k · Mesh:hamalayi@hamalayi 2/0.1k · Mesh:head@actors 2/0.1k
+   [no characters+no particles/blobs] main 23 calls 121k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      terrain 2/53k · scenery 17/36k · trees 4/32k
+heading 5 (225°, camera yaw 10.21): main 30 calls 143k tris · shadow 1 calls 0k tris
+   terrain 2/53k · trees 4/48k · scenery 17/36k · characters 4/6k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/53/0 · trees 0/0/0/48/0 · scenery 13/11/10/0/2 · characters 6/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 0/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@hamalayi 2/52.9k · BatchedMesh:lodBatch@hamalayi 4/48.3k · drawBatch:hamalayi@hamalayi 6/27.8k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 2/2.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k · Mesh:hamalayi@hamalayi 2/0.1k · Mesh:head@actors 2/0.1k
+   [no characters+no particles/blobs] main 23 calls 137k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      terrain 2/53k · trees 4/48k · scenery 17/36k
+heading 6 (270°, camera yaw 11.00): main 34 calls 212k tris · shadow 1 calls 0k tris
+   trees 4/104k · terrain 2/53k · scenery 21/50k · characters 4/6k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/104/0 · terrain 0/0/0/53/0 · scenery 4/20/10/10/6 · characters 6/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 1/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/103.6k · Mesh:terrain@hamalayi 2/52.9k · drawBatch:hamalayi@hamalayi 9/41.1k · Skinned:?@actors 2/5.9k · Mesh:sd3-landing@hamalayi 2/2.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:sd3-lba1@hamalayi 1/0.3k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k · Mesh:hamalayi@hamalayi 2/0.1k
+   [no characters+no particles/blobs] main 27 calls 206k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/104k · terrain 2/53k · scenery 21/50k
+heading 7 (315°, camera yaw 11.78): main 39 calls 268k tris · shadow 1 calls 0k tris
+   trees 4/120k · scenery 25/87k · terrain 2/53k · characters 4/6k · transparent 1/2k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/0/0/120/0 · scenery 2/22/10/48/6 · terrain 0/0/0/53/0 · characters 6/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:hamalayi@hamalayi #c8d0dc 1/1 · Instanced:hamalayi@hamalayi #ffffff 0/1 · Instanced:blobBatch #ffffff 0/0
+   top: BatchedMesh:lodBatch@hamalayi 4/120.2k · drawBatch:hamalayi@hamalayi 11/77.2k · Mesh:terrain@hamalayi 2/52.9k · Skinned:?@actors 2/5.9k · Mesh:sd3-lhar@hamalayi 3/3.2k · Mesh:sd3-landing@hamalayi 2/2.5k · Instanced:hamalayi@hamalayi 2/2.2k · Mesh:hripples@hamalayi 1/1.6k · Mesh:hfoam@hamalayi 1/1.1k · Mesh:sd3-lba1@hamalayi 1/0.3k · Mesh:hflags@hamalayi 1/0.3k · Mesh:hriver@hamalayi 1/0.2k · Mesh:hchannel@hamalayi 1/0.2k · Points:hamalayi@hamalayi 1/0.1k
+   [no characters+no particles/blobs] main 32 calls 262k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.1k tris)
+      trees 4/120k · scenery 25/87k · terrain 2/53k · transparent 1/2k

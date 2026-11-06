@@ -1,0 +1,2 @@
+# name probe settings — the Hamalayi's pines detailed to 22 m (an existing benchgpu trade-off), the regions' LOD batches switched by the probe
+trade3-hamalayi q_area.js W_AREA=hamalayi W_FAST=1 W_SHOTS=1 W_VARS=trees_detailed_to_22

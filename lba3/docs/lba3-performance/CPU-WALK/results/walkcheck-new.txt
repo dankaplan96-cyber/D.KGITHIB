@@ -1,0 +1,13 @@
+walkcheck · medium · 360 frames per route, every 40th drawn for real
+street: 360 updates · 500451 world matrices compared, 0 different · caster lists 360 (29396 casters), 0 different · 154080 batched pieces verified, 0 kept though changed · walked 643 a frame, frozen 1187 (max 1328) · ranges frozen 789, ended 74
+interior: 360 updates · 113787 world matrices compared, 0 different · caster lists 360 (25920 casters), 0 different · 28800 batched pieces verified, 0 kept though changed · walked 115 a frame, frozen 481 (max 502) · ranges frozen 28, ended 272
+combat: 360 updates · 103594 world matrices compared, 0 different · caster lists 360 (33840 casters), 0 different · 720 batched pieces verified, 0 kept though changed · walked 253 a frame, frozen 320 (max 343) · ranges frozen 75, ended 65
+transition: 360 updates · 224136 world matrices compared, 0 different · caster lists 360 (26484 casters), 0 different · 77868 batched pieces verified, 0 kept though changed · walked 337 a frame, frozen 657 (max 1355) · ranges frozen 618, ended 598
+arrival: 360 updates · 283577 world matrices compared, 0 different · caster lists 360 (19570 casters), 0 different · 124093 batched pieces verified, 0 kept though changed · walked 427 a frame, frozen 702 (max 903) · ranges frozen 740, ended 575
+hamalayi: 360 updates · 145756 world matrices compared, 0 different · caster lists 360 (15840 casters), 0 different · 67680 batched pieces verified, 0 kept though changed · walked 128 a frame, frozen 594 (max 622) · ranges frozen 294, ended 294
+sweep: 360 updates · 522025 world matrices compared, 0 different · caster lists 360 (28392 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 709 a frame, frozen 1204 (max 1342) · ranges frozen 559, ended 437
+street@orbit: 360 updates · 486532 world matrices compared, 0 different · caster lists 360 (29645 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 521 a frame, frozen 1296 (max 1331) · ranges frozen 53, ended 38
+street@quality: 360 updates · 477958 world matrices compared, 0 different · caster lists 360 (38251 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 515 a frame, frozen 1323 (max 1417) · ranges frozen 193, ended 39
+ALL EQUAL
+{}
+(391.6 s)

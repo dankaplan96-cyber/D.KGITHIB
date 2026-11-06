@@ -1,0 +1,11 @@
+Settled house frame after New Game (q_newgame.js, W_SHOT=1 W_SEED=7: 30 title frames, the click, 60 stepped frames + 1),
+1366x768, Auto on battery (Medium), SwiftShader. probes/pixdiff.py, EXCLUDE='500,440,600,575;670,290,765,455': the two
+animated people (Twinsen, Zoé), whose pose differs between two runs of the SAME build (their animation follows the clock).
+base, base2: two runs of the baseline (1d0c95d). cand: the start-room preparation only. cand2: all three FIRST-BUILD commits.
+
+cand2 vs base2: 5058 of 1049088 pixels differ (0.482 %), largest difference 214; outside the people: 0
+cand2 vs base:  3867 of 1049088 pixels differ (0.369 %), largest difference 186; outside the people: 0
+cand  vs base2: 2928 of 1049088 pixels differ (0.279 %), largest difference 154; outside the people: 0
+base  vs base2: 4892 of 1049088 pixels differ (0.466 %), largest difference 214; outside the people: 0   (baseline against itself)
+
+shots/house-base.jpg (base2), shots/house-after.jpg (cand2), shots/house-after-vs-base-diff.png (red: differing pixels).
