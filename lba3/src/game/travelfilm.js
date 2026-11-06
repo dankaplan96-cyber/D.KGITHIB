@@ -304,7 +304,9 @@ function watchShot(g, C, land, mode, region, makeMotion, len) {
       if (clearView(g, root, c, aims, c.hi ? Infinity : B.y)) { cam = c; break; }
     }
   } finally { if (C.parked) C.parked.visible = was; if (root) delete root.userData._filmCast; }
-  cam ??= high[1];
+  // (the view from above when none was clear; on a slow machine the time ran out before it was tried, and its height
+  //  was never set: the camera stood at y 0, under the ground, and the whole film showed the inside of the hill)
+  if (!cam) { cam = high[1]; cam.y = Math.max(B.y + cam.hi, g.physics.groundAt(cam.x, cam.z) + 3); }
   const lookH = mode === 'ferry' ? 2.2 : 1.6;
   return { out, cam, move, tried, ms: Math.round(performance.now() - t0), shot: () => ({ pos: cam, look: V().copy(C.twin.position).add(V(0, lookH, 0)), fov: mode === 'glider' ? 46 : 50 }) };
 }
