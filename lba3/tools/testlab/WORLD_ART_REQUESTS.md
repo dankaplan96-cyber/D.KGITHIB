@@ -2453,3 +2453,26 @@ real saves (KEEP → LOAD), ASSIST=1.
   sea, contrast kept). The Wannies' platform reads wrong: flat pale cloud slabs cross the island at walking height, its
   cloud sea is pink where the style asks amber, and ground, walls and props sink into one dark sepia. A fix is in work
   on the laptop (SKY-9, its own request). Pictures are chapter 3+: kept on the laptop.
+
+## SKY-9 · the Wannies' platform under its sky (CLOUD_ORDERS 9, SKY/WANNIE pictures: "fix what reads wrong") · the laptop, 6.11.2026
+`requests/SKY-9.diff` (zislands.js, zeelich.js; applies alone on the newest origin). Real GPU (Vega 8, headed Chrome),
+the same 8 play-camera spots before and after; chapter 3+, pictures kept on the laptop.
+- **White slabs through the island:** the hero walks at y 3.0–4.4; the island's edges sit at 0.2–1.3 m, and its narrow
+  channels between the terraces are sea cells (terrain −9). The cloud planes (−3.9 solid, −1.4, −0.3) and 54 puffs 5–11 m
+  tall at −0.8…1.0 filled them 3–5 m under the paths: a pale, near-untextured patch (one billow tile 140 m) read as a
+  floor, cut hard by the straight channel walls; some puff billows reached their texture's border (square edges).
+  Fix: `cloudYOf(S)` / per-island `CY`; the platform `cloudDrop: 4.5` (planes at −8.4/−5.9/−4.8, the solid one above the
+  −9 bed, capped), `R.cloudY` and the plinths, barges, skiffs, footings and stilts follow `CY` (other islands keep −1.4);
+  `cloudRep: 2`, `cloudOp [1, 0.85, 0.3]`, `puffScale: 0.6`. zeelich.js `puffTex` fades out before its border (all
+  islands' puffs, edges only; Otringal's frame stats unchanged ±1). Walkable ground unchanged (under −0.35 is blocked).
+- **Pink sea although the tint is amber:** `cloudTex` paints a lavender-pink base (#d0a0cc) and lavender shadows; the
+  amber tint multiplied them into dusty rose; and the platform had no `S.rock`, so its cliffs took Zeelich's pink rock.
+  Fix: a greyscale variant of `cloudTex(solid, grey)` and `puffTex(grey)` (own cache key), the platform `cloudGrey: true`
+  with tint ['#7a5030', '#b07a48', '#d09a60']; `rock '#b0a498'`, `rockHi '#c4b8a8'`.
+- **One murky sepia:** fog #b09a80, sun #ffcc98 2.4, hemi sky #ccb8a0, ground #94704c 1.6 (the light from below the
+  gas), grade 0.88, gradeTint [1.02, 0.985, 0.94]. Mean luma 65 → 73, darkest 5 % 11 → 24, saturation 185 → 167.
+  Lamps stay lit (dim place under the gas). The mine's boulders still read dark (their own material, untouched).
+- **Checked on the GPU:** zislands 13/13, zeelich-life 38/38, overlaps (ONLY=isle_platform) 1/1 + 2/2 visual; only
+  FAIL in each the local server's favicon 404. Draw calls, triangles, textures unchanged (142/117/108/118 calls on the
+  four spots); median frame 15–21 ms both, within run-to-run noise; +2 greyscale 512² cloud canvases, +1 128² puff.
+- **Left:** where the gas meets the stepped channel walls the cut is still hard, now 5–6 m under the paths and amber.
