@@ -2341,3 +2341,33 @@ frame (78 take-off frames a place):
   camera (11 spots tried; reads clearly, villagers crowd the tail); the Citadel glider now sits on a path junction
   (−58, −66); Hesk 1.2 m from the Desert glider (was 0.4); the 250 ms camera budget is easily overrun under load, so the
   shot picked can differ by machine. Pictures: chapter 10, not for the user (the laptop keeps them).
+
+## ROCK-13 · Desert Island's grey rock (CLOUD_ORDERS 13) · the laptop, 6.11.2026
+`requests/ROCK-13.diff` (desert.js only; applies alone on the newest origin). Overhead at a fixed camera, the same
+classifier as the original's study: grey share LBA2 23.5 % · ours before 4.7 % (mostly paving) · after 19.8 % (about
+84 % of it); warm red-brown 2.9 % → 0.1 % (LBA2 0.5 %); grey median #877e7b (LBA2 #8c8782).
+- **Why recolouring did little:** the terrain multiplies the vertex colour by `TX.cliff` (grey-violet), and `COL.rock`
+  '#e0a080' made it reddish-brown; colorFn blended to rock only at smoothstep(0.8, 1.6, slope) while the texture showed
+  rock from 1.0, so most rock pixels kept the sand colour; and rock lived only on faces steeper than 1.0, edge-on from
+  above. The rock meshes carried Citadel's moss (olive here) and a pink instance colour.
+- **The original's rock is not a steep-face material:** from its heightfield, grey is 15 % of the ground under 2 m,
+  22 % at 2–4 m, 28–36 % at 4–8 m, 41–47 % above 8 m; 22 % even on flat ground.
+- **Changed:** `COL.rock` linear (1.06, 1.1, 0.94), cancelling the texture's violet (`TX.cliff` shared with Citadel,
+  untouched). New `rockAt(x, z, h, slope)` used by both colorFn and splatFn (colour and texture agree): the old rule
+  everywhere, plus, away from places, tracks and paving, a lower slope threshold (0.5–0.95) and outcrop patches from a
+  fixed sine noise lifted by height and slope (no random draws; a crisp edge near places). `dryRock()`: a cached clone of
+  vegetation.js `rockGeometry` in dry grey, no moss. `placeRocks()`: about 87 scree rocks on steep grey slopes from their
+  own `rng(4313)` after all other draws (nothing else moves), ≥ 5 m off tracks, 3 m off places and coast, `keshClear`,
+  `inBuilding`-filtered, into the same three batches (under 1 m: the coarse sculpt). Old rocks keep spots and variants;
+  instance colour '#e8a888' → '#ece6de'. Rock colliders 106 → 134 (seeThrough, none within 2.5 m of a door, NPC, spot,
+  exit, search, trough or giver).
+- **Cost (SwiftShader counts, not frame times):** draw calls unchanged in all five views (spawn 35/12, crater 29/4,
+  east 47/12, north 91/10, overhead 167/11); triangles +4–18 % in play views, +20 % overhead. Vega 8 not measured.
+- **Checked:** desert-life 30/0, residents 182/0, wizards 6/0, world-consistency 37/0, overlaps (desert) 0; chapter4 43
+  passed then stopped at a save fixture the laptop copy lacks; lazyregions 1 FAIL (expects 11 Zeelich isles, the game has
+  9 since DECLUTTER: not desert.js). worldscore desert 82.6 → 83.1.
+- **Look by eye:** from the play camera the flat outcrops read as painted grey patches on the sand (as the original's
+  are texture only; the relief comes from the scree), a few with a hard edge. If that reads wrong to you, lower the patch
+  term near the play paths or soften `smoothstep(0.3, 0.5, rk)`. Soil fell 11.9 → 7.3 % (LBA2 14.4 %): shaded slope
+  sand became rock. Outcrop bias 0.35 → 0.32 would add about 1 point of grey. Pictures: chapter 3+, not for the user
+  (the laptop keeps them).
