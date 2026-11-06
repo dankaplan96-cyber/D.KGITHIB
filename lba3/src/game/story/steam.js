@@ -51,7 +51,9 @@ export class Steam extends ChapterBase {
       case 'tarra': return f.c5_planned ? S.tarra : around(1);
       case 'hesk':
         // (into the buried hall by its dug-out door, seen going: he vanished from Kesh in front of Twinsen: index.js walkOn)
-        if (f.c5_glider && this.Bh) { const g = this.Bh.glider; return { x: g.x - 1.2, z: g.z, a: Math.PI, via: D.ruins?.stand }; }
+        // (off its west wing tip, on the door's side, clear of the wing and the tarp, facing the fuselage 6.6 m east:
+        //  at g.x − 1.2 he stood under the tailplane, his body through it, condenser.js; g is the tail's spot)
+        if (f.c5_glider && this.Bh) { const g = this.Bh.glider; return { x: g.x - 6.2, z: g.z - 4.97, a: 1.12, via: D.ruins?.stand }; }
         return f.c5_planned ? S.hesk : around(2);
       case 'dallan':
         if (f.c5_vent) return { x: pz.x - 2.4, z: pz.z + 1.6, a: 1.4 };
@@ -335,7 +337,7 @@ export class Steam extends ChapterBase {
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     if (f.c5_relief) f.c5_vent = true;   // (a save mid-eruption: the steam is through)
     RG.whenBuilt('desert', (D) => {
-      if (f.c5_ferryTaken) D.ferry?.setVisible?.(false);
+      if (f.c5_ferryTaken && this.isCur()) D.ferry?.setVisible?.(false);   // (back from chapter 6 on: story/kesh.js push)
       if (f.c5_dug) D.ruins.setDrift(false);
       if (f.c5_dallanOK) D.post.gate.open();
       if (f.c5_vent) D.ruins.setPlume(1);

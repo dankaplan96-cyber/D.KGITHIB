@@ -195,7 +195,9 @@ const DESERT_PEOPLE = [
   // desertold.js: its door (−67.8, −66.4), the study crystal on its bracket (−66.05, −65.5)); a look up at the crystal
   { id: 'oni', char: 'desertkid', tint: '#eef0ff', speed: 1.1, color: '#b8c8ff', start: 0, area: 'desert', phase: school, rounds: {
     school: [
-      L('oni_door', -70.4, -67.4, -67.8, -66.0, 'stand', [20, 30], { gest: ['sigh'] }),
+      // (1 m east of where she stood: that was 1.7 m from the centre of the School wall's big boulder (desertold.js
+      //  OLD_ROCKS −72.0, −68.1, its collider 2.2 m round), inside it, its top her floor)
+      L('oni_door', -69.4, -67.0, -67.8, -66.0, 'stand', [20, 30], { gest: ['sigh'] }),
       L('oni_look', -64.9, -67.5, -66.05, -65.5, 'stand', [8, 12], { gest: ['shrug'] }),
     ] } },
 ];

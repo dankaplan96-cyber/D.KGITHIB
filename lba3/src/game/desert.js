@@ -1454,7 +1454,7 @@ export function* buildDesertSteps(scene, physics) {
       const e = ENDS[key]; if (!e) return;
       const P = e[2], a = P[P.length - 2], b = P[P.length - 1];
       yacht.position.set(e[0], H(e[0], e[1]), e[1]); yacht.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
-      yachtCol.x = ox + e[0]; yachtCol.z = oz + e[1]; yachtCol.top = H(e[0], e[1]) + 0.8; physics.update(yachtCol);
+      yachtCol.x = ox + e[0]; yachtCol.z = oz + e[1]; yachtCol.top = H(e[0], e[1]) + 0.8; yachtCol.rot = yacht.rotation.y; physics.update(yachtCol);   // (turned with the hull: it stayed east-west)
       this.x = ox + e[0]; this.z = oz + e[1];
     },
     spot(key) { const e = ENDS[key]; return e ? W(e[0], e[1]) : null; },
@@ -1477,7 +1477,7 @@ export function* buildDesertSteps(scene, physics) {
     if (Y.hero) { Y.hero.pos.set(ox + x, H(x, z) + 0.75, oz + z); Y.hero.angle = Math.atan2(b[0] - a[0], b[1] - a[1]); Y.hero.vy = 0; Y.hero.onGround = true; }
     if (Y.d >= Y.tot) {
       R.yacht.riding = null;
-      yachtCol.x = ox + x; yachtCol.z = oz + z; yachtCol.top = H(x, z) + 0.8; physics.update(yachtCol); yachtCol.enabled = true;
+      yachtCol.x = ox + x; yachtCol.z = oz + z; yachtCol.top = H(x, z) + 0.8; yachtCol.rot = yacht.rotation.y; physics.update(yachtCol); yachtCol.enabled = true;
       R.yacht.x = ox + x; R.yacht.z = oz + z;
       if (Y.hero) { const side = -Math.atan2(b[1] - a[1], b[0] - a[0]) + Math.PI / 2; const hx = x + Math.cos(side) * 1.8, hz = z - Math.sin(side) * 1.8; Y.hero.pos.set(ox + hx, H(hx, hz), oz + hz); }
       Y.done?.();
