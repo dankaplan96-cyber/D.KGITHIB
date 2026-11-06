@@ -2492,3 +2492,34 @@ Test Lab quick check on the installed desktop app 0.48.0 (build 330), Vega 8, pl
 - Also seen (light, structure-first): new game → play 3 frames over 50 ms (worst 89 ms, +5 geometries in that frame),
   the arena fight 2 (worst 141 ms). Tonight's requests are not in this build.
 - Run: `lba3/tools/testlab/runs/2026-11-06T08-45-29-quick/` (local only, not committed).
+
+## MUSIC-19 · music by place (CLOUD_ORDERS 19, and 23f's bar and terminal) · the laptop, 6.11.2026
+Diff: `requests/MUSIC-19.diff` (against 7b5d5b0b, `git apply --check` clean). Every room and region listed with its mood
+(ROOM_MUSIC, R.music, setOutdoorArea, story cues). The pieces that did not fit, set against how LBA1/LBA2 scored such
+places (descriptions only, nothing transcribed):
+
+| place | was | now | why |
+|---|---|---|---|
+| asylum | stealth (facility minus brass) | `asylum`: its own piece, **The Old Asylum** (score only) | LBA1 gives the asylum its own sparse tense piece; ours was the fort's mix going on through the door |
+| cellar | none (the town playlist, full) | home | a home's cellar keeps the home piece |
+| tavern | home | village | an inn is the town's lively register, not the family theme |
+| tavcellar, bazoo, pharmacy, ticket, baggage | home | office (the square through the walls) | shops and public halls keep the town's everyday tune indoors |
+| tralucave | home | cave (The Well) | caves are slow dark ambient |
+| terminal (Citadel) | home | island | a departure hall goes on with the region's travel music |
+| otrbar | home | zeelich (full) | 23f: a lively bar, on Zeelich, not Citadel's Home |
+| zterminal, otrhotel | home | `zeelich_in` (new MOODS entry, as office: gain 0.6, low-pass 1100) | 23f: Zeelich heard through the walls |
+
+- **The Old Asylum** (`tools/music/tracks/asylum.py`, original, written by hand): an uneasy music-box waltz, B minor,
+  3/4, 76 bpm, chamber colours, no brass or drums; B (D major) for the hostel lived in, C for Vesk's store with the
+  Entity cell once, bent. Intro 9.5 s, loop 1:35 (from the score). `lint.py` passes all 17 tracks (with a stub `mido`).
+  **Not rendered:** the laptop has no FluidSynth, FFmpeg, soundfont or the Python packages, and I installed nothing.
+  The wiring keeps it safe: `MOODS.asylum = { track: 'asylum', alt: 'facility_stealth' }` and a one-line `_alt()` in
+  `target()` plays `alt` while the track is missing from the manifest; after `build.py asylum` it plays with no code
+  change. **For the cloud:** render it (MUSIC.md setup, then `build.py asylum`), ~1.7 MB at the shipped rate.
+- celtemple dropped from my diff: REVIEW-ZEELICH (d7b5ecce) already moved it to 'cave'.
+- **Tests (SwiftShader, local copies):** audio 6/6, music 26/26, asylum 10/10, chapter1 23/23; a mood check entering
+  each remapped room and reading `music.state()` 19/19 (order 19) and 4/4 on the rebased diff (zterminal and otrhotel
+  `zeelich_in` with low-pass 1100, otrbar `zeelich` full, office unchanged). menus (2 settings checks + a reload timeout)
+  and timing (60 fps cap on a 144 Hz screen) fail the same on origin.
+- **Left, no better piece yet:** Bersimon's tent and the School of Magic (Home; a mystical piece is a candidate), the
+  Hamalayi outdoors (The Well), the Desert (the island pieces).
