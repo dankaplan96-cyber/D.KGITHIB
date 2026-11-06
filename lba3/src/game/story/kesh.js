@@ -55,14 +55,29 @@ export class KeshLife extends ChapterBase {
     C.setDates(!!f.k_done);
     this.push();
   }
-  regionBuilt(ids) { if (ids.includes('desert')) { this._jars = this._ferry = undefined; this.applyCool(); } }
-  // the things that follow the main story: the water jars (few before the pump), the ferry chalked out on the board
+  regionBuilt(ids) { if (ids.includes('desert')) { this._jars = this._ferry = this._gshow = undefined; this.applyCool(); } }
+  // the things that follow the main story: the water jars (few before the pump); the ferry chalked out on the board and
+  // gone from the pier while the project has it — chapter 5 only: from chapter 6 on the ferry runs again (travel.js), so
+  // the slate came down and the boat is back (the board said NO FERRY for the rest of the game, and the boat stayed away
+  // in a game played on but stood at the pier after a load); and the glider at the landing only once Hesk has one
+  // (FunFrock's, flown north at the end of chapter 5: in chapters 4 and 5 one stood parked by the pier while chapter 5
+  // has him dig the only glider out of a buried hangar)
   push() {
     const K = this.K; if (!K) return;
     const jars = this.phase() === 'dry' ? 2 : 5;
     if (jars !== this._jars) { this._jars = jars; K.cool.setJars(jars); }
-    const ferry = !this.f.c5_ferryTaken;
-    if (ferry !== this._ferry) { this._ferry = ferry; K.board.setFerry(ferry); }
+    const ferry = !this.f.c5_ferryTaken || this.story.index > this.idx('steam');
+    if (ferry !== this._ferry) { this._ferry = ferry; K.board.setFerry(ferry); this.game.regions?.built('desert')?.ferry?.setVisible?.(ferry); }
+    this.landingGlider();
+  }
+  landingGlider() {
+    const v = this.game.travel?.vehicles?.desert_glider; if (!v) return;
+    const show = this.story.index >= this.idx('pass');
+    if (show === this._gshow) return;   // (on a change only: a journey film hides the parked craft while it flies its twin)
+    this._gshow = show; v.visible = show;
+    const p = v.getWorldPosition(v.position.clone());   // (its collider, travel.js travelRegion: the box on the craft's own spot)
+    const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
+    if (c) c.enabled = show;
   }
   // Sani's place once the room draws: sitting in its doorway (asked by dig.js for chapters from 4 on)
   saniSpot() { return this.f.k_done && this.K ? this.K.cool.sani : null; }

@@ -152,6 +152,10 @@ function buildHangar(scene, physics) {
   { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 2.3 - Math.abs(y) * 0.55 - Math.abs(x) * 0.08 + Math.sin(x * 2 + y) * 0.06); } tarp.geometry.computeVertexNormals(); }
   tarp.rotation.x = -Math.PI / 2; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
   B.col(2.5, 2.8, 4.8, 1.6, 2.4, { noStand: true, rot: -0.3 });
+  // (the fuselage's nose and its tail with the tailplane reach past the wing's box: their own, so nobody stands in them;
+  //  the glider's frame turned −0.3: a point (x, z) in it lies at (2.5 + 0.955x − 0.296z, 2.8 + 0.296x + 0.955z))
+  B.col(3.22, 0.46, 0.75, 0.85, 2.0, { noStand: true, rot: -0.3 });   // the nose: its frame's (0, −2.45)
+  B.col(1.79, 5.09, 1.35, 0.45, 2.5, { noStand: true, rot: -0.3 });   // the tail: its frame's (0, 2.4)
   R.glider = { x: B.cx + 2.5, z: B.cz + 2.8 + 2.0, uncover() { tarp.visible = false; } };
   // a gantry along the right side with a ball switch for the roof hatch
   const gy = 4.2;
