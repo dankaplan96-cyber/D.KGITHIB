@@ -335,7 +335,129 @@ room.
 **Pictures:** the play camera at the market, the lower row at levels 0 and 1, the Speaking Steps, the chained gate,
 the bell tower, and Oren's and Mags's interiors.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 6.11.2026, branch `expansion/ballastra`; the place only — the residents are W-7's, their
+stand spots are ready; story, flags and travel are the cloud's)
+
+*Files* (new, `src/game/ballastra/`): `arches.js` (the region `bl_arches`, its own lazy group at x 3 000, z −3 800, built
+in 16 steps; the plan, the moving parts, the handle `BALLASTRA.arches`), `archhouses.js` (the district's pieces: the
+narrow tall house with its water record, `tideMarks` for stone faces, skiffs, market stalls, the gauge's paint),
+`archrooms.js` (`bl_oren` 3 800, `bl_mags` 3 900, `bl_pump` 4 000, all at z −3 800). Small additions in W-1's files:
+`common.js` (`BALLASTRA.arches`, the places' positions), `sea.js` (a place may give its own bed and bed colour),
+`skyline.js` (the arch's curve exported), `harbor.js` (`R.entries.bl_arches` = `districtEdge`; `exits.toArches` at the
+district gate, data for the story). `tests/ballastra-arches.mjs` (20 checks). Pictures: `docs/future/world/W-2/`.
+
+*The idea in form* (the coordinator's review): the lower canal is a walled basin whose water stands at 2.25 / 1.4 / 0.4 m
+(levels 0 flooded / 1 balanced / 2 low; the outer sea at 0), and everything on it rises and falls with it or stands
+clear of it, and keeps the record of where it has been:
+- the **market float** rides the level on four corner piles with bronze collars (deck 2.85 / 2.0 / aground at 1.05);
+  its two **hinged gangways** tilt with it (the one to the row is drawn up out of the water at level 0);
+- the **lower row**: eight narrow, tall houses (3.4–4.4 m wide, ~9 m to the ridge) on stilts, the wet floor below
+  (limewash or rubble stained a metre up, a salt line, two older marks with dried weed caught on them), the **living
+  floor on top**, jettied on brackets with a **gallery** (its door, herbs, the washing lines run from it, not from
+  below), a steep gable to the water with a glazed float-ball finial, **hoist beams** in every other gable (goods go
+  up, not in); **three doorstep heights** (the door's worn step 1.88, the walkway 1.75, the boat step 1.55 — a hand over
+  the balanced water); **boats tied at two heights** (rings at 2.6 and 1.65 on each mooring post; the painters go to
+  the high ring in a flood, the low one when balanced, slack in the mud when low; the boats lie aground at level 2);
+  shutters shut and washing in at a flood or when the row is away (`row.setHome`);
+- the **Speaking Steps**: a round platform at the quay's height (radial paving, a broken ring of stone seats, the
+  speaker's dais with a bronze ring) whose six tiers go down into the canal: 1 / 3 / 5 tiers are dry floors at
+  levels 0 / 1 / 2;
+- the **level gauge** painted on the west pier's foot (bands every half metre, three glazed tiles at the three levels,
+  no words), its bronze float riding the water in a slot; the salt line and old marks on every basin face;
+- the **big shapes**: the great arch (feet at x ±32, crest ~40 m; four homes hung under its span on chains) and the
+  old **beam pump** on the west pier (a glazed celadon cylinder, a 15 m bronze beam on a stone A-frame, its rod down
+  into the basin, the outflow mouth); no domes or towers from the base game; the flood bell is a squat stone tower.
+
+*The plan* (local metres; the hero comes in from the harbour in the south):
+- the **landing** (1.4) from the harbour's gate, steps up to the **south quay** (2.8, big pale flags): goods waiting
+  to go up to the living floors, the **notice board** (pictograms), the **jetty** north to the market's gangway;
+- the **west ledge** (2.8) along the pier: the **pump room's door** (bronze-framed arch), the gauge, a stair down at
+  its north end to the walkway (boarded at level 0);
+- the **lower row** along the basin's north side behind its **walkway** (1.75, on piles): Mags's house the third from
+  the west, Dunn's the fifth (older, rubble, sunk lower: its arched door at the boat step's height, the **silt heap**
+  in its pit); a **narrow stair** on brackets up the terrace's wall from the walkway's east end (two flights, a
+  landing at 4.4, rails; boarded at the landing at level 0);
+- the **upper terrace** (7.0, dressed stone, dry, older) on the arch's east shoulder: north part with **Oren's house**
+  (three storeys: stone, celadon tiles, painted boards; a glazed side-gabled roof) and an older cobalt-tiled
+  neighbour, the **cistern** with its bronze hand pump (the terrace drinks the sky, never the canal), a bench looking
+  away from the water; the south plaza with the **flood bell** and a third house; the **wide stair** (4 m, 19 treads)
+  down to the quay; the **gardens' gate** in the plaza's east parapet (W-3 beyond: closed).
+
+*The puzzle's parts*: `canal.setLevel` (about 5 s animated; the water, the float, the gangways, the floors, the boards,
+the gauge's float, the boats all follow it), `row.setHome`; Dunn's silt (3 stages, `silt.setHits`) and door (swings in,
+`dunnDoor.setOpen`); in `bl_pump` the spill gate (a timber gate in bronze grooves in a stone channel, the spindle, the
+hand-wheel, the **chain** round the wheel to a floor staple with a cobalt **seal plate**; the **pawl** on its ratchet
+high on the pier wall; `chain.cut`, `pawl.release`, `spillGate.setOpen` — the gate rises in ~3 s and stops being
+solid; the channel behind it is a dry stub he may step into); the bell (`untie`, `setHorn` ×3 — three ceramic horns
+stacked on a bronze mast over the belfry's roof, each turning to terrace / lower row / gardens — `setCam` one or two
+tones, `ring()`: the bell swings ~4.5 s and sounds through the game's synth; refused (null) while tied). Extras so
+nothing stays out of reach: `chain.reset`, `pawl.reset`, `bell.tie`.
+
+*Handles* (`BALLASTRA.arches`, world coordinates): as ordered — `rooms`, `spawns` (9), `exits` {toHarbor (active),
+toGardens (data: `bl_gardens` is not built yet)}, `doors` (orenOut/In, magsOut/In, pumpOut/In, active), `stands`
+(20), `spots` (11), `safe` (6), `ballTargets.spillPawl`, `swordTargets.spillChain / dunnSilt` {x, y, z, r}, the
+setters, `onChange(fn)`; plus `plan` (the build's numbers, for tests).
+
+*Collision*: the walkway, its boat steps and the west landing are floors only while dry (levels 1, 2); at level 0
+boards close the west stair's head and the narrow stair's landing, and the row's gangway is drawn up with the float's
+gap railed; the float and both gangways at the level's height (stair treads, ≤ 0.2 m a tread at level 2); the Steps'
+tiers are floors where dry; the silt heap solid until its third hit, Dunn's door until opened; the pump room's gate
+until open. The soft edge as in W-1 (anyone over water without a floor is eased back; a flood over the walkway puts
+him on dry stone).
+
+*Numbers* (**SwiftShader, headless, not the laptop's GPU** — the real-GPU playthrough had the machine tonight; draw calls
+and triangles per frame only, no fps or GPU ms; the game's default quality on this profile (High), 1280×720, the play
+camera; the Citadel street is the benchmark's own route setup, same run):
+
+| view | draw calls (shadow) | triangles |
+|---|---|---|
+| Citadel street (the budget; bench route at t 0 / t 3) | 215 (47) / 174 (49) | 899k / 749k |
+| W-1 the pad (for reference) | 45 (12) | 350k |
+| the landing from the harbour, level 0 | 109 (36) | 559k |
+| the south quay, level 0 / level 1 with the row home | 109 (36) / 108 (35) | 558k / 560k |
+| the market float, level 1 | 102 (37) | 537k |
+| the lower row's walkway, level 1 | 106 (37) | 561k |
+| the terrace by the bell / the terrace north | 45 (8) / 51 (13) | 443k / 453k |
+| the Speaking Steps, level 2 | 104 (35) | 559k |
+| the pump room / Oren's / Mags's (rooms) | 38 (2) / 29 (1) / 31 (2) | 42k / 33k / 24k |
+
+Every view is under the street in draw calls and triangles. The region is 143 meshes (merged per material: 70
+materials), 760k triangles in all (the arch's swept rock and the Steps' lathes are the biggest); 12 small canvas
+textures (≤ 512², one 64×512 gauge) and the sea's 256² height texture; no lights outdoors, 2–3 in each room. First
+build: 2.6–2.7 s on SwiftShader (16 steps when built by regions.js in steps), not measured on the laptop's GPU.
+
+*Checks*:
+- `tests/ballastra-arches.mjs` (SwiftShader) 20/20 PASS: lazy build, far from all areas, rooms known before built;
+  every handle; every stand spot clear floor; each level's water, floors (walkway, boat steps, float, gangways, the
+  Steps' tiers: 1/3/5), boards and look (washing, shutters, boats; aground at 2); the ~5 s animated fill with the float
+  riding it; he walks the whole district by input at level 1 (17 legs: landing, quay, notice board, jetty, gangway,
+  market, the row's gangway, walkway, Mags's door, a boat step, Dunn's door, the narrow stair, terrace, Oren's door,
+  bell rope, horn wheels, cam, wide stair, Steps, a dry tier, ledge, pump door, west stair); at level 0 the walkway has
+  no way in while market, terrace, bell, Steps and pump door are all reached; at level 2 market, walkway, Mags's door
+  and terrace; the three doors in and out; Dunn's silt and door; the spill gate, chain and pawl; the bell; the soft
+  edge (also a flood under his feet); the way back lands at the harbour's district edge; a second visit builds nothing.
+- `tests/ballastra-harbor.mjs`, `tests/chapter1.mjs`, `tests/transitions.mjs`: 19/19, 23/23 and 6/6 PASS on this branch, errors none (SwiftShader, run locally with the
+  Playwright path changed for this laptop, not committed). `drawcalls.mjs` and `perfbudget.mjs` do not cover Ballastra;
+  `overlaps.mjs` is not on this branch.
+
+*Pictures* (`docs/future/world/W-2/`, the play camera — Follow, Medium distance — **headless SwiftShader**, `testFreeze`,
+recentred, frames stepped by hand): `W-2-00-canal-level0-vs-level1` (the same spot on the jetty, side by side),
+`W-2-01/02/03-canal-level0/1/2`, `W-2-04-landing-from-harbour`, `W-2-05-market`, `W-2-06-lower-row`, `W-2-07-dunn-door`,
+`W-2-08-speaking-steps`, `W-2-09-gauge-ledge`, `W-2-10-terrace-bell`, `W-2-11-terrace-north`,
+`W-2-12-pump-room-chained-gate`, `W-2-13-oren-inside`, `W-2-14-mags-inside`.
+
+*Left / not done:*
+- no real-GPU numbers (fps, GPU ms, battery): the machine was busy; the SwiftShader counts above are the only measure.
+- the arch's span is not in any play-camera picture (its frame ends over the roofs, as in W-1); the free-camera
+  overview failed this time (the camera override left the view inside the row): to retake.
+- the level 0 / 1 change reads from the jetty (the float's height and the gangways, the walkway and boats, the Steps'
+  tiers, shutters and washing) but is not yet strong at a distance: a "fresh wet band" on the walls after the water
+  falls, and sandbags/boards at the doors in a flood, would make it read at a glance.
+- the W-1 skyline still shows its own older scenery district, not this layout; no travel into the district (the
+  story's: `BALLASTRA.harbor.exits.toArches` and `R.entries.bl_arches` are ready); the gardens' exit waits for W-3.
+- the bell's tones use the game synth's private `_tone` (with `clang` as the fallback); the horns, the cam and the
+  pull have no input wiring (the story's).
+- the residents are W-7's; Dunn's door opens onto a dark recess only (no room ordered).
 
 ---
 
@@ -864,3 +986,6 @@ safely by hand. About 20 minutes (WK-1 steps 4–7) and the aftermath's quiet gl
 _(file, line or function, why)_
 - `src/game/regions.js` (W-1, the World Builder): the import of `ballastra/harbor.js`, `REF.ballastra`, `AT.bl_shed`,
   `OUT_AT.ballastra`, one `add('ballastra', ['ballastra', 'bl_shed'], …)` line: Float Harbor's lazy group (built in steps).
+- `src/game/regions.js` (W-2, the World Builder): the import of `ballastra/arches.js`, `REF.bl_arches`, `AT.bl_oren`,
+  `AT.bl_mags`, `AT.bl_pump`, `OUT_AT.bl_arches`, one `add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'], …)`
+  line: the Arch District's lazy group (built in steps), each commented.
