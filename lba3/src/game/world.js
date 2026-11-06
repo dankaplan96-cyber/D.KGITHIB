@@ -22,7 +22,7 @@ import { mergeStatic } from '../engine/merge.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
-import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill, CLIMB_RAMP } from './lba1places.js';
+import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
@@ -371,7 +371,7 @@ export function islandHeight(x, z) {
 // same heightfield the paving is painted on. (CLIMB_OFF: the ground as it stood before, for the scatter's view of it)
 let CLIMB_OFF = false, CLIMB_PROF = null;
 const CLIMB_S0 = 10.6, CLIMB_FULL = 1.8, CLIMB_EASE = 2.6, CLIMB_DS = 0.25;
-const CLIMB_BOX = [-41.8, -38.4, -30.6, -11.6];
+const CLIMB_BOX = [-41.8, -38.4, -29.0, -11.6];   // (CLOUD_ORDERS 17: to the straight's east side, x −29.98; the scatter's view of it as it stood)
 function climbLocal(x, z) {
   let best = 1e9, bs = 0, s0 = 0;
   for (let i = 0; i < CLIMB_RAMP.length - 1; i++) {
@@ -398,14 +398,50 @@ function climbProfile() {
   for (let i = 1; i < n; i++) p[i] = Math.max(p[i], p[i - 1]);
   return { p, L };
 }
+const climbProfAt = (s) => { const P = CLIMB_PROF.p, f = Math.max(0, s) / CLIMB_DS, i = Math.min(P.length - 2, Math.floor(f)); return P[i] + (P[i + 1] - P[i]) * Math.min(1, f - i); };
+// CLOUD_ORDERS 17: the landing at the yard's edge, the straight on the flight's axis and the square landing at its foot
+// (lba1places.js CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT): the ground in them level across, rising with z from the second
+// leg's own height at the landing's south edge (on with the leg's slope, so the two meet without a fold) to
+// CLIMB_FOOT_Y at the foot landing's south edge, smoothed ±0.75 m, never falling on the way up; level from there under
+// the first steps. Beyond their edges it eases back to the land within 1.4 m where it cuts into the land (the stump's
+// bank comes down to the kerb), and within 0.6 m where it is raised over it (the yard, under the shelf's wall: the walls'
+// faces stand on the terrain's grid lines there, so the paving is level to them, the ground falls away only behind them,
+// and no raised ground reaches the stone house's eaves)
+let CLIMB_NZ = null;
+const CLIMB_NDZ = 0.25, CLIMB_NZ0 = CLIMB_JOG[3] + 1.5;
+function climbNorthProfile() {
+  const z0 = CLIMB_JOG[3], z1 = CLIMB_FOOT[3], [ax, az] = CLIMB_RAMP[1], [bx, bz] = CLIMB_RAMP[2];
+  const at = (z) => climbLocal(ax + (bx - ax) * (z - az) / (bz - az), z)[0];
+  const hs = climbProfAt(at(z0)), m0 = (hs - climbProfAt(at(z0 + 1))) / 1, hf = CLIMB_FOOT_Y;
+  const n = Math.ceil((CLIMB_NZ0 - (CLIMB_STRAIGHT[1] - 1.5)) / CLIMB_NDZ) + 1;
+  const raw = (z) => (z >= z0 ? hs - m0 * (z - z0) : z <= z1 ? hf : hs + (hf - hs) * (z0 - z) / (z0 - z1));
+  let p = Array.from({ length: n }, (_, i) => raw(CLIMB_NZ0 - i * CLIMB_NDZ));
+  for (let pass = 0; pass < 2; pass++) p = p.map((v, i) => { let a = 0, c = 0; for (let j = -3; j <= 3; j++) { const k = i + j; if (k >= 0 && k < n) { a += p[k]; c++; } } return a / c; });
+  for (let i = 1; i < n; i++) p[i] = Math.max(p[i], p[i - 1]);
+  return p.map((v, i) => (CLIMB_NZ0 - i * CLIMB_NDZ <= z1 - 0.75 ? hf : Math.min(v, hf)));
+}
+function climbNorth(x, z, h) {
+  let d = Infinity;
+  for (const [x0, z0, x1, z1] of [CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT]) {
+    const dx = Math.max(x0 - x, x - x1), dz = Math.max(z0 - z, z - z1);
+    d = Math.min(d, dx > 0 && dz > 0 ? Math.hypot(dx, dz) : Math.max(dx, dz));
+  }
+  if (d >= 1.0) return h;
+  CLIMB_NZ ??= climbNorthProfile();
+  const P = CLIMB_NZ, f = Math.max(0, Math.min(P.length - 1.001, (CLIMB_NZ0 - z) / CLIMB_NDZ)), i = Math.floor(f), ph = P[i] + (P[i + 1] - P[i]) * (f - i);
+  const r = smoothstep(0.1, 0.4, ph - h), w = 1 - smoothstep(lerp(0.2, 0.5, r), lerp(1.4, 0.6, r), d);
+  return lerp(h, ph, w);
+}
 function climbGround(x, z, h) {
   if (CLIMB_OFF || PRE80 || x < CLIMB_BOX[0] || x > CLIMB_BOX[2] || z < CLIMB_BOX[1] || z > CLIMB_BOX[3]) return h;
-  const [s, o, L] = climbLocal(x, z);
-  if (o >= CLIMB_EASE || s < CLIMB_S0 || s > L) return h;
   CLIMB_PROF ??= climbProfile();
-  const P = CLIMB_PROF.p, f = s / CLIMB_DS, i = Math.min(P.length - 2, Math.floor(f)), ph = P[i] + (P[i + 1] - P[i]) * (f - i);
-  const w = (1 - smoothstep(CLIMB_FULL, CLIMB_EASE, o)) * smoothstep(CLIMB_S0, CLIMB_S0 + 1.6, s) * (1 - smoothstep(L - 1.2, L, s));
-  return lerp(h, ph, w);
+  const [s, o, L] = climbLocal(x, z);
+  let r = h;
+  if (o < CLIMB_EASE && s >= CLIMB_S0 && s <= L) {
+    const w = (1 - smoothstep(CLIMB_FULL, CLIMB_EASE, o)) * smoothstep(CLIMB_S0, CLIMB_S0 + 1.6, s) * (1 - smoothstep(L - 1.2, L, s));
+    r = lerp(h, climbProfAt(s), w);
+  }
+  return climbNorth(x, z, r);
 }
 export const debugHeight = islandHeight;
 
@@ -685,7 +721,8 @@ export function* buildWorldSteps(parentScene) {
     decide: SG,
     skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
   });
-  dropRocks(W_cliffs.mesh, (x, z) => climbMasonry(x, z, 0.05), [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall)
+  climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
+  dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
