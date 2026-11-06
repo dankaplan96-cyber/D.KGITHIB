@@ -2572,3 +2572,25 @@ spots also turned 180°. Pictures (chapter 6+) stay on the laptop. Local coords;
   9/9; overlaps obsv pass, hamalayi the 2 pre-existing spots. chapter6.mjs did not boot within its fixed 240 s on
   SwiftShader (09-pass covers it). Not measured: draw calls (+4 batched rock meshes, fewer pine/rock instances; no lights).
 - Not done: order 14(g), the chapter-10 glider at the monastery (story/network.js).
+
+## CLIMB-17 · the climb's foot straight, and CLIMB-21 · the slide trap past the east flight (CLOUD_ORDERS 17, 21) · the laptop, 6.11.2026
+Diff: `requests/CLIMB-17.diff` (lba1places.js, world.js; against 913f8f55, `git apply --check` clean). Pictures:
+`docs/future/world/CLIMB-17/` (before|after, Follow, Medium; chapter 1, sent to the user).
+- **17:** the ramp's last ~8 m runs on the flight's axis x −32.6 straight into the first step: the shelf's wall on its
+  west, the parapet on its east, kerbs in line with the cheeks and posts. The round FOOT apron is a square landing
+  3.4 m wide, level at 9.45 (CLIMB_FOOT_Y); the dark notch at the left cheek's foot is filled by the shelf's fill.
+  **Deviation:** one bend onto the axis does not fit: the stone house's back corner (−31.8, −25.9), eave z −26.6, sits
+  0.8 m east of the axis, so a diagonal leg puts its parapet on the eaves. The leg keeps PATHS[0]'s line to a landing at
+  the yard's edge, CLIMB_JOG (x −36.85…−30.98, z −29.6…−27.64), square to the flight: leg, landing, straight, flight.
+  New CLIMB_JOG/STRAIGHT/FOOT, `climbShelfRows`, `inShelf`, `climbDropRock`, `climbParapet` (sheared, plumb ends);
+  world.js `climbGround` + `climbNorth`; CLIMB_BOX x1 −30.6 → −29.0. Scatter unchanged (terrain hash outside the climb
+  identical; collider changes only inside the flight's box). Risers 0.223–0.228. Triangles 22,782 → 25,194, same 6 meshes.
+- **21:** not fixed on origin (e8154735 only added the order). Before: standing at (−28.85, −45.7) or walking the east
+  flight at z −45.15 / −46.0 slid, stuck and `respawnFromFall` fired every time. New `climbTopThreshold` (from
+  `climbTerraceFill`): the top step carries on level (yt 15.93) as a stone threshold, row by row, to where the
+  forecourt is within 4 cm; +20 colliders. After: 5 stand-and-turn spots and the flight both ways: no slide, no
+  teleport, 0 hp lost. Left: a thin dark line at the threshold's east edge, its grey reads apart from the cobbles.
+- **Tests:** on the agent's base f3001989: lba1rooms 8/8, asylum 12/12, rocks 10/10, world-consistency 37/37, overlaps
+  26/26, chapter1 23/23; input walks and 12 A* legs arrive. Rebased on 913f8f55: world-consistency 37/37,
+  lba1rooms 8/8; rocks timed out (my 900 s cap on SwiftShader, no verdict), not rerun.
+- The straight is steeper (~0.44 rise per m); the shelf's fill covers ~7 × 6 m of the old ramp's west half.
