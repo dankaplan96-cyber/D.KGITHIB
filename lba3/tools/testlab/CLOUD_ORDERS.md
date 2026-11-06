@@ -195,4 +195,5 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    sharp folds over the rock, a bench on the slope. (f) Music (order 19): the Otringal bar and hotel and Zeelich's
    terminal play 'home': a livelier bar piece; a muffled Zeelich mood for the terminal (one MOODS entry in
    engine/music.js, as 'office'). Report as REVIEW-ZEELICH-ART.
+Cloud, 6.11: MUSIC-19, REVIEW-UNDER and REVIEW-HAMALAYI applied (4713a88f); the Old Asylum rendered with `build.py asylum` (b06d0560, -18.5 LUFS, loop 16.59–111.39 s, 1.57 MB), so `alt` no longer plays.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
