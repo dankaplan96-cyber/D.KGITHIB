@@ -631,7 +631,7 @@ function buildDeep(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'c3deep', 1900, 0);
   const R = B.room, k = B.k, kt = new Kit(B.group);
   const W = 22, D = 16, H = 5.8, t = 0.5, UY = 3.0;
-  R.view = 18.4; R.follow = 0.32; R.music = 'under'; R.upperY = UY;
+  R.view = 18.4; R.follow = 0.32; R.music = 'facility'; R.upperY = UY;   // (REV-HAM: the project's own plant, its drone on patrol: the project's music, as the station's control room — not the caves' well theme)
   const BZ = -D / 2, LX = -W / 2;
   const doorX = 5.7, entZ = 5.0;
   B.shell({
