@@ -192,9 +192,7 @@ export function citadelRoster(game) {
       const S = W.houses.find((h) => h.id === 'shop'); if (!S) return [];
       const at = (lx, lz) => ({ x: S.x + Math.sin(S.ry) * lz + Math.cos(S.ry) * lx, z: S.z + Math.cos(S.ry) * lz - Math.sin(S.ry) * lx });
       const c = at(1.0, S.d / 2 + 1.5), b = at(0.2, S.d / 2 + 1.8), out = at(0.6, S.d / 2 + 8);
-      // (REVIEW-CITADEL: in Garrick's body and colours, nearly his tint, the two met side by side by the square's bed and the
-      //  well like twins: a Lhar man's body, brown and gold, a moustache; Dov, the only other, waits out at the spaceport)
-      return [{ id: 'tibbo', char: 'lharMan', tint: '#f4ecdc', speed: 0.85, start: 0, color: '#f0d070', stops: [
+      return [{ id: 'tibbo', char: 'farmerA', tint: '#e8f0ff', speed: 0.85, start: 0, color: '#f0d070', stops: [
         D('tibbo_counter', c.x, c.z, { a: A(c.x, c.z, out.x, out.z), dur: [30, 45] }),
         D('tibbo_bench', b.x, b.z, { a: A(b.x, b.z, out.x, out.z), act: 'tinker', dur: [8, 12] }),
         // (a look at the square's well now and then: the town's news, and who might need darts)
