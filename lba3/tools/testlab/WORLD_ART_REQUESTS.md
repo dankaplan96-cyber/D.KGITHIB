@@ -2371,3 +2371,108 @@ classifier as the original's study: grey share LBA2 23.5 % · ours before 4.7 % 
   term near the play paths or soften `smoothstep(0.3, 0.5, rk)`. Soil fell 11.9 → 7.3 % (LBA2 14.4 %): shaded slope
   sand became rock. Outcrop bias 0.35 → 0.32 would add about 1 point of grey. Pictures: chapter 3+, not for the user
   (the laptop keeps them).
+
+## CLIMB-15 · the Citadel climb's likeness to LBA2 (CLOUD_ORDERS 15) · the laptop, 6.11.2026
+`requests/CLIMB-15.diff` (lba1places.js, world.js; applies alone on the newest origin e3385dd, and with POLISH-14).
+Compared with LBA2's climb north of the square (heights from the original's island file, numbers only; our game rendered
+at the reference picture's camera). Pictures (chapter 1, the user may see them): docs/future/world/CLIMB-15/.
+- **Differences, largest first:** (1) LBA2 climbs in level terraces (0.4 → 4.2 → 5.9 → 7.5 → 9.2 m), each behind a sheer
+  face, the ramps running along them; ours had shelves at nearly the same levels (6.1, 9.6 m) ending in soft grass and
+  rock banks, so the ramp read as a paved strip on a hillside. (2) Posts: LBA2 four big capped posts (~1.1 × 1.0 m,
+  1.6 m) at terrace corners only; ours 13 small ones every ~3 m. (3) Railings: LBA2's ramps have none; ours had teal
+  balusters on the ramp's parapet. (4) The 5.5 m sheer face toward Bug Street with two posts: ours a soft bank.
+  (5) Ramp 4.5 m wide in two ~21° legs vs ours 3.1 m at ~13° then the stair. (6) Faces slightly battered vs ours
+  vertical with cream coping.
+- **Fixed (1–3):** `CLIMB_SHELF`, `climbShelfWall`, `inShelf`: along the ramp's second leg the 9.6 m shelf's edge is a
+  dressed retaining wall (coping level 9.73 m, 0.7–2.2 m over the paving, base course), turning due west 4.6 m along the
+  shelf's face (a 3.5 m terrace face), capped posts at the corner and the return's end; behind them the shelf filled
+  level in stone by CLIMB-2's rule (the fill's edge ≥ 15 cm over the ground). Terrain unchanged; the shelf still reached
+  at the ramp's head. `climbPost` in LBA2's proportions (0.72 m shaft, 0.92 m cap, ~1.45 m), at corners and ends only;
+  `climbFlight` posts lined up with the cheeks (the stair keeps 2.6 m), the two halfway posts gone; `climbRampWall` east
+  parapet solid masonry 0.8 m, railing and in-between posts gone (camSkip still 1.1 m); `climbMasonry` box to x −44.5
+  (scatter keeps out: the pine west of the stair's foot goes); world.js `dropRocks` for the climb from x −45.
+- **Kept:** (5) as CLIMB-2 settled the corridor; (6) the town's coping; the stair's and terraces' teal railings where the
+  ground falls over 1.2 m. Stump, pipe branch, stair, landing, forecourt untouched.
+- **Checked (SwiftShader, on e3385dd + this):** overlaps PASS (25 areas), lba1rooms PASS (the walk up ASYLUM_STEPS),
+  asylum PASS, chapter1 PASS, camclear 43/1 (only the old 0.149 m at (−74, −50)); walkers 36/1 as origin (marda_b2).
+  By input: square → stair → shelf round the wall's end, shelf → mid-ramp, stair → landing → forecourt → square, all
+  arrive; walking into the wall blocks, along it he never stands on it. Climb group 6 meshes before and after (no new
+  calls), +1,172 triangles; Vega 8 not measured.
+- **Left (next, if you agree):** (4) the face toward the square: a retaining wall at about z −21 from x −54 to the
+  ramp's west kerb, top 6.06 m, with LBA2's two corner posts; first check what stands on that bank (a crate near
+  (−45, −24), a fruit tree, flowers, the west street's ramp at x −55…−66). The shelf fill's top is wall stone (reads as a
+  paved strip); paving or grass edging later.
+
+## POLISH-14 · the polish passes' visual leftovers (CLOUD_ORDERS 14 a–f) · the laptop, 6.11.2026
+`requests/POLISH-14.diff` (asylumhostel.js, tavcellar.js, town.js, walkrounds.js, world.js; applies alone on the newest
+origin, and together with CLIMB-15). Pictures SwiftShader 960×540, Follow, Medium; chapter 1 places: docs/future/world/POLISH-14/ (b, d before | after).
+- **(a) The hostel's north door, cream band:** the portico had colliders on its piers only, so the camera's clearance
+  test saw air over the doorway; out of the door Follow stood inside the lintel's brick (3.6 m up, 0.4–0.8 m behind its
+  face), and the near-cut showed the architrave's and pilasters' cream trim across the frame (worst when doorStep falls
+  back to the door's own spot). One collider over the doorway from the opening's head up (`bottom: gy + oh`, noStand):
+  he walks under it; the camera now stands in front of the portico (z −48.76, 3.9 m up), clean frame.
+- **(b) The "lantern" at lower right out of a door** was the Joint Project heat post: it stood 1 m out from the door's
+  spot along the house-middle → door line, 8–42° off the wall's normal on off-centre doors, 1.6–2 m out from the wall,
+  just where Follow stands the first second out (inside the frame within 2.2–2.5 m of the lens on 7 of 9 street doors).
+  Now each stands against its front wall (`HEAT_POST_OUT` 0.45 m from the wall, the wall's normal from `ry`), 1.45 m to
+  the right of the way out or the first clear of `HEAT_POST_SIDES` (Twinsen's house and the shop take the fallback:
+  pots, a barrel). After: no post within 4 m in frame on any of the 9 doors. brix_warm and marda_warm (walkrounds.js)
+  follow their posts, on the post's far side from the door (doorDist 1.37 / 1.32 m). Pippa's stall post unchanged.
+- **(c) The wizard tent's grass/bush in front of the camera:** not reproduced (Near/Medium/Far, rays from the lens and
+  renders out of the door and on the approach from the east): no change. Three smallPool grass blades stand inside the
+  tent's footprint, hidden by the cloth. If the user meets it again we need the way he walked.
+- **(d) The tavern cellar's lower floor near-black:** the drop's bottom was one `MAT.flat('#121216')` plane. Now rubble
+  with a little self-light (emissive 0.2, as the walls' tv_stone) round a ragged black hole under the railing's gap (the
+  way down to the sewers' hall), clear of the broken rail. No light added (light pool and R.indoor untouched). Mean luma
+  over the pit from the walkway 21 → 41 (pixels under 20: 81 % → 20 %), from the store 21 → 41.
+- **(e) GL_INVALID_OPERATION:** SwiftShader only. Real GPU (Chrome, Vega 8, D3D11), boot → street → door in and out →
+  tavern cellar: Medium 22,242 draws checked with getError, 0 errors; High 29,086 draws, 0. In SwiftShader all 307 come
+  in boot: Game.drawArea (main.js ~931) renders the start room before the sun's shadow map exists, and three r180 binds
+  the plain emptyTexture to null entries of a sampler2DShadow array (`directionalShadowMap[0]`). Harmless; if you want
+  SwiftShader quiet, make the sun's shadow map before drawArea/drawPart. No change.
+- **(f) The Citadel landing (−58, −60):** two scattered bushes had their colliders over the spot (one with the landing
+  inside it). `GLIDER_LANDING`/`LANDING_CLEAR` 1.6 m + the bush's radius, filtered after the scatter (no draw moves).
+  Nearest collider now a trunk 2.56 m off.
+- **Checked (SwiftShader, on fda1fc5 + this):** camera-doors 30/30, overlaps PASS, asylum PASS, chapter1 23/0.
+  Same as the origin baseline (not this diff): walkers 36/1 (marda_b2 not walkable), sewers-ways 31/2 (out of the Works
+  door d 2.97, out on the stone-house terrace d 2.37, both > 2.2: doorStep?), camclear 43/1 (the old 0.149 m at
+  (−74, −50)). travel: the chapter-2 Doran check fails on origin too (doranAtPort false, 26/1), not this diff.
+
+## GPU-9 · order 2's remainder (CLOUD_ORDERS 9): the playthrough chain on the real GPU · the laptop, 6.11.2026
+Measured on origin 3bcc70a (src as e3385dd), installed Chrome headed, ANGLE D3D11 on the AMD Radeon Vega 8, through
+tests/lib/seg.mjs (a local copy whose boot.mjs launches that Chrome instead of SwiftShader), the segments chained through
+real saves (KEEP → LOAD), ASSIST=1.
+- **tests/playthrough 01–14: all 14 ran every step to its end ("the segment ran every step to its end" PASS in each),
+  0 deaths, 0 Retries.** ISO fight assists: 04 project-valves 1 (drone1, drone2, gdog1), 06 zeelich 1 (zdrone2, zguard1,
+  zgdog1; the depot fight by input to 3 HP), 13 network 2 (ndrone0; nclone, nsentry); none elsewhere. 14-shell: the
+  pylons from their plates by input (3/3), Vesk's coil by input (3/3), the epilogue "The console sparks over Vesk",
+  "The End", Keep Exploring. Game time per segment 7–280 s; wall time about 37 min for the chain.
+- The only FAIL in every segment is the resource check's favicon.ico 404 from the laptop's plain file server, not the
+  game. No pageerror, no GL warning on the GPU.
+- The skies' pictures (SKY, WANNIE) on the same GPU, play camera: Otringal reads right (overcast grey, pale lavender
+  sea, contrast kept). The Wannies' platform reads wrong: flat pale cloud slabs cross the island at walking height, its
+  cloud sea is pink where the style asks amber, and ground, walls and props sink into one dark sepia. A fix is in work
+  on the laptop (SKY-9, its own request). Pictures are chapter 3+: kept on the laptop.
+
+## SKY-9 · the Wannies' platform under its sky (CLOUD_ORDERS 9, SKY/WANNIE pictures: "fix what reads wrong") · the laptop, 6.11.2026
+`requests/SKY-9.diff` (zislands.js, zeelich.js; applies alone on the newest origin). Real GPU (Vega 8, headed Chrome),
+the same 8 play-camera spots before and after; chapter 3+, pictures kept on the laptop.
+- **White slabs through the island:** the hero walks at y 3.0–4.4; the island's edges sit at 0.2–1.3 m, and its narrow
+  channels between the terraces are sea cells (terrain −9). The cloud planes (−3.9 solid, −1.4, −0.3) and 54 puffs 5–11 m
+  tall at −0.8…1.0 filled them 3–5 m under the paths: a pale, near-untextured patch (one billow tile 140 m) read as a
+  floor, cut hard by the straight channel walls; some puff billows reached their texture's border (square edges).
+  Fix: `cloudYOf(S)` / per-island `CY`; the platform `cloudDrop: 4.5` (planes at −8.4/−5.9/−4.8, the solid one above the
+  −9 bed, capped), `R.cloudY` and the plinths, barges, skiffs, footings and stilts follow `CY` (other islands keep −1.4);
+  `cloudRep: 2`, `cloudOp [1, 0.85, 0.3]`, `puffScale: 0.6`. zeelich.js `puffTex` fades out before its border (all
+  islands' puffs, edges only; Otringal's frame stats unchanged ±1). Walkable ground unchanged (under −0.35 is blocked).
+- **Pink sea although the tint is amber:** `cloudTex` paints a lavender-pink base (#d0a0cc) and lavender shadows; the
+  amber tint multiplied them into dusty rose; and the platform had no `S.rock`, so its cliffs took Zeelich's pink rock.
+  Fix: a greyscale variant of `cloudTex(solid, grey)` and `puffTex(grey)` (own cache key), the platform `cloudGrey: true`
+  with tint ['#7a5030', '#b07a48', '#d09a60']; `rock '#b0a498'`, `rockHi '#c4b8a8'`.
+- **One murky sepia:** fog #b09a80, sun #ffcc98 2.4, hemi sky #ccb8a0, ground #94704c 1.6 (the light from below the
+  gas), grade 0.88, gradeTint [1.02, 0.985, 0.94]. Mean luma 65 → 73, darkest 5 % 11 → 24, saturation 185 → 167.
+  Lamps stay lit (dim place under the gas). The mine's boulders still read dark (their own material, untouched).
+- **Checked on the GPU:** zislands 13/13, zeelich-life 38/38, overlaps (ONLY=isle_platform) 1/1 + 2/2 visual; only
+  FAIL in each the local server's favicon 404. Draw calls, triangles, textures unchanged (142/117/108/118 calls on the
+  four spots); median frame 15–21 ms both, within run-to-run noise; +2 greyscale 512² cloud canvases, +1 128² puff.
+- **Left:** where the gas meets the stepped channel walls the cut is still hard, now 5–6 m under the paths and amber.
