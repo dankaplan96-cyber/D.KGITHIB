@@ -148,4 +148,18 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    engine/music.js MOODS) and say where the piece does not fit the place as LBA1/LBA2 scored such places (a prison, a
    temple, a cave, a shop, a ship); if a new piece is needed, write it with the repo's own music tools
    (tools/music/tracks/*.py, original compositions only — never LBA's music) and wire it. Chapter 1–2 places first.
+20. **ASYLUM-4 against LBA1 itself (the user, 6.11: "check how they did it in the first game"; "the local agent has the
+   LBA1 files").** The cloud's agent fixed the asylum's look without LBA1's files (the cloud machine has none): from
+   `assets/lba1/asylum.json` it lit the room from the camera's side (`R.indoor.sunDir` (0.3, 0.8, 0.5), sideGain 2.8),
+   drew the nine-cell lamps and tables and the pipe runs as lamps, tables and round pipes (`lba1room.js opts.fittings`),
+   and stone post tops (`opts.capStone`) — merged as ASYLUM-4 (6dc37340), published (v51). Three of its before|after
+   pictures (our game only, no LBA1 art): `docs/future/world/ASYLUM-4/`. **With LBA1's own files:** render the asylum the way LBA1
+   draws it (its bricks, its camera) at the same spots (the user's two photos: the west landing by the tall maroon post;
+   the loft by the clothes line) and compare with ours on the GPU: wall and floor tones and texture, what LBA1 shows past
+   a floor's edge, the camera-side walls' height, the lamps/tables/pipes' look and placement (the agent's reading:
+   lamps 10 3 13 / 2 1 5 / 12 4 11 slope patterns over the loft, the kitchen counter, the upper walk, the office desk;
+   254 pipe cells), what LBA1 has that we lack. Fix the biggest differences within 80 % likeness and R11 (numbers and
+   descriptions only from LBA1, never its bricks or pictures in the repo). Left by the agent: pipe-colour cells that are
+   not runs still boxes; a few pipe ends capped in mid-air; the lamp over the upper walk reads as standing near the floor.
+   Before/after from the room's own camera (chapters 1–2: the user may see them).
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
