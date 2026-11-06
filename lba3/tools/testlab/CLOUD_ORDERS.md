@@ -130,4 +130,22 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    the dark notch at the left cheek's foot beside the first step (in the photo, left of Twinsen): close it. Same play
    camera (Follow, medium) before/after from the ramp below, and run lba1rooms, asylum, rocks, world-consistency,
    overlaps, chapter1.
+18. **A player's-eye art review, region by region, on the GPU (the user, 6.11: "all these notes are only from Citadel,
+   I'm afraid what happens in the other places"; "3 agents at a time and give tasks to the local agent").** The cloud
+   runs agents too: Desert Island now (camera, people, logic, music), then the others; you own the art, so you take the
+   art side first where the cloud is not yet: **(a) Zeelich and its nine islands, Otringal included; (b) the Hamalayi
+   (the village, the pass, the monastery, the observatory); (c) the underground (`c3*`, the shaft to the core).** Walk the
+   story's own routes (tests/playthrough 06–14 are the routes) with Follow, distance Medium (the user's setting), and
+   look for what the user found in Citadel today: crooked joins (stairs or ramps meeting at an angle, paths into walls),
+   holes and troughs beside walls, trenches beside stairs, dark notches, black voids where floors end, floating slabs or
+   black-sided boxes in rooms, doubled floors, rocks or props cutting through buildings, the camera zooming in or flailing
+   in passages and on stairs (report those to the cloud with coords: the cloud's camera agent is on camera.js now), two
+   near-identical characters side by side. Fix the art at its cause; before/after pictures (chapter 3+: keep them, not
+   for the user); report each region in `WORLD_ART_REQUESTS.md` with a table (spot, what a player sees, fixed / for the
+   cloud). One region per request diff (REVIEW-ZEELICH, REVIEW-HAMALAYI, REVIEW-UNDER), smallest first is fine.
+19. **Music by place (the user: "the asylum should have a different tune"):** the cloud gave the asylum the facility piece
+   (main.js ROOM_MUSIC asylum: 'stealth'). List every room and region and its music mood (main.js ROOM_MUSIC, R.music,
+   engine/music.js MOODS) and say where the piece does not fit the place as LBA1/LBA2 scored such places (a prison, a
+   temple, a cave, a shop, a ship); if a new piece is needed, write it with the repo's own music tools
+   (tools/music/tracks/*.py, original compositions only — never LBA's music) and wire it. Chapter 1–2 places first.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
