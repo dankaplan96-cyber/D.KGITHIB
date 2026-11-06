@@ -697,6 +697,15 @@ export function* buildArchesSteps(scene, physics) {
   for (const [x, z, k, y] of [[22, -24, 1, TER], [22, -22.8, 0, TER], [28.5, -30.5, 3, TER], [29.4, -30.5, 1, TER], [36.6, -28, 2, TER], [-15.4, -30.3, 1, WALK_Y], [-11.3, -30.3, 0, WALK_Y], [10.6, -30.3, 3, WALK_Y], [15.4, -30.3, 1, WALK_Y]]) herbPot(P(x, y, z), { kind: k, s: 1.1 });
   col({ type: 'box', x: 22, z: -23.4, hw: 0.35, hd: 1.0, top: TER + 0.4, block: true });
   { const p = P(38.6, TER, -24.0, -Math.PI / 2); p.add(cached('blbench', () => compose([[bbox(1.4, 0.07, 0.4, 0.02), 0, 0.45, 0], ...[-1, 1].map((s) => [bbox(0.08, 0.45, 0.36, 0.02), s * 0.6, 0.22, 0])])), BM.timber()); p.box(0, 0, 0.72, 0.22, 0.5, { block: true }); props(p); }
+  // the terrace's cistern: rain off the old roofs kept in a stone tank, a bronze hand pump on its lid (the dry district
+  // drinks the sky, never the canal), a ceramic bucket on its edge
+  {
+    const p = P(26.6, TER, -25.6);
+    p.add(cached('blw2cist', () => compose([[bbox(2.2, 0.8, 1.6, 0.05, 1.4), 0, 0.4, 0], [bbox(2.36, 0.12, 1.76, 0.03, 1), 0, 0.84, 0]])), AM.ashlar());
+    p.add(cached('blw2cpump', () => compose([[cyl(0.1, 0.12, 1.1, 10), 0, 1.45, 0], [bbox(0.7, 0.07, 0.07, 0.01), -0.3, 2.0, 0, 0, 0, -0.35], [cyl(0.05, 0.035, 0.4, 8).rotateZ(Math.PI / 2), 0.26, 1.62, 0], [cyl(0.16, 0.16, 0.08, 10), 0, 0.94, 0]])), BM.bronze(), 0.5, 0, 0);
+    p.add(cached('blw2cbucket', () => lathe([[0.001, 0], [0.16, 0], [0.2, 0.3], [0.21, 0.32], [0.001, 0.32]], 10)), BM.celadon(), -0.6, 0.9, 0.3);
+    p.box(0, 0, 1.15, 0.85, 0.95, { block: true }); props(p);
+  }
   const cat = (x, y, z, ry, c) => B.add(cached('blw2cat' + c, () => compose([[tint(new THREE.SphereGeometry(0.2, 10, 8).scale(1.5, 0.75, 0.9), c), 0, 0.15, 0], [tint(new THREE.SphereGeometry(0.11, 8, 6), c), 0.32, 0.24, 0], [tint(new THREE.ConeGeometry(0.04, 0.08, 4), c), 0.34, 0.36, 0.05], [tint(new THREE.ConeGeometry(0.04, 0.08, 4), c), 0.34, 0.36, -0.05], [tint(tube([[-0.28, 0.12, 0], [-0.42, 0.06, 0.12], [-0.3, 0.03, 0.26]], 0.025, 4, 1), c), 0, 0, 0]], true)), BM.vc(), x, y, z, 0, ry);
   cat(BT.x - 1.2, TER + BELL.h + 0.3, BT.z + BELL.s / 2 + 0.12, 0.4, '#e2a058'); cat(-16.9, FLOOR + 2.6 + 0.24, ROW_Z + ROW_D / 2 + 0.48, 2.6, '#6a6460'); cat(-2.3, QY + 0.36, 3.8, -0.4, '#f0e8d6');
   // the hanging homes under the arch (scenery: small houses slung from the span on chains, rope ladders down)
