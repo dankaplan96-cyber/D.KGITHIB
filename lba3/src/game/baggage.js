@@ -73,7 +73,7 @@ export function buildBaggageRoom(scene, physics) {
   // (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long
   //  already), the upper level a fifth higher, the camera close and following Twinsen; the furniture keeps its size)
   const P = BAGGAGE_PLAN, { FX, FZ, W, D } = P, H = 5.3;
-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
+  R.view = 11.5; R.follow = 0.65; R.music = 'office';   // (ORDER 19: the baggage claim: the town heard through the walls)
   // (the tavern's pale grey blocks: Citadel's stone inside)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);

@@ -90,7 +90,7 @@ export function buildOtrBarRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'otrbar', OTRBAR_AT.x, OTRBAR_AT.z);
   const R = B.room, k = B.k;
   const W = 20, D = 14, H = 5.6;
-  R.view = 12.5; R.follow = 0.6; R.music = 'home';
+  R.view = 12.5; R.follow = 0.6; R.music = 'zeelich';   // (ORDER 19/23f: a bar is lively: Zeelich's own playlist at full volume, not Citadel's Home)
   const sky = M('ob_sky', () => { const t = skyTex(), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.3 }); return m; });
   const darkStone = MAT.rubble('slate'), cap = MAT.paint('#3a3e44', 0.5);
   const floor = MAT.tiles('#c4c6c8', '#3a8a9a', '#5a5e64', true, 6);

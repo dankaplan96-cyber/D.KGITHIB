@@ -28,10 +28,13 @@ export const MOODS = {
   cave: 'well', storm: 'well', well: 'well', underworld: 'well', under: 'well',
   workshop: 'workshop',
   zeelich: { list: 'zeelich' },
+  zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
   desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
   hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',
+  // (ORDER 19) the old asylum's own piece (tools/music/tracks/asylum.py); `alt` plays while a track is not rendered yet
+  asylum: { track: 'asylum', alt: 'facility_stealth' },
   combat: 'combat',
   revelation: 'revelation',
   boss: 'finale', finale: 'finale',
@@ -52,7 +55,7 @@ const NEXT = {
   main_theme: ['home'], home: ['village'], village: ['island', 'combat'], island: ['village', 'combat'],
   village_b: ['island', 'combat'], island_b: ['village', 'combat'], zeelich_b: ['workshop', 'combat'],
   well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
-  workshop: ['zeelich'], facility_stealth: ['facility'],
+  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'],
 };
 
 // moods that end a running story cue
@@ -176,9 +179,11 @@ export class Music {
   target(commit = false) {
     if (this.cueSpec) return this.cueSpec;
     if (this.combat && this.has('combat') && this.base) return { track: 'combat', gain: 1 };
-    return this._resolve(this.base, commit);
+    return this._alt(this._resolve(this.base, commit));
   }
   has(track) { return !!this.manifest?.tracks?.[track]; }
+  // a mood whose own piece is not in the manifest yet ({ track, alt }: ORDER 19's asylum) plays its stand-in
+  _alt(s) { return s?.alt && this.manifest && !this.has(s.track) && this.has(s.alt) ? { ...s, track: s.alt } : s; }
 
   state() {
     const t = this.ctx?.currentTime ?? 0;

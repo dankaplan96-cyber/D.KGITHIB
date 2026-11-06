@@ -89,7 +89,7 @@ export function buildTicketRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
   //  furniture keeps its size)
   const P = TICKET_PLAN, { F, W, D } = P, H = 3.7;
-  R.view = 9.5; R.follow = 0.55; R.music = 'home';
+  R.view = 9.5; R.follow = 0.55; R.music = 'office';   // (ORDER 19: the harbour's ticket office: the town heard through the walls)
   // (the same pale grey blocks as the tavern and the shop: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
