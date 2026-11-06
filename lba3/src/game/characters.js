@@ -1053,11 +1053,13 @@ function splitArms(def) {
 const defs = {};
 export function createCharacter(lookName, overrides = {}) {
   const L = { ...(LOOKS[lookName] || LOOKS.twinsen), ...overrides };
-  const key = lookName + JSON.stringify(overrides);
-  const def = defs[key] ??= splitArms({ ...design(L), key });
   const polyName = 'poly' in L ? L.poly : lookName; // (every look has a Blender model unless poly: null)
   const poly = polyName && POLY[polyName];
-  if (poly) return polyCharacter({ ...L, poly: polyName }, def, poly);
+  // DRESS-1: a change of colours only gives a poly model the same body: the base look's skeleton, its own recoloured mesh
+  const onlyColours = poly && Object.keys(overrides).every((k) => DRESS_ROLES.includes(k));
+  const key = lookName + JSON.stringify(onlyColours ? {} : overrides);
+  const def = defs[key] ??= splitArms({ ...design(onlyColours ? { ...(LOOKS[lookName] || LOOKS.twinsen) } : L), key });
+  if (poly) return polyCharacter({ ...L, poly: polyName, recolor: onlyColours && Object.keys(overrides).length ? dressMap(LOOKS[lookName] || LOOKS.twinsen, overrides) : null }, def, poly);
   const { mesh, bones } = buildSculpted(def);
   const root = new THREE.Group();
   root.add(mesh);
@@ -1110,22 +1112,86 @@ function finishRig(L, def, root, mesh, bones, eyes) {
 // so every animation drives it; eyes are separate small meshes on the head (they blink).
 const POLY = {};
 const polyGeo = {};
-function polyColors(list) {
+function polyColors(list, rec = null) {
   const out = new Float32Array(list.length), c = new THREE.Color(), seen = new Map();
   for (let i = 0; i < list.length; i += 3) {
     const k = (list[i] << 16) | (list[i + 1] << 8) | list[i + 2];
-    if (!seen.has(k)) { c.setRGB(list[i] / 255, list[i + 1] / 255, list[i + 2] / 255, THREE.SRGBColorSpace); seen.set(k, [c.r, c.g, c.b]); }
+    if (!seen.has(k)) {
+      const [r, g, b] = rec ? dressColour(rec, [list[i], list[i + 1], list[i + 2]]) : [list[i], list[i + 1], list[i + 2]];
+      c.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace); seen.set(k, [c.r, c.g, c.b]);
+    }
     out.set(seen.get(k), i);
   }
   return out;
 }
-function polyGeometry(def, P) {
+
+// ------------------------------------------------------------------ DRESS-1: no two people the same
+// (the user, 6.11: "there are duplicate characters in Citadel, and I suppose elsewhere too: make sure no character is
+//  a copy of another"). 147 people share 51 models. The models' colours are baked per vertex from their look's colour
+// roles (tools/blender/cast_poly.py), so a person who shares a model gets their own clothes and hair here: every vertex
+// whose colour is a clothing role's (or a shade of it: the baked darker folds) is mapped to that role's new colour.
+// Skin, fur, eyes and the rest keep theirs: the same kind of person in other clothes, never another person's look.
+export const DRESS_ROLES = ['tunic', 'tunicTrim', 'pants', 'belt', 'apron', 'hat', 'collarColor', 'buckle', 'hair', 'beard', 'shoes', 'helmet', 'hardhat', 'tie', 'pouch', 'pack', 'cord', 'roll', 'wizHat', 'pompom', 'emblem', 'visor', 'helmetQ', 'crest'];
+const hex3 = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+function dressMap(base, over) {
+  const keep = Object.entries(base).filter(([k, v]) => k !== 'eyes' && typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) && !DRESS_ROLES.includes(k))   /* (the eyes are their own meshes) */.map(([, v]) => hex3(v));
+  const pairs = [];
+  for (const k of DRESS_ROLES) {
+    if (!over[k] || typeof base[k] !== 'string' || !/^#[0-9a-f]{6}$/i.test(base[k]) || over[k].toLowerCase() === base[k].toLowerCase()) continue;
+    const from = hex3(base[k]);
+    if (keep.some((q) => q[0] === from[0] && q[1] === from[1] && q[2] === from[2])) continue;   // (shoes the colour of the fur: the fur stays)
+    pairs.push({ from, to: hex3(over[k]) });
+  }
+  return { pairs, keep, key: '~' + pairs.map((p) => p.to.join('.')).join('|') };
+}
+// how far a baked colour is from being `k` times a role's colour (a shade of it), and that k
+function shadeOf(c, b) {
+  const k = (c[0] + c[1] + c[2] + 1) / (b[0] + b[1] + b[2] + 1);
+  const e = Math.hypot(c[0] - b[0] * k, c[1] - b[1] * k, c[2] - b[2] * k);
+  return { k, e };
+}
+function dressColour(rec, c) {
+  let best = null;
+  for (const p of rec.pairs) {
+    const s = shadeOf(c, p.from);
+    if (s.k < 0.55 || s.k > 1.3 || s.e > 9) continue;
+    if (!best || s.e + Math.abs(1 - s.k) * 4 < best.s.e + Math.abs(1 - best.s.k) * 4) best = { p, s };
+  }
+  if (!best) return c;
+  // a kept colour (skin, fur, eyes) that matches as well or better wins: never recolour a face
+  for (const q of rec.keep) { const s = shadeOf(c, q); if (s.k >= 0.55 && s.k <= 1.3 && s.e + Math.abs(1 - s.k) * 4 <= best.s.e + Math.abs(1 - best.s.k) * 4) return c; }
+  return best.p.to.map((v) => Math.max(0, Math.min(255, Math.round(v * best.s.k))));
+}
+// the n-th other dress of a look (n ≥ 1): its clothing hues turned round the colour wheel by the golden angle and its
+// shades stepped, grey cloth tinted; hair from natural colours. The same n gives the same dress on every load.
+const TRIMS = ['tunicTrim', 'belt', 'buckle', 'collarColor', 'emblem', 'cord'];
+const HAIRS = ['#2a1a12', '#5a3a1a', '#8a4a20', '#c89a50', '#9a9a98', '#e8e2d8', '#3a2a2a', '#6a4a2a'];
+export function dressVariant(lookName, n) {
+  const base = LOOKS[lookName];
+  if (!base || !n) return {};
+  const out = {}, c = new THREE.Color(), hsl = {};
+  const turn = (n * 0.382) % 1, light = [1, 0.78, 1.18, 0.9, 1.08][n % 5];
+  for (const k of DRESS_ROLES) {
+    const v = base[k];
+    if (typeof v !== 'string' || !/^#[0-9a-f]{6}$/i.test(v)) continue;
+    if (k === 'hair' || k === 'beard') { out[k] = HAIRS[(HAIRS.indexOf(v) + 1 + n * 3) % HAIRS.length]; continue; }
+    c.set(v).getHSL(hsl, THREE.SRGBColorSpace);
+    // gold and cream trim (braid, a belt, a buckle) stays: turned round the wheel it came out as neon cyan and pink
+    if (TRIMS.includes(k) && hsl.h > 0.07 && hsl.h < 0.19 && hsl.l > 0.45) { out[k] = v; continue; }
+    const s = hsl.s < 0.12 ? (hsl.l > 0.85 || hsl.l < 0.1 ? hsl.s : 0.28) : Math.min(0.7, hsl.s * 0.9);   // (white and black stay; greys take a tint; no brighter than the cast's own cloth)
+    c.setHSL((hsl.h + turn) % 1, s, Math.max(0.06, Math.min(0.88, hsl.l * light)), THREE.SRGBColorSpace);
+    out[k] = '#' + c.getHexString();
+  }
+  return out;
+}
+
+function polyGeometry(def, P, rec = null) {
   const names = Object.keys(def.bones);
   const map = P.bones.map((b) => names.indexOf(b));
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(P.pos, 3));
   geo.setAttribute('normal', new THREE.Float32BufferAttribute(P.nrm, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(polyColors(P.col), 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(polyColors(P.col, rec), 3));
   geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(P.si.map((i) => Math.max(0, map[i])), 4));
   geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(P.sw, 4));
   geo.computeBoundingSphere();
@@ -1168,7 +1234,8 @@ vec3 outgoingLight = mix( 0.62, 1.0, lbaSun ) * lbaRamp(diffuseColor.rgb, invers
 }
 const polyEyeMat = new LbaMaterial();
 function polyCharacter(L, def, P) {
-  const { mesh, bones } = assemble(def, polyGeo[L.poly] ??= polyGeometry(def, P));
+  const gk = L.recolor ? L.poly + L.recolor.key : L.poly;
+  const { mesh, bones } = assemble(def, polyGeo[gk] ??= polyGeometry(def, P, L.recolor));
   mesh.material = new LbaMaterial({ side: THREE.DoubleSide }); // (the cape and robe are open shells)
   const root = new THREE.Group();
   root.add(mesh);
