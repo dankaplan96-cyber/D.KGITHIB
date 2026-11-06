@@ -107,6 +107,17 @@ They were (for the record):
   camera with the fort wall 2.5 m behind — the user was offered a camera change there, no answer yet); the overlap
   sweep (an agent, worktree) running; the expansion merge of 5.11 being tested.
 
+- Night of 5–6.11 (night mode; artifact v48 → v50): Zoé's office harder (Watcher notice/cool/speed/glance; tests and
+  zoe-resume retry the way out) and lit by its own lamps (PLAY-3); OVERLAP-1 (an agent: a coplanar-surface detector,
+  `tests/overlaps.mjs`, six faults fixed: the beam pad, the drill collar, the lighthouse door, the tavern, its cellar,
+  the baggage claim, Tralu's cave); the laptop's CLIMB-2, CLIMB-15, PLAY-3, POLISH-14, ROCK-13, GLIDER-1, SKY-9 applied,
+  CHARS-1 merged (branch: the Grobos' trunks, the cast's seams; the poly models carry their colours baked — a look
+  change in characters.js needs the model rebuilt, as Tobb's violet showed); sewers.js reads the tent through
+  regions.built (lazyregions 13/13). Known failing, identical on yesterday's base: sewers.mjs 3 checks (back up the
+  well-house lift), combat (dodge 30/60), chapter5, camfollow, doorcull. Expansion: base merged twice (branch
+  `exp-merge-5n`, the 5.11 test routes by the asylum climb's foot; skeletons.json merged by key, the expansion's tessa
+  and dockers kept), oren-first/oren-square/ballastra-harbor PASS; pushed to `expansion/ballastra` once its batch ends.
+
 ## Queue (after those)
 0. ~~**Apply the laptop's new requests**~~ (done 4.11, second session) in `tools/testlab/requests/` as listed in `WORLD_ART_REQUESTS.md` (OTRINGAL-1 waits now: Otringal's identical shells → fewer buildings of recognisable kinds). Note the user's correction there: order 5 is the paved climb to the **asylum**, not the tavern.
 1. ~~**ASYLUM-2 story part:**~~ (done 4.11, second session; chapter 8's shelter mechanic left) the laptop builds the place (two entrances, the Esmer workers' hostel, Vesk's store, the
