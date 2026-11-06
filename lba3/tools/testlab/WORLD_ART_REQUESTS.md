@@ -2437,3 +2437,19 @@ origin, and together with CLIMB-15). Pictures SwiftShader 960×540, Follow, Medi
   Same as the origin baseline (not this diff): walkers 36/1 (marda_b2 not walkable), sewers-ways 31/2 (out of the Works
   door d 2.97, out on the stone-house terrace d 2.37, both > 2.2: doorStep?), camclear 43/1 (the old 0.149 m at
   (−74, −50)). travel: the chapter-2 Doran check fails on origin too (doranAtPort false, 26/1), not this diff.
+
+## GPU-9 · order 2's remainder (CLOUD_ORDERS 9): the playthrough chain on the real GPU · the laptop, 6.11.2026
+Measured on origin 3bcc70a (src as e3385dd), installed Chrome headed, ANGLE D3D11 on the AMD Radeon Vega 8, through
+tests/lib/seg.mjs (a local copy whose boot.mjs launches that Chrome instead of SwiftShader), the segments chained through
+real saves (KEEP → LOAD), ASSIST=1.
+- **tests/playthrough 01–14: all 14 ran every step to its end ("the segment ran every step to its end" PASS in each),
+  0 deaths, 0 Retries.** ISO fight assists: 04 project-valves 1 (drone1, drone2, gdog1), 06 zeelich 1 (zdrone2, zguard1,
+  zgdog1; the depot fight by input to 3 HP), 13 network 2 (ndrone0; nclone, nsentry); none elsewhere. 14-shell: the
+  pylons from their plates by input (3/3), Vesk's coil by input (3/3), the epilogue "The console sparks over Vesk",
+  "The End", Keep Exploring. Game time per segment 7–280 s; wall time about 37 min for the chain.
+- The only FAIL in every segment is the resource check's favicon.ico 404 from the laptop's plain file server, not the
+  game. No pageerror, no GL warning on the GPU.
+- The skies' pictures (SKY, WANNIE) on the same GPU, play camera: Otringal reads right (overcast grey, pale lavender
+  sea, contrast kept). The Wannies' platform reads wrong: flat pale cloud slabs cross the island at walking height, its
+  cloud sea is pink where the style asks amber, and ground, walls and props sink into one dark sepia. A fix is in work
+  on the laptop (SKY-9, its own request). Pictures are chapter 3+: kept on the laptop.
