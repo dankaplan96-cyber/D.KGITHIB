@@ -102,7 +102,18 @@ export class Story {
   npcDefs() {
     const seen = new Map();
     for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
-    return [...seen.values()];
+    const list = [...seen.values()];
+    // DRESS-1 (characters.js): people who share a model each get their own dress; the one the model is named after (or
+    // else the first) keeps the model's. Worked out from the whole cast every time, so a person's dress never depends on
+    // which areas are built yet or on the save
+    const owner = new Set(list.filter((d) => d.char && d.id === d.char).map((d) => d.char)), n = {};
+    for (const d of list) {
+      if (!d.char || d.dress != null) continue;
+      if (d.id === d.char) { d.dress = 0; continue; }
+      n[d.char] ??= owner.has(d.char) ? 0 : -1;
+      d.dress = ++n[d.char];
+    }
+    return list;
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
   decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); }

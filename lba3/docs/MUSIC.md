@@ -39,12 +39,12 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Track | Scene / mood names | Duration | Loop length | Key, meter | Files |
 |---|---|---|---|---|---|
 | Main Theme | title screen (`title`) | 2:06 | 1:32 (loop starts 33 s in, after the intro) | D, 4/4 | `assets/music/main_theme.mp3`, `art/music/masters/main_theme.flac`, `art/music/midi/main_theme.mid`, `tools/music/tracks/main_theme.py` |
-| Home | Twinsen's house, lighthouse lamp room (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
-| Citadel Village | town, harbour (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
-| Island Exploration | Citadel island away from the village (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
-| The Well | the well cave; underground places until chapter 3 has its own (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
+| Home | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses, Bersimon's tent, the School of Magic (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
+| Citadel Village | town, harbour, Chez Luc's tavern (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings: the water office, Bazoo's shop, the pharmacy, the ticket office, the baggage claim, the tavern's cellar (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
+| Island Exploration | Citadel island away from the village, Citadel Spaceport's terminal (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
+| The Well | the well cave; caves, sewers, temples and underground places (Tralu's cave, the Temple of Bù, the Temple of the Dark Monk, the shell) (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
 | Baldino's Workshop | the workshop (`workshop`) | 2:01 | 1:48 | Bb, 4/4 | `workshop.*` |
-| Zeelich | the Zeelich region (`zeelich`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
+| Zeelich | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
 | Energy Facility | project station in the fort, control room (`station`, `control`, `facility`) | 1:55 | 1:43 | D minor, 4/4 | `facility.*` |
 | Energy Facility (stealth mix) | project office, Zoé sneaking (`stealth`) — same performance without brass, drums and synth bass; switches in sync with the full mix | 1:55 | 1:43 | | `facility_stealth.*` (no MIDI of its own) |
 | Danger | combat, entered automatically (`combat`) | 1:30 | 1:20 | E minor, 4/4 | `combat.*` |
@@ -55,8 +55,28 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Market Day (MUSIC-2) | Citadel town and harbour, second piece of the `citadel` playlist (also heard muffled in town interiors) | 2:56 | — (one pass, ends) | A, 4/4 | `village_b.*` |
 | Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; first piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
 | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
+| The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`); **score only, not rendered yet**: until it is in the manifest the mood plays the stealth mix (`MOODS.asylum.alt`) | ≈1:54 (intro 9.5 s, body 1:35; computed from the score) | 1:35 | B minor, 3/4 | `tools/music/tracks/asylum.py` |
 
 Each score file starts with a section plan (bars, instruments, what happens to the themes).
+
+## ORDER 19: music by place (2026-11-06)
+
+The user: "the asylum should have a different tune". The asylum's front door is on the fort's terrace, where the full
+Energy Facility mix plays, so its earlier stealth mix sounded like the same piece going on; it now has a piece of its own,
+**The Old Asylum** (`tools/music/tracks/asylum.py`): an uneasy music-box waltz in B minor, 3/4, 76 bpm, chamber colours
+(music box, low clarinet, bassoon, English horn, pizzicato, muted strings, a glass hum, a wood-block clock), no brass or
+drums; the Entity cell heard once, bent, for Vesk's store. Original, written by hand; nothing of LBA's music was used.
+**It is not rendered**: the machine it was written on had no FluidSynth, FFmpeg, soundfont or Python packages. To render:
+the setup above, then `build.py asylum` (updates `manifest.json`); the asylum then plays it with no code change.
+
+Other places remapped to an existing piece: the house cellar (was the town's playlist) and the homes keep Home; the town's
+shops and public buildings (Bazoo, the pharmacy, the ticket office, the baggage claim, the tavern's cellar) hear the square
+through the walls (`office`) instead of the family's Home; the tavern plays the town's playlist; Citadel Spaceport's
+terminal goes on with the island's pieces; Tralu's cave plays The Well (was Home; the Temple of the Dark Monk already moved
+to it in REVIEW-ZEELICH); Otringal's bar plays Zeelich's playlist at full volume, and Zeelich Spaceport's terminal and the
+Imperial Hotel hear it through the walls (`zeelich_in`, ORDER 23f, as `office`) (all three were Citadel's Home).
+Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
+Well), the Desert (the island pieces).
 
 ## How the music is made (pipeline)
 

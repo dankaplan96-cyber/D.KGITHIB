@@ -1,0 +1,395 @@
+diff --git a/lba3/docs/MUSIC.md b/lba3/docs/MUSIC.md
+index 6512307a..3d35b0d2 100644
+--- a/lba3/docs/MUSIC.md
++++ b/lba3/docs/MUSIC.md
+@@ -39,12 +39,12 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
+ | Track | Scene / mood names | Duration | Loop length | Key, meter | Files |
+ |---|---|---|---|---|---|
+ | Main Theme | title screen (`title`) | 2:06 | 1:32 (loop starts 33 s in, after the intro) | D, 4/4 | `assets/music/main_theme.mp3`, `art/music/masters/main_theme.flac`, `art/music/midi/main_theme.mid`, `tools/music/tracks/main_theme.py` |
+-| Home | Twinsen's house, lighthouse lamp room (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
+-| Citadel Village | town, harbour (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
+-| Island Exploration | Citadel island away from the village (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
+-| The Well | the well cave; underground places until chapter 3 has its own (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
++| Home | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses, Bersimon's tent, the School of Magic (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
++| Citadel Village | town, harbour, Chez Luc's tavern (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings: the water office, Bazoo's shop, the pharmacy, the ticket office, the baggage claim, the tavern's cellar (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
++| Island Exploration | Citadel island away from the village, Citadel Spaceport's terminal (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
++| The Well | the well cave; caves, sewers, temples and underground places (Tralu's cave, the Temple of Bù, the Temple of the Dark Monk, the shell) (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
+ | Baldino's Workshop | the workshop (`workshop`) | 2:01 | 1:48 | Bb, 4/4 | `workshop.*` |
+-| Zeelich | the Zeelich region (`zeelich`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
++| Zeelich | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
+ | Energy Facility | project station in the fort, control room (`station`, `control`, `facility`) | 1:55 | 1:43 | D minor, 4/4 | `facility.*` |
+ | Energy Facility (stealth mix) | project office, Zoé sneaking (`stealth`) — same performance without brass, drums and synth bass; switches in sync with the full mix | 1:55 | 1:43 | | `facility_stealth.*` (no MIDI of its own) |
+ | Danger | combat, entered automatically (`combat`) | 1:30 | 1:20 | E minor, 4/4 | `combat.*` |
+@@ -55,9 +55,29 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
+ | Market Day (MUSIC-2) | Citadel town and harbour, second piece of the `citadel` playlist (also heard muffled in town interiors) | 2:56 | — (one pass, ends) | A, 4/4 | `village_b.*` |
+ | Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; first piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
+ | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
++| The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`); **score only, not rendered yet**: until it is in the manifest the mood plays the stealth mix (`MOODS.asylum.alt`) | ≈1:54 (intro 9.5 s, body 1:35; computed from the score) | 1:35 | B minor, 3/4 | `tools/music/tracks/asylum.py` |
+ 
+ Each score file starts with a section plan (bars, instruments, what happens to the themes).
+ 
++## ORDER 19: music by place (2026-11-06)
++
++The user: "the asylum should have a different tune". The asylum's front door is on the fort's terrace, where the full
++Energy Facility mix plays, so its earlier stealth mix sounded like the same piece going on; it now has a piece of its own,
++**The Old Asylum** (`tools/music/tracks/asylum.py`): an uneasy music-box waltz in B minor, 3/4, 76 bpm, chamber colours
++(music box, low clarinet, bassoon, English horn, pizzicato, muted strings, a glass hum, a wood-block clock), no brass or
++drums; the Entity cell heard once, bent, for Vesk's store. Original, written by hand; nothing of LBA's music was used.
++**It is not rendered**: the machine it was written on had no FluidSynth, FFmpeg, soundfont or Python packages. To render:
++the setup above, then `build.py asylum` (updates `manifest.json`); the asylum then plays it with no code change.
++
++Other places remapped to an existing piece: the house cellar (was the town's playlist) and the homes keep Home; the town's
++shops and public buildings (Bazoo, the pharmacy, the ticket office, the baggage claim, the tavern's cellar) hear the square
++through the walls (`office`) instead of the family's Home; the tavern plays the town's playlist; Citadel Spaceport's
++terminal goes on with the island's pieces; Tralu's cave plays The Well (was Home; the Temple of the Dark Monk already moved
++to it in REVIEW-ZEELICH); Otringal's bar plays Zeelich's playlist at full volume, and Zeelich Spaceport's terminal and the
++Imperial Hotel hear it through the walls (`zeelich_in`, ORDER 23f, as `office`) (all three were Citadel's Home).
++Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
++Well), the Desert (the island pieces).
++
+ ## How the music is made (pipeline)
+ 
+ ```
+diff --git a/lba3/src/engine/music.js b/lba3/src/engine/music.js
+index cc36db37..3c077898 100644
+--- a/lba3/src/engine/music.js
++++ b/lba3/src/engine/music.js
+@@ -28,10 +28,13 @@ export const MOODS = {
+   cave: 'well', storm: 'well', well: 'well', underworld: 'well', under: 'well',
+   workshop: 'workshop',
+   zeelich: { list: 'zeelich' },
++  zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
+   desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
+   hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
+   station: 'facility', control: 'facility', facility: 'facility',
+   stealth: 'facility_stealth',
++  // (ORDER 19) the old asylum's own piece (tools/music/tracks/asylum.py); `alt` plays while a track is not rendered yet
++  asylum: { track: 'asylum', alt: 'facility_stealth' },
+   combat: 'combat',
+   revelation: 'revelation',
+   boss: 'finale', finale: 'finale',
+@@ -52,7 +55,7 @@ const NEXT = {
+   main_theme: ['home'], home: ['village'], village: ['island', 'combat'], island: ['village', 'combat'],
+   village_b: ['island', 'combat'], island_b: ['village', 'combat'], zeelich_b: ['workshop', 'combat'],
+   well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
+-  workshop: ['zeelich'], facility_stealth: ['facility'],
++  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'],
+ };
+ 
+ // moods that end a running story cue
+@@ -176,9 +179,11 @@ export class Music {
+   target(commit = false) {
+     if (this.cueSpec) return this.cueSpec;
+     if (this.combat && this.has('combat') && this.base) return { track: 'combat', gain: 1 };
+-    return this._resolve(this.base, commit);
++    return this._alt(this._resolve(this.base, commit));
+   }
+   has(track) { return !!this.manifest?.tracks?.[track]; }
++  // a mood whose own piece is not in the manifest yet ({ track, alt }: ORDER 19's asylum) plays its stand-in
++  _alt(s) { return s?.alt && this.manifest && !this.has(s.track) && this.has(s.alt) ? { ...s, track: s.alt } : s; }
+ 
+   state() {
+     const t = this.ctx?.currentTime ?? 0;
+diff --git a/lba3/src/game/baggage.js b/lba3/src/game/baggage.js
+index abb1e6c8..295a0984 100644
+--- a/lba3/src/game/baggage.js
++++ b/lba3/src/game/baggage.js
+@@ -73,7 +73,7 @@ export function buildBaggageRoom(scene, physics) {
+   // (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long
+   //  already), the upper level a fifth higher, the camera close and following Twinsen; the furniture keeps its size)
+   const P = BAGGAGE_PLAN, { FX, FZ, W, D } = P, H = 5.3;
+-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
++  R.view = 11.5; R.follow = 0.65; R.music = 'office';   // (ORDER 19: the baggage claim: the town heard through the walls)
+   // (the tavern's pale grey blocks: Citadel's stone inside)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
+diff --git a/lba3/src/game/bazoo.js b/lba3/src/game/bazoo.js
+index df03a6bf..f9b3793a 100644
+--- a/lba3/src/game/bazoo.js
++++ b/lba3/src/game/bazoo.js
+@@ -83,7 +83,7 @@ export function buildBazooRoom(scene, physics) {
+   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the goods and
+   //  the tables keep their size)
+   const P = BAZOO_PLAN, { F, W, D } = P, H = 3.8;
+-  R.view = 10; R.follow = 0.6; R.music = 'home';
++  R.view = 10; R.follow = 0.6; R.music = 'office';   // (ORDER 19: a town shop: the square heard through the walls, as the water office)
+   // (the same pale grey blocks as the tavern: Citadel's stone inside, lit a little from within)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
+diff --git a/lba3/src/game/otrbar.js b/lba3/src/game/otrbar.js
+index a62cbf5d..50a47e8f 100644
+--- a/lba3/src/game/otrbar.js
++++ b/lba3/src/game/otrbar.js
+@@ -90,7 +90,7 @@ export function buildOtrBarRoom(scene, physics) {
+   const B = new RoomBuilder(scene, physics, 'otrbar', OTRBAR_AT.x, OTRBAR_AT.z);
+   const R = B.room, k = B.k;
+   const W = 20, D = 14, H = 5.6;
+-  R.view = 12.5; R.follow = 0.6; R.music = 'home';
++  R.view = 12.5; R.follow = 0.6; R.music = 'zeelich';   // (ORDER 19/23f: a bar is lively: Zeelich's own playlist at full volume, not Citadel's Home)
+   const sky = M('ob_sky', () => { const t = skyTex(), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.3 }); return m; });
+   const darkStone = MAT.rubble('slate'), cap = MAT.paint('#3a3e44', 0.5);
+   const floor = MAT.tiles('#c4c6c8', '#3a8a9a', '#5a5e64', true, 6);
+diff --git a/lba3/src/game/otrhotel.js b/lba3/src/game/otrhotel.js
+index 0b33f676..4698b03e 100644
+--- a/lba3/src/game/otrhotel.js
++++ b/lba3/src/game/otrhotel.js
+@@ -77,7 +77,7 @@ export function buildOtrHotelRoom(scene, physics) {
+   const B = new RoomBuilder(scene, physics, 'otrhotel', OTRHOTEL_AT.x, OTRHOTEL_AT.z);
+   const R = B.room, k = B.k;
+   const W = 22, D = 16, H = 5.6;
+-  R.view = 13; R.follow = 0.6; R.music = 'home';
++  R.view = 13; R.follow = 0.6; R.music = 'zeelich_in';   // (ORDER 19/23f: Zeelich's playlist through the walls, not Citadel's Home)
+   const wall = M('oh_wall', () => { const t = wallTex(), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.18 }); return m; });
+   const dark = MAT.rubble('slate'), floor = MAT.tiles('#b8704a', '#a8643f', '#6a3a2a', false, 4), cap = MAT.paint('#16323a', 0.5);
+   const LX = -W / 2, BZ = -D / 2, DOORZ = 5.2, UH = 0.9;
+diff --git a/lba3/src/game/pharmacy.js b/lba3/src/game/pharmacy.js
+index 9d809952..0fee80ed 100644
+--- a/lba3/src/game/pharmacy.js
++++ b/lba3/src/game/pharmacy.js
+@@ -102,7 +102,7 @@ export function buildPharmacyRoom(scene, physics) {
+   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
+   //  shelves, counter and jars keep their size, a few more shelves fill the longer walls)
+   const P = PHARMACY_PLAN, { F, W, D } = P, H = 3.7;
+-  R.view = 10; R.follow = 0.55; R.music = 'home';
++  R.view = 10; R.follow = 0.55; R.music = 'office';   // (ORDER 19: a town shop: the square heard through the walls, as the water office)
+   // (the same pale grey blocks as the tavern, the shop and the ticket office)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
+diff --git a/lba3/src/game/tavcellar.js b/lba3/src/game/tavcellar.js
+index afb9580a..8927cb9b 100644
+--- a/lba3/src/game/tavcellar.js
++++ b/lba3/src/game/tavcellar.js
+@@ -48,7 +48,7 @@ export function buildTavCellarRoom(scene, physics) {
+   // (ROOMS-FULL, the user 3.11, "the rooms feel empty … maybe shrink a little and add detail": 1.25 times, the store
+   //  stocked further)
+   const F = 1.25, W = 15 * F, D = 8.6 * F, H = 5.0;
+-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
++  R.view = 11.5; R.follow = 0.65; R.music = 'office';   // (ORDER 19: the tavern above heard through the floor)
+   // (the tavern's pale grey blocks)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
+diff --git a/lba3/src/game/tavern.js b/lba3/src/game/tavern.js
+index 8bcf02f2..c0d739c7 100644
+--- a/lba3/src/game/tavern.js
++++ b/lba3/src/game/tavern.js
+@@ -80,7 +80,7 @@ export function buildTavernRoom(scene, physics) {
+   // (the user 2.11, "make them bigger, it's really small": the floor 1.5 times the first cut, the hall and gallery a
+   //  quarter higher, the camera closer and following Twinsen as in his own house; the furniture keeps its size)
+   const P = TAVERN_PLAN, { F, S, W, D } = P, H = 6.2;
+-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
++  R.view = 11.5; R.follow = 0.65; R.music = 'village';   // (ORDER 19: the town's own folk playlist in the tavern, not the family's Home)
+   // (the original's walls are pale grey blocks with a cool cast: the grey stone texture lightened toward them, lit a
+   //  little from within as the sewers' masonry is, so a face turned from every lamp still reads as stone)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+diff --git a/lba3/src/game/terminal.js b/lba3/src/game/terminal.js
+index 2c5b210e..d7183314 100644
+--- a/lba3/src/game/terminal.js
++++ b/lba3/src/game/terminal.js
+@@ -151,7 +151,7 @@ export function buildTerminalRoom(scene, physics) {
+   const B = new RoomBuilder(scene, physics, 'terminal', TERMINAL_AT.x, TERMINAL_AT.z);
+   const R = B.room, k = B.k;
+   const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
+-  R.view = 12; R.follow = 0.6; R.music = 'home';
++  R.view = 12; R.follow = 0.6; R.music = 'island';   // (ORDER 19: a departure hall: the island's travel pieces go on inside)
+   // (Twinsun's pale sandstone below a white plaster band, as the terminal outside; lit a little from within)
+   const stone = M('tm_stone', () => { const t = TEX.stone('sand'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f2e8d8', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 }); m.userData.tile = 2; return m; });
+   const cap = MAT.stone('sand', 1.2), floor = MAT.tiles('#d8d2c4', '#c8c0b0', '#5a7a9a', false, 5);
+diff --git a/lba3/src/game/ticket.js b/lba3/src/game/ticket.js
+index 5b2bb227..01c328ff 100644
+--- a/lba3/src/game/ticket.js
++++ b/lba3/src/game/ticket.js
+@@ -89,7 +89,7 @@ export function buildTicketRoom(scene, physics) {
+   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
+   //  furniture keeps its size)
+   const P = TICKET_PLAN, { F, W, D } = P, H = 3.7;
+-  R.view = 9.5; R.follow = 0.55; R.music = 'home';
++  R.view = 9.5; R.follow = 0.55; R.music = 'office';   // (ORDER 19: the harbour's ticket office: the town heard through the walls)
+   // (the same pale grey blocks as the tavern and the shop: Citadel's stone inside, lit a little from within)
+   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
+diff --git a/lba3/src/game/tralucave.js b/lba3/src/game/tralucave.js
+index 16e5555f..dc7444ba 100644
+--- a/lba3/src/game/tralucave.js
++++ b/lba3/src/game/tralucave.js
+@@ -76,7 +76,7 @@ export function buildTraluCaveRoom(scene, physics) {
+   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the terrace a little higher, the camera
+   //  close and following Twinsen; the props keep their size)
+   const F = 1.5, W = 18 * F, D = 14 * F, H = 5.4;
+-  R.view = 12.5; R.follow = 0.65; R.music = 'home';
++  R.view = 12.5; R.follow = 0.65; R.music = 'cave';   // (ORDER 19: a rock cave, the well's dark cave piece, not the family's Home)
+   const rock = rockM(), block = blockM(), cap = capM();
+   const LX = -W / 2, BZ = -D / 2, DOORZ = 4.8 * F;
+   B.shell({ floor: floorM(), slab: rock, body: rock, low: rock, rail: rustM(), cap: rock, H, t: 0.7, dado: 0.6, rimH: 0.6, rimMat: rock, W, D,
+diff --git a/lba3/src/game/zterminal.js b/lba3/src/game/zterminal.js
+index 1cc4c16c..9b716c5c 100644
+--- a/lba3/src/game/zterminal.js
++++ b/lba3/src/game/zterminal.js
+@@ -114,7 +114,7 @@ export function buildZTerminalRoom(scene, physics) {
+   const B = new RoomBuilder(scene, physics, 'zterminal', ZTERMINAL_AT.x, ZTERMINAL_AT.z);
+   const R = B.room, k = B.k;
+   const P = ZTERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, AX0, AX1, AZ1, AH } = P;
+-  R.view = 12.5; R.follow = 0.6; R.music = 'home';
++  R.view = 12.5; R.follow = 0.6; R.music = 'zeelich_in';   // (ORDER 19/23f: Zeelich's playlist through the walls, not Citadel's Home)
+   // (Otringal's pale lilac plaster, lit a little from within; turquoise trim; a pale grey grille floor with lit studs)
+   const wallM = M('zt_wall', () => { const t = TEX.plaster('#efe2ee'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f4eaf2', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
+   const cap = MAT.paint('#d8ccd8', 0.55), floor = MAT.tiles('#c8c4cc', '#b4b0ba', '#3a5a6a', false, 5);
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index 857b79ed..ff509b24 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -146,7 +146,10 @@ export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', b
+ // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
+ // (asylum: the user, 6.11, "the asylum should have a different tune, no?": LBA1's asylum was Twinsen's prison and had its
+ //  own tense music; ours plays the project's quiet facility piece — Vesk's guarded store below the hostel — not the town's)
+-const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home', asylum: 'stealth' };
++// (ORDER 19: the asylum's own piece, 'asylum' (tools/music/tracks/asylum.py; until it is rendered, MOODS stands in with
++//  the stealth mix): the front door is on the fort's terrace, where the full facility mix plays, so the stealth mix
++//  alone sounded like the same tune going on. The house cellar is the house's: Home, not the town's playlist.)
++const ROOM_MUSIC = { house: 'home', cellar: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home', asylum: 'asylum' };
+ // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
+ const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+ const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
+diff --git a/lba3/tools/music/tracks/__init__.py b/lba3/tools/music/tracks/__init__.py
+index 2fc4de91..fefae419 100644
+--- a/lba3/tools/music/tracks/__init__.py
++++ b/lba3/tools/music/tracks/__init__.py
+@@ -1,3 +1,4 @@
+ # Build order (see docs/MUSIC.md for the scene each one belongs to).
+ ORDER = ['main_theme', 'home', 'village', 'island', 'well', 'workshop', 'facility', 'combat', 'zeelich', 'revelation', 'finale', 'homecoming', 'opening',
+-         'village_b', 'island_b', 'zeelich_b']  # (MUSIC-2: the second pieces of the playlists)
++         'village_b', 'island_b', 'zeelich_b',  # (MUSIC-2: the second pieces of the playlists)
++         'asylum']  # (ORDER 19: the old asylum's own piece)
+diff --git a/lba3/tools/music/tracks/asylum.py b/lba3/tools/music/tracks/asylum.py
+new file mode 100644
+index 00000000..75333d65
+--- /dev/null
++++ b/lba3/tools/music/tracks/asylum.py
+@@ -0,0 +1,128 @@
++"""The Old Asylum — FunFrock's asylum on Citadel twelve years on: officially the Joint Project's hostel for its Esmer
++workers, behind it Vesk's hidden store (LBA1's room 0 rebuilt; src/game/lba1places.js, src/game/asylumhostel.js).
++
++ORDER 19 (the user: "the asylum should have a different tune"). Until then the asylum shared the project's own piece
++with the fort outside (Energy Facility, its stealth mix), so walking in through the front door on the fort's terrace
++changed nothing that a player hears. This is a place of its own: an old building that still remembers being a prison,
++lived in now by tired workers, with something humming behind a locked door.
++
++An uneasy music-box waltz in B minor, 3/4, slow (76 bpm): a small mechanism that keeps turning in an empty hall.
++Quiet and sparse (no brass, no drums; a wood-block clock), chamber colours unlike the facility's mechanical 4/4 pulse:
++music box, low clarinet, bassoon, English horn, pizzicato, a few muted strings and a glass hum. The Entity cell is
++heard only once, bent and transposed (B F# G# then down to F natural, over Bm6 G7 A7/C#: the facility's troubled
++harmony moved down a minor third), in the section for the store behind the locked door.
++
++  intro  1-4    the music box alone over a pizzicato B, the clock
++  A      5-12   low clarinet: the asylum tune (B minor), the music box under it
++  A2    13-20   the tune climbs, violas hold the harmony; the last bar is the music box alone
++  B     21-28   the hostel lived in: bassoon in D major over a walking pizzicato, warmer, the box silent
++  C     29-36   the store behind the door: English horn with the bent cell, string tremolo, glass hum, the clock
++  A'    37-44   the tune high on a flute, the music box back; thins out to the box and the bass (loops to bar 5)
++
++Original work for this fan project, written by hand note by note; no melody, recording, MIDI or arrangement of the
++Little Big Adventure soundtracks was used or consulted (docs/MUSIC.md).
++"""
++from score import Song, P, pad, arp, bassline, hit
++
++
++def song():
++    S = Song('asylum', 790000, meter=(3, 4), title='The Old Asylum', role="FunFrock's old asylum (the project hostel)")
++    S.intro_bars, S.body_bars = 4, 40
++    S.mix = {'room': {'rt60': 2.6, 'predelay': 0.022, 'bright': 0.38}, 'wet': {'front': 0.28, 'mid': 0.34, 'back': 0.46},
++             'lufs': -18.5}
++
++    S.chords(1, 'Bm | Gmaj7/B | Bm | F#7/A#')
++    S.chords(5, 'Bm | Bm/A | Gmaj7 | Em6 | Bm/F# | C#m7b5 | F#7sus4 | F#7')
++    S.chords(13, 'Bm | Bm/A | Gmaj7 | G#m7b5 | Gmaj7 | F#7/A# | Bm | Bm')
++    S.chords(21, 'D | A/C# | Bm | F#m/A | G | D/F# | Em7 | F#7sus4 F#7')
++    S.chords(29, 'Bm6 | G7 | A7/C# | Bm | Bm6 | G7 | Em6/G | F#7')
++    S.chords(37, 'Bm | Bm/A | Gmaj7 | G#m7b5 | Em | F#7/A# | Bm | F#7')
++
++    cl = S.part('clarinet', 'clarinet', stem='front', pan=56, vol=92, legato=True, dyn='mp')
++    bn = S.part('bassoon', 'bassoon', stem='front', pan=72, vol=90, legato=True, dyn='mp')
++    eh = S.part('ehorn', 'ehorn', stem='front', pan=46, vol=88, legato=True, dyn='p')
++    fl = S.part('flute', 'flute', stem='front', pan=38, vol=86, legato=True, dyn='p')
++    mb = S.part('musicbox', 'musicbox', stem='mid', pan=26, vol=78, dyn='mp')
++    va = S.part('violas', 'strings_slow', stem='mid', pan=70, vol=80, legato=True, dyn='pp')
++    pz = S.part('pizz', 'pizz', stem='mid', pan=60, vol=92, dyn='mp')
++    cb = S.part('bass', 'contrabass', stem='mid', pan=64, vol=90, legato=True, dyn='pp')
++    tr = S.part('tremolo', 'trem', stem='back', pan=40, vol=70, dyn='pp')
++    gl = S.part('hum', 'glass', stem='back', pan=54, vol=58, dyn='pp')
++    dr = S.part('clock', 'drums', stem='back', pan=66, vol=74, dyn='p')
++
++    def box(b0, b1, vel=0):
++        # the music box: a broken chord, six eighths a bar, high and dry
++        arp(mb, b0, b1, '0 2 1 2 3 2', step=0.5, n=4, low=P('B4'), high=P('D6'), length=0.9, vel=vel)
++
++    def clock(b0, b1, v=26):
++        # an old wall clock in the corridor: tick on every beat, the first a little lower
++        for b in range(b0, b1):
++            for k in range(3):
++                hit(dr, b, 'wb_lo' if k == 0 else 'wb_hi', k, vel=v + (4 if k == 0 else 0), dur=0.25)
++
++    # ------------------------------------------------------------ intro (1-4)
++    box(1, 5, vel=-6)
++    mb.hairpin(1, 3, 'p', 'mp')
++    bassline(pz, 1, 5, 'R:q r:h', octave=2)
++    pz.dyn(1, 'p')
++    clock(1, 5, 22)
++
++    # ------------------------------------------------------------ A (5-12): the tune, low clarinet
++    box(5, 13)
++    mb.dyn(5, 'p')
++    cl.line(5, 'F#4:h B4:q | A4:q. G4:e F#4:q | G4:h D4:q | E4:h. |'
++               'F#4:q. G4:e A4:q | G4:h E4:q | F#4:h. | E4:q D4:q C#4:q')
++    cl.hairpin(5, 9, 'p', 'mp')
++    cl.hairpin(11, 13, 'mp', 'p')
++    bassline(pz, 5, 13, 'R:q r:q 8:q', octave=2)  # (the octave, not the fifth: C#m7b5 and G#m7b5 have no perfect fifth)
++    pz.dyn(5, 'mp')
++
++    # ------------------------------------------------------------ A2 (13-20): the tune climbs, violas below
++    box(13, 20)
++    cl.line(13, 'F#4:h D5:q | C#5:q. B4:e A4:q | B4:h F#4:q | G#4:h. |'
++                'G4:q. F#4:e E4:q | C#5:h A#4:q | B4:h. | r:h.')
++    cl.hairpin(13, 15, 'mp', 'mf')
++    cl.hairpin(17, 20, 'mf', 'p')
++    pad(va, 13, 20, n=3, low=P('D3'), high=P('B3'))
++    va.hairpin(13, 16, 'pp', 'p')
++    va.hairpin(17, 20, 'p', 'pp')
++    bassline(pz, 13, 21, 'R:q r:q 8:q', octave=2)
++    box(20, 21, vel=-8)  # (the box alone for a bar)
++
++    # ------------------------------------------------------------ B (21-28): the hostel lived in, bassoon in D
++    bn.line(21, 'F#3:q A3:q D4:q | C#4:h A3:q | B3:q. A3:e F#3:q | A3:h. |'
++                'G3:q B3:q D4:q | F#4:q. E4:e D4:q | E4:q G3:q B3:q | B3:q. A#3:e C#4:q')
++    bn.hairpin(21, 25, 'mp', 'mf')
++    bn.hairpin(27, 29, 'mf', 'mp')
++    bassline(pz, 21, 29, 'R:q 5:q 8:q', octave=2)
++    pz.dyn(21, 'mp')
++    pad(va, 21, 29, n=3, low=P('F#3'), high=P('D4'))
++    va.dyn(21, 'pp')
++
++    # ------------------------------------------------------------ C (29-36): the store behind the door
++    eh.line(29, 'B3:h F#4:e G#4:e | F4:h. | E4:h G4:q | F#4:h. |'
++                'B3:h F#4:e G#4:e | F4:h D4:q | E4:h C#4:q | A#3:h.')
++    eh.hairpin(29, 31, 'p', 'mp')
++    eh.hairpin(33, 37, 'mp', 'p')
++    pad(tr, 29, 37, n=3, low=P('D3'), high=P('B3'))
++    tr.hairpin(29, 33, 'ppp', 'pp')
++    tr.hairpin(33, 37, 'pp', 'ppp')
++    pad(gl, 29, 37, n=2, low=P('B3'), high=P('F#4'))
++    gl.dyn(29, 'pp')
++    cb.line(29, 'B1:h.~ | B1:h. | C#2:h. | B1:h. | B1:h.~ | B1:h. | G1:h. | F#1:h.')
++    cb.dyn(29, 'pp')
++    clock(29, 37, 24)
++
++    # ------------------------------------------------------------ A' (37-44): the tune high, the box back; thins out
++    box(37, 45, vel=-4)
++    mb.dyn(37, 'p')
++    fl.line(37, 'F#5:h B5:q | A5:q. G5:e F#5:q | G5:h D5:q | D5:h B4:q |'
++                'E5:q. D5:e B4:q | C#5:h. | B4:h. | r:h.')
++    fl.hairpin(37, 39, 'p', 'mp')
++    fl.hairpin(41, 44, 'mp', 'pp')
++    pad(va, 37, 42, n=3, low=P('D3'), high=P('B3'))
++    va.dyn(37, 'pp')
++    bassline(pz, 37, 45, 'R:q r:q 8:q', octave=2)
++    pz.hairpin(41, 45, 'mp', 'p')
++    clock(43, 45, 20)
++    return S

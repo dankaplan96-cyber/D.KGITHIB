@@ -366,7 +366,10 @@ export function* buildHamalayiSteps(scene, physics) {
   }
   for (let i = 0; i < TRAIL.length - 1; i++) {
     const [ax, az] = TRAIL[i], [bx, bz] = TRAIL[i + 1];
-    for (let t = 0.15; t < 1; t += 0.35) { const x = ax + (bx - ax) * t + 2.6, z = az + (bz - az) * t; B.add(new THREE.DodecahedronGeometry(0.4, 0), stone('#9a9488'), x, H(x, z) + 0.3, z); B.add(new THREE.DodecahedronGeometry(0.25, 0), stone('#a8a296'), x, H(x, z) + 0.75, z); }
+    // (REVIEW-HAMALAYI: the cairns 2.9 m out from the trail's line, square to it, on the side they stood before (+x): a fixed
+    //  +2.6 m in x lay along the two westward runs and stood them 1.2–2.2 m from the middle, in the walk)
+    const L = Math.hypot(bx - ax, bz - az), sg = -(bz - az) >= 0 ? 1 : -1, nx = sg * -(bz - az) / L, nz = sg * (bx - ax) / L;
+    for (let t = 0.15; t < 1; t += 0.35) { const x = ax + (bx - ax) * t + nx * 2.9, z = az + (bz - az) * t + nz * 2.9; B.add(new THREE.DodecahedronGeometry(0.4, 0), stone('#9a9488'), x, H(x, z) + 0.3, z); B.add(new THREE.DodecahedronGeometry(0.25, 0), stone('#a8a296'), x, H(x, z) + 0.75, z); }
   }
 
   // ---- Lhar: the same five houses on the same spots, now stone houses with slate roofs (one with an upper floor
@@ -441,6 +444,13 @@ export function* buildHamalayiSteps(scene, physics) {
   {
     const fx = -10, fz = -14, gy = H(fx, fz);
     B.add(cyl(1.2, 2.2, 9, 10, 0, true), ice, fx, gy + 4.5, fz - 1.5);
+    // (REVIEW-HAMALAYI: the icefall stood free in the snow 8–12 m in front of the cliff, walked through: now it pours off
+    //  the nose of a rock spur that runs back to the cliff, and both are solid. Fixed sizes, no draw from r0: every
+    //  random piece placed after it stays where it was)
+    { const rmS = pm('#ffffff', 0.95, { vertexColors: true });
+      for (const [x, y, z, sx, sy, sz, sd, ry] of [[fx, gy - 0.6, fz - 6.2, 2.7, 8.4, 4.4, 2, 0.3], [fx - 0.6, gy + 4.6, fz - 8.6, 2.5, 7.4, 3.8, 3, 1.7], [fx + 0.7, gy + 8.8, fz - 10.8, 2.4, 6.2, 3.2, 1, 2.6], [fx + 2.2, gy - 0.5, fz - 7.6, 1.6, 4.2, 2.4, 3, 0.9]]) B.add(rockGeometry(sd), rmS, x, y, z, 0, ry, 0, sx, sy, sz);
+      col({ type: 'box', x: fx, z: fz - 8.1, hw: 2.4, hd: 4.4, top: gy + 8, seeThrough: true });   // (the Follow camera passes it as it passes the pines: solid to the camera, it pulled in to 2 m behind him west of the ice)
+      col({ type: 'cyl', x: fx, z: fz - 1.5, r: 1.8, top: gy + 9, noStand: true, seeThrough: true }); }   // (the camera may pass the clear ice)
     for (let i = 0; i < 9; i++) B.add(new THREE.ConeGeometry(0.25 + r0() * 0.2, 1.4 + r0() * 1.4, 6).rotateX(Math.PI), ice, fx - 2 + r0() * 4, gy + 7.2 - r0() * 2, fz - 0.8);
   }
   // Pim's kite, frozen fast to the icefall (a ball knocks it free)
@@ -586,7 +596,7 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const sx of [-1, 1]) put('monastery', 'gateLantern', mx + sx * 3.1, mz + 8.7, sx < 0 ? 0 : Math.PI, (k) => lanternPost(k, { h: 2.3 }));
     put('monastery', 'signGate', mx + 4.5, mz + 12.5, 0, (k) => mountainSign(k, [{ text: 'OBSERVATORY', a: -1.96 }, { text: 'LIFT', a: -1.43 }]));
     // snow drifts in the yard's corners and against the walls outside
-    for (const [x, z, l, h, d, ry, sd] of [[mx - 8.0, mz - 0.4, 2.2, 0.55, 1.4, 0, 1], [mx + 8.0, mz - 0.3, 2.0, 0.5, 1.3, 0, 2], [mx + 8.2, mz + 9.2, 2.0, 0.5, 1.2, 0.7, 3], [mx - 10.1, mz + 4, 4.0, 0.7, 1.4, Math.PI / 2, 0], [mx + 10.1, mz + 2, 4.5, 0.75, 1.5, Math.PI / 2, 1], [mx - 6, mz + 10.9, 3.5, 0.55, 1.2, 0, 2], [mx + 6.5, mz + 10.9, 3.2, 0.5, 1.2, 0, 3]]) put('monastery', 'drift', x, z, ry, (k) => { drift(k, 0, -0.08, 0, l, h, d, 0, sd); }, { col: false, nocheck: true });
+    for (const [x, z, l, h, d, ry, sd] of [[mx - 8.0, mz - 0.4, 2.2, 0.55, 1.4, 0, 1], [mx + 8.0, mz - 0.3, 2.0, 0.5, 1.3, 0, 2], [mx + 8.2, mz + 9.2, 2.0, 0.5, 1.2, 0.7, 3], [mx - 10.1, mz + 4, 4.0, 0.7, 1.4, Math.PI / 2, 0], [mx + 10.1, mz + 2, 4.5, 0.75, 1.5, Math.PI / 2, 1], [mx + 6.5, mz + 10.9, 3.2, 0.5, 1.2, 0, 3]]) put('monastery', 'drift', x, z, ry, (k) => { drift(k, 0, -0.08, 0, l, h, d, 0, sd); }, { col: false, nocheck: true });
   }
   R.monastery = { gate: W(MONAST.x, MONAST.z + 11), yard: W(MONAST.x, MONAST.z + 4) };
 
@@ -681,6 +691,12 @@ export function* buildHamalayiSteps(scene, physics) {
     // house's eaves. Filtered like the two above: no random draw moves.
     const eaves = (h, x, z) => { const dx = x - h.x, dz = z - h.z, c = Math.cos(h.ry), s = Math.sin(h.ry), ax = Math.abs(dx * c - dz * s) - h.hw, az = Math.abs(dx * s + dz * c) - h.hd; return ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az); };
     for (let i = list.length - 1; i >= 0; i--) if (houses.some((h) => eaves(h, list[i].x, list[i].z) < 1.67 * list[i].s)) list.splice(i, 1);
+    // REVIEW-HAMALAYI (order 18): no pine with its boughs over a walk (the walks, the ledge to the slide), nor in the
+    // icefall's spur: kept 0.9 m off a walk's edge by the trunk, their lower tiers (1.67 m × scale) hung over it, and
+    // the Follow camera, a few metres behind him on the walk, stood inside them at the old gate, at the ledge and at
+    // the lift's foot. Filtered like the ones above: no random draw moves.
+    const WALKS = [...PATHS, [LEDGE, 1.8]];
+    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (WALKS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.3 + 1.5 * t.s) || (Math.abs(t.x + 10) < 3.6 && t.z < -15.5 && t.z > -27)) list.splice(i, 1); }
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
     const rocks = [];
@@ -689,9 +705,12 @@ export function* buildHamalayiSteps(scene, physics) {
       if (Math.abs(x) > 90 || Math.abs(z - 5) > 92 || Math.hypot(x - LHAR.x, z - LHAR.z) < LHAR.r - 4 || seg(TRAIL, x, z) < 3 || seg(LEDGE, x, z) < 2.5 || seg(RIDGE, x, z) < 3) continue;
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: r0() * 6, s: 0.3 + r0() * 0.9, color: '#c8c8d0' });
     }
+    // (REVIEW-HAMALAYI: none on a walk or in the icefall's spur — one stood him on top of it at the tree bridge's north end;
+    //  marked after the draws, kept in the list, so nothing else moves or changes its shape)
+    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27);
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
-    for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !lba1.within(r.x, r.z, 0.8)));
-    for (const r of rocks) if (r.s > 0.6 && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
+    for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !r.off && !lba1.within(r.x, r.z, 0.8)));
+    for (const r of rocks) if (r.s > 0.6 && !r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
   }
 
   // ---- chimney smoke and falling snow

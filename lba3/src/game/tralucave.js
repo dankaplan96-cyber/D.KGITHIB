@@ -76,7 +76,7 @@ export function buildTraluCaveRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the terrace a little higher, the camera
   //  close and following Twinsen; the props keep their size)
   const F = 1.5, W = 18 * F, D = 14 * F, H = 5.4;
-  R.view = 12.5; R.follow = 0.65; R.music = 'cave';   // (REVIEW-CITADEL: a cave plays the caves' piece, not Twinsen's home theme)
+  R.view = 12.5; R.follow = 0.65; R.music = 'cave';   // (ORDER 19: a rock cave, the well's dark cave piece, not the family's Home)
   const rock = rockM(), block = blockM(), cap = capM();
   const LX = -W / 2, BZ = -D / 2, DOORZ = 4.8 * F;
   B.shell({ floor: floorM(), slab: rock, body: rock, low: rock, rail: rustM(), cap: rock, H, t: 0.7, dado: 0.6, rimH: 0.6, rimMat: rock, W, D,
