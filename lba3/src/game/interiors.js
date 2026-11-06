@@ -691,7 +691,7 @@ function buildCellar(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'cellar', 1700, 0);
   const R = B.room, k = B.k;
   const W = 11, D = 9, H = 2.8;
-  R.view = 9.6; R.follow = 0.22;
+  R.view = 9.6; R.follow = 0.22; R.music = 'home';   // (REVIEW-CITADEL: under his house: the house's theme, not the village's outdoor music)
   B.shell({
     W, D, H, t: 0.4,
     floor: MAT.tiles('#b8784a', '#a86a40', '#5a3a28', true, 6), slab: MAT.rubble('grey'), rimMat: MAT.stone('grey', 1.4),

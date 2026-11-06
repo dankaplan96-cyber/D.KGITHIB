@@ -102,7 +102,7 @@ export function buildPharmacyRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
   //  shelves, counter and jars keep their size, a few more shelves fill the longer walls)
   const P = PHARMACY_PLAN, { F, W, D } = P, H = 3.7;
-  R.view = 10; R.follow = 0.55; R.music = 'home';
+  R.view = 10; R.follow = 0.55; R.music = 'office';   // (REVIEW-CITADEL: a town interior, the square heard through the walls; not Twinsen's home theme)
   // (the same pale grey blocks as the tavern, the shop and the ticket office)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
