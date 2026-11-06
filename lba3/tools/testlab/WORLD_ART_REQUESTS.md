@@ -2545,3 +2545,30 @@ so no Follow-camera faults here. Pictures (chapter 11+) stay on the laptop.
 - Tests: overlaps (c3shaft, c3deep, c3gallery, c3sendell, c3core) 5/5; playthrough 14-shell from save-13 every step,
   0 deaths, 0 assists. chapter3.mjs 13 checks passed, then its own fixed 240 s reload wait timed out on SwiftShader
   (the test ignores BOOT_TIMEOUT; not run on origin). No lights added; draw calls not measured.
+
+## REVIEW-HAMALAYI · the Hamalayi from the player's camera (CLOUD_ORDERS 18b) · the laptop, 6.11.2026
+Diff: `requests/REVIEW-HAMALAYI.diff` (hamalayi.js `buildHamalayiSteps` only; against 1f6f848c, `git apply --check`
+clean). Walked on the Vega 8 (headed Chrome, 1280×720, Follow, Medium) along playthrough 09–10 from save-08/09, outdoor
+spots also turned 180°. Pictures (chapter 6+) stay on the laptop. Local coords; world = local x + 4300.
+
+| spot | what a player sees | status |
+|---|---|---|
+| the old gate (−6, 62), the ledge start (23, −2.6) | pines beside the walks, boughs over the walk: the Follow camera sits in a tree (a green blade fills the frame) | fixed (pines dropped where boughs reach a walk: `hw + 0.3 + 1.5 × scale`) |
+| the lift foot | one pine still blocks the view when you come from the ledge (not the story path) | left |
+| the trail cairns (all three runs) | cairns in the middle of the walk | fixed: 2.9 m out, square to each run |
+| the lift top → the monastery gate (28, −33.1) | a snow drift on the walk, Twinsen wades through | fixed: drift removed |
+| the frozen waterfall behind Lhar (−10, −15.5) | a free-standing ice column 8–12 m before the cliff, walked through | fixed: it pours off a rock spur back to the cliff; spur and ice block walking, both `seeThrough` for the camera (a solid spur pulled the camera to 2.26 m at (−11.9, −14.3); now 9.5 as origin). Pim's kite target unchanged |
+| the tree bridge's north end (−6, 33.8) | Twinsen stands on a scattered rock | fixed: rocks kept off the walks |
+| the gorge's south bank, camera (4293, y 8, 59) | camera in the old gate's lintel, a white slab fills the frame | **for the cloud (camera)** |
+| the tree bridge's north end, camera (4285, y 8.2, 35.4) | camera against the cliff, the frame all rock | **for the cloud (camera)** |
+| Lhar by the falls, hero (4291.5, −7.0) turned south | camera on his shoulder against the balcony house (the same on origin, with or without the new colliders) | **for the cloud (camera)** |
+| the observatory door, camera (4287, y 34.9, −64.8) turning to the descent | the door canopy fills the frame | **for the cloud (camera)** |
+| the heat station (4320, −17) | camera behind the cabinet's snowy top, Twinsen an x-ray outline | **for the cloud (camera)** |
+| the observatory inside | a square 13 × 13 m hall inside a round drum | not fixed: a layout question for you |
+| Lhar houses 3 and 5 (4302.15, 14.49, −3.06), (4305.92, 14.53, 18.11) | overlaps flags 2 flicker spots under the roofs | pre-existing (same values on origin) |
+
+- No new draws from the island's random sequence: every other pine, rock and prop stays put; the dressing log empty.
+- Tests: playthrough 09-pass (from save-08) every step, 0 deaths, the kite step passes; 10-observatory pass; chapter7
+  9/9; overlaps obsv pass, hamalayi the 2 pre-existing spots. chapter6.mjs did not boot within its fixed 240 s on
+  SwiftShader (09-pass covers it). Not measured: draw calls (+4 batched rock meshes, fewer pine/rock instances; no lights).
+- Not done: order 14(g), the chapter-10 glider at the monastery (story/network.js).
