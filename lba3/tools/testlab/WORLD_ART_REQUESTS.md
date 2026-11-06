@@ -2282,3 +2282,92 @@ covers it):
 (reverted: your `R.indoor` lighting covers it); the cloud keeps Zoé's harder guard (enemies.js Watcher notice/cool/speed/
 glance, chapter1.js range 7.5, fov 0.82). The gate's flicker was already fixed (island.js: the hole starts 0.4 m down).
 Tests queued (SwiftShader); results in HANDOFF.
+
+## CHARS-1 · The Grobos' trunks and a pass over the cast · the laptop, 6.11.2026 (the user: "go over all the characters, mainly the elephants: their trunk doesn't look good")
+**Not a diff file: branch `laptop/CHARS-1`** (one commit, b5ca51e, on 4154e08): 38 model files in `assets/poly/` are
+single-line JSON, so the diff was 53 MB. Merge or cherry-pick it. Files: characters.js, rig.js (the trunk block only),
+tools/blender/{lbapoly,cast_poly,baldino_poly}.py, art/characters/skeletons.json (3 trunk bones added for the 10
+generic Grobos, nothing else changed), assets/poly (the 11 Grobos, 24 seam looks, vesk, zmole1, zmole2). Rebuilt with
+the repo's own Blender scripts through a small stand-in bpy/mathutils (no Blender on the laptop), checked first by
+rebuilding doran, guard and baldino from the old sources: same to 2.7 mm. `assets/bake.bin` untouched.
+- **What was wrong (measured):** LBA2's Grobo (body 99, numbers only): the trunk leaves the face just below the eyes
+  (0.72 H), arcs about 0.2 H out in front of the belly, hangs to the belt (0.29 H), about even thickness. Ours, the 10
+  generic Grobos (doran, guard, vguardG, councilC, farmerC, yorna, pim, hesk, desertTrader, bram): four straight thin
+  tubes (r 0.10 → 0.05) kinked at each join, two squashed balls like pipe clamps, a ball on the tip, hanging straight down
+  against the belly, rigid to the head, clipping into the body up to 16 cm. Baldino: nine 10-sided rings joined
+  straight (a fold where it turns down), a flat cut tip, height-only weights; it swayed 28° at the tip walking.
+- **The fix:** one smooth tube for every Grobo (`lbapoly.trunk_loft`: a curve through the control points, the radius
+  tapering on it, 10 sides, rings every 6.5 cm, three faint wrinkles, a rounded tip) with weights handed over along its
+  length (`trunk_weights`: head → trunk0 → trunk1 → trunk2). Generic Grobos: the curve from `grobo_trunk()` (cast_poly.py)
+  = `groboTrunk()` (characters.js, which places the bones on it; the build warns if they differ): out from the muzzle,
+  over the belly 8.5 cm clear, to the belt with the tip flicked forward, r 0.125 → 0.064. Baldino: his own centre line
+  on the smooth curve. rig.js: walk sway 0.35 → 0.21 per bone, each lower bone a little later (tip ~15–18°; Baldino 28.3
+  → 17.6°), a small idle breathing curl, a lift while talking, forward/back rotation capped at +0.02 so it never swings
+  into the belly. Clipping 0 for every Grobo in idle, walk and run (talk: 3.6 cm on pim, 0.3 on farmerC at the chin).
+- **The pass over the cast** (all 55 looks, idle/walk/run/talk, ranked by how visible in play): 2. the waist seam on 24
+  Quetch/Rabbibunny looks: the tunic top (torso bone) and skirt (hips bone) shared one ring, so walking opened a 3–5 cm
+  gap and the skirt edge poked through the belt: one torso-to-hips hand-over for both and for the belt, buckle, bow and
+  pouch (SEAM-1), tears 0 (≈1 cm left on tim, nell, lharWoman's hair). 3. Vesk's coat front: its violet strip spread to
+  a 20 cm wedge at the hem in every stride (stretched 13–15×): it moves with the coat's centre line now (≤ 3.5×). 4. The
+  moles (zmole1/2): sleeve and forearm 5–6 cm apart at the elbow running/talking: 0. Left: long robes and dresses
+  stretch ~3× between the legs (cloth would need a redesign); Twinsen's cape (JUMP-CAPE, as designed); lharWoman's hair
+  tail 3.3 cm in run; the Esmers' strong lean in walk.
+- Cost: draw calls unchanged (the trunk is in the body mesh); +1,120 triangles in all (Baldino +440). Tests
+  (SwiftShader): anim-polish, solidnpc, chapter1 PASS; npc-feet 2 FAIL in "residents in play" (foot slip, stops into
+  standing), which the base also failed once: traced to FarCull putting the walkers on the far animation rate (lodN 8)
+  differently from run to run; not settled, worth a run on your side.
+- Pictures (Citadel's cast, chapters 1–2): `docs/future/world/CHARS-1/` (before above, after below).
+
+## GLIDER-1 · Chapter 10's glider take-off, and the Hamalayi glider in the monastery wall (CLOUD_ORDERS 11, 14 g) · the laptop, 6.11.2026
+`requests/GLIDER-1.diff` (story/network.js `decorate`, travelfilm.js `watchShot`; applies alone on the newest origin;
+your glider body collider follows `gliderAt`, so it moves with them). Rays from the film's camera to the glider every
+frame (78 take-off frames a place):
+- **Citadel, 30 hidden:** pine #49 of the tree batch at (−56.6, −57.9), 2.6 m from the landing (15 frames), the rock
+  shelf north of z −51 (14), grass (1). Parked glider landing + (5, −3) heading 0.6 → landing + (0, −7) = (−58, −67),
+  heading 3.3: it runs south down the open field (the small turn west keeps it off a bush collider at (−57.4, −68.8)).
+- **Desert Island, 17 hidden:** a notice board 4.7 m in front of the camera. (3318, −3) → (3316, −3), heading −π/2
+  kept: 2 m toward the pier, the camera clear of the board.
+- **Hamalayi, 2 hidden, and 14 (g):** the parked glider straddled the yard's east wall box (4343, −39.5), the south-east
+  corner pillar, the gate wall and its lantern (the "frozen chest" is the icy trough by the east wall). (4342, −36),
+  0.4 → (4337.5, −41.5), −0.3: inside the yard between the landing and the hall, its nose to the gate, touching nothing.
+- **travelfilm.js:** when the 250 ms camera search ran out before trying the high spots, the fallback kept y = 0, under
+  the ground (78/78 hidden on a slow machine): it now takes its height (`cam = high[1]; cam.y = max(B.y + cam.hi,
+  ground + 3)`). Drop it if you want order 11 alone.
+- Hidden frames before → after (full flights with Hesk aboard): Citadel 30 → 0 (mostly hidden 33 → 0, arrival 4 → 0),
+  Desert Island 17 → 0 (11 → 0), Hamalayi 2 → 0 (9 → 0, arrival 13 → 1). No glider footprint cuts a collider at any of
+  the three (the wheel and skid tips just under the ground). Hesk's spots, landings, text and flags unchanged; no tree
+  removed; world.js unchanged.
+- Checked (SwiftShader): chapter10 27/27, story-journeys 30/30. Left: the Hamalayi film still takes the high fallback
+  camera (11 spots tried; reads clearly, villagers crowd the tail); the Citadel glider now sits on a path junction
+  (−58, −66); Hesk 1.2 m from the Desert glider (was 0.4); the 250 ms camera budget is easily overrun under load, so the
+  shot picked can differ by machine. Pictures: chapter 10, not for the user (the laptop keeps them).
+
+## ROCK-13 · Desert Island's grey rock (CLOUD_ORDERS 13) · the laptop, 6.11.2026
+`requests/ROCK-13.diff` (desert.js only; applies alone on the newest origin). Overhead at a fixed camera, the same
+classifier as the original's study: grey share LBA2 23.5 % · ours before 4.7 % (mostly paving) · after 19.8 % (about
+84 % of it); warm red-brown 2.9 % → 0.1 % (LBA2 0.5 %); grey median #877e7b (LBA2 #8c8782).
+- **Why recolouring did little:** the terrain multiplies the vertex colour by `TX.cliff` (grey-violet), and `COL.rock`
+  '#e0a080' made it reddish-brown; colorFn blended to rock only at smoothstep(0.8, 1.6, slope) while the texture showed
+  rock from 1.0, so most rock pixels kept the sand colour; and rock lived only on faces steeper than 1.0, edge-on from
+  above. The rock meshes carried Citadel's moss (olive here) and a pink instance colour.
+- **The original's rock is not a steep-face material:** from its heightfield, grey is 15 % of the ground under 2 m,
+  22 % at 2–4 m, 28–36 % at 4–8 m, 41–47 % above 8 m; 22 % even on flat ground.
+- **Changed:** `COL.rock` linear (1.06, 1.1, 0.94), cancelling the texture's violet (`TX.cliff` shared with Citadel,
+  untouched). New `rockAt(x, z, h, slope)` used by both colorFn and splatFn (colour and texture agree): the old rule
+  everywhere, plus, away from places, tracks and paving, a lower slope threshold (0.5–0.95) and outcrop patches from a
+  fixed sine noise lifted by height and slope (no random draws; a crisp edge near places). `dryRock()`: a cached clone of
+  vegetation.js `rockGeometry` in dry grey, no moss. `placeRocks()`: about 87 scree rocks on steep grey slopes from their
+  own `rng(4313)` after all other draws (nothing else moves), ≥ 5 m off tracks, 3 m off places and coast, `keshClear`,
+  `inBuilding`-filtered, into the same three batches (under 1 m: the coarse sculpt). Old rocks keep spots and variants;
+  instance colour '#e8a888' → '#ece6de'. Rock colliders 106 → 134 (seeThrough, none within 2.5 m of a door, NPC, spot,
+  exit, search, trough or giver).
+- **Cost (SwiftShader counts, not frame times):** draw calls unchanged in all five views (spawn 35/12, crater 29/4,
+  east 47/12, north 91/10, overhead 167/11); triangles +4–18 % in play views, +20 % overhead. Vega 8 not measured.
+- **Checked:** desert-life 30/0, residents 182/0, wizards 6/0, world-consistency 37/0, overlaps (desert) 0; chapter4 43
+  passed then stopped at a save fixture the laptop copy lacks; lazyregions 1 FAIL (expects 11 Zeelich isles, the game has
+  9 since DECLUTTER: not desert.js). worldscore desert 82.6 → 83.1.
+- **Look by eye:** from the play camera the flat outcrops read as painted grey patches on the sand (as the original's
+  are texture only; the relief comes from the scree), a few with a hard edge. If that reads wrong to you, lower the patch
+  term near the play paths or soften `smoothstep(0.3, 0.5, rk)`. Soil fell 11.9 → 7.3 % (LBA2 14.4 %): shaded slope
+  sand became rock. Outcrop bias 0.35 → 0.32 would add about 1 point of grey. Pictures: chapter 3+, not for the user
+  (the laptop keeps them).
