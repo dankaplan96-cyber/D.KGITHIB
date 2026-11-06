@@ -49,9 +49,11 @@ await ev(async () => {
     const h = G.hero, R = G.room, nav = G.walkers.nav;
     if (R && !R.outdoor && R.spawn) { h.pos.set(R.spawn.x, G.physics.groundAt(R.spawn.x, R.spawn.z), R.spawn.z); }
     else {
+      // (on their own level: Hesk's mark on the Hamalayi is 5.5 m from the monks' terrace's lip, and 7 m south of him
+      //  was the terrace below, where no walk leads back up)
       const m = G.npcs.find((n) => n.def.id === ids[0]).pos;
       let best = null;
-      for (let k = 0; k < 16 && !best; k++) { const a = k * 0.785, r = 7 + (k >> 3) * 2, x = m.x + Math.sin(a) * r, z = m.z + Math.cos(a) * r; const c = nav.nearest(x, z, 1); if (c && ids.every((id) => { const q = G.npcs.find((n) => n.def.id === id), so = stopsOf(q); return Math.hypot(q.pos.x - c.x, q.pos.z - c.z) > 4.5 && (so?.stops || []).every((s) => Math.hypot(s.x - c.x, s.z - c.z) > 3); })) best = c; }
+      for (let k = 0; k < 16 && !best; k++) { const a = k * 0.785, r = 7 + (k >> 3) * 2, x = m.x + Math.sin(a) * r, z = m.z + Math.cos(a) * r; const c = nav.nearest(x, z, 1); if (c && Math.abs(G.physics.groundAt(c.x, c.z, m.y + 1) - m.y) < 1.5 && ids.every((id) => { const q = G.npcs.find((n) => n.def.id === id), so = stopsOf(q); return Math.hypot(q.pos.x - c.x, q.pos.z - c.z) > 4.5 && (so?.stops || []).every((s) => Math.hypot(s.x - c.x, s.z - c.z) > 3); })) best = c; }
       if (best) h.pos.set(best.x, G.physics.groundAt(best.x, best.z), best.z);
     }
     h.onGround = true; h.vy = 0; if (G.camRig.lba) G.camRig.lba.init = false;
