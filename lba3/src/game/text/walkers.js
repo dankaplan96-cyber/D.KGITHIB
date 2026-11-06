@@ -6,7 +6,7 @@ import { STR } from '../i18n.js';
 Object.assign(STR.en, {
   n_oda: 'Oda', n_brix: 'Old Brix', n_maro: 'Maro', n_tilde: 'Tilde', n_garrick: 'Garrick',
   n_ilo: 'Ilo', n_aven: 'Aven', n_kira: 'Kira', n_safi: 'Safi', n_tamu: 'Tamu', n_bashir: 'Old Bashir',
-  n_pico: 'Pico', n_dot: 'Dot', n_marda: 'Marda', n_tobb: 'Tobb', n_sefa: 'Sefa the trader', n_ume: 'Granny Ume',
+  n_pico: 'Pico', n_dot: 'Dot', n_marda: 'Marda', n_tobb: 'Tobb', n_sefa: 'Neska the trader', n_ume: 'Granny Ume',
 
   rs_oda_dry: "The well's dry again. I fetch my water from the harbour tap now. My arms are very strong.",
   rs_oda_0: "Pippa's pears are the best on the island. Don't tell her I said so. She'd put the price up.",

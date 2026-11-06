@@ -15,7 +15,7 @@ Object.assign(STR.en, {
   // ---- the inventory
   it_honey: 'Mosquibee Honey', itd_honey: 'Honey from the Mosquibees of Zeelich, in a glazed jar. When life runs low, a spoonful is taken by itself: half your life back. Up to three jars.',
   it_ticket: 'Cabin Ticket', itd_ticket: 'For the ferry between Citadel and Desert Island. The deck is free; the cabin has cushions and tea. Board with it and you step off with full life and magic. Up to three.',
-  it_parcel: "Sefa's Parcel", itd_parcel: 'A teal Zeelich parcel with brass bands, stamped twice by Officer Odile. Sefa is waiting for it at the Esmer trading house.',
+  it_parcel: "Neska's Parcel", itd_parcel: 'A teal Zeelich parcel with brass bands, stamped twice by Officer Odile. Neska is waiting for it at the Esmer trading house.',
 
   // ---- toasts
   sh_toast_carry: '{n}: {c} carried', sh_toast_honey: 'A spoonful of honey: +{n} life', sh_toast_cabin: 'Cabin ticket: you step off rested',
@@ -36,13 +36,13 @@ Object.assign(STR.en, {
   sh_sefa_thanks: 'My ninth parcel! Both of Odile\'s stamps and everything. Fifteen kashes for your trouble, and a jar of honey. Honey\'s cheaper for you from now on.',
 
   // ---- the trading house's door; the shut counters in the evacuation
-  sh_door_sign: 'ESMER TRADING HOUSE. Zeelich goods by the crate or by the jar. Ask for Sefa.',
-  sh_door_evac: 'Shut. A note on the door: GONE WITH THE TOWN. BACK WHEN IT IS. - SEFA',
+  sh_door_sign: 'ESMER TRADING HOUSE. Zeelich goods by the crate or by the jar. Ask for Neska.',
+  sh_door_evac: 'Shut. A note on the door: GONE WITH THE TOWN. BACK WHEN IT IS. - NESKA',
   sh_ph_closed: 'A card on the counter: CLOSED. GONE TO THE DEPOT WITH EVERYONE ELSE. FIRST AID AT THE QUEUE.',
   sh_tk_closed: 'A card on the till: NO CROSSINGS UNTIL FURTHER NOTICE.',
 
   // ---- journal
   sh_j_title: 'Harbour trade',
-  sh_j_ask: 'Sefa at the Esmer trading house is one parcel short. Osk at the baggage claim may have it',
-  sh_j_take: 'Take the teal parcel to Sefa at the Esmer trading house',
+  sh_j_ask: 'Neska at the Esmer trading house is one parcel short. Osk at the baggage claim may have it',
+  sh_j_take: 'Take the teal parcel to Neska at the Esmer trading house',
 });

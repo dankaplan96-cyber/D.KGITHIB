@@ -466,6 +466,12 @@ function climbTerraceFill(k, M, physics, T, yt) {
   wall(G, T2_0 - 0.17, T2_TOP, -OE);   // (from the landing's north-east corner, where the landing's own north wall ends)
   fill([[G, T2_0, T2_TOP]], -1, null);
   climbTopThreshold(k, M, physics, T, yt);
+  // (REVIEW-CITADEL: north of the landing, between its north wall and the terrace, the gully's pocket stayed open, 1–2.5 m
+  //  deep under the terrace's edge (x −33.9…−31.3, z −46.9…−47.7): walking west along the north fill or south off the
+  //  terrace he dropped into it, slid, could not climb out and was taken back by the fall's respawn, a life lost. Closed
+  //  at the height of the terrace's edge above it)
+  { const sN = S1 + ASYLUM_STEPS.w, [cx, cz] = F.at(sN + 0.9, 0), yn = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
+    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn }); }
 }
 // CLOUD_ORDERS 21 (the cloud's camera agent, 6.11: past the east flight's top step, x −28.99, the forecourt's ground lay
 // 0.5–0.9 m lower and steep for ~1 m: Twinsen slid against the step and stuck, and actors.js respawnFromFall took him
