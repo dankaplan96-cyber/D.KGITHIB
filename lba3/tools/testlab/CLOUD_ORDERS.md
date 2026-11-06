@@ -119,4 +119,15 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    no room and rises over his head at 1.4–3.2 m (camera.js MIN-VIEW, by design). If (a) squares the flight, give the
    landing ≥ 4 m before the wall, or say so and the cloud makes the camera look along the terrace there. The cloud's terrain fill helper is `lba1places.js climbRampFill` (applied last in `world.js islandHeight`). (c)
    With (a)–(b), order 15's likeness to LBA2's climb. Before/after from the play camera (Follow, medium).
+17. **The climb's foot, straight (the user, 6.11, a photo from the ramp at the flight's foot: "can't it be
+   straightened? it doesn't look good"; chapters 1–2: pictures may go to the user).** CLIMB_RAMP's second leg
+   (−37, −20) → (−34, −36) runs ~10.6° off the flight, which starts square at ASYLUM_STEPS.a (−32.6, −35.0) heading due
+   north; the round FOOT apron (−33.3, −36.4, r 2) between them, the parapet slanting in at the left and the cheek posts
+   square make the join read crooked. Make the ramp's last stretch (at least ~6 m, the parapet and its wall with it) run
+   on the flight's own axis, x −32.6, straight into the first step, so ramp, parapet, kerbs and flight are one straight
+   line; replace the round apron with a square landing the flight's width (plus the cheeks); keep world.js PATHS[0]'s
+   later points, the ground under the paving level across (climbGround / climbRampFill), and STEP_UP-safe risers. Also
+   the dark notch at the left cheek's foot beside the first step (in the photo, left of Twinsen): close it. Same play
+   camera (Follow, medium) before/after from the ramp below, and run lba1rooms, asylum, rocks, world-consistency,
+   overlaps, chapter1.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
