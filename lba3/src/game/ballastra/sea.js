@@ -31,6 +31,8 @@ const DRAW = { x0: -64, x1: 56, z0: -48, z1: 40, step: 1.6 };   // the drawn bed
 // the drawn bed (local metres): deep outside, shallow sand round the harbour, the inner basin's floor high under
 // its own water, the lift's pit
 let SHAPE = null;   // { basin: [x0, z0, x1, z1], pit: [x0, z0, x1, z1], banks: [[x, z, r]] } (harbor.js)
+// (W-2, arches.js: a place of its own may give SHAPE.bed(x, z, h) → h, its own bed over the harbour's, and
+//  SHAPE.color(x, z, y, c), its own colour for the drawn bed: the district's canal floor of mud)
 export function setBedShape(s) { SHAPE = s; }
 export function bedDrawn(x, z) {
   const S = SHAPE || {};
@@ -40,6 +42,7 @@ export function bedDrawn(x, z) {
   const inR = (b, m = 0) => x > b[0] - m && x < b[2] + m && z > b[1] - m && z < b[3] + m;
   if (S.basin && inR(S.basin)) h = 0.35 + (fbm(x * 0.2, z * 0.2, 2) - 0.5) * 0.25;
   if (S.pit && inR(S.pit)) h = -1.2;
+  if (S.bed) return S.bed(x, z, h);
   return Math.min(h, S.basin && inR(S.basin) ? 1.0 : -0.6);
 }
 
@@ -130,6 +133,7 @@ function bedMesh() {
     const w = fbm(x * 0.11 + 7.3, z * 0.11 - 2.2, 3);
     if (w > 0.56) c.lerp(weed, smoothstep(0.56, 0.7, w) * 0.8);
     if (y > 0.2) c.copy(rub);
+    if (SHAPE?.color) SHAPE.color(x, z, y, c);
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
   }
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));

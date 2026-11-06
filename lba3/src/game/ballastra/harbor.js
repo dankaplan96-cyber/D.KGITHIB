@@ -571,7 +571,7 @@ export function* buildBallastraSteps(scene, physics) {
   const shedDoorOutside = { ...W(SHEDB.x, SHEDB.z + SHEDB.d / 2 + 0.5), r: 0.6, room: 'bl_shed' };
   const R = {
     id: 'ballastra', outdoor: true, sky: false, group, center: new THREE.Vector3(ox, 0, oz), lights: [], exits: [shedDoorOutside], searches: [], ballTargets: [], givers: [], updaters,
-    music: 'harbour', env, spawn: spawns.pad, entries: { bl_shed: spawns.shedDoorOut },
+    music: 'harbour', env, spawn: spawns.pad, entries: { bl_shed: spawns.shedDoorOut, bl_arches: spawns.districtEdge },   // (W-2: back from the Arch District at the district's edge)
     sounds: [{ kind: 'water', ...W(0, 12), r: 30, vol: 0.4 }, { kind: 'water', ...W(-10, -14), r: 24, vol: 0.35 }],
     safe: [W(PAD.x1 - 3, 18), W(12, 2), W(-9.5, 5.5), W(-16, -31)],
     colliders: statics,
@@ -606,6 +606,9 @@ export function* buildBallastraSteps(scene, physics) {
       shedOut: shedDoorOutside, shedIn: { ...SHED.door, r: 0.6, room: 'ballastra' },
       shed: { setLocked(b) { S.locked = !!b; R.exits = S.locked ? [] : [shedDoorOutside]; }, get locked() { return S.locked; } },
     },
+    // (W-2: the way through the district's gate into the Arch District, for the story to put in R.exits when the gate
+    //  opens; the district's own exit back, BALLASTRA.arches.exits.toHarbor, lands at spawns.districtEdge)
+    exits: { toArches: { ...W(-17, DIST.z0 + 1.0), r: 1.0, room: 'bl_arches' } },   // (before the shut gate: its leaves are the harbour's scenery)
     stands: {
       tessa_shed: { ...SHED.tessa }, tessa_quay: W(WX + 1.3, WZ + 1.4, -Math.PI / 2 - 0.4), tessa_lift: W(CH.x1 + 0.55, -4.6, -Math.PI / 2),
       docker1: W(19.2, 10.6, 0.3), docker2: W(14.4, 2.4, -Math.PI / 2), customs: W(HUT.x - HUT.s / 2 - 0.9, HUT.z - 0.2, -Math.PI / 2),
