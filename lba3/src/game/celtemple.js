@@ -67,7 +67,9 @@ export function buildCelTempleRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'celtemple', CELTEMPLE_AT.x, CELTEMPLE_AT.z);
   const R = B.room, k = B.k;
   const W = 18, D = 15, H = 6.0;
-  R.view = 12.5; R.follow = 0.6; R.music = 'facility';
+  // (the music: the old temples' piece, as Citadel's and the Desert's temples (temple.js 'cave'), not the project's facility
+  //  piece: an ancient hall under the mountain, lava and horned heads; nothing of the project is here)
+  R.view = 12.5; R.follow = 0.6; R.music = 'cave';
   const g = GRANITE(), floor = MAT.tiles('#3e4044', '#34363a', '#22242a', false, 3);
   const LX = -W / 2, BZ = -D / 2, DOORZ = 4.4, SEALZ = -4.6;
   B.shell({ floor, slab: MAT.rubble('slate'), body: g, low: g, rail: MAT.paint('#2a2c30', 0.5), cap: g, H, t: 0.6, dado: 1.2, rimH: 0.55, rimMat: g, W, D,

@@ -333,14 +333,17 @@ const ZEELICH_PEOPLE = [
   // palisade round (−28, −21), 11 × 6.8 m, its gate gap on the south side at z −17.6); from chapter 3 on
   { id: 'marl', char: 'keeper', tint: '#fff0dc', speed: 0.8, color: '#e8b070', start: 0, area: 'zeelich',
     phase: (f, S) => (S.index >= idx(S, 'zeelich') ? 'yard' : null), rounds: {
+      // (the council house (−25.5, −13.3; 8.2 × 5.6 m) backs onto the yard, its back wall at z −16.35, 1.25 m short of the
+      //  gate: both stops stood inside it, Marl's legs in the wall. Now at its two back corners, by the fence)
       yard: [
-        L('marl_gate', -29.8, -15.6, -28, -21, 'stand', [24, 34], { gest: ['nod'] }),
-        L('marl_side', -24.6, -15.9, -26, -21, 'stand', [10, 14]),
+        L('marl_gate', -31.2, -16.2, -28, -21, 'stand', [24, 34], { gest: ['nod'] }),
+        L('marl_side', -20.4, -16.4, -26, -21, 'stand', [10, 14]),
       ] } },
   // a council guard on post either side of the council house's door, crossing over now and then
   { id: 'zc_guard', char: 'keeper', tint: '#dfe4ff', speed: 0.6, color: '#a0a8e8', start: 0, area: 'zeelich', phase: council, rounds: {
     council: [
-      D('g_west', -28.0, -6.3, 0, 'stand', [30, 45]),
+      // (west of the door's flower tub (−27.8, −5.2), not behind it: there he stood with his nose in its leaves, legs hidden)
+      D('g_west', -29.4, -6.6, 0, 'stand', [30, 45]),
       D('g_east', -23.0, -6.3, 0, 'stand', [30, 45]),
     ] } },
   // a council clerk: in and out of the council house, a paper read by the fountain, out to the bridge to meet the ship
@@ -432,9 +435,12 @@ const upper = (f, S) => S.cur?.key === 'council';
 export const UPPER_ROOM = {
   floors: [{ x0: -6.95, x1: 6.95, z0: -4.95, z1: 4.95, y: 0 }],
   people: [
-    { id: 'up_clerk', char: 'clerk', tint: '#e8eeff', color: '#b8c0f0', speed: 0.85, start: 0, when: upper, stops: [
+    // (the user, 6.11, of Citadel: "two red Grobos together". Tib wears the clerk's own robe (the Esmer looks are few),
+    //  so he no longer works at the clerk's elbow behind the counter, where the two stood side by side as twins: he
+    //  pins forms up and takes them from Mrs Quill on the bench; his robe a cooler grey-blue, the clerk's junior)
+    { id: 'up_clerk', char: 'clerk', tint: '#c4d0f4', color: '#b8c0f0', speed: 0.85, start: 0, when: upper, stops: [
       D('uc_board', -6.15, -3.2, -PI / 2, 'put', [6, 9], { gest: ['nod'] }),   // (a form pinned up)
-      L('uc_counter', 3.3, 1.0, 2.6, 1.4, 'browse', [8, 12]),                  // (the counter's far end: the ledgers)
+      L('uc_quill', -1.9, 1.9, -3.0, 2.6, 'stand', [8, 12], { gest: ['nod'] }), // (Mrs Quill's form, at the bench's end)
     ] },
     { id: 'up_courier', char: 'xil', tint: '#fff4ec', color: '#f0c0b0', speed: 1.1, start: 0, when: upper, stops: [
       D('uk_lift', -5.9, 1.6, PI / 2, 'stand', [4, 6], { carry: 'case' }),

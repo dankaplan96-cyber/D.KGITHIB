@@ -525,7 +525,11 @@ export class Chapter2 extends ChapterBase {
     if (f.c2_shield || (f.c2_key && this.millsBraked() >= 3)) return this.stars(Z.platform.console);
     if (f.c2_key) return this.stars(mills());
     if (f.c2_cog && f.c2_cyl) return this.stars(Z.workshopDoor);
-    if (f.c2_plan) return this.stars(!f.c2_cog && Z.millTop, !f.c2_cyl && Z.depot.locker, mills());
+    // (the cog is Oku's to give while the plan is taken: the old mill's top answers "I should ask him first" until he
+    //  has agreed, and he wants the plan shown first. So no star sends him up the stair-stones before that: the star is on
+    //  Oku once the plan is back from the depot, on the mill's top once Oku has agreed)
+    const cog = f.c2_cog ? null : !f.c2_planTaken || f.c2_okuOK ? Z.millTop : f.c2_planBack ? this.starNpc('oku') : null;
+    if (f.c2_plan) return this.stars(cog, !f.c2_cyl && Z.depot.locker, mills());
     return this.stars(Z.workshopDoor);
   }
   items() {
