@@ -12,7 +12,10 @@ import { storyJourney } from '../travelfilm.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
 // (WC-1) the glider on the monks' slope for its departure film, from the monastery's gate, and where it is watched from
-const SLOPE = { x: 5, z: 3, a: 0, lx: 13, lz: 2 };   // (on the terrace's lip east of the gate, clear of the rope lift's winch, nose south over the drop to Lhar)
+// (on the terrace's lip east of the gate, clear of the rope lift's winch, nose south over the drop to Lhar; REV-HAM: on chapter
+//  10's glider spot (network.js decorate: the gate + (6.3, 3.8)) — 1.3 m east and 0.8 m south of where it stood, its body and
+//  tailplane through the gate's signpost (the gate + (4.5, 1.5)) as it took off. Its watch spot moved with it)
+const SLOPE = { x: 6.3, z: 3.8, a: 0, lx: 14.3, lz: 2.8 };
 
 export class Observatory extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }

@@ -25,6 +25,7 @@ node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migrat
 node tests/weather.mjs         # WEATHER-1: the default test boot is today's look; every state on each planet, smooth blends, the light's floor, indoors, holds (sandstorm), Settings, quality caps, cost
 node tests/overlaps.mjs        # OVERLAP-1: two surfaces in one plane (z-fighting) found by rays down and across, the ground included: Citadel outdoors and every Citadel interior fail on a seen one ≥ 0.5 m²; REGIONS=1 adds the other areas, ONLY=a,b, SHOTS=dir (red/green pictures), REPORT=file.json
 node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outward-wound, triangle budget (+30 % max), the 509 placements, even texel density, no stretch, clear of the paths, deterministic; SHOTS=dir for four cliff views
+node tests/slidetraps.mjs      # SLIDE-RESCUE: a slide into a collider (rock, post, wall, the sea's edge) in Citadel, Desert Island and the Hamalayi resolves: no respawn, no life lost, he ends standing on standable ground; SHOW=1 lists every spot
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);
