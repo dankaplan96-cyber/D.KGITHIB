@@ -446,6 +446,10 @@ recentred, frames stepped by hand): `W-2-00-canal-level0-vs-level1` (the same sp
 `W-2-08-speaking-steps`, `W-2-09-gauge-ledge`, `W-2-10-terrace-bell`, `W-2-11-terrace-north`,
 `W-2-12-pump-room-chained-gate`, `W-2-13-oren-inside`, `W-2-14-mags-inside`.
 
+**Accepted by the user so far (6.11.2026):** "looks good so far" on the pictures (canal levels 0 and 1 side by side,
+the lower row, the market). The left items below stay open: the real-GPU numbers, the arch's span shot, and the
+level change at a distance.
+
 *Left / not done:*
 - no real-GPU numbers (fps, GPU ms, battery): the machine was busy; the SwiftShader counts above are the only measure.
 - the arch's span is not in any play-camera picture (its frame ends over the roofs, as in W-1); the free-camera
