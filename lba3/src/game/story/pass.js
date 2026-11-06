@@ -227,7 +227,7 @@ export class Pass extends ChapterBase {
     if (f.c6_up) return this.stars(M.monastery.gate);
     if (f.c6_trip2) return this.stars(M.lift.pad);
     if (f.c6_trip1) return this.mitesLeft() > 0 ? [] : this.stars(M.lift.winch);
-    if (f.c6_liftReady) return this.stars(f.c6_sword && !f.c6_rope ? M.lift.pad : M.lift.winch);
+    if (f.c6_liftReady) return this.stars(f.c6_sword && !f.c6_rope ? this.rope ?? M.lift.pad : M.lift.winch);   // (REV-HAM: the frozen rope itself, 3.7 m off the platform's middle)
     if (f.c6_thawed) return this.stars(this.starNpc('yorna'));
     if (f.c6_heat) return this.stars(M.lift.winch);
     if (f.c6_yorna) {

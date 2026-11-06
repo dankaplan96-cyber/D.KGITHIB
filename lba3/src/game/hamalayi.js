@@ -353,9 +353,29 @@ export function* buildHamalayiSteps(scene, physics) {
     for (let i = 0; i < TRAIL.length - 1; i++) {
       const [ax, az] = TRAIL[i], [bx, bz] = TRAIL[i + 1], L = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / L, uz = (bz - az) / L;
       let prev = null;
+      // (REV-HAM: one open side for the whole leg, the side most of its posts read as the lower one: near a switchback
+      //  the reading flipped from one post to the next, and the rope zigzagged across the trail at chest height)
+      const sideAt = (d) => { const cx = ax + ux * d, cz = az + uz * d; return H(cx - uz * 3.4, cz + ux * 3.4) < H(cx + uz * 3.4, cz - ux * 3.4) ? 1 : -1; };
+      let vote = 0; for (let d = 1.5; d < L - 1.0; d += 2.6) vote += sideAt(d);
       for (let d = 1.5; d < L - 1.0; d += 2.6) {
-        const cx = ax + ux * d, cz = az + uz * d, side = H(cx - uz * 3.4, cz + ux * 3.4) < H(cx + uz * 3.4, cz - ux * 3.4) ? 1 : -1;
-        const x = cx - side * uz * 3.4, z = cz + side * ux * 3.4, y = H(x, z);
+        const cx = ax + ux * d, cz = az + uz * d, side = sideAt(d);
+        if (vote && side !== Math.sign(vote)) continue;   // (a post on the other side: none there; the rope runs on to the next)
+        // (REV-HAM: a post on rock too steep to stand on, or at the foot of such rock sloping down onto it — at the
+        //  switchback the "open side" lands on the cliff face above the trail —, is moved in toward the trail, at most
+        //  1.5 m, until it is clear of it: on the face its rope crossed the rock, and Twinsen sliding down the face from
+        //  the terrace above stuck against it and was put back with a life lost, actors.js respawnFromFall. Still on it
+        //  there: no post)
+        const grad = (px, pz) => [(H(px + 0.25, pz) - H(px - 0.25, pz)) / 0.5, (H(px, pz + 0.25) - H(px, pz - 0.25)) / 0.5];
+        const STEEP = 1.1 * 1.35, R = 0.6;
+        const onSlide = (px, pz) => {
+          if (Math.hypot(...grad(px, pz)) > STEEP) return true;
+          for (let a = 0; a < 8; a++) { const ex = Math.sin(a * Math.PI / 4) * R, ez = Math.cos(a * Math.PI / 4) * R, [gx, gz] = grad(px + ex, pz + ez), s = Math.hypot(gx, gz); if (s > STEEP && (gx * ex + gz * ez) / (s * R) > 0.5) return true; }   // (downhill there, −grad, points at the post)
+          return false;
+        };
+        let x = cx - side * uz * 3.4, z = cz + side * ux * 3.4, k = 0;
+        for (; k < 5 && onSlide(x, z); k++) { x += side * uz * 0.3; z -= side * ux * 0.3; }
+        if (onSlide(x, z)) { prev = null; continue; }
+        const y = H(x, z);
         KT.add(cyl(0.07, 0.09, 1.25, 6, 0), MAT_WOOD(), x, y + 0.55, z);
         KT.add(new THREE.SphereGeometry(0.09, 6, 3), snowM, x, y + 1.18, z, 0, { sy: 0.5 });
         col({ type: 'cyl', x, z, r: 0.12, top: y + 1.2, noStand: true, seeThrough: true });
@@ -466,14 +486,18 @@ export function* buildHamalayiSteps(scene, physics) {
   }
   // the project's heat station at the foot of the lift: a teal shed, a pipe, a heat post
   const HP = { x: LIFT.x - 3.2, z: LIFT.z + 2.4 };
+  // (REV-HAM: the shed stood 1.2 m from the post, so a player at the post with his back to it had the Follow camera
+  //  over the shed's roof, 3 m from him, showing him through it as a silhouette. It stands 3.6 m off now, out of the
+  //  KEEP round the post; the pipe runs low along the snow from its wall to the post's foot)
+  const SH = { x: HP.x - 4.8, z: HP.z + 0.6 };
   {
-    const gy = H(HP.x, HP.z);
-    B.add(bbox(2.4, 2.2, 1.8, 0.06, 2), teal, HP.x - 2.4, gy + 1.1, HP.z + 0.6);
+    const gy = H(HP.x, HP.z), gs = H(SH.x, SH.z);
+    B.add(bbox(2.4, 2.2, 1.8, 0.06, 2), teal, SH.x, gs + 1.1, SH.z);
     B.add(cyl(0.12, 0.12, 2.2, 8, 0), pm('#c8a050', 0.4, { metalness: 0.6 }), HP.x, gy + 1.1, HP.z);
-    B.add(tube([[HP.x - 1.2, gy + 1.6, HP.z + 0.4], [HP.x - 0.4, gy + 1.8, HP.z + 0.2], [HP.x, gy + 2.2, HP.z]], 0.08, 6, 1), iron, 0, 0, 0);
-    col({ type: 'box', x: HP.x - 2.4, z: HP.z + 0.6, hw: 1.2, hd: 0.9, top: gy + 2.2, noStand: true });   // (a wall, not a step: like the winch beside it, nobody stands on the shed's roof)
+    B.add(tube([[SH.x + 1.15, gs + 0.55, SH.z - 0.35], [SH.x + 1.55, gs + 0.14, SH.z - 0.4], [HP.x - 0.6, gy + 0.14, HP.z + 0.05], [HP.x - 0.08, gy + 0.5, HP.z]], 0.08, 6, 1), iron, 0, 0, 0);
+    col({ type: 'box', x: SH.x, z: SH.z, hw: 1.2, hd: 0.9, top: gs + 2.2, noStand: true });   // (a wall, not a step: like the winch beside it, nobody stands on the shed's roof)
     col({ type: 'cyl', x: HP.x, z: HP.z, r: 0.25, top: gy + 2.4, noStand: true });
-    put('lift', 'heatCabinet', HP.x - 2.4, HP.z + 0.6, 0, (k) => heatCabinetDress(k), { y: gy, col: false, nocheck: true });
+    put('lift', 'heatCabinet', SH.x, SH.z, 0, (k) => heatCabinetDress(k), { y: gs, col: false, nocheck: true });
   }
   const crystalHP = mesh(group, new THREE.OctahedronGeometry(0.22, 0).scale(1, 1.5, 1), pm('#6a4a3a', 0.25, { emissive: '#ff9a3c', emissiveIntensity: 0, flatShading: true }), HP.x, H(HP.x, HP.z) + 2.5, HP.z, 0, { cast: false });
   R.heatPost = { ...W(HP.x, HP.z), on: false, setOn(b) { this.on = !!b; crystalHP.material.emissiveIntensity = b ? 1.6 : 0; } };
@@ -697,6 +721,9 @@ export function* buildHamalayiSteps(scene, physics) {
     // the lift's foot. Filtered like the ones above: no random draw moves.
     const WALKS = [...PATHS, [LEDGE, 1.8]];
     for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (WALKS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.3 + 1.5 * t.s) || (Math.abs(t.x + 10) < 3.6 && t.z < -15.5 && t.z > -27)) list.splice(i, 1); }
+    // (REV-HAM: none on the monks' slope east of the gate, the gliders' ground — chapter 7's take-off, chapter 10's
+    //  parked glider (story/network.js): a pine at (44.5, −28.5) stood through the wing)
+    for (let i = list.length - 1; i >= 0; i--) if (list[i].x > MONAST.x && list[i].x < MONAST.x + 13 && list[i].z > MONAST.z + 10.5 && list[i].z < MONAST.z + 19) list.splice(i, 1);
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
     const rocks = [];
