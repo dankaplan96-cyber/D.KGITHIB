@@ -169,7 +169,10 @@ export const CAST_ROUNDS = [
   { id: 'hesk', ch: ['network'], room: 'desert', mark: heskSpot, speed: 1.0,
     stops: [M([10, 14]), T('wing', -1.6, -2.6, [-2.0, -5.2], 'tinker', [8, 12]), T('look', 4.5, -1.6, [10, -1.6], 'stand', [5, 8], { gest: ['nod'] })] },
   { id: 'hesk', ch: ['network'], room: 'hamalayi', mark: heskSpot, speed: 1.0,
-    stops: [M([10, 14]), T('wing', 4.0, 3.2, [7.8, 1.0], 'tinker', [8, 12]), T('look', 2.4, -1.4, [2.4, -8], 'stand', [5, 8], { gest: ['nod'] })] },   // (wing: clear of the frozen chest's prompt, 1.2 m before)
+    // (REV-HAM: the glider stands outside the gate now, story/network.js: his mark west of its wing; at the wing's tip
+    //  north of its trailing edge, and a look west down the terrace to the lift's top — not south: the lip is 3 m off,
+    //  and whoever stands in front of him there stands at its edge)
+    stops: [M([10, 14]), T('wing', 4.2, 0.0, [4.8, 1.2], 'tinker', [8, 12]), T('look', -2.0, 0.0, [-11, 0], 'stand', [5, 8], { gest: ['nod'] })] },
   { id: 'hesk', ch: ['network'], room: 'citadel', mark: heskSpot, speed: 1.0,
     stops: [M([10, 14]), T('wing', 4.2, -1.2, [6.8, -3.0], 'tinker', [8, 12]), T('look', 1.0, 2.4, [1.0, 10], 'stand', [5, 8], { gest: ['nod'] })] },
 ];
