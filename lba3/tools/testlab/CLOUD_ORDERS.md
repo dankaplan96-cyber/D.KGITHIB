@@ -182,4 +182,17 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    look); (g) the School's pits: piles of shiny black boulders; (h) the School pupils reuse Lulu and Tim (sc_pupa/
    sc_pupb, sc_in1/sc_in2): other kid looks so Citadel's named children don't seem to be there. Report in
    `WORLD_ART_REQUESTS.md` (REVIEW-DESERT-ART).
+23. **Zeelich and the isles, the cloud's player's-eye review (6.11; chapter 3+: pictures stay with you):** fixed by the
+   cloud: the Esmer shuttles hidden while the routes are grounded, the cog's star after Oku, Tib/Marl/the council guard
+   placed, the Dark Monk's temple in the cave piece. **Yours:** (a) **Esmer looks (with order 18):** the game has 6 Esmer
+   looks, all named characters (keeper 10×, xil 9×, oku 9×, nara 8×): Kira wears Councillor Sela's look while Sela sits
+   in council; Old Ossa and Ennu wear Oku's; Velo and the bar's boss wear Councillor Amaru's; the barkeep and the hotel
+   clerk wear the council clerk's. Colours are baked into the poly models: make 3–4 generic Esmer palette variants and
+   1–2 Quetch women and give them to the non-named people. (b) The Otringal bar: the door opens behind the back-bar shelf,
+   he walks in hidden beside the barkeep (otrbar.js, door left wall z 1.8, spawn LX+1.4): move the door or the back-bar.
+   (c) The dog yard's gate (local x −28.9…−27.1, z −17.6) opens 1.25 m from the council house's back wall. (d) The
+   Zeelich pier's mooring rope ends in the air (~(2342, 6, 1)). (e) Celebration's summit plaza ("THE FIGURE"): paving in
+   sharp folds over the rock, a bench on the slope. (f) Music (order 19): the Otringal bar and hotel and Zeelich's
+   terminal play 'home': a livelier bar piece; a muffled Zeelich mood for the terminal (one MOODS entry in
+   engine/music.js, as 'office'). Report as REVIEW-ZEELICH-ART.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
