@@ -96,7 +96,8 @@ const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, 
 // through a spring (CH_W 1/s: within 15° of a 90° turn in 0.25 s, settled in ~0.45 s) that never turns faster than
 // CH_VMAX (4°/frame at 60 fps, 8° at 30). The pivot's height keeps a dead band of CH_DEAD m, then its own spring (CH_HW).
 // Camera-relative controls: a push more than CH_BACK off the view's forward holds the heading; it is let go when the
-// stick goes another way and he faces less than CH_HOLD_OUT from the view's own way.
+// stick goes another way and he faces less than CH_HOLD_OUT from the view's own way, or once the stick has been let go
+// CH_HOLD_IDLE s (CAM-STAIRS).
 // The spring arm: the longest (CH_MIN..CH_ARM, 0.25 m steps) whose camera, over the ground (_groundNeed), keeps CH_GAP m
 // from everything solid and sees him — also CH_LEAD s on down a swing or his walk, and at the heading it is turning to;
 // or the same with the least margins (CH_NEAR, the ground's least: a tight spot, under eaves) when that arm is more
@@ -123,6 +124,9 @@ const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_
 // there is seen through by the silhouette pass. A spot in something solid is first left by tilting up (CH_RISE_Q),
 // at its length; drawn in shorter than CH_MIN_VIEW only where nothing else stands clear (under a low roof).
 const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.3;
+// (the lead's look-ahead turn at most CH_LEAD_YAW rad: a quick turn's spring speed times CH_LEAD s read headings well past
+// where the view ever goes; its pivot risen with the ground ahead, at most CH_LEAD_RISE m a metre: CAM-STAIRS)
+const CH_LEAD_YAW = 0.42, CH_LEAD_RISE = 1.0;
 // NEAR-CUT (with MIN-VIEW): following him, nothing within CH_NEAR_CUT m of the lens is drawn — the edge of an eave, a
 // branch or a post the camera stands just behind is cut away instead of filling the frame — while he stands at least
 // CH_NEAR_KEEP m beyond the cut (it shrinks back to the camera's own near plane as the arm comes in). Every other view
@@ -160,6 +164,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
+const CH_HOLD_IDLE = 1.0, CH_SW_SETTLE = 0.3;
 const CH_SIDE = [0.17, 0.35, 0.52], CH_STUCK_T = 0.3, CH_SIDE_HOLD = 4, CH_SIDE_OUT = 5, CH_FRESH_HOLD = 1.5, CH_SW_STILL = 0.3, CH_DOOR_T = 1.0, CH_DOOR_R = 3, CH_DOOR_OUT_V = 7, CH_DOOR_OUT_A = 18, CH_DOOR_OUT_T = 3;
 const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
 // G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
@@ -903,7 +908,11 @@ export class CameraRig {
       const walking = C.pT && Math.hypot(T.x - C.pT.x, T.z - C.pT.z) / dt > 0.6;
       C.baseT = base ? C.baseT + dt : 0; C.blockT = base || walking ? 0 : (C.blockT || 0) + dt;
       if (base) C.srch = null;
-      if (base && (fresh || C.baseT >= CH_SW_HOLD || (C.swGoal === 0 && C.riseGoal === 0))) {
+      // (CAM-STAIRS: a swung view drawn in past CH_COOL_ARM of the arm while his back stands clear at the full arm goes
+      // back at once: by the fort's south-west tower a swing chosen while he stood under the slope was kept 1.2 s more as
+      // he walked on up the passage, and its heading ran the arm into the tower — in to 3.2 m, over his head and out)
+      const pinned = (C.swGoal || C.riseGoal) && (C.want ?? full) < CH_COOL_ARM * full;
+      if (base && (fresh || C.baseT >= CH_SW_HOLD || (C.swGoal === 0 && C.riseGoal === 0) || pinned)) {
         if (C.swGoal || C.riseGoal) C.coolT = CH_SW_COOL;   // (let go: not swung out again at once)
         C.swGoal = 0; C.riseGoal = 0; C.swCost = 0;
       }
@@ -941,8 +950,12 @@ export class CameraRig {
       // fight the turn and turn the view back and forth)
       C.stillT = Math.abs(dyc) < 0.1 * dt ? (C.stillT || 0) + dt : 0;
       // (a view drawn in where it stands — stuck behind a post, a side-step under way — is never held: it moves to the clear one)
-      const cut = (C.sideT || 0) > 0 || (C.arm ?? 0) < Math.min(C.wantOut ?? 0, CH_SIDE_OUT) - 0.5;
-      const hold = back ? !cut && (!moving || (C.turnDir && Math.sign(e) !== C.turnDir)) : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL;
+      // (CAM-STAIRS: nor one drawn in at its own heading past CH_COOL_ARM of the arm; and standing, once the view has stood
+      // still CH_SW_SETTLE s, a swing let back goes back to his back: it waited for him to walk on, and on the asylum's
+      // forecourt, turned and standing, the view stayed 10-20° off his back — up to CH_SW_FAR — for as long as he stood)
+      const cut = (C.sideT || 0) > 0 || (C.arm ?? 0) < Math.min(C.wantOut ?? 0, CH_SIDE_OUT) - 0.5 || (C.want ?? full) < CH_COOL_ARM * full;
+      const settle = !moving && C.stillT >= CH_SW_SETTLE && Math.abs(C.vyaw) < 0.2;
+      const hold = back ? !cut && !settle && (!moving || (C.turnDir && Math.sign(e) !== C.turnDir)) : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL;
       const want = hold ? 0 : Math.sign(e) * Math.min(CH_SW_V, Math.sqrt(1.6 * CH_SW_A * Math.abs(e))), a = CH_SW_A * dt;
       C.swV += clamp(want - C.swV, -a, a);
       if (hold && Math.sign(C.swV) === Math.sign(e)) C.swV = 0;
@@ -992,8 +1005,11 @@ export class CameraRig {
       if (!lock) {
         const rel = typeof this.relative === 'function' ? this.relative() : this.relative, mv = rel && input?.move ? input.move() : null;
         const push = mv && Math.hypot(mv.x, mv.y) > 0.3, back = push && Math.abs(Math.atan2(mv.x, mv.y)) > CH_BACK;
+        // (CAM-STAIRS: and let go once the stick has been let go CH_HOLD_IDLE s — he stands, there is no push left to keep
+        // steady —: pushed back to turn round on the asylum's forecourt, the view stayed on his face as long as he stood)
+        C.idleT = push ? 0 : (C.idleT || 0) + dt;
         if (back) C.hold = true;
-        else if (C.hold && (!rel || (push && Math.abs(angleDiff(C.yaw, heroAngle + Math.PI)) < CH_HOLD_OUT))) C.hold = false;
+        else if (C.hold && (!rel || (push && Math.abs(angleDiff(C.yaw, heroAngle + Math.PI)) < CH_HOLD_OUT) || C.idleT > CH_HOLD_IDLE)) C.hold = false;
       } else C.hold = false;
       // (his facing held steady for CH_STEADY s: right behind him)
       const f = facing(), e = angleDiff(C.goal, f);
@@ -1096,7 +1112,14 @@ export class CameraRig {
       if (over) { C.overQ = fresh || !(C.overK > 0) ? overQ : damp(C.overQ, overQ, 6, dt); C.overArm = fresh || !(C.overK > 0) ? overArm : damp(C.overArm ?? overArm, overArm, 6, dt); }
       if (!fresh && C.pT) {
         const vx = (T.x - C.pT.x) / dt, vz = (T.z - C.pT.z) / dt, turn = Math.abs(C.vyaw) > 0.3, walk = Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 20;
-        if (turn || walk) for (const t of CH_LEAD) want = Math.min(want, armFor(yaw + C.vyaw * t, _c.set(T.x + (walk ? vx * t : 0), T.y, T.z + (walk ? vz * t : 0)))[0]);
+        // (CAM-STAIRS: his pivot there risen with the ground he walks up to — a flight of steps, a slope —, at most
+        // CH_LEAD_RISE of the way along: kept at the height he has now, a walk up the asylum's flight read the line to
+        // his chest 0.45 s on as through the steps ahead and drew the arm in over his head, 8.3 → 2.6 m, for the whole flight)
+        if (turn || walk) for (const t of CH_LEAD) {
+          const lx = T.x + (walk ? vx * t : 0), lz = T.z + (walk ? vz * t : 0), run = Math.hypot(lx - T.x, lz - T.z);
+          const ly = walk && P ? T.y + clamp(P.groundAt(lx, lz, hero.y + run * CH_LEAD_RISE) - gy, 0, run * CH_LEAD_RISE) : T.y;
+          want = Math.min(want, armFor(yaw + clamp(C.vyaw * t, -CH_LEAD_YAW, CH_LEAD_YAW), _c.set(lx, ly, lz))[0]);
+        }
         // (and at the heading its spring is on its way to: a turn toward a house starts drawing it in at the turn's start)
         const g = C.hold ? yaw : C.goal + C.swGoal, gd = angleDiff(yaw, g);
         if (Math.abs(gd) > 0.05) { want = Math.min(want, armFor(g, T)[0]); if (Math.abs(gd) > 0.6) want = Math.min(want, armFor(yaw + gd / 2, T)[0]); }
