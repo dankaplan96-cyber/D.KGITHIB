@@ -2476,3 +2476,19 @@ the same 8 play-camera spots before and after; chapter 3+, pictures kept on the 
   FAIL in each the local server's favicon 404. Draw calls, triangles, textures unchanged (142/117/108/118 calls on the
   four spots); median frame 15–21 ms both, within run-to-run noise; +2 greyscale 512² cloud canvases, +1 128² puff.
 - **Left:** where the gas meets the stepped channel walls the cut is still hard, now 5–6 m under the paths and amber.
+
+## FOCUS-1 · Test Lab finding: losing focus no longer reads as background play (the user: "send it") · the laptop, 6.11.2026
+Test Lab quick check on the installed desktop app 0.48.0 (build 330), Vega 8, plugged in, own test profile: 7/8 pass
+(cold launch, new game → play, street walk 56.9 fps, door, magic ball, arena fight 56.2 fps, save → restart → load).
+- **Failed twice in a row (the run and one reproduce):** pause-focus-fullscreen, "losing focus: the game draws in the
+  background": after `BrowserWindow.blur()` and 800 ms the game reports `background false, play` (expected true, play).
+  Esc pause/resume, focus back, leaving and re-entering fullscreen all pass. The same test passed on 0.43.3 (31.10).
+- **Likely cause (not verified):** BG-STUCK-1 (35aaa16, main.js ~2406) checks once a second while in the background
+  and calls `foreground()` when `!document.hidden && document.hasFocus()`. A programmatic blur in fullscreen leaves no
+  other window in front, so `hasFocus()` may still be true and the game returns to full rate within the test's 800 ms.
+  If so, a real switch to another program is fine and the test needs changing (mine, Test Lab); if `hasFocus()` is
+  true even with another program in front, the background cap never holds (battery cost). Your call which; I can
+  test it with a real second window if you want it measured.
+- Also seen (light, structure-first): new game → play 3 frames over 50 ms (worst 89 ms, +5 geometries in that frame),
+  the arena fight 2 (worst 141 ms). Tonight's requests are not in this build.
+- Run: `lba3/tools/testlab/runs/2026-11-06T08-45-29-quick/` (local only, not committed).
