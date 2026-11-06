@@ -144,7 +144,9 @@ export function migrateSave(raw) {
 const DOOR_STEP = 1.0;   // m (Game.doorStep)
 export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
-const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
+// (asylum: the user, 6.11, "the asylum should have a different tune, no?": LBA1's asylum was Twinsen's prison and had its
+//  own tense music; ours plays the project's quiet facility piece — Vesk's guarded store below the hostel — not the town's)
+const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home', asylum: 'stealth' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
 const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
