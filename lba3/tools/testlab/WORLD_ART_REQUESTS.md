@@ -2402,3 +2402,38 @@ at the reference picture's camera). Pictures (chapter 1, the user may see them):
   ramp's west kerb, top 6.06 m, with LBA2's two corner posts; first check what stands on that bank (a crate near
   (−45, −24), a fruit tree, flowers, the west street's ramp at x −55…−66). The shelf fill's top is wall stone (reads as a
   paved strip); paving or grass edging later.
+
+## POLISH-14 · the polish passes' visual leftovers (CLOUD_ORDERS 14 a–f) · the laptop, 6.11.2026
+`requests/POLISH-14.diff` (asylumhostel.js, tavcellar.js, town.js, walkrounds.js, world.js; applies alone on the newest
+origin, and together with CLIMB-15). Pictures SwiftShader 960×540, Follow, Medium; chapter 1 places: docs/future/world/POLISH-14/ (b, d before | after).
+- **(a) The hostel's north door, cream band:** the portico had colliders on its piers only, so the camera's clearance
+  test saw air over the doorway; out of the door Follow stood inside the lintel's brick (3.6 m up, 0.4–0.8 m behind its
+  face), and the near-cut showed the architrave's and pilasters' cream trim across the frame (worst when doorStep falls
+  back to the door's own spot). One collider over the doorway from the opening's head up (`bottom: gy + oh`, noStand):
+  he walks under it; the camera now stands in front of the portico (z −48.76, 3.9 m up), clean frame.
+- **(b) The "lantern" at lower right out of a door** was the Joint Project heat post: it stood 1 m out from the door's
+  spot along the house-middle → door line, 8–42° off the wall's normal on off-centre doors, 1.6–2 m out from the wall,
+  just where Follow stands the first second out (inside the frame within 2.2–2.5 m of the lens on 7 of 9 street doors).
+  Now each stands against its front wall (`HEAT_POST_OUT` 0.45 m from the wall, the wall's normal from `ry`), 1.45 m to
+  the right of the way out or the first clear of `HEAT_POST_SIDES` (Twinsen's house and the shop take the fallback:
+  pots, a barrel). After: no post within 4 m in frame on any of the 9 doors. brix_warm and marda_warm (walkrounds.js)
+  follow their posts, on the post's far side from the door (doorDist 1.37 / 1.32 m). Pippa's stall post unchanged.
+- **(c) The wizard tent's grass/bush in front of the camera:** not reproduced (Near/Medium/Far, rays from the lens and
+  renders out of the door and on the approach from the east): no change. Three smallPool grass blades stand inside the
+  tent's footprint, hidden by the cloth. If the user meets it again we need the way he walked.
+- **(d) The tavern cellar's lower floor near-black:** the drop's bottom was one `MAT.flat('#121216')` plane. Now rubble
+  with a little self-light (emissive 0.2, as the walls' tv_stone) round a ragged black hole under the railing's gap (the
+  way down to the sewers' hall), clear of the broken rail. No light added (light pool and R.indoor untouched). Mean luma
+  over the pit from the walkway 21 → 41 (pixels under 20: 81 % → 20 %), from the store 21 → 41.
+- **(e) GL_INVALID_OPERATION:** SwiftShader only. Real GPU (Chrome, Vega 8, D3D11), boot → street → door in and out →
+  tavern cellar: Medium 22,242 draws checked with getError, 0 errors; High 29,086 draws, 0. In SwiftShader all 307 come
+  in boot: Game.drawArea (main.js ~931) renders the start room before the sun's shadow map exists, and three r180 binds
+  the plain emptyTexture to null entries of a sampler2DShadow array (`directionalShadowMap[0]`). Harmless; if you want
+  SwiftShader quiet, make the sun's shadow map before drawArea/drawPart. No change.
+- **(f) The Citadel landing (−58, −60):** two scattered bushes had their colliders over the spot (one with the landing
+  inside it). `GLIDER_LANDING`/`LANDING_CLEAR` 1.6 m + the bush's radius, filtered after the scatter (no draw moves).
+  Nearest collider now a trunk 2.56 m off.
+- **Checked (SwiftShader, on fda1fc5 + this):** camera-doors 30/30, overlaps PASS, asylum PASS, chapter1 23/0.
+  Same as the origin baseline (not this diff): walkers 36/1 (marda_b2 not walkable), sewers-ways 31/2 (out of the Works
+  door d 2.97, out on the stone-house terrace d 2.37, both > 2.2: doorStep?), camclear 43/1 (the old 0.149 m at
+  (−74, −50)). travel: the chapter-2 Doran check fails on origin too (doranAtPort false, 26/1), not this diff.
