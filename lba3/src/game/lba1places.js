@@ -390,6 +390,16 @@ function climbTerraceFill(k, M, physics, T, yt) {
   // north: along the second flight, from the landing's corner to the top
   wall(G, T2_0 - 0.17, T2_TOP, -OE);   // (from the landing's north-east corner, where the landing's own north wall ends)
   fill([[G, T2_0, T2_TOP]], -1, null);
+  // (REVIEW-CITADEL: past the top step the old gully's bank still dipped 0.2–0.7 m under the forecourt, steep enough to
+  //  slide in: walking from the front door back to the stair, or onto the top step's north corner, he slid into the
+  //  hollow beside the north wall, stuck there and was hurt again and again by the fall's respawn. The forecourt's ground
+  //  there held level with the top step, from just before it to a metre past it, the north wall's end to the south wall)
+  { const [cx, cz] = G.at(T2_TOP + 0.25, -0.65); physics.add({ type: 'box', x: cx, z: cz, hw: 2.05, hd: 0.65, rot: G.a, top: yt }); }
+  // (and north of the landing, between its north wall and the terrace, the gully's pocket was open, 1–2.5 m deep under
+  //  the terrace's edge: walking west along the north fill or south off the terrace he dropped into it and could not
+  //  climb out. Closed at the height of the terrace's edge above it)
+  { const sN = S1 + ASYLUM_STEPS.w, [cx, cz] = F.at(sN + 0.9, 0), yn = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
+    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn }); }
 }
 
 // the ramp's retaining wall over the stone house's yard: on the ramp's second leg, east side, a dressed wall whose top is a

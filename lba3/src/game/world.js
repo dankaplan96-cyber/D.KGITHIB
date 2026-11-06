@@ -1143,8 +1143,10 @@ export function* buildWorldSteps(parentScene) {
     if (!okSpot(x, z, 2.5) && hs > 1.3) continue;
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
-  // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face)
-  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
+  // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face;
+  //  REVIEW-CITADEL: and the benches' room, as BENCHES-1 keeps it for the trees and bushes: a boulder stood where one sits
+  //  down on the harbour path's bench, and Marda walked over its top to sit)
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1) || benchRoom(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();
