@@ -405,7 +405,9 @@ export class Environment {
     // the shadow camera follows the focus in whole shadow-map texels, so shadow edges don't crawl as he walks
     // GFX-LOOK-2: Citadel's own sun direction (see SUN_CITADEL). WEATHER-1: the light cycle never moves it: ShadowCache
     // keys its cached static casters on this direction, so a moving sun would redraw all of them every frame
-    const sd = this.region || this.interior ? (this.region?.sunDir ? (this._rsd ??= new THREE.Vector3()).fromArray(this.region.sunDir).normalize() : SUN_BASE) : SUN_CITADEL;
+    // (ASYLUM-4: a room may give its own as well, R.indoor.sunDir: LBA1's rooms are drawn lit from the camera's side)
+    const own = this.region?.sunDir || (this.interior && this.indoor?.sunDir);
+    const sd = this.region || this.interior ? (own ? (this._rsd ??= new THREE.Vector3()).fromArray(own).normalize() : SUN_BASE) : SUN_CITADEL;
     if (!this.sunDir.equals(sd)) this.sunDir.copy(sd);
     const sf = this.snapShadow(focus);
     this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);

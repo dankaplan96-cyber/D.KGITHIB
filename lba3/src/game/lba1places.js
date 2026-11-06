@@ -556,8 +556,9 @@ export function buildLba1Asylum(scene, physics) {
     //  squares; the door of Twinsen's cell, which LBA1 kept as a moving actor, broken out of its wall: x 56–57 of
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
-      stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
-      gridZones: true, overhead: true, footing: { depth: 9, below: 1 },   // (order 8: the store's edge, its walls carried down into the dark)
+      stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, sideGain: 2.8, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
+      gridZones: true, overhead: true, footing: { depth: 9, below: 1, rows: [[0, 0.85], [2.2, 0.32], [9, 0]] },   // (order 8: the store's edge, its walls carried down into the dark; ASYLUM-4: lit now, so faded sooner)
+      fittings: true, capStone: true,   // (ASYLUM-4: LBA1's pipes, hanging lamps and round tables drawn as such, not as cells; posts capped in their stone)
       clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
@@ -565,6 +566,13 @@ export function buildLba1Asylum(scene, physics) {
       carve: [[56, 4, 50, 57, 6, 50], [56, 5, 45, 57, 6, 45], [41, 5, 30, 42, 9, 30]],
     });
     R.grade = 0.45; R.gradeTint = [1.03, 1.0, 0.95];   // (WA-13b: LBA1's grey stone, chroma 4-6; ASYLUM-2: lived in, the Esmer colours a little up, warm)
+    // (ASYLUM-4, the user: "check how they did it in the first game": LBA1's bricks are drawn lit from above and the
+    //  camera's side — top brightest, the faces turned to the camera mid-grey, never black. Our interiors' sun came
+    //  from behind the room (−x, −z): every face the camera sees stood in its own shade, black with a few lit bricks,
+    //  the posts black under pink tops. Now the room's sun comes over the camera's shoulder, a little from its left (as
+    //  LBA1's bricks and our people's ramp light), and the walls' stone (sideGain) is as light as the floors; shadows
+    //  fall away from the camera, behind the walls that cast them)
+    R.indoor = { sunDir: [0.3, 0.8, 0.5] };
     // the two exits, as LBA1's: the low stair-well (the side door: you come in at its top) and the main entrance on
     // the upper level (the front door: its doors stand in the tall portal between the two posts, you come in before them)
     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);

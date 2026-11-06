@@ -61,6 +61,47 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
     return near && y >= f + (opts.rim ?? 2);
   };
   const solidAt = (x, y, z) => { const c = C.get(`${x},${y},${z}`); return !!c && c[0] === SOLID && !cut(x, y, z); };
+  // ---- FITTINGS (ASYLUM-4, opts.fittings): LBA1 draws some cells as things thinner than a cell — its bricks are
+  // pictures, the cell only their collision. Two kinds read here as what they are, drawn as such, their colliders kept:
+  //  - the hanging lamps: nine slope cells in one pattern (shapes 10 3 13 / 2 1 5 / 12 4 11, a dome over a 3×3),
+  //    hanging over a floor (four in the asylum: over the loft, the kitchen counter, the upper walk, the office desk),
+  //    and the round tables under them (the same pattern, white); drawn as nine wedges each, they were the "slabs and
+  //    wedges floating in mid-air" by the walls
+  //  - the pipes: runs of one-cell-thick, grey-teal cells (the brick's colour, green and blue over red) hanging off the
+  //    walls and ceilings, three cells or more; drawn as boxes they were 0.87 m beams standing out of the walls
+  const art = new Set(), lampAt = [], tableAt = [], pipeSet = new Set();
+  if (opts.fittings) {
+    const LAMP = [10, 3, 13, 2, 1, 5, 12, 4, 11], nine = (x, z, f) => LAMP.every((s, i) => f(x + (i % 3), z + Math.floor(i / 3), s));
+    for (const [k, c] of C) {
+      if (c[0] !== 10) continue;
+      const [x, y, z] = k.split(',').map(Number);
+      if (!nine(x, z, (a, b, s) => C.get(`${a},${y},${b}`)?.[0] === s && !C.has(`${a},${y + 1},${b}`))) continue;
+      // (hanging: three cells or more of nothing under all of the nine. Under each of the four, seven cells down, the
+      //  same nine a cell or less over a floor, white, lit from the top left: its round table — drawn as one, a top on a
+      //  pedestal)
+      const hanging = nine(x, z, (a, b) => !C.has(`${a},${y - 1},${b}`) && !C.has(`${a},${y - 2},${b}`) && !C.has(`${a},${y - 3},${b}`));
+      for (let i = 0; i < 9; i++) art.add(`${x + (i % 3)},${y},${z + Math.floor(i / 3)}`);
+      (hanging ? lampAt : tableAt).push([x + 1, y, z + 1]);
+    }
+    const teal = (k) => { const c = C.get(k); if (!c || art.has(k)) return false; const [r, g, b] = L.pal[c[1]] || [0, 0, 0]; return g - r >= 8 && b - r >= 8 && Math.max(r, g, b) <= 100; };
+    const cand = new Set();
+    for (const k of C.keys()) {
+      if (!teal(k)) continue;
+      const [x, y, z] = k.split(',').map(Number), dn = `${x},${y - 1},${z}`, up = `${x},${y + 1},${z}`;
+      if ((C.has(dn) && !teal(dn)) || (C.has(up) && !teal(up)) || cut(x, y, z)) continue;   // (hangs: on nothing, under nothing but itself)
+      cand.add(k);
+    }
+    // (a line, not a slab: no more than three of them in its 3×3 at its height, or none on its diagonals — a tee, a cross)
+    const line = [...cand].filter((k) => { const [x, y, z] = k.split(',').map(Number); let n = 0, dg = 0; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const h = cand.has(`${x + i},${y},${z + j}`); n += h; if (i && j) dg += h; } return n <= 3 || dg === 0; });
+    const ls = new Set(line), done = new Set();
+    for (const k of line) {   // (runs of three or more, joined face to face)
+      if (done.has(k)) continue;
+      const comp = [k], st = [k]; done.add(k);
+      while (st.length) { const [x, y, z] = st.pop().split(',').map(Number); for (const [a, b, c] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) { const n = `${x + a},${y + b},${z + c}`; if (ls.has(n) && !done.has(n)) { done.add(n); comp.push(n); st.push(n); } } }
+      if (comp.length >= 3) for (const c of comp) { pipeSet.add(c); art.add(c); }
+    }
+  }
+  const wallAt = (x, y, z) => solidAt(x, y, z) && !art.has(`${x},${y},${z}`);   // (a face's neighbour that hides it)
   // ---- LIDS (ASYLUM-1): LBA1 shows the room the hero is in cut open above him. The original does it with its grid
   // zones (type 3: while the hero is inside the box, a fragment without the ceiling replaces the bricks there). Here a
   // lid is such a box (LBA1 cell coords, [x0, y0, z0, x1, y1, z1] as the zones give them) and `cut` (the cell height from
@@ -137,7 +178,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   // a face between two solid cells is drawn when they are cut away apart (a lid's cell against the room's own: the
   // room's face, which shows when the lid is gone; two lids: both)
   const faceShown = (x, y, z, nx, ny, nz) => {
-    if (!solidAt(nx, ny, nz)) return true;
+    if (!wallAt(nx, ny, nz)) return true;
     const a = sigOf(x, y, z), b = sigOf(nx, ny, nz);
     return a !== b && b !== '';
   };
@@ -147,7 +188,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   const bufs = new Map();   // signature ('' the room, else its lids) → { pos, nrm, colr, uv } per kind
   let pos, nrm, colr, uv;
   const useSig = (sig) => {
-    if (!bufs.has(sig)) bufs.set(sig, { pos: { side: [], top: [] }, nrm: { side: [], top: [] }, colr: { side: [], top: [] }, uv: { side: [], top: [] } });
+    if (!bufs.has(sig)) { const k4 = () => ({ side: [], top: [], pipe: [], glow: [] }); bufs.set(sig, { pos: k4(), nrm: k4(), colr: k4(), uv: k4() }); }
     ({ pos, nrm, colr, uv } = bufs.get(sig));
   };
   useSig('');
@@ -160,11 +201,14 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   const cells = [...C.entries()].map(([k, v]) => { const [x, y, z] = k.split(',').map(Number); return { x, y, z, shape: v[0], col: v[1] }; });
   for (const c of cells) {
     const { x, y, z, shape } = c;
-    if (cut(x, y, z)) continue;
+    if (cut(x, y, z) || art.has(`${x},${y},${z}`)) continue;
     const col = pal[c.col] || pal[0];
     useSig(sigOf(x, y, z));
     if (shape === SOLID) {
-      if (faceShown(x, y, z, x, y + 1, z)) { const [a, b] = [W(x, y + 1, z), W(x + 1, y + 1, z + 1)]; quad('top', [a[0], a[1], a[2]], [a[0], a[1], b[2]], [b[0], a[1], b[2]], [b[0], a[1], a[2]], [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [a[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, a[2] / 1.7]]); }
+      // (ASYLUM-4, opts.capStone: the top of a post or a block standing alone — fewer than two of its four neighbours
+      //  at its height — in the walls' stone, not the floors' cream plaster, which made LBA1's maroon wooden posts pink)
+      const alone = opts.capStone && [[1, 0], [-1, 0], [0, 1], [0, -1]].reduce((n, [dx, dz]) => n + wallAt(x + dx, y, z + dz), 0) < 2;
+      if (faceShown(x, y, z, x, y + 1, z)) { const [a, b] = [W(x, y + 1, z), W(x + 1, y + 1, z + 1)]; quad(alone ? 'side' : 'top', [a[0], a[1], a[2]], [a[0], a[1], b[2]], [b[0], a[1], b[2]], [b[0], a[1], a[2]], [0, 1, 0], col, [[a[0] / 1.7, a[2] / 1.7], [a[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, b[2] / 1.7], [b[0] / 1.7, a[2] / 1.7]]); }
       // the four sides (the bottom is never seen), each outward
       const F = {
         '1,0': [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1]],
@@ -196,7 +240,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       };
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const n = C.get(`${x + dx},${y},${z + dz}`);
-        if (n && (n[0] >= 2 || solidAt(x + dx, y, z + dz))) continue;
+        if (n && !art.has(`${x + dx},${y},${z + dz}`) && (n[0] >= 2 || solidAt(x + dx, y, z + dz))) continue;
         const [[u0, v0], [u1, v1]] = S[`${dx},${dz}`], t0 = slopeTop(shape, u0, v0), t1 = slopeTop(shape, u1, v1);
         if (t0 + t1 < 0.02 && yb === y) continue;
         const q = [W(x + u0, yb, z + v0), W(x + u1, yb, z + v1), W(x + u1, y + t1, z + v1), W(x + u0, y + t0, z + v0)];
@@ -205,12 +249,94 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       }
     }
   }
+  // ---- the fittings' shapes (opts.fittings, above), each in its cell's lid as the faces are
+  if (art.size) {
+    const _v = new THREE.Vector3(), _n = new THREE.Vector3(), _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
+    const flat = (g) => (g.index ? g.toNonIndexed() : g);
+    const put = (kind, g, m, col) => {
+      const p = g.attributes.position, n = g.attributes.normal; _nm.getNormalMatrix(m);
+      for (let i = 0; i < p.count; i++) {
+        _v.fromBufferAttribute(p, i).applyMatrix4(m); _n.fromBufferAttribute(n, i).applyMatrix3(_nm).normalize();
+        pos[kind].push(_v.x, _v.y, _v.z); nrm[kind].push(_n.x, _n.y, _n.z); colr[kind].push(col.r, col.g, col.b); uv[kind].push(0, 0);
+      }
+    };
+    const PR = 0.13, tube = flat(new THREE.CylinderGeometry(PR, PR, 1, 8, 1, true)), joint = flat(new THREE.SphereGeometry(PR * 1.18, 8, 5));
+    const seg = (kind, a, b, col, g = tube) => {   // (a tube from a to b, world-local)
+      const d = _v.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]), len = d.length(); if (len < 1e-3) return;
+      _q.setFromUnitVectors(UP, d.divideScalar(len));
+      put(kind, g, _m.compose(new THREE.Vector3((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2), _q, new THREE.Vector3(1, len, 1)), col);
+    };
+    // the pipes: each run along an axis keeps one offset toward the wall it runs on (0.22 m off the cell's middle, so the
+    // pipe lies against the wall, not out in the room), a joint where it turns or ends, an end that meets a wall goes in
+    const key = (x, y, z) => `${x},${y},${z}`, AX = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], OFF = 0.22;
+    const off = new Map();
+    for (const k of pipeSet) off.set(k, [0, 0, 0, 0, 0, 0]);   // (sum and count per component)
+    for (let a = 0; a < 3; a++) {
+      const seen = new Set();
+      for (const k of pipeSet) {
+        if (seen.has(k)) continue;
+        const [x, y, z] = k.split(',').map(Number), d = AX[a];
+        let s = 0; while (pipeSet.has(key(x + d[0] * (s - 1), y + d[1] * (s - 1), z + d[2] * (s - 1)))) s--;
+        const run = []; for (let i = s; pipeSet.has(key(x + d[0] * i, y + d[1] * i, z + d[2] * i)); i++) run.push([x + d[0] * i, y + d[1] * i, z + d[2] * i]);
+        run.forEach((p) => seen.add(key(...p)));
+        if (run.length < 2) continue;
+        for (const b of [0, 1, 2]) {   // (the components across the run: the wall side most of its cells have)
+          if (b === a || b === 1) continue;   // (never up or down: hung pipes hang where LBA1 drew them)
+          let w = 0;
+          for (const p of run) { const q = [...p]; q[b] += 1; const r2 = [...p]; r2[b] -= 1; w += wallAt(...q) - wallAt(...r2); }
+          for (const p of run) { const o = off.get(key(...p)); o[b * 2] += Math.sign(w); o[b * 2 + 1]++; }
+        }
+      }
+    }
+    const pipeCol = new THREE.Color(0, 0, 0); let pn = 0;
+    for (const k of pipeSet) { const c = pal[C.get(k)[1]]; if (c) { pipeCol.add(c); pn++; } }
+    if (pn) pipeCol.multiplyScalar(1 / pn);
+    const P = (k) => { const [x, y, z] = k.split(',').map(Number), o = off.get(k), w = W(x + 0.5, y + 0.5, z + 0.5); return [w[0] + (o[1] ? o[0] / o[1] : 0) * OFF, w[1], w[2] + (o[5] ? o[4] / o[5] : 0) * OFF]; };
+    for (const k of pipeSet) {
+      const [x, y, z] = k.split(',').map(Number), c = P(k), dirs = [];
+      useSig(sigOf(x, y, z));
+      for (const d of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+        const n = key(x + d[0], y + d[1], z + d[2]);
+        if (pipeSet.has(n)) { dirs.push(d); if (d[0] + d[1] + d[2] > 0) seg('pipe', c, P(n), pipeCol); }
+      }
+      const straight = dirs.length === 2 && dirs[0].every((v, i) => v === -dirs[1][i]);
+      if (!straight) put('pipe', joint, _m.makeTranslation(c[0], c[1], c[2]), pipeCol);
+      if (dirs.length === 1) {   // (an end: into the wall it meets, else a cap)
+        const d = dirs[0].map((v) => -v);
+        if (wallAt(x + d[0], y + d[1], z + d[2])) seg('pipe', c, [c[0] + d[0] * CELL * 0.5, c[1] + d[1] * CH * 0.5, c[2] + d[2] * CELL * 0.5], pipeCol);
+      }
+    }
+    // the hanging lamps: a dark dome shade on a short rod, a warm bulb under it (no light of its own: the room's lamps
+    // light it; the bulb glows)
+    const dome = flat(new THREE.SphereGeometry(0.46, 16, 5, 0, Math.PI * 2, 0, Math.PI / 2)), rim = flat(new THREE.TorusGeometry(0.46, 0.03, 5, 20)), bulb = flat(new THREE.SphereGeometry(0.13, 10, 6));
+    const rod = flat(new THREE.CylinderGeometry(0.025, 0.025, 1, 6, 1, true));
+    const shadeCol = new THREE.Color('#6f9a94').convertSRGBToLinear(), white = new THREE.Color(1, 1, 1);
+    for (const [x, y, z] of lampAt) {
+      useSig(sigOf(x, y, z));
+      const c = W(x + 0.5, y + 0.25, z + 0.5);
+      put('pipe', dome, _m.compose(new THREE.Vector3(c[0], c[1], c[2]), _q.identity(), new THREE.Vector3(1, 0.55, 1)), shadeCol);
+      put('pipe', rim, _m.compose(new THREE.Vector3(c[0], c[1], c[2]), _q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2), new THREE.Vector3(1, 1, 1)), shadeCol);
+      seg('pipe', [c[0], c[1] + 0.22, c[2]], [c[0], c[1] + 2.6, c[2]], shadeCol, rod);
+      put('glow', bulb, _m.makeTranslation(c[0], c[1] - 0.06, c[2]), white);
+    }
+    const disc = flat(new THREE.CylinderGeometry(1.2, 1.2, 0.09, 28)), post = flat(new THREE.CylinderGeometry(0.11, 0.14, 1, 10, 1, true)), foot = flat(new THREE.CylinderGeometry(0.42, 0.5, 0.05, 18));
+    const tableCol = new THREE.Color('#d9d2c2').convertSRGBToLinear();
+    for (const [x, y, z] of tableAt) {
+      useSig(sigOf(x, y, z));
+      const top = W(x + 0.5, y + 1, z + 0.5), bot = W(x + 0.5, y - 1, z + 0.5);
+      put('pipe', disc, _m.makeTranslation(top[0], top[1] - 0.045, top[2]), tableCol);
+      seg('pipe', [top[0], bot[1], top[2]], [top[0], top[1] - 0.09, top[2]], tableCol, post);
+      put('pipe', foot, _m.makeTranslation(top[0], bot[1] + 0.025, top[2]), tableCol);
+    }
+  }
   const mats = {
     side: new THREE.MeshStandardMaterial({ map: TEX.stone(opts.stone || 'grey'), vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }),
     top: new THREE.MeshStandardMaterial({ map: TEX.plaster('#f4f0ea'), vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }),
+    pipe: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.2 }),
+    glow: new THREE.MeshStandardMaterial({ vertexColors: true, color: '#fff4d8', emissive: '#ffd890', emissiveIntensity: 2.2, roughness: 0.4 }),
   };
   // (the stone texture is darker than white: lift the side colours a little)
-  mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(1.6);
+  mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(opts.sideGain ?? 1.6);
   // (WORLD-ART-7: opts.topCol / opts.sideCol tint floors and walls apart; the measured brick colours alone make both the same grey)
   if (opts.topCol) mats.top.color.set(opts.topCol);
   for (const kind of ['side', 'top']) { const m = mats[kind]; m.map = m.map.clone(); m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping; m.map.needsUpdate = true; }
@@ -220,15 +346,15 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   const lidMat = (m) => { const c = m.clone(); c.transparent = true; c.depthWrite = true; c.stencilWrite = true; c.stencilRef = 0; c.stencilFunc = THREE.AlwaysStencilFunc; c.stencilZPass = THREE.ReplaceStencilOp; return c; };
   const lidMeshes = [];
   for (const [sig, b] of bufs) {
-    const lm = sig ? { side: lidMat(mats.side), top: lidMat(mats.top) } : mats;
-    for (const kind of ['side', 'top']) {
+    const lm = sig ? { side: lidMat(mats.side), top: lidMat(mats.top), pipe: lidMat(mats.pipe), glow: lidMat(mats.glow) } : mats;
+    for (const kind of ['side', 'top', 'pipe', 'glow']) {
       if (!b.pos[kind].length) continue;
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(b.pos[kind], 3));
       g.setAttribute('normal', new THREE.Float32BufferAttribute(b.nrm[kind], 3));
       g.setAttribute('color', new THREE.Float32BufferAttribute(b.colr[kind], 3));
       g.setAttribute('uv', new THREE.Float32BufferAttribute(b.uv[kind], 2));
-      const mesh = new THREE.Mesh(g, lm[kind]); mesh.castShadow = true; mesh.receiveShadow = true;
+      const mesh = new THREE.Mesh(g, lm[kind]); mesh.castShadow = kind !== 'glow'; mesh.receiveShadow = true;
       // (userData.keep: a toggling part, so the shadow batches (shadowcull.js) and draw batches leave it on its own)
       if (sig) { mesh.name = 'lid:' + sig; mesh.userData.keep = true; lidMeshes.push({ mesh, lids: sig.split('+').map(Number) }); }
       B.group.add(mesh);
@@ -240,7 +366,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   // asylum's store, at its lowest corner) the frame was 30–40 % black hole under the floor; now the building's mass goes
   // down into the dark under its walls. One mesh, the room's wall material, no shadow.
   if (opts.footing) {
-    const { depth = 9, below = 1 } = opts.footing, rows = [[0, 1], [depth / 3, 0.62], [depth, 0]];   // (down from the bottom: the colour's share)
+    const { depth = 9, below = 1 } = opts.footing, rows = opts.footing.rows || [[0, 1], [depth / 3, 0.62], [depth, 0]];   // (down from the bottom: the colour's share)
     const P = [], N = [], Co = [], U = [];
     for (const [k, runs] of Object.entries(L.cols)) {
       const [x, z] = k.split(',').map(Number), y0 = runs[0][0];
@@ -331,6 +457,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   R.view = opts.view ?? 22; R.follow = opts.follow ?? 0.7;   // (big rooms: the view travels with the hero)
   // the lids: the one(s) over the hero fade out in LID_FADE s, the others back in (dt ≥ LID_FADE: at once)
   R.lids = lids; R.lidMeshes = lidMeshes;
+  R.fittings = { lamps: lampAt.map(([x, y, z]) => R.cell(x + 0.5, y + 0.25, z + 0.5)), tables: tableAt.map(([x, y, z]) => R.cell(x + 0.5, y + 1, z + 0.5)), pipeCells: pipeSet.size };   // (ASYLUM-4: what was drawn as fittings)
   R.toCell = (wx, wy, wz) => ({ x: (wx - cx - ox) / CELL, y: wy / CH, z: (wz - cz - oz) / CELL });
   if (lids.length) {
     const LID_FADE = 0.25;
