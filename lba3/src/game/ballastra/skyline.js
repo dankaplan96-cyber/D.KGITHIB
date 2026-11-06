@@ -27,16 +27,16 @@ const ARCH2 = { xc: 150, z: -190, rx: 22, ry: 30, foot: -4, s: 1 };
 const VCM = () => pm('#ffffff', 0.9, { vertexColors: true });
 
 // the centre line of an arch: s 0 … 1 from its west foot over the crest to its east foot
-function archLine(A, s) {
+export function archLine(A, s) {
   const th = Math.PI * (1 - s), sn = Math.sin(th);
   const x = A.xc + A.rx * Math.cos(th) * (1 + 0.06 * (1 - sn)), y = A.foot + (A.ry - A.foot) * Math.pow(sn, 0.82);
   return [x, y];
 }
 // its thickness across the line (in the arch's plane) and along z
-const archW = (s) => { const sn = Math.sin(Math.PI * s); return 6.5 + 7.5 * Math.pow(1 - sn, 1.6); };
-const archD = (s) => { const sn = Math.sin(Math.PI * s); return 9 + 7 * Math.pow(1 - sn, 1.4); };
+export const archW = (s) => { const sn = Math.sin(Math.PI * s); return 6.5 + 7.5 * Math.pow(1 - sn, 1.6); };
+export const archD = (s) => { const sn = Math.sin(Math.PI * s); return 9 + 7 * Math.pow(1 - sn, 1.4); };
 
-function archGeo(A, { seg = 72, ring = 14, scale = 1 } = {}) {
+export function archGeo(A, { seg = 72, ring = 14, scale = 1 } = {}) {
   const pos = [], col = [], idx = [];
   const c = new THREE.Color(), bands = ['#dccaa6', '#e8d9b8', '#cdb48c', '#c4b89e', '#e2cfa8'].map((h) => new THREE.Color(h));
   const wet = new THREE.Color('#8e9878'), moss = new THREE.Color('#7f9c5e'), shade = new THREE.Color('#b8a684');
