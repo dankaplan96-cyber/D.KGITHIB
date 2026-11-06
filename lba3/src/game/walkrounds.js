@@ -106,7 +106,7 @@ export function citadelRoster(game) {
     // the old man: benches along the lane, the well, a long look at the pump
     { id: 'brix', char: 'desertTrader', tint: '#d8f0d0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
       bench('brix_benchE', -35.8, 2.6, [28, 44]),
-      look('brix_warm', -34.0, -3.85, -33.87, -2.83, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit)
+      look('brix_warm', -33.25, 1.25, -33.25, 0.35, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit; POLISH-14 b: by the shop's wall north of the door now, he stands on its far side from the door, town.js)
       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
       bench('brix_lane', -47.8, 19.5, [28, 44]),
       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
@@ -169,7 +169,7 @@ export function citadelRoster(game) {
       bench('marda_b1', -67.9, 28.4, [18, 26]),
       look('marda_mid', -82.0, 36.0, -90, 33, [5, 8], { act: 'rest' }),
       look('marda_gate', -95.8, 37.4, -102, 36, [6, 9]),
-      look('marda_warm', -100.2, 34.0, -100.16, 32.95, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post)
+      look('marda_warm', -101.42, 31.48, -100.55, 31.25, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post; POLISH-14 b: by its front wall now, she stands on its far side from the door, town.js)
       bench('marda_b2', -94.4, 30.3, [18, 26]),
     ]) },
     // the porter: a crate from the quay's pile to the pile at the stall's end, and back empty (TOWN-LIFE-2: the crate he takes
