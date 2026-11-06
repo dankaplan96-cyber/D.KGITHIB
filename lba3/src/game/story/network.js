@@ -59,7 +59,10 @@ export class Network extends ChapterBase {
     switch (r) {
       case 'zeelich': return Z.spaceport?.landing || Z.dock;
       case 'desert': return { x: D.dock.x + 28, z: D.dock.z, a: Math.PI / 2 }; // (past the pier)
-      case 'hamalayi': return { x: M.monastery.yard.x + 2, z: M.monastery.yard.z + 3, a: Math.PI };
+      // (REV-HAM: outside the gate, facing it, west of the glider's wing on the monks' slope (decorate). It was inside the
+      //  yard, where chapter 6 left the villagers: he came down under the glider's wing among Yorna, Hesk and Lhar's
+      //  elder, the Follow camera held at 3 m for the first 13 s, and Pim stood inside the fuselage)
+      case 'hamalayi': { const gt = M.monastery.gate; return { x: gt.x - 1.4, z: gt.z + 2.8, a: 2.68 }; }   // (3 m clear of the wing's tip, turned to the gate: the view behind him away from the glider)
       default: return { x: CITADEL_LANDING.x, z: CITADEL_LANDING.z, a: Math.PI };
     }
   }
@@ -87,9 +90,11 @@ export class Network extends ChapterBase {
     //  so the film's take-off runs down the open field: it stood 5 m east, nose to the north-east, and ran north behind
     //  the pine by the landing and the rock shelf above)
     if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING, x = l.x, z = l.z - 7; keep('citadel', put(buildGlider(), g.world.root, x, g.world.H(x, z), z, 3.3), x, z, 3.3); }
-    // (the Hamalayi's: inside the monastery's yard, between the landing and the hall, its nose to the gate. It stood
-    //  6 m east of the landing across the yard's east wall, its corner pillar and the gate wall, wings through them)
-    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'), x = l.x + 1.5, z = l.z - 4.5; keep('hamalayi', put(buildGlider(), M.group, x, gy(x, z), z, -0.3), x, z, -0.3); }
+    // (the Hamalayi's: on the monks' slope east of the gate, nose south over the drop to Lhar as chapter 7's take-off
+    //  (observatory.js SLOPE), 1.3 m further east and 0.8 m further south than that spot, so its body and tailplane
+    //  clear the gate's signpost (the gate + (4.5, 1.5)) and its wing the sign's arms. It stood inside the yard, on the
+    //  villagers' spots (REV-HAM), and before that 6 m east of the landing across the yard's east wall, wings through it)
+    if (M?.group && this.once('gl-hamalayi')) { const gt = M.monastery.gate, x = gt.x + 6.3, z = gt.z + 3.8; keep('hamalayi', put(buildGlider(), M.group, x, gy(x, z), z, 0), x, z, 0); }
     // relays: one at each station
     const mt = Z?.millTop;
     if (mt && !this.relays.mill) this.relays.mill = put(buildRelay(), Z.group, mt.x + 0.5, mt.y - 0.05, mt.z + 0.3, 0);
