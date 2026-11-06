@@ -14,6 +14,27 @@ import { Rig } from '../engine/rig.js';
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
+// TRUNK-1: a Grobo's trunk curve [(y, z, r)] in its skeleton's units (root in the muzzle, the three trunk bones' pivots,
+// the tip's two points): the same numbers as tools/blender/cast_poly.py grobo_trunk(), which builds the mesh on it.
+// Change both together and re-dump the skeleton (art/characters/skeletons.json) before rebuilding the models.
+export function groboTrunk(headY, hipsY, shY, neckY, kneeY, belly, slim = 1) {
+  const R = 0.3 * slim, cy = headY - 0.02, cz = 0.1, GAP = 0.085;
+  const F = [[kneeY + 0.02, 0.2], [kneeY + 0.1, 0.34], [hipsY - 0.12, 0.44], [hipsY + 0.05, 0.48], [hipsY + 0.3, 0.45], [shY - 0.08, 0.38], [shY + 0.06, 0.29], [neckY + 0.04, 0.18]];
+  const front = (y) => {
+    if (y <= F[0][0]) return F[0][1] + belly;
+    for (let i = 0; i + 1 < F.length; i++) if (y <= F[i + 1][0]) return F[i][1] + (F[i + 1][1] - F[i][1]) * (y - F[i][0]) / (F[i + 1][0] - F[i][0]) + belly;
+    return F[F.length - 1][1] + belly;
+  };
+  const rad = [0.125, 0.112, 0.096, 0.083, 0.074, 0.064].map((r) => r * slim);
+  const y1 = cy - 1.2 * R, yT = hipsY - 0.03, y2 = y1 + (yT - y1) * 0.55;
+  const p0 = [cy - 0.25 * R, cz + 0.8 * R + belly * 0.4], p1 = [cy - 0.5 * R, cz + 1.32 * R + belly * 0.9];   // (a belly pushes the chest out under the chin: the trunk leaves the face over it)
+  const p2 = [y1, Math.max(front(y1) + rad[2] + GAP, p1[1] + 0.05)];
+  const p3 = [y2, Math.max(front(y2) + rad[3] + GAP, p2[1])];
+  const p4 = [yT + 0.07, Math.max(front(yT + 0.07) + rad[4] + GAP, p3[1] - 0.02)];
+  const p5 = [yT - 0.01, p4[1] + 0.05];
+  return [p0, p1, p2, p3, p4, p5].map(([y, z], i) => [+y.toFixed(4), +z.toFixed(4), +rad[i].toFixed(4)]);
+}
+
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
@@ -414,6 +435,9 @@ function design(L) {
   // a Grobo's own bones (Baldino, SRC-2): an ear each side on the head, and a trunk of three segments hanging from it
   if (L.earBones) for (const [s, sx] of [['L', 1], ['R', -1]]) bone('ear' + s, [sx * L.earBones[0], L.earBones[1], L.earBones[2]], 'head', { noSeg: true });
   if (L.trunkBones) L.trunkBones.forEach((p, i) => bone('trunk' + i, p, i ? 'trunk' + (i - 1) : 'head', { noSeg: true }));
+  // TRUNK-1: every other Grobo's trunk gets the same three bones (it hung rigid from the head), on its own curve (groboTrunk)
+  else if (grobo) groboTrunk(headP[1], hipsY, shY, neckP[1], B.kneeL.pos[1], belly, slim).slice(1, 4)
+    .forEach(([y, z], i) => bone('trunk' + i, [0, y, z], i ? 'trunk' + (i - 1) : 'head', { noSeg: true }));
   const hemY = Math.max(0.06, L.hem ?? 0.5);
   const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid || teen ? 0.92 : 1) + belly * 0.4;
   for (const [nm, dx, dz] of [['skirtF', 0, 1], ['skirtB', 0, -1], ['skirtL', 1, 0], ['skirtR', -1, 0]]) {

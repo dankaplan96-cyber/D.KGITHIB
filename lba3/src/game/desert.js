@@ -39,7 +39,7 @@ import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
-  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, emblemMaterial, emq, mergeGeos, BATCH,
+  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, LodBatch, emblemMaterial, emq, mergeGeos, BATCH,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -276,7 +276,36 @@ function heightFn(x, z) {
 }
 
 const C = (h) => new THREE.Color(h);
-const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: C('#e0a080'), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), pave: C('#e6dac6'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
+// (CLOUD_ORDERS 13: COL.rock tints the grey-violet cliff texture (TX.cliff, shared with Citadel's cliffs) to the
+//  original's pale warm stone grey, #8c8782 from above; '#e0a080' made it a reddish brown. A shade over white, in the
+//  linear values the vertex colours hold: the texture alone is darker than the original's stone under this light)
+const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: new THREE.Color().setRGB(1.06, 1.1, 0.94), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), pave: C('#e6dac6'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
+// CLOUD_ORDERS 13 (WA-10's open point): grey rock outcrops. LBA2's Desert Island from above is about 20 % grey rock
+// ground (23.5 % grey with its paving and track), a pale stony grey (k-means #c1b6b1, #8d8682, #605c57), on the steep
+// faces (about 30 % of the ground steeper than 1.0) and spread over the high ground (15 % of the land under 2 m, 22 %
+// at 2-4 m, 30 % at 4-7 m, 38 % above). Ours showed only the steepest faces (slope over ~1.0: a thin line from above).
+// rockAt (0..1+, the splat's rock weight and the colour's): the old rule everywhere, and outside our places, tracks
+// and paving a lower slope threshold plus outcrops: a fixed sine noise lifted by height and slope. No random draws.
+const outcropNoise = (x, z) => 0.5 * Math.sin(x * 0.13 + z * 0.07 + Math.sin(z * 0.05) * 1.7) * Math.sin(z * 0.11 - x * 0.05 + 0.6)
+  + 0.3 * Math.sin(x * 0.31 - z * 0.23) * Math.sin(z * 0.27 + x * 0.19) + 0.2 * Math.sin(x * 0.71 + z * 0.53) * Math.sin(z * 0.83 - x * 0.37);
+// (CLOUD_ORDERS 13: the island's rocks without Citadel's moss: vegetation.js's rock, cloned, its colours a dry stone
+//  grey; the moss on its top was a dull olive in the desert light)
+const DRY = new Map();
+function dryRock(seed, lo = 0) {
+  const k = seed * 2 + (lo ? 1 : 0); if (DRY.has(k)) return DRY.get(k);
+  const g = rockGeometry(seed, lo).clone(), a = g.attributes.color;
+  if (a) for (let i = 0; i < a.count; i++) { const l = Math.max(0.27, 0.3 * a.getX(i) + 0.59 * a.getY(i) + 0.11 * a.getZ(i)); a.setXYZ(i, l * 1.06, l, l * 0.9); }
+  DRY.set(k, g); return g;
+}
+function rockAt(x, z, h, slope) {
+  const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
+  if (h < 0.6) return old;
+  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, pavedAt(x, z)));
+  if (clear <= 0) return old;
+  // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
+  const out = outcropNoise(x, z) + 0.3 * smoothstep(1, 8, h) + 0.45 * smoothstep(0.15, 0.7, slope) - 0.35 - 1.5 * (1 - clear);
+  return Math.max(old, clear * smoothstep(0.5, 0.95, slope), smoothstep(-0.06, 0.06, out));
+}
 function colorFn(x, z, h, slope, c) {
   c.copy(COL.sand);
   const n = Math.sin(x * 0.7 + z * 0.4) * Math.sin(z * 0.6 - x * 0.2);
@@ -289,8 +318,9 @@ function colorFn(x, z, h, slope, c) {
   c.lerp(COL.sandLee, lee * 0.22);
   const big = Math.sin(x * 0.021 + 1.3) * Math.sin(z * 0.017 - 0.4) + Math.sin((x + z) * 0.011) * 0.5;
   c.lerp(COL.sandRed, smoothstep(0.35, 1.1, big) * 0.3);
-  if (slope > 0.8) c.lerp(COL.rock, smoothstep(0.8, 1.6, slope));
   if (h > 10.5) c.lerp(COL.rockTop, 0.6);   // (the original's ridge top)
+  const rk = rockAt(x, z, h, slope);   // (CLOUD_ORDERS 13: the rock's colour where its texture is, so the outcrops read grey)
+  if (rk > 0.3) c.lerp(COL.rock, smoothstep(0.3, 0.5, rk));   // (a short ramp: the texture's own edge is crisp, at ~0.45)
   const pv = pavedAt(x, z);
   if (pv > 0) c.lerp(COL.pave, pv * 0.85);   // (the School's plaza and rim walk, the compound's yard)
   if (inPost(x, z)) c.copy(COL.pad);
@@ -298,7 +328,7 @@ function colorFn(x, z, h, slope, c) {
 }
 function splatFn(x, z, h, slope, w) {
   w[0] = 0; w[1] = 1; w[2] = 0; w[3] = 0; w[4] = 0;
-  const rk = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
+  const rk = rockAt(x, z, h, slope);   // (CLOUD_ORDERS 13)
   w[2] = rk; w[1] = Math.max(0, 1 - rk);
   const pv = pavedAt(x, z);
   if (pv > 0) { w[4] = 2 * pv; w[1] *= 1 - pv; }
@@ -811,6 +841,7 @@ export function* buildDesertSteps(scene, physics) {
   });
 
   // ================================================================ mesas: rock rubble at their feet
+  let placeRocks = null;   // (CLOUD_ORDERS 13: drawn after the old places, below)
   {
     const rocks = [];
     for (const m of MESAS) for (let i = 0; i < 18; i++) {
@@ -836,11 +867,40 @@ export function* buildDesertSteps(scene, physics) {
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
     for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
-    for (let v = 0; v < 3; v++) {
-      const list = rocks.filter((_, i) => i % 3 === v).map((r) => ({ ...r, color: '#e8a888' }));
-      lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, list);
-    }
     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+    // CLOUD_ORDERS 13: scree on the steep grey slopes (rockAt's outcrops, outside our places and off the tracks), from
+    // its own draws after every other (rng 4313), so nothing else moves. Drawn with the rocks above, in the same three
+    // batches, once the old places stand (none in a house's walls: inBuilding, as the shrubs); the larger ones block
+    // as the others do (a cylinder, seen through by the camera)
+    const r5 = rng(4313), scree = [];
+    for (let i = 0; i < 2000; i++) {
+      const x = (r5() - 0.5) * 280, z = (r5() - 0.5) * 280, ry = r5() * 6, sz = r5();
+      const h = H(x, z); if (h < 0.8) continue;
+      const sl = terrain.slopeAt(x, z);
+      if (sl < 0.55 || coastDist(x, z) < 3 || trackDist(x, z) < 5 || keepNear(x, z) < 3 || pavedAt(x, z) > 0 || rockAt(x, z, h, sl) < 0.6 || keshClear(x, z, 1)) continue;
+      const s = 0.3 + sz * sz * 0.8;
+      scree.push({ x, y: h - 0.25 * s, z, ry, s, scree: true });
+    }
+    placeRocks = () => {
+      const more = scree.filter((r) => !inBuilding(r.x, r.z, r.s));
+      const all = rocks.concat(more);   // (the old rocks keep their variants: the new ones come after them)
+      for (let v = 0; v < 3; v++) {
+        const list = all.filter((_, i) => i % 3 === v).map((r) => ({ ...r, color: '#ece6de' }));   // (was '#e8a888', a pink)
+        const hi = dryRock(v + 1), lo = dryRock(v + 1, 1);
+        if (!BATCH.on) { lodInstances(group, hi, lo, rm, list); continue; }
+        // (one batch, as lodInstances makes it; the scree under 1 m always in the coarse sculpt: ~870 triangles, not
+        //  ~6 100, for a stone a metre or two across)
+        const B = new LodBatch(group, rm), o = new THREE.Object3D(), c = new THREE.Color();
+        for (const r of list) {
+          o.position.set(r.x, r.y, r.z); o.rotation.set(0, r.ry, 0, 'YXZ'); o.scale.setScalar(r.s); o.updateMatrix();
+          const small = r.scree && r.s < 1.0;
+          B.add(small ? lo : hi, small ? null : lo, o.matrix, c.set(r.color));
+        }
+        B.build();
+      }
+      for (const r of more) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+      R.rockCount = { old: rocks.length, scree: more.length };   // (for the Test Lab's measurements)
+    };
   }
   // dry shrubs and cacti
   // TREES-1 (the user, 4.11.2026: no plant may grow in a house): a dry shrub stood in two of Kesh's houses, in the big
@@ -1477,6 +1537,7 @@ export function* buildDesertSteps(scene, physics) {
   };
   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
   plantShrubs();   // (TREES-1: every building registered now)
+  placeRocks();   // (CLOUD_ORDERS 13: the rocks and the new scree, likewise)
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
   //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
   for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });

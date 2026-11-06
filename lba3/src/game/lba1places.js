@@ -97,7 +97,7 @@ function asylumDoor(scene, physics) {
 //                square to the hostel's portico, up between two walls onto the terrace's forecourt (ASYLUM_STEPS; it
 //                replaces WORLD-AUDIT's narrow 1 m stair; CLIMB-2: the turn, the user's "it leads into a wall", and
 //                CLOUD_ORDERS 16): 23 + 6 dressed steps, 2.6 m wide, between cheek walls with a coping, capped posts at the
-//                corners and halfway, railings where the ground falls away; beside the second flight the terrace is filled
+//                corners (CLIMB-15: not halfway), railings where the ground falls away; beside the second flight the terrace is filled
 //                out to it behind dressed walls with railings
 //   the terrace  before the fort's south wall (CLIMB_TERRACE), paved from the flight's top to the wall's foot, where
 //                ASYLUM-2's front door stands; a railing on a stone plinth with capped posts along its edge over the cliff
@@ -113,6 +113,13 @@ export const CLIMB_RAMP = [[-42, -4], [-37, -20], [-34, -36]];   // (world.js PA
 const CLIMB_HW = 1.55;                                           // the paved ramp's half width
 export const CLIMB_WALL = { s0: 0.8, s1: 10.0, o0: 1.62, o1: 2.1 };   // along CLIMB_RAMP's second leg: from, to; inner, outer face
 export const CLIMB_TERRACE = [[-28.6, -50.4, -22.8, -43.2], [-31.9, -50.4, -28.6, -47.7]];   // paved boxes [x0, z0, x1, z1]
+// CLIMB-15 (the user: "it isn't like the structure in LBA2"): LBA2's ramp north of the square climbs along the dressed
+// face of the terrace above it, the terrace standing level behind its own retaining wall, a capped post on its corner.
+// Ours: along the ramp's second leg, west side, where the second shelf (world.js level(2), 9.61 m) stands over the
+// ramp, its edge is a retaining wall now (CLIMB_SHELF: along CLIMB_RAMP's second leg from s0 to s1, its face at o0, back
+// at o1, its coping level, `top`), the wall turned west at its south end along the shelf's face for `ret` m; behind both
+// the shelf filled level with their top (a stone fill, as the terrace's by the stair, never coplanar with the ground)
+export const CLIMB_SHELF = { s0: 8.6, s1: 15.4, o0: 1.62, o1: 2.1, top: 9.61, ret: 4.6, reach: 3.6 };
 const FOOT = [-33.3, -36.4, 2.0];                                // the paved apron between the ramp and the flight's foot
 
 const seg = (P, x, z) => { let d = 1e9; for (let i = 0; i < P.length - 1; i++) { const [ax, az] = P[i], [bx, bz] = P[i + 1], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); d = Math.min(d, Math.hypot(x - ax - dx * t, z - az - dz * t)); } return d; };
@@ -166,7 +173,8 @@ export function climbPaveDist(x, z) {
 }
 // inside the masonry (the flight with its cheeks and posts, the ramp's wall, the terrace's railing), grown by pad
 export function climbMasonry(x, z, pad = 0) {
-  if (x < -40 || x > -20 || z < -52 || z > -16) return false;
+  if (x < -44.5 || x > -20 || z < -52 || z > -16) return false;
+  if (inShelf(x, z, pad)) return true;
   const S = ASYLUM_STEPS, [s, o] = FL.local(x, z), [t, l] = FL2.local(x, z), half = S.w / 2 + S.cheek + 0.1;
   if (s > -0.5 - pad && s < S1 + S.w + S.cheek + 0.3 + pad && Math.abs(o) < half + pad) return true;   // (the first flight, the landing)
   if (t > -0.3 - pad && t < T2_TOP + 0.3 + pad && Math.abs(l) < half + pad) return true;              // (the second flight)
@@ -175,6 +183,13 @@ export function climbMasonry(x, z, pad = 0) {
   const [rs, ro] = RW.local(x, z);
   if (rs > CLIMB_WALL.s0 - 0.4 - pad && rs < CLIMB_WALL.s1 + 0.4 + pad && ro > CLIMB_WALL.o0 - pad && ro < CLIMB_WALL.o1 + 0.1 + pad) return true;
   return seg(TERRACE_RAIL, x, z) < 0.35 + pad;
+}
+// the shelf's wall, its return and the fill behind them (CLIMB-15), grown by pad
+const SH_F0 = RW.at(CLIMB_SHELF.s0, -CLIMB_SHELF.o0), SH_RET = { x0: SH_F0[0] - CLIMB_SHELF.o1 + CLIMB_SHELF.o0 - CLIMB_SHELF.ret, x1: SH_F0[0], z1: SH_F0[1] };
+function inShelf(x, z, pad = 0) {
+  const C = CLIMB_SHELF, [rs, ro] = RW.local(x, z);
+  if (rs > C.s0 - 0.5 - pad && rs < C.s1 + 0.5 + pad && ro < -C.o0 + pad && ro > -C.o1 - C.reach - pad) return true;
+  return x > SH_RET.x0 - 0.5 - pad && x < SH_RET.x1 + pad && z < SH_RET.z1 + pad && z > SH_RET.z1 - (C.o1 - C.o0) - C.reach - pad;
 }
 // the scatter keeps out of the masonry and off the paved terrace (world.js)
 export function climbClear(x, z, pad = 0) {
@@ -205,12 +220,16 @@ const stepTex = (dark) => {
 };
 const stepMat = (dark) => cachedMat('climbStep' + dark, () => { const m = new THREE.MeshStandardMaterial({ map: stepTex(dark), roughness: 0.88 }); m.userData.tile = 2.6; return m; });
 
-// a square stone post with a heavy cap (LBA2's b29, smaller: 0.5 m shaft, 0.64 m cap), standing on y, h tall
-function climbPost(k, M, physics, x, z, y, h = 1.15, a = 0) {
-  k.add(rbox(0.5, h - 0.24, 0.5, 0.03), M.wall, x, y + (h - 0.24) / 2, z, a);
-  k.add(rbox(0.64, 0.2, 0.64, 0.04), M.cap, x, y + h - 0.14, z, a);
-  k.add(rbox(0.42, 0.08, 0.42, 0.03), M.cap, x, y + h - 0.0, z, a);
-  physics.add({ type: 'box', x, z, hw: 0.32, hd: 0.32, rot: a, top: y + h, noStand: true, seeThrough: true, camSkip: true });   // (the camera passes a post, as a branch: engine/camera.js NEAR-CUT hides it)
+// a square stone post with a heavy pale cap, as LBA2's b29 that marks the corners of its terraces (CLIMB-15: in its
+// proportions now, a little smaller: a 0.72 m shaft, a 0.92 m cap slab and a 0.6 m block on it, ~1.45 m tall; only
+// at the climb's corners and ends, as the original has them, not every few metres), standing on y, h tall
+const POST_W = 0.72, POST_HALF = POST_W / 2;
+function climbPost(k, M, physics, x, z, y, h = 1.45, a = 0) {
+  k.add(rbox(POST_W, h - 0.32, POST_W, 0.03), M.wall, x, y + (h - 0.32) / 2, z, a);
+  k.add(rbox(POST_W + 0.08, 0.07, POST_W + 0.08, 0.02), M.cap, x, y + h - 0.325, z, a);   // (a thin band under the cap; each piece's top inside the next: no shared faces)
+  k.add(rbox(0.92, 0.18, 0.92, 0.04), M.cap, x, y + h - 0.21, z, a);
+  k.add(rbox(0.6, 0.12, 0.6, 0.04), M.cap, x, y + h - 0.07, z, a);
+  physics.add({ type: 'box', x, z, hw: 0.46, hd: 0.46, rot: a, top: y + h, noStand: true, seeThrough: true, camSkip: true });   // (the camera passes a post, as a branch: engine/camera.js NEAR-CUT hides it)
 }
 // a wall's collision with a railing on it: the stone to `stone` (solid to the camera too), the railing over it to
 // `rail` (it stops him; the camera looks and passes over it: camSkip)
@@ -282,23 +301,23 @@ function climbFlight(k, M, physics, T) {
       physics.add({ type: 'box', x: px, z: pz, hw: cw / 2 + 0.05, hd: (b - a) / 2 + 0.05, rot: A.a, top: yc(b) + 0.15, noStand: true, seeThrough: true });
     }
     if (!rails) return;
-    const fall = (t) => yc(t) - 0.5 - T(...A.at(t, sd * (hw + cw + 0.5))) > 1.2, mid = (ta + tb) / 2;
+    const fall = (t) => yc(t) - 0.5 - T(...A.at(t, sd * (hw + cw + 0.5))) > 1.2;
     let r0 = null, prev = null;
     const runs = [];
     for (let t = ta + 0.5; t <= tb - 0.5 + 1e-6; t += 0.3) {
-      const f = fall(t) && Math.abs(t - mid) > 0.4;
+      const f = fall(t);   // (CLIMB-15: no post halfway now, the railing runs through)
       if (f) { if (r0 == null) r0 = t; prev = t; } else if (r0 != null) { runs.push([r0, prev]); r0 = null; }
     }
     if (r0 != null) runs.push([r0, prev]);
     for (const [a, b] of runs) if (b - a > 0.9) { const [ax, az] = A.at(a, o), [bx, bz] = A.at(b, o); climbRail(k, M, ax, az, bx, bz, yc(a) + 0.14 / Math.cos(p), yc(b) + 0.14 / Math.cos(p), 0.5); }
   };
-  const post = (A, t, sd, base, h = 1.2) => { const [px, pz] = A.at(t, sd * (hw + cw / 2)); climbPost(k, M, physics, px, pz, base, h, A.a); };
+  // (CLIMB-15: a post's inner face in line with the cheek's, so the larger posts take nothing off the stair's width)
+  const post = (A, t, sd, base, h = 1.45) => { const [px, pz] = A.at(t, sd * (hw + POST_HALF)); climbPost(k, M, physics, px, pz, base, h, A.a); };
   // the first flight: the west cheek to the landing, the east one to the terrace's corner
   cheek(F, 0, sL, -1, yc1);
   cheek(F, 0, Math.min(S_CORNER, sL), 1, yc1);
   post(F, -0.15, -1, Math.min(T(...F.at(-0.15, -hw - cw / 2)), y0)); post(F, -0.15, 1, Math.min(T(...F.at(-0.15, hw + cw / 2)), y0));
-  post(F, sL / 2, -1, yc1(sL / 2) - 0.5, 1.05);
-  if (sL / 2 < S_CORNER - 1.2) post(F, sL / 2, 1, yc1(sL / 2) - 0.5, 1.05);
+  // (CLIMB-15: no posts halfway up the flight: LBA2 sets its posts at the corners only)
   // the landing's west and north walls (a parapet 0.5 m over it, or 10 cm over the bank behind where that stands higher)
   {
     const o = -(hw + cw / 2);
@@ -314,8 +333,8 @@ function climbFlight(k, M, physics, T) {
     k.add(rbox(oe + hw + cw, topN - botN, cw, 0.03), M.wall, nx, (topN + botN) / 2, nz, F.a);
     k.add(rbox(oe + hw + cw + 0.06, 0.14, cw + 0.1, 0.03), M.cap, nx, topN + 0.07, nz, F.a);
     physics.add({ type: 'box', x: nx, z: nz, hw: (oe + hw + cw) / 2, hd: cw / 2 + 0.05, rot: F.a, top: topN + 0.15, noStand: true, seeThrough: true });
-    post(F, sN + cw / 2, -1, Hm, Math.max(top, topN) - Hm + 0.45);
-    post(F, sL, -1, Hm, top - Hm + 0.45);   // (where the cheek's slope meets the landing's level wall)
+    post(F, sN + POST_HALF, -1, Hm, Math.max(top, topN) - Hm + 0.6);
+    post(F, sL, -1, Hm, top - Hm + 0.6);   // (where the cheek's slope meets the landing's level wall)
   }
   // the second flight: cut into the terrace, its walls and the fill on both sides (below)
   climbTerraceFill(k, M, physics, T, yt);
@@ -366,7 +385,7 @@ function climbTerraceFill(k, M, physics, T, yt) {
   // south: the terrace's corner to K along the first flight, K to the top along the second
   wall(F, S_CORNER, S_K, OE);
   wall(G, T_K, T2_TOP, OE);
-  { const [px, pz] = F.at(S_K, OE); climbPost(k, M, physics, px, pz, yt, 1.42, F.a); }   // (the turn's post)
+  { const [px, pz] = F.at(S_K, HW + POST_HALF); climbPost(k, M, physics, px, pz, yt, 1.5, F.a); }   // (the turn's post)
   fill([[F, S_CORNER, S_K - 0.15], [G, T_K + 0.15, T2_TOP]], 1, ([x, z]) => [x, Math.min(z, railZ(x))]);
   // north: along the second flight, from the landing's corner to the top
   wall(G, T2_0 - 0.17, T2_TOP, -OE);   // (from the landing's north-east corner, where the landing's own north wall ends)
@@ -374,14 +393,16 @@ function climbTerraceFill(k, M, physics, T, yt) {
 }
 
 // the ramp's retaining wall over the stone house's yard: on the ramp's second leg, east side, a dressed wall whose top is a
-// parapet with a coping 0.45 m over the paving, down below the ground of the yard's bank; capped posts at its ends and
-// every ~3 m, a railing between them
+// parapet with a coping over the paving, down below the ground of the yard's bank. (CLIMB-15, as LBA2's climb, whose
+// ramps have no railings and posts only at their corners: the parapet solid masonry, 0.8 m over the paving with its
+// coping, a capped post at each end; the railing and the posts every ~3 m are gone.)
+const PARAPET = 0.66;
 function climbRampWall(k, M, physics, T) {
   const R = RW, C = CLIMB_WALL, th = C.o1 - C.o0, om = (C.o0 + C.o1) / 2;
   const hp = (s) => T(...R.at(s, 0));
   const N = Math.ceil((C.s1 - C.s0) / 3.1), step = (C.s1 - C.s0) / N;
   for (let i = 0; i < N; i++) {
-    const sa = C.s0 + i * step, sb = sa + step, ya = hp(sa) + 0.45, yb = hp(sb) + 0.45, p = Math.atan2(yb - ya, step), Ls = step / Math.cos(p);
+    const sa = C.s0 + i * step, sb = sa + step, ya = hp(sa) + PARAPET, yb = hp(sb) + PARAPET, p = Math.atan2(yb - ya, step), Ls = step / Math.cos(p);
     let D = 0;
     for (let s = sa; s <= sb + 1e-6; s += 0.25) D = Math.max(D, ya + (yb - ya) * (s - sa) / step - Math.min(T(...R.at(s, C.o0)), T(...R.at(s, C.o1 + 0.2))));
     D += 0.6;
@@ -391,11 +412,71 @@ function climbRampWall(k, M, physics, T) {
     // (CLIMB-2: a base course along the wall's foot on the paving side, 8 cm proud: the ground's grid is 0.9 m, so the
     //  last few centimetres of paving at the wall's face can't follow the incline exactly; the course is the edge there)
     { const [cx, cz] = R.at((sa + sb) / 2, C.o0 - 0.13), yb = (hp(sa) + hp(sb)) / 2; k.add(rbox(0.28, 0.5, Ls + 0.04, 0.03), M.wall, cx, yb + 0.08 - 0.25 / Math.cos(p), cz, R.a, { rx: -p }); }
-    const [ax, az] = R.at(sa + 0.3, om), [bx, bz] = R.at(sb - 0.3, om);
-    climbRail(k, M, ax, az, bx, bz, ya + 0.14 + (yb - ya) * 0.3 / step, yb + 0.14 - (yb - ya) * 0.3 / step, 0.5);
-    for (let j = 0; j < 3; j++) { const a = sa + (j / 3) * step, b = sa + ((j + 1) / 3) * step, [px, pz] = R.at((a + b) / 2, om), hm = Math.max(hp(a), hp(b)); climbRailCol(physics, px, pz, th / 2 + 0.05, step / 6 + 0.05, R.a, hm + 0.59, hm + 1.1); }   // (in thirds: the camera passes close over them)
+    for (let j = 0; j < 3; j++) { const a = sa + (j / 3) * step, b = sa + ((j + 1) / 3) * step, [px, pz] = R.at((a + b) / 2, om), hm = Math.max(hp(a), hp(b)); climbRailCol(physics, px, pz, th / 2 + 0.05, step / 6 + 0.05, R.a, hm + PARAPET + 0.14, hm + 1.1); }   // (in thirds: the camera passes close over them; over the parapet to 1.1 m, as the railing stood)
   }
-  for (let i = 0; i <= N; i++) { const s = C.s0 + i * step, [px, pz] = R.at(s, om); climbPost(k, M, physics, px, pz, hp(s), 1.25, R.a); }
+  for (const s of [C.s0, C.s1]) { const [px, pz] = R.at(s, om); climbPost(k, M, physics, px, pz, hp(s), 1.5, R.a); }
+}
+
+// CLIMB-15: the second shelf's retaining wall along the ramp's west side and its return west along the shelf's face
+// (CLIMB_SHELF): dressed stone, level, its coping 12 cm over the shelf's level; along the ramp a base course at its foot
+// as the east wall has; LBA2's capped posts on its corner and the return's end, standing in the coping; behind both the
+// shelf filled level out to where its own ground rises within 15 cm of the top. The coping and the fill are walkable;
+// from the ramp the wall is a wall (0.7–2.2 m): the shelf is reached at the ramp's head, past the stair's foot, as before.
+function climbShelfWall(k, M, physics, T) {
+  const C = CLIMB_SHELF, R = RW, top = C.top, cop = top + 0.12, th = C.o1 - C.o0, om = -(C.o0 + C.o1) / 2, L = C.s1 - C.s0;
+  const hp = (s) => T(...R.at(s, 0));
+  const body = (cx, cz, w, d, a, lo) => {   // a wall body from below the ground to its coping
+    const bot = lo - 0.6;
+    k.add(rbox(w, top + 0.02 - bot, d, 0.03), M.wall, cx, (top + 0.02 + bot) / 2, cz, a);
+    k.add(rbox(w + 0.1, 0.1, d + 0.06, 0.03), M.cap, cx, cop - 0.05, cz, a);
+    physics.add({ type: 'box', x: cx, z: cz, hw: w / 2 + 0.03, hd: d / 2 + 0.03, rot: a, top: cop });
+  };
+  // along the ramp
+  {
+    let lo = Infinity; for (let s = C.s0; s <= C.s1 + 1e-6; s += 0.25) for (const o of [-C.o0, -C.o1]) lo = Math.min(lo, T(...R.at(s, o)));
+    const [cx, cz] = R.at((C.s0 + C.s1) / 2, om);
+    body(cx, cz, th, L, R.a, lo);
+    // the base course on the paving side, in three runs following the ramp's incline (as climbRampWall's)
+    for (let i = 0; i < 3; i++) {
+      const sa = C.s0 + (i / 3) * L, sb = C.s0 + ((i + 1) / 3) * L, p = Math.atan2(hp(sb) - hp(sa), sb - sa), Ls = (sb - sa) / Math.cos(p);
+      const [bx, bz] = R.at((sa + sb) / 2, -(C.o0 - 0.13)), yb = (hp(sa) + hp(sb)) / 2;
+      k.add(rbox(0.28, 0.5, Ls + 0.04, 0.03), M.wall, bx, yb + 0.08 - 0.25 / Math.cos(p), bz, R.a, { rx: -p });
+    }
+  }
+  // the return, due west along the shelf's face from the wall's south end
+  const zr = SH_RET.z1 - th / 2, xr0 = SH_RET.x0, xr1 = SH_RET.x1;
+  {
+    let lo = Infinity; for (let x = xr0; x <= xr1 + 1e-6; x += 0.25) for (const z of [SH_RET.z1, SH_RET.z1 - th]) lo = Math.min(lo, T(x, z));
+    body((xr0 + xr1) / 2, zr, th, xr1 - xr0, Math.PI / 2, lo);
+  }
+  // the posts: on the corner and at the return's west end, standing in the coping (none at the wall's north end: the
+  // stair's foot post stands 1.8 m from it, and the way onto the shelf passes between them)
+  const [kx] = R.at(C.s0, om);
+  climbPost(k, M, physics, kx, zr, top, 1.15, 0);
+  climbPost(k, M, physics, xr0 + POST_HALF - 0.06, zr, top, 1.15, 0);
+  // the fill: a strip behind the wall and one behind the return (dir: outward, rot: a collider's turn)
+  const strip = (pts, dir, rot) => {
+    const out = (p) => { let d = 0.3; while (d < C.reach && T(p[0] + dir[0] * d, p[1] + dir[1] * d) < top - 0.15) d += 0.05; d = Math.max(0.3, d - 0.1); return [p[0] + dir[0] * d, p[1] + dir[1] * d]; };
+    const outer = pts.map(out), poly = [...pts, ...[...outer].reverse()];
+    let fb = Infinity; for (const [x, z] of poly) fb = Math.min(fb, T(x, z));
+    fb -= 0.4;
+    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(poly.map(([x, z]) => new THREE.Vector2(x, -z))), { depth: top - fb, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2); geo.translate(0, fb, 0);
+    k.add(geo, M.wall, 0, 0, 0);
+    for (let i = 0; i + 2 < pts.length; i += 2) {
+      const q = [pts[i], pts[i + 2], outer[i + 2], outer[i]], cx = q.reduce((a, p) => a + p[0], 0) / 4, cz = q.reduce((a, p) => a + p[1], 0) / 4;
+      const wid = Math.min(Math.hypot(outer[i][0] - pts[i][0], outer[i][1] - pts[i][1]), Math.hypot(outer[i + 2][0] - pts[i + 2][0], outer[i + 2][1] - pts[i + 2][1]));
+      if (wid < 0.15) continue;
+      const len = Math.hypot(pts[i + 2][0] - pts[i][0], pts[i + 2][1] - pts[i][1]);
+      physics.add({ type: 'box', x: cx, z: cz, hw: wid / 2, hd: len / 2 + 0.02, rot, top });
+    }
+  };
+  const back = [];
+  for (let s = C.s0; s < C.s1 + 0.25 - 1e-6; s += 0.25) back.push(R.at(Math.min(s, C.s1), -C.o1 + 0.05));
+  strip(back, [R.uz, -R.ux], R.a);   // (outward: west of the wall, -o)
+  const backR = [];
+  for (let x = xr0; x < xr1 - 0.4 + 0.25 - 1e-6; x += 0.25) backR.push([Math.min(x, xr1 - 0.4), SH_RET.z1 - th + 0.05]);
+  strip(backR, [0, -1], Math.PI / 2);   // (outward: north of the return)
 }
 
 // the terrace's railing over the cliff: a low dressed plinth, the iron railing on it, capped posts at its corners
@@ -450,6 +531,7 @@ function asylumSteps(scene, physics) {
   const M = { tread: stepMat(false), riser: stepMat(true), wall: MAT.stone('grey', 2), cap: MAT.plaster('#e2dccf'), iron: MAT.paint('#2a9a8a', 0.4) };
   const yt = climbFlight(k, M, physics, T);
   climbRampWall(k, M, physics, T);
+  climbShelfWall(k, M, physics, T);
   climbTerraceRail(k, M, physics, T, yt);
   k.flush();
   climbKerbs(g, T);

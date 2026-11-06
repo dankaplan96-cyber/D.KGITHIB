@@ -114,6 +114,8 @@ function pathDistScatter(x, z) {
   return d;
 }
 const newPathDist = (x, z) => { const p = PATHS[4]; let d = 1e9; for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1])); return d; };
+// (POLISH-14 f) the glider field's landing (story/network.js CITADEL_LANDING): kept clear of the scattered bushes
+const GLIDER_LANDING = { x: -58, z: -60 }, LANDING_CLEAR = 1.6;
 const NEW_HOUSES = new Set(['bug', 'bug2', 'stoneup']);   // (moved or added by WORLD-80; 'bug' stood at town.js OLD_BUG)
 
 // signed distance to an axis-aligned rectangle (negative inside)
@@ -683,7 +685,7 @@ export function* buildWorldSteps(parentScene) {
     decide: SG,
     skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
   });
-  dropRocks(W_cliffs.mesh, (x, z) => climbMasonry(x, z, 0.05), [-40, -54, -20, -16]);   // (CLIMB-1)
+  dropRocks(W_cliffs.mesh, (x, z) => climbMasonry(x, z, 0.05), [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
@@ -994,6 +996,10 @@ export function* buildWorldSteps(parentScene) {
   });
   for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // (POLISH-14 f: the glider field's landing, story/network.js CITADEL_LANDING and evacuation.js LANDING, where he
+  //  steps down from the glider: no scattered bush within LANDING_CLEAR m of it — two stood on it, their colliders
+  //  over the spot he is put on. Filtered after the scatter, so no random draw moves)
+  for (const b of bushes) if (!b.gone && Math.hypot(b.x - GLIDER_LANDING.x, b.z - GLIDER_LANDING.z) < LANDING_CLEAR + 0.6 * b.s) { b.s = 1e-4; b.gone = true; }
   // TREES-1 (the user, 4.11.2026: a tree stood inside Twinsen's house, its crown out through the thatch). okSpot keeps
   // the scatter out of the square's ring (exclusions: POI.village) and the original's trees 1.6 m off the houses, but
   // nothing kept the scattered trees and bushes out of the houses beyond the square: a tall tree grew in Twinsen's

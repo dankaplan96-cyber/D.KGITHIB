@@ -86,9 +86,16 @@ export class Network extends ChapterBase {
     const gy = (x, z) => g.physics.groundAt(x, z);
     // (each remembered by its region with its world place and heading: the glider films fly it, gliderSpot)
     const keep = (r, obj, x, z, a) => { this.gliders.push(obj); (this.gliderAt ??= {})[r] = { obj, x, z, a }; };
-    if (D?.group && this.once('gl-desert')) { const l = this.landing('desert'); keep('desert', put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2), l.x - 2, l.z - 7, -Math.PI / 2); }
-    if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING; keep('citadel', put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6), l.x + 5, l.z - 3, 0.6); }
-    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'); keep('hamalayi', put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4), l.x + 6, l.z + 1, 0.4); }
+    // (Desert Island's: 2 m further toward the pier than it was, so the film's camera stands clear of the notice board
+    //  north-east of the landing, which stood in front of it for a fifth of the take-off)
+    if (D?.group && this.once('gl-desert')) { const l = this.landing('desert'); keep('desert', put(buildGlider(), D.group, l.x - 4, gy(l.x - 4, l.z - 7), l.z - 7, -Math.PI / 2), l.x - 4, l.z - 7, -Math.PI / 2); }
+    // (Citadel's: 7 m south of the landing, its nose to the south (a little west, clear of the bush at its east side),
+    //  so the film's take-off runs down the open field: it stood 5 m east, nose to the north-east, and ran north behind
+    //  the pine by the landing and the rock shelf above)
+    if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING, x = l.x, z = l.z - 7; keep('citadel', put(buildGlider(), g.world.root, x, g.world.H(x, z), z, 3.3), x, z, 3.3); }
+    // (the Hamalayi's: inside the monastery's yard, between the landing and the hall, its nose to the gate. It stood
+    //  6 m east of the landing across the yard's east wall, its corner pillar and the gate wall, wings through them)
+    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'), x = l.x + 1.5, z = l.z - 4.5; keep('hamalayi', put(buildGlider(), M.group, x, gy(x, z), z, -0.3), x, z, -0.3); }
     // relays: one at each station
     const mt = Z?.millTop;
     if (mt && !this.relays.mill) this.relays.mill = put(buildRelay(), Z.group, mt.x + 0.5, mt.y - 0.05, mt.z + 0.3, 0);

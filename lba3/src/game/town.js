@@ -220,6 +220,9 @@ function bunting(parent, W, lamps) {
   for (const r of ropes) grp.add(new THREE.Mesh(r, rope));
   return { group: grp, setVisible(on) { grp.visible = !!on; } };
 }
+// (POLISH-14 b) where a house's heat post stands: HEAT_POST_OUT m out from its front wall, HEAT_POST_SIDES m beside the
+// door (the first clear of everything by HEAT_POST_R: a pot by the door)
+const HEAT_POST_OUT = 0.45, HEAT_POST_SIDES = [1.45, 1.85, -1.45, -1.85], HEAT_POST_R = 0.32;
 function heatPosts(parent, W, spots) {
   const { H, physics } = W;
   const teal = mat('#2c7f86', 0.45, { metalness: 0.35 }), brass = mat('#c89a3c', 0.35, { metalness: 0.6 });
@@ -584,10 +587,17 @@ export function buildTown(scene, W) {
   // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at
   // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is
   // back), then they glow and breathe a little warm air: the benefit the town sees before the evacuation plan.
+  // (POLISH-14 b: each stands against the front wall beside the door, HEAT_POST_OUT m out from the wall — the door's
+  //  spot is 0.75 m out of it, architecture.js — HEAT_POST_SIDES[0] m to the right of the way out, or the next free of
+  //  HEAT_POST_SIDES. It stood 1 m out from the door's spot along the line from the house's middle to the door, 1.6–2 m
+  //  out from the wall and turned in toward the doorway on most houses (the door off the middle): just where the Follow
+  //  camera stands for the first second out of a door, so it filled the frame's lower right on the way out.)
   W.heatPosts = heatPosts(scene, W, [
     ...W.houses.filter((hs, i) => HOUSES[i].heat !== false).map((hs) => {
-      let nx = hs.door.x - hs.x, nz = hs.door.z - hs.z; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
-      return [hs.door.x + nx * 1.0 - nz * 1.45, hs.door.z + nz * 1.0 + nx * 1.45];
+      const nx = Math.sin(hs.ry), nz = Math.cos(hs.ry), y = H(hs.door.x, hs.door.z), o = HEAT_POST_OUT - 0.75;
+      const at = (s) => [hs.door.x + nx * o - nz * s, hs.door.z + nz * o + nx * s];
+      const free = ([x, z]) => !physics.near(x, z).some((c) => c.enabled && c.top > y + 0.2 && physics._inside(c, x, z, HEAT_POST_R));
+      return HEAT_POST_SIDES.map(at).find(free) ?? at(HEAT_POST_SIDES[0]);
     }),
     [W.stall.x + Math.cos(W.stall.a) * 2.3, W.stall.z - Math.sin(W.stall.a) * 2.3],
   ]);

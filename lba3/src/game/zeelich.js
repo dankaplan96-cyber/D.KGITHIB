@@ -167,8 +167,11 @@ const sailTex = (a = '#f6eadc', b = '#e88aa4') => ctex('sail' + a + b, 128, 256,
   x.fillStyle = 'rgba(80,50,40,0.35)'; for (let i = 0; i <= 8; i++) x.fillRect((i * W) / 8 - 1, 0, 1.5, H);
   x.fillStyle = 'rgba(70,40,30,0.45)'; for (let j = 0; j < 4; j++) x.fillRect(0, (j * H) / 4, W, 2);
 });
-// soft cloud puffs, tileable, transparent (alpha) or on a solid ground
-export const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
+// SKY-9: a cloud texture in greys (its luminance, alpha kept), for a cloud sea whose colour is its tint alone (the
+// Wannies' amber gas: the lavender billows came out pink and magenta under an amber tint)
+const toGrey = (x, S) => { const im = x.getImageData(0, 0, S, S), d = im.data; for (let i = 0; i < d.length; i += 4) { const l = d[i] * 0.2126 + d[i + 1] * 0.7152 + d[i + 2] * 0.0722; d[i] = d[i + 1] = d[i + 2] = l; } x.putImageData(im, 0, 0); };
+// soft cloud puffs, tileable, transparent (alpha) or on a solid ground; grey: in greys (above)
+export const cloudTex = (solid, grey = false) => ctex('cloud' + solid + (grey ? 'g' : ''), 512, 512, (x, S) => {
   const r = rng(solid ? 77 : 78);
   if (solid) { x.fillStyle = '#d0a0cc'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
   // billows: a lavender shadow under each puff, then the sunlit puff with a soft rim
@@ -184,8 +187,9 @@ export const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
       x.fillStyle = g; x.fillRect(cx - q, cy - q, q * 2, q * 2);
     });
   }
+  if (grey) toGrey(x, S);
 });
-export const puffTex = () => ctex('puff', 128, 128, (x, S) => {
+export const puffTex = (grey = false) => ctex('puff' + (grey ? 'g' : ''), 128, 128, (x, S) => {
   x.clearRect(0, 0, S, S);
   const r = rng(3);
   for (let k = 0; k < 9; k++) {
@@ -194,6 +198,10 @@ export const puffTex = () => ctex('puff', 128, 128, (x, S) => {
     g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.6, 'rgba(255,238,246,0.6)'); g.addColorStop(1, 'rgba(255,238,246,0)');
     x.fillStyle = g; x.fillRect(cx - q, cy - q, q * 2, q * 2);
   }
+  // SKY-9: faded out before the texture's border (some billows reached past it: a puff showed its quad's straight edges)
+  const e = x.createRadialGradient(64, 64, 40, 64, 64, 64); e.addColorStop(0, 'rgba(0,0,0,1)'); e.addColorStop(1, 'rgba(0,0,0,0)');
+  x.globalCompositeOperation = 'destination-in'; x.fillStyle = e; x.fillRect(0, 0, S, S); x.globalCompositeOperation = 'source-over';
+  if (grey) toGrey(x, S);
 }, false);
 // hexagonal energy field
 const shieldTex = () => ctex('shield', 256, 256, (x, S) => {

@@ -84,8 +84,17 @@ export function buildTavCellarRoom(scene, physics) {
   // --- the dark drop between the walkway and the store (the original's void), railed off on every side but one
   //     stretch of the walkway's railing, broken off long ago (SEWERS-1, S-2: as LBA2's, the hole drops into the old
   //     sewers' hall: story/sewers.js takes him there as he falls; Old Fenn in the tavern warns about it)
-  k.add(plane(SX1 - AX1, D / 2 - AZ1), MAT.flat('#121216', 0.95), (AX1 + SX1) / 2, 0.01, (AZ1 + D / 2) / 2, 0, { rx: -Math.PI / 2 });
   const railM = TEAL(), GZ = 1.0, GW = 0.65;   // (the gap: 1.3 m of the walkway's railing, in the middle of its run)
+  // (POLISH-14 d, R8 "never dark": the drop's bottom was one flat near-black plane, read from the walkway as a black
+  //  floor. Now old rubble, lit a little by itself as the walls are (tv_stone), round a ragged black hole under the
+  //  railing's gap: the way down into the sewers' hall. Shape x, y = the room's x, −z; turned flat it faces up.)
+  const pit = M('tv_pit', () => { const t = TEX.rubble('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#a29fa8', roughness: 0.95, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.2 }); m.userData.tile = 2; return m; });
+  const HX = AX1 + 2.6, HR = 1.25, rim = [];   // (clear of the walkway's foot and the broken rail lying there)
+  for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2, r = HR + Math.sin(i * 2.7) * 0.18 + Math.cos(i * 1.3) * 0.12; rim.push(new THREE.Vector2(HX + Math.cos(a) * r, -(GZ + Math.sin(a) * r))); }
+  const pitS = new THREE.Shape([new THREE.Vector2(AX1, -AZ1), new THREE.Vector2(SX1, -AZ1), new THREE.Vector2(SX1, -D / 2), new THREE.Vector2(AX1, -D / 2)]);
+  pitS.holes.push(new THREE.Path(rim));
+  k.add(new THREE.ShapeGeometry(pitS), pit, 0, 0.01, 0, 0, { rx: -Math.PI / 2 });
+  k.add(new THREE.ShapeGeometry(new THREE.Shape(rim)), MAT.flat('#0b0c10', 0.95), 0, 0.01, 0, 0, { rx: -Math.PI / 2 });
   k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, D / 2 - 0.1], [AX1 + 0.05, GZ + GW]], { h: 0.95, mat: railM, step: 0.45 }));
   k.at(0, WH, 0, 0, () => railing(k, [[AX1 + 0.05, GZ - GW], [AX1 + 0.05, AZ1 + 0.05], [SX0, AZ1 + 0.05]], { h: 0.95, mat: railM, step: 0.45 }));
   k.add(rbox(0.05, 0.05, 0.9, 0.01), railM, AX1 + 0.6, 0.03, GZ + 0.2, 0.5);   // (the broken rail, down on the cellar floor)
