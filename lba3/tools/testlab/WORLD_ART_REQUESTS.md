@@ -2523,3 +2523,25 @@ places (descriptions only, nothing transcribed):
   and timing (60 fps cap on a 144 Hz screen) fail the same on origin.
 - **Left, no better piece yet:** Bersimon's tent and the School of Magic (Home; a mystical piece is a candidate), the
   Hamalayi outdoors (The Well), the Desert (the island pieces).
+
+## REVIEW-UNDER · the underground from the player's camera (CLOUD_ORDERS 18c) · the laptop, 6.11.2026
+Diff: `requests/REVIEW-UNDER.diff` (underground.js only; against c6d7554a, `git apply --check` clean). Walked on the
+Vega 8 (headed Chrome, 1280×720) along playthrough 14's route from save-13; every c3 room uses the fixed iso room camera,
+so no Follow-camera faults here. Pictures (chapter 11+) stay on the laptop.
+
+| spot (world) | what a player sees | status |
+|---|---|---|
+| c3shaft, the tunnel mouth to the deep hall (1805, −6.2) | the tunnel reads blocked: cave-wall boulders ~1 m into the opening, side rocks to ±0.55 m of its middle | fixed |
+| c3shaft, crystal rock (1804.4, −3.9) | a crystal rock on the cable-trench grating, on the walk | fixed: smaller (0.32), at the bore's foot beside the grating |
+| c3deep, the left wall's near end (1889, 8.5, y 6) | boulders hang past the wall's end over the room (floating rocks) | fixed |
+| c3deep, the drain sign (1908.3, 3.6) | the plate edge-on to the camera: a bare black pole | fixed: turned +π/4 to face the camera |
+| c3deep, the heat exchanger's top (1902.8, −2.4) | a solid brass sheet over the fins reads as a wooden lid | fixed: a brass frame, the fins show |
+| c3gallery, the entrance tunnel (1987, 5) and far arch (2008.6, −10) | the same boulder overhang into the doorways | fixed (same rule) |
+| c3deep, under the catwalk (1892, −7) | Twinsen hard to see under the deck | for the cloud, only if a player is meant to walk there |
+| c3sendell, c3core | nothing crooked or floating | — |
+
+- How: `rockWallRun` gets `ends` and `inset` (boulders kept inside a run where it meets a doorway or a free end);
+  `caveShell` sets `ends` beside every opening; the deep hall's runs `inset` 0.35; the gallery's four runs `ends`.
+- Tests: overlaps (c3shaft, c3deep, c3gallery, c3sendell, c3core) 5/5; playthrough 14-shell from save-13 every step,
+  0 deaths, 0 assists. chapter3.mjs 13 checks passed, then its own fixed 240 s reload wait timed out on SwiftShader
+  (the test ignores BOOT_TIMEOUT; not run on origin). No lights added; draw calls not measured.
