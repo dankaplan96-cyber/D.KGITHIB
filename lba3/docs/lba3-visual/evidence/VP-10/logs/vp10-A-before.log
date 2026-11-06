@@ -1,0 +1,7 @@
+ball {"ball":true}
+A1 exit: frames 15, seen min 99% mean 100%, frames <20% seen 0, veil max 36, gone max 15, pitch 32.9–40
+A control {"t":10.62,"st":"play","anim":"walk","spd":2.4,"pos":[-43.14,2.34,77.2],"ang":1.57,"fade":"","prompt":"","trans":false,"room":"citadel","pitch":32.9,"seen":99,"veil":36,"gone":15}
+A3 walk away 3 s: frames 12, seen min 98% mean 100%, frames <20% seen 0, veil max 36, gone max 15, pitch 30.3–31.6
+A5 Enter re-centre: frames 16, seen min 99% mean 100%, frames <20% seen 0, veil max 36, gone max 15, pitch 31.4–36.4
+A7-back-to-door: frames 12, seen min 98% mean 99%, frames <20% seen 0, veil max 36, gone max 15, pitch 36.5–46.1
+no page errors

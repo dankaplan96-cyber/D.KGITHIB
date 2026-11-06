@@ -1,0 +1,10 @@
+townlife rc=0
+workshop rc=0
+chapter2 rc=0
+stability rc=0
+desert-life rc=0
+chapter10 run1 rc=0
+chapter10 run2 rc=0
+chapter10 run3 rc=0
+chapter10 forced-assist (C10_MAX_THROWS=0) rc=2
+ALLDONE

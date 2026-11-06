@@ -1,0 +1,31 @@
+=== 04-project-valves start 2026-11-01T22:03:33Z LOAD=/dev/shm/gatefix/saves/f/03.json SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/04-project-valves.mjs
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-63.61,2.35,11] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[8s +8s] orchard (ball over the cage): {"open":true,"fail":null} | citadel [-71.54,15.87,-56.88] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[130s +121s] depot (fight the guards on the way): {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"tries":1,"open":true,"hp":11,"clovers":2,"fail":null} | citadel [-67.93,15.98,-72.16] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[143s +14s] cliffs: the target: {"hit":true,"fail":null} | citadel [-65.81,9.67,-34.14] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[147s +4s] cliffs: up the stones: {"reached":14,"of":14,"tries":14,"y":18.89,"fail":null} | citadel [-59.15,18.89,-35.7] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[148s +1s] cliffs: the valve: {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"water":true,"fail":null} | citadel [-54.5,18.8,-36.8] hp 11 | Visit Vesk at the old fortress
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[228.4] stuck at (-64.7, -27.3): replan
+[232.3] go → (-63.5, -28.2) plan ok=true pts=1 left=0.09
+[233.8] go → (-64.5, -30.2) plan ok=false pts=1 left=0.31
+[236.3] stuck at (-64.5, -29.9): replan
+[239.5] go → (-63.8, -31.3) plan ok=true pts=1 left=0.19
+[241.0] go → (-61.6, -31.5) plan ok=true pts=1 left=0.24
+[242.5] go → (-61.5, -32.9) plan ok=true pts=1 left=0.26
+[245.0] stuck at (-61.5, -32.6): replan
+[248.4] go → (-62.3, -34.6) plan ok=true pts=1 left=0.1
+[250.2] go → (-60.5, -33.8) plan ok=true pts=1 left=0.16
+[251.7] go → (-55.2, -36.6) plan ok=true pts=2 left=0.76
+[253.1] go → (-55.2, -36.6) plan ok=false pts=4 left=0.72
+kept /dev/shm/gatefix/saves/f/04.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 04-project-valves end rc=0 wall=332s 2026-11-01T22:09:05Z

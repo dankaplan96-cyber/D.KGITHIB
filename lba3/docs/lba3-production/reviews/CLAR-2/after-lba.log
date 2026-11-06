@@ -1,0 +1,126 @@
+  [prologue/01-handoff] 1 text item(s), 14 chars: objective: "Check the well"
+  [prologue/02-cupboard] 3 text item(s), 65 chars: objective: "Check the well" | toast: "Magic ball (Alt) · Holomap (H)" | weapon: "✦ Magic Ball R: Fists"
+  [prologue/03-outside] 0 text item(s), 0 chars: 
+  [prologue/04-at-well] 1 text item(s), 9 chars: prompt: "W Inspect"
+  [prologue/05-key] 3 text item(s), 32 chars: objective: "Climb down the well" | prompt: "W Talk" | toast: "Lid Key"
+  [prologue/06-rope] 2 text item(s), 17 chars: prompt: "W Talk" | toast: "Rope Ladder"
+ROUTE prologue: 32 HUD texts put up, 313 chars (prompt 26/131, toast 4/64, objective 2/118); dialogue 19 lines 1170 chars
+    2.5 prompt: Inspect
+    3.5 toast: Magic ball (Alt) · Holomap (H)
+    3.5 objective: Check the well
+    7.3 prompt: Talk
+    16.2 prompt: Inspect
+    16.6 prompt: Talk
+    30.0 prompt: Shop
+    30.6 prompt: Inspect
+    42.9 prompt: Talk
+    44.8 prompt: Inspect
+    47.8 prompt: Talk
+    49.7 prompt: Inspect
+    86.0 prompt: Talk
+    87.7 prompt: Inspect
+    90.1 prompt: Talk
+    91.0 prompt: Inspect
+    100.1 prompt: Inspect
+    161.0 objective: Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+    161.6 prompt: Inspect
+    163.1 prompt: Talk
+    165.4 toast: Lid Key
+    165.4 prompt: Talk
+    167.9 prompt: Talk
+    182.9 prompt: Talk
+    188.9 prompt: Talk
+    190.2 prompt: Talk
+    193.6 prompt: Talk
+    195.1 toast: Unloading Permit
+    195.2 prompt: Talk
+    198.5 prompt: Talk
+    199.3 toast: Rope Ladder
+    199.3 prompt: Talk
+PASS hand-off: the first goal is on screen, once (not as a toast repeating it) 
+PASS hand-off: no weapon pill ("Fists") for a weapon he already had 
+PASS out of the house: at most 2 text items on screen 
+PASS the cupboard: the ball and holomap toast names the player's keys (not a fixed F/M) 
+PASS prologue route: the objective is not repeated by a toast 
+  [street/01-square] 0 text item(s), 0 chars: 
+  [street/02-harbour] 0 text item(s), 0 chars: 
+ROUTE street: 7 HUD texts put up, 31 chars (prompt 7/31); dialogue 0 lines 0 chars
+    204.8 prompt: Talk
+    206.0 prompt: Talk
+    219.8 prompt: Talk
+    221.8 prompt: Talk
+    225.9 prompt: Inspect
+    226.9 prompt: Shop
+    243.1 prompt: Talk
+  [combat/01-cave] 2 text item(s), 39 chars: objective: "Find the source of the heat" | weapon: "✦ Magic Ball"
+  [combat/02-fight] 1 text item(s), 12 chars: weapon: "✦ Magic Ball"
+  [combat/03-after] 2 text item(s), 14 chars: weapon: "✦ Magic Ball" | float: "+1"
+ROUTE combat: 27 HUD texts put up, 206 chars (prompt 25/130, float 3/5, objective 1/57, toast 1/19); dialogue 14 lines 804 chars
+    247.6 prompt: Open
+    257.9 prompt: Talk
+    259.1 prompt: Talk
+    260.4 prompt: Talk
+    262.3 prompt: Talk
+    264.7 prompt: Shop
+    265.6 prompt: Inspect
+    266.4 prompt: Talk
+    267.1 prompt: Inspect
+    271.2 prompt: Talk
+    272.7 prompt: Inspect
+    276.6 prompt: Talk
+    278.0 prompt: Inspect
+    291.3 prompt: Talk
+    293.2 prompt: Inspect
+    297.8 prompt: Talk
+    298.6 prompt: Inspect
+    332.7 prompt: Talk
+    335.1 prompt: Inspect
+    336.6 prompt: Talk
+    336.9 prompt: Inspect
+    339.7 prompt: Talk
+    341.9 prompt: Inspect
+    348.5 prompt: Talk
+    349.4 prompt: Inspect
+    391.2 objective: Find the source of the heat◆ Wake the three dark crystals
+    401.6 toast: Crystal awake (1/3)
+  [chapter4/01-arrive] 2 text item(s), 47 chars: objective: "Find the professor who found the crystals" | prompt: "W Talk"
+  [chapter4/02-tarra] 2 text item(s), 27 chars: objective: "Restart the wind-pump" | prompt: "W Talk"
+  [chapter4/03-gust] 0 text item(s), 0 chars: 
+  [chapter4/04-leak] 0 text item(s), 0 chars: 
+ROUTE chapter4: 16 HUD texts put up, 256 chars (chapter 2/34, objective 5/181, prompt 9/41); dialogue 30 lines 2664 chars
+    417.0 chapter: Chapter 3 Zeelich
+    423.1 objective: Find Baldino's workshop
+    425.3 chapter: Chapter 4 The Dig
+    430.3 objective: Find the professor who found the crystals
+    430.3 prompt: Talk
+    438.0 prompt: Board
+    444.5 prompt: Talk
+    445.9 objective: Restart the wind-pump
+    446.0 prompt: Talk
+    449.6 prompt: Talk
+    451.6 prompt: Talk
+    453.1 objective: Restart the wind-pump◆ Find the gear that grinds
+    454.0 prompt: Talk
+    457.0 prompt: Listen
+    457.9 prompt: Listen
+    468.5 objective: Restart the wind-pump◆ Stop the leak in the pipe
+  [core/01-fight] 2 text item(s), 42 chars: objective: "Convert the three pylons (0/3)" | weapon: "✦ Magic Ball"
+  [core/02-stuck] 2 text item(s), 77 chars: toast: "Stand on a glowing plate and bounce the ball off the brass panels" | weapon: "✦ Magic Ball"
+ROUTE core: 3 HUD texts put up, 109 chars (objective 2/44, toast 1/65); dialogue 5 lines 490 chars
+    471.2 objective: Reach the core
+    472.3 objective: Convert the three pylons (0/3)
+    512.5 toast: Stand on a glowing plate and bounce the ball off the brass panels
+PASS the objective panel names the goal only; its steps wait in the pause menu, the Holomap and the journal 
+PASS core fight: no instruction toast as it starts (Baldino's radio said how) 
+PASS core fight: a player stuck for 40 s of play gets one nudge 
+PASS no area-name toast after travel, no "Game saved" toast at checkpoints 
+PASS the objective is kept for the pause menu and the Holomap 
+
+SUMMARY (after, HUD lba)
+  prologue  put up  32 texts   313 chars | dialogue 19 lines | on screen (items/chars): 01-handoff 1/14 · 02-cupboard 3/65 · 03-outside 0/0 · 04-at-well 1/9 · 05-key 3/32 · 06-rope 2/17
+  street    put up   7 texts    31 chars | dialogue 0 lines | on screen (items/chars): 01-square 0/0 · 02-harbour 0/0
+  combat    put up  27 texts   206 chars | dialogue 14 lines | on screen (items/chars): 01-cave 2/39 · 02-fight 1/12 · 03-after 2/14
+  chapter4  put up  16 texts   256 chars | dialogue 30 lines | on screen (items/chars): 01-arrive 2/47 · 02-tarra 2/27 · 03-gust 0/0 · 04-leak 0/0
+  core      put up   3 texts   109 chars | dialogue 5 lines | on screen (items/chars): 01-fight 2/42 · 02-stuck 2/77
+no errors
+ALL PASSED

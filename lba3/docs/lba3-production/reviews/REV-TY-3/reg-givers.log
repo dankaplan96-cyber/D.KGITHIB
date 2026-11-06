@@ -1,0 +1,18 @@
+PASS the house has givers {"id":"house","givers":["firewood","dresser","nightstand","chest","toychest","arthurchest","arthurbed","bookcase","readchair","hallchair"]}
+PASS Space with nothing in reach hops (0.58 s, the hips rise) {"act":"action","actT":0.58,"rise":0.68,"n":0,"after":true}
+PASS away from a giver nothing pops {"act":"action","actT":0.58,"rise":0.68,"n":0,"after":true}
+PASS a hop by the dresser pops one bonus {"r":{"act":"action","actT":0.58},"b0":[{"type":"coin","value":5,"fly":true,"y":1.39,"vis":true,"life":19.9}],"mid":[{"type":"coin","value":5,"fly":true,"y":1.8,"vis":true,"life":19.6}],"landed":[{"type":"coin","value":5,"fly":false,"y":0.37,"vis":true,"life":18.4}],"gv":{"x":999.18,"z":-3.2199999999999998}}
+PASS it flies up, then lands and stays (until taken) {"r":{"act":"action","actT":0.58},"b0":[{"type":"coin","value":5,"fly":true,"y":1.39,"vis":true,"life":19.9}],"mid":[{"type":"coin","value":5,"fly":true,"y":1.8,"vis":true,"life":19.6}],"landed":[{"type":"coin","value":5,"fly":false,"y":0.37,"vis":true,"life":18.4}],"gv":{"x":999.18,"z":-3.2199999999999998}}
+PASS broke: the bonus is kashes worth 5 [{"type":"coin","value":5,"fly":true,"y":1.39,"vis":true,"life":19.9}]
+PASS taking it adds 5 kashes {"coins":5,"left":0}
+PASS the same giver gives once 0
+PASS hurt badly → life, out of magic → magic, broke → money {"life":"life","magic":"magic","money":"money","noMagic":"life","b":[{"type":"heart","value":1,"fly":true,"y":0.79,"vis":true,"life":19.9}]}
+PASS a magic-only giver gives a heart before the ball {"life":"life","magic":"magic","money":"money","noMagic":"life","b":[{"type":"heart","value":1,"fly":true,"y":0.79,"vis":true,"life":19.9}]}
+PASS the chest pops a heart for a hurt Twinsen [{"type":"heart","value":1,"fly":true,"y":0.79,"vis":true,"life":19.9}]
+PASS an untaken bonus blinks at the end and goes after 20 s {"life":3.3,"blinks":true,"left":0}
+PASS no kashes lie around outdoors {"coinsOutside":0,"outGivers":["home-barrels","shop-barrels","quay-barrels","barrels","stump"],"saved":["giver:house:dresser","giver:house:chest"]}
+PASS a few givers outdoors (barrels, the stump) ["home-barrels","shop-barrels","quay-barrels","barrels","stump"]
+PASS the save keeps the givers taken ["giver:house:dresser","giver:house:chest"]
+no errors
+ALL PASSED
+rc=0

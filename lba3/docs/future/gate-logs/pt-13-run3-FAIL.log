@@ -1,0 +1,40 @@
+=== 13-network start 2026-11-01T18:30:32Z LOAD=/dev/shm/gate1/saves/12-council.json ASSIST= SRC=/dev/shm/gate1/tools/seg13-gate.mjs
+[0s +0s] continue: {"chapter":"network","room":"workshop"} | workshop [1502.75,0,-1.95] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[1s +1s] Oku: {"r":"talked","to":"oku","state":"play","lines":2,"ask":true} | zeelich [2377.21,6,6.91] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[3s +2s] brake the old mill (ball): {"braked":true,"fail":null} | zeelich [2397.51,6,-10.5] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[12s +9s] climb the old mill (jumps): {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2394.97,14.75,-21.3] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[12s +1s] the mill relay: {"r":"used","target":{"kind":"c10mill","id":"p_relay","label":"p_relay"},"state":"play","lines":4,"mill":true,"fail":null} | zeelich [2397.5,14.75,-16.75] hp 7 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[15s +2s] down from the mill: {"r":"arrived","t":5.366666666666657,"hops":[14.75,13.66,13.66,12.56,12.56,12.56,12.56],"y":6,"fail":null} | zeelich [2400.06,6,-14.48] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[172s +157s] the spaceship to Citadel: {"r":"picked","state":"play","room":"citadel","fail":null} | citadel [-1.7,2.35,39.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[175s +3s] Mira: the valve room: {"r":"talked","to":"mira","state":"play","lines":8,"room":"valves","ask":true} | valves [4995.8,0,2.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[175s +1s] the three valves: {"valves":true,"levels":[2,2,2],"fail":null} | valves [5003.81,0,-3] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[177s +1s] out: {"room":"citadel"} | citadel [-63.58,2.35,11] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[180s +4s] the lighthouse: Zoé: {"r":"talked","to":"zoe","state":"play","lines":6,"ask":true,"room":"lighttop"} | lighttop [1598.87,0,0.25] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+  [217.6] ISO assist: moved zoe,arthur 3 m west, off the lighthouse dial bank (B-1)
+[180s +0s] ISO: Zoé and Arthur moved off the dial bank: {"moved":["zoe","arthur"]} | lighttop [1598.87,0,0.25] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[181s +0s] the dials (input, after the ISO move): {"log":[2,0,1],"dials":[2,0,1],"light":true,"fail":null} | lighttop [1600.06,0,-1.43] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[182s +2s] fly to Desert Island: {"r":"no item 1","state":"play","room":"lighttop","fail":"glider"} | lighttop [1600.27,0,-1.67] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+  STOP: glider
+FAIL the segment ran every step to its end "fly to Desert Island: glider"
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[240.6] stuck at (1600.1, -1.3): replan
+[246.1] stuck at (1600.2, -1.3): replan
+[249.0] stuck at (1600.3, -1.1): replan
+[251.9] stuck at (1600.1, -1.2): replan
+[254.8] stuck at (1600.3, -1.6): replan
+[261.4] go → (1601.4, -1.1) plan ok=false pts=7 left=0.7
+[266.5] stuck at (1599.2, -1.0): replan
+[271.9] stuck at (1600.3, -1.6): replan
+[274.9] stuck at (1600.3, -1.1): replan
+[280.3] stuck at (1600.1, -1.2): replan
+[283.3] stuck at (1600.0, -1.1): replan
+[288.7] stuck at (1600.2, -1.5): replan
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED
+=== 13-network end rc=1 wall=285s 2026-11-01T18:35:17Z

@@ -1,0 +1,13 @@
+travel rc=1 3000s
+chapter10 rc=0 303s
+chapter1 rc=0 398s
+chapter2 rc=0 270s
+spaceport rc=0 134s
+chapter8 rc=0 79s
+chapter9 rc=0 83s
+seg:05-project-b:s04.json:f05.json rc=0 184s
+seg:06-zeelich:f05.json:f06.json rc=0 514s
+zeelich-life rc=0 612s
+opening rc=0 305s
+stability rc=0 56s
+DONE

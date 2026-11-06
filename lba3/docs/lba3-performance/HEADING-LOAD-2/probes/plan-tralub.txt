@@ -1,0 +1,1 @@
+tralu-base q_area.js W_AREA=isle_tralu W_FAST=1 W_ONLY=0,2 W_TOP=25

@@ -1,0 +1,178 @@
+{
+ "start": {
+  "state": "play",
+  "room": "zeelich",
+  "pos": [
+   2342.4,
+   6,
+   1.3
+  ],
+  "hp": 4,
+  "chapter": "zeelich",
+  "obj": "Find Baldino's workshop on the Esmer street",
+  "flags": [
+   "c2_started",
+   "c2_planTaken"
+  ]
+ },
+ "enter": {
+  "r": "entered",
+  "room": "workshop"
+ },
+ "enter lines": [],
+ "vis@entry": {
+  "lever": "seen",
+  "relayA_lamp": "seen",
+  "drawing": "seen",
+  "sync_lamps": "seen",
+  "coupler": "seen",
+  "drip_can": "seen",
+  "tin": "HIDDEN by ExtrudeGeometry @-2.53,1.26,3.25",
+  "relayB_low": "seen",
+  "relayB_high": "seen",
+  "hoist_crank": "seen",
+  "hoist_plate": "seen",
+  "fan": "seen",
+  "thunder_box": "HIDDEN by BufferGeometry @-3.57,2.44,-1.43",
+  "toy_mill": "seen",
+  "kettle": "seen",
+  "tea_wall_mid": "seen",
+  "tea_note": "seen",
+  "lid": "seen",
+  "ilo_perch": "seen",
+  "crate_label": "seen",
+  "crate_top": "seen",
+  "barrel_top": "seen"
+ },
+ "lever before intro": {
+  "r": "used",
+  "tgt": "wlever",
+  "label": "p_switch_on"
+ },
+ "lines": [
+  "n_hero: A tag on the lever: \"TEST PAIR. Won't talk. -B\""
+ ],
+ "state": {
+  "on": false,
+  "heat": 0,
+  "sync": 0,
+  "lift": 1,
+  "up": true,
+  "tap": false,
+  "pair": false,
+  "paid": false,
+  "ask": true,
+  "trips": 2,
+  "room": "workshop",
+  "coins": 7,
+  "state": "play",
+  "chapter": "zeelich",
+  "coinPickups": []
+ },
+ "after 3s lines": [
+  "n_hero: The hanging one can't see this one. The flying machine's nose is in the way.",
+  "n_baldino: They talk by sight. Two old friends across a street: put a cart between them and they sulk."
+ ],
+ "crank": {
+  "r": "used",
+  "tgt": "wcrank",
+  "label": "p_crank"
+ },
+ "crank lines": [
+  "TOAST w_toast_hot",
+  "n_hero: Baldino's old hoist. Older than Arthur, and it still turns sweetly.",
+  "TOAST w_toast_trip",
+  "n_hero: It tripped. Too hot."
+ ],
+ "tap": {
+  "r": "used"
+ },
+ "tap lines": [
+  "n_baldino: Couplers. Lovely until they're thirsty. That's what the drip is for."
+ ],
+ "lever again": {
+  "r": "used",
+  "tgt": "wlever",
+  "label": "p_switch_on"
+ },
+ "success lines (before intro)": [
+  "TOAST w_toast_hot",
+  "TOAST w_toast_trip",
+  "n_hero: It tripped. Too hot.",
+  "n_baldino: The drip, Twinsen. The tap."
+ ],
+ "coins after pickup": {
+  "on": false,
+  "heat": 0,
+  "sync": 0,
+  "lift": 1,
+  "up": true,
+  "tap": false,
+  "pair": false,
+  "paid": false,
+  "ask": true,
+  "trips": 2,
+  "room": "workshop",
+  "coins": 7,
+  "state": "play",
+  "chapter": "zeelich",
+  "coinPickups": []
+ },
+ "talk 1 (intro?)": {
+  "r": "talked",
+  "plan": true
+ },
+ "talk 1 lines": [
+  "n_baldino: Twinsen! At last! Mind the... ah. Never mind, I have another one.",
+  "n_hero: Baldino, Vesk says the project brings heat and light. What is it really doing?",
+  "n_baldino: Look at the globe. Our planet sits inside a shell, like a nut. Beneath the shell sleeps the being Sendell watches over.",
+  "n_baldino: Vesk is drilling through the shell. He believes the being is waking and nothing can stop it, so he's saving whoever he can. The rest... he isn't.",
+  "n_hero: Then we stop the drill.",
+  "n_baldino: No, no, no! Stop it halfway and the shell cracks on its own. We have to go down there and reverse it. But first we need to get past the platform's shield.",
+  "n_baldino: That's why I built an override key. Well, almost. Two parts are missing: the cog from the top of the old mill, and the code cylinder in the project depot's locker.",
+  "n_baldino: The shield draws power from the three mills. Brake them with your ball, and the shield will be weak enough for the key to open it.",
+  "n_baldino: One more thing. Nobody on Citadel Island knows any of this. Zoé is waiting at the lighthouse. When the key is ready, she'll broadcast a warning to the whole island."
+ ],
+ "talk 2": {
+  "r": "talked"
+ },
+ "talk 2 lines": [
+  "n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!",
+  "n_baldino: The hoist is older than Arthur. It lifts everything I build. Mostly back down again."
+ ],
+ "journal": [
+  [
+   "1. The Well",
+   5
+  ],
+  [
+   "2. The Joint Project",
+   6
+  ],
+  [
+   "3. Zeelich",
+   4
+  ],
+  [
+   "Baldino's workshop",
+   1
+  ]
+ ],
+ "final": {
+  "on": false,
+  "heat": 0,
+  "sync": 0,
+  "lift": 1,
+  "up": true,
+  "tap": false,
+  "pair": false,
+  "paid": false,
+  "ask": true,
+  "trips": 2,
+  "room": "workshop",
+  "coins": 7,
+  "state": "play",
+  "chapter": "zeelich",
+  "coinPickups": []
+ }
+}

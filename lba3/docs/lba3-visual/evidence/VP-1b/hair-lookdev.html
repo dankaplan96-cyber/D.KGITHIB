@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twinsen Hair Lookdev</title>
+<style>html,body{margin:0;background:#9fc4e6;overflow:hidden;font:12px system-ui}
+.lbl{position:absolute;color:#123;background:#ffffffcc;padding:1px 5px;border-radius:7px;white-space:nowrap}</style>
+<base href="../../../../">
+<script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head><body>
+<script type="module">
+// VP-1b review scene: Twinsen's head and hair (assets/poly/twinsen.json through createCharacter) in a grid —
+// one row per pose, one column per view, the same light, distance and framing for before and after.
+//   ?rows=idle,listen,walk,run,turn,swayBack,swayRoll   poses (see POSES)
+//   &cols=front,34,side,back,top,game                    views; game = LBA2's exterior camera (FOV 43.6°, 13.4 m,
+//                                                         38° down) on a 1280×720 frame, cropped round the head ×4
+//   &panel=260   panel size (px)   &mat=grey   plain grey (shape only)   &body=1   whole figure instead of the head
+import * as THREE from 'three';
+import * as CH from './src/game/characters.js';
+const q = new URLSearchParams(location.search);
+const ROWS = (q.get('rows') || 'idle,listen,walk,run,turn').split(',');
+const COLS = (q.get('cols') || 'front,34,side,back,top,game').split(',');
+const P = +(q.get('panel') || 260);
+const BODY = q.get('body') === '1';
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setPixelRatio(1); r.setSize(P * COLS.length, P * ROWS.length); r.toneMapping = THREE.NeutralToneMapping;
+r.setScissorTest(true);
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fc4e6');
+scene.add(new THREE.HemisphereLight('#d8ecff', '#6a7a4a', 1.2));
+const sun = new THREE.DirectionalLight('#fff3e0', 2.2); sun.position.set(-3.5, 6, 2.5); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#7f9a5a', roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+if (CH.preloadCharacters) await CH.preloadCharacters(['twinsen']);
+const grey = new THREE.MeshStandardMaterial({ color: '#a4a4a4', roughness: 0.8 });
+// poses: [clip, seconds, ground speed, after-update hook]
+const tails = (rig) => rig.j?.tail?.segs || [];
+const POSES = {
+  idle: ['idle', 1.5, 0],
+  listen: ['listen', 1.5, 0],
+  walk: ['walk', 0.45, 1.4],
+  run: ['run', 0.45, 6.5],
+  turn: ['walk', 0.45, 1.4, (g) => { g.roll = 0.15; g.turn = 1; }],
+  // the follow-through's extremes in rig.js (running flat out on a footfall, braking: tail i rotation.x up to
+  // 0.234·0.28·(i+1)+0.02; turning: rotation.z = −roll·(i+1)·0.6 with roll ±0.15), set on the bones directly
+  swayBack: ['run', 0.45, 6.5, null, (g) => tails(g).forEach((s, i) => { s.rotation.x = 0.234 * 0.28 * (i + 1) + 0.02; s.rotation.z = 0; })],
+  swayRoll: ['walk', 0.45, 1.4, null, (g) => tails(g).forEach((s, i) => { s.rotation.x = -0.04 * 0.28 * (i + 1) - 0.02; s.rotation.z = -0.15 * (i + 1) * 0.6; })],
+  swayDouble: ['run', 0.45, 6.5, null, (g) => tails(g).forEach((s, i) => { s.rotation.x = 2 * (0.234 * 0.28 * (i + 1) + 0.02); s.rotation.z = 0.15 * (i + 1) * 1.2; })],
+};
+const rigs = ROWS.map((name, i) => {
+  const [clip, T, speed, pre, post] = POSES[name];
+  const g = CH.createCharacter('twinsen');
+  g.root.position.set(i * 12, 0, 0);
+  g.t = 0; g.blinkT = 99; g.fidgetT = 99;
+  if (q.get('mat') === 'grey') g.root.traverse((m) => { if (m.isMesh) m.material = grey; });
+  scene.add(g.root);
+  const n = Math.round(T * 60);
+  for (let k = 0; k < n; k++) { g.play(clip); if (pre) pre(g); g.update(1 / 60, speed); g.root.rotation.y = 0; }
+  g.root.updateMatrixWorld(true);
+  if (post) { post(g); g.root.updateMatrixWorld(true); }
+  return g;
+});
+const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 300);
+const headPos = (g) => { const v = new THREE.Vector3(); (g.j?.head || g.root).getWorldPosition(v); return v; };
+const box = document.body;
+ROWS.forEach((rn, ri) => COLS.forEach((cn, ci) => {
+  const g = rigs[ri], hp = headPos(g);
+  const tgt = BODY ? new THREE.Vector3(g.root.position.x, 1.05, 0) : new THREE.Vector3(hp.x, hp.y + 0.12, hp.z);
+  const dist = BODY ? 5.2 : 1.25;
+  cam.fov = 30; cam.clearViewOffset();
+  const yaw = { front: 0, 34: 0.62, side: Math.PI / 2, back: Math.PI, '34back': Math.PI - 0.62 }[cn];
+  if (cn === 'top') { cam.position.set(tgt.x, tgt.y + dist, tgt.z + 0.001); cam.up.set(0, 0, -1); cam.lookAt(tgt); cam.up.set(0, 1, 0); }
+  else if (cn === 'game') {
+    const d = 13.4, p = 38 * Math.PI / 180, a = 0.62;   // walking toward the camera, a little to its side
+    cam.fov = 43.6; cam.aspect = 1280 / 720;
+    cam.position.set(g.root.position.x + Math.sin(a) * Math.cos(p) * d, 1 + Math.sin(p) * d, Math.cos(a) * Math.cos(p) * d);
+    cam.lookAt(g.root.position.x, 1, 0); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    const s = new THREE.Vector3().copy(BODY ? new THREE.Vector3(g.root.position.x, 1.0, 0) : hp).project(cam);
+    const cx = (s.x + 1) / 2 * 1280, cy = (1 - s.y) / 2 * 720, c = BODY ? 180 : 64;
+    cam.setViewOffset(1280, 720, cx - c / 2, cy - c / 2 - (BODY ? 0 : 6), c, c);
+  } else { cam.position.set(tgt.x + Math.sin(yaw) * dist, tgt.y + 0.08, tgt.z + Math.cos(yaw) * dist); cam.lookAt(tgt); }
+  if (cn !== 'game') cam.aspect = 1;
+  cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  const x = ci * P, y = (ROWS.length - 1 - ri) * P;
+  r.setViewport(x, y, P, P); r.setScissor(x, y, P, P);
+  r.render(scene, cam);
+  const l = document.createElement('div'); l.className = 'lbl'; l.textContent = `${rn} · ${cn}`;
+  l.style.left = (x + 4) + 'px'; l.style.top = (ri * P + 4) + 'px'; box.appendChild(l);
+}));
+window.hairDone = true;
+</script></body></html>

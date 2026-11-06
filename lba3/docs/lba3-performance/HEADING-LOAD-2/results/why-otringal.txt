@@ -1,0 +1,18 @@
+heading 4 (180°, camera yaw 9.34): main 47 calls 634k tris · shadow 1 calls 0k tris
+   scenery 25/336k · trees 7/261k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 122/3/134/77/0 · trees 0/261/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   drawn on its own (reason :: path [material] count/tris):
+      7× casts its own shadow :: lodBatch<isle_otringal [MeshStandardMaterial] 261.4k
+      4× own shader code (MeshStandardMaterial) :: terrain<terrain<isle_otringal [MeshStandardMaterial] 30.8k
+      3× foldable but alone in its cell :: Mesh<isle_otringal [MeshStandardMaterial] 2.7k
+      2× not foldable (MeshStandardMaterial map clamp): alone in its cell :: Mesh<isle_otringal [MeshStandardMaterial] 0.0k
+      2× own shader code (MeshStandardMaterial) :: Mesh<g<head<neck [MeshStandardMaterial] 0.1k
+      2× see-through :: Mesh<isle_otringal [MeshBasicMaterial] 0.0k
+      1× not foldable (MeshBasicMaterial map): alone in its cell :: Mesh<isle_otringal [MeshBasicMaterial] 0.0k
+      1× own shader code (MeshStandardMaterial) :: SkinnedMesh<g [MeshStandardMaterial] 2.9k
+      1× see-through :: spriteBatch<isle_otringal [SpriteMaterial] 0.2k
+      1× see-through :: Mesh<isle_otringal [MeshStandardMaterial] 0.2k
+      1× see-through :: blobBatch [MeshBasicMaterial] 0.0k
+      1× see-through :: softParticles [ShaderMaterial] 0.0k
+      1× see-through :: SkinnedMesh<SkinnedMesh<g [MeshBasicMaterial] 2.9k

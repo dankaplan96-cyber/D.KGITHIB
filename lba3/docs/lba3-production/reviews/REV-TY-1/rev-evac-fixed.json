@@ -1,0 +1,85 @@
+{
+ "ISO": "chapter set to evacuation by flags (c1_water, c1_plan)",
+ "present": [
+  {
+   "id": "bram",
+   "present": true
+  },
+  {
+   "id": "odile",
+   "present": true
+  },
+  {
+   "id": "nell",
+   "present": true
+  }
+ ],
+ "talk bram": {
+  "r": "talked",
+  "to": "bram",
+  "state": "play",
+  "lines": 2
+ },
+ "bram lines": [
+  "n_bram: Posts went dark. The pump didn't. Fill your bottle."
+ ],
+ "talk odile": {
+  "r": "talked",
+  "to": "odile",
+  "state": "play",
+  "lines": 2
+ },
+ "odile lines": [
+  "n_odile: Category: machinery. Sub-category: humming."
+ ],
+ "talk nell": {
+  "r": "talked",
+  "to": "nell",
+  "state": "play",
+  "lines": 2
+ },
+ "nell lines": [
+  "n_nell: Arthur came by. He wanted to know if a paddle boat could use a coupler. I said no. He said \"yet\"."
+ ],
+ "end": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -39.89,
+   2.31,
+   67.9
+  ],
+  "hp": 10,
+  "chapter": "evacuation",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "cs": "done",
+  "items": [
+   "evacplan"
+  ],
+  "coins": 7,
+  "clovers": 4,
+  "l": {
+   "l_nellMet": true,
+   "l_odileMet": true,
+   "l_crateAsk": true,
+   "l_crateOpen": true,
+   "l_cs": "done",
+   "l_nellKnows": true,
+   "l_coupler": true,
+   "l_n_l_nell_after": 2,
+   "l_cleared": true,
+   "l_nellPaid": true,
+   "l_pumpAsk": true,
+   "l_needPliers": true,
+   "l_pliers": true,
+   "l_pin": true,
+   "l_strokes": 3,
+   "l_pump": true,
+   "l_bramThanks": true,
+   "l_n_l_bram_after": 2,
+   "l_n_l_bram_evac": 0,
+   "l_n_l_odile_after": 0
+  }
+ },
+ "errors": []
+}

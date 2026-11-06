@@ -1,0 +1,7 @@
+spaceport exit 0 ALL PASSED
+townlife exit 0 ALL PASSED
+stability exit 0 ALL PASSED
+transitions exit 0 1 FAILED
+sd1walk.tmp exit 1 8 FAILED
+sd1walk.tmp exit 0 ALL PASSED
+transitions exit 0 ALL PASSED

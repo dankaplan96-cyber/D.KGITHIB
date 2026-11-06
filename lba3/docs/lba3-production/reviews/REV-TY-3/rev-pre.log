@@ -1,0 +1,15 @@
+start: {"state":"play","room":"zeelich","pos":[2342.4,6,1.3],"hp":4,"chapter":"zeelich","obj":"Find Baldino's workshop on the Esmer street","c2_plan":false,"ws":[]}
+enter: {"r":"entered","room":"workshop","ready":false}
+enter lines: []
+lever prompt: {"tg":"wlook:p_look","on":false,"up":false,"tap":false}
+lever lines: ["n_hero: Two relays, a lever, a coupler under a drip can. Baldino's. I'll ask before I touch."]
+tap prompt: {"tg":null,"on":false,"up":false,"tap":false}
+tap lines: []
+crank prompt: {"tg":null,"on":false,"up":false,"tap":false}
+crank lines: []
+talk 1: {"r":"talked","plan":true,"ready":true}
+talk 1 lines: ["n_baldino: Twinsen! At last! Mind the... ah. Never mind, I have another one.","n_hero: Baldino, Vesk says the project brings heat and light. What is it really doing?","n_baldino: Look at the globe. Our planet sits inside a shell, like a nut. Beneath the shell sleeps the being Sendell watches over.","n_baldino: Vesk is drilling through the shell. He believes the being is waking and nothing can stop it, so he's saving whoever he can. The rest... he isn't.","n_hero: Then we stop the drill.","n_baldino: No, no, no! Stop it halfway and the shell cracks on its own. We have to go down there and reverse it. But first we need to get past the platform's shield.","n_baldino: That's why I built an override key. Well, almost. Two parts are missing: the cog from the top of the old mill, and the code cylinder in the project depot's locker.","n_baldino: The shield draws power from the three mills. Brake them with your ball, and the shield will be weak enough for the key to open it.","n_baldino: One more thing. Nobody on Citadel Island knows any of this. Zoé is waiting at the lighthouse. When the key is ready, she'll broadcast a warning to the whole island."]
+lever after hello: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+lines: ["n_hero: A tag on the lever: \"TEST PAIR. Won't talk. -B\""]
+state: {"on":true,"heat":0.03,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"owe":0,"trips":0,"room":"workshop","coins":7,"lying":0,"state":"play","chapter":"zeelich"}
+no errors

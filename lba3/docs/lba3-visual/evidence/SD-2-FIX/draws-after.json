@@ -1,0 +1,550 @@
+{
+ "conditions": "headless Chromium, SwiftShader (ANGLE), 1280x720, default settings, new game ?nocine; each spot: enterRoom (+ hero placed/turned), game.step(2.0), two warm renders, then renderer.info of one composed frame (all passes). CPU-side counts only; no GPU timing.",
+ "rows": [
+  {
+   "spot": "otringal-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.12
+    },
+    "landmark": {
+     "fg": 0.1,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.6
+    }
+   },
+   "room": "isle_otringal",
+   "x": 1904.3,
+   "y": 12.71,
+   "z": 1809.33,
+   "a": 3.091,
+   "calls": 160,
+   "tris": 2862406,
+   "geometries": 983,
+   "textures": 505
+  },
+  {
+   "spot": "otringal-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.12
+    },
+    "landmark": {
+     "fg": 0.1,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.6
+    }
+   },
+   "room": "isle_otringal",
+   "x": 1912.31,
+   "y": 12.71,
+   "z": 1784.31,
+   "a": -2.456,
+   "calls": 148,
+   "tris": 2858382,
+   "geometries": 984,
+   "textures": 505
+  },
+  {
+   "spot": "knartas-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.03
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "room": "isle_knartas",
+   "x": 2214.35,
+   "y": 2.59,
+   "z": 1762.05,
+   "a": 0.134,
+   "calls": 173,
+   "tris": 1110974,
+   "geometries": 1018,
+   "textures": 505
+  },
+  {
+   "spot": "knartas-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.03
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "room": "isle_knartas",
+   "x": 2214.21,
+   "y": 2.59,
+   "z": 1783.21,
+   "a": 2.727,
+   "calls": 186,
+   "tris": 1103328,
+   "geometries": 1018,
+   "textures": 505
+  },
+  {
+   "spot": "mosquibee-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.07
+    }
+   },
+   "room": "isle_mosquibee",
+   "x": 2583.54,
+   "y": 21.32,
+   "z": 1769.62,
+   "a": 0.141,
+   "calls": 145,
+   "tris": 668950,
+   "geometries": 1041,
+   "textures": 505
+  },
+  {
+   "spot": "mosquibee-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.07
+    }
+   },
+   "room": "isle_mosquibee",
+   "x": 2583.21,
+   "y": 21.32,
+   "z": 1793.21,
+   "a": 2.424,
+   "calls": 141,
+   "tris": 647214,
+   "geometries": 1041,
+   "textures": 505
+  },
+  {
+   "spot": "celebration-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.1
+    }
+   },
+   "room": "isle_celebration",
+   "x": 2895.79,
+   "y": 9.75,
+   "z": 1807.84,
+   "a": -2.681,
+   "calls": 146,
+   "tris": 260714,
+   "geometries": 1061,
+   "textures": 505
+  },
+  {
+   "spot": "celebration-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.1
+    }
+   },
+   "room": "isle_celebration",
+   "x": 2898.6,
+   "y": 9.19,
+   "z": 1798.1,
+   "a": -1.199,
+   "calls": 138,
+   "tris": 260310,
+   "geometries": 1061,
+   "textures": 505
+  },
+  {
+   "spot": "undergas-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.25
+    }
+   },
+   "room": "isle_undergas",
+   "x": 3184.54,
+   "y": 21.32,
+   "z": 1771.02,
+   "a": 1.379,
+   "calls": 149,
+   "tris": 339234,
+   "geometries": 1091,
+   "textures": 505
+  },
+  {
+   "spot": "undergas-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.25
+    }
+   },
+   "room": "isle_undergas",
+   "x": 3201.21,
+   "y": 21.32,
+   "z": 1775.71,
+   "a": 1.756,
+   "calls": 130,
+   "tris": 303938,
+   "geometries": 1091,
+   "textures": 505
+  },
+  {
+   "spot": "cxislet-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 1
+    }
+   },
+   "room": "isle_cxislet",
+   "x": 3554.52,
+   "y": 4.82,
+   "z": 1803.55,
+   "a": -2.463,
+   "calls": 134,
+   "tris": 223204,
+   "geometries": 1115,
+   "textures": 505
+  },
+  {
+   "spot": "cxislet-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 1
+    }
+   },
+   "room": "isle_cxislet",
+   "x": 3546.1,
+   "y": 2.96,
+   "z": 1786.6,
+   "a": -0.495,
+   "calls": 118,
+   "tris": 222752,
+   "geometries": 1116,
+   "textures": 505
+  },
+  {
+   "spot": "platform-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.33
+    },
+    "landmark": {
+     "fg": 0.07,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.33
+    }
+   },
+   "room": "isle_platform",
+   "x": 3915.88,
+   "y": 4.38,
+   "z": 1763.69,
+   "a": 0.071,
+   "calls": 153,
+   "tris": 885516,
+   "geometries": 1147,
+   "textures": 505
+  },
+  {
+   "spot": "platform-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.33
+    },
+    "landmark": {
+     "fg": 0.07,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.33
+    }
+   },
+   "room": "isle_platform",
+   "x": 3918.21,
+   "y": 3.95,
+   "z": 1768.71,
+   "a": -0.669,
+   "calls": 169,
+   "tris": 921684,
+   "geometries": 1149,
+   "textures": 505
+  },
+  {
+   "spot": "liftdock-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.08,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.18
+    }
+   },
+   "room": "isle_liftdock",
+   "x": 4199.19,
+   "y": 5.48,
+   "z": 1811.02,
+   "a": 2.07,
+   "calls": 169,
+   "tris": 160506,
+   "geometries": 1172,
+   "textures": 505
+  },
+  {
+   "spot": "liftdock-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.08,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.18
+    }
+   },
+   "room": "isle_liftdock",
+   "x": 4205.1,
+   "y": 5.48,
+   "z": 1812.1,
+   "a": 3.018,
+   "calls": 168,
+   "tris": 159508,
+   "geometries": 1172,
+   "textures": 505
+  },
+  {
+   "spot": "tralu-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "room": "isle_tralu",
+   "x": 4534.94,
+   "y": 12.21,
+   "z": 1804.58,
+   "a": 1.942,
+   "calls": 179,
+   "tris": 292348,
+   "geometries": 1203,
+   "textures": 505
+  },
+  {
+   "spot": "tralu-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "room": "isle_tralu",
+   "x": 4538.48,
+   "y": 12.19,
+   "z": 1805.48,
+   "a": 2.327,
+   "calls": 170,
+   "tris": 291818,
+   "geometries": 1203,
+   "textures": 505
+  },
+  {
+   "spot": "orchard-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.05,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.23
+    }
+   },
+   "room": "isle_orchard",
+   "x": 4856.52,
+   "y": 7.37,
+   "z": 1801.26,
+   "a": 1.664,
+   "calls": 112,
+   "tris": 280462,
+   "geometries": 1223,
+   "textures": 505
+  },
+  {
+   "spot": "orchard-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.05,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.23
+    }
+   },
+   "room": "isle_orchard",
+   "x": 4869.06,
+   "y": 9.18,
+   "z": 1810.56,
+   "a": 3.053,
+   "calls": 103,
+   "tris": 280134,
+   "geometries": 1223,
+   "textures": 505
+  },
+  {
+   "spot": "oldwatch-arrival",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": false,
+     "fg0": 0.03
+    }
+   },
+   "room": "isle_oldwatch",
+   "x": 5196.29,
+   "y": 5.53,
+   "z": 1788.3,
+   "a": 2.146,
+   "calls": 97,
+   "tris": 58074,
+   "geometries": 1235,
+   "textures": 505
+  },
+  {
+   "spot": "oldwatch-landmark",
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": false,
+     "fg0": 0.03
+    }
+   },
+   "room": "isle_oldwatch",
+   "x": 5209.33,
+   "y": 6.88,
+   "z": 1787.33,
+   "a": 3.027,
+   "calls": 88,
+   "tris": 57730,
+   "geometries": 1235,
+   "textures": 505
+  },
+  {
+   "spot": "story-street",
+   "views": null,
+   "room": "zeelich",
+   "x": 2372,
+   "y": 6,
+   "z": 6,
+   "a": 2.67,
+   "calls": 921,
+   "tris": 658035,
+   "geometries": 1717,
+   "textures": 505
+  },
+  {
+   "spot": "story-plaza",
+   "views": null,
+   "room": "zeelich",
+   "x": 2374,
+   "y": 6,
+   "z": -2,
+   "a": 3.342,
+   "calls": 846,
+   "tris": 597720,
+   "geometries": 1719,
+   "textures": 505
+  },
+  {
+   "spot": "story-east",
+   "views": null,
+   "room": "zeelich",
+   "x": 2394,
+   "y": 6,
+   "z": 0,
+   "a": -2.071,
+   "calls": 954,
+   "tris": 663288,
+   "geometries": 1730,
+   "textures": 505
+  }
+ ]
+}

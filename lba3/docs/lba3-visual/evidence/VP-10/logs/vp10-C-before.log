@@ -1,0 +1,4 @@
+C from [-93,2.24,38.5]
+C1-lane-to-customs: frames 16, seen min 93% mean 99%, frames <20% seen 0, veil max 9, gone max 0, pitch 18.7–34.8
+C static (shots.mjs spot) [-107,1.85,37] {"t":8.85,"st":"play","anim":"idle","spd":0,"pos":[-107,1.85,37],"ang":-1.2,"fade":"","prompt":"","trans":false,"room":"citadel","pitch":36.6,"seen":34,"veil":9,"gone":0}
+no page errors

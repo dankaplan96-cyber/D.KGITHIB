@@ -1,0 +1,38 @@
+LBA3: The Awakening benchmark · build 0.31.0 (build 120) · 2026-10-24 15:57 (the user's laptop, pasted in chat)
+GPU (as reported by the browser): AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11 · preset picked for it on a first start: low · playing on: medium · automatic resolution: on (off while measuring)
+window 1366×768 · devicePixelRatio 1 · user agent Chrome/150.0.7871.250 Electron/43.7.9
+camera: free orbit from a fixed heading for every route (your camera setting: free) · WEBGL_multi_draw yes
+frame-rate limit: off (off while measuring) · shortest frame interval seen 15.9 ms (≈ 63 Hz)
+startup: build 21.3 s · shader preparation 9.2 s
+
+quality low: render pixel ratio 0.85 · MSAA 0× · FXAA on · shadows off · bloom off · lamp lights 2 · grass/flowers to 36 m · trees detailed to 26 m
+  street      38.6 fps · frame p50 33.1 p95 33.6 p99 33.8 max 34 ms · stalls>50ms 0 (0 behind black) · >33ms 25 of 231 · longest 34, 34, 34 ms · sim CPU p50 4.3 ms · render submit CPU p50 9.7 ms · draw calls 266 (p95 328, shadow 0) · GPU draws 346 · triangles 744k · warm-up max 34 ms
+  interior    58.2 fps · frame p50 16.7 p95 16.9 p99 17.1 max 200 ms · stalls>50ms 1 (1 behind black) · >33ms 1 of 350 · longest 200 (black), 17, 17 ms · sim CPU p50 4.2 ms · render submit CPU p50 3.9 ms · draw calls 107 (p95 113, shadow 0) · GPU draws 107 · triangles 213k · warm-up max 133 ms
+  combat      53.3 fps · frame p50 16.7 p95 33.4 p99 33.6 max 116.6 ms · stalls>50ms 1 (0 behind black) · >33ms 8 of 320 · longest 117, 50, 34 ms · sim CPU p50 4.3 ms · render submit CPU p50 4.2 ms · draw calls 130 (p95 131, shadow 0) · GPU draws 130 · triangles 140k · warm-up max 100 ms
+  transition    43 fps · frame p50 16.7 p95 33.5 p99 50 max 183.3 ms · stalls>50ms 2 (1 behind black) · >33ms 20 of 258 · longest 183 (black), 50, 50 ms · sim CPU p50 4 ms · render submit CPU p50 3.9 ms · draw calls 100 (p95 359, shadow 0) · GPU draws 100 · triangles 233k · warm-up max 200 ms
+
+quality medium: render pixel ratio 1 · MSAA 2× · FXAA off · shadows on (1024 px) · bloom off · lamp lights 4 · grass/flowers to 46 m · trees detailed to 34 m
+  street      15.9 fps · frame p50 66.6 p95 83.3 p99 86 max 86 ms · stalls>50ms 80 (0 behind black) · >33ms 96 of 96 · longest 86, 84, 83 ms · sim CPU p50 12.3 ms · render submit CPU p50 12.8 ms · draw calls 315 (p95 425, shadow 31) · GPU draws 495 · triangles 1132k · warm-up max 300 ms
+  interior    23.4 fps · frame p50 49.8 p95 50.4 p99 51.5 max 200 ms · stalls>50ms 29 (1 behind black) · >33ms 99 of 141 · longest 200 (black), 52, 51 ms · sim CPU p50 7.8 ms · render submit CPU p50 4.4 ms · draw calls 109 (p95 115, shadow 3) · GPU draws 109 · triangles 430k · warm-up max 150 ms
+  combat      23.7 fps · frame p50 33.5 p95 66.7 p99 66.8 max 66.8 ms · stalls>50ms 31 (0 behind black) · >33ms 82 of 142 · longest 67, 67, 67 ms · sim CPU p50 8 ms · render submit CPU p50 5.9 ms · draw calls 199 (p95 200, shadow 70) · GPU draws 199 · triangles 248k · warm-up max 50 ms
+  transition  17.2 fps · frame p50 50.1 p95 83.6 p99 84 max 200 ms · stalls>50ms 55 (1 behind black) · >33ms 91 of 104 · longest 200 (black), 84, 84 ms · sim CPU p50 8.1 ms · render submit CPU p50 6 ms · draw calls 102 (p95 424, shadow 3) · GPU draws 102 · triangles 450k · warm-up max 200 ms
+
+quality high: render pixel ratio 1 · MSAA 4× · FXAA off · shadows on (4096 px) · bloom on · lamp lights 8 · grass/flowers to 58 m · trees detailed to 40 m
+  street       9.6 fps · frame p50 100.6 p95 133.4 p99 233.1 max 233.1 ms · stalls>50ms 55 (0 behind black) · >33ms 55 of 58 · longest 233, 200, 133 ms · sim CPU p50 15.6 ms · render submit CPU p50 16.1 ms · draw calls 440 (p95 538, shadow 64) · GPU draws 651 · triangles 1323k · warm-up max 217 ms
+  interior    12.7 fps · frame p50 83.3 p95 100.1 p99 199.5 max 199.5 ms · stalls>50ms 67 (1 behind black) · >33ms 73 of 76 · longest 200 (black), 100, 100 ms · sim CPU p50 11.5 ms · render submit CPU p50 4.9 ms · draw calls 122 (p95 128, shadow 3) · GPU draws 122 · triangles 430k · warm-up max 233 ms
+  combat      13.1 fps · frame p50 67.1 p95 100.1 p99 116.8 max 116.8 ms · stalls>50ms 79 (0 behind black) · >33ms 79 of 79 · longest 117, 100, 100 ms · sim CPU p50 12 ms · render submit CPU p50 6.1 ms · draw calls 212 (p95 213, shadow 70) · GPU draws 212 · triangles 248k · warm-up max 83 ms
+  transition    10 fps · frame p50 84.4 p95 133.7 p99 199.9 max 199.9 ms · stalls>50ms 57 (1 behind black) · >33ms 58 of 59 · longest 200 (black), 134, 134 ms · sim CPU p50 11 ms · render submit CPU p50 9.3 ms · draw calls 115 (p95 533, shadow 3) · GPU draws 115 · triangles 450k · warm-up max 217 ms
+
+breakdown at Medium (one cost taken away at a time):
+  street · as is            16.3 fps · frame p50 66.6 p95 67.2 ms · render pixel ratio 1
+  street · no shadows       20.1 fps · frame p50 50 p95 66.8 ms · render pixel ratio 1
+  street · no lamps         18.7 fps · frame p50 50 p95 67.1 ms · render pixel ratio 1
+  street · res x0.6         21.1 fps · frame p50 50 p95 50.5 ms · render pixel ratio 0.6
+  interior · as is          22.4 fps · frame p50 49.9 p95 50.4 ms · render pixel ratio 1
+  interior · no shadows       26 fps · frame p50 33.4 p95 50.2 ms · render pixel ratio 1
+  interior · no lamps       26.7 fps · frame p50 33.4 p95 50.1 ms · render pixel ratio 1
+  interior · res x0.6       27.6 fps · frame p50 33.4 p95 50.1 ms · render pixel ratio 0.6
+
+Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only.
+
+The user: "of course still slow, also on Medium in the open world".

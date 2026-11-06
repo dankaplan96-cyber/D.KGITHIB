@@ -1,0 +1,49 @@
+// Chapter 4 (The Dig, Desert Island): Mother Tarra and the wind-pump (ADV-2: the jammed gear by ball from the
+// west, the shaken pipe joint pushed home), Hesk and the rope, the sand-yacht to Ilka's camp, the notebook from the
+// research post in a sandstorm, the dig's gate (the keypad: 4 · 1 · 7 from the notebook), down the terraces, the
+// three warm seals (ball), into the Temple of Bù, the great carving.
+export const steps = [
+  ['continue (Desert Island)', () => { P.settle(); return { room: game.room?.id, chapter: game.flags.chapterKey }; }],
+  ['Mother Tarra', () => ({ ...P.talk('tarra', { run: true }), task: game.flags.c4_pumpTask, fail: game.flags.c4_pumpTask ? null : 'tarra' })],
+  ['the pump\'s jammed gear (ball, from the west where its face looks)', () => {
+    const G = game, out = [];
+    for (const tg of G.room.ballTargets.filter((t) => t.gear != null)) {
+      for (let k = 0; k < 6 && !tg.done; k++) { const r = 4 + (k % 3) * 0.6, off = [0, 0.4, -0.3][k % 3]; P.go(tg.x - r, tg.z + off, { tol: 0.4, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
+      out.push(tg.done);
+    }
+    P.wait(1); P.settle();
+    return { gears: out, state: G.rooms.desert.pump.state, fail: G.flags.c4_gear1 ? null : 'gear' };
+  }],
+  ['the pipe joint pushed home', () => { const J = game.rooms.desert.pump.joint; const r = P.use(J.x, J.z, { kind: 'c4joint', run: true }); P.wait(1.5); P.settle(); return { ...r, pump: game.flags.c4_pump, fail: game.flags.c4_pump ? null : 'pump' }; }],
+  ['Tarra trusts him', () => ({ ...P.talk('tarra', { run: true }), trust: game.flags.c4_trust, fail: game.flags.c4_trust ? null : 'trust' })],
+  ['Hesk', () => ({ ...P.talk('hesk', { run: true }), ask: game.flags.c4_heskAsk })],
+  ['the rope from the pier', () => { const R = game.rooms.desert.rope; const r = P.use(R.x, R.z, { run: true }); return { ...r, rope: game.flags.c4_rope, fail: game.flags.c4_rope ? null : 'rope' }; }],
+  ['the sand-yacht to the camp', () => { const r = P.talk('hesk', { run: true }); P.settle(60); return { ...r, yacht: game.flags.c4_yacht, fail: game.flags.c4_yacht ? null : 'ride' }; }],
+  ['Ilka', () => ({ ...P.talk('ilka', { run: true }), ilka: game.flags.c4_ilka, fail: game.flags.c4_ilka ? null : 'ilka' })],
+  ['the notebook (in a sandstorm)', () => {
+    const G = game, Post = G.rooms.desert.post;
+    P.go(Post.gate.x + 6, Post.gate.z, { tol: 1.5, run: true });
+    let t = 0; while (!G.story.cur.stormy && t < 120) { G.step(0.25); t += 0.25; if (G.state !== 'play') P.settle(); }
+    const r = P.use(Post.desk.x, Post.desk.z, { near: 1.2 }); P.wait(1); P.settle();
+    return { waited: t, stormy: G.story.cur.stormy, ...r, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
+  }],
+  ['the dig\'s gate (the keypad)', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle(); return { ...r, menu: m.r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
+  ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],
+  // (ADV-1: five discs, the three warm ones are the `seal` targets; a stray ball on a cold disc shuts the open ones,
+  // so passes repeat until the door opens, as a player would start again)
+  ['the warm seals (ball)', () => {
+    const G = game, D = G.rooms.desert.dig; let out = [], pass = 0;
+    for (; pass < 4 && !G.flags.c4_seals3; pass++) {
+      out = [];
+      for (const tg of G.room.ballTargets.filter((t) => t.seal != null)) {
+        // from the floor's side, in front of the disc's face
+        for (let k = 0; k < 6 && !tg.done; k++) { const a = Math.atan2(D.x - tg.x, D.z - tg.z) + [0, 0.35, -0.35, 0.7, -0.7, 0][k], r = 2.8 + (k % 2) * 0.6; P.go(tg.x + Math.sin(a) * r, tg.z + Math.cos(a) * r, { tol: 0.5, maxT: 40 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
+        out.push(tg.done);
+      }
+      P.wait(1); P.settle();
+    }
+    return { seals: out, passes: pass, cold: G.flags.c4_coldHits || 0, fail: G.flags.c4_seals3 ? null : 'seals' };
+  }],
+  ['into the temple', () => { const d = game.rooms.desert.dig.door; const r = P.through(d.x, d.z); return { ...r, seen: game.flags.c4_templeSeen, fail: game.room?.id === 'butemple' ? null : 'temple' }; }],
+  ['the great carving → chapter 5', () => { const c = game.rooms.butemple.carving; const r = P.use(c.x, c.z); P.settle(60); P.settle(30); return { ...r, carving: game.flags.c4_carving, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'steam' ? null : 'no chapter 5' }; }],
+];

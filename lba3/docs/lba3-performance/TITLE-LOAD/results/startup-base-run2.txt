@@ -1,0 +1,72 @@
+start to title here: 156.4 s wall · title at 156.3 s page time · Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver · KHR_parallel_shader_compile false · Auto Medium · battery true
+build 15147 ms (Citadel 11774) · prepare ("shaders") 134540 ms · programs 83 · longest step 43667 ms
+world steps: {"textures":361,"heights":1396,"ground":264,"terrain":407,"town":1065,"statue":381,"tree spots":10,"tree round":13,"tree fruit":7,"tree tall":3,"tree pine":3,"trees":43,"plants":198,"island":893,"landmarks":26,"end":40}
+town 587+158+35+174 · house 763 · well 74 · actors 972 · story 1037
+prepare steps: {"paint":279,"programs":81,"textures":17082,"geometry":265,"geometryPart":43,"batches":30552,"batchUpload":988,"shadowPrograms":43661,"firstFrame":41633}
+long tasks: 23 (sum 147017 ms; > 100 ms 19; > 200 ms 16); the longest:
+   43661 ms at 71.03 s · Almost there…
+   41634 ms at 114.69 s · Almost there…
+   30552 ms at 39.48 s · Almost there…
+   17083 ms at 21.96 s · Preparing graphics…
+    3367 ms at 3.63 s · before the game
+    2343 ms at 17.43 s · Building Citadel…
+    1396 ms at 7.39 s · Building Citadel…
+    1065 ms at 9.95 s · Building Citadel…
+    1051 ms at 20.74 s · Preparing the story…
+     988 ms at 70.04 s · Almost there…
+     902 ms at 15.57 s · Building Citadel…
+     763 ms at 19.79 s · Building Twinsen's house…
+     407 ms at 9.54 s · Building Citadel…
+     380 ms at 11.02 s · Building Citadel…
+     361 ms at 7.00 s · Building Citadel…
+     264 ms at 9.27 s · Building Citadel…
+     198 ms at 15.10 s · Building Citadel…
+     149 ms at 39.05 s · Preparing Citadel…
+     143 ms at 15.42 s · Building Citadel…
+      89 ms at 0.98 s · before the game
+      87 ms at 156.33 s · title
+      73 ms at 20.60 s · Building the well cave…
+      61 ms at 21.81 s · Preparing graphics…
+programs by kind: {"ShaderMaterial":12,"MeshStandardMaterial":31,"merged-vctrm":1,"merged-vcrm":2,"MeshBasicMaterial":14,"SpriteMaterial":2,"LineBasicMaterial":1,"PointsMaterial":2,"unspecified":1,"MeshDepthMaterial":14,"merged-arr 256x256|4":1,"merged-arr 512x512|4":1,"OutputShader":1}
+
+LBA3 start trace · build 0.43.3 · 2026-10-31 14:07 · Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver
+display frames recorded 43 over 156.6 s · long animation frames 36 · long tasks 23
+startup steps (ms): build 15147 · shaders 134540 · prep {"paint":279,"programs":81,"textures":17082,"geometry":265,"geometryPart":43,"batches":30552,"batchUpload":988,"shadowPrograms":43661,"firstFrame":41633}
+
+phase (from its mark to the next)            frames  interval p50 / p95 / max ms   >20 / >33 / >50 / >100
+  page start @0.0s                                 4   916.7 / 1316.6 / 1316.6   4 / 4 / 4 / 4
+  loading: Building Citadel… @7.0s                 1   2183.3 / 2183.3 / 2183.3   1 / 1 / 1 / 1
+  loading: Building Citadel… @8.8s                 2   2149.8 / 2149.8 / 2149.8   1 / 1 / 1 / 1
+  loading: Building Citadel… @9.5s                 1   350 / 350 / 350   1 / 1 / 1 / 1
+  loading: Building Citadel… @9.9s                 1   766.7 / 766.7 / 766.7   1 / 1 / 1 / 1
+  loading: Building Citadel… @11.4s                1   1849.9 / 1849.9 / 1849.9   1 / 1 / 1 / 1
+  loading: Building Citadel… @12.3s                1   1083.3 / 1083.3 / 1083.3   1 / 1 / 1 / 1
+  loading: Building Citadel… @13.3s                1   116.6 / 116.6 / 116.6   1 / 1 / 1 / 1
+  loading: Building Citadel… @13.4s                1   50.1 / 50.1 / 50.1   1 / 1 / 1 / 0
+  loading: Building Citadel… @13.5s                1   49.9 / 49.9 / 49.9   1 / 1 / 0 / 0
+  loading: Building Citadel… @13.5s                2   33.3 / 33.3 / 33.3   1 / 0 / 0 / 0
+  loading: Building Citadel… @13.6s                1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0
+  loading: Building Citadel… @13.6s                1   16.6 / 16.6 / 16.6   0 / 0 / 0 / 0
+  loading: Building Citadel… @13.6s                1   316.7 / 316.7 / 316.7   1 / 1 / 1 / 1
+  loading: Building Citadel… @13.9s                1   316.6 / 316.6 / 316.6   1 / 1 / 1 / 1
+  loading: Building Citadel… @14.3s                1   833.4 / 833.4 / 833.4   1 / 1 / 1 / 1
+  loading: Building Citadel… @15.3s                1   300 / 300 / 300   1 / 1 / 1 / 1
+  loading: Building Citadel… @16.5s                1   1266.5 / 1266.5 / 1266.5   1 / 1 / 1 / 1
+  loading: Building Citadel… @16.7s                1   633.3 / 633.3 / 633.3   1 / 1 / 1 / 1
+  loading: Building Citadel… @17.3s                2   250 / 250 / 250   2 / 2 / 2 / 2
+  loading: Building Twinsen's house… @19.8s        1   2449.9 / 2449.9 / 2449.9   1 / 1 / 1 / 1
+  loading: Preparing the story… @20.7s             2   600 / 600 / 600   2 / 2 / 2 / 1
+  loading: Preparing graphics… @21.9s              2   1116.7 / 1116.7 / 1116.7   2 / 2 / 2 / 1
+  loading: Preparing Citadel… @39.0s               1   17066 / 17066 / 17066   1 / 1 / 1 / 1
+  loading: Preparing Citadel… @39.2s               3   33.3 / 266.7 / 266.7   3 / 1 / 1 / 1
+  loading: Preparing Citadel… @39.4s               1   33.4 / 33.4 / 33.4   1 / 1 / 0 / 0
+  loading: Almost there… @39.5s                    2   33.3 / 33.3 / 33.3   1 / 0 / 0 / 0
+  loading: Almost there… @70.0s                    2   30565.5 / 30565.5 / 30565.5   2 / 2 / 2 / 2
+  loading: Almost there… @71.0s                    1   43664.9 / 43664.9 / 43664.9   1 / 1 / 1 / 1
+  title @156.3s                                    2   41715 / 41715 / 41715   2 / 2 / 2 / 2
+
+every display frame over 50 ms (32): when · how long · phase · what ran (the browser's long animation frame overlapping it: its scripts, style/layout; else the game's own jobs)
+     2.84 s    917 ms  page start                   [1308 ms, style/layout 1, render 2: module-script http://localhost:8638/src/main.js src/main.js:0 88 ms | module-script http://localhost:8638/src/main.js src/main.js 5 ms] [904 ms, style/layout 1, render 1: no script (rendering / GPU / compositor)]
+     3.06 s    217 ms  page start                   [904 ms, style/layout 1, render 1: no script (rendering / GPU / compositor)] [226 ms, style/layout 1, render 1: no script (rendering / GPU / compositor)]
+     3.61 s    550 ms  page start                   [226 ms, style/layout 1, render 1: no script (rendering / GPU / compositor)] [556 ms, style/layout 1, render 6: no script (rendering / GPU / compositor)]
+

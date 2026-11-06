@@ -1,0 +1,26 @@
+opening rc=0 pass=24 fail=0 708s | ALL PASSED
+prologue rc=0 pass=0 fail=0 226s | warning: THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supporte
+menus rc=0 pass=26 fail=0 170s | ALL PASSED
+stability rc=0 pass=16 fail=0 99s | ALL PASSED
+holomap rc=0 pass=30 fail=0 151s | ALL PASSED
+clarity rc=0 pass=10 fail=0 451s | ALL PASSED
+chapter1 rc=0 pass=0 fail=0 202s | no errors
+chapter2 rc=0 pass=0 fail=0 184s | no errors
+chapter4 rc=0 pass=54 fail=0 869s | ALL PASSED
+townlife rc=0 pass=36 fail=0 576s | ALL PASSED
+workshop rc=0 pass=32 fail=0 629s | ALL PASSED
+desert-life rc=0 pass=30 fail=0 559s | ALL PASSED
+resume rc=0 pass=2 fail=0 196s | ALL PASSED
+chapter3 rc=0 pass=0 fail=0 190s | no errors
+chapter5 rc=0 pass=0 fail=0 88s | no errors
+chapter6 rc=0 pass=0 fail=0 106s | no errors
+chapter7 rc=0 pass=0 fail=0 94s | no errors
+chapter8 rc=0 pass=0 fail=0 107s | no errors
+chapter9 rc=0 pass=0 fail=0 104s | no errors
+chapter10 rc=0 pass=0 fail=0 121s | CHAPTER 10 DONE
+DONE
+post-merge f30d36d: menus rc=0 pass=26 fail=0 148s | ALL PASSED
+post-merge f30d36d: stability rc=0 pass=16 fail=0 97s | ALL PASSED
+post-merge f30d36d: opening rc=0 pass=24 fail=0 848s | ALL PASSED
+post-merge f30d36d: clarity rc=0 pass=10 fail=0 463s | ALL PASSED
+post-merge f30d36d: DONE

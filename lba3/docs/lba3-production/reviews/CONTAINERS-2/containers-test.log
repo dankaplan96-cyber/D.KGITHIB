@@ -1,0 +1,47 @@
+PASS Citadel: the original's spots and ours by the houses, market, corners and harbour hold a container (bins, barrels, crates, suitcases, a trolley), none skipped 
+PASS Citadel: each stands within 3 m of its spot 
+PASS Zeelich (6+) and its islands (16+) have containers, none skipped 
+PASS Desert Island has containers by Kesh's houses, the camp, the way to the dig and its rim (8+) 
+PASS every outdoor container can be reached and searched 
+PASS the verb prompt ("Search") by an unsearched container, gone once searched 
+PASS a hop by the bin pops one bonus (kashes for a broke Twinsen), in flight 
+PASS it lands outside the bin (not inside it) 
+PASS it lands, and is still there 40 s later (no timeout, no blinking) 
+PASS he takes it by walking over it (+2 kashes: the original's n) 
+PASS full life: the barrel's heart lands beside it, is not taken, stays on the ground 
+PASS ...and is still there 25 s later 
+PASS hurt: walking over it heals him and it is gone 
+PASS full magic: a flask stays; with magic spent he takes it 
+PASS kashes are taken whatever his life and magic 
+PASS mashing Space/E at a container: one bonus, recorded once 
+PASS the interact key searches it in another behaviour (Athletic), with the prompt shown 
+PASS (two hearts are left lying for the reload) 
+first presses that searched nothing (pressed again), part 1: []
+PASS after a reload the bonuses left lying are back, same kind, same place 
+PASS the save holds them (loot) and the containers stay searched 
+PASS a searched container gives nothing more after the reload 
+PASS taking it after the reload works, and the save forgets it 
+PASS away in Zeelich the Citadel bonus is kept, unseen 
+PASS back on Citadel it is there, where it landed, and he takes it 
+PASS Zeelich's bonus waits in Zeelich (not seen on Citadel) 
+PASS a door in mid-flight: the bonus lands and waits 
+PASS a line of dialogue in mid-flight: it lands meanwhile 
+PASS a save in mid-air keeps it; loaded, it falls to the ground (one copy) 
+first presses that searched nothing (pressed again), part 2: [{"actT":0.05,"busy":false,"state":"play","pad":false,"reach":"otringal-c1","ground":true,"beh":"normal","trans":false}]
+PASS death → Retry: the bonuses left before the last save are back, once each 
+PASS a quest reward (owed pickups) is not container loot and still settles its debt 
+PASS a glint twinkles over an unsearched container, none over a searched one 
+PASS within one visit a searched container stays empty: 90 s later, 10 presses, no bonus, no prompt, no glint 
+PASS away in another region, the Citadel containers are no longer marked searched 
+PASS back on Citadel the container is full again: the glint and the "Search" prompt are back 
+PASS ...it gives one more bonus (mashing: one), and the first one still lies where it fell 
+PASS through a door and back: the container is full again 
+the door round trip went by: walk+exitRoom
+PASS the house keeps its givers, and they refill on the next visit too 
+PASS the clover stump's record survives a region change (gives once ever) 
+PASS a save mid-visit: after loading, the container searched before the save stays searched 
+PASS an older save loads: other areas' giver keys are dropped, this area's and story searches kept 
+PASS no pile-up: a container with 3 bonuses lying stays shut (no prompt, no glint); one or more taken, it gives again on the next visit 
+first presses that searched nothing (pressed again): []
+no errors
+ALL PASSED

@@ -1,0 +1,56 @@
+heading 0 (0°, camera yaw 4.71): main 136 calls 409k tris · shadow 13 calls 7k tris
+   scenery 91/295k · trees 5/75k · grass 5/27k · characters 16/12k · transparent 17/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/1/92/150/37 · trees 0/0/0/75/0 · grass 0/2/8/17/0 · characters 6/0/6/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 27/27 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 42/268.9k · BatchedMesh:lodBatch@zeelich 7/90.1k · Instanced:zeelich@zeelich 6/26.8k · Skinned:?@actors 5/11.6k · Mesh:zeelich@zeelich 50/8.9k · Mesh:dogParts@zeelich 12/1.9k · Instanced:spriteBatch@zeelich 1/0.3k · Mesh:head@actors 7/0.3k · Mesh:handR@actors 4/0.3k · Instanced:blobBatch 1/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 118 calls 397k tris · shadow 13 calls 7k tris  (Δ main -18 calls -12.2k tris)
+      scenery 91/295k · trees 5/75k · grass 5/27k · transparent 17/1k
+heading 1 (45°, camera yaw 5.50): main 102 calls 344k tris · shadow 13 calls 7k tris
+   scenery 71/268k · trees 4/51k · grass 5/13k · characters 9/10k · transparent 11/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/1/141/80/32 · trees 0/0/0/51/0 · grass 0/1/4/9/0 · characters 6/0/4/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 13/13 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 30/253.7k · BatchedMesh:lodBatch@zeelich 6/55.7k · Instanced:zeelich@zeelich 6/13.5k · Skinned:?@actors 4/10.1k · Mesh:zeelich@zeelich 36/8.3k · Mesh:dogParts@zeelich 12/1.9k · Instanced:spriteBatch@zeelich 1/0.3k · Mesh:head@actors 5/0.2k · Instanced:blobBatch 1/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 91 calls 333k tris · shadow 13 calls 7k tris  (Δ main -11 calls -10.3k tris)
+      scenery 71/268k · trees 4/51k · grass 5/13k · transparent 11/1k
+heading 2 (90°, camera yaw 6.28): main 58 calls 191k tris · shadow 13 calls 7k tris
+   scenery 39/165k · trees 4/19k · characters 4/6k · grass 3/1k · transparent 6/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/0/144/1/4 · trees 0/0/19/0/0 · characters 6/0/0/0/0 · grass 0/1/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 1/1 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 18/152.4k · BatchedMesh:lodBatch@zeelich 6/23.3k · Mesh:zeelich@zeelich 18/7.3k · Skinned:?@actors 2/5.9k · Instanced:zeelich@zeelich 4/1.3k · Mesh:dogParts@zeelich 4/0.6k · Instanced:spriteBatch@zeelich 1/0.3k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:softParticles 1/0.0k · Sprite:? 1/0.0k
+   [no characters+no particles/blobs] main 52 calls 185k tris · shadow 13 calls 7k tris  (Δ main -6 calls -6.0k tris)
+      scenery 39/165k · trees 4/19k · grass 3/1k · transparent 6/0k
+heading 3 (135°, camera yaw 7.07): main 49 calls 169k tris · shadow 13 calls 7k tris
+   scenery 33/157k · trees 4/6k · characters 4/6k · transparent 5/0k · particles 2/0k · grass 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/0/136/1/4 · trees 0/0/6/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0 · grass 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 0/0 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 18/144.9k · BatchedMesh:lodBatch@zeelich 6/10.8k · Mesh:zeelich@zeelich 16/7.3k · Skinned:?@actors 2/5.9k · Instanced:spriteBatch@zeelich 1/0.3k · Instanced:blobBatch 1/0.1k · Instanced:zeelich@zeelich 2/0.1k · Mesh:head@actors 2/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 43 calls 163k tris · shadow 13 calls 7k tris  (Δ main -6 calls -6.0k tris)
+      scenery 33/157k · trees 4/6k · transparent 5/0k · grass 1/0k
+heading 4 (180°, camera yaw 7.85): main 48 calls 170k tris · shadow 14 calls 8k tris
+   scenery 32/157k · trees 4/6k · characters 4/6k · transparent 5/0k · grass 1/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/1/134/3/4 · trees 0/0/6/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · grass 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 0/0 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 16/144.3k · BatchedMesh:lodBatch@zeelich 6/10.8k · Mesh:zeelich@zeelich 17/8.0k · Skinned:?@actors 2/5.9k · Instanced:spriteBatch@zeelich 1/0.3k · Instanced:zeelich@zeelich 2/0.1k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 42 calls 164k tris · shadow 14 calls 8k tris  (Δ main -6 calls -6.0k tris)
+      scenery 32/157k · trees 4/6k · transparent 5/0k · grass 1/0k
+heading 5 (225°, camera yaw 8.64): main 53 calls 180k tris · shadow 14 calls 8k tris
+   scenery 36/161k · trees 5/13k · characters 4/6k · transparent 5/0k · grass 1/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 12/4/136/5/4 · trees 0/0/13/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · grass 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 0/0 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 20/148.4k · BatchedMesh:lodBatch@zeelich 7/17.1k · Mesh:zeelich@zeelich 17/8.0k · Skinned:?@actors 2/5.9k · Instanced:spriteBatch@zeelich 1/0.3k · Instanced:zeelich@zeelich 2/0.2k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 47 calls 174k tris · shadow 14 calls 8k tris  (Δ main -6 calls -6.0k tris)
+      scenery 36/161k · trees 5/13k · transparent 5/0k · grass 1/0k
+heading 6 (270°, camera yaw 9.42): main 60 calls 207k tris · shadow 14 calls 8k tris
+   scenery 40/166k · trees 5/33k · characters 4/6k · grass 4/2k · transparent 5/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 13/3/141/8/1 · trees 0/0/33/0/0 · characters 6/0/0/0/0 · grass 0/1/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 2/2 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 23/153.6k · BatchedMesh:lodBatch@zeelich 7/37.5k · Mesh:zeelich@zeelich 18/8.0k · Skinned:?@actors 2/5.9k · Instanced:zeelich@zeelich 5/1.8k · Instanced:spriteBatch@zeelich 1/0.3k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 54 calls 201k tris · shadow 14 calls 8k tris  (Δ main -6 calls -6.0k tris)
+      scenery 40/166k · trees 5/33k · grass 4/2k · transparent 5/0k
+heading 7 (315°, camera yaw 10.21): main 107 calls 313k tris · shadow 14 calls 8k tris
+   scenery 68/251k · trees 5/36k · grass 5/14k · characters 15/12k · transparent 12/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 15/1/84/122/29 · trees 0/0/0/36/0 · grass 0/1/4/9/0 · characters 6/0/6/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:zeelich@zeelich #ffffff 13/14 · Instanced:spriteBatch@zeelich #fff4f8 0/0 · Instanced:zeelich@zeelich #9ff0ff 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: drawBatch:zeelich@zeelich 36/226.8k · BatchedMesh:lodBatch@zeelich 7/51.3k · Instanced:zeelich@zeelich 6/13.5k · Skinned:?@actors 5/11.6k · Mesh:zeelich@zeelich 40/9.2k · Instanced:spriteBatch@zeelich 1/0.3k · Mesh:handR@actors 4/0.3k · Mesh:head@actors 6/0.2k · Instanced:blobBatch 1/0.1k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 90 calls 301k tris · shadow 14 calls 8k tris  (Δ main -17 calls -12.1k tris)
+      scenery 68/251k · trees 5/36k · grass 5/14k · transparent 12/1k

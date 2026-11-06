@@ -1,0 +1,172 @@
+done desert
+done zeelich
+done street
+done house
+done title
+
+== desert: 22.44 ms/frame busy (incl. render), GC 1.593 ms/frame
+  by file: 2536.96 readPixels | 9.19 (program) | 9.09 mapdraw.js | 4.34 three.module.min.js | 1.90 three.core.min.js | 1.59 (garbage collector) | 1.37 (idle) | 0.66 main.js | 0.53 drawcull.js | 0.31 shadowcull.js | 0.28 bindVertexArray | 0.27 uniformMatrix4fv | 0.20 jetpack.js | 0.20 drawElements
+2536.962 ms/frame  readPixels :0
+  7.031 ms/frame  build mapdraw.js:134
+  2.056 ms/frame  B.step mapdraw.js:123
+  0.621 ms/frame  renderBufferDirect three.module.min.js:6
+  0.573 ms/frame  (anon) three.module.min.js:6
+  0.491 ms/frame  frame main.js:1229
+  0.355 ms/frame  walk drawcull.js:26
+  0.302 ms/frame  update three.module.min.js:6
+  0.276 ms/frame  bindVertexArray :0
+  0.275 ms/frame  uniformMatrix4fv :0
+  0.251 ms/frame  setValue three.module.min.js:6
+  0.248 ms/frame  getParameters three.module.min.js:6
+  0.229 ms/frame  Ye three.module.min.js:6
+  0.206 ms/frame  updateMatrixWorld three.core.min.js:6
+  0.205 ms/frame  xr three.module.min.js:6
+  0.199 ms/frame  drawElements :0
+  0.195 ms/frame  watch shadowcull.js:98
+  0.179 ms/frame  compose three.core.min.js:6
+  0.169 ms/frame  setup three.module.min.js:6
+  0.165 ms/frame  $e three.module.min.js:6
+  0.161 ms/frame  copy three.core.min.js:6
+  0.159 ms/frame  putImageData :0
+  0.158 ms/frame  Rr three.module.min.js:6
+  0.157 ms/frame  fromArray three.core.min.js:6
+  0.156 ms/frame  multiplyMatrices three.core.min.js:6
+  0.151 ms/frame  bufferSubData :0
+  0.149 ms/frame  step jetpack.js:140
+  0.137 ms/frame  upload three.module.min.js:6
+  0.135 ms/frame  W.update world.js:853
+  0.114 ms/frame  A three.module.min.js:6
+
+== zeelich: 24.48 ms/frame busy (incl. render), GC 3.278 ms/frame
+  by file: 2634.78 readPixels | 9.03 three.module.min.js | 3.53 (program) | 3.28 (garbage collector) | 2.36 three.core.min.js | 2.01 mapdraw.js | 1.70 physics.js | 0.80 uniformMatrix4fv | 0.64 bindVertexArray | 0.58 shadowcull.js | 0.49 drawElements | 0.38 main.js | 0.35 drawcull.js | 0.22 bindTexture
+2634.777 ms/frame  readPixels :0
+  1.653 ms/frame  (anon) three.module.min.js:6
+  1.572 ms/frame  _inside physics.js:97
+  1.142 ms/frame  build mapdraw.js:134
+  1.041 ms/frame  renderBufferDirect three.module.min.js:6
+  0.858 ms/frame  B.step mapdraw.js:123
+  0.798 ms/frame  uniformMatrix4fv :0
+  0.638 ms/frame  bindVertexArray :0
+  0.489 ms/frame  drawElements :0
+  0.467 ms/frame  update three.module.min.js:6
+  0.464 ms/frame  build shadowcull.js:64
+  0.439 ms/frame  setValue three.module.min.js:6
+  0.436 ms/frame  getParameters three.module.min.js:6
+  0.393 ms/frame  Ye three.module.min.js:6
+  0.337 ms/frame  wr three.module.min.js:6
+  0.321 ms/frame  Lr three.module.min.js:6
+  0.317 ms/frame  r three.module.min.js:6
+  0.309 ms/frame  upload three.module.min.js:6
+  0.297 ms/frame  copy three.core.min.js:6
+  0.277 ms/frame  multiplyMatrices three.core.min.js:6
+  0.271 ms/frame  compose three.core.min.js:6
+  0.270 ms/frame  frame main.js:1229
+  0.252 ms/frame  setup three.module.min.js:6
+  0.244 ms/frame  A three.module.min.js:6
+  0.241 ms/frame  updateMatrixWorld three.core.min.js:6
+  0.229 ms/frame  getProgramCacheKey three.module.min.js:6
+  0.220 ms/frame  bindTexture :0
+  0.218 ms/frame  get three.module.min.js:6
+  0.199 ms/frame  useProgram :0
+  0.194 ms/frame  uniform3f :0
+
+== street: 18.8 ms/frame busy (incl. render), GC 1.487 ms/frame
+  by file: 3093.36 readPixels | 5.82 three.module.min.js | 4.94 (program) | 3.00 three.core.min.js | 2.43 mapdraw.js | 1.49 (garbage collector) | 0.57 (idle) | 0.52 uniformMatrix4fv | 0.42 drawcull.js | 0.42 terrain.js | 0.41 bindVertexArray | 0.39 shadowcull.js | 0.37 uniform3f | 0.33 main.js
+3093.358 ms/frame  readPixels :0
+  1.930 ms/frame  build mapdraw.js:134
+  0.968 ms/frame  (anon) three.module.min.js:6
+  0.697 ms/frame  compose three.core.min.js:6
+  0.529 ms/frame  Ye three.module.min.js:6
+  0.523 ms/frame  uniformMatrix4fv :0
+  0.470 ms/frame  copy three.core.min.js:6
+  0.459 ms/frame  renderBufferDirect three.module.min.js:6
+  0.443 ms/frame  B.step mapdraw.js:123
+  0.417 ms/frame  heightAt terrain.js:37
+  0.406 ms/frame  bindVertexArray :0
+  0.371 ms/frame  uniform3f :0
+  0.364 ms/frame  multiplyMatrices three.core.min.js:6
+  0.358 ms/frame  updateMatrixWorld three.core.min.js:6
+  0.357 ms/frame  setValue three.module.min.js:6
+  0.355 ms/frame  walk drawcull.js:26
+  0.298 ms/frame  update three.module.min.js:6
+  0.267 ms/frame  A three.module.min.js:6
+  0.265 ms/frame  applyMatrix4 three.core.min.js:6
+  0.263 ms/frame  Lr three.module.min.js:6
+  0.245 ms/frame  upload three.module.min.js:6
+  0.224 ms/frame  update shadowcull.js:134
+  0.219 ms/frame  wr three.module.min.js:6
+  0.208 ms/frame  updateMatrix three.core.min.js:6
+  0.189 ms/frame  bindTexture :0
+  0.163 ms/frame  frame main.js:1229
+  0.158 ms/frame  br three.module.min.js:6
+  0.146 ms/frame  bindFramebuffer three.module.min.js:6
+  0.146 ms/frame  r three.module.min.js:6
+  0.144 ms/frame  update actors.js:140
+
+== house: 6.21 ms/frame busy (incl. render), GC 0.182 ms/frame
+  by file: 1209.30 readPixels | 5.34 (program) | 2.61 three.module.min.js | 0.99 three.core.min.js | 0.18 (garbage collector) | 0.17 physics.js | 0.14 rig.js | 0.14 bindVertexArray | 0.14 drawcull.js | 0.13 main.js | 0.12 uniformMatrix4fv | 0.11 drawElements | 0.09 dinofly.js | 0.09 actors.js
+1209.296 ms/frame  readPixels :0
+  0.543 ms/frame  renderBufferDirect three.module.min.js:6
+  0.391 ms/frame  (anon) three.module.min.js:6
+  0.214 ms/frame  wr three.module.min.js:6
+  0.169 ms/frame  compose three.core.min.js:6
+  0.169 ms/frame  getRGB three.core.min.js:6
+  0.141 ms/frame  bindVertexArray :0
+  0.130 ms/frame  update three.module.min.js:6
+  0.129 ms/frame  setValue three.module.min.js:6
+  0.119 ms/frame  uniformMatrix4fv :0
+  0.109 ms/frame  Ke three.module.min.js:6
+  0.106 ms/frame  drawElements :0
+  0.101 ms/frame  upload three.module.min.js:6
+  0.095 ms/frame  A three.module.min.js:6
+  0.092 ms/frame  Lr three.module.min.js:6
+  0.088 ms/frame  multiplyMatrices three.core.min.js:6
+  0.087 ms/frame  render RenderPass.js:111
+  0.087 ms/frame  Ye three.module.min.js:6
+  0.085 ms/frame  r three.module.min.js:6
+  0.085 ms/frame  pose dinofly.js:125
+  0.083 ms/frame  update rig.js:401
+  0.081 ms/frame  updateShownWorld drawcull.js:23
+  0.078 ms/frame  (anon) three.core.min.js:6
+  0.075 ms/frame  copy three.core.min.js:6
+  0.073 ms/frame  W.update world.js:853
+  0.072 ms/frame  frame main.js:1229
+  0.071 ms/frame  applyMatrix4 three.core.min.js:6
+  0.068 ms/frame  Qi.render three.module.min.js:6
+  0.068 ms/frame  enable :0
+  0.068 ms/frame  updateMatrixWorld three.core.min.js:6
+
+== title: 4.05 ms/frame busy (incl. render), GC 0.169 ms/frame
+  by file: 197.00 readPixels | 4.67 (program) | 1.10 three.core.min.js | 1.10 three.module.min.js | 0.23 drawcull.js | 0.17 (garbage collector) | 0.15 rig.js | 0.11 texSubImage2D | 0.08 blendFuncSeparate | 0.07 actors.js | 0.06 main.js | 0.06 physics.js | 0.04  | 0.04 world.js
+197.000 ms/frame  readPixels :0
+  0.236 ms/frame  (anon) three.module.min.js:6
+  0.222 ms/frame  compose three.core.min.js:6
+  0.200 ms/frame  multiplyMatrices three.core.min.js:6
+  0.151 ms/frame  walk drawcull.js:26
+  0.126 ms/frame  Ye three.module.min.js:6
+  0.123 ms/frame  copy three.core.min.js:6
+  0.116 ms/frame  updateMatrixWorld three.core.min.js:6
+  0.111 ms/frame  texSubImage2D :0
+  0.081 ms/frame  blendFuncSeparate :0
+  0.070 ms/frame  render three.module.min.js:6
+  0.070 ms/frame  get three.module.min.js:6
+  0.070 ms/frame  set rig.js:830
+  0.069 ms/frame  update rig.js:401
+  0.064 ms/frame  update three.module.min.js:6
+  0.060 ms/frame  renderBufferDirect three.module.min.js:6
+  0.060 ms/frame  q three.module.min.js:6
+  0.056 ms/frame  setFromEuler three.core.min.js:6
+  0.053 ms/frame  br three.module.min.js:6
+  0.052 ms/frame  update actors.js:563
+  0.048 ms/frame  updateMatrix three.core.min.js:6
+  0.048 ms/frame  w three.module.min.js:6
+  0.048 ms/frame  set x three.core.min.js:6
+  0.045 ms/frame  groundAt physics.js:106
+  0.042 ms/frame  get x three.core.min.js:6
+  0.037 ms/frame  updateShownWorld drawcull.js:23
+  0.037 ms/frame  wr three.module.min.js:6
+  0.037 ms/frame  W.update world.js:853
+  0.035 ms/frame  pose dinofly.js:125
+  0.035 ms/frame  hide drawcull.js:62
+
+load [ 6.99, 6.15, 4.36 ] → [ 6.73, 7.93, 6.36 ] errors []

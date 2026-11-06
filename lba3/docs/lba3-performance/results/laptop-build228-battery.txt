@@ -1,0 +1,28 @@
+LBA3: The Awakening benchmark · build 0.33.0 (build 228) · 2026-10-28 17:02 (the user's Vega 8 laptop, pasted in chat), ON BATTERY
+battery profile applied (Medium/High: shadow filter 5 reads, MSAA off, automatic resolution down to ×0.5, 2 lamps; Low unchanged)
+window 1366×768 · dpr 1 · Electron 43.7.9 · shortest frame interval seen 11.0 ms (≈ 91 Hz)
+
+summary · fps at full resolution / as played (automatic resolution on: the factor it settled at) · ON BATTERY
+             low                medium              high
+  street     54 / 53 (×0.82)    49.7 / 47.5 (×0.5)  34.7 / 44 (×0.5)
+  interior   58.8 / 59.7 (×1)   58.7 / 60 (×0.7)    54.7 / 59.8 (×0.7)
+  combat     55.5 / 55.3 (×0.82) 60 / 46.3 (×0.5)   53.3 / 55.5 (×0.9)
+  transition 58.7 / 59.7 (×0.92) 52.5 / 55.3 (×0.5) 43.2 / 50.5 (×0.5)
+  arrival    47.8 / 57.7 (×0.82) 46.7 / 49.2 (×0.5) 36.2 / 43.9 (×0.5)
+  hamalayi   59.3 / 60 (×1)     51.5 / 57.9 (×0.5)  44.6 / 59.7 (×0.6)
+Against build 220 on battery (fixed runs): Medium street 40.1 → 49.7, transition 50.8 → 52.5, arrival 44.8 → 46.7; High street 27.9 → 34.7.
+
+THE BATTERY LIMIT IS NOW THE CPU (the CPU is clocked down on battery: render submit ~1.5–2× the plugged-in figures)
+  Medium street fixed: sim 3.8 + submit 11.0 ms, GPU 16.4 ms, 166 calls (shadow 18), 411k tris
+  Medium street AS PLAYED (the user's own camera: Follow at Far): sim 4.1 + submit 15.6 ms = ~20 ms → 47.5 fps even at resolution ×0.5;
+    282 draw calls, 815k tris (the fixed orbit route sees 166 calls / 411k) — the Far follow camera sees much more of the town
+  Medium street breakdown (fps / GPU ms / submit ms): as is 48.4 / 16.83 / 13.6 · res ×0.6 45.4 / 14.46 / 15.3 (lower resolution does not help)
+    · no shadows 48.3 / 13.97 / 10.2 · shadow map 512 50.2 / 16.0 / 10.7 · draw batches off 44.8 (calls 210) · battery profile off 34.3 / 25.02
+  Low street fixed: 54 fps, submit 10.1 ms, GPU 13.72 ms, 128 calls
+  High street fixed: 34.7, GPU 25.13 [shadow map 6.25 — the uncached 4096 map], submit 12.9, calls 246 (shadow 85)
+  Arrival (all presets): sim 5–6 ms + submit 10–14 ms; Medium as played 49.2 at ×0.5
+
+PACING PLATEAU AGAIN (frames slower than the work): Medium as played combat p50 22.4 ms with GPU 6.07 + sim 3.3 + submit 5.1;
+  transition p50 17.8 (GPU 7.43); arrival p50 18 (GPU 10.8)
+
+Medium interior on battery: 60 (GPU 10.5, submit 4.0) · battery profile off → 42 fps (GPU 20.1)

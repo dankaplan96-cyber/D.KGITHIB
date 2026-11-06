@@ -1,0 +1,10 @@
+hamalayi: 1 batches (terrain 4) — the terrain: squares vs its tiles
+heading 0°: pixels differ 0 · main 42 calls 276k tris (this build: batches culled per instance or square) vs 45 calls 349k (as before: InstancedMeshes, or the terrain's tiles)
+heading 45°: pixels differ 0 · main 49 calls 320k tris (this build: batches culled per instance or square) vs 52 calls 391k (as before: InstancedMeshes, or the terrain's tiles)
+heading 90°: pixels differ 0 · main 43 calls 279k tris (this build: batches culled per instance or square) vs 45 calls 338k (as before: InstancedMeshes, or the terrain's tiles)
+heading 135°: pixels differ 0 · main 33 calls 135k tris (this build: batches culled per instance or square) vs 34 calls 178k (as before: InstancedMeshes, or the terrain's tiles)
+heading 180°: pixels differ 0 · main 29 calls 81k tris (this build: batches culled per instance or square) vs 30 calls 126k (as before: InstancedMeshes, or the terrain's tiles)
+heading 225°: pixels differ 0 · main 29 calls 99k tris (this build: batches culled per instance or square) vs 30 calls 142k (as before: InstancedMeshes, or the terrain's tiles)
+heading 270°: pixels differ 0 · main 33 calls 175k tris (this build: batches culled per instance or square) vs 35 calls 238k (as before: InstancedMeshes, or the terrain's tiles)
+heading 315°: pixels differ 0 · main 38 calls 240k tris (this build: batches culled per instance or square) vs 41 calls 320k (as before: InstancedMeshes, or the terrain's tiles)
+worst 0 pixels differ

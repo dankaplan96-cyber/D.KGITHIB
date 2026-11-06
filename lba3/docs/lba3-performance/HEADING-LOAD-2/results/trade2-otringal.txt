@@ -1,0 +1,48 @@
+heading 0 (0°, camera yaw 6.20): main 38 calls 350k tris · shadow 1 calls 0k tris
+   scenery 16/211k · trees 7/102k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 0/128/32/51/0 · trees 0/102/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 38 calls 347k tris · shadow 1 calls 0k tris  (Δ main 0 calls -2.8k tris)
+      scenery 16/211k · trees 7/100k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 1 (45°, camera yaw 6.99): main 40 calls 449k tris · shadow 1 calls 0k tris
+   scenery 19/216k · trees 7/202k · terrain 3/25k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 0/128/32/55/0 · trees 0/202/0/0/0 · terrain 0/0/0/25/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 40 calls 388k tris · shadow 1 calls 0k tris  (Δ main 0 calls -60.8k tris)
+      scenery 19/216k · trees 7/141k · terrain 3/25k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 2 (90°, camera yaw 7.77): main 44 calls 588k tris · shadow 1 calls 0k tris
+   scenery 23/318k · trees 7/238k · terrain 3/25k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 113/16/177/12/0 · trees 0/238/0/0/0 · terrain 0/0/0/25/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 44 calls 503k tris · shadow 1 calls 0k tris  (Δ main 0 calls -84.6k tris)
+      scenery 23/318k · trees 7/153k · terrain 3/25k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 3 (135°, camera yaw 8.56): main 46 calls 609k tris · shadow 1 calls 0k tris
+   trees 7/300k · scenery 24/271k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 0/300/0/0/0 · scenery 116/9/134/13/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 46 calls 500k tris · shadow 1 calls 0k tris  (Δ main 0 calls -108.8k tris)
+      scenery 24/271k · trees 7/192k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 4 (180°, camera yaw 9.34): main 47 calls 634k tris · shadow 1 calls 0k tris
+   scenery 25/336k · trees 7/261k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 122/3/134/77/0 · trees 0/261/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 47 calls 523k tris · shadow 1 calls 0k tris  (Δ main 0 calls -111.1k tris)
+      scenery 25/336k · trees 7/150k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 5 (225°, camera yaw 10.13): main 45 calls 558k tris · shadow 1 calls 0k tris
+   scenery 23/345k · trees 7/176k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 122/6/130/86/0 · trees 0/176/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 45 calls 484k tris · shadow 1 calls 0k tris  (Δ main 0 calls -74.4k tris)
+      scenery 23/345k · trees 7/101k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+heading 6 (270°, camera yaw 10.91): main 41 calls 467k tris · shadow 1 calls 0k tris
+   scenery 21/343k · trees 7/86k · terrain 4/31k · characters 4/6k · transparent 3/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 9/150/99/85/0 · trees 0/86/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 41 calls 437k tris · shadow 1 calls 0k tris  (Δ main 0 calls -29.5k tris)
+      scenery 21/343k · trees 7/57k · terrain 4/31k · characters 4/6k · transparent 3/0k · particles 2/0k
+heading 7 (315°, camera yaw 11.70): main 39 calls 308k tris · shadow 1 calls 0k tris
+   scenery 17/216k · trees 7/55k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 1/128/32/56/0 · trees 0/55/0/0/0 · terrain 0/0/0/31/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): transparent 0/0 · particles 0/0
+   [island trees coarse] main 39 calls 308k tris · shadow 1 calls 0k tris  (Δ main 0 calls 0.0k tris)
+      scenery 17/216k · trees 7/55k · terrain 4/31k · characters 4/6k · transparent 5/1k · particles 2/0k

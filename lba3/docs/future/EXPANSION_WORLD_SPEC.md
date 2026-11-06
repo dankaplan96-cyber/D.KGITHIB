@@ -1,0 +1,539 @@
+# Expansion world spec: the cloud's work orders for the World Builder
+
+The cloud session owns the story and the game's growth. The World Builder on the laptop builds what is ordered here
+(`LOCAL_EXPANSION_PROMPT.md`).
+
+- Orders are numbered W-1, W-2, …, built in order.
+- Under each order the builder writes **Built** (files, handles, numbers, pictures, what's left).
+- The cloud then writes **Accepted** or **Changes**.
+
+Look: `docs/art-direction/EXPANSION_ART_DECISIONS.md` D1–D9. Places: `docs/future/EXPANSION_BRIEF.md` §7 and §10.
+
+Spoilers: pictures of these places go to `docs/future/world/<W-id>/` only; the user is asked before seeing any.
+
+---
+
+## W-1 · Float Harbor, the slice (needs the user's approval before W-2)
+
+Ballastra's arrival harbour, about a 30-minute slice of play once the cloud adds the story. It is the quality gate for
+everything after it, so build it to the final standard: handcrafted, readable, alive, and inside the budget.
+
+**The place.** A working harbour of floating platforms on a shallow sea. It is built in its own region, `ballastra`
+(a lazy group, far from every other region).
+- **Water:** shallow and green-blue. Floating platforms on floats and chains, joined by gangways.
+- **Skyline:** one great stone arch (D3's anchor), visible from everywhere in the harbour, and an inhabited district on
+  stilts beyond it. The district is scenery here; it is built in W-2.
+- **Parts:**
+  1. **The spacecraft pad:** a sturdy platform where the ship from Twinsun lands. Twinsen arrives here. The ship itself
+     is the existing project ship, reused.
+  2. **The cargo quay:** two cargo cranes on counterweights, crates and nets, and a customs hut (small, with its own
+     look, not Odile's).
+  3. **The boat lift:** a lock-like lift between the low outer water and the higher inner basin. Its moving deck is
+     raised or lowered by a big **counterweight** on a chain over a wheel. A small stranded **working boat** sits on the
+     deck, stuck halfway.
+  4. **Tessa's repair shed:** a timber and ceramic workshop on its own float. Its door leads into a **furnished
+     interior** (a separate room: workbench, tools on the wall, float parts, a stove, a hammock, drawings, a window onto
+     the lift).
+  5. **The pedestrian platform:** a hinged walkway across the lift, from the quay to the shed's float and on toward the
+     district.
+  6. **The shortcut:** a second, lower route (a cable ferry or a swing bridge) that is closed at first. Once open, it
+     links the pad straight to the district's edge.
+- **Height and readability:** a few levels of height (decks 1–3 m apart, ladders, ramps). Every walkable surface reads as
+  walkable from the play camera. Rails where a fall would strand the player; water that is too deep has a soft edge
+  that pushes the player back, never a death.
+- **Life (props only; the cloud adds the people):** washing, nets drying, potted herbs on floats, gulls (reuse
+  `gulls.js`), lanterns, the creak and bob of floats (a gentle animated bob).
+- **Light:** day only (no night on Ballastra), with a soft sea haze. Its own palette is optional (`R.grade`/`gradeTint`).
+
+**The puzzle's physical parts (N1, "Wrong Dock"). The story drives them through the handles below.**
+- **The counterweight** has three positions: high, middle and low. Moving it changes the lift deck's level: high
+  weight means a low deck, and the reverse. It is moved by a crank on the quay (a use spot).
+- **The crane release:** a visible latch high on crane B (a magic-ball target, with a hit spot and a radius). Released,
+  crane B swings its load over to the lift and adds weight.
+  - Side effect (the story's complication): the swung load blocks the pedestrian platform until the counterweight is
+    set to balance it.
+- **The lift deck** moves smoothly between levels (about 1.5 s). The stranded boat rides on it. At the top level the
+  boat can float out into the inner basin; give it a short "sail out" path the story can play.
+- **Balanced** (one exact combination: the crane released and the counterweight in the middle): the deck is level with
+  the inner basin, the boat is free, and the pedestrian platform is clear again. Nothing can be left permanently
+  inaccessible; every part can go back.
+- **The shortcut** opens when the story calls it (after the boat sails out).
+
+**Handles to export:** `BALLASTRA.harbor` from `src/game/ballastra/harbor.js`.
+- **Rooms and spots:**
+  - `rooms`: `ballastra` (outdoor) and `bl_shed` (the shed interior);
+  - `spawns`: `pad`, `shedDoorOut`, `shedIn`, `districtEdge`;
+  - `doors`: the shed door in both directions.
+- **Stand spots** (`{x, z, a}`) for:
+  - `tessa_shed`, `tessa_quay`, `tessa_lift`;
+  - `docker1`, `docker2`, `customs`;
+  - `boatOwner`.
+- **Interactive spots** (`{x, z, r}`): `crank`, `liftLever` (optional, a lever that only reports the level), `boat`,
+  `shedBench`.
+- **The ball target:** `craneLatch`, with `{x, y, z, r}`.
+- **Methods** (pure setters; `instant` for loading):
+  - `counterweight.set(pos /* 0 high, 1 middle, 2 low */, instant)` and `counterweight.pos`;
+  - `crane.release(instant)`, `crane.reset(instant)` (the load swings back: the player can try again) and `crane.released`;
+  - `lift.level` (read-only, worked out from the two above);
+  - `walkway.blocked` (read-only);
+  - `boat.sailOut(instant)`;
+  - `shortcut.setOpen(b, instant)`.
+- **Collision** follows the state: the blocked walkway is solid, the lift deck's height is right for walking on and off,
+  and the open shortcut is walkable.
+
+**Characters for W-1:**
+- **Tessa**, a new model (D9).
+- **Dockers:** two or three canal dwellers (D4), one new body with two or three outfits. A Twinsun trader can reuse an
+  existing body.
+- Each body is posed in its `characters.js` entry, and a lookdev sheet (idle, talk, walk, work) goes in
+  `docs/future/world/W-1/`.
+
+**Budget and measures (this laptop, Medium, plugged in and on battery; the Test Lab):**
+- **Views:** the pad, the quay, the lift and the shed interior. For each, give draw calls, triangles, GPU ms and fps.
+- **Budget:** at or under the Citadel street in each view.
+- **Loading:** first-visit build time, kept small and stepped (as the other regions are).
+
+**Pictures:** the play camera from the pad, the quay, the lift with the boat stuck, the lift balanced, the shed outside
+and inside, and Tessa's lookdev.
+
+**Built:** _(the builder)_
+
+---
+
+## W-2 … W-8 · Draft, the coordinator reviews
+
+**Draft, the coordinator reviews.** Written by the cloud's EXP-PLAN (01.11) from `EXPANSION_PLAN.md`. Do not build
+any of these until the coordinator marks the order **Ordered** and W-1 is **Accepted** by the user. The story cards
+that use each handle are named in brackets (N1–N6, BR-, SV-, UR-, NW-, OP-, DP- in the plan).
+
+Shared rules for every order below, as in W-1:
+- Each place is its own lazy group, far from every other region.
+- It exports one handle object with `rooms`, `spawns`, `exits`/`doors`, stand spots `{x, z, a}`, interactive spots
+  `{x, z, r}`, ball targets `{x, y, z, r}` and sword targets `{x, y, z, r}`.
+- Moving parts are **pure setters** with an `instant` flag for loading, and readable state.
+- **The story owns the puzzle rules.** Where a puzzle has a rule (which level follows from which setting), the story
+  computes it and calls the setters. The world animates them, keeps collision in step, and plays the mechanism's
+  sound. W-1's lift is the one exception, already specified.
+- Deep water has a soft edge that pushes back. Every room has `safe` spots: the story returns the hero there after
+  a fall or a drowning.
+- Day only, no night (Ballastra too, and underground). No readable story text in the world beyond the placeholder
+  signs given here.
+- Measure each view on the laptop (draw calls, triangles, GPU ms, fps on Medium, plugged in and on battery), at or
+  under the Citadel street. Pictures go to `docs/future/world/<W-id>/`.
+
+**One request for W-1 (so it isn't reopened):** add `crane.reset(instant)` beside `crane.release` (the story lets the
+player re-latch crane B and retry, N1).
+
+---
+
+## W-2 · The Arch District (Draft, the coordinator reviews)
+
+The district under and on Ballastra's great arch, the skyline anchor already seen from the harbour. About 25–30 minutes
+of play across N3 and OP-5, with return visits in N6 and the postgame. Lived in, not a set: homes, a market, a meeting
+place, and the old pump machinery under the arch that explains the planet's history without a panel.
+
+**The place.** Its own lazy group, `bl_arches`, entered from W-1's `districtEdge` and the shortcut.
+- **The arch:** one great weathered stone arch (D3), its feet in the water, its underside hung with homes.
+- **The upper terrace** (dry, on the arch's shoulder): taller, older houses in glazed tile and stone, wider stairs.
+  Oren's house is here.
+- **The lower row:** homes on stilts at canal level along the arch's foot, doorsteps a hand above the water at the
+  balanced level. Water lines (stains) on the walls a metre up. Mags's house is here.
+- **The market:** a broad float under the arch: stalls under cloth awnings, Corvin's glaze stall (bowls and floats),
+  fish, cloth, a tea stand.
+- **The Speaking Steps:** a round stone platform with tiered steps, the public meeting place; visible from the market
+  and the terrace.
+- **Narrow stairways and ladders** link the lower row, the market and the terrace (2–4 m steps), with rails where a
+  fall would strand.
+- **The flood bell** (OP-5): a squat tower on the arch's shoulder with a bronze bell, a pull rope, a cam wheel with two
+  settings, and **three horn mouths** that can each point one of three ways (terrace, lower row, gardens). The clapper
+  is tied off at first.
+- **Interiors:**
+  - `bl_oren`: Oren's house, dry and orderly: a drafting table with drawings, a worn formal coat on a hook, shelves of
+    ceramic models, a window that looks away from the water.
+  - `bl_mags`: Mags's house, lower row: patched floor, water line on the walls, a committee table with cups,
+    children's things drying.
+  - `bl_pump`: the old pump room inside the arch's pier: big glazed-ceramic and bronze machinery, pipes with brass
+    plates, the lower row's **spill gate** (a wheel and a vertical gate) **chained shut** with a heavy chain and an
+    official seal plate, its pawl high on the pier wall.
+- **Life (props; the story adds the people):** washing, boats tied at doorsteps, cats on warm tiles, potted herbs,
+  lanterns, gulls (`gulls.js`).
+
+**The puzzle's physical parts.**
+- **The lower canal** has three levels:
+  - 0 flooded: doorsteps under, boards across the walkway, washing taken in, shutters closed;
+  - 1 balanced: doorsteps dry, walkway open;
+  - 2 low: boats aground, mud.
+  Level 0 is the starting state; N3 sets 1.
+- **Dunn's door** (lower row): silted shut at canal level. A silt heap (sword target, three hits) and the door (a kick)
+  open it.
+- **The spill gate:** the chain (sword target, one hit cuts it) and the pawl (ball target). With both done the story
+  calls `spillGate.setOpen(true)`.
+- **The bell:** pull (interactive), clapper tie (needs the story's OK first), three horn mouths (interactive, each
+  cycles three directions), cam wheel (interactive, two settings). It rings in the setting given (one tone, two
+  tones).
+
+**Handles to export:** `BALLASTRA.arches` from `src/game/ballastra/arches.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_arches` (outdoor), `bl_oren`, `bl_mags`, `bl_pump`;
+  - `spawns`: `fromHarbor`, `fromGardens`, `orenIn`, `orenOut`, `magsIn`, `magsOut`, `pumpIn`, `pumpOut`, `steps`;
+  - `exits`: `toHarbor` (to W-1 `districtEdge`), `toGardens` (to W-3 `fromArches`);
+  - `doors`: Oren's, Mags's, the pump room, both ways.
+- **Stand spots:** `oren_table`, `oren_terrace` (away from the water), `oren_steps`, `mags_house`, `mags_row`,
+  `mags_steps`, `dunn_door`, `corvin_stall`, `hobb_market`, `tessa_steps`, `tessa_pump`, `tib_bell`, `quill_steps`,
+  `row1`…`row4` (lower-row residents when home), `market1`…`market3`.
+- **Interactive spots:** `orenPlan`, `pumpPlates`, `pumpMachine`, `spillWheel`, `dunnDoor`, `noticeBoard`, `bellPull`,
+  `bellCam`, `bellHorn0`, `bellHorn1`, `bellHorn2`, `safe` (several).
+- **Ball targets:** `spillPawl`. **Sword targets:** `spillChain`, `dunnSilt`.
+- **Methods:**
+  - `canal.setLevel(0|1|2, instant)`, `canal.level`;
+  - `row.setHome(b, instant)` (washing out, shutters open, boats tied);
+  - `dunnDoor.setOpen(b, instant)`, `silt.setHits(n, instant)`;
+  - `chain.cut(instant)`, `pawl.release(instant)`, `spillGate.setOpen(b, instant)`;
+  - `bell.untie(instant)`, `bell.setHorn(i, dir 0|1|2, instant)`, `bell.setCam(0|1, instant)`, `bell.ring()`.
+- **Collision:** the boarded walkway is closed at level 0, open at 1 and 2; doorsteps are walkable at 1. The pump
+  room's gate is solid until open.
+
+**Characters:** the residents come from W-7.
+
+**Budget and measures:** views of the market under the arch, the lower row, the terrace with the bell, and the pump
+room.
+
+**Pictures:** the play camera at the market, the lower row at levels 0 and 1, the Speaking Steps, the chained gate,
+the bell tower, and Oren's and Mags's interiors.
+
+**Built:** _(the builder)_
+
+---
+
+## W-3 · The Water Gardens (Draft, the coordinator reviews)
+
+Shared water made visible: cultivation rafts, channels, gauges, a kiln that lives on the same water, and the test
+installation where the prototype is proven (N2, N6; return visits in N3–N5 and the postgame).
+
+**The place.** Its own lazy group, `bl_gardens`, between the Arch District and the House of Balances' causeway.
+- **Cultivation rafts** on three levels of basins (terraced like rice fields, but floating), beans and reeds and
+  flowers. Three states: 0 dry (cracked mud, wilted), 1 recovering, 2 green.
+- **The upper channel** comes in on a stone aqueduct; a splitter house divides it. **Two big gauges** stand side by
+  side at the splitter (upper channel, lower gardens), readable from the path.
+- **Shifting walkways:** floating walkways between the rafts that ride the water (lower when the gardens are dry).
+- **The service tunnel:** a hatch by the splitter, down into a brick tunnel with the old pipework. Inside:
+  - an **unrecorded tap** (a newer pipe, clearly bodged on) leading off toward the kiln;
+  - a **seized bypass valve**;
+  - the **splitter board**, three gates (G1 gardens, G2 kiln, G3 overflow), each closed, half or open. G1 is set in
+    the tunnel; G2 and G3 have latches across the channel outside, too far to reach (ball targets).
+- **Corvin's kiln** (`bl_kiln`, interior): a glazing workshop with a water wheel on the outside wall driving the
+  bellows and the potter's wheel; racks of glazed floats; a kiln mouth that glows when running.
+- **The test installation** (N6): a stone platform with **three linked basins** (A, B, C), each with a float, a
+  level mark and a lamp. A frame in the middle has **five part slots**: a ceramic housing, a brass assembly, a core
+  element, a glazed float, a timber frame. Each basin has a **range dial** (three positions) and a **switch latch** high
+  on a post (ball target). A **storm sluice** feeds the rig (opened by a resident in the story).
+
+**Handles to export:** `BALLASTRA.gardens` from `src/game/ballastra/gardens.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_gardens` (outdoor), `bl_tunnel`, `bl_kiln`;
+  - `spawns`: `fromArches`, `fromHouse`, `tunnelIn`, `tunnelOut`, `kilnIn`, `kilnOut`, `rig`;
+  - `exits`: `toArches`, `toHouse` (W-4 causeway).
+- **Stand spots:** `wenna_rafts`, `wenna_gauges`, `grower1`, `grower2`, `corvin_kiln`, `corvin_wheel`, `tessa_rig`,
+  `oren_rig` (back from the water's edge), `mags_rig`, `wenna_rig`, `tib_sluice`, `rigWatch1`…`rigWatch4`.
+- **Interactive spots:** `gaugeUpper`, `gaugeLower`, `tunnelHatch`, `tap`, `bypassValve`, `gate1`, `rigSlot0`…`rigSlot4`,
+  `rigRange0`…`rigRange2`, `safe` (several).
+- **Ball targets:** `gate2Latch`, `gate3Latch`, `rigSwitch0`…`rigSwitch2`.
+- **Methods:**
+  - `channels.show({ upper, gardens, kiln, overflow } /* 0..1 flow */, instant)`;
+  - `gauges.set(upper, lower /* 0..1 */, instant)`;
+  - `gate.set(id /* 1|2|3 */, 0|1|2, instant)`, `tap.setOpen(b, instant)`, `bypass.setFree(b, instant)`;
+  - `rafts.setState(0|1|2, instant)`, `walkways.setLevel(t /* 0..1 */, instant)`;
+  - `kiln.setRunning(b, instant)`, `wheel.setSpeed(0..1)`;
+  - the rig: `rig.setPart(slot, b, instant)`, `rig.setRange(basin, 0|1|2, instant)`,
+    `rig.setLevels([a, b, c] /* 0..1 */, instant)`, `rig.setLamp(basin, 'off'|'green'|'amber'|'red')`,
+    `rig.spill(basin, toBasin)` (a visible overflow), `rig.setSluice(b, instant)`.
+- **Collision:** walkways follow their level. The rig's basins are shallow (wadeable, never deep).
+
+**Budget and measures:** views of the rafts with the gauges, the tunnel, the kiln interior, and the test rig with six
+people around it.
+
+**Pictures:** the play camera on the rafts (dry, green), the gauges, the tunnel's splitter, the kiln, and the rig
+empty and assembled.
+
+**Built:** _(the builder)_
+
+---
+
+## W-4 · The harbour warehouse and the House of Balances (Draft, the coordinator reviews)
+
+### Part A · The harbour warehouse (an addition to W-1's region `ballastra`) (N4)
+
+**The place.**
+- **Fennick's yard** beside the cargo quay, behind a gate with a small gatehouse: stacked crates, some stencilled
+  BALANCE WORKS (placeholder stencil text), a hand cart.
+- **The warehouse** (`bl_warehouse`, interior, two levels):
+  - the ground floor: crate aisles;
+  - Fennick's office in a corner, glass-fronted, with an order board, a ledger desk and a locked crate;
+  - an upper catwalk round the walls with a service door that opens on to crane B's walkway from W-1, reached once
+    W-1's shortcut is open.
+- **The freight line:** a cargo cable car from the warehouse roof to the House of Balances' causeway, shut at first.
+
+**Handles to export:** `BALLASTRA.warehouse` from `src/game/ballastra/warehouse.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_warehouse`;
+  - `spawns`: `yardGate`, `whIn`, `whOut`, `catwalkDoor`, `freightTop`;
+  - `doors`: the warehouse door, the catwalk service door.
+- **Stand spots:** `fennick_office`, `gatehand`, `hobb_yard`.
+- **Patrols** (arrays of points for two watchers): `patrolA`, `patrolB`; plus the watchers' look points.
+- **Interactive spots:** `crate0`…`crate2` (marked crates), `orderBoard`, `ledgerDesk`, `lockedCrate`, `serviceDoor`,
+  `freightCar`, `safe`.
+- **Ball target:** `hoistLatch` (a hoist over aisle 2 drops a crate across a patrol's path, a stealth helper).
+- **Methods:** `gate.setGuarded(b, instant)`, `crates.setSearched(i, b, instant)`, `lockedCrate.setOpen(b, instant)`,
+  `assembly.take(instant)`, `hoist.drop(instant)`, `freight.setOpen(b, instant)`, `freight.ride()` (a short ride, then
+  the story changes the scene to W-4's causeway).
+- **Collision:** the dropped crate is solid; the catwalk has rails.
+
+### Part B · The House of Balances (N5; the test chamber in postgame)
+
+A partly submerged former control facility in glazed ceramic and stone (D3's C element): long halls of turquoise
+tile, bronze floats on chains, sluice wheels, a records chamber half under water. Quiet, damp, beautiful and a little
+dangerous.
+
+**The place.** Its own lazy group, `bl_house`.
+- **`bl_causeway`** (outdoor): the approach from the gardens across a causeway of stone piers; the freight car's
+  landing. The façade is a glazed dome cracked down one side, half in the water.
+- **`bl_hall`** (the filling hall): a long pool with a sluice wheel (three levels), two floats on vertical rails that
+  rise with the water, and the **small cracked gate** to a side bay. The small gate drops shut and jams if the hall
+  is raised to level 2 while it stands open; its own wheel resets it.
+- **`bl_floats`** (the float gallery): a tall room with four floats on chains at different heights, a sluice wheel,
+  two **remote latches** high up (ball targets) that free floats, and **tangled nets** (sword targets, three) over
+  two passages. The **main damaged gate** sits between the gallery and the hall: visibly cracked, the same make as the
+  small one.
+- **`bl_records`** (the records chamber): a round room, the water at knee height; at its centre **the Balance**, a
+  glazed-ceramic and bronze master regulator the size of a barrel, on a plinth; ledger shelves in alcoves; one ledger
+  chest.
+- **`bl_maint`** (the maintenance passages): narrow, dry brick corridors behind the halls with ladders and hatches,
+  closed from the hall side at first; opened from inside they become the safe way in and out.
+- **`bl_test`** (the test chamber, postgame): a small working copy of the rig's basins, lit and running.
+- **Life:** dripping, reflections on tile, fish in the pools, old notices in tile (placeholder: "LEVEL TWO FOR
+  INSPECTION ONLY").
+
+**Handles to export:** `BALLASTRA.house` from `src/game/ballastra/house.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_causeway`, `bl_hall`, `bl_floats`, `bl_records`, `bl_maint`, `bl_test`;
+  - `spawns`: `fromGardens`, `freightLanding`, `hallIn`, `floatsIn`, `recordsIn`, `maintIn`, `maintOut`, `testIn`;
+  - `exits` and `doors` between them; each room's `safe` spots.
+- **Stand spots:** `tessa_hall`, `tessa_floats`, `oren_door` (outside the doorway: he hesitates), `oren_records`,
+  `oren_maint`.
+- **Interactive spots:** `wheel_hall`, `wheel_floats`, `wheel_records`, `wheel_smallGate`, `balance`, `ledgers`,
+  `ledgerChest`, `maintHatch`, `testRig`.
+- **Ball targets:** `latch0`, `latch1` (gallery), `latch2` (records' door counterweight).
+- **Sword targets:** `net0`, `net1`, `net2`.
+- **Methods:**
+  - `pool.setLevel(room, 0|1|2, instant)`, `pool.level(room)`; floats ride their room's level, `float.free(i, instant)`;
+  - `latch.release(id, instant)`, `net.cut(id, instant)`;
+  - `smallGate.setState('open'|'shut'|'dropped', instant)`, `mainGate.setState('shut'|'open'|'fallen', instant)`
+    (fallen: a collapse animation, then a wall of rubble and water; permanent);
+  - `recordsDoor.setOpen(b, instant)`, `balance.take(instant)`, `maint.setOpen(b, instant)`,
+    `test.setActive(b, instant)`.
+- **Keepers:** spawn points and patrol paths for three keeper automatons (W-7 builds the body): `keeper0`…`keeper2`.
+- **Collision:** floats are platforms at their height. Water deeper than the hero's chest pushes back to `safe`. The
+  fallen main gate closes that passage for good.
+
+**Budget and measures:** views of the causeway, the hall, the gallery, the records chamber, and the warehouse
+interior with two watchers.
+
+**Pictures:** the play camera at each, the gallery at two levels, the Balance, and the fallen gate.
+
+**Built:** _(the builder)_
+
+---
+
+## W-5 · Sendell's outer underground, first visit (Draft, the coordinator reviews)
+
+Quiet wonder (D5): warm lakes, translucent mineral layers, reflected light, slow motion, root-like forms and pressure
+channels; never "another crystal cave". Sendell is light responding in the stone (D7); the entity is one glimpse
+behind a thick layer (D8). About 23 minutes (SV-1…3); the same places return changed in W-6.
+
+**The place.** Its own lazy group, `uw_outer`, entered from the existing well cave.
+- **A hook in the well interior** (`interiors.js` `buildWell`, a shared file): a new exit beyond the crystal wall
+  broken in chapter 1, shown only when the story asks (`wellCave.setDeepOpen(b)`); and a lower water level for the
+  cave (`wellCave.setWaterLow(b)`).
+- **`uw_entry`:** a warm passage where the well's crystals give way to banded translucent stone, faint light inside
+  it.
+- **`uw_lake`:** a broad warm lake under a low vault, steam lying on it. With the water low, **root shelves** show
+  along one side. A **hanging root** is tied off high (ball target), and released it swings down as a bridge to the
+  far shelf. **Gauge site 1** is on the far shelf.
+- **`uw_channels`:** a chamber where **two pressure channels** (A, B) come out of the rock, each with an old
+  stone-and-root **valve** (three positions). Their **jets** cross a ledge in the middle, where **gauge site 2** is.
+  - Jets have three strengths and follow the story's setting: strong blocks the ledge; mid breathes on a 3-second
+    cycle (crossable between breaths); off.
+  - Through the ceiling comes the **project's feed casing**, a steel pipe with cracked, darkened layers round it. It
+    can **bang** (a shudder, dust, a sound) on command.
+- **`uw_layers`:** a tall space of translucent mineral sheets. Three **facets** on pivots (each turns in four steps by
+  use or ball) carry Sendell's light from a high source down the room. When all three line up, a **light path** lights
+  across the layers: a ledge route that is solid only while lit. It leads to **gauge site 3**. Behind the thickest
+  layer, the **glimpse**: a vast slow shape turning once, never whole.
+- Sendell's light: the layers brighten softly near the hero as he goes (D7), fainter than her chapter-7 shrine.
+
+**Handles to export:** `UNDERWORLD.outer` from `src/game/underworld/outer.js`.
+- **Rooms and spots:**
+  - `rooms`: `uw_entry`, `uw_lake`, `uw_channels`, `uw_layers`;
+  - `spawns`: `fromWell`, `lakeIn`, `channelsIn`, `layersIn`, `layersTop`;
+  - `exits`: between them and back to the well; `safe` spots in each.
+- **Interactive spots:** `gaugeSite0`…`gaugeSite2`, `valveA`, `valveB`, `facet0`…`facet2`.
+- **Ball targets:** `rootLatch`, `facetPivot0`…`facetPivot2`.
+- **Methods:**
+  - `root.drop(instant)`;
+  - `gauge.place(i, instant)`, `gauge.setReading(i, 0..1)`, `gauge.setPulse(i, b)`;
+  - `valve.set('A'|'B', 0|1|2, instant)`, `jet.set('A'|'B', 'off'|'mid'|'strong')` (the 3-second breath runs inside
+    the world in step with a readable sound, with `jet.phase` to read);
+  - `casing.bang()`;
+  - `facet.set(i, step 0..3, instant)`, `light.setPath(b, instant)` (collision on only while lit),
+    `light.setStrength(0..1)`;
+  - `glimpse.play()`.
+  - `wellCave.setDeepOpen(b, instant)`, `wellCave.setWaterLow(b, instant)` (well interior hook).
+- **Collision:** jets push the hero back (no damage). The lit path exists only while lit; unlit, its spots drop him
+  to the layer floor (`safe`).
+
+**Budget and measures:** views of the lake, the channels with both jets, the layers with the path lit. Few dynamic
+lights (D7): emissive and baked where possible.
+
+**Pictures:** each room at the play camera, the path lit and unlit, the glimpse frame (spoiler folder).
+
+**Built:** _(the builder)_
+
+---
+
+## W-6 · The underground, second visit (Draft, the coordinator reviews)
+
+The same places after continued drilling: hotter, lower, cracked, darker. Twinsen comes in from the other side (the
+shaft) and finds his own gauges from W-5 glowing as beacons. "The Wound in the Shell" is the one place of fragile
+grandeur (D5 C). About 25 minutes (UR-1), then the join to the existing deep installation.
+
+**The place.** Its own lazy group, `uw_wound`.
+- **A hook in `underground.js`** (shared file): the c3shaft tunnel to `c3deep` gets a **cave-in** (rubble across the
+  tunnel mouth: `shaftTunnel.setBlocked(b)`) and a **breach** in the shaft wall leading to `uw_breach`. And `c3deep`
+  gets a new side door `to uw_join`.
+- **`uw_breach`:** a raw crack from the shaft into the outer layers: drill-scarred rock meets banded stone.
+- **`uw_lake2`:** the W-5 lake from the far side, its water low and hot, the root shelves cracked, steam thicker.
+  Gauge 1 is visible across the water as a beacon.
+- **`uw_channels2`:** the channels rearranged: two linked pairs (C-D, E-F), each with a **band dial** (three
+  positions) instead of a plain valve. **Rubble** (three spans) drops across the path when a pair is forced (off on
+  one side, strong on the other) and clears when banded. Gauge 2 is here as a beacon.
+- **`uw_wound`:** a great fissure in the translucent shell seen from a ledge, light pulsing weakly inside, the second
+  and larger **glimpse**. Gauge 3 is here. A **lever** on the far side clears the shaft's cave-in for the way back.
+  A passage leads to `uw_join` and into `c3deep`.
+- Sendell's light: weaker than in W-5 (`light.setStrength` lower), flickering in damaged layers.
+
+**Handles to export:** `UNDERWORLD.wound` from `src/game/underworld/wound.js`.
+- **Rooms and spots:**
+  - `rooms`: `uw_breach`, `uw_lake2`, `uw_channels2`, `uw_wound`, `uw_join`;
+  - `spawns`: `fromShaft`, `lake2In`, `channels2In`, `woundIn`, `toDeep`;
+  - `exits`, including `to c3deep` and `to c3shaft` (back through the breach); `safe` spots in each.
+- **Interactive spots:** `bandCD`, `bandEF`, `caveLever`, `beacon0`…`beacon2` (look).
+- **Methods:**
+  - `beacon.setState(i, 'steady'|'stressed'|'dead')` (gauges: the same three models as W-5, now lit);
+  - `band.set('CD'|'EF', side 0|1, 0|1|2, instant)`, `jet.set(id, 'off'|'mid'|'strong')`;
+  - `rubble.set(i, b, instant)`;
+  - `light.setStrength(0..1)`, `glimpse.play()`;
+  - `shaftTunnel.setBlocked(b, instant)` (underground.js hook).
+- **Collision:** as W-5. Rubble is solid when down. The hot lake's edge pushes back.
+
+**Budget and measures:** views of the breach, the hot lake, the channels, and the Wound vista.
+
+**Pictures:** each room, and the Wound (spoiler folder).
+
+**Built:** _(the builder)_
+
+---
+
+## W-7 · Oren, the residents, the keepers (Draft, the coordinator reviews)
+
+Characters for W-2…W-4 (D4, D9). Silhouettes first; faces, hands and feet before effects; no recoloured crowds.
+
+- **Oren (D9):** a canal dweller from the upper districts, a little taller and narrower than his people (not
+  spindly), a worn formal coat from the central-network years (long, buttoned, frayed cuffs), careful posture.
+  - Gestures: points at a drawing; folds hands behind his back; steps back from the water's edge.
+  - **Rig contract first** (as `LOCAL_EXPANSION_PROMPT.md` §2 says): the changed proportions and what `rig.js`
+    needs, written here before building, then the cloud's OK.
+- **Residents** (compact canal dwellers, D4; each a distinct silhouette and outfit, one shared body with variants
+  where it reads well):
+  - **Hobb:** dock worker; broad, knit cap, rope over his shoulder.
+  - **Wenna:** grower; wide-brimmed reed hat, apron with seed pockets, mud to the knees.
+  - **Corvin:** kiln owner; leather apron, glaze-stained sleeves, round spectacles.
+  - **Mags:** lower-row representative; older, shawl, a stick she points with, upright.
+  - **Quill:** harbourmaster; peaked cap, a ledger and a set of hanging scales on his belt.
+  - **Fennick:** contractor; waistcoat, a clip-board, a company badge.
+  - **Tib:** Wenna's son, child proportions.
+  - **Dunn:** old resident, bent, a cane.
+  - **Ferro:** a boatman (can reuse a docker body with a new outfit).
+  - Plus **two yard hands** in Fennick & Daughters work coats (watchers, then knock-out fighters).
+- **The keepers:** three automatons of the old central system. Glazed-ceramic and bronze, squat, a gate-key arm, a
+  lamp eye; slow, readable wind-ups; hit by ball and sword. Not humanoid copies of the residents.
+- **Twinsen's work coat:** a variant for N4 (a Fennick & Daughters coat over the tunic), swapped like Zoé's body
+  swap, plus the same coat look for the chapter-9 archive disguise if the coordinator wants it reused.
+- Each body posed in its `characters.js` entry; lookdev sheets (idle, talk, walk, work) in `docs/future/world/W-7/`.
+
+**Built:** _(the builder)_
+
+---
+
+## W-8 · The bridge, the stations and the side stories in existing regions (Draft, the coordinator reviews)
+
+Small, purposeful additions to existing regions. Proposed home for the builder's code: `src/game/expworld/*.js`,
+exporting `EXPWORLD.*`, joined to the regions by small commented hooks listed under "Hooks". This needs the
+coordinator's OK, since the split names only `ballastra/` and `underworld/` as the builder's. Where the coordinator
+prefers, the very small props can be made by the story's `decorate()` instead, as chapter 8's shelters are.
+
+### W-8a · The bridge (Borrowed Time) and the seeds
+
+| Part | Region | What | Handles (`EXPWORLD.bridge`) |
+|---|---|---|---|
+| Depot feed station | Zeelich, by the depot gate | a wheel house: a big throttle wheel (three positions), a pressure gauge, a feed pipe with a joint that spits steam on a short readable cycle when surging | `feed.wheelSpot {x,z,r}`, `feed.setThrottle(0|1|2, instant)`, `feed.setSurge(b)` (with `feed.spitPhase`), `feed.spitZone {x,z,r}` |
+| Street heat posts dim | Zeelich street | the existing posts at three brightnesses | `zposts.setLevel(0..1)` |
+| Snuff's old hearth | Zeelich, the watch house | smoke from the old hearth chimney; a wood stack | `hearth.setLit(b, instant)` |
+| Grumm's braziers | Zeelich street, by the bakery and the council house | two charcoal braziers | `braziers.setOut(b, instant)` |
+| The bench shell | Baldino's workshop, the relay table | a glass ring on a stand with five pegs (three heights each) and a hairline crack that can appear at any of five places | `model.spot`, `model.setPeg(i, 0|1|2, instant)`, `model.crack(i)`, `model.reset()` |
+| The station store | Citadel, behind the project office (`projoffice`) | a small room `projstore`: shelves, packing crates, one crate stencilled BALANCE WORKS · BALLASTRA · REJECTED (placeholder), a lid that opens; a patrol path for one packing guard | room `projstore`, `crate.spot`, `crate.setOpen(b, instant)`, `storePatrol` |
+| The B-7 housing | the house kitchen table; later the station wall (epilogue) | a ceramic-and-brass regulator housing | `b7.setAt('none'|'table'|'station', instant)` |
+| Station yard crate (seed) | Citadel station yard (ch. 2) | the same crate, closed, REJECTED · RETURN TO SENDER | `yardCrate.setVisible(b)` |
+| Barge crate stencil (seed) | the opening's cargo crate on the quay | stencil BALANCE WORKS · BALLASTRA · CERAMIC | art only, `bargeCrate.spot` |
+| Nell's shelf | Nell's shop | a glazed float valve on her shelf | `nellValve.spot` |
+| Monastery radio | Hamalayi monastery | Pim's scrap radio on a table | `pimRadio.spot` |
+| Ferry idle | Citadel harbour | the ferry tied up dark; the chalk board "NO FERRY · THROTTLED" | `ferry.setIdle(b)` |
+| Pump queue | Citadel lane | three residents' stand spots at Bram's pump | `pumpQueue[0..2]` |
+| Feed-wheel tour step (DP-2a) | Citadel station, the control room or yard | a feed wheel the same make as Zeelich's | `cfeed.spot`, `cfeed.setOpen(b)` |
+| Asylum tunnel (DP-8b) | the asylum's cellar → the station yard | a passage and a grille onto the project store | `asylumTunnel.setOpen(b)`, spawns `tunnelIn/Out` |
+| Burrow route (DP-3a) | Zeelich: Grumm's hatch → a short moles' tunnel → up into the depot | a hatch with a warped lid (kick), the tunnel with a warm seep, a trap door in the depot | `burrow.setOpen(b)`, room `zburrow`, spawns |
+| SUPPLIERS cabinet (DP-9c) | Zeelich, the archive | a fourth cabinet labelled SUPPLIERS | `archive.cabinets` gains one entry |
+
+### W-8b · The network, the core and the homecoming
+
+| Part | Region | What | Handles (`EXPWORLD.stations`) |
+|---|---|---|---|
+| Regulator housings | the five relays (mill top, valve room, lighthouse top, bore frame, dome) | a ceramic float housing clipped beside each relay, a three-band dial, a lamp (off, green, amber) | `reg[station].spot`, `reg[station].setBand(0|1|2, instant)`, `reg[station].setLamp(state)` |
+| Lighthouse spots (B-1) | lighthouse top | clear stand spots for Zoé and Arthur beside the cabinet, off the dial bank and the stairs path | `lighttop.npcSpots.zoe2`, `.arthur2` |
+| Mill hoist (OP-2 reward) | Zeelich, the old mill | a crew-built hoist platform that shortens the climb | `millHoist.setBuilt(b)` |
+| Core stress lamps | the core (`c3core`) | one lamp on each pylon's base (green, amber, red); a floor window where the glimpse can show | `core.lamp(i, state)`, `core.glimpse()` |
+| The coil's plate | the core | a brass plate on Vesk's coil, BALANCE WORKS · COIL 4 OF 6 (placeholder) | art only |
+| Heat posts with switches | Citadel (epilogue) | each heat post gets a small local switch box; the harbour row's posts lit | `posts.setLocal(b)` |
+| Ballastra pad on the boards | Citadel Spaceport | a second line on the departures board | `spaceport.board.setLines([...])` |
+
+### W-8c · Side stories' parts in existing regions
+
+| Story | Region | What | Handles (`EXPWORLD.sides`) |
+|---|---|---|---|
+| OP-1 Missing Deliveries | Citadel harbour; the baggage claim; the depot shelter | the cargo lift (from the opening) with a control lever and two stops (quay, path side), a stalled cart on it; the baggage claim's back store with an old conveyor lever and a back passage to the square; blankets and casks props at the shelter door | `cargoLift.setStop('quay'|'path', instant)`, `cart.setAt(...)`, `baggage.backDoor.setOpen(b)`, `shelter.setStocked(b)` |
+| OP-2 The Last Shift | Zeelich, the depot | a production hall interior `zdepothall`: three lines (a drill-parts press with a broken guard, a heat-cell line, a packing line), a switchboard with three switches and a meter, a high switch on the press (ball target), the press belt (sword target), two drone spawns | room, `lines.setRunning(i, b)`, `meter.set(0..1)`, `press.switchTarget`, `press.beltTarget`, `drones[0..1]` |
+| OP-3 Yorna's Map | Hamalayi, foothills to monastery | three landmarks changed (a gully where a frozen fall was, a fallen horn rock, a snow mound over a stone store with a dig spot), three marker posts with ice (sword or ball), a marked path that becomes walkable | `store.digSpot`, `store.setOpen(b)`, `post(i).setIced(b)`, `route.setMarked(b)` |
+| OP-4 Arthur's Boat | Citadel, the garden pond and the bay by the pier | Arthur's model boat with a lamp mast (blinks), a sail path across the bay, a snag under the pier (ball target on the line) | `boat.sail(path)`, `boat.lamp(pattern)`, `boat.snag.target`, `boat.setAt(...)` |
+| OP-6 Dallan's Debt | Kesh | Lumi's torn shade sail; the research post's store door; a high ring for the sail (ball target) | `shade.setState('torn'|'up')`, `postStore.setOpen(b)`, `shade.ringTarget` |
+| DP-4 Ilka's stakes | Desert Island | three heat stakes with readable dials (oasis, dune, post fence) | `stake(i).set(0..1)` |
+| DP-6a escort | Hamalayi gorge | a second ice-bridge spot (ball target) downstream of the tree | `iceBridge2.setUp(b)`, target |
+| DP-7a/c two suns, melt race | the observatory and the glacier basin | a dome shutter with two positions (east sun, west sun); melt channels that open and close on a readable cycle across the basin | `shutter.set(0|1)`, `melt.setCycle(b)`, `melt.phase` |
+| DP-8a shelter in place | Citadel | chalk marks on three doors (three symbols), the pharmacy's door state | `chalk.set(door, symbol)`, `pharmacy.setOpen(b)` |
+
+**Budget and measures:** each touched region keeps its current numbers (draw calls, GPU ms) within its present
+budget.
+
+**Built:** _(the builder)_
+
+## Hooks (shared files touched, by either side)
+
+_(file, line or function, why)_

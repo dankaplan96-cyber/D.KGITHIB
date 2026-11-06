@@ -1,0 +1,36 @@
+{
+ "enter (input)": "entered",
+ "flags": {
+  "seen": false,
+  "searched": false
+ },
+ "north side presses": [
+  {
+   "press": 1,
+   "tg": "wlook:p_look",
+   "searched": false,
+   "seen": true,
+   "pickups": []
+  },
+  {
+   "press": 2,
+   "tg": null,
+   "searched": true,
+   "seen": true,
+   "pickups": []
+  },
+  {
+   "press": 3,
+   "tg": "wlook:p_look",
+   "searched": true,
+   "seen": true,
+   "pickups": []
+  }
+ ],
+ "lines": [
+  "n_hero: Esmer shuttle parts, stencilled \"SHUTTLE YARD, return to Ilo\". Some have been here a while.",
+  "n_baldino: Ilo lends me parts. I lend her opinions. She calls it a fair trade. She's being polite.",
+  "n_hero: Esmer shuttle parts, stencilled \"SHUTTLE YARD, return to Ilo\". Some have been here a while.",
+  "n_baldino: Ilo lends me parts. I lend her opinions. She calls it a fair trade. She's being polite."
+ ]
+}

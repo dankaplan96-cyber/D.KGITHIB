@@ -1,0 +1,10 @@
+start: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":true,"items":["evacplan","notebook"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":13,"hp":"8/11","pos":[3436.18,5.35,-27.18],"lying":[],"state":"play"}
+ride 1: {"r":"talked","at":"village","t":0,"heroMinusGround":0,"minDistHeroToPole":99,"overDrift":[],"state":"play"}
+ride 1 lines: ["n_hesk: Back to Kesh? Hop on."]
+ride 2: {"r":"talked","at":"dig","t":0,"heroMinusGround":0,"minDistHeroToPole":99,"overDrift":[],"state":"play"}
+ride 2 lines: ["n_hesk: The dig? They fenced it, but the yacht doesn't care about fences. Hop on."]
+walk to the drift: "arrived"
+walk over the drift and back: ["arrived","arrived"]
+end: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":true,"items":["evacplan","notebook"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":13,"hp":"8/11","pos":[3414.81,5.03,16.21],"lying":[],"state":"play"}
+kept save-k6.json
+no errors

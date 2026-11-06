@@ -1,0 +1,30 @@
+PROBE title after 205.6 s
+census street (follow), 240 frames: objects reached through shown parents 1828 a frame (min 1750, max 1891)
+shownTree stats a frame (avg): visited 1829.4 · composed 188.9 · world 467.1 · own 0.0
+group (top-level / kind): n · shown · TRS changed · visibility changed · reparented · children changed · world recomputed
+  Group / batched: 428 · 428 · 0 · 0 · 0 · 0 · 0
+  Group / rig: 422 · 330 · 212 · 7 · 0 · 0 · 318
+  Group / node: 290 · 172 · 12 · 0 · 0 · 0 · 12
+  Group / shadowMember: 234 · 231 · 12 · 1 · 0 · 0 · 88
+  Group / mesh: 213 · 148 · 0 · 10 · 0 · 0 · 21
+  Mesh / mesh: 148 · 2 · 4 · 0 · 0 · 0 · 4
+  Group / keep: 40 · 39 · 12 · 0 · 0 · 0 · 15
+  Group / bone: 27 · 27 · 5 · 0 · 0 · 0 · 26
+  wizardTent / mesh: 11 · 11 · 2 · 0 · 0 · 0 · 2
+  Sprite / node: 6 · 0 · 0 · 0 · 0 · 0 · 0
+  PointLight / node: 2 · 2 · 0 · 0 · 0 · 0 · 0
+  dog-grey / rig: 2 · 0 · 0 · 0 · 0 · 0 · 0
+  wizardTent / node: 1 · 1 · 0 · 0 · 0 · 0 · 0
+  HemisphereLight / node: 1 · 1 · 0 · 0 · 0 · 0 · 0
+  DirectionalLight / node: 1 · 1 · 1 · 0 · 0 · 0 · 1
+  Object3D / node: 1 · 1 · 1 · 0 · 0 · 0 · 1
+  LineSegments / node: 1 · 0 · 0 · 0 · 0 · 0 · 0
+  softParticles / mesh: 1 · 1 · 0 · 0 · 0 · 0 · 0
+  lantern / node: 1 · 0 · 1 · 0 · 0 · 0 · 1
+  blobBatch / mesh: 1 · 1 · 0 · 0 · 0 · 0 · 0
+  zeelich / node: 1 · 0 · 0 · 0 · 0 · 0 · 0
+  dog-brown / rig: 1 · 0 · 0 · 0 · 0 · 0 · 0
+  desert / node: 1 · 0 · 0 · 0 · 0 · 0 · 0
+  dog-greybrown / rig: 1 · 0 · 0 · 0 · 0 · 0 · 0
+  hamalayi / node: 1 · 0 · 0 · 0 · 0 · 0 · 0
+draw batch pieces watched: 428

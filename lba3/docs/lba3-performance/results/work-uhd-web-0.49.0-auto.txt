@@ -1,0 +1,28 @@
+# The user's work computer, in Chrome through the published page (claude.ai artifact), 2.11.2026. Pasted by the user.
+# Intel UHD Graphics (0xA7A8), plugged in, ~100 Hz screen (frames land at 10 / 20 ms), window 1745x733, DPR 1.1.
+# Reading (the cloud): Auto guessed Low and held it. Indoors, combat, transition and the Hamalayi run at the refresh
+# (100 fps, GPU p50 3-6 ms). The street misses 13 % of refreshes on Low: GPU p50 7.25, p95 10.96 ms against a 10 ms
+# budget; CPU 5.8 ms. One 60 ms frame on the street at 3.6 s; one 40 ms frame behind the black on arrival.
+
+LBA3: The Awakening benchmark — Quality Auto as played · build 0.49.0 · 2026-11-02 08:14
+GPU (as reported by the browser): Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11 · power: plugged in · window 1745×733 · devicePixelRatio 1.100000023841858 · frame-rate limit off
+Auto at the start: Low (gpu undefined · cpu undefined; guess) · GPU timer: yes
+
+route        fps   frame p50 / p95 / p99 / max ms   >33 / >50 / >100 (behind black)   GPU p50 / p95   CPU work p50 / p95   state at start -> end
+  street      88.2   10 / 20 / 20.1 / 59.9   1 / 1 / 0 (0)   7.25 / 10.96   5.8 / 7.6   Low -> Low
+      calls 180 (shadow 0) · triangles 629k · pacing: on the refresh 87 % · 17.2–20 ms 10 % · longer 3 %
+      every frame over 33 ms: 60@3.6s [frame before: work 5 ms]
+  interior     100   10 / 10.1 / 10.2 / 10.2   0 / 0 / 0 (0)   5.56 / 6.25   2.6 / 3.2   Low -> Low
+      calls 53 · triangles 220k · on the refresh 100 %
+  combat       100   10 / 10.1 / 10.2 / 10.5   0 / 0 / 0 (0)   3.12 / 3.75   2.6 / 3.1   Low -> Low
+      calls 96 · triangles 127k · on the refresh 100 %
+  transition  99.8   10 / 10.1 / 10.2 / 20.1   0 / 0 / 0 (0)   5.78 / 6.61   2.3 / 4.7   Low -> Low
+      calls 49 · triangles 219k · on the refresh 100 %
+  arrival     96.9   10 / 10.2 / 20 / 39.9   1 / 0 / 0 (1)   6.77 / 8.51   3.8 / 7.7   Low -> Low
+      calls 107 · triangles 397k · on the refresh 97 % · every frame over 33 ms: 40@5.9s black [frame before: work 39 ms]
+  hamalayi     100   10 / 10.1 / 10.2 / 10.6   0 / 0 / 0 (0)   6.15 / 6.68   2.1 / 2.7   Low -> Low
+      calls 34 · triangles 138k · on the refresh 100 %
+
+Auto now: Low — resolution 85 %, FXAA, no bloom, no shadows, 2 lamps, Low's grass, full-rate animation, full far detail
+  start: guess · nothing cached for this machine · last window: ok · 90 fps · frame p90 19.9 ms · CPU p90 6.9 ms · GPU p90 9 ms · missed 3 %
+(the full per-section CPU lines are in the conversation of 2.11.2026; the summary above keeps the numbers that matter)

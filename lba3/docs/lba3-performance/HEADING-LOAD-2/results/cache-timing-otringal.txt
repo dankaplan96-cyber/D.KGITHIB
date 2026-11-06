@@ -1,0 +1,20 @@
+# Otringal, Follow camera at Far, people and particles left out of every frame (probes/buildab.sh).
+# 1) A = base with the static shadow cache redrawn at each heading (q_area.js W_DROP=1), B = this build redrawn the same way,
+#    A2 = base not redrawn (the cache drawn on arrival): the base itself moves by 54-445 px (1-12 levels) when its cache is redrawn
+isle_otringal 0°: 190 px differ (0 by more than 2 levels, max 1) box x 119-1201 y 10-215    of them where two runs of A agree: 26 (A vs A2: 165 px differ) 
+isle_otringal 45°: 57 px differ (0 by more than 2 levels, max 1) box x 235-992 y 8-118    of them where two runs of A agree: 3 (A vs A2: 54 px differ) 
+isle_otringal 90°: 63 px differ (0 by more than 2 levels, max 1) box x 1-1359 y 95-197    of them where two runs of A agree: 0 (A vs A2: 63 px differ) 
+isle_otringal 135°: 68 px differ (1 by more than 2 levels, max 3) box x 337-845 y 33-146    of them where two runs of A agree: 0 (A vs A2: 68 px differ) 
+isle_otringal 180°: 262 px differ (1 by more than 2 levels, max 3) box x 0-1365 y 74-320    of them where two runs of A agree: 12 (A vs A2: 250 px differ) 
+isle_otringal 225°: 195 px differ (0 by more than 2 levels, max 1) box x 358-720 y 92-205    of them where two runs of A agree: 7 (A vs A2: 188 px differ) 
+isle_otringal 270°: 463 px differ (1 by more than 2 levels, max 4) box x 0-1341 y 115-234    of them where two runs of A agree: 19 (A vs A2: 445 px differ) 
+isle_otringal 315°: 301 px differ (2 by more than 2 levels, max 12) box x 289-1365 y 89-306    of them where two runs of A agree: 18 (A vs A2: 283 px differ) 
+# 2) A = this build redrawn, B = a second run of it redrawn, A2 = this build not redrawn: 0 px both ways
+isle_otringal 0°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 45°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 90°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 135°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 180°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 225°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 270°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
+isle_otringal 315°: 0 px differ (0 by more than 2 levels, max 0)    of them where two runs of A agree: 0 (A vs A2: 0 px differ) 
