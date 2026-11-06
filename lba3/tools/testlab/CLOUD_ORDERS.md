@@ -162,4 +162,10 @@ request diff in `WORLD_ART_REQUESTS.md`, push).
    descriptions only from LBA1, never its bricks or pictures in the repo). Left by the agent: pipe-colour cells that are
    not runs still boxes; a few pipe ends capped in mid-air; the lamp over the upper walk reads as standing near the floor.
    Before/after from the room's own camera (chapters 1–2: the user may see them).
+21. **A slide trap at the east flight's top (the cloud's camera agent, 6.11; small, urgent: the user plays there).** The
+   top step of the 6-step east flight ends at x −28.99; just past it, at x ≈ −28.9 … −28.8, z −46.3 … −45.2, the ground
+   is 0.6–0.9 m lower and steep: Twinsen slides against the step, sticks, and after 1 s `actors.js respawnFromFall`
+   teleports him back (and costs a life) — the likeliest cause of the user's "the camera lost its balance" on the
+   forecourt. Fill that strip level with the forecourt (climbGround / the fill) or close it with the cheek; check by
+   standing and turning there, and walking the east flight both ways.
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
