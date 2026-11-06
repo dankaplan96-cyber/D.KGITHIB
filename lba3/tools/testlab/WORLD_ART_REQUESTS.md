@@ -2371,3 +2371,34 @@ classifier as the original's study: grey share LBA2 23.5 % · ours before 4.7 % 
   term near the play paths or soften `smoothstep(0.3, 0.5, rk)`. Soil fell 11.9 → 7.3 % (LBA2 14.4 %): shaded slope
   sand became rock. Outcrop bias 0.35 → 0.32 would add about 1 point of grey. Pictures: chapter 3+, not for the user
   (the laptop keeps them).
+
+## CLIMB-15 · the Citadel climb's likeness to LBA2 (CLOUD_ORDERS 15) · the laptop, 6.11.2026
+`requests/CLIMB-15.diff` (lba1places.js, world.js; applies alone on the newest origin e3385dd, and with POLISH-14).
+Compared with LBA2's climb north of the square (heights from the original's island file, numbers only; our game rendered
+at the reference picture's camera). Pictures (chapter 1, the user may see them): docs/future/world/CLIMB-15/.
+- **Differences, largest first:** (1) LBA2 climbs in level terraces (0.4 → 4.2 → 5.9 → 7.5 → 9.2 m), each behind a sheer
+  face, the ramps running along them; ours had shelves at nearly the same levels (6.1, 9.6 m) ending in soft grass and
+  rock banks, so the ramp read as a paved strip on a hillside. (2) Posts: LBA2 four big capped posts (~1.1 × 1.0 m,
+  1.6 m) at terrace corners only; ours 13 small ones every ~3 m. (3) Railings: LBA2's ramps have none; ours had teal
+  balusters on the ramp's parapet. (4) The 5.5 m sheer face toward Bug Street with two posts: ours a soft bank.
+  (5) Ramp 4.5 m wide in two ~21° legs vs ours 3.1 m at ~13° then the stair. (6) Faces slightly battered vs ours
+  vertical with cream coping.
+- **Fixed (1–3):** `CLIMB_SHELF`, `climbShelfWall`, `inShelf`: along the ramp's second leg the 9.6 m shelf's edge is a
+  dressed retaining wall (coping level 9.73 m, 0.7–2.2 m over the paving, base course), turning due west 4.6 m along the
+  shelf's face (a 3.5 m terrace face), capped posts at the corner and the return's end; behind them the shelf filled
+  level in stone by CLIMB-2's rule (the fill's edge ≥ 15 cm over the ground). Terrain unchanged; the shelf still reached
+  at the ramp's head. `climbPost` in LBA2's proportions (0.72 m shaft, 0.92 m cap, ~1.45 m), at corners and ends only;
+  `climbFlight` posts lined up with the cheeks (the stair keeps 2.6 m), the two halfway posts gone; `climbRampWall` east
+  parapet solid masonry 0.8 m, railing and in-between posts gone (camSkip still 1.1 m); `climbMasonry` box to x −44.5
+  (scatter keeps out: the pine west of the stair's foot goes); world.js `dropRocks` for the climb from x −45.
+- **Kept:** (5) as CLIMB-2 settled the corridor; (6) the town's coping; the stair's and terraces' teal railings where the
+  ground falls over 1.2 m. Stump, pipe branch, stair, landing, forecourt untouched.
+- **Checked (SwiftShader, on e3385dd + this):** overlaps PASS (25 areas), lba1rooms PASS (the walk up ASYLUM_STEPS),
+  asylum PASS, chapter1 PASS, camclear 43/1 (only the old 0.149 m at (−74, −50)); walkers 36/1 as origin (marda_b2).
+  By input: square → stair → shelf round the wall's end, shelf → mid-ramp, stair → landing → forecourt → square, all
+  arrive; walking into the wall blocks, along it he never stands on it. Climb group 6 meshes before and after (no new
+  calls), +1,172 triangles; Vega 8 not measured.
+- **Left (next, if you agree):** (4) the face toward the square: a retaining wall at about z −21 from x −54 to the
+  ramp's west kerb, top 6.06 m, with LBA2's two corner posts; first check what stands on that bank (a crate near
+  (−45, −24), a fruit tree, flowers, the west street's ramp at x −55…−66). The shelf fill's top is wall stone (reads as a
+  paved strip); paving or grass edging later.
