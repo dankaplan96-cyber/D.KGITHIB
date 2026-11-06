@@ -43,10 +43,14 @@ const d3 = await ev(() => {
   G.lastSafe = { x: -60, z: 40 };
   const hp0 = h.hp;
   h.pos.set(-77.65, -0.35, 52.76); h.onGround = true; h.vel.set(0, 0);
-  let t = 0; for (; t < 3 && Math.hypot(h.pos.x + 77.65, h.pos.z - 52.76) < 2; t += 1 / 30) G.step(1 / 30);
-  return { t: +t.toFixed(2), pos: [h.pos.x, h.pos.z].map((v) => +v.toFixed(1)), hp: [hp0, h.hp] };
+  // (SLIDE-RESCUE: no longer back to the last safe spot with a life lost — he hops or scrambles off the bank onto the
+  //  nearest standable ground, actors.js Hero.slideStep; the safe spot only if there is none, without losing a life)
+  let t = 0, free = null;
+  for (; t < 3; t += 1 / 30) { G.step(1 / 30); if (free == null && h.onGround && !h.sliding && !h.rescue) free = t; if (free != null && t > free + 0.3) break; }
+  const PH = G.physics, gi = PH.groundInfo(h.pos.x, h.pos.z, h.pos.y + 0.1);
+  return { free: free == null ? null : +free.toFixed(2), pos: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(1)), hp: [hp0, h.hp], sliding: h.sliding, steep: !!PH.steepAt(h.pos.x, h.pos.z, h.pos.y), sea: gi.h < -0.35 && !gi.brick };
 });
-check('D3: held at the waterline by a slide, he is put back on safe ground within 1.5 s', d3.t < 1.5 && Math.hypot(d3.pos[0] + 60, d3.pos[1] - 40) < 1, d3);
+check('D3: held at the waterline by a slide, he is off it on standable ground within 1.5 s, no life lost', d3.free != null && d3.free < 1.5 && !d3.sliding && !d3.steep && !d3.sea && d3.hp[1] >= d3.hp[0], d3);
 
 // D6: the brink of the east cliff by the fort is never kept as a safe spot; after the fall to the shore
 // below (a slide trap) he is put back somewhere stable, not on the brink again (ISO: placed there)

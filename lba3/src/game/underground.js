@@ -1080,7 +1080,9 @@ function buildGallery(scene, physics) {
   PIL.forEach((p, i) => {
     const g = new THREE.Group(); B.group.add(g);
     const pk = new Kit(g);
-    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.93, flatShading: true }, 0, { noShadow: true });
+    // (REV-UNDER: opaque — at 0.93 it was drawn among the see-through things, after Twinsen: it covered him where he had
+    //  already marked himself as seen, and his silhouette (characters.js addSilhouette) never showed through it)
+    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true });
     const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true });
     const r = rng(300 + i);
     pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });

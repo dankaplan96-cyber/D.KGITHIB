@@ -599,7 +599,11 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const [px, pz] of hall.pillars) col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true });
     smokes.push({ x: mx + hall.smoke[0], y: gy + hall.smoke[1], z: mz - 6 + hall.smoke[2] });
     for (const sx of [-1, 1]) put('monastery', 'wheels', mx + sx * 5.05, mz - 1.05, 0, (k) => prayerWheels(k), { y: gy + 0.05 });
-    for (const [ax, az, bx, bz] of [[mx - 9, mz - 1, mx - 9, mz + 10], [mx + 9, mz - 1, mx + 9, mz + 10], [mx - 9, mz + 10, mx - 2, mz + 10], [mx + 2, mz + 10, mx + 9, mz + 10]]) {
+    // (YARD-GAPS: the side walls stopped 2 m short of the hall, at its front corners — the yard read open there and the
+    //  camera squeezed through the gap. They now run on past the hall's front and turn in to meet its side wall, 0.9 m
+    //  behind the front face; the turn's end is buried in the hall's wall)
+    for (const [ax, az, bx, bz] of [[mx - 9, mz - 2.4, mx - 9, mz + 10], [mx + 9, mz - 2.4, mx + 9, mz + 10], [mx - 9, mz + 10, mx - 2, mz + 10], [mx + 2, mz + 10, mx + 9, mz + 10],
+      [mx - 6.85, mz - 2.4, mx - 9, mz - 2.4], [mx + 9, mz - 2.4, mx + 6.85, mz - 2.4]]) {
       const L = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.round(L / 2.4));
       dryWall(kitOf('monastery'), Array.from({ length: n + 1 }, (_, i) => { const x = ax + (bx - ax) * i / n, z = az + (bz - az) * i / n; return [x, Math.min(gy, H(x, z)), z]; }), { h: 2.15, bw: 0.82, tw: 0.6, coping: 'slate', step: 2.4, seed: Math.round(ax + az), mat: MM.rubble('#e0d4c0') });
       col({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: 0.35, hd: L / 2, rot: Math.atan2(bx - ax, bz - az), top: gy + 2.2 });
