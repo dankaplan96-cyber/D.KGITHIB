@@ -562,13 +562,16 @@ export function* buildDesertSteps(scene, physics) {
     R.rope = { ...W(DOCK.x + 6, DOCK.z - 1.2), setVisible(b) { coil.visible = !!b; } };
   }
   // the project ferry tied up at the pier (a simple hull; the full ferry model lives on Citadel)
-  const ferry = new THREE.Group(); ferry.position.set(DOCK.x - 6, SEA_Y, DOCK.z - 4.2); group.add(ferry);
+  // (REVIEW-DESERT-ART b: the hull closed by its deck, sitting in the water; the cabin on the deck; the glowing disc
+  //  under the hull gone — the hull was an open bowl seen as a white sliver under a floating box)
+  const ferry = new THREE.Group(); ferry.position.set(DOCK.x - 6, SEA_Y - 0.5, DOCK.z - 4.2); group.add(ferry);
   {
     const FB = new Batch(ferry);
-    FB.add(lathe([[0.01, 0], [1.4, 0.15], [1.7, 0.9], [1.75, 1.6]], 20, 1), pm('#e8eef2', 0.4), 0, 0, 0, 0, 0, 0, 3.6, 1, 1);
-    FB.add(bbox(6.2, 1.3, 2.2, 0.15, 1), teal, 0, 2.2, 0);
-    FB.add(bbox(5.8, 0.12, 2.6, 0.04, 1), pm('#2a3a44', 0.5), 0, 2.9, 0);
-    FB.add(cyl(0.9, 0.9, 0.3, 24, 0), pm('#9ff4ff', 0.3, { emissive: '#35d8ff', emissiveIntensity: 1.5 }), 0, 0.05, 0);
+    FB.add(lathe([[0.01, 0], [1.4, 0.15], [1.7, 0.9], [1.75, 1.6], [1.6, 1.66], [0.01, 1.66]], 20, 1), pm('#e8eef2', 0.4), 0, 0, 0, 0, 0, 0, 3.6, 1, 1);
+    FB.add(cyl(1.62, 1.62, 0.06, 20, 1), plank, 0, 1.69, 0, 0, 0, 0, 3.55, 1, 1);   // the deck
+    FB.add(cyl(1.78, 1.76, 0.16, 20, 1), teal, 0, 1.55, 0, 0, 0, 0, 3.6, 1, 1);     // the rubbing strake round the sheer
+    FB.add(bbox(6.2, 1.3, 2.2, 0.15, 1), teal, 0, 2.37, 0);
+    FB.add(bbox(5.8, 0.12, 2.6, 0.04, 1), pm('#2a3a44', 0.5), 0, 3.07, 0);
     FB.build();
   }
   R.ferry = { group: ferry, setVisible(b) { ferry.visible = !!b; } };
@@ -721,6 +724,15 @@ export function* buildDesertSteps(scene, physics) {
     PB.build();
     col({ type: 'box', x: PUMP.x, z: PUMP.z, hw: b, hd: b, top: pumpGy + 9, noStand: true, seeThrough: true });
     col({ type: 'cyl', x: tk.x, z: tk.z, r: 1.3, top: pumpGy + 5.2, noStand: true, seeThrough: true });
+    // (REVIEW-DESERT-ART e: the pipe where it runs low enough to walk into — from about 2 m up on its way down from the
+    //  tank, through the joint, to the basin — is solid, a thin rail: he was walked through it at the joint. Under its
+    //  high end by the tank he still passes; the joint stays at hand height to push home)
+    {
+      const jy = H(PIPE_J.x, PIPE_J.z), ax = tk.x - 0.6, az = tk.z - 0.6, t = 0.55;
+      const seg = (x0, z0, x1, z1, top) => col({ type: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: Math.hypot(x1 - x0, z1 - z0) / 2, hd: 0.12, rot: Math.atan2(-(z1 - z0), x1 - x0), top, noStand: true, seeThrough: true });
+      seg(ax + (PIPE_J.x - ax) * t, az + (PIPE_J.z - az) * t, PIPE_J.x, PIPE_J.z, jy + 2.0);
+      seg(PIPE_J.x, PIPE_J.z, PIPE_J.x + (OASIS.x + 5 - PIPE_J.x) * 0.7, PIPE_J.z + (OASIS.z + 4 - PIPE_J.z) * 0.7, jy + 1.0);
+    }
     // the wheel: 14 sheet-metal sails on a ring
     wheel.position.set(PUMP.x - 0.6, pumpGy + h + 0.15, PUMP.z); wheel.rotation.y = Math.PI / 2; group.add(wheel);
     const WB = new Batch(wheel);
@@ -1530,8 +1542,11 @@ export function* buildDesertSteps(scene, physics) {
   // a wooden signpost: the board on two posts, facing ry
   const signAt = (text, x, z, ry, bg) => {
     const y = H(x, z), c = Math.cos(ry), s = Math.sin(ry);
-    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex(text, bg, 384), roughness: 0.8, side: THREE.DoubleSide }));
-    sg.scale.set(2.4, 0.6, 1); sg.position.set(x, y + 1.55, z); sg.rotation.y = ry; group.add(sg);
+    // (REVIEW-DESERT-ART a: a board with a painted face on each side, each reading the right way round; one
+    //  double-sided face read mirrored from behind, from the bridge and on the way out)
+    const sm = new THREE.MeshStandardMaterial({ map: signTex(text, bg, 384), roughness: 0.8 });
+    B.add(bbox(2.46, 0.66, 0.06, 0.01, 1), darkWood, x, y + 1.55, z, 0, ry, 0);
+    for (const k of [1, -1]) { const sg = new THREE.Mesh(emq(), sm); sg.scale.set(2.4, 0.6, 1); sg.position.set(x + s * 0.035 * k, y + 1.55, z + c * 0.035 * k); sg.rotation.y = ry + (k < 0 ? Math.PI : 0); group.add(sg); }
     for (const k of [-1.25, 1.25]) rod(B, [x + c * k, y, z - s * k], [x + c * k, y + 1.95, z - s * k], 0.05, darkWood);
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
   };

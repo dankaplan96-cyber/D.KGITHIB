@@ -148,9 +148,13 @@ function buildHangar(scene, physics) {
   G(rbox(2.6, 0.08, 0.8, 0.02), body, 0, 1.6, 2.4);
   G(rbox(0.08, 1.0, 0.8, 0.02), trim, 0, 2.0, 2.5);
   for (const s of [-1, 1]) { G(rbox(0.08, 0.08, 3.4, 0.02), MAT.iron(), s * 0.55, 0.25, 0); G(rbox(0.06, 0.8, 0.06, 0.01), MAT.iron(), s * 0.55, 0.65, -1); G(rbox(0.06, 0.8, 0.06, 0.01), MAT.iron(), s * 0.55, 0.65, 1); }
-  const tarp = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 6.2, 8, 6), MAT.cloth('#7a6a4a', '#5a4a34'));
-  { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 2.3 - Math.abs(y) * 0.55 - Math.abs(x) * 0.08 + Math.sin(x * 2 + y) * 0.06); } tarp.geometry.computeVertexNormals(); }
-  tarp.rotation.x = -Math.PI / 2; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
+  // (REVIEW-DESERT-ART c: the tarp 9 × 5 m over the wing, the cabin and the nose, tied up off the floor — the tail out
+  //  behind it, where he stands to look and to board (R.glider); at 10.5 × 6.2 m drooping to the floor it hung past the
+  //  floor's rim and its edge cut through his legs there. Its frame: z = TZ − the plane's y, the glider's own z)
+  const TZ = -0.9;   // (and flat over the wing out to its tips, then down)
+  const tarp = new THREE.Mesh(new THREE.PlaneGeometry(9, 5, 9, 6), MAT.cloth('#7a6a4a', '#5a4a34'));
+  { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), lz = TZ - p.getY(i); p.setZ(i, 2.36 - Math.max(0, lz - 0.5) * 0.5 - Math.max(0, -1.1 - lz) * 0.22 - Math.max(0, Math.abs(x) - 4.0) * 0.6 + Math.sin(x * 2 + lz) * 0.04); } tarp.geometry.computeVertexNormals(); }
+  tarp.rotation.x = -Math.PI / 2; tarp.position.z = TZ; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
   B.col(2.5, 2.8, 4.8, 1.6, 2.4, { noStand: true, rot: -0.3 });
   // (the fuselage's nose and its tail with the tailplane reach past the wing's box: their own, so nobody stands in them;
   //  the glider's frame turned −0.3: a point (x, z) in it lies at (2.5 + 0.955x − 0.296z, 2.8 + 0.296x + 0.955z))

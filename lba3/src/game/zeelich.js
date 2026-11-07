@@ -989,9 +989,10 @@ export function* buildZeelichSteps(scene, physics) {
     FB.add(cached('glb', () => new THREE.SphereGeometry(0.13, 12, 8)), glowCyan(), 4.72, deckY + 2.5, 0);
     FB.add(boxUV(bbox(1.0, 0.07, 1.6, 0.02, 1), TILE.planks), tm('planks', { color: '#d8c0a0' }), 2.0, deckY + 0.08, -2.3, 0.06);
     FB.build();
-    // mooring ropes to the bollards
-    const rope = pm('#c8a878', 0.9);
-    for (const [bx, fx] of [[-61.2, -4.5], [-54.0, 3.2]]) mesh(group, tube([[bx, Y0 + 0.55, PIER.hw - 0.35], [(bx + FERRY.x + fx) / 2, Y0 + 0.1, (PIER.hw + FERRY.z - 1.7) / 2], [FERRY.x + fx, Y0 + 0.35, FERRY.z - 1.75]], 0.035, 5, 1), rope);
+    // mooring ropes to the bollards (REVIEW-ZEELICH-ART d: in the ferry's own group, so they go with it: the story keeps
+    //  the ferry away, and the ropes were left ending in the air beside the pier)
+    const rope = pm('#c8a878', 0.9), rel = (p) => [p[0] - FERRY.x, p[1] - (Y0 - 1.05), p[2] - FERRY.z];
+    for (const [bx, fx] of [[-61.2, -4.5], [-54.0, 3.2]]) mesh(grp, tube([[bx, Y0 + 0.55, PIER.hw - 0.35], [(bx + FERRY.x + fx) / 2, Y0 + 0.1, (PIER.hw + FERRY.z - 1.7) / 2], [FERRY.x + fx, Y0 + 0.35, FERRY.z - 1.75]].map(rel), 0.035, 5, 1), rope);
     updaters.push((dt, t) => {
       if (!grp.visible) return;
       bob.position.y = Math.sin(t * 0.8) * 0.12;
