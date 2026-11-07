@@ -46,6 +46,14 @@ world-polish pass after it:
 | The underground (underground.js) | room camera; own pass | pending (REVIEW-UNDER done 6.11) |
 | Citadel | the reference; camera pass 3 in wave 1 | in progress |
 
+## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
+
+| # | Date | Where | Report | Owner | Status |
+|---|---|---|---|---|---|
+| P1 | 7.11 | Zeelich | "all the buildings disappear when you get close" (whole-house fades, zeelich.js makeFader; VP-10 missing in rooms) | wave-1 finisher | in progress |
+| P2 | 7.11 | Citadel harbour (residents) | "the characters walk in slow motion, a problem with the legs" (photo: an Esmer resident's leg stretched back) | animation-combat (urgent, a third worker) | in progress |
+| P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk (spaceport.js ~156, props.js kiosk) has nobody in it and does nothing | buildings-interiors, Citadel sweep (next free slot) | queued: a clerk behind the counter with tickets/info lines by chapter, and a sweep of every Citadel structure that looks usable but is empty (kiosks, stalls, booths, sheds, benches' stands) |
+
 ## Waves (cloud)
 
 | Wave | Workers | Status |
