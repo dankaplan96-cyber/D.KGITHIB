@@ -50,7 +50,9 @@
 // that still gives CH_WALK_KEEP m of arm that sees him, and a swing taken comes back as he walks; with his back blocked
 // at the base tilt the arm is first risen over what stands behind him at a longer length (CH_HIGH_*) before MIN-VIEW's
 // over his head, and over his head it goes higher at longer arms (CH_OVER_HI) before the shorter one; the look-ahead
-// draws the arm in no shorter than MIN-VIEW (a turn on the spot by the hostel's portico came in to 0.9-1.5 m).
+// draws the arm in no shorter than MIN-VIEW (a turn on the spot by the hostel's portico came in to 0.9-1.5 m). Under an
+// arch (the station gate's passage, 2.2 m high) the view dips before he runs in (CH_PREDIP), a dip keeps the whole arm's
+// low tilt at any length and lets out under the arch with the least margin: it stayed 1.0 m at his back there.
 //
 // "free" is a modern third-person orbit with obstacle avoidance.
 import * as THREE from 'three';
@@ -191,7 +193,7 @@ const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
 // G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
 // CH_KEEP_EASE s instead of flattening in the frame, its look-at point drawn no nearer than CH_KEEP_K of the way
 const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
-const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96;
+const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96, CH_DIP_V = 1.0, CH_DIP_A = 5, CH_PREDIP = -0.25;
 // the candidates, cheapest first: [swing, rise, cost]; at the full arm and 0.8 of it every swing to CH_SW_MAX; shorter, a
 // coarser set to CH_SW_FAR (every other swing, a rise and the dips)
 const CH_CANDS = (() => {
@@ -1042,7 +1044,9 @@ export class CameraRig {
     }
     // the rise: eased toward its goal
     {
-      const e = C.riseGoal - C.rise, want = Math.sign(e) * Math.min(CH_RISE_V, Math.sqrt(2 * Math.abs(e))), a = 1.5 * dt;
+      // (CAM-KEYWALK: into a dip — under an arch he runs into — quicker, CH_DIP_V and CH_DIP_A: at the rise's pace the arm had
+      // come in to 1 m at his back in the station gate's passage before the view had dipped under its arch)
+      const dip = C.riseGoal < 0 && C.rise > C.riseGoal, e = C.riseGoal - C.rise, want = Math.sign(e) * Math.min(dip ? CH_DIP_V : CH_RISE_V, Math.sqrt((dip ? CH_DIP_A : 2) * Math.abs(e))), a = (dip ? CH_DIP_A : 1.5) * dt;
       C.riseV += clamp(want - C.riseV, -a, a);
       const st = C.riseV * dt;
       if ((e > 0 && st >= e) || (e < 0 && st <= e) || Math.abs(e) < 1e-4) { C.rise = C.riseGoal; C.riseV = 0; } else C.rise += st;
@@ -1120,7 +1124,10 @@ export class CameraRig {
     const upK = Math.min(1, (CH_PITCH_SHORT - CH_PITCH) / (CH_UP + CH_UP2));
     const pitchAt = (arm) => CH_PITCH + upK * (CH_UP * clamp((CH_ARM - arm) / (CH_ARM - CH_SHORT), 0, 1) + CH_UP2 * clamp((CH_SHORT - arm) / (CH_SHORT - CH_MIN), 0, 1));
     // (CAM-CLEAR-2: and risen over a low wall or a fence by C.rise, never past CH_RISE_TOP)
-    const pq = (a, r = C.rise ?? 0) => { const p = pitchAt(a); return r < 0 ? Math.max(CH_DIP_MIN, p + r) : p + Math.max(0, Math.min(r, CH_RISE_TOP - p)); };
+    // (CAM-KEYWALK: a dip keeps the whole arm's low tilt at any length — drawn in under an arch, the tilt up of a short arm
+    // took the camera into the arch it dips under: in the station gate's passage it stayed 1.0 m behind him, 2 m up, and could
+    // not let out along that steeper line)
+    const pq = (a, r = C.rise ?? 0) => { const p = pitchAt(a); return r < 0 ? Math.max(CH_DIP_MIN, CH_PITCH + r) : p + Math.max(0, Math.min(r, CH_RISE_TOP - p)); };
     const at = (out, yw, a, O = T, q = pq(a)) => { const h = Math.cos(q) * a; return out.set(O.x + Math.sin(yw) * h, O.y + CH_PIVOT + Math.sin(q) * a, O.z + Math.cos(yw) * h); };
     // the longest arm along heading yw whose camera — over the ground as it will be — keeps CH_GAP from everything
     // solid and sees him; none keeps clear: a tight spot, the least margins (CH_NEAR, the ground's least); none there
@@ -1228,7 +1235,16 @@ export class CameraRig {
         if (turn || walk) for (const t of CH_LEAD) {
           const lx = T.x + (walk ? vx * t : 0), lz = T.z + (walk ? vz * t : 0), run = Math.hypot(lx - T.x, lz - T.z);
           const ly = walk && P ? T.y + clamp(P.groundAt(lx, lz, hero.y + run * CH_LEAD_RISE) - gy, 0, run * CH_LEAD_RISE) : T.y;
-          want = Math.min(want, ahead(armFor(yaw + clamp(C.vyaw * t, -CH_LEAD_YAW, CH_LEAD_YAW), _c.set(lx, ly, lz))));
+          const ly2 = yaw + clamp(C.vyaw * t, -CH_LEAD_YAW, CH_LEAD_YAW), r = armFor(ly2, _c.set(lx, ly, lz));
+          // CAM-KEYWALK (the user, 7.11: running into the station gate's passage "the camera still zooms in super close"):
+          // where he is about to be the arm is cut short — an arch ahead, 2.2 m over the paving — but the view dipped
+          // under it keeps MIN-VIEW and a metre more there: dip now (CH_PREDIP), before he is under it, instead of drawing
+          // the arm in to his back and dipping once he stands in the passage (1.0 m for 0.7-1 s)
+          if (walk && !lock && !C.door && r[0] < CH_MIN_VIEW && (C.riseGoal ?? 0) > CH_PREDIP) {
+            const r0 = C.rise; C.rise = CH_PREDIP; const rd = armFor(ly2, _c); C.rise = r0;
+            if (rd[1] && rd[2] === 0 && rd[0] >= CH_MIN_VIEW + 1) { C.riseGoal = CH_PREDIP; C.swAt = C.clk ?? 0; C.baseT = 0; continue; }
+          }
+          want = Math.min(want, ahead(r));
         }
         // (and at the heading its spring is on its way to: a turn toward a house starts drawing it in at the turn's start)
         const g = C.hold ? yaw : C.goal + C.swGoal, gd = angleDiff(yaw, g);
@@ -1246,7 +1262,9 @@ export class CameraRig {
       // into the old mill it was looking down past, and the arm stayed at 1.1 m for as long as it stood over him)
       if (!fresh && C.arm != null && want > C.arm) for (let a = C.arm + 0.1; a < want + 0.1; a += 0.1) {
         at(_b, yaw, Math.min(a, want), T, over ? overQ : pq(Math.min(a, want))); _b.y += this._chaseLift(_b, T, tier > 0);
-        if (this._solidAt(_b, tier > 0 ? CH_NEAR : CH_GAP)) { want = Math.max(C.arm, a - 0.1); break; }
+        // (CAM-KEYWALK: under a dip the way out keeps the least margin: out of the station gate's passage under its arch,
+        // 2.2 m high, the comfortable 0.4 m stopped the arm at 1.9 m though the yard behind him stood clear)
+        if (this._solidAt(_b, tier > 0 || (C.rise ?? 0) < 0 ? CH_NEAR : CH_GAP)) { want = Math.max(C.arm, a - 0.1); break; }
       }
       C.stuckT = !fresh && C.arm != null && w0 - want > 1.5 && want - C.arm < 0.3 ? (C.stuckT || 0) + dt : 0; C.wantOut = w0;
       // CAM-RECOVER (the user on Follow, Medium, reads a slow return as "stuck close behind him"): after an in-cut the

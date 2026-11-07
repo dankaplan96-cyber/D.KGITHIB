@@ -35,7 +35,7 @@ check('the user\'s settings: Follow, Medium, Classic controls', setup.cam === 'f
 
 const N = Math.PI, S = 0, E = Math.PI / 2, Wd = -Math.PI / 2;
 // the spots' middles (the drawn triangles are gathered round them; the level to stand on where two are stacked)
-const SPOTS = { 1: [-26.8, -48.8, 16], 2: [-29.3, -49.6, 16], 3: [-45.6, 84], 4: [-46.1, 80.9], 5: [-54.8, 75.5], 6: [-54, 92], 7: [-64, -18], 8: [-118, 46], 9: [-67.3, -12.9], 10: [-28, -60], 11: [-38, -49.5, 14.2], 12: [-32.6, -38] };
+const SPOTS = { 1: [-26.8, -48.8, 16], 2: [-29.3, -49.6, 16], 3: [-45.6, 84], 4: [-46.1, 80.9], 5: [-54.8, 75.5], 6: [-54, 92], 7: [-64, -18], 8: [-118, 46], 9: [-67.3, -12.9], 10: [-28, -60], 11: [-38, -49.5, 14.2], 12: [-32.6, -38], 13: [-43.8, -52, 14], 14: [-67.5, -12.5, 2.8], 15: [-41, -65, 15.9] };
 // a walk through spot `id` heading `deg` (0 south, 90 east, 180 north, 270 west): from 3 m before it (nearer where that
 // stands in a house: CW.place), Up for `s` s
 // (run: Athletic)
@@ -98,6 +98,21 @@ const WALKS = [
   { name: 'climb: run up, turn left at the top, run on west', x: -32.6, z: -33, a: N, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.6], [['ArrowUp', 'ArrowLeft'], 1.0], [['ArrowUp'], 1.5], [[], 1]], spot: 12 },
   { name: 'climb: walk up from the ramp, turning onto the flight', x: -36.2, z: -24, a: Math.PI * 0.94, keys: [[['ArrowUp'], 2], [['ArrowUp', 'ArrowRight'], 0.4], [['ArrowUp'], 7], [[], 1]], spot: 12 },
   turn(12, 'climb: a whole turn mid-flight'),
+  // the user, 7.11 (a photo: running along a narrow paved passage between two tall stone walls, the camera 1.5-2 m behind
+  // and just over his head): the passage by the fort's west wall, from the terrace's west end up to the plateau, and the
+  // alley between the Bug-street house and its bank
+  { name: 'west passage: run north up it to the plateau', x: -42.8, z: -47.6, y: 14, a: Math.atan2(-2.3, -6.5), spot: 13, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.6], [[], 0.8]] },
+  { name: 'west passage: walk north up it to the plateau', x: -42.8, z: -47.6, y: 14, a: Math.atan2(-2.3, -6.5), spot: 13, keys: [[['ArrowUp'], 5], [[], 0.8]] },
+  { name: 'west passage: run south down it to the terrace', x: -45.4, z: -56.5, a: Math.atan2(2.3, 6.5), spot: 13, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.4], [[], 0.8]] },
+  { name: 'west passage: walk south down it to the terrace', x: -45.4, z: -56.5, a: Math.atan2(2.3, 6.5), spot: 13, keys: [[['ArrowUp'], 4.5], [[], 0.8]] },
+  { name: 'Bug-street alley: run north through it', x: -67.5, z: -7.5, y: 2.8, a: N, spot: 14, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.2], [[], 0.8]] },
+  { name: 'Bug-street alley: run south through it', x: -67.5, z: -18, y: 2.8, a: S, spot: 14, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.2], [[], 0.8]] },
+  // (found by a sweep of every narrow passage on Citadel, run through both ways: the station gate through the fort's west
+  // wall, the yard's paving between the gate's walls out to the plateau's dirt — the arm came in to 1.0 m for 2.2 s)
+  { name: 'station gate: run west out through it', x: -36, z: -65, y: 15.9, a: Wd, spot: 15, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.6], [[], 0.8]] },
+  { name: 'station gate: walk west out through it', x: -36, z: -65, y: 15.9, a: Wd, spot: 15, keys: [[['ArrowUp'], 5], [[], 0.8]] },
+  { name: 'station gate: run east in through it', x: -47, z: -65, a: E, spot: 15, keys: [[['Digit2'], 0.05], [['ArrowUp'], 2.6], [[], 0.8]] },
+  { name: 'station gate: walk east in through it', x: -47, z: -65, a: E, spot: 15, keys: [[['ArrowUp'], 5], [[], 0.8]] },
 ];
 // SWEEP=1: every spot walked through from 8 headings (from 3 m before it, 3.5 s of Up) and turned on the spot 360°
 // (Left, 3.6 s): to find which way the review's spots go wrong
