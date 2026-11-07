@@ -76,3 +76,23 @@ Fix progression blockers first. Next fix missing causes, weak antagonist decisio
 For each important fix, record the original player experience, the change made, and the route used to verify it. Replay affected earlier and later states. Finish with a fresh end-to-end run if the environment supports it. If the build blocks progress, report the exact blocker, continue reviewing reachable content, and distinguish code inspection from playtesting.
 
 Deliver the implemented changes, a one-page account of the story as the player now experiences it, a chapter coverage table, and any unresolved issues. Do not declare the campaign coherent because the synopsis reads well. Show that its causes, choices, setbacks, and consequences are present in the playable game.
+
+
+## Maturity pack update (the user, 7.11.2026)
+The user's LBA3 Maturity Agent Pack adds the following to this definition. Where the two differ, the newer pack text below takes precedence; everything above still applies. Shared files: `lba3/docs/lba-maturity/` (PROJECT_CONTRACT.md, status.md).
+
+
+
+Read STORY_SYNOPSIS.he.md and current implementations. Play a fresh save through the main route, then check alternate orders and side arcs. For every major beat record what the player knows from play, wants next, physically does, learns and changes. A good external synopsis does not establish a coherent in-game story.
+
+Preserve the twelve-year continuation: Twinsen remains playable, Zoé makes consequential choices, Arthur has agency without becoming a chosen hero, Baldino's inventions have limitations, Sendell is not secretly evil, and FunFrock is not resurrected. Preserve earlier victories and avoid unexplained Earth-style nights on Twinsun.
+
+Vesk must first provide genuine benefits, then choose concealment/control himself. Communities have believable reasons to support or oppose him. If Oren is implemented, keep his identity: guardian of a damaged world, protecting sleeping people by denying awakening and choice; his expansion follows bounded infrastructure rules. Oren is an original invention, not claimed LBA canon. Vesk is not a possessed puppet. Maintain the sleeping-sibling chronology, legitimate safety constraints, the Sendell relationship and a finale that separates control from necessary life support. Do not force gated expansion content into the base campaign.
+
+Make enemies meaningful through their goals, reactions and placement. Guards protecting an evacuation, frightened workers and rigid machines need distinct responses where supported. Repair weak causality through gameplay events rather than exposition. Earn setbacks, make allies' contributions visible, pay off earlier skills and relationships, and resolve the main conflict with a human aftermath. Keep warmth and humor between dramatic peaks.
+
+Verify clue availability, required items, checkpoints, alternate order, return visits, quest-state consistency and compatible saves. Coordinate all chapter-length/difficulty changes with chapter-balance. Deliver the story as actually played, coverage and corrected contradictions.
+
+## Shared contract — mandatory
+Read `docs/lba-maturity/PROJECT_CONTRACT.md` and the current repository instructions before work. This is a task definition, not a claim that the game has been inspected. Inspect the actual current build. Implement fixes and validate them; reports alone do not complete the task.
+Preserve saves, working systems, other agents' edits, English-only concise writing, LBA identity, and performance. Coordinate file ownership with the coordinator. Do not overwrite another active agent's files. Label evidence Played / Automated runtime / Source only / Blocked / Not implemented. Never claim listening, visual review, performance gains or end-to-end completion without evidence. Persist progress and next actions before a context limit. Report concrete blockers and continue independent work. Do not publish or release automatically.

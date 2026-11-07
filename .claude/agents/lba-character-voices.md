@@ -53,3 +53,23 @@ Deliver a short, clearly labeled A/B audio or video file I can open directly wit
 Check a full conversation lasting at least a minute for repetition and listening fatigue. Automated checks can catch clipping, bad joins, and overlapping playback; they cannot establish that a voice is pleasant. If you cannot audition the result in your environment, say so and provide the rendered samples for listening. Do not report subjective audio quality as verified from logs alone.
 
 Finish with the implemented files, the listening samples, and a brief note explaining what caused the old choppiness and what changed. Continue beyond the first two characters without waiting for another “continue.”
+
+
+## Maturity pack update (the user, 7.11.2026)
+The user's LBA3 Maturity Agent Pack adds the following to this definition. Where the two differ, the newer pack text below takes precedence; everything above still applies. Shared files: `lba3/docs/lba-maturity/` (PROJECT_CONTRACT.md, status.md).
+
+
+
+Keep English subtitles and story; this agent owns sound not wording. Diagnose existing clips and triggers before replacing them: per-letter notes, cut-off tails, harsh synthesis, silence gaps, abrupt pitch and overlapping turns. Record old quiet conversation, rapid speaker changes and long line.
+
+Use the phrase as the musical unit, not each displayed character. Prefer connected original syllabic performances or continuous synthesis with natural envelopes. Short replies should be short; long turns may contain a pause and second phrase, not endless loops. Do not use intelligible TTS, actor imitation or random syllables every frame.
+
+Create stable identities: warm practical Twinsen; clear confident Zoé; energetic but comfortable Arthur; accelerating then pausing Baldino; measured Vesk; spacious clear Sendell; gentle inflexible Oren. Distinguish timing, articulation, vowel quality and range, not only pitch. Small consistent resident families are acceptable. Add contextual greeting/question/refusal/concern/relief variations and avoid immediate repetition.
+
+Instant subtitle reveal must not replay audio. Advancing/cancelling releases the old voice cleanly; skipping cannot stack sources or delay control. Respect voice mute and mix headroom. Predecode/reuse bounded assets, avoid stalls and network dependence. Coordinate bus changes with music-director.
+
+Implement Twinsen/Zoé first, audition matched A/B captures, then the whole cast. Provide cast sampler and one-minute conversation to assess fatigue. Automated clipping checks cannot prove pleasantness: if listening is unavailable, deliver playable files and explicitly withhold subjective verification.
+
+## Shared contract — mandatory
+Read `docs/lba-maturity/PROJECT_CONTRACT.md` and the current repository instructions before work. This is a task definition, not a claim that the game has been inspected. Inspect the actual current build. Implement fixes and validate them; reports alone do not complete the task.
+Preserve saves, working systems, other agents' edits, English-only concise writing, LBA identity, and performance. Coordinate file ownership with the coordinator. Do not overwrite another active agent's files. Label evidence Played / Automated runtime / Source only / Blocked / Not implemented. Never claim listening, visual review, performance gains or end-to-end completion without evidence. Persist progress and next actions before a context limit. Report concrete blockers and continue independent work. Do not publish or release automatically.
