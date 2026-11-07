@@ -1,0 +1,75 @@
+region,building_id,type,accessible,entrance,interior,return_route,cutaway,save_load,quest_state,exception_reason,evidence,status
+zeelich,zeelich-house0 (Mr Pelleck's house; minaret),home,yes (ch3 on),street door (-40.5 -6.85 local) walk-in,zh_pelleck: ledgers + Form 7-B + unconnected radiator + tile crates + bed,1.2 m before the door facing the street,shell: two far walls + low near rims,save inside -> Continue tested,none (looks only; zl_ flags unchanged),,tests/zeelich-doors.mjs,Automated runtime only
+zeelich,zeelich-house1 (council house; arcade),office,story (ch9),ch9: door -> upper (council.js); other chapters closed,upper/council/archive (ch9),council.js,upper.js,ch9 saves (chapter9.mjs),c9_*,story lock outside ch9: notice HEARINGS BY PETITION ONLY + its own line (zh_closed_council),tests/zeelich-doors.mjs (closed prompt),Automated runtime only
+zeelich,zeelich-house2 (Nara's flower house),shop/home,yes (ch3 on),street door (-11 -7.35 local),zh_nara: flower benches + potting table + order slate; HELD crates ch3 / gone ch4+; Lissa,1.2 m before the door,shell,via the same room code,phase only (no new flags),,tests/zeelich-doors.mjs,Automated runtime only
+zeelich,zeelich-house3 (Oku's house; dark heat post),home,yes (ch3 on),street door (-38.5 7.15 local),zh_oku: charcoal stove + quern + sail frame + bunks; Wenna,1.2 m before the door,shell,via the same room code,phase + c2_mill_* (read only),,tests/zeelich-doors.mjs,Automated runtime only
+zeelich,zeelich-house4 (Baldino's workshop),workshop,yes (ch3 on; was Locked in ch4-8),street door,workshop (workshoplife.js),chapter2.js exitTo,existing,existing,w_* (Test Pair),,tests/zeelich-doors.mjs (ch3 + ch5),Automated runtime only
+zeelich,watch house (Snuff's bakery),bakery,yes (ch3 on),street door by prompt (9.65 -8.3 local; Snuff stands 1.2 m from it; the hatch and roof stay The Second Bake),zh_bakery: oven cold/glowing by zl_crate + racks + kneading table,1.2 m before the door,shell,via the same room code,reads zl_crate,,tests/zeelich-doors.mjs,Automated runtime only
+zeelich,mill-north (the old mill),mill,no,drawn door,none,,,,,closed: nailed shut; its stair goes round the outside (ch3 climb),tests/zeelich-doors.mjs (closed prompt),Automated runtime only
+zeelich,mill-east,mill,no,drawn door,none,,,,,closed: Oku's padlock while the sails turn,tests/zeelich-doors.mjs (closed prompt),Automated runtime only
+zeelich,mill-south,mill,no,drawn door,none,,,,,closed: Oku's padlock while the sails turn,tests/zeelich-doors.mjs (closed prompt),Automated runtime only
+zeelich,depot-shed (project stores),store,no,drawn door,none,,,,,closed: PROJECT STORES. STAFF ONLY (inside the drones' patrol),source only,Source-reviewed only
+zeelich,control-hut (drill platform),office,no,drawn door,none,,,,,closed: the project's control hut (behind the shield in ch3),source only,Source-reviewed only
+zeelich,zport pavilion (Zeelich Spaceport terminal),terminal,yes,deck door,zterminal (departure + arrival halls),zterminalExit,existing,existing,existing,,tests/zeelich-doors.mjs,Automated runtime only
+zeelich,dog-training yard,yard,open,palisade gate,open yard (no building),,,,,,source only,Source-reviewed only
+isle_otringal,otrbar door (1857.8 1804.6),interior,yes,door,otrbar,existing exit,existing,existing,existing,,zinv probe (door offered),Automated runtime only
+isle_otringal,otrhotel door (1884.6 1793),interior,yes,door,otrhotel,existing exit,existing,existing,existing,,zinv probe (door offered),Automated runtime only
+isle_otringal,otringal-6--29,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--4--60,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--1--53,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-3--59,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-17--71,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-63--45,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-45--52,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-55--47,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-63--52,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-59--60,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-47--68,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-52--60,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--55--15,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-6--24,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-4-26,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--21--10,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-16-6,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-4--11,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--49-55,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-4-31,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal--2-56,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-3-65,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-12-43,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_otringal,otringal-40-43,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas--30--18,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-33--14,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-25--22,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-25--20,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-33--20,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-19--20,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-19--22,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-28--36,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-14--36,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-36--20,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-37--14,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-28-29,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-21-19,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-22-15,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-16-18,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-16-24,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-9-32,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-38-36,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-44-37,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_knartas,knartas-35-12,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_mosquibee,mosquibee--15-28,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_mosquibee,mosquibee-37-38,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_mosquibee,mosquibee-32-26,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_mosquibee,mosquibee-26-15,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_celebration,celtemple door (2892.2 1792),interior,yes,door,celtemple,existing exit,existing,existing,existing,,zinv probe (door offered),Automated runtime only
+isle_celebration,celebration--9-4,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_undergas,undergas-8--39,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform--24--27,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-27--31,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-27--38,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-27-12,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-35-15,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-30-27,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_platform,platform-50-46,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
+isle_orchard,orchard-4-28,house,accessible,door drawn,none,,,,,generic Locked. (missing work),zinv probe,Not implemented
