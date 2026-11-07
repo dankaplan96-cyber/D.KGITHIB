@@ -19,6 +19,7 @@
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/zeelife.js';
+import { ZHOMES, ZH, zhomeDoors, zhomeExit } from '../zhomes.js';
 
 export class ZeelichLife extends ChapterBase {
   // (LAZY-REGIONS: Zeelich once it is built; never builds it — the street's state goes on it as it is built)
@@ -40,6 +41,91 @@ export class ZeelichLife extends ChapterBase {
   // Twinsen up on the watch house (the roof, or the guards' stair above the first steps)
   up() { const h = this.game.hero.pos, w = this.L?.watch; return !!w && h.y > w.roofY - 3.1 && Math.hypot(h.x - w.flue.x, h.z - w.flue.z) < 6.5; }
 
+  // ---------------------------------------------------------------- ZEELICH-DOORS: the houses inside (zhomes.js)
+  // Lissa (Nara's niece, in the flower house) and Wenna (Oku's wife, at home): placed once their room is built
+  npcDefs() {
+    const at = (S) => (S ? { x: S.x, z: S.z, angle: S.a } : { x: 0, z: 0, angle: 0, pending: true });
+    return [
+      ...this.streetFolk(),
+      { id: 'zh_lissa', name: 'n_zh_lissa', char: 'nara', color: '#f4c0d0', ...at(ZH.zh_nara?.npcSpots?.lissa) },
+      { id: 'zh_wenna', name: 'n_zh_wenna', char: 'nara', color: '#e8c8a0', ...at(ZH.zh_oku?.npcSpots?.wenna) },
+    ];
+  }
+  // ZEELICH-LIFE: three of the street's working people, on rounds (walkers.js Resident): Fennick the project's heat
+  // fitter (the lit posts, the dark ones, the bakery's heat box, the feed under the street), Rezz the shuttle pilot
+  // (grounded in chapter 3: on the bench by the pad, at his shuttle; away flying from chapter 4, back for the council's
+  // checks in chapter 9), Oma who keeps the council's notices (the council door, the petition box, the street's tags)
+  streetFolk() {
+    const Z = this.Z, ox = Z?.group?.position.x ?? 2400, oz = Z?.group?.position.z ?? 0;
+    const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+    const S = (id, x, z, tx, tz, dur, act = 'stand', o = {}) => ({ id, x: ox + x, z: oz + z, a: A(x, z, tx, tz), dur, act, ...o });
+    const pad = Z?.shuttlePad ? [Z.shuttlePad.x - ox, Z.shuttlePad.z - oz] : [-44, 8];
+    const def = (id, char, color, speed, stops) => (Z ? { id, name: 'n_' + id, char, tint: '#ffffff', color, speed, ambient: true, x: stops[0].x, z: stops[0].z, angle: stops[0].a, round: stops, start: 0 }
+      : { id, name: 'n_' + id, char, tint: '#ffffff', color, ambient: true, x: 0, z: 0, angle: 0, pending: true });
+    return [
+      def('zr_fennick', 'worker', '#e8a040', 1.0, [
+        S('fen_post1', 15.0, -5.6, 15.6, -6.4, [8, 12], 'tend'),
+        S('fen_box', 14.6, -10.0, 13.56, -10.15, [10, 14], 'tend'),
+        S('fen_feed', 16.9, 2.6, 16.0, 0, [6, 9]),
+        S('fen_dark', -43.3, -6.3, -42.4, -7.2, [9, 13], 'tend'),
+        S('fen_sw', -35.3, 6.5, -36.2, 7.5, [6, 9]),
+      ]),
+      def('zr_rezz', 'xil', '#80c0e8', 0.9, [
+        S('rez_ship', pad[0] + 5.4, pad[1] + 0.6, pad[0], pad[1], [14, 20], 'browse'),
+        S('rez_look', pad[0] + 6.2, pad[1] - 3.4, pad[0] + 30, pad[1] - 20, [8, 12]),
+        S('rez_gate', -44.0, 1.6, -52, 0, [8, 12]),
+      ]),
+      def('zr_oma', 'archivist', '#c8b0e0', 0.85, [
+        S('oma_door', -22.9, -6.4, -25.5, -8.4, [9, 13]),
+        S('oma_fount', -21.6, 2.6, -24, 0, [6, 9]),
+        S('oma_tag', -28.9, 6.8, -29.9, 8.0, [6, 9]),
+        S('oma_box', -27.6, -6.0, -27.6, -8.4, [8, 11], 'put'),
+      ]),
+    ];
+  }
+  folkHere(id) {
+    const ph = this.phase();
+    if (id === 'zr_rezz') return ph === 'pre' || ph === 'post' || ph === 'council';   // (grounded, or the council checks every departure)
+    return true;
+  }
+  place(id) {
+    if (id.startsWith('zr_')) {
+      const n = this.npc(id);
+      if (!n?.ambient) return undefined;
+      if (!this.open || !this.folkHere(id)) { n.away = 'zl'; return null; }
+      if (n.away === 'zl') { n.away = null; return n.reset(); }
+      return undefined;
+    }
+    const S = id === 'zh_lissa' ? ZH.zh_nara?.npcSpots?.lissa : id === 'zh_wenna' ? ZH.zh_oku?.npcSpots?.wenna : undefined;
+    if (!id.startsWith('zh_')) return undefined;
+    if (!this.open) return null;
+    return S ? { x: S.x, z: S.z, a: S.a } : undefined;   // (the room not built yet: she waits hidden)
+  }
+  // the street's doors that lead in (from chapter 3); Baldino's workshop also in the chapters that offer no door of
+  // their own to it (4–8, after the network: the test pair, his fee tin)
+  doors() {
+    const Z = this.Z;
+    if (!this.open || !Z) return [];
+    const out = zhomeDoors(Z);
+    const cur = this.story.cur?.doors?.() || [];
+    if (Z.workshopDoor && this.game.regions.has('workshop') && !cur.some((d) => d.room === 'workshop')) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
+    return out;
+  }
+  exitTo(to) { return zhomeExit(to, this.Z); }
+  // a door kept shut on purpose, with its reason (the council house between hearings, the mills, the project's huts);
+  // not where a door of the story's is live
+  closedDoors() {
+    const Z = this.Z; if (!Z) return [];
+    const live = [...(this.story.cur?.doors?.() || []), ...this.doors()].filter((d) => d.region === 'zeelich');
+    return (Z.closedDoors || []).filter((d) => !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2));
+  }
+  // the rooms' state from the story: Nara's crates held while the shuttles are grounded; Snuff's oven
+  applyHomes() {
+    const held = this.phase() === 'pre' || this.phase() === 'post', hot = this.off;
+    if (ZH.zh_nara?.setHeld && this._held !== held) { this._held = held; ZH.zh_nara.setHeld(held); }
+    if (ZH.zh_bakery?.setOven && this._hot !== hot) { this._hot = hot; ZH.zh_bakery.setOven(hot); }
+  }
+
   // ---------------------------------------------------------------- state → world
   applyFlags() {
     const f = this.f;
@@ -56,7 +142,7 @@ export class ZeelichLife extends ChapterBase {
     this._ph = null; this.push();
     this.target();
   }
-  regionBuilt(ids) { if (ids.includes('zeelich')) this.applyStreet(); }
+  regionBuilt(ids) { if (ids.includes('zeelich')) this.applyStreet(); if (ids.some((i) => ZHOMES.includes(i))) { this._held = this._hot = null; this.applyHomes(); } }
   // what follows the main story: Nara's crates wait by the pad only while the project grounds the shuttles (ch. 3)
   push() {
     const L = this.L; if (!L) return;
@@ -98,6 +184,9 @@ export class ZeelichLife extends ChapterBase {
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
+    const rid = this.game.room?.id;
+    if (this.open && ZHOMES.includes(rid)) { for (const l of ZH[rid]?.looks || []) consider(dist(l.x, l.z), l.r, { kind: 'zhlook', key: l.key, label: 'p_look' }); return; }
+    if (rid === 'zeelich' && this.Z) { const y = this.game.hero.pos.y; for (const d of this.closedDoors()) if (Math.abs(y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'zhshut', key: d.key, label: 'p_door' }); }
     if (!this.open || !this.here()) return;
     const L = this.L, w = L.watch, f = this.f, y = this.game.hero.pos.y;
     if (y > w.roofY - 0.4) {
@@ -125,6 +214,8 @@ export class ZeelichLife extends ChapterBase {
       case 'zltag': return say(['zl_tag_' + it.tag]);
       case 'zlburrow': return say(['zl_burrow']);
       case 'zlnara': return say(['zl_flowers']);
+      case 'zhshut': g.audio.play('deny'); return say([it.key]);
+      case 'zhlook': return say([this.lookKey(it.key)]);
       case 'zlshove':
         h.act('use', 0.8, () => {
           if (this.off) return;
@@ -134,6 +225,14 @@ export class ZeelichLife extends ChapterBase {
         return true;
     }
     return false;
+  }
+  // a look inside the houses: some say what changed (the crates, the oven)
+  lookKey(k) {
+    const held = this.phase() === 'pre' || this.phase() === 'post';
+    if (k === 'zh_nara_crates') return held ? 'zh_nara_crates' : 'zh_nara_crates_gone';
+    if (k === 'zh_bak_oven') return this.off ? 'zh_bak_oven_hot' : 'zh_bak_oven';
+    if (k === 'zh_bak_racks') return this.off ? 'zh_bak_racks_full' : 'zh_bak_racks';
+    return k;
   }
   // the ball knocks the crate off the roof: it falls and breaks on the grass
   knock() {
@@ -164,7 +263,7 @@ export class ZeelichLife extends ChapterBase {
 
   // ---------------------------------------------------------------- people (asked before the chapter)
   talkFirst(npc) {
-    if (!this.open || !this.here()) return false;
+    if (!this.open || (!this.here() && !ZHOMES.includes(this.game.room?.id))) return false;
     const g = this.game, f = this.f, id = npc.def.id, ph = this.phase();
     const c = (lines, done) => { this.chain(lines.filter(Boolean), done); return true; };
     // one of a list, a different one each time
@@ -193,6 +292,14 @@ export class ZeelichLife extends ChapterBase {
         if (!f.zl_bz) return c([['zbee1', 'zl_bz_1'], ['zbee1', 'zl_bz_2']], () => { f.zl_bz = true; g.save(false); });
         return c([['zbee1', 'zl_bz_i_' + (ph === 'post' ? 'pre' : ph)], ['zbee1', 'zl_bz_wait']]);
       case 'ztri1': return one('ztri1', pk('zl_pel'));     // Mr Pelleck
+      case 'zr_fennick': case 'zr_rezz': case 'zr_oma': {   // (a resident on a round: it stops and turns while it talks)
+        const k = { zr_fennick: 'zr_fen_', zr_rezz: 'zr_rez_', zr_oma: 'zr_oma_' }[id] + (ph === 'post' ? 'pre' : id === 'zr_rezz' && ph !== 'council' ? 'pre' : ph);
+        npc.engage?.();
+        g.say('n_' + id, [pick(k)], () => npc.release?.(), npc);
+        return true;
+      }
+      case 'zh_lissa': return one('zh_lissa', 'zh_lissa_' + (ph === 'post' ? 'pre' : ph));
+      case 'zh_wenna': return one('zh_wenna', 'zh_wenna_' + (ph === 'pre' && this.story.chapters[this.idx('zeelich')]?.millsBraked?.() ? 'braked' : ph === 'post' ? 'braked' : ph));
       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
       // Nara and Oku when no chapter needs them (chapters 4–8 and after the network; after the ending they have their
@@ -205,6 +312,7 @@ export class ZeelichLife extends ChapterBase {
 
   // ---------------------------------------------------------------- per frame
   update(dt) {
+    this.applyHomes();
     if (!this.L) return;
     this.push();
     const g = this.game, L = this.L;

@@ -41,6 +41,8 @@ import { buildBazooRoom } from './bazoo.js';
 import { buildTicketRoom } from './ticket.js';
 import { buildPharmacyRoom } from './pharmacy.js';
 import { buildNbrHouseRoom } from './nbrhouse.js';
+import { occAuto } from './roomocc.js';
+import { ZHOMES, ZHOME_AT, buildZHome } from './zhomes.js';
 import { buildZTerminalRoom } from './zterminal.js';
 import { buildTerminalRoom } from './terminal.js';
 import { buildOtrBarRoom } from './otrbar.js';
@@ -55,7 +57,7 @@ import { buildNellHouseRoom } from './nellhouse.js';
 // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
 const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, workshop: 180, lighttop: 140, cellar: 70,
   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
-  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, otrbar: 120, otrhotel: 120, celtemple: 120, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
+  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, otrbar: 120, otrhotel: 120, celtemple: 120, zh_pelleck: 70, zh_nara: 70, zh_oku: 70, zh_bakery: 70, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
   isle_celebration: 160, isle_undergas: 320, isle_platform: 180, isle_liftdock: 120,
   isle_orchard: 230, isle_oldwatch: 90, isle: 250 };
 // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
@@ -65,7 +67,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0] };
+  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])) };
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -123,6 +125,7 @@ function groupDefs() {
   add('tralucave', ['tralucave'], buildTraluCaveRoom);   // (LBA-CITADEL-9: Tralu's cave, LBA2's scene 2, behind the plateau's door)
   add('zterminal', ['zterminal'], buildZTerminalRoom);   // (SPACEPORT-1: the terminal at Zeelich Spaceport, after LBA2's departure and arrival halls (scenes 78, 82))
   add('terminal', ['terminal'], buildTerminalRoom);   // (SPACEPORT-1: the terminal at Citadel Spaceport, after LBA2's departure hall (scene 78))
+  for (const id of ZHOMES) add(id, [id], buildZHome(id));   // (ZEELICH-DOORS: the street's houses inside, zhomes.js)
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)
@@ -202,7 +205,7 @@ export class Regions {
   }
   startSteps(gid, why) {
     const G = this.groups.get(gid);
-    G.state = 'loading'; G.it = G.steps(this.S, this.P); G.stepsMs = []; G.t0 = performance.now(); G.n0 = this.S.children.length; G.whyS = why; G.busy = 0;
+    G.state = 'loading'; G.c0 = this.P.colliders.length; G.it = G.steps(this.S, this.P); G.stepsMs = []; G.t0 = performance.now(); G.n0 = this.S.children.length; G.whyS = why; G.busy = 0;
     this.stepOnce(gid);
   }
   // one step of an area's build in steps (and its end: the same as buildGroup's)
@@ -220,7 +223,7 @@ export class Regions {
   buildGroup(gid, why) {
     const G = this.groups.get(gid);
     if (!G || G.state !== 'unloaded') return false;
-    G.state = 'loading';
+    G.state = 'loading'; G.c0 = this.P.colliders.length;
     const t0 = performance.now(), S = this.S, n0 = S.children.length, m = this.mode;
     this.mode = 'peek';   // (a builder never builds another area)
     let rooms;
@@ -249,6 +252,9 @@ export class Regions {
       const q = this.waits.get(id);
       if (q) { this.waits.delete(id); for (const fn of q) fn(rooms[id]); }
     }
+    // (VP-10 in the outdoor rooms: the solids this build added, and what the game's hooks put on the area just now — its
+    //  travel stops: travel.js —, give the camera their shapes, as Citadel's do: roomocc.js)
+    for (const R of Object.values(rooms)) if (R?.outdoor) occAuto(R, this.P.colliders.slice(G.c0 ?? 0), { terrain: this.P.terrain });
     this.afterBuilt?.(gid, rooms, why);
     return true;
   }

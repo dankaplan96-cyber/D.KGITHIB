@@ -57,7 +57,7 @@ await shot('01-street-watchhouse', { x: 11.6, z: -3.2, a: Math.PI });
 
 // the street's routes stay open: from the dock past the new places to the mills, the depot gate and the platform gate
 const routes = await ev(() => { const Z = game.rooms.zeelich, out = [];
-  for (const [n, x, z] of [['north mill (end of its track)', 2397.8, -15.4], ['east mill (end of its track)', 2421.9, -14.0], ['depot gate', 2412, 8.0], ['the bakery counter', Z.life.watch.hatch.x, Z.life.watch.hatch.z + 0.3], ['the burrow', Z.life.burrow.x + 1.6, Z.life.burrow.z - 1.4], ['Pelleck\'s door', 2400 - 40.5, -6.6], ['the platform gate', 2433.5, 0]]) { const r = P.go(x, z, { tol: 0.7, maxT: 90 }); out.push([n, r.r]); }
+  for (const [n, x, z] of [['north mill (end of its track)', 2397.8, -15.4], ['east mill (end of its track)', 2421.9, -14.0], ['depot gate', 2412, 8.0], ['the bakery counter', Z.life.watch.hatch.x, Z.life.watch.hatch.z + 0.3], ['the burrow', Z.life.burrow.x + 1.6, Z.life.burrow.z - 1.4], ['before Pelleck\'s door (ZEELICH-DOORS: the door itself leads in now)', 2400 - 40.5, -5.2], ['the platform gate', 2433.5, 0]]) { const r = P.go(x, z, { tol: 0.7, maxT: 90 }); out.push([n, r.r]); }
   return out; });
 check('collision and access: Twinsen walks from the street to the mills, the depot gate, the new places and the platform gate (INPUT)', routes.every(([, r]) => r === 'arrived'), routes);
 

@@ -39,6 +39,7 @@ import { rugTex } from './props.js';
 import { cullInstances } from './kit.js';
 import { viewCull } from '../engine/viewinst.js';
 import { buildZeelichLife, zlClear } from './zeelife.js';
+import { roomOcc } from './roomocc.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
@@ -115,6 +116,13 @@ function ctex(key, w, h, draw, repeat = true) {
   TC.set(key, t);
   return t;
 }
+// the council house's notice (ZEELICH-DOORS)
+const noticeTex = () => ctex('cnotice', 256, 180, (x, W, H) => {
+  x.fillStyle = '#f2e8d4'; x.fillRect(0, 0, W, H); x.strokeStyle = '#7a5a2a'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, H - 8);
+  x.fillStyle = '#2a3a5a'; x.textAlign = 'center'; x.font = 'bold 30px serif'; x.fillText('COUNCIL', W / 2, 52);
+  x.font = 'bold 22px sans-serif'; x.fillText('HEARINGS BY', W / 2, 96); x.fillText('PETITION ONLY', W / 2, 126);
+  x.fillStyle = '#a8302a'; x.beginPath(); x.arc(W / 2, 156, 12, 0, 7); x.fill();
+}, false);
 const wrap9 = (S, fn) => { for (const a of [-S, 0, S]) for (const b of [-S, 0, S]) fn(a, b); };
 // Esmer glazed tiles (4×4 per texture = 0.25 m tiles): an eight-point star per tile, quatrefoils at the corners
 const tileTex = (a = '#2f8a9a', b = '#e8b84a', c = '#d8608a') => ctex('tiles' + a + b + c, 256, 256, (x, S) => {
@@ -642,7 +650,7 @@ export function* buildZeelichSteps(scene, physics) {
   }
 
   // ---------------------------------------------------------------- the street twelve years on (src/game/zeelife.js)
-  const life = buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: houses[0].dome });
+  const life = buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: houses[0].dome, occ: roomOcc(R, physics.terrain) });
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   buildIslets();
@@ -662,9 +670,19 @@ export function* buildZeelichSteps(scene, physics) {
     workshopDoor: W(ws[0], ws[1]),
     councilDoor: W(houses[1].door[0], houses[1].door[1]),
     houseDoors: houses.filter((h) => h.door).map((h) => W(h.door[0], h.door[1])),   // (every house's door: tests/doorcull.mjs)
+    houseFacing: HOUSES.map((h) => h.ry),   // (the way each house's door faces: zhomes.js leads him out that way)
     // (DOORS-1: a house door that leads nowhere says "Locked."; the council's and the workshop's are the story's
     // doors in their chapters, offered instead there: story/prologue.js)
-    shutDoors: houses.filter((h) => h.door).map((h, i) => ({ id: 'zeelich-house' + i, ...W(h.door[0], h.door[1]), y: Y0 })),
+    // (ZEELICH-DOORS, 7.11: every house's door is answered by story/zeelife.js now — own: three lead into their houses
+    //  (zhomes.js), the workshop's in every chapter from 3, the council house's says why it is shut between hearings)
+    shutDoors: houses.filter((h) => h.door).map((h, i) => ({ id: 'zeelich-house' + i, ...W(h.door[0], h.door[1]), y: Y0, own: true })),
+    // the doors kept shut on purpose, each with its reason (story/zeelife.js closedDoors; not where a story door is live)
+    closedDoors: [
+      { id: 'council', ...W(houses[1].door[0], houses[1].door[1]), y: Y0, key: 'zh_closed_council' },
+      ...mills.map((m) => ({ id: 'mill-' + m.api.id, ...m.api.door, y: Y0, key: m.api.id === 'north' ? 'zh_closed_mill_old' : 'zh_closed_mill' })),
+      { id: 'depot-shed', ...W(21.2, 20.1), y: Y0, key: 'zh_closed_depot' },
+      { id: 'control-hut', ...W(53.8, -6.2), y: DECK, key: 'zh_closed_hut' },
+    ],
     npcSpots: {
       esmer1: { ...W(-34.5, -3.2), a: Math.PI / 2 },
       esmer2: { ...W(-24, 7.0), a: Math.PI },
@@ -691,30 +709,25 @@ export function* buildZeelichSteps(scene, physics) {
     life,
   });
 
-  // houses and big buildings between the camera and Twinsen fade out (the camera doesn't dodge them)
-  const faders = houses.map((h) => h.fader).concat(mills.map((m) => m.fader)).filter(Boolean);
-  { const b = life.fadeBox; faders.push(makeFader(life.group, b.x0, b.z0, b.x1, b.z1, b.top)); }
-  const sample = new THREE.Vector3(), hp = new THREE.Vector3(), cp = new THREE.Vector3();
+  // VP-10 (the user, 7.11: "in Zeelich all the buildings disappear when you get close"): as on Citadel and in LBA2,
+  // nothing on the street fades; the houses, mills and the watch house give the camera their shapes (R.occ, above and
+  // zeelife.js; every other tall solid by regions.js → roomocc.js occAuto) and each new shot rises over what would hide
+  // him. Only a porch roof he stands under fades (the council house's arcade), as Nell's lean-to on Citadel.
+  R.occFloor = Y0 - 0.05;   // (the island's floor is bricks over the clouds: not scenery to rise over)
+  const porches = houses.map((h) => h.arcade).filter(Boolean).map((A) => ({ ...A, fader: makeFader(A.group), f: 1 }));
   updaters.push((dt) => {
     const G = globalThis.game;
     if (!G || G.room !== R || !G.camera) return;
-    hp.set(G.hero.pos.x - ox, G.hero.pos.y, G.hero.pos.z - oz);
-    cp.set(G.camera.position.x - ox, G.camera.position.y, G.camera.position.z - oz);
-    for (const E of faders) {
-      let hit = false;
-      if (hp.x > E.x0 - 16 && hp.x < E.x1 + 16 && hp.z > E.z0 - 16 && hp.z < E.z1 + 16) {
-        for (const hy of [0.3, 1.0, 1.8]) for (let k = 1; k < 18 && !hit; k++) {
-          sample.set(hp.x, hp.y + hy, hp.z).lerp(cp, k / 18);
-          if (sample.x > E.x0 && sample.x < E.x1 && sample.z > E.z0 && sample.z < E.z1 && sample.y < E.top) hit = true;
-        }
-      }
-      const goal = hit ? 0.15 : 1;
-      E.f += (goal - E.f) * (1 - Math.exp(-dt * 8));
-      const see = E.f < 0.98;
-      for (const m of E.mats) {
-        if (m.userData.alwaysTransparent) { m.opacity = (m.userData.baseOpacity ?? 1) * (see ? E.f : 1); continue; }
+    const hx = G.hero.pos.x - ox, hz = G.hero.pos.z - oz;
+    for (const A of porches) {
+      const dx = hx - A.x, dz = hz - A.z, c = Math.cos(A.ry), sn = Math.sin(A.ry), lx = dx * c - dz * sn, lz = dx * sn + dz * c;
+      const under = Math.abs(lx) < A.hw && lz > A.lz0 && lz < A.lz1 && G.hero.pos.y < A.top;
+      A.f += ((under ? 0.2 : 1) - A.f) * (1 - Math.exp(-dt * 8));
+      const see = A.f < 0.98;
+      for (const m of A.fader.mats) {
+        if (m.userData.alwaysTransparent) { m.opacity = (m.userData.baseOpacity ?? 1) * (see ? A.f : 1); continue; }
         if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; }
-        m.opacity = see ? E.f : 1; m.depthWrite = !see;
+        m.opacity = see ? A.f : 1; m.depthWrite = !see;
       }
     }
   });
@@ -1019,7 +1032,7 @@ export function* buildZeelichSteps(scene, physics) {
   function esmerHouse(o) {
     const rr = rng(o.seed * 131 + 7);
     const G = new THREE.Group(); G.position.set(o.x, Y0, o.z); G.rotation.y = o.ry; group.add(G);
-    const HB = new Batch(G);
+    const HB = new Batch(G), occ = roomOcc(R, physics.terrain);
     const { w, d, h } = o, t = 0.32, base = 0.32;
     const wallM = tm('plasterWall', { color: o.wall });
     const stoneM = tm('stone', { color: '#e4dcd8' });
@@ -1156,12 +1169,17 @@ export function* buildZeelichSteps(scene, physics) {
       HB.add(MP.shell, capM([ca, cb]), mx, mh, mz);
       HB.add(MP.rib, brassM(), mx, mh, mz);
       HB.add(cached('mfin', () => lathe([[0, 0], [0.05, 0], [0.09, 0.12], [0.04, 0.22], [0.015, 0.6], [0, 0.62]], 8)), brassM(), mx, mh + 0.96, mz);
-      col({ ...wpos(f, mx, mz), type: 'cyl', r: 0.78, top: Y0 + mh, fades: true });
+      col({ ...wpos(f, mx, mz), type: 'cyl', r: 0.78, top: Y0 + mh, camSkip: true });
+      { const [wx, wz] = f(mx, mz); occ.add({ kind: 'rev', x: ox + wx, z: oz + wz, y0: Y0 - 1, base: Y0, profile: [[0.3, mh + 0.9], [0.66, mh + 0.1], [1.0, mh - 1.75]], name: 'minaret ' + o.seed }); }
     }
     // arcade porch in front
-    let arcadeDepth = 0;
+    let arcadeDepth = 0, arcade = null;
     if (o.arcade) {
       arcadeDepth = 2.1;
+      // (VP-10: the porch is its own group: it is the one part of a Zeelich house that fades, while he stands under its
+      //  roof — as Nell's lean-to on Citadel; the rest stays solid and the camera rises over it)
+      const AG = new THREE.Group(); G.add(AG);
+      const HB = new Batch(AG);
       const n = o.arcade, len = w - 0.3, ph = h - 0.9, pierW = 0.55, ow = (len - (n + 1) * pierW) / n;
       const arcs = []; for (let i = 0; i < n; i++) arcs.push({ x: -len / 2 + pierW + ow / 2 + i * (ow + pierW), y: 0.0, w: ow, h: ph - 0.75, horse: true });
       const az = d / 2 + arcadeDepth;
@@ -1171,12 +1189,18 @@ export function* buildZeelichSteps(scene, physics) {
       HB.add(boxUV(bbox(len, 0.34, 0.05, 0.01, 1), TILE.tiles), tiles, 0, ph - 0.45, az + 0.02);
       for (let i = 0; i <= n; i++) {
         const px = -len / 2 + pierW / 2 + i * (ow + pierW);
-        col({ ...wpos(f, px, az - 0.19), type: 'box', hw: pierW / 2 + 0.02, hd: 0.22, rot: o.ry, top: Y0 + ph, fades: true });
+        col({ ...wpos(f, px, az - 0.19), type: 'box', hw: pierW / 2 + 0.02, hd: 0.22, rot: o.ry, top: Y0 + ph, camSkip: true });
         HB.add(cached('pcap', () => bbox(0.7, 0.16, 0.5, 0.03, 1)), stoneM, px, ph - 0.85, az - 0.19);
       }
       HB.add(boxUV(bbox(len + 0.1, 0.12, arcadeDepth, 0.02, 1), TILE.cobble), tm('cobble', { color: '#f0d8e0' }), 0, 0.03, d / 2 + arcadeDepth / 2);
       // a rug drying over the arcade parapet
       HB.add(cached('rugq', () => new THREE.PlaneGeometry(1.5, 1.1)), pm('#ffffff', 0.95, { map: rugTex(['#a8304a', '#2a4a8a', '#e8b84a', '#f4e6c8', '#3a2030'], 4), side: THREE.DoubleSide, transparent: true, alphaTest: 0.5 }), len / 2 - 1.3, ph - 0.62, az + 0.06, 0, 0, Math.PI / 2);
+      HB.build();
+      // the porch for the camera: solid from outside (the next shot rises over it); passed through while he stands under
+      // it (walkUnder: roomocc.js), when it fades instead (a roof-slab volume had pulled the camera in to 2.3 m under it,
+      // and with none the arcade hid him from a camera behind it: probe route-arc, 7.11)
+      { const [wx, wz] = f(0, d / 2 + arcadeDepth / 2); occ.add({ kind: 'box', x: ox + wx, z: oz + wz, rot: o.ry, hw: (len + 0.3) / 2, hd: arcadeDepth / 2 + 0.1, y0: Y0 - 1, y1: Y0 + ph + 0.05, walkUnder: true, name: 'arcade ' + o.seed }); }
+      arcade = { group: AG, x: o.x, z: o.z, ry: o.ry, lz0: d / 2, lz1: az + 0.1, hw: len / 2 + 0.1, top: Y0 + ph - 0.3 };
     }
     // awning over a window and a wall lantern by the door
     {
@@ -1198,19 +1222,24 @@ export function* buildZeelichSteps(scene, physics) {
     let out = {};
     if (o.workshop) out = workshopClutter(HB, G, o, f, tiles);
     HB.build();
-    // collider (fades rather than pushing the camera) and the fader box
-    col({ ...wpos(f, 0, 0), type: 'box', hw: w / 2 + 0.25, hd: d / 2 + 0.25, rot: o.ry, top: Y0 + h + 1.0, fades: true });
-    for (const [sx, sz] of [[-1, 1], [1, 1]]) col({ ...wpos(f, sx * (w / 2 - 0.04), sz * (d / 2 - 0.04)), type: 'cyl', r: 0.4, top: Y0 + h + 0.8, fades: true });
+    // (ZEELICH-DOORS: the council house's door carries its notice: hearings by petition only)
+    if (o.arcade) HB.add(cached('cnotice', () => new THREE.PlaneGeometry(0.62, 0.44)), (MC.get('cnotice') || (MC.set('cnotice', new THREE.MeshStandardMaterial({ map: noticeTex(), roughness: 0.9 })), MC.get('cnotice'))), doorX, base + 1.45, d / 2 - t + 0.2);
+    // colliders, and the house's shape for the camera (VP-10, as Citadel's houses: nothing fades, the next shot rises
+    // over it — src/game/roomocc.js): the walls up to the coping, corner piers and plinth included; the drum and its cap
+    col({ ...wpos(f, 0, 0), type: 'box', hw: w / 2 + 0.25, hd: d / 2 + 0.25, rot: o.ry, top: Y0 + h + 1.0, camSkip: true });
+    for (const [sx, sz] of [[-1, 1], [1, 1]]) col({ ...wpos(f, sx * (w / 2 - 0.04), sz * (d / 2 - 0.04)), type: 'cyl', r: 0.4, top: Y0 + h + 0.8, camSkip: true });
+    occ.add({ kind: 'box', x: ox + o.x, z: oz + o.z, rot: o.ry, hw: w / 2 + 0.32, hd: d / 2 + 0.32, y0: Y0 - 1, y1: Y0 + h + 0.21, name: 'house ' + o.seed });
+    { const [wx, wz] = f(dx, dz), hb = Y0 + h + 1.12, Rc = o.workshop ? R0 : R0 * 1.12, Hc = domeTop - h - 1.12;
+      occ.add({ kind: 'rev', x: ox + wx, z: oz + wz, y0: Y0 + h - 0.1, base: Y0 + h, profile: [[Rc * 0.3, 1.12 + Hc * 0.92], [Rc * 0.79, 1.12 + Hc * 0.36], [Rc, 1.12 + Hc * 0.07], [Rc + 0.01, 1.12]], name: 'dome ' + o.seed }); void hb; }
     const ext = Math.max(w, d) / 2 + 0.6 + (o.minaret ? 1.4 : 0) + arcadeDepth;
-    const fader = makeFader(G, o.x - ext, o.z - ext, o.x + ext, o.z + ext, Y0 + Math.max(domeTop, h + (o.minaret ? 6 : 1)) + 0.5);
     keepClear(o.x - ext - 0.6, o.z - ext - 0.6, o.x + ext + 0.6, o.z + ext + 0.6);
     const doorW = f(doorX, d / 2 + arcadeDepth + 0.75);
     // (where the dome sits, for the scaffold of the one being re-tiled: zeelife.js; houses facing south only)
     const dome = o.workshop || o.ry ? null : { x: o.x + dx, z: o.z + dz, y: Y0 + h + 1.12, R0, roof: Y0 + h, front: o.z + d / 2, cap: { R: R0 * 1.12, H: R0 * 0.85, colors: o.dome } };   // (ZEELICH-2: cap: its shape, for zeelife.js's re-tiling)
-    return { group: G, door: doorW, fader, dome, ...out };
+    return { group: G, door: doorW, arcade, dome, ...out };
   }
   function wpos(f, lx, lz) { const [x, z] = f(lx, lz); return { x, z }; }
-  function makeFader(G, x0, z0, x1, z1, top) {
+  function makeFader(G) {
     const mats = new Map();
     G.traverse((m) => {
       if (!m.isMesh) return;
@@ -1218,7 +1247,7 @@ export function* buildZeelichSteps(scene, physics) {
       const out = list.map((mm) => { if (!mats.has(mm)) { const c = mm.clone(); if (c.transparent) { c.userData.alwaysTransparent = true; c.userData.baseOpacity = c.opacity; } mats.set(mm, c); } return mats.get(mm); });
       m.material = Array.isArray(m.material) ? out : out[0];
     });
-    return { x0, z0, x1, z1, top, mats: [...mats.values()], f: 1 };
+    return { mats: [...mats.values()] };
   }
 
   // Baldino's roof: antenna mast with a dish and wires, a propeller wind-vane, a brick chimney, a water tank, a cog
@@ -1452,7 +1481,10 @@ export function* buildZeelichSteps(scene, physics) {
     mesh(lever, cached('bullring', () => new THREE.TorusGeometry(0.56, 0.07, 8, 28)), brassM(), 0, 0.7, 0.05);
     mesh(lever, cached('bulldisc', () => new THREE.CircleGeometry(0.55, 28)), pm('#ffffff', 0.5, { map: bullseyeTex(), emissive: '#401010', emissiveIntensity: 0.3 }), 0, 0.7, 0.09, 0, { cast: false });
     mesh(lever, cached('bullback', () => cyl(0.55, 0.55, 0.08, 20).rotateX(Math.PI / 2)), darkSteel(), 0, 0.7, 0.02);
-    col({ type: 'cyl', x: m.x, z: m.z, r: R0 + 0.05, top: Y0 + H + 3 });
+    col({ type: 'cyl', x: m.x, z: m.z, r: R0 + 0.05, top: Y0 + H + 3, camSkip: true });
+    // the tower and its cap for the camera (VP-10: roomocc.js); the nacelle and the sail wheel are left open, as trees
+    { const cy = H + 0.35, prof = old ? [[0.4, cy + 2.7], [R1 * 0.7, cy + 1.6], [R1 + 0.5, cy + 0.05], [R0 + 0.35, 0.55]] : [[0.45, cy + 2.6], [R1 * 0.75, cy + 1.9], [R1 + 0.45, cy + 1.1], [R1 + 0.5, cy + 0.5], [R0 + 0.35, 0.55]];
+      roomOcc(R, physics.terrain).add({ kind: 'rev', x: m.x + ox, z: m.z + oz, y0: Y0 - 1, base: Y0, profile: prof, name: 'mill ' + m.id }); }
     // the old mill: stair-stones spiralling up to a wooden balcony gallery
     let top = null;
     if (old) {
@@ -1501,8 +1533,9 @@ export function* buildZeelichSteps(scene, physics) {
     } else keepClear(m.x - 3.5, m.z - 3.5, m.x + 3.5, m.z + 3.5);
     MB.build();
     // spinning, with a slow wind-down when the brake is pulled
+    const dr = Rat(1.1) + 0.75;
     const api = {
-      id: m.id, ...W(m.x, m.z), brake: { x: m.x + ox + bx, y: Y0 + by + 0.15, z: m.z + oz + bz }, spinning: true, speed: old ? 0.75 : 1.0,
+      id: m.id, ...W(m.x, m.z), door: W(m.x + Math.sin(doorPhi) * dr, m.z + Math.cos(doorPhi) * dr), brake: { x: m.x + ox + bx, y: Y0 + by + 0.15, z: m.z + oz + bz }, spinning: true, speed: old ? 0.75 : 1.0,
       setSpinning(b) { this.spinning = !!b; },
     };
     const full = api.speed;
@@ -1514,10 +1547,7 @@ export function* buildZeelichSteps(scene, physics) {
       leverA += ((api.spinning ? 0 : 0.9) - leverA) * (1 - Math.exp(-dt * 5));
       lever.rotation.x = leverA;
     });
-    const ext = old ? 5.2 : R0 + 0.6;
-    const fader = old ? null : makeFader(G, m.x - ext, m.z - ext, m.x + ext, m.z + ext, Y0 + 4.5);
-    if (fader) fader.mats = fader.mats.filter((mm) => mm !== tiles && mm.map !== bullseyeTex());
-    return { api, top, fader };
+    return { api, top };
   }
 
   // ================================================================ the project depot

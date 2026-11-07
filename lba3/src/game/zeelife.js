@@ -89,7 +89,7 @@ const scarTex = () => ctex('zlscar', 64, 64, (x, W, H) => {
 const stripeTex = () => ctex('zlstripe', 64, 64, (x, S) => { for (let i = 0; i < 6; i++) { x.fillStyle = i % 2 ? '#f4ecd8' : '#2f9a8a'; x.fillRect(i * S / 6, 0, S / 6 + 1, S); } });
 const shieldShape = (w, h) => { const s = new THREE.Shape(); s.moveTo(-w / 2, h / 2); s.lineTo(w / 2, h / 2); s.lineTo(w / 2, -h * 0.05); s.quadraticCurveTo(w / 2, -h * 0.35, 0, -h / 2); s.quadraticCurveTo(-w / 2, -h * 0.35, -w / 2, -h * 0.05); s.closePath(); return s; };
 
-export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH }) {
+export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH, occ = null }) {
   const C = {
     ash: tm('fortStone', { color: '#f2e6f8', rough: 0.92 }),       // the watch house's ashlar (lilac-grey)
     ashD: tm('fortStone', { color: '#c8bcd6', rough: 0.95 }),      // its plinth, string course, merlons
@@ -107,7 +107,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     const q = new THREE.Quaternion().setFromUnitVectors(_uy, d.normalize());
     Bt.addM(tint(cyl(r, r, +len.toFixed(2), seg), color), mat, new THREE.Matrix4().compose(A.add(Bv).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1)));
   };
-  // ================================================================ the watch house (its own group: it fades when it hides Twinsen)
+  // ================================================================ the watch house (solid: it gives the camera its walls and parapet, VP-10)
   const WG = new THREE.Group(); group.add(WG);
   const B = new Batch(WG);
   const roofY = Y0 + WH.h;
@@ -129,6 +129,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
       for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; B.add(cached('zlmerlon', () => bbox(0.46, 0.46, PT + 0.04, 0.04, 1.8)), C.ashD, ax + (bx - ax) * t, roofY + PH + 0.23, az + (bz - az) * t, 0, ry, 0); }
       // (the ball may skim the merlons on its way to the crate on the flue: the parapet doesn't stop it)
       col({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: ry ? PT / 2 : len / 2, hd: ry ? len / 2 : PT / 2, rot: 0, top: roofY + 0.95, noStand: true, seeThrough: true, noBall: true });
+      occ?.add({ kind: 'box', ...W((ax + bx) / 2, (az + bz) / 2), hw: ry ? PT / 2 : len / 2, hd: ry ? len / 2 : PT / 2, y0: roofY - 0.1, y1: roofY + PH + 0.46, name: 'watch house parapet' });
     };
     wallRun(X0, Z1 - PT / 2, X1, Z1 - PT / 2);                         // south (the street side)
     wallRun(X0, Z0 + PT / 2, X1, Z0 + PT / 2);                         // north
@@ -137,7 +138,8 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     // the roof: flagstones, Bzizz's landing mark
     B.add(bbox(WH.w - 0.1, 0.04, WH.d - 0.1, 0.01, 1.6), C.ashD, WH.x, roofY + 0.0, WH.z);
     B.add(cached('zlmark', () => tint(new THREE.RingGeometry(0.62, 0.78, 24).rotateX(-Math.PI / 2), '#e8b84a')), C.VC, WH.x - 0.6, roofY + 0.03, WH.z - 0.2);
-    col({ type: 'box', x: WH.x, z: WH.z, hw: WH.w / 2, hd: WH.d / 2, rot: 0, top: roofY });
+    col({ type: 'box', x: WH.x, z: WH.z, hw: WH.w / 2, hd: WH.d / 2, rot: 0, top: roofY, camSkip: !!occ });
+    occ?.add({ kind: 'box', ...W(WH.x, WH.z), hw: WH.w / 2 + 0.18, hd: WH.d / 2 + 0.18, y0: Y0 - 1, y1: roofY, name: 'watch house' });
     // the old door: planks, iron bands and a grilled spy window; the crest above it, chiselled off
     B.add(bbox(DOOR.w + 0.36, DOOR.h + 0.2, 0.14, 0.04, 1.8), C.ashD, DOOR.x, Y0 + (DOOR.h + 0.2) / 2, Z1 + 0.04);
     B.add(bbox(DOOR.w, DOOR.h, 0.08, 0.02, 1), C.planks, DOOR.x, Y0 + DOOR.h / 2, Z1 + 0.09);
@@ -224,7 +226,6 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
   placeCrate('flue');
   const crateCol = col({ type: 'box', x: FLUE.x, z: FLUE.z, hw: 0.36, hd: 0.36, rot: 0, top: flueTop.y + 0.62, noStand: true, seeThrough: true, noBall: true });   // (the ball's own target test takes it)
   void crateCol;
-  const fadeBox = { x0: X0 - 1.3, z0: Z0 - 0.3, x1: X1 + 0.4, z1: Z1 + 0.2, top: roofY + 0.05 };
 
   // ================================================================ everything else on one batch
   const L = new Batch(group);
@@ -385,7 +386,6 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
   updaters.push((dt) => watch.update(dt));
   return {
     group: WG,
-    fadeBox,
     watch,
     posts,
     burrow: { ...W(BURROW.x, BURROW.z), vent: { ...W(BURROW.x + 0.95, BURROW.z + 0.55), y: Y0 + 1.15 } },
