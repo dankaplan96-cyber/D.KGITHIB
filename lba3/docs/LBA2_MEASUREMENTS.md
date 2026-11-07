@@ -229,7 +229,10 @@ Root motion of the hero's anims (each key's step x/y/z is the move over that key
   `src/game/inventory.js`, css `#found`.
 
 ## Used in the game
-- `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
+- `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle); GAIT-CADENCE: a
+  walker slower than 80 % of that pace (the townsfolk, 0.25-0.6 H/s) takes a shorter stride, × √(speed / pace) / 0.9, the
+  thighs and arms swinging less with it, so its cadence stays 1.3-2 steps a second instead of falling to 0.6-1.3; the hero's
+  walk is unchanged).
 - `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; ball hands r 0.036 H at ±0.19,
   0.378 H; the head at the measured size (HEAD_K 1.0; it was 1.24 before pass 8), the hair (VP-1b) one dark,
   flat-shaded mass over the three balls at the measured places (H = 1296 frame), the crown on the head, the tuft on tail0..2; the look's armSpread 0.3.
