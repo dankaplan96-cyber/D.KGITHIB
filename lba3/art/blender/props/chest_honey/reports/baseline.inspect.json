@@ -1,0 +1,286 @@
+{
+  "file": "art/blender/props/chest_honey/source/chest_honey.polyprop.json",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "brass.01",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.65,
+        0.4975,
+        0.6022
+      ],
+      "mesh": {
+        "vertices": 2028,
+        "faces": 676,
+        "triangles": 676,
+        "uv_layers": [
+          "UVMap"
+        ],
+        "color_attributes": [],
+        "materials": [
+          "brass"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "iron.02",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.836,
+        0.096,
+        0.048
+      ],
+      "mesh": {
+        "vertices": 110,
+        "faces": 160,
+        "triangles": 160,
+        "uv_layers": [
+          "UVMap"
+        ],
+        "color_attributes": [],
+        "materials": [
+          "iron"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "wood:honey.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.8,
+        0.5043,
+        0.6053
+      ],
+      "mesh": {
+        "vertices": 804,
+        "faces": 268,
+        "triangles": 268,
+        "uv_layers": [
+          "UVMap"
+        ],
+        "color_attributes": [],
+        "materials": [
+          "wood:honey"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "brass",
+      "users": 1,
+      "images": [
+        "brass.png"
+      ],
+      "game": {
+        "key": "brass",
+        "recipe": [
+          "brass"
+        ],
+        "color": "#e0b25a",
+        "roughness": 0.32,
+        "metalness": 0.75,
+        "map": "brass.png",
+        "vertexColors": false,
+        "tile": 0.5
+      }
+    },
+    {
+      "name": "iron",
+      "users": 1,
+      "images": [
+        "iron.png"
+      ],
+      "game": {
+        "key": "iron",
+        "recipe": [
+          "iron"
+        ],
+        "color": "#4a4c54",
+        "roughness": 0.55,
+        "metalness": 0.55,
+        "map": "iron.png",
+        "vertexColors": false,
+        "tile": 0.5
+      }
+    },
+    {
+      "name": "wood:honey",
+      "users": 1,
+      "images": [
+        "wood_honey.png"
+      ],
+      "game": {
+        "key": "wood:honey",
+        "recipe": [
+          "wood",
+          "honey"
+        ],
+        "color": "#ffffff",
+        "roughness": 0.62,
+        "metalness": 0,
+        "map": "wood_honey.png",
+        "vertexColors": false,
+        "tile": 1
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "brass.png",
+      "path": "art/blender/props/chest_honey/source/textures/brass.png",
+      "size": [
+        128,
+        128
+      ],
+      "packed": false,
+      "estMemoryBytes": 87381
+    },
+    {
+      "name": "iron.png",
+      "path": "art/blender/props/chest_honey/source/textures/iron.png",
+      "size": [
+        128,
+        128
+      ],
+      "packed": false,
+      "estMemoryBytes": 87381
+    },
+    {
+      "name": "wood_honey.png",
+      "path": "art/blender/props/chest_honey/source/textures/wood_honey.png",
+      "size": [
+        256,
+        256
+      ],
+      "packed": false,
+      "estMemoryBytes": 349525
+    }
+  ],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 1104,
+    "materials": 3,
+    "images": 3,
+    "estTextureMemoryBytes": 524287,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.418,
+        -0.005,
+        -0.2521
+      ],
+      "max": [
+        0.418,
+        0.6053,
+        0.2521
+      ],
+      "size": [
+        0.836,
+        0.6103,
+        0.5043
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "chest_honey",
+    "units": "metres; +y up; front +z; origin on the floor at the footprint centre",
+    "source": {
+      "kind": "code-built prop",
+      "builder": "src/game/props.js chest",
+      "opts": {
+        "w": 0.8,
+        "d": 0.46,
+        "h": 0.44,
+        "pal": "honey"
+      },
+      "usedAt": "src/game/interiors.js:501 (a honey chest; the same builder makes the chests at homelife.js:115, interiors.js:540/622, nbrhouse.js:98)",
+      "extractedFrom": "the running game (tools/blender-bridge/game/polyprop.mjs extractProp)"
+    },
+    "footprint": {
+      "hw": 0.4,
+      "hd": 0.23,
+      "top": 0.6056
+    },
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.418,
+        -0.005,
+        -0.2521
+      ],
+      "max": [
+        0.418,
+        0.6053,
+        0.2521
+      ],
+      "size": [
+        0.836,
+        0.6103,
+        0.5043
+      ]
+    },
+    "triangles": 1104
+  }
+}
