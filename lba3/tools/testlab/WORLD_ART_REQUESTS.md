@@ -2699,3 +2699,37 @@ wall top beside a deep black slot under the upper floor).
   passed it 12/12; this change does not touch saving): **unverified here, please rerun.**
 - **Left (not story logic):** the maroon gantry beam (x 55, y 17–18, z 25–40) still brick boxes, reading as a bench on
   the office floor; LBA1's FunFrock statue cells at the office's back wall (x 57–59, y 10–15, z 20–21) still a block.
+
+## REVIEW-DESERT-ART · Desert Island's art (CLOUD_ORDERS 22) · the laptop, 7.11.2026
+Diff: `requests/REVIEW-DESERT-ART.diff` (desert.js, condenser.js, wizards.js; against 422f8ee2, `git apply --check` clean).
+Pictures (chapter 4+) stay on the laptop. Checked on the Vega 8 (headed Chrome, Follow, Medium).
+
+| spot | what a player sees | status |
+|---|---|---|
+| (a) SCHOOL OF MAGIC sign | mirrored from the bridge (confirmed on the GPU) | fixed: a dark-wood board with a one-sided painted face each side; both read |
+| (b) project ferry | an open lathe bowl (white sliver), the teal box floating on it, a cyan disc under the hull | fixed: closed hull with its own deck rim, plank deck, teal strake, 0.5 m lower; the cabin on the deck; no disc |
+| (c) hangar tarp | 10.5 × 6.2 m past the floor rim, his legs inside its edge at boarding | fixed: 9 × 5 m, 0.9 m toward the nose, flat over the wing to its tips; he is clear of it where he boards |
+| (d) School interior wall (x 5588.2) | two textures in one plane (four coplanar faces at x 5587.09) | fixed: block sides against the walls run 0.3 m into them, the classroom block starts at the dais (lx 29); overlaps 0 coplanar in school |
+| (e) pump pipe | walked through at the joint | fixed: two thin colliders (noStand, seeThrough) over the low run and the joint; he is pushed out; still passes under the high end by the tank |
+| (f) the Bù maze tones | on the GPU wall tops read light, floors dark; the inverted reading not reproduced | **left**: walls and floors share one `top` material, differing only by vertex colour; brighten up-faces at y > 1.2, darken at y < 1.0 in `buildLba1Temple` |
+| (g) School pits' boulders | shiny black boulders | fixed: matte (0.97), flat-shaded, three rock tones #9a8f80 #8a8072 #a89c8a |
+| (h) pupils reuse Lulu and Tim | — | dropped for DRESS-1 (not verified that it varies them) |
+
+- Tests (GPU copy): overlaps (desert, school, condB, zeelich) 4/4, world-consistency 37/37, wizards 6/6, desert-life
+  30/30, zislands 13/13, playthrough 07-dig and 08-steam every step, 0 deaths (the glider board works with the tarp).
+  Only fail: the local server's favicon 404. Not rerun on origin (nothing failed).
+- Draw calls (main/shadow, one frame, 1280×720): sign 32/5 = 32/5 (+142 tris), ferry 23/5 =, school wall 38/23 →
+  39/24 and pits 29/29 → 30/30 (the matte rock is its own merged mesh), tarp 37/24 =. Frame times not measured.
+
+## REVIEW-ZEELICH-ART · Zeelich's art (CLOUD_ORDERS 23) · the laptop, 7.11.2026
+Diff: `requests/REVIEW-ZEELICH-ART.diff` (zeelich.js, walkrounds.js; against 422f8ee2, `git apply --check` clean).
+
+| spot | what a player sees | status |
+|---|---|---|
+| (a) Esmer looks | — | dropped for DRESS-1, except: **Kira takes the existing `lharWoman` model instead of `councilB` (Councillor Sela's)** in walkrounds.js (roster + `ZEELICH_BODY`); not framed in a picture |
+| (b) Otringal bar door behind the back-bar | confirmed: he enters hidden behind the back-bar at z 2.85 | **left**: move the door to about z 6 in front of the bar (the plant at (LX+0.6, 6.4) moves, the stools' clearance checked) |
+| (c) the dog yard's gate | confirmed: 2 m in front of the gate is the council house's roof (y 11.3) | **left**: shift the gap west to about local x −32 (the lane between houses 0 and 1) and `R.dogYard.gate` with it; tests/purposes.mjs walks to `gate + 2.2 z`, which today points into the house |
+| (d) mooring ropes in the air | the story hides the ferry, the ropes were in the island's group | fixed: the ropes are in the ferry's group and hide with it (pier 72/207 → 70/199 calls) |
+| (e) Celebration's summit plaza | folds, a bench on the slope (terrain splat `paveAt` r 10 at (2,1), slope < 0.7) | **left** |
+
+- Tests: zeelich-life 38/38, playthrough 06-zeelich 0 deaths (1 ISO assist, logged); 12-council not run.
