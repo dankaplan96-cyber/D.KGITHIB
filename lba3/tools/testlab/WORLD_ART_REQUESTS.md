@@ -2594,3 +2594,40 @@ Diff: `requests/CLIMB-17.diff` (lba1places.js, world.js; against 913f8f55, `git 
   26/26, chapter1 23/23; input walks and 12 A* legs arrive. Rebased on 913f8f55: world-consistency 37/37,
   lba1rooms 8/8; rocks timed out (my 900 s cap on SwiftShader, no verdict), not rerun.
 - The straight is steeper (~0.44 rise per m); the shelf's fill covers ~7 × 6 m of the old ramp's west half.
+
+## ASYLUM-20 · the asylum against LBA1's own files (CLOUD_ORDERS 20) · the laptop, 7.11.2026
+Diff: `requests/ASYLUM-20.diff` (lba1room.js, lba1places.js, props.js one `TEX.stone` palette `cell`, tests/asylum.mjs; against
+ae665e73, `git apply --check` clean). LBA1's scene 0 rendered with its own bricks and palette (study only, never in the
+repo) and compared at the user's two spots (the west landing, the loft by the clothes line) and the store; layout z =
+grid z − 1. Pictures (ours only, the room's camera, Vega 8): `docs/future/world/ASYLUM-20/pair-{landing,loft,store,upper}.jpg`.
+
+| difference | LBA1 | ours before | after |
+|---|---|---|---|
+| wall tone | teal-grey brick, lit edges; camera-left #716e6d (L≈110), camera-right #424b4b (L≈72) | warm brown-grey L 51–60 | teal-grey brick (stone `cell`), sun lower: right L 69–73, left L 91–95 |
+| floor | dark flagstones L≈71–80, darker than the walls | cream checker L 95, brighter than the walls | L 77, under the lit walls |
+| walks, landings, stairs | teal grates #709398 (1217 teal tops) | pale mint plaster | grate texture on the teal tops |
+| wall tops | brick caps / dark brown trim | cream plaster (read as floor) | stone caps |
+| maroon posts and beams | open lattice girders, pyramid caps, two floodlights per tall post | solid maroon brick | 142 cells as lattice girders with caps; floodlights on arms; colliders kept |
+| lattice windows (loft wall x 13) | black diamond lattice in a dark frame | black slabs | lattice over each 2×6 window |
+| the boiler (store, x 9–11, z 51–53) | dark green boiler, copper bands and dome, gauge | 2.6 m brick tower | a boiler; its cells hidden, colliders kept |
+| drums under the west stair | 11 pale drums, red caps | grey blocks | 11 drums |
+| lamps | teal domes, white rim, over a white disc | a green dome on a 2.6 m rod (read as a floor lamp) | teal dome, white rim, cable to the ceiling, 1.5 m over its table |
+| pipes | round teal-grey runs, bends, red valves | boxes at bends and valves, a doubled run as a ladder, ends in mid-air | 270 cells: bends and valves joined, one pipe for the doubled run, 20 free ends into the wall, 3 flanged |
+| past a floor's edge | black | 9 m footing fading to black | kept (the user disliked black voids) |
+| camera-side walls | 4–5 cells high | 2-cell rim | kept (colliders, the hero hidden) |
+
+- New `lba1room.js` options, all off by default (bumaze unchanged): `hidden`, `girders`, `grate`, `capWalls`,
+  `grilles`, `lowLamps`, `pipeCol`; `R.fittings` also lists pipe ends, girders, hidden cells. `R.indoor.sunDir`
+  (0.34, 0.6, 0.72), sideGain 3.6. tests/asylum.mjs: the "a wall hides him" spot (9, 1, 49) → (8.5, 1, 49.5) (the
+  round boiler covers 43 % at the old spot, 74 % at the new).
+- **Tests** (SwiftShader): asylum 12/12, lba1rooms 8/8, overlaps 26/26 (before the test-spot move), chapter1 23/23,
+  world-consistency 37/37, walkers 36/1 (the known marda_b2; not rerun on origin). By input on the GPU: the west
+  stair both ways, landing → loft, round the boiler, store → service hall, past the drums; the boiler stops him; the
+  lattice window holds (x ≤ 12.46); re-entry ×2, resize, quality low → high → medium without errors. One walk run
+  crashed the page once and not again (cause not found).
+- **Cost (Vega 8, 1280×720, Medium):** draw calls +9…+25 per spot (lid meshes 68 → 91: grate, girder and grille are
+  new materials per lid; mergeable if needed), triangles ±2 %, +4 small canvas textures. Frame time not claimed: the
+  laptop was heavily loaded (medians swung 17–72 ms).
+- **Left:** the upper walk's FunFrock desk, stool and statue, the round wall lamps, the valve block by the landing, a
+  teal box at (1, 21–22, 12–13), a grey block at (1, 9–11, 33) still cell blocks; no stair handrails, valve wheels,
+  vent, fan or porthole; combat visibility not checked.
