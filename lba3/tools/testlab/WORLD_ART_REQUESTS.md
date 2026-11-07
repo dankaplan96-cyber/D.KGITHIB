@@ -2631,3 +2631,22 @@ grid z − 1. Pictures (ours only, the room's camera, Vega 8): `docs/future/worl
 - **Left:** the upper walk's FunFrock desk, stool and statue, the round wall lamps, the valve block by the landing, a
   teal box at (1, 21–22, 12–13), a grey block at (1, 9–11, 33) still cell blocks; no stair handrails, valve wheels,
   vent, fan or porthole; combat visibility not checked.
+
+## DECISION · Zeelich's main island is a new city (the user, 7.11.2026) · the laptop
+The user, after "Zeelich again doesn't look like it at all": **"you can say it is a new place on Zeelich, another
+city we were not in in the previous game."** So the terminal island (the spaceport deck, the Esmer street, the mills,
+the depot, the drill platform) stays our own layout. There is no original to match its geography or landmarks
+(WORLD_SIMILARITY.md "n/a" stands, the pack's rule: a new place gets no invented original counterpart).
+**What it must have instead: Zeelich's identity, as LBA2's own Zeelich islands show it**:
+- the Esmer architecture's shapes;
+- the palette and materials;
+- the cloud sea and the light;
+- the vegetation;
+- the inhabitants (Esmer, Quetch);
+- the everyday interactions.
+
+The new city should read as one more town of the same world beside Otringal, Celebration and Knartas, which are built
+on the original's numbers. The laptop will measure what makes those islands read as Zeelich (palette, building
+silhouettes and proportions, roof and wall shapes, plant kinds and density, light and fog), score the city against
+them with the pack's rubric minus the geography and landmark parts, and send the art changes as requests. Layout,
+paths, doors and story spots stay as they are unless a request says otherwise.
