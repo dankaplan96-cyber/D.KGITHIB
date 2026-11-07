@@ -57,28 +57,32 @@ const glassBand = () => M('zh_blocks', () => { const t = blocksTex(); t.wrapS = 
 
 // the shell every house shares: W × D × H, the door in the left wall at doorZ (from the street); the band of glass
 // blocks under the ceiling on the two far walls, rounded pilasters, a lamp; returns the builder's frame numbers
-function esmerRoom(id, { W, D, H = 3.3, wall = '#eadcd2', dado = '#2f7a84', floor = ['#d8c8b4', '#c4ae96', '#3a6a7a'], doorZ = 1.4, windows = [], view = 10.0, light = '#ffe8cc' }, scene, physics) {
-  const at = ZHOME_AT[id], B = new RoomBuilder(scene, physics, id, at.x, at.z), R = B.room, k = B.k;
-  R.view = view; R.follow = 0.7; R.music = 'zeelich_in';
+// (ISLE-HOMES, ihomes.js: the same shell for the islands' and Kesh's houses: `at` its centre, `reg` its registry of
+//  looks and spots, `band` false for no glass blocks, `music`, `body`/`floorMat` other materials, `frame` the door's colour)
+export function esmerRoom(id, { W, D, H = 3.3, wall = '#eadcd2', dado = '#2f7a84', floor = ['#d8c8b4', '#c4ae96', '#3a6a7a'], doorZ = 1.4, windows = [], view = 10.0, light = '#ffe8cc', at: at0 = null, reg = ZH, band: withBand = true, music = 'zeelich_in', body = null, floorMat = null, frame: doorFrame = '#2f7a84', capCol = '#e4d6cc' }, scene, physics) {
+  const at = at0 || ZHOME_AT[id], B = new RoomBuilder(scene, physics, id, at.x, at.z), R = B.room, k = B.k;
+  R.view = view; R.follow = 0.7; R.music = music;
   const LX = -W / 2, BZ = -D / 2;
-  const cap = MAT.paint('#e4d6cc', 0.6);
-  B.shell({ W, D, H, t: 0.4, floor: MAT.tiles(floor[0], floor[1], floor[2], false, 5), slab: MAT.rubble('grey'), rimMat: cap,
-    body: MAT.plaster(wall), low: MAT.paint(dado, 0.55), dado: 0.95, rail: MAT.brass(), cap, beam: MAT.wood('dark'),
-    posts: MAT.plaster(wall), postsAt: (L) => [0.3, L - 0.3],
-    left: [{ at: doorZ, w: 1.25, h: 2.35, y0: 0, kind: 'door', frame: MAT.paint('#2f7a84', 0.5) }, ...windows.map((z) => ({ kind: 'window', at: z, w: 0.9, h: 1.2, y0: 1.1, curtain: '#f2e2c8' }))] });
+  const cap = MAT.paint(capCol, 0.6);
+  B.shell({ W, D, H, t: 0.4, floor: floorMat || MAT.tiles(floor[0], floor[1], floor[2], false, 5), slab: MAT.rubble('grey'), rimMat: cap,
+    body: body || MAT.plaster(wall), low: MAT.paint(dado, 0.55), dado: 0.95, rail: MAT.brass(), cap, beam: MAT.wood('dark'),
+    posts: body || MAT.plaster(wall), postsAt: (L) => [0.3, L - 0.3],
+    left: [{ at: doorZ, w: 1.25, h: 2.35, y0: 0, kind: 'door', frame: MAT.paint(doorFrame, 0.5) }, ...windows.map((z) => ({ kind: 'window', at: z, w: 0.9, h: 1.2, y0: 1.1, curtain: '#f2e2c8' }))] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + doorZ, r: 0.75, to: id + '-out' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + doorZ, a: Math.PI / 2 };
   // the glass-block band under the ceiling, as on LBA2's Esmer walls (back and left)
-  const band = glassBand();
-  k.add(plane(W - 0.6, 0.42), band, 0, H - 0.5, BZ + 0.02);
-  k.add(plane(D - 0.6, 0.42), band, LX + 0.02, H - 0.5, 0, Math.PI / 2);
-  // rounded pilasters in the far corner and along the back
-  for (const x of [LX + 0.18, 0, W / 2 - 0.3]) k.add(cyl(0.16, 0.2, H - 0.2, 12), MAT.plaster(wall), x, (H - 0.2) / 2, BZ + 0.12);
+  if (withBand) {
+    const band = glassBand();
+    k.add(plane(W - 0.6, 0.42), band, 0, H - 0.5, BZ + 0.02);
+    k.add(plane(D - 0.6, 0.42), band, LX + 0.02, H - 0.5, 0, Math.PI / 2);
+    // rounded pilasters in the far corner and along the back
+    for (const x of [LX + 0.18, 0, W / 2 - 0.3]) k.add(cyl(0.16, 0.2, H - 0.2, 12), MAT.plaster(wall), x, (H - 0.2) / 2, BZ + 0.12);
+  }
   B.light(light, 4.2, 12, 0, H - 0.6, 0.3);
-  ZH[id] = { looks: [], npcSpots: {} };
-  return { B, R, k, LX, BZ, W, D, H, X: (x) => B.cx + x, Z: (z) => B.cz + z };
+  reg[id] = { looks: [], npcSpots: {} };
+  return { B, R, k, LX, BZ, W, D, H, reg, X: (x) => B.cx + x, Z: (z) => B.cz + z };
 }
-const look = (o, x, z, key, r = 1.1) => ZH[o.R.id].looks.push({ x: o.X(x), z: o.Z(z), r, key });
+const look = (o, x, z, key, r = 1.1) => o.reg[o.R.id].looks.push({ x: o.X(x), z: o.Z(z), r, key });
 
 // ---------------------------------------------------------------- Mr Pelleck's house
 function pelleck(scene, physics) {

@@ -1643,10 +1643,12 @@ function buildIsland0(scene, physics, name, L, at) {
         // (as tests/worldfit.mjs measures it: 0.5–1 m out and 0.4 m either side, ground more than 0.1 under the floor)
         const half = (toward[0] ? ex : ez) / 2;
         const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
-        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), ...(S.house?.(o, { walls, stone: stoneM }) || {}), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        const lk0 = look(o), hs0 = S.house?.(o, { walls, stone: stoneM }) || {};
+        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...lk0, ...hs0, fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
         // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
         // place is offered instead))
-        if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry }); }
+        // (ISLE-HOMES: what the building is, for its room (ihomes.js): its size, its role and sign; the door's own place)
+        if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8), [sx, sz] = P.pt(built.door.x, built.door.z); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry, sill: { x: ox + sx, z: oz + sz }, w: +(toward[0] ? ez : ex).toFixed(2), d: +(toward[0] ? ex : ez).toFixed(2), h: +o.sy.toFixed(2), role: (hs0.role ?? lk0.role) || 'house', sign: (hs0.sign ?? lk0.sign) || null, domed: !!(lk0.domeM && (hs0.domed ?? lk0.domed) !== false && o.sy > 4.5) }); }
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
