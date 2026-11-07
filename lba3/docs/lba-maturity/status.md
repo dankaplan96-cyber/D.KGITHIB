@@ -39,7 +39,7 @@ world-polish pass after it:
 
 | Region (outdoor room) | Citadel bar | Status |
 |---|---|---|
-| Zeelich (zeelich.js, zeelife.js) + Otringal | in wave 1 | in progress: buildings fading on approach (the user, 7.11) first |
+| Zeelich (zeelich.js, zeelife.js) + Otringal | wave 1 done (street) | VP-10 camera; the street's doors into four Esmer homes + the bakehouse; Baldino's workshop open ch 3–8; 3 new residents; zeelich-doors.mjs. Left: 58 island doors + Kesh → wave 3 |
 | Zeelich's isles (zislands.js) | wave 1 (VP-10 camera), then its own pass | pending |
 | Desert Island (desert.js) | VP-10 in wave 1; its own pass next | pending (REVIEW-DESERT done 6.11) |
 | The Hamalayi (hamalayi.js) | VP-10 in wave 1; its own pass next | pending (REV-HAM done 6.11) |
@@ -50,9 +50,9 @@ world-polish pass after it:
 
 | # | Date | Where | Report | Owner | Status |
 |---|---|---|---|---|---|
-| P1 | 7.11 | Zeelich | "all the buildings disappear when you get close" (whole-house fades, zeelich.js makeFader; VP-10 missing in rooms) | wave-1 finisher | in progress |
+| P1 | 7.11 | Zeelich | "all the buildings disappear when you get close" (whole-house fades, zeelich.js makeFader; VP-10 missing in rooms) | wave-1 finisher | **fixed** (merged 7.11): no building fades in any outdoor room; the camera rises over tight shapes (roomocc.js: Zeelich street 34, Desert 25, Hamalayi 25, all 9 isles); only the council porch fades while he stands under it — Automated runtime only |
 | P2 | 7.11 | Citadel harbour (residents) | "the characters walk in slow motion, a problem with the legs" (photo: an Esmer resident's leg stretched back) | animation-combat (urgent, a third worker) | in progress |
-| P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk (spaceport.js ~156, props.js kiosk) has nobody in it and does nothing | buildings-interiors, Citadel sweep (next free slot) | queued: a clerk behind the counter with tickets/info lines by chapter, and a sweep of every Citadel structure that looks usable but is empty (kiosks, stalls, booths, sheds, benches' stands) |
+| P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk (spaceport.js ~156, props.js kiosk) has nobody in it and does nothing | buildings-interiors worker (wave 3, started 7.11) | in progress: a clerk behind the counter with tickets/info lines by chapter, and a sweep of every Citadel structure that looks usable but is empty (kiosks, stalls, booths, sheds, benches' stands) |
 | P4 | 7.11 | Citadel sewer, all doors | "the sewer isn't laid out as in the second game: check every door, where it led and where it should connect" | laptop curator (LBA2 links, order 29) → cloud buildings-interiors | door-map.md generated from the game (18 outdoor doors, 23 rooms); waiting for DOORS-LBA2 |
 | P5 | 7.11 | Citadel, the fort climb's foot (CLIMB-17) | "very strange" (photo): stacked copings on a slotted pier, two parapets with a trench between, rails in mid-air, a jagged seam to the plaza, the pipeline over the landing | laptop (order 30, CLIMB-30) | queued |
 | P6 | 7.11 | Citadel, the Whispering Cliffs' rising stepping stones | "the cylinders look really weird" (photo): bare 9-sided brown cylinders with flat green discs | laptop world-art (order 31, STONES-31) | queued |
