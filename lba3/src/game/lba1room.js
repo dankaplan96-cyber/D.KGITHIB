@@ -81,9 +81,15 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   const cut = (x, y, z) => {
     if (cleared(x, y, z)) return true;
     if (opts.noCut) return false;
-    const k = `${x},${z}`, f = colFloor.get(k) ?? 0;
+    const k = `${x},${z}`, rim = opts.rim ?? 2;
+    let f = colFloor.get(k) ?? 0;
     const near = outside(x + 1, z) || outside(x, z + 1) || outside(x + 1, z + 1) || x >= SX - 1 || z >= SZ - 1;
-    return near && y >= f + (opts.rim ?? 2);
+    // (ASYLUM-21, opts.meetFloors: a wall on the camera's side that carries a raised floor beside it — a slab over
+    //  nothing, two cells or more above the wall's own floor — keeps its rim over that floor, as LBA1 builds it: cut to
+    //  its own floor, it stood 5 cells under the office's edge, and the void under the slab showed as a black slot
+    //  between them, its cut top a ledge he walked on)
+    if (opts.meetFloors && near) for (const n of [`${x - 1},${z}`, `${x},${z - 1}`]) { const r = L.cols[n]; if (r && r[0][0] - (f + rim) >= 2) f = Math.max(f, colFloor.get(n)); }
+    return near && y >= f + rim;
   };
   const solidAt = (x, y, z) => { const c = C.get(`${x},${y},${z}`); return !!c && c[0] === SOLID && !cut(x, y, z); };
   // ---- FITTINGS (ASYLUM-4, opts.fittings): LBA1 draws some cells as things thinner than a cell — its bricks are
