@@ -2758,3 +2758,82 @@ world.js; against e434cf38, `git apply --check` clean). Pictures (Follow, Medium
   (raise that parapet's collider: yours); a jagged dark line along the existing north fill's outer edge (x −29.5…−31.5,
   z ≈ −48). (c) the new face is a plain straight rock face. (d) the landing's old 0.9–1.7 m drops north and east (no
   parapet: not asked); he shows as an x-ray outline behind the south cheek as he comes out.
+
+## STEALTH-COVER · Zoé seen while crouched behind the desk (the user, 7.11) · the laptop, 8.11.2026
+The user: "in Zoé's part he sees her even when she crouches behind the desk". Diff: `requests/STEALTH-COVER.diff`
+(enemies.js `Watcher.update` only, +5/−1; `git apply --check` clean on 11f39e14).
+- **Cause:** the Watcher sees by cone plus `physics.lineOfSight` from his eye (1.6 m) to her at 0.6 m when hiding
+  (discreet + action). The office's desks are 0.78 m high and stand against the walls, so a desk is never between him
+  and her (chapter1.js `updateCone` says he sees over desks on purpose), and hiding only scales his notice rate to 0.15.
+  `interiors.js buildProjOffice` fills `R.cover` (15 spots: desks, crates, cabinets, each with a radius), but nothing in
+  src read it.
+- **Fix:** `covered` = hero hiding, more than 1.5 m from him, and within r + 0.35 of a room cover spot: then she is out
+  of his cone (and his suspicion cools as usual). Standing, crouched in the open, or with him on top of her: as before.
+  The only other Watcher (council.js, the chapter-9 archive) has no `R.cover`: unchanged.
+- **Measured in the game** (SwiftShader, the guard 4 m away kept facing her, 5 s at each spot):
+
+| case | origin ea2a6ebb | with the fix |
+|---|---|---|
+| crouched beside each of the 15 cover spots | spotted at 13 (2 hidden by a tall piece in the line) | spotted at 0 |
+| standing at the same spots | spotted at 15 | spotted at 15 |
+| crouched in the open, (1295, −0.5), clear line | (not run: the run was killed) | spotted |
+| crouched at cover, the guard 1.2 m away | spotted at 14 (the plan table blocks the 15th) | spotted at 14 (same) |
+
+- **Tests on the fix:** zoe-resume 5/5 (sneaks past him to the plan, save and Continue), chapter1 23/23.
+
+## CAST-POLISH-HEROES · Twinsen's cuffs and Zoé's necklace (the Blender pass: the first two of its queue) · the laptop, 7.11.2026
+Diff: `requests/CAST-POLISH-HEROES.diff` (tools/blender/twinsen_poly.py, tools/blender/zoe_poly.py; against db5a1c9c, the
+same files on ddad5c12; `git apply --check` clean). The two new model files, to replace `assets/poly/twinsen.json` and
+`assets/poly/zoe.json` (single-line JSON, so not in the diff): `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json`, built
+from the patched scripts by the installed Blender 5.2.3 through `tools/blender-bridge` (`script` op). Working copies,
+jobs, Blender views and reports: `art/blender/characters/{twinsen,zoe}/`, `art/blender/characters/jobs/`. Pictures
+(ours, chapter 1, the game's renderer; before | after): `docs/future/characters/{twinsen,zoe}/`.
+- **Twinsen, CUFF-HEM.** Looked at in the game (Follow/Medium, the dialogue with Dot, 1.9 m close-ups, 13 poses): at
+  the play camera nothing reads wrong; up close the sleeve's cuff ended in the cone's bare edge (no thickness, a knife
+  edge from every side) over a flat dark lid. Now the cloth turns under in a rolled hem (out a little, under and back in
+  by 1.5 cm) over a dark inner wall and lid. Same place, length and bone (the forearm) as before; the fist is
+  untouched, so the ball, sword, glove and blowgun sit as before. `TW_CUFF_OLD=1` builds the old cuff. The unchanged
+  script rebuilt by Blender 5.2.3 gives the committed file exactly (every array equal), so the new file differs only by
+  the cuffs.
+- **Zoé, NECKLACE-ZOE.** The necklace was laid by rays cast at the skin and the dress but not at her neck (its own
+  part), so its two back ends found nothing and stayed where the original's lines are, 3.5 cm behind our slimmer neck,
+  and the loop was open there: in the close-ups two blue sticks stood in the air behind her neck. Now it is one closed,
+  smooth cord round the base of her neck: the measured V and collarbone points in front, behind it rests on the neck
+  just above the body's shell (ours: the original's back points are off our neck), each point laid on the nearest
+  surface and smoothed. Same colour, width, weights (torso → neck) and part. The V's upper arms are narrower than the
+  original's (they turn in to the neck instead of running out over the shoulder). `ZOE_NECKLACE_OLD=1` builds the old
+  one. Note: the unchanged script rebuilt by Blender 5.2.3 already differs from the committed file in 180 normals of
+  the necklace (positions identical); the new file carries that too.
+- **Contracts kept (checked on the files):** bone names and order, `eyes` and `mouths` entries identical, 4 weights per
+  vertex summing to 1, no new vertex colour (both edits use colours the models had: Twinsen's tunic #2a86ad and inner
+  #123f58, Zoé's #1b4b67), feet and top unchanged (Twinsen 0–2.1005 m, Zoé 0.004–2.0154 m). `validate`: no failure; one
+  warning each, the same as the baseline's (Twinsen: the eye objects' transforms; Zoé: 4 loose vertices). The bridge's own skeleton check reads `skeletons.json[look]`'s
+  keys instead of its `bones` (a bridge bug), so the bones were checked against `skeletons.json` separately.
+- **Budget** (triangles incl. eyes and mouth): Twinsen 3078 → 3274 (+6.4 %), Zoé 5474 → 5704 (+4.2 %); in the game's
+  frame the hero adds 4 draw calls before and after (body, silhouette pass, eyes, mouth) and 6048 → 6440 / 10860 →
+  11320 triangles (the body is drawn twice, by the silhouette pass too); no texture, no material, no bone added.
+- **In the game** (SwiftShader, both files served in place of `assets/poly/*.json`; the village square, Follow/Medium;
+  `docs/future/characters/*/`): at the Follow camera both read as before (the edits are for the close-ups, as
+  intended); in the 1.9 m close-ups and the review scene the cuff ends in a rounded hem, and Zoé's necklace sits on
+  her neck all the way round. Poses (a second rig in the developer yard, side and ¾: idle, walk, run, turn, jump, fall,
+  throw, sword, talk, pickup, use, hurt, doze): the hem rides the forearm with the cuff, the cord follows the neck and
+  chest, no new tear or clipping. The hero's frame: 4 draws before and after.
+  Evidence labels: **Automated runtime only** (tests, SwiftShader); the pictures were looked at, not played.
+- **Tests** (SwiftShader, both candidates in `assets/poly`): solidnpc 54/54 PASS; chapter1 23/23 PASS; story-journeys
+  30/30 PASS; cast-rounds 196 passed and 0 failed before its browser was closed from outside at the last case (the
+  epilogue's household rounds), that case alone then 14/14 PASS. Earlier runs of chapter1 and story-journeys stopped
+  the same way (a browser closed while booting), and chapter1 also once on its own 240 s boot limit (raised in the test
+  copy only). They passed from a renamed copy of the headless shell.
+- **GPU, a light run** (installed Chrome on the Vega 8, 1280×720, quality high, the village square at Follow/Medium,
+  20 s each, two before/after pairs, other agents' tests running): medians 34.9 / 36.2 ms before and 39.4 / 35.1 ms
+  after for Twinsen, 35.3 / 35.4 before and 17.9 / 35.4 after for Zoé, with means anywhere from 26 to 82 ms in either. The
+  laptop's load swamps any difference: **frame time not claimed**. The frame's triangles go up by 0.2 % (Twinsen) and 1 %
+  (Zoé) and the draw calls are unchanged. Reports: `art/blender/characters/reports/gpu-*.json`.
+- **Left:** Twinsen's cuffs show only up close (at Follow/Medium nothing changes, as intended). Zoé's V is narrower at
+  the top than the original's, and there is a small kink where the cord passes over the body's shell beside the neck.
+  The game pictures are taken from the same spot and camera, but the idle and the people around were not frozen in the
+  same phase. Character `textured` previews in the bridge are white (only the neutral views are useful).
+- To apply: `git apply requests/CAST-POLISH-HEROES.diff`, then copy `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json` to
+  `assets/poly/`. To rebuild them: `twinsen_poly.py` / `zoe_poly.py` with `art/characters/skeletons.json`.
+- Ready for the cloud as one batch: `requests/CAST-POLISH-HEROES.diff` (the two scripts; `git apply --check` clean on
+  the current origin) + `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json` (the new `assets/poly` files). Merge, test, publish.

@@ -1,0 +1,173 @@
+diff --git a/lba3/tools/blender/twinsen_poly.py b/lba3/tools/blender/twinsen_poly.py
+index 44693681..180b1f81 100644
+--- a/lba3/tools/blender/twinsen_poly.py
++++ b/lba3/tools/blender/twinsen_poly.py
+@@ -464,6 +464,23 @@ def fist(part, sx):
+     bent([t0, t1, t2], [0.0108, 0.0098, 0.0080], 6)
+ 
+ 
++# CUFF-HEM (LBA3 Blender pass, 7.11.2026): the cuff's sections along its own axis (the old cone's: from (±0.19, 0.455,
++# 0.012) H, r 0.03, to (±0.192, 0.392, 0.014), r 0.043), (y, radius) in H. TW_CUFF_OLD=1 builds the bare cone and lid.
++TW_CUFF_OLD = bool(os.environ.get('TW_CUFF_OLD'))
++CUFF_WALL = [(0.455, 0.030), (0.398, 0.0418)]                                    # the cuff's side, as before
++CUFF_HEM = [(0.398, 0.0418), (0.3925, 0.0446), (0.3879, 0.0420), (0.3888, 0.0372)]   # rolled out, under and back in
++CUFF_IN = [(0.3888, 0.0372), (0.4005, 0.0352)]                                   # the inside, up to the dark lid
++
++
++def cuff_ring(sx, y, r, n=12):
++    a, b = Vector((sx * 0.19, 0.455, 0.012)), Vector((sx * 0.192, 0.392, 0.014))
++    d = (b - a).normalized()
++    u = d.cross(Vector((0, 0, 1))).normalized()
++    w = d.cross(u).normalized()
++    c = a + (b - a) * ((a.y - y) / (a.y - b.y))
++    return [tuple(c + u * (math.cos(2 * math.pi * i / n) * r) + w * (math.sin(2 * math.pi * i / n) * r)) for i in range(n)]
++
++
+ SLEEVE_W = {}   # (HERO-LOOK: the sleeves' weights by vertex)
+ for sx in (1, -1):
+     s = side(sx)
+@@ -480,8 +497,19 @@ for sx in (1, -1):
+     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
+     # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
+     cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
+-    tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
++    if TW_CUFF_OLD:
++        tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
++    else:
++        loft_along(cuff, [cuff_ring(sx, y, r) for y, r in CUFF_WALL], cap0=False, cap1=False)
+     PARTS.append(cuff)
++    if not TW_CUFF_OLD:
++        # CUFF-HEM: the cuff ended in the cone's bare edge (no thickness: a knife edge from every side, a flat dark lid just
++        # inside it). Now the cloth turns under in a rolled hem: out a little, round under and back in by the cloth's
++        # thickness (1.5 cm), so the cuff ends in a lit, rounded edge over a dark opening. Softly shaded on its own (a fine
++        # seam where it meets the cuff's side reads as the hem's stitch line); on the forearm's bone, as the cuff.
++        chem = Part('cuffHem' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=80)
++        loft_along(chem, [cuff_ring(sx, y, r) for y, r in CUFF_HEM], cap0=False, cap1=False)
++        PARTS.append(chem)
+     # HERO-LOOK (I-22): the sleeve, a wide tube from the shoulder joint to the cuff along the arm as the game shows it at
+     # rest (GAME_SPREAD), inside the cape there (clear of its walls by 2–6 cm), on the upper arm and the forearm. Raised,
+     # the arm comes out of the cape in it, the cape staying on the body. 8 sides, open at both ends (in the body / the cuff).
+@@ -527,7 +555,11 @@ for sx in (1, -1):
+         wall.cls = ['sleeve' if j < CUT_RINGS else 'shared' for j in range(CUT_RINGS + 1) for _ in range(WM + 1)]
+         PARTS.append(wall)
+     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
+-    cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
++    if TW_CUFF_OLD:
++        cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
++    else:   # (CUFF-HEM: the cloth's inside, dark, from the hem's inner edge up into the sleeve, closed there; the wrist runs
++        #      through that lid as it ran through the old one)
++        loft_along(cin, [cuff_ring(sx, y, r) for y, r in CUFF_IN], cap0=False, cap1=True)
+     PARTS.append(cin)
+     # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
+     hand = Part('hand' + s, 'skin', hb, angle=60 if os.environ.get('TW_BALL_HAND') else 82)
+diff --git a/lba3/tools/blender/zoe_poly.py b/lba3/tools/blender/zoe_poly.py
+index 9ecbde30..55fdc9df 100644
+--- a/lba3/tools/blender/zoe_poly.py
++++ b/lba3/tools/blender/zoe_poly.py
+@@ -458,8 +458,13 @@ for s_, sx in (('L', 1), ('R', -1)):
+ 
+ # ------------------------------------------------------------------ neck and head
+ neckY, headY = bp('neck')[1], bp('head')[1]
+-tube(b.P('neck', COL['skin'], lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60),
+-     (0, neckY - 0.05, -0.03), (0, 0.875 * ZH, -0.03), 0.042, 0.038, 12)   # (ZOE-OPEN: 12 sides, was 10)
++neckP = b.P('neck', COL['skin'], lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60)
++tube(neckP, (0, neckY - 0.05, -0.03), (0, 0.875 * ZH, -0.03), 0.042, 0.038, 12)   # (ZOE-OPEN: 12 sides, was 10)
++NECK_CORD_K = 5   # (NECKLACE-ZOE: the cord's points per span between its control points)
++# NECKLACE-ZOE (ours, H): behind, the cord rests on our neck just above the top of the body's shell, whose edge rises
++# round the back of the neck to 0.826 H (the original's nape points are at its height, 0.834 H, but 3.5 cm further back,
++# and its side points out on the shoulder): the nape, then the neck's side
++NECK_CORD_BACK = [(0.012, 0.834, -0.036), (0.0235, 0.829, -0.012)]
+ HK = 13   # points per half-contour after resampling
+ 
+ 
+@@ -659,19 +664,78 @@ for sxx in (1, -1):
+             ep.add(q, [[0, 1, 2, 3]])
+ 
+ # ------------------------------------------------------------------ the necklace: laid on the skin round the neck
+-btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v], skin.f + [[i + len(skin.v) for i in f] for f in dress.f])
+-pts = NECKLACE + [(-x, y, z) for x, y, z in reversed(NECKLACE[:-1])]
+-lay = []
+-for x, y, z in pts:
+-    o = Vector((0, y * ZH, -0.03))
+-    d = (Vector(m((x, y, z))) - o)
+-    d.y = 0
+-    hit = btree.ray_cast(o + d.normalized() * 0.3, -d.normalized())
+-    p = hit[0] + d.normalized() * 0.006 if hit[0] is not None else Vector(m((x, y, z)))
+-    lay.append(tuple(p))
+ nk = b.P('necklace', COL['blue'], lambda p: {'torso': 1 - smooth(0.80 * ZH, 0.84 * ZH, p[1]), 'neck': smooth(0.80 * ZH, 0.84 * ZH, p[1])}, 30)
+-for k in range(len(lay) - 1):
+-    tube(nk, lay[k], lay[k + 1], 0.0045, 0.0045, 5)
++if os.environ.get('ZOE_NECKLACE_OLD'):   # (the necklace before NECKLACE-ZOE, for comparison)
++    btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v], skin.f + [[i + len(skin.v) for i in f] for f in dress.f])
++    pts = NECKLACE + [(-x, y, z) for x, y, z in reversed(NECKLACE[:-1])]
++    lay = []
++    for x, y, z in pts:
++        o = Vector((0, y * ZH, -0.03))
++        d = (Vector(m((x, y, z))) - o)
++        d.y = 0
++        hit = btree.ray_cast(o + d.normalized() * 0.3, -d.normalized())
++        p = hit[0] + d.normalized() * 0.006 if hit[0] is not None else Vector(m((x, y, z)))
++        lay.append(tuple(p))
++    for k in range(len(lay) - 1):
++        tube(nk, lay[k], lay[k + 1], 0.0045, 0.0045, 5)
++else:
++    # NECKLACE-ZOE (LBA3 Blender pass, 7.11.2026). The necklace was laid by casting at the skin and the dress only, not
++    # at the neck (its own part): the two points behind the neck (0.834 H) found nothing and stayed where the original's
++    # lines are, 3.5 cm behind our slimmer neck, and the loop was open there. In the close-ups two blue sticks stood out
++    # in the air behind her neck. Now it is one closed cord round the base of her neck: the original's V in front (its
++    # point and the collarbones as measured, NECKLACE), and behind, where our neck is slimmer than the original's, ours:
++    # up the sides of the neck's base to the nape (NECK_CORD_BACK). A smooth closed curve through those points, each
++    # of its points laid on the nearest of the neck, the skin and the dress (the cord's radius + 1.5 mm off the surface),
++    # smoothed along the cord and laid again, and swept
++    # as one 5-sided cord with no joints or end caps. The same colour, weights, width and one part as before.
++    btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v + neckP.v],
++                                 skin.f + [[i + len(skin.v) for i in f] for f in dress.f] + [[i + len(skin.v) + len(dress.v) for i in f] for f in neckP.f])
++    half = NECK_CORD_BACK + NECKLACE[2:]                                       # nape L, side L, collarbone L, the V (H)
++    ctrl = half + [(-x, y, z) for x, y, z in reversed(half[:-1])]              # … collarbone R, side R, nape R
++    nC = len(ctrl)
++    path = []
++    for i in range(nC):   # (closed Catmull-Rom: the last span runs from the right nape point to the left one, behind the neck)
++        a_, b_, c_, d_ = ctrl[(i - 1) % nC], ctrl[i], ctrl[(i + 1) % nC], ctrl[(i + 2) % nC]
++        for j in range(NECK_CORD_K):
++            t = j / NECK_CORD_K
++            t2, t3 = t * t, t * t * t
++            path.append(Vector(m(tuple(0.5 * (2 * b_[q] + (c_[q] - a_[q]) * t + (2 * a_[q] - 5 * b_[q] + 4 * c_[q] - d_[q]) * t2 + (3 * b_[q] - a_[q] - 3 * c_[q] + d_[q]) * t3) for q in range(3)))))
++    CLEAR = 0.0045 + 0.0015
++
++    def lay_on(p):
++        # onto the nearest point of the neck, the skin or the dress, the cord's radius + 1.5 mm off it along the surface's
++        # outward normal (outward: away from a point on the body's axis 15 cm below; a level ray to the axis, as before,
++        # found the shoulders' far edge at the neck's base and carried the cord out to the shoulder corners)
++        hit = btree.find_nearest(p)
++        if hit[0] is None:
++            return p
++        q, nrm = Vector(hit[0]), Vector(hit[1])
++        if nrm.dot(q - Vector((0, q.y - 0.15, -0.03))) < 0:
++            nrm = -nrm
++        return q + nrm * CLEAR
++    lay = [lay_on(p) for p in path]
++    for _ in range(4):   # (smooth along the cord, then back onto the body: no steps where it passes from the dress to the skin)
++        n_ = len(lay)
++        lay = [lay_on(lay[i] * 0.5 + (lay[(i - 1) % n_] + lay[(i + 1) % n_]) * 0.25) for i in range(n_)]
++    nL = len(lay)
++    ringsN = []
++    for i, p in enumerate(lay):
++        tng = (lay[(i + 1) % nL] - lay[(i - 1) % nL]).normalized()
++        rad = Vector((p.x, 0.0, p.z + 0.03)); rad = (rad - tng * rad.dot(tng)).normalized()   # (out from the neck's axis)
++        bi = tng.cross(rad).normalized()
++        ringsN.append([tuple(p + rad * (0.0045 * math.cos(2 * math.pi * k / 5)) + bi * (0.0045 * math.sin(2 * math.pi * k / 5))) for k in range(5)])
++    vN = [q for r in ringsN for q in r]
++    fN = []
++    for i in range(nL):
++        j = (i + 1) % nL
++        for k in range(5):
++            k1 = (k + 1) % 5
++            fN.append([i * 5 + k, j * 5 + k, j * 5 + k1, i * 5 + k1])
++    # (outward: the first quad's normal away from the cord's centre line)
++    q0 = [Vector(vN[i]) for i in fN[0]]
++    if (q0[1] - q0[0]).cross(q0[2] - q0[0]).dot((q0[0] + q0[2]) / 2 - lay[0]) < 0:
++        fN = [list(reversed(f)) for f in fN]
++    nk.add(vN, fN, angle=75)
+ 
+ 
+ # ------------------------------------------------------------------ the bun: one golden mass through the three spheres

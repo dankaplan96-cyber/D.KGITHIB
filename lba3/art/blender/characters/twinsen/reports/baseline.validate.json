@@ -1,0 +1,339 @@
+{
+  "file": "art/blender/characters/twinsen/source/twinsen.rebuilt.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.755, 2.1005, 0.6331], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "warn",
+      "detail": "eye_iris, eye_iris.001, eye_lid, eye_lid.001, eye_lidSkin, eye_lidSkin.001, eye_pupil, eye_pupil.001, eye_white, eye_white.001, mouth"
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "material slots <= 40 (one draw call each in the game)",
+      "status": "pass",
+      "detail": "17: belt, brow, cord, hair, inner, iris, lid, lidSkin, medal, medalFace, mouth, pupil, shoe, skin, sole, tunic, white"
+    },
+    {
+      "check": "rig reference: belt -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: brow -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: brow",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cape -> TwinsenRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cape",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: capeLip -> TwinsenRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: capeLip",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cord -> TwinsenRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cord",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cuffInL -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cuffInL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cuffInR -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cuffInR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cuffL -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: cuffR -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hair -> TwinsenRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: handL -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: handR -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: head -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: knot -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: knot",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: medal -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: medal",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: medalFace -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: medalFace",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: neck -> TwinsenRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: neckIn -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: neckIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nose -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: robe -> TwinsenRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: robe",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: robeLip -> TwinsenRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: robeLip",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: shoeL -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: shoeR -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: soleL -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: soleR -> TwinsenRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: soleR",
+      "status": "pass",
+      "detail": "0"
+    }
+  ],
+  "totals": {
+    "objects": 37,
+    "meshes": 36,
+    "triangles": 3078,
+    "materials": 17,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3775,
+        0.0,
+        -0.2995
+      ],
+      "max": [
+        0.3775,
+        2.1005,
+        0.3336
+      ],
+      "size": [
+        0.755,
+        2.1005,
+        0.6331
+      ]
+    }
+  },
+  "passed": true
+}

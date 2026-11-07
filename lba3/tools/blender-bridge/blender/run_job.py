@@ -341,8 +341,9 @@ def op_validate():
     no_mat = [ob.name for ob in bpy.data.objects if ob.type == 'MESH' and not any(s.material for s in ob.material_slots)]
     add('every mesh has a material', 'fail' if no_mat else 'pass', ', '.join(no_mat))
     mats = {s.material.name for ob in bpy.data.objects if ob.type == 'MESH' for s in ob.material_slots if s.material}
-    lim = o.get('maxMaterials', 4)
-    add('material slots <= %d (one draw call each in the game)' % lim, 'warn' if len(mats) > lim else 'pass', '%d: %s' % (len(mats), ', '.join(sorted(mats))))
+    if o.get('target', 'polyprop') == 'polyprop':   # (a character's colours are baked into its vertex colours: one draw for the body whatever the slots)
+        lim = o.get('maxMaterials', 4)
+        add('material slots <= %d (one draw call each in the game)' % lim, 'warn' if len(mats) > lim else 'pass', '%d: %s' % (len(mats), ', '.join(sorted(mats))))
     if o.get('target', 'polyprop') == 'polyprop':
         nogame = sorted(m for m in mats if 'lba3_material' not in bpy.data.materials[m])
         add('materials carry a game recipe (lba3_material)', 'warn' if nogame else 'pass', ', '.join(nogame) + (' (exported as flat colours)' if nogame else ''))
@@ -365,7 +366,9 @@ def op_validate():
         add('<= 4 bone weights per vertex: %s' % ob.name, 'fail' if over else 'pass', str(over))
     if o.get('skeleton'):
         sk = json.load(open(os.path.join(SPEC['gameRoot'], o['skeleton']), encoding='utf-8'))
-        want = set(sk.get(o.get('skeletonKey', ''), sk).keys()) if isinstance(sk, dict) else set(sk)
+        ent = sk.get(o.get('skeletonKey', ''), sk) if isinstance(sk, dict) else sk
+        ent = ent.get('bones', ent) if isinstance(ent, dict) else ent   # (skeletons.json: {look: {bones: {name: ...}, height, ...}})
+        want = set(ent.keys()) if isinstance(ent, dict) else set(ent)
         for a in bpy.data.armatures:
             miss = sorted(want - {b.name for b in a.bones})
             add('armature %s has the game skeleton\'s bones' % a.name, 'fail' if miss else 'pass', ', '.join(miss[:12]))
@@ -480,6 +483,18 @@ def op_preview():
             sh.light = 'STUDIO'; sh.color_type = 'OBJECT'; sh.show_cavity = True; sh.cavity_type = 'WORLD'; sh.show_object_outline = True
         else:
             sc.render.engine = 'BLENDER_EEVEE'
+            for m in bpy.data.materials:   # (the cast scripts colour by vertex or by viewport colour: drive Base Color from them)
+                if m.name.startswith('_preview') or not m.node_tree:
+                    continue
+                bs = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+                if bs and not bs.inputs['Base Color'].is_linked:
+                    users = [o for o in meshes if any(sl.material == m for sl in o.material_slots)]
+                    ca = next((o.data.color_attributes[0].name for o in users if len(o.data.color_attributes)), None)
+                    if ca:
+                        vc = m.node_tree.nodes.new('ShaderNodeVertexColor'); vc.layer_name = ca
+                        m.node_tree.links.new(vc.outputs['Color'], bs.inputs['Base Color'])
+                    else:
+                        bs.inputs['Base Color'].default_value = m.diffuse_color
             try:
                 sc.eevee.taa_render_samples = o.get('samples', 32)
             except AttributeError:
