@@ -2476,3 +2476,177 @@ the same 8 play-camera spots before and after; chapter 3+, pictures kept on the 
   FAIL in each the local server's favicon 404. Draw calls, triangles, textures unchanged (142/117/108/118 calls on the
   four spots); median frame 15–21 ms both, within run-to-run noise; +2 greyscale 512² cloud canvases, +1 128² puff.
 - **Left:** where the gas meets the stepped channel walls the cut is still hard, now 5–6 m under the paths and amber.
+
+## FOCUS-1 · Test Lab finding: losing focus no longer reads as background play (the user: "send it") · the laptop, 6.11.2026
+Test Lab quick check on the installed desktop app 0.48.0 (build 330), Vega 8, plugged in, own test profile: 7/8 pass
+(cold launch, new game → play, street walk 56.9 fps, door, magic ball, arena fight 56.2 fps, save → restart → load).
+- **Failed twice in a row (the run and one reproduce):** pause-focus-fullscreen, "losing focus: the game draws in the
+  background": after `BrowserWindow.blur()` and 800 ms the game reports `background false, play` (expected true, play).
+  Esc pause/resume, focus back, leaving and re-entering fullscreen all pass. The same test passed on 0.43.3 (31.10).
+- **Likely cause (not verified):** BG-STUCK-1 (35aaa16, main.js ~2406) checks once a second while in the background
+  and calls `foreground()` when `!document.hidden && document.hasFocus()`. A programmatic blur in fullscreen leaves no
+  other window in front, so `hasFocus()` may still be true and the game returns to full rate within the test's 800 ms.
+  If so, a real switch to another program is fine and the test needs changing (mine, Test Lab); if `hasFocus()` is
+  true even with another program in front, the background cap never holds (battery cost). Your call which; I can
+  test it with a real second window if you want it measured.
+- Also seen (light, structure-first): new game → play 3 frames over 50 ms (worst 89 ms, +5 geometries in that frame),
+  the arena fight 2 (worst 141 ms). Tonight's requests are not in this build.
+- Run: `lba3/tools/testlab/runs/2026-11-06T08-45-29-quick/` (local only, not committed).
+
+## MUSIC-19 · music by place (CLOUD_ORDERS 19, and 23f's bar and terminal) · the laptop, 6.11.2026
+Diff: `requests/MUSIC-19.diff` (against 7b5d5b0b, `git apply --check` clean). Every room and region listed with its mood
+(ROOM_MUSIC, R.music, setOutdoorArea, story cues). The pieces that did not fit, set against how LBA1/LBA2 scored such
+places (descriptions only, nothing transcribed):
+
+| place | was | now | why |
+|---|---|---|---|
+| asylum | stealth (facility minus brass) | `asylum`: its own piece, **The Old Asylum** (score only) | LBA1 gives the asylum its own sparse tense piece; ours was the fort's mix going on through the door |
+| cellar | none (the town playlist, full) | home | a home's cellar keeps the home piece |
+| tavern | home | village | an inn is the town's lively register, not the family theme |
+| tavcellar, bazoo, pharmacy, ticket, baggage | home | office (the square through the walls) | shops and public halls keep the town's everyday tune indoors |
+| tralucave | home | cave (The Well) | caves are slow dark ambient |
+| terminal (Citadel) | home | island | a departure hall goes on with the region's travel music |
+| otrbar | home | zeelich (full) | 23f: a lively bar, on Zeelich, not Citadel's Home |
+| zterminal, otrhotel | home | `zeelich_in` (new MOODS entry, as office: gain 0.6, low-pass 1100) | 23f: Zeelich heard through the walls |
+
+- **The Old Asylum** (`tools/music/tracks/asylum.py`, original, written by hand): an uneasy music-box waltz, B minor,
+  3/4, 76 bpm, chamber colours, no brass or drums; B (D major) for the hostel lived in, C for Vesk's store with the
+  Entity cell once, bent. Intro 9.5 s, loop 1:35 (from the score). `lint.py` passes all 17 tracks (with a stub `mido`).
+  **Not rendered:** the laptop has no FluidSynth, FFmpeg, soundfont or the Python packages, and I installed nothing.
+  The wiring keeps it safe: `MOODS.asylum = { track: 'asylum', alt: 'facility_stealth' }` and a one-line `_alt()` in
+  `target()` plays `alt` while the track is missing from the manifest; after `build.py asylum` it plays with no code
+  change. **For the cloud:** render it (MUSIC.md setup, then `build.py asylum`), ~1.7 MB at the shipped rate.
+- celtemple dropped from my diff: REVIEW-ZEELICH (d7b5ecce) already moved it to 'cave'.
+- **Tests (SwiftShader, local copies):** audio 6/6, music 26/26, asylum 10/10, chapter1 23/23; a mood check entering
+  each remapped room and reading `music.state()` 19/19 (order 19) and 4/4 on the rebased diff (zterminal and otrhotel
+  `zeelich_in` with low-pass 1100, otrbar `zeelich` full, office unchanged). menus (2 settings checks + a reload timeout)
+  and timing (60 fps cap on a 144 Hz screen) fail the same on origin.
+- **Left, no better piece yet:** Bersimon's tent and the School of Magic (Home; a mystical piece is a candidate), the
+  Hamalayi outdoors (The Well), the Desert (the island pieces).
+
+## REVIEW-UNDER · the underground from the player's camera (CLOUD_ORDERS 18c) · the laptop, 6.11.2026
+Diff: `requests/REVIEW-UNDER.diff` (underground.js only; against c6d7554a, `git apply --check` clean). Walked on the
+Vega 8 (headed Chrome, 1280×720) along playthrough 14's route from save-13; every c3 room uses the fixed iso room camera,
+so no Follow-camera faults here. Pictures (chapter 11+) stay on the laptop.
+
+| spot (world) | what a player sees | status |
+|---|---|---|
+| c3shaft, the tunnel mouth to the deep hall (1805, −6.2) | the tunnel reads blocked: cave-wall boulders ~1 m into the opening, side rocks to ±0.55 m of its middle | fixed |
+| c3shaft, crystal rock (1804.4, −3.9) | a crystal rock on the cable-trench grating, on the walk | fixed: smaller (0.32), at the bore's foot beside the grating |
+| c3deep, the left wall's near end (1889, 8.5, y 6) | boulders hang past the wall's end over the room (floating rocks) | fixed |
+| c3deep, the drain sign (1908.3, 3.6) | the plate edge-on to the camera: a bare black pole | fixed: turned +π/4 to face the camera |
+| c3deep, the heat exchanger's top (1902.8, −2.4) | a solid brass sheet over the fins reads as a wooden lid | fixed: a brass frame, the fins show |
+| c3gallery, the entrance tunnel (1987, 5) and far arch (2008.6, −10) | the same boulder overhang into the doorways | fixed (same rule) |
+| c3deep, under the catwalk (1892, −7) | Twinsen hard to see under the deck | for the cloud, only if a player is meant to walk there |
+| c3sendell, c3core | nothing crooked or floating | — |
+
+- How: `rockWallRun` gets `ends` and `inset` (boulders kept inside a run where it meets a doorway or a free end);
+  `caveShell` sets `ends` beside every opening; the deep hall's runs `inset` 0.35; the gallery's four runs `ends`.
+- Tests: overlaps (c3shaft, c3deep, c3gallery, c3sendell, c3core) 5/5; playthrough 14-shell from save-13 every step,
+  0 deaths, 0 assists. chapter3.mjs 13 checks passed, then its own fixed 240 s reload wait timed out on SwiftShader
+  (the test ignores BOOT_TIMEOUT; not run on origin). No lights added; draw calls not measured.
+
+## REVIEW-HAMALAYI · the Hamalayi from the player's camera (CLOUD_ORDERS 18b) · the laptop, 6.11.2026
+Diff: `requests/REVIEW-HAMALAYI.diff` (hamalayi.js `buildHamalayiSteps` only; against 1f6f848c, `git apply --check`
+clean). Walked on the Vega 8 (headed Chrome, 1280×720, Follow, Medium) along playthrough 09–10 from save-08/09, outdoor
+spots also turned 180°. Pictures (chapter 6+) stay on the laptop. Local coords; world = local x + 4300.
+
+| spot | what a player sees | status |
+|---|---|---|
+| the old gate (−6, 62), the ledge start (23, −2.6) | pines beside the walks, boughs over the walk: the Follow camera sits in a tree (a green blade fills the frame) | fixed (pines dropped where boughs reach a walk: `hw + 0.3 + 1.5 × scale`) |
+| the lift foot | one pine still blocks the view when you come from the ledge (not the story path) | left |
+| the trail cairns (all three runs) | cairns in the middle of the walk | fixed: 2.9 m out, square to each run |
+| the lift top → the monastery gate (28, −33.1) | a snow drift on the walk, Twinsen wades through | fixed: drift removed |
+| the frozen waterfall behind Lhar (−10, −15.5) | a free-standing ice column 8–12 m before the cliff, walked through | fixed: it pours off a rock spur back to the cliff; spur and ice block walking, both `seeThrough` for the camera (a solid spur pulled the camera to 2.26 m at (−11.9, −14.3); now 9.5 as origin). Pim's kite target unchanged |
+| the tree bridge's north end (−6, 33.8) | Twinsen stands on a scattered rock | fixed: rocks kept off the walks |
+| the gorge's south bank, camera (4293, y 8, 59) | camera in the old gate's lintel, a white slab fills the frame | **for the cloud (camera)** |
+| the tree bridge's north end, camera (4285, y 8.2, 35.4) | camera against the cliff, the frame all rock | **for the cloud (camera)** |
+| Lhar by the falls, hero (4291.5, −7.0) turned south | camera on his shoulder against the balcony house (the same on origin, with or without the new colliders) | **for the cloud (camera)** |
+| the observatory door, camera (4287, y 34.9, −64.8) turning to the descent | the door canopy fills the frame | **for the cloud (camera)** |
+| the heat station (4320, −17) | camera behind the cabinet's snowy top, Twinsen an x-ray outline | **for the cloud (camera)** |
+| the observatory inside | a square 13 × 13 m hall inside a round drum | not fixed: a layout question for you |
+| Lhar houses 3 and 5 (4302.15, 14.49, −3.06), (4305.92, 14.53, 18.11) | overlaps flags 2 flicker spots under the roofs | pre-existing (same values on origin) |
+
+- No new draws from the island's random sequence: every other pine, rock and prop stays put; the dressing log empty.
+- Tests: playthrough 09-pass (from save-08) every step, 0 deaths, the kite step passes; 10-observatory pass; chapter7
+  9/9; overlaps obsv pass, hamalayi the 2 pre-existing spots. chapter6.mjs did not boot within its fixed 240 s on
+  SwiftShader (09-pass covers it). Not measured: draw calls (+4 batched rock meshes, fewer pine/rock instances; no lights).
+- Not done: order 14(g), the chapter-10 glider at the monastery (story/network.js).
+
+## CLIMB-17 · the climb's foot straight, and CLIMB-21 · the slide trap past the east flight (CLOUD_ORDERS 17, 21) · the laptop, 6.11.2026
+Diff: `requests/CLIMB-17.diff` (lba1places.js, world.js; against 913f8f55, `git apply --check` clean). Pictures:
+`docs/future/world/CLIMB-17/` (before|after, Follow, Medium; chapter 1, sent to the user).
+- **17:** the ramp's last ~8 m runs on the flight's axis x −32.6 straight into the first step: the shelf's wall on its
+  west, the parapet on its east, kerbs in line with the cheeks and posts. The round FOOT apron is a square landing
+  3.4 m wide, level at 9.45 (CLIMB_FOOT_Y); the dark notch at the left cheek's foot is filled by the shelf's fill.
+  **Deviation:** one bend onto the axis does not fit: the stone house's back corner (−31.8, −25.9), eave z −26.6, sits
+  0.8 m east of the axis, so a diagonal leg puts its parapet on the eaves. The leg keeps PATHS[0]'s line to a landing at
+  the yard's edge, CLIMB_JOG (x −36.85…−30.98, z −29.6…−27.64), square to the flight: leg, landing, straight, flight.
+  New CLIMB_JOG/STRAIGHT/FOOT, `climbShelfRows`, `inShelf`, `climbDropRock`, `climbParapet` (sheared, plumb ends);
+  world.js `climbGround` + `climbNorth`; CLIMB_BOX x1 −30.6 → −29.0. Scatter unchanged (terrain hash outside the climb
+  identical; collider changes only inside the flight's box). Risers 0.223–0.228. Triangles 22,782 → 25,194, same 6 meshes.
+- **21:** not fixed on origin (e8154735 only added the order). Before: standing at (−28.85, −45.7) or walking the east
+  flight at z −45.15 / −46.0 slid, stuck and `respawnFromFall` fired every time. New `climbTopThreshold` (from
+  `climbTerraceFill`): the top step carries on level (yt 15.93) as a stone threshold, row by row, to where the
+  forecourt is within 4 cm; +20 colliders. After: 5 stand-and-turn spots and the flight both ways: no slide, no
+  teleport, 0 hp lost. Left: a thin dark line at the threshold's east edge, its grey reads apart from the cobbles.
+- **Tests:** on the agent's base f3001989: lba1rooms 8/8, asylum 12/12, rocks 10/10, world-consistency 37/37, overlaps
+  26/26, chapter1 23/23; input walks and 12 A* legs arrive. Rebased on 913f8f55: world-consistency 37/37,
+  lba1rooms 8/8; rocks timed out (my 900 s cap on SwiftShader, no verdict), not rerun.
+- The straight is steeper (~0.44 rise per m); the shelf's fill covers ~7 × 6 m of the old ramp's west half.
+
+## ASYLUM-20 · the asylum against LBA1's own files (CLOUD_ORDERS 20) · the laptop, 7.11.2026
+Diff: `requests/ASYLUM-20.diff` (lba1room.js, lba1places.js, props.js one `TEX.stone` palette `cell`, tests/asylum.mjs; against
+ae665e73, `git apply --check` clean). LBA1's scene 0 rendered with its own bricks and palette (study only, never in the
+repo) and compared at the user's two spots (the west landing, the loft by the clothes line) and the store; layout z =
+grid z − 1. Pictures (ours only, the room's camera, Vega 8): `docs/future/world/ASYLUM-20/pair-{landing,loft,store,upper}.jpg`.
+
+| difference | LBA1 | ours before | after |
+|---|---|---|---|
+| wall tone | teal-grey brick, lit edges; camera-left #716e6d (L≈110), camera-right #424b4b (L≈72) | warm brown-grey L 51–60 | teal-grey brick (stone `cell`), sun lower: right L 69–73, left L 91–95 |
+| floor | dark flagstones L≈71–80, darker than the walls | cream checker L 95, brighter than the walls | L 77, under the lit walls |
+| walks, landings, stairs | teal grates #709398 (1217 teal tops) | pale mint plaster | grate texture on the teal tops |
+| wall tops | brick caps / dark brown trim | cream plaster (read as floor) | stone caps |
+| maroon posts and beams | open lattice girders, pyramid caps, two floodlights per tall post | solid maroon brick | 142 cells as lattice girders with caps; floodlights on arms; colliders kept |
+| lattice windows (loft wall x 13) | black diamond lattice in a dark frame | black slabs | lattice over each 2×6 window |
+| the boiler (store, x 9–11, z 51–53) | dark green boiler, copper bands and dome, gauge | 2.6 m brick tower | a boiler; its cells hidden, colliders kept |
+| drums under the west stair | 11 pale drums, red caps | grey blocks | 11 drums |
+| lamps | teal domes, white rim, over a white disc | a green dome on a 2.6 m rod (read as a floor lamp) | teal dome, white rim, cable to the ceiling, 1.5 m over its table |
+| pipes | round teal-grey runs, bends, red valves | boxes at bends and valves, a doubled run as a ladder, ends in mid-air | 270 cells: bends and valves joined, one pipe for the doubled run, 20 free ends into the wall, 3 flanged |
+| past a floor's edge | black | 9 m footing fading to black | kept (the user disliked black voids) |
+| camera-side walls | 4–5 cells high | 2-cell rim | kept (colliders, the hero hidden) |
+
+- New `lba1room.js` options, all off by default (bumaze unchanged): `hidden`, `girders`, `grate`, `capWalls`,
+  `grilles`, `lowLamps`, `pipeCol`; `R.fittings` also lists pipe ends, girders, hidden cells. `R.indoor.sunDir`
+  (0.34, 0.6, 0.72), sideGain 3.6. tests/asylum.mjs: the "a wall hides him" spot (9, 1, 49) → (8.5, 1, 49.5) (the
+  round boiler covers 43 % at the old spot, 74 % at the new).
+- **Tests** (SwiftShader): asylum 12/12, lba1rooms 8/8, overlaps 26/26 (before the test-spot move), chapter1 23/23,
+  world-consistency 37/37, walkers 36/1 (the known marda_b2; not rerun on origin). By input on the GPU: the west
+  stair both ways, landing → loft, round the boiler, store → service hall, past the drums; the boiler stops him; the
+  lattice window holds (x ≤ 12.46); re-entry ×2, resize, quality low → high → medium without errors. One walk run
+  crashed the page once and not again (cause not found).
+- **Cost (Vega 8, 1280×720, Medium):** draw calls +9…+25 per spot (lid meshes 68 → 91: grate, girder and grille are
+  new materials per lid; mergeable if needed), triangles ±2 %, +4 small canvas textures. Frame time not claimed: the
+  laptop was heavily loaded (medians swung 17–72 ms).
+- **Left:** the upper walk's FunFrock desk, stool and statue, the round wall lamps, the valve block by the landing, a
+  teal box at (1, 21–22, 12–13), a grey block at (1, 9–11, 33) still cell blocks; no stair handrails, valve wheels,
+  vent, fan or porthole; combat visibility not checked.
+
+## DECISION · Zeelich's main island is a new city (the user, 7.11.2026) · the laptop
+The user, after "Zeelich again doesn't look like it at all": **"you can say it is a new place on Zeelich, another
+city we were not in in the previous game."** So the terminal island (the spaceport deck, the Esmer street, the mills,
+the depot, the drill platform) stays our own layout. There is no original to match its geography or landmarks
+(WORLD_SIMILARITY.md "n/a" stands, the pack's rule: a new place gets no invented original counterpart).
+**What it must have instead: Zeelich's identity, as LBA2's own Zeelich islands show it**:
+- the Esmer architecture's shapes;
+- the palette and materials;
+- the cloud sea and the light;
+- the vegetation;
+- the inhabitants (Esmer, Quetch);
+- the everyday interactions.
+
+The new city should read as one more town of the same world beside Otringal, Celebration and Knartas, which are built
+on the original's numbers. The laptop will measure what makes those islands read as Zeelich (palette, building
+silhouettes and proportions, roof and wall shapes, plant kinds and density, light and fog), score the city against
+them with the pack's rubric minus the geography and landmark parts, and send the art changes as requests. Layout,
+paths, doors and story spots stay as they are unless a request says otherwise.

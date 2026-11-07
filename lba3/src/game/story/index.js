@@ -125,7 +125,18 @@ export class Story {
   npcDefs() {
     const seen = new Map();
     for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
-    return [...seen.values()];
+    const list = [...seen.values()];
+    // DRESS-1 (characters.js): people who share a model each get their own dress; the one the model is named after (or
+    // else the first) keeps the model's. Worked out from the whole cast every time, so a person's dress never depends on
+    // which areas are built yet or on the save
+    const owner = new Set(list.filter((d) => d.char && d.id === d.char).map((d) => d.char)), n = {};
+    for (const d of list) {
+      if (!d.char || d.dress != null) continue;
+      if (d.id === d.char) { d.dress = 0; continue; }
+      n[d.char] ??= owner.has(d.char) ? 0 : -1;
+      d.dress = ++n[d.char];
+    }
+    return list;
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
   decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); }
@@ -307,7 +318,19 @@ export class Story {
   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o); }
   lineTargets() { return this.kit2b.lineTargets(); }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.stepMoves(dt); this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
+  // (REVIEW-DESERT, the same on Citadel: the plateau's parked glider stood in its field from chapter 1, though the glider
+  //  routes to Citadel open only with the evacuation (travel.js edges); before that it is not there — on a change only,
+  //  so a journey film that hides the parked craft while it flies its twin is left alone; its collider with it)
+  citadelGlider() {
+    const v = this.game.travel?.vehicles?.citadel_glider; if (!v) return;
+    const show = this.index >= ORDER.indexOf('evacuation');
+    if (show === this._cgShow) return;
+    this._cgShow = show; v.visible = show;
+    const p = v.getWorldPosition(v.position.clone());
+    const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
+    if (c) c.enabled = show;
+  }
+  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {

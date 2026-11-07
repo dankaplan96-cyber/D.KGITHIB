@@ -123,8 +123,9 @@ const cut = await ev(() => {
   out.cellB.hidden = lidMeshes('cellB').every(({ mesh }) => !mesh.visible);
   // a fade takes a moment, not a frame: two frames after stepping back into room 1, its lid is on its way out
   T.at(20, 5, 10, 0.07); out.midFade = T.lids().find((l) => l.name === 'zone1').f;
-  // where a wall does hide him (down by the stair-well's foot, behind the hall's wall): the silhouette stays
-  T.at(9, 1, 49, 1.5); out.behind = T.ghost();
+  // where a wall does hide him (down in the store, behind the boiler — order 20: drawn as LBA1's round boiler now, not
+  //  its cells' brick block, so a step further behind it): the silhouette stays
+  T.at(8.5, 1, 49.5, 1.5); out.behind = T.ghost();
   return out;
 });
 check("in the room under the slab, its ceiling and near walls are cut away; the cell's and the next room's stay", cut.room1.hidden && cut.room1.othersShown && cut.room1.lids.find((l) => l.name === 'zone1')?.active, cut.room1);

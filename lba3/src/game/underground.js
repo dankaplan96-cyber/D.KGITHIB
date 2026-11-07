@@ -206,14 +206,25 @@ function crateStack(B, x, z, ry, sizes, y0 = 0) {
 
 // rough cave walls: a backing wall with rock boulders jammed along its inner face (local frame of a
 // far wall: run along x from 0..L, inner face at z = 0, facing +z) — call inside k.at(...)
-function rockWallRun(k, L, H, seed, mat, { tiers = 2, depth = 1.0, step = 1.5, top = 0.4 } = {}) {
+// REVIEW-UNDER (order 18): `ends` [start, end] keeps the boulders inside the run at an end that meets a doorway or a
+// free wall end (a boulder's faceted body reaches ~1.15 × sx from its centre: they jutted 1 m into the shaft's tunnel
+// mouth and hung past the deep hall's wall ends); `inset` sets them further back into the wall (less overhang)
+function rockWallRun(k, L, H, seed, mat, { tiers = 2, depth = 1.0, step = 1.5, top = 0.4, ends = [false, false], inset = 0 } = {}) {
   const r = rng(seed);
   k.add(new THREE.BoxGeometry(L, H, 0.6), mat, L / 2, H / 2, -0.3 - depth * 0.4);
   for (let t = 0; t < tiers; t++) {
     const y0 = t * (H / tiers) * 0.9;
     for (let x = (t % 2) * step * 0.5; x < L + step * 0.4; x += step * (0.75 + r() * 0.45)) {
-      const sx = step * (0.65 + r() * 0.35), sy = (H / tiers) * (0.62 + r() * 0.45) * (t === tiers - 1 ? 1 + top : 1), sz = depth * (0.55 + r() * 0.35);
-      k.add(rockGeo(Math.floor(r() * 40)), mat, Math.min(Math.max(x, 0.3), L - 0.3), y0, -depth * 0.25 + (r() - 0.5) * 0.15, r() * 6, { sx, sy, sz });
+      let sx = step * (0.65 + r() * 0.35);
+      const sy = (H / tiers) * (0.62 + r() * 0.45) * (t === tiers - 1 ? 1 + top : 1), sz = depth * (0.55 + r() * 0.35);
+      const geo = rockGeo(Math.floor(r() * 40)), z = -depth * 0.25 - inset + (r() - 0.5) * 0.15, ry = r() * 6;
+      let cx = Math.min(Math.max(x, 0.3), L - 0.3);
+      if (ends[0] || ends[1]) {
+        const lo = ends[0] ? sx * 1.15 : 0.3, hi = ends[1] ? L - sx * 1.15 : L - 0.3;
+        if (lo > hi) { sx = Math.max(0.2, L / ((ends[0] && ends[1] ? 2 : 1) * 1.15 + 0.01)); cx = ends[0] && ends[1] ? L / 2 : ends[0] ? Math.min(L - 0.3, sx * 1.15) : Math.max(0.3, L - sx * 1.15); }
+        else cx = Math.min(Math.max(cx, lo), hi);
+      }
+      k.add(geo, mat, cx, y0, z, ry, { sx, sy, sz });
     }
   }
 }
@@ -231,12 +242,12 @@ function caveShell(B, { W, D, H, t = 0.7, floor, slabMat, rock, seed = 1, rimH =
     let x = 0, i = 0;
     for (const o of ops) {
       const a = o.at - o.w / 2, b = o.at + o.w / 2;
-      if (a - x > 0.2) k.at(ox, 0, oz, ry, () => k.at(x, 0, 0, 0, () => rockWallRun(k, a - x, H, seed + i * 7 + (wall === 'back' ? 0 : 50), rock)));
+      if (a - x > 0.2) k.at(ox, 0, oz, ry, () => k.at(x, 0, 0, 0, () => rockWallRun(k, a - x, H, seed + i * 7 + (wall === 'back' ? 0 : 50), rock, { ends: [i > 0, true] })));
       // lintel rock over the opening
       k.at(ox, 0, oz, ry, () => { k.add(new THREE.BoxGeometry(o.w + 0.4, H - o.h, 0.8), rock, o.at, o.h + (H - o.h) / 2, -0.7); k.add(rockGeo(seed + i), rock, o.at, o.h + 0.1, -0.5, 0.4, { sx: o.w * 0.75, sy: (H - o.h) * 0.9, sz: 0.7 }); });
       x = b; i++;
     }
-    if (L - x > 0.2) k.at(ox, 0, oz, ry, () => k.at(x, 0, 0, 0, () => rockWallRun(k, L - x, H, seed + i * 7 + (wall === 'back' ? 0 : 50), rock)));
+    if (L - x > 0.2) k.at(ox, 0, oz, ry, () => k.at(x, 0, 0, 0, () => rockWallRun(k, L - x, H, seed + i * 7 + (wall === 'back' ? 0 : 50), rock, { ends: [i > 0, false] })));
   };
   run('back', W + t, -W / 2 - t, -D / 2, 0);
   run('left', D + t, -W / 2, D / 2 + t, Math.PI / 2);
@@ -423,12 +434,13 @@ function buildShaft(scene, physics) {
   }
   k.at(BC.x + 1.32, 1.5, BC.z + 1.32, Math.PI / 4, () => signPlate(k, 1.0, 0.38, signMat(['BORE 1', 'KEEP CLEAR'], { w: 384, h: 144, bg: '#6a2a24' })));
   // cracked rock at the bore's foot: the first crystals, warm steam
-  for (const [x, z, s, sd, ry] of [[BC.x - 2.35, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 2.5, BC.z - 0.6, 0.5, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
+  // (REVIEW-UNDER: the east one stood on the cable trench's grating, x 4.2, on the walk to the tunnel; now smaller, at the bore's foot beside it)
+  for (const [x, z, s, sd, ry] of [[BC.x - 2.35, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 1.45, BC.z - 1.6, 0.32, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
     k.at(x, 0, z, ry, () => { crystals(k, 5, s, sd, [CYAN(), DIM(), VIOLET()]); k.add(rockGeo(sd + 2), rockD, 0, -0.05, 0, 0, { sx: s * 1.4, sy: s * 0.5, sz: s * 1.2 }); });
     B.ccol(x, z, s * 0.8, s * 1.4, { noStand: true });
   }
   B.light('#40d0ff', 3, 4.5, BC.x - 2.2, 0.9, BC.z + 1.1);
-  motes(B, [[BC.x - 2.2, BC.z + 0.9, 0.6], [BC.x + 2.3, BC.z - 0.5, 0.5]], { n: 40, color: '#f6f0ff', size: 0.35, op: 0.2, hmax: 3.2, speed: 0.45 });
+  motes(B, [[BC.x - 2.2, BC.z + 0.9, 0.6], [BC.x + 1.45, BC.z - 1.6, 0.4]], { n: 40, color: '#f6f0ff', size: 0.35, op: 0.2, hmax: 3.2, speed: 0.45 });
 
   // --- the tunnel mouth: a steel portal, hazard lintel, sign; a short tunnel with a lamp going away
   const TZ = BZ;
@@ -438,7 +450,8 @@ function buildShaft(scene, physics) {
     k.add(rbox(3.3, 0.3, 0.06, 0.02), hazard(), 0, 3.12, 0.28);
     k.at(0, 4.15, 0.24, 0, () => signPlate(k, 1.8, 0.52, signMat(['DEEP INSTALLATION', 'LEVEL -2  ·  COOLING'], { w: 512, h: 150, arrow: 1 })));
     k.add(new THREE.BoxGeometry(2.9, 0.1, 3.4), floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), 0, -0.05, -1.8);
-    for (const s of [-1, 1]) for (let z = -0.8; z > -3.4; z -= 1.2) k.add(rockGeo(7 + Math.round(-z * 3) + (s > 0 ? 5 : 0)), rockD, s * 1.7, 0, z, z * 2, { sx: 0.8, sy: 1.9, sz: 0.9 });
+    // (REVIEW-UNDER: beside the shoring posts at ±1.25, not in the passage: at ±1.7 × 0.8 they reached in to ±0.55 m and the mouth read as rock)
+    for (const s of [-1, 1]) for (let z = -0.8; z > -3.4; z -= 1.2) k.add(rockGeo(7 + Math.round(-z * 3) + (s > 0 ? 5 : 0)), rockD, s * 2.05, 0, z, z * 2, { sx: 0.6, sy: 1.9, sz: 0.9 });
     k.add(new THREE.BoxGeometry(3.8, 0.3, 3.4), rockD, 0, 3.15, -1.8);
     for (let z = -0.7; z > -3.4; z -= 1.3) { for (const s of [-1, 1]) k.add(rbox(0.16, 3.0, 0.16, 0.03), tealP(), s * 1.25, 1.5, z); k.add(rbox(2.66, 0.16, 0.16, 0.03), tealP(), 0, 2.95, z); }
     k.at(-1.15, 2.3, -2.0, Math.PI / 2, () => wallLamp(k, { arm: 0.22 }));
@@ -618,7 +631,7 @@ function buildDeep(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'c3deep', 1900, 0);
   const R = B.room, k = B.k, kt = new Kit(B.group);
   const W = 22, D = 16, H = 5.8, t = 0.5, UY = 3.0;
-  R.view = 18.4; R.follow = 0.32; R.music = 'under'; R.upperY = UY;
+  R.view = 18.4; R.follow = 0.32; R.music = 'facility'; R.upperY = UY;   // (REV-HAM: the project's own plant, its drone on patrol: the project's music, as the station's control room — not the caves' well theme)
   const BZ = -D / 2, LX = -W / 2;
   const doorX = 5.7, entZ = 5.0;
   B.shell({
@@ -631,8 +644,8 @@ function buildDeep(scene, physics) {
   });
   // raw rock above the panelling: the hall is cut into the mountain
   const rock = rockMat('#c4b8b0');
-  k.at(LX - t, H + 0.05, BZ, 0, () => rockWallRun(k, W + t, 1.1, 41, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2 }));
-  k.at(LX, H + 0.05, D / 2 + t, Math.PI / 2, () => rockWallRun(k, D + t, 1.1, 43, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2 }));
+  k.at(LX - t, H + 0.05, BZ, 0, () => rockWallRun(k, W + t, 1.1, 41, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2, ends: [false, true], inset: 0.35 }));
+  k.at(LX, H + 0.05, D / 2 + t, Math.PI / 2, () => rockWallRun(k, D + t, 1.1, 43, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2, ends: [true, false], inset: 0.35 }));
 
   // --- coolant materials, one per valve (dark when shut, flowing cyan when open)
   const flowMats = {};
@@ -686,7 +699,8 @@ function buildDeep(scene, physics) {
     // the fin bank of the cooler riding on top
     k.add(rbox(EL - 0.4, 0.14, 1.1, 0.03), iron(), 0, EY + ER + 0.05, 0);
     for (let i = 0; i < 22; i++) k.add(rbox(0.04, 0.55, 1.0, 0.008), MAT.steel(), -EL / 2 + 0.4 + i * ((EL - 0.8) / 21), EY + ER + 0.4, 0);
-    k.add(rbox(EL - 0.3, 0.06, 1.16, 0.02), brass(), 0, EY + ER + 0.7, 0);
+    // (REVIEW-UNDER: a brass frame over the fins, not a solid brass sheet: from the room's camera the sheet read as a plank lid on the drum)
+    for (const s of [-1, 1]) { k.add(rbox(EL - 0.3, 0.06, 0.08, 0.02), brass(), 0, EY + ER + 0.7, s * 0.54); k.add(rbox(0.08, 0.06, 1.16, 0.02), brass(), s * (EL / 2 - 0.19), EY + ER + 0.7, 0); }
     // nameplate and gauges on the front
     k.at(-0.6, EY + 0.15, ER + 0.02, 0, () => signPlate(k, 1.2, 0.4, signMat(['EXCHANGER 2', 'BORE COOLING'], { w: 384, h: 128, emblem: false })));
     for (const [x, v] of [[0.8, 0.85], [1.3, 0.6]]) k.at(x, EY + 0.25, ER + 0.03, 0, () => P.gauge(k, { r: 0.13, v, stem: false }));
@@ -724,7 +738,8 @@ function buildDeep(scene, physics) {
   k.add(P.disc(0.62, 24), MAT.flat('#141418', 0.9), DR.x, 0.008, DR.z, 0, { rx: -Math.PI / 2 });
   for (let i = -2; i <= 2; i++) k.add(rbox(1.1 * Math.cos(Math.asin(Math.min(0.95, Math.abs(i) * 0.22))), 0.04, 0.06, 0.01), iron(), DR.x, 0.02, DR.z + i * 0.22);
   k.add(new THREE.RingGeometry(0.66, 0.92, 28), hazard(), DR.x, 0.012, DR.z, 0, { rx: -Math.PI / 2 });
-  k.at(DR.x + 1.3, 0, DR.z + 0.2, -Math.PI / 4, () => { k.add(cyl(0.04, 0.04, 1.3, 6), iron(), 0, 0.65, 0); k.at(0, 1.35, 0.02, 0, () => signPlate(k, 0.6, 0.36, signMat(['DRAIN', 'NOT UNDER LOAD'], { w: 256, h: 150, bg: '#6a2a24', emblem: false }))); });
+  k.at(DR.x + 1.3, 0, DR.z + 0.2, Math.PI / 4, () => { k.add(cyl(0.04, 0.04, 1.3, 6), iron(), 0, 0.65, 0);   // (REVIEW-UNDER: turned to the room's camera; at −π/4 the plate stood edge-on, a bare black pole)
+    k.at(0, 1.35, 0.02, 0, () => signPlate(k, 0.6, 0.36, signMat(['DRAIN', 'NOT UNDER LOAD'], { w: 256, h: 150, bg: '#6a2a24', emblem: false }))); });
   B.ccol(DR.x + 1.3, DR.z + 0.2, 0.12, 1.6, { noStand: true, seeThrough: true });
   const drainGlow = glowSprite('#40e0ff', 1.6, 0); drainGlow.position.set(DR.x, 0.3, DR.z); B.group.add(drainGlow);
 
@@ -993,15 +1008,15 @@ function buildGallery(scene, physics) {
 
   // --- walls: rough rock rising from the chasm floor to above the shelves
   const bwH = WH + DY - CY, a0 = exX - 1.9 - (LX - t);
-  k.at(LX - t, CY, BZ, 0, () => rockWallRun(k, a0, bwH, 61, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3 }));
-  k.at(exX + 1.9, CY, BZ, 0, () => rockWallRun(k, W / 2 + t - exX - 1.9, bwH, 62, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3 }));
+  k.at(LX - t, CY, BZ, 0, () => rockWallRun(k, a0, bwH, 61, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3, ends: [false, true] }));
+  k.at(exX + 1.9, CY, BZ, 0, () => rockWallRun(k, W / 2 + t - exX - 1.9, bwH, 62, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3, ends: [true, false] }));
   k.add(new THREE.BoxGeometry(3.8, bwH, 0.6), rock, exX, CY + bwH / 2, BZ - 0.78);
   k.add(new THREE.BoxGeometry(3.8, bwH - (DY - CY) - 3.7, 0.9), rock, exX, DY + 3.7 + (bwH - (DY - CY) - 3.7) / 2, BZ - 0.3);
   k.at(LX, DY, D / 2 + t, Math.PI / 2, () => {
     // left wall, broken by the tunnel from the deep installation
     const a = D / 2 + t - entZ;
-    rockWallRun(k, a - 1.4, WH, 63, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3 });
-    k.at(a + 1.4, 0, 0, 0, () => rockWallRun(k, D + t - a - 1.4, WH, 64, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3 }));
+    rockWallRun(k, a - 1.4, WH, 63, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3, ends: [false, true] });
+    k.at(a + 1.4, 0, 0, 0, () => rockWallRun(k, D + t - a - 1.4, WH, 64, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3, ends: [true, false] }));
     k.add(new THREE.BoxGeometry(2.9, WH - 2.7, 1.0), rock, a, 2.7 + (WH - 2.7) / 2, -0.7);
     k.add(rockGeo(5), rock, a, 2.5, -0.4, 0.4, { sx: 2.0, sy: 1.6, sz: 0.8 });
   });
@@ -1065,7 +1080,9 @@ function buildGallery(scene, physics) {
   PIL.forEach((p, i) => {
     const g = new THREE.Group(); B.group.add(g);
     const pk = new Kit(g);
-    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.93, flatShading: true }, 0, { noShadow: true });
+    // (REV-UNDER: opaque — at 0.93 it was drawn among the see-through things, after Twinsen: it covered him where he had
+    //  already marked himself as seen, and his silhouette (characters.js addSilhouette) never showed through it)
+    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true });
     const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true });
     const r = rng(300 + i);
     pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });

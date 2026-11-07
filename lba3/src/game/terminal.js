@@ -151,7 +151,7 @@ export function buildTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'terminal', TERMINAL_AT.x, TERMINAL_AT.z);
   const R = B.room, k = B.k;
   const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
-  R.view = 12; R.follow = 0.6; R.music = 'home';
+  R.view = 12; R.follow = 0.6; R.music = 'island';   // (ORDER 19: a departure hall: the island's travel pieces go on inside)
   // (Twinsun's pale sandstone below a white plaster band, as the terminal outside; lit a little from within)
   const stone = M('tm_stone', () => { const t = TEX.stone('sand'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f2e8d8', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 }); m.userData.tile = 2; return m; });
   const cap = MAT.stone('sand', 1.2), floor = MAT.tiles('#d8d2c4', '#c8c0b0', '#5a7a9a', false, 5);

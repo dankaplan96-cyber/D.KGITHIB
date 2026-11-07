@@ -19,6 +19,7 @@
 // is why two discs were cold). Dallan throws them out — but he knows.
 // → chapter 5 (Steam and Sand): open the vent under this island without boiling Kesh.
 import { ChapterBase } from './base.js';
+import { YACHT_ROUTES } from '../keshlife.js';
 import '../text/ch4.js';
 
 const STORM_PERIOD = 50, STORM_LEN = 28; // (CH4-STORM: the calm between storms 45 → 22 s) // seconds (game time) between storms, and how long one blows
@@ -29,6 +30,19 @@ export class Dig extends ChapterBase {
   get T() { return this.game.rooms.butemple; }
   inD() { return this.game.room?.id === 'desert'; }
   seals() { return [0, 1, 2].filter((i) => this.f['c4_seal' + i]).length; }
+  // where Hesk waits by his parked yacht ('camp', 'dig'): off its port side, clear of the hull and the outrigger wheel,
+  // facing it — where he steps off at the end of a ride while Twinsen steps off to starboard (desert.js ride). (He stood
+  // 1.4 m east, 1.6 m south of its middle whichever way it was parked: at the camp in its port wheel, at the dig in its
+  // bowsprit; and after a ride he stayed in the hull where he had sat, as he stops to face Twinsen while he is near.)
+  // The yacht is parked on the heading of its route's last stretch (desert.js placeAt).
+  heskByYacht(key) {
+    const p = this.D.yacht.spot(key), P = YACHT_ROUTES[{ camp: 'toCamp', dig: 'toDig' }[key]];
+    if (!p || !P) return p ? { x: p.x + 1.4, z: p.z + 1.6, a: Math.PI } : null;
+    const a = P[P.length - 2], b = P[P.length - 1], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const fx = (b[0] - a[0]) / l, fz = (b[1] - a[1]) / l;   // its bow's way; its port side (local +z) is (−fz, fx)
+    const x = p.x - fz * 2.7 - fx * 0.3, z = p.z + fx * 2.7 - fz * 0.3;
+    return { x, z, a: Math.atan2(p.x - x, p.z - z) };
+  }
   // where Ilka waits once she has her notebook back: outside the dig's gate, out of the keypad's way
   ilkaRim() {
     const dg = this.D.dig, g = dg.gate, dx = g.x - dg.x, dz = g.z - dg.z, a = Math.atan2(dz, dx) + 0.12, r = Math.hypot(dx, dz) + 2.4;
@@ -74,7 +88,7 @@ export class Dig extends ChapterBase {
       case 'hesk': {
         const y = f.c4_yacht || 'village';
         if (y === 'village') return S.hesk;
-        const p = D.yacht.spot(y); return { x: p.x + 1.4, z: p.z + 1.6, a: Math.PI };
+        return this.heskByYacht(y);
       }
       case 'tarra': return S.tarra;
       case 'ilka':
@@ -88,7 +102,8 @@ export class Dig extends ChapterBase {
       case 'dkid': return this.story.kesh?.saniSpot() || S.kid;   // (in the cool room's doorway once it draws: kesh.js)
       case 'dtrader': return S.trader;
       case 'weaver': return S.weaver;
-      case 'doran': return { x: D.dock.x + 1.2, z: D.dock.z + 1.4, a: Math.PI / 2 };
+      // (0.85 m in from the pier's rope rail at dock.z + 1.75: at + 1.4 his body stood through the rail)
+      case 'doran': return { x: D.dock.x + 1.2, z: D.dock.z + 0.9, a: Math.PI / 2 };
       // everyone else stays where the earlier chapters left them
     }
     return undefined;
@@ -222,6 +237,7 @@ export class Dig extends ChapterBase {
       g.cutscene = null;
       if (hesk) hesk.controlled = false;
       f.c4_yacht = to; f.c4_rode = true;
+      if (hesk && to !== 'village') hesk.placeAt(this.heskByYacht(to));   // (he steps off to port as Twinsen does to starboard)
       g.setState('play');   // (first: in the ride's state the cast is placed at once, and Hesk stepped 3 m off the yacht)
       this.story.refreshCast({ walk: true });
       g.updateObjective(); g.save(false);

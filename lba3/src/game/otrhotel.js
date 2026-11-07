@@ -77,7 +77,7 @@ export function buildOtrHotelRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'otrhotel', OTRHOTEL_AT.x, OTRHOTEL_AT.z);
   const R = B.room, k = B.k;
   const W = 22, D = 16, H = 5.6;
-  R.view = 13; R.follow = 0.6; R.music = 'home';
+  R.view = 13; R.follow = 0.6; R.music = 'zeelich_in';   // (ORDER 19/23f: Zeelich's playlist through the walls, not Citadel's Home)
   const wall = M('oh_wall', () => { const t = wallTex(), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.18 }); return m; });
   const dark = MAT.rubble('slate'), floor = MAT.tiles('#b8704a', '#a8643f', '#6a3a2a', false, 4), cap = MAT.paint('#16323a', 0.5);
   const LX = -W / 2, BZ = -D / 2, DOORZ = 5.2, UH = 0.9;

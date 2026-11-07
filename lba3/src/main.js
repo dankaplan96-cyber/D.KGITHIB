@@ -207,7 +207,12 @@ export function expandedStart(raw) {
 const DOOR_STEP = 1.0;   // m (Game.doorStep)
 export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
-const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
+// (asylum: the user, 6.11, "the asylum should have a different tune, no?": LBA1's asylum was Twinsen's prison and had its
+//  own tense music; ours plays the project's quiet facility piece — Vesk's guarded store below the hostel — not the town's)
+// (ORDER 19: the asylum's own piece, 'asylum' (tools/music/tracks/asylum.py; until it is rendered, MOODS stands in with
+//  the stealth mix): the front door is on the fort's terrace, where the full facility mix plays, so the stealth mix
+//  alone sounded like the same tune going on. The house cellar is the house's: Home, not the town's playlist.)
+const ROOM_MUSIC = { house: 'home', cellar: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home', asylum: 'asylum' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
 const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
@@ -2750,8 +2755,8 @@ class Game {
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
-    if (input.down('wheel')) {
-      // hold Ctrl: behaviour menu, world frozen
+    if (input.down('wheel') && !h.noBehaviours) {
+      // hold Ctrl: behaviour menu, world frozen (not while the story holds the behaviour: Zoé's search, the escorts)
       const i = BEHAVIOURS.indexOf(h.behaviour);
       if (input.pressed('right') || input.pressed('next')) h.setBehaviour(BEHAVIOURS[(i + 1) % 4]);
       if (input.pressed('left') || input.pressed('prev')) h.setBehaviour(BEHAVIOURS[(i + 3) % 4]);

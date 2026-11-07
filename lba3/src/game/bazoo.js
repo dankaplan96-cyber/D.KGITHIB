@@ -83,7 +83,7 @@ export function buildBazooRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the goods and
   //  the tables keep their size)
   const P = BAZOO_PLAN, { F, W, D } = P, H = 3.8;
-  R.view = 10; R.follow = 0.6; R.music = 'home';
+  R.view = 10; R.follow = 0.6; R.music = 'office';   // (ORDER 19: a town shop: the square heard through the walls, as the water office)
   // (the same pale grey blocks as the tavern: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);

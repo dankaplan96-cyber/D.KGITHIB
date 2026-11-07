@@ -2,11 +2,11 @@
 // projectiles, pickups and particles.
 import * as THREE from 'three';
 import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig.js';
-import { createCharacter, addSilhouette, writeBodyStencil, LOOKS } from './characters.js';
+import { createCharacter, addSilhouette, writeBodyStencil, LOOKS, dressVariant } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
-import { WATER_FLOOR } from '../engine/physics.js';
+import { WATER_FLOOR, GRAVITY } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
@@ -198,6 +198,9 @@ export class Hero extends Actor {
   }
 
   setBehaviour(b) {
+    // (the user, 7.11: "in Zoé's part you can switch to running now": a story-held behaviour (Zoé's discreet search, the
+    //  evacuation's run, chapter 2's escort) can't be changed from the Ctrl menu or the HUD's icons either, only by the story)
+    if (this.noBehaviours) return;
     if (b === this.behaviour) return;
     this.behaviour = b;
     this.game.audio.play('mode');
@@ -344,7 +347,8 @@ export class Hero extends Actor {
 
     jet?.step(this, dt, input, wx, wz);   // (the pack's thrust and steering, before the move and the fall)
     this.prevPos.copy(this.pos);
-    P.move(this, this.vel.x * dt, this.vel.y * dt);
+    if (this.rescue) this.rescueStep(dt);   // (SLIDE-RESCUE: the hop off a slide that could not go on, below)
+    else P.move(this, this.vel.x * dt, this.vel.y * dt);
     jet?.clearance(this);
     this.applyKnockback(dt);
     this.keepApart(dt);
@@ -368,16 +372,10 @@ export class Hero extends Actor {
       if (this.visY) { this.visY *= Math.exp(-dt * (this.visY < 0 ? 24 : 13)); if (Math.abs(this.visY) < 0.002) this.visY = 0; }
     }
     // too steep to stand on: slide down (and no jumping from here)
-    const steep = this.onGround ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
+    const steep = this.onGround && !this.rescue ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
     this.sliding = !!steep;
-    if (steep) {
-      P.move(this, steep.dx * 5 * dt, steep.dz * 5 * dt);
-      this.vel.set(steep.dx * 2.5, steep.dz * 2.5);
-      // slid down to the water's edge (or against a wall) and held there: too steep to climb, sea below, no
-      // jumping while sliding — a trap. Not moving at all for a second while sliding counts as a fall.
-      this.slideStuck = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) < 1e-3 ? (this.slideStuck || 0) + dt : 0;
-      if (this.slideStuck > 1) { this.slideStuck = 0; this.respawnFromFall(); }
-    } else this.slideStuck = 0;
+    if (steep) this.slideStep(steep, dt);
+    else { this.slideAnchor = null; this.slideSide = 0; }
     if (landed) {
       // (a jump's landing looks and sounds as it did before the jump was lowered: `feel` is that jump's own speed)
       const v = -landed, vf = this.gravity ? v * (JUMP.feel / JUMP.vy) : v;
@@ -667,11 +665,111 @@ export class Hero extends Actor {
     return out;
   }
 
-  respawnFromFall() {
+  // back to the last safe spot: a real fall (out of the world, below the sea) costs a life; a slide the game could not
+  // resolve (SLIDE-RESCUE found no footing) does not — that trap is the ground's fault, not the player's
+  respawnFromFall(hurt = true) {
     const p = this.game.lastSafe;
     this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
     this.vy = 0; this.onGround = true; this.resetMotion();
-    this.damage(1, null);
+    this.rescue = null; this.slideAnchor = null; this.slideSide = 0;
+    if (hurt) this.damage(1, null);
+  }
+
+  // SLIDE-RESCUE (the user: Twinsen "loses his balance" and is put back with a life lost). On terrain too steep to stand
+  // on he slides down it (and can't jump). A slide used to stop dead against whatever stood across it — a rock or a rope
+  // post at the face's foot, a wall, the water's edge — and a second without moving counted as a fall: back to the last
+  // safe spot, −1 life. Now the slide resolves itself:
+  //  1. blocked straight down, he slides along the blocker: the way down turned 45° and then 90° (along the contour),
+  //     to the side he took last (no zigzag), whichever really moves him; round a rock and on down the face;
+  //  2. getting no lower for 0.8 s (a pocket between a rock and the face, to and fro along a wall), he hops off the
+  //     face onto the nearest standable ground within 6 m that a hop can reach (up to 1.2 m higher; no wall or rock in
+  //     between); held at the sea's edge under a bank with nothing like that, he scrambles up it (up to 2.6 m, 4 m out);
+  //  3. only with no footing at all is he put back on the last safe spot, without losing a life.
+  slideStep(steep, dt) {
+    const P = this.game.physics, p = this.pos, step = 5 * dt, ox = p.x, oz = p.z;
+    let dx = steep.dx, dz = steep.dz;
+    P.move(this, dx * step, dz * step);
+    if (Math.hypot(p.x - ox, p.z - oz) < step * 0.4) {
+      const s0 = this.slideSide || 1;
+      let bd = Math.hypot(p.x - ox, p.z - oz), bx = p.x, bz = p.z, best = 0;
+      for (const a of [Math.PI / 4, Math.PI / 2]) for (const s of [s0, -s0]) {
+        const c = Math.cos(a * s), sn = Math.sin(a * s), tx = steep.dx * c - steep.dz * sn, tz = steep.dx * sn + steep.dz * c;
+        p.x = ox; p.z = oz;
+        P.move(this, tx * step, tz * step);
+        const d = Math.hypot(p.x - ox, p.z - oz) * (s === s0 ? 1.15 : 1);
+        if (d > bd + 1e-4) { bd = d; bx = p.x; bz = p.z; best = s; dx = tx; dz = tz; }
+      }
+      p.x = bx; p.z = bz;
+      if (best) this.slideSide = best;
+    }
+    this.vel.set(dx * 2.5, dz * 2.5);
+    // progress: a slide goes down. One that has come no lower than 0.3 m under its lowest point for 0.8 s is going
+    // nowhere: pressed against a rock, held at the sea's edge, or to and fro along a wall between two blockers (a
+    // distance from where it was misses that one: it swept 1.6 m each way, Citadel's east flight, −32.4, 13.9, −47.3)
+    const A = this.slideAnchor;
+    if (!A || p.y < A.y - 0.3) this.slideAnchor = { y: p.y, t: 0 };
+    else if ((A.t += dt) > 0.8) {
+      this.slideAnchor = null;
+      const f = this.findFooting() || this.findFooting(2.6, 4);
+      if (f) this.hopTo(f); else this.respawnFromFall(false);
+    }
+  }
+
+  // somewhere he can stand after a hop: not steep, not water, nothing solid there, and the ground round it (0.45 m)
+  // level enough not to send him sliding again at once
+  footingAt(x, z, g) {
+    const P = this.game.physics;
+    if (P.steepAt(x, z, g) || P.blockedAt(x, z, g, this.radius)) return false;
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3, x2 = x + Math.sin(a) * 0.45, z2 = z + Math.cos(a) * 0.45, gi = P.groundInfo(x2, z2, g + 0.6);
+      if (Math.abs(gi.h - g) > 0.5 || (gi.h < WATER_FLOOR && !gi.brick) || P.steepAt(x2, z2, gi.h)) return false;
+    }
+    return true;
+  }
+
+  findFooting(up = 1.2, maxR = 6) {
+    const P = this.game.physics, T = P.terrain, p = this.pos, r = this.radius;
+    for (let R = 0.5; R <= maxR + 0.01; R += 0.5) {
+      let best = null, bs = Infinity;
+      const n = Math.max(12, Math.round(R * 8));
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, x = p.x + Math.sin(a) * R, z = p.z + Math.cos(a) * R;
+        const gi = P.groundInfo(x, z, p.y + up), g = gi.h;
+        if ((g < WATER_FLOOR && !gi.brick) || g > p.y + up || g < p.y - 3) continue;
+        // the hop's way: no rock, post or wall across it, no terrain rising over it
+        const top = Math.max(p.y, g), m = Math.ceil(R / 0.25);
+        let clear = true;
+        for (let k = 1; k < m && clear; k++) {
+          const t = k / m, sx = p.x + (x - p.x) * t, sz = p.z + (z - p.z) * t;
+          if (T.heightAt(sx, sz) > top + 0.4 || P.blockedAt(sx, sz, top, r * 0.7)) clear = false;
+        }
+        if (!clear || !this.footingAt(x, z, g)) continue;
+        const s = Math.abs(g - p.y) * 0.3 + (g > p.y ? 0.2 : 0);
+        if (s < bs) { bs = s; best = { x, z, g }; }
+      }
+      if (best) return best;
+    }
+    return null;
+  }
+
+  // a short hop from the face onto that footing (the jump's arc under the ordinary gravity; Hero.rescueStep carries him)
+  hopTo(f) {
+    const p = this.pos, dh = f.g - p.y, d = Math.hypot(f.x - p.x, f.z - p.z);
+    const vy = Math.max(3.2, Math.sqrt(2 * GRAVITY * (Math.max(0, dh) + 0.35)));
+    const T = (vy + Math.sqrt(Math.max(0, vy * vy - 2 * GRAVITY * dh))) / GRAVITY;
+    this.rescue = { x: f.x, z: f.z, speed: clamp(d / Math.max(T, 0.1), 1.5, 7), t: 0 };
+    this.angle = Math.atan2(f.x - p.x, f.z - p.z);
+    this.vy = vy; this.onGround = false; this.gravity = null; this.sliding = false;
+  }
+
+  rescueStep(dt) {
+    const R = this.rescue, p = this.pos, dx = R.x - p.x, dz = R.z - p.z, d = Math.hypot(dx, dz);
+    R.t += dt;
+    if (R.t > 2 || d > 8 || (d < 1e-3 && this.onGround)) { this.rescue = null; if (d < 1e-3) this.vel.set(0, 0); return; }
+    if (d < 1e-3) { this.vel.set(0, 0); return; }
+    const s = Math.min(d, R.speed * dt);
+    p.x += (dx / d) * s; p.z += (dz / d) * s;
+    if (s >= d) this.vel.set(0, 0); else this.vel.set((dx / d) * R.speed, (dz / d) * R.speed);
   }
 
   // camera-relative world direction of the stick (classic controls: relative to the facing)
@@ -759,7 +857,7 @@ export class Hero extends Actor {
 export class NPC extends Actor {
   constructor(game, def) {
     // (the shared 0.45 m, or a look's own: Baldino's broad Grobo body, 0.6: SRC-2)
-    super(game, def.char ? createCharacter(def.char) : createHumanoid(def.look), def.x, def.z, (def.char && LOOKS[def.char]?.radius) || 0.45);
+    super(game, def.char ? createCharacter(def.char, dressVariant(def.char, def.dress)) : createHumanoid(def.look), def.x, def.z, (def.char && LOOKS[def.char]?.radius) || 0.45);
     this.def = def;
     this.name = def.name;
     this.bodyR = def.char ? contactRadius(def.char, this.rig.root.scale.x) : 0.45;   // (SOLID-NPC: Hero.keepApart)

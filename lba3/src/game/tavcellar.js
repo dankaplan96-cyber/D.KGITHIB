@@ -48,7 +48,7 @@ export function buildTavCellarRoom(scene, physics) {
   // (ROOMS-FULL, the user 3.11, "the rooms feel empty … maybe shrink a little and add detail": 1.25 times, the store
   //  stocked further)
   const F = 1.25, W = 15 * F, D = 8.6 * F, H = 5.0;
-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
+  R.view = 11.5; R.follow = 0.65; R.music = 'office';   // (ORDER 19: the tavern above heard through the floor)
   // (the tavern's pale grey blocks)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);

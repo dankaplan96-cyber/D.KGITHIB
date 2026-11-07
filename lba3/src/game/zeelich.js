@@ -567,7 +567,8 @@ export function* buildZeelichSteps(scene, physics) {
       keepClear(px - 5, pz - 5, px + 5, pz + 5);
       R.shuttlePad = W(px, pz);
     }
-    shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 40, r: 110, n: 3, speed: 0.04 });
+    // (R.traffic: the story keeps them on the ground while the project grounds the shuttles, chapter 3: story/zeelife.js)
+    R.traffic = shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 40, r: 110, n: 3, speed: 0.04 });
   }
 
   // ---------------------------------------------------------------- the dog-training yard (src/game/dogs.js)

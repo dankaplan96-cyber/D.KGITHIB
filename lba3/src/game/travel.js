@@ -170,7 +170,9 @@ export function travelRegion(game, id) {
   if (M) {
     const gl = M.glider, l = M.landing;
     pt('hamalayi_glider', { region: 'hamalayi', mode: 'glider', x: gl.x, z: gl.z, r: 4.5, landing: { x: l.x, z: l.z, a: l.a ?? Math.PI }, name: 'tr_hamalayi_field' });
-    const bx = gl.x - 6.5, bz = gl.z - 3.5, b = boardMesh(new THREE.Group(), 0, 0, 0, 0, { title: 'GLIDER FIELD', lines: ['CITADEL', 'DESERT ISLAND'], frame: '#6a5a4a' }).parent;
+    // (REV-HAM: beside the glider, east of the trodden way north: it stood on that way, 0.8 m off its middle, and the
+    //  Follow camera behind Twinsen drew in to 4 m as he passed it)
+    const bx = gl.x - 2.0, bz = gl.z - 5.4, b = boardMesh(new THREE.Group(), 0, 0, 0, 0, { title: 'GLIDER FIELD', lines: ['CITADEL', 'DESERT ISLAND'], frame: '#6a5a4a' }).parent;
     const lp = local(M, bx, bz); b.position.set(lp.x, gy(bx, bz), lp.z); b.rotation.y = Math.atan2(l.x - bx, l.z - bz); M.group.add(b);
     P.add({ type: 'box', x: bx, z: bz, hw: 1.1, hd: 0.15, rot: b.rotation.y, top: gy(bx, bz) + 2.7, noStand: true });
     const sx = gl.x + 4.5, sz = gl.z + 4.5, sk = new THREE.Group(), ls = local(M, sx, sz); sk.position.set(ls.x, gy(sx, sz), ls.z); M.group.add(sk); M.updaters.push(windsock(sk, 0, 0, 0));

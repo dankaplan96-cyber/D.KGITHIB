@@ -61,7 +61,14 @@ export class ZeelichLife extends ChapterBase {
   push() {
     const L = this.L; if (!L) return;
     const ph = this.phase();
-    if (ph !== this._ph) { this._ph = ph; L.flowers.setVisible(ph === 'pre' || ph === 'post'); }
+    if (ph !== this._ph) {
+      this._ph = ph; const grounded = ph === 'pre' || ph === 'post';
+      L.flowers.setVisible(grounded);
+      // (the user, 6.11, of Citadel: "Vesk's ship is already in the harbour in the opening, not logical": here, three
+      //  shuttles circled over Zeelich in chapter 3 while the crates by the pad read HELD, the shuttles grounded. They
+      //  fly from chapter 4, when the island routes open, travel.js)
+      for (const s of this.Z?.traffic || []) s.visible = !grounded;
+    }
   }
   // the crate as a target for the magic ball (thrown from the street, or anywhere): only while it sits on the flue
   target() {

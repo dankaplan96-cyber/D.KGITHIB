@@ -114,7 +114,7 @@ export function buildZTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'zterminal', ZTERMINAL_AT.x, ZTERMINAL_AT.z);
   const R = B.room, k = B.k;
   const P = ZTERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, AX0, AX1, AZ1, AH } = P;
-  R.view = 12.5; R.follow = 0.6; R.music = 'home';
+  R.view = 12.5; R.follow = 0.6; R.music = 'zeelich_in';   // (ORDER 19/23f: Zeelich's playlist through the walls, not Citadel's Home)
   // (Otringal's pale lilac plaster, lit a little from within; turquoise trim; a pale grey grille floor with lit studs)
   const wallM = M('zt_wall', () => { const t = TEX.plaster('#efe2ee'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f4eaf2', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
   const cap = MAT.paint('#d8ccd8', 0.55), floor = MAT.tiles('#c8c4cc', '#b4b0ba', '#3a5a6a', false, 5);

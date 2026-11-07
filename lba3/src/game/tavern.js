@@ -80,7 +80,7 @@ export function buildTavernRoom(scene, physics) {
   // (the user 2.11, "make them bigger, it's really small": the floor 1.5 times the first cut, the hall and gallery a
   //  quarter higher, the camera closer and following Twinsen as in his own house; the furniture keeps its size)
   const P = TAVERN_PLAN, { F, S, W, D } = P, H = 6.2;
-  R.view = 11.5; R.follow = 0.65; R.music = 'home';
+  R.view = 11.5; R.follow = 0.65; R.music = 'village';   // (ORDER 19: the town's own folk playlist in the tavern, not the family's Home)
   // (the original's walls are pale grey blocks with a cool cast: the grey stone texture lightened toward them, lit a
   //  little from within as the sewers' masonry is, so a face turned from every lamp still reads as stone)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
