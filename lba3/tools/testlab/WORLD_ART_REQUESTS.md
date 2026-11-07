@@ -2650,3 +2650,28 @@ on the original's numbers. The laptop will measure what makes those islands read
 silhouettes and proportions, roof and wall shapes, plant kinds and density, light and fog), score the city against
 them with the pack's rubric minus the geography and landmark parts, and send the art changes as requests. Layout,
 paths, doors and story spots stay as they are unless a request says otherwise.
+
+## WORLDSCORE-7.11 · every world against its original again, on the current game (6b97f4a5+) · the laptop, 7.11.2026
+`tools/worldscore.mjs` (SwiftShader, `?allregions`; a local copy with the test boot's Playwright path). Height = the
+mean absolute difference (MAE) after one uniform lift, against the original's own spread.
+
+| place | score | coast IoU | lift | height MAE / spread | objects orig → ours |
+|---|---|---|---|---|---|
+| Citadel Island | 82.7 (was 84.9) | 0.908 | +1.79 m | 0.91 / 4.55 m | 270 → 600 |
+| Desert Island | 83.1 (was 85.0) | 0.976 | 0.01 | 0.40 / 1.85 | 315 → 239 |
+| Otringal | 90.0 (was 92.6) | 1.0 | 0 | 0.11 / 6.51 | 555 → 399 |
+| Knartas | 94.7 | 1.0 | 0 | 0.18 / 1.09 | 263 → 278 |
+| Mosquibee | 84.5 | 1.0 | 0 | 0.41 / 6.04 | 145 → 94 |
+| Celebration | 91.1 | 1.0 | 0 | 0.00 / 3.09 | 24 → 40 |
+| Under Celebration | 91.3 | 1.0 | 0 | 0.04 / 6.20 | 61 → 118 |
+| The Platform | 89.4 | 0.992 | 0 | 0.25 / 2.27 | 168 → 136 |
+| The Lift Dock | 37.7 (partial; decks are its ground) | — | — | — | 53 → 89 |
+| The Hamalayi (LBA1) | 27.4 (ours by design) | | | | |
+| Zeelich's terminal island | n/a: a new city (the user's DECISION above) | | | | |
+
+- Height gaps worth a look (ground lower than the original, after the lift): Mosquibee ~7.0 m over ~135 m² at
+  (2545.4, 1828.3) and ~6.8 m at (2584.8, 1818.7); the Platform ~5.9–6.0 m at (3908.8, 1825.7) and (3905.7, 1814.8);
+  Under Celebration ~3.9 m at (3227.2, 1761.8). Small areas (0.6 points each at most).
+- Citadel's and Desert Island's drops (−2.2 / −1.9) and Otringal's (−2.6) come from the objects and landmark parts as
+  the world changed since the last run, not from the ground: coast and height are as before. The ranked list per
+  place is in the run's JSON (kept on the laptop; can be committed if wanted).
