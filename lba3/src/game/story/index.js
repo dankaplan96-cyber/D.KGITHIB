@@ -21,6 +21,7 @@ import * as THREE from 'three';
 import { TrackRunner } from '../../engine/scripts.js';
 import { t } from '../i18n.js';
 import { CHAPTER_AREAS } from '../regions.js';
+import { regionOf } from '../travel.js';
 import { Prologue } from './prologue.js';
 import { Chapter1 } from './chapter1.js';
 import { Chapter2 } from './chapter2.js';
@@ -68,6 +69,7 @@ export class Story {
     this.game = game;
     const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
+    this.depot = this.chapters.find((c) => c.key === 'project')?.watch;   // P9: the depot's watch, in every chapter it is there (story/depotwatch.js)
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
     this.citizens = new Citizens(this);   // WORLD-LIFE: the residents who walk round Citadel (citizens.js)
@@ -219,7 +221,45 @@ export class Story {
 
   // ---- routed hooks
   objective() { return this.cur.objective(); }
-  markers() { return this.cur.markers(); }
+  markers() { const ms = this.cur.markers(); const w = this.wayStar(ms); return w ? ms.concat(w) : ms; }
+  // CITADEL-3-9 (the campaign): back on Citadel (or anywhere) while the objective's star is in another region, the map
+  // had no star at all; now a star stands on the travel stop here that leads toward it (the ferry, the glider field,
+  // the spaceport, a shuttle pad), by the routes open in this chapter. Reads only built regions; nothing is saved.
+  wayStar(ms) {
+    const g = this.game, T = g.travel, R = g.regions;
+    const stars = ms.filter((m) => m.kind === 'star');
+    if (!T || !stars.length || g.state === 'title') return null;
+    const here = regionOf(g);
+    // which region each star is in: the nearest built region's centre (they lie kilometres apart)
+    const centres = [['citadel', 0, 0]];
+    for (const id of new Set(Object.values(T.points).map((p) => p.region))) { const B = id !== 'citadel' && R?.built(id); if (B?.group) centres.push([id, B.group.position.x, B.group.position.z]); }
+    // (a star in an interior — rooms stand apart from every region, the lamp room 800 m from Zeelich — is no one's: no
+    //  way-star for it, rather than one that points to the wrong planet)
+    const regionAt = (m) => { const c = centres.reduce((a, q) => (Math.hypot(m.x - q[1], m.z - q[2]) < Math.hypot(m.x - a[1], m.z - a[2]) ? q : a)); return Math.hypot(m.x - c[1], m.z - c[2]) < 450 ? c[0] : null; };
+    const want = new Set(stars.map(regionAt));
+    if (want.has(null)) return null;
+    if (want.has(here)) return null;
+    const key = here + '|' + [...want].join(',') + '|' + this.index;
+    if (this._way?.key === key) return this._way.star;
+    // the open routes, breadth first from this region's stops (by region names only: no unbuilt region is read)
+    const open = T.routes.filter((r) => r.gate(this));
+    const reg = (pid) => T.points[pid]?.region;
+    let star = null;
+    const start = Object.values(T.points).filter((p) => p.region === here).map((p) => p.id);
+    const seen = new Set([here]), queue = start.map((id) => ({ id, first: id }));
+    while (queue.length && !star) {
+      const { id, first } = queue.shift();
+      for (const r of open) {
+        const o = r.a === id ? r.b : r.b === id ? r.a : null;
+        if (!o) continue;
+        const rg = reg(o);
+        if (want.has(rg)) { const p = T.points[first], to = T.points[o]; star = { x: p.x, z: p.z, kind: 'star', color: '#ffcf4a', r: 7, edge: true, label: t('way_to', { where: String(t(to.name)).split(':')[0] }), way: true }; break; }
+        if (!seen.has(rg)) { seen.add(rg); for (const q of Object.values(T.points)) if (q.region === rg) queue.push({ id: q.id, first }); }
+      }
+    }
+    this._way = { key, star };
+    return star;
+  }
   journal() {
     const out = this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }));
     const life = this.life.journal();
@@ -286,7 +326,7 @@ export class Story {
     const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
     if (c) c.enabled = show;
   }
-  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
+  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {

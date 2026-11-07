@@ -82,8 +82,13 @@ const said = () => ev(() => window._said.splice(0));
 const C1 = { c1_started: true, c1_home: true, c1_arrived: true, c1_task: true, c1_water: true, c1_tour: true, c1_needZoe: true, c1_zoeStart: true, c1_zoeDone: true, c1_plan: true, c1_veskGone: true, c1_radio: true };
 await setChapter('project', C1);
 await near('citadel_ferry');
-const p2a = await ev(() => { const r = P.talk('doran', { run: true }); const d = P.npc('doran'), sp = game.world.spaceport; return { r: r.r, ship: !!game.flags.c1_ship, ch: game.flags.chapterKey, room: game.room?.id ?? 'citadel', doranAtPort: Math.hypot(d.pos.x - sp.pad.x, d.pos.z - sp.pad.z) < 8, obj: document.querySelector('#objective')?.textContent }; });
-check('chapter 2: Doran at the harbour takes Baldino\'s start code and goes ahead to the spaceport; no crossing from the harbour (INPUT)', p2a.r === 'talked' && p2a.ship && p2a.ch === 'project' && p2a.room === 'citadel' && p2a.doranAtPort && /spaceport/i.test(p2a.obj || ''), p2a);
+// (STAGING-1: he sets off up the quay on foot and is put by the ship once neither he nor it is in view, so he is
+//  checked at the spaceport when Twinsen gets there, not the moment the talk ends: he is still on the quay then)
+const p2a = await ev(() => { const r = P.talk('doran', { run: true }); const d = P.npc('doran'), sp = game.world.spaceport; return { r: r.r, ship: !!game.flags.c1_ship, ch: game.flags.chapterKey, room: game.room?.id ?? 'citadel', walking: !!game.story.cur.walkers?.doran, doranAtPortNow: Math.hypot(d.pos.x - sp.pad.x, d.pos.z - sp.pad.z) < 8, obj: document.querySelector('#objective')?.textContent }; });
+await said();
+p2a.there = await ev(() => { const sp = game.world.spaceport, d = P.npc('doran'); let g; for (let k = 0; k < 3 && Math.hypot(game.hero.pos.x - sp.pad.x, game.hero.pos.z - sp.pad.z) > 9; k++) { g = P.go(sp.pad.x - 7, sp.pad.z, { tol: 1.5, run: true, maxT: 200 }); P.settle(); }
+  return { go: g?.r, present: d.present, walking: !!game.story.cur.walkers?.doran, d: +Math.hypot(d.pos.x - sp.landing.x, d.pos.z - sp.landing.z).toFixed(1), dPad: +Math.hypot(d.pos.x - sp.pad.x, d.pos.z - sp.pad.z).toFixed(1) }; });
+check('chapter 2: Doran at the harbour takes Baldino\'s start code and sets off for the spaceport; no crossing from the harbour; when Twinsen gets to the spaceport Doran is waiting by the ship (INPUT)', p2a.r === 'talked' && p2a.ship && p2a.ch === 'project' && p2a.room === 'citadel' && /spaceport/i.test(p2a.obj || '') && p2a.there.present && !p2a.there.walking && p2a.there.dPad < 8, p2a);
 // (a remark on the way — someone in town calling out — stops the walk; a player walks on: up to three tries)
 await said();
 const p2b = await ev(() => { const sp = game.world.spaceport; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'project'; k++) { r = P.use(sp.pad.x - 4.2, sp.pad.z, { run: true, kind: 'c1ship' }); P.settle(60); } const Z = game.rooms.zeelich, L = Z.spaceport.landing, h = game.hero;

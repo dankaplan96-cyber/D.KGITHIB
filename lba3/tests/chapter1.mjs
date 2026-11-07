@@ -58,7 +58,9 @@ is('three bypass valves to open', valves, (v) => v.length === 3);
 await ev(() => { const cr = game.camRig; let ov = cr.override; window.__shots = []; Object.defineProperty(cr, 'override', { configurable: true, get: () => ov, set: (v) => { if (v) window.__shots.push([+v.pos.x.toFixed(1), +v.pos.z.toFixed(1)]); ov = v; } }); window.__upd = game.world.updaters.length; });
 for (const v of valves) {
   if (v.kind === 'use') {
-    await ev((v) => T.useAt(v.x, v.z), v);
+    // (P9, story/depotwatch.js: seen in the depot's yard the first time, the guard turns him out at a gate; caught
+    //  again, the watch fights while he turns the wheel: up to six goes, his health topped up (ISO, as the rest here))
+    await ev((v) => { const G = game; for (let k = 0; k < 6 && !G.world.valves.find((w) => w.id === v.id).open; k++) { G.hero.hp = Math.max(G.hero.hp, 6); T.useAt(v.x, v.z); for (let i = 0; i < 20 && (G.state !== 'play' || G.trans); i++) { T.talkAll(); G.step(0.3); } } T.talkAll(); }, v);
   } else {
     // ball: from a spot ~6 m away, facing the valve, throw (normal behaviour)
     await ev((v) => { const G = game; const a = Math.random() * 6.28; for (let k = 0; k < 16 && !G.world.valves.find((w) => w.id === v.id).open; k++) { const aa = a + k * 0.4; T.tp(v.x + Math.sin(aa) * 6, v.z + Math.cos(aa) * 6); G.hero.angle = Math.atan2(v.x - G.hero.pos.x, v.z - G.hero.pos.z); T.tap('KeyF'); G.step(2.5); } }, v);

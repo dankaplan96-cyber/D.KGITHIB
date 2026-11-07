@@ -31,6 +31,7 @@ const CAL = !!process.env.CALIBRATE;
 // not a journey), 'gap' (a region change with no film: known, listed)
 const TRANSITIONS = [
   ['chapter1.js', 'zoeSpotted', 'same', "chapter 2, Zoé's sneak: caught, back at the office's door (the same room)"],
+  ['depotwatch.js', 'warn', 'same', 'chapters 1–2, the depot (P9): warned by its guard, turned out at the nearer gate (the same region)'],
   ['chapter1.js', 'toZeelich', 'film:crossByShip', 'chapter 2 → 3: Citadel → Zeelich by the project ship (take-off, cabin, space)'],
   ['chapter2.js', 'startZoe', 'cut', "chapter 3: the story cuts to Zoé at Citadel's lighthouse (another character's scene, not a journey)"],
   ['chapter2.js', 'endZoe', 'cut', 'chapter 3: back to Twinsen on Zeelich'],

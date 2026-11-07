@@ -341,7 +341,10 @@ export class Evacuation extends ChapterBase {
     const f = this.f, W = this.W;
     // (the fences and the open shelters stay through chapter 10, while the town waits underground; and through 11 and 12,
     //  when the shaft's lift brings him up in the station's yard (SHAFT-CITADEL), as they are when he comes up in play)
-    const key = this.story.cur?.key, on = this.isCur() || key === 'network';
+    // (CITADEL-3-9: and through chapter 9, the council, when the ship back from Zeelich is open: played on from chapter 8
+    //  the fences, the dark heat posts and the open shelters were still there in chapter 9; a load in chapter 9 took them
+    //  away, and chapter 10 put them back)
+    const key = this.story.cur?.key, on = this.isCur() || key === 'council' || key === 'network';
     this.showProps(on || key === 'shell' || key === 'core');
     if (!on) return;
     W.station?.setActive?.(false);
