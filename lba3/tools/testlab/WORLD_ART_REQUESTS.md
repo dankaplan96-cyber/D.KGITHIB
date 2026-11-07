@@ -2675,3 +2675,27 @@ mean absolute difference (MAE) after one uniform lift, against the original's ow
 - Citadel's and Desert Island's drops (−2.2 / −1.9) and Otringal's (−2.6) come from the objects and landmark parts as
   the world changed since the last run, not from the ground: coast and height are as before. The ranked list per
   place is in the run's JSON (kept on the laptop; can be committed if wanted).
+
+## ASYLUM-21 · the black slot by the foreman's office, the clone statues (the user's photo, 7.11.2026) · the laptop
+Diff: `requests/ASYLUM-21.diff` (lba1room.js, lba1places.js, asylumhostel.js; against da4c68b6, which has
+ASYLUM-20; `git apply --check` clean). Picture: `docs/future/world/ASYLUM-21/pair-a21-office.jpg` (the photo's spot).
+The user: "the asylum still has a strange bug, and some props stand in strange places" (photo: Twinsen on a narrow
+wall top beside a deep black slot under the upper floor).
+- **Cause:** the foreman's office (LBA1's upper office, floor at layout y 9 over x 48–62, z 19–28, nothing under
+  it). Its east wall, x 63, z 20–28 (the grid's last column on the camera's side), is solid in LBA1 from y 1 to 10,
+  its top one cell over the office floor. Our camera-side cut measured the rim from the wall's own floor (y 2) and cut
+  it to y 4: the space under the office slab showed as a black slot, and the cut top was a ledge reachable from the
+  corridor's east end.
+- **Fix:** `lba1room.js opts.meetFloors` (on for the asylum): a camera-side wall whose inner neighbour is a floor slab
+  two or more cells above the cut keeps its rim over that floor, as LBA1 builds it. 12 columns change (x 63, z 19–28;
+  x 36, z 2–3). Colliders follow the cells: the ledge is gone. By input on the GPU: along the office's east side both
+  ways, standing and turning in the south-east corner (stays at y 10), the corridor's east end now leads up the stair;
+  the 2.2 m drop off the office's south edge is LBA1's own.
+- **The statues:** the two suits on white plinths are `asylumhostel.js`'s clone statues used as coat stands (the
+  twelve-years joke); one stood on the floor's very edge over the slot. Both now stand against the east wall (x 61.4,
+  z 26.5 and 27.75), facing the room. The green-headed figure on the rug is a story NPC (`R.npcSpots`): unchanged.
+- **Tests:** lba1rooms 8/8, overlaps 26/26, chapter1 23/23; asylum.mjs 11/12 twice: its 12th step (save → quit →
+  Continue, the find and the cut-away kept) timed out reopening the game on the loaded laptop both times (ASYLUM-20
+  passed it 12/12; this change does not touch saving): **unverified here, please rerun.**
+- **Left (not story logic):** the maroon gantry beam (x 55, y 17–18, z 25–40) still brick boxes, reading as a bench on
+  the office floor; LBA1's FunFrock statue cells at the office's back wall (x 57–59, y 10–15, z 20–21) still a block.
