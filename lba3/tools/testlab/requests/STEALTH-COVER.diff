@@ -1,0 +1,17 @@
+diff --git a/lba3/src/game/enemies.js b/lba3/src/game/enemies.js
+index 910a73ff..65f071ab 100644
+--- a/lba3/src/game/enemies.js
++++ b/lba3/src/game/enemies.js
+@@ -988,7 +988,11 @@ export class Watcher {
+     }
+     // vision: cone + line of sight, slower to notice a sneaking or hidden player
+     const hd = n.distTo(hero);
+-    const inCone = hd < this.range && Math.abs(angleDiff(n.angle, n.angleTo(hero))) < this.fov
++    // (the user, 7.11, Zoé's office: "he sees her even when she crouches behind the desk": a desk is lower than his eyes, so
++    //  the line of sight alone never hid her; crouched (discreet + action) at one of the room's cover spots (R.cover: the
++    //  desks, crates, cabinets) she is out of sight unless he is right on top of her)
++    const covered = hero.hiding && hd > 1.5 && (g.room?.cover ?? []).some((c) => Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z) < c.r + 0.35);
++    const inCone = !covered && hd < this.range && Math.abs(angleDiff(n.angle, n.angleTo(hero))) < this.fov
+       && P.lineOfSight(n.pos.x, n.pos.y + 1.6, n.pos.z, hero.pos.x, hero.pos.y + (hero.hiding ? 0.6 : 1.2), hero.pos.z);
+     const vis = hero.visibility();
+     const rate = inCone ? (hd < 2 ? 3 : 1.3) * this.notice * Math.max(0.15, vis) * (1.2 - hd / this.range) : -this.cool;

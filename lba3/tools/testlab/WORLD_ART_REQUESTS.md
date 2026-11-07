@@ -2758,3 +2758,25 @@ world.js; against e434cf38, `git apply --check` clean). Pictures (Follow, Medium
   (raise that parapet's collider: yours); a jagged dark line along the existing north fill's outer edge (x −29.5…−31.5,
   z ≈ −48). (c) the new face is a plain straight rock face. (d) the landing's old 0.9–1.7 m drops north and east (no
   parapet: not asked); he shows as an x-ray outline behind the south cheek as he comes out.
+
+## STEALTH-COVER · Zoé seen while crouched behind the desk (the user, 7.11) · the laptop, 8.11.2026
+The user: "in Zoé's part he sees her even when she crouches behind the desk". Diff: `requests/STEALTH-COVER.diff`
+(enemies.js `Watcher.update` only, +5/−1; `git apply --check` clean on 11f39e14).
+- **Cause:** the Watcher sees by cone plus `physics.lineOfSight` from his eye (1.6 m) to her at 0.6 m when hiding
+  (discreet + action). The office's desks are 0.78 m high and stand against the walls, so a desk is never between him
+  and her (chapter1.js `updateCone` says he sees over desks on purpose), and hiding only scales his notice rate to 0.15.
+  `interiors.js buildProjOffice` fills `R.cover` (15 spots: desks, crates, cabinets, each with a radius), but nothing in
+  src read it.
+- **Fix:** `covered` = hero hiding, more than 1.5 m from him, and within r + 0.35 of a room cover spot: then she is out
+  of his cone (and his suspicion cools as usual). Standing, crouched in the open, or with him on top of her: as before.
+  The only other Watcher (council.js, the chapter-9 archive) has no `R.cover`: unchanged.
+- **Measured in the game** (SwiftShader, the guard 4 m away kept facing her, 5 s at each spot):
+
+| case | origin ea2a6ebb | with the fix |
+|---|---|---|
+| crouched beside each of the 15 cover spots | spotted at 13 (2 hidden by a tall piece in the line) | spotted at 0 |
+| standing at the same spots | spotted at 15 | spotted at 15 |
+| crouched in the open, (1295, −0.5), clear line | (not run: the run was killed) | spotted |
+| crouched at cover, the guard 1.2 m away | spotted at 14 (the plan table blocks the 15th) | spotted at 14 (same) |
+
+- **Tests on the fix:** zoe-resume 5/5 (sneaks past him to the plan, save and Continue), chapter1 23/23.
