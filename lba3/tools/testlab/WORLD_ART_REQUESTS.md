@@ -2733,3 +2733,28 @@ Diff: `requests/REVIEW-ZEELICH-ART.diff` (zeelich.js, walkrounds.js; against 422
 | (e) Celebration's summit plaza | folds, a bench on the slope (terrain splat `paveAt` r 10 at (2,1), slope < 0.7) | **left** |
 
 - Tests: zeelich-life 38/38, playthrough 06-zeelich 0 deaths (1 ISO assist, logged); 12-council not run.
+
+## REVIEW-CITADEL-ART · Citadel's art follow-ups (CLOUD_ORDERS 26) · the laptop, 7.11.2026
+Diff: `requests/REVIEW-CITADEL-ART.diff` (island.js, lba1places.js `climbTerraceFill` only, town.js, tralucave.js,
+world.js; against e434cf38, `git apply --check` clean). Pictures (Follow, Medium, SwiftShader; chapter 1–2):
+`docs/future/world/REVIEW-CITADEL-ART/pair-{a3,b1,b2,c2,d1}.jpg`.
+
+| spot | what a player saw | status |
+|---|---|---|
+| (a) the pit north of the hostel stair's landing | your collider, nothing drawn: a dark crevice; from it the bank north rose 1.27 in 1 and he slid back 54 frames | fixed: an `M.wall` block drawn at the collider's height (15.29), 3 cm into the landing's north wall, its west face on the landing's; a 0.32 m step (15.61, own collider 7 cm back over the block's) up to the terrace |
+| (b) Bug Street's foot | a dirt pocket before the pharmacy and baggage-claim doors; three kerb runs in a stepped knot by the bench | fixed: one paved forecourt to both doors (`BUG_FOOT`, `bugFootDist` in the splat), curb stones and the square's ring skipped inside it, one new kerb from Bug Street's north kerb to the north house's front |
+| (c) the Water Office yard | the first shelf's knoll ran ~2 m past the office's front; its rock face a block heap left of the door (`buildCliffRocks` on that slope) | tidied: `waterKnoll` caps the ground in `KNOLL_BOX` [−68.6, 15.2, −62.5, 21.4] to the office's front line; the scatter and rocks decide on the old ground (`KNOLL_OFF`, as CLIMB_BOX), so no random draw moves |
+| (d) Tralu's cave door | out onto a ledge facing the sea, drops west and north; the way back an unreadable gap | fixed: `PLATEAU_STAIR` 12 steps west from the landing (12.92) to the slope (≈15.4), sheared cheeks with copings (noStand, seeThrough colliders); the exit on the stair's axis facing up it (a = −π/2) |
+| (e) Bersimon's tent music | Home | left: no existing mood fits (`well` = the sewer under his trapdoor, `office` = the square through walls, `island` = outdoors); he and the School of Magic each want a piece of their own |
+
+- Walks (scripted, physics, keys and the planner): (a) onto the block, stand, turn, east to its end, west, back, up
+  the step to the terrace: no slide, 0 respawns. (d) out of the cave, up the steps (13.35 → 15.18), turn, down; the
+  planner from the plateau path into the door and back: 0 slides, 0 respawns.
+- Tests (SwiftShader): world-consistency 37/0, overlaps 1 + 25 visual, rocks 8/0 + 2 visual (509 placements kept,
+  deterministic), walkers 37/0 (marda_b2 did not occur), lba1rooms 8/0, chapter1 23/0; sewers-ways 29 pass + the two
+  known out-of-door fails (2.97/2.37), its last section not reached (a reload timed out); **camclear not finished**
+  (ch1–5: 18/0; the cliffs check not reached on the loaded laptop). Not run on origin.
+- Left: (a) the block is 6 cm over the landing's north parapet coping, so he can step over it down to the landing
+  (raise that parapet's collider: yours); a jagged dark line along the existing north fill's outer edge (x −29.5…−31.5,
+  z ≈ −48). (c) the new face is a plain straight rock face. (d) the landing's old 0.9–1.7 m drops north and east (no
+  parapet: not asked); he shows as an x-ray outline behind the south cheek as he comes out.
