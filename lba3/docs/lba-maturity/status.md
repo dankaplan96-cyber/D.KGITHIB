@@ -52,7 +52,7 @@ world-polish pass after it:
 |---|---|---|---|---|---|
 | P1 | 7.11 | Zeelich | "all the buildings disappear when you get close" (whole-house fades, zeelich.js makeFader; VP-10 missing in rooms) | wave-1 finisher | **fixed** (merged 7.11): no building fades in any outdoor room; the camera rises over tight shapes (roomocc.js: Zeelich street 34, Desert 25, Hamalayi 25, all 9 isles); only the council porch fades while he stands under it — Automated runtime only |
 | P2 | 7.11 | Citadel harbour (residents) | "the characters walk in slow motion, a problem with the legs" (photo: an Esmer resident's leg stretched back) | animation-combat (urgent, a third worker) → laptop (hands) | **walk fixed** (GAIT-CADENCE, rig.js, merged 7.11): shorter strides when slow, the stance foot waits for the other, the held foot within 1.15 leg lengths; Sefa 0.76 → 1.22 steps/s, stance spread 0.42–0.49 H → 0.31–0.41 H (Automated runtime only; pictures looked at). **Hands: in the models** (cast_poly.py finger_hand, mirrored fan) → laptop order 36 HANDS-36 |
-| P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk (spaceport.js ~156, props.js kiosk) has nobody in it and does nothing | buildings-interiors worker (wave 3, started 7.11) | in progress: a clerk behind the counter with tickets/info lines by chapter, and a sweep of every Citadel structure that looks usable but is empty (kiosks, stalls, booths, sheds, benches' stands) |
+| P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk | buildings-interiors worker (wave 3) | **fixed** (merged 7.11): Corla the clerk behind the counter every chapter (lines by chapter; the spaceship menu from chapter 4); the sweep gave prompts and lines to the notice boards, map stands, fountains, carts and two sheds (citadel-structures.md, tests/citadel-structures.mjs) — Automated runtime only |
 | P4 | 7.11 | Citadel sewer, all doors | "the sewer isn't laid out as in the second game: check every door, where it led and where it should connect" | laptop curator (LBA2 links, order 29) → cloud buildings-interiors | door-map.md generated from the game (18 outdoor doors, 23 rooms); waiting for DOORS-LBA2 |
 | P5 | 7.11 | Citadel, the fort climb's foot (CLIMB-17) | "very strange" (photo): stacked copings on a slotted pier, two parapets with a trench between, rails in mid-air, a jagged seam to the plaza, the pipeline over the landing | laptop (order 30, CLIMB-30) | queued |
 | P6 | 7.11 | Citadel, the Whispering Cliffs' rising stepping stones | "the cylinders look really weird" (photo): bare 9-sided brown cylinders with flat green discs | laptop world-art (order 31, STONES-31) | queued |
@@ -67,11 +67,11 @@ world-polish pass after it:
 | 0 | in-flight work before the pack: camera pass 3 (Citadel spots by keyboard), Citadel chapters 3–9 + real saves, SLIDE-RESCUE review | paused by the usage limit; camera pass 3 resumes as part of wave 1 (world-polish), the other two fold into waves 2 and 7 |
 | 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | done: v57 (camera pass 3), v59 (Zeelich, 1794082922-cfd5) |
 | 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | pending |
-| 3 | buildings-interiors + original-mechanics (serialize shared transition code) | pending; needs the curator's building references |
+| 3 | buildings-interiors + original-mechanics (serialize shared transition code) | buildings part 1 done (merged 7.11): P3 + Citadel sweep; 63 rooms behind the isles' 55 doors + Kesh's 5 houses + the post's 3 cabins (ihomes.js, island-doors.mjs 78/78); 3 doors nailed shut with a reason. Waiting: DOORS-LBA2 (laptop 29). Knartas ledge door → world-polish |
 | 4 | animation-combat (+ laptop world-art in parallel) | pending |
 | 5 | dialogue-editor + character-voices | pending |
 | 6 | action-sound (+ laptop music-director) | pending |
-| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | pending; laptop performance-lab in parallel |
+| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | started early 7.11 night: camfollow's LBA2-view regression + its 4, camcitadel's 3, the Knartas ledge door, camclear; laptop performance-lab in parallel |
 | 8 | release-auditor | after all others |
 
 ## Laptop orders
