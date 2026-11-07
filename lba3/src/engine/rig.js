@@ -595,20 +595,35 @@ export class Rig {
         const ph = ((this.phase / (Math.PI * 2) - (this._lagPhase || 0) + (s === 'L' ? 0 : 0.5)) % 1 + 1) % 1;
         // (the sneak holds its foot to the end of its stance and lets it go over the next 3 % of the cycle, while the heel is already
         // peeling up: turning, the pose it goes back to stands a few cm off the held spot, and it slid there along the ground)
-        const stance = ph < (sneak ? SNEAK.stance + 0.03 : 0.5);
         const rel = sneak ? [SNEAK.stance, 0.03] : this.plantLite ? PLANT_LITE_RELEASE : [0.38, 0.12];
-        let wgt = stance ? smooth(ph / 0.05) * (1 - smooth((ph - rel[0]) / rel[1])) : 0;
+        // (GAIT-CADENCE: another character's stance foot stays down until the other foot has struck, to 62 % of its cycle at most: the
+        // other's keyed contact comes down 0.1-0.15 of a cycle after its phase says, and the foot let go at 44-50 % left both in the
+        // air meanwhile, the one just let go dragged forward along the ground at 1.2-1.5 m/s, a centimetre or two up). Only while the leg
+        // still reaches it (1.05 leg lengths: the heel up a centimetre or two, as at a push-off); past that it goes as before, once in
+        // its stance (waited: no second hold)
+        let waitOther = this.plantLite && !sneak && st.on && !st.waited && (st.reach || 0) <= 1.05 && !other.on && ph >= rel[0] && ph < 0.62;
+        if (!waitOther && st.on && ph >= rel[0] && ph < 0.62) st.waited = true;
+        const stance = ph < (sneak ? SNEAK.stance + 0.03 : 0.5) || waitOther;
+        let wgt = waitOther ? 1 : stance ? smooth(ph / 0.05) * (1 - smooth((ph - rel[0]) / rel[1])) : 0;
         if (st.on && (this.accel ?? 0) < -4) wgt = Math.max(wgt, st.w);   // (braking to a stop: the foot it stands on is not let go)
         // (the heel strikes when the leg can reach the ground below the foot: where the pose puts it far ahead of a high hip it
         // would hang in the air, or be pulled back to the ground in a frame)
         leg.hip.getWorldPosition(_hp);
         const Lg = 0.98 * (leg.knee.position.length() + leg.foot.position.length()) * sc, hv = _hp.y - groundY;
         const reach = Math.hypot(_fp.x - _hp.x, _fp.z - _hp.z, hv) <= Lg || _fp.y - groundY < 0.03 * sc;
-        if (stance && !st.on && reach && ph < 0.3) { st.on = true; st.locked = true; st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
+        if (stance && !st.on && reach && ph < 0.3) { st.waited = false; st.on = true; st.locked = true; st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
         else if (!stance && st.on) { st.on = false; st.locked = false; st.stepping = false; }
         if (st.on && st.stepping) { st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (a step left over from standing: the walk takes it)
         if (st.on && Math.hypot(_fp.x - st.P.x, _fp.z - st.P.z) > 1.2 * sc) { st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (ANIM-POLISH-3: put somewhere else mid-stride: the foot comes along)
         if (st.on) st.locked = true;
+        // (GAIT-CADENCE: another character's held foot is never further from its hip than 1.15 leg lengths: where the body has been carried
+        // on past it — a push out of someone's way, a sharp turn, a slope — it comes along the ground, instead of the leg drawn out
+        // straight behind it to 1.2-1.5 of its length (measured in play at the harbour). Let go there, it slid back to its pose along the
+        // ground at 1-2 m/s. A straight walk stays within 1.03-1.13 (the Spheros, short-legged and wide, the most))
+        if (this.plantLite && st.on) {
+          const hd = Math.hypot(st.P.x - _hp.x, st.P.z - _hp.z), Lr = 1.15 * Lg / 0.98, dMax = Math.sqrt(Math.max(0, Lr * Lr - hv * hv));
+          if (hd > dMax && hd > 1e-6) { const k = dMax / hd; st.P.x = _hp.x + (st.P.x - _hp.x) * k; st.P.z = _hp.z + (st.P.z - _hp.z) * k; }
+        }
         // (a foot still standing where the walk began keeps its place and eases into the walk's own weight)
         st.w = st.on ? (st.w >= wgt ? wgt + (st.w - wgt) * Math.exp(-dt / 0.04) : Math.min(wgt, st.w + dt / 0.06)) : Math.max(0, st.w - dt / 0.06);
       } else if (on) {
@@ -948,20 +963,39 @@ export class Rig {
         const H = this.hipsRest * this.root.scale.y / 0.46; // (LBA2: pelvis at 46% of the height)
         // (a look's own cycle length in metres where its original walk gives one: Baldino's short legs step
         // 800 units per 0.8 s cycle, 1.3 m — his pelvis is far below 46% of his height)
-        const cyc = this.walkCycle ? this.walkCycle * this.root.scale.y : 0.78 * H;
+        const cyc0 = this.walkCycle ? this.walkCycle * this.root.scale.y : 0.78 * H;
+        // (GAIT-CADENCE, the user, 7.11: "the characters walk in slow motion; there's a problem with the legs") LBA2's walk is
+        // one cycle in 0.8 s at its own pace (0.97 H/s); everyone else here strolls slower (0.6-1.15 m/s: 0.25-0.6 H/s), and with
+        // the cycle's length fixed their cadence fell with it to 0.43-0.75 cycles a second (LBA2 1.25): steps in slow motion,
+        // a tall Esmer's legs spread 70 degrees at 0.8 m/s. A slower walk takes shorter steps, as people do: below 80 % of its pace
+        // the stride is × √(speed / pace) / 0.9 (at least half), the thighs' and arms' swing with it, so the cadence stays lively
+        // (1.15-1.9 steps a second at 0.25-0.65 H/s; it was 0.64-1.7) and the stance foot still travels what the body does. The hero keeps
+        // his walk as it was (footPlant: his walk is at its own pace, the timing his feet and the tests are tuned to).
+        const ks = this.footPlant ? 1 : clamp(Math.sqrt(speed * 0.8 / cyc0) / 0.9, 0.5, 1);
+        this._stride = ks;
+        const cyc = cyc0 * ks;
         this.phase += (speed * dt / cyc) * Math.PI * 2 - dph;
         this._cycHz = speed / cyc;   // (cycles a second: the planted stance reads the pose this far behind the phase, Rig._plant)
         const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
         const W = WALK_KEYS;
-        T.legL = key(W.thigh, p); T.kneeL = key(W.knee, p); T.footL = key(W.foot, p);
-        T.legR = key(W.thigh, q); T.kneeR = key(W.knee, q); T.footR = key(W.foot, q);
-        T.armL = key(W.arm, p); T.elL = key(W.elbow, p); T.armR = key(W.arm, q); T.elR = key(W.elbow, q);
-        hipsY = 0.95 + key(W.bob, p * 2 % 1);
+        T.kneeL = key(W.knee, p); T.footL = key(W.foot, p); T.kneeR = key(W.knee, q); T.footR = key(W.foot, q);
+        if (ks < 1) {
+          // the thigh swings about the middle of its stance (contact -46, push-off +25 degrees), the arms with it; the knee folds
+          // and the foot rolls as before (the passing foot still clears the ground: shortened with the thigh, it scraped along it)
+          const th = (v) => W.thighMid + (v - W.thighMid) * ks;
+          T.legL = th(key(W.thigh, p)); T.legR = th(key(W.thigh, q));
+          T.armL = key(W.arm, p) * ks; T.armR = key(W.arm, q) * ks;
+        } else {
+          T.legL = key(W.thigh, p); T.legR = key(W.thigh, q);
+          T.armL = key(W.arm, p); T.armR = key(W.arm, q);
+        }
+        T.elL = key(W.elbow, p); T.elR = key(W.elbow, q);
+        hipsY = 0.95 + key(W.bob, p * 2 % 1) * ks;
         // (ANIM-POLISH-2, the player's walk, whose feet are held on the ground in their stance: the pelvis rides 3 cm lower, so
         // the standing leg reaches the ground at mid-stance — it hung 2 cm short — and a little lower again as the heel strikes)
         if (this.planting) hipsY += key(W.bobPlant, p * 2 % 1);
-        torsoY = key(W.twist, p); headY = -torsoY;
-        torsoX = 0.02 + key(W.lean, p * 2 % 1);
+        torsoY = key(W.twist, p) * ks; headY = -torsoY;
+        torsoX = 0.02 + key(W.lean, p * 2 % 1) * ks;
         if (this.aggro) {
           // ANIM-AGGR: LBA2's Aggressive walk (ANIM.HQR 83, measured: numbers only): a boxer's strut. The fists stay up
           // before the chest (shoulders 13-75 deg forward, elbows bent 50-72 deg), pumping a little with the steps;
@@ -1889,6 +1923,7 @@ function keyLin(ts, vs, t) {
 }
 const WALK_KEYS = {
   thigh: [-46 * D, -8 * D, 25 * D, -20 * D],
+  thighMid: -10.5 * D,          // (GAIT-CADENCE: halfway between contact and push-off; a shorter stride swings about it)
   knee: [18 * D, 10 * D, 7 * D, 52 * D],
   foot: [12 * D, 8 * D, -8 * D, -7 * D],
   arm: [10 * D, 0, -25 * D, 0],

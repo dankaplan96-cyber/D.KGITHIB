@@ -14,6 +14,8 @@
 //     stuck plant, no foot left behind;
 //  6. only the people near the camera and in view plant (FarCull, PLANT_VIEW.r 30 m);
 //  7. cost: Rig.update over the whole crowd, planting on and off (SwiftShader's CPU: ms, no fps claim).
+//  (GAIT-CADENCE, 2d) the townsfolk at their own speeds: a lively cadence, a stance not spread, the held foot within reach, the same at
+//     lower posing rates; the children and the hero at their full stride.
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
@@ -185,6 +187,47 @@ for (const fps of [60, 30, 120]) {
   const bad = R.filter((r) => !r.ok), most = (f) => Math.max(...R.map(f));
   measure('turn idle-clock sweep', { runs: R.length, bad: bad.length, notAlternating: R.filter((r) => !r.alternate).length, maxSlide180: most((r) => r.slide180), maxSlide90: most((r) => r.slide90) });
   check('bodies: turning where it stands at 8 idle clocks × 30 / 60 / 120 fps, 6 bodies: the feet step in turn (at most one closing step), a planted foot slides < 3 cm; the stop before it as above', bad.length === 0, { bad: bad.slice(0, 8) });
+}
+
+// ---- 2d. (GAIT-CADENCE, the user 7.11: "the characters walk in slow motion; there's a problem with the legs") the residents' looks
+// at their own walking speeds, 60 fps: the cadence (steps a second, from the cycle's phase) not slow motion (LBA2's walk: 2.5 a second
+// at its pace; ours fell to 0.6-1.3 for the townsfolk's 0.6-1.15 m/s), the stance not spread like a stride (the feet ≤ 0.41 H apart:
+// a tall Esmer's were 0.44 H), the held foot within its leg's reach and on the ground; the same cadence posed every 2nd and 4th frame
+// (Rig.lodN: the frames between are its time too) and at 30 fps; the hero's walk unchanged (one cycle per 0.78 H at his 2 m/s)
+{
+  const r = await ev(() => {
+    const { C, RG, wp, ankle } = NF;
+    const walk = (look, v, fps, lod = 0) => {
+      // (the hero's body on its own: a new rig set up as his, footPlant — the one in play is left alone)
+      const dt = 1 / fps, R = C.createCharacter(look), cam = RG.PLANT_VIEW.cam; RG.PLANT_VIEW.cam = null;
+      if (look === 'twinsen') R.footPlant = true; else R.plantIfFits();
+      R.fidgetT = 99;
+      const j = R.j, sc = R.root.scale.y, ank = ankle(R), H = R.hipsRest * sc / 0.46;
+      let z = 0, cyc = 0, T = 0, reach = 0, spread = 0, slip = 0, slipT = 0, prev = null;
+      R.lodN = lod;   // (Rig.update's own reduced posing rate, as FarCull sets it for people out of view)
+      for (let i = 0; i < Math.round(5 * fps); i++) {
+        z += v * dt; R.root.position.set(0, 0, z); R.root.rotation.y = 0;
+        R.play('walk'); const ph0 = R.phase; R.update(dt, v); R.root.updateMatrixWorld(true);
+        if (i < 1.5 * fps) { prev = null; continue; }
+        cyc += (R.phase - ph0) / (2 * Math.PI); T += dt;
+        const L = wp(j.legL.foot), Rf = wp(j.legR.foot), cur = { L: [L.x, L.y - ank, L.z], R: [Rf.x, Rf.y - ank, Rf.z] };
+        spread = Math.max(spread, Math.hypot(L.x - Rf.x, L.z - Rf.z) / H);
+        if (prev) { const k = cur.L[1] < cur.R[1] ? 'L' : 'R'; if (cur[k][1] <= 0.025 * sc && prev[k][1] <= 0.025 * sc) { slip += Math.hypot(cur[k][0] - prev[k][0], cur[k][2] - prev[k][2]); slipT += dt; } }
+        prev = cur;
+        const F = R._feet; if (F && R.plantLite) for (const f of [F.L, F.R]) if (f.on && !f.stepping && f.w * F.w > 0.5) reach = Math.max(reach, f.reach || 0);
+      }
+      RG.PLANT_VIEW.cam = cam;
+      return { body: `${look}@${v}`, u: +(v / H).toFixed(2), steps: +(2 * cyc / T).toFixed(2), cycH: +(v * T / cyc / H).toFixed(2), spread: +spread.toFixed(2), reach: +reach.toFixed(3), slip: slipT ? +(slip / slipT).toFixed(3) : null };
+    };
+    const B = [['nara', 0.8], ['keeper', 0.6], ['xil', 1.15], ['farmerA', 1.0], ['farmerC', 1.0], ['lharWoman', 1.15], ['lharElder', 0.75], ['magus', 0.75], ['yorna', 1.1], ['ilka', 1.05]];
+    return { adults: B.map(([k, v]) => walk(k, v, 60)), at30: B.slice(0, 4).map(([k, v]) => walk(k, v, 30)), lod: [2, 4].map((n) => ({ n, ...walk('nara', 0.8, 60, n) })), kids: [['pim', 1.3], ['desertkid', 1.6], ['lulu', 1.2]].map(([k, v]) => walk(k, v, 60)), hero: walk('twinsen', 2.0, 60) };
+  });
+  measure('cadence', r);
+  const bad = [...r.adults, ...r.at30].filter((b) => !(b.steps >= 1.1 && b.steps <= 2.4 && b.spread <= 0.41 && b.reach <= 1.08 && b.slip != null && b.slip < 0.12)).map((b) => b.body);
+  check('cadence: the townsfolk at their own speeds (0.25-0.65 H/s) step 1.1-2.4 times a second (LBA2 2.5 at its pace; it was 0.6-1.7), the feet ≤ 0.41 H apart, the held foot within 1.08 leg lengths and on the ground (< 0.12 m/s), at 60 and 30 fps', !bad.length, { bad, adults: r.adults, at30: r.at30 });
+  const n0 = r.adults[0].steps;
+  check('cadence: posed every 2nd or 4th frame (lodN) the stride keeps its rate (within 3 % of every frame\'s)', r.lod.every((b) => Math.abs(b.steps - n0) / n0 < 0.03), { lod: r.lod, every: n0 });
+  check('cadence: the children walk at their pace with their full stride (cycle 0.78 H, feet held within 1.1 leg lengths); the hero\'s walk unchanged (0.78 H a cycle at 2 m/s)', r.kids.every((b) => Math.abs(b.cycH - 0.78) < 0.03 && b.reach <= 1.1) && Math.abs(r.hero.cycH - 0.78) < 0.02, { kids: r.kids, hero: r.hero });
 }
 
 // ---- 3. the residents walking round Citadel in play (every resident simulated in full, 60 fps)
