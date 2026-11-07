@@ -54,6 +54,7 @@ world-polish pass after it:
 | P2 | 7.11 | Citadel harbour (residents) | "the characters walk in slow motion, a problem with the legs" (photo: an Esmer resident's leg stretched back) | animation-combat (urgent, a third worker) | in progress |
 | P3 | 7.11 | Citadel spaceport deck | "another structure that's just there": the TICKETS · INFO kiosk (spaceport.js ~156, props.js kiosk) has nobody in it and does nothing | buildings-interiors, Citadel sweep (next free slot) | queued: a clerk behind the counter with tickets/info lines by chapter, and a sweep of every Citadel structure that looks usable but is empty (kiosks, stalls, booths, sheds, benches' stands) |
 | P4 | 7.11 | Citadel sewer, all doors | "the sewer isn't laid out as in the second game: check every door, where it led and where it should connect" | laptop curator (LBA2 links, order 29) → cloud buildings-interiors | door-map.md generated from the game (18 outdoor doors, 23 rooms); waiting for DOORS-LBA2 |
+| P5 | 7.11 | Citadel, the fort climb's foot (CLIMB-17) | "very strange" (photo): stacked copings on a slotted pier, two parapets with a trench between, rails in mid-air, a jagged seam to the plaza, the pipeline over the landing | laptop (order 30, CLIMB-30) | queued |
 
 ## Waves (cloud)
 
