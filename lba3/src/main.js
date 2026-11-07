@@ -2654,8 +2654,8 @@ class Game {
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
-    if (input.down('wheel')) {
-      // hold Ctrl: behaviour menu, world frozen
+    if (input.down('wheel') && !h.noBehaviours) {
+      // hold Ctrl: behaviour menu, world frozen (not while the story holds the behaviour: Zoé's search, the escorts)
       const i = BEHAVIOURS.indexOf(h.behaviour);
       if (input.pressed('right') || input.pressed('next')) h.setBehaviour(BEHAVIOURS[(i + 1) % 4]);
       if (input.pressed('left') || input.pressed('prev')) h.setBehaviour(BEHAVIOURS[(i + 3) % 4]);

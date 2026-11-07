@@ -198,6 +198,9 @@ export class Hero extends Actor {
   }
 
   setBehaviour(b) {
+    // (the user, 7.11: "in Zoé's part you can switch to running now": a story-held behaviour (Zoé's discreet search, the
+    //  evacuation's run, chapter 2's escort) can't be changed from the Ctrl menu or the HUD's icons either, only by the story)
+    if (this.noBehaviours) return;
     if (b === this.behaviour) return;
     this.behaviour = b;
     this.game.audio.play('mode');
