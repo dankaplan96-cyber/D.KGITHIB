@@ -83,4 +83,4 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
   people on 51 models get their own clothes and hair; pictures looked at); CLIMB-17/21 (the climb's foot straight, no slide
   trap on the east flight); CAM-WALKSWING/RECOVER; SLIDE-RESCUE (78 steep spots: 10 respawns/lives lost → 0).
 - Known failing checks, failing the same on the base: travel.mjs "Doran goes ahead to the spaceport" (chapter 2);
-  camfollow's 4 (Modern then Up, backing up, full turn, Far); camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+  camfollow's 4 (Modern then Up, backing up, full turn, Far) + since v55/v56 a 5th, "LBA2 view (the default) unchanged: a run across the view never turns it" (turned 90°; fails on the base before CAM-KEYWALK too; came in between CAM-WALKSWING and v56: SLIDE-RESCUE or REVIEW-CITADEL's world.js — for the next camera/polish pass); camcitadel's water meter (2) and stepping-stones whole turn (1); camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
