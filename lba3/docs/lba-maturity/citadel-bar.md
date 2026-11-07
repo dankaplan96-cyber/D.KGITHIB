@@ -26,8 +26,8 @@ played; no frame-rate claims.
 
 - [ ] **Every accessible building has a real door that leads in, or is visibly closed for a stated reason.**
       Citadel has Twinsen's house, the tavern, the pharmacy, the ticket office, the neighbours', Nell's, the baggage
-      claim, the terminal, the lighthouse and the wizards' houses. Some Citadel houses still answer with the generic
-      "Locked." (`story/prologue.js` baseInteractables), and they fail this line too. Visibly closed means
+      claim, the terminal, the lighthouse and the wizards' houses. (Wave 3's probe, chapter 2: no Citadel house or
+      shut door answers the generic "Locked." any more; `citadel-structures.md` lists them with the small structures.) Visibly closed means
       story-locked, a ruin, or distant scenery. It must never be a generic "Locked." over missing work.
 - [ ] **A compact, furnished, lit interior that fits the owner.** Use the `RoomBuilder` shell (`interiors.js`), the
       dressing pieces in `props.js` and `roomdress.js`, its own lights, and music per place (`R.music`).
@@ -81,6 +81,6 @@ played; no frame-rate claims.
 |---|---|---|---|---|
 | Citadel | yes (W.occ) | done (see above) | done | the bar itself |
 | Zeelich street (terminal island: a new city, Zeelich identity) | yes (R.occ: houses, domes, minarets, mills, watch house; the other tall solids automatically) | 3 houses, the bakehouse, the workshop in every chapter from 3; the council house, the mills and the project's two huts give their own reason | + Lissa, Wenna | Automated runtime (`zeelich-doors`, the probes) |
-| Zeelich's islands | yes (automatic, from their solids) | Otringal's bar and hotel, Celebration's temple; the other houses are **Not implemented** (generic "Locked.") | the PEOPLE-1 residents | see `zeelich-inventory.md` |
-| Desert Island | yes (automatic) | Kesh's houses: generic "Locked." (**Not implemented**) | Kesh's life | probe only |
+| Zeelich's islands | yes (automatic, from their solids) | Otringal's bar and hotel, Celebration's temple; wave 3: 55 more houses lead in (`ihomes.js`), 3 stay shut with their own reason and a sign | the PEOPLE-1 residents + 6 keepers | `island-doors` (Automated runtime only) |
+| Desert Island | yes (automatic) | wave 3: Kesh's 5 houses and the post's 3 cabins lead in | Kesh's life | `island-doors` (Automated runtime only) |
 | Hamalayi | yes (automatic) | not inventoried this wave | | probe only |

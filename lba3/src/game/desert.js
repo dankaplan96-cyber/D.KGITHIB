@@ -627,12 +627,12 @@ export function* buildDesertSteps(scene, physics) {
       }
       col({ type: 'box', ...wpos(0, 0), hw: hd.w / 2 - 0.25, hd: hd.d / 2 - 0.25, rot: hd.ry, top: gy + hd.h + 0.37 });
     }
-    houseDoors.push({ ...wpos(0.6, hd.d / 2 + 0.9), house: i, tarra: !!hd.tarra });
+    houseDoors.push({ ...wpos(0.6, hd.d / 2 + 0.9), house: i, tarra: !!hd.tarra, sill: wpos(0.6, hd.d / 2), ry: hd.ry });   // (ISLE-HOMES: the door's own place and facing: its room, ihomes.js)
     // (WORLD-80: registered, so tools/worldscore.mjs can match the original's village houses to ours; the door's sill
     //  is 0.3 m under the ground, as the house stands 0.3 m into the sand)
     fitAdd({ region: 'desert', name: 'house kesh' + i, x: ox + hd.x, z: oz + hd.z, ry: hd.ry, oy: gy, w: hd.w, d: hd.d, base: 0, plinth: 0.35, floor: 0.3, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -0.15, x1: 1.35, y0: 0, y1: 2.6 }] });
   }
-  R.houseDoors = houseDoors.map((d) => ({ ...W(d.x, d.z), house: d.house, tarra: d.tarra }));
+  R.houseDoors = houseDoors.map((d) => ({ ...W(d.x, d.z), house: d.house, tarra: d.tarra, sill: W(d.sill.x, d.sill.z), ry: d.ry }));
 
   // market stall on the plaza
   {
@@ -1016,7 +1016,7 @@ export function* buildDesertSteps(scene, physics) {
       const em = new THREE.Mesh(emq(), emblemMaterial()); em.scale.setScalar(0.9);
       em.position.set(cb.x, postY + 2.1, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.06)); if (cb.ry) em.rotation.y = Math.PI; group.add(em);
       col({ type: 'box', x: cb.x, z: cb.z, hw: cb.w / 2, hd: cb.d / 2, top: postY + 3 });
-      (R.postDoors ||= []).push({ id: 'post-cabin' + ci, ...W(cb.x + cb.w / 2 - 0.9, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.8)), y: postY });
+      (R.postDoors ||= []).push({ id: 'post-cabin' + ci, ...W(cb.x + cb.w / 2 - 0.9, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.8)), y: postY, sill: W(cb.x + cb.w / 2 - 0.9, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2)), ry: cb.ry ? Math.PI : 0 });
       cover.push({ x: ox + cb.x, z: oz + cb.z, r: Math.max(cb.w, cb.d) / 2 });
     }
     R.post = {
@@ -1540,7 +1540,7 @@ export function* buildDesertSteps(scene, physics) {
   placeRocks();   // (CLOUD_ORDERS 13: the rocks and the new scree, likewise)
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
   //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
-  for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });
+  for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz), sill: d.sill, ry: d.ry });
   for (const d of R.postDoors || []) R.shutDoors.push(d);
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 

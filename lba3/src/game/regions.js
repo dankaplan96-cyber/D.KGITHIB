@@ -43,6 +43,7 @@ import { buildPharmacyRoom } from './pharmacy.js';
 import { buildNbrHouseRoom } from './nbrhouse.js';
 import { occAuto } from './roomocc.js';
 import { ZHOMES, ZHOME_AT, buildZHome } from './zhomes.js';
+import { IHOME_IDS, IHOME_AT, buildIHome } from './ihomes.js';
 import { buildZTerminalRoom } from './zterminal.js';
 import { buildTerminalRoom } from './terminal.js';
 import { buildOtrBarRoom } from './otrbar.js';
@@ -67,7 +68,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])) };
+  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])), ...Object.fromEntries(Object.entries(IHOME_AT).map(([k, v]) => [k, [v.x, v.z]])) };
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -96,7 +97,7 @@ function groupDefs() {
   const G = [];
   // (TITLE-LOAD: `steps`, a builder in steps — a generator whose return value is the rooms — that buildAsync runs a step
   //  per task with a painted frame between; `build` runs it all at once)
-  const add = (id, rooms, build, steps = null) => G.push({ id, rooms, build, steps, ref: REF[id] ?? (id.startsWith('isle_') ? REF.isle : 200) });
+  const add = (id, rooms, build, steps = null) => G.push({ id, rooms, build, steps, ref: REF[id] ?? (id.startsWith('isle_') ? REF.isle : id.startsWith('ih_') ? 70 : 200) });
   const whole = (gen) => (S, P) => { const it = gen(S, P); let r = it.next(); while (!r.done) r = it.next(); return r.value; };
   const one = (id, gen) => function* (S, P) { return { [id]: yield* gen(S, P) }; };
   for (const [id, fn] of Object.entries(INTERIOR_BUILDERS)) add(id, [id], (S, P) => ({ [id]: fn(S, P) }));
@@ -126,6 +127,7 @@ function groupDefs() {
   add('zterminal', ['zterminal'], buildZTerminalRoom);   // (SPACEPORT-1: the terminal at Zeelich Spaceport, after LBA2's departure and arrival halls (scenes 78, 82))
   add('terminal', ['terminal'], buildTerminalRoom);   // (SPACEPORT-1: the terminal at Citadel Spaceport, after LBA2's departure hall (scene 78))
   for (const id of ZHOMES) add(id, [id], buildZHome(id));   // (ZEELICH-DOORS: the street's houses inside, zhomes.js)
+  for (const id of IHOME_IDS) add(id, [id], buildIHome(id));   // (ISLE-HOMES: the islands' and Kesh's houses inside, ihomes.js: a group each)
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)

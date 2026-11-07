@@ -83,19 +83,26 @@ each, with rounds and lines. Camera: every island's tall solids are camera volum
 | The Nectar Orchard | ours (no counterpart) | 2 | 0 | 1 (the press house) | 4 | 3 |
 | The Old Watch | ours (no counterpart) | 0 | 0 | 0 | 4 | 2 |
 
-**58 island house doors answer with the generic "Locked."** (Otringal 24, Knartas 20, the Platform 7, Mosquibee 4,
-Celebration 1, Under Celebration 1, the Orchard 1). Those buildings are accessible but have no interiors: **Not
-implemented** against the contract. They need the buildings-interiors wave (wave 3), with the curator's references
-for the ones that stand for LBA2 rooms (`docs/future/ZEELICH_GAP.md` lists about 80 original interiors). This wave
-did not hide them behind new excuses. They are listed as they are.
+**Wave 3 (buildings-interiors, 7.11.2026): the 58 island house doors that answered "Locked." now lead in, except
+three that stay shut with a reason and a sign.** That is 55 compact rooms (`src/game/ihomes.js`, one lazy group each),
+each fitted to who lives or works there: Otringal 23 (homes, a school, the market, the tea room, the post office, the
+trading post, a clinic, a reading room, offices, a laundry, a meeting hall, a glazier, two stores), Knartas 20 (the
+harbourmaster's office, the diggers' canteen, a bunkhouse, the gem-sorting room, homes, stores, a smokehouse,
+workshops, the village hall), the Platform 7 (homes, the Building Company's office, the ore store, the chapel, a lamp
+mender), Mosquibee 2 (the honey room, the hive keepers' hall), Celebration (the lantern makers' store), Under
+Celebration (the gas works' gauge room) and the Orchard (the press house). Six have a keeper (Ossa, Liwa, Dobb, Brem,
+Gorrin, Clerk Tesk). The exceptions are Otringal's fountain pump house (2.5 m wide, PUMP HOUSE) and Mosquibee's two
+1.9 m curing cells (sealed, HONEY). Each has its own line, and a board and a plank across the door show it. Kesh's
+five houses and the project post's three cabins on Desert Island lead in too. The rooms are our own layouts, not LBA2's
+(none of these doors had an original interior in our reference). Their resemblance is unscored. Evidence:
+`tests/island-doors.mjs`, Automated runtime only. Per door: `BUILDING_REGISTER.csv`.
 
 ## What is still missing (and for whom)
 
-- **Island houses**: they answer with the generic "Locked." and have no interiors (**Not implemented**). Exceptions:
-  Otringal's harbour bar and Imperial Hotel lobby, and Celebration's temple. Next for the buildings-interiors wave;
-  the curator's references are needed for the ones that stand for LBA2 rooms.
+- **Island houses**: done in wave 3 (above). Left: the rooms follow no LBA2 interior (the curator may send references
+  for the ones that stand for original rooms); nobody has played them on a GPU.
 - **Resemblance scores**: Unverified everywhere (the laptop's curator).
 - **The lower world under the gas, the cab drivers, Zlitos, the casino**: see `docs/future/ZEELICH_GAP.md`. Not this
   wave's scope (no new layers or lore).
-- **Kesh's houses on Desert Island** answer with the generic "Locked." too (`desert.js`): the same treatment is
-  needed there next.
+- **Kesh's houses on Desert Island**: done in wave 3 (Brosk's, Lumi's, Mother Tarra's, Safi's, Hesk's lodging, and the
+  post's office, bunks and stores).
