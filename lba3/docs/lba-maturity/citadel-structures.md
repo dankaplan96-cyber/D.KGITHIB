@@ -29,8 +29,8 @@ person.
 | lane drinking fountain | (−43.4, 37.4) | no prompt | Drink, as the deck's | Automated runtime only |
 | lane handcart (flour sacks) | (−58.4, 30.2) | no prompt | Look: Chez Luc's flour (DO NOT SIT ON) | Automated runtime only |
 | quay handcart | (−113.4, 46.0) | not placed in this build (citydress.js skipped it: no room) | its line is ready if it is placed again | Source-reviewed only |
-| Doran's shed | door (−113.8, 49.6) region | a drawn door, no prompt | Shut, its own line: nets, oars and a padlock; Doran keeps the key round his neck (a private store, the reason shown) | Automated runtime only |
-| harbour master's shed (pier's foot) | door, east face | a drawn door, no prompt | Shut, its own line: ropes, buoys, tide tables; its key hangs in Odile's customs booth | Automated runtime only |
+| Doran's shed | its door (`W.harbourShed.door`), on the quay | a drawn door, no prompt | Shut, its own line: nets, oars and a padlock; Doran keeps the key round his neck (a private store, the reason shown) | Automated runtime only |
+| harbour master's shed (pier's foot) | its door, east face (`W.pierStart` + (1.9, 4.4) m) | a drawn door, no prompt | Shut, its own line: ropes, buoys, tide tables; its key hangs in Odile's customs booth | Automated runtime only |
 | customs booth (Officer Odile) | (−110.7, 36.3) | Odile, the held crate | unchanged (townlife.js) | `townlife` |
 | Nell's stall | (−103.8, 34.4) | Nell | unchanged | `townlife` |
 | Pippa's stall, Tibbo's counter | the square | the keepers, shops | unchanged (story/shops.js) | `shops` |
