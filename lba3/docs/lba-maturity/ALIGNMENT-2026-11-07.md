@@ -64,7 +64,7 @@ the expansion branch's merge since 6.11.
 5. **28 cast polish** (with 23a, 24): the Zeelich batch first, then each region as the cloud brings it to Citadel's level.
 6. **26, 22, 25**: Citadel's, Desert Island's, the Hamalayi's art follow-ups, in that order, as each region's turn comes.
 7. **27c performance lab** on the Vega 8 after each published version (a short pass; no claims for other machines).
-8. **4, 12 expansion**: paused until the user looks at W-1/W-2 again.
+8. **4, 12 expansion**: the user approved it (7.11, order 33): W-2 accepted, **W-3 the Water Gardens ordered** on `expansion/ballastra`; build it after 30/31, in turns with 29.
 
 **Cloud (two workers + an urgent third while the user is playing):**
 1. Now: Zeelich finisher (P1), camera pass 3 (P8), animation (P2). Publish as each lands with tests.
