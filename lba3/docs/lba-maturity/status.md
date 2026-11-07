@@ -66,7 +66,22 @@ world-polish pass after it:
 |---|---|---|
 | 0 | in-flight work before the pack: camera pass 3 (Citadel spots by keyboard), Citadel chapters 3–9 + real saves, SLIDE-RESCUE review | paused by the usage limit; camera pass 3 resumes as part of wave 1 (world-polish), the other two fold into waves 2 and 7 |
 | 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | starting |
-| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | pending |
+| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | campaign-director done (below) |
+
+### Wave 2, campaign-director: Citadel in chapters 3–10 after a real save (Automated runtime only)
+Each chapter set by its key (ISO; once with only the key, as an old save; once with chapter 2's flags and the chapter's
+`_started`), the game's own save written at Citadel's quay, the page reloaded, Continue. Probe:
+scratchpad `probes/survey.mjs` (not in the repo). Found and fixed:
+- the depot's watch stood at the depot in every chapter of a save without `c1_valve_depot` (chapters 3–10 with the
+  key only): now never after chapter 2 (P9's `on`).
+- chapter 9: played on from chapter 8, the fences, the dark heat posts and the open shelters were there; a load in
+  chapter 9 removed them (and lit the heat posts), chapter 10 put them back. Now a load keeps them (evacuation.js).
+- no map star on Citadel while the objective was in another region (chapters 4, 6, 7, 9): a star now stands on the stop
+  that leads there ("To Desert Island", "To The Hamalayi", "To Zeelich Spaceport"); none in chapter 3 (no route open).
+Seen and left: Citadel's ferry shows at the quay after a load in chapters 3 and 5 (hidden in play), but neither chapter
+can reach Citadel (no route), so no player sees it. Doran is nowhere in chapters 8–10 (absent, not misplaced). Zoé and
+Arthur are at home in 3–9 and in the lamp room in 10; Gilbert, Tim, Lulu and Xil keep their chapter-8 places in 9–10.
+Not covered: the chapters' own saves made by playing (the playthrough chain was not run in this wave).
 | 3 | buildings-interiors + original-mechanics (serialize shared transition code) | pending; needs the curator's building references |
 | 4 | animation-combat (+ laptop world-art in parallel) | pending |
 | 5 | dialogue-editor + character-voices | pending |
@@ -82,5 +97,7 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
 - v53–v55: music by place and the asylum's own piece; REVIEW-DESERT/ZEELICH/HAMALAYI/UNDER/CITADEL fixes; DRESS-1 (147
   people on 51 models get their own clothes and hair; pictures looked at); CLIMB-17/21 (the climb's foot straight, no slide
   trap on the east flight); CAM-WALKSWING/RECOVER; SLIDE-RESCUE (78 steep spots: 10 respawns/lives lost → 0).
-- Known failing checks, failing the same on the base: travel.mjs "Doran goes ahead to the spaceport" (chapter 2);
-  camfollow's 4 (Modern then Up, backing up, full turn, Far); camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+- Known failing checks, failing the same on the base: (travel.mjs "Doran goes ahead to the spaceport" fixed in wave 2:
+  the check ran while Doran was still walking up the quay, STAGING-1; a hero who ran ahead now finds him by the ship);
+  combat.mjs "dodge distance consistent at 30 and 60 fps"; prologue.mjs "the well's mites beaten" (3 of 4, random,
+  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); camfollow's 4 (Modern then Up, backing up, full turn, Far); camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
