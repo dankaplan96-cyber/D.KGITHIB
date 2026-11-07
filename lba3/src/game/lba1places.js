@@ -687,9 +687,14 @@ export function buildLba1Asylum(scene, physics) {
     //  squares; the door of Twinsen's cell, which LBA1 kept as a moving actor, broken out of its wall: x 56–57 of
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
-      stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, sideGain: 2.8, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
+      stone: 'cell', lamp: '#ffd9a8', lampI: 15, view: 24, sideGain: 3.6, topCol: '#f2e0c6', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps; order 20: LBA1's teal-grey brick, lighter)
       gridZones: true, overhead: true, footing: { depth: 9, below: 1, rows: [[0, 0.85], [2.2, 0.32], [9, 0]] },   // (order 8: the store's edge, its walls carried down into the dark; ASYLUM-4: lit now, so faded sooner)
       fittings: true, capStone: true,   // (ASYLUM-4: LBA1's pipes, hanging lamps and round tables drawn as such, not as cells; posts capped in their stone)
+      // (order 20, against LBA1's own bricks: its walls teal-grey brick with brick caps, lighter than its dark
+      //  flagstones; its walks and stairs teal grates; its maroon posts open lattice girders; its lattice windows; its
+      //  boiler a boiler, not a brick tower (BOILER: cells without a brick of their own, drawn by asylumNow))
+      grate: true, grateGain: 1.35, capWalls: true, girders: true, lowLamps: true, pipeCol: '#a4c6c9', hidden: [BOILER, ...DRUMS.map(([x, z]) => [x, 5, z, x, 7, z])],
+      grilles: [[13, 16, 5, 21, 6], [13, 16, 15, 21, 16]],
       clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
@@ -703,7 +708,10 @@ export function buildLba1Asylum(scene, physics) {
     //  the posts black under pink tops. Now the room's sun comes over the camera's shoulder, a little from its left (as
     //  LBA1's bricks and our people's ramp light), and the walls' stone (sideGain) is as light as the floors; shadows
     //  fall away from the camera, behind the walls that cast them)
-    R.indoor = { sunDir: [0.3, 0.8, 0.5] };
+    // (order 20: LBA1's bricks are lit about as bright on the camera's left faces as on their tops, the right faces half
+    //  that (measured on its pre-lit bricks: +z faces #716e6d, tops #6a6363, +x faces #424b4b); from 0.8 up the walls
+    //  stood at half the floors. The sun lower over the camera's left shoulder)
+    R.indoor = { sunDir: [0.34, 0.6, 0.72] };
     // the two exits, as LBA1's: the low stair-well (the side door: you come in at its top) and the main entrance on
     // the upper level (the front door: its doors stand in the tall portal between the two posts, you come in before them)
     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
@@ -728,6 +736,11 @@ export function buildLba1Asylum(scene, physics) {
 export const ASYLUM_CELLS = [[51.5, 3, 37.5, 58.5, 10, 44.5], [51.5, 3, 50.5, 58.5, 9, 57.5]];
 // (ASYLUM-2) Vesk's office: LBA1's sealed room behind the corridor (its walls on the camera's side cut while he is in it)
 export const VESK_ROOM = [36.5, 5, 19.5, 44.5, 16, 30.5];
+// (order 20) the store's boiler: LBA1's cells x 9–11, z 51–53, y 1–10 (its body has no bricks of its own; LBA1 draws a
+// dark green boiler on a dark round foot, copper bands, a domed top with a copper finial, a gauge on its front)
+const BOILER = [9, 1, 51, 11, 10, 53];
+// (order 20) LBA1's drums under the west stair (the larder now): one block of three cells a drum, pale enamel, a red cap
+const DRUMS = [[1, 21], [1, 22], [1, 23], [1, 24], [1, 25], [2, 24], [3, 24], [3, 25], [3, 26], [4, 25], [4, 27]];
 function asylumNow(R, physics) {
   const g = R.group, o = g.position;
   const at = (x, y, z) => { const w = R.cell(x, y, z); return [w.x - o.x, w.y, w.z - o.z]; };
@@ -779,6 +792,35 @@ function asylumNow(R, physics) {
   R.searches.push({ id: 'as_cell', x: lk.x, z: lk.z, r: 1.5, label: 'p_look' });
   R.asylumCell = { marks: R.cell(52.0, 5.6, 52.05), look: lk, door: R.cell(56.9, 4, 50.5), pipe: P2.map((p) => ({ x: p[0] + o.x, y: p[1], z: p[2] + o.z })) };
   R.wayIn = { breach: R.cell(1.0, 6.8, 40.4), stair: R.cell(10.5, 5, 41.85) };
+  // the store's boiler (order 20), in the cells LBA1 gave it (their colliders kept): cold for twelve years, Vesk's
+  // crates stacked round it
+  {
+    const b = at(10.5, 1, 52.5), body = MAT.paint('#2f5552', 0.55), dark = MAT.paint('#2a2326', 0.7), cu = MAT.copper();
+    const k = new Kit(g);
+    k.at(b[0], b[1], b[2], 0, () => {
+      k.add(cyl(1.14, 1.2, 0.26, 24), dark, 0, 0.13, 0);
+      k.add(cyl(0.97, 0.97, 3.0, 24), body, 0, 1.76, 0);
+      for (const y of [0.34, 3.18]) k.add(cyl(1.01, 1.01, 0.12, 24), cu, 0, y, 0);
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; k.add(rbox(0.035, 2.7, 0.03, 0.01), dark, Math.sin(a) * 0.975, 1.76, Math.cos(a) * 0.975, a); }
+      const dome = new THREE.SphereGeometry(0.97, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2); dome.scale(1, 0.5, 1);
+      k.add(dome, body, 0, 3.26, 0);
+      k.add(cyl(0.1, 0.3, 0.5, 14), cu, 0, 3.92, 0);
+      k.add(new THREE.SphereGeometry(0.11, 10, 6), cu, 0, 4.2, 0);
+      // the gauge, on the front the camera sees (+z, a little to +x)
+      k.at(0.34, 1.5, 0.93, 0.35, () => { k.add(cyl(0.24, 0.24, 0.1, 18).clone().rotateX(Math.PI / 2), cu, 0, 0, 0.02); k.add(cyl(0.19, 0.19, 0.02, 18).clone().rotateX(Math.PI / 2), MAT.flat('#ece6d6', 0.5), 0, 0, 0.075); k.add(rbox(0.02, 0.15, 0.01, 0.004), MAT.flat('#7a1a12', 0.5), 0.03, 0.03, 0.09, 0); });
+    });
+    // the larder's drums (order 20), each in its cells (their colliders kept): pale enamel, two dark hoops, a red cap
+    const en = MAT.paint('#c4d6d4', 0.45), hoop = MAT.paint('#5d7473', 0.5), cap = MAT.paint('#b8322a', 0.5);
+    DRUMS.forEach(([x, z], i) => {
+      const d = at(x + 0.5, 5, z + 0.5), h = 1.26;
+      k.at(d[0], d[1], d[2], i * 0.7, () => {
+        k.add(cyl(0.33, 0.33, h, 16), en, 0, h / 2, 0);
+        for (const y of [0.3, h - 0.3]) k.add(cyl(0.345, 0.345, 0.05, 16), hoop, 0, y, 0);
+        k.add(cyl(0.07, 0.07, 0.05, 8), cap, 0.14, h + 0.02, 0.05);
+      });
+    });
+    k.flush();
+  }
 }
 export function buildLba1Temple(scene, physics) {
   const A = LBA1_AT, out = {};

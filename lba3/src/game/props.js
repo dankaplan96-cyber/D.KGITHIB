@@ -376,7 +376,7 @@ export const TEX = {
   }),
   // dressed stone blocks, 1 tile = 2 m
   stone: (pal = 'grey') => tex('stone' + pal, () => {
-    const P = { grey: ['#8f8a80', '#6d685f', '#4a4640'], blue: ['#7d8a96', '#5f6b78', '#3a4450'], lav: ['#a49cb8', '#857c9c', '#575070'], sand: ['#c2ad8a', '#a08c6c', '#6e5e46'], slate: ['#6c6f74', '#55575d', '#34363a'] }[pal];
+    const P = { grey: ['#8f8a80', '#6d685f', '#4a4640'], blue: ['#7d8a96', '#5f6b78', '#3a4450'], lav: ['#a49cb8', '#857c9c', '#575070'], sand: ['#c2ad8a', '#a08c6c', '#6e5e46'], slate: ['#6c6f74', '#55575d', '#34363a'], cell: ['#94a09e', '#828e8d', '#4a5352'] }[pal];   // (cell: LBA1's asylum brick, teal-grey, order 20)
     const S = 512, [c, x] = cnv(S); const r = rng(pal.length * 17);
     x.fillStyle = P[2]; x.fillRect(0, 0, S, S);
     let y = 0;
