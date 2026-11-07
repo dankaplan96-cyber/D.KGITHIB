@@ -9,9 +9,9 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
+import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
+import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
 import { buildStatue } from './statue.js';
@@ -360,7 +360,19 @@ function houseFlats(x, z, h) {
 }
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
-  return climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight));
+  return waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)));
+}
+
+// REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
+// ran 2 m past the office's front, so its rock face stood as a heap of blocks in the front yard, left of the door. Its
+// east face is cut back to the office's front line (the face's foot on it, KNOLL_FOOT, 2.2 m up per metre back); the
+// shelf itself, its south face and its top stay. The scatter and the cliff rocks decide on the ground as it stood
+// (scatterGround, KNOLL_OFF: no random draw moves); the rocks of the old face are shaped on the new one.
+const KNOLL_BOX = [-68.6, 15.2, -62.5, 21.4], KNOLL_FOOT = -66.2, KNOLL_Y = 2.45;
+let KNOLL_OFF = false;
+function waterKnoll(x, z, h) {
+  if (KNOLL_OFF || x < KNOLL_BOX[0] || x > KNOLL_BOX[2] || z < KNOLL_BOX[1] || z > KNOLL_BOX[3]) return h;
+  return Math.min(h, KNOLL_Y + Math.max(0, KNOLL_FOOT - x) * 2.2);
 }
 
 // CLIMB-2 (the user's photo, 5.11: the cobbles folded into a pit beside the retaining wall): the paved ramp up to the
@@ -518,7 +530,7 @@ function islandSplat(x, z, h, slope, w) {
   }
   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
   w[4] = smoothstep(9.9, 9.0, vd) * 3; // the square, edged by a curb ring (town.js)
-  if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, streetDist(x, z) + n * 0.25) * 3);
+  if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, Math.min(streetDist(x, z), bugFootDist(x, z)) + n * 0.25) * 3);   // (REVIEW-CITADEL-ART b: and Bug Street's foot)
   // CLIMB-1: the way up to the fort's terrace, paved as the streets (lba1places.js climbPaveDist)
   w[4] = Math.max(w[4], smoothstep(0.3, -0.25, climbPaveDist(x, z) + n * 0.2) * 3);
   // in town the ground between the streets is brown soil with lawns (Citadel Island)
@@ -594,8 +606,19 @@ function scatterGround(T) {
       if (d !== 0) pre.set(k, T.heights[k] + d);
     }
   }
+  // (REVIEW-CITADEL-ART c: and the water office's knoll as it stood before its east face was cut back)
+  {
+    const [x0, z0, x1, z1] = KNOLL_BOX;
+    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      if (pre.has(k)) continue;
+      KNOLL_OFF = true; const before = islandHeight(x, z); KNOLL_OFF = false;
+      const d = before - islandHeight(x, z);
+      if (d !== 0) pre.set(k, T.heights[k] + d);
+    }
+  }
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -723,6 +746,7 @@ export function* buildWorldSteps(parentScene) {
   });
   climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
   dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
+  dropRocks(W_cliffs.mesh, (x, z) => plateauStairAt(x, z), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,

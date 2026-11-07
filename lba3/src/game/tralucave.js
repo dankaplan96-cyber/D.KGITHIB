@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, table, bench, barrel, plate, jar, candle } from './props.js';
-import { OLD_DOORS } from './island.js';
+import { OLD_DOORS, PLATEAU_STAIR } from './island.js';
 
 export const TRALUCAVE_AT = { x: 8400, z: 0 };
 
@@ -171,12 +171,15 @@ export function buildTraluCaveRoom(scene, physics) {
   return { tralucave: B.finish() };
 }
 
-// the plateau's door leads in; coming out, Twinsen stands 1.2 m before it, facing away
+// the plateau's door leads in; coming out, Twinsen stands on the landing before it, 1 m from the door's spot, facing
+// along the steps up to the plateau (REVIEW-CITADEL-ART d, island.js PLATEAU_STAIR: he faced the sea from the ledge's
+// edge). The door's frame: lx along the face (toward the steps), lz out of it
 const PD = OLD_DOORS.plateau;
 export function traluCaveDoors() {
   return [{ house: 'plateau', x: PD.x + Math.sin(PD.ry) * 0.35, z: PD.z + Math.cos(PD.ry) * 0.35, r: 0.9, room: 'tralucave' }];
 }
 export function traluCaveExit(to) {
   if (to !== 'tralucave-out') return null;
-  return { x: PD.x + Math.sin(PD.ry) * 1.6, z: PD.z + Math.cos(PD.ry) * 1.6, a: PD.ry };
+  const c = Math.cos(PD.ry), s = Math.sin(PD.ry), lx = 0.95, lz = PLATEAU_STAIR.lz;   // (on the steps' axis)
+  return { x: PD.x + c * lx + s * lz, z: PD.z - s * lx + c * lz, a: Math.atan2(c, -s) };
 }

@@ -35,6 +35,24 @@ export function streetDist(x, z) {
   return best; // < 0 inside a street
 }
 
+// REVIEW-CITADEL-ART (b): Bug Street's foot paved to its pair's doors (the pharmacy, 'bug2', and the baggage claim,
+// 'bug'): the wedge between Bug Street, the street down to the harbour and the two house fronts was a dirt pocket,
+// and the two streets' kerbs and the square's ring met in a stepped, overlapping knot by the bench. One paved forecourt
+// (x, z; under the house fronts on the west), its one open edge a kerb from Bug Street's north kerb to the north house's
+// front, north of its door (BUG_FOOT_KERB); no kerb inside it
+const BUG_FOOT = [[-57.7, -15.02], [-52.3, -13.93], [-46.81, -10.1], [-46.5, -6.0], [-50, -5.2], [-57, -4.4], [-59.7, -4.3], [-59.7, -11.0], [-57.7, -11.0]];
+const BUG_FOOT_KERB = [[-52.28, -14.05], [-57.25, -15.05]];
+// signed distance to the forecourt (< 0 inside)
+export function bugFootDist(x, z) {
+  let d = 1e9, inside = false;
+  for (let i = 0, j = BUG_FOOT.length - 1; i < BUG_FOOT.length; j = i++) {
+    const [xa, za] = BUG_FOOT[i], [xb, zb] = BUG_FOOT[j];
+    if ((za > z) !== (zb > z) && x < ((xb - xa) * (z - za)) / (zb - za) + xa) inside = !inside;
+    d = Math.min(d, distToSegment(x, z, xa, za, xb, zb));
+  }
+  return inside ? -d : d;
+}
+
 // Twinsen's corner sits on a small rise above the square
 const RISE = { x: -51, z: -14.5, r: 10, h: 0.75 };
 export function townHeight(x, z, h) {
@@ -401,6 +419,7 @@ function curbs(parent, H) {
         const x = a[0] + (b[0] - a[0]) * t + nx * w * side, z = a[1] + (b[1] - a[1]) * t + nz * w * side;
         if (Math.hypot(x - V.x, z - V.z) < 9.9) continue; // inside the square
         if (streetDist(x, z) < -0.05) continue;          // inside another street
+        if (bugFootDist(x, z) < 0) continue;             // inside Bug Street's foot (REVIEW-CITADEL-ART b)
         pos.push([x, H(x, z), z, ang]);
       }
     }
@@ -408,9 +427,12 @@ function curbs(parent, H) {
   // a ring of curb stones around the square, open where the streets leave it
   for (let a = 0; a < Math.PI * 2; a += 0.55 / 9.4) {
     const x = V.x + Math.sin(a) * 9.4, z = V.z + Math.cos(a) * 9.4;
-    if (streetDist(x, z) < 0.15) continue;
+    if (streetDist(x, z) < 0.15 || bugFootDist(x, z) < 0) continue;
     pos.push([x, H(x, z), z, a + Math.PI / 2]);
   }
+  // Bug Street's foot: its north kerb on to the north house's front
+  { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
+    for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; pos.push([x, H(x, z), z, ang]); } }
   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
   const o = new THREE.Object3D(), c = new THREE.Color();

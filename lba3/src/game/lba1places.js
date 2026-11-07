@@ -471,7 +471,27 @@ function climbTerraceFill(k, M, physics, T, yt) {
   //  terrace he dropped into it, slid, could not climb out and was taken back by the fall's respawn, a life lost. Closed
   //  at the height of the terrace's edge above it)
   { const sN = S1 + ASYLUM_STEPS.w, [cx, cz] = F.at(sN + 0.9, 0), yn = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
-    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn }); }
+    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn });
+    // (REVIEW-CITADEL-ART a: and drawn, so it no longer reads as a dark crevice under the edge: a block of the walls'
+    //  masonry at that height, as the collider, from the landing's north wall (its coping 6 cm under it) across the
+    //  wall's width, the west face in line with the landing's west wall; then one step up, 0.32 m, out north to where
+    //  the terrace's bank reaches it: from the block the bank rose 1.27 in 1 (steeper than he walks: he slid back down
+    //  it), so the step takes him up onto the terrace and on to the north fill beside it)
+    const cw = ASYLUM_STEPS.cheek, o0 = -HW - cw, o1 = HW, s0 = sN + cw - 0.03, s1 = sN + 1.4;   // (3 cm into the wall: no face shared with it)
+    const y2 = Math.min(yt, yn + 0.32), across = (s) => { let lo = Infinity; for (let o = o0; o <= o1 + 1e-6; o += 0.25) lo = Math.min(lo, T(...F.at(s, o))); return lo; };
+    let s2 = s1 + 0.3; while (s2 < s1 + 2.0 && across(s2) < y2 - 0.03) s2 += 0.05;
+    let gl = Infinity; for (let s = s0; s <= s2 + 1e-6; s += 0.25) gl = Math.min(gl, across(s));
+    const bot = gl - 0.4;
+    // (extruded as the fills beside it are, so its top's stone runs on from theirs)
+    const slab = (sa, sb, top) => {
+      const pts = [F.at(sa, o0), F.at(sa, o1), F.at(sb, o1), F.at(sb, o0)];
+      const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z))), { depth: top - bot, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2); geo.translate(0, bot, 0);
+      k.add(geo, M.wall, 0, 0, 0);
+    };
+    slab(s0, s1 + 0.03, yn); slab(s1, s2, y2);   // (the lower one 3 cm on under the step: no face shared)
+    // (its collider from 7 cm back over the block's: physics.js reads a brick 5 cm in from its edges, so no seam between)
+    { const sa = s1 - 0.07, sb = s2 + 0.02, [qx, qz] = F.at((sa + sb) / 2, (o0 + o1) / 2); physics.add({ type: 'box', x: qx, z: qz, hw: (o1 - o0) / 2, hd: (sb - sa) / 2, rot: F.a, top: y2 }); } }
 }
 // CLOUD_ORDERS 21 (the cloud's camera agent, 6.11: past the east flight's top step, x −28.99, the forecourt's ground lay
 // 0.5–0.9 m lower and steep for ~1 m: Twinsen slid against the step and stuck, and actors.js respawnFromFall took him

@@ -2768,9 +2768,69 @@ function cellarHatch(W, root, id, o) {
   shutDoor(W, id, o.x, g, o.z, o.ry, 1.0);
 }
 
+// REVIEW-CITADEL-ART (d): the way between the plateau's door (Tralu's cave) and the plateau. Its landing stands on the
+// north face over the sea, 0.9–1.7 m over the slope on the west and the north, and the one way back up was a gap on
+// the west no one read as a way. A flight of steps west from the landing's west edge up the slope to where it meets
+// the ground below the plateau's rim; dressed cheeks each side, their copings straight along the flight: on the north (the slope falls
+// to the sea cliff) a parapet 0.45 m over them, on the south (the bank stands at or over them) a retaining kerb. In the
+// door's frame (frame(): lx along the face, + to the west here; lz out of the face): from lx0 to lx1, centred on lz, w wide.
+export const PLATEAU_STAIR = { lx0: 1.3, lx1: 5.5, lz: 0.85, w: 1.8, n: 12 };   // (1.8 m between the cheeks: his body is 0.9 m across)
+// the stair's corridor in world coordinates (the cliff rocks there go: world.js dropRocks)
+export function plateauStairAt(x, z, m = 0) {
+  const o = OLD_DOORS.plateau, S = PLATEAU_STAIR, c = Math.cos(o.ry), s = Math.sin(o.ry), dx = x - o.x, dz = z - o.z;
+  const lx = c * dx - s * dz, lz = s * dx + c * dz;
+  return lx > S.lx0 - 0.2 - m && lx < S.lx1 + 0.3 + m && Math.abs(lz - S.lz) < S.w / 2 + 0.35 + m;
+}
+function plateauStair(W, root, o) {
+  const P = W.physics, T = W.H, S = PLATEAU_STAIR, grp = new THREE.Group(); grp.name = 'old-door-plateau-stair'; root.add(grp);
+  const B = new Batch(grp);
+  const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
+  const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
+  const yl = T(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1 - 0.02;   // (the landing's top: tunnelMouth's sill − 2 cm)
+  const run = (S.lx1 - S.lx0) / S.n, hw = S.w / 2, oN = S.lz + hw + 0.15, oS = S.lz - hw - 0.15;
+  const gAt = (lx, lz) => T(...f(lx, lz));
+  const yEnd = gAt(S.lx1, S.lz), rise = (yEnd - yl) / S.n;
+  let prev = yl;
+  const steps = [];
+  for (let i = 0; i < S.n; i++) {
+    const a = S.lx0 + i * run, b = a + run, m = (a + b) / 2;
+    let lo = Infinity, gc = -Infinity, gb = -Infinity;
+    for (let t = a; t <= b + 1e-6; t += run / 2) {
+      for (const lz of [oS - 0.15, S.lz - hw, S.lz, S.lz + hw, oN + 0.15]) lo = Math.min(lo, gAt(t, lz));
+      gc = Math.max(gc, gAt(t, S.lz)); gb = Math.max(gb, gAt(t, oS - 0.15));
+    }
+    const top = Math.min(prev + 0.3, Math.max(yl + (i + 1) * rise, gc + 0.03)), bot = Math.min(lo, prev) - 0.4;
+    prev = top;
+    steps.push({ m, top, bot, gb });
+    // the step (one stone from below the ground, 2 cm into each cheek: no face shared with it); its collider runs on
+    // under the steps above it to the top (no seam between two: physics.js reads a brick 5 cm in from its edges), the
+    // first one's from 15 cm back over the landing
+    const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), trimM, px, (top + bot) / 2, pz, 0, o.ry, 0);
+    { const c0 = i ? a : a - 0.15, [cx, cz] = f((c0 + S.lx1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (S.lx1 - c0) / 2, hd: hw, rot: o.ry, top }); }
+  }
+  // the cheeks: each one dressed wall the stair's length, its coping a straight line along the flight (the wall sheared
+  // to it, its ends plumb), down below the slope; the north one 0.45 m over the nosings at least, the south one 12 cm
+  // over them or 8 cm over the bank behind it; their colliders step with the treads
+  const L = S.lx1 - S.lx0, lm = (S.lx0 + S.lx1) / 2, s0 = steps[0], sN = steps[S.n - 1], k = (sN.top - s0.top) / (sN.m - s0.m);
+  const line = (lx) => s0.top + (lx - s0.m) * k;
+  const cheek = (lz, need) => {
+    let up = -Infinity, D = 0;
+    for (const st of steps) up = Math.max(up, need(st) - line(st.m));
+    for (const st of steps) D = Math.max(D, line(st.m) + up - st.bot);
+    const ym = line(lm) + up, [px, pz] = f(lm, lz), sh = (g) => g.clone().applyMatrix4(new THREE.Matrix4().makeShear(k, 0, 0, 0, 0, 0));
+    B.add(sh(bbox(L + 0.02, D + 0.3, 0.3, 0.03, 1)), stoneM, px, ym - (D + 0.3) / 2, pz, 0, o.ry, 0);
+    B.add(sh(bbox(L + 0.06, 0.08, 0.38, 0.02, 1)), trimM, px, ym + 0.04, pz, 0, o.ry, 0);
+    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, seeThrough: true }); }
+  };
+  cheek(oN, (st) => st.top + 0.45);
+  cheek(oS, (st) => Math.max(st.top + 0.12, st.gb + 0.08));
+  B.build();
+}
+
 function buildOldPlaces(W, root) {
   buildWestIslet(W, root);
   tunnelMouth(W, root, 'plateau', OLD_DOORS.plateau);
+  plateauStair(W, root, OLD_DOORS.plateau);
   tunnelMouth(W, root, 'passageN', OLD_DOORS.passageN);
   cellarHatch(W, root, 'passageS', OLD_DOORS.passageS);
 }
