@@ -110,13 +110,10 @@ for (const reg of regions) {
     for (const e of sh.ex) { await ev((id) => { const G = game, d = G.room.shutDoors.find((q) => q.id === id), a = (d.ry ?? 0); G.hero.pos.set(d.sill.x + Math.sin(a) * 3, G.physics.groundAt(d.sill.x + Math.sin(a) * 3, d.sill.z + Math.cos(a) * 3, d.y + 2), d.sill.z + Math.cos(a) * 3); G.hero.angle = a + Math.PI; P.settle(); for (let i = 0; i < 20; i++) G.frame(1 / 30, false); }, e.id); await shot('shut-' + e.id); }
   }
 }
-// KNOWN (reported, not this worker's geometry): Quill's office's door on Knartas stands on a ledge 1.5 m deep; the ground
-// before it falls away 1.2 m over the next metre (zislands.js DOORS-1 looks only 0.5–1 m out), so out of the door he
-// steps off the ledge and cannot walk back up: the second entry is not asked of it
-const LEDGE = new Set(['ih_knartas_m30_m18']);
-for (const r of all) if (LEDGE.has(r.room) && !r.again) console.log('KNOWN ' + r.room + ': out of the door he steps off its ledge (the island\'s ground; reported)');
+// (KNARTAS-LEDGE: Quill's office's door on Knartas, on its ledge over the quay's arm, has its steps down now (zislands.js
+// doorStair): asked in again like every other door)
 for (const r of all) check(`${r.room}: leads in (on its floor, furnished, lit), its own look reads, back out by its door facing away, and in again`,
-  r.inRoom && r.floor && r.meshes >= 14 && r.lights >= 1 && r.look === 'read' && r.line && !/^Locked/.test(r.line) && r.out !== r.room && r.near < 2.8 && r.away > 0.3 && r.ground && (r.again || LEDGE.has(r.room)), r);
+  r.inRoom && r.floor && r.meshes >= 14 && r.lights >= 1 && r.look === 'read' && r.line && !/^Locked/.test(r.line) && r.out !== r.room && r.near < 2.8 && r.away > 0.3 && r.ground && r.again, r);
 if (!ONLY) check('every room of ISLE-HOMES was entered (63: 55 on the islands, 5 Kesh houses, 3 post cabins)', all.length === 63 && all.every((r) => r.inRoom), all.length);
 
 // the keepers behind their counters, talking

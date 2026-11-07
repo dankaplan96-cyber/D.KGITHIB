@@ -573,8 +573,13 @@ const STYLE = {
     // the jars at a potter's size; the basin between the quay's arms a harbour: a calm cloud-water surface (open to
     // the west), quay walls with a kerb along its three land sides, skiffs moored in it (below: dress)
     // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
-    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : null),
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
+    // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
+    // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
+    // stood on the slope in their way stands beside their foot, on the arm)
+    doorStairs: { 'knartas--30--18': { lo: -0.25, hi: 1.2, loTop: -0.8, topTo: 2.9 } },
+    layout: (L) => ({ ...L, decor: L.decor.map((o) => (o[8] === 27 && o[7] === 'tall' && Math.hypot(o[0] + 23.85, o[1] + 17.55) < 0.05 ? [o[0], -15.75, 2.59, ...o.slice(3)] : o)) }),
     crates: 'wood', lines: ['#f4eee0', '#3a7ac8', '#e8608a', '#f0c040'],
     landmark(api) {
       const pois = [{ ...api.S.target }];
@@ -1530,6 +1535,36 @@ function buildIsland0(scene, physics, name, L, at) {
   const jy = (o) => (((o.body * 7 + Math.round(o.x * 13 + o.z * 17 + o.y * 29)) % 8 + 8) % 8) * 0.003;
   const landFrac = (o) => { let n = 0, t = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) { t++; if (raw(o.x + a * o.sx, o.z + b * o.sz) != null) n++; } return n / t; };
   // (OTR-VARIETY: the ends of Otringal's yard-wall lengths; where one ends with no other meeting it, a gate pier)
+  // KNARTAS-LEDGE (island-doors: Quill's office on Knartas stands on a ledge 2.5 m over the quay's middle arm; the ground
+  // before its door ran level 1.5 m, then fell 1.48 in 1 to the arm, steeper than he walks: out of the door he slid down
+  // it and could not walk back up). A flight of dressed steps from the ledge's brink down to where the lane levels out:
+  // a landing from the sill to the brink, risers of at most 0.24 m on 0.26 m treads. Across the door's line (u, + to its
+  // right as he comes out) from `lo` to `hi`, from `loTop` down to `topTo` m out (wider at the top, narrower where
+  // something stands beside the lower steps). Each step's collider runs back under the higher ones to the brink (no seam
+  // between them; the height under his feet decides, as on the decks' stairs)
+  const doorStair = (P, door, y0, [tx, tz], { lo: u0 = -0.8, hi: u1 = 0.8, loTop = u0, topTo = 0 } = {}) => {
+    const [sx, sz] = P.pt(door.x, door.z), lx = -tz, lz = tx, at = (v, u) => [sx + tx * v + lx * u, sz + tz * v + lz * u];
+    const g0 = (v) => gy(...at(v, 0)), low = (v, ua, ub) => Math.min(gy(...at(v, ua)), gy(...at(v, (ua + ub) / 2)), gy(...at(v, ub)));
+    let v0 = 0.3; while (v0 < 4 && g0(v0 + 0.1) > y0 - 0.06) v0 += 0.1;
+    let v1 = v0; while (v1 < v0 + 6 && !(g0(v1) < y0 - 0.4 && Math.abs(g0(v1 + 0.4) - g0(v1)) < 0.06)) v1 += 0.1;
+    const yt = y0 + 0.06, yf = g0(v1), n = Math.ceil((yt - yf) / 0.24), rise = (yt - yf) / n, run = 0.26;
+    if (yt - yf < 0.5) return;
+    // (the steps begin where the ground across their width has fallen under the first one's tread: the terrain at the brink
+    // stood over it, a slope he could not walk up onto the landing)
+    { const hiG = (v) => { let m = -Infinity; for (let u = Math.min(u0, loTop); u <= u1 + 1e-6; u += 0.2) m = Math.max(m, gy(...at(v, u))); return m; }; while (v0 < v1 && hiG(v0) > yt - rise - 0.03) v0 += 0.05; }
+    // a piece from va to vb out, its collider from vc (under the higher ones) to vb
+    const piece = (va, vb, vc, top, k) => {
+      const ul = vb <= topTo + 1e-6 ? loTop : u0, ua = ul + (k % 2) * 0.006, w = u1 - (k % 2) * 0.006 - ua;   // (alternate sides 6 mm in: no shared planes)
+      let gl = Infinity; for (let v = va; v <= vb + 1e-6; v += 0.13) gl = Math.min(gl, low(v, ua, ua + w));
+      const bot = Math.min(gl, top) - 0.3, d = vb - va + 0.02, [mx, mz] = at((va + vb + 0.02) / 2, ua + w / 2);
+      B.add(bbox(tx ? d : w, top - bot, tx ? w : d, 0.02, 1.8), stoneM, mx, (top + bot) / 2, mz);
+      const [cx, cz] = at((vc + vb) / 2, (ul + u1) / 2), cl = vb - vc, cw = u1 - ul;
+      col({ type: 'box', x: cx, z: cz, hw: (tx ? cl : cw) / 2, hd: (tx ? cw : cl) / 2, top, stair: true });
+    };
+    // the landing (6 cm over the ground's apron: never coplanar with it), then the steps
+    piece(0.1, v0, 0.1, yt, 0);
+    for (let i = 1; i < n; i++) piece(v0 + (i - 1) * run, v0 + i * run, v0 - 0.1, yt - i * rise, i);
+  };
   const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
@@ -1649,6 +1684,8 @@ function buildIsland0(scene, physics, name, L, at) {
         // place is offered instead))
         // (ISLE-HOMES: what the building is, for its room (ihomes.js): its size, its role and sign; the door's own place)
         if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8), [sx, sz] = P.pt(built.door.x, built.door.z); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry, sill: { x: ox + sx, z: oz + sz }, w: +(toward[0] ? ez : ex).toFixed(2), d: +(toward[0] ? ex : ez).toFixed(2), h: +o.sy.toFixed(2), role: (hs0.role ?? lk0.role) || 'house', sign: (hs0.sign ?? lk0.sign) || null, domed: !!(lk0.domeM && (hs0.domed ?? lk0.domed) !== false && o.sy > 4.5) }); }
+        // (KNARTAS-LEDGE: a door on a ledge over the lane below it gets a flight of steps down: S.doorStairs)
+        { const ds = S.doorStairs?.[`${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`]; if (built.door && ds) doorStair(P, built.door, y0, toward, ds); }
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
