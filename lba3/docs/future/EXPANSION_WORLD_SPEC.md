@@ -248,7 +248,7 @@ player re-latch crane B and retry, N1).
 
 ---
 
-## W-2 · The Arch District · **Ordered** (the coordinator, 5.11.2026, after the user accepted W-1 on 4.11)
+## W-2 · The Arch District · **Accepted** by the user (7.11.2026: "I approve the expansion"; "looks good so far", 6.11) · Ordered by the coordinator 5.11.2026 after W-1 was accepted 4.11
 
 The district under and on Ballastra's great arch, the skyline anchor already seen from the harbour. About 25–30 minutes
 of play across N3 and OP-5, with return visits in N6 and the postgame. Lived in, not a set: homes, a market, a meeting
@@ -465,7 +465,7 @@ level change at a distance.
 
 ---
 
-## W-3 · The Water Gardens (Draft, the coordinator reviews)
+## W-3 · The Water Gardens · **Ordered** (the coordinator, 7.11.2026, after the user approved the expansion so far: W-1 and W-2 accepted)
 
 Shared water made visible: cultivation rafts, channels, gauges, a kiln that lives on the same water, and the test
 installation where the prototype is proven (N2, N6; return visits in N3–N5 and the postgame).
