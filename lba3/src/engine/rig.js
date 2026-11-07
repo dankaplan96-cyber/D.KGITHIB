@@ -969,7 +969,7 @@ export class Rig {
         // the cycle's length fixed their cadence fell with it to 0.43-0.75 cycles a second (LBA2 1.25): steps in slow motion,
         // a tall Esmer's legs spread 70 degrees at 0.8 m/s. A slower walk takes shorter steps, as people do: below 80 % of its pace
         // the stride is × √(speed / pace) / 0.9 (at least half), the thighs' and arms' swing with it, so the cadence stays lively
-        // (1.4-1.9 steps a second at 0.35-0.6 H/s) and the stance foot still travels what the body does. The hero keeps
+        // (1.15-1.9 steps a second at 0.25-0.65 H/s; it was 0.64-1.7) and the stance foot still travels what the body does. The hero keeps
         // his walk as it was (footPlant: his walk is at its own pace, the timing his feet and the tests are tuned to).
         const ks = this.footPlant ? 1 : clamp(Math.sqrt(speed * 0.8 / cyc0) / 0.9, 0.5, 1);
         this._stride = ks;
