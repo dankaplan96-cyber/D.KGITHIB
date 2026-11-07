@@ -30,6 +30,22 @@ the coordinator does not edit in parallel with them beyond merges, stamps and do
 | performance-lab | **laptop** | the target hardware (Ryzen 5 3500U / Vega 8); the cloud cannot measure it |
 | release-auditor | **cloud**, after the last wave | independent of the workers |
 
+## The bar: Citadel's level everywhere (the user, 7.11.2026)
+"It's not only Zeelich — the whole game must be at Citadel's level." Every region is measured against what Citadel has
+(`citadel-bar.md`, written by the wave-1 finisher): the VP-10 camera (nothing fades; the shot rises over buildings), every
+accessible building enterable with a fitting interior, purposeful residents in their own dress, music per place, interior
+light, grounded props, no slide traps, a camera pass by keyboard. The regions in order, each done by the finisher with a
+world-polish pass after it:
+
+| Region (outdoor room) | Citadel bar | Status |
+|---|---|---|
+| Zeelich (zeelich.js, zeelife.js) + Otringal | in wave 1 | in progress: buildings fading on approach (the user, 7.11) first |
+| Zeelich's isles (zislands.js) | wave 1 (VP-10 camera), then its own pass | pending |
+| Desert Island (desert.js) | VP-10 in wave 1; its own pass next | pending (REVIEW-DESERT done 6.11) |
+| The Hamalayi (hamalayi.js) | VP-10 in wave 1; its own pass next | pending (REV-HAM done 6.11) |
+| The underground (underground.js) | room camera; own pass | pending (REVIEW-UNDER done 6.11) |
+| Citadel | the reference; camera pass 3 in wave 1 | in progress |
+
 ## Waves (cloud)
 
 | Wave | Workers | Status |
