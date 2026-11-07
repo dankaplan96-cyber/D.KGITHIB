@@ -2837,3 +2837,29 @@ jobs, Blender views and reports: `art/blender/characters/{twinsen,zoe}/`, `art/b
   `assets/poly/`. To rebuild them: `twinsen_poly.py` / `zoe_poly.py` with `art/characters/skeletons.json`.
 - Ready for the cloud as one batch: `requests/CAST-POLISH-HEROES.diff` (the two scripts; `git apply --check` clean on
   the current origin) + `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json` (the new `assets/poly` files). Merge, test, publish.
+
+## REV-HAM-ART · the Hamalayi's art follow-ups (CLOUD_ORDERS 25) · the laptop, 8.11.2026
+Diff: `requests/REV-HAM-ART.diff` (hamalayi.js, props-mountain.js, engine/softfx.js, engine/music.js, obsroom.js,
+tests/music.mjs, tools/music: new `tracks/mountain.py`, `__init__.py`, docs/MUSIC.md; against 201869e0, `git apply
+--check` clean). Vega 8, headed Chrome, Follow, Medium. Pictures (chapter 6+) stay on the laptop.
+
+| spot | what a player sees | status |
+|---|---|---|
+| (a1) the heat station's shed | still wrong: turning from the post to the winch the camera looks down over the shed's roof, his legs x-rayed through it (the shed stood on the post → camera line) | fixed: the shed backs onto the cliff foot at (4315.0, −23.0), gauge to the yard, on its lowest corner; the pipe follows the snow (0.14 m) to the post's foot; pines/rocks kept clear (filters only); the post → winch camera line passes ~2 m clear |
+| (a2) the glider field sign | reads right | — |
+| (a3) the ch 10 glider and landing at the gate | reads right (wing ~1 m from the signpost, ~3.5 m from the pillar) | — |
+| (a4) the trail's rope rail | a post on leg 3's rock bank under the terrace's snow lip, its rope through the lip; lone posts left without rope; leg 2's posts on the cut's walls | fixed: a post is skipped where the ground 0.9 m out is > 1 m higher; the rope breaks between posts > 1 m apart in height; a run needs ≥ 2 posts. Posts 12 → 8 (leg 2, a cut, none) |
+| the trail switchback (4329.5, 24) facing leg 2 | the Follow camera inside the bend's rock, he x-rayed (same on origin) | **for the cloud (camera)** |
+| (b) the vent steam from (4254, −47.8) looking west | a grey-brown speckled column | fixed: ~48 larger puffs (was ~72), alpha 0.7, plain white, holding density longer; A/B in one session: mean luma 146–152 → 168–171, grain 4.0–4.2 → 3.1–3.3. `Plume` takes `cell`, `fi`, `fo` (defaults = the old values: the desert's plumes unchanged) |
+| (c) Lhar roof flicker (4302.15, 14.49, −3.06), (4305.92, 14.53, 18.11) | `mountainHouse`: the eaves' timber band's top level with the rubble wall's top (one plane) | fixed: the band's top 2 cm proud (still under the roof slab); every mountain house; overlaps hamalayi 0 failing (was 2), listed spots 7 → 2 (monastery, pre-existing) |
+| (d) music | the Hamalayi outdoors and the observatory played The Well | **Prayer Flags** (`tools/music/tracks/mountain.py`, original, by hand): A dorian, 4/4, 72 bpm; intro 13.3 s, loop 2:13; pan flute over a hummed drone and harp, the tune an octave up with a horn answering, a monastery chant in C lydian with the bell, at the peak the Entity cell up a fifth (Sendell's shrine). Mood `mountain { track, alt: 'well' }`, `PLAYLISTS.hamalayi = ['mountain']` (`_list` maps a missing piece to its mood's `alt`), the observatory → `mountain`. **Score only: please run `build.py mountain`**; until then it plays The Well, with no code change after the render |
+
+- Tests (GPU): overlaps hamalayi pass; music 26/26 (the manifest check now accepts a playlist piece whose stand-in is
+  in the manifest; two crossfade-timing checks flaked once and passed on rerun), audio 6/6, chapter6 17/17, chapter7
+  9/9; playthrough 09-pass (15 steps) and 10-observatory (9 steps) 0 deaths, 0 assists; a scratch walk check 20/20
+  (the post, winch, bell, lantern, round the shed, all three trail legs both ways, 0 respawns; hamalayi ↔ obsv twice,
+  resize, quality low → high → medium); moods 7/7. lint.py: all 18 scores ok.
+- Cost at the steam: draw calls and triangles unchanged at every view; live puffs ~72 → ~48, puff area ~0.87×.
+  Whole Hamalayi: 313 meshes =, triangles 851,249 → 850,253, colliders 1,365 → 1,361. No frame-time claim (loaded laptop).
+- Not checked: combat visibility through the new steam (the vent's drone fight passed in 10-observatory); the
+  laptop on battery.
