@@ -1,0 +1,51 @@
+diff --git a/lba3/src/game/asylumhostel.js b/lba3/src/game/asylumhostel.js
+index aa11218e..82fca174 100644
+--- a/lba3/src/game/asylumhostel.js
++++ b/lba3/src/game/asylumhostel.js
+@@ -437,8 +437,9 @@ export function dressAsylum(R, physics) {
+     at(A, 52.0, 20.15, Y(52, 20.6, 10) + 1.55, 0, () => noticeBoard(A.k, 1.6, 0.9, 6));
+     at(A, 53.9, 20.12, Y(53.9, 20.6, 10) + 2.1, 0, () => wallClock(A.k, 0.2));
+     for (const z of [26.6, 27.5]) put(A, 46.4, z, 10, HALF, filingCabinet, { color: '#5a6a5a' });
+-    // the clone statues pushed into the corner by the stair, the workers' coats hung on them
+-    for (const [x, z, ry, c] of [[61.4, 27.8, -2.4, '#3a5a7a'], [60.1, 28.5, -2.9, '#8a4a3a']]) {
++    // the clone statues pushed into the corner by the stair, the workers' coats hung on them (ASYLUM-21: against the
++    //  east wall, facing into the room; at z 28.5 a plinth stood on the floor's very edge, over the old black slot)
++    for (const [x, z, ry, c] of [[61.45, 26.5, -HALF - 0.25, '#3a5a7a'], [61.4, 27.75, -HALF + 0.2, '#8a4a3a']]) {
+       const s = put(A, x, z, 10, ry, cloneStatue);
+       A.k.at(s.lx, s.y + 1.5, s.lz, ry, () => coat(A.k, { c }));
+     }
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index 826a299e..762a3bd6 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -693,7 +693,7 @@ export function buildLba1Asylum(scene, physics) {
+       // (order 20, against LBA1's own bricks: its walls teal-grey brick with brick caps, lighter than its dark
+       //  flagstones; its walks and stairs teal grates; its maroon posts open lattice girders; its lattice windows; its
+       //  boiler a boiler, not a brick tower (BOILER: cells without a brick of their own, drawn by asylumNow))
+-      grate: true, grateGain: 1.35, capWalls: true, girders: true, lowLamps: true, pipeCol: '#a4c6c9', hidden: [BOILER, ...DRUMS.map(([x, z]) => [x, 5, z, x, 7, z])],
++      meetFloors: true, grate: true, grateGain: 1.35, capWalls: true, girders: true, lowLamps: true, pipeCol: '#a4c6c9', hidden: [BOILER, ...DRUMS.map(([x, z]) => [x, 5, z, x, 7, z])],
+       grilles: [[13, 16, 5, 21, 6], [13, 16, 15, 21, 16]],
+       clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
+       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
+diff --git a/lba3/src/game/lba1room.js b/lba3/src/game/lba1room.js
+index 608528d5..114feb05 100644
+--- a/lba3/src/game/lba1room.js
++++ b/lba3/src/game/lba1room.js
+@@ -81,9 +81,15 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+   const cut = (x, y, z) => {
+     if (cleared(x, y, z)) return true;
+     if (opts.noCut) return false;
+-    const k = `${x},${z}`, f = colFloor.get(k) ?? 0;
++    const k = `${x},${z}`, rim = opts.rim ?? 2;
++    let f = colFloor.get(k) ?? 0;
+     const near = outside(x + 1, z) || outside(x, z + 1) || outside(x + 1, z + 1) || x >= SX - 1 || z >= SZ - 1;
+-    return near && y >= f + (opts.rim ?? 2);
++    // (ASYLUM-21, opts.meetFloors: a wall on the camera's side that carries a raised floor beside it — a slab over
++    //  nothing, two cells or more above the wall's own floor — keeps its rim over that floor, as LBA1 builds it: cut to
++    //  its own floor, it stood 5 cells under the office's edge, and the void under the slab showed as a black slot
++    //  between them, its cut top a ledge he walked on)
++    if (opts.meetFloors && near) for (const n of [`${x - 1},${z}`, `${x},${z - 1}`]) { const r = L.cols[n]; if (r && r[0][0] - (f + rim) >= 2) f = Math.max(f, colFloor.get(n)); }
++    return near && y >= f + rim;
+   };
+   const solidAt = (x, y, z) => { const c = C.get(`${x},${y},${z}`); return !!c && c[0] === SOLID && !cut(x, y, z); };
+   // ---- FITTINGS (ASYLUM-4, opts.fittings): LBA1 draws some cells as things thinner than a cell — its bricks are
