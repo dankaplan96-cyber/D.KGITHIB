@@ -70,7 +70,7 @@ export class Guard extends Actor {
   get markY() { return this.grobo ? 2.6 : 2.25; }
   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
   setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
-  alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
+  alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   // ---- hits (LBA1's HitObj: armour, two reactions)
   melee(D, h) { return this.take(D.dmg + (D.heavy ? 1 : 0), h.pos); }
@@ -115,8 +115,9 @@ export class Guard extends Actor {
     }
     this.state = 'hurt'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6);
   }
-  // can it see Twinsen? a cone, a range scaled by his visibility, line of sight
-  sees(hero) {
+  // can it see Twinsen? a cone, a range scaled by his visibility, line of sight (P9: a calm watch only looks: raw)
+  sees(hero, raw = false) {
+    if (!raw && this.def.calm?.()) return false;
     const d = this.distTo(hero), vis = hero.visibility();
     if (hero.dead || (vis <= 0.15 && d > 1.5)) return false;
     if (d > 10 * vis) return false;

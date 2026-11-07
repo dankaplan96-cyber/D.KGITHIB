@@ -50,6 +50,7 @@ const DEPOT0 = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45
 export const DEPOT = { x0: DEPOT0.x0 + SHIFT.depot.x, x1: DEPOT0.x1 + SHIFT.depot.x, z0: DEPOT0.z0 + SHIFT.depot.z, z1: DEPOT0.z1 + SHIFT.depot.z,
   gateW: DEPOT0.gateW.map((z) => z + SHIFT.depot.z), gateE: DEPOT0.gateE.map((z) => z + SHIFT.depot.z) };
 const DEPOT_VALVE = sh('depot', 16.0, 50.6);
+const DEPOT_LINE_Z = 49.3;   // (P9: the painted line between the public path, z 44–49, and the staff-only yard)
 const DEPOT_LOOP_X = [4.0, 13.0].map((x) => x + SHIFT.depot.x); // where the drones' loop crosses under the main
 // the orchard valve: iron cage centre (x,z, half size) and the drop point of the bypass (dx,dz)
 export const ORCHARD = { ...sh('orchard', -21.9, 32.55), half: 2.0, dx: -22.4 + SHIFT.orchard.x, dz: 32.6 + SHIFT.orchard.z };
@@ -2199,6 +2200,16 @@ function buildDepot(W0, root, r) {
   handcart(W, grp, B, 6.4, 45.7, 0.2, r);
   floodMast(W, B, -0.4, 59.4, 9, 52);
   floodMast(W, B, 18.4, 44.6, 9, 52);
+  // P9 (the user, 7.11): the public path runs through the depot between its two gates; past this yellow-and-black
+  // line painted across the yard is the project's ground, its staff-only store (story/depotwatch.js keeps the watch
+  // to it). Paint only: nothing to bump into.
+  {
+    const haz = tm('hazard', { rough: 0.7 }), n = 12, xa = -0.6, xb = 18.6, z = DEPOT_LINE_Z;
+    for (let i = 0; i < n; i++) {
+      const x0 = xa + ((xb - xa) * i) / n, x1 = xa + ((xb - xa) * (i + 1)) / n, h0 = W.H(x0, z), h1 = W.H(x1, z), len = Math.hypot(x1 - x0, h1 - h0);
+      B.add(boxUV(bbox(len + 0.02, 0.025, 0.22, 0.005, 1), TILE.hazard), haz, (x0 + x1) / 2, (h0 + h1) / 2 + 0.015, z, 0, 0, Math.atan2(h1 - h0, x1 - x0));
+    }
+  }
   // Funfrock's chest, half-buried among the project crates
   {
     const K = { x: 9, z: 57 }, kg = W.H(K.x, K.z);
@@ -2216,7 +2227,11 @@ function buildDepot(W0, root, r) {
     W.updaters.push((dt) => { if (W.chest.open) { W.chest.openT = Math.min(1, W.chest.openT + dt * 2); lidPivot.rotation.x = -W.chest.openT * 1.9; } });
   }
   // the drones' patrol loop (walkable, clear of every prop by > 1 m)
-  W.depot = { ...sh('depot', (D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: [[4.0, 48.6], [8.6, 48.0], [13.0, 48.6], [13.0, 55.2], [8.6, 55.6], [4.0, 55.2]].map(([x, z]) => [x + d.x, z + d.z]), valve: { ...DEPOT_VALVE } };
+  W.depot = { ...sh('depot', (D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: [[4.0, 48.6], [8.6, 48.0], [13.0, 48.6], [13.0, 55.2], [8.6, 55.6], [4.0, 55.2]].map(([x, z]) => [x + d.x, z + d.z]), valve: { ...DEPOT_VALVE },
+    // (P9: the staff-only yard past the painted line, and the path's two gates: in, and out on the path beyond them)
+    yard: { x0: D.x0 + d.x, x1: D.x1 + d.x, z0: DEPOT_LINE_Z + d.z, z1: D.z1 + d.z },
+    gates: [{ in: sh('depot', D.x0 + 1.6, (D.gateW[0] + D.gateW[1]) / 2), out: sh('depot', D.x0 - 2.4, (D.gateW[0] + D.gateW[1]) / 2), a: -Math.PI / 2 },
+      { in: sh('depot', D.x1 - 1.6, (D.gateE[0] + D.gateE[1]) / 2), out: sh('depot', D.x1 + 2.4, (D.gateE[0] + D.gateE[1]) / 2), a: Math.PI / 2 }] };
   B.build();
 }
 
@@ -2628,6 +2643,8 @@ function buildDressing(W, root, r) {
   // (WORLD-80: by the west street's new line round Bug Street's pair; it stood where the pair's north house is now)
   signpost(W, grp, -60.5, -21.8, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
   signpost(W, grp, -62.0, -79.0, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
+  // (P9: at the painted line inside each gate, facing the path: the yard beyond it is staff only)
+  for (const [x, z] of [[-83.2, -72.2], [-73.4, -72.25]]) signpost(W, grp, x, z, Math.PI, 'w_sign_yard', (c) => { A.gear(c, 92, 64, 24); A.cross(c, 172, 64); });
   signpost(W, grp, -47.4, -60.4, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
   signpost(W, grp, -73.5, -58.5, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
   signpost(W, grp, -53.4, -54.2, -0.5, 'w_sign_pipe', (c) => { A.drop(c, 80, 64); c.fillRect(110, 52, 110, 24); c.fillStyle = '#d2ae74'; for (let i = 0; i < 4; i++) c.fillRect(124 + i * 26, 50, 5, 28); c.fillStyle = '#3a2410'; });

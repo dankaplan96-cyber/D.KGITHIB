@@ -8,8 +8,9 @@ export const steps = [
     return { open: v.open, fail: v.open ? null : 'orchard' };
   }],
   // (a hit while he turns the wheel stops the turn: as a player, see off whoever is at him and turn it again)
+  // (P9: seen in the yard the first time, the guard only turns him out at a gate; the next time the watch fights)
   ['depot (fight the guards on the way)', () => { const v = game.world.valves.find((q) => q.id === 'depot'); let r, tries = 0;
-    for (; tries < 3 && !v.open && !game.hero.dead; tries++) { if (tries) { P.release(); P.fight({ maxT: 30, threatsOnly: true }); } r = P.use(v.x, v.z, { near: 1.3, run: true }); P.wait(1); P.settle(); }
+    for (; tries < 5 && !v.open && !game.hero.dead; tries++) { if (tries) { P.release(); P.fight({ maxT: 30, threatsOnly: true }); } r = P.use(v.x, v.z, { near: 1.3, run: true }); P.wait(1); P.settle(); }
     return { ...r, tries, open: v.open, hp: game.hero.hp, clovers: game.hero.clovers, fail: v.open ? null : 'depot' }; }],
   ['cliffs: the target', () => {
     const T = game.world.target;

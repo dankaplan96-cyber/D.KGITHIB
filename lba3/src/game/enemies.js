@@ -395,7 +395,8 @@ export class Drone extends Actor {
   }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
-  alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
+  // (P9: a watch the story keeps calm, story/depotwatch.js, takes no alarm from the others)
+  alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
   damage(n, from, poise = 1) {
     if (!this.alive) return;
     const g = this.game;
@@ -424,8 +425,10 @@ export class Drone extends Actor {
       g.onEnemyKilled(this);
     }
   }
-  // can it see Twinsen? cone + range + line of sight, scaled by his visibility
-  sees(hero) {
+  // can it see Twinsen? cone + range + line of sight, scaled by his visibility (P9: a calm watch looks without acting
+  // on it: only the story's own look, raw, sees him then: story/depotwatch.js)
+  sees(hero, raw = false) {
+    if (!raw && this.def.calm?.()) return false;
     const d = this.distTo(hero);
     const vis = hero.visibility();
     if (hero.dead || vis <= 0.15 && d > 1.5) return false;

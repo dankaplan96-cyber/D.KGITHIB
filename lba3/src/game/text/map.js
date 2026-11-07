@@ -56,6 +56,7 @@ Object.assign(STR.en, {
   mp_zport: 'Zeelich Spaceport',
   mp_council: 'Council house',
   mp_shuttle: 'Shuttle pad',
+  way_to: 'To {where}',   // (the star on the stop toward an objective in another region: story/index.js wayStar)
 
   // rooms (indoors the Holomap and the minimap name the room)
   room_house: "Twinsen's house",

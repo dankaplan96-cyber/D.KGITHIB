@@ -22,7 +22,7 @@ import { ChapterBase } from './base.js';
 import { Watcher } from '../enemies.js';
 import { crossByShip } from '../travelfilm.js';
 import { revealBeat, solidAt, twoShot } from './revealcam.js';
-import { dampAngle } from '../../engine/math.js';
+import { DepotWatch } from './depotwatch.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -31,6 +31,7 @@ export class Chapter1 extends ChapterBase {
   constructor(story) {
     super(story);
     this.steamT = 0;
+    this.watch = new DepotWatch(this);   // P9: the depot's watch, from the first day to the valve (depotwatch.js)
   }
 
   // ---------------------------------------------------------------- cast
@@ -44,18 +45,21 @@ export class Chapter1 extends ChapterBase {
     ];
   }
 
+  // P9: the project's standing watch over its depot (story/depotwatch.js): there from the first day of the game, calm
+  // while Twinsen keeps to the path through it, warning first, then fighting; called up to the station once the valve
+  // is opened. (Was `reached && !c1_valve_depot`: nobody there in chapter 1, then four enemies on sight, gone after.)
   enemyDefs() {
     const W = this.game.world;
     const D = W.depot || { x: POI.camp.x, z: POI.camp.z, patrol: [[POI.camp.x - 5, POI.camp.z - 4], [POI.camp.x + 5, POI.camp.z - 4], [POI.camp.x + 5, POI.camp.z + 5], [POI.camp.x - 5, POI.camp.z + 5]] };
-    const when = (f) => this.reached(f) && !f.c1_valve_depot;
+    const when = (f) => this.watch.on(f);
     const n = D.patrol.length;
     return [
-      { id: 'drone1', kind: 'drone', group: 'depot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
-      { id: 'drone2', kind: 'drone', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: D.patrol, wp: (Math.floor(n / 2) + 1) % n, when },
+      this.watch.def({ id: 'drone1', kind: 'drone', group: 'depot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when }),
+      this.watch.def({ id: 'drone2', kind: 'drone', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: D.patrol, wp: (Math.floor(n / 2) + 1) % n, when }),
       // one of Vesk's guards walks the loop the other way (src/game/guards.js)
-      { id: 'guard1', kind: 'guard', group: 'depot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when },
+      this.watch.def({ id: 'guard1', kind: 'guard', group: 'depot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when }),
       // and his guard dog (LBA2's Zeelich guard dog, src/game/guarddog.js) trots the loop ahead of him
-      { id: 'gdog1', kind: 'gdog', coat: 'grey', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: [...D.patrol].reverse(), wp: (n - Math.floor(n / 2)) % n, when },
+      this.watch.def({ id: 'gdog1', kind: 'gdog', coat: 'grey', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: [...D.patrol].reverse(), wp: (n - Math.floor(n / 2)) % n, when }),
     ];
   }
 
@@ -288,49 +292,12 @@ export class Chapter1 extends ChapterBase {
     g.hud.toast('c1_toast_valve', { n });
     g.updateObjective();
     g.save(false);
-    if (v.id === 'depot') this.depotStandDown(); // the depot drones stand down
+    if (v.id === 'depot') this.watch.recall();   // (P9: the station radios the depot's watch up to its gate)
     if (n >= 3) this.waterT = 0.9; // (game time: pauses with the game, see update)
   }
 
-  // The depot's patrol stands down once its valve is open (POLISH-A; the user: nobody pops out of sight in view). It
-  // used to be a refresh of the cast: the two drones, the guard and his dog vanished mid-chase in front of him. Now the
-  // ones the camera can't see go at once; the others drop the chase (their own minds off: no shots, no bites, not a
-  // target) and go back to walking (flying) their round, calm, and are gone the moment they are out of view (25 s at
-  // most). Nothing is saved: after a load their `when` keeps them away, as before.
-  depotStandDown() {
-    const g = this.game;
-    this.standing = [];
-    for (const e of g.enemies) {
-      if (e.def?.group !== 'depot' || !e.present) continue;
-      if (!e.alive || e.gone || this.unseen(e.pos)) { e.setPresent(!!e.def.when?.(this.f)); continue; }
-      e.present = false;   // (its update stops here: drawn still, moved by tickStandDown)
-      if (e.aimLine) e.aimLine.visible = false;
-      g.combatDir?.done(e);
-      this.standing.push({ e, t: 0 });
-    }
-  }
-  tickStandDown(dt) {
-    const S = this.standing, g = this.game;
-    if (!S?.length) return;
-    for (let i = S.length - 1; i >= 0; i--) {
-      const s = S[i], e = s.e;
-      s.t += dt;
-      if (!e.rig.root.visible || !e.alive || (s.t > 0.6 && this.unseen(e.pos)) || s.t > 25) { e.setPresent(false); S.splice(i, 1); continue; }
-      if (g.state !== 'play') continue;
-      const pts = e.patrol?.length ? e.patrol : [[e.home.x, e.home.z]], [tx, tz] = pts[e.wp % pts.length];
-      const dx = tx - e.pos.x, dz = tz - e.pos.z, d = Math.hypot(dx, dz), flyer = e.hover != null;
-      if (d < 0.6 && pts.length > 1) e.wp = (e.wp + 1) % pts.length;
-      const sp = d < 0.6 || s.t < 0.8 ? 0 : flyer ? 1.6 : 1.3;   // (a beat where it stands, then its round at a walk)
-      e.angle = dampAngle(e.angle, Math.atan2(dx, dz), 4, dt);
-      if (sp) g.physics.move(e, Math.sin(e.angle) * sp * dt, Math.cos(e.angle) * sp * dt);
-      if (flyer) { e.rig.mood = 'calm'; e.rig.play?.('idle'); e.rig.update(dt); e.syncHover(); continue; }
-      g.physics.fall?.(e, dt);
-      e.rig.play(sp ? 'walk' : 'idle');
-      e.placeRig?.();
-      e.rig.update(dt, sp);
-      e.sync();
-    }
-  }
+  // (POLISH-A's stand-down, where the patrol walked its round calm and was gone once out of view, is now the radio call
+  //  that sends it up to the station: story/depotwatch.js recall)
 
   // the valve gives (G1-QUEST #5: it played the treasure chest's chime): a clunk and a knock in the pipe, the hiss of
   // the pressure let go and water rushing on down the line (audio.js's synth: its noise bursts and tones)
@@ -825,7 +792,10 @@ export class Chapter1 extends ChapterBase {
           n.rig.play('walk'); n.rig.update(dt, w.speed); n.sync();
         }
       } else { n.rig.play('idle'); n.rig.update(dt, 0); n.sync(); }
-      if (w.i < w.pts.length && w.t < 30) continue;
+      // (or he has left them far behind: Doran setting off for the spaceport while Twinsen runs on ahead of him reached the
+      //  pad first and found nobody, since the walk ran its 30 s and the ship's spot was in view by then)
+      const left = !w.hold && Math.hypot(g.hero.pos.x - n.pos.x, g.hero.pos.z - n.pos.z) > 40;
+      if (w.i < w.pts.length && w.t < 30 && !left) continue;
       // there (or long enough): to the next place as soon as neither here nor there is on screen
       delete this.walkers[id];
       const to = this.place(id);
@@ -868,7 +838,6 @@ export class Chapter1 extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
     this.tickWalkers(dt);
-    this.tickStandDown(dt);
     if (this.waterT > 0 && g.state === 'play' && (this.waterT -= dt) <= 0) this.waterReturns();
     // the ferry is in the harbour once Vesk has arrived
     if (!this.arriving) W.ferry?.setVisible?.(!!f.c1_arrived);

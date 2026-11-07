@@ -31,7 +31,7 @@ export class GuardDog extends Actor {
   }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
-  alert(pos) { if (this.alive && (this.state === 'guard' || this.state === 'home')) { this.state = 'warn'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
+  alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'guard' || this.state === 'home')) { this.state = 'warn'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   melee(D, h) { this.damage(D.dmg + (D.heavy ? 1 : 0), h.pos); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
@@ -57,7 +57,8 @@ export class GuardDog extends Actor {
     this.state = 'hurt'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6);
   }
   // a wide cone and a good nose: it notices a running Twinsen close by even out of sight
-  notices(hero) {
+  notices(hero, raw = false) {
+    if (!raw && this.def.calm?.()) return false;   // (P9: a calm watch: story/depotwatch.js)
     const d = this.distTo(hero), vis = hero.visibility();
     if (hero.dead) return false;
     if (d < 3.2 && vis > 0.5) return true;

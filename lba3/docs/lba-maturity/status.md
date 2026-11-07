@@ -58,7 +58,7 @@ world-polish pass after it:
 | P6 | 7.11 | Citadel, the Whispering Cliffs' rising stepping stones | "the cylinders look really weird" (photo): bare 9-sided brown cylinders with flat green discs | laptop world-art (order 31, STONES-31) | queued |
 | P7 | 7.11 | Chapter 1, Zoé's search | "in Zoé's part you can switch to running now": the Ctrl behaviour menu and the HUD icons ignored the story's hold (noBehaviours) | coordinator | **fixed** (actors.js setBehaviour, main.js Ctrl menu); probe: discreet held through setBehaviour, the Ctrl menu and HUD clicks (Automated runtime only) |
 | P8 | 7.11 | Citadel, a narrow paved passage between tall stone walls | "the camera still zooms in super close" (photo, running) | world-polish camera worker (pass 3) | **fixed** (CAM-KEYWALK, merged 7.11): it was the fort's west station gate: run out 0.95 m → 3.2 m least arm, walk out 0.95 → 6.77 m; plus 13 Citadel spots (camcitadel.mjs, 50/51) — Automated runtime only; a GPU look asked of the laptop (order 34) |
-| P9 | 7.11 | Chapter 1, the project depot by the pipeline valve | "enemies only when you need to work the pipe: why are there enemies, what do they want, what did I do wrong? They don't exist before the water valve is needed and vanish after, even if I didn't kill them" (chapter1.js enemyDefs: drones, guard, dog `when: reached && !c1_valve_depot`) | campaign-director (wave 2, next free slot) | queued: the depot's guard exists as the project's standing watch from the start, with a visible reason (Vesk's supplies, a fence, a sign); warns and turns him out before any fight; stays (or leaves for a reason shown) after the valve |
+| P9 | 7.11 | Chapter 1, the project depot by the pipeline valve | "enemies only when you need to work the pipe: why are there enemies, what do they want, what did I do wrong? They don't exist before the water valve is needed and vanish after, even if I didn't kill them" (chapter1.js enemyDefs: drones, guard, dog `when: reached && !c1_valve_depot`) | campaign-director (wave 2) | **fixed** (story/depotwatch.js; island.js: a yellow line across the yard, two "Staff only past the yellow line" signs): the watch is there from chapter 1 (the well) until the valve; the path through the depot is public; seen in the yard, the guard warns and turns him out at a gate (saved: c1_depotWarned); caught again, at the valve, or striking one: a fight; the depot valve opened, the station radios the guard ("that's Twinsen: let it run", "all of you up to the station gate") and the watch walks off toward the fortress, gone only out of view; after a load and in later chapters it is not at the depot. tests/depot-watch.mjs 11/11 (Automated runtime, input where it says INPUT); no person has played it |
 
 ## Waves (cloud)
 
@@ -66,13 +66,28 @@ world-polish pass after it:
 |---|---|---|
 | 0 | in-flight work before the pack: camera pass 3 (Citadel spots by keyboard), Citadel chapters 3–9 + real saves, SLIDE-RESCUE review | paused by the usage limit; camera pass 3 resumes as part of wave 1 (world-polish), the other two fold into waves 2 and 7 |
 | 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | done: v57 (camera pass 3), v59 (Zeelich, 1794082922-cfd5) |
-| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | pending |
+| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | campaign-director done (below) |
 | 3 | buildings-interiors + original-mechanics (serialize shared transition code) | buildings part 1 done (merged 7.11): P3 + Citadel sweep; 63 rooms behind the isles' 55 doors + Kesh's 5 houses + the post's 3 cabins (ihomes.js, island-doors.mjs 78/78); 3 doors nailed shut with a reason. Waiting: DOORS-LBA2 (laptop 29). Knartas ledge door → world-polish |
 | 4 | animation-combat (+ laptop world-art in parallel) | pending |
 | 5 | dialogue-editor + character-voices | pending |
 | 6 | action-sound (+ laptop music-director) | pending |
 | 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | started early 7.11 night: camfollow's LBA2-view regression + its 4, camcitadel's 3, the Knartas ledge door, camclear; laptop performance-lab in parallel |
 | 8 | release-auditor | after all others |
+
+### Wave 2, campaign-director: Citadel in chapters 3–10 after a real save (Automated runtime only)
+Each chapter set by its key (ISO; once with only the key, as an old save; once with chapter 2's flags and the chapter's
+`_started`), the game's own save written at Citadel's quay, the page reloaded, Continue. Probe:
+scratchpad `probes/survey.mjs` (not in the repo). Found and fixed:
+- the depot's watch stood at the depot in every chapter of a save without `c1_valve_depot` (chapters 3–10 with the
+  key only): now never after chapter 2 (P9's `on`).
+- chapter 9: played on from chapter 8, the fences, the dark heat posts and the open shelters were there; a load in
+  chapter 9 removed them (and lit the heat posts), chapter 10 put them back. Now a load keeps them (evacuation.js).
+- no map star on Citadel while the objective was in another region (chapters 4, 6, 7, 9): a star now stands on the stop
+  that leads there ("To Desert Island", "To The Hamalayi", "To Zeelich Spaceport"); none in chapter 3 (no route open).
+Seen and left: Citadel's ferry shows at the quay after a load in chapters 3 and 5 (hidden in play), but neither chapter
+can reach Citadel (no route), so no player sees it. Doran is nowhere in chapters 8–10 (absent, not misplaced). Zoé and
+Arthur are at home in 3–9 and in the lamp room in 10; Gilbert, Tim, Lulu and Xil keep their chapter-8 places in 9–10.
+Not covered: the chapters' own saves made by playing (the playthrough chain was not run in this wave).
 
 ## Laptop orders
 CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab. Earlier open: 24 (DRESS-2 shapes), 25
@@ -82,5 +97,7 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
 - v53–v55: music by place and the asylum's own piece; REVIEW-DESERT/ZEELICH/HAMALAYI/UNDER/CITADEL fixes; DRESS-1 (147
   people on 51 models get their own clothes and hair; pictures looked at); CLIMB-17/21 (the climb's foot straight, no slide
   trap on the east flight); CAM-WALKSWING/RECOVER; SLIDE-RESCUE (78 steep spots: 10 respawns/lives lost → 0).
-- Known failing checks, failing the same on the base: travel.mjs "Doran goes ahead to the spaceport" (chapter 2);
-  camfollow's 4 (Modern then Up, backing up, full turn, Far) + since v55/v56 a 5th, "LBA2 view (the default) unchanged: a run across the view never turns it" (turned 90°; fails on the base before CAM-KEYWALK too; came in between CAM-WALKSWING and v56: SLIDE-RESCUE or REVIEW-CITADEL's world.js — for the next camera/polish pass); camcitadel's water meter (2) and stepping-stones whole turn (1); camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+- Known failing checks, failing the same on the base: (travel.mjs "Doran goes ahead to the spaceport" fixed in wave 2:
+  the check ran while Doran was still walking up the quay, STAGING-1; a hero who ran ahead now finds him by the ship);
+  combat.mjs "dodge distance consistent at 30 and 60 fps"; prologue.mjs "the well's mites beaten" (3 of 4, random,
+  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); camfollow's 4 (Modern then Up, backing up, full turn, Far) + since v56 a 5th, "LBA2 view (the default) unchanged: a run across the view never turns it" (world-polish on it, 7.11 night); camcitadel's water meter (2) and stepping-stones whole turn (1); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
