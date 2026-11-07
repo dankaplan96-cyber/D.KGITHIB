@@ -123,7 +123,7 @@ const CH_DIST = { near: { arm: 7.0, pitch: 0.34 }, medium: { arm: 8.75, pitch: 0
 const ISO_MAX = { near: 11, medium: 12.5, far: 14 };
 const CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
 const CH_DEAD = 0.25, CH_HW = 4, CH_BACK = (110 * Math.PI) / 180, CH_HOLD_OUT = (95 * Math.PI) / 180;
-const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
+const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.4, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
 // A lock-on: behind his shoulder (CH_SHOULDER rad round from the line target → him), looking at a point CH_LOCK_K of the
 // way to the target (at most CH_LOCK_MAX m), the arm longer by CH_LOCK_ARM of the distance (at most CH_LOCK_ARM_MAX m).
 // MIN-VIEW (the user, 4.11, on Medium: "the camera so close that Twinsen's back fills the screen against a house
@@ -138,6 +138,7 @@ const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.45;
 // that is not clear (something taller than it right behind him)
 const CH_HIGH_ARMS = [6.5, 5.5, 4.6, 3.9], CH_HIGH_P = [0.62, 0.75, 0.88, 1.0, 1.12], CH_OVER_HI = [4.4, 5.6], CH_OVER_HI_P = [1.2, 1.32, 1.45, 1.52];
 const CH_HIGH_ROOF_Q = 0.88;
+const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
 const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1];   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
 // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
 const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
@@ -1030,7 +1031,10 @@ export class CameraRig {
       if (C.swGoal === 0 && Math.abs(C.sw) < 0.01) C.walkSw = false;
       const hold = back ? !cut && !settle && !C.walkSw && (!moving || (C.turnDir && Math.sign(e) !== C.turnDir))
         : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL && !(C.walkSw && Math.abs(C.vyaw) < 0.5);
-      const want = hold ? 0 : Math.sign(e) * Math.min(CH_SW_V, Math.sqrt(1.6 * CH_SW_A * Math.abs(e))), a = CH_SW_A * dt;
+      // (CAM-ALLEY: standing with the view over his head — his back to a wall, in an alley — the swing out to a clear view
+      // goes at CH_SW_V_OVER: at CH_SW_V a quarter turn took 1.6 s more over his head, pressed against the meter's wall)
+      const over = (C.overK ?? 0) >= 1 && !moving && Math.abs(C.swGoal) > Math.abs(C.sw), vS = over ? CH_SW_V_OVER : CH_SW_V, aS = over ? CH_SW_A_OVER : CH_SW_A;
+      const want = hold ? 0 : Math.sign(e) * Math.min(vS, Math.sqrt(1.6 * aS * Math.abs(e))), a = aS * dt;
       C.swV += clamp(want - C.swV, -a, a);
       if (hold && Math.sign(C.swV) === Math.sign(e)) C.swV = 0;
       let st = C.swV * dt;
@@ -1224,6 +1228,7 @@ export class CameraRig {
       // (CAM-KEYWALK: over his head the arm lets out no faster than CH_OUT_V, as the arm itself: the risen arm's lengths
       // differ by metres — 3.2 to 6.5 —, and the eased change took them at 18 m/s; in, as before; and into it from the arm it had, not from the longer arm at once)
       if (over) { C.overQ = fresh || !(C.overK > 0) ? overQ : damp(C.overQ, overQ, 6, dt); const oa0 = C.overArm ?? overArm, oa1 = fresh ? overArm : !(C.overK > 0) ? Math.min(overArm, C.arm ?? overArm) : damp(oa0, overArm, 6, dt); C.overArm = fresh || !(C.overK > 0) ? oa1 : Math.min(oa1, oa0 + CH_OUT_V * dt); }
+      let wa = Infinity;   // (what the look-ahead reads: below)
       if (!fresh && C.pT) {
         const vx = (T.x - C.pT.x) / dt, vz = (T.z - C.pT.z) / dt, walk = Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 20;
         // (CAM-WALKSWING: turning on the spot while the clear view round the heading it turns to is still being looked
@@ -1245,12 +1250,19 @@ export class CameraRig {
             const r0 = C.rise; C.rise = CH_PREDIP; const rd = armFor(ly2, _c); C.rise = r0;
             if (rd[1] && rd[2] === 0 && rd[0] >= CH_MIN_VIEW + 1) { C.riseGoal = CH_PREDIP; C.swAt = C.clk ?? 0; C.baseT = 0; continue; }
           }
-          want = Math.min(want, ahead(r));
+          wa = Math.min(wa, ahead(r));
         }
         // (and at the heading its spring is on its way to: a turn toward a house starts drawing it in at the turn's start)
         const g = C.hold ? yaw : C.goal + C.swGoal, gd = angleDiff(yaw, g);
-        if (Math.abs(gd) > 0.05 && !looking) { want = Math.min(want, ahead(armFor(g, T))); if (Math.abs(gd) > 0.6) want = Math.min(want, ahead(armFor(yaw + gd / 2, T))); }
+        if (Math.abs(gd) > 0.05 && !looking) { wa = Math.min(wa, ahead(armFor(g, T))); if (Math.abs(gd) > 0.6) wa = Math.min(wa, ahead(armFor(yaw + gd / 2, T))); }
       }
+      // CAM-ALLEY (camcitadel, the alley behind the Bug-street house walked south-west: the arm under 5 m for 4.3 s): where
+      // the heading it stands at sees him at its comfortable arm, a cut the look-ahead reads holds only once it has read so
+      // CH_LEAD_CONFIRM s. Walking up the alley the readings 0.2-0.45 s on flickered short every few frames, each drew the
+      // arm in to MIN-VIEW at once, and the let-out waited CH_HOLD s again after each: 3.2-4.5 m the whole way. Nothing
+      // ever stands in anything meanwhile (below); a heading that is itself cut draws it in at once, as before
+      C.aheadT = wa < want - CH_FLICK ? (C.aheadT || 0) + dt : 0;
+      if (over || tier !== 0 || !seen || C.aheadT >= CH_LEAD_CONFIRM) want = Math.min(want, wa);
       (C.pT ??= new THREE.Vector3()).copy(T);
       // (a cut in of more than CH_FLICK m must hold CH_CONFIRM s: walking along a house's eaves the sight line grazes
       // their rim and the search drops to the shortest arm for a frame, then back — that pumped the view in and out; a
