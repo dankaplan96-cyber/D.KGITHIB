@@ -65,7 +65,7 @@ world-polish pass after it:
 | Wave | Workers | Status |
 |---|---|---|
 | 0 | in-flight work before the pack: camera pass 3 (Citadel spots by keyboard), Citadel chapters 3–9 + real saves, SLIDE-RESCUE review | paused by the usage limit; camera pass 3 resumes as part of wave 1 (world-polish), the other two fold into waves 2 and 7 |
-| 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | starting |
+| 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | done: v57 (camera pass 3), v59 (Zeelich, 1794082922-cfd5) |
 | 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | pending |
 | 3 | buildings-interiors + original-mechanics (serialize shared transition code) | pending; needs the curator's building references |
 | 4 | animation-combat (+ laptop world-art in parallel) | pending |
