@@ -359,7 +359,7 @@ class Game {
     this.env.onThunder = () => this.audio.play('thunder');
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
-    this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
+    this.camRig.occ = () => (this.room ? (this.room.occ || null) : this.world.occ);   // the scenery volumes for the play camera: Citadel's (Game.occluders), an outdoor room's own (game/roomocc.js)
     this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
     // (CAM-FOLLOW: with a lock-on the Follow camera stands behind his shoulder on the line from the target, framing both)
     this.camRig.lockOn = () => { const e = this.targeting?.lock; return e && e.alive !== false && e.present !== false && e.pos ? e.pos : null; };

@@ -20,7 +20,7 @@ const LIB = fileURLToPath(new URL('./lib/overlap.js', import.meta.url));
 const ROOM = { floorY: 0, heights: [0.3, 0.8, 1.5, 2.5, 3.5, 5, 7], step: 0.2, hstep: 0.2 };
 const CITADEL_ROOMS = ['house', 'well', 'office', 'projoffice', 'control', 'workshop', 'lighttop', 'cellar', 'tavern', 'tavcellar', 'bazoo', 'ticket',
   'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'tralucave', 'terminal', 'sewer', 'sewervault', 'sewerglobe', 'wtent', 'school', 'asylum'];
-const OTHER_ROOMS = ['zterminal', 'otrbar', 'otrhotel', 'celtemple', 'c3shaft', 'c3deep', 'c3gallery', 'c3sendell', 'c3core', 'condA', 'condB',
+const OTHER_ROOMS = ['zterminal', 'zh_pelleck', 'zh_nara', 'zh_oku', 'zh_bakery', 'otrbar', 'otrhotel', 'celtemple', 'c3shaft', 'c3deep', 'c3gallery', 'c3sendell', 'c3core', 'condA', 'condB',
   'butemple', 'obsv', 'upper', 'council', 'archive', 'valves', 'arena'];
 const REGIONS = ['desert', 'zeelich', 'hamalayi', 'isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas',
   'isle_platform', 'isle_liftdock', 'isle_orchard', 'isle_oldwatch'];

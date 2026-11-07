@@ -142,6 +142,123 @@ Object.assign(STR.en, {
     'Snuff bakes with the project\'s heat. Her grandmother baked with charcoal and complained less.',
   ],
 
+  // ---- ZEELICH-DOORS: inside the street's houses (src/game/zhomes.js)
+  n_zh_lissa: 'Lissa', n_zh_wenna: 'Wenna',
+  room_zh_pelleck: 'Mr Pelleck\'s house', room_zh_nara: 'Nara\'s flower house', room_zh_oku: 'Oku\'s house', room_zh_bakery: 'Snuff\'s bakehouse',
+  zh_pel_radiator: 'A heat radiator, fitted and polished. Its pipe ends in the wall. A tag: NEXT QTR.',
+  zh_pel_tiles: 'Tile samples. Two violet, six blue. The violet ones are the last of their kind.',
+  zh_pel_forms: 'Form 7-B, Application for Heat Connection. Two copies, both stamped RECEIVED.',
+  zh_nara_slate: 'XIL - CITADEL. 40 POTS. EVERY SHUTTLE.',
+  zh_nara_crates: 'Crates for Citadel, stacked to the beams. Every tag says HELD.',
+  zh_nara_crates_gone: 'Two crates left. The rest went out on the shuttles.',
+  zh_oku_stove: 'A charcoal stove. No heat post lit at this end of the street.',
+  zh_oku_quern: 'A hand quern. The flour from the mills is ground finer here, by hand.',
+  zh_oku_sail: 'A mill sail on a mending frame. One new pink panel, stitched in.',
+  zh_bak_oven: 'The oven is cold. The copper feed from the project runs into its back.',
+  zh_bak_oven_hot: 'The oven glows. The copper feed ticks as it warms.',
+  zh_bak_racks: 'Empty bread racks.',
+  zh_bak_racks_full: 'Loaves on every board. It smells like morning.',
+  zh_closed_council: 'A notice on the door: COUNCIL. HEARINGS BY PETITION ONLY. Barred.',
+  zh_closed_mill_old: 'The old mill\'s door is nailed shut. Its stair goes round the outside.',
+  zh_closed_mill: 'Oku\'s padlock. Nobody goes in while the sails turn.',
+  zh_closed_depot: 'PROJECT STORES. STAFF ONLY. The lock is new.',
+  zh_closed_hut: 'The project\'s control hut. Locked.',
+  zh_lissa_pre: [
+    'Forty pots for Citadel, and the shuttles grounded. I water them twice a day so they don\'t notice.',
+    'Aunt Nara says the project\'s ship takes project cargo first. Flowers aren\'t project cargo.',
+  ],
+  zh_lissa_mid: [
+    'They went out on the first shuttle. Now I\'m growing the next forty.',
+    'Xil writes from Citadel: the flowers sell before he unpacks them.',
+  ],
+  zh_lissa_council: [
+    'If the council stops the bore, the frames go cold in winter. Aunt Nara says we\'ll manage.',
+    'Everyone\'s at the council house. I\'m watering.',
+  ],
+  zh_lissa_network: [
+    'Xil wants sixty pots next time. Sixty!',
+    'The ground is quiet. The flowers like quiet.',
+  ],
+  zh_lissa_late: [
+    'Xil wants sixty pots next time. Sixty!',
+    'The ground is quiet. The flowers like quiet.',
+  ],
+  zh_wenna_pre: [
+    'Oku\'s at the plaza arguing about sails. I mend them, he argues.',
+    'No heat post lit at our end. Charcoal, like my mother.',
+  ],
+  zh_wenna_braked: [
+    'Somebody braked all three mills. Oku hasn\'t stopped talking since. Was that you?',
+    'A braked mill doesn\'t tear its sails. I won\'t complain.',
+  ],
+  zh_wenna_mid: [
+    'Charcoal costs more every month. The post outside still says next quarter.',
+    'The project paid for new sails. I still mend the old ones. Waste not.',
+  ],
+  zh_wenna_council: [
+    'Oku wants the council to stop the bore. I want the heat post lit. We\'ll vote differently.',
+    'Everyone\'s at the council house. Someone has to grind the flour.',
+  ],
+  zh_wenna_network: [
+    'Baldino\'s relays ride on our mills now. Oku pretends he isn\'t proud.',
+    'The ground is quiet. The post outside is still dark.',
+  ],
+  zh_wenna_late: [
+    'Baldino\'s relays ride on our mills now. Oku pretends he isn\'t proud.',
+    'The ground is quiet. The post outside is still dark.',
+  ],
+
+  // ---- ZEELICH-LIFE: the street's working people (story/zeelife.js streetFolk)
+  n_zr_fennick: 'Fennick', n_zr_rezz: 'Rezz', n_zr_oma: 'Oma',
+  zr_fen_pre: [
+    'Three posts lit, three tagged. Hanging the tags is my job too.',
+    'The bakery\'s heat box trips if you look at it wrong. Snuff looks at it wrong a lot.',
+  ],
+  zr_fen_mid: [
+    'Next quarter\'s list is longer than this quarter\'s.',
+    'The feed under the street runs hotter every week. I note it. Somebody files it.',
+  ],
+  zr_fen_council: [
+    'If the council stops the bore, I disconnect the lit posts. Same wrench either way.',
+    'Pelleck keeps asking about his post. I keep saying next quarter.',
+  ],
+  zr_fen_network: [
+    'Baldino wants a reading from every post. He says the heat tells him how the shell is.',
+    'Steady pressure today. I wrote it down twice.',
+  ],
+  zr_fen_late: [
+    'Quiet ground, steady pressure. First good week in a year.',
+    'They say the west end gets its posts lit at last. They said that last year.',
+  ],
+  zr_rez_pre: [
+    'Grounded. The project says the sky is busy. It looks empty to me.',
+    'I fly Nara\'s flowers, Bzizz\'s nectar and the council\'s post. Today I fly this bench.',
+  ],
+  zr_rez_council: [
+    'The council checks every departure now. Twenty minutes a flight, for a stamp.',
+    'Grounded again, more or less. At least the bench knows me.',
+  ],
+  zr_oma_pre: [
+    'Petitions go in the box. Hearings when there are enough. There are never enough.',
+    'I count the tags on the dark posts. The council likes numbers.',
+  ],
+  zr_oma_mid: [
+    'The shuttles fly, so petitions come by shuttle now. From Citadel, even.',
+    'Three dark posts this quarter. Same three as last quarter.',
+  ],
+  zr_oma_council: [
+    'Enough petitions at last. The council has to sit!',
+    'Everyone wants a stamp today. I\'ve run out of ink twice.',
+  ],
+  zr_oma_network: [
+    'The council voted. Now everyone wants to petition about the vote.',
+    'Baldino\'s relays need a permit. I wrote the permit. Nobody asked for it.',
+  ],
+  zr_oma_late: [
+    'The council voted. Now everyone wants to petition about the vote.',
+    'A quiet day. I put up a notice saying so.',
+  ],
+
   // ---- journal
   zl_j_oven: 'Mother Snuff bakes in Zeelich\'s old watch house, on the project\'s heat. Her oven is cold: something sits on its flue.',
   zl_j_paid: 'Snuff paid me five kashes. The street has bread again.',

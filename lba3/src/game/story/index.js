@@ -101,7 +101,7 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel, this.zlife]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
     const list = [...seen.values()];
     // DRESS-1 (characters.js): people who share a model each get their own dress; the one the model is named after (or
     // else the first) keeps the model's. Worked out from the whole cast every time, so a person's dress never depends on
@@ -200,6 +200,7 @@ export class Story {
       if (wait) { n.setPresent(false); continue; }
       if (n.def.pending && p === undefined) continue;   // (his own area not built yet: he stays hidden: Game.addActors)
       if (p === undefined) p = this.hostel.place(n.def.id);   // (ASYLUM-2: the hostel's people, by the chapter)
+      if (p === undefined) p = this.zlife.place(n.def.id);   // (ZEELICH-DOORS: the people in the street's houses, zhomes.js)
       if (p === undefined) p = this.life.place(n.def.id);
       if (p === undefined) p = this.interiors.place(n.def.id);   // (INTERIOR-LIFE: a room's or a port's people out of their chapter, or back)
       if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
@@ -250,9 +251,9 @@ export class Story {
   // WORLD-AUDIT: Twinsen's own front door opens in every chapter. The chapters set elsewhere (4–7, 9; 3, 11, 12) offer
   // no door of their own on Citadel, so on a visit home by ferry or ship it had no prompt at all while Zoé and Arthur
   // were inside on their marks.
-  doors() { const cur = this.cur.doors(), h0 = this.game.world?.houses?.[0]; if (h0?.door && !cur.some((d) => d.room === 'house')) cur.push({ house: h0.id, x: h0.door.x, z: h0.door.z, r: 0.9, room: 'house' }); return [...cur, ...wizardDoors(), ...lba1Doors(), ...sewerDoors(this.game.world, this.game.flags), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world), ...traluCaveDoors(this.game.world), ...terminalDoors(this.game.world), ...zterminalDoors(this.game.world), ...otrBarDoors(this.game.world), ...otrHotelDoors(this.game.world), ...celTempleDoors(this.game.world)]; }
+  doors() { const cur = this.cur.doors(), h0 = this.game.world?.houses?.[0]; if (h0?.door && !cur.some((d) => d.room === 'house')) cur.push({ house: h0.id, x: h0.door.x, z: h0.door.z, r: 0.9, room: 'house' }); return [...cur, ...wizardDoors(), ...lba1Doors(), ...sewerDoors(this.game.world, this.game.flags), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world), ...traluCaveDoors(this.game.world), ...terminalDoors(this.game.world), ...zterminalDoors(this.game.world), ...otrBarDoors(this.game.world), ...otrHotelDoors(this.game.world), ...celTempleDoors(this.game.world), ...this.zlife.doors()]; }
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
-  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to, this.game.world) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world) || traluCaveExit(to, this.game.world) || terminalExit(to, this.game.world) || zterminalExit(to, this.game.world) || otrBarExit(to, this.game.world) || otrHotelExit(to, this.game.world) || celTempleExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to, this.game.world) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world) || traluCaveExit(to, this.game.world) || terminalExit(to, this.game.world) || zterminalExit(to, this.game.world) || otrBarExit(to, this.game.world) || otrHotelExit(to, this.game.world) || celTempleExit(to, this.game.world) || this.zlife.exitTo(to); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
   // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
   townDoors() {
