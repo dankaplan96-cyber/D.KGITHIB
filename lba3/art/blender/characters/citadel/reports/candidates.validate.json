@@ -1,0 +1,1514 @@
+{
+  "file": "art/blender/characters/citadel/work/cast_poly_citadel.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.6818, 2.2602, 0.5503], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: farmerB_apron -> farmerBRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_apron",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_apronHem -> farmerBRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_apronHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_apronPocket -> farmerBRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_apronPocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_apronStrap -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_apronStrap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_apronStrap.001 -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_apronStrap.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_belt -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_brows -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_cuffL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_cuffR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_ear -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_ear.001 -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_earIn -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_earIn.001 -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_foreL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_foreR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_handL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_handR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_head -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_hemBand -> farmerBRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_neck -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_neckBand -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_nose -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shinL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shinR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shoeL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shoeR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shoulderL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_shoulderR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_skirt -> farmerBRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_soleL -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_soleR -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_teeth -> farmerBRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_teeth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_thighL -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_thighR -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_torso -> farmerBRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_upperL -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerB_upperR -> farmerBRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerB_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_belt -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_brows -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_cuffL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_cuffR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_foreL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_foreR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_hair -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_hairTufts -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_hairTufts",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_handL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_handR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_head -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_hemBand -> gilbertRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_moustache -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_moustache",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_neck -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_neckBand -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_nose -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_pocket -> gilbertRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_pocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_pocketFlap -> gilbertRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_pocketFlap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shinL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shinR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shoeL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shoeR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shoulderL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_shoulderR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_skirt -> gilbertRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_soleL -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_soleR -> gilbertRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_thighL -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_thighR -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_torso -> gilbertRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_upperL -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: gilbert_upperR -> gilbertRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: gilbert_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_apron -> pippaRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_apron",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_apronHem -> pippaRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_apronHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_apronPocket -> pippaRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_apronPocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_apronStrap -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_apronStrap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_apronStrap.001 -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_apronStrap.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_belt -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_brows -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_cuffL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_cuffR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_ear -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_ear.001 -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_earIn -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_earIn.001 -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_foreL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_foreR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_handL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_handR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_head -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_hemBand -> pippaRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_neck -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_neckBand -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_nose -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shinL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shinR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shoeL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shoeR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shoulderL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_shoulderR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_skirt -> pippaRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_soleL -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_soleR -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_teeth -> pippaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_teeth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_thighL -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_thighR -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_torso -> pippaRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_upperL -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: pippa_upperR -> pippaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: pippa_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_apron -> weaverRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_apron",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_apronHem -> weaverRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_apronHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_apronPocket -> weaverRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_apronPocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_apronStrap -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_apronStrap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_apronStrap.001 -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_apronStrap.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_belt -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_brows -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_cuffL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_cuffR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_ear -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_ear.001 -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_earIn -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_earIn.001 -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_foreL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_foreR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_handL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_handR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_head -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_hemBand -> weaverRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_neck -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_neckBand -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_nose -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shinL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shinR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shoeL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shoeR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shoulderL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_shoulderR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_skirt -> weaverRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_soleL -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_soleR -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_teeth -> weaverRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_teeth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_thighL -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_thighR -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_torso -> weaverRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_upperL -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: weaver_upperR -> weaverRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: weaver_upperR",
+      "status": "pass",
+      "detail": "0"
+    }
+  ],
+  "totals": {
+    "objects": 183,
+    "meshes": 179,
+    "triangles": 11220,
+    "materials": 72,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 4,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3409,
+        0.0,
+        -0.2592
+      ],
+      "max": [
+        0.3409,
+        2.2602,
+        0.291
+      ],
+      "size": [
+        0.6818,
+        2.2602,
+        0.5503
+      ]
+    }
+  },
+  "passed": true
+}

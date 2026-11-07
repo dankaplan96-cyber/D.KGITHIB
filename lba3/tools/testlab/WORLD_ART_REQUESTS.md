@@ -2863,3 +2863,47 @@ tests/music.mjs, tools/music: new `tracks/mountain.py`, `__init__.py`, docs/MUSI
   Whole Hamalayi: 313 meshes =, triangles 851,249 → 850,253, colliders 1,365 → 1,361. No frame-time claim (loaded laptop).
 - Not checked: combat visibility through the new steam (the vent's drone fight passed in 10-observatory); the
   laptop on battery.
+
+## CAST-POLISH-CITADEL · Gilbert's moustache and the aprons (Pippa, farmerB, weaver) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL.diff` (tools/blender/cast_poly.py only; against db5a1c9c, the same file on ddad5c12 and
+c2684be7's CAST-POLISH-HEROES does not touch it; `git apply --check` clean). New model files for `assets/poly/`:
+`requests/CAST-POLISH-CITADEL/{gilbert,pippa,farmerB,weaver}.json`, built by `cast_poly.py <skel> <out> gilbert pippa
+farmerB weaver` in Blender 5.2.3 through the bridge (`CAST_BLEND` pointed outside `art/characters/`). HEAD's script
+rebuilt here gives the committed files to 1e-5 m (positions) and 1e-4 (normals), so the new files differ by the edits only.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{gilbert,pippa,farmerB}/`.
+- **Which people:** a census of Citadel in chapters 1 and 2 (the game, `census.mjs`) lists the story people present in
+  both: Zoé, Arthur, Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim).
+  I surveyed seven of them in the review scene (Arthur, Pippa, Mira, Gilbert, Bram, Odile, Nell). Picked by visibility
+  and weakness: Gilbert (the Water Office story, chapter 1) and Pippa (her stall stands on the square where Citadel
+  starts).
+- **Gilbert, MOUSTACHE-1** (CAST `moustacheSwept`, his entry only; lharMan and dallan keep the balls): his moustache was
+  three balls a side, a string of beads in the close-ups. Now each side is one soft, tapered lobe along the same line,
+  flat on the lip, the two overlapping under the nose, still clear of the mouth (it talks). His hair hex #cfcfcf (role
+  `hair`). 3872 → 3856 triangles (−16).
+- **APRON-EDGE** (build(), every apron it makes: Pippa; farmerB, 7 people: hedda, tavi, farmer2, dg_cook, lh_mira,
+  up_wait, maro; weaver, 2: fenn, lomba. `APRON_EDGE_OLD=1` builds the old one): the apron was one sheet 1.2 cm off the
+  tunic, paper from the side. Its sides, foot and the bib's top now turn back 1 cm toward the body, in the exact apron
+  hex (role `apron`), with a hard edge between face and side. +32 triangles each (Pippa 2476 → 2508, farmerB and weaver
+  2396 → 2428). DRESS-1, checked on the game's own code (`dresscheck.mjs`, farmerB variants 1–6): the apron recolours
+  completely in every variant, none of its 192 vertices keeps the base hex. Separately, farmerB's `shoes` role never
+  recolours (3600 vertices keep #e8d0b8): that was already so before this pass, so nothing here caused it.
+- **Contracts:** bones (names, order), `eyes` and `mouths` identical; 4 weights summing to 1; no new colour; feet and top
+  unchanged. Hero frame with each as the hero (swapBody): 4 draw calls before and after.
+- **Looked at:**
+  - In the game (SwiftShader, `gamecap.mjs`), with each as the hero at the same square spot: Follow/Medium, Follow ¾,
+    the dialogue with Dot, close-ups front/¾/back.
+  - Poses (a second rig in the developer yard, side and ¾): idle, walk, run, turn, jump, fall, throw, sword, talk,
+    pickup, use, hurt, doze. The moustache rides the head. The apron's edges follow the apron with no tear.
+  - In the throw and the sword the bib sinks behind the tunic, before and after alike (not this edit).
+  - In Blender: the four views of Gilbert and Pippa, neutral and in colour (`turnaround-blender-after.jpg`).
+  - Both edits read up close and in the dialogue. At Follow/Medium, Gilbert's moustache reads as one shape; the apron's
+    edge is a pixel.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** −16 / +32 triangles a model, no draw call, material or texture added. The Vega 8 frame time was not run for
+  so small a change: the last pair (CAST-POLISH-HEROES) showed the machine's noise swamps far larger ones.
+- **Left:**
+  - Gilbert's side fringe is still a row of balls (the G1-ART design); lharMan and dallan keep the bead moustache.
+  - The Rabbibunnies' necks are plain long tubes (a race-wide proportion, not checked against LBA2 here).
+  - The bib-sinks-in-the-throw problem above.

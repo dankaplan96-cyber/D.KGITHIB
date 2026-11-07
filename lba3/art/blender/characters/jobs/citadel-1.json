@@ -1,0 +1,6 @@
+[
+  { "op": "script", "name": "citadel: baseline rebuild (HEAD's cast_poly.py)", "script": "tools/blender-bridge/.work/head/cast_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/citadel/source/rebuilt", "gilbert", "pippa", "farmerB", "weaver"] },
+  { "op": "script", "name": "citadel: candidates (MOUSTACHE-1, APRON-EDGE)", "script": "tools/blender/cast_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/citadel/export", "gilbert", "pippa", "farmerB", "weaver"] }
+]
