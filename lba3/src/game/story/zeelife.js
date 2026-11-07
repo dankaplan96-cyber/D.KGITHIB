@@ -186,7 +186,11 @@ export class ZeelichLife extends ChapterBase {
   interactables(consider, dist) {
     const rid = this.game.room?.id;
     if (this.open && ZHOMES.includes(rid)) { for (const l of ZH[rid]?.looks || []) consider(dist(l.x, l.z), l.r, { kind: 'zhlook', key: l.key, label: 'p_look' }); return; }
-    if (rid === 'zeelich' && this.Z) { const y = this.game.hero.pos.y; for (const d of this.closedDoors()) if (Math.abs(y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'zhshut', key: d.key, label: 'p_door' }); }
+    if (rid === 'zeelich' && this.Z) {
+      const y = this.game.hero.pos.y;
+      for (const d of this.closedDoors()) if (Math.abs(y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'zhshut', key: d.key, label: 'p_door' });
+      if (this.open && Math.abs(y - 6.0) < 1.0) for (const d of this.doors()) if (d.prompt) consider(dist(d.x, d.z), 1.3, { kind: 'zhenter', room: d.room, label: 'p_door' });
+    }
     if (!this.open || !this.here()) return;
     const L = this.L, w = L.watch, f = this.f, y = this.game.hero.pos.y;
     if (y > w.roofY - 0.4) {
@@ -215,6 +219,7 @@ export class ZeelichLife extends ChapterBase {
       case 'zlburrow': return say(['zl_burrow']);
       case 'zlnara': return say(['zl_flowers']);
       case 'zhshut': g.audio.play('deny'); return say([it.key]);
+      case 'zhenter': g.audio.play('door'); g.walkNext = true; g.enterRoom(it.room); g.walkNext = false; return true;   // (as a door walked into: main.js)
       case 'zhlook': return say([this.lookKey(it.key)]);
       case 'zlshove':
         h.act('use', 0.8, () => {

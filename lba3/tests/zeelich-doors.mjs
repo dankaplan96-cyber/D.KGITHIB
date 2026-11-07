@@ -31,7 +31,7 @@ await said();
 
 // every door the story offers on Zeelich: in and out by input
 const tour = async (tag) => {
-  const doors = await ev(() => game.story.doors().filter((d) => d.region === 'zeelich').map((d) => ({ room: d.room, x: d.x, z: d.z })));
+  const doors = await ev(() => game.story.doors().filter((d) => d.region === 'zeelich').map((d) => ({ room: d.room, x: d.x, z: d.z, prompt: !!d.prompt })));
   const rooms = [];
   for (const d of doors) {
     const r = await ev((d) => {
@@ -40,7 +40,15 @@ const tour = async (tag) => {
       // from 3 m out on the street side (the door faces the street's middle line, z = 0)
       const sz = Math.sign(Z.street.z - d.z) || 1, ax = d.x, az = d.z + sz * 3.0;
       P.go(ax, az, { tol: 0.8, run: true, maxT: 60, fight: false }); P.settle();
-      const t = P.through(d.x, d.z);
+      // (a door that opens by its prompt — the bakehouse's, by Snuff's counter: walk up to it, press E)
+      let t;
+      if (d.prompt) {
+        P.go(d.x, d.z, { tol: 0.4, maxT: 30, fight: false }); P.settle();
+        const seen = []; G.story.interactables((dd, max, o) => { if (dd < max) seen.push(o); }, (x, z) => Math.hypot(x - G.hero.pos.x, z - G.hero.pos.z));
+        const it = seen.find((o) => o.kind === 'zhenter' && o.room === d.room);
+        if (it) { P.face(d.x, d.z - 3); G.story.interact(it); let k = 0; while ((G.trans || G.room?.id === 'zeelich') && k++ < 40) G.step(0.1); P.settle(); }
+        t = { to: G.room?.id, prompt: !!it };
+      } else t = P.through(d.x, d.z);
       const R = G.room, h = G.hero.pos;
       const inRoom = R?.id === d.room;
       const floor = inRoom ? Math.abs(h.y - G.physics.groundAt(h.x, h.z, h.y + 0.5)) < 0.15 : false;
@@ -96,7 +104,7 @@ check('a shut door\'s line is its own (not "Locked.")', sd.length && !sd.some((l
 const insideTalk = await ev(() => {
   const G = game; P.enter('zh_nara'); const a = P.talk('zh_lissa');
   P.enter('zeelich'); P.enter('zh_oku'); const b = P.talk('zh_wenna');
-  P.enter('zeelich'); P.enter('zh_bakery'); P.enter('zeelich');
+  P.enter('zeelich');
   return { a: a.r, b: b.r, room: G.room?.id };
 });
 const tl = await said();

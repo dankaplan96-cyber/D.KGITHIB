@@ -22,7 +22,8 @@
 //   ZH[id] (filled when built): npcSpots {…}, looks [{x, z, r, key}] (read spots: story/zeelife.js), and per room:
 //     zh_nara.setHeld(b) (the HELD crates stacked or mostly gone), zh_bakery.setOven(hot) (the oven's glow, the loaves)
 //   zhomeDoors(Z) / zhomeExit(to, Z): each house's door on the street leads in (region 'zeelich', from chapter 3 on:
-//     story/zeelife.js decides when); '<id>-out' back out 1.2 m before the door, facing the street
+//     story/zeelife.js decides when); '<id>-out' back out 1.2 m before the door, facing the street. PROMPT_DOORS open
+//     by a prompt (r 0, prompt: true): the bakehouse's
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, chair, bed, bookcase, desk, deskLamp, officeChair, ledger, papers,
@@ -267,9 +268,13 @@ function streetDoor(id, Z) {
   const p = Z?.houseDoors?.[d.house], a = Z?.houseFacing?.[d.house];
   return p ? { x: p.x, z: p.z, a: a ?? 0 } : null;
 }
+// (the bakehouse's door opens by its prompt, not by walking into it: Mother Snuff stands at her counter 1.2 m from it,
+//  and everyone who came to talk to her walked into her kitchen — tests/zeelich-life.mjs, 7.11. Its entry has r 0: the
+//  map and the tests still find it; story/zeelife.js offers the prompt)
+export const PROMPT_DOORS = new Set(['zh_bakery']);
 export function zhomeDoors(Z) {
   const out = [];
-  for (const id of ZHOMES) { const d = streetDoor(id, Z); if (d) out.push({ house: id, x: d.x, z: d.z, r: 0.85, room: id, region: 'zeelich' }); }
+  for (const id of ZHOMES) { const d = streetDoor(id, Z); if (d) out.push({ house: id, x: d.x, z: d.z, r: PROMPT_DOORS.has(id) ? 0 : 0.85, room: id, region: 'zeelich', ...(PROMPT_DOORS.has(id) ? { prompt: true } : {}) }); }
   return out;
 }
 export function zhomeExit(to, Z) {
