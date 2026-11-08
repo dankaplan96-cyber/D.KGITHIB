@@ -192,8 +192,9 @@ export class HamalayiLife extends ChapterBase {
       W(-31.6, 6.2, 2.4, { kind: 'hl_look', key: 'hl_pen', label: 'p_look' }),
       W(-8.0, 14.0, 2.4, { kind: 'hl_look', key: 'hl_shrine', label: 'p_look' }),
       W(16.0, -19.2, 1.9, { kind: 'hl_look', key: 'hl_heat', label: 'p_look', heat: true }),
-      W(29.0, -44.0, 1.5, { kind: 'hl_pwheel', label: 'p_turn' }),
-      W(39.0, -44.0, 1.5, { kind: 'hl_pwheel', label: 'p_turn' }),
+      // (the rows' outer ends: the villagers' round spins them from the middle of each row, castrounds.js)
+      W(27.4, -44.2, 1.1, { kind: 'hl_pwheel', label: 'p_turn' }),
+      W(41.0, -44.2, 1.1, { kind: 'hl_pwheel', label: 'p_turn' }),
     ];
     const d = M.observatory.door;
     list.push({ x: d.x, z: d.z - 0.4, y: gy(d.x, d.z + 0.6), r: 1.9, it: { kind: 'hl_obs', label: 'p_knock' }, obs: true });

@@ -113,3 +113,19 @@ Chapter 7 by its flags (chapter 6 done). At each spot he is put 1.5 m before it 
   lit while the menders are down in chapters 8–10 (one draw call kept, not five).
 - **GPU look** (the laptop): the hall, the five rooms by phase, the observatory's slate, Lhar's dark windows.
 - Not this pass: chapter 6's mites (chapter-balance: low challenge; animation-combat's proposal).
+
+## Evidence (8.11.2026, Automated runtime only; a snapshot of `lba3/` served locally, one suite at a time)
+
+| Suite | Verdict | Notes |
+|---|---|---|
+| `hamalayi-life` (new, 18 checks) | PASS | the hall by input, Brother Tenpa's round and talk, tea/wheel/altar, out facing the yard; moving day; Lhar empty in chapter 7; the bedrolls; chapter 8's people at home (one dress, outdoor selves away, a round each), Yorna and Sefa at home, the observatory's slate; save in Bero's house → Continue; a key-only save; the epilogue; death → Retry in the Hamalayi with full life. The first run failed one check (Bero's mending things found no free floor in his small room: fixed, rerun PASS) |
+| `door-sweep` CHAPTERS=5,6,7,9, the Hamalayi's 9 doors | PASS | every room in/out clear and facing away; the hall's walk from 2.6 m out is "blocked start" in the sweep's rule (a porch with steps before the door is the street's matter; `hamalayi-life` and the camera probe walk in by input) |
+| `island-doors` ROOMS = the 7 Hamalayi rooms | the 7 rooms PASS | the two FAILs are the limited run's (Knartas's walk had no door to walk to, the keepers' rooms were not built: ROOMS left them out) |
+| `chapter6`, `chapter7`, `chapter10` | PASS | the chapters' own routes unchanged |
+| `world-consistency` | PASS | chapter 10: hamalayi 8/8 (5 in the camp + Bero, Sana, Lhamo at home) |
+| `residents` ONLY=chapter 6, 7 | PASS | |
+| `cast-rounds` | first run FAIL 3: the monastery's prayer-wheel prompts stood on three villagers' wheel stops; moved to the rows' outer ends. Lhar's chapter-6 rounds (the coordinator's report) PASS | rerun ONLY=Lhar,monastery after the move: PASS (48 checks) |
+| `overlaps` ONLY=hamalayi,ham_hall | ham_hall PASS; the Hamalayi's 2 Lhar roof spots | the known pre-existing two (status.md; REV-HAM-ART's fix is on the laptop's diff) |
+| `room-cutaway` ROOMS=ham_hall + 3 Lhar rooms | PASS | 0 hidden spots |
+| `story-journeys` ONLY=ch5,ch7 | PASS | the glider to and from the Hamalayi |
+| `save-migration`, `slidetraps`, `interior-life` | PASS | |
