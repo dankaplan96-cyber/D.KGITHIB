@@ -87,10 +87,9 @@ iso('a sandstorm waited for (game time)');
 const storm = await ev(() => { const G = game, cur = G.story.cur, D = G.rooms.desert; for (let i = 0; i < 600 && !cur.stormy; i++) G.step(0.25);
   const sd = D.shutDoors.find((x) => x.id === 'post-cabin1'); before(sd.x, sd.z, Math.sin(sd.ry), Math.cos(sd.ry), 2.0);
   const door = G.story.doors().some((d) => d.room === 'ih_post_cabin1'); const u = P.use(sd.x, sd.z, { kind: 'ihshut', near: 0.8 }); P.settle();
+  const room = G.room?.id, pl = D.plaza; before(pl.x, pl.z, 3, 3, 3);   // (ISO: back to Kesh's plaza, out of the post's yard, before the drones can see again)
   let t = 0; while (cur.stormy && t < 120) { G.step(0.5); t += 0.5; }
-  const out = { stormy0: true, door, u: u.r, room: G.room?.id, after: G.story.doors().some((d) => d.room === 'ih_post_cabin1') };
-  const pl = D.plaza; before(pl.x, pl.z, 3, 3, 3);   // (ISO: back to Kesh's plaza, out of the post's yard)
-  return out; });
+  return { stormy0: true, door, u: u.r, room, after: G.story.doors().some((d) => d.room === 'ih_post_cabin1') }; });
 const stormL = await said();
 check('the post\'s bunk cabin while a sandstorm blows (INPUT): shut, the guard waiting it out inside (its own line); a door again once the storm passes', storm.u === 'used' && !storm.door && storm.room === 'desert' && has(stormL, /gate guard/) && storm.after, { storm, stormL });
 const safi4 = await ev(() => talkTo('safi')); const safi4L = await said();
