@@ -142,10 +142,11 @@ export const CAST_ROUNDS = [
   // children to the depot's shelter)
   { id: 'gilbert', ch: ['evacuation'], room: 'citadel', mark: near(well, 3.5, 8.0), speed: 0.85, when: (f) => !f.c8_gilbert,
     stops: [M([12, 18]), T('well', -2.4, -2.6, [-3.5, -8.0], 'stand', [6, 9], { gest: ['sigh'] }), T('post', 1.8, -1.8, [3.0, -2.6], 'wipe', [6, 9])] },
+  // (Tim's crate and Lulu's kneel moved off the harbour sheds' doors, CITADEL-STANDS 7.11: their prompts were in reach)
   { id: 'tim', ch: ['evacuation'], room: 'citadel', mark: near(quay, 2.5, 2.0), speed: 1.4, when: (f) => !f.c8_pippa,
-    stops: [M([6, 10]), T('edge', 3.5, 1.8, [6.0, 1.8], 'stand', [4, 6], { gest: ['shrug'] }), T('crate', 2.0, 2.5, [2.0, 3.5], 'pickup', [3, 5])] },
+    stops: [M([6, 10]), T('edge', 3.5, 1.8, [6.0, 1.8], 'stand', [4, 6], { gest: ['shrug'] }), T('crate', 2.5, 0.6, [2.5, -0.4], 'pickup', [3, 5])] },
   { id: 'lulu', ch: ['evacuation'], room: 'citadel', mark: near(quay, 2.5, 3.2), speed: 1.3, when: (f) => !f.c8_pippa,
-    stops: [M([6, 10]), T('kneel', 0.5, 1.2, [0.5, 2.5], 'kneelWork', [4, 6]), T('edge', 3.2, -1.4, [6.0, -1.4], 'stand', [4, 6], { gest: ['nod'] })] },
+    stops: [M([6, 10]), T('kneel', -1.4, 0.2, [-2.6, 0.2], 'kneelWork', [4, 6]), T('edge', 3.2, -1.4, [6.0, -1.4], 'stand', [4, 6], { gest: ['nod'] })] },
   { id: 'xil', ch: ['evacuation'], room: 'citadel', mark: near(quay, 4.5, -0.5), speed: 0.9,
     stops: [M([12, 18]), T('bollard', 1.4, -2.0, [2.6, -2.0], 'tinker', [7, 10]), T('sea', 2.6, 1.0, [8, 1.0], 'stand', [5, 8], { gest: ['sigh'] })] },
 
