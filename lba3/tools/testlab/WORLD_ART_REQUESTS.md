@@ -2837,3 +2837,73 @@ jobs, Blender views and reports: `art/blender/characters/{twinsen,zoe}/`, `art/b
   `assets/poly/`. To rebuild them: `twinsen_poly.py` / `zoe_poly.py` with `art/characters/skeletons.json`.
 - Ready for the cloud as one batch: `requests/CAST-POLISH-HEROES.diff` (the two scripts; `git apply --check` clean on
   the current origin) + `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json` (the new `assets/poly` files). Merge, test, publish.
+
+## REV-HAM-ART · the Hamalayi's art follow-ups (CLOUD_ORDERS 25) · the laptop, 8.11.2026
+Diff: `requests/REV-HAM-ART.diff` (hamalayi.js, props-mountain.js, engine/softfx.js, engine/music.js, obsroom.js,
+tests/music.mjs, tools/music: new `tracks/mountain.py`, `__init__.py`, docs/MUSIC.md; against 201869e0, `git apply
+--check` clean). Vega 8, headed Chrome, Follow, Medium. Pictures (chapter 6+) stay on the laptop.
+
+| spot | what a player sees | status |
+|---|---|---|
+| (a1) the heat station's shed | still wrong: turning from the post to the winch the camera looks down over the shed's roof, his legs x-rayed through it (the shed stood on the post → camera line) | fixed: the shed backs onto the cliff foot at (4315.0, −23.0), gauge to the yard, on its lowest corner; the pipe follows the snow (0.14 m) to the post's foot; pines/rocks kept clear (filters only); the post → winch camera line passes ~2 m clear |
+| (a2) the glider field sign | reads right | — |
+| (a3) the ch 10 glider and landing at the gate | reads right (wing ~1 m from the signpost, ~3.5 m from the pillar) | — |
+| (a4) the trail's rope rail | a post on leg 3's rock bank under the terrace's snow lip, its rope through the lip; lone posts left without rope; leg 2's posts on the cut's walls | fixed: a post is skipped where the ground 0.9 m out is > 1 m higher; the rope breaks between posts > 1 m apart in height; a run needs ≥ 2 posts. Posts 12 → 8 (leg 2, a cut, none) |
+| the trail switchback (4329.5, 24) facing leg 2 | the Follow camera inside the bend's rock, he x-rayed (same on origin) | **for the cloud (camera)** |
+| (b) the vent steam from (4254, −47.8) looking west | a grey-brown speckled column | fixed: ~48 larger puffs (was ~72), alpha 0.7, plain white, holding density longer; A/B in one session: mean luma 146–152 → 168–171, grain 4.0–4.2 → 3.1–3.3. `Plume` takes `cell`, `fi`, `fo` (defaults = the old values: the desert's plumes unchanged) |
+| (c) Lhar roof flicker (4302.15, 14.49, −3.06), (4305.92, 14.53, 18.11) | `mountainHouse`: the eaves' timber band's top level with the rubble wall's top (one plane) | fixed: the band's top 2 cm proud (still under the roof slab); every mountain house; overlaps hamalayi 0 failing (was 2), listed spots 7 → 2 (monastery, pre-existing) |
+| (d) music | the Hamalayi outdoors and the observatory played The Well | **Prayer Flags** (`tools/music/tracks/mountain.py`, original, by hand): A dorian, 4/4, 72 bpm; intro 13.3 s, loop 2:13; pan flute over a hummed drone and harp, the tune an octave up with a horn answering, a monastery chant in C lydian with the bell, at the peak the Entity cell up a fifth (Sendell's shrine). Mood `mountain { track, alt: 'well' }`, `PLAYLISTS.hamalayi = ['mountain']` (`_list` maps a missing piece to its mood's `alt`), the observatory → `mountain`. **Score only: please run `build.py mountain`**; until then it plays The Well, with no code change after the render |
+
+- Tests (GPU): overlaps hamalayi pass; music 26/26 (the manifest check now accepts a playlist piece whose stand-in is
+  in the manifest; two crossfade-timing checks flaked once and passed on rerun), audio 6/6, chapter6 17/17, chapter7
+  9/9; playthrough 09-pass (15 steps) and 10-observatory (9 steps) 0 deaths, 0 assists; a scratch walk check 20/20
+  (the post, winch, bell, lantern, round the shed, all three trail legs both ways, 0 respawns; hamalayi ↔ obsv twice,
+  resize, quality low → high → medium); moods 7/7. lint.py: all 18 scores ok.
+- Cost at the steam: draw calls and triangles unchanged at every view; live puffs ~72 → ~48, puff area ~0.87×.
+  Whole Hamalayi: 313 meshes =, triangles 851,249 → 850,253, colliders 1,365 → 1,361. No frame-time claim (loaded laptop).
+- Not checked: combat visibility through the new steam (the vent's drone fight passed in 10-observatory); the
+  laptop on battery.
+
+## CAST-POLISH-CITADEL · Gilbert's moustache and the aprons (Pippa, farmerB, weaver) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL.diff` (tools/blender/cast_poly.py only; against db5a1c9c, the same file on ddad5c12 and
+c2684be7's CAST-POLISH-HEROES does not touch it; `git apply --check` clean). New model files for `assets/poly/`:
+`requests/CAST-POLISH-CITADEL/{gilbert,pippa,farmerB,weaver}.json`, built by `cast_poly.py <skel> <out> gilbert pippa
+farmerB weaver` in Blender 5.2.3 through the bridge (`CAST_BLEND` pointed outside `art/characters/`). HEAD's script
+rebuilt here gives the committed files to 1e-5 m (positions) and 1e-4 (normals), so the new files differ by the edits only.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{gilbert,pippa,farmerB}/`.
+- **Which people:** a census of Citadel in chapters 1 and 2 (the game, `census.mjs`) lists the story people present in
+  both: Zoé, Arthur, Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim).
+  I surveyed seven of them in the review scene (Arthur, Pippa, Mira, Gilbert, Bram, Odile, Nell). Picked by visibility
+  and weakness: Gilbert (the Water Office story, chapter 1) and Pippa (her stall stands on the square where Citadel
+  starts).
+- **Gilbert, MOUSTACHE-1** (CAST `moustacheSwept`, his entry only; lharMan and dallan keep the balls): his moustache was
+  three balls a side, a string of beads in the close-ups. Now each side is one soft, tapered lobe along the same line,
+  flat on the lip, the two overlapping under the nose, still clear of the mouth (it talks). His hair hex #cfcfcf (role
+  `hair`). 3872 → 3856 triangles (−16).
+- **APRON-EDGE** (build(), every apron it makes: Pippa; farmerB, 7 people: hedda, tavi, farmer2, dg_cook, lh_mira,
+  up_wait, maro; weaver, 2: fenn, lomba. `APRON_EDGE_OLD=1` builds the old one): the apron was one sheet 1.2 cm off the
+  tunic, paper from the side. Its sides, foot and the bib's top now turn back 1 cm toward the body, in the exact apron
+  hex (role `apron`), with a hard edge between face and side. +32 triangles each (Pippa 2476 → 2508, farmerB and weaver
+  2396 → 2428). DRESS-1, checked on the game's own code (`dresscheck.mjs`, farmerB variants 1–6): the apron recolours
+  completely in every variant, none of its 192 vertices keeps the base hex. Separately, farmerB's `shoes` role never
+  recolours (3600 vertices keep #e8d0b8): that was already so before this pass, so nothing here caused it.
+- **Contracts:** bones (names, order), `eyes` and `mouths` identical; 4 weights summing to 1; no new colour; feet and top
+  unchanged. Hero frame with each as the hero (swapBody): 4 draw calls before and after.
+- **Looked at:**
+  - In the game (SwiftShader, `gamecap.mjs`), with each as the hero at the same square spot: Follow/Medium, Follow ¾,
+    the dialogue with Dot, close-ups front/¾/back.
+  - Poses (a second rig in the developer yard, side and ¾): idle, walk, run, turn, jump, fall, throw, sword, talk,
+    pickup, use, hurt, doze. The moustache rides the head. The apron's edges follow the apron with no tear.
+  - In the throw and the sword the bib sinks behind the tunic, before and after alike (not this edit).
+  - In Blender: the four views of Gilbert and Pippa, neutral and in colour (`turnaround-blender-after.jpg`).
+  - Both edits read up close and in the dialogue. At Follow/Medium, Gilbert's moustache reads as one shape; the apron's
+    edge is a pixel.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** −16 / +32 triangles a model, no draw call, material or texture added. The Vega 8 frame time was not run for
+  so small a change: the last pair (CAST-POLISH-HEROES) showed the machine's noise swamps far larger ones.
+- **Left:**
+  - Gilbert's side fringe is still a row of balls (the G1-ART design); lharMan and dallan keep the bead moustache.
+  - The Rabbibunnies' necks are plain long tubes (a race-wide proportion, not checked against LBA2 here).
+  - The bib-sinks-in-the-throw problem above.

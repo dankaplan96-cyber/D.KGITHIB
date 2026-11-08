@@ -71,8 +71,33 @@ Jobs: `characters/jobs/*.json`.
   look) instead of its `bones`, so it cannot pass; bones checked separately. The `textured` preview of a character is
   white (its materials only set the viewport colour); the neutral views are the useful ones.
 
+### Citadel batch 1: Gilbert (MOUSTACHE-1), Pippa and the aprons (APRON-EDGE): CAST-POLISH-CITADEL (8.11.2026)
+CAST-POLISH-HEROES was pushed (c2684be7, with the bridge fixes; `run_job.py` copied from the main repo).
+Census (the game, chapters 1–2 on Citadel, `census.mjs`): the story people present in both chapters are Zoé, Arthur,
+Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim), and residents.
+Surveyed in the review scene (arthur, pippa, mira, gilbert, bram, odile, nell); picked by visibility and weakness:
+- **Gilbert, MOUSTACHE-1** (`cast_poly.py`, CAST `moustacheSwept`): his moustache was three balls a side (a string of
+  beads up close); now one swept, tapered lobe a side over the same line, his hair hex #cfcfcf. 3872 → 3856 tris.
+- **Pippa, APRON-EDGE** (`cast_poly.py` build(), every apron: pippa, farmerB ×7 people (hedda, tavi, farmer2, dg_cook,
+  lh_mira, up_wait, maro), weaver ×2 (fenn, lomba); `APRON_EDGE_OLD=1` for the old one): the apron was one sheet
+  1.2 cm off the tunic (paper from the side); its sides, foot and bib top now turn back 1 cm, in the exact apron hex.
+  +32 tris each (pippa 2476 → 2508, farmerB/weaver 2396 → 2428).
+- The baseline rebuilt from HEAD's script matches the committed files to 1e-5 m / 1e-4 normals.
+- Working copies: `art/blender/characters/citadel/` (source = committed + rebuilt, export = candidates, work .blend).
+- Done: game captures before/after (gamecap LOOKS=gilbert,pippa,farmerB; the hero swapped to each), DRESS check on
+  farmerB (the apron recolours fully in variants 1–6), evidence `docs/future/characters/{gilbert,pippa,farmerB}/`,
+  request `tools/testlab/requests/CAST-POLISH-CITADEL*` and its note in `WORLD_ART_REQUESTS.md`.
+  `assets/poly/` was put back after the tests.
+- Tests (SwiftShader, the four files in place, a renamed headless shell): solidnpc 54/54, chapter1 23/23, cast-rounds
+  209/209, story-journeys 30/30 PASS. Blender views of Gilbert and Pippa (neutral and colour) looked at.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured (−16/+32, no draw),
+  frame time not run · integrated: no (request for the cloud).
+- Seen, not changed: in the throw and the sword the bib sinks behind the tunic (already so before); the Rabbibunnies'
+  necks are plain long tubes; Gilbert's side fringe is still balls.
+
 ## Current
-- (next) Citadel's most visible recurring people (queue item 3).
+- (next) Citadel batch 2 (queue item 3): Mira, Bram, Odile, Nell, Arthur were surveyed (`survey.png` in the scratchpad);
+  candidates: the Rabbibunny neck (race-wide: check LBA2 first), Mira's glasses, Bram.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
@@ -85,8 +110,7 @@ Jobs: `characters/jobs/*.json`.
 8. Common props
 
 ## Next action
-Wait for the cloud's verdict on CAST-POLISH-HEROES. Then queue item 3: list Citadel's recurring people by visibility
-(`game.npcs.map(n => [n.def.id, n.def.char])` on Citadel in chapters 1–2), capture the top one with
-`characters/jobs/gamecap.mjs` (LOOKS=<look>), and take it through the same loop (its source is `tools/blender/cast_poly.py`;
-bake each role in its LOOKS hex). Tools of this pass: `characters/jobs/{gamecap.mjs,lookcap.mjs,gpuperf.mjs,polycheck.py}`
-(scratch copies; they serve the worktree on 127.0.0.1:8257 and take Playwright from the main repo's Test Lab).
+Citadel batch 2: capture Mira, Bram, Odile, Nell in the review scene and the game (`characters/jobs/gamecap.mjs`
+LOOKS=…), pick one weakness each that is not race-wide, and take it through the same loop (`cast_poly.py`, a CAST entry
+per person, the LOOKS role hexes exact). Run the tests with `SHELL_EXE` (a renamed copy of the headless shell: browsers
+named chrome-headless-shell were being closed from outside). Never kill processes you did not start.
