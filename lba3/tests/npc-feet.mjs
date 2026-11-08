@@ -299,11 +299,14 @@ for (const fps of [60, 30, 120]) {
     out.patrol = { differs: diff(A, B), walkS: +(A.S.filter((s) => s.anim === 'walk').length * dt).toFixed(1), slip: M.contact(A.S).speed, slipUnplanted: M.contact(B.S).speed, stops: stopsA, nan: A.S.some((s) => s.nan) };
     // b) a fight: Twinsen 5 m in front of it, standing (it sees him, closes in, aims, fires, winds up and strikes)
     { const x = gd.pos.x + Math.sin(gd.angle) * 5, z = gd.pos.z + Math.cos(gd.angle) * 5; h.pos.set(x, G.physics.groundAt(x, z), z); } h.hp = h.maxHp; h.invuln = 0;
+    // (P9: the depot's watch is calm until the story turns it hostile, and a calm guard takes no alarm: turned hostile here, ISO)
+    const dw = G.story.depot, wasHostile = dw?.hostile; if (dw) dw.hostile = true;
     gd.waitT = 0; gd.alert(h.pos);   // (it has seen him: it turns, closes in, aims, fires, strikes)
     const s1 = save();
     const C1 = play(12, true, false); load(s1); const D1 = play(12, false, false); load(s1);
     out.fight = { differs: diff(C1, D1), states: [...new Set(C1.T.map((v) => v.split(',')[3]))], heroHp: C1.T[C1.T.length - 1].split(',')[5] };
     gd.rig.plantLite = fits; RG.PLANT_VIEW.cam = cam; h.pos.copy(hp0); h.hp = h.maxHp; gd.state = 'patrol'; G.combatDir?.reset?.();
+    if (dw) dw.hostile = wasHostile;
     return out;
   });
   measure('depot guard', r);

@@ -2552,7 +2552,13 @@ function buildPipeline(W, root, r) {
     }
     const v = makeValve(W, grp, B, 'depot', 'use', [V.x, yl, zl], [1, 0, 0], [0, 1, 0], 0.42);
     valves.push(v);
-    W.physics.add({ type: 'box', x: V.x, z: zl, hw: 1.85, hd: 0.36, rot: 0, top: yl + 0.6, noStand: true, seeThrough: true });
+    W.physics.add({ type: 'box', x: V.x, z: zl, hw: 1.85, hd: 0.36, rot: 0, top: yl + 0.6, noStand: true, seeThrough: true, noBall: true });
+    // (POINT-BLANK, 8.11.2026: for the ball that one box stood 0.4 m over the loop's pipe, an unseen wall where Twinsen
+    // fights at the valve: a throw down at the dog beside him met it. The ball meets the pipe, the wheel and the two
+    // risers as drawn, all inside the box above, so walking is unchanged)
+    W.physics.add({ type: 'box', x: V.x, z: zl, hw: 1.85, hd: 0.36, rot: 0, top: yl + 0.26, noStand: true, seeThrough: true });
+    W.physics.add({ type: 'cyl', x: V.x, z: zl, r: 0.36, top: yl + 0.82, noStand: true, seeThrough: true });
+    for (const s of [-1, 1]) W.physics.add({ type: 'cyl', x: V.x + s * 1.6, z: zl, r: 0.2, top: ym + 0.36, noStand: true, seeThrough: true });
     // a hazard-striped kerb plate under it and a warning plate
     B.add(boxUV(bbox(3.9, 0.06, 1.2, 0.02, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), V.x, g + 0.03, zl);
   }

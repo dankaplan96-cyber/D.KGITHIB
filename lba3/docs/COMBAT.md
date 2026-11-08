@@ -196,6 +196,21 @@ LBA2 the behaviour is the distance.
   distance control applies only when there is no target. The puzzles' switches and targets are aimed this way, so
   they solve as before.
 - Damage, magic cost, bounces (4, home on the 5th contact), ricochets, fetching and recall are unchanged.
+- **Point-blank** (POINT-BLANK, 8.11.2026; chapter 2's depot, chapter-balance.md). The ball leaves the hand 0.9 m ahead,
+  0.19 m to his right, 1.45 m up (measured at the release frame). Three faults at close range, fixed:
+  (1) a throw at a target under 1.6 m from the hand crossed the ground at the full aimed pace while its fall was planned
+  for 0.12 s: it went past the target before it came down (13 m/s sideways over a dog at his feet; hits only by the
+  hit cylinder's luck). Now it crosses in those 0.12 s (`MagicBall.plan`; the charged ricochet the same). Farther
+  throws are unchanged (13 m/s at 3 and 6 m). (2) Close to a wall or fence the hand was inside the collider (the ball
+  stuck there, its four bounces spent in 0.03 s) or past a thin one (thrown through the depot fence). Now the arm's way
+  out, from his body at the hand's height to the hand, is followed: the ball leaves short of anything solid, and an
+  enemy the arm reaches first is struck there (`MagicBall.armReach`). (3) The depot valve's bypass loop had one
+  collider standing 0.4 m over the pipe: an unseen wall for a throw down at the dog beside him. The ball now meets the
+  pipe, the wheel and the risers as drawn (island.js; walking unchanged). LBA2 releases from the hand too (key 6 of
+  LANCE, 1200 units up); its throws are not aimed, so a close enemy is simply in the ball's way.
+- **The preview** (AIM-MATCH, the same day): the charge's dots and ring were drawn from the hand cocked behind his head,
+  not from where the ball leaves: the ring fell 1.3–1.4 m short of the throw's touch-down in every behaviour. Now from
+  the release point (the last throw's, relative to him): within 0.07 m. `tests/ball-close.mjs` checks all of this.
 
 ## Twinsen's combat animation (ANIM-COMBAT) — src/engine/rig.js
 The user: "in combat Twinsen's movements feel unnatural and weird." The animation was reworked; no timing, hit window,
@@ -348,6 +363,12 @@ Measured first on 0d045bf, each body alone at its own walking speeds (residents 
   with the step; riding the pelvis 1-3 cm lower shortened that by a few points but drew the held foot along the ground at 0.1-0.5 m/s,
   so it was left as his). The opening scene places its people's feet itself: their plantLite is off for it (opening.js `actor`).
   tests/townlife.mjs's FIX-PUMP-N check (between Bram and the pump) fails on 0d045bf as well, with the same numbers.
+- **STOP-TURN** (8.11.2026, walkers.js `dwellTick`): a resident reaching a stop turned at once toward the stop's view (or to
+  Twinsen within 3 m), so a stop that ended facing away became one move: Oda by the bench she does not sit on (a 140° turn)
+  took 5 steps in the second after she stopped, Dot at the stall 3 (0.55 rad). Now the stop comes first (its two steps) and the
+  turn 1.2 s later, as a turn of its own (the rig's stepping turn); a turn under 0.3 rad goes on at once. Oda 5 → 2, Dot 3 → 1
+  (tests/npc-feet.mjs 3, Automated runtime only). GAIT-CADENCE untouched. The same file's depot-guard fight check now turns the
+  P9 watch hostile first (a calm guard took no alarm, so it never fought: the check had failed since P9).
 
 ## Enemies are solid (SOLID-ENEMY)
 The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
@@ -536,6 +557,22 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
 - Ch. 10 Desert Island: a lone sentry at the post gate, then three drones at the bore.
 - Ch. 10 Hamalayi ridge: a lone crystal crawler, then two mites by the dome.
 - Ch. 9 archive: avoidance (stealth).
+- Ch. 12 the core, the bore's guardian (BOSS-SHAPE, 8.11.2026; src/game/enemies.js `Guardian`, `SLAM`): three phases.
+  1. **The pylons**: it keeps its distance and fires a fan of three bolts after a 1.35 s tell (lanes on the floor;
+     quicker with each pylon); a ball hit stuns it 2.6 s: the window for a plate's bank shot.
+  2. **The overload** (Vesk's lines; the glow turns violet): its new attack, the **dive**, taken in turn with a quicker
+     fan, the first right away. It climbs to 4.2 m while a red ring on the deck (1.8 m) follows Twinsen (1.0 s), the
+     ring stops and flashes white (0.9 s), it drops (0.2 s): inside 2.0 m, 2 damage and knocked down, and a shock ring
+     runs out. Answers: run or dodge out once the ring stops (walking straight out just clears it: 2.14 m), or a ball
+     while it climbs knocks it out of the dive (stunned); once it drops it is committed. After a dive it sits stuck in
+     the deck 3.0 s, venting, harmless: the opening to turn the bleed valve (1.0 s). Overloaded, the ball and the blade
+     glance off it (violet sparks, a clang) except while it climbs or hangs over the ring and while it is stuck in the
+     deck, and more hits do not draw out a stun: the dive is the way in (hit it as it climbs: stunned 2.6 s; or step out
+     and use the 3 s it is stuck). Bait the dive by the valve, step out, turn it. One toast each the first time a ball
+     glances off and the first time a dive hits him; the nudge after 30 s names both openings.
+  3. **The coil**: the same guardian (dive and fan) while Vesk's coil takes three ball hits.
+  Story, flags (`c3_overload`, `c3_bleed`, `c3_coil`), saves and the reload rules are unchanged. `tests/chapter3.mjs`
+  plays the dive four ways (stand, walk out, dodge, ball at the climb).
 
 ## Verification
 `tests/combat.mjs` runs in the developer arena (`?arena`). Its 22 checks currently pass (headless, software GL):

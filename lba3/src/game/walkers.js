@@ -317,6 +317,7 @@ export class Resident extends NPC {
   // it has reached stop s (arrive at its slot): do what the stop says
   arrived(s, instant = false) {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
+    this.arrivedAt = instant ? -9 : this.game.time;   // (dwellTick: the stop settles before it turns)
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     this.gestT = 1 + this.rnd() * 2;
     if (!stageOk(s, this.W.stage)) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
@@ -575,9 +576,12 @@ export class Resident extends NPC {
   dwellTick(dt, s) {
     const h = this.game.hero;
     // it turns to whoever comes close (as the story's own people do), else to what the stop looks at
-    const dh = this.distTo(h);
-    if (dh < 3.0 && !s.act?.match(/tend|water|draw|warm/)) this.angle = dampAngle(this.angle, this.angleTo(h), 4, dt);
-    else if (this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
+    // (STOP-TURN, 8.11.2026: the stop first, then the turn. Turning at once on arrival, a stop that ended facing away from
+    //  its view (Oda by the bench she does not sit on: 140°) became one move of five steps; now it stands in its two steps
+    //  and turns 1.2 s later, a turn of its own (the rig's stepping turn). A small turn (< 0.3 rad) goes on at once)
+    const dh = this.distTo(h), want = dh < 3.0 && !s.act?.match(/tend|water|draw|warm/) ? this.angleTo(h) : this.targetAngle;
+    const settling = this.game.time - (this.arrivedAt ?? -9) < 1.2 && want != null && Math.abs(Math.atan2(Math.sin(want - this.angle), Math.cos(want - this.angle))) > 0.3;
+    if (want != null && !settling) this.angle = dampAngle(this.angle, want, 4, dt);
     // in the way of a door or of someone the story put here: move on soon
     this.tmr -= dt;
     this.keepClear(dt, s);

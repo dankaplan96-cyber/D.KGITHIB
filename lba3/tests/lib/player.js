@@ -327,6 +327,10 @@
     for (let s = 0; s < t; s += DT) {
       const inbound = G.bolts?.list?.find((b) => { if (b.dodged) return false; const p = b.m.position, dx = h.pos.x - p.x, dz = h.pos.z - p.z, d = Math.hypot(dx, dz); return d < 2.4 && (b.v.x * dx + b.v.z * dz) > 0; });
       if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge a bolt'); continue; }
+      // (BOSS-SHAPE: the overloaded guardian's dive: once its ring on the deck stops under him, step back out of it with
+      // the dodge — he faces the guardian, which slides over the ring — as many times as it takes)
+      const dv = G.enemies.find((e) => e.state === 'lock' && e.spot && e.def?.kind === 'guardian');
+      if (dv && Math.hypot(h.pos.x - dv.spot.x, h.pos.z - dv.spot.z) < 2.5 && h.combat?.canDodge?.() && h.hurtT <= 0 && h.actT <= 0) { keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge out of the dive\'s ring'); continue; }
       G.step(DT);
     }
   };

@@ -11,7 +11,7 @@ import { Guard } from './guards.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
-import { createGuardianRig, createHaulerRig, createFan } from './bossmodels.js';
+import { createGuardianRig, createHaulerRig, createFan, createSlamMarks } from './bossmodels.js';
 
 // SOLID-ENEMY (the user, 29.10: "what LBA2 did"): how wide each enemy's body is to Twinsen, who stops at it and slides
 // (Hero.keepApart; the enemy itself stops at him: Actor.keepOffHero). LBA2 makes every actor with a body solid to him
@@ -543,38 +543,122 @@ export class Drone extends Actor {
 // for a few seconds (the window to line up a bank shot on a pylon). Its attack is readable: it stops,
 // glows and hums for over a second, then fires a fan of three bolts — step sideways or duck behind a
 // pylon. Each converted pylon makes it a little quicker; when the third is converted it loses power.
+// BOSS-SHAPE (8.11.2026, chapter-balance.md: chapter 12 was the shortest core chapter, its second phase the first one
+// again). Overloaded by Vesk (level 4) it has a second attack, taken in turn with the fan: the dive. It climbs and a red
+// ring on the deck follows Twinsen (SLAM.rise); the ring stops and flashes white (the dive is set, SLAM.lock); it drops
+// onto the ring (SLAM.drop): inside it, a heavy blow (2, knocked down), and a shock ring runs out. Run or dodge out of
+// the ring once it stops (walking out only just makes it). Then it sits stuck in the deck, venting, unable to fight
+// (SLAM.ground): the opening to turn the bleed valve or throw at Vesk's coil. A ball hit while it climbs knocks it out
+// of the dive (stunned, as ever); once it drops it is committed. The fan is kept, quicker, between dives.
 const FAN_OFFS = [-0.32, 0, 0.32];
+const SLAM = { rise: 1.0, lock: 0.9, drop: 0.2, ground: 3.0, R: 1.8, reach: 2.0, top: 4.2, rest: 1.5, dmg: 2, after: 1.2 };
 export class Guardian extends Drone {
   constructor(game, def) {
     super(game, def);
     // (its own model, bossmodels.js: built at the size it is drawn, no longer the warden scaled by 2.1)
     this.shadow.scale.multiplyScalar(2.2);
     this.fan = createFan(game.scene);   // the bolt fan's floor markers, shown through the wind-up
+    this.marks = createSlamMarks(game.scene);   // the dive's ring and its shock ring (BOSS-SHAPE)
     this.hover = 2.6; this.hitR = 1.4; this.hitH = 4.2;
     this.arena = def.arena || null;
     this.level = 0; this.stunT = 0;
     this.hp = this.maxHp = 1e9;
     this.group = def.group || 'core';
     this.state = 'chase';
+    this.nextDive = false; this.dives = 0; this.waveT = 1;
   }
+  get diving() { return this.state === 'rise' || this.state === 'lock' || this.state === 'drop'; }
   setLevel(n) {
     const was = this.level; this.level = n; this.rig.setLevel?.(n);
     // a ring comes off for each converted pylon: a clank and a burst of sparks off the body
     if (n !== was && n > was && n <= 3 && this.alive) { const g = this.game; g.audio.play('clunk'); g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 26, 5); }
+    if (n >= 4 && was < 4) this.nextDive = true;   // (the overload opens with a dive: the new attack is seen at once)
   }
+  setPresent(on) { super.setPresent(on); if (!on) { this.marks.hideAll(); if (this.diving || this.state === 'ground') { this.state = 'chase'; this.stateT = 0; } } }
+  // (BOSS-SHAPE) overloaded, the ball and the blade glance off it (violet sparks, a clang) except while it climbs into a
+  // dive or hangs over the ring (its underside open) and while it sits stuck in the deck; a stun is not drawn out by more
+  // hits. So the dive is the way in: hit it as it climbs, or step out and use the time it is stuck. Before the overload
+  // every hit stuns it, as ever.
+  shrugs() { return this.level >= 4 && !(this.state === 'rise' || this.state === 'lock' || this.state === 'ground'); }
+  glance() {
+    const g = this.game;
+    this.rig.hitFlash(); g.audio.play('clang');
+    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#d8a0ff', 12, 3);
+    if (!this.toldGlance && this.state !== 'stunned' && this.state !== 'drop') { this.toldGlance = true; g.hud?.toast?.('c3_toast_overload'); }
+    return 'blocked';
+  }
+  ballHit(ball, p) { if (this.shrugs()) return this.glance(); return super.ballHit(ball, p); }
+  melee(D) { if (this.shrugs()) return this.glance(); return super.melee(D); }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
     this.rig.hitFlash();
     g.audio.play('hit');
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 22, 4);
+    if (this.state === 'drop') return;   // (committed: it lands whatever hits it)
+    this.marks.hide();
     this.state = 'stunned'; this.stateT = 0; this.stunT = 2.6;
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 5, Math.cos(a) * 5); }
+  }
+  // the dive (BOSS-SHAPE): rise → lock → drop → ground; returns the facing it wants, or null
+  dive(dt, hero, P) {
+    const g = this.game, A = this.arena, S = SLAM;
+    const clampX = (x) => (A ? Math.min(A.x1 - 1, Math.max(A.x0 + 1, x)) : x), clampZ = (z) => (A ? Math.min(A.z1 - 1, Math.max(A.z0 + 1, z)) : z);
+    if (this.state === 'rise') {
+      // climbs, drifting over him; the ring follows him
+      this.hover = Math.min(S.top, this.hover + dt * 2.2);
+      const d = this.distTo(hero), sp = Math.min(3.2, d * 2);
+      if (d > 0.3) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+      const k = Math.min(1, this.stateT / S.rise);
+      this.rig.play('windup'); this.rig.k = k;
+      this.marks.target(clampX(hero.pos.x), hero.pos.y, clampZ(hero.pos.z), S.R, k, false, this.stateT);
+      if (this.stateT > S.rise) {
+        this.spot = { x: clampX(hero.pos.x), y: hero.pos.y, z: clampZ(hero.pos.z), from: { x: this.pos.x, z: this.pos.z }, h: this.hover };
+        this.state = 'lock'; this.stateT = 0; g.audio.play('chargeFull');
+      }
+      return this.angleTo(hero);
+    }
+    const s = this.spot;
+    if (this.state === 'lock') {
+      // set: the ring stays where he stood and flashes; it slides over the spot
+      const u = Math.min(1, this.stateT / S.lock), e = u * u * (3 - 2 * u);
+      this.pos.x = s.from.x + (s.x - s.from.x) * e * 0.85; this.pos.z = s.from.z + (s.z - s.from.z) * e * 0.85;
+      this.hover = Math.min(S.top, this.hover + dt * 2.2);
+      this.rig.play('windup'); this.rig.k = 1;
+      this.marks.target(s.x, s.y, s.z, S.R, 1, true, this.stateT);
+      if (Math.random() < dt * 20) g.particles.burst(this.pos.x, this.pos.y + this.hover - 1.2, this.pos.z, '#d8a0ff', 1, 1.5);
+      if (this.stateT > S.lock) { this.state = 'drop'; this.stateT = 0; s.h = this.hover; s.from = { x: this.pos.x, z: this.pos.z }; g.audio.play('whoosh'); }
+      return null;
+    }
+    if (this.state === 'drop') {
+      const u = Math.min(1, this.stateT / S.drop);
+      this.pos.x = s.from.x + (s.x - s.from.x) * u; this.pos.z = s.from.z + (s.z - s.from.z) * u;
+      this.hover = s.h + (S.rest - s.h) * u * u;
+      this.marks.target(s.x, s.y, s.z, S.R, 1, true, this.stateT);
+      if (u >= 1) {
+        // the blow: inside the ring (his body's edge counts), a heavy hit; the shock ring runs out from it
+        this.marks.hide(); this.waveT = 0; this.waveAt = { x: s.x, y: s.y, z: s.z };
+        g.audio.play('rumble'); g.audio.play('clunk'); g.camRig.shake(0.5);
+        g.particles.burst(s.x, s.y + 0.2, s.z, '#d8a0ff', 30, 6); g.particles.burst(s.x, s.y + 0.1, s.z, '#bbb', 20, 5);
+        if (!hero.dead && Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < S.reach && Math.abs(hero.pos.y - s.y) < 1.5) {
+          const hp0 = hero.hp; hero.damage(S.dmg, { x: s.x, y: s.y, z: s.z }, true);
+          if (hero.hp < hp0) { this.slamHits = (this.slamHits || 0) + 1; if (this.slamHits === 1) g.hud?.toast?.('c3_toast_slam'); }
+        }
+        this.dives++; this.state = 'ground'; this.stateT = 0;
+      }
+      return null;
+    }
+    // ground: stuck in the deck, venting; harmless
+    this.hover = S.rest + Math.sin(this.stateT * 37) * 0.02;
+    this.rig.play('hurt'); this.rig.k = 0;
+    if (Math.random() < dt * 12) g.particles.burst(this.pos.x + (Math.random() - 0.5) * 2.2, this.pos.y + 0.4, this.pos.z + (Math.random() - 0.5) * 2.2, Math.random() < 0.5 ? '#d8d8e0' : '#d8a0ff', 2, 2);
+    if (this.stateT > S.ground) { this.state = 'chase'; this.stateT = 0; this.coolT = S.after; }
+    return null;
   }
   powerDown() {
     if (!this.alive) return;
     const g = this.game;
-    this.state = 'dead'; this.deadT = 0; this.fan.hide();
+    this.state = 'dead'; this.deadT = 0; this.fan.hide(); this.marks.hideAll();
     g.audio.play('break'); g.camRig.shake(0.35);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 40, 6);
     new KnockOut(this, 'guardian', null);
@@ -589,6 +673,7 @@ export class Guardian extends Drone {
     let face = this.angleTo(hero), sp = 0;
     this.rig.k = 0;
     if (this.state !== 'windup') this.fan.hide();
+    if (!this.diving) this.marks.hide();
     const d = this.distTo(hero);
     if (this.state === 'stunned') {
       // sags, sparks, can't attack
@@ -599,6 +684,9 @@ export class Guardian extends Drone {
       if (Math.random() < dt * 7) g.particles.burst(this.pos.x + (Math.random() - 0.5) * 2.4, this.pos.y + this.hover + (Math.random() - 0.3) * 1.4, this.pos.z + (Math.random() - 0.5) * 2.4, '#ffc870', 3, 3);
       face = null;
       if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.8; }
+    } else if (this.diving || this.state === 'ground') {
+      this.rig.mood = 'alert';
+      face = this.dive(dt, hero, P);   // (BOSS-SHAPE)
     } else {
       this.hover = Math.min(2.6, this.hover + dt * 1.5);
       this.rig.mood = 'alert';
@@ -608,7 +696,11 @@ export class Guardian extends Drone {
         const side = Math.sin(this.stateT * 0.9) * 1.2;
         P.move(this, Math.cos(this.angle) * side * dt, -Math.sin(this.angle) * side * dt);
         this.coolT = Math.max(0, this.coolT - dt);
-        if (this.coolT <= 0 && d < 12 && !hero.dead) { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); }
+        // (overloaded: the dive and the fan in turn, BOSS-SHAPE)
+        if (this.coolT <= 0 && d < 12 && !hero.dead) {
+          if (this.level >= 4 && this.nextDive) { this.nextDive = false; this.state = 'rise'; this.stateT = 0; g.audio.play('charge'); g.audio.play('alert'); }
+          else { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); if (this.level >= 4) this.nextDive = true; }
+        }
         this.rig.play('idle');
       } else if (this.state === 'windup') {
         // the tell: stops, glows, hums
@@ -636,6 +728,7 @@ export class Guardian extends Drone {
     }
     if (face != null) this.angle = dampAngle(this.angle, face, 3, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    if (this.waveT < 1) { this.waveT = Math.min(1, this.waveT + dt / 0.4); const w = this.waveAt; this.marks.wave(w.x, w.y, w.z, 3.2, this.waveT); }
     if (this.arena) {
       const A = this.arena;
       this.pos.x = Math.min(A.x1 - 1, Math.max(A.x0 + 1, this.pos.x));
