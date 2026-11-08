@@ -40,7 +40,7 @@ between rooms (house/cellar, tavern/cellar, the temple and its maze, the sewer's
 | 5 | The Platform, the Building Company's door | Its board stood 1.5 m before the door, the board's collider down to the ground: a straight walk at the door stopped at it. Moved, a lamp and a crate took the freed spot. | The board stands 4 m east of the door; the isles' dressing now keeps every house door's way in clear (2.2 m out, 0.7 m either side; the original's own objects are not moved); the foreman's yard spot beside the board. Straight and ±0.5 m: in. |
 | 6 | Knartas, the fishing family's house (`knartas-19--20`) | A pennant fence (the original's objects) ran 2 m before the door with no gap; no way led round it. The island test reached the door only by being placed behind the fence (ISO). | The panel and pole across the door are left out (zislands.js knartas `shape`); straight and ±0.5 m: in. |
 | 7 | The Hamalayi: the landing's hut, Lhar's five houses, the observatory keeper's house | Drawn doors with no prompt and no line: silent. | They lead into compact rooms (ihomes.js `ham-*`, the planner's pieces, whitewashed stone and dark timber): Bero's, Yorna's (where the village meets), Old Dorje's, Sana's loom, Lhamo's kitchen, the field keeper's hut, the observatory keeper's charts. Each has its own look line. |
-| 8 | Zeelich, the council house door (chapter 9) | Straight from 2.6 m a resident (Oma) can stand in the way. | Listed: reached round her; ±0.3 m straight in. Not changed. |
+| 8 | Zeelich, the council house door (chapter 9); the Platform, `platform-35-15` | Straight from 2.6 m a resident (Oma) can stand in the way; on the Platform a low rail ends at the landing spot, so he lands beside it (0.57 m clear, facing away) and the sweep's straight line from there meets the rail. | Listed: both reached round what stands there; the Platform's straight on from the street: in. Not changed. |
 | 9 | Citadel, the pink house's sewer door | One way until the works door is opened below (story/sewers.js). | Listed as one way, by design. |
 
 ### Open
@@ -75,3 +75,14 @@ room's own meshes (draw-batched originals included, clear glass and sprites not)
   modelled. A keeper for Lhar (the village moves to the monastery in chapter 6) was not added.
 - Sounds: the door sound is the existing `door`; no new audio event IDs.
 - Laptop: a GPU look at a few of the new Hamalayi rooms and at the moved Building Company board.
+
+## Evidence (8.11.2026, after commit `88fdfa7d`; Automated runtime only)
+
+Run against a snapshot of `lba3/` served locally, one suite at a time: `door-sweep` (99 doors, 11 links, the save
+check), `room-cutaway`, `camera-doors`, `zeelich-doors`, `island-doors` (70 rooms), `interior-life`, `lba1rooms`,
+`lazyregions`, `chapter1`, `story-journeys`, `world-consistency`: PASS. Earlier in the wave, on the same code apart from
+the room-spot rule (#4): `overlaps`, `zeelich-life`, `zislands`: PASS. `interior-life` failed twice with every room's
+spot moved (#4) and passed on the base and after the rule was taken back.
+A/B: `door-sweep BEFORE=1` (DOOR-CLEAR off in the page) fails Zeelich's terminal (lands 0.05 m inside, Continue walks
+him back in); the restore checks of `room-cutaway` fail on the build before CUT-RESTORE (lid 0.07, porch 13 faded
+materials against 9).
