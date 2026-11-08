@@ -64,13 +64,48 @@ interaction in reach, four headings each; `chap.js` counted who is on the island
 | The evacuation (ch. 8) | Kesh's walkers and the School's people gone | they stay (Citadel's evacuation is Citadel's) | `story/citizens.js` OFF_CITADEL, `storylife.js` school | `world-consistency` |
 | Music indoors | the home theme, Citadel's square | the island's pieces heard through the walls (`desert_in`, as `zeelich_in`) in Kesh's homes, the post's cabins and the two old houses | `engine/music.js`, `ihomes.js` | source; not listened to |
 
-## People on Desert Island per chapter (after; `probes/chap.js`)
+## People on Desert Island per chapter
 
-PEND
+Before (`probes/chap.js`, on the island outdoors, the base): chapter 4: 25 (the story's 9 with Doran and the guard, Kesh's
+3 walkers, the dig crew's 8, the School's plaza 5); 5: 24; 6–7: 15; **8: 6** (Tarra, Ilka, Dallan, Sani, Brosk, Lumi);
+9: 13; 10: 15; 11: 14; the epilogue: 15. Indoors: the School's classroom 3 (+ Hougo, Ker'aooc); Kesh's homes and the
+post's cabins 0.
+
+Now: outdoors the same in every chapter but 8, where Kesh's three walkers and the School's plaza and classroom stay
+(17 on the island; `desert-bar` checks them there). Indoors, from chapter 4: Dela, Jorr, Nima, Old Hanna, Leya in
+Kesh's homes and S40; Brann in the bunkhouse in chapter 4 and early 5; Joss in the dormitory once the crystal is awake.
+Every one of them, and Tarra, Ilka, Dallan and Doran between chapters, has a line for the state of the story they are
+heard in (`text/desertlife.js`): the bar's "lines change with the story's phases".
 
 ## The camera by keyboard at the main spots (`probes/camdesert.mjs`)
 
-PEND
+Follow at Medium, Classic controls, ArrowUp held through Playwright's keyboard from 6–14 m before each spot, 30 frames
+a second; per frame: Twinsen hidden (`camRig.hiddenBy`: his middle and head cut off), the camera inside a solid (a
+collider or the ground), the shortest arm. Pictures: `cam-before/`, `cam-after/` in the worker's scratchpad.
+
+| Spot | Before: hidden / inside / frames | After | Note |
+|---|---|---|---|
+| the pier to Kesh | 0 / 0 / 180 | 0 / 0 / 180 | |
+| Kesh's plaza | 0 / 0 / 150 | 0 / 0 / 150 | |
+| Brosk's door | (approach mis-set in the first run) | 0 / 0 / 84 | |
+| the cool room's door | (mis-set) | 0 / 0 / 94 | |
+| the oasis | 0 / 0 / 120 | 0 / 0 / 120 | |
+| the pump | 1 / 0 / 120 | 1 / 0 / 120 | one frame behind the tower, the next shot rises |
+| Hesk's stop | 0 / 0 / 109 | 0 / 0 / 109 | |
+| the post's gate | 0 / 0 / 120 | 0 / 0 / 120 | |
+| the dig's gate | 0 / 0 / 120 | 0 / 0 / 120 | |
+| Ilka's camp | 0 / 0 / 120 | 0 / 0 / 120 | |
+| S40's door | (mis-set) | 0 / 0 / 93 | |
+| S28's door | (mis-set) | 3 / 0 / 120 | three frames behind the ridge in the hollow; the shot rises |
+| the School's bridge | (mis-set) | 0 / 0 / 120 | |
+| the rim walk to the dormitory | (mis-set) | 0 / 0 / 93 | |
+| **up to the dormitory's door from the face's side** | 0 / **9** / 19 | 0 / **0** / 19 | before: the camera stood inside the stone face, Twinsen drawn as an outline (`cam-before/cam-dormdoor.png`); now behind him outside it, close (2.7 m arm) between the face and the hall |
+| the condenser hall's door | 0 / 0 / 120 | 0 / 0 / 78 | |
+| the post's yard | 0 / 0 / 120 | 0 / 0 / 117 | |
+
+The fix: the School's rock wall, stone face and great hall had camSkip colliders and no camera volume, so the camera
+went through them (`desertold.js` camVol; the island's other tall solids were already volumes). Nothing fades
+outdoors (VP-10 kept). Automated runtime only; a GPU look at the School's rim walk is asked of the laptop.
 
 ## What is left (and for whom)
 
