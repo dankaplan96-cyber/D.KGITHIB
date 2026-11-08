@@ -1,5 +1,6 @@
 // node zeecap.mjs <outdir>   env CAND_<look>=<file> as gamecap.mjs; SHELL_EXE (a renamed headless shell); GPU=1: the installed
-// Chrome on this machine's GPU, frame times only (20 s, the game's own loop).
+// Chrome on this machine's GPU, frame times only (20 s, the game's own loop). KEY/FLAGS: another chapter by its flags (as
+// tests/cast-rounds.mjs); IDS: only these people (comma list) framed, viewed close and spoken to.
 // The real game (?nocine, new game), chapter 3 by its flags (as tests/zeelich-life.mjs): Zeelich's street, where the Esmers
 // live. Pictures (chapter 3+: NOT for the user): street-follow.png (Twinsen facing the street's Esmers, Follow camera at the
 // player's distance), dialogue-<id>.png (the game's own two-shot with an Esmer), esmer-<id>.png (a fixed 2.6 m 3/4 view of
@@ -10,6 +11,8 @@ const OUT = process.argv[2]; fs.mkdirSync(OUT, { recursive: true });
 const BASE = process.env.BASE || 'http://127.0.0.1:8257/', GPU = !!process.env.GPU;
 const browser = await chromium.launch(GPU ? { channel: 'chrome', headless: false, args: ['--ignore-gpu-blocklist', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] } : { ...(process.env.SHELL_EXE ? { executablePath: process.env.SHELL_EXE } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+// ROUTES="src/game/roomlife.js=C:/…/roomlife.before.js;…": serve these files from elsewhere (a before run of a change in the code)
+for (const r of (process.env.ROUTES || '').split(';').filter(Boolean)) { const [u, f] = r.split('='); await ctx.route('**/' + u, (q) => q.fulfill({ path: f, contentType: 'text/javascript' })); }
 for (const [k, v] of Object.entries(process.env)) if (k.startsWith('CAND_') && v) { console.log('candidate', k.slice(5), v); await ctx.route(`**/assets/poly/${k.slice(5)}.json`, (r) => r.fulfill({ path: v, contentType: 'application/json' })); }
 await ctx.addInitScript(() => { let a = 0x2f6b1d; Math.random = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
 const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
@@ -19,21 +22,33 @@ await page.goto(BASE + '?nocine', { waitUntil: 'load', timeout: 300000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading')?.classList.contains('hidden') && !window.game.preparing, null, { timeout: 1500000 });
 await ev(() => { game.testFreeze = true; });
 await page.click('[data-act="new"]', { timeout: 300000 });
-const R = await ev(async () => {
+const KEY = process.env.KEY || null, FLAGS = JSON.parse(process.env.FLAGS || '{}'), IDS = process.env.IDS ? process.env.IDS.split(',') : null;
+const R = await ev(async ({ KEY, FLAGS }) => {
   const G = game; G.testFreeze = true; G.step(0.2);
   window.T = { talkAll(max = 120) { for (let i = 0; i < max && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); } };
   T.talkAll();
   Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(1); T.talkAll(); G.step(1); T.talkAll();
+  if (KEY) {   // (another chapter by its flags, as tests/cast-rounds.mjs setChapter: e.g. KEY=council FLAGS={"c9_started":true,"c9_form":true})
+    const RG = await import('/src/game/regions.js'), f = G.flags, base = JSON.parse(JSON.stringify(f));
+    for (const k of Object.keys(f)) delete f[k];
+    Object.assign(f, base, { prologueDone: true, intro: true, chapterKey: KEY, c1_water: true, c1_done: true }, FLAGS);
+    f.chapter = G.story.chapters.findIndex((c) => c.key === KEY); G.hero.hasBall = true;
+    for (const id of RG.CHAPTER_AREAS[KEY] || []) G.regions.ensure(id, 'test');
+    G.story.applyFlags(); G.step(0.2);
+    if (G.room?.id !== 'zeelich') G.enterRoom('zeelich', null, true);
+    G.story.refreshCast(); G.step(1); T.talkAll();
+  }
   const CH = await import('/src/game/characters.js');
   const es = G.npcs.filter((n) => n.present !== false && n.pos && n.group?.visible !== false && CH.LOOKS[n.def.char]?.race === 'esmer' && Math.abs(n.pos.x - G.hero.pos.x) < 80);
   return { room: G.room?.id, chapterKey: G.flags.chapterKey, hero: [G.hero.pos.x, G.hero.pos.z], esmers: es.map((n) => ({ id: n.def.id, char: n.def.char, x: +n.pos.x.toFixed(2), z: +n.pos.z.toFixed(2) })) };
-});
+}, { KEY, FLAGS });
+if (IDS) R.esmers = R.esmers.filter((e) => IDS.includes(e.id));
 log(JSON.stringify(R));
 const shot = async (name, hideHud = true) => { await ev((h) => { const hud = document.querySelector('#hud'); if (hud) hud.style.visibility = h ? 'hidden' : ''; game.renderer.render(); }, hideHud); await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 300000 }); log('shot', name); };
 // the street: Twinsen 7 m from the Esmers' middle, facing it (the Follow camera behind him at the player's distance)
-const street = await ev(() => {
-  const G = game, h = G.hero, CHs = G.npcs.filter((n) => n.present !== false && n.pos && ['oku', 'nara', 'keeper', 'xil', 'clerk', 'councilChair'].includes(n.def.char) && Math.abs(n.pos.x - h.pos.x) < 80);
+const street = await ev((ids) => {
+  const G = game, h = G.hero, CHs = G.npcs.filter((n) => n.present !== false && n.pos && ids.includes(n.def.id));
   if (!CHs.length) return null;
   for (const n of CHs) { n.def.speed = 0; n._round = null; }
   const cx = CHs.reduce((a, n) => a + n.pos.x, 0) / CHs.length, cz = CHs.reduce((a, n) => a + n.pos.z, 0) / CHs.length;
@@ -44,7 +59,7 @@ const street = await ev(() => {
   G.camRig.lba && (G.camRig.lba.init = false); G.camRig.snap?.(); G.step(1.5);
   const rd = G.renderer.renderer; rd.info.autoReset = false; rd.info.reset(); G.renderer.render(); const info = { calls: rd.info.render.calls, triangles: rd.info.render.triangles }; rd.info.autoReset = true;
   return { at: best, centre: [cx, cz], n: CHs.length, info, settings: { camera: G.settings.camera, camDist: G.settings.camDist, quality: G.settings.quality } };
-});
+}, R.esmers.map((e) => e.id));
 log('street', JSON.stringify(street));
 const res = { ...R, street, gpu: GPU };
 if (GPU) {

@@ -3211,3 +3211,96 @@ calls (main + shadow). Vega 8, Chrome D3D11, 1366×768, Medium by hand, chapter 
   `game.frame(dt, true)` or `shadowCull.update(root)` first. **Root cause left:** the builders that use the scene
   instead of `world.root` (wizards, lba1, sewers, kit2); moving them changes Citadel's batches, so they are culled
   here instead. The same pieces may cost in other outdoor regions within 2,500 m of Citadel (the desert near x ≈ 1000).
+
+## CAST-POLISH-ZEELICH-2 · keeper_b (the council guards), oku_b (three working Esmers), the clerk's and Sela's glasses · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ZEELICH-2.diff`. It goes **on top of CAST-POLISH-HEROES, -CITADEL, -CITADEL-2, -CITADEL-3
+and -ZEELICH**: `git apply --check` is clean on origin `7b34fc50` with those five applied. Files it changes:
+- `tools/blender/cast_poly.py`;
+- `src/game/characters.js`: 2 new LOOKS entries, nothing else changed;
+- the people's `char`: `src/game/storylife.js` (2 lines), `src/game/roomlife.js` (4 lines), `src/game/story/hostel.js`
+  (1 line);
+- `art/characters/skeletons.json`: 2 new looks, made with `tools/dump-skeletons.mjs keeper_b` and `… oku_b`. The file
+  is one line, so the diff carries it whole twice; regenerating with those two commands gives the same file;
+- `assets/poly/index.json`: + keeper_b, oku_b.
+
+Model files for `assets/poly/`, in `requests/CAST-POLISH-ZEELICH-2/`:
+- `keeper_b.json` and `oku_b.json`, new;
+- `clerk.json`, which replaces CAST-POLISH-ZEELICH's;
+- `councilB.json`.
+
+Pictures (**chapter 3+: not for the user**): `docs/future/characters/{keeper_b,oku_b,clerk,councilB}/`.
+- **keeper_b, Zeelich's council guard (order 24).** It follows LBA2's helmeted Esmer, body 80, measured read-only: a
+  head piece ±0.16 H wide from 0.78 H at the back to the top, with a peak forward over the face. The changes:
+  - a heavier build: not `slim`, so the capsule is 0.1 H round and the skeleton is oku's width, from the dump;
+  - a helmet, 1.25 R round. Its rim is over the brows, over the ears and down the back as a neck guard, and it is closed
+    underneath. It has a curved peak and is in the new role `helmet` #4a6a5a, with its underside 0.72× that colour;
+  - a belt in `belt` #6a4a2a with a brass `buckle` #e8c870.
+
+  Who takes it: **zc_guard, up_guard, zt_guard, zt_guard2**. Sefa (`keeper`), Ilo, Marl and Esren keep keeper, and so do
+  the isles' kn_fisher and ld_op.
+  - Triangles: 2224 with eyes and mouth (body 2144), +20.7 % on keeper.
+  - In chapter 9 on Zeelich's street, the guard by the council door now reads as a guard at Follow/Medium, beside Marl
+    in keeper.
+- **oku_b, a working Esmer (order 24).** The changes:
+  - upright (no stoop);
+  - a long robe flared out to just above the boots, with the same rolled hem lower down;
+  - a wrapped headcloth (wrap, crown and a short tail) in oku's `hat` hex, the wrap's lower turn 0.82× that colour,
+    instead of the round cap;
+  - dark brows (oku's are white);
+  - height 0.97.
+
+  Who takes it: **pask, ennu, hs_worker4**. Oku and Old Ossa (up_esmer) keep oku.
+  - Triangles: 2128 with eyes and mouth (body 2048), −5 % on oku.
+- **GLASSES-CLERK (clerk ×6) and GLASSES-SELA (councilB ×4: Sela, Kira, Sanna, Ama),** as GLASSES-MIRA (CAST
+  `glassesRim`). Both were flat wire octagons standing off the face. Now each is a round rim (a thin cord) laid on the
+  face, with a bridge and arms back to the ears.
+  - The clerk's cords are cheap (3 sides, 10 steps): 1808 → 1950 body, +7.9 % on CAST-POLISH-ZEELICH's clerk. That is
+    +27 % on the shipped clerk (1536) once both batches are in, just over the order's +25 %.
+  - Sela: 2662 → 2982 body, +12.0 %.
+- **Census after the change** (all 147 people at load): keeper ×4, keeper_b ×4, oku ×2, oku_b ×3. DRESS-1's numbering
+  is worked out again over the whole cast, so the guards now share keeper_b's own colours and variants, and Ilo, Marl
+  and Esren get the next keeper variants. Every dress is still different.
+- **Contracts:**
+  - the bone names and order equal the looks' skeletons;
+  - 4 weights a vertex;
+  - no colour that is neither a role nor a darker multiple of one;
+  - feet at 0.004.
+  - DRESS-1 (keeper_b and oku_b, variants 1–6): 0 vertices keep an overridden base hex, helmet and belt included.
+  - `validate` (Blender, keeper_b and oku_b): 0 fails. The one warning is the cast's loose vertices.
+  - The rebuild from the diff's script is byte-identical to the request's JSONs.
+- **In the game:**
+  - Draw calls: the hero as keeper_b, oku_b, clerk or councilB is 4 calls, as before.
+  - Zeelich's street in chapter 9, Follow/Medium: 709 = 709 calls on SwiftShader and 643 = 643 on the Vega 8, with
+    triangles +368 (SwiftShader) and +972 (Vega 8) respectively.
+  - In chapter 3 nothing changes in view: Ennu stands on the pier, out of frame.
+  - Vega 8 frame time (chapter 9 street, 20 s, two pairs, the before run serving the old chars through routes):
+    - before: median 17.3 / 17.4 ms, p95 18.2 / 18.2 ms;
+    - after: median 17.4 / 17.4 ms, p95 18.2 / 18.2 ms.
+
+    No measurable change; the frame sits at the 60 Hz cap.
+- **Looked at:**
+  - lookdev turnarounds against the CAST-POLISH-ZEELICH models;
+  - 13 poses × 2 views of keeper_b and oku_b: the helmet stays on the head through the throw, the sword and the doze,
+    and the long robe walks and runs;
+  - the game with the hero as each look: Follow/Medium, the dialogue and close-ups;
+  - Zeelich's street in chapters 3 and 9, before and after;
+  - Blender views of keeper_b and oku_b;
+  - the faces of the clerk and Sela, front, ¾ and side.
+- **Tests** (SwiftShader, every file of CAST-POLISH-ZEELICH and -ZEELICH-2 in `assets/poly`, the code changes in place):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - interior-life 144/144 PASS (zt_guard, zt_guard2 and pask at the terminal).
+
+  `assets/poly` was put back afterwards. Evidence labels: **Automated runtime only**. The pictures were looked at, not
+  played.
+- **Left:**
+  - the doze pose's feet, as in CAST-POLISH-ZEELICH;
+  - the helmet's 16 facets show up close;
+  - Otringal's Quetch otherwise read as designed: lharWoman (on zc_petit and others) is unchanged;
+  - Kira still wears Sela's shape. Only her colours are her own (DRESS-1); a `councilB_b` would be a later order-24
+    item;
+  - the cast's other order-24 models (farmerB, desertkid, lharMan, lharWoman, farmerA, clerk, farmerC, archivist) still
+    have no shape variants.
+- Applies directly on the current origin (which has the earlier cast batches): `git apply --check` clean. Note: the clerk is +27 % over the shipped file across both batches, just above the +25 % rule (ZEELICH's boots and robe plus these glasses): accept or ask for a trim.

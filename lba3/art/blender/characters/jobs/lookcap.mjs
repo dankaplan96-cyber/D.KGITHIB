@@ -23,7 +23,8 @@ const SH = [
 const only = process.env.ONLY?.split(',');
 for (const [n, q] of SH) {
   if (only && !only.includes(n)) continue;
-  await page.goto(`${BASE}lookdev.html?c=${LOOK}&${q}`, { waitUntil: 'load', timeout: 180000 });
+  const qq = process.env.FY ? q.replace(/fy=[-0-9.]+/, "fy=" + process.env.FY) : q;   // (FY: another face height, e.g. an Esmer's face sits low on its tall head)
+  await page.goto(`${BASE}lookdev.html?c=${LOOK}&${qq}`, { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.lookdev && window.lookdev.rigs?.length, null, { timeout: 300000 });
   await page.evaluate(() => { for (let i = 0; i < 3; i++) window.lookdev.render(1 / 60); });
   await page.waitForTimeout(300);
