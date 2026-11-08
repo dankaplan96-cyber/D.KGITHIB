@@ -317,15 +317,6 @@ function build(rid, scene, physics) {
       && !(x < LX + 2.0 && Math.abs(z - doorZ) < 1.0);
     IH[rid].front[pc.name] = { x: o.X(x), z: o.Z(z), a: Math.atan2(pc.x - x, pc.z - z), at: { x: o.X(pc.x), z: o.Z(pc.z) }, clear };
   }
-  // a keeper with no counter stands at the piece that is their work (KEEPERS stand), facing it; else at another piece
-  // with room before it. Never before the room's two looked-at pieces (the first two): there the look's own spot is
-  for (const K of Object.values(KEEPERS)) {
-    if (K.room !== rid || !K.stand || IH[rid].npcSpots.keeper) continue;
-    const F = IH[rid].front, looked = new Set(placed.slice(0, 2).map((q) => q.name));
-    const ok = (n) => F[n]?.clear && !looked.has(n);
-    const name = ok(K.stand) ? K.stand : placed.map((q) => q.name).find(ok);
-    if (name) IH[rid].npcSpots.keeper = { x: F[name].x, z: F[name].z, a: F[name].a };
-  }
   // the two looks: the room's own at its first piece, its kind's at the second (from where he stands before them)
   // (the prompt is in reach of the piece itself; the place to stand before it keeps out of the door's way)
   const lookAt = (pc, key) => {
@@ -336,6 +327,28 @@ function build(rid, scene, physics) {
   };
   if (placed[0]) lookAt(placed[0], rid);
   if (placed[1]) lookAt(placed[1], 'ihk_' + placed[1].name);
+  // a keeper with no counter (KEEPERS stand) stands at the piece that is their work, facing it; or at another piece; or on
+  // a free spot of the floor. Never where they would take a look's prompt: within reach of a look's own standing spot
+  // and in front of him as he faces its piece (Game.findInteractable puts a person ahead of a thing). In the room's frame
+  for (const K of Object.values(KEEPERS)) {
+    if (K.room !== rid || !K.stand || IH[rid].npcSpots.keeper) continue;
+    const L = IH[rid].looks.map((l) => ({ x: l.x - o.X(0), z: l.z - o.Z(0), ax: l.at.x - o.X(0), az: l.at.z - o.Z(0) }));
+    const steals = (x, z) => L.some((l) => { const dx = x - l.x, dz = z - l.z, d = Math.hypot(dx, dz); if (d > 2.9) return false; if (d < 0.6) return true; const fx = l.ax - l.x, fz = l.az - l.z, fl = Math.hypot(fx, fz) || 1; return (dx * fx + dz * fz) / (d * fl) > -0.35; });
+    const inPiece = (x, z) => placed.some((q) => x > q.x - q.hx - 0.35 && x < q.x + q.hx + 0.35 && z > q.z - q.hz - 0.35 && z < q.z + q.hz + 0.35);
+    const clearAt = (x, z) => x > LX + 0.5 && x < RX - 0.5 && z > BZ + 0.5 && z < FZ - 0.5 && !(x < LX + 2.0 && Math.abs(z - doorZ) < 1.0) && !inPiece(x, z) && !steals(x, z);
+    const local = (f) => ({ x: f.x - o.X(0), z: f.z - o.Z(0), a: f.a });
+    const F = IH[rid].front, names = [K.stand, ...placed.map((q) => q.name)];
+    let spot = null;
+    for (const n of names) { const f = F[n] && local(F[n]); if (f && clearAt(f.x, f.z)) { spot = f; break; } }
+    if (!spot) {   // (a free spot of the floor, facing the nearest piece)
+      for (let x = LX + 0.6; x <= RX - 0.6 && !spot; x += 0.3) for (let z = BZ + 0.6; z <= FZ - 0.6 && !spot; z += 0.3) {
+        if (!clearAt(x, z)) continue;
+        const q = placed.reduce((b, p) => (!b || Math.hypot(p.x - x, p.z - z) < Math.hypot(b.x - x, b.z - z) ? p : b), null);
+        spot = { x, z, a: q ? Math.atan2(q.x - x, q.z - z) : 0 };
+      }
+    }
+    if (spot) IH[rid].npcSpots.keeper = { x: o.X(spot.x), z: o.Z(spot.z), a: spot.a };
+  }
   // on the walls: a frame or a hanging on the left wall past the door, a lamp from the ceiling
   const lz0 = BZ + 0.5, lz1 = doorZ - 1.0;
   if (lz1 - lz0 > 1.0 && !placed.some((q) => q.ry === Math.PI / 2 && q.z - q.hz < lz1)) {
