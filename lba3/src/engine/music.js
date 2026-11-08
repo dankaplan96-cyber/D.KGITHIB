@@ -30,6 +30,7 @@ export const MOODS = {
   zeelich: { list: 'zeelich' },
   zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
   desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
+  desert_in: { list: 'desert', gain: 0.6, lowpass: 1100 }, // (DESERT-BAR) Kesh's homes, the post's cabins, the old houses: the island heard through the walls, as 'office'
   hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',

@@ -26,6 +26,7 @@
 import * as THREE from 'three';
 import { tm, pm, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
 import { fitAdd } from './worldfit.js';
+import { roomOcc, occCollider } from './roomocc.js';
 import { rng, smoothstep } from '../engine/math.js';
 
 // ------------------------------------------------------------------ the places (local metres, desert.js's frame)
@@ -87,6 +88,11 @@ function ringOf(hwIn, hwOut, sp, over = 0.3) {   // the surround between two hor
 // C: { R, B, col, H, W, palm(x, z, s, ry), signAt(text, x, z, ry, bg) } from desert.js (B the island's batch; H the ground)
 export function buildOldPlaces(C) {
   const { R, B, col, H, W } = C;   // (C.group: the region's group, local frame)
+  // (DESERT-BAR, VP-10: the School's rock wall, its stone face and the great hall are camera volumes: the next shot rises
+  //  over them, as over every other tall solid of the island (roomocc.js). Their colliders were camSkip and nothing stood
+  //  for them in R.occ, so the camera went through them: walking up to the dormitory's door from the face's side, the
+  //  view stood inside the face and showed him as a see-through outline)
+  const camVol = (c, name) => occCollider(roomOcc(R, C.terrain), c, { name });   // (C.terrain: the shared world terrain, as regions.js occAuto's)
   R.shutDoors = [];
   R.figures = [];
   // materials: the island's own (kit.js caches by name and options: the same objects desert.js draws with), plus a
@@ -100,7 +106,9 @@ export function buildOldPlaces(C) {
     eye: pm('#ff5a1a', 0.3, { emissive: '#d82a00', emissiveIntensity: 1.4 }),
   };
   const r = rng(4949);
-  const shut = (id, x, y, z, ry, out = 0.9) => R.shutDoors.push({ id, ...W(x + Math.sin(ry) * out, z + Math.cos(ry) * out), y, ry });
+  // (DESERT-BAR: with its sill, the door's own face, so a door that leads in (S28, the hall: ihomes.js) has its room's way
+  //  in and out)
+  const shut = (id, x, y, z, ry, out = 0.9) => R.shutDoors.push({ id, ...W(x + Math.sin(ry) * out, z + Math.cos(ry) * out), y, ry, sill: W(x, z) });
   const figure = (x, z) => R.figures.push(W(x, z));
 
   // ---------------------------------------------------------------- a house of Kesh's adobe (two storeys when tall)
@@ -123,7 +131,7 @@ export function buildOldPlaces(C) {
     piece(D.side, D.u, -0.05, bbox(1.25, 2.15, 0.3, 0.04, 1), M.dark, gy + 1.08);
     piece(D.side, D.u, 0.02, bbox(1.45, 0.16, 0.38, 0, 1), M.wood, gy + 2.2);
     for (const s of [-1, 1]) piece(D.side, D.u + s * 0.68, 0.02, bbox(0.14, 2.2, 0.36, 0, 1), M.wood, gy + 1.1);
-    if (o.shut) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);
+    if (o.shut && !o.lived) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);   // (DESERT-BAR: `lived`, a door that leads in: ajar)
     else { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u - 0.15, 0.28); add(bbox(0.95, 1.95, 0.08, 0, 0.6), M.plank, lx, gy + 1.0, lz, S.yaw - 0.55); }
     piece(D.side, D.u, 0.32, bbox(1.7, 0.16, 0.6, 0, 1), M.stone, gy + 0.02);   // the sill's step
     // windows: small, deep, with a wooden sill and one open shutter; the upper storey's higher
@@ -191,7 +199,7 @@ export function buildOldPlaces(C) {
     const S = SCHOOL_SITE, f = frame(S.x, S.z, S.ry);   // (local +z faces east: f(u, v): u along the face (north −), v out of it)
     const g = H(S.x, S.z), base = g - 0.4, top = g + S.h;
     // the canyon wall the mask is set in: a slab of the terrace's rock behind the face, boulders at its ends and over it
-    { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 1.4, 2.6, 0.5, TILE.cliff), M.cliff, bx, base + (S.h + 1.4) / 2 - 0.2, bz, 0, S.ry, 0); col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 0.9, camSkip: true }); }
+    { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 1.4, 2.6, 0.5, TILE.cliff), M.cliff, bx, base + (S.h + 1.4) / 2 - 0.2, bz, 0, S.ry, 0); camVol(col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 0.9, camSkip: true }), 'school rock wall'); }
     // (the boulders at its ends: OLD_ROCKS, drawn by the island's rock tiles)
     // the face: a broad stone egg, its chin pushed forward
     { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.grey, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
@@ -212,7 +220,7 @@ export function buildOldPlaces(C) {
     { const [sx, sz] = f(0, 1.56); B.add(cached('w80d-star', () => new THREE.CircleGeometry(0.22, 5)), pm('#bff4ff', 0.4, { emissive: '#40a0d0', emissiveIntensity: 1.0 }), sx, doorY + 1.75, sz, 0, S.ry, 0); }
     { const F = FORECOURT, cx = (F.x0 + F.x1) / 2, cz = (F.z0 + F.z1) / 2; B.add(bbox(F.x1 - F.x0, 1.3, F.z1 - F.z0, 0.04, 1.5), M.stone, cx, g - 0.62, cz); col({ type: 'box', x: cx, z: cz, hw: (F.x1 - F.x0) / 2, hd: (F.z1 - F.z0) / 2, top: g + 0.03 }); }
     // the mask's body is solid; the forecourt is stood on
-    { const [cx, cz] = f(0, 0.3); col({ type: 'box', x: cx, z: cz, hw: S.w / 2 + 0.1, hd: 1.7, rot: S.ry, top: top, camSkip: true }); }
+    { const [cx, cz] = f(0, 0.3); camVol(col({ type: 'box', x: cx, z: cz, hw: S.w / 2 + 0.1, hd: 1.7, rot: S.ry, top: top, camSkip: true }), 'school face'); }
     fitAdd({ region: 'desert', name: 'the school mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -1.05, x1: 1.05, y0: 0, y1: 2.6 }] });
     C.schoolSpot = { x: dx, z: dz };
     // the white blocks (bodies 46) and the fallen cubes (45) on the terrace, the horned pillar (body 32) to the north
@@ -265,7 +273,7 @@ export function buildOldPlaces(C) {
       for (const s of [-1, 1]) for (const dzz of [-1.8, 1.8]) { const wx = Hh.x + s * (Hh.w / 2 + 0.02); B.add(bbox(0.06, 1.3, 0.34, 0, 1), M.dark, wx, sill + 2.6, Hh.z + dzz); B.add(bbox(0.05, 1.5, 0.54, 0, 1), M.blue, wx - s * 0.01, sill + 2.6, Hh.z + dzz); }
       // the threshold slab between the rim walk and the door, stood on; the hall itself is solid
       B.add(bbox(3.4, 0.5, 1.6, 0.04, 1.5), M.stone, Hh.x, sill - 0.25, dz0 - 0.7); col({ type: 'box', x: Hh.x, z: dz0 - 0.7, hw: 1.7, hd: 0.8, top: sill });
-      col({ type: 'box', x: Hh.x, z: Hh.z, hw: Hh.w / 2 + 0.5, hd: Hh.d / 2 + 0.5, top: roofTop, camSkip: true });
+      camVol(col({ type: 'box', x: Hh.x, z: Hh.z, hw: Hh.w / 2 + 0.5, hd: Hh.d / 2 + 0.5, top: roofTop, camSkip: true }), 'great hall');
       shut('hall', Hh.x, sill, dz0, Math.PI, 1.2);
       // PURPOSES: the pupils' study crystal on an iron bracket beside the doorway: asleep (dim) until a pure note wakes it
       // (story/purposes.js, the singing fork). Its glow is the material's own: no light.
@@ -289,7 +297,7 @@ export function buildOldPlaces(C) {
 
   // ================================================================ around Kesh
   // the big house S40 (body 24), its stoop (28), garden wall (31), the horned pillar (32), the palm (9/10), a hand cart (16/17)
-  adobe({ name: 'house s40', x: -35.5, z: -38.9, w: 6.08, d: 7.6, h: 5.07, ry: -Math.PI / 2, tint: '#e9b98a', shutter: '#c84a3a', door: { side: 'front', u: 0.3 }, stoop: 3.0, shut: true,
+  adobe({ name: 'house s40', x: -35.5, z: -38.9, w: 6.08, d: 7.6, h: 5.07, ry: -Math.PI / 2, tint: '#e9b98a', shutter: '#c84a3a', door: { side: 'front', u: 0.3 }, stoop: 3.0, shut: true, lived: true,
     windows: [{ side: 'front', u: -2.0 }, { side: 'front', u: -1.6, up: true }, { side: 'front', u: 1.8, up: true }, { side: 'left', u: -1.2 }, { side: 'left', u: 1.0, up: true }, { side: 'right', u: 1.2, up: true }] });
   for (const [x, z, ry] of [[-33.4, -44.9, 0], [-35.5, -45.1, 0], [-37.7, -45.3, 0], [-39.8, -45.5, 0], [-42.0, -45.7, 0], [-48.3, -46.2, 0], [-50.5, -46.4, 0], [-32.2, -43.6, Math.PI / 2]]) lowWall(x, z, 2.12, ry);
   hornedPillar(-43.0, -41.3, 0, 4.25);
@@ -314,6 +322,15 @@ export function buildOldPlaces(C) {
     B.add(bbox(0.9, 0.16, 1.9, 0, 1), M.stone, T.x - T.w / 2 - 0.4, gy + 0.03, T.z - 1.5);
     col({ type: 'box', x: T.x, z: T.z, hw: T.w / 2, hd: T.d / 2, top: gy + T.h + 0.5 });
     shut('s28', T.x - T.w / 2, gy, T.z - 1.5, -Math.PI / 2, 1.0);
+    // (DESERT-BAR: the crew's board on the wall north of the door, now that the door leads in: Anko's sketch is read there,
+    //  story/purposes.js; a cork board in a frame with three pinned sheets)
+    {
+      const bx = T.x - T.w / 2 - 0.05, bz = T.z - 1.5 + 1.55, by = gy + 1.45;
+      B.add(bbox(0.08, 0.95, 1.1, 0.01, 1), M.darkWood, bx, by, bz);
+      B.add(bbox(0.04, 0.8, 0.95, 0, 1), pm('#b88a5a', 0.95), bx - 0.04, by, bz);
+      for (const [dy, dz, c] of [[0.15, -0.25, '#f2ead6'], [-0.1, 0.2, '#e8dcc0'], [0.2, 0.25, '#dfe8ee']]) B.add(bbox(0.01, 0.28, 0.22, 0, 1), pm(c, 0.9), bx - 0.07, by + dy, bz + dz);
+      R.s28board = W(bx - 0.9, bz);
+    }
     fitAdd({ region: 'desert', name: 'tower s28', x: W(T.x, T.z).x, z: W(T.x, T.z).z, ry: 0, oy: gy, w: T.w, d: T.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6, openings: [{ side: 'left', kind: 'door', x0: -2.3, x1: -0.7, y0: 0, y1: 2.4 }] });
   }
   for (const [x, z] of [[-55.7, -73.9], [-58.1, -74.1]]) { const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }

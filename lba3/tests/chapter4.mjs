@@ -151,7 +151,17 @@ await shot('C4-02-camp.png');
 log('ilka', await ev(() => { T.talk('ilka'); return [game.flags.c4_ilka, T.obj()]; }));
 // the research post in a storm
 log('storm', await ev(() => { const G = game; for (let i = 0; i < 400 && !G.story.cur.stormy; i++) G.step(0.05); return [G.story.cur.stormy, G.rooms.desert.post.gate.isOpen, G.rooms.desert.storm.level.toFixed(2)]; }));
-log('desk', await ev(() => { const P = game.rooms.desert.post; T.tp(P.gate.x + 3, P.gate.z); T.useAt(P.desk.x, P.desk.z); return [game.flags.c4_notebook, T.obj()]; }));
+// (DESERT-BAR: the notebook is on the foreman's desk inside the office, the cabin's own room: in by its door (INPUT), the desk
+//  searched (INPUT), out again. Before, it was taken 0.8 m before the office door, inside the door's way in.)
+const desk = await ev(() => { const G = game, Po = G.rooms.desert.post; T.tp(Po.gate.x + 3, Po.gate.z);
+  const outside = (() => { const d = G.story.doors().find((x) => x.room === 'ih_post_cabin0'); return d ? Math.hypot(d.x - Po.desk.x, d.z - Po.desk.z) : null; })();
+  const e = P.enter('ih_post_cabin0', { run: true }); const d = G.story.cur.deskSpot();
+  const u = P.use(d.at.x, d.at.z, { kind: 'c4desk', near: 1.2 }); P.settle();
+  const o = P.exitTo('ih_post_cabin0-out');
+  return { enter: e.r, prompt: u.target?.kind, u: u.r, notebook: !!G.flags.c4_notebook, out: o.to, obj: T.obj(), doorToOld: outside == null ? null : +outside.toFixed(2) }; });
+s = await said();
+check('the notebook on the foreman\'s desk inside the post\'s office (WALK in by the door, Search, out again)', desk.enter === 'entered' && desk.prompt === 'c4desk' && desk.notebook && desk.out === 'desert' && has(s, /DIG GATE 4-1-7/), { desk, s });
+log('desk', [desk.notebook, desk.obj]);
 await shot('C4-03-post.png');
 // save/reload mid-chapter
 const KEYS = ['c4_pump', 'c4_trust', 'c4_rope', 'c4_ilka', 'c4_notebook', 'c4_yacht', 'c4_gear1', 'c4_joint', 'c4_gearMiss'];

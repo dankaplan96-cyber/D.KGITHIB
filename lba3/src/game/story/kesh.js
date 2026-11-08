@@ -37,6 +37,14 @@ export class KeshLife extends ChapterBase {
     if (i === this.idx('steam')) return 'steam';
     return f.c4_pump ? 'wet' : 'dry';
   }
+  // DESERT-BAR: the village's talk through the whole story (Kesh's people in their homes, Safi, Tamu and Bashir on their
+  // rounds): phase() and, after the vent, what reaches Kesh from elsewhere — Citadel's evacuation (chapter 8), Baldino's
+  // network with its relay on the post's bore (chapter 10), the ending (the epilogue)
+  lifePhase() {
+    const k = this.story.cur?.key;
+    if (this.phase() !== 'after') return this.phase();
+    return k === 'evacuation' ? 'evac' : k === 'network' ? 'net' : k === 'home' ? 'home' : 'after';
+  }
   get dir() { return this.f.k_dir ?? 2; }
 
   // ---------------------------------------------------------------- state → world

@@ -155,12 +155,14 @@ function buildHangar(scene, physics) {
   const tarp = new THREE.Mesh(new THREE.PlaneGeometry(9, 5, 9, 6), MAT.cloth('#7a6a4a', '#5a4a34'));
   { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), lz = TZ - p.getY(i); p.setZ(i, 2.36 - Math.max(0, lz - 0.5) * 0.5 - Math.max(0, -1.1 - lz) * 0.22 - Math.max(0, Math.abs(x) - 4.0) * 0.6 + Math.sin(x * 2 + lz) * 0.04); } tarp.geometry.computeVertexNormals(); }
   tarp.rotation.x = -Math.PI / 2; tarp.position.z = TZ; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
-  B.col(2.5, 2.8, 4.8, 1.6, 2.4, { noStand: true, rot: -0.3 });
+  const glCols = [B.col(2.5, 2.8, 4.8, 1.6, 2.4, { noStand: true, rot: -0.3 })];
   // (the fuselage's nose and its tail with the tailplane reach past the wing's box: their own, so nobody stands in them;
   //  the glider's frame turned −0.3: a point (x, z) in it lies at (2.5 + 0.955x − 0.296z, 2.8 + 0.296x + 0.955z))
-  B.col(3.22, 0.46, 0.75, 0.85, 2.0, { noStand: true, rot: -0.3 });   // the nose: its frame's (0, −2.45)
-  B.col(1.79, 5.09, 1.35, 0.45, 2.5, { noStand: true, rot: -0.3 });   // the tail: its frame's (0, 2.4)
-  R.glider = { x: B.cx + 2.5, z: B.cz + 2.8 + 2.0, uncover() { tarp.visible = false; } };
+  glCols.push(B.col(3.22, 0.46, 0.75, 0.85, 2.0, { noStand: true, rot: -0.3 }));   // the nose: its frame's (0, −2.45)
+  glCols.push(B.col(1.79, 5.09, 1.35, 0.45, 2.5, { noStand: true, rot: -0.3 }));   // the tail: its frame's (0, 2.4)
+  // (DESERT-BAR: gone(): flown north at the end of chapter 5: the hall is open in later chapters, story/desertlife.js;
+  //  its tarp with it)
+  R.glider = { x: B.cx + 2.5, z: B.cz + 2.8 + 2.0, uncover() { tarp.visible = false; }, gone() { gl.visible = false; for (const c of glCols) c.enabled = false; } };
   // a gantry along the right side with a ball switch for the roof hatch
   const gy = 4.2;
   k.add(rbox(1.2, 0.12, D - 2, 0.02), MAT.tread('#5a5a5a'), W / 2 - 1.0, gy, 0);

@@ -111,12 +111,16 @@ check('after the call: the conch sends the chasing dog home, calm; it does not c
 iso('chapter 4 entered by its flags (on Desert Island by the pier); the singing fork and the lance given as the chapter would');
 const s0 = await ev(() => { const G = game, h = G.hero; const j = T.jump('dig'); h.coins = 30; return { ...j, homes: Object.keys(G.rooms.desert.oldHomes || {}), lamp: !!G.rooms.desert.studyLamp }; });
 check('chapter 4: on Desert Island; the three kept old houses are lived in (S40, S28, the hall), the study crystal is there', s0.room === 'desert' && s0.homes.join() === 's40,s28,hall' && s0.lamp, s0);
-const s1 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes; const u = P.use(O.s28.x, O.s28.z, { kind: 'pp_door', near: 1.2 }); P.settle(); return { u: u.r, survey: !!G.flags.pp_survey, inv: G.inventory.items().map((i) => i.id) }; });
+// (DESERT-BAR: S28's door leads into the crew's bunkhouse now; the board is on the wall beside it, desertold.js)
+const s1 = await ev(() => { const G = game, B = G.rooms.desert.s28board; const u = P.use(B.x, B.z, { kind: 'pp_door', near: 1.0 }); P.settle(); return { u: u.r, room: G.room?.id, survey: !!G.flags.pp_survey, inv: G.inventory.items().map((i) => i.id) }; });
 const s1l = await said();
-check("the dig crew's bunkhouse (WALK, E): its board, Anko's pipe sketch found (line two runs to the oasis), carried", s1.survey && s1.inv.includes('survey') && s1l.some((l) => /pipe/.test(l)), { s1, s1l });
-const s2 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes; const u = P.use(O.s40.x, O.s40.z, { kind: 'pp_door', near: 1.2 }); P.settle(); return { u: u.r }; });
+check("the dig crew's bunkhouse (WALK, E): its board beside the door, Anko's pipe sketch found (line two runs to the oasis), carried", s1.room === 'desert' && s1.survey && s1.inv.includes('survey') && s1l.some((l) => /pipe/.test(l)), { s1, s1l });
+// (DESERT-BAR: S40's door leads into Bashir's home, his granddaughter Leya inside, who points to him at the loom)
+const s2 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes, d = G.story.doors().find((q) => q.room === 'ih_house_s40'); if (!d) return { r: 'no door' };
+  G.hero.pos.set(O.s40.x - 2.0, G.physics.groundAt(O.s40.x - 2.0, O.s40.z, O.s40.y + 2), O.s40.z); P.settle(); const t = P.through(d.x, d.z); const k = P.talk('ih_leya');
+  const e = G.room?.exits?.find((x) => /-out$/.test(x.to)); const o = e ? P.through(e.x, e.z) : null; return { room: t.to, talk: k.r, out: o?.to }; });
 const s2l = await said();
-check("S40 (WALK, knock): Bashir's home; it points to him at the loom", s2l.some((l) => /Bashir's house/.test(l)), { s2, s2l });
+check("S40 (WALK in): Bashir's home; Leya, his granddaughter, points to him at the loom; back out", s2.room === 'ih_house_s40' && s2.talk === 'talked' && s2l.some((l) => /Grandpa/.test(l)) && s2.out === 'desert', { s2, s2l });
 const o1 = await ev(() => { const G = game; const r = P.talk('oni'); return { r: r.r, ask: !!G.flags.pp_oniAsk }; });
 const o1l = await said();
 check('Oni at the dormitory (TALK): the study crystal is asleep; a pure note; the dig\'s singing fork', o1.r === 'talked' && o1.ask && o1l.some((l) => /pure note/.test(l)) && o1l.some((l) => /fork/.test(l)), { o1, o1l });

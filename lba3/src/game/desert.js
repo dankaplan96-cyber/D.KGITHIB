@@ -553,6 +553,8 @@ export function* buildDesertSteps(scene, physics) {
     sg.scale.set(1.6, 0.6, 1); sg.position.set(x1 + 2, H(x1 + 2, z + 3.2) + 2.1, z + 3.2); sg.rotation.y = -Math.PI / 2; group.add(sg);
     rod(B, [x1 + 2.05, H(x1 + 2, z + 3.2), z + 2.6], [x1 + 2.05, H(x1 + 2, z + 3.2) + 2.4, z + 2.6], 0.05, darkWood);
     rod(B, [x1 + 2.05, H(x1 + 2, z + 3.2), z + 3.8], [x1 + 2.05, H(x1 + 2, z + 3.2) + 2.4, z + 3.8], 0.05, darkWood);
+    // (DESERT-BAR: the island's boards and signs are read: story/desertlife.js. Each: where to stand, how near)
+    R.reads = [{ id: 'kesh', ...W(x1 + 0.9, z + 3.2), r: 1.6 }];
   }
   R.dock = { ...W(DOCK.x - 2, DOCK.z), a: Math.PI / 2 };
   // a coil of rope on the pier (chapter 4: for Hesk's sand-yacht)
@@ -979,6 +981,7 @@ export function* buildDesertSteps(scene, physics) {
 
   // ================================================================ Ilka's camp (POLISH-AUDIT #15: desertdress.js)
   dressCamp({ group, H, col, ox, oz, updaters }, CAMP);
+  R.reads.push({ id: 'survey', ...W(CAMP.x + 6.5, CAMP.z + 4.1), r: 1.4 });   // (Ilka's survey board on its easel: desertdress.js, read from its face)
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   R.camp = W(CAMP.x, CAMP.z);
 
@@ -1070,6 +1073,7 @@ export function* buildDesertSteps(scene, physics) {
     // a sign on the gate
     const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8, side: THREE.DoubleSide }));
     sg.scale.set(3.4, 0.9, 1); sg.position.set(POST.x0 - 0.1, postY + 3.3, POST.gateZ); sg.rotation.y = -Math.PI / 2; group.add(sg);
+    R.reads.push({ id: 'post', ...W(POST.x0 - 2.2, POST.gateZ), r: 1.8 });   // (read from before the gate)
     dressPost({ group, H, col, ox, oz, updaters }, POST);   // (POLISH-AUDIT #15: awnings, a break corner, the equipment of the job)
   }
 
@@ -1549,8 +1553,9 @@ export function* buildDesertSteps(scene, physics) {
     for (const k of [1, -1]) { const sg = new THREE.Mesh(emq(), sm); sg.scale.set(2.4, 0.6, 1); sg.position.set(x + s * 0.035 * k, y + 1.55, z + c * 0.035 * k); sg.rotation.y = ry + (k < 0 ? Math.PI : 0); group.add(sg); }
     for (const k of [-1.25, 1.25]) rod(B, [x + c * k, y, z - s * k], [x + c * k, y + 1.95, z - s * k], 0.05, darkWood);
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
+    if (text === 'SCHOOL OF MAGIC') R.reads.push({ id: 'school', ...W(x + s * 1.1, z + c * 1.1), r: 1.5 });   // (from its painted east face)
   };
-  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
+  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group, terrain: physics.terrain });
   plantShrubs();   // (TREES-1: every building registered now)
   placeRocks();   // (CLOUD_ORDERS 13: the rocks and the new scree, likewise)
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the

@@ -71,8 +71,8 @@ const crew = (stays) => (f, S) => {
   if (k === 'steam') return !f.c5_planned ? 'crew' : stays ? 'pack' : null;
   return null;
 };
-// (the School: from chapter 4 on, but the evacuation)
-const school = (f, S) => (S.index >= idx(S, 'dig') && S.cur?.key !== 'evacuation' ? 'school' : null);
+// (the School: from chapter 4 on; DESERT-BAR: in the evacuation too, which is Citadel's: the ferry still reaches the island)
+const school = (f, S) => (S.index >= idx(S, 'dig') ? 'school' : null);
 
 const DESERT_PEOPLE = [
   // the surveyor at his tripod on the north rim, a look from the north-east rim, a word with his staff man, his notes at the kitchen's table
@@ -425,15 +425,15 @@ const north = (b) => [b[0], b[1] + 1.05], south = (b) => [b[0], b[1] - 1.05];   
 export const SCHOOL_ROOM = {
   floors: [{ x0: SX(29) + 0.05, x1: SX(40) - 0.05, z0: SZ(3) + 0.05, z1: SZ(18) - 0.1, y: 3.2 }],
   people: [
-    { id: 'sc_in1', char: 'lulu', tint: '#fff4e4', color: '#f0c0a0', speed: 1.0, start: 0, when: school, stops: [
+    { id: 'sc_in1', stays: true, char: 'lulu', tint: '#fff4e4', color: '#f0c0a0', speed: 1.0, start: 0, when: school, stops: [
       SEATED('i1_bench', north(B1), [...B1, -PI / 2], [40, 60]),
       D('i1_board', -7.0, -11.5, PI, 'stand', [6, 9], { gest: ['nod'] }),
     ] },
-    { id: 'sc_in2', char: 'tim', tint: '#e6f6ff', color: '#a0c8f0', speed: 1.0, start: 0, when: school, stops: [
+    { id: 'sc_in2', stays: true, char: 'tim', tint: '#e6f6ff', color: '#a0c8f0', speed: 1.0, start: 0, when: school, stops: [
       SEATED('i2_bench', south(B2), [...B2, -PI / 2], [40, 60]),
       D('i2_edge', -4.6, -3.5, 0, 'stand', [6, 9], { gest: ['shrug'] }),
     ] },
-    { id: 'sc_in3', char: 'desertkid', tint: '#f6eaff', color: '#d0a8f0', speed: 1.1, start: 0, when: school, stops: [
+    { id: 'sc_in3', stays: true, char: 'desertkid', tint: '#f6eaff', color: '#d0a8f0', speed: 1.1, start: 0, when: school, stops: [
       SEATED('i3_bench', north(B3), [...B3, -PI / 2], [30, 45]),
       D('i3_board', -5.9, -11.5, PI, 'stand', [5, 8]),
       SEATED('i3_bench2', south(B4), [...B4, -PI / 2], [30, 45]),
