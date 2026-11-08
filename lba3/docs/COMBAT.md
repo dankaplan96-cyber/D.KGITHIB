@@ -363,6 +363,12 @@ Measured first on 0d045bf, each body alone at its own walking speeds (residents 
   with the step; riding the pelvis 1-3 cm lower shortened that by a few points but drew the held foot along the ground at 0.1-0.5 m/s,
   so it was left as his). The opening scene places its people's feet itself: their plantLite is off for it (opening.js `actor`).
   tests/townlife.mjs's FIX-PUMP-N check (between Bram and the pump) fails on 0d045bf as well, with the same numbers.
+- **STOP-TURN** (8.11.2026, walkers.js `dwellTick`): a resident reaching a stop turned at once toward the stop's view (or to
+  Twinsen within 3 m), so a stop that ended facing away became one move: Oda by the bench she does not sit on (a 140° turn)
+  took 5 steps in the second after she stopped, Dot at the stall 3 (0.55 rad). Now the stop comes first (its two steps) and the
+  turn 1.2 s later, as a turn of its own (the rig's stepping turn); a turn under 0.3 rad goes on at once. Oda 5 → 2, Dot 3 → 1
+  (tests/npc-feet.mjs 3, Automated runtime only). GAIT-CADENCE untouched. The same file's depot-guard fight check now turns the
+  P9 watch hostile first (a calm guard took no alarm, so it never fought: the check had failed since P9).
 
 ## Enemies are solid (SOLID-ENEMY)
 The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
