@@ -123,7 +123,7 @@ const CH_DIST = { near: { arm: 7.0, pitch: 0.34 }, medium: { arm: 8.75, pitch: 0
 const ISO_MAX = { near: 11, medium: 12.5, far: 14 };
 const CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
 const CH_DEAD = 0.25, CH_HW = 4, CH_BACK = (110 * Math.PI) / 180, CH_HOLD_OUT = (95 * Math.PI) / 180;
-const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.4, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
+const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
 // A lock-on: behind his shoulder (CH_SHOULDER rad round from the line target → him), looking at a point CH_LOCK_K of the
 // way to the target (at most CH_LOCK_MAX m), the arm longer by CH_LOCK_ARM of the distance (at most CH_LOCK_ARM_MAX m).
 // MIN-VIEW (the user, 4.11, on Medium: "the camera so close that Twinsen's back fills the screen against a house
@@ -1250,17 +1250,19 @@ export class CameraRig {
             const r0 = C.rise; C.rise = CH_PREDIP; const rd = armFor(ly2, _c); C.rise = r0;
             if (rd[1] && rd[2] === 0 && rd[0] >= CH_MIN_VIEW + 1) { C.riseGoal = CH_PREDIP; C.swAt = C.clk ?? 0; C.baseT = 0; continue; }
           }
-          wa = Math.min(wa, ahead(r));
+          if (walk) wa = Math.min(wa, ahead(r)); else want = Math.min(want, ahead(r));
         }
         // (and at the heading its spring is on its way to: a turn toward a house starts drawing it in at the turn's start)
         const g = C.hold ? yaw : C.goal + C.swGoal, gd = angleDiff(yaw, g);
-        if (Math.abs(gd) > 0.05 && !looking) { wa = Math.min(wa, ahead(armFor(g, T))); if (Math.abs(gd) > 0.6) wa = Math.min(wa, ahead(armFor(yaw + gd / 2, T))); }
+        if (Math.abs(gd) > 0.05 && !looking) { want = Math.min(want, ahead(armFor(g, T))); if (Math.abs(gd) > 0.6) want = Math.min(want, ahead(armFor(yaw + gd / 2, T))); }
       }
       // CAM-ALLEY (camcitadel, the alley behind the Bug-street house walked south-west: the arm under 5 m for 4.3 s): where
-      // the heading it stands at sees him at its comfortable arm, a cut the look-ahead reads holds only once it has read so
-      // CH_LEAD_CONFIRM s. Walking up the alley the readings 0.2-0.45 s on flickered short every few frames, each drew the
-      // arm in to MIN-VIEW at once, and the let-out waited CH_HOLD s again after each: 3.2-4.5 m the whole way. Nothing
-      // ever stands in anything meanwhile (below); a heading that is itself cut draws it in at once, as before
+      // the heading it stands at sees him at its comfortable arm, a cut the look-ahead reads along his walk holds only once it
+      // has read so CH_LEAD_CONFIRM s (a turn on the spot, and the heading the chase turns to, draw it in at once, as before:
+      // turning by a house's wall, a cut read late let the view stand behind the wall for a frame). Walking up the alley the
+      // readings 0.2-0.45 s on flickered short every few frames, each drew the arm in to MIN-VIEW at once, and the let-out
+      // waited CH_HOLD s again after each: 3.2-4.5 m the whole way. Nothing ever stands in anything meanwhile (below); a
+      // heading that is itself cut draws it in at once, as before
       C.aheadT = wa < want - CH_FLICK ? (C.aheadT || 0) + dt : 0;
       if (over || tier !== 0 || !seen || C.aheadT >= CH_LEAD_CONFIRM) want = Math.min(want, wa);
       (C.pT ??= new THREE.Vector3()).copy(T);
