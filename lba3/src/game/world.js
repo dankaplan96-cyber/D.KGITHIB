@@ -797,7 +797,7 @@ export function* buildWorldSteps(parentScene) {
   });
   const inHouse = inHouseOf(W.houses);
   // (WORLD-80: the scatter's view — the houses, paths and islet ground before step 2 — and what changed, filtered after)
-  const SCATTER_HOUSES = W.houses.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? { ...h, ...OLD_BUG, door: null } : h.id === 'pink' ? { ...h, z: h.z + OLD_PINK_DZ, door: { x: h.door.x, z: h.door.z + OLD_PINK_DZ } } : h));
+  const SCATTER_HOUSES = W.houses.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? { ...h, ...OLD_BUG, door: null } : h.id === 'pink' ? { ...h, ry: 0, z: h.z + OLD_PINK_DZ, door: { x: h.x, z: h.z + (h.x - h.door.x) + OLD_PINK_DZ } } : h));
   const inHouseS = inHouseOf(SCATTER_HOUSES), inNewHouse = inHouseOf(W.houses.filter((h) => NEW_HOUSES.has(h.id)));
   const isletSteep = (x, z, s) => x < ISLET_X + 2 && terrain.slopeAt(x, z) > s;
   const okSpot = (x, z, clear = 3) => {

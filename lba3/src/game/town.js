@@ -85,7 +85,9 @@ const HOUSES = [
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
   // (DOORS-LBA2 #1: 3 m north of where it stood, z 24.6: LBA2's street hatch and its rails are in the street before it
   // now, sewers.js HATCHES.street; its tubs clear of the rails. Fosse's Sewer Works office, shut while he is below)
-  { id: 'pink', x: -28.5, z: 21.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
+  // (the user, 8.11: "you can't get to the house, it's too tight": its door faced the hatch's rails 2 m off; turned to
+  //  face west onto the open grass, its south side wall now toward the hatch. The scatter still reads it unturned: world.js)
+  { id: 'pink', x: -28.5, z: 21.6, ry: -Math.PI / 2, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
     windows: [{ side: 'front', x: -1.65 }, { side: 'left', x: 0.3 }] },   // (WORLD-FIX: the window's open shutter lay on the door's surround at −1.2)
   { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', awning: '#e58aa0', awningW: 6.6, awningX: 0, roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
     windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
@@ -134,7 +136,7 @@ export const OLD_BUG = { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, 
 OLD_BUG.pad = Math.max(OLD_BUG.w, OLD_BUG.d) * 0.75 + 2;
 // (DOORS-LBA2: the pink house stood 3 m further south; the scatter decides with it there too, world.js)
 export const OLD_PINK_DZ = 3.0;
-const HOUSES_PRE = HOUSES.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? OLD_BUG : h.id === 'pink' ? { ...h, z: h.z + OLD_PINK_DZ } : h));
+const HOUSES_PRE = HOUSES.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? OLD_BUG : h.id === 'pink' ? { ...h, ry: 0, z: h.z + OLD_PINK_DZ } : h));
 export const HOUSE_PADS_PRE = padsOf(HOUSES_PRE), HOUSE_FLATS_PRE = flatsOf(HOUSES_PRE);
 
 // ------------------------------------------------------------------ helpers
