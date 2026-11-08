@@ -1555,7 +1555,7 @@ export function* buildDesertSteps(scene, physics) {
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
     if (text === 'SCHOOL OF MAGIC') R.reads.push({ id: 'school', ...W(x + s * 1.1, z + c * 1.1), r: 1.5 });   // (from its painted east face)
   };
-  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
+  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group, terrain: physics.terrain });
   plantShrubs();   // (TREES-1: every building registered now)
   placeRocks();   // (CLOUD_ORDERS 13: the rocks and the new scree, likewise)
   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
