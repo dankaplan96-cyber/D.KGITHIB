@@ -9,7 +9,7 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
+import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG, OLD_PINK_DZ } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
 import { buildDinoFly } from './dinofly.js';
@@ -24,6 +24,7 @@ import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
+import { HATCHES } from './sewers.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -116,7 +117,7 @@ function pathDistScatter(x, z) {
 const newPathDist = (x, z) => { const p = PATHS[4]; let d = 1e9; for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1])); return d; };
 // (POLISH-14 f) the glider field's landing (story/network.js CITADEL_LANDING): kept clear of the scattered bushes
 const GLIDER_LANDING = { x: -58, z: -60 }, LANDING_CLEAR = 1.6;
-const NEW_HOUSES = new Set(['bug', 'bug2', 'stoneup']);   // (moved or added by WORLD-80; 'bug' stood at town.js OLD_BUG)
+const NEW_HOUSES = new Set(['bug', 'bug2', 'pink']);   // (moved or added by WORLD-80; 'bug' stood at town.js OLD_BUG; 'pink' moved by DOORS-LBA2)
 
 // signed distance to an axis-aligned rectangle (negative inside)
 function boxDist(x, z, x0, z0, x1, z1) {
@@ -796,7 +797,7 @@ export function* buildWorldSteps(parentScene) {
   });
   const inHouse = inHouseOf(W.houses);
   // (WORLD-80: the scatter's view — the houses, paths and islet ground before step 2 — and what changed, filtered after)
-  const SCATTER_HOUSES = W.houses.filter((h) => h.id !== 'bug2' && h.id !== 'stoneup').map((h) => (h.id === 'bug' ? { ...h, ...OLD_BUG, door: null } : h));
+  const SCATTER_HOUSES = W.houses.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? { ...h, ...OLD_BUG, door: null } : h.id === 'pink' ? { ...h, z: h.z + OLD_PINK_DZ, door: { x: h.door.x, z: h.door.z + OLD_PINK_DZ } } : h));
   const inHouseS = inHouseOf(SCATTER_HOUSES), inNewHouse = inHouseOf(W.houses.filter((h) => NEW_HOUSES.has(h.id)));
   const isletSteep = (x, z, s) => x < ISLET_X + 2 && terrain.slopeAt(x, z) > s;
   const okSpot = (x, z, clear = 3) => {
@@ -1073,7 +1074,10 @@ export function* buildWorldSteps(parentScene) {
   // draw moves and every other tree keeps its place. The grass, flowers and tulips keep out of the same floors below.
   const BLOCKS = [...W.houses.map((h) => ({ x: h.x, z: h.z, ry: h.ry, w: h.w, d: h.d })),
     { x: ASYLUM_DOOR.x - 0.3, z: ASYLUM_DOOR.z, ry: 0, w: 3.0, d: 3.6 },   // (lba1places.js asylumDoor: its stone block)
-    { x: (BRIDGE.x0 + BRIDGE.x1) / 2, z: BRIDGE.z, ry: 0, w: BRIDGE.x1 - BRIDGE.x0, d: BRIDGE.hw * 2, deck: true }];
+    { x: (BRIDGE.x0 + BRIDGE.x1) / 2, z: BRIDGE.z, ry: 0, w: BRIDGE.x1 - BRIDGE.x0, d: BRIDGE.hw * 2, deck: true },
+    // (DOORS-LBA2: the sewer's two street hatches, the lower town's with its rails, sewers.js; built later, main.js)
+    ...Object.values(HATCHES).map((h) => ({ x: h.x, z: h.z, ry: 0, w: 2 * (h.S + (h.rails ? 0.7 : 0.3)), d: 2 * (h.S + (h.rails ? 0.7 : 0.3)) })),
+    ...Object.values(HATCHES).filter((h) => h.rails).map((h) => ({ x: h.x - h.S - 1.3, z: h.z, ry: 0, w: 1.4, d: 3.2 }))];   // (and the way onto it from the west, between its bollards)
   // (how far (x, z) stands outside the nearest block's walls; inside, minus its depth)
   const blockDist = (x, z, decks = true) => {
     let m = Infinity;

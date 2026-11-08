@@ -287,7 +287,7 @@ class Game {
       // (the wizard's tent and the asylum's block-house stand on Citadel; their rooms are built when needed)
       timed('wizards', () => buildWizardTent(S, P, this.world));
       timed('lba1', () => buildLba1Door(S, P));
-      timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14: the grate in the lane by the pump)
+      timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14, DOORS-LBA2: the lower town's and the terrace's hatches)
       bar.measured(BUILD_REF.town, performance.now() - t0);
     }
     L.citadel = Math.round(performance.now() - tm);
@@ -1224,9 +1224,9 @@ class Game {
   // door, under the eaves, so the chase camera, with his back to the wall, could only hang over his head (4.3 m up,
   // 1.3 m back) until he had walked clear. Out of a door he lands DOOR_STEP m further along the way he faces when that
   // ground is open and level (no brick at his height there or half-way, within 0.15 m of the spot's own height, above
-  // the water); else where the story said.
+  // the water); else where the story said. (to.stay: a spot that is no door's, a lift's deck: left where it is)
   doorStep(to) {
-    if (!to || to.a == null || !Number.isFinite(to.x) || !Number.isFinite(to.z)) return to;
+    if (!to || to.a == null || to.stay || !Number.isFinite(to.x) || !Number.isFinite(to.z)) return to;
     const P = this.physics, g0 = P.groundAt(to.x, to.z), sx = Math.sin(to.a), sz = Math.cos(to.a);
     const open = (d) => { const x = to.x + sx * d, z = to.z + sz * d, g = P.groundAt(x, z, g0 + 0.5); return Math.abs(g - g0) < 0.15 && g > -0.2 && !P.blockedAt(x, z, g, 0.45) ? g : null; };
     for (const d of [DOOR_STEP, DOOR_STEP * 0.6]) if (open(d) != null && open(d / 2) != null) return { ...to, x: to.x + sx * d, z: to.z + sz * d };

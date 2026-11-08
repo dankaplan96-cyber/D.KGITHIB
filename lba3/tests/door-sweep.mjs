@@ -86,8 +86,8 @@ for (const ci of CH) {
         else if (!best) best = cand;
       }
       out.out = best;
-      // (a door whose room has no way back out near it — the sewer's hatch-house doors until the works door is opened,
-      //  story/sewers.js — is one way: listed, not judged by where its room's other exits land)
+      // (a door whose room has no way back out near it is one way: listed, not judged by where its room's other exits
+      //  land. DOORS-LBA2: the sewer's ways from the street are hatches with lifts now, story/sewers.js, not doors)
       if (best && (best.reg !== d.region || best.dist > 6)) out.oneway = true;
       // ---- the walk in by input, from 2.6 m out along the way he comes out (straight, then 0.3 m and 0.5 m to the sides)
       if (best && best.reg === d.region && !d.prompt) {

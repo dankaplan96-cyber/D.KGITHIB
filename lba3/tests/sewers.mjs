@@ -1,14 +1,15 @@
 // WA-14: Citadel's old sewers (src/game/sewers.js, story/sewers.js), walked by INPUT (the player harness; no teleport
 // in the walk), from a new game in chapter 1:
-//   1. out of the house, along the lane to the grate by the pump: looked at (the knocking, Arthur's chalk), lifted
-//   2. SEWER-LIFT: under it the lift's deck, flush with the lane; on it, "Go down" (E): the deck goes down the shaft
-//      with him planted on it (~1.5 s, the winch), then the flooded hall (on the island, by the well-house door)
-//   3. the gate at the back is shut: walking at it gets nowhere
+//   1. out of the house, to the lower town's street hatch (DOORS-LBA2: LBA2's, railed, at (−28.5, 27.6)): looked at
+//      (the knocking, Arthur's chalk), lifted
+//   2. SEWER-LIFT: under it the lift's deck, flush with the street; on it, "Go down" (E): the deck goes down the shaft
+//      with him planted on it (~1.5 s, the winch), then the flooded hall (by the lift's foot in the north-east corner)
+//   3. the gate in the west wall is shut: walking at it gets nowhere
 //   4. the project's valve on the old winch: eased, the knocking stops, the gate rises
-//   5. across the hall (island → pier → colonnade) and through the gate into the treasure room
+//   5. across the hall (colonnade → north walkway → west stair → west walkway) and through the gate into the treasure room
 //   6. the star chest: Arthur's map (the found-object ceremony), a clover (picked up); the barrel gives (a hop)
-//   7. back out the same way: the gate, the hall, up the well-house: on the deck as it rises the last stretch, then
-//      free to walk off
+//   7. back out: the gate, the hall; the street lift's lever is padlocked (Fosse's) until Fosse, told the valve is
+//      eased, takes it off; up the shaft: on the deck as it rises the last stretch, then free to walk off
 //   8. home: Arthur is asked about the map (the item goes back to him)
 //   9. Save → Continue keeps it all (the grate shut, as a loaded game finds it; the gate up, the chest open, no map);
 //      lifted again without a word and ridden down; a load in the middle of the ride, and one during its fade, leave
@@ -85,7 +86,8 @@ r = await ev(() => { const t0 = game.time; P.settle(); return { t: +(game.time -
 w = await where();
 const hall0 = await ev(() => { const R = game.room, c = R.center, sp = R.spawn; return { built: game.regions.stateOf('sewer'), onFloor: game.hero.onGround, y: +game.hero.pos.y.toFixed(2), atSpawn: +Math.hypot(game.hero.pos.x - sp.x, game.hero.pos.z - sp.z).toFixed(2), local: [+(game.hero.pos.x - c.x).toFixed(1), +(game.hero.pos.z - c.z).toFixed(1)] }; });
 L = await lift();
-check('down the shaft: in the flooded hall, standing on the island by the well-house, where he always arrived', w.room === 'sewer' && hall0.onFloor && hall0.y > 0.3 && hall0.atSpawn < 0.3, { r, w, hall0 });
+const NE = await ev(() => { const R = game.room, e = R.entries.street; return { d: +Math.hypot(game.hero.pos.x - e.x, game.hero.pos.z - e.z).toFixed(2), local: [+(e.x - R.center.x).toFixed(1), +(e.z - R.center.z).toFixed(1)] }; });
+check('down the shaft: in the flooded hall, by the street lift\'s foot in the north-east corner (DOORS-LBA2 #2)', w.room === 'sewer' && hall0.onFloor && Math.abs(hall0.y) < 0.1 && hall0.atSpawn < 0.3 && NE.d < 0.3 && NE.local[0] > 9 && NE.local[1] < -8, { r, w, hall0, NE });
 check('and the ride is over: play, the camera its own, the deck back at the top above', L.state === 'play' && !L.ride && !L.cut && !L.cam && L.deck === 0 && L.sil !== false, L);
 await view('s2-hall');
 // the knock: the valve thumps every few seconds while it is open
@@ -94,8 +96,8 @@ check('the knocking: the valve thumps every few seconds', r >= 2, r);
 
 // ---------------------------------------------------------------- 3. the gate is shut
 const GATE = await ev(() => { const g = game.story.sewers; return { gate: game.rooms.sewer.hall.gate, valve: game.rooms.sewer.hall.valve }; });
-r = await ev((G) => { const out = P.go(G.gate.x, G.gate.z - 0.6, { tol: 0.3, maxT: 25 }); return { r: out.r, room: game.room?.id, z: +(game.hero.pos.z - G.gate.z).toFixed(2), x: +(game.hero.pos.x - G.gate.x).toFixed(2) }; }, GATE);
-check('the gate at the back is shut: walking at it gets nowhere (INPUT)', r.room === 'sewer' && r.z > 0.3, r);
+r = await ev((G) => { P.go(G.gate.x + 1.6, G.gate.z, { tol: 0.3, maxT: 60 }); const out = P.go(G.gate.x - 0.6, G.gate.z, { tol: 0.3, maxT: 25 }); return { r: out.r, room: game.room?.id, z: +(game.hero.pos.z - G.gate.z).toFixed(2), x: +(game.hero.pos.x - G.gate.x).toFixed(2), local: [+(G.gate.x - game.room.center.x).toFixed(1), +(G.gate.z - game.room.center.z).toFixed(1)] }; }, GATE);
+check('the gate in the west wall at mid-depth (DOORS-LBA2 #7) is shut: walking at it gets nowhere (INPUT)', r.room === 'sewer' && r.x > 0.3 && r.local[0] < -13 && Math.abs(r.local[1]) < 1, r);
 await view('s3-gate-shut');
 
 // ---------------------------------------------------------------- 4. the valve
@@ -126,16 +128,24 @@ check('the barrel gives kashes (a hop by it, as any container)', r.coins > 0, r)
 r = await ev(() => P.enter('sewer'));
 w = await where();
 check('out of the treasure room: back in the hall at the gate (INPUT)', w.room === 'sewer', { r, w });
-// across the hall to the well-house door, by input; the scene changes; a moment later the deck is still rising
+// the street lift: Fosse's padlock on its lever; Fosse, told it's quiet, takes it off
+const HL = await ev(() => game.rooms.sewer.hall);
+r = await ev((H) => P.use(H.works.x, H.works.z, { near: 0.8, kind: 'swworks' }), HL);
+s = await said();
+check('the street lift\'s lever: padlocked, no way up yet (INPUT)', has(s, /Padlocked/) && !(await ev(() => game.room.exits.some((x) => x.to === 'sewer-out'))), { r, s });
+r = await ev(() => P.talk('fosse')); s = await said();
+await ev(() => P.wait(1.2));
+check('Fosse: a quiet day; his padlock off the lift (INPUT)', has(s, /quiet day/) && (await flags()).sw_works === true && (await ev(() => game.room.exits.some((x) => x.to === 'sewer-out'))), { r, s });
+// onto the lift's deck, by input; the scene changes; a moment later the deck is still rising
 r = await ev(() => { const e = game.room.exits.find((x) => x.to === 'sewer-out'); const g = P.go(e.x, e.z, { tol: 0.25, stopOnTrans: true }); let k = 0; while (game.room && k++ < 600) game.step(1 / 60); game.step(0.2); return { g: g.r, k }; });
 L = await lift();
-check('up the well-house: back on Citadel standing on the deck in the grate as it rises the last stretch (INPUT)', L.room === 'citadel' && L.ride === 'up' && L.deck > 0.1 && L.onDeck && L.off < 0.1 && L.state === 'cutscene', { r, L });
+check('up the north-east shaft: back on Citadel standing on the deck in the street hatch as it rises the last stretch (INPUT)', L.room === 'citadel' && L.ride === 'up' && L.deck > 0.1 && L.onDeck && L.off < 0.1 && L.state === 'cutscene', { r, L });
 await view('s5-rise');
 r = await ev(() => P.settle());
 L = await lift();
-check('at the top: play again, standing on the lane, the grate still lifted, the deck flush', L.state === 'play' && !L.ride && !L.cut && L.open && L.deck === 0 && Math.abs(L.ground) < 0.02 && L.off < 0.1 && L.sil !== false, { r, L });
+check('at the top: play again, standing in the street, the lid still lifted, the deck flush', L.state === 'play' && !L.ride && !L.cut && L.open && L.deck === 0 && Math.abs(L.ground) < 0.02 && L.off < 0.1 && L.sil !== false, { r, L });
 await view('s5-back');
-r = await ev((H) => { const g = P.go(H.x + 1.5, H.z + 0.4, { tol: 0.3 }); return { g: g.r, room: game.room?.id ?? 'citadel', d: +Math.hypot(game.hero.pos.x - H.x, game.hero.pos.z - H.z).toFixed(2), state: game.state }; }, HATCH);
+r = await ev((H) => { const g = P.go(H.x - 2.4, H.z, { tol: 0.3 }); return { g: g.r, room: game.room?.id ?? 'citadel', d: +Math.hypot(game.hero.pos.x - H.x, game.hero.pos.z - H.z).toFixed(2), state: game.state }; }, HATCH);
 check('and free to walk off it (INPUT)', r.g === 'arrived' && r.room === 'citadel' && r.d > 1.2 && r.state === 'play', r);
 
 // ---------------------------------------------------------------- 8. Arthur
@@ -161,7 +171,7 @@ check('lifted again without a word, ridden down; below, the gate still up (INPUT
 // back up (the autosave is made on the lane, at the grate), then a load in the middle of a ride down
 await ev(() => { P.exitTo('sewer-out'); P.settle(); });
 L = await lift();
-check('back up the well-house onto the deck (INPUT)', L.room === 'citadel' && L.state === 'play' && L.open && L.off < 0.1, L);
+check('back up the north-east shaft onto the deck (INPUT)', L.room === 'citadel' && L.state === 'play' && L.open && L.off < 0.1, L);
 await onDeck(HATCH);
 await pressDown();
 await ev(() => game.step(0.6));

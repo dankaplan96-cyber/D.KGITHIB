@@ -83,7 +83,9 @@ const HOUSES = [
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
   { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'stone', tint: '#eef0f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
-  { id: 'pink', x: -28.5, z: 24.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
+  // (DOORS-LBA2 #1: 3 m north of where it stood, z 24.6: LBA2's street hatch and its rails are in the street before it
+  // now, sewers.js HATCHES.street; its tubs clear of the rails. Fosse's Sewer Works office, shut while he is below)
+  { id: 'pink', x: -28.5, z: 21.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
     windows: [{ side: 'front', x: -1.65 }, { side: 'left', x: 0.3 }] },   // (WORLD-FIX: the window's open shutter lay on the door's surround at −1.2)
   { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', awning: '#e58aa0', awningW: 6.6, awningX: 0, roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
     windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
@@ -102,11 +104,8 @@ const HOUSES = [
   // Bug Street's south house (the original's scene 22, 6.9 × 5.2 m), beside the north one, which shares its floor
   { id: 'bug2', x: -62.3, z: -8.2, ry: Math.PI / 2, noPad: true, w: 4.9, d: 6.6, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#f6e6cc', roof: 'roof', shutters: '#3f9a6a', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.3, w: 0.6 }, { side: 'left', x: 0 }] },
-  // the stone house's upper door (the original's second door to scene 17): a small stone porch on the terrace behind
-  // the house, its door to the north at the terrace's level, in the house's own stone and blue roof (no heat post:
-  // it is the house's back door; a small floor so the terrace's edge behind it stays where it is)
-  { id: 'stoneup', x: -25.5, z: -31.8, ry: Math.PI, noPad: true, flat: 0.8, ease: 0.9, heat: false, w: 2.6, d: 2.2, h: 2.75, door: { x: 0 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimney: false,
-    windows: [{ side: 'left', x: 0, y: 1.2, w: 0.5, h: 0.6 }] },
+  // (DOORS-LBA2 #3: the stone house's porch on the terrace, 'stoneup', is gone: LBA2's second way down there is a lift
+  // hatch flush with the terrace, sewers.js HATCHES.terrace)
 ];
 // the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
 for (const h of HOUSES) if (!h.pad && !h.noPad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
@@ -133,7 +132,9 @@ export const HOUSE_FLATS = flatsOf(HOUSES);
 // the terrace): world.js's scatter decides with the ground they made, so nothing else on the island moves
 export const OLD_BUG = { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, door: { x: 1.9 } };
 OLD_BUG.pad = Math.max(OLD_BUG.w, OLD_BUG.d) * 0.75 + 2;
-const HOUSES_PRE = HOUSES.filter((h) => h.id !== 'bug2' && h.id !== 'stoneup').map((h) => (h.id === 'bug' ? OLD_BUG : h));
+// (DOORS-LBA2: the pink house stood 3 m further south; the scatter decides with it there too, world.js)
+export const OLD_PINK_DZ = 3.0;
+const HOUSES_PRE = HOUSES.filter((h) => h.id !== 'bug2').map((h) => (h.id === 'bug' ? OLD_BUG : h.id === 'pink' ? { ...h, z: h.z + OLD_PINK_DZ } : h));
 export const HOUSE_PADS_PRE = padsOf(HOUSES_PRE), HOUSE_FLATS_PRE = flatsOf(HOUSES_PRE);
 
 // ------------------------------------------------------------------ helpers
