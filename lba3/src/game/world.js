@@ -15,7 +15,7 @@ import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plat
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -1290,7 +1290,7 @@ export function* buildWorldSteps(parentScene) {
     for (let pass = 0; pass < 2; pass++) { endTop = Math.max(P.h - 0.15, rimTop(at(n, n - 1))); n = Math.ceil((endTop + 0.15 - base) / 1.05); }
     W.stones = [];
     const stoneMat = mat('#8d8578', { roughness: 0.95 });
-    const mossMat = mat('#5d8a3a', { roughness: 0.95 });
+    const rockMat = W_cliffs.mesh.material;   // (STONES-31: the cliff rocks' own material: one program, no new texture)
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
       // (SMALL-FIXES: the last-but-one stone was cut into the cliff's rim: its far half had the rim 0.3-1.0 m over its top
@@ -1301,11 +1301,14 @@ export function* buildWorldSteps(parentScene) {
       const top = base + 1.0 + (endTop - base - 1.0) * k;
       const r = 1.15;
       const grp = new THREE.Group();
-      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.15, 30, 9), stoneMat);
-      pillar.position.y = -15; pillar.castShadow = pillar.receiveShadow = true; grp.add(pillar);
-      const moss = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.02, r * 1.02, 0.12, 9), mossMat);
-      moss.position.y = -0.05; grp.add(moss);
       const ground = H(x, z);
+      // (STONES-31: a column of the cliffs' rock with a mossy worn cap, cliffs.js stoneColumnGeometry: one mesh a stone,
+      //  was a bare cylinder and a green disc, two. It reaches 0.6 m under the lowest ground round its foot once risen;
+      //  the earth stain sits where that ground meets it. Its top, y = 0 in the group, is the collider's top as before)
+      let low = ground;
+      for (let a = 0; a < 12; a++) low = Math.min(low, H(x + Math.sin(a * Math.PI / 6) * 1.7, z + Math.cos(a * Math.PI / 6) * 1.7));
+      const rock = new THREE.Mesh(stoneColumnGeometry(9101 + i * 7919, top - low + 0.6, (lx, lz) => H(x + lx, z + lz) - top), rockMat);
+      rock.castShadow = rock.receiveShadow = true; rock.name = 'steppingStone'; grp.add(rock);
       grp.position.set(x, ground - 0.3, z);
       scene.add(grp);
       const c = physics.add({ type: 'cyl', x, z, r, top: ground - 0.3, enabled: false });

@@ -196,3 +196,96 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
   parent.add(m);
   return { mesh: m, blocks, chunks };
 }
+
+// STONES-31 (the user, 7.11: "the cylinders look really weird"): the Whispering Cliffs' rising stepping stones were
+// bare nine-sided cylinders, flat brown with a flat green disc on top. Each is now a column of the cliff rocks' own
+// kind, drawn with the very same material (the stratified cliff texture, vertex tones, flat facets: one program, one
+// draw a stone): an irregular polygon of seven or eight corners, ring under ring, each ring jittered and a little
+// wider than the one above (a slight taper, never an overhang), some rings stepping out a few centimetres as a
+// stratum's ledge, the whole column leaning its own way. The top is a worn cap: a bevelled rim under a low cushion of
+// moss whose edge is ragged (teeth of moss and bare rock round the rim; the moss stays on the top, never over the
+// edge). The foot carries a band of earth stain where the column meets the ground once risen, so as it rises the
+// stained rock comes up out of the soil. The texture moves with the stone (U along each facet, V by its own height),
+// so the strata rise with it. Local frame: y = 0 is the stone's top (its collider's), the column reaches `depth` m
+// down; groundY(x, z) is the risen ground's local height at a local point. Shape draws from rng(seed) alone.
+// (the collider stays the r 1.15 cylinder: the cap's flat covers it to ~1.1 m, its bevel to ~1.3; the foot reaches
+// at most ~0.3 m past it, inside the hero's own radius)
+export function stoneColumnGeometry(seed, depth, groundY = () => -1e9) {
+  const hr = rng(seed);
+  const pos = [], uv = [], col = [];
+  const ou = hr() * 9, ov = hr() * 9;                       // (each stone its own patch of the texture)
+  // (a little warmer and lighter than the cliff behind, each its own: the path of stones reads against the rock face)
+  const tone = 0.98 + hr() * 0.08, base = [tone * (1.05 + hr() * 0.04), tone, tone * (0.88 + hr() * 0.05)];
+  const MOSS = [[0.36, 0.88, 0.16], [0.46, 0.92, 0.17], [0.31, 0.76, 0.17]];
+  const EARTH = [0.74, 0.6, 0.46];
+  // one triangle, wound so its normal points along `out`, projected and shaded as buildCliffRocks' are
+  const tri = (a, b, c, out, moss = null) => {
+    let ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
+    let vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const l = Math.hypot(nx, ny, nz); if (l < 1e-7) return;
+    nx /= l; ny /= l; nz /= l;
+    if (nx * out[0] + ny * out[1] + nz * out[2] < 0) { [b, c] = [c, b]; nx = -nx; ny = -ny; nz = -nz; }
+    const cap = Math.abs(ny) > 0.707;
+    let hx = nz, hz = -nx; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl;
+    const sh = Math.min(1.1, Math.max(0.78, 0.94 + ny * 0.14)) * (0.96 + hr() * 0.08);
+    const tint = moss || base;
+    for (const p of [a, b, c]) {
+      pos.push(p[0], p[1], p[2]);
+      if (cap) uv.push(p[0] * TEX + ou, p[2] * TEX + ov); else uv.push((p[0] * hx + p[2] * hz) * TEX + ou, p[1] * TEX + ov);
+      // (the earth stain: full at the risen ground, gone 0.9 m over it)
+      const e = moss ? 1 : Math.min(1, Math.max(0, (p[1] - groundY(p[0], p[2])) / 0.9)), s = e * e * (3 - 2 * e);
+      col.push(tint[0] * sh * (EARTH[0] + (1 - EARTH[0]) * s), tint[1] * sh * (EARTH[1] + (1 - EARTH[1]) * s), tint[2] * sh * (EARTH[2] + (1 - EARTH[2]) * s));
+    }
+  };
+  const nS = hr() < 0.5 ? 7 : 8, th0 = hr() * Math.PI * 2, step = (2 * Math.PI) / nS;
+  const ang = Array.from({ length: nS }, (_, k) => th0 + k * step + (hr() - 0.5) * step * 0.4);
+  const la = hr() * Math.PI * 2, lean = 0.008 + hr() * 0.014;   // (m out per m down, its own way; ≤ 0.08 m at the foot)
+  const off = (y) => { const d = Math.min(-y, 0.08 / lean) * lean; return [Math.cos(la) * d, Math.sin(la) * d]; };
+  const ringAt = (y, R, yj = 0) => { const [cx, cz] = off(y); return ang.map((a, k) => { const aa = a + (hr() - 0.5) * 0.08; return [cx + Math.cos(aa) * R[k], y + (hr() - 0.5) * yj, cz + Math.sin(aa) * R[k]]; }); };
+  // the cap's rim (flat, a little worn), its bevel, then the body down to `depth`
+  const Rt = ang.map(() => 1.13 + hr() * 0.09), Rb = Rt.map((r) => r + 0.13 + hr() * 0.06);
+  const top = ang.map((a, k) => [Math.cos(a) * Rt[k], -0.005 - hr() * 0.035, Math.sin(a) * Rt[k]]);
+  const bevY = -0.15 - hr() * 0.08;
+  const rings = [top, ringAt(bevY, Rb, 0.04)];
+  let R = Rb.slice(), y = bevY;
+  const Rmax = Rb.map((r) => r + 0.17);   // (the foot at most ~0.3 m past the collider: inside the hero's own radius)
+  while (y > -depth) {
+    const dy = 0.7 + hr() * 0.65; y = Math.max(y - dy, -depth - 0.05);
+    R = R.map((r, k) => Math.min(Rmax[k], Math.max(r - 0.01, r + dy * 0.03 + (hr() - 0.5) * 0.06)));
+    const ring = ringAt(y, R, y > -depth + 0.1 ? 0.16 : 0);
+    rings.push(ring);
+    if (y > -depth + 0.3 && hr() < 0.45) {                       // a stratum's ledge: a few cm out, just under
+      R = R.map((r, k) => Math.max(r, Math.min(Rmax[k], r + 0.04 + hr() * 0.05)));
+      const [cx, cz] = off(y);
+      rings.push(ring.map((p, k) => { const a = Math.atan2(p[2] - cz, p[0] - cx); return [cx + Math.cos(a) * R[k], p[1] - 0.05 - hr() * 0.03, cz + Math.sin(a) * R[k]]; }));
+      y -= 0.07;
+    }
+  }
+  // the sides: a band of quads between each ring and the next, each cut on its own diagonal (facets of their own planes)
+  for (let r = 0; r + 1 < rings.length; r++) {
+    const A = rings[r], B = rings[r + 1];
+    for (let k = 0; k < nS; k++) {
+      const k1 = (k + 1) % nS, o = [Math.cos(ang[k] + step / 2), 0, Math.sin(ang[k] + step / 2)];
+      if (hr() < 0.5) { tri(A[k], A[k1], B[k1], o); tri(A[k], B[k1], B[k], o); }
+      else { tri(A[k], A[k1], B[k], o); tri(A[k1], B[k1], B[k], o); }
+    }
+  }
+  // the cap: a low cushion of moss (a ring of 2·nS corners, each its own way in from the rim, some on the rim itself)
+  // and between it and the rim a band of bare rock of uneven width: a ragged edge, on the top, never over it
+  const UP = [0, 1, 0], C = [(hr() - 0.5) * 0.3, 0.022, (hr() - 0.5) * 0.3];
+  const E = (m) => { const k = m >> 1, a = top[k % nS], b = top[(k + 1) % nS]; return m & 1 ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2] : a; };
+  const M = Array.from({ length: 2 * nS }, (_, m) => { const e = E(m), q = hr(), f = q < 0.3 ? 1 : 0.58 + q * 0.36; return [C[0] + (e[0] - C[0]) * f, 0.008 + hr() * 0.012, C[2] + (e[2] - C[2]) * f]; });
+  const moss = () => MOSS[Math.floor(hr() * MOSS.length)];
+  for (let m = 0; m < 2 * nS; m++) tri(C, M[m], M[(m + 1) % (2 * nS)], UP, moss());
+  for (let k = 0; k < nS; k++) {
+    const Tk = top[k], Tk1 = top[(k + 1) % nS], m0 = M[2 * k], m1 = M[2 * k + 1], m2 = M[(2 * k + 2) % (2 * nS)];
+    tri(Tk, Tk1, m1, UP); tri(Tk, m1, m0, UP); tri(Tk1, m2, m1, UP);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
