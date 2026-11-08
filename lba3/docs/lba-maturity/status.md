@@ -66,12 +66,12 @@ world-polish pass after it:
 |---|---|---|
 | 0 | in-flight work before the pack: camera pass 3 (Citadel spots by keyboard), Citadel chapters 3–9 + real saves, SLIDE-RESCUE review | paused by the usage limit; camera pass 3 resumes as part of wave 1 (world-polish), the other two fold into waves 2 and 7 |
 | 1 | world-campaign-finisher (Zeelich: entrances, identity, life) + world-polish (camera pass 3, resumed) | done: v57 (camera pass 3), v59 (Zeelich, 1794082922-cfd5) |
-| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | campaign-director done (below) |
+| 2 | chapter-balance (all chapters) + campaign-director (incl. the paused Citadel 3–9/saves review) | campaign-director done (below); chapter-balance done (merged 8.11): chapter-balance.md — 14 segments chained through real saves; ch 7, 9, 12 got real steps (ice slit, warm discs, the archivist's key, the bleed valve), ch 10 Yorna's broth; ch 2 and 10 long by design (the user's call), ch 12 still short (needs the boss fight: animation-combat), ch 2's depot spike (bot) → animation-combat. First-play minutes are estimates |
 | 3 | buildings-interiors + original-mechanics (serialize shared transition code) | buildings part 1 done (merged 7.11): P3 + Citadel sweep; 63 rooms behind the isles' 55 doors + Kesh's 5 houses + the post's 3 cabins (ihomes.js, island-doors.mjs 78/78); 3 doors nailed shut with a reason. Waiting: DOORS-LBA2 (laptop 29). Knartas ledge door → world-polish |
 | 4 | animation-combat (+ laptop world-art in parallel) | pending |
 | 5 | dialogue-editor + character-voices | pending |
 | 6 | action-sound (+ laptop music-director) | pending |
-| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | started early 7.11 night: camfollow's LBA2-view regression + its 4, camcitadel's 3, the Knartas ledge door, camclear; laptop performance-lab in parallel |
+| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | part done (merged 8.11): camfollow 31/31 (the 5th failure was the test's run off Citadel's south cliff, not a camera turn; CAM-OVERSIGHT fixed a real fault by walls), camcitadel 61/61 (CAM-ALLEY), the Knartas ledge door's steps, the hostel landing's parapet. Left: camclear 0.149 m, Oda's stop, the SLIDE-RESCUE keyboard review; laptop performance-lab in parallel |
 | 8 | release-auditor | after all others |
 
 ### Wave 2, campaign-director: Citadel in chapters 3–10 after a real save (Automated runtime only)
@@ -100,4 +100,4 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
 - Known failing checks, failing the same on the base: (travel.mjs "Doran goes ahead to the spaceport" fixed in wave 2:
   the check ran while Doran was still walking up the quay, STAGING-1; a hero who ran ahead now finds him by the ship);
   combat.mjs "dodge distance consistent at 30 and 60 fps"; prologue.mjs "the well's mites beaten" (3 of 4, random,
-  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); camfollow's 4 (Modern then Up, backing up, full turn, Far) + since v56 a 5th, "LBA2 view (the default) unchanged: a run across the view never turns it" (world-polish on it, 7.11 night); camcitadel's water meter (2) and stepping-stones whole turn (1); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); (camfollow and camcitadel fixed 8.11); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
