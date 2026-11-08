@@ -150,6 +150,12 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.06, stoop: 0.14, belly: 0.05, skin: '#e0957a', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
     eyes: '#d8c060', hat: '#e8d8b0', height: 0.94,
   },
+  oku_b: {
+    // CAST-POLISH-ZEELICH-2 (order 24, oku's shape variant): a working Esmer, upright, in a long robe flared to the boots and
+    // a wrapped headcloth (cast_poly.py CAST oku_b). Taken by Pask, Ennu and the hostel's fourth worker; Oku and Old Ossa keep oku
+    race: 'esmer', outfit: 'robe', hem: 0.06, belly: 0.05, skin: '#e0957a', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
+    eyes: '#d8c060', hat: '#e8d8b0', height: 0.97,
+  },
   xil: {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f0b08a', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
@@ -295,6 +301,13 @@ export const LOOKS = {
     // Sefa, keeper of the observatory: a tall Esmer in a star-blue robe
     race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#f2a888', ridge: '#3a6a8a', tunic: '#2a3a7a', tunicTrim: '#e8e0b0', belt: '#e8e0b0', pants: '#1a2a4a', shoes: '#2a2040',
     eyes: '#f0d060', height: 1.08,
+  },
+  keeper_b: {
+    // CAST-POLISH-ZEELICH-2 (order 24, keeper's shape variant): Zeelich's council guard after LBA2's helmeted Esmer (body 80):
+    // a heavier build, a helmet with a peak and a neck guard, a belt with a buckle (cast_poly.py CAST keeper_b). Taken by
+    // zc_guard, up_guard, zt_guard and zt_guard2; Sefa (keeper), Ilo, Marl and Esren keep keeper
+    race: 'esmer', outfit: 'robe', hem: 0.06, skin: '#f2a888', ridge: '#3a6a8a', tunic: '#2a3a7a', tunicTrim: '#e8e0b0', belt: '#6a4a2a', pants: '#1a2a4a', shoes: '#2a2040',
+    helmet: '#4a6a5a', buckle: '#e8c870', eyes: '#f0d060', height: 1.08,
   },
   // ---- Desert Island (chapters 4–5)
   ilka: {

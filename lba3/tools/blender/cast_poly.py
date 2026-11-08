@@ -77,7 +77,7 @@ CAST = {
     'desertkid': dict(browS=0.8, mouthW=1.2, mouthLift=1.5, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=1.0),
     'desertTrader': dict(hatStyle='straw', browS=1.5, mouthLift=1.2, earS=0.95),
     'weaver': dict(cheekS=1.2, earBend=(0.0, 0.5), mouthLift=1.0, browTilt=0.2, earInCol='#e8a8b8'),
-    'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07),
+    'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1),
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
@@ -94,8 +94,11 @@ CAST = {
     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
-    'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05),
+    'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05, glassesRim=True),   # (GLASSES-CLERK)
     'councilChair': dict(browS=1.7, browTilt=-0.3, mouthLift=-0.3, noseS=1.1),
+    # (CAST-POLISH-ZEELICH-2, order 24: the shape variants of the most shared Esmer models)
+    'keeper_b': dict(browS=1.5, browTilt=-0.35, mouthLift=-0.3, noseS=1.05, helmet=True, beltBand=True),
+    'oku_b': dict(browS=1.3, browTilt=0.1, mouthLift=0.4, robeLong=True, headcloth=True),
     'zbee1': dict(browS=1.5, lip='#7a2a30'),
     'zbee2': dict(browS=0.8, lashes=True, lip='#a02840'),
     'zmole1': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=2),
@@ -714,7 +717,21 @@ def build(name):
         elif nk == 'button':
             ny_ = my(0.866)
             sphere(b.P('nose', ncol, head_w, 60), (0, ny_, front(0, ny_) + 0.001), 0.0125 * sx_ * ns_, 7, 5, (1.0, 0.9, 1.0))
-        if L.get('glasses'):   # (CAST-POLISH) round spectacles, a thin dark frame
+        if L.get('glasses') and cp.get('glassesRim'):
+            # CAST-POLISH-ZEELICH-2 (GLASSES-SELA, as GLASSES-MIRA): flat wire octagons 1.2 cm off the face, standing in the
+            # air round the eyes from the side and ¾. Now a round rim (a thin cord) laid on the face round each eye, a bridge
+            # over the snout and an arm back along the side of the head; the same dark colour.
+            gz_ = 0.025 * sx_ * (L.get('eyeScale') or 1)
+            gl_ = b.P('glasses', '#2a2a30', head_w, 60)
+            gy_, gx_, gr_ = my(0.896), 0.037 * sx_, gz_ * 1.3
+            for sxx in (1, -1):
+                loop_ = [(sxx * gx_ + gr_ * math.cos(2 * math.pi * k / 14), gy_ + gr_ * 0.9 * math.sin(2 * math.pi * k / 14)) for k in range(14)]
+                cord(gl_, [(x, y, front(x, y) + 0.004) for x, y in loop_], 0.0026, 5, True)
+                ox_ = sxx * (gx_ + gr_)
+                cord(gl_, [(ox_, gy_, front(ox_, gy_) + 0.002), (ox_ * 1.18, gy_ + 0.004, front(ox_, gy_) - 0.025), (ox_ * 1.22, gy_ + 0.006, Hc[2])], 0.0021, 5, False)
+            bx_ = gx_ - gr_
+            cord(gl_, [(-bx_, gy_ + 0.003, front(-bx_, gy_) + 0.004), (0, gy_ + 0.005, front(0, gy_ + 0.005) + 0.005), (bx_, gy_ + 0.003, front(bx_, gy_) + 0.004)], 0.0024, 5, False)
+        elif L.get('glasses'):   # (CAST-POLISH) round spectacles, a thin dark frame
             gz_ = 0.025 * sx_ * (L.get('eyeScale') or 1)
             glasses_on(b.P('glasses', '#2a2a30', head_w, 30), front, my(0.896), 0.037 * sx_, gz_ * 1.5, w=0.0055)
         # (FACE-MOUTH) the mouth, as his father's (twinsen_poly.py): a short tapered crescent on the lower face on
@@ -1518,7 +1535,15 @@ def build_esmer(name):
         dr = [0, 0, 0, 0, 0, tH * 0.6, tH, tR, tR, tR, tR, tC, tC * 0.6, 0, 0, 0, 0, 0, 0, 0]
         # (the hem's flat underside, at 0.33 H, is trim; the collar's flat top, at 0.685 H, too)
         bands = [(0.33 * H - 1e-4, pants), (0.36 * H - 1e-4, trim), (0.66 * H - 1e-4, cloth), (0.685 * H + 1e-4, trim), (9e9, skin)]
-    rings = [ell(y * H, R * k * (1.06 if y <= 0.3 else 1.0) + d, R * k * (1.06 if y <= 0.3 else 1.0) + d, 16, cz=zc(y * H)) for y, k, d in zip(ys, ks, dr)]
+        if cp.get('robeLong'):
+            # (CAST-POLISH-ZEELICH-2, oku_b: the robe long, flared out over the trousers to just above the boots, the same rolled
+            # hem lower down; the trousers only under it, between the legs. The 1.06 bulge below 0.3 H is in the k's here)
+            ys = [0.19, 0.205, 0.205, 0.213, 0.235, 0.3, 0.36, 0.45, 0.55, 0.66, 0.674, 0.685, 0.685, 0.75, 0.82, 0.88, 0.95, 0.985, 1.0]
+            ks = [0.55, 0.85, 1.12, 1.15, 1.12, 1.08, 1.03, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.6, 0.15]
+            dr = [0, 0, tR, tR, tR, tR, tR, tR, tR, tR, tC, tC * 0.6, 0, 0, 0, 0, 0, 0, 0]
+            bands = [(0.205 * H - 1e-4, pants), (0.235 * H - 1e-4, trim), (0.66 * H - 1e-4, cloth), (0.685 * H + 1e-4, trim), (9e9, skin)]
+    bulge = 1.0 if cp.get('robeLong') and not OLD else 1.06
+    rings = [ell(y * H, R * k * (bulge if y <= 0.3 else 1.0) + d, R * k * (bulge if y <= 0.3 else 1.0) + d, 16, cz=zc(y * H)) for y, k, d in zip(ys, ks, dr)]
     faceY = 0.82 * H
     banded(b, 'capsule', rings, bands, w_cap)
     front = lambda x, y: zc(y) + math.sqrt(max(0.0, R * R - x * x))
@@ -1535,11 +1560,36 @@ def build_esmer(name):
     mw = R * 0.28
     mp_, mlens, mt_ = mouth_lens(0.0, faceY - R * 0.62 + 0.004, mw, 0.018, 0.004 * cp.get('mouthLift', 0.0), front, 9, 0.003)
     b.mouth(mp_, [(mlens, '#6a2a2a')], rest=0.226, drop=-0.006, tilt=mt_)
-    if L.get('hat'):   # a round cap over the top of the capsule
+    if not OLD and cp.get('helmet'):
+        esmer_helmet(b, L, R, H, zc, w_cap)
+    if not OLD and cp.get('beltBand'):
+        # (CAST-POLISH-ZEELICH-2, keeper_b: a belt round the robe at the waist, 0.8 cm thick, a brass buckle in front)
+        r0, r1, y0, y1 = R + 0.008, R + 0.016, 0.47 * H, 0.5 * H
+        bl = Part('belt', L.get('belt', '#6a4a2a'), w_cap, 50)
+        loft(bl, [ell(y0, r0, r0, 16, cz=zc(y0)), ell(y0, r1, r1, 16, cz=zc(y0)), ell(y1, r1, r1, 16, cz=zc(y1)), ell(y1, r0, r0, 16, cz=zc(y1))])
+        b.P('belt', L.get('belt', '#6a4a2a'), w_cap, 50).add(bl.v, bl.f)
+        bz = zc(0.485 * H) + r1
+        box(b.P('buckle', L.get('buckle', '#e8c870'), w_cap, 20), -0.035, 0.035, y0 - 0.006, y1 + 0.006, bz - 0.004, bz + 0.008)
+    if not OLD and cp.get('headcloth'):
+        esmer_headcloth(b, L, R, H, zc)
+    elif L.get('hat'):   # a round cap over the top of the capsule
         ht = b.P('hat', L['hat'], 'head', 40)
         sphere(ht, (0, 0.955 * H, zc(H)), R * 1.12, 12, 6, (1.0, 0.62, 1.05))
         disc(ht, (0, 0.93 * H, zc(H) + R * 0.25), R * 1.25, 12, 'y', 0.012)
-    if L.get('glasses'):
+    if L.get('glasses') and cp.get('glassesRim') and not OLD:
+        # CAST-POLISH-ZEELICH-2 (GLASSES-CLERK, as GLASSES-MIRA): flat octagons of strip 0.8 cm off the face, as wide as the
+        # face (their outer sides in the air from ¾ and the side). Now a round rim (a thin cord) laid on the face round each
+        # eye, a bridge between them and an arm back to the ear; the same dark colour.
+        gl = b.P('glasses', '#2a2a30', 'head', 60)
+        gx_, gr_ = R * 0.38, R * 0.25
+        for sxx in (1, -1):
+            loop_ = [(sxx * gx_ + gr_ * math.cos(2 * math.pi * k / 10), faceY + gr_ * 0.85 * math.sin(2 * math.pi * k / 10)) for k in range(10)]
+            cord(gl, [(x, y, front(x, y) + 0.004) for x, y in loop_], 0.003, 3, True)   # (3 sides, 10 steps: the clerk's six wearers are many)
+            ox_ = sxx * (gx_ + gr_)
+            cord(gl, [(ox_, faceY, front(ox_, faceY) + 0.003), (sxx * R * 0.9, faceY + 0.004, zc(faceY) + R * 0.42), (sxx * R * 1.0, faceY - R * 0.05, zc(faceY) + R * 0.05)], 0.0025, 3, False)
+        bx_ = gx_ - gr_
+        cord(gl, [(-bx_, faceY + 0.003, front(-bx_, faceY) + 0.004), (0, faceY + 0.006, front(0, faceY) + 0.007), (bx_, faceY + 0.003, front(bx_, faceY) + 0.004)], 0.0028, 3, False)
+    elif L.get('glasses'):
         gl = b.P('glasses', '#2a2a30', 'head', 30)
         for sxx in (1, -1):
             c = (sxx * R * 0.36, faceY, front(sxx * R * 0.36, faceY) + 0.008)
@@ -1571,6 +1621,49 @@ def build_esmer(name):
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
     print(name, 'tris', tris)
     return name
+
+
+def esmer_helmet(b, L, R, H, zc, w_cap):
+    """CAST-POLISH-ZEELICH-2, keeper_b: Zeelich's council guard wears LBA2's Esmer guard helmet (body 80: a head piece wider
+    than the capsule, ±0.16 H, from 0.78 H at the back to the top, a peak forward over the face, the face bare below it).
+    Ours: a shell 1.25 R round, its rim at 0.865 H over the brows, 0.825 H over the ears and down to 0.785 H at the back (a
+    neck guard), closed underneath to the head; a curved peak in front. All in the helmet's hex (a DRESS-1 role); the rim
+    and the peak's underside a darker multiple of it."""
+    hc = L.get('helmet', '#4a6a5a')
+    n, Rh = 16, R * 1.25
+    yr = lambda t: (0.825 + 0.04 * math.cos(t)) * H
+    prof = [('rim', 1.02, None), ('lip', 1.0, 0.02), ('side', 0.99, 0.93), ('crown', 0.9, 0.99), ('top', 0.64, 1.03), ('cap', 0.3, 1.055)]
+    rings = []
+    for nm, k, yy in prof:
+        r_ = []
+        for i in range(n):
+            t = 2 * math.pi * i / n
+            y = yr(t) if yy is None else (yr(t) + yy * H if nm == 'lip' else yy * H)
+            r_.append((math.sin(t) * Rh * k, y, zc(y) + math.cos(t) * Rh * k))
+        rings.append(r_)
+    inner = [(math.sin(2 * math.pi * i / n) * R * 0.98, yr(2 * math.pi * i / n), zc(yr(2 * math.pi * i / n)) + math.cos(2 * math.pi * i / n) * R * 0.98) for i in range(n)]
+    hp = Part('helmet', hc, 'head', 45)
+    loft(hp, [inner] + rings, cap_top=True)
+    b.P('helmet', hc, 'head', 45).add(hp.v, [f for f in hp.f if not all(k < 2 * n for k in f)])
+    b.P('helmetRim', shade(hc, 0.72), 'head', 45).add(hp.v, [f for f in hp.f if all(k < 2 * n for k in f)])   # (the underside: inner to rim)
+    yf = 0.865 * H + 0.012 * H
+    visor(b.P('helmetPeak', hc, 'head', 35), 0, yf, zc(yf), Rh * 0.96, Rh * 1.55, 0.95, 0.02 * H, 0.012, 8)
+
+
+def esmer_headcloth(b, L, R, H, zc):
+    """CAST-POLISH-ZEELICH-2, oku_b: a cloth wrapped round the top of the head (in place of oku's round cap): a thick wrap
+    from 0.9 to 0.99 H, a soft crown over it and a short tail hanging at the back; the hat's hex, the wrap's lower turn a
+    darker multiple of it."""
+    hc = L.get('hat', '#e8d8b0')
+    prof = [(0.895, 0.98), (0.905, 1.1), (0.93, 1.15), (0.95, 1.12), (0.965, 1.15), (0.985, 1.1), (1.0, 0.98), (1.025, 0.72), (1.04, 0.3)]
+    rings = [ell(y * H, R * k, R * k, 16, cz=zc(y * H)) for y, k in prof]
+    hp = Part('headcloth', hc, 'head', 50)
+    loft(hp, rings, cap_top=True)
+    low = [f for f in hp.f if sum(hp.v[k][1] for k in f) / len(f) < 0.95 * H]
+    b.P('headcloth', hc, 'head', 50).add(hp.v, [f for f in hp.f if f not in low])
+    b.P('headclothLow', shade(hc, 0.82), 'head', 50).add(hp.v, low)
+    zb = zc(0.95 * H) - R * 1.12
+    tube(b.P('headclothTail', hc, 'head', 50), (0.0, 0.95 * H, zb + 0.01), (0.012, 0.86 * H, zb - 0.025), 0.03, 0.018, 8, squash=0.45)
 
 
 def esmer_boot(b, bp, shoes, H, s):
