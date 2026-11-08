@@ -405,9 +405,14 @@ export class Network extends ChapterBase {
         if (!f.c10_ilka) return c([['ilka', 'c10_ilka_1'], ['ilka', 'c10_ilka_2']], () => { f.c10_ilka = true; ok(); });
         return c([['ilka', f.c10_bore ? 'c10_ilka_3' : 'c10_ilka_2']]);
       case 'dallan': return c([['dallan', 'c10_dallan_1']]);
-      case 'yorna': case 'pim':
-        if (!f.c10_pim) return c([['yorna', 'c10_yorna_1'], ['pim', 'c10_pim_1'], ['yorna', 'c10_yorna_2']], () => { f.c10_pim = true; ok(); });
-        return c([[id, id === 'pim' ? 'c10_pim_2' : 'c10_yorna_2']]);
+      case 'yorna': case 'pim': {
+        // (CHAPTER-BALANCE: he comes in by glider straight from the bore's fight, and a Retry brings him back here with what
+        //  the save holds, as little as 4: Yorna's broth puts his life back whenever he is hurt, before the ridge's crawler)
+        const h = g.hero, hurt = id === 'yorna' && h.hp < h.maxHp, tea = hurt ? [['yorna', 'c10_yorna_broth']] : [];
+        if (hurt) { h.hp = h.maxHp; g.audio.play('heal'); g.hud.toast('c10_toast_broth'); g.hud.stats?.(h); }
+        if (!f.c10_pim) return c([...tea, ['yorna', 'c10_yorna_1'], ['pim', 'c10_pim_1'], ['yorna', 'c10_yorna_2']], () => { f.c10_pim = true; ok(); });
+        return c([...tea, [id, id === 'pim' ? 'c10_pim_2' : 'c10_yorna_2']]);
+      }
       case 'keeper':
         if (f.c10_pim && !f.c10_keeper) return c([['keeper', 'c10_keeper_1']], () => { f.c10_keeper = true; ok(); });
         return c([['keeper', f.c10_dome ? 'c10_keeper_2' : 'c10_keeper_1']]);

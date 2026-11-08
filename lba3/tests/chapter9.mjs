@@ -69,6 +69,9 @@ is('into the archive, its watcher on', await ev(() => { T.exit('council-out'); c
 await shot('C9-04-archive.png');
 is("the worker's coat: disguised", await ev(() => { const L = game.rooms.archive.locker; T.useAt(L.x, L.z); return [game.flags.c9_coat, game.hero.body, game.hero.disguised]; }), (v) => v[0] === true && v[1] === 'worker' && v[2] === true);
 is('the wrong cabinet (FERRIES) has no plans', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'FERRIES'); T.useAt(c.x, c.z); return [game.flags.c9_plans]; }), (v) => !v[0]);
+// CHAPTER-BALANCE: the BORE cabinet is locked until the archivist's key ring is taken from his desk
+is('the BORE cabinet without the key: locked, no plans; the objective names the key', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, game.flags.c9_locked, T.obj()]; }), (v) => !v[0] && v[1] === true && /key/i.test(v[2]));
+is("the archivist's key ring taken from his desk", await ev(() => { const K = game.rooms.archive.keys; T.useAt(K.x, K.z); return [game.flags.c9_key, K.taken]; }), (v) => v[0] === true && v[1] === true);
 is('the BORE cabinet: the plans, an objective set', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 log('spot test', await ev(() => { const G = game; return [G.story.cur.watcher?.active]; }));
 is('chapter 9 ends with the vote: back to Twinsen, the next chapter (network)', await ev(() => { const r1 = T.exit('archive-out'); const b = game.hero.body; const r2 = T.exit('up-council'); game.step(0.5); T.talkAll(); for (let i = 0; i < 20; i++) { game.step(0.2); T.talkAll(); } return [r1, b, r2, game.flags.c9_vote, game.flags.chapterKey]; }), (v) => v[1] === 'twinsen' && v[2] === 'council' && v[3] === true && v[4] === 'network');

@@ -10,6 +10,7 @@
 //   upper    R.counter {x,z}; exits 'up-down' (the lift, back to the street), 'up-council', 'up-archive'
 //   council  R.dais {x,z}; R.npcSpots {chair, c2, c3, dallan, baldino}; exit 'council-out'
 //   archive  R.cabinets [{i,x,z,label}]; R.locker {x,z}; R.patrol [[x,z]...]; exit 'archive-out'
+//            R.keys {x,z, setTaken(b)}: the archivist's key ring on his desk (the BORE cabinet's key; CHAPTER-BALANCE)
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import * as P from './props.js';
@@ -134,6 +135,11 @@ function buildArchive(scene, physics) {
   // crates of files waiting to be shelved, and the archivist's desk (more cover in the front half)
   for (const [x, z, r] of [[-1.2, 4.6, 0.2], [3.8, 3.6, -0.3], [4.6, 3.9, 0.1]]) B.put(x, z, r, (kk) => P.cargoCrate(kk, { w: 1.0, h: 1.2, d: 1.0, color: '#5a6a62' }));
   B.put(5.4, 1.6, -Math.PI / 2, (kk) => P.desk(kk));
+  // the archivist's key ring on the desk's near end (CHAPTER-BALANCE: the BORE cabinet is locked; story/council.js)
+  const ring = new THREE.Group(); ring.position.set(5.2, 0.8, 1.1); B.group.add(ring);
+  { const m = MAT.brass(); const r0 = new THREE.Mesh(torus(0.07, 0.012, 6, 16), m); r0.rotation.x = Math.PI / 2; ring.add(r0);
+    for (const [a, l] of [[0.4, 0.11], [1.3, 0.09], [2.4, 0.12]]) { const kk = new THREE.Mesh(rbox(0.018, 0.012, l, 0.004), m); kk.position.set(Math.sin(a) * (0.07 + l / 2), 0, Math.cos(a) * (0.07 + l / 2)); kk.rotation.y = a; ring.add(kk); } }
+  R.keys = { x: B.cx + 5.2, z: B.cz + 1.1, taken: false, setTaken(b) { this.taken = !!b; ring.visible = !b; } };
   // three plan cabinets on the back wall, labelled
   const cabinets = [];
   ['TUNNELS', 'BORE', 'FERRIES'].forEach((lab, i) => {

@@ -58,6 +58,10 @@ Object.assign(STR.en, {
   c3_ilka_hold: "Twinsen, the overload is pulling on every station! Dallan and I are opening the desert vent wide to bleed it off.",
   c3_pim_hold: "Sefa turned the dome right into the sun! The relay's burning like a lamp. We're holding!",
   c3_toast_coil: "Hit the glowing coil over Vesk's console with the ball",
+  c3_ilka_bleed: "It's still building on your side! The bore has a bleed line to the vents: open its valve on the deck ring and we'll take the surge out.",
+  c3_ilka_bled: "There it goes! The vent's roaring like a geyser. Keep that line open!",
+  c3_vesk_coil: "You're draining it into the sand? Then I'll take what's left myself!",
+  c3_toast_bleed: "Stun the guardian, then turn the red bleed valve on the deck ring",
   c3_toast_coil_hit: 'Coil damaged ({n}/3)',
   c3_vesk_hit1: 'Stop that! Do you know what that coil cost?',
   c3_vesk_hit2: 'The readings... no. No, no, no!',
@@ -73,6 +77,7 @@ Object.assign(STR.en, {
   c3_vesk_left: "Go on, then. Switch my machine. See how long a sketch holds without the man who built it.",
   c3_tw_switch: "Shield mode. Baldino, I hope your sketch holds.",
   c3_bal_end: "It holds! It holds! Twinsen, the field is stable. And the council's guards are on their way down for Vesk.",
+  c3_obj_bleed: "Open the bore's bleed valve",
   c3_obj_coil: "Break Vesk's overload coil ({n}/3)",
   c3_sendell_end: 'Thank you, Twinsen. She is asleep again.',
 
