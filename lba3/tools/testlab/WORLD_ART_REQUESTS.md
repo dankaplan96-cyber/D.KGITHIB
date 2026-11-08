@@ -3473,3 +3473,68 @@ origin's own plus only the new entries (`zmole1_b`; `desertkid_b`, `farmerC_b`) 
 **ISLES, then DESERT**; both `git apply --check` clean in that order; the merged JS passes `node --check`, cast_poly.py
 compiles. The model JSONs in `requests/CAST-POLISH-ISLES/` and `-DESERT/` are unchanged. (The first DESERT push
 said "after ISLES" but did not apply on origin: my mistake, corrected here.)
+
+## ITEMS-1 · the bonuses: heart, clover leaf, magic flask, Kash (the user, 8.11: "none of these look really good") · the laptop, 8.11.2026
+Diff: `requests/ITEMS-1.diff`, code only, **rebased on origin c5d7e2b6** (made on e3876e05; a three-way apply was clean, `git apply --check -R` clean, `node --check` passes). **Please run `tests/containers.mjs` before applying:** its 32 checks passed here, but its ferry round trip to Zeelich did not return on the loaded laptop. Code:
+`src/game/bonuslook.js` (new), `src/game/actors.js` (PICK), `index.html` (the HUD clover), `css/style.css` (the behaviour
+menu's clover boxes). Blender working files `art/blender/props/items/` (jobs, polyprops, reports, sheet jpgs; the .blend and png previews stay on the laptop).
+Pictures (ours, chapter 1 Citadel, may go to the user), before | after: `docs/future/items/{all,heart,clover,flask,coin,crystal}/`.
+- **What they were:** primitives, each spawn making new geometries and a new material (never freed): the heart two
+  spheres and a cone, the clover three balls (a trefoil), the flask a ball and a stick (transparent), the Kash a disc in a
+  torus. At Follow/Medium they read as a red blob, three green balls, a blue ball, an orange disc.
+- **The originals** (the user's LBA2 `SPRIRAW.HQR`, decoded to a scratch folder, looked at, deleted; descriptions only):
+  the bonuses are flat sprites of 12–14 px, read by their outline: a plump red heart with a white spot; a round light-blue
+  flask with a short neck and a flared lip; a **four-leaf** clover in an X (the clover box is the same leaf on a brown
+  box); a gold Kash with a rim and a raised mark.
+- **Now** (bonuslook.js; each shape and each material made once and shared by every bonus of its kind):
+
+| Bonus | Was wrong | Now | Meshes | Triangles | Draw calls in the frame (with its shadow) |
+|---|---|---|---|---|---|
+| heart | three primitives, seams, a cone point | one smooth cushion from the heart curve (0.33 × 0.30 × 0.12 m), glossy cherry red | 3 → 1 | 300 → 300 | 6 → 2 |
+| clover | three balls (a trefoil, not LBA's four-leaf) | four heart-shaped leaflets (notch out) in an X, cupped, a knot and a curved stem (0.33 m across) | 3 → 1 | 420 → 700 | 6 → 2 |
+| flask | a blue ball on a stick, transparent | a round-bellied flask: neck, flared lip, stopper (14-sided lathe, 0.24 × 0.33 m), smooth blue glass, opaque | 2 → 1 | 248 → 420 | 4 → 2 |
+| coin (Kash) | a flat disc in a ring, orange | a coin on its edge: raised rim round a sunk field, crisp edges, a K raised 8 mm on both faces (0.26 m), brighter gold | 2 → 1 | 224 → 318 | 4 → 2 |
+| crystal | three meshes | the same look, one mesh | 3 → 1 | 24 → 24 | 6 → 2 |
+| shard | new material and geometry per spawn | the same look, its parts shared | 2 → 2 | = | = (not captured) |
+
+  - 20 coins at once: **80 → 40** draw calls, 8,960 → 12,720 triangles (the frame has ~910,000), new GPU geometries
+    **+40 (never freed after they were taken) → 0**; shader programs 86 in both runs once all five kinds had been drawn (the same standard
+    program: no maps, no vertex colours; nothing new compiles in play).
+  - Glow: emissive 0.55–0.7 (was 1.1–1.5), so they read as things, not lamps; still bright against stone, dirt and grass.
+  - Sizes kept about as before (the user found them too big once): heart 0.33 m wide, clover 0.33, flask 0.33 tall, coin
+    0.26.
+  - Unchanged: every type name and id, spin, bob, the pickup radius, the coin's pull, blinking, the givers' arcs, shadows.
+  - HUD: the clover counter (index.html) and the behaviour menu's clover boxes (style.css) now show four leaves, like the
+    bonus.
+- **Interface:** the inventory's kashes and clovers slots, the shop's flask and clover rows and every price coin take the
+  new models (itemlook.js `pickupModel`; itemlook.js itself unchanged). The heart is never carried; the found box never
+  shows bonuses (found.js).
+- **Blender** (5.2.3 through the bridge, `art/blender/props/items/jobs/items-1.json`, 32 jobs OK): each bonus's baseline
+  and candidate imported, inspected, validated (candidates 12/12 pass, no zero-area faces), the four views in grey and in
+  colour (`*/previews/*/sheet.jpg`, `docs/future/items/<item>/blender-turnaround.jpg`), the candidate exported back with
+  the same triangles.
+- **Looked at in the game** (SwiftShader, Citadel's square, chapter 1, Follow/Medium; before = HEAD's files served in
+  place): on the ground, in flight from a giver, a 20-coin rain, the inventory (kashes, clovers), Pippa's stall, the
+  128 px slot pictures of every item look, the 320 px large view, the HUD counters.
+- **Tests** (SwiftShader, the worktree served in-process by the tests copied to a scratch folder, its Playwright import pointed at the Test Lab's; the machine was
+  shared with another agent's browsers and slow — boots of 3–6 min):
+  - **chapter1 23/23, givers 16/16, items-ceremony 20/20, prologue 26/26, shops 31/31: PASS.**
+  - shops failed twice before passing: the Save & quit → Continue reload stalled on the loading screen ("Almost there…",
+    and once `net::ERR_NETWORK_IO_SUSPENDED` on module loads). A HEAD control run (the four changed files served as at
+    e3876e05) passed 31/31; with ITEMS-1 the third try reached it (then a 30 s screenshot timeout in the copy, raised)
+    and the fourth passed 31/31. Read as the loaded machine, not the change — but a flake to watch.
+  - **containers: not a full verdict.** Every check up to "a searched container stays empty: 90 s later" passed
+    (32 checks, including the reload: the hearts left lying come back, same kind, same place; full life / magic leave a
+    heart or flask lying; taking them). Its next step, a ferry round trip to Zeelich, did not return in 55 min; the
+    page's renderer was idle and SwiftShader's GPU process busy (not a script loop), and I stopped my run. Earlier
+    tries broke on the copy's Windows path to `lib/player.js` (fixed in the copy) and on `ERR_NETWORK_IO_SUSPENDED`.
+    Please run `tests/containers.mjs` in the cloud.
+  - Harness edits, in the scratch copy only: chapter1's boot timeout 240 → 900 s, quitAndKeep's 300 s → BOOT_TIMEOUT,
+    `pathname` → a Windows path for `lib/player.js`, shops' screenshot timeout 30 → 180 s.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** fewer draw calls and no leak; +0 to +280 triangles a bonus (clover the most; it is rare). The Vega 8 frame time
+  was not run.
+- **Left:**
+  - The K on the coin is lost below ~40 px (at Follow/Medium the coin reads by its rim and colour).
+  - The heart potion, the pearl and the other item looks are unchanged: they read in the 128 px slots.
+  - Coins could be one instanced draw for a whole rain (InstancedMesh); not done (a behaviour-side change).
