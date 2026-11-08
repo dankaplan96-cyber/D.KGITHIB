@@ -284,7 +284,7 @@ export class KnockOut {
     const e = this.e, g = this.g, kind = this.kind;
     this.impactT = this.t;
     const s = kind === 'guardian' || kind === 'crawler' ? 1.8 : kind === 'mite' ? 0.6 : 1;
-    g.audio.play(kind === 'drone' || kind === 'guardian' || kind === 'sentry' ? 'clunk' : kind === 'mite' || kind === 'crawler' ? 'land' : 'thump');
+    g.audio.play(kind === 'drone' || kind === 'guardian' || kind === 'sentry' ? 'clunk' : kind === 'mite' || kind === 'crawler' ? 'hitStone' : 'thump', { x: M.cx, z: M.cz });   // (ACTION-SOUND: placed; not Twinsen's own landing)
     g.particles.burst(M.cx, this.base + 0.1, M.cz, '#cbb994', Math.round(10 * s), 1.6 * s);
     if (kind === 'guardian' || kind === 'sentry' || kind === 'crawler') g.camRig?.shake?.(0.12 * s);
     if (!this.bonusOut && !this.noBonus) { this.bonusOut = true; const p = g.enemyBonus?.(e, M.cx, Math.max(M.cy, this.base + 0.4) + 0.25, M.cz); if (p) p.koDrop = true; }
@@ -317,7 +317,7 @@ export class KnockOut {
         p.x += d.vx * dt; p.y += d.vy * dt; p.z += d.vz * dt;
         o.rotateX(d.sx * dt); o.rotateZ(d.sz * dt);
         const gy = P.groundAt(p.x, p.z, p.y + 0.5) + 0.1;
-        if (p.y <= gy && d.vy < 0) { p.y = gy; d.landed = true; this.g.audio.play('clunk'); }
+        if (p.y <= gy && d.vy < 0) { p.y = gy; d.landed = true; this.g.audio.play('clunk', p); }
       } else {
         // it settles flat (its length along the ground) in a moment
         o.quaternion.slerp(d.rest, 1 - Math.exp(-16 * dt));

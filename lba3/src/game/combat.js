@@ -473,7 +473,7 @@ export class HeroCombat {
     this.dodgeDist = dodgeDist(rel);
     h.rig.atk = { kind: 'dodge', rel };
     h.rig.play('dodge'); h.rig.actionT = 0;
-    g.audio.play('whoosh');
+    g.audio.play('dodge');
     g.particles.burst(h.pos.x, h.pos.y + 0.1, h.pos.z, '#cbb994', 6, 1.5);
     void aim;
   }

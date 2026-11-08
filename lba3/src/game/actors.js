@@ -389,7 +389,7 @@ export class Hero extends Actor {
         const fall = Math.max(0, (this.airPeak ?? this.pos.y) - this.pos.y), run = Math.hypot(this.vel.x, this.vel.y) > 2.2 ? 0.55 : 1;
         const s = clamp((0.3 + 0.8 * (fall - 0.3)) * run, 0.3, 1.2);
         if (fall > 0.2 || vf > 6) this.rig.land(s);
-        if (vf > 6) g.audio.play('land');
+        if (vf > 6) { g.audio.play('land'); g.audio.play('step-' + (g.surfaceAt?.(this.pos) || 'stone')); }   // (ACTION-SOUND: the thud and the surface's grain)
         if (fall > 0.9 || vf > 6) g.particles.burst(this.pos.x, this.pos.y + 0.05, this.pos.z, '#b8a888', 8 + Math.round(6 * s), 1.2);
       }
       if (this.jumpBuf > 0 && beh === 'athletic' && !this.sliding) this.jump();
@@ -840,7 +840,7 @@ export class Hero extends Actor {
         this.act('knockdown', 0.9, null, 0, ['getup', 0.9, () => {
           this.hp = this.maxHp; this.mp = this.mpMax;
           g.hud.toast('toast_clover');
-          g.audio.play('heal');
+          g.audio.play('revive');   // (ACTION-SOUND: the clover's own motif, not a refill)
           g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#6fe36f', 30, 4);
         }, 0.6]);
       } else {
@@ -989,7 +989,7 @@ export class Sentinel extends Actor {
 
   alert(pos) {
     if (!this.alive || this.state === 'dormant') return;
-    if (this.state !== 'chase') { this.game.audio.play('alert'); }
+    if (this.state !== 'chase') { this.game.audio.play('alert', this.pos); }
     this.state = 'chase';
     this.suspicion = 1;
     this.lostT = 0;
@@ -1020,7 +1020,7 @@ export class Sentinel extends Actor {
     const g = this.game;
     this.state = 'dead';
     this.icon.visible = false;
-    g.audio.play('die');
+    g.audio.play('break', this.pos);   // (ACTION-SOUND: 'die' is Twinsen's own)
     g.onEnemyKilled(this);
   }
 
@@ -1124,7 +1124,7 @@ export class Sentinel extends Actor {
       this.slamT = 1.6;
       this.rig.play('kick'); this.rig.actionT = 0;
       this.game.camRig.shake(0.4);
-      this.game.audio.play('rumble');
+      this.game.audio.play('rumble', this.pos);
       this.game.particles.burst(this.pos.x, this.pos.y + 0.2, this.pos.z, '#bbb', 20, 5);
       this.game.hero.damage(2, this.pos);
     }
@@ -1152,7 +1152,7 @@ export class Sentinel extends Actor {
       const d2 = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), s);
       g.bolts.fire(from, d2, this.boss ? 15 : 13, this.boss ? 2 : 1);
     }
-    g.audio.play('zap');
+    g.audio.play('zap', this.pos);
   }
 }
 
@@ -1621,7 +1621,7 @@ export class MagicBall {
     // a bonus within reach rides back with it
     if (!this.carry) for (const p of g.pickups?.list || []) {
       if (p.fly || p.carried || p.type === 'shard' || p.delay > 0 || (p.where && p.where !== g.where()) || !g.canTake(p)) continue;
-      if (Math.hypot(p.pos.x - this.pos.x, p.pos.y - this.pos.y, p.pos.z - this.pos.z) < 0.7) { p.carried = true; this.carry = p; g.audio.play('catch'); this.state = 'return'; this.retT = 0; return; }
+      if (Math.hypot(p.pos.x - this.pos.x, p.pos.y - this.pos.y, p.pos.z - this.pos.z) < 0.7) { p.carried = true; this.carry = p; g.audio.play('ballGrab', this.pos); this.state = 'return'; this.retT = 0; return; }
     }
     const nx = this.pos.x + this.vel.x * h, nz = this.pos.z + this.vel.z * h;
     const y = this.pos.y;
@@ -1646,6 +1646,8 @@ export class MagicBall {
   onHit(hit) {
     const g = this.game;
     if (hit.enemy) this.hits.add(hit.enemy);
+    // (ACTION-SOUND: the ball's own 'pling' on an enemy or a switch, over the material's sound: a hit, never a bounce)
+    if (hit.enemy || hit.result === 'switch') g.audio.play('ballHit', this.pos);
     g.impact(this.pos.x, this.pos.y, this.pos.z, hit.material || 'magic', hit.result || 'hit', 0.6);
     this.flash(this.pos.x, this.pos.y, this.pos.z, this.charged ? 1.35 : 1.05); // (the hit flash, the ring and the sparks)
     // a charged throw with bounces left goes on to the next enemy
@@ -1657,7 +1659,7 @@ export class MagicBall {
         const ty = next.pos.y + (next.hover ?? 0) + (next.aimY ?? 0.5);
         const dx = next.pos.x - this.pos.x, dz = next.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1, tt = Math.max(0.1, d / sp);
         this.vel.set(dx / tt, (ty - this.pos.y + 0.5 * this.grav * tt * tt) / tt, dz / tt);   // (POINT-BLANK: as MagicBall.plan)
-        g.audio.play('bounce');
+        g.audio.play('ballChain', this.pos);
         return;
       }
     }
@@ -1708,7 +1710,7 @@ export class MagicBall {
   bounce(kind) {
     this.bounces--;
     const g = this.game;
-    g.audio.play('bounce');
+    g.audio.play(kind === 'ground' ? 'bounceGround' : 'bounceWall', this.pos);   // (one per bounce: two contacts in one step merge)
     g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);
     this.flash(this.pos.x, this.pos.y, this.pos.z, 0.35, false);
     if (this.bounces < 0) { this.state = 'return'; this.retT = 0; }

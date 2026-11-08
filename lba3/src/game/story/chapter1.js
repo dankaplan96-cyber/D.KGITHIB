@@ -186,11 +186,11 @@ export class Chapter1 extends ChapterBase {
         return true;
       }
       case 'c1gate':
-        g.audio.play('deny');
+        g.audio.play('doorLocked');
         this.chain([['hero', f.c1_task ? 'c1_gate_task' : 'c1_gate']]);
         return true;
       case 'pipemap':
-        g.audio.play('select');
+        g.audio.play('paper');
         // (G1-QUEST #19: once the water is back the map is only a map: Mira no longer marks valves that are open)
         if (f.c1_water) { this.chain([['hero', 'c1_map_after']]); return true; }
         f.c1_map = true;
@@ -199,7 +199,7 @@ export class Chapter1 extends ChapterBase {
       case 'locker':
         g.searched.push(it.spot.id);
         h.act('search', 1.1, () => {
-          g.audio.play('chest');
+          g.audio.play(it.spot.id === 'locker2' ? 'search' : 'searchEmpty');   // (ACTION-SOUND: the plan, or an empty locker)
           if (it.spot.id === 'locker2') this.foundPlan();
           else this.chain([['zoe', it.spot.id === 'locker1' ? 'c1_zoe_locker1' : 'c1_zoe_locker3']]);
         }, 0.2);

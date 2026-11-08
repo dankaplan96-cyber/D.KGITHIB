@@ -130,7 +130,7 @@ export class HostelLife extends ChapterBase {
         return true;
       }
       case 'hs_door':
-        if (!f.hs_crate) { g.audio.play('deny'); return say(['hs_door_locked']); }
+        if (!f.hs_crate) { g.audio.play('doorLocked'); return say(['hs_door_locked']); }
         f.hs_door = true; this.applyWorld(false); g.audio.play('door');
         return say(['hs_door_open'], () => g.save(false));
       case 'hs_desk': {

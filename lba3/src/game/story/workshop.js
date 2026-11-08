@@ -116,7 +116,7 @@ export class WorkshopLife extends ChapterBase {
         h.act('use', 0.6, () => {
           if (f.w_pair) return;   // (pressed in the pair's last moment: it finished first)
           this.on = !this.on; this.sync = 0; this.tOn = 0; this.warned = false; this.sightSaid = false;
-          g.audio.play(this.on ? 'select' : 'door');
+          g.audio.play('lever');
           if (this.on && !f.w_ask) { f.w_ask = true; say(['w_tw_tag']); }
           this.push();
         }, 0.3);

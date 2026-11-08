@@ -2,9 +2,10 @@
 // rendered orchestral soundtrack (files in assets/music, played by ./music.js).
 //
 // Buses: master ─┬─ music (file playback, ducked under dialogue)
-//                ├─ sfx (+ a little room reverb)
-//                ├─ ambience (rain, surf, wind; follows the effects volume)
+//                ├─ fxDuck ─┬─ sfx (+ a little room reverb; ACTION-SOUND: play() below)
+//                │          └─ ambience (rain, surf, wind; follows the effects volume)
 //                └─ voice (the characters' gibberish voices, voice.js)
+// then master → out (PAUSE-FADE) → the speakers. fxDuck steps the effects back under a voice line (duck).
 
 import { Music } from './music.js';
 import { Babble, voiceStyle } from './voice.js';
@@ -19,6 +20,50 @@ const VOL_GLIDE = 0.03; // s: the time constant of a volume change (MUSIC-CRACKL
 // PAUSE-FADE (wave 5): a story scene's pause fades the whole output out over this long before the context is suspended,
 // and back in once it runs again (MUSIC-CRACKLE: an immediate ctx.suspend() cut the output mid-wave)
 const PAUSE_RAMP = 0.02;
+
+// ACTION-SOUND (wave 6): how each effect is played (play()). pri: 3 is never skipped (an outcome or a danger: hurt,
+// something gained, a door, a refusal, a telegraph), 2 actions and combat, 1 small and repeated (feet, ticks). gap:
+// the least time (s) between two takes of the same group: two calls for one event (two contacts in one step, a frame
+// asking again) make one sound. vary: [pitch ±fraction, level ±dB] per take, small, so a repeated sound doesn't
+// machine-gun; the musical ones (pickups, finds, stingers, the interface) keep theirs exactly.
+const DEF = { pri: 2, gap: 0.03, vary: [0.02, 0.8] };
+const FIXED = [0, 0];
+const SND = {
+  step: { pri: 1, group: 'step', gap: 0.12, vary: [0.05, 1.5] }, 'step-stone': { pri: 1, group: 'step', gap: 0.12, vary: [0.05, 1.5] },
+  'step-grass': { pri: 1, group: 'step', gap: 0.12, vary: [0.05, 1.5] }, 'step-dirt': { pri: 1, group: 'step', gap: 0.12, vary: [0.05, 1.5] },
+  'step-wood': { pri: 1, group: 'step', gap: 0.12, vary: [0.04, 1.5] }, 'step-metal': { pri: 1, group: 'step', gap: 0.12, vary: [0.03, 1.5] },
+  jump: { pri: 1, gap: 0.1, vary: [0.03, 1] }, land: { pri: 2, gap: 0.15, vary: [0.04, 1] }, dodge: { gap: 0.1, vary: [0.04, 1] },
+  punch: { vary: [0.04, 1] }, swing: { gap: 0.05, vary: [0.04, 1] }, swingHeavy: { gap: 0.05, vary: [0.03, 1] },
+  // (an enemy's damage() asks for 'hit' and the blow's impact() for its material in the same step: 'hit' waits 20 ms and
+  //  gives way to a material sound in that time — yield — so one blow is one sound, the material's)
+  hit: { group: 'impact', gap: 0.04, vary: [0.03, 1], yield: true }, hitFlesh: { group: 'impact', gap: 0.04, vary: [0.04, 1] },
+  hitCrystal: { group: 'impact', gap: 0.04, vary: [0.02, 1] }, hitMachine: { group: 'impact', gap: 0.04, vary: [0.03, 1] },
+  hitStone: { group: 'impact', gap: 0.04, vary: [0.04, 1] }, hitWood: { group: 'impact', gap: 0.04, vary: [0.04, 1] },
+  clang: { gap: 0.05, vary: [0.015, 1] }, whoosh: { gap: 0.08, vary: [0.04, 1] }, break: { gap: 0.06, vary: [0.03, 1] },
+  bounce: { group: 'bounce', gap: 0.05, vary: [0.02, 1] }, bounceWall: { group: 'bounce', gap: 0.05, vary: [0.02, 1] },
+  bounceGround: { group: 'bounce', gap: 0.05, vary: [0.02, 1] }, ballHit: { gap: 0.05, vary: [0.01, 0.5] }, ballChain: { gap: 0.05, vary: FIXED },
+  ballGrab: { gap: 0.1, vary: FIXED }, recall: { gap: 0.15, vary: FIXED }, catch: { pri: 3, gap: 0.2, vary: [0.01, 0.5] },
+  throw: { gap: 0.1, vary: [0.02, 0.8] }, throwHeavy: { gap: 0.1, vary: FIXED }, charge: { gap: 0.3, vary: FIXED }, chargeFull: { gap: 0.3, vary: FIXED },
+  hurt: { pri: 3, gap: 0.12, vary: [0.03, 1] }, die: { pri: 3, gap: 0.5, vary: FIXED }, dodged: { gap: 0.25, vary: FIXED },
+  coin: { gap: 0.025, vary: [0, 0.5] }, pickLife: { pri: 3, gap: 0.1, vary: FIXED }, pickMagic: { pri: 3, gap: 0.1, vary: FIXED },
+  pickClover: { pri: 3, gap: 0.2, vary: FIXED }, revive: { pri: 3, gap: 1, vary: FIXED }, heal: { pri: 3, gap: 0.15, vary: FIXED }, bonus: { pri: 1, gap: 0.06, vary: [0.03, 1] },
+  chest: { pri: 3, gap: 0.3, vary: FIXED }, shard: { pri: 3, gap: 0.3, vary: FIXED }, found: { pri: 3, gap: 0.5, vary: FIXED }, victory: { pri: 3, gap: 1, vary: FIXED },
+  rummage: { gap: 0.2, vary: [0.04, 1] }, search: { pri: 3, gap: 0.3, vary: [0.02, 0.5] }, searchEmpty: { pri: 3, gap: 0.3, vary: [0.02, 0.5] },
+  doorIn: { pri: 3, gap: 0.5, vary: [0.02, 0.5] }, door: { pri: 3, gap: 0.5, vary: FIXED }, doorLocked: { pri: 3, gap: 0.3, vary: [0.02, 0.5] },
+  lever: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valve: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valveShut: { pri: 3, gap: 0.2, vary: [0.02, 0.5] },
+  paper: { gap: 0.2, vary: [0.04, 1] }, radio: { pri: 3, gap: 0.3, vary: FIXED },
+  diveRise: { pri: 3, gap: 0.5, vary: FIXED }, diveLock: { pri: 3, gap: 0.5, vary: FIXED }, diveDrop: { pri: 3, gap: 0.2, vary: FIXED }, diveImpact: { pri: 3, gap: 0.3, vary: FIXED },
+  alert: { pri: 3, gap: 0.15, vary: FIXED }, zap: { pri: 3, gap: 0.06, vary: [0.02, 0.5] }, slam: { pri: 3, gap: 0.15, vary: [0.02, 0.5] }, pulse: { gap: 0.1, vary: FIXED },
+  rumble: { gap: 0.3, vary: FIXED }, thunder: { pri: 3, gap: 1, vary: FIXED }, horn: { pri: 3, gap: 1, vary: FIXED },
+  blip: { pri: 1, gap: 0.025, vary: FIXED }, select: { pri: 3, gap: 0.04, vary: FIXED }, mode: { gap: 0.05, vary: FIXED },
+  deny: { pri: 3, gap: 0.15, vary: FIXED }, notReady: { gap: 0.12, vary: FIXED }, lockOn: { gap: 0.08, vary: FIXED }, equip: { gap: 0.08, vary: FIXED },
+  tick: { pri: 1, gap: 0.02, vary: FIXED }, put: { vary: [0.03, 1] }, clunk: { gap: 0.04, vary: [0.03, 1] }, pipeKnock: { gap: 0.04, vary: [0.04, 1] },
+};
+const VOICES_MAX = 16;   // effects sounding at once before a pri-2 one is skipped (pri 3 always plays)
+const VOICES_LOW = 10;   // … before a pri-1 one is (feet and ticks give way first)
+const SPACE = { near: 4, far: 0.1, pan: 0.6 };   // full within 4 m, then near/d; quieter than 0.1 (40 m) skipped; side ≤ 0.6
+const COIN_RUN = [0, 2, 4, 5, 7];   // semitones: kashes taken in a run (play: _coinStep)
+const FX_DUCK = 0.63;   // the effects and ambience under a voice line (-4 dB), as the music steps back (duck)
 
 export class AudioEngine {
   constructor() {
@@ -80,8 +125,13 @@ export class AudioEngine {
     this.reverb.buffer = this._impulse(REVERB_SEC);
     const revGain = ctx.createGain();
     revGain.gain.value = 0.35;
-    this.reverb.connect(revGain).connect(this.master);
-    for (const b of [this.musicBus, this.sfxBus, this.ambBus]) b.connect(this.master);
+    // ACTION-SOUND: the effects, their room and the ambience pass one more stage, which steps back under a voice line
+    // (duck: FX_DUCK) the way the music does; the sliders stay on the buses
+    this.fxDuck = ctx.createGain();
+    this.fxDuck.connect(this.master);
+    this.reverb.connect(revGain).connect(this.fxDuck);
+    this.musicBus.connect(this.master);
+    for (const b of [this.sfxBus, this.ambBus]) b.connect(this.fxDuck);
     // the voices (VOICE-MIX, the user: "too quiet against the music, even with the music turned down"): louder,
     // through a gentle compressor so loud syllables don't clip; the music ducks while someone speaks (duck)
     this.voiceComp = ctx.createDynamicsCompressor();
@@ -298,34 +348,94 @@ export class AudioEngine {
   // the music steps back to MUSIC_DUCK while a character speaks, and comes back after (music.js: 0.25 s down; up over
   // 0.9 s, 0.45 s after the last line, so consecutive lines do not pump). (MUSIC-2: this was defined twice; the later
   // definition, ducking to 0.55, was the one in force and VOICE-MIX's 0.5 never applied.)
-  duck(on) { this.ducked = on; this.music.duck(on, MUSIC_DUCK); }
+  // ACTION-SOUND: the effects and ambience step back too (-4 dB: an effect never masks a line), down in ~0.15 s, up
+  // over ~0.9 s once the music's own 0.45 s has passed
+  duck(on) {
+    this.ducked = on; this.music.duck(on, MUSIC_DUCK);
+    const g = this.fxDuck?.gain;
+    if (!g) return;
+    clearTimeout(this._fxDuckT);
+    const to = (v, tc) => { const t = this.ctx.currentTime; if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); } g.setTargetAtTime(v, t, tc); };
+    if (on) to(FX_DUCK, 0.05); else this._fxDuckT = setTimeout(() => to(1, 0.3), 450);
+  }
   // outdoors on Citadel island the music follows the area (village / open island / project station)
   setOutdoorArea(pos, POI) { this.setMood(this.music.outdoorMood(pos, POI)); }
 
   // ---- sound effects ----
-  _tone({ type = 'sine', f0, f1 = f0, dur = 0.15, vol = 0.3, at = 0 }) {
-    const ctx = this.ctx;
-    const t = ctx.currentTime + at;
+  // ACTION-SOUND (wave 6): every effect is tones and filtered noise. play() shapes each take: a small spread of pitch
+  // (_pv) and level (_gv) for the repeated ones, distance and side for those placed in the world (_dest), and how long
+  // it sounds (_end, for the count of effects playing). Every tone and burst starts with a few ms of attack (a tone
+  // switched on at full level clicks), and the effects pass a gentle shelf above 5.5 kHz (_in: no harsh highs).
+  _tone({ type = 'sine', f0, f1 = f0, dur = 0.15, vol = 0.3, at = 0, atk = 0.004 }) {
+    const ctx = this.ctx, pv = this._pv || 1, v = vol * (this._gv ?? 1);
+    const t = ctx.currentTime + at + (this._delay || 0);
     const o = ctx.createOscillator(); o.type = type;
-    o.frequency.setValueAtTime(f0, t);
-    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    o.frequency.setValueAtTime(f0 * pv, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1 * pv), t + dur);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.sfxBus);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(atk, dur * 0.5));
+    g.gain.exponentialRampToValueAtTime(Math.min(0.001, v * 0.02), t + dur);
+    o.connect(g).connect(this._dest || this._in());
     o.start(t); o.stop(t + dur + 0.02);
+    this._nodes?.push(g);
+    this._end = Math.max(this._end || 0, at + dur);
   }
 
-  _burst({ dur = 0.1, vol = 0.3, type = 'lowpass', f = 1000, f1 = f, q = 1, at = 0 }) {
-    const ctx = this.ctx;
-    const t = ctx.currentTime + at;
+  _burst({ dur = 0.1, vol = 0.3, type = 'lowpass', f = 1000, f1 = f, q = 1, at = 0, atk = 0.003 }) {
+    const ctx = this.ctx, pv = this._pv || 1, v = vol * (this._gv ?? 1);
+    const t = ctx.currentTime + at + (this._delay || 0);
     const n = ctx.createBufferSource(); n.buffer = this.noiseBuf;
     const fl = ctx.createBiquadFilter(); fl.type = type; fl.Q.value = q;
-    fl.frequency.setValueAtTime(f, t); fl.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
-    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    n.connect(fl).connect(g).connect(this.sfxBus);
+    fl.frequency.setValueAtTime(f * pv, t); fl.frequency.exponentialRampToValueAtTime(Math.max(30, f1 * pv), t + dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(atk, dur * 0.5));
+    g.gain.exponentialRampToValueAtTime(Math.min(0.001, v * 0.02), t + dur);
+    n.connect(fl).connect(g).connect(this._dest || this._in());
     n.start(t, Math.random() * 1.5); n.stop(t + dur + 0.02);
+    this._nodes?.push(g);
+    this._end = Math.max(this._end || 0, at + dur);
   }
+  // a struck, rounded body (wood, rubber, a hand): a sine that drops fast, with a short dull click on top
+  _knock({ f = 200, drop = 0.6, dur = 0.09, vol = 0.12, click = 1400, cv = 0.5, at = 0 }) {
+    this._tone({ f0: f, f1: f * drop, dur, vol, at, atk: 0.002 });
+    this._burst({ dur: Math.min(0.04, dur), vol: vol * cv, f: click, f1: click * 0.4, at });
+  }
+  // a soft bell: a sine and a quieter triangle an octave up, a fast attack and a long fall
+  _bell(f, at = 0, dur = 0.35, vol = 0.07) {
+    this._tone({ f0: f, dur, vol, at, atk: 0.006 });
+    this._tone({ type: 'triangle', f0: f * 2, dur: dur * 0.55, vol: vol * 0.22, at, atk: 0.004 });
+  }
+  // the input of the effects: a gentle shelf over the highs, then the effects bus (made on first use)
+  _in() {
+    if (!this._shelf) {
+      const s = this.ctx.createBiquadFilter(); s.type = 'highshelf'; s.frequency.value = 5500; s.gain.value = -5;
+      s.connect(this.sfxBus); this._shelf = s;
+    }
+    return this._shelf;
+  }
+
+  // where the listener is: Twinsen's position, and the camera's right for the side (main.js, each frame of play)
+  listen(p, cam) {
+    const L = (this.listener ??= { x: 0, z: 0, rx: 1, rz: 0 }), e = cam?.matrixWorld?.elements;
+    L.x = p.x; L.z = p.z;
+    if (e) { const r = Math.hypot(e[0], e[2]) || 1; L.rx = e[0] / r; L.rz = e[2] / r; }
+  }
+  // how a sound at `at` ({x, z}) is heard: full within SPACE.near m, then falling as near/d (-6 dB per doubling); the
+  // side follows the camera, never more than SPACE.pan
+  _space(at) {
+    const L = this.listener;
+    if (!at || !L || !Number.isFinite(at.x) || !Number.isFinite(at.z)) return null;
+    const dx = at.x - L.x, dz = at.z - L.z, d = Math.hypot(dx, dz);
+    const gain = d <= SPACE.near ? 1 : SPACE.near / d;
+    const pan = d < 0.5 ? 0 : Math.max(-SPACE.pan, Math.min(SPACE.pan, ((dx * L.rx + dz * L.rz) / d) * Math.min(1, d / SPACE.near) * SPACE.pan));
+    return { gain, pan, d };
+  }
+  _coinStep(now) {
+    // coins taken in a run climb a pentatonic step each (a little scale, never a machine gun), back to the root after a pause
+    this._coinN = now - (this._coinT ?? -9) < 0.35 ? Math.min(COIN_RUN.length - 1, (this._coinN || 0) + 1) : 0;
+    this._coinT = now;
+    return Math.pow(2, COIN_RUN[this._coinN] / 12);
+  }
+
 
   // A sound that runs until stopped (story scenes): returns { name, stop(fade) }. Synthesised like the rest.
   loop(name, opts = {}) {
@@ -379,13 +489,52 @@ export class AudioEngine {
     return h;
   }
 
-  play(name) {
-    if (!this.ctx || this.ctx.state !== 'running') return;
+  // play(name, at?): one sound for one event. at: where it happens ({x, z}; the hero's own sounds and the interface
+  // leave it out). Returns true if it sounded. A second call for the same event (two contacts in one step, a sound a
+  // frame asks for again) falls inside the sound's gap and is merged; a crowd of small sounds is thinned before an
+  // important one is ever skipped (SND: pri). The counts are in sfxStats, the last takes in sfxRecent (tests).
+  play(name, at = null) {
+    if (!this.ctx || this.ctx.state !== 'running') return false;
+    const m = SND[name] || DEF, ctx = this.ctx, pri = m.pri ?? DEF.pri;
+    const S = (this.sfxStats ??= { played: 0, merged: 0, dropped: 0, far: 0 });
+    const now = this.clock ? this.clock() : performance.now() / 1000;
+    const grp = m.group || name, last = (this._last ??= new Map()).get(grp);
+    if (last && now >= last.t && now - last.t < (m.gap ?? DEF.gap)) {
+      if (!last.nodes || m.yield || now - last.t > 0.015) { S.merged++; return false; }   // (not once it has begun)
+      for (const g of last.nodes) g.disconnect();   // (a waiting 'hit' gives way to the material: yield)
+      last.nodes = null; S.merged++;
+    }
+    const tc = ctx.currentTime;
+    this._live = (this._live || []).filter((e) => e > tc);
+    if (pri < 3 && this._live.length >= (pri <= 1 ? VOICES_LOW : VOICES_MAX)) { S.dropped++; return false; }
+    const sp = this._space(at);
+    if (sp && sp.gain < SPACE.far && pri < 3) { S.far++; return false; }
+    const take = { t: now, nodes: m.yield ? [] : null };
+    this._last.set(grp, take);
+    const [pv, gv] = m.vary ?? DEF.vary;
+    this._pv = (1 + (Math.random() * 2 - 1) * pv) * (name === 'coin' ? this._coinStep(now) : 1);
+    this._gv = Math.pow(10, ((Math.random() * 2 - 1) * gv) / 20) * (sp ? sp.gain : 1);
+    let chain = null;
+    if (sp && (Math.abs(sp.pan) > 0.04) && ctx.createStereoPanner) {
+      chain = ctx.createStereoPanner(); chain.pan.value = sp.pan; chain.connect(this._in()); this._dest = chain;
+    }
+    this._end = 0; this._nodes = take.nodes; this._delay = m.yield ? 0.02 : 0;
+    try { this._synth(name); } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; }
+    this._live.push(tc + this._end + 0.03);
+    if (chain) setTimeout(() => chain.disconnect(), (this._end + 0.6) * 1000);
+    S.played++;
+    const R = (this.sfxRecent ??= []);
+    R.push({ name, t: +now.toFixed(3), gain: +(sp ? sp.gain : 1).toFixed(2), pan: +(sp ? sp.pan : 0).toFixed(2) });
+    if (R.length > 64) R.shift();
+    return true;
+  }
+
+  _synth(name) {
     switch (name) {
       // story scenes (the opening): rope, lift, tap, small household sounds
       case 'ropeCreak': this._tone({ type: 'triangle', f0: 340, f1: 270, dur: 0.38, vol: 0.035 }); this._burst({ dur: 0.3, vol: 0.05, f: 900, f1: 700, type: 'bandpass', q: 7 }); break;
       case 'bark': [0, 0.17].forEach((at) => { this._tone({ type: 'sawtooth', f0: 430, f1: 230, dur: 0.1, vol: 0.06, at }); this._burst({ dur: 0.08, vol: 0.1, f: 1100, f1: 450, type: 'bandpass', q: 2.5, at }); }); break;
-      case 'yap': [0, 0.12, 0.24].forEach((at) => { this._tone({ type: 'square', f0: 980, f1: 640, dur: 0.06, vol: 0.035, at }); this._burst({ dur: 0.05, vol: 0.06, f: 2200, f1: 1200, type: 'bandpass', q: 3, at }); }); break;
+      case 'yap': [0, 0.12, 0.24].forEach((at) => { this._tone({ type: 'triangle', f0: 980, f1: 640, dur: 0.06, vol: 0.035, at }); this._burst({ dur: 0.05, vol: 0.06, f: 2200, f1: 1200, type: 'bandpass', q: 3, at }); }); break;
       case 'yelp': this._tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.16, vol: 0.06 }); this._burst({ dur: 0.1, vol: 0.06, f: 2400, f1: 1200, type: 'bandpass', q: 3 }); break;
       case 'growl': this._tone({ type: 'sawtooth', f0: 95, f1: 110, dur: 0.5, vol: 0.07 }); this._burst({ dur: 0.5, vol: 0.06, f: 420, f1: 300, type: 'bandpass', q: 4 }); break;
       case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
@@ -409,70 +558,120 @@ export class AudioEngine {
       case 'hum': {
         const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), gg = ctx.createGain();
         o.frequency.setValueAtTime(44, t); o.frequency.linearRampToValueAtTime(41, t + 2.2);
-        gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(0.09, t + 0.7); gg.gain.linearRampToValueAtTime(0, t + 2.4);
-        o.connect(gg).connect(this.sfxBus); o.start(t); o.stop(t + 2.5);
+        gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(0.09 * (this._gv ?? 1), t + 0.7); gg.gain.linearRampToValueAtTime(0, t + 2.4);
+        o.connect(gg).connect(this._dest || this._in()); o.start(t); o.stop(t + 2.5); this._end = 2.4;
         break;
       }
-      case 'rattle': for (let i = 0; i < 8; i++) this._tone({ type: 'square', f0: 2200 + Math.random() * 600, dur: 0.02, vol: 0.012, at: i * 0.07 + Math.random() * 0.02 }); break;
+      case 'rattle': for (let i = 0; i < 8; i++) this._tone({ type: 'triangle', f0: 2200 + Math.random() * 600, dur: 0.02, vol: 0.012, at: i * 0.07 + Math.random() * 0.02 }); break;
       case 'tapSqueak': this._tone({ type: 'triangle', f0: 880, f1: 1240, dur: 0.22, vol: 0.035 }); this._tone({ type: 'triangle', f0: 1180, f1: 820, dur: 0.18, vol: 0.03, at: 0.12 }); break;
       case 'pipeKnock': this._tone({ f0: 115, f1: 70, dur: 0.14, vol: 0.18 }); this._burst({ dur: 0.1, vol: 0.14, f: 650, f1: 160 }); break;
       case 'waterRun': this._burst({ dur: 0.7, vol: 0.16, f: 2300, f1: 1700, type: 'bandpass', q: 1.2 }); break;
       case 'gurgle': [320, 410, 360, 520, 450].forEach((f, i) => this._tone({ f0: f, f1: f * 1.3, dur: 0.05, vol: 0.04, at: i * 0.06 })); this._burst({ dur: 0.3, vol: 0.06, f: 500, f1: 200 }); break;
       case 'tick': this._tone({ type: 'triangle', f0: 1600, dur: 0.03, vol: 0.04 }); break;
       case 'put': this._tone({ type: 'triangle', f0: 300, f1: 200, dur: 0.06, vol: 0.09 }); this._burst({ dur: 0.05, vol: 0.07, f: 1500, f1: 500 }); break;
-      case 'step': this._burst({ dur: 0.06, vol: 0.08, f: 900, f1: 300 }); break;
-      case 'step-stone': this._burst({ dur: 0.05, vol: 0.09, f: 2600, f1: 900, type: 'bandpass', q: 1.5 }); break;
-      case 'step-grass': this._burst({ dur: 0.09, vol: 0.06, f: 3200, f1: 1600, type: 'highpass' }); break;
-      case 'step-dirt': this._burst({ dur: 0.07, vol: 0.08, f: 700, f1: 250 }); break;
-      case 'step-wood': this._tone({ type: 'triangle', f0: 190, f1: 120, dur: 0.07, vol: 0.09 }); this._burst({ dur: 0.04, vol: 0.05, f: 1200, f1: 500 }); break;
-      case 'step-metal': this._tone({ type: 'square', f0: 420, f1: 380, dur: 0.05, vol: 0.03 }); this._tone({ type: 'triangle', f0: 1250, f1: 1180, dur: 0.12, vol: 0.03 }); this._burst({ dur: 0.04, vol: 0.06, f: 3000, f1: 1500, type: 'bandpass', q: 3 }); break;
-      case 'jump': this._tone({ type: 'square', f0: 220, f1: 520, dur: 0.14, vol: 0.06 }); break;
-      case 'land': this._burst({ dur: 0.12, vol: 0.2, f: 600, f1: 120 }); break;
-      case 'punch': this._burst({ dur: 0.09, vol: 0.25, f: 2000, f1: 300, type: 'bandpass', q: 2 }); break;
-      case 'hit': this._tone({ type: 'square', f0: 300, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.25, f: 1500, f1: 200 }); break;
-      case 'throw': this._burst({ dur: 0.25, vol: 0.15, f: 600, f1: 2500, type: 'bandpass', q: 3 }); break;
-      case 'bounce': this._tone({ f0: 780, f1: 1200, dur: 0.08, vol: 0.15 }); break;
-      case 'catch': this._tone({ f0: 900, f1: 1800, dur: 0.1, vol: 0.12 }); break;
-      // a bonus pops out of a giver: a short rising 'boing'
-      case 'bonus': this._tone({ type: 'triangle', f0: 420, f1: 880, dur: 0.16, vol: 0.07 }); this._tone({ type: 'sine', f0: 1180, f1: 1240, dur: 0.12, vol: 0.04, at: 0.1 }); break;
-      case 'coin': this._tone({ type: 'square', f0: 988, dur: 0.07, vol: 0.06 }); this._tone({ type: 'square', f0: 1319, dur: 0.18, vol: 0.06, at: 0.07 }); break;
-      case 'heal': [523, 659, 784].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.18, vol: 0.12, at: i * 0.07 })); break;
-      case 'hurt': this._tone({ type: 'sawtooth', f0: 400, f1: 120, dur: 0.25, vol: 0.12 }); break;
-      case 'zap': this._tone({ type: 'sawtooth', f0: 1400, f1: 200, dur: 0.18, vol: 0.06 }); break;
-      case 'alert': this._tone({ type: 'square', f0: 660, dur: 0.08, vol: 0.08 }); this._tone({ type: 'square', f0: 990, dur: 0.12, vol: 0.08, at: 0.09 }); break;
-      case 'die': this._tone({ type: 'sawtooth', f0: 300, f1: 40, dur: 0.6, vol: 0.12 }); this._burst({ dur: 0.5, vol: 0.2, f: 800, f1: 60 }); break;
-      case 'break': this._burst({ dur: 0.3, vol: 0.3, f: 3000, f1: 200 }); this._tone({ f0: 120, f1: 50, dur: 0.2, vol: 0.2 }); break;
-      case 'chest': [392, 494, 587, 784].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.3, vol: 0.12, at: i * 0.09 })); break;
-      case 'shard': [523, 659, 784, 1047, 1319].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.6, vol: 0.12, at: i * 0.1 })); break;
-      case 'blip': this._tone({ type: 'square', f0: 520 + Math.random() * 80, dur: 0.03, vol: 0.025 }); break;
-      case 'select': this._tone({ type: 'triangle', f0: 660, f1: 880, dur: 0.08, vol: 0.1 }); break;
-      case 'mode': this._tone({ type: 'triangle', f0: 440, f1: 880, dur: 0.12, vol: 0.1 }); break;
-      case 'door': this._burst({ dur: 1.2, vol: 0.25, f: 300, f1: 80 }); this._tone({ type: 'sawtooth', f0: 70, f1: 50, dur: 1.2, vol: 0.06 }); break;
-      case 'rumble': this._burst({ dur: 1.5, vol: 0.3, f: 200, f1: 60 }); break;
-      case 'thunder': this._burst({ dur: 2.8, vol: 0.5, f: 400, f1: 40 }); this._burst({ dur: 0.3, vol: 0.3, f: 3000, f1: 300 }); break;
-      case 'horn': this._tone({ type: 'sawtooth', f0: 147, f1: 140, dur: 1.4, vol: 0.12 }); this._tone({ type: 'sawtooth', f0: 220, f1: 210, dur: 1.4, vol: 0.08 }); break;
-      // combat: distinct materials, readable timing cues
-      case 'swing': this._burst({ dur: 0.14, vol: 0.18, f: 900, f1: 3200, type: 'bandpass', q: 2.5 }); break;
-      case 'swingHeavy': this._burst({ dur: 0.22, vol: 0.24, f: 500, f1: 2400, type: 'bandpass', q: 2 }); this._tone({ type: 'sine', f0: 140, f1: 90, dur: 0.18, vol: 0.06 }); break;
-      case 'hitFlesh': this._burst({ dur: 0.1, vol: 0.28, f: 900, f1: 180 }); this._tone({ type: 'sine', f0: 160, f1: 70, dur: 0.1, vol: 0.12 }); break;
-      case 'hitCrystal': this._tone({ type: 'triangle', f0: 2400, f1: 1800, dur: 0.16, vol: 0.08 }); this._tone({ type: 'triangle', f0: 3600, f1: 3100, dur: 0.12, vol: 0.05 }); this._burst({ dur: 0.08, vol: 0.18, f: 4000, f1: 1500, type: 'highpass' }); break;
-      case 'hitMachine': this._tone({ type: 'square', f0: 520, f1: 300, dur: 0.1, vol: 0.06 }); this._burst({ dur: 0.12, vol: 0.22, f: 2600, f1: 600, type: 'bandpass', q: 3 }); break;
-      case 'clang': this._tone({ type: 'triangle', f0: 1450, f1: 1380, dur: 0.35, vol: 0.09 }); this._tone({ type: 'triangle', f0: 2170, f1: 2100, dur: 0.25, vol: 0.05 }); this._burst({ dur: 0.05, vol: 0.25, f: 5000, f1: 2500, type: 'highpass' }); break;
-      case 'hitStone': this._burst({ dur: 0.14, vol: 0.3, f: 600, f1: 120 }); break;
-      case 'hitWood': this._tone({ type: 'triangle', f0: 260, f1: 160, dur: 0.09, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.18, f: 1400, f1: 400 }); break;
-      case 'whoosh': this._burst({ dur: 0.2, vol: 0.14, f: 400, f1: 1600, type: 'bandpass', q: 1.5 }); break;
-      case 'dodged': this._tone({ type: 'sine', f0: 1200, f1: 1700, dur: 0.12, vol: 0.06 }); break;
-      case 'charge': this._tone({ type: 'sine', f0: 300, f1: 760, dur: 0.75, vol: 0.06 }); break;
-      case 'chargeFull': this._tone({ type: 'triangle', f0: 1568, dur: 0.12, vol: 0.08 }); this._tone({ type: 'triangle', f0: 2093, dur: 0.18, vol: 0.06, at: 0.06 }); break;
-      case 'throwHeavy': this._burst({ dur: 0.3, vol: 0.2, f: 500, f1: 3000, type: 'bandpass', q: 3 }); this._tone({ f0: 600, f1: 1400, dur: 0.2, vol: 0.06 }); break;
-      case 'notReady': this._tone({ type: 'square', f0: 240, dur: 0.04, vol: 0.05 }); this._tone({ type: 'square', f0: 200, dur: 0.05, vol: 0.05, at: 0.06 }); break;
-      case 'recall': this._tone({ f0: 1400, f1: 700, dur: 0.18, vol: 0.08 }); break;
-      case 'lockOn': this._tone({ type: 'triangle', f0: 880, f1: 1320, dur: 0.07, vol: 0.06 }); break;
-      case 'equip': this._burst({ dur: 0.06, vol: 0.12, f: 3000, f1: 1500, type: 'bandpass', q: 4 }); this._tone({ type: 'triangle', f0: 700, dur: 0.05, vol: 0.06 }); break;
-      case 'pulse': this._tone({ type: 'sawtooth', f0: 90, f1: 60, dur: 0.35, vol: 0.1 }); this._tone({ type: 'sine', f0: 1800, f1: 300, dur: 0.3, vol: 0.06 }); this._burst({ dur: 0.25, vol: 0.18, f: 3000, f1: 400, type: 'bandpass', q: 2 }); break;
-      case 'slam': this._burst({ dur: 0.5, vol: 0.4, f: 300, f1: 50 }); this._tone({ type: 'sine', f0: 90, f1: 40, dur: 0.4, vol: 0.2 }); break;
-      case 'deny': this._tone({ type: 'square', f0: 200, f1: 150, dur: 0.15, vol: 0.08 }); break;
-      case 'victory': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.5, vol: 0.12, at: i * 0.14 })); break;
+      // ---- the hero's feet: a soft heel and the surface's own grain, well under a voice (they never lead the mix)
+      case 'step': this._burst({ dur: 0.05, vol: 0.18, f: 650, f1: 220 }); break;
+      case 'step-stone': this._burst({ dur: 0.04, vol: 0.17, f: 520, f1: 180 }); this._burst({ dur: 0.035, vol: 0.09, f: 2000, f1: 900, type: 'bandpass', q: 1.4 }); break;
+      case 'step-grass': this._burst({ dur: 0.05, vol: 0.09, f: 420, f1: 160 }); this._burst({ dur: 0.08, vol: 0.055, f: 2600, f1: 1500, type: 'bandpass', q: 0.9 }); break;
+      case 'step-dirt': this._burst({ dur: 0.06, vol: 0.17, f: 600, f1: 220 }); this._burst({ dur: 0.05, vol: 0.06, f: 1500, f1: 800, type: 'bandpass', q: 1.2 }); break;
+      case 'step-wood': this._knock({ f: 170, drop: 0.7, dur: 0.06, vol: 0.03, click: 1000, cv: 0.6 }); break;
+      case 'step-metal': this._knock({ f: 230, drop: 0.8, dur: 0.05, vol: 0.024, click: 1600, cv: 0.5 }); this._tone({ type: 'triangle', f0: 880, f1: 860, dur: 0.12, vol: 0.006 }); break;
+      case 'jump': this._tone({ type: 'triangle', f0: 240, f1: 430, dur: 0.12, vol: 0.05 }); this._burst({ dur: 0.08, vol: 0.03, f: 700, f1: 1400, type: 'bandpass', q: 1.2 }); break;
+      case 'land': this._burst({ dur: 0.11, vol: 0.15, f: 520, f1: 110 }); this._tone({ f0: 110, f1: 60, dur: 0.1, vol: 0.06 }); break;
+      case 'dodge': this._burst({ dur: 0.18, vol: 0.16, f: 420, f1: 1400, type: 'bandpass', q: 1.2 }); this._burst({ dur: 0.07, vol: 0.09, f: 500, f1: 160, at: 0.12 }); break;
+      // ---- fists and the sword: the air, then what was struck (impact by material)
+      case 'punch': this._burst({ dur: 0.08, vol: 0.14, f: 1500, f1: 350, type: 'bandpass', q: 1.6 }); this._tone({ f0: 150, f1: 90, dur: 0.06, vol: 0.05 }); break;
+      case 'swing': this._burst({ dur: 0.14, vol: 0.26, f: 700, f1: 2300, type: 'bandpass', q: 2.2 }); break;
+      case 'swingHeavy': this._burst({ dur: 0.22, vol: 0.17, f: 420, f1: 1800, type: 'bandpass', q: 1.8 }); this._tone({ f0: 130, f1: 85, dur: 0.18, vol: 0.06 }); break;
+      case 'hit': this._knock({ f: 210, drop: 0.45, dur: 0.11, vol: 0.13, click: 1300, cv: 1.3 }); break;
+      case 'hitFlesh': this._burst({ dur: 0.1, vol: 0.27, f: 800, f1: 170 }); this._tone({ f0: 150, f1: 70, dur: 0.1, vol: 0.14 }); break;
+      case 'hitCrystal': this._bell(1568, 0, 0.22, 0.05); this._tone({ type: 'triangle', f0: 2350, f1: 2200, dur: 0.12, vol: 0.025 }); this._burst({ dur: 0.06, vol: 0.12, f: 3200, f1: 1400, type: 'bandpass', q: 1.5 }); break;
+      case 'hitMachine': this._tone({ type: 'triangle', f0: 440, f1: 300, dur: 0.1, vol: 0.06 }); this._burst({ dur: 0.11, vol: 0.16, f: 2200, f1: 600, type: 'bandpass', q: 2.5 }); this._knock({ f: 160, drop: 0.6, dur: 0.08, vol: 0.07 }); break;
+      // a blocked blow: a rounded metal ring (partials 1 : 1.5 : 2.7, lower than a bell) over a short bright scrape
+      case 'clang': this._tone({ type: 'triangle', f0: 990, f1: 960, dur: 0.32, vol: 0.075 }); this._tone({ type: 'triangle', f0: 1485, f1: 1450, dur: 0.22, vol: 0.04 }); this._tone({ f0: 2670, dur: 0.12, vol: 0.015 }); this._burst({ dur: 0.05, vol: 0.14, f: 3000, f1: 1600, type: 'bandpass', q: 1.4 }); break;
+      case 'hitStone': this._burst({ dur: 0.13, vol: 0.24, f: 560, f1: 120 }); this._knock({ f: 120, drop: 0.6, dur: 0.08, vol: 0.06, cv: 0 }); break;
+      case 'hitWood': this._knock({ f: 250, drop: 0.62, dur: 0.09, vol: 0.12, click: 1300, cv: 1.2 }); break;
+      case 'whoosh': this._burst({ dur: 0.2, vol: 0.12, f: 380, f1: 1500, type: 'bandpass', q: 1.5 }); break;
+      case 'dodged': this._tone({ f0: 1100, f1: 1500, dur: 0.12, vol: 0.05 }); break;
+      case 'lockOn': this._tone({ type: 'triangle', f0: 880, f1: 1320, dur: 0.07, vol: 0.05 }); break;
+      case 'equip': this._knock({ f: 420, drop: 0.85, dur: 0.04, vol: 0.05, click: 2600, cv: 1.2 }); this._knock({ f: 620, drop: 0.85, dur: 0.05, vol: 0.05, click: 2400, cv: 0.9, at: 0.07 }); break;
+      case 'notReady': this._tone({ type: 'triangle', f0: 247, dur: 0.05, vol: 0.06 }); this._tone({ type: 'triangle', f0: 208, dur: 0.07, vol: 0.06, at: 0.07 }); break;
+      // ---- the magic ball: the release, its bounces (a rubbery knock and its rising chirp, the ball's signature; the
+      // wall firmer than the ground), striking an enemy or a switch (its own bright 'pling' over the material), going on
+      // to the next enemy, a bonus caught on the way, back in the hand
+      case 'charge': this._tone({ f0: 300, f1: 760, dur: 0.75, vol: 0.05, atk: 0.08 }); this._tone({ type: 'triangle', f0: 600, f1: 1520, dur: 0.75, vol: 0.012, atk: 0.1 }); break;
+      case 'chargeFull': this._bell(1568, 0, 0.14, 0.06); this._bell(2093, 0.06, 0.2, 0.045); break;
+      case 'throw': this._burst({ dur: 0.22, vol: 0.12, f: 520, f1: 1900, type: 'bandpass', q: 2.4 }); this._tone({ f0: 520, f1: 780, dur: 0.06, vol: 0.04 }); break;
+      case 'throwHeavy': this._burst({ dur: 0.3, vol: 0.16, f: 450, f1: 2300, type: 'bandpass', q: 2.4 }); this._tone({ f0: 600, f1: 1300, dur: 0.2, vol: 0.05 }); this._tone({ f0: 300, f1: 420, dur: 0.12, vol: 0.04 }); break;
+      case 'bounce': // (the old name: a wall)
+      case 'bounceWall': this._knock({ f: 300, drop: 0.62, dur: 0.08, vol: 0.1, click: 1700, cv: 0.7 }); this._tone({ f0: 780, f1: 1200, dur: 0.07, vol: 0.07, at: 0.01 }); break;
+      case 'bounceGround': this._knock({ f: 220, drop: 0.65, dur: 0.07, vol: 0.075, click: 1000, cv: 0.5 }); this._tone({ f0: 650, f1: 980, dur: 0.06, vol: 0.045, at: 0.01 }); break;
+      case 'ballHit': this._bell(1319, 0, 0.18, 0.062); this._tone({ type: 'triangle', f0: 1760, f1: 1175, dur: 0.12, vol: 0.037 }); break;
+      case 'ballChain': this._tone({ f0: 900, f1: 1700, dur: 0.1, vol: 0.06 }); this._tone({ type: 'triangle', f0: 1350, f1: 2400, dur: 0.08, vol: 0.02, at: 0.03 }); break;
+      case 'ballGrab': this._tone({ type: 'triangle', f0: 990, f1: 1180, dur: 0.07, vol: 0.05 }); break;
+      case 'recall': this._tone({ f0: 1400, f1: 700, dur: 0.18, vol: 0.06 }); break;
+      case 'catch': this._burst({ dur: 0.035, vol: 0.09, f: 900, f1: 300 }); this._tone({ f0: 880, f1: 1320, dur: 0.09, vol: 0.07, at: 0.005 }); break;
+      // ---- hurt and death
+      case 'hurt': this._burst({ dur: 0.1, vol: 0.18, f: 700, f1: 150 }); this._tone({ type: 'triangle', f0: 420, f1: 170, dur: 0.22, vol: 0.09 }); this._tone({ f0: 240, f1: 150, dur: 0.16, vol: 0.06 }); break;
+      case 'die': this._tone({ type: 'triangle', f0: 300, f1: 45, dur: 0.7, vol: 0.11 }); this._burst({ dur: 0.5, vol: 0.18, f: 700, f1: 60 }); break;
+      // ---- pickups, each its own: a kash a two-note ring (a run of them climbs), life a warm rise, magic a sparkle up,
+      // a clover a little leaf of four; a bonus popping out a 'boing'; a refill by someone (heal) the old triad
+      case 'coin': this._bell(988, 0, 0.09, 0.045); this._bell(1319, 0.065, 0.2, 0.05); break;
+      case 'pickLife': this._bell(659, 0, 0.16, 0.07); this._bell(880, 0.08, 0.3, 0.07); this._tone({ f0: 330, dur: 0.3, vol: 0.03, at: 0.08, atk: 0.04 }); break;
+      case 'pickMagic': [784, 988, 1175, 1568].forEach((f, i) => this._bell(f, i * 0.045, 0.22 - i * 0.02, 0.045)); this._burst({ dur: 0.25, vol: 0.025, f: 3000, f1: 5000, type: 'bandpass', q: 3, at: 0.05 }); break;
+      case 'pickClover': [784, 988, 1175, 1568].forEach((f, i) => this._bell(f, i * 0.075, i === 3 ? 0.4 : 0.16, 0.06)); break;
+      case 'revive': [392, 494, 587, 784].forEach((f, i) => this._bell(f, i * 0.11, i === 3 ? 0.7 : 0.22, 0.07)); this._tone({ f0: 196, f1: 392, dur: 0.5, vol: 0.04, atk: 0.2 }); break;
+      case 'bonus': this._tone({ type: 'triangle', f0: 420, f1: 880, dur: 0.16, vol: 0.06 }); this._tone({ f0: 1180, f1: 1240, dur: 0.12, vol: 0.035, at: 0.1 }); break;
+      case 'heal': [523, 659, 784].forEach((f, i) => this._bell(f, i * 0.07, 0.22, 0.075)); break;
+      // ---- something gained: a done task or a small treasure (chest, the old four notes), a story's power (shard), and
+      // a real object received (found, I-24's box): a short rising gesture onto a held chord, ~1.2 s, never a fanfare
+      case 'chest': [392, 494, 587, 784].forEach((f, i) => this._bell(f, i * 0.09, 0.32, 0.075)); break;
+      case 'shard': [523, 659, 784, 1047, 1319].forEach((f, i) => this._bell(f, i * 0.1, 0.6, 0.065)); break;
+      case 'found': {
+        [523, 659, 784].forEach((f, i) => this._bell(f, i * 0.07, 0.22, 0.07));
+        [1047, 1319, 1568].forEach((f) => this._bell(f, 0.22, 1.0, 0.04));
+        this._tone({ f0: 262, dur: 1.0, vol: 0.05, at: 0.22, atk: 0.03 });
+        this._burst({ dur: 0.6, vol: 0.018, f: 2500, f1: 4500, type: 'bandpass', q: 4, at: 0.24 });
+        break;
+      }
+      case 'victory': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this._bell(f, i * 0.14, 0.5, 0.085)); break;
+      // ---- searching: a rummage (cause), then the outcome: something there (a little 'pop'), or nothing (two soft
+      // falling notes, a shrug); rummage alone: a hop into a bin or planter (its bonus pops out with 'bonus')
+      case 'rummage': [0, 0.07, 0.15].forEach((at, i) => this._knock({ f: 190 + i * 30, drop: 0.7, dur: 0.06, vol: 0.05, click: 1100, cv: 1, at })); this._burst({ dur: 0.2, vol: 0.03, f: 1800, f1: 1200, type: 'bandpass', q: 1, at: 0.02 }); break;
+      case 'search': this._synth('rummage'); this._tone({ type: 'triangle', f0: 660, f1: 990, dur: 0.1, vol: 0.05, at: 0.26 }); break;
+      case 'searchEmpty': this._synth('rummage'); this._tone({ f0: 392, dur: 0.12, vol: 0.045, at: 0.27, atk: 0.01 }); this._tone({ f0: 294, dur: 0.2, vol: 0.045, at: 0.4, atk: 0.01 }); break;
+      // ---- doors: walked through (a latch, the leaf on its hinges, the leaf shut behind), a heavy door or gate a
+      // mechanism opens (door), and a door that will not open (the handle rattles against its lock)
+      case 'doorIn': this._knock({ f: 520, drop: 0.8, dur: 0.03, vol: 0.05, click: 2200, cv: 1.2 }); this._tone({ type: 'triangle', f0: 240, f1: 300, dur: 0.24, vol: 0.02, at: 0.05, atk: 0.06 }); this._burst({ dur: 0.25, vol: 0.04, f: 500, f1: 300, type: 'bandpass', q: 3, at: 0.05 }); this._knock({ f: 120, drop: 0.6, dur: 0.12, vol: 0.09, click: 700, cv: 0.8, at: 0.42 }); break;
+      case 'door': this._burst({ dur: 1.0, vol: 0.2, f: 280, f1: 80 }); this._tone({ f0: 70, f1: 50, dur: 1.0, vol: 0.07 }); this._knock({ f: 110, drop: 0.6, dur: 0.15, vol: 0.08, click: 600, at: 0.85 }); break;
+      case 'doorLocked': [0, 0.09, 0.16].forEach((at, i) => this._knock({ f: 300 - i * 15, drop: 0.85, dur: 0.04, vol: 0.06, click: 1900, cv: 1.1, at })); this._knock({ f: 140, drop: 0.7, dur: 0.1, vol: 0.07, click: 800, at: 0.26 }); break;
+      // ---- world machinery
+      case 'lever': [0, 0.05, 0.1].forEach((at) => this._knock({ f: 600, drop: 0.85, dur: 0.025, vol: 0.03, click: 2400, cv: 1.3, at })); this._knock({ f: 140, drop: 0.6, dur: 0.12, vol: 0.085, click: 1000, cv: 1, at: 0.17 }); break;
+      case 'valve': this._tone({ type: 'triangle', f0: 520, f1: 760, dur: 0.3, vol: 0.022, atk: 0.04 }); this._knock({ f: 180, drop: 0.7, dur: 0.08, vol: 0.07, at: 0.3 }); this._burst({ dur: 0.55, vol: 0.05, f: 2600, f1: 1800, type: 'bandpass', q: 0.9, at: 0.32, atk: 0.06 }); break;
+      case 'valveShut': this._tone({ type: 'triangle', f0: 760, f1: 520, dur: 0.28, vol: 0.022, atk: 0.04 }); this._knock({ f: 150, drop: 0.65, dur: 0.1, vol: 0.08, at: 0.28 }); break;
+      case 'paper': [0, 0.08].forEach((at) => this._burst({ dur: 0.07, vol: 0.07, f: 1700, f1: 1100, type: 'bandpass', q: 0.8, at })); this._knock({ f: 200, drop: 0.7, dur: 0.05, vol: 0.03, cv: 0, at: 0.02 }); break;
+      case 'radio': this._knock({ f: 900, drop: 0.9, dur: 0.02, vol: 0.05, click: 2500, cv: 1 }); this._burst({ dur: 0.22, vol: 0.12, f: 1500, f1: 1300, type: 'bandpass', q: 2.5, at: 0.02 }); this._tone({ type: 'triangle', f0: 1046, dur: 0.07, vol: 0.05, at: 0.25 }); break;
+      // ---- the guardian's dive (chapter 3): its own telegraph, unlike the hero's charge: a low engine climbing while
+      // it rises (rise, 1 s), a low two-tone warning while the ring is set (lock, 0.9 s), a falling whistle (drop,
+      // 0.2 s), the blow (a heavy thud and a ringing hull)
+      case 'diveRise': this._tone({ type: 'sawtooth', f0: 70, f1: 140, dur: 1.0, vol: 0.05, atk: 0.2 }); this._burst({ dur: 1.0, vol: 0.06, f: 300, f1: 700, type: 'bandpass', q: 2, atk: 0.2 }); break;
+      case 'diveLock': [0, 0.3, 0.6].forEach((at) => { this._tone({ type: 'triangle', f0: 392, dur: 0.13, vol: 0.1, at }); this._tone({ type: 'triangle', f0: 294, dur: 0.13, vol: 0.1, at: at + 0.14 }); }); break;
+      case 'diveDrop': this._tone({ f0: 1100, f1: 320, dur: 0.22, vol: 0.05 }); this._burst({ dur: 0.22, vol: 0.1, f: 1500, f1: 400, type: 'bandpass', q: 1.5 }); break;
+      case 'diveImpact': this._burst({ dur: 0.6, vol: 0.32, f: 280, f1: 45 }); this._tone({ f0: 85, f1: 38, dur: 0.45, vol: 0.18 }); this._tone({ type: 'triangle', f0: 620, f1: 600, dur: 0.4, vol: 0.03, at: 0.02 }); break;
+      // ---- enemies and danger
+      case 'alert': this._tone({ type: 'triangle', f0: 660, dur: 0.08, vol: 0.07 }); this._tone({ type: 'triangle', f0: 990, dur: 0.12, vol: 0.07, at: 0.09 }); break;
+      case 'zap': this._tone({ type: 'triangle', f0: 1100, f1: 260, dur: 0.18, vol: 0.06 }); this._burst({ dur: 0.14, vol: 0.05, f: 2000, f1: 700, type: 'bandpass', q: 3 }); break;
+      case 'break': this._burst({ dur: 0.28, vol: 0.24, f: 2400, f1: 200 }); this._tone({ f0: 120, f1: 50, dur: 0.2, vol: 0.17 }); break;
+      case 'pulse': this._tone({ type: 'sawtooth', f0: 90, f1: 60, dur: 0.35, vol: 0.08 }); this._tone({ f0: 1600, f1: 300, dur: 0.3, vol: 0.05 }); this._burst({ dur: 0.25, vol: 0.15, f: 2600, f1: 400, type: 'bandpass', q: 2 }); break;
+      case 'slam': this._burst({ dur: 0.5, vol: 0.34, f: 300, f1: 50 }); this._tone({ f0: 90, f1: 40, dur: 0.4, vol: 0.18 }); break;
+      case 'rumble': this._burst({ dur: 1.5, vol: 0.28, f: 200, f1: 60 }); break;
+      case 'thunder': this._burst({ dur: 2.8, vol: 0.45, f: 400, f1: 40 }); this._burst({ dur: 0.3, vol: 0.2, f: 2400, f1: 300 }); break;
+      case 'horn': this._tone({ type: 'sawtooth', f0: 147, f1: 140, dur: 1.4, vol: 0.1, atk: 0.06 }); this._tone({ type: 'sawtooth', f0: 220, f1: 210, dur: 1.4, vol: 0.065, atk: 0.06 }); break;
+      // ---- the interface (no place, no spread)
+      case 'blip': this._tone({ type: 'triangle', f0: 520 + Math.random() * 80, dur: 0.03, vol: 0.03 }); break;
+      case 'select': this._tone({ type: 'triangle', f0: 660, f1: 880, dur: 0.08, vol: 0.08 }); break;
+      case 'mode': this._tone({ type: 'triangle', f0: 440, f1: 880, dur: 0.12, vol: 0.08 }); break;
+      case 'deny': this._tone({ type: 'triangle', f0: 311, f1: 290, dur: 0.1, vol: 0.07 }); this._tone({ type: 'triangle', f0: 233, f1: 220, dur: 0.16, vol: 0.07, at: 0.09 }); break;
     }
   }
 }

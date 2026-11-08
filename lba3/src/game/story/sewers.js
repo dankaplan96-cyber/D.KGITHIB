@@ -150,7 +150,7 @@ export class SewerLife extends ChapterBase {
       case 'swvalve':
         if (f.sw_valve) return say(['sw_valve_after']);
         h.act('use', 0.8, () => {
-          f.sw_valve = true; SEWER.hall.setValve(true); g.audio.play('ropeCreak'); g.camRig?.shake?.(0.15);
+          f.sw_valve = true; SEWER.hall.setValve(true); g.audio.play('valve'); g.camRig?.shake?.(0.15);
           say(['sw_valve1', 'sw_valve2'], () => g.save(false));
         }, 0.4);
         return true;
@@ -160,9 +160,9 @@ export class SewerLife extends ChapterBase {
           say(['sw_bolt1'], () => g.save(false));
         }, 0.35);
         return true;
-      case 'swworks': g.audio.play('deny'); return say([f.sw_fosse ? 'sw_works_shut2' : 'sw_works_shut']);
+      case 'swworks': g.audio.play('doorLocked'); return say([f.sw_fosse ? 'sw_works_shut2' : 'sw_works_shut']);
       case 'swgdoor':
-        if (!f.sw_ber) { g.audio.play('deny'); return say(['sw_gdoor_shut']); }
+        if (!f.sw_ber) { g.audio.play('doorLocked'); return say(['sw_gdoor_shut']); }
         h.act('use', 0.6, () => {
           f.sw_gdoor = true; SEWER.hall.setDoor('globe', true); g.audio.play('door');
           say(['sw_gdoor1'], () => g.save(false));

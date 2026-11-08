@@ -154,7 +154,7 @@ export class DepotWatch {
     const guard = L.find((e) => e.def.kind === 'guard');
     if (!guard) { go(); return; }
     this.busy = true;
-    g.audio.play('blip');   // (the guard's radio)
+    g.audio.play('radio');   // (the guard's radio: a squelch and a click)
     this.say([['radio', 'dw_radio_1'], ['radio', 'dw_radio_2'], ['guard', wasHostile ? 'dw_go_fight' : 'dw_go']], () => { this.busy = false; go(); });
   }
 
