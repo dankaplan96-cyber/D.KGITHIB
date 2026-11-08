@@ -40,14 +40,23 @@ between rooms (house/cellar, tavern/cellar, the temple and its maze, the sewer's
 | 5 | The Platform, the Building Company's door | Its board stood 1.5 m before the door, the board's collider down to the ground: a straight walk at the door stopped at it. Moved, a lamp and a crate took the freed spot. | The board stands 4 m east of the door; the isles' dressing now keeps every house door's way in clear (2.2 m out, 0.7 m either side; the original's own objects are not moved); the foreman's yard spot beside the board. Straight and ±0.5 m: in. |
 | 6 | Knartas, the fishing family's house (`knartas-19--20`) | A pennant fence (the original's objects) ran 2 m before the door with no gap; no way led round it. The island test reached the door only by being placed behind the fence (ISO). | The panel and pole across the door are left out (zislands.js knartas `shape`); straight and ±0.5 m: in. |
 | 7 | The Hamalayi: the landing's hut, Lhar's five houses, the observatory keeper's house | Drawn doors with no prompt and no line: silent. | They lead into compact rooms (ihomes.js `ham-*`, the planner's pieces, whitewashed stone and dark timber): Bero's, Yorna's (where the village meets), Old Dorje's, Sana's loom, Lhamo's kitchen, the field keeper's hut, the observatory keeper's charts. Each has its own look line. |
-| 8 | Zeelich, the council house door (chapter 9); the Platform, `platform-35-15` | Straight from 2.6 m a resident (Oma) can stand in the way; on the Platform a low rail ends at the landing spot, so he lands beside it (0.57 m clear, facing away) and the sweep's straight line from there meets the rail. | Listed: both reached round what stands there; the Platform's straight on from the street: in. Not changed. |
+| 8 | Zeelich, the council house door (chapter 9); the Platform, `platform-35-15` | Straight from 2.6 m a resident (Oma) can stand in the way; on the Platform a low rail ends at the landing spot, so he lands beside it (0.57 m clear, facing away) and the sweep's straight line from there meets the rail. | Listed then. World-polish pass 2 (8.11): the council's 'detour' was the sweep's own doing: asking the council room's shut exits makes the clerk refuse, and that line was still open when it walked (81 frames of 'dialog', Up held, no step); the sweep reads open lines first now, straight and ±0.3/±0.5 m: in. Oma's round no longer has a leg before the council door (her stop at the petition box stood inside a planter, and the box-to-notice-board leg crossed the door 1.5 m out); `clearOfDoors` (story/zeelife.js) keeps every street resident's stop out of every house door's way in (2.2 m, ±0.7 m); `zeelich-life` samples 300 s of the three residents' rounds in chapter 9. The Platform's yard fence ends 0.95 m short of the door's middle; the two rail lengths 1.6 m up across the top of that door (no balcony under them) are left out; he lands straight out and walks straight in. |
 | 9 | Citadel, the pink house's sewer door | One way until the works door is opened below (story/sewers.js). | Listed as one way, by design. |
 
 ### Open
 
-- **Knartas' village, reachability.** The harness's planner did not find a way from the shuttle pad to the diggers'
-  village (it stopped on Quill's ledge, by the cloud channel); the island tests put him in the village (ISO). Not
-  verified either way; for world-polish: a walk from the pad to `knartas-33--14` by input.
+- **Knartas' village, reachability: fixed (world-polish pass 2, 8.11).** A real cut-off, not the planner: the slab on
+  the gatehouse roof between the harbour and the village had a block down to the ground that filled the arch, so from the
+  shuttle pad nothing led to the village (by held keys he stopped in the arch's mouth). Things resting high on a roof now
+  block from their own foot up (zislands.js `small`, KNARTAS-GATE). `island-doors` walks to every Knartas door from the
+  pad / the last door by the planner. `knartas-28--36` stands on a grass mound: from the west the bank is too steep to
+  walk up (he stops at its foot), from the lane in front and from the east it is walkable; the test goes round by the
+  lane when the first plan stops. The original's gateway posts before that door are drawn as a lamp and a tree, the lamp
+  0.2 m off the door's line; for world-art.
+- **Knartas, more of the original's objects standing high over the ground** (local x, z, height over the ground;
+  Source + Automated runtime list, not each looked at): tall posts 52/53 at (29.9, -12.7) and (39.4, -12.7) 2.3 m up;
+  46 at (25.9, -38.1) 1.5 m up; props 68/69 at (34.1, -8.5) 2.9 m; 72 at (9.0, -15.8) and (14.1, -15.8) 3.0 m; 80 at
+  (20.0, 26.0) 3.4 m; 26 at (-25.2, -17.6) 3.2 m. Some may rest on a wall or a roof edge. For world-art.
 - **Otringal's high town ground.** Grey rock spikes stand up through the paving between the houses (seen in the door
   pictures beside `otringal-55--47` and `otringal-63--52`); a door's approach from the side runs up one. For world-art.
 - The deep installation's chain and the Hamalayi's monastery are entered by story exits; the sweep covers their links,

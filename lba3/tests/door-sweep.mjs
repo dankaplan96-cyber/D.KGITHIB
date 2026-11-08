@@ -95,6 +95,9 @@ for (const ci of CH) {
         const res = {};
         for (const off of [0, 0.3, -0.3, 0.5, -0.5]) {
           goScene(d.region);
+          // (a line still open — the council clerk's refusals, said when the sweep asked the room's shut exits above — is
+          //  read first: in a dialogue Up does nothing, and the straight walk at the council door read as 'missed')
+          for (let k = 0; G.state === 'dialog' && k < 80; k++) P.tap('KeyE', 0.1);
           // (2.6 m out, or nearer where steps or a wall stand there: a player walks up to the door from wherever the street lets him)
           let sx, sz, gy, ok = false;
           // (level ground only: a slope or a flight of steps before a door is the street's matter, not the door's)
