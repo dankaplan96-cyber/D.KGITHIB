@@ -132,7 +132,7 @@ const DESERT_PEOPLE = [
       L('port_fence', 40.5, -6.6, 40.5, -9, 'stand', [5, 8], { gest: ['sigh'] }),
     ] } },
   // the fitter: the post's fence mended from outside, the rim's rope re-staked, a look over the yard's crates
-  { id: 'dg_mech', char: 'lharMan', tint: '#f0e2cc', speed: 0.9, color: '#c8a070', start: 0, area: 'desert', phase: crew(true), rounds: {
+  { id: 'dg_mech', char: 'lharMan_b', tint: '#f0e2cc', speed: 0.9, color: '#c8a070', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('mech_fence', 45.2, -6.75, 45.2, -8, 'browse', [12, 18], { gest: ['shrug'] }),
       L('mech_stake', 59.4, 10.4, DIGC.x, DIGC.z, 'tend', [9, 13]),
@@ -374,7 +374,7 @@ const ZEELICH_PEOPLE = [
       L('co_dock', -54.0, 0.5, -62, 0.5, 'stand', [5, 8], { gest: ['nod'] }),
     ] } },
   // a petitioner from Twinsun, waiting by the fountain with her form, a look at the council's door
-  { id: 'zc_petit', char: 'lharWoman', tint: '#f2eaff', speed: 0.85, color: '#d0b0f0', start: 0, area: 'zeelich', phase: council, rounds: {
+  { id: 'zc_petit', char: 'lharWoman_b', tint: '#f2eaff', speed: 0.85, color: '#d0b0f0', start: 0, area: 'zeelich', phase: council, rounds: {
     council: [
       L('pe_wait', -28.4, -2.4, -25.5, -7.65, 'stand', [16, 24], { gest: ['sigh', 'shrug'] }),
       L('pe_fount', -26.6, 2.9, -24, 0, 'dip', [5, 8]),

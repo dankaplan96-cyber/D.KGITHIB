@@ -203,7 +203,7 @@ export const ROOMS = {
         D('baz_pack', ...bzAt('zeelich', 0.95), 'put', [5, 7], { stage: 2, carry: 'crate' }),
         D('baz_crates', ...bzAt('corner', 1.05), 'put', [5, 7], { stage: 2, carry: null }),     // (boxed, by the back corner's table)
       ] },
-      { id: 'pell', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 0, stops: [
+      { id: 'pell', char: 'lharWoman_b', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 0, stops: [
         D('pell_counter', BA.CX - 0.7, BA.front + 0.58, Math.PI, 'browse', [10, 14]),            // (at the counter's front, by the till)
         D('pell_rabbit', ...bzAt('rabbit', 1.0), 'browse', [8, 12], { gest: ['shrug'] }),
         D('pell_corner', ...bzAt('corner', 1.05), 'browse', [6, 9]),
@@ -307,7 +307,7 @@ export const ROOMS = {
         S('ressa_seat', by(tmSeat(0), -0.75, 0), seatOf(tmSeat(0), SEAT.termSeat), [40, 60]),
         S('ressa_cafe', beside(TM.chairs[1], -1), seatOf(TM.chairs[1], SEAT.chair), [30, 45]),
       ] },
-      { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+      { id: 'ollo', char: 'lharMan_b', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
         S('ollo_seat', by(tmSeat(3), -0.75, 0), seatOf(tmSeat(3), SEAT.termSeat), [30, 45], { stage: NOW }),
         ask('ollo_ticket', 1.3, [6, 9], { stage: NOW }),                                               // (his ticket)
         S('ollo_coffee', by(TM.stools[2], 0, 0.7), [TM.stools[2].x, TM.stools[2].z, Math.PI, SEAT.cafeStool], [20, 30]),
@@ -322,7 +322,7 @@ export const ROOMS = {
         TQ.stop('rq_queue', 1, [25, 35], { gest: ['sigh'], carry: 'case' }),
         S('rq_seat', by(tmSeat(4), -0.75, 0), seatOf(tmSeat(4), SEAT.termSeat), [20, 30], { carry: 'case', stage: EVAC }),
       ] },
-      { id: 'pell_q', as: 'pell', lines: 'pell_q', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 1, when: ['evac'], stops: [
+      { id: 'pell_q', as: 'pell', lines: 'pell_q', char: 'lharWoman_b', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 1, when: ['evac'], stops: [
         TQ.stop('pq_queue', 2, [20, 30], { gest: ['shrug'], carry: 'basket' }),
         S('pq_seat', by(tmSeat(2), -0.75, 0), seatOf(tmSeat(2), SEAT.termSeat), [20, 30], { carry: 'basket', stage: EVAC }),
       ] },
@@ -380,7 +380,7 @@ const CITADEL_PORT = [
   // (SPACEPORT-1: the clerk, the port guard and Mrs Lomba went inside, to the terminal's counter, gate and seats; Dov
   //  stays out on the bench, watching the grounded ship)
   // (WC-4: and in the evacuation, not on the project's list: he waits where he always has)
-  { id: 'dov', char: 'lharMan', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
+  { id: 'dov', char: 'lharMan_b', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
     SB('dov_bench', CB[1], 1, [30, 45]),
     L('dov_ship', -3.0, 35.8, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
     L('dov_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['sigh'] }),
