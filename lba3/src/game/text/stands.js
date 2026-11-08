@@ -14,8 +14,8 @@ Object.assign(STR.en, {
   cs_corla_fly: "Flights are running: the spaceship to Zeelich Spaceport, pad one. I can sell you the seat here and save you the queue inside.",
   cs_corla_steam: "They say the project took the ferry at Kesh. My spaceship still flies. Ferries aren't my department.",
   cs_corla_pass: "Someone from the north asked for a one-way seat today. The ice is melting, he said. I gave him a ticket and a blanket.",
-  cs_corla_council: "Zeelich's council checks every arrival now. Bring patience. I'd sell you some, but it's not on my list.",
-  cs_corla_network: "Every other passenger this week carries a crate for an inventor on Zeelich. I don't ask. The crates hum.",
+  cs_corla_council: "Zeelich's council has guards at the arrivals gate now. Bring patience. I'd sell you some, but it's not on my list.",
+  cs_corla_network: "Every other crate this week is addressed to Baldino on Zeelich. One of them hums. I keep it at the far end.",
   cs_corla_shell: "The fort's gates are shut and the ground hums. My board still says ON TIME. I'm keeping it that way.",
   cs_corla_core: "The fort's gates are shut and the ground hums. My board still says ON TIME. I'm keeping it that way.",
   cs_corla_home: "Return tickets again. Everyone's coming home. I like this kind of busy.",
@@ -24,8 +24,8 @@ Object.assign(STR.en, {
   cs_corla_evac: "No seats today. Project ships board by the project's list at the terminal's gate. I hand out water and directions.",
 
   // ---- the street notice boards: the square's, the lane's by the harbour path
-  cs_board_square_dry: "NOTICES · Water Office: the town well is shut for inspection. · Lost: a grey cat. Answers to nothing. · Choir practice moved to Chez Luc.",
-  cs_board_square_hot: "NOTICES · Joint Project: a heat post at every door this week, free. · Water back on. It runs warm; boil it anyway. · Grey cat found, unimpressed.",
+  cs_board_square_dry: "NOTICES · Water Office: the town well is shut for inspection. · Lost: a wind-up Meca-Penguin. Answers to nothing. · Choir practice moved to Chez Luc.",
+  cs_board_square_hot: "NOTICES · Joint Project: a heat post at every door this week, free. · Water back on. It runs warm; boil it anyway. · Meca-Penguin found, still walking.",
   cs_board_square_mid: "NOTICES · Spaceship to Zeelich: daily from pad one. · Tremors: the project says stay calm. · Pictures fallen off walls: report to nobody, they'll fall again.",
   cs_board_square_evac: "EVACUATION · Project ships board by the list at the spaceport. · Not on the list? Ask at the Water Office. Nobody stays behind. · Water, warm clothes, one bag.",
   cs_board_square_late: "NOTICES · Back from the evacuation? Tell the Water Office you're home. · Heat posts stay dark until further notice. · Spaceship to Zeelich: daily.",
@@ -35,7 +35,7 @@ Object.assign(STR.en, {
   cs_board_lane_mid: "HARBOUR · Ferry to Desert Island from the quay. · Spaceship to Zeelich from the spaceport, across the footbridge.",
   cs_board_lane_evac: "HARBOUR · Fishing boats to the lighthouse cliffs: ask Doran. · Keep the quay clear for the queue.",
   cs_board_lane_late: "HARBOUR · Ferry to Desert Island from the quay. · Boats back from the cliffs: thank Doran, he's pretending not to care.",
-  cs_board_lane_home: "HARBOUR · Ferry to Desert Island from the quay. · Dinner at the Twinsens' tonight, they say. Bring a chair.",
+  cs_board_lane_home: "HARBOUR · Ferry to Desert Island from the quay. · Dinner at the Twinsens', they say. Bring a chair.",
 
   // ---- the information stands
   cs_info_town: "CITADEL ISLAND · You are here: the town square. Up the hill: the old fortress, now the project's station. Down the lane: the harbour, the footbridge to the spaceport and the road to the lighthouse. Along the cliff path: the Whispering Cliffs.",

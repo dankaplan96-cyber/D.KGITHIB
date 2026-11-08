@@ -16,10 +16,10 @@ Object.assign(STR.en, {
   zl_box_green: 'Green lamp. The feed pipe ticks as it warms.',
   zl_flue_hot: 'Hot air shimmers out of the flue.',
   zl_tag_pelleck: 'A tag on the dark post: CONNECTION NEXT QUARTER. Mr Pelleck\'s house.',
-  zl_tag_sw: 'Another dark post, another tag: CONNECTION NEXT QUARTER. The lit ones are by the council house, the depot and the bakery.',
+  zl_tag_sw: 'Another dark post, the same tag. The lit ones are by the council house, the depot and the bakery.',
   zl_tag_burrow: 'CONNECTION NEXT QUARTER, over the Wannies\' burrow. Warm air comes out of their vent anyway.',
   zl_burrow: 'Warm air breathes out of the Wannies\' vent. It smells of earth and root tea.',
-  zl_flowers: 'Nara\'s cloud flowers, crated for Citadel. A project tag: HELD. The shuttles are grounded, and the project\'s ship takes project cargo first.',
+  zl_flowers: 'Nara\'s cloud flowers, crated for Citadel. A project tag on each: HELD. Nothing flies but the project.',
 
   // ---- the roof
   zl_shoved: 'Off the flue it goes. It can sit on the stage like the others.',
@@ -32,9 +32,9 @@ Object.assign(STR.en, {
   zl_snuff_i_pre: 'I sold my charcoal cart when the project\'s heat came. Bread\'s a third cheaper now. When the oven works.',
   zl_snuff_i_post: 'Shield or no shield, the heat still comes up the pipe. Whatever they\'re doing down there hasn\'t stopped.',
   zl_snuff_i_mid: 'The shuttles fly again, so Bzizz flies twice as much. And lands on my roof twice as much.',
-  zl_snuff_i_council: 'If the council stops the bore, I\'ll want my charcoal cart back. I sold it.',
+  zl_snuff_i_council: 'The whole street\'s arguing about the bore. If it stops, I want my charcoal cart back.',
   zl_snuff_i_network: 'Baldino says the bore will make a shield instead. Do shields bake bread?',
-  zl_snuff_i_late: 'Some days the ground is quiet. The oven should be warm every day.',
+  zl_snuff_i_late: 'The ground\'s quiet at last. Pity about my oven.',
   zl_snuff_2: 'The heat box shuts itself off when the flue can\'t breathe. Something\'s sitting on my flue. Bzizz, I\'d bet. The guards\' stair is round the side.',
   zl_snuff_wait: 'Up the guards\' stair. Something on my flue.',
   zl_snuff_warm: 'Warm! The oven\'s warm!',
@@ -47,12 +47,12 @@ Object.assign(STR.en, {
     'This house was built for watching people. Now it feeds them.',
   ],
   zl_snuff_after_mid: [
-    'The shuttles bring flour from Citadel now. And Citadel buys my rolls.',
+    'The ships bring flour from Citadel now. And Citadel buys my rolls.',
     'This house was built for watching people. Now it feeds them.',
   ],
   zl_snuff_after_council: [
     'Half my bread goes to the drill crews. If the council stops the bore, who buys it?',
-    'Oku says I sold my oven to a drill. I sold a charcoal cart.',
+    'The drill crews say my rolls are the best thing on the platform. They\'re the only thing on the platform.',
   ],
   zl_snuff_after_network: [
     'Turn the bore into a shield, then. Just leave my heat box alone.',
@@ -65,7 +65,7 @@ Object.assign(STR.en, {
   zl_bz_wait: 'The depot hasn\'t signed. My crate stays put. Bzz.',
   // (asked again: the street's news first, by phase; 'post' shares 'pre')
   zl_bz_i_pre: 'No shuttles, so everything waits on my stage. Crates, nectar, me.',
-  zl_bz_i_mid: 'The shuttles fly again. Forty crates a day, and the depot signs for ten.',
+  zl_bz_i_mid: 'Forty crates a day now, and the depot signs for ten.',
   zl_bz_i_council: 'The council talks. The depot waits for the council. My crate waits for the depot.',
   zl_bz_i_network: 'Everyone\'s busy with Baldino\'s relays. Nobody\'s busy signing for nectar.',
   zl_bz_i_late: 'The ground\'s quiet now. The depot isn\'t. Still no signature.',
@@ -77,7 +77,7 @@ Object.assign(STR.en, {
     'I land on the stage now. Not on the flue. Snuff chalked a line.',
   ],
   zl_bz_after_mid: [
-    'The shuttles fly again. My cousins carry the heavy crates out to them.',
+    'Twice the flights since the shuttles fly again. My cousins carry the heavy crates.',
     'I land on the stage now. Not on the flue.',
   ],
   zl_bz_after_council: [
@@ -100,7 +100,7 @@ Object.assign(STR.en, {
     'Connection next quarter. It was next quarter last quarter.',
   ],
   zl_pel_council: [
-    'If the council stops the bore, who keeps the depot\'s books? Who pays the tilers?',
+    'No bore, no depot. No depot, no books. No books, no tilers.',
     'I do not panic. I file.',
   ],
   zl_pel_network: [
@@ -110,7 +110,7 @@ Object.assign(STR.en, {
 
   // ---- Old Grumm (the burrow)
   zl_grumm_pre: [
-    'They put a heat post over our burrow. Connection next quarter. Our tunnels sweat already.',
+    'They put a heat post over our burrow, for later. Our tunnels sweat already.',
     'Up top they wait for heat. Down below we open the vents. Somebody\'s got it wrong.',
   ],
   zl_grumm_mid: [
@@ -122,7 +122,7 @@ Object.assign(STR.en, {
     'The vent breathes warmer every week.',
   ],
   zl_grumm_network: [
-    'Baldino\'s relays on our mills? Hmph. Anything that cools my tunnels.',
+    'Baldino\'s relays on Oku\'s mills? Hmph. Anything that cools my tunnels.',
     'Up top they wait for heat. Down below we open the vents.',
   ],
 
@@ -134,7 +134,7 @@ Object.assign(STR.en, {
 
   // ---- Nara and Oku, when no chapter needs them
   zl_nara: [
-    'The shuttles fly again. My flowers went out on the first one. Xil sells them on at Citadel\'s harbour.',
+    'The ships fly again. My flowers went out on the first one. Xil sells them on at Citadel\'s harbour.',
     'The project brought people up from Twinsun. People buy flowers. I\'m not complaining.',
   ],
   zl_oku: [
@@ -148,9 +148,9 @@ Object.assign(STR.en, {
   zh_pel_radiator: 'A heat radiator, fitted and polished. Its pipe ends in the wall. A tag: NEXT QTR.',
   zh_pel_tiles: 'Tile samples. Two violet, six blue. The violet ones are the last of their kind.',
   zh_pel_forms: 'Form 7-B, Application for Heat Connection. Two copies, both stamped RECEIVED.',
-  zh_nara_slate: 'XIL - CITADEL. 40 POTS. EVERY SHUTTLE.',
+  zh_nara_slate: 'XIL - CITADEL. 40 POTS. EVERY FLIGHT.',
   zh_nara_crates: 'Crates for Citadel, stacked to the beams. Every tag says HELD.',
-  zh_nara_crates_gone: 'Two crates left. The rest went out on the shuttles.',
+  zh_nara_crates_gone: 'Two crates left. The rest have gone to Citadel.',
   zh_oku_stove: 'A charcoal stove. No heat post lit at this end of the street.',
   zh_oku_quern: 'A hand quern. The flour from the mills is ground finer here, by hand.',
   zh_oku_sail: 'A mill sail on a mending frame. One new pink panel, stitched in.',
@@ -164,15 +164,15 @@ Object.assign(STR.en, {
   zh_closed_depot: 'PROJECT STORES. STAFF ONLY. The lock is new.',
   zh_closed_hut: 'The project\'s control hut. Locked.',
   zh_lissa_pre: [
-    'Forty pots for Citadel, and the shuttles grounded. I water them twice a day so they don\'t notice.',
+    'Forty pots for Citadel, and nothing flying. I water them twice a day so they don\'t notice.',
     'Aunt Nara says the project\'s ship takes project cargo first. Flowers aren\'t project cargo.',
   ],
   zh_lissa_mid: [
-    'They went out on the first shuttle. Now I\'m growing the next forty.',
+    'They went out on the first ship. Now I\'m growing the next forty.',
     'Xil writes from Citadel: the flowers sell before he unpacks them.',
   ],
   zh_lissa_council: [
-    'If the council stops the bore, the frames go cold in winter. Aunt Nara says we\'ll manage.',
+    'Without the project\'s heat the frames go cold in winter. Aunt Nara says we\'ll manage.',
     'Everyone\'s at the council house. I\'m watering.',
   ],
   zh_lissa_network: [
@@ -192,12 +192,12 @@ Object.assign(STR.en, {
     'A braked mill doesn\'t tear its sails. I won\'t complain.',
   ],
   zh_wenna_mid: [
-    'Charcoal costs more every month. The post outside still says next quarter.',
+    'Charcoal costs more every month. Everyone with a lit post stopped buying it.',
     'The project paid for new sails. I still mend the old ones. Waste not.',
   ],
   zh_wenna_council: [
     'Oku wants the council to stop the bore. I want the heat post lit. We\'ll vote differently.',
-    'Everyone\'s at the council house. Someone has to grind the flour.',
+    'Oku\'s up at the council house. Someone has to grind the flour.',
   ],
   zh_wenna_network: [
     'Baldino\'s relays ride on our mills now. Oku pretends he isn\'t proud.',
@@ -212,23 +212,23 @@ Object.assign(STR.en, {
   n_zr_fennick: 'Fennick', n_zr_rezz: 'Rezz', n_zr_oma: 'Oma',
   zr_fen_pre: [
     'Three posts lit, three tagged. Hanging the tags is my job too.',
-    'The bakery\'s heat box trips if you look at it wrong. Snuff looks at it wrong a lot.',
+    'The bakery\'s heat box trips the moment its flue chokes. Then Snuff blames me.',
   ],
   zr_fen_mid: [
     'Next quarter\'s list is longer than this quarter\'s.',
     'The feed under the street runs hotter every week. I note it. Somebody files it.',
   ],
   zr_fen_council: [
-    'If the council stops the bore, I disconnect the lit posts. Same wrench either way.',
-    'Pelleck keeps asking about his post. I keep saying next quarter.',
+    'Whatever the council decides, I bring the same wrench.',
+    'Pelleck asks about his post every morning. I\'ve started taking the long way round.',
   ],
   zr_fen_network: [
     'Baldino wants a reading from every post. He says the heat tells him how the shell is.',
-    'Steady pressure today. I wrote it down twice.',
+    'Steady pressure today. Baldino says that\'s good. I\'ll take his word.',
   ],
   zr_fen_late: [
     'Quiet ground, steady pressure. First good week in a year.',
-    'They say the west end gets its posts lit at last. They said that last year.',
+    'They say the west end gets its posts lit at last. I\'ll believe it when I fit them.',
   ],
   zr_rez_pre: [
     'Grounded. The project says the sky is busy. It looks empty to me.',
@@ -243,8 +243,8 @@ Object.assign(STR.en, {
     'I count the tags on the dark posts. The council likes numbers.',
   ],
   zr_oma_mid: [
-    'The shuttles fly, so petitions come by shuttle now. From Citadel, even.',
-    'Three dark posts this quarter. Same three as last quarter.',
+    'Petitions come from Citadel now, by ship. They want hearings too.',
+    'Three dark posts, three petitions about them. Mr Pelleck wrote two.',
   ],
   zr_oma_council: [
     'Enough petitions at last. The council has to sit!',

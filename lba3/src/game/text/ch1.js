@@ -275,7 +275,7 @@ Object.assign(STR.en, {
 Object.assign(STR.he, {
   dw_warn: 'היי! זה שטח של המיזם, לעובדים בלבד. החוצה, אזרח.',
   dw_warn_valve: 'היי! ידיים מהשסתום של המיזם!',
-  dw_tw_vesk: 'וסק שלח אותי לפתוח אותו.',
+  dw_tw_vesk: 'וסק שלח אותי לפתוח את השסתום.',
   dw_warn_task: 'אף אחד לא אמר לי. אין אישור, אין חצר. החוצה.',
   dw_warn_out: 'השביל לכולם. מעבר לקו הצהוב זה שלנו. בפעם הבאה אני לא אבקש.',
   dw_again: 'הזהרתי אותך!',
@@ -287,7 +287,7 @@ Object.assign(STR.he, {
 Object.assign(STR.en, {
   dw_warn: "Hey! This is project ground, staff only. Out you go, citizen.",
   dw_warn_valve: "Hey! Hands off the project's valve!",
-  dw_tw_vesk: 'Vesk sent me to open it.',
+  dw_tw_vesk: 'Vesk sent me to open the valve.',
   dw_warn_task: 'Nobody told me. No pass, no yard. Out.',
   dw_warn_out: "The path is for everyone. Past the yellow line is ours. Next time I won't ask.",
   dw_again: 'I warned you!',

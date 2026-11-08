@@ -50,7 +50,7 @@ Object.assign(STR.en, {
   c9_toast_coat: "Disguised: the archivist is slower to notice you",
   c9_cab_tunnels: "TUNNELS: FunFrock's old tunnels on every island, surveyed for 'cold storage'. Useful, but not proof.",
   c9_cab_ferries: "FERRIES: evacuation schedules. Lists, lists, lists. My name isn't on any of them.",
-  c9_cab_locked: "BORE: locked, the only one. The archivist's key ring lies on his desk by the door, where he passes every round.",
+  c9_cab_locked: "BORE is the only cabinet locked. The archivist's key ring is on his desk by the door, and he passes it every round.",
   c9_key_take: "His key ring. One small brass key is stamped B.",
   c9_cab_bore: 'BORE: the master plans. The final page is a cross-section of the planet: the bore goes straight through the shell, and someone has written in the margin: "Integrity: not assessed."',
   c9_toast_plans: 'Master plans of the bore',
