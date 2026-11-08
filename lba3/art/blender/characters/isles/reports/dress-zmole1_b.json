@@ -1,0 +1,170 @@
+[
+ {
+  "n": 1,
+  "overrides": {
+   "tunic": "#504b3f",
+   "apron": "#305d53",
+   "hat": "#2aaaa9"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#504b3f",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#305d53",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#2aaaa9",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ },
+ {
+  "n": 2,
+  "overrides": {
+   "tunic": "#607979",
+   "apron": "#8c4886",
+   "hat": "#da67b9"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#607979",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#8c4886",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#da67b9",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ },
+ {
+  "n": 3,
+  "overrides": {
+   "tunic": "#5d4957",
+   "apron": "#576b37",
+   "hat": "#6fc430"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#5d4957",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#576b37",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#6fc430",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ },
+ {
+  "n": 4,
+  "overrides": {
+   "tunic": "#616f58",
+   "apron": "#425780",
+   "hat": "#5163d4"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#616f58",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#425780",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#5163d4",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ },
+ {
+  "n": 5,
+  "overrides": {
+   "tunic": "#515467",
+   "apron": "#773d40",
+   "hat": "#d05740"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#515467",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#773d40",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#d05740",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ },
+ {
+  "n": 6,
+  "overrides": {
+   "tunic": "#50423f",
+   "apron": "#305d3b",
+   "hat": "#2aaa64"
+  },
+  "left": {
+   "tunic": {
+    "base": "#5a5068",
+    "to": "#50423f",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   },
+   "apron": {
+    "base": "#7a5a3a",
+    "to": "#305d3b",
+    "verticesStillBase": 0,
+    "inBase": 156
+   },
+   "hat": {
+    "base": "#d8a838",
+    "to": "#2aaa64",
+    "verticesStillBase": 0,
+    "inBase": 1020
+   }
+  }
+ }
+]

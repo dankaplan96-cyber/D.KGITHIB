@@ -3304,3 +3304,78 @@ Pictures (**chapter 3+: not for the user**): `docs/future/characters/{keeper_b,o
   - the cast's other order-24 models (farmerB, desertkid, lharMan, lharWoman, farmerA, clerk, farmerC, archivist) still
     have no shape variants.
 - Applies directly on the current origin (which has the earlier cast batches): `git apply --check` clean. Note: the clerk is +27 % over the shipped file across both batches, just above the +25 % rule (ZEELICH's boots and robe plus these glasses): accept or ask for a trim.
+
+## CAST-POLISH-ISLES · zmole1_b: the Wannies at work (Burr, Delve and Dunt), the isles' most shared model · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ISLES.diff`, against `803efcd1` (origin `b8d3d9ae` with CAST-POLISH-ZEELICH-2 applied);
+`git apply --check` is clean on it. Files it changes:
+- `tools/blender/cast_poly.py`: CAST `zmole1_b` and a `minerCap` block in `build_mole`;
+- `src/game/characters.js`: 1 new LOOKS entry, nothing else changed;
+- `src/game/islandlife.js`: 3 `char` lines;
+- `art/characters/skeletons.json`: + zmole1_b, made with `tools/dump-skeletons.mjs zmole1_b`. Its bones are identical
+  to zmole1's. The file is one line, so the diff carries it whole;
+- `assets/poly/index.json`: + zmole1_b.
+
+New model file: `requests/CAST-POLISH-ISLES/zmole1_b.json` for `assets/poly/`. Pictures (**chapter 4+: not for the
+user**): `docs/future/characters/zmole1_b/`.
+- **Survey of the isles** (`islandlife.js`, at most 8 people an isle):
+  - their Esmers (nara ×6, xil ×5 with the two children, oku ×5, keeper ×2) were done in CAST-POLISH-ZEELICH;
+  - the rest are Zeelich's other races: moles zmole1 ×6 and zmole2 ×4, bees zbee1 ×4 and zbee2 ×3, tri-heads ztri1 ×2
+    and ztri2 ×2.
+
+  In lookdev and at Follow distance they read as designed. I checked the tri-heads' feet against LBA2 (body 84, read-only):
+  the original's are also a flat plate, about 0.11 H long, so they are left as they are.
+
+  What is left is sharing. zmole1 is now the most shared model on the isles: ×8 with Old Grumm and the hostel's worker,
+  as shared as keeper was. All the Wannies of the Platform and the gas works are one grey-violet robed mole in
+  DRESS-1's colours.
+- **zmole1_b** (order 24's kind of shape variant: another hat, another coat), the Wannies' working dress:
+  - a miner's cap on the crown, with the ears coming out at its sides;
+  - a darker band and a peak over the snout's root;
+  - a lamp on the front: its housing 0.6× the cap's hex, the glass a pale #f4e8b0 that is not a role;
+  - a leather apron with a bib, straps and a pocket over the robe, the robe's hem and collar in the apron's shade. This
+    is the code zmole2 already uses.
+
+  Colours are the roles `hat` #d8a838 and `apron` #7a5a3a, plus darker multiples of them.
+
+  Who takes it: **pf_miner1 (Burr), pf_miner2 (Delve), ug_fitter (Dunt)**. Old Grumm (zmole1), hs_worker3,
+  ug_foreman, pf_foreman and pf_chaplain keep zmole1.
+- **Budget:**
+  - Triangles: body 2578 → 3010 (+16.8 % on zmole1), 3042 with the mouth. In the game the hero measures 5188 → 6052
+    triangles (the body twice: the silhouette pass).
+  - Draw calls: the hero as zmole1_b is 3 calls, as zmole1 (body, silhouette pass, mouth).
+  - On the Platform (chapter 4, Follow/Medium) the frame is 144 = 144 calls. Its triangle count changes with who is in
+    view (504468 against 503604 in this pair), so the per-model cost (+432 a person) is the measure.
+  - No texture or material.
+- **Contracts:**
+  - bones identical to zmole1's, in order, and so are the mouth;
+  - 4 weights a vertex;
+  - feet at 0.004.
+  - DRESS-1 variants 1–6: 0 vertices keep an overridden base hex (tunic, apron, hat).
+  - `validate` (Blender): 0 fails. The one warning is the cast's loose vertices.
+  - zmole1 and zmole2 rebuilt unchanged to within float rounding (1e-5 m positions, 1e-4 normals); the committed files
+    are kept.
+- **Looked at:**
+  - lookdev turnaround and Follow-distance view;
+  - 13 poses × 2 views: the cap stays on the head through the throw, the sword and the doze;
+  - the game with the hero as each: Follow/Medium, dialogue and close-ups;
+  - the Platform in chapter 4, before and after. For the before run the old islandlife.js was served through
+    `zeecap.mjs` ROUTES;
+  - Blender views.
+
+  At Follow distance on the Platform, Burr now reads as a miner (the yellow cap and lamp, the apron) beside Foreman
+  Krum. A first, smaller cap did not read at that distance and was enlarged.
+- **Tests** (SwiftShader, zmole1_b.json and the index in `assets/poly`, the code changes in place, a renamed headless
+  shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - island-people 65/65 PASS.
+
+  Evidence labels: **Automated runtime only**. The pictures were looked at, not played. Vega 8 frame time was not run
+  for this batch: no draw call was added, and the triangle cost per person is about ZEELICH-2's keeper_b's.
+- **Left:**
+  - the isles' two Esmer children (kn_kid, ow_kid) are xil at 0.72 scale, an adult's proportions made smaller;
+  - zmole2 ×6 and zbee1/zbee2 ×6 each still share one body;
+  - the doze pose's feet, as in CAST-POLISH-ZEELICH.
+- Order: after CAST-POLISH-ZEELICH-2 (both touch skeletons.json's single line and assets/poly/index.json).
