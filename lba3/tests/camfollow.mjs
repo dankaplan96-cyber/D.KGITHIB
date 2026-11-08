@@ -106,6 +106,11 @@ await ev(async () => {
       for (let k = 0; k < 8; k++) {
         const a = (k * Math.PI) / 4, sx = Math.sin(a), sz = Math.cos(a); let y = y0, ok = true;
         for (let d = 0.5; d <= 20 && ok; d += 0.5) { const ny = window.P._stepTo(x + sx * (d - 0.5), y, z + sz * (d - 0.5), x + sx * d, z + sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P.blockedAt(x + sx * d + sz * o, z + sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
+        // (and 7 m the other way: the Modern checks run him back toward the camera from here, 5 m. The first spot, Citadel's
+        // south brink at -112, -84, stood 4 m from the 13 m cliff behind it: pushed back he ran off it into the sea, came
+        // back on the last safe spot, and the cut that puts the view behind him read as the view turning — 90° in LBA2's,
+        // a 104° frame in Follow's)
+        y = y0; for (let d = 0.5; d <= 7 && ok; d += 0.5) { const ny = window.P._stepTo(x - sx * (d - 0.5), y, z - sz * (d - 0.5), x - sx * d, z - sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P.blockedAt(x - sx * d + sz * o, z - sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
         if (!ok) continue;
         const mx = x + sx * 9, mz = z + sz * 9;
         if (P.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
@@ -136,8 +141,9 @@ if (!spot.none) {
 // ---------------------------------------------------------------- 1b/2. LBA2 untouched; behind his back
 const run = await ev((spot) => {
   const G = game, h = G.hero, C = G.camRig, out = {};
-  // LBA2 (the default): turned 90° on the spot, then a run across the view: its heading never moves
-  F.cam('lba'); F.place(spot, spot.a + Math.PI / 2); F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180));
+  // LBA2: turned 90° on the spot (Left turns him anticlockwise, +90°), then a run across the view along the way the
+  // spot was found open for: its heading never moves
+  F.cam('lba'); F.place(spot, spot.a - Math.PI / 2); F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180));
   let R = F.rec(); F.hold(['ArrowUp'], 4, R.fn); out.lba = { turned: F.turned(R), mode: [...R.modes] };
   // Follow: standing 2 s, then a turn on the spot 90° left (Classic, 100°/s), then standing 3 s
   F.cam('follow'); F.place(spot, spot.a + Math.PI / 2);
@@ -155,7 +161,7 @@ const run = await ev((spot) => {
   G.step(1); h.behaviour = 'normal';
   return out;
 }, spot);
-check('LBA2 view (the default) unchanged: a run across the view never turns it', run.lba.turned < 0.5 && run.lba.mode.join() === 'lba', run.lba);
+check('LBA2 view (Fixed) unchanged: a run across the view never turns it', run.lba.turned < 0.5 && run.lba.mode.join() === 'lba', run.lba);
 check('Follow: standing, the view stays behind his back (within 15°)', run.standOff <= 15, run);
 check('Follow, Classic: a turn on the spot turns the view with him (it turns ≥ 65° while he turns 90°, never more than 25° behind)', run.turn.turnedDuring >= 65 && run.turn.lagMax <= 25, run.turn);
 check('Follow: behind his back (within 15°) within 0.6 s of the turn, settled (within 3°) within 0.8 s, no overshoot (≤ 1°)', run.turn.within15At != null && run.turn.within15At <= 0.6 && run.turn.within3At != null && run.turn.within3At <= 0.8 && run.turn.overshoot <= 1 && run.turn.standAfter <= 1, run.turn);

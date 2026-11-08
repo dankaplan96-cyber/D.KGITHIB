@@ -20,6 +20,7 @@ import { buildLba1Room, hasLba1Room } from './lba1room.js';
 import { Kit, M as cachedMat } from './props.js';
 import { streetDist } from './town.js';
 import { mat as rigMat } from '../engine/rig.js';
+import { STEP_UP } from '../engine/physics.js';
 export { hasLba1Room };
 import { MAT, rbox, plane, cyl, canvasTex } from './props.js';
 import { tube } from './kit.js';
@@ -407,7 +408,11 @@ function climbFlight(k, M, physics, T) {
     const topN = Math.max(Hm + 0.5, gn + 0.1), [nx, nz] = F.at(sn, (-hw - cw + oe) / 2), botN = Math.min(Hm, gnl) - 0.6;
     k.add(rbox(oe + hw + cw, topN - botN, cw, 0.03), M.wall, nx, (topN + botN) / 2, nz, F.a);
     k.add(rbox(oe + hw + cw + 0.06, 0.14, cw + 0.1, 0.03), M.cap, nx, topN + 0.07, nz, F.a);
-    physics.add({ type: 'box', x: nx, z: nz, hw: (oe + hw + cw) / 2, hd: cw / 2 + 0.05, rot: F.a, top: topN + 0.15, noStand: true, seeThrough: true });
+    // (REVIEW-CITADEL-ART a, follow-up: the pit block north of it (climbTerraceFill) stands 6 cm over this coping; from the
+    //  block the wall's collider was under his feet and he stepped over the wall down onto the landing. Held a step over
+    //  the block's top, as from the landing's side)
+    const ynB = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
+    physics.add({ type: 'box', x: nx, z: nz, hw: (oe + hw + cw) / 2, hd: cw / 2 + 0.05, rot: F.a, top: Math.max(topN + 0.15, ynB + STEP_UP + 0.1), noStand: true, seeThrough: true });
     post(F, sN + POST_HALF, -1, Hm, Math.max(top, topN) - Hm + 0.6);
     post(F, sL, -1, Hm, top - Hm + 0.6);   // (where the cheek's slope meets the landing's level wall)
   }
