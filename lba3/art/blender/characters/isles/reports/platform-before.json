@@ -1,0 +1,48 @@
+{
+ "room": "isle_platform",
+ "chapterKey": "dig",
+ "hero": [
+  3907.711485988491,
+  1754.0414147735094
+ ],
+ "esmers": [
+  {
+   "id": "pf_miner1",
+   "char": "zmole1",
+   "x": 3904.18,
+   "z": 1791.9
+  },
+  {
+   "id": "pf_miner2",
+   "char": "zmole1",
+   "x": 3911.37,
+   "z": 1783.91
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 3907.775493337619,
+   "z": 1794.9063260554753,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   3907.775493337619,
+   1787.9063260554753
+  ],
+  "n": 2,
+  "info": {
+   "calls": 144,
+   "triangles": 503604
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "pf_miner1",
+ "errors": [],
+ "at": "2026-11-08T06:04:48.529Z",
+ "candidates": {}
+}
