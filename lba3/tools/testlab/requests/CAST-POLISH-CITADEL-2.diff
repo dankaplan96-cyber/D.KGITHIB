@@ -1,0 +1,159 @@
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index a17f2dc..3b55143 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -59,14 +59,14 @@ CAST = {
+                     dome=0.016, fluff=0.046, shoulderDrop=0.022, moustacheSwept=True),   # (G1-ART: a rounded bald crown, a fringe of white tufts, round shoulders; MOUSTACHE-1)
+     'tim': dict(hem=0.5, browS=0.8, browTilt=0.5, mouthW=1.25, mouthLift=1.8, mouthH=1.1, noseS=1.0, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], lip='#8a3a3a'),
+     'lulu': dict(browS=0.7, browTilt=0.2, mouthW=1.0, mouthLift=1.6, lip='#b04058', lashes=True, bow=True, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hemH=0.06),
+-    'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a'),
++    'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a', gogglesGlass=True),
+     'farmerA': dict(browS=1.3, browTilt=-0.1, mouthW=1.2, mouthLift=1.3, rolled=True, pockets=True, pocketY=0.06, noseS=1.1),
+     'farmerB': dict(browS=1.2, browTilt=0.1, cheekS=1.25, mouthLift=1.2, earBend=(0.35, 0.0), earSpread=1.0, earInCol='#e8a8a0'),
+     'farmerC': dict(hatStyle='straw', mouthLift=1.3, browS=1.4, earS=0.95),
+-    'bram': dict(browS=2.1, browTilt=-0.3, hatStyle='flatcap', mouthLift=-0.6, mouthW=0.9, earS=1.0, earTurn=0.2),
++    'bram': dict(browS=2.1, browTilt=-0.3, hatStyle='flatcap', mouthLift=-0.6, mouthW=0.9, earS=1.0, earTurn=0.2, peakCurved=True),
+     'pippa': dict(browS=1.0, cheekS=1.35, mouthLift=1.4, earBend=(0.0, 0.7), mouthW=1.1),
+-    'mira': dict(browTilt=0.4, browS=0.9, earLen=1.08, mouthLift=0.5),
+-    'odile': dict(browS=1.1, browTilt=-0.1, mouthLift=0.2, earSpread=0.9),
++    'mira': dict(browTilt=0.4, browS=0.9, earLen=1.08, mouthLift=0.5, glassesRim=True),
++    'odile': dict(browS=1.1, browTilt=-0.1, mouthLift=0.2, earSpread=0.9, peakCurved=True),
+     'vguard': dict(trim='#c8a050', epaulette='#c8a050', strap='#8a6a30', collar=True, glove='#16141a', boots=0.2, mouthLift=-0.2, mouthW=0.9, browS=1.2, browTilt=-0.4, buckle='#e8c870'),
+     'vguardG': dict(trim='#c8a050', epaulette='#c8a050', strap='#8a6a30', glove='#16141a', mouthLift=-0.4, browS=1.8, browTilt=-0.5),
+     # ---- the Desert Island and Zeelich
+@@ -150,6 +150,55 @@ def glasses_on(part, front, ey, ex, r, rot=0.0, w=0.004):
+     part.add([(-bw, ey + 0.004, front(0, ey) + 0.013), (bw, ey + 0.004, front(0, ey) + 0.013), (bw, ey - 0.002, front(0, ey) + 0.013), (-bw, ey - 0.002, front(0, ey) + 0.013)], [[0, 3, 2, 1]])
+ 
+ 
++def cord(part, pts, r, n=5, closed=True):
++    """CAST-POLISH-CITADEL-2: a thin round cord swept along a line of points (a spectacle rim, a bridge, an arm): rings of
++    n round each point, square to the line, joined; a closed loop has no ends, an open line is capped."""
++    m_ = len(pts)
++    P_ = [Vector(q) for q in pts]
++    rings_ = []
++    for i, q in enumerate(P_):
++        a_ = P_[(i + 1) % m_] if closed or i < m_ - 1 else q
++        b_ = P_[(i - 1) % m_] if closed or i > 0 else q
++        t_ = (a_ - b_).normalized()
++        u_ = t_.cross(Vector((0, 0, 1)) if abs(t_.z) < 0.9 else Vector((1, 0, 0))).normalized()
++        w_ = t_.cross(u_).normalized()
++        rings_.append([tuple(q + u_ * (r * math.cos(2 * math.pi * k / n)) + w_ * (r * math.sin(2 * math.pi * k / n))) for k in range(n)])
++    v_ = [x for rr in rings_ for x in rr]
++    segs = m_ if closed else m_ - 1
++    f_ = [[i * n + k, ((i + 1) % m_) * n + k, ((i + 1) % m_) * n + (k + 1) % n, i * n + (k + 1) % n] for i in range(segs) for k in range(n)]
++    if not closed:
++        v_ += [tuple(P_[0]), tuple(P_[-1])]
++        f_ += [[k, (k + 1) % n, len(v_) - 2] for k in range(n)] + [[(m_ - 1) * n + (k + 1) % n, (m_ - 1) * n + k, len(v_) - 1] for k in range(n)]
++    part.add(v_, f_)
++
++
++def visor(part, cx, cy, cz, r_in, r_out, ang, drop, thick, n=8, sx=1.0):
++    """CAST-POLISH-CITADEL-2: a cap's peak as a curved visor (it was a flat box, a plank from the side and the front): a
++    band of the circle round the cap's centre (cx, cz) from r_in (under the crown's edge) out to r_out, `ang` radians
++    either side of the front, sloping down by `drop` to its front edge, shorter toward its sides (rounded corners),
++    `thick` thick."""
++    top, bot = [], []
++    for i in range(n + 1):
++        a = -ang + 2 * ang * i / n
++        k_ = math.cos(a * 0.5 * math.pi / ang) ** 0.6
++        ro = r_in + (r_out - r_in) * (0.35 + 0.65 * k_)
++        for rr, dd in ((r_in, 0.0), (ro, drop)):
++            x, z = cx + math.sin(a) * rr * sx, cz + math.cos(a) * rr
++            top.append((x, cy - dd, z))
++            bot.append((x, cy - dd - thick, z))
++    v_ = top + bot
++    N2 = len(top)
++    f_ = []
++    for i in range(n):
++        a0, a1, b0, b1 = 2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 3
++        f_.append([a0, b0, b1, a1])
++        f_.append([N2 + a0, N2 + a1, N2 + b1, N2 + b0])
++        f_.append([a1, b1, N2 + b1, N2 + a1])
++    f_.append([0, 1, N2 + 1, N2])
++    f_.append([2 * n + 1, 2 * n, N2 + 2 * n, N2 + 2 * n + 1])
++    part.add(v_, f_)
++
++
+ def grobo_trunk(headY, hipsY, shY, neckY, kneeY, belly, slim=1.0):
+     """TRUNK-1: a Grobo's trunk, the centre line and radius [(y, z, r)]: its root buried in the muzzle, then the three
+     trunk bones' pivots, then the tip's two points. The same numbers as characters.js groboTrunk() (which places the
+@@ -853,9 +902,29 @@ def build(name):
+                    [[i, i + 1, 5 + i, 4 + i] for i in range(3)] + [[4 + i, 5 + i, i + 1, i][::-1] for i in range(3)])
+         if L.get('goggles'):
+             gg = b.P('goggles', '#c89a48', head_w, 40)
+-            for sxx in (1, -1):
+-                c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
+-                tube(gg, c, (c[0], c[1] + 0.006, c[2] + 0.03), 0.022 * sx_, 0.022 * sx_, 8)
++            if cp.get('gogglesGlass'):
++                # CAST-POLISH-CITADEL-2 (GOGGLES-NELL): the goggles were two gold drums with flat gold faces, coins on her
++                # brow. Now each is a brass cup with a rolled rim round a dark glass lens set into it (a darker shade of the
++                # brass), joined over the nose by a short bridge; the strap as before.
++                gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
++                for sxx in (1, -1):
++                    c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
++                    e_ = (c[0], c[1] + 0.006, c[2] + 0.03)
++                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, 12, cap=False)
++                    d_ = Vector(e_) - Vector(c)
++                    d_.normalize()
++                    u_ = d_.cross(Vector((1, 0, 0))).normalized()
++                    w_ = d_.cross(u_).normalized()
++                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)]
++                    cord(gg, rim_, 0.0035 * sx_, 6, True)
++                    lens_c = Vector(e_) - d_ * 0.004
++                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)] + [tuple(lens_c + d_ * 0.003)]
++                    gls_.add(lv, [[k, (k + 1) % 12, 12] for k in range(12)], 180)
++                cord(gg, [(-0.012 * sx_, my(0.937), mz(0.118) + 0.012), (0, my(0.94), mz(0.122) + 0.014), (0.012 * sx_, my(0.937), mz(0.118) + 0.012)], 0.003 * sx_, 5, False)
++            else:
++                for sxx in (1, -1):
++                    c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
++                    tube(gg, c, (c[0], c[1] + 0.006, c[2] + 0.03), 0.022 * sx_, 0.022 * sx_, 8)
+             strip(b.P('strap', '#3a2a20', head_w, 40), [(-0.075 * sx_, my(0.93), mz(0.06)), (0, my(0.94), mz(0.12)), (0.075 * sx_, my(0.93), mz(0.06))], 0.006)
+         if L.get('hat') and not L.get('hardhat'):
+             # CAST-POLISH: a farmer's wide straw hat: a brim all round, a low rounded crown, a darker band (the tuft stays under it)
+@@ -917,7 +986,21 @@ def build(name):
+                 box(tb, x0 * hw, (x0 + 0.032) * hw, my_m - hw * 0.14, my_m - hw * 0.045, tz_ - hw * 0.025, tz_ + hw * 0.003)
+         for sxx in (1, -1):
+             sphere(hp, (sxx * hw * 0.36, c[1] - hh * 0.3, c[2] + hd_ * 0.5), hw * 0.21 * cp.get('cheekS', 1.0), 7, 5, (1.0, 0.9, 1.0))
+-        if L.get('glasses'):
++        if L.get('glasses') and cp.get('glassesRim'):
++            # CAST-POLISH-CITADEL-2 (GLASSES-MIRA): the spectacles were flat wire rings 1.2 cm off the face and wider than
++            # the face at their outer sides, so from the side and three-quarter they stood in the air round the eyes like a
++            # scribble. Now each is a round rim (a thin cord) laid on the face round the eye, with a bridge over the snout
++            # and an arm back toward the ear; the same dark colour.
++            gl_ = b.P('glasses', '#2a2a30', head_w, 60)
++            gy_, gx_, gr_ = c[1] + hh * 0.12, hw * 0.40, esz_ * 1.38
++            for sxx in (1, -1):
++                loop_ = [(sxx * gx_ + gr_ * math.cos(2 * math.pi * k / 14), gy_ + gr_ * 0.9 * math.sin(2 * math.pi * k / 14)) for k in range(14)]
++                cord(gl_, [(x, y, front(x, y) + 0.004) for x, y in loop_], 0.0028, 5, True)
++                ox_ = sxx * (gx_ + gr_)
++                cord(gl_, [(ox_, gy_, front(ox_, gy_) + 0.002), (sxx * hw * 0.82, gy_ + 0.004, c[2] + hd_ * 0.15), (sxx * hw * 0.88, gy_ + 0.006, c[2] - hd_ * 0.25)], 0.0022, 5, False)
++            bx_ = gx_ - gr_
++            cord(gl_, [(-bx_, gy_ + 0.003, front(-bx_, gy_) + 0.004), (0, gy_ + 0.006, front(0, gy_ + 0.006) + 0.006), (bx_, gy_ + 0.003, front(bx_, gy_) + 0.004)], 0.0026, 5, False)
++        elif L.get('glasses'):
+             glasses_on(b.P('glasses', '#2a2a30', head_w, 30), front, c[1] + hh * 0.12, hw * 0.42, esz_ * 1.7, w=0.007)
+         # LBA2's wizards (bodies 111, 123): a long beard hanging from under the snout, a tall pointed hat between the ears
+         if L.get('beard'):
+@@ -942,7 +1025,10 @@ def build(name):
+             cap_.f = [f for f in cap_.f if sum(cap_.v[i][1] for i in f) / len(f) > thr]
+             r_band = hw * 0.84 * math.sqrt(max(0.05, 1 - ((thr - (c[1] + 0.005)) / (hw * 0.84 * 0.92)) ** 2))
+             tube(b.P('hatBand', L.get('tunicTrim') or '#d8b04a', head_w, 30), (0, thr - 0.012, c[2] - 0.004), (0, thr + 0.008, c[2] - 0.004), r_band * 1.02, r_band * 1.0, 14, cap=False)
+-            box(b.P('hatPeak', shade(L['hat'], 0.7), head_w, 30), -hw * 0.5, hw * 0.5, thr - 0.012, thr + 0.006, c[2] + r_band * 0.95, c[2] + r_band * 1.35, top_front=thr - 0.016)
++            if cp.get('peakCurved'):   # (CAST-POLISH-CITADEL-2, PEAK-ODILE: a curved visor from under the band, not a flat plank)
++                visor(b.P('hatPeak', shade(L['hat'], 0.7), head_w, 35), 0, thr - 0.002, c[2] - 0.004, r_band * 0.96, r_band * 1.42, 0.95, 0.018, 0.007, 8)
++            else:
++                box(b.P('hatPeak', shade(L['hat'], 0.7), head_w, 30), -hw * 0.5, hw * 0.5, thr - 0.012, thr + 0.006, c[2] + r_band * 0.95, c[2] + r_band * 1.35, top_front=thr - 0.016)
+         if L.get('wizHat'):
+             # (a pointed hat with a brim and a band; the point folds over a little, as LBA2's wizards')
+             wz = b.P('wizHat', L['wizHat'], head_w, 40)
+@@ -1018,7 +1104,10 @@ def build(name):
+             if hs_ == 'flatcap':
+                 # a flat cap: a low squashed crown pulled over the brow, a short peak at the front
+                 sphere(ht, (0, c[1] + R * 0.78, c[2] + R * 0.02), R * 0.86, 12, 6, (1.0, 0.36, 1.0))
+-                box(b.P('hatPeak', shade(L['hat'], 0.8), head_w, 30), -R * 0.5, R * 0.5, c[1] + R * 0.8, c[1] + R * 0.86, c[2] + R * 0.78, c[2] + R * 1.18, top_front=c[1] + R * 0.78)
++                if cp.get('peakCurved'):   # (CAST-POLISH-CITADEL-2, PEAK-BRAM: a short curved peak tucked under the crown's front)
++                    visor(b.P('hatPeak', shade(L['hat'], 0.8), head_w, 35), 0, c[1] + R * 0.84, c[2] + R * 0.02, R * 0.74, R * 1.2, 0.95, R * 0.15, R * 0.05, 8)
++                else:
++                    box(b.P('hatPeak', shade(L['hat'], 0.8), head_w, 30), -R * 0.5, R * 0.5, c[1] + R * 0.8, c[1] + R * 0.86, c[2] + R * 0.78, c[2] + R * 1.18, top_front=c[1] + R * 0.78)
+             elif hs_ == 'straw':
+                 # a wide straw hat: a brim round the head, a rounded crown, a band
+                 disc(ht, (0, c[1] + R * 0.8, c[2]), R * 1.35, 14, 'y', 0.012)

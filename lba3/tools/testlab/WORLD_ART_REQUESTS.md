@@ -2907,3 +2907,56 @@ Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{gilber
   - Gilbert's side fringe is still a row of balls (the G1-ART design); lharMan and dallan keep the bead moustache.
   - The Rabbibunnies' necks are plain long tubes (a race-wide proportion, not checked against LBA2 here).
   - The bib-sinks-in-the-throw problem above.
+
+## CAST-POLISH-CITADEL-2 · Mira's glasses, Bram's and Odile's cap peaks, Nell's goggles · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-2.diff` (tools/blender/cast_poly.py only). It goes **on top of CAST-POLISH-CITADEL.diff**,
+which a7d14466 carries as a request and has not applied; `git apply --check` is clean on that base. New model files
+for `assets/poly/`: `requests/CAST-POLISH-CITADEL-2/{mira,bram,odile,nell}.json`. They were built by `cast_poly.py
+<skel> <out> mira bram odile nell` in Blender 5.2.3 through the bridge.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{mira,bram,odile,nell}/`.
+Each change is behind a CAST flag of that person only; with the flag off, the old shape is built.
+- **Mira, GLASSES-MIRA** (`glassesRim`):
+  - Before: her spectacles were flat wire rings 1.2 cm off the face and wider than it. From the side and ¾ they stood
+    in the air round the eyes like a scribble.
+  - Now: round rims (a thin cord) laid on the face round each eye, a bridge over the snout and an arm back toward each
+    ear, in the same dark colour. In the close-ups they read as glasses.
+  - 2330 → 2650 triangles (+13.7 %).
+- **Bram, PEAK-BRAM** (`peakCurved`):
+  - Before: the flat cap's peak was a flat box, a plank sticking out from the side.
+  - Now: a curved visor tucked under the crown's front, sloping down, shorter toward its sides, in the hat's shade.
+  - 3630 → 3670 triangles.
+- **Odile, PEAK-ODILE** (`peakCurved`):
+  - Before: the customs cap's peak was the same plank.
+  - Now: a curved visor from under the gold band, in the hat's shade.
+  - 2436 → 2476 triangles.
+- **Nell, GOGGLES-NELL** (`gogglesGlass`):
+  - Before: the goggles were two gold drums with flat gold faces, coins on her brow.
+  - Now: brass cups with a rolled rim round a dark glass lens, joined by a bridge. The lens colour is #382b14 (0.28 ×
+    the brass, not a LOOKS role; Nell's model is hers alone).
+  - Her file also takes CAST-POLISH-CITADEL's apron edge, which her model had not been rebuilt for.
+  - 2768 → 3126 triangles (+12.9 %, the apron's +32 included).
+- **Contracts:**
+  - Bone names, eyes and mouths are identical.
+  - Mira's `bones` list comes out in a different order (kneeL before hipL); the game maps bones by name.
+  - 4 weights per vertex summing to 1. Feet and top unchanged.
+  - The hero frame is 4 draw calls before and after, with each as the hero.
+- **Looked at:**
+  - The review scene: face front, ¾ and side.
+  - The game (SwiftShader, `gamecap.mjs`, each as the hero at the same square spot): Follow/Medium, the dialogue with
+    Dot, close-ups front, ¾ and back, and 13 poses × 2 views.
+  - At Follow/Medium Nell's goggles and Mira's glasses now read as such. The two peaks show in close-up and in the
+    dialogue only.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **validate:** 0 fails and 2 warnings, both already there before this batch:
+  - Bram's feet 1.2 cm below the floor;
+  - loose vertices in bram_coat, bram_trousers and odile_hat (the cap dome's culled faces).
+- **Cost:** +40 to +358 triangles a model (Mira +13.7 %, Nell +12.9 %; within the +25 % rule). No draw call, material
+  or texture added. Vega 8 frame time not run (the same reason as CAST-POLISH-CITADEL).
+- **Left:**
+  - Nell's leather apron: the tunic's flare shows through its lower part in a stride, and its pocket and buckle are
+    pale patches. Both already so before.
+  - Bram's peak shows only from the side and in the dialogue.
+  - The Rabbibunny neck tube (race-wide, not touched).
+- Order: apply `CAST-POLISH-CITADEL.diff` first (a7d14466 carries it as a request); this diff applies cleanly on top.

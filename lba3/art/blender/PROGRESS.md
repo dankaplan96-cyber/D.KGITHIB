@@ -71,7 +71,7 @@ Jobs: `characters/jobs/*.json`.
   look) instead of its `bones`, so it cannot pass; bones checked separately. The `textured` preview of a character is
   white (its materials only set the viewport colour); the neutral views are the useful ones.
 
-### Citadel batch 1: Gilbert (MOUSTACHE-1), Pippa and the aprons (APRON-EDGE): CAST-POLISH-CITADEL (8.11.2026)
+### Citadel batch 1: Gilbert (MOUSTACHE-1), Pippa and the aprons (APRON-EDGE): CAST-POLISH-CITADEL (8.11.2026; pushed a7d14466)
 CAST-POLISH-HEROES was pushed (c2684be7, with the bridge fixes; `run_job.py` copied from the main repo).
 Census (the game, chapters 1–2 on Citadel, `census.mjs`): the story people present in both chapters are Zoé, Arthur,
 Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim), and residents.
@@ -95,9 +95,23 @@ Surveyed in the review scene (arthur, pippa, mira, gilbert, bram, odile, nell); 
 - Seen, not changed: in the throw and the sword the bib sinks behind the tunic (already so before); the Rabbibunnies'
   necks are plain long tubes; Gilbert's side fringe is still balls.
 
+### Citadel batch 2: Mira, Bram, Odile, Nell: CAST-POLISH-CITADEL-2 (8.11.2026)
+Edits in `tools/blender/cast_poly.py` (helpers `cord`, `visor`; one CAST flag each, the old shape when it is off):
+- Mira, GLASSES-MIRA (`glassesRim`): flat wire rings off the face → round rims laid on the face, bridge, arms. 2330 → 2650 (+13.7 %).
+- Bram, PEAK-BRAM (`peakCurved`): the flat cap's plank peak → a curved, sloping visor under the crown. 3630 → 3670.
+- Odile, PEAK-ODILE (`peakCurved`): the uniform cap's plank peak → a curved visor from under the band. 2436 → 2476.
+- Nell, GOGGLES-NELL (`gogglesGlass`): gold drums with flat faces → brass cups, rolled rims, dark glass (#382b14 =
+  0.28 × the brass), a bridge. 2768 → 3126 (+12.9 %, incl. +32 of batch 1's apron edge, which her file had not had).
+Candidates: `characters/citadel2/export/`; request `tools/testlab/requests/CAST-POLISH-CITADEL-2.diff` (on top of
+CAST-POLISH-CITADEL.diff; checked with `git apply --check`) + `CAST-POLISH-CITADEL-2/*.json`. Looked at in the review
+scene (faces front/¾/side), in the game (Follow/Medium, dialogue, close-ups, 13 poses × 2), Blender views of Mira and Nell.
+Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS. `assets/poly` put back.
+States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, frame time not
+run · integrated: no (request). Pictures `docs/future/characters/{mira,bram,odile,nell}/`.
+
 ## Current
-- (next) Citadel batch 2 (queue item 3): Mira, Bram, Odile, Nell, Arthur were surveyed (`survey.png` in the scratchpad);
-  candidates: the Rabbibunny neck (race-wide: check LBA2 first), Mira's glasses, Bram.
+- (next) queue item 3 is done for the story people of chapters 1–2 except Arthur, Tim, Lulu, Doran, Joe, the guard,
+  the Spheros, Dot (pim). Then queue item 5 (CLOUD_ORDERS 28, by region).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
@@ -110,7 +124,7 @@ Surveyed in the review scene (arthur, pippa, mira, gilbert, bram, odile, nell); 
 8. Common props
 
 ## Next action
-Citadel batch 2: capture Mira, Bram, Odile, Nell in the review scene and the game (`characters/jobs/gamecap.mjs`
-LOOKS=…), pick one weakness each that is not race-wide, and take it through the same loop (`cast_poly.py`, a CAST entry
-per person, the LOOKS role hexes exact). Run the tests with `SHELL_EXE` (a renamed copy of the headless shell: browsers
-named chrome-headless-shell were being closed from outside). Never kill processes you did not start.
+Wait for the cloud on CAST-POLISH-CITADEL-2 (it goes on top of CAST-POLISH-CITADEL.diff). Next batch: Citadel's other
+chapter 1–2 story people (Arthur, Tim, Lulu, Doran, Joe, the guard, Dot): survey them in the review scene
+(`lookcap.mjs`), pick one weakness each that is not race-wide, then the same loop. Diffs go on top of the requests not yet
+applied (build the base by applying them to HEAD in a temp checkout). Run browsers with `SHELL_EXE`.
