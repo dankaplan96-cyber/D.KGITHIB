@@ -205,8 +205,37 @@ ISLES pushed (f4f66ab7) and committed locally as HEAD 59dab6e3 ("local base: + C
   integrated: no (request).
 - Left: farmerC_b's lighter belly hardly shows; desertkid's 96 base-hair vertices (pre-existing); worker x4 one body.
 
+
+### Items batch 1: the bonuses (heart, clover leaf, magic flask, Kash): ITEMS-1 (8.11.2026, worktree `C:\Users\dan\lba3-items`)
+The user (8.11): the clover, the heart, the magic and the coins "don't look really good". Detached at e3876e05.
+- **Where:** `src/game/actors.js` PICK (world bonuses: givers, containers, crates, beaten enemies, the prologue's coins,
+  the cliff clover) and the interface through `pickupModel` (itemlook.js: inventory slots kashes/clovers, the shop's
+  potion/flask/clover rows and price coins). Bonuses never show in the found box (found.js). Behaviour untouched (spin,
+  bob, radii, the coin's pull, blinking, flight, every type name).
+- **References** (the user's LBA2 SPRIRAW.HQR, decoded to a scratch folder, looked at, deleted): the bonuses are 2D
+  sprites of 12-14 px: a plump red heart with a white spot; a round light-blue flask with a neck and a flared lip; a
+  four-leaf clover in an X; a gold Kash with a rim and a raised mark; the clover box. Nothing kept.
+- **New:** `src/game/bonuslook.js` (shapes made once, shared): heart = one cushion from the heart curve (30 points, 3
+  rings); clover = four heart-shaped leaflets (notch out), cupped, a knot and a curved stem; flask = one 14-sided lathe
+  (belly, neck, lip, stopper); coin = rim/field lathe in bands (crisp edges) + a K raised 8 mm on both faces; crystal =
+  its three spikes merged. Materials one per kind, cached, the same program as before (86 = 86 programs), emissive
+  0.55-0.7 (was 1.1-1.5), the flask opaque (was transparent). The shard's parts cached too (look unchanged).
+  HUD: the clover counter's SVG and the behaviour menu's clover boxes drawn as four leaves (index.html, style.css).
+- **Blender** (5.2.3, `props/items/jobs/items-1.json`, 32 jobs OK): baseline and candidate polyprops imported, inspected,
+  validated (12/12 pass each, no zero-area faces), previewed (four views, neutral and coloured; `previews/`), and the
+  candidate exported back (round trip, same triangle counts).
+- **In the game** (SwiftShader, `scratchpad/items/itemcap.mjs`; before = HEAD's actors.js/itemlook.js/index.html/style.css
+  served in place): per bonus 1 mesh (was 2-3), 2 draw calls with its shadow (was 4-6); triangles heart 300 = 300,
+  clover 420 -> 700, flask 248 -> 420, coin 224 -> 318, crystal 24 = 24. 20 coins: 80 -> 40 draw calls, 8960 -> 12720
+  triangles, GPU geometries +40 never freed -> 0. Pictures: `docs/future/items/` (chapter 1, may go to the user).
+- **Tests:** chapter1 23/23, givers 16/16, items-ceremony 20/20, prologue 26/26, shops 31/31 PASS; containers 32 checks passed, its Zeelich round trip unfinished (machine load); details in WORLD_ART_REQUESTS.md ITEMS-1.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles/memory measured
+  (SwiftShader), Vega 8 frame time not run · integrated: no (request `tools/testlab/requests/ITEMS-1.diff`).
+- Left: the heart potion and the other item looks unchanged (they read); the K is lost below ~40 px; no LOD.
+
 ## Current
 - CAST-POLISH-DESERT ready for the cloud (diff against 59dab6e3); desert-life to be run in the cloud.
+- ITEMS-1 ready for the cloud (code diff rebased on c5d7e2b6; the cloud runs containers.mjs).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
@@ -217,10 +246,11 @@ ISLES pushed (f4f66ab7) and committed locally as HEAD 59dab6e3 ("local base: + C
 5. The named cast
 6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC~~; lharMan, lharWoman,
    farmerA, farmerB, clerk, archivist (glasses done), worker (and councilB for Kira; zmole2, zbee1, zbee2)
-7. Equipment: the ball, the sword
+7. Equipment: ~~the bonuses~~ (ITEMS-1); the ball, the sword
 8. Common props
 
 ## Next action
+(Items track: ITEMS-1 sent 8.11; the next items are the magic ball's and the sword's presentation, queue 7. After the Hamalayi the cast track does HANDS-36, CLOUD_ORDERS 36.)
 Region 4, the Hamalayi (storylife.js lh_* people: lharMan, lharWoman, lharElder, farmerA, desertkid, pim, farmerB,
 farmerC_b; the hamalayi*.js places): census by chapter (KEY flags as cast-rounds), survey in lookdev; order 24's lharMan x6,
 lharWoman x6, farmerA x6 come first (`_b` variants, people by id), plus any that reads wrong; same loop in
