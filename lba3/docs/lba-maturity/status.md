@@ -40,9 +40,9 @@ world-polish pass after it:
 | Region (outdoor room) | Citadel bar | Status |
 |---|---|---|
 | Zeelich (zeelich.js, zeelife.js) + Otringal | wave 1 done (street) | VP-10 camera; the street's doors into four Esmer homes + the bakehouse; Baldino's workshop open ch 3–8; 3 new residents; zeelich-doors.mjs. Left: 58 island doors + Kesh → wave 3 |
-| Zeelich's isles (zislands.js) | wave 1 (VP-10 camera), then its own pass | pending |
-| Desert Island (desert.js) | VP-10 in wave 1; its own pass next | pending (REVIEW-DESERT done 6.11) |
-| The Hamalayi (hamalayi.js) | VP-10 in wave 1; its own pass next | pending (REV-HAM done 6.11) |
+| Zeelich's isles (zislands.js) | VP-10; 63 rooms behind the doors + 6 keepers (wave 3); Knartas reachable (polish 2) | own pass after the Hamalayi |
+| Desert Island (desert.js) | VP-10 in wave 1; Kesh's 5 houses + the post's 3 cabins (wave 3) | **own pass started 8.11** (world-campaign-finisher) |
+| The Hamalayi (hamalayi.js) | VP-10 in wave 1; its 7 doors into rooms (original-mechanics) | **own pass started 8.11** (world-campaign-finisher) |
 | The underground (underground.js) | room camera; own pass | pending (REVIEW-UNDER done 6.11) |
 | Citadel | the reference; camera pass 3 in wave 1 | in progress |
 
