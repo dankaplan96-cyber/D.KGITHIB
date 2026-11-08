@@ -561,7 +561,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   // a lid's meshes: transparent from the start (its fade changes only the opacity, never the program), writing depth
   // as the room does; where one is drawn over the hero it clears his mark in the stencil, so his silhouette shows
   // through it as through any wall (characters.js addSilhouette)
-  const lidMat = (m) => { const c = m.clone(); c.transparent = true; c.depthWrite = true; c.stencilWrite = true; c.stencilRef = 0; c.stencilFunc = THREE.AlwaysStencilFunc; c.stencilZPass = THREE.ReplaceStencilOp; return c; };
+  const lidMat = (m) => { const c = m.clone(); c.userData.lid = true; c.transparent = true; c.depthWrite = true; c.stencilWrite = true; c.stencilRef = 0; c.stencilFunc = THREE.AlwaysStencilFunc; c.stencilZPass = THREE.ReplaceStencilOp; return c; };
   const lidMeshes = [];
   for (const [sig, b] of bufs) {
     const lm = sig ? { side: lidMat(mats.side), top: lidMat(mats.top), pipe: lidMat(mats.pipe), glow: lidMat(mats.glow), girder: lidMat(mats.girder), grate: lidMat(mats.grate), pool: mats.pool, grille: lidMat(mats.grille) } : mats;
@@ -717,10 +717,19 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
       }
       for (const { mesh, lids: ids } of lidMeshes) {
         let f = 1; for (const i of ids) f = Math.min(f, lids[i].f);
-        mesh.visible = f > 0.01; mesh.material.opacity = f;
+        mesh.visible = f > 0.01; if (mesh.material.userData.lid) mesh.material.opacity = f;   // (never a material shared with the room: its pools)
       }
     };
-    R.updaters.push((dt) => { const G = globalThis.game; if (G?.hero && G.room === R) R.updateLids(G.hero, dt); });
+    // (CUT-RESTORE, original-mechanics wave 3: a new visit — a door, a load, a respawn, a cinematic's cut — starts from the
+    //  room's own state: every lid back in at once and the ones over the spot he lands on cut at once; no lid left cut
+    //  from where he was last time, fading back in through the first frames. The sight lines wait for the camera's first
+    //  frame here: until then the camera still stands where the last scene had it)
+    R.resetCut = () => { for (const l of lids) { l.hold = 0; l.active = false; l.f = 1; } R._lidSnap = true; };
+    R.updaters.push((dt) => {
+      const G = globalThis.game; if (!G?.hero || G.room !== R) return;
+      if (R._lidSnap) { R._lidSnap = false; R.updateLids(G.hero, 1, null); return; }
+      R.updateLids(G.hero, dt);
+    });
   }
   // light: a few lamps spread over the room
   for (let i = 0; i < 9; i++) { const p = R.cell(SX * (1 + (i % 3) * 2) / 6, 0, SZ * (1 + Math.floor(i / 3) * 2) / 6); B.light(opts.lamp || '#ffe8c8', opts.lampI ?? 14, Math.max(SX, SZ) * CELL * 0.45, p.x - cx, 7.5, p.z - cz); }

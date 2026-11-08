@@ -1134,6 +1134,7 @@ class Game {
       this.room = R;
       this.regions.activate(id);
       R.group.visible = true;
+      R.resetCut?.();   // (CUT-RESTORE: a room's cut-away, a porch's fade, start from where he lands: lba1room.js, zeelich.js)
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
       if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true, R.indoor); }   // (ROOM-LIGHT: a room lit by its own lamps dims the daylight fill, R.indoor)

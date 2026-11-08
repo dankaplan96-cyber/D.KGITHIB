@@ -9,17 +9,24 @@
 //   - a room's exit refused by the story says why (a line), never silence.
 // ISO (logged): the chapter by its flags; he is put before each door (the walk in is by input); the way out is the
 // game's own (Game.checkDoors's branch, run directly) and then 2.5 s with no input.
-// CHAPTERS=1,2 limits the chapters (indices in story ORDER); ONLY=room,room limits the doors.
+//   - a save made just out of a door (the game saves as he lands) comes back there on Continue and stays there: before
+//     DOOR-CLEAR, Zeelich's terminal put him inside its own trigger and Continue walked him back in.
+// CHAPTERS=1,2 limits the chapters (indices in story ORDER); ONLY=room,room limits the doors. BEFORE=1 turns DOOR-CLEAR
+// off in the page (Game.clearOfDoors → the landing as given): the A/B.
 import { launch, open, menu, checker } from './lib/boot.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 const { check, done } = checker();
-const { browser, page } = await launch();
+let { browser, context, page } = await launch();
 const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
 const CH = (process.env.CHAPTERS || '1,2,3,4,5,6,7,8,9,10').split(',').map(Number);
 const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
 const DOOR_CLEAR = 0.4, IN_CLEAR = 0.3;   // (the game keeps 0.45 m out of a door, 0.35 m into a room: main.js DOOR-CLEAR)
 
-await open(page, '?nocine'); await menu(page, 'new');
+const before = () => (process.env.BEFORE ? ev(() => { game.clearOfDoors = (to) => to; }) : null);
+await open(page, '?nocine'); await before(); await menu(page, 'new');
 await ev(() => { P.settle(); const G = game; G.settings.controls = 'classic'; G.settings.autoControls = 'off'; G.applySettings(); });
 const seen = new Set(), rows = [];
 for (const ci of CH) {
@@ -159,5 +166,25 @@ check('every walk-in door takes him in from straight on and 0.3 m to either side
 console.log('NOTE one-way doors: ' + JSON.stringify(bad((r) => r.oneway)));
 console.log('NOTE doors reached only round something before them: ' + JSON.stringify(bad((r) => r.walk && Object.values(r.walk).includes('detour'))));
 console.log(`SWEPT ${rows.length} doors`);
+
+// ---- out of Zeelich's terminal by input, the game's own save on landing, Continue: he stays out
+if (!ONLY || ONLY.includes('zterminal')) {
+  const o = await ev(() => {
+    const G = game, S = G.story, f = G.flags, ci = S.chapters.findIndex((c) => c.key === 'steam');
+    Object.assign(f, { chapter: ci, chapterKey: 'steam' }); S.refreshCast?.();
+    G.regions.ensure('zeelich', 'sweep'); G.enterRoom('zeelich', G.rooms.zeelich.spawn, true, true); P.settle();
+    const r = P.enter('zterminal'); if (G.room?.id !== 'zterminal') return { err: 'not in: ' + r.r };
+    const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z);
+    return { room: G.room?.id, at: { x: G.hero.pos.x, z: G.hero.pos.z } };
+  });
+  const file = path.join(os.tmpdir(), 'door-sweep-' + process.pid + '.json');
+  await context.storageState({ path: file });   // (the game's own save as he landed: no Quit, which saves again where he stands by then)
+  await browser.close();
+  ({ browser, context, page } = await launch({ storageState: file }));
+  await open(page, '?nocine'); await before(); await menu(page, 'continue');
+  const back = await ev(() => { const G = game, h = G.hero.pos, d = G.story.doors().find((q) => q.room === 'zterminal'); const at0 = { room: G.room?.id, clear: d ? +(Math.hypot(h.x - d.x, h.z - d.z) - d.r).toFixed(2) : null }; G.step(3); return { ...at0, after: G.room?.id }; });
+  check('out of Zeelich\'s terminal, saved on landing → Continue: on the street clear of its door, and still there 3 s on', o.room === 'zeelich' && back.room === 'zeelich' && back.clear > DOOR_CLEAR && back.after === 'zeelich', { o, back });
+  fs.rmSync(file, { force: true });
+}
 done();
 await browser.close();
