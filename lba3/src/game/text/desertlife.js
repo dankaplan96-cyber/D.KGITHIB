@@ -89,7 +89,7 @@ Object.assign(STR.en, {
   ih_dela_evac: "Citadel's emptying, the ferryman says. Who'll buy their dates now? Nobody. We'll eat them.",
   ih_dela_net: "Brosk sends dates out to the bore for Ilka. He says it's business. He doesn't charge.",
   ih_dela_home: "Brosk wants a stall on Citadel now. I want to stay here and count.",
-  ih_jorr_dry: 'Mother keeps the village. I keep the tally on that wall. Today\'s tally: not enough.',
+  ih_jorr_dry: 'Mother keeps the village. I keep the water tally. Today\'s tally: not enough.',
   ih_jorr_wet: 'Every family has water against its mark again. The first full row this year.',
   ih_jorr_steam: "The project's list has no Kesh on it. So I'm making our own list. Everyone's on it.",
   ih_jorr_after: "Mother won't say it, so I will. Thank you. The tally's full.",

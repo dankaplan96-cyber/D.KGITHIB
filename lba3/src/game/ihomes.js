@@ -131,12 +131,12 @@ export const KEEPERS = {
   ih_tesk: { room: roomOf('platform-27--31'), char: 'zmole1', color: '#b8c8a0' },
   // DESERT-BAR: Kesh's homes and the old houses have their people (no counter: each stands at the piece of the room that
   // is their work, `stand`); their lines follow Kesh's state (story/kesh.js lifePhase); `when`: not there in some states
-  ih_dela: { room: roomOf('kesh-house0'), char: 'weaver', color: '#f0b890', stand: 'jars', phase: 'kesh' },
-  ih_jorr: { room: roomOf('kesh-house2'), char: 'farmerA', color: '#d8c090', stand: 'jars', phase: 'kesh' },
-  ih_nima: { room: roomOf('kesh-house3'), char: 'lharWoman', color: '#e8a8b8', stand: 'jars', phase: 'kesh' },
-  ih_hanna: { room: roomOf('kesh-house4'), char: 'tarra', color: '#c8b0e0', stand: 'mats', phase: 'kesh' },
+  ih_dela: { room: roomOf('kesh-house0'), char: 'weaver', color: '#f0b890', stand: 'crates', phase: 'kesh' },
+  ih_jorr: { room: roomOf('kesh-house2'), char: 'farmerA', color: '#d8c090', stand: 'table', phase: 'kesh' },
+  ih_nima: { room: roomOf('kesh-house3'), char: 'lharWoman', color: '#e8a8b8', stand: 'chest', phase: 'kesh' },
+  ih_hanna: { room: roomOf('kesh-house4'), char: 'tarra', color: '#c8b0e0', stand: 'jars', phase: 'kesh' },
   ih_brann: { room: roomOf('s28'), char: 'worker', color: '#e8c070', stand: 'table', phase: 'kesh', when: 'crew' },
-  ih_joss: { room: roomOf('hall'), char: 'desertkid_b', color: '#b8c8ff', stand: 'bookcase', phase: 'kesh' },
+  ih_joss: { room: roomOf('hall'), char: 'desertkid_b', color: '#b8c8ff', stand: 'table', phase: 'kesh' },
 };
 export const IH = {};
 
@@ -316,12 +316,14 @@ function build(rid, scene, physics) {
       && !(x < LX + 2.0 && Math.abs(z - doorZ) < 1.0);
     IH[rid].front[pc.name] = { x: o.X(x), z: o.Z(z), a: Math.atan2(pc.x - x, pc.z - z), at: { x: o.X(pc.x), z: o.Z(pc.z) }, clear };
   }
-  // a keeper with no counter stands at the piece that is their work (KEEPERS stand), facing it; else at the first
-  // piece with room before it
+  // a keeper with no counter stands at the piece that is their work (KEEPERS stand), facing it; else at another piece
+  // with room before it. Never before the room's two looked-at pieces (the first two): there the look's own spot is
   for (const K of Object.values(KEEPERS)) {
     if (K.room !== rid || !K.stand || IH[rid].npcSpots.keeper) continue;
-    const F = IH[rid].front, f = F[K.stand]?.clear ? F[K.stand] : Object.values(F).find((q) => q.clear);
-    if (f) IH[rid].npcSpots.keeper = { x: f.x, z: f.z, a: f.a };
+    const F = IH[rid].front, looked = new Set(placed.slice(0, 2).map((q) => q.name));
+    const ok = (n) => F[n]?.clear && !looked.has(n);
+    const name = ok(K.stand) ? K.stand : placed.map((q) => q.name).find(ok);
+    if (name) IH[rid].npcSpots.keeper = { x: F[name].x, z: F[name].z, a: F[name].a };
   }
   // the two looks: the room's own at its first piece, its kind's at the second (from where he stands before them)
   // (the prompt is in reach of the piece itself; the place to stand before it keeps out of the door's way)
