@@ -75,7 +75,7 @@ world-polish pass after it:
 | 4 | animation-combat (+ laptop world-art in parallel) | done (merged 8.11): point-blank throws (the ball leaves before anything solid, close throws cross in their fall time; the valve corner 44/44, ball-close.mjs), chapter 12's guardian a dive phase (a telegraphed ring, glances while overloaded; the bot's time unchanged ~68 s: a person must time it), Oda's 5-step stop → 2 (the turn after the stop). Hands → laptop HANDS-36 |
 | 5 | dialogue-editor + character-voices | pending |
 | 6 | action-sound (+ laptop music-director) | pending |
-| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | part done (merged 8.11): camfollow 31/31 (the 5th failure was the test's run off Citadel's south cliff, not a camera turn; CAM-OVERSIGHT fixed a real fault by walls), camcitadel 61/61 (CAM-ALLEY), the Knartas ledge door's steps, the hostel landing's parapet. Left: camclear 0.149 m, Oda's stop, the SLIDE-RESCUE keyboard review; laptop performance-lab in parallel |
+| 7 | world-polish remainder (SLIDE-RESCUE keyboard review) | part done (merged 8.11): camfollow 31/31 (the 5th failure was the test's run off Citadel's south cliff, not a camera turn; CAM-OVERSIGHT fixed a real fault by walls), camcitadel 61/61 (CAM-ALLEY), the Knartas ledge door's steps, the hostel landing's parapet. Left: camclear 0.149 m, Oda's stop, the SLIDE-RESCUE keyboard review; laptop performance-lab in parallel Pass 2 (merged 8.11): crosssystem's focus check was its setup (against a fence), Knartas's gatehouse arch opened (the village reachable by walking: flood fill 1774 → 11813 cells), Oma off the council door, platform-35-15's fence, camclear's orchard pipe volumes (0 of 532) |
 | 8 | release-auditor | after all others |
 
 ### Wave 2, campaign-director: Citadel in chapters 3–10 after a real save (Automated runtime only)
@@ -104,4 +104,4 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
 - Known failing checks, failing the same on the base: (travel.mjs "Doran goes ahead to the spaceport" fixed in wave 2:
   the check ran while Doran was still walking up the quay, STAGING-1; a hero who ran ahead now finds him by the ship);
   combat.mjs "dodge distance consistent at 30 and 60 fps"; prologue.mjs "the well's mites beaten" (3 of 4, random,
-  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); (camfollow and camcitadel fixed 8.11); crosssystem "focus lost while charging … he walks" (walks 0.01 m after a blur; fails the same on v63: for polish); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); (camfollow and camcitadel fixed 8.11); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
