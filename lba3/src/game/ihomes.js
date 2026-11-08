@@ -96,10 +96,19 @@ export const IHOMES = {
   'post-cabin0': { k: 'pobox' },               // the project post's office
   'post-cabin1': { k: 'postbunk' },
   'post-cabin2': { k: 'poststore' },
+  // the Hamalayi (DOOR-SWEEP, original-mechanics wave 3: their doors were drawn and did nothing): the landing's hut,
+  // Lhar's five stone houses, the observatory keeper's house (hamalayi.js R.shutDoors)
+  'ham-landing0': { k: 'lodging' },            // the landing's hut: glider harnesses, the keeper's bunk
+  'ham-lhar0': { k: 'home' },                  // Bero's family (his grandfather built it)
+  'ham-lhar1': { k: 'hall' },                  // Yorna's house, where the village meets
+  'ham-lhar2': { k: 'home' },                  // Old Dorje's
+  'ham-lhar3': { k: 'weaver' },                // Sana weaves the prayer flags
+  'ham-lhar4': { k: 'canteen' },               // Lhamo's kitchen, soup for the street
+  'ham-obs0': { k: 'library' },                // the observatory keeper's house: charts and logbooks
 };
 export const EXCEPT = new Set(Object.keys(IHOMES).filter((d) => IHOMES[d].ex));
 export const roomOf = (d) => 'ih_' + d.replace(/--/g, '_m').replace(/-/g, '_');
-export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') ? 'desert' : 'isle_' + d.split('-')[0]);
+export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') ? 'desert' : d.startsWith('ham-') ? 'hamalayi' : 'isle_' + d.split('-')[0]);
 export const IHOME_IDS = Object.keys(IHOMES).filter((d) => !EXCEPT.has(d)).map(roomOf);
 const DOOR = Object.fromEntries(Object.keys(IHOMES).map((d) => [roomOf(d), d]));
 export const doorOf = (r) => DOOR[r] || null;
@@ -125,6 +134,7 @@ function styleOf(door, r) {
   if (isle === 'mosquibee') return { wall: '#f4e4b0', dado: '#c8902a', floor: ['#e8c878', '#d8b060', '#a87a2a'], band: false, frame: '#c8902a', light: '#fff0c0', cap: '#e8d090' };
   if (isle === 'platform' || isle === 'undergas') return { wall: pick(['#d0c8c0', '#c8c0b4']), dado: '#5a5a6a', floor: ['#a8a4a0', '#98948e', '#5a5856'], band: false, frame: '#5a5a6a', light: '#ffe0b0', cap: '#b8b0a8' };
   if (door.startsWith('kesh-')) return { wall: pick(['#ecd0a8', '#e8c8a0', '#f0d4b0']), dado: '#2f7a9a', floor: ['#d89a6a', '#c88a5a', '#8a5a3a'], band: false, frame: '#7a5a3a', light: '#ffe0b0', cap: '#e0bc90', music: 'home' };
+  if (door.startsWith('ham-')) return { wall: pick(['#e8dccb', '#e2d4c0', '#ecdcc4']), dado: pick(['#6a4a32', '#5a3a2a', '#7a5a3a']), floorMat: MAT.planks('dark'), band: false, frame: '#5a3a2a', light: '#ffd8a8', cap: '#d8c8b0', music: 'home' };   // (the Hamalayi: whitewashed stone, dark timber, a warm hearth light)
   if (door.startsWith('post-')) return { wall: '#dae6e6', dado: '#2a8a8a', floor: ['#9aa4aa', '#8a949a', '#5a6268'], band: false, frame: '#2a3a44', light: '#eef8ff', cap: '#c8d4d4', music: 'office' };
   return { wall: pick(ESMER_WALLS), dado: pick(ESMER_DADO), floor: pick([['#d8c8b4', '#c4ae96', '#3a6a7a'], ['#d4c8c0', '#c0b2a8', '#3a7a6a'], ['#c8d0d8', '#b4bcc8', '#4a5a7a']]), band: true, frame: '#2f7a84', light: '#ffe8cc', cap: '#e4d6cc' };
 }
@@ -317,6 +327,8 @@ const SIZE = {
   'platform-35-15': { w: 6.69, d: 6.79 }, 'platform-30-27': { w: 4.28, d: 3.42 }, 'platform-50-46': { w: 5.14, d: 5.14 }, 'orchard-4-28': { w: 5.4, d: 7.0 },
   'kesh-house0': { w: 6.4, d: 5.2 }, 'kesh-house1': { w: 5.4, d: 5.0 }, 'kesh-house2': { w: 7.2, d: 5.4 }, 'kesh-house3': { w: 5.0, d: 4.6 }, 'kesh-house4': { w: 5.6, d: 4.8 },
   'post-cabin0': { w: 7.0, d: 3.4 }, 'post-cabin1': { w: 6.0, d: 3.2 }, 'post-cabin2': { w: 5.0, d: 3.2 },
+  'ham-landing0': { w: 4.4, d: 3.6 }, 'ham-lhar0': { w: 5.5, d: 4.4 }, 'ham-lhar1': { w: 6.2, d: 4.6 }, 'ham-lhar2': { w: 5.0, d: 4.2 },
+  'ham-lhar3': { w: 4.8, d: 4.0 }, 'ham-lhar4': { w: 5.2, d: 4.2 }, 'ham-obs0': { w: 3.2, d: 2.4 },
 };
 export const buildIHome = (rid) => (scene, physics) => build(rid, scene, physics);
 
