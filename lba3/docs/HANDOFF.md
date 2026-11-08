@@ -129,3 +129,17 @@ They were (for the record):
    player saw, or BR-4); OG-5 when the laptop's W-8 lands; W-1 waits for the user's approval of its pictures.
 4. ~~Smaller: chapter 10's glider film; arrival films 2→3 and 8→9; the follow camera's first half-second outside a
    door~~ (done 5.11).
+
+- Night of 7–8.11 (night mode; artifact v59 → v63, the maturity pack's waves; status: `docs/lba-maturity/status.md`):
+  v59 Zeelich (VP-10 camera in every outdoor room via `roomocc.js`, the street's four homes + bakehouse `zhomes.js`, 3
+  residents); v60 GAIT-CADENCE (rig.js: residents' stride shortens when slow, P2) + the laptop's Desert/Zeelich art;
+  v61 P9 the depot's watch (`story/depotwatch.js`: present from chapter 1, warns and turns him out, a fight only after,
+  radioed off after the valve), Doran by the ship, chapter 9's load, way-stars; P3 Corla at the kiosk + Citadel's
+  stands (`story/stands.js`); 63 rooms behind the isles' and Kesh's doors (`ihomes.js`, island-doors.mjs); the
+  laptop's REVIEW-CITADEL-ART; v62 CAM-OVERSIGHT/CAM-ALLEY (camfollow 31/31, camcitadel 61/61; camfollow's "90° turn"
+  was the test running off the south cliff), the Knartas ledge door's stair, CHAPTER-BALANCE (chapter-balance.md; ch 7,
+  9, 12 real steps; ch 10 Yorna's broth), dialogue pass 1 (dialogue-pass-1.md), the laptop's CAST-POLISH (heroes,
+  Citadel, Esmers), MUSIC-CRACKLE (sliders glide; not reproduced in the game's output), ZSTYLE-1/2 (Zeelich's new city
+  in LBA2's look, the user's decision to the laptop); v63 ZPERF-1 (BoxCull.hideFar), CAST-POLISH-ZEELICH-2 (keeper_b,
+  oku_b). Laptop order 36 HANDS-36 (the mirrored hand in cast_poly.py). Open: P4 DOORS-LBA2, P5 CLIMB-30, P6
+  STONES-31 (laptop); animation-combat (point-blank throws, chapter 12's fight); camclear 0.149 m; Oda's stop.
