@@ -97,11 +97,11 @@ export class ZeelichLife extends ChapterBase {
       //  box is reached from the tags now (down past the planter's door side, 1 m clear of the door's way in), and she
       //  leaves it north, to look the council house over from the street, before the notice board)
       def('zr_oma', 'archivist', '#c8b0e0', 0.85, [
-        S('oma_door', -22.9, -6.4, -25.5, -8.4, [9, 13]),
+        S('oma_door', -22.4, -5.7, -25.5, -8.4, [9, 13]),
         S('oma_fount', -21.6, 2.6, -24, 0, [6, 9]),
         S('oma_tag', -28.9, 6.8, -29.9, 8.0, [6, 9]),
         S('oma_box', -27.2, -6.7, -27.6, -8.4, [8, 11], 'put'),
-        S('oma_look', -26.8, -3.4, -25.5, -8.4, [5, 8]),
+        S('oma_look', -26.8, -1.8, -25.5, -8.4, [5, 8]),
       ]),
     ];
   }
