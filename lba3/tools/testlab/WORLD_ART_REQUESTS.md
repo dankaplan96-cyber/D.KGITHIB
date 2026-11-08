@@ -3057,3 +3057,31 @@ and CAST-POLISH-CITADEL-2.diff**, `git apply --check` clean on that base). New m
 - **Left:** the visor hides his eyes, as the box did (the design); the Grobos' flat ears (race-wide).
 - **Next:** Citadel's chapter 1–2 story people are done. The laptop moves to queue item 5 (CLOUD_ORDERS 28, by region).
 - Order: CAST-POLISH-CITADEL, then -2, then this one (clean `git apply --check` on that base).
+
+## ZSTYLE-2 · Zeelich's new city, step 2: Otringal's buildings, ribbed metal, paving · the laptop, 8.11.2026
+Diff: `requests/ZSTYLE-2.diff` (zeelich.js, zeelife.js, zislands.js). **Apply after ZSTYLE-1**: checked on 2a3054e8
++ ZSTYLE-1.diff, `git apply --check` clean. Merged with origin's VP-10 house code (camSkip colliders, `roomocc` boxes):
+the dome occluder (`rev`) now only for houses with a drum and cap; the octagonal hall and the vaulted house get a roof
+box up to +1.6 m instead. Layout, paths, doors, colliders, story spots and the random stream unchanged. Pictures
+(chapter 3+) stay on the laptop.
+- **Octagonal hall** (the house at (−11, −10.6), Otringal's body 9, `octa`): corners chamfered 1.1 m (four straight and
+  four diagonal walls, the door kept, its two front windows gone), cornice, deck, frieze, glass-block foot and eight
+  slim piers on the octagon, a broad faceted aqua cap (`polyCap`) with a gold eave ring and spike. Its colliders are
+  the old rectangle: a planter with a golden fan plant fills each open corner, so nothing invisible stops him.
+- **Barrel vault** (the south-west house at (−38.5, 10.6), body 51, `vault`): a faceted vault rising 1.5 m in the cap
+  mosaic, a glass-block band over the crown, stucco gables, brass ribs, gold spikes; the minaret kept.
+- **Ribbed metal** (bodies 0 and 69): `ribTex` teal-grey ribbed walls on the depot's shed, bolted ribbed panels on
+  Baldino's back and east walls (clear of windows, foot band, frieze).
+- **Paving:** `paveTex` pale lavender-grey flags on the street, plaza, depot spur and arcade floor; `kerbTex` lighter
+  border stone along the street edges and on the plaza star; `gravelTex` on the mill tracks.
+- **The watch house** (zeelife.js): no square merlons; a glass-block band, a rounded coping, brass knobs (collider and
+  stair gap unchanged).
+- **zislands.js:** an island without its own sky takes the hub's overcast pale grey (and the lavender-grey sea if it
+  has no sea of its own): visible on Knartas and the Lift Dock; islands with their own sky or sea unchanged.
+- **Rubric (editorial, medium-low): 43 → ~46/55 (84 %, range 45–47)**: architecture 16 → 17, palette 12 → 14,
+  vegetation 8, inhabitants 7. Below 85 mainly on the inhabitants: patrolling police, posters, a coin machine (the
+  people owners).
+- Cost (Vega 8, whole frame): 0 to +3 draw calls, +0.7–2.6 % triangles; new canvases: ribbed 128², flags 256², kerb
+  128², gravel 256². Frame time not measured.
+- Tests on the merged tree (origin + ZSTYLE-1 + ZSTYLE-2, SwiftShader): zeelich-life 38/38 (the platform gate passed
+  this time), overlaps (zeelich) 1 + 1 visual pass, world-consistency 37/37.
