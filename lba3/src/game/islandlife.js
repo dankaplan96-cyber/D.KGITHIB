@@ -154,7 +154,7 @@ export const ISLE_PEOPLE = {
     { id: 'ug_foreman', char: 'zmole1', tint: '#f0f0ff', color: '#b0b0e0', speed: 0.75, rounds: {
       ord: [at('uf_works', -18.8, -24.3, 'stand', [12, 18], { d: 1.0, gest: ['nod'] }), at('uf_pump', -30.3, -34.3, 'browse', [8, 12], { d: 1.4 }), at('uf_sign', -22.3, -26.3, 'stand', [5, 8], { d: 1.2 })],
     } },
-    { id: 'ug_fitter', char: 'zmole1', tint: '#fff0e6', color: '#e0b090', speed: 0.8, start: 1, rounds: {
+    { id: 'ug_fitter', char: 'zmole1_b', tint: '#fff0e6', color: '#e0b090', speed: 0.8, start: 1, rounds: {
       ord: [at('fi_pump', -13, -17.5, 'tinker', [14, 20], { d: 1.6 }), at('fi_holder', -12.5, -33, 'browse', [8, 12], { d: 3.2 })],
     } },
     { id: 'ug_carrier', char: 'zmole2', tint: '#fff8f0', color: '#f0c0a0', speed: 0.8, rounds: {
@@ -169,10 +169,10 @@ export const ISLE_PEOPLE = {
     { id: 'pf_foreman', char: 'zmole1', tint: '#f8f0e0', color: '#d8c090', speed: 0.75, rounds: {
       ord: [op('pfo_yard', 27, -25.4, PI, 'stand', [12, 18], { gest: ['nod'] }), at('pfo_crates', 17.2, -24.3, 'browse', [6, 9], { d: 1.0 }), at('pfo_lift', 27.3, -21.9, 'stand', [6, 9], { d: 2.6, dir: -PI / 2 })],
     } },
-    { id: 'pf_miner1', char: 'zmole1', tint: '#e6e2f0', color: '#a8a0c8', speed: 0.85, rounds: {
+    { id: 'pf_miner1', char: 'zmole1_b', tint: '#e6e2f0', color: '#a8a0c8', speed: 0.85, rounds: {
       ord: [at('m1_mine', 27.5, -9.5, 'browse', [12, 18], { d: 3.6, dir: -PI / 2 + 0.4, carry: 'crate' }), at('m1_crates', 20.7, -23.3, 'put', [5, 7], { carry: null, d: 1.0 })],
     } },
-    { id: 'pf_miner2', char: 'zmole1', tint: '#f0e6dc', color: '#c8a888', speed: 0.85, start: 1, rounds: {
+    { id: 'pf_miner2', char: 'zmole1_b', tint: '#f0e6dc', color: '#c8a888', speed: 0.85, start: 1, rounds: {
       ord: [at('m2_mine', 27.5, -9.5, 'tinker', [12, 18], { d: 3.6, dir: -PI / 2 - 0.5 }), at('m2_barrel', 31.2, -14.8, 'draw', [5, 7], { d: 0.9 })],
     } },
     { id: 'pf_vill1', char: 'zmole2', tint: '#fff4ec', color: '#f0c8a8', speed: 0.8, rounds: {

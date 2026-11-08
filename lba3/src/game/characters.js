@@ -181,6 +181,12 @@ export const LOOKS = {
     // one of Zeelich's moles: a dark grey-violet robe, the long pale snout, pale arms and big feet
     race: 'mole', outfit: 'robe', tunic: '#5a5068', skin: '#e8e0d8', lip: '#f0c060', eyes: '#2a1a1a', height: 0.95,
   },
+  zmole1_b: {
+    // CAST-POLISH-ISLES (order 24, zmole1's shape variant): a Wannie at work, the miners' and fitters' dress: a miner's cap
+    // with a lamp and a peak, a leather apron with a bib over the robe (cast_poly.py CAST zmole1_b). Taken by Burr and Delve
+    // (pf_miner1, pf_miner2) and Dunt (ug_fitter); Old Grumm, the foremen, the chaplain and the hostel's third worker keep zmole1
+    race: 'mole', outfit: 'robe', tunic: '#5a5068', apron: '#7a5a3a', hat: '#d8a838', skin: '#e8e0d8', lip: '#f0c060', eyes: '#2a1a1a', height: 0.95,
+  },
   zmole2: {
     // a smaller mole in a white smock with a red apron (the original's homemaker)
     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,

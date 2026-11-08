@@ -102,6 +102,7 @@ CAST = {
     'zbee1': dict(browS=1.5, lip='#7a2a30'),
     'zbee2': dict(browS=0.8, lashes=True, lip='#a02840'),
     'zmole1': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=2),
+    'zmole1_b': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=0, minerCap=True),   # (CAST-POLISH-ISLES: the Wannies at work)
     'zmole2': dict(lidT=0.45, eyeW=0.021, earIn='#f0b0b8', lipIn='#5a1a2a', tufts=2),
     'ztri1': dict(fringe=True, browS=0.9, browTilt=0.2, mouthLift=1.0, noseS=1.0),
     'ztri2': dict(rolled=True, browS=1.5, browTilt=-0.1, mouthLift=0.5, noseS=1.1),
@@ -1884,6 +1885,17 @@ def build_mole(name):
     for sxx in (1, -1):
         sphere(b.P('ear', pale, 'head', 60), (sxx * 0.088 * H, 0.95 * H, 0.035 * H), 0.034 * H, 7, 5, (0.45, 1.0, 0.9))
         sphere(b.P('earIn', cp.get('earIn', '#e0a8a0'), 'head', 60), (sxx * 0.095 * H, 0.95 * H, 0.04 * H), 0.022 * H, 6, 4, (0.35, 0.95, 0.85))
+    if cp.get('minerCap') and L.get('hat'):
+        # CAST-POLISH-ISLES (zmole1_b): a miner's cap on the crown between the ears (they come out at its sides), a band, a
+        # peak over the snout's root and a lamp on its front; the hat's hex, the band and the lamp's housing darker multiples
+        hc = L['hat']
+        cz_ = 0.05 * H
+        sphere(b.P('hat', hc, 'head', 45), (0, 0.94 * H, cz_), 0.1 * H, 12, 6, (1.0, 0.72, 1.05))
+        loft(b.P('hatBand', shade(hc, 0.7), 'head', 45), [ell(0.918 * H, 0.1 * H, 0.104 * H, 16, cz=cz_), ell(0.918 * H, 0.106 * H, 0.11 * H, 16, cz=cz_), ell(0.942 * H, 0.106 * H, 0.11 * H, 16, cz=cz_), ell(0.942 * H, 0.1 * H, 0.104 * H, 16, cz=cz_)])
+        visor(b.P('hatPeak', hc, 'head', 35), 0, 0.925 * H, cz_, 0.1 * H, 0.16 * H, 0.85, 0.014 * H, 0.009 * H, 8)
+        lz = cz_ + 0.098 * H
+        tube(b.P('lamp', shade(hc, 0.6), 'head', 40), (0, 0.965 * H, lz - 0.012 * H), (0, 0.965 * H, lz + 0.02 * H), 0.024 * H, 0.027 * H, 10)
+        disc(b.P('lampGlass', '#f4e8b0', 'head', 30), (0, 0.965 * H, lz + 0.0205 * H), 0.021 * H, 10, 'z', 0.0)
     tf = b.P('tuft', shade(pale, 0.8), 'head', 40)
     for k in range(cp.get('tufts', 3)):
         a = (k - (cp.get('tufts', 3) - 1) / 2) * 0.55
