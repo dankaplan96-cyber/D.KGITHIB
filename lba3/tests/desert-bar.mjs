@@ -171,7 +171,9 @@ check('chapter 10: the post\'s gate is the relay station; Old Hanna talks of Hes
 await ev((C6) => setChapter('home', { ...C6, ep_dinner: true, ep_free: true }), C6);
 await said();
 const ep = await ev(() => readIt('board')); const epL = await said();
-const epT = await ev(() => talkTo('tamu')); const epTL = await said();
+// (Tamu walks his round at a child's pace: talk to him at one of his stops, as a player who catches up would; the bot
+//  reached the spot he had left and turned while he walked on out of reach — a timing fault of the test, not the game)
+const epT = await ev(() => { const G = game, t = G.npcs.find((n) => n.def.id === 'tamu'); for (let i = 0; i < 240 && t && t.st === 'walk'; i++) G.step(0.25); return talkTo('tamu'); }); const epTL = await said();
 check('the epilogue: Hesk\'s stop has a child\'s line on it; Tamu missed the party (INPUT)', ep.r === 'used' && has(epL, /TAMU WAS FIRST/) && epT === 'talked' && has(epTL, /party/), { epL, epTL });
 
 done();
