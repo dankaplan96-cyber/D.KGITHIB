@@ -24,8 +24,8 @@ import { IH } from '../ihomes.js';
 import '../text/ch4.js';
 
 const STORM_PERIOD = 50, STORM_LEN = 28; // (CH4-STORM: the calm between storms 45 → 22 s) // seconds (game time) between storms, and how long one blows
-const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];
-const OFFICE = 'ih_post_cabin0';   // (the post's office inside: ihomes.js, the door of the post's first cabin)   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
+const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
+const OFFICE = 'ih_post_cabin0';   // (the post's office inside: ihomes.js, the door of the post's first cabin)
 
 export class Dig extends ChapterBase {
   get D() { return this.game.rooms.desert; }
