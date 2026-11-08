@@ -264,7 +264,7 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 .ico.keyico { background: #e6c25a; clip-path: polygon(0 30%, 40% 30%, 40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 80% 60%, 80% 80%, 65% 80%, 65% 60%, 0 60%); }
 .binfo .clovers { display: flex; gap: 4px; flex: 1; }
 .binfo .clovers span { width: 18px; height: 18px; border: 1px solid #fff; background: #000; }
-.binfo .clovers span.full { background: radial-gradient(circle at 50% 30%, #8ff08a 25%, transparent 26%), radial-gradient(circle at 28% 62%, #5fe36a 25%, transparent 26%), radial-gradient(circle at 72% 62%, #5fe36a 25%, transparent 26%), #0b2a0b; }
+.binfo .clovers span.full { background: radial-gradient(circle at 33% 33%, #8ff08a 21%, transparent 22%), radial-gradient(circle at 67% 33%, #6fe86c 21%, transparent 22%), radial-gradient(circle at 33% 67%, #5fe36a 21%, transparent 22%), radial-gradient(circle at 67% 67%, #5fe36a 21%, transparent 22%), #0b2a0b; }   /* (a four-leaf clover, as the bonus: ITEMS-1) */
 .binfo .shardrow { display: flex; gap: 4px; }
 .binfo .shardrow span { width: 12px; height: 18px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: rgba(255, 255, 255, 0.2); }
 .binfo .shardrow span.got { background: linear-gradient(180deg, #fff6c0, #ffb000); }

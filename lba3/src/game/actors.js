@@ -10,6 +10,7 @@ import { WATER_FLOOR, GRAVITY } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
+import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -1758,62 +1759,29 @@ export class Bolts {
 }
 
 // ------------------------------------------------------------------ pickups
+let SHARD = null;   // (the shard's parts, made on its first use)
+// ITEMS-1: the bonuses' shapes and materials are made once (bonuslook.js) and shared: each bonus is one mesh, one draw
+// call. Sizes as before (the user found the pickups too big: the coin was a 0.73 m octahedron, the others scaled down).
 const PICK = {
-  // a Kash: a small gold coin standing on its edge (it spins about its upright axis), a raised rim round a flat face
-  // (was a 0.73 m gold octahedron, nearly half Twinsen's height: the user found the pickups far too big)
-  coin: () => {
-    const g = new THREE.Group();
-    const gold = new THREE.MeshStandardMaterial({ color: '#ffd23a', emissive: '#c88a00', emissiveIntensity: 1.1, metalness: 0.8, roughness: 0.3 });
-    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 16), gold);
-    face.rotation.x = Math.PI / 2; g.add(face);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.016, 5, 16), gold);
-    g.add(rim);
-    return g;
-  },
-  heart: () => {
-    const g = new THREE.Group();
-    const mt = new THREE.MeshStandardMaterial({ color: '#ff4a5a', emissive: '#d0102a', emissiveIntensity: 1.2 });
-    const a = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt); a.position.set(-0.12, 0.08, 0); g.add(a);
-    const b = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt); b.position.set(0.12, 0.08, 0); g.add(b);
-    const c = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.35, 10), mt); c.rotation.z = Math.PI; c.position.y = -0.12; g.add(c);
-    g.scale.setScalar(0.6);   // (smaller: the user found the pickups too big)
-    return g;
-  },
-  flask: () => {
-    const g = new THREE.Group();
-    const mt = new THREE.MeshStandardMaterial({ color: '#5ab0ff', emissive: '#1a60ff', emissiveIntensity: 1.5, transparent: true, opacity: 0.9 });
-    const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), mt); g.add(b);
-    const n = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 8), mt); n.position.y = 0.25; g.add(n);
-    g.scale.setScalar(0.62);   // (smaller: the user found the pickups too big)
-    return g;
-  },
-  clover: () => {
-    const g = new THREE.Group();
-    const mt = new THREE.MeshStandardMaterial({ color: '#5fe36a', emissive: '#18a030', emissiveIntensity: 1.2 });
-    for (let i = 0; i < 3; i++) {
-      const l = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), mt);
-      const a = (i / 3) * Math.PI * 2 + Math.PI / 2;
-      l.position.set(Math.cos(a) * 0.14, Math.sin(a) * 0.14, 0); g.add(l);
-    }
-    g.scale.setScalar(0.7);   // (smaller: the user found the pickups too big)
-    return g;
-  },
+  // a Kash: a gold coin standing on its edge (it spins about its upright axis), a raised rim, a K stamped on both faces
+  coin: () => new THREE.Mesh(coinGeo(), bonusMat('coin')),
+  // a heart: one smooth red cushion
+  heart: () => new THREE.Mesh(heartGeo(), bonusMat('heart')),
+  // a magic flask: a round blue flask with a neck, a flared lip and a stopper
+  flask: () => new THREE.Mesh(flaskGeo(), bonusMat('flask')),
+  // a clover leaf (the extra life): four heart-shaped leaflets on a stem
+  clover: () => new THREE.Mesh(cloverGeo(), bonusMat('clover')),
   // a singing crystal: three blue spikes from one root, like the well's crystals in miniature
-  crystal: () => {
-    const g = new THREE.Group();
-    const mt = new THREE.MeshStandardMaterial({ color: '#9fe8ff', emissive: '#2a9aff', emissiveIntensity: 1.8, roughness: 0.15, flatShading: true });
-    for (const [rx, rz, s] of [[0, 0, 1], [0.5, 0.2, 0.62], [-0.45, -0.3, 0.55]]) {
-      const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 0), mt);
-      m.scale.set(0.8 * s, 2.2 * s, 0.8 * s); m.rotation.set(rx, 0, rz); m.position.set(rz * -0.35, 0.2 * s, rx * 0.35); g.add(m);
-    }
-    return g;
-  },
+  crystal: () => new THREE.Mesh(crystalGeo(), bonusMat('crystal')),   // (its three spikes one mesh: ITEMS-1)
+  // a Sendell shard: a bright crystal in a ring of light (its parts made once and shared: ITEMS-1)
   shard: () => {
+    const S = (SHARD ??= {
+      gem: new THREE.OctahedronGeometry(0.45, 0), gemMat: new THREE.MeshStandardMaterial({ color: '#fff0a0', emissive: '#ffb000', emissiveIntensity: 3.5, metalness: 0.3, roughness: 0.1 }),
+      ring: new THREE.TorusGeometry(0.75, 0.03, 6, 32), ringMat: new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }),
+    });
     const g = new THREE.Group();
-    const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), new THREE.MeshStandardMaterial({ color: '#fff0a0', emissive: '#ffb000', emissiveIntensity: 3.5, metalness: 0.3, roughness: 0.1 }));
-    m.scale.set(0.7, 1.4, 0.7); g.add(m);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.03, 6, 32), new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }));
-    ring.rotation.x = Math.PI / 2; g.add(ring);
+    const m = new THREE.Mesh(S.gem, S.gemMat); m.scale.set(0.7, 1.4, 0.7); g.add(m);
+    const ring = new THREE.Mesh(S.ring, S.ringMat); ring.rotation.x = Math.PI / 2; g.add(ring);
     return g;
   },
 };
