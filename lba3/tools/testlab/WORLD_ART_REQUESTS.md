@@ -2960,3 +2960,34 @@ Each change is behind a CAST flag of that person only; with the flag off, the ol
   - Bram's peak shows only from the side and in the dialogue.
   - The Rabbibunny neck tube (race-wide, not touched).
 - Order: apply `CAST-POLISH-CITADEL.diff` first (a7d14466 carries it as a request); this diff applies cleanly on top.
+
+## MUSIC-CRACKLE · the music crackle on the user's laptop (CLOUD_ORDERS 27b) · the laptop, 8.11.2026
+Diff: `requests/MUSIC-CRACKLE.diff` (engine/audio.js, tests/audio.mjs, docs/MUSIC.md, new `tools/music/crackle/` (10
+measuring tools, 568 lines); against cca490df, `git apply --check` clean).
+**Not reproduced in what the game outputs; one real click source fixed.** Ryzen 5 3500U, Windows 11, plugged in, Realtek
+48 kHz; the dev build (Electron 43.7.9 with the desktop app's switches, `AudioContextPlayoutStats` on) and the
+installed 0.48.0 exe fullscreen (own `--user-data-dir`); a ~190 s scripted Citadel session per run (walking, the water
+office in and out, ducking, the slider, an area change, combat, Home's loop seam, a piece's end) and a stress run;
+the CPU at 100 % from other agents throughout (frame p95 52–274 ms).
+- Source files (Automated runtime): every MP3 decoded as the game does: no clipping (peaks 0.52–0.83), lengths =
+  the manifest (padding trimmed), 0 discontinuities, loop points on whole frames, seams continuous.
+- Null test, game against source (Automated runtime): the music bus tapped (AudioWorklet) and subtracted from the
+  decoded file sample-aligned: median residual −70.8 dB outdoors, −72.6 dB at Home's seam; 0 gain steps.
+- Clicks: 0 per minute in every phase before and after (the detector catches ~75 % of planted 128-frame dropouts).
+- Underruns (Chromium's playout counter): 0–2 events per ~3 min (5–13 ms), none near a long frame; decodes and doors
+  caused none. Never more than 2 music voices (a crossfade).
+- **The defect:** the volume sliders set the bus gains with `.value =` (a 0.55 → 0.35 jump between two samples): clicks
+  while a slider is dragged. Fixed: after init every bus change glides (`setTargetAtTime`, 30 ms `VOL_GLIDE`; changes
+  < 0.002 skipped); largest per-block change 0.35 → 0.030, realtime hits in the slider phase 3 → 0. tests/audio.mjs
+  reads the gains after 500 ms.
+- Source only, not changed: pausing a story scene calls `ctx.suspend()` at once (cuts mid-wave); a fade first would
+  delay the suspend ~0.25 s, which tests/voices.mjs (0.2 s) forbids: for the character-voices owner. Music decodes
+  again on most area changes (only 3 kept): under load 1–24 s late starts (not crackle).
+- Blocked: Windows' own output (loopback) could not be captured, so the mixer and driver are not measured; battery not
+  tested (the laptop stays plugged in).
+- Tests (GPU mode, the CPU at 100 %): audio 6/6, music 26/26 (favicon-only fail), chapter1 23/23; timing 27/2 (a
+  quality-resize check that also fails on HEAD in GPU mode; the 144 Hz cap borderline 16.35 vs 16.67 ± 0.3 ms).
+- **For the user's ears** (the WAVs are on the laptop): source vs game of village_b (sample-identical), Home's seam,
+  the office in and out, the slider before/after. If the source crackles too, the renders are the cause (a re-render
+  or higher bitrate: yours); if neither does but the live game does, it is after Chromium (Windows' mixer/driver
+  under load) or battery power.
