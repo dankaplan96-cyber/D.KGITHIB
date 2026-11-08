@@ -186,25 +186,44 @@ ZEELICH-2 pushed (b8d3d9ae); the cloud applied HEROES, CITADEL 1-3 and ZEELICH. 
   not run (no draw added) · integrated: no (request).
 - Left: the Esmer children (xil x0.72); zmole2, zbee1, zbee2 (x6 each) one body each; doze feet.
 
+### Desert batch 1: desertkid_b, farmerC_b, GLASSES-ARCHIVIST: CAST-POLISH-DESERT (8.11.2026, `lba3-cast2`)
+ISLES pushed (f4f66ab7) and committed locally as HEAD 59dab6e3 ("local base: + CAST-POLISH-ISLES"); this diff is against it.
+- Census (`desert/reports/census-all.json`): the dig x8, the School x5 (+3 inside), Kesh x3, the story people. Order 24's
+  models there: desertkid x6, farmerC x5, archivist x5 (also wearing the flat glasses).
+- desertkid_b: straw sun hat (role hat #d8b860) + tail of hair; people pico, sc_pupc; body 2444 -> 2928 (+19.8 %).
+- farmerC_b: bare-headed, belly 0.05; people dg_haul (Gorrum), lh_grum (Bodo); 3538 -> 3234.
+- GLASSES-ARCHIVIST (CAST glassesRim): 2414 -> 2734 (+13.3 %).
+- Code: characters.js +2 LOOKS; storylife.js 3 chars, walkrounds.js 1 (pico); skeletons.json +2; index.json +2.
+- Checks: contracts, validate 0 fails, DRESS-1 clean on farmerC_b/archivist (desertkid_b = shipped desertkid's own result);
+  hero 4 draws; School 145 = 145 calls, dig 180 = 180.
+- Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, walkers 37/37 PASS. desert-life NOT
+  finished: a reload did not boot in 20 min after 21 PASS / 0 FAIL; the same on a clean HEAD export (after 12 PASS).
+  An environment limit on this laptop; asked the cloud to run it.
+- The worktree keeps the batch applied, uncommitted (the three JSONs and the index in assets/poly).
+- Tools: zeecap.mjs with IDS no longer limits people to 80 m of the hero.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles measured, frame time not run ·
+  integrated: no (request).
+- Left: farmerC_b's lighter belly hardly shows; desertkid's 96 base-hair vertices (pre-existing); worker x4 one body.
+
 ## Current
-- CAST-POLISH-ISLES ready for the cloud (diff against 803efcd1).
+- CAST-POLISH-DESERT ready for the cloud (diff against 59dab6e3); desert-life to be run in the cloud.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), ~~the isles~~ (ISLES), Desert Island, the
-   Hamalayi, the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), ~~the isles~~ (ISLES), ~~Desert Island~~
+   (DESERT), the Hamalayi, the underground
 5. The named cast
-6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1~~; farmerB, desertkid, lharMan, lharWoman,
-   farmerA, clerk, farmerC, archivist (and councilB for Kira; zmole2, zbee1, zbee2)
+6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC~~; lharMan, lharWoman,
+   farmerA, farmerB, clerk, archivist (glasses done), worker (and councilB for Kira; zmole2, zbee1, zbee2)
 7. Equipment: the ball, the sword
 8. Common props
 
 ## Next action
-Region 3, Desert Island (the people of desert.js / desertdress.js / desertold.js and the Lhar folk: census by chapter with
-KEY flags; the most shared there are desertkid x6, lharMan x6, lharWoman x6, farmerA x6, all order 24's `_b` list, plus any
-one that reads wrong); same loop in `C:\Users\dan\lba3-cast2`; report CAST-POLISH-DESERT; diff against the then HEAD (with
-ISLES applied if the cloud has not). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`, a renamed copy of the
-headless shell), server on 8257 (`z28/serve.py <root> 8257`, run in the background), a test copy of tests/ with
-lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+Region 4, the Hamalayi (storylife.js lh_* people: lharMan, lharWoman, lharElder, farmerA, desertkid, pim, farmerB,
+farmerC_b; the hamalayi*.js places): census by chapter (KEY flags as cast-rounds), survey in lookdev; order 24's lharMan x6,
+lharWoman x6, farmerA x6 come first (`_b` variants, people by id), plus any that reads wrong; same loop in
+`C:\Users\dan\lba3-cast2`; report CAST-POLISH-HAMALAYI; diff against the then HEAD. Browsers with `SHELL_EXE`
+(scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`, in the background), a test copy of tests/ with
+lib/boot.mjs patched (SHELL_EXE, the testlab playwright import; quitAndKeep's boot wait raised to 1 200 000 ms).
