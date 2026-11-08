@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "desert-1: desertkid_b, farmerC_b, archivist (GLASSES-ARCHIVIST) + desertkid, farmerC unchanged", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast2/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast2/lba3/art/blender/characters/desert/export", "desertkid_b", "farmerC_b", "archivist", "desertkid", "farmerC"] }]

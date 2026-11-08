@@ -1,0 +1,57 @@
+{
+ "room": "hamalayi",
+ "chapterKey": "pass",
+ "hero": [
+  4304,
+  86
+ ],
+ "esmers": [
+  {
+   "id": "lhar1",
+   "char": "lharMan",
+   "x": 4282,
+   "z": 8
+  },
+  {
+   "id": "lhar3",
+   "char": "lharElder",
+   "x": 4300,
+   "z": 2
+  },
+  {
+   "id": "lh_old",
+   "char": "lharElder",
+   "x": 4295.2,
+   "z": 16.1
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 4292.400000000001,
+   "z": 15.700000000000001,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   4292.400000000001,
+   8.700000000000001
+  ],
+  "n": 3,
+  "info": {
+   "calls": 253,
+   "triangles": 410052
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "lhar1",
+ "errors": [],
+ "at": "2026-11-08T17:17:31.857Z",
+ "candidates": {
+  "CAND_lharElder": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig4/lharElder.committed.json",
+  "CAND_lharMan": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig4/lharMan.committed.json"
+ }
+}

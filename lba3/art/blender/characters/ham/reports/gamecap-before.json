@@ -1,0 +1,83 @@
+{
+ "lharMan": {
+  "look": "lharMan",
+  "body": "lharMan",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973670
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967774
+   },
+   "heroCalls": 4,
+   "heroTris": 5896
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5896,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "lharElder": {
+  "look": "lharElder",
+  "body": "lharElder",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 973136
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968748
+   },
+   "heroCalls": 4,
+   "heroTris": 4388
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4388,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T16:58:09.819Z",
+ "candidates": {
+  "CAND_lharElder": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig4/lharElder.committed.json",
+  "CAND_lharMan": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig4/lharMan.committed.json"
+ }
+}
