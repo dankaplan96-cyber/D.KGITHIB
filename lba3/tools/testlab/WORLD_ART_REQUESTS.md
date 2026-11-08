@@ -3813,3 +3813,39 @@ user.
   - the moles' claws (three, fanned sideways at the spade hand) and the bees' forelegs were not part of the order; the moles
     could take the same front-to-back turn later;
   - Vesk's and Baldino's hands are their own scripts' and were not touched.
+
+## CURATOR-27a · Citadel and Zeelich against LBA2 on the 85/100 rubric (order 27a) · the laptop, 8.11.2026
+
+- **Files:** `docs/lba-maturity/resemblance-citadel.md`, `resemblance-zeelich.md`, `MATURITY-curator.md`, and the
+  register `BUILDING_REGISTER.csv`. The register keeps all 123 rows and gets 10 new rows and 3 new columns
+  (`in_original`, `has_door`, `story_locked`).
+- **Our captures:** `docs/future/world/CURATOR-27a/{citadel,zeelich}/` (HEAD 21bf522d, Vega 8 D3D11).
+- **Reference renders:** decoded from the user's files. They stay in the laptop's scratch and are never committed.
+- **Evidence labels:** our side **Automated runtime only** (pictures, nothing played); the references **Source only**.
+  The scores are provisional and the user has not reviewed them. No district reaches 85.
+- **Citadel scores:**
+  - harbour 73, square and Bug Street 75, lower town south 78, terraces 71, Twinsen's quarter 83;
+  - **lighthouse 67**: a round red-and-white tower where LBA2 has a white square stone tower;
+  - north plateau 71;
+  - **NW plateau 66**: Bersimon's tent is blue with stars, LBA2's is red;
+  - sewer 76.
+- **Other scores:**
+  - Zeelich terminal island (a new city, compatibility only): 60–69;
+  - Otringal 61–68;
+  - Knartas 58;
+  - Mosquibee 56–62;
+  - Celebration 59–62;
+  - Platform 54–57;
+  - Lift Dock 65.
+- **Top fixes for the cloud** (the order is the curator's; details and gains are in MATURITY-curator.md):
+  1. The isles' own buildings instead of the Esmer box everywhere (Franco dome huts, Mosquibee's cocoon nest, the
+     Platform's lattice tower). Doors, rooms and colliders stay. About +4 to +10 per district.
+  2. Otringal's paving renders #605b60 against zislands' target #d3ced9 to #ece8de: something darkens it. About +5 in
+     4 districts.
+  3. The Citadel lighthouse as a white square stone tower with a domed lantern. About +13.
+  4. Citadel harbour: barrel roofs on the ticket office and Nell's, and a straight quay with bollards. About +9.
+  5. Landmarks: Knartas's zeppelin, Celebration's figure, the Lift Dock's red frame, ember veins on the volcano isles.
+- **Check:** the sewer hatch shafts draw as black columns, but only in orthographic and overhead captures. Three Follow
+  shots near both hatches are clean; a high camera needs a look.
+- **Not done:** no fix is implemented and `tools/worldscore` was not re-run. Desert Island and the Hamalayi are next for
+  the curator.

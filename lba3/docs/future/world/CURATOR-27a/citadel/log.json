@@ -1,0 +1,168 @@
+{
+ "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "url": "http://127.0.0.1:55736/",
+ "chapter": "well",
+ "shots": [
+  {
+   "name": "c_hatch_street_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     -38.73133673757772,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "outdoor",
+   "hero": [
+    -33,
+    2.35,
+    22
+   ],
+   "cam": [
+    -38.7,
+    7.3,
+    16.4
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "c_hatch_terr_below_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     -26.01272454543325,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "outdoor",
+   "hero": [
+    -26,
+    8.35,
+    -21
+   ],
+   "cam": [
+    -26,
+    13.3,
+    -13
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "c_hatch_terr_top_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     -25.15454985927181,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "outdoor",
+   "hero": [
+    -25.15,
+    10.66,
+    -36.94
+   ],
+   "cam": [
+    -25.2,
+    19.3,
+    -44.1
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "c_south_iso2",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     -40,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "outdoor",
+   "hero": [
+    -40,
+    2.22,
+    26
+   ],
+   "cam": [
+    -40,
+    7.2,
+    18
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "c_terr_iso2",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     -29.866340901290034,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "outdoor",
+   "hero": [
+    -29.87,
+    8.22,
+    -29.58
+   ],
+   "cam": [
+    -29.9,
+    13.4,
+    -37.6
+   ],
+   "off": [
+    0,
+    0
+   ]
+  }
+ ],
+ "errs": []
+}
