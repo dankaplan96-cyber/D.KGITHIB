@@ -7,7 +7,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const step = (s) => ev((s) => game.step(s), s);
 await open(page, '?nocine'); await menu(page, 'new');
 // the ball from the cupboard, then outside on the street (played)
-await ev(() => { const G = game; P.settle(); const s = G.room.searches[0]; P.use(s.x, s.z); const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); P.settle(); });
+await ev(() => { const G = game; P.settle(); const s = G.room.searches[0]; P.use(s.x, s.z); const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); P.settle(); window.__land = G.hero.pos.clone(); });
 
 // 1. pause while charging a throw; release while paused; resume
 const c1 = await ev(() => {
@@ -25,8 +25,11 @@ check('pause while charging: nothing is thrown while paused', c1.paused === 'pau
 check('...after resuming the ball is in hand again (thrown once or not at all) and he walks', c1.resumed === 'play' && ['inhand', 'idle'].includes(c1.ball2) && c1.walks > 0.5, c1);
 
 // 2. focus lost while charging the ball
+// (section 1's walk ends against the garden's picket fence, 1.2 m in front of the house door's landing: with no blur
+//  and no throw, Up held there moves him 0.06 m. He goes back to the landing first, so "he walks" measures the input)
 const c2 = await ev(() => {
   const G = game, h = G.hero, out = {};
+  const L = window.__land; P.go(L.x, L.z, { tol: 0.2, maxT: 6 }); P.face(L.x + 3, L.z); G.step(0.5); out.from = +h.pos.distanceTo(L).toFixed(2);
   G.input.keys.add('KeyF'); G.input.taps.add('KeyF'); G.step(0.4);
   window.dispatchEvent(new Event('blur')); G.step(0.2); out.after = G.ball.state; G.step(2.5); out.later = G.ball.state;
   const p0 = h.pos.clone(); P.holdFor(['ArrowUp'], 0.6); out.walks = +h.pos.distanceTo(p0).toFixed(2); out.keys = G.input.keys.size;

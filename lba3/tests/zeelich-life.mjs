@@ -231,6 +231,27 @@ iso('chapter 9: the bake set back to "asked, not done" for one talk each');
 const k2 = await askedAgain();
 const k2l = await said();
 check('asked, not done, at the council: Snuff wants her charcoal cart back if the bore stops; Bzizz waits on the council', k2.crate === 'flue' && k2l.some((l) => /charcoal cart back/.test(l)) && k2l.some((l) => /waits for the council/.test(l)), { k2, k2l });
+// (DOOR-CLEAR: the street's residents on their rounds never stand or walk before a house door — 2.2 m out, 0.7 m either
+//  side; Oma's leg from the petition box to the notice board crossed the council door's front, chapter 9)
+const k3 = await ev(() => {
+  const G = game, Z = G.rooms.zeelich, doors = Z.houseDoors.map((d, i) => ({ ...d, a: Z.houseFacing[i] ?? 0 })), hits = {};
+  const folk = G.npcs.filter((n) => ['zr_fennick', 'zr_rezz', 'zr_oma'].includes(n.def.id));
+  if (G.room?.id !== 'zeelich') { const e = G.room?.exits?.find((x) => !x.room); if (e) P.through(e.x, e.z); }
+  G.hero.pos.set(Z.spawn.x, G.physics.groundAt(Z.spawn.x, Z.spawn.z), Z.spawn.z); P.settle();
+  let n = 0;
+  for (let i = 0; i < 600; i++) {
+    G.step(0.5);
+    for (const f of folk) {
+      if (!f.present || f.away) continue; n++;
+      for (const [k, d] of doors.entries()) {
+        const fx = Math.sin(d.a), fz = Math.cos(d.a), dx = f.pos.x - d.x, dz = f.pos.z - d.z, out = dx * fx + dz * fz, side = dx * fz - dz * fx;
+        if (out > 0 && out < 2.2 && Math.abs(side) < 0.7) { const key = f.def.id + '@house' + k; hits[key] = (hits[key] || 0) + 1; }
+      }
+    }
+  }
+  return { n, hits, here: folk.filter((f) => f.present && !f.away).map((f) => f.def.id) };
+});
+check('chapter 9: the street\'s residents (Fennick, Rezz, Oma) never stand or walk before a house door (300 s of their rounds)', k3.n > 600 && k3.here.includes('zr_oma') && Object.keys(k3.hits).length === 0, k3);
 
 // ---- chapter 10: the network
 iso('chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)');

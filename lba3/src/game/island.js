@@ -2569,6 +2569,10 @@ function buildPipeline(W, root, r) {
     pipeRun(B, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, vy + 0.5, O.dz]], 0.2);
     B.add(cached('tee', () => new THREE.SphereGeometry(0.36, 14, 10)), tm('pipe', { rough: 0.5, metal: 0.35 }), prof.xs[i], ym, prof.zs[i]);
     pipeRun(B, [[O.dx, vy - 0.5, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
+    // (CAM-STUB, camclear: the stub and the column under the valve had no camera volume, only the main had: the play camera
+    //  stood 0.15 m from the column's side, 5 m over the cliffs' path below. Both as the camera's own volumes, as the main)
+    pipeVolumes(W, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, vy + 0.5, O.dz]], 0.2);
+    pipeVolumes(W, [[O.dx, vy - 0.5, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
     B.add(lathe([[0, 0], [0.48, 0], [0.48, 0.22], [0.4, 0.28], [0, 0.28]], 18, TILE.concrete), tm('concrete', { color: '#d0ccc4' }), O.dx, g - 0.05, O.dz);
     // a bracket from the old column steadies the tall valve
     member(B, [O.dx - 0.9, g, O.dz], [O.dx - 0.18, vy - 0.7, O.dz], 0.1, darkSteel(), 1, 0.02);
