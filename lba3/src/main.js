@@ -155,6 +155,7 @@ const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive:
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
+const RETRY_KEY = 'lba3_retry';   // (sessionStorage: the Continue after a reload was a Retry from Game Over)
 const $ = (s) => document.querySelector(s);
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -1368,6 +1369,9 @@ class Game {
     try {
       if (!s) throw new Error('unreadable save');
       this.applySave(s);
+      // a Retry after Game Over: the autosave's place and state, with his life full
+      let retry = false; try { retry = key === SAVE_KEY && sessionStorage.getItem(RETRY_KEY) === '1'; sessionStorage.removeItem(RETRY_KEY); } catch { /* */ }
+      if (retry) { this.hero.hp = this.hero.maxHp; this.hud.stats?.(this.hero); }
     } catch (e) {
       // never delete a save we couldn't read: set it aside and start fresh
       console.error('save load failed', e);
@@ -1676,7 +1680,8 @@ class Game {
         this.bench.runAuto().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
         break;
       case 'benchcopy': navigator.clipboard?.writeText($('#bench-out').value).then(() => this.hud.toast('bench_copied'), () => {}); break;
-      case 'retry': this.reloadInto(store.get(SAVE_KEY) ? 'continue' : 'new'); break;
+      // (RETRY, the user 8.11: "Retry goes back to the last autosave with full health")
+      case 'retry': if (store.get(SAVE_KEY)) { try { sessionStorage.setItem(RETRY_KEY, '1'); } catch { /* */ } this.reloadInto('continue'); } else this.reloadInto('new'); break;
       case 'explore':
         this.hideScreens(); this.hud.show(true); this.camRig.override = null; this.setState('play');
         this.story.afterEnding();

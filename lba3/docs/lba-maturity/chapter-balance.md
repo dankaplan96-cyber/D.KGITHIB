@@ -286,3 +286,8 @@ From `lba3/` in a snapshot served on a free port (`python3 -m http.server <port>
 `BOOT_TIMEOUT=900000 GAME_URL=http://localhost:<port>/ STATS=st-NN.json KEEP=save-NN.json LOAD=save-(NN-1).json node tests/lib/seg.mjs tests/playthrough/NN-*.mjs`
 for each segment in order (no LOAD for 01). Each segment prints `stats:` per step and `stats total:`; the JSON holds the
 same. Chained wall time on the shared SwiftShader machine: about 80 minutes for 01–14.
+
+## The user's decisions (8.11.2026)
+- **Long chapters stay long** ("don't shorten"): chapters 2 and 10 keep their length; no cuts proposed further.
+- **Retry** after Game Over goes back to the last autosave **with full health** (main.js `RETRY_KEY`; tests/crosssystem.mjs
+  checks hp === maxHp). Yorna's broth in chapter 10 stays as a story beat.

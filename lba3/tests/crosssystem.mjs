@@ -99,8 +99,8 @@ await page.click('#gameover [data-act="retry"]');
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 await page.waitForFunction(() => game.state === 'play', null, { timeout: 120000 }).catch(() => {});
 await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).pathname });
-const c7b = await ev(() => { game.testFreeze = true; P.settle(); return { state: game.state, hp: game.hero.hp, ball: game.ball.state, hasBall: game.hero.hasBall }; });
-check('Retry: back in play from the save, alive, the ball in hand', c7b.state === 'play' && c7b.hp > 0 && c7b.hasBall, c7b);
+const c7b = await ev(() => { game.testFreeze = true; P.settle(); return { state: game.state, hp: game.hero.hp, maxHp: game.hero.maxHp, ball: game.ball.state, hasBall: game.hero.hasBall }; });
+check('Retry: back in play from the last autosave, his life full (the user, 8.11), the ball in hand', c7b.state === 'play' && c7b.hp === c7b.maxHp && c7b.hasBall, c7b);
 
 const fails = done(errs);
 await browser.close();

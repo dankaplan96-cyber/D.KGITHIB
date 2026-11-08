@@ -46,6 +46,10 @@ world-polish pass after it:
 | The underground (underground.js) | room camera; own pass | pending (REVIEW-UNDER done 6.11) |
 | Citadel | the reference; camera pass 3 in wave 1 | in progress |
 
+## The user's decisions
+- 8.11: long chapters are not shortened (chapters 2 and 10 stay as they are).
+- 8.11: Retry after Game Over → the last autosave with full health (main.js RETRY_KEY).
+
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 
 | # | Date | Where | Report | Owner | Status |
