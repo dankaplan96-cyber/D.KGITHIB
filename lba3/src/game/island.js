@@ -21,6 +21,7 @@ import { t } from './i18n.js';
 import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
+import { HATCHES } from './sewers.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -2890,6 +2891,7 @@ function buildOriginalProps(W, root, r) {
     if (W.pathDist && W.pathDist(x, z) < (open ? 0.9 : 1.3) + rad) return false;
     if (streetDist(x, z) < (open ? -0.6 : 0.2) + rad) return false;
     if (doors.some((d) => Math.hypot(x - d.x, z - d.z) < 2.2 + rad)) return false;
+    if (Object.values(HATCHES).some((d) => Math.max(Math.abs(x - d.x), Math.abs(z - d.z)) < d.S + 1.4 + rad)) return false;   // (DOORS-LBA2: the sewer's hatches, their rails and the way onto them)
     if (placed.some((p) => Math.hypot(x - p.x, z - p.z) < p.r + rad)) return false;
     return clear(x, z, rad);
   };

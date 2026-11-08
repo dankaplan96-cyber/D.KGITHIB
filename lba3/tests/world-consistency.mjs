@@ -55,7 +55,7 @@ const TRANSITIONS = [
   ['pass.js', 'trip', 'same', "chapter 6: the lift's trip up to the monastery (the Hamalayi)"],
   ['pass.js', 'update', 'same', 'chapter 6 → 7: the Hamalayi, both'],
   ['prologue.js', 'endPrologue', 'same', "chapter 1 → 2: up from the well's cave into Citadel's square"],
-  ['sewers.js', 'rideStep', 'same', "the sewer lift under the lane by the pump (a room under Citadel)"],
+  ['sewers.js', 'rideStep', 'same', "the sewer lifts under the lower town's street and the terrace (a room under Citadel)"],
   ['steam.js', 'board', 'film:storyJourney', "chapter 5 → 6: Hesk's glider from the dunes over the buried hall to the Hamalayi field (WC-1)"],
 ];
 {

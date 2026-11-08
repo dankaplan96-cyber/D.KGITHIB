@@ -2,32 +2,40 @@
 // Our own geometry, from a study of the original's layout (numbers and descriptions only; nothing copied):
 //   - a square hall flooded with pale cyan water; narrow stone walkways along the far walls, the north one raised,
 //     with stairs between the levels; stepping slabs along the near (south) side; a long pier on the east side
-//   - a raised island in the middle: a small square well-house (a barred door, an opening on top: the shaft up to
-//     the street) and a railed, paved platform
-//   - at the back (north-east) a colonnade before three barred arches: the middle one is the treasure room's gate
+//   - a raised island in the middle: a small square well-house (LBA2's tower: a door, an opening on top) and a railed,
+//     paved platform
+//   - at the back (north-east) a colonnade before three barred arches; the treasure room's gate in the west wall
 //   - iron railings with spear tops, short pillars with pale blue globe lamps, barrels, round blue rocks, dark spiked
 //     iron rings along the water's edge, gargoyle heads on the corner pillars, small blue plaques
 //   - dark and muted (the original measures stone #4f4e48, water #70b7c5, chroma ~7, L* ~40): the only colour is the
 //     water and the lamps
 // Twelve years on: the railings rust, three of the globe lamps are dead, and the project's new copper heat pipe comes
-// down the well-house shaft with a blue valve box bolted straight onto the old gate winch. Its brace jams the winch,
-// and the valve knocks every few seconds: the knocking people hear under the lane by the pump (story/sewers.js).
+// down the well-house shaft to a blue valve box bolted straight onto the old gate winch. Its brace jams the winch,
+// and the valve knocks every few seconds: the knocking people hear under the street (story/sewers.js).
 // The treasure room: a paved room with a dais and a star chest, two lamp pillars, a star plaque, a barrel, blue rocks
 // and spiked rings, and Arthur's chalk on the wall (he found it first).
 //
+// DOORS-LBA2 (tools/testlab/WORLD_ART_REQUESTS.md, the laptop's decoded links, 8.11.2026): the ways in are where
+// LBA2's are. Two lid-and-frame hatches with a lift each: the lower town's, railed in the street (−28.5, 27.6), down
+// the hall's north-east shaft; the terrace's behind the school (−25.1, −31.5), down the north-west shaft (its catch
+// drawn below). The well-house on the island (LBA2's tower) is the globe room's door; its shaft keeps only the heat
+// pipe. The treasure room's gate is in the west wall; the tavern's trapdoor drops onto the island's platform; the
+// tent's stair comes out at the south-west.
+//
 // CONTRACT
-//   SEWER_AT {sewer, sewervault}  where the rooms stand (regions.js)
-//   buildSewerHatch(scene, physics, world)  the grate in Bug Street (Citadel; built with it) → SEWER.hatch
-//   buildSewerRooms(scene, physics) → { sewer, sewervault }   (regions.js group 'sewer')
-//   SEWER.hatch {x, z, y, open, deckY, setOpen(b), setDeck(d), setLever(t), deckTop(), lever}   (SEWER-LIFT: the grate and its lift)
+//   SEWER_AT {sewer, sewervault, sewerglobe}  where the rooms stand (regions.js)
+//   HATCHES {street, terrace}  the two hatches (Citadel, world metres); HATCH = HATCHES.street
+//   buildSewerHatch(scene, physics, world)  both hatches (Citadel; built with it) → SEWER.hatches, SEWER.hatch (street)
+//   buildSewerRooms(scene, physics) → { sewer, sewervault, sewerglobe }   (regions.js group 'sewer')
+//   a hatch {id, x, z, y, S, open, deckY, entry, exit, setOpen(b), setDeck(d), setLever(t), deckTop(), lever}
 //   SEWER.hall (the hall's room) {valve, gate, setValve(b, instant)}
 //   SEWER.vault (the treasure room) {chest, setChest(b)}
-//   SEWER.hall also {bolt, works, gdoor, setDoor(id, b, instant), doorOpen(id), splash()}; R.entries {fall, pink, stoneup,
-//     wtent, sewerglobe}; R.npcSpots.fosse   (SEWERS-1: the terrace bolt, the Works door, the globe's door, the west stair)
+//   SEWER.hall also {bolt, works, gdoor, setDoor(id, b, instant), doorOpen(id), splash()}: 'bolt' the terrace lift's
+//     catch (sw_bolt), 'works' Fosse's padlock on the street lift (sw_works), 'globe' the well-house door (sw_gdoor);
+//     R.entries {street (= pink), terrace (= stoneup), fall, wtent, sewerglobe, sewervault}; R.npcSpots.fosse
 //   SEWER.globe (the globe's room, sewerglobe) {globe, cock, setClear(b, instant), setSky(state), clear}
-//   sewerDoors(W, f) / sewerExit(to, W)   the grate is no door (the lift's lever takes him down: story/sewers.js);
-//     'sewer-out' leads back up onto the deck; the pink house's door (always) and the terrace porch (sw_bolt) lead in,
-//     'sewer-pink' / 'sewer-stoneup' lead out before them
+//   sewerDoors() → [] (a hatch is no door: story/sewers.js lifts it and rides its lift)
+//   sewerExit(to)  'sewer-out' (the street lift up; old 'sewer-pink' too) and 'sewer-stoneup' (the terrace lift up)
 import * as THREE from 'three';
 import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
@@ -35,9 +43,17 @@ import * as P from './props.js';
 import { textures } from '../engine/textures.js';
 
 export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 }, sewerglobe: { x: 5960, z: 0 } };
-// the grate: Bug Street, a few steps north of where the project's heat pipe dives under the lane (townlife.js PUMP)
-export const HATCH = { x: -45.4, z: 56.6 };
-export const SEWER = { hatch: null, hall: null, vault: null, globe: null };
+// DOORS-LBA2 #1-#5: LBA2's two lift hatches (its scenes 42 and 48 → 17), in our Citadel's metres. The lower town's
+// is railed on its north, east and south sides and stepped onto from the west between two bollards; the terrace's
+// lies flush on the terrace behind the school. Each lift comes down at its own corner of the hall (hall: its deck, in
+// hall metres). (WA-14's grate stood in Bug Street by the pump, where LBA2 has none: moved here. The pump's knocking
+// stays: the project's pipe still runs under that lane, townlife.js.)
+export const HATCHES = {
+  street: { id: 'street', x: -28.5, z: 27.6, S: 0.7, rails: true, entry: 'street', exit: 'sewer-out', hall: { x: 11.5, z: -10.5 } },
+  terrace: { id: 'terrace', x: -25.1, z: -31.5, S: 0.7, rails: false, entry: 'terrace', exit: 'sewer-stoneup', hall: { x: -12.4, z: -10.75 } },
+};
+export const HATCH = HATCHES.street;
+export const SEWER = { hatch: null, hatches: {}, hall: null, vault: null, globe: null };
 
 // ------------------------------------------------------------------ materials (dark, muted; colour only in the water and lamps)
 const std = (map, color, rough, tile, extra = {}) => { const m = new THREE.MeshStandardMaterial({ map, color, roughness: rough, ...extra }); m.userData.tile = tile; return m; };
@@ -140,12 +156,40 @@ function railing(B, k, pts, y, { rusty = false, h = 0.95 } = {}) {
 const WY = -0.55;              // the water's surface (the walkways stand 0.55 m above it)
 const BASE = -1.6;             // how far the stone goes down under the water
 const U = 1.65, ISL = 0.45, PLAT = 1.15;
-const GATE = { x: 10.5, w: 1.6, h: 2.4 };
-// SEWERS-1 (CONNECTIONS_AUDIT.md S-1…S-5): LBA2's other ways in and out of the hall, and the globe's room
-const WD = { x: -4, w: 1.1, h: 2.0 };        // S-3 the terrace door on the raised walkway (to the porch above the stone house)
-const WORKS = { x: 7.75, w: 1.3, h: 2.0 };   // S-4 the Works door at the east pier's head (the street door in the lower town)
-const GLOBE = { x: 13.0, w: 1.2, h: 2.0 };   // S-5 Bersimon's little door (the globe's room)
-const WEST = { z: 6, w: 1.1, h: 2.1 };       // S-1 the stair up to the wizard's tent, in the west wall across from the bridge
+// DOORS-LBA2: the colonnade's three arches are blind now (twelve years: barred and bricked behind); the treasure
+// room's gate is in the west wall at mid-depth, off the west walkway (LBA2's S18 door); the tent's stair comes out in
+// the south-west, by the slabs (LBA2's nook); the well-house's door is the globe room's (LBA2's island tower, S34)
+const ARCHES = [{ x: 7.75, w: 1.3, h: 2.0 }, { x: 10.5, w: 1.6, h: 2.4 }, { x: 13.0, w: 1.2, h: 2.0 }];
+const GATE = { z: 0, w: 1.6, h: 2.4 };       // the treasure room's gate (west wall)
+const WEST = { z: 10, w: 1.1, h: 2.1 };      // S-1 the stair up to the wizard's tent (west wall, the south-west)
+const WN = { x: -3.9, z: 2.9 };              // the old gate winch, on the island's west side (its chain over the water to the gate)
+
+// a lift's foot (DOORS-LBA2 #2, #4): its grated deck flush with the floor, two iron guides up past the wall's top with
+// a beam and two pulleys, the chains down to the deck's eyes, a lever post at its south-east corner. alongX: the guides
+// stand east and west (stepped onto from the north or south); else north and south (stepped onto from east or west)
+function liftFoot(B, k, L, y, H, alongX) {
+  const { x, z } = L.hall, S = L.S, D = S - 0.06, m = ironM(), top = H + 0.45, ry = alongX ? 0 : Math.PI / 2;
+  const f = (u, v) => alongX ? [x + u, z + v] : [x + v, z - u];   // (the guides' axis u, across it v)
+  for (const [px, pz, w, d] of [[0, -D + 0.035, 2 * D, 0.07], [0, D - 0.035, 2 * D, 0.07], [-D + 0.035, 0, 0.07, 2 * D - 0.14], [D - 0.035, 0, 0.07, 2 * D - 0.14]]) k.add(rbox(w, 0.09, d, 0.012), m, x + px, y + 0.045, z + pz);
+  for (let i = -Math.floor((D - 0.08) / 0.088); i <= Math.floor((D - 0.08) / 0.088); i++) k.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), m, x + i * 0.088, y + 0.065, z);
+  k.add(new THREE.BoxGeometry(2 * D - 0.1, 0.02, 2 * D - 0.1), MAT.flat('#0e1112', 1), x, y + 0.012, z);   // (the dark of the pit under the grating)
+  for (const s of [-1, 1]) {
+    const [gx, gz] = f(s * (S + 0.09), 0), [px, pz] = f(s * (S - 0.08), 0);
+    k.add(rbox(0.12, top - y, 0.14, 0.015), m, gx, (top + y) / 2, gz, ry);
+    k.add(rbox(0.22, 0.12, 0.26, 0.015), m, gx, y + 0.06, gz, ry);
+    B.col(gx, gz, 0.1, 0.1, top);
+    k.add(torus(0.09, 0.022, 5, 12), m, px, top - 0.2, pz, ry + Math.PI / 2);
+    chain(k, m, px, top - 0.3, y + 0.1, pz, ry + Math.PI / 2);
+  }
+  k.add(rbox(2 * S + 0.42, 0.16, 0.2, 0.02), m, x, top + 0.04, z, ry);
+  // the lever post (its lever up)
+  const lp = { x: x + D - 0.1, z: z + D - 0.1 };
+  k.add(rbox(0.07, 0.78, 0.07, 0.01), m, lp.x, y + 0.39, lp.z);
+  k.add(rbox(0.11, 0.05, 0.11, 0.01), m, lp.x, y + 0.8, lp.z);
+  k.add(cyl(0.013, 0.013, 0.22, 5), m, lp.x, y + 0.86, lp.z - 0.06, 0, { rx: -0.5 });
+  k.add(sphere(0.03, 8, 6), MAT.brass(), lp.x, y + 0.96, lp.z - 0.11);
+  return { lp, D };
+}
 
 function buildHall(scene, physics) {
   const { x: CX, z: CZ } = SEWER_AT.sewer;
@@ -210,52 +254,53 @@ function buildHall(scene, physics) {
 
   // ---- the walls: two tall far walls (north, west), low near rims (south, east)
   const wallBox = (x0, x1, z0, z1, y0, y1, m = stoneM()) => k.add(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), m, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-  // north: openings at floor level in the north-east (two barred arches and the gate between)
-  const arches = [{ ...WORKS, door: 'works' }, { x: GATE.x, w: GATE.w, h: GATE.h }, { ...GLOBE, door: 'globe' }];
+  // north: three blind barred arches at floor level in the north-east, behind the colonnade
   {
-    // (S-3: the terrace door's opening on the raised walkway)
-    wallBox(X0 - T, WD.x - WD.w / 2, Z0 - T, Z0, BASE, H);
-    wallBox(WD.x - WD.w / 2, WD.x + WD.w / 2, Z0 - T, Z0, BASE, U);
-    wallBox(WD.x - WD.w / 2, WD.x + WD.w / 2, Z0 - T, Z0, U + WD.h, H);
-    k.add(plane(WD.w, WD.h), MAT.flat('#0c0f10', 1), WD.x, U + WD.h / 2, Z0 - T + 0.02);
-    for (const sx of [-1, 1]) k.add(rbox(0.16, WD.h, 0.14, 0.03), capM(), WD.x + sx * (WD.w / 2 + 0.06), U + WD.h / 2, Z0 + 0.04);
-    k.add(rbox(WD.w + 0.3, 0.18, 0.16, 0.03), capM(), WD.x, U + WD.h + 0.09, Z0 + 0.04);
-    let x = WD.x + WD.w / 2;
-    for (const a of arches) {
+    let x = X0 - T;
+    for (const a of ARCHES) {
       wallBox(x, a.x - a.w / 2, Z0 - T, Z0, BASE, H);
       wallBox(a.x - a.w / 2, a.x + a.w / 2, Z0 - T, Z0, a.h, H);
       x = a.x + a.w / 2;
     }
     wallBox(x, X1 + T, Z0 - T, Z0, BASE, H);
-    for (const a of arches) {
+    for (const a of ARCHES) {
       k.add(torus(a.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), a.x, a.h - a.w / 2 + 0.05, Z0 + 0.04);
       for (const s of [-1, 1]) k.add(rbox(0.22, a.h - a.w / 2 + 0.05, 0.16, 0.03), capM(), a.x + s * (a.w / 2 + 0.06), (a.h - a.w / 2 + 0.05) / 2, Z0 + 0.04);
-      // the dark beyond
+      // the dark beyond, bricked up a little way back; the bars rusted in
       k.add(plane(a.w, a.h), MAT.flat('#0c0f10', 1), a.x, a.h / 2, Z0 - T + 0.02);
       wallBox(a.x - a.w / 2, a.x + a.w / 2, Z0 - T - 1.6, Z0 - T, BASE, 0, rubbleM());
-      if (a.x !== GATE.x) {
-        if (!a.door) for (let bx = a.x - a.w / 2 + 0.15; bx < a.x + a.w / 2 - 0.05; bx += 0.2) k.add(cyl(0.022, 0.022, a.h - 0.1, 5), rustM(), bx, (a.h - 0.1) / 2, Z0 - 0.25);
-        if (!a.door) for (const y of [0.5, 1.3]) k.add(rbox(a.w, 0.05, 0.05, 0.01), rustM(), a.x, y, Z0 - 0.25);
-        B.col(a.x, Z0 - T / 2, a.w / 2, T / 2, H);
-      }
+      for (let bx = a.x - a.w / 2 + 0.15; bx < a.x + a.w / 2 - 0.05; bx += 0.2) k.add(cyl(0.022, 0.022, a.h - 0.1, 5), rustM(), bx, (a.h - 0.1) / 2, Z0 - 0.25);
+      for (const y of [0.5, 1.3]) k.add(rbox(a.w, 0.05, 0.05, 0.01), rustM(), a.x, y, Z0 - 0.25);
     }
-    // colliders: the wall either side of the gate, and the back of the gate's passage
-    B.col((X0 - T + GATE.x - GATE.w / 2) / 2, Z0 - T / 2, (GATE.x - GATE.w / 2 - X0 + T) / 2, T / 2, H);
-    B.col((GATE.x + GATE.w / 2 + X1 + T) / 2, Z0 - T / 2, (X1 + T - GATE.x - GATE.w / 2) / 2, T / 2, H);
-    B.col(GATE.x, Z0 - T - 1.0, GATE.w / 2 + 0.2, 0.3, H);
-    wallBox(GATE.x - GATE.w / 2 - 0.3, GATE.x - GATE.w / 2, Z0 - T - 1.6, Z0 - T, 0, GATE.h);
-    wallBox(GATE.x + GATE.w / 2, GATE.x + GATE.w / 2 + 0.3, Z0 - T - 1.6, Z0 - T, 0, GATE.h);
+    B.col(0, Z0 - T / 2, W / 2 + T, T / 2, H);
   }
-  // west
-  wallBox(X0 - T, X0, Z0 - T, WEST.z - WEST.w / 2, BASE, H);
-  wallBox(X0 - T, X0, WEST.z + WEST.w / 2, Z1 + T, BASE, H);
-  wallBox(X0 - T, X0, WEST.z - WEST.w / 2, WEST.z + WEST.w / 2, WEST.h, H);
-  // (S-1: the stair up to the wizard's tent: an open arch, treads rising into the dark)
-  k.add(plane(WEST.w, WEST.h + 0.6), MAT.flat('#0c0f10', 1), X0 - T - 1.2, WEST.h / 2 + 0.3, WEST.z, Math.PI / 2);
-  for (let i = 0; i < 4; i++) k.add(rbox(0.3, 0.2 * (i + 1), WEST.w, 0.02), rubbleM(), X0 - T + 0.15 - i * 0.3, 0.1 * (i + 1), WEST.z);
-  for (const sz of [-1, 1]) k.add(rbox(0.14, WEST.h - WEST.w / 2 + 0.05, 0.22, 0.03), capM(), X0 + 0.04, (WEST.h - WEST.w / 2 + 0.05) / 2, WEST.z + sz * (WEST.w / 2 + 0.06));
-  k.add(torus(WEST.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), X0 + 0.04, WEST.h - WEST.w / 2 + 0.05, WEST.z, Math.PI / 2);
-  B.col(X0 - T / 2, 0, T / 2, D / 2 + T, H);
+  // west: the treasure room's gate at mid-depth (a passage back through the wall) and the tent's stair in the south-west
+  {
+    const g0 = GATE.z - GATE.w / 2, g1 = GATE.z + GATE.w / 2, w0 = WEST.z - WEST.w / 2, w1 = WEST.z + WEST.w / 2;
+    wallBox(X0 - T, X0, Z0 - T, g0, BASE, H);
+    wallBox(X0 - T, X0, g0, g1, GATE.h, H);
+    wallBox(X0 - T, X0, g1, w0, BASE, H);
+    wallBox(X0 - T, X0, w0, w1, WEST.h, H);
+    wallBox(X0 - T, X0, w1, Z1 + T, BASE, H);
+    // the gate's arch and jambs; the passage behind it (its floor, its sides, the dark at its end)
+    k.add(torus(GATE.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), X0 + 0.04, GATE.h - GATE.w / 2 + 0.05, GATE.z, Math.PI / 2);
+    for (const s of [-1, 1]) k.add(rbox(0.16, GATE.h - GATE.w / 2 + 0.05, 0.22, 0.03), capM(), X0 + 0.04, (GATE.h - GATE.w / 2 + 0.05) / 2, GATE.z + s * (GATE.w / 2 + 0.06));
+    wallBox(X0 - T - 1.6, X0 - T, g0 - 0.3, g0, 0, GATE.h);
+    wallBox(X0 - T - 1.6, X0 - T, g1, g1 + 0.3, 0, GATE.h);
+    wallBox(X0 - T - 1.6, X0 - T, g0, g1, GATE.h, GATE.h + 0.3);
+    wallBox(X0 - T - 1.6, X0, g0, g1, BASE, 0, rubbleM());
+    k.add(plane(GATE.w, GATE.h), MAT.flat('#0c0f10', 1), X0 - T - 1.58, GATE.h / 2, GATE.z, Math.PI / 2);
+    B.col(X0 - T / 2, (Z0 - T + g0) / 2, T / 2, (g0 - Z0 + T) / 2, H);
+    B.col(X0 - T / 2, (g1 + Z1 + T) / 2, T / 2, (Z1 + T - g1) / 2, H);
+    B.col(X0 - T - 0.8, g0 - 0.15, 0.8, 0.15, H); B.col(X0 - T - 0.8, g1 + 0.15, 0.8, 0.15, H);
+    B.col(X0 - T - 1.3, GATE.z, 0.3, GATE.w / 2 + 0.2, H);
+    B.col(X0 - (T + 1.6) / 2, GATE.z, (T + 1.6) / 2, GATE.w / 2 + 0.3, 0, { seeThrough: true });   // (the passage's floor)
+    // (S-1: the stair up to the wizard's tent: an open arch, treads rising into the dark)
+    k.add(plane(WEST.w, WEST.h + 0.6), MAT.flat('#0c0f10', 1), X0 - T - 1.2, WEST.h / 2 + 0.3, WEST.z, Math.PI / 2);
+    for (let i = 0; i < 4; i++) k.add(rbox(0.3, 0.2 * (i + 1), WEST.w, 0.02), rubbleM(), X0 - T + 0.15 - i * 0.3, 0.1 * (i + 1), WEST.z);
+    for (const sz of [-1, 1]) k.add(rbox(0.14, WEST.h - WEST.w / 2 + 0.05, 0.22, 0.03), capM(), X0 + 0.04, (WEST.h - WEST.w / 2 + 0.05) / 2, WEST.z + sz * (WEST.w / 2 + 0.06));
+    k.add(torus(WEST.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), X0 + 0.04, WEST.h - WEST.w / 2 + 0.05, WEST.z, Math.PI / 2);
+  }
   // near rims (low: the camera sees over them), with a coping
   const RIM = 0.55;
   wallBox(X0 - T, X1 + T, Z1, Z1 + T, BASE, RIM, rubbleM());
@@ -266,9 +311,8 @@ function buildHall(scene, physics) {
   B.col(X1 + T / 2, 0, T / 2, D / 2 + T, 1.4);
   // masonry rhythm on the far walls: buttresses, a string course, the cap
   for (const x of [-10, -6, -2, 2]) { k.add(rbox(0.55, H - U, 0.22, 0.04), stoneM(), x, U + (H - U) / 2, Z0 + 0.11); B.col(x, Z0 + 0.11, 0.28, 0.12, H); }
-  for (const z of [-8, -4, 0, 4, 8]) { k.add(rbox(0.22, H, 0.55, 0.04), stoneM(), X0 + 0.11, H / 2, z); B.col(X0 + 0.11, z, 0.12, 0.28, H); }
-  { const a = X0 - T / 2, b = WD.x - WD.w / 2 - 0.15, c = WD.x + WD.w / 2 + 0.15, d = X1 + T / 2;   // (the string course, broken by the terrace door)
-    k.add(rbox(b - a, 0.16, 0.18, 0.04), capM(), (a + b) / 2, 3.4, Z0 + 0.09); k.add(rbox(d - c, 0.16, 0.18, 0.04), capM(), (c + d) / 2, 3.4, Z0 + 0.09); }
+  for (const z of [-8, -4, 4, 8]) { k.add(rbox(0.22, H, 0.55, 0.04), stoneM(), X0 + 0.11, H / 2, z); B.col(X0 + 0.11, z, 0.12, 0.28, H); }
+  k.add(rbox(W + T, 0.16, 0.18, 0.04), capM(), 0, 3.4, Z0 + 0.09);
   k.add(rbox(0.18, 0.16, D + T, 0.04), capM(), X0 + 0.09, 3.4, 0);
   k.add(rbox(W + 2 * T + 0.1, 0.2, T + 0.14, 0.05), capM(), 0, H + 0.08, Z0 - T / 2);
   k.add(rbox(T + 0.14, 0.2, D + 2 * T + 0.1, 0.05), capM(), X0 - T / 2, H + 0.08, 0);
@@ -303,10 +347,17 @@ function buildHall(scene, physics) {
   railing(B, k, [[8.55, -7.05], [11.3, -7.05], [13.95, -7.05]], 0, { rusty: true });
   railing(B, k, [[-11.55, -3.4], [-11.55, -0.6]], 0, { rusty: true });
 
-  // ---- the well-house on the island: the shaft down from the street (its door is the way out)
+  // ---- DOORS-LBA2 #2, #4: the two lifts' feet, at the north gallery's ends: the street's in the north-east under
+  //      the colonnade, the terrace's at the raised walkway's west end
+  const NE = HATCHES.street.hall, NW = HATCHES.terrace.hall;
+  const liftNE = liftFoot(B, k, HATCHES.street, 0, H, true), liftNW = liftFoot(B, k, HATCHES.terrace, U, H, false);
+
+  // ---- the well-house on the island (LBA2's tower): the globe room's door in its south face; its shaft keeps only
+  //      the project's heat pipe coming down
   const WH = { x0: -4.4, x1: -1.4, z0: -2.6, z1: 0.4, h: 2.6 }, whx = (WH.x0 + WH.x1) / 2, whz = (WH.z0 + WH.z1) / 2;
+  const gdoor = { w: 1.0, h: 1.85 };
   {
-    const y0 = ISL, w = WH.x1 - WH.x0, d = WH.z1 - WH.z0, door = { w: 1.0, h: 1.85 };
+    const y0 = ISL, w = WH.x1 - WH.x0, d = WH.z1 - WH.z0, door = gdoor;
     // walls round a hollow shaft, the door in the south face
     wallBox(WH.x0, WH.x0 + 0.35, WH.z0, WH.z1, y0, y0 + WH.h, rubbleM());
     wallBox(WH.x1 - 0.35, WH.x1, WH.z0, WH.z1, y0, y0 + WH.h, rubbleM());
@@ -323,52 +374,38 @@ function buildHall(scene, physics) {
       k.add(new THREE.BoxGeometry((ww - hole) / 2, 0.2, hole), capM(), whx - (ww + hole) / 4, yy + 0.1, whz);
       k.add(new THREE.BoxGeometry((ww - hole) / 2, 0.2, hole), capM(), whx + (ww + hole) / 4, yy + 0.1, whz);
     }
-    // the door: a stone frame and its barred leaf standing open; the ladder's foot inside
+    // the door's stone frame (its leaf, Bersimon's little blue door, below)
     k.add(torus(door.w / 2 + 0.05, 0.08, 4, 12, Math.PI), capM(), whx, y0 + door.h - 0.02, WH.z1 + 0.02);
     for (const s of [-1, 1]) k.add(rbox(0.16, door.h, 0.14, 0.03), capM(), whx + s * (door.w / 2 + 0.05), y0 + door.h / 2, WH.z1 + 0.02);
-    k.at(whx + door.w / 2 - 0.02, y0, WH.z1 + 0.06, -1.9, () => {
-      for (let bx = 0.12; bx < door.w - 0.05; bx += 0.17) k.add(cyl(0.02, 0.02, door.h - 0.15, 5), ironM(), -bx, (door.h - 0.15) / 2 + 0.05, 0);
-      for (const y of [0.25, door.h * 0.55, door.h - 0.15]) k.add(rbox(door.w - 0.06, 0.05, 0.04, 0.01), ironM(), -door.w / 2, y, 0);
-    });
-    for (const s of [-1, 1]) k.add(cyl(0.025, 0.025, WH.h + 0.6, 5), MAT.wood('dark'), whx + s * 0.25, y0 + (WH.h + 0.6) / 2, WH.z0 + 0.5);
-    for (let y = 0.3; y < WH.h + 0.5; y += 0.32) k.add(cyl(0.02, 0.02, 0.5, 5), MAT.wood('dark'), whx, y0 + y, WH.z0 + 0.5, 0, { rz: Math.PI / 2 });
-    // SEWER-LIFT: the street's lift comes down here: its grated deck on the floor, its chains up the shaft
-    {
-      const lz = whz + 0.15, D = LIFT.S - 0.06;
-      for (const [px, pz, ww, dd] of [[0, -D + 0.035, 2 * D, 0.07], [0, D - 0.035, 2 * D, 0.07], [-D + 0.035, 0, 0.07, 2 * D - 0.14], [D - 0.035, 0, 0.07, 2 * D - 0.14]]) k.add(rbox(ww, 0.09, dd, 0.012), ironM(), whx + px, y0 + 0.045, lz + pz);
-      for (let i = -4; i <= 4; i++) k.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), ironM(), whx + i * 0.088, y0 + 0.065, lz);
-      for (const s of [-1, 1]) chain(k, ironM(), whx + s * (LIFT.S - 0.08), y0 + WH.h + 0.5, y0 + 0.1, lz, Math.PI / 2);
-    }
+    k.add(plane(0.5, 0.32), plaqueM(), whx + door.w / 2 + 0.45, y0 + 1.55, WH.z1 + 0.01);
     B.col(whx, WH.z0 + 0.4, w / 2, 0.4, y0 + WH.h + 0.6);
     B.col(WH.x0 + 0.2, whz, 0.2, d / 2, y0 + WH.h + 0.6);
     B.col(WH.x1 - 0.2, whz, 0.2, d / 2, y0 + WH.h + 0.6);
     B.col(whx - door.w / 2 - 0.4, WH.z1 - 0.2, 0.4, 0.2, y0 + WH.h + 0.6);
     B.col(whx + door.w / 2 + 0.4, WH.z1 - 0.2, 0.4, 0.2, y0 + WH.h + 0.6);
   }
-  R.exits.push({ ...B.world(whx, WH.z1 - 0.1), r: 0.7, to: 'sewer-out' });
-  R.spawn = { ...B.world(whx, WH.z1 + 1.35), a: 0 };
 
-  // ---- the project's new heat pipe: down the shaft, out of the well-house's north side, along the island's north
-  //      edge on stands, into the blue valve box bolted onto the old gate winch
-  const WN = { x: 4.3, z: -1.7, y: ISL };   // the winch
+  // ---- the project's new heat pipe: down the well-house shaft, out through its west wall, south along the island's
+  //      west edge on stands, into the blue valve box bolted onto the old gate winch
   {
-    const py = ISL + 0.7;
-    P.pipeline(k, [[-2.2, ISL + WH.h + 0.9, -1.9], [-2.2, py, -1.9], [-2.2, py, -3.35], [WN.x, py, -3.35], [WN.x, py, WN.z - 0.55]], 0.1, MAT.copper(), MAT.brass());
-    for (const x of [-0.5, 1.6, 3.4]) { k.add(rbox(0.08, py - WY, 0.08, 0.01), ironM(), x, (py + WY) / 2, -3.35); k.add(rbox(0.3, 0.06, 0.08, 0.01), ironM(), x, py - 0.12, -3.35); }
+    const py = ISL + 0.7, ex = -4.75;
+    P.pipeline(k, [[-2.2, ISL + WH.h + 0.9, -1.9], [-2.2, py, -1.9], [ex, py, -1.9], [ex, py, WN.z], [WN.x - 0.76, py, WN.z]], 0.1, MAT.copper(), MAT.brass());
+    for (const z of [-0.6, 1.0]) { k.add(rbox(0.08, py - ISL, 0.08, 0.01), ironM(), ex, (py + ISL) / 2, z); k.add(rbox(0.08, 0.06, 0.3, 0.01), ironM(), ex, py - 0.12, z); }
   }
-  // the winch: a drum on two iron frames, a crank; the chain runs up over the water to the gate
-  const valve = new THREE.Group(); valve.position.set(WN.x, 0, WN.z); B.group.add(valve);
-  {
+  // the winch: a drum on two iron frames, its axle north-south, a crank; the chain runs west over the water to the gate.
+  // (built in the winch's own frame, turned a quarter: its local x is the hall's −z, its local −z the hall's −x)
+  const valve = new THREE.Group(); valve.position.set(WN.x, 0, WN.z); valve.rotation.y = Math.PI / 2; B.group.add(valve);
+  k.at(WN.x, 0, WN.z, Math.PI / 2, () => {
     const y = ISL;
     for (const s of [-1, 1]) {
-      k.add(rbox(0.08, 0.95, 0.08, 0.01), ironM(), WN.x + s * 0.45, y + 0.47, WN.z - 0.2, 0, { rz: s * 0.15 });
-      k.add(rbox(0.08, 0.95, 0.08, 0.01), ironM(), WN.x + s * 0.45, y + 0.47, WN.z + 0.2, 0, { rz: s * 0.15 });
-      k.add(rbox(0.1, 0.06, 0.5, 0.01), ironM(), WN.x + s * 0.4, y + 0.9, WN.z);
+      k.add(rbox(0.08, 0.95, 0.08, 0.01), ironM(), s * 0.45, y + 0.47, -0.2, 0, { rz: s * 0.15 });
+      k.add(rbox(0.08, 0.95, 0.08, 0.01), ironM(), s * 0.45, y + 0.47, 0.2, 0, { rz: s * 0.15 });
+      k.add(rbox(0.1, 0.06, 0.5, 0.01), ironM(), s * 0.4, y + 0.9, 0);
     }
-    k.add(cyl(0.2, 0.2, 0.75, 12), rustM(), WN.x, y + 0.92, WN.z, 0, { rz: Math.PI / 2 });
-    for (const s of [-1, 1]) k.add(torus(0.21, 0.025, 4, 14), ironM(), WN.x + s * 0.36, y + 0.92, WN.z, Math.PI / 2);
-  }
-  // the valve box (animated: it knocks), its wheel, the brace through the drum
+    k.add(cyl(0.2, 0.2, 0.75, 12), rustM(), 0, y + 0.92, 0, 0, { rz: Math.PI / 2 });
+    for (const s of [-1, 1]) k.add(torus(0.21, 0.025, 4, 14), ironM(), s * 0.36, y + 0.92, 0, Math.PI / 2);
+  });
+  // the valve box (animated: it knocks), its wheel, the brace through the drum (on the drum's west side, by the pipe)
   {
     const vk = new P.Kit(valve);
     vk.add(rbox(0.5, 0.55, 0.42, 0.04), MAT.paint('#3a5a8a', 0.5), 0, ISL + 0.65, -0.55);
@@ -377,85 +414,80 @@ function buildHall(scene, physics) {
     vk.add(rbox(0.06, 0.06, 0.8, 0.01), MAT.paint('#3a5a8a', 0.5), 0.0, ISL + 0.86, -0.1, 0, { rx: 0.35 });
     vk.flush();
   }
-  B.col(WN.x, WN.z - 0.2, 0.55, 0.55, ISL + 1.2);
-  const chainEnd = [GATE.x, GATE.h + 0.45, Z0 + 0.25];
+  B.col(WN.x - 0.25, WN.z, 0.55, 0.55, ISL + 1.2);
+  const chainEnd = [X0 + 0.25, GATE.h + 0.45, GATE.z];
   {
-    const a = [WN.x, ISL + 1.1, WN.z], b = chainEnd, n = 14, pts = [];
+    const a = [WN.x - 0.1, ISL + 1.1, WN.z], b = chainEnd, n = 18, pts = [];
     for (let i = 0; i <= n; i++) { const t = i / n; pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - 0.7 * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]); }
     k.add(pipe(pts, 0.03, 0.12, 5), ironM(), 0, 0, 0);
-    k.add(cyl(0.12, 0.12, 0.12, 10), ironM(), b[0], b[1], b[2] + 0.05, 0, { rx: Math.PI / 2 });
+    k.add(cyl(0.12, 0.12, 0.12, 10), ironM(), b[0] + 0.05, b[1], b[2], 0, { rz: Math.PI / 2 });
   }
   // the gate: a rusted portcullis that rises when the winch turns
-  const gate = new THREE.Group(); gate.position.set(GATE.x, 0, Z0 - 0.3); B.group.add(gate);
+  const gate = new THREE.Group(); gate.position.set(X0 - 0.3, 0, GATE.z); gate.rotation.y = Math.PI / 2; B.group.add(gate);
   {
     const gk = new P.Kit(gate);
     for (let bx = -GATE.w / 2 + 0.1; bx < GATE.w / 2; bx += 0.19) { gk.add(cyl(0.026, 0.026, GATE.h, 5), rustM(), bx, GATE.h / 2, 0); gk.add(lathe([[0.001, 0], [0.03, 0.02], [0.001, 0.1]], 4), rustM(), bx, -0.08, 0, 0, { rx: Math.PI }); }
     for (const y of [0.4, 1.2, 2.0]) gk.add(rbox(GATE.w - 0.04, 0.07, 0.06, 0.01), rustM(), 0, y, 0);
     gk.flush();
   }
-  const gateCol = B.col(GATE.x, Z0 - 0.3, GATE.w / 2 + 0.05, 0.1, H);
-  B.col(GATE.x, Z0 - (T + 1.6) / 2, GATE.w / 2 + 0.3, (T + 1.6) / 2, 0, { seeThrough: true });   // (the passage's floor)
-  R.exits.push({ ...B.world(GATE.x, Z0 - 0.75), r: 0.55, room: 'sewervault' });
-  R.entries = { sewervault: { ...B.world(GATE.x, Z0 + 1.6), a: 0 } };
+  const gateCol = B.col(X0 - 0.3, GATE.z, 0.1, GATE.w / 2 + 0.05, H);
+  R.exits.push({ ...B.world(X0 - 0.75, GATE.z), r: 0.55, room: 'sewervault' });
+  R.entries = { sewervault: { ...B.world(X0 + 1.6, GATE.z), a: Math.PI / 2 } };
 
-  // ---- SEWERS-1: the other ways in and out (story/sewers.js says which are open)
-  // a door leaf hinged at its west edge in an opening of the north wall; it swings back into the passage
-  const leaf = (o, y0, build) => {
-    const g = new THREE.Group(); g.position.set(o.x - o.w / 2 + 0.04, y0, Z0 - 0.16); B.group.add(g);
-    const lk = new P.Kit(g); build(lk, o.w - 0.08, o.h - 0.04); lk.flush();
-    return { g, t: 0, open: 0 };
+  // ---- the ways in and out (story/sewers.js says which are open). The lifts: the street's goes up once Fosse's
+  //      padlock is off its lever (sw_works), the terrace's once its catch is drawn (sw_bolt); either one is ridden
+  //      by stepping onto its deck. The well-house's little blue door: Bersimon's key (sw_gdoor).
+  const lock = new THREE.Group(); lock.position.set(liftNE.lp.x - 0.05, 0.62, liftNE.lp.z); B.group.add(lock);
+  { const lk = new P.Kit(lock); lk.add(rbox(0.09, 0.11, 0.05, 0.01), MAT.brass(), 0, 0, 0); lk.add(torus(0.035, 0.009, 4, 10, Math.PI), ironM(), 0, 0.06, 0); lk.add(cyl(0.01, 0.01, 0.2, 4), ironM(), 0.03, 0.1, 0, 0, { rz: 1.2 }); lk.flush(); }
+  const CB = { x: NW.x + 0.3, z: NW.z + HATCHES.terrace.S + 0.09 };   // (the catch: an iron bar on the south guide, across the deck's edge)
+  const catchBar = new THREE.Group(); catchBar.position.set(CB.x, U + 0.55, CB.z); catchBar.rotation.y = Math.PI; B.group.add(catchBar);
+  { const ck = new P.Kit(catchBar); ck.add(rbox(0.6, 0.07, 0.07, 0.01), ironM(), -0.25, 0, 0); ck.add(rbox(0.07, 0.16, 0.07, 0.01), ironM(), 0.02, 0.06, 0); ck.add(sphere(0.035, 8, 6), MAT.brass(), 0.02, 0.15, 0); ck.flush(); }
+  const leaf = new THREE.Group(); leaf.position.set(whx - gdoor.w / 2 + 0.04, ISL, WH.z1 - 0.1); B.group.add(leaf);
+  {
+    const lk = new P.Kit(leaf), w = gdoor.w - 0.08, h = gdoor.h - 0.04;
+    lk.add(rbox(w, h, 0.07, 0.01), MAT.paint('#1c3550', 0.6), w / 2, h / 2, 0);
+    lk.add(torus(0.18, 0.03, 4, 5), MAT.brass(), w / 2, 1.3, 0.05);
+    lk.add(rbox(0.1, 0.14, 0.04, 0.01), MAT.brass(), w - 0.15, 0.95, 0.05);
+    lk.flush();
+  }
+  const leafCol = B.col(whx, WH.z1 - 0.15, gdoor.w / 2, 0.12, ISL + gdoor.h);
+  const sm = (t) => t * t * (3 - 2 * t);
+  const doors = {
+    bolt: { t: 0, open: false, apply: (t) => { catchBar.position.x = CB.x + 0.32 * sm(t); catchBar.rotation.z = 0.5 * sm(Math.min(1, t * 2)); } },
+    works: { t: 0, open: false, apply: (t) => { lock.visible = t < 0.999; lock.position.y = 0.62 - 0.5 * t * t; lock.rotation.z = 1.2 * t; } },
+    globe: { t: 0, open: false, apply: (t) => { leaf.rotation.y = 1.6 * sm(t); leafCol.enabled = t < 0.5; } },
   };
-  const leaves = {
-    // S-3: planks and iron bands; the bolt on the hall's side
-    bolt: leaf(WD, U, (lk, w, h) => {
-      lk.add(rbox(w, h, 0.07, 0.01), MAT.wood('dark'), w / 2, h / 2, 0);
-      for (const y of [0.3, h / 2, h - 0.3]) lk.add(rbox(w + 0.02, 0.07, 0.09, 0.01), ironM(), w / 2, y, 0);
-      lk.add(rbox(0.12, 0.16, 0.05, 0.01), ironM(), w - 0.14, 1.0, 0.06);
-    }),
-    // S-4: an iron grille door with a keyhole and no handle on this side
-    works: leaf(WORKS, 0, (lk, w, h) => {
-      for (let bx = 0.08; bx < w - 0.03; bx += 0.17) lk.add(cyl(0.024, 0.024, h, 5), rustM(), bx, h / 2, 0);
-      for (const y of [0.25, h / 2, h - 0.12]) lk.add(rbox(w, 0.06, 0.05, 0.01), rustM(), w / 2, y, 0);
-      lk.add(rbox(0.16, 0.24, 0.07, 0.01), ironM(), w - 0.16, 1.0, 0.02);
-    }),
-    // S-5: a small door painted night blue with a brass star on it
-    globe: leaf(GLOBE, 0, (lk, w, h) => {
-      lk.add(rbox(w, h, 0.07, 0.01), MAT.paint('#1c3550', 0.6), w / 2, h / 2, 0);
-      lk.add(torus(0.18, 0.03, 4, 5), MAT.brass(), w / 2, 1.3, 0.05);
-      lk.add(rbox(0.1, 0.14, 0.04, 0.01), MAT.brass(), w - 0.15, 0.95, 0.05);
-    }),
-  };
-  const bolt = new THREE.Mesh(rbox(0.5, 0.06, 0.06, 0.01), ironM()); bolt.position.set(WD.w - 0.08 - 0.14, 1.0, 0.1); bolt.castShadow = true; leaves.bolt.g.add(bolt);
   const gated = (e) => (on) => { const i = R.exits.indexOf(e); if (on && i < 0) R.exits.push(e); else if (!on && i >= 0) R.exits.splice(i, 1); };
   const exitOn = {
-    bolt: gated({ ...B.world(WD.x, Z0 + 0.1), r: 0.55, to: 'sewer-stoneup' }),
-    works: gated({ ...B.world(WORKS.x, Z0 + 0.1), r: 0.6, to: 'sewer-pink' }),
-    globe: gated({ ...B.world(GLOBE.x, Z0 + 0.1), r: 0.6, room: 'sewerglobe' }),
+    bolt: gated({ ...B.world(NW.x, NW.z), r: 0.5, to: HATCHES.terrace.exit }),
+    works: gated({ ...B.world(NE.x, NE.z), r: 0.5, to: HATCHES.street.exit }),
+    globe: gated({ ...B.world(whx, WH.z1 - 0.3), r: 0.55, room: 'sewerglobe' }),
   };
   // S-1: the stair to the tent is always open (LBA2: both ways from the start)
   R.exits.push({ ...B.world(X0 + 0.15, WEST.z), r: 0.6, room: 'wtent' });
+  const street = { ...B.world(NE.x - 0.9, NE.z + 1.5), a: 0 }, terrace = { ...B.world(NW.x + 1.5, NW.z), a: Math.PI / 2 };
   Object.assign(R.entries, {
+    street, terrace, pink: street, stoneup: terrace,   // (pink, stoneup: their names before DOORS-LBA2)
     wtent: { ...B.world(X0 + 1.5, WEST.z), a: Math.PI / 2 },
-    sewerglobe: { ...B.world(GLOBE.x, Z0 + 1.3), a: 0 },
-    pink: { ...B.world(WORKS.x, Z0 + 1.3), a: 0 },
-    stoneup: { ...B.world(WD.x, Z0 + 1.1), a: 0 },
-    fall: { ...B.world(7.5, 7.4), a: Math.PI },   // (S-2: out of the water onto the east pier)
+    sewerglobe: { ...B.world(whx, WH.z1 + 1.3), a: 0 },
+    fall: { ...B.world(-0.2, -1.5), a: 0 },   // (S-2, DOORS-LBA2 #8: down through the ceiling onto the island's platform)
   });
-  R.npcSpots = { fosse: { ...B.world(9.1, -9.7), a: -0.7 } };   // (S-4: the sewer man, at the pier's head by his door)
+  R.spawn = street;
+  R.npcSpots = { fosse: { ...B.world(8.5, -10.1), a: 1.2 } };   // (S-4: the sewer man, by his lift)
 
   // ---- lamps (some dead), barrels, blue rocks, spiked rings, plaques
-  const lamps = [[-4.6, 4.0, ISL, 1], [-0.45, -2.6, PLAT, 1], [3.2, -2.6, PLAT, 0], [-12.9, 1.0, 0, 1], [-6.0, -11.2, U, 0], [1.4, -11.2, U, 1],
-    [9.35, -11.4, 0, 1], [11.65, -11.4, 0, 0], [8.1, 3.0, 0, 1]];
+  const lamps = [[-4.6, 4.0, ISL, 1], [-0.45, -2.6, PLAT, 1], [3.2, -2.6, PLAT, 0], [-12.9, 2.6, 0, 1], [-6.0, -11.2, U, 0], [1.4, -11.2, U, 1],
+    [9.35, -11.4, 0, 1], [13.2, -11.0, 0, 0], [8.1, 3.0, 0, 1]];
   for (const [x, z, y, lit] of lamps) {
     globeLamp(k, x, y, z, lit);
     B.ccol(x, z, 0.22, y + 1.5);
     if (lit) B.light('#8fd0ff', 2.6, 6.5, x, y + 1.45, z);
   }
   B.light('#a8b4c0', 3.0, 30, 0, 9, 2);   // (the dim fill: grey daylight that seeps down the shafts)
-  for (const [x, z, r, y] of [[12.7, -9.2, 0.34, 0], [13.35, -8.4, 0.3, 0], [-12.9, 10.6, 0.34, 0], [-4.2, 7.1, 0.3, ISL]]) { B.put(x, z, 0, P.barrel, { r, h: r * 2.6, pal: 'honey', y, noCol: true }); B.ccol(x, z, r, y + r * 2.6); }
+  for (const [x, z, r, y] of [[12.7, -9.2, 0.34, 0], [13.35, -8.4, 0.3, 0], [-12.9, 6.9, 0.34, 0], [-4.2, 7.1, 0.3, ISL]]) { B.put(x, z, 0, P.barrel, { r, h: r * 2.6, pal: 'honey', y, noCol: true }); B.ccol(x, z, r, y + r * 2.6); }
   // (a giver's r is its container's radius + 1.05, as containers.js: the bonus then pops from outside the barrel's collider)
   R.givers.push({ id: 'sw_barrels', ...B.world(12.7, -9.2), y: 0, r: 0.34 + 1.05, top: 0.9, kinds: ['money', 'life'], n: 2 });
-  for (const [x, z, s, y] of [[13.6, -10.15, 0.8, 0], [-12.9, -2.4, 1.0, 0], [4.2, 7.0, 0.9, ISL], [7.9, 10.8, 0.8, 0], [-13.0, -10.6, 0.8, U]]) {
+  for (const [x, z, s, y] of [[13.6, -10.15, 0.8, 0], [-12.9, -2.4, 1.0, 0], [4.2, 7.0, 0.9, ISL], [7.9, 10.8, 0.8, 0], [-8.6, -11.3, 0.8, U]]) {
     k.add(blueRocks(), softMat, x, y, z, x, { sx: s, sy: s, sz: s });
     B.ccol(x, z, 0.42 * s, y + 0.6 * s);
   }
@@ -469,31 +501,23 @@ function buildHall(scene, physics) {
   // ---- the knock: every few seconds the valve box jolts and a ring spreads on the water under the pipe; it stops
   //      once the valve is eased (story/sewers.js plays the sound and counts the beat)
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.32, 24), new THREE.MeshBasicMaterial({ color: '#e8fbff', transparent: true, opacity: 0, depthWrite: false }));
-  ring.rotation.x = -Math.PI / 2; ring.position.set(WN.x - 0.3, WY + 0.02, -3.6); B.group.add(ring);
-  // (S-2: the splash where he fell in, beside the east pier)
-  const splash = new THREE.Mesh(ring.geometry, ring.material.clone());
-  splash.rotation.x = -Math.PI / 2; splash.position.set(9.4, WY + 0.02, 7.4); splash.visible = false; B.group.add(splash);
-  const H_ = { valve, gate, gateCol, ring, open: 0, opening: false, knockT: 99, quiet: false, splashT: 99 };
+  ring.rotation.x = -Math.PI / 2; ring.position.set(-5.5, WY + 0.02, WN.z - 0.4); B.group.add(ring);
+  const H_ = { valve, gate, gateCol, ring, open: 0, opening: false, knockT: 99, quiet: false };
   R.updaters.push((dt) => {
     // the jolt (0.25 s) and the ring (1.2 s)
     H_.knockT += dt;
     const j = H_.knockT < 0.25 ? Math.sin((H_.knockT / 0.25) * Math.PI * 3) * (1 - H_.knockT / 0.25) : 0;
-    valve.position.x = WN.x + j * 0.03; valve.rotation.z = j * 0.02;
+    valve.position.z = WN.z + j * 0.03; valve.rotation.z = j * 0.02;
     const rk = H_.knockT / 1.2;
     ring.visible = rk < 1; if (ring.visible) { ring.scale.setScalar(1 + rk * 4); ring.material.opacity = (1 - rk) * 0.5; }
+    // the doors: each moves over 0.8 s once opened
+    for (const L of Object.values(doors)) if (L.open && L.t < 1) { L.t = Math.min(1, L.t + dt / 0.8); L.apply(L.t); }
     // the gate rises over 2.4 s once the winch turns
-    H_.splashT += dt; const sk = H_.splashT / 1.6;
-    splash.visible = sk < 1; if (splash.visible) { splash.scale.setScalar(1.5 + sk * 7); splash.material.opacity = (1 - sk) * 0.7; }
-    for (const [id, L] of Object.entries(leaves)) {   // (a door swings open over 0.8 s; the bolt slides back first)
-      if (id === 'bolt') bolt.position.x = WD.w - 0.22 - 0.3 * Math.min(1, L.t * 3);
-      if (L.open && L.t < 1) L.t = Math.min(1, L.t + dt / 0.8);
-      const e = L.t * L.t * (3 - 2 * L.t); L.g.rotation.y = (id === 'works' ? 1.35 : 1.6) * Math.max(0, (e - (id === 'bolt' ? 0.3 : 0)) / (id === 'bolt' ? 0.7 : 1));
-    }
     if (H_.opening && H_.open < 1) { H_.open = Math.min(1, H_.open + dt / 2.4); gate.position.y = GATE.h * 0.92 * (H_.open * H_.open * (3 - 2 * H_.open)); if (H_.open >= 1) gateCol.enabled = false; }
   });
   R.hall = {
-    valve: { ...B.world(WN.x, WN.z + 0.85), y: ISL, face: Math.PI },
-    gate: { ...B.world(GATE.x, Z0 - 0.3) },
+    valve: { ...B.world(WN.x - 0.55, WN.z - 1.0), y: ISL, face: 0 },
+    gate: { ...B.world(X0 - 0.3, GATE.z) },
     knock() { H_.knockT = 0; },
     // the valve eased (and the gate up); instant: from a save
     setValve(b, instant = false) {
@@ -503,14 +527,15 @@ function buildHall(scene, physics) {
       if (instant) { H_.open = 1; gate.position.y = GATE.h * 0.92; gateCol.enabled = false; }
     },
     get gateOpen() { return H_.open >= 1; },
-    // SEWERS-1: the doors (instant: from a save), where to stand to use them, the splash of a fall
-    bolt: { ...B.world(WD.x, Z0 + 0.75), y: U },
-    works: { ...B.world(WORKS.x, Z0 + 0.7), y: 0 },
-    gdoor: { ...B.world(GLOBE.x, Z0 + 0.7), y: 0 },
-    setDoor(id, b, instant = false) { const L = leaves[id]; L.open = b; if (!b || instant) L.t = b ? 1 : 0; exitOn[id](b); },
-    doorOpen(id) { return leaves[id].open && leaves[id].t >= 1; },
-    splash() { H_.splashT = 0; },
+    // the catch, the padlock and the blue door (instant: from a save); where to stand to use them
+    bolt: { ...B.world(NW.x + 1.1, NW.z), y: U },
+    works: { ...B.world(NE.x - 1.1, NE.z), y: 0 },
+    gdoor: { ...B.world(whx, WH.z1 + 0.7), y: ISL },
+    setDoor(id, b, instant = false) { const L = doors[id]; L.open = b; if (!b || instant) { L.t = b ? 1 : 0; L.apply(L.t); } exitOn[id](b); },
+    doorOpen(id) { return doors[id].open && doors[id].t >= 1; },
+    splash() {},   // (DOORS-LBA2 #8: the drop lands on the platform now, no water)
   };
+  for (const L of Object.values(doors)) L.apply(0);
   return B.finish();
 }
 
@@ -727,12 +752,18 @@ function shaftGeo(S, top, depth) {
 function chain(k, m, x, y0, y1, z, ry = 0) {
   for (let y = y0, i = 0; y > y1; y -= 0.05, i++) k.add(torus(0.026, 0.007, 4, 8), m, x, y, z, ry + (i % 2 ? Math.PI / 2 : 0));
 }
+// DOORS-LBA2: both hatches, LBA2's (a 1.9 m lid in a stone frame); the lower town's with its rails and bollards
 export function buildSewerHatch(scene, physics, world) {
-  const { x, z } = HATCH, y = physics.groundAt(x, z);
-  const g = new THREE.Group(); g.position.set(x, y, z); g.name = 'sewerhatch';
+  for (const def of Object.values(HATCHES)) SEWER.hatches[def.id] = buildHatch(scene, physics, world, def);
+  SEWER.hatch = SEWER.hatches.street;
+  return SEWER.hatch;
+}
+function buildHatch(scene, physics, world, def) {
+  const { x, z, S } = def, y = physics.groundAt(x, z);
+  const g = new THREE.Group(); g.position.set(x, y, z); g.name = 'sewerhatch-' + def.id;
   (world?.root || scene).add(g);
   const k = new P.Kit(g);
-  const { S, F, DEPTH, DECK } = LIFT;
+  const { F, DEPTH, DECK } = LIFT;
   // the frame: dressed stone, its inner edge 3 cm over the opening (it covers the seam with the shaft)
   const I = S - 0.03, W = F + 0.03;
   for (const [px, pz, w, d] of [[0, -I - W / 2, 2 * (I + W), W], [0, I + W / 2, 2 * (I + W), W], [-I - W / 2, 0, W, 2 * I], [I + W / 2, 0, W, 2 * I]]) k.add(rbox(w, 0.26, d, 0.03), capM(), px, -0.08, pz);
@@ -742,8 +773,26 @@ export function buildSewerHatch(scene, physics, world) {
     k.add(torus(0.07, 0.018, 5, 12), ironM(), s * (S - 0.01), 0.15, 0);
     k.add(cyl(0.014, 0.014, 0.14, 5), ironM(), s * (S - 0.01), 0.15, 0, 0, { rx: Math.PI / 2 });
   }
-  // the chalk mark on the frame's south side
-  k.add(plane(0.5, 0.2), M('sw_rimChalk', () => { const m = new THREE.MeshBasicMaterial({ map: canvasTex(128, 52, (c, W, H) => { c.clearRect(0, 0, W, H); c.strokeStyle = c.fillStyle = 'rgba(240,240,232,0.9)'; c.lineWidth = 4; c.font = 'bold 22px sans-serif'; c.fillText('A+L', 6, 34); c.beginPath(); c.moveTo(70, 26); c.lineTo(118, 26); c.moveTo(118, 26); c.lineTo(104, 16); c.moveTo(118, 26); c.lineTo(104, 36); c.stroke(); }), transparent: true, depthWrite: false }); m.userData.noShadow = true; return m; }), 0, 0.055, I + W / 2, Math.PI, { rx: -Math.PI / 2 });
+  // the street's: Arthur's chalk on the frame's south side; iron rails round its north, east and south sides, and two
+  // stone bollards on the west where it is stepped onto (LBA2's decoration there)
+  if (def.rails) {
+    k.add(plane(0.5, 0.2), M('sw_rimChalk', () => { const m = new THREE.MeshBasicMaterial({ map: canvasTex(128, 52, (c, W, H) => { c.clearRect(0, 0, W, H); c.strokeStyle = c.fillStyle = 'rgba(240,240,232,0.9)'; c.lineWidth = 4; c.font = 'bold 22px sans-serif'; c.fillText('A+L', 6, 34); c.beginPath(); c.moveTo(70, 26); c.lineTo(118, 26); c.moveTo(118, 26); c.lineTo(104, 16); c.moveTo(118, 26); c.lineTo(104, 36); c.stroke(); }), transparent: true, depthWrite: false }); m.userData.noShadow = true; return m; }), 0, 0.055, I + W / 2, Math.PI, { rx: -Math.PI / 2 });
+    const Rr = S + F + 0.42, rh = 0.95, rm = M('sw_streetRail', () => MAT.paint('#2f3a3c', 0.55));
+    const run = [[-Rr, -Rr], [Rr, -Rr], [Rr, Rr], [-Rr, Rr]];
+    for (let i = 1; i < run.length; i++) {
+      const [ax, az] = run[i - 1], [bx, bz] = run[i], L = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
+      for (const yy of [0.45, rh]) k.add(cyl(0.022, 0.022, L, 6), rm, (ax + bx) / 2, yy, (az + bz) / 2, ry, { rx: Math.PI / 2 });
+      for (let s = 0.32; s < L - 0.1; s += 0.32) k.add(cyl(0.014, 0.014, rh - 0.05, 5), rm, ax + (bx - ax) * s / L, (rh - 0.05) / 2, az + (bz - az) * s / L);
+      const cx = (ax + bx) / 2, cz = (az + bz) / 2, hw = Math.abs(bx - ax) / 2 + 0.06, hd = Math.abs(bz - az) / 2 + 0.06;
+      physics.add({ type: 'box', x: x + cx, z: z + cz, hw, hd, top: y + 1.05, seeThrough: true, noStand: true });
+    }
+    for (const [px, pz] of run) { k.add(rbox(0.09, rh + 0.06, 0.09, 0.015), rm, px, (rh + 0.06) / 2, pz); k.add(sphere(0.055, 8, 6), rm, px, rh + 0.1, pz); }
+    for (const s of [-1, 1]) {
+      const bx = -1.8, bz = s * 1.35;
+      k.add(lathe([[0.001, 0], [0.2, 0], [0.19, 0.08], [0.15, 0.12], [0.14, 0.55], [0.16, 0.6], [0.12, 0.7], [0.001, 0.74]], 10), capM(), bx, -0.02, bz);
+      physics.add({ type: 'cyl', x: x + bx, z: z + bz, r: 0.2, top: y + 0.72, seeThrough: true, noStand: true });
+    }
+  }
   k.flush();
   // the opening's square at the rim (stencil 2 where it is seen), and the shaft drawn there
   const cut = new THREE.Mesh(plane(2 * S, 2 * S), M('sw_cut', () => new THREE.MeshBasicMaterial({
@@ -772,14 +821,14 @@ export function buildSewerHatch(scene, physics, world) {
   }
   // the deck: a grated iron platform in a heavy frame, eyes for the chains, a lever post at the south-east corner
   const deck = new THREE.Group(); deck.name = 'sewerDeck'; deck.userData.keep = true; g.add(deck);
-  const deckM = M('sw_deckIron', () => { const q = ironM().clone(); q.userData.base = q.color.clone(); return q; });
-  const D = S - 0.06, LP = { x: D - 0.1, z: D - 0.1 };
+  const deckM = M('sw_deckIron_' + def.id, () => { const q = ironM().clone(); q.userData.base = q.color.clone(); return q; });
+  const D = S - 0.06, LP = { x: D - 0.1, z: D - 0.1 }, nS = Math.floor((D - 0.08) / 0.088);
   const lever = new THREE.Group();
   {
     const dk = new P.Kit(deck);
     for (const [px, pz, w, d] of [[0, -D + 0.035, 2 * D, 0.07], [0, D - 0.035, 2 * D, 0.07], [-D + 0.035, 0, 0.07, 2 * D - 0.14], [D - 0.035, 0, 0.07, 2 * D - 0.14]]) dk.add(rbox(w, 0.09, d, 0.012), deckM, px, DECK - 0.045, pz);
-    for (let i = -4; i <= 4; i++) dk.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), deckM, i * 0.088, DECK - 0.027, 0);
-    for (const zz of [-0.2, 0.2]) dk.add(rbox(2 * D - 0.1, 0.04, 0.035, 0.006), deckM, 0, DECK - 0.065, zz);
+    for (let i = -nS; i <= nS; i++) dk.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), deckM, i * 0.088, DECK - 0.027, 0);
+    for (const zz of [-D * 0.5, 0, D * 0.5]) dk.add(rbox(2 * D - 0.1, 0.04, 0.035, 0.006), deckM, 0, DECK - 0.065, zz);
     for (const s of [-1, 1]) dk.add(torus(0.035, 0.01, 4, 8), deckM, s * (S - 0.08), DECK + 0.02, 0, Math.PI / 2);
     // the post: a square iron column with a cap, a quadrant for the lever
     dk.add(rbox(0.07, 0.78, 0.07, 0.01), deckM, LP.x, DECK + 0.39, LP.z);
@@ -793,23 +842,23 @@ export function buildSewerHatch(scene, physics, world) {
     lever.userData.arm = arm;
   }
   for (const o of [inner, deck]) o.traverse((q) => { if (q.isMesh) { q.renderOrder = 1.6; q.castShadow = false; q.receiveShadow = true; } });
-  // the grate itself, on a hinge at its north edge
+  // the lid itself, an iron grating on a hinge at its north edge
   const hinge = new THREE.Group(); hinge.position.set(0, 0.06, -S); hinge.userData.keep = true; g.add(hinge);
   {
-    const hk = new P.Kit(hinge);
+    const hk = new P.Kit(hinge), nb = Math.floor((S - 0.1) / 0.12);
     for (const [px, pz, w, d] of [[0, 0.03, 2 * S + 0.04, 0.06], [0, 2 * S - 0.03, 2 * S + 0.04, 0.06], [-S + 0.0, S, 0.06, 2 * S], [S - 0.0, S, 0.06, 2 * S]]) hk.add(rbox(w, 0.05, d, 0.01), ironM(), px, 0, pz);
-    for (let i = -3; i <= 3; i++) hk.add(rbox(0.035, 0.045, 2 * S - 0.06, 0.008), ironM(), i * 0.12, 0, S);
-    hk.add(rbox(2 * S - 0.06, 0.045, 0.035, 0.008), ironM(), 0, 0.005, S);
+    for (let i = -nb; i <= nb; i++) hk.add(rbox(0.035, 0.045, 2 * S - 0.06, 0.008), ironM(), i * 0.12, 0, S);
+    for (const zz of [S * 0.5, S, S * 1.5]) hk.add(rbox(2 * S - 0.06, 0.045, 0.035, 0.008), ironM(), 0, 0.005, zz);
     hk.add(torus(0.06, 0.012, 4, 10), ironM(), 0, 0.04, 2 * S - 0.12, 0, { rx: Math.PI / 2 });
     hk.flush();
   }
-  // (shut, only the dark shows between the bars; the deck and the shaft's iron come with the grate lifted)
+  // (shut, only the dark shows between the bars; the deck and the shaft's iron come with the lid lifted)
   const show = (b) => { deck.visible = b; inner.visible = b; };
   const base = deckM.userData.base;
-  SEWER.hatch = {
-    x, z, y,
+  const H = {
+    id: def.id, entry: def.entry, exit: def.exit, x, z, y, S,
     open: false,
-    deckY: 0,   // the deck's drop below the lane (m, 0 at the top)
+    deckY: 0,   // the deck's drop below the street (m, 0 at the top)
     setOpen(b) { this.open = b; hinge.rotation.x = b ? -1.7 : 0; this.setDeck(0); this.setLever(0); show(b); },
     // the deck (and whoever rides it) `d` m down the shaft; the iron darker the deeper it goes
     setDeck(d) {
@@ -823,27 +872,17 @@ export function buildSewerHatch(scene, physics, world) {
     deckTop() { return this.y + DECK - this.deckY; },
     lever: { x: x + LP.x, z: z + LP.z },
   };
-  SEWER.hatch.setOpen(false);
-  return SEWER.hatch;
+  H.setOpen(false);
+  return H;
 }
 
-// (SEWER-LIFT: the grate is no longer a door: on the deck, the lever takes him down: story/sewers.js)
-// SEWERS-1: the lower town's street door (pink, S-4) always leads in, to the Works door at the east pier's head; the
-// terrace porch (stoneup, S-3) once the bolt below is drawn. Each lands at its own door in the hall (R.entries).
-const house = (W, id) => W?.houses?.find((h) => h.id === id);
-export function sewerDoors(W, f = {}) {
-  const out = [];
-  for (const [id, on] of [['pink', true], ['stoneup', !!f.sw_bolt]]) {
-    const h = house(W, id);
-    if (on && h?.door) out.push({ house: id, x: h.door.x, z: h.door.z, r: 0.9, room: 'sewer', spawn: (R) => R.entries?.[id] });
-  }
-  return out;
-}
-export function sewerExit(to, W) {
-  const id = { 'sewer-pink': 'pink', 'sewer-stoneup': 'stoneup' }[to], hs = id && house(W, id);
-  if (hs?.door) return { x: hs.door.x + Math.sin(hs.ry) * 1.2, z: hs.door.z + Math.cos(hs.ry) * 1.2, a: hs.ry };
-  const h = SEWER.hatch;
-  // back up the shaft: on the deck in the grate (story/sewers.js brings it up the last stretch)
-  if (to === 'sewer-out' && h) return { x: h.x, z: h.z, a: Math.PI / 2 };
+// (SEWER-LIFT, DOORS-LBA2: a hatch is no door: on its deck, the lever takes him down, story/sewers.js. The lower
+// town's pink house and the terrace's porch no longer lead down: the porch is gone, the house is Fosse's office.)
+export function sewerDoors() { return []; }
+// back up a shaft: on the deck in its hatch (story/sewers.js brings it up the last stretch). 'sewer-pink' was the
+// pink house's way out before DOORS-LBA2: it is the street hatch's now.
+export function sewerExit(to) {
+  const id = { 'sewer-out': 'street', 'sewer-pink': 'street', 'sewer-stoneup': 'terrace' }[to], h = id && SEWER.hatches[id];
+  if (h) return { x: h.x, z: h.z, a: h.id === 'street' ? -Math.PI / 2 : Math.PI / 2, stay: true };   // (on the deck: no door step off it; the street's faces its open west side)
   return null;
 }

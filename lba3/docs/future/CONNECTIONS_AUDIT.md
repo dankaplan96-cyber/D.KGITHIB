@@ -133,6 +133,12 @@ joined only by spaceship, FunFrock dead and Vesk the villain, no Earth-style nig
 **Built on `sewers-1` (SEWERS-1, 3.11):** S-1, S-2, S-3, S-4 (code-only: the pink door → the Works door at the east
 pier's head; Fosse the sewer man in the hall), S-5 (the globe's room, a new small room `sewerglobe` in the vault's kit, no
 lamp of its own; the key is Bersimon's) and C-2. Flags `sw_*`; `tests/sewers-ways.mjs`.
+**Rebuilt by DOORS-LBA2 (8.11, the laptop's decoded links):** S-3 and S-4 are LBA2's two lift hatches now (the lower
+town's railed hatch at (−28.5, 27.6) → the hall's NE shaft, Fosse's padlock on its lever below; the terrace's at
+(−25.1, −31.5) → the NW shaft, its catch drawn below); the pink house is Fosse's shut office 3 m north, the porch is
+gone, WA-14's Bug Street grate is gone; S-5's door is the well-house's; the treasure gate is in the west wall; S-2
+lands on the island's platform; S-1 comes out at z 10. The flags kept their meaning. `docs/lba-maturity/door-map.md`,
+`tests/doors-lba2.mjs`.
 | # | Gap | Proposal | Purpose | Chapter | Cost |
 |---|---|---|---|---|---|
 | S-1 | Bersimon's tent has no way down (LBA2 row 16) | A trapdoor under Bersimon's rug, a stair down to the hall's west end. He has felt the warm air rising under the town (his bible line) and sends Twinsen to look: the grate's side story gets a second, grown-up hook, and the tent becomes the sewers' way in and out from the plateau. | story beat (optional), a shortcut plateau ⇄ lower town | 1–2 hook, every chapter after | M · code (trapdoor prop and prompt in `wizards.js`; a doorway and stair in the hall's west wall in `sewers.js`; two exits) |
