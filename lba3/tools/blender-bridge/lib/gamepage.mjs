@@ -9,6 +9,7 @@ import { GAME_ROOT } from '../bridge.mjs';
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.bin': 'application/octet-stream', '.woff2': 'font/woff2' };
 
 export function serve(root = GAME_ROOT) {
+  root = path.resolve(root);   // (a root given with forward slashes must still match the joined paths' check)
   const srv = http.createServer((req, res) => {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (p.endsWith('/')) p += 'index.html';

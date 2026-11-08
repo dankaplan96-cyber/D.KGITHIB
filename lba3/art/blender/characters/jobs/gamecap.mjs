@@ -10,7 +10,7 @@ const OUT = process.argv[2]; fs.mkdirSync(OUT, { recursive: true });
 const BASE = process.env.BASE || 'http://127.0.0.1:8257/', GPU = !!process.env.GPU;
 const LOOKSWANT = (process.env.LOOKS || 'twinsen,zoe').split(',');
 const SKIP_POSES = !!process.env.SKIP_POSES;
-const browser = await chromium.launch(GPU ? { channel: 'chrome', headless: false, args: ['--ignore-gpu-blocklist'] } : { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch(GPU ? { channel: 'chrome', headless: false, args: ['--ignore-gpu-blocklist'] } : { ...(process.env.SHELL_EXE ? { executablePath: process.env.SHELL_EXE } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
 for (const [k, v] of Object.entries(process.env)) if (k.startsWith('CAND_') && v) { const look = k.slice(5); console.log('candidate', look, v); await ctx.route(`**/assets/poly/${look}.json`, (r) => r.fulfill({ path: v, contentType: 'application/json' })); }
 await ctx.addInitScript(() => { let a = 0x2f6b1d; Math.random = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });

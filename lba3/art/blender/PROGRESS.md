@@ -71,7 +71,7 @@ Jobs: `characters/jobs/*.json`.
   look) instead of its `bones`, so it cannot pass; bones checked separately. The `textured` preview of a character is
   white (its materials only set the viewport colour); the neutral views are the useful ones.
 
-### Citadel batch 1: Gilbert (MOUSTACHE-1), Pippa and the aprons (APRON-EDGE): CAST-POLISH-CITADEL (8.11.2026)
+### Citadel batch 1: Gilbert (MOUSTACHE-1), Pippa and the aprons (APRON-EDGE): CAST-POLISH-CITADEL (8.11.2026; pushed a7d14466)
 CAST-POLISH-HEROES was pushed (c2684be7, with the bridge fixes; `run_job.py` copied from the main repo).
 Census (the game, chapters 1–2 on Citadel, `census.mjs`): the story people present in both chapters are Zoé, Arthur,
 Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim), and residents.
@@ -95,22 +95,74 @@ Surveyed in the review scene (arthur, pippa, mira, gilbert, bram, odile, nell); 
 - Seen, not changed: in the throw and the sword the bib sinks behind the tunic (already so before); the Rabbibunnies'
   necks are plain long tubes; Gilbert's side fringe is still balls.
 
+### Citadel batch 2: Mira, Bram, Odile, Nell: CAST-POLISH-CITADEL-2 (8.11.2026; pushed cca490df, applies after CITADEL)
+Edits in `tools/blender/cast_poly.py` (helpers `cord`, `visor`; one CAST flag each, the old shape when it is off):
+- Mira, GLASSES-MIRA (`glassesRim`): flat wire rings off the face → round rims laid on the face, bridge, arms. 2330 → 2650 (+13.7 %).
+- Bram, PEAK-BRAM (`peakCurved`): the flat cap's plank peak → a curved, sloping visor under the crown. 3630 → 3670.
+- Odile, PEAK-ODILE (`peakCurved`): the uniform cap's plank peak → a curved visor from under the band. 2436 → 2476.
+- Nell, GOGGLES-NELL (`gogglesGlass`): gold drums with flat faces → brass cups, rolled rims, dark glass (#382b14 =
+  0.28 × the brass), a bridge. 2768 → 3126 (+12.9 %, incl. +32 of batch 1's apron edge, which her file had not had).
+Candidates: `characters/citadel2/export/`; request `tools/testlab/requests/CAST-POLISH-CITADEL-2.diff` (on top of
+CAST-POLISH-CITADEL.diff; checked with `git apply --check`) + `CAST-POLISH-CITADEL-2/*.json`. Looked at in the review
+scene (faces front/¾/side), in the game (Follow/Medium, dialogue, close-ups, 13 poses × 2), Blender views of Mira and Nell.
+Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS. `assets/poly` put back.
+States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, frame time not
+run · integrated: no (request). Pictures `docs/future/characters/{mira,bram,odile,nell}/`.
+
+### Citadel batch 3: the guard (VISOR-GUARD): CAST-POLISH-CITADEL-3 (8.11.2026)
+Surveyed in the review scene (scratch `blend/survey3.png`): Tim, Lulu, Doran, Joe, the guard, Dot (pim); Arthur earlier.
+Only the guard has a clear weakness: his visor was a flat box (two black bricks either side of the trunk).
+- Guard, VISOR-GUARD (`visorCurved`, his CAST entry; vguardG keeps the box): a band of the helmet's curve round the
+  front, 1–1.6 cm proud, the same dark glass. 3578 → 3718 tris (+3.9 %). Export `characters/citadel3/export/guard.json`,
+  views `citadel3/previews/guard-after`, validate 0 fails (2 warnings as before: feet −1.2 cm, loose vertices).
+- The others read well at Follow/Medium and in close-up (no change proposed): Tim, Lulu, Doran, Joe, Dot, Arthur.
+- In the game (Follow/Medium, dialogue, close-ups, 13 poses) and Blender views looked at. Tests: solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS; `assets/poly` put back. Pictures
+  `docs/future/characters/guard/`; request `requests/CAST-POLISH-CITADEL-3*` (on top of CITADEL and CITADEL-2).
+
+### Zeelich batch 1: the Esmers (ROBE-EDGE-ESMER, BOOTS-ESMER, ARMS-ESMER): CAST-POLISH-ZEELICH (8.11.2026)
+Census (`jobs/census-z.mjs`, all 147 people at load; `zeelich/reports/census-all.json`): the six Esmer looks dress 28 people
+(keeper ×8: keeper, ilo, marl, zc_guard, zt_guard, zt_guard2, up_guard, esren; clerk ×6: clerk, aven, zc_clerk, up_clerk,
+ot_keep, ot_clerk; oku ×5: oku, pask, up_esmer, ennu, hs_worker4; xil ×4: xil, zc_courier, up_courier, oshra; councilChair ×3:
+chair, velo, ot_boss; nara ×2: nara, sefa) plus ~20 of the isles (islandlife.js, lazy). Surveyed in lookdev (keeper, clerk,
+oku, xil, councilChair, nara, councilB): the Esmers read worst of the region (paint robe, slipper feet under shins that end in
+the air, stick arms). LBA2 measured read-only (`tools/lba-source/measure.py`, bodies 80 and 186, numbers only): the capsule is
+the original's and stays; feet 0.2 H x 0.09 H x 0.06 H (ours 0.15 x 0.04 x 0.03), arms +-0.021-0.027 H (ours 0.014-0.017).
+- Edit (`cast_poly.py` build_esmer + `esmer_boot`, `limb_legs(foot=)`; `ESMER_OLD=1` = the old build, which equals the
+  committed six files exactly): robe 0.8 cm off the body with rolled hem and collar in the trim hex; boots 0.19 x 0.06 x 0.06 H
+  with a shaft (foot below, shin above); arms 0.017-0.020 H.
+- Budget: body +18.1 % (keeper/xil/nara 1504 -> 1776), +17.7 % (clerk), +14.4 % (oku/councilChair 1884 -> 2156); bones, order,
+  eyes, mouths, weights, colours unchanged; DRESS-1 variants 1-6 recolour everything (keeper, oku, clerk); validate 0 fails.
+- In the game: hero 4 draws before and after; Zeelich street (chapter 3) 797 = 797 calls (SwiftShader), 760 = 760 (Vega 8),
+  +1360 tris; Vega 8 20 s x 2 pairs: median 17.7/17.7 -> 17.6/17.6 ms, p95 18.4/18.5 -> 18.2/18.3 (no measurable regression,
+  at the 60 Hz cap).
+- Tests (the six in assets/poly, renamed shell `SHELL_EXE`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209,
+  story-journeys 30/30 PASS; assets/poly put back.
+- Files: `characters/zeelich/{source,export,work,previews,reports}`; jobs `zeelich-*.json`; new tools `zeecap.mjs` (Zeelich's
+  street in chapter 3; GPU=1 frame times), `posecap.mjs` (13 poses whole-body in lookdev; `views=` turns the body),
+  `census-z.mjs`; lookcap.mjs takes SHELL_EXE. Pictures `docs/future/characters/{keeper,oku,xil,nara,clerk,councilChair}/`
+  (chapter 3+: never to the user). Request `tools/testlab/requests/CAST-POLISH-ZEELICH*` (+ note in WORLD_ART_REQUESTS.md).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance verified ✓ (draws/triangles; Vega 8 frame time
+  in Zeelich's street, light check) · integrated: no (request for the cloud).
+- Left: in doze the Esmers' feet lie apart from the shins (rig pose, before and after); cone hands; keeper x8 / oku x5 one
+  body each; Otringal's Quetch (councilB x4, lharWoman's zc_petit) untouched.
+
 ## Current
-- (next) Citadel batch 2 (queue item 3): Mira, Bram, Odile, Nell, Arthur were surveyed (`survey.png` in the scratchpad);
-  candidates: the Rabbibunny neck (race-wide: check LBA2 first), Mira's glasses, Bram.
+- CAST-POLISH-ZEELICH ready for the cloud (applies on origin + HEROES, CITADEL, CITADEL-2, CITADEL-3).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
-3. Citadel's recurring people
-4. CLOUD_ORDERS 28, by region: Zeelich and Otringal, the isles, Desert Island, the Hamalayi, the underground
+3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
+4. CLOUD_ORDERS 28, by region: Zeelich and Otringal (batch 1, the Esmers: CAST-POLISH-ZEELICH), the isles, Desert
+   Island, the Hamalayi, the underground
 5. The named cast
 6. The most shared models' shape variants (`<look>_b`)
 7. Equipment: the ball, the sword
 8. Common props
 
 ## Next action
-Citadel batch 2: capture Mira, Bram, Odile, Nell in the review scene and the game (`characters/jobs/gamecap.mjs`
-LOOKS=…), pick one weakness each that is not race-wide, and take it through the same loop (`cast_poly.py`, a CAST entry
-per person, the LOOKS role hexes exact). Run the tests with `SHELL_EXE` (a renamed copy of the headless shell: browsers
-named chrome-headless-shell were being closed from outside). Never kill processes you did not start.
+Zeelich batch 2: the keeper shape variant `keeper_b` (order 24: a new LOOKS entry + JSON, the people by id; e.g. the guards
+zc_guard, zt_guard, zt_guard2, up_guard as a helmeted, heavier Esmer, Ilo/Marl/Esren keep keeper), then `oku_b`; then
+Otringal's Quetch (councilB on kira/sanna/ama). Diffs go on top of CAST-POLISH-ZEELICH (base: origin + HEROES, CITADEL, -2,
+-3, ZEELICH applied in a scratch git repo). Browsers with `SHELL_EXE` (a renamed copy of the headless shell); server 8257.

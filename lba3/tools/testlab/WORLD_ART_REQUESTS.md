@@ -2907,3 +2907,278 @@ Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{gilber
   - Gilbert's side fringe is still a row of balls (the G1-ART design); lharMan and dallan keep the bead moustache.
   - The Rabbibunnies' necks are plain long tubes (a race-wide proportion, not checked against LBA2 here).
   - The bib-sinks-in-the-throw problem above.
+
+## CAST-POLISH-CITADEL-2 · Mira's glasses, Bram's and Odile's cap peaks, Nell's goggles · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-2.diff` (tools/blender/cast_poly.py only). It goes **on top of CAST-POLISH-CITADEL.diff**,
+which a7d14466 carries as a request and has not applied; `git apply --check` is clean on that base. New model files
+for `assets/poly/`: `requests/CAST-POLISH-CITADEL-2/{mira,bram,odile,nell}.json`. They were built by `cast_poly.py
+<skel> <out> mira bram odile nell` in Blender 5.2.3 through the bridge.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{mira,bram,odile,nell}/`.
+Each change is behind a CAST flag of that person only; with the flag off, the old shape is built.
+- **Mira, GLASSES-MIRA** (`glassesRim`):
+  - Before: her spectacles were flat wire rings 1.2 cm off the face and wider than it. From the side and ¾ they stood
+    in the air round the eyes like a scribble.
+  - Now: round rims (a thin cord) laid on the face round each eye, a bridge over the snout and an arm back toward each
+    ear, in the same dark colour. In the close-ups they read as glasses.
+  - 2330 → 2650 triangles (+13.7 %).
+- **Bram, PEAK-BRAM** (`peakCurved`):
+  - Before: the flat cap's peak was a flat box, a plank sticking out from the side.
+  - Now: a curved visor tucked under the crown's front, sloping down, shorter toward its sides, in the hat's shade.
+  - 3630 → 3670 triangles.
+- **Odile, PEAK-ODILE** (`peakCurved`):
+  - Before: the customs cap's peak was the same plank.
+  - Now: a curved visor from under the gold band, in the hat's shade.
+  - 2436 → 2476 triangles.
+- **Nell, GOGGLES-NELL** (`gogglesGlass`):
+  - Before: the goggles were two gold drums with flat gold faces, coins on her brow.
+  - Now: brass cups with a rolled rim round a dark glass lens, joined by a bridge. The lens colour is #382b14 (0.28 ×
+    the brass, not a LOOKS role; Nell's model is hers alone).
+  - Her file also takes CAST-POLISH-CITADEL's apron edge, which her model had not been rebuilt for.
+  - 2768 → 3126 triangles (+12.9 %, the apron's +32 included).
+- **Contracts:**
+  - Bone names, eyes and mouths are identical.
+  - Mira's `bones` list comes out in a different order (kneeL before hipL); the game maps bones by name.
+  - 4 weights per vertex summing to 1. Feet and top unchanged.
+  - The hero frame is 4 draw calls before and after, with each as the hero.
+- **Looked at:**
+  - The review scene: face front, ¾ and side.
+  - The game (SwiftShader, `gamecap.mjs`, each as the hero at the same square spot): Follow/Medium, the dialogue with
+    Dot, close-ups front, ¾ and back, and 13 poses × 2 views.
+  - At Follow/Medium Nell's goggles and Mira's glasses now read as such. The two peaks show in close-up and in the
+    dialogue only.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **validate:** 0 fails and 2 warnings, both already there before this batch:
+  - Bram's feet 1.2 cm below the floor;
+  - loose vertices in bram_coat, bram_trousers and odile_hat (the cap dome's culled faces).
+- **Cost:** +40 to +358 triangles a model (Mira +13.7 %, Nell +12.9 %; within the +25 % rule). No draw call, material
+  or texture added. Vega 8 frame time not run (the same reason as CAST-POLISH-CITADEL).
+- **Left:**
+  - Nell's leather apron: the tunic's flare shows through its lower part in a stride, and its pocket and buckle are
+    pale patches. Both already so before.
+  - Bram's peak shows only from the side and in the dialogue.
+  - The Rabbibunny neck tube (race-wide, not touched).
+- Order: apply `CAST-POLISH-CITADEL.diff` first (a7d14466 carries it as a request); this diff applies cleanly on top.
+
+## MUSIC-CRACKLE · the music crackle on the user's laptop (CLOUD_ORDERS 27b) · the laptop, 8.11.2026
+Diff: `requests/MUSIC-CRACKLE.diff` (engine/audio.js, tests/audio.mjs, docs/MUSIC.md, new `tools/music/crackle/` (10
+measuring tools, 568 lines); against cca490df, `git apply --check` clean).
+**Not reproduced in what the game outputs; one real click source fixed.** Ryzen 5 3500U, Windows 11, plugged in, Realtek
+48 kHz; the dev build (Electron 43.7.9 with the desktop app's switches, `AudioContextPlayoutStats` on) and the
+installed 0.48.0 exe fullscreen (own `--user-data-dir`); a ~190 s scripted Citadel session per run (walking, the water
+office in and out, ducking, the slider, an area change, combat, Home's loop seam, a piece's end) and a stress run;
+the CPU at 100 % from other agents throughout (frame p95 52–274 ms).
+- Source files (Automated runtime): every MP3 decoded as the game does: no clipping (peaks 0.52–0.83), lengths =
+  the manifest (padding trimmed), 0 discontinuities, loop points on whole frames, seams continuous.
+- Null test, game against source (Automated runtime): the music bus tapped (AudioWorklet) and subtracted from the
+  decoded file sample-aligned: median residual −70.8 dB outdoors, −72.6 dB at Home's seam; 0 gain steps.
+- Clicks: 0 per minute in every phase before and after (the detector catches ~75 % of planted 128-frame dropouts).
+- Underruns (Chromium's playout counter): 0–2 events per ~3 min (5–13 ms), none near a long frame; decodes and doors
+  caused none. Never more than 2 music voices (a crossfade).
+- **The defect:** the volume sliders set the bus gains with `.value =` (a 0.55 → 0.35 jump between two samples): clicks
+  while a slider is dragged. Fixed: after init every bus change glides (`setTargetAtTime`, 30 ms `VOL_GLIDE`; changes
+  < 0.002 skipped); largest per-block change 0.35 → 0.030, realtime hits in the slider phase 3 → 0. tests/audio.mjs
+  reads the gains after 500 ms.
+- Source only, not changed: pausing a story scene calls `ctx.suspend()` at once (cuts mid-wave); a fade first would
+  delay the suspend ~0.25 s, which tests/voices.mjs (0.2 s) forbids: for the character-voices owner. Music decodes
+  again on most area changes (only 3 kept): under load 1–24 s late starts (not crackle).
+- Blocked: Windows' own output (loopback) could not be captured, so the mixer and driver are not measured; battery not
+  tested (the laptop stays plugged in).
+- Tests (GPU mode, the CPU at 100 %): audio 6/6, music 26/26 (favicon-only fail), chapter1 23/23; timing 27/2 (a
+  quality-resize check that also fails on HEAD in GPU mode; the 144 Hz cap borderline 16.35 vs 16.67 ± 0.3 ms).
+- **For the user's ears** (the WAVs are on the laptop): source vs game of village_b (sample-identical), Home's seam,
+  the office in and out, the slider before/after. If the source crackles too, the renders are the cause (a re-render
+  or higher bitrate: yours); if neither does but the live game does, it is after Chromium (Windows' mixer/driver
+  under load) or battery power.
+
+## ZSTYLE-1 · Zeelich's new city reads as Zeelich (the user's DECISION, 7.11; CLOUD_ORDERS 27a for the hub) · the laptop, 8.11.2026
+Diff: `requests/ZSTYLE-1.diff` (zeelich.js, travel.js, zterminal.js, zeelife.js; against bceb4486, `git apply --check`
+clean; origin's house `arcade` kept, the dome occluder uses `DH` and the council's 1.22 cap). Layout, paths, doors,
+colliders, story spots and the random scatter unchanged. Pictures (chapter 3+) stay on the laptop.
+**Zeelich's identity, measured from the user's LBA2 files (numbers only, kept in lba-study):** no lawn, grey granite
+ground (Otringal #838079 / #62625c / #aaa19a / #454440, pale paving #d6d1d4); walls granite #6c6e6a, dark metal
+#414b44, ochre wood #90643c, taupe stucco #a79d98, glass blocks #6c95a0; roofs grey/taupe/slate with aqua or gold
+caps; props grey-green rails and gold; Otringal's civic halls 7.4–9.3 m on octagonal plans, glass blocks over the
+lower third, columned drums, faceted aqua/gold caps with a gold spike; Knartas hive domes; Mosquibee white cocoons
+with red fins; golden-plume trees in square planters and golden fan plants (~26/ha); an overcast pale-grey misty sky.
+**Rubric without geography and landmarks (editorial, medium-low confidence): 29/55 (53 %) → 43/55 (78 %), below 85.**
+Architecture 11 → 16 /20, palette and materials 7 → 12 /15, vegetation and environment 4 → 8 /10, inhabitants 7 → 7 /10.
+- What changed: an overcast pale-grey sky and fog; the cloud sea in SKY-9's grey textures under a lavender-grey tint
+  (no pink); a speckled granite (`graniteTex`) for ground, cliffs and the old mill; a glass-block foot on every
+  house (the frieze's material: no new draw); the council house a 2.3 m drum ringed by 8 grey columns under a gold
+  cap; the planters alternate `frondTree` and `goldPlant` (the old plants' draws burnt, so every later scatter keeps
+  its place); the plaza star in pale border stone, a glass-block band on the fountain, teal bench backs, rust/teal/
+  ochre awnings, warm white lamp glass; the mills taupe stucco with glass bands, aqua or gold faceted caps, grey sails;
+  ochre bulbs, golden tufts; the spaceport deck paler lavender-grey with teal rails (LBA2's port deck); the terminal
+  pavilion in the same look; the watch house taupe stucco over grey stone (was a dark blue block).
+- Cost (Vega 8, whole frame, all passes): draw calls 875 → 873, 649 → 645, 390 → 390, 1006 → 1001; triangles +0.4–1 %;
+  one 512² granite canvas, two grey 512² cloud canvases, one 128² puff (shared with the Platform). Frame time not
+  measured. **Already so before: the hub draws 390–1006 calls against 73–202 on the isles: worth a performance look.**
+- Tests: on the agent's base (ddad5c12) zeelich-life 38/38, overlaps (zeelich) pass, world-consistency 37/37,
+  playthrough 06-zeelich every step (1 ISO assist as on GPU-9). Rebased: zeelich-life hit "the platform gate:
+  transition, not arrived" and stopped before its verdict; **the same check fails on origin without this diff
+  (37/1)**, so it is not from it: yours (the platform gate walk). overlaps (zeelich) on the rebased tree crashed the
+  page under load: not rerun.
+- Left, to reach 85: one or two round or barrel-vault house bodies at the same footprints and doors; ribbed metal on
+  the depot and workshop; a less Citadel-like parapet on the watch house; lighter lavender-grey street paving and a
+  gravel look for the tracks; the inhabitants (street police, posters, a coin machine: the people owners);
+  zislands.js's default environment for islands without their own still carries the old pink.
+
+## CAST-POLISH-CITADEL-3 · the guard's visor (and why the others of chapters 1–2 are left as they are) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-3.diff` (tools/blender/cast_poly.py only; it goes **on top of CAST-POLISH-CITADEL.diff
+and CAST-POLISH-CITADEL-2.diff**, `git apply --check` clean on that base). New model file:
+`requests/CAST-POLISH-CITADEL-3/guard.json` for `assets/poly/`. Pictures: `docs/future/characters/guard/`.
+- **Surveyed** in the review scene (faces front and ¾, the turnaround): Tim, Lulu, Doran, Joe, the guard and Dot (pim),
+  with Arthur done earlier. Only the guard has something that reads wrong at Follow/Medium and in the dialogue:
+  - his visor was a flat box across the eyes;
+  - its square corners stood off the round helmet;
+  - with the trunk in front of its middle, it read as two black bricks.
+
+  The others read as designed, so I propose no change for them. Forcing one change each would have made them worse,
+  not better.
+- **Guard, VISOR-GUARD** (CAST `visorCurved`, his entry only; vguardG, the Zeelich guards, keep the box): a band of the
+  helmet's own curve round the front (116°), 1–1.6 cm proud of it, in the same dark glass (#1a2830, not a role). The
+  'guard' look is the project security guard of chapters 1–2 alone; the enemy guards use vguard/vguardG.
+  3578 → 3718 triangles (+3.9 %).
+- **Contracts:** bones, eyes and mouths identical; 4 weights; no new colour; feet and top unchanged.
+  `validate`: 0 fails; its 2 warnings were already there before this change: the feet sit 1.2 cm below the floor, and
+  the coat, trousers and helmet have loose vertices.
+- **Looked at:**
+  - The review scene before and after (`lookdev-visor.jpg`).
+  - In the game (`gamecap.mjs`, LOOKS=guard): Follow/Medium, the dialogue with Dot, close-ups front, ¾ and back, and 13
+    poses.
+  - Blender views in colour (`turnaround-blender-after.jpg`).
+  - In the close-up and the dialogue the visor reads as one curved glass across the helmet.
+- **Tests** (SwiftShader, guard.json in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** +140 triangles, no draw call, material or texture. Vega 8 frame time not run.
+- **Left:** the visor hides his eyes, as the box did (the design); the Grobos' flat ears (race-wide).
+- **Next:** Citadel's chapter 1–2 story people are done. The laptop moves to queue item 5 (CLOUD_ORDERS 28, by region).
+- Order: CAST-POLISH-CITADEL, then -2, then this one (clean `git apply --check` on that base).
+
+## ZSTYLE-2 · Zeelich's new city, step 2: Otringal's buildings, ribbed metal, paving · the laptop, 8.11.2026
+Diff: `requests/ZSTYLE-2.diff` (zeelich.js, zeelife.js, zislands.js). **Apply after ZSTYLE-1**: checked on 2a3054e8
++ ZSTYLE-1.diff, `git apply --check` clean. Merged with origin's VP-10 house code (camSkip colliders, `roomocc` boxes):
+the dome occluder (`rev`) now only for houses with a drum and cap; the octagonal hall and the vaulted house get a roof
+box up to +1.6 m instead. Layout, paths, doors, colliders, story spots and the random stream unchanged. Pictures
+(chapter 3+) stay on the laptop.
+- **Octagonal hall** (the house at (−11, −10.6), Otringal's body 9, `octa`): corners chamfered 1.1 m (four straight and
+  four diagonal walls, the door kept, its two front windows gone), cornice, deck, frieze, glass-block foot and eight
+  slim piers on the octagon, a broad faceted aqua cap (`polyCap`) with a gold eave ring and spike. Its colliders are
+  the old rectangle: a planter with a golden fan plant fills each open corner, so nothing invisible stops him.
+- **Barrel vault** (the south-west house at (−38.5, 10.6), body 51, `vault`): a faceted vault rising 1.5 m in the cap
+  mosaic, a glass-block band over the crown, stucco gables, brass ribs, gold spikes; the minaret kept.
+- **Ribbed metal** (bodies 0 and 69): `ribTex` teal-grey ribbed walls on the depot's shed, bolted ribbed panels on
+  Baldino's back and east walls (clear of windows, foot band, frieze).
+- **Paving:** `paveTex` pale lavender-grey flags on the street, plaza, depot spur and arcade floor; `kerbTex` lighter
+  border stone along the street edges and on the plaza star; `gravelTex` on the mill tracks.
+- **The watch house** (zeelife.js): no square merlons; a glass-block band, a rounded coping, brass knobs (collider and
+  stair gap unchanged).
+- **zislands.js:** an island without its own sky takes the hub's overcast pale grey (and the lavender-grey sea if it
+  has no sea of its own): visible on Knartas and the Lift Dock; islands with their own sky or sea unchanged.
+- **Rubric (editorial, medium-low): 43 → ~46/55 (84 %, range 45–47)**: architecture 16 → 17, palette 12 → 14,
+  vegetation 8, inhabitants 7. Below 85 mainly on the inhabitants: patrolling police, posters, a coin machine (the
+  people owners).
+- Cost (Vega 8, whole frame): 0 to +3 draw calls, +0.7–2.6 % triangles; new canvases: ribbed 128², flags 256², kerb
+  128², gravel 256². Frame time not measured.
+- Tests on the merged tree (origin + ZSTYLE-1 + ZSTYLE-2, SwiftShader): zeelich-life 38/38 (the platform gate passed
+  this time), overlaps (zeelich) 1 + 1 visual pass, world-consistency 37/37.
+
+## CAST-POLISH-ZEELICH · the Esmers: robe edges with thickness, LBA2's boots, thicker arms (all six Esmer looks) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ZEELICH.diff` (tools/blender/cast_poly.py only: `build_esmer`, a new `esmer_boot`, and a `foot`
+argument on `limb_legs` whose default is unchanged). It goes **on top of CAST-POLISH-HEROES, -CITADEL, -CITADEL-2 and
+-CITADEL-3**: `git apply --check` is clean on origin `2a3054e8` with those four applied. New model files for `assets/poly/`:
+`requests/CAST-POLISH-ZEELICH/{keeper,oku,xil,nara,clerk,councilChair}.json`. Pictures (**chapter 3+: not for the user**):
+`docs/future/characters/{keeper,oku,xil,nara,clerk,councilChair}/`.
+- **Why the Esmers.** The census (all 147 people at load) and a survey of Zeelich's and Otringal's people in the review
+  scene showed that the six Esmer looks read worst of the region. Between them they dress 28 people at load: keeper ×8,
+  clerk ×6, oku ×5, xil ×4, councilChair ×3, nara ×2. The isles' folk (`islandlife.js`) add about 20 more. In chapter 3,
+  seven of them stand on Zeelich's street: Nara, Oku, Ilo, Aven, Marl, Ennu and Oshra.
+  - The capsule body is LBA2's own and stays. I measured the user's LBA2 files read-only, numbers only, with
+    `tools/lba-source/measure.py`; nothing was extracted.
+  - Bodies 80 and 186: one capsule ±0.10–0.107 H from 0.2 H to the top.
+  - Three things were below the original or below our own finish standard:
+    - the robe was paint, with no thickness;
+    - the shoes were flat slippers half the original's size, under shins that ended in the air above them;
+    - the arms were sticks.
+
+  It is one builder, so the fix is race-wide. Faces, hats, glasses and colours are unchanged.
+- **ROBE-EDGE-ESMER:**
+  - the robe stands 0.8 cm off the body;
+  - its hem is a rolled edge, 1.6 cm out, with a flat underside back to the trousers;
+  - its collar is a rolled edge that turns in to the skin;
+  - both are in the trim's exact hex.
+- **BOOTS-ESMER:** the original's feet are 0.2 H long (−0.07 to +0.13 H about the ankle), 0.09 H wide and 0.05–0.066 H
+  tall. Ours were 0.04 H wide and 0.03 H tall. Now:
+  - each boot is 0.19 H long, 0.06 H wide and 0.06 H tall, with a flat sole and a rounded toe and heel. It is not the full
+    0.09 H wide because our legs stand closer together than the original's (±0.042 H against ±0.08 H), and wider boots
+    would touch;
+  - a shaft round the ankle covers the shin's end. Its lower half follows the foot and its upper half the shin;
+  - everything is in the shoes' hex.
+- **ARMS-ESMER:**
+  - LBA2's arms are ±0.021–0.027 H thick above the elbow; ours were 0.014–0.017 H. Now they are 0.017–0.020 H, as thick
+    as they can be and still clear the robe at the elbow (rest spread 0.03 rad);
+  - the cuffs grew with them.
+- `ESMER_OLD=1` rebuilds the old capsule, shoes and arms. With it, the rebuild equals the committed six files exactly
+  (every array equal).
+- **Contracts** (`art/blender/characters/jobs/polycheck.py`, reports in `art/blender/characters/zeelich/reports/`):
+  - bones, in the same order, eyes and mouths are identical;
+  - 4 weights a vertex, all summing to 1;
+  - no new colour;
+  - feet at 0.004 and the top unchanged.
+  - DRESS-1 (`dresscheck.mjs`, keeper, oku and clerk, variants 1–6): 0 vertices keep a base hex that a variant
+    overrides, so the new hem, collar and boots recolour with tunicTrim, tunic and shoes.
+  - `validate` (Blender, keeper and oku): 0 fails. One warning, loose vertices, was already there before (968 → 1224,
+    the cast's separate parts).
+- **Budget:**
+
+  | look | triangles before → after (body) | change | with eyes and mouth |
+  |---|---|---|---|
+  | keeper, xil, nara | 1504 → 1776 | +18.1 % | 1584 → 1856 |
+  | clerk | 1536 → 1808 | +17.7 % | 1616 → 1888 |
+  | oku, councilChair | 1884 → 2156 | +14.4 % | 1964 → 2236 |
+
+  - Draw calls are unchanged: the hero as an Esmer is 4 calls before and after (body, silhouette pass, eyes, mouth).
+  - Zeelich's street in chapter 3, Follow camera at Medium: 797 = 797 calls on SwiftShader and 760 = 760 on the Vega 8.
+    Triangles went up by 1360, 5 Esmers in view × 272.
+  - Each model gains 816 vertices, about +49 KB of vertex data at 60 B a vertex.
+  - No texture, no material, no new bone.
+- **Vega 8 frame time** (installed Chrome on this laptop's GPU, the game's own loop, 20 s, Zeelich's street, quality
+  medium; two before/after pairs):
+  - before: median 17.7 / 17.7 ms, p95 18.4 / 18.5 ms;
+  - after: median 17.6 / 17.6 ms, p95 18.2 / 18.3 ms.
+
+  There was no measurable regression. The frame sits at the 60 Hz cap, so headroom was not measured. Reports:
+  `gpu-*.json`.
+- **Looked at:**
+  - The review scene (lookdev, the game's own renderer): turnaround, face ¾, hand and walk before and after for all six.
+    Poses for keeper (slim) and oku (stooped and wide), side and ¾, before and after: idle, walk, run, turn, jump, fall,
+    throw, sword (heavy), talk, pickup, use, hurt, doze.
+  - In the game, with the hero swapped to each look (`gamecap.mjs`, Citadel's square, chapter 1): Follow/Medium, the
+    dialogue two-shot, and close-ups front, ¾ and back, before and after for all six.
+  - Zeelich's street in chapter 3 (`zeecap.mjs`), before and after.
+  - Blender views of keeper (before and after) and oku (after).
+
+  What I saw:
+  - at Follow/Medium the feet now read as boots, where they had been grey points;
+  - in the close-up the collar and hem are visible lips;
+  - in the walk and run the boots stay on the ground and the shafts stay on the shins.
+- **Tests** (SwiftShader, the six files in `assets/poly`, a renamed headless shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS.
+
+  `assets/poly` was put back afterwards. Evidence labels: **Automated runtime only**. The pictures were looked at, not
+  played.
+- **Left:**
+  - In the doze pose the Esmer's feet lie apart from the ends of the shins. This was already so with the old shoes, and
+    the bigger boots make it easier to see. It is the rig's pose, not the mesh, so it is not changed here.
+  - The hands are still LBA2's cone with three fingers and a thumb.
+  - keeper ×8 and oku ×5 are still one body each, apart from DRESS-1's colours. Their `_b` shape variants (order 24)
+    are the next Zeelich batch.
+  - The other Esmer looks share one face shape.
+  - Otringal's Quetch (councilB on Kira, Sanna and Ama; lharWoman on zc_petit) are not touched in this batch.
+- Order: HEROES, CITADEL, CITADEL-2, CITADEL-3, then this one. Re-test after merging: the worktree's game was at db5a1c9c, before your GAIT-CADENCE rig.js.
