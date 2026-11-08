@@ -126,6 +126,41 @@ is('the three pylons converted', plateShots.map((x) => x.last), (v) => v.length 
 is("each plate's first bank shot, thrown from its centre, hits its pylon", plateShots.map((x) => x.first), (v) => v.length === 3 && v.every((x) => x === true));
 // CHAPTER-BALANCE: the overload first needs the bore's bleed valve on the deck ring; no coil until it is turned
 is('the overload: no coil yet, the objective names the bleed valve', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj(), !!game.room.bleed]; }), (v) => v[0] === true && v[1] === false && /bleed/i.test(v[2]) && v[3]);
+// BOSS-SHAPE: the overloaded guardian dives (a ring on the deck follows him as it climbs, stops, it drops onto it), then sits
+// stuck in the deck. Twinsen placed between the arena's middle and the bleed valve (ISO), the dive's turn set (ISO); the
+// answers by input: stand still (hit), walk out once the ring stops (just clear), the dodge (clear), a ball at the climb
+// (knocked out of the dive)
+await ev(() => { const G = game, C = G.room, gd = G.story.cur.guardian, A = gd.arena, cx = (A.x0 + A.x1) / 2, cz = (A.z0 + A.z1) / 2;
+  window.DV = { sx: cx + (C.bleed.x - cx) * 0.55, sz: cz + (C.bleed.z - cz) * 0.55,
+    run(how) {
+      const h = G.hero, keys = G.input.keys;
+      const put = () => { h.pos.set(DV.sx, G.physics.groundAt(DV.sx, DV.sz, h.pos.y + 2), DV.sz); h.angle = Math.atan2(cx - DV.sx, cz - DV.sz); h.vel?.set?.(0, 0); };
+      for (let i = 0; i < 300 && (G.state !== 'play' || h.actT > 0 || gd.state === 'ground' || gd.diving); i++) { G.step(1 / 30); if (G.state !== 'play') T.talkAll(); }
+      put(); h.hp = h.maxHp; h.invuln = 0; G.ball.state = 'idle';
+      gd.nextDive = true; if (gd.state !== 'stunned') { gd.state = 'chase'; gd.coolT = 0; }
+      let t = 0; for (; t < 12 && gd.state !== 'rise'; t += 1 / 60) { G.step(1 / 60); h.pos.x = DV.sx; h.pos.z = DV.sz; }
+      const r = { how, rose: gd.state === 'rise', hp0: h.hp };
+      if (how === 'ball') { G.step(0.3); h.angle = h.angleTo(gd); T.tap('KeyF'); G.step(1.0); r.after = gd.state; return r; }
+      G.step(0.5); h.pos.x += 0.8;   // (ISO: a step aside while it climbs: the ring must lock where he is now)
+      for (let i = 0; i < 120 && gd.state === 'rise'; i++) G.step(1 / 60);
+      const s = gd.spot; r.lockedOnHim = !!s && Math.hypot(s.x - h.pos.x, s.z - h.pos.z) < 0.2;
+      if (how === 'walk') keys.add('ArrowUp');
+      if (how === 'dodge') T.tap('KeyX');
+      for (let i = 0; i < 180 && (gd.state === 'lock' || gd.state === 'drop'); i++) G.step(1 / 60);
+      keys.delete('ArrowUp');
+      r.lost = r.hp0 - h.hp; r.knocked = h.rig.anim === 'knockdown'; r.out = +Math.hypot(h.pos.x - s.x, h.pos.z - s.z).toFixed(2);
+      const nb = G.bolts.list.length; let tg = 0; for (; tg < 6 && gd.state === 'ground'; tg += 1 / 60) G.step(1 / 60);
+      r.stuck = +tg.toFixed(2); r.fired = G.bolts.list.length - nb;
+      return r;
+    } }; });
+const dvStand = await ev(() => DV.run('stand'));
+is('the overloaded guardian dives: its ring follows him and locks where he is; standing in it costs 2 and knocks him down; then it is stuck in the deck ~3 s and fires nothing', dvStand, (v) => v.rose && v.lockedOnHim && v.lost === 2 && v.knocked && v.stuck > 2.8 && v.fired === 0);
+const dvWalk = await ev(() => DV.run('walk'));
+is('walking straight out once the ring stops (input): just clear, no harm', dvWalk, (v) => v.rose && v.lost === 0 && v.out >= 2.0);
+const dvDodge = await ev(() => DV.run('dodge'));
+is('the dodge (X) once the ring stops: clear, no harm', dvDodge, (v) => v.rose && v.lost === 0);
+const dvBall = await ev(() => DV.run('ball'));
+is('a ball at it while it climbs knocks it out of the dive (stunned)', dvBall, (v) => v.rose && v.after === 'stunned');
 is('the bleed valve turned (its prompt, E): Ilka takes the surge, Vesk raises the coil, an objective set', await ev(() => { const G = game, B = G.room.bleed, h = G.hero; T.tp(B.x, B.z); const g = G.story.cur.guardian; if (g) { g.state = 'stunned'; g.stateT = 0; } h.hp = h.maxHp; G.step(0.2); T.tap('KeyE'); G.step(1.6); T.talkAll(); G.step(0.5); T.talkAll(); const tg = G.room.ballTargets.find((x) => x.coil); return { bleed: G.flags.c3_bleed, open: B.open, coil: !!tg, obj: T.obj() }; }), (v) => v.bleed === true && v.open && v.coil && /coil/i.test(v.obj));
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
 is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);

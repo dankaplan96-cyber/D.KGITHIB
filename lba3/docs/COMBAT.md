@@ -551,6 +551,20 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
 - Ch. 10 Desert Island: a lone sentry at the post gate, then three drones at the bore.
 - Ch. 10 Hamalayi ridge: a lone crystal crawler, then two mites by the dome.
 - Ch. 9 archive: avoidance (stealth).
+- Ch. 12 the core, the bore's guardian (BOSS-SHAPE, 8.11.2026; src/game/enemies.js `Guardian`, `SLAM`): three phases.
+  1. **The pylons**: it keeps its distance and fires a fan of three bolts after a 1.35 s tell (lanes on the floor;
+     quicker with each pylon); a ball hit stuns it 2.6 s: the window for a plate's bank shot.
+  2. **The overload** (Vesk's lines; the glow turns violet): its new attack, the **dive**, taken in turn with a quicker
+     fan, the first right away. It climbs to 4.2 m while a red ring on the deck (1.8 m) follows Twinsen (1.0 s), the
+     ring stops and flashes white (0.9 s), it drops (0.2 s): inside 2.0 m, 2 damage and knocked down, and a shock ring
+     runs out. Answers: run or dodge out once the ring stops (walking straight out just clears it: 2.14 m), or a ball
+     while it climbs knocks it out of the dive (stunned); once it drops it is committed. After a dive it sits stuck in
+     the deck 3.0 s, venting, harmless: the opening to turn the bleed valve (1.0 s), as a stun is. Bait the dive by the
+     valve, step out, turn it. A first dive that hits him shows one toast (the ring, the opening); the nudge after 30 s
+     names both openings.
+  3. **The coil**: the same guardian (dive and fan) while Vesk's coil takes three ball hits.
+  Story, flags (`c3_overload`, `c3_bleed`, `c3_coil`), saves and the reload rules are unchanged. `tests/chapter3.mjs`
+  plays the dive four ways (stand, walk out, dodge, ball at the climb).
 
 ## Verification
 `tests/combat.mjs` runs in the developer arena (`?arena`). Its 22 checks currently pass (headless, software GL):

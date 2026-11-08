@@ -342,3 +342,36 @@ export function createFan(scene) {
     remove() { scene.remove(mesh); },
   };
 }
+
+// ================================================================== the overloaded guardian's slam marks (BOSS-SHAPE)
+// The ring on the deck where its dive will land: it follows Twinsen while the guardian climbs (red, filling in), then
+// stays put and flashes white once the dive is locked; and the shock ring that runs out from the impact. Two flat rings
+// and a faint disc, basic transparent materials (the same kind as the bolt fan's lanes: no new shader).
+export function createSlamMarks(scene) {
+  const add = { transparent: true, depthWrite: false, side: THREE.DoubleSide };
+  const ringM = new THREE.MeshBasicMaterial({ color: '#ff3a2a', opacity: 0, ...add });
+  const discM = new THREE.MeshBasicMaterial({ color: '#ff3a2a', opacity: 0, ...add });
+  const waveM = new THREE.MeshBasicMaterial({ color: '#d8a0ff', opacity: 0, ...add });
+  const place = (o) => { o.visible = false; o.renderOrder = 2; o.frustumCulled = false; scene.add(o); return o; };
+  const ring = place(new THREE.Mesh(new THREE.RingGeometry(0.9, 1.0, 40).rotateX(-Math.PI / 2), ringM));
+  const disc = place(new THREE.Mesh(new THREE.CircleGeometry(0.9, 40).rotateX(-Math.PI / 2), discM));
+  const wave = place(new THREE.Mesh(new THREE.RingGeometry(0.8, 1.0, 40).rotateX(-Math.PI / 2), waveM));
+  return {
+    // x, y, z: the spot on the deck; R: its reach; k: the climb 0..1; locked: the dive is set; t: time (the flicker)
+    target(x, y, z, R, k, locked, t) {
+      for (const o of [ring, disc]) { o.position.set(x, y + 0.03, z); o.scale.setScalar(R); o.visible = true; }
+      ringM.color.set(locked ? (Math.sin(t * 40) > 0 ? '#ffffff' : '#ff5a3a') : '#ff3a2a');
+      ringM.opacity = locked ? 0.95 : 0.35 + 0.45 * k;
+      discM.color.set(locked ? '#ff6a4a' : '#ff3a2a');
+      discM.opacity = locked ? 0.32 : 0.06 + 0.16 * k;
+    },
+    // the shock ring: u 0..1 over its run, out to R
+    wave(x, y, z, R, u) {
+      if (u >= 1) { wave.visible = false; return; }
+      wave.position.set(x, y + 0.05, z); wave.scale.setScalar(0.6 + R * u); wave.visible = true;
+      waveM.opacity = 0.85 * (1 - u);
+    },
+    hide() { ring.visible = false; disc.visible = false; },
+    hideAll() { ring.visible = false; disc.visible = false; wave.visible = false; },
+  };
+}
