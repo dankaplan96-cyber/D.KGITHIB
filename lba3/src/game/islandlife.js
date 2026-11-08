@@ -167,7 +167,7 @@ export const ISLE_PEOPLE = {
   // ---------------------------------------------------------------- the Platform: the Wannies' village and mine (spots: zislands.js R.wannie.npcSpots)
   platform: { people: [
     { id: 'pf_foreman', char: 'zmole1', tint: '#f8f0e0', color: '#d8c090', speed: 0.75, rounds: {
-      ord: [op('pfo_yard', 27, -25.4, PI, 'stand', [12, 18], { gest: ['nod'] }), at('pfo_crates', 17.2, -24.3, 'browse', [6, 9], { d: 1.0 }), at('pfo_lift', 27.3, -21.9, 'stand', [6, 9], { d: 2.6, dir: -PI / 2 })],
+      ord: [op('pfo_yard', 29.2, -25.0, PI, 'stand', [12, 18], { gest: ['nod'] }), at('pfo_crates', 17.2, -24.3, 'browse', [6, 9], { d: 1.0 }), at('pfo_lift', 27.3, -21.9, 'stand', [6, 9], { d: 2.6, dir: -PI / 2 })],
     } },
     { id: 'pf_miner1', char: 'zmole1', tint: '#e6e2f0', color: '#a8a0c8', speed: 0.85, rounds: {
       ord: [at('m1_mine', 27.5, -9.5, 'browse', [12, 18], { d: 3.6, dir: -PI / 2 + 0.4, carry: 'crate' }), at('m1_crates', 20.7, -23.3, 'put', [5, 7], { carry: null, d: 1.0 })],

@@ -301,6 +301,10 @@ export function* buildHamalayiSteps(scene, physics) {
     const cs = Math.cos(ry), sn = Math.sin(ry), dx = w * (o.door ?? 0.4) - w / 2 + 0.5;
     const hs = { x, z, ry, w, d, hw: fp.hw ?? w / 2, hd: fp.hd ?? d / 2, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
     houses.push(hs); keep.push(['door', hs.door.x - ox, hs.door.z - oz, 1.1]);
+    // (DOOR-SWEEP: each house's door, for ihomes.js — the landing's hut, Lhar's five houses, the observatory keeper's:
+    //  they were drawn doors that did and said nothing. id 'ham-<area><n>', the sill on the front's face)
+    const n = houses.filter((q) => q.area === area).length; hs.area = area;
+    (R.shutDoors ||= []).push({ id: `ham-${area}${n}`, x: hs.door.x, y: gy, z: hs.door.z, ry, sill: { x: ox + x + cs * dx + sn * (d / 2), z: oz + z - sn * dx + cs * (d / 2) } });
     return hs;
   };
   R.hut = stoneHouse('landing', HUT.x, HUT.z, 0.4, 4.4, 3.6, 2.4, { lean: -1, seed: 5, trim: TRIM.green, doorC: TRIM.ochre, pots: true }).door;

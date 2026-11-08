@@ -142,6 +142,12 @@ export function migrateSave(raw) {
   return s;
 }
 const DOOR_STEP = 1.0;   // m (Game.doorStep)
+// DOOR-CLEAR (original-mechanics, wave 3): out of a door he lands DOOR_CLEAR m beyond the rim of every door trigger of
+// the scene (Citadel or an outdoor region), so standing still never takes him back through the door he came by. Into a
+// room only a landing inside one of its exits is moved (DOOR_CLEAR_IN): the rooms' own spots, 0.15–0.25 m from the exit
+// with the walk-in carrying him on, stay as their builders set them (moved, the residents' rounds round him changed)
+// (Game.clearOfDoors)
+const DOOR_CLEAR = 0.45, DOOR_CLEAR_IN = 0.05;   // m
 export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 // (asylum: the user, 6.11, "the asylum should have a different tune, no?": LBA1's asylum was Twinsen's prison and had its
@@ -1131,12 +1137,13 @@ class Game {
       this.room = R;
       this.regions.activate(id);
       R.group.visible = true;
+      R.resetCut?.();   // (CUT-RESTORE: a room's cut-away, a porch's fade, start from where he lands: lba1room.js, zeelich.js)
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
       if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true, R.indoor); }   // (ROOM-LIGHT: a room lit by its own lamps dims the daylight fill, R.indoor)
       this.renderer.setGrade?.(R.grade, R.gradeTint);   // (WA-13 follow-up: an area's own palette)
       // (a story exit may name only the room, { room }: then the room's own spawn — never a position without x/z)
-      const sp = spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn;
+      const sp = this.clearOfDoors(spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn, R);
       const h = this.hero;
       this.resetCombat();
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
@@ -1190,6 +1197,7 @@ class Game {
       this.renderer.setGrade?.(null, null);
       const h = this.hero;
       this.resetCombat();
+      to = this.clearOfDoors(to, null);
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
@@ -1219,6 +1227,53 @@ class Game {
     const open = (d) => { const x = to.x + sx * d, z = to.z + sz * d, g = P.groundAt(x, z, g0 + 0.5); return Math.abs(g - g0) < 0.15 && g > -0.2 && !P.blockedAt(x, z, g, 0.45) ? g : null; };
     for (const d of [DOOR_STEP, DOOR_STEP * 0.6]) if (open(d) != null && open(d / 2) != null) return { ...to, x: to.x + sx * d, z: to.z + sz * d };
     return to;
+  }
+
+  // DOOR-CLEAR: a landing inside a door trigger (or less than DOOR_CLEAR beyond its rim) is moved out of it: along the
+  // way he faces when that leads away from the door, else straight away from it, over open, level ground (no brick at
+  // his height there or half-way, within 0.3 m of the spot's own height). Where that way is shut, or the landing stands
+  // inside something solid (a tower built before a door: the physics would push him back into the trigger), the
+  // nearest open spot round it that is clear of every trigger, facing away from the nearest one; with none within
+  // 1.6 m the landing stays as it was. R: the room he lands in (its exits are the triggers), or null for Citadel; in an
+  // outdoor region, the story's doors of that region.
+  clearOfDoors(to, R) {
+    if (!to || !Number.isFinite(to.x) || !Number.isFinite(to.z)) return to;
+    let trig, clear;
+    if (R && !R.outdoor) { trig = (R.exits || []).filter((e) => Number.isFinite(e.r)); clear = DOOR_CLEAR_IN; }
+    else { const reg = R?.id; trig = this.story?.doors?.().filter((d) => (d.region || undefined) === reg && Number.isFinite(d.r)) || []; clear = DOOR_CLEAR; }
+    if (!trig.length) return to;
+    const P = this.physics, g0 = P.groundAt(to.x, to.z);
+    const open = (x, z) => { const g = P.groundAt(x, z, g0 + 0.5); return Number.isFinite(g) && Math.abs(g - g0) < 0.3 && !P.blockedAt(x, z, g, 0.4); };
+    const inTrig = (x, z) => trig.find((q) => Math.hypot(x - q.x, z - q.z) < q.r + clear - 1e-3);
+    const stuck = (x, z) => P.blockedAt(x, z, P.groundAt(x, z, g0 + 0.5), 0.15);
+    if (!inTrig(to.x, to.z)) return to;   // (clear already: a story's spot — a bed, a seat — is never moved)
+    let x = to.x, z = to.z, a = to.a;
+    for (let it = 0; it < 3; it++) {
+      const d = inTrig(x, z);
+      if (!d) break;
+      const rx = x - d.x, rz = z - d.z, rl = Math.hypot(rx, rz);
+      let ux = Math.sin(to.a ?? 0), uz = Math.cos(to.a ?? 0);
+      if (to.a == null || (rl > 0.05 && (ux * rx + uz * rz) / rl < 0.3)) { if (rl < 0.05) break; ux = rx / rl; uz = rz / rl; }
+      const Rr = d.r + clear, b = ux * rx + uz * rz, t = -b + Math.sqrt(Math.max(0, b * b - (rl * rl - Rr * Rr))) + 0.02;
+      if (t > 1.6) break;   // (a landing deep in a trigger is a story's spot of its own: left alone)
+      const nx = x + ux * t, nz = z + uz * t;
+      if (!open(nx, nz) || !open(x + ux * t / 2, z + uz * t / 2)) break;
+      x = nx; z = nz;
+    }
+    if (inTrig(x, z) || stuck(x, z)) {
+      const d0 = inTrig(to.x, to.z);
+      let best = null;
+      for (const rad of [0.4, 0.7, 1.0, 1.3, 1.6]) {
+        for (let k = 0; k < 16 && !best; k++) {
+          const b = (k / 16) * Math.PI * 2, cx = to.x + Math.sin(b) * rad, cz = to.z + Math.cos(b) * rad;
+          if (!inTrig(cx, cz) && open(cx, cz)) best = { x: cx, z: cz };
+        }
+        if (best) break;
+      }
+      if (!best) return to;
+      x = best.x; z = best.z; a = Math.atan2(x - d0.x, z - d0.z);
+    }
+    return x === to.x && z === to.z ? to : { ...to, x, z, a };
   }
 
   // ROOMS-FULL: is (x, z) on room R's floor (inside its shell, R.bounds) and clear of everything solid at his height?

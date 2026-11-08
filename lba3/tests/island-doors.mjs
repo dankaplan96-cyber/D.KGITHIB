@@ -30,7 +30,7 @@ await open(page, '?nocine'); await menu(page, 'new');
 iso('chapter 5 by its flags (as the island tests do)');
 await ev(() => { const G = game, f = G.flags; Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'steam' }); f.chapter = G.story.chapters.findIndex((c) => c.key === 'steam'); G.hero.hasBall = true; G.story.refreshCast(); P.settle(); });
 await said();
-const regions = ['isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_orchard', 'desert'];
+const regions = ['isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_orchard', 'desert', 'hamalayi'];   // (DOOR-SWEEP: and the Hamalayi's seven: the landing's hut, Lhar, the observatory keeper's)
 const all = [];
 for (const reg of regions) {
   iso('put on ' + reg + "'s spawn");
@@ -114,7 +114,7 @@ for (const reg of regions) {
 // doorStair): asked in again like every other door)
 for (const r of all) check(`${r.room}: leads in (on its floor, furnished, lit), its own look reads, back out by its door facing away, and in again`,
   r.inRoom && r.floor && r.meshes >= 14 && r.lights >= 1 && r.look === 'read' && r.line && !/^Locked/.test(r.line) && r.out !== r.room && r.near < 2.8 && r.away > 0.3 && r.ground && r.again, r);
-if (!ONLY) check('every room of ISLE-HOMES was entered (63: 55 on the islands, 5 Kesh houses, 3 post cabins)', all.length === 63 && all.every((r) => r.inRoom), all.length);
+if (!ONLY) check('every room of ISLE-HOMES was entered (70: 55 on the islands, 5 Kesh houses, 3 post cabins, 7 in the Hamalayi)', all.length === 70 && all.every((r) => r.inRoom), all.length);
 
 // the keepers behind their counters, talking
 const keep = await ev(async () => {

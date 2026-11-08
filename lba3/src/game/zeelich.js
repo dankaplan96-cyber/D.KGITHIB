@@ -822,9 +822,14 @@ export function* buildZeelichSteps(scene, physics) {
   // him. Only a porch roof he stands under fades (the council house's arcade), as Nell's lean-to on Citadel.
   R.occFloor = Y0 - 0.05;   // (the island's floor is bricks over the clouds: not scenery to rise over)
   const porches = houses.map((h) => h.arcade).filter(Boolean).map((A) => ({ ...A, fader: makeFader(A.group), f: 1 }));
+  // (CUT-RESTORE: arriving on the street — a door, a shuttle, a load — the porch takes its state for where he lands at
+  //  once: left faded while he went in under it, it stayed faded until he came back and eased in on the new shot)
+  let snap = false;
+  R.resetCut = () => { snap = true; };
   updaters.push((dt) => {
     const G = globalThis.game;
     if (!G || G.room !== R || !G.camera) return;
+    if (snap) { snap = false; dt = 10; }
     const hx = G.hero.pos.x - ox, hz = G.hero.pos.z - oz;
     for (const A of porches) {
       const dx = hx - A.x, dz = hz - A.z, c = Math.cos(A.ry), sn = Math.sin(A.ry), lx = dx * c - dz * sn, lz = dx * sn + dz * c;
