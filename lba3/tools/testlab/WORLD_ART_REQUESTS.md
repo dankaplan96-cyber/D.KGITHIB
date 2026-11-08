@@ -3538,3 +3538,119 @@ Pictures (ours, chapter 1 Citadel, may go to the user), before | after: `docs/fu
   - The K on the coin is lost below ~40 px (at Follow/Medium the coin reads by its rim and colour).
   - The heart potion, the pearl and the other item looks are unchanged: they read in the 128 px slots.
   - Coins could be one instanced draw for a whole rain (InstancedMesh); not done (a behaviour-side change).
+
+## DOORS-LBA2 · every Citadel door and the sewer against LBA2, then Zeelich and Desert Island · the laptop, 8.11.2026
+
+Order 29. Read-only: the user's GOG LBA2 files (`SCENE.HQR`, `CITADEL.ILE`, `OTRINGAL.ILE`, `CELEBRAT.ILE`, `DESERT.ILE`, `LBA_BKG.HQR`), our code at `027c65a0`, `docs/lba-maturity/door-map.md`, `docs/future/CONNECTIONS_AUDIT.md` (2.11). Nothing extracted is kept; only numbers and descriptions below.
+
+**Evidence marks.** **(D)** decoded from the user's files on this laptop (scene header, every change-cube zone: box, target scene, arrival point, the ID a script uses to switch it, and whether it is on at the start). **(S)** the GPL engine source (`OBJECT.CPP` `GereZoneChangeCube`: arrival = zone Info0..2 plus the hero's offset inside the zone, Info3 turns him, Info7 = on; `COMMON.H` life opcodes 52 `CHANGE_CUBE`, 77 `SET_CHANGE_CUBE`). **(H)** a byte search of the scene scripts for opcode 77 with the zone IDs (heuristic, not a full script decoder). **(G)** the sewer grid's floor heights and floor sounds as a 64 × 64 map. **(O)** our source only. Nothing here was played or captured on this pass: every "ours" is **Source only**.
+
+**Coordinates.** Citadel outdoors: ours = LBA2 island-centred + (−76, +16) (`world.js` LAYOUT); checked against 11 of our doors that sit within 0.3 m of LBA2's (D). Sewer hall: hall-local metres, as `sewers.js` builds it (x −14 west … +14 east, z −12 north wall … +12 south rim; world = x + 5800). LBA2 sewer bricks map to ours as `x = −14 + (bx − 8) × 28/45`, `z = −12 + (bz − 16) × 24/44` (LBA2's hall is bricks x 8–53, z 16–60, about 39 × 38 m; ours is 28 × 24 m). Zeelich isles: island-local metres (`ISLE_AT`). Desert Island: our desert frame via `DESERT_FIT` (deg 275, t (−4, −40)); checked against `desertold.js` S40 and S28 (within 4 m and 1.4 m).
+
+### (a) LBA2 Citadel: scenes and every link (D)
+
+Outdoor scenes (island 0): 42 the square and lower town (cube 8,9), 43 the harbour wing (7,9), 44 the west islet (6,8), 45 the north-west plateau (7,7), 46 the lighthouse headland (7,10), 47 the north plateau and fort ruins (8,7), 48 Bug Street, the museum and the terrace (8,8), 49 Twinsen's quarter (8,10), 50 the north-east (9,7). 193–197 and 202 are later states of 0, 1, 49, 46, 43, 26 with the same links; 191 is a cut-scene set; 94 a stub. The section-edge zones between outdoor scenes (19) are seamless in our one open island and need nothing.
+
+| LBA2 door (outside, ours coords) | Scene | Arrives inside (brick) | Way back out arrives (ours) | On at start | Ours now (O) |
+|---|---|---|---|---|---|
+| Twinsen's house, east face (−45.6, 79.9) | 0 | (25, 3, 19) | (−45.2, 81.1) | on | `twinsen` door (−46.0, 77.2), east face: 2.7 m south of LBA2's |
+| inside 0 ↔ 1 (cellar) | 1 | | | on | `house` ↔ `cellar` ✓ |
+| neighbour's, east face (−30.6, 75.3) | 9 | (12, 3, 8) | (−29.8, 74.4) | on | `nbr` door (−30.2, 75.3) ✓ — **missing from door-map.md** |
+| tavern, south side of the square (−46.1, 27.9) | 3 | (13, 4, 29) | (−46.9, 28.8) | on | `south` door (−46.1, 27.2) ✓ |
+| inside 3 ↔ 4 (cellar) | 4 | | | on | `tavern` ↔ `tavcellar` ✓ |
+| **inside 4: a trapdoor in the cellar floor, one way** | 17 | (28, 15.6, 33): drops from the ceiling onto the hall's central platform | — | on | `tavcellar` railing gap → `sewer` entries.fall (7.5, 7.4) on the east pier |
+| **lower town: a railed hatch with a lift in the street** (−28.5, 27.6), ground level | 17 | (48, 12, 16): top of the north-east shaft | (−29.3, 26.7), on the lid | in: on; out: off until he steps on the lift below (H) | the `pink` house's door (−28.5, 27.9) → the Works door, hall north wall x 7.75 |
+| Bug Street north (−56.7, −13.3) | 5 | (60, 14, 37) | (−56.3, −14.0) | off at start, story (H) | `bug` → `baggage` (−56.5, −13.4) ✓ |
+| inside 5 → 6 (two doors), 6 → 16 | 6, 16 | | | on (6→16 switched off by a script) | not built: deliberate (CONNECTIONS_AUDIT C-6) |
+| Bug Street south (−58.5, −8.8) | 22 | (12, 4, 7) | (−58.0, −9.7) | off at start | `bug2` → `pharmacy` (−58.2, −8.8) ✓ |
+| by the harbour path (−66.2, 41.1) | 14 | (13, 4, 5) | (−65.7, 40.0) | off at start | `museum` → `bazoo` (−66.2, 41.1) ✓ (one zone in 14 → 0 has no size: unused) |
+| west of the square (−65.3, 11.0) and an upper door (−68.5, 9.3; 5.2 m up) | 15 | (62, 3, 56) and (24, 11.7, 26) | (−64.9, 10.0) and (−69.2, 7.0; 5.0 m up) | both off at start | `water` (Water Office) door (−65.4, 11.0) ✓; no upper door: deliberate (C-5) |
+| the school, south face (−30.0, −21.5) | 37 | (10, 2, 9) | (−30.6, −20.6) | off at start | `stone` door (−26.8, −20.1), locked: 3.4 m east (WORLD-FIX moved the house off the ramp) |
+| **the terrace behind the school: a hatch with a lift** (−25.1, −31.5; terrace 7.5 m up) | 17 | (11, 12, 18): top of the north-west shaft | (−26.0, −32.4), on the lid | in: off, opened by a script (H); out: off until he steps on the lift below (H) | the `stoneup` porch house (−25.5, −33.8), door gated by `sw_bolt` → hall north wall x −4 |
+| Bersimon's tent, east face (−101.2, −67.4; 13.6 m up) | 21 | (14, 5, 21) | (−100.7, −66.2) | on | tent centre (−100, −71), door (−96.25, −71): 3.7 m east, 3.6 m north |
+| **inside 21: a doorway in the tent's west wall** | 17 | (4, 4, 57): the hall's south-west nook | back to (1, 4, 9) | on, both ways | `wtent` trapdoor under the rug → hall west wall z 6 |
+| inside 17 → 18 (treasure room) | 18 | (8, 2, 11) | hall (10, 2, 37) | on | `sewer` NE colonnade gate x 10.5 → `sewervault` |
+| inside 17 → 34 (the secret room) | 34 | (18, 1, 9) | hall (26, 4, 46) | on | `sewer` NE colonnade door x 13 → `sewerglobe` |
+| Tralu's cave, plateau bank, east face (−80.7, −73.0; 9.4 m up) | 2 | (62, 1, 49) | (−79.4, −73.9) | on (switched off by a script later) | OLD_DOORS.plateau (−80.7, −82.0) facing north: 9 m north |
+| inside 2 ↔ 19 ↔ 20 ↔ 2 | 19, 20 | | | on | not built: deliberate (C-6) |
+| harbour wing (−99.1, 30.6) | 7 | (9, 3, 14) | (−100.0, 31.4) | on | `wing2` → `nellhouse` (−99.1, 31.6) ✓ |
+| harbour wing (−88.8, 30.5) | 8 | (5, 4, 10) | (−89.7, 31.4) | toggled by the story | `baggage` → `ticket` (−88.8, 30.6) ✓ |
+| fort ruins top, a door facing south (−24.4, −63.2; 12.3 m up) and the north face (−25.9, −82.0; 9.4 m up) | 51 | (17, 10, 11) and (16, 5, 34) | (−25.5, −64.5) and (−27.2, −83.3) | top: off, opened later; north: on | yard hatch (−27.8, −61.6) and barred mouth (−25.9, −84.6), both locked: deliberate until C-1 |
+| west islet (−159.8, 0.1; 12 m up) | 26 | | | | **excluded: no dome** (the user) |
+| lighthouse, ferry | scripted, no zone | | | | `lighttop`, the ferry: unchanged |
+
+Also seen (H, unverified): a scripted four-stop ride between objects of one kind at (−52.9, −13.1), (−76.7, −44.3; 24 m up), (−76.9, 98.2; 7 m up) and (−15.1, −62.4; 12 m up), each offering the other three scenes (45, 46, 48, 50). Not a door; out of scope.
+
+### (b) LBA2's sewer (scene 17), in order (D, G, H)
+
+One flooded hall, about 39 × 38 m, water over the whole floor (floor sound "water" at 0.4 m), walkways at 0.9 m, the north gallery at 2.6 m.
+
+1. **The ways in.** (i) The tavern cellar's trapdoor: a one-way drop from the ceiling onto the **central raised platform** (brick 28, 33). (ii) The lower-town street hatch (−28.5, 27.6): a 1.9 m square iron lid in a stone frame, railed on its north, east and south sides, two bollards on the west where you step on; a lift takes him down the **north-east shaft** (49, 17). (iii) The terrace hatch (−25.1, −31.5), the same lid and frame on the railed terrace behind the school, 7.5 m up; a lift down the **north-west shaft** (10, 17). (iv) Bersimon's tent: a passage from the tent's west wall into the **south-west nook** of the hall (3.5, 58), both ways from the start.
+2. **The north gallery** (z 16–19) runs the whole north wall at 2.6 m, humps over a bridge at x 17–27, has a low gap to the water at x 34–37, and ends at both corners at the two shafts. The lift shafts are only at its ends.
+3. **The west walkway** (x 8–10) comes down from the gallery's west end by a stair (z 20–30) and runs to the south; **the treasure room's door (S18) is in the west wall at its middle** (8.5, 38).
+4. **The east walkway** (x 47–52) runs the whole east wall at 0.9 m, broken by short seams of water.
+5. **The south side** (z 57–59): stepping slabs with seams of water; the tent's nook opens off its west end, the wall stepping out (x 3–5).
+6. **The central island** (x 19–36, z 32–50): a raised platform (x 25–35, z 32–41, 4.3 m, railed, lamp globes) where the tavern drop lands; terraces round it at 3.4 m with stairs down to the east; at its south-west **a small walled tower (x 19–25, z 42–48, 6 m, hollow) whose east door leads to the secret room S34** (25.5, 47); a raised causeway (z 49–50) runs from the island west to the west wall.
+7. **Getting out (H).** Standing on a shaft's lift starts it and switches that shaft's street exit on; so both hatches work as exits from below at any time, and the street hatch works from above from the start. The terrace hatch opens from above only when the story opens it.
+8. **Rooms off the hall:** S18, a small treasure room (west wall); S34, the secret room (island tower). Nothing else.
+
+### (c) Ours against it (O)
+
+Our hall already follows LBA2's plan well: raised north walkway with stairs down the west side (LBA2 2, 3), stepping slabs on the south (5), a central island with a raised platform and a small square well-house (6), a bridge from the west walkway to the island (LBA2's causeway), an east pier (4). The doors are what is not LBA2's:
+
+- Ours has a **street grate with a lift** — LBA2's kind of entrance — but at (−45.4, 56.6) in Bug Street, where LBA2 has nothing, and it comes down **in the island's well-house**. LBA2's lift hatches are at (−28.5, 27.6) and the terrace, and come down the **two north corner shafts**.
+- LBA2's two hatches became **house doors** in ours: the `pink` house was built on top of the street hatch (its south wall over the hatch's north rail), and the terrace hatch became a porch house (`stoneup`). Both lead to doors in the hall's north wall, not to shafts.
+- **The secret room's door** is in LBA2's island tower; ours is the third arch of the north-east colonnade. Our well-house stands where LBA2's tower does (4 m north of it) and is used for the street shaft instead.
+- **The treasure room's door** is in LBA2's west wall; ours is the colonnade's middle arch.
+- **The tavern drop** lands on LBA2's central platform; ours on the east pier.
+- **The tent passage** reaches LBA2's south-west nook; ours the west wall at z 6, 4–5 m north of it.
+- Every link LBA2 has exists in ours now (SEWERS-1); none is missing and none is extra except our Bug Street grate.
+
+### (d) Corrections
+
+Positions: Citadel outdoors in world metres; the hall in hall-local metres (world x + 5800). "Twelve years" marks a difference that is ours on purpose and should stay.
+
+| # | Door or link | LBA2 links it | Ours links it | Change wanted |
+|---|---|---|---|---|
+| 1 | **Lower-town street hatch** | a railed lift hatch in the street at (−28.5, 27.6), open to the west between two bollards → the hall's NE shaft | the `pink` house's door (−28.5, 27.9) → the Works door, hall north wall x 7.75 | **Move our grate-lift (`HATCH`, `buildSewerHatch`) from (−45.4, 56.6) to (−28.5, 27.6)**; rails on its N/E/S sides, two bollards at (−30.3, 26.2) and (−30.3, 28.9). Move the `pink` house north so its south wall clears z 25.6 (centre z 24.6 → about 22.5; check what stands north of it) or drop it. Its door no longer leads down (keep it as Fosse's Sewer Works office, a twelve-year addition, or locked with a line). Hero comes up on the lid at (−29.3, 26.7). |
+| 2 | **The hall end of 1** | the NE shaft at the gallery's east end (≈ hall (11.5, −11.5)) | the Works door, north wall x 7.75; the lift comes down in the island's well-house | Put the lift shaft in the NE corner under the colonnade: deck at about (11.5, −10.5) on the colonnade floor; `sewer-out` and the `pink` entry move there; remove the Works door (or keep it as Fosse's door into his works, not to the street). |
+| 3 | **Terrace hatch** | a lift hatch on the railed terrace (−25.1, −31.5; 7.5 m), off at the start → the hall's NW shaft | the `stoneup` porch house, door (−25.5, −33.8), gated by `sw_bolt` → hall north wall x −4 | Replace the porch with a flush lid-and-frame hatch at (−25.1, −31.5) using the same lift kit (no house). Keep the story gate: the bolt becomes the lift's catch drawn from below. Hero comes up on the lid at (−26.0, −32.4). |
+| 4 | **The hall end of 3** | the NW shaft at the gallery's west end (≈ hall (−12.8, −11.5), on the 1.65 m walkway) | the terrace door at x −4 on the raised walkway | Move it to the walkway's west end: lift deck at about (−12.6, −10.8), arrival there; the walkway is already raised at that corner. |
+| 5 | **Our Bug Street grate** (−45.4, 56.6) | nothing | street grate → lift → well-house | Gone once 1 moves it. If its spot must keep something, a sealed drain cover only. The knocking by the pump (townlife PUMP) can stay: the pipe still runs under the lane. |
+| 6 | **The well-house on the island** | LBA2's island tower, its east door → S34, the secret room | the street shaft (lift deck, chains) and `sewer-out` | Make the well-house's door the **globe room's door** (`sewerglobe`, Bersimon's key, as now). Its shaft keeps only the heat pipe coming down (twelve years: the project's pipe is why the globe clouds). Optional: move it 3–4 m south to the island's south-west, centre about (−5.3, 3.9), door on its east face facing (−3.1, 4.9), as LBA2's. Remove the globe door from the colonnade (x 13). |
+| 7 | **Treasure room** (`sewervault`) | a door in the west wall at mid-depth (≈ hall (−14, 0)), off the west walkway | the colonnade's middle barred arch, x 10.5 | Move the gate and its exit/entry to the west wall at z ≈ 0 (the west walkway already runs there at floor 0). The colonnade's arches stay as blind barred arches (twelve years: bricked up). |
+| 8 | **Tavern-cellar drop** | lands from the ceiling on the central raised platform (≈ hall (−1.6, −2.7)) | lands on the east pier (7.5, 7.4) | `entries.fall` → about (−0.2, −1.5) on the platform (1.15 m), clear of the well-house; a short fall from above, then the splash is not needed. |
+| 9 | **Tent passage** | the hall's south-west nook, west wall at the south slabs (≈ hall (−14, 10.5)) | west wall at z 6, across from the bridge | Move `WEST.z` from 6 to about 10 (keep the stair up). Low priority. |
+| 10 | Wizard's tent, outside | tent body x −105.9…−101.6, z −71.1…−64.0, door east face (−101.2, −67.4) | `WIZ.tent` (−100, −71), door (−96.25, −71) | Move the tent so its door lands at (−101.2, −67.4): centre about (−105.0, −67.4) at our tent's size; check the plateau's west edge behind it. |
+| 11 | Tralu's cave door | the plateau bank (−80.7, −73.0; 9.4 m), facing east | `OLD_DOORS.plateau` (−80.7, −82.0), facing north | Move 9 m south and turn it to face east, if our bank has a face there; else note the bank as the reason and keep. |
+| 12 | Twinsen's front door | east face at (−45.6, 79.9) | east face at (−46.0, 77.2) | Optional: door 2.7 m north (door.x 2.6 → about −0.1) if the interior's door can follow. |
+| 13 | Fort-ruins passage, top end | a standing door facing south on the ruins (−24.4, −63.2; 12.3 m) | a hatch in the yard (−27.8, −61.6), locked | Twelve years / C-1: keep shut; if C-1 is built, make the top end a door, not a hatch. |
+| 14 | School door (`stone`) | (−30.0, −21.5) → S37 | (−26.8, −20.1), locked | Keep (WORLD-FIX moved the house off the ramp); purpose is the user's call. |
+| 15 | Museum upper door, baggage back rooms, Tralu's deeper caves, the asylum, the terminal | as (a) | not built, or ours | Twelve years / deliberate (C-5, C-6, LBA1 asylum, our spaceport). No change. |
+
+**door-map.md additions** (Source only; gated by story where noted): `nbr` (−30.2, 75.3) → `nbrhouse` (after the prologue); `water` (−65.4, 11.0) → the Water Office (chapters 2, 8, 10, after the ending); `stoneup` (−25.5, −33.8) → `sewer` (after `sw_bolt`); `stone` (−26.8, −20.1), `shop` (−33.6, −1.1) locked; the lighthouse → `lighttop` (chapters 3, 10); room exits `tavcellar` → `sewer` (the drop), `wtent` → `sewer` (the trapdoor, once opened), `sewer` → `sewer-stoneup`, `sewer-pink`, `sewerglobe` (gated), `sewerglobe` → `sewer`.
+
+### Zeelich (D against O; the hub city is ours, not compared)
+
+| Door | LBA2 | Ours | Change wanted |
+|---|---|---|---|
+| Otringal bar (`otrbar`, LBA2 136) | the harbour house's **west** face at local (−45.0, −0.4; 4 m up), toward the pier; out at (−47.1, −2.6) | the same house (centre (−42.2, −0.4)), door at (−42.2, +4.7) on its south side | Put the door on the west face at (−45.0, −0.4). |
+| Otringal hotel (`otrhotel`, LBA2 81) | a corner door in the upper town at (7.3, −50.9) and (5.4, −48.5), 18.4 m up; out at (7.7, −47.1) | the plaza house (−15.4, −10.2), door (−15.4, −7.0) — LBA2's **casino** (135) has its double door here, (−19.2 / −17.0, −7.3; 12.7 m) | The user's call: move the hotel's door to the upper town at about (6.4, −49.7) if our Otringal has that terrace; or keep and record it as twelve years (the casino became the hotel). |
+| Celebration temple (`celtemple`, LBA2 93) | a door on the island's **west flank** at (−12.7, 4.1; 9.9 m up), facing west; out at (−14.6, 2.6) | a portal on the summit plaza's north edge (2.2, −9.2) | Move the portal to (−12.7, 4.1) on the west flank, facing west. LBA2's summit door (−1.2, 5.5; 20.6 m) leads to a different chain (185 → 186/187 → 188/192), not built. |
+
+Otringal has about 34 outdoor doors to 40 interiors, Celebration 2: only the three above are built, so only those are corrected.
+
+### Desert Island (D against O)
+
+| Door | LBA2 | Ours | Change wanted |
+|---|---|---|---|
+| School of Magic (LBA2 28 → 27 classroom → 33 blowgun test) | the tall narrow tower in the hollow under the ridge, door at (4.2, −0.1); out at (5.4, −0.5) | the School at the stone mask (−66.3, −72.7), 95 m away; the tower is the dig crew's bunkhouse (shut) | **The user's decision of 26.10 placed the School at the mask**; the decoded links put LBA2's School door in the tower. Keep unless the user reverses; worth showing them. |
+| Kesh: bar 39 (−64.0, −7.6), Leone's 35 (−58.0, −21.1), shop 36 (−43.3, −18.9), Baldino's 38 (−44.5, −4.0), ticket office 40 (−39.6, −38.5) | five doors in a cluster round (−50, −18) | houses at (−60, −8) and (−54, −18) match the bar and Leone's within 4–5 m; (−64, 10), (−50, 16, Tarra's) and (−36, 15) stand 15–25 m north; S40 is Bashir's (shut); Baldino's workshop is on Zeelich | Twelve years for the workshop. Optional: move one northern house to the shop's spot (−43.3, −18.9) and one to Baldino's (−44.5, −4.0) if Kesh is rebuilt. |
+| Temple of Bu (10; a floor hatch 127 into it) | door (49.7, −83.9), hatch (49.7, −67.5) | the dig at (64, 28): the temple under the excavation | Twelve years (the buried temple is our story). |
+| Hacienda 24 (three doors, one a roof hatch), hut 113, the islet's door 183 | (55.6, −119.7), (−115.0, −99.1), (117.8, −120.9) | cut by DECLUTTER (the user, 3.11) | Deliberate. |
+
+### Not decoded or verified
+- Life scripts were byte-searched, not decoded: who opens the terrace hatch from above, and whether a script that switches off zone ID 0 in scene 42 also closes the street hatch (two zones share ID 0), are unconfirmed.
+- No picture of LBA2 gameplay at these spots was compared; the hatch description comes from decoration footprints (frame, lid, rails, bollards) and the zone shapes. Scene names come from the earlier study's list (lba2remake locator), cross-checked here only by links (the School chain 28-27-33, the tavern 3-4).
+- Our side is Source only: nothing was walked or captured on this build. Ground heights at the moved spots (tent, Tralu's door, the hatch north of the pink house) must be checked in game.
+- No rubric score is given: this is a door audit, not a visual comparison.
