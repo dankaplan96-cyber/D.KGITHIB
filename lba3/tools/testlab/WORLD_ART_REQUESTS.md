@@ -2991,3 +2991,36 @@ the CPU at 100 % from other agents throughout (frame p95 52–274 ms).
   the office in and out, the slider before/after. If the source crackles too, the renders are the cause (a re-render
   or higher bitrate: yours); if neither does but the live game does, it is after Chromium (Windows' mixer/driver
   under load) or battery power.
+
+## ZSTYLE-1 · Zeelich's new city reads as Zeelich (the user's DECISION, 7.11; CLOUD_ORDERS 27a for the hub) · the laptop, 8.11.2026
+Diff: `requests/ZSTYLE-1.diff` (zeelich.js, travel.js, zterminal.js, zeelife.js; against bceb4486, `git apply --check`
+clean; origin's house `arcade` kept, the dome occluder uses `DH` and the council's 1.22 cap). Layout, paths, doors,
+colliders, story spots and the random scatter unchanged. Pictures (chapter 3+) stay on the laptop.
+**Zeelich's identity, measured from the user's LBA2 files (numbers only, kept in lba-study):** no lawn, grey granite
+ground (Otringal #838079 / #62625c / #aaa19a / #454440, pale paving #d6d1d4); walls granite #6c6e6a, dark metal
+#414b44, ochre wood #90643c, taupe stucco #a79d98, glass blocks #6c95a0; roofs grey/taupe/slate with aqua or gold
+caps; props grey-green rails and gold; Otringal's civic halls 7.4–9.3 m on octagonal plans, glass blocks over the
+lower third, columned drums, faceted aqua/gold caps with a gold spike; Knartas hive domes; Mosquibee white cocoons
+with red fins; golden-plume trees in square planters and golden fan plants (~26/ha); an overcast pale-grey misty sky.
+**Rubric without geography and landmarks (editorial, medium-low confidence): 29/55 (53 %) → 43/55 (78 %), below 85.**
+Architecture 11 → 16 /20, palette and materials 7 → 12 /15, vegetation and environment 4 → 8 /10, inhabitants 7 → 7 /10.
+- What changed: an overcast pale-grey sky and fog; the cloud sea in SKY-9's grey textures under a lavender-grey tint
+  (no pink); a speckled granite (`graniteTex`) for ground, cliffs and the old mill; a glass-block foot on every
+  house (the frieze's material: no new draw); the council house a 2.3 m drum ringed by 8 grey columns under a gold
+  cap; the planters alternate `frondTree` and `goldPlant` (the old plants' draws burnt, so every later scatter keeps
+  its place); the plaza star in pale border stone, a glass-block band on the fountain, teal bench backs, rust/teal/
+  ochre awnings, warm white lamp glass; the mills taupe stucco with glass bands, aqua or gold faceted caps, grey sails;
+  ochre bulbs, golden tufts; the spaceport deck paler lavender-grey with teal rails (LBA2's port deck); the terminal
+  pavilion in the same look; the watch house taupe stucco over grey stone (was a dark blue block).
+- Cost (Vega 8, whole frame, all passes): draw calls 875 → 873, 649 → 645, 390 → 390, 1006 → 1001; triangles +0.4–1 %;
+  one 512² granite canvas, two grey 512² cloud canvases, one 128² puff (shared with the Platform). Frame time not
+  measured. **Already so before: the hub draws 390–1006 calls against 73–202 on the isles: worth a performance look.**
+- Tests: on the agent's base (ddad5c12) zeelich-life 38/38, overlaps (zeelich) pass, world-consistency 37/37,
+  playthrough 06-zeelich every step (1 ISO assist as on GPU-9). Rebased: zeelich-life hit "the platform gate:
+  transition, not arrived" and stopped before its verdict; **the same check fails on origin without this diff
+  (37/1)**, so it is not from it: yours (the platform gate walk). overlaps (zeelich) on the rebased tree crashed the
+  page under load: not rerun.
+- Left, to reach 85: one or two round or barrel-vault house bodies at the same footprints and doors; ribbed metal on
+  the depot and workshop; a less Citadel-like parapet on the watch house; lighter lavender-grey street paving and a
+  gravel look for the tracks; the inhabitants (street police, posters, a coin machine: the people owners);
+  zislands.js's default environment for islands without their own still carries the old pink.
