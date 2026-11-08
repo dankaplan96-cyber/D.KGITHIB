@@ -1,0 +1,6 @@
+    at async file:///C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/tests/desert-life.mjs:154:1 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v26.13.0

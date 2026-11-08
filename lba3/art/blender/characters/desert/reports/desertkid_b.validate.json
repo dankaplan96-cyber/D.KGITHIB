@@ -1,0 +1,429 @@
+{
+  "file": "art/blender/characters/desert/work/desertkid_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.6498, 1.8566, 0.6341], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y -0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: desertkid_b_belt -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_brows -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_cuffL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_cuffR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_foreL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_foreR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_hair -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_handL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_handR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_hat -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_hatBand -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_hatBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_head -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_hemBand -> desertkid_bRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_neck -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_neckBand -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_nose -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shinL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shinR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shoeL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shoeR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shoulderL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_shoulderR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_skirt -> desertkid_bRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_soleL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_soleR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_tail0 -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_tail0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_tail1 -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_tail1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_tail2 -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_tail2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_thighL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_thighR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_tie -> desertkid_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_tie",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_torso -> desertkid_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_upperL -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: desertkid_b_upperR -> desertkid_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: desertkid_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature desertkid_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 44,
+    "meshes": 43,
+    "triangles": 3008,
+    "materials": 13,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3249,
+        -0.0,
+        -0.3197
+      ],
+      "max": [
+        0.3249,
+        1.8566,
+        0.3143
+      ],
+      "size": [
+        0.6498,
+        1.8566,
+        0.6341
+      ]
+    }
+  },
+  "passed": true
+}

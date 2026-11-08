@@ -3379,3 +3379,97 @@ user**): `docs/future/characters/zmole1_b/`.
   - zmole2 ×6 and zbee1/zbee2 ×6 each still share one body;
   - the doze pose's feet, as in CAST-POLISH-ZEELICH.
 - Order: after CAST-POLISH-ZEELICH-2 (both touch skeletons.json's single line and assets/poly/index.json).
+
+## CAST-POLISH-DESERT · desertkid_b (a sun hat), farmerC_b (bare-headed), the archivist's glasses · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-DESERT.diff`, against `59dab6e3` (origin + ZEELICH-2 + ISLES, the local base);
+`git apply --check` is clean on it. Files it changes:
+- `tools/blender/cast_poly.py`: CAST desertkid_b, farmerC_b, archivist `glassesRim`;
+- `src/game/characters.js`: 2 new LOOKS entries, nothing else changed;
+- `src/game/storylife.js`: 3 `char` lines;
+- `src/game/walkrounds.js`: 1 `char` line;
+- `art/characters/skeletons.json`: + desertkid_b, farmerC_b, made with `tools/dump-skeletons.mjs`. desertkid_b has three
+  extra bones, tail0–2, for its swinging tail of hair; farmerC_b's trunk bones sit 6–7 cm further back over its smaller
+  belly. The file is one line, so the diff carries it whole;
+- `assets/poly/index.json`: + desertkid_b, farmerC_b.
+
+Model files for `assets/poly/`, in `requests/CAST-POLISH-DESERT/`:
+- `desertkid_b.json` and `farmerC_b.json`, new;
+- `archivist.json`, which replaces the shipped one.
+
+Pictures (**chapter 4+: not for the user**, except Pico's, which are Citadel's): `docs/future/characters/{desertkid_b,
+farmerC_b,archivist}/`.
+- **Census of Desert Island.** At the dig there are 8 people: worker ×3, farmerA, farmerB, farmerC, lharMan,
+  archivist. At the School 5 more: magus, lulu, tim, and desertkid ×2 (Rafi, Oni). Inside the School there are 3: lulu,
+  tim, desertkid. In Kesh: lulu, tim, archivist (Bashir). The story people are Sani (desertkid), Brosk, Hesk, Ilka,
+  Dallan and Tarra.
+
+  Order 24's models here are desertkid ×6 (Sani, Oni, Rafi, Oona, Pico, Little Kel), farmerC ×5 (Fosse, Grull, Tobb,
+  Gorrum, Bodo) and archivist ×5. The archivist wore the same flat wire octagons as the clerk and Sela.
+- **desertkid_b:** a wide straw sun hat (role `hat` #d8b860; its band is the straw hat's usual 0.55× shade) and a
+  short tail of hair instead of the tuft. Who takes it: **pico (Pico, Citadel's walker) and sc_pupc (Rafi, the
+  School's plaza)**. Sani (dkid), Oni, Oona (sc_in3) and Little Kel (lh_kid1) keep desertkid.
+  - Triangles: body 2444 → 2928 (+19.8 %).
+  - On Citadel's square, Pico now walks in a sun hat.
+- **farmerC_b:** a working Grobo, bare-headed (no hat, so the crown and ears show), with a lighter belly (0.05 against
+  0.12). Who takes it: **dg_haul (Gorrum, the dig) and lh_grum (Bodo, the Hamalayi)**. Fosse, Grull (farmer3) and Tobb
+  keep farmerC.
+  - Triangles: body 3538 → 3234 (−8.6 %).
+- **GLASSES-ARCHIVIST** (archivist ×5: the archivist, Bashir, dg_clerk, Kip, Bern): the same change as GLASSES-SELA, a
+  round rim on the face with a bridge and arms to the ears.
+  - Triangles: 2414 → 2734 (+13.3 %).
+- **Contracts:**
+  - bones in each look's skeleton;
+  - eyes and mouths unchanged on archivist;
+  - 4 weights a vertex;
+  - no colour that is neither a role nor a darker multiple of one;
+  - feet as before: farmerC's −1.2 cm was already in the shipped model.
+  - `validate` (Blender, desertkid_b and farmerC_b): 0 fails.
+  - The rebuild from the diff's script is byte-identical to the request's JSONs, and desertkid and farmerC rebuild
+    unchanged.
+- **DRESS-1** (variants 1–6):
+  - farmerC_b and archivist recolour every role.
+  - desertkid_b leaves 96 vertices in the base hair hex, and in variant 5 708 vertices in the base shoe hex. **The
+    shipped desertkid gives the same result** (96 hair, 828 shoes in variant 5). Variant 5's hair goes to #6a4a2a, which
+    is the shoes' own hex, so the check counts recoloured hair as shoes left; the 96 hair vertices are a pre-existing
+    oddity of that model, not this change.
+- **Budget:**
+  - Draw calls: the hero as any of the three looks is 4 calls, as before.
+  - In the hero frame: desertkid_b 4968 → 5936 triangles, farmerC_b 7172 → 6564, archivist 4908 → 5548.
+  - School plaza (chapter 4, Follow/Medium): 145 = 145 calls, +484 triangles.
+  - Dig site (chapter 5): 180 = 180 calls, +16 triangles (Gorrum's hat off, the clerk's glasses on).
+  - No texture or material. Vega 8 frame time not run.
+- **Looked at:**
+  - lookdev turnarounds and faces;
+  - 13 poses × 2 views of desertkid_b and farmerC_b: the hat and the tail of hair follow the head through jump, throw,
+    the sword and the doze;
+  - the game with the hero as each, before and after: Follow/Medium, the dialogue and close-ups;
+  - the School plaza and the dig site, before and after, through `zeecap.mjs` ROOM=desert with ROUTES for the old char
+    lines;
+  - Blender views.
+- **Tests** (SwiftShader, the three files and the index in `assets/poly`, the code in place, a renamed headless shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - walkers 37/37 PASS (Pico).
+  - **desert-life did not finish:** 21 checks passed and 0 failed, then a reload of the page did not finish booting
+    within 20 minutes. The same test on a clean export of `59dab6e3` (served on port 8258) also did not finish: it stopped
+    at the same kind of reload after 12 passes. So this test cannot finish on this laptop tonight with or without the
+    change, and **desert-life is unproven for this batch: please run it in the cloud.**
+
+  Evidence labels: **Automated runtime only**. The pictures were looked at, not played.
+- **Left:**
+  - farmerC_b's lighter belly hardly shows; the read is the bare head;
+  - desertkid's 96 base-hair vertices (above);
+  - lharMan, lharWoman and farmerA (×6 each, order 24) are mostly the Hamalayi's and Citadel's: next region;
+  - worker ×4 (3 at the dig) still share one body.
+- Order: after CAST-POLISH-ISLES. **Please run desert-life before merging**: on the laptop it stopped on a page reload's boot (21 pass, 0 fail) both with and without this change.
+
+## CAST-POLISH-ISLES and -DESERT: diffs rebuilt on the current origin · the laptop, 8.11.2026
+Both were made on the laptop's own application of ZEELICH-2; you applied ZEELICH-2 yourselves, so the single-line
+`art/characters/skeletons.json` and `assets/poly/index.json` no longer matched (and islandlife.js had moved). The two
+request diffs are now **rebuilt on the current origin**: the code by a three-way apply, and the two JSON files as
+origin's own plus only the new entries (`zmole1_b`; `desertkid_b`, `farmerC_b`) taken from the laptop's dump. Apply
+**ISLES, then DESERT**; both `git apply --check` clean in that order; the merged JS passes `node --check`, cast_poly.py
+compiles. The model JSONs in `requests/CAST-POLISH-ISLES/` and `-DESERT/` are unchanged. (The first DESERT push
+said "after ISLES" but did not apply on origin: my mistake, corrected here.)
