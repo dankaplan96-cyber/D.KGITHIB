@@ -104,4 +104,4 @@ CLOUD_ORDERS 27 (this pack): curator, world-art, music crackle, performance-lab.
 - Known failing checks, failing the same on the base: (travel.mjs "Doran goes ahead to the spaceport" fixed in wave 2:
   the check ran while Doran was still walking up the quay, STAGING-1; a hero who ran ahead now finds him by the ship);
   combat.mjs "dodge distance consistent at 30 and 60 fps"; prologue.mjs "the well's mites beaten" (3 of 4, random,
-  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); (camfollow and camcitadel fixed 8.11); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
+  passed on the rerun); saveslots.mjs's slot picture (passed on the rerun); (camfollow and camcitadel fixed 8.11); crosssystem "focus lost while charging … he walks" (walks 0.01 m after a blur; fails the same on v63: for polish); npc-feet Oda's 5-step stop; camclear's pipeline 0.149 m; overlaps' two Lhar roof spots.
