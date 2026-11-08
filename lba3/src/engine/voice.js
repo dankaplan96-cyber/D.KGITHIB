@@ -277,6 +277,7 @@ export const VOICES = {
   ih_tesk: { race: 'mole', seed: 1507, f0: 205, k: 1.06, rate: 1.2, contour: 'step', range: 3, legato: 0.5 },                         // the Platform's office clerk: precise
   zh_lissa: { race: 'esmer', seed: 1508, f0: 236, k: 1.2, rate: 1.12, contour: 'bounce', range: 6, legato: 0.6, spk: 1 },             // Nara's niece: young, lively
   zh_wenna: { race: 'esmer', seed: 1509, f0: 210, k: 1.0, tilt: 2.0, rate: 0.74, contour: 'fall', range: 3, legato: 1.0, vib: [5, 18], spk: 2 },          // Oku's wife: older, settled
+  hl_monk: { race: 'bunny', seed: 1601, f0: 118, k: 1.0, rate: 0.78, contour: 'fall', legato: 0.86, sex: 'm' },   // Brother Tenpa, the monks' hall (HAMALAYI-LIFE): slow, warm
   zr_fennick: { race: 'quetch', seed: 1510, f0: 132, k: 0.96, rate: 1.08, contour: 'bounce', legato: 0.56, spk: 3 },                  // the heat fitter: busy
   zr_rezz: { race: 'esmer', seed: 1511, f0: 112, k: 0.82, tilt: 2.1, rate: 1.4, contour: 'arc', legato: 0.4, spk: 2 },                           // the grounded shuttle pilot
   zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful

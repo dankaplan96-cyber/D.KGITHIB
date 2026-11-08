@@ -129,6 +129,8 @@ await ev(async () => {
       if (!(r.present || r.inside || r.away === 'sleep')) continue;
       const k = areaKey(r); (out[k] ||= []).push(r.def.id);
     }
+    // (HAMALAYI-LIFE: Lhar's people at home in their houses, by the phase: their outdoor selves are away then)
+    for (const id of G.story.hlife?.atHome?.() || []) (out.hamalayi ||= []).push(id);
     return out;
   };
   // the hero into an area: a room at its spawn; outdoors 7 m from the first of `ids` on the planner's ground (or x, z)

@@ -45,7 +45,8 @@ export class Observatory extends ChapterBase {
     const M = this.M;
     if (!M) return undefined;
     switch (id) {
-      case 'keeper': return this.O.npcSpots.keeper;
+      // (HAMALAYI-LIFE: chapters 8 and 9, no story at the dome: Sefa is at home next door, writing up the night: story/hamlife.js)
+      case 'keeper': return ['evacuation', 'council'].includes(this.story.cur?.key) ? this.story.hlife.home('keeper') : this.O.npcSpots.keeper;
       case 'hesk': return f.c7_vent ? { x: M.monastery.gate.x + 2, z: M.monastery.gate.z + 1, a: Math.PI } : null;
     }
     return undefined;
