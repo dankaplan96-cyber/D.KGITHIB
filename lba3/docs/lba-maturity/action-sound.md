@@ -184,6 +184,14 @@ WAV, with `LISTEN.txt` saying what to listen for. **Listening status: not listen
   `alert`.
 - `tests/combat.mjs` "dodge distance consistent at 30 and 60 fps" fails identically before this pass (a391e9c6:
   `{"d30":0,"d60":1.56}`): not caused by it, not fixed here.
+- `tests/sewers.mjs` fails the same three well-house lift checks before this pass (a391e9c6) and after: not caused by
+  it, not fixed here.
+
+## Tests (Automated runtime, headless SwiftShader, 2026-11-08)
+
+Pass: action-sound (21), audio (6), music (26), voices (27), ball-close (6), anim-combat (35), depot-watch (11),
+items-ceremony (20), containers (41), chapter1 (23), chapter3 (36), chapter4 (54), door-sweep (5). combat: 75/76 and
+sewers: 27/30, the same failures as on a391e9c6 (above).
 
 ## Files
 
