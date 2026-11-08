@@ -38,12 +38,16 @@ const TRANSITIONS = [
   ['chapter3.js', 'toCore', 'same', 'chapter 11 → 12: on down through the shell (the underground)'],
   ['chapter3.js', 'interact', 'same', "chapter 11: into the shaft at Citadel's station (on foot, down its ladder: the underground under Citadel)"],
   ['chapter3.js', 'finish', 'cut', 'chapter 12 → the epilogue: home a few days later (a cut in time)'],
+  // (EXP-MERGE-35: the expanded campaign's calls, expansion/ballastra; OG-1 throttle.js, OG-2 survey.js, OG-6 coils.js)
+  ['coils.js', 'meet', 'same', "chapter 14, OG-6: the street meets by the fountain (Zeelich's street, a few metres: the same area)"],
+  ['coils.js', 'disperse', 'same', "chapter 14, OG-6: the meeting breaks up where it stood (Zeelich's street)"],
   ['council.js', 'verdict', 'same', "chapter 9 → 10: the council chamber → Baldino's workshop, both on Zeelich"],
   ['council.js', 'spotted', 'same', 'chapter 9, the archive: spotted, back to its door (the same room)'],
   ['dig.js', 'readCarving', 'same', 'chapter 4 → 5: Desert Island, both'],
   ['evacuation.js', 'interact', 'film:crossByShip', 'chapter 8 → 9: Citadel → Zeelich by a project ship'],
   ['evacuation.js', 'startZoe', 'same', "chapter 8: Zoé's part, on Citadel"],
   ['evacuation.js', 'endZoe', 'same', "chapter 8: back to Twinsen at the station's control room, on Citadel"],
+  ['index.js', 'afterLoad', 'cut', 'a save standing in an empty shell chapter (12, 13: not written yet) goes on to the next written one behind its card: the loader catching up, no story step reaches a shell (Story.nextIndex skips them)'],
   ['islands.js', 'board', 'film:travelTo', "a terminal's counter: out through the gate under the black, then the travel's journey film from the pad"],
   // (GLIDER-FILM, 5.11, split fly: fly plays the glider's film (storyJourney) and then calls flyTo, whose scene change
   //  this is; with the films off, or no parked glider at either end, flyTo's plain fade alone)
@@ -56,6 +60,10 @@ const TRANSITIONS = [
   ['prologue.js', 'endPrologue', 'same', "chapter 1 → 2: up from the well's cave into Citadel's square"],
   ['sewers.js', 'rideStep', 'same', "the sewer lift under the lane by the pump (a room under Citadel)"],
   ['steam.js', 'board', 'film:storyJourney', "chapter 5 → 6: Hesk's glider from the dunes over the buried hall to the Hamalayi field (WC-1)"],
+  ['survey.js', 'update', 'same', "chapter 11 → 14: Baldino's call answered, the chapter ends once he has landed on Zeelich (his own ticket: the travel's ship film brought him); the network begins in Baldino's workshop, on Zeelich (12–13 pass through)"],
+  ['throttle.js', 'flyHome', 'film:playJourney', "chapter 10: Mira's call reaches him on Zeelich: the ship's film from Zeelich Spaceport to Citadel's (TRAVEL-1), then the landing there"],
+  ['throttle.js', 'end', 'same', "chapter 10 → 11: Gilbert's thanks at the fortress shelter → chapter 11 at the shelter's door (Citadel, both)"],
+  ['throttle.js', 'downstairs', 'same', "chapter 10: Mira takes him down from the Water Office into FunFrock's valve room (a room of Citadel)"],
 ];
 {
   const dir = ROOT + 'src/game/story/', found = [];

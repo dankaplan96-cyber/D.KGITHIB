@@ -144,7 +144,8 @@ export class Throttle extends ChapterBase {
       this.f.og_home = true;
       this.story.refreshCast(); g.audio.play('door'); g.updateObjective();
     };
-    if (!to) { g.startTransition(swap); return; }
+    // (one scene change, always through the ship's film: with the films off or no Citadel port point, playJourney
+    //  calls it at once with no arrival film, as the plain fade here did before; EXP-MERGE-35)
     playJourney(g, { from, to, mode: 'ship' }, (then) => g.startTransition(swap, null, then));
   }
   update(dt) {
