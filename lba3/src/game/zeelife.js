@@ -91,8 +91,10 @@ const shieldShape = (w, h) => { const s = new THREE.Shape(); s.moveTo(-w / 2, h 
 
 export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH, occ = null }) {
   const C = {
-    ash: tm('fortStone', { color: '#f2e6f8', rough: 0.92 }),       // the watch house's ashlar (lilac-grey)
-    ashD: tm('fortStone', { color: '#c8bcd6', rough: 0.95 }),      // its plinth, string course, merlons
+    // (ZSTYLE-1: in the street's taupe stucco over grey stone; Citadel's fort stone under a lilac tint read as a dark
+    // violet-blue block among the Esmer houses)
+    ash: tm('plasterWall', { color: '#ddd4cc', rough: 0.92 }),     // the watch house's walls
+    ashD: tm('stone', { color: '#cfc9c2', rough: 0.95 }),          // its plinth, string course, merlons
     planks: tm('planks', { color: '#c8a078', rough: 0.85 }),
     stripe: tm(stripeTex(), { rough: 0.9, side: THREE.DoubleSide }),
     VC: pm('#ffffff', 0.8, { vertexColors: true }),

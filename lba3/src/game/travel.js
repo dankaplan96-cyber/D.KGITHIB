@@ -181,7 +181,9 @@ export function travelRegion(game, id) {
   // ---- Zeelich: its spaceport (ours) and the shuttle pad by the dock; each island's pad (zislands.js)
   const Z = R.zeelich;
   if (Z) {
-    const o = Z.group.position, Y = 6.0, B = new Batch(Z.group), deck = tm('deck', { color: '#e0d8e8', rough: 0.65, metal: 0.25 }), brass = brassM(), stone = tm('stone', { color: '#ecdce4' });
+    // (ZSTYLE-1: LBA2's space port deck plate, lavender-grey (LBA2_VISUAL_NOTES #60–61), a shade paler; LBA2's teal metal
+    // rails (Otringal's body 5), grey stone stilts; they were brass rails and rose stone)
+    const o = Z.group.position, Y = 6.0, B = new Batch(Z.group), deck = tm('deck', { color: '#e4e2e8', rough: 0.65, metal: 0.25 }), brass = tm('teal', { rough: 0.55, metal: 0.3 }), stone = tm('stone', { color: '#d6d2cc' });
     const p = ZPORT, br = p.bridge;
     const wbox = (x0, x1, z0, z1, top, extra = {}) => P.add({ type: 'box', x: o.x + (x0 + x1) / 2, z: o.z + (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, top, ...extra });
     // the deck on stilts into the clouds, the footbridge from the shore
@@ -210,7 +212,7 @@ export function travelRegion(game, id) {
       B.add(cached('zplampglobe', () => new THREE.SphereGeometry(0.22, 12, 8)), pm('#fff4d8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), lx, Y + 3.3, lz);
     }
     B.build();
-    const b = boardMesh(Z.group, br.x + 3.4, Y, p.z0 + 2.2, Math.PI * 0.75, { title: 'ZEELICH SPACEPORT', lines: ['TWINSUN: CITADEL', 'BY SPACESHIP'], frame: '#7a3a8a', bg: '#2a1e34', ink: '#f0c040' });
+    const b = boardMesh(Z.group, br.x + 3.4, Y, p.z0 + 2.2, Math.PI * 0.75, { title: 'ZEELICH SPACEPORT', lines: ['TWINSUN: CITADEL', 'BY SPACESHIP'], frame: '#2f6f78', bg: '#1c2a30', ink: '#f0c040' });
     void b; P.add({ type: 'box', x: o.x + br.x + 3.4, z: o.z + p.z0 + 2.2, hw: 1.1, hd: 0.15, rot: Math.PI * 0.75, top: Y + 2.7, noStand: true });
     buildZTerminalOutside(Z.group, P, Y);   // (SPACEPORT-1: the terminal's pavilion beside the bridge's end; its hall is zterminal.js)
     Z.spaceport = { pad: { x: o.x + p.pad.x, z: o.z + p.pad.z, y: Y }, landing: { x: o.x + p.pad.x, z: o.z + p.pad.z - 7.2, a: Math.PI }, deck: { x0: o.x + p.x0, x1: o.x + p.x1, z0: o.z + p.z0, z1: o.z + p.z1, y: Y } };
