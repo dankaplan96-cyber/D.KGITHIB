@@ -20,7 +20,7 @@ const before = REF ? execSync(`git show ${REF}:lba3/src/engine/audio.js`, { cwd:
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-page.on('console', (m) => console.log('page:', m.text()));
+page.on('console', (m) => { if (m.type() !== 'log') console.log('page:', m.text()); });
 await page.goto(URL0 + 'README.md');
 const res = await page.evaluate(async ({ before, base, ONLY }) => {
   const SR = 48000;
@@ -47,7 +47,8 @@ const res = await page.evaluate(async ({ before, base, ONLY }) => {
     return { A, oc };
   }
   // run fn at offline time t (the context's clock advances as in play)
-  const at = (oc, t, fn) => oc.suspend(Math.round(t * SR / 128) * 128 / SR).then(() => { try { fn(); } catch (e) { console.error('event at', t, e.message); } finally { oc.resume(); } });
+  const errors = [];   // (a sound that throws while it is built: the run fails)
+  const at = (oc, t, fn) => oc.suspend(Math.round(t * SR / 128) * 128 / SR).then(() => { try { fn(); } catch (e) { errors.push(`${t}: ${e.message}`); } finally { oc.resume(); } });
 
   // K-weighting (BS.1770's two stages, as biquads at 48 kHz) for loudness
   async function kweight(buf) {
@@ -130,7 +131,6 @@ const res = await page.evaluate(async ({ before, base, ONLY }) => {
       const takes = [];
       for (let k = 0; k < 6; k++) { const e = engine(mod, len); at(e.oc, 0.05 + k * 0.0, () => e.A.play(name)); takes.push(await measure(await e.oc.startRendering())); }
       const spread = (f) => +(Math.max(...takes.map(f)) - Math.min(...takes.map(f))).toFixed(1);
-      console.log(tag, name);
       out.sfx.push({ name, tag, ...m, varDb: spread((x) => x.lufs50), varCentroid: spread((x) => x.centroid), wav: wav(buf) });
     }
   }
@@ -222,6 +222,7 @@ const res = await page.evaluate(async ({ before, base, ONLY }) => {
       out.scenes.push({ id, tag, mix: await measure(buf), fx: await measure(fx), wav: wav(buf) });
     }
   }
+  out.errors = errors;
   return out;
 }, { before, base: URL0, ONLY });
 await browser.close();
@@ -235,3 +236,4 @@ writeFileSync(OUT + 'measurements.csv', [cols.join(','), ...rows.map((r) => cols
 console.log('refs', JSON.stringify(res.refs));
 for (const s of res.scenes) console.log('scene', s.id, s.tag, JSON.stringify(s.mix), 'fx', JSON.stringify(s.fx));
 console.log(rows.length, 'sounds measured →', OUT);
+if (res.errors.length) { console.log('ERRORS while building sounds:', res.errors.length, res.errors.slice(0, 5)); process.exitCode = 1; }

@@ -368,13 +368,14 @@ export class AudioEngine {
   // switched on at full level clicks), and the effects pass a gentle shelf above 5.5 kHz (_in: no harsh highs).
   _tone({ type = 'sine', f0, f1 = f0, dur = 0.15, vol = 0.3, at = 0, atk = 0.004 }) {
     const ctx = this.ctx, pv = this._pv || 1, v = vol * (this._gv ?? 1);
+    if (!(v > 1e-5)) return;   // (a silent layer: nothing to make)
     const t = ctx.currentTime + at + (this._delay || 0);
     const o = ctx.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(f0 * pv, t);
     o.frequency.exponentialRampToValueAtTime(Math.max(20, f1 * pv), t + dur);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(atk, dur * 0.5));
-    g.gain.exponentialRampToValueAtTime(Math.min(0.001, v * 0.02), t + dur);
+    g.gain.exponentialRampToValueAtTime(Math.max(1e-6, Math.min(0.001, v * 0.02)), t + dur);
     o.connect(g).connect(this._dest || this._in());
     o.start(t); o.stop(t + dur + 0.02);
     this._nodes?.push(g);
@@ -383,12 +384,13 @@ export class AudioEngine {
 
   _burst({ dur = 0.1, vol = 0.3, type = 'lowpass', f = 1000, f1 = f, q = 1, at = 0, atk = 0.003 }) {
     const ctx = this.ctx, pv = this._pv || 1, v = vol * (this._gv ?? 1);
+    if (!(v > 1e-5)) return;   // (a silent layer: nothing to make)
     const t = ctx.currentTime + at + (this._delay || 0);
     const n = ctx.createBufferSource(); n.buffer = this.noiseBuf;
     const fl = ctx.createBiquadFilter(); fl.type = type; fl.Q.value = q;
     fl.frequency.setValueAtTime(f * pv, t); fl.frequency.exponentialRampToValueAtTime(Math.max(30, f1 * pv), t + dur);
     const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(atk, dur * 0.5));
-    g.gain.exponentialRampToValueAtTime(Math.min(0.001, v * 0.02), t + dur);
+    g.gain.exponentialRampToValueAtTime(Math.max(1e-6, Math.min(0.001, v * 0.02)), t + dur);
     n.connect(fl).connect(g).connect(this._dest || this._in());
     n.start(t, Math.random() * 1.5); n.stop(t + dur + 0.02);
     this._nodes?.push(g);
@@ -519,7 +521,8 @@ export class AudioEngine {
       chain = ctx.createStereoPanner(); chain.pan.value = sp.pan; chain.connect(this._in()); this._dest = chain;
     }
     this._end = 0; this._nodes = take.nodes; this._delay = m.yield ? 0.02 : 0;
-    try { this._synth(name); } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; }
+    // (a sound that fails to build must never stop the game: it is skipped and named once)
+    try { this._synth(name); } catch (e) { if (!this._synthErr) { this._synthErr = true; console.warn('sound', name, e.message); } } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; }
     this._live.push(tc + this._end + 0.03);
     if (chain) setTimeout(() => chain.disconnect(), (this._end + 0.6) * 1000);
     S.played++;
@@ -638,8 +641,8 @@ export class AudioEngine {
       // ---- searching: a rummage (cause), then the outcome: something there (a little 'pop'), or nothing (two soft
       // falling notes, a shrug); rummage alone: a hop into a bin or planter (its bonus pops out with 'bonus')
       case 'rummage': [0, 0.07, 0.15].forEach((at, i) => this._knock({ f: 190 + i * 30, drop: 0.7, dur: 0.06, vol: 0.05, click: 1100, cv: 1, at })); this._burst({ dur: 0.2, vol: 0.03, f: 1800, f1: 1200, type: 'bandpass', q: 1, at: 0.02 }); break;
-      case 'search': this._synth('rummage'); this._tone({ type: 'triangle', f0: 660, f1: 990, dur: 0.1, vol: 0.05, at: 0.26 }); break;
-      case 'searchEmpty': this._synth('rummage'); this._tone({ f0: 392, dur: 0.12, vol: 0.045, at: 0.27, atk: 0.01 }); this._tone({ f0: 294, dur: 0.2, vol: 0.045, at: 0.4, atk: 0.01 }); break;
+      case 'search': this._synth('rummage'); this._tone({ type: 'triangle', f0: 660, f1: 990, dur: 0.1, vol: 0.08, at: 0.26 }); this._bell(1319, 0.33, 0.25, 0.05); break;
+      case 'searchEmpty': this._synth('rummage'); this._tone({ f0: 392, dur: 0.12, vol: 0.035, at: 0.27, atk: 0.01 }); this._tone({ f0: 294, dur: 0.2, vol: 0.035, at: 0.4, atk: 0.01 }); break;
       // ---- doors: walked through (a latch, the leaf on its hinges, the leaf shut behind), a heavy door or gate a
       // mechanism opens (door), and a door that will not open (the handle rattles against its lock)
       case 'doorIn': this._knock({ f: 520, drop: 0.8, dur: 0.03, vol: 0.05, click: 2200, cv: 1.2 }); this._tone({ type: 'triangle', f0: 240, f1: 300, dur: 0.24, vol: 0.02, at: 0.05, atk: 0.06 }); this._burst({ dur: 0.25, vol: 0.04, f: 500, f1: 300, type: 'bandpass', q: 3, at: 0.05 }); this._knock({ f: 120, drop: 0.6, dur: 0.12, vol: 0.09, click: 700, cv: 0.8, at: 0.42 }); break;

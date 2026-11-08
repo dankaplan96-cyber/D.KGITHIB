@@ -172,9 +172,12 @@ const duck = await ev(async () => {
   const G = game, A = G.audio, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const g0 = A.fxDuck.gain.value;
   G.say('', ['A short line to hear the effects step back.']);
-  await sleep(500); const under = A.fxDuck.gain.value;
+  // (on the audio clock: a busy headless context may run behind real time, so wait for 0.4 s of it, at most 4 s)
+  const c0 = A.ctx.currentTime; for (let i = 0; i < 40 && A.ctx.currentTime - c0 < 0.4; i++) await sleep(100);
+  const under = A.fxDuck.gain.value;
   for (let i = 0; i < 20 && G.state !== 'play'; i++) { P.tap('KeyE', 0.05); G.step(0.3); await sleep(50); }
-  await sleep(1800); const after = A.fxDuck.gain.value;
+  await sleep(500); const c1 = A.ctx.currentTime; for (let i = 0; i < 60 && A.ctx.currentTime - c1 < 1.6; i++) await sleep(100);
+  const after = A.fxDuck.gain.value;
   return { g0: +g0.toFixed(3), under: +under.toFixed(3), after: +after.toFixed(3), state: G.state };
 });
 check('a line of dialogue: effects and ambience down to ~0.63 (-4 dB), back to 1 after it', Math.abs(duck.g0 - 1) < 0.02 && Math.abs(duck.under - 0.63) < 0.05 && duck.after > 0.95, duck);
