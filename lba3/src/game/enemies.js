@@ -575,6 +575,20 @@ export class Guardian extends Drone {
     if (n >= 4 && was < 4) this.nextDive = true;   // (the overload opens with a dive: the new attack is seen at once)
   }
   setPresent(on) { super.setPresent(on); if (!on) { this.marks.hideAll(); if (this.diving || this.state === 'ground') { this.state = 'chase'; this.stateT = 0; } } }
+  // (BOSS-SHAPE) overloaded, the ball and the blade glance off it (violet sparks, a clang) except while it climbs into a
+  // dive or hangs over the ring (its underside open) and while it sits stuck in the deck; a stun is not drawn out by more
+  // hits. So the dive is the way in: hit it as it climbs, or step out and use the time it is stuck. Before the overload
+  // every hit stuns it, as ever.
+  shrugs() { return this.level >= 4 && !(this.state === 'rise' || this.state === 'lock' || this.state === 'ground'); }
+  glance() {
+    const g = this.game;
+    this.rig.hitFlash(); g.audio.play('clang');
+    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#d8a0ff', 12, 3);
+    if (!this.toldGlance && this.state !== 'stunned' && this.state !== 'drop') { this.toldGlance = true; g.hud?.toast?.('c3_toast_overload'); }
+    return 'blocked';
+  }
+  ballHit(ball, p) { if (this.shrugs()) return this.glance(); return super.ballHit(ball, p); }
+  melee(D) { if (this.shrugs()) return this.glance(); return super.melee(D); }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;

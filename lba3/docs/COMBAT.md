@@ -559,9 +559,11 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
      ring stops and flashes white (0.9 s), it drops (0.2 s): inside 2.0 m, 2 damage and knocked down, and a shock ring
      runs out. Answers: run or dodge out once the ring stops (walking straight out just clears it: 2.14 m), or a ball
      while it climbs knocks it out of the dive (stunned); once it drops it is committed. After a dive it sits stuck in
-     the deck 3.0 s, venting, harmless: the opening to turn the bleed valve (1.0 s), as a stun is. Bait the dive by the
-     valve, step out, turn it. A first dive that hits him shows one toast (the ring, the opening); the nudge after 30 s
-     names both openings.
+     the deck 3.0 s, venting, harmless: the opening to turn the bleed valve (1.0 s). Overloaded, the ball and the blade
+     glance off it (violet sparks, a clang) except while it climbs or hangs over the ring and while it is stuck in the
+     deck, and more hits do not draw out a stun: the dive is the way in (hit it as it climbs: stunned 2.6 s; or step out
+     and use the 3 s it is stuck). Bait the dive by the valve, step out, turn it. One toast each the first time a ball
+     glances off and the first time a dive hits him; the nudge after 30 s names both openings.
   3. **The coil**: the same guardian (dive and fan) while Vesk's coil takes three ball hits.
   Story, flags (`c3_overload`, `c3_bleed`, `c3_coil`), saves and the reload rules are unchanged. `tests/chapter3.mjs`
   plays the dive four ways (stand, walk out, dodge, ball at the climb).

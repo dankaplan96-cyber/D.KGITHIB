@@ -153,6 +153,12 @@ await ev(() => { const G = game, C = G.room, gd = G.story.cur.guardian, A = gd.a
       r.stuck = +tg.toFixed(2); r.fired = G.bolts.list.length - nb;
       return r;
     } }; });
+const dvGlance = await ev(() => { const G = game, h = G.hero, gd = G.story.cur.guardian;
+  for (let i = 0; i < 300 && (G.state !== 'play' || gd.state !== 'chase'); i++) { G.step(1 / 30); if (G.state !== 'play') T.talkAll(); }
+  gd.coolT = 9; h.pos.set(DV.sx, G.physics.groundAt(DV.sx, DV.sz, h.pos.y + 2), DV.sz); h.hp = h.maxHp; G.ball.state = 'idle'; G.step(0.3);
+  h.angle = h.angleTo(gd); const s0 = gd.state; T.tap('KeyF'); let st = []; for (let i = 0; i < 60; i++) { G.step(1 / 60); st.push(gd.state); }
+  gd.coolT = 0; return { s0, stunned: st.includes('stunned') }; });
+is('overloaded, a ball at it while it hovers glances off (no stun): the dive is the way in', dvGlance, (v) => v.s0 === 'chase' && !v.stunned);
 const dvStand = await ev(() => DV.run('stand'));
 is('the overloaded guardian dives: its ring follows him and locks where he is; standing in it costs 2 and knocks him down; then it is stuck in the deck ~3 s and fires nothing', dvStand, (v) => v.rose && v.lockedOnHim && v.lost === 2 && v.knocked && v.stuck > 2.8 && v.fired === 0);
 const dvWalk = await ev(() => DV.run('walk'));
