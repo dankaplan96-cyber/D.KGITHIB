@@ -38,7 +38,7 @@ Object.assign(STR.en, {
   hl_yorna_council_2: "A few more weeks of quiet ground and we come home for good. Pim wants to stay with the monks. He says the food is better. It is.",
   hl_sefa_evacuation: "The dome needs a rest, and so do I. I'm writing up the day we lit the crystal. Nobody will believe a word of it.",
   hl_sefa_evacuation_2: "Since the vent opened, the snow stays where it falls. A good sign. Good signs are rare up here.",
-  hl_sefa_council: "The second sun's beam reaches the crystal every evening now. I log it. Somebody should.",
+  hl_sefa_council: "The second sun's beam reaches the crystal every day now. I log it. Somebody should.",
   hl_sefa_council_2: "Knock here if you must. Not on the dome. The dome is resting.",
 
   // ---- Lhar's houses by the phase (their own look: ihomes.js ih_ham_lharN, then these)
