@@ -135,6 +135,7 @@ export class Perf {
 // where the browser exposes it (Chrome hides it on some systems; then none: the report says so). Results arrive a
 // few frames later; a frame the driver marks "disjoint" (a power state change, another program) is dropped. This
 // is the number that tells a GPU-bound frame (pixels, shadows, MSAA) from a CPU-bound one (draw calls, simulation).
+const GPU_MS_MAX = 10000;   // (ZPERF-1: a frame's GPU time above this is not a measurement)
 export class GpuTimer {
   static make(gl) { const ext = gl?.getExtension?.('EXT_disjoint_timer_query_webgl2'); return ext ? new GpuTimer(gl, ext) : null; }
   constructor(gl, ext) { this.gl = gl; this.ext = ext; this.free = []; this.frames = []; this.f = null; this.cur = null; this.ms = []; this.pass = new Map(); }
@@ -169,17 +170,20 @@ export class GpuTimer {
       let tot = 0;
       for (const [label, q] of F.q) { const ms = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; by[label] = (by[label] || 0) + ms; tot += ms; this.free.push(q); }
       if (disjoint) { this.disjoint = (this.disjoint || 0) + 1; continue; }   // (PERF-HIGH: counted: a GPU power-state change)
+      // (ZPERF-1: a result no frame can have — 737 873 ms came back, not marked disjoint, on the user's Vega 8 under load —
+      //  is dropped and counted apart, so it reaches neither a percentile nor the Auto governor)
+      if (!(tot >= 0 && tot < GPU_MS_MAX)) { this.invalid = (this.invalid || 0) + 1; continue; }
       this.onFrame?.(tot);
       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
       if (F.tag != null) { const T = (this.tags ??= new Map()); let a = T.get(F.tag); if (!a) T.set(F.tag, (a = [])); a.push(tot); if (a.length > 600) a.shift(); }
       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
     }
   }
-  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.tags?.clear(); }
+  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.invalid = 0; this.tags?.clear(); }
   stats() {
     if (!this.ms.length) return null;
     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
-    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
+    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, invalid: this.invalid || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
   }
 }
 
