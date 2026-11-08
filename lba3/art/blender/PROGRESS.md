@@ -147,22 +147,44 @@ the original's and stays; feet 0.2 H x 0.09 H x 0.06 H (ours 0.15 x 0.04 x 0.03)
 - Left: in doze the Esmers' feet lie apart from the shins (rig pose, before and after); cone hands; keeper x8 / oku x5 one
   body each; Otringal's Quetch (councilB x4, lharWoman's zc_petit) untouched.
 
+### Zeelich batch 2: keeper_b, oku_b, GLASSES-CLERK, GLASSES-SELA: CAST-POLISH-ZEELICH-2 (8.11.2026)
+CAST-POLISH-ZEELICH was pushed (7b34fc50, requests only; the base for this diff = origin + HEROES, CITADEL, -2, -3, ZEELICH
+in the scratch repo `scratchpad/z28/base`).
+- keeper_b (council guard, after LBA2 body 80's helmeted Esmer): not slim, helmet (role `helmet` #4a6a5a) with peak and neck
+  guard, belt #6a4a2a + buckle. People: zc_guard, up_guard, zt_guard, zt_guard2. 2224 tris (+20.7 % on keeper).
+- oku_b (working Esmer): upright, long flared robe, headcloth (oku's hat hex), dark brows, height 0.97. People: pask, ennu,
+  hs_worker4. 2128 tris.
+- GLASSES-CLERK (clerk x6, cheap cords: 1808 -> 1950 body, +27 % on the shipped 1536 over both batches) and GLASSES-SELA
+  (councilB x4: 2662 -> 2982); CAST `glassesRim` (Quetch branch new, Esmer branch new).
+- Code: characters.js 2 LOOKS entries; chars in storylife.js, roomlife.js, story/hostel.js; skeletons.json + 2 looks
+  (`dump-skeletons.mjs`, a copy in scratch with SHELL_EXE); assets/poly/index.json + 2 names.
+- Checks: contracts and DRESS-1 variants 1-6 clean; validate 0 fails; census keeper x4 / keeper_b x4 / oku x2 / oku_b x3;
+  chapter 9 street 709 = 709 calls (SwiftShader), 643 = 643 (Vega 8), Vega 8 median 17.3/17.4 -> 17.4/17.4 ms.
+- Tests (both batches' files in assets/poly): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30,
+  interior-life 144/144 PASS; assets/poly put back (keeper_b/oku_b removed, index restored).
+- Tools: zeecap.mjs takes KEY/FLAGS (a chapter by its flags), IDS, ROUTES (serve old code files for a before run);
+  lookcap.mjs takes FY (face height). Files `characters/zeelich2/`; pictures `docs/future/characters/{keeper_b,oku_b,clerk,
+  councilB}/` (chapter 3+: never to the user); request `tools/testlab/requests/CAST-POLISH-ZEELICH-2*`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance verified ✓ (light) · integrated: no (request).
+- Left: doze feet (rig); helmet facets up close; Kira still Sela's shape (a councilB_b later); lharWoman unchanged (reads fine).
+
 ## Current
-- CAST-POLISH-ZEELICH ready for the cloud (applies on origin + HEROES, CITADEL, CITADEL-2, CITADEL-3).
+- CAST-POLISH-ZEELICH-2 ready for the cloud (applies on origin + HEROES, CITADEL, -2, -3, ZEELICH).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: Zeelich and Otringal (batch 1, the Esmers: CAST-POLISH-ZEELICH), the isles, Desert
-   Island, the Hamalayi, the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), the isles, Desert Island, the Hamalayi,
+   the underground
 5. The named cast
-6. The most shared models' shape variants (`<look>_b`)
+6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku~~; farmerB, desertkid, lharMan, lharWoman, farmerA,
+   clerk, farmerC, archivist (and councilB for Kira)
 7. Equipment: the ball, the sword
 8. Common props
 
 ## Next action
-Zeelich batch 2: the keeper shape variant `keeper_b` (order 24: a new LOOKS entry + JSON, the people by id; e.g. the guards
-zc_guard, zt_guard, zt_guard2, up_guard as a helmeted, heavier Esmer, Ilo/Marl/Esren keep keeper), then `oku_b`; then
-Otringal's Quetch (councilB on kira/sanna/ama). Diffs go on top of CAST-POLISH-ZEELICH (base: origin + HEROES, CITADEL, -2,
--3, ZEELICH applied in a scratch git repo). Browsers with `SHELL_EXE` (a renamed copy of the headless shell); server 8257.
+Region 2, Zeelich's isles (islandlife.js people: ot_*, kn_*, or_*, ce_*, ld_*, ow_*; they wear nara/oku/xil/keeper/clerk):
+census them (they load lazily: ensure the isles' regions first), survey in lookdev, pick by visibility and weakness, same
+loop; report CAST-POLISH-ISLES. Diffs on top of ZEELICH-2 (scratch base: apply it to `base` as commit after6). Browsers
+with `SHELL_EXE` (renamed headless shell copy), server 8257, before runs of code changes through zeecap's ROUTES.
