@@ -90,10 +90,10 @@ export class CitadelStands extends ChapterBase {
     const g = this.game, h = g.hero;
     const say = (key) => { g.say('', [t(key)]); return true; };
     switch (it.kind) {
-      case 'cs_board': g.audio.play('select'); return say(`cs_board_${it.which}_${this.townState()}`);
+      case 'cs_board': g.audio.play('paper'); return say(`cs_board_${it.which}_${this.townState()}`);
       case 'cs_info': g.audio.play('select'); return say(it.key);
       case 'cs_cart': return say(it.key === 'cs_cart_port' ? (portPhase(this.story) === 'grounded' ? 'cs_cart_port_g' : 'cs_cart_port') : it.key);
-      case 'cs_shed': g.audio.play('deny'); return say(it.key);
+      case 'cs_shed': g.audio.play('doorLocked'); return say(it.key);
       case 'cs_fount': {
         const st = this.townState();
         if (st === 'dry') { g.audio.play('deny'); return say('cs_fount_dry'); }

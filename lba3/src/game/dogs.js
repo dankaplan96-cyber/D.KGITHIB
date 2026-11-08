@@ -359,7 +359,7 @@ export class Dog {
 
   bark(dh) {
     const G = globalThis.game;
-    if (dh < 9 && G?.audio) G.audio.play(this.friendly ? 'yap' : 'bark');
+    if (dh < 9 && G?.audio) G.audio.play(this.friendly ? 'yap' : 'bark', this.pos);
     this.rig.bark();
     this.barkCool = this.friendly ? 6 + Math.random() * 6 : 1.4 + Math.random();
   }

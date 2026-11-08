@@ -293,7 +293,7 @@ export class Network extends ChapterBase {
       case 'c10valve': {
         const v = it.valve;
         h.act('use', 0.6, () => {
-          v.setOpen(!v.open); (f.c10_valveSet ||= {})[v.i] = v.open; g.audio.play('select');
+          v.setOpen(!v.open); (f.c10_valveSet ||= {})[v.i] = v.open; g.audio.play(v.open ? 'valve' : 'valveShut');
           const lv = this.gaugeLevels(); this.R.valves.gauges.set(lv);
           if (lv.every((x) => x === 2)) {
             this.lightRelay('valves'); g.audio.play('shard');

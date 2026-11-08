@@ -70,7 +70,7 @@ export class IsleHomes extends ChapterBase {
   interact(it) {
     const g = this.game;
     if (it.kind === 'ihlook') { g.say('n_hero', [t(it.key)], null, g.hero); return true; }
-    if (it.kind === 'ihshut') { g.audio.play('deny'); g.say('', [t(it.key)]); return true; }
+    if (it.kind === 'ihshut') { g.audio.play('doorLocked'); g.say('', [t(it.key)]); return true; }
     return false;
   }
   // ---------------------------------------------------------------- the keepers (defined once their room is built)

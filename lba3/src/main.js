@@ -362,6 +362,10 @@ class Game {
     this.showBuilt();
     this.bench = new Bench(this);
     this.audio = new AudioEngine();
+    // ACTION-SOUND: the clock an effect's gap is counted on (two calls for one event merge): the mean of real time and
+    // the game's time, so it runs at 1× in play, still moves in a pause (the menus' ticks), and steps with the
+    // simulation when it runs faster than real time (a catch-up, the tests' stepped loops)
+    this.audio.clock = () => (performance.now() / 1000 + (this.time || 0)) / 2;
     this.audio.setMood('title');
     this.env.onThunder = () => this.audio.play('thunder');
     this.input = new Input(this.renderer.canvas);
@@ -2140,6 +2144,7 @@ class Game {
     if (!gv) return false;
     const key = this.giverKey(gv);
     this.searched.push(key);
+    this.audio.play('rummage');   // (ACTION-SOUND: the search itself; its bonus pops out with 'bonus')
     let lk = key;
     for (let i = 2; this.pickups.list.some((p) => p.loot === lk) || this.ball?.carry?.loot === lk; i++) lk = key + '#' + i;
     const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z, this.hero.pos.y + 1)) + (gv.top ?? 1);
@@ -2303,7 +2308,7 @@ class Game {
   impact(x, y, z, material = 'flesh', result = 'hit', scale = 1) {
     const C = { flesh: '#ffe0b0', crystal: '#9ff4ff', machine: '#ffd27a', armor: '#ffffff', stone: '#d8ccb0', wood: '#c8904a', magic: '#ffe27a', none: '#a8b8c8' }[material] || '#ffffff';
     const snd = result === 'blocked' ? 'clang' : result === 'immune' ? 'notReady' : { flesh: 'hitFlesh', crystal: 'hitCrystal', machine: 'hitMachine', armor: 'clang', stone: 'hitStone', wood: 'hitWood', magic: 'hit' }[material] || 'hit';
-    this.audio.play(snd);
+    this.audio.play(snd, { x, z });   // (ACTION-SOUND: placed where it struck: quieter and to the side far off)
     this.particles.burst(x, y, z, C, Math.round((result === 'blocked' ? 10 : 8) * scale), result === 'blocked' ? 5 : 3.5);
     if (result !== 'immune') this.camRig.shake(result === 'blocked' ? 0.12 : 0.08 * scale);
   }
@@ -2381,9 +2386,9 @@ class Game {
     if (fl) this.hud.float(fl[0], p.pos, fl[1]);
     switch (p.type) {
       case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
-      case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('heal'); break;
-      case 'flask': h.mp = h.mpMax; this.audio.play('heal'); break;
-      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); break;   // (the ♣ and the counter say it)
+      case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('pickLife'); break;
+      case 'flask': h.mp = h.mpMax; this.audio.play('pickMagic'); break;
+      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('pickClover'); break;   // (the ♣ and the counter say it)
       case 'crystal': {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;
@@ -2421,9 +2426,9 @@ class Game {
         if (this.exitRefused?.e === e) continue;
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
           // a door between two rooms of one building (Twinsen's house and its cellar)
-          if (e.room) { this.audio.play('door'); this.walkNext = true; const from = this.room.id; this.enterRoom(e.room, (R2) => R2.entries?.[from] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
+          if (e.room) { this.audio.play('doorIn'); this.walkNext = true; const from = this.room.id; this.enterRoom(e.room, (R2) => R2.entries?.[from] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
           if (this.story.canExit(this.room, e.to)) {
-            this.audio.play('door');
+            this.audio.play('doorIn');
             // an exit leads outdoors on Citadel, or into another room/region ({ room, x, z, a })
             // (LAZY-REGIONS: where it lands may be read from an area not built yet: then that area is built behind
             //  the black, under its card, and the exit is worked out there)
@@ -2444,7 +2449,7 @@ class Game {
       const region = this.room?.id;
       for (const d of this.story.doors()) {
         if ((d.region || undefined) !== region) continue;
-        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room, d.spawn || null); this.walkNext = false; return; }   // (a door may name where in the room it lands: SEWERS-1)
+        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('doorIn'); this.walkNext = true; this.enterRoom(d.room, d.spawn || null); this.walkNext = false; return; }   // (a door may name where in the room it lands: SEWERS-1)
       }
     }
   }
@@ -2778,6 +2783,7 @@ class Game {
     // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
     if (!this.room) this.audio.setOutdoorArea(h.pos, POI);
     this.audio.updateSources(this.soundSources(), h.pos);
+    this.audio.listen(h.pos, this.camera);   // (ACTION-SOUND: where a placed sound is heard from)
     // adaptive combat music
     const chasing = this.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup'));
     this.combat = lerp(this.combat, chasing ? 1 : 0, 1 - Math.exp(-dt * 1.5));

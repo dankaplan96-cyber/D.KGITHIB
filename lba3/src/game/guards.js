@@ -83,7 +83,7 @@ export class Guard extends Actor {
     if (this.state === 'patrol' || this.state === 'search') { this.state = 'chase'; this.stateT = 0; }
     if (force < this.armour) {   // taken on the armour: a brace, no damage
       this.rig.play('listen'); this.hurtT = 0.25; this.rig.hitFlash?.();
-      g.audio.play('clang');
+      g.audio.play('clang', this.pos);
       return 'blocked';
     }
     this.damage(force, from);
@@ -108,7 +108,7 @@ export class Guard extends Actor {
     if (this.hp <= 0) {
       this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this);
       this.rifle.userData.glow.emissiveIntensity = 0.2;
-      g.audio.play('hit'); g.camRig.shake(0.15);
+      g.audio.play('hit', this.pos); g.camRig.shake(0.15);
       new KnockOut(this, 'human', from);   // the fall (death.js); its bonus comes out when it hits the ground
       g.onEnemyKilled(this);   // (LBA1's GiveExtraBonus: one bonus where it fell)
       return;
@@ -167,7 +167,7 @@ export class Guard extends Actor {
         if (this.waitT > 0) { this.waitT -= dt; anim = 'idle'; }
         else if (dd < 0.4 || this.patrol.length < 2) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = this.patrol.length < 2 ? 1e9 : 1.2; }
         else { face = Math.atan2(tx - this.pos.x, tz - this.pos.z); sp = 1.4; anim = 'walk'; }
-        if (sees) { this.state = 'alerted'; this.stateT = 0; g.audio.play('alert'); g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 2.4, z: this.pos.z }, '#e090ff'); }
+        if (sees) { this.state = 'alerted'; this.stateT = 0; g.audio.play('alert', this.pos); g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 2.4, z: this.pos.z }, '#e090ff'); }
         break;
       }
       case 'alerted':   // a beat to turn and bark
@@ -195,7 +195,7 @@ export class Guard extends Actor {
         if (!this.sees(hero) || this.jamT > 0) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); break; }
         if (this.stateT > tell) {
           g.bolts.fire(from, to.sub(from).normalize(), 8, 1);
-          g.audio.play('zap');
+          g.audio.play('zap', this.pos);
           this.rifle.userData.glow.emissiveIntensity = 1.6;
           this.state = 'recover'; this.stateT = 0; this.coolT = 1.8 * DF.cool; g.combatDir?.done(this);
         }
@@ -211,7 +211,7 @@ export class Guard extends Actor {
         break;
       case 'strike':
         anim = 'heavy'; sp = 2.2;
-        if (!this.hitDone && this.stateT > 0.12 && d < 1.6 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch'); }
+        if (!this.hitDone && this.stateT > 0.12 && d < 1.6 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch', this.pos); }
         if (this.stateT > 0.35) { this.state = 'recover'; this.stateT = 0; this.coolT = 1.2 * DF.cool; g.combatDir?.done(this); }
         break;
       case 'hurt':

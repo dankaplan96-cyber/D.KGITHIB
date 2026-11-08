@@ -138,7 +138,7 @@ export class Council extends ChapterBase {
         h.act('use', 0.8, () => {
           g.audio.play('chest');
           if (c.label !== 'BORE') { this.chain([['hero', c.label === 'TUNNELS' ? 'c9_cab_tunnels' : 'c9_cab_ferries']]); return; }
-          if (!f.c9_key) { g.audio.play('deny'); f.c9_locked = true; this.chain([['hero', 'c9_cab_locked']], () => g.updateObjective()); return; }
+          if (!f.c9_key) { g.audio.play('doorLocked'); f.c9_locked = true; this.chain([['hero', 'c9_cab_locked']], () => g.updateObjective()); return; }
           f.c9_plans = true; this.watcher?.stop();
           g.audio.play('shard');
           this.chain([['hero', 'c9_cab_bore']], () => { g.updateObjective(); g.save(false); g.found('plans', 'c9_toast_plans'); });

@@ -46,10 +46,10 @@ export class GuardDog extends Actor {
     if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 6, Math.cos(a) * 6); }
     g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#fff2b0', 8, 3);
-    g.audio.play('yelp');
+    g.audio.play('yelp', this.pos);
     if (this.hp <= 0) {
       this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this);
-      g.audio.play('hit'); g.camRig.shake(0.1);
+      g.audio.play('hit', this.pos); g.camRig.shake(0.1);
       new KnockOut(this, 'dog', from);   // the roll-over (death.js); its bonus comes out when it hits the ground
       g.onEnemyKilled(this);
       return;
@@ -67,7 +67,7 @@ export class GuardDog extends Actor {
     if (d > 2 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) > 1.4) return false;
     return this.game.physics.lineOfSight(this.pos.x, this.pos.y + 0.8, this.pos.z, hero.pos.x, hero.pos.y + 1.0, hero.pos.z);
   }
-  bark() { this.rig.bark(); this.game.audio.play('bark'); }
+  bark() { this.rig.bark(); this.game.audio.play('bark', this.pos); }
 
   update(dt) {
     if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
@@ -97,7 +97,7 @@ export class GuardDog extends Actor {
       case 'chase': {
         face = this.angleTo(hero); anim = 'run';
         const close = d < 2.4;
-        if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('growl'); break; }
+        if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('growl', this.pos); break; }
         sp = d > 3 ? 4.2 : close ? 0 : 2.0;
         if (close) anim = 'warn';
         if (Math.random() < dt * 0.4) this.bark();
@@ -110,7 +110,7 @@ export class GuardDog extends Actor {
         break;
       case 'lunge':
         anim = 'lunge'; sp = 5.5;
-        if (!this.hitDone && d < 1.4 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(1, this.pos); g.audio.play('punch'); }
+        if (!this.hitDone && d < 1.4 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(1, this.pos); g.audio.play('punch', this.pos); }
         if (this.stateT > 0.3) { this.state = 'recover'; this.stateT = 0; this.coolT = 1.4 * DF.cool; g.combatDir?.done(this); }
         break;
       case 'recover':   // the opening: standing, panting

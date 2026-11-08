@@ -60,7 +60,7 @@ export class IslandShuttle {
   interact(it) {
     const g = this.game;
     // (WC-4: a board reads the port's state when it has a line for it: the evacuation's, the council's checks)
-    if (it.kind === 'termBoard') { const k = `${it.tm.board}_${portPhase(this.story)}`; g.audio.play('select'); g.say('', [t(t(k) !== k ? k : it.tm.board)]); return true; }
+    if (it.kind === 'termBoard') { const k = `${it.tm.board}_${portPhase(this.story)}`; g.audio.play('paper'); g.say('', [t(t(k) !== k ? k : it.tm.board)]); return true; }
     if (it.kind === 'termCounter') return this.counter(it.tm);
     if (it.kind === 'portGrounded') { g.audio.play('deny'); g.say('', [t('port_grounded')]); return true; }
     if (it.kind !== 'isleShuttle') return false;

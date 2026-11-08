@@ -240,8 +240,8 @@ export class ZeelichLife extends ChapterBase {
       case 'zltag': return say(['zl_tag_' + it.tag]);
       case 'zlburrow': return say(['zl_burrow']);
       case 'zlnara': return say(['zl_flowers']);
-      case 'zhshut': g.audio.play('deny'); return say([it.key]);
-      case 'zhenter': g.audio.play('door'); g.walkNext = true; g.enterRoom(it.room); g.walkNext = false; return true;   // (as a door walked into: main.js)
+      case 'zhshut': g.audio.play('doorLocked'); return say([it.key]);
+      case 'zhenter': g.audio.play('doorIn'); g.walkNext = true; g.enterRoom(it.room); g.walkNext = false; return true;   // (as a door walked into: main.js)
       case 'zhlook': return say([this.lookKey(it.key)]);
       case 'zlshove':
         h.act('use', 0.8, () => {

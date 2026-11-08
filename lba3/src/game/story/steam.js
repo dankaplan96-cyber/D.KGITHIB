@@ -131,7 +131,7 @@ export class Steam extends ChapterBase {
         const v = it.valve;
         h.act('use', 0.8, () => {
           v.setOpen(!v.open); (f.c5_valves ||= {})[v.id] = v.open;
-          g.audio.play(v.open ? 'chest' : 'select');
+          g.audio.play(v.open ? 'valve' : 'valveShut');
           g.hud.toast('c5_toast_valve', { v: v.id, state: t5(v.open ? 'c5_open' : 'c5_shut') });
           this.updateGauges();
           if (v.id === 2 && v.open) { g.audio.play('deny'); this.chain([['hero', 'c5_valve_aquifer']]); return; }

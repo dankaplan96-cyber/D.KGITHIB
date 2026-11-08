@@ -390,7 +390,7 @@ export class Prologue extends ChapterBase {
           return true;
         }
         if (!f.rope) { f.pr_deep = true; g.say('n_hero', t('pr_well_rope'), () => g.updateObjective(), h); return true; }
-        g.say('n_hero', t('pr_well_go'), () => { g.audio.play('door'); g.enterRoom('well'); }, h);
+        g.say('n_hero', t('pr_well_go'), () => { g.audio.play('doorIn'); g.enterRoom('well'); }, h);
         return true;
       case 'bell':
         f.pr_bellSeen = true;
@@ -410,7 +410,7 @@ export class Prologue extends ChapterBase {
         });
         return true;
       case 'fortgate':
-        g.audio.play('deny');
+        g.audio.play('doorLocked');
         g.say('', [t('pr_fort')]);
         return true;
     }
@@ -422,7 +422,7 @@ export class Prologue extends ChapterBase {
   asylumSearch(it) {
     const g = this.game, f = this.f, h = g.hero;
     if (it.spot.id === 'asylum_register') {
-      g.searched.push(it.spot.id); g.audio.play('chest');
+      g.searched.push(it.spot.id); g.audio.play('search');
       this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
       return true;
     }
@@ -443,13 +443,13 @@ export class Prologue extends ChapterBase {
       // (C-4, CONNECTIONS_AUDIT.md: a locked door names its reason in one line, text/world.js w_door_<id>; the
       //  neighbours' line about the well is chapter 1's only)
       case 'locked': {
-        if (it.id === 'nbr' && this.story.index === 0) { g.say('n_hero', t('pr_locked'), null, h); return true; }
-        g.audio.play('deny');
+        if (it.id === 'nbr' && this.story.index === 0) { g.audio.play('doorLocked'); g.say('n_hero', t('pr_locked'), null, h); return true; }
+        g.audio.play('doorLocked');   // (ACTION-SOUND: the handle against its lock, not the interface's refusal)
         g.say('', [hasStr('w_door_' + it.id) ? t('w_door_' + it.id) : t('w_door_shut')]);
         return true;
       }
       case 'shut':
-        g.audio.play('deny');
+        g.audio.play('doorLocked');
         g.say('', [hasStr('w_door_' + it.id) ? t('w_door_' + it.id) : t('w_door_shut')]);
         return true;
       case 'chest':
@@ -462,7 +462,7 @@ export class Prologue extends ChapterBase {
       case 'roomsearch':
         if (this.asylumSearch(it)) return true;
         g.searched.push(it.spot.id);
-        g.audio.play('chest');
+        g.audio.play(it.spot.reward ? 'search' : 'searchEmpty');   // (ACTION-SOUND: something there, or nothing: heard apart)
         if (it.spot.reward) g.pickups.spawn(it.spot.reward, it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z) + 1, it.spot.z, { pop: true });
         else g.say('n_hero', t('gen_search_nothing'), null, h);
         return true;

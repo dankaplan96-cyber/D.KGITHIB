@@ -189,7 +189,7 @@ export class Mite extends Actor {
     // a hit interrupts the bite (small: always staggers)
     if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
     this.state = 'chase'; this.coolT = 0.7;
-    if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); this.rig.parts.crystals.visible = false; new KnockOut(this, 'mite', from); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break', this.pos); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); this.rig.parts.crystals.visible = false; new KnockOut(this, 'mite', from); g.onEnemyKilled(this); }
   }
   update(dt) {
     if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
@@ -218,7 +218,7 @@ export class Mite extends Actor {
       if (d < 6 && !hero.dead && hero.visibility() > 0.2) {
         this.noticeT = (this.noticeT || 0) + dt;
         if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; }
-        if (this.noticeT >= (this.def.wake || 0)) { this.state = 'chase'; this.noticeT = 0; g.audio.play('alert'); }
+        if (this.noticeT >= (this.def.wake || 0)) { this.state = 'chase'; this.noticeT = 0; g.audio.play('alert', this.pos); }
       } else this.noticeT = 0;
       this.rig.play('idle');
     } else if (this.state === 'chase') {
@@ -228,7 +228,7 @@ export class Mite extends Actor {
       // (DIFFICULTY: nothing bites across a drop: a mite that fell into the galleries' chasm cannot bite the hero on the shelf 3 m up)
       const level = Math.abs(this.pos.y - hero.pos.y) < 1.6;
       const may = d < 2.0 && level && this.coolT <= 0 && this.hurtT <= 0 && !hero.dead && (g.combatDir?.canAttack(this) ?? true);
-      if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
       else if (d > 2.6) sp = 2.5;
       else { side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
       // too far from home, or he got away: go back
@@ -419,7 +419,7 @@ export class Drone extends Actor {
     if (this.hp <= 0) {
       g.combatDir?.done(this); this.aimLine.visible = false;
       this.state = 'dead'; this.deadT = 0;
-      g.audio.play('break'); g.camRig.shake(0.2);
+      g.audio.play('break', this.pos); g.camRig.shake(0.2);
       g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ff9a3a', 30, 6);
       new KnockOut(this, 'drone', from);
       g.onEnemyKilled(this);
@@ -476,7 +476,7 @@ export class Drone extends Actor {
       // "!" — a beat to react before it starts hunting
       this.rig.mood = 'alert';
       face = this.angleTo(hero);
-      if (this.stateT < dt * 1.5) { g.audio.play('alert'); g.hud.float('!', { x: this.pos.x, y: this.pos.y + this.hover + 0.9, z: this.pos.z }, '#ff5a3a'); g.alertGroup(this.group, hero.pos, 0.6); }
+      if (this.stateT < dt * 1.5) { g.audio.play('alert', this.pos); g.hud.float('!', { x: this.pos.x, y: this.pos.y + this.hover + 0.9, z: this.pos.z }, '#ff5a3a'); g.alertGroup(this.group, hero.pos, 0.6); }
       if (this.stateT > 0.6) { this.state = 'chase'; this.stateT = 0; }
     } else if (this.state === 'chase') {
       this.rig.mood = 'alert';
@@ -485,7 +485,7 @@ export class Drone extends Actor {
       // keep a firing distance of 4–6 m
       sp = d > 6 ? 2.2 : d < 3.5 ? -1.4 : 0;
       if (this.deafT > 0) face = this.angle + 2.6 * Math.sin(this.stateT * 3.1);   // (squealed at: its aim wanders)
-      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
       if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; g.combatDir?.done(this); }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 24) { this.state = 'search'; this.stateT = 0; }
     } else if (this.state === 'windup') {
@@ -503,7 +503,7 @@ export class Drone extends Actor {
         const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 0.5, this.pos.y + this.hover - 0.4, this.pos.z + Math.cos(this.angle) * 0.5);
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
         g.bolts.fire(from, to.sub(from).normalize(), 9, 1);
-        g.audio.play('zap');
+        g.audio.play('zap', this.pos);
         this.state = 'chase'; this.stateT = 0; this.coolT = 1.6 * DF.cool;
         this.rig.play('fire');
         g.combatDir?.done(this);
@@ -571,7 +571,7 @@ export class Guardian extends Drone {
   setLevel(n) {
     const was = this.level; this.level = n; this.rig.setLevel?.(n);
     // a ring comes off for each converted pylon: a clank and a burst of sparks off the body
-    if (n !== was && n > was && n <= 3 && this.alive) { const g = this.game; g.audio.play('clunk'); g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 26, 5); }
+    if (n !== was && n > was && n <= 3 && this.alive) { const g = this.game; g.audio.play('clunk', this.pos); g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 26, 5); }
     if (n >= 4 && was < 4) this.nextDive = true;   // (the overload opens with a dive: the new attack is seen at once)
   }
   setPresent(on) { super.setPresent(on); if (!on) { this.marks.hideAll(); if (this.diving || this.state === 'ground') { this.state = 'chase'; this.stateT = 0; } } }
@@ -582,7 +582,7 @@ export class Guardian extends Drone {
   shrugs() { return this.level >= 4 && !(this.state === 'rise' || this.state === 'lock' || this.state === 'ground'); }
   glance() {
     const g = this.game;
-    this.rig.hitFlash(); g.audio.play('clang');
+    this.rig.hitFlash(); g.audio.play('clang', this.pos);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#d8a0ff', 12, 3);
     if (!this.toldGlance && this.state !== 'stunned' && this.state !== 'drop') { this.toldGlance = true; g.hud?.toast?.('c3_toast_overload'); }
     return 'blocked';
@@ -593,7 +593,7 @@ export class Guardian extends Drone {
     if (!this.alive) return;
     const g = this.game;
     this.rig.hitFlash();
-    g.audio.play('hit');
+    g.audio.play('hit', this.pos);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 22, 4);
     if (this.state === 'drop') return;   // (committed: it lands whatever hits it)
     this.marks.hide();
@@ -614,7 +614,7 @@ export class Guardian extends Drone {
       this.marks.target(clampX(hero.pos.x), hero.pos.y, clampZ(hero.pos.z), S.R, k, false, this.stateT);
       if (this.stateT > S.rise) {
         this.spot = { x: clampX(hero.pos.x), y: hero.pos.y, z: clampZ(hero.pos.z), from: { x: this.pos.x, z: this.pos.z }, h: this.hover };
-        this.state = 'lock'; this.stateT = 0; g.audio.play('chargeFull');
+        this.state = 'lock'; this.stateT = 0; g.audio.play('diveLock', this.pos);   // (ACTION-SOUND: its own warning, not the hero's charge)
       }
       return this.angleTo(hero);
     }
@@ -627,7 +627,7 @@ export class Guardian extends Drone {
       this.rig.play('windup'); this.rig.k = 1;
       this.marks.target(s.x, s.y, s.z, S.R, 1, true, this.stateT);
       if (Math.random() < dt * 20) g.particles.burst(this.pos.x, this.pos.y + this.hover - 1.2, this.pos.z, '#d8a0ff', 1, 1.5);
-      if (this.stateT > S.lock) { this.state = 'drop'; this.stateT = 0; s.h = this.hover; s.from = { x: this.pos.x, z: this.pos.z }; g.audio.play('whoosh'); }
+      if (this.stateT > S.lock) { this.state = 'drop'; this.stateT = 0; s.h = this.hover; s.from = { x: this.pos.x, z: this.pos.z }; g.audio.play('diveDrop', this.pos); }
       return null;
     }
     if (this.state === 'drop') {
@@ -638,7 +638,7 @@ export class Guardian extends Drone {
       if (u >= 1) {
         // the blow: inside the ring (his body's edge counts), a heavy hit; the shock ring runs out from it
         this.marks.hide(); this.waveT = 0; this.waveAt = { x: s.x, y: s.y, z: s.z };
-        g.audio.play('rumble'); g.audio.play('clunk'); g.camRig.shake(0.5);
+        g.audio.play('diveImpact', s); g.camRig.shake(0.5);
         g.particles.burst(s.x, s.y + 0.2, s.z, '#d8a0ff', 30, 6); g.particles.burst(s.x, s.y + 0.1, s.z, '#bbb', 20, 5);
         if (!hero.dead && Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < S.reach && Math.abs(hero.pos.y - s.y) < 1.5) {
           const hp0 = hero.hp; hero.damage(S.dmg, { x: s.x, y: s.y, z: s.z }, true);
@@ -659,7 +659,7 @@ export class Guardian extends Drone {
     if (!this.alive) return;
     const g = this.game;
     this.state = 'dead'; this.deadT = 0; this.fan.hide(); this.marks.hideAll();
-    g.audio.play('break'); g.camRig.shake(0.35);
+    g.audio.play('break', this.pos); g.camRig.shake(0.35);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 40, 6);
     new KnockOut(this, 'guardian', null);
     this.ko.noBonus = true;   // (the boss was never "killed": no bonus, as before)
@@ -698,8 +698,8 @@ export class Guardian extends Drone {
         this.coolT = Math.max(0, this.coolT - dt);
         // (overloaded: the dive and the fan in turn, BOSS-SHAPE)
         if (this.coolT <= 0 && d < 12 && !hero.dead) {
-          if (this.level >= 4 && this.nextDive) { this.nextDive = false; this.state = 'rise'; this.stateT = 0; g.audio.play('charge'); g.audio.play('alert'); }
-          else { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); if (this.level >= 4) this.nextDive = true; }
+          if (this.level >= 4 && this.nextDive) { this.nextDive = false; this.state = 'rise'; this.stateT = 0; g.audio.play('diveRise', this.pos); g.audio.play('alert', this.pos); }
+          else { this.state = 'windup'; this.stateT = 0; g.audio.play('alert', this.pos); if (this.level >= 4) this.nextDive = true; }
         }
         this.rig.play('idle');
       } else if (this.state === 'windup') {
@@ -720,7 +720,7 @@ export class Guardian extends Drone {
           const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
           const dir = to.sub(from).normalize();
           for (const off of FAN_OFFS) g.bolts.fire(from.clone(), dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), off), 8.5, 1);
-          g.audio.play('zap');
+          g.audio.play('zap', this.pos);
           this.rig.play('fire');
           this.state = 'chase'; this.stateT = 0; this.coolT = 2.8 - this.level * 0.5;
         }
@@ -872,7 +872,7 @@ export class Sentry extends Actor {
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
     void from;
   }
-  breakGuard() { const g = this.game; this.state = 'stagger'; this.stateT = 0; g.combatDir?.done(this); g.audio.play('clang'); g.camRig.shake(0.15); }
+  breakGuard() { const g = this.game; this.state = 'stagger'; this.stateT = 0; g.combatDir?.done(this); g.audio.play('clang', this.pos); g.camRig.shake(0.15); }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
@@ -881,7 +881,7 @@ export class Sentry extends Actor {
     // (opened by the singing fork: that was its one hit; the guard comes back up)
     if (this.rung && this.state === 'open') { this.rung = false; this.openFor = 0; this.state = 'chase'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6); }
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
-    if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break', this.pos); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
   }
   update(dt) {
     if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
@@ -894,12 +894,12 @@ export class Sentry extends Actor {
     switch (this.state) {
       case 'idle':
         this.rig.play('idle');
-        if (sees && (d < 6 || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert'); }
+        if (sees && (d < 6 || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); }
         break;
       case 'chase':
         face = this.angleTo(hero); this.rig.play('walk');
         sp = d > 1.9 ? 1.7 : 0;
-        if (d < 2.4 && this.coolT <= 0 && this.stateT > 0.4 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); }
+        if (d < 2.4 && this.coolT <= 0 && this.stateT > 0.4 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('alert', this.pos); }
         // it won't follow far from its post
         if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 14 || d > 16) { this.state = 'home'; this.stateT = 0; g.combatDir?.done(this); }
         break;
@@ -909,7 +909,7 @@ export class Sentry extends Actor {
         break;
       case 'bash':
         this.rig.play('bash'); sp = 4.2;
-        if (!this.hitDone && d < 1.5 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(2, this.pos, true); g.audio.play('clang'); }
+        if (!this.hitDone && d < 1.5 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(2, this.pos, true); g.audio.play('clang', this.pos); }
         if (this.stateT > 0.28) { this.state = 'open'; this.stateT = 0; g.combatDir?.done(this); }
         break;
       case 'open':
@@ -973,7 +973,7 @@ export class Crawler extends Mite {
     g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#bff8ff', 8, 4);
     // heavy: only big hits stagger it, and never during a slam already falling
     if (poise >= 3 && this.state !== 'slam') { this.hurtT = 0.5; if (this.state === 'windup') { this.state = 'chase'; this.ring.visible = false; g.combatDir?.done(this); } this.coolT = Math.max(this.coolT, 0.8); }
-    if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); this.rig.parts.crystals.visible = false; new KnockOut(this, 'crawler', from); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break', this.pos); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); this.rig.parts.crystals.visible = false; new KnockOut(this, 'crawler', from); g.onEnemyKilled(this); }
   }
   update(dt) {
     if (koActive(this)) { this.ring.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
@@ -986,12 +986,12 @@ export class Crawler extends Mite {
     let sp = 0;
     if (this.state === 'idle') {
       this.rig.play('idle');
-      if (d < 9 && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert'); }
+      if (d < 9 && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); }
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 3, dt);
       this.rig.play('walk');
       sp = d > 2.2 ? 1.6 : 0;
-      if (d < this.slamR + 0.3 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      if (d < this.slamR + 0.3 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 16 || d > 18) { this.state = 'idle'; g.combatDir?.done(this); }
     } else if (this.state === 'windup') {
       this.rig.play('windup');
@@ -1002,7 +1002,7 @@ export class Crawler extends Mite {
     } else if (this.state === 'slam') {
       this.rig.play('lunge');
       if (!this.slammed) {
-        this.slammed = true; g.audio.play('slam'); g.camRig.shake(0.4);
+        this.slammed = true; g.audio.play('slam', this.pos); g.camRig.shake(0.4);
         g.particles.burst(this.pos.x, this.pos.y + 0.2, this.pos.z, '#d8ccb0', 30, 5);
         if (d < this.slamR + hero.radius && hero.onGround) hero.damage(2, this.pos, true);
       }

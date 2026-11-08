@@ -56,7 +56,7 @@ export class FoundObject {
     this.cur = { ...it, t: 0, out: -1, a0: h.angle, face, turn: wrap(face - h.angle) };
     this.shown.push(it.id);
     g.setState('found');
-    g.audio.play('chest');
+    g.audio.play('found');   // (ACTION-SOUND: a real object's own short gesture; kashes and bonuses never get it)
     h.combat?.reset?.();
     const el = this.el;
     el.querySelector('.found-name').textContent = it.name;
