@@ -573,7 +573,7 @@ const STYLE = {
     // the jars at a potter's size; the basin between the quay's arms a harbour: a calm cloud-water surface (open to
     // the west), quay walls with a kerb along its three land sides, skiffs moored in it (below: dress)
     // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
-    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass)
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
     // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
@@ -792,7 +792,9 @@ const STYLE = {
     landmark(api) {
       const pois = [{ ...api.S.target }];
       // the company's board over its yard, before the long building facing the pad
-      api.near('boardSign', 27, -27.2, 0, { text: 'BUILDING COMPANY', w: 3.6 }, 1.5);
+      // (DOOR-SWEEP: to the east of the company's door, not before it: it stood across the way in, its board's
+      //  collider down to the ground, and he could only reach the door round its end)
+      api.near('boardSign', 31.0, -25.8, 0, { text: 'BUILDING COMPANY', w: 3.6 }, 1.0);
       // the gem mine's mouth on the ramp down to the village, facing west; the lift's foot at the ramp's head
       // (the yard itself is all routes: these are the planner's nearest free spots)
       const m = api.near('mineMouth', 27.5, -9.5, -Math.PI / 2, {}, 3);
@@ -1010,6 +1012,14 @@ function planIsland(name, L, A, debug = false) {
   stamp(pad.x, pad.z, 5.0, keep); stamp(pad.x, pad.z, 3.6, walk, 0);
   for (const f of A.floors || []) if (f.stair) rect((f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2, (f.x1 - f.x0) / 2 + 0.8, (f.z1 - f.z0) / 2 + 0.8, (k) => { keep[k] = 1; });   // (stairs stay clear)
   if (spawn) { stamp(spawn.x, spawn.z, 2.0, keep); line(pad.x, pad.z, spawn.x, spawn.z, (k) => { keep[k] = 1; return true; }); view(spawn.x, spawn.z, Math.sin(spawn.a), Math.cos(spawn.a), { stamp: true }); }
+  // (DOOR-SWEEP: the way in to every house door stays clear of our dressing, 2.2 m out and 0.7 m either side of the
+  //  door's middle: a lamp, a crate and the Building Company's board had stood across some, and a door led in only to
+  //  a player who found the gap. The original's own objects are not moved)
+  for (const o of A.decor) {
+    if (o.shape !== 'house' || o.noDoor || !o.face) continue;
+    const t = o.face, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz), dx = o.x + t[0] * (ex / 2), dz = o.z + t[1] * (ez / 2);
+    rect(dx + t[0] * 1.1, dz + t[1] * 1.1, t[0] ? 1.1 : 0.7, t[1] ? 1.1 : 0.7, (k) => { keep[k] = 1; });
+  }
   const start = spawn ? K(spawn.x, spawn.z) : K(pad.x + Math.sin(pad.toward) * 4.8, pad.z + Math.cos(pad.toward) * 4.8);
 
   // ---- reach: what he can walk to from the landing (the plan never cuts any of it off)
@@ -2097,7 +2107,7 @@ function buildIsland0(scene, physics, name, L, at) {
       crates: lf ? W2(...fr(lf, 0.5, 3.2)) : null,
       npcSpots: {
         miner1: m ? W2(...fr(m, 4.4, -1.6), m.ry) : null, miner2: m ? W2(...fr(m, 3.8, 2.2), m.ry + 2.6) : null,
-        foreman: W2(27, -25.4, Math.PI), villager1: W2(27.3, 7.6, Math.PI), villager2: W2(40.7, 14.5, Math.PI / 2), chaplain: W2(36.6, 28.0, Math.PI / 2),
+        foreman: W2(29.2, -25.0, Math.PI), villager1: W2(27.3, 7.6, Math.PI), villager2: W2(40.7, 14.5, Math.PI / 2), chaplain: W2(36.6, 28.0, Math.PI / 2),
       },
     };
   }
