@@ -1194,6 +1194,7 @@ const BALL_TARGET_PACE = { normal: 13, athletic: 15, aggressive: 19, discreet: 9
 //  - limits: 4.2 s of flight (Discreet's four tall hops take ~3.8 s), then it returns; a return that takes over
 //    2.5 s (or a scene change) puts it straight back in the hand. The ball can't be lost.
 const BALL_STEP = 0.12, BALL_R = 0.14;
+const REL_OFF = { f: 0.9, s: -0.19, u: 1.45 };   // where the ball leaves the hand, standing (ahead, to his left (+), up): MagicBall.preview
 // the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
 const BALL_LEVEL = [null, ['#ffe68a', '#ffc400'], ['#9dff8a', '#30d020'], ['#ff8a7a', '#ff2a10'], ['#ffc070', '#ff6a00']];
 
@@ -1299,6 +1300,27 @@ export class MagicBall {
     if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(this.mesh.position); this.mesh.position.y -= 0.08; }
     else this.mesh.position.set(this.holder.pos.x, this.holder.pos.y + 1.4, this.holder.pos.z);
   }
+  // POINT-BLANK (chapter 2's depot, 8.11.2026): the throw lets go 0.9 m ahead of him (the hand at the end of the whip,
+  // 1.45 m up). Close to a wall, a fence or the valve's pipe loop that point was inside the collider (the ball stuck
+  // there, its four bounces spent in 0.03 s, a lost throw) or past a thin one (thrown through the fence). The arm's way
+  // out, from his body at the hand's height to the hand, is followed: the ball leaves from the last free point before
+  // anything solid, and an enemy the arm reaches first is where the ball strikes (returns true; `p` is moved there).
+  // LBA2 lets go from the hand too (key 6 of LANCE, 1200 units up: docs/COMBAT.md); its throws are not aimed, so a
+  // close enemy is simply in the way of the ball.
+  armReach(hero, p, enemies = false) {
+    const g = this.game, P = g.physics, x0 = hero.pos.x, z0 = hero.pos.z, d = Math.hypot(p.x - x0, p.z - z0);
+    if (d < 0.05 || P.solidAt(x0, z0, p.y, BALL_R)) return false;
+    const n = Math.ceil(d / 0.05), tx = p.x, tz = p.z;
+    for (let i = 1; i <= n; i++) {
+      const x = x0 + (tx - x0) * (i / n), z = z0 + (tz - z0) * (i / n);
+      if (enemies) for (const e of g.enemies) {
+        if (!e.alive || !e.present || e === hero || Math.hypot(x - e.pos.x, z - e.pos.z) >= (e.hitR || 0.75) || p.y <= e.pos.y - 0.2 || p.y >= e.pos.y + (e.hitH || 2)) continue;
+        p.x = x; p.z = z; return true;
+      }
+      if (P.solidAt(x, z, p.y, BALL_R)) { p.x = x0 + (tx - x0) * ((i - 1) / n); p.z = z0 + (tz - z0) * ((i - 1) / n); return false; }
+    }
+    return false;
+  }
   canRecall() { return this.state === 'fly' && this.life > 0.2; }
   recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.game.audio.play('recall'); } }
   // back in the pocket, now. `silent` only mutes the catch; what it carries is settled by `carry`:
@@ -1340,8 +1362,11 @@ export class MagicBall {
     if (target) {
       const tp = target.pos || target, f = (BALL_TARGET_PACE[beh] || BALL_TARGET_PACE.normal) * (charged ? BALL_CHARGE_K : 1);
       const ty = target.pos ? tp.y + (target.hover ?? 0) + (target.aimY ?? 0.5) : tp.y;
-      const dx = tp.x - from.x, dz = tp.z - from.z, d = Math.hypot(dx, dz) || 1, tt = Math.max(0.12, d / f);
-      out.vel.set((dx / d) * f, (ty - from.y + 0.5 * BALL_TARGET_G * tt * tt) / tt, (dz / d) * f);
+      // (POINT-BLANK: within 0.12 s of flight — under 1.6 m from the hand at Normal's pace — the flight takes 0.12 s, so
+      // the ball must also cross the ground in it: it went at the full pace and passed over or beside a target closer
+      // than that before it came down to its height, e.g. 13 m/s sideways over a dog at his feet. Farther: unchanged)
+      const dx = tp.x - from.x, dz = tp.z - from.z, d = Math.hypot(dx, dz) || 1, tt = Math.max(0.12, d / f), fx = d / tt;
+      out.vel.set((dx / d) * fx, (ty - from.y + 0.5 * BALL_TARGET_G * tt * tt) / tt, (dz / d) * fx);
       out.grav = BALL_TARGET_G; out.lift = Math.max(2.5, out.vel.y);
       return out;
     } else if (aim && g.settings?.controls !== 'classic') {
@@ -1433,8 +1458,12 @@ export class MagicBall {
     if (!hero) { this.dots.forEach((d) => (d.visible = false)); this.landMark.visible = false; return; }
     const g = this.game, P = g.physics;
     const tgt = g.targeting?.throwTarget(aim);
-    const p = this.mesh.position.clone();
-    p.y = Math.max(p.y, hero.pos.y + 1.2);
+    // (AIM-MATCH, 8.11.2026: from where the ball will leave his hand at the release, not from the hand cocked behind his
+    // head while he charges: the ring fell 1.3–1.4 m short of the throw's own touch-down in every behaviour. The release
+    // point is the last throw's, relative to him: 0.9 m ahead, 0.19 m to the right, 1.45 m up when standing)
+    const o = this.relOff || REL_OFF, fx = Math.sin(hero.angle), fz = Math.cos(hero.angle);
+    const p = new THREE.Vector3(hero.pos.x + fx * o.f + fz * o.s, hero.pos.y + Math.max(1.2, o.u), hero.pos.z + fz * o.f - fx * o.s);
+    this.armReach(hero, p);   // (where it will leave from: short of a wall in front of him)
     const pl = this.plan(hero, hero.behaviour, aim, tgt, !!full, p);
     // follow the arc in small steps to its first contact: the ground, a wall, or the target
     const v = pl.vel, G = pl.grav, pts = [], tp = tgt ? (tgt.pos || tgt) : null;
@@ -1469,11 +1498,16 @@ export class MagicBall {
       const r = this.reseat; this.reseat = null;
       if (this.state === 'fly' && this.holder) {
         this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, r.hero.pos.y + 1.2);
+        { const H = r.hero, fx = Math.sin(H.angle), fz = Math.cos(H.angle), dx = this.pos.x - H.pos.x, dz = this.pos.z - H.pos.z;
+          this.relOff = { f: dx * fx + dz * fz, s: dx * fz - dz * fx, u: this.pos.y - H.pos.y }; }   // (for the next preview)
+        const struck = this.armReach(r.hero, this.pos, true);
         const aim = r.aim || { x: Math.sin(r.hero.angle), z: Math.cos(r.hero.angle) };
         const pl = this.plan(r.hero, r.beh, aim, r.target, r.charged);
         this.vel.copy(pl.vel); this.grav = pl.grav; this.lift = pl.lift;
         this.flash(this.pos.x, this.pos.y, this.pos.z, r.charged ? 0.5 : 0.3, false); // (a small pop where the ball leaves the hand)
         dt = 0;
+        // (POINT-BLANK: the hand came down on or through an enemy before it let go: the ball strikes it there)
+        if (struck) { const hit = g.ballHitTest(this.pos, this); if (hit) this.onHit(hit); }
       }
     }
     this.life += dt;
@@ -1621,8 +1655,8 @@ export class MagicBall {
         this.bounces--;
         const sp = Math.max(12, Math.hypot(this.vel.x, this.vel.z));
         const ty = next.pos.y + (next.hover ?? 0) + (next.aimY ?? 0.5);
-        const dx = next.pos.x - this.pos.x, dz = next.pos.z - this.pos.z, d = Math.hypot(dx, dz), tt = Math.max(0.1, d / sp);
-        this.vel.set((dx / d) * sp, (ty - this.pos.y + 0.5 * this.grav * tt * tt) / tt, (dz / d) * sp);
+        const dx = next.pos.x - this.pos.x, dz = next.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1, tt = Math.max(0.1, d / sp);
+        this.vel.set(dx / tt, (ty - this.pos.y + 0.5 * this.grav * tt * tt) / tt, dz / tt);   // (POINT-BLANK: as MagicBall.plan)
         g.audio.play('bounce');
         return;
       }

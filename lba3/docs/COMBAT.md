@@ -196,6 +196,21 @@ LBA2 the behaviour is the distance.
   distance control applies only when there is no target. The puzzles' switches and targets are aimed this way, so
   they solve as before.
 - Damage, magic cost, bounces (4, home on the 5th contact), ricochets, fetching and recall are unchanged.
+- **Point-blank** (POINT-BLANK, 8.11.2026; chapter 2's depot, chapter-balance.md). The ball leaves the hand 0.9 m ahead,
+  0.19 m to his right, 1.45 m up (measured at the release frame). Three faults at close range, fixed:
+  (1) a throw at a target under 1.6 m from the hand crossed the ground at the full aimed pace while its fall was planned
+  for 0.12 s: it went past the target before it came down (13 m/s sideways over a dog at his feet; hits only by the
+  hit cylinder's luck). Now it crosses in those 0.12 s (`MagicBall.plan`; the charged ricochet the same). Farther
+  throws are unchanged (13 m/s at 3 and 6 m). (2) Close to a wall or fence the hand was inside the collider (the ball
+  stuck there, its four bounces spent in 0.03 s) or past a thin one (thrown through the depot fence). Now the arm's way
+  out, from his body at the hand's height to the hand, is followed: the ball leaves short of anything solid, and an
+  enemy the arm reaches first is struck there (`MagicBall.armReach`). (3) The depot valve's bypass loop had one
+  collider standing 0.4 m over the pipe: an unseen wall for a throw down at the dog beside him. The ball now meets the
+  pipe, the wheel and the risers as drawn (island.js; walking unchanged). LBA2 releases from the hand too (key 6 of
+  LANCE, 1200 units up); its throws are not aimed, so a close enemy is simply in the ball's way.
+- **The preview** (AIM-MATCH, the same day): the charge's dots and ring were drawn from the hand cocked behind his head,
+  not from where the ball leaves: the ring fell 1.3–1.4 m short of the throw's touch-down in every behaviour. Now from
+  the release point (the last throw's, relative to him): within 0.07 m. `tests/ball-close.mjs` checks all of this.
 
 ## Twinsen's combat animation (ANIM-COMBAT) — src/engine/rig.js
 The user: "in combat Twinsen's movements feel unnatural and weird." The animation was reworked; no timing, hit window,
