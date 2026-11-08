@@ -41,12 +41,14 @@ await ev(() => { window.CIT = () => game.walkers.res.filter((r) => r.stops.lengt
   window.storyDoors = () => { const st = game.story, out = []; game.regions.peek(() => { for (const c of [...st.chapters, st.life]) { try { for (const d of c.doors()) out.push({ x: d.x, z: d.z, r: d.r || 0.9 }); } catch (e) { /* */ } } }); return out; };
 });
 
+// (Zeelich's street folk, zr_*, ZEELICH-LIFE 7.11: their names are n_zr_*, their lines by phase in story/zeelife.js —
+//  checked in tests/zeelich-life.mjs — not the citizens' rs_* table)
 // ---- the cast
 const cast = await ev(() => { const G = game, W = G.walkers; const storyIds = new Set(G.npcs.filter((n) => !n.ambient).map((n) => n.def.id));
   return { n: CIT().length, all: W.res.length, ids: CIT().map((r) => r.def.id), stops: CIT().map((r) => r.stops.length), allIn: W.res.every((r) => G.npcs.includes(r)), clash: W.res.filter((r) => storyIds.has(r.def.id)).map((r) => r.def.id), present: CIT().filter((r) => r.present).length, waiting: W.res.filter((r) => r.def.pending).map((r) => r.def.id) }; });
-check('twelve residents walk round Citadel (ten, Sefa the Esmer trader at the trading house: WA-15b, and Tibbo at his Fix and Fill: DECLUTTER; six more wait, hidden, for Zeelich and Kesh to be built, and WC-3\'s 24 for Desert Island, the Hamalayi and Zeelich), all in the cast, none sharing an id with a story character', cast.n === 12 && cast.all === 44 && cast.waiting.length === 32 && cast.allIn && cast.clash.length === 0 && cast.present >= 10, cast);
+check('twelve residents walk round Citadel (ten, Sefa the Esmer trader at the trading house: WA-15b, and Tibbo at his Fix and Fill: DECLUTTER; six more wait, hidden, for Zeelich and Kesh to be built, and WC-3\'s 24 for Desert Island, the Hamalayi and Zeelich), all in the cast, none sharing an id with a story character', cast.n === 12 && cast.all === 47 && cast.waiting.length === 35 && cast.allIn && cast.clash.length === 0 && cast.present >= 10, cast);
 check('each has a round of at least 3 stops', cast.stops.every((n) => n >= 3), cast.stops);
-const texts = await ev(async () => { const { t } = await import('/src/game/i18n.js'); const W = game.walkers; return W.res.map((r) => [r.def.id, t('n_' + r.def.id) !== 'n_' + r.def.id, t('rs_' + r.def.id + '_0') !== 'rs_' + r.def.id + '_0']); });
+const texts = await ev(async () => { const { t } = await import('/src/game/i18n.js'); const W = game.walkers; return W.res.filter((r) => !/^zr_/.test(r.def.id)).map((r) => [r.def.id, t('n_' + r.def.id) !== 'n_' + r.def.id, t('rs_' + r.def.id + '_0') !== 'rs_' + r.def.id + '_0']); });
 check('every resident has a name and lines of their own', texts.every(([, a, b]) => a && b), texts.filter(([, a, b]) => !(a && b)));
 
 // ---- the stops: walkable, off the doors, clear of the story's people in every chapter
@@ -212,7 +214,7 @@ const after = await ev(() => { const G = game, W = G.walkers, u = CIT().find((r)
   return out; });
 check('when the talk ends she goes on with her walk', after.state === 'play' && !after.engaged && after.moved > 2, after);
 const lines = await ev(() => { const G = game, S = G.story.citizens; const out = {};
-  for (const r of G.walkers.res) { out[r.def.id] = S.linesFor(r).length; }
+  for (const r of G.walkers.res) { if (/^zr_/.test(r.def.id)) continue; out[r.def.id] = S.linesFor(r).length; }
   return out; });
 check('each resident has several lines to say (cycled, the first by what they are doing)', Object.values(lines).every((n) => n >= 2), lines);
 
