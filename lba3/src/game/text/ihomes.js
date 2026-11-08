@@ -109,7 +109,7 @@ Object.assign(STR.en, {
   ih_ham_lhar1: "Benches round the stove and the village ledger on its stand. When Lhar has something to decide, it argues in Yorna's house.",
   ih_ham_lhar2: "A fur rug before the fire and a stool worn smooth. Old Dorje's seat, seventy winters running.",
   ih_ham_lhar3: "Prayer-flag cloth on the loom, red and blue, half done. Sana weaves the flags that hang between the roofs.",
-  ih_ham_lhar4: "A cauldron big enough for the whole street. On a cold night Lhamo cooks for half of Lhar.",
+  ih_ham_lhar4: "A cauldron big enough for the whole street. When the wind comes down the pass, Lhamo cooks for half of Lhar.",
   ih_ham_obs0: "Star charts pinned over every shelf and a kettle that is never cold. The observatory's keeper lives next door to the telescope.",
   ih_post_cabin2: "The post's stores: crates of filters, ration tins, drill bits. All signed for.",
 
