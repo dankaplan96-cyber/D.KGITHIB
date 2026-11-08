@@ -300,8 +300,21 @@ const stepMat = (dark) => cachedMat('climbStep' + dark, () => { const m = new TH
 // proportions now, a little smaller: a 0.72 m shaft, a 0.92 m cap slab and a 0.6 m block on it, ~1.45 m tall; only
 // at the climb's corners and ends, as the original has them, not every few metres), standing on y, h tall
 const POST_W = 0.72, POST_HALF = POST_W / 2;
+// CLIMB-31 (the user's photo, 8.11: the cheek's brick courses ran steeply diagonal, a skewed, toppling wall): the
+// masonry's stone is box-projected in each piece's own frame (props.js mergeEntries), so a tilted piece tilts its
+// courses, and each piece started its courses at its own middle. Each piece of the climb's masonry is now laid in its
+// run's frame (A: along s, across o) with its geometry moved to its place in that frame, so the stone reads the
+// world's height and the distance along the run: the courses level, and one course line from a wall into the next
+// piece and the posts. A sloped piece is sheared (its ends plumb), never tilted. (Merged into the same batches.)
+const sheared = (geo, t) => geo.clone().applyMatrix4(new THREE.Matrix4().makeShear(0, 0, 0, 0, 0, t));
+function onRun(k, geo, mat, A, s, o, y, t = 0) {
+  const g = (t ? sheared(geo, t) : geo.clone()).translate(-o, y, s), [x0, z0] = A.at(0, 0);
+  k.add(g, mat, x0, 0, z0, A.a);
+}
+// a frame through (x, z) facing a (for the posts and the level walls set by their middles)
+const frameAt = (x, z, a) => ({ a, at: (s, o) => [x + Math.sin(a) * s - Math.cos(a) * o, z + Math.cos(a) * s + Math.sin(a) * o] });
 function climbPost(k, M, physics, x, z, y, h = 1.45, a = 0) {
-  k.add(rbox(POST_W, h - 0.32, POST_W, 0.03), M.wall, x, y + (h - 0.32) / 2, z, a);
+  onRun(k, rbox(POST_W, h - 0.32, POST_W, 0.03), M.wall, frameAt(x, z, a), 0, 0, y + (h - 0.32) / 2);
   k.add(rbox(POST_W + 0.08, 0.07, POST_W + 0.08, 0.02), M.cap, x, y + h - 0.325, z, a);   // (a thin band under the cap; each piece's top inside the next: no shared faces)
   k.add(rbox(0.92, 0.18, 0.92, 0.04), M.cap, x, y + h - 0.21, z, a);
   k.add(rbox(0.6, 0.12, 0.6, 0.04), M.cap, x, y + h - 0.07, z, a);
@@ -323,6 +336,8 @@ function climbRail(k, M, x0, z0, x1, z1, y0a, y0b, h = 0.62) {
     const t = i / n, y = y0a + (y0b - y0a) * t;
     k.add(rbox(0.035, h, 0.035, 0), M.iron, x0 + (x1 - x0) * t, y + h / 2, z0 + (z1 - z0) * t, a);
   }
+  // (CLIMB-31: a newel at each end, so the rails end on a post standing on the coping, not in the air)
+  for (const [x, z, y] of [[x0, z0, y0a], [x1, z1, y0b]]) k.add(rbox(0.06, h + 0.04, 0.06, 0.01), M.iron, x, y + (h + 0.04) / 2, z, a);
 }
 
 // the stair: the first flight north to the landing, the second turned toward the front door, their cheek walls with a
@@ -363,14 +378,18 @@ function climbFlight(k, M, physics, T) {
   // the ground; railings where the ground beside falls away more than 1.2 m; capped posts at the ends and halfway
   const line = (a, b) => { const sl = (b[1] - a[1]) / (b[0] - a[0]); return (t) => a[1] + (t - a[0]) * sl; };
   const yc1 = line([run / 2, tops[0] + 0.5], [sL - run / 2, tops[n1 - 2] + 0.5]);
-  const cheek = (A, ta, tb, sd, yc, rails = true) => {
-    const o = sd * (hw + cw / 2), p = Math.atan((yc(tb) - yc(ta)) / (tb - ta)), Ls = (tb - ta) / Math.cos(p);
+  // (CLIMB-31: the body and its coping sheared to the slope, not tilted: the courses level, the ends plumb. Tilted, the
+  //  body's top end stood ~1 m short of the post under the coping (a dark notch below the coping at the post) and its
+  //  foot ran on past it. Its railing, where there is one, stands on the coping's top and ends at a newel by the post or
+  //  the wall at each end (endA, endB: the clear distance there), never a free end in the air)
+  const cheek = (A, ta, tb, sd, yc, { rails = true, endA = 0.3, endB = 0.3 } = {}) => {
+    const o = sd * (hw + cw / 2), sl = (yc(tb) - yc(ta)) / (tb - ta);
     let D = 0;
     for (let t = ta; t <= tb + 1e-6; t += 0.25) D = Math.max(D, yc(t) - Math.min(T(...A.at(t, o - cw / 2)), T(...A.at(t, o + cw / 2))));
     D += 0.5;
-    const [mx, mz] = A.at((ta + tb) / 2, o), ym = yc((ta + tb) / 2);
-    k.add(rbox(cw, D * Math.cos(p), Ls, 0.03), M.wall, mx, ym - D / 2, mz, A.a, { rx: -p });
-    k.add(rbox(cw + 0.1, 0.14, Ls, 0.03), M.cap, mx, ym + 0.07 / Math.cos(p), mz, A.a, { rx: -p });
+    const tm = (ta + tb) / 2, ym = yc(tm);
+    onRun(k, rbox(cw, D, tb - ta, 0.03), M.wall, A, tm, o, ym - D / 2, sl);
+    onRun(k, rbox(cw + 0.1, 0.14, tb - ta, 0.03), M.cap, A, tm, o, ym + 0.07, sl);
     const np = Math.max(1, Math.round((tb - ta) / 0.6));   // (short, so a piece stands no more than ~0.4 m over its cheek: the camera passes close over them)
     for (let j = 0; j < np; j++) {
       const a = ta + (j / np) * (tb - ta), b = ta + ((j + 1) / np) * (tb - ta), [px, pz] = A.at((a + b) / 2, o);
@@ -385,36 +404,52 @@ function climbFlight(k, M, physics, T) {
       if (f) { if (r0 == null) r0 = t; prev = t; } else if (r0 != null) { runs.push([r0, prev]); r0 = null; }
     }
     if (r0 != null) runs.push([r0, prev]);
-    for (const [a, b] of runs) if (b - a > 0.9) { const [ax, az] = A.at(a, o), [bx, bz] = A.at(b, o); climbRail(k, M, ax, az, bx, bz, yc(a) + 0.14 / Math.cos(p), yc(b) + 0.14 / Math.cos(p), 0.5); }
+    for (let [a, b] of runs) {
+      if (a - ta < 1.2) a = ta + endA;   // (near an end: carried on to the post or the wall there)
+      if (tb - b < 1.2) b = tb - endB;
+      if (b - a <= 0.9) continue;
+      const [ax, az] = A.at(a, o), [bx, bz] = A.at(b, o);
+      climbRail(k, M, ax, az, bx, bz, yc(a) + 0.14, yc(b) + 0.14, 0.5);
+    }
   };
   // (CLIMB-15: a post's inner face in line with the cheek's, so the larger posts take nothing off the stair's width)
-  const post = (A, t, sd, base, h = 1.45) => { const [px, pz] = A.at(t, sd * (hw + POST_HALF)); climbPost(k, M, physics, px, pz, base, h, A.a); };
+  // (CLIMB-31: its shaft carried down to the ground round it: a post wider than the wall under it stood out 0.32 m past
+  //  the wall's outer face from the landing's level, its underside a dark notch over the drop seen from the path below)
+  const post = (A, t, sd, base, h = 1.45) => {
+    const [px, pz] = A.at(t, sd * (hw + POST_HALF));
+    let lo = base; for (const u of [-POST_HALF, 0, POST_HALF]) for (const v of [0, POST_HALF]) lo = Math.min(lo, T(...A.at(t + u, sd * (hw + POST_HALF + v))) - 0.3);
+    climbPost(k, M, physics, px, pz, lo, h + base - lo, A.a);
+  };
+  // the landing's west and north walls: one level coping round it, 0.5 m over it, or 10 cm over the bank behind where
+  // that stands higher (CLIMB-31: each wall took its own height, so two copings could meet the corner post a step apart;
+  // and the west cheek's coping ran into the post 11 cm under the landing's: one line now, the cheek's coping rising to
+  // the landing's at the post, the post's cap over both)
+  const oW = -(hw + cw / 2), oe = HW;   // (the north wall to the landing's north-east corner: the second flight's north wall goes on from there)
+  let g = -Infinity, gl = Infinity; for (let s = sL; s <= sN + cw; s += 0.25) for (const q of [oW - cw, oW, oW + cw]) { const h = T(...F.at(s, q)); g = Math.max(g, h); gl = Math.min(gl, h); }
+  let gn = -Infinity, gnl = Infinity; for (let q = -hw - cw; q <= oe; q += 0.25) for (const s of [sN, sN + cw, sN + cw + 0.3]) { const h = T(...F.at(s, q)); gn = Math.max(gn, h); gnl = Math.min(gnl, h); }
+  const topL = Math.max(Hm + 0.5, g + 0.1, gn + 0.1);
+  const ycW = topL > yc1(sL) ? line([run / 2, tops[0] + 0.5], [sL, topL]) : yc1;
   // the first flight: the west cheek to the landing, the east one to the terrace's corner
-  cheek(F, 0, sL, -1, yc1);
-  cheek(F, 0, Math.min(S_CORNER, sL), 1, yc1);
+  cheek(F, 0, sL, -1, ycW, { endB: POST_HALF + 0.06 });
+  cheek(F, 0, Math.min(S_CORNER, sL), 1, yc1, { endB: 0.12 });
   post(F, -0.15, -1, Math.min(T(...F.at(-0.15, -hw - cw / 2)), y0)); post(F, -0.15, 1, Math.min(T(...F.at(-0.15, hw + cw / 2)), y0));
   // (CLIMB-15: no posts halfway up the flight: LBA2 sets its posts at the corners only)
-  // the landing's west and north walls (a parapet 0.5 m over it, or 10 cm over the bank behind where that stands higher)
   {
-    const o = -(hw + cw / 2);
-    let g = -Infinity, gl = Infinity; for (let s = sL; s <= sN + cw; s += 0.25) for (const q of [o - cw, o, o + cw]) { const h = T(...F.at(s, q)); g = Math.max(g, h); gl = Math.min(gl, h); }
-    const top = Math.max(Hm + 0.5, g + 0.1), [mx, mz] = F.at((sL + sN + cw) / 2, o), bot = Math.min(gl, Hm) - 0.6;
-    k.add(rbox(cw, top - bot, sN + cw - sL, 0.03), M.wall, mx, (top + bot) / 2, mz, F.a);
-    k.add(rbox(cw + 0.1, 0.14, sN + cw - sL + 0.06, 0.03), M.cap, mx, top + 0.07, mz, F.a);
-    physics.add({ type: 'box', x: mx, z: mz, hw: cw / 2 + 0.05, hd: (sN + cw - sL) / 2, rot: F.a, top: top + 0.15, noStand: true, seeThrough: true });
+    const L = sN + cw - sL, bot = Math.min(gl, Hm) - 0.6, [mx, mz] = F.at((sL + sN + cw) / 2, oW);
+    onRun(k, rbox(cw, topL - bot, L, 0.03), M.wall, F, (sL + sN + cw) / 2, oW, (topL + bot) / 2);
+    k.add(rbox(cw + 0.1, 0.14, L + 0.06, 0.03), M.cap, mx, topL + 0.07, mz, F.a);
+    physics.add({ type: 'box', x: mx, z: mz, hw: cw / 2 + 0.05, hd: L / 2, rot: F.a, top: topL + 0.15, noStand: true, seeThrough: true });
     // north: from the north-west corner to the second flight's north-west cheek
-    const oe = HW, sn = sN + cw / 2;   // (to the landing's north-east corner: the second flight's north wall goes on from there)
-    let gn = -Infinity, gnl = Infinity; for (let q = -hw - cw; q <= oe; q += 0.25) for (const s of [sN, sN + cw, sN + cw + 0.3]) { const h = T(...F.at(s, q)); gn = Math.max(gn, h); gnl = Math.min(gnl, h); }
-    const topN = Math.max(Hm + 0.5, gn + 0.1), [nx, nz] = F.at(sn, (-hw - cw + oe) / 2), botN = Math.min(Hm, gnl) - 0.6;
-    k.add(rbox(oe + hw + cw, topN - botN, cw, 0.03), M.wall, nx, (topN + botN) / 2, nz, F.a);
-    k.add(rbox(oe + hw + cw + 0.06, 0.14, cw + 0.1, 0.03), M.cap, nx, topN + 0.07, nz, F.a);
-    // (REVIEW-CITADEL-ART a, follow-up: the pit block north of it (climbTerraceFill) stands 6 cm over this coping; from the
-    //  block the wall's collider was under his feet and he stepped over the wall down onto the landing. Held a step over
-    //  the block's top, as from the landing's side)
+    const sn = sN + cw / 2, [nx, nz] = F.at(sn, (-hw - cw + oe) / 2), botN = Math.min(Hm, gnl) - 0.6;
+    onRun(k, rbox(oe + hw + cw, topL - botN, cw, 0.03), M.wall, F, sn, (-hw - cw + oe) / 2, (topL + botN) / 2);
+    k.add(rbox(oe + hw + cw + 0.06, 0.14, cw + 0.1, 0.03), M.cap, nx, topL + 0.07, nz, F.a);
+    // (REVIEW-CITADEL-ART a, follow-up: the pit block north of it (climbTerraceFill) stands about level with this coping;
+    //  from the block the wall's collider was under his feet and he stepped over the wall down onto the landing. Held a
+    //  step over the block's top, as from the landing's side)
     const ynB = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
-    physics.add({ type: 'box', x: nx, z: nz, hw: (oe + hw + cw) / 2, hd: cw / 2 + 0.05, rot: F.a, top: Math.max(topN + 0.15, ynB + STEP_UP + 0.1), noStand: true, seeThrough: true });
-    post(F, sN + POST_HALF, -1, Hm, Math.max(top, topN) - Hm + 0.6);
-    post(F, sL, -1, Hm, top - Hm + 0.6);   // (where the cheek's slope meets the landing's level wall)
+    physics.add({ type: 'box', x: nx, z: nz, hw: (oe + hw + cw) / 2, hd: cw / 2 + 0.05, rot: F.a, top: Math.max(topL + 0.15, ynB + STEP_UP + 0.1), noStand: true, seeThrough: true });
+    post(F, sN + POST_HALF, -1, Hm, topL - Hm + 0.6);
+    post(F, sL, -1, Hm, topL - Hm + 0.6);   // (where the cheek's slope meets the landing's level wall)
   }
   // the second flight: cut into the terrace, its walls and the fill on both sides (below)
   climbTerraceFill(k, M, physics, T, yt);
@@ -434,7 +469,7 @@ function climbTerraceFill(k, M, physics, T, yt) {
     let lo = Infinity;
     for (let t = ta; t <= tb + 1e-6; t += 0.25) lo = Math.min(lo, T(...A.at(t, o - 0.17)), T(...A.at(t, o + 0.17)));
     const bot = lo - 0.6, [wx, wz] = A.at((ta + tb) / 2, o), L = tb - ta;
-    k.add(rbox(0.34, top - bot, L, 0.03), M.wall, wx, (top + bot) / 2, wz, A.a);
+    onRun(k, rbox(0.34, top - bot, L, 0.03), M.wall, A, (ta + tb) / 2, o, (top + bot) / 2);
     k.add(rbox(0.42, 0.1, L + 0.06, 0.03), M.cap, wx, top + 0.05, wz, A.a);
     if (L > 1.0) { const [ax, az] = A.at(ta + 0.35, o), [bx, bz] = A.at(tb - 0.35, o); climbRail(k, M, ax, az, bx, bz, top + 0.1, top + 0.1, 0.6); }
     climbRailCol(physics, wx, wz, 0.22, L / 2, A.a, top, top + 0.75);
@@ -465,7 +500,9 @@ function climbTerraceFill(k, M, physics, T, yt) {
   // south: the terrace's corner to K along the first flight, K to the top along the second
   wall(F, S_CORNER, S_K, OE);
   wall(G, T_K, T2_TOP, OE);
-  { const [px, pz] = F.at(S_K, HW + POST_HALF); climbPost(k, M, physics, px, pz, yt, 1.5, F.a); }   // (the turn's post)
+  // (the turn's post: CLIMB-31, one post on the whole short run from the terrace's corner to K, its south face over the
+  //  wall's end and the cheek's, its inner face on the cheek's line; the terrace's railing starts from it)
+  { const [px, pz] = F.at((S_CORNER + S_K) / 2, HW + POST_HALF); climbPost(k, M, physics, px, pz, yt, 1.5, F.a); }
   fill([[F, S_CORNER, S_K - 0.15], [G, T_K + 0.15, T2_TOP]], 1, ([x, z]) => [x, Math.min(z, railZ(x))]);
   // north: along the second flight, from the landing's corner to the top
   wall(G, T2_0 - 0.17, T2_TOP, -OE);   // (from the landing's north-east corner, where the landing's own north wall ends)
@@ -525,6 +562,15 @@ function climbTopThreshold(k, M, physics, T, yt) {
   fb -= 0.4;
   const geo = new THREE.ExtrudeGeometry(new THREE.Shape(poly.map(([x, z]) => new THREE.Vector2(x, -z))), { depth: yt - fb, bevelEnabled: false });
   geo.rotateX(-Math.PI / 2); geo.translate(0, fb, 0);
+  // (CLIMB-31: its edge onto the forecourt stands 0–4 cm over the flags; that sliver of side face, turned from the light,
+  //  drew a black zig-zag line across the forecourt. Where a side stands no more than 8 cm over the ground it is shaded
+  //  as the top: the edge reads as the paving's; the taller sides by the walls keep their own shading)
+  { const Nm = geo.attributes.normal, Ps = geo.attributes.position;
+    for (let i = 0; i + 2 < Nm.count; i += 3) {
+      if (Math.abs(Nm.getY(i)) > 0.7) continue;
+      const cx = (Ps.getX(i) + Ps.getX(i + 1) + Ps.getX(i + 2)) / 3, cz = (Ps.getZ(i) + Ps.getZ(i + 1) + Ps.getZ(i + 2)) / 3;
+      if (T(cx, cz) > yt - 0.08) for (let j = i; j < i + 3; j++) Nm.setXYZ(j, 0, 1, 0);
+    } }
   k.add(geo, M.wall, 0, 0, 0);
   for (let i = 0; i + 1 < rows.length; i++) {
     const t0 = T2_TOP - 0.1, t1 = (rows[i][1] + rows[i + 1][1]) / 2, [cx, cz] = G.at((t0 + t1) / 2, (rows[i][0] + rows[i + 1][0]) / 2);
@@ -540,7 +586,6 @@ function climbTopThreshold(k, M, physics, T, yt) {
 const PARAPET = 0.66;
 // (CLOUD_ORDERS 17: each run's body, coping and base course sheared to the incline, not tilted, so a run's ends stand
 //  plumb: a tilted body 4–6 m deep over the yard pushed its foot a metre past the corner)
-const sheared = (geo, t) => geo.clone().applyMatrix4(new THREE.Matrix4().makeShear(0, 0, 0, 0, 0, t));
 function climbParapet(k, M, physics, T, A, s0, s1, oc, th, hp, side = -1) {
   const N = Math.max(1, Math.ceil((s1 - s0) / 3.1)), step = (s1 - s0) / N, oi = oc + side * th / 2, ob = oc - side * (th / 2 + 0.2);
   for (let i = 0; i < N; i++) {
@@ -549,11 +594,11 @@ function climbParapet(k, M, physics, T, A, s0, s1, oc, th, hp, side = -1) {
     for (let s = sa; s <= sb + 1e-6; s += 0.25) D = Math.max(D, ya + (yb - ya) * (s - sa) / step - Math.min(T(...A.at(s, oi)), T(...A.at(s, ob))));
     D += 0.6;
     const [mx, mz] = A.at((sa + sb) / 2, oc), ym = (ya + yb) / 2;
-    k.add(sheared(rbox(th, D, step + 0.04, 0.03), t), M.wall, mx, ym - D / 2, mz, A.a);
+    onRun(k, rbox(th, D, step + 0.04, 0.03), M.wall, A, (sa + sb) / 2, oc, ym - D / 2, t);
     k.add(sheared(rbox(th + 0.1, 0.14, step + 0.04, 0.03), t), M.cap, mx, ym + 0.07, mz, A.a);
     // (CLIMB-2: a base course along the wall's foot on the paving side, 8 cm proud: the ground's grid is 0.9 m, so the
     //  last few centimetres of paving at the wall's face can't follow the incline exactly; the course is the edge there)
-    { const [cx, cz] = A.at((sa + sb) / 2, oi + side * 0.13), yb = (hp(sa) + hp(sb)) / 2; k.add(sheared(rbox(0.28, 0.5, step + 0.04, 0.03), (hp(sb) - hp(sa)) / step), M.wall, cx, yb + 0.08 - 0.25, cz, A.a); }
+    { const yb = (hp(sa) + hp(sb)) / 2; onRun(k, rbox(0.28, 0.5, step + 0.04, 0.03), M.wall, A, (sa + sb) / 2, oi + side * 0.13, yb + 0.08 - 0.25, (hp(sb) - hp(sa)) / step); }
     for (let j = 0; j < 3; j++) { const a = sa + (j / 3) * step, b = sa + ((j + 1) / 3) * step, [px, pz] = A.at((a + b) / 2, oc), hm = Math.max(hp(a), hp(b)); climbRailCol(physics, px, pz, th / 2 + 0.05, step / 6 + 0.05, A.a, hm + PARAPET + 0.14, hm + 1.1); }   // (in thirds: the camera passes close over them; over the parapet to 1.1 m, as the railing stood)
   }
 }
@@ -586,7 +631,7 @@ function climbShelfWall(k, M, physics, T) {
   const C = CLIMB_SHELF, top = C.top, cop = top + 0.12, th = C.th;
   const body = (cx, cz, w, d, a, lo) => {   // a wall body from below the ground to its coping
     const bot = lo - 0.6;
-    k.add(rbox(w, top + 0.02 - bot, d, 0.03), M.wall, cx, (top + 0.02 + bot) / 2, cz, a);
+    onRun(k, rbox(w, top + 0.02 - bot, d, 0.03), M.wall, frameAt(cx, cz, a), 0, 0, (top + 0.02 + bot) / 2);
     k.add(rbox(w + 0.1, 0.1, d + 0.06, 0.03), M.cap, cx, cop - 0.05, cz, a);
     physics.add({ type: 'box', x: cx, z: cz, hw: w / 2 + 0.03, hd: d / 2 + 0.03, rot: a, top: cop });
   };
@@ -594,8 +639,8 @@ function climbShelfWall(k, M, physics, T) {
     const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 1.2)), a = Math.atan2(x1 - x0, z1 - z0);
     for (let i = 0; i < n; i++) {
       const ta = i / n, tb = (i + 1) / n, pa = [x0 + (x1 - x0) * ta, z0 + (z1 - z0) * ta], pb = [x0 + (x1 - x0) * tb, z0 + (z1 - z0) * tb];
-      const ha = hp(...pa), hb = hp(...pb), p = Math.atan2(hb - ha, L / n), Ls = L / n / Math.cos(p);
-      k.add(rbox(0.28, 0.5, Ls + 0.04, 0.03), M.wall, (pa[0] + pb[0]) / 2, (ha + hb) / 2 + 0.08 - 0.25 / Math.cos(p), (pa[1] + pb[1]) / 2, a, { rx: -p });
+      const ha = hp(...pa), hb = hp(...pb);   // (CLIMB-31: sheared to the paving's incline, not tilted: its courses level)
+      onRun(k, rbox(0.28, 0.5, L / n + 0.04, 0.03), M.wall, frameAt((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2, a), 0, 0, (ha + hb) / 2 + 0.08 - 0.25, (hb - ha) / (L / n));
     }
   };
   const lowIn = ([x0, z0, x1, z1]) => { let lo = Infinity; for (let x = x0; x <= x1 + 1e-6; x += 0.25) for (let z = z0; z <= z1 + 1e-6; z += 0.24) lo = Math.min(lo, T(x, z)); return lo; };
@@ -637,12 +682,14 @@ function climbTerraceRail(k, M, physics, T, yt) {
     for (let t = 0; t <= 1; t += 0.1) { const h = T(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t); hi = Math.max(hi, h); lo = Math.min(lo, h); }
     if (i === 0) hi = Math.max(hi, yt);   // (CLIMB-2: over the filled gully, level with the fill)
     const top = hi + 0.22, bot = lo - 0.5;
-    k.add(rbox(0.34, top - bot, L, 0.03), M.wall, (x0 + x1) / 2, (top + bot) / 2, (z0 + z1) / 2, a);
+    onRun(k, rbox(0.34, top - bot, L, 0.03), M.wall, frameAt((x0 + x1) / 2, (z0 + z1) / 2, a), 0, 0, (top + bot) / 2);
     k.add(rbox(0.42, 0.1, L + 0.06, 0.03), M.cap, (x0 + x1) / 2, top + 0.05, (z0 + z1) / 2, a);
     climbRail(k, M, x0 + (x1 - x0) * 0.3 / L, z0 + (z1 - z0) * 0.3 / L, x1 - (x1 - x0) * 0.3 / L, z1 - (z1 - z0) * 0.3 / L, top + 0.1, top + 0.1, 0.6);
     climbRailCol(physics, (x0 + x1) / 2, (z0 + z1) / 2, 0.22, L / 2, a, top, top + 0.75);
   }
-  P.forEach(([x, z], i) => climbPost(k, M, physics, x, z, i === 0 ? Math.max(T(x, z), yt) : T(x, z), 1.2));
+  // (CLIMB-31: none at the corner by the stair, P[0]: the turn's post stands there (climbTerraceFill); the two stood
+  //  side by side, caps overlapping at two heights with a dark slot between their shafts)
+  P.forEach(([x, z], i) => { if (i > 0) climbPost(k, M, physics, x, z, T(x, z), 1.2); });
 }
 
 // granite kerbs along both edges of the paved ramp, as the town's streets have (town.js curbs: the same stone and size),
