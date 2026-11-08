@@ -86,9 +86,11 @@ CAST = {
     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
-    'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1),
+    'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
+    'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
     'lharWoman': dict(lashes=True, mouthLift=1.0, lip='#a03a4a', browTilt=0.2, hemH=0.07),
-    'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1),
+    'lharWoman_b': dict(lashes=True, mouthLift=0.6, lip='#a03a4a', browTilt=0.0, browS=1.1, hemH=0.07, noseS=1.05),   # (CAST-POLISH-HAMALAYI)
+    'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1, glassesRim=True),   # (GLASSES-ELDER)
     'sphero1': dict(mouthLift=0.6),
     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)

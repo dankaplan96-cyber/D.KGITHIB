@@ -302,9 +302,22 @@ export const LOOKS = {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.06, tunic: '#7a4a2a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a3a3a', shoes: '#2a1a10',
     hair: '#2a1a10', skin: '#d8a880', hairStyle: 'tuft', nose: 'long', eyes: '#2a1a10', moustache: true, height: 0.98, neck: 0.08,
   },
+  lharMan_b: {
+    // CAST-POLISH-HAMALAYI (order 24, lharMan's shape variant): a heavier Lhar man, bald, in a longer coat (cast_poly.py CAST
+    // lharMan_b). Taken by Fitter Ludo (dg_mech), Ollo and Dov; Tashi (lhar1), Bero (lh_bero) and Luc keep lharMan
+    race: 'quetch', outfit: 'tunic', hem: 0.45, belly: 0.14, tunic: '#7a4a2a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a3a3a', shoes: '#2a1a10',
+    hair: '#2a1a10', skin: '#d8a880', hairStyle: 'bald', nose: 'long', eyes: '#2a1a10', moustache: true, height: 0.98, neck: 0.08,
+  },
   lharWoman: {
     race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
     hair: '#1a1210', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, height: 0.9, neck: 0.08,
+  },
+  lharWoman_b: {
+    // CAST-POLISH-HAMALAYI (order 24, lharWoman's shape variant): an older Lhar woman, the hair up in a bun, a fuller figure
+    // (cast_poly.py CAST lharWoman_b). Taken by Mrs Pell (pell, pell_q) and Mrs Ardo (zc_petit); Dawa (lhar2), Sana (lh_sana),
+    // Oda and Kira keep lharWoman
+    race: 'quetch', outfit: 'dress', hem: 0.12, belly: 0.06, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
+    hair: '#1a1210', skin: '#e0b090', hairStyle: 'bun', nose: 'button', eyes: '#2a1a10', height: 0.9, neck: 0.08,
   },
   lharElder: {
     race: 'bunny', outfit: 'robe', hem: 0.1, stoop: 0.14, fur: '#f0ece8', furDark: '#c8c0b8', tunic: '#5a3a7a', tunicTrim: '#e8c060', belt: '#e8c060', pants: '#3a2a4a', shoes: '#f0ece8',
