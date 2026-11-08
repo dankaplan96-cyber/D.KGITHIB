@@ -83,13 +83,14 @@ check('S28 (INPUT): the crew\'s board beside the door is read where it hangs (An
 const hall0 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes; before(O.hall.x, O.hall.z, 0, -1, 2.0); const u = P.use(O.hall.x, O.hall.z, { kind: 'pp_door', near: 0.8 }); P.settle(); return { u: u.r, door: G.story.doors().some((d) => d.room === 'ih_hall'), room: G.room?.id }; });
 const hall0L = await said();
 check('the School\'s dormitory while its crystal sleeps (INPUT): knocked on, pupils inside who can\'t see; no way in', hall0.u === 'used' && !hall0.door && hall0.room === 'desert' && has(hall0L, /can't see/), { hall0, hall0L });
-iso('a sandstorm waited for (game time)');
-const storm = await ev(() => { const G = game, cur = G.story.cur, D = G.rooms.desert; for (let i = 0; i < 600 && !cur.stormy; i++) G.step(0.25);
+iso('Ilka\'s errand given by flag (c4_ilka: the storms blow while the notebook is wanted); a sandstorm waited for (game time)');
+const storm = await ev(() => { const G = game, cur = G.story.cur, D = G.rooms.desert; G.flags.c4_ilka = true; let n = 0; for (; n < 600 && !cur.stormy; n++) G.step(0.25); if (!cur.stormy) return { stormy0: false, waited: n * 0.25 };
   const sd = D.shutDoors.find((x) => x.id === 'post-cabin1'); before(sd.x, sd.z, Math.sin(sd.ry), Math.cos(sd.ry), 2.0);
   const door = G.story.doors().some((d) => d.room === 'ih_post_cabin1'); const u = P.use(sd.x, sd.z, { kind: 'ihshut', near: 0.8 }); P.settle();
   const room = G.room?.id, pl = D.plaza; before(pl.x, pl.z, 3, 3, 3);   // (ISO: back to Kesh's plaza, out of the post's yard, before the drones can see again)
   let t = 0; while (cur.stormy && t < 120) { G.step(0.5); t += 0.5; }
-  return { stormy0: true, door, u: u.r, room, after: G.story.doors().some((d) => d.room === 'ih_post_cabin1') }; });
+  const after = G.story.doors().some((d) => d.room === 'ih_post_cabin1'); delete G.flags.c4_ilka; G.step(0.3);
+  return { stormy0: true, door, u: u.r, room, after }; });
 const stormL = await said();
 check('the post\'s bunk cabin while a sandstorm blows (INPUT): shut, the guard waiting it out inside (its own line); a door again once the storm passes', storm.u === 'used' && !storm.door && storm.room === 'desert' && has(stormL, /gate guard/) && storm.after, { storm, stormL });
 const safi4 = await ev(() => talkTo('safi')); const safi4L = await said();
