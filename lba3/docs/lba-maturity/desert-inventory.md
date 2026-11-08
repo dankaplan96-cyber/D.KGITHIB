@@ -123,3 +123,20 @@ outdoors (VP-10 kept). Automated runtime only; a GPU look at the School's rim wa
   took Kesh's (story/citizens.js `gone`): left for the Zeelich pass (not this region).
 - **A player's own first time**: none of this was played by a person; the chapter-balance numbers for chapters 4–5
   are unchanged (the notebook's walk is a few metres longer: in through the office door).
+
+## Evidence (8.11.2026, Automated runtime only)
+
+Run against a snapshot of `lba3/` served locally (SwiftShader, headless Chromium), one suite at a time, on the final
+code unless marked: `desert-bar` (new, 17/17: the reads, the oasis, Dela, S28 and its board, the dormitory dark and
+lit, the bunk cabin in a storm, chapter 5 with the ferry taken, chapter 6's lines, the temple and the condenser hall
+after their chapters, a save in the dormitory then Continue, a death then Retry with full health, chapter 8's people,
+chapter 10 and the epilogue), `chapter4` 55/55 (the notebook in the office by input; run before the keepers' spot
+rule), `chapter5` 20/20, `purposes` 23/23 (S40 into Leya's room, S28's board), `island-doors` 89/89 (72 rooms, the
+keepers), `desert-life` 30/30, `door-sweep` (CHAPTERS=4,5,6, the Desert doors: in, out, walk-in ±0.3 m),
+`world-consistency` (ONLY=dig|steam|evacuation|network|home) 19/19, `save-migration` 11/11, `wizards` 6/6, `overlaps`
+(ONLY=desert,condA,condB,butemple) PASS, `slidetraps` PASS (desert: 6 spots, 0 respawns, 0 lives lost),
+`story-journeys` (ONLY=ch5) PASS, `interior-life` 144/144. Failures met on the way and fixed: `desert-bar`'s storm
+check (no storm blows unless Ilka's errand is on: the test sets it), `island-doors` (a keeper standing where a look's
+prompt went to them; Nima with no spot left: the keepers' spot rule).
+Not run: the full playthrough chain (`tests/playthrough`; only segment 07's notebook step changed), `camfollow` and
+`camclear` (Citadel's), the full `door-sweep` and `world-consistency` over every chapter.
