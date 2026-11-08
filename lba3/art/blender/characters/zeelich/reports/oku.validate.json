@@ -1,0 +1,349 @@
+{
+  "file": "art/blender/characters/zeelich/work/oku.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.6496, 2.0501, 0.5851], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0040"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "1224"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: oku_bootL -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_bootL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_bootR -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_bootR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_bootTopL -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_bootTopL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_bootTopR -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_bootTopR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_brows -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_capsule0 -> okuRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_capsule0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_capsule1 -> okuRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_capsule1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_capsule2 -> okuRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_capsule2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_capsule3 -> okuRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_capsule3",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_capsule4 -> okuRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_capsule4",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_cuffL -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_cuffR -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_ear -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_ear.001 -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_foreL -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_foreR -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_handL -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_handR -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_hat -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_nose -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_shinL -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_shinR -> okuRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_thighL -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_thighR -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_upperL -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: oku_upperR -> okuRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: oku_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature okuRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 36,
+    "meshes": 35,
+    "triangles": 2236,
+    "materials": 12,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3248,
+        0.004,
+        -0.2165
+      ],
+      "max": [
+        0.3248,
+        2.0541,
+        0.3686
+      ],
+      "size": [
+        0.6496,
+        2.0501,
+        0.5851
+      ]
+    }
+  },
+  "passed": true
+}

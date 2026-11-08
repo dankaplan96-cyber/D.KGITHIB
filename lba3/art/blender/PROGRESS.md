@@ -120,21 +120,49 @@ Only the guard has a clear weakness: his visor was a flat box (two black bricks 
   chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS; `assets/poly` put back. Pictures
   `docs/future/characters/guard/`; request `requests/CAST-POLISH-CITADEL-3*` (on top of CITADEL and CITADEL-2).
 
+### Zeelich batch 1: the Esmers (ROBE-EDGE-ESMER, BOOTS-ESMER, ARMS-ESMER): CAST-POLISH-ZEELICH (8.11.2026)
+Census (`jobs/census-z.mjs`, all 147 people at load; `zeelich/reports/census-all.json`): the six Esmer looks dress 28 people
+(keeper ×8: keeper, ilo, marl, zc_guard, zt_guard, zt_guard2, up_guard, esren; clerk ×6: clerk, aven, zc_clerk, up_clerk,
+ot_keep, ot_clerk; oku ×5: oku, pask, up_esmer, ennu, hs_worker4; xil ×4: xil, zc_courier, up_courier, oshra; councilChair ×3:
+chair, velo, ot_boss; nara ×2: nara, sefa) plus ~20 of the isles (islandlife.js, lazy). Surveyed in lookdev (keeper, clerk,
+oku, xil, councilChair, nara, councilB): the Esmers read worst of the region (paint robe, slipper feet under shins that end in
+the air, stick arms). LBA2 measured read-only (`tools/lba-source/measure.py`, bodies 80 and 186, numbers only): the capsule is
+the original's and stays; feet 0.2 H x 0.09 H x 0.06 H (ours 0.15 x 0.04 x 0.03), arms +-0.021-0.027 H (ours 0.014-0.017).
+- Edit (`cast_poly.py` build_esmer + `esmer_boot`, `limb_legs(foot=)`; `ESMER_OLD=1` = the old build, which equals the
+  committed six files exactly): robe 0.8 cm off the body with rolled hem and collar in the trim hex; boots 0.19 x 0.06 x 0.06 H
+  with a shaft (foot below, shin above); arms 0.017-0.020 H.
+- Budget: body +18.1 % (keeper/xil/nara 1504 -> 1776), +17.7 % (clerk), +14.4 % (oku/councilChair 1884 -> 2156); bones, order,
+  eyes, mouths, weights, colours unchanged; DRESS-1 variants 1-6 recolour everything (keeper, oku, clerk); validate 0 fails.
+- In the game: hero 4 draws before and after; Zeelich street (chapter 3) 797 = 797 calls (SwiftShader), 760 = 760 (Vega 8),
+  +1360 tris; Vega 8 20 s x 2 pairs: median 17.7/17.7 -> 17.6/17.6 ms, p95 18.4/18.5 -> 18.2/18.3 (no measurable regression,
+  at the 60 Hz cap).
+- Tests (the six in assets/poly, renamed shell `SHELL_EXE`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209,
+  story-journeys 30/30 PASS; assets/poly put back.
+- Files: `characters/zeelich/{source,export,work,previews,reports}`; jobs `zeelich-*.json`; new tools `zeecap.mjs` (Zeelich's
+  street in chapter 3; GPU=1 frame times), `posecap.mjs` (13 poses whole-body in lookdev; `views=` turns the body),
+  `census-z.mjs`; lookcap.mjs takes SHELL_EXE. Pictures `docs/future/characters/{keeper,oku,xil,nara,clerk,councilChair}/`
+  (chapter 3+: never to the user). Request `tools/testlab/requests/CAST-POLISH-ZEELICH*` (+ note in WORLD_ART_REQUESTS.md).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance verified ✓ (draws/triangles; Vega 8 frame time
+  in Zeelich's street, light check) · integrated: no (request for the cloud).
+- Left: in doze the Esmers' feet lie apart from the shins (rig pose, before and after); cone hands; keeper x8 / oku x5 one
+  body each; Otringal's Quetch (councilB x4, lharWoman's zc_petit) untouched.
+
 ## Current
-- Queue item 3 (Citadel, chapters 1–2) done. Next: queue item 5, CLOUD_ORDERS 28 by region (Zeelich and Otringal first);
-  their pictures are spoilers (chapter 3+): keep them out of the user's view.
+- CAST-POLISH-ZEELICH ready for the cloud (applies on origin + HEROES, CITADEL, CITADEL-2, CITADEL-3).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
-3. Citadel's recurring people
-4. CLOUD_ORDERS 28, by region: Zeelich and Otringal, the isles, Desert Island, the Hamalayi, the underground
+3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
+4. CLOUD_ORDERS 28, by region: Zeelich and Otringal (batch 1, the Esmers: CAST-POLISH-ZEELICH), the isles, Desert
+   Island, the Hamalayi, the underground
 5. The named cast
 6. The most shared models' shape variants (`<look>_b`)
 7. Equipment: the ball, the sword
 8. Common props
 
 ## Next action
-Queue item 5: census Zeelich and Otringal's people (`census.mjs`, the chapter 3 flags as cast-rounds sets them), survey
-them in the review scene, pick one weakness each (not race-wide), same loop; report CAST-POLISH-ZEELICH. Diffs go on top
-of CAST-POLISH-CITADEL, -2 and -3 (build the base by applying them to HEAD in a temp checkout). Browsers with `SHELL_EXE`.
+Zeelich batch 2: the keeper shape variant `keeper_b` (order 24: a new LOOKS entry + JSON, the people by id; e.g. the guards
+zc_guard, zt_guard, zt_guard2, up_guard as a helmeted, heavier Esmer, Ilo/Marl/Esren keep keeper), then `oku_b`; then
+Otringal's Quetch (councilB on kira/sanna/ama). Diffs go on top of CAST-POLISH-ZEELICH (base: origin + HEROES, CITADEL, -2,
+-3, ZEELICH applied in a scratch git repo). Browsers with `SHELL_EXE` (a renamed copy of the headless shell); server 8257.

@@ -3085,3 +3085,100 @@ box up to +1.6 m instead. Layout, paths, doors, colliders, story spots and the r
   128², gravel 256². Frame time not measured.
 - Tests on the merged tree (origin + ZSTYLE-1 + ZSTYLE-2, SwiftShader): zeelich-life 38/38 (the platform gate passed
   this time), overlaps (zeelich) 1 + 1 visual pass, world-consistency 37/37.
+
+## CAST-POLISH-ZEELICH · the Esmers: robe edges with thickness, LBA2's boots, thicker arms (all six Esmer looks) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ZEELICH.diff` (tools/blender/cast_poly.py only: `build_esmer`, a new `esmer_boot`, and a `foot`
+argument on `limb_legs` whose default is unchanged). It goes **on top of CAST-POLISH-HEROES, -CITADEL, -CITADEL-2 and
+-CITADEL-3**: `git apply --check` is clean on origin `2a3054e8` with those four applied. New model files for `assets/poly/`:
+`requests/CAST-POLISH-ZEELICH/{keeper,oku,xil,nara,clerk,councilChair}.json`. Pictures (**chapter 3+: not for the user**):
+`docs/future/characters/{keeper,oku,xil,nara,clerk,councilChair}/`.
+- **Why the Esmers.** The census (all 147 people at load) and a survey of Zeelich's and Otringal's people in the review
+  scene showed that the six Esmer looks read worst of the region. Between them they dress 28 people at load: keeper ×8,
+  clerk ×6, oku ×5, xil ×4, councilChair ×3, nara ×2. The isles' folk (`islandlife.js`) add about 20 more. In chapter 3,
+  seven of them stand on Zeelich's street: Nara, Oku, Ilo, Aven, Marl, Ennu and Oshra.
+  - The capsule body is LBA2's own and stays. I measured the user's LBA2 files read-only, numbers only, with
+    `tools/lba-source/measure.py`; nothing was extracted.
+  - Bodies 80 and 186: one capsule ±0.10–0.107 H from 0.2 H to the top.
+  - Three things were below the original or below our own finish standard:
+    - the robe was paint, with no thickness;
+    - the shoes were flat slippers half the original's size, under shins that ended in the air above them;
+    - the arms were sticks.
+
+  It is one builder, so the fix is race-wide. Faces, hats, glasses and colours are unchanged.
+- **ROBE-EDGE-ESMER:**
+  - the robe stands 0.8 cm off the body;
+  - its hem is a rolled edge, 1.6 cm out, with a flat underside back to the trousers;
+  - its collar is a rolled edge that turns in to the skin;
+  - both are in the trim's exact hex.
+- **BOOTS-ESMER:** the original's feet are 0.2 H long (−0.07 to +0.13 H about the ankle), 0.09 H wide and 0.05–0.066 H
+  tall. Ours were 0.04 H wide and 0.03 H tall. Now:
+  - each boot is 0.19 H long, 0.06 H wide and 0.06 H tall, with a flat sole and a rounded toe and heel. It is not the full
+    0.09 H wide because our legs stand closer together than the original's (±0.042 H against ±0.08 H), and wider boots
+    would touch;
+  - a shaft round the ankle covers the shin's end. Its lower half follows the foot and its upper half the shin;
+  - everything is in the shoes' hex.
+- **ARMS-ESMER:**
+  - LBA2's arms are ±0.021–0.027 H thick above the elbow; ours were 0.014–0.017 H. Now they are 0.017–0.020 H, as thick
+    as they can be and still clear the robe at the elbow (rest spread 0.03 rad);
+  - the cuffs grew with them.
+- `ESMER_OLD=1` rebuilds the old capsule, shoes and arms. With it, the rebuild equals the committed six files exactly
+  (every array equal).
+- **Contracts** (`art/blender/characters/jobs/polycheck.py`, reports in `art/blender/characters/zeelich/reports/`):
+  - bones, in the same order, eyes and mouths are identical;
+  - 4 weights a vertex, all summing to 1;
+  - no new colour;
+  - feet at 0.004 and the top unchanged.
+  - DRESS-1 (`dresscheck.mjs`, keeper, oku and clerk, variants 1–6): 0 vertices keep a base hex that a variant
+    overrides, so the new hem, collar and boots recolour with tunicTrim, tunic and shoes.
+  - `validate` (Blender, keeper and oku): 0 fails. One warning, loose vertices, was already there before (968 → 1224,
+    the cast's separate parts).
+- **Budget:**
+
+  | look | triangles before → after (body) | change | with eyes and mouth |
+  |---|---|---|---|
+  | keeper, xil, nara | 1504 → 1776 | +18.1 % | 1584 → 1856 |
+  | clerk | 1536 → 1808 | +17.7 % | 1616 → 1888 |
+  | oku, councilChair | 1884 → 2156 | +14.4 % | 1964 → 2236 |
+
+  - Draw calls are unchanged: the hero as an Esmer is 4 calls before and after (body, silhouette pass, eyes, mouth).
+  - Zeelich's street in chapter 3, Follow camera at Medium: 797 = 797 calls on SwiftShader and 760 = 760 on the Vega 8.
+    Triangles went up by 1360, 5 Esmers in view × 272.
+  - Each model gains 816 vertices, about +49 KB of vertex data at 60 B a vertex.
+  - No texture, no material, no new bone.
+- **Vega 8 frame time** (installed Chrome on this laptop's GPU, the game's own loop, 20 s, Zeelich's street, quality
+  medium; two before/after pairs):
+  - before: median 17.7 / 17.7 ms, p95 18.4 / 18.5 ms;
+  - after: median 17.6 / 17.6 ms, p95 18.2 / 18.3 ms.
+
+  There was no measurable regression. The frame sits at the 60 Hz cap, so headroom was not measured. Reports:
+  `gpu-*.json`.
+- **Looked at:**
+  - The review scene (lookdev, the game's own renderer): turnaround, face ¾, hand and walk before and after for all six.
+    Poses for keeper (slim) and oku (stooped and wide), side and ¾, before and after: idle, walk, run, turn, jump, fall,
+    throw, sword (heavy), talk, pickup, use, hurt, doze.
+  - In the game, with the hero swapped to each look (`gamecap.mjs`, Citadel's square, chapter 1): Follow/Medium, the
+    dialogue two-shot, and close-ups front, ¾ and back, before and after for all six.
+  - Zeelich's street in chapter 3 (`zeecap.mjs`), before and after.
+  - Blender views of keeper (before and after) and oku (after).
+
+  What I saw:
+  - at Follow/Medium the feet now read as boots, where they had been grey points;
+  - in the close-up the collar and hem are visible lips;
+  - in the walk and run the boots stay on the ground and the shafts stay on the shins.
+- **Tests** (SwiftShader, the six files in `assets/poly`, a renamed headless shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS.
+
+  `assets/poly` was put back afterwards. Evidence labels: **Automated runtime only**. The pictures were looked at, not
+  played.
+- **Left:**
+  - In the doze pose the Esmer's feet lie apart from the ends of the shins. This was already so with the old shoes, and
+    the bigger boots make it easier to see. It is the rig's pose, not the mesh, so it is not changed here.
+  - The hands are still LBA2's cone with three fingers and a thumb.
+  - keeper ×8 and oku ×5 are still one body each, apart from DRESS-1's colours. Their `_b` shape variants (order 24)
+    are the next Zeelich batch.
+  - The other Esmer looks share one face shape.
+  - Otringal's Quetch (councilB on Kira, Sanna and Ama; lharWoman on zc_petit) are not touched in this batch.
+- Order: HEROES, CITADEL, CITADEL-2, CITADEL-3, then this one. Re-test after merging: the worktree's game was at db5a1c9c, before your GAIT-CADENCE rig.js.

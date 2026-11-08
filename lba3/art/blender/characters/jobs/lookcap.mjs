@@ -4,7 +4,7 @@ import fs from 'node:fs'; import path from 'node:path';
 import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 const [OUT, LOOK, CAND] = process.argv.slice(2); fs.mkdirSync(OUT, { recursive: true });
 const BASE = process.env.BASE || 'http://127.0.0.1:8257/';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ ...(process.env.SHELL_EXE ? { executablePath: process.env.SHELL_EXE } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext({ viewport: { width: 900, height: 700 } });
 if (CAND) await ctx.route(`**/assets/poly/${LOOK}.json`, (r) => r.fulfill({ path: CAND, contentType: 'application/json' }));
 const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
