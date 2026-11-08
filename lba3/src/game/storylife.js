@@ -340,7 +340,7 @@ const ZEELICH_PEOPLE = [
         L('marl_side', -20.4, -16.4, -26, -21, 'stand', [10, 14]),
       ] } },
   // a council guard on post either side of the council house's door, crossing over now and then
-  { id: 'zc_guard', char: 'keeper', tint: '#dfe4ff', speed: 0.6, color: '#a0a8e8', start: 0, area: 'zeelich', phase: council, rounds: {
+  { id: 'zc_guard', char: 'keeper_b', tint: '#dfe4ff', speed: 0.6, color: '#a0a8e8', start: 0, area: 'zeelich', phase: council, rounds: {
     council: [
       // (west of the door's flower tub (−27.8, −5.2), not behind it: there he stood with his nose in its leaves, legs hidden)
       D('g_west', -29.4, -6.6, 0, 'stand', [30, 45]),
@@ -454,7 +454,7 @@ export const UPPER_ROOM = {
       D('ue_bench', -1.8, 3.9, PI, 'stand', [20, 30], { gest: ['sigh', 'shrug'] }),
       L('ue_plant', 4.5, 2.4, 5.5, 3.4, 'stand', [6, 9]),
     ] },
-    { id: 'up_guard', char: 'keeper', tint: '#d8deff', color: '#9098e0', speed: 0.6, start: 0, when: upper, stops: [
+    { id: 'up_guard', char: 'keeper_b', tint: '#d8deff', color: '#9098e0', speed: 0.6, start: 0, when: upper, stops: [
       D('ug_west', -5.3, -3.9, 0, 'stand', [40, 60]),
       D('ug_east', -1.7, -3.9, 0, 'stand', [30, 45]),
     ] },

@@ -338,7 +338,7 @@ export const ROOMS = {
         D('velo_till', ZT.clerk.x, ZT.clerk.z, ZT.clerk.a, 'browse', [14, 20], { spot: 'clerk' }),
         D('velo_print', ZT.printer.x, ZT.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),
       ] },
-      { id: 'pask', char: 'oku', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, when: 'always', stops: [
+      { id: 'pask', char: 'oku_b', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, when: 'always', stops: [
         D('pask_wait', ZT.porter.x, ZT.porter.z, ZT.porter.a, 'stand', [10, 16], { spot: 'porter' }),   // (at the arrivals stair's foot)
         D('pask_case', ZT.porter.x + 1.4, ZT.AZ1 + 0.6, Math.PI, 'reach', [4, 6], { carry: 'case' }),   // (a case off the arrivals deck's lip)
         L('pask_gate', ZT.LX + 2.6, ZT.GATEZ + 1.4, ZT.LX, ZT.GATEZ, 'put', [5, 7], { carry: null }),   // (set by the gate for the next ship)
@@ -346,11 +346,11 @@ export const ROOMS = {
       // WC-4, chapter 9: the council's guards. One by the gate, where every departure is checked (on post, a step toward
       // the gate now and then); one between the door and the hall, watching who comes in. Clear of the gate's and the
       // door's ways, the counter's and the board's spots and Pask's round
-      { id: 'zt_guard', char: 'keeper', tint: '#dde2ff', color: '#98a0e8', speed: 0.6, start: 0, when: ['council'], stops: [
+      { id: 'zt_guard', char: 'keeper_b', tint: '#dde2ff', color: '#98a0e8', speed: 0.6, start: 0, when: ['council'], stops: [
         D('ztg_post', ZT.guard.x, ZT.guard.z, ZT.guard.a, 'stand', [30, 45], { spot: 'guard' }),
         D('ztg_look', ZT.LX + 1.7, ZT.GATEZ + 2.6, Math.PI / 2, 'stand', [8, 12], { gest: ['nod'] }),   // (a look down the hall: clear of Pask's cases by the gate)
       ] },
-      { id: 'zt_guard2', char: 'keeper', tint: '#e6e0ff', color: '#a8a0e8', speed: 0.65, start: 1, when: ['council'], stops: [
+      { id: 'zt_guard2', char: 'keeper_b', tint: '#e6e0ff', color: '#a8a0e8', speed: 0.65, start: 1, when: ['council'], stops: [
         L('ztg2_door', ZT.LX + 2.3, ZT.DOORZ - 1.5, ZT.LX, ZT.DOORZ, 'stand', [20, 30]),
         L('ztg2_hall', 0.2, 0.6, ZT.CX, ZT.CZ, 'stand', [12, 18], { gest: ['sigh'] }),
       ] },
@@ -405,7 +405,7 @@ const CITADEL_PORT = [
 // south-east). Esmers do not sit (walkers.js canSit): they stand.
 const ZEELICH_PORT = [
   // (SPACEPORT-1: Velo, the port agent, went inside to the terminal's counter: zterminal above)
-  { id: 'ennu', char: 'oku', tint: '#eef8ff', color: '#a8d8f0', speed: 0.75, start: 0, stops: [
+  { id: 'ennu', char: 'oku_b', tint: '#eef8ff', color: '#a8d8f0', speed: 0.75, start: 0, stops: [
     D('ennu_wait', -11.5, 40.0, Math.PI / 2, 'stand', [20, 30], { carry: 'case', gest: ['sigh'] }),
     L('ennu_ship', -11.5, 47.0, -4, 44, 'stand', [14, 20]),
     L('ennu_board', -8.0, 34.5, -0.6, 35.2, 'stand', [8, 12]),
