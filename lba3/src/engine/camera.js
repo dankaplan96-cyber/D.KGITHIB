@@ -1229,8 +1229,9 @@ export class CameraRig {
       // differ by metres — 3.2 to 6.5 —, and the eased change took them at 18 m/s; in, as before; and into it from the arm it had, not from the longer arm at once)
       if (over) { C.overQ = fresh || !(C.overK > 0) ? overQ : damp(C.overQ, overQ, 6, dt); const oa0 = C.overArm ?? overArm, oa1 = fresh ? overArm : !(C.overK > 0) ? Math.min(overArm, C.arm ?? overArm) : damp(oa0, overArm, 6, dt); C.overArm = fresh || !(C.overK > 0) ? oa1 : Math.min(oa1, oa0 + CH_OUT_V * dt); }
       let wa = Infinity;   // (what the look-ahead reads: below)
+      C.walkNow = false;
       if (!fresh && C.pT) {
-        const vx = (T.x - C.pT.x) / dt, vz = (T.z - C.pT.z) / dt, walk = Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 20;
+        const vx = (T.x - C.pT.x) / dt, vz = (T.z - C.pT.z) / dt, walk = (C.walkNow = Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 20);
         // (CAM-WALKSWING: turning on the spot while the clear view round the heading it turns to is still being looked
         // for — a few frames —, where the turn will take it does not draw the arm in yet: the swing found turns it
         // elsewhere. Where it stands still does: nothing ever stands in a wall meanwhile)
@@ -1290,7 +1291,9 @@ export class CameraRig {
       // row of posts, a colonnade: the slow let-out keeps it from pumping in and out there). Short of that (a wall still
       // limits it, he walks away from it) the let-out is CH_OUT_V as before.
       C.clk = (C.clk || 0) + dt;
-      C.quick = !fresh && !lock && C.arm != null && w0 >= full - CH_QUICK_NEAR && want >= w0 - 0.05 && (C.quick || full - C.arm > CH_QUICK_GAP) && !(C.clk - (C.cut0 ?? -1e9) < CH_QUICK_PUMP);
+      // (CAM-ALLEY: the pump guard is for a walk past posts; turned on the spot by a house — the stepping-stones street —
+      // the turn's two cuts in held the slow let-out 3 s, the arm under 5 m for 3.02-3.05 s)
+      C.quick = !fresh && !lock && C.arm != null && w0 >= full - CH_QUICK_NEAR && want >= w0 - 0.05 && (C.quick || full - C.arm > CH_QUICK_GAP) && !(C.walkNow && C.clk - (C.cut0 ?? -1e9) < CH_QUICK_PUMP);
       // (over his head: in and out of it eased, CH_OVER_RATE)
       // (in only once over his head has been wanted CH_OVER_T s, or at once when he is out of sight from where it stands: a
       // step past a corner of the eaves doesn't bob it up and down)
