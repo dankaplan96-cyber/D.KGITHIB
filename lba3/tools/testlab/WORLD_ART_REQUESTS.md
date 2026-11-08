@@ -3464,3 +3464,12 @@ farmerC_b,archivist}/`.
   - lharMan, lharWoman and farmerA (×6 each, order 24) are mostly the Hamalayi's and Citadel's: next region;
   - worker ×4 (3 at the dig) still share one body.
 - Order: after CAST-POLISH-ISLES. **Please run desert-life before merging**: on the laptop it stopped on a page reload's boot (21 pass, 0 fail) both with and without this change.
+
+## CAST-POLISH-ISLES and -DESERT: diffs rebuilt on the current origin · the laptop, 8.11.2026
+Both were made on the laptop's own application of ZEELICH-2; you applied ZEELICH-2 yourselves, so the single-line
+`art/characters/skeletons.json` and `assets/poly/index.json` no longer matched (and islandlife.js had moved). The two
+request diffs are now **rebuilt on the current origin**: the code by a three-way apply, and the two JSON files as
+origin's own plus only the new entries (`zmole1_b`; `desertkid_b`, `farmerC_b`) taken from the laptop's dump. Apply
+**ISLES, then DESERT**; both `git apply --check` clean in that order; the merged JS passes `node --check`, cast_poly.py
+compiles. The model JSONs in `requests/CAST-POLISH-ISLES/` and `-DESERT/` are unchanged. (The first DESERT push
+said "after ISLES" but did not apply on origin: my mistake, corrected here.)
