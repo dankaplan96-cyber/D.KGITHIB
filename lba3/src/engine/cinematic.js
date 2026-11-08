@@ -252,15 +252,15 @@ export class Cinematic {
     if (this.paused) return;
     this.paused = true;
     this.game.audio.babble?.hush?.(); // (a line's voice doesn't hang on under the pause menu)
-    const ctx = this.game.audio.ctx;
-    if (ctx && ctx.state === 'running') { ctx.suspend(); this._suspended = true; }
+    // (PAUSE-FADE: a 20 ms fade, then the suspend; at once it cut the output mid-wave)
+    if (this.game.audio.suspendSoftly?.()) this._suspended = true;
   }
   resume() {
     if (!this.paused) return;
     this.paused = false;
     this.hold = 0;
     this.game.input.clearEdges?.();
-    if (this._suspended) { this.game.audio.ctx?.resume(); this._suspended = false; }
+    if (this._suspended) { this.game.audio.resumeSoftly(); this._suspended = false; }
   }
 
   // ---------------------------------------------------------------- end (played out or skipped)
@@ -269,7 +269,7 @@ export class Cinematic {
     const g = this.game, was = this.state;
     this.state = 'done';
     this.game.audio.babble?.stop();
-    if (this._suspended) { g.audio.ctx?.resume(); this._suspended = false; }
+    if (this._suspended) { g.audio.resumeSoftly(); this._suspended = false; }
     this.ui(false);
     const end = () => {
       try { this.def.finish?.(skipped, this); } catch (e) { console.error('cinematic finish failed', e); }

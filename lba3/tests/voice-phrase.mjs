@@ -30,6 +30,10 @@ check('a bank for each of the main cast and each resident family (two speakers o
 const badClip = [];
 for (const [id, b] of Object.entries(man.banks)) for (const [k, c] of Object.entries(b.clips)) if (!(c.d > 0 && c.sp <= c.d && c.s.length >= 1 && c.s.every((s) => s[0] >= 0 && s[0] < c.d))) badClip.push(id + ':' + k);
 check('every clip has its speech inside its own span, and its syllables for the mouth', badClip.length === 0, badClip.slice(0, 5));
+// VOICE-FLOW: every clip carries its measured sound edges (tools/voice-render/clip-edges.py), sound inside the speech
+const noEdge = [];
+for (const [id, b] of Object.entries(man.banks)) for (const [k, c] of Object.entries(b.clips)) if (!(c.a >= 0 && c.e > c.a && c.e <= c.sp + 1e-9)) noEdge.push(id + ':' + k);
+check('every clip has its sound edges (0 <= a < e <= sp), which the playback joins clauses by', noEdge.length === 0, noEdge.slice(0, 5));
 
 // ------------------------------------------------------------------ 1. offline
 const { browser, page } = await launch();
@@ -87,6 +91,20 @@ const off = await page.evaluate(async (base) => {
       let pk = 0; for (const x of r.voice) pk = Math.max(pk, Math.abs(x));
       o.muted = { peak: pk, maxLive: Math.max(...r.log.map((x) => x[2])), mouth: Math.max(...r.log.map((x) => x[1])) };
     }
+    // (f) VOICE-FLOW: a line of several clauses from the phrases: the silences between them are about the planned pauses
+    //     (a comma 0.13 s, a full stop 0.3 s), not the third of a second at a comma and half a second at a full stop
+    //     the clips' own silences added before
+    if (mode === 'phrases') {
+      const text = 'The depot at the old camp? Drones, a guard and a dog. Keep to the path and nobody minds you. Past the yellow line, go slowly.';
+      const r = await S.renderScene(V, { len: 8, turns: [{ key: 'n_doran', text, at: 0.2, say: true, mode: 'dialog' }] }, { prepare: (B) => B.prepare(['n_doran'], { wait: true }) });
+      // (silences: 5 ms frames 35 dB under the loudest, 40 ms or longer, between sounds)
+      const h = Math.round(r.sr * 0.005), env = [];
+      for (let s = 0; s + h <= r.voice.length; s += h) { let e = 0; for (let i = 0; i < h; i++) e += r.voice[s + i] ** 2; env.push(Math.sqrt(e / h)); }
+      const q = Math.max(...env) * Math.pow(10, -35 / 20), sil = []; let run = 0, on = false;
+      for (const x of env) { if (x > q) { if (on && run >= 8) sil.push(+(run * 0.005).toFixed(3)); run = 0; on = true; } else if (on) run++; }
+      const P = await import(new URL('src/engine/voiceplan.js', base).href);
+      o.flow = { silences: sil, planned: P.clauses(text).slice(0, -1).map((c) => c.pause), played: r.played.length };
+    }
   }
   // (e) a bank that is not there: the line is synthesised
   {
@@ -104,6 +122,10 @@ for (const mode of ['phrases', 'synthesis']) {
   const o = off[mode];
   check(`${mode}: a line typed letter by letter starts one utterance (not one per letter)`, o.charsCalls > 20 && o.lines === 1 && o.maxActive === 1, { chars: o.charsCalls, lines: o.lines, maxActive: o.maxActive, syllables: o.syllables });
   if (mode === 'phrases') check('phrases: one clip per clause, from the speaker\'s own bank', o.played.length >= 1 && o.played.length <= 3 && o.played.every((x) => x.startsWith('hero:')), o.played);
+  if (mode === 'phrases') {
+    const s = [...o.flow.silences].sort((a, b) => a - b);
+    check('phrases: a line of clauses flows: no silence inside it over 0.4 s, the median about a full stop\'s 0.3 s or less (was 0.45-0.6 s at a full stop)', o.flow.played >= 4 && s.length >= 3 && s[s.length - 1] <= 0.4 && s[Math.floor(s.length / 2)] <= 0.32, o.flow);
+  }
   check(`${mode}: the line sounds while it is spoken, the mouth moves with it`, o.during > 0.02 && o.mouthOpen > 0.3, { peak: o.during, mouth: o.mouthOpen });
   check(`${mode}: the box closed, silent 0.25 s later, nothing left playing`, o.afterClose < 0.001 && o.liveEnd === 0, { after: o.afterClose, live: o.liveEnd });
   const R = o.rapid;

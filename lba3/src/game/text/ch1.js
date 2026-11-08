@@ -2,7 +2,7 @@
 import { STR } from '../i18n.js';
 
 Object.assign(STR.he, {
-  n_vesk: 'וסק', n_worker: 'עובד המיזם', n_guard: 'שומר המיזם', n_radio: 'קול ברדיו', n_baldino: 'בלדינו',
+  n_vesk: 'וסק', n_worker: 'עובד המיזם', n_guard: 'שומר המיזם', n_dw_guard: 'שומר המיזם', n_radio: 'קול ברדיו', n_baldino: 'בלדינו',
   p_valve: 'סובב', p_look: 'הסתכל',
 
   c1_arrive_1: 'המעבורת של המיזם נכנסת לנמל בלי קול. אין לה מפרש ואין לה משוטים, רק אור כחלחל שמתחת לשדרית.',
@@ -132,7 +132,7 @@ Object.assign(STR.he, {
 });
 
 Object.assign(STR.en, {
-  n_vesk: 'Vesk', n_worker: 'Worker', n_guard: 'Guard', n_radio: 'Radio', n_baldino: 'Baldino',
+  n_vesk: 'Vesk', n_worker: 'Worker', n_guard: 'Guard', n_dw_guard: 'Guard', n_radio: 'Radio', n_baldino: 'Baldino',
   p_valve: 'Turn', p_look: 'Inspect',
 
   c1_arrive_1: 'The project ferry glides into the harbour without a sound. No sails, no oars, just a blue glow beneath the hull.',

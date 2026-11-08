@@ -201,7 +201,7 @@ export class DepotWatch {
       const [id, key] = lines[i];
       const guard = this.members().find((e) => e.def.kind === 'guard' && e.alive);
       const sp = id === 'hero' ? g.hero : id === 'guard' ? guard : null;
-      const name = id === 'hero' ? 'n_hero' : id === 'guard' ? 'n_guard' : 'n_radio';
+      const name = id === 'hero' ? 'n_hero' : id === 'guard' ? 'n_dw_guard' : 'n_radio';   // (VOICE-CAST-5: the depot's Quetch guard has a voice of his own, not the pier's Grobo guard's)
       if (guard && id === 'guard') guard.angle = guard.angleTo(g.hero);
       g.say(name, [t(key)], () => next(i + 1), sp, id === 'guard' ? GUARD_COLOR : id === 'radio' ? RADIO_COLOR : null);
     };

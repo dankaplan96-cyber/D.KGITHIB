@@ -409,6 +409,8 @@ def main():
         print(f'{bid:13s} sid {spec["sid"]:3d} {len(b["clips"]):2d} clips {len(b["pcm"]) / SR:5.1f} s {kb:4.0f} KB {L} LUFS pk {pk} f0 {e["f0"]}  e.g. {b["texts"][3]!r}', flush=True)
     man['banks'] = dict(sorted(man['banks'].items()))
     with open(mfile, 'w') as fh: json.dump(man, fh, separators=(',', ':'))
+    # VOICE-FLOW: each clip's measured sound edges (a / e), which the playback joins clauses by
+    subprocess.run([sys.executable, os.path.join(HERE, 'clip-edges.py')], check=True)
     tot = sum(os.path.getsize(os.path.join(OUT, b['file'])) for b in man['banks'].values())
     print(f'assets/voice: {len(man["banks"])} banks, {tot / 1048576:.2f} MB + manifest {os.path.getsize(mfile) / 1024:.0f} KB')
 

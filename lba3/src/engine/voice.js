@@ -15,8 +15,9 @@
 // A voice = its race's colour (RACES) + the character's own values (VOICES): pitch f0 (Hz) and range (semitones),
 // formant scale k (bigger = smaller head), source tilt (higher = darker, softer), breath, brightness, nasality,
 // syllable rate, legato, an intonation contour, vibrato, a fixed seed, and for the main cast their sounds (cons, vow),
-// their manner (hesitate, momentum, clipped, spacious, sharp) and how they ask (rise, high). The same line from the
-// same speaker always gets the same plan, like a recorded line.
+// their manner (hesitate, momentum, clipped, spacious, sharp) and how they ask (rise, high), and for a resident who
+// speaks from a family's phrases, optionally which of its speakers (spk). The same line from the same speaker always
+// gets the same plan, like a recorded line.
 //
 // Cost: nothing per frame (pump only checks a line waiting for its bank). Synthesis: the filter chains are built once
 // per audio context and pooled; a line makes its few sources. Phrases: a bank is fetched and decoded once, off the
@@ -263,6 +264,30 @@ export const VOICES = {
   up_esmer: { race: 'esmer', seed: 1131, f0: 112, k: 0.98, rate: 0.74, contour: 'fall', legato: 0.84, vib: [4.8, 22] },
   fosse: { race: 'grobo', seed: 1135, f0: 98, k: 0.8, rate: 0.82, contour: 'fall', range: 3, legato: 0.6 },   // the sewer man: a grumble
   up_guard: { race: 'esmer', seed: 1132, f0: 130, k: 0.9, rate: 0.88, contour: 'flat', legato: 0.42 },
+  // --- VOICE-CAST-5: the speakers added since (they fell back to a hashed Quetch voice: Esmers, a mole and a
+  // triangle-head heard as Quetch, Liwa, Brem, Wenna and Oma with the other sex's voice, the depot guard with a woman's).
+  // Race from their look, sex from the story; spk: which of their family's phrase speakers they use (1-3: bankOf), so
+  // nobody shares a speaker at the same pitch with someone who talks in the same place.
+  cs_corla: { race: 'esmer', seed: 1501, f0: 226, k: 1.12, rate: 1.08, contour: 'arc', range: 5, legato: 0.62, spk: 1 },              // spaceport kiosk: brisk, helpful
+  ih_ossa: { race: 'tri', seed: 1502, f0: 196, k: 1.12, rate: 0.92, contour: 'step', range: 5, legato: 0.62 },                        // Otringal's market (synthesised, as the triangle-heads are)
+  ih_liwa: { race: 'esmer', seed: 1503, f0: 214, k: 0.92, tilt: 2.2, rate: 0.62, contour: 'sing', range: 5, legato: 0.95, spk: 1 },                         // the tea room: nobody hurries
+  ih_dobb: { race: 'esmer', seed: 1504, f0: 128, k: 0.95, rate: 0.84, contour: 'flat', range: 3, legato: 0.55, spk: 2 },             // the post office: dry, level
+  ih_brem: { race: 'esmer', seed: 1505, f0: 168, k: 1.0, rate: 1.12, contour: 'zigzag', range: 6, legato: 0.5, spk: 3 },             // the trading post: quick patter
+  ih_gorrin: { race: 'esmer', seed: 1506, f0: 98, k: 0.9, rate: 0.82, contour: 'fall', range: 6, legato: 0.7, vib: [4.6, 14], spk: 1 },        // the diggers' canteen: gruff, dry
+  ih_tesk: { race: 'mole', seed: 1507, f0: 205, k: 1.06, rate: 1.2, contour: 'step', range: 3, legato: 0.5 },                         // the Platform's office clerk: precise
+  zh_lissa: { race: 'esmer', seed: 1508, f0: 236, k: 1.2, rate: 1.12, contour: 'bounce', range: 6, legato: 0.6, spk: 1 },             // Nara's niece: young, lively
+  zh_wenna: { race: 'esmer', seed: 1509, f0: 210, k: 1.0, tilt: 2.0, rate: 0.74, contour: 'fall', range: 3, legato: 1.0, vib: [5, 18], spk: 2 },          // Oku's wife: older, settled
+  zr_fennick: { race: 'quetch', seed: 1510, f0: 132, k: 0.96, rate: 1.08, contour: 'bounce', legato: 0.56, spk: 3 },                  // the heat fitter: busy
+  zr_rezz: { race: 'esmer', seed: 1511, f0: 112, k: 0.82, tilt: 2.1, rate: 1.4, contour: 'arc', legato: 0.4, spk: 2 },                           // the grounded shuttle pilot
+  zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful
+  dw_guard: { race: 'quetch', seed: 1513, f0: 118, k: 0.95, rate: 1.0, contour: 'flat', range: 2.5, legato: 0.5, swing: 0.05, spk: 2 }, // the depot's Quetch guard (chapter 1): clipped
+  hs_foreman: { race: 'tri', seed: 1514, f0: 130, k: 0.98, rate: 1.2, contour: 'step', range: 3, legato: 0.4 },                       // the hostel: Foreman Ordo
+  hs_cook: { race: 'mole', seed: 1515, f0: 240, k: 1.08, rate: 0.82, contour: 'sing', legato: 0.88, vib: [5, 20] },                   // Mama Pufa
+  hs_worker1: { race: 'bee', seed: 1516, f0: 380, k: 1.3, rate: 1.45, contour: 'zigzag', legato: 0.6 },                               // Zizi
+  hs_worker2: { race: 'tri', seed: 1517, f0: 176, k: 1.08, rate: 0.88, contour: 'arc', legato: 0.66 },                                // Tellem
+  hs_worker3: { race: 'mole', seed: 1518, f0: 118, k: 0.92, rate: 0.8, contour: 'fall', legato: 0.75 },                               // Gorro
+  hs_worker4: { race: 'esmer', seed: 1519, f0: 118, k: 0.94, rate: 0.74, contour: 'fall', legato: 0.82, vib: [4.8, 24], spk: 1 },    // Old Kesso
+  hs_sleeper: { race: 'bee', seed: 1520, f0: 300, k: 1.24, rate: 1.0, contour: 'fall', legato: 0.75 },                                // Wix (asleep: no lines yet)
   // --- Rabbibunnies
   mira: { race: 'bunny', seed: 301, f0: 236, k: 1.25, rate: 1.6, contour: 'bounce', legato: 0.25, bright: 5600, range: 2, vol: 1.12 },
   pippa: { race: 'bunny', seed: 302, f0: 210, k: 1.22, rate: 1.4, contour: 'zigzag', range: 8, legato: 0.45, vol: 1.1 },                     // the merchant: quick patter
@@ -315,14 +340,16 @@ const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', '
   // (those still without a voice of their own: the fallback below gives them a woman's)
   'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi',
   'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait', 'marl',
-  'ot_ulla', 'ot_boss', 'ot_clerk', 'ot_guest', 'kn_nets', 'kn_mother', 'mb_bzzra', 'or_pick1', 'ce_dancer1', 'ce_lanterns', 'ug_carrier', 'pf_vill1', 'ow_oumi', 'ow_sketch']);
+  'ot_ulla', 'ot_boss', 'ot_clerk', 'ot_guest', 'kn_nets', 'kn_mother', 'mb_bzzra', 'or_pick1', 'ce_dancer1', 'ce_lanterns', 'ug_carrier', 'pf_vill1', 'ow_oumi', 'ow_sketch',
+  'cs_corla', 'ih_liwa', 'zh_lissa', 'zh_wenna', 'zr_oma', 'hs_cook']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
   'luc', 'hobb', 'fenn', 'fosse', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
   'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2', 'tibbo',
-  'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'kn_quill', 'kn_fisher', 'or_pell', 'or_pick2', 'ce_steward', 'ce_dancer2', 'ld_op', 'ld_crane', 'ld_load1', 'ow_mason']);
+  'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'kn_quill', 'kn_fisher', 'or_pell', 'or_pick2', 'ce_steward', 'ce_dancer2', 'ld_op', 'ld_crane', 'ld_load1', 'ow_mason',
+  'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zr_fennick', 'zr_rezz', 'dw_guard', 'hs_foreman', 'hs_worker2', 'hs_worker3', 'hs_worker4']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;
@@ -408,7 +435,8 @@ export function bankOf(v) {
   if (!F[fam] && !B[fam]) fam = sex === 'kid' ? 'quetch-kid' : `quetch-${sex}`;
   const list = (F[fam] || [fam]).filter((b) => B[b]);
   if (!list.length) return null;
-  const bid = list[(hashStr(v.id) >>> 3) % list.length];
+  // (VOICE-CAST-5: a voice may name its speaker, spk 1-3, to stay apart from its neighbours; else its id's hash picks)
+  const bid = v.spk && B[`${fam}-${v.spk}`] ? `${fam}-${v.spk}` : list[(hashStr(v.id) >>> 3) % list.length];
   // (moved toward the resident's own pitch, within a semitone and a half of the speaker's: a recorded voice moved
   //  further begins to sound sped up)
   const st = Math.max(-1.5, Math.min(1.5, 12 * Math.log2(v.f0 / (B[bid].f0 || v.f0))));
@@ -486,6 +514,8 @@ const CLIP_LEVEL = 0.23;  // the pre-rendered phrases' gain into the voice bus (
 const LEAD = 0.03;        // schedule this far ahead of the audio clock (never in the past: no clicks)
 const CHANNELS = 3;       // pooled synthesis chains: one speaking, the others free or fading
 const FADE = 0.025;       // a line cut short (skipped, closed) fades with this time constant, its sources end 0.15 s later
+const MIN_JOIN = 0.1;     // VOICE-FLOW: the least silence between two clauses' phrases (a comma's pause is 0.13 s)
+const HM_GAP = 0.28;      // the beat between Twinsen's "hm" and his answer (as heard before VOICE-FLOW)
 let LAST_HEARD = { key: null, intent: null };   // (Twinsen hesitates before answering a question or a worry)
 
 export class Babble {
@@ -624,11 +654,17 @@ export class Babble {
     dest.connect(this.audio.voiceBus);
     const utt = { gain: out, srcs: [], released: false, end: T0, nodes: dest === out ? [out] : [out, dest] };
     const syl = [];
-    let t = 0, i = 0, alive = 0;
+    // VOICE-FLOW: with the clips' measured edges (manifest a / e, tools/voice-render/clip-edges.py) each clause's clip
+    // starts so that the silence between the last one's sound and its own is the planned pause (a comma 0.13 s, a full
+    // stop 0.3 s). Before, it started at the last clip's speech mark plus the pause, and each join carried the clips'
+    // own silences too (a median 0.15-0.2 s more): a third of a second at every comma, half a second at a full stop.
+    let t = 0, i = 0, alive = 0, heard = null, gap = 0, last = 0;
     const play = (c, r) => {
+      if (heard != null && c.a != null) t = Math.max(t, heard + gap - c.a / r);
       const s = ctx.createBufferSource(); s.buffer = bank.buf; s.playbackRate.value = r;
       s.connect(out);
       s.start(T0 + t, c.o, c.d);
+      last = Math.max(last, t + c.d / r);
       this.clips.add(s); alive++;
       // (the utterance's own nodes go when its last phrase has ended)
       s.onended = () => { s.disconnect(); this.clips.delete(s); if (--alive === 0) for (const n of utt.nodes) n.disconnect(); };
@@ -639,7 +675,7 @@ export class Babble {
     // Twinsen's hesitation: his short "hm", then the answer
     if (plan.phrases[0]?.g.syl[0]?.hum && info.len.hm) {
       const c = clipFor(info, 'hm', 1, recent, h);
-      if (c) { play(c, rate); t += c.sp + 0.12; }
+      if (c) { play(c, rate); if (c.e != null) { heard = t + c.e / rate; gap = HM_GAP; } else t += c.sp + 0.12; }
     }
     for (const ph of plan.phrases) {
       const c = clipFor(info, ph.intent, ph.n, recent, h + i * 31);
@@ -648,12 +684,13 @@ export class Babble {
       // (a touch of variety each time: within a third of a semitone)
       const r = rate * Math.pow(2, (((h >>> (i % 16)) % 7) - 3) * 0.1 / 12);
       play(c, r);
-      // the next clause after this one's speech (its tail of release overlaps the pause) and the pause
-      const next = plan.phrases[i];
-      t += c.sp / r + (next ? Math.max(0.08, next.t0 - (ph.t0 + ph.g.dur)) : 0);
+      const next = plan.phrases[i], pause = next ? next.t0 - (ph.t0 + ph.g.dur) : 0;
+      if (c.e != null) { heard = t + c.e / r; gap = Math.max(MIN_JOIN, pause); }
+      // (a bank without edges: the next clause after this one's speech mark (its tail overlaps the pause) and the pause)
+      else t += c.sp / r + (next ? Math.max(0.08, pause) : 0);
     }
     if (!alive) for (const n of utt.nodes) n.disconnect();
-    utt.end = T0 + t + 0.25;
+    utt.end = T0 + Math.max(t, last - 0.1) + 0.25;
     this.utt = utt;
     return syl;
   }

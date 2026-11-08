@@ -19,17 +19,31 @@ const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });
 
 // every speaker name key the game shows (n_*), from the English text
+// (VOICE-CAST-5: keys with an underscore too, n_ih_ossa: they were left out, and every one of them fell back unseen)
 const keys = new Set();
 for (const f of ['src/game/i18n.js', ...readdirSync(ROOT + 'src/game/text').map((x) => 'src/game/text/' + x)]) {
-  for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/\b(n_[a-zA-Z0-9]+):/g)) keys.add(m[1]);
+  for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/\b(n_[a-zA-Z0-9_]+):/g)) keys.add(m[1]);
 }
+// VOICE-CAST-5: the people who talk in the same place, and the speakers added since the last voice pass
+const PLACES = {
+  spaceport: ['cs_corla', 'tavi', 'bern', 'doran', 'pask'],
+  otringal: ['ih_ossa', 'ih_liwa', 'ih_dobb', 'ih_brem', 'ot_ulla', 'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'ot_boss', 'ot_clerk', 'ot_guest'],
+  knartas: ['ih_gorrin', 'kn_quill', 'kn_nets', 'kn_fisher', 'kn_mother', 'kn_kid'],
+  platform: ['ih_tesk', 'pf_foreman', 'pf_miner1', 'pf_miner2', 'pf_vill1', 'pf_vill2', 'pf_chaplain'],
+  zeelichStreet: ['zh_lissa', 'zh_wenna', 'zr_fennick', 'zr_rezz', 'zr_oma', 'nara', 'oku', 'xil', 'ztri1', 'ztri2', 'zbee1', 'zbee2', 'zmole1', 'zmole2', 'clerk', 'chair'],
+  depot: ['dw_guard', 'radio', 'hero'],
+  pier: ['guard', 'vesk', 'worker', 'hero'],
+  hostel: ['hs_foreman', 'hs_cook', 'hs_worker1', 'hs_worker2', 'hs_worker3', 'hs_worker4'],
+};
+const NEW = ['cs_corla', 'ih_ossa', 'ih_liwa', 'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zh_lissa', 'zh_wenna', 'zr_fennick', 'zr_rezz', 'zr_oma', 'dw_guard',
+  'hs_foreman', 'hs_cook', 'hs_worker1', 'hs_worker2', 'hs_worker3', 'hs_worker4'];
 
 // ------------------------------------------------------------------ 1. offline
 await page.goto(URL0 + 'README.md');
 const MAIN = ['hero', 'zoe', 'arthur', 'baldino', 'vesk'];
 const OTHERS = ['farmer1', 'doran', 'guard', 'pippa', 'mira', 'sphero1', 'nara', 'oku', 'zbee1', 'zmole1', 'zmole2', 'joe', 'ztri1', 'sendell'];
 const LINE = 'Hello there! Have you seen the lighthouse keeper? The water gets warmer every day.';
-const off = await ev(async ({ MAIN, OTHERS, LINE, keys, base }) => {
+const off = await ev(async ({ MAIN, OTHERS, LINE, keys, base, PLACES }) => {
   const lab = await import(new URL('tests/lib/voicelab.js', base).href);
   const V = await import(new URL('src/engine/voice.js', base).href);
   const m = {};
@@ -49,17 +63,25 @@ const off = await ev(async ({ MAIN, OTHERS, LINE, keys, base }) => {
   const poolBee = await lab.render(V, 'n_zbee1', LINE, { lines: 2 });
   // the click check on a deliberately clicky control
   const ctl = lab.analyse(lab.clickyControl(), 32000);
+  // VOICE-CAST-5: the neighbours: the synthesis's features (every voice's fallback, and the only voice of the rarer
+  // peoples) and the phrase speaker and pitch each one plays from
+  await new V.Babble({ ctx: null, vol: { voice: 1 } }).prepare([], { wait: true });   // (the banks' manifest, for bankOf)
+  const place = {};
+  for (const id of [...new Set(Object.values(PLACES).flat())]) {
+    const r = await lab.render(V, 'n_' + id, LINE), b = V.bankOf(V.voiceFor('n_' + id));
+    place[id] = { f: lab.features(lab.analyse(r.data, r.sr)), bank: b ? b[0] : null, st: b ? 12 * Math.log2(b[1]) : 0, own: !!V.VOICES[id] };
+  }
   // every named speaker
   const named = keys.map((k) => [k, V.voiceFor(k)]);
   const ids = [...new Set(named.filter(([, v]) => v).map(([, v]) => v.id))];
   const own = ids.filter((id) => V.VOICES[id]);
   const seeds = own.map((id) => V.VOICES[id].seed);
   const sig = own.map((id) => { const v = V.voiceFor('n_' + id); return [v.race, Math.round(v.f0 / 4), Math.round(v.k * 30), v.contour, Math.round(v.rate * 10), Math.round(v.legato * 10)].join('|'); });
-  return { m, nodes: pool.nodes, nodesBee: poolBee.nodes, same, before, after, quietRms: q.rmsDb, ctl, ids, missing: ids.filter((id) => !V.VOICES[id]), seedsUnique: new Set(seeds).size === seeds.length,
+  return { nb: place, m, nodes: pool.nodes, nodesBee: poolBee.nodes, same, before, after, quietRms: q.rmsDb, ctl, ids, missing: ids.filter((id) => !V.VOICES[id]), seedsUnique: new Set(seeds).size === seeds.length,
     sigUnique: new Set(sig).size === sig.length, dupSig: sig.filter((x, i) => sig.indexOf(x) !== i),
     balradio: V.voiceFor('n_balradio')?.id, radio: V.voiceFor('n_zoeradio')?.radio, hero: V.voiceFor('n_hero')?.f0, zoeF0: V.voiceFor('n_zoe')?.f0,
     stranger: V.voiceFor('n_somebody')?.f0, strangerAgain: V.voiceFor('n_somebody')?.f0, place: V.voiceFor('n_lighthouse'), races: Object.keys(V.RACES) };
-}, { MAIN, OTHERS, LINE, keys: [...keys], base: URL0 });
+}, { MAIN, OTHERS, LINE, keys: [...keys], base: URL0, PLACES });
 
 const M = off.m, ALL = [...MAIN, ...OTHERS];
 const dist = (a, b) => Math.hypot(...M[a].f.map((x, i) => x - M[b].f[i]));
@@ -84,6 +106,19 @@ check('the same line from the same speaker sounds the same each time (seeded)', 
 check('a line stopped mid-way is silent 0.2 s later', off.before > 0.02 && off.after < 0.001, { before: off.before, after: off.after });
 check('every named speaker has an own voice with its own seed', off.missing.length === 0 && off.seedsUnique, { missing: off.missing, n: off.ids.length });
 check('no two named voices share the same settings', off.sigUnique, off.dupSig);
+// VOICE-CAST-5: each speaker added since the last voice pass has a voice of its own and differs from everyone who talks
+// in the same place: in the synthesis (feature distance >= 1.5) and in the phrases (another speaker, or the same one at
+// least 1.5 semitones apart)
+const P = off.nb, pd = (a, b) => Math.hypot(...P[a].f.map((x, i) => x - P[b].f[i]));
+const nbBad = [];
+for (const [where, ids] of Object.entries(PLACES)) for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+  const [a, b] = [ids[i], ids[j]];
+  if (!NEW.includes(a) && !NEW.includes(b)) continue;
+  const sameBank = P[a].bank && P[a].bank === P[b].bank && Math.abs(P[a].st - P[b].st) < 1.5;
+  if (pd(a, b) < 1.5 || sameBank) nbBad.push([where, a, b, +pd(a, b).toFixed(2), sameBank ? P[a].bank : '']);
+}
+check('the speakers added since the last pass have voices of their own (race, sex, speaker)', NEW.every((id) => P[id].own), NEW.filter((id) => !P[id].own));
+check('each of them differs from everyone who talks in the same place (synthesis distance >= 1.5; phrases: another speaker or >= 1.5 st apart)', nbBad.length === 0, nbBad);
 check('every race has a colour', ['quetch', 'grobo', 'bunny', 'sphero', 'esmer', 'bee', 'mole'].every((r) => off.races.includes(r)), off.races);
 check("Baldino on the radio is Baldino's voice; radio voices are band-limited", off.balradio === 'baldino' && off.radio === true, { bal: off.balradio, radio: off.radio });
 check('Twinsen and Zoé keep the original median pitch (195 / 252 Hz)', off.hero === 195 && off.zoeF0 === 252 && Math.abs(M.hero.f0 - 195) < 20 && Math.abs(M.zoe.f0 - 252) < 30, { hero: M.hero.f0, zoe: M.zoe.f0 });
@@ -146,6 +181,31 @@ const r = await ev(async () => {
   await wait(300); out.liveAfterPause = B.live;
   B.stop();
   A.voiceBus.disconnect(an);
+  // PAUSE-FADE: what the output was doing when a scene's pause stopped the context (an analyser keeps the last samples
+  // rendered): a steady tone through the master, then the scene's pause (a 20 ms fade, then the suspend) and, for
+  // comparison, the old immediate suspend
+  const probe = async (soft) => {
+    const osc = ctx.createOscillator(); osc.frequency.value = 220;
+    const og = ctx.createGain(); og.gain.value = 0.2; osc.connect(og).connect(A.master); osc.start();
+    const an2 = ctx.createAnalyser(); an2.fftSize = 2048; A.out.connect(an2);
+    const b = new Float32Array(2048);
+    await wait(200);
+    an2.getFloatTimeDomainData(b); let before = 0; for (const x of b) before = Math.max(before, Math.abs(x));
+    const t0 = performance.now();
+    if (soft) cine.pause(); else ctx.suspend();
+    for (let i = 0; i < 50 && ctx.state === 'running'; i++) await wait(10);
+    const ms = performance.now() - t0, state = ctx.state;
+    await wait(100);
+    an2.getFloatTimeDomainData(b); let cut = 0; for (let i = b.length - 128; i < b.length; i++) cut = Math.max(cut, Math.abs(b[i]));
+    if (soft) cine.resume(); else await ctx.resume();
+    for (let i = 0; i < 100 && ctx.state !== 'running'; i++) await wait(20);
+    await wait(150);
+    const gain = A.out.gain.value;
+    osc.stop(); osc.disconnect(); og.disconnect(); A.out.disconnect(an2);
+    return { before: +before.toFixed(4), cut: +cut.toFixed(5), state, suspendMs: Math.round(ms), gainAfterResume: +gain.toFixed(3) };
+  };
+  out.cutHard = await probe(false);
+  out.cutSoft = await probe(true);
   return out;
 });
 check('the audio context runs headless', r.running === 'running', r);
@@ -156,6 +216,9 @@ check('skipping the text stops the voice: silent 0.25 s later, its sources ended
 check('closing the dialogue drops the speaker', r.closed === 'play' && r.voiceAfterClose === null, r);
 check('a cinematic pause stops the line: silent after resume, sources ended', r.cineSpeaking > 0.01 && r.suspended === 'suspended' && r.resumed === 'running' && r.afterPause < 0.001 && r.liveAfterPause === 0,
   { speaking: r.cineSpeaking, suspended: r.suspended, resumed: r.resumed, after: r.afterPause, live: r.liveAfterPause });
+check('a scene pause fades the output out before it suspends (the last samples rendered silent; an immediate suspend stopped at full level), within 0.2 s, and back in after',
+  r.cutSoft.state === 'suspended' && r.cutSoft.suspendMs <= 200 && r.cutSoft.before > 0.05 && r.cutSoft.cut < 0.002 && r.cutHard.cut > 0.05 && Math.abs(r.cutSoft.gainAfterResume - 1) < 0.01,
+  { soft: r.cutSoft, immediate: r.cutHard });
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

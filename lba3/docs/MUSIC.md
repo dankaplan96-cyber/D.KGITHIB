@@ -338,6 +338,10 @@ Fixed: the volume sliders (`AudioEngine.applyVolumes`) glide (time constant 30 m
 change between two quanta 0.35 → 0.03, spread over the samples. Seen in the code, not changed: a story scene's pause
 suspends the audio context at once (`Cinematic.pause`), which cuts the output mid-wave; a fade first needs the output
 latency (~0.2 s) before the suspend, and `tests/voices.mjs` expects the context suspended 0.2 s after the pause.
+**PAUSE-FADE (wave 5, fixed):** `AudioEngine.suspendSoftly()` fades a gain after the master (`audio.out`) to silence over
+20 ms, then suspends once the fade has been rendered plus the output's latency (capped at 0.1 s); `resumeSoftly()` fades
+back in. Measured headless (Automated runtime only): the last 128 samples rendered before the suspend peak at 0 with
+the fade, 0.19 with the old immediate suspend (a 0.2 tone through the master); suspended 145 ms after the pause.
 
 **Not reproduced**: the crackle the user describes. Nothing measurable in the signal Chromium hands to Windows explains
 it on this laptop plugged in. Not measured: battery power, Windows' mixer and the driver after Chromium (a loopback

@@ -16,6 +16,9 @@ const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
 // 48000 at 192 kHz, rates a Windows laptop's output may run at. The impulse is held under the limit at any rate.
 const REVERB_MAX_FRAMES = 12000;
 const VOL_GLIDE = 0.03; // s: the time constant of a volume change (MUSIC-CRACKLE; ~95 % there in 90 ms)
+// PAUSE-FADE (wave 5): a story scene's pause fades the whole output out over this long before the context is suspended,
+// and back in once it runs again (MUSIC-CRACKLE: an immediate ctx.suspend() cut the output mid-wave)
+const PAUSE_RAMP = 0.02;
 
 export class AudioEngine {
   constructor() {
@@ -64,7 +67,8 @@ export class AudioEngine {
     else if (ctx.state !== 'running') ctx.resume().catch(() => {});
     this.ctx = ctx;
     this.master = ctx.createGain();
-    this.master.connect(ctx.destination);
+    this.out = ctx.createGain();   // (PAUSE-FADE: after the master volume; only a pause moves it)
+    this.master.connect(this.out).connect(ctx.destination);
     this.musicBus = ctx.createGain();
     this.sfxBus = ctx.createGain();
     this.ambBus = ctx.createGain();
@@ -121,6 +125,33 @@ export class AudioEngine {
       }
       this.playout.events = e; this.playout.ms = ms;
     }, 5000);
+  }
+  // PAUSE-FADE: suspend the context without cutting the output mid-wave. The output fades to silence over PAUSE_RAMP
+  // (20 ms) on the audio clock; the suspend follows once the fade has been rendered and has had time to reach the
+  // speakers (the output's latency, at most 0.1 s more), so what is still in the device's buffer when it stops is
+  // silence. Resuming fades back in from silence. A resume before the suspend has happened calls the suspend off.
+  // Returns true when a suspend is on its way.
+  suspendSoftly() {
+    const c = this.ctx;
+    if (!c || c.state !== 'running') return false;
+    const tok = (this._pauseTok = (this._pauseTok || 0) + 1);
+    this._ramp(0);
+    const wait = PAUSE_RAMP + Math.min(0.1, (c.outputLatency || 0) + (c.baseLatency || 0));
+    setTimeout(() => { if (this._pauseTok === tok && c.state === 'running') c.suspend(); }, Math.ceil(wait * 1000) + 5);
+    return true;
+  }
+  resumeSoftly() {
+    const c = this.ctx;
+    if (!c) return;
+    this._pauseTok = (this._pauseTok || 0) + 1;
+    const up = () => this._ramp(1);
+    if (c.state === 'running') up(); else c.resume().then(up, up);
+  }
+  _ramp(to) {
+    const g = this.out?.gain, t = this.ctx.currentTime;
+    if (!g) return;
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); }
+    g.linearRampToValueAtTime(to, t + PAUSE_RAMP);
   }
   stats() {
     const c = this.ctx;
