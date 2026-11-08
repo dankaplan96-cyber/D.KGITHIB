@@ -230,11 +230,17 @@ const village = (trip) => (f, S) => {
   if (i < p) return 'lhar';
   if (S.cur?.key === 'pass') return f[trip] ? 'mon' : 'lhar';
   if (S.cur?.key === 'home') return 'lhar';
+  if (MEND.has(S.cur?.key)) return 'mend';
   return 'mon';
 };
+// (HAMALAYI-LIFE: from chapter 8, the vent open and the ground still, the village still lives in the camp ('mend': the
+//  camp's rounds, its own lines) but some go down by day to mend Lhar: Bero, Sana and Lhamo are in their houses then, and
+//  Old Dorje in his once Lhar is home again (story/hamlife.js places them indoors); out here they are not there then)
+const MEND = new Set(['evacuation', 'council', 'network', 'shell', 'core']);
+const homeAt = (phase, inside) => (f, S) => { const k = phase(f, S); return k === inside ? null : k; };
 const HAMALAYI_PEOPLE = [
   // Bero: sacks out of house 3 to the hand cart, the sledge's load lashed; up there, logs split and carried to the fire
-  { id: 'lh_bero', char: 'lharMan', tint: '#f6eadc', speed: 0.9, color: '#d8a878', start: 0, area: 'hamalayi', phase: village('c6_trip1'), rounds: {
+  { id: 'lh_bero', char: 'lharMan', tint: '#f6eadc', speed: 0.9, color: '#d8a878', start: 0, area: 'hamalayi', phase: homeAt(village('c6_trip1'), 'mend'), rounds: {
     lhar: [
       DOOR('bero_home', H3, 0.5, 0.9, [6, 10], { carry: 'sack' }),
       L('bero_cart', -17.1, 3.9, -17.3, 2.4, 'put', [5, 7], { carry: null }),
@@ -246,7 +252,7 @@ const HAMALAYI_PEOPLE = [
       L('bero_view', 57.4, -30.2, 57.4, -20, 'stand', [5, 8], { gest: ['sigh'] }),
     ] } },
   // Sana: the washing off the rack and into house 4, the barrels; up there, mending at the rack, the pot, a look down
-  { id: 'lh_sana', char: 'lharWoman', tint: '#eaf6ff', speed: 0.95, color: '#a0d8c8', start: 1, area: 'hamalayi', phase: village('c6_trip1'), rounds: {
+  { id: 'lh_sana', char: 'lharWoman', tint: '#eaf6ff', speed: 0.95, color: '#a0d8c8', start: 1, area: 'hamalayi', phase: homeAt(village('c6_trip1'), 'mend'), rounds: {
     lhar: [
       L('sana_rack', -5.6, -5.0, -5.6, -6.2, 'draw', [6, 9], { carry: 'basket' }),
       DOOR('sana_home', H4, -0.6, 0.9, [8, 12], { carry: null }),
@@ -258,7 +264,7 @@ const HAMALAYI_PEOPLE = [
       L('sana_view', 54.4, -29.8, 54.4, -20, 'stand', [5, 8]),
     ] } },
   // Old Dorje: warm by the fire, watching the packing with a sigh; up there, the camp's fire and the washing
-  { id: 'lh_old', char: 'lharElder', tint: '#fff6ea', speed: 0.7, color: '#e0c8f0', start: 0, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_old', char: 'lharElder', tint: '#fff6ea', speed: 0.7, color: '#e0c8f0', start: 0, area: 'hamalayi', phase: (f, S) => (S.cur?.key === 'home' ? null : village('c6_trip2')(f, S)), rounds: {
     lhar: [
       L('old_fire', -4.8, 16.1, -4, 17.2, 'warm', [14, 20], { gest: ['sigh'] }),
       L('old_look', -11.0, 6.6, -16, 3, 'stand', [8, 12], { gest: ['sigh', 'shrug'] }),
@@ -300,7 +306,7 @@ const HAMALAYI_PEOPLE = [
       L('k2_view', 52.0, -29.6, 52.0, -20, 'stand', [4, 6]),
     ] } },
   // Mira: water from the trough to the pot on the fire, a word by the shrine; up there, the cooking
-  { id: 'lh_mira', char: 'farmerB', tint: '#fffae6', speed: 0.9, color: '#f0c8a0', start: 0, area: 'hamalayi', phase: village('c6_trip1'), rounds: {
+  { id: 'lh_mira', char: 'farmerB', tint: '#fffae6', speed: 0.9, color: '#f0c8a0', start: 0, area: 'hamalayi', phase: homeAt(village('c6_trip1'), 'mend'), rounds: {
     lhar: [
       L('mira_trough', -15.6, 12.0, -17, 12.3, 'draw', [5, 7], { carry: 'can' }),
       L('mira_pot', -3.0, 16.2, -4, 17.2, 'put', [5, 7], { carry: null }),
@@ -322,6 +328,7 @@ const HAMALAYI_PEOPLE = [
       L('grum_crates', MC.crates.x + 0.2, MC.crates.z + 1.2, MC.crates.x, MC.crates.z, 'put', [5, 7], { carry: null }),
     ] } },
 ];
+for (const p of HAMALAYI_PEOPLE) p.rounds.mend ||= p.rounds.mon;   // (HAMALAYI-LIFE: the camp's rounds while Lhar is mended)
 
 // ================================================================== Zeelich's council quarter (zeelich.js's frame: the island at x 2400)
 // the council house's door (−25.5, −7.65) (its cloud lift: the upper district's rooms); the fountain (−24, 0), 2.5 m

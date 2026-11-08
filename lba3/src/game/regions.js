@@ -44,6 +44,7 @@ import { buildNbrHouseRoom } from './nbrhouse.js';
 import { occAuto } from './roomocc.js';
 import { ZHOMES, ZHOME_AT, buildZHome } from './zhomes.js';
 import { IHOME_IDS, IHOME_AT, buildIHome } from './ihomes.js';
+import { HAM_ROOMS, HAM_AT, buildHamRoom } from './hamrooms.js';
 import { buildZTerminalRoom } from './zterminal.js';
 import { buildTerminalRoom } from './terminal.js';
 import { buildOtrBarRoom } from './otrbar.js';
@@ -69,6 +70,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
   arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])), ...Object.fromEntries(Object.entries(IHOME_AT).map(([k, v]) => [k, [v.x, v.z]])) };
+for (const [k, v] of Object.entries(HAM_AT)) AT[k] = [v.x, v.z];   // (HAMALAYI-LIFE)
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -128,6 +130,7 @@ function groupDefs() {
   add('terminal', ['terminal'], buildTerminalRoom);   // (SPACEPORT-1: the terminal at Citadel Spaceport, after LBA2's departure hall (scene 78))
   for (const id of ZHOMES) add(id, [id], buildZHome(id));   // (ZEELICH-DOORS: the street's houses inside, zhomes.js)
   for (const id of IHOME_IDS) add(id, [id], buildIHome(id));   // (ISLE-HOMES: the islands' and Kesh's houses inside, ihomes.js: a group each)
+  for (const id of HAM_ROOMS) add(id, [id], buildHamRoom(id));   // (HAMALAYI-LIFE: the monastery's hall inside, hamrooms.js)
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)

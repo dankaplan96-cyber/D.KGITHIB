@@ -30,17 +30,20 @@ import { ctex, cached, bbox, cyl, lathe, pm, tm, brassM, Batch } from './kit.js'
 import { t } from './i18n.js';
 import { playJourney, FILMS } from './travelfilm.js';
 import './text/islands.js';
+import { doorOf, regionOf as homeRegionOf } from './ihomes.js';
 
 export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)] };
 export const planetOf = (region) => (PLANETS.zeelich.includes(region) ? 'zeelich' : 'twinsun');
 // interiors and the regions they open from (the rest of the interiors are on Citadel)
 const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', zterminal: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', school: 'desert', obsv: 'hamalayi' };
+INSIDE.ham_hall = 'hamalayi';   // (HAMALAYI-LIFE: the monastery's hall, hamrooms.js)
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;
   if (!R) { lastOut = 'citadel'; lastPos = { x: game.hero.pos.x, z: game.hero.pos.z }; return 'citadel'; }
   if (R.outdoor) { lastOut = R.id; lastPos = { x: game.hero.pos.x, z: game.hero.pos.z }; return R.id; }
   if (R.id.startsWith('c3')) return lastOut;   // (under the shell: the map shows where he went down)
+  if (R.id.startsWith('ih_') && doorOf(R.id)) return homeRegionOf(doorOf(R.id));   // (ISLE-HOMES: a house's room is in its door's region, not on Citadel)
   return INSIDE[R.id] || (R.id in INSIDE ? lastOut : 'citadel');
 }
 export const lastOutdoorPos = () => lastPos;

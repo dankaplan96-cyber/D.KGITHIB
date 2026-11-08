@@ -72,17 +72,22 @@ export class Pass extends ChapterBase {
     if (!M) return undefined;
     const S = M.npcSpots, y = M.monastery.yard;
     const yard = (k) => ({ x: y.x - 3 + k * 1.5, z: y.z + (k % 2), a: Math.PI });
+    // (HAMALAYI-LIFE: past this chapter the village is up at the monastery, whatever the save holds: a save with only a
+    //  later chapter's key had Yorna, Pim and the three in Lhar's square while their neighbours camped by the monastery)
+    const past = this.story.index > this.pos, trip1 = f.c6_trip1 || past, trip2 = f.c6_trip2 || past;
     switch (id) {
       case 'hesk': return S.hesk;
-      case 'lhar1': return f.c6_trip1 ? yard(0) : S.v1;
-      case 'lhar2': return f.c6_trip1 ? yard(1) : S.v2;
-      case 'lhar3': return f.c6_trip2 ? yard(2) : S.v3;
+      case 'lhar1': return trip1 ? yard(0) : S.v1;
+      case 'lhar2': return trip1 ? yard(1) : S.v2;
+      case 'lhar3': return trip2 ? yard(2) : S.v3;
       case 'yorna':
-        if (f.c6_up) return yard(3);
+        // (chapters 8 and 9: down in Lhar, in her own house, where the village decides which roof is mended first: story/hamlife.js)
+        if (past && ['evacuation', 'council'].includes(this.story.cur?.key)) return this.story.hlife.home('yorna');
+        if (f.c6_up || past) return yard(3);
         if (f.c6_trip2) { const c = M.lift.crank; return { x: c.x, z: c.z, a: Math.PI }; }
         if (f.c6_thawed) { const w = M.lift.winch; return { x: w.x - 2.4, z: w.z + 1.4, a: Math.PI }; }
         return S.yorna;
-      case 'pim': return f.c6_trip2 ? yard(4) : S.pim;
+      case 'pim': return trip2 ? yard(4) : S.pim;
     }
     return undefined;
   }

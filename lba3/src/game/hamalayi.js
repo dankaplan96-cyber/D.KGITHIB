@@ -296,7 +296,8 @@ export function* buildHamalayiSteps(scene, physics) {
     const fp = put(area, 'house', x, z, ry, (k) => mountainHouse(k, { w, d, h, ...o }), { y: gy, nocheck: true, col: false });
     col({ type: 'box', x, z, hw: fp.hw, hd: fp.hd, rot: ry, top: gy + fp.top });
     if (fp.lean) { const [lx, lz] = loc(x, z, ry, fp.lean.lx, fp.lean.lz); col({ type: 'box', x: lx, z: lz, hw: fp.lean.hw, hd: fp.lean.hd, rot: ry, top: gy + fp.lean.top }); }
-    if (fp.smoke) { const [sx, sz] = loc(x, z, ry, fp.smoke[0], fp.smoke[2]); smokes.push({ x: sx, y: gy + fp.smoke[1], z: sz }); }
+    let smoke = null;
+    if (fp.smoke) { const [sx, sz] = loc(x, z, ry, fp.smoke[0], fp.smoke[2]); smokes.push((smoke = { x: sx, y: gy + fp.smoke[1], z: sz })); }
     const ridge = (s) => { const [px, pz] = loc(x, z, ry, s * (fp.ridge.hx - 0.1), 0); return [px, gy + fp.ridge.y + 0.05, pz]; };
     const cs = Math.cos(ry), sn = Math.sin(ry), dx = w * (o.door ?? 0.4) - w / 2 + 0.5;
     const hs = { x, z, ry, w, d, hw: fp.hw ?? w / 2, hd: fp.hd ?? d / 2, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
@@ -305,6 +306,8 @@ export function* buildHamalayiSteps(scene, physics) {
     //  they were drawn doors that did and said nothing. id 'ham-<area><n>', the sill on the front's face)
     const n = houses.filter((q) => q.area === area).length; hs.area = area;
     (R.shutDoors ||= []).push({ id: `ham-${area}${n}`, x: hs.door.x, y: gy, z: hs.door.z, ry, sill: { x: ox + x + cs * dx + sn * (d / 2), z: oz + z - sn * dx + cs * (d / 2) } });
+    // (HAMALAYI-LIFE: a house's chimney smokes while somebody is home: story/hamlife.js R.chimney(id, on))
+    if (smoke) (R.chimneys ||= {})[`ham-${area}${n}`] = smoke;
     return hs;
   };
   R.hut = stoneHouse('landing', HUT.x, HUT.z, 0.4, 4.4, 3.6, 2.4, { lean: -1, seed: 5, trim: TRIM.green, doorC: TRIM.ochre, pots: true }).door;
@@ -633,6 +636,8 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const [x, z, l, h, d, ry, sd] of [[mx - 8.0, mz - 0.4, 2.2, 0.55, 1.4, 0, 1], [mx + 8.0, mz - 0.3, 2.0, 0.5, 1.3, 0, 2], [mx + 8.2, mz + 9.2, 2.0, 0.5, 1.2, 0.7, 3], [mx - 10.1, mz + 4, 4.0, 0.7, 1.4, Math.PI / 2, 0], [mx + 10.1, mz + 2, 4.5, 0.75, 1.5, Math.PI / 2, 1], [mx + 6.5, mz + 10.9, 3.2, 0.5, 1.2, 0, 3]]) put('monastery', 'drift', x, z, ry, (k) => { drift(k, 0, -0.08, 0, l, h, d, 0, sd); }, { col: false, nocheck: true });
   }
   R.monastery = { gate: W(MONAST.x, MONAST.z + 11), yard: W(MONAST.x, MONAST.z + 4) };
+  // (HAMALAYI-LIFE: the hall's red double door, on the porch's deck 0.4 m up, its front to the yard: hamrooms.js ham_hall)
+  { const gy = H(MONAST.x, MONAST.z), fz = MONAST.z - 6 + 4.5; R.monastery.hall = { id: 'ham-hall', ...W(MONAST.x, fz + 0.55), y: gy + 0.4, ry: 0, sill: W(MONAST.x, fz) }; }
 
   // ---- the observatory on the peak: a stone drum with buttresses and windows on a plinth, a balcony round the
   // ribbed verdigris dome, the open slit with the telescope's barrel in it, a framed door under a canopy,
@@ -784,7 +789,7 @@ export function* buildHamalayiSteps(scene, physics) {
     let snowLevel = 0.5;
     R.snow = { setLevel(k) { snowLevel = k; }, focus: null };
     updaters.push((dt, t) => {
-      for (const p of puffs) { const k = (t * 0.25 + p.ph) % 1; p.sp.position.set(p.s.x + k * 1.5, p.s.y + k * 3, p.s.z); p.sp.scale.setScalar(0.6 + k * 1.8); p.sp.material.opacity = (1 - k) * 0.7; }
+      for (const p of puffs) { p.sp.visible = !p.s.off; if (p.s.off) continue; const k = (t * 0.25 + p.ph) % 1; p.sp.position.set(p.s.x + k * 1.5, p.s.y + k * 3, p.s.z); p.sp.scale.setScalar(0.6 + k * 1.8); p.sp.material.opacity = (1 - k) * 0.7; }
       flakes.visible = snowLevel > 0.02; flakes.material.opacity = snowLevel * 0.9;
       const f = R.snow.focus; if (!f) return;
       for (let i = 0; i < N; i++) {
@@ -809,6 +814,7 @@ export function* buildHamalayiSteps(scene, physics) {
     yorna: at(-6, 6, Math.PI * 0.8), pim: at(-3, 7.5, Math.PI * 0.9), v1: at(-18, 8, 0.6), v2: at(-14, 1, 0.2), v3: at(0, 2, -0.4),
     hesk: at(LANDING.x + 1.5, LANDING.z - 4, 0.4), keeper: at(OBS.x + 2, OBS.z + 7.5, Math.PI),
   };
+  R.chimney = (id, on) => { const s = R.chimneys?.[id]; if (s) s.off = !on; };
   R.lhar = W(LHAR.x, LHAR.z);
   R.spawn = { ...R.landing };
   R.levels = { L0, L1, L3, L4, LB };

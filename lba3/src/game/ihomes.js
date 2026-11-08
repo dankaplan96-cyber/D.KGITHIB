@@ -99,11 +99,13 @@ export const IHOMES = {
   // the Hamalayi (DOOR-SWEEP, original-mechanics wave 3: their doors were drawn and did nothing): the landing's hut,
   // Lhar's five stone houses, the observatory keeper's house (hamalayi.js R.shutDoors)
   'ham-landing0': { k: 'lodging' },            // the landing's hut: glider harnesses, the keeper's bunk
-  'ham-lhar0': { k: 'home' },                  // Bero's family (his grandfather built it)
+  // (HAMALAYI-LIFE: the owners as the village's residents use them, storylife.js: Bero carries his sacks out of house 3,
+  //  Sana her washing into house 4; their people come home at some phases: story/hamlife.js)
+  'ham-lhar0': { k: 'canteen' },               // Lhamo's kitchen, soup for the street
   'ham-lhar1': { k: 'hall' },                  // Yorna's house, where the village meets
   'ham-lhar2': { k: 'home' },                  // Old Dorje's
-  'ham-lhar3': { k: 'weaver' },                // Sana weaves the prayer flags
-  'ham-lhar4': { k: 'canteen' },               // Lhamo's kitchen, soup for the street
+  'ham-lhar3': { k: 'home' },                  // Bero's family (his grandfather built it)
+  'ham-lhar4': { k: 'weaver' },                // Sana weaves the prayer flags
   'ham-obs0': { k: 'library' },                // the observatory keeper's house: charts and logbooks
 };
 export const EXCEPT = new Set(Object.keys(IHOMES).filter((d) => IHOMES[d].ex));
@@ -286,6 +288,8 @@ function build(rid, scene, physics) {
     }
   }
   IH[rid].pieces = placed.map((q) => q.name);
+  IH[rid].placed = placed.map((q) => ({ name: q.name, x: o.X(q.x), z: o.Z(q.z), ry: q.ry, hx: q.hx, hz: q.hz, fd: q.p.fd }));   // (HAMALAYI-LIFE: where each piece stands)
+  IH[rid].frame = { LX, BZ, RX, FZ, doorZ, cx: o.X(0), cz: o.Z(0) };
   // the two looks: the room's own at its first piece, its kind's at the second (from where he stands before them)
   // (the prompt is in reach of the piece itself; the place to stand before it keeps out of the door's way)
   const lookAt = (pc, key) => {
