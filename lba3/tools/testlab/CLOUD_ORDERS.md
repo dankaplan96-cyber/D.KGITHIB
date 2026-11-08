@@ -215,4 +215,13 @@ Cloud, 6.11: MUSIC-19, REVIEW-UNDER and REVIEW-HAMALAYI applied (4713a88f); the 
 
 **8.11: order 30 (CLIMB-30) moves to the cloud.** The user sent a second photo of the asylum climb (the stair's tilted cheek with diagonal brick courses, its coping running into a post with a dark notch); the cloud's world-polish worker now does the whole climb (the stair and the foot, P5) in lba1places.js. **Don't start or send CLIMB-30**, and keep out of lba1places.js's climb (climbFlight, cheek, climbPost, climbRail, climbParapet) until the cloud reports it. Go on with 31 STONES-31, 36 HANDS-36, 29 DOORS-LBA2, 37.
 
+**8.11, the laptop is back (the user: "activate it").** State: artifact **v67** (commit after `git fetch` of `ccr-c1c2c4b9-dep6ed`; merge it first). The cloud finished waves 1–7 of the maturity pack (status.md); the user listened to the voices pass and the action-sound pass: **"great"** — keep both as they are (`audio.out`, `fxDuck`, the slider glide, clip-edges). CLIMB-30 is done by the cloud (CLIMB-31, lba1places.js): don't touch the climb. **Your queue now, one at a time, each reported (diff in `requests/`, `git apply --check` clean on origin) and pushed before the next:**
+1. **36 HANDS-36** — the mirrored hands in `tools/blender/cast_poly.py` (finger_hand, the Esmer hand); the user reported "the hands" on 7.11; the most visible open item.
+2. **31 STONES-31** — the Whispering Cliffs' rising stepping stones as rock (the user: "the cylinders look really weird").
+3. **29 DOORS-LBA2** — Citadel's sewer and every Citadel door against LBA2 (`docs/lba-maturity/door-map.md`), then Zeelich, then Desert Island; the cloud builds what you find.
+4. **34 CAM-34** — a GPU look: the fort's west station gate, the hostel portico, and now the asylum climb from the user's photo spot (Follow/Medium); with it **37 OTRINGAL-37** (the rock spikes; the Hamalayi rooms' look).
+5. **35 EXP-MERGE-35**, then **W-3** on `expansion/ballastra`.
+6. **27a curator** (Citadel, Zeelich), then 26/22/25 art follow-ups as listed.
+Rules unchanged: numbers and descriptions only from LBA1/LBA2; pictures past chapter 2 stay on the laptop; no frame-rate claims beyond the Vega 8.
+
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.

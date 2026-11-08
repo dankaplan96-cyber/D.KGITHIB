@@ -50,6 +50,8 @@ world-polish pass after it:
 - 8.11: long chapters are not shortened (chapters 2 and 10 stay as they are).
 - 8.11: Retry after Game Over → the last autosave with full health (main.js RETRY_KEY).
 
+- 8.11: the user listened to the voices and action-sound passes: "great" (kept as they are).
+
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 
 | # | Date | Where | Report | Owner | Status |
