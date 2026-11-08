@@ -181,6 +181,12 @@ export const LOOKS = {
     // one of Zeelich's moles: a dark grey-violet robe, the long pale snout, pale arms and big feet
     race: 'mole', outfit: 'robe', tunic: '#5a5068', skin: '#e8e0d8', lip: '#f0c060', eyes: '#2a1a1a', height: 0.95,
   },
+  zmole1_b: {
+    // CAST-POLISH-ISLES (order 24, zmole1's shape variant): a Wannie at work, the miners' and fitters' dress: a miner's cap
+    // with a lamp and a peak, a leather apron with a bib over the robe (cast_poly.py CAST zmole1_b). Taken by Burr and Delve
+    // (pf_miner1, pf_miner2) and Dunt (ug_fitter); Old Grumm, the foremen, the chaplain and the hostel's third worker keep zmole1
+    race: 'mole', outfit: 'robe', tunic: '#5a5068', apron: '#7a5a3a', hat: '#d8a838', skin: '#e8e0d8', lip: '#f0c060', eyes: '#2a1a1a', height: 0.95,
+  },
   zmole2: {
     // a smaller mole in a white smock with a red apron (the original's homemaker)
     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
@@ -275,6 +281,13 @@ export const LOOKS = {
     race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.12, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', hat: '#6a5a3a', height: 1.04,
   },
+  farmerC_b: {
+    // CAST-POLISH-DESERT (order 24, farmerC's shape variant): a working Grobo, bare-headed (no hat: the ears and the crown
+    // show), a lighter build (cast_poly.py CAST farmerC_b). Taken by Gorrum (dg_haul, the dig) and Bodo (lh_grum, the
+    // Hamalayi); Fosse, Grull (farmer3) and Tobb keep farmerC
+    race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.05, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', height: 1.04,
+  },
   // ---- the Hamalayi (chapters 6–7)
   yorna: {
     // Yorna: an old Grobo mountain guide; a thick felt coat in red and ochre, a fur hat
@@ -333,6 +346,13 @@ export const LOOKS = {
   desertkid: {
     race: 'quetch', kid: true, outfit: 'tunic', hem: 0.62, tunic: '#e8d8b0', tunicTrim: '#c86a3a', belt: '#c86a3a', pants: '#8a6a4a', shoes: '#6a4a2a',
     hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tuft', nose: 'button', eyes: '#2a1a10', height: 0.62, neck: 0.08,
+  },
+  desertkid_b: {
+    // CAST-POLISH-DESERT (order 24, desertkid's shape variant): a child in a wide straw sun hat, the hair in a short tail
+    // (cast_poly.py CAST desertkid_b). Taken by Pico (Citadel's walker) and Rafi (sc_pupc, the School's plaza); Sani (dkid),
+    // Oni, Oona (sc_in3) and Little Kel (lh_kid1) keep desertkid
+    race: 'quetch', kid: true, outfit: 'tunic', hem: 0.62, tunic: '#e8d8b0', tunicTrim: '#c86a3a', belt: '#c86a3a', pants: '#8a6a4a', shoes: '#6a4a2a',
+    hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tail', nose: 'button', eyes: '#2a1a10', hat: '#d8b860', height: 0.62, neck: 0.08,
   },
   desertTrader: {
     race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',

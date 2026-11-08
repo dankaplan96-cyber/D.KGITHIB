@@ -109,7 +109,7 @@ const DESERT_PEOPLE = [
       L('cook_stow', PA.x + 0.4, PA.z - 1.2, PA.x + 0.4, PA.z, 'put', [5, 7], { carry: null }),
     ] } },
   // the porters: a crate off the yard's pile to the pile by the dig (chapter 5: back again), a breather at the kitchen
-  { id: 'dg_haul', char: 'farmerC', tint: '#ffffff', speed: 0.95, color: '#e8a860', start: 0, area: 'desert', phase: crew(true), rounds: {
+  { id: 'dg_haul', char: 'farmerC_b', tint: '#ffffff', speed: 0.95, color: '#e8a860', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('haul_a', PA.x, PA.z + 1.2, PA.x, PA.z, 'put', [4, 6], { carry: 'crate' }),
       L('haul_b', PB.x, PB.z - 1.2, PB.x, PB.z, 'put', [5, 7], { carry: null }),
@@ -186,7 +186,7 @@ const DESERT_PEOPLE = [
       L('b_tend', -57.5, -76.1, -56.9, -75.2, 'tend', [9, 13]),
       L('b_look', -57.6, -72.4, -66, -72.7, 'stand', [5, 8], { gest: ['shrug'] }),
     ] } },
-  { id: 'sc_pupc', char: 'desertkid', tint: '#fff2ec', speed: 1.4, color: '#ffc0a0', start: 1, area: 'desert', phase: school, rounds: {
+  { id: 'sc_pupc', char: 'desertkid_b', tint: '#fff2ec', speed: 1.4, color: '#ffc0a0', start: 1, area: 'desert', phase: school, rounds: {
     school: [
       L('c_dip', -61.85, -79.6, -63.7, -79.6, 'dip', [4, 6]),
       L('c_pillar', -59.3, -76.0, -60.2, -75.1, 'stand', [5, 8], { gest: ['shrug'] }),
@@ -312,7 +312,7 @@ const HAMALAYI_PEOPLE = [
       L('mira_back', MC.fire.x - 0.9, MC.fire.z - 0.9, MC.fire.x, MC.fire.z, 'put', [4, 6], { carry: null }),
     ] } },
   // Grum: crates to the hand cart; up there, the sledge's load into the camp
-  { id: 'lh_grum', char: 'farmerC', tint: '#eef0ff', speed: 0.85, color: '#c0c8e8', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_grum', char: 'farmerC_b', tint: '#eef0ff', speed: 0.85, color: '#c0c8e8', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
     lhar: [
       L('grum_crates', -26.0, 1.6, -26.3, 0.3, 'put', [4, 6], { carry: 'crate' }),
       L('grum_cart', -15.9, 2.8, -17.3, 2.4, 'put', [5, 7], { carry: null }),

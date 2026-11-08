@@ -142,7 +142,7 @@ export function citadelRoster(game) {
     ]) },
     // the children: Pico up and down the lane, Dot round the square; TOWN-LIFE-3: tag together on the lawn west of the square,
     // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on the bench by the spaceport bridge
-    { id: 'pico', char: 'desertkid', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
+    { id: 'pico', char: 'desertkid_b', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
       D('pico_a', -38.8, -9.4, { a: 0, dur: [2, 4] }),
       D('pico_b', -44.0, 12.8, { a: 3, dur: [2, 4] }),
       D('pico_c', -42.4, 30.6, { a: 1.5, dur: [3, 5] }),
