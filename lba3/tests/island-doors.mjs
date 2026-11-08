@@ -133,13 +133,18 @@ for (const r of all) check(`${r.room}: leads in (on its floor, furnished, lit), 
 const walkedTo = all.filter((r) => WALK.includes(r.reg));
 check('Knartas: every door, the harbour\'s and the diggers\' village\'s, reached on foot from the shuttle pad (one walk door to door, by the planner)', walkedTo.length > 0 && walkedTo.every((r) => r.walked && !r.walked.failed), { n: walkedTo.length, failed: walkedTo.filter((r) => !r.walked || r.walked.failed).map((r) => ({ room: r.room, ...r.walked })) });
 for (const r of walkedTo) console.log('WALK ' + r.room + ' ' + JSON.stringify(r.walked));
-if (!ONLY) check('every room of ISLE-HOMES was entered (70: 55 on the islands, 5 Kesh houses, 3 post cabins, 7 in the Hamalayi)', all.length === 70 && all.every((r) => r.inRoom), all.length);
+// (DESERT-BAR: + the dig crew's bunkhouse in S28 on Desert Island; the School's dormitory opens only once its crystal is
+//  awake: its door is a knock in this state, purposes.js)
+if (!ONLY) check('every room of ISLE-HOMES open in this state was entered (71: 55 on the islands, 5 Kesh houses, 3 post cabins, the crew\'s bunkhouse, 7 in the Hamalayi)', all.length === 71 && all.every((r) => r.inRoom), all.length);
 
 // the keepers behind their counters, talking
 const keep = await ev(async () => {
   const { KEEPERS } = await import(location.origin + '/src/game/ihomes.js');
   const G = game, out = [];
   for (const [id, K] of Object.entries(KEEPERS)) {
+    // (DESERT-BAR: a keeper behind a door that is shut in this state (the dormitory before its crystal wakes) is not asked)
+    const door = (await import(location.origin + '/src/game/ihomes.js')).doorOf(K.room);
+    if (G.story.ihomes.shutNow(door) != null) { out.push({ id, skipped: 'door shut now' }); continue; }
     if (!G.regions.built(K.room)) { out.push({ id, r: 'room not built' }); continue; }
     const reg = (await import(location.origin + '/src/game/ihomes.js')).regionOf((await import(location.origin + '/src/game/ihomes.js')).doorOf(K.room));
     if (G.room?.id !== K.room) { if (G.room?.id !== reg) { G.enterRoom(reg, G.rooms[reg].spawn, true); P.settle(); } const d = G.story.doors().find((x) => x.room === K.room); const sd = G.room.shutDoors.find((e) => e.id === d.house), a = sd.ry ?? 0; G.hero.pos.set(sd.sill.x + Math.sin(a) * 2.4, G.physics.groundAt(sd.sill.x + Math.sin(a) * 2.4, sd.sill.z + Math.cos(a) * 2.4, sd.y + 2), sd.sill.z + Math.cos(a) * 2.4); P.settle(); P.through(d.x, d.z); }
@@ -149,7 +154,8 @@ const keep = await ev(async () => {
   return out;
 });
 const kl = await said();
-check('the keepers stand in their rooms and talk (their own lines)', keep.every((k) => k.present && k.inRoom && k.talk === 'talked') && kl.length >= keep.length, { keep, kl: kl.slice(0, 8) });
+const asked = keep.filter((k) => !k.skipped);
+check('the keepers stand in their rooms and talk (their own lines)', asked.every((k) => k.present && k.inRoom && k.talk === 'talked') && kl.length >= asked.length, { keep, kl: kl.slice(0, 8) });
 
 // a save inside a house comes back there, and its door still leads out
 const rid = 'ih_otringal_6_m24';

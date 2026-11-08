@@ -348,6 +348,7 @@ export class Steam extends ChapterBase {
       if (f.c5_routed) { A.hangarDoor.open(); for (const c of this.Bh.condensers) c.setSteam(0.4); }
       if (f.c5_hatch) this.openHatch(true);
       if (f.c5_vent) for (const c of this.Bh?.condensers || []) c.setSteam(1);
+      if (!this.isCur() && this.Bh) { this.Bh.glider.uncover(); this.Bh.glider.gone?.(); }   // (DESERT-BAR: flown north at the chapter's end; the hall stays open: desertlife.js)
     });
   }
 

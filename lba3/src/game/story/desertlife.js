@@ -8,6 +8,10 @@
 //     has it, the glider later);
 //   - the oasis: dry mud before the pump runs; a drink once it does gives back a little life (once in a while), warm and
 //     sour while the steam threatens it (chapter 5 before the vent).
+//   - the places the story opened stay open after their chapter: the Temple of Bù at the bottom of the dig (from chapter
+//     5; its door was only the chapter's own, so from then on its open gate led nowhere and said nothing) and FunFrock's
+//     condenser hall under the dunes, dug out (from chapter 6). Inside, the great carving and the hall's wall diagram are
+//     read again, with what has changed since (Ilka's chalk on them).
 // The words are text/desertlife.js's; so are the story's people's lines between their chapters (idle_<id>_<chapter>:
 // prologue.js baseTalk), Kesh's three walkers' (story/citizens.js) and the keepers' in Kesh's homes (story/ihomes.js).
 import { t } from '../i18n.js';
@@ -19,7 +23,17 @@ const DRINK_EVERY = 20;   // s between two drinks that give life back
 // from Safi's dipping place, clear of the pump's joint and of the listening spot by the tower)
 const OASIS_DRINK = { x: -45.8, z: -9.2, r: 1.8 };
 
+const idx = (S, key) => S.chapters.findIndex((c) => c.key === key);
 export class DesertLife extends ChapterBase {
+  // the temple's and the hall's doors after their chapters (their exits are the chapters' own: dig.js bu-out, steam.js
+  // cond-out, which answer in every later chapter)
+  doors() {
+    const S = this.story, f = this.f, RG = this.game.regions, D = RG?.built('desert'), out = [];
+    if (!D) return out;
+    if (S.index > idx(S, 'dig') && f.c4_seals3 && D.dig?.door && RG.has('butemple')) out.push({ region: 'desert', x: D.dig.door.x, z: D.dig.door.z, r: 1.3, room: 'butemple' });
+    if (S.index > idx(S, 'steam') && f.c5_dug && D.ruins?.door && RG.has('condA')) out.push({ region: 'desert', x: D.ruins.door.x, z: D.ruins.door.z, r: 1.0, room: 'condA' });
+    return out;
+  }
   get D() { return this.game.regions?.built('desert'); }
   get K() { return this.story.kesh; }
   phase() { return this.K?.open ? this.K.lifePhase() : null; }
@@ -36,8 +50,11 @@ export class DesertLife extends ChapterBase {
     return out;
   }
   interactables(consider, dist) {
-    const g = this.game;
-    if (g.room?.id !== 'desert' || !this.K?.open) return;
+    const g = this.game, S = this.story, rid = g.room?.id;
+    // inside the temple and the hall after their chapters: the carving, the wall diagram
+    if (rid === 'butemple' && S.index > idx(S, 'dig') && g.room.carving) { consider(dist(g.room.carving.x, g.room.carving.z), 2.2, { kind: 'dl_read', id: 'carving', label: 'p_carving' }); return; }
+    if (rid === 'condA' && S.index > idx(S, 'steam') && g.room.diagram) { consider(dist(g.room.diagram.x, g.room.diagram.z), 1.8, { kind: 'dl_read', id: 'diagram', label: 'p_read' }); return; }
+    if (rid !== 'desert' || !this.K?.open) return;
     const b = g.hero.body; if (b === 'zoe' || b === 'worker') return;
     for (const it of this.things()) {
       const label = it.kind === 'dl_oasis' ? (this.wet() ? 'p_drink' : 'p_look') : 'p_read';
