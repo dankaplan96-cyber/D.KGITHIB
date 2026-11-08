@@ -2,36 +2,39 @@
 // the director (index.js) asks it after the chapter in progress, like the town's side stories (life.js). Its state is
 // flags prefixed sw_ (saved with the game; a save from before has none of them and simply finds the grate shut).
 //
-//   1. The grate in the lane north of the house, by the pump: something knocks down there, and there's chalk on the
-//      rim, an arrow and "A + L" (Arthur's hand). Twinsen lifts the grate (sw_hatch). Under it, the old lift
-//      (SEWER-LIFT, as LBA2's Citadel: a platform that goes down): on its deck, "Go down" pulls the lever and the deck
-//      takes him down the shaft (~1.5 s, a clanking winch), then the scene changes to the hall. Back up the well-house,
-//      he arrives on the deck as it rises the last stretch, the grate still lifted. A loaded game finds it shut (and
-//      no ride half done); he lifts it again without a word.
+//   1. The hatch in the lower town's street (DOORS-LBA2: LBA2's railed lift hatch at (−28.5, 27.6); WA-14 had it in
+//      Bug Street by the pump): something knocks down there, and there's chalk on the rim, an arrow and "A + L"
+//      (Arthur's hand). Twinsen lifts the lid (sw_hatch). Under it, the old lift (SEWER-LIFT, as LBA2's Citadel: a
+//      platform that goes down): on its deck, "Go down" pulls the lever and the deck takes him down the shaft (~1.5 s,
+//      a clanking winch), then the scene changes to the hall, by the lift's foot in the north-east corner. Back up it,
+//      he arrives on the deck as it rises the last stretch, the lid still lifted. A loaded game finds it shut (and no
+//      ride half done); he lifts it again without a word.
 //   2. The flooded hall. The project's new heat pipe comes down the well-house shaft into a blue valve box bolted onto
 //      the old gate winch: its brace jams the winch, and the valve knocks every few seconds. Eased shut, the knocking
-//      stops and the winch turns: the gate at the back rises (sw_valve).
+//      stops and the winch turns: the gate in the west wall rises (sw_valve).
 //   3. The treasure room behind it: the star chest holds Arthur's map, a stub of chalk and someone's old coins
 //      (sw_chest: the map, found; a clover, owed until picked up). The barrels in both rooms give, as containers do.
 //   4. Back home, Arthur is asked about it (sw_arthur): he and Lulu found the room before the pipe went in.
 //   SEWERS-1 (CONNECTIONS_AUDIT.md S-1…S-5, C-2; the user 2.11: "the descent to the sewer should lead where it led in
-//   the second game, more places to reach the sewer, e.g. from the wizard, and the secret place should mean something"):
-//   LBA2's four ways into the hall, beside ours (the grate's lift stays the fifth):
-//   5. Luc's cellar: a broken stretch of the walkway's railing over the dark drop. He falls through and comes up in the
-//      hall's water by the east pier (one way). Old Fenn in the tavern warns about the hole (sw_fell: the first time).
-//   6. The terrace porch above the stone house (stoneup): bolted from below. The bolt is on the hall's raised north
-//      walkway; drawn, the door works both ways (sw_bolt).
-//   7. Bersimon's tent: a trapdoor under his rug, a stair down to the hall's west end. Told about the warm air rising
+//   the second game, more places to reach the sewer, e.g. from the wizard, and the secret place should mean something")
+//   and DOORS-LBA2 (8.11: every way in where LBA2 has it):
+//   5. Luc's cellar: a broken stretch of the walkway's railing over the dark drop. He falls through the hall's ceiling
+//      onto the island's platform (one way). Old Fenn in the tavern warns about the hole (sw_fell: the first time).
+//   6. The terrace hatch behind the school: the same lid and lift, held from below by a catch on the lift's foot at
+//      the raised walkway's west end; drawn, the lift works both ways (sw_bolt).
+//   7. Bersimon's tent: a trapdoor under his rug, a stair down to the hall's south-west. Told about the warm air rising
 //      under the town, he rolls the rug back and gives Twinsen the key of the little room he keeps down there (sw_ber,
 //      the key sw_key until used). Coming up the stair from below opens it too (sw_trap). Both ways, every chapter.
-//   8. The lower town's street door (pink): straight into the hall at the Works door by the east pier's head. Fosse,
-//      the sewer man (LBA2's grumbler, twelve years on), wants the project's knocking stopped (sw_fosse); once the valve
-//      is eased he puts the Works door on the latch, the way back out to the street (sw_works).
-//   9. The globe's room behind the little blue door (Bersimon's key: sw_gdoor): the project's heat pipe has clouded his
-//      weather globe. The bleed cock shut, it clears and shows the sky over Citadel as the weather is (sw_globe); Bersimon
-//      explains that's where his magic for Twinsen comes from (sw_berGlobe). Looked at again, it shows the weather then.
+//   8. Fosse, the sewer man (LBA2's grumbler, twelve years on), by the street lift's foot: his padlock is on its lever,
+//      so the street's lift only goes down. He wants the project's knocking stopped (sw_fosse); once the valve is eased
+//      he takes the padlock off (sw_works): the way back up to the lower town. His office up there (the pink house) is
+//      shut while he is below.
+//   9. The globe's room behind the well-house's little blue door (Bersimon's key: sw_gdoor): the project's heat pipe
+//      has clouded his weather globe. The bleed cock shut, it clears and shows the sky over Citadel as the weather is
+//      (sw_globe); Bersimon explains that's where his magic for Twinsen comes from (sw_berGlobe).
 //  10. Tralu's cave (C-2): Raph's guitar case, and a cache under the lantern (a clover, once: sw_cache). Luc mentions it.
-//   Old saves have none of these flags: every door they name is shut and nothing is owed.
+//   Old saves have none of these flags: every door they name is shut and nothing is owed. The flags kept their
+//   meaning through DOORS-LBA2 (sw_bolt: the terrace way open; sw_works: the street way out open).
 // Nothing on the main path needs any of it.
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
@@ -43,13 +46,16 @@ import '../text/sewers.js';
 const DOWN_T = 1.5, V_DOWN = 1.6, TAKE_UP = 0.15, RISE = 1.5, RISE_T = 1.0;
 
 export class SewerLife extends ChapterBase {
-  get H() { return SEWER.hatch; }
+  // the hatch in use (DOORS-LBA2: the lower town's or the terrace's; the street's when none is)
+  get H() { return this.hat || SEWER.hatch; }
+  get hatches() { return Object.values(SEWER.hatches || {}); }
   // ---------------------------------------------------------------- state
   applyFlags() {
     const f = this.f;
     this.endRide();   // (a game loaded mid-ride: none of it stays)
     this.falling = false;
-    this.H?.setOpen(false);   // (shut whenever a game is loaded: lifted again, without a word, once he knows it)
+    for (const H of this.hatches) H.setOpen(false);   // (shut whenever a game is loaded: lifted again, without a word, once he knows it)
+    this.hat = null;
     this.applyRooms();
     this.settleOwed('sw_oweClover', 'clover', 1, 'sw_toast_owed');
     this.settleOwed('sw_oweClover2', 'clover', 1, 'sw_toast_owed2');
@@ -105,14 +111,18 @@ export class SewerLife extends ChapterBase {
     const g = this.game, f = this.f, R = g.room;
     if (g.hero.body === 'zoe' || g.hero.body === 'worker') return;
     if (!R) {
-      const H = this.H, hp = g.hero.pos;
-      if (!H || this.ride) return;
-      if (!H.open) { consider(dist(H.x, H.z), 1.5, { kind: 'swhatch', label: 'p_sw_lift' }); return; }
-      // the lift: on its deck (whichever way he faces), or at its rim facing it
-      const d = Math.hypot(hp.x - H.x, hp.z - H.z);
-      if (!g.hero.onGround || Math.abs(hp.y - H.deckTop()) > 0.5) return;
-      if (d < LIFT.S + 0.15) consider(0.05 + d * 0.3, 1, { kind: 'swdown', label: 'p_sw_down' });
-      else consider(dist(H.x, H.z), 1.2, { kind: 'swdown', label: 'p_sw_down' });
+      const hp = g.hero.pos;
+      if (this.ride) return;
+      for (const H of this.hatches) {
+        if (Math.hypot(hp.x - H.x, hp.z - H.z) > 3 || Math.abs(hp.y - H.y) > 1.2) continue;
+        // (DOORS-LBA2 #3: the terrace's lid is held from below until its lift's catch is drawn)
+        if (!H.open) { consider(dist(H.x, H.z), H.S + 1.05, { kind: H.id === 'terrace' && !f.sw_bolt ? 'swlid' : 'swhatch', hatch: H.id, label: 'p_sw_lift' }); continue; }
+        // the lift: on its deck (whichever way he faces), or at its rim facing it
+        const d = Math.hypot(hp.x - H.x, hp.z - H.z);
+        if (!g.hero.onGround || Math.abs(hp.y - H.deckTop()) > 0.5) continue;
+        if (d < H.S + 0.15) consider(0.05 + d * 0.3, 1, { kind: 'swdown', hatch: H.id, label: 'p_sw_down' });
+        else consider(dist(H.x, H.z), H.S + 0.75, { kind: 'swdown', hatch: H.id, label: 'p_sw_down' });
+      }
       return;
     }
     const y = g.hero.pos.y;
@@ -120,7 +130,7 @@ export class SewerLife extends ChapterBase {
       const H = SEWER.hall, v = H.valve;
       consider(dist(v.x, v.z), 1.3, { kind: 'swvalve', label: f.sw_valve ? 'p_look' : 'p_sw_ease' });
       if (!f.sw_bolt && Math.abs(y - H.bolt.y) < 0.5) consider(dist(H.bolt.x, H.bolt.z), 1.2, { kind: 'swbolt', label: 'p_sw_bolt' });
-      if (!f.sw_works && y < 0.6) consider(dist(H.works.x, H.works.z), 1.2, { kind: 'swworks', label: 'p_door' });
+      if (!f.sw_works && y < 0.6) consider(dist(H.works.x, H.works.z), 1.3, { kind: 'swworks', label: 'p_sw_up' });
       if (!f.sw_gdoor && y < 0.6) consider(dist(H.gdoor.x, H.gdoor.z), 1.2, { kind: 'swgdoor', label: f.sw_ber ? 'p_sw_unlock' : 'p_door' });
     }
     if (R.id === 'sewervault' && SEWER.vault) { const c = SEWER.vault.chest; consider(dist(c.x, c.z), 1.3, { kind: 'swchest', label: f.sw_chest ? 'p_look' : 'p_open' }); }
@@ -138,15 +148,19 @@ export class SewerLife extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     const say = (keys, done) => { this.chain(keys.map((k) => ['hero', k]), done); return true; };
     switch (it.kind) {
-      case 'swhatch':
-        // he kneels, lifts the grate on its hinge: then it's a way down
+      case 'swhatch': {
+        // he kneels, lifts the lid on its hinge: then it's a way down (the street's first time: the knocking, the chalk)
+        const H = SEWER.hatches[it.hatch] || this.H;
         h.act('use', 0.7, () => {
-          const first = !f.sw_hatch;
-          f.sw_hatch = true; this.H.setOpen(true); g.audio.play('clunk');
+          const first = H.id === 'street' && !f.sw_hatch;
+          if (H.id === 'street') f.sw_hatch = true;
+          this.hat = H; H.setOpen(true); g.audio.play('clunk');
           if (first) say(['sw_hatch1', 'sw_hatch2'], () => g.save(false));
         }, 0.35);
         return true;
-      case 'swdown': this.goDown(); return true;
+      }
+      case 'swlid': g.audio.play('doorLocked'); return say(['sw_lid_shut']);
+      case 'swdown': this.goDown(SEWER.hatches[it.hatch] || this.H); return true;
       case 'swvalve':
         if (f.sw_valve) return say(['sw_valve_after']);
         h.act('use', 0.8, () => {
@@ -208,20 +222,22 @@ export class SewerLife extends ChapterBase {
   // ---------------------------------------------------------------- the lift (SEWER-LIFT)
   // "Go down": he steps to the middle of the deck, turns to the lever and pulls it; the deck goes down with him on it
   // (stick input on the way there takes over: nothing happens)
-  goDown() {
-    const g = this.game, h = g.hero, H = this.H;
+  goDown(H = this.H) {
+    const g = this.game, h = g.hero;
+    this.hat = H;
     const lever = Math.atan2(H.lever.x - H.x, H.lever.z - H.z);
     const pull = () => {
       if (!H.open || g.room || g.state !== 'play' || this.ride) return;
-      h.act('use', 0.5, () => this.startRide('down'), 0.2);
+      h.act('use', 0.5, () => this.startRide('down', H), 0.2);
     };
     h.walkTo([{ x: H.x, z: H.z }], { a: lever, speed: 1.4, then: pull, fail: pull });
   }
   // a ride: the game in a scene of its own (no input, no pause or save menu, nobody hurts him) for its length
-  startRide(dir) {
-    const g = this.game, h = g.hero, H = this.H;
+  startRide(dir, H = this.H) {
+    const g = this.game, h = g.hero;
     if (this.ride || !H || g.room || h.dead || (dir === 'down' && (!H.open || g.state !== 'play'))) return;
-    const R = this.ride = { dir, t: 0, d: dir === 'down' ? 0 : RISE, v: 0, fn: null, sil: h.rig?.silhouette || null, cam: null };
+    this.hat = H;
+    const R = this.ride = { dir, t: 0, d: dir === 'down' ? 0 : RISE, v: 0, fn: null, sil: h.rig?.silhouette || null, cam: null, H };
     R.fn = (dt) => this.rideStep(dt, R);
     g.setState('cutscene'); g.cutscene = R.fn;
     h.actT = 0; h.actCb = null; h.actNext = null; h.steer = null; h.vel?.set(0, 0); h.vy = 0; h.onGround = true;
@@ -242,7 +258,7 @@ export class SewerLife extends ChapterBase {
     this.rideStep(0, R);
   }
   rideStep(dt, R) {
-    const g = this.game, h = g.hero, H = this.H;
+    const g = this.game, h = g.hero, H = R.H;
     if (this.ride !== R) return;
     R.t += dt;
     if (R.dir === 'down') {
@@ -267,8 +283,9 @@ export class SewerLife extends ChapterBase {
   // down: the scene changes to the hall, where he always arrives
   arrive(R) {
     if (this.ride !== R) return;   // (a game loaded during the fade)
+    const H = R.H;
     this.endRide();
-    this.game.enterRoom('sewer', null, true);
+    this.game.enterRoom('sewer', (Rm) => Rm.entries?.[H.entry] || Rm.spawn, true);
   }
   // the ride over (or cut short by a load): play again, the camera its own, the deck at the top, the lever up
   endRide() {
@@ -278,31 +295,32 @@ export class SewerLife extends ChapterBase {
     if (g.cutscene === R.fn) { g.cutscene = null; if (g.state === 'cutscene') g.setState('play'); }
     if (R.cam && g.camRig.override === R.cam) g.camRig.override = null;
     if (R.sil) R.sil.visible = true;
-    this.H?.setDeck(0); this.H?.setLever(0);
+    R.H?.setDeck(0); R.H?.setLever(0);
   }
   // SEWERS-1: arrivals by the other ways (the director calls this after the chapter's own)
   onEnterRoom(id) {
     const g = this.game, f = this.f, h = g.hero, R = g.room, near = (p, r = 0.9) => !!p && Math.hypot(h.pos.x - p.x, h.pos.z - p.z) < r;
     if (id === 'sewer' && this.falling) {
-      // S-2: out of the water by the east pier, the splash still spreading
+      // S-2: down through the hall's ceiling onto the island's platform (DOORS-LBA2 #8: LBA2's landing)
       this.falling = false;
-      SEWER.hall?.splash(); g.audio.play('gurgle');
+      g.audio.play('land');
       if (!f.sw_fell) { f.sw_fell = true; this.chain([['hero', 'sw_fall1']]); }
       return;
     }
     this.falling = false;
-    // S-4: in from the street, the Works door clicks shut behind him (until Fosse puts it on the latch)
-    if (id === 'sewer' && !f.sw_works && near(R?.entries?.pink)) { g.audio.play('clunk'); if (!f.sw_pinkIn) { f.sw_pinkIn = true; this.chain([['hero', 'sw_pink1']]); } }
+    // S-4: down the street's lift: its lever down here wears Fosse's padlock (until he takes it off)
+    if (id === 'sewer' && !f.sw_works && near(R?.entries?.street)) { g.audio.play('clunk'); if (!f.sw_pinkIn) { f.sw_pinkIn = true; this.chain([['hero', 'sw_pink1']]); } }
     // S-1: up the stair from the hall: he pushes the trapdoor open from below (the rug slides off)
     if (id === 'wtent' && !f.sw_trap && near(R?.entries?.sewer, 1.2)) { f.sw_trap = true; R.trap?.setOpen(true); g.audio.play('clunk'); }
     if (id === 'sewerglobe') SEWER.globe?.setSky(this.sky());
   }
-  // up the well-house shaft: out on the deck in the grate (sewerExit), which rises the last stretch with him
+  // up a shaft: out on the deck in its hatch (sewerExit), which rises the last stretch with him
   onExitRoom(id) {
-    const g = this.game, H = this.H, h = g.hero;
-    if (id !== 'sewer' || g.room || !H || Math.hypot(h.pos.x - H.x, h.pos.z - H.z) > 0.3) return;
+    const g = this.game, h = g.hero;
+    const H = this.hatches.find((q) => Math.hypot(h.pos.x - q.x, h.pos.z - q.z) <= 0.3);
+    if (id !== 'sewer' || g.room || !H) return;
     this.endRide();
-    this.startRide('up');
+    this.startRide('up', H);
   }
 
   // ---------------------------------------------------------------- Arthur, afterwards (asked before the chapter)
