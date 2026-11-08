@@ -59,6 +59,7 @@ saved and no flag changes meaning:
 | 9 | The monastery's prayer wheels | did nothing | they turn with a line | `story/hamlife.js` | Source only |
 | 10 | The observatory's door outside its chapters | silent in chapters 6, 8, 9 | chapter 6: bolted from inside, Sefa at work; chapters 8–9: locked, a slate on the door SEFA / NEXT DOOR, and he is there | `story/hamlife.js` | `hamalayi-life` |
 | 11 | Sefa's house | empty | Sefa at home in chapters 8–9 | as 4 | `hamalayi-life` |
+| 11b | The story villagers' rounds in Lhar (`castrounds.js`, chapter 6) | since the doors lead in (8.11), Tashi's and Old Norbu's stops by the doors stood inside a door's reach (1.80 m and 1.75 m from the triggers; StoryRounds leaves such a stop out) and they walked no round (the coordinator's report: cast-rounds, 4 checks); Dawa's stood on the rim of Yorna's door's reach | each stop off every door's way in (2.2 m out, ±0.7 m) and ≥ 2.8 m from the triggers: Tashi by the sledge's side of the square, Old Norbu and Dawa a step aside, still watching their doors | `castrounds.js` | `cast-rounds` |
 | 12 | An island room's region | inside any of the islands' or Kesh's or the Hamalayi's house rooms the HUD's region (`travel.js` regionOf) read Citadel | the door's region | `travel.js` | Source only |
 
 ## The camera by keyboard at the main spots (VP-10; probe `cam.mjs`, `hallcam.mjs`)
@@ -78,7 +79,7 @@ Chapter 7 by its flags (chapter 6 done). At each spot he is put 1.5 m before it 
 | the lift's top (4324, −30) | — | clear | 8.95 |
 | the monastery gate → the yard (4334, −38) | — | the gate's beam and roofs frame him; clear | 8.91 |
 | the hall's porch (4334, −42.4) | — | the door ahead, clear; walking on he goes in (the door by input) | 8.89 |
-| out of the hall, facing the yard (4334, −41.9) | — (no door then) | **was**: the camera stood in the lower roof's overhang, gold tiles over the frame's bottom half, Twinsen x-rayed (arm 6.81, 7.2 m up). Fixed with the hall's own camera shapes (below) | see below |
+| out of the hall, facing the yard (4334, −41.9) | — (no door then) | **was**: the camera stood in the lower roof's overhang, gold tiles over the frame's bottom half, Twinsen x-rayed (arm 6.81, 7.2 m up). **Now** (the hall's own shapes, `hamalayi.js`): landing out of the door, the camera close over his shoulder under the porch, the yard clear (arm 4.45); standing 2 s it settles beside him, a porch pillar large on the left of the frame (arm 4.8; he and the yard clear); walking 2 m out, a wide shot (arm 9); turned to the hall, the hall and the porch framed (arm 9) | `hallcam/1…4` |
 | the camp (4350, −38) | — | clear | 8.93 |
 | the ridge (4312, −50) | — | clear | 8.81 |
 | the observatory's door (4286, −64.8), and turned to the descent | the door canopy fills the frame | clear both ways | 8.90 |

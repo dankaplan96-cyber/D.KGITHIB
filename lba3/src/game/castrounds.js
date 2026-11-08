@@ -107,11 +107,11 @@ export const CAST_ROUNDS = [
     when: (f) => !f.c6_trip2,
     stops: [M([8, 12]), T('icefall', 1.5, -3.0, [-5.6, -20.9], 'stand', [5, 8], { gest: ['sigh', 'shrug'] }), T('square', 0.5, 4.0, [0.5, 5.5], 'pickup', [4, 6])] },
   { id: 'lhar1', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v1'), speed: 0.8, when: (f) => !f.c6_trip1,
-    stops: [M([10, 16]), T('door', -1.8, -0.4, [-3.1, -1.0], 'setDown', [6, 9])] },
+    stops: [M([10, 16]), T('sledge', -1.6, 1.8, [-6.6, 0.6], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: house 0's door leads in now: its stop by the door stood 1.8 m from the door's trigger, inside its reach and its way in; now by the sledge's side of the square, 3.6 m off)
   { id: 'lhar2', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v2'), speed: 0.8, when: (f) => !f.c6_trip1,
-    stops: [M([10, 16]), T('door', 1.0, -0.6, [1.9, -1.8], 'setDown', [6, 9])] },
+    stops: [M([10, 16]), T('door', 0.4, 0.2, [1.9, -1.8], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: 2.9 m from Yorna's door's trigger: it stood on the rim of its reach and its way in)
   { id: 'lhar3', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v3'), speed: 0.8, when: (f) => !f.c6_trip2,
-    stops: [M([10, 16]), T('door', 0.6, -1.0, [1.4, -2.1], 'setDown', [6, 9])] },
+    stops: [M([10, 16]), T('door', -1.4, -1.6, [1.4, -2.1], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: house 2's door leads in now: off its way in (2.2 m out, ±0.7 m), 3 m from its trigger, still watching it)
   // the monastery's yard, the villagers settled (chapter 6 once up, chapter 7): the fire, the crates and the cart in the
   // west corner, the trough and the prayer wheels; the middle of the yard (the way from the gate) stays clear
   { id: 'lhar1', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(0), speed: 0.8, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip1,
