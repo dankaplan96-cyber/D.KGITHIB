@@ -29,8 +29,7 @@ import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, counter } from './props.js';
 import { Batch, tm } from './kit.js';
-import { Place, esmerBuilding, cm } from './props-esmer.js';
-import { domeTex } from './zeelich.js';
+import { Place, esmerBuilding, setLook, capM } from './props-esmer.js';
 import { ZEELICH } from './zeelich.js';
 
 export const ZTERMINAL_AT = { x: 8800, z: 0 };
@@ -210,9 +209,13 @@ export function buildZTerminalRoom(scene, physics) {
 // the pavilion on the port's deck: an Esmer house with a turquoise dome, its door toward the bridge's end
 export function buildZTerminalOutside(group, physics, Y) {
   const B = new Batch(group);
-  const wall = tm('plasterWall', { color: '#f4eaf2', rough: 0.95 }), dome = cm(domeTex('#7a3a8a', '#e0c0f0'), { rough: 0.4 });
+  // (ZSTYLE-1: the pavilion is the first building one meets on Zeelich: in the street's LBA2 Esmer look (props-esmer.js
+  // setLook: glass-block bands, teal glass, a plain coping, a low faceted aqua cap), taupe stucco; it drew the old look,
+  // scalloped merlons, rose and teal diamond tiles and a violet onion. Same size, door and collider)
+  const wall = tm('plasterWall', { color: '#e0d6ce', rough: 0.95 }), dome = capM(['#78a8ae', '#b4d8d8']);
   const P = new Place(B, PAV.x, Y, PAV.z, PAV.ry);
-  esmerBuilding(P, { w: PAV.w, d: PAV.d, h: PAV.h, wallH: PAV.wallH, wall, domeM: dome, trim: '#7a3a8a', accent: '#f0c040', seed: 77, role: 'store', doorX: PAV.doorX, bury: 0.1 });
+  setLook(true);
+  try { esmerBuilding(P, { w: PAV.w, d: PAV.d, h: PAV.h, wallH: PAV.wallH, wall, domeM: dome, trim: '#3a7a8a', accent: '#c8963a', seed: 77, role: 'store', doorX: PAV.doorX, bury: 0.1 }); } finally { setLook(null); }
   B.build();
   const o = group.position;
   physics.add({ type: 'box', x: o.x + PAV.x, z: o.z + PAV.z, hw: PAV.d / 2 - 0.05, hd: PAV.w / 2 - 0.05, top: Y + PAV.h, noStand: true });

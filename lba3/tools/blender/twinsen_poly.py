@@ -464,6 +464,23 @@ def fist(part, sx):
     bent([t0, t1, t2], [0.0108, 0.0098, 0.0080], 6)
 
 
+# CUFF-HEM (LBA3 Blender pass, 7.11.2026): the cuff's sections along its own axis (the old cone's: from (±0.19, 0.455,
+# 0.012) H, r 0.03, to (±0.192, 0.392, 0.014), r 0.043), (y, radius) in H. TW_CUFF_OLD=1 builds the bare cone and lid.
+TW_CUFF_OLD = bool(os.environ.get('TW_CUFF_OLD'))
+CUFF_WALL = [(0.455, 0.030), (0.398, 0.0418)]                                    # the cuff's side, as before
+CUFF_HEM = [(0.398, 0.0418), (0.3925, 0.0446), (0.3879, 0.0420), (0.3888, 0.0372)]   # rolled out, under and back in
+CUFF_IN = [(0.3888, 0.0372), (0.4005, 0.0352)]                                   # the inside, up to the dark lid
+
+
+def cuff_ring(sx, y, r, n=12):
+    a, b = Vector((sx * 0.19, 0.455, 0.012)), Vector((sx * 0.192, 0.392, 0.014))
+    d = (b - a).normalized()
+    u = d.cross(Vector((0, 0, 1))).normalized()
+    w = d.cross(u).normalized()
+    c = a + (b - a) * ((a.y - y) / (a.y - b.y))
+    return [tuple(c + u * (math.cos(2 * math.pi * i / n) * r) + w * (math.sin(2 * math.pi * i / n) * r)) for i in range(n)]
+
+
 SLEEVE_W = {}   # (HERO-LOOK: the sleeves' weights by vertex)
 for sx in (1, -1):
     s = side(sx)
@@ -480,8 +497,19 @@ for sx in (1, -1):
     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
     # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
     cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
-    tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
+    if TW_CUFF_OLD:
+        tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
+    else:
+        loft_along(cuff, [cuff_ring(sx, y, r) for y, r in CUFF_WALL], cap0=False, cap1=False)
     PARTS.append(cuff)
+    if not TW_CUFF_OLD:
+        # CUFF-HEM: the cuff ended in the cone's bare edge (no thickness: a knife edge from every side, a flat dark lid just
+        # inside it). Now the cloth turns under in a rolled hem: out a little, round under and back in by the cloth's
+        # thickness (1.5 cm), so the cuff ends in a lit, rounded edge over a dark opening. Softly shaded on its own (a fine
+        # seam where it meets the cuff's side reads as the hem's stitch line); on the forearm's bone, as the cuff.
+        chem = Part('cuffHem' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=80)
+        loft_along(chem, [cuff_ring(sx, y, r) for y, r in CUFF_HEM], cap0=False, cap1=False)
+        PARTS.append(chem)
     # HERO-LOOK (I-22): the sleeve, a wide tube from the shoulder joint to the cuff along the arm as the game shows it at
     # rest (GAME_SPREAD), inside the cape there (clear of its walls by 2–6 cm), on the upper arm and the forearm. Raised,
     # the arm comes out of the cape in it, the cape staying on the body. 8 sides, open at both ends (in the body / the cuff).
@@ -527,7 +555,11 @@ for sx in (1, -1):
         wall.cls = ['sleeve' if j < CUT_RINGS else 'shared' for j in range(CUT_RINGS + 1) for _ in range(WM + 1)]
         PARTS.append(wall)
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
-    cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
+    if TW_CUFF_OLD:
+        cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
+    else:   # (CUFF-HEM: the cloth's inside, dark, from the hem's inner edge up into the sleeve, closed there; the wrist runs
+        #      through that lid as it ran through the old one)
+        loft_along(cin, [cuff_ring(sx, y, r) for y, r in CUFF_IN], cap0=False, cap1=True)
     PARTS.append(cin)
     # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
     hand = Part('hand' + s, 'skin', hb, angle=60 if os.environ.get('TW_BALL_HAND') else 82)

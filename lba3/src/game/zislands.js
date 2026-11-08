@@ -1475,7 +1475,9 @@ function buildIsland0(scene, physics, name, L, at) {
   const R = {
     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'zeelich', cloudY: CY,
-    env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300], ...(S.env || {}) },
+    // (ZSTYLE-2: an island without its own sky takes Zeelich's overcast pale grey, as the hub (zeelich.js, ZSTYLE-1); it
+    // took the hub's old pink sky and fog)
+    env: { fog: '#dcd9e0', sun: '#f4f0e8', hemiSky: '#e2e0e8', hemiGround: '#7e7a84', sunI: 2.15, hemiI: 1.35, fogRange: [80, 290], ...(S.env || {}) },
     grade: S.grade ?? null, gradeTint: S.gradeTint ?? null,   // (ZEELICH-1 item 6: an island's own palette, applied as it is entered: main.js setGrade)
     terrain, H: (x, z) => terrain.heightAt(x - ox, z - oz),
     land: (x, z) => land(x - ox, z - oz),
@@ -2043,12 +2045,15 @@ function buildIsland0(scene, physics, name, L, at) {
       pl.position.y = y; pl.renderOrder = transparent ? -1 : 0; group.add(pl);
       updaters.push((dt, t) => { map.offset.set(t * speed, t * speed * 0.6); });
     };
-    const ct = S.cloudTint || ['#ffffff', '#ffffff', '#fff0f6'];   // (ZEELICH-1 item 6: an island's own cloud sea: grey over Otringal, amber gas below)
+    // (ZSTYLE-2: an island with neither its own sky nor its own sea takes the hub's pale lavender-grey sea, grey billows
+    // under a lavender-grey tint; it took the old rose sea under white)
+    const plain = !S.cloudTint && !S.env, grey = !!S.cloudGrey || plain;
+    const ct = S.cloudTint || (plain ? ['#dcd6e8', '#e4def0', '#ece8f4'] : ['#ffffff', '#ffffff', '#fff0f6']);   // (ZEELICH-1 item 6: an island's own cloud sea: grey over Otringal, amber gas below)
     const rep = S.cloudRep || 1, op = S.cloudOp || [1, 0.9, 0.45];   // (SKY-9: an island's own billow size and layer opacities)
-    mk(cloudTex(true, !!S.cloudGrey), CY - 2.5, 14 * rep, ct[0], op[0], 0.0012, false);
-    mk(cloudTex(false, !!S.cloudGrey), CY, 10 * rep, ct[1], op[1], 0.002, true);
-    mk(cloudTex(false, !!S.cloudGrey), CY + 1.1, 6 * rep, ct[2], op[2], -0.0015, true);
-    const puffM = new THREE.SpriteMaterial({ map: puffTex(!!S.cloudGrey), color: S.cloudTint ? ct[2] : '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
+    mk(cloudTex(true, grey), CY - 2.5, 14 * rep, ct[0], op[0], 0.0012, false);
+    mk(cloudTex(false, grey), CY, 10 * rep, ct[1], op[1], 0.002, true);
+    mk(cloudTex(false, grey), CY + 1.1, 6 * rep, ct[2], op[2], -0.0015, true);
+    const puffM = new THREE.SpriteMaterial({ map: puffTex(grey), color: S.cloudTint || plain ? ct[2] : '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
     const puffs = [], spots = [];
     for (let j = 0; j < L.nz; j += 4) for (let i = 0; i < L.nx; i += 4) {
       const k = j * L.nx + i; if (H[k] != null) continue;

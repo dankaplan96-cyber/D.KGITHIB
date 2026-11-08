@@ -316,3 +316,30 @@ episode: Market Day's harbour interlude was 10 dB under the rest and was raised 
 ear**: whether the tunes are good, the balance between instruments, how the HQ soundfont's patches sound next to the
 older renders, and whether 20–60 s silences feel right in play. The excerpts in
 `docs/lba3-production/reviews/MUSIC-2/` are for that.
+
+## MUSIC-CRACKLE (CLOUD_ORDERS 27b, 2026-11-08): measured on the user's laptop
+
+The user hears the game's music crackle on their laptop while other music plays fine. Measured there (Ryzen 5 3500U /
+Vega 8, Windows 11, plugged in, 48 kHz output; the desktop app's browser: Electron 43 / Chromium 150, GPU on) with
+`tools/music/crackle/` (usage in `run.mjs`): one scripted Citadel session per run (outdoors, walking with real keys,
+the water office in and out, ducking, the music slider, a change of area, combat in and out, Home's loop seam, a
+piece's end), plus a stress session (idle, 8 music decodes, 6 doors). **Not a listening test.**
+
+| What | How | Result |
+|---|---|---|
+| The source files | every MP3 decoded as the game decodes it | no clipping (peaks 0.52–0.83), decoded lengths exact (encoder padding trimmed), no discontinuity; loop seams continuous |
+| Game vs source | music-bus recording (AudioWorklet tap) nulled against the decoded file, per 128-frame quantum | the game plays the file exactly: residual −70 to −76 dB median, worst quantum −58 dB, through walking, ducking and across Home's loop seam |
+| Clicks in the music bus | 2nd-difference detector (catches ~75 % of 128-frame dropouts or held blocks) | 0 per minute in every phase, every run, before and after |
+| Output underruns | `AudioContext.playoutStats` (enabled by the desktop build) | 0–2 events (5–13 ms) per 3-minute session, none near a long frame, none in the stress session (8 decodes, 6 doors, frames up to 2.7 s); the installed 0.48 app fullscreen: 0 |
+| Duplicate sources | voices alive | never more than 2 (a crossfade) |
+| Settings sliders | the same null test | **a step**: each slider input set the bus gain directly, a jump between two samples (0.55 → 0.35 in one quantum) |
+
+Fixed: the volume sliders (`AudioEngine.applyVolumes`) glide (time constant 30 ms) instead of stepping; largest gain
+change between two quanta 0.35 → 0.03, spread over the samples. Seen in the code, not changed: a story scene's pause
+suspends the audio context at once (`Cinematic.pause`), which cuts the output mid-wave; a fade first needs the output
+latency (~0.2 s) before the suspend, and `tests/voices.mjs` expects the context suspended 0.2 s after the pause.
+
+**Not reproduced**: the crackle the user describes. Nothing measurable in the signal Chromium hands to Windows explains
+it on this laptop plugged in. Not measured: battery power, Windows' mixer and the driver after Chromium (a loopback
+capture through Electron returned silence), and the sound of the renders themselves by ear (draft FluidSynth renders,
+112 kbps MP3). Listening files (matched source/game pairs) are kept with the run, outside the repository.
