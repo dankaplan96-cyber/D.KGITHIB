@@ -68,6 +68,13 @@ Only `ch1.js` has Hebrew twins in these files; the one changed line there has it
 "Next quarter" after the pass: the three heat-post tags and Pelleck's radiator tag (signs), Pelleck's two lines (his
 joke), Fennick's "next quarter's list" (his job). "The shuttles fly again": Snuff's and Bzizz's mid lines (one each).
 
+## Tests (Automated runtime, 8.11.2026, snapshot of the pass's commit on :8820, SwiftShader)
+
+zeelich-life 38/38, island-doors 78/78, citadel-structures 7/7, depot-watch 11/11, world-consistency 37/37,
+zeelich-doors 22/22, chapter7 14/14, chapter9 18/18: all passed. The tests that match these strings (Snuff's
+"charcoal cart back", "tilers", "last quarter", "shuttles fly again|stage now", Sefa's "both suns|frozen", Corla's
+"grounded"/"list", the watch's "staff only"/"yellow line") still match; no test was changed.
+
 ## Read and kept
 
 Kept as written: the Second Bake chain (Snuff, Bzizz, the heat box, the hatch, the roof, the pay lines, Tavo), Rezz,
