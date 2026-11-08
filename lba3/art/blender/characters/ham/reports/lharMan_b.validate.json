@@ -1,0 +1,399 @@
+{
+  "file": "art/blender/characters/ham/work/lharMan_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.6818, 1.9897, 0.5551], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: lharMan_b_belt -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_brows -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_cuffL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_cuffR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_foreL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_foreR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_hair -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_handL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_handR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_head -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_hemBand -> lharMan_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_moustache -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_moustache",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_neck -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_neckBand -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_nose -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_pocket -> lharMan_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_pocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_pocketFlap -> lharMan_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_pocketFlap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shinL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shinR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shoeL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shoeR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shoulderL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_shoulderR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_skirt -> lharMan_bRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_soleL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_soleR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_thighL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_thighR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_torso -> lharMan_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_upperL -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharMan_b_upperR -> lharMan_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharMan_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature lharMan_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 41,
+    "meshes": 40,
+    "triangles": 2800,
+    "materials": 12,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3409,
+        0.0,
+        -0.2691
+      ],
+      "max": [
+        0.3409,
+        1.9897,
+        0.2859
+      ],
+      "size": [
+        0.6818,
+        1.9897,
+        0.5551
+      ]
+    }
+  },
+  "passed": true
+}

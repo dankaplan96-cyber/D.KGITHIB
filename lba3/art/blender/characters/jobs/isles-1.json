@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "isles-1: zmole1_b (+ zmole1, zmole2 unchanged)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast2/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast2/lba3/art/blender/characters/isles/export", "zmole1_b", "zmole1", "zmole2"] }]
