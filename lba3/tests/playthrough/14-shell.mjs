@@ -1,6 +1,6 @@
 // Chapters 11 (The Shell) and 12 (The Core) to the end: the bore's machinery (the cooling diagram, valves A and C, the ball switch for
 // the ladder), the crystal galleries (three pillars: ball), Sendell, the core (the guardian, three pylons from
-// their plates, Vesk's overload coil), the epilogue: dinner, the end screen, Keep Exploring.
+// their plates, the bleed valve, Vesk's overload coil), the epilogue: dinner, the end screen, Keep Exploring.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['down to the machinery', () => P.exitTo('c3-deep')],
@@ -46,6 +46,8 @@ export const steps = [
   // (the guardian's fight as a player plays it: stun it with the ball, then the plate's bank shot in the 2.6 s it
   // sags — P.coreFight; walking plate to plate under its bolt fans killed the bot)
   ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); const n = G.story.cur.pylons(); return { ...r, pylons: n, fail: n >= 3 ? null : 'pylons' }; }],
+  // (CHAPTER-BALANCE) the overload: the bore's bleed valve on the deck ring, turned while the guardian is stunned
+  ['the bleed valve', () => { const G = game; P.settle(); const r = P.coreFight('bleed'); P.settle(); return { ...r, bleed: G.flags.c3_bleed, coil: !!G.room.ballTargets.find((x) => x.coil), fail: G.flags.c3_bleed ? null : 'bleed' }; }, null, { retryFrom: 'the core → chapter 12' }],
   // the coil: three ball hits while the overloaded guardian fights (input: stun it, then the coil in the window)
   ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); const r = tg && !tg.done ? P.coreFight('coil') : null;
     // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)

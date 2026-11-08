@@ -30,6 +30,8 @@ await ev(() => { const G = game, f = G.flags; P.settle(); f.c3_sendell = true; f
   G.enterRoom('c3core', null, true); for (let i = 0; i < 60; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }
   for (const i of [0, 1, 2]) if (!f['c3_pylon' + i]) ch.convertPylon(i);
   for (let i = 0; i < 300; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }
+  // (CHAPTER-BALANCE: the coil comes once the bore's bleed valve is turned: ISO, the story's own call)
+  ch.openBleed(); for (let i = 0; i < 120; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }
 });
 const d16a = await ev(() => ({ fight: game.flags.c3_fight, over: game.flags.c3_overload, coil: !!game.room.ballTargets.find((x) => x.coil) }));
 await reloadContinue();

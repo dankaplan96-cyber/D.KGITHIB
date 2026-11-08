@@ -64,6 +64,8 @@ Object.assign(STR.en, {
 
   // The Hamalayi: the dome
   c10_yorna_1: "Back again, and with a box on your back. Sefa's dome?",
+  c10_yorna_broth: "You look half frozen and half beaten. Drink this first: monastery broth.",
+  c10_toast_broth: "Yorna's broth: life restored",
   c10_pim_1: "I'm coming! The big mirror's chain needs someone light to hold it, and I'm the lightest one here. Mum said so.",
   c10_yorna_2: "He's right, and he'll be careful. Won't you, Pim. Go on, both of you. Up the ridge.",
   c10_keeper_1: "The relay wants light? Then it shall have the dome's. Set it beside the telescope, and turn the dome to the sun.",

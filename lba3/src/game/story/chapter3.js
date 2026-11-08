@@ -17,8 +17,11 @@
 // tells him plainly what lies under the shell and why stopping the drill is not enough. In the core Vesk
 // sets the bore's guardian on him; Twinsen converts the three pylons with bank shots while his allies,
 // by radio, feed each one (Zoé's signal, Mira's valves, Oku's mills). Vesk will not let go: he wants her
-// power for the project, overloads the guardian and raises a coil over his console; three hits with the ball
-// break it, the console bursts, and Twinsen switches the bore to shield mode himself. → epilogue.
+// power for the project and overloads the guardian. Ilka and Dallan open the desert vent to bleed the surge, but it
+// needs a way out on his side too: Twinsen turns the bore's bleed valve on the deck ring while the overloaded guardian
+// hunts him (CHAPTER-BALANCE: stun it first, as with the plates; flag c3_bleed). With the surge draining, Vesk raises a
+// coil over his console to take her power himself; three hits with the ball break it, the console bursts, and
+// Twinsen switches the bore to shield mode himself. → epilogue.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
@@ -128,6 +131,9 @@ export class Chapter3 extends ChapterBase {
         if (v.y != null && Math.abs(h.pos.y - v.y) > 1.3) continue; // (valve C: only from the catwalk)
         consider(dist(v.x, v.z), 1.7, { kind: 'c3valve', valve: v, label: 'p_valve' });
       }
+    } else if (room === 'c3core') {
+      const B = this.R.c3core?.bleed;
+      if (B && f.c3_overload && !f.c3_bleed && !f.c3_turned) consider(dist(B.x, B.z), 1.5, { kind: 'c3bleed', label: 'p_valve' });
     }
   }
   interact(it) {
@@ -143,6 +149,9 @@ export class Chapter3 extends ChapterBase {
         this.chain(lines, () => g.updateObjective());
         return true;
       }
+      case 'c3bleed':
+        h.act('use', 1.0, () => this.openBleed(), 0.5);
+        return true;
       case 'c3valve': {
         const v = it.valve;
         h.act('use', 0.8, () => {
@@ -243,12 +252,27 @@ export class Chapter3 extends ChapterBase {
     f.c3_overload = true; f.c3_coil = 0;
     // (FINALE-ALLIES: the overload pulls on every station; Ilka and Dallan bleed it off through the desert vent, Pim and Sefa
     //  keep the dome's light on the relay: the two stations not wired to a pylon are heard holding the line)
-    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3'], ['ilkaradio', 'c3_ilka_hold'], ['pimradio', 'c3_pim_hold']], () => {
-      this.ensureCoil();
+    // (CHAPTER-BALANCE: the surge needs a way out on his side as well: the bleed valve first, then Vesk's coil. A reload
+    //  after the valve was turned comes back to the coil: c3_bleed is kept)
+    const bled = !!f.c3_bleed;
+    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3'], ['ilkaradio', 'c3_ilka_hold'], ...(bled ? [] : [['ilkaradio', 'c3_ilka_bleed']]), ['pimradio', 'c3_pim_hold']], () => {
+      if (bled) this.ensureCoil();
       const gd = this.guardian;
       if (gd) { gd.setLevel?.(4); gd.state = 'chase'; gd.stateT = 0; gd.coolT = 1.5; }
       g.audio.play('rumble'); g.camRig.shake(0.3);
-      g.updateObjective(); g.save(false);   // (the objective names the coil; a nudge comes only if he is stuck)
+      g.updateObjective(); g.save(false);   // (the objective names the valve, then the coil; a nudge comes only if he is stuck)
+    });
+  }
+  // the bleed valve turned: the surge runs out to the vents; Vesk takes what is left into his coil
+  openBleed() {
+    const g = this.game, f = this.f, C = this.R.c3core;
+    if (!f.c3_overload || f.c3_bleed || f.c3_turned) return;
+    f.c3_bleed = true; C?.bleed?.setOpen(true);
+    g.audio.play('horn'); g.camRig.shake(0.3);
+    if (C?.bleed) g.particles.burst(C.bleed.x, (C.floorY ?? 0) + 1.2, C.bleed.z, '#ffd080', 24, 4);
+    this.chain([['ilkaradio', 'c3_ilka_bled'], ['vesk', 'c3_vesk_coil']], () => {
+      this.ensureCoil();
+      g.updateObjective(); g.save(false);
     });
   }
   // the coil: a crackling ball of light high over Vesk's console (finale-fx.js draws it, and the burst after it), a ball
@@ -396,12 +420,13 @@ export class Chapter3 extends ChapterBase {
         }
       }
     }
-    if (g.room?.id === 'c3core' && f.c3_overload && !f.c3_turned) {
+    if (g.room?.id === 'c3core' && f.c3_overload && f.c3_bleed && !f.c3_turned) {
       this.ensureCoil();   // (it animates itself: finale-fx.js, on the room's updaters)
     }
     // nudges for a stuck player only (HINTS-LESS): no pylon after 40 s of the fight, no hit on the coil after 25 s
     const core = g.room?.id === 'c3core';
     this.nudge(dt, 'pylons', core && f.c3_fight && !f.c3_overload && this.pylons() === 0, 40, 'c3_toast_fight');
+    this.nudge(dt, 'bleed', core && f.c3_overload && !f.c3_bleed && !f.c3_turned && g.state === 'play', 30, 'c3_toast_bleed');
     this.nudge(dt, 'coil', core && f.c3_overload && !f.c3_turned && !(f.c3_coil > 0) && !!this.coil, 25, 'c3_toast_coil');
     // a defeat during the fight respawns at the core's entrance with the fight still on (pylons kept)
     if (f.c3_fight && !f.c3_turned && g.room?.id === 'c3core') {
@@ -436,6 +461,7 @@ export class Chapter3 extends ChapterBase {
     if (C) {
       for (const i of [0, 1, 2]) if (f['c3_pylon' + i]) { for (const tg of C.ballTargets || []) if (tg.pylon === i) tg.done = true; this.convertPylon(i, true); }
       if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); this.fx?.wreckNow(); }
+      C.bleed?.setOpen(!!(f.c3_bleed || f.c3_done));
     }
     if (f.c3_sendell) { R.c3sendell?.presence?.setVisible?.(true); R.c3sendell?.presence?.setIntensity?.(0.45); }
   }
@@ -444,6 +470,7 @@ export class Chapter3 extends ChapterBase {
   objective() {
     const f = this.f, room = this.game.room?.id;
     if (this.part === 2) {
+      if (f.c3_overload && !f.c3_turned && !f.c3_bleed) return this.goal('c3_obj_bleed');
       if (f.c3_overload && !f.c3_turned) return this.goal('c3_obj_coil', { n: f.c3_coil || 0 });
       if (f.c3_fight) return this.goal('c3_obj_pylons', { n: this.pylons() });
       return this.goal('c3_obj_core');

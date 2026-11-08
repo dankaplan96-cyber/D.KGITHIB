@@ -17,6 +17,8 @@
 //   R.slide {x,z}  (the rockslide that blocks the ledge)
 //   R.monastery {gate:{x,z}, yard:{x,z}}
 //   R.observatory {door:{x,z}, x,z}; R.vent {x,z, open, setOpen(b)}; R.basin {x,z}
+//   R.ventDiscs [{i, x,y,z, warm, lit, setLit(b)}] five carved discs round the vent's seal (three warm: they steam once the
+//   cap is melted); their ball targets {…, disc:i} call R.onDisc(i) (story/observatory.js; CHAPTER-BALANCE)
 //   R.snow {setLevel(0..1)}
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
@@ -662,6 +664,27 @@ export function* buildHamalayiSteps(scene, physics) {
     melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
     setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steamLevel = b ? 1 : 0; },
   };
+  // (CHAPTER-BALANCE, 7.11.2026) the seal is carved like the dig's (chapter 4): five discs round its rim. Three are warm
+  // and steam once the dome's light has melted the cap; the ball wakes them (as the warm seals at the dig), and with all
+  // three awake the seal turns. A cold one only rings. Each on bare ice just outside the vent's collider.
+  {
+    const WARM = [0, 2, 3], discs = [], stoneM = tm('stone', { color: '#a89c8c' });
+    const steams = [];
+    for (let i = 0; i < 5; i++) {
+      const a = 0.35 + (i * Math.PI * 2) / 5, lx = VENT.x + Math.sin(a) * 4.0, lz = VENT.z + Math.cos(a) * 4.0, gy = H(lx, lz);
+      const glowM = new THREE.MeshStandardMaterial({ color: '#6a5a48', roughness: 0.6, emissive: '#ff9a40', emissiveIntensity: 0 });   // (its own: pm() caches by colour)
+      const d = mesh(group, cyl(0.5, 0.55, 0.16, 16, 0), stoneM, lx, gy + 0.06, lz, a);
+      const ring = mesh(group, cyl(0.3, 0.3, 0.02, 14, 0), glowM, lx, gy + 0.15, lz, a);
+      void d; void ring;
+      const D = { i, ...W(lx, lz), y: gy + 0.25, warm: WARM.includes(i), lit: false, setLit(b) { this.lit = !!b; glowM.emissiveIntensity = b ? 1.6 : 0; } };
+      discs.push(D);
+      if (D.warm) steams.push({ D, pl: new Plume({ rate: 6, rise: 1.4, h: 2.6, w0: 0.6, w1: 1.6, a: 0.55, add: 0.08, drift: 0.4, spread: 0.3, color: '#f2f6ff' }) });
+      R.ballTargets.push({ x: D.x, y: D.y, z: D.z, r: 0.8, disc: i, get done() { return D.lit || !R.vent.melted || R.vent.open || !R.onDisc; }, onHit() { R.onDisc?.(i); } });
+    }
+    // the warm ones breathe a thread of steam once the cap is gone (until woken, or the vent is open)
+    updaters.push((dt, t, fx) => { if (!fx || !R.vent.melted || R.vent.open) return; for (const s of steams) if (!s.D.lit) s.pl.tick(fx, dt, s.D.x, s.D.y, s.D.z, 1); });
+    R.ventDiscs = discs;
+  }
   R.ventPatrol = [[VENT.x - 8, VENT.z - 4], [VENT.x + 6, VENT.z - 6], [VENT.x + 7, VENT.z + 6], [VENT.x - 6, VENT.z + 7]].map(([x, z]) => [ox + x, oz + z]);
   R.basin = W(BASIN.x, BASIN.z);
   col({ type: 'cyl', x: VENT.x, z: VENT.z, r: 3.4, top: H(VENT.x, VENT.z) + 1.2, noStand: true });

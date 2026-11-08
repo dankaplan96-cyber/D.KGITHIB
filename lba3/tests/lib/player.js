@@ -410,7 +410,7 @@
   // overload coil ('coil'); bolt fans are dodged (P.gstep). Input only. Ends when the phase's goal is met.
   P.coreFight = (phase, { maxT = 300 } = {}) => {
     const h = hero(), f = G.flags, C = G.story.cur, out = { stunThrows: 0, stuns: 0, shots: 0, hurt: 0, t: 0 };
-    const done = () => (phase === 'pylons' ? f.c3_overload || C.pylons() >= 3 : f.c3_turned);
+    const done = () => (phase === 'pylons' ? f.c3_overload || C.pylons() >= 3 : phase === 'bleed' ? !!f.c3_bleed : f.c3_turned);
     let miss = 0;
     let hp = h.hp; const tick = (s) => { P.gstep(s); out.t += s; if (h.hp < hp) out.hurt += hp - h.hp; hp = h.hp; };
     const idle = () => { for (let w = 0; w < 300 && G.ball.state !== 'idle'; w++) tick(DT); };
@@ -428,9 +428,19 @@
       if (phase === 'pylons') {
         const p = C.plates().filter((q) => !f['c3_pylon' + q.i]).sort((a, b) => Math.hypot(a.x - h.pos.x, a.z - h.pos.z) - Math.hypot(b.x - h.pos.x, b.z - h.pos.z))[0]; if (!p) { tick(0.5); continue; }   // (the nearest plate: the walk is inside the 2.6 s window)
         P.go(p.x, p.z, { tol: 0.35, maxT: 3, fight: false }); tick(0.35); idle();   // (standing still on a plate lines him up)
+      } else if (phase === 'bleed') {
+        // (CHAPTER-BALANCE: the bleed valve on the deck ring, turned while the guardian is stunned: E, and the turn plays out)
+        const B = G.room.bleed; if (!B) { tick(0.5); continue; }
+        P.go(B.x, B.z, { tol: 0.7, maxT: 4, fight: false }); P.face(B.x, B.z, 1);
+        if (P.target()?.kind === 'c3bleed') { P.tap('KeyE', 0.05); out.shots++; for (let w = 0; w < 2 / DT && h.actT > 0; w++) tick(DT); }
+        tick(0.2); P.settle(); continue;
       } else {
         const tg = G.room.ballTargets.find((x) => x.coil); if (!tg) { tick(0.5); continue; }
-        const d = Math.hypot(tg.x - h.pos.x, tg.z - h.pos.z); if (d > 5.5) P.go(tg.x + (h.pos.x - tg.x) / d * 4, tg.z + (h.pos.z - tg.z) / d * 4, { tol: 1.0, maxT: 2, fight: false });
+        // (from the arena's side of the console, as a player stands to throw up at it: from beside or behind the console its
+        //  panel is in the way. The bleed valve, CHAPTER-BALANCE, leaves him off to the console's side)
+        const A = G.enemies.find((e) => e.id === 'guardian')?.arena, cx = A ? (A.x0 + A.x1) / 2 : h.pos.x, cz = A ? (A.z0 + A.z1) / 2 : h.pos.z;
+        const dc = Math.hypot(cx - tg.x, cz - tg.z) || 1, sx = tg.x + (cx - tg.x) / dc * 4, sz = tg.z + (cz - tg.z) / dc * 4;
+        if (Math.hypot(sx - h.pos.x, sz - h.pos.z) > 1.5) P.go(sx, sz, { tol: 1.0, maxT: 3, fight: false });
         idle(); P.face(tg.x, tg.z, 1);
       }
       P.tap('KeyF', 0.05); out.shots++; tick(1.4); P.settle();

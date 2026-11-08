@@ -6,7 +6,9 @@
 // The clerk in the council house lets him through. The council fears the cold more than the crack, and
 // wants proof the project itself wrote down. Next door is the project's archive: a locker holds a
 // technician's coat (the archivist notices a "colleague" more slowly), and one of three cabinets holds the
-// master plans of the bore, "Integrity: not assessed." Back in the chamber, Dallan arrives with Ilka's
+// master plans of the bore, "Integrity: not assessed." That cabinet is locked; its key hangs on the archivist's ring on
+// his desk, by his round's near side (CHAPTER-BALANCE, 7.11.2026, flag c9_key: a second stealth step, timed to his
+// back). Back in the chamber, Dallan arrives with Ilka's
 // rubbings of the seals, a map of the shell with the bore through its thinnest part. The council votes to
 // reverse the bore. But only Vesk's console below can switch it, and the shaft opens only on a code sent
 // from every station at once. Baldino: "A network!" → chapter 10.
@@ -115,6 +117,7 @@ export class Council extends ChapterBase {
     if (!this.isCur() || r !== 'archive' || f.c9_plans) return;
     const A = this.A;
     if (!f.c9_coat) consider(dist(A.locker.x, A.locker.z), 1.4, { kind: 'c9coat', label: 'p_coat' });
+    if (!f.c9_key && A.keys) consider(dist(A.keys.x, A.keys.z), 1.3, { kind: 'c9key', label: 'p_take' });
     for (const c of A.cabinets) consider(dist(c.x, c.z), 1.2, { kind: 'c9cab', cab: c, label: 'p_cabinet' });
   }
   interact(it) {
@@ -126,11 +129,16 @@ export class Council extends ChapterBase {
           this.chain([['hero', 'c9_coat_1']], () => { g.hud.toast('c9_toast_coat'); g.save(false); });
         }, 0.3);
         return true;
+      case 'c9key':
+        f.c9_key = true; this.A.keys?.setTaken(true); g.audio.play('coin');
+        this.chain([['hero', 'c9_key_take']], () => { g.updateObjective(); g.save(false); });
+        return true;
       case 'c9cab': {
         const c = it.cab;
         h.act('use', 0.8, () => {
           g.audio.play('chest');
           if (c.label !== 'BORE') { this.chain([['hero', c.label === 'TUNNELS' ? 'c9_cab_tunnels' : 'c9_cab_ferries']]); return; }
+          if (!f.c9_key) { g.audio.play('deny'); f.c9_locked = true; this.chain([['hero', 'c9_cab_locked']], () => g.updateObjective()); return; }
           f.c9_plans = true; this.watcher?.stop();
           g.audio.play('shard');
           this.chain([['hero', 'c9_cab_bore']], () => { g.updateObjective(); g.save(false); g.found('plans', 'c9_toast_plans'); });
@@ -269,6 +277,7 @@ export class Council extends ChapterBase {
     if (this.watcher?.active && g.state === 'play') this.watcher.update(dt);
   }
   applyFlags() {
+    this.game.regions?.whenBuilt?.('archive', (A) => A.keys?.setTaken(!!this.f.c9_key));
     if (!this.isCur() || !this.Z) return;
     this.freezeMills();
     this.Z.ferry?.setVisible?.(false);
@@ -291,7 +300,7 @@ export class Council extends ChapterBase {
     const f = this.f;
     if (!f.c9_started) return '';
     if (f.c9_plans) return this.goal('c9_obj_back');
-    if (f.c9_heard) return this.goal('c9_obj_archive');
+    if (f.c9_heard) return this.goal('c9_obj_archive') + (f.c9_locked || f.c9_key ? this.sub(!!f.c9_key, 'c9_sub_key') : '');
     if (f.c9_clerk) return this.goal('c9_obj_council');
     if (this.stamps() >= 2) return this.goal('c9_obj_clerk');
     if (f.c9_form) {

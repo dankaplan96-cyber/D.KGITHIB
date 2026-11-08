@@ -24,6 +24,7 @@
 //   c3sendell   R.sendellSpot {x,y,z}; R.presence {group, setVisible(b), setIntensity(0..1)}
 //               exits 'c3-gallery', 'c3-core'
 //   c3core      R.pylons [{i,x,y,z, state, setState(0|1|2), target:{x,y,z}}] (ballTargets {…, pylon:i})
+//               R.bleed {x,z, open, setOpen(b)}: the bore's bleed line to the vents, its wheel on the deck ring (CHAPTER-BALANCE)
 //               R.reflectors [{x,y,z, nx,nz, hw, y0,y1, collider}] brass bank-shot panels: a room updater
 //               mirrors the magic ball off them (R.reflectBall(ball, dt) does the same on demand)
 //               R.console {x,z}; R.npcSpots {vesk}; R.bossSpot {x,y,z}; R.arena {x0,z0,x1,z1}
@@ -1734,6 +1735,35 @@ function buildCore(scene, physics) {
     return false;
   };
   R.reflectBall = reflectBall;
+
+  // --- the bore's bleed line (CHAPTER-BALANCE, 7.11.2026): a valve stand on the deck ring, its pipe running down into
+  // the floor toward the vents. In the overload Ilka and Dallan open the desert vent; the surge needs this way out too
+  // (story/chapter3.js: the wheel turned, Vesk raises his coil). Clear of the bays, the console and the entrance.
+  {
+    const ph = Math.PI * 0.3, [bx, bz] = polar(ph, 8.7), ba = ph + Math.PI, wy = 1.15;
+    k.at(bx, 0, bz, ba, () => {
+      k.add(cyl(0.16, 0.16, wy - 0.2, 12), MAT.paint(TEAL, 0.45), 0, (wy - 0.2) / 2, 0);
+      k.add(cyl(0.26, 0.26, 0.06, 14), brass(), 0, wy - 0.42, 0);
+      k.add(sphere(0.26, 14, 10), MAT.paint('#3a4448', 0.45), 0, wy - 0.2, 0, 0, { sy: 0.8 });
+      k.add(cyl(0.26, 0.26, 0.06, 14), brass(), 0, wy + 0.02, 0);
+      k.add(cyl(0.05, 0.05, 0.5, 8), MAT.steel(), 0, wy - 0.2, 0.25, 0, { rx: Math.PI / 2 });
+      k.add(pipe([[0, 0.5, -0.1], [0, 0.5, -0.9], [0, -0.3, -0.9]], 0.13, 0.2, 8), MAT.paint('#7a7a80', 0.4), 0, 0, 0);
+      k.add(new THREE.RingGeometry(0.75, 0.95, 24), hazard(), 0, 0.016, 0, 0, { rx: -Math.PI / 2 });
+      k.at(-0.55, 0, 0.1, 0, () => { k.add(cyl(0.04, 0.04, 1.4, 6), iron(), 0, 0.7, 0); k.at(0, 1.42, 0.02, 0, () => signPlate(k, 0.6, 0.36, signMat(['BLEED', 'TO THE VENTS'], { w: 256, h: 150, bg: '#6a2a24', emblem: false }))); });
+    });
+    const piv = new THREE.Group(); B.group.add(piv);
+    piv.position.set(bx + Math.sin(ba) * 0.5, wy - 0.2, bz + Math.cos(ba) * 0.5); piv.rotation.y = ba;
+    const wk = new Kit(piv); P.valveWheel(wk, { r: 0.28, color: '#c8302a' }); wk.flush();
+    B.ccol(bx, bz, 0.3, wy + 0.1, { noStand: true, seeThrough: true });
+    const glow = glowSprite('#ffb060', 1.4, 0); glow.position.set(bx, 0.4, bz); B.group.add(glow);
+    let turn = 0;
+    R.bleed = { ...B.world(bx + Math.sin(ba) * 0.9, bz + Math.cos(ba) * 0.9), open: false, setOpen(b) { this.open = !!b; } };
+    R.updaters.push((dt, tt) => {
+      const goal = R.bleed.open ? 1 : 0; turn += Math.sign(goal - turn) * Math.min(Math.abs(goal - turn), dt * 1.2);
+      piv.children.forEach((c) => { c.rotation.z = -turn * Math.PI * 3; });
+      glow.material.opacity = R.bleed.open ? 0.55 + Math.sin(tt * 7) * 0.2 : 0;
+    });
+  }
 
   // --- light: the bore's hot tip, her violet, cold fill
   B.light('#7a6ad8', 3, 30, 0, 9, 0);

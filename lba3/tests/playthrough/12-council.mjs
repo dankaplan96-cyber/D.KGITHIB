@@ -1,5 +1,5 @@
 // Chapter 9 (The Council, Zeelich): the street folk, Baldino's petition, Nara's stamp, Oku's stamp (free the three
-// mills: ball), the council house, the clerk, the hearing, the archive in a borrowed coat (the BORE cabinet),
+// mills: ball), the council house, the clerk, the hearing, the archive in a borrowed coat (the archivist's keys, the BORE cabinet),
 // back to the council → chapter 10.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
@@ -16,6 +16,16 @@ export const steps = [
   // (the archivist walks a loop whose near side runs along the cabinets, so crouching in his way only gets him walked
   // into. As a player times it: wait by the door till he has turned down the far side, away from the cabinets
   // (patrol[3] → patrol[0]), then straight to the BORE cabinet. Caught, he is sent back to the door: up to 3 times)
+  // (CHAPTER-BALANCE: the BORE cabinet is locked; the key ring is on the archivist's desk by his round's near side. As a
+  // player times it: wait by the door till he turns north up the far side (patrol[3] → patrol[0]), his back to the desk)
+  ['the archivist\'s keys', () => { const G = game, A = G.rooms.archive, K = A.keys; let r, misses = 0, waited = 0;
+    if (G.hero.behaviour !== 'normal') P.tap('F1');
+    for (let k = 0; k < 3 && !G.flags.c9_key; k++) {
+      const w = G.story.cur.watcher;
+      for (let t = 0; w?.active && t < 90 && !(w.wp === 0 && w.npc.pos.z < A.patrol[3][1] - 0.4 && w.npc.pos.z > A.patrol[0][1] + 1.5 && w.suspicion < 0.2); t += 0.1) { G.step(0.1); waited += 0.1; if (G.state !== 'play') P.settle(); }
+      r = P.use(K.x, K.z, { kind: 'c9key', near: 0.8, run: true }); P.settle(); if (!G.flags.c9_key) misses++; }
+    if (G.flags.c9_key && G.room?.id === 'archive') { P.go(A.spawn.x + 0.8, A.spawn.z, { tol: 0.8, run: true, fight: false }); P.settle(); }   // (back by the door, out of his round)
+    return { ...r, misses, waited: +waited.toFixed(1), key: G.flags.c9_key, fail: G.flags.c9_key ? null : 'key' }; }],
   ['the BORE cabinet', () => { const G = game, A = G.rooms.archive, c = A.cabinets.find((x) => x.label === 'BORE'); let r, misses = 0, waited = 0;
     if (G.hero.behaviour !== 'normal') P.tap('F1');
     for (let k = 0; k < 3 && !G.flags.c9_plans; k++) {

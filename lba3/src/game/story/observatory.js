@@ -1,10 +1,13 @@
 // Chapter 7 — "The Observatory" (the Hamalayi).
 //
-// Up the ridge to the observatory on the peak: once Sendell's shrine, now kept by Sefa. Four floor mirrors
-// carry the sunbeam from a wall slit to her crystal (three set right, one a decoy). Sendell speaks plainly for
+// Up the ridge to the observatory on the peak: once Sendell's shrine, now kept by Sefa. Her crystal drank the light
+// of both suns: three floor mirrors carry the first sun's beam from a wall slit; the second sun's slit is frozen over
+// (the ball breaks the ice) and the fourth mirror carries that beam (CHAPTER-BALANCE, flag c7_ice). Sendell speaks plainly for
 // the first time: she has been holding the shell with her own light and is fading — she cannot do it alone.
 // The dome's big mirror throws the light onto the glacier and melts the ice over the vent; a heavy project
-// drone guards it. With the drone down, the old stone seal turns and the vent breathes. Arthur calls: the
+// drone guards it. The old stone seal is carved like the dig's: of five discs round its rim the three warm ones steam,
+// and the ball wakes them (CHAPTER-BALANCE: chapter 4's warm seals applied anew, flags c7_disc0/2/3). With the drone
+// down and the three awake, the seal turns and the vent breathes. Arthur calls: the
 // project is evacuating Citadel by its list. Hesk has the glider ready on the monastery slope. → chapter 8.
 import { ChapterBase } from './base.js';
 import '../text/ch7.js';
@@ -85,6 +88,7 @@ export class Observatory extends ChapterBase {
           g.audio.play('select');
           const res = this.O.trace();
           if (res.lit) this.lightCrystal();
+          else if (res.n === 1 && !this._faint) { this._faint = true; this.chain([['hero', f.c7_ice ? 'c7_faint_ice' : 'c7_faint']]); }
         }, 0.3);
         return true;
       }
@@ -94,6 +98,8 @@ export class Observatory extends ChapterBase {
         this.chain([['narrator', 'c7_scope'], ['keeper', 'c7_keeper_5']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c7vent':
+        // (the seal turns only with its three warm discs awake)
+        if (this.discsLit() < 3) { f.c7_sealSeen = true; this.chain([['hero', this.discsLit() ? 'c7_seal_more' : 'c7_seal_stuck']], () => g.updateObjective()); return true; }
         h.act('use', 1.0, () => {
           f.c7_vent = true; this.M.vent.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
           this.story.refreshCast({ walk: true });
@@ -102,6 +108,28 @@ export class Observatory extends ChapterBase {
         return true;
     }
     return false;
+  }
+  // the ball breaks the ice over the second sun's slit (obsroom.js R.ice's ball target)
+  breakIce() {
+    const g = this.game, f = this.f, O = this.O;
+    if (!this.isCur() || f.c7_ice || f.c7_lit) return;
+    f.c7_ice = true; O.ice.setBroken(true);
+    g.audio.play('shard'); g.camRig.shake(0.15);
+    const res = O.trace();
+    if (res.lit) { this.lightCrystal(); return; }
+    this.chain([['narrator', 'c7_ice']], () => { g.updateObjective(); g.save(false); });
+  }
+  discsLit() { return (this.M?.ventDiscs || []).filter((d) => d.warm && d.lit).length; }
+  // a ball on one of the seal's discs (hamalayi.js R.ventDiscs): a warm one wakes, a cold one only rings
+  hitDisc(i) {
+    const g = this.game, f = this.f, D = this.M?.ventDiscs?.[i];
+    if (!this.isCur() || !D || D.lit || f.c7_vent) return;
+    if (!D.warm) { g.audio.play('clang'); g.hud.toast('c7_toast_cold'); return; }
+    D.setLit(true); f['c7_disc' + i] = true;
+    g.audio.play('shard'); g.particles.burst(D.x, D.y + 0.3, D.z, '#ffb060', 16, 2.5);
+    const n = this.discsLit();
+    if (n >= 3) { g.camRig.shake(0.2); this.chain([['hero', 'c7_seal_free']], () => { g.updateObjective(); g.save(false); }); }
+    else { g.hud.toast('c7_toast_disc', { n }); g.save(false); }
   }
   lightCrystal(silent = false) {
     const g = this.game, f = this.f;
@@ -133,8 +161,9 @@ export class Observatory extends ChapterBase {
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'keeper':
-        if (!f.c7_keeper) return c([['keeper', 'c7_keeper_1'], ['hero', 'c7_tw_k1'], ['keeper', 'c7_keeper_2'], ['keeper', 'c7_keeper_3'], ['hero', 'c7_mirror_hint']], () => { f.c7_keeper = true; g.updateObjective(); g.save(false); });
+        if (!f.c7_keeper) return c([['keeper', 'c7_keeper_1'], ['hero', 'c7_tw_k1'], ['keeper', 'c7_keeper_2'], ['keeper', 'c7_keeper_3'], ['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun'], ['hero', 'c7_mirror_hint']], () => { f.c7_keeper = true; g.updateObjective(); g.save(false); });
         if (f.c7_sendell && !f.c7_scope) return c([['keeper', 'c7_keeper_4']]);
+        if (!f.c7_lit) return c([['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun']]);
         return c([['keeper', f.c7_scope ? 'c7_keeper_5' : 'c7_keeper_3']]);
       case 'yorna': return c([['yorna', 'c7_yorna_1']]);
       case 'hesk': if (f.c7_vent) { this.leave(); return true; } return false;
@@ -164,6 +193,10 @@ export class Observatory extends ChapterBase {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
     M.snow.focus = h.pos;
+    // (the frozen slit's ball target answers to this chapter, however it began: a load, or chapter 6 played on)
+    const O = g.regions?.built('obsv');
+    if (O?.ice && !O.ice.onBreak) O.ice.onBreak = () => this.breakIce();
+    if (!M.onDisc) M.onDisc = (i) => this.hitDisc(i);
     // the heavy drone: bigger, and its fall is the cue
     const hd = this.heavy();
     if (hd && !hd._big) { hd._big = true; hd.rig.root.scale.multiplyScalar(1.7); hd.hover = 2.2; hd.hitR = 1.3; hd.hitH = 3.6; }
@@ -182,6 +215,10 @@ export class Observatory extends ChapterBase {
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     RG.whenBuilt('obsv', (O) => {
+      O.ice.onBreak = () => this.breakIce();
+      // (a save from before the second sun, with the crystal lit: the slit open, the fourth mirror set right)
+      O.ice.setBroken(!!(f.c7_ice || f.c7_lit));
+      if (f.c7_lit && !f.c7_mirrors?.[3] && O.mirrors[3]) O.mirrors[3].setType('A');
       for (const m of O.mirrors) if (f.c7_mirrors?.[m.i]) m.setType(f.c7_mirrors[m.i]);
       O.trace();
       if (f.c7_lit) this.lightCrystal(true);
@@ -189,6 +226,8 @@ export class Observatory extends ChapterBase {
     RG.whenBuilt('hamalayi', (M) => {
       if (f.c7_scope) M.vent.melt(true);
       if (f.c7_vent) M.vent.setOpen(true);
+      // (a save from before the discs, the vent open: all three awake)
+      for (const D of M.ventDiscs || []) D.setLit(D.warm && !!(f['c7_disc' + D.i] || f.c7_vent));
     });
   }
   // GUIDE: the dome, the vent, the monastery's gate on the Hamalayi's map (base.js star)
@@ -203,6 +242,7 @@ export class Observatory extends ChapterBase {
     const f = this.f, r = this.room();
     if (!f.c7_started) return '';
     if (f.c7_vent) return this.goal('c7_obj_home');
+    if (f.c7_droneDown && f.c7_sealSeen && this.discsLit() < 3) return this.goal('c7_obj_discs', { n: this.discsLit() });
     if (f.c7_droneDown) return this.goal('c7_obj_vent');
     if (f.c7_scope) return this.goal('c7_obj_drone');
     if (f.c7_sendell) return this.goal('c7_obj_scope');
