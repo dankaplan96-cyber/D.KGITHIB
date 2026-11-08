@@ -64,6 +64,8 @@ Object.assign(STR.en, {
   hl_notice_home: "WELCOME HOME. The monks' cheese is in Lhamo's kitchen. Take some. Please.",
   hl_pen: "An empty goat pen. The goats went up the monks' path ahead of everyone, the clever things.",
   hl_pen_home: "The pen is still empty. The goats like the monks' meadow better and won't come down.",
+  hl_shrine: "Lhar's shrine, three stone steps and a pole. Every flag line in the village starts from it, and everyone meets here.",
+  hl_heat: "The project's heat station hums now. It keeps the winch thawed beautifully. The village, not so much.",
   hl_pwheel: "The prayer wheels turn one after another: clack, clack, clack. Small hands have worn the handles smooth.",
   hl_pwheel_pack: "The prayer wheels turn stiffly in the cold. Nobody has spun them in a while.",
   hl_obs_pass: "Bolted from inside. Somebody in there is humming over the clicks of a big brass instrument.",

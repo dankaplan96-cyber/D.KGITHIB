@@ -187,6 +187,7 @@ export function noticeBoard(k, { w = 1.3, h = 0.9, y = 0.9 } = {}) {
 // so the door spots don't move). lean: a woodshed on the +x (1) or −x (−1) gable. balcony: over the door (two storeys).
 export function mountainHouse(k, o = {}) {
   const { w = 5, d = 4.2, h = 2.6, door = 0.4, seed = 1, wall = '#e6d8c2', trim = TRIM.blue, doorC = TRIM.red, lean = 0, balcony = false, chimney = true, pitch = 0.6, ovE = 0.55, ovG = 0.38, pots = false } = o;
+  const glowM = o.glow || MM.glow();   // (HAMALAYI-LIFE: Lhar's houses share a window glow of their own, dimmed while the village is away)
   const r = rng(seed * 31 + 7), t = 0.42, f = 0.3;
   const wallM = MM.rubble(wall), stoneM = MM.stone('#d8d0c4'), woodD = MAT.wood('dark'), slateM = MM.slate();
   const dx = w * door - w / 2 + 0.5, two = h >= 4.6;
@@ -221,7 +222,7 @@ export function mountainHouse(k, o = {}) {
           k.add(sphere(0.045, 8, 6), MAT.brass(), q.x + q.w * 0.32, q.y + 1.0, -t * 0.62 + 0.06);
           if (!q.upper) k.add(rbox(q.w + 0.45, 0.32, 0.42, 0.04), stoneM, q.x, -0.17, 0.2);
         } else {
-          k.add(box(q.w, q.h, 0.04), MM.glow(), q.x, q.y + q.h / 2, -t * 0.58);
+          k.add(box(q.w, q.h, 0.04), glowM, q.x, q.y + q.h / 2, -t * 0.58);
           k.add(box(0.05, q.h, 0.05), woodD, q.x, q.y + q.h / 2, -t * 0.5);
           k.add(box(q.w, 0.05, 0.05), woodD, q.x, q.y + q.h * 0.55, -t * 0.5);
           k.add(box(q.w + 0.32, 0.08, 0.24), stoneM, q.x, q.y - 0.05, 0.08);
@@ -301,7 +302,7 @@ export function mountainHouse(k, o = {}) {
   {
     const lx = dx + (dx > 0 ? -0.95 : 0.95), y = f + 2.25, z = d / 2;
     k.add(box(0.05, 0.05, 0.36), MAT.iron(), lx, y + 0.22, z + 0.18);
-    k.add(rbox(0.17, 0.22, 0.17, 0.02), MM.glow(), lx, y, z + 0.34);
+    k.add(rbox(0.17, 0.22, 0.17, 0.02), glowM, lx, y, z + 0.34);
     k.add(cyl(0.02, 0.15, 0.12, 4), MAT.iron(), lx, y + 0.17, z + 0.34, Math.PI / 4);
     k.add(box(0.2, 0.03, 0.2), MAT.iron(), lx, y - 0.12, z + 0.34);
     if (pots) {

@@ -326,6 +326,12 @@ const HAMALAYI_PEOPLE = [
     mon: [
       L('grum_sledge', MC.sledge.x - 0.4, MC.sledge.z + 1.3, MC.sledge.x, MC.sledge.z, 'put', [4, 6], { carry: 'crate' }),
       L('grum_crates', MC.crates.x + 0.2, MC.crates.z + 1.2, MC.crates.x, MC.crates.z, 'put', [5, 7], { carry: null }),
+    ],
+    // (HAMALAYI-LIFE: while Lhar is mended he carries the new slates that come down the lift to Bero's house, and back)
+    mend: [
+      L('grum_lift', 17.0, -15.5, 24, -22, 'put', [5, 7], { carry: 'crate' }),
+      DOOR('grum_bero', H3, 0.5, 0.9, [4, 6], { carry: null }),
+      L('grum_cart', -15.9, 2.8, -17.3, 2.4, 'browse', [4, 6]),
     ] } },
 ];
 for (const p of HAMALAYI_PEOPLE) p.rounds.mend ||= p.rounds.mon;   // (HAMALAYI-LIFE: the camp's rounds while Lhar is mended)

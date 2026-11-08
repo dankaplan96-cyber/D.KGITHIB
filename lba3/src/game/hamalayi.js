@@ -15,7 +15,8 @@
 //   R.lhar {x,z}; R.npcSpots {yorna, pim, v1, v2, v3, keeper, hesk} {x,z,a}
 //   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done)}; R.heatPost {x,z, on, setOn(b)}
 //   R.slide {x,z}  (the rockslide that blocks the ledge)
-//   R.monastery {gate:{x,z}, yard:{x,z}}
+//   R.monastery {gate:{x,z}, yard:{x,z}, hall:{x,z,y,ry,sill}}  (hall: the hall's door on its porch: story/hamlife.js)
+//   R.chimney(doorId, on), R.lharWindows(on): a house's smoke, Lhar's window glow (story/hamlife.js, by the story's phase)
 //   R.observatory {door:{x,z}, x,z}; R.vent {x,z, open, setOpen(b)}; R.basin {x,z}
 //   R.ventDiscs [{i, x,y,z, warm, lit, setLit(b)}] five carved discs round the vent's seal (three warm: they steam once the
 //   cap is melted); their ball targets {…, disc:i} call R.onDisc(i) (story/observatory.js; CHAPTER-BALANCE)
@@ -32,6 +33,7 @@ import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
 import { makeTree } from './hamalayi-tree.js';
+import { roomOcc } from './roomocc.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
@@ -412,7 +414,11 @@ export function* buildHamalayiSteps(scene, physics) {
     { lean: 1, seed: 6, trim: TRIM.plum, doorC: TRIM.ochre, pots: true },
   ];
   const doors = [];
-  HOUSES.forEach(([x, z, ry, w, d, h], i) => { const o = HOPT[i]; doors.push(stoneHouse('lhar', x, z, ry, w, d, o.h ?? h, o).door); });
+  // (HAMALAYI-LIFE: the village's windows share a glow of their own: lit while Lhar is lived in, dark while it camps up at the
+  //  monastery: R.lharWindows, story/hamlife.js)
+  const lharGlow = MM.glow().clone();
+  HOUSES.forEach(([x, z, ry, w, d, h], i) => { const o = HOPT[i]; doors.push(stoneHouse('lhar', x, z, ry, w, d, o.h ?? h, { ...o, glow: lharGlow }).door); });
+  R.lharWindows = (on) => { lharGlow.emissiveIntensity = on ? 1.25 : 0.06; lharGlow.color.set(on ? '#ffe2a8' : '#5a5650'); };
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   R.lharDoors = doors;
   const LH = houses.slice(1);   // (houses[0] is the hut)
@@ -603,7 +609,17 @@ export function* buildHamalayiSteps(scene, physics) {
   {
     const mx = MONAST.x, mz = MONAST.z, gy = H(mx, mz);
     const hall = put('monastery', 'hall', mx, mz - 6, 0, (k) => monasteryHall(k), { y: gy, col: false, nocheck: true });
-    col({ type: 'box', x: mx, z: mz - 6, hw: 7, hd: 4.5, top: gy + 9 });
+    const hallC = col({ type: 'box', x: mx, z: mz - 6, hw: 7, hd: 4.5, top: gy + 9 });
+    // (HAMALAYI-LIFE, VP-10: the hall's own shapes for the camera, not its collider's box: the walls to the eaves, the
+    //  lower roof's flared overhang, the upper hall and its roof, and the porch's little roof, which he walks under. Out
+    //  of the hall's door, facing the yard, the camera had stood in the lower roof's overhang, its tiles filling the
+    //  bottom of the frame and Twinsen seen through them)
+    { const occ = roomOcc(R, physics.terrain), X = ox + mx, Z = oz + mz - 6;
+      hallC.camSkip = true;
+      occ.add({ kind: 'box', x: X, z: Z, hw: 7.4, hd: 4.9, y0: gy - 1, y1: gy + 7.0, name: 'hall walls' });
+      occ.add({ kind: 'box', x: X, z: Z, hw: 8.2, hd: 5.7, y0: gy + 6.9, y1: gy + 9.9, name: 'hall roof' });
+      occ.add({ kind: 'box', x: X, z: Z, hw: 3.9, hd: 2.9, y0: gy + 9.8, y1: gy + 12.8, name: 'hall upper' });
+      occ.add({ kind: 'box', x: X, z: Z + 5.6, hw: 3.6, hd: 1.65, y0: gy + 4.3, y1: gy + 5.8, walkUnder: true, name: 'hall porch' }); }
     col({ type: 'box', x: mx, z: mz - 6 + hall.porch.lz, hw: hall.porch.hw, hd: hall.porch.hd, top: gy + hall.porch.top });
     for (const [px, pz] of hall.pillars) col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true });
     smokes.push({ x: mx + hall.smoke[0], y: gy + hall.smoke[1], z: mz - 6 + hall.smoke[2] });

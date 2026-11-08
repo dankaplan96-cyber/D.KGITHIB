@@ -176,7 +176,9 @@ export class HamalayiLife extends ChapterBase {
     if (r !== 'hamalayi' || !this.open()) return;
     const M = this.M, h = g.hero;
     const shut = this.obsShut();
-    for (const s of this.spots(M)) if ((!s.obs || shut) && Math.abs(h.pos.y - s.y) < 2.5) consider(dist(s.x, s.z), s.r, s.it);
+    // (the heat station's shed: its own look once it runs; before that it is chapter 6's to explain: pass.js c6heat)
+    const heat = !!this.f.c6_heat || this.story.index > this.story.chapters.findIndex((c) => c.key === 'pass');
+    for (const s of this.spots(M)) if ((!s.obs || shut) && (!s.it.heat || heat) && Math.abs(h.pos.y - s.y) < 2.5) consider(dist(s.x, s.z), s.r, s.it);
   }
   // the outdoor things, in the region's world frame (hamalayi.js layout: Lhar's notice board, the goat pen, the
   // monastery's two rows of prayer wheels, the observatory's door)
@@ -188,6 +190,8 @@ export class HamalayiLife extends ChapterBase {
       W(-8.2, 0.1, 1.5, { kind: 'hl_notice', label: 'p_read' }),
       W(-28.6, 8.4, 1.6, { kind: 'hl_look', key: 'hl_pen', label: 'p_look' }),
       W(-31.6, 6.2, 2.4, { kind: 'hl_look', key: 'hl_pen', label: 'p_look' }),
+      W(-8.0, 14.0, 2.4, { kind: 'hl_look', key: 'hl_shrine', label: 'p_look' }),
+      W(16.0, -19.2, 1.9, { kind: 'hl_look', key: 'hl_heat', label: 'p_look', heat: true }),
       W(29.0, -44.0, 1.5, { kind: 'hl_pwheel', label: 'p_turn' }),
       W(39.0, -44.0, 1.5, { kind: 'hl_pwheel', label: 'p_turn' }),
     ];
@@ -238,9 +242,10 @@ export class HamalayiLife extends ChapterBase {
       const st = this.house(room), id = rid(room), R = RG.built(id);
       M?.chimney?.('ham-' + room, st.home);
       if (!R || !IH[id]?.placed) continue;
-      R._hl ||= dressLharRoom(R, IH[id], room);
+      R._hl ||= dressLharRoom(R, IH[id], room, this.game.physics);
       R._hl.set(st.set, st.home);
     }
+    M?.lharWindows?.(Object.keys(HOUSE).some((room) => this.house(room).home));
     this.hall?.setGuests(this.guests());
     if (M) this.obsSign(M, this.obsShut() && LATE.has(this.key()));
   }

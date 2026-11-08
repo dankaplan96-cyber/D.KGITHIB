@@ -17,7 +17,7 @@
 //   HAM_ROOMS ['ham_hall']; HAM_AT { id: {x, z} }; buildHamRoom(id)(scene, physics) → { [id]: R }
 //   HR[id] (when built): { looks [{x, z, r, key, at}], npcSpots { monk }, round [stops] }
 //   R.wheel { x, z, spin() }; R.tea { x, z }; R.altar { x, z }; R.beds { x, z }; R.setGuests(b)
-//   dressLharRoom(R, info, room) → { set(phase) }   (info: ihomes IH[rid]; room: 'lhar0'…'lhar4')
+//   dressLharRoom(R, info, room, physics) → { set(phase, home), shown }   (info: ihomes IH[rid]; room: 'lhar0'…'lhar4')
 import * as THREE from 'three';
 import { esmerRoom } from './zhomes.js';
 import { Kit, MAT, rbox, cyl, sphere, crate, rug, hangingLamp, potStove, kettle, jar, barrel } from './props.js';
@@ -114,11 +114,11 @@ export const buildHamRoom = (id) => (scene, physics) => hall(scene, physics);
 // ---------------------------------------------------------------- Lhar's houses by the story's phase
 // (R: the room ihomes.js built; info: its IH entry; which: 'lhar0'…'lhar4'). Free floor is found against the room's own
 // pieces (info.placed) and the door's way in, so nothing here stands in a piece or the doorway.
-export function dressLharRoom(R, info, which) {
+export function dressLharRoom(R, info, which, physics) {
   const F = info.frame, gp = R.group.position;
-  const taken = info.placed.map((q) => ({ x0: q.x - gp.x - q.hx - 0.15, x1: q.x - gp.x + q.hx + 0.15, z0: q.z - gp.z - q.hz - 0.15, z1: q.z - gp.z + q.hz + 0.15 }));
+  const taken = info.placed.map((q) => ({ x0: q.x - gp.x - q.hx - 0.08, x1: q.x - gp.x + q.hx + 0.08, z0: q.z - gp.z - q.hz - 0.08, z1: q.z - gp.z + q.hz + 0.08 }));
   taken.push({ x0: F.LX - 0.1, x1: F.LX + 2.2, z0: F.doorZ - 1.0, z1: F.doorZ + 1.0 });
-  for (const l of info.looks) taken.push({ x0: l.x - gp.x - 0.45, x1: l.x - gp.x + 0.45, z0: l.z - gp.z - 0.45, z1: l.z - gp.z + 0.45 });
+  for (const l of info.looks) taken.push({ x0: l.x - gp.x - 0.35, x1: l.x - gp.x + 0.35, z0: l.z - gp.z - 0.35, z1: l.z - gp.z + 0.35 });
   const free = (x, z, hx, hz) => x - hx >= F.LX + 0.05 && x + hx <= F.RX - 0.05 && z - hz >= F.BZ + 0.05 && z + hz <= F.FZ - 0.05 && !taken.some((q) => x + hx > q.x0 && x - hx < q.x1 && z + hz > q.z0 && z - hz < q.z1);
   // a free place for low things, nearest the near rim or the right rim (the camera looks over them there)
   const spot = (hx, hz) => {
@@ -132,14 +132,17 @@ export function dressLharRoom(R, info, which) {
     const [x, z] = best; taken.push({ x0: x - hx - 0.1, x1: x + hx + 0.1, z0: z - hz - 0.1, z1: z + hz + 0.1 });
     return [x, z];
   };
-  const sets = {};
+  const sets = {}, cols = {};
   const group = (name, fill) => { const g = new THREE.Group(); g.visible = false; R.group.add(g); const kk = new Kit(g); fill(kk); kk.flush(); sets[name] = g; };
+  // (each set's things are solid while shown: a box over them, off with the set)
+  const solid = (name, x, z, hw, hd, top) => { const c = physics.add({ type: 'box', x: gp.x + x, z: gp.z + z, hw, hd, top, noStand: true }); c.enabled = false; R.colliders?.push(c); (cols[name] ||= []).push(c); };
   // moving day: two tied bundles and a corded crate
   group('pack', (kk) => {
-    const p = spot(0.75, 0.4);
+    const p = spot(0.66, 0.36);
     if (!p) return;
-    kk.at(p[0] - 0.35, 0, p[1], 0.2, () => sackPile(kk, { seed: 3 + which.length }));
-    kk.at(p[0] + 0.4, 0, p[1], -0.1, () => { crate(kk, 0.55, { pal: 'honey' }); for (const s of [-1, 1]) kk.add(rbox(0.57, 0.02, 0.03, 0.005), MAT.cloth('#c8b08a', '#a89070'), 0, 0.3 + s * 0.12, 0.29); });
+    solid('pack', p[0], p[1], 0.66, 0.36, 0.6);
+    kk.at(p[0] - 0.3, 0, p[1], 0.2, () => sackPile(kk, { seed: 3 + which.length }));
+    kk.at(p[0] + 0.34, 0, p[1], -0.1, () => { crate(kk, 0.55, { pal: 'honey' }); for (const s of [-1, 1]) kk.add(rbox(0.57, 0.02, 0.03, 0.005), MAT.cloth('#c8b08a', '#a89070'), 0, 0.3 + s * 0.12, 0.29); });
   });
   // mending, in the houses whose people come down to it
   group('mend', (kk) => {
@@ -148,17 +151,18 @@ export function dressLharRoom(R, info, which) {
       kk.add(cyl(0.008, 0.008, F.RX - F.LX - 0.8, 4), MAT.paint('#c8b08a', 0.9), (F.LX + F.RX) / 2, y + 0.16, (F.BZ + F.FZ) / 2, 0, { rz: Math.PI / 2 });
       for (let i = 0; i < n; i++) kk.add(rbox(0.3, 0.32, 0.01, 0.003), MAT.cloth(flagCols[i % 5], '#000000'), F.LX + 0.8 + i * 0.5, y, (F.BZ + F.FZ) / 2);
     }
-    const p = spot(0.6, 0.4);
+    const p = spot(0.5, 0.34);
     if (!p) return;
+    solid('mend', p[0], p[1], 0.5, 0.34, 0.45);
     if (which === 'lhar3') {   // Bero's: a tub of mortar, new slates, a trowel
-      kk.at(p[0] - 0.25, 0, p[1], 0, () => { barrel(kk, { r: 0.26, h: 0.4, pal: 'dark' }); kk.add(cyl(0.24, 0.24, 0.02, 12), MAT.paint('#b8b0a0', 0.9), 0, 0.39, 0); });
-      for (let i = 0; i < 5; i++) kk.add(rbox(0.42, 0.03, 0.28, 0.01), MAT.paint('#6a7080', 0.7), p[0] + 0.3, 0.02 + i * 0.035, p[1], i * 0.06);
-      kk.add(rbox(0.22, 0.015, 0.1, 0.004), MAT.steel(), p[0] - 0.25, 0.42, p[1] + 0.05, 0.4);
+      kk.at(p[0] - 0.22, 0, p[1], 0, () => { barrel(kk, { r: 0.24, h: 0.4, pal: 'dark' }); kk.add(cyl(0.22, 0.22, 0.02, 12), MAT.paint('#b8b0a0', 0.9), 0, 0.39, 0); });
+      for (let i = 0; i < 5; i++) kk.add(rbox(0.4, 0.03, 0.26, 0.01), MAT.paint('#6a7080', 0.7), p[0] + 0.26, 0.02 + i * 0.035, p[1], i * 0.06);
+      kk.add(rbox(0.22, 0.015, 0.1, 0.004), MAT.steel(), p[0] - 0.22, 0.42, p[1] + 0.05, 0.4);
     } else if (which === 'lhar4') {   // Sana's: and a sack of wool
       kk.at(p[0], 0, p[1], 0, () => sackPile(kk, { seed: 21 }));
     } else if (which === 'lhar0') {   // Lhamo's: bowls stacked, a basket of roots
-      for (let i = 0; i < 6; i++) kk.add(cyl(0.12, 0.08, 0.06, 10), MAT.paint('#d8c8a8', 0.6), p[0] - 0.2, 0.03 + i * 0.065, p[1]);
-      kk.at(p[0] + 0.3, 0, p[1], 0, () => { jar(kk, 0, 0, 0, 'jar', '#a85030', 1.2); jar(kk, 0.25, 0, 0.1, 'jar', '#c8a050', 1.0); });
+      for (let i = 0; i < 6; i++) kk.add(cyl(0.12, 0.08, 0.06, 10), MAT.paint('#d8c8a8', 0.6), p[0] - 0.22, 0.03 + i * 0.065, p[1]);
+      kk.at(p[0] + 0.18, 0, p[1], 0, () => { jar(kk, 0, 0, 0, 'jar', '#a85030', 1.2); jar(kk, 0.18, 0, 0.08, 'jar', '#c8a050', 1.0); });
     } else {
       kk.at(p[0], 0, p[1], 0, () => crate(kk, 0.5, { pal: 'pale' }));
     }
@@ -169,7 +173,7 @@ export function dressLharRoom(R, info, which) {
     shown: null, home: null,
     set(phase, home) {
       this.shown = phase && sets[phase]?.children.length ? phase : null; this.home = !!home;
-      for (const [name, g] of Object.entries(sets)) g.visible = name === phase;
+      for (const [name, g] of Object.entries(sets)) { g.visible = name === phase; for (const c of cols[name] || []) c.enabled = g.visible; }
       R.lights.forEach((l, i) => { l.userData.base = base[i] * (home ? 1 : 0.3); if (l.intensity) l.intensity = l.userData.base; });
     },
   };
