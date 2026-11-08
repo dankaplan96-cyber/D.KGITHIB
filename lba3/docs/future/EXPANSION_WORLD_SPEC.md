@@ -993,3 +993,8 @@ _(file, line or function, why)_
 - `src/game/regions.js` (W-2, the World Builder): the import of `ballastra/arches.js`, `REF.bl_arches`, `AT.bl_oren`,
   `AT.bl_mags`, `AT.bl_pump`, `OUT_AT.bl_arches`, one `add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'], …)`
   line: the Arch District's lazy group (built in steps), each commented.
+- `src/game/lba1places.js` `climbShelfWall` (EXP-MERGE-35, the World Builder): the shelf fill's block and collision box
+  across the foot landing's north edge run to the landing's line (`kz`), closing a pocket by the wall's north end that
+  pinned the hero (oren-square's walk from the fortress shelter); base code: also `tools/testlab/requests/EXP-MERGE-35-base.diff`.
+- `tests/world-consistency.mjs` `TRANSITIONS` (EXP-MERGE-35): the expanded campaign's `startTransition` calls classified
+  (coils.js, index.js afterLoad, survey.js, throttle.js); expansion branch only (on main those calls don't exist).

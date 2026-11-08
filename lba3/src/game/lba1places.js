@@ -590,6 +590,13 @@ function climbShelfWall(k, M, physics, T) {
   // the fill: one block over the rows (each row from its east edge west), its collision a box between each two rows,
   // out to the middle of its slanted west edge (within ~0.15 m of the stone's edge: no gap to sink into, no ledge)
   const R = climbShelfRows(T), inner = R.map(([z, xe]) => [xe, z]), outer = R.map(([z, , xw2]) => [xw2, z]);
+  // (EXP-MERGE-35: across the foot landing's north edge, zn, the rows' east edge steps from the wall's back to the
+  //  landing's line; the block and the box between those two rows took the narrower one, leaving a pocket of low ground
+  //  0.35 × 0.17 m between the wall's north end, the fill and the landing, 0.5–0.7 m under the fill: the hero dropped in
+  //  and stood pinned between the wall and the fill (oren-square's walk from the fortress shelter). The block takes the
+  //  landing's corner and that box runs to the landing's line.)
+  const kz = R.findIndex(([z]) => z <= C.zn);
+  if (kz > 0 && R[kz - 1][1] < R[kz][1]) inner.splice(kz, 0, [R[kz][1], C.zn]);
   const poly = [...inner, ...[...outer].reverse()];
   let fb = Infinity; for (const [x, z] of poly) fb = Math.min(fb, T(x, z));
   fb -= 0.4;
@@ -597,7 +604,7 @@ function climbShelfWall(k, M, physics, T) {
   geo.rotateX(-Math.PI / 2); geo.translate(0, fb, 0);
   k.add(geo, M.wall, 0, 0, 0);
   for (let i = 0; i + 1 < R.length; i++) {
-    const xe = Math.min(R[i][1], R[i + 1][1]), xwm = (R[i][2] + R[i + 1][2]) / 2;
+    const xe = (i + 1 === kz ? Math.max : Math.min)(R[i][1], R[i + 1][1]), xwm = (R[i][2] + R[i + 1][2]) / 2;   // (EXP-MERGE-35, above)
     if (xe - xwm < 0.15) continue;
     physics.add({ type: 'box', x: (xe + xwm) / 2, z: (R[i][0] + R[i + 1][0]) / 2, hw: (xe - xwm) / 2, hd: Math.abs(R[i + 1][0] - R[i][0]) / 2 + 0.08, rot: 0, top });   // (overlapping well past physics' 5 cm inset: no seam to drop through)
   }
