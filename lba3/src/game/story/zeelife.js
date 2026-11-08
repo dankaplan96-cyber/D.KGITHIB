@@ -21,6 +21,22 @@ import { ChapterBase } from './base.js';
 import '../text/zeelife.js';
 import { ZHOMES, ZH, zhomeDoors, zhomeExit } from '../zhomes.js';
 
+// DOOR-CLEAR: a resident's stop never stands before a house door: 2.2 m out from it and 0.7 m either side of its middle
+// (as the isles' dressing keeps it, zislands.js). A stop inside is moved sideways out of it, keeping where it faces
+export function clearOfDoors(stops, Z) {
+  const doors = (Z?.houseDoors || []).map((d, i) => ({ ...d, a: Z.houseFacing?.[i] ?? 0 }));
+  return stops.map((s) => {
+    for (const d of doors) {
+      const fx = Math.sin(d.a), fz = Math.cos(d.a), dx = s.x - d.x, dz = s.z - d.z;
+      const out = dx * fx + dz * fz, side = dx * fz - dz * fx;
+      if (out < -0.2 || out > 2.2 || Math.abs(side) > 0.7) continue;
+      const k = (side < 0 ? -1 : 1) * (1.05 - Math.abs(side));
+      s = { ...s, x: s.x + fz * k, z: s.z - fx * k };
+    }
+    return s;
+  });
+}
+
 export class ZeelichLife extends ChapterBase {
   // (LAZY-REGIONS: Zeelich once it is built; never builds it — the street's state goes on it as it is built)
   get Z() { return this.game.regions?.built('zeelich'); }
@@ -60,8 +76,8 @@ export class ZeelichLife extends ChapterBase {
     const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
     const S = (id, x, z, tx, tz, dur, act = 'stand', o = {}) => ({ id, x: ox + x, z: oz + z, a: A(x, z, tx, tz), dur, act, ...o });
     const pad = Z?.shuttlePad ? [Z.shuttlePad.x - ox, Z.shuttlePad.z - oz] : [-44, 8];
-    const def = (id, char, color, speed, stops) => (Z ? { id, name: 'n_' + id, char, tint: '#ffffff', color, speed, ambient: true, x: stops[0].x, z: stops[0].z, angle: stops[0].a, round: stops, start: 0 }
-      : { id, name: 'n_' + id, char, tint: '#ffffff', color, ambient: true, x: 0, z: 0, angle: 0, pending: true });
+    const def = (id, char, color, speed, stops0) => { const stops = Z ? clearOfDoors(stops0, Z) : stops0; return (Z ? { id, name: 'n_' + id, char, tint: '#ffffff', color, speed, ambient: true, x: stops[0].x, z: stops[0].z, angle: stops[0].a, round: stops, start: 0 }
+      : { id, name: 'n_' + id, char, tint: '#ffffff', color, ambient: true, x: 0, z: 0, angle: 0, pending: true }); };
     return [
       def('zr_fennick', 'worker', '#e8a040', 1.0, [
         S('fen_post1', 15.0, -5.6, 15.6, -6.4, [8, 12], 'tend'),
@@ -75,11 +91,17 @@ export class ZeelichLife extends ChapterBase {
         S('rez_look', pad[0] + 6.2, pad[1] - 3.4, pad[0] + 30, pad[1] - 20, [8, 12]),
         S('rez_gate', -44.0, 1.6, -52, 0, [8, 12]),
       ]),
+      // (DOOR-CLEAR: the notice board east of the council door and the petition box west of it were one leg of her
+      //  round, and that leg crossed the door's front 1.5 m out: in chapter 9 she stood in the straight way in. Her stop
+      //  at the box was inside the planter beside it, so she stopped wherever the planner put her, nearer the door. The
+      //  box is reached from the tags now (down past the planter's door side, 1 m clear of the door's way in), and she
+      //  leaves it north, to look the council house over from the street, before the notice board)
       def('zr_oma', 'archivist', '#c8b0e0', 0.85, [
         S('oma_door', -22.9, -6.4, -25.5, -8.4, [9, 13]),
         S('oma_fount', -21.6, 2.6, -24, 0, [6, 9]),
         S('oma_tag', -28.9, 6.8, -29.9, 8.0, [6, 9]),
-        S('oma_box', -27.6, -6.0, -27.6, -8.4, [8, 11], 'put'),
+        S('oma_box', -27.2, -6.7, -27.6, -8.4, [8, 11], 'put'),
+        S('oma_look', -26.8, -3.4, -25.5, -8.4, [5, 8]),
       ]),
     ];
   }
