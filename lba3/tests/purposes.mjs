@@ -111,9 +111,10 @@ check('after the call: the conch sends the chasing dog home, calm; it does not c
 iso('chapter 4 entered by its flags (on Desert Island by the pier); the singing fork and the lance given as the chapter would');
 const s0 = await ev(() => { const G = game, h = G.hero; const j = T.jump('dig'); h.coins = 30; return { ...j, homes: Object.keys(G.rooms.desert.oldHomes || {}), lamp: !!G.rooms.desert.studyLamp }; });
 check('chapter 4: on Desert Island; the three kept old houses are lived in (S40, S28, the hall), the study crystal is there', s0.room === 'desert' && s0.homes.join() === 's40,s28,hall' && s0.lamp, s0);
-const s1 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes; const u = P.use(O.s28.x, O.s28.z, { kind: 'pp_door', near: 1.2 }); P.settle(); return { u: u.r, survey: !!G.flags.pp_survey, inv: G.inventory.items().map((i) => i.id) }; });
+// (DESERT-BAR: S28's door leads into the crew's bunkhouse now; the board is on the wall beside it, desertold.js)
+const s1 = await ev(() => { const G = game, B = G.rooms.desert.s28board; const u = P.use(B.x, B.z, { kind: 'pp_door', near: 1.0 }); P.settle(); return { u: u.r, room: G.room?.id, survey: !!G.flags.pp_survey, inv: G.inventory.items().map((i) => i.id) }; });
 const s1l = await said();
-check("the dig crew's bunkhouse (WALK, E): its board, Anko's pipe sketch found (line two runs to the oasis), carried", s1.survey && s1.inv.includes('survey') && s1l.some((l) => /pipe/.test(l)), { s1, s1l });
+check("the dig crew's bunkhouse (WALK, E): its board beside the door, Anko's pipe sketch found (line two runs to the oasis), carried", s1.room === 'desert' && s1.survey && s1.inv.includes('survey') && s1l.some((l) => /pipe/.test(l)), { s1, s1l });
 const s2 = await ev(() => { const G = game, O = G.rooms.desert.oldHomes; const u = P.use(O.s40.x, O.s40.z, { kind: 'pp_door', near: 1.2 }); P.settle(); return { u: u.r }; });
 const s2l = await said();
 check("S40 (WALK, knock): Bashir's home; it points to him at the loom", s2l.some((l) => /Bashir's house/.test(l)), { s2, s2l });

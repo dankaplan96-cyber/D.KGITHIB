@@ -24,8 +24,11 @@ export const steps = [
     const G = game, Post = G.rooms.desert.post;
     P.go(Post.gate.x + 6, Post.gate.z, { tol: 1.5, run: true });
     let t = 0; while (!G.story.cur.stormy && t < 120) { G.step(0.25); t += 0.25; if (G.state !== 'play') P.settle(); }
-    const r = P.use(Post.desk.x, Post.desk.z, { near: 1.2 }); P.wait(1); P.settle();
-    return { waited: t, stormy: G.story.cur.stormy, ...r, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
+    // (DESERT-BAR: the notebook is on the foreman's desk inside the office: in through the office's door, Search at the desk)
+    const e = P.enter('ih_post_cabin0'); const d = G.story.cur.deskSpot();
+    const r = d ? P.use(d.at.x, d.at.z, { near: 1.2, kind: 'c4desk' }) : { r: 'no desk' }; P.wait(1); P.settle();
+    const out = P.exitTo('ih_post_cabin0-out');
+    return { waited: t, stormy: G.story.cur.stormy, enter: e.r, ...r, out: out.to, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
   }],
   ['the dig\'s gate (the keypad)', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle(); return { ...r, menu: m.r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
   ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],

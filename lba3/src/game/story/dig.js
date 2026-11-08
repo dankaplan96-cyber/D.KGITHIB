@@ -20,10 +20,12 @@
 // → chapter 5 (Steam and Sand): open the vent under this island without boiling Kesh.
 import { ChapterBase } from './base.js';
 import { YACHT_ROUTES } from '../keshlife.js';
+import { IH } from '../ihomes.js';
 import '../text/ch4.js';
 
 const STORM_PERIOD = 50, STORM_LEN = 28; // (CH4-STORM: the calm between storms 45 → 22 s) // seconds (game time) between storms, and how long one blows
-const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
+const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];
+const OFFICE = 'ih_post_cabin0';   // (the post's office inside: ihomes.js, the door of the post's first cabin)   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
 
 export class Dig extends ChapterBase {
   get D() { return this.game.rooms.desert; }
@@ -43,6 +45,8 @@ export class Dig extends ChapterBase {
     const x = p.x - fz * 2.7 - fx * 0.3, z = p.z + fx * 2.7 - fz * 0.3;
     return { x, z, a: Math.atan2(p.x - x, p.z - z) };
   }
+  // the foreman's desk in the post's office (its room, once built): where he stands before it
+  deskSpot() { return this.game.regions?.built(OFFICE) ? IH[OFFICE]?.front?.desk || null : null; }
   // where Ilka waits once she has her notebook back: outside the dig's gate, out of the keypad's way
   ilkaRim() {
     const dg = this.D.dig, g = dg.gate, dx = g.x - dg.x, dz = g.z - dg.z, a = Math.atan2(dz, dx) + 0.12, r = Math.hypot(dx, dz) + 2.4;
@@ -127,13 +131,18 @@ export class Dig extends ChapterBase {
   interactables(consider, dist) {
     const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: read each frame: never builds)
     if (this.isCur() && g.room?.id === 'butemple' && f.c4_seals3 && !f.c4_carving && this.T) consider(dist(this.T.carving.x, this.T.carving.z), 2.2, { kind: 'c4carve', label: 'p_carving' });
+    // (DESERT-BAR: the notebook is on the foreman's desk inside the post's office, the cabin's own room (ihomes.js). It was
+    //  taken from a spot 0.8 m before the office door, inside the door's own way in: walking up to it took him indoors to
+    //  an office with no notebook)
+    const desk = this.deskSpot();
+    if (this.isCur() && desk && f.c4_ilka && !f.c4_notebook && g.room?.id === OFFICE) consider(dist(desk.x, desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
     if (!this.isCur() || !this.inD()) return;
     // the wind-pump: listen at the tower while it is jammed; push the shaken joint home while it sprays
     const pu = D.pump;
     if (f.c4_started && pu.state === 'jammed') consider(dist(pu.x, pu.z), 3.7, { kind: 'c4listen', label: 'p_listen' });
     if (pu.state === 'leak') consider(dist(pu.joint.x, pu.joint.z), 1.5, { kind: 'c4joint', label: 'p_push' });
     if (f.c4_heskAsk && !f.c4_rope) consider(dist(D.rope.x, D.rope.z), 1.4, { kind: 'c4rope', label: 'p_rope' });
-    if (f.c4_ilka && !f.c4_notebook) consider(dist(D.post.desk.x, D.post.desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
+    if (f.c4_ilka && !f.c4_notebook && !this.deskSpot()) consider(dist(D.post.desk.x, D.post.desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });   // (only if the office has no room)
     if (!f.c4_digOpen) consider(dist(D.dig.gate.x, D.dig.gate.z), 1.8, { kind: 'c4gate', label: 'p_code' });
     // the carving over the temple's door (five vents breathing), from the bottom of the dig
     if (f.c4_digOpen && !f.c4_seals3 && h.pos.y < D.dig.bottomY + 1) consider(dist(D.dig.carvings.x, D.dig.carvings.z), 1.6, { kind: 'c4lintel', label: 'p_carving' });
@@ -455,7 +464,7 @@ export class Dig extends ChapterBase {
     if (f.c4_digOpen && f.c4_bottom) return this.stars(D.dig.carvings);
     if (f.c4_digOpen) return this.stars(D.dig);
     if (f.c4_notebook) return this.stars(D.dig.gate);
-    if (f.c4_ilka) return this.stars(D.post.desk);
+    if (f.c4_ilka) return this.stars(this.game.room?.id === OFFICE && this.deskSpot() ? this.deskSpot().at : D.post.desk);   // (the office's door; inside, the desk)
     if (f.c4_trust) return f.c4_heskAsk && !f.c4_rope ? this.stars(D.rope) : this.stars(this.starNpc('hesk'));
     if (f.c4_pump) return this.stars(this.starNpc('tarra'));
     if (f.c4_pumpTask) return this.stars(D.pump.state === 'leak' ? D.pump.joint : D.pump);

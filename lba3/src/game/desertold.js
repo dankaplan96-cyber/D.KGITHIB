@@ -100,7 +100,9 @@ export function buildOldPlaces(C) {
     eye: pm('#ff5a1a', 0.3, { emissive: '#d82a00', emissiveIntensity: 1.4 }),
   };
   const r = rng(4949);
-  const shut = (id, x, y, z, ry, out = 0.9) => R.shutDoors.push({ id, ...W(x + Math.sin(ry) * out, z + Math.cos(ry) * out), y, ry });
+  // (DESERT-BAR: with its sill, the door's own face, so a door that leads in (S28, the hall: ihomes.js) has its room's way
+  //  in and out)
+  const shut = (id, x, y, z, ry, out = 0.9) => R.shutDoors.push({ id, ...W(x + Math.sin(ry) * out, z + Math.cos(ry) * out), y, ry, sill: W(x, z) });
   const figure = (x, z) => R.figures.push(W(x, z));
 
   // ---------------------------------------------------------------- a house of Kesh's adobe (two storeys when tall)
@@ -314,6 +316,15 @@ export function buildOldPlaces(C) {
     B.add(bbox(0.9, 0.16, 1.9, 0, 1), M.stone, T.x - T.w / 2 - 0.4, gy + 0.03, T.z - 1.5);
     col({ type: 'box', x: T.x, z: T.z, hw: T.w / 2, hd: T.d / 2, top: gy + T.h + 0.5 });
     shut('s28', T.x - T.w / 2, gy, T.z - 1.5, -Math.PI / 2, 1.0);
+    // (DESERT-BAR: the crew's board on the wall north of the door, now that the door leads in: Anko's sketch is read there,
+    //  story/purposes.js; a cork board in a frame with three pinned sheets)
+    {
+      const bx = T.x - T.w / 2 - 0.05, bz = T.z - 1.5 + 1.55, by = gy + 1.45;
+      B.add(bbox(0.08, 0.95, 1.1, 0.01, 1), M.darkWood, bx, by, bz);
+      B.add(bbox(0.04, 0.8, 0.95, 0, 1), pm('#b88a5a', 0.95), bx - 0.04, by, bz);
+      for (const [dy, dz, c] of [[0.15, -0.25, '#f2ead6'], [-0.1, 0.2, '#e8dcc0'], [0.2, 0.25, '#dfe8ee']]) B.add(bbox(0.01, 0.28, 0.22, 0, 1), pm(c, 0.9), bx - 0.07, by + dy, bz + dz);
+      R.s28board = W(bx - 0.9, bz);
+    }
     fitAdd({ region: 'desert', name: 'tower s28', x: W(T.x, T.z).x, z: W(T.x, T.z).z, ry: 0, oy: gy, w: T.w, d: T.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6, openings: [{ side: 'left', kind: 'door', x0: -2.3, x1: -0.7, y0: 0, y1: 2.4 }] });
   }
   for (const [x, z] of [[-55.7, -73.9], [-58.1, -74.1]]) { const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }

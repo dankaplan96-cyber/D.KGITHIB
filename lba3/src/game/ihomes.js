@@ -88,13 +88,13 @@ export const IHOMES = {
   'platform-30-27': { k: 'chapel' },           // the Wannies' chapel
   'platform-50-46': { k: 'workshop' },         // the lamp mender by the shore
   'orchard-4-28': { k: 'press' },              // the press house
-  'kesh-house0': { k: 'trader' },              // Brosk's house
+  'kesh-house0': { k: 'trader', keeper: 'ih_dela' },   // Brosk's house: Dela, his wife, keeps the stock
   'kesh-house1': { k: 'weaver' },              // Lumi's weaving room
-  'kesh-house2': { k: 'home' },                // Mother Tarra's house
-  'kesh-house3': { k: 'home' },                // Safi's family (the water carrier)
-  'kesh-house4': { k: 'lodging' },             // Hesk's lodging
+  'kesh-house2': { k: 'home', keeper: 'ih_jorr' },     // Mother Tarra's house: Jorr, her son, keeps the water tally
+  'kesh-house3': { k: 'home', keeper: 'ih_nima' },     // Safi's family (the water carriers): Nima, her mother
+  'kesh-house4': { k: 'lodging', keeper: 'ih_hanna' }, // Hesk's lodging: Old Hanna lets the beds
   'post-cabin0': { k: 'pobox' },               // the project post's office
-  'post-cabin1': { k: 'postbunk' },
+  'post-cabin1': { k: 'postbunk', shut: 'storm' },   // (chapter 4: the gate guard waits out a sandstorm in here: story/ihomes.js)
   'post-cabin2': { k: 'poststore' },
   // the Hamalayi (DOOR-SWEEP, original-mechanics wave 3: their doors were drawn and did nothing): the landing's hut,
   // Lhar's five stone houses, the observatory keeper's house (hamalayi.js R.shutDoors)
@@ -105,10 +105,17 @@ export const IHOMES = {
   'ham-lhar3': { k: 'weaver' },                // Sana weaves the prayer flags
   'ham-lhar4': { k: 'canteen' },               // Lhamo's kitchen, soup for the street
   'ham-obs0': { k: 'library' },                // the observatory keeper's house: charts and logbooks
+  // DESERT-BAR (8.11): Desert Island's kept old houses (desertold.js). S28 is the dig crew's bunkhouse; the great hall in
+  // the School's pool is the pupils' dormitory, open once their study crystal is awake (dark inside before: they knock
+  // back through the door, story/purposes.js). S40, Bashir's home, stays shut with its own line (his granddaughter at the
+  // shutters).
+  's28': { k: 'bunkhouse', style: 'crew', keeper: 'ih_brann' },
+  'hall': { k: 'dorm', style: 'school', shut: 'lamp', keeper: 'ih_joss' },
 };
 export const EXCEPT = new Set(Object.keys(IHOMES).filter((d) => IHOMES[d].ex));
 export const roomOf = (d) => 'ih_' + d.replace(/--/g, '_m').replace(/-/g, '_');
-export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') ? 'desert' : d.startsWith('ham-') ? 'hamalayi' : 'isle_' + d.split('-')[0]);
+const DESERT_OLD = new Set(['s28', 'hall']);   // (desertold.js's kept old houses)
+export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') || DESERT_OLD.has(d) ? 'desert' : d.startsWith('ham-') ? 'hamalayi' : 'isle_' + d.split('-')[0]);
 export const IHOME_IDS = Object.keys(IHOMES).filter((d) => !EXCEPT.has(d)).map(roomOf);
 const DOOR = Object.fromEntries(Object.keys(IHOMES).map((d) => [roomOf(d), d]));
 export const doorOf = (r) => DOOR[r] || null;
@@ -122,6 +129,14 @@ export const KEEPERS = {
   ih_brem: { room: roomOf('otringal--2-56'), char: 'oku', color: '#e0c890' },
   ih_gorrin: { room: roomOf('knartas-33--14'), char: 'keeper', color: '#e0a870' },
   ih_tesk: { room: roomOf('platform-27--31'), char: 'zmole1', color: '#b8c8a0' },
+  // DESERT-BAR: Kesh's homes and the old houses have their people (no counter: each stands at the piece of the room that
+  // is their work, `stand`); their lines follow Kesh's state (story/kesh.js lifePhase); `when`: not there in some states
+  ih_dela: { room: roomOf('kesh-house0'), char: 'weaver', color: '#f0b890', stand: 'jars', phase: 'kesh' },
+  ih_jorr: { room: roomOf('kesh-house2'), char: 'farmerA', color: '#d8c090', stand: 'jars', phase: 'kesh' },
+  ih_nima: { room: roomOf('kesh-house3'), char: 'lharWoman', color: '#e8a8b8', stand: 'jars', phase: 'kesh' },
+  ih_hanna: { room: roomOf('kesh-house4'), char: 'tarra', color: '#c8b0e0', stand: 'mats', phase: 'kesh' },
+  ih_brann: { room: roomOf('s28'), char: 'worker', color: '#e8c070', stand: 'table', phase: 'kesh', when: 'crew' },
+  ih_joss: { room: roomOf('hall'), char: 'desertkid_b', color: '#b8c8ff', stand: 'bookcase', phase: 'kesh' },
 };
 export const IH = {};
 
@@ -133,9 +148,11 @@ function styleOf(door, r) {
   if (isle === 'knartas') return { wall: pick(['#e8d8c0', '#e2ccae', '#ead8b8']), dado: pick(['#7a5a3a', '#6a4a3a', '#5a6a5a']), floorMat: MAT.planks('honey'), band: false, frame: '#7a5a3a', light: '#ffe2b8', cap: '#d8c4a4' };
   if (isle === 'mosquibee') return { wall: '#f4e4b0', dado: '#c8902a', floor: ['#e8c878', '#d8b060', '#a87a2a'], band: false, frame: '#c8902a', light: '#fff0c0', cap: '#e8d090' };
   if (isle === 'platform' || isle === 'undergas') return { wall: pick(['#d0c8c0', '#c8c0b4']), dado: '#5a5a6a', floor: ['#a8a4a0', '#98948e', '#5a5856'], band: false, frame: '#5a5a6a', light: '#ffe0b0', cap: '#b8b0a8' };
-  if (door.startsWith('kesh-')) return { wall: pick(['#ecd0a8', '#e8c8a0', '#f0d4b0']), dado: '#2f7a9a', floor: ['#d89a6a', '#c88a5a', '#8a5a3a'], band: false, frame: '#7a5a3a', light: '#ffe0b0', cap: '#e0bc90', music: 'home' };
+  if (IHOMES[door]?.style === 'crew') return { wall: '#e2cba8', dado: '#6a5a4a', floorMat: MAT.planks('dark'), band: false, frame: '#5a4a3a', light: '#ffe0b0', cap: '#cdb898', music: 'desert_in' };   // (the tower's lower storey: stone, the crew's planks)
+  if (IHOMES[door]?.style === 'school') return { wall: '#c8c0b4', dado: '#2f5a8a', floor: ['#8a8478', '#7a7468', '#4a4640'], band: true, frame: '#2f4a6a', light: '#d8f0ff', cap: '#b8b0a4', music: 'desert_in' };   // (the School's grey stone, its blue; the crystal's cool light)
+  if (door.startsWith('kesh-')) return { wall: pick(['#ecd0a8', '#e8c8a0', '#f0d4b0']), dado: '#2f7a9a', floor: ['#d89a6a', '#c88a5a', '#8a5a3a'], band: false, frame: '#7a5a3a', light: '#ffe0b0', cap: '#e0bc90', music: 'desert_in' };
   if (door.startsWith('ham-')) return { wall: pick(['#e8dccb', '#e2d4c0', '#ecdcc4']), dado: pick(['#6a4a32', '#5a3a2a', '#7a5a3a']), floorMat: MAT.planks('dark'), band: false, frame: '#5a3a2a', light: '#ffd8a8', cap: '#d8c8b0', music: 'home' };   // (the Hamalayi: whitewashed stone, dark timber, a warm hearth light)
-  if (door.startsWith('post-')) return { wall: '#dae6e6', dado: '#2a8a8a', floor: ['#9aa4aa', '#8a949a', '#5a6268'], band: false, frame: '#2a3a44', light: '#eef8ff', cap: '#c8d4d4', music: 'office' };
+  if (door.startsWith('post-')) return { wall: '#dae6e6', dado: '#2a8a8a', floor: ['#9aa4aa', '#8a949a', '#5a6268'], band: false, frame: '#2a3a44', light: '#eef8ff', cap: '#c8d4d4', music: 'desert_in' };
   return { wall: pick(ESMER_WALLS), dado: pick(ESMER_DADO), floor: pick([['#d8c8b4', '#c4ae96', '#3a6a7a'], ['#d4c8c0', '#c0b2a8', '#3a7a6a'], ['#c8d0d8', '#b4bcc8', '#4a5a7a']]), band: true, frame: '#2f7a84', light: '#ffe8cc', cap: '#e4d6cc' };
 }
 
@@ -230,6 +247,7 @@ const KIND = {
   weaver: ['loom', 'woolshelf', 'mats', 'chest'],
   lodging: ['harness', 'mats', 'chest', 'jars'],
   pobox: ['desk', 'radiodesk', 'filing', 'lockers'],
+  dorm: ['bookcase', 'bunk', 'table', 'bunk', 'chest', 'bunk'],   // (DESERT-BAR: the pupils' dormitory: their books first, its look)
   postbunk: ['bunk', 'lockers', 'bunk', 'table'],
   poststore: ['bigcrates', 'barrels', 'crates', 'lockers'],
 };
@@ -286,6 +304,25 @@ function build(rid, scene, physics) {
     }
   }
   IH[rid].pieces = placed.map((q) => q.name);
+  // (DESERT-BAR: where to stand before each piece, facing it, in the world: the first of each kind; a story thing kept
+  //  on a piece — the post office's desk — is offered from there)
+  IH[rid].front = {};
+  for (const pc of placed) {
+    if (IH[rid].front[pc.name]) continue;
+    const fx = Math.sin(pc.ry), fz = Math.cos(pc.ry), d = pc.p.fd / 2 + 0.55;
+    const x = clamp(pc.x + fx * d, LX + 0.45, RX - 0.45), z = clamp(pc.z + fz * d, BZ + 0.45, FZ - 0.45);
+    // (clear of every other piece by a body's width, and of the door's way in: else none, the piece is read from the side)
+    const clear = !placed.some((q) => q !== pc && x > q.x - q.hx - 0.35 && x < q.x + q.hx + 0.35 && z > q.z - q.hz - 0.35 && z < q.z + q.hz + 0.35)
+      && !(x < LX + 2.0 && Math.abs(z - doorZ) < 1.0);
+    IH[rid].front[pc.name] = { x: o.X(x), z: o.Z(z), a: Math.atan2(pc.x - x, pc.z - z), at: { x: o.X(pc.x), z: o.Z(pc.z) }, clear };
+  }
+  // a keeper with no counter stands at the piece that is their work (KEEPERS stand), facing it; else at the first
+  // piece with room before it
+  for (const K of Object.values(KEEPERS)) {
+    if (K.room !== rid || !K.stand || IH[rid].npcSpots.keeper) continue;
+    const F = IH[rid].front, f = F[K.stand]?.clear ? F[K.stand] : Object.values(F).find((q) => q.clear);
+    if (f) IH[rid].npcSpots.keeper = { x: f.x, z: f.z, a: f.a };
+  }
   // the two looks: the room's own at its first piece, its kind's at the second (from where he stands before them)
   // (the prompt is in reach of the piece itself; the place to stand before it keeps out of the door's way)
   const lookAt = (pc, key) => {
@@ -329,6 +366,7 @@ const SIZE = {
   'post-cabin0': { w: 7.0, d: 3.4 }, 'post-cabin1': { w: 6.0, d: 3.2 }, 'post-cabin2': { w: 5.0, d: 3.2 },
   'ham-landing0': { w: 4.4, d: 3.6 }, 'ham-lhar0': { w: 5.5, d: 4.4 }, 'ham-lhar1': { w: 6.2, d: 4.6 }, 'ham-lhar2': { w: 5.0, d: 4.2 },
   'ham-lhar3': { w: 4.8, d: 4.0 }, 'ham-lhar4': { w: 5.2, d: 4.2 }, 'ham-obs0': { w: 3.2, d: 2.4 },
+  's28': { w: 7.19, d: 2.47 }, 'hall': { w: 10.19, d: 7.02 },   // (the tower's door is in its long west side; the hall's in its north)
 };
 export const buildIHome = (rid) => (scene, physics) => build(rid, scene, physics);
 

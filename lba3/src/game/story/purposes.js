@@ -74,8 +74,12 @@ export class Purposes extends ChapterBase {
     const O = this.D.oldHomes || {}, L = this.D.studyLamp;
     const door = (d, what, label) => { if (d && Math.abs(y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'pp_door', what, label }); };
     door(O.s40, 's40', 'p_knock');
-    door(O.s28, 's28', 'p_read');
-    door(O.hall, 'hall', 'p_knock');
+    // (DESERT-BAR: S28's door leads into the crew's bunkhouse now, ihomes.js: the board is on the wall beside it; the
+    //  dormitory's door leads in once the crystal is awake: knocked on only while it is dark inside)
+    const B = this.D.s28board;
+    if (B && O.s28 && Math.abs(y - O.s28.y) < 1.6) consider(dist(B.x, B.z), 1.3, { kind: 'pp_door', what: 's28', label: 'p_read' });
+    else door(O.s28, 's28', 'p_read');
+    if (!this.f.pp_lamp) door(O.hall, 'hall', 'p_knock');
     if (L && Math.abs(L.y - y) < LAMP_REACH) consider(dist(L.x, L.z) + 0.4, 2.0, { kind: 'pp_lamp', label: 'p_look' });
   }
   interact(it) {
