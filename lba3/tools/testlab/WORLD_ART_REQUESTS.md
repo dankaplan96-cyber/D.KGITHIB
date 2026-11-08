@@ -3182,3 +3182,32 @@ argument on `limb_legs` whose default is unchanged). It goes **on top of CAST-PO
   - The other Esmer looks share one face shape.
   - Otringal's Quetch (councilB on Kira, Sanna and Ama; lharWoman on zc_petit) are not touched in this batch.
 - Order: HEROES, CITADEL, CITADEL-2, CITADEL-3, then this one. Re-test after merging: the worktree's game was at db5a1c9c, before your GAIT-CADENCE rig.js.
+
+## ZPERF-1 · Zeelich's hub draw calls on the Vega 8 (CLOUD_ORDERS 27c) · the laptop, 8.11.2026
+Diff: `requests/ZPERF-1.diff` (engine/drawcull.js, engine/perf.js, main.js; against ff85b2b6, `git apply --check`
+clean; independent of ZSTYLE-1/2). **Correction of the ZSTYLE-1 note:** the hub's 390–1006 calls were a test-path
+artifact: `game.step()` + a bare `renderer.render()` never runs `game.frame(dt, true)`, so `shadowCull.update(root)`
+never runs and `renderer.mid` skips `drawBatch` (it batches only areas in `shadowCull.areas`). **In play the hub is
+batched like Citadel** (53 batches, 506 pieces, BoxCull, the shadow cache): arrival 48, plaza 123, street 236, mills 70
+calls (main + shadow). Vega 8, Chrome D3D11, 1366×768, Medium by hand, chapter 3.
+- **The one real cost:** Citadel's scene-level pieces (wizards.js `wizardTent`, the LBA1 asylum front and block-house
+  from `buildLba1Door`, lba1places `asylum-climb`, kit2.js `kit2lane`, six story-prop groups) are added to the scene,
+  not to `world.root`, so `enterRoom` hiding the root leaves them shown; from Zeelich's street looking west they are
+  2,400 m off (far plane 2,500, fog ends at 290 m) and drawn in the fog colour. BoxCull and FarCull never test them.
+- **Fix:** `BoxCull.hideFar(scene, root, camera, far, shadows)`: for one frame, leaves out the scene's top-level
+  subtrees other than the area root whose world box is wholly beyond the fog's end and out of view or beyond the fog
+  in depth (casters only beyond 400 m, clear of the sun's box); never subtrees with lights, skinned/instanced/batched
+  meshes, points, lines, sprites, non-culled or onBeforeRender meshes, unfogged or non-normal-blended materials. Boxes
+  refresh when a root moves and every 30 frames; candidates every 120 frames or on a child-count change. `?nofar` /
+  `boxCull.far = false` for A/B. main.js `renderer.mid` calls it after `boxCull.hide` (3 lines).
+- **Before → after (exact):** street 236–237 → 165 calls, triangles 354.5k → 335.7k main; arrival, plaza, mills
+  unchanged (±2 = people and dogs moving). Pixels: rule off / on / off again from one frozen state: 0 px different at
+  plaza, street and mills.
+- `perf.js GpuTimer` drops non-finite or ≥ 10,000 ms results (counted as `invalid`): one 737,873 ms sample came back
+  without the disjoint flag.
+- Tests (headless): zeelich-life, overlaps (zeelich), zeelich-doors (ch 3 and 5), world-consistency: pass.
+- Not verified: any frame-time gain (other agents loaded the laptop; sim time swung 5–80 ms between runs), battery,
+  play. **For your tests and probes:** counting calls through `game.step` + `renderer.render()` over-reports; use
+  `game.frame(dt, true)` or `shadowCull.update(root)` first. **Root cause left:** the builders that use the scene
+  instead of `world.root` (wizards, lba1, sewers, kit2); moving them changes Citadel's batches, so they are culled
+  here instead. The same pieces may cost in other outdoor regions within 2,500 m of Citadel (the desert near x ≈ 1000).
