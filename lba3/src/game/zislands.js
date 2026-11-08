@@ -573,7 +573,9 @@ const STYLE = {
     // the jars at a potter's size; the basin between the quay's arms a harbour: a calm cloud-water surface (open to
     // the west), quay walls with a kerb along its three land sides, skiffs moored in it (below: dress)
     // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
-    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
+    // (KNARTAS-GATE: the original's lintels (body 31) stood on posts we draw as lamps and trees: drawn, they were grey
+    // rocks hanging 2 m up beside the houses; left out. The slab on the gatehouse's roof (38) a stone slab, not a rock)
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
     // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
@@ -789,6 +791,13 @@ const STYLE = {
     walls: ['#d8ccc0', '#cfc4b4', '#e0d4c4'], domes: [['#6a5a4a', '#c8b098'], ['#4a6a6a', '#a8c8c0']],
     target: { x: 27, z: -26, word: 'BUILDING COMPANY' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
     crates: 'wood', lines: ['#c8a050', '#5a4a3a'],
+    // (DOOR-CLEAR: the yard fence along the front of the Wannie house at (35, 15) ran on 0.2 m past the middle of its
+    //  door, 1.4 m out: straight out of the door, or straight back in from where he lands, he walked into its end. It
+    //  ends 0.95 m short of the door's middle now; the yard keeps its other sides)
+    //  (and the original's two rail lengths 1.6 m up round that house's corner, with no balcony under them, are left out:
+    //  drawn, they were a wooden frame hanging across the top of its door)
+    shape: (o) => (o.y > 5.8 && Math.hypot(o.x - 37.4, o.z - 12.3) < 2.5 && Math.min(o.sx, o.sz) < 0.45 ? 'skip' : null),
+    layout: (L) => ({ ...L, decor: L.decor.map((o) => (Math.abs(o[0] - 39.62) < 0.05 && Math.abs(o[1] - 13.06) < 0.05 && o[5] > 3 ? [o[0], 12.48, o[2], o[3], o[4], 2.18, ...o.slice(6)] : o)) }),
     landmark(api) {
       const pois = [{ ...api.S.target }];
       // the company's board over its yard, before the long building facing the pad
@@ -1585,7 +1594,10 @@ function buildIsland0(scene, physics, name, L, at) {
     // (a small thing standing on a steep slope gets no block: he would slide into it and be held there)
     const gi = Math.round(gx(o.x)), gj = Math.round(gz(o.z));
     let onSteep = false; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const ii = gi + a, jj = gj + b; if (ii >= 0 && jj >= 0 && ii < L.nx && jj < L.nz && A.steep[jj * L.nx + ii]) onSteep = true; }
-    const small = (c) => { if (!onSteep) col(c); };
+    // (KNARTAS-GATE: a small thing resting on a roof, well over the ground, blocks only from its own foot up. Its block
+    // reached down to the ground: the slab on Knartas's gatehouse roof filled the arch under it, and the harbour with
+    // its shuttle pad was cut off from the diggers' village)
+    const small = (c) => { if (!onSteep) col(c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c); };
     const shape = o.shape === 'house' && o.sy > 3 && landFrac(o) < 0.35 ? 'hulk'
       : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
     switch (shape) {
