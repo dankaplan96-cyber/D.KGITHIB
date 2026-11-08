@@ -3024,3 +3024,36 @@ Architecture 11 → 16 /20, palette and materials 7 → 12 /15, vegetation and e
   the depot and workshop; a less Citadel-like parapet on the watch house; lighter lavender-grey street paving and a
   gravel look for the tracks; the inhabitants (street police, posters, a coin machine: the people owners);
   zislands.js's default environment for islands without their own still carries the old pink.
+
+## CAST-POLISH-CITADEL-3 · the guard's visor (and why the others of chapters 1–2 are left as they are) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-3.diff` (tools/blender/cast_poly.py only; it goes **on top of CAST-POLISH-CITADEL.diff
+and CAST-POLISH-CITADEL-2.diff**, `git apply --check` clean on that base). New model file:
+`requests/CAST-POLISH-CITADEL-3/guard.json` for `assets/poly/`. Pictures: `docs/future/characters/guard/`.
+- **Surveyed** in the review scene (faces front and ¾, the turnaround): Tim, Lulu, Doran, Joe, the guard and Dot (pim),
+  with Arthur done earlier. Only the guard has something that reads wrong at Follow/Medium and in the dialogue:
+  - his visor was a flat box across the eyes;
+  - its square corners stood off the round helmet;
+  - with the trunk in front of its middle, it read as two black bricks.
+
+  The others read as designed, so I propose no change for them. Forcing one change each would have made them worse,
+  not better.
+- **Guard, VISOR-GUARD** (CAST `visorCurved`, his entry only; vguardG, the Zeelich guards, keep the box): a band of the
+  helmet's own curve round the front (116°), 1–1.6 cm proud of it, in the same dark glass (#1a2830, not a role). The
+  'guard' look is the project security guard of chapters 1–2 alone; the enemy guards use vguard/vguardG.
+  3578 → 3718 triangles (+3.9 %).
+- **Contracts:** bones, eyes and mouths identical; 4 weights; no new colour; feet and top unchanged.
+  `validate`: 0 fails; its 2 warnings were already there before this change: the feet sit 1.2 cm below the floor, and
+  the coat, trousers and helmet have loose vertices.
+- **Looked at:**
+  - The review scene before and after (`lookdev-visor.jpg`).
+  - In the game (`gamecap.mjs`, LOOKS=guard): Follow/Medium, the dialogue with Dot, close-ups front, ¾ and back, and 13
+    poses.
+  - Blender views in colour (`turnaround-blender-after.jpg`).
+  - In the close-up and the dialogue the visor reads as one curved glass across the helmet.
+- **Tests** (SwiftShader, guard.json in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** +140 triangles, no draw call, material or texture. Vega 8 frame time not run.
+- **Left:** the visor hides his eyes, as the box did (the design); the Grobos' flat ears (race-wide).
+- **Next:** Citadel's chapter 1–2 story people are done. The laptop moves to queue item 5 (CLOUD_ORDERS 28, by region).
+- Order: CAST-POLISH-CITADEL, then -2, then this one (clean `git apply --check` on that base).

@@ -95,7 +95,7 @@ Surveyed in the review scene (arthur, pippa, mira, gilbert, bram, odile, nell); 
 - Seen, not changed: in the throw and the sword the bib sinks behind the tunic (already so before); the Rabbibunnies'
   necks are plain long tubes; Gilbert's side fringe is still balls.
 
-### Citadel batch 2: Mira, Bram, Odile, Nell: CAST-POLISH-CITADEL-2 (8.11.2026)
+### Citadel batch 2: Mira, Bram, Odile, Nell: CAST-POLISH-CITADEL-2 (8.11.2026; pushed cca490df, applies after CITADEL)
 Edits in `tools/blender/cast_poly.py` (helpers `cord`, `visor`; one CAST flag each, the old shape when it is off):
 - Mira, GLASSES-MIRA (`glassesRim`): flat wire rings off the face → round rims laid on the face, bridge, arms. 2330 → 2650 (+13.7 %).
 - Bram, PEAK-BRAM (`peakCurved`): the flat cap's plank peak → a curved, sloping visor under the crown. 3630 → 3670.
@@ -109,9 +109,20 @@ Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30
 States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, frame time not
 run · integrated: no (request). Pictures `docs/future/characters/{mira,bram,odile,nell}/`.
 
+### Citadel batch 3: the guard (VISOR-GUARD): CAST-POLISH-CITADEL-3 (8.11.2026)
+Surveyed in the review scene (scratch `blend/survey3.png`): Tim, Lulu, Doran, Joe, the guard, Dot (pim); Arthur earlier.
+Only the guard has a clear weakness: his visor was a flat box (two black bricks either side of the trunk).
+- Guard, VISOR-GUARD (`visorCurved`, his CAST entry; vguardG keeps the box): a band of the helmet's curve round the
+  front, 1–1.6 cm proud, the same dark glass. 3578 → 3718 tris (+3.9 %). Export `characters/citadel3/export/guard.json`,
+  views `citadel3/previews/guard-after`, validate 0 fails (2 warnings as before: feet −1.2 cm, loose vertices).
+- The others read well at Follow/Medium and in close-up (no change proposed): Tim, Lulu, Doran, Joe, Dot, Arthur.
+- In the game (Follow/Medium, dialogue, close-ups, 13 poses) and Blender views looked at. Tests: solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS; `assets/poly` put back. Pictures
+  `docs/future/characters/guard/`; request `requests/CAST-POLISH-CITADEL-3*` (on top of CITADEL and CITADEL-2).
+
 ## Current
-- (next) queue item 3 is done for the story people of chapters 1–2 except Arthur, Tim, Lulu, Doran, Joe, the guard,
-  the Spheros, Dot (pim). Then queue item 5 (CLOUD_ORDERS 28, by region).
+- Queue item 3 (Citadel, chapters 1–2) done. Next: queue item 5, CLOUD_ORDERS 28 by region (Zeelich and Otringal first);
+  their pictures are spoilers (chapter 3+): keep them out of the user's view.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
@@ -124,7 +135,6 @@ run · integrated: no (request). Pictures `docs/future/characters/{mira,bram,odi
 8. Common props
 
 ## Next action
-Wait for the cloud on CAST-POLISH-CITADEL-2 (it goes on top of CAST-POLISH-CITADEL.diff). Next batch: Citadel's other
-chapter 1–2 story people (Arthur, Tim, Lulu, Doran, Joe, the guard, Dot): survey them in the review scene
-(`lookcap.mjs`), pick one weakness each that is not race-wide, then the same loop. Diffs go on top of the requests not yet
-applied (build the base by applying them to HEAD in a temp checkout). Run browsers with `SHELL_EXE`.
+Queue item 5: census Zeelich and Otringal's people (`census.mjs`, the chapter 3 flags as cast-rounds sets them), survey
+them in the review scene, pick one weakness each (not race-wide), same loop; report CAST-POLISH-ZEELICH. Diffs go on top
+of CAST-POLISH-CITADEL, -2 and -3 (build the base by applying them to HEAD in a temp checkout). Browsers with `SHELL_EXE`.
