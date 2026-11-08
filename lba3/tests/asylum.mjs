@@ -119,7 +119,7 @@ const cut = await ev(() => {
   out.ghost3 = T.ghost();
   T.at(56, 3, 54, 2);   // his cell
   out.cellB = { lids: T.lids().filter((l) => /cell|zone1/.test(l.name)), ghost: T.ghost() };
-  out.cellB.shownAgain = lidMeshes('zone1').every(({ mesh }) => mesh.visible && mesh.material.opacity > 0.98);
+  out.cellB.shownAgain = lidMeshes('zone1').every(({ mesh }) => mesh.visible && (!mesh.material.userData.lid || mesh.material.opacity > 0.98));   // (a pool under a lid keeps its water's own opacity: CUT-RESTORE)
   out.cellB.hidden = lidMeshes('cellB').every(({ mesh }) => !mesh.visible);
   // a fade takes a moment, not a frame: two frames after stepping back into room 1, its lid is on its way out
   T.at(20, 5, 10, 0.07); out.midFade = T.lids().find((l) => l.name === 'zone1').f;
