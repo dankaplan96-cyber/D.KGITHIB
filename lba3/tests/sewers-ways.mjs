@@ -41,7 +41,9 @@ const nearHatch = (id) => ev((id) => { const H = game.story.sewers.hatches.find(
 // lift a hatch's lid and ride its lift down, as a player: to the lid, Lift (E), onto the deck, Go down (E)
 const rideDown = (id) => ev((id) => {
   const H = game.story.sewers.hatches.find((x) => x.id === id);
-  const u = P.use(H.x, H.z, { near: 1.1, kind: 'swhatch' }); P.settle();
+  // (up a lift he stands on its lid, lifted: then "Go down" is the prompt already)
+  const u = H.open ? 'open' : P.use(H.x, H.z, { near: 1.1, kind: 'swhatch' }); P.settle();
+  if (game.room) return { u, t: 'gone down at once', room: game.room.id };
   P.go(H.x + 0.1, H.z + 0.05, { tol: 0.2 }); P.wait(0.2);
   const t = P.target(); P.tap('KeyE', 0.02); let k = 0; while (game.state !== 'cutscene' && k++ < 240) game.step(1 / 60);
   P.settle(); return { u: u.r || u, t: t?.kind, room: game.room?.id ?? 'citadel' };
@@ -83,6 +85,8 @@ await view('w1-fall');
 
 // ---------------------------------------------------------------- 3. S-4 the street lift and Fosse
 const H = await ev(() => { const h = game.rooms.sewer.hall; return { works: h.works, bolt: h.bolt, gdoor: h.gdoor, valve: h.valve }; });
+// (off the platform by its steps, as a player would: the harness's straight walk would push at its railing)
+await ev(() => { const c = game.room.center; P.go(c.x + 1.3, c.z + 2.6, { tol: 0.4 }); });
 r = await ev((H) => P.use(H.works.x, H.works.z, { near: 0.8, kind: 'swworks' }), H);
 s = await said();
 check('the street lift\'s foot in the north-east corner: its lever padlocked, no way up yet (INPUT)', has(s, /Padlocked/) && !(await exitsHere()).includes('sewer-out'), { r, s });
@@ -188,6 +192,7 @@ await ev(() => { P.exitTo('sewer-out'); P.settle(); for (const k of Object.keys(
 await boot('continue');
 r = await ev(() => ({ room: game.room?.id ?? 'citadel', state: game.state, chapter: game.flags.chapterKey, doors: game.story.doors().filter((d) => d.room === 'sewer').length, items: game.story.items().map((i) => i.id) }));
 check('an old save (no sw_ flags) loads: on the street, no door leads down, nothing owed', r.state === 'play' && r.chapter === 'well' && r.doors === 0 && !r.items.includes('sw_key'), r);
+await said();
 r = await ev(() => { const H = game.story.sewers.hatches.find((x) => x.id === 'terrace'); game.exitRoom({ x: H.x + 2.2, z: H.z, a: -Math.PI / 2 }, true, true); P.settle(); return P.use(H.x, H.z, { near: 1.2 }); });
 s = await said();
 check('the terrace hatch shut from above again (its catch not drawn) (INPUT)', has(s, /holds it from below/), { r, s });
