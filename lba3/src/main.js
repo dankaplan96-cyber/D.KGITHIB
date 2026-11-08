@@ -142,10 +142,12 @@ export function migrateSave(raw) {
   return s;
 }
 const DOOR_STEP = 1.0;   // m (Game.doorStep)
-// DOOR-CLEAR (original-mechanics, wave 3): every landing of a scene change stands this far beyond the rim of every door
-// trigger of the scene he lands in (a street door outside, a room's exit inside), so standing still never takes him
-// back through the door he came by (Game.clearOfDoors)
-const DOOR_CLEAR = 0.45, DOOR_CLEAR_IN = 0.35;   // m: out of a door; into a room
+// DOOR-CLEAR (original-mechanics, wave 3): out of a door he lands DOOR_CLEAR m beyond the rim of every door trigger of
+// the scene (Citadel or an outdoor region), so standing still never takes him back through the door he came by. Into a
+// room only a landing inside one of its exits is moved (DOOR_CLEAR_IN): the rooms' own spots, 0.15–0.25 m from the exit
+// with the walk-in carrying him on, stay as their builders set them (moved, the residents' rounds round him changed)
+// (Game.clearOfDoors)
+const DOOR_CLEAR = 0.45, DOOR_CLEAR_IN = 0.05;   // m
 export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', buhalls: 'bumaze', otroffice: 'otrbar' };
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 // (asylum: the user, 6.11, "the asylum should have a different tune, no?": LBA1's asylum was Twinsen's prison and had its

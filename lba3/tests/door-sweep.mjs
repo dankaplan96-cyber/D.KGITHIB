@@ -23,7 +23,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
 const CH = (process.env.CHAPTERS || '1,2,3,4,5,6,7,8,9,10').split(',').map(Number);
 const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
-const DOOR_CLEAR = 0.4, IN_CLEAR = 0.3;   // (the game keeps 0.45 m out of a door, 0.35 m into a room: main.js DOOR-CLEAR)
+const DOOR_CLEAR = 0.4, IN_CLEAR = 0.1;   // (the game keeps 0.45 m out of a door; a room's own spot is 0.15 m or more from its exit: main.js DOOR-CLEAR)
 
 const before = () => (process.env.BEFORE ? ev(() => { game.clearOfDoors = (to) => to; }) : null);
 await open(page, '?nocine'); await before(); await menu(page, 'new');
