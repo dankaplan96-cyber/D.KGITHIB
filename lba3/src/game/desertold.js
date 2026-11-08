@@ -125,7 +125,7 @@ export function buildOldPlaces(C) {
     piece(D.side, D.u, -0.05, bbox(1.25, 2.15, 0.3, 0.04, 1), M.dark, gy + 1.08);
     piece(D.side, D.u, 0.02, bbox(1.45, 0.16, 0.38, 0, 1), M.wood, gy + 2.2);
     for (const s of [-1, 1]) piece(D.side, D.u + s * 0.68, 0.02, bbox(0.14, 2.2, 0.36, 0, 1), M.wood, gy + 1.1);
-    if (o.shut) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);
+    if (o.shut && !o.lived) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);   // (DESERT-BAR: `lived`, a door that leads in: ajar)
     else { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u - 0.15, 0.28); add(bbox(0.95, 1.95, 0.08, 0, 0.6), M.plank, lx, gy + 1.0, lz, S.yaw - 0.55); }
     piece(D.side, D.u, 0.32, bbox(1.7, 0.16, 0.6, 0, 1), M.stone, gy + 0.02);   // the sill's step
     // windows: small, deep, with a wooden sill and one open shutter; the upper storey's higher
@@ -291,7 +291,7 @@ export function buildOldPlaces(C) {
 
   // ================================================================ around Kesh
   // the big house S40 (body 24), its stoop (28), garden wall (31), the horned pillar (32), the palm (9/10), a hand cart (16/17)
-  adobe({ name: 'house s40', x: -35.5, z: -38.9, w: 6.08, d: 7.6, h: 5.07, ry: -Math.PI / 2, tint: '#e9b98a', shutter: '#c84a3a', door: { side: 'front', u: 0.3 }, stoop: 3.0, shut: true,
+  adobe({ name: 'house s40', x: -35.5, z: -38.9, w: 6.08, d: 7.6, h: 5.07, ry: -Math.PI / 2, tint: '#e9b98a', shutter: '#c84a3a', door: { side: 'front', u: 0.3 }, stoop: 3.0, shut: true, lived: true,
     windows: [{ side: 'front', u: -2.0 }, { side: 'front', u: -1.6, up: true }, { side: 'front', u: 1.8, up: true }, { side: 'left', u: -1.2 }, { side: 'left', u: 1.0, up: true }, { side: 'right', u: 1.2, up: true }] });
   for (const [x, z, ry] of [[-33.4, -44.9, 0], [-35.5, -45.1, 0], [-37.7, -45.3, 0], [-39.8, -45.5, 0], [-42.0, -45.7, 0], [-48.3, -46.2, 0], [-50.5, -46.4, 0], [-32.2, -43.6, Math.PI / 2]]) lowWall(x, z, 2.12, ry);
   hornedPillar(-43.0, -41.3, 0, 4.25);

@@ -54,6 +54,7 @@ interaction in reach, four headings each; `chap.js` counted who is on the island
 | The post's bunk cabin (ch. 4) | led in during a storm too | **shut while a chapter-4 sandstorm blows**: "Voices inside: the gate guard and a mug of something" (Ilka says he hides in his cabin) | `story/ihomes.js` shutNow | `probes/new2.js` |
 | Kesh's homes | empty | **their people**: Dela in Brosk's house (she counts the stock), Jorr in Mother Tarra's (the water tally), Nima in Safi's family's, Old Hanna in Hesk's lodging; each stands at their work, their own dress (DRESS-1), lines by Kesh's state (dry · wet · steam · after · evac · net · home) | `ihomes.js` KEEPERS stand, `story/ihomes.js`, `story/kesh.js` lifePhase | `island-doors` (keepers talk), `probes/new2.js` |
 | S28 | the door read a board; no way in | **the dig crew's bunkhouse leads in**; Brann sleeps off his night shift there while the crew works here (ch. 4, ch. 5 until the ferry takes the crew; then the room is empty); the board is drawn on the wall beside the door and read there (Anko's sketch, as before) | `ihomes.js`, `desertold.js` s28board, `story/purposes.js` | `island-doors`, `purposes` |
+| S40 (Bashir's home) | knocked on: his granddaughter at the shutters sends him to the loom | **leads in**: Kesh's mats and jars; Leya, Bashir's granddaughter, who keeps it (Bashir says so on his round) | `ihomes.js` keshhome, `story/purposes.js` | `purposes`, `island-doors` |
 | The great hall (the pupils' dormitory) | knocked on in every state | **dark: knocked on** (as before); **once the pupils' crystal is awake it leads in**: bunks, spellbooks, Joss practising the wind spell; the School's signpost thanks him | `ihomes.js` shut 'lamp', `story/desertlife.js` | `probes/new2.js` |
 | The Temple of Bù, the condenser hall | open doors leading nowhere after their chapters | **stay open**: the temple from chapter 5, the hall from chapter 6; inside, the carving and the hall's diagram are read again with Ilka's chalk on them; the glider is gone from the hangar after chapter 5 (it stood there still) | `story/desertlife.js` doors, `condenser.js` glider.gone, `story/steam.js` | `door-sweep` |
 | Signs and boards | not readable | **read**: KESH at the pier; the post's gate (staff only · ferry requisitioned · closed, ask at the oasis · relay station · survey post); Ilka's survey board (ch. 4: "warm ground" by each crystal find: the dig's warm discs' clue); the School's signpost; Hesk's stop (the ferry chalked out in ch. 5, the glider later) | `story/desertlife.js`, `desert.js` R.reads | `probes/new1.js` |
@@ -73,4 +74,17 @@ PEND
 
 ## What is left (and for whom)
 
-PEND
+- **Resemblance scores**: Unverified (the laptop's curator). The two rooms opened in the original's buildings (S28,
+  the great hall) are our own layouts.
+- **Lumi's weaving room** has no one in it: Lumi works at her loom outside, ten metres away (as Nell keeps her stall
+  outside Citadel's house; Nell has Wim inside, Lumi has nobody). The post's office, bunk cabin and stores are empty
+  in chapters 4–5 by design (the notebook's stealth; the guard during storms) and empty after chapter 5 by the story
+  (the crew left with the ferry, Dallan stayed in Kesh).
+- **The School's own music**: its hall now plays the island through the walls (`desert_in`) instead of Twinsen's home
+  theme; a piece of its own is the music-director's (laptop). Nothing here was listened to.
+- **The cool room** is a store looked into, not a room (its lines are the side story's). A room behind its curtain
+  (the jars, the sand, the dates) would show the side story's states; not done.
+- **Zeelich's street walkers** (Ilo, Aven, Kira) are taken off Zeelich in Citadel's evacuation by the same rule that
+  took Kesh's (story/citizens.js `gone`): left for the Zeelich pass (not this region).
+- **A player's own first time**: none of this was played by a person; the chapter-balance numbers for chapters 4–5
+  are unchanged (the notebook's walk is a few metres longer: in through the office door).

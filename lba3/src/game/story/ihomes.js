@@ -108,7 +108,7 @@ export class IsleHomes extends ChapterBase {
     const S = IH[K.room]?.npcSpots?.keeper;
     return S ? { x: S.x, z: S.z, a: S.a } : null;
   }
-  // DESERT-BAR: a keeper who is only there in some states: the dig crew's surveyor in the bunkhouse while the crew works
+  // DESERT-BAR: a keeper who is only there in some states: Brann, the crew's long-shift driller, in the bunkhouse while the crew works
   // here (chapter 4, chapter 5 until the ferry takes the crew)
   keeperHere(K) {
     if (K.when === 'crew') { const k = this.story.cur?.key; return k === 'dig' || (k === 'steam' && !this.f.c5_ferryTaken); }

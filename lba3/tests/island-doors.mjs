@@ -135,7 +135,7 @@ check('Knartas: every door, the harbour\'s and the diggers\' village\'s, reached
 for (const r of walkedTo) console.log('WALK ' + r.room + ' ' + JSON.stringify(r.walked));
 // (DESERT-BAR: + the dig crew's bunkhouse in S28 on Desert Island; the School's dormitory opens only once its crystal is
 //  awake: its door is a knock in this state, purposes.js)
-if (!ONLY) check('every room of ISLE-HOMES open in this state was entered (71: 55 on the islands, 5 Kesh houses, 3 post cabins, the crew\'s bunkhouse, 7 in the Hamalayi)', all.length === 71 && all.every((r) => r.inRoom), all.length);
+if (!ONLY) check('every room of ISLE-HOMES open in this state was entered (72: 55 on the islands, 5 Kesh houses, 3 post cabins, the crew\'s bunkhouse, Bashir\'s home, 7 in the Hamalayi)', all.length === 72 && all.every((r) => r.inRoom), all.length);
 
 // the keepers behind their counters, talking
 const keep = await ev(async () => {

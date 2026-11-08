@@ -81,6 +81,15 @@ Object.assign(STR.en, {
   rs_bashir_khome: 'Young Dallan brought me water this morning. He\'s learning. Slowly, like the rest of us.',
 
   // ---- Kesh's homes and the old houses: their people (story/ihomes.js; ih_<id>_<state>, `after` when none)
+  n_ih_leya: 'Leya',
+  ih_leya_dry: "Grandpa's at the loom again. He says he's counting its rhythm. He's asleep.",
+  ih_leya_wet: "The pump's going! Grandpa says he heard it first. He was asleep for that too.",
+  ih_leya_steam: 'Grandpa says steam under the oasis is nothing to worry about. Then he moved his chair nearer the door.',
+  ih_leya_after: 'Grandpa tells everyone you fixed the pump. Then he tells them he told you how.',
+  ih_leya_evac: "Citadel's leaving? Grandpa says he came here from somewhere loud once. He won't say where.",
+  ih_leya_net: "Grandpa took tea out to the bore. He came back with Dallan's whole life story.",
+  ih_leya_home: "Grandpa's teaching Dallan the loom's rhythm. Neither of them can count.",
+  ih_house_s40: "Bashir's house. Mats, water jars, and a basket of Lumi's cut-off threads he keeps for nobody knows what.",
   n_ih_dela: 'Dela', n_ih_jorr: 'Jorr', n_ih_nima: 'Nima', n_ih_hanna: 'Old Hanna', n_ih_brann: 'Brann', n_ih_joss: 'Joss',
   ih_dela_dry: "Brosk sells the dates, I count them. Since the pump seized people pay in water, and I can't count water.",
   ih_dela_wet: "The pump's back. Brosk says he fixed it by complaining. I'm writing it down as yours.",

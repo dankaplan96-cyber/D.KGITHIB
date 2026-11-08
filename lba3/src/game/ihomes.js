@@ -107,14 +107,14 @@ export const IHOMES = {
   'ham-obs0': { k: 'library' },                // the observatory keeper's house: charts and logbooks
   // DESERT-BAR (8.11): Desert Island's kept old houses (desertold.js). S28 is the dig crew's bunkhouse; the great hall in
   // the School's pool is the pupils' dormitory, open once their study crystal is awake (dark inside before: they knock
-  // back through the door, story/purposes.js). S40, Bashir's home, stays shut with its own line (his granddaughter at the
-  // shutters).
+  // back through the door, story/purposes.js). S40 is Bashir's home, kept by his granddaughter Leya.
   's28': { k: 'bunkhouse', style: 'crew', keeper: 'ih_brann' },
   'hall': { k: 'dorm', style: 'school', shut: 'lamp', keeper: 'ih_joss' },
+  'house s40': { k: 'keshhome', style: 'kesh', keeper: 'ih_leya' },
 };
 export const EXCEPT = new Set(Object.keys(IHOMES).filter((d) => IHOMES[d].ex));
-export const roomOf = (d) => 'ih_' + d.replace(/--/g, '_m').replace(/-/g, '_');
-const DESERT_OLD = new Set(['s28', 'hall']);   // (desertold.js's kept old houses)
+export const roomOf = (d) => 'ih_' + d.replace(/--/g, '_m').replace(/-/g, '_').replace(/ /g, '_');   // (a space: desertold.js's 'house s40')
+const DESERT_OLD = new Set(['s28', 'hall', 'house s40']);   // (desertold.js's kept old houses)
 export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') || DESERT_OLD.has(d) ? 'desert' : d.startsWith('ham-') ? 'hamalayi' : 'isle_' + d.split('-')[0]);
 export const IHOME_IDS = Object.keys(IHOMES).filter((d) => !EXCEPT.has(d)).map(roomOf);
 const DOOR = Object.fromEntries(Object.keys(IHOMES).map((d) => [roomOf(d), d]));
@@ -137,6 +137,7 @@ export const KEEPERS = {
   ih_hanna: { room: roomOf('kesh-house4'), char: 'tarra', color: '#c8b0e0', stand: 'jars', phase: 'kesh' },
   ih_brann: { room: roomOf('s28'), char: 'worker', color: '#e8c070', stand: 'table', phase: 'kesh', when: 'crew' },
   ih_joss: { room: roomOf('hall'), char: 'desertkid_b', color: '#b8c8ff', stand: 'table', phase: 'kesh' },
+  ih_leya: { room: roomOf('house s40'), char: 'desertkid', color: '#f0c8a0', stand: 'table', phase: 'kesh' },
 };
 export const IH = {};
 
@@ -150,7 +151,7 @@ function styleOf(door, r) {
   if (isle === 'platform' || isle === 'undergas') return { wall: pick(['#d0c8c0', '#c8c0b4']), dado: '#5a5a6a', floor: ['#a8a4a0', '#98948e', '#5a5856'], band: false, frame: '#5a5a6a', light: '#ffe0b0', cap: '#b8b0a8' };
   if (IHOMES[door]?.style === 'crew') return { wall: '#e2cba8', dado: '#6a5a4a', floorMat: MAT.planks('dark'), band: false, frame: '#5a4a3a', light: '#ffe0b0', cap: '#cdb898', music: 'desert_in' };   // (the tower's lower storey: stone, the crew's planks)
   if (IHOMES[door]?.style === 'school') return { wall: '#c8c0b4', dado: '#2f5a8a', floor: ['#8a8478', '#7a7468', '#4a4640'], band: true, frame: '#2f4a6a', light: '#d8f0ff', cap: '#b8b0a4', music: 'desert_in' };   // (the School's grey stone, its blue; the crystal's cool light)
-  if (door.startsWith('kesh-')) return { wall: pick(['#ecd0a8', '#e8c8a0', '#f0d4b0']), dado: '#2f7a9a', floor: ['#d89a6a', '#c88a5a', '#8a5a3a'], band: false, frame: '#7a5a3a', light: '#ffe0b0', cap: '#e0bc90', music: 'desert_in' };
+  if (door.startsWith('kesh-') || IHOMES[door]?.style === 'kesh') return { wall: pick(['#ecd0a8', '#e8c8a0', '#f0d4b0']), dado: '#2f7a9a', floor: ['#d89a6a', '#c88a5a', '#8a5a3a'], band: false, frame: '#7a5a3a', light: '#ffe0b0', cap: '#e0bc90', music: 'desert_in' };
   if (door.startsWith('ham-')) return { wall: pick(['#e8dccb', '#e2d4c0', '#ecdcc4']), dado: pick(['#6a4a32', '#5a3a2a', '#7a5a3a']), floorMat: MAT.planks('dark'), band: false, frame: '#5a3a2a', light: '#ffd8a8', cap: '#d8c8b0', music: 'home' };   // (the Hamalayi: whitewashed stone, dark timber, a warm hearth light)
   if (door.startsWith('post-')) return { wall: '#dae6e6', dado: '#2a8a8a', floor: ['#9aa4aa', '#8a949a', '#5a6268'], band: false, frame: '#2a3a44', light: '#eef8ff', cap: '#c8d4d4', music: 'desert_in' };
   return { wall: pick(ESMER_WALLS), dado: pick(ESMER_DADO), floor: pick([['#d8c8b4', '#c4ae96', '#3a6a7a'], ['#d4c8c0', '#c0b2a8', '#3a7a6a'], ['#c8d0d8', '#b4bcc8', '#4a5a7a']]), band: true, frame: '#2f7a84', light: '#ffe8cc', cap: '#e4d6cc' };
@@ -282,7 +283,7 @@ function build(rid, scene, physics) {
     if (wall === 'mid') { const cx = (LX + 2.0 + RX) / 2, cz = (BZ + FZ) / 2; for (const [dx, dz] of [[0, 0], [0.3, 0.2], [-0.3, 0.2], [0.3, -0.3], [0, 0.45], [0.5, 0], [-0.5, 0], [0, -0.45]]) out.push({ x: cx + dx, z: cz + dz, ry: 0, hx: fw / 2, hz: fd / 2 }); }
     return out;
   };
-  const list = door.startsWith('kesh-') && spec.k === 'home' ? KESH_HOME : KIND[spec.k] || KIND.home;
+  const list = (door.startsWith('kesh-') && spec.k === 'home') || spec.k === 'keshhome' ? KESH_HOME : KIND[spec.k] || KIND.home;
   const placed = [];
   for (const name of list) {
     const p = P[name];
@@ -368,7 +369,7 @@ const SIZE = {
   'post-cabin0': { w: 7.0, d: 3.4 }, 'post-cabin1': { w: 6.0, d: 3.2 }, 'post-cabin2': { w: 5.0, d: 3.2 },
   'ham-landing0': { w: 4.4, d: 3.6 }, 'ham-lhar0': { w: 5.5, d: 4.4 }, 'ham-lhar1': { w: 6.2, d: 4.6 }, 'ham-lhar2': { w: 5.0, d: 4.2 },
   'ham-lhar3': { w: 4.8, d: 4.0 }, 'ham-lhar4': { w: 5.2, d: 4.2 }, 'ham-obs0': { w: 3.2, d: 2.4 },
-  's28': { w: 7.19, d: 2.47 }, 'hall': { w: 10.19, d: 7.02 },   // (the tower's door is in its long west side; the hall's in its north)
+  's28': { w: 7.19, d: 2.47 }, 'hall': { w: 10.19, d: 7.02 }, 'house s40': { w: 6.08, d: 7.6 },   // (the tower's door is in its long west side; the hall's in its north)
 };
 export const buildIHome = (rid) => (scene, physics) => build(rid, scene, physics);
 
