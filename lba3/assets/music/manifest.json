@@ -159,7 +159,7 @@
    "sampleRate": 48000,
    "duration": 103.5,
    "lufs": -17.5,
-   "truePeak": -4.3,
+   "truePeak": -4.81,
    "limiterGR": 0.0,
    "bytes": 1449840,
    "bars": [
@@ -215,7 +215,7 @@
    "loopStartSample": 600000,
    "loopEndSample": 4920000,
    "loopLength": 90.0,
-   "seamMaxDiff": 1.1845681144317943e-08
+   "seamMaxDiff": 1.1166955082853036e-08
   },
   "facility": {
    "file": "facility.mp3",
@@ -871,7 +871,7 @@
    "sampleRate": 48000,
    "duration": 109.0,
    "lufs": -18.0,
-   "truePeak": -4.57,
+   "truePeak": -4.98,
    "limiterGR": 0.0,
    "bytes": 1526784,
    "bars": [
@@ -922,7 +922,7 @@
    "loopStartSample": 576000,
    "loopEndSample": 5184000,
    "loopLength": 96.0,
-   "seamMaxDiff": 3.553730740129407e-05
+   "seamMaxDiff": 3.295880951267177e-05
   },
   "opening": {
    "file": "opening.mp3",
@@ -1023,7 +1023,7 @@
    "sampleRate": 48000,
    "duration": 109.0,
    "lufs": -18.0,
-   "truePeak": -6.27,
+   "truePeak": -4.26,
    "limiterGR": 0.0,
    "bytes": 1526784,
    "bars": [
@@ -1083,7 +1083,7 @@
    "loopStartSample": 576000,
    "loopEndSample": 5184000,
    "loopLength": 96.0,
-   "seamMaxDiff": 8.160610836352444e-05
+   "seamMaxDiff": 7.79571840392318e-05
   },
   "village": {
    "file": "village.mp3",

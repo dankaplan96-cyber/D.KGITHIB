@@ -32,6 +32,7 @@ node tests/citadel-structures.mjs   # CITADEL-STANDS: Corla at the spaceport kio
 node tests/overlaps.mjs        # OVERLAP-1: two surfaces in one plane (z-fighting) found by rays down and across, the ground included: Citadel outdoors and every Citadel interior fail on a seen one ≥ 0.5 m²; REGIONS=1 adds the other areas, ONLY=a,b, SHOTS=dir (red/green pictures), REPORT=file.json
 node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outward-wound, triangle budget (+30 % max), the 509 placements, even texel density, no stretch, clear of the paths, deterministic; SHOTS=dir for four cliff views
 node tests/slidetraps.mjs      # SLIDE-RESCUE: a slide into a collider (rock, post, wall, the sea's edge) in Citadel, Desert Island and the Hamalayi resolves: no respawn, no life lost, he ends standing on standable ground; SHOW=1 lists every spot
+node tests/music-places.mjs   # MUSIC-BY-PLACE: the School of Magic (and its dormitory, the wizard's tent), the Desert, Kesh's houses, the Hamalayi, the monastery hall, Lhar's houses each play their own piece on the audio clock (muffled where heard through walls); the alt fallback without the renders; the renders' loop points and loudness (not a listening test)
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);

@@ -47,7 +47,7 @@ def song():
     S.chords(31, KESH_CH)
 
     ob = S.part('oboe', 'oboe', stem='front', pan=56, vol=94, legato=True, dyn='mf')
-    fd = S.part('fiddle', 'fiddle', stem='front', pan=74, vol=90, legato=True, dyn='mp')
+    fd = S.part('fiddle', 'fiddle', stem='front', pan=74, vol=112, legato=True, dyn='mf')
     fl = S.part('flute', 'flute', stem='front', pan=40, vol=88, legato=True, dyn='mp')
     ng = S.part('nylon', 'nylon', stem='front', pan=48, vol=104, dyn='mf')
     sg = S.part('guitar', 'steelgtr', stem='mid', pan=30, vol=86, dyn='mp')
@@ -94,8 +94,8 @@ def song():
 
     # ------------------------------------------------------------ A2 (11-18): fiddle, the groove, soft strings
     fd.line(11, KESH_HEAD + ' | D5:e F#5:q A5:e F#5:q D5:q | C5:e E5:q G5:e E5:h | B4:q. D5:e C#5:q E5:q | D5:h. r:q')
-    fd.hairpin(11, 15, 'mp', 'mf')
-    fd.hairpin(17, 19, 'mf', 'mp')
+    fd.hairpin(11, 15, 'mf', 'f')
+    fd.hairpin(17, 19, 'f', 'mf')
     strum(11, 19)
     bassline(bs, 11, 19, 'R:q. 5:e r:q R:q', octave=2)
     groove(11, 19)
@@ -136,14 +136,14 @@ def song():
     ob.dyn(31, 'mf')
     ob.hairpin(37, 39, 'mf', 'mp')
     fd.line(31, KESH_LOW)
-    fd.dyn(31, 'mp')
-    fd.hairpin(37, 39, 'mp', 'p')
+    fd.dyn(31, 'p')
+    fd.hairpin(37, 39, 'p', 'pp')
     strum(31, 39)
     sg.hairpin(37, 39, 'mp', 'p')
     bassline(bs, 31, 39, 'R:q. 5:e r:q R:q', octave=2)
     pad(st, 31, 37, n=3, low=P('F#4'), high=P('E5'))
     st.dyn(31, 'pp')
-    groove(31, 37)
+    groove(31, 37, v=36)
     for b in range(37, 39):
         hit(dr, b, 'tumba', 0, vel=32, dur=0.5)
     return S

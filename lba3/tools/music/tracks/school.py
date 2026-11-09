@@ -49,7 +49,7 @@ def song():
     cl = S.part('clarinet', 'clarinet', stem='front', pan=54, vol=94, legato=True, dyn='mp')
     fl = S.part('flute', 'flute', stem='front', pan=76, vol=88, legato=True, dyn='mp')
     ce = S.part('celesta', 'celesta', stem='front', pan=30, vol=86, dyn='mp')
-    bn = S.part('bassoon', 'bassoon', stem='front', pan=70, vol=92, dyn='mp')
+    bn = S.part('bassoon', 'bassoon', stem='front', pan=70, vol=112, dyn='mf')
     hp = S.part('harp', 'harp', stem='mid', pan=36, vol=90, dyn='mp')
     pz = S.part('pizz', 'pizz', stem='mid', pan=78, vol=90, dyn='mp')
     vc = S.part('cello', 'cello', stem='mid', pan=82, vol=94, legato=True, dyn='mp')
@@ -119,9 +119,9 @@ def song():
     # ------------------------------------------------------------ C (27-34): a spell goes a little wrong, then works
     bn.line(27, 'B2:e! D3:e! F#3:e! D3:e! B2:e! C#3:e! D3:q | A2:e! C#3:e! E3:e! C#3:e! A2:e! B2:e! C#3:q |'
                 'G2:e! B2:e! D3:e! B2:e! G2:e! A2:e! B2:q | A#2:e! C#3:e! E3:e! C#3:e! F#3:q r:q')
-    bn.hairpin(27, 30, 'mp', 'mf')
+    bn.hairpin(27, 30, 'mf', 'f')
     bassline(pz, 27, 31, 'r:e 5:e! r:e 8:e! r:e 5:e! r:e 8:e!', octave=2)
-    pz.dyn(27, 'mp')
+    pz.dyn(27, 'mf')
     for b in range(27, 31):
         for k in range(4):
             hit(dr, b, 'wb_hi' if k % 2 else 'wb_lo', k, vel=30 + (6 if k == 0 else 0), dur=0.25)

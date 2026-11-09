@@ -39,12 +39,12 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Track | Scene / mood names | Duration | Loop length | Key, meter | Files |
 |---|---|---|---|---|---|
 | Main Theme | title screen (`title`) | 2:06 | 1:32 (loop starts 33 s in, after the intro) | D, 4/4 | `assets/music/main_theme.mp3`, `art/music/masters/main_theme.flac`, `art/music/midi/main_theme.mid`, `tools/music/tracks/main_theme.py` |
-| Home | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses, Bersimon's tent, the School of Magic (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
+| Home | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
 | Citadel Village | town, harbour, Chez Luc's tavern (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings: the water office, Bazoo's shop, the pharmacy, the ticket office, the baggage claim, the tavern's cellar (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
 | Island Exploration | Citadel island away from the village, Citadel Spaceport's terminal (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
-| The Well | the well cave; caves, sewers, temples and underground places (Tralu's cave, the Temple of Bù, the Temple of the Dark Monk, the shell) (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
+| The Well | the well cave; caves, sewers, temples and underground places (Tralu's cave, the Temple of Bù, the Temple of the Dark Monk, the shell), the Hamalayi's observatory; second piece of the Hamalayi playlist (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
 | Baldino's Workshop | the workshop (`workshop`) | 2:01 | 1:48 | Bb, 4/4 | `workshop.*` |
-| Zeelich | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
+| Zeelich | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`, `zeelich_in`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
 | Energy Facility | project station in the fort, control room (`station`, `control`, `facility`) | 1:55 | 1:43 | D minor, 4/4 | `facility.*` |
 | Energy Facility (stealth mix) | project office, Zoé sneaking (`stealth`) — same performance without brass, drums and synth bass; switches in sync with the full mix | 1:55 | 1:43 | | `facility_stealth.*` (no MIDI of its own) |
 | Danger | combat, entered automatically (`combat`) | 1:30 | 1:20 | E minor, 4/4 | `combat.*` |
@@ -53,9 +53,12 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Homecoming | ending screens, credits (`ending`, `credits`, `homecoming`) | 2:49 | 2:31 | F, 3/4 | `homecoming.*` |
 | Opening | the new-game opening scene, one-shot (`audio.cue('opening')`), written to the scene's clock (each section starts on its shot; see the score header) | 1:29 | — | F, 3/4 | `opening.*` |
 | Market Day (MUSIC-2) | Citadel town and harbour, second piece of the `citadel` playlist (also heard muffled in town interiors) | 2:56 | — (one pass, ends) | A, 4/4 | `village_b.*` |
-| Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; first piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
+| Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; second piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
 | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
-| The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`); **score only, not rendered yet**: until it is in the manifest the mood plays the stealth mix (`MOODS.asylum.alt`) | ≈1:54 (intro 9.5 s, body 1:35; computed from the score) | 1:35 | B minor, 3/4 | `tools/music/tracks/asylum.py` |
+| The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`; without the render the mood plays the stealth mix, `MOODS.asylum.alt`) | 1:52 | 1:35 | B minor, 3/4 | `asylum.*` |
+| The School of Magic (MUSIC-BY-PLACE) | the School of Magic on Desert Island, its pupils' dormitory, Bersimon's tent (`school`; alt Home) | 1:49 | 1:36 | G (lydian colour), 4/4 | `school.*` |
+| The High Hamalayi (MUSIC-BY-PLACE) | the Hamalayi outdoors (first piece of its playlist), the monastery hall (`mountain`; alt The Well); muffled in Lhar's houses and the landing's hut (`hamalayi_in`) | 1:49 | 1:36 | A dorian, 4/4 | `mountain.*` |
+| Desert Island (MUSIC-BY-PLACE) | Desert Island outdoors (first piece of the `desert` playlist); muffled in Kesh's houses, the post's cabins, the crew's bunkhouse, Bashir's house (`desert_in`) | 1:44 | 1:30 | D mixolydian, 4/4 | `desert_isle.*` |
 
 Each score file starts with a section plan (bars, instruments, what happens to the themes).
 
@@ -66,8 +69,7 @@ Energy Facility mix plays, so its earlier stealth mix sounded like the same piec
 **The Old Asylum** (`tools/music/tracks/asylum.py`): an uneasy music-box waltz in B minor, 3/4, 76 bpm, chamber colours
 (music box, low clarinet, bassoon, English horn, pizzicato, muted strings, a glass hum, a wood-block clock), no brass or
 drums; the Entity cell heard once, bent, for Vesk's store. Original, written by hand; nothing of LBA's music was used.
-**It is not rendered**: the machine it was written on had no FluidSynth, FFmpeg, soundfont or Python packages. To render:
-the setup above, then `build.py asylum` (updates `manifest.json`); the asylum then plays it with no code change.
+It was rendered later (6.11, `build.py asylum`), and re-renders bit for bit.
 
 Other places remapped to an existing piece: the house cellar (was the town's playlist) and the homes keep Home; the town's
 shops and public buildings (Bazoo, the pharmacy, the ticket office, the baggage claim, the tavern's cellar) hear the square
@@ -75,8 +77,34 @@ through the walls (`office`) instead of the family's Home; the tavern plays the 
 terminal goes on with the island's pieces; Tralu's cave plays The Well (was Home; the Temple of the Dark Monk already moved
 to it in REVIEW-ZEELICH); Otringal's bar plays Zeelich's playlist at full volume, and Zeelich Spaceport's terminal and the
 Imperial Hotel hear it through the walls (`zeelich_in`, ORDER 23f, as `office`) (all three were Citadel's Home).
-Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
-Well), the Desert (the island pieces).
+Left as they were then, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
+Well), the Desert (the island pieces) — given their own pieces in MUSIC-BY-PLACE below.
+
+## MUSIC-BY-PLACE (wave C item 6, 2026-11-09)
+
+The map of every place and the piece it plays, the places that borrowed a piece meant for somewhere else, and what is
+left: `docs/lba-maturity/music-by-place.md`. Three new pieces, original, written by hand in the score DSL (section plans
+in each score's header), rendered with the same soundfont and chain, draft quality and **not listened to**:
+
+* **The School of Magic** (`school`, G major with a lydian C#, 4/4, 100 bpm, −18 LUFS): a lesson tune on clarinet then
+  flute over harp and pizzicato; a quiet cello study in E minor; a spell that goes a little wrong (bassoon staccato,
+  wood block) and then works: the project's own Entity cell (themes.py ENT_A, wonder) in G lydian, because magic in
+  this world is Sendell's gift; the celesta's little "spell" figure at phrase ends is the same cell played fast. For the
+  School, its dormitory and Bersimon's tent (before: Citadel's island pieces through the walls; Twinsen's Home).
+* **The High Hamalayi** (`mountain`, A dorian, 4/4, 80 bpm, −18 LUFS): a slow pan-flute tune over an A drone, violins
+  and a horn for the valley, a soft low drum, and a unison choir chant in C with tubular bells for the monastery. The
+  Hamalayi playlist is now `mountain` ↔ `well`; the monastery hall (which asked for `mountain` before any mood had that
+  name, and was silent) keeps the outdoor piece going; Lhar's houses hear it through the walls (`hamalayi_in`).
+* **Desert Island** (`desert_isle`, D mixolydian, 4/4, 96 bpm, −17.5 LUFS): a lazy syncopated oboe tune, a fiddle
+  answering, nylon and steel guitars, fretless bass, a hand-drum groove; a B-minor noon episode; a gust where the
+  tune's head goes down through C and B flat on horns over a D pedal. The Desert playlist is now `desert_isle` ↔
+  `island_b`; Kesh's houses and the other Desert rooms hear it through the walls (`desert_in`, unchanged).
+
+`MOODS.school` and `MOODS.mountain` carry an `alt` (Home, The Well); a playlist skips a piece missing from the manifest:
+a build without the new renders plays what each place had. The crossfade, ducking and output chain are unchanged.
+Measured (the table below; and in headless Chromium: decoded lengths exact, no discontinuity over the files, the game's
+music bus nulled against the sources at −71…−73 dB median, across the School's loop seam too): see music-by-place.md.
+`tests/music-places.mjs` checks each piece in its place on the audio clock.
 
 ## How the music is made (pipeline)
 
@@ -206,6 +234,10 @@ From `tools/music/check.py`, on the MP3s decoded with ffmpeg (as Chrome decodes 
 | village_b (MUSIC-2, one pass) | −17.4 | −2.6 | 11.0 | — | — |
 | island_b (MUSIC-2, one pass) | −17.9 | −5.4 | 6.4 | — | — |
 | zeelich_b (MUSIC-2, one pass) | −17.9 | −4.4 | 7.3 | — | — |
+| asylum (ORDER 19) | −18.8 | −5.5 | 11.3 | −34.2 / −24.5 | 0.71 |
+| school (MUSIC-BY-PLACE) | −18.4 | −4.7 | 5.1 | −34.5 / −25.2 | 0.56 |
+| mountain (MUSIC-BY-PLACE) | −18.4 | −5.6 | 4.8 | −36.9 / −25.6 | 0.43 |
+| desert_isle (MUSIC-BY-PLACE) | −18.0 | −5.2 | 5.9 | −29.7 / −23.8 | 0.47 |
 
 * Loudness targets: −17 LUFS (combat, main theme, finale −16.5; quiet beds home, well, revelation −18;
   stealth mix −18.5). All tracks are within −16.8…−18.8 LUFS integrated after MP3 encoding.
@@ -230,8 +262,8 @@ From `tools/music/check.py`, on the MP3s decoded with ffmpeg (as Chrome decodes 
 
 ## Sizes
 
-`assets/music`: 30 MB (16 MP3s at 112 kbps + manifest; MUSIC-2 added 7.3 MB: village_b 2.47, island_b 2.53,
-zeelich_b 2.34); `art/music/midi`: 0.9 MB. Listening excerpts of the MUSIC-2 pieces (not shipped):
+`assets/music`: 37.4 MB (20 MP3s at 112 kbps + manifest; MUSIC-2 added 7.3 MB: village_b 2.47, island_b 2.53,
+zeelich_b 2.34; ORDER 19 the asylum 1.57; MUSIC-BY-PLACE 4.5 MB: school 1.53, mountain 1.53, desert_isle 1.45); `art/music/midi`: 0.9 MB. Listening excerpts of the MUSIC-2 pieces (not shipped):
 `docs/lba3-production/reviews/MUSIC-2/*.mp3`, 6 × 27–28 s at 96 kbps, 2.0 MB. The FLAC masters
 (`art/music/masters`, 119 MB) are not committed: they rebuild bit for bit from the scores and the soundfont
 (see above), so they are git-ignored and made locally when needed. At most 3 tracks are kept decoded
