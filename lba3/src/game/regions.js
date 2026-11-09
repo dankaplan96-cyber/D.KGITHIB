@@ -52,6 +52,7 @@ import { buildTavCellarRoom } from './tavcellar.js';
 import { buildNellHouseRoom } from './nellhouse.js';
 import { buildBallastra, buildBallastraSteps } from './ballastra/harbor.js';   // (EXPANSION W-1: Float Harbor, Ballastra)
 import { buildArches, buildArchesSteps } from './ballastra/arches.js';   // (EXPANSION W-2: the Arch District, Ballastra)
+import { buildGardens, buildGardensSteps } from './ballastra/gardens.js';   // (EXPANSION W-3: the Water Gardens, Ballastra)
 
 // Reference build times (ms, the development container, SwiftShader, quiet machine): only the loading card's pace,
 // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
@@ -59,7 +60,7 @@ const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, w
   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
   hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, otrbar: 120, otrhotel: 120, celtemple: 120, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
   isle_celebration: 160, isle_undergas: 320, isle_platform: 180, isle_liftdock: 120,
-  isle_orchard: 230, isle_oldwatch: 90, isle: 250, ballastra: 420, bl_arches: 520 };   // (bl_arches: EXPANSION W-2)
+  isle_orchard: 230, isle_oldwatch: 90, isle: 250, ballastra: 420, bl_arches: 520, bl_gardens: 520 };   // (bl_arches: EXPANSION W-2; bl_gardens: W-3)
 // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
 // data-only questions such as "which scene is this point in" (regions.sceneOf; the tests' harness). Checked against
 // the built room in regions.buildGroup (a mismatch is a console warning).
@@ -68,8 +69,9 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
   arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], bl_shed: [3800, -3000],
-  bl_oren: [3800, -3800], bl_mags: [3900, -3800], bl_pump: [4000, -3800] };   // (bl_oren, bl_mags, bl_pump: EXPANSION W-2's rooms)
-const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000], bl_arches: [3000, -3800] };   // (bl_arches: EXPANSION W-2)
+  bl_oren: [3800, -3800], bl_mags: [3900, -3800], bl_pump: [4000, -3800],   // (bl_oren, bl_mags, bl_pump: EXPANSION W-2's rooms)
+  bl_tunnel: [3800, -4600], bl_kiln: [3900, -4600] };   // (bl_tunnel, bl_kiln: EXPANSION W-3's rooms)
+const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000], bl_arches: [3000, -3800], bl_gardens: [3000, -4600] };   // (bl_arches: EXPANSION W-2; bl_gardens: W-3)
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
 
@@ -130,6 +132,7 @@ function groupDefs() {
   add('terminal', ['terminal'], buildTerminalRoom);   // (SPACEPORT-1: the terminal at Citadel Spaceport, after LBA2's departure hall (scene 78))
   add('ballastra', ['ballastra', 'bl_shed'], buildBallastra, buildBallastraSteps);   // (EXPANSION W-1: Float Harbor and Tessa's shed, src/game/ballastra/)
   add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'], buildArches, buildArchesSteps);   // (EXPANSION W-2: the Arch District and its three rooms, src/game/ballastra/)
+  add('bl_gardens', ['bl_gardens', 'bl_tunnel', 'bl_kiln'], buildGardens, buildGardensSteps);   // (EXPANSION W-3: the Water Gardens, the service tunnel and Corvin's kiln, src/game/ballastra/)
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)

@@ -34,7 +34,7 @@
 //   BALLASTRA.arches = H:
 //     rooms ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'] · spawns {fromHarbor, fromGardens, orenIn, orenOut, magsIn,
 //       magsOut, pumpIn, pumpOut, steps} {x, z, a}
-//     exits {toHarbor (active: to W-1's districtEdge), toGardens (data: W-3's fromArches, for the story to enable)}
+//     exits {toHarbor (active: to W-1's districtEdge), toGardens (active since W-3: to the gardens' fromArches)}
 //     doors {orenOut, orenIn, magsOut, magsIn, pumpOut, pumpIn} {x, z, r, room} (both ways, active as room exits)
 //     stands {oren_table, oren_terrace, oren_steps, mags_house, mags_row, mags_steps, dunn_door, corvin_stall,
 //       hobb_market, tessa_steps, tessa_pump, tib_bell, quill_steps, row1…row4, market1…market3} {x, z, a}
@@ -453,7 +453,7 @@ export function* buildArchesSteps(scene, physics) {
     for (let i = 0; i < 6; i++) B.add(sb(3.0, 0.3, 0.9, 1.2), BM.cap(), GATE_E.x + 0.9 + i * 0.85, TER - 0.2 - i * 0.3, GATE_E.z);
     g.box(-1.6, 0, 0.3, 0.3, 3.4, { block: true }); g.box(1.6, 0, 0.3, 0.3, 3.4, { block: true }); cols(g.cols);
     box(40, 6.6, 41, 9.4, TER, { seeThrough: true });
-    box(41, 6.6, 41.4, 9.4, TER + 0.8, { block: true });   // (W-3 lies beyond: the story opens the way)
+    box(41, 6.6, 41.4, 9.4, TER + 0.8, { block: true });   // (W-3 lies beyond: the gate's exit, toGardens, takes him there)
   }
   yield;
 
@@ -760,7 +760,7 @@ export function* buildArchesSteps(scene, physics) {
     toGardens: { ...W(GATE_E.x + 0.6, GATE_E.z), r: 0.8, room: 'bl_gardens' },
   };
   const R = {
-    id: 'bl_arches', outdoor: true, sky: false, group, center: new THREE.Vector3(ox, 0, oz), lights: [], exits: [exits.toHarbor, doorsOut.orenOut, doorsOut.magsOut, doorsOut.pumpOut],
+    id: 'bl_arches', outdoor: true, sky: false, group, center: new THREE.Vector3(ox, 0, oz), lights: [], exits: [exits.toHarbor, exits.toGardens, doorsOut.orenOut, doorsOut.magsOut, doorsOut.pumpOut],   // (toGardens: W-3)
     searches: [], ballTargets: [], givers: [], updaters, music: 'harbour', env, spawn: spawns.fromHarbor,
     entries: { ballastra: spawns.fromHarbor, bl_oren: spawns.orenOut, bl_mags: spawns.magsOut, bl_pump: spawns.pumpOut, bl_gardens: spawns.fromGardens },
     sounds: [{ kind: 'water', ...W(-6, -16), r: 30, vol: 0.35 }, { kind: 'water', ...W(0, 22), r: 24, vol: 0.4 }],
