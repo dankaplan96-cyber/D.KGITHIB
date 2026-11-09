@@ -62,7 +62,7 @@ Nothing new is saved and no flag changes meaning: what shows is read from the ch
 | 8 | Sendell's chamber | silent after her words; her scene played over the well's piece | her pool points on (the core through the warm arch); in chapter 12 her light flickers; after the ending she sleeps. The first relief of the two suns reads. Her words now start the revelation's music (as the well's Sendell scene) | as 2, `story/chapter3.js` | `under-bar` |
 | 9 | The core: Vesk mid-fight | "Hello, Twinsen." | "Talk to my guardian, Twinsen. I'm busy." (overload: "Get away from my console!") | deeplife | `under-bar` |
 | 10 | **The epilogue: the way down** | the open collar said nothing | after dinner the collar leads down again ("Descend"): the bore runs as a shield "run by both worlds" (the end card) | deeplife (`dp_down`) | `under-bar` |
-| 11 | The epilogue: the shield crew | nobody | **Guard Harl**, a council guard, keeps the lift (Vesk rode it up in chains); **Tolli** of the project's crew walks a round in the deep installation (the console, valve A, the exchanger's sight glasses) and checks the second coolant loop (Vesk's note from his cell when he was pulled clear, VESK-CHOICE; his own reason otherwise); **Sala**, Zeelich's half of the crew, reads the field at Vesk's patched console in the core. Each has two lines and a voice of their own (`engine/voice.js`), own dress (DRESS-1) | deeplife, `text/deeplife.js`, `engine/voice.js` | `under-bar` |
+| 11 | The epilogue: the shield crew | nobody | **Guard Harl**, a council guard, keeps the lift (Vesk rode it up in chains); **Tolli** of the project's crew walks a round in the deep installation (the console, valve A, the exchanger's sight glasses) and checks the second coolant loop (Vesk's note from his cell when he was pulled clear, VESK-CHOICE; his own reason otherwise); **Sala**, Zeelich's half of the crew, reads the field on the deck at the foot of Vesk's platform in the core. Each has two lines and a voice of their own (`engine/voice.js`), own dress (DRESS-1) | deeplife, `text/deeplife.js`, `engine/voice.js` | `under-bar` |
 | 12 | The epilogue's rooms | — | the hoist lamp green; the diagram's chalked SHIELD LOOP; the board's USE THE STONES; Sendell's light low (0.25); the core plays the cave's piece, not the boss's; Vesk's console reads burnt black, two dials patched | deeplife apply | `under-bar` |
 
 The fights, the puzzles, the guardian (chapter 12's dive phase), the flags and the chapters' order are unchanged.
@@ -100,7 +100,29 @@ meaningful step that is not padding (the core is one arena; the way to it is cha
 - **GPU look** (the laptop): the hoist in the deep installation's back wall, the crew in the epilogue.
 - The bore's drive corner, the generator, the toolbox, the tug and the lockers stay silent: they read as plant, not as
   things to use; the console, the log and the hoist carry the room's story.
+- Vesk's console platform is his stage and is not climbed (its steps stop him at 0.75 m): the burnt console is read from
+  the deck at the foot of the steps. Nothing on the route needs the platform.
+- A save with only chapter 11's key and no chapter-10 relay flags (an old save) puts Baldino in his workshop on Zeelich,
+  not at the collar (network.js counts the relays): unchanged, nothing to do with the underground.
+- The playthrough segment 14 was not run in this pass (it needs segment 13's save, the chain from 01); `chapter3`
+  covers the same route by flags.
+- `overlaps` lists (does not fail) two near-planes at the hoist (its sign over the I-beam's flange, its left column
+  against the panelling's dado, 0.6–3 mm), as the deep installation's other listed spots.
 
 ## Evidence (Automated runtime only; a snapshot of `lba3/` served locally, one suite at a time)
 
-_(filled in from the runs)_
+| Suite | Verdict | Notes |
+|---|---|---|
+| `under-bar` (new, 15 checks) | PASS (15/15) | the first two runs failed on the test's own approach (Baldino placed by the chapter-10 relays the setup had left out; the pool's middle and Vesk's platform walked into) and on Sala first standing on the unclimbed platform (moved to the deck); the third run passed |
+| `epilogue-home` | PASS (12) | the epilogue's town and allies as before | the collar by input; the shaft's and the deep installation's things; up the lift, Baldino by progress; the galleries' board (shelf, not chasm floor); Sendell's pool and relief; Vesk mid-fight; a death in the deep installation → Retry there with full life; the epilogue: down by input, Harl, Tolli's round and talk, the hoist green, the console, the diagram, the stones still up (ISO across), the pool, the core's music and shield, Sala, the console; a save in the deep installation → Continue, out up the lift |
+| `chapter3` | PASS | chapters 11 and 12 by flags and real throws, the final fight unchanged, the epilogue |
+| `resume` (D16) | PASS | the core fight's coil phase comes back after Continue |
+| `save-migration` | PASS (11) | |
+| `world-consistency` | PASS (37) | the new startTransition (`deeplife.js` interact) classified 'same' |
+| `overlaps` ONLY = the five rooms | PASS | listed spots above |
+| `room-cutaway` ROOMS = the five rooms | PASS | 0 hidden; `cam.mjs` over the full extents and both levels: 0 hidden |
+| `camera-doors` | PASS (4) | |
+| `deaths` | PASS (160) | |
+| `voices` | 1 FAIL, not this pass's | "every named speaker has an own voice": the missing ones are Desert Island's keepers (`ih_leya`, `ih_dela`, `ih_jorr`, `ih_nima`, `ih_hanna`, `ih_brann`, `ih_joss`), from the Desert pass; Harl, Tolli and Sala have theirs |
+| `door-sweep` | not run | the underground has no story doors (its ways are room exits, walked in `under-bar` and `chapter3`) |
+| `slidetraps` | not run | it scans Citadel, Desert Island and the Hamalayi; no terrain changed here |
