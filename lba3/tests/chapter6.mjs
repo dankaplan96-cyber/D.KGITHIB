@@ -67,6 +67,16 @@ is('the first trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.li
 // COMBAT-2: the ice mites' frost slide. One mite, the others held still: he stands 4.5 m off on open snow. It crouches and its
 // streak shows the line (told), slides along it (committed) and bites him standing in it; the next one he steps out of the
 // line once it holds still (the last 0.3 s): the slide misses and the mite spins on the ice (the opening)
+// (pictures for a person to look at: the crouch with its streak, then the slide)
+const shotAt = async (want) => ev((want) => { const G = game, h = G.hero, P = G.physics, m = G.enemies.find((e) => e.def?.id?.startsWith('imite') && e.alive);
+  if (!m) return 'none';
+  if (want === 'slidewind') { m.state = 'chase'; m.coolT = 0; m.slideCool = 0; h.invuln = 99;
+    for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + 4.5 * Math.sin(a), z = m.pos.z + 4.5 * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
+      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 0.4, z, m.pos.x, m.pos.y + 0.4, m.pos.z)) { h.pos.set(x, y, z); h.angle = h.angleTo(m); h.onGround = true; break; } } }
+  for (let i = 0; i < 150; i++) { for (const o of G.enemies) if (o !== m && o.def?.id?.startsWith('imite')) { o.state = 'idle'; o.noticeT = 0; } if (m.state === want && m.stateT > (want === 'slidewind' ? 0.6 : 0.12)) break; G.step(1 / 30); }
+  return m.state; }, want);
+log('ice slide pictures:', await shotAt('slidewind')); await shot('C6-02b-ice-crouch.png'); log(await shotAt('slide')); await shot('C6-02c-ice-slide.png');
+await ev(() => { const h = game.hero; h.invuln = 0; h.hp = h.maxHp; game.step(1.5); });
 const slide = await ev(() => { const G = game, h = G.hero, P = G.physics, ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite') && e.alive);
   const m = ms[0], others = ms.slice(1), out = { ice: !!m?.ice };
   if (!m) return out;

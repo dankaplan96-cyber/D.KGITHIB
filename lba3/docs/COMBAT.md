@@ -78,9 +78,9 @@ fight; Aggressive mode's Space still attacks with the same moves.
   (the legs step sideways or backwards while aiming). The controls are free again at 0.36 s; the follow-through
   runs on to ~0.62 s on the layer and blends into the walk or idle. The ball leaves the hand at 0.16 s on the
   same clock as the pose. Charging allows a slow aimed walk (×0.42). How each move is posed: "Twinsen's combat animation" below.
-- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3), and a second one
-  starts its wind-up at least 0.7 s after the first (Gentle 1.0, Hard 0.45: COMBAT-2), so two shots or blows never land
-  closer together than one dodge after another can take them. Enemies
+- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3), and a second
+  shooter (a drone, a guard) starts its wind-up at least 0.7 s after another one still aiming (Gentle 1.0, Hard 0.45:
+  COMBAT-2), so two bolts never come closer together than one dodge after another can take them. Enemies
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,
   never enemy health.
@@ -598,9 +598,12 @@ bot on the old game, the new bot on the old game (to tell the bot's part from th
   ball (`Bolts.update`, actors.js). Drones and guards **don't fire into one** (`clearShot`, enemies.js / guards.js: the
   wind-up is not started, or is dropped, when the bolt's line crosses one): through the fence they only watch; the fight
   is at the gate or inside, where both can hit.
-- **The attack director staggers wind-ups** (`COMBAT.stagger`, combat.js): a second enemy starts its wind-up at least
-  0.7 s after the first (Gentle 1.0, Hard 0.45), so two shots or blows never land closer together than one dodge after
-  another takes them (a dodge and its cooldown are 0.64 s). The two-at-a-time limit is unchanged.
+- **The attack director staggers the shooters** (`COMBAT.stagger`, combat.js): a second shooter (a drone, a guard: its
+  rifle or its baton) starts its wind-up at least 0.7 s after another one still holding its turn (Gentle 1.0, Hard
+  0.45), so two bolts never come closer together than one dodge after another takes them (a dodge and its cooldown are
+  0.64 s). The two-at-a-time limit is unchanged. Biters (mites, dogs, the crawler, the sentry) keep their timing: a
+  stagger for every enemy shifted the Citadel depot's watch enough that `depot-watch` 7a, 7b and 8a failed (its
+  stealth is tuned to the watch's round); for the shooters alone it passes.
 - **The first armour brace says what gets through** (once a game, guards.js; `hint_armour`): "The armour takes it. Hold
   {ball} for a charged throw, or land a heavier blow (a kick: the third {attack})." Checked by input in the arena: jab,
   jab, kick on the trooper (armour 2) takes 2 of its 5 (scratch probe `probe-fists.mjs`).
