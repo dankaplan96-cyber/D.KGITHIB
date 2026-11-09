@@ -515,7 +515,120 @@ people around it.
 **Pictures:** the play camera on the rafts (dry, green), the gauges, the tunnel's splitter, the kiln, and the rig
 empty and assembled.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 8.–9.11.2026, branch `expansion/ballastra`; the place only: the residents are W-7's, their
+stand spots are ready; story, flags and travel are the cloud's)
+
+*Files* (new, `src/game/ballastra/`): `gardens.js` (the region `bl_gardens`, its own lazy group at x 3 000, z −4 600, built
+in 12 steps; the plan, the moving parts, the handle `BALLASTRA.gardens`), `gardenrooms.js` (`bl_tunnel` 3 800 and `bl_kiln`
+3 900, both at z −4 600). Small additions in my own files: `common.js` (`BALLASTRA.gardens`, the places' positions),
+`arches.js` (W-2's `exits.toGardens` is now an active exit: the terrace's east gate leads here). `tests/ballastra-gardens.mjs`
+(22 checks). Pictures: `docs/future/world/W-3/`.
+
+*The idea in form*: where the water goes is something you can see and follow. It comes in high on a nine-arched
+aqueduct from a rocky islet in the north into the splitter house; three ways leave it, each a channel you can walk beside:
+G1 (the gardens: a cut channel across the yard, a culvert under the north path, a glazed spout into the upper basin, then
+down through the weirs' notches), G2 (the kiln: a leat on its own wall the whole north side, ending in a timber trough
+over Corvin's wheel) and G3 (the overflow: west across the plaza and down a six-step spillway to the sea). The basins'
+walls keep the record (the green low line, the stain to the full line, the salt there, an older mark with weed); dry,
+the rafts sit on cracked mud with their walkways low and the gangways steep; green, everything floats a hand under the
+paths. Each part of the place does one thing: the plaza splits the water, the paths and gangways follow it, the kiln
+lives on it, the rig proves it.
+
+*The plan* (local metres, x east, z south; the hero comes in through the west gate from W-2's terrace):
+- heights: the sea 0; the upper level 6.4 (the west plaza, the splitter yard, the paths round the upper basin); the middle
+  4.8 (the middle basin's paths, the rig's platform); the lower 3.2 (the lower basin's paths, the east terrace). Basins
+  x −35…−7.5 / −5…20.5 / 23…47.5, z −7…16, full 5.7 / 4.1 / 2.5, beds 4.7 / 3.1 / 1.5; weirs between them (block, not
+  walked), stairs at their ends; the north path's bank (grass, reed clumps and shrubs) steps down with it behind dressed
+  retaining walls, the leat on its wall above it;
+- the west plaza: the gate (two glazed posts, a lintel, the stair up toward W-2 beyond), the splitter house (ashlar,
+  celadon tiles, a glazed hip roof, the aqueduct's mouth in its north wall, bronze-arched channel mouths east and west),
+  the **two gauges** side by side in front of it (glazed columns on stone bases: a scale board of bands — a celadon or
+  cobalt "enough" band, a red "low" band, no words — and a bronze float in a glass tube; celadon cap upper, cobalt cap
+  lower), the **tunnel's hatch** east of it (a stone kerb, the bronze leaf up, rails to hold), a bench, a barrow, herbs,
+  the growers' pergola with beans over it, seed trays and a bench;
+- each basin: 16 planted rafts (beans on poles, reeds, flowers), a long floating walkway north–south and a cross
+  walkway, lily pads; a hinged gangway at each end from the path's edge down to the walkway; mooring posts;
+- the rig's platform south of the middle basin; the east terrace with Corvin's workshop (lime and celadon-tiled dado, a
+  sign of two glazed floats over the door), its **water wheel on the west wall** in a railed pit, seen from the terrace,
+  the bottle kiln chimney beside it, his drying rack of glazed floats; the causeway's first stretch to the House of
+  Balances (W-4) behind a closed bronze gate at the terrace's south-east.
+
+*The water's parts*: `channels.show` (each channel's water and its falls fade in and out over ~1.5 s: the aqueduct;
+G1's channel, spout and the two weir cascades; the leat, the trough's fall onto the wheel and the tail race; the
+overflow's six spillway falls); `gauges.set` (the floats ride in ~1.5 s); `gate.set(1|2|3, 0|1|2)` (each gate's timber
+leaf rises in its frame — G1 at the gardens' channel's head by the house, G2 on the leat, G3 at the spillway's head — and
+the tunnel's board shows all three; G1's hand-wheel turns); G2's latch is on a post on the leat's far side over its wall,
+G3's on a stone pier in the sea north of the spillway (an iron rod to the gate's frame), both red-knobbed ball targets out
+of reach; `walkways.setLevel` (the three basins' water, the rafts, walkways and lily pads in ~4 s; the gangways tilt);
+`rafts.setState` (three plantings, one shown; the beds cracked when dry, wet mud otherwise); `kiln.setRunning` (the
+mouth's glow and its light in the workshop, the chimney's smoke); `wheel.setSpeed` (the wheel, the workshop's gear,
+potter's wheel and bellows; it only turns with the leat's water on it). In `bl_tunnel`: the old celadon main, the
+splitter board (three gates in bronze grooves, pictograms under them: sprouts, a flame, waves), G1's hand-wheel, the
+**seized bypass** (a loop of old iron pipe, its big valve wheel crusted with rust: `bypass.setFree` clears it and turns
+the wheel), the **unrecorded tap** (bright copper bodged onto the main with clamps and rag, off through the east wall
+toward the kiln, a brass tap, a trickle at the clamp while open: `tap.setOpen`). In `bl_kiln`: the water wheel's axle
+through the back wall into a big wooden gear, the belt to the potter's wheel, the crank to the bellows, the kiln (a stone
+dome bound with iron, its mouth glowing), racks of glazed floats, the glazing table.
+
+*The rig* (N6): a stone platform; three basins A, B, C sunk a step (floors 4.55, rims 5.0: wadeable, never deep), glazed
+inside, each with a bronze level mark, a float on a guide rod, a lamp on a post (off, green, amber, red), a range dial on a
+pedestal (three positions, a pointer) and a switch latch high on a post (a ball target); celadon troughs link A–B and B–C
+(`rig.spill` runs a sheet of water through one, ~2.5 s; only to a neighbour); the frame with five stone saddles
+(`rig.setPart`: the ceramic housing, the brass assembly, the core element, the glazed float, the timber frame), its tall
+back to the south so the parts face the path; the storm tank on the platform's west end, fed by a glazed pipe from the
+upper basin, its sluice leaf and chute into A (`rig.setSluice` opens and pours).
+
+*Handles* (`BALLASTRA.gardens`, world coordinates): as ordered — `rooms`, `spawns` (7), `exits` {toArches (active),
+toHouse (data: `bl_house` is W-4's)}, `doors` (tunnelOut/In, kilnOut/In, active), `stands` (15), `spots` (14), `safe`
+(9), `ballTargets` (5) {x, y, z, r}, the setters and getters, `onChange(fn)`; plus `plan` (the build's numbers, for
+tests). The start state is N2's: the aqueduct full, G1 shut and the gardens' channel dry, G2 open with the leat running the
+kiln, G3 shut, the tap open, the bypass seized, the basins dry and the rafts wilted, the kiln running, the rig empty.
+
+*Collision*: the walkways and the rafts ride the water (the rafts are planted: block, not stood on); the gangways'
+segments follow their tilt; the rig's basins are floors a step down; weirs, banks, the leat, gauges, the hatch's kerb,
+the trough, the wheel's pit rails, the causeway's gate block; the soft edge as in W-1/W-2 (anyone over open water is eased
+back to where he stood, or to the nearest safe spot).
+
+*Numbers*:
+- **SwiftShader, headless, 960×540, a fresh profile's settings, the play camera** (`ballastra-gardens.mjs`, draw
+  calls and triangles per frame, no fps): the rafts and gauges from the plaza 120 calls / 310k triangles; the upper basin
+  from the north path 126 / 356k; the test rig 62 / 140k; the east terrace and the wheel 60 / 192k; the tunnel 31 / 29k;
+  the kiln 31 / 29k — every view under the Citadel street's 215 / 900k (W-2's benchmark).
+- **The laptop's GPU** (AMD Radeon Vega 8, ANGLE D3D11, headless Chromium from the Test Lab's Playwright, 1280×720, DPR 1,
+  the game's quality on that profile: Medium, the game running unfrozen; frame interval from requestAnimationFrame over 180
+  frames; plugged in): the plaza by the gauges 92 calls / 236k, median 16.7 ms, p95 16.8; the upper basin from the north
+  path 107 / 296k, 16.7 / 33.3; the rig 59 / 91k, 16.7 / 16.7; the east terrace 39 / 126k, 16.7 / 33.3; the tunnel 18 /
+  19k, 16.7 / 16.7; the kiln 17 / 18k, 16.7 / 16.7. The interval is vsync-capped at 60 Hz: it says the frame kept up,
+  not the GPU's own time; a light check, not a benchmark, and no battery run.
+- The region is 160 meshes (54 materials), 315k triangles; the tunnel 58 meshes / 12.5k, the kiln 52 / 12.2k; small canvas
+  textures (≤ 512²) only; no lights outdoors, 3 in each room. First build 1.4 s on SwiftShader on a quiet machine (5.2 s
+  with a second browser running), not measured on the GPU.
+
+*Checks*: `tests/ballastra-gardens.mjs` (SwiftShader) 22/22 PASS: lazy build far from all areas (over 600 m: W-2's district is 800 m north), rooms
+known before built; every handle; every stand spot clear floor dry and full; the basins' water at each level, the
+walkways' floors on it, the rafts blocked, the gangways' tilt, the ~4 s animation; the rafts' three states; the channels'
+waters and falls; the gauges; the three gates outside and on the board; **he walks the gardens by input dry and full**
+(18 legs each: the gauges, the hatch, the north path, down a gangway onto the upper walkway and across, up to the south
+path, the stair, the rig's frame, into a shallow basin and out to its dial, the middle walkway and back up, the stairs,
+the lower walkway, the wheel, the kiln's door, the causeway's gate, the rig); through the hatch (to the tap, the bypass
+and G1's wheel) and the kiln's door and back; the tap and bypass; the kiln and its wheel; the rig; the soft edge; **the
+way from W-2's terrace gate in and back out**; a second visit builds nothing; the cost. The other expansion suites: see
+the W-3 report (`docs/future/world/W-3/W-3-REPORT.md`).
+
+*Pictures* (`docs/future/world/W-3/`, the play camera — Follow, Medium — **on the laptop's GPU**, headless, `testFreeze`,
+frames stepped by hand): `W-3-00-rafts-dry-vs-green` (the same spot side by side), `01/02` rafts dry and green, `03` the
+plaza from the gate, `04` the gauges and the splitter house, `05` on a green walkway, `06` a weir's cascade, `07/07b` the
+kiln and its water wheel, `08/09` the rig empty and assembled, `10` the tunnel's splitter board, `11` inside the kiln,
+`12` the north path, the bank and the leat.
+
+*Left / not done:*
+- the residents (W-7): none stand on the spots yet; the spec's "test rig with six people around it" view is measured
+  without them;
+- the kiln's exterior is a plain workshop with a sign; its interior is the bigger part of its character;
+- the gardens' gate on W-2's terrace leads straight here (an active exit); if the story wants it closed until N2, it
+  needs a flag on that exit (the cloud's);
+- the causeway to the House of Balances is scenery behind a closed gate until W-4;
+- sounds use the game's existing names (waterRun, grind, clunk, splash, gearClack); no new sounds.
 
 ---
 
@@ -996,5 +1109,8 @@ _(file, line or function, why)_
 - `src/game/lba1places.js` `climbShelfWall` (EXP-MERGE-35, the World Builder): the shelf fill's block and collision box
   across the foot landing's north edge run to the landing's line (`kz`), closing a pocket by the wall's north end that
   pinned the hero (oren-square's walk from the fortress shelter); base code: also `tools/testlab/requests/EXP-MERGE-35-base.diff`.
+- `src/game/regions.js` (W-3, the World Builder): the import of `ballastra/gardens.js`, `REF.bl_gardens`, `AT.bl_tunnel`,
+  `AT.bl_kiln`, `OUT_AT.bl_gardens`, one `add('bl_gardens', ['bl_gardens', 'bl_tunnel', 'bl_kiln'], …)` line: the Water
+  Gardens' lazy group (built in steps), each commented.
 - `tests/world-consistency.mjs` `TRANSITIONS` (EXP-MERGE-35): the expanded campaign's `startTransition` calls classified
   (coils.js, index.js afterLoad, survey.js, throttle.js); expansion branch only (on main those calls don't exist).
