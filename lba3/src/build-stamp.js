@@ -1,3 +1,3 @@
 // When this copy of the game was last published (UTC), shown on the title screen and in the pause menu so the player
 // can tell whether the page is the newest. Written by tools/stamp-build.sh right before each publish; keep the format.
-export const BUILT = '2026-11-09T08:45:18Z';
+export const BUILT = '2026-11-09T10:32:56Z';
