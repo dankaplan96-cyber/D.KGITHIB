@@ -12,6 +12,9 @@
 //   9. R5: Zoé's hand (the skinned hand's vertices, CHAR-2's longer hand) is on the tap's handle every frame it turns,
 //      and in the stream under the spout; standing feet don't jump; the scene's pose layers are off every joint after
 //      it (no hand bone left turned), played or skipped
+//  10. OPEN-FILM: every line's speaker's mouth moves with it (the harbour's worker and resident, scene-only actors,
+//      too); no line plays the rig's looping talk gesture; the aerial move doesn't stop between 3 and 12.5 s; every
+//      footstep heard falls within 0.1 s of one of Zoé's feet coming down
 //   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
 //   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
 //   not a vanishing)
@@ -93,6 +96,14 @@ const watch = await ev((polySizes) => {
   const handPts = () => { cast.zoe.rig.root.updateMatrixWorld(true); return hIdx.map((i) => zMesh.getVertexPosition(i, new v.constructor()).applyMatrix4(zMesh.matrixWorld)); };
   const TURNS = [[41.5, 42.2], [44.05, 44.5], [58.6, 59.1], [69.45, 69.85]], WET = [60.3, 62.0];
   const feetPrev = {}, footJumps = [];
+  // OPEN-FILM: each line's speaker moves their mouth (the harbour's two included); no line plays the rig's looping talk
+  // gesture; the aerial move (0-13 s) never stops; each footstep heard is a foot coming down (Zoé's walks)
+  const speakerOf = { n_zoe: cast.zoe, n_hero: cast.twinsen, n_arthur: cast.arthur, n_worker: c.extras?.worker, n_resident: c.extras?.resident };
+  const mouthBy = {}, talking = [], aerial = { min: 99, at: null }, footDown = [], stepsHeard = [];
+  const play0 = G.audio.play.bind(G.audio);
+  G.audio.play = (n, ...r) => { if (/^step-/.test(n) && G.cine) stepsHeard.push(+G.cine.t.toFixed(3)); return play0(n, ...r); };
+  const zf = { L: { h: null, hi: -1, down: false, t: 0 }, R: { h: null, hi: -1, down: false, t: 0 } };
+  let camPrev = null;
   // OPEN-3: every actor's path, frame by frame, stays out of the solids (walls, furniture, counters, fences,
   // railings: the physics colliders taller than the floor they stand on) and out of each other while the picture is
   // up. BODY is a body's half-width at the hips (the gameplay radius, 0.45, also keeps a reach's distance free);
@@ -158,12 +169,26 @@ const watch = await ev((polySizes) => {
       if (p && still && p.still && !dark && !p.dark) for (let i = 0; i < 2; i++) { const d = Math.hypot(f[i].x - p.f[i].x, f[i].z - p.f[i].z); if (d > 0.09 && d < 0.8 && footJumps.length < 8) footJumps.push({ id, t: +c.t.toFixed(2), d: +d.toFixed(3) }); }
       feetPrev[id] = { f, still, dark };
     }
+    if (c.subI >= 0) { const sp = speakerOf[c.def.subs[c.subI].voice]; if (sp && (sp.rig.mOpen || 0) > 0.05) mouthBy[c.subI] = (mouthBy[c.subI] || 0) + 1; }
+    for (const [id, a] of Object.entries(everyone)) if (a.rig.anim === 'talk' && talking.length < 6) talking.push({ id, t: +c.t.toFixed(2) });
+    if (camPrev && c.t > 3.0 && c.t < 12.5) { const sp = cam.position.distanceTo(camPrev) * 30; if (sp < aerial.min) aerial.min = +sp.toFixed(2), aerial.at = +c.t.toFixed(2); }
+    camPrev = cam.position.clone();
+    if (cast.zoe.present && cast.zoe.rig.root.visible) {
+      const fl = G.physics.groundAt(cast.zoe.pos.x, cast.zoe.pos.z), walking = cast.zoe.rig.anim === 'walk';
+      for (const sd of ['L', 'R']) {
+        const h = cast.zoe.rig.j['leg' + sd].foot.getWorldPosition(new v.constructor()).y - fl, f = zf[sd];
+        if (f.h != null && walking) { if (h < f.h) f.down = true; else if (f.down) { f.down = false; if (f.hi - f.h > 0.05) footDown.push(f.t); f.hi = f.h; } f.hi = Math.max(f.hi, h); } else { f.hi = h; f.down = false; }
+        f.h = h; f.t = +c.t.toFixed(3);
+      }
+    }
     const sub = document.querySelector('#cine-sub').classList.contains('show') ? document.querySelector('#cine-sub').textContent : '';
     if (sub && sub !== lastSub) subsAt.push(sub);
     lastSub = sub;
   }
   const subs = window.__cine.def.subs;
-  return { mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+  G.audio.play = play0;
+  const offbeat = stepsHeard.filter((s) => !footDown.some((d) => Math.abs(s - d) <= 0.1));
+  return { mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
 }, polySizes);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
@@ -175,6 +200,10 @@ check('R5: her fingers are in the stream under the spout', watch.hand.wet >= 45 
 check("R5: standing feet don't jump (more than 9 cm in a frame) while the picture is up", watch.footJumps.length === 0, watch.footJumps);
 check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && watch.subsAt[0].startsWith('Resident'), watch.subsAt);
 check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
+check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and the resident too)", watch.mouthBy.every(([vk, n]) => n >= 4), watch.mouthBy);
+check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
+check('OPEN-FILM: the aerial move does not stop between 3 and 12.5 s (it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
+check("OPEN-FILM: every footstep heard is one of Zoé's feet coming down (within 0.1 s)", watch.steps.heard >= 10 && watch.steps.offbeat.length === 0, watch.steps);
 await run(0.5);
 const full = await endState();
 check('played through: control in the house, objective, save, cast placed', good(full), full);

@@ -872,6 +872,9 @@ export function driveMouth(game) {
   if (!v || v.radio || !B.mev.length) return;
   const { o, r } = B.mouth();
   let a = game.state === 'dialog' ? game.speaker : null;
+  // (OPEN-FILM: a scene's own cast, who are not the world's NPCs — the opening's harbour worker and resident — are named by
+  // the scene: cine.speakers { n_worker: actor }; their mouths stayed shut while their lines were heard)
+  if (!a && B.key) a = game.cine?.speakers?.[B.key] || null;
   if (!a && B.key?.startsWith('n_')) {
     const id = B.key.slice(2);
     a = id === 'hero' ? game.hero : game.npcs?.find((n) => n.def?.id === id && n.present);

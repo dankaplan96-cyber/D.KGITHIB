@@ -24,8 +24,9 @@ characters and objects are listed in `temps` and removed by `finish`. Everyday a
 `Rig._craft` (`tinker`, `kneelWork`, `kneelLook`, `kneelShow`, `reach`, `tapTurn`, `touchWater`, `setDown`,
 `potting`, `wipe`, `reachHigh`) plus additive gestures (`rig.doGesture('nod' | 'shrug' | 'sigh' | 'start')`).
 Characters in a scene don't fidget (`rig.noFidget`) and the player's occlusion silhouette is off. Every character in a
-scene is made with `createCharacter` (the poly cast, `assets/poly/*.json`); talking is the rig's generic `talk`
-gesture while the line babbles: there is no lip-sync and no recorded voice.
+scene is made with `createCharacter` (the poly cast, `assets/poly/*.json`). A speaker's mouth opens and closes with
+the syllables their gibberish voice plays (FACES-HANDS, `voice.js driveMouth`; a scene names its own extras in
+`cine.speakers`): a mouth that moves with the voice, not lip-sync, and no recorded voice.
 
 The house as a set: for the scene the house gets a ceiling and its east wall back (the game draws it open for its
 own camera), and the well's cave its east wall; they fade out in the handoff (83.6–84.0) and `finish` removes them.
@@ -48,9 +49,16 @@ them, and `finish` takes them off, played or skipped — the gameplay rig never 
   (the rig's turn lean) and lets the feet step round; the gameplay turn's shuffle (turnL / turnR) skated the planted
   foot round with the body. `walk(..., {acc, dec})` gets up to speed and settles; a walk's end facing is reached in
   its last steps and then by a short turn (it used to snap there in one frame).
-- Talking: each line's gesture is chosen for it (`say(..., gesture)`: a hand up for "Now the sail.", the
-  screwdriver's hand toward the tap, one open hand, hands together for a question) or none (calling across the room,
-  "I'll check the well." with a nod). Still no lip-sync and no mouth motion (no poly face has mouth poses).
+- Talking (OPEN-FILM, docs/lba-maturity/opening-film.md): the opening no longer plays the rig's `talk` (arms swinging on
+  a sine for the whole line, the head nodding at 1.1 Hz). A line has at most one gesture, `say(..., { at, d, o })` →
+  `gest()`: a small wind-up the other way, the move with a touch of follow-through, a hold while the words that carry it
+  are said, a settle (the screwdriver pointed at the boat for "Now the sail.", toward the tap for "I fixed that
+  yesterday.", a hand back at the tap and a glance for "The tap's stopped again.", one open hand, both forearms up for a
+  question) or none. The head moves with the voice (`speech()`: a small dip into the stressed syllables, the chin a
+  little up and to one side for the line, under 3.5°), the eyes blink when the gaze moves on (`look()`), and a look
+  past the neck's reach twists the chest the rest of the way (`reachLook()`).
+- Footsteps (OPEN-FILM): heard when a foot comes down (the ankle's lowest point after a 5 cm lift), on the surface the
+  game gives that spot (`surfaceAt`), not on a timer.
 
 Doors: somebody who leaves through a door walks out of the shot or into the game's door transition (a dip to black,
 the door sound, and they are outside, already a step past the door, as the game puts the hero) — never into a
@@ -78,16 +86,15 @@ What a player who never played LBA should know by the end, shown rather than tol
 
 | Time | Shot | What happens | What the player learns |
 |---|---|---|---|
-| 0–9 | Citadel Island from the air | the town, the harbour, the sea; the caption "Citadel Island, Twinsun / Twelve years after Twinsen's last adventure"; the cue enters at 2.5 s | where and when; Twinsen is somebody who had adventures |
-| 9–13 | down to the harbour | the pier, the project barge and its cargo lift, the ferry | the island trades by sea |
+| 0–13 | Citadel Island from the air, down to the harbour | one move (OPEN-FILM: it used to stop dead at 9 s and set off again): it drifts over the town under the caption "Citadel Island, Twinsun / Twelve years after Twinsen's last adventure", gathers speed past the water and dives over the quay's roofs to the pier, the barge and its cargo lift; the cue enters at 2.5 s | where and when; Twinsen is somebody who had adventures; the island trades by sea |
 | 13–19.6 | the lift | the worker runs the lift; a crate with the project's emblem comes up off the barge. Resident: "When does the harbour row get the heat?" Worker: "Next quarter. Every home gets it. Vesk promised." 18.6: a hum, the lantern and the hook tremble, the puddle ripples | there is a project bringing heat to every home; Vesk is behind it; not everyone has it yet |
 | 19.6–23.8 | the drill | the derrick turning inside FunFrock's old fortress on the plateau, the hum | the project drills into the island |
 | 23.8–29 | the pier again | Resident: "What's that hum?" Worker: "Just the drill. It's a long way down." The crate is set down; the resident goes on to the ferry | the hum comes from the drill; the people in charge aren't worried |
 | 29–35 | home | the family room: Twinsen mends the reading lamp, Zoé pots seedlings, Arthur kneels at his model boat. Arthur's close-up: "Dad! The mast fits!"; over his shoulder: "Told you. Now the sail." | Twinsen, his son Arthur, his wife Zoé: an ordinary home |
-| 35–48 | Zoé at the counter, the tap | one shot from the kitchen's west end at her eye level (three-quarter front, Twinsen at his table behind her), a slow push in: she pots, wipes her hands, her eyes go to the tap, she walks over and reaches as she settles; her hand lands on the cross handle and turns with it: a squeak, two knocks (she glances up at the pipe), a short stream (down at the water), a sputter, nothing (a beat on the spout); she turns it off, breathes out, lifts her hand away, looks round to him and turns (stepping round). Cut on her turn (45.3) to her face from his side of the room: "Twinsen. The tap's stopped again." | — |
+| 35–48 | Zoé at the counter, the tap | one shot from the kitchen's west end (Twinsen at his table behind her), a slow push in that comes down to her shoulder's height as she reaches (OPEN-FILM: from 1.84 m it saw the top of her bowed head through the tap's business; now her face in profile over her arm): she pots, the mast clicks in and both parents glance over at Arthur, she presses the last seedling in (a nod), wipes her hands, her eyes go to the tap, she walks over and reaches as she settles; her hand lands on the cross handle and turns with it: a squeak, two knocks (she glances up at the pipe), a short stream (down at the water), a sputter, nothing (a beat on the spout); she turns it off, breathes out, lifts her hand away, looks round to him and turns (stepping round). Cut on her turn (45.3) to her face from his side of the room: "Twinsen. The tap's stopped again." | — |
 | 48–53.4 | the exchange | Twinsen turns round from the table (stepping round); his face from her side of the room, Arthur behind him, the screwdriver's hand toward the tap: "I fixed that yesterday." Over his shoulder: "It worked yesterday." (one open hand; his shrug) | — |
 | 53.4–58 | the house hums | the hum again, dust from the ceiling, all three look up (a wide from the bed's foot); Arthur's close-up: "The drill again. Lulu says they're digging to the middle of the world." | the drill reaches their house too |
-| 58–62.4 | the second try | her eyes back to the tap, she steps round to it (the first try's angle), her hand on the handle; a thin warm trickle, a little steam; her hand goes from the tap to under the stream, palm up, the water landing on it (the stream ends at her palm), a small start: "That's warm. It's never warm." The music turns (the Entity cell) | the water is wrong |
+| 58–62.4 | the second try | her eyes back to the tap, she steps round to it (the first try's angle), her hand on the handle; a thin warm trickle, a little steam; her hand goes from the tap to under the stream, palm up, the water landing on it (the stream ends at her palm), a small start: "That's warm. It's never warm." (OPEN-FILM: the insert shows her face over her palm, from the stove's side, the palm above the subtitles) The music turns (the Entity cell) | the water is wrong |
 | 62.4–66.5 | under the island | a dip to black, the well's cave, inside the last chamber facing the crystal vein: it glows brighter with the hum, then a dip back | the hook: something under the island answers the drill (what the player finds at the bottom of the well) |
 | 66.5–75.2 | the decision | Twinsen puts the screwdriver down: "I'll check the well." (a nod). Zoé turns the tap off (her hand on the handle): "I'll ask next door.", lets go, steps round to him drying her hands and, going: "Take your magic ball. Just in case." She walks out of the shot toward the hall | the first goal (the well) and the first step (the ball); Zoé acts on her own |
 | 75.2–81.6 | outside | the game's door transition (a dip, the door): Zoé steps out by the house's new heat post (dark: the heat hasn't come yet), comes up the path and walks along the lane round the neighbours' fenced yard; the title over the sky, 76.4–81 | — |
@@ -110,7 +117,7 @@ skip at 3, 21 (the drill), 50, 64 (under the well), 77 (outside) and 85 s (the h
 leftover objects; every spoken line babbles in its speaker's voice; every character on screen is one of the poly
 cast's meshes; nobody vanishes or jumps more than a metre on screen except under a dip to black; a short press doesn't skip; pause and resume
 (clock stopped); losing focus pauses; Continue doesn't replay; a second new game duplicates nothing; the first
-objective is playable. Chapter tests start with `?nocine` (the opening's end state without the scene).
+objective is playable; every line's speaker's mouth moves with it; no looping talk gesture; the aerial move never stops; every footstep heard is a foot coming down (OPEN-FILM). Chapter tests start with `?nocine` (the opening's end state without the scene).
 Since R5 the per-frame checks (solids, people in people, vanishing) cover the whole scene: the dips come back up on
 the scene's clock (they were wall-clock timers, which never ran inside the test's stepped frames, so the picture read
 as black from 28.6 s on and the checks only ever saw the harbour); a cut or a camera move that takes someone out of the
