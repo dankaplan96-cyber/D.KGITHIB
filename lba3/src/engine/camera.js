@@ -1094,8 +1094,8 @@ export class CameraRig {
     }
     // (CAM-ROOFEDGE: his legs must be in view — _sees — just out of a door and once he has stood CH_LOW_STILL s, not turning: walking,
     // a house's corner over his feet for a step is let pass, as before, rather than drawing the arm in at every corner)
-    C.stillT = !fresh && C.pT && Math.hypot(hero.x - C.pT.x, hero.z - C.pT.z) < 0.3 * dt ? (C.stillT || 0) + dt : 0;
-    this._low = !!C.door || (C.stillT > CH_LOW_STILL && Math.abs(C.vyaw ?? 0) < 0.3);   // (not while he turns on the spot: the view moves with him then anyway)
+    C.standT = !fresh && C.pT && Math.hypot(hero.x - C.pT.x, hero.z - C.pT.z) < 0.3 * dt ? (C.standT || 0) + dt : 0;
+    this._low = !!C.door || (C.standT > CH_LOW_STILL && Math.abs(C.vyaw ?? 0) < 0.3);   // (not while he turns on the spot: the view moves with him then anyway)
     // the heading: his facing (a small steering correction inside CH_DEAD_YAW moves nothing) through the spring;
     // camera-relative controls pushed back (toward the camera) hold it
     {
