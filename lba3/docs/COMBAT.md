@@ -436,7 +436,7 @@ active frames). Not done: how the start of a walk reads by eye (its stance foot 
 | Enemy | Role | Tell | Opening | Hit reaction |
 |---|---|---|---|---|
 | Crystal mite | cautious close-range | rears up, crystals flare (0.5 s) | sits low for 0.6 s after the lunge | always staggers |
-| Ice mite (the Hamalayi, ch. 6; COMBAT-2) | a crystal mite with a frost slide from 2.6–6.2 m | crouches nose-down, crystals white; a pale streak on the snow shows the line (0.75 s; it follows him, then holds still and turns white for the last 0.3 s) | spins on the ice for 1.0 s at the slide's end | always staggers; a hit cuts the slide short |
+| Ice mite (the Hamalayi, ch. 6; COMBAT-2) | a crystal mite with a frost slide from 2.6–6.2 m | crouches nose-down, crystals white; a pale blue streak on the snow shows the line (0.75 s; it follows him, then holds still and deepens to bright blue for the last 0.3 s) | spins on the ice for 1.0 s at the slide's end | always staggers; a hit cuts the slide short |
 | Warden drone | ranged, mechanical | prongs crackle, a red aim line brightens (0.75 s); needs a clear shot | cooldown after firing | staggers, but steadies after two staggers in 2 s; the pulse stuns it |
 | Sentry automaton | protected | pulls its shield back, red eye (0.7 s) | shield down for 1.1 s after its bash | blocks frontal ball and sword (clang); heavy strike, charged ball or pulse breaks the guard |
 | Crystal crawler | heavy, controls space | rears, a ring spreads on the ground (1 s) | 1.3 s after the slam | only heavy hits stagger it; dodge or leave the ring (being airborne also avoids it) |
@@ -611,7 +611,7 @@ bot on the old game, the new bot on the old game (to tell the bot's part from th
   Hamalayi, but not while the bore's fight is on (wave 2 has its own heart and flask). He talks to her to set the relay,
   so the fight starts whole.
 - **Ice mites** (chapter 6, `def.ice`, `ICE_SLIDE` in enemies.js): a frost slide (table above: crouch nose-down, a streak
-  on the snow that follows him and then holds still and turns white for the last 0.3 s, a committed 9 m/s slide, 1
+  on the snow, pale blue, that follows him and then holds still and deepens to bright blue for the last 0.3 s (white was lost on the snow in the first pictures), a committed 9 m/s slide, 1
   damage, a 1 s spin on the ice as the opening), and they **skitter aside from a ball thrown from further than 3.2 m**
   (not while crouched, sliding or spinning; not again for 1.4 s): Yorna's "up close a blade is quicker than any ball".
   The answer: step out of the line once it holds, then strike or throw in the spin; or close in with the sword. Their

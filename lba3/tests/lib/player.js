@@ -362,6 +362,9 @@
   P.gstep = (t) => {
     const h = hero();
     for (let s = 0; s < t; s += DT) {
+      // (P.smart: a charge being held is not thrown away for a dodge — the dodge cancels it, and the throw that follows is
+      //  the weak one the armour takes; the player who commits to a charge takes the risk)
+      if (P.smart && keys.has('KeyF')) { G.step(DT); continue; }
       const inbound = G.bolts?.list?.find((b) => { if (b.dodged) return false; const p = b.m.position, dx = h.pos.x - p.x, dz = h.pos.z - p.z, d = Math.hypot(dx, dz); return d < 2.4 && (b.v.x * dx + b.v.z * dz) > 0; });
       if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; dodgeKey(inbound); P.note('dodge a bolt'); continue; }
       // (BOSS-SHAPE: the overloaded guardian's dive: once its ring on the deck stops under him, step back out of it with

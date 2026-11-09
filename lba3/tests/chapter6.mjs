@@ -72,7 +72,7 @@ const shotAt = async (want) => ev((want) => { const G = game, h = G.hero, P = G.
   if (!m) return 'none';
   if (want === 'slidewind') { m.state = 'chase'; m.coolT = 0; m.slideCool = 0; h.invuln = 99;
     for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + 4.5 * Math.sin(a), z = m.pos.z + 4.5 * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
-      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 0.4, z, m.pos.x, m.pos.y + 0.4, m.pos.z)) { h.pos.set(x, y, z); h.angle = h.angleTo(m); h.onGround = true; break; } } }
+      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 0.4, z, m.pos.x, m.pos.y + 0.4, m.pos.z)) { h.pos.set(x, y, z); h.angle = h.angleTo(m); h.onGround = true; if (G.camRig.lba) G.camRig.lba.init = false; break; } } }
   for (let i = 0; i < 150; i++) { for (const o of G.enemies) if (o !== m && o.def?.id?.startsWith('imite')) { o.state = 'idle'; o.noticeT = 0; } if (m.state === want && m.stateT > (want === 'slidewind' ? 0.6 : 0.12)) break; G.step(1 / 30); }
   return m.state; }, want);
 log('ice slide pictures:', await shotAt('slidewind')); await shot('C6-02b-ice-crouch.png'); log(await shotAt('slide')); await shot('C6-02c-ice-slide.png');

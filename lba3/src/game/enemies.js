@@ -294,7 +294,7 @@ export class Mite extends Actor {
       if (this.stateT < tell - ICE_SLIDE.hold) this.slideLen = clamp(d + 1.6, ICE_SLIDE.min + 1, ICE_SLIDE.max + 1.4);
       const S = this.streak; S.visible = true; S.position.set(this.pos.x, this.pos.y + 0.05, this.pos.z); S.rotation.y = this.slideAng;
       S.scale.set(0.55, 1, this.slideLen * (0.35 + 0.65 * k)); S.material.opacity = 0.15 + 0.5 * k;
-      S.material.color.set(this.stateT >= tell - ICE_SLIDE.hold ? '#ffffff' : '#bfe6ff');
+      S.material.color.set(this.stateT >= tell - ICE_SLIDE.hold ? '#2f9cff' : '#a8dcff');   // (blue, to read on snow; deep once it holds)
       if (this.stateT > tell) { this.state = 'slide'; this.stateT = 0; this.bit = false; this.slideLeft = this.slideLen; g.audio.play('swing', this.pos); }
     } else if (this.state === 'slide') {
       // committed: straight along the streak on its belly, snow spraying; a bite as it passes him (1)
