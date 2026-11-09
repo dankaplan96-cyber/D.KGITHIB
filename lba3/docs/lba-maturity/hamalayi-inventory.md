@@ -103,7 +103,22 @@ Chapter 7 by its flags (chapter 6 done). At each spot he is put 1.5 m before it 
 - **Resemblance**: unscored (the curator). Lhar, the monastery and the observatory have no LBA original to match.
 - **The trail's switchback** (4329.5, 24): the terrace's snow lip above the bend crosses the frame's lower right and
   touches his right side as he walks the bend uphill (cam probe `trailBend`). Not a camera-inside-rock fault any more;
-  a GPU look asked.
+  a GPU look asked. World-polish 3 (keyboard, Follow/Medium; Automated runtime only): walked up the first leg, round
+  the bend (Up + Left) and up the second, the arm is 8.75 m the whole way, nothing cut, nothing near the lens
+  (scratchpad `cam3/hamalayi/b2/sheet.jpg`). The lip only shows when he is *put* at the bend: the snapped view's line
+  to his chest then grazes the bank 2 m to his right (0.08 m under it, 35 % of the way) for its first quarter second,
+  clear by 1.1 m from then on. Left as it is (a load or a respawn there, not a walk).
+- **Out of the hall's door** (world-polish 3): standing, the follow camera holds over his shoulder 2.3 s (3.6–3.9 m,
+  steep), then its look round him swings 80° along the hall's front to the whole arm. That swing went through the
+  porch's solid beam and golden roof (the porch's camera volume is passed through while he stands under it, but it
+  did not fade) and past a pillar's capital at arm's length. Now the porch's beam and roof fade while he stands under
+  it (`props-mountain.js` porchRoof, `hamalayi.js`), and the pillars and their capitals are camera shapes. Settled, the
+  view is the yard from along the hall's front with a pillar at mid-distance (`cam3/hamalayi/after/sheet-hall-stand.jpg`
+  against `before/`). The arm's numbers are the same (least 3.6 m, 0 s under 3.1, 2.35 s under 5 m). Left: on its
+  way round (about a quarter second) the view still passes the west pillar's capital at arm's length, large on the
+  left of the frame (`after2/sheet-hall-stand.jpg`, third picture): the swing's eased path between its two views is
+  not tested for clearance, only where it ends; a change to the chase's swing (camera.js) is the next step, not done
+  here.
 - **Lhar in the epilogue**: the owners are outdoors on their rounds (the square, the trough, the fire); their houses
   are lit and smoke, but only Old Dorje is inside. Kept: the epilogue's image is the square full of people.
 - **The landing's hut** stays without a keeper: it is Hesk's waystation; Hesk stays by his glider.

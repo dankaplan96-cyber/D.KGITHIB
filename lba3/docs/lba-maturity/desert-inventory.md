@@ -107,6 +107,15 @@ The fix: the School's rock wall, stone face and great hall had camSkip colliders
 went through them (`desertold.js` camVol; the island's other tall solids were already volumes). Nothing fades
 outdoors (VP-10 kept). Automated runtime only; a GPU look at the School's rim walk is asked of the laptop.
 
+World-polish 3 (9.11, keyboard walks recorded by `tests/lib/camwalk.js`, Follow/Medium/Classic; scratchpad
+`cam3/desert/`): the ways a player comes to the dormitory's door keep the whole arm — from the forecourt's south end
+8.75 m all the way to the door, from the rim walk east 8.47 m, from the bridge along the gap 8.75 m until the last
+step (3.2 m at the sill). The close and steep shot is only where he stands in the 2 m between the stone face and the
+hall's door, the 8.6 m face at his back: put there and walked 2.2 m south, 3.2 m over his head (p 1.5) easing to 5.4 m
+(0 s under 3.1 m, 1.28 s under 5 m); turned round there to walk north into the face, 3.02 s under 5 m at a stretch (the
+hall behind him then, a dark door reveal at the frame's right for a moment). No camera change: the face and the hall are
+already their own shapes, and there is no clear view behind him in that gap. Left as it is.
+
 ## What is left (and for whom)
 
 - **Resemblance scores**: Unverified (the laptop's curator). The two rooms opened in the original's buildings (S28,

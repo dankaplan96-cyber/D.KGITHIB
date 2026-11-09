@@ -100,11 +100,54 @@ the press house) are left for world-polish's camera pass, with the two spots whe
 Knartas's gatehouse arch (it rides through the arch's top as he walks under it: `cam/knartas-gate.jpg`) and the lane
 behind it. Not changed here (camera code is world-polish's).
 
+### World-polish 3 (camera pass, 9.11): what those spots were, and the fix
+
+Automated runtime only (SwiftShader, headless Chromium, 960×540, Follow/Medium/Classic, chapter 5 by its flags). Base
+`4ab72577` against this pass; pictures in the worker's scratchpad `cam3/isles/` (`before/`, `after/`, `camisles-before/`,
+`camisles-after/`, `strip-east2/`), kept.
+
+- **What "hidden" counted.** `camRig.hiddenBy`'s wall test took every collider on a line from his pivot, posts too: of
+  the long stretches, the Grand Hall's 81 frames were a banner pole by the fountain, the press house's 131 a lamp post,
+  the Platform village's 117 a tree's crown box, the flight's 246 a lamp post at its head. The pictures show him in view
+  in all but the banner (its cloth, 0.7 m wide, crossed him for 1.4 s on the planner's slow walk round the fountain).
+  `hiddenBy` now uses the camera's own sight rule (`sight`: no posts, poles, trunks or rails), as every other sight
+  test in camera.js; the fixed (LBA2) view no longer swings round behind him for a lamp post.
+- **Knartas's gatehouse.** The two gatehouses stand back to back over the causeway: a passage 2.7 m wide, 10.5 m long
+  and 1.5–1.7 m high under the vaults, with a stone slab and a dome on top. Nothing over the passage was a camera shape
+  (the halves were automatic boxes up to the dome's top), so the follow camera dipped into the passage behind him and
+  rode inside the vault, Twinsen x-rayed; with the vault made solid it went over his head instead and lost him under the
+  roof. No camera fits in that passage and none over it shows him, so the masonry over it (vaults, arch faces, roof
+  slabs, the stone slab, the dome) is a roof he walks under: solid to the camera from outside, passed through while he
+  is in the passage and while, just out of it, it still stands between the camera and him; it fades meanwhile (as the
+  council house's arcade on Zeelich, Nell's lean-to on Citadel). The halves have their own boxes to their parapets.
+  `zislands.js` (gate, slab, the passage's fade), `roomocc.js` (walkUnder by area).
+
+The planner's walks (`P.go`, the inventory's measure; frames / hidden (`hiddenBy`) / behind a drawn face / least arm):
+
+| Walk | Before | After |
+|---|---|---|
+| Otringal → the Grand Hall | 1334 / 122 (81 at a stretch) / 0 / 6.6 | 1334 / 0 / 0 / 6.6 |
+| Otringal → the flight's foot, its head, the terrace | 436, 274, 418 / 0, 0, 11 / 0 / 3.2, 8.7, 8.7 | same / 0, 0, 0 / 0 / same |
+| Knartas → the gatehouse arch | 752 / 31 / **46** / 3.2 | 752 / 0 / **0** / **8.75** |
+| Knartas → the lane behind it | 486 / 23 / **6** / 3.6 | 486 / 0 / **0** / 3.6 |
+| Knartas → the upper village | 1266 / 55 / 0 / 7.2 | 1266 / 0 / 0 / 7.2 |
+| the Platform → the yard, the mine, the village | 1082, 548, 526 / 15, 57, 25 / 0, 8, 0 / 5.2, 3.2, 8.7 | same / 2, 29, 0 / 0, 8, 0 / same |
+| the Orchard → the press house | 508 / 140 / 0 / 8.0 | 508 / 0 / 0 / 8.0 |
+
+By keyboard (`tests/camisles.mjs`, 14 walks; least arm / behind a drawn face / out of sight (head and chest both cut) /
+`hiddenBy`): through Knartas's arch east and west, walked and run, along its south wall: before 3.2–3.6 m / 9–32 frames
+/ up to 36 / up to 38 (the slab on its roof); after 8.75 m / 0 / 0 / 0 (`strip-east2/sheet.jpg`: the passage's roof
+faded, him in view the whole way). Turned round under the arch: 3.2 m / 33 → 0 / 39 → 0 / 72 → 21 (over the halves'
+parapet, 0.3 s). Otringal's walks: 0 out of sight before and after; down the new flight 270 → 150 `hiddenBy` frames (the
+steps above him cut the pivot line; his head and chest stay in view: out of sight 9, at most 3 in a row, the picture
+shows his legs behind the step edge). The Platform's village lane 117 → 0, the press house 152 → 0. Verdict before: FAIL
+(6 visual); after: PASS.
+
 ## The bar, line by line, for the isles now
 
 | Bar line (`citadel-bar.md`) | The isles | Evidence |
 |---|---|---|
-| 1 Nothing fades outdoors; tight shapes | met (automatic volumes); two camera-inside spots on Knartas and long hidden stretches listed above | `cam.mjs` |
+| 1 Nothing fades outdoors; tight shapes | met (automatic volumes; Knartas's gatehouses their own shapes, the passage's roof the one fade, while he walks under it — world-polish 3) | `cam.mjs`, `camisles` |
 | 2 Every accessible building enterable or shut with its own reason | 52 of the 55 isle rooms reached on foot from their pads (the planner and the flood fill); the three left stand on patches across the clouds (Otringal's barges' yard with the quay's cargo store, its west quay with the dock worker's house, Mosquibee's west islet with the honey room): **distant scenery**, never met at the door. The three shut doors keep their reason and sign | flood fill, `knartas.mjs`, `island-doors` |
 | 2 Compact furnished lit interiors; music per place | the planner's rooms (wave 3), `zeelich_in`; the bar `zeelich` | `island-doors`, `interior-life` |
 | 2 The way back out; a save inside comes back inside | yes (Ulla's room saved, Continue) | `isles-bar` |
@@ -118,8 +161,11 @@ behind it. Not changed here (camera code is world-polish's).
 - **Resemblance scores**: Unverified (the laptop's curator). The new flight and the hoist are ours.
 - **The three rooms across the clouds** (Otringal's quay cargo store and dock worker's house, Mosquibee's honey room):
   out of reach on foot; a gangway or a ferry would bring them in. Not added (no new crossing invented for two rooms).
-- **The camera**: Knartas's gatehouse arch and lane (the camera inside a solid for ~1 s each walk), long hidden stretches
-  by Otringal's Grand Hall and the Platform's mine and village: world-polish's camera pass; a GPU look asked.
+- **The camera** (world-polish 3, above): Knartas's arch and lane fixed; the long hidden stretches were posts. Left:
+  a banner's cloth crosses him for about a second on some paths by Otringal's fountain (the banners are thin pieces the
+  camera sees past; their cloth has no camera shape); on the planner's walk to the Platform's mine the camera brushes a
+  street lamp's head for 8 frames (its collider is the post, 3.4 m; the lantern reaches 0.6 m out and 3.7 m up) and
+  the company's board hides him 15 frames. A GPU look at the faded passage roof is asked of the laptop.
 - **Otringal's high town** reads busier with the spires slimmer; how it reads at Follow/Medium on a GPU is the laptop's
   (OTRINGAL-37 follow-up).
 - **Rooms still empty in every state**: 37 of the 55 (homes, stores, offices). Not filled with idle extras (the brief: a few

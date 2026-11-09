@@ -29,6 +29,8 @@ import * as EP from './props-esmer.js';
 import { placeLayout, PLACES, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 import { fitAdd } from './worldfit.js';
 import { buildCelPortal } from './celtemple.js';
+import { roomOcc, occCollider } from './roomocc.js';
+import { Occluders } from '../engine/occlude.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -1645,6 +1647,14 @@ function buildIsland0(scene, physics, name, L, at) {
     piece(0.1, v0, 0.1, yt, 0);
     for (let i = 1; i < n; i++) piece(v0 + (i - 1) * run, v0 + i * run, v0 - 0.1, yt - i * rise, i);
   };
+  // (WORLD-POLISH 3: the masonry over a gatehouse passage — Knartas's two gatehouses back to back over the causeway, S.gate
+  //  G — fades while he walks the passage, and the camera passes through it meanwhile (passUnder: roomocc.js walkUnder);
+  //  its pieces go into their own group with their own materials, so nothing else on the island fades with them)
+  const passUnder = G ? { x0: ox + G.x0 - 0.1, x1: ox + G.x1 + 0.1, z0: oz + G.z0, z1: oz + G.z1 } : null;
+  let passGroup = null, passBatch = null;
+  const passB = () => { if (!passBatch) { passGroup = new THREE.Group(); passGroup.name = 'gatehouse passage roof (fades)'; group.add(passGroup); passBatch = new Batch(passGroup); } return passBatch; };
+  const overPass = (o) => G && o.x + o.sx / 2 > G.x0 && o.x - o.sx / 2 < G.x1 && o.z + o.sz / 2 > G.z0 && o.z - o.sz / 2 < G.z1;
+  const faderOf = (grp) => { const mats = new Map(); grp.traverse((q) => { if (q.isMesh) q.material = [q.material].flat().map((mm) => { if (!mats.has(mm)) { const c = mm.clone(); if (c.transparent) { c.userData.alwaysTransparent = true; c.userData.baseOpacity = c.opacity; } mats.set(mm, c); } return mats.get(mm); })[0]; }); return { mats: [...mats.values()] }; };
   const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
@@ -1702,22 +1712,36 @@ function buildIsland0(scene, physics, name, L, at) {
         // vault, the dome over the middle)
         const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy, lk = look(o), m = lk.wall, pw = G.z1 - G.z0, zc = (G.z0 + G.z1) / 2;
         const roof = wallH + 0.22 - 0.46, hp = Math.min(3.1, roof - 0.7);
+        // (WORLD-POLISH 3, VP-10: the gatehouse's own shapes for the camera — each half to its parapet, the dome — instead
+        // of the halves' boxes up to the dome's top and nothing over the passage, where the follow camera rode through the
+        // vault behind him with Twinsen x-rayed (cam3 probe: 46 frames). The passage is 1.5–1.7 m high and 10 m long
+        // through Knartas's two gatehouses: no camera fits in it behind him and none over it shows him. So the masonry
+        // over the passage — the vaults, the arch faces, the roof slabs over them, the stone slab and the dome on top —
+        // is a roof he walks under (walkUnder: solid to the camera from outside, passed through while he is in the
+        // passage), and it fades while he is, as the council house's arcade on Zeelich and Nell's lean-to on Citadel;
+        // the halves either side stay solid)
+        const occ = roomOcc(R, physics.terrain), gyo = Math.min(gy(o.x, o.z), y0) - 1;
         for (const [z0, z1] of [[o.z - ez / 2, G.z0], [G.z1, o.z + ez / 2]]) {
           const dz = z1 - z0; if (dz < 0.4) continue;
           EP.esmerBuilding(new EP.Place(B, o.x, y0, (z0 + z1) / 2, 0), { ...lk, w: ex, d: dz, h: wallH + 0.22, wallH, door: false, domed: false, bury: o.bury, fit: { region: 'isle_' + name, name: `gatehouse half (${o.x.toFixed(1)}, ${((z0 + z1) / 2).toFixed(1)})`, ox, oz } });
-          col({ type: 'box', x: o.x, z: (z0 + z1) / 2, hw: ex / 2 - 0.05, hd: dz / 2 - 0.02, top, noStand: true });
+          occCollider(occ, col({ type: 'box', x: o.x, z: (z0 + z1) / 2, hw: ex / 2 - 0.05, hd: dz / 2 - 0.02, top, noStand: true }), { y0: gyo, top: y0 + wallH + 0.24, name: 'gatehouse half' });
         }
-        const arch = { x: 0, y: 0, w: +(pw - 0.2).toFixed(2), h: +hp.toFixed(2), horse: true };
+        occ.add({ kind: 'box', x: ox + o.x, z: oz + zc, hw: ex / 2 + 0.09, hd: pw / 2 + 0.1, y0: y0 + hp - 0.35, y1: y0 + roof + 0.03, walkUnder: passUnder, name: 'gatehouse vault' });
+        const AB = passB(), arch = { x: 0, y: 0, w: +(pw - 0.2).toFixed(2), h: +hp.toFixed(2), horse: true };
         for (const s of [-1, 1]) {
-          const P = new EP.Place(B, o.x + s * (ex / 2 - 0.44), y0, zc, s * Math.PI / 2);
+          const P = new EP.Place(AB, o.x + s * (ex / 2 - 0.44), y0, zc, s * Math.PI / 2);
           P.add(panelGeo(pw + 0.5, roof, 0.28, [arch]), m, 0, 0, 0);
           P.add(frameGeo(arch, 0.22, 0.1), EP.archTiles(), 0, 0, 0.26);
         }
         // (WORLD-FIX: the vault's top 2 cm under the halves' roofs and the slab over it 1.5 cm proud of them: all three
         // shared one plane and z-fought)
-        B.add(bbox(ex - 0.6, roof - hp + 0.28, pw + 0.3, 0.04, 2.2), m, o.x, y0 + hp - 0.3 + (roof - hp + 0.28) / 2, zc);
-        B.add(bbox(ex + 0.18, 0.18, pw + 0.5, 0.05, 1.8), stoneM, o.x, y0 + roof - 0.075, zc);
-        if (o.sy > 4.5) EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM });
+        AB.add(bbox(ex - 0.6, roof - hp + 0.28, pw + 0.3, 0.04, 2.2), m, o.x, y0 + hp - 0.3 + (roof - hp + 0.28) / 2, zc);
+        AB.add(bbox(ex + 0.18, 0.18, pw + 0.5, 0.05, 1.8), stoneM, o.x, y0 + roof - 0.075, zc);
+        if (o.sy > 4.5) {
+          // (the dome stands over the passage's middle: part of its roof, faded and passed through with it)
+          const ds = EP.domeStack(new EP.Place(passB(), o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM }), Hd = (ds?.top ?? o.sy) - roof, R0 = (ds?.R0 ?? Math.min(ex, ez) * 0.3) + 0.12;
+          occ.add({ kind: 'rev', x: ox + o.x, z: oz + o.z, y0: y0 + roof - 0.1, base: y0 + roof, profile: [[R0 * 0.35, Hd], [R0 * 0.8, Hd * 0.7], [R0, Hd * 0.4]], walkUnder: passUnder, name: 'gatehouse dome' });
+        }
         break;
       }
       case 'yardWall': {   // (OTR-VARIETY: a length of Otringal's cargo-yard wall: plaster in the island's colour on a
@@ -1804,6 +1828,15 @@ function buildIsland0(scene, physics, name, L, at) {
       }
       case 'deck': case 'slab': {
         const t = Math.max(0.12, o.sy);
+        // (WORLD-POLISH 3: a slab lying on a gatehouse's roof over the passage — Knartas's (38) — is part of the passage's
+        //  roof: it fades with it and the camera reads it as one, passed through while he walks the passage)
+        const onGate = o.shape === 'slab' && overPass(o) && y0 - gy(o.x, o.z) > 1.2;
+        if (onGate) {
+          passB().add(bbox(ex, t, ez, 0.04, 2), stoneM, o.x, top - t / 2 + jy(o), o.z);
+          const c = col({ type: 'box', x: o.x, z: o.z, hw: ex / 2, hd: ez / 2, top, bottom: top - t - 0.05 });
+          occCollider(roomOcc(R, physics.terrain), c, { name: 'gatehouse slab' }).walkUnder = passUnder;
+          break;
+        }
         B.add(bbox(ex, t, ez, 0.04, 2), o.shape === 'deck' ? deckM : stoneM, o.x, top - t / 2 + jy(o), o.z);
         // posts down to the ground (or into the clouds) under a deck that stands clear of it
         const g = tgy(o.x, o.z);
@@ -2081,6 +2114,41 @@ function buildIsland0(scene, physics, name, L, at) {
     }
   }
   B.build();
+  // (WORLD-POLISH 3: a gatehouse's passage roof fades while he stands under it — see 'gate' above —, and stays so just out
+  //  of it while it still stands between the camera and him (the camera trails over the roof as he comes out: the dome
+  //  over Knartas's passage then hid him and the view swooped over his head, 8 m in a quarter second); it is solid to the
+  //  camera again from the first frame it no longer hides him. Arriving on the island it takes its state for where he
+  //  lands at once, CUT-RESTORE)
+  if (passBatch) {
+    passBatch.build();
+    const A = { fader: faderOf(passGroup), f: 1, top: -Infinity, was: false }, vols = (R.occ?.list || []).filter((v) => v.walkUnder === passUnder);
+    for (const v of vols) A.top = Math.max(A.top, v.top);
+    const plain = Occluders.prototype.topAt;   // (a volume's own shape, whatever walkUnder says)
+    const hides = (c, h) => {   // (the line from the camera to his chest through the passage's roof?)
+      const dx = h.x - c.x, dy = h.y + 1.0 - c.y, dz = h.z - c.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
+      for (let i = 1; i < n; i++) { const k = i / n, x = c.x + dx * k, y = c.y + dy * k, z = c.z + dz * k; for (const v of vols) if (y >= v.y0 && y <= plain.call(R.occ, v, x, z)) return true; }
+      return false;
+    };
+    let snap = false;
+    const prevReset = R.resetCut;
+    R.resetCut = () => { snap = true; A.was = false; passUnder.on = undefined; prevReset?.(); };
+    updaters.push((dt) => {
+      const Gm = globalThis.game;
+      if (!Gm || Gm.room !== R) return;
+      if (snap) { snap = false; dt = 10; }
+      const h = Gm.hero.pos, U = passUnder, inside = h.x > U.x0 && h.x < U.x1 && h.z > U.z0 && h.z < U.z1 && h.y < A.top;
+      A.was = inside || (A.was && !!Gm.camera && Math.hypot(Math.max(0, U.x0 - h.x, h.x - U.x1), Math.max(0, U.z0 - h.z, h.z - U.z1)) < 12 && hides(Gm.camera.position, h));
+      U.on = A.was;
+      const under = A.was;
+      A.f += ((under ? 0.2 : 1) - A.f) * (1 - Math.exp(-dt * 8));
+      const see = A.f < 0.98;
+      for (const m of A.fader.mats) {
+        if (m.userData.alwaysTransparent) { m.opacity = (m.userData.baseOpacity ?? 1) * (see ? A.f : 1); continue; }
+        if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; }
+        m.opacity = see ? A.f : 1; m.depthWrite = !see;
+      }
+    });
+  }
   // instanced pieces, each scaled to its object's box (by the geometry's own size)
   // (HEADING-LOAD-2: culled per instance in each pass, kit.js cullInstances: the island-wide meshes went to the GPU in
   //  full at every heading — Otringal's sculpted trees 1.1–1.3M triangles a frame)

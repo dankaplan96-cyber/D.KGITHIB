@@ -15,7 +15,7 @@
 //
 // CONTRACT
 //   roomOcc(R, terrain) → R.occ (made on first use); a volume { walkUnder: true } (a porch) is passed through while
-//     Twinsen stands under it
+//     Twinsen stands under it; { walkUnder: { x0, x1, z0, z1 } } (world) while he stands in that area under its top
 //   occCollider(occ, c, { y0, top, name }) → the volume of collider c (box or cylinder); c becomes camSkip
 //   occAuto(R, colliders, { terrain, floor }) → how many of `colliders` became volumes (R.occFloor: the lowest ground the
 //     area's own floor stands on, for an area built of bricks over the clouds — Zeelich — so its floor is not "tall")
@@ -29,7 +29,13 @@ class RoomOccluders extends Occluders {
   //  from outside it is as solid as the rest)
   topAt(v, x, z) {
     if (v.src && !v.src.enabled) return -Infinity;
-    if (v.walkUnder) { const h = globalThis.game?.hero?.pos; if (h && h.y < v.y1 && super.topAt(v, h.x, h.z) > -Infinity) return -Infinity; }
+    if (v.walkUnder) {
+      // (walkUnder: true — while he stands on its own footprint; or { x0, x1, z0, z1, on? } — while he stands in that area
+      //  (or while `on`, kept by its builder: just out of it, until the camera sees him past it): a
+      //  gatehouse's passage, whose roofs, vaults and the slab over them are all passed through while he walks it)
+      const h = globalThis.game?.hero?.pos, U = v.walkUnder;
+      if (h && h.y < v.top && (U === true ? super.topAt(v, h.x, h.z) > -Infinity : U.on ?? (h.x > U.x0 && h.x < U.x1 && h.z > U.z0 && h.z < U.z1))) return -Infinity;
+    }
     return super.topAt(v, x, z);
   }
 }
