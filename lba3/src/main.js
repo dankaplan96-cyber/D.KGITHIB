@@ -2767,7 +2767,8 @@ class Game {
     if (this.screen === 'controls' && this.keysNav(btns)) return false;
     // (UI-PASS: answers side by side — the confirmations, the controls' Reset and Back — take left / right too)
     const lr = i.menu('right') ? 1 : i.menu('left') ? -1 : 0, cur = btns[this.menuSel], row = cur?.parentElement;
-    if (lr && row && getComputedStyle(row).flexDirection === 'row') {
+    const across = lr && row && this.screen !== 'settings' && this.screen !== 'loadgame' && /flex/.test(getComputedStyle(row).display) && getComputedStyle(row).flexDirection === 'row';
+    if (across) {
       const k = btns.indexOf(row.children[[...row.children].indexOf(cur) + lr]);
       if (k >= 0) { this.menuSel = k; this.focusMenu(true); this.audio.play('blip'); }
     }

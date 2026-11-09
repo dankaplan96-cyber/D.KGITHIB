@@ -39,9 +39,9 @@ const layout = await ev(() => {
   for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
   return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
 });
-const KEYS = ['aimAssist', 'autoControls', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice', 'weather'];
+const KEYS = ['aimAssist', 'autoControls', 'autoTalk', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice', 'weather'];
 check('settings: every stored setting has its control (SETTINGS-FEW: Edges, Resolution and the frame-rate limit removed)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
-check('settings: four pages (Game, Controls, Display, Sound), at most 4 rows each before Advanced; opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 4) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
+check('settings: four pages (Game, Controls, Display, Sound), at most 5 rows each before Advanced (Game: 5 since Dialogue Advances); opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 5) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
 // keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
 await page.keyboard.press('ArrowRight'); await step(0.05);
 await page.keyboard.press('ArrowDown'); await step(0.05);
