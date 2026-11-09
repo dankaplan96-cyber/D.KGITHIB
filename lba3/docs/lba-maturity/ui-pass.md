@@ -76,9 +76,24 @@ read the equipment state (`hero.arms`, `combat.weapon`). A new piece of equipmen
   a phone (touch names, Inventory button, buttons aside in pause and inventory, the life bar clear of the pause
   button, a long message inside the window).
 - Changed: `tests/menus.mjs` and `tests/display.mjs` (Esc in the pause's Settings now returns to the pause menu; a
-  second Esc resumes), `tests/weather.mjs` (the row's new label).
+  second Esc resumes), `tests/weather.mjs` (the row's new label). `tests/menus.mjs` also knew only 18 settings and
+  4 rows a page: Dialogue Advances (the user's, 5.11) had made it 19 and the Game page 5 before this pass.
+
+Results (9.11, this branch, SwiftShader on a shared machine; `BOOT_TIMEOUT=900000`):
+
+| Suite | Verdict | Note |
+|---|---|---|
+| uipass | PASS (25/25) | new |
+| menus | PASS (39/39) | |
+| display | PASS | 1920×1080 … 640×360, settings fit, Esc paths |
+| saveslots, holomap, items-ceremony, crosssystem, resume, opening, voices, chapter1 | PASS | |
+| controls | FAIL (3): the camera's acceleration limits (accMax 25.0–25.1 against ≤ 25, p95 12.5–14.3 against ≤ 12) | the same three, the same numbers, on the base commit 568a05ed: not from this pass |
+| weather | FAIL (1): Zeelich's fog colour in one light | the same on the base commit; the label check passes |
+| autoquality-game | 20 checks PASS (the Graphics row's hint included), then `page.goto … ?nocine&autoq` times out at "load" (twice) | see below |
 
 ## Left
+- Hebrew: the old fixed controls table (`controls_html`) is no longer shown; the generated list has English text
+  only (the language cannot be chosen in Settings any more).
 - A real gamepad, a real phone and a GPU were not available: pad and touch are simulated (the input layer's own
   paths), pictures are SwiftShader's.
 - Copy for the clarity editor: speakers' names mix cases ("Bersimon the Weather Wizard" / "Ker'aooc the healing

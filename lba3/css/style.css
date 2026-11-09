@@ -190,7 +190,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 /* (UI-PASS: the buttons sat over the middle of a phone's picture; now low on the right, above the weapon. Out of play
    — dialogue, menus, the inventory, the Holomap — they step aside: tapped there they did nothing) */
 body.hud-busy #touch { visibility: hidden; }
-@media (pointer: coarse) and (max-width: 640px) { #prompt { bottom: 268px; } }   /* (above the stick and the buttons) */
+/* (above the stick and the buttons; the Always-on HUD's behaviour bar too, its prompt above that) */
+@media (pointer: coarse) and (max-width: 640px) { #prompt { bottom: 268px; } #behaviour { bottom: 212px; } body:not(.hud-lba) #prompt { bottom: 290px; } }
 
 @media (max-width: 640px) {
   #objective { top: 136px; inset-inline-end: 16px; font-size: 13px; max-width: 60vw; padding: 7px 10px; }
@@ -198,7 +199,8 @@ body.hud-busy #touch { visibility: hidden; }
   .bar { width: min(240px, 36vw); }   /* (clear of the pause button in the middle) */
   #minimap { width: 110px; height: 110px; top: 16px; bottom: auto; }
   .beh { width: 50px; }
-  .beh .lbl { font-size: 9px; }
+  .beh .lbl { font-size: 10.5px; }
+  .beh .k { font-size: 11px; }
   #behaviour { bottom: 12px; }
   #dialog .text { font-size: 16px; }
   .settings { grid-template-columns: 1fr; }
