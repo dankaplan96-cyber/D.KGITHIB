@@ -382,7 +382,7 @@ function applyState(st,{fromSync=false}={}){
   S.data=st;S.lastRev=st.revision;
   // מטמון מקומי לקריאה בלבד – ללא נתוני סיסמה
   try{const c=clone(st);c.users=c.users.map(({salt,hash,iterations,...u})=>u);c.settings.recovery=null;safeSet(CACHE_KEY,JSON.stringify(c))}catch{}
-  if(S.me){const u=st.users.find(x=>x.id===S.me.id);if(!u||!u.active){logout('המשתמש הושבת או נמחק.');return}}
+  if(S.me){const u=st.users.find(x=>x.id===S.me.id);if(!u||!u.active){logout(S.deletingSelf?'החשבון שלך נמחק מהמערכת.':'המשתמש הושבת או נמחק.');S.deletingSelf=false;return}}
   const wantScreen=!!screenHTML(),haveScreen=!$('#screen').classList.contains('hidden');
   if(wantScreen!==haveScreen||wantScreen){renderAll();return}
   renderTop();renderNav();
@@ -779,7 +779,7 @@ async function forcePasswordChange(){
 }
 ACT.changePw=async()=>{
   const r=await formModal({title:'שינוי סיסמה',ok:'שינוי סיסמה',
-    body:`<div class="field"><label>סיסמה נוכחית</label>${pwInput('old')}</div><div class="field"><label>סיסמה חדשה</label>${pwInput('pw',{auto:'new-password',meter:true})}</div><div class="field"><label>אימות סיסמה חדשה</label>${pwInput('pw2',{auto:'new-password'})}</div>`,
+    body:`<div class="field"><label>סיסמה נוכחית</label>${pwInput('old')}</div><div class="field"><label>סיסמה חדשה</label>${pwInput('pw',{auto:'new-password',meter:true})}</div><div class="field"><label>אימות סיסמה חדשה</label>${pwInput('pw2',{auto:'new-password'})}</div><div style="text-align:left"><button type="button" class="linkbtn" style="color:var(--red)" data-act="deleteSelf">מחיקת החשבון שלי</button></div>`,
     onSubmit:async v=>{if(!await verifyRecord(me(),v.old))throw new Error('הסיסמה הנוכחית שגויה');const p=pwProblem(v.pw);if(p)throw new Error(p);if(v.pw!==v.pw2)throw new Error('הסיסמאות אינן תואמות');if(v.pw===v.old)throw new Error('הסיסמה החדשה זהה לישנה');const rec=await passwordRecord(v.pw);await mutate((st,a)=>{Object.assign(a,rec);a.mustChange=false;a.passwordChangedAt=nowISO();audit(st,a,'password_changed')})}});
   if(r)toast('הסיסמה עודכנה','ok');
 };
@@ -1027,7 +1027,8 @@ PAGES.my=()=>{
    <div class="stat warn"><div class="k">ממתינים</div><div class="v">${b.pending}</div><div class="sub">ימים בבקשות פתוחות</div></div>
    <div class="stat ${b.remaining-b.pending<0?'bad':'good'}"><div class="k">יתרה</div><div class="v">${b.remaining}</div><div class="sub">${b.pending?`${b.remaining-b.pending} אם יאושרו הממתינות`:'ימי חופשה'}</div></div></div>
    ${byType?`<div class="notice" style="margin-bottom:14px">היעדרויות נוספות ב-${y} (לא מנוכות מהיתרה): ${byType}</div>`:''}
-   <div class="card"><h3>היסטוריית בקשות</h3>${rs.length?`<div class="table-wrap"><table class="table"><thead><tr><th>תאריכים</th><th>סוג</th><th>ימי עבודה</th><th>סטטוס</th><th>הערות</th><th>הוגש</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">עדיין לא הוגשו בקשות</div>'}</div>`;
+   <div class="card"><h3>היסטוריית בקשות</h3>${rs.length?`<div class="table-wrap"><table class="table"><thead><tr><th>תאריכים</th><th>סוג</th><th>ימי עבודה</th><th>סטטוס</th><th>הערות</th><th>הוגש</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">עדיין לא הוגשו בקשות</div>'}</div>
+   <div class="card"><h3>החשבון שלי</h3><div class="row"><div><div class="row-title">מחיקת החשבון שלי</div><div class="row-sub">מוחקת את המשתמש, כרטיס העובד/ת וכל הבקשות שלך. אי אפשר לבטל.</div></div><button class="btn sm red" data-act="deleteSelf">🗑 מחיקת החשבון</button></div></div>`;
 };
 ACT.cancelOwn=async d=>{
   if(!await confirmBox('לבטל את הבקשה הממתינה?',{ok:'ביטול הבקשה',kind:'red'}))return;
@@ -1185,7 +1186,7 @@ PAGES.employees=()=>{
     <td><div class="actions"><button class="btn sm outline" data-act="editEmp" data-id="${e.id}">עריכה</button><button class="btn sm outline" data-act="resetPw" data-id="${e.id}">איפוס סיסמה</button><button class="btn sm ${e.active?'gray':'green'}" data-act="toggleEmp" data-id="${e.id}">${e.active?'השבתה':'הפעלה'}</button><button class="btn sm red" data-act="deleteEmp" data-id="${e.id}" title="מחיקה">🗑</button></div></td></tr>`}).join('');
   return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · סיסמה ראשונית לכל עובד/ת חדש/ה: <b dir="ltr">${INITIAL_PASSWORD}</b> – בכניסה הראשונה מחליפים לסיסמה אישית`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn" data-act="importEmps">📋 הזנת שמות מסידור העבודה</button>`)+
   `<div class="card">${es.length?`<div class="table-wrap"><table class="table"><thead><tr><th>שם</th><th>תפקיד</th><th>מכסה ${y}</th><th>יתרה</th><th>משתמש</th><th>כניסה אחרונה</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty" style="padding:30px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px">עדיין אין עובדים במערכת</div><div style="margin-bottom:14px">הדרך המהירה: מעתיקים את סידור העבודה ומדביקים. המערכת מזהה את השמות, ונשאר רק לקבוע תפקיד לכל אחד/ת.</div><button class="btn lg" data-act="importEmps">📋 הזנת שמות מסידור העבודה</button></div>`}</div>
-  <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">${esc(a.title||'מנהל/ת מערכת')} · כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id===S.me.id?`<div class="actions"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכת הפרטים שלי</button></div>`:''}${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכה</button><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button></div>`:''}</div>`).join('')}</div>
+  <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">${esc(a.title||'מנהל/ת מערכת')} · כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id===S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכת הפרטים שלי</button><button class="btn sm red" data-act="deleteSelf" title="מחיקת החשבון שלי">🗑</button></div>`:''}${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכה</button><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button><button class="btn sm red" data-act="deleteAdmin" data-id="${esc(a.id)}" title="מחיקה">🗑</button></div>`:''}</div>`).join('')}</div>
   <div class="small muted" style="margin-top:8px">ניתן גם לתת לעובד/ת הרשאת <b>מנהל/ת</b> (אישור בקשות וניהול) דרך "עריכה" – כך הוא/היא יכול/ה גם להגיש בקשות וגם לאשר בקשות של אחרים.</div></div>`;
 };
 function credentialsModal(list,title='פרטי כניסה'){
@@ -1413,6 +1414,46 @@ ACT.resetAdminPw=async d=>{
   await mutate((st,a)=>{if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');const x=st.users.find(q=>q.id===u.id);Object.assign(x,rec,{mustChange:true});audit(st,a,'password_reset',x.displayName)});
   credentialsModal([{name:u.displayName,group:'מנהל/ת מערכת',password}],'הסיסמה אופסה');
 };
+/** מחיקת החשבון של המשתמש/ת המחובר/ת (עובד/ת או מנהל/ת) */
+ACT.deleteSelf=async()=>{
+  const u=me();if(!u)return;
+  const emp=u.employeeId?empById(u.employeeId):null,n=emp?S.data.requests.filter(r=>r.employeeId===emp.id).length:0;
+  const otherAdmins=S.data.users.filter(x=>x.role==='admin'&&x.active&&x.id!==u.id).length;
+  if(u.role==='admin'&&!otherAdmins){
+    openModal(`<h3>לא ניתן למחוק את החשבון</h3><div class="notice warn">את/ה <b>מנהל/ת המערכת היחיד/ה</b>. בלי מנהל/ת אף אחד לא יוכל לאשר בקשות או לנהל עובדים.<br><br>קודם צריך להוסיף מנהל/ת אחר/ת ("עובדים והרשאות" ← "מנהל/ת נוסף/ת"), ורק אחר כך למחוק את החשבון שלך.</div><div class="modal-actions"><button class="btn outline" data-act="closeModal">הבנתי</button></div>`);return;
+  }
+  const v=await formModal({title:'מחיקת החשבון שלי',ok:'מחיקת החשבון לצמיתות',kind:'red',
+    body:`<div class="notice err" style="margin-bottom:12px">פעולה זו תמחק את המשתמש <b>${esc(u.displayName)}</b>${emp?`, את כרטיס העובד/ת ואת כל ${n} הבקשות שלך (כולל חופשות מאושרות)`:''}. <b>אי אפשר לבטל אותה.</b>${u.role==='admin'||u.manager?'<br>הרשאות הניהול שלך יימחקו יחד עם החשבון.':''}</div>
+    <div class="field"><label>הסיסמה שלך (לאימות)</label>${pwInput('pw')}</div>
+    <div class="field"><label>להמשך הקלד/י את המילה: מחיקה</label><input name="confirm" autocomplete="off"></div>`,
+    onSubmit:async v=>{
+      if(v.confirm!=='מחיקה')throw new Error('יש להקליד "מחיקה" בדיוק');
+      if(!await verifyRecord(me(),v.pw))throw new Error('הסיסמה שגויה');
+      S.deletingSelf=true;
+      try{await mutate((st,a)=>{
+        if(a.role==='admin'&&!st.users.some(x=>x.role==='admin'&&x.active&&x.id!==a.id))throw new Error('את/ה מנהל/ת המערכת היחיד/ה – הוסף/י מנהל/ת אחר/ת לפני המחיקה');
+        const eid=a.employeeId,cnt=eid?st.requests.filter(r=>r.employeeId===eid).length:0;
+        st.users=st.users.filter(x=>x.id!==a.id);
+        if(eid){st.employees=st.employees.filter(e=>e.id!==eid);st.requests=st.requests.filter(r=>r.employeeId!==eid)}
+        audit(st,a,'account_self_deleted',`${a.displayName}${eid?` (${cnt} בקשות)`:''}`);
+      })}catch(e){S.deletingSelf=false;throw e}
+    }});
+  if(v&&S.me){logout('החשבון שלך נמחק מהמערכת.');S.deletingSelf=false}
+};
+ACT.deleteAdmin=async d=>{
+  const u=S.data.users.find(x=>x.id===d.id);if(!u)return;
+  const emp=u.employeeId?empById(u.employeeId):null;
+  const v=await formModal({title:'מחיקת חשבון מנהל/ת',ok:'מחיקה לצמיתות',kind:'red',
+    body:`<div class="notice err" style="margin-bottom:10px">החשבון של <b>${esc(u.displayName)}</b> יימחק${emp?' יחד עם כרטיס העובד/ת והבקשות שלו/ה':''}. אי אפשר לבטל. לרוב עדיף <b>השבתה</b>.</div><div class="field"><label>להמשך הקלד/י את השם: ${esc(u.displayName)}</label><input name="confirm" autocomplete="off"></div>`,
+    onSubmit:v=>{if(v.confirm!==u.displayName)throw new Error('השם שהוקלד אינו תואם');return mutate((st,a)=>{
+      if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');if(u.id===a.id)throw new Error('למחיקת החשבון שלך השתמש/י ב"מחיקת החשבון שלי"');
+      const x=st.users.find(q=>q.id===u.id);if(!x)return;
+      st.users=st.users.filter(q=>q.id!==x.id);
+      if(x.employeeId){st.employees=st.employees.filter(e=>e.id!==x.employeeId);st.requests=st.requests.filter(r=>r.employeeId!==x.employeeId)}
+      audit(st,a,'admin_deleted',x.displayName);
+    })}});
+  if(v)toast('החשבון נמחק','ok');
+};
 ACT.toggleAdmin=async d=>{await mutate((st,a)=>{if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');const x=st.users.find(q=>q.id===d.id);if(!x||x.id===a.id)throw new Error('לא ניתן');if(x.active&&st.users.filter(q=>q.role==='admin'&&q.active).length<=1)throw new Error('חייב להישאר לפחות מנהל/ת מערכת פעיל/ה אחד/ת');x.active=!x.active;audit(st,a,x.active?'admin_enabled':'admin_disabled',x.displayName)});toast('עודכן','ok')};
 
 /* ---- settings & backups (admin) ---- */
@@ -1490,7 +1531,7 @@ ACT.newRecovery=async()=>{
 };
 
 /* ---- audit log (admin) ---- */
-const AUDIT_LABELS={system_created:'הקמת מערכת',blank_system_created:'הקמת מערכת',login:'כניסה',password_set:'הגדרת סיסמה',password_changed:'שינוי סיסמה',password_reset:'איפוס סיסמה',admin_password_recovered:'שחזור סיסמת מנהל/ת',request_created:'בקשה חדשה',request_cancelled:'ביטול בקשה',cancel_requested:'בקשת ביטול',cancel_request_withdrawn:'חזרה מבקשת ביטול',request_approved:'אישור בקשה',request_rejected:'דחיית בקשה',bulk_approved:'אישור מרוכז',cancel_approved:'אישור ביטול',cancel_rejected:'דחיית ביטול',leave_added_by_admin:'הוספת חופשה ע״י מנהל/ת',leave_edited:'עריכת חופשה',leave_deleted:'מחיקת חופשה',employee_added:'הוספת עובד/ת',employees_imported:'ייבוא עובדים',bulk_import_employees:'ייבוא עובדים',employee_edited:'עריכת עובד/ת',employee_enabled:'הפעלת עובד/ת',employee_disabled:'השבתת עובד/ת',employee_deleted:'מחיקת עובד/ת',admin_added:'הוספת מנהל/ת',admin_edited:'עריכת פרטי מנהל/ת',admin_enabled:'הפעלת מנהל/ת',admin_disabled:'השבתת מנהל/ת',settings_saved:'שמירת הגדרות',restored_from_backup:'שחזור מגיבוי',recovery_code_created:'קוד שחזור חדש'};
+const AUDIT_LABELS={system_created:'הקמת מערכת',blank_system_created:'הקמת מערכת',login:'כניסה',password_set:'הגדרת סיסמה',password_changed:'שינוי סיסמה',password_reset:'איפוס סיסמה',admin_password_recovered:'שחזור סיסמת מנהל/ת',request_created:'בקשה חדשה',request_cancelled:'ביטול בקשה',cancel_requested:'בקשת ביטול',cancel_request_withdrawn:'חזרה מבקשת ביטול',request_approved:'אישור בקשה',request_rejected:'דחיית בקשה',bulk_approved:'אישור מרוכז',cancel_approved:'אישור ביטול',cancel_rejected:'דחיית ביטול',leave_added_by_admin:'הוספת חופשה ע״י מנהל/ת',leave_edited:'עריכת חופשה',leave_deleted:'מחיקת חופשה',employee_added:'הוספת עובד/ת',employees_imported:'ייבוא עובדים',bulk_import_employees:'ייבוא עובדים',employee_edited:'עריכת עובד/ת',employee_enabled:'הפעלת עובד/ת',employee_disabled:'השבתת עובד/ת',employee_deleted:'מחיקת עובד/ת',admin_added:'הוספת מנהל/ת',admin_edited:'עריכת פרטי מנהל/ת',admin_enabled:'הפעלת מנהל/ת',admin_disabled:'השבתת מנהל/ת',admin_deleted:'מחיקת מנהל/ת',account_self_deleted:'מחיקה עצמית של חשבון',settings_saved:'שמירת הגדרות',restored_from_backup:'שחזור מגיבוי',recovery_code_created:'קוד שחזור חדש'};
 PAGES.audit=()=>{
   if(!isAdmin())return '';
   const q=S.auditQ.toLowerCase();
