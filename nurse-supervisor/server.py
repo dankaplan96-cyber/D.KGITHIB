@@ -52,18 +52,12 @@ DEFAULT_CONFIG = {
         {"id": "p3", "name": "אח כללי 3"},
     ],
     "departments": [
-        {"id": "d1", "name": "פנימית א'", "beds": 36, "active": True,
-         "standard": {"morning": 7, "evening": 5, "night": 4}},
-        {"id": "d2", "name": "פנימית ב'", "beds": 36, "active": True,
-         "standard": {"morning": 7, "evening": 5, "night": 4}},
-        {"id": "d3", "name": "כירורגיה", "beds": 30, "active": True,
-         "standard": {"morning": 6, "evening": 4, "night": 3}},
-        {"id": "d4", "name": "גריאטריה", "beds": 32, "active": True,
-         "standard": {"morning": 6, "evening": 4, "night": 3}},
-        {"id": "d5", "name": "אורתופדיה", "beds": 28, "active": True,
-         "standard": {"morning": 5, "evening": 4, "night": 3}},
-        {"id": "d6", "name": "מיון", "beds": 40, "active": True,
-         "standard": {"morning": 10, "evening": 9, "night": 7}},
+        {"id": "d1", "name": "פנימית א'", "active": True},
+        {"id": "d2", "name": "פנימית ב'", "active": True},
+        {"id": "d3", "name": "כירורגיה", "active": True},
+        {"id": "d4", "name": "גריאטריה", "active": True},
+        {"id": "d5", "name": "אורתופדיה", "active": True},
+        {"id": "d6", "name": "מיון", "active": True},
     ],
     # assignments[shift_id][department_id] = position_id
     "assignments": {
@@ -74,14 +68,6 @@ DEFAULT_CONFIG = {
     "absence_reasons": [
         "מחלה", "מחלת ילד", "חופשה", "מילואים", "אירוע משפחתי",
         "לא הודיע/ה (פאנצ'ר)", "איחור", "השתלמות", "אחר",
-    ],
-    "staff_roles": ["אח/ות מוסמך/ת", "אח/ות מעשי/ת", "כוח עזר", "מזכיר/ה", "סטודנט/ית", "אחר"],
-    "counters": [
-        {"id": "c1", "name": "מונשמים"},
-        {"id": "c2", "name": "בבידוד"},
-        {"id": "c3", "name": "קשים / סיעודיים"},
-        {"id": "c4", "name": "קבלות"},
-        {"id": "c5", "name": "שחרורים"},
     ],
 }
 
@@ -379,13 +365,9 @@ def validate_config(cfg):
     out["positions"] = id_list(cfg.get("positions"), "אחים כלליים")
 
     def dept_extra(it, row):
-        row["beds"] = clean_int(it.get("beds"), 0, 999) or 0
         row["active"] = bool(it.get("active", True))
-        std = it.get("standard") or {}
-        row["standard"] = {sid: clean_int(std.get(sid), 0, 999) or 0 for sid in shift_ids}
 
     out["departments"] = id_list(cfg.get("departments"), "מחלקות", dept_extra)
-    out["counters"] = id_list(cfg.get("counters") or [], "מונים")
 
     pos_ids = {p["id"] for p in out["positions"]}
     dept_ids = {d["id"] for d in out["departments"]}
@@ -395,18 +377,12 @@ def validate_config(cfg):
         m = asg.get(sid) or {}
         out["assignments"][sid] = {d: p for d, p in m.items() if d in dept_ids and p in pos_ids}
 
-    for key in ("absence_reasons", "staff_roles"):
-        vals = [clean_str(x, 80) for x in (cfg.get(key) or [])]
-        out[key] = [v for v in dict.fromkeys(vals) if v]
+    vals = [clean_str(x, 80) for x in (cfg.get("absence_reasons") or [])]
+    out["absence_reasons"] = [v for v in dict.fromkeys(vals) if v]
     return out
 
 
 def validate_entry(body, cfg):
-    counters = {}
-    for c in cfg["counters"]:
-        v = clean_int((body.get("counters") or {}).get(c["id"]), 0, 999)
-        if v is not None:
-            counters[c["id"]] = v
     absences = []
     for a in (body.get("absences") or [])[:100]:
         emp = clean_str(a.get("employee"), 80)
@@ -416,7 +392,6 @@ def validate_entry(body, cfg):
         need(reason, "יש לבחור סיבת היעדרות לכל עובד")
         absences.append({
             "employee": emp,
-            "role": clean_str(a.get("role"), 80),
             "reason": reason,
             "details": clean_str(a.get("details"), 500),
             "replaced": bool(a.get("replaced")),
@@ -425,11 +400,9 @@ def validate_entry(body, cfg):
     return {
         "patients": clean_int(body.get("patients"), 0, 999),
         "staff_present": clean_int(body.get("staff_present"), 0, 999),
-        "staff_standard": clean_int(body.get("staff_standard"), 0, 999),
-        "counters": counters,
         "absences": absences,
+        "staff_notes": clean_str(body.get("staff_notes"), 5000),
         "patient_notes": clean_str(body.get("patient_notes"), 5000),
-        "general_notes": clean_str(body.get("general_notes"), 5000),
     }
 
 
@@ -448,8 +421,7 @@ def shift_overview(cfg, day, shift_id):
         if not d.get("active", True) and not e:
             continue
         depts.append({
-            "id": d["id"], "name": d["name"], "beds": d.get("beds", 0),
-            "standard": d.get("standard", {}).get(shift_id, 0),
+            "id": d["id"], "name": d["name"],
             "position_id": asg.get(d["id"]),
             "position_name": pos_names.get(asg.get(d["id"]), ""),
             "entry": e,
@@ -485,20 +457,18 @@ def collect_entries(cfg, date_from, date_to, shift_id=None, dept_id=None, positi
 
 
 def summarize(rows):
-    s = {"entries": len(rows), "patients": 0, "staff_present": 0, "staff_standard": 0,
-         "absences": 0, "replaced": 0, "by_reason": {}, "by_department": {}, "counters": {}}
+    s = {"entries": len(rows), "patients": 0, "staff_present": 0, "absences": 0, "replaced": 0,
+         "exceptional": 0, "by_reason": {}, "by_department": {}}
     for r in rows:
         s["patients"] += r.get("patients") or 0
         s["staff_present"] += r.get("staff_present") or 0
-        s["staff_standard"] += r.get("staff_standard") or 0
-        for cid, v in (r.get("counters") or {}).items():
-            s["counters"][cid] = s["counters"].get(cid, 0) + (v or 0)
+        if r.get("patient_notes"):
+            s["exceptional"] += 1
         dn = r.get("department_name") or r["department_id"]
-        bd = s["by_department"].setdefault(dn, {"entries": 0, "absences": 0, "shortage": 0})
+        bd = s["by_department"].setdefault(dn, {"entries": 0, "absences": 0, "exceptional": 0})
         bd["entries"] += 1
-        std, pres = r.get("staff_standard"), r.get("staff_present")
-        if std is not None and pres is not None and pres < std:
-            bd["shortage"] += std - pres
+        if r.get("patient_notes"):
+            bd["exceptional"] += 1
         for a in r.get("absences") or []:
             s["absences"] += 1
             bd["absences"] += 1
@@ -510,29 +480,24 @@ def summarize(rows):
 
 def rows_to_csv(cfg, rows, kind):
     buf = io.StringIO()
-    buf.write("﻿")  # BOM so Excel opens Hebrew correctly
+    buf.write("\ufeff")  # BOM so Excel opens Hebrew correctly
     w = csv.writer(buf)
     if kind == "absences":
-        w.writerow(["תאריך", "משמרת", "מחלקה", "אח כללי", "שם העובד", "תפקיד", "סיבה",
+        w.writerow(["תאריך", "משמרת", "מחלקה", "אח כללי", "שם העובד", "סיבה",
                     "פירוט", "הוחלף", "מחליף", "דווח ע\"י"])
         for r in rows:
             for a in r.get("absences") or []:
                 w.writerow([r["date"], r["shift_name"], r.get("department_name"), r.get("position_name"),
-                            a.get("employee"), a.get("role"), a.get("reason"), a.get("details"),
+                            a.get("employee"), a.get("reason"), a.get("details"),
                             "כן" if a.get("replaced") else "לא", a.get("replacement"),
                             r.get("updated_by_name")])
     else:
-        counters = cfg["counters"]
-        w.writerow(["תאריך", "משמרת", "מחלקה", "אח כללי", "מטופלים", "עובדים בפועל", "תקן",
-                    "חוסר", "חסרים (מספר)"] + [c["name"] for c in counters] +
-                   ["מצב מטופלים", "הערות", "דווח ע\"י", "עודכן"])
+        w.writerow(["תאריך", "משמרת", "מחלקה", "אח כללי", "מטופלים", "אנשי צוות", "היעדרויות",
+                    "דיווח על הצוות", "חריגים במטופלים", "דווח ע\"י", "עודכן"])
         for r in rows:
-            std, pres = r.get("staff_standard"), r.get("staff_present")
-            short = (std - pres) if (std is not None and pres is not None and pres < std) else 0
             w.writerow([r["date"], r["shift_name"], r.get("department_name"), r.get("position_name"),
-                        r.get("patients"), pres, std, short, len(r.get("absences") or [])] +
-                       [(r.get("counters") or {}).get(c["id"], "") for c in counters] +
-                       [r.get("patient_notes"), r.get("general_notes"), r.get("updated_by_name"),
+                        r.get("patients"), r.get("staff_present"), len(r.get("absences") or []),
+                        r.get("staff_notes"), r.get("patient_notes"), r.get("updated_by_name"),
                         r.get("updated_at")])
     return buf.getvalue().encode("utf-8")
 
@@ -749,8 +714,6 @@ class Handler(BaseHTTPRequestHandler):
                     "updated_by": user["username"], "updated_by_name": user["name"],
                     "revisions": ((prev or {}).get("revisions") or 0) + 1,
                 })
-                if entry["staff_standard"] is None:
-                    entry["staff_standard"] = dept.get("standard", {}).get(sid)
                 deps[did] = entry
                 write_json(day_path(day), data)
             audit(user["username"], "save-entry", {"date": day, "shift": sid, "department": did,

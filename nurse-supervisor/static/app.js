@@ -118,11 +118,6 @@ function seg(options, current, onPick) {
     h("button", { type: "button", class: o.value === current ? "on" : "", onclick: () => onPick(o.value) }, o.label)));
 }
 
-function shortageOf(e) {
-  if (!e || e.staff_standard == null || e.staff_present == null) return 0;
-  return Math.max(0, e.staff_standard - e.staff_present);
-}
-
 /* ------------------------------------------------------------------ */
 /* boot / routing                                                     */
 /* ------------------------------------------------------------------ */
@@ -373,7 +368,7 @@ function positionWho(ov, sel) {
 
 function deptCard(d, sel, other) {
   const e = d.entry;
-  const short = shortageOf(e);
+  const abs = e ? (e.absences || []).length : 0;
   return h("div", {
     class: "dept-card" + (e ? " done" : "") + (other ? " other" : ""),
     onclick: () => go("/entry", { date: sel.date, shift: sel.shift, dept: d.id }),
@@ -384,10 +379,9 @@ function deptCard(d, sel, other) {
   other && d.position_name ? h("div", { class: "small muted" }, d.position_name) : null,
   e ? h("div", { class: "stats" },
     h("span", null, "מטופלים: ", h("b", null, e.patients ?? "-")),
-    h("span", null, "צוות: ", h("b", null, (e.staff_present ?? "-") + "/" + (e.staff_standard ?? "-"))),
-    short ? h("span", { class: "badge badge-danger" }, "חוסר " + short) : null,
-    (e.absences || []).length ? h("span", { class: "badge badge-danger" }, "היעדרויות: " + e.absences.length) : null)
-    : h("div", { class: "stats muted" }, "תקן צוות: " + (d.standard || "-") + " · מיטות: " + (d.beds || "-")),
+    h("span", null, "צוות: ", h("b", null, e.staff_present ?? "-")),
+    abs ? h("span", { class: "badge badge-danger" }, "היעדרויות: " + abs) : null,
+    e.patient_notes ? h("span", { class: "badge badge-danger" }, "⚠ חריג") : null) : null,
   e ? h("div", { class: "meta" }, "עודכן " + fmtTime(e.updated_at) + " ע\"י " + e.updated_by_name) : null);
 }
 
@@ -395,28 +389,22 @@ function deptCard(d, sel, other) {
 /* entry form                                                         */
 /* ------------------------------------------------------------------ */
 
-function stepper(label, get, set, opts = {}) {
+function stepper(label, get, set) {
   const input = h("input", { type: "number", inputmode: "numeric", min: 0, max: 999, value: get() ?? "", placeholder: "-" });
-  const hint = h("div", { class: "hint" });
-  const refresh = () => { if (opts.hint) hint.textContent = opts.hint() || ""; if (opts.onChange) opts.onChange(); };
   const setVal = (v) => {
     v = v === "" || v === null || isNaN(v) ? null : Math.max(0, Math.min(999, parseInt(v, 10)));
     set(v);
     input.value = v ?? "";
     S.dirty = true;
-    refresh();
   };
   input.addEventListener("input", () => setVal(input.value));
   input.addEventListener("focus", () => input.select());
-  const el = h("div", { class: "stepper" + (opts.big ? " big" : "") },
-    h("div", { class: "label" }, h("span", null, label), opts.side || null),
+  return h("div", { class: "stepper big" },
+    h("div", { class: "label" }, label),
     h("div", { class: "ctrl" },
       h("button", { type: "button", onclick: () => setVal((get() ?? 0) + 1), "aria-label": "הוסף" }, "+"),
       input,
-      h("button", { type: "button", onclick: () => setVal(Math.max(0, (get() ?? 0) - 1)), "aria-label": "הפחת" }, "−")),
-    hint);
-  setTimeout(refresh, 0);
-  return el;
+      h("button", { type: "button", onclick: () => setVal(Math.max(0, (get() ?? 0) - 1)), "aria-label": "הפחת" }, "−")));
 }
 
 async function renderEntry(params) {
@@ -425,11 +413,7 @@ async function renderEntry(params) {
   const d = ov.departments.find((x) => x.id === dept) || (deptById(dept) && { ...deptById(dept), entry: null });
   if (!d) throw new Error("המחלקה לא נמצאה");
   const orig = d.entry;
-  const E = orig ? clone(orig) : {
-    patients: null, staff_present: null, staff_standard: d.standard ?? null,
-    counters: {}, absences: [], patient_notes: "", general_notes: "",
-  };
-  E.counters = E.counters || {};
+  const E = orig ? clone(orig) : { patients: null, staff_present: null, absences: [], staff_notes: "", patient_notes: "" };
   E.absences = E.absences || [];
   const ro = !ov.can_edit;
 
@@ -449,72 +433,44 @@ async function renderEntry(params) {
   }
   if (ro) app.appendChild(h("div", { class: "card badge-wait", style: "font-weight:600" }, "צפייה בלבד – חלון העריכה נסגר."));
 
-  // --- shortage box ---
-  const shortBox = h("div", { class: "shortage" });
-  const updShort = () => {
-    const s = shortageOf(E);
-    const abs = E.absences.length;
-    if (E.staff_present == null) { shortBox.className = "shortage"; shortBox.textContent = ""; return; }
-    shortBox.className = "shortage " + (s ? "bad" : "good");
-    shortBox.textContent = s
-      ? `חוסר של ${s} אנשי צוות ביחס לתקן (${E.staff_present}/${E.staff_standard}). דווחו ${abs} היעדרויות.`
-      : `הצוות מאויש לפי התקן (${E.staff_present}/${E.staff_standard ?? "-"}).` + (abs ? ` דווחו ${abs} היעדרויות.` : "");
-  };
+  const ta = (key, ph) => h("textarea", { placeholder: ph, value: E[key] || "", oninput: (e) => { E[key] = e.target.value; S.dirty = true; } });
 
-  // --- main numbers ---
+  // 1 – patients
   app.appendChild(h("div", { class: "card" },
-    h("h2", { style: "margin-top:0" }, "מטופלים וצוות"),
-    h("div", { class: "grid grid-steppers" },
-      stepper("מספר מטופלים", () => E.patients, (v) => (E.patients = v), {
-        big: true,
-        hint: () => d.beds ? `${d.beds} מיטות` + (E.patients != null ? ` · תפוסה ${Math.round((E.patients / d.beds) * 100)}%` : "") : "",
-      }),
-      stepper("עובדים במשמרת (בפועל)", () => E.staff_present, (v) => (E.staff_present = v), { big: true, onChange: updShort }),
-      stepper("תקן עובדים למשמרת", () => E.staff_standard, (v) => (E.staff_standard = v), {
-        onChange: updShort, hint: () => d.standard ? "תקן מוגדר: " + d.standard : "",
-      })),
-    h("div", { style: "margin-top:12px" }, shortBox)));
-  updShort();
+    h("h2", { style: "margin-top:0" }, "1. מטופלים"),
+    h("div", { class: "grid grid-steppers" }, stepper("כמה מטופלים יש במחלקה?", () => E.patients, (v) => (E.patients = v)))));
 
-  // --- counters ---
-  if (cfg().counters.length) {
-    app.appendChild(h("div", { class: "card" },
-      h("h2", { style: "margin-top:0" }, "מצב מטופלים – מספרים"),
-      h("div", { class: "grid grid-steppers" }, cfg().counters.map((c) =>
-        stepper(c.name, () => E.counters[c.id] ?? null, (v) => { if (v == null) delete E.counters[c.id]; else E.counters[c.id] = v; })))));
-  }
-
-  // --- absences ---
+  // 2 – staff
   const absList = h("div");
   const drawAbs = () => {
     absList.innerHTML = "";
-    if (!E.absences.length) absList.appendChild(h("div", { class: "muted", style: "margin-bottom:10px" }, "לא דווחו היעדרויות במשמרת זו."));
     E.absences.forEach((a, i) => absList.appendChild(absenceEditor(a, i, () => {
-      E.absences.splice(i, 1); S.dirty = true; drawAbs(); updShort();
+      E.absences.splice(i, 1); S.dirty = true; drawAbs();
     })));
   };
   drawAbs();
   app.appendChild(h("div", { class: "card" },
-    h("h2", { style: "margin-top:0" }, "היעדרויות / פאנצ'רים"),
-    h("div", { class: "small muted", style: "margin-bottom:10px" }, "איש צוות שהיה אמור להגיע ולא הגיע – יש לציין שם, תפקיד וסיבה."),
+    h("h2", { style: "margin-top:0" }, "2. צוות"),
+    h("div", { class: "grid grid-steppers" }, stepper("כמה אנשי צוות במשמרת?", () => E.staff_present, (v) => (E.staff_present = v))),
+    h("h3", null, "היעדרויות / פאנצ'רים"),
     absList,
     h("button", {
       class: "btn btn-danger-ghost", type: "button",
       onclick: () => {
-        E.absences.push({ employee: "", role: "", reason: "", details: "", replaced: false, replacement: "" });
-        S.dirty = true; drawAbs(); updShort();
+        E.absences.push({ employee: "", reason: "", details: "", replaced: false, replacement: "" });
+        S.dirty = true; drawAbs();
         const last = absList.querySelector(".absence:last-child input");
         if (last) last.focus();
       },
-    }, "+ הוספת היעדרות / פאנצ'ר")));
+    }, "+ איש צוות לא הגיע"),
+    h("h3", null, "דיווח נוסף לגבי הצוות"),
+    ta("staff_notes", "למשל: עובד/ת עזב/ה מוקדם, חוסר בכוח עזר, תגבור מפול, בעיות במשמרת...")));
 
-  // --- notes ---
-  const ta = (key, ph) => h("textarea", { placeholder: ph, value: E[key] || "", oninput: (e) => { E[key] = e.target.value; S.dirty = true; } });
+  // 3 – exceptional patient events
   app.appendChild(h("div", { class: "card" },
-    h("h2", { style: "margin-top:0" }, "מצב המטופלים"),
-    ta("patient_notes", "מטופלים קשים, אירועים חריגים, העברות, נפטרים, מטופלים הדורשים מעקב..."),
-    h("h3", null, "הערות כלליות"),
-    ta("general_notes", "ציוד, בעיות תפעול, בקשות מהמחלקה, נושאים להעברה למשמרת הבאה...")));
+    h("h2", { style: "margin-top:0" }, "3. חריגים במטופלים"),
+    h("div", { class: "small muted", style: "margin-bottom:8px" }, "אם אין חריגים – השאירו ריק."),
+    ta("patient_notes", "מטופל קשה / מידרדר, נפילה, אירוע חריג, העברה לטיפול נמרץ, פטירה...")));
 
   if (ro) {
     app.querySelectorAll("input,textarea,select,button.chip,.stepper button,.absence button").forEach((el) => (el.disabled = true));
@@ -528,7 +484,7 @@ async function renderEntry(params) {
     const bad = E.absences.findIndex((a) => !a.reason);
     if (bad >= 0) return toast("יש לבחור סיבה לכל היעדרות (היעדרות מס' " + (bad + 1) + ")", "error");
     if (E.patients == null || E.staff_present == null) {
-      if (!confirm("לא הוזן מספר מטופלים או מספר עובדים. לשמור בכל זאת?")) return;
+      if (!confirm("לא הוזן מספר מטופלים או מספר אנשי צוות. לשמור בכל זאת?")) return;
     }
     saveBtn.disabled = true;
     try {
@@ -557,29 +513,25 @@ async function renderEntry(params) {
 
 function absenceEditor(a, i, onRemove) {
   const mark = () => (S.dirty = true);
-  const chipsOf = (list, key, danger) => {
-    const box = h("div", { class: "chips" });
-    const draw = () => {
-      box.innerHTML = "";
-      list.forEach((v) => box.appendChild(h("button", {
-        type: "button", class: "chip" + (a[key] === v ? " on" + (danger ? " danger" : "") : ""),
-        onclick: () => { a[key] = a[key] === v ? "" : v; mark(); draw(); },
-      }, v)));
-    };
-    draw();
-    return box;
+  const reasons = h("div", { class: "chips" });
+  const drawReasons = () => {
+    reasons.innerHTML = "";
+    cfg().absence_reasons.forEach((v) => reasons.appendChild(h("button", {
+      type: "button", class: "chip" + (a.reason === v ? " on danger" : ""),
+      onclick: () => { a.reason = a.reason === v ? "" : v; mark(); drawReasons(); },
+    }, v)));
   };
-  const replName = h("input", { placeholder: "שם המחליף/ה", value: a.replacement, oninput: (e) => { a.replacement = e.target.value; mark(); } });
-  const replWrap = h("div", { class: a.replaced ? "" : "hidden", style: "margin-top:8px" }, replName);
+  drawReasons();
+  const replWrap = h("div", { class: a.replaced ? "" : "hidden", style: "margin-top:8px" },
+    h("input", { placeholder: "שם המחליף/ה", value: a.replacement, oninput: (e) => { a.replacement = e.target.value; mark(); } }));
   return h("div", { class: "absence" },
     h("div", { class: "head" },
-      h("b", null, "היעדרות " + (i + 1)),
+      h("b", null, "לא הגיע/ה #" + (i + 1)),
       h("button", { type: "button", class: "btn btn-sm btn-danger-ghost", onclick: () => { if (confirm("להסיר היעדרות זו?")) onRemove(); } }, "הסרה")),
     h("label", { class: "field" }, h("span", null, "שם העובד/ת"),
       h("input", { value: a.employee, placeholder: "שם מלא", oninput: (e) => { a.employee = e.target.value; mark(); } })),
-    h("div", { class: "field" }, h("span", { style: "font-weight:600;font-size:15px;display:block;margin-bottom:6px" }, "תפקיד"), chipsOf(cfg().staff_roles, "role")),
-    h("div", { class: "field", style: "margin-top:10px" }, h("span", { style: "font-weight:600;font-size:15px;display:block;margin-bottom:6px" }, "סיבת ההיעדרות *"), chipsOf(cfg().absence_reasons, "reason", true)),
-    h("label", { class: "field", style: "margin-top:10px" }, h("span", null, "פירוט / הערה"),
+    h("div", { class: "field" }, h("span", { style: "font-weight:600;font-size:15px;display:block;margin-bottom:6px" }, "למה לא הגיע/ה? *"), reasons),
+    h("label", { class: "field", style: "margin-top:10px" }, h("span", null, "פירוט (לא חובה)"),
       h("input", { value: a.details, placeholder: "למשל: הודיע/ה בשעה 06:30, לא ענה/תה לטלפון...", oninput: (e) => { a.details = e.target.value; mark(); } })),
     h("label", { style: "display:flex;gap:10px;align-items:center;font-weight:600;cursor:pointer" },
       h("input", { type: "checkbox", checked: a.replaced, onchange: (e) => { a.replaced = e.target.checked; replWrap.classList.toggle("hidden", !a.replaced); mark(); } }),
@@ -590,6 +542,13 @@ function absenceEditor(a, i, onRemove) {
 /* ------------------------------------------------------------------ */
 /* shift summary                                                      */
 /* ------------------------------------------------------------------ */
+
+function staffCell(e) {
+  const abs = absencesText(e.absences);
+  return h("div", null, (e.absences || []).length ? abs : null,
+    e.staff_notes ? h("div", { class: "notes", style: "white-space:pre-wrap" }, e.staff_notes) : null,
+    !(e.absences || []).length && !e.staff_notes ? "-" : null);
+}
 
 async function renderSummary(params) {
   const { date, shift, position } = params;
@@ -610,39 +569,33 @@ async function renderSummary(params) {
   if (onDuty.length) app.appendChild(h("div", { style: "margin-bottom:10px" }, h("b", null, "אחים כלליים במשמרת: "), onDuty.join(" · ")));
 
   const filled = depts.filter((d) => d.entry);
-  const tot = { patients: 0, present: 0, standard: 0, short: 0, abs: 0 };
+  const tot = { patients: 0, staff: 0, abs: 0, exc: 0 };
   filled.forEach((d) => {
     const e = d.entry;
-    tot.patients += e.patients || 0; tot.present += e.staff_present || 0; tot.standard += e.staff_standard || 0;
-    tot.short += shortageOf(e); tot.abs += (e.absences || []).length;
+    tot.patients += e.patients || 0; tot.staff += e.staff_present || 0;
+    tot.abs += (e.absences || []).length; tot.exc += e.patient_notes ? 1 : 0;
   });
   app.appendChild(h("div", { class: "grid grid-stats", style: "margin-bottom:14px" },
     stat("מחלקות שדווחו", filled.length + "/" + depts.length, filled.length < depts.length),
     stat("מטופלים", tot.patients),
-    stat("צוות בפועל / תקן", tot.present + "/" + tot.standard),
-    stat("חוסר בצוות", tot.short, tot.short > 0),
-    stat("היעדרויות", tot.abs, tot.abs > 0)));
+    stat("אנשי צוות", tot.staff),
+    stat("היעדרויות", tot.abs, tot.abs > 0),
+    stat("מחלקות עם חריגים", tot.exc, tot.exc > 0)));
 
-  const counters = cfg().counters;
   app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
     h("thead", null, h("tr", null,
       h("th", null, "מחלקה"), h("th", null, "אח כללי"), h("th", { class: "num" }, "מטופלים"),
-      h("th", { class: "num" }, "צוות/תקן"), h("th", { class: "num" }, "חוסר"),
-      counters.map((c) => h("th", { class: "num" }, c.name)),
-      h("th", null, "היעדרויות"), h("th", null, "מצב מטופלים / הערות"), h("th", null, "דווח"))),
+      h("th", { class: "num" }, "צוות"), h("th", null, "דיווח על הצוות"), h("th", null, "חריגים במטופלים"), h("th", null, "דווח"))),
     h("tbody", null, depts.map((d) => {
       const e = d.entry;
       if (!e) return h("tr", null, h("td", null, h("b", null, d.name)), h("td", null, d.position_name),
-        h("td", { colspan: 6 + counters.length }, h("span", { class: "badge badge-wait" }, "לא דווח")));
-      const s = shortageOf(e);
+        h("td", { colspan: 5 }, h("span", { class: "badge badge-wait" }, "לא דווח")));
       return h("tr", null,
         h("td", null, h("b", null, d.name)), h("td", null, e.position_name || d.position_name),
         h("td", { class: "num" }, e.patients ?? "-"),
-        h("td", { class: "num" }, (e.staff_present ?? "-") + "/" + (e.staff_standard ?? "-")),
-        h("td", { class: "num" + (s ? " neg" : "") }, s || "-"),
-        counters.map((c) => h("td", { class: "num" }, (e.counters || {})[c.id] ?? "-")),
-        h("td", null, absencesText(e.absences)),
-        h("td", { class: "notes" }, [e.patient_notes, e.general_notes].filter(Boolean).join("\n—\n")),
+        h("td", { class: "num" }, e.staff_present ?? "-"),
+        h("td", null, staffCell(e)),
+        h("td", { class: "notes" }, e.patient_notes || "-"),
         h("td", { class: "small" }, e.updated_by_name, h("br"), fmtTime(e.updated_at)));
     })))));
 }
@@ -650,7 +603,7 @@ async function renderSummary(params) {
 function absencesText(list) {
   if (!list || !list.length) return "-";
   return h("div", null, list.map((a) => h("div", { style: "margin-bottom:4px" },
-    h("b", null, a.employee || "(ללא שם)"), a.role ? " (" + a.role + ")" : "", " – ",
+    h("b", null, a.employee || "(ללא שם)"), " – ",
     h("span", { class: "neg" }, a.reason), a.details ? " · " + a.details : "",
     a.replaced ? h("span", { class: "badge badge-ok", style: "margin-inline-start:6px" }, "הוחלף" + (a.replacement ? ": " + a.replacement : "")) : null)));
 }
@@ -725,13 +678,13 @@ async function renderReports(params) {
     return;
   }
 
-  const totalShort = Object.values(sm.by_department).reduce((a, b) => a + b.shortage, 0);
   app.appendChild(h("div", { class: "grid grid-stats", style: "margin-bottom:14px" },
     stat("דיווחי מחלקה", sm.entries),
     stat("ממוצע מטופלים לדיווח", sm.entries ? Math.round(sm.patients / sm.entries) : 0),
+    stat("ממוצע צוות לדיווח", sm.entries ? Math.round((sm.staff_present / sm.entries) * 10) / 10 : 0),
     stat("סה\"כ היעדרויות", sm.absences, sm.absences > 0),
     stat("היעדרויות שהוחלפו", sm.replaced),
-    stat("משמרות-אדם חסרות", totalShort, totalShort > 0)));
+    stat("דיווחים עם חריגים", sm.exceptional, sm.exceptional > 0)));
 
   const reasonRows = Object.entries(sm.by_reason).sort((a, b) => b[1] - a[1]);
   const deptRows = Object.entries(sm.by_department).sort((a, b) => b[1].absences - a[1].absences);
@@ -742,13 +695,19 @@ async function renderReports(params) {
           h("div", { class: "progress" }, h("div", { style: `width:${(v / sm.absences) * 100}%;background:var(--danger)` }))))))) : h("div", { class: "muted" }, "אין היעדרויות")),
     h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "לפי מחלקה"),
       h("table", null,
-        h("thead", null, h("tr", null, h("th", null, "מחלקה"), h("th", { class: "num" }, "דיווחים"), h("th", { class: "num" }, "היעדרויות"), h("th", { class: "num" }, "חוסר מצטבר"))),
+        h("thead", null, h("tr", null, h("th", null, "מחלקה"), h("th", { class: "num" }, "דיווחים"), h("th", { class: "num" }, "היעדרויות"), h("th", { class: "num" }, "חריגים"))),
         h("tbody", null, deptRows.map(([k, v]) => h("tr", null, h("td", null, k), h("td", { class: "num" }, v.entries),
-          h("td", { class: "num" + (v.absences ? " neg" : "") }, v.absences), h("td", { class: "num" + (v.shortage ? " neg" : "") }, v.shortage))))))));
+          h("td", { class: "num" + (v.absences ? " neg" : "") }, v.absences), h("td", { class: "num" + (v.exceptional ? " neg" : "") }, v.exceptional))))))));
 
-  if (cfg().counters.length) {
-    app.appendChild(h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "סיכום מונים (מצטבר)"),
-      h("div", { class: "grid grid-stats" }, cfg().counters.map((c) => stat(c.name, sm.counters[c.id] || 0)))));
+  // exceptional events
+  const exc = r.rows.filter((e) => e.patient_notes);
+  if (exc.length) {
+    app.appendChild(h("h2", null, "חריגים במטופלים (" + exc.length + ")"));
+    app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+      h("thead", null, h("tr", null, ["תאריך", "משמרת", "מחלקה", "חריג", "דווח ע\"י"].map((t) => h("th", null, t)))),
+      h("tbody", null, exc.map((e) => h("tr", null,
+        h("td", null, fmtShort(e.date)), h("td", null, e.shift_name), h("td", null, h("b", null, e.department_name)),
+        h("td", { class: "notes" }, e.patient_notes), h("td", { class: "small" }, e.updated_by_name)))))));
   }
 
   // absences detail
@@ -757,35 +716,28 @@ async function renderReports(params) {
   if (absRows.length) {
     app.appendChild(h("h2", null, "פירוט היעדרויות (" + absRows.length + ")"));
     app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
-      h("thead", null, h("tr", null, ["תאריך", "משמרת", "מחלקה", "שם העובד", "תפקיד", "סיבה", "פירוט", "הוחלף", "דווח ע\"י"].map((t) => h("th", null, t)))),
+      h("thead", null, h("tr", null, ["תאריך", "משמרת", "מחלקה", "שם העובד", "סיבה", "פירוט", "הוחלף", "דווח ע\"י"].map((t) => h("th", null, t)))),
       h("tbody", null, absRows.map(([row, a]) => h("tr", null,
         h("td", null, fmtShort(row.date)), h("td", null, row.shift_name), h("td", null, row.department_name),
-        h("td", null, h("b", null, a.employee || "-")), h("td", null, a.role || "-"), h("td", { class: "neg" }, a.reason),
+        h("td", null, h("b", null, a.employee || "-")), h("td", { class: "neg" }, a.reason),
         h("td", null, a.details || ""), h("td", null, a.replaced ? "כן" + (a.replacement ? " – " + a.replacement : "") : "לא"),
         h("td", { class: "small" }, row.updated_by_name)))))));
   }
 
   // entries detail
-  const counters = cfg().counters;
-  app.appendChild(h("h2", null, "פירוט דיווחים (" + r.rows.length + ")"));
+  app.appendChild(h("h2", null, "כל הדיווחים (" + r.rows.length + ")"));
   app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
     h("thead", null, h("tr", null,
       ["תאריך", "משמרת", "מחלקה", "אח כללי"].map((t) => h("th", null, t)),
-      h("th", { class: "num" }, "מטופלים"), h("th", { class: "num" }, "צוות/תקן"), h("th", { class: "num" }, "חוסר"),
-      h("th", { class: "num" }, "היעדרויות"), counters.map((c) => h("th", { class: "num" }, c.name)),
-      h("th", null, "מצב מטופלים / הערות"), h("th", null, "דווח ע\"י"))),
-    h("tbody", null, r.rows.map((e) => {
-      const s = shortageOf(e);
-      return h("tr", { style: "cursor:pointer", title: "פתיחת הדיווח", onclick: () => go("/entry", { date: e.date, shift: e.shift, dept: e.department_id }) },
-        h("td", null, fmtShort(e.date)), h("td", null, e.shift_name), h("td", null, h("b", null, e.department_name)),
-        h("td", null, e.position_name || "-"),
-        h("td", { class: "num" }, e.patients ?? "-"), h("td", { class: "num" }, (e.staff_present ?? "-") + "/" + (e.staff_standard ?? "-")),
-        h("td", { class: "num" + (s ? " neg" : "") }, s || "-"),
-        h("td", { class: "num" + ((e.absences || []).length ? " neg" : "") }, (e.absences || []).length || "-"),
-        counters.map((c) => h("td", { class: "num" }, (e.counters || {})[c.id] ?? "-")),
-        h("td", { class: "notes" }, [e.patient_notes, e.general_notes].filter(Boolean).join("\n—\n")),
-        h("td", { class: "small" }, e.updated_by_name, h("br"), fmtTime(e.updated_at)));
-    })))));
+      h("th", { class: "num" }, "מטופלים"), h("th", { class: "num" }, "צוות"),
+      h("th", null, "דיווח על הצוות"), h("th", null, "חריגים במטופלים"), h("th", null, "דווח ע\"י"))),
+    h("tbody", null, r.rows.map((e) => h("tr", { style: "cursor:pointer", title: "פתיחת הדיווח", onclick: () => go("/entry", { date: e.date, shift: e.shift, dept: e.department_id }) },
+      h("td", null, fmtShort(e.date)), h("td", null, e.shift_name), h("td", null, h("b", null, e.department_name)),
+      h("td", null, e.position_name || "-"),
+      h("td", { class: "num" }, e.patients ?? "-"), h("td", { class: "num" }, e.staff_present ?? "-"),
+      h("td", null, staffCell(e)),
+      h("td", { class: "notes" }, e.patient_notes || "-"),
+      h("td", { class: "small" }, e.updated_by_name, h("br"), fmtTime(e.updated_at))))))));
 }
 
 /* ------------------------------------------------------------------ */
@@ -794,7 +746,7 @@ async function renderReports(params) {
 
 const SETTINGS_TABS = [
   ["assign", "שיבוץ מחלקות"], ["departments", "מחלקות"], ["positions", "אחים כלליים"],
-  ["shifts", "משמרות"], ["lists", "סיבות, תפקידים ומונים"], ["general", "כללי"], ["users", "משתמשים"],
+  ["shifts", "משמרות"], ["lists", "סיבות היעדרות"], ["general", "כללי"], ["users", "משתמשים"],
 ];
 
 async function renderSettings(params) {
@@ -868,27 +820,18 @@ function renderSettingsTab(tab) {
   }
 
   if (tab === "departments") {
-    body.appendChild(h("div", { class: "card" },
-      h("p", { class: "muted", style: "margin-top:0" }, "תקן = מספר אנשי הצוות הנדרש במשמרת. מחלקה לא פעילה לא תוצג לדיווח (הדוחות הקודמים נשמרים)."),
-      h("div", { class: "table-wrap" }, h("table", null,
-        h("thead", null, h("tr", null, h("th", null, "שם המחלקה"), h("th", { class: "num" }, "מיטות"),
-          D.shifts.map((s) => h("th", { class: "num" }, "תקן " + s.name)), h("th", { class: "num" }, "פעילה"), h("th", null, ""))),
-        h("tbody", null, D.departments.map((d, i) => {
-          d.standard = d.standard || {};
-          const num = (get, set) => h("input", { type: "number", min: 0, inputmode: "numeric", style: "width:80px", value: get() ?? 0, oninput: (e) => { set(parseInt(e.target.value || "0", 10)); mark(); } });
-          return h("tr", null,
-            h("td", null, h("input", { value: d.name, oninput: (e) => { d.name = e.target.value; mark(); } })),
-            h("td", { class: "num" }, num(() => d.beds, (v) => (d.beds = v))),
-            D.shifts.map((s) => h("td", { class: "num" }, num(() => d.standard[s.id], (v) => (d.standard[s.id] = v)))),
-            h("td", { class: "num" }, h("input", { type: "checkbox", checked: d.active !== false, onchange: (e) => { d.active = e.target.checked; mark(); } })),
-            h("td", null, h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => {
-              if (!confirm("למחוק את המחלקה \"" + d.name + "\"? (דוחות קודמים יישמרו. מומלץ לסמן 'לא פעילה' במקום)")) return;
-              D.departments.splice(i, 1); mark(); redraw();
-            } }, "מחיקה")));
-        })))),
-      h("button", { class: "btn btn-light", style: "margin-top:12px", onclick: () => {
-        const std = {}; D.shifts.forEach((s) => (std[s.id] = 0));
-        D.departments.push({ id: uid("d"), name: "מחלקה חדשה", beds: 0, active: true, standard: std }); mark(); redraw();
+    body.appendChild(h("div", { class: "card", style: "max-width:720px" },
+      h("p", { class: "muted", style: "margin-top:0" }, "מחלקה לא פעילה לא תוצג לדיווח (הדוחות הקודמים שלה נשמרים)."),
+      D.departments.map((d, i) => h("div", { class: "list-row" },
+        h("input", { value: d.name, oninput: (e) => { d.name = e.target.value; mark(); } }),
+        h("label", { style: "display:flex;gap:6px;align-items:center" },
+          h("input", { type: "checkbox", checked: d.active !== false, onchange: (e) => { d.active = e.target.checked; mark(); } }), "פעילה"),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => {
+          if (!confirm("למחוק את המחלקה \"" + d.name + "\"? (דוחות קודמים יישמרו. מומלץ לבטל 'פעילה' במקום)")) return;
+          D.departments.splice(i, 1); mark(); redraw();
+        } }, "מחיקה"))),
+      h("button", { class: "btn btn-light", style: "margin-top:8px", onclick: () => {
+        D.departments.push({ id: uid("d"), name: "מחלקה חדשה", active: true }); mark(); redraw();
       } }, "+ הוספת מחלקה")));
     return;
   }
@@ -925,20 +868,12 @@ function renderSettingsTab(tab) {
   }
 
   if (tab === "lists") {
-    const strList = (title, key, ph) => h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, title),
-      D[key].map((v, i) => h("div", { class: "list-row" },
-        h("input", { value: v, oninput: (e) => { D[key][i] = e.target.value; mark(); } }),
-        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => { D[key].splice(i, 1); mark(); redraw(); } }, "מחיקה"))),
-      h("button", { class: "btn btn-light btn-sm", onclick: () => { D[key].push(ph); mark(); redraw(); } }, "+ הוספה"));
-    body.appendChild(h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(320px,1fr))" },
-      strList("סיבות היעדרות", "absence_reasons", "סיבה חדשה"),
-      strList("תפקידי צוות", "staff_roles", "תפקיד חדש"),
-      h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "מונים נוספים בדיווח"),
-        h("p", { class: "muted small" }, "שדות מספריים נוספים שהאח הכללי ממלא לכל מחלקה (למשל: מונשמים, בבידוד, קבלות)."),
-        D.counters.map((c, i) => h("div", { class: "list-row" },
-          h("input", { value: c.name, oninput: (e) => { c.name = e.target.value; mark(); } }),
-          h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => { D.counters.splice(i, 1); mark(); redraw(); } }, "מחיקה"))),
-        h("button", { class: "btn btn-light btn-sm", onclick: () => { D.counters.push({ id: uid("c"), name: "מונה חדש" }); mark(); redraw(); } }, "+ הוספה"))));
+    body.appendChild(h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-top:0" }, "סיבות היעדרות"),
+      h("p", { class: "muted small" }, "הסיבות שמופיעות ככפתורים כשמדווחים על איש צוות שלא הגיע."),
+      D.absence_reasons.map((v, i) => h("div", { class: "list-row" },
+        h("input", { value: v, oninput: (e) => { D.absence_reasons[i] = e.target.value; mark(); } }),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => { D.absence_reasons.splice(i, 1); mark(); redraw(); } }, "מחיקה"))),
+      h("button", { class: "btn btn-light btn-sm", onclick: () => { D.absence_reasons.push("סיבה חדשה"); mark(); redraw(); } }, "+ הוספה")));
     return;
   }
 
