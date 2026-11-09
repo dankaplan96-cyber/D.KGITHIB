@@ -119,6 +119,26 @@ await key('KeyI');
 const iv = await ev(() => [game.state, !!document.querySelector('#inventory .inv-close')]);
 await page.click('#inventory .inv-close'); await step(0.1);
 check('inventory: a Close button, and it closes', iv[0] === 'inventory' && iv[1] && await ev(() => game.state === 'play' && document.querySelector('#inventory').classList.contains('hidden')), iv);
+// ---- PT-5: the goal panel on its way out: its words go first over the still-dark box, then the box
+await ev(() => { const o = document.querySelector('#objective'); o.innerHTML = '<b>Check the bore\'s channel at the platform console</b>'; o.classList.add('show'); });
+await page.waitForTimeout(900);
+await ev(() => document.querySelector('#objective').classList.remove('show'));
+await page.waitForTimeout(170);
+const of1 = await ev(() => { const o = document.querySelector('#objective'); return [+getComputedStyle(o).opacity, +getComputedStyle(o.firstElementChild).opacity]; });
+await page.waitForTimeout(900);
+const of2 = await ev(() => { const o = document.querySelector('#objective'); return [+getComputedStyle(o).opacity, +getComputedStyle(o.firstElementChild).opacity]; });
+check('PT-5: fading out, the goal panel keeps its dark box while its words fade (box > 0.9, words < 0.8); then both are gone', of1[0] > 0.9 && of1[1] < 0.8 && of2[0] === 0 && of2[1] === 0, { of1, of2 });
+// ---- a forced choice (hud.openMenu opts.forced): no Cancel, Back does nothing
+const fc = await ev(() => {
+  let picked = null, closed = 0;
+  game.setState('shop'); game.hud.openMenu('c3_choice_title', [{ key: 'c3_choice_help', id: 'help' }, { key: 'c3_choice_leave', id: 'leave' }], (it) => { picked = it.id; game.setState('play'); }, () => { closed++; game.setState('play'); }, { forced: true });
+  const btns = [...document.querySelectorAll('#shop button')].map((b) => b.className);
+  P.tap('Escape', 0.1); P.tap('Escape', 0.1);
+  const open = !document.querySelector('#shop').classList.contains('hidden') && game.state === 'shop';
+  P.tap('ArrowDown', 0.05); P.tap('Enter', 0.1);
+  return { btns, open, closed, picked, state: game.state };
+});
+check('a forced choice: only its answers (no Cancel), Esc leaves it open, an answer closes it', fc.btns.length === 2 && !fc.btns.some((c) => /leave/.test(c)) && fc.open && fc.closed === 0 && fc.picked === 'leave' && fc.state === 'play', fc);
 // ---- the confirmation of a new game: ← → between its answers, Esc back to the title
 await ev(() => { game.save(false); game.hideScreens(); game.setState('title'); game.showScreen('title'); });
 const t1 = await ev(() => ['btn-continue', 'btn-load'].map((id) => getComputedStyle(document.getElementById(id)).display));

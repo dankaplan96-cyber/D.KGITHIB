@@ -51,6 +51,10 @@ Pictures: `/tmp/claude-0/-home-user-D-KGITHIB/ee8386c5-a577-5abe-b3f0-c10324e7c3
 | 22 | Phone: Holomap | The title and the controls line lost their ends ("Inside: Twins…"). | They wrap on an upright phone (a short landscape window keeps one line). |
 | 23 | Phone: Load Game | The slot's place / time / date line lost its end. | Wraps on a narrow screen. |
 | 24 | Title | The disclaimer was faint over the bright fog. | A dark halo. |
+| 25 | HUD: goal panel (PT-5, PLAYTHROUGH-REPORT) | Over Zeelich's cloud sea, the desert's sand and the Hamalayi's snow the goal's words could not be read as the panel faded: words and box faded together, faint words over bright ground. (After the fade the panel is gone by design, CLAR-2; the pictures caught the 0.5 s fade under way: they are taken right after a game step, the CSS fade runs in real time.) | On the way out the words fade first (0.25 s) over the still-dark box, then the box (0.3 s); the LBA HUD's box is darker (0.72). No more text, no arrow; the way in is as before. |
+| 26 | Forced choices (`hud.openMenu`) | A choice that must be made showed Cancel, which only blinked the menu shut and open (chapter 3 now removes the button itself). | `openMenu(…, { forced: true })` (also through `game.openMenu`): no Cancel, Esc / B do nothing, an answer closes it. Other menus unchanged. Chapter 3 (a story file, not touched here) can pass the option instead of removing the button. |
+| 27 | HUD | The pause button stayed on screen in dialogue, the inventory and the Holomap, where it pauses nothing. | Hidden out of play. |
+| 28 | Game over | The scene showed through brightly behind "Twinsen is down". | The ending's darker backdrop. |
 
 Checked and left as they were (no fault found): the loading screen (MEA Studio, then the shots and a real progress
 bar), Save Game and Load Game (slot pictures, Latest tag, Delete beside each manual slot, empty slots dimmed on
@@ -67,7 +71,8 @@ read the equipment state (`hero.arms`, `combat.weapon`). A new piece of equipmen
 ## Tests
 - `tests/uipass.mjs` (new): Back / Esc on every screen (also with Pause rebound to O, Up rebound to U), rapid
   pause / Settings / back ×6, the mouse's one selection, Controls (first key in view at 1280×720, → across, a rebound
-  key shown at once, pad A / B), every settings row's line, the inventory's Close, New Game's confirmation (← →, Esc),
+  key shown at once, pad A / B), every settings row's line, the inventory's Close, the goal panel's fade (PT-5), a
+  forced choice, New Game's confirmation (← →, Esc),
   a phone (touch names, Inventory button, buttons aside in pause and inventory, the life bar clear of the pause
   button, a long message inside the window).
 - Changed: `tests/menus.mjs` and `tests/display.mjs` (Esc in the pause's Settings now returns to the pause menu; a

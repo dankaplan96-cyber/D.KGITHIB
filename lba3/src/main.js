@@ -2325,9 +2325,9 @@ class Game {
   }
 
   // a choice list (the story's travel menus); onPick(item) runs back in play
-  openMenu(titleKey, items, onPick) {
+  openMenu(titleKey, items, onPick, opts) {
     this.setState('shop');
-    this.hud.openMenu(titleKey, items, (it) => { this.setState('play'); onPick(it); }, () => this.setState('play'));
+    this.hud.openMenu(titleKey, items, (it) => { this.setState('play'); onPick(it); }, () => this.setState('play'), opts);   // (opts.forced: no Cancel: hud.js)
   }
 
   // ------------------------------------------------ combat hooks

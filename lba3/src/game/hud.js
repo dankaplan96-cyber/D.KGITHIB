@@ -397,6 +397,7 @@ export class HUD {
     const el = $('#shop');
     el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
     el.classList.add('goods');
+    this.shopForced = false;
     const coin = (cls = 'kc') => { const u = stage.thumb('coin', 64); return u ? `<img class="${cls}" src="${u}" alt="">` : '◆'; };
     const render = () => {
       const list = items(), h = this.game.hero;
@@ -430,17 +431,19 @@ export class HUD {
     render();
   }
   // a list of choices in the shop's panel (Hesk's glider): items [{key, note?, disabled?}]
-  openMenu(titleKey, items, onPick, onClose) {
+  // opts.forced (UI-PASS): a choice that must be made — no Cancel button, and Back (Esc, B) does nothing
+  openMenu(titleKey, items, onPick, onClose, opts = {}) {
     const el = $('#shop');
     el.dir = 'ltr';
     el.classList.remove('goods');
+    this.shopForced = !!opts.forced;
     const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
     const render = () => {
       el.innerHTML = `<h2>${t(titleKey)}</h2>` +
         items.map((it, i) => `<button class="item" data-i="${i}" ${it.disabled ? 'disabled' : ''}><span>${t(it.key)}</span><b>${it.note ? t(it.note) : ''}</b></button>`).join('') +
-        `<button class="leave">${t('menu_cancel')}</button>`;
+        (this.shopForced ? '' : `<button class="leave">${t('menu_cancel')}</button>`);
       el.querySelectorAll('.item').forEach((b) => b.addEventListener('click', () => { const it = items[+b.dataset.i]; if (it.disabled) return; el.classList.add('hidden'); this.shopOpen = false; onPick(it); }));
-      el.querySelector('.leave').addEventListener('click', close);
+      el.querySelector('.leave')?.addEventListener('click', close);
       this._shopFocus();
     };
     this.shopRender = render;
@@ -462,7 +465,7 @@ export class HUD {
     if (input.menu('up')) move(-1);
     if (input.menu('ok')) btns[this.shopSel]?.click();
     // Back: Esc (pause), the ball key as before, and B on a pad (as the menus' Back: main.js menuNav)
-    else if (input.menu('back') || input.pressed('ball')) this.shopClose();
+    else if ((input.menu('back') || input.pressed('ball')) && !this.shopForced) this.shopClose();
   }
 
   // ---------------- maps (MAP-1) ----------------
