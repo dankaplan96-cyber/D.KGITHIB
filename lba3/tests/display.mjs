@@ -50,10 +50,13 @@ for (const [w, h] of [[1920, 1080], [1366, 768], [1280, 720], [1024, 768], [800,
       if (!adv || m.hasAdv) sets.push(m);
     }
   }
-  await page.keyboard.press('Escape'); await ev(() => { game.setAdv = {}; game.step(0.1); });   // (Esc in the pause's settings resumes, as before)
+  // (UI-PASS: Esc in the pause's settings returns to the pause menu; Esc there resumes)
+  await page.keyboard.press('Escape'); await ev(() => { game.setAdv = {}; game.step(0.1); });
+  const escBack = await ev(() => [game.screen, game.state]);
+  await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
   const bad = sets.filter((m) => !m.inside || m.cut.length || m.screenScroll > 1 || (!m.adv && m.pageScroll > 1));
   check(`${w}×${h}: settings pages fit with Back, no text cut, no scrolling unless Advanced is open`, !bad.length, bad);
-  check(`${w}×${h}: Esc from the settings resumes play`, await ev(() => game.state === 'play'), await ev(() => game.state));
+  check(`${w}×${h}: Esc from the settings returns to the pause menu, Esc again resumes play`, escBack[0] === 'pause' && await ev(() => game.state === 'play'), { escBack, now: await ev(() => game.state) });
   check(`${w}×${h}: the canvas fills the window`, Math.abs(play.canvas[0] - w) <= 2 && Math.abs(play.canvas[1] - h) <= 2, play.canvas);
   check(`${w}×${h}: HUD inside the window, no clipped text (in play and in dialogue)`, !play.off.length && !play.clipped.length && !dlg.off.length && !dlg.clipped.length, { play, dlg });
   check(`${w}×${h}: the pause menu fits`, pm[0], pm);
@@ -67,6 +70,7 @@ const rmRow = await ev(() => getComputedStyle(document.querySelector('#settings 
 await page.emulateMedia({ reducedMotion: 'no-preference' });
 const rmOff = await ev(() => getComputedStyle(document.querySelector('#settings .set-row.sel')).animationName);
 check('reduced motion: the selected menu entry and settings row don\'t animate (they do without it)', rmPause === 'none' && rmRow === 'none' && rmOff === 'fire', { rmPause, rmRow, rmOff });
+await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
 await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
 const fails = done(errs);
 await browser.close();

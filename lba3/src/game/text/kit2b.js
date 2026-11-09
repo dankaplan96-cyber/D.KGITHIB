@@ -6,7 +6,7 @@ Object.assign(STR.en, {
   wp_fork: 'Singing Fork', wp_line: 'Esmer Line', wp_heatflask: 'Heat Flask',
   it_fork: "Ilka's Singing Fork", itd_fork: "The dig's tool for finding crystals. Attack: strike it. Warm crystal within reach rings: a crust cracks, a sleeping crystal wakes and glows, a stuck crystal wheel turns. Crystal mites and crawlers within 6 m stagger for 1.5 s; a sentry's crystal-celled guard drops for one hit. 5 s to fall quiet. Crystal only.",
   it_line: 'Esmer Line', itd_line: "An Esmer rope-maker's sticky cord on a hand reel. Attack: cast it, 14 m at most. A cord ring reels you across a gap or up to a ledge; a loose thing comes to you; a light enemy is hauled in; a sentry's shield is yanked aside. It holds only to rings, loose things and light enemies.",
-  it_heatflask: 'Heat Flask', itd_heatflask: "Baldino's drawing, Tashi's smithing, a project heat cell inside. E at a heat post, a steam vent or a fire draws its heat. Attack: let it out in front. It thaws and melts, and burns enemies within 2.5 m for 2 (ice creatures 4). One charge; the heat fades in 90 s.",
+  it_heatflask: 'Heat Flask', itd_heatflask: "Baldino's drawing, Tashi's smithing, a project heat cell inside. {e} at a heat post, a steam vent or a fire draws its heat. Attack: let it out in front. It thaws and melts, and burns enemies within 2.5 m for 2 (ice creatures 4). One charge; the heat fades in 90 s.",
   p_draw: 'Draw heat',
   a_sh_line: 'Esmer line: a sticky cord on a hand reel',
   // ---- the singing fork (chapter 4)
@@ -47,7 +47,7 @@ Object.assign(STR.en, {
   e2b_tashi_3: 'Hold it to anything hot and it drinks the heat. Let it out where you need it.',
   e2b_tw_tashi: 'On a frozen winch, say?',
   e2b_tashi_4: 'Just so. The crack by the falls steams all winter now. Be quick: the heat fades in a minute and a half.',
-  e2b_toast_flaskhow: 'Heat Flask: E at something hot draws its heat. Choose it on the wheel ({w}); {k}: let it out',
+  e2b_toast_flaskhow: 'Heat Flask: {e} at something hot draws its heat. Choose it on the wheel ({w}); {k}: let it out',
   e2b_crack_look: "Warm air hisses out of a crack in the rock. The mountain's own heat.",
   e2b_toast_drawn: 'The flask is full of heat: {n} s before it fades',
   e2_toast_cold: 'The flask is cold. Draw heat at a heat post, a steam vent or a fire',

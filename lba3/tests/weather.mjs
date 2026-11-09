@@ -228,8 +228,8 @@ const off = await ev((LOOK) => { const G = game, L = new Function('return (' + L
 await ev(() => { game.pause(); game.showScreen('settings'); game.setTabTo('display'); });
 await page.click('#settings .seg[data-setting="weather"] button[data-v="on"]');
 const on = await ev(() => { const G = game; G.act('back'); G.act('resume'); G.step(0.5); return { set: G.settings.weather, on: G.weather.enabled(), info: G.weather.info() }; });
-check('Settings → Display: "Weather and light changes" On/Off; Off is today\'s look at once (stored), On starts fresh (clear, noon)',
-  ui.was.wx && ui.was.motes && ui.label === 'Weather and light changes' && off.set === 'off' && off.stored === 'off' && !off.on && JSON.stringify(off.look) === JSON.stringify(def.look)
+check('Settings → Display: "Weather and Light" On/Off; Off is today\'s look at once (stored), On starts fresh (clear, noon)',
+  ui.was.wx && ui.was.motes && ui.label === 'Weather and Light' && off.set === 'off' && off.stored === 'off' && !off.on && JSON.stringify(off.look) === JSON.stringify(def.look)
   && on.set === 'on' && on.on && on.info.state === 'clear' && on.info.light === 'noon', { ui, off, on });
 const caps = await ev(() => {
   const G = game, W = G.weather, e = G.env, out = {};

@@ -126,7 +126,7 @@ export class HUD {
     if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
     // the swap key and the last weapon: while the pill shows a change, not through a whole fight
     const alt = (this.weaponShowT || 0) > 0 && h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
-    const altTxt = alt ? `${keyLabel(keyFor('swap'))}: ${t('wp_' + alt)}` : '';
+    const altTxt = alt ? `${this.key('swap')}: ${t('wp_' + alt)}` : '';   // (UI-PASS: the swap key as in use: LB on a pad, ⇄ on touch)
     if (this._alt !== altTxt) { this._alt = altTxt; el.querySelector('.alt').textContent = altTxt; }
     const r = el.querySelector('.ready');
     const ballOut = h.hasBall && !g.ball.ready;
@@ -267,6 +267,7 @@ export class HUD {
   // play, updatePlay sets the prompt again on its first frame.
   busy(on) {
     this.el.classList.toggle('busy', on);
+    document.body.classList.toggle('hud-busy', on);   // (UI-PASS: the touch buttons step aside too: css)
     if (!on) return;
     this.prompt(null);
     if (this._jetOn) this.jet({ show: false });
@@ -302,7 +303,7 @@ export class HUD {
   }
 
   toast(key, vars, ms = 2300) {
-    const msg = t(key, vars);
+    const msg = t(key, { e: this.key('interact'), ...vars });   // (UI-PASS: {e} in any message is the talk / use key in use)
     // the same words already up (a repeated action), or the goal the objective panel shows: not again
     const up = [...this.toastEl.children].find((e) => e.textContent === msg && !e.classList.contains('out'));
     if (up || (this.objShown && msg === this._goal)) return;
@@ -396,6 +397,7 @@ export class HUD {
     const el = $('#shop');
     el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
     el.classList.add('goods');
+    this.shopForced = false;
     const coin = (cls = 'kc') => { const u = stage.thumb('coin', 64); return u ? `<img class="${cls}" src="${u}" alt="">` : '◆'; };
     const render = () => {
       const list = items(), h = this.game.hero;
@@ -429,17 +431,19 @@ export class HUD {
     render();
   }
   // a list of choices in the shop's panel (Hesk's glider): items [{key, note?, disabled?}]
-  openMenu(titleKey, items, onPick, onClose) {
+  // opts.forced (UI-PASS): a choice that must be made — no Cancel button, and Back (Esc, B) does nothing
+  openMenu(titleKey, items, onPick, onClose, opts = {}) {
     const el = $('#shop');
     el.dir = 'ltr';
     el.classList.remove('goods');
+    this.shopForced = !!opts.forced;
     const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
     const render = () => {
       el.innerHTML = `<h2>${t(titleKey)}</h2>` +
         items.map((it, i) => `<button class="item" data-i="${i}" ${it.disabled ? 'disabled' : ''}><span>${t(it.key)}</span><b>${it.note ? t(it.note) : ''}</b></button>`).join('') +
-        `<button class="leave">${t('menu_cancel')}</button>`;
+        (this.shopForced ? '' : `<button class="leave">${t('menu_cancel')}</button>`);
       el.querySelectorAll('.item').forEach((b) => b.addEventListener('click', () => { const it = items[+b.dataset.i]; if (it.disabled) return; el.classList.add('hidden'); this.shopOpen = false; onPick(it); }));
-      el.querySelector('.leave').addEventListener('click', close);
+      el.querySelector('.leave')?.addEventListener('click', close);
       this._shopFocus();
     };
     this.shopRender = render;
@@ -457,11 +461,11 @@ export class HUD {
   shopNav(input) {
     const btns = [...document.querySelectorAll('#shop button')];
     const move = (d) => { this.shopSel = (this.shopSel + d + btns.length) % btns.length; if ($('#shop').classList.contains('goods')) this.shopRender(); else this._shopFocus(); this.game.audio.play('blip'); };
-    if (input.pressed('down')) move(1);
-    if (input.pressed('up')) move(-1);
-    if (input.pressed('interact') || input.pressed('action') || input.pressed('recenter')) btns[this.shopSel]?.click();
+    if (input.menu('down')) move(1);
+    if (input.menu('up')) move(-1);
+    if (input.menu('ok')) btns[this.shopSel]?.click();
     // Back: Esc (pause), the ball key as before, and B on a pad (as the menus' Back: main.js menuNav)
-    else if (input.pressed('pause') || input.pressed('ball') || (input.lastDevice === 'pad' && input.pressed('dodge'))) this.shopClose();
+    else if ((input.menu('back') || input.pressed('ball')) && !this.shopForced) this.shopClose();
   }
 
   // ---------------- maps (MAP-1) ----------------
@@ -664,7 +668,7 @@ export class HUD {
   // input and drawing, each frame the map is open; true when it closes
   holomapUpdate(input, dt) {
     if (this._closeReq) { this._closeReq = false; return true; }
-    if ((input.pressed('map') && input.lastDevice !== 'pad') || input.pressed('pause') || (input.lastDevice === 'pad' && input.pressed('dodge'))) return true;   // (on a pad LT opens it and zooms out in it: B or Menu close)
+    if ((input.pressed('map') && input.lastDevice !== 'pad') || input.menu('back')) return true;   // (on a pad LT opens it and zooms out in it: B or Menu close)
     const c = this.holo;
     if (Math.abs(c.getBoundingClientRect().width - this._holoCss) > 1) this._holoSize();
     const w = this._where(), region = w.region, B = this.mapBase(region), W = c.width, H = c.height;

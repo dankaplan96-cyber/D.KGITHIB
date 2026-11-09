@@ -12,6 +12,7 @@ node tests/chapter1.mjs        # chapter 1 end to end, with save → reload in t
 node tests/chapter2.mjs        # chapter 2 end to end, incl. the confiscated-plan setback
 node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt save recovery
 node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue = newest / Delete / New Game keeps slots / full storage
+node tests/uipass.mjs         # UI-PASS: Back / Esc the same on every screen (also with Pause or Up rebound), Controls: one list from the keys in use (first key in view, B gives up a wait), every settings row says what it does, the inventory's Close, a phone's touch buttons (aside in menus, an Inventory button), long messages wrap
 node tests/solidnpc.mjs       # SOLID-NPC: Twinsen never walks into people (Grobo, Sphero, story people, walking residents), pets or the small props; residents sit on a bench's seat; SHOTS=dir for the bench captures
 node tests/solidenemy.mjs     # SOLID-ENEMY: enemies are solid as in LBA2: every kind stops him (head on) and slides him (off centre), every attack still connects from there, a drone over his head is walked under, a beaten enemy is not solid, lunges never push him into a wall
 node tests/walkers.mjs        # WORLD-LIFE: the residents who walk round Citadel, Zeelich's street and Kesh: routes, benches, chats, avoidance, stuck fallback, talk, LOD cost
