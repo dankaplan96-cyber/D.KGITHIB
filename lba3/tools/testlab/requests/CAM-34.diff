@@ -1,0 +1,61 @@
+diff --git a/lba3/src/game/asylumhostel.js b/lba3/src/game/asylumhostel.js
+index 82fca174..bf5d4519 100644
+--- a/lba3/src/game/asylumhostel.js
++++ b/lba3/src/game/asylumhostel.js
+@@ -34,6 +34,7 @@ import * as THREE from 'three';
+ import { Kit, MAT, rbox, plane, cyl, sphere, lathe, slab, canvasTex, pottedPlant, locker, rug, stove, dresser, table, bench, floorLamp, pot, kettle, plate,
+   ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand, bookcase, jar, barrel } from './props.js';
+ import { tileTex, cm, latticeM } from './props-esmer.js';
++import { occOf } from '../engine/occlude.js';
+ 
+ export const ASYLUM_FRONT = { x: -26.5, z: -50.58, a: 0 };   // (the fort's south wall, outer face at its foot; out = +z)
+ 
+@@ -60,7 +61,8 @@ export const plaqueTex = (lines, { w = 512, h = 320 } = {}) => canvasTex(w, h, (
+ // A brick portico against the fort's south wall: two piers and a lintel round a deep doorway (the doors 1.3 m back),
+ // a plaster plinth, pilasters, architrave and a thick cornice, a pediment with a slate roof and an Esmer tile roundel;
+ // the hostel's enamel sign on the lintel, two brass lanterns (no lights: emissive glass), two potted plants from home.
+-export function buildAsylumFront(scene, physics) {
++// (world: Citadel's world, for the camera's own volume over the cornice and the roof — CAM-34; none: not added)
++export function buildAsylumFront(scene, physics, world = null) {
+   const F = ASYLUM_FRONT, gy = physics.groundAt(F.x, F.z + 2.2, 40);
+   const g = new THREE.Group(); g.name = 'asylum-front'; g.position.set(F.x, gy, F.z); g.rotation.y = F.a; scene.add(g);
+   const k = new Kit(g);
+@@ -117,6 +119,12 @@ export function buildAsylumFront(scene, physics) {
+   physics.add({ type: 'box', x: F.x, z: wz(zc + 0.04), hw: ow / 2 + 0.05, hd: D / 2 + 0.08, rot: 0, top: gy + H + 1.4, bottom: gy + oh, noStand: true });   // (noStand: nothing is put on its top)
+   physics.add({ type: 'box', x: F.x, z: wz(1.06), hw: ow / 2 + 0.5, hd: 0.86, rot: 0, top: gy + 0.13 });
+   for (const s of [-1, 1]) physics.add({ type: 'cyl', x: wx(s * (ow / 2 + 0.95)), z: wz(zf + 0.55), r: 0.3, top: gy + 0.5, noStand: true });
++  // (CAM-34: the cornice and the pediment's slate roof as the camera's own volume — occlude.js camOnly, as island.js's
++  //  beam pad arch —: they stand 0.2–0.5 m out past the piers' and the lintel's boxes, and the Follow camera grazed
++  //  them leaving the door. The camera keeps its spot out of it; the sight line and the view's rise pass through, so
++  //  the shot never climbs over the portico for it. The cornice's width and depth, from 0.2 m under its foot to 1.5 m
++  //  over it: the pediment and its roof to the ridge)
++  if (world) occOf(world).add({ kind: 'box', camOnly: true, x: F.x, z: wz(zc + 0.25), hw: (W + 0.55) / 2, hd: (D + 0.5) / 2, y0: gy + H - 0.2, y1: gy + H + 1.5, name: 'hostel portico cornice' });
+   return { door: { x: F.x, z: wz(z0 + 1.05) }, out: { x: F.x, z: wz(zf + 1.35), a: F.a } };
+ }
+ 
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index afbe9072..26f87aaa 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -750,7 +750,7 @@ export function buildLba1Places(scene, physics) {
+ }
+ // LAZY-REGIONS (src/game/regions.js): the asylum's two doors stand on Citadel (built with it); the asylum, and the
+ // temple's maze and halls together, are built the first time they are needed
+-export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); FRONT = buildAsylumFront(scene, physics); } }
++export function buildLba1Door(scene, physics, world = null) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); FRONT = buildAsylumFront(scene, physics, world); } }   // (world: CAM-34's camera volume)
+ export function buildLba1Asylum(scene, physics) {
+   const A = LBA1_AT, out = {};
+   if (hasLba1Room('asylum')) {
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index e732a982..eb3dc9bb 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -286,7 +286,7 @@ class Game {
+       timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
+       // (the wizard's tent and the asylum's block-house stand on Citadel; their rooms are built when needed)
+       timed('wizards', () => buildWizardTent(S, P, this.world));
+-      timed('lba1', () => buildLba1Door(S, P));
++      timed('lba1', () => buildLba1Door(S, P, this.world));
+       timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14, DOORS-LBA2: the lower town's and the terrace's hatches)
+       bar.measured(BUILD_REF.town, performance.now() - t0);
+     }
