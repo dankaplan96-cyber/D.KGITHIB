@@ -2442,11 +2442,8 @@ class Game {
             const pr = this.regions.probe(() => this.story.exitTo(e.to)), ek = e.to;
             if (pr.error && !pr.misses.size) throw pr.error;
             this.walkNext = true;
-            // (CAM-ROOFEDGE: out into an outdoor area — Desert Island, Zeelich and its isles, the Hamalayi — a step clear
-            //  of the door too, Game.doorStep, as onto Citadel's street)
-            const out = (to) => (this.rooms[to.room]?.outdoor ? this.doorStep(to) : to);
-            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, out(to), true); else this.exitRoom(this.doorStep(to), true); }, [...pr.misses]);
-            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, out(to)); else this.exitRoom(this.doorStep(to)); }
+            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, to, true); else this.exitRoom(this.doorStep(to), true); }, [...pr.misses]);
+            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(this.doorStep(to)); }
             this.walkNext = false;   // (a story exit may have started its own scene instead)
           } else this.exitRefused = { e, room: this.room };
           this.doorCool = 1.5;
