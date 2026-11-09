@@ -486,7 +486,7 @@ export class Tools {
     this.hauls.push({ e, left: Math.max(0, d - LINE.pullTo) });
     e.kb?.set(0, 0);
     // (a bite or a shot being wound up is cut short; it needs a moment before the next)
-    if (e.state === 'windup' || e.state === 'lunge') { e.state = 'chase'; e.stateT = 0; if ('bit' in e) e.bit = false; if (e.aimLine) e.aimLine.visible = false; g.combatDir?.done(e); }
+    if (e.state === 'windup' || e.state === 'lunge' || e.state === 'slidewind' || e.state === 'slide') { e.state = 'chase'; e.stateT = 0; if ('bit' in e) e.bit = false; if (e.aimLine) e.aimLine.visible = false; e.endSlide?.(); g.combatDir?.done(e); }
     if ('coolT' in e) e.coolT = Math.max(e.coolT || 0, 0.9);
     this.stats.hauled++;
     this.sound('reel');

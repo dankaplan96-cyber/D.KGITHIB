@@ -78,7 +78,9 @@ fight; Aggressive mode's Space still attacks with the same moves.
   (the legs step sideways or backwards while aiming). The controls are free again at 0.36 s; the follow-through
   runs on to ~0.62 s on the layer and blends into the walk or idle. The ball leaves the hand at 0.16 s on the
   same clock as the pose. Charging allows a slow aimed walk (×0.42). How each move is posed: "Twinsen's combat animation" below.
-- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3). Enemies
+- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3), and a second one
+  starts its wind-up at least 0.7 s after the first (Gentle 1.0, Hard 0.45: COMBAT-2), so two shots or blows never land
+  closer together than one dodge after another can take them. Enemies
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,
   never enemy health.
@@ -434,6 +436,7 @@ active frames). Not done: how the start of a walk reads by eye (its stance foot 
 | Enemy | Role | Tell | Opening | Hit reaction |
 |---|---|---|---|---|
 | Crystal mite | cautious close-range | rears up, crystals flare (0.5 s) | sits low for 0.6 s after the lunge | always staggers |
+| Ice mite (the Hamalayi, ch. 6; COMBAT-2) | a crystal mite with a frost slide from 2.6–6.2 m | crouches nose-down, crystals white; a pale streak on the snow shows the line (0.75 s; it follows him, then holds still and turns white for the last 0.3 s) | spins on the ice for 1.0 s at the slide's end | always staggers; a hit cuts the slide short |
 | Warden drone | ranged, mechanical | prongs crackle, a red aim line brightens (0.75 s); needs a clear shot | cooldown after firing | staggers, but steadies after two staggers in 2 s; the pulse stuns it |
 | Sentry automaton | protected | pulls its shield back, red eye (0.7 s) | shield down for 1.1 s after its bash | blocks frontal ball and sword (clang); heavy strike, charged ball or pulse breaks the guard |
 | Crystal crawler | heavy, controls space | rears, a ring spreads on the ground (1 s) | 1.3 s after the slam | only heavy hits stagger it; dodge or leave the ring (being airborne also avoids it) |
@@ -552,7 +555,7 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
   crystal mites.
 - Ch. 4 dig: mites in the trench.
 - Ch. 5 valve hall: drones among cover.
-- Ch. 6 lift: the rope, then three cautious mites.
+- Ch. 6 lift: the rope, then three ice mites (they stir one after another; their frost slide: "Fair fights" below).
 - Ch. 7 glacier: the heavy drone.
 - Ch. 10 Desert Island: a lone sentry at the post gate, then three drones at the bore.
 - Ch. 10 Hamalayi ridge: a lone crystal crawler, then two mites by the dome.

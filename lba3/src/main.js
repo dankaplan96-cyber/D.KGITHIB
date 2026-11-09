@@ -86,7 +86,7 @@ const CHILD_SCREENS = new Set(['settings', 'controls', 'confirmnew', ...SLOT_SCR
 // the states that count as play time (not the title, the pause menus, game over or the ending screen)
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
-const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
+const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn', 'slidewind', 'slide', 'skid']);
 export const VERSION = '0.49.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.

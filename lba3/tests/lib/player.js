@@ -204,6 +204,8 @@
       keys.delete('ArrowLeft'); keys.delete('ArrowRight'); keys.delete('ArrowUp');
       if (diff > 0.1) keys.add('ArrowLeft'); else if (diff < -0.1) keys.add('ArrowRight');
       if (Math.abs(diff) < (h.speed > 3.5 ? 0.22 : 0.32)) keys.add('ArrowUp');
+      // (P.smart: walking under fire, he still dodges a bolt about to hit or a blow about to land: P.evade)
+      if (P.smart && P.evade()) { t += DT; continue; }
       const hp0 = h.hp; G.step(DT); t += DT;
       if (h.hp < hp0) P.note(`hurt ${hp0}→${h.hp} at (${h.pos.x.toFixed(1)}, ${h.pos.y.toFixed(1)}, ${h.pos.z.toFixed(1)}) near: ${G.enemies.filter((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 10).map((e) => e.id + ':' + e.state).join(',') || 'nobody'} ${h.sliding ? 'sliding' : ''}`);
       if (t - lastP.t > 2.5) {
@@ -350,15 +352,65 @@
       if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge a bolt'); continue; }
       // (BOSS-SHAPE: the overloaded guardian's dive: once its ring on the deck stops under him, step back out of it with
       // the dodge — he faces the guardian, which slides over the ring — as many times as it takes)
+      // (P.smart, COMBAT-2: a close enemy's wind-up — the mite rearing, the dog crouched, the baton up, the shield drawn
+      // back, the crawler's ring — read as a player reads it: the dodge pressed just before the blow, so its invulnerable
+      // hop meets it; once per wind-up)
+      const mt = P.smart && P.meleeThreat();
+      if (mt && h.combat?.canDodge?.() && h.hurtT <= 0 && h.actT <= 0) { mt._dodged = mt._wind; keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note(`dodge ${mt.id}'s ${mt.state}`); continue; }
       const dv = G.enemies.find((e) => e.state === 'lock' && e.spot && e.def?.kind === 'guardian');
       if (dv && Math.hypot(h.pos.x - dv.spot.x, h.pos.z - dv.spot.z) < 2.5 && h.combat?.canDodge?.() && h.hurtT <= 0 && h.actT <= 0) { keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge out of the dive\'s ring'); continue; }
       G.step(DT);
     }
   };
+  // one frame's dodge if a bolt is about to hit him or a close blow about to land (P.smart's walks: P.go); true if it dodged
+  P.evade = () => {
+    const h = hero();
+    if (!h.combat?.canDodge?.() || h.hurtT > 0 || h.actT > 0) return false;
+    const inbound = G.bolts?.list?.find((b) => { if (b.dodged) return false; const p = b.m.position, dx = h.pos.x - p.x, dz = h.pos.z - p.z, d = Math.hypot(dx, dz); return d < 2.4 && (b.v.x * dx + b.v.z * dz) > 0; });
+    const mt = !inbound && P.meleeThreat();
+    if (!inbound && !mt) return false;
+    if (inbound) inbound.dodged = true; else mt._dodged = mt._wind;
+    keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX');
+    P.note(inbound ? 'dodge a bolt (walking)' : `dodge ${mt.id}'s ${mt.state} (walking)`);
+    return true;
+  };
+  // the close enemy whose blow is about to land (its wind-up nearly over, him in its reach), or null. The tells' lengths are
+  // the enemies' own (enemies.js, guards.js, guarddog.js), × the difficulty's wind-up factor
+  const TELL = { mite: [0.5, 2.3], gdog: [0.5, 3.0], guard: [0.55, 2.5], guardG: [0.55, 2.5], fclone: [0.55, 2.5], sentry: [0.7, 2.8], crawler: [1.0, 3.6] };
+  P.meleeThreat = () => {
+    const h = hero(), k = G.combatDir?.diff?.windup ?? 1;
+    for (const e of G.enemies) {
+      if (!e.alive || !e.present) continue;
+      const wind = e.state === 'windup' || e.state === 'slidewind' || e.state === 'slide';
+      if (!wind) { e._wind = null; continue; }
+      if (e._wind == null) e._wind = G.time;
+      if (e._dodged === e._wind) continue;
+      const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
+      // (an ice mite's slide: dodged as it arrives, from its streak's line; not while it only crouches)
+      if (e.state === 'slidewind') continue;
+      if (e.state === 'slide') { if (d < 2.4 && !e.bit) return e; continue; }
+      const T = TELL[e.def?.kind] || (e.slamR ? TELL.crawler : null);
+      if (!T) continue;
+      if (d < T[1] && e.stateT > T[0] * k - 0.09) return e;
+    }
+    return null;
+  };
+  // a heart or flask lying close by that he needs now (hurt, or the magic nearly gone), not beside an enemy about to strike
+  P.needed = (r = 8) => {
+    const h = hero();
+    return G.pickups.list.filter((q) => q.mesh.visible && (!q.where || q.where === G.where()) && !q.fly && G.canTake(q)
+      && ((q.type === 'heart' && h.hp <= h.maxHp * 0.7) || (q.type === 'flask' && h.mp < 2))
+      && Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z) < r && Math.abs(q.pos.y - h.pos.y) < 2
+      && !G.enemies.some((e) => e.alive && e.present && (e.state === 'windup' || e.state === 'aim') && e.pos.distanceTo(q.pos) < 2.5))
+      .sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0] || null;
+  };
   P.fight = ({ group = null, maxT = 120, range = 7, melee = false, threatsOnly = false, minHp = 0 } = {}) => {
     const h = hero(); let t = 0;
     const alive = () => threatsOnly ? P.threats(12) : G.enemies.filter((e) => e.alive && e.present && !((P.ignore.get(e) ?? -1) > G.time) && (group ? e.group === group : e.pos.distanceTo(h.pos) < 30));
     while (t < maxT && alive().length && !h.dead && !(minHp && h.hp <= minHp)) {
+      // (P.smart: a heart or a flask dropped close by while he is hurt or out of magic: he takes it first, as a player would)
+      const need = P.smart && P.needed();
+      if (need) { const r0 = P.go(need.pos.x, need.pos.z, { tol: 0.45, maxT: 3, fight: false }); t += r0.t || 0.3; P.gstep(0.1); P.note(`fight: took a ${need.type} (hp ${h.hp} mp ${h.mp})`); continue; }
       const e = alive().sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0];
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
       // (no path to it — behind a fence, below a cliff: leave it, as a player would, rather than chase it off an edge)
@@ -375,6 +427,19 @@
       const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
       const ahp0 = aimed.hp;
       // the ball can't get at it (behind something) but the sword is in hand: walk up and strike, as a player would
+      // (P.smart: armour the ball can't get through — a Grobo guard, a trooper, his magic spent so no charge — the fists' kick
+      // can: jab, jab, kick, started in its opening)
+      const fists = P.smart && !h.hasSword && (aimed.armour || 0) > Math.max(1, h.magicLevel) && h.mp < 1;
+      if (fists) {
+        const open = () => aimed.state === 'recover' || aimed.state === 'hurt' || aimed.state === 'chase' && aimed.coolT > 0.3;
+        for (let w = 0; w < 4 / DT && aimed.alive && !open(); w++) { P.gstep(DT); t += DT; }
+        P.go(aimed.pos.x, aimed.pos.z, { tol: 1.15, maxT: 3, fight: false }); P.face(aimed.pos.x, aimed.pos.z, 1);
+        if (h.combat?.weapon !== 'fists') P.tap('KeyR', 0.1);
+        const hp1 = aimed.hp; for (let k = 0; k < 3 && aimed.alive; k++) { P.tap('KeyK', 0.05); P.gstep(0.28); }
+        P.gstep(0.3); t += 1.3; P.note(`fight ${aimed.id}: fists (jab, jab, kick) hp ${hp1}→${aimed.hp} me ${h.hp}`);
+        if (aimed.hp === hp1) { aimed._miss = (aimed._miss || 0) + 1; } else aimed._miss = 0;
+        continue;
+      }
       const close = melee || (h.hasSword && (e._miss || 0) >= 2);
       if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); if (h.combat?.weapon !== 'sword') P.tap('KeyR', 0.1); }
       if (close) { P.tap('KeyK', 0.35); P.gstep(0.3); P.tap('KeyK', 0.35); t += 1.0; }
@@ -388,11 +453,21 @@
       // a wasted throw: nothing was hit, neither this enemy nor the one the game aimed at instead (both behind a
       // fence the ball can't pass, say). It counts for both, so after a few a player stops throwing and walks on.
       const wasted = e.hp === hp0 && (close || aimed === e || aimed.hp === ahp0);
+      // (P.smart: wasted on a chain-link fence between them — the ball stops at it — he walks round to it, through the gate,
+      // as a player would, rather than throwing on)
+      if (wasted && P.smart && !close && G.physics.ballFenceBetween(h.pos.x, h.pos.y + 1.35, h.pos.z, e.pos.x, e.pos.y + (e.aimY ?? 0.6), e.pos.z)) {
+        const fenced = () => G.physics.ballFenceBetween(h.pos.x, h.pos.y + 1.35, h.pos.z, e.pos.x, e.pos.y + (e.aimY ?? 0.6), e.pos.z);
+        const r1 = P.go(e.pos.x, e.pos.z, { tol: 1.2, maxT: 10, fight: false, stopWhen: () => !fenced() && Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 6 }); t += r1.t || 0.5; P.note(`fight: ${e.id} behind a fence: walked round (${r1.r})`);
+        if (G.state !== 'play') P.settle();
+        continue;
+      }
       if (wasted) for (const q of aimed === e || close ? [e] : [e, aimed]) { q._miss = (q._miss || 0) + 1; if (q._miss >= 6) { q._miss = 0; P.ignore.set(q, G.time + 25); P.note(`fight: ${q.id} unreachable from here, leaving it`); } }
       else e._miss = 0;
       P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
       if (G.state !== 'play') P.settle();
     }
+    // (P.smart: the fight over, what the beaten dropped is picked up when it is needed — a heart while hurt, a flask)
+    if (P.smart && !h.dead && G.state === 'play' && !alive().length && (h.hp < h.maxHp || h.mp < h.mpMax)) P.grab(10);
     return { left: alive().length, dead: h.dead, hp: h.hp, t: +t.toFixed(1) };
   };
 

@@ -57,6 +57,8 @@ Object.assign(STR.en, {
   c10_drones: 'Drones! Three of them, coming in low over the post.',
   c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. There's a heart by your feet. Breathe, then take them one at a time.",
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
+  c10_ilka_water: "You look like the desert chewed you up. Here, my canteen: the vent's water, clean and warm.",
+  c10_toast_water: "Ilka's canteen: life restored",
   c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
   c10_dallan_stand: "Bren! Rifle down. The council has ordered the bore reversed, and you were on my roster for a year. Back inside.",
   c10_guard_stand: "The guard looks from Dallan to the bore. He lowers his rifle and walks back to his cabin.",

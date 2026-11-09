@@ -35,6 +35,10 @@ export const COMBAT = {
   hitStop: { light: 0.045, heavy: 0.085 },
   pulse: { range: 4.8, cone: 0.75, recharge: 5.0, stun: 2.6, shieldDown: 3.2 },
   tokens: { gentle: 1, normal: 2, hard: 3 },
+  // COMBAT-2: s between two enemies starting their wind-ups (with another one still holding its turn): two shots or blows
+  // never land closer together than the dodge can take one after the other (its 0.36 s + 0.28 s cooldown). Measured at the
+  // Zeelich depot: two drones and a guard's rifle put bolts 0.2–0.6 s apart, a dodge for the first left him in the second
+  stagger: { gentle: 1.0, normal: 0.7, hard: 0.45 },
   grace: 1.2,                // s after regaining control before any enemy may start an attack
   difficulty: {
     gentle: { dmg: 0.5, windup: 1.3, cool: 1.35 },
@@ -89,7 +93,7 @@ export class InputBuffer {
 
 // ------------------------------------------------------------------ the attack director
 export class CombatDirector {
-  constructor(game) { this.game = game; this.holders = new Set(); this.grace = 0; }
+  constructor(game) { this.game = game; this.holders = new Set(); this.grace = 0; this.lastStart = -1e9; }
   get diff() { return COMBAT.difficulty[this.game.settings.difficulty] || COMBAT.difficulty.normal; }
   update(dt) {
     this.grace = Math.max(0, this.grace - dt);
@@ -101,7 +105,9 @@ export class CombatDirector {
     if (this.holders.has(e)) return true;
     const max = COMBAT.tokens[this.game.settings.difficulty] ?? 2;
     if (this.holders.size >= max) return false;
-    this.holders.add(e); return true;
+    const now = this.game.time ?? 0, gap = COMBAT.stagger[this.game.settings.difficulty] ?? 0.7;
+    if (this.holders.size && now - this.lastStart < gap) return false;   // (another is winding up: wait a beat)
+    this.holders.add(e); this.lastStart = now; return true;
   }
   done(e) { this.holders.delete(e); }
   calm(t = COMBAT.grace) { this.grace = Math.max(this.grace, t); }
