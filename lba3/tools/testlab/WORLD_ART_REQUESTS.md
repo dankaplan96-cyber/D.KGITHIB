@@ -4170,7 +4170,6 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 
 - **Pushed:** `expansion/ballastra` at 973b2fc3 (three commits on 28deb808); the pictures are on that branch in `docs/future/world/W-3/`.
 
-<<<<<<< ours
 - **Accepted** by the user, 9.11.2026: "Looks good" (on the GPU pictures: the rafts dry and green, the arrival plaza, the wheel and the kiln). The spec says so on `expansion/ballastra`. W-4 waits for the coordinator to order it.
 
 ## CAM-34 · withdrawn: the user prefers the camera straight behind at the hostel door · the laptop, 9.11.2026
@@ -4186,7 +4185,7 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
     volume starting at the spring line, and the proposal is in the CAM-34 note above. The user's "chaotic" may well cover
     that too: please treat calmer camera motion as the goal there;
   - OTRINGAL-37 and EXP-MERGE-35-base, which are unaffected and apply on their own.
-=======
+
 ## ZOE-LOOK-38 · Zoé toward a softer, more expressive animated look (a candidate for the user) · the laptop, 9.11.2026
 
 Order 38. Baseline: origin `568a05ed`; `git apply --check` also clean on origin `68315019`. Diff:
@@ -4201,4 +4200,3 @@ Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go t
   3.6 cm or more clear of her body in 13 poses. solidnpc, chapter1, zoe-resume, cast-rounds and story-journeys PASS.
 - **Waiting for the user's decision** before it is applied (and before Twinsen gets the same treatment). The square's statue
   takes the new Zoé too.
->>>>>>> theirs
