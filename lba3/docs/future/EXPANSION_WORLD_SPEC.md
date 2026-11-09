@@ -465,7 +465,7 @@ level change at a distance.
 
 ---
 
-## W-3 · The Water Gardens · **Ordered** (the coordinator, 7.11.2026, after the user approved the expansion so far: W-1 and W-2 accepted)
+## W-3 · The Water Gardens · **Accepted** by the user (9.11.2026: "Looks good", on the GPU pictures) · Ordered by the coordinator 7.11.2026 after the user approved the expansion so far: W-1 and W-2 accepted)
 
 Shared water made visible: cultivation rafts, channels, gauges, a kiln that lives on the same water, and the test
 installation where the prototype is proven (N2, N6; return visits in N3–N5 and the postgame).
