@@ -211,6 +211,21 @@ Object.assign(STR.en, {
   ip_cache_look: "A supply crate, nailed shut and forgotten. A label: OLD WATCH. Inside, someone's pay and a jar of honey.",
   ip_cache_spied: "The crate from the telescope. A label: OLD WATCH. Inside, someone's pay and a jar of honey.",
 
+  // ---- ISLES-BAR: the crisis (chapters 8-9) for those who had no line of it
+  ip_kn_kid_crisis: "Mum listens to the radio all day. I listen to the shuttles. They're all project ships this week.",
+  ip_mb_tend1_crisis: 'Bzz. The bees are nervous. So am I. We water the flowers anyway.',
+  ip_mb_flier_crisis: 'Bzz. No honey to Twinsun this week. The project needs the cargo space. For people, they say.',
+  ip_ug_fitter_crisis: "Hmph. The pump runs hot. Everything runs hot this month. I'm not touching the big valve.",
+  ip_ug_carrier_crisis: 'The project ordered every full bottle we have. Then they ordered the empty ones too.',
+  ip_ld_crane_crisis: 'Project cargo, project cargo, project cargo. My clipboard has never been so dull.',
+  ip_ld_load2_crisis: 'Bzz. Heavy crates, all of them marked URGENT. Even the light ones are urgent.',
+  ip_or_carter_crisis: 'Bzz. The project wants nectar. Pello says no. I carry crates to nowhere.',
+  ip_or_pick1_crisis: "Fewer pickers this week. I do two rows before lunch. The trees don't notice.",
+  ip_ce_dancer1_crisis: 'Yaro says dance anyway. I say dance slower. We compromised. We dance anyway, slower.',
+  ip_pf_miner2_crisis: 'Double shifts. The cart squeaks twice as much. I like it half as much.',
+  ip_ow_kid_crisis: 'Old Oumi let me count the project ships. I got to sixty and she said that was enough.',
+  ip_ow_mason_crisis: "Nobody's paying for ruins this week. I'm mending the tower anyway. It's quiet up here.",
+
   // ---- the journal
   ip_j_light: "Knartas: bring the quay light's lens back from wherever the project sent it.",
   ip_j_beacon: "Mosquibee: light the beacon on the Orchard's cloud catcher, so the shuttles swing wide of the hives.",

@@ -628,9 +628,10 @@ const STYLE = {
     // (KNARTAS-GATE: the original's lintels (body 31) stood on posts we draw as lamps and trees: drawn, they were grey
     // rocks hanging 2 m up beside the houses; left out. The slab on the gatehouse's roof (38) a stone slab, not a rock)
     // (ISLES-BAR: the original's pieces that stood on its arches and walls, which ours do not draw, hung 1.5-3.4 m over the
-    //  ground or on a wall: a wooden frame on the canteen's front, two posts and a lamp over the lane: left out like the
-    //  lintels (bodies 26, 46 up high, 52, 53, 68, 69, 72, 80))
-    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) || [26, 52, 53, 68, 69, 72, 80].includes(o.body) || (o.body === 46 && o.y > 5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
+    //  ground or on a wall: a wooden frame on the canteen's front, two posts and a lamp over the lane: not built (S.open:
+    //  the plan keeps its numbers), as the lintels are left out (bodies 26, 46 up high, 52, 53, 68, 69, 72, 80))
+    open: (o) => [26, 52, 53, 68, 69, 72, 80].includes(o.body) || (o.body === 46 && o.y > 5),
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
     // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
