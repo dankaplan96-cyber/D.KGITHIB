@@ -627,7 +627,10 @@ const STYLE = {
     // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
     // (KNARTAS-GATE: the original's lintels (body 31) stood on posts we draw as lamps and trees: drawn, they were grey
     // rocks hanging 2 m up beside the houses; left out. The slab on the gatehouse's roof (38) a stone slab, not a rock)
-    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
+    // (ISLES-BAR: the original's pieces that stood on its arches and walls, which ours do not draw, hung 1.5-3.4 m over the
+    //  ground or on a wall: a wooden frame on the canteen's front, two posts and a lamp over the lane: left out like the
+    //  lintels (bodies 26, 46 up high, 52, 53, 68, 69, 72, 80))
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) || [26, 52, 53, 68, 69, 72, 80].includes(o.body) || (o.body === 46 && o.y > 5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
     // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
@@ -690,7 +693,7 @@ const STYLE = {
     env: { fog: '#f2cbb4', sun: '#ffd8b0', hemiSky: '#ffdcc8', hemiGround: '#a05a44', sunI: 2.5, hemiI: 1.25, fogRange: [80, 290] }, gradeTint: [1.04, 0.98, 0.93], cloudTint: ['#ffe2d4', '#ffe8dc', '#fff0e4'],
     // (CELEBRA2's new objects, kept as "risen"): twelve years on the figure still stands, its pit filled and paved
     // round its feet, and the island holds its festival there — masts round it, garlands up to the figure
-    trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 10,
+    trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 10, paveSlope: 0.3,   // (REVIEW-ZEELICH-ART (e): the plaza's paving ran over the rock's slopes in sharp folds)
     walls: ['#fff0f4', '#f6dce6', '#fbf0e0'], domes: [['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']],
     // the figure's parts (CELEBRA2: 17 the body, 18 its back, 16 the head, 20 the crest, 12 + 19 + 21 a staff), set
     // on the paved plaza (9.5 m; they stood on the pit's floor at 6.5 m), numbered 800+ so they keep apart
@@ -1518,7 +1521,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
-    if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
+    if (rk < 0.5 && paved(x, z) && slope < (S.paveSlope ?? 9)) { wt[4] = 1.6; wt[0] *= 0.2; }   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
