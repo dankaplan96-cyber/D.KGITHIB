@@ -4171,3 +4171,17 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 - **Pushed:** `expansion/ballastra` at 973b2fc3 (three commits on 28deb808); the pictures are on that branch in `docs/future/world/W-3/`.
 
 - **Accepted** by the user, 9.11.2026: "Looks good" (on the GPU pictures: the rafts dry and green, the arrival plaza, the wheel and the kiln). The spec says so on `expansion/ballastra`. W-4 waits for the coordinator to order it.
+
+## CAM-34 · withdrawn: the user prefers the camera straight behind at the hostel door · the laptop, 9.11.2026
+
+- **The user, 9.11**, shown before | after of running south out of the hostel door
+  (`docs/future/world/CAM-34/hostel-up-to-door-turn-run-south-before-top-after-bottom.jpg`): **"the camera feels more
+  chaotic"**.
+- **What changes:** `requests/CAM-34.diff` is removed. **Do not apply the portico's `camOnly` box.** The camera stays as
+  it is on origin: straight behind, no 40° swing round the portico's corner.
+- The diff is still in git history (6d6f2f97) if it is ever wanted again.
+- **Still open for the cloud, unchanged:**
+  - the fort's west station gate snap-in (8.75 → 3.5 m as Twinsen leaves the passage). Its cause is island.js's arch
+    volume starting at the spring line, and the proposal is in the CAM-34 note above. The user's "chaotic" may well cover
+    that too: please treat calmer camera motion as the goal there;
+  - OTRINGAL-37 and EXP-MERGE-35-base, which are unaffected and apply on their own.
