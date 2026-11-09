@@ -116,6 +116,19 @@ hall's door, the 8.6 m face at his back: put there and walked 2.2 m south, 3.2 m
 hall behind him then, a dark door reveal at the frame's right for a moment). No camera change: the face and the hall are
 already their own shapes, and there is no clear view behind him in that gap. Left as it is.
 
+World-polish 4 (9.11, the same walks with `polish4/probes/spot.mjs`, Automated runtime only): the turn-round walk is
+3.02 s under 5 m in all (3.35 s before), still 3.02 s at a stretch; out-of-sight 0, inside 0. The stretch is the walk's
+own 0.5 s standing start and its 1.8 s turn in the 2 m pocket, where only the over-his-head view (MIN-VIEW, 3.2 m) sees
+him; once he walks out it lets out to 5 m within 0.7 s. **Left, with that reason:** widening the pocket means moving the
+School's face or the hall (the original's place), and a longer view there stands over the hall's roof (the legs rule
+below rejects it). Out of the doors (`polish4/probes/doors.mjs`, 3.3 s standing just out of each of the 11 doors, 2+ of
+5 points up his body hidden behind drawn scenery): **10.3 s before, 1.3 s after** (before: Kesh's houses 1.1-1.5 s each,
+the post's cabins 1.2-1.3 s each, him wholly behind the cabin's roof on the first frame; after: Kesh house 4 0.5 s, the
+third cabin 0.8 s); the School's, S40's and S28's first frames had him at 0.82-0.85 of the way down the frame for
+1.1-1.7 s, now 0.55 and at most 0.6 s. The causes and the fixes are in `PLAYTHROUGH-REPORT.md` (PT-2, PT-3): a view
+counts only if nothing tall hides his legs, camera shapes for the condenser hall with its lintel and the post's three
+door awnings.
+
 ## What is left (and for whom)
 
 - **Resemblance scores**: Unverified (the laptop's curator). The two rooms opened in the original's buildings (S28,

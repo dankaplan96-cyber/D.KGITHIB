@@ -182,6 +182,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // instead (the search swings it along the foot first). Only when nothing round him is clear does the arm come in to
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
+const CH_LOW_SEE = 0.25, CH_EL_KEEP_DOOR = (11 * Math.PI) / 180;   // (CAM-ROOFEDGE: the low point of him that nothing tall may hide, m over his feet: _sees; his chest inside the frame's foot just out of a door: _chase)
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
 const CH_HOLD_IDLE = 1.0, CH_SW_SETTLE = 0.3;
 // CAM-RECOVER: the quicker let-out to the whole arm (see the arm's let-out in _chase)
@@ -207,6 +208,7 @@ const CH_CANDS = (() => {
 // CAM-CLEAR-2, a dialogue under Follow (AUDIT-CH12 #13): Twinsen and whoever talks with him framed together, the camera
 // beside his shoulder CH_TALK_ANG off the line between them (the side nearer the view first), CH_TALK_P up, far enough
 // back that everyone stands inside CH_TALK_FIT of the frame, nobody in front of him (CH_TALK_SEP apart across it); into it and back out to the chase eased (CH_TALK_W, CH_TALK_IN s)
+const CH_TALK_KEEP = 8, CH_CROWD_NEAR = 4.5;   // (CH_CROWD_NEAR: a bystander's head nearer the lens than this, in the frame, is in the way: _crowdIn)   // (CAM-AFTERTALK: the most the two-shot is kept after the dialogue while nobody moves, s: _talkShot)
 const CH_TALK_ANG = [0.75, 1.0, 0.55, 1.25, 0.35, 1.5], CH_TALK_P = 0.32, CH_TALK_FIT = 0.72, CH_TALK_W = 2.6, CH_TALK_IN = 1.1, CH_TALK_SEP = 0.22;
 // G1-CAM: where none of those is clear, the search all round them: the arm's lengths (of the first one's), its tilts, and
 // what a flaw costs (someone in front of him; a face behind a post, a rail or an arch's leg; a face hidden; the view
@@ -714,7 +716,11 @@ export class CameraRig {
   }
 
   // CAM-FOLLOW: does a camera at p see his head or his chest? (nothing on the line: the terrain, a wall, a cliff, a
-  // big rock, a scenery volume — not a post, a rail or a tree's crown, which he shows between)
+  // big rock, a scenery volume — not a post, a rail or a round tree's crown, which he shows between; the tall trees' and pines' crowns and a banner's cloth count: c.sight)
+  // (CAM-ROOFEDGE, PLAYTHROUGH PT-2/PT-3: and his legs are not behind something tall — a house, a cabin, a hall's slab,
+  // more than CH_LOW_WALL over his feet —: out of the research post's office the arm stood 6 m out over the cabin's flat
+  // roof, the line to his head just over its edge and the roof over everything below his shoulders — an outline for as
+  // long as he stood. A low wall, a fence, a crate or the ground's own rise before his feet still let a view count.
   // (CAM-CLEAR-2, `strict`: a dialogue's two-shot — his head and his chest both, and the posts and the see-through
   // things count too: a face half behind the beam pad's arch is not framed)
   _sees(p, hero, strict = false) {
@@ -722,13 +728,13 @@ export class CameraRig {
     // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
     // the questions in a walk through the town are repeats.)
     // (STABILIZATION: the answers kept as numbers in one array, 8 a question — not a new array each: ~48 a frame)
-    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : 0;
+    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : this._lowOff ? 2 : 0;
     if (this._busy) {
       if (M.fid !== this._fid) { M.fid = this._fid; M.n = 0; }
       for (let i = 0, j = 0; i < M.n; i++, j += 8) if (A[j] === p.x && A[j + 1] === p.y && A[j + 2] === p.z && A[j + 3] === hero.x && A[j + 4] === hero.y && A[j + 5] === hero.z && A[j + 6] === st) return A[j + 7] === 1;
     }
     const r = strict ? this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true)
-      : this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
+      : (this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z)) && (this._lowOff || this._line(p, hero.x, hero.y + CH_LOW_SEE, hero.z, false, false, hero.y + CH_LOW_WALL));
     if (this._busy && M.n < 48) { const j = M.n++ * 8; A[j] = p.x; A[j + 1] = p.y; A[j + 2] = p.z; A[j + 3] = hero.x; A[j + 4] = hero.y; A[j + 5] = hero.z; A[j + 6] = st; A[j + 7] = r ? 1 : 0; }
     return r;
   }
@@ -755,7 +761,7 @@ export class CameraRig {
             const c = L[li];
             if (_segSeen.has(c)) continue;
             _segSeen.add(c);
-            if (c.top > ylo && c.bottom < yhi && segDist(c.x, c.z, ax, az, bx, bz) <= (c.type === 'cyl' ? c.r : Math.hypot(c.hw, c.hd)) + 1e-6) _segCols.push(c);
+            if (c.top > ylo && c.bottom < yhi && segDist(c.x, c.z, ax, az, bx, bz) <= (c.type === 'cyl' ? Math.max(c.r, c.sight?.r ?? 0) : Math.hypot(c.hw, c.hd)) + 1e-6) _segCols.push(c);
           }
         }
       }
@@ -775,8 +781,9 @@ export class CameraRig {
     }
   }
 
-  // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there)
-  _line(p, tx, ty, tz, strict = false, ground = true) {
+  // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there; `tall`: only what stands higher
+  // than that counts — CAM-ROOFEDGE)
+  _line(p, tx, ty, tz, strict = false, ground = true, tall = -Infinity) {
     const P = this.physics, occ = this.occ?.(), T = ground ? this.terrain : null;
     const dx = tx - p.x, dy = ty - p.y, dz = tz - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
     this._segCands(p, dx, dy, dz, n, 1, n - 1, P, occ);
@@ -786,13 +793,18 @@ export class CameraRig {
       if (T && T.heightAt(x, z) > y + 0.05) return false;
       for (let ci = 0; ci < cols.length; ci++) {
         const c = cols[ci];
-        if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom) continue;
+        if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom || c.top < tall) continue;
+        // (CAM-CROWN, PLAYTHROUGH PT-7: a dense crown down to the ground — the tall cypress-like trees, the pines — hides
+        // him like a wall within its core, c.sight: behind one at the depot bunker's wheel and at the glider field the
+        // camera kept its view and he showed as an outline through the leaves. A round tree's crown, high over its trunk,
+        // is still seen under)
+        if (c.sight && y > c.sight.y0 && y < c.sight.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.sight.r ** 2) return false;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }
       // (occlude.js hit(), every volume: none skipped, the camera's own ones — camOnly — left out; G1-CAM: but they count
       // for a dialogue's two-shot, `strict`: a face is not framed through the pipeline or the beam pad's arch)
-      for (let vi = 0; vi < vols.length; vi++) { const v = vols[vi]; if ((strict || !v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false; }
+      for (let vi = 0; vi < vols.length; vi++) { const v = vols[vi]; if ((strict || !v.camOnly) && v.top >= tall && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false; }
     }
     return true;
   }
@@ -1065,6 +1077,8 @@ export class CameraRig {
     // the ground under him (a jump doesn't lift the view; falling further than a jump, it follows him down)
     const gy = Math.max(P ? P.groundAt(hero.x, hero.z, hero.y + 0.3) : hero.y, hero.y - 2.5);
     const tp = this.lockOn?.(), lockD = tp ? Math.hypot(tp.x - hero.x, tp.z - hero.z) : 0, lock = tp && lockD > 0.5;
+    // (CAM-ROOFEDGE: with a lock-on the shot frames him and the target: the legs rule, _sees, is not asked)
+    this._lowOff = !!lock;
     // where the view wants to look from: behind his back, or behind his shoulder on the line from the target
     const facing = () => (lock ? Math.atan2(hero.x - tp.x, hero.z - tp.z) + CH_SHOULDER : heroAngle + Math.PI);
     const fresh = snap || !C.init;
@@ -1449,7 +1463,9 @@ export class CameraRig {
     if (!lock) {
       const c = cam.position, dh = Math.hypot(this.look.x - c.x, this.look.z - c.z), dv = c.y - this.look.y;
       const hh = Math.hypot(hero.x - c.x, hero.z - c.z), heroEl = Math.atan2(c.y - (hero.y + 1.0), Math.max(hh, 0.05));
-      const elMax = Math.max(CH_EL_MAX, heroEl - (cam.fov * Math.PI) / 360 + CH_EL_KEEP), el = Math.atan2(dv, dh);
+      // (CAM-ROOFEDGE: just out of a door, over his head, his chest CH_EL_KEEP_DOOR inside the frame: out of the School's
+      // and S28's doors he stood at the frame's foot, 0.85 of the way down, for the first 1.1-1.7 s)
+      const elMax = Math.max(CH_EL_MAX, heroEl - (cam.fov * Math.PI) / 360 + (C.door ? CH_EL_KEEP_DOOR : CH_EL_KEEP)), el = Math.atan2(dv, dh);
       // (the cap itself eased: the camera passing close over him moves it, never the view in a frame)
       const want = Math.min(el, elMax);
       C.el = fresh || C.el == null ? want : damp(C.el, want, CH_EL_W, dt);
@@ -1460,13 +1476,13 @@ export class CameraRig {
       if (dv > 0 && dh > 1e-3 && (el > C.el || (C.keepT > 0 && el < C.el - 1e-4))) { const k = Math.max(CH_KEEP_K, dv / Math.tan(C.el) / dh); this.look.x = c.x + (this.look.x - c.x) * k; this.look.z = c.z + (this.look.z - c.z) * k; }   // (further, or nearer, along the same way)
     } else C.el = null;
     // CAM-CLEAR-2: a dialogue: him and whoever talks with him framed together, eased in and back out to the chase
-    this._talkShot(dt, hero, fresh);
+    this._talkShot(dt, hero, fresh, heroAngle, lock);
     cam.lookAt(this.look);
     this.target.copy(hero);
   }
 
   // CAM-CLEAR-2: a camera at p looking at L: are all of pts inside CH_TALK_FIT of the frame (and in front of it)?
-  _fits(p, L, pts, sep = null) {
+  _fits(p, L, pts, sep = null, fit = CH_TALK_FIT) {
     const fx = L.x - p.x, fy = L.y - p.y, fz = L.z - p.z, fl = Math.hypot(fx, fy, fz) || 1;
     const f = [fx / fl, fy / fl, fz / fl], rl = Math.hypot(f[2], f[0]) || 1, r = [-f[2] / rl, 0, f[0] / rl];
     const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
@@ -1474,7 +1490,7 @@ export class CameraRig {
     for (const q of pts) {
       const vx = q[0] - p.x, vy = q[1] - p.y, vz = q[2] - p.z, z = vx * f[0] + vy * f[1] + vz * f[2];
       if (z < 1) return false;
-      if (Math.abs((vx * r[0] + vz * r[2]) / (z * th)) > CH_TALK_FIT || Math.abs((vx * u[0] + vy * u[1] + vz * u[2]) / (z * tv)) > CH_TALK_FIT) return false;
+      if (Math.abs((vx * r[0] + vz * r[2]) / (z * th)) > fit || Math.abs((vx * u[0] + vy * u[1] + vz * u[2]) / (z * tv)) > fit) return false;
     }
     // (and nobody standing in front of another: each partner's chest CH_TALK_SEP of the frame's width from his, across)
     if (sep) {
@@ -1482,6 +1498,26 @@ export class CameraRig {
       for (let i = 1; i < xs.length; i++) if (Math.abs(xs[i] - xs[0]) < CH_TALK_SEP) return false;
     }
     return true;
+  }
+
+  // CAM-CROWD (PLAYTHROUGH PT-8: Vesk's task on the pier, Doran's hat and head over a third of the two-shot): how many of
+  // the people round a dialogue but not in it (this.crowd) stand in its way from p — within CH_CROWD_NEAR m of the lens
+  // and in the frame, or across the line from p to a face or a chest of those in it
+  _crowdIn(p, look, all, crowd) {
+    let n = 0;
+    for (const b of crowd) {
+      const dh = Math.hypot(b.x - p.x, b.y + 1.6 - p.y, b.z - p.z);
+      if (dh < 1.3 || (dh < CH_CROWD_NEAR && (this._fits(p, look, [[b.x, b.y + 1.6, b.z]], null, 1.15) || this._fits(p, look, [[b.x, b.y + 0.9, b.z]], null, 1.15)))) { n++; continue; }
+      cut: for (const o of all) for (const hy of [1.6, 1.1, 0.5]) {
+        const tx = o.x - p.x, ty = o.y + hy - p.y, tz = o.z - p.z, L = Math.hypot(tx, ty, tz), m = Math.ceil(L / 0.3);
+        for (let i = 1; i < m; i++) {
+          const k = i / m; if ((1 - k) * L < 0.6) break;
+          const x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k;
+          if (y > b.y && y < b.y + 2.1 && (x - b.x) ** 2 + (z - b.z) ** 2 < b.r * b.r) { n++; break cut; }
+        }
+      }
+    }
+    return n;
   }
 
   // CAM-CLEAR-2: the two-shot of a dialogue: him and those in `who`, from beside his shoulder (CH_TALK_ANG off the line
@@ -1503,9 +1539,10 @@ export class CameraRig {
       p.y += this._chaseLift(p, _c.set(piv.x, piv.y, piv.z), false);
       return p;
     };
+    const crowd = this.crowd?.() || [];
     for (const k of [1, 1.3, 1.65, 0.8]) for (const ang of CH_TALK_ANG) for (const sg of [s1, -s1]) {
       const p = place(back + sg * ang, d0 * k, CH_TALK_P);
-      if (!this._fits(p, look, pts, all) || this._solidAt(p, CH_GAP)) continue;
+      if (!this._fits(p, look, pts, all) || this._solidAt(p, CH_GAP) || this._crowdIn(p, look, all, crowd)) continue;
       if (all.every((q) => this._sees(p, q, true))) return { pos: p.clone(), look };
     }
     // G1-CAM (AUDIT-CH12 #13: Vesk at the beam pad): none clear there — three of them round the arch, Twinsen standing in
@@ -1524,7 +1561,7 @@ export class CameraRig {
       const p = place(yw, d0 * k, q), c0 = c1 + (s0 && side(p.x, p.z) === -s0 ? CH_TALK_K_LINE : 0);
       if (c0 >= bc) continue;
       if (!this._fits(p, look, pts) || this._solidAt(p, CH_GAP)) continue;
-      let c = c0 + (this._fits(p, look, pts, all) ? 0 : CH_TALK_K_SEP);
+      let c = c0 + (this._fits(p, look, pts, all) ? 0 : CH_TALK_K_SEP) + this._crowdIn(p, look, all, crowd) * CH_TALK_K_PART;
       for (const o of all) { if (c >= bc) break; if (!this._sees(p, o, true)) c += this._sees(p, o) ? CH_TALK_K_PART : CH_TALK_K_HID; }
       if (c < bc) { bc = c; best = p.clone(); }
     }
@@ -1533,10 +1570,16 @@ export class CameraRig {
 
   // CAM-CLEAR-2: into the dialogue's two-shot (this.talk) and back out to the chase, eased (CH_TALK_IN s, the shot's own
   // moves at CH_TALK_W); a new scene drops it
-  _talkShot(dt, hero, fresh) {
+  // (CAM-AFTERTALK, PLAYTHROUGH PT-6: and once it ends, the two-shot is kept while he stands as he stood and the people
+  // in it stay where they were — at most CH_TALK_KEEP s —, then eased back as before: the chase behind him put whoever
+  // he had just spoken to behind his back, hidden by him, until he walked off. A step, a turn, a lock-on, a new scene or
+  // one of them walking away lets it go at once)
+  _talkShot(dt, hero, fresh, heroAngle = 0, lock = false) {
     const cam = this.cam, S = (this.tk ??= { k: 0, n: 0, shot: null, pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false });
     const who = this.talk?.() || null;
-    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; }
+    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; S.keep = null; }
+    if (who && who.length) S.keep = { x: hero.x, z: hero.z, a: heroAngle, t: 0, who, at: who.map((p) => [p.x, p.z]) };
+    else if (S.keep && (lock || !S.shot || (S.keep.t += dt) > CH_TALK_KEEP || Math.hypot(hero.x - S.keep.x, hero.z - S.keep.z) > 0.15 || Math.abs(angleDiff(S.keep.a, heroAngle)) > 0.05 || S.keep.who.some((p, i) => Math.hypot(p.x - S.keep.at[i][0], p.z - S.keep.at[i][1]) > 0.5))) S.keep = null;
     if (who && who.length) {
       // (worked out when the dialogue starts and whenever someone joins it)
       // (G1-CAM: a new shot more than CH_TALK_CUT round from the one it has is cut to, as a film cuts to the wider shot when
@@ -1548,7 +1591,7 @@ export class CameraRig {
         S.shot = ns || S.shot; S.miss = !S.shot;
       }
     } else { S.n = 0; if (S.k <= 0) S.shot = null; }
-    const on = !!(who && who.length && S.shot);
+    const on = !!((who && who.length) || S.keep) && !!S.shot;
     S.k = clamp(S.k + (on ? dt : -dt) / CH_TALK_IN, 0, 1);
     if (S.k <= 0 || !S.shot) { S.init = false; return; }
     if (!S.init) { S.pos.copy(S.shot.pos); S.look.copy(S.shot.look); S.init = true; }

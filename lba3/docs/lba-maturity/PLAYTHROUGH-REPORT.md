@@ -160,6 +160,33 @@ archive, the bore rooms), the well's kicked lid stands open behind the well (`01
 appear where the thing is first needed (Athletic at the bay rocks `01/19`, the sword at Yorna's winch `09/10`, the Pulse
 Tool in Baldino's workshop `12/14`), the end card and Keep Exploring (`14/17`, `14/18`).
 
+## World-polish 4 follow-up (9.11.2026, the camera faults above)
+
+**Automated runtime only** (SwiftShader, headless Chromium, 960×540, Follow/Medium, Classic controls; no frame-rate
+claims). Measure: 5 points up his body (0.2-1.7 m) ray-cast against the drawn meshes from the play camera; "covered"
+is time with 2 or more of them hidden (the outline shows). Probes and pictures in the session scratchpad `polish4/`
+(`probes/*.mjs`, `shots/<probe>-before|after*`), before = the unchanged snapshot, after = this pass, the same saves.
+
+| Fault | Cause | Fix | Before → after |
+|---|---|---|---|
+| PT-2 office exit | A view counted as seeing him when only his head cleared the cabin's roof edge, and the door's awning had no shape. | `camera.js` CAM-ROOFEDGE: a view must also see his legs past anything tall (over 2.4 m above his feet; not asked with a lock-on). `desertdress.js`: shapes for the post's 3 door awnings. A `doorStep` on exits into outdoor areas was tried and dropped: `island-doors` and `hamalayi-life` hold him within 2.8 m of the sill. | Office, 3.3 s standing: 1.3 s covered (first frame 5/5 hidden) → 0: the first shot now stands over his head, behind him, all of him in view. All 11 Desert Island doors: 10.3 s → 1.3 s (Kesh house 4: 0.5 s; the third cabin: 0.8 s). |
+| PT-3 condenser hall exit | The hall is half buried, so it had no camera shape of its own; the collider stopped short of the lintel slab. | `desert.js`: a hall shape that includes the lintel. | 3.1 of 3.1 s covered (5/5) → 0. Arm 5.7 m, behind him. |
+| (all doors) | As PT-2. | As PT-2, plus his chest kept 11° inside the frame just after a door. | Citadel's 13 doors: 5.3 s → 0 (asylum 3 → 0, baggage 1.9 → 0). Hamalayi's 9 doors: 0 → 0. The observatory exit (PT-7, `10/07`): his middle 0.79 → 0.55 of the way down the frame, 0.9 s at its foot → 0.3 s; the hall 0.81 → 0.52. School/S40/S28: 0.82-0.85 → 0.55. |
+| PT-4 Zoé | Her run started on the house's doorstep, outside `doorStep`. The view at her back went over the roof. | `story/evacuation.js` startZoe: `g.doorStep`. | 0.9 s covered in the first second → 0; frame foot 0.78 → 0.52; walking on, 0.9 s → 0. **Left:** after 1.2 s standing, the door hold lets go and the view swings 60° to a clear side view (CAM-CLEAR-2's own rule). |
+| PT-6 after a talk | The two-shot eased back to his back at once. Outdoor areas had no two-shot at all (`talk` returned null in any room). | CAM-AFTERTALK: the two-shot stays while nobody moves, at most 8 s. A step, a turn, a lock-on or the partner walking off lets it go. Two-shot in outdoor areas too (`main.js`). | Vesk: two-shot held 3 s standing. After 0.6 s of walking, weight 0.45; at 1.8 s, 0 (back behind him). |
+| PT-8 Doran | The two-shot ignored bystanders. | CAM-CROWD: the two-shot avoids people near the lens or on the lines to the faces (`camRig.crowd`, `main.js`). | Doran 3.5 m from the lens, near frame centre → no bystander within 4.5 m in frame (`vesk-after2/09`). A first try put a guard's body over him; fixed in the same pass. |
+| PT-7 props | Trees and banners counted as see-through; the monastery gate's roofs had no shape. | CAM-CROWN: the tall trees' and the pines' crowns and the Esmer banners' cloth count for sight (`world.js`, `props-esmer.js`). `hamalayi.js`: shapes for the gate pillars' roofs. | 8 + extra headings × 1.5 s: depot-wheel tree 1.5 → 0, glider-field pine 1.5 → 0, Otringal's banners 4.5 → 3.0. The 2 headings left are a building mesh, not looked into. Water Office exit: 0 → 0, not reproduced. Monastery gate: 0 → 0, not reproduced (shape added from source). **Left:** the mill sails (thin and turning: a shape would push the camera about for a moment's cover), the cliff face (`04/04`) and the snow lip (`09/05`): he is in full view; it is the ground. |
+
+Suites, one at a time on the final camera, all PASS: `camfollow`, `camcitadel`, `camisles`, `camera-doors`,
+`slidetraps`, `camclear`, `chapter1`, `chapter2`, `chapter4`, `chapter5`, `chapter8`, `overlaps` (ONLY=hamalayi: Lhar's
+two flicker spots gone — `props-mountain.js` mountainHouse's walls stop 5 cm under the eaves band, which had them in
+one plane with a snow surface under the roof). After the outdoor door step was dropped: `island-doors`, `hamalayi-life`
+and `desert-bar` again. Cost, measured against world-polish 3's `camcitadel` (deterministic walks): 92 of 121 lines
+unchanged, all within bounds, but the arm comes in sooner where a house hides his legs ("behind the house, walk through
+heading south-east": least arm 6.47 → 3.2 m, 1.12 s under 5 m where there was none; "house alley, a whole turn" 2.98 s
+under 5 m at a stretch, bound 3). `camisles`: Otringal's flight down to the plaza, out of sight 9 frames → 0. The
+dormitory pocket and the three doors across the clouds: `desert-inventory.md`, `isles-inventory.md`.
+
 ## Left for others
 
 | Owner | Item |

@@ -185,6 +185,7 @@ export function noticeBoard(k, { w = 1.3, h = 0.9, y = 0.9 } = {}) {
 // ================================================================ a stone house with a slate roof (Lhar, the shepherd's hut)
 // w × d footprint, h to the eaves (≥ 4.6: two storeys), the door on the front (+z) at door·w − w/2 + 0.5 (as before,
 // so the door spots don't move). lean: a woodshed on the +x (1) or −x (−1) gable. balcony: over the door (two storeys).
+const WALL_DROP = 0.05;   // (m: mountainHouse's walls under its eaves band's top)
 export function mountainHouse(k, o = {}) {
   const { w = 5, d = 4.2, h = 2.6, door = 0.4, seed = 1, wall = '#e6d8c2', trim = TRIM.blue, doorC = TRIM.red, lean = 0, balcony = false, chimney = true, pitch = 0.6, ovE = 0.55, ovG = 0.38, pots = false } = o;
   const glowM = o.glow || MM.glow();   // (HAMALAYI-LIFE: Lhar's houses share a window glow of their own, dimmed while the village is away)
@@ -210,7 +211,9 @@ export function mountainHouse(k, o = {}) {
   ];
   for (const fc of faces) {
     const s = fc.ry, inX = -Math.sin(s) * t, inZ = -Math.cos(s) * t;
-    k.add(panelGeo(fc.len, h, t, fc.holes.map((q) => ({ x: q.x, y: q.y, w: q.w, h: q.h })), 1.7), wallM, fc.x + inX, f, fc.z + inZ, s);
+    // (OVERLAP-1, Lhar: the wall tops stop WALL_DROP under the eaves band's top: level with it they shared a plane with a
+    //  snow surface under the roof, flagged at two of Lhar's houses; the band hides the step from outside)
+    k.add(panelGeo(fc.len, h - WALL_DROP, t, fc.holes.map((q) => ({ x: q.x, y: q.y, w: q.w, h: q.h })), 1.7), wallM, fc.x + inX, f, fc.z + inZ, s);
     k.at(fc.x, f, fc.z, s, () => {
       for (const q of fc.holes) {
         const ring = q.door ? 0.12 : 0.09;

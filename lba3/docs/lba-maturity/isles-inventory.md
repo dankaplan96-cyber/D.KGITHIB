@@ -148,7 +148,7 @@ shows his legs behind the step edge). The Platform's village lane 117 → 0, the
 | Bar line (`citadel-bar.md`) | The isles | Evidence |
 |---|---|---|
 | 1 Nothing fades outdoors; tight shapes | met (automatic volumes; Knartas's gatehouses their own shapes, the passage's roof the one fade, while he walks under it — world-polish 3) | `cam.mjs`, `camisles` |
-| 2 Every accessible building enterable or shut with its own reason | 52 of the 55 isle rooms reached on foot from their pads (the planner and the flood fill); the three left stand on patches across the clouds (Otringal's barges' yard with the quay's cargo store, its west quay with the dock worker's house, Mosquibee's west islet with the honey room): **distant scenery**, never met at the door. The three shut doors keep their reason and sign | flood fill, `knartas.mjs`, `island-doors` |
+| 2 Every accessible building enterable or shut with its own reason | 52 of the 55 isle rooms reached on foot from their pads (the planner and the flood fill); the three left stand on patches across the clouds (Otringal's barges' yard with the quay's cargo store, its west quay with the dock worker's house, Mosquibee's west islet with the honey room): **distant scenery**, never met at the door; a look on the near shore says there is no way over on foot (world-polish 4). The three shut doors keep their reason and sign | flood fill, `knartas.mjs`, `island-doors` |
 | 2 Compact furnished lit interiors; music per place | the planner's rooms (wave 3), `zeelich_in`; the bar `zeelich` | `island-doors`, `interior-life` |
 | 2 The way back out; a save inside comes back inside | yes (Ulla's room saved, Continue) | `isles-bar` |
 | 3 Purposeful residents with rounds; memorable people whose lines change; own dress; rooms have their keeper | 39 residents + 12 indoor people now; lines by state; favour lines honest; 18 of the 55 isle rooms have someone in some state (the 6 keepers and the 12 above) | `isles-bar`, `island-people`, `residents`, `world-consistency` |
@@ -161,11 +161,22 @@ shows his legs behind the step edge). The Platform's village lane 117 → 0, the
 - **Resemblance scores**: Unverified (the laptop's curator). The new flight and the hoist are ours.
 - **The three rooms across the clouds** (Otringal's quay cargo store and dock worker's house, Mosquibee's honey room):
   out of reach on foot; a gangway or a ferry would bring them in. Not added (no new crossing invented for two rooms).
+  World-polish 4 (9.11): each door now has an honest line where a player meets the gap — a look on the near shore's
+  first level ground on the way from the shuttle toward the door (`story/ihomes.js` farSpot, `text/ihomes.js`
+  `ih_far_*`): "The barges' yard, across the clouds… No way over on foot", "The west quay… I can't walk it", "The honey
+  room is on that islet… The Mosquibees fly over. I can't." Probe `fardoors.mjs` (Automated runtime only): from each
+  island's shuttle spawn the bot walked to all three looks (P.go "arrived", 36-39 m short of the doors), the prompt was
+  *Inspect* and E gave the line; picture `polish4/shots/fardoors/`.
 - **The camera** (world-polish 3, above): Knartas's arch and lane fixed; the long hidden stretches were posts. Left:
   a banner's cloth crosses him for about a second on some paths by Otringal's fountain (the banners are thin pieces the
   camera sees past; their cloth has no camera shape); on the planner's walk to the Platform's mine the camera brushes a
   street lamp's head for 8 frames (its collider is the post, 3.4 m; the lantern reaches 0.6 m out and 3.7 m up) and
   the company's board hides him 15 frames. A GPU look at the faded passage roof is asked of the laptop.
+  World-polish 4 (9.11): the Esmer banners' cloth now counts for the camera's sight lines (a 0.38 m core over its
+  2.3 m drop, `props-esmer.js` bannerPole `sight`, camera.js `_line`); standing by the Grand Hall's banners and turned
+  8 ways, 1.5 s each, the time with 2+ of 5 points up his body hidden fell from 4.5 s to 3.0 s (the two headings left
+  are hidden by the island's own building mesh 4 m from the lens, not a banner; not looked into). The lamp head and
+  the board are left as they were.
 - **Otringal's high town** reads busier with the spires slimmer; how it reads at Follow/Medium on a GPU is the laptop's
   (OTRINGAL-37 follow-up).
 - **Rooms still empty in every state**: 37 of the 55 (homes, stores, offices). Not filled with idle extras (the brief: a few

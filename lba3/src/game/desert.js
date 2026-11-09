@@ -35,6 +35,7 @@ import { shuttleTraffic } from './shuttle.js';
 import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
 import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
 import { fitAdd, FIT } from './worldfit.js';
+import { roomOcc } from './roomocc.js';
 import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
@@ -1074,7 +1075,7 @@ export function* buildDesertSteps(scene, physics) {
     const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8, side: THREE.DoubleSide }));
     sg.scale.set(3.4, 0.9, 1); sg.position.set(POST.x0 - 0.1, postY + 3.3, POST.gateZ); sg.rotation.y = -Math.PI / 2; group.add(sg);
     R.reads.push({ id: 'post', ...W(POST.x0 - 2.2, POST.gateZ), r: 1.8 });   // (read from before the gate)
-    dressPost({ group, H, col, ox, oz, updaters }, POST);   // (POLISH-AUDIT #15: awnings, a break corner, the equipment of the job)
+    dressPost({ group, H, col, ox, oz, updaters, occ: () => roomOcc(R, physics.terrain) }, POST);   // (POLISH-AUDIT #15: awnings, a break corner, the equipment of the job)
   }
 
   // ================================================================ the dig
@@ -1341,7 +1342,13 @@ export function* buildDesertSteps(scene, physics) {
     UB.add(bbox(3.2, 0.4, 0.8, 0.06, 1), concrete, RUINS.x, gy + 2.75, RUINS.z + 1.1);
     for (const s of [-1, 1]) UB.add(cyl(0.3, 0.35, 3.0, 10, 1), rust, RUINS.x + s * 4.2, gy + 0.8, RUINS.z - 2.2, 0.3, 0, s * 0.4);
     UB.build();
-    col({ type: 'box', x: RUINS.x, z: RUINS.z - 1.0, hw: 3.5, hd: 2.0, top: gy + 3 });
+    const hc = col({ type: 'box', x: RUINS.x, z: RUINS.z - 1.0, hw: 3.5, hd: 2.0, top: gy + 3 });
+    // (CAM-ROOFEDGE, PLAYTHROUGH PT-3: the hall's shape for the play camera, the lintel slab over the door included — it
+    //  stands 0.5 m proud of the collider: out of the door the camera looked over the collider's edge and the slab hid
+    //  him from the waist down, standing, for as long as he stood. The hall is half buried: too low over the dune for a
+    //  volume of its own, occAuto)
+    hc.camSkip = true;
+    roomOcc(R, physics.terrain).add({ kind: 'box', x: ox + RUINS.x, z: oz + RUINS.z - 0.75, hw: 3.6, hd: 2.3, y0: gy - 0.7, y1: gy + 3.05, name: 'condenser hall' });
   }
   // sand drifted against the door (chapter 5 digs it out), and the plume once the steam runs through
   const drift = mesh(group, new THREE.SphereGeometry(1.8, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.2, 0.75, 0.7), tm('sand', { color: '#f6deb0' }), RUINS.x, H(RUINS.x, RUINS.z + 1.6) - 0.1, RUINS.z + 1.6);

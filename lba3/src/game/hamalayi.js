@@ -662,6 +662,11 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const [x, z] of [[mx - 9, mz + 10], [mx + 9, mz + 10]]) { kitOf('monastery').add(bbox(1.1, 2.9, 1.1, 0.05, 1), stone('#c8bca8'), x, gy + 1.15, z); kitOf('monastery').add(bbox(1.3, 0.14, 1.3, 0.03, 1), slate, x, gy + 2.65, z); col({ type: 'box', x, z, hw: 0.55, hd: 0.55, top: gy + 2.7 }); }
     const gt = put('monastery', 'gate', mx, mz + 10, 0, (k) => monasteryGate(k, { gap: 4 }), { y: H(mx, mz + 10), col: false, nocheck: true });
     for (const [px, pz] of gt.pillars) col({ type: 'box', x: mx + px, z: mz + 10 + pz, hw: 0.45, hd: 0.45, top: gy + 3.2 });
+    // (CAM-SHAPES, PLAYTHROUGH PT-7: each gate pillar and its little golden roof give the camera their shape — the pillar's
+    //  collider is too slight for a volume of its own (occAuto), and talking to Pim and Yorna just inside the gate the
+    //  camera stood behind a roof, the gold tiles over half the frame and him an outline through them)
+    { const occ = roomOcc(R, physics.terrain), g0 = H(mx, mz + 10);
+      for (const [px, pz] of gt.pillars) occ.add({ kind: 'rev', x: ox + mx + px, z: oz + mz + 10 + pz, y0: g0 - 0.2, base: g0, profile: [[0.12, 4.3], [0.85, 3.3]], name: 'gate pillar roof' }); }
     for (const [lx, lz, ln] of gt.leaves) col({ type: 'box', x: mx + lx, z: mz + 10 + lz, hw: 0.07, hd: ln / 2, top: gy + 2.7, noStand: true });
     // the yard's west corner: the villagers' cart, bundles and crates, a fire with a pot, a woodpile on the wall
     put('monastery', 'yardCart', mx - 6.5, mz + 6.6, Math.PI / 2 + 0.1, (k) => handCart(k, { load: 'crates', seed: 5 }));

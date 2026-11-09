@@ -303,7 +303,9 @@ export class Evacuation extends ChapterBase {
     this.saved = { behaviour: h.behaviour };
     g.startTransition(() => {
       // out of the front door (a fixed point here ended up inside the square's barrier ring after the Citadel rebuild)
-      if (g.room) g.exitRoom(this.story.exitTo('outdoor'), true);
+      // (CAM-HANDOVER, PLAYTHROUGH PT-4: a step clear of the door as any walk out of it, Game.doorStep: left on the
+      //  doorstep, under the eaves, her first view was from over the house's roof, cut by the frame's foot)
+      if (g.room) g.exitRoom(g.doorStep(this.story.exitTo('outdoor')), true);
       h.swapBody('zoe'); h.hasBall = false; h.noBehaviours = true; h.behaviour = 'normal'; g.hud.behaviour('normal');
       this.story.refreshCast({ walk: true });
       this.progress();   // (the objective panel: "Zoé: bring the hill families to the lighthouse")
