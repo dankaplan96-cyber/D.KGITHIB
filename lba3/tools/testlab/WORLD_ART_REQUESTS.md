@@ -3849,3 +3849,34 @@ user.
   shots near both hatches are clean; a high camera needs a look.
 - **Not done:** no fix is implemented and `tools/worldscore` was not re-run. Desert Island and the Hamalayi are next for
   the curator.
+
+## EXP-MERGE-35 · the expansion branch after the merge with main (order 35) · the laptop, 8.11.2026
+
+- **Branch:** `expansion/ballastra` pushed at 28deb808 (two commits on fad5710f). All seven suites PASS
+  (SwiftShader, the laptop):
+  - world-consistency 37/37;
+  - oren-square 29/29;
+  - ballastra-harbor 19/19;
+  - ballastra-arches 20/20;
+  - oren-first 21/21;
+  - oren-bands 25/25;
+  - oren-coils 33/33.
+- **(b) The `go:stuck` was a pocket in CLIMB-17's shelf fill**, not REVIEW-CITADEL or SLIDE-RESCUE:
+  - In `climbShelfWall`, the box between the two rows across the foot landing's north edge (`zn`) took the narrower
+    east edge, the wall's back. That left low ground of 0.35 × 0.17 m between the wall's north end, the fill and the
+    landing. Its ground is 8.9–9.1 m and the fill is 9.61 m.
+  - The bot's A* line dropped the hero in at (−34.48, 9.05, −32.66). From there he could not move in any direction:
+    the fill is 0.56 m above him, over STEP_UP 0.55. A player could fall in the same way.
+  - The fix: that pair's box runs to the landing's line, and the fill block takes the landing's corner.
+  - A probe: ground at the spot 9.06 → 9.61; the hero moves 0.5 m in all eight directions where it was 0 before.
+  - **Base diff for the cloud:** `requests/EXP-MERGE-35-base.diff` (lba1places.js only, 9 lines).
+    `git apply --check` is clean on origin `ccr-c1c2c4b9-dep6ed` and on ours.
+  - The diff does not touch CLIMB-30's climb (climbFlight, cheek, climbPost, climbRail, climbParapet).
+- **(a) The journeys allow-list** (expansion branch only) classifies the expansion's `startTransition` calls:
+  - coils meet and disperse: the same street;
+  - index afterLoad: a cut (a save in an empty shell chapter moves on);
+  - survey update, and throttle end and downstairs: the same region;
+  - throttle flyHome (Zeelich → Citadel): goes through the film, `playJourney`. Its filmless second call is removed.
+- **Unverified:**
+  - two "page crashed" late in runs on the loaded machine; both suites passed in full on a rerun;
+  - nothing was run on the GPU.
