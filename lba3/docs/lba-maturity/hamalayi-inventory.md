@@ -114,7 +114,11 @@ Chapter 7 by its flags (chapter 6 done). At each spot he is put 1.5 m before it 
   did not fade) and past a pillar's capital at arm's length. Now the porch's beam and roof fade while he stands under
   it (`props-mountain.js` porchRoof, `hamalayi.js`), and the pillars and their capitals are camera shapes. Settled, the
   view is the yard from along the hall's front with a pillar at mid-distance (`cam3/hamalayi/after/sheet-hall-stand.jpg`
-  against `before/`). The arm's numbers are the same (least 3.6 m, 0 s under 3.1, 2.35 s under 5 m).
+  against `before/`). The arm's numbers are the same (least 3.6 m, 0 s under 3.1, 2.35 s under 5 m). Left: on its
+  way round (about a quarter second) the view still passes the west pillar's capital at arm's length, large on the
+  left of the frame (`after2/sheet-hall-stand.jpg`, third picture): the swing's eased path between its two views is
+  not tested for clearance, only where it ends; a change to the chase's swing (camera.js) is the next step, not done
+  here.
 - **Lhar in the epilogue**: the owners are outdoors on their rounds (the square, the trough, the fire); their houses
   are lit and smoke, but only Old Dorje is inside. Kept: the epilogue's image is the square full of people.
 - **The landing's hut** stays without a keeper: it is Hesk's waystation; Hesk stays by his glider.
