@@ -43,7 +43,7 @@ world-polish pass after it:
 | Zeelich's isles (zislands.js) | VP-10; 63 rooms behind the doors + 6 keepers (wave 3); Knartas reachable (polish 2) | **own pass started 9.11** |
 | Desert Island (desert.js) | **own pass done (merged 8.11)**: the notebook bug, people at home, doors after their chapters, signs and the oasis, desert_in music, the School's camera volumes; desert-bar.mjs 17/17; desert-inventory.md | done; GPU look asked |
 | The Hamalayi (hamalayi.js) | VP-10; rooms; **own pass done (merged 8.11)**: four village phases (moving day, camp, mending, home), owners at home, the monastery hall with Brother Tenpa, the observatory slate, the notice board/goat pen/prayer wheels; hamalayi-life.mjs 18/18; hamalayi-inventory.md | done; GPU look asked |
-| The underground (underground.js) | room camera; own pass | **own pass started 9.11** |
+| The underground (underground.js) | room camera; **own pass done (merged 9.11)**: Baldino and Vesk in character, the shaft's call post and shift log, the bore console by phase, the shutter's reason, a service hoist showing how Vesk got ahead, Sendell's pool, the epilogue's shield crew (Guard Harl, Tolli, Sala); under-bar.mjs 15/15; underground-inventory.md | done; GPU look asked |
 | Citadel | the reference; camera pass 3 in wave 1 | in progress |
 
 v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOORS-LBA2, the pink house turned, HANDS-36, STONES-31, ITEMS-1, the isles'/Desert/Hamalayi cast shapes.

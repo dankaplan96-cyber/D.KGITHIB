@@ -285,6 +285,14 @@ export const VOICES = {
   zr_rezz: { race: 'esmer', seed: 1511, f0: 112, k: 0.82, tilt: 2.1, rate: 1.4, contour: 'arc', legato: 0.4, spk: 2 },                           // the grounded shuttle pilot
   zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful
   dw_guard: { race: 'quetch', seed: 1513, f0: 118, k: 0.95, rate: 1.0, contour: 'flat', range: 2.5, legato: 0.5, swing: 0.05, spk: 2 }, // the depot's Quetch guard (chapter 1): clipped
+  // (DESERT-BAR's keepers, 8.11: Kesh's homes, the bunkhouse, the dormitory, S40; Quetch, each apart from Kesh's walkers)
+  ih_dela: { race: 'quetch', seed: 1620, f0: 206, k: 1.1, rate: 1.04, contour: 'zigzag', range: 5, legato: 0.6, spk: 2 },      // Brosk's wife: counts the stock aloud
+  ih_jorr: { race: 'quetch', seed: 1621, f0: 140, k: 0.98, rate: 0.9, contour: 'step', range: 3, legato: 0.6, spk: 1 },        // Mother Tarra's son: the water tally, careful
+  ih_nima: { race: 'quetch', seed: 1622, f0: 236, k: 1.16, rate: 1.0, contour: 'arc', range: 6, legato: 0.8, spk: 3 },         // Safi's mother: warm
+  ih_hanna: { race: 'quetch', seed: 1623, f0: 190, k: 1.06, rate: 0.7, contour: 'fall', range: 6, legato: 0.85, vib: [4.8, 18], tilt: 2.0 },   // Old Hanna: slow, kindly
+  ih_brann: { race: 'quetch', seed: 1624, f0: 104, k: 0.9, rate: 1.1, contour: 'flat', range: 3, legato: 0.45, spk: 2 },       // the dig crew's bunkhouse: blunt
+  ih_joss: { race: 'quetch', seed: 1625, kid: true, f0: 290, k: 1.2, rate: 1.06, contour: 'bounce', range: 5, legato: 0.6 },  // a School pupil
+  ih_leya: { race: 'quetch', seed: 1626, kid: true, f0: 340, k: 1.3, rate: 1.0, contour: 'sing', range: 6, legato: 0.7 },     // Bashir's granddaughter
   hs_foreman: { race: 'tri', seed: 1514, f0: 130, k: 0.98, rate: 1.2, contour: 'step', range: 3, legato: 0.4 },                       // the hostel: Foreman Ordo
   hs_cook: { race: 'mole', seed: 1515, f0: 240, k: 1.08, rate: 0.82, contour: 'sing', legato: 0.88, vib: [5, 20] },                   // Mama Pufa
   hs_worker1: { race: 'bee', seed: 1516, f0: 380, k: 1.3, rate: 1.45, contour: 'zigzag', legato: 0.6 },                               // Zizi
@@ -345,7 +353,7 @@ const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', '
   'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi',
   'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait', 'marl',
   'ot_ulla', 'ot_boss', 'ot_clerk', 'ot_guest', 'kn_nets', 'kn_mother', 'mb_bzzra', 'or_pick1', 'ce_dancer1', 'ce_lanterns', 'ug_carrier', 'pf_vill1', 'ow_oumi', 'ow_sketch',
-  'cs_corla', 'ih_liwa', 'zh_lissa', 'zh_wenna', 'zr_oma', 'hs_cook']);
+  'cs_corla', 'ih_liwa', 'zh_lissa', 'zh_wenna', 'zr_oma', 'hs_cook', 'ih_dela', 'ih_nima', 'ih_hanna']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
@@ -353,7 +361,7 @@ const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farme
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
   'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2', 'tibbo',
   'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'kn_quill', 'kn_fisher', 'or_pell', 'or_pick2', 'ce_steward', 'ce_dancer2', 'ld_op', 'ld_crane', 'ld_load1', 'ow_mason',
-  'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zr_fennick', 'zr_rezz', 'dw_guard', 'hs_foreman', 'hs_worker2', 'hs_worker3', 'hs_worker4']);
+  'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zr_fennick', 'zr_rezz', 'dw_guard', 'ih_jorr', 'ih_brann', 'hs_foreman', 'hs_worker2', 'hs_worker3', 'hs_worker4']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;
