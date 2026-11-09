@@ -94,7 +94,9 @@ export function buildOtrBarRoom(scene, physics) {
   const sky = M('ob_sky', () => { const t = skyTex(), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.3 }); return m; });
   const darkStone = MAT.rubble('slate'), cap = MAT.paint('#3a3e44', 0.5);
   const floor = MAT.tiles('#c4c6c8', '#3a8a9a', '#5a5e64', true, 6);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 1.8, UH = 0.6;
+  // (REVIEW-ZEELICH-ART (b), ISLES-BAR: the door at z 1.8 opened behind the back-bar's shelf wall (z 2.85), so he walked in
+  //  hidden beside the barkeep; now it opens at z 5.9, in front of the bar and its stools, where the room reads)
+  const LX = -W / 2, BZ = -D / 2, DOORZ = 5.9, UH = 0.6;
   B.shell({ floor, slab: darkStone, body: sky, low: darkStone, rail: WOOD(), cap, H, t: 0.5, dado: 1.6, rimH: 0.5, rimMat: cap, W, D,
     left: [{ at: DOORZ, w: 1.6, h: 2.6, y0: 0, kind: 'door', frame: WOOD() }, { kind: 'window', at: -4.6, w: 1.4, h: 1.2, y0: UH + 1.4 }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'otrbar-out' });
@@ -151,7 +153,7 @@ export function buildOtrBarRoom(scene, physics) {
   // --- the middle: booths in a row, the aquarium, plants
   for (const x of [-3.2, 0.2]) { B.put(x, 0.4, 0, (kk) => booth(kk, 1.8)); B.put(x, 1.55, 0, (kk) => barTable(kk)); }
   B.put(4.6, 1.6, 0, (kk) => aquarium(kk));
-  for (const [x, z] of [[LX + 0.6, D / 2 - 0.6], [-1.6, UZ1 + 0.6], [W / 2 - 0.6, D / 2 - 0.6], [W / 2 - 0.6, GZ1 + 1.6]]) B.put(x, z, 0, (kk) => leafPlant(kk));
+  for (const [x, z] of [[LX + 0.6, 3.6], [-1.6, UZ1 + 0.6], [W / 2 - 0.6, D / 2 - 0.6], [W / 2 - 0.6, GZ1 + 1.6]]) B.put(x, z, 0, (kk) => leafPlant(kk));
 
   // --- the L-shaped bar at the front left: the green top, bottles and urns, stools along it
   const BX0 = -7.4, BX1 = -2.8, BZB = 4.6;   // (the long arm along x, the short one down toward the front)

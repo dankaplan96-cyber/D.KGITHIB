@@ -30,7 +30,7 @@ Object.assign(STR.en, {
   ih_brem_council: "The council's guards open every crate now. Mine are boring. They open them twice.",
   ih_brem_net: "Copper, wire, glass. An inventor's list, sent over from the terminal island. I filled it.",
   ih_brem_2: "The barges come in at the yard below. I see them from the window and know what to charge.",
-  ih_gorrin_ord: "Soup for the diggers, morning and evening. The same soup. They say it's better than the gas.",
+  ih_gorrin_ord: "Soup for the diggers, before the shift and after. The same soup. They say it's better than the gas.",
   ih_gorrin_evac: "The diggers listen to the radio from Twinsun at supper. Nobody talks. The soup goes cold.",
   ih_gorrin_council: "Half the village has gone up to the council to argue. The other half is here, arguing about that.",
   ih_gorrin_net: "Busy again. Good. A canteen without diggers is just a pot.",

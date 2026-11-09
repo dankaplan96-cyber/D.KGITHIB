@@ -60,14 +60,17 @@ Object.assign(STR.en, {
   rs_ilo_0: "Mind your step, Twinsen. Everything on Zeelich is slightly uphill from the clouds.",
   rs_ilo_1: "The fountain has never once been rebuilt. We're very proud of it.",
   rs_ilo_work: "Careful with the basket. The apricots are shy.",
+  rs_ilo_evac: "Twinsun is emptying its towns, they say. Here we still sell apricots. It feels rude, somehow.",
 
   rs_aven_0: "I count the street's benches every week. Six. Always six. It calms me.",
   rs_aven_1: "From here you can watch all three mills turn. The wind works overtime.",
   rs_aven_work: "Sit if you like. The view doesn't change, and nor do I.",
+  rs_aven_evac: "Project ships in from Twinsun all day. I counted them too. I wish I hadn't.",
 
   rs_kira_0: "These planters are older than the project. They like being talked to. I talk to them a lot.",
   rs_kira_1: "Orb-stalks glow when they're happy. This one's been dim since the heat posts went up. Coincidence, I'm sure.",
   rs_kira_work: "Watering. Please don't make me lose count.",
+  rs_kira_evac: "My sister lives in Citadel. No letter this week. I water the planters so my hands have something to do.",
 
   rs_safi_0: "The oasis is lower than last year. Everyone says so. Nobody says it to the oasis.",
   rs_safi_1: "Twelve jars a day, from the water to the cool room. I stopped counting at eleven.",

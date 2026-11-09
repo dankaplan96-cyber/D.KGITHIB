@@ -27,6 +27,15 @@ import { CARRY } from './shops.js';
 import '../text/islandpeople.js';
 
 export const IP_PRICE = { life: 5, magic: 5, lens: 20, lensPaper: 8, honey: 6, honeyFriend: 4, cordial: 4, lantern: 10 };
+// ISLES-BAR: [the favour's flag, the line while it is open, the line once it is done (else the key itself)]
+const FAVOUR_LINE = {
+  ip_kn_kid_after: ['pp_light', 'ip_kn_kid_after_dark'], ip_kn_kid_1: ['pp_light', 'ip_kn_kid_1', 'ip_kn_kid_1_lit'],
+  ip_kn_fisher_after: ['pp_light', 'ip_kn_fisher_after_dark'], ip_ow_kid_after: ['pp_light', 'ip_ow_kid_after_dark'],
+  ip_ot_boss_after: ['pp_light', 'ip_ot_boss_after_dark'],
+  ip_ot_guest_after: ['pp_beacon', 'ip_ot_guest_after_dark'], ip_ld_load2_after: ['pp_beacon', 'ip_ld_load2_after_dark'],
+  ip_or_carter_after: ['pp_beacon', 'ip_or_carter_after_dark'], ip_ce_dancer1_after: ['pp_beacon', 'ip_ce_dancer1_after_dark'],
+  ip_or_pick1_after: ['pp_bzzraDone', 'ip_or_pick1_after_dark'], ip_or_pell_ord: ['pp_beacon', 'ip_or_pell_ord', 'ip_or_pell_ord_lit'],
+};
 const ISLE_OF = Object.fromEntries(Object.entries(ISLE_IDS).flatMap(([a, ids]) => ids.map((id) => [id, a])));
 for (const id of ISLE_ROOM_IDS) ISLE_OF[id] = 'isle_otringal';
 
@@ -150,7 +159,8 @@ export class IslandPeople extends ChapterBase {
     const id = npc.def.id, st = lineState(this.story), ph = islePhase(this.story) || 'ord', has = (k) => t(k) !== k, keys = [];
     for (const k of [`ip_${id}_${st}`, `ip_${id}_${ph}`]) if (has(k) && !keys.includes(k)) keys.push(k);
     for (let i = 0; i < 4 && has(`ip_${id}_${i}`); i++) keys.push(`ip_${id}_${i}`);
-    return keys;
+    // (ISLES-BAR: a line that tells of a favour done is said only once it is; till then its other line: text/isleslife.js)
+    return keys.map((k) => { const w = FAVOUR_LINE[k]; return w ? (this.f[w[0]] ? w[2] || k : w[1]) : k; });
   }
   talkFirst(npc) {
     const id = npc?.def?.id;

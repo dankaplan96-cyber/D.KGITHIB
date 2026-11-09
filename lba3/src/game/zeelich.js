@@ -735,22 +735,26 @@ export function* buildZeelichSteps(scene, physics) {
       box(1.4, 0.6, 0.8, new THREE.MeshStandardMaterial({ color: '#c8a050', roughness: 1 }), yx - 2.2, gy + 0.3, yz + 0.6, 0.3);
       col({ type: 'box', x: yx - 2.2, z: yz + 0.6, hw: 0.7, hd: 0.4, rot: 0.3, top: gy + 0.6 });
       for (const s of [-1, 1]) box(1.0, 0.06, 1.1, wood, yx - 2.4 + s * 0.42, gy + 0.36, yz - 1.2).rotation.z = -s * 0.75;
-      // the palisade: planks of uneven height on all four sides, a gap for a gate on the near (south) side
+      // the palisade: planks of uneven height on all four sides, a gap for a gate on the near (south) side. (REVIEW-ZEELICH-ART (c),
+      //  ISLES-BAR: the gap stood at the yard's middle, 1.5 m behind the council house's back wall, its roof 2 m before the gate;
+      //  now GX m west, at the lane between Mr Pelleck's house and the council house, which leads up from the street)
+      const GX = -4.0;
       const plank = (x, z, ry, h) => { const o = box(0.34, h, 0.08, (Math.round(x * 7 + z * 3) % 2) ? wood : woodD, x, gy + h / 2, z, ry); o.rotation.z = ((x * 13 + z * 7) % 1) * 0.08 - 0.04; };
-      for (let x = -HW; x <= HW + 0.01; x += 0.36) { plank(yx + x, yz - HD, 0, 1.15 + Math.abs(Math.sin(x * 3.1)) * 0.25); if (Math.abs(x) > 0.9) plank(yx + x, yz + HD, 0, 1.1 + Math.abs(Math.sin(x * 2.3)) * 0.25); }
+      for (let x = -HW; x <= HW + 0.01; x += 0.36) { plank(yx + x, yz - HD, 0, 1.15 + Math.abs(Math.sin(x * 3.1)) * 0.25); if (Math.abs(x - GX) > 0.9) plank(yx + x, yz + HD, 0, 1.1 + Math.abs(Math.sin(x * 2.3)) * 0.25); }
       for (let z = -HD + 0.36; z < HD; z += 0.36) for (const s of [-1, 1]) plank(yx + s * HW, yz + z, Math.PI / 2, 1.15 + Math.abs(Math.sin(z * 2.7 + s)) * 0.25);
       col({ type: 'box', x: yx, z: yz - HD, hw: HW, hd: 0.1, rot: 0, top: gy + 1.2 });
       for (const s of [-1, 1]) {
         col({ type: 'box', x: yx + s * HW, z: yz, hw: 0.1, hd: HD, rot: 0, top: gy + 1.2 });
-        col({ type: 'box', x: yx + s * (HW + 0.9) / 2, z: yz + HD, hw: (HW - 0.9) / 2, hd: 0.1, rot: 0, top: gy + 1.2 });
       }
+      // (the south side either side of the gate's gap)
+      for (const [a, b] of [[-HW, GX - 0.9], [GX + 0.9, HW]]) col({ type: 'box', x: yx + (a + b) / 2, z: yz + HD, hw: (b - a) / 2, hd: 0.1, rot: 0, top: gy + 1.2 });
       keepClear(yx - HW - 1, yz - HD - 1, yx + HW + 1, yz + HD + 1);
       const P = path.map(([x, z, hop]) => [x + ox, z + oz, hop]);
       dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'grey', x: P[0][0], z: P[0][1], path: P }));
       dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'brown', x: P[12][0], z: P[12][1], path: P }));
       dogs[1].s = dogs[1].len / 2;
       dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'greybrown', x: yx + ox - 2, z: yz + oz - 1.5, area: { x0: yx + ox - 3.5, z0: yz + oz - 1.6, x1: yx + ox + 3.5, z1: yz + oz + 1.6 } }));
-      R.dogYard = { ...W(yx, yz), gate: W(yx, yz + HD) };
+      R.dogYard = { ...W(yx, yz), gate: W(yx + GX, yz + HD) };
     }
     addDogs(dogs, updaters);
     R.dogs = dogs;

@@ -2030,6 +2030,10 @@ function buildIsland0(scene, physics, name, L, at) {
   R.landmark = p0 ? { x: ox + p0.x, z: oz + p0.z, word: plan.pois[0].word, look: { x: ox + lk.x, z: oz + lk.z } } : null;
   R.pois = plan.pois.filter((p) => p.reach).map((p) => ({ x: ox + p.reach.x, z: oz + p.reach.z, word: p.word }));
   R.dressing = pieces; R.rails = rails;
+  // (ISLES-BAR: the pieces a player reads as usable, in world coordinates, with their footprint: story/isleslife.js gives
+  //  each a word or a use)
+  const USABLE = new Set(['shuttleBoard', 'signpost', 'fountain', 'stall', 'netRack', 'laundry', 'greatHive', 'hive', 'gasHolder', 'pump', 'warn', 'boardSign', 'mineMouth', 'liftTower', 'bellFrame', 'crane', 'cloudCatcher', 'telescope', 'weighBeam', 'nectarPress', 'ruinedTower', 'fallenDome']);
+  R.items = plan.items.filter((it) => USABLE.has(it.kind)).map((it) => { const fr = FOOT[it.kind]?.(it.o || {}) || { r: 0.5 }; return { kind: it.kind, x: ox + it.x, z: oz + it.z, ry: it.ry || 0, r: fr.r ?? Math.max(fr.hw || 0.5, fr.hd || 0.5), words: (it.o?.boards || []).map((b) => b.text), text: it.o?.text || '' }; });
   R.views = { arrival: plan.arrivalView, landmark: plan.pois[0]?.view || null };   // (the planner's camera model: foreground share, his body hidden)
   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
