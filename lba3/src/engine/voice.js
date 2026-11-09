@@ -278,6 +278,9 @@ export const VOICES = {
   zh_lissa: { race: 'esmer', seed: 1508, f0: 236, k: 1.2, rate: 1.12, contour: 'bounce', range: 6, legato: 0.6, spk: 1 },             // Nara's niece: young, lively
   zh_wenna: { race: 'esmer', seed: 1509, f0: 210, k: 1.0, tilt: 2.0, rate: 0.74, contour: 'fall', range: 3, legato: 1.0, vib: [5, 18], spk: 2 },          // Oku's wife: older, settled
   hl_monk: { race: 'bunny', seed: 1601, f0: 118, k: 1.0, rate: 0.78, contour: 'fall', legato: 0.86, sex: 'm' },   // Brother Tenpa, the monks' hall (HAMALAYI-LIFE): slow, warm
+  dp_guard: { race: 'esmer', seed: 1701, f0: 116, k: 0.9, rate: 0.84, contour: 'flat', range: 2.5, legato: 0.5, spk: 3, sex: 'm' },              // Guard Harl at the shaft's lift (UNDER-BAR): even, slow
+  dp_tolli: { race: 'quetch', seed: 1702, f0: 150, k: 1.0, rate: 1.12, contour: 'bounce', legato: 0.55, spk: 1 },                     // Tolli of the shield crew: brisk
+  dp_sala: { race: 'esmer', seed: 1703, f0: 228, k: 1.12, rate: 0.96, contour: 'arc', range: 4, legato: 0.7, spk: 1 },                // Sala, Zeelich's half of the crew: light
   zr_fennick: { race: 'quetch', seed: 1510, f0: 132, k: 0.96, rate: 1.08, contour: 'bounce', legato: 0.56, spk: 3 },                  // the heat fitter: busy
   zr_rezz: { race: 'esmer', seed: 1511, f0: 112, k: 0.82, tilt: 2.1, rate: 1.4, contour: 'arc', legato: 0.4, spk: 2 },                           // the grounded shuttle pilot
   zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful

@@ -30,6 +30,10 @@
 //               R.console {x,z}; R.npcSpots {vesk}; R.bossSpot {x,y,z}; R.arena {x0,z0,x1,z1}
 //               R.field {level, setLevel(0..1)}; R.drill {spin, mode, setSpin(rad/s), setMode('drill'|'shield')}
 //               exit 'c3-sendell'
+// UNDER-BAR (the underground at Citadel's bar, story/deeplife.js; docs/lba-maturity/underground-inventory.md):
+//   every room  R.looks [{id, x,z,y, r}]: the things that look usable and answer (deeplife.js gives the line by phase)
+//   c3shaft     R.crew {guard:{x,z,a}}            c3deep  R.hoist {x,z, open, setOpen(b)}, R.crew {tolli:[stops]}
+//   c3core      R.crew {sala:{x,z,a}}: the shield crew's reader at the console's end once Vesk is gone
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite, twoSided, sag } from './interiors.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, canvasTex } from './props.js';
@@ -535,6 +539,10 @@ function buildShaft(scene, physics) {
   cableRun(kt, [[legs[1][0], linerY - 0.3, legs[1][1]], [-1.0, 4.5, BZ + 0.3]], 0.03, 0.6);
   cableRun(kt, [[cl[2][0], 4.0, cl[2][1]], [-1.0, 4.5, BZ + 0.3]], 0.03, 0.3);
   for (const [x, z, ry] of [[LX + 0.45, 2.8, Math.PI / 2], [-1.2, BZ + 0.45, 0]]) { k.at(x, 3.0, z, ry, () => wallLamp(k)); const [lx, lz] = ry ? [x + 1.1, z] : [x, z + 1.1]; B.light('#ffe2b8', 5, 7, lx, 2.6, lz); }
+  // UNDER-BAR: the call post (the way back up) and the crew's tea corner (its shift log) answer; the lift's guard after the
+  // ending stands between the pad and the tea corner, off the walk to the tunnel
+  R.looks = [{ id: 'callpost', ...B.world(cpX, cpZ), y: 0, r: 1.25 }, { id: 'tea', ...B.world(tX, tZ), y: 0, r: 1.5 }];
+  R.crew = { guard: { ...B.world(-2.7, 1.9), a: ang(-2.7, 1.9, LS.x, LS.z) } };
 
   // --- the rock: outcrops, boulders, crystal seams starting to show in the walls
   for (const [x, z, s, sy, sd] of [[LX + 1.0, 5.4, 1.3, 1.0, 4], [-2.8, BZ + 0.9, 1.1, 1.5, 9], [7.9, BZ + 2.4, 1.0, 1.3, 12], [LX + 0.7, -5.2, 1.3, 2.2, 15], [8.0, 5.2, 1.0, 0.8, 18], [2.2, 5.6, 0.8, 0.6, 19]]) {
@@ -838,6 +846,36 @@ function buildDeep(scene, physics) {
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.8, to: 'c3-gallery' });
   R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.75, to: 'c3-shaft' });
   R.spawn = { ...B.world(LX + 1.7, entZ), a: Math.PI / 2 };
+
+  // --- the service hoist to the core (UNDER-BAR): a caged well in the back wall behind the exchanger. Its cage is down at
+  //  the core and its call locked from below: the way Vesk went ahead (the galleries' bridge is out). The lamp turns green
+  //  once the shield crew runs it (deeplife.js). Shut: the gate is a wall
+  const HX = 2.0, HW = 1.6, HH = 2.6;
+  for (const s of [-1, 1]) k.at(HX + s * (HW / 2 + 0.14), 0, BZ + 0.16, 0, () => column(k, HH + 0.3, 0.24));
+  k.at(HX, HH + 0.34, BZ + 0.18, 0, () => ibeam(k, HW + 0.62, 0.32, 0.24));
+  k.add(rbox(HW + 0.5, 0.2, 0.06, 0.02), hazard(), HX, HH + 0.08, BZ + 0.27);
+  k.add(plane(HW, HH), MAT.flat('#050406', 1), HX, HH / 2, BZ + 0.05);
+  for (const s of [-1, 1]) k.add(rbox(0.08, HH, 0.08, 0.02), iron(), HX + s * 0.52, HH / 2, BZ + 0.1);
+  for (const s of [-0.16, 0.16]) k.add(cyl(0.02, 0.02, HH, 5), MAT.steel(), HX + s, HH / 2, BZ + 0.12);
+  for (let i = 0; i <= 8; i++) k.add(rbox(0.035, HH - 0.12, 0.035, 0.008), iron(), HX - HW / 2 + 0.04 + i * ((HW - 0.08) / 8), HH / 2, BZ + 0.22);
+  for (const y of [0.12, HH / 2, HH - 0.12]) k.add(rbox(HW, 0.06, 0.05, 0.01), brass(), HX, y, BZ + 0.25);
+  k.add(rbox(HW + 0.3, 0.05, 0.5, 0.015), hazard(), HX, 0.03, BZ + 0.45);
+  k.at(HX, HH + 0.82, BZ + 0.2, 0, () => signPlate(k, 1.5, 0.42, signMat(['SERVICE HOIST', 'CORE LEVEL'], { w: 384, h: 110, emblem: false })));
+  const cbX = HX + HW / 2 + 0.6;
+  k.at(cbX, 1.25, BZ + 0.12, 0, () => { k.add(rbox(0.3, 0.44, 0.14, 0.02), teal(), 0, 0, 0); k.add(sphere(0.035, 8, 6), MAT.paint('#e8e0d0', 0.4), 0, -0.07, 0.08); });
+  const hoistLamp = new THREE.Mesh(sphere(0.06, 10, 8), stdM({ color: '#ffd0c0', emissive: '#ff3020', emissiveIntensity: 2.0 }, 0, { noShadow: true }));
+  hoistLamp.position.set(cbX, 1.56, BZ + 0.2); B.group.add(hoistLamp);
+  B.col(HX + 0.3, BZ + 0.2, HW / 2 + 0.6, 0.2, HH + 0.5, { noStand: true });
+  R.hoist = { ...B.world(HX, BZ + 1.0), open: false, setOpen(b) { this.open = !!b; hoistLamp.material.emissive.set(b ? '#30e060' : '#ff3020'); hoistLamp.material.color.set(b ? '#c8ffd0' : '#ffd0c0'); } };
+  // UNDER-BAR: what else looks usable and answers: the bore's console by the way in, the shutter while the heat holds it,
+  // the hoist; the shield crew's engineer after the ending walks the console, valve A and the exchanger's sight glasses
+  R.looks = [
+    { id: 'console', ...B.world(LX + 1.0, 0.4), y: 0, r: 1.15 },
+    { id: 'shutter', ...B.world(doorX, BZ + 1.35), y: 0, r: 1.6 },
+    { id: 'hoist', ...B.world(HX, BZ + 0.9), y: 0, r: 1.45 },
+    { id: 'diagram', ...B.world(LX + 0.9, 2.3), y: 0, r: 1.9 },
+  ];
+  R.crew = { tolli: [{ ...B.world(LX + 1.35, 0.4), a: -Math.PI / 2 }, { ...B.world(LX + 1.5, -2.4), a: -Math.PI / 2 }, { ...B.world(2.0, -0.35), a: Math.PI }] };
 
   // --- the bore's transmission in the corner: the drill string coming down, a ring gear and its motor
   const TX = { x: 9.5, z: -6.2 };
@@ -1169,6 +1207,8 @@ function buildGallery(scene, physics) {
   // (DIFFICULTY: the near mite sleeps 7 m from the way in, not 3 m — the first step in the room is a breath, not a bite; the far
   //  two sleep 5-6 m back from where the stones end. They wake one after the other: chapter3.js `wake`)
   R.mites = [B.world(-7.0, -0.4), B.world(-8.2, -5.6), B.world(11.0, -6.8), B.world(10.0, 5.6)];
+  // UNDER-BAR: the crew's warning board at the edge reads (from the shelf, not from the chasm floor)
+  R.looks = [{ id: 'bridge', ...B.world(-6.5, 2.4), y: DY, r: 1.5 }];
   // two supply crates of the crew's, one on each shelf (the player can rummage them: a hop beside one, a heart each visit): the
   // one by the way in, with the other stack; the other at the far shelf's rim, past the stones. A fall into the chasm costs 2 HP.
   crateStack(B, 11.9, 0.6, -0.25, [[0.9, 0.75, 0.9], [0.7, 0.55, 0.7, null, 0.3]], DY);
@@ -1407,6 +1447,8 @@ function buildSendell(scene, physics) {
   // exits and spawn
   { const [x, z] = polar(ENT, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-gallery' }); const [sx, sz] = polar(ENT, Rr - 2.0); R.spawn = { ...B.world(sx, sz), a: ang(sx, sz, 0, 0) }; }
   { const [x, z] = polar(EXI, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-core' }); }
+  // UNDER-BAR: the first relief of the two suns (by the way in), and her pool
+  { const [x, z] = polar(Math.PI * 1.42, Rr - 1.0); R.looks = [{ id: 'relief', ...B.world(x, z), y: 0, r: 1.3 }, { id: 'pool', ...B.world(0, 0), y: 0, r: PR + 1.25 }]; }
   B.light('#6a80e0', 2.2, 16, 0, 5, 0);
   B.light('#8aa0ff', 1.6, 9, -3.5, 3.0, -3.5);
 
@@ -1705,6 +1747,11 @@ function buildCore(scene, physics) {
   { const [x, z] = [CP[0] - Math.sin(cpA) * 0.9, CP[1] - Math.cos(cpA) * 0.9]; B.col(x, z, 1.12, 0.42, 2.6, { rot: cpA, noStand: true }); }
   R.console = B.world(CP[0] - Math.sin(cpA) * 0.9, CP[1] - Math.cos(cpA) * 0.9);
   R.npcSpots = { vesk: { ...B.world(CP[0] - Math.sin(cpA) * 0.05, CP[1] - Math.cos(cpA) * 0.05), a: cpA + Math.PI } };
+  // UNDER-BAR: Vesk's burnt console reads after the ending, from the deck at the foot of his platform's steps (the platform
+  // is his stage, not climbed); the shield crew's Sala reads the field there, a step to the side of the steps (deeplife.js)
+  R.looks = [{ id: 'vconsole', ...B.world(CP[0] + Math.sin(cpA) * 2.1, CP[1] + Math.cos(cpA) * 2.1), y: 0, r: 1.5 }];
+  { const sx = CP[0] + Math.sin(cpA) * 3.2 + Math.cos(cpA) * 1.4, sz = CP[1] + Math.cos(cpA) * 3.2 - Math.sin(cpA) * 1.4;
+    R.crew = { sala: { ...B.world(sx, sz), a: ang(sx, sz, CP[0], CP[1]) } }; }
   B.light('#9ff4ff', 3, 5, CP[0] - Math.sin(cpA) * 0.2, 2.2, CP[1] - Math.cos(cpA) * 0.2);
 
   // --- the arena for the guardian, the spot it rises from

@@ -39,6 +39,7 @@ const TRANSITIONS = [
   ['chapter3.js', 'toCore', 'same', 'chapter 11 → 12: on down through the shell (the underground)'],
   ['chapter3.js', 'interact', 'same', "chapter 11: into the shaft at Citadel's station (on foot, down its ladder: the underground under Citadel)"],
   ['chapter3.js', 'finish', 'cut', 'chapter 12 → the epilogue: home a few days later (a cut in time)'],
+  ['deeplife.js', 'interact', 'same', "the epilogue: into the shaft at Citadel's station again, the shield crew's way down (UNDER-BAR)"],
   ['council.js', 'verdict', 'same', "chapter 9 → 10: the council chamber → Baldino's workshop, both on Zeelich"],
   ['council.js', 'spotted', 'same', 'chapter 9, the archive: spotted, back to its door (the same room)'],
   ['dig.js', 'readCarving', 'same', 'chapter 4 → 5: Desert Island, both'],
