@@ -177,8 +177,15 @@ is time with 2 or more of them hidden (the outline shows). Probes and pictures i
 | PT-8 Doran | The two-shot ignored bystanders. | CAM-CROWD: the two-shot avoids people near the lens or on the lines to the faces (`camRig.crowd`, `main.js`). | Doran 3.5 m from the lens, near frame centre → no bystander within 4.5 m in frame (`vesk-after2/09`). A first try put a guard's body over him; fixed in the same pass. |
 | PT-7 props | Trees and banners counted as see-through; the monastery gate's roofs had no shape. | CAM-CROWN: the tall trees' and the pines' crowns and the Esmer banners' cloth count for sight (`world.js`, `props-esmer.js`). `hamalayi.js`: shapes for the gate pillars' roofs. | 8 + extra headings × 1.5 s: depot-wheel tree 1.5 → 0, glider-field pine 1.5 → 0, Otringal's banners 4.5 → 3.0. The 2 headings left are a building mesh, not looked into. Water Office exit: 0 → 0, not reproduced. Monastery gate: 0 → 0, not reproduced (shape added from source). **Left:** the mill sails (thin and turning: a shape would push the camera about for a moment's cover), the cliff face (`04/04`) and the snow lip (`09/05`): he is in full view; it is the ground. |
 
-Suites on the final state: listed in the pass's report. The dormitory pocket, the three doors across the clouds, Lhar's
-overlaps: `desert-inventory.md`, `isles-inventory.md`.
+Suites, one at a time on the final camera, all PASS: `camfollow`, `camcitadel`, `camisles`, `camera-doors`,
+`slidetraps`, `camclear`, `chapter1`, `chapter2`, `chapter4`, `chapter5`, `chapter8`, `overlaps` (ONLY=hamalayi: Lhar's
+two flicker spots gone — `props-mountain.js` mountainHouse's walls stop 5 cm under the eaves band, which had them in
+one plane with a snow surface under the roof). After the outdoor door step was dropped: `island-doors`, `hamalayi-life`
+and `desert-bar` again. Cost, measured against world-polish 3's `camcitadel` (deterministic walks): 92 of 121 lines
+unchanged, all within bounds, but the arm comes in sooner where a house hides his legs ("behind the house, walk through
+heading south-east": least arm 6.47 → 3.2 m, 1.12 s under 5 m where there was none; "house alley, a whole turn" 2.98 s
+under 5 m at a stretch, bound 3). `camisles`: Otringal's flight down to the plaza, out of sight 9 frames → 0. The
+dormitory pocket and the three doors across the clouds: `desert-inventory.md`, `isles-inventory.md`.
 
 ## Left for others
 
