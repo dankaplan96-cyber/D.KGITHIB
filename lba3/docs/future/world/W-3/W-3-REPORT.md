@@ -63,13 +63,13 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 | suite | result |
 |---|---|
 | `tests/ballastra-gardens.mjs` (new) | 22/22 PASS |
-| `ballastra-arches` | {ARCHES} |
-| `ballastra-harbor` | {HARBOR} |
-| `oren-first` | {FIRST} |
-| `oren-bands` | {BANDS} |
-| `oren-coils` | {COILS} |
-| `oren-square` | {SQUARE} |
-| `world-consistency` | {WC} |
+| `ballastra-arches` | 20/20 PASS (W-2's gate exit now active) |
+| `ballastra-harbor` | 19/19 PASS |
+| `oren-first` | 21/21 PASS |
+| `oren-bands` | 25/25 checks PASS; verdict FAIL on 1 resource: a connection reset on `assets/music/zeelich_b.mp3` from my scratch Node server (media loading). Not W-3: the same reset happens with W-3 unhooked (the pre-W-3 regions.js served). The same suite passed outright in EXP-MERGE-35 on this machine |
+| `oren-coils` | 33/33 PASS |
+| `oren-square` | 29/29 PASS |
+| `world-consistency` | 37/37 PASS |
 
 - The new suite walks the gardens by input both dry and full, 18 legs each.
 - It also checks:
