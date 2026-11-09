@@ -173,6 +173,7 @@ export class Inventory {
   }
   show(on) {
     this.open = on;
+    this.closeReq = false;
     this.el.classList.toggle('hidden', !on);
     if (on) this.render();
     else stage.spin(null);   // (nothing turns once it is shut)
@@ -180,6 +181,7 @@ export class Inventory {
   // the controls line, in the keys the player uses (rebound keys by name) or the pad's buttons (CLAR-2)
   hint(K) {
     if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: `${PAD_LABELS.inventory} / ${PAD_LABELS.dodge}` });   // (View, or B as the menus' Back)
+    if (this.game.input?.lastDevice === 'touch') return t('inv_hint_touch');   // (UI-PASS: a tap selects, Close closes)
     const mv = ['up', 'left', 'down', 'right'].map(K), move = mv.every((s) => s.length === 1) ? mv.join('') : mv.join(' ');
     const close = [...new Set([K('inventory'), keyLabel(keyFor('pause'))])].join(' / ');
     return t('inv_hint_keys', { move, close });
@@ -194,14 +196,16 @@ export class Inventory {
     const count = (it) => it.n == null ? '' : `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : it.n}</em>`;
     const grid = items.map((it, i) => `<button class="inv-item${i === this.sel ? ' sel' + (stage.live ? ' spinning' : '') : ''}" data-i="${i}" aria-label="${t('it_' + it.id)}"><img src="${this.pic(it)}" alt="">${i === this.sel ? '<canvas class="spin" width="128" height="128"></canvas>' : ''}${count(it)}</button>`).join('');
     const sel = items[this.sel];
-    const desc = sel ? t('itd_' + sel.id) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') : '';
+    const desc = sel ? t('itd_' + sel.id, { k: K('ball'), e: K('interact') }) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') : '';
     const use = sel && USE.has(sel.id) ? `<b class="inv-use">${t('inv_use', { k: K('interact') })}</b>` : '';
     const journal = g.story.journal().map((c) => c.lines.length ? `<h3>${c.title}</h3><ul>${c.lines.map((l) => `<li class="${l.done ? 'done' : ''}">${t(l.key)}</li>`).join('')}</ul>` : '').join('');
     this.el.innerHTML = `<div class="inv-panel lba-frame">
       <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div>
         <div class="inv-detail">${sel ? `<div class="inv-big lba-frame"><canvas width="320" height="320"></canvas></div><div class="inv-text"><h3 class="inv-name">${t('it_' + sel.id)}${sel.n != null ? ` <span>${sel.id === 'ball' ? t('it_level', { n: sel.n }) : '× ' + sel.n}</span>` : ''}</h3><p class="inv-desc">${desc}</p>${use}</div>` : ''}</div></section>
       <section class="inv-journal"><h2>${t('journal_title')}</h2><div class="inv-obj">${g.story.objective()}</div>${journal}</section>
-      <div class="inv-hint">${this.hint(K)}</div></div>`;
+      <div class="inv-foot"><span class="inv-hint">${this.hint(K)}</span><button class="inv-close" type="button">${t('map_close_btn')}</button></div></div>`;
+    // (UI-PASS: a Close button for the mouse and touch, as the Holomap has; main.js closes it on its next frame)
+    this.el.querySelector('.inv-close').addEventListener('click', () => { this.closeReq = true; });
     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
     // the selected item turns (LBA2: a turn in 4.1 s), in the large view and in its slot
     if (sel) { const look = lookOf(sel.id, sel.icon); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
@@ -213,10 +217,10 @@ export class Inventory {
     // (up and down move a row: the grid's own columns, which the screen's width sets: css .inv-grid)
     const grid = this.el.querySelector('.inv-grid'), COLS = (grid && getComputedStyle(grid).gridTemplateColumns.split(' ').length) || 5;
     const was = this.sel;
-    if (input.pressed('right')) this.sel = (this.sel + 1) % n;
-    if (input.pressed('left')) this.sel = (this.sel + n - 1) % n;
-    if (input.pressed('down')) this.sel = Math.min(n - 1, this.sel + COLS);
-    if (input.pressed('up')) this.sel = Math.max(0, this.sel - COLS);
+    if (input.menu('right')) this.sel = (this.sel + 1) % n;
+    if (input.menu('left')) this.sel = (this.sel + n - 1) % n;
+    if (input.menu('down')) this.sel = Math.min(n - 1, this.sel + COLS);
+    if (input.menu('up')) this.sel = Math.max(0, this.sel - COLS);
     if (this.sel !== was) { this.render(); this.game.audio?.play('blip'); }
   }
 }

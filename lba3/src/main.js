@@ -81,6 +81,8 @@ const THUMB_WORKER = `onmessage = async (e) => {
   } catch (err) { postMessage({ url: null, token }); }
 };`;
 const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
+// the screens opened from another one: Back (Esc, a pad's B) returns to it (UI-PASS)
+const CHILD_SCREENS = new Set(['settings', 'controls', 'confirmnew', ...SLOT_SCREENS]);
 // the states that count as play time (not the title, the pause menus, game over or the ending screen)
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
@@ -461,7 +463,8 @@ class Game {
     this.last = performance.now();
     requestAnimationFrame((t2) => this.loop(t2));
 
-    if (matchMedia('(pointer: coarse)').matches) this.touch = true;
+    // (UI-PASS: a touch screen starts with the touch buttons' names in prompts and hints, not the keyboard's)
+    if (matchMedia('(pointer: coarse)').matches) { this.touch = true; this.input.lastDevice = 'touch'; }
     await this.prepare();
   }
 
@@ -1486,11 +1489,13 @@ class Game {
     this._rebindOff?.(); // (a key press after leaving the controls screen never rebinds anything)
     document.querySelector('#chapter')?.classList.remove('show'); // (a chapter title never sits on top of a screen)
     $('#' + id).classList.remove('hidden');
-    if (id === 'title') { const any = this.anySave(); $('#btn-continue').disabled = !any; $('#btn-load').disabled = !any; }
+    // (UI-PASS: with no save at all, Continue and Load Game are left out rather than shown dimmed)
+    if (id === 'title') { const any = this.anySave(); for (const b of [$('#btn-continue'), $('#btn-load')]) { b.disabled = !any; b.classList.toggle('hidden', !any); } }
     this.screen = id;
     if (id === 'settings') { this.syncSettingsUI(); this.setTabTo(this.setTab || 'game'); }
     if (id === 'savegame' || id === 'loadgame') this.buildSlots(id);
     if (id === 'slotconfirm') this.buildSlotConfirm();
+    if (id === 'controls') this.buildRebind();   // (UI-PASS: before the selection is drawn: on a first opening it fell on Reset)
     if (id === 'pause') { $('#pause-msg').textContent = ''; $('#btn-save').classList.toggle('blocked', !!this.saveBlockReason()); }
     this.screenT = 0;
     this.menuSel = 0;
@@ -1511,6 +1516,7 @@ class Game {
     if (this.screen === 'settings') document.querySelectorAll('#settings .sel').forEach((e) => e.classList.remove('sel'));
     btns.forEach((b, i) => b.classList.toggle('sel', i === this.menuSel));
     if (scroll) btns[this.menuSel]?.scrollIntoView?.({ block: 'nearest' });
+    if (this.screen === 'settings') this.settingsDesc();
   }
   // a child menu (Settings, Controls) remembers where its parent's selection was; Back returns to it
   openChild(id) {
@@ -1518,7 +1524,6 @@ class Game {
     if (this.screen) this.menuStack.push({ id: this.screen, sel: this.menuSel });
     this.prevScreen = this.screen;
     this.showScreen(id);
-    if (id === 'controls') this.buildRebind();
   }
   closeChild() {
     const top = this.menuStack?.pop();
@@ -1560,12 +1565,12 @@ class Game {
     if (i.pressed('cycle')) tab = i.keys.has('ShiftLeft') || i.keys.has('ShiftRight') ? -1 : 1;
     if (pad && i.pressed('swap')) tab = -1;
     if (pad && i.pressed('focus')) tab = 1;
-    let dir = i.pressed('right') ? 1 : i.pressed('left') ? -1 : 0;
+    let dir = i.menu('right') ? 1 : i.menu('left') ? -1 : 0;
     if (dir) this._setHeld = now;
     const slider = it?.querySelector?.('input[type=range]');
-    const held = (i.down('right') ? 1 : 0) - (i.down('left') ? 1 : 0);
+    const held = (i.menuHeld('right') ? 1 : 0) - (i.menuHeld('left') ? 1 : 0);
     if (!dir && slider && held && now - (this._setHeld || 0) > 380 && now - (this._setRep || 0) > 70) { dir = held; this._setRep = now; }
-    const confirm = i.pressed('interact') || i.pressed('action') || i.pressed('recenter');
+    const confirm = i.menu('ok');
     if (it?.classList.contains('set-tabs')) { tab ||= dir; if (confirm && !tab) tab = 1; dir = 0; }
     if (tab) {
       const T = ['game', 'controls', 'display', 'sound'], k = (T.indexOf(this.setTab) + tab + T.length) % T.length;
@@ -1628,21 +1633,22 @@ class Game {
     });
     // the mouse (or a touch) selects the row under it: one row highlighted, not one by the pointer and one by keys
     const pick = (e) => {
-      if (this.screen !== 'settings' || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+      if (this.screen !== 'settings' || (e.type === 'pointermove' && (e.pointerType !== 'mouse' || !this.mouseMoved(e)))) return;
       const el = e.target.closest('.set-tabs, .set-row, .set-fold, .menu button'); if (!el) return;
       const k = this.settingsItems().indexOf(el);
       if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(); }
     };
     $('#settings').addEventListener('pointermove', pick);
     $('#settings').addEventListener('pointerdown', pick);
-    // (SAVE-SLOTS: the same on the slot screens — the slot under the mouse is the selected one, one burning bar)
+    // (SAVE-SLOTS: the same on the slot screens — the slot under the mouse is the selected one, one burning bar;
+    //  UI-PASS: on every other menu screen too — the title, pause, Controls, the confirmations, game over, the ending)
     const pickSlot = (e) => {
-      if (!SLOT_SCREENS.has(this.screen) || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
-      const b = e.target.closest('.menu button'); if (!b) return;
+      if (!this.screen || this.screen === 'settings' || (e.type === 'pointermove' && (e.pointerType !== 'mouse' || !this.mouseMoved(e)))) return;
+      const b = e.target.closest('.menu button, #rebind .keybtn'); if (!b) return;
       const k = this.menuButtons().indexOf(b);
       if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(); }
     };
-    for (const id of SLOT_SCREENS) { $('#' + id).addEventListener('pointermove', pickSlot); $('#' + id).addEventListener('pointerdown', pickSlot); }
+    for (const el of document.querySelectorAll('.screen')) if (el.id !== 'settings' && el.id !== 'loading') { el.addEventListener('pointermove', pickSlot); el.addEventListener('pointerdown', pickSlot); }
     $('#pausebtn').addEventListener('click', () => this.pause());
     // a story scene stops when the window loses focus (its music would run on without the picture)
     document.addEventListener('visibilitychange', () => {
@@ -1680,6 +1686,12 @@ class Game {
   }
   // the label of the key bound to an action ("E", "Space"...), for prompts
   keyName(action) { return keyLabel(keyFor(action)); }
+  // a pointer move that really moved (the browser's own moves after a list is redrawn under a still mouse don't)
+  mouseMoved(e) {
+    const m = this._ptrAt, moved = !m || m[0] !== e.clientX || m[1] !== e.clientY;
+    this._ptrAt = [e.clientX, e.clientY];
+    return moved;
+  }
 
   act(a, btn) {
     switch (a) {
@@ -1891,13 +1903,24 @@ class Game {
     this.slotCard(card, A.n, slotInfo(A.n), false);
     S.querySelector('[data-act="slotyes"]').textContent = t(A.kind === 'delete' ? 'slot_delete_yes' : 'slot_overwrite_yes');
   }
+  // the controls list in two columns (a wide window): left / right go across to the key beside (UI-PASS)
+  keysNav(btns) {
+    const i = this.input, d = i.menu('right') ? 1 : i.menu('left') ? -1 : 0;
+    const cur = btns[this.menuSel]; if (!d || !cur?.classList.contains('keybtn')) return false;
+    const rows = [...document.querySelectorAll('#rebind .krow')], r = rows.indexOf(cur.closest('.krow')), cols = getComputedStyle($('#rebind')).gridTemplateColumns.split(' ').length;
+    if (cols < 2) return true;
+    const per = +getComputedStyle($('#rebind')).getPropertyValue('--rows') || rows.length, to = rows[r + d * per]?.querySelector('.keybtn');
+    const k = to ? btns.indexOf(to) : -1;
+    if (k >= 0) { this.menuSel = k; this.focusMenu(true); this.audio.play('blip'); }
+    return true;
+  }
   // the Load list: up / down go from slot to slot (past the Delete buttons), right / left between a slot and its Delete
   slotNav(btns) {
     const i = this.input, cur = btns[this.menuSel], isDel = (b) => !!b?.classList.contains('slot-del');
     const go = (b) => { const k = btns.indexOf(b); if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(true); this.audio.play('blip'); } };
-    if (i.pressed('right')) { if (cur?.classList.contains('slot')) go(cur.parentElement.querySelector('.slot-del')); return true; }
-    if (i.pressed('left')) { if (isDel(cur)) go(cur.parentElement.querySelector('.slot:not(:disabled)')); return true; }
-    const d = i.pressed('down') ? 1 : i.pressed('up') ? -1 : 0;
+    if (i.menu('right')) { if (cur?.classList.contains('slot')) go(cur.parentElement.querySelector('.slot-del')); return true; }
+    if (i.menu('left')) { if (isDel(cur)) go(cur.parentElement.querySelector('.slot:not(:disabled)')); return true; }
+    const d = i.menu('down') ? 1 : i.menu('up') ? -1 : 0;
     if (!d) return false;
     let k = isDel(cur) ? Math.max(0, btns.indexOf(cur.parentElement.querySelector('.slot'))) : this.menuSel;
     for (let n = 0; n < btns.length; n++) { k = (k + d + btns.length) % btns.length; if (!isDel(btns[k])) break; }
@@ -1921,18 +1944,57 @@ class Game {
       // (AUTO-QUALITY: what Auto runs now, in words; PERF-BATTERY: the battery profile's note)
       quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? ', settling' : '') }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
+      // (UI-PASS: every row says what it does; the keys named are the ones in use)
+      difficulty: () => t('set_h_df_' + s.difficulty),
+      textSpeed: () => t('set_h_ts'),
+      autoTalk: () => t('set_h_at_' + (s.autoTalk === 'off' ? 'off' : 'on'), { k: this.hud.key('interact') }),
+      textSize: () => t('set_h_tsz'),
+      shake: () => t('set_h_shake'),
+      keys: () => t('set_h_keys'),
+      aimAssist: () => t('set_h_aa'),
+      lockMode: () => t('set_h_lm_' + (s.lockMode === 'hold' ? 'hold' : 'toggle'), { k: this.input.lastDevice === 'pad' || this.input.lastDevice === 'touch' ? this.hud.key('focus') : `${L('focus')} / right-click` }),
+      visual: () => t('set_h_vis_' + (s.visual === '1997' ? '1997' : '2026')),
+      hud: () => t('set_h_hud_' + (s.hud === 'lba' ? 'lba' : 'modern')),
+      weather: () => t('set_h_wx_' + (s.weather === 'off' ? 'off' : 'on')),
+      music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
     };
-    document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
+    const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
+    this._setHint = hint;
+    document.querySelectorAll('#settings [data-hint]').forEach((row) => { const h = row.querySelector('.set-hint'); if (h) h.textContent = hint[row.dataset.hint]?.() ?? ''; });
+    this.settingsDesc();
+  }
+  // UI-PASS: the line under the settings panel says what the selected row does (the tab bar: how to turn the page;
+  // Advanced: what it holds; Back: nothing)
+  settingsDesc() {
+    const el = $('#settings .set-desc'); if (!el || this.screen !== 'settings') return;
+    const it = this.settingsItems()[this.menuSel], H = this._setHint || {};
+    let txt = '';
+    if (it?.classList.contains('set-tabs')) txt = t('set_h_tabs', { k: this.input.lastDevice === 'pad' ? 'LB / RB' : `${keyLabel(keyFor('cycle'))} / ← →` });
+    else if (it?.classList.contains('set-fold')) txt = t('set_h_fold', { list: [...it.nextElementSibling.querySelectorAll('.set-label')].map((l) => l.textContent).join(', ') });
+    else if (it?.dataset.hint) txt = H[it.dataset.hint]?.() ?? '';
+    if (el.textContent !== txt) el.textContent = txt;
   }
 
-  // key rebinding (controls screen): click an action, press the new key
+  // The controls screen (UI-PASS): one list, an action's key beside what it does, from the keys in use (the movement
+  // scheme chosen, rebound keys by their names). A rebindable action's key is a button: pick it, press the new key
+  // (Esc, or B on a pad, cancels). The rest (the behaviours, the mouse, the pad) are listed as they are. It was a fixed
+  // table naming both schemes' default keys whatever was bound, then a second list of the same actions to rebind,
+  // whose first entry sat below the window's edge when the screen opened.
   buildRebind() {
     const el = $('#rebind');
     if (!el) return;
-    el.innerHTML = '';
+    const L = (a) => keyLabel(keyFor(a)), classic = this.settings.controls !== 'modern';
+    const DESC = {
+      up: classic ? 'ct_fwd' : 'ct_up', down: classic ? 'ct_back' : 'ct_down', left: classic ? 'ct_tleft' : 'ct_left', right: classic ? 'ct_tright' : 'ct_right',
+      action: 'ct_action', interact: 'ct_interact', attack: 'ct_attack', ball: 'ct_ball', dodge: 'ct_dodge', focus: 'ct_focus', tswitch: 'ct_next',
+      swap: 'ct_swap', weapons: 'ct_wheel', view: 'ct_view', recenter: 'ct_recenter', map: 'ct_map', inventory: 'ct_inv', pause: 'ct_pause',
+    };
+    el.textContent = '';
+    const row = (desc, key) => { const r = document.createElement('div'); r.className = 'krow'; const d = document.createElement('span'); d.className = 'kdesc'; d.textContent = desc; r.append(d, key); el.append(r); return r; };
+    const fixed = (text) => { const k = document.createElement('span'); k.className = 'kfix'; k.textContent = text; return k; };
     for (const a of REBINDABLE) {
-      const lab = document.createElement('label'); lab.textContent = t('kb_' + a);
-      const b = document.createElement('button'); b.className = 'keybtn'; b.textContent = b.dataset.key = keyLabel(keyFor(a));
+      const b = document.createElement('button'); b.className = 'keybtn'; b.textContent = b.dataset.key = L(a); b.dataset.action = a;
+      b.setAttribute('aria-label', `${t('kb_' + a)}: ${L(a)}`);
       b.addEventListener('click', () => {
         // one key awaited at a time: a second click (on this or another action) replaces the first
         this._rebindOff?.(); el.querySelectorAll('.keybtn.wait').forEach((x) => { x.classList.remove('wait'); x.textContent = x.dataset.key; });
@@ -1949,9 +2011,19 @@ class Game {
         this._rebindOff = () => { removeEventListener('keydown', on, true); this._rebindOff = null; };
         addEventListener('keydown', on, true);
       });
-      el.append(lab, b);
+      // (the label names the action for the tests and screen readers; the line says what it does)
+      const lab = document.createElement('label'); lab.textContent = t('kb_' + a); lab.className = 'kname';
+      row(t(DESC[a]), b).prepend(lab);
     }
+    row(t('ct_beh'), fixed(`${t('ct_hold', { k: 'Ctrl' })} + ${L('left')} / ${L('right')} · F1–F4 · ${L('cycle')}`));
+    row(t('ct_freecam'), fixed(`${L('camL')} / ${L('camR')} · ${t('ct_rdrag')}`));
+    row(t('ct_mouse'), fixed(t('ct_mouse_keys')));
+    el.style.setProperty('--rows', Math.ceil(el.children.length / 2));
+    $('#controls .kpad').textContent = `${t('ct_pad')}: ${t('ct_pad_text')}`;
+    $('#controls .kscheme').textContent = t('ct_scheme', { s: t(classic ? 'ctrl_classic' : 'ctrl_modern') });
   }
+  // a key awaited on the controls screen is given up (B on a pad: a pad can't give a key)
+  cancelRebind() { if (!this._rebindOff) return; this._rebindOff(); const k = this.menuSel; this.buildRebind(); this.menuSel = k; this.focusMenu(); this.input.clearEdges?.(); }
 
   // Applies the settings. Only what changed since the last call is redone: a volume slider sends an event per
   // step, and must not rebuild text, render targets, the shadow map or reset the camera.
@@ -2622,7 +2694,7 @@ class Game {
         this.inventory.nav(input); itemStage.tick(dt);
         // E on a gadget uses it (LBA2: select it in the inventory); otherwise E closes, as before
         if (input.pressed('interact') && this.inventory.usable()) { const id = this.inventory.usable(); this.inventory.show(false); this.setState('play'); this.gadgets.use(id); this.hud.stats(this.hero); this.save(false); }
-        else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact') || (input.lastDevice === 'pad' && input.pressed('dodge'))) { this.inventory.show(false); this.setState('play'); }
+        else if (input.pressed('inventory') || input.menu('back') || input.pressed('interact') || this.inventory.closeReq) { this.inventory.show(false); this.setState('play'); }
         break;
       case 'map':
         if (this.hud.holomapUpdate(input, dt)) { this.hud.closeHolomap(); this.setState('play'); }
@@ -2630,7 +2702,7 @@ class Game {
       case 'pause': case 'gameover': case 'ending':
         // a grace period, so a key still held from the last line of dialogue doesn't press a button
         if (this.state !== 'pause' && this.screenT < 1.2) { this.screenT += dt; break; }
-        if (!this.menuNav() && this.state === 'pause' && input.pressed('pause')) this.act('resume');
+        if (!this.menuNav() && this.state === 'pause' && input.menu('back') && (this.screen === 'pause' || this.screen === 'benchres')) this.act('resume');
         break;
       case 'cinematic':
         if (input.pressed('pause')) { this.pause(); break; }
@@ -2678,20 +2750,30 @@ class Game {
     }
   }
 
-  // returns true when it used the pause key (Esc / Menu: Back on the save-slot screens)
+  // returns true when it used the Back press (Esc, the pause key, a pad's B)
+  // UI-PASS: Back is the same everywhere: on a screen opened from another (Settings, Controls, the save slots, a
+  // confirmation) it returns to that screen with its selection; on the pause menu it resumes; on the title, the game
+  // over and the ending it does nothing (they have no "back")
   menuNav() {
     const btns = this.menuButtons();
-    if (!btns.length || this._rebindOff) return false; // (while a key is awaited, the keys belong to the rebinding)
     const i = this.input;
-    // the save-slot screens (SAVE-SLOTS): Esc or a pad's B goes back one screen
-    if (SLOT_SCREENS.has(this.screen) && (i.pressed('pause') || (i.lastDevice === 'pad' && i.pressed('dodge')))) { this.audio.play('select'); this.act('back'); return true; }
-    // a pad's B goes back from a child menu (Esc keeps its meaning: in the pause menus it resumes)
-    if (i.lastDevice === 'pad' && i.pressed('dodge') && (this.screen === 'settings' || this.screen === 'controls')) { this.audio.play('select'); this.act('back'); return false; }
+    // (while a key is awaited, the keys belong to the rebinding; a pad's B or Menu gives it up)
+    if (this._rebindOff) { if (i.lastDevice === 'pad' && (i.pressed('dodge') || i.pressed('pause'))) { this.cancelRebind(); this.audio.play('select'); } return false; }
+    if (!btns.length) return false;
+    if (this.screen === 'settings' && i.lastDevice !== this._descDev) { this._descDev = i.lastDevice; this.syncSettingsUI(); }   // (the keys or the pad's buttons, as in use)
+    if (i.menu('back') && CHILD_SCREENS.has(this.screen)) { this.audio.play('select'); this.act('back'); return true; }
     if (this.screen === 'settings' && this.settingsNav(btns)) return false;
     if (this.screen === 'loadgame' && this.slotNav(btns)) return false;
-    if (i.pressed('down')) { this.menuSel = (this.menuSel + 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
-    if (i.pressed('up')) { this.menuSel = (this.menuSel + btns.length - 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
-    if (i.pressed('interact') || i.pressed('action') || i.pressed('recenter')) { this.audio.init(); btns[this.menuSel]?.click(); }
+    if (this.screen === 'controls' && this.keysNav(btns)) return false;
+    // (UI-PASS: answers side by side — the confirmations, the controls' Reset and Back — take left / right too)
+    const lr = i.menu('right') ? 1 : i.menu('left') ? -1 : 0, cur = btns[this.menuSel], row = cur?.parentElement;
+    if (lr && row && getComputedStyle(row).flexDirection === 'row') {
+      const k = btns.indexOf(row.children[[...row.children].indexOf(cur) + lr]);
+      if (k >= 0) { this.menuSel = k; this.focusMenu(true); this.audio.play('blip'); }
+    }
+    if (i.menu('down')) { this.menuSel = (this.menuSel + 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
+    if (i.menu('up')) { this.menuSel = (this.menuSel + btns.length - 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
+    if (i.menu('ok')) { this.audio.init(); btns[this.menuSel]?.click(); }
     return false;
   }
 

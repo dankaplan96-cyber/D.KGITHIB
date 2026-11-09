@@ -68,6 +68,9 @@ export function keyLabel(code) {
 const PADMAP = { action: [0], dodge: [1], attack: [2], ball: [3], swap: [4], focus: [5], map: [6], wheel: [6], weapons: [7], inventory: [8], pause: [9], view: [10], r3: [11], up: [12], down: [13], left: [14], right: [15], b1: [12], b2: [15], b3: [13], b4: [14] };
 export const PAD_LABELS = { action: 'A', dodge: 'B', attack: 'X', ball: 'Y', swap: 'LB', focus: 'RB', wheel: 'LT', weapons: 'RT', map: 'LT', inventory: 'View', pause: 'Menu', view: 'L3', tswitch: 'R3', interact: 'A', b1: 'D-pad ↑', b2: 'D-pad →', b3: 'D-pad ↓', b4: 'D-pad ←' };
 const DIRS = ['up', 'down', 'left', 'right'];
+// UI-PASS: the menus' own keys, never rebound: the arrows move, Enter confirms, Esc goes back, whatever the bindings
+// (Classic's Up rebound to another key keeps the arrow working in menus; Pause rebound away from Esc keeps Esc as Back)
+const MENU_KEYS = { m_up: ['ArrowUp'], m_down: ['ArrowDown'], m_left: ['ArrowLeft'], m_right: ['ArrowRight'], m_ok: ['Enter', 'NumpadEnter'], m_back: ['Escape'] };
 
 export class Input {
   constructor(canvas) {
@@ -186,6 +189,7 @@ export class Input {
     this.prev = this.now;
     this.now = new Set();
     for (const [a, codes] of Object.entries(KEYMAP)) if (codes.some((c) => this.keys.has(c) || this.taps.has(c))) this.now.add(a);
+    for (const [a, codes] of Object.entries(MENU_KEYS)) if (codes.some((c) => this.keys.has(c) || this.taps.has(c))) this.now.add(a);
     this.rawTap = this.taps.size > 0;   // (any key at all this frame, bound or not: anyPressed)
     this.taps.clear();
     for (const b of this.touch.buttons) this.now.add(b);
@@ -235,6 +239,13 @@ export class Input {
   }
   down(a) { return this.now.has(a); }
   pressed(a) { return this.now.has(a) && !this.prev.has(a); }
+  // menus (UI-PASS): a direction ('up' …), 'ok' or 'back' by the bound keys, the fixed menu keys, or the pad (A / B)
+  menu(d) {
+    if (d === 'ok') return this.pressed('interact') || this.pressed('action') || this.pressed('recenter') || this.pressed('m_ok');
+    if (d === 'back') return this.pressed('pause') || this.pressed('m_back') || (this.lastDevice === 'pad' && this.pressed('dodge'));
+    return this.pressed(d) || this.pressed('m_' + d);
+  }
+  menuHeld(d) { return this.now.has(d) || this.now.has('m_' + d); }
   // any key, button, click or tap pressed this frame ("press any key": the found-object box, found.js)
   anyPressed() { if (this.rawTap) return true; for (const a of this.now) if (!this.prev.has(a)) return true; return false; }
 

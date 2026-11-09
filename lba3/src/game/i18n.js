@@ -93,10 +93,10 @@ export const STR = {
     slot_full: 'Not enough storage space. Save over an old slot, or delete slots from Load Game on the title screen.', slot_fail: "Can't save: the browser's storage isn't available.",
     nosave_scene: "You can't save during a story scene.", nosave_fight: "You can't save during a fight.", nosave_dead: "You can't save right now.", nosave_here: "You can't save here.", nosave_wait: 'Wait a moment, then save.',
     quit_full: "Storage is full, so this spot wasn't saved. Press Save & Quit again to quit anyway.",
-    language: 'Language', auto_controls: 'Controls by device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
+    language: 'Language', auto_controls: 'Controls by Device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'LBA3', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_auto: 'Auto', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
-    camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_follow: 'Follow', cam_free: 'Free', cam_dist: 'Camera distance', cd_near: 'Near', cd_medium: 'Medium', cd_far: 'Far',
+    camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_follow: 'Follow', cam_free: 'Free', cam_dist: 'Camera Distance', cd_near: 'Near', cd_medium: 'Medium', cd_far: 'Far',
     hud: 'HUD', hud_lba: 'Minimal (LBA2)', hud_modern: 'Always on',
     music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',
     rebind_title: 'Key Bindings', rebind_hint: 'Click an action, then press a key. Esc cancels.', rebind_press: 'Press a key…', rebind_reset: 'Reset to Defaults',
@@ -104,7 +104,7 @@ export const STR = {
     auto_talk: 'Dialogue Advances', at_on: 'Automatically', at_off: 'On a Key', text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
     text_size: 'Subtitle Size', tsz_normal: 'Normal', tsz_large: 'Large',
     shake_set: 'Camera Shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
-    weather_set: 'Weather and light changes', wx_on: 'On', wx_off: 'Off',   // (WEATHER-1; the Hebrew table falls back to these)
+    weather_set: 'Weather and Light', wx_on: 'On', wx_off: 'Off',   // (WEATHER-1; the Hebrew table falls back to these)
     controls_html: `
       <tr><td colspan="2"><b>Classic (LBA2's keys, the default)</b></td></tr>
       <tr><td>↑ / ↓</td><td>Walk forward / back</td></tr>
@@ -140,7 +140,7 @@ export const STR = {
     hint_jump: 'Athletic ({b}), then {k} to jump',
     boss_name: 'Warden Krell',
     map_close: 'M / Esc to close',
-    gameover: 'Twinsen is down', gameover_sub: 'No clover leaves left.', retry: 'Retry from Last Autosave',
+    gameover: 'Twinsen is down', gameover_sub: 'No clover leaves left. Retry returns to the last autosave with full health.', retry: 'Retry from Last Autosave',
     shop_title: "Pippa's Stall", shop_leave: 'Leave',
     shop_potion: 'Heart potion: full health', shop_flask: 'Magic flask: refill magic', shop_clover: 'Clover leaf: extra life',
     shop_max: 'Already at maximum.',

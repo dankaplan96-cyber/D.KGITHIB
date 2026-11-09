@@ -128,14 +128,16 @@ for (let n = 0; n < 10 && (await ev(() => game.menuSel)) !== backAt; n++) { awai
 await page.keyboard.press('Enter'); await step(0.05);
 const ck3 = await ev(() => [game.screen, game.state, document.querySelector('#pause .menu button.sel')?.dataset.act]);
 check('settings → Keys opens the controls screen; its Back returns to Settings with Keys selected; Back by Enter returns to the pause menu', ck1 === '["controls"]' && ck2[0] === 'settings' && ck2[1] === 'controls' && ck2[2] && ck3[0] === 'pause' && ck3[1] === 'pause' && ck3[2] === 'settings', { ck1, ck2, ck3 });
-// a pad: B backs out of the settings (Esc is unchanged: it resumes play from the pause's settings)
+// a pad: B backs out of the settings; Esc does the same (UI-PASS: Back is the same everywhere), Esc on the pause menu resumes
 await page.click('#pause [data-act="settings"]'); await step(0.05);
 await ev(() => { const btn = (p) => ({ pressed: p, value: p ? 1 : 0 }); window.__pad = { connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => btn(false)) }; navigator.getGamepads = () => [window.__pad]; game.step(0.05); window.__pad.buttons[1] = btn(true); game.step(0.05); window.__pad.buttons[1] = btn(false); game.step(0.05); window.__pad.connected = false; game.step(0.05); });
 const pb = JSON.stringify(await shown());
 await page.click('#pause [data-act="settings"]'); await step(0.05);
 await page.keyboard.press('Escape'); await step(0.1);
-const esc = await ev(() => [game.state, document.querySelector('#settings').classList.contains('hidden')]);
-check('pad B in the settings returns to the pause menu; Esc in them resumes play (as before)', pb === '["pause"]' && esc[0] === 'play' && esc[1], { pb, esc });
+const esc = await ev(() => [game.state, game.screen, document.querySelector('#settings').classList.contains('hidden'), document.querySelector('#pause .menu button.sel')?.dataset.act]);
+await page.keyboard.press('Escape'); await step(0.1);
+const esc2 = await ev(() => game.state);
+check('pad B in the settings returns to the pause menu; Esc there does too (Settings still selected); Esc on the pause menu resumes', pb === '["pause"]' && esc[0] === 'pause' && esc[1] === 'pause' && esc[2] && esc[3] === 'settings' && esc2 === 'play', { pb, esc, esc2 });
 await page.keyboard.press('Escape'); await step(0.1);
 await page.click('#pause [data-act="resume"]'); await step(0.1);
 check('Resume button: back in play', await ev(() => game.state === 'play') && (await shown()).length === 0, await shown());

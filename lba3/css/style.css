@@ -61,11 +61,11 @@ button { font-family: inherit; }
 
 /* (above the weapon pill, which sits in the bottom-right corner of the "Always on" HUD) */
 #minimap { position: absolute; bottom: 64px; inset-inline-end: 16px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
-#prompt { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%) translateY(10px); background: var(--panel); border: 1px solid var(--line); padding: 8px 16px; border-radius: 999px; font-weight: 500; opacity: 0; transition: all 0.15s; white-space: nowrap; }
+#prompt { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%) translateY(10px); background: var(--panel); border: 1px solid var(--line); padding: 8px 16px; border-radius: 999px; font-weight: 500; opacity: 0; transition: all 0.15s; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
 #prompt.show { opacity: 1; transform: translateX(-50%); }
 kbd { display: inline-block; min-width: 24px; padding: 1px 7px; border-radius: 6px; background: var(--ink); color: #111; font-family: inherit; font-weight: 700; text-align: center; margin-inline-end: 6px; }
 #toast { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.toast { background: rgba(6, 12, 20, 0.92); border: 1px solid rgba(255, 255, 255, 0.42); border-radius: 10px; padding: 8px 16px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px #000; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); animation: tin 0.25s ease-out; transition: opacity 0.4s, transform 0.4s; white-space: nowrap; }
+.toast { background: rgba(6, 12, 20, 0.92); border: 1px solid rgba(255, 255, 255, 0.42); border-radius: 10px; padding: 8px 16px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px #000; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); animation: tin 0.25s ease-out; transition: opacity 0.4s, transform 0.4s; width: max-content; max-width: calc(100vw - 32px); text-align: center; }   /* (UI-PASS: a long message wraps inside the window; it ran off a phone's edges) */
 .toast.out { opacity: 0; transform: translateY(-8px); }
 @keyframes tin { from { opacity: 0; transform: translateY(10px) scale(0.95); } }
 #bossbar { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); width: min(460px, 70vw); text-align: center; font-weight: 700; text-shadow: 0 2px 4px #000; letter-spacing: 0.04em; }
@@ -126,6 +126,8 @@ body.big-text #holomap .foot, body.big-text #holomap .objective { font-size: 16p
   #holomap .foot { font-size: 12px; min-height: 24px; }
   #holomap .objective { margin-top: 0 !important; font-size: 12px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+/* (UI-PASS: a phone held upright has the height: the title and the controls line wrap rather than lose their end) */
+@media (max-width: 700px) and (min-height: 421px) { #holomap .title, #holomap .hint { white-space: normal; } }
 
 /* ---------- screens ---------- */
 .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; justify-content: safe center; gap: 18px; padding: 24px 16px; z-index: 10; background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.35), rgba(5, 12, 20, 0.85)); text-align: center; overflow-y: auto; }
@@ -143,13 +145,17 @@ body.big-text #holomap .foot, body.big-text #holomap .objective { font-size: 16p
 .menu button, .langs button { padding: 13px 22px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.18); background: rgba(12, 24, 36, 0.8); color: var(--ink); cursor: pointer; transition: all 0.15s; }
 .menu button:hover, .menu button:focus-visible, .menu button.sel { border-color: var(--accent); background: rgba(255, 207, 74, 0.15); transform: translateY(-1px); outline: none; }
 .menu button:disabled { opacity: 0.35; pointer-events: none; }
+/* (UI-PASS: the pause menu's two benchmark entries, a tool for measuring the game: last, smaller, side by side) */
+#pause .menu .tools { display: flex; gap: 8px; margin-top: 4px; }
+#pause .menu .tools button { flex: 1 1 auto; padding: 7px 8px; font-size: 13px; font-weight: 600; white-space: nowrap; color: var(--ink-dim); }
+#pause .menu .tools button.sel { color: #fff; }
 /* short windows (a phone held sideways): menus stay within the screen */
 @media (max-height: 440px) { .screen { gap: 10px; padding: 10px 16px; } .menu { gap: 6px; } .menu button { padding: 7px 18px; font-size: 16px; } }
 /* (very short windows, 640×360: the pause menu has seven entries since AUTO-QUALITY's benchmark button) */
 @media (max-height: 380px) { .screen { gap: 6px; padding: 6px 14px; } .menu { gap: 4px; } .menu button { padding: 4px 16px; font-size: 14px; } #pause h1 { font-size: 22px; margin: 0; } #pause-objective { font-size: 12px; padding: 5px 10px; line-height: 1.35; } }
 .langs { display: flex; gap: 8px; }
 .langs button { padding: 8px 14px; font-size: 14px; }
-.disclaimer { max-width: 620px; font-size: 12px; color: var(--ink-dim); opacity: 0.8; line-height: 1.5; }
+.disclaimer { max-width: 620px; font-size: 12px; color: var(--ink-dim); opacity: 0.9; line-height: 1.5; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0, 0, 0, 0.8); }
 .settings { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: center; width: min(720px, 100%); text-align: start; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
 .settings label { font-weight: 700; color: var(--ink-dim); }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -159,8 +165,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .keys { border-collapse: collapse; max-width: 760px; background: var(--panel); border-radius: 14px; overflow: hidden; text-align: start; }
 .keys td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .keys td:first-child { font-weight: 700; color: var(--accent); white-space: nowrap; }
-#ending { background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.72), rgba(5, 12, 20, 0.92)); }
-#ending p { background: rgba(5, 12, 20, 0.55); padding: 16px 22px; border-radius: 10px; }
+#ending, #gameover { background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.72), rgba(5, 12, 20, 0.92)); }   /* (UI-PASS: the game over line was faint over the scene) */
+#ending p { background: rgba(0, 0, 0, 0.6); padding: 16px 22px; border-radius: 0; }   /* (UI-PASS: square, as the other panels) */
 #loading { background: var(--bg); }
 #loading-step { font-size: 14px; opacity: 0.7; letter-spacing: 0.04em; }
 .spinner { width: 48px; height: 48px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.15); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
@@ -172,13 +178,20 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 
 /* ---------- touch ---------- */
 #touch { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
-#stick { position: absolute; left: 24px; bottom: 110px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.25); pointer-events: auto; }
+#stick { position: absolute; left: 24px; bottom: 72px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.25); pointer-events: auto; }
 #stick i { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); }
-.tbtns { position: absolute; right: 20px; bottom: 210px; display: grid; grid-template-columns: repeat(2, 64px); gap: 10px; pointer-events: auto; }
-.tbtns button { width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(10, 20, 30, 0.55); color: #fff; font-size: 24px; }
+.tbtns { position: absolute; right: 16px; bottom: 68px; display: grid; grid-template-columns: repeat(3, 54px); gap: 7px; pointer-events: auto; }
+.tbtns button { width: 54px; height: 54px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(10, 20, 30, 0.55); color: #fff; font-size: 22px; }
+.tbtns button:active { background: rgba(255, 255, 255, 0.3); border-color: #fff; }
+/* (UI-PASS: the buttons sat over the middle of a phone's picture; now low on the right, above the weapon. Out of play
+   — dialogue, menus, the inventory, the Holomap — they step aside: tapped there they did nothing) */
+body.hud-busy #touch { visibility: hidden; }
+@media (pointer: coarse) and (max-width: 640px) { #prompt { bottom: 268px; } }   /* (above the stick and the buttons) */
 
 @media (max-width: 640px) {
-  #objective { top: 136px; inset-inline-end: 16px; font-size: 12px; max-width: 60vw; padding: 7px 10px; }
+  #objective { top: 136px; inset-inline-end: 16px; font-size: 13px; max-width: 60vw; padding: 7px 10px; }
+  #toast { top: 200px; }   /* (UI-PASS: under the goal panel, not over it) */
+  .bar { width: min(240px, 36vw); }   /* (clear of the pause button in the middle) */
   #minimap { width: 110px; height: 110px; top: 16px; bottom: auto; }
   .beh { width: 50px; }
   .beh .lbl { font-size: 9px; }
@@ -207,7 +220,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 #dialog .text { font-size: clamp(18px, 2.6vw, 26px); line-height: 1.45; font-weight: 700; letter-spacing: 0.01em;
   background: linear-gradient(180deg, var(--spk-hi, #fff) 10%, var(--spk, #fff) 55%, var(--spk-lo, #bbb) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85)); }
-#dialog .name { top: -14px; background: #000; color: var(--spk, #fff); border: 1px solid #fff; border-radius: 0; font-size: 13px; padding: 2px 10px; }
+#dialog .name { top: auto; bottom: calc(100% - 12px); max-width: calc(100% - 40px); background: #000; color: var(--spk, #fff); border: 1px solid #fff; border-radius: 0; font-size: 14px; line-height: 1.3; padding: 2px 10px; }   /* (UI-PASS: a long name wraps upward, never over the first line) */
 #dialog .next { color: #fff; }
 
 .menu button, .langs button { border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.85); background: rgba(0, 0, 0, 0.6); position: relative; overflow: hidden; text-shadow: 1px 1px 0 #000; }
@@ -216,6 +229,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   background: linear-gradient(0deg, #3a0400 0%, #b11d00 35%, #ff7a00 65%, #ffd23a 100%);
   background-size: 100% 300%; animation: fire 0.9s linear infinite alternate;
 }
+.menu button.sel { text-shadow: 1px 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.85); }   /* (UI-PASS: white words on the fire's bright top stay readable) */
 .menu button.sel::after, .menu button:hover::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0.6;
   background: repeating-linear-gradient(100deg, transparent 0 14px, rgba(255, 200, 80, 0.35) 14px 22px, transparent 22px 38px);
@@ -246,7 +260,7 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 #behmenu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 7; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; }
 .bboxes { display: flex; gap: 10px; }
 .bbox { width: clamp(70px, 13vw, 120px); height: clamp(84px, 15.6vw, 144px); }
-.bbox.on { border-color: #ffe35a; }
+.bbox.on { border-color: #ffe35a; border-width: 2px; box-shadow: 0 0 0 1px #000, 0 0 14px rgba(255, 227, 90, 0.45); }   /* (UI-PASS: the chosen box stands out by more than a colour: thicker, lit; the label names it) */
 .blabel { width: 100%; text-align: center; padding: 6px; font-size: 22px; font-weight: 900; color: #fff; background: rgba(0, 0, 0, 0.75); text-shadow: 2px 2px 0 #000; }
 .binfo { width: 100%; background: rgba(0, 0, 0, 0.75); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
 .binfo .row { display: flex; align-items: center; gap: 8px; }
@@ -257,6 +271,8 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 .binfo .gtrack { flex: 1; }
 .binfo .magic i { background: linear-gradient(180deg, #9fd0ff, #2a6ae0 50%, #0a2a7a); }
 .binfo .kash, .binfo .keys { min-width: 44px; font-weight: 900; font-size: 18px; color: #ffe35a; text-shadow: 1px 1px 0 #000; }
+/* (UI-PASS: the key count shares its class with the controls' old table (.keys): no frame or panel of its own) */
+.binfo .keys { max-width: none; background: none; border: 0; border-radius: 0; overflow: visible; }
 .binfo .ico { width: 18px; height: 18px; display: inline-block; flex: none; }
 .ico.heart { background: radial-gradient(circle at 30% 35%, #ff9a9a, #e01a2a 60%); clip-path: path('M9 17 L1.5 9.5 A4.3 4.3 0 0 1 9 3.5 A4.3 4.3 0 0 1 16.5 9.5 Z'); }
 .ico.flask { background: radial-gradient(circle at 40% 60%, #bfe2ff, #2a6ae0 70%); border-radius: 50% 50% 45% 45%; }
@@ -320,7 +336,12 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 .inv-obj b { display: block; color: #ffe35a; }
 .inv-obj .s { display: block; color: var(--ink-dim); font-size: 14px; }
 .inv-obj .s.ok { text-decoration: line-through; opacity: 0.7; }
-.inv-hint { grid-column: 1 / -1; font-size: 12px; color: var(--ink-dim); text-align: center; }
+.inv-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
+.inv-hint { flex: 1; font-size: 13px; color: var(--ink-dim); text-align: center; }
+/* (UI-PASS: a Close button for the mouse and touch, as the Holomap has, in the menus' white frame) */
+.inv-close { flex: none; padding: 5px 16px; border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.85); background: rgba(0, 0, 0, 0.6); color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-shadow: 1px 1px 0 #000; }
+.inv-close:hover, .inv-close:focus-visible { background: rgba(255, 255, 255, 0.16); border-color: #fff; outline: none; }
+.inv-close:active { transform: translateY(1px); }
 @media (max-width: 640px) { .inv-panel { grid-template-columns: 1fr; } .inv-grid { grid-template-columns: repeat(4, 1fr); } }
 body.big-text .inv-desc, body.big-text .inv-journal ul, body.big-text .inv-use { font-size: 17px; }
 body.big-text .inv-panel h3.inv-name { font-size: 20px; }
@@ -373,13 +394,29 @@ body.big-text #dialog .text { font-size: clamp(24px, 3.3vw, 32px) !important; li
 body.big-text #dialog .name { font-size: 17px !important; }
 body.big-text #objective { font-size: 17px !important; max-width: min(440px, 60vw); }
 body.big-text #toast, body.big-text .toast { font-size: 18px !important; }
+body.big-text #cine-sub { font-size: clamp(1.25rem, 2.7vw, 1.65rem); }   /* (UI-PASS: Subtitle Size reaches the story scenes' subtitles too) */
 
 /* ---------- key rebinding ---------- */
-#controls h2 { margin: 18px 0 4px; font-size: 20px; }
-#controls .hint { margin: 0 0 10px; opacity: 0.75; font-size: 14px; }
-#rebind { max-width: 760px; }
-#rebind .keybtn { min-width: 110px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06); color: #ffe35a; font-weight: 800; font-size: 15px; cursor: pointer; }
-#rebind .keybtn.wait { border-color: var(--accent); color: #fff; animation: bob 0.6s infinite alternate; }
+/* UI-PASS: one list, an action's key beside what it does; two columns where the window is wide (main.js buildRebind,
+   keysNav), the settings' framed panel and chips */
+#controls { gap: 10px; }
+#controls h1 { font-size: clamp(26px, 4vw, 40px); }
+#controls .hint { margin: 0; font-size: 15px; line-height: 1.4; color: var(--ink); text-shadow: 1px 1px 0 #000; }
+#controls .hint b { color: #ffe35a; }
+#rebind { display: grid; grid-template-columns: 1fr; column-gap: 0; width: min(1120px, 100%); flex: none; text-align: start; background: rgba(0, 0, 0, 0.6); }
+@media (min-width: 1000px) { #rebind { grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(var(--rows, 11), auto); } }
+#rebind .krow { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 4px 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+#rebind .kname { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+#rebind .kdesc { flex: 1; min-width: 0; font-size: 15px; line-height: 1.3; text-shadow: 1px 1px 0 #000; }
+#rebind .keybtn, #rebind .kfix { flex: none; min-width: 96px; min-height: 30px; padding: 4px 10px; border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.32); background: rgba(0, 0, 0, 0.45); color: #ffe35a; font: inherit; font-weight: 800; font-size: 15px; text-align: center; text-shadow: 1px 1px 0 #000; }
+#rebind .keybtn { cursor: pointer; }
+#rebind .keybtn:hover { border-color: #fff; }
+#rebind .kfix { max-width: 60%; color: var(--ink); font-weight: 600; font-size: 13px; border-style: dashed; }
+#rebind .keybtn.wait { background: #fff3d1; color: #1d0e00; border-color: #fff; text-shadow: none; animation: bob 0.6s infinite alternate; }
+#controls .kpad { max-width: min(1120px, 100%); margin: 0; font-size: 13px !important; line-height: 1.45 !important; color: var(--ink-dim); text-align: start; text-shadow: 1px 1px 0 #000; }
+#controls .menu { flex-direction: row; justify-content: center; flex-wrap: wrap; }
+#controls .menu button { min-width: 200px; }
+@media (max-height: 760px) { #controls { gap: 6px; padding-top: 10px; padding-bottom: 10px; } #controls h1 { font-size: 26px; } #rebind .krow { min-height: 34px; padding: 2px 10px; } #rebind .kdesc { font-size: 14px; } #rebind .keybtn, #rebind .kfix { min-height: 26px; padding: 2px 8px; } #controls .menu button { padding: 8px 18px; } }
 
 /* combat HUD: the weapon in hand (bottom right, small), the selector ring (hold X / RT) */
 #weapon { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; font-size: 14px; transition: opacity 0.3s, transform 0.15s; }
@@ -389,10 +426,11 @@ body.big-text #toast, body.big-text .toast { font-size: 18px !important; }
 #weapon .ready.cool { background: conic-gradient(#9fe8ff var(--k, 0%), rgba(255,255,255,0.15) 0); box-shadow: none; }
 #weapon .alt { opacity: 0.6; font-size: 12px; }
 #weapon.flash { transform: scale(1.08); border-color: #ff6a4a; }
-body.hud-lba #weapon { opacity: 0; }
+body.hud-lba #weapon { opacity: 0; border-radius: 0; background: rgba(0, 0, 0, 0.6); border-color: rgba(255, 255, 255, 0.8); }   /* (UI-PASS: the LBA HUD's square white frame, as its goal, prompt and messages) */
 body.hud-lba #weapon.show { opacity: 1; }
 /* out of play (dialogue, menus, cut-scenes): no interaction prompt or weapon pill under the box or the menus */
 #hud.busy #prompt, #hud.busy #weapon { opacity: 0; transition: none; }
+#hud.busy #pausebtn { visibility: hidden; }   /* (UI-PASS: out of play it pauses nothing: dialogue, the inventory, the Holomap, the menus) */
 #wsel { position: fixed; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; pointer-events: none; z-index: 30; }
 #wsel .slot { position: absolute; width: 74px; height: 74px; border-radius: 50%; background: var(--panel); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 26px; transition: transform 0.1s, border-color 0.1s; }
 #wsel .slot small { font-size: 11px; margin-top: 2px; }
@@ -487,7 +525,10 @@ body.desktop .desktop-only { display: block !important; }
 .set-row { position: relative; display: grid; grid-template-columns: minmax(120px, 34%) 1fr; align-items: center; column-gap: 16px; min-height: 52px; padding: 9px 16px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .set-page > .set-row:first-child { border-top: 0; }
 .set-label { font-size: 16px; font-weight: 700; color: var(--ink); text-shadow: 1px 1px 0 #000; }
-#settings .set-hint { grid-column: 2; margin: 5px 0 0; min-height: 1.3em; font-size: 13px; line-height: 1.3; color: var(--ink-dim); text-align: start; }
+/* UI-PASS: a row's hint is shown once, under the panel, for the selected row (.set-desc); the rows stay one line each */
+#settings .set-hint { display: none; }
+#settings .set-desc { flex: none; width: min(680px, 100%); min-height: 2.8em; margin: 0; padding: 0 16px; font-size: 14px !important; line-height: 1.4 !important; color: var(--ink); text-align: start; text-shadow: 1px 1px 0 #000, 0 0 6px #000; }
+body.big-text #settings .set-desc { font-size: 16px !important; }
 /* the choices: equal chips, the chosen one filled */
 #settings .seg { display: flex; gap: 6px; flex-wrap: nowrap; min-width: 0; }
 #settings .seg button { flex: 1 1 0; min-width: 0; min-height: 34px; padding: 7px 6px; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 0; white-space: nowrap; cursor: pointer; text-shadow: 1px 1px 0 #000; }
@@ -512,14 +553,17 @@ body.desktop .desktop-only { display: block !important; }
   background: linear-gradient(0deg, #6a0c00, #d24a00 55%, #ffb43a) 0 0 / var(--v, 50%) 100% no-repeat, rgba(0, 0, 0, 0.55); }
 #settings input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 24px; background: #fff; border: 1px solid #000; border-radius: 0; }
 #settings input[type=range]::-moz-range-thumb { width: 10px; height: 24px; background: #fff; border: 1px solid #000; border-radius: 0; }
+/* (UI-PASS: on the burning selected row the fire fill would vanish: there the level is the chosen chips' cream on black) */
+#settings .set-row.sel input[type=range] { background: linear-gradient(#fff3d1, #fff3d1) 0 0 / var(--v, 50%) 100% no-repeat, rgba(0, 0, 0, 0.75); }
 /* the selection burns (LBA2's fire bar), with corner marks so it doesn't rest on colour alone */
 .set-row.sel, .set-fold.sel, .set-tabs.sel button[aria-selected="true"], #rebind .keybtn.sel {
   color: #fff; background: linear-gradient(0deg, #2a0300 0%, #8e1600 40%, #d85400 75%, #f39a20 100%); background-size: 100% 300%; animation: fire 0.9s linear infinite alternate; }
-#settings .set-row.sel .set-hint { color: #fff; text-shadow: 1px 1px 0 #000; }
 .set-row.sel::before, .set-row.sel::after, .set-fold.sel::after { content: ''; position: absolute; width: 10px; height: 10px; border: 0 solid #fff; pointer-events: none; }
 .set-row.sel::before { top: 3px; left: 3px; border-width: 2px 0 0 2px; }
 .set-row.sel::after, .set-fold.sel::after { bottom: 3px; right: 3px; border-width: 0 2px 2px 0; }
-#rebind .keybtn.sel { border-color: #fff; color: #fff; text-shadow: 1px 1px 0 #000; }
+#rebind .keybtn.sel { border-color: #fff; color: #fff; text-shadow: 1px 1px 0 #000; outline: 2px solid #fff; outline-offset: 1px; }
+#rebind .krow:has(.keybtn.sel) { background: rgba(255, 255, 255, 0.08); }
+#rebind .keybtn.wait.sel { background: #fff3d1; color: #1d0e00; text-shadow: none; animation: bob 0.6s infinite alternate; }   /* (awaiting a key: the cream of a chosen value, not the fire) */
 /* a phone held sideways (640x360) and other short windows: everything on one screen, no title (the tabs say it) */
 @media (max-height: 440px) {
   #settings { gap: 6px; padding-top: 8px; padding-bottom: 8px; }
@@ -528,13 +572,12 @@ body.desktop .desktop-only { display: block !important; }
   .set-row { min-height: 38px; padding: 4px 12px; }
   .set-label { font-size: 14px; }
   #settings .seg button, .set-go { min-height: 28px; padding: 3px 6px; font-size: 13px; }
-  #settings .set-hint { margin-top: 1px; font-size: 11.5px; }
+  #settings .set-desc { min-height: 2.6em; font-size: 12.5px !important; line-height: 1.3 !important; }
   .set-fold { min-height: 32px; padding: 6px 12px; font-size: 11px; }
   #settings input[type=range] { height: 16px; }
 }
 @media (max-width: 520px) {
   .set-row { grid-template-columns: 1fr; row-gap: 6px; }
-  #settings .set-hint { grid-column: 1; margin-top: 0; }
   .set-tabs button { letter-spacing: 0.06em; }
 }
 /* =====================================================================
@@ -563,13 +606,15 @@ body.desktop .desktop-only { display: block !important; }
 .menu-msg { min-height: 1.5em; font-size: 15px !important; line-height: 1.4 !important; color: #fff3d1; text-shadow: 1px 1px 0 #000; }
 .menu-msg.bad { color: #ffb08a; }
 #pause .menu button.blocked { opacity: 0.55; }
-/* one burning bar: on these screens the mouse selects (main.js pickSlot), a hover alone does not burn */
-:is(#savegame, #loadgame, #slotconfirm) .menu button:hover:not(.sel) { background: rgba(0, 0, 0, 0.6); animation: none; }
-:is(#savegame, #loadgame, #slotconfirm) .menu button:hover:not(.sel)::after { content: none; }
+/* one burning bar: on every menu screen the mouse selects (main.js pickSlot), a hover alone does not burn (UI-PASS:
+   the title, pause and the rest burned the hovered entry and the keys' entry at once) */
+.screen .menu button:hover:not(.sel) { background: rgba(0, 0, 0, 0.6); animation: none; }
+.screen .menu button:hover:not(.sel)::after { content: none; }
 /* the confirmation shows the slot it is about */
 #slotconfirm .slot-card { display: flex; align-items: center; gap: 14px; width: min(520px, 100%); padding: 8px 14px 8px 8px; text-align: start; background: rgba(0, 0, 0, 0.6); }
-#slotconfirm .menu { flex-direction: row; justify-content: center; }
-#slotconfirm .menu button { min-width: 150px; }
+/* (UI-PASS: both confirmations alike: their two answers side by side, Back first) */
+:is(#slotconfirm, #confirmnew) .menu { flex-direction: row; justify-content: center; }
+:is(#slotconfirm, #confirmnew) .menu button { min-width: 150px; }
 /* a laptop-height window (960x540 and the like): seven slots and Back on one screen */
 @media (max-height: 680px) {
   .slots-screen { gap: 6px; padding-top: 12px; padding-bottom: 12px; }
@@ -594,12 +639,12 @@ body.desktop .desktop-only { display: block !important; }
   .menu .slot-del { padding: 3px 10px; font-size: 12px; }
   .menu-msg { min-height: 0; font-size: 13px !important; }
 }
-@media (max-width: 520px) { .slot-pic { width: 64px; height: 36px; } }
+@media (max-width: 520px) { .slot-pic { width: 64px; height: 36px; } .slot-txt > .slot-meta { white-space: normal; } }
 
 /* reduced motion: the fire bars hold still (menus, settings, key buttons) */
 @media (prefers-reduced-motion: reduce) {
   .menu button.sel, .menu button:hover, .menu button:focus-visible, .set-row.sel, .set-fold.sel, .set-tabs.sel button, #rebind .keybtn.sel { animation: none; background-position: 0 50%; }
-  .menu button.sel::after, .menu button:hover::after, #rebind .keybtn.wait { animation: none; }
+  .menu button.sel::after, .menu button:hover::after, #rebind .keybtn.wait, #rebind .keybtn.wait.sel { animation: none; }
   .set-tabs button, .set-fold::before, .menu button { transition: none; }
 }
 
