@@ -106,8 +106,11 @@ meaningful step that is not padding (the core is one arena; the way to it is cha
   not at the collar (network.js counts the relays): unchanged, nothing to do with the underground.
 - The playthrough segment 14 was not run in this pass (it needs segment 13's save, the chain from 01); `chapter3`
   covers the same route by flags.
-- `overlaps` lists (does not fail) two near-planes at the hoist (its sign over the I-beam's flange, its left column
-  against the panelling's dado, 0.6–3 mm), as the deep installation's other listed spots.
+- `overlaps` listed (did not fail) two near-planes at the hoist. World-polish 3: they were the sign's plate 3 mm in
+  front of its own iron frame (signPlate, every sign of the underground: the plate now 1 cm proud) and the left
+  column's back flange 0.6 mm in front of the panelling's dado (both columns now 1 cm into it). `overlaps ONLY=c3deep`:
+  6 listed → 3 (the hoist's two and another sign's gone; the three left are elsewhere in the room, 0–2.1 mm).
+  Automated runtime only.
 
 ## Evidence (Automated runtime only; a snapshot of `lba3/` served locally, one suite at a time)
 

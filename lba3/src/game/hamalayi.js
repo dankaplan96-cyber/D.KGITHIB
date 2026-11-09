@@ -643,7 +643,11 @@ export function* buildHamalayiSteps(scene, physics) {
     // (WORLD-POLISH 3: the porch's two red pillars give the camera their shape — 0.44 m thick, 3.5 m to the beam: no
     //  post the view sees past. Standing out of the door, the follow camera's look round him for a clear view swung 80°
     //  along the hall's front and settled with a pillar filling the left of the frame)
-    for (const [px, pz] of hall.pillars) occCollider(roomOcc(R, physics.terrain), col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true }), { y0: gy + hall.porch.top - 0.3, top: gy + hall.porch.top + 4.2, name: 'hall porch pillar' });
+    for (const [px, pz] of hall.pillars) {
+      const occ = roomOcc(R, physics.terrain), cy = gy + hall.porch.top + 3.4;
+      occCollider(occ, col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true }), { y0: gy + hall.porch.top - 0.3, top: gy + hall.porch.top + 4.2, name: 'hall porch pillar' });
+      occ.add({ kind: 'rev', x: ox + mx + px, z: oz + mz - 6 + pz, y0: cy, base: cy, profile: [[0.55, 0.6]], name: 'hall porch capital' });   // (its painted capital, 0.95 m across)
+    }
     smokes.push({ x: mx + hall.smoke[0], y: gy + hall.smoke[1], z: mz - 6 + hall.smoke[2] });
     for (const sx of [-1, 1]) put('monastery', 'wheels', mx + sx * 5.05, mz - 1.05, 0, (k) => prayerWheels(k), { y: gy + 0.05 });
     // (YARD-GAPS: the side walls stopped 2 m short of the hall, at its front corners — the yard read open there and the
