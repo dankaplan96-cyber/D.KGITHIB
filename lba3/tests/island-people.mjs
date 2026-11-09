@@ -46,7 +46,9 @@ const install = () => ev(async () => {
     const dist = (x, z) => { last = { x, z }; return 0; };
     const consider = (d, r, it) => { if (last) out.push({ x: last.x, z: last.z, r, kind: it.kind }); };
     try { G.story.interactables(consider, dist); G.story.chapters[0].baseInteractables(consider, dist, G.story.cur); } catch (e) { out.push({ err: String(e) }); }
-    return out.filter((p) => p.x != null && !/^npc/.test(p.kind));
+    // (ISLES-BAR: the islands' usable pieces, story/isleslife.js il_item, are where some residents work (a stall's keeper, the
+    //  great hive's keeper): their prompt gives way to a person beside him, so a stop by one is not a stop on a prompt)
+    return out.filter((p) => p.x != null && !/^npc/.test(p.kind) && p.kind !== 'il_item');
   };
   window.spots = () => {
     const G = game, R = G.room, out = [], near = (p) => Math.hypot(p.x - G.hero.pos.x, p.z - G.hero.pos.z) < 120;
@@ -153,8 +155,9 @@ for (const n of ['otringal', 'knartas', 'platform', 'oldwatch']) await island('c
 await ev(() => setChapter('home', {}));
 iso('the epilogue (after): set by its flags');
 for (const n of ['otringal', 'celebration', 'liftdock']) await island('epilogue', n, 'after');
-const ev8 = await ev(() => { setChapter('evacuation', {}); heroTo('isle_knartas'); return { n: here('isle_knartas').length, ph: here('isle_knartas').map((n) => n.phaseKey) }; });
-check('chapter 8 (the evacuation is Twinsun\'s): Knartas\'s people are still at home, in the crisis state', ev8.n === 5 && ev8.ph.every((p) => p === 'crisis'), ev8);
+// (ISLES-BAR: Mila waits by the radio for letters from Twinsun at home in chapters 8-9: story/isleslife.js; four outdoors)
+const ev8 = await ev(() => { setChapter('evacuation', {}); heroTo('isle_knartas'); return { n: here('isle_knartas').length, ph: here('isle_knartas').map((n) => n.phaseKey), mila: game.story.islife.atHome().includes('il_mila') }; });
+check('chapter 8 (the evacuation is Twinsun\'s): Knartas\'s people are still at home, in the crisis state (Mila indoors by the radio)', ev8.n === 4 && ev8.mila && ev8.ph.every((p) => p === 'crisis'), ev8);
 const ch3 = await ev(() => { setChapter('zeelich', {}); heroTo('isle_mosquibee'); return here('isle_mosquibee').length; });
 check('before chapter 4 (the shuttle does not fly there): nobody on the islands', ch3 === 0, ch3);
 
@@ -297,8 +300,8 @@ const before = await ev(() => { heroTo('isle_knartas'); game.save(false); return
 await quitAndKeep(page, context, '/dev/shm/pp1-storage.json');
 await open(page, '?nocine'); await menu(page, 'continue');
 await install();
-const after = await ev(() => { const G = game; G.step(0.5); return { room: G.room?.id, pp: Object.keys(G.flags).filter((k) => k.startsWith('pp_')).sort(), light: !!G.flags.pp_light, n: here('isle_knartas').length, lit: IL.ISLE_THINGS.knartas?.light ? true : false, raw: /phaseKey|_isleStops|ot_ulla|kn_quill/.test(JSON.stringify(localStorage).replace(/n_[a-z_]+|ip_[a-z_]+/g, '')) }; });
-check('saved on Knartas and reloaded (INPUT: Quit, Continue): the islands\' pp_ flags back, the light lit, the people there; nothing of theirs in the save but pp_ flags', after.room === 'isle_knartas' && JSON.stringify(after.pp) === JSON.stringify(before.pp) && after.light && after.n === 5 && !after.raw, { before: before.pp, after });
+const after = await ev(() => { const G = game; G.step(0.5); return { room: G.room?.id, pp: Object.keys(G.flags).filter((k) => k.startsWith('pp_')).sort(), light: !!G.flags.pp_light, n: here('isle_knartas').length, want: 5 - (G.story.islife?.atHome().includes('il_mila') ? 1 : 0), lit: IL.ISLE_THINGS.knartas?.light ? true : false, raw: /phaseKey|_isleStops|ot_ulla|kn_quill/.test(JSON.stringify(localStorage).replace(/n_[a-z_]+|ip_[a-z_]+/g, '')) }; });
+check('saved on Knartas and reloaded (INPUT: Quit, Continue): the islands\' pp_ flags back, the light lit, the people there (in chapter 9 Mila is at home: ISLES-BAR); nothing of theirs in the save but pp_ flags', after.room === 'isle_knartas' && JSON.stringify(after.pp) === JSON.stringify(before.pp) && after.light && after.n === after.want && !after.raw, { before: before.pp, after });
 try { fs.unlinkSync('/dev/shm/pp1-storage.json'); } catch { /* (gone) */ }
 
 // ---------------------------------------------------------------- cost

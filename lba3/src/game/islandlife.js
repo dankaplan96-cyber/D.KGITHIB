@@ -49,6 +49,15 @@ export function lineState(S) {
   return k === 'evacuation' ? 'evac' : k === 'council' ? 'council' : k === 'home' ? 'home' : (k === 'network' || k === 'shell' || k === 'core') ? 'net' : 'ord';
 }
 
+// ISLES-BAR: who is at home indoors in which state of the story (lineState), with a reason the lines give
+// (story/isleslife.js places their indoor selves in their rooms, ihomes.js; out here they are not there then):
+//   Ulla shuts her stall while the council argues (nobody buys) and counts her stock at home; Mr Tanek cuts blankets for
+//   Twinsun in his cutting room through the evacuation and the council; Mila waits by the radio for letters from Twinsun;
+//   Mother Pudd keeps her stove going all day ("worry needs feeding", Nib says); Rudd watches the gas works' gauges while
+//   the needle jumps; in the epilogue Obo stays in his first warm room and Nessa takes a day off at home
+export const ISLE_HOME = { ot_ulla: ['council'], ot_tanek: ['evac', 'council'], kn_mother: ['evac', 'council'], pf_vill1: ['evac', 'council'], ug_gauge: ['evac', 'council'], ot_sweep: ['home'], kn_nets: ['home'] };
+export const atHome = (id, S) => !!ISLE_HOME[id]?.includes(lineState(S)) && islePhase(S) != null;
+
 // ------------------------------------------------------------------ stops (in the island's frame)
 // at an anchor: stand d m from it (toward `dir`, absolute, or toward the pad), facing it; o.local [lx, lz] with o.ry: a place
 // in the anchor's own frame (a stall's keeper behind its counter), tried first
@@ -301,7 +310,7 @@ export function isleDefs(game) {
       const full = { ord: rounds.ord, crisis: rounds.crisis || rounds.ord, after: rounds.after || rounds.ord };
       const s0 = full.ord[(p.start || 0) % full.ord.length];
       out.push({ id: p.id, name: 'n_' + p.id, char: p.char, tint: p.tint, speed: p.speed, color: p.color, scale: p.scale, ambient: true, story: true, isle: name, area, start: p.start || 0,
-        phase: (f, S) => islePhase(S), rounds: full, round: full.ord, x: s0.x, z: s0.z, angle: s0.a ?? 0 });
+        phase: (f, S) => (atHome(p.id, S) ? null : islePhase(S)), rounds: full, round: full.ord, x: s0.x, z: s0.z, angle: s0.a ?? 0 });
     }
   }
   return out;

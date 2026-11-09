@@ -5,7 +5,7 @@
 import { ChapterBase } from './base.js';
 import { t } from '../i18n.js';
 import '../text/walkers.js';
-import { ambientDefs, DESERT_ROSTER_IDS } from '../walkrounds.js';
+import { ambientDefs, DESERT_ROSTER_IDS, ZEELICH_ROSTER_IDS } from '../walkrounds.js';
 import { TownBusy } from '../townbusy.js';
 import { storyDefs, dressStoryLife } from '../storylife.js';
 import { isleDefs, islesKey, dressIsle, ISLE_PEOPLE } from '../islandlife.js';
@@ -14,8 +14,10 @@ import '../text/storylife.js';
 
 export const EVAC_STAY = new Set(['maro', 'tilde']);
 // (DESERT-BAR: Citadel's evacuation empties Citadel's streets, not Kesh's: Safi, Tamu and Bashir keep their rounds on
-//  Desert Island in chapter 8, which the ferry still reaches)
+//  Desert Island in chapter 8, which the ferry still reaches; ISLES-BAR: nor Zeelich's: Ilo, Aven and Kira keep their
+//  street rounds there too)
 const OFF_CITADEL = new Set(DESERT_ROSTER_IDS);
+const OFF_EVAC = new Set([...DESERT_ROSTER_IDS, ...ZEELICH_ROSTER_IDS]);
 
 export class Citizens extends ChapterBase {
   // TOWN-LIFE-2: the town's small business round its people (heads turning, a word when bumped, the plaza's chatter
@@ -41,7 +43,7 @@ export class Citizens extends ChapterBase {
     const n = this.game.npcs.find((x) => x.def.id === id);
     if (!n?.ambient || n.def.indoor) return undefined;   // (INTERIOR-LIFE: the rooms' and the ports' people are story/interiors.js's)
     if (n.def.story) return this.placeStory(n);
-    if (this.gone && !EVAC_STAY.has(id) && !OFF_CITADEL.has(id)) { n.away = 'story'; return null; }
+    if (this.gone && !EVAC_STAY.has(id) && !OFF_EVAC.has(id)) { n.away = 'story'; return null; }
     if (n.away === 'story') { n.away = null; return n.reset(); }
     return undefined;
   }

@@ -343,13 +343,14 @@ const COUNCIL_DOOR = { x: -25.5, z: -7.65 };
 const council = (f, S) => (S.cur?.key === 'council' ? 'council' : null);
 const ZEELICH_PEOPLE = [
   // PURPOSES (3.11.2026): Marl, who trains the project's guard dogs in the yard behind the north houses (zeelich.js: the
-  // palisade round (−28, −21), 11 × 6.8 m, its gate gap on the south side at z −17.6); from chapter 3 on
+  // palisade round (−28, −21), 11 × 6.8 m, its gate gap on the south side at x −32, z −17.6); from chapter 3 on
   { id: 'marl', char: 'keeper', tint: '#fff0dc', speed: 0.8, color: '#e8b070', start: 0, area: 'zeelich',
     phase: (f, S) => (S.index >= idx(S, 'zeelich') ? 'yard' : null), rounds: {
       // (the council house (−25.5, −13.3; 8.2 × 5.6 m) backs onto the yard, its back wall at z −16.35, 1.25 m short of the
       //  gate: both stops stood inside it, Marl's legs in the wall. Now at its two back corners, by the fence)
       yard: [
-        L('marl_gate', -31.2, -16.2, -28, -21, 'stand', [24, 34], { gest: ['nod'] }),
+        // (ISLES-BAR: the gate's gap moved west to x −32, the lane's head: he stands just west of it, by the fence)
+        L('marl_gate', -34.0, -16.3, -31, -20, 'stand', [24, 34], { gest: ['nod'] }),
         L('marl_side', -20.4, -16.4, -26, -21, 'stand', [10, 14]),
       ] } },
   // a council guard on post either side of the council house's door, crossing over now and then

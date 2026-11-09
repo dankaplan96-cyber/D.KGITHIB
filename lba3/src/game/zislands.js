@@ -324,6 +324,46 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
   }
 }
 
+// OTRINGAL-37 (the cloud's original-mechanics sweep, 8.11: "grey rock spikes stand up through the paving between the
+// houses" of the high town; docs/lba-maturity/mechanics-entry.md): no scattered rock: they are the original's ground
+// itself, a grid point or two of its heights 1-3 m over the street, which the granite (S.turfRock) draws as grey
+// peaks between the houses, one at the foot of the way in to a door (looked at on the laptop's GPU, Follow/Medium).
+// S.paveFlat { R, span }: the ground drawn and walked on (not the analysis the plan reads: the dressing keeps its
+// places) is cut down to the street, the floor of the nearest house within R m of its walls:
+//   - a bump in the street, at most max m high: the ground comes back to the street's level (0.3 m over it to 0.6 m
+//     under it) on both sides, along x or along z, within span m: not a terrace rising behind a house, nor the rock
+//     mass at the rim (it does not come back down to the street within span on either line), nor ground falling away;
+//   - the way in to every door, 2.2 m out from its wall and 0.7 m either side (as the dressing keeps it, DOOR-SWEEP),
+//     with a grid cell more round it, so no triangle of a peak beside it slopes into it.
+// Only lowered, never raised.
+function paveFlat(A, L, P) {
+  const { nx, nz, cell } = L, { cx, cz, gx, gz } = A, H0 = A.H, H = H0.slice();
+  const hs = A.decor.filter((o) => o.fitted && (o.shape === 'house' || o.shape === 'tower'));
+  const at = (i, j) => (i < 0 || j < 0 || i >= nx || j >= nz ? null : H0[j * nx + i]);
+  const steps = Math.ceil(P.span / cell);
+  const back = (i, j, di, dj, ref) => {
+    for (let s = 1; s <= steps; s++) { const v = at(i + di * s, j + dj * s); if (v == null || v < ref - 0.6) return false; if (v <= ref + 0.3) return true; }
+    return false;
+  };
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const k = j * nx + i, v = H0[k]; if (v == null) continue;
+    let ref = null, best = P.R;
+    for (const o of hs) { const dd = Math.max(Math.abs(cx(i) - o.x) - o.sx / 2, Math.abs(cz(j) - o.z) - o.sz / 2, 0); if (dd <= best) { best = dd; ref = o.y + 0.02; } }
+    if (ref == null || v <= ref + 0.25 || v > ref + P.max) continue;
+    if ((back(i, j, 1, 0, ref) && back(i, j, -1, 0, ref)) || (back(i, j, 0, 1, ref) && back(i, j, 0, -1, ref))) H[k] = ref;
+  }
+  for (const o of hs) {
+    if (o.noDoor || !o.face) continue;
+    const t = o.face, fx = o.x + t[0] * o.sx / 2, fz = o.z + t[1] * o.sz / 2, out = 2.2 + cell, lat = 0.7 + cell;
+    const x0 = t[0] ? Math.min(fx, fx + t[0] * out) : o.x - lat, x1 = t[0] ? Math.max(fx, fx + t[0] * out) : o.x + lat;
+    const z0 = t[1] ? Math.min(fz, fz + t[1] * out) : o.z - lat, z1 = t[1] ? Math.max(fz, fz + t[1] * out) : o.z + lat;
+    for (let j = Math.max(0, Math.ceil(gz(z0))); j <= Math.min(nz - 1, Math.floor(gz(z1))); j++) {
+      for (let i = Math.max(0, Math.ceil(gx(x0))); i <= Math.min(nx - 1, Math.floor(gx(x1))); i++) { const k = j * nx + i; if (H[k] != null && H[k] > o.y + 0.02) H[k] = o.y + 0.02; }
+    }
+  }
+  return H;
+}
+
 // A place built on decks (the Lift Dock, the original's ASCENCE: its ground is a slab at the cloud line under
 // decks on stilts at 4–7 m): the decks' tops are its ground. The style names the original's floor objects
 // (S.floors: bodies) and may add decks of its own (S.extraDecor, bodies ≥ 990: ours). Returns the layout with
@@ -539,6 +579,18 @@ const STYLE = {
     grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
     crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
     // (OTR-VARIETY: fewer buildings, each of a kind; the yard's wall lengths a wall: OTR above)
+    // (ISLES-BAR: the south terrace and the high town had no way up from the plaza (a flood fill of where he walks: the
+    //  plaza's 4565 m², 14 of the 23 doors out of reach). A flight of steps up the bank west of the Grand Hall, where
+    //  the rock lip already slopes onto the terrace; and the ramp down from the high town, which ended against the
+    //  original's thin wall (body 15) at the terrace's garden, goes through: that wall is not built)
+    //  (the terrace's rail, the original's fence lengths (body 5) along its lip, opens over the flight's head)
+    flights: [{ a: [-6.92, -21.4], b: [-6.92, -26.4], w: 3.2 }],
+    open: (o) => (o.body === 15 && Math.hypot(o.x - 26.97, o.z + 59.93) < 0.1) || (o.body === 37 && Math.hypot(o.x - 50.16, o.z + 47.13) < 0.1) || (o.body === 5 && Math.abs(o.z + 27.78) < 0.1 && (Math.abs(o.x + 7.75) < 0.1 || Math.abs(o.x + 6.09) < 0.1)),
+    // (ISLES-BAR: the high town's tall beige spires (bodies 37, 42, 3.3 m across) filled its lanes wall to wall: one
+    //  stood on the big family's door (not built: S.open), two closed the clinic's lane. Drawn slimmer there, they leave a
+    //  way past each side)
+    spireK: (o) => ((o.body === 37 || o.body === 42) && o.y > 25 ? 0.22 : 0.45),
+    paveFlat: { R: 5, span: 7, max: 3.5 },   // (OTRINGAL-37: the high town's paving without the ground's grey peaks: paveFlat)
     layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : otrShape(o)), cellBatch: 48,
     landmark(api) {
       const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
@@ -575,6 +627,10 @@ const STYLE = {
     // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
     // (KNARTAS-GATE: the original's lintels (body 31) stood on posts we draw as lamps and trees: drawn, they were grey
     // rocks hanging 2 m up beside the houses; left out. The slab on the gatehouse's roof (38) a stone slab, not a rock)
+    // (ISLES-BAR: the original's pieces that stood on its arches and walls, which ours do not draw, hung 1.5-3.4 m over the
+    //  ground or on a wall: a wooden frame on the canteen's front, two posts and a lamp over the lane: not built (S.open:
+    //  the plan keeps its numbers), as the lintels are left out (bodies 26, 46 up high, 52, 53, 68, 69, 72, 80))
+    open: (o) => [26, 52, 53, 68, 69, 72, 80].includes(o.body) || (o.body === 46 && o.y > 5),
     shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : (o.body === 14 && o.y > 5) || (o.body === 31 && o.y > 4.5) ? 'skip' : o.body === 38 && o.y > 5 ? 'slab' : o.body === 16 && Math.hypot(o.x + 24.31, o.z + 18.51) < 0.05 ? 'skip' : (o.body === 44 && Math.hypot(o.x - 17.98, o.z + 15.84) < 0.05) || (o.body === 45 && Math.hypot(o.x - 19.26, o.z + 15.84) < 0.05) ? 'skip' : null),   // (KNARTAS-LEDGE: not the hedge's fence end the steps pass; DOOR-SWEEP: nor the pennant fence's panel and pole across the fishing family's door, which no way led round)
     lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     // (KNARTAS-LEDGE: Quill's office's door on its ledge over the middle arm: steps down to the arm, a little toward its
@@ -609,6 +665,9 @@ const STYLE = {
     // (ZEELICH-1 item 6: LBA2 has the Mosquibees under the gas: a warmer, hazier light; mild, the meadow keeps its colour)
     env: { fog: '#e2c8a8', sun: '#ffe0b0', hemiSky: '#f0dcc4', hemiGround: '#8a6a4a', sunI: 2.2, hemiI: 1.15, fogRange: [75, 280] }, gradeTint: [1.02, 0.99, 0.93], cloudTint: ['#fff0dc', '#fff2e0', '#fff4e8'],
     mainNear: { x: 28, z: -20 },
+    // (ISLES-BAR: the hive keepers' hall stands on the ledge 13 m under the meadow's east edge, which nothing reached: a
+    //  honey hoist down the cliff, the Mosquibees' own way for the jars)
+    hoists: [{ id: 'mb_hoist', tower: [20.3, 9.8, Math.PI], h: 14.5, w: 2.0, head: [17.6, 9.8], foot: [22.5, 9.9] }],
     trees: '#fff0b8', ground: ['#eef2a0', '#f4e890', '#e8d8b0'], pave: 'concrete', paveAt: () => false,
     walls: ['#fff4d8', '#f8e8c0', '#f4f0e0'], domes: [['#d89a30', '#ffe6a8'], ['#c8a020', '#fff0a0']],
     target: { x: 27, z: -6, word: 'HIVES' }, near: 12, far: 30,
@@ -635,7 +694,7 @@ const STYLE = {
     env: { fog: '#f2cbb4', sun: '#ffd8b0', hemiSky: '#ffdcc8', hemiGround: '#a05a44', sunI: 2.5, hemiI: 1.25, fogRange: [80, 290] }, gradeTint: [1.04, 0.98, 0.93], cloudTint: ['#ffe2d4', '#ffe8dc', '#fff0e4'],
     // (CELEBRA2's new objects, kept as "risen"): twelve years on the figure still stands, its pit filled and paved
     // round its feet, and the island holds its festival there — masts round it, garlands up to the figure
-    trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 10,
+    trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 10, paveSlope: 0.3,   // (REVIEW-ZEELICH-ART (e): the plaza's paving ran over the rock's slopes in sharp folds)
     walls: ['#fff0f4', '#f6dce6', '#fbf0e0'], domes: [['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']],
     // the figure's parts (CELEBRA2: 17 the body, 18 its back, 16 the head, 20 the crest, 12 + 19 + 21 a staff), set
     // on the paved plaza (9.5 m; they stood on the pit's floor at 6.5 m), numbered 800+ so they keep apart
@@ -1398,7 +1457,7 @@ function buildIsland0(scene, physics, name, L, at) {
   const S = STYLE[name] || {}, CY = cloudYOf(S);   // (SKY-9: this island's cloud sea)
   if (S.layout) L = S.layout(L);   // (Celebration: its later state's figure)
   if (S.decks) L = deckLayout(L, S);   // (the Lift Dock: its decks are its ground)
-  const A = analyse(L, S), { w, d, H, cx, cz, gx, gz } = A;
+  const A = analyse(L, S), { w, d, cx, cz, gx, gz } = A, H = S.paveFlat ? paveFlat(A, L, S.paveFlat) : A.H;   // (OTRINGAL-37: the street's bumps cut down)
   const plan = planIsland(name, L, A), pad = plan.pad;
   const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}), ...(S.rock ? { rock: C(S.rock), rockHi: C(S.rockHi || S.rock), rim: C(S.rock).multiplyScalar(0.85) } : {}), ...(S.paveCol ? { pave: C(S.paveCol) } : {}) };
   // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares
@@ -1463,7 +1522,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
-    if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
+    if (rk < 0.5 && paved(x, z) && slope < (S.paveSlope ?? 9)) { wt[4] = 1.6; wt[0] *= 0.2; }   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
@@ -1589,7 +1648,7 @@ function buildIsland0(scene, physics, name, L, at) {
   const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
-    if (o.shape === 'skip') continue;   // (drawn by the style's own piece, or left out: a rail, a beam)
+    if (o.shape === 'skip' || S.open?.(o)) continue;   // (drawn by the style's own piece, or left out: a rail, a beam; S.open: a way through, ISLES-BAR)
     if (!o.solid && o.shape !== 'deck' && Math.hypot(o.x - pad.x, o.z - pad.z) < 4.2 + Math.max(o.sx, o.sz) / 2) continue;   // (under the shuttle's pad)
     // (a small thing standing on a steep slope gets no block: he would slide into it and be held there)
     const gi = Math.round(gx(o.x)), gj = Math.round(gz(o.z));
@@ -1760,7 +1819,7 @@ function buildIsland0(scene, physics, name, L, at) {
         break;
       }
       case 'spire': {
-        const rr = Math.max(0.25, Math.min(ex, ez) * 0.45);
+        const rr = Math.max(0.25, Math.min(ex, ez) * (S.spireK?.(o) ?? 0.45));
         B.add(spireGeo, pick(o, walls), o.x, y0, o.z, 0, 0, 0, rr * 2, o.sy, rr * 2);
         col({ type: 'cyl', x: o.x, z: o.z, r: rr * 0.8, top, noStand: true });
         break;
@@ -1864,6 +1923,42 @@ function buildIsland0(scene, physics, name, L, at) {
       case 'bush': bushes.push(o); if (!o.cut && Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: Math.min(ex, ez) * 0.35, top, noStand: true, seeThrough: true }); break;
       default: plants.push(o);
     }
+  }
+  // ISLES-BAR (S.flights): a flight of dressed steps up a bank too steep to walk, from a (its foot, local x, z) to b (its
+  // head), w m wide: risers of at most 0.24 m; each step's collider runs back under the higher ones to the head (no seam;
+  // the height under his feet decides, as on the decks' stairs and KNARTAS-LEDGE's door steps). Where the bank's own
+  // ground stands over a step, he walks on the ground (it is gentle enough there: the steps are for the steep part)
+  for (const F of S.flights || []) {
+    const [ax, az] = F.a, [bx, bz] = F.b, len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len, lx = -uz, lz = ux, hw = F.w / 2;
+    const ya = gy(ax, az), yb = gy(bx, bz) + 0.04, n = Math.ceil((yb - ya) / 0.24), rise = (yb - ya) / n, run = len / n;
+    const low = (x, z) => { let m = Infinity; for (const u of [-hw, 0, hw]) m = Math.min(m, gy(x + lx * u, z + lz * u)); return m; };
+    for (let i = 0; i < n; i++) {
+      const v0 = i * run, v1 = (i + 1) * run, top = ya + (i + 1) * rise, mx = ax + ux * (v0 + v1) / 2, mz = az + uz * (v0 + v1) / 2;
+      let gl = Infinity; for (let v = v0; v <= v1 + 1e-6; v += run / 2) gl = Math.min(gl, low(ax + ux * v, az + uz * v));
+      const bot = Math.min(gl, top) - 0.3, ry = Math.atan2(ux, uz), nw = (i % 2) * 0.012;
+      if (top > gl - 0.05) { const m = new THREE.Mesh(bbox(F.w - nw, top - bot, run + 0.02, 0.02, 1.8), stoneM); m.position.set(mx, (top + bot) / 2, mz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; group.add(m); }
+      const cv = (v0 + len) / 2, cl = len - v0;
+      col({ type: 'box', x: ax + ux * cv, z: az + uz * cv, hw: Math.abs(ux) > 0.5 ? cl / 2 : hw, hd: Math.abs(ux) > 0.5 ? hw : cl / 2, top, stair: true });
+    }
+    // low cheek walls either side, stepped with the flight (a parapet 0.6 m over each pair of steps), so it reads as built
+    // into the bank and hides nothing of him from the side; each length a block he cannot cross from the flight
+    for (const sd of [-1, 1]) for (let i = 0; i < n; i += 2) {
+      const v0 = i * run, v1 = Math.min(len, (i + 2) * run), vm = (v0 + v1) / 2, x = ax + ux * vm + lx * sd * (hw + 0.15), z = az + uz * vm + lz * sd * (hw + 0.15);
+      const top = ya + Math.min(n, i + 2) * rise + 0.6, bot = Math.min(ya + i * rise, low(x, z)) - 0.3;
+      const m = new THREE.Mesh(bbox(0.3 - (i % 4 ? 0.012 : 0), top - bot, v1 - v0 + 0.02, 0.03, 1.5), stoneM); m.position.set(x, (top + bot) / 2, z); m.rotation.y = Math.atan2(ux, uz); m.castShadow = m.receiveShadow = true; group.add(m);
+      col({ type: 'box', x, z, hw: Math.abs(ux) > 0.5 ? (v1 - v0) / 2 : 0.15, hd: Math.abs(ux) > 0.5 ? 0.15 : (v1 - v0) / 2, top, noStand: true });
+    }
+  }
+  // ISLES-BAR (S.hoists): a lift tower against a cliff between two walkable levels the planner keeps apart (Mosquibee's
+  // meadow and its ledge): its cage rides up and down; story/isleslife.js offers the ride at its foot and at its head
+  // (R.hoists, world coordinates: where he stands to ride, facing away from the tower when he arrives)
+  for (const Hs of S.hoists || []) {
+    const [tx, tz, ry] = Hs.tower, P = new EP.Place(B, tx, gy(tx, tz), tz, ry);
+    EP.liftTower(P, { h: Hs.h, w: Hs.w });
+    for (const c of P.cols) col(c);
+    for (const e of P.extra) { group.add(e.obj); updaters.push(e.update); }
+    const spot = ([x, z]) => ({ x: ox + x, z: oz + z, y: gy(x, z), a: Math.atan2(x - tx, z - tz) });
+    (R.hoists ||= []).push({ id: Hs.id, foot: spot(Hs.foot), head: spot(Hs.head), tower: { x: ox + tx, z: oz + tz } });
   }
   // --- the dressing: the plan's pieces, merged into the island's batch (one draw per material)
   const honey = (P) => { EP.crate(P, { s: 0.62, kind: 'nectar' }); EP.honeyJars(P, { n: 5, ly: 0.62, collide: false }); EP.honeyJars(P, { n: 2, lx: 0.62, lz: 0.2, seed: 7, collide: false }); P.box(0, 0, 0.36, 0.36, 0.95); P.r = 0.6; return P; };
@@ -2030,6 +2125,10 @@ function buildIsland0(scene, physics, name, L, at) {
   R.landmark = p0 ? { x: ox + p0.x, z: oz + p0.z, word: plan.pois[0].word, look: { x: ox + lk.x, z: oz + lk.z } } : null;
   R.pois = plan.pois.filter((p) => p.reach).map((p) => ({ x: ox + p.reach.x, z: oz + p.reach.z, word: p.word }));
   R.dressing = pieces; R.rails = rails;
+  // (ISLES-BAR: the pieces a player reads as usable, in world coordinates, with their footprint: story/isleslife.js gives
+  //  each a word or a use)
+  const USABLE = new Set(['shuttleBoard', 'signpost', 'fountain', 'stall', 'netRack', 'laundry', 'greatHive', 'hive', 'gasHolder', 'pump', 'warn', 'boardSign', 'mineMouth', 'liftTower', 'bellFrame', 'crane', 'cloudCatcher', 'telescope', 'weighBeam', 'nectarPress', 'ruinedTower', 'fallenDome']);
+  R.items = plan.items.filter((it) => USABLE.has(it.kind)).map((it) => { const fr = FOOT[it.kind]?.(it.o || {}) || { r: 0.5 }; return { kind: it.kind, x: ox + it.x, z: oz + it.z, ry: it.ry || 0, r: fr.r ?? Math.max(fr.hw || 0.5, fr.hd || 0.5), words: (it.o?.boards || []).map((b) => b.text), text: it.o?.text || '' }; });
   R.views = { arrival: plan.arrivalView, landmark: plan.pois[0]?.view || null };   // (the planner's camera model: foreground share, his body hidden)
   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
