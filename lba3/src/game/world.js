@@ -1102,7 +1102,13 @@ export function* buildWorldSteps(parentScene) {
   for (let v = 0; v < 2; v++) { const list = palmList.filter((t, i) => i % 2 === v); if (list.length) mkInst(palmGeometry(v + 1), leafMat, list, true, shadeVar, palmGeometry(v + 1, 1)); }
   for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar, treeGeometry('bush', v + 1, 1));
   if (BATCH.on) batchFor(leafMat).build();
-  for (const t of trees) if (!t.gone) physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
+  // (CAM-CROWN, PLAYTHROUGH PT-7: the tall trees' and the pines' crowns reach down to a metre over the ground: the play
+  //  camera's sight lines count their dense core, `sight` (camera.js _line), as it counts a wall)
+  const SIGHT = { tall: [0.62, 1.1, 5.6], pine: [0.85, 1.0, 4.6] };   // (core radius, from, to: m at scale 1)
+  for (const t of trees) if (!t.gone) {
+    const S = SIGHT[t.kind];
+    physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s } } : {}) });
+  }
   for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
 

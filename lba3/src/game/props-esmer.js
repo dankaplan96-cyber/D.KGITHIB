@@ -354,6 +354,11 @@ export function pole(P, { h = 4.2, flag = null } = {}) {
 // banner on a pole: a crossbar and a long cloth in bands with a diamond, swallow-tailed
 export function bannerPole(P, { h = 5.2, colors = ['#7a3a8a', '#f0c040', '#f4eee0'] } = {}) {
   pole(P, { h });
+  // (CAM-CROWN, WORKPLAN 9.11 Wave C item 5: the cloth, 0.7 m wide and 2.3 m long under the pole's top, hides him like a
+  //  board: the play camera's sight lines count it — camera.js _line, `sight` — while the pole alone it still sees past.
+  //  By Otringal's fountain the cloth crossed him for about a second on some walks)
+  const pc = P.cols[P.cols.length - 1];
+  if (pc) pc.sight = { r: 0.38, y0: P.y + h - 0.35 - 2.3, y1: P.y + h - 0.35 };
   const key = 'ebanner' + h + colors.join();
   P.add(cached(key, () => {
     const w = 0.7, top = h - 0.35, len = 2.3, parts = [[tint(cyl(0.025, 0.025, w + 0.25, 6).rotateZ(Math.PI / 2), '#c8a050'), 0.0, top + 0.02, 0.07]];

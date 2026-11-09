@@ -367,6 +367,9 @@ export function dressPost(ctx, POST) {
   const awn = (x, z, ry, mat) => {
     const f = frame(x, z, ry);
     K.add(awningGeo(2.5, 1.45, 2.55, 2.1), mat, x, y, z, 0, ry, 0);
+    // (CAM-ROOFEDGE: and its shape for the play camera — out of the office's door the camera over the cabin looked down
+    //  through the awning at his legs; passed through while he stands under it, as a porch)
+    if (ctx.occ) { const [cx, cz] = f(0, 0.75); ctx.occ().add({ kind: 'box', x: ctx.ox + cx, z: ctx.oz + cz, hw: 1.3, hd: 0.78, rot: ry, y0: y + 1.95, y1: y + 2.6, walkUnder: true, name: 'post awning' }); }
     for (const s of [-1, 1]) { const [px, pz] = f(s * 1.15, 1.35); rod(K, [px, y, pz], [px, y + 2.1, pz], 0.04, D.iron, 6); }
   };
   const red = striped('#c84a3a', '#f0eadc'), blue = striped('#2f7a9a', '#f0eadc');

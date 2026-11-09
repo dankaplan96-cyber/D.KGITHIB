@@ -376,10 +376,17 @@ class Game {
     this.camRig.lockOn = () => { const e = this.targeting?.lock; return e && e.alive !== false && e.present !== false && e.pos ? e.pos : null; };
     // (CAM-CLEAR-2: a dialogue outdoors under Follow frames him and whoever has spoken in it, within 9 m: AUDIT-CH12 #13)
     this.camRig.talk = () => {
-      if (this.state !== 'dialog' || this.room || !this.talkers?.size) return null;
+      // (CAM-AFTERTALK: in the outdoor areas too — Desert Island, Zeelich and its isles, the Hamalayi —, not only on Citadel)
+      if (this.state !== 'dialog' || (this.room && !this.room.outdoor) || !this.talkers?.size) return null;
       const h = this.hero.pos, out = [];
       for (const a of this.talkers) if (a.pos && a.present !== false && Math.hypot(a.pos.x - h.x, a.pos.z - h.z) < 9) out.push(a.pos);
       return out.length ? out : null;
+    };
+    // (CAM-CROWD, PLAYTHROUGH PT-8: the people standing round a dialogue, not in it — its two-shot keeps them out of the way)
+    this.camRig.crowd = () => {
+      const h = this.hero.pos, out = [];
+      for (const n of this.npcs) if (n.present && n.pos && !this.talkers?.has(n) && Math.hypot(n.pos.x - h.x, n.pos.z - h.z) < 16) out.push({ x: n.pos.x, y: n.pos.y, z: n.pos.z, r: Math.max(0.55, (n.bodyR || n.radius || 0.4) + 0.15) });
+      return out;
     };
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
@@ -2435,8 +2442,11 @@ class Game {
             const pr = this.regions.probe(() => this.story.exitTo(e.to)), ek = e.to;
             if (pr.error && !pr.misses.size) throw pr.error;
             this.walkNext = true;
-            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, to, true); else this.exitRoom(this.doorStep(to), true); }, [...pr.misses]);
-            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(this.doorStep(to)); }
+            // (CAM-ROOFEDGE: out into an outdoor area — Desert Island, Zeelich and its isles, the Hamalayi — a step clear
+            //  of the door too, Game.doorStep, as onto Citadel's street)
+            const out = (to) => (this.rooms[to.room]?.outdoor ? this.doorStep(to) : to);
+            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, out(to), true); else this.exitRoom(this.doorStep(to), true); }, [...pr.misses]);
+            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, out(to)); else this.exitRoom(this.doorStep(to)); }
             this.walkNext = false;   // (a story exit may have started its own scene instead)
           } else this.exitRefused = { e, room: this.room };
           this.doorCool = 1.5;
