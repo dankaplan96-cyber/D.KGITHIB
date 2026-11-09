@@ -2,7 +2,8 @@
 // page after tests/lib/player.js. The keys themselves come from the test (Playwright's page.keyboard, through the game's
 // own key listener); this side only places Twinsen, steps the frames (game.testFreeze) and records what the camera did.
 //   CW.setup()              Follow, Medium, Classic (the user's settings), the prologue done, the game in play
-//   CW.place(s)             Twinsen at s = { x, z, a, y? } on Citadel, the view snapped and settled 1 s (not recorded)
+//   CW.place(s)             Twinsen at s = { x, z, a, y?, room? } on Citadel (or in the outdoor room s.room: an island,
+//                           Desert Island, the Hamalayi; world coordinates), the view snapped and settled 1 s (not recorded)
 //   CW.tris(box)            the drawn triangles in box { x0, x1, z0, z1 } (opaque meshes, instanced ones by instance)
 //   CW.start() / CW.stop()  record every camera update → the stats below
 //   CW.step(s, fps, stopAt) step s seconds at fps; stopAt: stop after that recorded frame (for a picture of it)
@@ -28,7 +29,8 @@
     for (const k of [...G.input.keys]) G.input.keys.delete(k);
     // (a door walked into, a line said: done first; a menu or anything else left at once)
     for (let i = 0; i < 100 && (G.trans || G.state !== 'play'); i++) { if (G.state === 'dialog') G.input.taps.add('KeyE'); else if (G.state !== 'play' && G.state !== 'cinematic') G.setState('play'); G.step(0.1); }
-    if (G.room) G.exitRoom({ x: s.x, z: s.z, a: s.a }, true, true);
+    if (s.room) { if (G.room?.id !== s.room) { G.regions?.ensure?.(s.room, 'test'); G.enterRoom(s.room, G.rooms[s.room].spawn, true, true); G.step(0.3); } }
+    else if (G.room) G.exitRoom({ x: s.x, z: s.z, a: s.a }, true, true);
     G.step(0.3);
     // (a walk through a spot, s.thru = [x, z, y?]: from up to 3 m before it on its own level, clear of walls and roofs —
     // 3 m back may stand inside a house, and the ground there is its roof)
@@ -72,7 +74,7 @@
           const mx = Math.min(v[0].x, v[1].x, v[2].x), Mx = Math.max(v[0].x, v[1].x, v[2].x), mz = Math.min(v[0].z, v[1].z, v[2].z), Mz = Math.max(v[0].z, v[1].z, v[2].z);
           if (Mx < box.x0 || mx > box.x1 || Mz < box.z0 || mz > box.z1) continue;
           _ab.subVectors(v[1], v[0]); _ac.subVectors(v[2], v[0]); const nn = new V3().crossVectors(_ab, _ac); const L = nn.length(); if (L < 1e-9) continue; nn.divideScalar(L);
-          tris.push({ a: v[0].clone(), b: v[1].clone(), c: v[2].clone(), n: nn, side: m.side, name: o.name || o.parent?.name || '?', mx, Mx, mz, Mz, my: Math.min(v[0].y, v[1].y, v[2].y), My: Math.max(v[0].y, v[1].y, v[2].y) });
+          tris.push({ a: v[0].clone(), b: v[1].clone(), c: v[2].clone(), n: nn, side: m.side, mat: m, name: o.name || o.parent?.name || '?', mx, Mx, mz, Mz, my: Math.min(v[0].y, v[1].y, v[2].y), My: Math.max(v[0].y, v[1].y, v[2].y) });
         }
       }
     });
@@ -109,7 +111,7 @@
     const i0 = Math.floor((p.x - R) / D.cell), i1 = Math.floor((p.x + R) / D.cell), j0 = Math.floor((p.z - R) / D.cell), j1 = Math.floor((p.z + R) / D.cell), seen = new Set();
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (const ti of D.grid.get(D.key(i, j)) || []) {
       if (seen.has(ti)) continue; seen.add(ti);
-      const T = D.tris[ti];
+      const T = D.tris[ti]; if (T.mat.transparent && T.mat.opacity < 0.9) continue;   // (a roof faded while he stands under it: no surface now)
       if (p.x < T.mx - best || p.x > T.Mx + best || p.z < T.mz - best || p.z > T.Mz + best || p.y < T.my - best || p.y > T.My + best) continue;
       closest(p, T); const d = _q.distanceTo(p);
       if (d < best - 1e-6) { best = d; who = T.name; bestT = T; _n.copy(_q); }
@@ -133,14 +135,14 @@
   };
   // the camera inside something solid (camfollow.mjs's F.inside)
   CW.inside = () => {
-    const c = cam.position, why = [], occ = G.room ? null : G.world.occ;
+    const c = cam.position, why = [], occ = C.occ?.() || null;   // (Citadel's W.occ, an outdoor room's R.occ: the camera's own)
     if (G.room?.outdoor || !G.room) { const th = G.world.terrain.heightAt(c.x, c.z); if (c.y < th + 0.3) why.push('terrain ' + (th - c.y).toFixed(2)); }
     for (const k of P.near(c.x, c.z)) { if (!k.enabled || c.y >= k.top || c.y <= k.bottom || !P._inside(k, c.x, c.z, 0)) continue; if (k.camSkip && occ) continue; why.push(k.type + '@' + k.x.toFixed(1) + ',' + k.z.toFixed(1)); }
     if (occ) for (const v of occ.near(c.x, c.z)) { const t = occ.topAt(v, c.x, c.z); if (t > -Infinity && c.y >= v.y0 && c.y <= t && !v.camOnly) why.push('volume@' + v.x.toFixed(1) + ',' + v.z.toFixed(1)); }
     return why.join('; ');
   };
   CW.seen = () => {
-    const c = cam.position, h = G.hero, occ = G.room ? null : G.world.occ;
+    const c = cam.position, h = G.hero, occ = C.occ?.() || null;
     const clear = (hy) => { const b = new V3(h.pos.x, h.pos.y + hy, h.pos.z), n = Math.ceil(c.distanceTo(b) / 0.25);
       for (let i = 1; i < n - 1; i++) { const p = c.clone().lerp(b, i / n);
         if ((G.room?.outdoor || !G.room) && G.world.terrain.heightAt(p.x, p.z) > p.y + 0.05) return false;
@@ -149,10 +151,25 @@
       return true; };
     return clear(1.5) || clear(1.0);
   };
+  // what hides him now (the camera's own test, camRig.hiddenBy: 'scenery' or 'collider', '' in view), the registry's
+  // "under" set kept as the camera left it (the test must not change what the camera reads next frame)
+  CW.hidden = (p) => { const occ = C.occ?.(), keep = occ ? [...occ.under] : null; const why = C.hiddenBy(p) || ''; if (occ) { occ.under.clear(); for (const v of keep) occ.under.add(v); } return why; };
+  // which collider hides him when the camera says 'collider' (camRig.occluded's walk from his pivot toward the camera)
+  CW.hider = (hp) => {
+    const c = cam.position, cp = Math.cos(C.pitch), sp = Math.sin(C.pitch), yaw = Math.atan2(c.x - hp.x, c.z - hp.z), maxD = Math.hypot(c.x - hp.x, c.z - hp.z) / Math.max(cp, 0.1);
+    for (let d = 1.2; d <= maxD - 0.5; d += 0.5) {
+      const x = hp.x + Math.sin(yaw) * cp * d, z = hp.z + Math.cos(yaw) * cp * d, y = hp.y + 1.4 + sp * d;
+      for (const k of P.near(x, z)) {
+        if (!k.enabled || k.fades || k.camSkip || k.top < y || k.bottom > y) continue;
+        if (k.type === 'cyl' ? Math.hypot(x - k.x, z - k.z) < (k.camR ?? k.r) + 0.3 : P._inside(k, x, z, 0.3)) return `${k.type}${k.type === 'cyl' ? ' r' + k.r.toFixed(2) : ' ' + (2 * k.hw).toFixed(1) + 'x' + (2 * k.hd).toFixed(1)}@${k.x.toFixed(1)},${k.z.toFixed(1)} ${k.bottom > -50 ? k.bottom.toFixed(1) : '-'}..${k.top.toFixed(1)}${k.seeThrough ? ' seeThrough' : ''}${k.noStand ? ' noStand' : ''}${k.stair ? ' stair' : ''}${k.name ? ' ' + k.name : ''} d${d.toFixed(1)}`;
+      }
+    }
+    return '';
+  };
   const up = C.update.bind(C);
   C.update = (...args) => {
     up(...args);
-    if (!CW.on || C.cine || C.override || C.iso || G.room) return;
+    if (!CW.on || C.cine || C.override || C.iso || (G.room && !G.room.outdoor)) return;
     const h = G.hero, c = cam.position, ch = C.ch || {};
     const py = (ch.h ?? h.pos.y) + 1.4, arm = Math.hypot(c.x - h.pos.x, c.y - py, c.z - h.pos.z);
     const toCam = Math.atan2(c.x - h.pos.x, c.z - h.pos.z), off = deg(ad(h.angle + Math.PI, toCam));
@@ -160,9 +177,9 @@
     const ins = CW.inside();
     const L = C.look, fl = Math.hypot(L.x - c.x, L.y - c.y, L.z - c.z) || 1;
     const clip = CW.clipped(c, { x: (L.x - c.x) / fl, y: (L.y - c.y) / fl, z: (L.z - c.z) / fl }, cam.near);
-    const prev = CW.F[CW.F.length - 1];
+    const prev = CW.F[CW.F.length - 1], hid = CW.hidden(h.pos);
     CW.F.push({ t: G.time, arm, off, ha: h.angle, sp: Math.hypot(h.pos.x - (prev?.h[0] ?? h.pos.x), h.pos.z - (prev?.h[2] ?? h.pos.z)) / (args[0] || 1 / 60),
-      nd, nwho, back, clip, near: cam.near, ins, seen: CW.seen(), c: [c.x, c.y, c.z], h: [h.pos.x, h.pos.y, h.pos.z], pitch: C.pitch, sw: C.why.off || 0, kb: C.why.kb || 0, swg: ch.swGoal || 0, over: ch.overK || 0, want: ch.want, tier: ch.tight ? 1 : 0, key: [...G.input.keys].join('+'), st: G.state + (G.trans ? '+trans' : '') + (h.behaviour === 'normal' ? '' : ':' + h.behaviour) });
+      nd, nwho, back, clip, near: cam.near, ins, seen: CW.seen(), hid, hw: hid === 'collider' ? CW.hider(h.pos) : '', c: [c.x, c.y, c.z], h: [h.pos.x, h.pos.y, h.pos.z], pitch: C.pitch, sw: C.why.off || 0, kb: C.why.kb || 0, swg: ch.swGoal || 0, over: ch.overK || 0, want: ch.want, tier: ch.tight ? 1 : 0, key: [...G.input.keys].join('+'), st: G.state + (G.trans ? '+trans' : '') + (h.behaviour === 'normal' ? '' : ':' + h.behaviour) });
   };
   CW.start = () => { CW.F = []; CW.on = true; };
   CW.step = (s, fps = 60, stopAt = -1) => {
@@ -176,7 +193,7 @@
   // face (inside a mesh), with a drawn face nearer than the near plane (x-ray), not in view
   CW.stats = (F) => {
     const r = (u, k = 2) => +u.toFixed(k);
-    let under31 = 0, minArm = 99, minAt = -1, under = 0, run = 0, runMax = 0, maxOff = 0, maxOffSteady = 0, steadyT = 0, ins = 0, insAt = -1, insWhy = '', back = 0, backAt = -1, backWho = '', xr = 0, xrAt = -1, xrWho = '', unseen = 0, minNd = 99, maxStep = 0, maxDArm = 0, dur = 0, offAt = -1;
+    let under31 = 0, minArm = 99, minAt = -1, under = 0, run = 0, runMax = 0, maxOff = 0, maxOffSteady = 0, steadyT = 0, ins = 0, insAt = -1, insWhy = '', back = 0, backAt = -1, backWho = '', xr = 0, xrAt = -1, xrWho = '', unseen = 0, hidden = 0, hidRun = 0, hidMax = 0, hidAt = -1, unRun = 0, unseenMax = 0, unseenAt = -1, minNd = 99, maxStep = 0, maxDArm = 0, dur = 0, offAt = -1;
     for (let i = 0; i < F.length; i++) {
       const f = F[i], dt = i ? Math.max(1e-4, F[i].t - F[i - 1].t) : 1 / 60; dur += dt;
       if (f.arm < minArm) { minArm = f.arm; minAt = i; }
@@ -188,14 +205,15 @@
       if (f.ins) { ins++; if (insAt < 0) { insAt = i; insWhy = f.ins; } }
       if (f.back && f.nd < 0.6) { back++; if (backAt < 0) { backAt = i; backWho = f.nwho; } }
       if (f.clip) { xr++; if (xrAt < 0) { xrAt = i; xrWho = f.clip; } }
-      if (!f.seen) unseen++;
+      if (!f.seen) { unseen++; unRun++; if (unRun > unseenMax) { unseenMax = unRun; unseenAt = i - (unRun >> 1); } } else unRun = 0;
+      if (f.hid) { hidden++; hidRun++; if (hidRun > hidMax) { hidMax = hidRun; hidAt = i - (hidRun >> 1); } } else hidRun = 0;
       minNd = Math.min(minNd, f.nd);
       if (i) { const p = F[i - 1]; const yaw1 = Math.atan2(f.c[0] - f.h[0], f.c[2] - f.h[2]), yaw0 = Math.atan2(p.c[0] - p.h[0], p.c[2] - p.h[2]); maxStep = Math.max(maxStep, Math.abs(deg(ad(yaw0, yaw1))) / (dt * 60)); maxDArm = Math.max(maxDArm, Math.abs(f.arm - p.arm) / dt); }
     }
     return { frames: F.length, dur: r(dur), minArm: r(minArm), minAt, under31: r(under31), under5: r(under), under5run: r(runMax), maxOff: r(maxOff, 1), maxOffSteady: r(maxOffSteady, 1), offAt,
-      inside: ins, insAt, insWhy, behindFace: back, backAt, backWho, backCam: backAt >= 0 ? F[backAt].c.map((u) => r(u)) : null, backHero: backAt >= 0 ? F[backAt].h.map((u) => r(u)) : null, xray: xr, xrAt, xrWho, minSurf: r(minNd, 3), unseen, maxStepDeg60: r(maxStep, 2), maxArmRate: r(maxDArm, 1),
+      inside: ins, insAt, insWhy, behindFace: back, backAt, backWho, backCam: backAt >= 0 ? F[backAt].c.map((u) => r(u)) : null, backHero: backAt >= 0 ? F[backAt].h.map((u) => r(u)) : null, xray: xr, xrAt, xrWho, minSurf: r(minNd, 3), unseen, unseenMax, unseenAt, hidden, hidMax, hidAt, hidWho: hidAt >= 0 ? `${F[hidAt].hid} ${F[hidAt].hw}`.trim() : "", maxStepDeg60: r(maxStep, 2), maxArmRate: r(maxDArm, 1),
       endArm: F.length ? r(F[F.length - 1].arm) : null, end: F.length ? F[F.length - 1].h.map((u) => r(u)) : null };
   };
   // a compact trace (every n-th frame)
-  CW.trace = (n = 6) => CW.F.filter((_, i) => i % n === 0).map((f) => `${f.t.toFixed(2)} ${f.st} ${f.key || "-"} arm ${f.arm.toFixed(2)} off ${f.off.toFixed(0)} p ${f.pitch.toFixed(2)} sw ${(f.sw * 57.3).toFixed(0)} g ${((f.swg || 0) * 57.3).toFixed(0)} kb ${(f.kb || 0).toFixed(1)} ov ${f.over.toFixed(2)} want ${f.want?.toFixed?.(2)} nd ${f.nd.toFixed(2)}${f.back ? 'B' : ''} ${f.ins ? 'IN ' + f.ins : ''} h ${f.h.map((u) => u.toFixed(1)).join(',')} c ${f.c.map((u) => u.toFixed(1)).join(',')}`);
+  CW.trace = (n = 6) => CW.F.filter((_, i) => i % n === 0).map((f) => `${f.t.toFixed(2)} ${f.st} ${f.key || "-"} arm ${f.arm.toFixed(2)} off ${f.off.toFixed(0)} p ${f.pitch.toFixed(2)} sw ${(f.sw * 57.3).toFixed(0)} g ${((f.swg || 0) * 57.3).toFixed(0)} kb ${(f.kb || 0).toFixed(1)} ov ${f.over.toFixed(2)} want ${f.want?.toFixed?.(2)} nd ${f.nd.toFixed(2)}${f.back ? 'B' : ''} ${f.ins ? 'IN ' + f.ins : ''}${f.hid ? ' HID ' + f.hid : ''} h ${f.h.map((u) => u.toFixed(1)).join(',')} c ${f.c.map((u) => u.toFixed(1)).join(',')}`);
 })();

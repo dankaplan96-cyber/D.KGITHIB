@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { rng } from '../engine/math.js';
 import { textures } from '../engine/textures.js';
-import { MAT, M, TEX, rbox, cyl, lathe, sphere, torus, plane, pipe, slab, tinted, paintVC, canvasTex } from './props.js';
+import { MAT, M, TEX, rbox, cyl, lathe, sphere, torus, plane, pipe, slab, tinted, paintVC, canvasTex, Kit } from './props.js';
 import { panelGeo, frameGeo, cyl as kitCyl } from './kit.js';
 
 const GC = new Map();
@@ -600,13 +600,18 @@ export function monasteryHall(k, { w = 14, d = 9, h = 6 } = {}) {
     pv(k, rbox(0.7, 0.18, 0.55, 0.03), '#2f6a9a', x, f + 3.55, pz + 0.55);
     pv(k, rbox(0.95, 0.18, 0.55, 0.03), '#2f8a5a', x, f + 3.73, pz + 0.55);
   }
-  k.add(rbox(6.0, 0.4, 0.45, 0.03), red, 0, f + 4.0, pz + 0.55);
-  curvedRoof(k, 3.5, 1.6, 1.0, MM.gold(), 0, f + 4.25, pz + 0.1);
+  // (WORLD-POLISH 3: the porch's beam and roof are a kit of their own, `porchRoof`'s group: the one part of the hall that
+  //  fades, while he stands under it — hamalayi.js —, as the arcade on Zeelich; the camera passes through it meanwhile)
+  const pk = new Kit(new THREE.Group());
+  pk.stack = [k.top.clone()]; k.group.add(pk.group);
+  pk.add(rbox(6.0, 0.4, 0.45, 0.03), red, 0, f + 4.0, pz + 0.55);
+  curvedRoof(pk, 3.5, 1.6, 1.0, MM.gold(), 0, f + 4.25, pz + 0.1);
+  pk.flush();
   // a chimney through the back of the lower roof
   const cx = 4.2, cz = -2.2, ctop = r1 + 2.4;
   k.add(rbox(0.8, ctop - by, 0.8, 0.04), MM.rubble('#c8bca8'), cx, (ctop + by) / 2, cz);
   k.add(rbox(1.0, 0.1, 1.0, 0.02), MM.slate(), cx, ctop + 0.05, cz);
-  return { hw: w / 2 + 0.3, hd: d / 2 + 0.3, porch: { lz: pz, hw: 3.0, hd: 1.0, top: f }, pillars: [[-2.2, pz + 0.55], [2.2, pz + 0.55]], smoke: [cx, ctop + 0.3, cz], top: fy + 1.4 };
+  return { hw: w / 2 + 0.3, hd: d / 2 + 0.3, porch: { lz: pz, hw: 3.0, hd: 1.0, top: f }, porchRoof: pk.group, pillars: [[-2.2, pz + 0.55], [2.2, pz + 0.55]], smoke: [cx, ctop + 0.3, cz], top: fy + 1.4 };
 }
 // an arched opening filled flat (dark behind a door, glass in a window), facing +z
 const fillGeoArch = (o) => cached('mm-archfill' + JSON.stringify(o), () => {

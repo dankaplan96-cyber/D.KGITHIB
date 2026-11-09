@@ -1745,7 +1745,10 @@ export class CameraRig {
     _v.set(hero.x, hero.y, hero.z);
     const toCam = Math.atan2(cam.x - hero.x, cam.z - hero.z);
     const dHero = Math.hypot(cam.x - hero.x, cam.z - hero.z) / Math.max(cp, 0.1);
-    return this.occluded(_v, cp, sp, toCam, dHero) < dHero - 0.5 ? 'collider' : null;
+    // (WORLD-POLISH 3: only what really hides him — `sight`, as every other sight test here: not a lamp post, a banner's
+    // pole, a tree's trunk or a rail, which he shows beside. On the isles 4 of 5 "hidden" frames were such a post: the
+    // fixed view swung round behind him for a lamp post, and the probes counted him hidden while he stood in full view)
+    return this.occluded(_v, cp, sp, toCam, dHero, true) < dHero - 0.5 ? 'collider' : null;
   }
 
   _camAt(out, f, yaw, pitch, dist) {

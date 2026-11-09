@@ -192,7 +192,8 @@ const signMat = (lines, o) => { const t = signTex(lines, o); return M('ugsignm' 
 // riveted sign plate facing +z (centre at origin)
 function signPlate(k, w, h, mat) {
   k.add(rbox(w + 0.08, h + 0.08, 0.05, 0.015), iron(), 0, 0, 0.0);
-  k.add(plane(w, h), mat, 0, 0, 0.028);
+  // (WORLD-POLISH 3: the plate 1 cm proud of its frame's face, not 3 mm: the two read as one plane, overlaps listed it)
+  k.add(plane(w, h), mat, 0, 0, 0.035);
 }
 // a sagging black cable through points (adds sag to each span)
 function cableRun(k, pts, r = 0.03, s = 0.15) {
@@ -851,7 +852,8 @@ function buildDeep(scene, physics) {
   //  the core and its call locked from below: the way Vesk went ahead (the galleries' bridge is out). The lamp turns green
   //  once the shield crew runs it (deeplife.js). Shut: the gate is a wall
   const HX = 2.0, HW = 1.6, HH = 2.6;
-  for (const s of [-1, 1]) k.at(HX + s * (HW / 2 + 0.14), 0, BZ + 0.16, 0, () => column(k, HH + 0.3, 0.24));
+  // (WORLD-POLISH 3: the columns' back flanges 1 cm into the wall's dado, not 0.6 mm in front of it: one plane, overlaps)
+  for (const s of [-1, 1]) k.at(HX + s * (HW / 2 + 0.14), 0, BZ + 0.15, 0, () => column(k, HH + 0.3, 0.24));
   k.at(HX, HH + 0.34, BZ + 0.18, 0, () => ibeam(k, HW + 0.62, 0.32, 0.24));
   k.add(rbox(HW + 0.5, 0.2, 0.06, 0.02), hazard(), HX, HH + 0.08, BZ + 0.27);
   k.add(plane(HW, HH), MAT.flat('#050406', 1), HX, HH / 2, BZ + 0.05);

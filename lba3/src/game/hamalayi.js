@@ -33,7 +33,7 @@ import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
 import { makeTree } from './hamalayi-tree.js';
-import { roomOcc } from './roomocc.js';
+import { roomOcc, occCollider } from './roomocc.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
@@ -619,9 +619,31 @@ export function* buildHamalayiSteps(scene, physics) {
       occ.add({ kind: 'box', x: X, z: Z, hw: 7.4, hd: 4.9, y0: gy - 1, y1: gy + 7.0, name: 'hall walls' });
       occ.add({ kind: 'box', x: X, z: Z, hw: 8.2, hd: 5.7, y0: gy + 6.9, y1: gy + 9.9, name: 'hall roof' });
       occ.add({ kind: 'box', x: X, z: Z, hw: 3.9, hd: 2.9, y0: gy + 9.8, y1: gy + 12.8, name: 'hall upper' });
-      occ.add({ kind: 'box', x: X, z: Z + 5.6, hw: 3.6, hd: 1.65, y0: gy + 4.3, y1: gy + 5.8, walkUnder: true, name: 'hall porch' }); }
+      occ.add({ kind: 'box', x: X, z: Z + 5.6, hw: 3.6, hd: 1.65, y0: gy + 4.3, y1: gy + 5.8, walkUnder: true, name: 'hall porch' });
+      // (WORLD-POLISH 3: and the porch's beam and roof fade while he stands under it — the camera passes through them
+      //  then, walkUnder: standing out of the door the view swung round through the solid red beam and golden roof)
+      if (hall.porchRoof) {
+        const mats = new Map();
+        hall.porchRoof.traverse((q) => { if (q.isMesh) q.material = [q.material].flat().map((mm) => { if (!mats.has(mm)) mats.set(mm, mm.clone()); return mats.get(mm); })[0]; });
+        const A = { mats: [...mats.values()], f: 1 };
+        let snap = false;
+        const prevReset = R.resetCut;
+        R.resetCut = () => { snap = true; prevReset?.(); };
+        updaters.push((dt) => {
+          const Gm = globalThis.game;
+          if (!Gm || Gm.room !== R) return;
+          if (snap) { snap = false; dt = 10; }
+          const h = Gm.hero.pos, under = Math.abs(h.x - X) < 3.6 && Math.abs(h.z - (Z + 5.6)) < 1.65 && h.y < gy + 4.3;
+          A.f += ((under ? 0.2 : 1) - A.f) * (1 - Math.exp(-dt * 8));
+          const see = A.f < 0.98;
+          for (const m of A.mats) { if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; } m.opacity = see ? A.f : 1; m.depthWrite = !see; }
+        });
+      } }
     col({ type: 'box', x: mx, z: mz - 6 + hall.porch.lz, hw: hall.porch.hw, hd: hall.porch.hd, top: gy + hall.porch.top });
-    for (const [px, pz] of hall.pillars) col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true });
+    // (WORLD-POLISH 3: the porch's two red pillars give the camera their shape — 0.44 m thick, 3.5 m to the beam: no
+    //  post the view sees past. Standing out of the door, the follow camera's look round him for a clear view swung 80°
+    //  along the hall's front and settled with a pillar filling the left of the frame)
+    for (const [px, pz] of hall.pillars) occCollider(roomOcc(R, physics.terrain), col({ type: 'cyl', x: mx + px, z: mz - 6 + pz, r: 0.26, top: gy + 4.5, noStand: true }), { y0: gy + hall.porch.top - 0.3, top: gy + hall.porch.top + 4.2, name: 'hall porch pillar' });
     smokes.push({ x: mx + hall.smoke[0], y: gy + hall.smoke[1], z: mz - 6 + hall.smoke[2] });
     for (const sx of [-1, 1]) put('monastery', 'wheels', mx + sx * 5.05, mz - 1.05, 0, (k) => prayerWheels(k), { y: gy + 0.05 });
     // (YARD-GAPS: the side walls stopped 2 m short of the hall, at its front corners — the yard read open there and the
