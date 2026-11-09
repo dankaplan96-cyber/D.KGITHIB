@@ -48,6 +48,30 @@ function toast(msg, type) {
   toast._t = setTimeout(() => (t.className = "toast"), type === "error" ? 5000 : 2600);
 }
 
+const DEMO = !!window.NS_DEMO;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } },
+};
+
+/* in-page confirm dialog (native confirm() is ugly on tablets and blocked in some browsers) */
+function ask(message, okLabel, danger) {
+  return new Promise((resolve) => {
+    const close = (v) => { overlay.remove(); document.removeEventListener("keydown", onKey); resolve(v); };
+    const onKey = (e) => { if (e.key === "Escape") close(false); if (e.key === "Enter") close(true); };
+    const overlay = h("div", { class: "modal-overlay", onclick: (e) => { if (e.target === overlay) close(false); } },
+      h("div", { class: "modal", role: "dialog", "aria-modal": "true" },
+        h("div", { class: "modal-msg" }, message),
+        h("div", { class: "modal-actions" },
+          h("button", { class: "btn " + (danger === false ? "btn-ok" : "btn-danger"), onclick: () => close(true) }, okLabel || "אישור"),
+          h("button", { class: "btn btn-ghost", onclick: () => close(false) }, "ביטול"))));
+    document.body.appendChild(overlay);
+    document.addEventListener("keydown", onKey);
+    overlay.querySelector(".btn").focus();
+  });
+}
+
 async function api(method, path, body) {
   const opts = { method, headers: {}, credentials: "same-origin" };
   if (body !== undefined) {
@@ -129,7 +153,7 @@ async function loadMe() {
   S.now = r.now;
   S.dataDir = r.data_dir;
   if (!S.sel) {
-    S.sel = { date: r.now.date, shift: r.now.shift, position: localStorage.getItem("ns_position") || "" };
+    S.sel = { date: r.now.date, shift: r.now.shift, position: store.get("ns_position") || "" };
   }
   if (S.sel.position && S.sel.position !== "all" && !posById(S.sel.position)) S.sel.position = "";
   document.body.classList.toggle("is-admin", r.user.role === "admin");
@@ -138,14 +162,17 @@ async function loadMe() {
   document.getElementById("hospitalName").textContent = r.config.hospital_name;
 }
 
-window.addEventListener("hashchange", () => {
+window.addEventListener("hashchange", async () => {
   if (S.skipHash) { S.skipHash = false; return; }
-  if (S.dirty && !confirm("יש שינויים שלא נשמרו. לצאת בלי לשמור?")) {
+  if (S.dirty) {
+    const target = location.hash;
     S.skipHash = true;
-    location.hash = S.lastHash;
+    location.hash = S.lastHash; // stay on the form until the user decides
+    if (!(await ask("יש שינויים שלא נשמרו. לצאת בלי לשמור?", "יציאה בלי לשמור"))) return;
+    S.dirty = false;
+    location.hash = target;
     return;
   }
-  S.dirty = false;
   render();
 });
 
@@ -154,7 +181,7 @@ window.addEventListener("beforeunload", (e) => {
 });
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
-  if (S.dirty && !confirm("יש שינויים שלא נשמרו. לצאת בכל זאת?")) return;
+  if (S.dirty && !(await ask("יש שינויים שלא נשמרו. לצאת בכל זאת?", "יציאה"))) return;
   S.dirty = false;
   try { await api("POST", "logout"); } catch (e) { /* ignore */ }
   S.user = null; S.sel = null;
@@ -279,10 +306,11 @@ async function renderHome() {
 
   // --- date & shift ---
   app.appendChild(h("div", { class: "toolbar" },
-    h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, -1) }) }, "→ יום קודם"),
-    h("input", { type: "date", value: sel.date, onchange: (e) => e.target.value && setSel({ date: e.target.value }) }),
-    h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, 1) }) }, "יום הבא ←"),
-    seg(cfg().shifts.map((s) => ({ value: s.id, label: s.name + " " + s.start + "-" + s.end })), sel.shift,
+    h("div", { class: "datenav" },
+      h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, -1) }) }, "→ ", h("span", { class: "hide-phone" }, "יום קודם")),
+      h("input", { type: "date", value: sel.date, onchange: (e) => e.target.value && setSel({ date: e.target.value }) }),
+      h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, 1) }) }, h("span", { class: "hide-phone" }, "יום הבא"), " ←")),
+    seg(cfg().shifts.map((s) => ({ value: s.id, label: [s.name, h("span", { class: "hide-phone" }, " " + s.start + "-" + s.end)] })), sel.shift,
       (v) => setSel({ shift: v })),
     isNow ? h("span", { class: "badge badge-ok" }, "משמרת נוכחית")
       : h("button", { class: "btn btn-sm", onclick: () => api("GET", "me").then((r) => { S.now = r.now; setSel({ date: r.now.date, shift: r.now.shift }); }) }, "חזרה למשמרת הנוכחית"),
@@ -297,7 +325,7 @@ async function renderHome() {
     h("div", { class: "row between" },
       h("div", null,
         h("div", { style: "font-weight:700;margin-bottom:8px" }, "באיזו עמדה את/ה במשמרת זו?"),
-        seg(posOptions, sel.position, (v) => { localStorage.setItem("ns_position", v); setSel({ position: v }); })),
+        seg(posOptions, sel.position, (v) => { store.set("ns_position", v); setSel({ position: v }); })),
       positionWho(ov, sel))));
 
   if (!ov.can_edit) {
@@ -484,7 +512,7 @@ async function renderEntry(params) {
     const bad = E.absences.findIndex((a) => !a.reason);
     if (bad >= 0) return toast("יש לבחור סיבה לכל היעדרות (היעדרות מס' " + (bad + 1) + ")", "error");
     if (E.patients == null || E.staff_present == null) {
-      if (!confirm("לא הוזן מספר מטופלים או מספר אנשי צוות. לשמור בכל זאת?")) return;
+      if (!(await ask("לא הוזן מספר מטופלים או מספר אנשי צוות. לשמור בכל זאת?", "שמירה", false))) return;
     }
     saveBtn.disabled = true;
     try {
@@ -502,7 +530,7 @@ async function renderEntry(params) {
     orig && S.user.role === "admin" ? h("button", {
       class: "btn btn-danger btn-lg",
       onclick: async () => {
-        if (!confirm("למחוק את הדיווח של " + d.name + "? (הפעולה נרשמת ביומן)")) return;
+        if (!(await ask("למחוק את הדיווח של " + d.name + "? (הפעולה נרשמת ביומן)", "מחיקה"))) return;
         try {
           await api("DELETE", "entry?" + qs({ date, shift, department: dept }));
           S.dirty = false; toast("הדיווח נמחק"); go("/");
@@ -527,7 +555,7 @@ function absenceEditor(a, i, onRemove) {
   return h("div", { class: "absence" },
     h("div", { class: "head" },
       h("b", null, "לא הגיע/ה #" + (i + 1)),
-      h("button", { type: "button", class: "btn btn-sm btn-danger-ghost", onclick: () => { if (confirm("להסיר היעדרות זו?")) onRemove(); } }, "הסרה")),
+      h("button", { type: "button", class: "btn btn-sm btn-danger-ghost", onclick: async () => { if (await ask("להסיר היעדרות זו?", "הסרה")) onRemove(); } }, "הסרה")),
     h("label", { class: "field" }, h("span", null, "שם העובד/ת"),
       h("input", { value: a.employee, placeholder: "שם מלא", oninput: (e) => { a.employee = e.target.value; mark(); } })),
     h("div", { class: "field" }, h("span", { style: "font-weight:600;font-size:15px;display:block;margin-bottom:6px" }, "למה לא הגיע/ה? *"), reasons),
@@ -560,7 +588,7 @@ async function renderSummary(params) {
 
   app.appendChild(h("div", { class: "row between no-print" },
     h("button", { class: "btn btn-ghost", onclick: () => go("/") }, "→ חזרה"),
-    h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF")));
+    DEMO ? null : h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF")));
   app.appendChild(h("div", { class: "print-only muted small" }, cfg().hospital_name + " · הופק " + new Date().toLocaleString("he-IL")));
   app.appendChild(h("h1", null, "סיכום משמרת " + shiftName(shift) + " – " + fmtDate(date) +
     (position && posById(position) ? " – " + posById(position).name : "")));
@@ -665,9 +693,10 @@ async function renderReports(params) {
   app.appendChild(h("div", { class: "row between no-print", style: "margin-bottom:12px" },
     h("div", { class: "muted" }, filterDesc),
     h("div", { class: "row" },
-      h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF"),
-      h("a", { class: "btn btn-light", href: csvUrl("entries") }, "⬇️ אקסל – דיווחים"),
-      h("a", { class: "btn btn-light", href: csvUrl("absences") }, "⬇️ אקסל – היעדרויות"))));
+      DEMO ? h("span", { class: "small muted" }, "הדפסה וייצוא לאקסל זמינים בגרסה המלאה") : [
+        h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF"),
+        h("a", { class: "btn btn-light", href: csvUrl("entries") }, "⬇️ אקסל – דיווחים"),
+        h("a", { class: "btn btn-light", href: csvUrl("absences") }, "⬇️ אקסל – היעדרויות")])));
 
   app.appendChild(h("div", { class: "print-only" },
     h("div", { class: "muted small" }, cfg().hospital_name + " · הופק " + new Date().toLocaleString("he-IL") + " ע\"י " + S.user.name),
@@ -775,7 +804,7 @@ async function renderSettings(params) {
         } catch (e) { toast(e.message, "error"); }
       },
     }, "💾 שמירת הגדרות"),
-    h("button", { class: "btn btn-ghost btn-lg", onclick: () => { if (!S.dirty || confirm("לבטל את כל השינויים שלא נשמרו?")) { S.dirty = false; S.draft = clone(cfg()); renderSettingsTab(currentTab()); } } }, "ביטול שינויים"));
+    h("button", { class: "btn btn-ghost btn-lg", onclick: async () => { if (!S.dirty || (await ask("לבטל את כל השינויים שלא נשמרו?", "ביטול שינויים"))) { S.dirty = false; S.draft = clone(cfg()); renderSettingsTab(currentTab()); } } }, "ביטול שינויים"));
   app.appendChild(saveBar);
   renderSettingsTab(tab);
 }
@@ -826,8 +855,8 @@ function renderSettingsTab(tab) {
         h("input", { value: d.name, oninput: (e) => { d.name = e.target.value; mark(); } }),
         h("label", { style: "display:flex;gap:6px;align-items:center" },
           h("input", { type: "checkbox", checked: d.active !== false, onchange: (e) => { d.active = e.target.checked; mark(); } }), "פעילה"),
-        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => {
-          if (!confirm("למחוק את המחלקה \"" + d.name + "\"? (דוחות קודמים יישמרו. מומלץ לבטל 'פעילה' במקום)")) return;
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (!(await ask("למחוק את המחלקה \"" + d.name + "\"? (דוחות קודמים יישמרו. מומלץ לבטל 'פעילה' במקום)", "מחיקה"))) return;
           D.departments.splice(i, 1); mark(); redraw();
         } }, "מחיקה"))),
       h("button", { class: "btn btn-light", style: "margin-top:8px", onclick: () => {
@@ -841,8 +870,8 @@ function renderSettingsTab(tab) {
       h("p", { class: "muted", style: "margin-top:0" }, "העמדות של האחים הכלליים במשמרת (אח כללי 1, 2, 3...). את המחלקות של כל עמדה מגדירים בלשונית \"שיבוץ מחלקות\"."),
       D.positions.map((p, i) => h("div", { class: "list-row" },
         h("input", { value: p.name, oninput: (e) => { p.name = e.target.value; mark(); } }),
-        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => {
-          if (!confirm("למחוק את \"" + p.name + "\"? השיבוצים שלו יימחקו.")) return;
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (!(await ask("למחוק את \"" + p.name + "\"? השיבוצים שלו יימחקו.", "מחיקה"))) return;
           D.positions.splice(i, 1);
           Object.values(D.assignments).forEach((m) => Object.keys(m).forEach((k) => { if (m[k] === p.id) delete m[k]; }));
           mark(); redraw();
@@ -858,9 +887,9 @@ function renderSettingsTab(tab) {
         h("input", { value: s.name, placeholder: "שם", oninput: (e) => { s.name = e.target.value; mark(); } }),
         h("label", null, "התחלה "), h("input", { type: "time", class: "short", value: s.start, oninput: (e) => { s.start = e.target.value; mark(); } }),
         h("label", null, "סיום "), h("input", { type: "time", class: "short", value: s.end, oninput: (e) => { s.end = e.target.value; mark(); } }),
-        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => {
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
           if (D.shifts.length <= 1) return toast("חייבת להישאר לפחות משמרת אחת", "error");
-          if (!confirm("למחוק את משמרת \"" + s.name + "\"?")) return;
+          if (!(await ask("למחוק את משמרת \"" + s.name + "\"?", "מחיקה"))) return;
           D.shifts.splice(i, 1); delete D.assignments[s.id]; mark(); redraw();
         } }, "מחיקה"))),
       h("button", { class: "btn btn-light", onclick: () => { D.shifts.push({ id: uid("s"), name: "משמרת חדשה", start: "08:00", end: "16:00" }); mark(); redraw(); } }, "+ הוספת משמרת")));
@@ -938,7 +967,7 @@ async function renderUsers(body) {
           drawForm(); box.scrollIntoView({ behavior: "smooth" });
         } }, "עריכה"),
         u.username !== S.user.username ? h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
-          if (!confirm("למחוק את המשתמש " + u.name + "? (הדוחות שמילא יישמרו)")) return;
+          if (!(await ask("למחוק את המשתמש " + u.name + "? (הדוחות שמילא יישמרו)", "מחיקה"))) return;
           try { await api("DELETE", "users/" + encodeURIComponent(u.username)); toast("נמחק"); renderSettingsTab("users"); }
           catch (e) { toast(e.message, "error"); }
         } }, "מחיקה") : null))))))));

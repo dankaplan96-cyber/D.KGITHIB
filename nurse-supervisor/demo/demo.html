@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f5e8c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>אח כללי – גרסת הדגמה</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjVlOGMiLz48cGF0aCBkPSJNMjYgMTJoMTJ2MTRoMTR2MTJIMzh2MTRIMjZWMzhIMTJWMjZoMTR6IiBmaWxsPSIjZmZmIi8+PC9zdmc+" type="image/svg+xml">
+  <style>
+:root {
+  --primary: #0f5e8c;
+  --primary-dark: #0a4566;
+  --primary-light: #e3f0f8;
+  --ok: #1e8a4c;
+  --ok-bg: #e4f5ea;
+  --warn: #b26a00;
+  --warn-bg: #fff3dc;
+  --danger: #c0392b;
+  --danger-bg: #fde8e6;
+  --text: #1d2733;
+  --muted: #637081;
+  --border: #d7dee6;
+  --bg: #f2f5f8;
+  --card: #fff;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(20, 40, 60, .08), 0 4px 14px rgba(20, 40, 60, .05);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", "Rubik", "Assistant", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 17px;
+  -webkit-tap-highlight-color: transparent;
+}
+.hidden { display: none !important; }
+a { color: var(--primary); }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 8px 16px; background: var(--primary); color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.logo { width: 38px; height: 38px; border-radius: 9px; border: 2px solid rgba(255,255,255,.4); }
+.brand-title { font-weight: 700; font-size: 19px; }
+.brand-sub { font-size: 13px; opacity: .85; }
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav a {
+  color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px;
+  font-weight: 600; opacity: .85;
+}
+.nav a.active, .nav a:hover { background: rgba(255,255,255,.18); opacity: 1; }
+.userbox { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.link-btn { text-decoration: none; font-size: 20px; }
+body:not(.is-admin) .admin-only { display: none !important; }
+
+.app { max-width: 1200px; margin: 0 auto; padding: 16px 16px 120px; }
+
+/* ---------- generic ---------- */
+h1 { font-size: 26px; margin: 4px 0 16px; }
+h2 { font-size: 21px; margin: 22px 0 10px; }
+h3 { font-size: 18px; margin: 14px 0 8px; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.row.between { justify-content: space-between; }
+.grow { flex: 1; }
+.card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px; margin-bottom: 14px;
+}
+.grid { display: grid; gap: 12px; }
+.grid-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.grid-steppers { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.grid-stats { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 48px; padding: 10px 20px; border-radius: 10px; border: 1px solid transparent;
+  font: inherit; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff;
+  text-decoration: none; user-select: none; touch-action: manipulation;
+}
+.btn:hover { background: var(--primary-dark); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-ghost { background: transparent; border-color: currentColor; color: inherit; }
+.btn-ghost:hover { background: rgba(0,0,0,.05); }
+.topbar .btn-ghost:hover { background: rgba(255,255,255,.15); }
+.btn-light { background: var(--primary-light); color: var(--primary-dark); }
+.btn-light:hover { background: #cfe4f2; }
+.btn-ok { background: var(--ok); }
+.btn-ok:hover { background: #176b3b; }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #962d22; }
+.btn-danger-ghost { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn-sm { min-height: 36px; padding: 6px 12px; font-size: 15px; }
+.btn-lg { min-height: 60px; font-size: 20px; padding: 12px 32px; }
+
+input, select, textarea {
+  font: inherit; color: inherit; padding: 10px 12px; min-height: 48px;
+  border: 1px solid var(--border); border-radius: 10px; background: #fff; width: 100%;
+}
+textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+input:focus, select:focus, textarea:focus { outline: 3px solid #a9d0ea; border-color: var(--primary); }
+label.field { display: block; margin-bottom: 12px; }
+label.field > span { display: block; font-weight: 600; margin-bottom: 6px; font-size: 15px; }
+input[type=checkbox] { width: 24px; height: 24px; min-height: 0; vertical-align: middle; }
+
+/* segmented buttons */
+.seg { display: inline-flex; background: #e6ecf2; border-radius: 12px; padding: 4px; gap: 4px; flex-wrap: wrap; }
+.seg button {
+  border: 0; background: transparent; font: inherit; font-weight: 600; color: var(--text);
+  min-height: 46px; padding: 8px 18px; border-radius: 9px; cursor: pointer;
+}
+.seg button.on { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--border); background: #fff; font: inherit; font-size: 15px;
+  padding: 8px 14px; min-height: 42px; border-radius: 999px; cursor: pointer;
+}
+.chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.chip.on.danger { background: var(--danger); border-color: var(--danger); }
+
+/* badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-wait { background: var(--warn-bg); color: var(--warn); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-info { background: var(--primary-light); color: var(--primary-dark); }
+
+/* ---------- login ---------- */
+.login-wrap { min-height: 90vh; display: flex; align-items: center; justify-content: center; }
+.login-card { width: 100%; max-width: 420px; padding: 32px; }
+.login-card .logo { width: 64px; height: 64px; display: block; margin: 0 auto 10px; border: 0; }
+.login-card h1 { text-align: center; margin-bottom: 4px; }
+.login-card .muted { text-align: center; margin-bottom: 20px; }
+
+/* ---------- dashboard ---------- */
+.toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.toolbar input[type=date] { width: auto; }
+.dept-card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px; cursor: pointer; border-right: 6px solid var(--warn);
+  transition: transform .08s; min-height: 140px; display: flex; flex-direction: column; gap: 8px;
+}
+.dept-card:active { transform: scale(.98); }
+.dept-card.done { border-right-color: var(--ok); }
+.dept-card.other { opacity: .75; }
+.dept-card .name { font-size: 20px; font-weight: 700; }
+.dept-card .stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; }
+.dept-card .stats b { font-size: 19px; }
+.dept-card .meta { margin-top: auto; font-size: 13px; color: var(--muted); }
+.progress { height: 10px; background: #e1e7ed; border-radius: 99px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--ok); }
+.position-who { font-size: 15px; }
+
+/* ---------- entry form ---------- */
+.stepper { background: #f7f9fb; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.stepper .label { font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 6px; }
+.stepper .ctrl { display: flex; align-items: center; gap: 8px; }
+.stepper button {
+  width: 56px; height: 56px; flex: none; border-radius: 12px; border: 0; font-size: 28px; font-weight: 700;
+  background: var(--primary-light); color: var(--primary-dark); cursor: pointer; touch-action: manipulation;
+}
+.stepper button:active { background: #c3dcee; }
+.stepper input { text-align: center; font-size: 26px; font-weight: 700; height: 56px; padding: 4px; }
+.stepper .hint { font-size: 13px; color: var(--muted); margin-top: 6px; min-height: 18px; }
+.stepper.big { background: #fff; border-width: 2px; }
+.shortage { padding: 12px 16px; border-radius: 10px; font-weight: 700; }
+.shortage.bad { background: var(--danger-bg); color: var(--danger); }
+.shortage.good { background: var(--ok-bg); color: var(--ok); }
+.absence { border: 1px solid #f0c4be; background: #fffafa; border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.absence .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.absence .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sticky-actions {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 15; background: rgba(255,255,255,.96);
+  border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; gap: 12px; justify-content: center; backdrop-filter: blur(6px);
+}
+.sticky-actions .btn { min-width: 160px; }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: #fff; font-size: 15px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: top; }
+th { background: #eef3f7; font-weight: 700; position: sticky; top: 0; white-space: nowrap; }
+tr.total td { font-weight: 700; background: #f6f9fb; }
+td.num, th.num { text-align: center; white-space: nowrap; }
+td.notes { white-space: pre-wrap; min-width: 180px; max-width: 360px; }
+.neg { color: var(--danger); font-weight: 700; }
+
+.stat { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; text-align: center; }
+.stat .v { font-size: 30px; font-weight: 800; color: var(--primary); }
+.stat .l { font-size: 14px; color: var(--muted); }
+.stat.danger .v { color: var(--danger); }
+
+/* ---------- settings ---------- */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tabs button {
+  border: 1px solid var(--border); background: #fff; font: inherit; font-weight: 600;
+  padding: 10px 16px; border-radius: 10px; cursor: pointer; min-height: 46px;
+}
+.tabs button.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.list-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.list-row input { flex: 1; min-width: 120px; }
+.list-row input.short { flex: 0 0 110px; min-width: 0; }
+.assign-table select { min-width: 140px; }
+.assign-table td, .assign-table th { vertical-align: middle; }
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(30px);
+  background: #22303d; color: #fff; padding: 14px 22px; border-radius: 12px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: all .25s; z-index: 50; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--danger); }
+.toast.ok { background: var(--ok); }
+
+.print-only { display: none; }
+
+.datenav { display: flex; gap: 8px; align-items: center; }
+
+@media (max-width: 700px) {
+  body { font-size: 16px; }
+  .topbar { position: static; gap: 6px 10px; padding: 8px 10px; }
+  .brand { flex: 1; }
+  .logo { width: 32px; height: 32px; }
+  .brand-title { font-size: 17px; }
+  .brand-sub { font-size: 12px; }
+  .userbox { font-size: 14px; gap: 6px; }
+  .nav { order: 3; flex-basis: 100%; }
+  .nav a { flex: 1; text-align: center; padding: 7px; }
+  .app { padding: 10px 10px 110px; }
+  h1 { font-size: 21px; margin-bottom: 12px; }
+  h2 { font-size: 19px; }
+  .hide-phone { display: none; }
+  .toolbar { gap: 8px; }
+  .datenav { width: 100%; }
+  .datenav input { flex: 1; }
+  .datenav .btn { min-width: 48px; padding: 6px 10px; }
+  .toolbar .seg { width: 100%; }
+  .seg { display: flex; }
+  .seg button { flex: 1 1 0; padding: 8px 6px; white-space: nowrap; }
+  .card { padding: 12px; }
+  .grid-steppers { grid-template-columns: 1fr; }
+  .grid-cards { grid-template-columns: 1fr; }
+  .dept-card { min-height: 0; }
+  .absence { padding: 10px; }
+  .chip { padding: 6px 12px; min-height: 40px; font-size: 14px; }
+  .sticky-actions { padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+  .sticky-actions .btn { flex: 1; min-width: 0; font-size: 17px; padding: 10px 8px; white-space: nowrap; }
+  .toast { bottom: 96px; }
+  .demo-banner { font-size: 12px; padding: 6px 8px; }
+}
+
+@media print {
+  body { background: #fff; font-size: 12px; }
+  .topbar, .no-print, .sticky-actions, .toast, .tabs { display: none !important; }
+  .print-only { display: block; }
+  .app { max-width: none; padding: 0; }
+  .card, .stat { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  th { position: static; }
+  table { font-size: 11px; }
+  th, td { padding: 4px 6px; }
+  h1 { font-size: 18px; }
+  h2 { font-size: 15px; }
+  .stat .v { font-size: 20px; }
+}
+
+/* ---------- confirm dialog ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100; background: rgba(15, 30, 45, .45);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal { background: #fff; border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.modal-msg { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 18px; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions .btn { flex: 1; }
+
+.demo-banner { background: #fff3dc; color: #6b4300; font-size: 14px; padding: 8px 12px; text-align: center; line-height: 1.6; }
+.demo-banner button { font: inherit; font-size: 13px; margin-inline-start: 6px; padding: 2px 10px; border-radius: 8px;
+  border: 1px solid #b26a00; background: transparent; color: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="demo-banner">
+    <b>גרסת הדגמה</b> · כניסה: <span dir="ltr">admin / admin</span> (מנהל) או <span dir="ltr">nurse1 / 1234</span> (אח כללי)
+    · הנתונים נשמרים רק במכשיר זה
+    <button type="button" onclick="nsDemoReset()">איפוס נתונים</button>
+  </div>
+  <header id="topbar" class="topbar hidden">
+    <div class="brand">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjVlOGMiLz48cGF0aCBkPSJNMjYgMTJoMTJ2MTRoMTR2MTJIMzh2MTRIMjZWMzhIMTJWMjZoMTR6IiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="" class="logo">
+      <div>
+        <div class="brand-title">אח כללי</div>
+        <div class="brand-sub" id="hospitalName"></div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#/" data-nav="home">משמרת</a>
+      <a href="#/reports" data-nav="reports">דוחות</a>
+      <a href="#/settings" data-nav="settings" class="admin-only">הגדרות</a>
+    </nav>
+    <div class="userbox">
+      <span id="userName"></span>
+      <a href="#/password" class="link-btn" title="החלפת סיסמה">🔑</a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">יציאה</button>
+    </div>
+  </header>
+  <main id="app" class="app"></main>
+  <div id="toast" class="toast"></div>
+  <script>
+/* Demo mode: an in-browser imitation of server.py so the app can be tried
+   on any phone without a server. Data lives in this browser only. */
+"use strict";
+(function () {
+  window.NS_DEMO = true;
+  const KEY = "ns_demo_v1";
+
+  const DEFAULT_CONFIG = {
+    hospital_name: "גרסת הדגמה",
+    edit_window_hours: 12,
+    shifts: [
+      { id: "morning", name: "בוקר", start: "07:00", end: "15:00" },
+      { id: "evening", name: "ערב", start: "15:00", end: "23:00" },
+      { id: "night", name: "לילה", start: "23:00", end: "07:00" },
+    ],
+    positions: [
+      { id: "p1", name: "אח כללי 1" },
+      { id: "p2", name: "אח כללי 2" },
+      { id: "p3", name: "אח כללי 3" },
+    ],
+    departments: [
+      { id: "d1", name: "פנימית א'", active: true },
+      { id: "d2", name: "פנימית ב'", active: true },
+      { id: "d3", name: "כירורגיה", active: true },
+      { id: "d4", name: "גריאטריה", active: true },
+      { id: "d5", name: "אורתופדיה", active: true },
+      { id: "d6", name: "מיון", active: true },
+    ],
+    assignments: {
+      morning: { d1: "p1", d2: "p1", d3: "p2", d4: "p2", d5: "p3", d6: "p3" },
+      evening: { d1: "p1", d2: "p1", d3: "p1", d4: "p2", d5: "p2", d6: "p2" },
+      night: { d1: "p1", d2: "p1", d3: "p1", d4: "p1", d5: "p2", d6: "p2" },
+    },
+    absence_reasons: ["מחלה", "מחלת ילד", "חופשה", "מילואים", "אירוע משפחתי", "לא הודיע/ה (פאנצ'ר)", "איחור", "השתלמות", "אחר"],
+  };
+
+  /* ---------------- storage ---------------- */
+  let memory = null;
+  function load() {
+    if (memory) return memory;
+    try { memory = JSON.parse(localStorage.getItem(KEY)); } catch (e) { memory = null; }
+    if (!memory) memory = seed();
+    return memory;
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(memory)); } catch (e) { /* memory only */ } }
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const isoDate = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const isoNow = () => { const d = new Date(); return isoDate(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()); };
+  const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoDate(d); };
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  function seed() {
+    const db = {
+      config: clone(DEFAULT_CONFIG),
+      users: [
+        { username: "admin", name: "מנהל מערכת", role: "admin", password: "admin", active: true, must_change_password: false },
+        { username: "nurse1", name: "דנה כהן", role: "nurse", password: "1234", active: true, must_change_password: false },
+        { username: "nurse2", name: "יוסי לוי", role: "nurse", password: "1234", active: true, must_change_password: false },
+      ],
+      days: {},
+      session: null,
+    };
+    // a few sample reports from yesterday so the reports screen has content
+    const y = addDays(isoDate(new Date()), -1);
+    const mk = (dept, pos, pts, staff, abs, staffNotes, pNotes, by) => ({
+      patients: pts, staff_present: staff, absences: abs, staff_notes: staffNotes, patient_notes: pNotes,
+      department_name: DEFAULT_CONFIG.departments.find((d) => d.id === dept).name,
+      shift_name: "", position_id: pos, position_name: DEFAULT_CONFIG.positions.find((p) => p.id === pos).name,
+      created_at: y + "T10:00:00", updated_at: y + "T10:00:00", updated_by: by[0], updated_by_name: by[1], revisions: 1,
+    });
+    const dana = ["nurse1", "דנה כהן"], yossi = ["nurse2", "יוסי לוי"];
+    db.days[y] = {
+      date: y,
+      shifts: {
+        morning: {
+          positions: { p1: { username: "nurse1", name: "דנה כהן", since: y + "T07:05" }, p2: { username: "nurse2", name: "יוסי לוי", since: y + "T07:10" } },
+          departments: {
+            d1: { ...mk("d1", "p1", 34, 7, [], "", "", dana), shift_name: "בוקר" },
+            d2: { ...mk("d2", "p1", 31, 5, [{ employee: "מיכל אברהם", reason: "מחלה", details: "הודיעה ב-06:00", replaced: true, replacement: "רונית מהפול" }], "", "חדר 8 – מטופל מידרדר, הועבר לטיפול נמרץ", dana), shift_name: "בוקר" },
+            d3: { ...mk("d3", "p2", 27, 5, [{ employee: "אבי מזרחי", reason: "לא הודיע/ה (פאנצ'ר)", details: "לא ענה לטלפון", replaced: false, replacement: "" }], "חוסר בכוח עזר", "", yossi), shift_name: "בוקר" },
+            d4: { ...mk("d4", "p2", 30, 6, [], "", "נפילה בחדר 3 ללא חבלה, דווח לרופא", yossi), shift_name: "בוקר" },
+          },
+        },
+        evening: {
+          positions: { p1: { username: "nurse1", name: "דנה כהן", since: y + "T15:02" } },
+          departments: {
+            d1: { ...mk("d1", "p1", 33, 5, [{ employee: "שירן דוד", reason: "מחלת ילד", details: "", replaced: false, replacement: "" }], "", "", dana), shift_name: "ערב", updated_at: y + "T16:20:00" },
+          },
+        },
+      },
+    };
+    return db;
+  }
+
+  /* ---------------- shift logic (same as server.py) ---------------- */
+  const hm = (s) => s.split(":").map(Number);
+  function shiftBounds(cfg, day, sid) {
+    const sh = cfg.shifts.find((s) => s.id === sid);
+    if (!sh) return null;
+    const [y, m, d] = day.split("-").map(Number);
+    const [sh_h, sh_m] = hm(sh.start), [en_h, en_m] = hm(sh.end);
+    const start = new Date(y, m - 1, d, sh_h, sh_m), end = new Date(y, m - 1, d, en_h, en_m);
+    if (end <= start) end.setDate(end.getDate() + 1);
+    return [start, end];
+  }
+  function currentShift(cfg) {
+    const now = new Date();
+    for (const off of [0, -1]) {
+      const day = addDays(isoDate(now), off);
+      for (const s of cfg.shifts) {
+        const b = shiftBounds(cfg, day, s.id);
+        if (b && b[0] <= now && now < b[1]) return [day, s.id];
+      }
+    }
+    return [isoDate(now), cfg.shifts[0].id];
+  }
+  function canEdit(user, cfg, day, sid) {
+    if (user.role === "admin") return true;
+    const b = shiftBounds(cfg, day, sid);
+    if (!b) return false;
+    const now = Date.now();
+    return b[0].getTime() - 2 * 3600e3 <= now && now <= b[1].getTime() + (cfg.edit_window_hours || 0) * 3600e3;
+  }
+
+  /* ---------------- helpers ---------------- */
+  class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+  const need = (c, msg, status) => { if (!c) throw new ApiError(status || 400, msg); };
+  const str = (v, n) => (v == null ? "" : String(v).trim().slice(0, n || 2000));
+  const int = (v) => { if (v === null || v === undefined || v === "") return null; const n = parseInt(v, 10); need(!isNaN(n), "ערך מספרי לא תקין"); return Math.max(0, Math.min(999, n)); };
+  const validDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || "") && !isNaN(new Date(s + "T12:00:00"));
+  const pub = (u) => ({ username: u.username, name: u.name, role: u.role, active: u.active, must_change_password: !!u.must_change_password });
+  const getDay = (db, day) => db.days[day] || { date: day, shifts: {} };
+
+  function shiftOverview(db, day, sid) {
+    const cfg = db.config, data = getDay(db, day);
+    const entries = ((data.shifts[sid] || {}).departments) || {};
+    const asg = cfg.assignments[sid] || {};
+    const posNames = Object.fromEntries(cfg.positions.map((p) => [p.id, p.name]));
+    const depts = [];
+    for (const d of cfg.departments) {
+      const e = entries[d.id] || null;
+      if (d.active === false && !e) continue;
+      depts.push({ id: d.id, name: d.name, position_id: asg[d.id] || null, position_name: posNames[asg[d.id]] || "", entry: e });
+    }
+    return { date: day, shift: sid, departments: depts, positions: (data.shifts[sid] || {}).positions || {} };
+  }
+
+  function collect(db, from, to, f) {
+    const cfg = db.config;
+    const order = Object.fromEntries(cfg.shifts.map((s, i) => [s.id, i]));
+    const names = Object.fromEntries(cfg.shifts.map((s) => [s.id, s.name]));
+    const rows = [];
+    for (let day = from; day <= to; day = addDays(day, 1)) {
+      const data = db.days[day];
+      if (!data) continue;
+      for (const [sid, sd] of Object.entries(data.shifts || {})) {
+        if (f.shift && sid !== f.shift) continue;
+        for (const [did, e] of Object.entries(sd.departments || {})) {
+          if (f.department && did !== f.department) continue;
+          if (f.position && e.position_id !== f.position) continue;
+          rows.push({ ...e, date: day, shift: sid, shift_name: names[sid] || e.shift_name || sid, department_id: did });
+        }
+      }
+    }
+    rows.sort((a, b) => (a.date + (order[a.shift] ?? 99) + a.department_name).localeCompare(b.date + (order[b.shift] ?? 99) + b.department_name));
+    return rows;
+  }
+
+  function summarize(rows) {
+    const s = { entries: rows.length, patients: 0, staff_present: 0, absences: 0, replaced: 0, exceptional: 0, by_reason: {}, by_department: {} };
+    for (const r of rows) {
+      s.patients += r.patients || 0;
+      s.staff_present += r.staff_present || 0;
+      if (r.patient_notes) s.exceptional++;
+      const bd = s.by_department[r.department_name] = s.by_department[r.department_name] || { entries: 0, absences: 0, exceptional: 0 };
+      bd.entries++;
+      if (r.patient_notes) bd.exceptional++;
+      for (const a of r.absences || []) {
+        s.absences++; bd.absences++;
+        if (a.replaced) s.replaced++;
+        s.by_reason[a.reason] = (s.by_reason[a.reason] || 0) + 1;
+      }
+    }
+    return s;
+  }
+
+  function validateConfig(c) {
+    need(c && typeof c === "object", "הגדרות לא תקינות");
+    const list = (items, label, extra) => {
+      need(Array.isArray(items), "רשימת " + label + " לא תקינה");
+      const seen = new Set();
+      return items.map((it) => {
+        const id = str(it.id, 40) || Math.random().toString(36).slice(2, 10);
+        need(/^[A-Za-z0-9_-]{1,40}$/.test(id), "מזהה לא תקין ב" + label);
+        need(!seen.has(id), "מזהה כפול ב" + label); seen.add(id);
+        const name = str(it.name, 80);
+        need(name, "חסר שם ב" + label);
+        const row = { id, name };
+        if (extra) extra(it, row);
+        return row;
+      });
+    };
+    const out = { hospital_name: str(c.hospital_name, 120) || "בית החולים", edit_window_hours: int(c.edit_window_hours) || 0 };
+    out.shifts = list(c.shifts, "משמרות", (it, row) => {
+      for (const k of ["start", "end"]) { const v = str(it[k], 5); need(/^\d{2}:\d{2}$/.test(v), "שעת משמרת לא תקינה (HH:MM)"); row[k] = v; }
+    });
+    need(out.shifts.length, "חייבת להיות לפחות משמרת אחת");
+    out.positions = list(c.positions, "אחים כלליים");
+    out.departments = list(c.departments, "מחלקות", (it, row) => { row.active = it.active !== false; });
+    const pos = new Set(out.positions.map((p) => p.id)), dep = new Set(out.departments.map((d) => d.id));
+    out.assignments = {};
+    for (const s of out.shifts) {
+      out.assignments[s.id] = {};
+      for (const [d, p] of Object.entries((c.assignments || {})[s.id] || {})) if (dep.has(d) && pos.has(p)) out.assignments[s.id][d] = p;
+    }
+    out.absence_reasons = [...new Set((c.absence_reasons || []).map((x) => str(x, 80)).filter(Boolean))];
+    return out;
+  }
+
+  /* ---------------- router ---------------- */
+  function handle(method, route, q, body) {
+    const db = load();
+    if (route === "login" && method === "POST") {
+      const u = db.users.find((x) => x.username === str(body.username).toLowerCase());
+      if (!u || !u.active || u.password !== String(body.password || "")) throw new ApiError(401, "שם משתמש או סיסמה שגויים");
+      db.session = u.username; save();
+      return { user: pub(u) };
+    }
+    if (route === "logout" && method === "POST") { db.session = null; save(); return { ok: true }; }
+
+    const user = db.users.find((x) => x.username === db.session && x.active);
+    need(user, "יש להתחבר מחדש", 401);
+    const cfg = db.config;
+    const admin = () => need(user.role === "admin", "אין הרשאה - נדרש מנהל מערכת", 403);
+
+    if (route === "me" && method === "GET") {
+      const [day, sid] = currentShift(cfg);
+      return { user: pub(user), config: cfg, now: { date: day, shift: sid }, data_dir: user.role === "admin" ? "(הדגמה – הנתונים נשמרים בדפדפן במכשיר זה בלבד)" : null };
+    }
+    if (route === "change-password" && method === "POST") {
+      need(String(body.old || "") === user.password, "הסיסמה הנוכחית שגויה");
+      need(String(body.new || "").length >= 4, "הסיסמה החדשה חייבת להכיל לפחות 4 תווים");
+      user.password = String(body.new); user.must_change_password = false; save();
+      return { ok: true };
+    }
+    if (route === "shift" && method === "GET") {
+      need(validDate(q.date), "תאריך לא תקין");
+      need(cfg.shifts.some((s) => s.id === q.shift), "משמרת לא קיימת");
+      return { ...shiftOverview(db, q.date, q.shift), can_edit: canEdit(user, cfg, q.date, q.shift) };
+    }
+    if (route === "shift/position" && method === "POST") {
+      const { date, shift, position } = body;
+      need(validDate(date), "תאריך לא תקין");
+      need(cfg.positions.some((p) => p.id === position), "עמדה לא קיימת");
+      need(canEdit(user, cfg, date, shift), "לא ניתן לעדכן משמרת זו", 403);
+      const data = db.days[date] = getDay(db, date);
+      const sh = data.shifts[shift] = data.shifts[shift] || { departments: {} };
+      sh.positions = sh.positions || {};
+      sh.positions[position] = { username: user.username, name: user.name, since: isoNow().slice(0, 16) };
+      save();
+      return { ok: true };
+    }
+    if (route === "entry" && method === "PUT") {
+      const { date, shift, department } = body;
+      need(validDate(date), "תאריך לא תקין");
+      const sh = cfg.shifts.find((s) => s.id === shift); need(sh, "משמרת לא קיימת");
+      const dept = cfg.departments.find((d) => d.id === department); need(dept, "מחלקה לא קיימת");
+      need(canEdit(user, cfg, date, shift), "חלון העריכה למשמרת זו נסגר. לתיקון יש לפנות למנהל המערכת", 403);
+      const absences = [];
+      for (const a of (body.absences || []).slice(0, 100)) {
+        const emp = str(a.employee, 80), reason = str(a.reason, 80);
+        if (!emp && !reason) continue;
+        need(reason, "יש לבחור סיבת היעדרות לכל עובד");
+        absences.push({ employee: emp, reason, details: str(a.details, 500), replaced: !!a.replaced, replacement: str(a.replacement, 80) });
+      }
+      const pid = (cfg.assignments[shift] || {})[department];
+      const pos = cfg.positions.find((p) => p.id === pid);
+      const data = db.days[date] = getDay(db, date);
+      const s = data.shifts[shift] = data.shifts[shift] || { departments: {} };
+      s.departments = s.departments || {};
+      const prev = s.departments[department];
+      if (prev && body.base_updated_at && prev.updated_at !== body.base_updated_at) {
+        throw new ApiError(409, "הדיווח עודכן בינתיים ע\"י " + prev.updated_by_name + ". רעננו את המסך כדי לראות את הגרסה העדכנית.");
+      }
+      const entry = {
+        patients: int(body.patients), staff_present: int(body.staff_present), absences,
+        staff_notes: str(body.staff_notes, 5000), patient_notes: str(body.patient_notes, 5000),
+        department_name: dept.name, shift_name: sh.name, position_id: pid || null, position_name: pos ? pos.name : "",
+        created_at: (prev && prev.created_at) || isoNow(), updated_at: isoNow(),
+        updated_by: user.username, updated_by_name: user.name, revisions: ((prev && prev.revisions) || 0) + 1,
+      };
+      s.departments[department] = entry;
+      save();
+      return { ok: true, entry };
+    }
+    if (route === "entry" && method === "DELETE") {
+      need(user.role === "admin", "רק מנהל מערכת יכול למחוק דיווח", 403);
+      const sd = (getDay(db, q.date).shifts[q.shift] || {}).departments || {};
+      delete sd[q.department]; save();
+      return { ok: true };
+    }
+    if (route === "reports" && method === "GET") {
+      need(validDate(q.from) && validDate(q.to), "טווח תאריכים לא תקין");
+      need(q.from <= q.to, "תאריך ההתחלה מאוחר מתאריך הסיום");
+      const rows = collect(db, q.from, q.to, q);
+      return { rows, summary: summarize(rows) };
+    }
+    if (route === "config" && method === "PUT") {
+      admin();
+      db.config = validateConfig(body); save();
+      return { ok: true, config: db.config };
+    }
+    if (route === "users" && method === "GET") { admin(); return { users: db.users.map(pub) }; }
+    if (route === "users" && method === "POST") {
+      admin();
+      const uname = str(body.username, 40).toLowerCase();
+      need(/^[a-z0-9_.-]{2,40}$/.test(uname), "שם משתמש: אותיות באנגלית, ספרות, נקודה, מקף (2-40 תווים)");
+      const name = str(body.name, 80); need(name, "יש להזין שם מלא");
+      const pw = String(body.password || "");
+      let u = db.users.find((x) => x.username === uname);
+      if (!u) { need(pw.length >= 4, "סיסמה חייבת להכיל לפחות 4 תווים"); u = { username: uname, must_change_password: true }; db.users.push(u); }
+      u.name = name; u.role = body.role === "admin" ? "admin" : "nurse"; u.active = body.active !== false;
+      if (pw) { need(pw.length >= 4, "סיסמה חייבת להכיל לפחות 4 תווים"); u.password = pw; u.must_change_password = !!body.must_change_password; }
+      need(db.users.some((x) => x.role === "admin" && x.active), "חייב להישאר לפחות מנהל מערכת פעיל אחד");
+      save();
+      return { ok: true };
+    }
+    if (route.startsWith("users/") && method === "DELETE") {
+      admin();
+      const uname = decodeURIComponent(route.slice(6));
+      need(uname !== user.username, "לא ניתן למחוק את המשתמש המחובר");
+      const rest = db.users.filter((x) => x.username !== uname);
+      need(rest.some((x) => x.role === "admin" && x.active), "חייב להישאר לפחות מנהל מערכת פעיל אחד");
+      db.users = rest; save();
+      return { ok: true };
+    }
+    throw new ApiError(404, "לא נמצא");
+  }
+
+  const realFetch = window.fetch ? window.fetch.bind(window) : null;
+  window.fetch = async function (url, opts) {
+    const u = String(url);
+    if (!u.startsWith("/api/")) return realFetch(url, opts);
+    opts = opts || {};
+    const [path, query] = u.slice(5).split("?");
+    const q = {};
+    new URLSearchParams(query || "").forEach((v, k) => (q[k] = v));
+    let body = {};
+    try { body = opts.body ? JSON.parse(opts.body) : {}; } catch (e) { /* ignore */ }
+    let status = 200, out;
+    try { out = handle(opts.method || "GET", path, q, body); }
+    catch (e) { status = e.status || 500; out = { error: e.message }; }
+    return new Response(JSON.stringify(out), { status, headers: { "Content-Type": "application/json" } });
+  };
+
+  window.nsDemoReset = function () { try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } memory = null; location.hash = "#/login"; location.reload(); };
+})();
+
+</script>
+<script>
+/* תוכנת אח כללי - צד לקוח (ללא ספריות חיצוניות) */
+"use strict";
+
+const S = {
+  user: null,
+  config: null,
+  now: null,
+  sel: null,        // {date, shift, position}
+  dirty: false,
+  lastHash: "",
+  skipHash: false,
+};
+
+/* ------------------------------------------------------------------ */
+/* helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "style") el.style.cssText = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else if (k === "value") el.value = v;
+      else if (k === "checked") el.checked = !!v;
+      else if (v === true) el.setAttribute(k, "");
+      else el.setAttribute(k, v);
+    }
+  }
+  for (const c of children.flat(Infinity)) {
+    if (c === null || c === undefined || c === false) continue;
+    el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+const $app = () => document.getElementById("app");
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+function toast(msg, type) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => (t.className = "toast"), type === "error" ? 5000 : 2600);
+}
+
+const DEMO = !!window.NS_DEMO;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } },
+};
+
+/* in-page confirm dialog (native confirm() is ugly on tablets and blocked in some browsers) */
+function ask(message, okLabel, danger) {
+  return new Promise((resolve) => {
+    const close = (v) => { overlay.remove(); document.removeEventListener("keydown", onKey); resolve(v); };
+    const onKey = (e) => { if (e.key === "Escape") close(false); if (e.key === "Enter") close(true); };
+    const overlay = h("div", { class: "modal-overlay", onclick: (e) => { if (e.target === overlay) close(false); } },
+      h("div", { class: "modal", role: "dialog", "aria-modal": "true" },
+        h("div", { class: "modal-msg" }, message),
+        h("div", { class: "modal-actions" },
+          h("button", { class: "btn " + (danger === false ? "btn-ok" : "btn-danger"), onclick: () => close(true) }, okLabel || "אישור"),
+          h("button", { class: "btn btn-ghost", onclick: () => close(false) }, "ביטול"))));
+    document.body.appendChild(overlay);
+    document.addEventListener("keydown", onKey);
+    overlay.querySelector(".btn").focus();
+  });
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: {}, credentials: "same-origin" };
+  if (body !== undefined) {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  let res;
+  try {
+    res = await fetch("/api/" + path, opts);
+  } catch (e) {
+    throw new Error("אין חיבור לשרת. בדקו את חיבור הרשת ונסו שוב.");
+  }
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* ignore */ }
+  if (res.status === 401 && path !== "login") {
+    S.user = null;
+    S.dirty = false;
+    go("/login");
+    throw new Error(data.error || "יש להתחבר מחדש");
+  }
+  if (!res.ok) throw new Error(data.error || "שגיאה " + res.status);
+  return data;
+}
+
+function qs(params) {
+  return Object.entries(params)
+    .filter(([, v]) => v !== "" && v !== null && v !== undefined)
+    .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
+}
+
+function parseHash() {
+  const raw = location.hash.replace(/^#/, "") || "/";
+  const [path, query] = raw.split("?");
+  const params = {};
+  new URLSearchParams(query || "").forEach((v, k) => (params[k] = v));
+  return { path, params };
+}
+
+function go(path, params) {
+  const q = params ? qs(params) : "";
+  location.hash = "#" + path + (q ? "?" + q : "");
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+function addDays(iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoDate(d); }
+const DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+function fmtDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T12:00:00");
+  return "יום " + DAYS[d.getDay()] + ", " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
+}
+function fmtShort(iso) { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "/" + m + "/" + y.slice(2); }
+function fmtTime(ts) {
+  if (!ts) return "";
+  const [d, t] = ts.split("T");
+  return t.slice(0, 5) + " " + fmtShort(d);
+}
+
+const cfg = () => S.config;
+const shiftById = (id) => cfg().shifts.find((s) => s.id === id);
+const shiftName = (id) => (shiftById(id) || {}).name || id;
+const posById = (id) => cfg().positions.find((p) => p.id === id);
+const deptById = (id) => cfg().departments.find((d) => d.id === id);
+
+function seg(options, current, onPick) {
+  return h("div", { class: "seg" }, options.map((o) =>
+    h("button", { type: "button", class: o.value === current ? "on" : "", onclick: () => onPick(o.value) }, o.label)));
+}
+
+/* ------------------------------------------------------------------ */
+/* boot / routing                                                     */
+/* ------------------------------------------------------------------ */
+
+async function loadMe() {
+  const r = await api("GET", "me");
+  S.user = r.user;
+  S.config = r.config;
+  S.now = r.now;
+  S.dataDir = r.data_dir;
+  if (!S.sel) {
+    S.sel = { date: r.now.date, shift: r.now.shift, position: store.get("ns_position") || "" };
+  }
+  if (S.sel.position && S.sel.position !== "all" && !posById(S.sel.position)) S.sel.position = "";
+  document.body.classList.toggle("is-admin", r.user.role === "admin");
+  document.getElementById("topbar").classList.remove("hidden");
+  document.getElementById("userName").textContent = r.user.name;
+  document.getElementById("hospitalName").textContent = r.config.hospital_name;
+}
+
+window.addEventListener("hashchange", async () => {
+  if (S.skipHash) { S.skipHash = false; return; }
+  if (S.dirty) {
+    const target = location.hash;
+    S.skipHash = true;
+    location.hash = S.lastHash; // stay on the form until the user decides
+    if (!(await ask("יש שינויים שלא נשמרו. לצאת בלי לשמור?", "יציאה בלי לשמור"))) return;
+    S.dirty = false;
+    location.hash = target;
+    return;
+  }
+  render();
+});
+
+window.addEventListener("beforeunload", (e) => {
+  if (S.dirty) { e.preventDefault(); e.returnValue = ""; }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  if (S.dirty && !(await ask("יש שינויים שלא נשמרו. לצאת בכל זאת?", "יציאה"))) return;
+  S.dirty = false;
+  try { await api("POST", "logout"); } catch (e) { /* ignore */ }
+  S.user = null; S.sel = null;
+  document.getElementById("topbar").classList.add("hidden");
+  go("/login");
+});
+
+async function render() {
+  S.lastHash = location.hash;
+  const { path, params } = parseHash();
+  if (path !== "/login" && !S.user) {
+    try { await loadMe(); } catch (e) { return renderLogin(); }
+  }
+  if (path === "/login") return renderLogin();
+  if (S.user.must_change_password && path !== "/password") return go("/password");
+
+  document.querySelectorAll("[data-nav]").forEach((a) => {
+    const n = a.getAttribute("data-nav");
+    a.classList.toggle("active",
+      (n === "home" && (path === "/" || path === "/entry" || path === "/summary")) || "/" + n === path);
+  });
+
+  const app = $app();
+  app.innerHTML = "";
+  app.appendChild(h("div", { class: "muted" }, "טוען..."));
+  try {
+    if (path === "/" || path === "") await renderHome();
+    else if (path === "/entry") await renderEntry(params);
+    else if (path === "/summary") await renderSummary(params);
+    else if (path === "/reports") await renderReports(params);
+    else if (path === "/settings") await renderSettings(params);
+    else if (path === "/password") renderPassword();
+    else go("/");
+  } catch (e) {
+    app.innerHTML = "";
+    app.appendChild(h("div", { class: "card" }, h("b", null, "שגיאה: "), e.message,
+      h("div", { style: "margin-top:12px" }, h("button", { class: "btn", onclick: render }, "נסה שוב"))));
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ------------------------------------------------------------------ */
+/* login / password                                                   */
+/* ------------------------------------------------------------------ */
+
+function renderLogin() {
+  document.getElementById("topbar").classList.add("hidden");
+  const app = $app();
+  app.innerHTML = "";
+  const user = h("input", { autocomplete: "username", autocapitalize: "off", spellcheck: "false", dir: "ltr" });
+  const pass = h("input", { type: "password", autocomplete: "current-password", dir: "ltr" });
+  const btn = h("button", { class: "btn btn-lg", type: "submit", style: "width:100%" }, "כניסה");
+  const form = h("form", {
+    onsubmit: async (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      try {
+        await api("POST", "login", { username: user.value, password: pass.value });
+        S.user = null; S.sel = null;
+        await loadMe();
+        const before = location.hash;
+        go("/");
+        if (before === "#/" || before === "") render();
+      } catch (err) {
+        toast(err.message, "error");
+        pass.value = "";
+        pass.focus();
+      } finally { btn.disabled = false; }
+    },
+  },
+  h("label", { class: "field" }, h("span", null, "שם משתמש"), user),
+  h("label", { class: "field" }, h("span", null, "סיסמה"), pass),
+  btn);
+  app.appendChild(h("div", { class: "login-wrap" },
+    h("div", { class: "card login-card" },
+      h("img", { src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjVlOGMiLz48cGF0aCBkPSJNMjYgMTJoMTJ2MTRoMTR2MTJIMzh2MTRIMjZWMzhIMTJWMjZoMTR6IiBmaWxsPSIjZmZmIi8+PC9zdmc+", class: "logo", alt: "" }),
+      h("h1", null, "אח כללי"),
+      h("div", { class: "muted" }, "דיווח מצב מחלקות ונוכחות צוות"),
+      form)));
+  setTimeout(() => user.focus(), 50);
+}
+
+function renderPassword() {
+  const app = $app();
+  app.innerHTML = "";
+  const old = h("input", { type: "password", dir: "ltr", autocomplete: "current-password" });
+  const n1 = h("input", { type: "password", dir: "ltr", autocomplete: "new-password" });
+  const n2 = h("input", { type: "password", dir: "ltr", autocomplete: "new-password" });
+  app.appendChild(h("div", { class: "card", style: "max-width:480px;margin:auto" },
+    h("h1", null, "החלפת סיסמה"),
+    S.user.must_change_password ? h("p", { class: "badge badge-wait" }, "יש להחליף את הסיסמה הראשונית לפני ההמשך") : null,
+    h("form", {
+      onsubmit: async (e) => {
+        e.preventDefault();
+        if (n1.value !== n2.value) return toast("הסיסמאות החדשות אינן תואמות", "error");
+        try {
+          await api("POST", "change-password", { old: old.value, new: n1.value });
+          S.user.must_change_password = false;
+          toast("הסיסמה עודכנה", "ok");
+          go("/");
+        } catch (err) { toast(err.message, "error"); }
+      },
+    },
+    h("label", { class: "field" }, h("span", null, "סיסמה נוכחית"), old),
+    h("label", { class: "field" }, h("span", null, "סיסמה חדשה"), n1),
+    h("label", { class: "field" }, h("span", null, "אימות סיסמה חדשה"), n2),
+    h("button", { class: "btn", type: "submit" }, "עדכון סיסמה"))));
+}
+
+/* ------------------------------------------------------------------ */
+/* home – shift dashboard                                             */
+/* ------------------------------------------------------------------ */
+
+async function renderHome() {
+  const sel = S.sel;
+  const ov = await api("GET", "shift?" + qs({ date: sel.date, shift: sel.shift }));
+  const app = $app();
+  app.innerHTML = "";
+
+  const setSel = (patch) => { Object.assign(S.sel, patch); render(); };
+  const isNow = sel.date === S.now.date && sel.shift === S.now.shift;
+
+  // --- date & shift ---
+  app.appendChild(h("div", { class: "toolbar" },
+    h("div", { class: "datenav" },
+      h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, -1) }) }, "→ ", h("span", { class: "hide-phone" }, "יום קודם")),
+      h("input", { type: "date", value: sel.date, onchange: (e) => e.target.value && setSel({ date: e.target.value }) }),
+      h("button", { class: "btn btn-light btn-sm", onclick: () => setSel({ date: addDays(sel.date, 1) }) }, h("span", { class: "hide-phone" }, "יום הבא"), " ←")),
+    seg(cfg().shifts.map((s) => ({ value: s.id, label: [s.name, h("span", { class: "hide-phone" }, " " + s.start + "-" + s.end)] })), sel.shift,
+      (v) => setSel({ shift: v })),
+    isNow ? h("span", { class: "badge badge-ok" }, "משמרת נוכחית")
+      : h("button", { class: "btn btn-sm", onclick: () => api("GET", "me").then((r) => { S.now = r.now; setSel({ date: r.now.date, shift: r.now.shift }); }) }, "חזרה למשמרת הנוכחית"),
+  ));
+
+  app.appendChild(h("h1", null, "משמרת " + shiftName(sel.shift) + " · " + fmtDate(sel.date)));
+
+  // --- position selection ---
+  const posOptions = cfg().positions.map((p) => ({ value: p.id, label: p.name }))
+    .concat([{ value: "all", label: "כל המחלקות" }]);
+  app.appendChild(h("div", { class: "card" },
+    h("div", { class: "row between" },
+      h("div", null,
+        h("div", { style: "font-weight:700;margin-bottom:8px" }, "באיזו עמדה את/ה במשמרת זו?"),
+        seg(posOptions, sel.position, (v) => { store.set("ns_position", v); setSel({ position: v }); })),
+      positionWho(ov, sel))));
+
+  if (!ov.can_edit) {
+    app.appendChild(h("div", { class: "card badge-wait", style: "font-weight:600" },
+      "צפייה בלבד – חלון העריכה למשמרת זו נסגר. לתיקון יש לפנות למנהל המערכת."));
+  }
+
+  const depts = ov.departments;
+  const mine = sel.position && sel.position !== "all" ? depts.filter((d) => d.position_id === sel.position) : depts;
+  const done = mine.filter((d) => d.entry).length;
+
+  app.appendChild(h("div", { class: "row between", style: "margin:6px 0 10px" },
+    h("div", { class: "grow" },
+      h("div", { class: "small muted", style: "margin-bottom:4px" }, `דווחו ${done} מתוך ${mine.length} מחלקות`),
+      h("div", { class: "progress" }, h("div", { style: `width:${mine.length ? (done / mine.length) * 100 : 0}%` }))),
+    h("button", { class: "btn btn-light", onclick: () => go("/summary", { date: sel.date, shift: sel.shift, position: sel.position === "all" ? "" : sel.position }) },
+      "📋 סיכום משמרת / הדפסה")));
+
+  if (!sel.position) {
+    app.appendChild(h("div", { class: "card muted" }, "בחר/י עמדה (אח כללי) כדי לראות את המחלקות שבאחריותך."));
+    return;
+  }
+
+  if (sel.position === "all") {
+    for (const p of cfg().positions.concat([{ id: null, name: "ללא שיבוץ" }])) {
+      const list = depts.filter((d) => (d.position_id || null) === p.id);
+      if (!list.length) continue;
+      app.appendChild(h("h2", null, p.name));
+      app.appendChild(h("div", { class: "grid grid-cards" }, list.map((d) => deptCard(d, sel))));
+    }
+    return;
+  }
+
+  if (!mine.length) {
+    app.appendChild(h("div", { class: "card" }, "לא שובצו מחלקות לעמדה זו במשמרת " + shiftName(sel.shift) +
+      ". ניתן לעדכן במסך ההגדרות › שיבוץ."));
+  } else {
+    app.appendChild(h("div", { class: "grid grid-cards" }, mine.map((d) => deptCard(d, sel))));
+  }
+
+  const others = depts.filter((d) => d.position_id !== sel.position);
+  if (others.length) {
+    app.appendChild(h("details", { style: "margin-top:22px" },
+      h("summary", { style: "cursor:pointer;font-weight:700;padding:8px 0" }, `מחלקות נוספות (${others.length}) – למקרה של החלפה / כיסוי`),
+      h("div", { class: "grid grid-cards" }, others.map((d) => deptCard(d, sel, true)))));
+  }
+}
+
+function positionWho(ov, sel) {
+  if (!sel.position || sel.position === "all") return null;
+  const who = (ov.positions || {})[sel.position];
+  const pos = posById(sel.position);
+  const isMe = who && who.username === S.user.username;
+  return h("div", { class: "position-who" },
+    who ? h("div", null, "רשום/ה כ", pos.name, ": ", h("b", null, who.name), " ",
+      h("span", { class: "muted small" }, "(" + who.since.slice(11) + ")")) : h("div", { class: "muted" }, "לא נרשם אח כללי לעמדה זו"),
+    ov.can_edit && !isMe ? h("button", {
+      class: "btn btn-sm", style: "margin-top:6px",
+      onclick: async () => {
+        try {
+          await api("POST", "shift/position", { date: sel.date, shift: sel.shift, position: sel.position });
+          toast("נרשמת כ" + pos.name + " למשמרת", "ok");
+          render();
+        } catch (e) { toast(e.message, "error"); }
+      },
+    }, "אני " + pos.name + " במשמרת זו") : null);
+}
+
+function deptCard(d, sel, other) {
+  const e = d.entry;
+  const abs = e ? (e.absences || []).length : 0;
+  return h("div", {
+    class: "dept-card" + (e ? " done" : "") + (other ? " other" : ""),
+    onclick: () => go("/entry", { date: sel.date, shift: sel.shift, dept: d.id }),
+  },
+  h("div", { class: "row between" },
+    h("div", { class: "name" }, d.name),
+    e ? h("span", { class: "badge badge-ok" }, "✓ דווח") : h("span", { class: "badge badge-wait" }, "ממתין לדיווח")),
+  other && d.position_name ? h("div", { class: "small muted" }, d.position_name) : null,
+  e ? h("div", { class: "stats" },
+    h("span", null, "מטופלים: ", h("b", null, e.patients ?? "-")),
+    h("span", null, "צוות: ", h("b", null, e.staff_present ?? "-")),
+    abs ? h("span", { class: "badge badge-danger" }, "היעדרויות: " + abs) : null,
+    e.patient_notes ? h("span", { class: "badge badge-danger" }, "⚠ חריג") : null) : null,
+  e ? h("div", { class: "meta" }, "עודכן " + fmtTime(e.updated_at) + " ע\"י " + e.updated_by_name) : null);
+}
+
+/* ------------------------------------------------------------------ */
+/* entry form                                                         */
+/* ------------------------------------------------------------------ */
+
+function stepper(label, get, set) {
+  const input = h("input", { type: "number", inputmode: "numeric", min: 0, max: 999, value: get() ?? "", placeholder: "-" });
+  const setVal = (v) => {
+    v = v === "" || v === null || isNaN(v) ? null : Math.max(0, Math.min(999, parseInt(v, 10)));
+    set(v);
+    input.value = v ?? "";
+    S.dirty = true;
+  };
+  input.addEventListener("input", () => setVal(input.value));
+  input.addEventListener("focus", () => input.select());
+  return h("div", { class: "stepper big" },
+    h("div", { class: "label" }, label),
+    h("div", { class: "ctrl" },
+      h("button", { type: "button", onclick: () => setVal((get() ?? 0) + 1), "aria-label": "הוסף" }, "+"),
+      input,
+      h("button", { type: "button", onclick: () => setVal(Math.max(0, (get() ?? 0) - 1)), "aria-label": "הפחת" }, "−")));
+}
+
+async function renderEntry(params) {
+  const { date, shift, dept } = params;
+  const ov = await api("GET", "shift?" + qs({ date, shift }));
+  const d = ov.departments.find((x) => x.id === dept) || (deptById(dept) && { ...deptById(dept), entry: null });
+  if (!d) throw new Error("המחלקה לא נמצאה");
+  const orig = d.entry;
+  const E = orig ? clone(orig) : { patients: null, staff_present: null, absences: [], staff_notes: "", patient_notes: "" };
+  E.absences = E.absences || [];
+  const ro = !ov.can_edit;
+
+  const app = $app();
+  app.innerHTML = "";
+  app.appendChild(h("div", { class: "row between" },
+    h("div", null,
+      h("h1", { style: "margin-bottom:2px" }, d.name),
+      h("div", { class: "muted" }, "משמרת " + shiftName(shift) + " · " + fmtDate(date) +
+        (d.position_name ? " · " + d.position_name : ""))),
+    h("button", { class: "btn btn-ghost no-print", onclick: () => go("/") }, "→ חזרה")));
+
+  if (orig) {
+    app.appendChild(h("div", { class: "small muted", style: "margin:8px 0" },
+      "דיווח קיים – עודכן לאחרונה " + fmtTime(orig.updated_at) + " ע\"י " + orig.updated_by_name +
+      (orig.revisions > 1 ? ` (${orig.revisions} עדכונים)` : "")));
+  }
+  if (ro) app.appendChild(h("div", { class: "card badge-wait", style: "font-weight:600" }, "צפייה בלבד – חלון העריכה נסגר."));
+
+  const ta = (key, ph) => h("textarea", { placeholder: ph, value: E[key] || "", oninput: (e) => { E[key] = e.target.value; S.dirty = true; } });
+
+  // 1 – patients
+  app.appendChild(h("div", { class: "card" },
+    h("h2", { style: "margin-top:0" }, "1. מטופלים"),
+    h("div", { class: "grid grid-steppers" }, stepper("כמה מטופלים יש במחלקה?", () => E.patients, (v) => (E.patients = v)))));
+
+  // 2 – staff
+  const absList = h("div");
+  const drawAbs = () => {
+    absList.innerHTML = "";
+    E.absences.forEach((a, i) => absList.appendChild(absenceEditor(a, i, () => {
+      E.absences.splice(i, 1); S.dirty = true; drawAbs();
+    })));
+  };
+  drawAbs();
+  app.appendChild(h("div", { class: "card" },
+    h("h2", { style: "margin-top:0" }, "2. צוות"),
+    h("div", { class: "grid grid-steppers" }, stepper("כמה אנשי צוות במשמרת?", () => E.staff_present, (v) => (E.staff_present = v))),
+    h("h3", null, "היעדרויות / פאנצ'רים"),
+    absList,
+    h("button", {
+      class: "btn btn-danger-ghost", type: "button",
+      onclick: () => {
+        E.absences.push({ employee: "", reason: "", details: "", replaced: false, replacement: "" });
+        S.dirty = true; drawAbs();
+        const last = absList.querySelector(".absence:last-child input");
+        if (last) last.focus();
+      },
+    }, "+ איש צוות לא הגיע"),
+    h("h3", null, "דיווח נוסף לגבי הצוות"),
+    ta("staff_notes", "למשל: עובד/ת עזב/ה מוקדם, חוסר בכוח עזר, תגבור מפול, בעיות במשמרת...")));
+
+  // 3 – exceptional patient events
+  app.appendChild(h("div", { class: "card" },
+    h("h2", { style: "margin-top:0" }, "3. חריגים במטופלים"),
+    h("div", { class: "small muted", style: "margin-bottom:8px" }, "אם אין חריגים – השאירו ריק."),
+    ta("patient_notes", "מטופל קשה / מידרדר, נפילה, אירוע חריג, העברה לטיפול נמרץ, פטירה...")));
+
+  if (ro) {
+    app.querySelectorAll("input,textarea,select,button.chip,.stepper button,.absence button").forEach((el) => (el.disabled = true));
+    app.querySelectorAll(".btn-danger-ghost").forEach((el) => el.classList.add("hidden"));
+    return;
+  }
+
+  // --- actions ---
+  const saveBtn = h("button", { class: "btn btn-ok btn-lg" }, "💾 שמירת דיווח");
+  saveBtn.addEventListener("click", async () => {
+    const bad = E.absences.findIndex((a) => !a.reason);
+    if (bad >= 0) return toast("יש לבחור סיבה לכל היעדרות (היעדרות מס' " + (bad + 1) + ")", "error");
+    if (E.patients == null || E.staff_present == null) {
+      if (!(await ask("לא הוזן מספר מטופלים או מספר אנשי צוות. לשמור בכל זאת?", "שמירה", false))) return;
+    }
+    saveBtn.disabled = true;
+    try {
+      await api("PUT", "entry", { ...E, date, shift, department: dept, base_updated_at: orig ? orig.updated_at : null });
+      S.dirty = false;
+      toast("הדיווח נשמר ✓", "ok");
+      go("/");
+    } catch (e) {
+      toast(e.message, "error");
+    } finally { saveBtn.disabled = false; }
+  });
+  app.appendChild(h("div", { class: "sticky-actions" },
+    saveBtn,
+    h("button", { class: "btn btn-ghost btn-lg", onclick: () => go("/") }, "ביטול"),
+    orig && S.user.role === "admin" ? h("button", {
+      class: "btn btn-danger btn-lg",
+      onclick: async () => {
+        if (!(await ask("למחוק את הדיווח של " + d.name + "? (הפעולה נרשמת ביומן)", "מחיקה"))) return;
+        try {
+          await api("DELETE", "entry?" + qs({ date, shift, department: dept }));
+          S.dirty = false; toast("הדיווח נמחק"); go("/");
+        } catch (e) { toast(e.message, "error"); }
+      },
+    }, "מחיקה") : null));
+}
+
+function absenceEditor(a, i, onRemove) {
+  const mark = () => (S.dirty = true);
+  const reasons = h("div", { class: "chips" });
+  const drawReasons = () => {
+    reasons.innerHTML = "";
+    cfg().absence_reasons.forEach((v) => reasons.appendChild(h("button", {
+      type: "button", class: "chip" + (a.reason === v ? " on danger" : ""),
+      onclick: () => { a.reason = a.reason === v ? "" : v; mark(); drawReasons(); },
+    }, v)));
+  };
+  drawReasons();
+  const replWrap = h("div", { class: a.replaced ? "" : "hidden", style: "margin-top:8px" },
+    h("input", { placeholder: "שם המחליף/ה", value: a.replacement, oninput: (e) => { a.replacement = e.target.value; mark(); } }));
+  return h("div", { class: "absence" },
+    h("div", { class: "head" },
+      h("b", null, "לא הגיע/ה #" + (i + 1)),
+      h("button", { type: "button", class: "btn btn-sm btn-danger-ghost", onclick: async () => { if (await ask("להסיר היעדרות זו?", "הסרה")) onRemove(); } }, "הסרה")),
+    h("label", { class: "field" }, h("span", null, "שם העובד/ת"),
+      h("input", { value: a.employee, placeholder: "שם מלא", oninput: (e) => { a.employee = e.target.value; mark(); } })),
+    h("div", { class: "field" }, h("span", { style: "font-weight:600;font-size:15px;display:block;margin-bottom:6px" }, "למה לא הגיע/ה? *"), reasons),
+    h("label", { class: "field", style: "margin-top:10px" }, h("span", null, "פירוט (לא חובה)"),
+      h("input", { value: a.details, placeholder: "למשל: הודיע/ה בשעה 06:30, לא ענה/תה לטלפון...", oninput: (e) => { a.details = e.target.value; mark(); } })),
+    h("label", { style: "display:flex;gap:10px;align-items:center;font-weight:600;cursor:pointer" },
+      h("input", { type: "checkbox", checked: a.replaced, onchange: (e) => { a.replaced = e.target.checked; replWrap.classList.toggle("hidden", !a.replaced); mark(); } }),
+      "נמצא/ה מחליף/ה"),
+    replWrap);
+}
+
+/* ------------------------------------------------------------------ */
+/* shift summary                                                      */
+/* ------------------------------------------------------------------ */
+
+function staffCell(e) {
+  const abs = absencesText(e.absences);
+  return h("div", null, (e.absences || []).length ? abs : null,
+    e.staff_notes ? h("div", { class: "notes", style: "white-space:pre-wrap" }, e.staff_notes) : null,
+    !(e.absences || []).length && !e.staff_notes ? "-" : null);
+}
+
+async function renderSummary(params) {
+  const { date, shift, position } = params;
+  const ov = await api("GET", "shift?" + qs({ date, shift }));
+  let depts = ov.departments;
+  if (position) depts = depts.filter((d) => d.position_id === position);
+  const app = $app();
+  app.innerHTML = "";
+
+  app.appendChild(h("div", { class: "row between no-print" },
+    h("button", { class: "btn btn-ghost", onclick: () => go("/") }, "→ חזרה"),
+    DEMO ? null : h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF")));
+  app.appendChild(h("div", { class: "print-only muted small" }, cfg().hospital_name + " · הופק " + new Date().toLocaleString("he-IL")));
+  app.appendChild(h("h1", null, "סיכום משמרת " + shiftName(shift) + " – " + fmtDate(date) +
+    (position && posById(position) ? " – " + posById(position).name : "")));
+
+  const onDuty = Object.entries(ov.positions || {}).map(([pid, w]) => ((posById(pid) || {}).name || pid) + ": " + w.name);
+  if (onDuty.length) app.appendChild(h("div", { style: "margin-bottom:10px" }, h("b", null, "אחים כלליים במשמרת: "), onDuty.join(" · ")));
+
+  const filled = depts.filter((d) => d.entry);
+  const tot = { patients: 0, staff: 0, abs: 0, exc: 0 };
+  filled.forEach((d) => {
+    const e = d.entry;
+    tot.patients += e.patients || 0; tot.staff += e.staff_present || 0;
+    tot.abs += (e.absences || []).length; tot.exc += e.patient_notes ? 1 : 0;
+  });
+  app.appendChild(h("div", { class: "grid grid-stats", style: "margin-bottom:14px" },
+    stat("מחלקות שדווחו", filled.length + "/" + depts.length, filled.length < depts.length),
+    stat("מטופלים", tot.patients),
+    stat("אנשי צוות", tot.staff),
+    stat("היעדרויות", tot.abs, tot.abs > 0),
+    stat("מחלקות עם חריגים", tot.exc, tot.exc > 0)));
+
+  app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+    h("thead", null, h("tr", null,
+      h("th", null, "מחלקה"), h("th", null, "אח כללי"), h("th", { class: "num" }, "מטופלים"),
+      h("th", { class: "num" }, "צוות"), h("th", null, "דיווח על הצוות"), h("th", null, "חריגים במטופלים"), h("th", null, "דווח"))),
+    h("tbody", null, depts.map((d) => {
+      const e = d.entry;
+      if (!e) return h("tr", null, h("td", null, h("b", null, d.name)), h("td", null, d.position_name),
+        h("td", { colspan: 5 }, h("span", { class: "badge badge-wait" }, "לא דווח")));
+      return h("tr", null,
+        h("td", null, h("b", null, d.name)), h("td", null, e.position_name || d.position_name),
+        h("td", { class: "num" }, e.patients ?? "-"),
+        h("td", { class: "num" }, e.staff_present ?? "-"),
+        h("td", null, staffCell(e)),
+        h("td", { class: "notes" }, e.patient_notes || "-"),
+        h("td", { class: "small" }, e.updated_by_name, h("br"), fmtTime(e.updated_at)));
+    })))));
+}
+
+function absencesText(list) {
+  if (!list || !list.length) return "-";
+  return h("div", null, list.map((a) => h("div", { style: "margin-bottom:4px" },
+    h("b", null, a.employee || "(ללא שם)"), " – ",
+    h("span", { class: "neg" }, a.reason), a.details ? " · " + a.details : "",
+    a.replaced ? h("span", { class: "badge badge-ok", style: "margin-inline-start:6px" }, "הוחלף" + (a.replacement ? ": " + a.replacement : "")) : null)));
+}
+
+function stat(label, value, danger) {
+  return h("div", { class: "stat" + (danger ? " danger" : "") }, h("div", { class: "v" }, value), h("div", { class: "l" }, label));
+}
+
+/* ------------------------------------------------------------------ */
+/* reports                                                            */
+/* ------------------------------------------------------------------ */
+
+async function renderReports(params) {
+  const today = S.now.date;
+  const F = {
+    from: params.from || addDays(today, -6), to: params.to || today,
+    shift: params.shift || "", department: params.department || "", position: params.position || "",
+  };
+  const app = $app();
+  app.innerHTML = "";
+  app.appendChild(h("h1", { class: "no-print" }, "דוחות"));
+
+  const inp = (key, attrs) => h("input", { ...attrs, value: F[key], onchange: (e) => (F[key] = e.target.value) });
+  const sel = (key, opts) => h("select", { onchange: (e) => (F[key] = e.target.value) },
+    opts.map(([v, l]) => h("option", { value: v, ...(F[key] === v ? { selected: true } : {}) }, l)));
+  const run = () => go("/reports", { ...F, run: 1 });
+  const quick = (label, from, to) => h("button", { class: "chip", type: "button", onclick: () => { F.from = from; F.to = to; run(); } }, label);
+  const d0 = new Date(today + "T12:00:00");
+  const monthStart = isoDate(new Date(d0.getFullYear(), d0.getMonth(), 1));
+  const prevMonthStart = isoDate(new Date(d0.getFullYear(), d0.getMonth() - 1, 1));
+  const prevMonthEnd = isoDate(new Date(d0.getFullYear(), d0.getMonth(), 0));
+
+  app.appendChild(h("div", { class: "card no-print" },
+    h("div", { class: "chips", style: "margin-bottom:12px" },
+      quick("היום", today, today), quick("אתמול", addDays(today, -1), addDays(today, -1)),
+      quick("7 ימים אחרונים", addDays(today, -6), today), quick("החודש", monthStart, today),
+      quick("חודש קודם", prevMonthStart, prevMonthEnd), quick("30 יום", addDays(today, -29), today)),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill,minmax(180px,1fr))" },
+      h("label", { class: "field" }, h("span", null, "מתאריך"), inp("from", { type: "date" })),
+      h("label", { class: "field" }, h("span", null, "עד תאריך"), inp("to", { type: "date" })),
+      h("label", { class: "field" }, h("span", null, "משמרת"), sel("shift", [["", "כל המשמרות"], ...cfg().shifts.map((s) => [s.id, s.name])])),
+      h("label", { class: "field" }, h("span", null, "מחלקה"), sel("department", [["", "כל המחלקות"], ...cfg().departments.map((d) => [d.id, d.name])])),
+      h("label", { class: "field" }, h("span", null, "אח כללי"), sel("position", [["", "כולם"], ...cfg().positions.map((p) => [p.id, p.name])]))),
+    h("button", { class: "btn", onclick: run }, "📊 הפקת דוח")));
+
+  if (!params.run) return;
+
+  const r = await api("GET", "reports?" + qs(F));
+  const sm = r.summary;
+  const csvUrl = (kind) => "/api/reports.csv?" + qs({ ...F, kind });
+
+  const filterDesc = [
+    F.from === F.to ? fmtDate(F.from) : fmtShort(F.from) + " – " + fmtShort(F.to),
+    F.shift ? "משמרת " + shiftName(F.shift) : "כל המשמרות",
+    F.department ? (deptById(F.department) || {}).name : "כל המחלקות",
+    F.position ? (posById(F.position) || {}).name : null,
+  ].filter(Boolean).join(" · ");
+
+  app.appendChild(h("div", { class: "row between no-print", style: "margin-bottom:12px" },
+    h("div", { class: "muted" }, filterDesc),
+    h("div", { class: "row" },
+      DEMO ? h("span", { class: "small muted" }, "הדפסה וייצוא לאקסל זמינים בגרסה המלאה") : [
+        h("button", { class: "btn", onclick: () => window.print() }, "🖨️ הדפסה / PDF"),
+        h("a", { class: "btn btn-light", href: csvUrl("entries") }, "⬇️ אקסל – דיווחים"),
+        h("a", { class: "btn btn-light", href: csvUrl("absences") }, "⬇️ אקסל – היעדרויות")])));
+
+  app.appendChild(h("div", { class: "print-only" },
+    h("div", { class: "muted small" }, cfg().hospital_name + " · הופק " + new Date().toLocaleString("he-IL") + " ע\"י " + S.user.name),
+    h("h1", null, "דוח אח כללי – " + filterDesc)));
+
+  if (!r.rows.length) {
+    app.appendChild(h("div", { class: "card" }, "לא נמצאו דיווחים בטווח שנבחר."));
+    return;
+  }
+
+  app.appendChild(h("div", { class: "grid grid-stats", style: "margin-bottom:14px" },
+    stat("דיווחי מחלקה", sm.entries),
+    stat("ממוצע מטופלים לדיווח", sm.entries ? Math.round(sm.patients / sm.entries) : 0),
+    stat("ממוצע צוות לדיווח", sm.entries ? Math.round((sm.staff_present / sm.entries) * 10) / 10 : 0),
+    stat("סה\"כ היעדרויות", sm.absences, sm.absences > 0),
+    stat("היעדרויות שהוחלפו", sm.replaced),
+    stat("דיווחים עם חריגים", sm.exceptional, sm.exceptional > 0)));
+
+  const reasonRows = Object.entries(sm.by_reason).sort((a, b) => b[1] - a[1]);
+  const deptRows = Object.entries(sm.by_department).sort((a, b) => b[1].absences - a[1].absences);
+  app.appendChild(h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(320px,1fr))" },
+    h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "היעדרויות לפי סיבה"),
+      reasonRows.length ? h("table", null, h("tbody", null, reasonRows.map(([k, v]) =>
+        h("tr", null, h("td", null, k), h("td", { class: "num" }, v), h("td", { style: "width:45%" },
+          h("div", { class: "progress" }, h("div", { style: `width:${(v / sm.absences) * 100}%;background:var(--danger)` }))))))) : h("div", { class: "muted" }, "אין היעדרויות")),
+    h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "לפי מחלקה"),
+      h("table", null,
+        h("thead", null, h("tr", null, h("th", null, "מחלקה"), h("th", { class: "num" }, "דיווחים"), h("th", { class: "num" }, "היעדרויות"), h("th", { class: "num" }, "חריגים"))),
+        h("tbody", null, deptRows.map(([k, v]) => h("tr", null, h("td", null, k), h("td", { class: "num" }, v.entries),
+          h("td", { class: "num" + (v.absences ? " neg" : "") }, v.absences), h("td", { class: "num" + (v.exceptional ? " neg" : "") }, v.exceptional))))))));
+
+  // exceptional events
+  const exc = r.rows.filter((e) => e.patient_notes);
+  if (exc.length) {
+    app.appendChild(h("h2", null, "חריגים במטופלים (" + exc.length + ")"));
+    app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+      h("thead", null, h("tr", null, ["תאריך", "משמרת", "מחלקה", "חריג", "דווח ע\"י"].map((t) => h("th", null, t)))),
+      h("tbody", null, exc.map((e) => h("tr", null,
+        h("td", null, fmtShort(e.date)), h("td", null, e.shift_name), h("td", null, h("b", null, e.department_name)),
+        h("td", { class: "notes" }, e.patient_notes), h("td", { class: "small" }, e.updated_by_name)))))));
+  }
+
+  // absences detail
+  const absRows = [];
+  r.rows.forEach((row) => (row.absences || []).forEach((a) => absRows.push([row, a])));
+  if (absRows.length) {
+    app.appendChild(h("h2", null, "פירוט היעדרויות (" + absRows.length + ")"));
+    app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+      h("thead", null, h("tr", null, ["תאריך", "משמרת", "מחלקה", "שם העובד", "סיבה", "פירוט", "הוחלף", "דווח ע\"י"].map((t) => h("th", null, t)))),
+      h("tbody", null, absRows.map(([row, a]) => h("tr", null,
+        h("td", null, fmtShort(row.date)), h("td", null, row.shift_name), h("td", null, row.department_name),
+        h("td", null, h("b", null, a.employee || "-")), h("td", { class: "neg" }, a.reason),
+        h("td", null, a.details || ""), h("td", null, a.replaced ? "כן" + (a.replacement ? " – " + a.replacement : "") : "לא"),
+        h("td", { class: "small" }, row.updated_by_name)))))));
+  }
+
+  // entries detail
+  app.appendChild(h("h2", null, "כל הדיווחים (" + r.rows.length + ")"));
+  app.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+    h("thead", null, h("tr", null,
+      ["תאריך", "משמרת", "מחלקה", "אח כללי"].map((t) => h("th", null, t)),
+      h("th", { class: "num" }, "מטופלים"), h("th", { class: "num" }, "צוות"),
+      h("th", null, "דיווח על הצוות"), h("th", null, "חריגים במטופלים"), h("th", null, "דווח ע\"י"))),
+    h("tbody", null, r.rows.map((e) => h("tr", { style: "cursor:pointer", title: "פתיחת הדיווח", onclick: () => go("/entry", { date: e.date, shift: e.shift, dept: e.department_id }) },
+      h("td", null, fmtShort(e.date)), h("td", null, e.shift_name), h("td", null, h("b", null, e.department_name)),
+      h("td", null, e.position_name || "-"),
+      h("td", { class: "num" }, e.patients ?? "-"), h("td", { class: "num" }, e.staff_present ?? "-"),
+      h("td", null, staffCell(e)),
+      h("td", { class: "notes" }, e.patient_notes || "-"),
+      h("td", { class: "small" }, e.updated_by_name, h("br"), fmtTime(e.updated_at))))))));
+}
+
+/* ------------------------------------------------------------------ */
+/* settings (admin)                                                   */
+/* ------------------------------------------------------------------ */
+
+const SETTINGS_TABS = [
+  ["assign", "שיבוץ מחלקות"], ["departments", "מחלקות"], ["positions", "אחים כלליים"],
+  ["shifts", "משמרות"], ["lists", "סיבות היעדרות"], ["general", "כללי"], ["users", "משתמשים"],
+];
+
+async function renderSettings(params) {
+  if (S.user.role !== "admin") return go("/");
+  const tab = params.tab || "assign";
+  if (!S.draft || !S.dirty) S.draft = clone(cfg());
+  const D = S.draft;
+  const app = $app();
+  app.innerHTML = "";
+  app.appendChild(h("h1", null, "הגדרות"));
+  app.appendChild(h("div", { class: "tabs" }, SETTINGS_TABS.map(([id, label]) =>
+    h("button", { class: id === tab ? "on" : "", onclick: () => { history.replaceState(null, "", "#/settings?tab=" + id); S.lastHash = location.hash; renderSettingsTab(id); markTab(id); } }, label))));
+  const body = h("div", { id: "settingsBody" });
+  app.appendChild(body);
+  const markTab = (id) => app.querySelectorAll(".tabs button").forEach((b, i) => b.classList.toggle("on", SETTINGS_TABS[i][0] === id));
+
+  const saveBar = h("div", { class: "sticky-actions", id: "settingsSave" },
+    h("button", {
+      class: "btn btn-ok btn-lg", onclick: async () => {
+        try {
+          const r = await api("PUT", "config", D);
+          S.config = r.config; S.draft = clone(r.config); S.dirty = false;
+          document.getElementById("hospitalName").textContent = r.config.hospital_name;
+          toast("ההגדרות נשמרו ✓", "ok");
+          renderSettingsTab(currentTab());
+        } catch (e) { toast(e.message, "error"); }
+      },
+    }, "💾 שמירת הגדרות"),
+    h("button", { class: "btn btn-ghost btn-lg", onclick: async () => { if (!S.dirty || (await ask("לבטל את כל השינויים שלא נשמרו?", "ביטול שינויים"))) { S.dirty = false; S.draft = clone(cfg()); renderSettingsTab(currentTab()); } } }, "ביטול שינויים"));
+  app.appendChild(saveBar);
+  renderSettingsTab(tab);
+}
+
+function currentTab() { return parseHash().params.tab || "assign"; }
+
+function renderSettingsTab(tab) {
+  const body = document.getElementById("settingsBody");
+  body.innerHTML = "";
+  document.getElementById("settingsSave").classList.toggle("hidden", tab === "users");
+  const D = S.draft;
+  const mark = () => (S.dirty = true);
+  const redraw = () => renderSettingsTab(tab);
+
+  if (tab === "assign") {
+    body.appendChild(h("div", { class: "card" },
+      h("p", { class: "muted", style: "margin-top:0" }, "לכל מחלקה ולכל משמרת – בחרו איזה אח כללי אחראי עליה."),
+      h("div", { class: "table-wrap" }, h("table", { class: "assign-table" },
+        h("thead", null, h("tr", null, h("th", null, "מחלקה"), D.shifts.map((s) => h("th", null, s.name + " (" + s.start + "-" + s.end + ")")))),
+        h("tbody", null, D.departments.filter((d) => d.active !== false).map((d) => h("tr", null,
+          h("td", null, h("b", null, d.name)),
+          D.shifts.map((s) => {
+            D.assignments[s.id] = D.assignments[s.id] || {};
+            const cur = D.assignments[s.id][d.id] || "";
+            return h("td", null, h("select", {
+              onchange: (e) => { if (e.target.value) D.assignments[s.id][d.id] = e.target.value; else delete D.assignments[s.id][d.id]; mark(); redraw(); },
+            }, h("option", { value: "" }, "— ללא —"), D.positions.map((p) => h("option", { value: p.id, ...(cur === p.id ? { selected: true } : {}) }, p.name))));
+          }))))))));
+    // overview per shift
+    body.appendChild(h("h2", null, "תצוגה לפי אח כללי"));
+    body.appendChild(h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(280px,1fr))" },
+      D.shifts.map((s) => h("div", { class: "card" }, h("h3", { style: "margin-top:0" }, "משמרת " + s.name),
+        D.positions.map((p) => {
+          const list = D.departments.filter((d) => d.active !== false && (D.assignments[s.id] || {})[d.id] === p.id).map((d) => d.name);
+          return h("div", { style: "margin-bottom:6px" }, h("b", null, p.name + ": "), list.length ? list.join(", ") : h("span", { class: "muted" }, "—"));
+        }),
+        (() => {
+          const un = D.departments.filter((d) => d.active !== false && !(D.assignments[s.id] || {})[d.id]).map((d) => d.name);
+          return un.length ? h("div", { class: "badge badge-wait" }, "לא משובצות: " + un.join(", ")) : null;
+        })()))));
+    return;
+  }
+
+  if (tab === "departments") {
+    body.appendChild(h("div", { class: "card", style: "max-width:720px" },
+      h("p", { class: "muted", style: "margin-top:0" }, "מחלקה לא פעילה לא תוצג לדיווח (הדוחות הקודמים שלה נשמרים)."),
+      D.departments.map((d, i) => h("div", { class: "list-row" },
+        h("input", { value: d.name, oninput: (e) => { d.name = e.target.value; mark(); } }),
+        h("label", { style: "display:flex;gap:6px;align-items:center" },
+          h("input", { type: "checkbox", checked: d.active !== false, onchange: (e) => { d.active = e.target.checked; mark(); } }), "פעילה"),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (!(await ask("למחוק את המחלקה \"" + d.name + "\"? (דוחות קודמים יישמרו. מומלץ לבטל 'פעילה' במקום)", "מחיקה"))) return;
+          D.departments.splice(i, 1); mark(); redraw();
+        } }, "מחיקה"))),
+      h("button", { class: "btn btn-light", style: "margin-top:8px", onclick: () => {
+        D.departments.push({ id: uid("d"), name: "מחלקה חדשה", active: true }); mark(); redraw();
+      } }, "+ הוספת מחלקה")));
+    return;
+  }
+
+  if (tab === "positions") {
+    body.appendChild(h("div", { class: "card" },
+      h("p", { class: "muted", style: "margin-top:0" }, "העמדות של האחים הכלליים במשמרת (אח כללי 1, 2, 3...). את המחלקות של כל עמדה מגדירים בלשונית \"שיבוץ מחלקות\"."),
+      D.positions.map((p, i) => h("div", { class: "list-row" },
+        h("input", { value: p.name, oninput: (e) => { p.name = e.target.value; mark(); } }),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (!(await ask("למחוק את \"" + p.name + "\"? השיבוצים שלו יימחקו.", "מחיקה"))) return;
+          D.positions.splice(i, 1);
+          Object.values(D.assignments).forEach((m) => Object.keys(m).forEach((k) => { if (m[k] === p.id) delete m[k]; }));
+          mark(); redraw();
+        } }, "מחיקה"))),
+      h("button", { class: "btn btn-light", onclick: () => { D.positions.push({ id: uid("p"), name: "אח כללי " + (D.positions.length + 1) }); mark(); redraw(); } }, "+ הוספת אח כללי")));
+    return;
+  }
+
+  if (tab === "shifts") {
+    body.appendChild(h("div", { class: "card" },
+      h("p", { class: "muted", style: "margin-top:0" }, "שעות המשמרות קובעות איזו משמרת מוצגת כ\"נוכחית\". משמרת שחוצה חצות (לילה) משויכת לתאריך שבו התחילה."),
+      D.shifts.map((s, i) => h("div", { class: "list-row" },
+        h("input", { value: s.name, placeholder: "שם", oninput: (e) => { s.name = e.target.value; mark(); } }),
+        h("label", null, "התחלה "), h("input", { type: "time", class: "short", value: s.start, oninput: (e) => { s.start = e.target.value; mark(); } }),
+        h("label", null, "סיום "), h("input", { type: "time", class: "short", value: s.end, oninput: (e) => { s.end = e.target.value; mark(); } }),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (D.shifts.length <= 1) return toast("חייבת להישאר לפחות משמרת אחת", "error");
+          if (!(await ask("למחוק את משמרת \"" + s.name + "\"?", "מחיקה"))) return;
+          D.shifts.splice(i, 1); delete D.assignments[s.id]; mark(); redraw();
+        } }, "מחיקה"))),
+      h("button", { class: "btn btn-light", onclick: () => { D.shifts.push({ id: uid("s"), name: "משמרת חדשה", start: "08:00", end: "16:00" }); mark(); redraw(); } }, "+ הוספת משמרת")));
+    return;
+  }
+
+  if (tab === "lists") {
+    body.appendChild(h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-top:0" }, "סיבות היעדרות"),
+      h("p", { class: "muted small" }, "הסיבות שמופיעות ככפתורים כשמדווחים על איש צוות שלא הגיע."),
+      D.absence_reasons.map((v, i) => h("div", { class: "list-row" },
+        h("input", { value: v, oninput: (e) => { D.absence_reasons[i] = e.target.value; mark(); } }),
+        h("button", { class: "btn btn-sm btn-danger-ghost", onclick: () => { D.absence_reasons.splice(i, 1); mark(); redraw(); } }, "מחיקה"))),
+      h("button", { class: "btn btn-light btn-sm", onclick: () => { D.absence_reasons.push("סיבה חדשה"); mark(); redraw(); } }, "+ הוספה")));
+    return;
+  }
+
+  if (tab === "general") {
+    body.appendChild(h("div", { class: "card", style: "max-width:640px" },
+      h("label", { class: "field" }, h("span", null, "שם בית החולים / המוסד"),
+        h("input", { value: D.hospital_name, oninput: (e) => { D.hospital_name = e.target.value; mark(); } })),
+      h("label", { class: "field" }, h("span", null, "חלון עריכה לאחר סיום משמרת (שעות)"),
+        h("input", { type: "number", min: 0, value: D.edit_window_hours, oninput: (e) => { D.edit_window_hours = parseInt(e.target.value || "0", 10); mark(); } }),
+        h("div", { class: "small muted", style: "margin-top:4px" }, "אחים כלליים יכולים לעדכן דיווח עד מספר שעות זה אחרי סוף המשמרת. מנהל מערכת יכול לערוך תמיד.")),
+      S.dataDir ? h("div", { class: "small muted" }, "תיקיית הנתונים: ", h("code", { dir: "ltr" }, S.dataDir)) : null));
+    return;
+  }
+
+  if (tab === "users") return renderUsers(body);
+}
+
+async function renderUsers(body) {
+  const r = await api("GET", "users");
+  const form = { username: "", name: "", role: "nurse", active: true, password: "", must_change_password: true, isNew: true };
+  const box = h("div");
+  const drawForm = () => {
+    box.innerHTML = "";
+    const f = form;
+    box.appendChild(h("div", { class: "card", style: "max-width:640px" },
+      h("h3", { style: "margin-top:0" }, f.isNew ? "הוספת משתמש" : "עריכת משתמש: " + f.username),
+      h("div", { class: "grid", style: "grid-template-columns:1fr 1fr" },
+        h("label", { class: "field" }, h("span", null, "שם משתמש (אנגלית)"),
+          h("input", { dir: "ltr", value: f.username, disabled: !f.isNew, autocapitalize: "off", oninput: (e) => (f.username = e.target.value) })),
+        h("label", { class: "field" }, h("span", null, "שם מלא"), h("input", { value: f.name, oninput: (e) => (f.name = e.target.value) })),
+        h("label", { class: "field" }, h("span", null, "הרשאה"),
+          h("select", { onchange: (e) => (f.role = e.target.value) },
+            h("option", { value: "nurse", ...(f.role === "nurse" ? { selected: true } : {}) }, "אח/ות כללי/ת"),
+            h("option", { value: "admin", ...(f.role === "admin" ? { selected: true } : {}) }, "מנהל מערכת"))),
+        h("label", { class: "field" }, h("span", null, f.isNew ? "סיסמה ראשונית" : "סיסמה חדשה (ריק = ללא שינוי)"),
+          h("input", { dir: "ltr", type: "text", autocomplete: "off", value: f.password, oninput: (e) => (f.password = e.target.value) }))),
+      h("label", { style: "display:flex;gap:8px;align-items:center;margin-bottom:8px" },
+        h("input", { type: "checkbox", checked: f.active, onchange: (e) => (f.active = e.target.checked) }), "משתמש פעיל"),
+      h("label", { style: "display:flex;gap:8px;align-items:center;margin-bottom:12px" },
+        h("input", { type: "checkbox", checked: f.must_change_password, onchange: (e) => (f.must_change_password = e.target.checked) }), "לחייב החלפת סיסמה בכניסה הבאה (כשמוגדרת סיסמה)"),
+      h("div", { class: "row" },
+        h("button", { class: "btn btn-ok", onclick: async () => {
+          try {
+            await api("POST", "users", f);
+            toast("המשתמש נשמר ✓", "ok");
+            renderSettingsTab("users");
+          } catch (e) { toast(e.message, "error"); }
+        } }, "שמירה"),
+        !f.isNew ? h("button", { class: "btn btn-ghost", onclick: () => renderSettingsTab("users") }, "משתמש חדש") : null)));
+  };
+
+  body.appendChild(h("div", { class: "card table-wrap" }, h("table", null,
+    h("thead", null, h("tr", null, h("th", null, "שם משתמש"), h("th", null, "שם מלא"), h("th", null, "הרשאה"), h("th", null, "סטטוס"), h("th", null, ""))),
+    h("tbody", null, r.users.map((u) => h("tr", null,
+      h("td", { dir: "ltr", style: "text-align:right" }, u.username), h("td", null, u.name),
+      h("td", null, u.role === "admin" ? h("span", { class: "badge badge-info" }, "מנהל מערכת") : "אח/ות כללי/ת"),
+      h("td", null, u.active ? h("span", { class: "badge badge-ok" }, "פעיל") : h("span", { class: "badge badge-danger" }, "מושבת"),
+        u.must_change_password ? h("span", { class: "badge badge-wait", style: "margin-inline-start:4px" }, "ממתין להחלפת סיסמה") : null),
+      h("td", null, h("div", { class: "row" },
+        h("button", { class: "btn btn-sm btn-light", onclick: () => {
+          Object.assign(form, { username: u.username, name: u.name, role: u.role, active: u.active, password: "", must_change_password: false, isNew: false });
+          drawForm(); box.scrollIntoView({ behavior: "smooth" });
+        } }, "עריכה"),
+        u.username !== S.user.username ? h("button", { class: "btn btn-sm btn-danger-ghost", onclick: async () => {
+          if (!(await ask("למחוק את המשתמש " + u.name + "? (הדוחות שמילא יישמרו)", "מחיקה"))) return;
+          try { await api("DELETE", "users/" + encodeURIComponent(u.username)); toast("נמחק"); renderSettingsTab("users"); }
+          catch (e) { toast(e.message, "error"); }
+        } }, "מחיקה") : null))))))));
+  drawForm();
+  body.appendChild(box);
+}
+
+render();
+
+</script>
+</body>
+</html>
