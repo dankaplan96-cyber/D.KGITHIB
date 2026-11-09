@@ -12,7 +12,7 @@
 //   - People at home: indoor selves of seven residents in their own rooms in the states islandlife.js ISLE_HOME gives
 //     (their outdoor selves are away then: one name, one voice, one dress), and five people of the rooms themselves:
 //     Miss Avra at the terrace school, Sister Ione at the high town's clinic (she patches Twinsen up), Old Jaspa in
-//     Knartas's gem-sorting room, Zuzz in Mosquibee's honey room, Zett at the Orchard's press. Each works a round between
+//     Knartas's gem-sorting room, Zuzz in Mosquibee's hive keepers' hall (down the honey hoist), Zett at the Orchard's press. Each works a round between
 //     two pieces of their room and has a line for each state of the story.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
@@ -33,7 +33,7 @@ const INDOOR = {
   il_avra: { door: 'otringal--4--60', char: 'ztri2', color: '#a8d0f0', work: ['chalk', 'bookcase'], anims: ['tinker', 'reach'] },
   il_ione: { door: 'otringal-52--60', char: 'nara', color: '#f4f4ff', work: ['jarshelf', 'cot', 'desk'], anims: ['reach', 'tinker', null], heals: true },
   il_jaspa: { door: 'knartas-28-29', char: 'keeper', color: '#d8b8a0', work: ['gemtable', 'shelf'], anims: ['tinker', 'reach'] },
-  il_zuzz: { door: 'mosquibee--15-28', char: 'zbee1', color: '#f0d070', work: ['comb', 'honeyshelf'], anims: ['tinker', 'reach'] },
+  il_zuzz: { door: 'mosquibee-26-15', char: 'zbee1', color: '#f0d070', work: ['comb', 'honeyshelf'], anims: ['tinker', 'reach'] },
   il_zett: { door: 'orchard-4-28', char: 'zbee2', color: '#c0e090', work: ['press', 'vats'], anims: ['tinker', 'reach'] },
 };
 const PEOPLE_OF = Object.fromEntries(Object.values(ISLE_PEOPLE).flatMap((I) => I.people.map((p) => [p.id, p])));
@@ -122,6 +122,13 @@ export class IslesLife extends ChapterBase {
     g.say(npc.def.name || 'n_' + id, lines, () => { npc.talking = false; npc.release?.(); }, npc);
     return true;
   }
+  // the hoist: the cage's ride behind the black, out at the other end facing away from the tower
+  ride(Hs, from) {
+    const g = this.game, rid = g.room?.id, to = Hs[from === 'head' ? 'foot' : 'head'];
+    g.audio.play('liftWinch');
+    g.startTransition(() => { g.enterRoom(rid, { x: to.x, z: to.z, a: to.a }, true); });
+    return true;
+  }
   // ---------------------------------------------------------------- the islands' usable pieces
   things(R) {
     if (R._ilThings) return R._ilThings;
@@ -135,6 +142,11 @@ export class IslesLife extends ChapterBase {
     const R = g.room, h = g.hero;
     // (a person by the hero: their talk wins over a piece beside them)
     const busy = g.npcs.some((n) => n.present && !n.away && Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) < 2.4 && Math.abs(n.pos.y - h.pos.y) < 1.5);
+    // (the honey hoist: at its head and at its foot, a ride to the other end)
+    for (const Hs of R.hoists || []) for (const end of ['head', 'foot']) {
+      const e = Hs[end]; if (Math.abs(e.y - h.pos.y) > 1.6) continue;
+      consider(dist(e.x, e.z), 1.5, { kind: 'il_hoist', hoist: Hs, from: end, label: 'p_ride' });
+    }
     for (const it of this.things(R)) {
       if (busy && it.kind !== 'shuttleBoard') continue;
       if (Math.abs(it.y - h.pos.y) > 2.5) continue;
@@ -142,6 +154,7 @@ export class IslesLife extends ChapterBase {
     }
   }
   interact(it) {
+    if (it.kind === 'il_hoist') return this.ride(it.hoist, it.from);
     if (it.kind !== 'il_item') return false;
     const g = this.game, h = g.hero, f = this.f, I = it.item, st = this.state(), ph = this.phase(), has = (k) => t(k) !== k;
     const pick = (base) => [`${base}_${st}`, `${base}_${ph}`, base].find(has) || base;
