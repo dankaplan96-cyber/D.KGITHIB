@@ -3813,3 +3813,255 @@ user.
   - the moles' claws (three, fanned sideways at the spade hand) and the bees' forelegs were not part of the order; the moles
     could take the same front-to-back turn later;
   - Vesk's and Baldino's hands are their own scripts' and were not touched.
+
+## CURATOR-27a · Citadel and Zeelich against LBA2 on the 85/100 rubric (order 27a) · the laptop, 8.11.2026
+
+- **Files:** `docs/lba-maturity/resemblance-citadel.md`, `resemblance-zeelich.md`, `MATURITY-curator.md`, and the
+  register `BUILDING_REGISTER.csv`. The register keeps all 123 rows and gets 10 new rows and 3 new columns
+  (`in_original`, `has_door`, `story_locked`).
+- **Our captures:** `docs/future/world/CURATOR-27a/{citadel,zeelich}/` (HEAD 21bf522d, Vega 8 D3D11).
+- **Reference renders:** decoded from the user's files. They stay in the laptop's scratch and are never committed.
+- **Evidence labels:** our side **Automated runtime only** (pictures, nothing played); the references **Source only**.
+  The scores are provisional and the user has not reviewed them. No district reaches 85.
+- **Citadel scores:**
+  - harbour 73, square and Bug Street 75, lower town south 78, terraces 71, Twinsen's quarter 83;
+  - **lighthouse 67**: a round red-and-white tower where LBA2 has a white square stone tower;
+  - north plateau 71;
+  - **NW plateau 66**: Bersimon's tent is blue with stars, LBA2's is red;
+  - sewer 76.
+- **Other scores:**
+  - Zeelich terminal island (a new city, compatibility only): 60–69;
+  - Otringal 61–68;
+  - Knartas 58;
+  - Mosquibee 56–62;
+  - Celebration 59–62;
+  - Platform 54–57;
+  - Lift Dock 65.
+- **Top fixes for the cloud** (the order is the curator's; details and gains are in MATURITY-curator.md):
+  1. The isles' own buildings instead of the Esmer box everywhere (Franco dome huts, Mosquibee's cocoon nest, the
+     Platform's lattice tower). Doors, rooms and colliders stay. About +4 to +10 per district.
+  2. Otringal's paving renders #605b60 against zislands' target #d3ced9 to #ece8de: something darkens it. About +5 in
+     4 districts.
+  3. The Citadel lighthouse as a white square stone tower with a domed lantern. About +13.
+  4. Citadel harbour: barrel roofs on the ticket office and Nell's, and a straight quay with bollards. About +9.
+  5. Landmarks: Knartas's zeppelin, Celebration's figure, the Lift Dock's red frame, ember veins on the volcano isles.
+- **Check:** the sewer hatch shafts draw as black columns, but only in orthographic and overhead captures. Three Follow
+  shots near both hatches are clean; a high camera needs a look.
+- **Not done:** no fix is implemented and `tools/worldscore` was not re-run. Desert Island and the Hamalayi are next for
+  the curator.
+
+## EXP-MERGE-35 · the expansion branch after the merge with main (order 35) · the laptop, 8.11.2026
+
+- **Branch:** `expansion/ballastra` pushed at 28deb808 (two commits on fad5710f). All seven suites PASS
+  (SwiftShader, the laptop):
+  - world-consistency 37/37;
+  - oren-square 29/29;
+  - ballastra-harbor 19/19;
+  - ballastra-arches 20/20;
+  - oren-first 21/21;
+  - oren-bands 25/25;
+  - oren-coils 33/33.
+- **(b) The `go:stuck` was a pocket in CLIMB-17's shelf fill**, not REVIEW-CITADEL or SLIDE-RESCUE:
+  - In `climbShelfWall`, the box between the two rows across the foot landing's north edge (`zn`) took the narrower
+    east edge, the wall's back. That left low ground of 0.35 × 0.17 m between the wall's north end, the fill and the
+    landing. Its ground is 8.9–9.1 m and the fill is 9.61 m.
+  - The bot's A* line dropped the hero in at (−34.48, 9.05, −32.66). From there he could not move in any direction:
+    the fill is 0.56 m above him, over STEP_UP 0.55. A player could fall in the same way.
+  - The fix: that pair's box runs to the landing's line, and the fill block takes the landing's corner.
+  - A probe: ground at the spot 9.06 → 9.61; the hero moves 0.5 m in all eight directions where it was 0 before.
+  - **Base diff for the cloud:** `requests/EXP-MERGE-35-base.diff` (lba1places.js only, 9 lines).
+    `git apply --check` is clean on origin `ccr-c1c2c4b9-dep6ed` and on ours.
+  - The diff does not touch CLIMB-30's climb (climbFlight, cheek, climbPost, climbRail, climbParapet).
+- **(a) The journeys allow-list** (expansion branch only) classifies the expansion's `startTransition` calls:
+  - coils meet and disperse: the same street;
+  - index afterLoad: a cut (a save in an empty shell chapter moves on);
+  - survey update, and throttle end and downstairs: the same region;
+  - throttle flyHome (Zeelich → Citadel): goes through the film, `playJourney`. Its filmless second call is removed.
+- **Unverified:**
+  - two "page crashed" late in runs on the loaded machine; both suites passed in full on a rerun;
+  - nothing was run on the GPU.
+
+## CAM-34 · the hostel portico's camera volume; the fort's west station gate, the portico and the asylum climb on the GPU · the laptop, 8.11.2026
+
+Order 34 (and line 222: the asylum climb from the user's photo spot). Baseline: origin `a4d6ce62` (worktree
+`lba3-pk19`, detached; nothing committed or pushed). Diff: `requests/CAM-34.diff`, `git apply --check` clean on
+`a4d6ce62`'s tree (checked with a scratch index: `GIT_INDEX_FILE=… git read-tree a4d6ce62; git apply --cached --check`).
+Pictures (chapter 1, may go to the user): `docs/future/world/CAM-34/`.
+
+### (a) The code: the portico's own camera shape
+
+- `src/game/asylumhostel.js` `buildAsylumFront`: one `camOnly` box, as island.js's beam pad arch declares them
+  (`occOf(W).add({ kind: 'box', camOnly: true, … })`): the cornice's width and depth (`W + 0.55` × `D + 0.5`, centred
+  where the cornice is), from `H − 0.2` to `H + 1.5` over the ground (the pediment and its slate roof to the ridge).
+  The camera keeps its own spot out of it; the sight line and the view's rise pass through it (occlude.js), so the shot
+  never climbs over the portico for it.
+- `buildAsylumFront` had no handle on Citadel's world (the registry is `W.occ`), so `world` is passed through as an
+  optional last argument: `src/game/lba1places.js` `buildLba1Door(scene, physics, world = null)` (that one line only;
+  nothing of the climb) and `src/main.js` (`buildLba1Door(S, P, this.world)`). Without a world nothing is added
+  (`buildLba1Places`, the other caller, is unused).
+
+### (b) How it reads on the GPU (Follow, Medium, Classic)
+
+How: Playwright's Chromium on the laptop's Vega 8 (ANGLE D3D11, 1366×768); Twinsen placed by `tests/lib/camwalk.js`
+(or the game's own exit from the hostel), then real key events (`page.keyboard`), the frames stepped at 60 fps
+(`game.testFreeze`) and a rendered frame kept every 6th step (10 a simulated second). **Staged position + normal key
+input, stepped time**: the clips show the camera's motion per simulated second, not real-time frame pacing; no frame
+rate was measured. Numbers per walk: `docs/future/world/CAM-34/walk-stats.json` (camwalk.js's stats).
+
+**The fort's west station gate** (sheets and clips `gate-*`; the after build, the box does not touch the gate):
+- In chapter 1 before the water (`c1_water`) the portcullis is down: a walk stops at it. `tests/camcitadel.mjs`'s
+  four "station gate" walks run in that state and end at x −41.3 / −42.6, at the portcullis: they never pass through,
+  so their PASS says nothing about the passage. For the look I raised it (`W.gate.open = true`, staged).
+- Walking out west: the arm holds 8.75 m through the passage, then as he leaves the west mouth it snaps in, 8.75 →
+  3.6 m in 0.3 s (the camera jumps ~5 m into the passage), holds 0.5 s, and eases back out (~2.5 m/s): 1.2 s under
+  5 m. Running out: 8.75 → 3.2 m in 0.3 s, 1.8 s under 5 m. Walking or running in east: the same snap as he clears the
+  east mouth (8.75 → 3.85 m in 0.2 s, the arm moving up to 67 m/s), 1.1–1.2 s under 5 m. Never inside a collider or
+  volume, no wall between the camera and him (he is out of view on 0–1 frame), the view never turns off his back.
+- Reads: the user's "zooms in super close" is reproduced: a pop to a 3.2–3.9 m arm with his back filling the lower
+  third of the frame (`gate-walk-out-west-3.9s-arm-3.6m.jpg` against `…-2.0s-arm-8.75m.jpg`), then a slow pull back.
+- Cause (trace + code reading): island.js's `fort gate arch` scenery volume covers the whole 4.4 m passage from the
+  arch's spring line up (`y0 = g + GATE.h − GATE.w / 2`, 2.2 m over the ground); the chase at Medium stands
+  2.8–2.9 m up, so every spot of its arm inside the passage counts as masonry and the arm is drawn to MIN-VIEW until
+  he is far enough past. (On its axis the arch is open to its 4.0 m crown, but the raised portcullis's spikes hang at
+  about 2.6 m.)
+- Not changed here (island.js and camera.js are not mine). Proposed for the camera owner: in a passage too low for the
+  arm, keep the arm and flatten the pitch so the camera goes through at ~2.0 m under the portcullis (or let the arm
+  shrink no faster than it grows back, so there is no pop), or raise the portcullis clear of the arch and fit the arch
+  volume to its intrados.
+
+**The hostel portico, before (a4d6ce62's src) and after the box** (same walks, same frames; sheets `hostel-*`):
+- Out of the door, walking south: the lens came within 0.42 m of the slate roof's front edge; after, it keeps
+  0.83 m off it. Frames with the portico cut open by the near plane: 68 → 49 (camcitadel on SwiftShader, after: 49).
+- Up to the door, turn round, run south: before, the camera stayed straight behind at a 6.05 m arm 0.2 m off the
+  portico's face for the last second (near-cut 27 frames); after, it swings 40° west round the portico's corner to its
+  full 8.75 m arm while he runs straight (29.6° off his back, at most 1.9° a frame; near-cut 16). Smooth, but it is a
+  visible swing: it reads as the camera stepping aside of the portico rather than pressing against it. Still inside
+  camcitadel's bound (≤ 55°). Partner review wanted on which reads better.
+- A whole turn on the spot: near-cut 5 → 3; one quicker arm change after (arm rate peak 25 → 54 m/s, one step).
+- Turn right and walk west, and along the portico: unchanged.
+- **Not fixed, in both before and after:** the first 0.4–0.6 s out of the door the camera hangs over the pediment's
+  slate roof (7.3 m up; the box ends at 6.0 m) and Twinsen shows as the x-ray silhouette through the roof's front edge
+  (`hostel-out-turn-right-walk-west-*-sheet.jpg`, 0.0–0.3 s); any camera straight behind him there is over the
+  portico. Walking west off the terrace down the dirt slope, the camera then ends behind the cliff rock and he is the
+  silhouette again for ~0.6 s (unseen 38 of 234 frames, before and after). Both for the camera owner (the exit's
+  first shot, and rocks on the sight line).
+
+**The asylum climb from the user's photo spot** (CLIMB-31's foot; Twinsen on the foot landing, x −32.6, z −34,
+y 9.45, the camera up the flight looking down; sheets `climb-*`, `climb-photo-spot-foot-landing-looking-down.jpg`):
+- The photo spot reads clean now: one cheek and coping per side, rails ending on capped posts, no trench or slot, the
+  landing's edge to the plaza even. I did not edit the climb.
+- Walking up from the landing at the yard's edge: the arm holds 8.75 m all the way, nothing between, no pops.
+- Walking and running down from the terrace: with his back to the fort wall at the top the arm starts at 4.6 m (dips to
+  3.54 m for 0.3 s), then opens to 8.75 m in ~2.5 s; running, 4.6 m min. Near the top the green pipeline sweeps across
+  the right of the frame, cut open by the near plane (18 frames walking, 38 running: `pipeline`).
+- A turn on the foot landing: arm ≥ 7.25 m; 2 frames behind the cliff rock's face and the stone house's blue roof
+  across the bottom of the frame at 2.7–3.0 s of the turn.
+
+### Tests (SwiftShader, the after worktree; GAME_URL served from lba3-pk19)
+
+| test | result (after) | note |
+|---|---|---|
+| camcitadel | 61 passed, 0 failed; visual 60/0 | its 4 station-gate walks stop at the shut portcullis (above) |
+| asylum | 10 passed, 0 failed; visual 2/0 | a first run timed out in `quitAndKeep`'s 300 s reload while I ran GPU probes beside it; rerun alone: PASS |
+| occluders | 1 passed, 0 failed; visual 36/0 | |
+| camfollow | 31 passed, 0 failed | |
+| camclear | 14 passed, 0 failed; visual 30/0 | |
+| camera-doors | 4 passed, 0 failed | |
+| camsteady | 100 passed, **10 failed** | the same checks fail on a4d6ce62 (98 passed, 12 failed, run here the same night): the 10 are a subset of origin's 12 (street/square jitter, house-door exit, pier, Modern controls, the lba door); none is at the hostel |
+| world-consistency | 37 passed, 0 failed | |
+
+
+### Unresolved / unverified
+
+- The gate pop and the exit shot over the portico roof (above) are left to the camera owner; numbers and pictures here.
+- Smoothness is judged from stepped 10-per-second captures, not from real-time play; no frame rate measured.
+- Only 1366×768 looked at; other window sizes not checked for these spots.
+
+- **Rebased** on origin `04c5a290` (main.js's context moved; the change is the same one line). `git apply --check` is clean there; OTRINGAL-37 and EXP-MERGE-35-base apply on top of it.
+
+## OTRINGAL-37 · Otringal's high town: the grey peaks through the paving; the Hamalayi's new rooms · the laptop, 8.11.2026
+
+Order 37. Baseline: origin `a4d6ce62` (worktree `lba3-pk19`, detached; nothing committed or pushed). Diff:
+`requests/OTRINGAL-37.diff` (`src/game/zislands.js` only), `git apply --check` clean on `a4d6ce62`'s tree.
+Pictures: `docs/future/world/OTRINGAL-37/` (chapters past 2: **not for the user**).
+
+### What the spikes are
+
+Not a scatter. No rock pieces stand there (the island group's only instanced meshes are a tree and the cloud sprites;
+the terrain mesh itself rises to each peak: raycasts on it at its grid vertices). The grey peaks are the **original's ground itself**: single grid points
+(cell 1.71 m) of the island's height data 1–3 m over the street level (28.42 m), drawn in the granite (`turfRock`), so a
+point 3 m up makes a grey pyramid between the houses. Measured on the drawn terrain (raycasts at every grid vertex of
+the high town, x 30…75, z −80…−35): the worst, +3.0 m and +1.8 m at (47.9, −44.5) and (46.2, −44.5), stands in the lane
+between `otringal-45--52`'s door and `otringal-55--47`'s door, its foot reaching the side of 55--47's way in (the
+mechanics-entry sweep's "a door's approach from the side runs up one"); lower ones along the north and east edges of
+the paving and the fringe of the west rock mass poke into the lanes. (`fitBuildings` already cuts the ground down to
+the floor within 2.6 m of every house; these stand just beyond.)
+
+### The change
+
+`zislands.js`: `paveFlat(A, L, P)` and Otringal's `paveFlat: { R: 5, span: 7, max: 3.5 }`. On a copy of the heights
+used to build the drawn and walked ground (the analysis the plan reads is untouched, so the dressing, the pad, the
+routes and the random streams stay as they were), lowered only, never raised:
+- a bump in the street: a point more than 0.25 m (and at most 3.5 m) over the floor of the nearest house within 5 m
+  of its walls, where the ground comes back to the street's level (0.3 m over it to 0.6 m under it) on both sides along
+  x or along z within 7 m, goes down to that floor. Not a terrace rising behind a house, not the west rock mass (4 m+,
+  or not coming back down within 7 m), not ground falling to the clouds;
+- the way in to every door: 2.2 m out from its wall and 0.7 m either side, as the dressing keeps it (DOOR-SWEEP), plus a
+  grid cell all round so no triangle of a peak beside it slopes into it: no point there over the house's floor.
+
+Result in the high town: 21 grid vertices lowered (`otr-grid-changes.json`), all the peaks between the houses gone;
+the west rock mass, the south and east rims (falling to the lower town and the clouds) kept. Every high-town door's
+way in was already level at the grid points; no point was raised.
+
+### How it reads (GPU, Follow/Medium, staged positions; `otr-*-before-left-after-right.jpg`)
+
+- The lane west of 55--47 and in front of 45--52 is open paving now; the grey pyramid in front of the beige spires is
+  gone (`otr-persp-sw…`, `otr-d55-front…`, `otr-d55-side-s…`, `otr-west-lane…`). Where the peaks were, the cobble
+  patches' stepped edges now show (the same splat look as the rest of the paving).
+- Still there, not mine to change or not asked: the **beige spires** (the original's tall objects, 5–8 m) stand in the
+  lanes, and at Follow/Medium the camera often puts one between itself and Twinsen (he shows as the x-ray silhouette
+  in `otr-d55-front` and `otr-d55-side-s`, before and after); the **black notches** in the rim's steep faces (both); a
+  brown **stacked boulder** over the north edge in front of a house (`otr-persp-ne…`); `otringal-63--52` faces east
+  onto the rim: its 2.6 m apron is level, then the ground falls 1.6 m, so a player comes to the door uphill.
+
+### The Hamalayi's new rooms (ihomes.js; entered through each door by the game's own transition; `ham-*`)
+
+All seven open (no page errors), each its own furniture; what reads poorly:
+- **One shell seven times**: the same box, the same cream plaster over a dark wood dado, plank floor, coping and one
+  dark doorway on the left wall, the same warm light. Outside, Lhar's houses are stone; inside nothing says mountain
+  village: no stone or timber walls, no hearth or stove as a centre (a black iron box stands against a wall in three),
+  no felt, rugs or cushions, no prayer flags, no view of snow.
+- **Empty of people**: no one inside any of them (the hall, the canteen and the weaver's especially read as abandoned).
+- `ham-landing0` (glider harnesses, the keeper's bunk): a bedroll, a barrel, a crate and hooks; no harness or glider
+  part reads.
+- `ham-lhar1` (Yorna's hall, where the village meets): a bench, a lectern, a hanging lamp in a big bare floor; too few
+  seats for a meeting.
+- `ham-lhar3` (the weaver): the loom-like red frame and the yarn shelf read; the best of the seven.
+- `ham-lhar4` (Lhamo's kitchen, soup for the street): a counter, a stool, jugs; no pot or fire.
+- `ham-obs0` (the observatory keeper: charts and logbooks): three bookcases and a plant: a generic library; no chart
+  table, star map or instrument.
+- `ham-lhar0`, `ham-lhar2` (homes): a bed, a stove box, a shelf: fine but interchangeable.
+Not fixed (report only; nothing trivial enough without a look-and-purpose pass by the room's owner).
+
+### Tests (SwiftShader, the after worktree)
+
+| test | result (after) | note |
+|---|---|---|
+| zislands | 13 passed, 0 failed | Otringal: lands, walks to far points, edges hold, no traps |
+| island-doors (ROOMS = the seven high-town rooms) | 20 passed, 3 failed | all seven high-town doors lead in and out by input (including 55--47 and 63--52); the 3 fails are the whole-tour checks the ROOMS filter skips (Knartas' walk n = 0, the keepers' rooms "not built", the tea room not visited); the full tour was not run |
+| zeelich-life | 39 passed, 0 failed | the known "platform gate: transition" failure did not occur in this run |
+| overlaps ONLY=isle_otringal,zeelich | 1 passed, 0 failed; visual 2/0 | |
+| world-consistency | 37 passed, 0 failed | |
+
+
+### Unresolved / unverified
+
+- The rule runs over the whole island. Measured at every grid vertex of Otringal (raycasts on the drawn terrain, before
+  and after): 55 lowered, none raised; 21 in the high town, 34 elsewhere (0.2–1.9 m: a 7 m row in the plaza at x −8.6,
+  z −14…−5 under the raised walkway; the yard's path at (44.5, 41…45); the west harbour (−56.5, 50…53), (−42.8, 53…55);
+  the south terrace (3…22, −72…−58) and (−3…0, −46); list: `otr-island-changes.json`). Looked at once from Follow at
+  seven of them (`otr-outside-hightown-before-left-after-right.jpg`): no visible harm, little visible change. If the
+  cloud wants it to the high town only, add a box to `paveFlat` (one test in the loop).
+- Pictures are staged (Twinsen placed, the camera settled 1.5 s); no walk by input through the high town on the GPU.
+
+- **Checked** on origin `04c5a290`: `git apply --check` clean, after CAM-34 too.
