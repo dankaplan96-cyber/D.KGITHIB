@@ -32,7 +32,10 @@ const retry = async () => {
   if (process.env.STATS) await page.addScriptTag({ path: STATS_JS });
   await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a; P.settle(); }, !!process.env.ASSIST);
 };
-let deaths = 0;
+let deaths = 0, shotN = 0;
+if (process.env.SHOTS) { (await import('node:fs')).mkdirSync(process.env.SHOTS, { recursive: true });
+  // (OVERFLOW: P.settle measures each dialogue line and the objective as it is shown, tests/lib/player.js P.fits)
+ }
 const labels = seg.steps.map((x) => x[0]);
 for (const [label, fn, arg, opt] of seg.steps) {
   const s0 = Date.now();
@@ -53,6 +56,15 @@ for (const [label, fn, arg, opt] of seg.steps) {
     const st = await page.evaluate(() => P.state());
     console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s +${((Date.now() - s0) / 1000).toFixed(0)}s] ${label}: ${JSON.stringify(r)?.slice(0, 400)} | ${st.room} ${JSON.stringify(st.pos)} hp ${st.hp} | ${st.obj.slice(0, 120)}`);
     if (st0) { const st1 = await statNow(); const d = {}; for (const k in st1) if (typeof st1[k] === 'number') d[k] = k.endsWith('Now') ? st1[k] : +((st1[k] - (st0[k] || 0))).toFixed(1); statSteps.push({ label, ...d }); console.log('  stats: ' + JSON.stringify(d)); }
+    // SHOTS=<dir>: a picture after each step from the play camera (the player's view: the HUD, objective, prompt), for a
+    // person to look at; and a census of text boxes that overflow (dialogue lines, the objective, the prompt: OVERFLOW)
+    if (process.env.SHOTS) {
+      const nm = `${String(++shotN).padStart(2, '0')}-${label.replace(/[^a-z0-9]+/gi, '-').slice(0, 48)}${r && r.fail ? '-FAIL' : ''}.png`;
+      await page.evaluate(() => { game.renderer.render(); }).catch(() => {});
+      await page.screenshot({ path: path.join(process.env.SHOTS, nm), timeout: 180000 }).catch((e) => console.log('  shot failed: ' + e.message.split('\n')[0]));
+      const ov = await page.evaluate(() => (window.__overflow || []).splice(0)).catch(() => []);
+      for (const o of ov) console.log('  OVERFLOW ' + o);
+    }
     if (r && r.fail) { failed = true; stop = `${label}: ${r.fail}`; console.log('  STOP: ' + r.fail); break; }
   } catch (e) { failed = true; stop = `${label}: ERROR ${e.message.split('\n')[0]}`; console.log(stop); break; }
 }

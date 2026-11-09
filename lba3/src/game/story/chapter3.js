@@ -328,7 +328,9 @@ export class Chapter3 extends ChapterBase {
       f.c3_veskHelped = it.id === 'help';
       this.chain(f.c3_veskHelped ? [['narrator', 'c3_help_narr'], ['vesk', 'c3_vesk_helped']] : [['vesk', 'c3_vesk_left']], done);
     };
-    const open = () => { g.setState('shop'); g.hud.openMenu('c3_choice_title', items, pick, open); };
+    // (PLAYTHROUGH-11.9: the shared menu's Cancel button did nothing here but blink the menu shut and open again: a
+    //  choice that must be made shows only its two answers; Esc still reopens it, as before)
+    const open = () => { g.setState('shop'); g.hud.openMenu('c3_choice_title', items, pick, open); document.querySelector('#shop .leave')?.remove(); };
     open();
   }
   finish() {

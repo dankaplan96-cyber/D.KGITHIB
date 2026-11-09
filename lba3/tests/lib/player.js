@@ -31,11 +31,27 @@
     const speakers = new Set();
     while (t < maxT) {
       if (G.state === 'play' && !G.trans) { G.step(0.1); if (G.state === 'play' && !G.trans) break; }
-      if (G.state === 'dialog') { speakers.add(speakerId()); P.tap('KeyE', 0.12); lines++; t += 0.15; continue; }
-      if (G.state === 'pause' || G.state === 'gameover' || G.state === 'ending' || G.state === 'title') break;
+      if (G.state === 'dialog') { speakers.add(speakerId()); P.fits(); P.tap('KeyE', 0.12); lines++; t += 0.15; continue; }
+      // (a menu — a shop, the keypad, Hesk's destinations, a choice — waits for a pick: the caller makes it; stepping
+      //  on idled 120 s of game time there on every flight, PLAYTHROUGH-11.9)
+      if (G.state === 'pause' || G.state === 'gameover' || G.state === 'ending' || G.state === 'title' || G.state === 'shop') break;
       G.step(0.1); t += 0.1;
     }
     return { state: G.state, lines, speakers: [...speakers] };
+  };
+
+  // does each text box shown fit? (watches only: a line or objective cut off or spilling out of its box, for the report)
+  window.__overflow = window.__overflow || [];
+  const ovSeen = new Set();
+  P.fits = () => {
+    for (const sel of ['#dialog .text', '#objective', '#prompt']) {
+      const el = document.querySelector(sel); if (!el || !el.offsetParent || !el.textContent.trim()) continue;
+      const box = sel === '#dialog .text' ? el.parentElement : el, r = box.getBoundingClientRect();
+      const out = el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2 || r.bottom > innerHeight + 1 || r.right > innerWidth + 1 || r.left < -1 || r.top < -1;
+      if (!out) continue;
+      const k = sel + el.textContent.slice(0, 60); if (ovSeen.has(k)) continue; ovSeen.add(k);
+      window.__overflow.push(`${sel} ${el.scrollWidth}x${el.scrollHeight} in ${el.clientWidth}x${el.clientHeight} box ${r.left|0},${r.top|0}-${r.right|0},${r.bottom|0}: ${el.textContent.slice(0, 90)}`);
+    }
   };
 
   // ---- navigation
@@ -286,7 +302,10 @@
       if (!n || !n.present) return { r: 'absent:' + id, ...(skipped.length ? { skipped } : {}) };
       const where = P.sceneOf(n.pos.x, n.pos.z);
       if (where !== P.here()) { const e = P.enter(where, opts); if (P.here() !== where) return { r: 'cannot reach ' + where + ': ' + e.r }; }
-      const r = P.go(n.pos.x, n.pos.z, { tol: 1.6, ...opts });
+      // (a player presses E as soon as the Talk prompt is for this person, as P.use does: walking on to the spot where
+      //  they stood had the bot circle Yorna by her winch for 240 s, chapter 6, PLAYTHROUGH-11.9)
+      const ready = () => { const tg = P.target(); return tg?.kind === 'npc' && tg.id === id && Math.hypot(hero().pos.x - n.pos.x, hero().pos.z - n.pos.z) < 2.2; };
+      const r = P.go(n.pos.x, n.pos.z, { tol: 1.6, stopWhen: ready, ...opts });
       // a dialogue that opened on the way, before he pressed E (a pickup's remark, a passer-by): if everyone heard in it
       // is someone else (him, another person; no unnamed voice), it was not this conversation. Read it to the end, as a
       // player would, and walk on to talk to them (twice at most). A conversation they speak in counts, as before.
