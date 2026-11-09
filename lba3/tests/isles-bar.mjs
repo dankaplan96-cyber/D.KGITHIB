@@ -127,7 +127,7 @@ check('chapter 8 (Citadel\'s evacuation): Zeelich\'s street walkers Ilo, Aven an
 await ev(() => setChapter('zeelich'));
 const yard = await ev(() => { const G = game; G.regions.ensure('zeelich', 'test'); const Z = G.rooms.zeelich; G.enterRoom('zeelich', Z.spawn, true); P.settle(); const o = Z.group.position, Y = Z.dogYard;
   const s = { x: o.x - 33, z: o.z - 6 }; G.hero.pos.set(s.x, G.physics.groundAt(s.x, s.z, 30), s.z); G.camRig.snap(); G.step(0.3);
-  const g = P.go(Y.gate.x, Y.gate.z + 2.2, { tol: 0.8 }); const roof = G.physics.groundAt(Y.gate.x, Y.gate.z + 2.2, G.hero.pos.y + 30) - G.hero.pos.y;   // (anything solid over him there: a roof) return { gate: [+(Y.gate.x - o.x).toFixed(1), +(Y.gate.z - o.z).toFixed(1)], r: g.r, roof: +roof.toFixed(2) }; });
+  const g = P.go(Y.gate.x, Y.gate.z + 2.2, { tol: 0.8 }); const roof = G.physics.groundAt(Y.gate.x, Y.gate.z + 2.2, G.hero.pos.y + 30) - G.hero.pos.y;   /* (anything solid over him there: a roof) */ return { gate: [+(Y.gate.x - o.x).toFixed(1), +(Y.gate.z - o.z).toFixed(1)], r: g.r, roof: +roof.toFixed(2) }; });
 check('the dog yard\'s gate opens onto the lane between Mr Pelleck\'s house and the council\'s (x −32), walked to from the street (INPUT), no roof 2 m before it', yard.r === 'arrived' && Math.abs(yard.gate[0] + 32) < 0.2 && Math.abs(yard.roof) < 1, yard);
 
 // ---------------------------------------------------------------- chapter 10: lines wait for their favour
