@@ -59,7 +59,7 @@ crate, the Imperial Hotel's machines, Pello's cordial, Zella's lantern (for the 
 | 11 | Otringal's bar | the door behind the back-bar | the door at z 5.9 in front of the bar and its stools (the leaf plant moved to z 3.6) | `otrbar.js` | `isles-bar`, `new1/bar-in.jpg` |
 | 12 | Zeelich's dog yard | the gate 1.5 m behind the council house | the gap 4 m west, at the head of the lane between Mr Pelleck's house and the council's; `R.dogYard.gate` with it (the conch's 9 m and `purposes` follow it); Marl by the fence just west of it | `zeelich.js`, `storylife.js` | `isles-bar` (INPUT from the street), `new1/yard-gate.jpg` |
 | 13 | Zeelich in chapter 8 | Ilo, Aven, Kira taken off by Citadel's evacuation | they stay, with a line of the day each | `story/citizens.js` OFF_EVAC, `text/walkers.js` | `isles-bar` |
-| 14 | Knartas | pieces hung 1.5–3.4 m up | left out like the lintels (KNARTAS-GATE's rule) | `zislands.js` knartas shape | `before/knartas-b52.jpg` → `after/` |
+| 14 | Knartas | pieces hung 1.5–3.4 m up | not built (S.open at build: the planner keeps its numbers), as the lintels are left out | `zislands.js` knartas open | `before/knartas-b52.jpg` → `after/` |
 | 15 | Celebration's plaza | paving over the slopes | paving only where the ground is near level (S.paveSlope 0.3) | `zislands.js` | `before/after celebration-*.jpg` (small change; a GPU look asked) |
 
 ## People on the isles per chapter
