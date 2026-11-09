@@ -131,7 +131,7 @@ function koMite(rig, K, dt) {
 // for the last `hold` s), along at `speed` m/s, then `skid` s spinning (the opening), not again for `again` s. And on the ice
 // they skitter aside from a ball thrown from further than `hopFrom` m (not again for `hopCool` s; never while crouched,
 // sliding or spinning): Yorna's "up close a blade is quicker than any ball" — close in, or catch them in their opening
-export const ICE_SLIDE = { min: 2.6, max: 6.2, tell: 0.75, hold: 0.3, speed: 9, skid: 1.0, again: 2.6, hopFrom: 4.5, hopCool: 1.4 };
+export const ICE_SLIDE = { min: 2.6, max: 6.2, tell: 0.75, hold: 0.3, speed: 9, skid: 1.0, again: 2.6, hopFrom: 3.2, hopCool: 1.4 };
 
 // A cautious close-range attacker: it circles at a safe distance until the director lets it attack, rears
 // up (the tell), lunges, then sits low for a moment (the opening). Any hit staggers it (it's small).

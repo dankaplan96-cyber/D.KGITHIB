@@ -345,11 +345,25 @@
   // fight the enemies of a group (or every present one in reach) with the ball until none is left
   // step the game for t seconds the way a player waits in a fight: a bolt coming in close → dodge (X), timed so
   // the dodge's invulnerable frames meet it
+  // the dodge's press. P.smart and a bolt: aside, off the bolt's line (Left/Right held for that frame: Classic's side
+  // hop, 2.4 m), as a player sidesteps a shot — a backstep runs along the line at 5.6 m/s and a 9 m/s bolt still
+  // catches him after the invulnerable frames
+  const dodgeKey = (bolt) => {
+    const h = hero(); let side = null;
+    if (P.smart && bolt) {
+      const sp = Math.hypot(bolt.v.x, bolt.v.z) || 1, nx = -bolt.v.z / sp, nz = bolt.v.x / sp, p = bolt.m.position;
+      const off = (h.pos.x - p.x) * nx + (h.pos.z - p.z) * nz, rx = -Math.cos(h.angle), rz = Math.sin(h.angle);   // (his right: Hero.moveDir, Classic)
+      side = ((rx * nx + rz * nz) * (off >= 0 ? 1 : -1)) >= 0 ? 'ArrowRight' : 'ArrowLeft';
+    }
+    if (P.smart) { keys.delete('ArrowLeft'); keys.delete('ArrowRight'); keys.delete('ArrowUp'); keys.delete('ArrowDown'); }
+    if (side) keys.add(side);
+    keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); if (side) keys.delete(side);
+  };
   P.gstep = (t) => {
     const h = hero();
     for (let s = 0; s < t; s += DT) {
       const inbound = G.bolts?.list?.find((b) => { if (b.dodged) return false; const p = b.m.position, dx = h.pos.x - p.x, dz = h.pos.z - p.z, d = Math.hypot(dx, dz); return d < 2.4 && (b.v.x * dx + b.v.z * dz) > 0; });
-      if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge a bolt'); continue; }
+      if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; dodgeKey(inbound); P.note('dodge a bolt'); continue; }
       // (BOSS-SHAPE: the overloaded guardian's dive: once its ring on the deck stops under him, step back out of it with
       // the dodge — he faces the guardian, which slides over the ring — as many times as it takes)
       // (P.smart, COMBAT-2: a close enemy's wind-up — the mite rearing, the dog crouched, the baton up, the shield drawn
@@ -370,7 +384,7 @@
     const mt = !inbound && P.meleeThreat();
     if (!inbound && !mt) return false;
     if (inbound) inbound.dodged = true; else mt._dodged = mt._wind;
-    keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX');
+    dodgeKey(inbound);
     P.note(inbound ? 'dodge a bolt (walking)' : `dodge ${mt.id}'s ${mt.state} (walking)`);
     return true;
   };
@@ -398,7 +412,7 @@
   // a heart or flask lying close by that he needs now (hurt, or the magic nearly gone), not beside an enemy about to strike
   P.needed = (r = 8) => {
     const h = hero();
-    return G.pickups.list.filter((q) => q.mesh.visible && (!q.where || q.where === G.where()) && !q.fly && G.canTake(q)
+    return G.pickups.list.filter((q) => q.mesh.visible && (!q.where || q.where === G.where()) && !q.fly && G.canTake(q) && (q._tries || 0) < 2
       && ((q.type === 'heart' && h.hp <= h.maxHp * 0.7) || (q.type === 'flask' && h.mp < 2))
       && Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z) < r && Math.abs(q.pos.y - h.pos.y) < 2
       && !G.enemies.some((e) => e.alive && e.present && (e.state === 'windup' || e.state === 'aim') && e.pos.distanceTo(q.pos) < 2.5))
@@ -410,7 +424,8 @@
     while (t < maxT && alive().length && !h.dead && !(minHp && h.hp <= minHp)) {
       // (P.smart: a heart or a flask dropped close by while he is hurt or out of magic: he takes it first, as a player would)
       const need = P.smart && P.needed();
-      if (need) { const r0 = P.go(need.pos.x, need.pos.z, { tol: 0.45, maxT: 3, fight: false }); t += r0.t || 0.3; P.gstep(0.1); P.note(`fight: took a ${need.type} (hp ${h.hp} mp ${h.mp})`); continue; }
+      // (one out of his reach — over a fence — is tried twice, then left)
+      if (need) { need._tries = (need._tries || 0) + 1; const r0 = P.go(need.pos.x, need.pos.z, { tol: 0.45, maxT: 3, fight: false }); t += r0.t || 0.3; P.gstep(0.1); P.note(`fight: took a ${need.type} (hp ${h.hp} mp ${h.mp})`); continue; }
       const e = alive().sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0];
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
       // (no path to it — behind a fence, below a cliff: leave it, as a player would, rather than chase it off an edge)

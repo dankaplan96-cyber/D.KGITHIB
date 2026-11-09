@@ -298,6 +298,11 @@ understate puzzles (it knows every answer).
   chapter 10: Oku pointing to the hop-pack). The user plays chapter 2; any cut there wants the user's word.
 - **Chapter 2's depot spike**: the armoured guard blocks point-blank throws in the valve's corner (animation-combat).
 - **Chapters 6 and 11** sit just under the band (0.70): their fights are light (chapter 6's mites cost nothing).
+  COMBAT-2 (9.11): the ice mites now have a frost slide and skitter from far throws (a pattern, not more health); the
+  fights the bot needed ISO assists for were measured by source and fixed where unfair (the Zeelich depot's drones shot
+  through the fence; no recovery before the bore: Ilka's canteen) — docs/COMBAT.md "Fair fights". By the new bot, with
+  no ISO assist: chapter 3 depot 10 health lost, chapter 8 fortress 0, chapter 10 bore 2 and ridge 2 (was 24 and both
+  clovers), chapter 6 mites 0 (2 slides dodged). Free-play times were not re-measured.
 - **Retry keeps the save's health** (at least 4): after a death the player can restart weak. A rule for the whole game
   (e.g. Retry restores full life, as LBA2's clover/life restart does) is a design decision for the coordinator.
 - **No human first-play timing exists.** The estimates' factors (1.8 × navigation, 60 s a puzzle, 200 words a minute) are

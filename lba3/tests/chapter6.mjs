@@ -82,9 +82,19 @@ const slide = await ev(() => { const G = game, h = G.hero, P = G.physics, ms = G
       if (m.state === 'skid') { r.skid = true; break; }
       G.step(1 / 30); }
     r.hp1 = h.hp; return r; };
-  out.stand = watch(false); G.step(0.5); out.step = watch(true); h.hp = h.maxHp; return out; });
+  out.stand = watch(false); G.step(0.5); out.step = watch(true);
+  // the skitter: a ball thrown at it from 5 m (it is not attacking): it hops aside, unhurt; from 3 m the ball lands
+  const throwFrom = (r) => { m.endSlide(); m.state = 'chase'; m.stateT = 0; m.slideCool = 9; m.coolT = 9; m.hopCool = 0; m.kb.set(0, 0); h.invuln = 99;
+    for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + r * Math.sin(a), z = m.pos.z + r * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
+      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 1.2, z, m.pos.x, m.pos.y + 0.6, m.pos.z)) { h.pos.set(x, y, z); break; } }
+    h.angle = h.angleTo(m); G.ball.state = 'idle'; const hp0 = m.hp, x0 = m.pos.x, z0 = m.pos.z;
+    T.tap('KeyF'); for (let i = 0; i < 45; i++) { hold(); m.slideCool = 9; m.coolT = 9; G.step(1 / 30); }
+    h.invuln = 0; return { hp0, hp1: m.hp, moved: +Math.hypot(m.pos.x - x0, m.pos.z - z0).toFixed(2) }; };
+  out.far = throwFrom(5); out.near = m.alive ? throwFrom(3) : null;
+  h.hp = h.maxHp; return out; });
 is('the ice mites: the frost slide is told (crouch, streak), committed, and bites one who stands in its line; a step aside after the line holds avoids it', slide,
   (v) => v.ice && v.stand?.told && v.stand.streak && v.stand.slid && v.stand.hp1 < v.stand.hp0 && v.step?.told && v.step.slid && v.step.skid && v.step.hp1 === v.step.hp0);
+is('the ice mites skitter aside from a ball thrown from 5 m (unhurt); from 3 m it lands', slide, (v) => v.far?.hp1 === v.far.hp0 && v.far.moved > 0.8 && v.near && v.near.hp1 < v.near.hp0);
 // (the hero stands 3 m from the mite, west of it when that is open. A mite chases him, so by the third one it may
 //  stand against the heat shed's east wall, and "3 m west" is then inside the shed or behind it: the shed is a wall
 //  to the ball and to the lock-on, so no throw from there could ever reach it. As in play, he steps to a spot with

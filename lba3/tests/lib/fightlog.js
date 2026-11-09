@@ -5,8 +5,8 @@
 (() => {
   const G = window.game;
   if (window.FIGHTLOG) return;
-  const ATTACK = new Set(['windup', 'aim', 'lunge', 'strike', 'bash', 'slam', 'lock', 'drop']);
-  const OPEN = new Set(['recover', 'open', 'stunned', 'stagger']);
+  const ATTACK = new Set(['windup', 'aim', 'lunge', 'strike', 'bash', 'slam', 'lock', 'drop', 'slidewind', 'slide']);
+  const OPEN = new Set(['recover', 'open', 'stunned', 'stagger', 'skid']);
   const L = (window.FIGHTLOG = { hits: [], attacks: {}, openings: {}, kills: [], first: {}, cur: null, fightT: 0 });
   const tag = (e) => (e ? e.id || e.def?.id || e.def?.kind || '?' : null);
   const wrapEnemy = (e) => {
