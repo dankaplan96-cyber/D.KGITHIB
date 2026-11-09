@@ -89,7 +89,7 @@ Results (9.11, this branch, SwiftShader on a shared machine; `BOOT_TIMEOUT=90000
 | saveslots, holomap, items-ceremony, crosssystem, resume, opening, voices, chapter1 | PASS | |
 | controls | FAIL (3): the camera's acceleration limits (accMax 25.0–25.1 against ≤ 25, p95 12.5–14.3 against ≤ 12) | the same three, the same numbers, on the base commit 568a05ed: not from this pass |
 | weather | FAIL (1): Zeelich's fog colour in one light | the same on the base commit; the label check passes |
-| autoquality-game | 20 checks PASS (the Graphics row's hint included), then `page.goto … ?nocine&autoq` times out at "load" (twice) | see below |
+| autoquality-game | 20 checks PASS (the Graphics row's hint included), then `page.goto … ?nocine&autoq` times out at "load" (twice) | the same 20 and the same time-out on the base commit: not from this pass |
 
 ## Left
 - Hebrew: the old fixed controls table (`controls_html`) is no longer shown; the generated list has English text
