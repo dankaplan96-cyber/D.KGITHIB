@@ -263,7 +263,33 @@ New rule: new skeleton and index entries go as `skeletons.add.json` / `index.add
   `docs/future/characters/hands-36/` (`ch3plus-*` not for the user, `citadel-*` may go to the user).
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles measured · integrated: no.
 
+### ZOE-LOOK-38: Zoé toward a softer, more expressive animated look (order 38, 9.11.2026, worktree `lba3-pk19`)
+A candidate for the user, from the order's words only (no picture seen). Baseline origin `568a05ed`; HEAD's script rebuilt
+through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` rebuilds it exactly.
+- Edit (`tools/blender/zoe_poly.py`, flag `LOOK38`): bigger eyes (white, blue iris, pupil, catch-light, a heavy lid, lash line,
+  three lashes; all in the eye group, so the blink closes them), a crease above, thin arched darker brows, a smaller nose,
+  fuller lips; the skull's sections split along a hairline into skin and swept-up hair (raised 3.5-5.5 mm), the bun replaced
+  by a tall ponytail on the skeleton's tail0-2 (tied at the crown in a green band, arcing back, drifting to her left, the tip
+  curled); green trims cut into the top's edges (neck V, straps, open back) and over the shoulder caps, a black belt with
+  lips and a square silver buckle, a green cord with a round dark pendant, green bangles, round gold hoops; head 28 sides
+  (was 24), arms 14 (was 12). Body sections unchanged. `characters.js`: LOOKS.zoe belt = the baked black (#2a2426), a comment.
+- Budget: body 5616 -> 7004 tris (+24.7 %), with eyes and mouth 5704 -> 7190; hero rig in the game 11320 -> 14194 (body
+  twice: the silhouette pass), meshes 4 = 4, materials 4 = 4; frame draw calls at the Follow/Medium spot 166 = 166 (GPU).
+  Bones in the JSON 16 -> 19 (tail0-2 now weighted; they were already in the skeleton). Validate 0 fails (the old warning:
+  4 loose vertices); polycheck: <= 4 weights, sums 1, every bone in the skeleton, feet at 0.004 as before.
+- Checks (lookdev, scratch `rigcheck.mjs`): the mouth opens to 1.0 and closes to its rest 0.17; the eyes blink (0.12); the
+  hanging ponytail's nearest approach to the rest of her body over 13 poses: 3.6-3.7 cm (sampled), never inside.
+- Tests (SwiftShader, the candidate served): solidnpc 54/54, chapter1 23/23, zoe-resume 5/5, cast-rounds 209/209,
+  story-journeys 30/30 PASS. Vega 8 light check (2 pairs): Zoé's median 16.7 ms in all four, means swamped by noise both
+  ways (Twinsen's unchanged scene drifted as much): no measurable regression, no claim of zero cost.
+- Side effect: the square's statue of Twinsen and Zoé bakes her model, so its Zoé takes the ponytail too (same one draw).
+- Files: `characters/zoe38/{source,export,work,previews,reports}`, jobs `zoe38-*.json`; pictures
+  `docs/future/characters/zoe/look-38/` (chapter 1: may go to the user); request `tools/testlab/requests/ZOE-LOOK-38*`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, GPU light check (see
+  the request note) · integrated: no (the user decides; then the cloud).
+
 ## Current
+- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Next: Twinsen (TWINSEN-LOOK-38).
 - CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
 
 ## Queue
@@ -279,7 +305,8 @@ New rule: new skeleton and index entries go as `skeletons.add.json` / `index.add
 9. Common props
 
 ## Next action
-Back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
+If the user likes ZOE-LOOK-38: the same treatment for Twinsen (order 38), then the cast region by region. If not: say
+which parts to keep (each is separable in `zoe_poly.py`). Otherwise back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
 orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
 `C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
 place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of

@@ -4171,3 +4171,34 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 - **Pushed:** `expansion/ballastra` at 973b2fc3 (three commits on 28deb808); the pictures are on that branch in `docs/future/world/W-3/`.
 
 - **Accepted** by the user, 9.11.2026: "Looks good" (on the GPU pictures: the rafts dry and green, the arrival plaza, the wheel and the kiln). The spec says so on `expansion/ballastra`. W-4 waits for the coordinator to order it.
+
+## CAM-34 · withdrawn: the user prefers the camera straight behind at the hostel door · the laptop, 9.11.2026
+
+- **The user, 9.11**, shown before | after of running south out of the hostel door
+  (`docs/future/world/CAM-34/hostel-up-to-door-turn-run-south-before-top-after-bottom.jpg`): **"the camera feels more
+  chaotic"**.
+- **What changes:** `requests/CAM-34.diff` is removed. **Do not apply the portico's `camOnly` box.** The camera stays as
+  it is on origin: straight behind, no 40° swing round the portico's corner.
+- The diff is still in git history (6d6f2f97) if it is ever wanted again.
+- **Still open for the cloud, unchanged:**
+  - the fort's west station gate snap-in (8.75 → 3.5 m as Twinsen leaves the passage). Its cause is island.js's arch
+    volume starting at the spring line, and the proposal is in the CAM-34 note above. The user's "chaotic" may well cover
+    that too: please treat calmer camera motion as the goal there;
+  - OTRINGAL-37 and EXP-MERGE-35-base, which are unaffected and apply on their own.
+
+## ZOE-LOOK-38 · Zoé toward a softer, more expressive animated look (a candidate for the user) · the laptop, 9.11.2026
+
+Order 38. Baseline: origin `568a05ed`; `git apply --check` also clean on origin `68315019`. Diff:
+`requests/ZOE-LOOK-38.diff` (`tools/blender/zoe_poly.py`, `src/game/characters.js`: LOOKS.zoe belt hex and comment),
+`git apply --check` clean on `568a05ed`'s tree; model `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`.
+Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go to the user):
+`docs/future/characters/zoe/look-38/`.
+- Bigger lidded eyes with lashes, a smaller nose, fuller lips; swept-up hair and a tall ponytail on the existing tail bones,
+  a green band, a curled tip; green trims, a black belt with a silver buckle, a green cord with a dark pendant, green bangles,
+  gold hoops. Body proportions unchanged; no shader change.
+- Body 5616 → 7004 tris (+24.7 %), draws the same (hero 4 = 4; frame 166 = 166). Talk and blink work; the ponytail stays
+  3.6 cm or more clear of her body in 13 poses. solidnpc, chapter1, zoe-resume, cast-rounds and story-journeys PASS.
+- **Waiting for the user's decision** before it is applied (and before Twinsen gets the same treatment). The square's statue
+  takes the new Zoé too.
+
+- **Accepted by the user, 9.11.2026: "Zoé is good"** (on before | after `game-closeup-34`, `lookdev-face-front`, `game-follow-medium-crop`). **Please apply:** `requests/ZOE-LOOK-38.diff`, then `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`. When applying, update `docs/BLENDER_ASSET_WORKFLOW.md`, which still says Zoé reads by "her bun": it is now the ponytail. Twinsen is next (TWINSEN-LOOK-38, order 38).

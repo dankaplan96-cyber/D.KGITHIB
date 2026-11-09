@@ -1,0 +1,6 @@
+[
+  { "op": "script", "name": "zoe ZOE-LOOK-38 baseline: HEAD's script rebuilt", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-pk19/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/zoe38/source/zoe.rebuilt.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/zoe38/source/zoe.rebuilt.blend"] },
+  { "op": "preview", "name": "zoe baseline views", "input": "art/blender/characters/zoe38/source/zoe.rebuilt.blend", "output": "art/blender/characters/zoe38/previews/before",
+    "options": { "resolution": 720, "modes": ["neutral", "textured"], "orthoScale": 2.5 } }
+]
