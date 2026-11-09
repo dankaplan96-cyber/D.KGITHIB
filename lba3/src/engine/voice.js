@@ -278,11 +278,11 @@ export const VOICES = {
   zh_lissa: { race: 'esmer', seed: 1508, f0: 236, k: 1.2, rate: 1.12, contour: 'bounce', range: 6, legato: 0.6, spk: 1 },             // Nara's niece: young, lively
   zh_wenna: { race: 'esmer', seed: 1509, f0: 210, k: 1.0, tilt: 2.0, rate: 0.74, contour: 'fall', range: 3, legato: 1.0, vib: [5, 18], spk: 2 },          // Oku's wife: older, settled
   // (ISLES-BAR: the islands' indoor people of their own; the indoor selves of the residents speak as them, n_ot_ulla …)
-  il_avra: { race: 'esmer', seed: 1701, f0: 228, k: 1.1, rate: 0.96, contour: 'arc', range: 5, legato: 0.6, sex: 'f' },     // Otringal's terrace school: clear, patient
-  il_ione: { race: 'esmer', seed: 1702, f0: 205, k: 1.0, tilt: 2.0, rate: 0.8, contour: 'fall', range: 3, legato: 0.8, sex: 'f' },   // the high town's clinic: calm
-  il_jaspa: { race: 'esmer', seed: 1703, f0: 104, k: 0.9, rate: 0.86, contour: 'step', range: 4, legato: 0.6, sex: 'm' },   // Knartas's gem sorter: dry
-  il_zuzz: { race: 'bee', seed: 1704, f0: 440, k: 1.08, rate: 1.5, contour: 'bounce', legato: 0.55 },                      // Mosquibee's honey room
-  il_zett: { race: 'bee', seed: 1705, f0: 395, k: 1.02, rate: 1.35, contour: 'arc', legato: 0.6 },                        // the Orchard's press house
+  il_avra: { race: 'esmer', seed: 1711, f0: 228, k: 1.1, rate: 0.96, contour: 'arc', range: 5, legato: 0.6, sex: 'f' },     // Otringal's terrace school: clear, patient
+  il_ione: { race: 'esmer', seed: 1712, f0: 205, k: 1.0, tilt: 2.0, rate: 0.8, contour: 'fall', range: 3, legato: 0.8, sex: 'f' },   // the high town's clinic: calm
+  il_jaspa: { race: 'esmer', seed: 1713, f0: 104, k: 0.9, rate: 0.86, contour: 'step', range: 4, legato: 0.6, sex: 'm' },   // Knartas's gem sorter: dry
+  il_zuzz: { race: 'bee', seed: 1714, f0: 440, k: 1.08, rate: 1.5, contour: 'bounce', legato: 0.55 },                      // Mosquibee's honey room
+  il_zett: { race: 'bee', seed: 1715, f0: 395, k: 1.02, rate: 1.35, contour: 'arc', legato: 0.6 },                        // the Orchard's press house
   hl_monk: { race: 'bunny', seed: 1601, f0: 118, k: 1.0, rate: 0.78, contour: 'fall', legato: 0.86, sex: 'm' },   // Brother Tenpa, the monks' hall (HAMALAYI-LIFE): slow, warm
   dp_guard: { race: 'esmer', seed: 1701, f0: 116, k: 0.9, rate: 0.84, contour: 'flat', range: 2.5, legato: 0.5, spk: 3, sex: 'm' },              // Guard Harl at the shaft's lift (UNDER-BAR): even, slow
   dp_tolli: { race: 'quetch', seed: 1702, f0: 150, k: 1.0, rate: 1.12, contour: 'bounce', legato: 0.55, spk: 1 },                     // Tolli of the shield crew: brisk
