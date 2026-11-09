@@ -182,7 +182,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // instead (the search swings it along the foot first). Only when nothing round him is clear does the arm come in to
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
-const CH_LOW_SEE = 0.25, CH_LOW_STILL = 0.4, CH_EL_KEEP_DOOR = (11 * Math.PI) / 180;   // (CAM-ROOFEDGE: the low point of him that nothing tall may hide, m over his feet: _sees; his chest inside the frame's foot just out of a door: _chase)
+const CH_LOW_SEE = 0.25, CH_EL_KEEP_DOOR = (11 * Math.PI) / 180;   // (CAM-ROOFEDGE: the low point of him that nothing tall may hide, m over his feet: _sees; his chest inside the frame's foot just out of a door: _chase)
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
 const CH_HOLD_IDLE = 1.0, CH_SW_SETTLE = 0.3;
 // CAM-RECOVER: the quicker let-out to the whole arm (see the arm's let-out in _chase)
@@ -721,7 +721,6 @@ export class CameraRig {
   // more than CH_LOW_WALL over his feet —: out of the research post's office the arm stood 6 m out over the cabin's flat
   // roof, the line to his head just over its edge and the roof over everything below his shoulders — an outline for as
   // long as he stood. A low wall, a fence, a crate or the ground's own rise before his feet still let a view count.
-  // Asked while he stands or just out of a door, this._low (_chase))
   // (CAM-CLEAR-2, `strict`: a dialogue's two-shot — his head and his chest both, and the posts and the see-through
   // things count too: a face half behind the beam pad's arch is not framed)
   _sees(p, hero, strict = false) {
@@ -729,13 +728,13 @@ export class CameraRig {
     // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
     // the questions in a walk through the town are repeats.)
     // (STABILIZATION: the answers kept as numbers in one array, 8 a question — not a new array each: ~48 a frame)
-    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : this._low ? 2 : 0;
+    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : this._lowOff ? 2 : 0;
     if (this._busy) {
       if (M.fid !== this._fid) { M.fid = this._fid; M.n = 0; }
       for (let i = 0, j = 0; i < M.n; i++, j += 8) if (A[j] === p.x && A[j + 1] === p.y && A[j + 2] === p.z && A[j + 3] === hero.x && A[j + 4] === hero.y && A[j + 5] === hero.z && A[j + 6] === st) return A[j + 7] === 1;
     }
     const r = strict ? this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true)
-      : (this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z)) && (!this._low || this._line(p, hero.x, hero.y + CH_LOW_SEE, hero.z, false, false, hero.y + CH_LOW_WALL));
+      : (this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z)) && (this._lowOff || this._line(p, hero.x, hero.y + CH_LOW_SEE, hero.z, false, false, hero.y + CH_LOW_WALL));
     if (this._busy && M.n < 48) { const j = M.n++ * 8; A[j] = p.x; A[j + 1] = p.y; A[j + 2] = p.z; A[j + 3] = hero.x; A[j + 4] = hero.y; A[j + 5] = hero.z; A[j + 6] = st; A[j + 7] = r ? 1 : 0; }
     return r;
   }
@@ -1078,6 +1077,8 @@ export class CameraRig {
     // the ground under him (a jump doesn't lift the view; falling further than a jump, it follows him down)
     const gy = Math.max(P ? P.groundAt(hero.x, hero.z, hero.y + 0.3) : hero.y, hero.y - 2.5);
     const tp = this.lockOn?.(), lockD = tp ? Math.hypot(tp.x - hero.x, tp.z - hero.z) : 0, lock = tp && lockD > 0.5;
+    // (CAM-ROOFEDGE: with a lock-on the shot frames him and the target: the legs rule, _sees, is not asked)
+    this._lowOff = !!lock;
     // where the view wants to look from: behind his back, or behind his shoulder on the line from the target
     const facing = () => (lock ? Math.atan2(hero.x - tp.x, hero.z - tp.z) + CH_SHOULDER : heroAngle + Math.PI);
     const fresh = snap || !C.init;
@@ -1092,10 +1093,6 @@ export class CameraRig {
       // spaceport, its hull at his back, the view stayed pressed against it for as long as he stood)
       if (C.door && (C.door.t += dt) > CH_DOOR_T && (Math.hypot(hero.x - C.door.x, hero.z - C.door.z) > CH_DOOR_R || (C.door.t > CH_DOOR_STAY && ((C.want ?? Infinity) <= CH_MIN_VIEW + 0.05 || C.overK >= 1)))) C.door = null;
     }
-    // (CAM-ROOFEDGE: his legs must be in view — _sees — just out of a door and once he has stood CH_LOW_STILL s, not turning: walking,
-    // a house's corner over his feet for a step is let pass, as before, rather than drawing the arm in at every corner)
-    C.standT = !fresh && C.pT && Math.hypot(hero.x - C.pT.x, hero.z - C.pT.z) < 0.3 * dt ? (C.standT || 0) + dt : 0;
-    this._low = !!C.door || (C.standT > CH_LOW_STILL && Math.abs(C.vyaw ?? 0) < 0.3);   // (not while he turns on the spot: the view moves with him then anyway)
     // the heading: his facing (a small steering correction inside CH_DEAD_YAW moves nothing) through the spring;
     // camera-relative controls pushed back (toward the camera) hold it
     {
