@@ -126,6 +126,31 @@ Summary against the band (15–25 min, estimate): **in band** 1, 3, 4, 5, 8, 9; 
 and 12 together (the bible's final story, split in save format 5) come to about 21 minutes, but chapter 12 is a numbered
 core chapter and is not excused by that.
 
+## Rerun 9.11.2026 (the whole-story playthrough, Wave A item 2)
+
+The chain 01–14 was played three times from a new game on the current build (`8a09c5c2` plus `PLAYTHROUGH-REPORT.md`'s
+fixes; run 1 before them), Automated runtime only, same method and formula. Every run passed every segment. Run 3 is the
+one in `chapter-balance.csv` (marked "9.11 run 3"). Free play s per run (1 · 2 · 3), then run 3's estimate:
+
+| Ch | free play s | health lost | clovers | est. total min (run 3) | vs T | what moved since 8.11 |
+|---|---|---|---|---|---|---|
+| 1 | 373 · 390 · 362 | 0 | 0 | 19.5 | 0.98 in band | the cave's mites still free |
+| 2 | 662 · 656 · 655 | 15 each | 1 each | 33.5 | 1.67 HIGH (kept) | the depot is no longer 27 health and both clovers |
+| 3 | 323 · 333 · 259 | 10–13 | 0–1 | 17.5 | 0.87 in band | the depot fight still ends with an ISO assist (all runs) |
+| 4 | 216 · 204 · 212 | 10–11 | 1 each | 18.5 | 0.92 in band | the gate guard in the storm takes a clover; no Retry |
+| 5 | 256 · 263 · 263 | 3 | 0 | 16.2 | 0.81 in band | — |
+| 6 | 466 · 457 · 236 | 0–1 | 0 | 14.0 | 0.70 just under | runs 1–2 had the bot's 4-minute circle at Yorna's winch (fixed in the bot); the mites now come during the winch trips |
+| 7 | 222 each | 2 | 0 | 13.3 | 0.66 low | — |
+| 8 | 401 · 349 · 350 | 4–9 | 0 | 18.5 | 0.93 in band | run 1 had a 45-s bot stall at Pippa's barriers; the fortress fight needed an ISO assist in runs 2–3 |
+| 9 | 210 · 212 · 212 | 0 | 0 | 15.6 | 0.78 in band | — |
+| 10 | 556 · 563 · 542 | 8–22 | 2 · 0 · 0 | 29.5 | 1.47 HIGH (kept) | no ridge deaths (Yorna's broth); the bore fight: ISO assist each run |
+| 11 | 245 · 277 · 249 | 5–6 | 0 | 13.8 | 0.69 just under | — |
+| 12 | 70 · 70 · 66 | 5 | 0 | 7.3 | 0.36 LOW | unchanged (the boss wave's) |
+| Ep. | 1 | 0 | 0 | 0.9 | aftermath | — |
+
+No Game Over happened in any of the three runs, so the Retry-with-full-life rule was not exercised by the chain.
+The bot's menu idling (120 s of game time per menu, now fixed) was in the "menu" state and never in these numbers.
+
 ## Per chapter
 
 Each table: scripted (Automated runtime only) and first-play (**estimate**) time, the band (15–25 min), what the
