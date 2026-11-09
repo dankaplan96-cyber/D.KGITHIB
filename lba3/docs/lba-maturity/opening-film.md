@@ -71,6 +71,18 @@ of geometry; nobody in a wall, in furniture or in anybody else (tests/opening.mj
 frame it turns and in the stream; standing feet don't jump; the handoff ends exactly on the gameplay camera (the frame
 at 87.5 s and the first playable frame match), the objective panel comes up, the first steps walk.
 
+## Tests (this pass; on ccr-c1c2c4b9-dep6ed + this pass; SwiftShader, 960×540, Medium)
+All PASS: tests/opening.mjs (with its four new checks: mouths 9–54 frames open on every line, no `talk` frame, the
+aerial's least speed 3–12.5 s above 1.5 m/s, 17 steps heard and none off a footfall), prologue, chapter1, voices, audio,
+resume, save-migration. A skip sweep (scratchpad `skipsweep.mjs`, the suite's own end-state check): E held for 0.9 s at
+every shot boundary (13, 19.6, 23.8, 29, 31.2, 33.1, 35, 45.3, 48, 50.8, 53.4, 54.8, 58, 60.1, 62.4, 66.5, 72.2, 75.2,
+81.6, 83.6) and mid-action (41.6 the hand turning the tap, 60.5 the palm in the stream, 67.1 the screwdriver going down,
+74.9 inside the door's dip, 87.9 the last frame): 25 of 25 reach the same end state (control in the house, the
+objective, the save, the cast placed, the same scene object count, no hand bone left turned), with no voice sounding, no
+subtitle or title left up and the held key not opening a dialogue. (The sweep's first run lost its last four points to
+the local web server's own time limit; they were run again: PASS.) The suite also covers pause / resume, focus loss,
+Continue after a reload (no replay), a second new game and the first objective.
+
 ## Not done / left
 - **Lip-sync**: there is none. Mouths open and close with the gibberish voice's syllables (FACES-HANDS); no phonemes,
   no recorded voice.
