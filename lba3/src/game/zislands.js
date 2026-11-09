@@ -1939,12 +1939,13 @@ function buildIsland0(scene, physics, name, L, at) {
       const cv = (v0 + len) / 2, cl = len - v0;
       col({ type: 'box', x: ax + ux * cv, z: az + uz * cv, hw: Math.abs(ux) > 0.5 ? cl / 2 : hw, hd: Math.abs(ux) > 0.5 ? hw : cl / 2, top, stair: true });
     }
-    // low cheek walls either side, so the flight reads as built into the bank
-    for (const sd of [-1, 1]) {
-      const cx = (ax + bx) / 2 + lx * sd * (hw + 0.15), cz = (az + bz) / 2 + lz * sd * (hw + 0.15), cy0 = Math.min(ya, low(cx, cz)) - 0.3, cy1 = yb + 0.5;
-      const m = new THREE.Mesh(bbox(0.3, cy1 - cy0, len + 0.3, 0.03, 1.5), stoneM); m.position.set(cx, (cy0 + cy1) / 2, cz); m.rotation.y = Math.atan2(ux, uz); m.castShadow = m.receiveShadow = true; group.add(m);
-      // (the cheek is a sloped rail he cannot cross from the flight: blocks along its length, each at its step's height)
-      for (let i = 0; i < n; i += 2) { const v = (i + 1) * run; col({ type: 'box', x: ax + ux * v + lx * sd * (hw + 0.15), z: az + uz * v + lz * sd * (hw + 0.15), hw: Math.abs(ux) > 0.5 ? run * 1.1 : 0.15, hd: Math.abs(ux) > 0.5 ? 0.15 : run * 1.1, top: ya + (i + 1) * rise + 0.5, noStand: true }); }
+    // low cheek walls either side, stepped with the flight (a parapet 0.6 m over each pair of steps), so it reads as built
+    // into the bank and hides nothing of him from the side; each length a block he cannot cross from the flight
+    for (const sd of [-1, 1]) for (let i = 0; i < n; i += 2) {
+      const v0 = i * run, v1 = Math.min(len, (i + 2) * run), vm = (v0 + v1) / 2, x = ax + ux * vm + lx * sd * (hw + 0.15), z = az + uz * vm + lz * sd * (hw + 0.15);
+      const top = ya + Math.min(n, i + 2) * rise + 0.6, bot = Math.min(ya + i * rise, low(x, z)) - 0.3;
+      const m = new THREE.Mesh(bbox(0.3 - (i % 4 ? 0.012 : 0), top - bot, v1 - v0 + 0.02, 0.03, 1.5), stoneM); m.position.set(x, (top + bot) / 2, z); m.rotation.y = Math.atan2(ux, uz); m.castShadow = m.receiveShadow = true; group.add(m);
+      col({ type: 'box', x, z, hw: Math.abs(ux) > 0.5 ? (v1 - v0) / 2 : 0.15, hd: Math.abs(ux) > 0.5 ? 0.15 : (v1 - v0) / 2, top, noStand: true });
     }
   }
   // ISLES-BAR (S.hoists): a lift tower against a cliff between two walkable levels the planner keeps apart (Mosquibee's

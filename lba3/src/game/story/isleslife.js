@@ -23,18 +23,18 @@ import '../text/isleslife.js';
 // the people indoors: their door (ihomes.js IHOMES), the outdoor self they are (if any: its name, voice, dress and tint),
 // when they are there (lineState values; none: whenever the islands are open), their look, the pieces they work at
 const INDOOR = {
-  il_ulla: { door: 'otringal-3--59', of: 'ot_ulla', work: ['table', 'shelf'], anims: ['tinker', 'reach'] },
-  il_tanek: { door: 'otringal--1--53', of: 'ot_tanek', work: ['cuttable', 'clothshelf'], anims: ['tinker', 'reach'] },
-  il_obo: { door: 'otringal-17--71', of: 'ot_sweep', work: ['stove', 'table'], anims: ['tinker', null] },
-  il_mila: { door: 'knartas-19--20', of: 'kn_mother', work: ['table', 'stove'], anims: [null, 'tinker'] },
-  il_nessa: { door: 'knartas-19--22', of: 'kn_nets', work: ['bed', 'table'], anims: ['tinker', null] },
-  il_pudd: { door: 'platform-27-12', of: 'pf_vill1', work: ['stove', 'table'], anims: ['tinker', null] },
-  il_rudd: { door: 'undergas-8--39', of: 'ug_gauge', work: ['gauges', 'desk'], anims: ['tinker', null] },
-  il_avra: { door: 'otringal--4--60', char: 'ztri2', color: '#a8d0f0', work: ['chalk', 'bookcase'], anims: ['tinker', 'reach'] },
-  il_ione: { door: 'otringal-52--60', char: 'nara', color: '#f4f4ff', work: ['jarshelf', 'cot', 'desk'], anims: ['reach', 'tinker', null], heals: true },
-  il_jaspa: { door: 'knartas-28-29', char: 'keeper', color: '#d8b8a0', work: ['gemtable', 'shelf'], anims: ['tinker', 'reach'] },
-  il_zuzz: { door: 'mosquibee-26-15', char: 'zbee1', color: '#f0d070', work: ['comb', 'honeyshelf'], anims: ['tinker', 'reach'] },
-  il_zett: { door: 'orchard-4-28', char: 'zbee2', color: '#c0e090', work: ['press', 'vats'], anims: ['tinker', 'reach'] },
+  il_ulla: { door: 'otringal-3--59', of: 'ot_ulla', work: ['shelf', 'stove'], anims: ['tinker', 'reach'] },
+  il_tanek: { door: 'otringal--1--53', of: 'ot_tanek', work: ['wardrobe', 'boxes'], anims: ['tinker', 'reach'] },
+  il_obo: { door: 'otringal-17--71', of: 'ot_sweep', work: ['stove', 'chest'], anims: ['tinker', null] },
+  il_mila: { door: 'knartas-19--20', of: 'kn_mother', work: ['stove', 'shelf'], anims: ['tinker', null] },
+  il_nessa: { door: 'knartas-19--22', of: 'kn_nets', work: ['chest', 'shelf'], anims: ['tinker', null] },
+  il_pudd: { door: 'platform-27-12', of: 'pf_vill1', work: ['stove', 'chest'], anims: ['tinker', null] },
+  il_rudd: { door: 'undergas-8--39', of: 'ug_gauge', work: ['desk', 'crates'], anims: ['tinker', null] },
+  il_avra: { door: 'otringal--4--60', char: 'ztri2', color: '#a8d0f0', work: ['bookcase', 'pew'], anims: ['tinker', 'reach'] },
+  il_ione: { door: 'otringal-52--60', char: 'nara', color: '#f4f4ff', work: ['desk', 'jarshelf'], anims: ['tinker', 'reach'], heals: true },
+  il_jaspa: { door: 'knartas-28-29', char: 'keeper', color: '#d8b8a0', work: ['shelf', 'sacks'], anims: ['tinker', 'reach'] },
+  il_zuzz: { door: 'mosquibee-26-15', char: 'zbee1', color: '#f0d070', work: ['barrels', 'sacks'], anims: ['tinker', 'reach'] },
+  il_zett: { door: 'orchard-4-28', char: 'zbee2', color: '#c0e090', work: ['barrels', 'crates'], anims: ['tinker', 'reach'] },
 };
 const PEOPLE_OF = Object.fromEntries(Object.values(ISLE_PEOPLE).flatMap((I) => I.people.map((p) => [p.id, p])));
 const HEAL_EVERY = 30;   // s between two of Sister Ione's patch-ups
@@ -82,11 +82,21 @@ export class IslesLife extends ChapterBase {
         // (out of the door's way in, and not on a look's own standing spot: his look there must stay his)
         const F = H.frame, lx = x - F.cx, lz = z - F.cz;
         if (lx < F.LX + 2.0 && Math.abs(lz - F.doorZ) < 1.0) continue;
-        if ((H.looks || []).some((l) => Math.hypot(l.x - x, l.z - z) < 0.7)) continue;
+        // (nor where a look's prompt is offered: a person ahead of him takes the prompt, Game.findInteractable; the room's
+        //  two looks are at its first two pieces, which nobody works at)
+        if ((H.looks || []).some((l) => Math.hypot(l.x - x, l.z - z) < 1.6 || Math.hypot(l.at.x - p.x, l.at.z - p.z) < 0.05)) continue;
         out.push({ x, z, a: p.ry + Math.PI }); break;
       }
     }
-    if (!out.length) { const F = H.frame; out.push({ x: F.cx + (F.LX + F.RX) / 2 + 0.6, z: F.cz + (F.BZ + F.FZ) / 2, a: Math.PI }); }
+    if (!out.length) {   // (a free spot of the floor, clear of the pieces, the door's way in and the looks, facing the room)
+      const F = H.frame;
+      for (let lx = F.LX + 2.2; lx <= F.RX - 0.6 && !out.length; lx += 0.3) for (let lz = F.BZ + 0.6; lz <= F.FZ - 0.6 && !out.length; lz += 0.3) {
+        const x = F.cx + lx, z = F.cz + lz;
+        if (ph.blockedAt(x, z, 0.3, 0.35) || (H.looks || []).some((l) => Math.hypot(l.x - x, l.z - z) < 1.6)) continue;
+        out.push({ x, z, a: Math.PI });
+      }
+      if (!out.length) out.push({ x: F.cx + (F.LX + F.RX) / 2 + 0.6, z: F.cz + (F.BZ + F.FZ) / 2, a: Math.PI });
+    }
     return Object.assign(out[0], { stops: out });
   }
   track(stops, anims) {
