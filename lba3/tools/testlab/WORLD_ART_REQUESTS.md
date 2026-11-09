@@ -4169,3 +4169,5 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 - now resolved: the gardens' exit, which waited for W-3, is active.
 
 - **Pushed:** `expansion/ballastra` at 973b2fc3 (three commits on 28deb808); the pictures are on that branch in `docs/future/world/W-3/`.
+
+- **Accepted** by the user, 9.11.2026: "Looks good" (on the GPU pictures: the rafts dry and green, the arrival plaza, the wheel and the kiln). The spec says so on `expansion/ballastra`. W-4 waits for the coordinator to order it.
