@@ -314,7 +314,9 @@
       if (G.state === 'play') {
         P.face(n.pos.x, n.pos.z); tg = P.target();
         // the prompt must be for this person (not a bench or a sign beside them): step closer
-        for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: 1.0 - k * 0.2 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+        // (each try a short walk that stops on their prompt: closer than their body allows, with 240 s to get there, the
+        //  bot circled Yorna at her winch for four minutes, chapter 6, PLAYTHROUGH-11.9)
+        for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: Math.max(1.0 - k * 0.2, hero().radius + (n.bodyR ?? n.radius ?? 0.4) + 0.1), maxT: 20, stopWhen: ready }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
         P.tap('KeyE', 0.1);
       }
       const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
