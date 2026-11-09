@@ -289,7 +289,7 @@ through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` r
   the request note) · integrated: no (the user decides; then the cloud).
 
 ## Current
-- ZOE-LOOK-38 delivered 9.11 as a candidate (uncommitted, worktree `C:/Users/dan/lba3-pk19`); waiting for the user's yes/no.
+- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Next: Twinsen (TWINSEN-LOOK-38).
 - CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
 
 ## Queue

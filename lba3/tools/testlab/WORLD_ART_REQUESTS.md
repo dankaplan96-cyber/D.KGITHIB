@@ -4200,3 +4200,5 @@ Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go t
   3.6 cm or more clear of her body in 13 poses. solidnpc, chapter1, zoe-resume, cast-rounds and story-journeys PASS.
 - **Waiting for the user's decision** before it is applied (and before Twinsen gets the same treatment). The square's statue
   takes the new Zoé too.
+
+- **Accepted by the user, 9.11.2026: "Zoé is good"** (on before | after `game-closeup-34`, `lookdev-face-front`, `game-follow-medium-crop`). **Please apply:** `requests/ZOE-LOOK-38.diff`, then `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`. When applying, update `docs/BLENDER_ASSET_WORKFLOW.md`, which still says Zoé reads by "her bun": it is now the ponytail. Twinsen is next (TWINSEN-LOOK-38, order 38).
