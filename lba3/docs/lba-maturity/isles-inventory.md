@@ -130,4 +130,23 @@ behind it. Not changed here (camera code is world-polish's).
 
 ## Evidence (9.11.2026, Automated runtime only)
 
-See the table in the final report of the pass (suites run one at a time against a snapshot of `lba3/`, SwiftShader).
+Run against a snapshot of `lba3/` served locally (SwiftShader, headless Chromium), one suite at a time, on the final
+code unless marked:
+
+| Suite | Verdict | Notes |
+|---|---|---|
+| `isles-bar` (new) | PASS 13/13 | the flight, the terrace and the high town by input, the clinic and Sister Ione, the fountain, every board and its favour notes, the hoist and Zuzz, the bar's door, Ulla at home in chapter 9, a save in her room → Continue, a death → Retry with full health, chapter 8's Zeelich walkers, the dog yard's gate from the street, chapter 10's favour-bound line. The first runs failed on the test's own roof check (the street's floor bricks) and a comment that swallowed a line: fixed |
+| `zislands` | PASS | first run FAIL 1: Knartas's high pieces left out by shape changed the planner's free ground and Nessa's round crossed the pad's approach; left out at build instead (S.open), rerun PASS |
+| `island-doors` | PASS 89 | first run FAIL 1: Zett at the press took its look's prompt; the indoor people now work at pieces without a look |
+| `island-people` | PASS | updated: Mila at home in chapters 8–9 (four outdoors), the islands' usable pieces where residents work are not "a stop on a prompt" |
+| `purposes`, `zeelich-life`, `zeelich-doors` | PASS | the dog yard's new gate (purposes walks to gate + 2.2 z) |
+| `interior-life` | PASS 144 | (an earlier run's 2 resource fails were the local server stopping at its time limit) |
+| `camera-doors`, `save-migration`, `slidetraps` | PASS | |
+| `overlaps` ONLY = the seven original isles, the bar, Zeelich | PASS | the flight's steps and cheeks |
+| `cast-rounds`, `residents` | PASS | Marl's new gate stop |
+| `world-consistency` | PASS 37 | the hoist's scene change added to the journeys' allow-list (the same island) |
+| `door-sweep` CHAPTERS=5,8,9 | PASS | |
+| `story-journeys` | PASS | |
+
+Not run: the full playthrough chain (`tests/playthrough`; no chapter's route crosses the isles), `camfollow`/`camclear`
+(Citadel's), `door-sweep` and `overlaps` over every chapter and region.
