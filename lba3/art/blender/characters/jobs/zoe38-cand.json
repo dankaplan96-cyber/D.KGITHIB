@@ -1,0 +1,6 @@
+[
+  { "op": "script", "name": "zoe ZOE-LOOK-38 candidate", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-pk19/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/zoe38/export/zoe.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/zoe38/work/zoe_poly.blend"] },
+  { "op": "preview", "name": "zoe ZOE-LOOK-38 candidate views", "input": "art/blender/characters/zoe38/work/zoe_poly.blend", "output": "art/blender/characters/zoe38/previews/after",
+    "options": { "resolution": 720, "modes": ["neutral", "textured"], "orthoScale": 2.5 } }
+]
