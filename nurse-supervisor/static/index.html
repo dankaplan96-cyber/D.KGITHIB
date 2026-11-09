@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f5e8c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>אח כללי - דיווח משמרת</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="topbar" class="topbar hidden">
+    <div class="brand">
+      <img src="icon.svg" alt="" class="logo">
+      <div>
+        <div class="brand-title">אח כללי</div>
+        <div class="brand-sub" id="hospitalName"></div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#/" data-nav="home">משמרת</a>
+      <a href="#/reports" data-nav="reports">דוחות</a>
+      <a href="#/settings" data-nav="settings" class="admin-only">הגדרות</a>
+    </nav>
+    <div class="userbox">
+      <span id="userName"></span>
+      <a href="#/password" class="link-btn" title="החלפת סיסמה">🔑</a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">יציאה</button>
+    </div>
+  </header>
+  <main id="app" class="app"></main>
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# runtime data (reports, users, config) - lives on the network share, not in git
+data/
+__pycache__/
+*.pyc
