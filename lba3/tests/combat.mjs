@@ -118,10 +118,21 @@ r = await ev(() => {
     C.only([], [6194, 8], Math.PI); const h = G.hero, y = h.pos.y;
     const f = P.add({ type: 'box', x: h.pos.x, z: h.pos.z - 2.5, hw: 3, hd: 0.12, rot: 0, top: y + 2.4, seeThrough: true, noStand: true });
     P.rebuild?.();
-    const hp0 = h.hp; G.bolts.fire(new (h.pos.constructor)(h.pos.x, y + 1.1, h.pos.z - 6), new (h.pos.constructor)(0, 0, 1), 9, 1);
+    // (twelve bolts, each from 3 cm further back: whether a frame's step lands inside the fence depends on where it starts)
+    let through = 0;
+    for (let k = 0; k < 12; k++) {
+      h.hp = h.maxHp; h.invuln = 0; h.hurtT = 0; const hp0 = h.hp;
+      G.bolts.fire(new (h.pos.constructor)(h.pos.x, y + 1.1, h.pos.z - 6 - k * 0.03), new (h.pos.constructor)(0, 0, 1), 9, 1);
+      for (let i = 0; i < fps; i++) C.step(1 / fps, 1 / fps);
+      if (h.hp < hp0) through++;
+      G.bolts.clear();
+    }
+    out['hp' + fps] = -through; out['left' + fps] = G.bolts.list.length;
+    f.enabled = false;
+    // (the control: without the fence the same bolt hits him)
+    h.hp = h.maxHp; h.invuln = 0; h.hurtT = 0; G.bolts.fire(new (h.pos.constructor)(h.pos.x, y + 1.1, h.pos.z - 6), new (h.pos.constructor)(0, 0, 1), 9, 1);
     for (let i = 0; i < fps; i++) C.step(1 / fps, 1 / fps);
-    out['hp' + fps] = h.hp - hp0; out['left' + fps] = G.bolts.list.length;
-    f.enabled = false; G.bolts.clear();
+    out['open' + fps] = h.maxHp - h.hp; G.bolts.clear(); h.hp = h.maxHp;
   }
   // the drone: behind a fence, in sight, in range, ready: no wind-up for 3 s
   C.only(['a_drone'], [6194, 8], Math.PI); const h = G.hero, d = E('a_drone'), y = h.pos.y;
@@ -132,7 +143,7 @@ r = await ev(() => {
   out.droneFiredThrough = wound; out.droneFiresInOpen = woundOpen; G.bolts.clear(); d.setPresent(false);
   return out;
 });
-check('bolts: stopped by a chain-link fence at 30 and 15 fps (as the ball), no harm through it', r.hp30 === 0 && r.hp15 === 0 && r.left30 === 0 && r.left15 === 0, r);
+check('bolts: stopped by a chain-link fence at 30 and 15 fps (as the ball): none of twelve through it; without it they hit', r.hp30 === 0 && r.hp15 === 0 && r.left30 === 0 && r.left15 === 0 && r.open30 > 0 && r.open15 > 0, r);
 check('a drone does not fire into a fence between them; it does in the open', !r.droneFiredThrough && r.droneFiresInOpen, r);
 
 // 6. one press, one ball; pressing again while it flies calls it back

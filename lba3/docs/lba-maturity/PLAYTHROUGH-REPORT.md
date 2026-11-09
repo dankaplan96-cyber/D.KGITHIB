@@ -153,7 +153,7 @@ run.
 *Update (COMBAT-2, Wave B item 4):* measured by source and addressed in docs/COMBAT.md "Fair fights": the Zeelich depot's
 drones shot through the fence (fixed), no recovery before the bore (Ilka's canteen), chapter 8's fortress and chapter
 10's ridge fair once the bot reads the telegraphs (the bot now dodges, sidesteps bolts and picks up hearts); chapter 6's
-ice mites have a frost slide. The four fights by the new bot: no ISO assist.
+ice mites have a frost slide. By the new bot: chapters 8 and 10 with no ISO assist; chapter 3's depot by input to the end in 2 of 8 runs (still 9–10 health lost each time).
 
 ### Looked at and fine (by picture)
 

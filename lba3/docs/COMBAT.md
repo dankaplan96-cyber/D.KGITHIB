@@ -583,15 +583,16 @@ ridge), and chapter 6's ice mites cost nothing (PLAYTHROUGH-REPORT PT-9). Each f
 (`tests/lib/fightlog.js`, `FIGHTLOG=1` in `tests/lib/seg.mjs`: health lost by source, attacks and openings per minute,
 time to beat each enemy, attacks under way when a blow landed), three ways from run 3's chapter-start saves: the old
 bot on the old game, the new bot on the old game (to tell the bot's part from the game's), the new bot on the new game.
-**Automated runtime only** (SwiftShader, headless Chromium, game seconds; one run each, so ±1–2 health is noise).
+**Automated runtime only** (SwiftShader, headless Chromium, game seconds; ±1–2 health between runs is noise). "Stacked":
+blows that landed while another enemy was also winding up or striking; it was at most 1 per fight in every run.
 
 | Fight | Old bot, old game | New bot, old game | New bot, new game | Cause | Kind |
 |---|---|---|---|---|---|
-| Ch. 3 Zeelich depot (2 drones, Grobo guard, dog) | 8 lost (all bolts), ISO assist for 2 | 10 lost, ISO assist for 4 | **10 lost (5 bolts, 3 bites, 1 baton), no assist**, all four beaten by input in 64 s of fighting | drones and the guard inside the yard shot him **through the chain-link fence** his ball can't pass (a 9 m/s bolt moved 0.3 m a frame, the fence is 0.24 m); then no magic left for the Grobo's armour, and nothing said what gets through | unfair: fixed |
-| Ch. 8 fortress lever (6 of the squad; the Grobo guard posted by the lever) | 7 lost (baton 2 × 2, bolts 2, dog 1), ISO assist for 5 | **0 lost, no assist** | **0 lost, no assist** | the bot stood in the Grobo's baton swing (0.55 s tell) at the lever and never picked up a heart | fair: the bot |
-| Ch. 10 the bore (3 drones, then clone, guard, sentry) | arrived with **3 health**; 4 lost, ISO assist for 3 | 0 lost, no assist | arrived with 3, **Ilka's canteen: 12**; 2 lost, no assist | no recovery before the chapter's longest fight (the mill's stones and the chapter before cost the health) | unfair start: fixed; the fight itself fair |
-| Ch. 10 the ridge (crystal crawler, 2 mites) | **24 lost: 12 slams, both clovers** | 4 lost | 2 lost | the bot stood in the crawler's ring (1 s tell, 1.3 s opening) | fair: the bot |
-| Ch. 6 ice mites (3) | 0 lost, 0 attacks, 7 s | — | 0 lost by the new bot (it dodged both slides), 2 slides in 8 s | each died to one throw before it ever attacked | given a pattern |
+| Ch. 3 Zeelich depot (2 drones, Grobo guard, dog) | 8 lost (all bolts: 4 of them from inside the fence), ISO assist for 2 | 10 lost, ISO assist for 4 | 6 runs (3 before the 2-hit drones): 9–10 lost each; by input to the end in 1 of 6 (4 health left), the rest stopped at 2 health with 2–4 enemies up. With the 2-hit drones (2 runs): **9 lost each, one by input to the end (5 left)**, one ISO assist for 2 | the drones and the guard shot him **through the chain-link fence** his ball can't pass (a 9 m/s bolt moved 0.3 m a frame, the fence is 0.24 m); two shooters' bolts 0.2–0.6 s apart; no magic left for the Grobo's armour and nothing said what gets through; 3-hit drones at magic level 1 | unfair parts fixed; still the early game's hard fight (below) |
+| Ch. 8 fortress lever (6 of the squad; the Grobo guard posted by the lever) | 7 lost (baton 2 × 2, bolts 2, dog 1), ISO assist for 5 | **0 lost, no assist** | 0 lost, no assist (2 runs, one without assists allowed) | the bot stood in the Grobo's baton swing (0.55 s tell) at the lever and never picked up a heart | fair: the bot |
+| Ch. 10 the bore (3 drones, then clone, guard, sentry) | arrived with **3 health**; 4 lost, ISO assist for 3 | 0 lost, no assist | arrived with 3, **Ilka's canteen: 12**; 2 and 9 lost (two runs; the 9: four sentry bashes), no assist | no recovery before the chapter's longest fight (the mill's stones and the chapter before cost the health) | unfair start: fixed; the fight itself fair |
+| Ch. 10 the ridge (crystal crawler, 2 mites) | **24 lost: 12 slams, both clovers** | 4 lost | 2 lost (two runs) | the bot stood in the crawler's ring (1 s tell, 1.3 s opening) | fair: the bot |
+| Ch. 6 ice mites (3) | 0 lost, 0 attacks, 7 s | — | 0 and 2 lost (three runs; the bot dodges most slides), 2–3 slides in 8–10 s | each died to one throw before it ever attacked | given a pattern |
 
 **The changes (game).**
 - **Bolts are substepped** (≤ 0.1 m, as the ball): a chain-link fence or a railing stops an enemy's bolt as it stops his
@@ -616,8 +617,10 @@ bot on the old game, the new bot on the old game (to tell the bot's part from th
   (not while crouched, sliding or spinning; not again for 1.4 s): Yorna's "up close a blade is quicker than any ball".
   The answer: step out of the line once it holds, then strike or throw in the spin; or close in with the sword. Their
   health (2) and bite are unchanged; their shells are frosted pale. They stir one after another (0, 0.9, 1.8 s).
+- **The Zeelich depot's two drones take two hits** (`hp: 2`, story/chapter2.js; three elsewhere): at magic level 1 three
+  each cost 6 of his 6–8 magic while they, the guard's rifle and the dog worked on him (a drone took the bot 30–84 s).
 - Not changed: chapter 8's squad and the Grobo by the lever (fair once the baton is read), the crawler, the bore's waves,
-  every enemy's health, damage and tells; Retry's full life; the chapters' lengths.
+  every other enemy's health, damage and tells; Retry's full life; the chapters' lengths.
 
 **The bot (tests/lib/player.js, `P.smart`, now the default; `OLDBOT=1` gives the old one).** It plays as a player would,
 never teleporting: it dodges a close wind-up just before the blow (each enemy's own tell), sidesteps a bolt off its
@@ -625,12 +628,19 @@ line (a backstep ran along the line and the bolt caught him after the invulnerab
 takes a dropped heart or flask when it needs one (and what lies about after a fight), kicks armour its ball can't hurt
 when its magic is spent, and walks round a fence its ball can't pass. ISO assists stay available and logged.
 
-**Left.** One run per fight: the chapter 3 depot by input ended at 4 health of 11; a person's play is the real measure. The ice mites' bite was measured against the new bot, which dodges perfectly; a person who stands still takes 1
-per slide (chapter 6 suite). Chapter 2's Citadel depot (watch, fence) was not re-measured by the playthrough here
-(`depot-watch` was run).
+**Left.** Chapter 3's depot is still the early game's hardest fight: its blows now come one at a time, each told, none
+through the fence, and the bot finishes it by input in some runs, but it still costs the bot 9–10 of its 11 health in
+every run (bolts from the drone that stays inside among the barrels, the guard's rifle, the dog). The bot uses no cover
+and its ranged play is poor; whether a person finds it fair (the containers and the shed are cover; the drops hold
+flasks) needs a person's play — the segment's ISO assist below 3 health stays. The ice mites' bite was measured against
+a bot that reads every tell; a person who stands still takes 1 per slide (chapter 6 suite). Chapter 2's Citadel depot
+was not re-measured by the playthrough (`depot-watch` passes).
 
 ## Verification
-`tests/combat.mjs` runs in the developer arena (`?arena`). Its 22 checks currently pass (headless, software GL):
+`tests/combat.mjs` runs in the developer arena (`?arena`). (9.11.2026, COMBAT-2: its "dodge distance consistent at 30 and
+60 fps" check fails — the first dodge at 30 fps after `devArena()` moves 0 m — on the base commit too, unchanged by
+COMBAT-2; the new fence checks fail on the base, 2 of 12 bolts through at 30 fps and 6 of 12 at 15 fps, and pass after.)
+Its checks (headless, software GL):
 - active-frame timing and one hit per swing;
 - combo buffering and mashing limits;
 - walls blocking melee and targeting;
