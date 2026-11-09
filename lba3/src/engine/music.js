@@ -29,9 +29,13 @@ export const MOODS = {
   workshop: 'workshop',
   zeelich: { list: 'zeelich' },
   zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
-  desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
+  desert: { list: 'desert' },     // (MUSIC-BY-PLACE: its own piece, Desert Island, then Sea Wind)
   desert_in: { list: 'desert', gain: 0.6, lowpass: 1100 }, // (DESERT-BAR) Kesh's homes, the post's cabins, the old houses: the island heard through the walls, as 'office'
-  hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
+  hamalayi: { list: 'hamalayi' }, // (MUSIC-BY-PLACE: its own piece, The High Hamalayi, then The Well; with silences outdoors)
+  hamalayi_in: { list: 'hamalayi', gain: 0.6, lowpass: 1100 }, // (MUSIC-BY-PLACE) Lhar's houses, the landing's hut: the mountain through the walls (they had Twinsen's Home)
+  // (MUSIC-BY-PLACE, docs/lba-maturity/music-by-place.md) own pieces; `alt` is what the place played before, while unrendered
+  school: { track: 'school', alt: 'home' },       // the School of Magic, its dormitory, the weather wizard's tent
+  mountain: { track: 'mountain', alt: 'well' },   // the monastery hall (it asked for 'mountain' before there was one: silent)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',
   // (ORDER 19) the old asylum's own piece (tools/music/tracks/asylum.py); `alt` plays while a track is not rendered yet
@@ -47,8 +51,8 @@ export const PLAYLISTS = {
   citadel: ['village', 'village_b'],
   island: ['island', 'island_b'],
   zeelich: ['zeelich', 'zeelich_b'],
-  desert: ['island_b', 'island'],
-  hamalayi: ['well'],
+  desert: ['desert_isle', 'island_b'],   // (MUSIC-BY-PLACE: its own piece first; it had Citadel's two)
+  hamalayi: ['mountain', 'well'],         // (MUSIC-BY-PLACE: its own piece; it had the well's alone)
 };
 const GAP = [20, 60]; // s of silence between two pieces outdoors (uniform)
 // what to prefetch once a track is playing (a playlist piece first prefetches the next piece of its list)
@@ -57,6 +61,7 @@ const NEXT = {
   village_b: ['island', 'combat'], island_b: ['village', 'combat'], zeelich_b: ['workshop', 'combat'],
   well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
   workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'],
+  school: ['desert_isle', 'combat'], mountain: ['well', 'combat'], desert_isle: ['island_b', 'combat'],
 };
 
 // moods that end a running story cue
