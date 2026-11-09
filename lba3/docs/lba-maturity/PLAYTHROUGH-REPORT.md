@@ -193,7 +193,7 @@ Tool in Baldino's workshop `12/14`), the end card and Keep Exploring (`14/17`, `
 ## Files changed (this pass)
 
 Commits on the worktree's branch: `3c9fe0b9` (the chapter-12 fix, the bot's pictures, text-fit watch, first two bot
-fixes) and the one after it (the Talk-prompt fix, the numbers, this report).
+fixes), `0ce1e93e` (the Talk-prompt fix, the numbers, this report) and a last one adding the suites below.
 
 - `src/game/story/chapter3.js` (veskChoice: the forced choice without the menu's Cancel)
 - `tests/lib/seg.mjs` (SHOTS=<dir>: a picture after each step; OVERFLOW lines)
@@ -201,6 +201,12 @@ fixes) and the one after it (the Talk-prompt fix, the numbers, this report).
 - `tests/playthrough/14-shell.mjs` (checks the choice has two answers)
 - `docs/lba-maturity/chapter-balance.csv` (measured columns refreshed, marked), `chapter-balance.md` (a pointer)
 - this file
+
+## Other suites run (same snapshot, after run 3, one at a time)
+
+`crosssystem` PASS (10 checks, the Retry rule included); `shops` PASS (31: menus and talks with the changed `P.settle` and
+`P.talk`); `hamalayi-life` PASS (18: talks with walking people). Every other suite that uses `P.talk` (about 20) was not
+rerun: the change only shortens a walk that ends on the person's own prompt.
 
 ## How to rerun
 
