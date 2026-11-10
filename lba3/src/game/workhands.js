@@ -158,7 +158,8 @@ function touch(g, a, rig, dt) {
     if (rig.actionT < 0.12 && S.pre !== key) {
       S.pre = key;
       _mid.set(p.x + fx * 0.5 * sc, p.y + (spec.ground ? 0.3 : 0.95) * sc, p.z + fz * 0.5 * sc);
-      if (!find(g, rig, spec, _mid, p.y, sc, fx, fz, 0.12)) {   // (within 0.62 m of the body: what an arm and a bend reach) rig.standFor = rig.anim; S.T = null; S.w = 0; return; }
+      // (within 0.62 m of the body: what an arm and a bend reach)
+      if (!find(g, rig, spec, _mid, p.y, sc, fx, fz, 0.12)) { rig.standFor = rig.anim; S.T = null; S.w = 0; return; }
     }
     if (live <= 0) { S.T = null; S.key = ''; S.w = 0; return; }
     if (!S.T && S.key !== key) { if (live < 0.6) return; fresh = true; }
