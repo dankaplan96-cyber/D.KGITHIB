@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- בופי מן RPG V60 -->
+<!-- בופי מן RPG V61 -->
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -423,6 +423,23 @@ body.panel-open #scrim{display:block;animation:scrimIn .2s ease-out}
 .ng-foot .btn-main{margin:0;padding:10px 28px}
 .newgame-panel{top:10%!important;bottom:auto!important;max-height:80%;width:min(560px,90%);left:50%!important;right:auto!important;transform:translateX(-50%)}
 #ach-toast{z-index:38}
+#coach{position:absolute;top:27%;left:50%;transform:translate(-50%,8px);max-width:min(440px,84%);padding:9px 14px;border-radius:12px;border:1px solid #7edcf0;background:#0b1626ee;color:#e8f4ff;font-size:12.5px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:30;box-shadow:0 10px 28px #000a}
+#coach.show{opacity:1;transform:translate(-50%,0)}
+.shop-card.worn{outline:2px solid var(--tint);box-shadow:0 0 16px color-mix(in srgb,var(--tint) 45%,transparent)}
+.st-charm{font:inherit;color:inherit;background:#122033;border:1px solid #33465e;border-radius:999px;padding:3px 10px;cursor:pointer}
+.st-charm.on{border-color:var(--gold);background:#2a2210}
+.tm-svg{width:100%;height:auto;max-height:58vh;display:block;border-radius:14px;touch-action:manipulation}
+.tm-node{cursor:pointer}.tm-node.locked{opacity:.55}
+.tm-label{fill:#e7edf7;paint-order:stroke;stroke:#0b1220;stroke-width:3px;font-weight:600}
+.tm-node.sel .tm-label{fill:#7edcf0}
+.tm-pulse{animation:tmPulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes tmPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.25}}
+.tm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:10px 12px;border:1px solid #33465e;border-radius:12px;background:#0e1a2b}
+.tm-card strong{display:block;font-size:14px}.tm-card small{display:block;color:#94a3b8;font-size:11px;line-height:1.45;margin-top:2px}
+.tm-here{color:#fbbf24;font-size:11px;white-space:nowrap}
+@media(max-width:640px){#ach-toast{top:92px;max-width:94%}#ach-toast em{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+@media(prefers-reduced-motion:reduce){.tm-pulse{animation:none}}
+
 .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:640px){.game-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -531,6 +548,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
     <button class="close-btn" onclick="learnSkip()">לא עכשיו</button>
   </div>
 
+  <div id="coach" aria-live="polite"></div>
   <div id="townmap-panel" class="panel">
     <div class="panel-header"><span>🗺️ מפת העיר</span><span id="townmap-day"></span><button class="x-btn" aria-label="סגירה" onclick="closeTownMap()">✕</button></div>
     <div class="panel-list" id="townmap-body"></div>
@@ -559,7 +577,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
       <button class="game-menu-card" id="menu-tower-card" onclick="launchGameMenu('tower')"><b>🗼 מגדל</b><small id="menu-tower-sub">50 קומות של אתגר</small></button>
       <button class="game-menu-card" onclick="launchGameMenu('settings')"><b>⚙️ הגדרות</b><small>צליל, קושי ונגישות</small></button>
     </div>
-    <div class="menu-footer"><span><span dir="ltr">V60</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
+    <div class="menu-footer"><span><span dir="ltr">V61</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
   </div>
 
   <div id="progress-panel" class="panel">
@@ -592,7 +610,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 
 <script>
 /* =========================================================
-   בופי מן RPG V60 (Hebrew dialogue, character voices and situational humor)
+   בופי מן RPG V61 (Hebrew dialogue, character voices and situational humor)
    ========================================================= */
 const canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d'); // Temporarily redirected only while building a map layer.
@@ -2938,7 +2956,69 @@ const QUESTS = {
     progress: () => bestiaryCount() + ' / 14 סוגי אויבים',
     ready: () => bestiaryCount() >= 14,
     thanks: "\"ארבעה-עשר? יופי, פנה לי קצת מקום.\" הוא מרים את המכחול ומדגים. למדת: 🌟 יצירת מופת!",
-    reward: () => teachTechnique('ultimate') }
+    reward: () => teachTechnique('ultimate') },
+  // chapter two: the harbour
+  gulls: { title: '🎣 מי גנב את הפיתיון', giver: '13:9,9',
+    offer: '"שחף לקח לי את הפיתיון, הצופר הבריח את הדגים, והרוח העיפה לי את הכובע. אם תנצח את שלושתם, לפחות אדע שמישהו עשה משהו."',
+    remind: '"שחף, צופר ורוח. הם כאן על הרציף, בדשא. הדגים בינתיים לא ממהרים."',
+    hint: 'לנצח בנמל שחף גנב, צופר ערפל ורוח מלוחה.',
+    progress: () => ['seagull', 'foghorn', 'saltWind'].filter(k => (player.bestiary || {})[k]).length + ' / 3 נוצחו',
+    ready: () => ['seagull', 'foghorn', 'saltWind'].every(k => (player.bestiary || {})[k]),
+    thanks: '"שלושתם? ואני חשבתי שרק לי יש סבלנות." היא נותנת לך את התרמוס שלה. "זה תה. הוא מחזיק יותר ממה שנראה." (+12 אנרגיה מקסימלית)',
+    reward: () => { player.maxAp += 12; player.ap += 12; } },
+  rhythm: { title: '🎼 הקצב של הדייג', giver: '14:13,6',
+    offer: '"דג לא תופסים בכוח, תופסים ברגע. תראה לי שתים-עשרה מכות בתזמון מושלם, ואתן לך משהו ששומר קצב גם כשאתה לא."',
+    remind: '"מושלם, לא בערך. הים מבדיל, וגם אני."',
+    hint: 'להנחית 12 מכות בתזמון מושלם (הטבעת הצהובה).',
+    onAccept: () => { player.qbase = player.qbase || {}; player.qbase.rhythm = (player.stats.perfects || 0); },
+    progress: () => Math.min(12, (player.stats.perfects || 0) - ((player.qbase || {}).rhythm || 0)) + ' / 12 מושלמות',
+    ready: () => (player.stats.perfects || 0) - ((player.qbase || {}).rhythm || 0) >= 12,
+    thanks: '"שתים-עשרה. ספרתי, אין לי הרבה מה לעשות פה." הוא מושיט לך מטרונום ישן. "הוא מפגר בשנייה. תתרגל, זה חלק מהקסם." (קיבלת: 🎼 מטרונום כיס)',
+    reward: () => { if (charmOwned('metronome')) player.gold += 250; else charmGive('metronome'); } },
+  doors: { title: '🚪 שלוש טריקות דלת', giver: '15:10,4',
+    offer: '"שלושים שנה אני סוחב ארגזים, ואף פעם לא גרמתי למישהו ללכת בלי להרים עליו ארגז. תעשה את זה שלוש פעמים, ותספר לי איך."',
+    remind: '"לעצבן עד שהולכים. בלי מכה אחרונה. אני רוצה לשמוע את הדלת."',
+    hint: 'לגרום לשלושה יריבים לעזוב את הקרב מרוב עצבים (😤 לעצבן עד התפרצות שנייה).',
+    onAccept: () => { player.qbase = player.qbase || {}; player.qbase.doors = (player.stats.irkWins || 0); },
+    progress: () => Math.min(3, (player.stats.irkWins || 0) - ((player.qbase || {}).doors || 0)) + ' / 3 הלכו',
+    ready: () => (player.stats.irkWins || 0) - ((player.qbase || {}).doors || 0) >= 3,
+    thanks: '"אז זה עובד. כל השנים האלה, והיה אפשר פשוט לדבר." הוא מראה לך איך מרימים נכון, מהרגליים. (+4 כוח ויצירה לתמיד)',
+    reward: () => { player.atk += 4; player.sat += 4; } },
+  // chapter three: the old city and the tower
+  figs: { title: '🧺 תאנים לקומת הקבלה', giver: '17:5,1', turnIn: '18:5,14',
+    offer: '"הנכדה שלי עובדת בקבלה של המגדל. היא אומרת שאין לה זמן לאכול. קח לה תאנים, ותגיד שסבתא לא שואלת, סבתא קובעת."',
+    remind: '"התאנים לא משתפרות עם הזמן. הנכדה שלי, למזלה, כן."',
+    hint: 'להביא את סל התאנים לפקידת הקבלה במגדל הגלריות.',
+    progress: () => 'הסל אצלך',
+    onAccept: () => flag('qi_figs'),
+    ready: () => hasFlag('qi_figs'),
+    thanks: '"סבתא שלחה? היא גם אמרה שהיא קובעת?" הפקידה אוכלת אחת, ואז עוד אחת. "קח, זה מקופת האירועים. אף אחד לא סופר." (₪300 ושתי ערכות חירום)',
+    reward: () => { player.gold += 300; player.inventory.kit = (player.inventory.kit || 0) + 2; } },
+  bazaar: { title: '🥁 ארבעה רעשים של שוק', giver: '17:8,12',
+    offer: '"אני מנסה לתפוס את הקצב של השוק ולא מצליח. יש פה מיקוח, המון, ענן תבלינים ומזכרת שלא מפסיקה. תנצח את ארבעתם, ואולי אשמע את עצמי."',
+    remind: '"מיקוח, המון, תבלינים, מזכרת. אחרי זה נשאר רק התוף."',
+    hint: 'לנצח בעיר העתיקה את ארבעת יצורי השוק.',
+    progress: () => ['haggle', 'crowd', 'spiceCloud', 'souvenir'].filter(k => (player.bestiary || {})[k]).length + ' / 4 נוצחו',
+    ready: () => ['haggle', 'crowd', 'spiceCloud', 'souvenir'].every(k => (player.bestiary || {})[k]),
+    thanks: 'הילד מתופף מקצב חדש. הוא לא מדויק, אבל הוא שלו. "עכשיו אני שומע. גם אותך, אגב, אתה נושם חזק." (+3 הגנה וחוסן לתמיד)',
+    reward: () => { player.def += 3; player.sdf += 3; } },
+  // chapter four: the sea
+  turtle: { title: '🐢 סבלנות של צב', giver: '20:8,1',
+    offer: 'הצב מדבר לאט, כאילו כל מילה עולה לו שנה. "ארבעה... גרים כאן... בשונית. תכיר... את כולם. אחר כך... נדבר."',
+    remind: '"דיונון... דג פנס... סקיצה אבודה... וסרטן. אני... לא ממהר."',
+    hint: 'לנצח את ארבעת יצורי השונית.',
+    progress: () => ['inkSquid', 'lanternFish', 'lostSketch', 'coralCrab'].filter(k => (player.bestiary || {})[k]).length + ' / 4 נוצחו',
+    ready: () => ['inkSquid', 'lanternFish', 'lostSketch', 'coralCrab'].every(k => (player.bestiary || {})[k]),
+    thanks: '"יפה. עכשיו... הסוד." הצב שותק דקה שלמה. "אין סוד. רק... שריון... וזמן." (+25 חיים מקסימליים)',
+    reward: () => { player.maxHp += 25; player.hp += 25; } },
+  masters: { title: '🏅 שישה שיעורים', giver: '19:13,8',
+    offer: '"דורית אומרת שמי שלמד רק ממורה אחד, למד בעיקר את המורה. תנצח שישה מאסטרים ותחזור, ואני ארשום את זה אצלי כשיעורי בית שעשיתי."',
+    remind: '"שישה מאסטרים. אני סופר, כי מישהו צריך."',
+    hint: 'לנצח שישה מאסטרים שונים ברחבי העולם.',
+    progress: () => Math.min(6, Object.keys(player.bestiary || {}).filter(k => ENEMY_BASE[k] && ENEMY_BASE[k].master).length) + ' / 6 מאסטרים',
+    ready: () => Object.keys(player.bestiary || {}).filter(k => ENEMY_BASE[k] && ENEMY_BASE[k].master).length >= 6,
+    thanks: '"שישה. אז אתה כבר לא תלמיד של אף אחד." השוליה נותן לך את דמי הכיס שלו ושתי מחברות. "אני ממילא רק מעתיק." (₪700 ושתי מחברות סקיצות)',
+    reward: () => { player.gold += 700; player.inventory.sketchbook = (player.inventory.sketchbook || 0) + 2; } }
 };
 function questActive(id) { return hasFlag('q_' + id + '_active') && !hasFlag('q_' + id + '_done'); }
 function handleQuestTalk(mi, key, npc) {
@@ -4916,10 +4996,6 @@ const CUTSCENES = {
   street_first: [
     { art: 'street', text: "שבע בבוקר. המכוניות עומדות, הנהגים צופרים. עד עכשיו זה לא קידם אף מכונית." },
     { art: 'street', who: 'בופי מן', text: "\"אם אני כבר תקוע פה, לפחות אגיע עם רעיון לציור.\"" },
-    { art: 'street', who: "טיפ לקרב", text: "🎨 התז צבע חזק משרבוט. הגנה מחזירה AP ומקטינה את המכה הבאה. ובתיק יש בופיפן, לימים שהפילוסופיה לא מספיקה." },
-    { art: 'street', who: "טיפ לקרב", text: "🌈 כל פגיעה, כל מכה שספגת וכל עקיצה טובה ממלאות זרימה. כשהמד מלא היא מחכה בטכניקות. כמו השראה: לא באה כשקוראים לה, אבל אפשר להתכונן." },
-    { art: 'street', who: "טיפ לקרב", text: "⏱ בכל מכה טבעת נסגרת על היעד. הקשה בדיוק בזמן: +25% נזק כשאתה תוקף, ושליש פחות נזק נחסם כשתוקפים אותך. מי שמפספס לא מפסיד כלום." },
-    { art: 'street', who: "טיפ לקרב", text: "😤 לעצבן זה נשק שני: מחזיר אנרגיה, מקפיא, ומי שמתפרץ פעמיים פשוט הולך. ניצחון על מישהו עצבני משלם יותר. סבלנות היא נשק, וגם חוסר סבלנות, כשהוא של מישהו אחר." }
   ],
   office_first: [
     { art: 'office', text: "משרד, פלורסנטים ומעלית. מישהו חימם דג, והשעה עוד לא תשע." },
@@ -6979,7 +7055,9 @@ function enemyImpactFx(dmg, color, big) {
 }
 
 function afterPlayerAction(msg, dmg, big, healAmt) {
+  if (charmOn('match') && dmg > 0) { const nd = Math.round(dmg * 1.2); msg = msg.replace(dmg + ' נזק', nd + ' נזק'); if (healAmt) healAmt = Math.round(healAmt * nd / dmg); dmg = nd; }
   const timed = timingResult();
+  if (timed === 'perfect' && player.stats) player.stats.perfects = (player.stats.perfects || 0) + 1;
   if (timed && dmg > 0) {
     const nd = Math.round(dmg * (timed === 'perfect' ? 1.25 : 1.1));
     msg = msg.replace(dmg + ' נזק', nd + ' נזק') + (timed === 'perfect' ? ' ⏱ תזמון מושלם!' : ' ⏱ תזמון טוב.');
@@ -7122,7 +7200,7 @@ function useTechnique(moveId) {
     return;
   }
   const eff = typeEffectiveness(mv.type, battle.enemy.type);
-  const crit = battle.enemy.ability !== 'shellArmor' && Math.random() < DIFF().critChance * (inFlow() ? BALANCE.flowCrit : 1);
+  const crit = battle.enemy.ability !== 'shellArmor' && Math.random() < DIFF().critChance * (inFlow() ? BALANCE.flowCrit : 1) * (charmOn('needle') ? 2 : 1);
   const stg = battle.stages;
   battle.lastMoveType = mv.type; battle.vfxType = mv.type;
   let dmg = calcDamage(playerOffense(mv.type) * stageMult(stg.patk) * mv.power, enemyDefense(mv.type) * stageMult(stg.edef),
@@ -7298,7 +7376,8 @@ function doDefend() {
   player.guarding = true;
   battle.heroAnim = { type: 'guard', t: 0, dur: 320 };
   battle.supportFx = { type: 'guard', t: 0, dur: 420 };
-  player.ap = Math.min(player.maxAp, player.ap + 15);
+  player.ap = Math.min(player.maxAp, player.ap + (charmOn('sponge') ? 30 : 15));
+  if (charmOn('sponge')) { player.hp = Math.min(player.maxHp, player.hp + Math.round(player.maxHp * .06)); updateHUD(); }
   battle.phase = 'ANIM'; battle.msg = '';
   addRing(HERO_HOME.x, HERO_HOME.y - 4, { maxR: 60, color: '#94a3b8', width: 5, life: 480 });
   addParticles(HERO_HOME.x, HERO_HOME.y, 10, { color: '#94a3b8', speed: 50, life: 600, size: 3, grav: -20 });
@@ -7481,6 +7560,7 @@ function enemyTurn() {
   else battle.foeAnim = { t: 0, dur: 300 };
   schedule(tLead + 150, () => {
     if (!battle) return;
+    if (charmOn('match')) dmg = Math.round(dmg * 1.15);
     const blocked = timingResult();
     if (blocked) {
       dmg = Math.max(1, Math.round(dmg * (blocked === 'perfect' ? BALANCE.blockPerfect : BALANCE.blockGood)));
@@ -7557,7 +7637,7 @@ function winBattle() {
   const nightK = player.evening ? .5 : 1;                 // night fights tire more than they teach
   const wild = !towerF && !dailyK && !beatenTrainer && !battle.flagOnWin && !e.boss;
   const gM = wild ? BALANCE.wildGoldMult : BALANCE.trainerGoldMult, xM = wild ? BALANCE.wildExpMult : BALANCE.trainerExpMult;
-  const rGold = Math.max(1, Math.round((left ? e.gold / 2 : e.gold) * nightK * gM * (dayMod().gold || 1)));
+  const rGold = Math.max(1, Math.round((left ? e.gold / 2 : e.gold) * nightK * gM * (dayMod().gold || 1) * (charmOn('magnet') ? 1.25 : 1)));
   const loopBoost = (1 + .1 * Math.min(5, player.loopsInAct || 0)) * (1 + .2 * Math.min(4, player.ngPlus || 0));     // you know where the good fights are
   const rExp = Math.max(1, Math.round((left ? e.exp / 2 : e.exp) * nightK * xM * loopBoost));
   const irkK = left ? 1 : irkBonusFor(e);
@@ -7937,7 +8017,7 @@ function doAnnoy(act) {
   if (streak > 0) { mult *= 1 + BALANCE.annoyStreak * streak; tag += ' (רצף ×' + (1 + BALANCE.annoyStreak * streak).toFixed(1) + ')'; }
   if (e.meltdowns && !e.boss && !e.finale && !e.master) { mult *= BALANCE.waryMult; tag += ' הוא כבר דרוך, זה נכנס לו פחות.'; }
   if (!act.boss) tag += counterEnemyGimmick(e, act.id);
-  const amount = 22 * mult * (e.boss || e.finale ? .8 : 1);
+  const amount = 22 * mult * (e.boss || e.finale ? .8 : 1) * (charmOn('chili') ? 1.35 : 1);
   // annoying someone is restful: בופי מן gets his breath back while they fume
   const apBack = Math.min(player.maxAp - player.ap, Math.round(player.maxAp * .12));
   if (apBack > 0) { player.ap += apBack; tag += ' (+' + apBack + ' AP)'; }
@@ -8190,7 +8270,8 @@ function renderShopList() {
     SHOP_ITEMS.map(it => shopCard(it, it.cost(), { fx: it.fx, own: player.inventory[it.key] || 0, max: full[it.key] })).join('') + '</div>' +
     '<div class="pg-section">⬆ שדרוגים קבועים</div><div class="shop-grid">' +
     SHOP_UPGRADES.map(it => shopCard(it, it.cost(), { fx: it.stat(), lvl: it.lvl(), max: full[it.key] })).join('') + '</div>' +
-    '<div class="settings-desc">המדף מתמלא מחדש כל בוקר. הנקודות בכל כרטיס הן מה שנשאר היום.</div>';
+    '<div class="pg-section">🧿 קמעות · עונדים אחד בכל פעם</div><div class="shop-grid">' + CHARMS.map(charmCard).join('') + '</div>' +
+    '<div class="settings-desc">המדף מתמלא מחדש כל בוקר. הנקודות בכל כרטיס הן מה שנשאר היום. קמע קונים פעם אחת, ומחליפים כאן או במסך המצב.</div>';
   hudSet('shop-gold', 'text', player.gold);
 }
 function buyItem(type, cost) {
@@ -8372,6 +8453,7 @@ function openStatus() {
   const stat = (icon, name, v, note) => '<div class="st-stat"><small>' + icon + ' ' + name + '</small><b>' + v + '</b>' + (note ? '<em>' + note + '</em>' : '') + '</div>';
   const nm = nextMoveAfter(player.level), powers = Object.keys(FIELD_POWERS).filter(hasPower), friends = availableFriends();
   const extras = [];
+  (player.charms || []).forEach(id => { const c = CHARMS.find(x => x.id === id); if (c) extras.push('<button class="st-charm' + (charmOn(id) ? ' on' : '') + '" onclick="player.charm=charmOn(\'' + id + '\')?null:\'' + id + '\';sfx.select();saveGame();openStatus()">' + c.icon + ' ' + c.name + (charmOn(id) ? ' ✓' : '') + '</button>'); });
   if (player.grit > 0) extras.push('💪 נחישות +' + Math.round(BALANCE.gritPerLoss * Math.min(player.grit, BALANCE.gritMax) * 100) + '%');
   if (inFlow() || (player.flow || 0) > 0) extras.push('🌈 ' + (inFlow() ? 'בזרימה' : flowReady() ? 'זרימה מוכנה' : 'זרימה ' + Math.round(player.flow) + '%'));
   if (player.echoCount) extras.push('🔁 ' + player.echoCount + ' נקודות הד');
@@ -8675,14 +8757,7 @@ function flyTo(mi) {
 function openTownMap() {
   heldDir = null; gameState = 'TOWNMAP';
   document.getElementById('townmap-day').innerText = 'יום ' + player.day;
-  document.getElementById('townmap-body').innerHTML = TOWN_MAP.map(e => {
-    const st = townMapStatus(e), here = e.map === currentMap;
-    return '<div class="panel-item" style="' + (st.open ? '' : 'opacity:.5;') + (here ? 'border-color:#fbbf24;' : '') + '">' +
-      '<div><strong>' + (here ? '📍 ' : st.open ? '' : '🔒 ') + MAPS[e.map].name + '</strong><br>' +
-      '<small style="color:#94a3b8">' + (st.open ? e.note : st.why) + '</small></div>' +
-      (here ? '<small style="color:#fbbf24">אתה כאן</small>' : canFlyTo(e.map) ?
-        '<button class="system-btn" onclick="flyTo(' + e.map + ')">🪁 טוס</button>' : '') + '</div>';
-  }).join('');
+  townSel = null; renderTownMap();
   document.getElementById('townmap-panel').style.display = 'flex';
 }
 function closeTownMap() { document.getElementById('townmap-panel').style.display = 'none'; returnFromPanel(); }
@@ -9720,7 +9795,7 @@ function fxKO(e) {
 }
 function stepBattleFx(dt) {
   const b = battle;
-  stepAutoBattle(dt); stepTiming(dt);
+  stepAutoBattle(dt); stepTiming(dt); coachStep(dt);
   if (player.hp > 0 && player.hp / player.maxHp < .25) { b.hbT = (b.hbT || 0) + dt; if (b.hbT > 1100) { b.hbT = 0; sfx.heartbeat(); } }
   if (b.punch) { b.punch.t += dt; if (b.punch.t >= b.punch.dur) b.punch = null; }
   if (b.splats) b.splats = b.splats.filter(p => (p.t += dt) < p.life);
@@ -11412,7 +11487,8 @@ function startTiming(kind, lead) { battle.timing = { kind, t: 0, lead, res: null
 function timingTap() {
   const T = battle && battle.timing; if (!T || T.res) return false;
   const d = Math.abs(T.t - T.lead);
-  T.res = d <= 85 ? 'perfect' : d <= 190 ? 'good' : 'miss'; T.shown = 1;
+  const tw = charmOn('metronome') ? 1.5 : 1;
+  T.res = d <= 85 * tw ? 'perfect' : d <= 190 * tw ? 'good' : 'miss'; T.shown = 1;
   const at = T.kind === 'atk' ? FOE_HOME : HERO_HOME;
   if (T.res === 'miss') { sfx.back(); addFloater(at.x, at.y - 62, T.t < T.lead ? 'מוקדם מדי' : 'מאוחר מדי', { color: '#94a3b8', size: 12, rtl: true, life: 700 }); }
   else { sfx.guard(); buzz(T.res === 'perfect' ? [12, 20, 12] : 10); addRing(at.x, at.y - 4, { maxR: T.res === 'perfect' ? 70 : 44, color: T.res === 'perfect' ? '#fde047' : '#7dd3fc', width: 4, life: 420 }); }
@@ -11928,6 +12004,107 @@ function paintAftermathSlide(c, t) {
   c.restore();
   for (let i = 0; i < 5; i++) { const x = ((t * 14 + i * 110) % 560) - 40, y = 50 + i * 13 + Math.sin(t * 1.5 + i) * 5, f = Math.sin(t * 9 + i) * 3;
     c.strokeStyle = 'rgba(30,25,50,.75)'; c.lineWidth = 1.3; c.beginPath(); c.moveTo(x - 5, y - f); c.quadraticCurveTo(x - 2, y - 1, x, y); c.quadraticCurveTo(x + 2, y - 1, x + 5, y - f); c.stroke(); }
+}
+
+/* =========================================================
+   CHARMS — one worn at a time. Each bends how a fight is played rather than adding a number.
+   ========================================================= */
+const CHARMS = [
+  { id: 'metronome', icon: '🎼', name: 'מטרונום כיס', fx: 'חלון התזמון רחב פי 1.5', cost: 220, tint: '#fde047' },
+  { id: 'chili', icon: '🌶️', name: 'חריף אש', fx: '"לעצבן" עולה לו לעצבים 35% יותר', cost: 200, tint: '#fb923c' },
+  { id: 'sponge', icon: '🧽', name: 'ספוג', fx: 'הגנה מחזירה כפול אנרגיה ועוד 6% חיים', cost: 240, tint: '#7dd3fc' },
+  { id: 'needle', icon: '🪡', name: 'מחט חדה', fx: 'סיכוי כפול לפגיעה קריטית', cost: 260, tint: '#f472b6' },
+  { id: 'magnet', icon: '🧲', name: 'מגנט', fx: '25% יותר כסף מכל קרב', cost: 180, tint: '#a3e635' },
+  { id: 'match', icon: '🔥', name: 'גפרור', fx: 'מכה 20% יותר חזק, סופג 15% יותר', cost: 280, tint: '#f87171' }
+];
+function charmOn(id) { return player.charm === id; }
+function charmOwned(id) { return (player.charms || []).indexOf(id) >= 0; }
+function charmGive(id) { player.charms = player.charms || []; if (!charmOwned(id)) player.charms.push(id); }
+function charmCard(c) {
+  const own = charmOwned(c.id), worn = charmOn(c.id), poor = !own && player.gold < c.cost;
+  return '<button class="shop-card' + (poor ? ' poor' : '') + (worn ? ' worn' : '') + '" style="--tint:' + c.tint + '" onclick="charmTap(\'' + c.id + '\')">' +
+    '<span class="shop-ico">' + c.icon + '</span><span class="shop-name">' + c.name + (worn ? ' <em>ענוד</em>' : '') + '</span>' +
+    '<span class="shop-fx">' + c.fx + '</span><span class="shop-foot"></span>' +
+    '<span class="shop-price">' + (worn ? '✓ עליך · הקשה מורידה' : own ? 'שלך · הקשה לענידה' : '₪' + c.cost) + '</span></button>';
+}
+function charmTap(id) {
+  const c = CHARMS.find(x => x.id === id); if (!c) return;
+  if (!charmOwned(id)) {
+    if (player.gold < c.cost) { sfx.bump(); shopSay = '"חסרים לך ₪' + (c.cost - player.gold) + '. קמע בהקפה מביא מזל רע, זה ידוע."'; renderShopList(); return; }
+    player.gold -= c.cost; charmGive(id); player.charm = id; sfx.coin(); buzz(15);
+    shopSay = '"' + c.name + '. עונדים אחד בכל פעם, אחרת הם רבים ביניהם."';
+  } else { player.charm = charmOn(id) ? null : id; sfx.select(); shopSay = player.charm ? '"יושב עליך טוב."' : '"מורידים? גם זו החלטה."'; }
+  saveGame(); updateHUD(); renderShopList();
+}
+/* =========================================================
+   COACH — a line of advice the first time it is useful, in the fight itself, once per save.
+   ========================================================= */
+const COACH = {
+  timing: '⏱ טבעת נסגרת על היעד. הקשה ברגע שהיא נסגרת: המכה שלך חזקה יותר, ושלו חלשה יותר.',
+  annoy: '😤 אפשר גם לעצבן: זה מחזיר אנרגיה, ומי שמתפרץ פעמיים פשוט הולך. לכל אחד יש נקודה רגישה.',
+  flow: '🌈 הזרימה מלאה. היא מחכה ברשימת הטכניקות, ושלושה תורות הכול חזק יותר.',
+  guard: '🛡️ החיים יורדים. הגנה מקטינה את המכה הבאה ומחזירה אנרגיה; בתיק יש גם בופיפן.'
+};
+let coachT = 0, coachTurns = 0, coachPhase = '';
+function coachSay(id) {
+  if (!COACH[id] || hasFlag('coach_' + id) || coachT > 0) return false;
+  const el = document.getElementById('coach'); if (!el) return false;
+  flag('coach_' + id); el.textContent = COACH[id]; el.classList.add('show'); coachT = 6500; sfx.select && sfx.select();
+  return true;
+}
+function coachStep(dt) {
+  const el = document.getElementById('coach');
+  if (coachT > 0) { coachT -= dt; if (coachT <= 0 || !battle) { coachT = 0; if (el) el.classList.remove('show'); } }
+  const b = battle; if (!b) { coachTurns = 0; coachPhase = ''; return; }
+  if (b.tower || b.daily || player.autoBattle) return;
+  if (b.phase !== coachPhase) { coachPhase = b.phase; if (b.phase === 'MENU') coachTurns++; }
+  if (b.timing && b.timing.t < 80) coachSay('timing');
+  if (b.phase !== 'MENU') return;
+  if (player.hp / player.maxHp < .5) { if (coachSay('guard')) return; }
+  if (flowReady() && !inFlow()) { if (coachSay('flow')) return; }
+  if (coachTurns >= 2 && hasFlag('coach_timing')) coachSay('annoy');
+}
+/* =========================================================
+   TOWN MAP — a drawn chart of the city instead of a list. Tap a place to read about it.
+   ========================================================= */
+const TOWN_POS = { 0: [112, 262], 1: [188, 240], 5: [176, 316], 2: [272, 222], 3: [352, 206], 4: [352, 142], 10: [276, 296], 6: [258, 142], 7: [196, 96],
+  8: [436, 156], 9: [330, 78], 11: [440, 92], 12: [520, 56], 13: [468, 252], 14: [566, 300], 15: [536, 196], 16: [112, 150], 17: [70, 76], 18: [150, 36], 19: [500, 334], 20: [404, 348] };
+const TOWN_ICON = { 0: '🛏️', 1: '🏙️', 5: '🌳', 2: '🚏', 3: '🏢', 4: '🔥', 10: '🚇', 6: '🎨', 7: '🕊️', 8: '📊', 9: '🖼️', 11: '🪜', 12: '🎬', 13: '⚓', 14: '🗼', 15: '📦', 16: '⛰️', 17: '🕌', 18: '🏛️', 19: '🌊', 20: '🐠' };
+const TOWN_ROADS = [[0, 1], [1, 5], [1, 2], [2, 3], [3, 4], [2, 10], [2, 6], [6, 7], [6, 9], [3, 8], [8, 11], [11, 12], [3, 13], [13, 15], [13, 14], [13, 19], [19, 20], [6, 16], [16, 17], [17, 18]];
+let townSel = null;
+function townEntry(mi) { return TOWN_MAP.find(e => e.map === mi); }
+function townSelect(mi) { townSel = mi; sfx.select(); renderTownMap(); }
+function renderTownMap() {
+  if (townSel == null || !TOWN_POS[townSel]) townSel = TOWN_POS[currentMap] ? currentMap : 1;
+  const open = mi => { const e = townEntry(mi); return e ? townMapStatus(e).open : true; };
+  let svg = '<svg class="tm-svg" viewBox="0 0 640 392" role="img" aria-label="מפת העיר">' +
+    '<defs><linearGradient id="tmSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a5f8a"/><stop offset="1" stop-color="#0c3552"/></linearGradient>' +
+    '<linearGradient id="tmLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34405a"/><stop offset="1" stop-color="#232b40"/></linearGradient></defs>' +
+    '<rect width="640" height="392" rx="14" fill="url(#tmSea)"/>' +
+    [0, 1, 2, 3, 4, 5].map(i => '<path d="M' + (360 + i * 40) + ' ' + (300 + (i % 3) * 26) + ' q10 -6 20 0 t20 0" fill="none" stroke="#9fd3f0" stroke-opacity=".35" stroke-width="1.6"/>').join('') +
+    '<path d="M0 0 H560 Q600 40 590 110 Q570 170 600 215 Q560 250 520 232 Q470 250 440 290 Q400 310 330 322 Q280 372 150 392 H0 Z" fill="url(#tmLand)" stroke="#8ea3c4" stroke-opacity=".5" stroke-width="2"/>' +
+    '<path d="M0 0 H560 Q600 40 590 110 Q570 170 600 215 Q560 250 520 232 Q470 250 440 290 Q400 310 330 322 Q280 372 150 392 H0 Z" fill="none" stroke="#e8d9a8" stroke-opacity=".25" stroke-width="7"/>' +
+    '<ellipse cx="566" cy="304" rx="40" ry="24" fill="#3a4a5e" stroke="#e8d9a8" stroke-opacity=".35" stroke-width="3"/>' +
+    '<path d="M60 190 q30 -70 60 -20 q26 -46 54 10 z" fill="#2c4a3e" opacity=".8"/><ellipse cx="176" cy="318" rx="44" ry="26" fill="#27503c" opacity=".8"/>' +
+    [[300, 170], [395, 175], [300, 110], [405, 115], [220, 190]].map(([x, y], i) => '<g fill="#1b2233" opacity=".7"><rect x="' + x + '" y="' + y + '" width="16" height="' + (20 + i * 3) + '"/><rect x="' + (x + 19) + '" y="' + (y + 8) + '" width="12" height="' + (12 + i * 3) + '"/></g>').join('');
+  TOWN_ROADS.forEach(([a, b]) => { const A = TOWN_POS[a], B = TOWN_POS[b], on = open(a) && open(b);
+    svg += '<line x1="' + A[0] + '" y1="' + A[1] + '" x2="' + B[0] + '" y2="' + B[1] + '" stroke="' + (on ? '#f3e3b0' : '#7b8aa6') + '" stroke-opacity="' + (on ? .75 : .35) + '" stroke-width="' + (on ? 3 : 2) + '" stroke-dasharray="' + (on ? '1 0' : '4 6') + '" stroke-linecap="round"/>'; });
+  Object.keys(TOWN_POS).map(Number).forEach(mi => {
+    const [x, y] = TOWN_POS[mi], ok = open(mi), here = mi === currentMap, sel = mi === townSel, fly = canFlyTo(mi);
+    svg += '<g class="tm-node' + (ok ? '' : ' locked') + (sel ? ' sel' : '') + '" onclick="townSelect(' + mi + ')" tabindex="0" role="button" aria-label="' + MAPS[mi].name + '">' +
+      (here ? '<circle class="tm-pulse" cx="' + x + '" cy="' + y + '" r="19" fill="none" stroke="#fbbf24" stroke-width="2.5"/>' : '') +
+      '<circle cx="' + x + '" cy="' + y + '" r="24" fill="transparent"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="14" fill="' + (ok ? '#101a2c' : '#1a2233') + '" stroke="' + (sel ? '#7edcf0' : here ? '#fbbf24' : ok ? '#e8d9a8' : '#5b6780') + '" stroke-width="' + (sel ? 3 : 2) + '"/>' +
+      '<text x="' + x + '" y="' + (y + 5) + '" text-anchor="middle" font-size="14">' + (ok ? TOWN_ICON[mi] : '🔒') + '</text>' +
+      (fly ? '<text x="' + (x + 13) + '" y="' + (y - 9) + '" text-anchor="middle" font-size="10">🪁</text>' : '') +
+      '<text class="tm-label" x="' + x + '" y="' + (y + 28) + '" text-anchor="middle" font-size="9.5" direction="rtl">' + MAPS[mi].name + '</text></g>';
+  });
+  svg += '</svg>';
+  const e = townEntry(townSel), st = e ? townMapStatus(e) : { open: true }, here = townSel === currentMap;
+  const card = '<div class="tm-card"><div><strong>' + (here ? '📍 ' : st.open ? TOWN_ICON[townSel] + ' ' : '🔒 ') + MAPS[townSel].name + '</strong>' +
+    '<small>' + (st.open ? (e ? e.note : '') : st.why) + (MAPS[townSel].lv && st.open ? ' · רמות ' + MAPS[townSel].lv[0] + '–' + MAPS[townSel].lv[1] : '') + '</small></div>' +
+    (here ? '<span class="tm-here">אתה כאן</span>' : canFlyTo(townSel) ? '<button class="system-btn" onclick="flyTo(' + townSel + ')">🪁 טוס</button>' : '') + '</div>';
+  document.getElementById('townmap-body').innerHTML = svg + card;
 }
 
 /* A tap that closes a message can open a window under the same finger; the browser then delivers that
