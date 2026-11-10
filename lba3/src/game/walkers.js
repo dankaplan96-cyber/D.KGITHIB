@@ -30,6 +30,7 @@ import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
+import { workSpot, standsAt } from './workhands.js';
 const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
 
 const DAY = 360;                       // seconds in a resident's "day": stops may keep to part of it (when: [from, to] of 0..1)
@@ -274,6 +275,15 @@ export class Resident extends NPC {
   }
   // the round is given once the world is ready (walkrounds.js); the resident starts part-way through its first stop
   setRound(stops, start = 0) {
+    // (NO-AIR: a stop it works at — its hands on a table, a crate, a rim, a door — is stood at an arm's length from the
+    //  thing: workhands.js workSpot; the stops were set a metre off, and the hands worked on the air between)
+    for (const s of stops) {
+      if (s.seat || s.pair || s._ws) continue;
+      const an = this.actAnim(s); s._ws = true;
+      if (an === 'idle' || an === 'wipe' || s.act === 'warm') continue;
+      const m = workSpot(this.game, s.x, s.z, s.a, an, { y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), max: s.door ? 0.5 : 0.9 });
+      if (m) { s.x = m.x; s.z = m.z; }
+    }
     this.stops = stops;
     this.ri = start % stops.length;
     const stage = this.W.stageNow();
@@ -538,6 +548,7 @@ export class Resident extends NPC {
   }
   // the pose for a stop's act
   actAnim(s) {
+    if (s.id && standsAt(this.def.id, s.id)) return 'idle';   // (NO-AIR: nothing there a hand can be on: workhands.js AIR_STOPS)
     switch (s.act) {
       case 'tend': return 'kneelWork';
       case 'water': return 'potting';

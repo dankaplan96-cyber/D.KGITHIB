@@ -80,6 +80,7 @@ import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
 import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
 import { OTRBAR_ROOM, OTRHOTEL_ROOM } from './islandlife.js';
+import { workSpot, standsAt } from './workhands.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // WC-4: the spaceports' state for the chapter in progress (story/index.js Story): derived, never saved
@@ -525,6 +526,9 @@ export function castStops(g, D, m, nav) {
     if (!nav.walkable(x, z)) { const c = nav.nearest(x, z, 0.75); if (!c) continue; x = c.x; z = c.z; }
     if (doors.some((d) => Math.hypot(d.x - x, d.z - z) < (d.r || 0.9) + DOOR_CLEAR)) continue;
     const a = s.a ?? (s.face ? Math.atan2(m.x + s.face[0] - x, m.z + s.face[1] - z) : (m.a ?? 0));
+    // (NO-AIR: a stop worked at with the hands is stood at an arm's length from its thing: workhands.js)
+    const ws = s.act && s.act !== 'stand' ? workSpot(g, x, z, a, s.act, { y: g.physics.groundAt(x, z, (m.y ?? g.physics.groundAt(m.x, m.z)) + 0.3) }) : null;
+    if (ws && nav.walkable(ws.x, ws.z) && !doors.some((d) => Math.hypot(d.x - ws.x, d.z - ws.z) < (d.r || 0.9) + DOOR_CLEAR)) { x = ws.x; z = ws.z; }
     out.push({ ...s, x, z, a });
   }
   return out;
@@ -570,7 +574,12 @@ export class StoryRounds {
   // the stops in the world (the mark's from the chapter's own place)
   stops(D, R) {
     const c = R.center, m = this.mark(D, R);
-    return D.stops.map((s) => (s.mark ? { ...s, x: m.x, z: m.z, a: m.a } : { ...s, x: s.x + c.x, z: s.z + c.z }));
+    return D.stops.map((s) => {
+      if (s.mark) return { ...s, x: m.x, z: m.z, a: m.a };
+      const o = { ...s, x: s.x + c.x, z: s.z + c.z }, ws = s.act && s.act !== 'stand' ? workSpot(this.game, o.x, o.z, o.a, s.act, { y: this.game.physics.groundAt(o.x, o.z, (ROUND_FLOORS[D.room]?.y ?? 0) + 0.3) }) : null;   // (NO-AIR: at an arm's length from the thing worked at)
+      if (ws) { o.x = ws.x; o.z = ws.z; }
+      return o;
+    });
   }
   update(dt) {
     const g = this.game;
@@ -703,7 +712,7 @@ export class StoryRounds {
     S.st = 'dwell'; S.path = null; S.vel = 0; S.stuckT = 0; S.replans = 0;
     S.tmr = d[0] + (d[1] - d[0]) * S.rnd() * (first ? 0.6 : 1);
     S.gestT = 1 + S.rnd() * 2;
-    n.targetAngle = s.a; n.forceAnim = s.act === 'stand' ? null : s.act;
+    n.targetAngle = s.a; n.forceAnim = s.act === 'stand' || standsAt(n.def.id, s.id) ? null : s.act;
     S.visits++; S.log.push(`${this.game.time.toFixed(1)} at ${s.id}`); if (S.log.length > 30) S.log.shift();
   }
   plan(n, S) {
@@ -719,7 +728,7 @@ export class StoryRounds {
     const near = Math.hypot(h.pos.x - n.pos.x, h.pos.z - n.pos.z) < 2.6 && s.act === 'stand';
     n.angle = dampAngle(n.angle, near ? n.angleTo(h) : s.a, 4, dt);
     if (s.gest && (S.gestT -= dt) <= 0) { n.rig.doGesture(s.gest[Math.floor(S.rnd() * s.gest.length)]); S.gestT = 4 + S.rnd() * 4; }
-    n.rig.play(s.act === 'stand' ? 'idle' : s.act);
+    n.rig.play(s.act === 'stand' || standsAt(n.def.id, s.id) ? 'idle' : s.act);
     n.placeRig();
     if ((S.tmr -= dt) <= 0) { S.ri = (S.ri + 1) % S.stops.length; this.plan(n, S); }
   }

@@ -17,6 +17,7 @@
 import * as THREE from 'three';
 import { Cinematic, voiceSeconds } from '../../engine/cinematic.js';
 import { angleDiff, damp, dampAngle } from '../../engine/math.js';
+import { solveHand, keepJoint, restoreJoints } from '../../engine/handik.js';
 import { createCharacter } from '../characters.js';
 import { glowSprite } from '../interiors.js';
 import { MAT, Kit } from '../props.js';
@@ -59,7 +60,8 @@ export function playOpening(story) {
   const unseen = [];                                  // things hidden for a shot: [object, was visible, its shadow]
   // (ANIM-POLISH-3: the scene places its people's feet itself — its own planted steps and pose layers on the legs — so the rig's
   // own foot planting (plantLite) is off for the scene, and back on after it: finish)
-  const actor = (a) => { cast.push(a); a._speed = 0; a.rig.noFidget = true; a._plantLite = a.rig.plantLite; a.rig.plantLite = false; return a; };
+  // (NO-AIR: nor the rig's own hand-on-the-thing layer, workhands.js: the scene's grips put every hand)
+  const actor = (a) => { cast.push(a); a._speed = 0; a.rig.noFidget = true; a._plantLite = a.rig.plantLite; a.rig.plantLite = false; a._contact = a.rig.contact; a.rig.contact = null; return a; };
   const extra = (name) => {
     const rig = createCharacter(name);               // (the poly cast: assets/poly/<name>.json)
     g.scene.add(rig.root); temps.push(rig.root);
@@ -94,15 +96,19 @@ export function playOpening(story) {
   const worker = extra('worker'), resident = extra('farmerB');
   // (the worker stands a step off the lift column's base: at (-84.35, -3.05) his body was in it)
   const wkSpot = HP(-84.25, -3.1), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
+  const crSpot = HP(-84.12, -3.66);   // (where the worker meets the crate: an arm's length from its near edge)
   const resSpot2 = HP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
 
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
-  const rest = (obj, parent, p, extraRot = [0, 0, 0]) => { parent.add(obj); obj.position.set(p.x, p.y, p.z); obj.rotation.set(extraRot[0], p.ry ?? 0, extraRot[2]); };
+  const rest = (obj, parent, p, extraRot = [0, 0, 0]) => { parent.add(obj); obj.position.set(p.x, p.y, p.z); obj.rotation.set(extraRot[0], p.ry ?? 0, extraRot[2]); obj.scale.setScalar(1); };
   // where he lays the screwdriver down: under his right hand at the bottom of setDown (measured), on the table's near
   // edge by the fruit bowl — the room's own rest spot is 0.75 m from his hand, so it jumped there when let go
-  const sdRest = { x: TB.sdRest.x - 0.69, y: TB.sdRest.y, z: TB.sdRest.z - 0.04, ry: TB.sdRest.ry };   // (its tip clear of the edge)
-  const mastFitted = { x: BT.mastRest.x, y: 0.085, z: BT.mastRest.z, ry: BT.mastRest.ry }; // (room-local)
+  // (NO-AIR: that spot, with the tool lying across him, was at his arm's end: the hand stopped 5 cm over it and the tool
+  //  dropped the rest. It lies by the table's near edge now, pointing away from him, as a hand lays a tool down: the
+  //  handle under his wrist at the bottom of the move — the grip `toolDown` below)
+  const sdRest = { x: TB.sdRest.x - 0.6, y: TB.sdRest.y, z: TB.sdRest.z - 0.09, ry: Math.PI / 2 + 0.25 };
+  const mastFitted = { x: BT.mastRest.x, y: BT.mastRest.y + 0.005, z: BT.mastRest.z, ry: BT.mastRest.ry }; // (room-local; the boat stands on Arthur's building crate)
 
   // ---------------------------------------------------------------- the tap
   const stream = K.stream;
@@ -357,7 +363,7 @@ export function playOpening(story) {
   track(0, 29.0, (k, tt) => {
     let u = 0;
     for (let i = 1; i < liftU.length; i++) if (tt <= liftU[i][0]) { const [a0, u0] = liftU[i - 1], [a1, u1] = liftU[i]; u = u0 + (u1 - u0) * Math.min(1, Math.max(0, (tt - a0) / (a1 - a0))); break; } else u = liftU[i][1];
-    L.pose(u);
+    L.pose(u, true);   // (the control's lever stays where the cycle leaves it: nobody is at it when the hook is up)
     // the hum (18.6–25.0): the lantern and the hook tremble, the puddle ripples
     L.shake(Math.max(0, Math.sin(Math.min(1, Math.max(0, (tt - 18.6) / 6.4)) * Math.PI)) * 0.85);
     W.boatSurge = Math.sin(Math.min(1, Math.max(0, (tt - 1.0) / 4.0)) * Math.PI) * 0.32;
@@ -397,8 +403,8 @@ export function playOpening(story) {
   // the resident waits by the lift for his word with the worker, then goes on down the pier
   // (the worker steps to the crate's side of the pier, by its west face, while the resident is still there; the
   // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
-  walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
-  walk(worker, [wkSpot, HP(-84.2, -3.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-84.2, -3.65) }, L.cratePierW));
+  walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.3)], 26.4, 1.2, 'idle', Math.PI);   // (NO-AIR: 0.3 m in from the pier's edge: his left foot ended over the water)
+  walk(worker, [wkSpot, crSpot], 24.6, 1.0, 'idle', angleTo({ pos: crSpot }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 39.95, 1.0, 'idle', Math.PI, { acc: 0.25, dec: 0.3 });   // (there by 40.87; the turn to the tap runs into the reach)
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
   // (wide of the chair at the table's east end: the corner at hx(0.7, -1.4) took her through it)
@@ -462,42 +468,17 @@ export function playOpening(story) {
   //                 while the body turns or the action shifts the legs; when it can't (more than 10 cm or 0.4 rad
   //                 away) the foot steps there (lifted, 0.3 s), one foot at a time. Not while walking or kneeling.
   const saved = (a) => (a._ov ??= []);
-  const keep = (a, obj) => saved(a).push([obj, obj.rotation.x, obj.rotation.y, obj.rotation.z]);
-  const restore = (a) => { const s = a._ov; if (!s) return; for (let i = s.length - 1; i >= 0; i--) s[i][0].rotation.set(s[i][1], s[i][2], s[i][3]); s.length = 0; };
+  const keep = (a, obj) => keepJoint(saved(a), obj);
+  const restore = (a) => { if (a._ov) restoreJoints(a._ov); };
   const grips = [];
   const grip = (a, side, t0, t1, target, { ein = 0.35, eout = 0.35, palm = V(0.008, -0.062, 0.012) } = {}) => grips.push({ a, side, t0, t1, target, ein, eout, palm });
-  const _w = V(0, 0, 0), _w2 = V(0, 0, 0), _x = V(0, 0, 0), _y = V(0, 0, 0), _z = V(0, 0, 0), _m = new THREE.Matrix4(), _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion();
+  // (NO-AIR: the solve itself is src/engine/handik.js now, shared with the residents' work: src/game/workhands.js)
   const solveArm = (a, g, tt) => {
     const w = sm((tt - g.t0) / g.ein) * sm((g.t1 - tt) / g.eout);
     if (w <= 0) return;
     const T = g.target(tt);
     if (!T) return;
-    const arm = a.rig.j['arm' + g.side], sh = arm.sh, el = arm.el, hand = arm.hand;
-    // the hand's orientation in the world: fingers along the hand's -y, the palm's normal its +x (right) / -x (left)
-    _y.copy(T.fingers).normalize().negate();
-    _x.copy(T.normal).normalize(); if (g.side === 'L') _x.negate();
-    _x.addScaledVector(_y, -_x.dot(_y)).normalize(); _z.crossVectors(_x, _y);
-    _q2.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
-    const wrist = g.palm.clone().applyQuaternion(_q2).negate().add(T.palm);
-    keep(a, sh); keep(a, el); keep(a, hand);
-    const P = [[sh, 'x'], [sh, 'y'], [sh, 'z'], [el, 'x']], s0 = P.map(([o, ax]) => o.rotation[ax]);
-    const at = () => { sh.updateMatrixWorld(true); return hand.getWorldPosition(_w2).clone(); };
-    for (let it = 0; it < 6; it++) {
-      const p0 = at(), e = wrist.clone().sub(p0);
-      if (e.length() < 0.002) break;
-      const J = P.map(([o, ax]) => { o.rotation[ax] += 1e-3; const d = at().sub(p0).multiplyScalar(1000); o.rotation[ax] -= 1e-3; return d; });
-      // Δθ = Jᵀ (J Jᵀ + λ² I)⁻¹ e
-      const A = new THREE.Matrix3().set(...[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => J.reduce((s, d) => s + d.getComponent(r) * d.getComponent(c), 0) + (r === c ? 0.0025 : 0))));
-      const y = e.clone().applyMatrix3(A.invert());
-      P.forEach(([o, ax], i) => { o.rotation[ax] += J[i].dot(y); });
-      el.rotation.x = Math.min(0, Math.max(-2.4, el.rotation.x));
-    }
-    P.forEach(([o, ax], i) => { o.rotation[ax] = s0[i] + (o.rotation[ax] - s0[i]) * w; });
-    sh.updateMatrixWorld(true);
-    hand.getWorldQuaternion(_q1).slerp(_q2, w);
-    hand.parent.getWorldQuaternion(_q2);
-    hand.quaternion.copy(_q2.invert().multiply(_q1));
-    hand.updateMatrixWorld(true);
+    solveHand(a.rig.j['arm' + g.side], g.side, T, w, saved(a), g.palm);
   };
   const STEP = 0.28, NOFEET = /^(walk|run|sneak|kneel)/;
   const plantFeet = (a, tt, dt) => {
@@ -600,7 +581,10 @@ export function playOpening(story) {
   at(MUSIC_AT, () => g.audio.cue('opening'));
   at(6.2, () => loop('winch', { quiet: true }));
   at(13.6, () => sfx('clunk'));
-  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });
+  // (NO-AIR: his left hand goes to the control's lever after the hook clunks on, and throws it as the motor starts:
+  //  the grips and the arm's bend below; the rig's `reach` is a right arm held out, and the lever is on his left, the
+  //  camera's side)
+  at(14.2, () => { loop('motor'); look(resident, head(worker)); });
   // the worker glances back at the man asking while his hand stays on the control; Xil, on the pier behind, turns
   // to listen in, looks up at the lift when the hum shakes it, and listens again on the way back
   at(15.0, () => look(worker, head(resident)));
@@ -611,7 +595,6 @@ export function playOpening(story) {
   at(16.85, () => { play(worker, 'idle'); look(worker, head(resident)); });
   turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 16.85, 0.5);
   turn(worker, angleTo({ pos: wkSpot }, column), 19.7, 0.3);
-  at(20.0, () => play(worker, 'reach'));
   turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 23.3, 0.3);
   at(23.3, () => play(worker, 'idle'));
   // the hum: at the pier, then the drill, then the pier again
@@ -624,10 +607,16 @@ export function playOpening(story) {
   at(23.9, () => { look(resident, head(worker)); look(worker, head(resident)); });
   // the worker answers over his shoulder, then bends to the crate and frees the hook (his hand on the crate's
   // top as it settles: the thump), straightens and watches the hook go up
-  at(26.4, () => { look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 0.3)); look(resident, null); });
-  at(26.6, () => play(worker, 'setDown'));
-  bend(worker, 26.75, 27.55, { torso: [0.34], kneeL: [0.12], kneeR: [0.12], hipL: [-0.06], hipR: [-0.06], shR: [-0.2] });   // (down to the crate's top, 0.82 m: setDown is for a table)
+  // (NO-AIR, the user 10.11: the crate came down by itself and he bowed to it with one hand afterwards. Now he meets it
+  //  as it comes down, both hands on its top, and goes down with it to the deck (the thump); then his right hand frees
+  //  the hook, he straightens and watches the hook go up)
+  at(25.6, () => { play(worker, 'potting'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); });   // (both arms forward: the grips below put the palms on the crate)
+  at(26.15, () => look(worker, head(resident)));
+  at(26.4, () => look(resident, null));
+  at(26.75, () => look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 0.3)));
+  bend(worker, 25.6, 28.15, () => { const k = crateLow(); return { torso: [0.36 * k], kneeL: [0.12 * k], kneeR: [0.12 * k], hipL: [-0.07 * k], hipR: [-0.07 * k], hips: -0.03 * k }; });
   at(27.0, () => { sfx('thump'); });
+  at(27.85, () => { play(worker, 'idle'); worker.rig.blendT = 0.45; });
   at(27.9, () => look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 2.4)));
   at(28.6, () => { stopLoop('motor'); stopLoop('winch'); look(worker, null); });
   // to the house: a short dip to black
@@ -645,7 +634,8 @@ export function playOpening(story) {
   at(33.1, () => tw.rig.doGesture('nod'));
   at(35.2, () => { play(tw, 'tinker'); look(tw, null); });
   at(35.0, () => { play(ar, 'kneelWork'); look(ar, null); });
-  at(36.2, () => { rest(BT.mast, R.group, mastFitted); sfx('tick'); });
+  at(36.2, () => sfx('tick'));   // (the mast home in its step, in his hand: the grips below)
+  at(36.55, () => rest(BT.mast, R.group, mastFitted));   // (he lets go: it stands where his hand left it)
   // (OPEN-FILM: 35-39.5 s was four and a half seconds of the potting loop and the tinkering loop with nothing happening.
   // The mast clicks into place: both parents glance over at Arthur, and back to their work; Zoé presses the last seedling
   // in with a small nod (done), then dries her hands and sees the tap)
@@ -688,6 +678,119 @@ export function playOpening(story) {
   grip(zo, 'R', 58.2, 60.15, onTap(null), { ein: 0.35, eout: 0.4 });   // (from once the reach has the arm up: from the arm at her side the solve swung it wide)
   grip(zo, 'R', 59.75, 62.4, inStream, { ein: 0.45, eout: 0.1 });
   grip(zo, 'R', 69.0, 70.35, onTap(69.85), { ein: 0.4, eout: 0.55 });
+
+  // ---------------------------------------------------------------- NO-AIR: hands on things
+  // (the user, 10.11.2026: "the people at the harbour, Arthur and Twinsen — the actions they do in the air". Every hand
+  //  that works in the film is on the thing it works at, by the grips above, and the thing answers: the lift's lever is
+  //  thrown under the worker's palm; the crate comes down with both his hands on its top; Twinsen's screwdriver sits in a
+  //  screw on the lamp's collar and the screw turns in with each stroke of his wrist, his other hand on the shade; Arthur
+  //  holds his hull on its stand and seats the mast in its step with his own hand — the click — before he lets go; Zoé's
+  //  palms press the soil of the tray's last two pots.)
+  const UP = V(0, 1, 0), PALM = V(0.008, -0.062, 0.012);
+  // the lift's control (island.js cargoLift): the palm on the lever's knob, the fingers over it toward the mast
+  const onLever = () => {
+    const k = L.knob.getWorldPosition(V(0, 0, 0)), d = V(column.x - worker.pos.x, 0, column.z - worker.pos.z).normalize();
+    return { palm: k.add(V(0, 0.03, 0)), fingers: d.add(V(0, -0.55, 0)), normal: V(0, -1, 0) };
+  };
+  for (const [t0, t1] of [[13.7, 16.95], [20.0, 23.4]]) {
+    bend(worker, t0, t1 - 0.1, { shL: [-1.05], elL: [-0.5], torso: [0.1] });   // (the arm up and forward, a little lean: then the palm onto the knob)
+    grip(worker, 'L', t0 + 0.05, t1, onLever, { ein: 0.45, eout: 0.4 });
+  }
+  // the crate: both palms on its top's near edge, wherever it hangs; how far down it has come (0 at his chest, 1 on
+  // the deck) bends him with it
+  const crateTop = () => { const c = L.crate.getWorldPosition(V(0, 0, 0)); c.y += 0.4; return c; };
+  const crateLow = () => Math.min(1, Math.max(0, (worker.pos.y + 1.3 - crateTop().y) / 0.48));
+  const onCrate = (sd) => () => {
+    const c = crateTop(), n = V(worker.pos.x - c.x, 0, worker.pos.z - c.z).normalize(), tn = V(n.z, 0, -n.x);   // (tn: his right)
+    return { palm: c.addScaledVector(n, 0.33).addScaledVector(tn, sd * 0.19).add(V(0, 0.006, 0)), fingers: n.clone().negate().add(V(0, -0.25, 0)), normal: V(0, -1, 0) };
+  };
+  const onHook = () => {
+    const h = L.hook.getWorldPosition(V(0, 0, 0)), n = V(worker.pos.x - h.x, 0, worker.pos.z - h.z).normalize();
+    return { palm: h.add(V(0, -0.09, 0)).addScaledVector(n, 0.065), fingers: n.clone().multiplyScalar(-0.4).add(V(0, -1, 0)), normal: n.clone().negate() };
+  };
+  grip(worker, 'L', 25.6, 28.0, onCrate(-1), { ein: 0.5, eout: 0.35 });
+  grip(worker, 'R', 25.6, 27.45, onCrate(1), { ein: 0.5, eout: 0.3 });
+  grip(worker, 'R', 27.2, 28.0, onHook, { ein: 0.3, eout: 0.35 });
+  // the lamp: the screwdriver's tip in the screw on the stem's collar (interiors.js: R.table.lamp), its shaft in line
+  // with the screw; each stroke turns the screw in with his wrist (a radian), then the tip lifts a hair and the wrist
+  // comes back for the next. The strokes run while he is at it (not while he looks over at Arthur). His left hand
+  // stays on the lamp's shade the whole time.
+  const LMP = TB.lamp, sdv = TB.screwdriver;
+  const tipLocal = V(0, -0.28, 0), axisLocal = V(0, -1, 0);   // (the tool's tip and the way it points, in his hand: set in prepare, once he holds it)
+  const SCREW = { T: 1.15, turn: 1.0, win: [[29.0, 31.5], [35.6, 36.4], [37.45, 46.0]] };
+  const screwing = (tt) => {
+    let act = 0; for (const [a, b] of SCREW.win) act += Math.max(0, Math.min(tt, b) - a);
+    const n = Math.floor(act / SCREW.T), ph = act / SCREW.T - n, fwd = sm(ph / 0.5), back = sm((ph - 0.62) / 0.26);
+    return { theta: (n + fwd) * SCREW.turn, roll: SCREW.turn * (fwd - back - 0.5), lift: 0.007 * sm((ph - 0.5) / 0.1) * (1 - sm((ph - 0.9) / 0.1)) };
+  };
+  const SCREW_END = screwing(99).theta;
+  const setScrew = (th) => { LMP.screw.rotation.z = -th; LMP.screw.position.copy(LMP.at).addScaledVector(LMP.n, LMP.out * (1 - th / SCREW_END)); };
+  track(28.9, 46.1, (k, tt) => setScrew(screwing(tt).theta));
+  const _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion();
+  const onScrew = (tt) => {
+    const st = screwing(tt), aw = LMP.n.clone().negate();
+    const tip = LMP.screw.getWorldPosition(V(0, 0, 0)).addScaledVector(LMP.n, LMP.head + st.lift);
+    _qa.setFromUnitVectors(axisLocal, aw);
+    // (the hand turned round the shaft so the palm faces down and to his left, then by the stroke)
+    const x0 = V(1, 0, 0).applyQuaternion(_qa), want = V(0.55, -0.83, 0);
+    _qb.setFromAxisAngle(aw, Math.atan2(want.dot(aw.clone().cross(x0)), want.dot(x0)) + st.roll).multiply(_qa);
+    return { palm: tip, fingers: V(0, -1, 0).applyQuaternion(_qb), normal: V(1, 0, 0).applyQuaternion(_qb) };
+  };
+  const onShade = () => ({ palm: V(R.center.x + LMP.shade.x, LMP.shade.y + 0.004, R.center.z + LMP.shade.z), fingers: LMP.shadeDir.clone().add(V(0, -0.2, 0)), normal: V(0, -1, 0) });
+  grip(tw, 'R', 28.5, 31.6, onScrew, { ein: 0.35, eout: 0.4, palm: tipLocal });
+  grip(tw, 'R', 35.2, 46.25, onScrew, { ein: 0.45, eout: 0.4, palm: tipLocal });
+  grip(tw, 'L', 28.5, 31.7, onShade, { ein: 0.35, eout: 0.45 });   // (off the lamp while he looks up and answers Arthur: held on, the arm across him hid the screwdriver's point at the boat)
+  grip(tw, 'L', 35.2, 46.3, onShade, { ein: 0.45, eout: 0.45 });
+  // ...and laid down (66.65-67.15): his hand comes to where the screwdriver lies on the table when he lets go — the hand
+  // that holds it at exactly its resting place — so it does not move as it leaves his hand (it jumped 11 cm)
+  const toolDown = (() => {
+    let T = null;
+    return () => {
+      if (T) return T;
+      const hs = tw.rig.j.armR.hand.getWorldScale(V(0, 0, 0)).x || 1;
+      const local = new THREE.Matrix4().compose(sdv.position.clone().multiplyScalar(hs), new THREE.Quaternion().setFromEuler(sdv.rotation), V(1, 1, 1));
+      const lie = new THREE.Matrix4().compose(hv(sdRest.x, sdRest.y, sdRest.z), new THREE.Quaternion().setFromAxisAngle(UP, sdRest.ry), V(1, 1, 1));
+      const hand = lie.multiply(local.invert()), p = V(0, 0, 0), q = new THREE.Quaternion(), sc = V(1, 1, 1);
+      hand.decompose(p, q, sc);
+      return (T = { palm: PALM.clone().applyQuaternion(q).add(p), fingers: V(0, -1, 0).applyQuaternion(q), normal: V(1, 0, 0).applyQuaternion(q) });
+    };
+  })();
+  grip(tw, 'R', 66.7, 67.6, toolDown, { ein: 0.4, eout: 0.4 });
+  // Arthur's boat on its stand (interiors.js: R.boat): his left palm on the deck by the stern, holding the hull; his right
+  // hand round the mast's foot — the mast upright in his fist (fingers ahead, the palm against it from his right). It
+  // rests on the deck by the step as he tries it, goes up as he shows it, comes down over the step and in (home at 36.2:
+  // the click), he holds it there a moment and lets go; then that hand rubs the deck by the bow smooth.
+  const aA = R.npcSpots.arthur.a, aF = V(Math.sin(aA), 0, Math.cos(aA)), aLeft = V(aF.z, 0, -aF.x);
+  const hullAxis = V(Math.cos(BT.ry), 0, -Math.sin(BT.ry));
+  const hullPt = (lx, lz, up = 0) => V(BT.x + Math.cos(BT.ry) * lx + Math.sin(BT.ry) * lz, BT.deck + up, BT.z - Math.sin(BT.ry) * lx + Math.cos(BT.ry) * lz);
+  const mastFoot = hv(mastFitted.x, mastFitted.y, mastFitted.z);
+  const palmSeat = mastFoot.clone().addScaledVector(UP, 0.045).addScaledVector(aLeft, -0.012);
+  // the mast in his hand, such that with his palm at palmSeat it stands exactly where it is fitted (so letting go moves nothing)
+  const mastInHand = (() => {
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(aLeft, aF.clone().negate(), UP));
+    const hand = new THREE.Matrix4().compose(palmSeat.clone().sub(PALM.clone().applyQuaternion(q)), q, V(1, 1, 1));
+    const fit = new THREE.Matrix4().compose(mastFoot, new THREE.Quaternion().setFromAxisAngle(UP, mastFitted.ry), V(1, 1, 1));
+    const p = V(0, 0, 0), r = new THREE.Quaternion(), sc = V(1, 1, 1);
+    hand.invert().multiply(fit).decompose(p, r, sc);
+    return { p, r };
+  })();
+  const mastHand = (tt) => {
+    const nat = ar.rig.j.armR.hand.localToWorld(PALM.clone());   // (where the action itself has his palm: held up to show)
+    const show = sm((tt - 31.15) / 0.45) * (1 - sm((tt - 35.0) / 0.7));
+    const lift = tt < 33 ? 0.008 : 0.075 * (1 - sm((tt - 35.75) / 0.45)), side = tt < 33 ? 0.032 : 0;
+    return { palm: palmSeat.clone().addScaledVector(UP, lift).addScaledVector(hullAxis, side).lerp(nat, show), fingers: aF, normal: aLeft };
+  };
+  const onDeck = (lx, rub = 0) => (tt) => ({ palm: hullPt(lx + rub * Math.sin(tt * 5.2), 0, 0.004), fingers: aF.clone().add(V(0, -0.25, 0)), normal: V(0, -1, 0) });
+  grip(ar, 'R', 28.5, 36.95, mastHand, { ein: 0.35, eout: 0.4 });
+  grip(ar, 'R', 36.85, 53.85, onDeck(0.105, 0.028), { ein: 0.5, eout: 0.35 });
+  grip(ar, 'R', 58.2, OPENING_LENGTH, onDeck(0.105, 0.028), { ein: 0.45, eout: 0.01 });
+  grip(ar, 'L', 28.5, 31.3, onDeck(-0.115), { ein: 0.35, eout: 0.4 });
+  grip(ar, 'L', 34.9, 53.85, onDeck(-0.115), { ein: 0.5, eout: 0.35 });
+  grip(ar, 'L', 58.2, OPENING_LENGTH, onDeck(-0.115), { ein: 0.45, eout: 0.01 });
+  // Zoé's tray: her palms on the soil of the two pots she is filling, pressing in turn
+  const onPot = (i, ph) => (tt) => { const p = K.pots[i]; return { palm: V(p.x, p.y + 0.006 - 0.006 * Math.max(0, Math.sin(tt * 4.2 + ph)), p.z), fingers: V(0, -0.45, -1), normal: V(0, -1, 0) }; };
+  grip(zo, 'L', 28.5, 39.65, onPot(0, 0), { ein: 0.35, eout: 0.4 });
+  grip(zo, 'R', 28.5, 39.65, onPot(1, Math.PI), { ein: 0.35, eout: 0.4 });
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
@@ -726,7 +829,7 @@ export function playOpening(story) {
   });
   // the decision
   at(66.65, () => play(tw, 'setDown'));
-  bend(tw, 66.75, 67.45, { torso: [0.34], kneeL: [0.14], kneeR: [0.14], hipL: [-0.07], hipR: [-0.07], shR: [0.06], elR: [0.4] });   // (down to the table top)
+  bend(tw, 66.75, 67.45, { torso: [0.5], kneeL: [0.2], kneeR: [0.2], hipL: [-0.1], hipR: [-0.1], hips: -0.045, shR: [0.06], elR: [0.4] });   // (down to the table top; NO-AIR: lower, so his hand gets all the way down to where the tool lies)
   at(67.15, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
   at(68.85, () => look(zo, tapAt()));
   at(69.0, () => play(zo, 'reach'));
@@ -804,7 +907,7 @@ export function playOpening(story) {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
     if (a && beat) gest(a, tt + (beat.at ?? 0.15), beat.d ?? Math.min(d - 0.5, voiceSeconds(t(key), d, 'n_' + id)), beat.o);
   };
-  say(14.6, 'resident', 'op_res_1', 2.3, resident, { o: { shL: [-0.32], shR: [-0.32], elL: [-1.05], elR: [-1.05], head: [0.06] } });   // (both forearms up: asking)
+  say(14.6, 'resident', 'op_res_1', 2.3, resident, { at: 0.35, d: 1.2, o: { shR: [-0.55, 0, -0.3], elR: [-2.0], head: [0.03, 0, 0.07] } });   // (NO-AIR: a thumb back over his shoulder at the harbour row; it was both forearms held up in front of him, as if he carried something)
   say(16.95, 'worker', 'op_wk_1', 2.6, worker);   // (his hand stays on the lift's control; ends with the cut to the drill at 19.6)
   say(24.0, 'resident', 'op_res_2', 1.7, resident, { at: 0.1, d: 1.1, o: { shL: [-0.62, 0, 0.22], elL: [-0.45], head: [-0.08, 0, 0.06] } });   // (an open hand up, toward the hum)
   say(25.8, 'worker', 'op_wk_2', 2.4, worker);
@@ -840,9 +943,13 @@ export function playOpening(story) {
       // the hero is at home (out of sight while the camera is at the harbour)
       put(tw, twSpot.x, twSpot.z, 0, 'tinker');
       hold(TB.screwdriver, tw, [0, -0.05, 0.02], [-0.3, 0, Math.PI / 2]);
+      tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
+      setScrew(0);
       put(zo, zoTray.x, zoTray.z, Math.PI, 'potting');
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
-      hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
+      { const hand = ar.rig.j.armR.hand; ar.rig.root.updateMatrixWorld(true);   // (in his fist, upright: mastInHand)
+        const hs = hand.getWorldScale(V(0, 0, 0)).x || 1;
+        hand.add(BT.mast); BT.mast.position.copy(mastInHand.p).divideScalar(hs); BT.mast.quaternion.copy(mastInHand.r); BT.mast.scale.setScalar(1 / hs); }
       zoe.setPresent(true);
       R.group.add(flats); temps.push(flats); setFade(1);
       WR.group.add(caveFlat); temps.push(caveFlat);
@@ -864,7 +971,7 @@ export function playOpening(story) {
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
       for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
-      for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; if (a._plantLite != null) a.rig.plantLite = a._plantLite; }
+      for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; if (a._plantLite != null) a.rig.plantLite = a._plantLite; if (a._contact) a.rig.contact = a._contact; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
       document.querySelector('#cine-title').classList.remove('show');
@@ -872,7 +979,7 @@ export function playOpening(story) {
       if (g.room !== R) g.enterRoom('house', twEnd, true, true);
       cine.focus = null;
       rest(TB.screwdriver, R.group, sdRest);
-      rest(BT.mast, R.group, mastFitted);
+      rest(BT.mast, R.group, mastFitted); setScrew(SCREW_END);
       handle.rotation.y = 0; water(0); steam.forEach((s) => (s.visible = false));
       L.pose(1); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
       W.station.setActive(stationWas);

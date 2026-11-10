@@ -11,6 +11,7 @@ import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
 import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { workHands } from './workhands.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -869,6 +870,7 @@ export class NPC extends Actor {
     this.forceAnim = def.anim || null;
     this.present = true;
     this.rig.plantIfFits();   // (ANIM-POLISH-3: the stance foot held in the walk, two-step stops, stepping turns: Rig._plant)
+    workHands(game, this);    // (NO-AIR: a working hand is put on what stands there: workhands.js)
   }
   setPresent(on) {
     this.present = on;

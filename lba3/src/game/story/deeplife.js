@@ -60,7 +60,7 @@ export class UndergroundLife extends ChapterBase {
     const st = R.crew?.tolli;
     if (!st?.length) return null;
     const anims = ['tinker', 'reach', 'tinker'], T = [];
-    st.forEach((s, i) => T.push({ op: 'call', fn: (a) => { a.forceAnim = anims[i]; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.55 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 }));
+    st.forEach((s, i) => T.push({ op: 'call', fn: (a) => { a.forceAnim = anims[i]; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.55, near: 0.12 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 }));
     T.push({ op: 'loop' });
     return { x: st[0].x, z: st[0].z, a: st[0].a, anim: 'tinker', track: T };
   }
