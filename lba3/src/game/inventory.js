@@ -187,7 +187,9 @@ export class Inventory {
     return t('inv_hint_keys', { move, close });
   }
   // a slot's picture: the item's own model, a still three-quarter view (painted icon without WebGL)
-  pic(it) { return stage.thumb(lookOf(it.id, it.icon)) || itemIcon(it.icon); }
+  pic(it) { return stage.thumb(this.look(it)) || itemIcon(it.icon); }
+  // an item's look (itemlook.js); the ball's is in the colour of his level (EQUIP-1: ball, ball2..ball4)
+  look(it) { return it.id === 'ball' && it.n > 1 ? 'ball' + Math.min(4, it.n) : lookOf(it.id, it.icon); }
   render() {
     const g = this.game;
     const K = (a) => g.hud?.key?.(a) ?? keyLabel(keyFor(a));
@@ -208,7 +210,7 @@ export class Inventory {
     this.el.querySelector('.inv-close').addEventListener('click', () => { this.closeReq = true; });
     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
     // the selected item turns (LBA2: a turn in 4.1 s), in the large view and in its slot
-    if (sel) { const look = lookOf(sel.id, sel.icon); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
+    if (sel) { const look = this.look(sel); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
     else stage.spin(null);
   }
   nav(input) {
