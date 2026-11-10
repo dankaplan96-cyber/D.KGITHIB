@@ -63,6 +63,17 @@ const ok = (name, cond, info) => { checks.push([name, !!cond, info]); console.lo
   await p.evaluate(() => { continueGame(); }); await p.waitForTimeout(300);
   ok('save and load', await p.evaluate(lv => player.level === lv, lv));
 
+  // 8. a transfer code carries the save across; a charm changes a rule; the town map draws
+  const xf = await p.evaluate(async () => { dialogue = null; gameState = 'OVERWORLD'; player.gold = 4321; charmGive('needle'); player.charm = 'needle';
+    const code = await saveCodeMake(); player.gold = 1; player.charm = null; const back = await saveCodeRead(code);
+    let bad = false; try { await saveCodeRead('BOFFI1:abc'); } catch (e) { bad = true; }
+    return code.startsWith('BOFFI') && back.gold === 4321 && back.charm === 'needle' && bad; });
+  ok('transfer code', xf);
+  await p.evaluate(() => { openGameMenu(); launchGameMenu('map'); }); await p.waitForTimeout(200);
+  ok('town map', await p.evaluate(() => document.querySelectorAll('#townmap-body .tm-node').length >= 20));
+  await p.evaluate(() => { pressB(); pressB(); });
+  ok('side quests', await p.evaluate(() => Object.keys(QUESTS).length >= 12 && Object.values(QUESTS).every(q => { const [m, k] = q.giver.split(':'); return MAPS[+m].npc && MAPS[+m].npc[k]; })));
+
   ok('no page errors', errs.length === 0, errs.join(' | ').slice(0, 400));
   await b.close();
   const failed = checks.filter(c => !c[1]).length;

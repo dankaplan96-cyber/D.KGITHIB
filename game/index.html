@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- בופי מן RPG V61 -->
+<!-- בופי מן RPG V62 -->
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -425,6 +425,13 @@ body.panel-open #scrim{display:block;animation:scrimIn .2s ease-out}
 #ach-toast{z-index:38}
 #coach{position:absolute;top:27%;left:50%;transform:translate(-50%,8px);max-width:min(440px,84%);padding:9px 14px;border-radius:12px;border:1px solid #7edcf0;background:#0b1626ee;color:#e8f4ff;font-size:12.5px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:30;box-shadow:0 10px 28px #000a}
 #coach.show{opacity:1;transform:translate(-50%,0)}
+.sum-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0 16px;max-width:620px;width:100%}
+.sum-cell{background:#0e1a2b;border:1px solid #33465e;border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.sum-cell span{font-size:18px}.sum-cell b{font-size:17px;color:var(--gold)}.sum-cell small{font-size:9.5px;color:#94a3b8;line-height:1.2}
+.code-box{width:100%;min-height:64px;margin:8px 0 4px;padding:8px;border-radius:10px;border:1px solid #33465e;background:#08111d;color:#cfe6ff;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;word-break:break-all;resize:vertical}
+.code-box:focus-visible{outline:2px solid #7edcf0;outline-offset:1px}
+.sum-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+@media(max-width:560px){.sum-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .shop-card.worn{outline:2px solid var(--tint);box-shadow:0 0 16px color-mix(in srgb,var(--tint) 45%,transparent)}
 .st-charm{font:inherit;color:inherit;background:#122033;border:1px solid #33465e;border-radius:999px;padding:3px 10px;cursor:pointer}
 .st-charm.on{border-color:var(--gold);background:#2a2210}
@@ -507,7 +514,8 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 
   <div id="victory-modal" class="modal" style="display:none">
     <h1>🏆 ניצחת את היום!</h1><p id="victory-text"></p>
-    <button class="btn-main" onclick="startEvening()">הביתה, לקנבס 🌙</button>
+    <div id="victory-stats" class="sum-grid"></div>
+    <div class="sum-row"><button class="btn-main" onclick="startEvening()">הביתה, לקנבס 🌙</button><button class="system-btn" onclick="shareCard()">📸 כרטיס לשיתוף</button></div>
   </div>
 
   <div id="act2-modal" class="modal" style="display:none">
@@ -577,7 +585,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
       <button class="game-menu-card" id="menu-tower-card" onclick="launchGameMenu('tower')"><b>🗼 מגדל</b><small id="menu-tower-sub">50 קומות של אתגר</small></button>
       <button class="game-menu-card" onclick="launchGameMenu('settings')"><b>⚙️ הגדרות</b><small>צליל, קושי ונגישות</small></button>
     </div>
-    <div class="menu-footer"><span><span dir="ltr">V61</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
+    <div class="menu-footer"><span><span dir="ltr">V62</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
   </div>
 
   <div id="progress-panel" class="panel">
@@ -610,7 +618,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 
 <script>
 /* =========================================================
-   בופי מן RPG V61 (Hebrew dialogue, character voices and situational humor)
+   בופי מן RPG V62 (Hebrew dialogue, character voices and situational humor)
    ========================================================= */
 const canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d'); // Temporarily redirected only while building a map layer.
@@ -4085,6 +4093,13 @@ function battleHeroPose() {
     return { rot: .16 * k * m, sx: 1 + (.09 * wind + .06 * Math.max(0,k)) * m,
       sy: 1 - (.1 * wind + .04 * Math.max(0,k)) * m, arm: -1.25 * Math.max(0,k) };
   }
+  if (a.type === 'throw') {
+    // paint is flung overhand, a beam is pointed and held, a leaf is swept up and let go
+    const snap = t < .35 ? -Math.sin(t / .35 * Math.PI / 2) : -1 + easeOut((t - .35) / .65) * 2;
+    if (a.kind === 'paint') return { rot: .2 * snap * m, sx: 1 + .05 * pulse * m, sy: 1 - .05 * pulse * m, arm: 1.1 - (snap + 1) * 1.5 };
+    if (a.kind === 'beam') return { rot: .08 * pulse * m, sx: 1 + .08 * pulse * m, sy: 1 - .06 * pulse * m, arm: -1.55 * Math.min(1, t * 4) };
+    return { rot: -.06 * pulse * m, sx: 1 - .03 * pulse * m, sy: 1 + .07 * pulse * m, arm: -.3 - 1.9 * easeOut(t) };
+  }
   if (a.type === 'charge') return { sx: 1 + .07 * pulse * m, sy: 1 - .08 * pulse * m, arm: -.5 * pulse };
   if (a.type === 'guard') return { rot: -.05 * pulse * m, sx: 1 + .07 * pulse * m, sy: 1 - .06 * pulse * m, arm: -.9 };
   if (a.type === 'hurt' || a.type === 'dodge') return { rot: -.16 * pulse * m, sx: 1 - .06 * pulse * m, sy: 1 + .04 * pulse * m };
@@ -4125,6 +4140,10 @@ function heroBattlePos() {
     const t = a.t / a.dur;
     x = HERO_HOME.x - Math.sin(t * Math.PI) * (a.type === 'guard' ? 5 : 18) * (player.reduceFx ? .25 : 1);
     y = HERO_HOME.y + Math.sin(t * Math.PI) * 3;
+  } else if (a && a.type === 'throw') {
+    const t = clamp(a.t / a.dur, 0, 1), m = player.reduceFx ? .25 : 1;
+    x = HERO_HOME.x + (t < .35 ? -7 * Math.sin(t / .35 * Math.PI / 2) : -7 + 19 * Math.sin((t - .35) / .65 * Math.PI)) * m * BL.s;
+    y = HERO_HOME.y - (a.kind === 'leaf' ? Math.sin(t * Math.PI) * 6 * m : 0);
   } else if (a && a.type === 'charge') {
     y = HERO_HOME.y + Math.sin(clamp(a.t / a.dur, 0, 1) * Math.PI) * (player.reduceFx ? 1 : 3);
   }
@@ -4414,7 +4433,7 @@ function renderBattle() {
 
   // ghosts (after-images) behind the hero
   (battle.ghosts || []).forEach(gh => {
-    drawHero(ctx, gh.x, gh.y, 46 * S, { facing: 'right', alpha: (gh.life / gh.max) * .38, glow: false });
+    drawHero(ctx, gh.x, gh.y - 3 * S, 58 * S, { facing: 'right', alpha: (gh.life / gh.max) * .38, glow: false });
   });
 
   const inK = 1 - easeOut(clamp((battle.introT || 0) / 520, 0, 1));
@@ -4439,7 +4458,7 @@ function renderBattle() {
 
   }
   const breathe = battle.heroAnim ? 0 : Math.sin(clock / 420) * 1.6 * S;
-  drawHero(ctx, hp.x, hp.y + breathe, 46 * S, {
+  drawHero(ctx, hp.x, hp.y + breathe - 3 * S, 58 * S, {
     facing: 'right', phase: clock / 90, pose: battleHeroPose(),
     walking: !!(battle.heroAnim && battle.heroAnim.type === 'lunge'),
     flash: !!(battle.heroFlash > 0) && (battle.heroFlash % 100) > 50
@@ -7248,7 +7267,7 @@ function useTechnique(moveId) {
   const projKind = mv.type === 'vigor' ? 'paint' : mv.type === 'focus' ? 'beam' : mv.type === 'calm' ? 'leaf' : null;
   schedule(220, () => {
     if (projKind) {                      // coloured techniques are thrown, not punched
-      battle.heroAnim = { type: 'charge', t: 0, dur: 180 };
+      battle.heroAnim = { type: 'throw', kind: projKind, t: 0, dur: 320 };
       launchProjectile(projKind, ti.color, 180);
       return;
     }
@@ -7842,6 +7861,14 @@ function showVictoryModal() {
     (finalDay ? 'הציור החמישי מחכה בבית. אחריו, התערוכה, ואחריה כנראה תנומה.'
       : '🖼️ על הקיר ' + player.paintings.length + '/5 ציורים. הציור של היום מחכה בבית: הוא לא ממהר, אבל גם לא מצייר את עצמו.' +
         (player.day === FINAL_DAY - 1 ? ' מחר היום האחרון.' : ''));
+  // the day in numbers: what changed since this morning
+  const st = player.stats || {}, snap = player.daySnap || {}, d = (k, v) => Math.max(0, (v || 0) - (snap[k] || 0));
+  const cell = (ico, val, lbl) => '<div class="sum-cell"><span>' + ico + '</span><b>' + val + '</b><small>' + lbl + '</small></div>';
+  document.getElementById('victory-stats').innerHTML =
+    cell('⚔️', d('wins', st.wins), 'ניצחונות היום') + cell('⏱', d('perfects', st.perfects), 'תזמונים מושלמים') +
+    cell('😤', d('irkWins', st.irkWins), 'ניצחונות עצבים') + cell('⬆️', '+' + Math.max(0, player.level - (snap.level || 1)), 'רמות') +
+    cell('💰', '₪' + Math.max(0, player.gold - (snap.gold || 0)), 'נצבר היום') + cell('🗺️', completionPct() + '%', 'מהעולם');
+  player.daySnap = { wins: st.wins || 0, perfects: st.perfects || 0, irkWins: st.irkWins || 0, level: player.level, gold: player.gold };
   document.getElementById('victory-modal').style.display = 'flex';
   maybeOfferLearn();
 }
@@ -8617,8 +8644,8 @@ function renderSettingsBody() {
     '<div class="panel-item settings-row"><div><small style="color:#94a3b8">' + (saveOk ? 'המשחק נשמר לבד: בכל התקדמות, כל 20 שניות, וכשיוצאים מהאפליקציה. שמירה אחרונה: ' + fmtAgo(lastSaveAt || player.savedAt)
       : '⚠️ השמירה נכשלה במכשיר הזה. כדאי להוריד קובץ גיבוי.') + '</small></div>' +
     '<div class="diff-row"><button class="system-btn" onclick="exportSave()">📤 הורד גיבוי</button>' +
-    '<button class="system-btn" onclick="importSaveClick()">📥 טען גיבוי</button></div>' +
-    (settingsNote ? '<div class="settings-desc" style="color:#fde68a">' + settingsNote + '</div>' : '') + '</div>' +
+    '<button class="system-btn" onclick="importSaveClick()">📥 טען גיבוי</button></div>' + saveCodeBoxHtml() +
+    (settingsNote && !codeBoxOpen ? '<div class="settings-desc" style="color:#fde68a">' + settingsNote + '</div>' : '') + '</div>' +
     '<div class="panel-item settings-row"><div><strong>איפוס התקדמות</strong><br>' +
     '<small style="color:#94a3b8">מוחק את השמירה הזאת וחוזר למסך הפתיחה. לא ניתן לבטל.</small></div>' +
     '<button class="system-btn danger-btn" onclick="' + (resetArmed ? 'confirmReset()' : 'armReset()') + '">' +
@@ -12105,6 +12132,60 @@ function renderTownMap() {
     '<small>' + (st.open ? (e ? e.note : '') : st.why) + (MAPS[townSel].lv && st.open ? ' · רמות ' + MAPS[townSel].lv[0] + '–' + MAPS[townSel].lv[1] : '') + '</small></div>' +
     (here ? '<span class="tm-here">אתה כאן</span>' : canFlyTo(townSel) ? '<button class="system-btn" onclick="flyTo(' + townSel + ')">🪁 טוס</button>' : '') + '</div>';
   document.getElementById('townmap-body').innerHTML = svg + card;
+}
+
+/* =========================================================
+   TRANSFER CODE — the whole save as a block of text, to carry a game to another phone or browser
+   without a file: copy it here, paste it there.
+   ========================================================= */
+let codeBoxOpen = false;
+async function saveCodeMake() {
+  saveNow();
+  const raw = new TextEncoder().encode(JSON.stringify({ game: 'boffiman', v: player.v, player }));
+  let bytes = raw, tag = 'BOFFI0:';
+  try { if (typeof CompressionStream === 'function') {
+    const buf = await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+    bytes = new Uint8Array(buf); tag = 'BOFFI1:';
+  } } catch (e) { bytes = raw; tag = 'BOFFI0:'; }
+  let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return tag + btoa(bin);
+}
+async function saveCodeRead(code) {
+  code = String(code || '').replace(/\s+/g, '');
+  const tag = code.slice(0, 7), bin = atob(code.slice(7));
+  let bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+  if (tag === 'BOFFI1:') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  else if (tag !== 'BOFFI0:') throw new Error('bad');
+  const o = JSON.parse(new TextDecoder().decode(bytes)), s = o && o.game === 'boffiman' ? o.player : null;
+  if (!s || typeof s !== 'object' || s.level == null) throw new Error('bad');
+  return s;
+}
+async function copySaveCode() {
+  try {
+    const code = await saveCodeMake();
+    codeBoxOpen = true; renderSettingsBody();
+    const ta = document.getElementById('save-code'); if (ta) { ta.value = code; ta.select(); }
+    let ok = false; try { await navigator.clipboard.writeText(code); ok = true; } catch (e) { try { ok = document.execCommand('copy'); } catch (e2) {} }
+    settingsNote = ok ? '📋 קוד ההעברה הועתק (' + code.length + ' תווים). הדבק אותו במכשיר השני, באותו מסך.' : 'הקוד מופיע בתיבה. סמן והעתק אותו ידנית.';
+    const n = document.getElementById('save-code-note'); if (n) n.textContent = settingsNote;
+  } catch (e) { settingsNote = 'לא ניתן ליצור קוד במכשיר הזה. אפשר להוריד קובץ גיבוי במקום.'; renderSettingsBody(); }
+}
+function toggleCodeBox() { codeBoxOpen = !codeBoxOpen; settingsNote = ''; renderSettingsBody(); const ta = document.getElementById('save-code'); if (ta && codeBoxOpen) ta.focus(); }
+async function loadSaveCode() {
+  const ta = document.getElementById('save-code');
+  try {
+    const p = normalizePlayer(await saveCodeRead(ta ? ta.value : ''));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(p)); localStorage.setItem(SAVE_BAK, JSON.stringify(p));
+    settingsNote = ''; codeBoxOpen = false; closeSettings(); continueGame();
+    showDialogue('📥 המשחק הועבר: יום ' + p.day + ', רמה ' + p.level + '.');
+  } catch (e) { settingsNote = 'הקוד לא תקין או לא שלם. ודא שהעתקת את כולו, מ-BOFFI ועד הסוף.'; const n = document.getElementById('save-code-note'); if (n) n.textContent = settingsNote; else renderSettingsBody(); }
+}
+function saveCodeBoxHtml() {
+  return '<div class="diff-row"><button class="system-btn" onclick="copySaveCode()">📋 העתק קוד העברה</button>' +
+    '<button class="system-btn" onclick="toggleCodeBox()">⌨️ הדבק קוד</button></div>' +
+    (codeBoxOpen ? '<textarea id="save-code" class="code-box" dir="ltr" spellcheck="false" autocomplete="off" aria-label="קוד העברה" placeholder="BOFFI1:..."></textarea>' +
+      '<div class="diff-row"><button class="system-btn" onclick="loadSaveCode()">📥 טען מהקוד</button></div>' +
+      '<div class="settings-desc" id="save-code-note" style="color:#fde68a">' + (settingsNote || 'מעביר את כל ההתקדמות לטלפון או לדפדפן אחר. טעינה מחליפה את השמירה הנוכחית כאן.') + '</div>' : '');
 }
 
 /* A tap that closes a message can open a window under the same finger; the browser then delivers that
