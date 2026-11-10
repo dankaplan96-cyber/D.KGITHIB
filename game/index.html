@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- בופי מן RPG V59 -->
+<!-- בופי מן RPG V60 -->
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -559,7 +559,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
       <button class="game-menu-card" id="menu-tower-card" onclick="launchGameMenu('tower')"><b>🗼 מגדל</b><small id="menu-tower-sub">50 קומות של אתגר</small></button>
       <button class="game-menu-card" onclick="launchGameMenu('settings')"><b>⚙️ הגדרות</b><small>צליל, קושי ונגישות</small></button>
     </div>
-    <div class="menu-footer"><span><span dir="ltr">V59</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
+    <div class="menu-footer"><span><span dir="ltr">V60</span> · ⏱️ <span id="menu-time"></span></span><span>₪<span id="ui-gold">120</span></span></div>
   </div>
 
   <div id="progress-panel" class="panel">
@@ -592,7 +592,7 @@ body.force-land .game-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 
 <script>
 /* =========================================================
-   בופי מן RPG V59 (Hebrew dialogue, character voices and situational humor)
+   בופי מן RPG V60 (Hebrew dialogue, character voices and situational humor)
    ========================================================= */
 const canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d'); // Temporarily redirected only while building a map layer.
@@ -1872,7 +1872,11 @@ const BALANCE = {
   // Gen-3 pacing: longer fights, EXP mostly from trainers, money mostly from trainers
   enemyHpMult: 1.6, wildExpMult: 1, wildGoldMult: .3, trainerExpMult: 1.5, trainerGoldMult: 1.5,   // Gen 3: trainers pay ×1.5   // routes now carry many trainers, so each pays less
   paraChance: .25, stageMax: 6, fieldStressSteps: 8,
-  finaleHp: 1.2, finaleAtk: 1.1,                // day 5's true form
+  finaleHp: 1.45, finaleAtk: 1.25,              // day 5's true form
+  masterHp: .9, masterAtk: .95,                 // masters: still the wall of each area, but one a careful player gets over
+  trainerHp: 1.15, trainerAtk: 1.1,             // a named opponent is a step above the same creature in the wild
+  blockPerfect: .65, blockGood: .85,            // what a timed guard leaves of an incoming blow
+  peeveMult: 2, annoyStreak: .2, waryMult: .6,  // nerves: the sore spot, the running gag, and an enemy who has already blown up once
   dazzleTurns: 2, dazzleAtk: .3
 };
 const FLOW_MAX = 100;
@@ -4914,7 +4918,7 @@ const CUTSCENES = {
     { art: 'street', who: 'בופי מן', text: "\"אם אני כבר תקוע פה, לפחות אגיע עם רעיון לציור.\"" },
     { art: 'street', who: "טיפ לקרב", text: "🎨 התז צבע חזק משרבוט. הגנה מחזירה AP ומקטינה את המכה הבאה. ובתיק יש בופיפן, לימים שהפילוסופיה לא מספיקה." },
     { art: 'street', who: "טיפ לקרב", text: "🌈 כל פגיעה, כל מכה שספגת וכל עקיצה טובה ממלאות זרימה. כשהמד מלא היא מחכה בטכניקות. כמו השראה: לא באה כשקוראים לה, אבל אפשר להתכונן." },
-    { art: 'street', who: "טיפ לקרב", text: "⏱ בכל מכה טבעת נסגרת על היעד. הקשה בדיוק בזמן: +25% נזק כשאתה תוקף, וכמעט חצי מהנזק נחסם כשתוקפים אותך. מי שמפספס לא מפסיד כלום." },
+    { art: 'street', who: "טיפ לקרב", text: "⏱ בכל מכה טבעת נסגרת על היעד. הקשה בדיוק בזמן: +25% נזק כשאתה תוקף, ושליש פחות נזק נחסם כשתוקפים אותך. מי שמפספס לא מפסיד כלום." },
     { art: 'street', who: "טיפ לקרב", text: "😤 לעצבן זה נשק שני: מחזיר אנרגיה, מקפיא, ומי שמתפרץ פעמיים פשוט הולך. ניצחון על מישהו עצבני משלם יותר. סבלנות היא נשק, וגם חוסר סבלנות, כשהוא של מישהו אחר." }
   ],
   office_first: [
@@ -6920,6 +6924,12 @@ function startBattle(key, opts) {
   if (opts && opts.tower) towerTune(enemy, opts.tower);
   if (opts && opts.daily) { dailyToday().mod.apply(enemy); enemy.name = '📅 ' + enemy.name; }
   initEnemyGimmick(enemy);
+  if (opts && opts.trainer && !enemy.master && !enemy.boss && !opts.tower && !opts.daily) {
+    enemy.maxHp = enemy.hp = Math.round(enemy.hp * BALANCE.trainerHp); enemy.atk = Math.round(enemy.atk * BALANCE.trainerAtk); enemy.sat = Math.round(enemy.sat * BALANCE.trainerAtk);
+  }
+  if (enemy.master && !(opts && (opts.tower || opts.daily))) {
+    enemy.maxHp = enemy.hp = Math.round(enemy.hp * BALANCE.masterHp); enemy.atk = Math.round(enemy.atk * BALANCE.masterAtk); enemy.sat = Math.round(enemy.sat * BALANCE.masterAtk);
+  }
   if (key === 'burnout' && player.day >= FINAL_DAY && !player.endless) {
     enemy.finale = true; enemy.name = 'השחיקה, בלי מסכות'; enemy.icon = '🌑';
     // the last gym leader: tougher than the daily curve, so five days of journey still end in a real fight
@@ -7473,7 +7483,7 @@ function enemyTurn() {
     if (!battle) return;
     const blocked = timingResult();
     if (blocked) {
-      dmg = Math.max(1, Math.round(dmg * (blocked === 'perfect' ? .55 : .8)));
+      dmg = Math.max(1, Math.round(dmg * (blocked === 'perfect' ? BALANCE.blockPerfect : BALANCE.blockGood)));
       addFloater(HERO_HOME.x, HERO_HOME.y - 62, blocked === 'perfect' ? 'חסימה מושלמת!' : 'חסימה', { color: blocked === 'perfect' ? '#fde047' : '#7dd3fc', size: 15, rtl: true, life: 900, pop: true });
       if (blocked === 'perfect') { addFlow(6); battle.supportFx = { type: 'guard', t: 0, dur: 450 }; }
     }
@@ -7897,7 +7907,7 @@ function irkAdd(amount, fromAnnoy) {
       e.stormOff = true;
       msg += ' 🌋 ' + e.name + ' מאבד את זה לגמרי, זורק את הכול ויוצא בטריקת דלת. ניצחון, בלי מכה אחרונה.';
     } else {
-      e.irk = 40; e.stunTurns = (e.stunTurns || 0) + 2; e.meltT = 3;
+      e.irk = big ? 40 : 20; e.stunTurns = (e.stunTurns || 0) + 2; e.meltT = 3;
       battle.stages.edef = Math.max(-BALANCE.stageMax, (battle.stages.edef || 0) - 1);
       const b = BOSS_IRK[e.key];
       msg += ' 💢 ' + (b ? b.melt : e.name + ' יוצא מהכלים!') + ' קפוא לשני תורות, וכל מכה בו חזקה בחצי.' + (!story && !battle.tower ? ' עוד התפרצות אחת, והוא הולך.' : '');
@@ -7920,11 +7930,12 @@ function doAnnoy(act) {
   player.peeves = player.peeves || {};
   const peeve = !act.boss && act.id === peeveOf(e);
   if (act.boss) { mult = 2.6; flowGain = 16; }
-  else if (peeve) { mult = 2.6; flowGain = 12; tag = ' זה בדיוק מה שמעצבן אותו!'; player.peeves[e.key + ':peeve'] = act.id; }
+  else if (peeve) { mult = BALANCE.peeveMult; flowGain = 12; tag = ' זה בדיוק מה שמעצבן אותו!'; player.peeves[e.key + ':peeve'] = act.id; }
   else if (act.id === unfazedOf(e)) { mult = .35; flowGain = 2; tag = ' זה לא מזיז לו.'; player.peeves[e.key + ':meh'] = act.id; }
   // a running gag: every annoyance in a row lands harder than the last
   const streak = Math.min(3, battle.annoyStreak - 1);
-  if (streak > 0) { mult *= 1 + .3 * streak; tag += ' (רצף ×' + (1 + .3 * streak).toFixed(1) + ')'; }
+  if (streak > 0) { mult *= 1 + BALANCE.annoyStreak * streak; tag += ' (רצף ×' + (1 + BALANCE.annoyStreak * streak).toFixed(1) + ')'; }
+  if (e.meltdowns && !e.boss && !e.finale && !e.master) { mult *= BALANCE.waryMult; tag += ' הוא כבר דרוך, זה נכנס לו פחות.'; }
   if (!act.boss) tag += counterEnemyGimmick(e, act.id);
   const amount = 22 * mult * (e.boss || e.finale ? .8 : 1);
   // annoying someone is restful: בופי מן gets his breath back while they fume

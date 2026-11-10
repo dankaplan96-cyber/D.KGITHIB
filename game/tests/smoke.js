@@ -26,7 +26,7 @@ const ok = (name, cond, info) => { checks.push([name, !!cond, info]); console.lo
 
   // 3. nerves: the sore spot twice over makes an ordinary enemy storm off
   await place(); await p.evaluate(() => startEncounter('alarmClock')); await p.waitForTimeout(2700); await drain(10);
-  for (let r = 0; r < 6; r++) { const ph = await p.evaluate(() => battle ? battle.phase : 'none'); if (ph === 'none') break;
+  for (let r = 0; r < 10; r++) { const ph = await p.evaluate(() => battle ? battle.phase : 'none'); if (ph === 'none') break;
     if (ph === 'MENU') await p.evaluate(() => { player.hp = player.maxHp; const l = annoyList(); battle.phase = 'ANNOY'; battle.annoyIndex = l.findIndex(a => a.id === peeveOf(battle.enemy)); battleConfirm(); });
     await drain(12); }
   await p.waitForTimeout(1200);
