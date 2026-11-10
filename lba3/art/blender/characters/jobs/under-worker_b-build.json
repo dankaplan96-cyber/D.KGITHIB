@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "under: worker_b (.blend)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/blender/characters/under/source/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/under/work/x", "worker_b"] }]
