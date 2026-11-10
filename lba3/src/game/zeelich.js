@@ -1534,6 +1534,10 @@ export function* buildZeelichSteps(scene, physics) {
     SB.build();
     col({ type: 'box', x: sx, z: sz - 0.7, hw: 1.8, hd: 0.45, rot: 0, top: Y0 + 1.0, noStand: true, seeThrough: true });
     for (const [px, pz] of [[-1.6, 0.9], [1.6, 0.9]]) col({ type: 'cyl', x: sx + px, z: sz + pz, r: 0.12, top: Y0 + 2.5, seeThrough: true });
+    // (CAM-COVER, release audit v75 F-8: the canopy is a scenery volume for the play camera, as a porch is — the camera
+    //  rises over it or looks round it, never through it at him; passed through while he stands under it: by Oku's
+    //  stall the camera stood behind it, the cloth over him, his outline showing, and its sight test read him as seen)
+    roomOcc(R, physics.terrain).add({ kind: 'box', x: ox + sx, z: oz + sz, hw: 2.0, hd: 1.25, y0: Y0 + 1.85, y1: Y0 + 2.75, walkUnder: true, name: 'stall canopy' });
     keepClear(sx - 2.2, sz - 1.4, sx + 2.2, sz + 1.4);
   }
 

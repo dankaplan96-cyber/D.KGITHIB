@@ -1104,10 +1104,14 @@ export function* buildWorldSteps(parentScene) {
   if (BATCH.on) batchFor(leafMat).build();
   // (CAM-CROWN, PLAYTHROUGH PT-7: the tall trees' and the pines' crowns reach down to a metre over the ground: the play
   //  camera's sight lines count their dense core, `sight` (camera.js _line), as it counts a wall)
-  const SIGHT = { tall: [0.62, 1.1, 5.6], pine: [0.85, 1.0, 4.6] };   // (core radius, from, to: m at scale 1)
+  // (CAM-COVER, release audit v75 F-8: and the round and fruit trees' crowns, from 1.95 m up — the leaf mass round
+  //  2.85 m, vegetation.js, its lobes 1.0 m out —: by the hopscotch a round crown filled the view between the camera and
+  //  him, his outline showing, while the sight test read him as seen. A line under the crown still sees him. `soft`:
+  //  counted once he has stood a moment, camera.js CH_SOFT_T)
+  const SIGHT = { tall: [0.62, 1.1, 5.6], pine: [0.85, 1.0, 4.6], round: [1.5, 1.95, 3.85], fruit: [1.5, 1.95, 3.85] };   // (core radius, from, to: m at scale 1)
   for (const t of trees) if (!t.gone) {
     const S = SIGHT[t.kind];
-    physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s } } : {}) });
+    physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s, soft: t.kind === 'round' || t.kind === 'fruit' } } : {}) });
   }
   for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;

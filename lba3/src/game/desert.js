@@ -654,6 +654,9 @@ export function* buildDesertSteps(scene, physics) {
     const aw = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), new THREE.MeshStandardMaterial({ map: awningTex('#2f7a9a', '#f4e8d0'), side: THREE.DoubleSide }));
     aw.position.set(sx, gy + 2.45, sz); aw.rotation.x = -Math.PI / 2 + 0.12; aw.castShadow = true; group.add(aw);
     col({ type: 'box', x: sx, z: sz, hw: 1.45, hd: 0.55, top: gy + 0.95, noStand: true, seeThrough: true });
+    // (CAM-COVER, release audit v75 F-8: the awning is a scenery volume for the play camera, as the research post's are —
+    //  passed through while he stands under it: by the trader the camera stood over it, the cloth between it and him)
+    roomOcc(R, physics.terrain).add({ kind: 'box', x: ox + sx, z: oz + sz, hw: 1.65, hd: 0.85, y0: gy + 2.25, y1: gy + 2.7, walkUnder: true, name: 'stall awning' });
   }
 
   // ================================================================ the oasis: pond, palms, reeds

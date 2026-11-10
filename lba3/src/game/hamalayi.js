@@ -808,7 +808,9 @@ export function* buildHamalayiSteps(scene, physics) {
     //  parked glider (story/network.js): a pine at (44.5, −28.5) stood through the wing)
     for (let i = list.length - 1; i >= 0; i--) if (list[i].x > MONAST.x && list[i].x < MONAST.x + 13 && list[i].z > MONAST.z + 10.5 && list[i].z < MONAST.z + 19) list.splice(i, 1);
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
-    for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
+    // (CAM-COVER, release audit v75 F-8: their crowns count for the play camera's sight lines as Citadel's pines do —
+    //  world.js SIGHT, camera.js _line: by Lhar's door a pine filled the view while the sight test read him as seen)
+    for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true, sight: { r: 0.85 * t.s, y0: t.y + 1.0 * t.s, y1: t.y + 4.6 * t.s } });
     const rocks = [];
     for (let i = 0; i < 120; i++) {
       const x = (r0() - 0.5) * 190, z = (r0() - 0.5) * 190;
