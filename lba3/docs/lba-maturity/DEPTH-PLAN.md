@@ -4,6 +4,11 @@ Written 10.11.2026 on `ccr-c1c2c4b9-dep6ed` at `2f1d3890` (artifact v76). **Desi
 nothing was played, no browser was run for it.** It is the "written list per region for the user to approve"
 (`WORKPLAN-2026-11-09.md`, wave E item 9). Every minute below is an **estimate**, not a measurement.
 
+**Build status (10.11.2026, first wave, part 1):** COL-1, HAM-1 and ISL-1 are **built** (`src/game/crystals.js`,
+`src/game/story/depth.js`, `src/game/text/depth.js`; test `tests/depth-1.mjs`; Automated runtime only, SwiftShader, no
+person has played them). The other 24 proposals are not built. Each built item's card below has a "Built" row saying
+where the build differs from the card.
+
 The user's worry (10.11): the main path is estimated at 4–5 h for a first play (the bot plays it in about 1 h 15 min);
 LBA1/LBA2 last several times longer for a newcomer, mostly through optional errands, reasons to go back, secrets and
 puzzles that make the player stop and think. The user's rules for this plan: long chapters are **not** shortened
@@ -188,6 +193,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | none to the story. Flags `dx_jaspa_ask/sorted`; the crystal `sc-jaspa` (COL-1) |
 | Test | a wrong sort (lamp, line, reset), the right sort by input, the crystal and +1 max life; the fork's ring as the alternate |
 | Evidence → principle | sample 3 (a visible feature marks the answer), P1, P2 |
+| **Built** (10.11.2026) | `story/depth.js` (ISL-1), `tests/depth-1.mjs`. Jaspa is a man in the game (his voice and model since ISLES-BAR), so the lines are his. His favour comes after his own line the first time he is spoken to. The tray and the two bins stand on a low bench by the sorting room's back wall (the room's gem table keeps its look); six stones, two warm (a pale crust of small crystals, dust motes rising). Twinsen takes the next stone from the tray and says what he sees (the clue is in the world, not only the journal), then sets it in a bin; both reaches are his right hand on the stone and into the bin ('pickup'). Failure: a warm one in PROJECT flashes the lamp at once (Jaspa: "That one sweats!"); all six in with a cold one in KEEP is the other mistake (his second line); both put every stone back on the tray. A stone in his hand is not saved (back on the tray after a load or if he walks off); the bins are (`dx_jaspa_bins`). The fork: struck by the tray, the warm stones still on it ring. Flags `dx_jaspa_ask/bins/tries/sorted/thx`, owed crystal `dx_owe_sc_jaspa`. |
 
 #### ISL-2 · Tellem's letters (a chain across both planets)
 | | |
@@ -282,6 +288,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | the dome must be in view from the waystone (the art pass checks the shot; if not, the clue moves to Tenpa's lines). Flags `dx_way_ask/face/open` |
 | Test | each wrong face's line, the right face by input, the crystal; Continue keeps the turned face |
 | Evidence → principle | sample 4 (the clue points at a visible landmark), P1 |
+| **Built** (10.11.2026) | `story/depth.js` (HAM-1), `tests/depth-1.mjs`. Closest fit to the card where the geometry decided: the monastery's roof, the glacier and the observatory all lie west of the stone (within 30° of each other), so the four quarters cannot point at four landmarks. The turning stone is an upper block round the pillar, under its cap, set at 45° to the pillar: one of its faces then looks straight at the observatory (measured 0.2° off), and its faces look over the plinth's corners, the only places on the top step wide enough to stand with both hands on a face's grips ('pumpGrip' pose; the test measures the hands within 8 cm of the face). Carvings in turning order: dome, roof, ice, houses. As found the dome faces down the valley; each turn says what now faces the west: the ice faces the glacier, the roof faces the monastery's roof, then the dome faces the dome on the ridge. The niche is a slab at the pillar's foot that sinks into the step; inside, the crystal and the words FOR THE LAST PILGRIM (the card's "the pilgrims left one each" is Tenpa's line after). Tenpa: his own line first, then the pilgrims; after three turns without it, "Ask the altar" (the hall's altar already says the dome was Sendell's shrine). Flags `dx_way_seen/ask/face/turns/open/hint/thx/read`, owed crystal `dx_owe_sc_waystone`. Whether the dome is noticed from the terrace is a design judgment (section 8); the pictures of the stone are in the test's SHOTS. |
 
 #### HAM-2 · Pim's kite and the goat path (a shortcut earned)
 | | |
@@ -496,6 +503,7 @@ and C12-3 too: chapter 12 about 18 min (0.9 T). All estimates by the balance for
 | Risks | **balance**: max life 22 makes chapters 10–12 easier for a thorough player; animation-combat rechecks the ridge, the bore and the core with 16 and 22. **Saves**: `crystalsAll` keeps its meaning (the first six, Sendell's chapter-11 line); the new set is `dx_crystals12`; an old save with six keeps +6 and its line; the quest crystals are owed rewards (`ChapterBase.reward`) so a save before pick-up does not lose one. |
 | Test | the count and max life after each; an old six-crystal save loads with 16 max life and `crystalsAll`; the twelfth triggers the line; chapter 12's catch happens once (death avoided once, then Retry rules as now) |
 | Evidence → principle | recollection: LBA1/LBA2's clover boxes hidden off the paths that let him carry more; P7 |
+| **Built** (10.11.2026) | `src/game/crystals.js` (the registry), `main.js` (the count of unique `sc-` ids, the toast "n/12", `crystalsAll` = the six lying in the world, `dx_crystals12` = all twelve), `story/depth.js` (quest crystals as owed rewards, caught up after a load; Sendell's catch; the epilogue line), `actors.js` (one line: Hero.damage asks `depth.catchFall` before a clover or a death). **Obtainable today: 8 of 12** (the six in the world, ISL-1, HAM-1). The slots of DES-1 (`sc-figures`), DES-2 (`sc-trial`), HAM-3 (`sc-pack`) and UND-1 (`sc-source`) exist with their reward plumbing (`giveCrystal`) and are marked `built: false` in `crystals.js`: nothing in the game gives them until those quests are built, so the all-twelve payoff cannot happen in normal play yet (the test reaches it staged). Sendell's catch comes before a clover is used, once per game (`dx_c12_caught`; a Retry that reloads a save from before it can see it again in that attempt). Not built: the holomap helper (it belongs to DES-3, second wave). The "all six" line now reads without a number (the count is out of 12). For the combat owner to review: the catch in `Hero.damage` and the balance with 16 to 22 max life (the card's risk). |
 
 Not proposed: raising the clover cap (9) or new clover boxes (the economy around 9 works, `chapter-balance.md` "Depot
 economy"); a second currency (Zlitos) or a casino (`ZEELICH_GAP.md` items 7 and 9: a system decision, larger than
@@ -585,5 +593,7 @@ Each `tests/depth-<id>.mjs` (player-input harness, one suite at a time, SwiftSha
 9. the chapter suites and the playthrough segment of that chapter still pass (for C11-1 and C12-1: updated);
 10. text: English only, and no night, evening or tonight in any new line (a grep over the new text keys).
 
-Status of this document: **Not implemented** (design only). Next step: the user approves, cuts or reorders the list;
-the coordinator gives the first wave to workers in pairs.
+Status of this document: the user approved the first wave (10.11.2026). **Built:** COL-1, HAM-1, ISL-1 (see their
+"Built" rows; Automated runtime only). **Not built:** the other nine of the first wave (UND-1, ISL-3, ZEE-1, DES-1,
+DES-2, HAM-2, HAM-3, C11-1, C12-1) and the whole second wave. When DES-1, DES-2, HAM-3 or UND-1 is built, it flips its
+entry in `src/game/crystals.js` to `built: true` and gives its crystal with `Depth.giveCrystal(id, x, y, z, area)`.

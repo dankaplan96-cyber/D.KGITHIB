@@ -832,6 +832,8 @@ export class Hero extends Actor {
       this.rig.hitDir = angleDiff(this.angle, a + Math.PI); // 0 = hit from the front
       if (heavy && this.hp > 0) { this.angle = a + Math.PI; this.act('knockdown', 0.5, null, 0, ['getup', 0.8]); }
     }
+    // (COL-1: with all twelve singing crystals, Sendell catches him once in the core: story/depth.js catchFall)
+    if (this.hp <= 0 && g.story?.depth?.catchFall?.(this)) return;
     if (this.hp <= 0) {
       if (this.clovers > 0) {
         // LBA2: a clover leaf revives you on the spot with full life
