@@ -4433,7 +4433,7 @@ function renderBattle() {
 
   // ghosts (after-images) behind the hero
   (battle.ghosts || []).forEach(gh => {
-    drawHero(ctx, gh.x, gh.y - 3 * S, 58 * S, { facing: 'right', alpha: (gh.life / gh.max) * .38, glow: false });
+    drawHero(ctx, gh.x, gh.y - 7 * S, 58 * S, { facing: 'right', alpha: (gh.life / gh.max) * .38, glow: false });
   });
 
   const inK = 1 - easeOut(clamp((battle.introT || 0) / 520, 0, 1));
@@ -4458,7 +4458,7 @@ function renderBattle() {
 
   }
   const breathe = battle.heroAnim ? 0 : Math.sin(clock / 420) * 1.6 * S;
-  drawHero(ctx, hp.x, hp.y + breathe - 3 * S, 58 * S, {
+  drawHero(ctx, hp.x, hp.y + breathe - 7 * S, 58 * S, {
     facing: 'right', phase: clock / 90, pose: battleHeroPose(),
     walking: !!(battle.heroAnim && battle.heroAnim.type === 'lunge'),
     flash: !!(battle.heroFlash > 0) && (battle.heroFlash % 100) > 50
