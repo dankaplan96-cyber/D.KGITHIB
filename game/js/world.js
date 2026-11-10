@@ -208,7 +208,8 @@ function renderWorld() {
   cam.x = W <= VW ? -(VW - W) / 2 : clamp(hero.px - VW / 2, 0, W - VW);
   cam.y = H <= VH ? -(VH - H) / 2 : clamp(hero.py - 20 - VH / 2, 0, H - VH);
   cam.x = Math.round(cam.x); cam.y = Math.round(cam.y);
-  ctx.fillStyle = '#dfeaf1'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = lin(0, 0, 0, VH, [[0, '#e6f0f6'], [1, '#d3e2ec']]); ctx.fillRect(0, 0, VW, VH);
+  if (W < VW || H < VH) { ctx.fillStyle = 'rgba(30,60,90,.10)'; roundRect(ctx, -cam.x - 5, -cam.y - 2, W + 10, H + 12, 8); ctx.fill(); ctx.fillStyle = 'rgba(30,60,90,.10)'; roundRect(ctx, -cam.x - 2, -cam.y, W + 4, H + 6, 6); ctx.fill(); }
   ctx.save(); ctx.translate(-cam.x, -cam.y);
   ctx.drawImage(Art.mapLayer(S.map), 0, 0, W, H);
   Art.mapAnim(ctx, S.map, clock);
@@ -245,10 +246,35 @@ function renderWorld() {
     const b = n.bubble || Game.npcBubble(n);
     if (b) drawBubble(n.px, n.py - 52, b);
   } }));
-  ents.push({ y: hero.py + .1, draw: () => Art.drawPerson(ctx, hero.px, hero.py, S.player.look, { dir: hero.dir, walking: !!hero.move, phase: hero.phase }) });
+  ents.push({ y: hero.py + .1, draw: () => {
+    Art.drawPerson(ctx, hero.px, hero.py, S.player.look, { dir: hero.dir, walking: !!hero.move, phase: hero.phase });
+    if (tileAt(Math.floor(hero.px / TILE), Math.round((hero.py - TILE) / TILE)) === ';') {   // wading through tall grass
+      for (let i = 0; i < 7; i++) { const h = 7 + (i * 5) % 6 + (hero.move ? Math.sin(clock / 70 + i) * 1.5 : 0); ctx.fillStyle = i % 2 ? '#3f9b4a' : '#58b85f'; ctx.fillRect(hero.px - 15 + i * 4.6, hero.py - h + 2, 3, h); }
+    }
+  } });
   ents.sort((a, b) => a.y - b.y).forEach(e => e.draw());
   // tap path dots
   if (hero.path && hero.path.length) hero.path.forEach(([x, y], i) => circle(ctx, x * TILE + TILE / 2, y * TILE + TILE / 2, 2.5, 'rgba(14,143,134,' + (.6 - i * .03) + ')'));
+  // the guide arrow: a small chevron circling the hero that points at the next goal; a bouncing marker when it is close
+  const gt = Game.state === 'OVERWORLD' && !UI.active && !Panel.isOpen ? Game.guideTarget() : null;
+  if (gt) {
+    const tx = gt.x * TILE + TILE / 2, ty = gt.y * TILE + TILE / 2, dx = tx - hero.px, dy = ty - (hero.py - TILE / 2), d = Math.hypot(dx, dy);
+    if (d > TILE * 2.4) {
+      const a = Math.atan2(dy, dx), r = 34 + Math.sin(clock / 200) * 3;
+      ctx.save(); ctx.translate(hero.px + Math.cos(a) * r, hero.py - 24 + Math.sin(a) * r); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -7); ctx.lineTo(-2, 0); ctx.lineTo(-5, 7); ctx.closePath();
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ctx.fillStyle = '#f2a516'; ctx.fill(); ctx.restore();
+    } else if (gt.door) {
+      const by = Math.sin(clock / 180) * 3; ctx.save(); ctx.translate(tx, ty - 26 + by + (gt.y === 0 ? 30 : 0));
+      ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-7, -3); ctx.lineTo(7, -3); ctx.closePath(); ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ctx.fillStyle = '#f2a516'; ctx.fill(); ctx.restore();
+    }
+  }
+  // outdoors: drifting cloud shadows and a few leaves on the wind
+  if (m.floor === 'grass' && !reduceFx()) {
+    for (let i = 0; i < 3; i++) { const cx = ((clock / (38 + i * 9) + i * 420) % (W + 500)) - 250, cy = H * (.2 + i * .3); ctx.fillStyle = 'rgba(30,70,90,.07)'; ctx.beginPath(); ctx.ellipse(cx, cy, 150 + i * 30, 46 + i * 8, 0, 0, Math.PI * 2); ctx.fill(); }
+    for (let i = 0; i < 9; i++) { const k = (clock / (5200 + i * 310) + i * .173) % 1, lx = (i * 197 % W) + k * 160, ly = k * (H + 40) - 20 + Math.sin(clock / 500 + i) * 10;
+      ctx.save(); ctx.translate(lx, ly); ctx.rotate(clock / 400 + i); ctx.fillStyle = i % 3 ? 'rgba(120,190,90,.85)' : 'rgba(244,170,60,.85)'; ctx.beginPath(); ctx.ellipse(0, 0, 3.4, 1.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  }
   ctx.restore();
   renderFx();
   // soft daylight vignette

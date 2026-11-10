@@ -58,10 +58,13 @@ function renderBattle(dt) {
   Art.drawPerson(ctx, hx, hy, S.player.look, { size: 74, dir: 'left', walking: !!B.heroAnim, phase: clock / 90, flash: B.heroFlash > 0 && (B.heroFlash % 100) > 50, bob: Math.sin(clock / 420) * 1.2 });
   renderFx();
   ctx.restore();
+  // low stability: a slow red pulse at the edges, like a monitor alarm
+  if (B.hp / B.maxHp <= .3 && !reduceFx()) { const a = .10 + .08 * Math.sin(clock / 260); ctx.fillStyle = rad(VW / 2, VH / 2, VH * .35, VW * .7, [[0, 'rgba(224,82,82,0)'], [1, 'rgba(224,82,82,' + a + ')']]); ctx.fillRect(0, 0, VW, VH); }
   drawPlates(B, F);
 }
 const attack = t => { t = clamp(t, 0, 1); if (t < .18) return -.07 * Math.sin(t / .18 * Math.PI / 2); if (t < .5) return lerp(-.07, 1, easeOut((t - .18) / .32)); return 1 - easeInOut((t - .5) / .5); };
 
+const hpCol = v => v > .5 ? '#22a35a' : v > .25 ? '#e0a514' : '#e05252';
 function drawPlates(B, F) {
   const e = B.enemy, T = TYPES[e.type] || TYPES.meds;
   const s = clamp(VW / 560, .9, 1.08);
@@ -76,7 +79,7 @@ function drawPlates(B, F) {
   ctx.fillStyle = T.color + '2a'; roundRect(ctx, -W + 6, 7, 66, 16, 5); ctx.fill(); ctx.strokeStyle = T.color; ctx.lineWidth = 1; roundRect(ctx, -W + 6, 7, 66, 16, 5); ctx.stroke();
   heText(T.icon + ' ' + T.name, -W + 68, 19, { size: 10, bold: true, color: INK, maxWidth: 60 });
   bar(-W + 10, 28, W - 22, 9, disp.ehpG, '#fde68a', '#e3ecf3');
-  ctx.fillStyle = disp.ehp > .3 ? '#22a35a' : '#e05252'; if (disp.ehp > 0) { roundRect(ctx, -W + 10 + (1 - disp.ehp) * (W - 22), 28, Math.max(9, disp.ehp * (W - 22)), 9, 4.5); ctx.fill(); }
+  ctx.fillStyle = hpCol(disp.ehp); if (disp.ehp > 0) { roundRect(ctx, -W + 10 + (1 - disp.ehp) * (W - 22), 28, Math.max(9, disp.ehp * (W - 22)), 9, 4.5); ctx.fill(); }
   heText(e.barLabel || 'חומרה', -12, 52, { size: 10, bold: true, color: MUTED });
   numText(Math.max(0, Math.round(e.hp)) + ' / ' + e.maxHp, -W + 10, 52, { size: 10, color: MUTED });
   if (e.sub) heText(e.sub, -64, 52, { size: 10, bold: true, color: '#b26c06', maxWidth: 110 });
@@ -91,7 +94,7 @@ function drawPlates(B, F) {
   heText(B.heroLabel || S.player.name, -10, 16, { size: 13, bold: true, maxWidth: 120, color: INK });
   numText('Lv.' + levelOf(S.xp), -W2 + 8, 16, { size: 11, bold: true, color: '#b26c06' });
   bar(-W2 + 8, 22, W2 - 16, 9, disp.hpG, '#fca5a5', '#e3ecf3');
-  ctx.fillStyle = disp.hp > .3 ? '#22a35a' : '#e05252'; if (disp.hp > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.hp) * (W2 - 16), 22, Math.max(9, disp.hp * (W2 - 16)), 9, 4.5); ctx.fill(); }
+  ctx.fillStyle = hpCol(disp.hp); if (disp.hp > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.hp) * (W2 - 16), 22, Math.max(9, disp.hp * (W2 - 16)), 9, 4.5); ctx.fill(); }
   if (B.time != null) { bar(-W2 + 8, 36, W2 - 16, 7, 0, '#38bdf8', '#e3ecf3'); ctx.fillStyle = '#2b9fd8'; if (disp.ap > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.ap) * (W2 - 16), 36, Math.max(7, disp.ap * (W2 - 16)), 7, 3.5); ctx.fill(); } }
   heText((B.hpLabel || 'יציבות') + ' ' + Math.max(0, Math.round(B.hp)) + (B.time != null ? '  ·  ⏱ זמן ' + Math.max(0, Math.round(B.time)) : ''), -10, 58, { size: 10, bold: true, color: MUTED });
   ctx.restore();
@@ -123,7 +126,7 @@ async function heroStrike(big) {
   const col = (TYPES[e.type] || TYPES.meds).color;
   addRing(F.foe.x, F.foe.y, { maxR: big ? 96 : 62, color: col, width: big ? 5 : 3 });
   addParticles(F.foe.x, F.foe.y, big ? 26 : 14, { color: [col, '#fde68a', '#fff'], speed: big ? 190 : 130, life: 650, size: 3.5, lift: 40, star: big });
-  if (big) { screenFlash('#fde68a', 110); Sound.crit(); } else Sound.hit();
+  if (big) { screenFlash('#fde68a', 110); Sound.crit(); addFloater(F.foe.x, F.foe.y - 96, '⚡ יעיל במיוחד!', { color: '#fde68a', size: 17, life: 1200 }); } else Sound.hit();
   buzz(big ? [20, 30, 40] : 20);
   await sleep(320);
 }
@@ -210,7 +213,7 @@ async function decide(prompt, options, correct, o) {
   let first = true, conf = { value: 'maybe' }, firstConf = null;
   for (;;) {
     const opts = order.map(i => ({ label: options[i], disabled: gone.has(i), mark: gone.has(i) ? '✗' : '', cls: gone.has(i) ? 'gone' : '' }));
-    const pickI = await UI.ask(prompt, opts, { name: o.name, cancel: o.cancel && first, conf: o.conf && first ? conf : null, tall: true, extra: o.extra });
+    const pickI = await UI.ask(prompt, opts, { two: true, name: o.name, cancel: o.cancel && first, conf: o.conf && first ? conf : null, tall: true, extra: o.extra });
     if (pickI < 0) return { cancelled: true };
     const idx = order[pickI];
     if (first) firstConf = conf.value;
@@ -259,7 +262,7 @@ async function episodeBattle(ep, opts) {
     enemy: { name: ep.t, type, icon: TYPES[type].icon, sub: pt.n, barLabel: 'חומרה' }, hpLabel: 'יציבות', heroLabel: S.player.name + ' · ' + pt.n.split(',')[0] });
   const B = battle;
   B.scoreClues = 0;
-  const vit = (hint) => stepsHTML(B, hint) + chipsHTML(ep.v.map(t => ({ t: '📈 ' + t, cls: 'vit' })).concat([...B.found].map(j => ({ t: (ep.c[j][2] === 2 ? '★ ' : ep.c[j][2] === 1 ? '◆ ' : '· ') + ep.c[j][0] + ': ' + ep.c[j][1], cls: 'r' + ep.c[j][2] }))));
+  const vit = (hint, bare) => (bare ? (hint ? '<div class="bhint">💡 ' + esc(hint) + '</div>' : '') : stepsHTML(B, hint)) + chipsHTML(ep.v.map(t => ({ t: '📈 ' + t, cls: 'vit' })).concat([...B.found].map(j => ({ t: (ep.c[j][2] === 2 ? '★ ' : ep.c[j][2] === 1 ? '◆ ' : '· ') + ep.c[j][0] + ': ' + ep.c[j][1], cls: 'r' + ep.c[j][2] }))));
   await sleep(520);
   const actEps = C.episodes.filter(e => e.a === ep.a), idxInAct = actEps.indexOf(ep) + 1;
   const prev = C.episodes.filter(e => e.p === ep.p && S.episodes[e.id] && e.id !== ep.id).pop();
@@ -290,9 +293,10 @@ async function episodeBattle(ep, opts) {
     if (c === 0) await assess();
     else if (c === 1) {
       const r = await decide(st.prompt, ep[st.key], ep[st.ck], {
-        name: 'שלב ' + (B.stage + 1) + ' · ' + st.name, cancel: true, conf: true, extra: vit(STAGE_TIP[st.key]),
+        name: 'שלב ' + (B.stage + 1) + ' · ' + st.name, cancel: true, conf: true, extra: vit(STAGE_TIP[st.key], true),
         onWrong: async (first, conf) => {
           if (first) { recordConf(conf, false); domain(st.dom, 0, 1); }
+          B.combo = 0;
           if (B.shield) { B.shield = false; await UI.say('🛡️ הבדיקה הכפולה תפסה את הטעות לפני שהגיעה למטופל. ' + STAGE_HINT[st.key]); return; }
           const dmg = conf === 'sure' && first ? D.sure : D.wrong;
           await foeStrike(dmg); B.hp = Math.max(0, B.hp - dmg);
@@ -306,7 +310,9 @@ async function episodeBattle(ep, opts) {
       const big = r.first && (B.exposed || r.conf === 'sure');
       await heroStrike(big);
       B.enemy.hp = Math.round(100 * (1 - (B.stage + 1) / 4));
-      const gain = r.first ? (big ? 16 : 12) : 5; B.xp += gain;
+      B.combo = r.first ? (B.combo || 0) + 1 : 0;
+      const gain = (r.first ? (big ? 16 : 12) : 5) + (B.combo >= 2 ? (B.combo - 1) * 3 : 0); B.xp += gain;
+      if (B.combo >= 2) { addFloater(battleFrame().hero.x, battleFrame().hero.y - 110, '🔥 רצף ×' + B.combo, { color: '#fb923c', size: 18, life: 1300 }); Sound.coin(); }
       addFloater(battleFrame().foe.x, battleFrame().foe.y - 70, '+' + gain + ' XP', { color: '#fde68a', size: 16 });
       const right = ep[st.key][ep[st.ck]];
       await UI.say((r.first ? (big ? '✓ יעיל במיוחד! ' : '✓ נכון. ') : '✓ הגעת לזה. ') + right, { extra: vit() });
@@ -592,6 +598,8 @@ async function panelBattle(cfg) {
     if (r.fail) { if (K) Core.record(K.id, false); result = 'fail'; break; }
     if (K) Core.record(K.id, !!r.first);
     if (r.first) { recordConf(r.conf, true); rights++; }
+    B.combo = r.first ? (B.combo || 0) + 1 : 0;
+    if (B.combo >= 2) { addFloater(battleFrame().hero.x, battleFrame().hero.y - 110, '🔥 רצף ×' + B.combo, { color: '#fb923c', size: 18, life: 1300 }); Sound.coin(); }
     await heroStrike(r.first);
     B.enemy.hp = Math.max(0, B.enemy.hp - (r.first ? per : Math.ceil(per / 2)));
     await UI.say('✓ ' + opts[ck] + (K ? '\n📚 ' + K.e + ' — ' + K.s.map(id => SOURCES[id].t).join(' · ') : EP_EVIDENCE[e.id] ? '\n📚 ' + EP_EVIDENCE[e.id].k : '\n💡 ' + e.pe), { extra, tall: true });

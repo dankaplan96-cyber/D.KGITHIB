@@ -10,7 +10,7 @@ function freshState() {
   return { v: 1, player: null, difficulty: 'normal', map: 0, x: 5, y: 5, dir: 'up', xp: 0, coins: 30, shift: 1, streak: 0, lastDay: '',
     badges: [], labBadge: false, episodes: {}, labRounds: {}, dex: {}, inv: { coffee: 0, calm: 1, torch: 0, guide: 0, shield: 0 },
     domains: {}, calib: {}, flags: {}, trainers: {}, visited: {}, daily: null, shiftLog: { eps: 0, xp: 0 },
-    know: {}, team: [], found: {}, hazards: {}, council: 0, councilHP: 100, rival: 0, stats: { steps: 0, codes: 0 }, settings: { sound: true, musicVol: .6, sfxVol: .8, textSpeed: 1, reduceFx: false, hc: false, zoom: 1, haptics: true, pager: true, autoRun: false } };
+    know: {}, team: [], found: {}, hazards: {}, council: 0, councilHP: 100, rival: 0, stats: { steps: 0, codes: 0 }, settings: { guide: true, sound: true, musicVol: .6, sfxVol: .8, textSpeed: 1, reduceFx: false, hc: false, zoom: 1, haptics: true, pager: true, autoRun: false } };
 }
 let S = freshState();
 window.S = S;
@@ -107,6 +107,30 @@ const Game = {
       if (res.result === 'win') await this.reward(60 + n * 30, 25 + n * 10);
       npcs = npcs.filter(x => x !== r); this.save();
     });
+  },
+  /* Where the story wants you next — the tile in this map to walk to (a person, a bed, or the door that leads there). */
+  guideTarget() {
+    if (!S.settings.guide) return null;
+    if (this._gt && clock - this._gt.t < 500 && this._gt.map === S.map) return this._gt.v;
+    const findNpc = id => { for (let i = 0; i < MAPS.length; i++) { const n = (MAPS[i].npcs || []).find(q => q.id === id); if (n) return { map: i, x: n.x, y: n.y }; } return null; };
+    let goal = null;
+    if (!this.tutorialDone()) goal = findNpc('rivka');
+    else if (S.badges.length < ACTS.length && this.bossReady()) goal = findNpc('leader');
+    else {
+      const p = Object.keys(PATIENT_ROOM).find(q => this.availableEpisode(q));
+      if (p) { const mi = PATIENT_ROOM[p] + 1, k = Object.keys(MAPS[mi].beds).find(q => MAPS[mi].beds[q] === p), xy = k.split(',').map(Number); goal = { map: mi, x: xy[0], y: xy[1] }; }
+      else if (S.badges.length >= ACTS.length && !S.flags.champion) goal = findNpc('judge' + Math.min(3, S.council || 0)) || null;
+    }
+    let v = null;
+    if (goal && goal.map === S.map) v = { x: goal.x, y: goal.y };
+    else if (goal) {   // breadth-first over the doors: which door of this map starts the shortest way there?
+      const seen = { [S.map]: 1 }, q = Object.keys(MAPS[S.map].doors || {}).map(k => ({ m: MAPS[S.map].doors[k].to, first: k }));
+      while (q.length && !v) { const c = q.shift(); if (seen[c.m]) continue; seen[c.m] = 1;
+        if (c.m === goal.map) { const xy = c.first.split(',').map(Number); v = { x: xy[0], y: xy[1], door: true }; }
+        else Object.keys(MAPS[c.m].doors || {}).forEach(k => q.push({ m: MAPS[c.m].doors[k].to, first: c.first })); }
+    }
+    this._gt = { t: clock, map: S.map, v };
+    return v;
   },
   async lockedDoor(door) {
     if (this.busy) return;
@@ -630,6 +654,7 @@ function openSettings() {
     ${row('zoom', '🔠 גודל טקסט', 'בתיבות ובחלונות', [[1, 'רגיל'], [1.15, 'גדול'], [1.3, 'גדול מאוד']])}
     ${row('hc', '◐ ניגודיות גבוהה', 'רקעים כהים לגמרי וקווים בהירים', [[false, 'כבוי'], [true, 'פועל']])}
     ${row('reduceFx', '✨ הפחתת אפקטים', 'פחות רעידות, הבזקים ותנועה', [[false, 'כבוי'], [true, 'פועל']])}
+    ${row('guide', '🧭 חץ הכוונה', 'חץ קטן שמצביע ליעד הבא', [[true, 'פועל'], [false, 'כבוי']])}
     ${row('pager', '📟 קריאות ביפר', 'אירועים מהירים אקראיים במסדרון', [[true, 'פועל'], [false, 'כבוי']])}
     ${row('autoRun', '🏃 ריצה אוטומטית', 'הליכה מהירה תמיד (או Shift)', [[false, 'כבוי'], [true, 'פועל']])}
     ${row('haptics', '📳 רטט', 'במכשירים שתומכים', [[true, 'פועל'], [false, 'כבוי']])}

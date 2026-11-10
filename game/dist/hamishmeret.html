@@ -606,6 +606,10 @@ body.in-battle #quest-box{display:none!important}
 .pl-card .pg-bar{margin:0}
 .pl-card .system-btn{align-self:flex-start;font-size:12px}
 
+/* v1.6 — answers in two columns so the whole question fits and the scene stays visible */
+@media(min-width:600px){#msg-opts.list.two{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:stretch}#msg-opts.list.two .conf-row,#msg-opts.list.two .opt.back{grid-column:1/-1}#msg-opts.list.two .opt{padding:7px 11px;font-size:13.5px}}
+.conf-n{flex-basis:auto;align-self:center}
+
 </style>
 </head>
 <body class="on-title">
@@ -1957,6 +1961,13 @@ const Art = (() => {
       } else if (GROUND[ch]) drawGround(c, GROUND[ch], m.floor, x, y, px, py);
       else drawFloor(c, m.floor, x, y, px, py);
     }
+    // depth: walls and buildings cast a soft shadow onto the floor below and beside them
+    for (let y = 1; y < H; y++) for (let x = 0; x < W; x++) {
+      if (WALLISH.has(at(x, y))) continue;
+      const px = x * T, py = y * T;
+      if (WALLISH.has(at(x, y - 1))) { const gr = c.createLinearGradient(0, py, 0, py + 13); gr.addColorStop(0, 'rgba(35,65,90,.20)'); gr.addColorStop(1, 'rgba(35,65,90,0)'); c.fillStyle = gr; c.fillRect(px, py, T, 13); }
+      if (x > 0 && WALLISH.has(at(x - 1, y))) { const gr = c.createLinearGradient(px, 0, px + 7, 0); gr.addColorStop(0, 'rgba(35,65,90,.12)'); gr.addColorStop(1, 'rgba(35,65,90,0)'); c.fillStyle = gr; c.fillRect(px, py, 7, T); }
+    }
     if (m.id === 'hall') { c.fillStyle = 'rgba(45,212,191,.55)'; c.fillRect(T, 4 * T + 18, (W - 2) * T, 4); c.fillStyle = 'rgba(251,191,36,.45)'; c.fillRect(T, 4 * T + 24, (W - 2) * T, 2); }
     if (m.id === 'staff') { c.fillStyle = '#9fd5cd'; roundRect(c, 2 * T + 6, 2 * T + 6, 7 * T - 12, 4 * T - 12, 6); c.fill(); c.strokeStyle = '#d4a85a'; c.lineWidth = 2; roundRect(c, 2 * T + 12, 2 * T + 12, 7 * T - 24, 4 * T - 24, 4); c.stroke(); }
     // doors
@@ -2448,16 +2459,16 @@ const UI = {
       $('msg-text').style.display = text ? '' : 'none';
       const b = this.box(), wrap = $('msg-opts');
       b.classList.add('has-opts'); b.classList.toggle('tall', !!o.tall);
-      wrap.className = o.grid ? 'grid' : 'list';
+      wrap.className = o.grid ? 'grid' : 'list' + (o.two ? ' two' : '');
       $('msg-next').style.display = 'none';
       let html = '';
-      if (o.conf) html += '<div class="conf-row" role="group" aria-label="רמת ביטחון"><span class="conf-l">ביטחון:</span>' + [['guess', '🤔 ניחוש'], ['maybe', '🙂 סביר'], ['sure', '😎 בטוח/ה']].map(([k, l]) => `<button type="button" class="conf${k === o.conf.value ? ' on' : ''}" data-conf="${k}">${l}</button>`).join('') + '<small class="conf-n">בטוח/ה ונכון = בונוס · בטוח/ה וטועה = יותר נזק</small></div>';
+      if (o.conf) html += '<div class="conf-row" role="group" aria-label="רמת ביטחון"><span class="conf-l">ביטחון:</span>' + [['guess', '🤔 ניחוש'], ['maybe', '🙂 סביר'], ['sure', '😎 בטוח/ה']].map(([k, l]) => `<button type="button" class="conf${k === o.conf.value ? ' on' : ''}" data-conf="${k}">${l}</button>`).join('') + '<small class="conf-n">בטוח/ה ונכון = פגיעה חזקה · בטוח/ה וטועה = נזק גדול יותר</small></div>';
       html += options.map((op, i) => `<button type="button" class="opt ${op.cls || ''}${op.disabled ? ' dis' : ''}" data-i="${i}" ${op.disabled ? 'aria-disabled="true"' : ''} style="${op.tint ? '--tint:' + op.tint : ''}">
         ${op.icon ? `<span class="o-ico">${op.icon}</span>` : ''}<span class="o-txt"><b>${esc(op.label)}</b>${op.sub ? `<small>${op.sub}</small>` : ''}</span>${op.mark ? `<span class="o-mark">${op.mark}</span>` : ''}</button>`).join('');
       if (o.cancel) html += `<button type="button" class="opt back" data-i="-1"><span class="o-txt"><b>↩ חזרה</b></span></button>`;
       wrap.innerHTML = html;
       const btns = [...wrap.querySelectorAll('.opt')];
-      const a = this.active = { kind: 'ask', res, btns, sel: Math.max(0, btns.findIndex(x => !x.classList.contains('dis'))), cancel: !!o.cancel, grid: !!o.grid, conf: o.conf };
+      const a = this.active = { kind: 'ask', res, btns, sel: Math.max(0, btns.findIndex(x => !x.classList.contains('dis'))), cancel: !!o.cancel, grid: !!o.grid, two: !!o.two && innerWidth >= 600, conf: o.conf };
       wrap.querySelectorAll('[data-conf]').forEach(cb => cb.onclick = () => { o.conf.value = cb.dataset.conf; wrap.querySelectorAll('[data-conf]').forEach(x => x.classList.toggle('on', x === cb)); Sound.blip(); });
       btns.forEach((bt, k) => {
         bt.onclick = ev => { ev.stopPropagation(); a.sel = k; this.choose(); };
@@ -2484,8 +2495,10 @@ const UI = {
   move(d) {
     const a = this.active; if (!a || a.kind !== 'ask') return;
     const n = a.btns.length; let k = a.sel;
-    const cols = a.grid ? 2 : 1;
-    const delta = d === 'up' ? -cols : d === 'down' ? cols : d === 'left' ? (a.grid ? 1 : 0) : d === 'right' ? (a.grid ? -1 : 0) : 0;
+    const wide = a.grid || a.two, cols = wide ? 2 : 1;
+    const cycleConf = step => { const order = ['guess', 'maybe', 'sure']; a.conf.value = order[(order.indexOf(a.conf.value) + step + 3) % 3]; this.box().querySelectorAll('[data-conf]').forEach(x => x.classList.toggle('on', x.dataset.conf === a.conf.value)); Sound.blip(); };
+    if (a.two && a.conf && d === 'up' && a.sel < 2) return cycleConf(1);   // above the top row sits the confidence picker
+    const delta = d === 'up' ? -cols : d === 'down' ? cols : d === 'left' ? (wide ? 1 : 0) : d === 'right' ? (wide ? -1 : 0) : 0;
     if (!delta) { if (a.conf && (d === 'left' || d === 'right')) { const order = ['guess', 'maybe', 'sure']; let ci = order.indexOf(a.conf.value) + (d === 'left' ? 1 : -1); ci = clamp(ci, 0, 2); a.conf.value = order[ci]; this.box().querySelectorAll('[data-conf]').forEach(x => x.classList.toggle('on', x.dataset.conf === a.conf.value)); Sound.blip(); } return; }
     for (let tries = 0; tries < n; tries++) { k = (k + delta + n) % n; if (!a.btns[k].classList.contains('dis')) break; }
     a.sel = k; Sound.blip(); this.paint();
@@ -2658,10 +2671,13 @@ function renderBattle(dt) {
   Art.drawPerson(ctx, hx, hy, S.player.look, { size: 74, dir: 'left', walking: !!B.heroAnim, phase: clock / 90, flash: B.heroFlash > 0 && (B.heroFlash % 100) > 50, bob: Math.sin(clock / 420) * 1.2 });
   renderFx();
   ctx.restore();
+  // low stability: a slow red pulse at the edges, like a monitor alarm
+  if (B.hp / B.maxHp <= .3 && !reduceFx()) { const a = .10 + .08 * Math.sin(clock / 260); ctx.fillStyle = rad(VW / 2, VH / 2, VH * .35, VW * .7, [[0, 'rgba(224,82,82,0)'], [1, 'rgba(224,82,82,' + a + ')']]); ctx.fillRect(0, 0, VW, VH); }
   drawPlates(B, F);
 }
 const attack = t => { t = clamp(t, 0, 1); if (t < .18) return -.07 * Math.sin(t / .18 * Math.PI / 2); if (t < .5) return lerp(-.07, 1, easeOut((t - .18) / .32)); return 1 - easeInOut((t - .5) / .5); };
 
+const hpCol = v => v > .5 ? '#22a35a' : v > .25 ? '#e0a514' : '#e05252';
 function drawPlates(B, F) {
   const e = B.enemy, T = TYPES[e.type] || TYPES.meds;
   const s = clamp(VW / 560, .9, 1.08);
@@ -2676,7 +2692,7 @@ function drawPlates(B, F) {
   ctx.fillStyle = T.color + '2a'; roundRect(ctx, -W + 6, 7, 66, 16, 5); ctx.fill(); ctx.strokeStyle = T.color; ctx.lineWidth = 1; roundRect(ctx, -W + 6, 7, 66, 16, 5); ctx.stroke();
   heText(T.icon + ' ' + T.name, -W + 68, 19, { size: 10, bold: true, color: INK, maxWidth: 60 });
   bar(-W + 10, 28, W - 22, 9, disp.ehpG, '#fde68a', '#e3ecf3');
-  ctx.fillStyle = disp.ehp > .3 ? '#22a35a' : '#e05252'; if (disp.ehp > 0) { roundRect(ctx, -W + 10 + (1 - disp.ehp) * (W - 22), 28, Math.max(9, disp.ehp * (W - 22)), 9, 4.5); ctx.fill(); }
+  ctx.fillStyle = hpCol(disp.ehp); if (disp.ehp > 0) { roundRect(ctx, -W + 10 + (1 - disp.ehp) * (W - 22), 28, Math.max(9, disp.ehp * (W - 22)), 9, 4.5); ctx.fill(); }
   heText(e.barLabel || 'חומרה', -12, 52, { size: 10, bold: true, color: MUTED });
   numText(Math.max(0, Math.round(e.hp)) + ' / ' + e.maxHp, -W + 10, 52, { size: 10, color: MUTED });
   if (e.sub) heText(e.sub, -64, 52, { size: 10, bold: true, color: '#b26c06', maxWidth: 110 });
@@ -2691,7 +2707,7 @@ function drawPlates(B, F) {
   heText(B.heroLabel || S.player.name, -10, 16, { size: 13, bold: true, maxWidth: 120, color: INK });
   numText('Lv.' + levelOf(S.xp), -W2 + 8, 16, { size: 11, bold: true, color: '#b26c06' });
   bar(-W2 + 8, 22, W2 - 16, 9, disp.hpG, '#fca5a5', '#e3ecf3');
-  ctx.fillStyle = disp.hp > .3 ? '#22a35a' : '#e05252'; if (disp.hp > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.hp) * (W2 - 16), 22, Math.max(9, disp.hp * (W2 - 16)), 9, 4.5); ctx.fill(); }
+  ctx.fillStyle = hpCol(disp.hp); if (disp.hp > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.hp) * (W2 - 16), 22, Math.max(9, disp.hp * (W2 - 16)), 9, 4.5); ctx.fill(); }
   if (B.time != null) { bar(-W2 + 8, 36, W2 - 16, 7, 0, '#38bdf8', '#e3ecf3'); ctx.fillStyle = '#2b9fd8'; if (disp.ap > 0) { roundRect(ctx, -W2 + 8 + (1 - disp.ap) * (W2 - 16), 36, Math.max(7, disp.ap * (W2 - 16)), 7, 3.5); ctx.fill(); } }
   heText((B.hpLabel || 'יציבות') + ' ' + Math.max(0, Math.round(B.hp)) + (B.time != null ? '  ·  ⏱ זמן ' + Math.max(0, Math.round(B.time)) : ''), -10, 58, { size: 10, bold: true, color: MUTED });
   ctx.restore();
@@ -2723,7 +2739,7 @@ async function heroStrike(big) {
   const col = (TYPES[e.type] || TYPES.meds).color;
   addRing(F.foe.x, F.foe.y, { maxR: big ? 96 : 62, color: col, width: big ? 5 : 3 });
   addParticles(F.foe.x, F.foe.y, big ? 26 : 14, { color: [col, '#fde68a', '#fff'], speed: big ? 190 : 130, life: 650, size: 3.5, lift: 40, star: big });
-  if (big) { screenFlash('#fde68a', 110); Sound.crit(); } else Sound.hit();
+  if (big) { screenFlash('#fde68a', 110); Sound.crit(); addFloater(F.foe.x, F.foe.y - 96, '⚡ יעיל במיוחד!', { color: '#fde68a', size: 17, life: 1200 }); } else Sound.hit();
   buzz(big ? [20, 30, 40] : 20);
   await sleep(320);
 }
@@ -2810,7 +2826,7 @@ async function decide(prompt, options, correct, o) {
   let first = true, conf = { value: 'maybe' }, firstConf = null;
   for (;;) {
     const opts = order.map(i => ({ label: options[i], disabled: gone.has(i), mark: gone.has(i) ? '✗' : '', cls: gone.has(i) ? 'gone' : '' }));
-    const pickI = await UI.ask(prompt, opts, { name: o.name, cancel: o.cancel && first, conf: o.conf && first ? conf : null, tall: true, extra: o.extra });
+    const pickI = await UI.ask(prompt, opts, { two: true, name: o.name, cancel: o.cancel && first, conf: o.conf && first ? conf : null, tall: true, extra: o.extra });
     if (pickI < 0) return { cancelled: true };
     const idx = order[pickI];
     if (first) firstConf = conf.value;
@@ -2859,7 +2875,7 @@ async function episodeBattle(ep, opts) {
     enemy: { name: ep.t, type, icon: TYPES[type].icon, sub: pt.n, barLabel: 'חומרה' }, hpLabel: 'יציבות', heroLabel: S.player.name + ' · ' + pt.n.split(',')[0] });
   const B = battle;
   B.scoreClues = 0;
-  const vit = (hint) => stepsHTML(B, hint) + chipsHTML(ep.v.map(t => ({ t: '📈 ' + t, cls: 'vit' })).concat([...B.found].map(j => ({ t: (ep.c[j][2] === 2 ? '★ ' : ep.c[j][2] === 1 ? '◆ ' : '· ') + ep.c[j][0] + ': ' + ep.c[j][1], cls: 'r' + ep.c[j][2] }))));
+  const vit = (hint, bare) => (bare ? (hint ? '<div class="bhint">💡 ' + esc(hint) + '</div>' : '') : stepsHTML(B, hint)) + chipsHTML(ep.v.map(t => ({ t: '📈 ' + t, cls: 'vit' })).concat([...B.found].map(j => ({ t: (ep.c[j][2] === 2 ? '★ ' : ep.c[j][2] === 1 ? '◆ ' : '· ') + ep.c[j][0] + ': ' + ep.c[j][1], cls: 'r' + ep.c[j][2] }))));
   await sleep(520);
   const actEps = C.episodes.filter(e => e.a === ep.a), idxInAct = actEps.indexOf(ep) + 1;
   const prev = C.episodes.filter(e => e.p === ep.p && S.episodes[e.id] && e.id !== ep.id).pop();
@@ -2890,9 +2906,10 @@ async function episodeBattle(ep, opts) {
     if (c === 0) await assess();
     else if (c === 1) {
       const r = await decide(st.prompt, ep[st.key], ep[st.ck], {
-        name: 'שלב ' + (B.stage + 1) + ' · ' + st.name, cancel: true, conf: true, extra: vit(STAGE_TIP[st.key]),
+        name: 'שלב ' + (B.stage + 1) + ' · ' + st.name, cancel: true, conf: true, extra: vit(STAGE_TIP[st.key], true),
         onWrong: async (first, conf) => {
           if (first) { recordConf(conf, false); domain(st.dom, 0, 1); }
+          B.combo = 0;
           if (B.shield) { B.shield = false; await UI.say('🛡️ הבדיקה הכפולה תפסה את הטעות לפני שהגיעה למטופל. ' + STAGE_HINT[st.key]); return; }
           const dmg = conf === 'sure' && first ? D.sure : D.wrong;
           await foeStrike(dmg); B.hp = Math.max(0, B.hp - dmg);
@@ -2906,7 +2923,9 @@ async function episodeBattle(ep, opts) {
       const big = r.first && (B.exposed || r.conf === 'sure');
       await heroStrike(big);
       B.enemy.hp = Math.round(100 * (1 - (B.stage + 1) / 4));
-      const gain = r.first ? (big ? 16 : 12) : 5; B.xp += gain;
+      B.combo = r.first ? (B.combo || 0) + 1 : 0;
+      const gain = (r.first ? (big ? 16 : 12) : 5) + (B.combo >= 2 ? (B.combo - 1) * 3 : 0); B.xp += gain;
+      if (B.combo >= 2) { addFloater(battleFrame().hero.x, battleFrame().hero.y - 110, '🔥 רצף ×' + B.combo, { color: '#fb923c', size: 18, life: 1300 }); Sound.coin(); }
       addFloater(battleFrame().foe.x, battleFrame().foe.y - 70, '+' + gain + ' XP', { color: '#fde68a', size: 16 });
       const right = ep[st.key][ep[st.ck]];
       await UI.say((r.first ? (big ? '✓ יעיל במיוחד! ' : '✓ נכון. ') : '✓ הגעת לזה. ') + right, { extra: vit() });
@@ -3192,6 +3211,8 @@ async function panelBattle(cfg) {
     if (r.fail) { if (K) Core.record(K.id, false); result = 'fail'; break; }
     if (K) Core.record(K.id, !!r.first);
     if (r.first) { recordConf(r.conf, true); rights++; }
+    B.combo = r.first ? (B.combo || 0) + 1 : 0;
+    if (B.combo >= 2) { addFloater(battleFrame().hero.x, battleFrame().hero.y - 110, '🔥 רצף ×' + B.combo, { color: '#fb923c', size: 18, life: 1300 }); Sound.coin(); }
     await heroStrike(r.first);
     B.enemy.hp = Math.max(0, B.enemy.hp - (r.first ? per : Math.ceil(per / 2)));
     await UI.say('✓ ' + opts[ck] + (K ? '\n📚 ' + K.e + ' — ' + K.s.map(id => SOURCES[id].t).join(' · ') : EP_EVIDENCE[e.id] ? '\n📚 ' + EP_EVIDENCE[e.id].k : '\n💡 ' + e.pe), { extra, tall: true });
@@ -3428,7 +3449,8 @@ function renderWorld() {
   cam.x = W <= VW ? -(VW - W) / 2 : clamp(hero.px - VW / 2, 0, W - VW);
   cam.y = H <= VH ? -(VH - H) / 2 : clamp(hero.py - 20 - VH / 2, 0, H - VH);
   cam.x = Math.round(cam.x); cam.y = Math.round(cam.y);
-  ctx.fillStyle = '#dfeaf1'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = lin(0, 0, 0, VH, [[0, '#e6f0f6'], [1, '#d3e2ec']]); ctx.fillRect(0, 0, VW, VH);
+  if (W < VW || H < VH) { ctx.fillStyle = 'rgba(30,60,90,.10)'; roundRect(ctx, -cam.x - 5, -cam.y - 2, W + 10, H + 12, 8); ctx.fill(); ctx.fillStyle = 'rgba(30,60,90,.10)'; roundRect(ctx, -cam.x - 2, -cam.y, W + 4, H + 6, 6); ctx.fill(); }
   ctx.save(); ctx.translate(-cam.x, -cam.y);
   ctx.drawImage(Art.mapLayer(S.map), 0, 0, W, H);
   Art.mapAnim(ctx, S.map, clock);
@@ -3465,10 +3487,35 @@ function renderWorld() {
     const b = n.bubble || Game.npcBubble(n);
     if (b) drawBubble(n.px, n.py - 52, b);
   } }));
-  ents.push({ y: hero.py + .1, draw: () => Art.drawPerson(ctx, hero.px, hero.py, S.player.look, { dir: hero.dir, walking: !!hero.move, phase: hero.phase }) });
+  ents.push({ y: hero.py + .1, draw: () => {
+    Art.drawPerson(ctx, hero.px, hero.py, S.player.look, { dir: hero.dir, walking: !!hero.move, phase: hero.phase });
+    if (tileAt(Math.floor(hero.px / TILE), Math.round((hero.py - TILE) / TILE)) === ';') {   // wading through tall grass
+      for (let i = 0; i < 7; i++) { const h = 7 + (i * 5) % 6 + (hero.move ? Math.sin(clock / 70 + i) * 1.5 : 0); ctx.fillStyle = i % 2 ? '#3f9b4a' : '#58b85f'; ctx.fillRect(hero.px - 15 + i * 4.6, hero.py - h + 2, 3, h); }
+    }
+  } });
   ents.sort((a, b) => a.y - b.y).forEach(e => e.draw());
   // tap path dots
   if (hero.path && hero.path.length) hero.path.forEach(([x, y], i) => circle(ctx, x * TILE + TILE / 2, y * TILE + TILE / 2, 2.5, 'rgba(14,143,134,' + (.6 - i * .03) + ')'));
+  // the guide arrow: a small chevron circling the hero that points at the next goal; a bouncing marker when it is close
+  const gt = Game.state === 'OVERWORLD' && !UI.active && !Panel.isOpen ? Game.guideTarget() : null;
+  if (gt) {
+    const tx = gt.x * TILE + TILE / 2, ty = gt.y * TILE + TILE / 2, dx = tx - hero.px, dy = ty - (hero.py - TILE / 2), d = Math.hypot(dx, dy);
+    if (d > TILE * 2.4) {
+      const a = Math.atan2(dy, dx), r = 34 + Math.sin(clock / 200) * 3;
+      ctx.save(); ctx.translate(hero.px + Math.cos(a) * r, hero.py - 24 + Math.sin(a) * r); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -7); ctx.lineTo(-2, 0); ctx.lineTo(-5, 7); ctx.closePath();
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ctx.fillStyle = '#f2a516'; ctx.fill(); ctx.restore();
+    } else if (gt.door) {
+      const by = Math.sin(clock / 180) * 3; ctx.save(); ctx.translate(tx, ty - 26 + by + (gt.y === 0 ? 30 : 0));
+      ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-7, -3); ctx.lineTo(7, -3); ctx.closePath(); ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ctx.fillStyle = '#f2a516'; ctx.fill(); ctx.restore();
+    }
+  }
+  // outdoors: drifting cloud shadows and a few leaves on the wind
+  if (m.floor === 'grass' && !reduceFx()) {
+    for (let i = 0; i < 3; i++) { const cx = ((clock / (38 + i * 9) + i * 420) % (W + 500)) - 250, cy = H * (.2 + i * .3); ctx.fillStyle = 'rgba(30,70,90,.07)'; ctx.beginPath(); ctx.ellipse(cx, cy, 150 + i * 30, 46 + i * 8, 0, 0, Math.PI * 2); ctx.fill(); }
+    for (let i = 0; i < 9; i++) { const k = (clock / (5200 + i * 310) + i * .173) % 1, lx = (i * 197 % W) + k * 160, ly = k * (H + 40) - 20 + Math.sin(clock / 500 + i) * 10;
+      ctx.save(); ctx.translate(lx, ly); ctx.rotate(clock / 400 + i); ctx.fillStyle = i % 3 ? 'rgba(120,190,90,.85)' : 'rgba(244,170,60,.85)'; ctx.beginPath(); ctx.ellipse(0, 0, 3.4, 1.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  }
   ctx.restore();
   renderFx();
   // soft daylight vignette
@@ -3579,7 +3626,7 @@ function freshState() {
   return { v: 1, player: null, difficulty: 'normal', map: 0, x: 5, y: 5, dir: 'up', xp: 0, coins: 30, shift: 1, streak: 0, lastDay: '',
     badges: [], labBadge: false, episodes: {}, labRounds: {}, dex: {}, inv: { coffee: 0, calm: 1, torch: 0, guide: 0, shield: 0 },
     domains: {}, calib: {}, flags: {}, trainers: {}, visited: {}, daily: null, shiftLog: { eps: 0, xp: 0 },
-    know: {}, team: [], found: {}, hazards: {}, council: 0, councilHP: 100, rival: 0, stats: { steps: 0, codes: 0 }, settings: { sound: true, musicVol: .6, sfxVol: .8, textSpeed: 1, reduceFx: false, hc: false, zoom: 1, haptics: true, pager: true, autoRun: false } };
+    know: {}, team: [], found: {}, hazards: {}, council: 0, councilHP: 100, rival: 0, stats: { steps: 0, codes: 0 }, settings: { guide: true, sound: true, musicVol: .6, sfxVol: .8, textSpeed: 1, reduceFx: false, hc: false, zoom: 1, haptics: true, pager: true, autoRun: false } };
 }
 let S = freshState();
 window.S = S;
@@ -3676,6 +3723,30 @@ const Game = {
       if (res.result === 'win') await this.reward(60 + n * 30, 25 + n * 10);
       npcs = npcs.filter(x => x !== r); this.save();
     });
+  },
+  /* Where the story wants you next — the tile in this map to walk to (a person, a bed, or the door that leads there). */
+  guideTarget() {
+    if (!S.settings.guide) return null;
+    if (this._gt && clock - this._gt.t < 500 && this._gt.map === S.map) return this._gt.v;
+    const findNpc = id => { for (let i = 0; i < MAPS.length; i++) { const n = (MAPS[i].npcs || []).find(q => q.id === id); if (n) return { map: i, x: n.x, y: n.y }; } return null; };
+    let goal = null;
+    if (!this.tutorialDone()) goal = findNpc('rivka');
+    else if (S.badges.length < ACTS.length && this.bossReady()) goal = findNpc('leader');
+    else {
+      const p = Object.keys(PATIENT_ROOM).find(q => this.availableEpisode(q));
+      if (p) { const mi = PATIENT_ROOM[p] + 1, k = Object.keys(MAPS[mi].beds).find(q => MAPS[mi].beds[q] === p), xy = k.split(',').map(Number); goal = { map: mi, x: xy[0], y: xy[1] }; }
+      else if (S.badges.length >= ACTS.length && !S.flags.champion) goal = findNpc('judge' + Math.min(3, S.council || 0)) || null;
+    }
+    let v = null;
+    if (goal && goal.map === S.map) v = { x: goal.x, y: goal.y };
+    else if (goal) {   // breadth-first over the doors: which door of this map starts the shortest way there?
+      const seen = { [S.map]: 1 }, q = Object.keys(MAPS[S.map].doors || {}).map(k => ({ m: MAPS[S.map].doors[k].to, first: k }));
+      while (q.length && !v) { const c = q.shift(); if (seen[c.m]) continue; seen[c.m] = 1;
+        if (c.m === goal.map) { const xy = c.first.split(',').map(Number); v = { x: xy[0], y: xy[1], door: true }; }
+        else Object.keys(MAPS[c.m].doors || {}).forEach(k => q.push({ m: MAPS[c.m].doors[k].to, first: c.first })); }
+    }
+    this._gt = { t: clock, map: S.map, v };
+    return v;
   },
   async lockedDoor(door) {
     if (this.busy) return;
@@ -4199,6 +4270,7 @@ function openSettings() {
     ${row('zoom', '🔠 גודל טקסט', 'בתיבות ובחלונות', [[1, 'רגיל'], [1.15, 'גדול'], [1.3, 'גדול מאוד']])}
     ${row('hc', '◐ ניגודיות גבוהה', 'רקעים כהים לגמרי וקווים בהירים', [[false, 'כבוי'], [true, 'פועל']])}
     ${row('reduceFx', '✨ הפחתת אפקטים', 'פחות רעידות, הבזקים ותנועה', [[false, 'כבוי'], [true, 'פועל']])}
+    ${row('guide', '🧭 חץ הכוונה', 'חץ קטן שמצביע ליעד הבא', [[true, 'פועל'], [false, 'כבוי']])}
     ${row('pager', '📟 קריאות ביפר', 'אירועים מהירים אקראיים במסדרון', [[true, 'פועל'], [false, 'כבוי']])}
     ${row('autoRun', '🏃 ריצה אוטומטית', 'הליכה מהירה תמיד (או Shift)', [[false, 'כבוי'], [true, 'פועל']])}
     ${row('haptics', '📳 רטט', 'במכשירים שתומכים', [[true, 'פועל'], [false, 'כבוי']])}

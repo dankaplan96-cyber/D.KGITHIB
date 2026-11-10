@@ -592,3 +592,7 @@ body.in-battle #quest-box{display:none!important}
 .pl-stats{display:flex;gap:10px;font-size:11px;color:#365069;font-weight:700}
 .pl-card .pg-bar{margin:0}
 .pl-card .system-btn{align-self:flex-start;font-size:12px}
+
+/* v1.6 — answers in two columns so the whole question fits and the scene stays visible */
+@media(min-width:600px){#msg-opts.list.two{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:stretch}#msg-opts.list.two .conf-row,#msg-opts.list.two .opt.back{grid-column:1/-1}#msg-opts.list.two .opt{padding:7px 11px;font-size:13.5px}}
+.conf-n{flex-basis:auto;align-self:center}

@@ -197,6 +197,13 @@ const Art = (() => {
       } else if (GROUND[ch]) drawGround(c, GROUND[ch], m.floor, x, y, px, py);
       else drawFloor(c, m.floor, x, y, px, py);
     }
+    // depth: walls and buildings cast a soft shadow onto the floor below and beside them
+    for (let y = 1; y < H; y++) for (let x = 0; x < W; x++) {
+      if (WALLISH.has(at(x, y))) continue;
+      const px = x * T, py = y * T;
+      if (WALLISH.has(at(x, y - 1))) { const gr = c.createLinearGradient(0, py, 0, py + 13); gr.addColorStop(0, 'rgba(35,65,90,.20)'); gr.addColorStop(1, 'rgba(35,65,90,0)'); c.fillStyle = gr; c.fillRect(px, py, T, 13); }
+      if (x > 0 && WALLISH.has(at(x - 1, y))) { const gr = c.createLinearGradient(px, 0, px + 7, 0); gr.addColorStop(0, 'rgba(35,65,90,.12)'); gr.addColorStop(1, 'rgba(35,65,90,0)'); c.fillStyle = gr; c.fillRect(px, py, 7, T); }
+    }
     if (m.id === 'hall') { c.fillStyle = 'rgba(45,212,191,.55)'; c.fillRect(T, 4 * T + 18, (W - 2) * T, 4); c.fillStyle = 'rgba(251,191,36,.45)'; c.fillRect(T, 4 * T + 24, (W - 2) * T, 2); }
     if (m.id === 'staff') { c.fillStyle = '#9fd5cd'; roundRect(c, 2 * T + 6, 2 * T + 6, 7 * T - 12, 4 * T - 12, 6); c.fill(); c.strokeStyle = '#d4a85a'; c.lineWidth = 2; roundRect(c, 2 * T + 12, 2 * T + 12, 7 * T - 24, 4 * T - 24, 4); c.stroke(); }
     // doors
