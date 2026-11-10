@@ -40,6 +40,8 @@ function renderBattle(dt) {
   ctx.save();
   if (FX.shake > 0) ctx.translate(Math.sin(clock * .11) * 4 * FX.shake / 300, Math.cos(clock * .13) * 3 * FX.shake / 300);
   Art.battleBackdrop(B.scene, B.patient);
+  { const ecA = (TYPES[B.enemy.type] || TYPES.meds).color, pulse = reduceFx() ? .2 : .18 + .05 * Math.sin(clock / 700);   // the problem's colour glows behind it
+    ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = rad(F.foe.x, F.foe.y, 10, 170, [[0, ecA], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(F.foe.x - 170, F.foe.y - 170, 340, 340); ctx.restore(); }
   const intro = 1 - easeOut(clamp(B.introT / 520, 0, 1));
   const ec = (TYPES[B.enemy.type] || TYPES.meds).color;
   Art.platform(F.foe.x, F.foe.y + 44, 70, 15, ec + '');
@@ -493,7 +495,7 @@ async function quickBattle(o) {
   const Q = quickQuestion(), D = diff();
   await battleTransition();
   const room = 1 + Math.floor(Math.random() * 4);
-  startBattle({ kind: 'quick', scene: 'hall', hpLabel: 'יציבות', heroLabel: S.player.name,
+  startBattle({ kind: 'quick', scene: curMap().floor === 'grass' ? 'street' : 'hall', hpLabel: 'יציבות', heroLabel: S.player.name,
     enemy: o.trainer ? { name: o.trainer.name, person: o.trainer.look, type: Q.type, sub: o.trainer.role, barLabel: 'ספק' } : { name: o.community ? 'שיחה מהקהילה' : 'קריאה מחדר ' + room, type: 'pager', ringing: true, sub: Q.title, barLabel: 'דחיפות' } });
   const B = battle;
   const extra = chipsHTML((Q.v || []).map(t => ({ t: '📈 ' + t, cls: 'vit' })));

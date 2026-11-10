@@ -100,7 +100,7 @@ const Game = {
       r.dir = Object.keys(DIRS).find(d => DIRS[d][0] === Math.sign(hero.x - r.x) && DIRS[d][1] === Math.sign(hero.y - r.y)) || 'down';
       hero.dir = Object.keys(DIRS).find(d => DIRS[d][0] === -Math.sign(hero.x - r.x) && DIRS[d][1] === -Math.sign(hero.y - r.y)) || hero.dir;
       await UI.say('עידו: “' + L.intro + '”', { name: 'עידו · היריב/ה שלך' });
-      const res = await panelBattle({ enemy: { name: 'עידו', person: 'ido', type: 'meds', sub: 'אח חדש · היריב' }, scene: 'hall', need: 3, loss: 30, music: 'battle',
+      const res = await panelBattle({ enemy: { name: 'עידו', person: 'ido', type: 'meds', sub: 'אח חדש · היריב' }, scene: MAPS[S.map].floor === 'grass' ? 'street' : 'hall', need: 3, loss: 30, music: 'battle',
         intro: 'שלושה מקרים. מי שמשכנע ראשון — מנצח.', qs: Core.questions(null, 8, this.unlockedAct()) });
       S.rival = n + 1;
       await UI.say('עידו: “' + (res.result === 'win' ? L.win : L.lose) + '”', { name: 'עידו' });
@@ -320,7 +320,7 @@ const Game = {
     } else if (n.id === 'rachel') {
       if (S.flags.teachback) return say('“אני יודעת בדיוק מה הוא לוקח ומתי. תודה שהסברת — ושביקשת שאסביר בחזרה.”');
       await say('“אברהם חוזר עם שלוש רשימות תרופות ואני מבולבלת. תסביר/י לי?” — זה הזמן ל-Teach-back: מסבירים, ואז מבקשים ממנה להסביר בחזרה.');
-      const r = await panelBattle({ enemy: { name: 'רחל', person: 'rachel', type: 'goals', sub: 'מטפלת עיקרית' }, scene: 'hall', need: 2, loss: 25,
+      const r = await panelBattle({ enemy: { name: 'רחל', person: 'rachel', type: 'goals', sub: 'מטפלת עיקרית' }, scene: 'home', need: 2, loss: 25,
         intro: 'בוא/י נעבור על זה יחד. אני רוצה להבין באמת.', qs: shuffle(C.episodes.filter(e => ['med-reconciliation', 'caregiver-capacity', 'discharge', 'goals-hf'].includes(e.id))).map((e, i) => ({ e, st: STAGES[(i + 1) % 4] })) });
       if (r.result === 'win') { S.flags.teachback = 1; Sound.badge(); await say('“עכשיו אני מבינה — ואני יכולה להסביר לבד.” 🎉 📚 Teach-back מאמת הבנה בפועל, לא חתימה על דף (AHRQ).'); await this.reward(80, 30); this.save(); }
     } else if (/^judge|^champion/.test(n.id)) {
@@ -385,7 +385,7 @@ const Game = {
     const i = n.id === 'champion' ? 4 : +n.id.slice(5), cfg = COUNCIL[i], info = NPC_INFO[n.id];
     if ((S.council || 0) > i) return UI.say('“כבר שכנעת אותי. המשך/המשיכי.”', { name: info.name });
     if ((S.council || 0) < i) return UI.say('“קודם השופט/ת הקודם/ת.”', { name: info.name });
-    const r = await panelBattle({ enemy: { name: info.name, person: cfg.id, type: ACT_TYPE[cfg.acts[cfg.acts.length - 1]], sub: info.role }, scene: 'conf', music: 'boss', boss: true,
+    const r = await panelBattle({ enemy: { name: info.name, person: cfg.id, type: ACT_TYPE[cfg.acts[cfg.acts.length - 1]], sub: info.role }, scene: 'council', music: 'boss', boss: true,
       hp: S.councilHP, need: i === 4 ? 5 : 4, loss: 22, noLeave: true, intro: cfg.intro, qs: Core.questions(cfg.pillar, 12) });
     if (r.result === 'win') {
       S.council = i + 1; S.councilHP = r.hp; this.save();

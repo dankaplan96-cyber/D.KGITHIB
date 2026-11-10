@@ -85,10 +85,24 @@ async function trainerSpotted(n, dist) {
   S.trainers[n.id] = S.shift; Game.save();
 }
 
+const EMOTES = { _: ['♪', '💬', '…', '📋'], shula: ['☕', '♪'], tal: ['🧪', '🔬'], omer: ['💊', '📋'], maya: ['💪', '♪'], ron: ['🏠', '💬'], liat: ['📞', '💬'], noa: ['🥗', '♪'], cohen: ['💪', '…'], gil: ['…', '👀'], neighbor: ['🌷', '♪'] };
 function stepNpcs(dt) {
   for (const n of npcs) {
     if (n.move) { n.move.t += dt; const k = clamp(n.move.t / n.move.dur, 0, 1); n.px = lerp(n.move.fx, n.move.tx, k) * TILE + TILE / 2; n.py = lerp(n.move.fy, n.move.ty, k) * TILE + TILE; n.phase = (n.phase || 0) + dt / 60; if (k >= 1) n.move = null; continue; }
     n.px = n.x * TILE + TILE / 2; n.py = n.y * TILE + TILE;
+    // a little life: turn to whoever walks up, glance around now and then, and the occasional emote
+    if (Game.state === 'OVERWORLD' && !UI.active && !n.sight) {
+      if (n.homeDir == null) n.homeDir = n.dir;
+      const dx = hero.x - n.x, dy = hero.y - n.y, near = Math.abs(dx) + Math.abs(dy) <= 2;
+      if (!n.wander) {
+        if (near) { n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); n.glance = 1200; }
+        else { n.glance = (n.glance == null ? 3000 + Math.random() * 6000 : n.glance) - dt;
+          if (n.glance <= 0) { if (n.dir === n.homeDir) { n.dir = pick(['left', 'right', 'down']); n.glance = 900 + Math.random() * 900; } else { n.dir = n.homeDir; n.glance = 4000 + Math.random() * 7000; } } }
+      }
+      n.emoteT = (n.emoteT == null ? 3000 + Math.random() * 12000 : n.emoteT) - dt;
+      if (n.emoteT <= 0) { n.emote = pick(EMOTES[n.id] || EMOTES._); n.emoteLeft = 1800; n.emoteT = 9000 + Math.random() * 14000; }
+      if (n.emoteLeft > 0) n.emoteLeft -= dt;
+    }
     if (!n.wander || Game.state !== 'OVERWORLD' || UI.active) continue;
     n.next -= dt;
     if (n.next > 0) continue;
@@ -245,6 +259,7 @@ function renderWorld() {
     Art.drawPerson(ctx, n.px, n.py, n.look, { dir: n.dir, walking: !!n.move, phase: n.phase || 0, seed: n.seed });
     const b = n.bubble || Game.npcBubble(n);
     if (b) drawBubble(n.px, n.py - 52, b);
+    else if (n.emoteLeft > 0) { const k = 1 - n.emoteLeft / 1800; ctx.save(); ctx.globalAlpha = k < .15 ? k / .15 : k > .75 ? (1 - k) / .25 : 1; heText(n.emote, n.px + 13, n.py - 56 - k * 8, { size: 13, bold: true, color: '#24425c', align: 'center', ltr: true }); ctx.restore(); }
   } }));
   ents.push({ y: hero.py + .1, draw: () => {
     Art.drawPerson(ctx, hero.px, hero.py, S.player.look, { dir: hero.dir, walking: !!hero.move, phase: hero.phase });
