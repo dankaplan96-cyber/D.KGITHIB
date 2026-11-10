@@ -1,0 +1,29 @@
+From 9a4f6bb2071f461ebaae1cb58fd1537a02585ada Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 15:02:44 +0000
+Subject: [PATCH 2/3] NO-AIR: a brace lost behind a comment in workhands.js
+ (the module did not parse)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/workhands.js | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lba3/src/game/workhands.js b/lba3/src/game/workhands.js
+index f9e7be94..eea12a18 100644
+--- a/lba3/src/game/workhands.js
++++ b/lba3/src/game/workhands.js
+@@ -158,7 +158,8 @@ function touch(g, a, rig, dt) {
+     if (rig.actionT < 0.12 && S.pre !== key) {
+       S.pre = key;
+       _mid.set(p.x + fx * 0.5 * sc, p.y + (spec.ground ? 0.3 : 0.95) * sc, p.z + fz * 0.5 * sc);
+-      if (!find(g, rig, spec, _mid, p.y, sc, fx, fz, 0.12)) {   // (within 0.62 m of the body: what an arm and a bend reach) rig.standFor = rig.anim; S.T = null; S.w = 0; return; }
++      // (within 0.62 m of the body: what an arm and a bend reach)
++      if (!find(g, rig, spec, _mid, p.y, sc, fx, fz, 0.12)) { rig.standFor = rig.anim; S.T = null; S.w = 0; return; }
+     }
+     if (live <= 0) { S.T = null; S.key = ''; S.w = 0; return; }
+     if (!S.T && S.key !== key) { if (live < 0.6) return; fresh = true; }
+-- 
+2.43.0
+
