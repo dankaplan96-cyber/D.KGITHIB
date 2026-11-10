@@ -139,7 +139,7 @@ const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.45;
 const CH_HIGH_ARMS = [6.5, 5.5, 4.6, 3.9], CH_HIGH_P = [0.62, 0.75, 0.88, 1.0, 1.12], CH_OVER_HI = [4.4, 5.6], CH_OVER_HI_P = [1.2, 1.32, 1.45, 1.52];
 const CH_HIGH_ROOF_Q = 0.88;
 const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
-const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1];   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
+const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1], CH_OVER_SEE_STEP = 0.9;   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
 // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
 const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
 const CH_OVER_SET = [[CH_OVER_ARMS[0], CH_OVER_P], ...CH_OVER_HI.map((a) => [a, CH_OVER_HI_P]), ...CH_OVER_ARMS.slice(1).map((a) => [a, CH_OVER_P])];
@@ -182,6 +182,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // instead (the search swings it along the foot first). Only when nothing round him is clear does the arm come in to
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
+const CH_SOFT_T = 0.6, CH_SOFT_GO = 1.0;   // (CAM-COVER: a round crown counts once he has stood this long, until he walks this far: _chase)
 const CH_LOW_SEE = 0.25, CH_EL_KEEP_DOOR = (11 * Math.PI) / 180;   // (CAM-ROOFEDGE: the low point of him that nothing tall may hide, m over his feet: _sees; his chest inside the frame's foot just out of a door: _chase)
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
 const CH_HOLD_IDLE = 1.0, CH_SW_SETTLE = 0.3;
@@ -285,7 +286,7 @@ const _segCols = [], _segVols = [], _segSeen = new Set();
 const _pass = [[0, false], [0, true]], SOLID_PASS = (gap) => { _pass[0][0] = gap; _pass[1][0] = gap + CH_PIPE; return _pass; };
 const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
-const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3();
+const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3(), _os = new THREE.Vector3();
 // LBA2's forced camera: the look-ahead shrinks with the sine of the pitch above the view's own, to nothing at 90°
 const aheadK = (p, p0) => (p <= p0 + 1e-4 ? 1 : clamp(1 - (Math.sin(p) - Math.sin(p0)) / (1 - Math.sin(p0)), 0, 1));
 
@@ -430,6 +431,7 @@ export class CameraRig {
   }
 
   _update(dt, focus, heroAngle, moving, input, cam) {
+    this._softOn = false;   // (CAM-COVER: set by _chase alone, the Follow camera's)
     if (this._focus && focus.distanceToSquared(this._focus) > 16) this.snap();
     (this._focus ??= new THREE.Vector3()).copy(focus);
     // (CAM-2: a drag of the mouse or a finger with no free orbit to turn is let go, not kept for later: it used to pile
@@ -438,7 +440,7 @@ export class CameraRig {
     if (this.cine) return; // a cinematic places the camera itself (src/engine/cinematic.js)
     const snap = this._snap;
     this._snap = false;
-    { const W = this.why; W.follow = W.box = W.swing = W.rise = W.lift = W.keep = W.dist = W.auto = W.user = W.occ = W.ground = W.off = W.chase = W.talk = W.kb = 0; W.swingBy = ''; W.snap = !!snap; W.mode = this.override ? 'override' : this.iso ? 'iso' : this.mode === 'lba' ? (this.cut ? 'cuts' : 'lba') : this.mode; }
+    { const W = this.why; W.follow = W.box = W.swing = W.rise = W.lift = W.keep = W.dist = W.auto = W.user = W.occ = W.ground = W.off = W.chase = W.talk = W.kb = 0; W.swingBy = ''; W.keepBy = ''; W.snap = !!snap; W.mode = this.override ? 'override' : this.iso ? 'iso' : this.mode === 'lba' ? (this.cut ? 'cuts' : 'lba') : this.mode; }
     if (this.override) {
       if (snap) { cam.position.copy(this.override.pos); this.look.copy(this.override.look); }
       cam.position.lerp(this.override.pos, 1 - Math.exp(-dt * 2));
@@ -728,7 +730,7 @@ export class CameraRig {
     // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
     // the questions in a walk through the town are repeats.)
     // (STABILIZATION: the answers kept as numbers in one array, 8 a question — not a new array each: ~48 a frame)
-    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : this._lowOff ? 2 : 0;
+    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = (strict ? 1 : this._lowOff ? 2 : 0) + (this._softOn ? 4 : 0);
     if (this._busy) {
       if (M.fid !== this._fid) { M.fid = this._fid; M.n = 0; }
       for (let i = 0, j = 0; i < M.n; i++, j += 8) if (A[j] === p.x && A[j + 1] === p.y && A[j + 2] === p.z && A[j + 3] === hero.x && A[j + 4] === hero.y && A[j + 5] === hero.z && A[j + 6] === st) return A[j + 7] === 1;
@@ -798,7 +800,8 @@ export class CameraRig {
         // him like a wall within its core, c.sight: behind one at the depot bunker's wheel and at the glider field the
         // camera kept its view and he showed as an outline through the leaves. A round tree's crown, high over its trunk,
         // is still seen under)
-        if (c.sight && y > c.sight.y0 && y < c.sight.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.sight.r ** 2) return false;
+        // (CAM-COVER, release audit v75 F-8: a round tree's crown, sight.soft, only once he has stood a moment: _chase)
+        if (c.sight && (!c.sight.soft || this._softOn) && y > c.sight.y0 && y < c.sight.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.sight.r ** 2) return false;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }
@@ -1079,6 +1082,22 @@ export class CameraRig {
     const tp = this.lockOn?.(), lockD = tp ? Math.hypot(tp.x - hero.x, tp.z - hero.z) : 0, lock = tp && lockD > 0.5;
     // (CAM-ROOFEDGE: with a lock-on the shot frames him and the target: the legs rule, _sees, is not asked)
     this._lowOff = !!lock;
+    // CAM-COVER (release audit v75 F-8): a round or fruit tree's crown (its collider's sight.soft: world.js) counts for the
+    // sight lines once he has stood CH_SOFT_T s, until he walks CH_SOFT_GO m away: standing by the hopscotch a round crown
+    // filled the view between the camera and him for as long as he stood, his outline showing, the sight test reading him
+    // as seen. Walking, they do not count (his outline shows as he passes under one): counted then, the town's crowns
+    // came and went on the arm's lines every few steps — the view's heading reversed twice as often as his, and the
+    // height bobbed (camsteady: along the house walls, turning on the spot by the hopscotch, the Medium street)
+    {
+      const S = (this._soft ??= { t: 0, on: false, px: hero.x, pz: hero.z, pa: heroAngle, ax: 0, az: 0 });
+      const mv = Math.hypot(hero.x - S.px, hero.z - S.pz) / dt > 0.3 || Math.abs(angleDiff(S.pa, heroAngle)) / dt > 0.3;
+      S.px = hero.x; S.pz = hero.z; S.pa = heroAngle;
+      S.t = snap || mv ? 0 : S.t + dt;
+      if (snap) S.on = false;
+      else if (!S.on && S.t > CH_SOFT_T) { S.on = true; S.ax = hero.x; S.az = hero.z; }
+      else if (S.on && Math.hypot(hero.x - S.ax, hero.z - S.az) > CH_SOFT_GO) S.on = false;
+      this._softOn = S.on && !lock;
+    }
     // where the view wants to look from: behind his back, or behind his shoulder on the line from the target
     const facing = () => (lock ? Math.atan2(hero.x - tp.x, hero.z - tp.z) + CH_SHOULDER : heroAngle + Math.PI);
     const fresh = snap || !C.init;
@@ -1391,7 +1410,7 @@ export class CameraRig {
       for (let q = q0 + 0.05; q <= CH_RISE_Q + 1e-6; q += 0.05) {
         at(_b, yaw, a, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
         if (this._solidAt(_b, CH_INSIDE) || this._overRoof(_b)) continue;
-        cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1;
+        cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1; W.keepBy = 'tilt';
         break;
       }
       // (CAM-KEYWALK: nor there — something taller than it right behind him, the hostel's portico —: higher over his
@@ -1403,7 +1422,7 @@ export class CameraRig {
           if (q < q0) continue;
           at(_b, yaw, oa, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
           if (this._solidAt(_b, CH_INSIDE) || this._overRoof(_b)) continue;
-          cam.position.copy(_b); this.dist = oa; this.pitch = q; W.keep = 1;
+          cam.position.copy(_b); this.dist = oa; this.pitch = q; W.keep = 1; W.keepBy = 'high';
           // (and the arm takes it as its own, over his head: let go, it eases down from there — it used to drop in a
           // frame to the 2 m the arm held underneath, by the fort's south-west tower)
           C.arm = oa; C.armV = 0; C.overArm = oa; C.overQ = q; C.overK = 1;
@@ -1421,7 +1440,7 @@ export class CameraRig {
         let l = Math.max(n, C.lift);
         for (_b.y = y0 + l; l > n && this._solidAt(_b, CH_INSIDE); _b.y = y0 + l) l = Math.max(n, l - 0.1);
         if (this._solidAt(_b, CH_INSIDE)) continue;
-        cam.position.copy(_b); this.dist = a; W.keep = 1;
+        cam.position.copy(_b); this.dist = a; W.keep = 1; W.keepBy = 'arm';
         if (so === 0) { C.arm = a; C.armV = 0; this.pitch = pq(a); if (l === n) { C.lift = n; C.vlift = 0; } }
         break;
       }
@@ -1433,7 +1452,7 @@ export class CameraRig {
         dip: for (let q = q0 - 0.1; q >= CH_DIP_MIN - 1e-6; q -= 0.1) for (let a = Math.min(C.arm, CH_SHORT); a >= CH_CLOSE - 1e-6; a -= 0.1) {
           at(_b, yaw, a, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
           if (this._solidAt(_b, CH_INSIDE)) continue;
-          cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1;
+          cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1; W.keepBy = 'dip';
           if (so === 0) { C.arm = a; C.armV = 0; }
           break dip;
         }
@@ -1446,17 +1465,34 @@ export class CameraRig {
     // were never asked whether they see him: backing up to the wall and turning there, it stood on the roof's slope
     // looking down through the eave at him for 20-30 frames, though the view it was going to saw him. Seeing him no
     // more on that way, it takes the least further step along it that does (CH_OVER_SEE of the rest), clear of everything
+    // (F-5, release audit v75: "sees" here is his head or his chest, as before CAM-ROOFEDGE: a step along that way is taken
+    // in one frame, and with the legs rule asked here too it was taken whenever a roof's edge hid his legs — the arm
+    // jumped 2.1-3.4 m in a frame walking the street, through a door, out of the house door. The legs rule still picks
+    // the view the arm eases to, armFor)
+    const low0 = this._lowOff; this._lowOff = true;
     if (C.overSee && !lock && !this._sees(cam.position, hero)) {
       const a1 = this.dist, q1 = this.pitch, [q2, a2] = C.overSee;
       for (const f of CH_OVER_SEE) {
         const a = lerp(a1, a2, f), q = lerp(q1, q2, f);
         at(_b, yaw, a, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
         if (this._solidAt(_b, CH_INSIDE) || !this._sees(_b, hero)) continue;
-        cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1;
-        C.overK = 1; C.overArm = a; C.overQ = q; C.overT = Math.max(C.overT || 0, CH_OVER_T);
+        // (F-5: and it goes there at most CH_OVER_SEE_STEP m a frame, along the same way, through spots that stand clear —
+        // a step over his head out of a crown or an eave came to 4.6 m in a frame; nothing it passes stands in anything,
+        // and his outline shows for the two or three frames it takes)
+        let aa = a, qq = q;
+        const far = _b.distanceTo(cam.position);
+        if (far > CH_OVER_SEE_STEP) for (let g = CH_OVER_SEE_STEP / far; g < 1; g += 0.1) {
+          const ga = lerp(a1, a, g), gq = lerp(q1, q, g);
+          at(_os, yaw, ga, T, gq); _os.y += this._groundNeed(_os.x, _os.y, _os.z, T, true);
+          if (this._solidAt(_os, CH_INSIDE)) continue;
+          _b.copy(_os); aa = ga; qq = gq; break;
+        }
+        cam.position.copy(_b); this.dist = aa; this.pitch = qq; W.keep = 1; W.keepBy = 'oversee';
+        C.overK = 1; C.overArm = aa; C.overQ = qq; C.overT = Math.max(C.overT || 0, CH_OVER_T);
         break;
       }
     }
+    this._lowOff = low0;
     // (drawn in and lifted over a slope or a terrace beside him, it would look down steeply on him: it looks further
     // along its way instead, no steeper than CH_EL_MAX — or as little more as keeps his chest CH_EL_KEEP inside the
     // frame's lower edge)
