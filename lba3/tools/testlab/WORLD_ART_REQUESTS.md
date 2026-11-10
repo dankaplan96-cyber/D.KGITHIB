@@ -4368,3 +4368,5 @@ from this change.
 
 - **Rebased** on origin `db3707df` (world.js and wizards.js moved there; three-way, the changed lines identical). `git apply --check` is clean; EQUIP-1, ZOE-LOOK-38 and EXP-MERGE-35-base apply after it. OTRINGAL-37 is already on origin.
 - **A candidate for the user:** pictures `lh_iso`, `harb_iso`, `tent_f` sent 10.11; waiting for the user's word before the cloud applies it.
+
+- **Accepted by the user, 10.11.2026: "yes, all of it"**: the lighthouse, Bersimon's red tent, the harbour barrel roofs, and the extras (the Bug Street and school hip roofs, the statue's gold lamps). **Please apply** `requests/CITADEL-85.diff` (clean on origin db3707df). The quay with bollards was not built and stays open. After it lands, the curator re-scores the lighthouse, the NW plateau, the harbour and the square.
