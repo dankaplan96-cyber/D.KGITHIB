@@ -109,6 +109,43 @@ r = await ev(() => {
 check('ball: no tunnelling through a thin wall at 15 fps', !r.crossed, r);
 check('ball: back in hand afterwards', r.state === 'idle', r);
 
+// 5b. COMBAT-2: an enemy bolt (9 m/s, a drone's) at 30 and 15 fps stops at a chain-link fence (seen through, 0.24 m thick)
+// as the ball does, and a drone that sees him through one does not fire into it (the Zeelich depot's drones shot him
+// through the fence his ball could not pass: a frame's 0.3 m stepped over it)
+r = await ev(() => {
+  const { G, E } = C, P = G.physics, out = {};
+  for (const fps of [30, 15]) {
+    C.only([], [6194, 8], Math.PI); const h = G.hero, y = h.pos.y;
+    const f = P.add({ type: 'box', x: h.pos.x, z: h.pos.z - 2.5, hw: 3, hd: 0.12, rot: 0, top: y + 2.4, seeThrough: true, noStand: true });
+    P.rebuild?.();
+    // (twelve bolts, each from 3 cm further back: whether a frame's step lands inside the fence depends on where it starts)
+    let through = 0;
+    for (let k = 0; k < 12; k++) {
+      h.hp = h.maxHp; h.invuln = 0; h.hurtT = 0; const hp0 = h.hp;
+      G.bolts.fire(new (h.pos.constructor)(h.pos.x, y + 1.1, h.pos.z - 6 - k * 0.03), new (h.pos.constructor)(0, 0, 1), 9, 1);
+      for (let i = 0; i < fps; i++) C.step(1 / fps, 1 / fps);
+      if (h.hp < hp0) through++;
+      G.bolts.clear();
+    }
+    out['hp' + fps] = -through; out['left' + fps] = G.bolts.list.length;
+    f.enabled = false;
+    // (the control: without the fence the same bolt hits him)
+    h.hp = h.maxHp; h.invuln = 0; h.hurtT = 0; G.bolts.fire(new (h.pos.constructor)(h.pos.x, y + 1.1, h.pos.z - 6), new (h.pos.constructor)(0, 0, 1), 9, 1);
+    for (let i = 0; i < fps; i++) C.step(1 / fps, 1 / fps);
+    out['open' + fps] = h.maxHp - h.hp; G.bolts.clear(); h.hp = h.maxHp;
+  }
+  // the drone: behind a fence, in sight, in range, ready: no wind-up for 3 s
+  C.only(['a_drone'], [6194, 8], Math.PI); const h = G.hero, d = E('a_drone'), y = h.pos.y;
+  d.pos.set(h.pos.x, d.pos.y, h.pos.z - 5); d.state = 'chase'; d.coolT = 0; d.patrol = [[d.pos.x, d.pos.z]];
+  const f = P.add({ type: 'box', x: h.pos.x, z: h.pos.z - 2.5, hw: 3, hd: 0.12, rot: 0, top: y + 2.4, seeThrough: true, noStand: true });
+  let wound = false; for (let i = 0; i < 90; i++) { d.pos.z = h.pos.z - 5; C.step(1 / 30, 1 / 30); if (d.state === 'windup') wound = true; }
+  f.enabled = false; let woundOpen = false; for (let i = 0; i < 90 && !woundOpen; i++) { d.pos.z = h.pos.z - 5; C.step(1 / 30, 1 / 30); if (d.state === 'windup') woundOpen = true; }
+  out.droneFiredThrough = wound; out.droneFiresInOpen = woundOpen; G.bolts.clear(); d.setPresent(false);
+  return out;
+});
+check('bolts: stopped by a chain-link fence at 30 and 15 fps (as the ball): none of twelve through it; without it they hit', r.hp30 === 0 && r.hp15 === 0 && r.left30 === 0 && r.left15 === 0 && r.open30 > 0 && r.open15 > 0, r);
+check('a drone does not fire into a fence between them; it does in the open', !r.droneFiredThrough && r.droneFiresInOpen, r);
+
 // 6. one press, one ball; pressing again while it flies calls it back
 r = await ev(() => {
   const { G } = C; C.only([], [6190, 8], Math.PI / 2);

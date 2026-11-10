@@ -12,12 +12,19 @@ await open(page, process.env.Q ?? '?nocine');
 await menu(page, process.env.MENU || (process.env.LOAD ? 'continue' : 'new'));
 // ASSIST=1: fights the bot is losing (2 HP left) are finished by an ISO assist, logged as 'ISO assist' (never INPUT evidence)
 if (process.env.ASSIST) await page.evaluate(() => { P.assist = true; });
+// the bot plays its fights as a player would (P.smart: dodges a close wind-up, takes a dropped heart or flask when it needs
+// one, kicks armour its ball can't hurt, walks round a fence its ball can't pass); OLDBOT=1: the bot of before (COMBAT-2)
+const SMART = !process.env.OLDBOT;
+await page.evaluate((s) => { P.smart = s; }, SMART);
 // STATS=<file.json>: game time per state, dialogue words, walked metres, health lost, per step (tests/lib/stats.js; watches only)
 const STATS_JS = fileURLToPath(new URL('./stats.js', import.meta.url));
 const statSteps = [], statBase = [];   // (statBase: the totals of pages a Retry reloaded away)
 const statAdd = (a, b) => { const o = { ...a }; for (const k in b) if (typeof b[k] === 'number' && k !== 'rooms' && !k.endsWith('Now')) o[k] = +((o[k] || 0) + b[k]).toFixed(1); return o; };
 const statNow = async () => { const s = await page.evaluate(() => window.STATS?.snap()); return statBase.reduce(statAdd, s || {}); };
 if (process.env.STATS) await page.addScriptTag({ path: STATS_JS });
+// FIGHTLOG=1: health lost by source, attacks and openings per minute, time to beat each enemy, per step (tests/lib/fightlog.js; watches only)
+const FIGHT_JS = fileURLToPath(new URL('./fightlog.js', import.meta.url));
+if (process.env.FIGHTLOG) await page.addScriptTag({ path: FIGHT_JS });
 const t0 = Date.now();
 let failed = false, stop = null;
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
@@ -30,7 +37,8 @@ const retry = async () => {
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.state !== 'gameover', null, { timeout: 300000 });
   await page.addScriptTag({ path: HARNESS });
   if (process.env.STATS) await page.addScriptTag({ path: STATS_JS });
-  await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a; P.settle(); }, !!process.env.ASSIST);
+  if (process.env.FIGHTLOG) await page.addScriptTag({ path: FIGHT_JS });
+  await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a.assist; P.smart = a.smart; P.settle(); }, { assist: !!process.env.ASSIST, smart: SMART });
 };
 let deaths = 0, shotN = 0;
 if (process.env.SHOTS) { (await import('node:fs')).mkdirSync(process.env.SHOTS, { recursive: true });
@@ -40,6 +48,7 @@ const labels = seg.steps.map((x) => x[0]);
 for (const [label, fn, arg, opt] of seg.steps) {
   const s0 = Date.now();
   const st0 = process.env.STATS ? await statNow() : null;
+  const fl0 = process.env.FIGHTLOG ? await page.evaluate(() => window.FIGHTLOG?.snap()) : null;
   try {
     let r = await page.evaluate(fn, arg);
     // a death at the end of a step: let the fall play out (game time) so the game-over screen comes up
@@ -55,6 +64,7 @@ for (const [label, fn, arg, opt] of seg.steps) {
     for (const l of await page.evaluate(() => { const out = P.trace.filter((x, i) => x.includes('ISO assist') && i >= (P._assistSeen || 0)); P._assistSeen = P.trace.length; return out; })) console.log('  ' + l);
     const st = await page.evaluate(() => P.state());
     console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s +${((Date.now() - s0) / 1000).toFixed(0)}s] ${label}: ${JSON.stringify(r)?.slice(0, 400)} | ${st.room} ${JSON.stringify(st.pos)} hp ${st.hp} | ${st.obj.slice(0, 120)}`);
+    if (fl0) { const fl = await page.evaluate((s) => window.FIGHTLOG && window.FIGHTLOG.since(s), fl0).catch(() => null); if (fl && (fl.fightS > 0 || fl.lost > 0)) { const { hits, ...sum } = fl; console.log('  fight: ' + JSON.stringify(sum)); if (hits.length) console.log('  hits: ' + hits.map((x) => `${x.t}s ${x.src} -${x.lost} →${x.hp}${x.clover ? ' CLOVER' : ''} busy${x.busy} near${x.near}`).join(' | ')); } }
     if (st0) { const st1 = await statNow(); const d = {}; for (const k in st1) if (typeof st1[k] === 'number') d[k] = k.endsWith('Now') ? st1[k] : +((st1[k] - (st0[k] || 0))).toFixed(1); statSteps.push({ label, ...d }); console.log('  stats: ' + JSON.stringify(d)); }
     // SHOTS=<dir>: a picture after each step from the play camera (the player's view: the HUD, objective, prompt), for a
     // person to look at; and a census of text boxes that overflow (dialogue lines, the objective, the prompt: OVERFLOW)

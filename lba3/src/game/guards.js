@@ -84,6 +84,8 @@ export class Guard extends Actor {
     if (force < this.armour) {   // taken on the armour: a brace, no damage
       this.rig.play('listen'); this.hurtT = 0.25; this.rig.hitFlash?.();
       g.audio.play('clang', this.pos);
+      // (COMBAT-2: the first time, what gets through: a charged throw or a heavier blow; once a game)
+      if (!g.flags.hintArmour && g.hero?.combat) { g.flags.hintArmour = true; g.hud?.toast?.('hint_armour', { b: g.hud.key('ball'), k: g.hud.key('attack') }, 4200); }
       return 'blocked';
     }
     this.damage(force, from);
@@ -115,6 +117,8 @@ export class Guard extends Actor {
     }
     this.state = 'hurt'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6);
   }
+  // COMBAT-2: would the rifle's bolt get to him? Not through a chain-link fence or a railing (Bolts.update; as his ball)
+  clearShot(hero) { return !this.game.physics.ballFenceBetween(this.pos.x, this.pos.y + 1.35, this.pos.z, hero.pos.x, hero.pos.y + 0.9, hero.pos.z); }
   // can it see Twinsen? a cone, a range scaled by his visibility, line of sight (P9: a calm watch only looks: raw)
   sees(hero, raw = false) {
     if (!raw && this.def.calm?.()) return false;
@@ -178,7 +182,7 @@ export class Guard extends Actor {
         face = this.angleTo(hero); anim = 'walk';
         const close = d < 1.9;
         if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; break; }
-        if (!close && d < 8 && sees && this.coolT <= 0 && this.jamT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
+        if (!close && d < 8 && sees && this.coolT <= 0 && this.jamT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
         sp = d > 4.5 ? 2.4 : d > 2.2 ? 1.6 : 0;
         if (!sp) anim = 'idle';   // (ANIM-POLISH-3: waiting in reach for its turn it stands, not frozen mid-stride on one foot)
         if (!sees && this.stateT > 4) { this.state = 'search'; this.stateT = 0; this.last = { x: hero.pos.x, z: hero.pos.z }; }
@@ -192,7 +196,7 @@ export class Guard extends Actor {
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
         const L = this.aimLine; L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
         this.rifle.userData.glow.emissiveIntensity = 1.6 + 2.5 * Math.min(1, this.stateT / tell);
-        if (!this.sees(hero) || this.jamT > 0) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); break; }
+        if (!this.sees(hero) || this.jamT > 0 || !this.clearShot(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); break; }
         if (this.stateT > tell) {
           g.bolts.fire(from, to.sub(from).normalize(), 8, 1);
           g.audio.play('zap', this.pos);

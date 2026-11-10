@@ -59,7 +59,8 @@ export class Pass extends ChapterBase {
     const M = this.M;
     if (!M) return [];
     const b = M.lift.bottom;
-    return [[-4, 3], [3, 4], [6, 1]].map(([dx, dz], i) => ({ id: 'imite' + i, kind: 'mite', x: b.x + dx, z: b.z + dz, when: (f) => this.isCur(f) && !!f.c6_trip1 && !f.c6_trip2 }));
+    // (COMBAT-2: ice mites, with their frost slide: enemies.js ICE_SLIDE; they stir one after another, not all at once)
+    return [[-4, 3], [3, 4], [6, 1]].map(([dx, dz], i) => ({ id: 'imite' + i, kind: 'mite', ice: true, wake: i * 0.9, x: b.x + dx, z: b.z + dz, when: (f) => this.isCur(f) && !!f.c6_trip1 && !f.c6_trip2 }));
   }
   place(id) {
     const f = this.f;

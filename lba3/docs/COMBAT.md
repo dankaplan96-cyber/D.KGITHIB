@@ -78,7 +78,9 @@ fight; Aggressive mode's Space still attacks with the same moves.
   (the legs step sideways or backwards while aiming). The controls are free again at 0.36 s; the follow-through
   runs on to ~0.62 s on the layer and blends into the walk or idle. The ball leaves the hand at 0.16 s on the
   same clock as the pose. Charging allows a slow aimed walk (×0.42). How each move is posed: "Twinsen's combat animation" below.
-- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3). Enemies
+- **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3), and a second
+  shooter (a drone, a guard) starts its wind-up at least 0.7 s after another one still aiming (Gentle 1.0, Hard 0.45:
+  COMBAT-2), so two bolts never come closer together than one dodge after another can take them. Enemies
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,
   never enemy health.
@@ -434,6 +436,7 @@ active frames). Not done: how the start of a walk reads by eye (its stance foot 
 | Enemy | Role | Tell | Opening | Hit reaction |
 |---|---|---|---|---|
 | Crystal mite | cautious close-range | rears up, crystals flare (0.5 s) | sits low for 0.6 s after the lunge | always staggers |
+| Ice mite (the Hamalayi, ch. 6; COMBAT-2) | a crystal mite with a frost slide from 2.6–6.2 m | crouches nose-down, crystals white; a pale blue streak on the snow shows the line (0.75 s; it follows him, then holds still and deepens to bright blue for the last 0.3 s) | spins on the ice for 1.0 s at the slide's end | always staggers; a hit cuts the slide short |
 | Warden drone | ranged, mechanical | prongs crackle, a red aim line brightens (0.75 s); needs a clear shot | cooldown after firing | staggers, but steadies after two staggers in 2 s; the pulse stuns it |
 | Sentry automaton | protected | pulls its shield back, red eye (0.7 s) | shield down for 1.1 s after its bash | blocks frontal ball and sword (clang); heavy strike, charged ball or pulse breaks the guard |
 | Crystal crawler | heavy, controls space | rears, a ring spreads on the ground (1 s) | 1.3 s after the slam | only heavy hits stagger it; dodge or leave the ring (being airborne also avoids it) |
@@ -552,7 +555,7 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
   crystal mites.
 - Ch. 4 dig: mites in the trench.
 - Ch. 5 valve hall: drones among cover.
-- Ch. 6 lift: the rope, then three cautious mites.
+- Ch. 6 lift: the rope, then three ice mites (they stir one after another; their frost slide: "Fair fights" below).
 - Ch. 7 glacier: the heavy drone.
 - Ch. 10 Desert Island: a lone sentry at the post gate, then three drones at the bore.
 - Ch. 10 Hamalayi ridge: a lone crystal crawler, then two mites by the dome.
@@ -574,8 +577,70 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
   Story, flags (`c3_overload`, `c3_bleed`, `c3_coil`), saves and the reload rules are unchanged. `tests/chapter3.mjs`
   plays the dive four ways (stand, walk out, dodge, ball at the climb).
 
+## Fair fights (COMBAT-2, 9.11.2026; WORKPLAN-2026-11-09 Wave B item 4)
+The playthrough bot needed ISO assists at chapter 3's depot, chapter 8's fortress lever, chapter 10's bore (and once its
+ridge), and chapter 6's ice mites cost nothing (PLAYTHROUGH-REPORT PT-9). Each fight was measured with a fight log
+(`tests/lib/fightlog.js`, `FIGHTLOG=1` in `tests/lib/seg.mjs`: health lost by source, attacks and openings per minute,
+time to beat each enemy, attacks under way when a blow landed), three ways from run 3's chapter-start saves: the old
+bot on the old game, the new bot on the old game (to tell the bot's part from the game's), the new bot on the new game.
+**Automated runtime only** (SwiftShader, headless Chromium, game seconds; ±1–2 health between runs is noise). "Stacked":
+blows that landed while another enemy was also winding up or striking; it was at most 1 per fight in every run.
+
+| Fight | Old bot, old game | New bot, old game | New bot, new game | Cause | Kind |
+|---|---|---|---|---|---|
+| Ch. 3 Zeelich depot (2 drones, Grobo guard, dog) | 8 lost (all bolts: 4 of them from inside the fence), ISO assist for 2 | 10 lost, ISO assist for 4 | 6 runs (3 before the 2-hit drones): 9–10 lost each; by input to the end in 1 of 6 (4 health left), the rest stopped at 2 health with 2–4 enemies up. With the 2-hit drones (2 runs): **9 lost each, one by input to the end (5 left)**, one ISO assist for 2 | the drones and the guard shot him **through the chain-link fence** his ball can't pass (a 9 m/s bolt moved 0.3 m a frame, the fence is 0.24 m); two shooters' bolts 0.2–0.6 s apart; no magic left for the Grobo's armour and nothing said what gets through; 3-hit drones at magic level 1 | unfair parts fixed; still the early game's hard fight (below) |
+| Ch. 8 fortress lever (6 of the squad; the Grobo guard posted by the lever) | 7 lost (baton 2 × 2, bolts 2, dog 1), ISO assist for 5 | **0 lost, no assist** | 0 lost, no assist (2 runs, one without assists allowed) | the bot stood in the Grobo's baton swing (0.55 s tell) at the lever and never picked up a heart | fair: the bot |
+| Ch. 10 the bore (3 drones, then clone, guard, sentry) | arrived with **3 health**; 4 lost, ISO assist for 3 | 0 lost, no assist | arrived with 3, **Ilka's canteen: 12**; 2 and 9 lost (two runs; the 9: four sentry bashes), no assist | no recovery before the chapter's longest fight (the mill's stones and the chapter before cost the health) | unfair start: fixed; the fight itself fair |
+| Ch. 10 the ridge (crystal crawler, 2 mites) | **24 lost: 12 slams, both clovers** | 4 lost | 2 lost (two runs) | the bot stood in the crawler's ring (1 s tell, 1.3 s opening) | fair: the bot |
+| Ch. 6 ice mites (3) | 0 lost, 0 attacks, 7 s | — | 0 and 2 lost (three runs; the bot dodges most slides), 2–3 slides in 8–10 s | each died to one throw before it ever attacked | given a pattern |
+
+**The changes (game).**
+- **Bolts are substepped** (≤ 0.1 m, as the ball): a chain-link fence or a railing stops an enemy's bolt as it stops his
+  ball (`Bolts.update`, actors.js). Drones and guards **don't fire into one** (`clearShot`, enemies.js / guards.js: the
+  wind-up is not started, or is dropped, when the bolt's line crosses one): through the fence they only watch; the fight
+  is at the gate or inside, where both can hit.
+- **The attack director staggers the shooters** (`COMBAT.stagger`, combat.js): a second shooter (a drone, a guard: its
+  rifle or its baton) starts its wind-up at least 0.7 s after another one still holding its turn (Gentle 1.0, Hard
+  0.45), so two bolts never come closer together than one dodge after another takes them (a dodge and its cooldown are
+  0.64 s). The two-at-a-time limit is unchanged. Biters (mites, dogs, the crawler, the sentry) keep their timing: a
+  stagger for every enemy shifted the Citadel depot's watch enough that `depot-watch` 7a, 7b and 8a failed (its
+  stealth is tuned to the watch's round); for the shooters alone it passes.
+- **The first armour brace says what gets through** (once a game, guards.js; `hint_armour`): "The armour takes it. Hold
+  {ball} for a charged throw, or land a heavier blow (a kick: the third {attack})." Checked by input in the arena: jab,
+  jab, kick on the trooper (armour 2) takes 2 of its 5 (scratch probe `probe-fists.mjs`).
+- **Ilka's canteen** (network.js, text ch10): talking to Ilka while hurt puts his life back, as Yorna's broth does on the
+  Hamalayi, but not while the bore's fight is on (wave 2 has its own heart and flask). He talks to her to set the relay,
+  so the fight starts whole.
+- **Ice mites** (chapter 6, `def.ice`, `ICE_SLIDE` in enemies.js): a frost slide (table above: crouch nose-down, a streak
+  on the snow, pale blue, that follows him and then holds still and deepens to bright blue for the last 0.3 s (white was lost on the snow in the first pictures), a committed 9 m/s slide, 1
+  damage, a 1 s spin on the ice as the opening), and they **skitter aside from a ball thrown from further than 3.2 m**
+  (not while crouched, sliding or spinning; not again for 1.4 s): Yorna's "up close a blade is quicker than any ball".
+  The answer: step out of the line once it holds, then strike or throw in the spin; or close in with the sword. Their
+  health (2) and bite are unchanged; their shells are frosted pale. They stir one after another (0, 0.9, 1.8 s).
+- **The Zeelich depot's two drones take two hits** (`hp: 2`, story/chapter2.js; three elsewhere): at magic level 1 three
+  each cost 6 of his 6–8 magic while they, the guard's rifle and the dog worked on him (a drone took the bot 30–84 s).
+- Not changed: chapter 8's squad and the Grobo by the lever (fair once the baton is read), the crawler, the bore's waves,
+  every other enemy's health, damage and tells; Retry's full life; the chapters' lengths.
+
+**The bot (tests/lib/player.js, `P.smart`, now the default; `OLDBOT=1` gives the old one).** It plays as a player would,
+never teleporting: it dodges a close wind-up just before the blow (each enemy's own tell), sidesteps a bolt off its
+line (a backstep ran along the line and the bolt caught him after the invulnerable frames), dodges while walking too,
+takes a dropped heart or flask when it needs one (and what lies about after a fight), kicks armour its ball can't hurt
+when its magic is spent, and walks round a fence its ball can't pass. ISO assists stay available and logged.
+
+**Left.** Chapter 3's depot is still the early game's hardest fight: its blows now come one at a time, each told, none
+through the fence, and the bot finishes it by input in some runs, but it still costs the bot 9–10 of its 11 health in
+every run (bolts from the drone that stays inside among the barrels, the guard's rifle, the dog). The bot uses no cover
+and its ranged play is poor; whether a person finds it fair (the containers and the shed are cover; the drops hold
+flasks) needs a person's play — the segment's ISO assist below 3 health stays. The ice mites' bite was measured against
+a bot that reads every tell; a person who stands still takes 1 per slide (chapter 6 suite). Chapter 2's Citadel depot
+was not re-measured by the playthrough (`depot-watch` passes).
+
 ## Verification
-`tests/combat.mjs` runs in the developer arena (`?arena`). Its 22 checks currently pass (headless, software GL):
+`tests/combat.mjs` runs in the developer arena (`?arena`). (9.11.2026, COMBAT-2: its "dodge distance consistent at 30 and
+60 fps" check fails — the first dodge at 30 fps after `devArena()` moves 0 m — on the base commit too, unchanged by
+COMBAT-2; the new fence checks fail on the base, 2 of 12 bolts through at 30 fps and 6 of 12 at 15 fps, and pass after.)
+Its checks (headless, software GL):
 - active-frame timing and one hit per swing;
 - combo buffering and mashing limits;
 - walls blocking melee and targeting;

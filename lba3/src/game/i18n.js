@@ -138,6 +138,7 @@ export const STR = {
     toast_clover_found: 'Clover leaf',
     toast_alert: 'Spotted!',
     hint_jump: 'Athletic ({b}), then {k} to jump',
+    hint_armour: 'The armour takes it. Hold {b} for a charged throw, or land a heavier blow (a kick: the third {k}).',
     boss_name: 'Warden Krell',
     map_close: 'M / Esc to close',
     gameover: 'Twinsen is down', gameover_sub: 'No clover leaves left. Retry returns to the last autosave with full health.', retry: 'Retry from Last Autosave',

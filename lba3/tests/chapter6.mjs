@@ -64,6 +64,47 @@ is('Yorna: the lift ready', await ev(() => { T.talk('yorna'); return [game.flags
 await shot('C6-02-lift.png');
 is('the sword cuts the mooring rope', await ev(() => { const G = game, h = G.hero, R = G.story.cur.rope; const before = [h.hasSword, h.combat.weapon]; T.tp(R.x - 1.2, R.z); h.angle = Math.atan2(R.x - h.pos.x, R.z - h.pos.z); G.step(0.2); T.tap('KeyK'); G.step(0.8); T.talkAll(); return [before, G.flags.c6_rope, T.obj()]; }), (v) => v[0][0] === true && v[1] === true && v[2].length > 0);
 is('the first trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip1; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip1, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+// COMBAT-2: the ice mites' frost slide. One mite, the others held still: he stands 4.5 m off on open snow. It crouches and its
+// streak shows the line (told), slides along it (committed) and bites him standing in it; the next one he steps out of the
+// line once it holds still (the last 0.3 s): the slide misses and the mite spins on the ice (the opening)
+// (pictures for a person to look at: the crouch with its streak, then the slide)
+const shotAt = async (want) => ev((want) => { const G = game, h = G.hero, P = G.physics, m = G.enemies.find((e) => e.def?.id?.startsWith('imite') && e.alive);
+  if (!m) return 'none';
+  if (want === 'slidewind') { m.state = 'chase'; m.coolT = 0; m.slideCool = 0; h.invuln = 99;
+    for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + 4.5 * Math.sin(a), z = m.pos.z + 4.5 * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
+      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 0.4, z, m.pos.x, m.pos.y + 0.4, m.pos.z)) { h.pos.set(x, y, z); h.angle = h.angleTo(m); h.onGround = true; if (G.camRig.lba) G.camRig.lba.init = false; break; } } }
+  for (let i = 0; i < 150; i++) { for (const o of G.enemies) if (o !== m && o.def?.id?.startsWith('imite')) { o.state = 'idle'; o.noticeT = 0; } if (m.state === want && m.stateT > (want === 'slidewind' ? 0.6 : 0.12)) break; G.step(1 / 30); }
+  return m.state; }, want);
+log('ice slide pictures:', await shotAt('slidewind')); await shot('C6-02b-ice-crouch.png'); log(await shotAt('slide')); await shot('C6-02c-ice-slide.png');
+await ev(() => { const h = game.hero; h.invuln = 0; h.hp = h.maxHp; game.step(1.5); });
+const slide = await ev(() => { const G = game, h = G.hero, P = G.physics, ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite') && e.alive);
+  const m = ms[0], others = ms.slice(1), out = { ice: !!m?.ice };
+  if (!m) return out;
+  const hold = () => { for (const o of others) { o.state = 'idle'; o.noticeT = 0; o.pos.set(o.home.x, o.pos.y, o.home.z); } };
+  const place = () => { for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + 4.5 * Math.sin(a), z = m.pos.z + 4.5 * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
+    if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 0.4, z, m.pos.x, m.pos.y + 0.4, m.pos.z)) { h.pos.set(x, y, z); h.angle = h.angleTo(m); h.onGround = true; return true; } } return false; };
+  const watch = (sidestep) => { m.state = 'chase'; m.coolT = 0; m.slideCool = 0; m.stateT = 0; h.hp = h.maxHp; h.invuln = 0; if (!place()) return { placed: false };
+    const r = { placed: true, told: false, streak: false, slid: false, skid: false, hp0: h.hp };
+    for (let i = 0; i < 160; i++) { hold();
+      if (m.state === 'slidewind') { r.told = true; r.streak ||= m.streak.visible && m.streak.material.opacity > 0.3; m.pos.y = m.pos.y; }
+      if (sidestep && m.state === 'slidewind' && m.stateT > 0.55) { const a = m.slideAng + Math.PI / 2; for (let k = 0; k < 8; k++) P.move(h, Math.sin(a) * 0.2, Math.cos(a) * 0.2); }
+      if (m.state === 'slide') r.slid = true;
+      if (m.state === 'skid') { r.skid = true; break; }
+      G.step(1 / 30); }
+    r.hp1 = h.hp; return r; };
+  out.stand = watch(false); G.step(0.5); out.step = watch(true);
+  // the skitter: a ball thrown at it from 5 m (it is not attacking): it hops aside, unhurt; from 3 m the ball lands
+  const throwFrom = (r) => { m.endSlide(); m.state = 'chase'; m.stateT = 0; m.slideCool = 9; m.coolT = 9; m.hopCool = 0; m.kb.set(0, 0); h.invuln = 99;
+    for (const a of [0, 1, 2, 3, 4, 5]) { const x = m.pos.x + r * Math.sin(a), z = m.pos.z + r * Math.cos(a), y = P.groundAt(x, z, m.pos.y + 1);
+      if (Math.abs(y - m.pos.y) < 0.4 && !P.solidAt(x, z, y + 0.5, 0.45) && P.lineOfSight(x, y + 1.2, z, m.pos.x, m.pos.y + 0.6, m.pos.z)) { h.pos.set(x, y, z); break; } }
+    h.angle = h.angleTo(m); G.ball.state = 'idle'; const hp0 = m.hp, x0 = m.pos.x, z0 = m.pos.z;
+    T.tap('KeyF'); for (let i = 0; i < 45; i++) { hold(); m.slideCool = 9; m.coolT = 9; G.step(1 / 30); }
+    h.invuln = 0; return { hp0, hp1: m.hp, moved: +Math.hypot(m.pos.x - x0, m.pos.z - z0).toFixed(2) }; };
+  out.far = throwFrom(5); out.near = m.alive ? throwFrom(3) : null;
+  h.hp = h.maxHp; return out; });
+is('the ice mites: the frost slide is told (crouch, streak), committed, and bites one who stands in its line; a step aside after the line holds avoids it', slide,
+  (v) => v.ice && v.stand?.told && v.stand.streak && v.stand.slid && v.stand.hp1 < v.stand.hp0 && v.step?.told && v.step.slid && v.step.skid && v.step.hp1 === v.step.hp0);
+is('the ice mites skitter aside from a ball thrown from 5 m (unhurt); from 3 m it lands', slide, (v) => v.far?.hp1 === v.far.hp0 && v.far.moved > 0.8 && v.near && v.near.hp1 < v.near.hp0);
 // (the hero stands 3 m from the mite, west of it when that is open. A mite chases him, so by the third one it may
 //  stand against the heat shed's east wall, and "3 m west" is then inside the shed or behind it: the shed is a wall
 //  to the ball and to the lock-on, so no throw from there could ever reach it. As in play, he steps to a spot with

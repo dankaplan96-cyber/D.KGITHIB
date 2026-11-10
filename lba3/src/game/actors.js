@@ -1740,15 +1740,19 @@ export class Bolts {
     const g = this.game, hero = g.hero, P = g.physics;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const b = this.list[i];
-      b.m.position.addScaledVector(b.v, dt);
       b.life -= dt;
       const p = b.m.position;
       let dead = b.life <= 0;
-      if (!dead && Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) < 0.55 && p.y > hero.pos.y && p.y < hero.pos.y + (hero.hiding ? 0.9 : 1.8)) {
-        hero.damage(b.dmg, p);
-        dead = true;
+      // (COMBAT-2: in steps of at most 0.1 m, as the ball moves: at 9 m/s a frame's 0.3 m stepped over a chain-link fence's
+      // 0.24 m, so the depot's drones shot Twinsen through the fence his ball can't pass)
+      const n = Math.max(1, Math.ceil(Math.hypot(b.v.x, b.v.y, b.v.z) * dt / 0.1));
+      for (let k = 0; k < n && !dead; k++) {
+        p.addScaledVector(b.v, dt / n);
+        if (Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) < 0.55 && p.y > hero.pos.y && p.y < hero.pos.y + (hero.hiding ? 0.9 : 1.8)) {
+          hero.damage(b.dmg, p);
+          dead = true;
+        } else if (g.terrain.heightAt(p.x, p.z) > p.y || P.blockedAt(p.x, p.z, p.y - 0.6, 0)) dead = true;
       }
-      if (!dead && (g.terrain.heightAt(p.x, p.z) > p.y || P.blockedAt(p.x, p.z, p.y - 0.6, 0))) dead = true;
       if (dead) {
         g.particles.burst(p.x, p.y, p.z, '#ff6a4a', 8, 3);
         g.scene.remove(b.m);

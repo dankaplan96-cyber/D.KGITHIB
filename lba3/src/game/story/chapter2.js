@@ -53,9 +53,12 @@ export class Chapter2 extends ChapterBase {
     if (!D) return [];
     const when = (f) => this.reached(f) && !f.c2_shield;
     const n = D.patrol.length, h = Math.floor(n / 2);
+    // (COMBAT-2: the two drones take two hits, not three. With the magic ball still at level 1 here (1 a hit, 1 magic a
+    //  throw) three each meant 6 of his 6–8 magic on them alone while they, the guard's rifle and the dog worked on him: the
+    //  playthrough's bot lost 9–10 of its 11 health in 4 of 5 runs, the fights 43–87 s, a drone 30–84 s to beat)
     return [
-      { id: 'zdrone1', kind: 'drone', group: 'zdepot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
-      { id: 'zdrone2', kind: 'drone', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
+      { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
+      { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
       { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when },
       { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: [...D.patrol].reverse(), wp: (n - h) % n, when },
     ];

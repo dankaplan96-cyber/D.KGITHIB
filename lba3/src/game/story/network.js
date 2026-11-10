@@ -401,9 +401,15 @@ export class Network extends ChapterBase {
       case 'arthur':
         if (!f.c10_zoeAsk) return this.talk(this.npc('zoe'));
         return c([['arthur', f.c10_light ? 'c10_ar_right' : 'c10_ar_1']]);
-      case 'ilka':
-        if (!f.c10_ilka) return c([['ilka', 'c10_ilka_1'], ['ilka', 'c10_ilka_2']], () => { f.c10_ilka = true; ok(); });
-        return c([['ilka', f.c10_bore ? 'c10_ilka_3' : 'c10_ilka_2']]);
+      case 'ilka': {
+        // (COMBAT-2: the bore's two waves are the chapter's longest fight, and he flies in from Citadel with whatever the
+        //  mill's stones and the chapter before left him (the playthrough's bot: 3 health, once 1). Ilka's canteen puts his
+        //  life back whenever he is hurt, as Yorna's broth does on the Hamalayi; not while the fight is on: wave 2 has its heart)
+        const h = g.hero, hurt = h.hp < h.maxHp && !(f.c10_boreRelay && !f.c10_bore), water = hurt ? [['ilka', 'c10_ilka_water']] : [];
+        if (hurt) { h.hp = h.maxHp; g.audio.play('heal'); g.hud.toast('c10_toast_water'); g.hud.stats?.(h); }
+        if (!f.c10_ilka) return c([...water, ['ilka', 'c10_ilka_1'], ['ilka', 'c10_ilka_2']], () => { f.c10_ilka = true; ok(); });
+        return c([...water, ['ilka', f.c10_bore ? 'c10_ilka_3' : 'c10_ilka_2']]);
+      }
       case 'dallan': return c([['dallan', 'c10_dallan_1']]);
       case 'yorna': case 'pim': {
         // (CHAPTER-BALANCE: he comes in by glider straight from the bore's fight, and a Retry brings him back here with what

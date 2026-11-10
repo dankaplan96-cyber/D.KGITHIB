@@ -89,15 +89,18 @@ function createMiteRig() {
       this.t += dt * (2 + speed * 4);
       this.actionT += dt;
       if (this.anim === 'dead' && this.ko) { koMite(this, this.ko, dt); return; }
-      legs.forEach((g, i) => { g.rotation.z = Math.sin(this.t * 3 + i * 1.7) * 0.35 * Math.min(1, speed + 0.1); });
-      // rearing = the bite wind-up: front lifts, crystals flare
-      const want = this.anim === 'windup' ? 1 : this.anim === 'lunge' ? 0.4 : 0;
+      // (an ice mite's slide: legs splayed out flat, still; COMBAT-2)
+      legs.forEach((g, i) => { g.rotation.z = this.anim === 'slide' ? 0.5 : Math.sin(this.t * 3 + i * 1.7) * 0.35 * Math.min(1, speed + 0.1); });
+      // rearing = the bite wind-up: front lifts, crystals flare. (COMBAT-2: an ice mite's slide is told apart: it crouches
+      // nose down, flat to the snow — 'crouch', then 'slide' on its belly — its crystals flaring white the same way)
+      const want = this.anim === 'windup' ? 1 : this.anim === 'lunge' ? 0.4 : this.anim === 'crouch' ? -0.55 : this.anim === 'slide' ? -0.3 : 0;
       this.rear += (want - this.rear) * (1 - Math.exp(-dt * 12));
       body.rotation.x = -this.rear * 0.55;
       body.position.y = Math.abs(Math.sin(this.t * 3)) * 0.03 + this.rear * 0.12;
       this.flash = Math.max(0, this.flash - dt * 4);
-      crystal.emissiveIntensity = 1.1 + this.rear * 2.5 + this.flash * 3 + (this.anim === 'windup' ? Math.sin(this.actionT * 40) * 0.8 : 0);
-      shellMat.emissive.setRGB(this.flash, this.flash, this.flash);
+      crystal.emissiveIntensity = 1.1 + Math.abs(this.rear) * 2.5 + this.flash * 3 + (this.anim === 'windup' || this.anim === 'crouch' ? Math.sin(this.actionT * 40) * 0.8 : 0);
+      const ig = this.iceGlow || 0;   // (an ice mite's shell: frosted pale, COMBAT-2)
+      shellMat.emissive.setRGB(this.flash + ig, this.flash + ig * 1.25, this.flash + ig * 1.5);
     },
   };
   rig.parts = { body, legs, crystal, shellMat, crystals: c };
@@ -124,6 +127,12 @@ function koMite(rig, K, dt) {
   shellMat.emissive.setRGB(rig.flash, rig.flash, rig.flash);
 }
 
+// the ice mites' frost slide (COMBAT-2, chapter 6): taken from min–max m off; tell s of crouching (its streak holds still
+// for the last `hold` s), along at `speed` m/s, then `skid` s spinning (the opening), not again for `again` s. And on the ice
+// they skitter aside from a ball thrown from further than `hopFrom` m (not again for `hopCool` s; never while crouched,
+// sliding or spinning): Yorna's "up close a blade is quicker than any ball" — close in, or catch them in their opening
+export const ICE_SLIDE = { min: 2.6, max: 6.2, tell: 0.75, hold: 0.3, speed: 9, skid: 1.0, again: 2.6, hopFrom: 3.2, hopCool: 1.4 };
+
 // A cautious close-range attacker: it circles at a safe distance until the director lets it attack, rears
 // up (the tell), lunges, then sits low for a moment (the opening). Any hit staggers it (it's small).
 export class Mite extends Actor {
@@ -141,16 +150,38 @@ export class Mite extends Actor {
     this.present = true;
     this.material = 'crystal'; this.aimY = 0.4; this.markY = 0.9; this.hitH = 1.0; this.recentHitT = 0;
     this.bodyR = BODY_R.mite;   // (SOLID-ENEMY: Actor.keepOffHero, Hero.keepApart)
+    // COMBAT-2: the Hamalayi's ice mites (chapter 6, def.ice) have a second attack, the frost slide: from a few metres off
+    // they crouch while a pale streak on the snow shows the line (ICE_SLIDE.tell; it follows him, then holds still for the
+    // last moment), then they shoot along it on their bellies, committed; at its end they spin on the ice, open (ICE_SLIDE.skid)
+    if (def.ice) {
+      this.ice = true; this.slideCool = 0.8 + (def.wake || 0);
+      const P = this.rig.parts; P.crystal.color.set('#f2fcff'); P.crystal.emissive.set('#8fd8ff'); this.rig.iceGlow = 0.16;
+      this.streak = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2).translate(0, 0, 0.5), new THREE.MeshBasicMaterial({ color: '#cfefff', transparent: true, opacity: 0, depthWrite: false }));
+      this.streak.visible = false; this.streak.renderOrder = 2; game.scene.add(this.streak);
+    }
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (!on && this.streak) this.streak.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  // an ice mite skitters aside from a ball coming at it from afar (ICE_SLIDE.hopFrom): a quick sidestep across the ball's line
+  skitter() {
+    const g = this.game, b = g.ball, h = g.hero;
+    if (this.hopCool > 0 || !(this.state === 'chase' || this.state === 'idle') || this.hurtT > 0 || this.frozenT > 0 || this.ringT > 0) return;
+    if (!b || b.state !== 'fly' || b.hits?.has(this) || this.distTo(h) < ICE_SLIDE.hopFrom) return;
+    const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, d = Math.hypot(rx, rz), sp = Math.hypot(b.vel.x, b.vel.z);
+    if (d > 2.8 || sp < 1 || (rx * b.vel.x + rz * b.vel.z) <= 0) return;
+    const px = -b.vel.z / sp, pz = b.vel.x / sp, side = (rx * px + rz * pz) >= 0 ? 1 : -1;   // (away from the ball's line, on its own side)
+    this.kb.set(px * side * 12, pz * side * 12); this.hopCool = ICE_SLIDE.hopCool;
+    g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#f4fbff', 6, 2);
+  }
+  // (an ice mite's slide cut short — struck, frozen, rung — or done: the streak off, the spin straightened)
+  endSlide() { if (this.streak) this.streak.visible = false; this.rig.parts.body.rotation.z = 0; this.rig.parts.body.rotation.y = 0; }
   alert() { if (this.alive && this.state === 'idle') this.state = 'chase'; }
   melee(D) { this.damage(D.dmg, this.game.hero.pos); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
   // Bram's pump lance (tools.js): cold water stiffens a crystal mite where it stands for a while (a bite cut short)
   freeze(t) {
     if (!this.alive) return false;
-    if (this.state === 'windup' || this.state === 'lunge') { this.state = 'chase'; this.bit = false; this.game.combatDir?.done(this); }
+    if (this.state === 'windup' || this.state === 'lunge' || this.state === 'slidewind' || this.state === 'slide') { this.state = 'chase'; this.bit = false; this.game.combatDir?.done(this); this.endSlide(); }
     this.frozenT = t; this.kb.set(0, 0); this.rig.hitFlash();
     return true;
   }
@@ -158,8 +189,8 @@ export class Mite extends Actor {
   // flaring, for a while (a bite or a slam cut short), then carries on; blows land as ever meanwhile
   forkRing(t) {
     if (!this.alive) return false;
-    if (this.state === 'windup' || this.state === 'lunge' || this.state === 'slam') {
-      this.state = 'chase'; this.bit = false; this.slammed = false;
+    if (this.state === 'windup' || this.state === 'lunge' || this.state === 'slam' || this.state === 'slidewind' || this.state === 'slide') {
+      this.state = 'chase'; this.bit = false; this.slammed = false; this.endSlide?.();
       if (this.ring?.isMesh) this.ring.visible = false;
       this.game.combatDir?.done(this);
     }
@@ -186,15 +217,17 @@ export class Mite extends Actor {
     this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.35; this.recentHitT = 2.5;
     g.particles.burst(this.pos.x, this.pos.y + 0.5, this.pos.z, '#9ff4ff', 10, 4);
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 8, Math.cos(a) * 8); }
-    // a hit interrupts the bite (small: always staggers)
-    if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
+    // a hit interrupts the bite or the slide (small: always staggers)
+    if (this.state === 'windup' || this.state === 'lunge' || this.state === 'slidewind' || this.state === 'slide') g.combatDir?.done(this);
+    if (this.ice) this.endSlide();
     this.state = 'chase'; this.coolT = 0.7;
     if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break', this.pos); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); this.rig.parts.crystals.visible = false; new KnockOut(this, 'mite', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { if (this.streak) this.streak.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, D = g.combatDir?.diff || { windup: 1, cool: 1 };
+    if (this.ice) { this.slideCool = Math.max(0, this.slideCool - dt); this.hopCool = Math.max(0, (this.hopCool || 0) - dt); this.skitter(); }
     // frozen by the pump lance: still as a stone, its pose held, a little frost coming off it; it still falls
     if (this.frozenT > 0) {
       this.frozenT = Math.max(0, this.frozenT - dt);
@@ -228,7 +261,11 @@ export class Mite extends Actor {
       // (DIFFICULTY: nothing bites across a drop: a mite that fell into the galleries' chasm cannot bite the hero on the shelf 3 m up)
       const level = Math.abs(this.pos.y - hero.pos.y) < 1.6;
       const may = d < 2.0 && level && this.coolT <= 0 && this.hurtT <= 0 && !hero.dead && (g.combatDir?.canAttack(this) ?? true);
+      // (an ice mite a few metres off, a clear run to him: the frost slide)
+      const slide = !may && this.ice && d > ICE_SLIDE.min && d < ICE_SLIDE.max && level && hero.onGround && this.coolT <= 0 && this.hurtT <= 0 && this.slideCool <= 0 && !hero.dead
+        && g.physics.lineOfSight(this.pos.x, this.pos.y + 0.4, this.pos.z, hero.pos.x, hero.pos.y + 0.4, hero.pos.z) && (g.combatDir?.canAttack(this) ?? true);
       if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
+      else if (slide) { this.state = 'slidewind'; this.stateT = 0; this.slideAng = this.angleTo(hero); g.audio.play('zap', this.pos); }
       else if (d > 2.6) sp = 2.5;
       else { side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
       // too far from home, or he got away: go back
@@ -247,6 +284,39 @@ export class Mite extends Actor {
       // the opening: low and slow for a moment
       this.rig.play('idle');
       if (this.stateT > 0.6) { this.state = 'chase'; this.coolT = 1.0 * D.cool; }
+    } else if (this.state === 'slidewind') {
+      // the ice mite crouches, crystals white; the streak on the snow shows its line: it follows him, then holds for the last
+      // ICE_SLIDE.hold s (a step aside then is safe), brightening
+      const tell = ICE_SLIDE.tell * D.windup, k = Math.min(1, this.stateT / tell);
+      if (this.stateT < tell - ICE_SLIDE.hold) this.slideAng = dampAngle(this.slideAng, this.angleTo(hero), 6, dt);
+      this.angle = dampAngle(this.angle, this.slideAng, 10, dt);
+      this.rig.play('crouch');
+      if (this.stateT < tell - ICE_SLIDE.hold) this.slideLen = clamp(d + 1.6, ICE_SLIDE.min + 1, ICE_SLIDE.max + 1.4);
+      const S = this.streak; S.visible = true; S.position.set(this.pos.x, this.pos.y + 0.05, this.pos.z); S.rotation.y = this.slideAng;
+      S.scale.set(0.55, 1, this.slideLen * (0.35 + 0.65 * k)); S.material.opacity = 0.15 + 0.5 * k;
+      S.material.color.set(this.stateT >= tell - ICE_SLIDE.hold ? '#2f9cff' : '#a8dcff');   // (blue, to read on snow; deep once it holds)
+      if (this.stateT > tell) { this.state = 'slide'; this.stateT = 0; this.bit = false; this.slideLeft = this.slideLen; g.audio.play('swing', this.pos); }
+    } else if (this.state === 'slide') {
+      // committed: straight along the streak on its belly, snow spraying; a bite as it passes him (1)
+      this.rig.play('slide');
+      const fx = Math.sin(this.slideAng), fz = Math.cos(this.slideAng), step = ICE_SLIDE.speed * dt, P = g.physics;
+      const ahead = P.groundAt(this.pos.x + fx * 0.6, this.pos.z + fz * 0.6, this.pos.y + 0.5);
+      const x0 = this.pos.x, z0 = this.pos.z;
+      if (ahead > this.pos.y - 0.5) P.move(this, fx * step, fz * step);
+      const moved = Math.hypot(this.pos.x - x0, this.pos.z - z0);
+      this.slideLeft -= Math.max(moved, step * 0.25);
+      this.rig.parts.body.rotation.y = Math.sin(this.stateT * 30) * 0.12;
+      if (Math.random() < dt * 30) g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#f4fbff', 1, 1.5);
+      this.streak.material.opacity *= 0.9;
+      if (d < 1.0 && !this.bit && Math.abs(this.pos.y - hero.pos.y) < 1.2) { this.bit = true; hero.damage(1, this.pos); }
+      if (this.slideLeft <= 0 || ahead <= this.pos.y - 0.5 || moved < step * 0.3) { this.state = 'skid'; this.stateT = 0; this.bit = false; this.streak.visible = false; g.combatDir?.done(this); }
+    } else if (this.state === 'skid') {
+      // the opening: it spins to a stop on the ice, wobbling, a moment
+      this.rig.play('idle');
+      const u = Math.min(1, this.stateT / ICE_SLIDE.skid);
+      this.rig.parts.body.rotation.y = (1 - u) * 6 * this.stateT;
+      this.rig.parts.body.rotation.z = Math.sin(this.stateT * 14) * 0.3 * (1 - u);
+      if (this.stateT > ICE_SLIDE.skid) { this.endSlide(); this.state = 'chase'; this.coolT = 1.0 * D.cool; this.slideCool = ICE_SLIDE.again; }
     }
     if ((sp || side) && this.hurtT <= 0) {
       const P = g.physics, fx = Math.sin(this.angle), fz = Math.cos(this.angle);
@@ -438,6 +508,9 @@ export class Drone extends Actor {
     const P = this.game.physics;
     return P.lineOfSight(this.pos.x, this.pos.y + this.hover, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
   }
+  // COMBAT-2: would its bolt get to him? A chain-link fence or a railing it sees him through stops a bolt as it stops his
+  // ball (Bolts.update): it does not shoot into one (the depot's drones shot him through the fence his ball can't pass)
+  clearShot(hero) { return !this.game.physics.ballFenceBetween(this.pos.x, this.pos.y + this.hover - 0.4, this.pos.z, hero.pos.x, hero.pos.y + 0.9, hero.pos.z); }
   update(dt) {
     if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
@@ -485,7 +558,7 @@ export class Drone extends Actor {
       // keep a firing distance of 4–6 m
       sp = d > 6 ? 2.2 : d < 3.5 ? -1.4 : 0;
       if (this.deafT > 0) face = this.angle + 2.6 * Math.sin(this.stateT * 3.1);   // (squealed at: its aim wanders)
-      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
+      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
       if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; g.combatDir?.done(this); }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 24) { this.state = 'search'; this.stateT = 0; }
     } else if (this.state === 'windup') {
@@ -496,8 +569,8 @@ export class Drone extends Actor {
       // the aim line: where the shot will go, brightening until it fires
       const L = this.aimLine, from = new THREE.Vector3(this.pos.x, this.pos.y + this.hover - 0.4, this.pos.z), to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
       L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
-      // no clear shot: give up the attack rather than fire into a wall
-      if (!this.sees(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); }
+      // no clear shot: give up the attack rather than fire into a wall (or a fence: COMBAT-2)
+      if (!this.sees(hero) || !this.clearShot(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); }
       else if (this.hurtT > 0) { this.state = 'chase'; this.stateT = 0; }
       else if (this.stateT > tell) {
         const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 0.5, this.pos.y + this.hover - 0.4, this.pos.z + Math.cos(this.angle) * 0.5);
