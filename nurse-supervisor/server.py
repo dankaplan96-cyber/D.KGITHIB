@@ -394,7 +394,7 @@ def validate_entry(body, cfg):
             "employee": emp,
             "reason": reason,
             "details": clean_str(a.get("details"), 500),
-            "replaced": bool(a.get("replaced")),
+            "replaced": None if a.get("replaced") is None else bool(a.get("replaced")),
             "replacement": clean_str(a.get("replacement"), 80),
         })
     return {
@@ -457,7 +457,7 @@ def collect_entries(cfg, date_from, date_to, shift_id=None, dept_id=None, positi
 
 
 def summarize(rows):
-    s = {"entries": len(rows), "patients": 0, "staff_present": 0, "absences": 0, "replaced": 0,
+    s = {"entries": len(rows), "patients": 0, "staff_present": 0, "absences": 0, "replaced": 0, "unreplaced": 0,
          "exceptional": 0, "by_reason": {}, "by_department": {}}
     for r in rows:
         s["patients"] += r.get("patients") or 0
@@ -474,8 +474,13 @@ def summarize(rows):
             bd["absences"] += 1
             if a.get("replaced"):
                 s["replaced"] += 1
+            elif a.get("replaced") is False:
+                s["unreplaced"] += 1
             s["by_reason"][a["reason"]] = s["by_reason"].get(a["reason"], 0) + 1
     return s
+
+
+NO_EVENTS = "ללא אירועים מיוחדים"
 
 
 def rows_to_csv(cfg, rows, kind):
@@ -489,7 +494,7 @@ def rows_to_csv(cfg, rows, kind):
             for a in r.get("absences") or []:
                 w.writerow([r["date"], r["shift_name"], r.get("department_name"), r.get("position_name"),
                             a.get("employee"), a.get("reason"), a.get("details"),
-                            "כן" if a.get("replaced") else "לא", a.get("replacement"),
+                            {True: "כן", False: "לא"}.get(a.get("replaced"), ""), a.get("replacement"),
                             r.get("updated_by_name")])
     else:
         w.writerow(["תאריך", "משמרת", "מחלקה", "אח כללי", "מטופלים", "אנשי צוות", "היעדרויות",
@@ -497,7 +502,7 @@ def rows_to_csv(cfg, rows, kind):
         for r in rows:
             w.writerow([r["date"], r["shift_name"], r.get("department_name"), r.get("position_name"),
                         r.get("patients"), r.get("staff_present"), len(r.get("absences") or []),
-                        r.get("staff_notes"), r.get("patient_notes"), r.get("updated_by_name"),
+                        r.get("staff_notes"), r.get("patient_notes") or NO_EVENTS, r.get("updated_by_name"),
                         r.get("updated_at")])
     return buf.getvalue().encode("utf-8")
 

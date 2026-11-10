@@ -90,6 +90,22 @@
         },
       },
     };
+    // the shift running now: a few departments already reported, so the overview has content
+    const [cd, cs] = currentShift(DEFAULT_CONFIG);
+    const sn = DEFAULT_CONFIG.shifts.find((s) => s.id === cs).name;
+    const asg = DEFAULT_CONFIG.assignments[cs];
+    const t = isoNow();
+    const cur = (dept, pts, staff, abs, staffNotes, pNotes, by) => ({ ...mk(dept, asg[dept], pts, staff, abs, staffNotes, pNotes, by), shift_name: sn, created_at: t, updated_at: t });
+    const day = db.days[cd] = db.days[cd] || { date: cd, shifts: {} };
+    day.shifts[cs] = {
+      positions: { p2: { username: "nurse2", name: "יוסי לוי", since: t.slice(0, 16) } },
+      departments: {
+        d1: cur("d1", 35, 6, [], "", "", yossi),
+        d2: cur("d2", 30, 4, [{ employee: "גלית שמש", reason: "לא הודיע/ה (פאנצ'ר)", details: "לא עונה לטלפון", replaced: false, replacement: "" }], "", "", yossi),
+        d4: cur("d4", 29, 5, [{ employee: "נועה ברק", reason: "מחלה", details: "", replaced: true, replacement: "שני מהפול" }], "", "חדר 4 – נפילה, נבדק ע\"י רופא, ללא חבלה", yossi),
+        d5: cur("d5", 26, 4, [], "כוח עזר עזב שעה מוקדם", "", yossi),
+      },
+    };
     return db;
   }
 
@@ -168,7 +184,7 @@
   }
 
   function summarize(rows) {
-    const s = { entries: rows.length, patients: 0, staff_present: 0, absences: 0, replaced: 0, exceptional: 0, by_reason: {}, by_department: {} };
+    const s = { entries: rows.length, patients: 0, staff_present: 0, absences: 0, replaced: 0, unreplaced: 0, exceptional: 0, by_reason: {}, by_department: {} };
     for (const r of rows) {
       s.patients += r.patients || 0;
       s.staff_present += r.staff_present || 0;
@@ -179,6 +195,7 @@
       for (const a of r.absences || []) {
         s.absences++; bd.absences++;
         if (a.replaced) s.replaced++;
+        else if (a.replaced === false) s.unreplaced++;
         s.by_reason[a.reason] = (s.by_reason[a.reason] || 0) + 1;
       }
     }
@@ -272,7 +289,7 @@
         const emp = str(a.employee, 80), reason = str(a.reason, 80);
         if (!emp && !reason) continue;
         need(reason, "יש לבחור סיבת היעדרות לכל עובד");
-        absences.push({ employee: emp, reason, details: str(a.details, 500), replaced: !!a.replaced, replacement: str(a.replacement, 80) });
+        absences.push({ employee: emp, reason, details: str(a.details, 500), replaced: a.replaced === null || a.replaced === undefined ? null : !!a.replaced, replacement: str(a.replacement, 80) });
       }
       const pid = (cfg.assignments[shift] || {})[department];
       const pos = cfg.positions.find((p) => p.id === pid);
