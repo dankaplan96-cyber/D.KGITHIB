@@ -93,7 +93,7 @@ function buildTentRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'wtent', TENT_IN.x, TENT_IN.z);
   const R = B.room, k = B.k;
   const W = 13, D = 9.5, H = 4.6;
-  R.view = 15; R.follow = 0.3; R.music = 'home';
+  R.view = 15; R.follow = 0.3; R.music = 'school';   // (MUSIC-BY-PLACE: a wizard's den hears the School's piece, not Twinsen's home theme)
   const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
   // (WORLD-ART-7: a lived-in wizard's den — warm boards under the stone walls, brass rails like the tent's gold stars)
   B.shell({ floor: MAT.planks('honey'), slab: rough, body: stone, low: rough, rail: MAT.brass(), cap: MAT.iron(), H, t: 0.55, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
@@ -185,7 +185,7 @@ function buildSchoolRoom(scene, physics) {
   const s = 0.63, L = 0.4, W = 41 * s, D = 39 * s, H = 9.0;
   const X = (lx) => (lx - 22) * s - W / 2, Z = (lz) => (lz - 3) * s - D / 2;   // (the original's cell → the room's frame)
   const CL = 8 * L, CD = 10 * L, WK = 5 * L, DS = 3 * L;   // classroom, its dais, the walkway, the hall's dais
-  R.view = 12.5; R.follow = 0.7; R.music = 'desert_in';   // (DESERT-BAR: the island heard through the walls, as its other rooms; it had Twinsen's home theme)
+  R.view = 12.5; R.follow = 0.7; R.music = 'school';   // (MUSIC-BY-PLACE: its own piece, tools/music/tracks/school.py; it had the island through the walls, before that Twinsen's home theme)
   // (the original's walls are a light grey stone: the grey stone texture lightened toward it and lit a little from
   //  within, as Chez Luc's is, so the long wall reads as stone in the hall's dim light)
   const stone = M('sc_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#dcdad6', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
