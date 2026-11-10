@@ -56,6 +56,8 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 
 - 9.11: the wizard's tent stays where it is (LBA2's spot is our glider field; the tent is ~4 m off it). DOORS-LBA2 #10 closed as kept.
 
+- 10.11: the user bought a new desktop with a GTX 1050 graphics card: it becomes the **work and test machine** (the local agent, Blender, the test lab, the GPU looks). The Vega 8 laptop stays the **minimum target** for performance.
+
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 
 | # | Date | Where | Report | Owner | Status |
