@@ -4212,3 +4212,5 @@ Note with the numbers, tests and evidence labels: `requests/EQUIP-1.md`. Code: `
 - Sword: broader sabre blade with a bevelled edge, curved guard, pommel, wrapped grip; turned so its edge leads the backhand
   and the overhead blow. 8 -> 6 draw calls held (with shadows), +187 tris a pass. Inventory and HUD icons drawn to match.
 - Behaviour unchanged (arc, bounces, reach, damage, hand attach, sounds). Shader programs 86 = 86. Frame time not verified (shared laptop).
+
+- **The user, 10.11, on the sword blade's quarter turn (so the edge leads the backhand and overhead strikes): "keep it".** The rest of EQUIP-1 is the cloud's to apply: `requests/EQUIP-1.diff` (clean on origin db3707df; ZOE-LOOK-38 applies after it).
