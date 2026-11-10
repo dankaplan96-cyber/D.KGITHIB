@@ -105,7 +105,7 @@ export const ISLE_PEOPLE = {
     { id: 'kn_fisher', char: 'keeper', tint: '#f4eadc', color: '#d0b088', speed: 0.9, start: 1, rounds: {
       ord: [at('fi_skiff', -12.5, -48.8, 'tend', [12, 18], { d: 2.4 }), at('fi_barrel', -12.3, -18.8, 'draw', [5, 7], { carry: 'can', d: 0.9 }), at('fi_crates', -11.8, -15.8, 'put', [5, 7], { carry: null, d: 0.9 })],
     } },
-    { id: 'kn_mother', char: 'nara', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
+    { id: 'kn_mother', char: 'nara_b', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
       ord: [at('mo_crates', -8.3, -22.8, 'browse', [6, 9], { carry: 'basket', d: 1.0 }), dr('mo_home', 18.7, -17.5, [10, 14], { carry: null }), at('mo_bench', 9.7, -16.8, 'stand', [8, 12], { d: 1.0 })],
     } },
     { id: 'kn_kid', char: 'xil', scale: 0.72, tint: '#fff8e8', color: '#f0d890', speed: 1.35, rounds: {
