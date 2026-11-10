@@ -64,7 +64,7 @@ export class ZeelichLife extends ChapterBase {
     return [
       ...this.streetFolk(),
       { id: 'zh_lissa', name: 'n_zh_lissa', char: 'nara', color: '#f4c0d0', ...at(ZH.zh_nara?.npcSpots?.lissa) },
-      { id: 'zh_wenna', name: 'n_zh_wenna', char: 'nara', color: '#e8c8a0', ...at(ZH.zh_oku?.npcSpots?.wenna) },
+      { id: 'zh_wenna', name: 'n_zh_wenna', char: 'nara_b', color: '#e8c8a0', ...at(ZH.zh_oku?.npcSpots?.wenna) },
     ];
   }
   // ZEELICH-LIFE: three of the street's working people, on rounds (walkers.js Resident): Fennick the project's heat
@@ -79,7 +79,7 @@ export class ZeelichLife extends ChapterBase {
     const def = (id, char, color, speed, stops0) => { const stops = Z ? clearOfDoors(stops0, Z) : stops0; return (Z ? { id, name: 'n_' + id, char, tint: '#ffffff', color, speed, ambient: true, x: stops[0].x, z: stops[0].z, angle: stops[0].a, round: stops, start: 0 }
       : { id, name: 'n_' + id, char, tint: '#ffffff', color, ambient: true, x: 0, z: 0, angle: 0, pending: true }); };
     return [
-      def('zr_fennick', 'worker', '#e8a040', 1.0, [
+      def('zr_fennick', 'worker_b', '#e8a040', 1.0, [
         S('fen_post1', 15.0, -5.6, 15.6, -6.4, [8, 12], 'tend'),
         S('fen_box', 14.6, -10.0, 13.56, -10.15, [10, 14], 'tend'),
         S('fen_feed', 16.9, 2.6, 16.0, 0, [6, 9]),
