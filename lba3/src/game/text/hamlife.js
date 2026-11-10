@@ -10,7 +10,7 @@ Object.assign(STR.en, {
   hl_monk_camp: "Forty guests and one kettle. The kettle is coping better than I am.",
   hl_monk_camp_2: "The old ones and the little ones sleep in here. The rest of Lhar snores by the wall.",
   hl_monk_mend: "The ground has been still since the vent breathed. Half of Lhar goes down to mend each day and comes back up for supper.",
-  hl_monk_mend_2: "Sefa came down from his dome and ate three bowls. He says the stars are back where they belong.",
+  hl_monk_mend_2: "Sefa came down from his dome and ate three bowls. He says the sky and his charts agree again.",
   hl_monk_network: "Pim says you're putting a box on Sefa's dome. Bring the boy back with all his fingers.",
   hl_monk_home: "The hall is ours again. Very quiet. I miss the children's noise, a little.",
   hl_monk_home_2: "Lhar took our cheese home with it. All of it. We gave it gladly. Mostly.",

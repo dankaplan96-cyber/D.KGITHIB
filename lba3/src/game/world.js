@@ -15,7 +15,7 @@ import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plat
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks, stoneColumnGeometry } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -1299,7 +1299,6 @@ export function* buildWorldSteps(parentScene) {
     let n = Math.ceil((P.h - base) / 1.05), endTop = P.h - 0.15;
     for (let pass = 0; pass < 2; pass++) { endTop = Math.max(P.h - 0.15, rimTop(at(n, n - 1))); n = Math.ceil((endTop + 0.15 - base) / 1.05); }
     W.stones = [];
-    const stoneMat = mat('#8d8578', { roughness: 0.95 });
     const rockMat = W_cliffs.mesh.material;   // (STONES-31: the cliff rocks' own material: one program, no new texture)
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
@@ -1382,16 +1381,23 @@ export function* buildWorldSteps(parentScene) {
 
     // shard pedestal on top of the plateau
     const pg = H(P.x, P.z);
-    add(scene, new THREE.CylinderGeometry(0.8, 1.0, 1.0, 8), mat('#cfc6b4'), P.x, pg + 0.5, P.z);
     physics.add({ type: 'cyl', x: P.x, z: P.z, r: 0.9, top: pg + 1.0 });
     W.shard1Spot = { x: P.x, y: pg + 2.0, z: P.z };
-    // some standing stones up there
+    // some standing stones up there, round the shard's pedestal
+    // (STONES-PLATEAU, release audit v75: they were bare flat-grey boxes and the pedestal a plain grey drum, seven draws;
+    //  now rough slabs of the cliff's own rock with lichen, broad face to the centre, and a hand-cut pedestal, in the
+    //  cliff rocks' material as the stepping stones (STONES-31): one mesh for all seven, cliffs.js plateauStonesGeometry.
+    //  The colliders are the ones they had)
+    const ring = [];
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2;
       const x = P.x + Math.cos(a) * 6.5, z = P.z + Math.sin(a) * 6.5 / 1.15;
-      add(scene, new THREE.BoxGeometry(0.9, 3 + (i % 2), 0.6), stoneMat, x, H(x, z) + 1.5, z, { ry: -a });
+      ring.push({ x, z, ry: Math.atan2(Math.cos(a), Math.sin(a)) + Math.sin(i * 2.3) * 0.22, h: 3 + (i % 2) * 0.5, seed: 7301 + i * 613 });
       physics.add({ type: 'cyl', x, z, r: 0.6, top: H(x, z) + 3.5 });
     }
+    const plateauStones = new THREE.Mesh(plateauStonesGeometry({ stones: ring, pedestal: { x: P.x, z: P.z, y: pg, h: 1.0 }, ground: H }), W_cliffs.mesh.material);
+    plateauStones.castShadow = plateauStones.receiveShadow = true; plateauStones.name = 'plateauStones';
+    scene.add(plateauStones);
   }
 
   yield 'landmarks';

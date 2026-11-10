@@ -1410,7 +1410,39 @@ class Game {
     if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (!s.respawn && this.onRoomFloor(R, at) ? at : { ...(R.spawn || at) }), true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
+    this.unwedge();
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
+  }
+
+  // DEPOT-CORNER (release audit v75): a save made where he stood wedged between two things (the Zeelich depot's back
+  // fence and a crate, before that slot was shut) loaded him wedged again, every way out refused. Overlapping what
+  // stops him, he is put on the nearest spot within 3 m that is clear of it all, on the same floor, reached in a
+  // straight line through nothing but what he already stood in; none: he stays (jetpack.js afterLoad still rescues a
+  // centre inside something). Returns true when he was moved.
+  unwedge() {
+    const P = this.physics, h = this.hero, p = h.pos, r = h.radius || 0.4, y = p.y;
+    if (!Number.isFinite(p.x + p.y + p.z) || P.overlapAt(p.x, p.z, y, r) < 0.03) return false;
+    const start = P.near(p.x, p.z).filter((c) => P.stops(c, y) && P._inside(c, p.x, p.z, 0));
+    const through = (x, z) => {
+      const d = Math.hypot(x - p.x, z - p.z), n = Math.ceil(d / 0.1);
+      for (let i = 1; i < n; i++) {
+        const t = i / n, sx = p.x + (x - p.x) * t, sz = p.z + (z - p.z) * t;
+        for (const c of P.near(sx, sz)) if (P.stops(c, y) && !start.includes(c) && P._inside(c, sx, sz, 0)) return false;
+      }
+      return true;
+    };
+    for (let d = 0.2; d <= 3.01; d += 0.2) for (let k = 0; k < 24; k++) {
+      const a = (k * Math.PI) / 12, x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d;
+      const gi = P.groundInfo(x, z, y + 0.3);
+      if (Math.abs(gi.h - y) > 0.3 || (gi.h < -0.35 && !gi.brick)) continue;
+      if (this.room && !this.room.outdoor && !this.onRoomFloor(this.room, { x, z })) continue;
+      if (this.room?.bounds?.length && !this.room.bounds.some((b) => x > b.x0 + 0.3 && x < b.x1 - 0.3 && z > b.z0 + 0.3 && z < b.z1 - 0.3)) continue;
+      if (P.overlapAt(x, z, gi.h, r + 0.05) > 0 || !through(x, z)) continue;
+      p.set(x, gi.h, z); h.vy = 0; h.onGround = true;
+      if (!this.room || this.room.outdoor) this.lastSafe = { x, z };
+      return true;
+    }
+    return false;
   }
 
   // ------------------------------------------------ flow

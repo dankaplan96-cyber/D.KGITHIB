@@ -143,7 +143,7 @@ Object.assign(STR.en, {
   c2_toast_mill: 'Mill braked ({n}/3)',
 
   c2_zoe_in: 'The lighthouse. Baldino said three dials, then the microphone. What was the order again?',
-  c2_radio_freq: 'Zoé, can you hear me? The dials: first what wakes us, then what the sea does, then what keeps watch at night. Then speak, slowly and clearly!',
+  c2_radio_freq: 'Zoé, can you hear me? The dials: first what wakes us, then what the sea does, then what twinkles. Then speak, slowly and clearly!',
   c2_dial_sun: 'The dial points to the sun.',
   c2_dial_wave: 'The dial points to the wave.',
   c2_dial_star: 'The dial points to the star.',
