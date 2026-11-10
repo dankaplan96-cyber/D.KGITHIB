@@ -76,7 +76,7 @@ const school = (f, S) => (S.index >= idx(S, 'dig') ? 'school' : null);
 
 const DESERT_PEOPLE = [
   // the surveyor at his tripod on the north rim, a look from the north-east rim, a word with his staff man, his notes at the kitchen's table
-  { id: 'dg_surv', char: 'worker', tint: '#fff2dc', speed: 0.95, color: '#e8c030', start: 0, area: 'desert', phase: crew(true), rounds: {
+  { id: 'dg_surv', char: 'worker_b', tint: '#fff2dc', speed: 0.95, color: '#e8c030', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('surv_scope', TP.x, TP.z - 0.85, TP.x, TP.z + 4, 'browse', [14, 20], { gest: ['nod'] }),
       L('surv_rim', 77.6, 15.2, DIGC.x, DIGC.z, 'stand', [6, 9], { gest: ['nod'] }),
