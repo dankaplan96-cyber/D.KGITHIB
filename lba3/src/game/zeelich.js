@@ -791,7 +791,7 @@ export function* buildZeelichSteps(scene, physics) {
     closedDoors: [
       { id: 'council', ...W(houses[1].door[0], houses[1].door[1]), y: Y0, key: 'zh_closed_council' },
       ...mills.map((m) => ({ id: 'mill-' + m.api.id, ...m.api.door, y: Y0, key: m.api.id === 'north' ? 'zh_closed_mill_old' : 'zh_closed_mill' })),
-      { id: 'depot-shed', ...W(21.2, 20.1), y: Y0, key: 'zh_closed_depot' },
+      { id: 'depot-shed', ...W(21.2, 20.5), y: Y0, key: 'zh_closed_depot' },
       { id: 'control-hut', ...W(53.8, -6.2), y: DECK, key: 'zh_closed_hut' },
     ],
     npcSpots: {
@@ -1815,11 +1815,15 @@ export function* buildZeelichSteps(scene, physics) {
       for (const s of [-1, 1]) { const [ex, ez] = f(0.4, s * 1.245); B.add(emq(), emblemMaterial(), ex, Y0 + 1.4, ez, 0, ry + (s > 0 ? 0 : Math.PI), 0, 1.1); }
       col({ type: 'box', x, z, hw: 3.05, hd: 1.25, rot: ry, top: Y0 + 2.6 });
     };
-    container(8.2, 23.3, 0, '#3a8a86');
+    // (DEPOT-CORNER, release audit v75: along the back fence the container, the two crate stacks and the shed each left a
+    //  slot 0.5–0.7 m wide, narrower than Twinsen (0.8 m): walked into, he was wedged between the fence and a crate and
+    //  could not move. Each now stands against the fence (and the west stack against the container's end), so the slots
+    //  are shut, and the way between the stacks and the locker stays 1–2 m wide)
+    container(8.2, 23.8, 0, '#3a8a86');
     container(22.3, 15.6, Math.PI / 2, '#d86a5a');
     // the teal shed (Zeelich-tech module) in the south-east corner
     {
-      const x = 20.6, z = 22.6, w = 4.2, d = 3.6, h = 2.6, G = new THREE.Group(); G.position.set(x, Y0, z); G.rotation.y = Math.PI; group.add(G);
+      const x = 20.6, z = 23.0, w = 4.2, d = 3.6, h = 2.6, G = new THREE.Group(); G.position.set(x, Y0, z); G.rotation.y = Math.PI; group.add(G);
       const SB = new Batch(G);
       const wallM = tm(ribTex(), { rough: 0.5, metal: 0.4, color: '#bcd8d6' });   // (ZSTYLE-2: ribbed teal-grey sheet, not plain painted steel)
       SB.add(boxUV(bbox(w + 0.3, 0.3, d + 0.3, 0.05, 1), TILE.concrete), tm('concrete', { color: '#d8d0cc' }), 0, 0.13, 0);
@@ -1859,7 +1863,7 @@ export function* buildZeelichSteps(scene, physics) {
       col({ type: 'box', x: LK.x, z: LK.z, hw: 0.8, hd: 0.4, rot: 0, top: Y0 + 2.3, noStand: true });
     }
     // crates, tech crates, barrels, floodlight masts
-    techCrates([[5.4, 11.0, 2, 0.9], [6.5, 10.6, 1, 0.8], [17.6, 24.0, 1, 0.9], [12.4, 24.1, 2, 0.85]]);
+    techCrates([[5.4, 11.0, 2, 0.9], [6.5, 10.6, 1, 0.8], [17.6, 24.45, 1, 0.9], [11.75, 24.5, 2, 0.85]]);
     const barrel = cached('zbarrel', () => { const pts = []; for (let i = 0; i <= 8; i++) { const k = i / 8; pts.push([0.32 + Math.sin(k * Math.PI) * 0.06, k * 0.95]); } return compose([[lathe(pts, 14, 1)], [new THREE.CircleGeometry(0.33, 14).rotateX(-Math.PI / 2), 0, 0.95, 0]]); });
     for (const [x, z] of [[4.9, 13.0], [5.1, 13.8], [23.0, 10.4], [22.3, 10.2]]) { B.add(barrel, tm('metal', { color: '#e8b84a', rough: 0.6, metal: 0.3 }), x, Y0, z); col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 0.95, noStand: true, seeThrough: true }); }
     for (const [x, z] of [[4.6, 24.6], [23.4, 9.6]]) {

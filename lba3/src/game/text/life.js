@@ -72,7 +72,7 @@ Object.assign(STR.en, {
   l_odile_after: [
     'Category: machinery. Sub-category: humming.',
     'Half of Zeelich\'s forms have one box for "pot". You\'d be amazed what fits in it.',
-    'The shuttles are lovely. The noise at dawn shift is not.',
+    'The shuttles are lovely. The noise at shift change is not.',
     "The Zeelich crates go down to the Esmers' house once I've stamped them. Every last one.",
   ],
   l_crate_look: 'An Esmer crate, "SOUP POT (1)". It hums.',
