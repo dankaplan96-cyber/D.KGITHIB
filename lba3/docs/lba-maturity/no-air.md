@@ -71,7 +71,49 @@ post's warmth) are listed, not measured.
    collider for his hands.
 
 ### Numbers
-See the table at the end of this file (filled from the runs).
+The sweep could not be run whole: the machine was shared (load 15–32 on 4 cores, memory short), and pages with every
+area built died for lack of memory. What was measured:
 
-### What is left
-See "Left" below.
+| Run | States covered | Distinct work cases | Hand in the air (> 5 cm) | On a thing | Stood down | Own body / warming |
+|---|---|---|---|---|---|---|
+| Base (ba23dfa6) | well, project ×2, zeelich ×2, dig (6 of 21) | ~220 | **172** (tinker 67, setDown 41, reach 20, kneelWork 16, tapTurn 11, touchWater 8, potting 6, other 3); typical gap 20–80 cm | ~30 | — | 14 / 4 |
+| After, changes 1–4 | well, project, zeelich, dig (4 of 21) | 219 | **66** | 61 | 77 | 14 / 4 |
+| After, as committed (a one-off action's look-ahead made stricter) | well only (1 of 21) | 99 | **21** (base, the same state: 74) | — | — | — |
+
+Feet: no standing worker's sole more than 6 cm off the ground in any run (0 offenders, before and after).
+The other 15–17 states (chapters 5–13) were not measured after the change. They run the same code on the same kinds
+of stops; their numbers are unknown, not assumed.
+
+`tests/no-air.mjs` therefore **fails today** on its hand check, by design: it lists what is left.
+
+### Left (honest list)
+1. **Hands on a collider that is not the thing's drawn surface** (most of the 66): the layer reads colliders, the sweep
+   measures triangles. Where a prop's collider is a wide box or cylinder round a thinner thing, the palm is put on the
+   collider's face, 6–60 cm from the mesh. Measured in the four states:
+   - Citadel: garrick@gar_tap, tobb@tobb_stall, gurt@gurt_trolley, nell@mark (6 cm), and the four house-door knocks
+     (maro, tilde: the door is set 14–17 cm back in the wall's collider);
+   - Zeelich: kira@kira_b, zr_fennick@fen_dark, @fen_post1, zr_oma@oma_box;
+   - Desert: dg_cook@cook_pot/@cook_pour/@cook_table, dg_clerk@clk_b, dg_mech@mech_pile/@mech_stake/@mech_fence,
+     dg_dig@dig_pile/@dig_rim, dg_surv@surv_scope, safi@safi_door, dkid@pebble (a pickup 36 cm over the sand);
+   - the Hamalayi: lh_sana@sana_barrels/@sana_rack, lh_tam@tam_wood4/@tam_fire, lh_grum@grum_cart/@grum_crates,
+     lh_bero@bero_cart, lh_mira@mira_pot;
+   - rooms: zoe@table and @stove (5.7 cm), hedda@hedda_stove (6 cm), wim@wim_bench/@wim_parts, luc@luc_serve,
+     osk@osk_crates, pask@pask_gate, il_zuzz, il_avra (5.4 cm);
+   - islands: Knartas kn_mother@mo_crates, kn_nets@ne_rack1/2; Mosquibee mb_bzzra, mb_tend1, mb_tend2 (the hives);
+     Old Watch ow_mason; the Orchard or_pick1, or_pick2, or_pell; the Platform pf_vill1, pf_vill2; Under-Gas ug_gauge,
+     ug_fitter, ug_foreman (the pump's round collider).
+   The fix per stop is one of: give the prop a collider that is its top or face; move the stop; or name it in
+   `workhands.js AIR_STOPS` ('who@stop': the person stands there instead). The list is in place and empty: nothing was
+   added to it without a sweep to check it.
+2. **77 stops stood down** (in the four states: Citadel 9, Zeelich 8, Desert 12, the Hamalayi 7, the islands 34, rooms 7):
+   nothing was in reach, so the person now stands at the stop instead of working. Each wants a small prop (a bench, a
+   crate, a pot) or a new place. None was added: no prop was placed without a picture to judge it by.
+3. **The story's placed poses** are not moved (a chapter's mark is checked by its own tests): chapter 2's worker at the
+   lift plays `use` 42 cm from the mast (the lift now has a control he could be put at).
+4. **Scripted scenes** in src/game/story/*.js other than the opening were not swept: their people get the hands layer
+   like everyone (it runs wherever an NPC plays a work action), but no scene was measured.
+5. **Looks**: the hands layer has not been looked at in play (only measured). A deep bend to a low crate (up to
+   0.64 rad on top of the action's own) may read as too much; palms lie flat on tops whatever the action.
+6. **Cost**: not measured. The layer solves two arms per visible worker per frame (about thirty small matrix updates
+   each) and reads a handful of colliders once per stop; no frame time was taken.
+7. The opening's Arthur close-ups stay on his face; his hands' work shows in the wide shots only.
