@@ -330,11 +330,9 @@ Queue item 8 after ITEMS-1, the same method.
 9. Common props
 
 ## Next action
-If the user likes ZOE-LOOK-38: the same treatment for Twinsen (order 38), then the cast region by region. If not: say
-which parts to keep (each is separable in `zoe_poly.py`). Otherwise back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
-After EQUIP-1 (the cloud applies it; a Vega 8 frame-time pair on a quiet laptop is still owed), back to the queue.
-After HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
-orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
-`C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
-place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of
-tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+ZOE-LOOK-38 accepted (9.11); EQUIP-1 sent (10.11; a Vega 8 frame-time pair on a quiet laptop is still owed). The user, 9.11:
+"by the order we set": next is queue item 4, region 5, the underground (the sewers' and the underground's people); then the
+named cast, the `_b` variants, common props; **Twinsen's ZOE-LOOK treatment after the queue**. The moles' claws could take the
+hands' front-to-back turn too (not asked). Worktree `C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted
+(their JSONs, the index and skeletons.json in place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257
+(`z28/serve.py <root> 8257`), a test copy of tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
