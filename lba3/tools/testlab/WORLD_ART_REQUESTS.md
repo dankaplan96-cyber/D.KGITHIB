@@ -4457,3 +4457,8 @@ the runner and the Quick Check's summary beside it in `2026-11-10-gtx1050/`).
 - **Evidence label:** Automated runtime only, on real hardware. One run each, no spread. Windows was still finishing
   updates in the background (a restart pending). Not measured: battery, the desktop app, the Follow camera,
   temperatures over a long session. Nobody played the routes by hand.
+- **Against the cloud's `2026-11-10-desktop-gtx1050.md`** (the user's run in the desktop app, minutes earlier): the CPU
+  it asks about is an Intel Core i5-8300H, a laptop part. That run fell to Medium for CPU pressure (street CPU work
+  p50 14.4 ms) and had a 4042 ms shadow-program step; mine in Chrome held High (street CPU work p50 7.3 ms, shadow
+  programs 441–480 ms). I have not isolated why (desktop app against Chrome, a first start after the new driver,
+  Windows updating in the background). Not done yet: the same benchmark in the desktop app on this machine.
