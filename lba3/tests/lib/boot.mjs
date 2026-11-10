@@ -155,10 +155,10 @@ process.on('exit', (code) => {
 export async function quitAndKeep(page, context, file) {
   await page.evaluate(() => { P.release(); P.settle(); P.tap('Escape', 0.1); });
   // the game saves, then reloads the page 500 ms later (src/main.js): wait for that reload, or a later open() races it
-  const reloaded = page.waitForEvent('load', { timeout: 300000 });
+  const reloaded = page.waitForEvent('load', { timeout: +process.env.BOOT_TIMEOUT || 300000 });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 });
   await reloaded;
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 })
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 })
     .catch(async (e) => {   // say where the boot stopped, not just that it timed out
       const st = await page.evaluate(() => ({ url: location.href, game: !!window.game, preparing: window.game?.preparing, loading: document.querySelector('#loading')?.textContent?.slice(0, 120) })).catch((x) => String(x));
       console.log('quitAndKeep: the reload did not finish booting', JSON.stringify(st)); throw e; });

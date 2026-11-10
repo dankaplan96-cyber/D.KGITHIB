@@ -318,7 +318,13 @@
         // the prompt must be for this person (not a bench or a sign beside them): step closer
         // (each try a short walk that stops on their prompt: closer than their body allows, with 240 s to get there, the
         //  bot circled Yorna at her winch for four minutes, chapter 6, PLAYTHROUGH-11.9)
-        for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: Math.max(1.0 - k * 0.2, hero().radius + (n.bodyR ?? n.radius ?? 0.4) + 0.1), maxT: 20, stopWhen: ready }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+        // (F-14: no early stop on these short walks. The prompt can be theirs while he turns on the way and someone else's
+        //  once he faces them — Brix walking past Tibbo's counter —; stopping on it there had all three tries end where they
+        //  began, 2.2 m off, and E pressed on the neighbour)
+        const forThis = () => tg?.kind === 'npc' && tg.id === id;
+        for (let k = 0; k < 3 && !forThis(); k++) { P.go(n.pos.x, n.pos.z, { tol: Math.max(1.0 - k * 0.2, hero().radius + (n.bodyR ?? n.radius ?? 0.4) + 0.1), maxT: 20 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+        // (someone walking by still has the prompt: wait for them to pass, as P.use does and a player would; at most 5 s)
+        for (let k = 0; k < 20 && G.state === 'play' && !forThis(); k++) { G.step(0.25); P.face(n.pos.x, n.pos.z); tg = P.target(); }
         P.tap('KeyE', 0.1);
       }
       const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
