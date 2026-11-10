@@ -1,0 +1,422 @@
+diff --git a/lba3/src/game/actors.js b/lba3/src/game/actors.js
+index 7476c502..8291dc94 100644
+--- a/lba3/src/game/actors.js
++++ b/lba3/src/game/actors.js
+@@ -11,6 +11,7 @@ import { SoftParticles } from '../engine/softfx.js';
+ import { offScene } from './offscene.js';
+ import { SlashTrail } from './slashtrail.js';
+ import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
++import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
+ 
+ export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
+ // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
+@@ -44,22 +45,14 @@ const DEG = Math.PI / 180;
+ export const HERO_LOOK = 'twinsen';
+ 
+ // The sword Yorna gives Twinsen (chapter 6): a short, slightly curved blade with a brass guard. Built along
+-// the hand's -y (the continuation of the forearm), so arm swings read as blade swings.
++// the hand's -y (the continuation of the forearm), so arm swings read as blade swings. Its look (EQUIP-1: a broader
++// sabre blade with a bevelled edge, a curved guard, pommel and wrapped grip; three meshes, shared) is equiplook.js's.
+ export function buildSword() {
+-  const g = new THREE.Group();
+-  // (TOWN-POLISH, I-28: a bright, mostly dielectric steel with a faint cool glow. At metalness 0.8 with no environment map
+-  //  the blade drew dark grey, lost against the grey paving at the player's distance)
+-  const steel = new THREE.MeshStandardMaterial({ color: '#f4f8fc', metalness: 0.35, roughness: 0.3, emissive: '#8fb4d8', emissiveIntensity: 0.35 });
+-  const brass = new THREE.MeshStandardMaterial({ color: '#e0b25a', metalness: 0.7, roughness: 0.35 });
+-  const grip = new THREE.MeshStandardMaterial({ color: '#5a3a24', roughness: 0.8 });
+-  const add = (geo, m, y, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.rotation.z = rz; o.castShadow = true; g.add(o); return o; };
+-  add(new THREE.CylinderGeometry(0.022, 0.024, 0.16, 8), grip, 0.0);
+-  add(new THREE.SphereGeometry(0.032, 8, 6), brass, 0.09);
+-  add(new THREE.BoxGeometry(0.2, 0.03, 0.05), brass, -0.09);
+-  const blade = new THREE.Shape(); blade.moveTo(-0.022, 0); blade.lineTo(0.024, 0); blade.quadraticCurveTo(0.03, -0.4, 0.008, -0.72); blade.lineTo(-0.01, -0.66); blade.quadraticCurveTo(-0.02, -0.35, -0.022, 0);
+-  const bg = new THREE.ExtrudeGeometry(blade, { depth: 0.012, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 1 }); bg.translate(0, 0, -0.006);
+-  add(bg, steel, -0.1);
++  const g = swordMeshes(new THREE.Group());
+   g.rotation.x = -0.25; // a little forward of the forearm line
++  // (EQUIP-1: the blade turned a quarter about its own line: its edge leads the backhand and the overhead blow (it led
++  //  with the flat), and the camera behind him sees its flat in the guard and those two swings, not a 3 px edge)
++  g.rotation.y = Math.PI / 2;
+   g.position.y = -0.05;
+   writeBodyStencil(g); // (the hero's silhouette doesn't show through his own sword)
+   return g;
+@@ -1232,8 +1225,11 @@ export class MagicBall {
+     this.state = 'idle';
+     this.pos = new THREE.Vector3();
+     this.vel = new THREE.Vector3();
+-    this.mat = new THREE.MeshStandardMaterial({ color: '#ffe68a', emissive: '#ffc400', emissiveIntensity: 3, roughness: 0.2 });
+-    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), this.mat);
++    // (EQUIP-1: a marble in the level's colour, its shading painted on and turned to the camera (fx), a moderate glow:
++    //  equiplook.js. `glow` is the old emissive scale, still what the halo and the charge are measured in)
++    this.mat = ballMaterial();
++    this.glow = 3;
++    this.mesh = new THREE.Mesh(ballGeo(1), this.mat);
+     writeBodyStencil(this.mesh);
+     this.mesh.visible = false;
+     game.scene.add(this.mesh);
+@@ -1257,7 +1253,7 @@ export class MagicBall {
+     this.ribbon = new THREE.Mesh(tgeo, this.trailMat);
+     this.ribbon.frustumCulled = false; this.ribbon.visible = false; this.ribbon.renderOrder = 4;
+     game.scene.add(this.ribbon);
+-    this.haloMat = new THREE.MeshBasicMaterial({ map: T.halo, color: '#ffd04a', opacity: 0.6, ...add });
++    this.haloMat = new THREE.MeshBasicMaterial({ map: ballGlowTexture(), color: '#ffd04a', opacity: 0.6, ...add });
+     this.halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.haloMat);
+     this.halo.visible = false; this.halo.renderOrder = 4;
+     game.scene.add(this.halo);
+@@ -1290,12 +1286,21 @@ export class MagicBall {
+     this.holder = hero;
+     this.mesh.visible = true;
+     this.charge = 0;
+-    this.mat.emissiveIntensity = 0.6;
++    this.paint(hero.magicLevel);   // (the level's colour in his hand too, not the last throw's)
++    this.setGlow(0.6);
+     this.mesh.scale.setScalar(1);
+     this.followHand();
+   }
+   cancelHold() { if (this.state === 'inhand') this.toHand(true); }
+-  setCharge(k) { this.charge = k; this.mat.emissiveIntensity = 0.6 + k * 3.2; this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
++  setCharge(k) { this.charge = k; this.setGlow(0.6 + k * 3.2); this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
++  // the look of a level (1 yellow, 2 green, 3 red, 4 the fire ball): the body's painted marble, its glow, the trail and halo
++  paint(level) {
++    const L = Math.max(1, Math.min(4, level | 0 || 1)), col = BALL_LEVEL[L];
++    this.mesh.geometry = ballGeo(L);
++    this.mat.emissive.set(col[1]);
++    this.trailMat.color.set(col[1]); this.haloMat.color.set(col[1]);
++  }
++  setGlow(v) { this.glow = v; this.mat.emissiveIntensity = ballEmissive(v); }
+   followHand() {
+     const hand = this.holder?.rig.j?.armR?.hand;
+     if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(this.mesh.position); this.mesh.position.y -= 0.08; }
+@@ -1429,9 +1434,7 @@ export class MagicBall {
+     if (opts.magic === undefined && this.magic) hero.mp -= 1;
+     this.bounces = this.magic ? 4 : 0;
+     this.carry = null;
+-    const col = BALL_LEVEL[Math.max(1, Math.min(4, level))];
+-    this.mat.color.set(col[0]); this.mat.emissive.set(col[1]);
+-    this.trailMat.color.set(col[1]); this.haloMat.color.set(col[1]);
++    this.paint(level);
+     this.sn = 0; // (a new throw, a new trail)
+     this.fire = level >= 4;
+     // released from the hand, at the hand's position (the release frame of the throw)
+@@ -1450,7 +1453,7 @@ export class MagicBall {
+     this.history = [];
+     this.mesh.visible = true;
+     this.mesh.scale.setScalar(charged ? 1.3 : 1);
+-    this.mat.emissiveIntensity = charged ? 4 : 2.2;
++    this.setGlow(charged ? 4 : 2.2);
+     this.preview(null);
+   }
+ 
+@@ -1590,14 +1593,17 @@ export class MagicBall {
+       }
+       this.ribbon.geometry.attributes.position.needsUpdate = true;
+     }
++    // (EQUIP-1: the ball turned to the camera, so its painted glint and rim read from any side)
++    if (this.mesh.visible) this.mesh.quaternion.copy(cam.quaternion);
+     // the halo
+     const showHalo = !retro && this.mesh.visible && this.state !== 'idle';
+     this.halo.visible = showHalo;
+     if (showHalo) {
+       this.halo.position.copy(this.mesh.position); this.halo.quaternion.copy(cam.quaternion);
+-      const e = this.mat.emissiveIntensity, s = (0.5 + Math.min(e, 6) * 0.07) * this.mesh.scale.x * (1 + Math.sin(this.clock * 22) * 0.05);
++      // (the fire ball's glow flickers)
++      const e = this.glow, s = (0.5 + Math.min(e, 6) * 0.07) * this.mesh.scale.x * (1 + Math.sin(this.clock * 22) * 0.05 + (this.fire ? Math.sin(this.clock * 41) * 0.06 : 0));
+       this.halo.scale.set(s, s, 1);
+-      this.haloMat.opacity = Math.min(0.75, 0.25 + e * 0.08);
++      this.haloMat.opacity = Math.min(0.8, 0.3 + e * 0.09);
+     }
+     // the flashes: a glow that swells and fades, a ring that runs out (both face the camera)
+     for (const f of this.flashes) {
+diff --git a/lba3/src/game/equiplook.js b/lba3/src/game/equiplook.js
+new file mode 100644
+index 00000000..39d0195a
+--- /dev/null
++++ b/lba3/src/game/equiplook.js
+@@ -0,0 +1,186 @@
++// EQUIP-1: the magic ball's and the sword's looks (the ball: actors.js MagicBall; the sword: actors.js buildSword, held in
++// Twinsen's hand; both again in the interface: itemlook.js, the inventory; and their HUD icons: hud.js).
++//
++// The ball, as in LBA2 (the user's own SPRIRAW.HQR, looked at and described only; nothing copied): a small glossy
++// marble in the level's colour (gold, green, red; the fire ball a bright orange flame), lit from the upper left with a
++// white glint and a dark rim at the lower right, a half-transparent disc of its colour round it and a string of
++// smaller balls behind it. Ours was a flat near-white disc (a standard material at emissive 2.2-4 burns out to white
++// under the neutral tone mapping), so the level hardly showed (red read pink, the fire ball salmon).
++// Now: the same sphere, its shading painted in vertex colours (base, light, dark rim, glint) and turned to face the
++// camera every frame, so it reads as a marble from any side; a moderate glow in the level's colour keeps it bright in
++// the dark; the halo gets a soft core (ballGlowTexture). Same program as the game's own vertex-coloured props
++// (standard + vertex colours), one mesh, one draw call, as before.
++//
++// The sword (Yorna's, chapter 6; the game's own design: a short, slightly curved blade with a brass guard), at the
++// Follow camera a 3-4 px grey line with nothing at the hilt: now a broader sabre blade (6.4 cm, was 4.6) with a flat
++// and a bevelled edge (crisp facets: a light line along the edge), a curved cross-guard with ball ends, a pommel and a
++// wrapped grip. Same length, grip and blade positions in the hand (slashtrail.js samples the blade at y -0.36 / -0.84),
++// three meshes (steel, brass, leather) instead of four, their geometries and materials made once and shared.
++import * as THREE from 'three';
++
++const GEO = {}, MATS = {};
++const once = (bag, k, make) => bag[k] || (bag[k] = make());
++const ss = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
++const col = (h) => new THREE.Color(h);   // (sRGB in, linear held: what vertex colours are)
++
++// ------------------------------------------------------------------ the magic ball
++export const BALL_RADIUS = 0.12;
++// per level: base (the marble's colour), light (toward the glint), dark (the rim), glint
++const BALL_PAINT = [null,
++  { base: '#f2b23a', light: '#ffe08a', dark: '#6a4208', glint: '#ffffff' },   // 1 gold-yellow
++  { base: '#3cc04e', light: '#a8f2a0', dark: '#0c4418', glint: '#ffffff' },   // 2 green
++  { base: '#d8282a', light: '#ff8a7a', dark: '#520404', glint: '#ffffff' },   // 3 red
++  { base: '#ff9a10', light: '#fff27a', dark: '#d8340a', glint: '#fffbe0' },   // 4 the fire ball (a bright rim: flame, not shade)
++];
++// where the light comes from in the ball's own frame (+z faces the camera, +y up): upper left, toward the viewer
++const LIGHT = new THREE.Vector3(-0.42, 0.5, 0.76).normalize();
++const UP = new THREE.Vector3(0, 1, 0);
++// The ball's sphere with its shading painted on. facing = true: for the game (the mesh is turned to face the camera,
++// MagicBall.fx): the glint upper left, the rim darkened all round. facing = false: for the inventory, which turns the
++// model about y: the shading is symmetric about y (light on top), the stage's own lights give the glint.
++export function ballGeo(level = 1, facing = true) {
++  const L = Math.max(1, Math.min(4, level | 0));
++  return once(GEO, `ball${L}${facing ? 'f' : 'u'}`, () => {
++    const P = BALL_PAINT[L], base = col(P.base), light = col(P.light), dark = col(P.dark), glint = col(P.glint);
++    // the pole on the light (the glint is then the first ring: a round spot, not a broken one)
++    const g = new THREE.SphereGeometry(BALL_RADIUS, 18, 12);
++    const axis = facing ? LIGHT : UP;
++    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, axis));
++    const N = g.attributes.normal, c = new Float32Array(N.count * 3), n = new THREE.Vector3(), k = new THREE.Color();
++    for (let i = 0; i < N.count; i++) {
++      n.fromBufferAttribute(N, i);
++      const d = n.dot(axis);
++      k.copy(dark).lerp(base, ss(-0.75, 0.25, d)).lerp(light, ss(0.35, 0.92, d) * 0.85);
++      if (facing) k.lerp(dark, (1 - ss(0.0, 0.55, n.z)) * 0.55);   // (the rim, as the sprite's outline)
++      k.lerp(glint, ss(facing ? 0.93 : 0.97, facing ? 0.99 : 1.0, d));
++      c[i * 3] = k.r; c[i * 3 + 1] = k.g; c[i * 3 + 2] = k.b;
++    }
++    g.setAttribute('color', new THREE.BufferAttribute(c, 3));
++    return g;
++  });
++}
++// The game's ball material (one ball: one material, its glow set per level and charge by MagicBall)
++export function ballMaterial() {
++  // (its colour a light grey: in full sun the lit marble stays below white, so a yellow ball stays yellow)
++  return new THREE.MeshStandardMaterial({ color: '#d4d4d4', vertexColors: true, roughness: 0.35, metalness: 0, emissive: '#ffc400', emissiveIntensity: 0.4 });
++}
++// glow (the old emissive scale: 0.6 held, 2.2 thrown, 4 charged, up to 3.8 while charging) -> the body's emissive: kept
++// low, so the painted shading and the level's hue survive the tone mapping (the halo carries the rest)
++export const ballEmissive = (glow) => 0.18 + Math.min(glow, 6) * 0.1;
++// The inventory's ball (itemlook.js): the same marble, a little glow (the slot's lights give the glint)
++export function ballLookMesh(level = 1) {
++  const L = Math.max(1, Math.min(4, level | 0));
++  const m = once(MATS, 'ballLook' + L, () => new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.22, metalness: 0, emissive: ['#000', '#ffb000', '#30d020', '#ff2a10', '#ff6a00'][L], emissiveIntensity: L === 4 ? 0.4 : 0.15 }));
++  return new THREE.Mesh(ballGeo(L, false), m);
++}
++// The halo's picture: a soft disc a little wider than the ball (LBA2's half-transparent disc; the ball covers the
++// middle 37 % of it in flight) inside a wide, soft glow
++let _glowTex = null;
++export function ballGlowTexture() {
++  if (_glowTex) return _glowTex;
++  const S = 64, c = document.createElement('canvas'); c.width = c.height = S;
++  const x = c.getContext('2d'), im = x.createImageData(S, S);
++  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
++    const d = Math.hypot(i / (S - 1) - 0.5, j / (S - 1) - 0.5) * 2;
++    const a = d >= 1 ? 0 : 0.45 * Math.pow(1 - d, 1.5) + 0.55 * (1 - ss(0.46, 0.7, d));
++    const k = (j * S + i) * 4; im.data[k] = im.data[k + 1] = im.data[k + 2] = 255; im.data[k + 3] = Math.round(Math.min(1, a) * 255);
++  }
++  x.putImageData(im, 0, 0);
++  _glowTex = new THREE.CanvasTexture(c); _glowTex.colorSpace = THREE.SRGBColorSpace;
++  return _glowTex;
++}
++
++// ------------------------------------------------------------------ the sword
++// In the sword's group (the hand's frame: -y continues the forearm): the grip from y -0.075 to 0.075 (where the hand
++// closes), the pommel above it, the guard at -0.09, the blade from -0.1 to -0.82 (its width along x, its flat facing z).
++const BLADE = { y0: -0.1, len: 0.72, half: 0.032, curve: 0.026, thick: 0.0075 };
++// A strip of quads through rows of points (each row one station along the blade), its own vertices so its normals are
++// smooth along the blade and crisp against the next facet
++function strip(rows, a, b, pos, idx) {
++  const base = pos.length / 3;
++  for (const r of rows) pos.push(...r[a], ...r[b]);
++  for (let i = 0; i < rows.length - 1; i++) { const q = base + i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
++}
++function bladeGeo() {
++  const B = BLADE, n = 14, rows = [];
++  for (let i = 0; i <= n; i++) {
++    const t = i / n, y = B.y0 - t * B.len;
++    const bend = B.curve * t * t;                                   // the slight curve (the spine convex, toward -x)
++    const taper = t < 0.74 ? 1 + 0.06 * Math.sin((t / 0.74) * Math.PI * 0.9) : Math.sqrt(Math.max(0, 1 - ((t - 0.74) / 0.26) ** 2)) * 1.05;
++    // spine (-x side) and edge (+x side); toward the point the edge sweeps up to the spine (the point nearer the spine:
++    // a sabre's), the spine dipping a little
++    const xs = -bend - B.half + (1 - Math.min(1, taper)) * B.half * 0.6, xe = xs + 2 * B.half * taper;
++    const th = B.thick * (1 - 0.45 * t) * (t < 0.74 ? 1 : Math.min(1, taper + 0.15));
++    const xr = xs + (xe - xs) * 0.55;                                 // the ridge: the flat from the spine, the bevel to the edge
++    rows.push({ sf: [xs, y, th * 0.7], sb: [xs, y, -th * 0.7], rf: [xr, y, th], rb: [xr, y, -th], e: [xe, y, 0] });
++  }
++  const pos = [], idx = [];
++  // front: spine -> ridge (the flat), ridge -> edge (the bevel); back the same, wound the other way; the spine's band
++  strip(rows, 'rf', 'sf', pos, idx); strip(rows, 'e', 'rf', pos, idx);
++  strip(rows, 'sb', 'rb', pos, idx); strip(rows, 'rb', 'e', pos, idx);
++  strip(rows, 'sf', 'sb', pos, idx);
++  // the base: one cap under the guard (hidden, but it closes the solid for the shadow)
++  const r0 = rows[0], q = pos.length / 3; pos.push(...r0.sf, ...r0.rf, ...r0.e, ...r0.rb, ...r0.sb);
++  idx.push(q, q + 1, q + 4, q + 1, q + 3, q + 4, q + 1, q + 2, q + 3);
++  const g = new THREE.BufferGeometry();
++  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
++  g.computeVertexNormals();   // (each facet its own vertices: smooth along the blade, crisp from facet to facet)
++  return dropDegenerate(g);
++}
++// position + normal as one non-indexed geometry, leaving out triangles of no area (the blade's point, a lathe's poles)
++function dropDegenerate(...list) {
++  const pos = [], nrm = [], a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
++  for (const g0 of list) {
++    const g = g0.index ? g0.toNonIndexed() : g0, P = g.attributes.position, N = g.attributes.normal;
++    for (let i = 0; i < P.count; i += 3) {
++      a.fromBufferAttribute(P, i); b.fromBufferAttribute(P, i + 1); c.fromBufferAttribute(P, i + 2);
++      if (c.clone().sub(b).cross(b.clone().sub(a)).lengthSq() < 1e-14) continue;
++      for (let k = 0; k < 3; k++) { pos.push(P.getX(i + k), P.getY(i + k), P.getZ(i + k)); nrm.push(N.getX(i + k), N.getY(i + k), N.getZ(i + k)); }
++    }
++  }
++  const out = new THREE.BufferGeometry();
++  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
++  out.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
++  out.computeBoundingSphere();
++  return out;
++}
++const at = (g, x, y, z, sx = 1, sy = 1, sz = 1) => { g.scale(sx, sy, sz); g.translate(x, y, z); return g; };
++function brassGeo() {
++  // the cross-guard: a bar bent a little toward the blade at its ends, a ball on each end, a block at the middle
++  const path = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-0.1, -0.103, 0), new THREE.Vector3(0, -0.076, 0), new THREE.Vector3(0.1, -0.103, 0));
++  const bar = at(new THREE.TubeGeometry(path, 8, 0.0135, 6, false), 0, 0, 0, 1, 1, 1.25);
++  const ends = [-1, 1].map((s) => at(new THREE.SphereGeometry(0.02, 6, 4), s * 0.102, -0.105, 0));
++  const block = at(new THREE.BoxGeometry(0.052, 0.034, 0.036), 0, -0.092, 0);
++  // the pommel (a flattened ball) and the ferrule under it
++  const pommel = at(new THREE.SphereGeometry(0.034, 8, 5), 0, 0.104, 0, 1, 0.82, 1);
++  const ferrule = at(new THREE.CylinderGeometry(0.025, 0.023, 0.016, 8, 1, true), 0, 0.078, 0);
++  return dropDegenerate(bar, ...ends, block, pommel, ferrule);
++}
++function gripGeo() {
++  // a wrapped grip: three swells of the binding between the guard and the ferrule
++  const pts = [[0.0, -0.075], [0.02, -0.075], [0.0225, -0.05], [0.0195, -0.025], [0.0225, 0.0], [0.0195, 0.025], [0.0225, 0.05], [0.019, 0.07], [0.0, 0.07]];
++  return dropDegenerate(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 8));
++}
++export const swordGeos = () => once(GEO, 'sword', () => ({ blade: bladeGeo(), brass: brassGeo(), grip: gripGeo() }));
++// (TOWN-POLISH, I-28: a bright, mostly dielectric steel with a faint cool glow: at metalness 0.8 with no environment map
++//  the blade drew dark grey against the grey paving. Kept; the bevel's facets now give it an edge line)
++export const swordMats = () => once(MATS, 'sword', () => ({
++  blade: new THREE.MeshStandardMaterial({ color: '#f4f8fc', metalness: 0.35, roughness: 0.28, emissive: '#8fb4d8', emissiveIntensity: 0.38 }),
++  brass: new THREE.MeshStandardMaterial({ color: '#e8b450', metalness: 0.7, roughness: 0.32 }),
++  grip: new THREE.MeshStandardMaterial({ color: '#4e2e1a', roughness: 0.8 }),
++}));
++// the sword's three meshes in a group (shared geometries and materials; the group's pose is buildSword's)
++export function swordMeshes(g) {
++  const G = swordGeos(), M = swordMats();
++  for (const k of ['blade', 'brass', 'grip']) { const o = new THREE.Mesh(G[k], M[k]); o.name = 'sword-' + k; o.castShadow = true; g.add(o); }
++  return g;
++}
++
++// ------------------------------------------------------------------ the HUD icons (the weapon pill, the selector ring)
++// small inline SVGs in the item's own colours (they were the glyphs ✦ and ⚔: a star, and two crossed swords for one)
++const BALL_ICON = [null, ['#ffe08a', '#f2b23a', '#6a4208'], ['#a8f2a0', '#3cc04e', '#0c4418'], ['#ff8a7a', '#d8282a', '#520404'], ['#fff27a', '#ff9a10', '#d8340a']];
++export function ballIcon(level = 1) {
++  const [l, b, d] = BALL_ICON[Math.max(1, Math.min(4, level | 0))];
++  return `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" style="vertical-align:-0.25em" aria-hidden="true"><defs><radialGradient id="bi${level}" cx="0.38" cy="0.34" r="0.7"><stop offset="0" stop-color="${l}"/><stop offset="0.55" stop-color="${b}"/><stop offset="1" stop-color="${d}"/></radialGradient></defs><circle cx="12" cy="12" r="10.5" fill="${b}" opacity="0.28"/><circle cx="12" cy="12" r="8" fill="url(#bi${level})"/><ellipse cx="9" cy="8.6" rx="2.2" ry="1.6" fill="#fff" transform="rotate(-35 9 8.6)"/></svg>`;
++}
++export const SWORD_ICON = '<svg viewBox="0 0 24 24" width="1.35em" height="1.35em" style="vertical-align:-0.3em" aria-hidden="true"><path d="M19.6 2.6 C17.2 3.4 12.6 7.6 9.4 11.4 L12.6 14.6 C16.4 11.4 20.6 6.8 21.4 4.4 Z" fill="#eef4fa" stroke="#5a6a7a" stroke-width="0.7"/><path d="M19.6 2.6 C17.2 3.4 12.6 7.6 9.4 11.4 L11 13 C14.6 9.6 18.6 5.2 19.6 2.6 Z" fill="#b8c8d8"/><path d="M6.6 11.2 L12.8 17.4" stroke="#e8b450" stroke-width="2.6" stroke-linecap="round"/><path d="M9.6 14.4 L5.2 18.8" stroke="#4e2e1a" stroke-width="2.4" stroke-linecap="round"/><circle cx="4.4" cy="19.6" r="1.9" fill="#e8b450"/></svg>';
+diff --git a/lba3/src/game/hud.js b/lba3/src/game/hud.js
+index 33756f10..5aebac08 100644
+--- a/lba3/src/game/hud.js
++++ b/lba3/src/game/hud.js
+@@ -4,6 +4,7 @@ import { t, getLang } from './i18n.js';
+ import { BEHAVIOURS } from './actors.js';
+ import { Color, Vector3 } from 'three';
+ import { WEAPON_INFO } from './combat.js';
++import { ballIcon, SWORD_ICON } from './equiplook.js';
+ import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
+ import { regionOf, planetOf, PLANETS } from './travel.js';
+ import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
+@@ -116,7 +117,9 @@ export class HUD {
+     const c = h.combat, w = c.weapon, g = this.game;
+     const wn = this.wpName(h, w);
+     // (shown for a moment when the weapon changes; not for the one he already held when play starts or loads)
+-    if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
++    if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').innerHTML = this.wpIcon(h, w); el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
++    // (the ball's icon in the colour of his level: redrawn when the level changes)
++    if (w === 'ball' && this._wl !== h.magicLevel) { this._wl = h.magicLevel; el.querySelector('.ico').innerHTML = this.wpIcon(h, w); }
+     // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
+     const a = h.arms || {};
+     // (EQUIP-2b: the heat flask's carried heat, the seconds it has left; '—' cold)
+@@ -168,6 +171,8 @@ export class HUD {
+     const mark = s.why === 'roof' || s.why === 'ground' ? '✕' : '';
+     if (el.lastChild.textContent !== mark) el.lastChild.textContent = mark;
+   }
++  // a weapon's icon (markup: EQUIP-1's drawn ball and sword, equiplook.js; the others their glyph)
++  wpIcon(h, w) { return w === 'ball' ? ballIcon(h.magicLevel) : w === 'sword' ? SWORD_ICON : WEAPON_INFO[w]?.icon || ''; }
+   wpName(h, w) { return t(w === 'blowgun' && h.arms?.blowtron ? 'wp_blowtron' : 'wp_' + w); }
+   weaponFlash() { const el = $('#weapon'); el?.classList.add('flash'); this.flashT = 0.25; this.weaponShowT = 1.5; }
+   // the selector ring: open while held; returns the chosen weapon when it closes
+@@ -195,7 +200,7 @@ export class HUD {
+           }
+           Object.assign(el.querySelector('.mid').style, { left: '145px', top: '145px' });
+         }
+-        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${this.wpName(h, w)}</small>` : ''; }
++        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${this.wpIcon(h, w)}<small>${this.wpName(h, w)}</small>` : ''; }
+       }
+       const mv = input.move();
+       if (Math.hypot(mv.x, mv.y) > 0.5) {
+diff --git a/lba3/src/game/inventory.js b/lba3/src/game/inventory.js
+index c6e32121..538c4294 100644
+--- a/lba3/src/game/inventory.js
++++ b/lba3/src/game/inventory.js
+@@ -187,7 +187,9 @@ export class Inventory {
+     return t('inv_hint_keys', { move, close });
+   }
+   // a slot's picture: the item's own model, a still three-quarter view (painted icon without WebGL)
+-  pic(it) { return stage.thumb(lookOf(it.id, it.icon)) || itemIcon(it.icon); }
++  pic(it) { return stage.thumb(this.look(it)) || itemIcon(it.icon); }
++  // an item's look (itemlook.js); the ball's is in the colour of his level (EQUIP-1: ball, ball2..ball4)
++  look(it) { return it.id === 'ball' && it.n > 1 ? 'ball' + Math.min(4, it.n) : lookOf(it.id, it.icon); }
+   render() {
+     const g = this.game;
+     const K = (a) => g.hud?.key?.(a) ?? keyLabel(keyFor(a));
+@@ -208,7 +210,7 @@ export class Inventory {
+     this.el.querySelector('.inv-close').addEventListener('click', () => { this.closeReq = true; });
+     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
+     // the selected item turns (LBA2: a turn in 4.1 s), in the large view and in its slot
+-    if (sel) { const look = lookOf(sel.id, sel.icon); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
++    if (sel) { const look = this.look(sel); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
+     else stage.spin(null);
+   }
+   nav(input) {
+diff --git a/lba3/src/game/itemlook.js b/lba3/src/game/itemlook.js
+index d64dba18..ecb8d966 100644
+--- a/lba3/src/game/itemlook.js
++++ b/lba3/src/game/itemlook.js
+@@ -12,7 +12,8 @@
+ // above (camera alpha 60 x MUL_ANGLE 4 = 240 of 4096); the selected inventory object turns one unit a millisecond (a
+ // turn in 4.1 s), the found object two (a turn in 2.05 s).
+ import * as THREE from 'three';
+-import { pickupModel, buildSword } from './actors.js';
++import { pickupModel } from './actors.js';
++import { ballLookMesh, swordMeshes } from './equiplook.js';
+ import { blowgunModel, pistolModel, gloveModel, pulseModel } from './weapons.js';
+ import { penguinModel, lanternModel } from './gadgets.js';
+ import { jetpackModel } from './jetpack.js';
+@@ -54,8 +55,11 @@ function cogGeo(r = 0.12, teeth = 10, th = 0.04) {
+ // ------------------------------------------------------------------ the looks
+ // look id → () => Object3D. `tilt` lays a long thing across the view so it is seen turning, not spun on its own axis.
+ const LOOKS = {
+-  // the magic ball (actors.js MagicBall: the same gold, its glow kept lower so it reads as a ball, not a lamp)
+-  ball: () => { const g = new THREE.Group(); put(g, new THREE.SphereGeometry(0.12, 24, 18), M('#ffe68a', { emissive: '#ffb000', emissiveIntensity: 0.55, roughness: 0.25 })); return g; },
++  // the magic ball (EQUIP-1: the game's marble, equiplook.js, in the colour of his level: ball, ball2..ball4 (inventory.js))
++  ball: () => { const g = new THREE.Group(); g.add(ballLookMesh(1)); return g; },
++  ball2: () => { const g = new THREE.Group(); g.add(ballLookMesh(2)); return g; },
++  ball3: () => { const g = new THREE.Group(); g.add(ballLookMesh(3)); return g; },
++  ball4: () => { const g = new THREE.Group(); g.add(ballLookMesh(4)); return g; },
+   // the holomap: a glass globe of the island on a brass foot
+   holomap: () => {
+     const g = new THREE.Group();
+@@ -180,7 +184,7 @@ const LOOKS = {
+     const g = new THREE.Group(); put(g, new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false }), M('#fff6a0', { emissive: '#ffd23a', emissiveIntensity: 0.8 }), 0, 0, -0.015); return g;
+   },
+   // story things of later chapters (a look each, in the same style)
+-  sword: () => buildSword(),
++  sword: () => { const g = swordMeshes(new THREE.Group()); g.rotation.x = -0.25; return g; },   // (its flat to the view; in his hand: actors.js buildSword)
+   pulse: () => pulseModel(false),   // (the one in his hand: weapons.js)
+   jar: () => {
+     const g = new THREE.Group();

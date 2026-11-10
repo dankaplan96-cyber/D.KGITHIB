@@ -4202,3 +4202,13 @@ Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go t
   takes the new Zoé too.
 
 - **Accepted by the user, 9.11.2026: "Zoé is good"** (on before | after `game-closeup-34`, `lookdev-face-front`, `game-follow-medium-crop`). **Please apply:** `requests/ZOE-LOOK-38.diff`, then `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`. When applying, update `docs/BLENDER_ASSET_WORKFLOW.md`, which still says Zoé reads by "her bun": it is now the ponytail. Twinsen is next (TWINSEN-LOOK-38, order 38).
+## EQUIP-1 · the magic ball and the sword (art queue item 8, after ITEMS-1) · the laptop, 9.11.2026
+Diff: `requests/EQUIP-1.diff` (code only, on 68315019 = origin `ccr-c1c2c4b9-dep6ed`; `git apply --check` on a scratch index: clean).
+Note with the numbers, tests and evidence labels: `requests/EQUIP-1.md`. Code: `src/game/equiplook.js` (new), `actors.js`
+(MagicBall look, buildSword), `itemlook.js`, `inventory.js`, `hud.js`. Art: `art/blender/props/equip/{ball,sword}/`. Pictures
+(Citadel, chapter 1, before | after on the Vega 8, may go to the user): `docs/future/items/{ball,sword}/`.
+- Ball: a shaded marble per level (gold, green, red, fire) facing the camera, glint and rim painted, glow kept low so the hue
+  survives; halo disc wider than the ball; the ball in his hand in his level's colour. 5 = 5 draw calls in flight, +44 tris.
+- Sword: broader sabre blade with a bevelled edge, curved guard, pommel, wrapped grip; turned so its edge leads the backhand
+  and the overhead blow. 8 -> 6 draw calls held (with shadows), +187 tris a pass. Inventory and HUD icons drawn to match.
+- Behaviour unchanged (arc, bounces, reach, damage, hand attach, sounds). Shader programs 86 = 86. Frame time not verified (shared laptop).
