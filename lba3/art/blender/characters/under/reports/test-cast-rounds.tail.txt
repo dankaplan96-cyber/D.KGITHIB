@@ -1,0 +1,25 @@
+MEASURE chapter 4, Ilka's camp: the rounds' updates 0.0242 ms per game frame (1 people, 4200 driven person-frames, 0.0208 ms each); whole step 0.901 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 5, Kesh (the plan made): the rounds' updates 0.2091 ms per game frame (3 people, 21000 driven person-frames, 0.0358 ms each); whole step 1.317 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 5, Kesh (the steam through): the rounds' updates 0.1765 ms per game frame (1 people, 25200 driven person-frames, 0.0252 ms each); whole step 0.87 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 6, Lhar: the rounds' updates 0.3306 ms per game frame (5 people, 21000 driven person-frames, 0.0567 ms each); whole step 1.716 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 7, the monastery's yard: the rounds' updates 0.194 ms per game frame (5 people, 21000 driven person-frames, 0.0333 ms each); whole step 0.924 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 7, the observatory: the rounds' updates 0.014 ms per game frame (1 people, 4200 driven person-frames, 0.012 ms each); whole step 0.28 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 8, the well: the rounds' updates 0.117 ms per game frame (1 people, 12600 driven person-frames, 0.0334 ms each); whole step 1.561 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 8, the hill farms: the rounds' updates 0.1927 ms per game frame (3 people, 16800 driven person-frames, 0.0413 ms each); whole step 2.034 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 8, the quay: the rounds' updates 0.0945 ms per game frame (3 people, 12600 driven person-frames, 0.027 ms each); whole step 1.747 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 9, Zeelich's street: the rounds' updates 0.0916 ms per game frame (2 people, 8400 driven person-frames, 0.0393 ms each); whole step 3.159 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 9, Baldino's workshop: the rounds' updates 0.017 ms per game frame (1 people, 4200 driven person-frames, 0.0145 ms each); whole step 0.341 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 9, the council between sittings: the rounds' updates 0.0503 ms per game frame (3 people, 12600 driven person-frames, 0.0144 ms each); whole step 0.523 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 10, Zeelich's street: the rounds' updates 0.0361 ms per game frame (1 people, 4200 driven person-frames, 0.0309 ms each); whole step 1.514 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 10, the bore's post: the rounds' updates 0.0319 ms per game frame (2 people, 8400 driven person-frames, 0.0137 ms each); whole step 0.862 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 10, the glider at Desert Island: the rounds' updates 0.0262 ms per game frame (1 people, 4200 driven person-frames, 0.0225 ms each); whole step 0.938 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 10, the glider at the Hamalayi: the rounds' updates 0.0612 ms per game frame (1 people, 4200 driven person-frames, 0.0525 ms each); whole step 0.807 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE chapter 10, the glider at Citadel: the rounds' updates 0.0686 ms per game frame (1 people, 4200 driven person-frames, 0.0588 ms each); whole step 1.275 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+MEASURE the epilogue, home (household rounds): the rounds' updates 0.0781 ms per game frame (2 people, 8400 driven person-frames, 0.0335 ms each); whole step 0.658 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 209 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     22 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

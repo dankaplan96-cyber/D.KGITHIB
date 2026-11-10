@@ -3814,6 +3814,39 @@ user.
     could take the same front-to-back turn later;
   - Vesk's and Baldino's hands are their own scripts' and were not touched.
 
+## CAST-POLISH-UNDERGROUND · the underground's and the sewers' people: worker_b, nara_b, Vesk's collar, Fosse · the laptop, 10.11.2026
+**Ready for the cloud.** Diff: `requests/CAST-POLISH-UNDERGROUND.diff`, made on origin `db3707df` (`git diff HEAD`;
+`git apply --cached --check` clean on a scratch index read from it; `node --check` and `py_compile` pass). It changes
+`tools/blender/cast_poly.py` (CAST worker_b, nara_b; the goggles' resolution as CAST options with Nell's defaults; Vesk's
+collar edge), `src/game/characters.js` (2 LOOKS entries, the farmerC_b comment) and one or two `char` lines in
+`story/deeplife.js`, `story/zeelife.js`, `islandlife.js`, `story/isleslife.js`, `storylife.js`, `story/prologue.js`.
+Not in the diff (the single-line files): `requests/CAST-POLISH-UNDERGROUND/skeletons.add.json` `{worker_b, nara_b}` (same
+bones as worker and nara) and `index.add.json` `["worker_b","nara_b"]`. Models for `assets/poly/`: `vesk.json` (replaces),
+`worker_b.json`, `nara_b.json` (new). Full note with the census table: `requests/CAST-POLISH-UNDERGROUND.md`.
+Pictures (**chapter 3+: not for the user**): `docs/future/characters/{vesk,worker_b,nara_b,farmerC_b}/ch3plus-*.jpg`.
+- **Who:** the epilogue's shield crew (Guard Harl keeper_b, Tolli worker, Sala nara), Vesk in the core, Baldino at the
+  collar; in the sewers only Fosse (farmerC). nara dresses 9 people at load (16+ with the isles), worker 6.
+- **VESK-COLLAR:** the tall collar's top and front edges were two bare shells 4 mm apart (a paper line in the close
+  shots): now a rolled lining edge 1.8 cm thick. Triangles 1722 → 1878 (+9.1 %).
+- **worker_b** (order 24): heavier, bare-headed, a moustache, brass goggles on the brow, sleeves rolled, the crew's teal
+  hexes. Who takes it: **dp_tolli (Tolli), dg_surv (Surveyor Anko), zr_fennick (Fennick)**; the yard's worker, Teo,
+  Kasp and Brann keep worker (the hero's disguise too). 2572 → 3126 (+21.5 %).
+- **nara_b** (order 24): a long dress to the boots with a belt, its own palette; LBA2's Esmers (bodies 80-83, 86, 186,
+  measured read-only) share one capsule and differ by dress. Who takes it: **dp_sala (Sala), zh_wenna (Wenna), kn_mother
+  (Mila, and il_mila at home), il_ione (Sister Ione)**. 2010 → 2086 (+3.8 %).
+- **Fosse** takes the existing farmerC_b (bare-headed: no sun hat in the sewer; Grull and Tobb keep farmerC).
+- **Contracts:** bones and order = the base looks', 4 weights summing to 1, feet as before, eyes and mouth separate;
+  Vesk's eyes, mouth and colours unchanged; validate 0 fails; DRESS-1 variants 1-6 leave exactly what the shipped base
+  looks leave. Draw calls: the hero is 4 calls as each look, before and after. No texture or material.
+- **Tests** (SwiftShader, the files in `assets/poly`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209,
+  story-journeys 30/30, under-bar 15/15, epilogue-home 12/12, sewers 32/32, sewers-ways 34/34 PASS.
+
+  Evidence labels: **Automated runtime only**. Not verified: the crew looked at in their own rooms (under-bar reaches and
+  talks to them; the pictures are of the hero wearing each model in Citadel), the Zeelich and isles takers in their places,
+  Vega 8 frame time.
+- **Left:** Baldino's paper-thin ears and headband (his own script); Harl shares keeper_b with four council guards (a
+  uniform); the moles' claws untouched (no mole lives down there); worker_b's goggle strap does not show from the side.
+
 ## CURATOR-27a · Citadel and Zeelich against LBA2 on the 85/100 rubric (order 27a) · the laptop, 8.11.2026
 
 - **Files:** `docs/lba-maturity/resemblance-citadel.md`, `resemblance-zeelich.md`, `MATURITY-curator.md`, and the

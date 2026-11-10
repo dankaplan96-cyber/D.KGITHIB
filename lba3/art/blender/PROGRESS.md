@@ -312,27 +312,52 @@ Queue item 8 after ITEMS-1, the same method.
   equip2 30/30, chapter1 23/23, givers 16/16, items-ceremony 20/20, shops 31/31, magic-levels 26/26 (details in `requests/EQUIP-1.md`).
 - Left: no bloom capture; the forehand still leads with the flat; the fire ball is an orange marble, not LBA2's flat flame.
 
+### Underground batch 1: worker_b, nara_b, VESK-COLLAR, Fosse: CAST-POLISH-UNDERGROUND (10.11.2026, worktree `lba3-items`)
+Detached at origin `db3707df`, clean. Census (`census-z.mjs`, 173 people at load) + the code: the underground's people are
+the epilogue's shield crew (Harl keeper_b, Tolli worker, Sala nara), Vesk in the core (ch 12), Baldino at the collar
+(ch 11-12); the sewers' only person is Fosse (farmerC). LBA2 bodies 80-83, 86, 186 measured read-only (numbers printed,
+nothing written): the Esmers share one capsule and differ by dress and headgear only.
+- VESK-COLLAR (`build_vesk`, `VESK_OLD=1` = the old collar): the collar's top and front edges were two bare shells 4 mm
+  apart; a rolled lining edge 1.8 cm thick now. 1722 -> 1878 (+9.1 %).
+- worker_b (Tolli dp_tolli, Anko dg_surv, Fennick zr_fennick): heavier, bare-headed, moustache, brass goggles up (Nell's
+  glass goggles at 8 sides: new CAST `gogglesN`/`gogglesRimN`, defaults = Nell's, nell rebuilds identical), rolled sleeves;
+  the crew's teal hexes kept. 2572 -> 3126 (+21.5 %).
+- nara_b (Sala dp_sala, Wenna zh_wenna, Mila kn_mother/il_mila, Sister Ione il_ione): the long dress (oku_b's robe code)
+  with a belt, its own palette. 2010 -> 2086 (+3.8 %).
+- Fosse -> the existing farmerC_b (no sun hat in the sewer; parts him from Grull and Tobb). 3634 -> 3330.
+- Checks: HEAD rebuild = shipped (nara exact; worker/vesk 0.0001 normal rounding); polycheck clean; validate 0 fails;
+  DRESS-1 as the base looks (worker's hair/shoes and variant-3 hair=belt false positives); hero 4 = 4 draws each.
+- Tests (SwiftShader): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, under-bar 15/15,
+  epilogue-home 12/12, sewers 32/32, sewers-ways 34/34 PASS.
+- Files `characters/under/`, jobs `under-*.json`; pictures `docs/future/characters/{vesk,worker_b,nara_b,farmerC_b}/ch3plus-*`
+  (not for the user); request `tools/testlab/requests/CAST-POLISH-UNDERGROUND*`. The worktree keeps the batch applied,
+  uncommitted (vesk/worker_b/nara_b and the index in assets/poly; art/characters/skeletons.json untouched).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (hero wearing each, Citadel; 13 poses) · performance:
+  draws/triangles measured, frame time not run · integrated: no (request).
+- Left: Baldino's paper ears and headband (his script); Harl shares keeper_b (a uniform); worker x4 / nara x12+ still
+  most shared; worker_b's goggle strap does not show from the side.
+
 ## Current
-- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue below is done (the user, 9.11: "by the order we set").
-- EQUIP-1 (ball, sword) sent 10.11 (diff clean on origin db3707df); waiting for the user and the cloud.
-- CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
+- CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
+- ZOE-LOOK-38 accepted by the user 9.11 ("Zoé is good"); the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue is done (the user, 9.11: "by the order we set").
+- EQUIP-1 (ball, sword) and CITADEL-85: applied by the cloud (CITADEL-85 as e2a9d1dc); the user kept the blade's quarter turn and accepted CITADEL-85 whole (10.11).
+- CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11. ITEMS-1, DESERT, ISLES applied by the cloud.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, ~~the underground~~ (CAST-POLISH-UNDERGROUND)
 5. ~~HANDS-36~~ (order 36: request sent)
 6. The named cast
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
-   farmerA, farmerB, clerk, worker (and councilB for Kira; zmole2, zbee1, zbee2)
+   ~~worker, nara~~ (UNDERGROUND); farmerA, farmerB, clerk (and councilB for Kira; zmole2, zbee1, zbee2)
 8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
 ## Next action
-ZOE-LOOK-38 accepted (9.11); EQUIP-1 sent (10.11; a Vega 8 frame-time pair on a quiet laptop is still owed). The user, 9.11:
-"by the order we set": next is queue item 4, region 5, the underground (the sewers' and the underground's people); then the
-named cast, the `_b` variants, common props; **Twinsen's ZOE-LOOK treatment after the queue**. The moles' claws could take the
-hands' front-to-back turn too (not asked). Worktree `C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted
-(their JSONs, the index and skeletons.json in place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257
-(`z28/serve.py <root> 8257`), a test copy of tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+Order 28's regions are done (the underground last, 10.11). By the order the user set (9.11): next is queue 6, the named cast
+(Baldino's paper-thin ears and headband first), then queue 7's `_b` variants (farmerA, farmerB, clerk; worker ×4 and nara ×12+
+still the most shared), queue 8 equipment is done, then 9 common props; **Twinsen's ZOE-LOOK treatment after the queue**.
+The moles' claws could take the hands' front-to-back turn too (not asked). A Vega 8 frame-time pair for EQUIP-1 on a quiet
+laptop is still owed.
