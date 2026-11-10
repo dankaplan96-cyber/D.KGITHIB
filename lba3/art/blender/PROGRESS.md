@@ -288,8 +288,33 @@ through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` r
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, GPU light check (see
   the request note) · integrated: no (the user decides; then the cloud).
 
+### Equipment: the magic ball and the sword: EQUIP-1 (9.11.2026, worktree `C:\Users\dan\lba3-items`, detached at 68315019)
+Queue item 8 after ITEMS-1, the same method.
+- **Where:** `actors.js` MagicBall (the body, the halo; trail and flashes unchanged) and buildSword (in the right hand);
+  `itemlook.js` looks `ball`, `sword`; the HUD pill and selector ring (`hud.js`, glyphs from `combat.js` WEAPON_INFO).
+  Behaviour untouched: throw plan, bounces, recall, reach, damage, hand attach points, sounds.
+- **Reference** (the user's LBA2 SPRIRAW.HQR, decoded to scratch, looked at, deleted): the ball is a 14 px shaded marble per
+  level (gold, green, red; the fire ball a flat flame) with a white glint upper left, a dark rim, a 50 % dithered halo disc
+  and a trail of smaller balls. No sword reference (Yorna's sword is the game's own).
+- **New:** `src/game/equiplook.js`. Ball: vertex-painted marble per level (pole on the light, glint, rim), turned to the
+  camera in `fx`, emissive kept low (0.24 / 0.40 / 0.58 from the old 0.6 / 2.2 / 4 scale, kept as `glow` for the halo and
+  the charge), a halo picture with a disc wider than the ball, painted at `holdIn` too. Sword: sabre blade 6.4 cm wide with
+  flat + bevel facets, curved guard with ball ends, pommel, wrapped grip; 3 shared meshes; turned pi/2 about its line so the
+  edge leads slash1 and slash3 (measured: they struck with the flat). Inventory ball in the level's colour (inventory.js
+  `look`), HUD SVG icons.
+- **Blender** (`props/equip/jobs/equip-1.json`, 33 jobs OK): baselines and candidates imported, inspected, validated 13/13,
+  four views grey and coloured, round trip with equal triangles (ball 396, sword 515).
+- **In the game** (Vega 8, Chrome, Follow/Medium, Auto = Medium): ball in flight 5 = 5 draws, 478 -> 522 tris; sword held
+  8 -> 6 draws, 656 -> 1030 tris (both passes); swing 9 -> 7 draws; programs 86 = 86. Pictures `docs/future/items/{ball,sword}/`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles/programs measured, frame time
+  NOT verified (another agent's SwiftShader browser loaded the laptop) · integrated: no (request `tools/testlab/requests/EQUIP-1.diff`).
+- Tests: combat 75/76 (the base's dodge 30/60 fps FAIL, the same on HEAD), anim-combat 35/35, ball-close 6/6, anim-polish 55/55,
+  equip2 30/30, chapter1 23/23, givers 16/16, items-ceremony 20/20, shops 31/31, magic-levels 26/26 (details in `requests/EQUIP-1.md`).
+- Left: no bloom capture; the forehand still leads with the flat; the fire ball is an orange marble, not LBA2's flat flame.
+
 ## Current
-- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Next: Twinsen (TWINSEN-LOOK-38).
+- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue below is done (the user, 9.11: "by the order we set").
+- EQUIP-1 (ball, sword) sent 10.11 (diff clean on origin db3707df); waiting for the user and the cloud.
 - CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
 
 ## Queue
@@ -301,13 +326,13 @@ through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` r
 6. The named cast
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
    farmerA, farmerB, clerk, worker (and councilB for Kira; zmole2, zbee1, zbee2)
-8. Equipment: ~~the bonuses~~ (ITEMS-1); the ball, the sword
+8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
 ## Next action
-If the user likes ZOE-LOOK-38: the same treatment for Twinsen (order 38), then the cast region by region. If not: say
-which parts to keep (each is separable in `zoe_poly.py`). Otherwise back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
-orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
-`C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
-place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of
-tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+ZOE-LOOK-38 accepted (9.11); EQUIP-1 sent (10.11; a Vega 8 frame-time pair on a quiet laptop is still owed). The user, 9.11:
+"by the order we set": next is queue item 4, region 5, the underground (the sewers' and the underground's people); then the
+named cast, the `_b` variants, common props; **Twinsen's ZOE-LOOK treatment after the queue**. The moles' claws could take the
+hands' front-to-back turn too (not asked). Worktree `C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted
+(their JSONs, the index and skeletons.json in place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257
+(`z28/serve.py <root> 8257`), a test copy of tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
