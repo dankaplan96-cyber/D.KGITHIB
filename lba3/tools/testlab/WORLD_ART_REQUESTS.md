@@ -4403,3 +4403,57 @@ from this change.
 - **A candidate for the user:** pictures `lh_iso`, `harb_iso`, `tent_f` sent 10.11; waiting for the user's word before the cloud applies it.
 
 - **Accepted by the user, 10.11.2026: "yes, all of it"**: the lighthouse, Bersimon's red tent, the harbour barrel roofs, and the extras (the Bug Street and school hip roofs, the statue's gold lamps). **Please apply** `requests/CITADEL-85.diff` (clean on origin db3707df). The quay with bollards was not built and stays open. After it lands, the curator re-scores the lighthouse, the NW plateau, the harbour and the square.
+
+---
+
+## DESKTOP-GTX1050 · the new work machine: set up, on the NVIDIA card, first numbers · the new machine's agent, 10.11.2026
+
+**To the laptop's agent: from now on this machine takes 34 CAM-34 (the GPU look at every region), 38 ZOE-LOOK,
+27a the curator and the expansion on `expansion/ballastra`. Please don't start them there; 27c (the Vega 8
+measurements) stays with the laptop.** I have not started any of them yet: this entry is the setup and the
+measurements only.
+
+Full report with every table: `lba3/docs/lba3-performance/HARDWARE/2026-11-10-gtx1050.md` (raw benchmark reports,
+the runner and the Quick Check's summary beside it in `2026-11-10-gtx1050/`).
+
+- **The machine is a laptop, not a desktop:** Acer Nitro AN515-53, Intel Core i5-8300H (4 cores / 8 threads),
+  NVIDIA GeForce GTX 1050 with 4 GB VRAM, 16 GB RAM, Windows 11 Home 26H2 (build 26300.9711), NVIDIA driver 582.78,
+  Chrome 157.0.8103.51, built-in 1920×1080 60 Hz screen at 125 %. Git 2.56, Node 26.13 (LTS), Blender 5.3 and the
+  Test Lab are installed; the clone is at `C:\Users\danka\dev\D.KGITHIB`.
+- **Why the first run was on the Intel UHD 630** (correcting `2026-11-10-desktop-first-run.md`: there is no monitor
+  cable to move): the NVIDIA driver was missing after the Windows reinstall, and once it was in, Windows still sent
+  Chrome to the power-saving GPU. Fixed with the per-app "High performance" graphics preference for `chrome.exe`
+  and the Test Lab's `electron.exe`. Verified: the game's overlay in the user's own Chrome and the benchmark both
+  report "NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11". A page's `powerPreference` made no difference on this
+  machine, so nothing is asked of the game.
+- **The game's benchmark, build 0.49.0 (87613283), Chrome, window 1536×788 at 1.25, plugged in, orbit camera**
+  (GTX 1050 numbers; they never stand in for the Vega 8):
+
+| route | Auto (held High) fps · GPU p50 | fixed Medium fps · GPU p50/p95 | fixed High fps · GPU p50/p95 | first run, Intel UHD 630 |
+|---|---|---|---|---|
+| street | 59.5 · 7.0 ms | 59.9 · 8.6 / 16.6 ms | 60 · 7.1 / 8.3 ms | 45.5 · 18.7 ms (Medium) |
+| interior | 60 · 6.0 ms | 60 · 5.6 / 6.1 ms | 60 · 5.5 / 6.1 ms | 53.7 · 16.1 ms (Medium) |
+| combat | 60 · 5.9 ms | 59.7 · 7.0 / 8.2 ms | 59.9 · 4.9 / 6.1 ms | 59.5 · 10.5 ms (Medium) |
+| transition | 60 · 6.0 ms | 60 · 5.8 / 9.6 ms | 60 · 5.3 / 6.6 ms | 59.9 · 10.3 ms (Medium → Low) |
+| arrival | 52.7 · 6.4 ms | 56.3 · 7.0 / 8.2 ms | 53.5 · 6.7 / 8.5 ms | 53.3 · 12.2 ms (Low) |
+| hamalayi | 60 · 5.9 ms | 60 · 4.1 / 5.0 ms | 60 · 5.6 / 6.5 ms | 60 · 11.7 ms (Low) |
+
+  - Auto never left High; "as played" kept the resolution factor at ×1. Every route is capped by the 60 Hz screen.
+  - **Arrival is not helped by the card:** 28 frames over 33 ms in the Auto run (11 behind the black, the longest
+    400 ms), with shadow batches, draw batches and geometry upload recorded in the frames before them. The first
+    run had the same (367 ms).
+  - The street's one 200 ms frame in the Auto run followed a shader program compiled in play.
+- **The Test Lab's Quick Check, development build** (run `2026-11-10T17-28-55-quick`): 6 of 8 passed. Street
+  traversal 59.4 fps (p95 16.9 ms, one 200 ms frame, GPU p50 6.4 ms, 195 calls, 839k triangles); the house door
+  52.1 fps (three stalls behind the loading); combat 59.7 fps. **Failed:** cold-launch (only the server's
+  `favicon.ico` 404) and save-restart-load ("Continue is offered after the restart": false, after the save
+  returned ok).
+- **For the cloud, proposed (tool code, I changed nothing):** `engine/server.mjs` listens on port 0, so
+  save-restart-load's relaunch serves the game from a new port, a new origin that cannot see the first one's save.
+  That is my reading of the code, not verified by a run. Keeping one port per run in dev mode and serving an empty
+  favicon would clear both failures. Also `launch.mjs` could pass `--disable-features=CalculateNativeWinOcclusion`:
+  my first Auto run opened behind another window and Chrome throttled it to one frame a second (discarded and
+  rerun).
+- **Evidence label:** Automated runtime only, on real hardware. One run each, no spread. Windows was still finishing
+  updates in the background (a restart pending). Not measured: battery, the desktop app, the Follow camera,
+  temperatures over a long session. Nobody played the routes by hand.
