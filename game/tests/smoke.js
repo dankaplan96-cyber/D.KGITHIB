@@ -46,10 +46,12 @@ const ok = (name, cond, info) => { checks.push([name, !!cond, info]); console.lo
 
   // 6. tower floor and daily challenge
   await p.evaluate(() => { player.story.day_done_1 = true; openTower(); towerStart(1); towerFight(); }); await p.waitForTimeout(2700); await drain(10);
-  await p.evaluate(() => { battle.enemy.hp = 1; battle.enemy.spd = 1; battle.phase = 'MOVES'; battle.moveIndex = 0; battleConfirm(); }); await drain(20);
+  await p.evaluate(() => { battle.enemy.hp = 1; battle.enemy.spd = 1; battle.phase = 'MOVES'; battle.moveIndex = 0; battleConfirm(); });
+  for (let i = 0; i < 12 && !(await p.evaluate(() => gameState === 'TOWER')); i++) await drain(6);
   ok('tower floor', await p.evaluate(() => gameState === 'TOWER' && player.tower.best === 1));
   await p.evaluate(() => dailyFight()); await p.waitForTimeout(2700); await drain(10);
-  await p.evaluate(() => { battle.enemy.hp = 0; winBattle(); }); await drain(14); await p.waitForTimeout(600);
+  await p.evaluate(() => { battle.enemy.hp = 0; winBattle(); });
+  for (let i = 0; i < 12 && !(await p.evaluate(() => player.daily && player.daily.streak === 1)); i++) await drain(6);
   ok('daily challenge', await p.evaluate(() => player.daily && player.daily.streak === 1));
   await p.evaluate(() => { if (gameState === 'LEARN') learnSkip(); if (gameState === 'TOWER') closeTower(); });
 
