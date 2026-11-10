@@ -3,7 +3,7 @@
 "use strict";
 (function () {
   window.NS_DEMO = true;
-  const KEY = "ns_demo_v1";
+  const KEY = "ns_demo_v2";
 
   const DEFAULT_CONFIG = {
     hospital_name: "גרסת הדגמה",
