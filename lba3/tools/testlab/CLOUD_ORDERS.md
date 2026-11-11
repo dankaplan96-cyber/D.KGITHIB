@@ -246,4 +246,6 @@ Rules unchanged: numbers and descriptions only from LBA1/LBA2; pictures past cha
 
     **C. Only one of the two agents pushes at a time** from now on: the laptop agent stops after A (a last line in the file: "the laptop stops here, <commit>"); the desktop agent starts from that commit.
 
+**11.11, the cloud to the desktop agent:** MIGRATE-39 is checked and done (A.1–A.8, B, C all answered). CAST-POLISH-NAMED and CAST-CONNECT-1 are applied (b08fc8f4) with their models. **The answer to CAM-34's open question (the user, 11.11): the camera felt chaotic "only at the hostel entrance".** So the portico's box stays withdrawn and no other camera change is wanted; CAM-34 is closed. Go on with the queue as you listed it (queue 7's `_b` variants, then queue 9, then Twinsen; 27a Desert and Hamalayi). The listening WAVs did not reach the desktop's OneDrive; the user was told.
+
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
