@@ -186,8 +186,10 @@ export class SoftParticles {
 // narrow, rise, swell and wander sideways, and thin out at the top, so the column billows instead of being a tube.
 export class Plume {
   // rate puffs/s at level 1 · rise m/s · h height m · w0, w1 diameter at the base / at the top · a peak alpha
+  // · cell (1 the lumpy puff, 0 the round soft glow) · fi, fo (fraction of a puff's life its fade-in ends, its fade-out
+  // starts) · color (anything THREE.Color takes, or [r, g, b] linear, which may exceed 1 for sunlit steam)
   constructor(o = {}) {
-    Object.assign(this, { rate: 10, rise: 2.4, h: 8, w0: 0.6, w1: 3, color: '#f4f8ff', a: 0.5, add: 0.1, spread: 0.25, drift: 0.9, grav: -0.3 }, o);
+    Object.assign(this, { rate: 10, rise: 2.4, h: 8, w0: 0.6, w1: 3, color: '#f4f8ff', a: 0.5, add: 0.1, spread: 0.25, drift: 0.9, grav: -0.3, cell: 1, fi: 0.1, fo: 0.4 }, o);
     this.acc = 0;
   }
   tick(fx, dt, x, y, z, level = 1) {
@@ -198,7 +200,7 @@ export class Plume {
       const rise = this.rise * (0.85 + rnd() * 0.3), life = this.h / rise * (0.9 + rnd() * 0.2);
       fx.spawn({ x: x + (rnd() - 0.5) * this.w0 * 0.5, y: y + rnd() * rise * dt, z: z + (rnd() - 0.5) * this.w0 * 0.5,
         vx: (rnd() - 0.5) * this.spread, vy: rise, vz: (rnd() - 0.5) * this.spread,
-        color: this.color, a: this.a * (0.8 + rnd() * 0.4), s0: this.w0 * (0.7 + rnd() * 0.6), s1: this.w1 * (0.75 + rnd() * 0.5), life, grav: this.grav, drag: 0, drift: this.drift, add: this.add, cell: 1, fi: 0.1, fo: 0.4 });
+        color: this.color, a: this.a * (0.8 + rnd() * 0.4), s0: this.w0 * (0.7 + rnd() * 0.6), s1: this.w1 * (0.75 + rnd() * 0.5), life, grav: this.grav, drag: 0, drift: this.drift, add: this.add, cell: this.cell, fi: this.fi, fo: this.fo });
     }
   }
 }

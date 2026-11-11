@@ -56,6 +56,7 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; first piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
 | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
 | The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`); **score only, not rendered yet**: until it is in the manifest the mood plays the stealth mix (`MOODS.asylum.alt`) | ≈1:54 (intro 9.5 s, body 1:35; computed from the score) | 1:35 | B minor, 3/4 | `tools/music/tracks/asylum.py` |
+| Prayer Flags (ORDER 25) | the Hamalayi outdoors (the `hamalayi` playlist, with its silences), the observatory (`mountain`); **score only, not rendered yet**: until it is in the manifest the mood and the playlist play The Well (`MOODS.mountain.alt`) | ≈2:27 (intro 13.3 s, body 2:13; computed from the score) | 2:13 | A dorian, 4/4 | `tools/music/tracks/mountain.py` |
 
 Each score file starts with a section plan (bars, instruments, what happens to the themes).
 
@@ -75,8 +76,23 @@ through the walls (`office`) instead of the family's Home; the tavern plays the 
 terminal goes on with the island's pieces; Tralu's cave plays The Well (was Home; the Temple of the Dark Monk already moved
 to it in REVIEW-ZEELICH); Otringal's bar plays Zeelich's playlist at full volume, and Zeelich Spaceport's terminal and the
 Imperial Hotel hear it through the walls (`zeelich_in`, ORDER 23f, as `office`) (all three were Citadel's Home).
-Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
-Well), the Desert (the island pieces).
+Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Desert (the island pieces).
+(The Hamalayi outdoors had The Well too: ORDER 25 below.)
+
+## ORDER 25: the Hamalayi's own piece (2026-11-08)
+
+The Hamalayi outdoors and the observatory played The Well, the caves' piece. **Prayer Flags**
+(`tools/music/tracks/mountain.py`): a slow modal piece in A dorian, 4/4, 72 bpm, for the snow terraces, Lhar and the
+monastery: a pan flute tune over a hummed drone and a harp ringing in open fifths, a temple bell, snow glints on the
+celesta; the tune an octave up with a horn answering it; the monastery as a plain low chant in C lydian (the same notes
+from C) over the drone and the bell; on the peak the Entity cell on a solo flute in A lydian with its wonder harmony
+moved up a fifth (A, B/A, G#m7, Amaj7), the shrine where Sendell speaks; the tune back on the flute, thinning to the
+drone and the bell before the loop. No drums but a bell tree and one soft timpani roll. Original, written by hand;
+nothing of LBA's music was used or consulted. **Not rendered** (the laptop it was written on has no FluidSynth, FFmpeg
+or soundfont): `build.py mountain` updates the manifest, and then the Hamalayi and the observatory play it with no code
+change. Until then `MOODS.mountain = { track: 'mountain', alt: 'well' }` and `PLAYLISTS.hamalayi = ['mountain']`
+play The Well (a playlist piece missing from the manifest now plays its mood's `alt`, as a single-track mood does).
+The underground keeps The Well (`under`, `cave`) and the deep installation the facility mix.
 
 ## How the music is made (pipeline)
 
@@ -145,8 +161,8 @@ track reproduces the same MIDI, FLAC and MP3 bit for bit.
 
 * **Playlists (MUSIC-2)**: the places the player stays in rotate through pieces instead of looping one track
   (`PLAYLISTS` in music.js): Citadel town and harbour `village` ↔ `village_b`; the open island `island` ↔ `island_b`;
-  Zeelich `zeelich` ↔ `zeelich_b`; the Desert `island_b` ↔ `island`; the Hamalayi `well` alone (until it has a piece of its
-  own). Each piece is played **once, to its end**: a looping render to the end of its body (it fades over its last
+  Zeelich `zeelich` ↔ `zeelich_b`; the Desert `island_b` ↔ `island`; the Hamalayi `mountain` alone (ORDER 25; The Well
+  stands in until it is rendered: a playlist piece missing from the manifest plays its mood's `alt`). Each piece is played **once, to its end**: a looping render to the end of its body (it fades over its last
   6 s, the link back to the top, which thins out in every score), a MUSIC-2 piece to its last note. Then
   **outdoors a silence of 20–60 s** (uniform; ambience, surf and wind go on), and the next piece of the list starts from
   its first bar; **indoors** (and in the Zeelich interiors that use the playlist) the next piece follows at once.

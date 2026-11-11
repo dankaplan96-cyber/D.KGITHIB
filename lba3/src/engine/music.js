@@ -30,11 +30,14 @@ export const MOODS = {
   zeelich: { list: 'zeelich' },
   zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
   desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
-  hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
+  hamalayi: { list: 'hamalayi' }, // (the mountain's own piece, with silences outdoors; ORDER 25)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',
   // (ORDER 19) the old asylum's own piece (tools/music/tracks/asylum.py); `alt` plays while a track is not rendered yet
   asylum: { track: 'asylum', alt: 'facility_stealth' },
+  // (ORDER 25) the Hamalayi's own piece, Prayer Flags (tools/music/tracks/mountain.py): the observatory, and through
+  // PLAYLISTS.hamalayi the snow outdoors; The Well stands in until it is rendered (the caves keep The Well)
+  mountain: { track: 'mountain', alt: 'well' },
   combat: 'combat',
   revelation: 'revelation',
   boss: 'finale', finale: 'finale',
@@ -47,7 +50,7 @@ export const PLAYLISTS = {
   island: ['island', 'island_b'],
   zeelich: ['zeelich', 'zeelich_b'],
   desert: ['island_b', 'island'],
-  hamalayi: ['well'],
+  hamalayi: ['mountain'],   // (ORDER 25: the well's piece stood in here; a piece not rendered yet plays its mood's `alt`)
 };
 const GAP = [20, 60]; // s of silence between two pieces outdoors (uniform)
 // what to prefetch once a track is playing (a playlist piece first prefetches the next piece of its list)
@@ -55,7 +58,7 @@ const NEXT = {
   main_theme: ['home'], home: ['village'], village: ['island', 'combat'], island: ['village', 'combat'],
   village_b: ['island', 'combat'], island_b: ['village', 'combat'], zeelich_b: ['workshop', 'combat'],
   well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
-  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'],
+  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'], mountain: ['combat'],
 };
 
 // moods that end a running story cue
@@ -202,7 +205,8 @@ export class Music {
   _list(key) {
     let L = this.lists.get(key);
     if (!L) {
-      const tracks = (PLAYLISTS[key] || [key]).filter((n) => this.has(n));
+      // (a piece not in the manifest yet plays the stand-in its mood names, MOODS[n].alt, as _alt does for a single track)
+      const tracks = [...new Set((PLAYLISTS[key] || [key]).map((n) => (this.has(n) ? n : MOODS[n]?.alt)).filter((n) => n && this.has(n)))];
       L = { key, tracks, idx: Math.floor(this.rand() * tracks.length) % Math.max(1, tracks.length), started: false, gapUntil: 0, mode: 'phrase' };
       this.lists.set(key, L);
     }

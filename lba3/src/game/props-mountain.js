@@ -237,8 +237,11 @@ export function mountainHouse(k, o = {}) {
     const lx = i % 2 ? 0.62 : 0.36, lz = i % 2 ? 0.36 : 0.62;
     k.add(box(lx, 0.4, lz), stoneM, sx * (w / 2 - lx / 2 + 0.03), f + 0.22 + i * 0.46, sz * (d / 2 - lz / 2 + 0.03), 0, { jit: true });
   }
-  for (const sz of [-1, 1]) k.add(rbox(w + 0.08, 0.2, 0.26, 0.02), woodD, 0, f + h - 0.1, sz * (d / 2 - 0.08));
-  for (const sx of [-1, 1]) k.add(rbox(0.26, 0.2, d + 0.08, 0.02), woodD, sx * (w / 2 - 0.08), f + h - 0.1, 0);
+  // (REV-HAM-ART: the band's top 2 cm above the wall's: level with it, the wood and the stone shared one plane under the
+  //  roof and flickered (tests/overlaps.mjs, Lhar's houses 3 and 5); it now caps the wall's outer edge, below the roof
+  //  slab's underside there (f + h + 0.06), its ends buried in the gables' sill)
+  for (const sz of [-1, 1]) k.add(rbox(w + 0.08, 0.22, 0.26, 0.02), woodD, 0, f + h - 0.09, sz * (d / 2 - 0.08));
+  for (const sx of [-1, 1]) k.add(rbox(0.26, 0.22, d + 0.08, 0.02), woodD, sx * (w / 2 - 0.08), f + h - 0.09, 0);
   // the roof: two thick slate slabs on a ridge along x, snow on them, bargeboards, rafter tails, icicles
   const tp = Math.tan(pitch), cp = Math.cos(pitch), sp = Math.sin(pitch), th = 0.22;
   const run = d / 2 + ovE, yE = f + h + 0.06 - ovE * tp, yR = yE + run * tp, L = run / cp + 0.1, RW = w + 2 * ovG;

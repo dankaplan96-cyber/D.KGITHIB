@@ -19,14 +19,16 @@ async function until(fn, arg, timeout = 30) {
 await open(page, '?nocine'); await menu(page, 'new');
 await until(() => game.audio.ctx && game.audio.music.manifest && Object.keys(game.audio.music.manifest.tracks).length);
 const man = await ev(() => ({ tracks: game.audio.music.manifest.tracks }));
-const { PLAYLISTS } = await ev(() => import('./src/engine/music.js').then((m) => ({ PLAYLISTS: m.PLAYLISTS })));
+const { PLAYLISTS, MOODS } = await ev(() => import('./src/engine/music.js').then((m) => ({ PLAYLISTS: m.PLAYLISTS, MOODS: m.MOODS })));
 
 // ---------------------------------------------------------------- files
 const shipped = new Set(Object.values(gameFiles()));
 const files = Object.values(man.tracks).map((t) => 'assets/music/' + t.file);
 check('every track in the manifest is a shipped file (tools/game-files.mjs)', files.every((f) => shipped.has(f)), files.filter((f) => !shipped.has(f)));
 const named = [...new Set(Object.values(PLAYLISTS).flat())];
-check('every playlist piece is in the manifest', named.every((n) => man.tracks[n]), named.filter((n) => !man.tracks[n]));
+// (a piece written but not rendered yet — ORDER 25's mountain — counts when its mood names a stand-in that is: the playlist plays that)
+const has = (n) => !!man.tracks[n] || !!(MOODS[n]?.alt && man.tracks[MOODS[n].alt]);
+check('every playlist piece is in the manifest (or its stand-in is)', named.every(has), named.filter((n) => !has(n)));
 const lens = Object.fromEntries(Object.entries(PLAYLISTS).map(([k, l]) => [k, l.filter((n) => man.tracks[n]).length]));
 check('Citadel town, the island and Zeelich have two pieces or more', lens.citadel >= 2 && lens.island >= 2 && lens.zeelich >= 2, lens);
 check('every track has its bar lines (manifest bars, for phrase starts and bar-line crossfades)', Object.values(man.tracks).every((t) => t.bars?.length > 8), Object.entries(man.tracks).filter(([, t]) => !(t.bars?.length > 8)).map(([k]) => k));

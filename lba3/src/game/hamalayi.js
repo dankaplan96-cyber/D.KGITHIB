@@ -352,7 +352,19 @@ export function* buildHamalayiSteps(scene, physics) {
     const KT = kitOf('trail');
     for (let i = 0; i < TRAIL.length - 1; i++) {
       const [ax, az] = TRAIL[i], [bx, bz] = TRAIL[i + 1], L = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / L, uz = (bz - az) / L;
-      let prev = null;
+      // (REV-HAM-ART: the posts are kept in runs and a run is drawn only with two posts or more: where the rules below
+      //  dropped a post's neighbours, a lone post stood by the trail with no rope)
+      let run = [];
+      const flush = () => {
+        if (run.length >= 2) run.forEach(([x, y, z], j) => {
+          KT.add(cyl(0.07, 0.09, 1.25, 6, 0), MAT_WOOD(), x, y + 0.55, z);
+          KT.add(new THREE.SphereGeometry(0.09, 6, 3), snowM, x, y + 1.18, z, 0, { sy: 0.5 });
+          col({ type: 'cyl', x, z, r: 0.12, top: y + 1.2, noStand: true, seeThrough: true });
+          const q = run[j - 1];
+          if (q) B.add(tube([[q[0], q[1] + 1.05, q[2]], [(q[0] + x) / 2, (q[1] + y) / 2 + 0.82, (q[2] + z) / 2], [x, y + 1.05, z]], 0.022, 4, 1), rope, 0, 0, 0);
+        });
+        run = [];
+      };
       // (REV-HAM: one open side for the whole leg, the side most of its posts read as the lower one: near a switchback
       //  the reading flipped from one post to the next, and the rope zigzagged across the trail at chest height)
       const sideAt = (d) => { const cx = ax + ux * d, cz = az + uz * d; return H(cx - uz * 3.4, cz + ux * 3.4) < H(cx + uz * 3.4, cz - ux * 3.4) ? 1 : -1; };
@@ -374,14 +386,17 @@ export function* buildHamalayiSteps(scene, physics) {
         };
         let x = cx - side * uz * 3.4, z = cz + side * ux * 3.4, k = 0;
         for (; k < 5 && onSlide(x, z); k++) { x += side * uz * 0.3; z -= side * ux * 0.3; }
-        if (onSlide(x, z)) { prev = null; continue; }
+        if (onSlide(x, z)) { flush(); continue; }
         const y = H(x, z);
-        KT.add(cyl(0.07, 0.09, 1.25, 6, 0), MAT_WOOD(), x, y + 0.55, z);
-        KT.add(new THREE.SphereGeometry(0.09, 6, 3), snowM, x, y + 1.18, z, 0, { sy: 0.5 });
-        col({ type: 'cyl', x, z, r: 0.12, top: y + 1.2, noStand: true, seeThrough: true });
-        if (prev) B.add(tube([[prev[0], prev[1] + 1.05, prev[2]], [(prev[0] + x) / 2, (prev[1] + y) / 2 + 0.82, (prev[2] + z) / 2], [x, y + 1.05, z]], 0.022, 4, 1), rope, 0, 0, 0);
-        prev = [x, y, z];
+        // (REV-HAM-ART: nor at the foot of the bank under the terrace's snow lip, where the ground 0.9 m further out stands
+        //  higher than the post's top (leg 3 by Lhar: the post stood on the rock under the lip and its rope ran up
+        //  through the lip to the next post on the terrace); and no rope between two posts a level apart)
+        let under = false; for (let a = 0; a < 8 && !under; a++) under = H(x + Math.sin(a * Math.PI / 4) * 0.9, z + Math.cos(a * Math.PI / 4) * 0.9) > y + 1.0;
+        if (under) { flush(); continue; }
+        if (run.length && Math.abs(y - run[run.length - 1][1]) > 1.0) flush();
+        run.push([x, y, z]);
       }
+      flush();
     }
   }
   for (let i = 0; i < TRAIL.length - 1; i++) {
@@ -489,12 +504,19 @@ export function* buildHamalayiSteps(scene, physics) {
   // (REV-HAM: the shed stood 1.2 m from the post, so a player at the post with his back to it had the Follow camera
   //  over the shed's roof, 3 m from him, showing him through it as a silhouette. It stands 3.6 m off now, out of the
   //  KEEP round the post; the pipe runs low along the snow from its wall to the post's foot)
-  const SH = { x: HP.x - 4.8, z: HP.z + 0.6 };
+  // (REV-HAM-ART: 4.8 m due west of the post it still stood on the line from the post back to the Follow camera when
+  //  he turns from the post to the winch (east): the camera looked down over its roof and showed his legs through it.
+  //  It backs onto the cliff foot now, south-west of the post (the cliff rises at z −24.5 here), its gauge to the
+  //  yard; that line passes 2 m clear of it, and nobody stands between it and the rock)
+  const SH = { x: 15.0, z: -23.0 };
   {
-    const gy = H(HP.x, HP.z), gs = H(SH.x, SH.z);
+    const gy = H(HP.x, HP.z), gs = Math.min(H(SH.x, SH.z), H(SH.x - 1.2, SH.z), H(SH.x + 1.2, SH.z), H(SH.x, SH.z + 0.9));   // (on its lowest corner: the yard falls 0.2 m westward here)
     B.add(bbox(2.4, 2.2, 1.8, 0.06, 2), teal, SH.x, gs + 1.1, SH.z);
     B.add(cyl(0.12, 0.12, 2.2, 8, 0), pm('#c8a050', 0.4, { metalness: 0.6 }), HP.x, gy + 1.1, HP.z);
-    B.add(tube([[SH.x + 1.15, gs + 0.55, SH.z - 0.35], [SH.x + 1.55, gs + 0.14, SH.z - 0.4], [HP.x - 0.6, gy + 0.14, HP.z + 0.05], [HP.x - 0.08, gy + 0.5, HP.z]], 0.08, 6, 1), iron, 0, 0, 0);
+    { // the pipe out of the shed's east wall, down onto the snow, along it to the post's foot and up into it
+      const ux = HP.x - SH.x - 1.55, uz = HP.z - SH.z + 0.2, ul = Math.hypot(ux, uz), ex = ux / ul, ez = uz / ul;
+      const run = [0.2, 0.4, 0.6, 0.8].map((t) => { const x = SH.x + 1.55 + ux * t, z = SH.z - 0.2 + uz * t; return [x, H(x, z) + 0.14, z]; });
+      B.add(tube([[SH.x + 1.15, gs + 0.55, SH.z - 0.2], [SH.x + 1.55, gs + 0.14, SH.z - 0.2], ...run, [HP.x - ex * 0.6, gy + 0.14, HP.z - ez * 0.6], [HP.x - ex * 0.08, gy + 0.5, HP.z - ez * 0.08]], 0.08, 6, 1), iron, 0, 0, 0); }
     col({ type: 'box', x: SH.x, z: SH.z, hw: 1.2, hd: 0.9, top: gs + 2.2, noStand: true });   // (a wall, not a step: like the winch beside it, nobody stands on the shed's roof)
     col({ type: 'cyl', x: HP.x, z: HP.z, r: 0.25, top: gy + 2.4, noStand: true });
     put('lift', 'heatCabinet', SH.x, SH.z, 0, (k) => heatCabinetDress(k), { y: gs, col: false, nocheck: true });
@@ -653,12 +675,18 @@ export function* buildHamalayiSteps(scene, physics) {
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   // (FX-SOFT: the vent's steam was a hard white open cone: now a billowing column of soft puffs, from the game's particle
   //  system, which the room's updaters get as their third argument)
-  const steamPl = new Plume({ rate: 15, rise: 3.2, h: 15, w0: 1.4, w1: 6.4, a: 0.5, add: 0.08, drift: 1.6, spread: 0.6, color: '#eef6ff' });
+  // (REV-HAM-ART: seen against the basin's dark cliff the column read as a brown, dusty cloud: ~70 small puffs at half
+  //  alpha in an off-white let the rock through each one, and their many lobes speckled it. Now ~48 larger puffs, denser
+  //  (0.7), plain white (linear 1.0–1.1, no glow), holding their density longer before they thin (fade from 55 % of
+  //  their life). A/B in one session on the Vega 8, from (4254, −47.8) looking west, twice each: the column's region mean
+  //  luminance 146–152 → 168–171, its grain 4.0–4.2 → 3.1–3.3; live puffs ~72 → ~48, their summed quad area ~0.87 of
+  //  before; the same one draw call. Brighter than 1, or the round soft cell, read as a glowing lamp, not steam)
+  const steamPl = new Plume({ rate: 9, rise: 3.0, h: 15, w0: 1.8, w1: 7.4, a: 0.7, add: 0.04, drift: 1.2, spread: 0.45, color: [1.0, 1.04, 1.1], cell: 1, fi: 0.15, fo: 0.55 });
   let steamLevel = 0;
   updaters.push((dt, t, fx) => { if (steamLevel > 0 && fx) steamPl.tick(fx, dt, ox + VENT.x, H(VENT.x, VENT.z) + 0.9, oz + VENT.z, steamLevel); });
   const seal = mesh(group, cyl(1.6, 1.6, 0.3, 18, 0), tm('stone', { color: '#b8a898' }), VENT.x, H(VENT.x, VENT.z) + 0.15, VENT.z, 0);
   R.vent = {
-    ...W(VENT.x, VENT.z), open: false, melted: false,
+    ...W(VENT.x, VENT.z), open: false, melted: false, plume: steamPl,
     melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
     setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steamLevel = b ? 1 : 0; },
   };
@@ -707,7 +735,7 @@ export function* buildHamalayiSteps(scene, physics) {
     }
     // (the random pines keep off the walks and out of the lift station's yard: filtered, so the stream of the
     // random sequence — and every rock placed after it — stays as it was)
-    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (Math.hypot(t.x - 26, t.z + 20.5) < 8 || PATHS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.9)) list.splice(i, 1); }
+    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (Math.hypot(t.x - 26, t.z + 20.5) < 8 || Math.hypot(t.x - SH.x, t.z - SH.z) < 3.2 || PATHS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.9)) list.splice(i, 1); }   // (REV-HAM-ART: nor through the heat station's shed)
     for (const [x, z, s] of [[-4, 94, 1.1], [-0.5, 97.5, 0.85], [-8, 96, 0.95], [18, 66, 1.15], [21.5, 64, 0.9], [-24, 66, 1.0], [-27.5, 63, 1.2], [-21, 94, 1.0], [27, 58, 1.05], [-31, -1, 1.1], [-34.5, 19, 1.0], [15, 24, 0.95], [12, -31, 1.0], [9, -34, 0.85], [44.5, -28.5, 1.0], [20, -50, 1.1], [23, -53, 0.9], [46, -52, 1.0]]) {
       if (terrain.slopeAt(x, z) > 0.5) { dress.log.push(`pine @${x},${z} on a slope`); continue; }
       check('pine', x, z, 0.5 * s);
@@ -738,7 +766,7 @@ export function* buildHamalayiSteps(scene, physics) {
     }
     // (REVIEW-HAMALAYI: none on a walk or in the icefall's spur — one stood him on top of it at the tree bridge's north end;
     //  marked after the draws, kept in the list, so nothing else moves or changes its shape)
-    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27);
+    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27) || Math.hypot(q.x - SH.x, q.z - SH.z) < 1.8 + q.s;   // (REV-HAM-ART: none in the heat station's shed)
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !r.off && !lba1.within(r.x, r.z, 0.8)));
     for (const r of rocks) if (r.s > 0.6 && !r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });

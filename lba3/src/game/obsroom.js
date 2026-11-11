@@ -21,7 +21,7 @@ export function buildObsRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'obsv', 4600, 0);
   const R = B.room, k = B.k;
   const W = 13, D = 13, H = 6.5;
-  R.view = 15; R.follow = 0.25; R.music = 'well';
+  R.view = 15; R.follow = 0.25; R.music = 'mountain';   // (ORDER 25: the Hamalayi's own piece, not the caves' Well)
   B.shell({
     W, D, H, t: 0.5, floor: MAT.tiles('#d8d0c4', '#9aa0b4', '#7a7468', true, 4), slab: MAT.stone('grey'), body: MAT.stone('sand', 2), low: MAT.stone('slate', 1),
     rail: MAT.brass(), cap: MAT.stone('grey'), dado: 1.0, rimH: 0.5,
