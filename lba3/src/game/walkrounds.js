@@ -266,8 +266,10 @@ export function desertRoster(game) {
   return [
     // a girl who carries the village's water: from the oasis to the jars in the cool room, with a rest in the loom's shade
     { id: 'safi', char: 'lulu', tint: '#ffe8c8', speed: 1.2, start: 1, color: '#f0a0c0', stops: [
-      look('safi_oasis', -43.4, -6.6, -41, -9, [5, 8], { act: 'dip', carry: 'basket' }),
-      look('safi_door', -69.7, -0.9, -69.7, -2.8, [5, 7], { act: 'put', carry: null }),
+      // (NO-AIR 3: kneeling at the water jars on the shore — storylife.js KESH_LIFE.jars: the pond lies below her reach — and on
+      //  the jars of the shelf by the cool room's door, keshlife.js, a step east of the doorway she used to stand before)
+      look('safi_oasis', -43.4, -6.6, -43.0, -7.0, [5, 8], { act: 'tend', carry: 'basket' }),
+      look('safi_door', -68.7, -2.4, -68.7, -3.4, [5, 7], { act: 'draw', carry: null }),
       look('safi_sail', -62.2, -4.2, -58, -1, [7, 11], { act: 'rest' }),
     ] },
     // a boy who runs between the ferry board and the cool room

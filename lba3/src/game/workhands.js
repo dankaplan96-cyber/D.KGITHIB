@@ -205,16 +205,20 @@ const _tmp = [], _try = [];
 // The hands' places on what is drawn here, tried once on the pose as it is now: { kind, lean, R: {…}, L: {…} } or null
 // (S.why says what was missing)
 function plan(rig, spec, S, feetY, sc, fx, fz) {
-  const j = rig.j, px = rig.root.position.x, pz = rig.root.position.z, two = spec.hands.length > 1, MID = two ? [0, 0.5] : [0];
+  const j = rig.j, px = rig.root.position.x, pz = rig.root.position.z, two = spec.hands.length > 1;
   const kinds = spec.kind === 'top' ? (spec.face ? ['top', 'face'] : ['top']) : ['face'];
   S.why = 'nothing at the hands';
   let got = null;
+  // (one hand, nothing found where the pose has it, a hand's width to the side of the body's middle: then on the body's
+  //  own line — a thin thing stood straight before it, a pole, a stake's head, an instrument on its tripod)
+  for (let pass = 0; pass < (two ? 1 : 2) && !got; pass++) { const MID = two ? [0, 0.5] : pass ? [1] : [0];
   for (let ki = 0; ki < kinds.length && !got; ki++) for (let li = 0; li < LEANS.length && !got; li++) {
     const kind = kinds[ki], lean = LEANS[li];
     _tmp.length = 0;
     if (lean) { _tmp.push([j.torso, j.torso.rotation.x, j.torso.rotation.y, j.torso.rotation.z]); j.torso.rotation.x += lean; j.torso.updateMatrixWorld(true); }
     palms(j); _nR.copy(_pR); _nL.copy(_pL);
-    const mx = two ? (_nR.x + _nL.x) / 2 : _nR.x, mz = two ? (_nR.z + _nL.z) / 2 : _nR.z;
+    const along = (_nR.x - px) * fx + (_nR.z - pz) * fz;
+    const mx = two ? (_nR.x + _nL.x) / 2 : px + fx * along, mz = two ? (_nR.z + _nL.z) / 2 : pz + fz * along;
     const A = kind === 'top' ? FWD : UP, P = { kind, lean, R: null, L: null };
     for (let ai = 0; ai < A.length && !got; ai++) for (let mi = 0; mi < MID.length && !got; mi++) {
       const e = A[ai], m = MID[mi];
@@ -243,6 +247,7 @@ function plan(rig, spec, S, feetY, sc, fx, fz) {
     }
     restoreJoints(_tmp); j.torso.updateMatrixWorld(true);
   }
+  }
   palms(j);
   return got;
 }
@@ -258,6 +263,7 @@ function ahead(spec, p, sc, fx, fz) {
 }
 // what the story has changed since a stop was last looked at (a thing put there, or taken away)
 const sig = (g) => { const f = g.flags || {}; let n = 0; for (const k in f) if (f[k]) n++; return (f.chapter | 0) * 4096 + n; };
+export const storySig = sig;
 
 function touch(g, a, rig, dt) {
   const spec = ACTS[rig.anim], S = a._wh || (a._wh = { key: '', P: null, w: 0, pre: '', why: '', sig: -1, plans: new Map() });
@@ -309,44 +315,96 @@ function touch(g, a, rig, dt) {
 // air in front of them). null: nothing of the action's kind stands on that line within reach of a step or two, or the
 // place is taken; the stop stays. (walkers.js Resident.setRound, roomlife.js the cast's and the household's rounds)
 const STAND = 0.5;       // m: the body's middle from the thing's near edge (a walker's own radius is 0.45)
-export function workSpot(g, x, z, a, anim, { y = null, max = 0.9, r = 0.43, ok = null } = {}) {
+export function workSpot(g, x, z, a, anim, { y = null, max = 0.9, r = 0.43, ok = null, way = false, stand = STAND, belly = 0, low = false } = {}) {
   const spec = ACTS[anim]; if (!spec || !(a === a)) return null;
-  const P = g.physics, fx = Math.sin(a), fz = Math.cos(a), feetY = y ?? P.groundAt(x, z), far = STAND + max + 0.05;
+  const P = g.physics, fx = Math.sin(a), fz = Math.cos(a), feetY = y ?? P.groundAt(x, z), far = stand + max + 0.05;
   // the first solid on the line (the physics' colliders: what a body cannot stand in): the thing, or what is in the way of it
-  let hit = -1, solid = false;
+  let hit = -1, solid = false, front = -1;
   scan: for (let d = 0.15; d <= far; d += 0.03) {
     const px = x + fx * d, pz = z + fz * d, L = P.near(px, pz);
     for (let i = 0; i < L.length; i++) {
       const c = L[i]; if (!c.enabled || c.stair || c.bottom > feetY + 1.4 || c.top < feetY + 0.12) continue;
       if (!P._inside(c, px, pz, 0)) continue;
-      const h = c.top - feetY, fits = spec.kind === 'face' ? h > 0.75 : (h >= Math.max(0.3, spec.lo) && h <= spec.hi) || (spec.face && h > spec.hi);
+      const h = c.top - feetY, fits = spec.kind === 'face' ? h > 0.75 : (h >= Math.max(low ? 0.12 : 0.3, spec.lo) && h <= spec.hi) || (spec.face && h > spec.hi);
       if (fits) hit = d;
-      solid = true;
+      solid = true; front = d;
       break scan;
     }
   }
   // nothing solid there: what is DRAWN on the line (a thing with no collider of its own) — the first top of the action's
   // height, or (a reach; a loom, a shelf) the first face
-  if (!solid) {
+  if (!solid || belly) {
     const was = NEAR; NEAR = far / 2 + 0.8; _got.a = _got;
     gather(g, null, '', x + fx * far / 2, feetY + 0.9, z + fz * far / 2); NEAR = was; _got.a = _got;
+  }
+  if (!solid) {
     if (spec.kind === 'top') {
-      const lo = Math.max(0.3, spec.lo);
+      const lo = Math.max(low ? 0.12 : 0.3, spec.lo);
       for (let d = 0.15; d <= far && hit < 0; d += 0.04) if (ray(x + fx * d, feetY + spec.hi + 0.05, z + fz * d, x + fx * d, feetY + lo, z + fz * d) <= 1) hit = d;
     }
     if (hit < 0 && (spec.kind === 'face' || spec.face)) {
       for (const h of [0.95, 1.25]) { const t = ray(x + fx * 0.12, feetY + h, z + fz * 0.12, x + fx * far, feetY + h, z + fz * far); if (t <= 1) { const d = 0.12 + (far - 0.12) * t; if (hit < 0 || d < hit) hit = d; } }
     }
   }
+  // (a step: a solid of another height than the action's — a pile's box as high as its top crate, on ground that falls
+  //  away — with a top of the action's height drawn just behind its face: that top is the thing, the box's face its edge)
+  if (hit < 0 && solid && belly && spec.kind === 'top') {
+    const lo = Math.max(low ? 0.12 : 0.3, spec.lo);
+    for (let d = front; d <= front + 0.5 && hit < 0; d += 0.05) if (ray(x + fx * d, feetY + spec.hi + 0.05, z + fz * d, x + fx * d, feetY + lo, z + fz * d) <= 1) hit = front;
+  }
   if (hit < 0) return null;
-  let move = Math.min(max, hit - STAND);
+  let move = Math.min(max, hit - stand);
+  // (belly: the body's own half-width is kept off what is drawn there as well — a wide body at a thing flush with its
+  //  collider, a cart's shafts outside it: the first face from the shins to the belly)
+  //  (the rays run with the ground's own slope up to the thing — the ground a body stands on: a deck's or a plaza's
+  //   paving, not the terrain under it: a rise of a hand's width in a metre of snow is not a thing in the way)
+  if (belly) {
+    const dg = solid ? Math.max(0.1, front - 0.08) : far, rise = Math.max(-0.25, Math.min(0.25, (P.groundAt(x + fx * dg, z + fz * dg, feetY + 0.4) - feetY) * far / dg));
+    for (const h of low ? [0.12, 0.3, 0.5] : [0.3, 0.55, 0.8]) { const t = ray(x + fx * 0.05, feetY + h, z + fz * 0.05, x + fx * far, feetY + h + rise, z + fz * far); if (t <= 1) move = Math.min(move, 0.05 + (far - 0.05) * t - belly - 0.04); }
+  }
   if (move < 0.06) return null;
   for (; move >= 0.06; move -= 0.06) {
     const nx = x + fx * move, nz = z + fz * move;
     if (Math.abs(P.groundAt(nx, nz, feetY + 0.4) - feetY) > 0.2 || P.blockedAt(nx, nz, feetY, r) || (ok && !ok(nx, nz))) continue;   // (ok: the caller's own test of the place — a walker's: its routes reach it)
+    // (way: the ground between is level and free too — a step taken on foot, not a stop set there: no kerb, no gap, nothing stood in)
+    if (way) { let clear = true; for (let d = 0.12; d < move && clear; d += 0.12) { const wx = x + fx * d, wz = z + fz * d; clear = Math.abs(P.groundAt(wx, wz, feetY + 0.4) - feetY) <= 0.2 && !P.blockedAt(wx, wz, feetY, r); } if (!clear) continue; }
     return { x: nx, z: nz, moved: +move.toFixed(2) };
   }
   return null;
+}
+
+// The last step up to the thing, as a knock's to its door (walkers.js Resident.stepTick, roomlife.js StoryRounds.dwell;
+// tests/no-air.mjs measures from there). A round's stop is where a route ends: a walking body's berth off whatever stands
+// there (the planner's cells keep 0.42 m clear of every collider on a half-metre grid), which left most benches, carts
+// and crates a hand's length out of reach, and their workers standing. From the stop the worker takes the rest of the
+// way on foot along the stop's facing, to an arm's length from the thing (a body's own girth off its collider, the
+// ground level and free all the way), and takes it back before going on: its routes start and end at the stop as planned.
+// null: nothing of the action's kind within a step, or no free level place before it.
+export const STEP_ACTS = new Set(['tinker', 'potting', 'search', 'kneelWork', 'setDown', 'pickup', 'touchWater', 'reach', 'tapTurn', 'use', 'reachHigh']);
+// It stands as near as a body may: its middle 0.3 m clear of every collider (a knock's berth; a child's body less, by
+// its size) and its belly's width off what is drawn there (girth: actors.js contactRadius, the circle others keep out
+// of — a Grobo's 0.62, a Rabbibunny's 0.4 — which is some 0.17 m wider than the body).
+// Kneeling, the knees are 0.4 m before the hips and the hands work just past them: its knees come up to what is drawn
+// (a sledge's runner, a bed's kerb), its middle still outside the thing's collider.
+export function workStep(g, x, z, a, anim, { y = null, ok = null, max = 1.0, girth = 0.45, scale = 1 } = {}) {
+  if (!STEP_ACTS.has(anim)) return null;
+  const sc = Math.min(1, Math.max(0.6, scale)), kneel = anim === 'kneelWork', r = kneel ? 0.1 : 0.3 * sc;
+  return workSpot(g, x, z, a, anim, { y, max, r, ok, way: true, stand: r + 0.04, belly: kneel ? 0.42 * sc : Math.max(0.2, girth - 0.17), low: kneel });
+}
+
+// A knock's last step up to its door (walkers.js knockTick; tests/no-air.mjs): an arm's length from the door's collider
+// as it always was — and, where the leaf is set back in its wall (a mountain house's door in its deep stone reveal:
+// 0.9 m from there, out of reach), up to the wall itself, a knock's berth from it.
+export function knockStep(g, x, z, a, { y = null, girth = 0.45, scale = 1 } = {}) {
+  const m = workSpot(g, x, z, a, 'tapTurn', { y, max: 1.7, r: 0.3 });
+  const at = m || { x, z }, fx = Math.sin(a), fz = Math.cos(a), feetY = y ?? g.physics.groundAt(x, z), sc = Math.min(1, Math.max(0.6, scale));
+  const was = NEAR; NEAR = 1.4; _got.a = _got;
+  gather(g, null, '', at.x + fx * 0.5, feetY + 1.0, at.z + fz * 0.5); NEAR = was; _got.a = _got;
+  let leaf = 9;
+  for (const h of [1.0 * sc, 1.25 * sc]) { const t = ray(at.x + fx * 0.1, feetY + h, at.z + fz * 0.1, at.x + fx * 1.3, feetY + h, at.z + fz * 1.3); if (t <= 1) leaf = Math.min(leaf, 0.1 + 1.2 * t); }
+  if (leaf <= 0.62 || leaf > 1.25) return m;   // (in reach from there; or no door drawn at all)
+  const r = 0.3 * sc, m2 = workSpot(g, x, z, a, 'tapTurn', { y, max: 1.7, r, stand: r + 0.04, belly: Math.max(0.2, girth - 0.17) });
+  return m2 && m2.moved > (m ? m.moved : 0) ? m2 : m;
 }
 
 // Stops named here are stood at whatever is there ('who@stop'): for a stop whose thing a hand should not be put on.

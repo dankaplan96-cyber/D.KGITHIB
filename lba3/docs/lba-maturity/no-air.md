@@ -129,150 +129,161 @@ memory on the shared machine earlier and was not tried again).
    until the person is first seen at the stop).
 6. The opening's Arthur close-ups stay on his face; his hands' work shows in the wide shots only.
 
-## Appendix — the stops where the person stands (147; the final sweep)
+## Phase 3 — the people get their work back (11.11.2026): the Hamalayi, Desert Island, Zeelich's isles
+
+Phase 2 kept the rule by standing people down: 147 of 266 stops. Here the stood stops of three areas (the Hamalayi 31,
+Desert Island 29, Zeelich's isles 46: 106) were gone through one by one. What stood behind most of them was mended in
+the machinery, which works for every area's people; the rest was mended stop by stop, or with a small drawn thing
+where the stop's thing was missing.
+
+**Status: Automated runtime only** (headless Chromium, SwiftShader, the machine shared with another worker's runs).
+The sweep poses people at their stops; `tests/work-step.mjs` follows two of them through the running game. Pictures
+were looked at by the workers who made and checked the change, nobody else. No frame-rate claim.
+
+### What stood behind them
+1. **A round's stop is a walker's berth off its thing.** The route planner keeps 0.42 m clear of every collider on a
+   half-metre grid, colliders are loose boxes round what is drawn, and an arm is 0.5 to 0.6 m long.
+2. **In the running game even stops the sweep counted as working were often stood down.** A walk ends within 0.35 m
+   of its slot, heading the way it walked; the work began at once, the hands' layer looked along the wrong line, found
+   nothing and stood the action down for the whole stop. Measured on the base: Tam at Lhar's woodpile worked 15 frames
+   and stood 250, 0.35 m short of his slot. The sweep could not see it: it poses each person exactly on the slot.
+3. **Stops set for a thing's middle, where the thing is not**: a pile's middle is the gap between its two crates, a
+   pair of barrels has a gap, a tripod's instrument is a hand's width wide; a table's end; a stall whose keeper's place
+   is inside its own crates; island anchors the island planner has since moved (Otringal's two stalls stood 3 and 15 m
+   from where their keepers were sent).
+4. **An action that does not fit the thing's height**: a standing pose at a sledge, a kerb or a low crate; a reach at
+   chest height at a trough or a barrel; a child picking up from the ground (its hand ends 0.2 m over it).
+5. **Nothing there at all**: a cook's pot hangs a metre inside its ring of stones; "her bag", "the crates by his door".
+
+### What was changed
+Generic (every area's residents and the story's rounds; Citadel and Zeelich included):
+- **The last step up to the thing** (`workhands.js workStep`; `walkers.js Resident.stepTick`, `roomlife.js
+  StoryRounds.stepTick`). Where the hands find nothing in reach from the slot (the action is stood down there), the
+  person walks on along the stop's facing to an arm's length from the thing, works, and walks back to the slot before
+  going on, so every route starts and ends where it was planned. A stop in reach from its slot is worked from the slot
+  as before. The place: the body's middle 0.3 m clear of every collider (a child's less by its size), its belly's width
+  off what is drawn, the ground level and free all the way, at most a metre; never into a doorway's keep-out, onto the
+  hero, onto another resident, or within a metre of one of the story's people or their marks (then the person stays at
+  the slot). Kneeling, the knees come up to the thing. It is looked for once the person is seen stood down there, kept
+  with the stop until the story's flags change, and taken at once on the next visit; if the thing is out of reach from
+  there as well, the person keeps to the slot afterwards. Pushed off it (the hero walks into them), they go on from
+  where they are. Nothing of it is saved: a load starts a round again, and a stop reached unseen is taken already
+  stepped up.
+- **Onto the slot, squarely, then the work** (`walkers.js`, `roomlife.js`): a resident that ends its walk within a step
+  of the slot takes that step; the work pose begins once the body faces the stop's own way (within two degrees, then
+  exactly). It stands while it turns, and stands turned to Twinsen when he comes close (it used to work at the air
+  beside him).
+- **A knock steps up to a leaf set back in its wall** (`workhands.js knockStep`): a mountain house's door is 0.46 m
+  inside its stone reveal, 0.9 m from the knock's place; the knock is now made from the wall.
+- **One hand on a thin thing** (`workhands.js plan`): a one-hand action that finds nothing where the pose has the hand
+  (0.2 m to the side of the body's line) is tried on the body's own line (a pole, a stake's head, an instrument).
+- **A step's crate** (`workSpot`): a pile whose collider is as high as its top crate is met by the lower crate drawn
+  before it.
+- The sweep (`tests/no-air.mjs`) measures as the game does: on the slot first; stood down there, from the stepped
+  place; a door from `knockStep`. `AREAS=` builds only the named areas for a partial run. `tests/work-step.mjs` (new)
+  follows a resident and one of the story's people frame by frame through the running game: stepped up with hands on
+  the thing, back to the slot, at once on the next visit, and talked to while stepped up.
+
+Per stop, in the three areas (castrounds.js, storylife.js, walkrounds.js, islandlife.js): stops set before the thing
+itself instead of its middle or end; actions fitted to the thing's height (kneeling at a sledge, a hand down into a
+barrel or trough); island stall keepers placed by the stall where the island's planner actually put it, working from
+the buyers' side; a few stops with nothing to work at made plain standing stops with a gesture. Small drawn things
+where a stop's thing was missing, each with a collider, merged in one Kit per area: on the Hamalayi a
+log seat and a cook's bench at the monastery camp, the three households' packing on Lhar's square, the children's
+snowman; in the desert the dig's hearth stone and spoil sieve, Kesh's pebble-game stone and the water jars on the oasis
+shore, the School's water basin; on Celebration the lantern seller's stand.
+
+Tried and taken out again: looking for the thing at three more beats of the pose before standing the person down (a
+thing at the very end of the reach). While it looked, the pose's hand stayed in the air up to 0.4 s longer, and a
+room person on Mosquibee (il_zuzz, reaching while still turning) was measured 38 cm from anything. The layer stands
+the action down at the first look again, as in Phase 2.
+
+Two other suites' scenes were sensitive to when the rounds' people are where (the step changes a round's timing), and
+were made to do what a player would: `tests/zislands.mjs` — at the Lift Dock's giver, a dock worker on his way past
+stood waiting by Twinsen, and Space was taken for a talk: Twinsen now steps back off the worker's way, lets him pass
+and comes back; `tests/townlife.mjs` — the resident walked into is a grown-up who is not stepped up to its thing (a
+child is small enough that Twinsen side-steps round it head on, actors.js keepApart). One stop was moved for the cast
+suite: Lhar's second household at the yard's prayer wheels, 0.12 m east, 1.6 m clear of the west wheel's prompt.
+
+### Numbers
+Stops counted once each (a person at a stop with an action, over all 21 chapter states; working: a hand within 5 cm of
+a drawn surface in at least one state). The whole game's row counts as Phase 2 did (by stop and place: a stop worked
+from its stepped place is a place of its own there), with the count by stop beside it. Before: the base (f4519f2d with the watchman's torch, 9e2f14e9), the three areas
+built and swept alone (the whole game's row: Phase 2's own final sweep). After: the whole game built and swept, every state in its own process, no page died.
+
+| Area | Working before → after | Standing before → after | Of the working after, stepped up |
+|---|---|---|---|
+| The Hamalayi | 10 → 39 | 30 → 0 | 16 |
+| Desert Island | 5 → 33 | 30 → 2 | 6 |
+| Zeelich's isles | 20 → 58 | 46 → 4 | 13 |
+| The whole game | 98 → 201 (198 counted by stop) | 147 → 40 (39 by stop) | 42 |
+
+Hand offenders (> 5 cm from anything) 0 and feet offenders (> 6 cm off the ground) 0 in every one of the 21 states.
+(The base's own final sweep listed 31 / 29 / 46 standing in the three areas; the restricted base run above found 30 /
+30 / 46 — the stops at the very edge of reach fall either way between runs.) The step is generic, so Citadel, Zeelich
+and the rooms gained as well (Citadel 14 → 9 standing, Zeelich 12 → 11, the house 2 → 1, the tavern 2 → 1).
+No stop that worked on the base stands now in the three areas. Outside them one does in the full sweep: Citadel's
+farmer3 at the rows (chapter 8): measured alone, or after either one of the other two farmers, it works (both hands
+0.0–0.5 cm from the ground); measured after both, it stands. The sweep's result there depends on the order it poses
+people in; not resolved.
+
+### Cost (SwiftShader, the machine shared: no frame-rate claim)
+- One frame's draw calls and triangles (every pass: the view and the shadow maps) from nine fixed places in the three
+  areas, base → after: draw calls +0 to +3 (the new things are in the area's existing Kit, merged per material; the
+  people's own meshes are unchanged); triangles +0.2 % to +8 % (the most at the monastery camp, 360 k → 390 k, with
+  the bench and the log seat in view and its shadow map). Static triangles of a whole area: +0.3 % to +1 %.
+- The hands' first look at a stop: 0.95 to 3.1 ms mean over a sweep state (239 to 474 looks; Phase 2 measured 1.0 to
+  4.1 ms). The step's own look (`workStep`) is taken once per stop, only when the person is seen stood down there, and
+  kept until the story's flags change.
+
+### Left
+1. Six stops in the three areas still stand: Kesh's children at the pebble stone and the School's herb bed (a
+   kneeling child's hands do not reach), Knartas's mother at the crates (a face before the top) and the net mender's
+   crate, the Old Watch mason setting down at the tower, a Platform villager's knock (a door with no leaf drawn).
+2. Not watched at speed on a real GPU. The pictures were staged (posed at the stop, the game camera); `tests/work-step.mjs`
+   followed two people through the running game. A step up and back is a short walk of up to a metre each way.
+3. The Hamalayi households' packing on Lhar's square stays there after the households have moved up to the
+   monastery (it is not tied to the story's flags).
+4. People who walk a track in a room (isleslife.js and the others) are not stepped: they still start their work while
+   turning, and stand down at the first look if nothing is in reach.
+
+## Appendix — the stops where the person stands (39; Phase 3's sweep)
 Scene, who@stop, the action stood down, why, and what is drawn on the stop's line (the first face at 0.5 / 0.85 /
-1.2 m of height, the first table-high top): the measure for setting each stop by hand.
+1.2 m of height, the first table-high top), from the stop itself: the measure for setting each stop by hand. (Phase 2
+listed 147; the rest work now, most after the last step up to their thing.)
 
 ```
 baggage osk@osk_table tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-baggage osk@osk_belt reach nothing at the hands; ahead: a face at 1.74/1.74/1.77 m, a top 1.03 m high at 1.75 m
+baggage osk@osk_belt reach nothing at the hands; ahead: a face at 1.6/1.6/1.63 m, a top 1.03 m high at 1.6 m
 baggage osk@osk_crates setDown nothing ahead; ahead: a face at 1.63/1.67/1.67 m, a top 0.54 m high at 1.65 m
 c3core dp_sala@mark tinker nothing at the hands; ahead: a face at 1.5/1.53/- m, a top 0.85 m high at 1.5 m
-citadel dot@dot_peer touchWater out of reach; ahead: a face at 0.69/0.68/0.77 m, a top 0.92 m high at 0.6 m
 citadel farmer1@rows kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
 citadel farmer2@rows kneelWork out of reach; ahead: a face at -/-/- m, a top 0.42 m high at 0.25 m
-citadel garrick@gar_tap reach nothing at the hands; ahead: a face at 0.73/0.72/- m, a top 1.01 m high at 0.55 m
-citadel garrick@gar_water potting nothing at the hands; ahead: a face at 1.02/-/- m, a top 0.54 m high at 1 m
+citadel farmer3@rows kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
+citadel garrick@gar_water potting nothing at the hands; ahead: a face at 0.75/-/- m, a top 0.55 m high at 0.75 m
 citadel gurt@gurt_crates setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-citadel gurt@gurt_trolley setDown out of reach; ahead: a face at 0.68/-/- m, a top 0.27 m high at 0.6 m
 citadel gurt@gurt_ship reach nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-citadel lulu@kneel kneelWork out of reach; ahead: a face at 0.91/0.91/0.86 m, a top 0.23 m high at 0.85 m
 citadel sefa@sefa_crates tinker nothing at the hands; ahead: a face at 1.51/-/- m, a top 0.7 m high at 1.55 m
 citadel tibbo@tibbo_bench tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
 citadel tim@crate pickup out of reach; ahead: a face at -/-/- m, a top nowhere
-citadel tobb@tobb_quay setDown nothing at the hands; ahead: a face at 0.63/-/- m, a top 0.62 m high at 0.65 m
-citadel tobb@tobb_stall setDown nothing at the hands; ahead: a face at 1.27/1.27/- m, a top 0.31 m high at 0.6 m
-desert dg_clerk@clk_b tinker nothing at the hands; ahead: a face at 1.36/-/- m, a top 0.25 m high at 0.6 m
-desert dg_clerk@clk_table tinker nothing at the hands; ahead: a face at -/0.49/- m, a top 0.84 m high at 0.5 m
-desert dg_cook@cook_pot tinker out of reach; ahead: a face at -/0.99/- m, a top 0.93 m high at 0.95 m
-desert dg_cook@cook_table setDown nothing at the hands; ahead: a face at -/-/- m, a top 0.82 m high at 0.5 m
-desert dg_cook@cook_water reach out of reach; ahead: a face at -/-/- m, a top nowhere
-desert dg_cook@cook_pour setDown nothing ahead; ahead: a face at 0.92/1.04/- m, a top 0.39 m high at 0.95 m
-desert dg_cook@cook_stow setDown nothing ahead; ahead: a face at 0.92/0.92/- m, a top 0.22 m high at 0.85 m
-desert dg_dig@dig_rim kneelWork out of reach; ahead: a face at -/-/- m, a top 1.08 m high at 0.85 m
-desert dg_dig@dig_pile tinker out of reach; ahead: a face at -/-/- m, a top nowhere
-desert dg_haul@haul_a setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-desert dg_haul@haul_b setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-desert dg_mech@mech_stake kneelWork out of reach; ahead: a face at -/-/- m, a top 1.05 m high at 0.6 m
-desert dg_mech@mech_tripod tinker nothing at the hands; ahead: a face at -/-/- m, a top 1.36 m high at 0.85 m
-desert dg_porter@port_a setDown nothing ahead; ahead: a face at 0.93/1.7/1.7 m, a top 0.76 m high at 0.95 m
-desert dg_surv@surv_scope tinker nothing at the hands; ahead: a face at -/-/- m, a top 1.41 m high at 0.65 m
-desert dg_surv@surv_fold tinker nothing at the hands; ahead: a face at -/-/- m, a top 1.41 m high at 0.65 m
-desert dkid@pebble pickup out of reach; ahead: a face at -/-/- m, a top nowhere
-desert dtrader@wares tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-desert hesk@runner kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
-desert hesk@sheet tinker nothing at the hands; ahead: a face at -/-/- m, a top 0.27 m high at 1.45 m
-desert ilka@tank tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-desert ilka@notes tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-desert ilka@bag kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
-desert safi@safi_oasis touchWater nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-desert safi@safi_door setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-desert sc_pupa@a_draw reach nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-desert sc_pupa@a_water potting out of reach; ahead: a face at -/-/- m, a top 0.26 m high at 0.6 m
-desert sc_pupb@b_tend kneelWork out of reach; ahead: a face at 1.19/-/- m, a top 0.26 m high at 0.85 m
-desert sc_pupc@c_dip touchWater nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-hamalayi lh_bero@bero_home tapTurn out of reach; ahead: a face at 0.91/0.91/0.91 m, a top 0.43 m high at 0.9 m
-hamalayi lh_bero@bero_cart setDown nothing ahead; ahead: a face at -/1.24/- m, a top 0.91 m high at 1.25 m
-hamalayi lh_bero@bero_sledge tinker out of reach; ahead: a face at 0.67/-/- m, a top 0.3 m high at 0.6 m
-hamalayi lh_bero@bero_fire setDown nothing ahead; ahead: a face at -/1.04/- m, a top 0.93 m high at 1.05 m
-hamalayi lh_grum@grum_crates setDown nothing ahead; ahead: a face at 0.69/0.71/- m, a top 1.08 m high at 0.7 m
-hamalayi lh_grum@grum_cart setDown nothing ahead; ahead: a face at -/0.73/- m, a top 0.93 m high at 0.75 m
-hamalayi lh_grum@grum_sledge setDown nothing ahead; ahead: a face at 0.85/-/- m, a top 0.31 m high at 0.75 m
-hamalayi lh_grum@grum_crates setDown nothing ahead; ahead: a face at 0.9/1.03/- m, a top 0.53 m high at 0.9 m
-hamalayi lh_grum@grum_lift setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-hamalayi lh_kid2@k2_sledge tinker nothing at the hands; ahead: a face at -/-/- m, a top 0.26 m high at 0.7 m
-hamalayi lh_mira@mira_trough reach out of reach; ahead: a face at 0.5/-/- m, a top 0.71 m high at 0.5 m
-hamalayi lh_mira@mira_pot setDown nothing ahead; ahead: a face at -/1.22/1.41 m, a top 0.89 m high at 1.25 m
-hamalayi lh_mira@mira_pot tinker out of reach; ahead: a face at -/1.06/- m, a top 1.01 m high at 1.05 m
-hamalayi lh_mira@mira_back setDown nothing ahead; ahead: a face at -/1.06/- m, a top 1 m high at 1.05 m
-hamalayi lh_sana@sana_rack reach out of reach; ahead: a face at -/-/0.99 m, a top 1.25 m high at 1 m
-hamalayi lh_sana@sana_home tapTurn out of reach; ahead: a face at 0.9/0.9/0.9 m, a top 0.41 m high at 0.9 m
-hamalayi lh_sana@sana_barrels tinker out of reach; ahead: a face at 0.8/1.4/1.37 m, a top 0.48 m high at 0.8 m
-hamalayi lh_sana@sana_rack tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-hamalayi lh_sana@sana_pot tinker nothing at the hands; ahead: a face at -/1.03/- m, a top 0.89 m high at 1.05 m
-hamalayi lh_tam@tam_wood setDown nothing ahead; ahead: a face at 1.33/1.27/- m, a top 1.37 m high at 1.2 m
-hamalayi lh_tam@tam_fire setDown nothing ahead; ahead: a face at -/1.15/1.27 m, a top 0.98 m high at 1.15 m
-hamalayi lh_tam@tam_sledge setDown nothing at the hands; ahead: a face at 0.76/-/- m, a top 0.27 m high at 0.45 m
-hamalayi lhar1@sledge setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-hamalayi lhar1@fire tinker nothing at the hands; ahead: a face at -/1.42/1.61 m, a top 1.01 m high at 1.45 m
-hamalayi lhar2@door setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-hamalayi lhar2@wheels reach out of reach; ahead: a face at 0.55/0.94/0.72 m, a top 0.65 m high at 0.55 m
-hamalayi lhar2@cart setDown nothing ahead; ahead: a face at -/0.79/- m, a top 0.61 m high at 0.7 m
-hamalayi lhar3@door setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-hamalayi lhar3@trough touchWater out of reach; ahead: a face at 0.51/1.9/1.91 m, a top 0.63 m high at 0.5 m
-hamalayi pim@square pickup out of reach; ahead: a face at -/-/- m, a top nowhere
-hamalayi pim@sledge kneelWork out of reach; ahead: a face at 1.42/-/- m, a top 0.26 m high at 1.4 m
+desert dkid@pebble kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
+desert sc_pupa@a_water kneelWork out of reach; ahead: a face at -/-/- m, a top nowhere
 house zoe@mark touchWater nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-house zoe@table setDown nothing ahead; ahead: a face at -/-/- m, a top 0.78 m high at 0.7 m
-isle_celebration ce_lanterns@la_stand tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_celebration ce_lanterns@la_pole reachHigh nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_knartas kn_fisher@fi_barrel reach out of reach; ahead: a face at -/-/- m, a top nowhere
-isle_knartas kn_fisher@fi_crates setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_knartas kn_mother@mo_crates tinker nothing at the hands; ahead: a face at 0.64/-/- m, a top 0.69 m high at 0.65 m
-isle_knartas kn_nets@ne_crate setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_knartas kn_nets@ne_rack2 tinker out of reach; ahead: a face at 1.01/1.01/1 m, a top nowhere
-isle_liftdock ld_crane@cr_dock tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_liftdock ld_load1@l1_a setDown nothing ahead; ahead: a face at 0.58/-/- m, a top 0.73 m high at 0.6 m
-isle_liftdock ld_load1@l1_b setDown nothing ahead; ahead: a face at 0.58/0.59/0.59 m, a top 1.35 m high at 0.6 m
-isle_liftdock ld_load2@l2_a setDown nothing ahead; ahead: a face at 0.67/1.16/1.16 m, a top 0.72 m high at 0.7 m
-isle_mosquibee mb_tend1@t1_bed potting nothing at the hands; ahead: a face at 1.27/0.78/- m, a top 0.3 m high at 0.55 m
-isle_mosquibee mb_tend1@t1_honey setDown nothing ahead; ahead: a face at 0.68/0.8/- m, a top 0.63 m high at 0.7 m
-isle_mosquibee mb_tend2@t2_bed potting out of reach; ahead: a face at -/0.79/- m, a top 0.3 m high at 0.55 m
-isle_oldwatch ow_mason@ma_dome tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
+isle_knartas kn_mother@mo_crates kneelWork out of reach; ahead: a face at 0.51/1.08/1.08 m, a top 0.69 m high at 0.55 m
+isle_knartas kn_nets@ne_crate setDown nothing ahead; ahead: a face at 0.76/-/- m, a top 0.71 m high at 0.65 m
 isle_oldwatch ow_mason@ma_back setDown nothing ahead; ahead: a face at 1.25/1.25/1.26 m, a top 0.75 m high at 1.25 m
-isle_orchard or_carter@ca_pad setDown nothing ahead; ahead: a face at -/-/1.76 m, a top 1.48 m high at 1.2 m
-isle_orchard or_pell@pe_crates tinker out of reach; ahead: a face at 0.49/-/- m, a top 0.53 m high at 0.5 m
-isle_orchard or_pell@pe_crates2 setDown nothing ahead; ahead: a face at 0.59/-/- m, a top 0.78 m high at 0.6 m
-isle_orchard or_pell@pe_bed tinker out of reach; ahead: a face at 0.73/-/- m, a top 0.4 m high at 0.4 m
-isle_orchard or_pick1@p1_bed kneelWork out of reach; ahead: a face at -/-/- m, a top 0.67 m high at 1.35 m
-isle_orchard or_pick1@p1_crates setDown nothing at the hands; ahead: a face at 0.59/-/- m, a top 0.78 m high at 0.6 m
-isle_orchard or_pick2@p2_honey setDown out of reach; ahead: a face at 0.93/-/- m, a top 0.36 m high at 0.65 m
-isle_otringal ot_tanek@ta_stall tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_otringal ot_tanek@ta_cloth setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_otringal ot_ulla@ul_stall tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_otringal ot_ulla@ul_crates tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_otringal ot_ulla@ul_back setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_platform pf_chaplain@ch_bell tinker out of reach; ahead: a face at -/-/- m, a top 0.24 m high at 0.35 m
-isle_platform pf_foreman@pfo_crates tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
-isle_platform pf_miner1@m1_mine tinker nothing at the hands; ahead: a face at 1.34/2.08/2.08 m, a top 0.25 m high at 0.55 m
-isle_platform pf_miner1@m1_crates setDown nothing ahead; ahead: a face at 0.67/-/- m, a top 0.58 m high at 0.7 m
-isle_platform pf_miner2@m2_mine tinker nothing at the hands; ahead: a face at 1.44/1.96/1.96 m, a top 0.25 m high at 0.6 m
-isle_platform pf_miner2@m2_barrel reach nothing at the hands; ahead: a face at 1.89/-/- m, a top 0.24 m high at 1.6 m
 isle_platform pf_vill1@v1_home tapTurn nothing at the hands; ahead: a face at -/-/- m, a top 0.22 m high at 1.95 m
-isle_platform pf_vill1@v1_barrel reach out of reach; ahead: a face at 1.01/1.16/- m, a top 0.46 m high at 1.05 m
-isle_platform pf_vill2@v2_crates setDown nothing ahead; ahead: a face at -/-/- m, a top 0.19 m high at 1.25 m
-isle_platform pf_vill2@v2_bench setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
-isle_undergas ug_carrier@ca_a setDown nothing ahead; ahead: a face at 0.63/0.63/0.71 m, a top 0.72 m high at 0.65 m
-isle_undergas ug_carrier@ca_b setDown nothing ahead; ahead: a face at 0.71/0.7/- m, a top 0.65 m high at 0.7 m
-isle_undergas ug_carrier@ca_barrel reach out of reach; ahead: a face at 0.39/0.4/- m, a top 0.69 m high at 0.4 m
-isle_undergas ug_fitter@fi_pump tinker out of reach; ahead: a face at 1.09/1.08/1.08 m, a top 0.4 m high at 0.55 m
-isle_undergas ug_fitter@fi_holder tinker out of reach; ahead: a face at 1.24/1.24/1.24 m, a top 0.43 m high at 1.2 m
-isle_undergas ug_foreman@uf_pump tinker out of reach; ahead: a face at 0.95/0.95/0.95 m, a top 0.39 m high at 0.6 m
-isle_undergas ug_gauge@ga_holder tinker nothing at the hands; ahead: a face at 1.18/1.22/1.22 m, a top 0.4 m high at 1.15 m
-isle_undergas ug_gauge@ga_holder2 tinker nothing at the hands; ahead: a face at 0.62/0.62/0.62 m, a top 1.04 m high at 1.05 m
-nellhouse wim@wim_parts setDown out of reach; ahead: a face at -/-/- m, a top 0.45 m high at 0.55 m
-obsv keeper@wall tinker out of reach; ahead: a face at 0.42/-/- m, a top 0.59 m high at 0.45 m
-office mira@plant potting nothing at the hands; ahead: a face at 1.06/-/0.38 m, a top 1.16 m high at 0.4 m
-tavern luc@luc_serve setDown nothing ahead; ahead: a face at -/1.1/- m, a top 0.79 m high at 0.7 m
+nellhouse wim@wim_parts setDown out of reach; ahead: a face at -/-/- m, a top 0.45 m high at 0.35 m
+obsv keeper@wall tinker out of reach; ahead: a face at 0.32/-/- m, a top 0.59 m high at 0.35 m
+office mira@plant potting out of reach; ahead: a face at 0.87/-/0.19 m, a top 1.17 m high at 0.2 m
 tavern luc@luc_stack setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
 terminal bern@bern_list tinker nothing at the hands; ahead: a face at -/-/- m, a top nowhere
 upper up_clerk@uc_board setDown nothing ahead; ahead: a face at 0.82/0.82/0.85 m, a top 1.13 m high at 0.8 m
 upper up_courier@uk_counter setDown nothing ahead; ahead: a face at -/-/- m, a top nowhere
 zeelich ilo@ilo_stall tinker nothing at the hands; ahead: a face at -/-/- m, a top 0.28 m high at 1.5 m
-zeelich ilo@ilo_fount touchWater out of reach; ahead: a face at 0.62/-/- m, a top 0.72 m high at 0.55 m
-zeelich kira@kira_a kneelWork out of reach; ahead: a face at 1.15/1.72/1.9 m, a top 0.68 m high at 1.1 m
+zeelich ilo@ilo_fount touchWater out of reach; ahead: a face at 0.48/2.08/- m, a top 0.72 m high at 0.4 m
 zeelich kira@kira_draw reach nothing at the hands; ahead: a face at 1.78/-/- m, a top 0.72 m high at 1.75 m
-zeelich kira@kira_b potting out of reach; ahead: a face at 0.83/1.49/- m, a top 0.45 m high at 0.85 m
+zeelich kira@kira_b potting out of reach; ahead: a face at 0.45/1.11/- m, a top 0.45 m high at 0.45 m
 zeelich oku@goods tinker nothing at the hands; ahead: a face at 1.88/1.88/- m, a top 0.97 m high at 1.85 m
 zeelich zc_clerk@cl_in tapTurn nothing at the hands; ahead: a face at -/-/- m, a top nowhere
 zeelich zc_courier@co_in tapTurn nothing at the hands; ahead: a face at -/-/- m, a top nowhere

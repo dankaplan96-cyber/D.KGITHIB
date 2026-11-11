@@ -266,8 +266,10 @@ const pileWalk = await ev(() => { const G = game, B = G.world.busy, h = G.hero, 
   return out; });
 check('the quay\'s crate pile stops him (he does not walk through it); the harbour path to the pier and the way to the stall stay open (INPUT)', pileWalk.quayStop > 0.6 && pileWalk.pier.r === 'arrived' && pileWalk.square.r === 'arrived', pileWalk);
 // a word when bumped: walking into a standing resident; a bubble over it, the game goes on (no dialogue)
+// (a grown-up: a child is small enough that walked into head on he side-steps round it, actors.js keepApart, and which
+//  resident is found first depends on the rounds' timing; not one stepped up to its thing: he would be put in the thing)
 const bump = await ev(() => { const G = game, B = G.world.busy, W = G.walkers; let r = null;
-  for (let k = 0; k < 300 && !r; k++) { G.step(0.5); r = W.res.find((x) => x.present && !x.away && x.st === 'dwell' && x.tmr > 4 && !x.sit && !x.stop?.door && Math.abs(x.pos.x) < 200 && !/tend|water/.test(x.stop?.act || '')); }
+  for (let k = 0; k < 300 && !r; k++) { G.step(0.5); r = W.res.find((x) => x.present && !x.away && x.st === 'dwell' && x.tmr > 4 && !x.sit && !x.stop?.door && Math.abs(x.pos.x) < 200 && !/tend|water/.test(x.stop?.act || '') && (x.bodyR ?? 0.45) >= 0.45 && !x.wk); }
   if (!r) return { none: true };
   const a = r.angle; G.exitRoom({ x: r.pos.x + Math.sin(a) * 1.6, z: r.pos.z + Math.cos(a) * 1.6, a: a + Math.PI }, true); G.step(0.3); B.hide();
   P.holdFor(['ArrowUp'], 1.0);

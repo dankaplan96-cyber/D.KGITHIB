@@ -113,6 +113,8 @@ check('Knartas → back to Zeelich, beside its pad, in play', t3.room === 'zeeli
 
 // ZL-ALL: the new places — the Lift Dock (LBA2's ASCENCE) and our three — and Celebration with its figure: from the
 // arrival he walks to every landmark (INPUT), and finds the place's giver (Space there in Normal: a hop gives a bonus, once)
+// (a resident walking by within talk reach takes Space for a talk, as in play, and one whose way he stands in waits for
+//  him: he steps back off it, lets them pass and comes back, as a player would)
 const places = await ev(() => {
   const G = game, out = [];
   for (const id of ['isle_liftdock', 'isle_orchard', 'isle_oldwatch', 'isle_celebration']) {
@@ -120,7 +122,7 @@ const places = await ev(() => {
     const h = G.hero, walks = [];
     for (const p of R.pois) { G.enterRoom(id, null, true); P.settle(); const r = P.go(p.x, p.z, { tol: 1.4, run: true, maxT: 90 }); walks.push([p.word, r.r, +Math.hypot(h.pos.x - p.x, h.pos.z - p.z).toFixed(1)]); }
     let given = null;
-    if (R.givers[0]) { const gv = R.givers[0]; P.go(gv.x, gv.z, { tol: 0.5, maxT: 60 }); h.setBehaviour('normal'); const n0 = G.searched.length; P.tap('Space', 0.05); G.step(1.0); given = G.searched.length > n0; P.tap('Space', 0.05); G.step(1.0); given = given && G.searched.length === n0 + 1; }
+    if (R.givers[0]) { const gv = R.givers[0]; P.go(gv.x, gv.z, { tol: 0.5, maxT: 60 }); for (let k = 0; k < 3 && P.target()?.kind === 'npc'; k++) { const n = G.npcs.filter((x) => x.present && x !== h && x.def?.id !== 'hero').sort((p, q) => Math.hypot(p.pos.x - h.pos.x, p.pos.z - h.pos.z) - Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z))[0], dx = h.pos.x - n.pos.x, dz = h.pos.z - n.pos.z, l = Math.hypot(dx, dz) || 1; P.go(gv.x + dx / l * 2.5, gv.z + dz / l * 2.5, { tol: 0.6, maxT: 10 }); G.step(4); P.go(gv.x, gv.z, { tol: 0.5, maxT: 30 }); } h.setBehaviour('normal'); const n0 = G.searched.length; P.tap('Space', 0.05); G.step(1.0); given = G.searched.length > n0; P.tap('Space', 0.05); G.step(1.0); given = given && G.searched.length === n0 + 1; }
     out.push({ id, landmark: R.landmark?.word, walks, givers: R.givers.length, given, dressing: R.dressing });
   }
   G.enterRoom('zeelich', G.story.isles.landing('zeelich'), true); P.settle();   // (back where the next step starts)
