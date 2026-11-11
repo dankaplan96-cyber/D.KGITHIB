@@ -390,10 +390,13 @@ const camRec = `(() => {
   window.__cam.push({ p: [cp.x, cp.y, cp.z], look: [C.look.x, C.look.y, C.look.z], hero: [h.pos.x, h.pos.y, h.pos.z], ndc: [v.x, v.y], yaw: C.yaw, v: [h.vel.x, h.vel.y], sp: h.speed });
 })()`;
 const camStats = `((S, dt) => {
-  let acc = [], yawRate = 0, nMax = 0, out = 0, behind = 0, ahead = 0, nMove = 0, aY = [];
+  let acc = [], yawRate = 0, nMax = 0, out = 0, behind = 0, ahead = 0, nMove = 0, aY = [], aXZ = [], hAcc = [], hXZ = [];
   for (let i = 1; i < S.length - 1; i++) {
     const a = [0, 1, 2].map((k) => (S[i + 1].p[k] - 2 * S[i].p[k] + S[i - 1].p[k]) / (dt * dt));
-    acc.push(Math.hypot(a[0], a[1], a[2])); aY.push(Math.abs(a[1]));
+    acc.push(Math.hypot(a[0], a[1], a[2])); aY.push(Math.abs(a[1])); aXZ.push(Math.hypot(a[0], a[2]));
+    // (F-5: his own, for comparison — the camera following him at most jerks as hard as he moves)
+    const b = [0, 1, 2].map((k) => (S[i + 1].hero[k] - 2 * S[i].hero[k] + S[i - 1].hero[k]) / (dt * dt));
+    hAcc.push(Math.hypot(b[0], b[1], b[2])); hXZ.push(Math.hypot(b[0], b[2]));
     yawRate = Math.max(yawRate, Math.abs(Math.atan2(Math.sin(S[i].yaw - S[i - 1].yaw), Math.cos(S[i].yaw - S[i - 1].yaw))) / dt);
   }
   for (const s of S) {
@@ -404,7 +407,8 @@ const camStats = `((S, dt) => {
   }
   const q = (arr, f) => { const b = [...arr].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(b.length * f))] || 0; };
   return { frames: S.length, maxNdc: +nMax.toFixed(2), outOfBox: out, lead: +(ahead / Math.max(1, nMove)).toFixed(2), worstBehind: +behind.toFixed(2),
-    accP95: +q(acc, 0.95).toFixed(1), accMax: +Math.max(...acc).toFixed(1), accYMax: +Math.max(...aY).toFixed(1), yawRateMax: +(yawRate * 180 / Math.PI).toFixed(1) };
+    accP95: +q(acc, 0.95).toFixed(1), accMax: +Math.max(...acc).toFixed(1), accYMax: +Math.max(...aY).toFixed(1), accXZP95: +q(aXZ, 0.95).toFixed(1), accYP95: +q(aY, 0.95).toFixed(1),
+    heroAccP95: +q(hAcc, 0.95).toFixed(1), heroAccXZP95: +q(hXZ, 0.95).toFixed(1), heroAccXZMax: +Math.max(...hXZ).toFixed(1), yawRateMax: +(yawRate * 180 / Math.PI).toFixed(1) };
 })`;
 const cam = await ev(({ camRec, camStats }) => {
   const G = game, h = G.hero, I = K.I, C = G.camRig, PH = G.physics;

@@ -309,11 +309,26 @@ const od = await ev(() => { const G = game, n = G.npcs.find((x) => x.def.id === 
 check('Officer Odile works her counter (turned to it) while nobody is at the window; as he comes up she is the story\'s again: she turns and talks, and stays at her place', od.far.anim === 'tinker' && od.far.face < 0.3 && od.talk.r === 'talked' && od.near.anim === null && od.at < 0.05, od);
 // the gulls take off as he walks up and come down again on a perch away from him; out of reach they sit still
 const gl = await ev(() => { const G = game, B = G.world.busy, F = B.flocks[0], h = G.hero;
-  const b = F.birds.find((x) => x.st === 'sit'); G.exitRoom({ x: b.x + 6, z: b.z, a: -Math.PI / 2 }, true); P.settle();
-  P.holdFor(['ArrowUp'], 2.5); const went = F.birds.filter((x) => x.st !== 'sit'), up = went.length, l0 = went.map((x) => x.landed || 0); G.step(30);
+  // (a sitting gull with a walkable way up to it from 6 m off — the flock changes perches as the town's time runs, and
+  //  a start fixed 6 m east of whichever sat first was not always one he could walk up from (F-14: it failed once the
+  //  Talk walks before it took a different time); the first of eight directions whose 6 m line to it he can walk)
+  let b = null, st = null;
+  for (const q of F.birds.filter((x) => x.st === 'sit')) {
+    for (let k = 0; k < 8 && !st; k++) {
+      const a = (k * Math.PI) / 4, sx = q.x + Math.sin(a) * 6, sz = q.z + Math.cos(a) * 6;
+      let y = G.physics.groundAt(sx, sz), ok = y > 0.2 && Math.abs(y - q.y) < 3;
+      for (let d = 5.5; ok && d >= 2.5; d -= 0.5) { const ny = P._stepTo(q.x + Math.sin(a) * (d + 0.5), y, q.z + Math.cos(a) * (d + 0.5), q.x + Math.sin(a) * d, q.z + Math.cos(a) * d); if (ny == null) ok = false; else y = ny; }
+      if (ok) st = { x: sx, z: sz, a: a + Math.PI };
+    }
+    if (st) { b = q; break; }
+  }
+  if (!b) return { none: true };
+  G.exitRoom(st, true); P.settle();
+  const p0 = [h.pos.x, h.pos.z]; P.holdFor(['ArrowUp'], 2.5); const walked = +Math.hypot(h.pos.x - p0[0], h.pos.z - p0[1]).toFixed(2), state = G.state;
+  const went = F.birds.filter((x) => x.st !== 'sit'), up = went.length, l0 = went.map((x) => x.landed || 0); G.step(30);
   const down = went.filter((x, i) => (x.landed || 0) <= l0[i]).length, dist = went.map((x) => +Math.hypot(x.p.x - h.pos.x, x.p.z - h.pos.z).toFixed(1));
   G.exitRoom({ x: G.world.life.boatBox.x, z: G.world.life.boatBox.z + 2, a: 0 }, true); P.settle();
-  const m0 = F.body.instanceMatrix.version; G.step(5); return { up, down, dist, still: F.body.instanceMatrix.version === m0 }; });
+  const m0 = F.body.instanceMatrix.version; G.step(5); return { up, down, dist, still: F.body.instanceMatrix.version === m0, walked, state, from: [st.x, st.z].map((u) => +u.toFixed(1)) }; });
 check('the harbour\'s gulls take off as he walks up to them and come down again within half a minute; far off they keep still (no work)', gl.up >= 1 && gl.down === 0 && gl.still, gl);
 // interrupted: a bubble goes as he goes indoors; heads he turned are let go
 const intr = await ev(() => { const G = game, B = G.world.busy; const r = G.walkers.res.find((x) => x.present && !x.away && !x.inside && Math.abs(x.pos.x) < 200);
