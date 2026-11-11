@@ -517,7 +517,7 @@ const samePlace = (p, m) => !!p && !!m && Math.hypot(p.x - m.x, p.z - m.z) < SAM
 // a cast round's stops in the world: the mark (the chapter's place: its pose, its angle) and the others round it (dx, dz
 // from the mark; facing `a`, or the point `face` [dx, dz] from the mark, or the mark's way). A stop that is no way for
 // the planner moves to the nearest that is (within 0.75 m) or is left out; one in a door's reach is left out.
-export function castStops(g, D, m, nav) {
+export function castStops(g, D, m, nav, others = null) {
   const doors = [...(g.story?.doors?.() || []), ...(g.room?.exits || [])].filter((d) => Math.abs(d.x - m.x) < 15 && Math.abs(d.z - m.z) < 15);
   const out = [];
   for (const s of D.stops) {
@@ -531,7 +531,9 @@ export function castStops(g, D, m, nav) {
     // (and only where a route still ends: a place the grid calls walkable can lie in a pocket behind the thing)
     // (nor nearer to where somebody else stands than a body's berth and a step: the yard's trough has Pim's mark by it)
     const near = (q) => !!q && Math.hypot(q.x - ws.x, q.z - ws.z) < 1.2 && Math.hypot(q.x - ws.x, q.z - ws.z) < Math.hypot(q.x - x, q.z - z);   // (where they are now, and their own mark: they come back to it)
-    const crowds = ws && g.npcs.some((o) => o.def?.id !== D.id && o.present !== false && !o.dead && (near(o.pos) || near(o.placed)));
+    const by = (q) => Math.hypot(q.x - x, q.z - z) < 1.2;   // (a neighbour at the same thing: both stay as they were set)
+    // (nor to a stop of somebody else's round: two who use one trough from its two sides stand a body apart)
+    const crowds = ws && (g.npcs.some((o) => o.def?.id !== D.id && o.present !== false && !o.dead && (near(o.pos) || near(o.placed))) || (others || []).some(by));
     if (ws && !crowds && nav.walkable(ws.x, ws.z) && !doors.some((d) => Math.hypot(d.x - ws.x, d.z - ws.z) < (d.r || 0.9) + DOOR_CLEAR) && (!nav.planSync || nav.planSync({ x, z }, { x: ws.x, z: ws.z }).ok)) { x = ws.x; z = ws.z; }
     out.push({ ...s, x, z, a });
   }
@@ -677,7 +679,10 @@ export class StoryRounds {
       const m = n.placed;
       if (S?.none && S.mark && samePlace(m, S.mark)) return false;   // (no round fits round this mark: they stand)
       const t0 = this.measure ? performance.now() : 0;
-      const nav = this.castNav(D), stops = castStops(g, D, m, nav);
+      // (the other people's stops as their rounds set them, from their marks: a stop is not moved toward one of those)
+      const others = [];
+      for (const o of g.npcs) { if (o === n || o.stops || !o.present || !o.placed) continue; let Do = null; try { Do = this.defFor(o); } catch { Do = null; } if (Do?.ch) for (const q of Do.stops) if (!q.mark && q.dx != null) others.push({ x: o.placed.x + q.dx, z: o.placed.z + q.dz }); }
+      const nav = this.castNav(D), stops = castStops(g, D, m, nav, others);
       const rnd = S?.rnd || rng([...D.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), log = S?.log || [];
       if (stops.length < 2) {
         log.push(`${g.time.toFixed(1)} no round here (${stops.length} stop)`);

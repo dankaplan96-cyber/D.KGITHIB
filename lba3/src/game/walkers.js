@@ -643,8 +643,8 @@ export class Resident extends NPC {
     // (NO-AIR: first the last step up to the door, so that the hand is on it: its stop is where the route ends, a
     //  walking body's berth off the wall and out of any arm's reach of the leaf; the step in is that much shorter)
     if (this.kGo === undefined) {
-      const m = s.act === 'noknock' ? null : workSpot(this.game, this.pos.x, this.pos.z, this.angle, 'tapTurn', { y: this.pos.y, max: 0.6, r: 0.3 });
-      this.kGo = m ? m.moved : 0; this.kIn = 1.1 * Math.max(0.3, 1 - this.kGo / 0.55);
+      const m = s.act === 'noknock' ? null : workSpot(this.game, this.pos.x, this.pos.z, this.angle, 'tapTurn', { y: this.pos.y, max: 1.7, r: 0.3 });
+      this.kGo = m ? m.moved : 0; this.kIn = 1.1 * Math.max(0.3, 1 - this.kGo / 0.55);   // (a door two metres off — the islands', Zeelich's — is walked up to)
     }
     if (this.kGo > 0.005) {
       const step = Math.min(this.kGo, dt * 1.1); this.kGo -= step;

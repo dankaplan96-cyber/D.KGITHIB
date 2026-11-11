@@ -71,11 +71,14 @@ STOOD with the reason and what is drawn before it (how far the first face and th
    of working the air. A one-off move (setDown, pickup, reachHigh) is judged before it sets off.
 3. **Stops are stood at an arm's length** (`workSpot`): a round's work stop is moved along its own facing until its
    thing is 0.5 m from the body's middle (the stops were set 0.8 to 1 m off: a walker's berth), where the place is
-   free, a route still ends there, and (the cast's rounds) nobody else's place is crowded. Read from the colliders;
+   free, a route still ends there, and (the cast's rounds) nobody else's mark or stop is within 1.2 m. Read from the colliders;
    from what is drawn where no collider stands on the line.
-4. **A knock steps up to its door** (walkers.js `knockTick`): the stop stays where the route ends; the last 0.1 to
-   0.6 m to the leaf are the knock's own, and the step in is that much shorter.
-5. **A track's walk ends on its spot** (engine/scripts.js `goto … near`).
+4. **A knock steps up to its door** (walkers.js `knockTick`): the stop stays where the route ends; the last step to
+   the leaf (0.1 to 1.7 m: Citadel's doors stand a metre off, the islands' and Zeelich's two) is the knock's own, and
+   the step in is that much shorter.
+5. **A track's walk ends on its spot** (engine/scripts.js `goto … near`; isleslife.js, deeplife.js. Not the Hamalayi
+   rooms': there a person standing on the spot took the room's own look prompt from the player's Talk,
+   tests/hamalayi-life.mjs).
 6. **A hand held out to a heat post** (`warm`) is left as it is (`rig.handsFree`).
 7. Chapter 1's worker at the lift stands at the lift's control (the opening's), both hands on it; he stood 2 m short
    of the mast cranking the air (story/chapter1.js).

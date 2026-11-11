@@ -105,7 +105,7 @@ return ev(async () => {
         for (const s of n.stops) if (!s.seat) {
           stopAct = s.act;
           // (a door: the knock is made after the last step up to the leaf — walkers.js knockTick — so from there)
-          const k = s.door && s.act !== 'noknock' ? WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 0.6, r: 0.3 }) : null;
+          const k = s.door && s.act !== 'noknock' ? WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 1.7, r: 0.3 }) : null;
           add(n, 'round', s.id, k ? k.x : s.x, k ? k.z : s.z, s.a, s.door ? 'tapTurn' : n.actAnim(s), s.y);
         }
         stopAct = null;
