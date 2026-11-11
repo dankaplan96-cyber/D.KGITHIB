@@ -15,6 +15,7 @@ const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
 // past 8192 + 4096 to a background thread), not in seconds: 0.25 s is 12000 frames at 48 kHz but 24000 at 96 kHz and
 // 48000 at 192 kHz, rates a Windows laptop's output may run at. The impulse is held under the limit at any rate.
 const REVERB_MAX_FRAMES = 12000;
+const VOL_GLIDE = 0.03; // s: the time constant of a volume change (MUSIC-CRACKLE; ~95 % there in 90 ms)
 
 export class AudioEngine {
   constructor() {
@@ -126,13 +127,20 @@ export class AudioEngine {
     return c ? { sampleRate: c.sampleRate, baseLatency: c.baseLatency, outputLatency: c.outputLatency, reverbFrames: this.reverb?.buffer?.length, ...this.playout } : null;
   }
 
+  // MUSIC-CRACKLE (CLOUD_ORDERS 27b): after the first setting (init, nothing playing yet) a volume change glides over
+  // ~90 ms instead of jumping. Each input event of a settings slider set a bus gain directly: a step in the waveform of
+  // everything on that bus, a click per event while the slider is dragged (measured on the music bus: one gain step per
+  // move, none after this change; tools/music/crackle/).
   applyVolumes() {
     if (!this.ctx) return;
-    this.master.gain.value = this.vol.master;
-    this.musicBus.gain.value = this.vol.music; // (the ducking is a stage of its own in music.js: the slider never fights it)
-    this.sfxBus.gain.value = this.vol.sfx;
-    this.ambBus.gain.value = this.vol.sfx * 0.6;
-    this.voiceBus.gain.value = (this.vol.voice ?? 0.8) * VOICE_BOOST;
+    const t = this.ctx.currentTime, first = !this._volSet;
+    const set = (p, v) => { if (first) { p.value = v; this._targets.set(p, v); } else this._glide(p, v, t, VOL_GLIDE); };
+    set(this.master.gain, this.vol.master);
+    set(this.musicBus.gain, this.vol.music); // (the ducking is a stage of its own in music.js: the slider never fights it)
+    set(this.sfxBus.gain, this.vol.sfx);
+    set(this.ambBus.gain, this.vol.sfx * 0.6);
+    set(this.voiceBus.gain, (this.vol.voice ?? 0.8) * VOICE_BOOST);
+    this._volSet = true;
   }
 
   _noise(sec) {
