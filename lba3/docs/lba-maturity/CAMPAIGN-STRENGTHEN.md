@@ -94,16 +94,18 @@ conversation (section 4).
 
 | Ch | bot s of free play: base → wave 1 | walked m | lines · words | est. first play (min): base → wave 1 | what the seconds are |
 |---|---|---|---|---|---|
-| 1 | 333 → **418** (segments 01 + 02: 241 + 93 → 306 + 112) | 776 → 820 | 64 · 702 → 80 · 894 | 18.7 → **23.4** | the tap, the cup, the two pipes outside (+65 s); the pool and the pump's cycle (+19 s) |
-| 2 | 676 → **897** (03 + 04 + 05: 81 + 210 + 386 → 81 + 240 + 575) | 1,471 → 1,864 | 72 · 1,206 → 103 · 1,686 | 32.6 → **43.9** | home, the lane, the pump room and back (+190 s; segment 04's +31 s is the bot's depot fight, not a change) |
-| 3 | 235 → **370** (06) | 471 → 525 | 53 · 829 → 81 · 1,305 | 16.8 → **25.5** | Brel, the lift's six hand actions and the ride, the cart, the bench (+135 s) |
+| 1 | 333 → **394** (segments 01 + 02: 241 + 93 → 287 + 107) | 776 → 804 | 64 · 702 → 80 · 894 | 18.7 → **22.6** | the tap, the cup, the two pipes outside (+46 s); the catch basin and the pump's cycle (+14 s) |
+| 2 | 676 → **879** (03 + 04 + 05: 81 + 210 + 386 → 81 + 227 + 571) | 1,471 → 1,823 | 72 · 1,206 → 104 · 1,691 | 32.6 → **43.5** | home, the lane, the pump room and back (+185 s; segment 04's +17 s is the bot's depot fight, not a change) |
+| 3 | 235 → **416** (06) | 471 → 594 | 53 · 829 → 81 · 1,305 | 16.8 → **26.9** | Brel, the lift's hand actions and the ride, the cart, the bench (about +135 s; the rest is the bot's depot fight, longer in this run) |
 
 The estimates use `chapter-balance.md`'s formula with one more deduction step counted in chapter 1 (which pipe), two in
 chapter 2 (which pipe is the new one; which cock) and two in chapter 3 (hook before bell; the dial). They are
-**estimates**. The runs: base in `/dev/shm/c1010/base`, wave 1 in `/dev/shm/c1010/new` (logs, stats, traces, a picture
+**estimates**. The runs: base in `/dev/shm/c1010/base`, wave 1 in `/dev/shm/c1010/new2` (logs, stats, traces, a picture
 after every step; the session's scratch, not in the repository). Each chain is a new game played by input with Esc →
-Save & quit → Continue between segments; no death, no assisted fight in either. Chapters 1 and 3 are now above 125 %
-of the old median and chapter 2 further above it: the three chapters the player meets first are the three with a
+Save & quit → Continue between segments; no death in either. The wave-1 chain passed every segment at the first try;
+its segment 06 used one assisted finish in the depot fight (the bot's "ISO assist below 3 HP", as in every run recorded
+in `chapter-balance.md`: that fight is the chapter's as it was, not part of this wave). Chapters 1 and 3 are now above
+125 % of the old median and chapter 2 further above it: the three chapters the player meets first are the three with a
 problem found by hand, and the median moves only when the later chapters get theirs (section 6).
 
 ## 4. The missing playable step, chapter by chapter
