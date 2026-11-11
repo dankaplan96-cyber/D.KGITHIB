@@ -1,0 +1,359 @@
+{
+  "file": "art/blender/characters/ham/work/lharWoman_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.7339, 2.1249, 0.6813], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: lharWoman_b_belt -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_brows -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_bun0 -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_bun0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_bun1 -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_bun1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_bun2 -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_bun2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_cuffL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_cuffR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_foreL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_foreR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_hair -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_handL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_handR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_head -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_hemBand -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_neck -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_neckBand -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_nose -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_shoeL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_shoeR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_shoulderL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_shoulderR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_skirt -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_soleL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_soleR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_torso -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_upperL -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: lharWoman_b_upperR -> lharWoman_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: lharWoman_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature lharWoman_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 39,
+    "meshes": 38,
+    "triangles": 2694,
+    "materials": 12,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3669,
+        0.0,
+        -0.362
+      ],
+      "max": [
+        0.3669,
+        2.1249,
+        0.3193
+      ],
+      "size": [
+        0.7339,
+        2.1249,
+        0.6813
+      ]
+    }
+  },
+  "passed": true
+}

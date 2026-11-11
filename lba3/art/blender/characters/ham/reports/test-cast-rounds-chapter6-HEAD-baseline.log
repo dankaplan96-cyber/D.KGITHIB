@@ -1,0 +1,47 @@
+ISO  chapter 6, Lhar: chapter set by its flags (pass); the hero put in hamalayi at 4294,-1 (enterRoom/exitRoom and a placement)
+PASS chapter 6, Lhar, yorna: present, with a cast round whose stops all stand on the ground, clear of the doors, the prompts and the other people's talk reach 
+PASS chapter 6, Lhar, pim: present, with a cast round whose stops all stand on the ground, clear of the doors, the prompts and the other people's talk reach 
+FAIL chapter 6, Lhar, lhar1: present, with a cast round whose stops all stand on the ground, clear of the doors, the prompts and the other people's talk reach {"round":"cast","stops":["mark"],"at":["4282.00,8.00"],"placed":{"x":4282,"z":8},"bad":["1 stop(s) left out (no ground there, or a door)"]}
+PASS chapter 6, Lhar, lhar2: present, with a cast round whose stops all stand on the ground, clear of the doors, the prompts and the other people's talk reach 
+FAIL chapter 6, Lhar, lhar3: present, with a cast round whose stops all stand on the ground, clear of the doors, the prompts and the other people's talk reach {"round":"cast","stops":["mark"],"at":["4300.00,2.00"],"placed":{"x":4300,"z":2},"bad":["1 stop(s) left out (no ground there, or a door)"]}
+PASS chapter 6, Lhar, yorna: in 60 s of free play visits at least 2 stops of the round, with no collider overlap 
+  yorna: shrine → packing → mark (4 arrivals, walked 17.7 m, 0 collider overlaps)
+PASS chapter 6, Lhar, pim: in 60 s of free play visits at least 2 stops of the round, with no collider overlap 
+  pim: icefall → square → mark (6 arrivals, walked 28 m, 0 collider overlaps)
+FAIL chapter 6, Lhar, lhar1: in 60 s of free play visits at least 2 stops of the round, with no collider overlap {"why":null,"by":null,"stops":[],"visits":0,"moved":0,"hits":[],"log":[]}
+  lhar1:  (0 arrivals, walked 0 m, 0 collider overlaps)
+PASS chapter 6, Lhar, lhar2: in 60 s of free play visits at least 2 stops of the round, with no collider overlap 
+  lhar2: door → mark (5 arrivals, walked 4.9 m, 0 collider overlaps)
+FAIL chapter 6, Lhar, lhar3: in 60 s of free play visits at least 2 stops of the round, with no collider overlap {"why":null,"by":null,"stops":[],"visits":0,"moved":0,"hits":[],"log":[]}
+  lhar3:  (0 arrivals, walked 0 m, 0 collider overlaps)
+PASS chapter 6, Lhar: nothing of the rounds goes into the flags (nothing saved); play goes on 
+PASS chapter 6, Lhar, yorna: a talk (INPUT) stops them where they are and they turn to Twinsen; afterwards the round goes on 
+PASS chapter 6, Lhar, pim: a talk (INPUT) stops them where they are and they turn to Twinsen; afterwards the round goes on 
+FAIL chapter 6, Lhar, lhar1: a talk (INPUT) stops them where they are and they turn to Twinsen; afterwards the round goes on {"walking":false,"walkingAtE":false,"target":"npc:lhar1","inDialog":true,"drift":0,"facing":0,"speaker":"lhar1","state":"play","roundAfter":"lhar1","after":0,"active":false}
+PASS chapter 6, Lhar, lhar2: a talk (INPUT) stops them where they are and they turn to Twinsen; afterwards the round goes on 
+FAIL chapter 6, Lhar, lhar3: a talk (INPUT) stops them where they are and they turn to Twinsen; afterwards the round goes on {"walking":false,"walkingAtE":false,"target":"npc:lhar3","inDialog":true,"drift":0,"facing":0,"speaker":"lhar3","state":"play","roundAfter":"lhar3","after":0,"active":false}
+PASS chapter 6, Lhar, yorna: a cut-scene freezes the round; a scene's place (STAGED) takes them at once and holds them; back in free play they stand exactly on their mark; the hero gone, they are back on it 
+PASS chapter 6, Lhar, pim: a cut-scene freezes the round; a scene's place (STAGED) takes them at once and holds them; back in free play they stand exactly on their mark; the hero gone, they are back on it 
+PASS chapter 6, Lhar, lhar1: a cut-scene freezes the round; a scene's place (STAGED) takes them at once and holds them; back in free play they stand exactly on their mark; the hero gone, they are back on it 
+PASS chapter 6, Lhar, lhar2: a cut-scene freezes the round; a scene's place (STAGED) takes them at once and holds them; back in free play they stand exactly on their mark; the hero gone, they are back on it 
+PASS chapter 6, Lhar, lhar3: a cut-scene freezes the round; a scene's place (STAGED) takes them at once and holds them; back in free play they stand exactly on their mark; the hero gone, they are back on it 
+PASS left out: chapter 4, the research post (the sneak): Dallan, the gate guard — no round, they stand on their marks 
+PASS left out: chapter 9, the archive (the disguise): the archivist (the watcher walks him) — no round 
+PASS left out: chapter 9, the antechamber: the clerk at his counter — no round, they stand on their marks 
+PASS left out: chapter 10, the workshop (the hop-pack's peg by the door leaves no free spot): Baldino at his bench — no round, they stand on their marks 
+PASS left out: chapter 10, the lamp room (the dial bank): Zoé and Arthur — no round, they stand on their marks 
+rounds given:
+  yorna: pass: mark → shrine → packing
+  pim: pass: mark → icefall → square
+  lhar1: pass: mark
+  lhar2: pass: mark → door
+  lhar3: pass: mark
+MEASURE chapter 6, Lhar: the rounds' updates 1.8216 ms per game frame (5 people, 12600 driven person-frames, 0.5204 ms each); whole step 10.254 ms/frame wall time with no rendering. SwiftShader container: CPU time, not fps.
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 20 passed, 6 failed
+errors:     1 FAIL
+  FAIL console error: The AudioContext encountered an error from the audio device or the WebAudio renderer.
+resources:  no required file missing, 0 optional
+visual:     1 capture(s) written for review, not judged here
+VERDICT: FAIL (6 functional, 1 error)
+7 FAILED

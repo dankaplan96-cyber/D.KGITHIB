@@ -1,0 +1,108 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 1cc4fa02..8c95d929 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -302,10 +302,23 @@ export const LOOKS = {
+     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.06, tunic: '#7a4a2a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a3a3a', shoes: '#2a1a10',
+     hair: '#2a1a10', skin: '#d8a880', hairStyle: 'tuft', nose: 'long', eyes: '#2a1a10', moustache: true, height: 0.98, neck: 0.08,
+   },
++  lharMan_b: {
++    // CAST-POLISH-HAMALAYI (order 24, lharMan's shape variant): a heavier Lhar man, bald, in a longer coat (cast_poly.py CAST
++    // lharMan_b). Taken by Fitter Ludo (dg_mech), Ollo and Dov; Tashi (lhar1), Bero (lh_bero) and Luc keep lharMan
++    race: 'quetch', outfit: 'tunic', hem: 0.45, belly: 0.14, tunic: '#7a4a2a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a3a3a', shoes: '#2a1a10',
++    hair: '#2a1a10', skin: '#d8a880', hairStyle: 'bald', nose: 'long', eyes: '#2a1a10', moustache: true, height: 0.98, neck: 0.08,
++  },
+   lharWoman: {
+     race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
+     hair: '#1a1210', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, height: 0.9, neck: 0.08,
+   },
++  lharWoman_b: {
++    // CAST-POLISH-HAMALAYI (order 24, lharWoman's shape variant): an older Lhar woman, the hair up in a bun, a fuller figure
++    // (cast_poly.py CAST lharWoman_b). Taken by Mrs Pell (pell, pell_q) and Mrs Ardo (zc_petit); Dawa (lhar2), Sana (lh_sana),
++    // Oda and Kira keep lharWoman
++    race: 'quetch', outfit: 'dress', hem: 0.12, belly: 0.06, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
++    hair: '#1a1210', skin: '#e0b090', hairStyle: 'bun', nose: 'button', eyes: '#2a1a10', height: 0.9, neck: 0.08,
++  },
+   lharElder: {
+     race: 'bunny', outfit: 'robe', hem: 0.1, stoop: 0.14, fur: '#f0ece8', furDark: '#c8c0b8', tunic: '#5a3a7a', tunicTrim: '#e8c060', belt: '#e8c060', pants: '#3a2a4a', shoes: '#f0ece8',
+     eyes: '#2a2a3a', glasses: true, height: 0.82,
+diff --git a/lba3/src/game/roomlife.js b/lba3/src/game/roomlife.js
+index 7006e745..347030ed 100644
+--- a/lba3/src/game/roomlife.js
++++ b/lba3/src/game/roomlife.js
+@@ -203,7 +203,7 @@ export const ROOMS = {
+         D('baz_pack', ...bzAt('zeelich', 0.95), 'put', [5, 7], { stage: 2, carry: 'crate' }),
+         D('baz_crates', ...bzAt('corner', 1.05), 'put', [5, 7], { stage: 2, carry: null }),     // (boxed, by the back corner's table)
+       ] },
+-      { id: 'pell', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 0, stops: [
++      { id: 'pell', char: 'lharWoman_b', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 0, stops: [
+         D('pell_counter', BA.CX - 0.7, BA.front + 0.58, Math.PI, 'browse', [10, 14]),            // (at the counter's front, by the till)
+         D('pell_rabbit', ...bzAt('rabbit', 1.0), 'browse', [8, 12], { gest: ['shrug'] }),
+         D('pell_corner', ...bzAt('corner', 1.05), 'browse', [6, 9]),
+@@ -307,7 +307,7 @@ export const ROOMS = {
+         S('ressa_seat', by(tmSeat(0), -0.75, 0), seatOf(tmSeat(0), SEAT.termSeat), [40, 60]),
+         S('ressa_cafe', beside(TM.chairs[1], -1), seatOf(TM.chairs[1], SEAT.chair), [30, 45]),
+       ] },
+-      { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
++      { id: 'ollo', char: 'lharMan_b', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+         S('ollo_seat', by(tmSeat(3), -0.75, 0), seatOf(tmSeat(3), SEAT.termSeat), [30, 45], { stage: NOW }),
+         ask('ollo_ticket', 1.3, [6, 9], { stage: NOW }),                                               // (his ticket)
+         S('ollo_coffee', by(TM.stools[2], 0, 0.7), [TM.stools[2].x, TM.stools[2].z, Math.PI, SEAT.cafeStool], [20, 30]),
+@@ -322,7 +322,7 @@ export const ROOMS = {
+         TQ.stop('rq_queue', 1, [25, 35], { gest: ['sigh'], carry: 'case' }),
+         S('rq_seat', by(tmSeat(4), -0.75, 0), seatOf(tmSeat(4), SEAT.termSeat), [20, 30], { carry: 'case', stage: EVAC }),
+       ] },
+-      { id: 'pell_q', as: 'pell', lines: 'pell_q', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 1, when: ['evac'], stops: [
++      { id: 'pell_q', as: 'pell', lines: 'pell_q', char: 'lharWoman_b', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 1, when: ['evac'], stops: [
+         TQ.stop('pq_queue', 2, [20, 30], { gest: ['shrug'], carry: 'basket' }),
+         S('pq_seat', by(tmSeat(2), -0.75, 0), seatOf(tmSeat(2), SEAT.termSeat), [20, 30], { carry: 'basket', stage: EVAC }),
+       ] },
+@@ -380,7 +380,7 @@ const CITADEL_PORT = [
+   // (SPACEPORT-1: the clerk, the port guard and Mrs Lomba went inside, to the terminal's counter, gate and seats; Dov
+   //  stays out on the bench, watching the grounded ship)
+   // (WC-4: and in the evacuation, not on the project's list: he waits where he always has)
+-  { id: 'dov', char: 'lharMan', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
++  { id: 'dov', char: 'lharMan_b', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
+     SB('dov_bench', CB[1], 1, [30, 45]),
+     L('dov_ship', -3.0, 35.8, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
+     L('dov_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['sigh'] }),
+diff --git a/lba3/src/game/storylife.js b/lba3/src/game/storylife.js
+index 5841b449..c7aedb40 100644
+--- a/lba3/src/game/storylife.js
++++ b/lba3/src/game/storylife.js
+@@ -132,7 +132,7 @@ const DESERT_PEOPLE = [
+       L('port_fence', 40.5, -6.6, 40.5, -9, 'stand', [5, 8], { gest: ['sigh'] }),
+     ] } },
+   // the fitter: the post's fence mended from outside, the rim's rope re-staked, a look over the yard's crates
+-  { id: 'dg_mech', char: 'lharMan', tint: '#f0e2cc', speed: 0.9, color: '#c8a070', start: 0, area: 'desert', phase: crew(true), rounds: {
++  { id: 'dg_mech', char: 'lharMan_b', tint: '#f0e2cc', speed: 0.9, color: '#c8a070', start: 0, area: 'desert', phase: crew(true), rounds: {
+     crew: [
+       L('mech_fence', 45.2, -6.75, 45.2, -8, 'browse', [12, 18], { gest: ['shrug'] }),
+       L('mech_stake', 59.4, 10.4, DIGC.x, DIGC.z, 'tend', [9, 13]),
+@@ -361,7 +361,7 @@ const ZEELICH_PEOPLE = [
+       L('co_dock', -54.0, 0.5, -62, 0.5, 'stand', [5, 8], { gest: ['nod'] }),
+     ] } },
+   // a petitioner from Twinsun, waiting by the fountain with her form, a look at the council's door
+-  { id: 'zc_petit', char: 'lharWoman', tint: '#f2eaff', speed: 0.85, color: '#d0b0f0', start: 0, area: 'zeelich', phase: council, rounds: {
++  { id: 'zc_petit', char: 'lharWoman_b', tint: '#f2eaff', speed: 0.85, color: '#d0b0f0', start: 0, area: 'zeelich', phase: council, rounds: {
+     council: [
+       L('pe_wait', -28.4, -2.4, -25.5, -7.65, 'stand', [16, 24], { gest: ['sigh', 'shrug'] }),
+       L('pe_fount', -26.6, 2.9, -24, 0, 'dip', [5, 8]),
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 76c64708..b6db4ab5 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -86,9 +86,11 @@ CAST = {
+     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
+     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
+     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
+-    'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1),
++    'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
++    'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
+     'lharWoman': dict(lashes=True, mouthLift=1.0, lip='#a03a4a', browTilt=0.2, hemH=0.07),
+-    'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1),
++    'lharWoman_b': dict(lashes=True, mouthLift=0.6, lip='#a03a4a', browTilt=0.0, browS=1.1, hemH=0.07, noseS=1.05),   # (CAST-POLISH-HAMALAYI)
++    'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1, glassesRim=True),   # (GLASSES-ELDER)
+     'sphero1': dict(mouthLift=0.6),
+     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
+     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)

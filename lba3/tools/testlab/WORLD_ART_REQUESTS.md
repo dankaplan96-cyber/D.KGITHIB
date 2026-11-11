@@ -3473,3 +3473,153 @@ origin's own plus only the new entries (`zmole1_b`; `desertkid_b`, `farmerC_b`) 
 **ISLES, then DESERT**; both `git apply --check` clean in that order; the merged JS passes `node --check`, cast_poly.py
 compiles. The model JSONs in `requests/CAST-POLISH-ISLES/` and `-DESERT/` are unchanged. (The first DESERT push
 said "after ISLES" but did not apply on origin: my mistake, corrected here.)
+
+## CAST-POLISH-HAMALAYI · lharMan_b, lharWoman_b, the Lhar moustache, the elders' glasses · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-HAMALAYI.diff`, against `fb0c0ef0` (origin df60ad21 + ISLES + DESERT, the local base);
+`git apply --check` is clean on it. Files it changes:
+- `tools/blender/cast_poly.py`: CAST entries only;
+- `src/game/characters.js`: 2 new LOOKS entries, nothing else changed;
+- `src/game/storylife.js`: 2 `char` lines;
+- `src/game/roomlife.js`: 4 `char` lines.
+
+Following the new rule, the two single-line files are **not in the diff**: `requests/CAST-POLISH-HAMALAYI/skeletons.add.json`
+holds `{lharMan_b, lharWoman_b}` (from `tools/dump-skeletons.mjs`, same bone names as their base looks) and
+`index.add.json` holds `["lharMan_b","lharWoman_b"]`. Model files for `assets/poly/`:
+- `lharMan_b.json` and `lharWoman_b.json`, new;
+- `lharMan.json` and `lharElder.json`, which replace the shipped ones.
+
+Pictures (**chapter 6+: not for the user**): `docs/future/characters/{lharMan,lharMan_b,lharWoman_b,lharElder}/`.
+- **Survey** (lookdev: lharMan, lharWoman, lharElder, farmerA, yorna). Lhar's people read as designed, except two
+  details that repeat across shared models:
+  - lharMan's moustache was a string of beads, as Gilbert's was before MOUSTACHE-1;
+  - lharElder (Old Norbu, Old Dorje, Granny Ume) wore the same flat wire glasses as the clerk, Sela and the archivist.
+
+  The "monks" are not a look of their own: Lhar's people live in the monks' camp, and the robed elders are lharElder.
+- **MOUSTACHE-LHAR** (CAST `moustacheSwept`, lharMan ×6: Tashi, Bero, Luc, Fitter Ludo, Ollo, Dov): one swept, tapered
+  lobe a side, as Gilbert's. Triangles: 2908 → 2892.
+- **GLASSES-ELDER** (CAST `glassesRim`, the Rabbibunny branch, as Mira's): round rims laid on the face, a bridge, arms to
+  the ears. Triangles: 2154 → 2474 (+14.9 %).
+- **lharMan_b** (order 24): a heavier Lhar man (belly 0.14), bald with the side fringe, in a longer coat (hem 0.45),
+  with the swept moustache.
+
+  Who takes it: **dg_mech (Fitter Ludo), ollo, dov**. Tashi (lhar1), Bero (lh_bero) and Luc keep lharMan.
+  - Triangles: body 2720 (−6.5 % on lharMan).
+- **lharWoman_b** (order 24): an older Lhar woman with her hair up in a bun instead of the long tail, a fuller figure
+  (belly 0.06, not slim).
+
+  Who takes it: **pell and pell_q (Mrs Pell), zc_petit (Mrs Ardo)**. Dawa (lhar2), Sana (lh_sana), Oda and Kira keep
+  lharWoman.
+  - Triangles: body 2612 (+7.2 % on lharWoman).
+- **Contracts:**
+  - bones in each look's skeleton;
+  - eyes and mouths unchanged on lharMan and lharElder;
+  - 4 weights a vertex;
+  - no new colour;
+  - feet as before.
+  - `validate` (Blender, both variants): 0 fails, 0 warnings.
+  - The rebuild from the diff's script is byte-identical to the request's JSONs, and lharWoman rebuilds unchanged.
+- **DRESS-1** (variants 1–6): the variants leave exactly what the shipped models already leave.
+  - lharMan and lharMan_b: 96 hair + 96 shoe vertices. The hair and the shoes share #2a1a10, so the check cannot tell
+    them apart.
+  - lharWoman_b: 54 hair vertices, as the shipped lharWoman.
+  - lharElder: its shoes keep the fur colour by design ("shoes the colour of the fur: the fur stays").
+- **Budget:**
+  - Draw calls: the hero is 4 calls as each look, before and after.
+  - Lhar (chapter 6, Follow/Medium): 253 = 253 calls.
+  - Dig site (chapter 5): 196 = 196 calls.
+  - No texture or material. Vega 8 frame time not run.
+- **Looked at:**
+  - lookdev turnarounds and faces;
+  - 13 poses × 2 views of both variants;
+  - the game with the hero as each, before and after: Follow/Medium, the dialogue and close-ups;
+  - Lhar in chapter 6 and the dig site in chapter 5, before and after (ROUTES for the old char lines);
+  - Blender views.
+
+  In Lhar, Tashi's moustache now reads as one moustache at the dialogue distance.
+- **Tests** (SwiftShader, the four files and the index in `assets/poly`, the code in place):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - story-journeys 30/30 PASS;
+  - interior-life 144/144 PASS (Ollo, Dov, Mrs Pell);
+  - **cast-rounds 203/209**: six FAILs, all *chapter 6, Lhar, lhar1/lhar3*: "1 stop(s) left out (no ground there, or a
+    door)", so no visits and no round after a talk. **The same six FAILs occur on a clean export of `fb0c0ef0`**
+    (`ONLY="chapter 6"`: 20 passed, 6 failed). This is a pre-existing problem on the current origin (Lhar's ground or doors
+    at Tashi's mark (4282, 8) and Old Norbu's (4300, 2)), not this batch. **Please look at it in the cloud.**
+
+  Evidence labels: **Automated runtime only**.
+- **Left:**
+  - farmerA ×6 has no variant yet (it reads fine; next in order 24's list);
+  - Kira and Dawa still share lharWoman's shape;
+  - lharElder's glasses are small at the Follow distance (a close-up item).
+
+## HANDS-36 · the Esmer and tri-head hands built as hands hang (order 36) · the laptop, 8.11.2026
+Diff: `requests/HANDS-36.diff`. It changes only `tools/blender/cast_poly.py`: a new `hand_axes`, a new `esmer_hand`, and
+`finger_hand` rebuilt. `HANDS_OLD=1` builds the old hands, and that old build reproduces the shipped files. The diff goes
+**on top of CAST-POLISH-HAMALAYI**: `git apply --check` is clean on `fb0c0ef0` with HAMALAYI applied. No single-line JSON
+changes: no new looks, so there is no `.add.json`. Model files for `assets/poly/`, in `requests/HANDS-36/`: keeper, oku,
+xil, nara, clerk, councilChair, keeper_b, oku_b, ztri1, ztri2. Pictures: `docs/future/characters/hands-36/`. Files
+named `ch3plus-*` show chapter 3+ people (Esmers, tri-heads): **not for the user**. Files named `citadel-*` may go to the
+user.
+- **What was wrong, and what was not:**
+  - `finger_hand` (the tri-heads, ztri1/ztri2: Pelleck, Tavo, Tanek, the mason, the steward, the crane driver, the
+    hostel's foreman and worker) and the Esmer hand in `build_esmer` (the six Esmer looks plus keeper_b and oku_b) were
+    built as the order says: fingers fanned sideways, palm forward, thumb inward. From behind they read as a spread claw.
+  - The Quetch, Grobo and Rabbibunny hands are not built with those. They are LBA2's ball with `hand_detail`: the thumb
+    already stands forward off the inner front, and the knuckle lobes curl under toward the thigh. I checked them in
+    lookdev (front, behind, outside) and in the game for a Quetch (farmerA), a Grobo (farmerC) and a child (desertkid):
+    from behind they read as a closed fist with the thumb forward, not a claw. **They are unchanged.**
+- **Now** (built, not a bone turned: the rig and its hand bones are untouched):
+  - the palm flat toward the thigh: the tri-heads' palm ball flattened across; the Esmers' a flattened ball on a short
+    wrist;
+  - the three fingers side by side front to back;
+  - each finger in two joints, curling a little in toward the thigh (relaxed);
+  - the thumb off the palm's front edge, pointing forward;
+  - the Esmer's middle finger the longest, LBA2's cone kept as it.
+
+  Five-sided fingers whose hidden ends are open keep the cost down.
+- **Numbers** (triangles with eyes and mouth; colours, bones, eyes and mouths unchanged on all ten; feet at 0.004):
+
+  | look | before → after | change |
+  |---|---|---|
+  | keeper, xil | 1856 → 2008 | +8.2 % |
+  | nara | 1858 → 2010 | +8.2 % |
+  | clerk | 2030 → 2182 | +7.5 % |
+  | oku, councilChair | 2236 → 2388 | +6.8 % |
+  | keeper_b | 2224 → 2376 | +6.8 % |
+  | oku_b | 2128 → 2280 | +7.1 % |
+  | ztri1 | 1649 → 1769 | +7.3 % |
+  | ztri2 | 1570 → 1690 | +7.6 % |
+
+  - In the hero frame: keeper 3632 → 3936 triangles, oku_b 4176 → 4480, ztri1 3218 → 3458.
+  - Draw calls: 4 = 4 for each.
+  - No texture or material.
+  - Blender `validate` (keeper, ztri1): 0 fails; the one warning is the cast's loose vertices.
+- **Looked at** (the order's five members: an Esmer = keeper, a Quetch = farmerA, a Grobo = farmerC, a robe = oku_b's long
+  robe, a child = desertkid; plus the tri-head ztri1):
+  - lookdev hand close-ups from the front, from behind and from the outside, before and after;
+  - Blender views from the back and the side;
+  - the game with the hero as each, Follow/Medium from behind and the close-ups from behind and ¾, before and after.
+
+  What I saw:
+  - from behind the Esmer's hand is now a slim hand with its fingers in line, not the wide spiked cone;
+  - 13 poses × 2 views (walk, run, throw, sword, pickup, talk and the rest) of keeper, oku_b and ztri1: the hand stays on
+    its bone in every pose (no detached hand) and does not cut into the thigh or the robe at the swing;
+  - the first build left a 2 cm gap between the forearm's end and the palm; a short wrist piece now closes it.
+- **A townsfolk's walk on the GPU** (installed Chrome on the Vega 8, the game's own loop, Citadel, chapter 1; filmed from
+  the side): Oda (lharWoman) walked at **0.71 m/s** over 7.4 s, slowing into her stops (her `speed` is 1.15).
+  - The stride alternates and the dress swings with it. It does not read as slow motion.
+  - My side camera lost her after six frames (`citadel-walk-oda-gpu.jpg`), so I cannot judge foot planting from it.
+  - A first try on Neska (sefa, nara) caught her standing at a stop.
+  - Frame times in that run (p50 36 ms) include the screenshots: not a performance number.
+- **Tests** (SwiftShader, the ten files in `assets/poly` on top of HAMALAYI's):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - story-journeys 30/30 PASS. Its first run timed out loading the page before any check; the rerun passed;
+  - cast-rounds 203/209: the same six chapter-6 Lhar FAILs as on a clean `fb0c0ef0` (see CAST-POLISH-HAMALAYI),
+    nothing new.
+
+  Evidence labels: **Automated runtime only** (the walk once on the GPU).
+- **Left:**
+  - the moles' claws (three, fanned sideways at the spade hand) and the bees' forelegs were not part of the order; the moles
+    could take the same front-to-back turn later;
+  - Vesk's and Baldino's hands are their own scripts' and were not touched.

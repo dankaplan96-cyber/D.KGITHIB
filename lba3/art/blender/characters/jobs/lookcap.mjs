@@ -15,6 +15,9 @@ const SH = [
   ['face-34', `yaw=0&light=outdoor&labels=0&props=0&focus=head&fd=1.0&fy=0.13&cyaw=0.7&cpitch=0.05`],
   ['face-side', `yaw=0&light=outdoor&labels=0&props=0&focus=head&fd=1.0&fy=0.13&cyaw=1.5708&cpitch=0.05`],
   ['hand', `yaw=0&light=outdoor&labels=0&props=0&focus=armR.hand&fd=0.5&cyaw=-0.6&cpitch=0.1`],
+  ['hand-back', `yaw=0&light=outdoor&labels=0&props=0&focus=armR.hand&fd=0.6&cyaw=2.6&cpitch=0.15`],   // (HANDS-36: from behind, as the Follow camera)
+  ['hand-out', `yaw=0&light=outdoor&labels=0&props=0&focus=armR.hand&fd=0.6&cyaw=-1.5708&cpitch=0.05`],   // (HANDS-36: from the outside)
+  ['back', `views=3.1416&light=outdoor&labels=0&grid=0&props=0&dist=4.2&cy=1.0`],
   ['walk', `views=0,1.5708&anim=walk&t=0.37&light=outdoor&labels=0&grid=0&props=0&dist=4.2&cy=1.0&gap=1.2`],
   ['run', `views=0,1.5708&anim=run&t=0.21&light=outdoor&labels=0&grid=0&props=0&dist=4.2&cy=1.0&gap=1.2`],
   ['talk', `views=0.6&anim=talk&t=0.5&light=outdoor&labels=0&grid=0&props=0&focus=head&fd=1.4&cyaw=0.5&cpitch=0.05&fy=-0.3`],

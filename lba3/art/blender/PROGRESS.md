@@ -205,25 +205,53 @@ ISLES pushed (f4f66ab7) and committed locally as HEAD 59dab6e3 ("local base: + C
   integrated: no (request).
 - Left: farmerC_b's lighter belly hardly shows; desertkid's 96 base-hair vertices (pre-existing); worker x4 one body.
 
+### Hamalayi batch 1: lharMan_b, lharWoman_b, MOUSTACHE-LHAR, GLASSES-ELDER: CAST-POLISH-HAMALAYI (8.11.2026, `lba3-cast3`)
+DESERT pushed; the cloud rebuilt ISLES + DESERT on origin df60ad21 (the single-line skeletons.json / index.json conflicted).
+New rule: new skeleton and index entries go as `skeletons.add.json` / `index.add.json` in the request folder, never in the
+.diff. New worktree `lba3-cast3`, HEAD fb0c0ef0 (origin + ISLES + DESERT, their JSONs).
+- MOUSTACHE-LHAR (lharMan x6, CAST moustacheSwept): 2908 -> 2892. GLASSES-ELDER (lharElder x3, glassesRim): 2154 -> 2474.
+- lharMan_b: bald, heavier (belly 0.14), longer coat (hem 0.45); people dg_mech, ollo, dov; body 2720.
+- lharWoman_b: bun, fuller (belly 0.06); people pell, pell_q, zc_petit; body 2612.
+- Request: diff (cast_poly.py, characters.js, storylife.js, roomlife.js) + skeletons.add.json + index.add.json + 4 JSONs.
+- Tests: solidnpc 54/54, chapter1 23/23, story-journeys 30/30, interior-life 144/144 PASS; cast-rounds 203/209: the six
+  FAILs (chapter 6 Lhar, lhar1/lhar3: a stop without ground) are the same on a clean export of fb0c0ef0: pre-existing.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws measured, frame time not run ·
+  integrated: no (request).
+- The worktree keeps the batch applied, uncommitted (the four JSONs, the index and skeletons.json in place for the game).
+
+### HANDS-36: the Esmer and tri-head hands as hands hang (order 36, 8.11.2026, `lba3-cast3`)
+- `cast_poly.py`: `hand_axes`, `esmer_hand`, `finger_hand` rebuilt (`HANDS_OLD=1` = as before; it rebuilds the shipped
+  files). Palm toward the thigh, fingers front to back in two joints curling in, thumb forward; the rig untouched.
+- Re-exported: keeper, oku, xil, nara, clerk, councilChair, keeper_b, oku_b (+152 tris, +6.8 to +8.2 %), ztri1, ztri2
+  (+120, +7.3 / +7.6 %); colours, bones, eyes, mouths unchanged; hero draws 4 = 4. The Quetch/Grobo/Rabbibunny ball hands
+  (`hand_detail`) already had the thumb forward and the knuckles curled in: checked (farmerA, farmerC, desertkid), unchanged.
+- Looked at: lookdev hand front/behind/outside, Blender back/side, game Follow + close-ups from behind and 3/4 (keeper,
+  oku_b, ztri1 and the three ball-hand looks), 13 poses x 2 (no detached hand, no clipping at the swing). GPU walk: Oda
+  0.71 m/s, alternating stride, not slow motion (the camera lost her after 6 frames).
+- Tests: solidnpc 54/54, chapter1 23/23, story-journeys 30/30 (rerun after a load timeout) PASS; cast-rounds 203/209 = the
+  six pre-existing chapter-6 Lhar FAILs.
+- Request `tools/testlab/requests/HANDS-36.diff` (on top of HAMALAYI) + 10 JSONs; pictures
+  `docs/future/characters/hands-36/` (`ch3plus-*` not for the user, `citadel-*` may go to the user).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles measured · integrated: no.
+
 ## Current
-- CAST-POLISH-DESERT ready for the cloud (diff against 59dab6e3); desert-life to be run in the cloud.
+- CAST-POLISH-HAMALAYI and HANDS-36 ready for the cloud (apply HAMALAYI, then HANDS-36, on fb0c0ef0).
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), ~~the isles~~ (ISLES), ~~Desert Island~~
-   (DESERT), the Hamalayi, the underground
-5. The named cast
-6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC~~; lharMan, lharWoman,
-   farmerA, farmerB, clerk, archivist (glasses done), worker (and councilB for Kira; zmole2, zbee1, zbee2)
-7. Equipment: the ball, the sword
-8. Common props
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, the underground
+5. ~~HANDS-36~~ (order 36: request sent)
+6. The named cast
+7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
+   farmerA, farmerB, clerk, worker (and councilB for Kira; zmole2, zbee1, zbee2)
+8. Equipment: the ball, the sword
+9. Common props
 
 ## Next action
-Region 4, the Hamalayi (storylife.js lh_* people: lharMan, lharWoman, lharElder, farmerA, desertkid, pim, farmerB,
-farmerC_b; the hamalayi*.js places): census by chapter (KEY flags as cast-rounds), survey in lookdev; order 24's lharMan x6,
-lharWoman x6, farmerA x6 come first (`_b` variants, people by id), plus any that reads wrong; same loop in
-`C:\Users\dan\lba3-cast2`; report CAST-POLISH-HAMALAYI; diff against the then HEAD. Browsers with `SHELL_EXE`
-(scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`, in the background), a test copy of tests/ with
-lib/boot.mjs patched (SHELL_EXE, the testlab playwright import; quitAndKeep's boot wait raised to 1 200 000 ms).
+Back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
+orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
+`C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
+place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of
+tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
