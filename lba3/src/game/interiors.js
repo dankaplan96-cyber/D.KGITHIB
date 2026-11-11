@@ -10,6 +10,7 @@ import * as P from './props.js';
 import { dressHomeLife } from './homelife.js';
 import { dressWorkshop } from './workshoplife.js';
 import { windowViewMaterial, windowViewPlane, viewPlaneGeo, TILES as VIEW_TILES } from './windowviews.js';
+const RIM_PROUD = 0.005;
 
 export const texMat = (tex, rx, ry, extra = {}) => {
   const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
@@ -114,7 +115,8 @@ export class RoomBuilder {
     // far walls
     k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t, -1));
     k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0, 1));
-    // near rims
+    // near rims (ZFIGHT: their outer faces RIM_PROUD m out from the far walls' ends, which ran to the same plane at
+    //  the two corners: wall end and rim face fought there in every room's iso view)
     const rh = o.rimH ?? 0.45, rm = o.rimMat || o.slab;
     if (rh > 0) {
       // the south rim, open where a door goes through it (o.rimGaps: [{ x, w }], x in the builder's frame)
@@ -122,12 +124,12 @@ export class RoomBuilder {
       let x0 = -W / 2 - t;
       for (const [g0, g1] of [...gaps, [W / 2 + t, W / 2 + t]]) {
         if (g0 - x0 > 0.02) {
-          k.add(new THREE.BoxGeometry(g0 - x0, rh, t), rm, (x0 + g0) / 2, rh / 2, D / 2 + t / 2);
+          k.add(new THREE.BoxGeometry(g0 - x0, rh, t + RIM_PROUD), rm, (x0 + g0) / 2, rh / 2, D / 2 + (t + RIM_PROUD) / 2);
           k.add(rbox(g0 - x0 + (gaps.length ? 0 : 0.06), 0.12, t + 0.1, 0.055), o.cap, (x0 + g0) / 2, rh + 0.04, D / 2 + t / 2);
         }
         x0 = g1;
       }
-      k.add(new THREE.BoxGeometry(t, rh, D + t), rm, W / 2 + t / 2, rh / 2, -t / 2);
+      k.add(new THREE.BoxGeometry(t + RIM_PROUD, rh, D + t), rm, W / 2 + (t + RIM_PROUD) / 2, rh / 2, -t / 2);
       k.add(rbox(t + 0.1, 0.12, D + t + 0.04, 0.055), o.cap, W / 2 + t / 2, rh + 0.04, -t / 2 + 0.02);
     }
     this.wallCols(W, D, H, t, cx0, cz0);

@@ -13,7 +13,7 @@ import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/mat
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { buildHarbourShed } from './harbourshed.js';
-import { mergeStatic } from '../engine/merge.js';
+import { mergeStatic, dupOf } from '../engine/merge.js';
 import { viewCull } from '../engine/viewinst.js';
 import { occOf } from '../engine/occlude.js';
 import { fitAdd } from './worldfit.js';
@@ -190,20 +190,22 @@ class Batch {
     return this.addM(geo, mat, _m4.clone());
   }
   addM(geo, mat, m) {
+    if (dupOf(this.seen ??= new Set(), geo, mat, m)) return this;   // (ZFIGHT: the same part twice: engine/merge.js dupOf)
     if (!this.items.has(mat)) this.items.set(mat, []);
-    this.items.get(mat).push([geo, m]);
+    this.items.get(mat).push(globalThis.__zfTrace ? [geo, m, new Error('batch')] : [geo, m]);   // (the Error: tests/zfight.mjs TRACE only, who added the part)
     return this;
   }
   build() {
     const out = [];
     for (const [mat, list] of this.items) {
       const geo = mergeGeos(list, !!mat.vertexColors);
+      if (globalThis.__zfTrace) { let f = 0; geo.userData.zfParts = list.map(([g, , err]) => { const n = g.index ? g.index.count : g.attributes.position.count; f += n; return { err, geo: g.type, from: f - n, n }; }); }   // (tests/zfight.mjs TRACE only)
       const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = this.cast; mesh.receiveShadow = this.receive;
       this.parent.add(mesh);
       out.push(mesh);
     }
-    this.items.clear();
+    this.items.clear(); this.seen = null;
     return out;
   }
 }

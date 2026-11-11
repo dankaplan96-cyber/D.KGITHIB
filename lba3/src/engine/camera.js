@@ -128,6 +128,11 @@ const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.3;
 // CH_NEAR_KEEP m beyond the cut (it shrinks back to the camera's own near plane as the arm comes in). Every other view
 // (rooms, scripted shots, cinematics, the story's reveal beats) keeps the camera's own near plane.
 const CH_NEAR_CUT = 1.0, CH_NEAR_KEEP = 2.0;
+// ZFIGHT: a room's iso view stands ISO_DIST m from its focus with the camera's own near plane (0.1 m), so the whole room
+// lay in the last 0.1 % of the depth range: one step of the 24-bit depth buffer was ~4.5 mm there, and surfaces a few
+// millimetres apart (a rug on the floor, a board on a wall) fought. The view's near plane is ISO_NEAR m instead (nothing
+// of a room comes within ISO_DIST − ISO_NEAR m of the camera: the biggest hall is ~30 m across): ~0.012 mm a step.
+const ISO_DIST = 90, ISO_NEAR = 40;
 const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, CH_LOCK_ARM_MAX = 3;
 // CAM-CLEAR-2 (AUDIT-CH12 #1, #2, #12-#15: at Far the Follow camera collapsed to a few metres in the fort yard, at the
 // station gate and the beam pad, out of the house door and in the lane by the Bug house; rose ~24 m at the foot of the
@@ -393,7 +398,7 @@ export class CameraRig {
     if (!this.cine && !this.override && !this.iso && this.mode === 'follow' && focus) {
       const d = Math.hypot(cam.position.x - focus.x, cam.position.y - (focus.y + 1.0), cam.position.z - focus.z);
       n = Math.max(this.near0, Math.min(CH_NEAR_CUT, d - CH_NEAR_KEEP));
-    }
+    } else if (!this.cine && !this.override && this.iso) n = Math.max(this.near0, ISO_NEAR);
     if (Math.abs(cam.near - n) > 1e-4) { cam.near = n; cam.updateProjectionMatrix(); }
   }
 
@@ -1539,7 +1544,7 @@ export class CameraRig {
 
   _iso(dt, hero) {
     const cam = this.cam, R = this.iso;
-    const dist = 90, view = R.wide ? R.view : Math.min(R.view, this.isoMax ?? ISO_MAX.far), closer = view < R.view;   // (ISO-CLOSE)
+    const dist = ISO_DIST, view = R.wide ? R.view : Math.min(R.view, this.isoMax ?? ISO_MAX.far), closer = view < R.view;   // (ISO-CLOSE)
     cam.fov = (2 * Math.atan((view / 2) / dist) * 180) / Math.PI;
     cam.updateProjectionMatrix();
     const goal = R.center.clone().lerp(hero, closer ? Math.max(R.follow ?? 0.3, 0.85) : R.follow ?? 0.3);

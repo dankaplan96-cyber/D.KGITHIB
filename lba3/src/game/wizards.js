@@ -206,7 +206,10 @@ function buildSchoolRoom(scene, physics) {
   // a solid of cells [lx0, lx1) × [lz0, lz1) up to top, its top paved
   const block = (lx0, lz0, lx1, lz1, top, face, pave, extra = {}) => {
     const x0 = X(lx0), x1 = X(lx1), z0 = Z(lz0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    k.add(rbox(x1 - x0, top, z1 - z0, 0.03), face, cx, top / 2, cz);
+    // (ZFIGHT: a block built inside another — the dais in the classroom's block — shared its faces: each is drawn
+    //  0.2 % of its height wider, so a taller block's faces stand clear of a lower one's; the collider is as before)
+    const e = 0.002 * top;
+    k.add(rbox(x1 - x0 + 2 * e, top, z1 - z0 + 2 * e, 0.03), face, cx, top / 2, cz);
     if (pave) k.add(rbox(x1 - x0 - 0.04, 0.02, z1 - z0 - 0.04, 0.005), pave, cx, top + 0.005, cz);
     return B.col(cx, cz, (x1 - x0) / 2 + 0.06, (z1 - z0) / 2 + 0.06, top, extra);   // (6 cm over each edge: abutting blocks shrink 5 cm each under groundAt and left a 10 cm seam to fall into)
   };

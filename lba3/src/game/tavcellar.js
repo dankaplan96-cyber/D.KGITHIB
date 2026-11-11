@@ -63,8 +63,9 @@ export function buildTavCellarRoom(scene, physics) {
   const AX1 = LX + 1.5 * F, AZ1 = BZ + 1.3 * F, SX0 = -1.0 * F;
   k.add(rbox(AX1 - LX, WH, D, 0.02), stone, (LX + AX1) / 2, WH / 2, 0);
   k.add(rbox(SX0 - AX1, WH, AZ1 - BZ, 0.02), stone, (AX1 + SX0) / 2, WH / 2, (BZ + AZ1) / 2);
-  for (const [x0, x1, z0, z1] of [[LX, AX1, BZ, D / 2], [AX1, SX0, BZ, AZ1]]) {
-    k.add(rbox(x1 - x0 + 0.04, 0.12, z1 - z0 + 0.04, 0.02), cap, (x0 + x1) / 2, WH - 0.06, (z0 + z1) / 2);
+  for (const [i, [x0, x1, z0, z1]] of [[LX, AX1, BZ, D / 2], [AX1, SX0, BZ, AZ1]].entries()) {
+    // (ZFIGHT: the two caps overlap by 4 cm where the walls meet: the second 3 mm higher, so their tops are not one plane)
+    k.add(rbox(x1 - x0 + 0.04, 0.12, z1 - z0 + 0.04, 0.02), cap, (x0 + x1) / 2, WH - 0.06 + i * 0.003, (z0 + z1) / 2);
     B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, WH);
   }
   // --- the stair down along the back wall to the store

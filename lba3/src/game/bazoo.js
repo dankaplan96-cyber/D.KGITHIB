@@ -95,10 +95,10 @@ export function buildBazooRoom(scene, physics) {
 
   // --- the counter in the middle: a rounded U of pale metal, the till on it, a bauble tree at each end
   const { CX, CZ, CW, CD } = P;
-  k.add(rbox(CW, 0.95, 0.5, 0.2), METAL(), CX, 0.475, CZ + CD / 2 - 0.25);
+  k.add(rbox(CW + 0.01, 0.95, 0.51, 0.2), METAL(), CX, 0.475, CZ + CD / 2 - 0.245);   // (ZFIGHT: 5 mm proud of the sides' faces, which it shared)
   for (const s of [-1, 1]) k.add(rbox(0.5, 0.95, CD, 0.2), METAL(), CX + s * (CW / 2 - 0.25), 0.475, CZ);
   k.add(rbox(CW + 0.08, 0.05, 0.56, 0.02), DARK(), CX, 0.97, CZ + CD / 2 - 0.25);
-  for (const s of [-1, 1]) k.add(rbox(0.56, 0.05, CD + 0.06, 0.02), DARK(), CX + s * (CW / 2 - 0.25), 0.97, CZ);
+  for (const s of [-1, 1]) k.add(rbox(0.56, 0.05, CD + 0.06, 0.02), DARK(), CX + s * (CW / 2 - 0.25), 0.973, CZ);   // (3 mm over the front's top: where they cross, not one plane)
   B.col(CX, CZ + CD / 2 - 0.25, CW / 2, 0.27, 1.0, { noStand: true });
   for (const s of [-1, 1]) B.col(CX + s * (CW / 2 - 0.25), CZ, 0.27, CD / 2, 1.0, { noStand: true });
   k.at(CX, 0.995, CZ + CD / 2 - 0.25, 0, () => till(k));

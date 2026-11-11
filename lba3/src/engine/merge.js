@@ -59,6 +59,20 @@ export function twinOf(m, rm = false) {
   return t;
 }
 
+// ZFIGHT: a part a builder adds twice — the same shape, at the same place, drawn the same — is the same triangles laid
+// on one another (fences and railings built run by run put a post at each run's two ends, so every corner had two).
+// They can only fight, never show more: dupOf(seen, geo, mat, matrix) is true for the second, which the batches drop.
+// A see-through part is a duplicate only of the same material (a glow laid over a solid on purpose stays); an opaque one
+// of any opaque part of the same shape and place (the first one is kept).
+export function dupOf(seen, geo, mat, m) {
+  const P = geo?.attributes?.position; if (!P || !P.array || P.count < 1) return false;
+  const a = P.array, n = P.count * P.itemSize, f = (v) => Math.round(v * 1e4);
+  const e = m.elements, key = `${P.count}:${geo.index ? geo.index.count : 0}:${f(a[0])},${f(a[1])},${f(a[2])}:${f(a[n - 3])},${f(a[n - 2])},${f(a[n - 1])}|`
+    + `${mat.transparent || mat.depthWrite === false ? mat.uuid : 'o' + (mat.side ?? 0)}|${e.map(f).join(',')}`;
+  if (seen.has(key)) return true;
+  seen.add(key); return false;
+}
+
 export function mergeStatic(group, { minParts = 2, recolor = false, cell = 0, retex = false } = {}) {
   group.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(group.matrixWorld).invert();
@@ -102,8 +116,11 @@ export function mergeStatic(group, { minParts = 2, recolor = false, cell = 0, re
     const index = indexed ? new (vCount > 65535 ? Uint32Array : Uint16Array)(iCount) : null;
     const m = new THREE.Matrix4(), nm = new THREE.Matrix3(), v = new THREE.Vector3();
     let vo = 0, io = 0;
+    // (tests/zfight.mjs TRACE only: which source part each range of the merged triangles came from)
+    const parts = globalThis.__zfTrace ? [] : null;
     for (const o of list) {
       const g = o.geometry, cnt = g.attributes.position.count, uvM = o.userData._mergeUV;
+      parts?.push({ o, from: indexed ? io : vo, n: indexed ? g.index.count : cnt });
       m.multiplyMatrices(inv, o.matrixWorld);
       nm.getNormalMatrix(m);
       for (const n of names) {
@@ -133,6 +150,7 @@ export function mergeStatic(group, { minParts = 2, recolor = false, cell = 0, re
     for (const n of Object.keys(out)) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
     if (index) geo.setIndex(new THREE.BufferAttribute(index, 1));
     geo.computeBoundingSphere();
+    if (parts) geo.userData.zfParts = parts;
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = list[0].castShadow; mesh.receiveShadow = list[0].receiveShadow; mesh.renderOrder = list[0].renderOrder;
     mesh.name = 'merged';

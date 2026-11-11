@@ -112,7 +112,10 @@ export function buildHouse(opts) {
   const wallMat = texMat(o.wall === 'plaster' ? 'plasterWall' : o.wall, { color: o.tint || '#ffffff' });
   const stone = texMat('stone', { rx: 1, ry: 1 });
   const wood = texMat('wood', { rx: 1, ry: 1 });
-  const roofTop = texMat(o.roof, { rx: 1, ry: 1 });
+  const roofTop = texMat(o.roof, { rx: 1, ry: 1, layer: 1 });
+  // (ZFIGHT: the tiles lie 5 mm over the roof slab's top, which fought seen from 100 m and more — a step of the depth
+  //  buffer is ~1 mm there: drawn 6 depth steps toward the camera at any distance, as a decal is)
+  if (!roofTop.polygonOffset) { roofTop.polygonOffset = true; roofTop.polygonOffsetFactor = 0; roofTop.polygonOffsetUnits = -6; }   // (units only: a slope factor pulled the tiles through the gables' tops seen at a grazing angle)
   const fascia = plain('#6b4423', 0.9);
   const ridgeMat = texMat(o.roof, { color: '#d8c0b0', rx: 1, ry: 0.4 });
   const gableH = (o.w / 2) * o.pitch;

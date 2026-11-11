@@ -437,7 +437,7 @@ function buildShaft(scene, physics) {
     k.at(0, 3.55, 0.1, 0, () => ibeam(k, 3.5, 0.42, 0.3));
     k.add(rbox(3.3, 0.3, 0.06, 0.02), hazard(), 0, 3.12, 0.28);
     k.at(0, 4.15, 0.24, 0, () => signPlate(k, 1.8, 0.52, signMat(['DEEP INSTALLATION', 'LEVEL -2  ·  COOLING'], { w: 512, h: 150, arrow: 1 })));
-    k.add(new THREE.BoxGeometry(2.9, 0.1, 3.4), floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), 0, -0.05, -1.8);
+    k.add(new THREE.BoxGeometry(2.9, 0.1, 3.4), floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), 0, -0.047, -1.8);   // (ZFIGHT: 3 mm over the room's floor, whose plane it shared)
     for (const s of [-1, 1]) for (let z = -0.8; z > -3.4; z -= 1.2) k.add(rockGeo(7 + Math.round(-z * 3) + (s > 0 ? 5 : 0)), rockD, s * 1.7, 0, z, z * 2, { sx: 0.8, sy: 1.9, sz: 0.9 });
     k.add(new THREE.BoxGeometry(3.8, 0.3, 3.4), rockD, 0, 3.15, -1.8);
     for (let z = -0.7; z > -3.4; z -= 1.3) { for (const s of [-1, 1]) k.add(rbox(0.16, 3.0, 0.16, 0.03), tealP(), s * 1.25, 1.5, z); k.add(rbox(2.66, 0.16, 0.16, 0.03), tealP(), 0, 2.95, z); }

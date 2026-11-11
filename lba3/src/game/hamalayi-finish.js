@@ -412,7 +412,7 @@ export function gorgeRiver(env) {
   for (const s of [-1, 1]) for (let x = X0 + 2; x < X1 - 2; x += 1.2 + r() * 2.2) {
     const d = shore(x, s), c = zc(x); if (d > 5.2) continue;
     if (r() < 0.62) { const sz = 0.16 + r() * 0.36; B.add(stone, stoneM, x, 0.7 + sz * 0.12, c + s * (d - 0.15 - r() * 0.4), r(), r() * 6, r(), sz * (0.9 + r() * 0.5), sz, sz); }
-    if (r() < 0.45) { const len = 1.4 + r() * 2.6, wd = 0.5 + r() * 0.5; B.add(bbox(len, 0.12, wd, 0.05, 1), shelfM, x, 0.745, c + s * (d - wd * 0.35), 0, (r() - 0.5) * 0.5, 0); }
+    if (r() < 0.45) { const len = 1.4 + r() * 2.6, wd = 0.5 + r() * 0.5; B.add(bbox(len, 0.12, wd, 0.05, 1), shelfM, x, 0.745 + (Math.round(x * 3) % 4) * 0.003, c + s * (d - wd * 0.35), 0, (r() - 0.5) * 0.5, 0); }   // (ZFIGHT: shelves that overlap at one height had one top plane: 0–9 mm apart by where they stand, the random sequence untouched)
     if (r() < 0.8) { const len = 0.8 + r() * 2.2; const pts = []; for (let i = 0; i <= 3; i++) { const xx = x + len * i / 3; pts.push([xx, zc(xx) + s * (shore(xx, s) - 0.12)]); } foam.push(ribbonGeo(pts, (i) => 0.1 + 0.07 * Math.sin(Math.PI * i / 3), () => 0, 0.74, '#ffffff')); }
   }
   // floes: pale slabs jammed against the stones and along the channel

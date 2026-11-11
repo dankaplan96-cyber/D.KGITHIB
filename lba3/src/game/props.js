@@ -6,6 +6,7 @@
 // textures, and merged per material so a dense room stays cheap to draw.
 import * as THREE from 'three';
 import { rng } from '../engine/math.js';
+import { dupOf } from '../engine/merge.js';
 import { sculptRigid } from '../engine/sculpt.js';
 
 // ================================================================ geometry
@@ -99,7 +100,10 @@ export class Kit {
     let b = this.buckets.get(mat);
     if (!b) { b = []; this.buckets.set(mat, b); }
     const jit = o.jit ? [this.r(), this.r()] : [0, 0];
-    b.push({ geo, m: this._local(x, y, z, ry, o), s: [o.sx ?? 1, o.sy ?? 1, o.sz ?? 1], o: jit, swap: !!o.swap });
+    const lm = this._local(x, y, z, ry, o);
+    // (ZFIGHT: the same part twice at the same place: dropped, engine/merge.js dupOf)
+    if (!o.jit && !o.swap && (o.sx ?? 1) === 1 && (o.sy ?? 1) === 1 && (o.sz ?? 1) === 1 && dupOf(this.seen ??= new Set(), geo, mat, lm)) return this;
+    b.push({ geo, m: lm, s: [o.sx ?? 1, o.sy ?? 1, o.sz ?? 1], o: jit, swap: !!o.swap, zf: globalThis.__zfTrace ? new Error('kit') : undefined });   // (zf: tests/zfight.mjs TRACE only, who added the part)
     return this;
   }
   // separate (animated) mesh, transformed by the current stack
@@ -131,11 +135,12 @@ export class Kit {
     }
     for (const [mat, list] of this.buckets) {
       const geo = mergeEntries(list, mat.userData.tile || 0, !!mat.vertexColors);
+      if (globalThis.__zfTrace) { let f = 0; geo.userData.zfParts = list.map((e) => { const n = e.geo.index ? e.geo.index.count : e.geo.attributes.position.count; f += n; return { err: e.zf, geo: e.geo.type, from: f - n, n }; }); }   // (tests/zfight.mjs TRACE only)
       const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = !mat.userData.noShadow; mesh.receiveShadow = true;
       this.group.add(mesh);
     }
-    this.buckets.clear();
+    this.buckets.clear(); this.seen = null;
   }
 }
 

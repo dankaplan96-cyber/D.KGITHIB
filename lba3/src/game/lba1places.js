@@ -207,7 +207,7 @@ const stepMat = (dark) => cachedMat('climbStep' + dark, () => { const m = new TH
 
 // a square stone post with a heavy cap (LBA2's b29, smaller: 0.5 m shaft, 0.64 m cap), standing on y, h tall
 function climbPost(k, M, physics, x, z, y, h = 1.15, a = 0) {
-  k.add(rbox(0.5, h - 0.24, 0.5, 0.03), M.wall, x, y + (h - 0.24) / 2, z, a);
+  k.add(rbox(0.52, h - 0.24, 0.52, 0.03), M.wall, x, y + (h - 0.24) / 2, z, a);   // (ZFIGHT: 0.52, 1 cm proud of the cheek's 0.5 m coping that runs into it: at 0.5 their sides were one plane)
   k.add(rbox(0.64, 0.2, 0.64, 0.04), M.cap, x, y + h - 0.14, z, a);
   k.add(rbox(0.42, 0.08, 0.42, 0.03), M.cap, x, y + h - 0.0, z, a);
   physics.add({ type: 'box', x, z, hw: 0.32, hd: 0.32, rot: a, top: y + h, noStand: true, seeThrough: true, camSkip: true });   // (the camera passes a post, as a branch: engine/camera.js NEAR-CUT hides it)

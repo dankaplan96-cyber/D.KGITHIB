@@ -133,8 +133,14 @@ function railing(B, k, pts, y, { rusty = false, h = 0.95 } = {}) {
     }
     B.col((ax + bx) / 2, (az + bz) / 2, Math.abs(ux) * L / 2 + 0.08, Math.abs(uz) * L / 2 + 0.08, y + 1.3, { seeThrough: true });
   }
-  for (const [px, pz] of pts) { k.add(rbox(0.12, h + 0.08, 0.12, 0.02), m, px, y + (h + 0.08) / 2, pz); k.add(sphere(0.06, 8, 6), m, px, y + h + 0.12, pz); }
+  // (ZFIGHT: two railings that meet at a corner each stood a post there, one inside the other: one post per spot)
+  const posted = POSTED.get(k) ?? new Set(); POSTED.set(k, posted);
+  for (const [px, pz] of pts) {
+    const key = `${px.toFixed(2)},${pz.toFixed(2)},${y.toFixed(2)}`; if (posted.has(key)) continue; posted.add(key);
+    k.add(rbox(0.12, h + 0.08, 0.12, 0.02), m, px, y + (h + 0.08) / 2, pz); k.add(sphere(0.06, 8, 6), m, px, y + h + 0.12, pz);
+  }
 }
+const POSTED = new WeakMap();   // (a room's kit → the spots that have a railing post)
 
 // ------------------------------------------------------------------ the hall (scene 17)
 const WY = -0.55;              // the water's surface (the walkways stand 0.55 m above it)

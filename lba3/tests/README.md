@@ -24,6 +24,7 @@ node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed 
 node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migration, Settings line, knobs, commit points, power, calibration cache, Auto benchmark
 node tests/weather.mjs         # WEATHER-1: the default test boot is today's look; every state on each planet, smooth blends, the light's floor, indoors, holds (sandstorm), Settings, quality caps, cost
 node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outward-wound, triangle budget (+30 % max), the 509 placements, even texel density, no stretch, clear of the paths, deterministic; SHOTS=dir for four cliff views
+node tests/zfight.mjs          # ZFIGHT: z-fighting (two surfaces drawn on one another) seen by the play camera, every outdoor area on a 20 m grid + Citadel's named spots + every room's iso view: ID passes in two draw orders and a depth peel (tests/lib/zfight.js), each fighting mesh pair ranked by pixels with its place, gap and builder; AREAS=, STEP=, TRACE=1 (builders' stacks), OUT=, SHOTS=, LIMIT= (FAIL above n fighting core pixels)
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);

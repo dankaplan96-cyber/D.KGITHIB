@@ -389,7 +389,7 @@ export function sledge(k, { load = true, seed = 1 } = {}) {
 // a stone trough frozen over, fed by a wooden spout on a post (an icicle runs from spout to ice)
 export function trough(k, { len = 1.8, spout = true } = {}) {
   const st = MM.stone('#d0c8bc'), hh = 0.62;
-  k.add(rbox(len, 0.12, 0.7, 0.03), st, 0, 0.06, 0);
+  k.add(rbox(len - 0.02, 0.12, 0.68, 0.03), st, 0, 0.06, 0);   // (ZFIGHT: 1 cm inside the walls' outer faces, which it shared)
   for (const sz of [-1, 1]) k.add(rbox(len, hh, 0.14, 0.03), st, 0, hh / 2, sz * 0.28);
   for (const sx of [-1, 1]) k.add(rbox(0.14, hh, 0.44, 0.03), st, sx * (len / 2 - 0.07), hh / 2, 0);
   k.add(box(len - 0.26, 0.05, 0.44), MM.ice(), 0, hh - 0.12, 0);
