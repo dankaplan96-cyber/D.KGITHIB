@@ -191,7 +191,9 @@ function buildSchoolRoom(scene, physics) {
   const stone = M('sc_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#dcdad6', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.2), iron = MAT.iron();
   const flags = MAT.tiles('#8e8c88', '#827f7a', '#3a3a3c', false, 3), checks = MAT.tiles('#a29f9a', '#6f6d6a', '#3a3a3c', true, 4);
-  const rockM = MAT.rubble('grey');
+  // (REVIEW-DESERT-ART g: the heaps' stones matte and faceted in the island's own rock tones, three of them; the rubble
+  //  texture on smooth balls read as piles of shiny black boulders)
+  const rockM = ['#9a8f80', '#8a8072', '#a89c8a'].map((c) => MAT.flat(c, 0.97, { flatShading: true }));
   const glass = MAT.map(latticeTex(), 0.3, { emissive: '#3fb8a8', emissiveIntensity: 0.8, emissiveMap: latticeTex() });
   const DOORX = (X(56) + X(61)) / 2, DOORW = X(61) - X(56);
   const WINS = [35, 39, 43, 47, 51, 55, 59];
@@ -204,8 +206,10 @@ function buildSchoolRoom(scene, physics) {
     k.add(new THREE.TorusGeometry(0.76, 0.08, 5, 16, Math.PI), cap, X(lx), 7.6, -D / 2 + 0.05);
   }
   // a solid of cells [lx0, lx1) × [lz0, lz1) up to top, its top paved
+  // (REVIEW-DESERT-ART d: a side against the room's left, right or back wall runs 0.3 m into the wall, so its face is
+  //  not in the wall's own plane, where the two textures fought)
   const block = (lx0, lz0, lx1, lz1, top, face, pave, extra = {}) => {
-    const x0 = X(lx0), x1 = X(lx1), z0 = Z(lz0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    const x0 = X(lx0) - (lx0 === 22 ? 0.3 : 0), x1 = X(lx1) + (lx1 === 63 ? 0.3 : 0), z0 = Z(lz0) - (lz0 === 3 ? 0.3 : 0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     k.add(rbox(x1 - x0, top, z1 - z0, 0.03), face, cx, top / 2, cz);
     if (pave) k.add(rbox(x1 - x0 - 0.04, 0.02, z1 - z0 - 0.04, 0.005), pave, cx, top + 0.005, cz);
     return B.col(cx, cz, (x1 - x0) / 2 + 0.06, (z1 - z0) / 2 + 0.06, top, extra);   // (6 cm over each edge: abutting blocks shrink 5 cm each under groundAt and left a 10 cm seam to fall into)
@@ -217,13 +221,13 @@ function buildSchoolRoom(scene, physics) {
     const n = Math.max(2, Math.round((x1 - x0) * (z1 - z0) / 0.9));
     for (let i = 0; i < n; i++) {
       const x = x0 + 0.25 + rnd() * (x1 - x0 - 0.5), z = z0 + 0.25 + rnd() * (z1 - z0 - 0.5), h = (top - y0) * (0.7 + rnd() * 0.4), w = 0.5 + rnd() * 0.5;
-      k.add(sphere(0.5, 9, 7), rockM, x, y0 + h * 0.45, z, rnd() * 3, { sx: w * 1.4, sy: h, sz: w * 1.2 });
+      k.add(sphere(0.5, 9, 7), rockM[i % 3], x, y0 + h * 0.45, z, rnd() * 3, { sx: w * 1.4, sy: h, sz: w * 1.2 });
     }
     B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, top, { noStand: true });
   };
 
   // --- the classroom, 2.2 m up in the back left corner; the pit of rock in front of it (out of reach)
-  block(22, 3, 40, 18, CL, rough, checks);
+  block(29, 3, 40, 18, CL, rough, checks);   // (from the dais's side on: under the dais its faces lay in the dais's own)
   B.col((X(22) + X(40)) / 2, Z(18) + 0.04, (X(40) - X(22)) / 2, 0.05, CL + 1.1, { seeThrough: true, noStand: true });   // (its open edge: no fall into the pit)
   k.add(rbox(X(42) - X(22), 0.04, Z(42) - Z(18), 0.01), MAT.rubble('slate'), (X(22) + X(42)) / 2, 0.02, (Z(18) + Z(42)) / 2);
   rocks(22, 18, 42, 42, 0, 1.3, 3);
