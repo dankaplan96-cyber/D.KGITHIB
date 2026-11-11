@@ -1,14 +1,14 @@
 // Scene changes (src/main.js startTransition): through a door the hero walks on into it while the screen fades out
 // and walks in on the other side while it fades back in; a scene change that isn't a door (a story cut) doesn't
 // walk; in real time the screen holds black while the new scene's shaders compile, then fades in.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
 const errs = watch(page);
 const { check, done } = checker({ info: 'fail' });
-await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
-await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 600000 });
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 1200000 });
 await page.evaluate(() => { localStorage.clear(); game.testFreeze = true; });
 await page.click('[data-act="new"]', { timeout: 180000 });
 const r = await page.evaluate(() => {

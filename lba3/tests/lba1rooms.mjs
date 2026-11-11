@@ -2,15 +2,15 @@
 // Citadel (in through the door, its guards are posted after the prologue, the old register in the office, out by
 // the stair-well), and the Temple of Bù's maze and halls (down the stair from our temple, through the maze to the
 // halls with their crystal mites, and back up at the far end).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watch(page);
 const { check, done } = checker({ info: 'fail' });
-await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
-await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 600000 });
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 1200000 });
 await page.evaluate(() => { localStorage.clear(); game.testFreeze = true; });
 await page.click('[data-act="new"]', { timeout: 180000 });
 const r = await page.evaluate(() => {

@@ -1,13 +1,16 @@
 // LBA1's places, rebuilt from their layouts (src/game/lba1room.js, assets/lba1/*.json, numbers only):
-//   asylum   FunFrock's asylum on Citadel (LBA1 room 0, where LBA1 began). Its door is a squat stone block-house
-//            outside the old fort's east wall; inside, Vesk's project keeps a store and posts guards where FunFrock's
-//            nurses and clone stood (the original actors' spots): Quetch guards, a fat trooper, two guard dogs.
+//   asylum   FunFrock's asylum on Citadel (LBA1 room 0, where LBA1 began). ASYLUM-2 (the cloud's answer, 3.11.2026):
+//            twelve years on it is, officially, the Joint Project's hostel for its Esmer workers from Zeelich, and behind
+//            it Vesk's hidden storehouse (src/game/asylumhostel.js: the dressing, the offices, the handles). Its two
+//            doors are LBA1's two exits: the front door on the upper level (a brick portico against the old fort's
+//            south wall, at the top of the stair onto the fort's terrace) and the low stair-well as the side door (the
+//            squat block-house round the corner outside the fort's east wall), both ways, every chapter.
 //            The old register lies in the office (a search), a giver behind the desk.
-//            ASYLUM-1, why it is here when LBA2 never shows it: after FunFrock fell it was bricked up and forgotten;
-//            the Joint Project's digging under the fort broke back into it. The bricking at the stair-well lies broken
-//            (and its rubble by the block-house door), the dig's breach gapes in the west wall with the project's
-//            cable out of it. Twinsen's own cell (where LBA1 starts him) has his scratch marks, a warm pipe through
-//            it, and a find (flag as_cell). The rooms are cut open over him as in LBA1 (lba1room.js, lids).
+//            ASYLUM-1: after FunFrock fell it was bricked up by order of the Council; the Joint Project's digging under
+//            the fort broke back into it. The bricking at the stair-well lies broken (its rubble by the block-house
+//            door, the Council's plaque beside it), the dig's breach gapes in the west wall with the project's cable
+//            out of it. Twinsen's own cell (where LBA1 starts him) has his scratch marks, a warm pipe through it, and a
+//            find (flag as_cell). The rooms are cut open over him as in LBA1 (lba1room.js, lids).
 //   bumaze   the Temple of Bù's spiked maze (LBA1 room 57), down a stair from our Temple of Bù (chapter 4)
 //   buhalls  the temple's dark halls (LBA1 room 40), past the maze; crystal mites where LBA1 had its creatures,
 //            and at the far end the way back up
@@ -17,9 +20,11 @@ import { buildLba1Room, hasLba1Room } from './lba1room.js';
 export { hasLba1Room };
 import { MAT, rbox, plane, cyl, canvasTex } from './props.js';
 import { tube } from './kit.js';
+import { buildAsylumFront, dressAsylum, ASYLUM_FRONT } from './asylumhostel.js';
+export { ASYLUM_FRONT };
 
 export const LBA1_AT = { asylum: { x: 7000, z: 0 }, bumaze: { x: 7200, z: 0 }, buhalls: { x: 7400, z: 0 } };
-export const ASYLUM_DOOR = { x: -11.2, z: -65, a: Math.PI / 2 };   // (outside the fort's east wall, facing east)
+export const ASYLUM_DOOR = { x: -11.2, z: -65, a: Math.PI / 2 };   // the side door (outside the fort's east wall, facing east)
 
 // ASYLUM-1's decals (drawn: no words but the project's sign): Twinsen's tally marks, scratched in groups of five
 // (twelve years ago, in LBA1); the dark mouth of the dig's breach, ragged brick round it
@@ -51,7 +56,7 @@ const signTex = (lines) => canvasTex(512, 160, (x, W, H) => {
   x.font = '26px serif'; x.fillText(lines[1], W / 2, 112);
 });
 
-// the block-house over the asylum's stair, on Citadel (world coordinates)
+// the block-house over the asylum's stair (the side door, ASYLUM-2), on Citadel (world coordinates)
 function asylumDoor(scene, physics) {
   const { x, z } = ASYLUM_DOOR, gy = physics.groundAt(x + 1.5, z);
   const g = new THREE.Group(); g.position.set(x, gy, z); scene.add(g);
@@ -63,7 +68,7 @@ function asylumDoor(scene, physics) {
   for (const s of [-1, 1]) add(rbox(0.16, 2.2, 0.16, 0.02), MAT.paint('#5a2a2a', 0.5), 1.27, 1.1, s * 0.72);
   // FunFrock's old emblem over the door, painted out
   add(new THREE.CircleGeometry(0.32, 16), MAT.flat('#7a3a3a', 0.8), 1.33, 2.35, 0, Math.PI / 2);
-  add(plane(1.5, 0.47), MAT.map(signTex(['Citadel Asylum', 'Closed by order of the Council']), 0.8, { side: THREE.DoubleSide }), 1.6, 1.5, 1.35, Math.PI / 2);
+  add(plane(1.5, 0.47), MAT.map(signTex(['Joint Project', 'Service stair · staff only']), 0.8, { side: THREE.DoubleSide }), 1.6, 1.5, 1.35, Math.PI / 2);
   add(cyl(0.05, 0.06, 1.2, 6), MAT.wood('dark'), 1.6, 0.6, 1.35);
   physics.add({ type: 'box', x: x - 0.3, z, hw: 1.5, hd: 1.8, rot: 0, top: gy + 3.0 });
   // ASYLUM-1: the bricks that walled the door up, knocked out and heaped either side of it (the project broke in)
@@ -105,14 +110,14 @@ function asylumSteps(scene, physics) {
   }
 }
 
-let DOOR = null;
+let DOOR = null, FRONT = null;
 export function buildLba1Places(scene, physics) {
   buildLba1Door(scene, physics);
   return { ...buildLba1Asylum(scene, physics), ...buildLba1Temple(scene, physics) };
 }
-// LAZY-REGIONS (src/game/regions.js): the asylum's block-house stands on Citadel (built with it); the asylum, and the
+// LAZY-REGIONS (src/game/regions.js): the asylum's two doors stand on Citadel (built with it); the asylum, and the
 // temple's maze and halls together, are built the first time they are needed
-export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); } }
+export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); FRONT = buildAsylumFront(scene, physics); } }
 export function buildLba1Asylum(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('asylum')) {
@@ -121,22 +126,29 @@ export function buildLba1Asylum(scene, physics) {
     //  squares; the door of Twinsen's cell, which LBA1 kept as a moving actor, broken out of its wall: x 56–57 of
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
-      stone: 'grey', lamp: '#e8f0ff', view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls)
+      stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
       gridZones: true, overhead: true,
-      lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }],
-      carve: [[56, 4, 50, 57, 6, 50]],
+      lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
+      // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
+      //  room LBA1 kept behind a moving door, its door broken through the corridor wall at cells 41–42 of z 30)
+      carve: [[56, 4, 50, 57, 6, 50], [56, 5, 45, 57, 6, 45], [41, 5, 30, 42, 9, 30]],
     });
-    R.grade = 0.32;   // (WA-13b: LBA1's rooms are grey stone; measured on the laptop against LBA1: chroma 4-6)
-    // the low stair-well (the original's exit to the yard) leads out; you come in at its top
+    R.grade = 0.45; R.gradeTint = [1.03, 1.0, 0.95];   // (WA-13b: LBA1's grey stone, chroma 4-6; ASYLUM-2: lived in, the Esmer colours a little up, warm)
+    // the two exits, as LBA1's: the low stair-well (the side door: you come in at its top) and the main entrance on
+    // the upper level (the front door: its doors stand in the tall portal between the two posts, you come in before them)
     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
     R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
     R.spawn = { x: sp.x, z: sp.z, a: Math.PI };
+    const fx = R.cell(36.75, 14, 11.5), fs = R.cell(34.4, 14, 11.5);
+    R.exits.push({ x: fx.x, z: fx.z, r: 1.0, to: 'asylum-front' });
+    R.ways = { side: R.spawn, front: { x: fs.x, z: fs.z, a: -Math.PI / 2 } };
     // the office (the clone statues' room): the old register, and a giver behind the desk
     const reg = R.cell(46.5, 14, 23.5);
     R.searches.push({ id: 'asylum_register', x: reg.x, z: reg.z, r: 1.6 });
     const gv = R.cell(50.5, 14, 22.5);
     R.givers.push({ id: 'asylum_desk', x: gv.x, z: gv.z, y: gv.y, r: 1.2, top: 1, kinds: ['money', 'life', 'clover'], n: 3 });
     asylumNow(R, physics);
+    dressAsylum(R, physics);
   }
   return out;
 }
@@ -144,6 +156,8 @@ export function buildLba1Asylum(scene, physics) {
 // ASYLUM-1: the asylum twelve years on (LBA1 cell coords through R.cell; the room's group is at its centre)
 // the two cells (the original's scenery zones round them; the second is Twinsen's, where LBA1 starts him)
 export const ASYLUM_CELLS = [[51.5, 3, 37.5, 58.5, 10, 44.5], [51.5, 3, 50.5, 58.5, 9, 57.5]];
+// (ASYLUM-2) Vesk's office: LBA1's sealed room behind the corridor (its walls on the camera's side cut while he is in it)
+export const VESK_ROOM = [36.5, 5, 19.5, 44.5, 16, 30.5];
 function asylumNow(R, physics) {
   const g = R.group, o = g.position;
   const at = (x, y, z) => { const w = R.cell(x, y, z); return [w.x - o.x, w.y, w.z - o.z]; };
@@ -222,9 +236,16 @@ export function buildLba1Temple(scene, physics) {
   return out;
 }
 
-export function lba1Doors() { return DOOR ? [{ x: DOOR.x, z: DOOR.z, r: 0.9, room: 'asylum' }] : []; }
+// the front door first (the main way in), then the side door; each lands at its own way in the room
+export function lba1Doors() {
+  const out = [];
+  if (FRONT) out.push({ x: FRONT.door.x, z: FRONT.door.z, r: 0.9, room: 'asylum', spawn: (R) => R.ways?.front || R.spawn });
+  if (DOOR) out.push({ x: DOOR.x, z: DOOR.z, r: 0.9, room: 'asylum', spawn: (R) => R.ways?.side || R.spawn });
+  return out;
+}
 export function lba1Exit(to) {
   if (to === 'asylum-out' && DOOR) return { x: DOOR.x + 1.3, z: DOOR.z, a: Math.PI / 2 };
+  if (to === 'asylum-front' && FRONT) return { ...FRONT.out };
   return null;
 }
 
