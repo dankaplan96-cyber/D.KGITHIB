@@ -9,6 +9,18 @@ nothing was played, no browser was run for it.** It is the "written list per reg
 person has played them). The other 24 proposals are not built. Each built item's card below has a "Built" row saying
 where the build differs from the card.
 
+**Verified (11.11.2026)** after merging `ccr-c1c2c4b9-dep6ed` at `abbb7af2` (EQUIP-1, CITADEL-85, CAST-POLISH-UNDERGROUND
+on top of the build): the merge was clean. Automated runtime only (headless Chromium, SwiftShader; no person has played
+them, no timing or frame rate claimed). `tests/depth-1.mjs` passes (29 checks: both puzzles by the harness's keys with a
+wrong attempt and Save & quit → Continue half way, the count out of 12, max life, an old 6-crystal save). Also passing on
+the merged code: `chapter4`, `chapter5`, `chapter6`, `chapter7`, `hamalayi-life`, `isles-bar`, `island-people`,
+`zislands`, `voices`, `save-migration`, `saveslots`, `resume`, `world-consistency`, and playthrough segments 07 (the dig)
+and 09 (the pass) from saves of the main path: every step to its end, no death, no assist, 10 max life (the main path
+neither needs nor meets the new crystals). The test machine was shared and overloaded during the run: `saveslots` and
+`resume` first stopped on the harness's own 30 s screenshot/reload waits and segment 07's browser was killed once for
+lack of memory; each passed when run again (the two suites with longer harness waits, nothing else changed). Pictures of
+both places come from `SHOTS=dir node tests/depth-1.mjs` (nine, deviceScaleFactor 1).
+
 The user's worry (10.11): the main path is estimated at 4–5 h for a first play (the bot plays it in about 1 h 15 min);
 LBA1/LBA2 last several times longer for a newcomer, mostly through optional errands, reasons to go back, secrets and
 puzzles that make the player stop and think. The user's rules for this plan: long chapters are **not** shortened

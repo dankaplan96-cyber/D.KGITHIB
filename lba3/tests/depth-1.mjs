@@ -30,7 +30,8 @@ const shot = async (n) => { if (!SHOTS) return; await ev(() => game.renderer.ren
 // a close look from a camera of our own (the game's camera put there for one frame; play goes on from its own after)
 const closeup = async (n, which) => { if (!SHOTS) return; await ev((w) => {
   const c = game.renderer.camera, D = game.story.depth, set = (f, a) => { c.position.set(...f); c.lookAt(...a); c.updateMatrixWorld(); };
-  if (w === 'tray') { const T = D.G.tray; set([T.x - 0.5, 1.45, T.z + 1.6], [T.x, 0.45, T.z]); }
+  if (w === 'tray') { const T = D.G.tray; set([T.x - 0.9, 2.5, T.z + 3.7], [T.x, 0.55, T.z]); }
+  if (w === 'niche') { const Y = D.way, n = Y.niche, l = Math.hypot(n.x - Y.cx, n.z - Y.cz) || 1, ux = (n.x - Y.cx) / l, uz = (n.z - Y.cz) / l; set([n.x + ux * 3.0 - uz * 0.9, n.y + 1.1, n.z + uz * 3.0 + ux * 0.9], [n.x, n.y, n.z]); }
   if (w === 'way') { const Y = D.way, a = Y.ry + Math.PI / 4 + Math.PI + 0.6; set([Y.cx + Math.sin(a) * 4.2, Y.gy + 3.4, Y.cz + Math.cos(a) * 4.2], [Y.cx, Y.gy + 2.3, Y.cz]); }
   if (w === 'wayobs') { const Y = D.way, o = game.rooms.hamalayi.observatory, b = Math.atan2(o.x - Y.cx, o.z - Y.cz), oy = game.physics.groundAt(o.x, o.z, 200); set([Y.cx - Math.sin(b) * 3.5, Y.gy + 3.6, Y.cz - Math.cos(b) * 3.5], [o.x, oy + 4, o.z]); }
   game.renderer.render(); }, which);
@@ -203,6 +204,7 @@ check('HAM-1: the roof faces the monastery\'s roof (INPUT), then the dome faces 
 check('HAM-1: the crystal from the niche, the words cut inside it; +1 max life', w4.got && !w4.owe && after2.n === before2.n + 1 && after2.max === before2.max + 1 && has(w4l, /FOR THE LAST PILGRIM/), { before2, after2, w4l });
 await shot('depth-ham1-02-open');
 await closeup('depth-ham1-05-open-close', 'way');
+await closeup('depth-ham1-06-niche', 'niche');
 const w5 = await ev(() => { const G = game, Y = D().way; const u = P.use(Y.cx, Y.cz, { kind: 'dx_way', near: 1.3, match: 2 }).r; G.step(1); return { u, face: G.flags.dx_way_face, n: G.collected.filter((i) => i === 'sc-waystone').length, c: crystals() }; });
 const w5l = await said();
 check('HAM-1: used again: it stays facing the dome, no second crystal', w5.u === 'used' && w5.face === 2 && w5.n === 1 && w5.c.n === after2.n && has(w5l, /Facing the dome/), { w5, w5l });
