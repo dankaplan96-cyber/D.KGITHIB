@@ -103,7 +103,7 @@ export class HamalayiLife extends ChapterBase {
     const T = [];
     stops.forEach((s, i) => {
       const an = anims[i] || 'tinker';
-      T.push({ op: 'call', fn: (a) => { a.forceAnim = an; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.5, near: 0.12 }, { op: 'face', a: s.a }, { op: 'wait', t: s.t ?? 6 + i * 2 });
+      T.push({ op: 'call', fn: (a) => { a.forceAnim = an; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.5 }, { op: 'face', a: s.a }, { op: 'wait', t: s.t ?? 6 + i * 2 });
     });
     if (stops.length > 1) T.push({ op: 'loop' });
     return T;
