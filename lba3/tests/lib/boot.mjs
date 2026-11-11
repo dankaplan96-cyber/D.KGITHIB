@@ -13,7 +13,7 @@
 // done() prints functional checks, errors, resources and visual captures separately, then one VERDICT line,
 // and sets the exit code: non-zero on any FAIL. A FAIL captured after done() (or with no done() at all) still
 // makes the exit code non-zero and is printed as a late FAIL.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { fileURLToPath } from 'node:url';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 export const URL0 = process.env.GAME_URL || 'http://localhost:8123/';
@@ -158,7 +158,7 @@ export async function quitAndKeep(page, context, file) {
   const reloaded = page.waitForEvent('load', { timeout: 300000 });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 });
   await reloaded;
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 })
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 })
     .catch(async (e) => {   // say where the boot stopped, not just that it timed out
       const st = await page.evaluate(() => ({ url: location.href, game: !!window.game, preparing: window.game?.preparing, loading: document.querySelector('#loading')?.textContent?.slice(0, 120) })).catch((x) => String(x));
       console.log('quitAndKeep: the reload did not finish booting', JSON.stringify(st)); throw e; });

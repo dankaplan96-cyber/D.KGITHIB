@@ -1,9 +1,12 @@
 // The harbour master's shed on the quay (I-3, from AUDIT-CH12 #9): plank walls on a rubble plinth, a framed door with a
-// brace and a step, a small shuttered window on each long wall, a blue roof with an overhang, a ridge cap and a
+// brace and a step, a small shuttered window on each long wall, a plank roof with an overhang, a ridge cap and a
 // fascia, with a rain barrel and two crates against the front. It replaces the plain box and slab the prologue
 // set here, on the same footprint (2.6 x 2.0 m, the collider unchanged).
-// Built from the town's kit (kit.js Batch): one mesh per material, four in all (planks, roof, rubble, plain), and
+// Built from the town's kit (kit.js Batch): one mesh per material, three in all (planks, rubble, plain), and
 // only the walls and the roof cast a shadow.
+// (HARBOUR-ONE: the roof was the town's blue tiles, a garden shed's look beside Doran's rubble shed; now weathered
+// boards, darker than the walls, like the plank roofs of LBA2's harbour houses and Doran's shed: one plank-shed
+// language on the quay, and one material fewer)
 import * as THREE from 'three';
 import { Batch, tm, pm, bbox, boxUV, tint, cached, cyl } from './kit.js';
 
@@ -33,7 +36,7 @@ export function buildHarbourShed(parent, ry = 0) {
   const { w, d, h, pitch, overhang, T } = SHED;
   const g = new THREE.Group(); g.rotation.y = ry; parent.add(g);
   const planks = tm('planks', { vc: true, rough: 0.9 });
-  const roofM = tm('roofBlue', { vc: true, rough: 0.8 });
+  const roofM = planks;   // (HARBOUR-ONE: was tm('roofBlue'); the slabs and the cap tinted darker than the walls)
   const stone = tm('rubble', { vc: true });
   const plain = pm('#ffffff', 0.55, { vertexColors: true, metalness: 0.15 });
   const BC = new Batch(g, { cast: true }), BN = new Batch(g, { cast: false });
@@ -85,10 +88,10 @@ export function buildHarbourShed(parent, ry = 0) {
   // ---- the roof: two thick slabs with overhang, a fascia along each eave, a ridge cap
   const half = w / 2 + overhang, slope = Math.hypot(half, half * pitch), ang = Math.atan(pitch), len = d + overhang * 1.6;
   for (const sx of [-1, 1]) {
-    BC.add(tint(bx(slope, 0.11, len, 1.6), '#ffffff'), roofM, sx * (slope / 2) * Math.cos(ang), h + gableH + 0.0 - (slope / 2) * Math.sin(ang) - 0.05, 0, 0, 0, sx * -ang);
+    BC.add(tint(bx(slope, 0.11, len, 1.6), '#a88866'), roofM, sx * (slope / 2) * Math.cos(ang), h + gableH + 0.0 - (slope / 2) * Math.sin(ang) - 0.05, 0, 0, 0, sx * -ang);
     BN.add(tint(bx(0.05, 0.16, len + 0.02, 1), '#7a5a3a'), planks, sx * (half - 0.02), h + gableH - half * pitch - 0.08, 0);   // fascia
   }
-  BN.add(tint(bx(0.2, 0.12, len + 0.04, 1), '#d8e4f2'), roofM, 0, h + gableH + 0.02, 0);
+  BN.add(tint(bx(0.2, 0.12, len + 0.04, 1), '#6e5238'), roofM, 0, h + gableH + 0.02, 0);
 
   // ---- a rain barrel at the front corner and two crates against the wall (the local frame of the door side)
   const barrel = { x: 1.33, z: 0.9, r: 0.3 };
