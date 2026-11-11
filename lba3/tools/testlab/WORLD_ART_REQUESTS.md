@@ -4471,3 +4471,29 @@ the runner and the Quick Check's summary beside it in `2026-11-10-gtx1050/`).
 - **From now on only this machine pushes.** The queue continues here in the laptop's order: CAST-POLISH-NAMED (from
   `wip/laptop/lba3-items`), then 28's queues 7 and 9, 27a (Desert Island, the Hamalayi, the Citadel re-score), Twinsen
   after those, W-4 when ordered. 27c stays with the Vega 8 laptop.
+
+## CAST-POLISH-NAMED · the named cast, batch 1: Baldino's ears, strap, goggles and collar; Hesk's goggles; Yorna's and Brum's long coats · the laptop, 10.11.2026
+**Ready for the cloud.** Built on the laptop 10.11, finished on the desktop 11.11 (MIGRATE-39): diff `requests/CAST-POLISH-NAMED.diff`,
+now against `8f826b7b` (UNDERGROUND and ZOE-LOOK-38 already applied), `git apply --check` clean there. The four models rebuilt on the
+desktop with Blender 5.3.0 are byte-identical to the laptop's. It changes `tools/blender/baldino_poly.py` and `tools/blender/cast_poly.py` only.
+Models for `assets/poly/` (each replaces the shipped one): `requests/CAST-POLISH-NAMED/{baldino,hesk,yorna,councilC}.json`. No new
+look, no skeleton, index or `characters.js` change. Full note with the named-cast table: `requests/CAST-POLISH-NAMED.md`.
+Pictures (**chapter 3+ people: not for the user**): `docs/future/characters/{baldino,hesk,yorna,councilC}/ch3plus-named-*.jpg`.
+- **BALDINO-EARS / -STRAP / -GOGGLES / -COLLAR** (`BALDINO_OLD=1` builds the old parts): the flat ear boards are cushions with a
+  rounded rim and their root in the head; the strap a closed band round the whole head; the lenses in dark teal frames (LBA2
+  body 139's byte 160, measured read-only); the collar 2.2 cm thick. Triangles 5781 → 6173 (+6.8 %).
+- **GOGGLES-HESK** (CAST `gogglesUp`): brass cups with rims and dark glass pushed up on his head, a bridge, a band round the back
+  (were two flat drums and a stick). 3426 → 3728 (+8.8 %). Gurt and Hobb (Citadel) wear the same model.
+- **GROBO-COAT** (CAST `coatLong`): Yorna's felt coat and Brum's robe, as their LOOKS describe them, now fall from the belt to
+  just below the knee with a rolled hem band in the trim hex (they had Doran's hip-length shape). Yorna 3602 → 3802 (+5.6 %;
+  Marda too), Brum 3466 → 3666 (+5.8 %; Mr Bazoo and Gunda too). A silhouette change from the project's own descriptions, not
+  from LBA2: drop `coatLong` from the two CAST entries to keep the old cut.
+- **Contracts:** bones in the skeletons (yorna and councilC now also weight the skirt bones they already had), 4 weights summing
+  to 1, eyes and mouths unchanged, feet as before; validate 0 fails; DRESS-1 variants 1-6 as the shipped looks; the hero is 4
+  draw calls as each look, before and after; the other 56 cast looks rebuild identical.
+- **Tests** (SwiftShader, the four files in `assets/poly`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS (run on the desktop, 11.11).
+
+  Evidence labels: **Automated runtime only**. Not verified: the four in their own places (pictures are of the hero wearing each
+  model in Citadel), Vega 8 frame time.
+- **Left:** Doran unchanged (reads well); Yorna's fur-hat flaps; the Grobos' flat brow strips; Kira and Oni share their models.
+

@@ -337,7 +337,16 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 - Left: Baldino's paper ears and headband (his script); Harl shares keeper_b (a uniform); worker x4 / nara x12+ still
   most shared; worker_b's goggle strap does not show from the side.
 
+### The named cast, batch 1: Baldino, Hesk, Yorna, Brum: CAST-POLISH-NAMED (built on the laptop 10.11, finished on the desktop 11.11)
+- BALDINO-EARS/-STRAP/-GOGGLES/-COLLAR, GOGGLES-HESK, GROBO-COAT (Yorna, Brum); details `tools/testlab/requests/CAST-POLISH-NAMED.md`.
+- The desktop (MIGRATE-39): the laptop's partial work taken from `wip/laptop/lba3-items`; the diff re-made against `8f826b7b`;
+  the four models rebuilt with Blender 5.3.0 = the laptop's 5.2.3 files byte for byte; tests solidnpc 54/54, chapter1 23/23,
+  cast-rounds 209/209, story-journeys 30/30 PASS.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (the laptop's pictures, looked at again) · performance:
+  draws/triangles measured · integrated: no (request).
+
 ## Current
+- **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11.
 - CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
 - ZOE-LOOK-38 accepted by the user 9.11 ("Zoé is good"); the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue is done (the user, 9.11: "by the order we set").
 - EQUIP-1 (ball, sword) and CITADEL-85: applied by the cloud (CITADEL-85 as e2a9d1dc); the user kept the blade's quarter turn and accepted CITADEL-85 whole (10.11).
@@ -349,15 +358,15 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
 4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, ~~the underground~~ (CAST-POLISH-UNDERGROUND)
 5. ~~HANDS-36~~ (order 36: request sent)
-6. The named cast
+6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); left: Yorna's hat flaps, the Grobos' flat brows
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
    ~~worker, nara~~ (UNDERGROUND); farmerA, farmerB, clerk (and councilB for Kira; zmole2, zbee1, zbee2)
 8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
 ## Next action
-Order 28's regions are done (the underground last, 10.11). By the order the user set (9.11): next is queue 6, the named cast
-(Baldino's paper-thin ears and headband first), then queue 7's `_b` variants (farmerA, farmerB, clerk; worker ×4 and nara ×12+
+Order 28's regions are done (the underground last, 10.11), queue 6's first batch too (CAST-POLISH-NAMED, 11.11). By the order
+the user set (9.11): queue 6's left items (Yorna's fur-hat flaps, the cast Grobos' flat brow strips), then queue 7's `_b` variants (farmerA, farmerB, clerk; worker ×4 and nara ×12+
 still the most shared), queue 8 equipment is done, then 9 common props; **Twinsen's ZOE-LOOK treatment after the queue**.
 The moles' claws could take the hands' front-to-back turn too (not asked). A Vega 8 frame-time pair for EQUIP-1 on a quiet
 laptop is still owed.
