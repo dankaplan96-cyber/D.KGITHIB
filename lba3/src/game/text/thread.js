@@ -25,6 +25,7 @@ Object.assign(STR.en, {
   ct_ar_shut: "I'm shutting it! I'm shutting it.",
   prh_cup_2: '(There. Under the right pipe.)',
   prh_leave: '(The tap first. Zoé is waiting.)',
+  prh_leave_cup: "(Arthur's cup first. It's still under the wrong pipe.)",
   prh_yard: '(The garden pipe is knocking too. It runs under the lane, toward the square.)',
   prh_lane: "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)",
   prh_cave_in: "Crystals? These weren't here before.",

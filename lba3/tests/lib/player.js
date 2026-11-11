@@ -345,10 +345,17 @@
   // out. P.tapFirst = false leaves the door to refuse (the playthrough's own step checks that it does).
   P.homeTap = () => {
     const H = G.story.chapters?.[0]?.home?.parts?.house;
-    if (!H || G.room?.id !== 'house' || G.flags.chapterKey !== 'well' || !G.flags.pr_v2 || G.flags.pr_tap) return false;
-    P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'h_tap' });
-    for (let i = 0; i < 60 && !G.flags.pr_tap; i++) { G.step(0.25); P.settle(); }
-    return !!G.flags.pr_tap;
+    if (!H || G.room?.id !== 'house' || G.flags.chapterKey !== 'well' || !G.flags.pr_v2 || G.flags.pr_cup) return false;
+    if (!G.flags.pr_tap) {
+      P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'h_tap' });
+      for (let i = 0; i < 60 && !G.flags.pr_tap; i++) { G.step(0.25); P.settle(); }
+    }
+    // then Arthur's cup (the door holds for both): from the stove to the sink
+    if (G.flags.pr_tap && !G.flags.pr_cup) {
+      P.use(H.stove.x, H.stove.z, { near: 1.2, kind: 'h_cup' });
+      for (let i = 0; i < 80 && !G.flags.pr_cup; i++) { G.step(0.25); P.settle(); }
+    }
+    return !!G.flags.pr_cup;
   };
   P.through = (x, z, opts = {}) => {
     if (P.tapFirst !== false) P.homeTap();

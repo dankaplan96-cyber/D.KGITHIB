@@ -149,8 +149,10 @@ export class HomeTap {
     return { x: P.zoe.x, z: P.zoe.z, a: P.zoe.a, anim: null };
   }
   canExit() {
-    if (!this.indoors || this.f.pr_tap) return true;
-    this.ch.chain([['hero', 'prh_leave']]);
+    // both house steps before the door: Zoé stays at the sink until the cup stands under the right pipe, and the town's
+    // well needs her next door (her kettle crystals), so leaving with the cup undone would stall chapter 1
+    if (!this.indoors) return true;
+    this.ch.chain([['hero', this.f.pr_tap ? 'prh_leave_cup' : 'prh_leave']]);
     return false;
   }
   objective() {
