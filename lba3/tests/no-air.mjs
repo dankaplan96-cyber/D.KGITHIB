@@ -253,7 +253,7 @@ for (const c of feet) console.log('OFFENDER feet ' + line(c));
 const byAnim = {}; for (const c of cases) { const a = (byAnim[c.anim] ||= [0, 0]); a[0]++; if (c.gap != null && c.gap > HAND) a[1]++; }
 measure('cases', { states: SEL ? SEL.length : STATES.length, pagesDied: crashes, measured: rows.length, distinct: cases.length, byAnim, ownBody: self.length, warming: warm.length, stoodDown: stood.length, onAThing: cases.filter((c) => c.gap != null && c.gap <= HAND).length, handLimitCm: HAND * 100, footLimitCm: FOOT * 100 });
 measure('offenders', { hands: air.length, feet: feet.length, worstCm: air[0] ? +(air[0].gap * 100).toFixed(1) : 0 });
-check('the sweep found the people at work (hundreds of stops over the chapters)', ONLY ? cases.length > 0 : cases.length > 150, { distinct: cases.length });
+check('the sweep found the people at work (hundreds of stops over the chapters; a part of it — STATES, ONLY — its share)', ONLY ? cases.length > 0 : SEL ? cases.length > 40 * Math.min(3, SEL.length) : cases.length > 150, { distinct: cases.length });
 check(`no hand works on air: every working hand within ${HAND * 100} cm of a real surface at its contact`, air.length === 0, air.slice(0, 12).map(line));
 check(`feet on the ground: every standing worker's soles within ${FOOT * 100} cm of it`, feet.length === 0, feet.slice(0, 12).map(line));
 const fails = done();
