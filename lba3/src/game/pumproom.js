@@ -130,10 +130,10 @@ export function buildPumpRoom(scene, physics) {
   const riser = (x, y, m, r) => { k.add(cyl(r, r, y, 10), m, x, y / 2, PZ); k.add(sphere(r * 1.25, 10, 8), m, x, y, PZ); k.add(torus(r * 1.3, 0.02, 6, 12), brass, x, 0.4, PZ, 0, { rx: Math.PI / 2 }); B.ccol(x, PZ, r + 0.04, y, { noStand: true }); };
   const UP = { x: -1.7, y: 2.35, r: 0.11 }, LO = { x: -0.5, y: 1.6, r: 0.11 }, CU = { x: 0.7, y: 1.05, r: 0.085 };   // (the copper one at the height of a hand laid on it; the old ones are felt on their risers at 1.48 m: story/reach.js)
   riser(UP.x, UP.y, old, UP.r); riser(LO.x, LO.y, old2, LO.r);
-  k.add(cyl(UP.r, UP.r, 4.35 - UP.x, 10), old, (4.35 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
+  k.add(cyl(UP.r, UP.r, 4.3 - UP.x, 10), old, (4.3 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
   // (the lower run and the copper one move: Zoé's knocks, the copper's shiver — each its own mesh)
   const mk = (geo, m, x, y, z, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.z = rz; o.castShadow = true; B.group.add(o); return o; };
-  const lowerRun = mk(new THREE.CylinderGeometry(LO.r, LO.r, 5.2 - LO.x, 10), old2, (5.2 + LO.x) / 2, LO.y, PZ, Math.PI / 2);
+  const lowerRun = mk(new THREE.CylinderGeometry(LO.r, LO.r, 5.0 - LO.x, 10), old2, (5.0 + LO.x) / 2, LO.y, PZ, Math.PI / 2);
   const copper = new THREE.Group(); copper.userData.keep = true; B.group.add(copper);
   const cm = (geo, x, y, z, rz = 0, rx = 0) => { const o = new THREE.Mesh(geo, cu); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; copper.add(o); };
   cm(new THREE.CylinderGeometry(CU.r, CU.r, CU.y, 10), CU.x, CU.y / 2, PZ);
@@ -162,10 +162,10 @@ export function buildPumpRoom(scene, physics) {
     // (his hand on the handle's bar, 0.15 m along it from the hub)
     return { ...touch(B.cx + x + 0.15, B.cz + PZ + 0.24, Math.PI, 'tinker'), open: false, set(b) { this.open = !!b; piv.rotation.z = b ? -Math.PI / 2 : 0; } };
   };
-  const cocks = { upper: cock(4.35, UP.y, old, UP.r), lower: cock(5.2, LO.y, old2, LO.r) };   // (0.85 m apart: each has its own place to stand)
+  const cocks = { upper: cock(4.3, UP.y, old, UP.r), lower: cock(5.0, LO.y, old2, LO.r) };   // (0.7 m apart, clear of the pier and of the pipe along the east wall: each has its own place to stand)
   // the copper pipe's own way: up from its run into the lower leg under the cock (a bolted tee), and on to the pump
-  k.add(cyl(CU.r, CU.r, 0.5, 10), cu, 5.2, 0.84, PZ + 0.1, 0, { rx: 0.35 });
-  k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.2, 0.72, PZ + 0.04);
+  k.add(cyl(CU.r, CU.r, 0.5, 10), cu, 5.0, 0.84, PZ + 0.1, 0, { rx: 0.35 });
+  k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.0, 0.72, PZ + 0.04);
   // the booster pump on its bed: a casing, a ribbed motor, a flywheel; the maker's plate on the casing's west end, its
   // gauge and paper strip on the east end
   const PX = 4.35, PZ2 = 0.75;
@@ -176,7 +176,7 @@ export function buildPumpRoom(scene, physics) {
   // (the copper pipe on from the tee: along the east wall and into the pump's casing)
   k.add(cyl(CU.r, CU.r, PZ2 - PZ + 0.1, 10), cu, W / 2 - 0.14, CU.y, (PZ2 + PZ) / 2, 0, { rx: Math.PI / 2 });
   k.add(cyl(CU.r, CU.r, 0.5, 10), cu, W / 2 - 0.36, CU.y - 0.11, PZ2, 0, { rz: Math.PI / 2 + 0.45 });
-  B.col(W / 2 - 0.14, (PZ2 + PZ) / 2 - 0.3, 0.12, (PZ2 - PZ) / 2 - 0.4, CU.y + 0.1, { noStand: true });
+  B.col(W / 2 - 0.1, (PZ2 + PZ) / 2, 0.06, (PZ2 - PZ) / 2, CU.y + 0.1, { noStand: true });   // (a thin brick at the wall: the alcove keeps its width)
   k.add(plane(0.5, 0.16), MAT.map(plateTex()), PX - 0.35, 0.6, PZ2 + 0.345);
   const fly = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.05, 6, 20), MAT.paint('#b8302a', 0.4)); fly.position.set(PX + 0.86, 0.52, PZ2); fly.rotation.y = Math.PI / 2; B.group.add(fly);
   for (let s = 0; s < 3; s++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.04, 0.04), iron); sp.rotation.z = (s * Math.PI) / 3; fly.add(sp); }
