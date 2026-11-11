@@ -92,7 +92,19 @@ conversation (section 4).
 
 **Chapters 1–3, this wave** (base `3ecbf58e` and the wave's build, both run in this session, the same bot):
 
-AFTER_TABLE
+| Ch | bot s of free play: base → wave 1 | walked m | lines · words | est. first play (min): base → wave 1 | what the seconds are |
+|---|---|---|---|---|---|
+| 1 | 333 → **418** (segments 01 + 02: 241 + 93 → 306 + 112) | 776 → 820 | 64 · 702 → 80 · 894 | 18.7 → **23.4** | the tap, the cup, the two pipes outside (+65 s); the pool and the pump's cycle (+19 s) |
+| 2 | 676 → **897** (03 + 04 + 05: 81 + 210 + 386 → 81 + 240 + 575) | 1,471 → 1,864 | 72 · 1,206 → 103 · 1,686 | 32.6 → **43.9** | home, the lane, the pump room and back (+190 s; segment 04's +31 s is the bot's depot fight, not a change) |
+| 3 | 235 → **370** (06) | 471 → 525 | 53 · 829 → 81 · 1,305 | 16.8 → **25.5** | Brel, the lift's six hand actions and the ride, the cart, the bench (+135 s) |
+
+The estimates use `chapter-balance.md`'s formula with one more deduction step counted in chapter 1 (which pipe), two in
+chapter 2 (which pipe is the new one; which cock) and two in chapter 3 (hook before bell; the dial). They are
+**estimates**. The runs: base in `/dev/shm/c1010/base`, wave 1 in `/dev/shm/c1010/new` (logs, stats, traces, a picture
+after every step; the session's scratch, not in the repository). Each chain is a new game played by input with Esc →
+Save & quit → Continue between segments; no death, no assisted fight in either. Chapters 1 and 3 are now above 125 %
+of the old median and chapter 2 further above it: the three chapters the player meets first are the three with a
+problem found by hand, and the median moves only when the later chapters get theirs (section 6).
 
 ## 4. The missing playable step, chapter by chapter
 
@@ -116,7 +128,11 @@ Did the player discover the problem, test an idea and see the result — or did 
 
 ## 5. Wave 1, as built (the treatment's sections 1–3)
 
-WAVE1_TABLE
+| Chapter | Before (base) | Now: what the player's hands do | Where |
+|---|---|---|---|
+| 1 Home | the film said the tap had stopped; control began with "take the ball" and "check the well"; Zoé had already gone next door | Zoé is still at the sink and Arthur at his boat. The door waits ("the tap first"). He turns the tap (his hand on the handle, it squeaks round dry, the brass riser beside the picture shakes and knocks three times). Arthur's cup stands on the stove under the flue's overflow: he lifts it, carries it in his hand to the sink and sets it under the tap; one drop falls into it. Outside, the garden standpipe knocks as he passes, then the copper riser at the shut pump room up the lane ("toward the square"). Zoé is next door by the time he needs her kettle. In the cave he reaches into the pool at the shaft's foot (warm); a moment later a pump starts above (a hum, a shake) and the crystals grown up the old pillar lean toward it. After Sendell's two lines: the pump runs in cycles, he will watch the next | `story/hometap.js`; the kitchen, the yard, the lane, the well cave |
+| 2 Citadel | three valves, the well fills, "time to see Vesk"; the departure came from Arthur's radio | The square fills, and his own tap is still dry (his hand again). Zoé stays at it and will knock on the pipe (twice for water). The worker at the pump room's door has opened "two pipes, as on the diagram". Below: a pump room with the fitters' bench, tool board, stool, lunch, hose and spare lengths; the wall diagram (TOWN MAIN: upper → SQUARE, lower → HOUSES); three pipes out of the wall, each felt by hand (the copper one, warm, shivers three beats and rests, seen and heard along its run); behind the brick pier a cock on each old pipe: the upper one roars and springs back with one knock from above (nothing lost), the lower one fills the houses' line (two knocks). The shut copper pipe's gauge still kicks: he tears off its paper strip and reads the booster pump's plate (IRSA'S PUMP WORKS · MILL LANE · ZEELICH · No. 14); the door waits for both. Up in the lane the garden tap runs; at home the tap Arthur left open runs into the sink until he shuts it; in the square the shopkeeper washes her counter. Vesk, shown the strip, calls it "a new pump settling"; Baldino on the radio knows Irsa | `story/pumpline.js`, `pumproom.js`; the lane's pump house (new, small) and its room |
+| 3 Zeelich | the landing, the plan taken, a marker to Baldino's door | No marker: Brel, a docker at the bridge's mouth, gives the way (left at the mill, the brass wheel on a mast). The cistern lift has stopped half way with the quarter's water cart; Kell holds the brake and will not let it move with the cart loose and the dockers carrying under it. The stair to the upper landing; the frame's chain let down onto the cart by its hand wheel; the landing bell (it waits for the hook). Kell clears the lane; Vesk answers on the speaking tube and gives the lift the mill line ("we disagree about numbers, not about water"). The feed switch; the deck comes down; he steps on at the cart's bar and rides up with it; a shove sends it along its rails to the filler, its cock opened by hand; the float climbs, the standpipe below runs, Brel fills up. Irsa's bench runs off the cistern: her test pump's dial set to the strip and cranked — the same rhythm, the needle the other way. A wrong setting cranks too and proves nothing. Baldino would not start without that | `story/zeelift.js`, `zlift.js`; Mill Lane between the spaceport's bridge and the Esmer street |
 
 **New flags only** (old saves load and go on): `pr_v2 pr_tap pr_cup pr_zoeOut pr_yard pr_lane pr_pool pr_growth` ·
 `ct_v ct_dry ct_worker ct_roomIn ct_diagram ct_felt ct_seen ct_wrong ct_bypass ct_strip ct_plate ct_home ct_tapShut
@@ -139,8 +155,7 @@ the treatment's section 6: the service lift to the archive); Brel, a docker (Que
 Citadel's lane pump No. 14 (Esmer).
 
 **Left open by wave 1** (for the next waves or the coordinator): the pump room has no prompts in chapters 3 onward
-(its door is open, the room is as he left it); the holomap shows a hero in the pump room at the well's place
-(`main.js mapHero` knows only the house, the cellar and the sewers); Bram, who keeps the lane's hand pump, says
+(its door is open, the room is as he left it); Bram, who keeps the lane's hand pump, says
 nothing about the pump room (his lines are `story/life.js`'s side story).
 
 ## 6. The next waves (chapters 4–12 and the aftermath)

@@ -229,7 +229,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     spots: {
       kell: { ...W(MH.x + MH.hw + 0.75, MH.z + 0.3), a: -Math.PI / 2 },
       brelA: { ...W(STK.x - 0.55, STK.z - 0.75), a: Math.PI / 4 }, brelB: { ...W(T.x1 + 0.75, DECK.z), a: -Math.PI / 2 }, brelClear: { ...W(STK.x - 1.2, STK.z - 0.2), a: -Math.PI / 2 },
-      brelTap: { ...W(TAP.x, TAP.z - 0.85), a: 0 },
+      brelTap: { ...W(TAP.x, TAP.z - 0.85), a: 0 }, brelWay: [W(MH.x + MH.hw + 1.9, MH.z + 0.6), W(MH.x + MH.hw + 1.2, MH.z - MH.hd - 1.5)],   // (his way from the lane round the motor house to the standpipe)
       irsa: { ...W(BX - 0.25, WORKS.z1 + 1.0), a: Math.atan2(-1, -0.6) },   // (under her sign, off the bench's end: the crank's prompt is his) irsaTap: { ...W(TAP.x + 0.95, TAP.z - 0.5), a: -Math.PI / 2 - 0.5 },
       stairFoot: W(STAIR.x0 + 0.8, STAIR.z0 + STAIR.w / 2), stairTop: W(T.x0 + 0.6, T.z1 - 0.7),
     },

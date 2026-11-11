@@ -212,7 +212,7 @@ export class LiftThread {
     const n = this.ch.npc('zl_brel'), L = this.L;
     if (!n?.present || !L) { this.brel = null; return; }
     this.sack(n, false);
-    this.brel = { n, to: L.spots[key], mode: 'go' };
+    this.brel = { n, to: L.spots[key], mode: 'go', via: key === 'brelTap' ? L.spots.brelWay.slice() : [], t: 0 };
     n.controlled = true; n.forceAnim = null;
   }
   // the sack he carries by its neck (in his hand while he walks to the hatch)
@@ -244,7 +244,10 @@ export class LiftThread {
       return false;
     };
     if (B.mode === 'go') {
-      if (walk(B.to, 1.35)) { n.angle = B.to.a ?? n.angle; n.controlled = false; this.brel = null; this.story.refreshCast(); }
+      B.t += dt;
+      if (B.via.length) { if (walk(B.via[0], 1.35)) B.via.shift(); return; }
+      // (there, or held up too long and out of sight: at his place)
+      if (walk(B.to, 1.35) || (B.t > 40 && Math.hypot(g.hero.pos.x - n.pos.x, g.hero.pos.z - n.pos.z) > 25)) { n.angle = B.to.a ?? n.angle; n.controlled = false; this.brel = null; this.story.refreshCast(); }
       return;
     }
     const ends = [L.spots.brelA, L.spots.brelB];

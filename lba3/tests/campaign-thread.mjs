@@ -65,7 +65,8 @@ if (!ONLY || ONLY === 'A') {
   }), (v) => v[0] && !v[1] && v[2] < 6 && v[3] === 'pumproom' && v[4] && v[4].every((x) => x === false));
   // failure and retry: the wrong cock, then the right one
   is('A4 the wrong setting: the upper cock sends the water back to the square; it springs shut, Zoé knocks once, nothing is lost', await ev(() => {
-    const U = game.room.pump; P.use(U.cocks.upper.x, U.cocks.upper.z, { near: 0.9, kind: 'ct_cock' }); game.step(3.4); P.settle();
+    const U = game.room.pump; P.go(U.cocks.upper.front.x, U.cocks.upper.front.z + 0.3, { tol: 0.5 }); game.step(0.6); P.settle();
+    P.use(U.cocks.upper.x, U.cocks.upper.z, { near: 0.9, kind: 'ct_cock' }); game.step(3.4); P.settle();
     return [game.flags.ct_wrong, !!game.flags.ct_bypass, U.cocks.upper.open, game.state];
   }), (v) => v[0] === 1 && v[1] === false && v[2] === false && v[3] === 'play');
   is("A4 corrected at once: the lower cock fills the houses' line", await ev(() => {
@@ -77,7 +78,7 @@ if (!ONLY || ONLY === 'A') {
   is('A5 the door waits for the strip and the plate', await ev(() => { const e = game.room.exits[0]; P.through(e.x, e.z); P.settle(); return [game.room?.id, game.story.cur.line.done]; }), (v) => v[0] === 'pumproom' && v[1] === false);
   await handover();
   is('A5 Save & quit → Continue after the partial repair: in the pump room, the bypass set, the strip still on the gauge, the objective for what is left', await ev(() => {
-    const U = game.room?.pump, f = game.flags; return [game.room?.id, !!f.ct_bypass, !!f.ct_strip, U && U.bypass, U && U.cocks.lower.open, document.querySelector('#objective').textContent];
+    const U = game.room?.pump, f = game.flags; return [game.room?.id, !!f.ct_bypass, !!f.ct_strip, U && U.bypass, U && U.cocks.lower.open, game.story.objective().replace(/<[^>]+>/g, ' ')];
   }), (v) => v[0] === 'pumproom' && v[1] && !v[2] && v[3] === true && v[4] === true && /strip/i.test(v[5]));
   is("A6 the gauge's strip torn off, the maker's plate read: the way out opens", await ev(() => {
     const U = game.room.pump; P.use(U.gauge.x, U.gauge.z, { near: 0.9, kind: 'ct_strip' }); for (let i = 0; i < 40 && !game.flags.ct_strip; i++) { game.step(0.25); P.settle(); } game.step(2.6); P.settle();
@@ -129,7 +130,7 @@ if (!ONLY || ONLY === 'B') {
   await handover();
   is('B3 Save & quit → Continue after the partial repair: on the upper landing, the cart still hooked, the deck still half way, Kell still at the brake', await ev(() => {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero;
-    return [!!f.zt_hook, !!f.zt_bell, L.state.hooked, +(L.deckY - L.half).toFixed(2), +(h.pos.y - L.top).toFixed(1), P.npc('zl_kell').placed?.anim, document.querySelector('#objective').textContent];
+    return [!!f.zt_hook, !!f.zt_bell, L.state.hooked, +(L.deckY - L.half).toFixed(2), +(h.pos.y - L.top).toFixed(1), P.npc('zl_kell').placed?.anim, game.story.objective().replace(/<[^>]+>/g, ' ')];
   }), (v) => v[0] && !v[1] && v[2] === true && v[3] === 0 && Math.abs(v[4]) < 0.2 && v[5] === 'use' && /bell/i.test(v[6]));
   // a fall at the lift: off the open bay; alive, the task as it was; up again
   is('B4 a fall at the lift: off the open bay onto the deck and the lane; he lives, nothing of the task is lost', await ev(() => {
@@ -144,7 +145,7 @@ if (!ONLY || ONLY === 'B') {
     P.go(L.spots.stairFoot.x, L.spots.stairFoot.z, { tol: 0.6, maxT: 60 }); P.go(L.spots.stairTop.x, L.spots.stairTop.z, { tol: 0.7, maxT: 60 });
     P.use(L.bell.x, L.bell.z, { near: 1.0, kind: 'zt_bell' }); for (let i = 0; i < 60 && !f.zt_bell; i++) { game.step(0.25); P.settle(); } P.settle();
     const b = P.npc('zl_brel'); for (let i = 0; i < 80 && LT.brel; i++) game.step(0.25);
-    return [!!f.zt_bell, +Math.hypot(b.pos.x - L.spots.brelClear.x, b.pos.z - L.spots.brelClear.z).toFixed(1), document.querySelector('#objective').textContent];
+    return [!!f.zt_bell, +Math.hypot(b.pos.x - L.spots.brelClear.x, b.pos.z - L.spots.brelClear.z).toFixed(1), game.story.objective().replace(/<[^>]+>/g, ' ')];
   }), (v) => v[0] && v[1] < 1.2 && /mill line|motor/i.test(v[2]));
   is('B6 the feed switch thrown: the motor runs, the deck comes down; he steps on beside the cart and rides up with it', await ev(() => {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero;
@@ -160,7 +161,7 @@ if (!ONLY || ONLY === 'B') {
     P.use(L.cart.x, L.cart.z, { near: 1.3, kind: 'zt_cart' }); for (let i = 0; i < 60 && !(f.zt_shove && !LT.busy); i++) { game.step(0.25); P.settle(); }
     const k = +L.cartK.toFixed(2);
     P.use(L.cartEnd.x - 1.12, L.cartEnd.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
-    for (let i = 0; i < 120 && LT.brel; i++) game.step(0.25);
+    for (let i = 0; i < 200 && LT.brel; i++) game.step(0.25);
     const b = P.npc('zl_brel');
     return [!!f.zt_shove, k, !!f.zt_water, L.state.water, +Math.hypot(b.pos.x - L.spots.brelTap.x, b.pos.z - L.spots.brelTap.z).toFixed(1), b.placed?.anim];
   }), (v) => v[0] && v[1] === 1 && v[2] && v[3] === true && v[4] < 1.2 && v[5] === 'use');
@@ -182,9 +183,10 @@ if (!ONLY || ONLY === 'B') {
   is('B10 Save & quit → Continue after completion: the deck at the top, the cart at the filler, the cistern full, the standpipe running; Kell at his lever (no hand on the brake), Brel at the tap, Irsa at her bench; their words follow', await ev(() => {
     const LT = game.story.cur.lift, L = LT.L, S = L.spots, d = (id, s) => { const n = P.npc(id); return n.present ? +Math.hypot(n.pos.x - s.x, n.pos.z - s.z).toFixed(1) : -1; };
     const out = [+(L.deckY - L.top).toFixed(2), L.cartK, L.state.water, d('zl_kell', S.kell), P.npc('zl_kell').placed?.anim ?? null, d('zl_brel', S.brelTap), d('zl_irsa', S.irsa)];
-    const r = P.talk('zl_kell', { run: true }); out.push(r.lines);
+    const e = game.room?.exits?.find((x) => !x.room && game.room.id === 'workshop'); if (e) { P.through(e.x, e.z); P.settle(); }
+    const r = P.talk('zl_kell', { run: true }); out.push(r.lines ?? r.r);
     return out;
-  }), (v) => v[0] === 0 && v[1] === 1 && v[2] === true && v[3] >= 0 && v[3] < 1 && v[4] === null && v[5] >= 0 && v[5] < 1.5 && v[6] >= 0 && v[6] < 1 && v[7] >= 1);
+  }), (v) => v[0] === 0 && v[1] === 1 && v[2] === true && v[3] >= 0 && v[3] < 1 && v[4] === null && v[5] >= 0 && v[5] < 1.5 && v[6] >= 0 && v[6] < 1 && v[7] >= 1);   // (the places are read before he walks out of Baldino's workshop to Kell)
   await browser.close();
 }
 

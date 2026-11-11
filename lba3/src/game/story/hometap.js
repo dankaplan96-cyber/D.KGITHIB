@@ -110,7 +110,7 @@ export class HomeTap {
       mergeStatic(grp, { recolor: true });
       const water = new THREE.Mesh(new THREE.CircleGeometry(POOL.r - 0.08, 20), new THREE.MeshStandardMaterial({ color: '#7fd0d8', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.78, emissive: '#1f6a78', emissiveIntensity: 0.35 }));
       water.rotation.x = -Math.PI / 2; water.position.set(POOL.x, 0.1, POOL.z); R.group.add(water);
-      g.physics.add({ type: 'cyl', x: o.x + POOL.x, z: o.z + POOL.z, r: POOL.r + 0.1, top: 0.2, noStand: true, seeThrough: true });
+      g.physics.add({ type: 'cyl', x: o.x + POOL.x, z: o.z + POOL.z, r: POOL.r + 0.1, top: 0.75, noStand: true, seeThrough: true });   // (walked round, reached into from its curb)
       // the growth: crystals climbing the old pillar's west side (they lean when the pump runs: kept apart, one draw)
       const glow = new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 0.9, roughness: 0.25 });
       const growth = new THREE.Group(); growth.position.set(GROW.x - GROW.r - 0.02, 0, GROW.z + 0.1); growth.userData.keep = true; R.group.add(growth);

@@ -46,8 +46,8 @@ export class PumpLine {
   }
   // the street's state: the garden tap and the kitchen tap run once the houses' line is open
   push() {
-    const f = this.f, H = this.home?.parts, runs = !this.on || !!f.ct_bypass, past = (this.story.index ?? 0) > this.ch.pos;
-    if (H?.yard?.stream) H.yard.stream.visible = this.ch.reached() && (past || (!!f.c1_water && runs));
+    const f = this.f, H = this.home?.parts, runs = !this.on || !!f.ct_bypass;
+    if (H?.yard?.stream) H.yard.stream.visible = this.ch.isCur() && !!f.c1_water && runs;   // (through chapter 2: the street's change; afterwards a tap again, shut)
     const K = H?.house?.K;
     if (K?.stream && this.ch.isCur()) { const on = this.on && !!f.ct_bypass && !f.ct_tapShut; K.stream.visible = on; K.stream.scale.set(1, 1, 1); if (H.house.puddle) H.house.puddle.visible = on || (this.on && !!f.ct_bypass && !f.c1_veskGone); }
   }

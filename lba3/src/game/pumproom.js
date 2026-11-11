@@ -128,7 +128,7 @@ export function buildPumpRoom(scene, physics) {
   const riser = (x, y, m, r) => { k.add(cyl(r, r, y, 10), m, x, y / 2, PZ); k.add(sphere(r * 1.25, 10, 8), m, x, y, PZ); k.add(torus(r * 1.3, 0.02, 6, 12), brass, x, 0.4, PZ, 0, { rx: Math.PI / 2 }); B.ccol(x, PZ, r + 0.04, y, { noStand: true }); };
   const UP = { x: -1.7, y: 2.35, r: 0.11 }, LO = { x: -0.5, y: 1.6, r: 0.11 }, CU = { x: 0.7, y: 0.8, r: 0.085 };
   riser(UP.x, UP.y, old, UP.r); riser(LO.x, LO.y, old2, LO.r);
-  k.add(cyl(UP.r, UP.r, 4.0 - UP.x, 10), old, (4.0 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
+  k.add(cyl(UP.r, UP.r, 4.2 - UP.x, 10), old, (4.2 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
   // (the lower run and the copper one move: Zoé's knocks, the copper's shiver — each its own mesh)
   const mk = (geo, m, x, y, z, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.z = rz; o.castShadow = true; B.group.add(o); return o; };
   const lowerRun = mk(new THREE.CylinderGeometry(LO.r, LO.r, 5.0 - LO.x, 10), old2, (5.0 + LO.x) / 2, LO.y, PZ, Math.PI / 2);
@@ -159,7 +159,7 @@ export function buildPumpRoom(scene, physics) {
     // (shut: the handle across the pipe; open: along it, pointing down)
     return { ...wpt(x, PZ), front: wpt(x, PZ + 0.95), open: false, set(b) { this.open = !!b; piv.rotation.z = b ? -Math.PI / 2 : 0; } };
   };
-  const cocks = { upper: cock(4.0, UP.y, old, UP.r), lower: cock(5.0, LO.y, old2, LO.r) };
+  const cocks = { upper: cock(4.2, UP.y, old, UP.r), lower: cock(5.0, LO.y, old2, LO.r) };
   // the copper pipe's own way: up from its run into the lower leg under the cock (a bolted tee), and on to the pump
   k.add(cyl(CU.r, CU.r, 0.5, 10), cu, 5.0, 0.6, PZ + 0.16, 0, { rx: 0.5 });
   k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.0, 0.72, PZ + 0.06);

@@ -34,6 +34,9 @@ await boot('new');
 await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); });
 is('chapter 2 (zeelich) starts on Zeelich, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c2_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 2 && v[1] === true && v[2] === 'zeelich' && v[3] === 'play' && v[4].length > 0);
+// CAMPAIGN-3 (story/zeelift.js): this run comes to Zeelich without the gauge's strip (chapter 2 was skipped), so the
+// arrival's thread is off: Mill Lane's lift is mended, its cistern full, its people there, and Baldino talks at once
+is('without the strip the cistern lift is mended and Mill Lane lived in (the thread counts as done)', await ev(() => { const LT = game.story.cur.lift, L = LT.L; return [LT.on, LT.done, +(L.deckY - L.top).toFixed(2), L.cartK, L.state.water, ['zl_kell', 'zl_brel', 'zl_irsa'].map((id) => !!T.npc(id)?.present)]; }), (v) => v[0] === false && v[1] === true && v[2] === 0 && v[3] === 1 && v[4] === true && v[5].every(Boolean));
 await shot('C2-00-arrive.png');
 const Zt = (code) => ev(code);
 // Baldino (in his workshop if the room exists)
