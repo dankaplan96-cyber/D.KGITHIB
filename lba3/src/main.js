@@ -1122,7 +1122,7 @@ class Game {
       R.group.visible = true;
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
-      if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
+      if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true, R.indoor); }   // (ROOM-LIGHT: a room lit by its own lamps dims the daylight fill, R.indoor)
       this.renderer.setGrade?.(R.grade, R.gradeTint);   // (WA-13 follow-up: an area's own palette)
       // (a story exit may name only the room, { room }: then the room's own spawn — never a position without x/z)
       const sp = spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn;
