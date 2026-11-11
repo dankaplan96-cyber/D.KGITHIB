@@ -336,7 +336,7 @@ export function createHumanoid(opts = {}) {
 // ------------------------------------------------------------------ animator
 export class Rig {
   constructor(root, j) {
-    this.root = root;
+    this.root = root; root.userData.rig = true;   // (a body: not a thing a working hand rests on, workhands.js)
     this.j = j;
     this.phase = 0;
     this.t = Math.random() * 10;

@@ -528,7 +528,10 @@ export function castStops(g, D, m, nav) {
     const a = s.a ?? (s.face ? Math.atan2(m.x + s.face[0] - x, m.z + s.face[1] - z) : (m.a ?? 0));
     // (NO-AIR: a stop worked at with the hands is stood at an arm's length from its thing: workhands.js)
     const ws = s.act && s.act !== 'stand' ? workSpot(g, x, z, a, s.act, { y: g.physics.groundAt(x, z, (m.y ?? g.physics.groundAt(m.x, m.z)) + 0.3) }) : null;
-    if (ws && nav.walkable(ws.x, ws.z) && !doors.some((d) => Math.hypot(d.x - ws.x, d.z - ws.z) < (d.r || 0.9) + DOOR_CLEAR)) { x = ws.x; z = ws.z; }
+    // (and only where a route still ends: a place the grid calls walkable can lie in a pocket behind the thing)
+    // (nor nearer to where somebody else stands than a body's berth and a step: the yard's trough has Pim's mark by it)
+    const crowds = ws && g.npcs.some((o) => o.def?.id !== D.id && o.present !== false && !o.dead && o.pos && Math.hypot(o.pos.x - ws.x, o.pos.z - ws.z) < 1.2 && Math.hypot(o.pos.x - ws.x, o.pos.z - ws.z) < Math.hypot(o.pos.x - x, o.pos.z - z));
+    if (ws && !crowds && nav.walkable(ws.x, ws.z) && !doors.some((d) => Math.hypot(d.x - ws.x, d.z - ws.z) < (d.r || 0.9) + DOOR_CLEAR) && (!nav.planSync || nav.planSync({ x, z }, { x: ws.x, z: ws.z }).ok)) { x = ws.x; z = ws.z; }
     out.push({ ...s, x, z, a });
   }
   return out;

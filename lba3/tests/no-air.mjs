@@ -102,7 +102,12 @@ return ev(async () => {
       if (!n.rig?.j?.armR?.hand) continue;
       if (n.stops) {   // a resident: the round of its state
         if (n.away === 'story' || !n.stops.length) continue;
-        for (const s of n.stops) if (!s.seat) { stopAct = s.act; add(n, 'round', s.id, s.x, s.z, s.a, n.actAnim(s), s.y); }
+        for (const s of n.stops) if (!s.seat) {
+          stopAct = s.act;
+          // (a door: the knock is made after the last step up to the leaf — walkers.js knockTick — so from there)
+          const k = s.door && s.act !== 'noknock' ? WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 0.6, r: 0.3 }) : null;
+          add(n, 'round', s.id, k ? k.x : s.x, k ? k.z : s.z, s.a, s.door ? 'tapTurn' : n.actAnim(s), s.y);
+        }
         stopAct = null;
         continue;
       }
@@ -135,6 +140,7 @@ return ev(async () => {
     n.pos.set(c.x, y, c.z); n.angle = c.a;
     rig.root.visible = true; rig.lodN = 0; rig.noFidget = true; if (!rig.root.parent) G.scene.add(rig.root);
     const dt = 1 / 30, frames = Math.round((W.shot ? W.shot + 0.15 : 2.6) / dt), from = W.shot ? 3 : 36;
+    const free = rig.handsFree; rig.handsFree = c.act === 'warm';
     rig.standFor = null; rig.play('idle'); rig.update(dt, 0); rig.play(c.anim);
     const best = { R: { d: 9 }, L: { d: 9 } }; let feet = [0, 0], stood = false;
     G.scene.updateMatrixWorld();
@@ -143,14 +149,14 @@ return ev(async () => {
       rig.play(c.anim); rig.update(dt, 0);
       rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
       rig.root.updateMatrixWorld(true);
-      if (rig.anim !== c.anim && i > 20) { stood = true; break; }   // (stood down: nothing there to work at, workhands.js)
+      if (rig.anim !== c.anim && i > 20) { stood = true; const la = WH.lookAhead ? WH.lookAhead(G, n.pos.x, n.pos.y, n.pos.z, n.angle, rig.root.scale.y || 1) : null; c = { ...c, why: (n._wh?.why || '') + (la ? ` (drawn ahead: a face at ${la.face.map((d) => d ?? '-').join('/')} m, a top ${la.top ? la.top[1] + ' m high at ' + la.top[0] + ' m' : 'nowhere'})` : '') }; break; }   // (stood down: nothing there to work at, workhands.js)
       if (i < from || W.self) continue;
       for (const s of W.req) { const r = CT.handGap(n, s, CT.roots(), 0.8); const d = r.d ?? 0.8; if (d < best[s].d) best[s] = { d, on: r.name, i }; }
       if (i === frames - 1 || (W.shot && i === Math.round(W.shot * 0.45 / dt))) feet = CT.feet(n);
     }
     const out = { ...c, stood, x: +c.x.toFixed(2), z: +c.z.toFixed(2), a: +(+c.a).toFixed(2), gap: W.self || stood ? null : Math.max(...W.req.map((s) => best[s].d)), hands: W.self || stood ? null : Object.fromEntries(W.req.map((s) => [s, [+best[s].d.toFixed(3), best[s].on || '-']])), feet: /^kneel/.test(c.anim) || c.anim === 'pickup' ? null : feet };
     n.pos.set(keep.x, keep.y, keep.z); n.angle = keep.a; rig.root.visible = keep.vis; rig.lodN = keep.lod; rig.noFidget = keep.nf; if (!keep.par) rig.root.parent?.remove(rig.root);
-    rig.standFor = null; rig.play('idle'); rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
+    rig.standFor = null; rig.handsFree = free; rig.play('idle'); rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
     return out;
   };
   return { ms: Math.round(performance.now() - t0), rooms: Object.keys(G.rooms).length, npcs: G.npcs.length };
@@ -185,6 +191,10 @@ const runState = (key, flags) => ev(([key, flags, ONLY, TRACK_S]) => {
         for (let i = 0, N = Math.round(TRACK_S * 15); i < N; i++) {
           G.step(1 / 15);
           if (G.state !== 'play') P.settle();
+          // (as seen: a person out of the camera's view is posed at a lower rate and without the hands layer — the game's
+          //  step leaves the people it does not draw that way; here each one at work is posed once more as the camera's
+          //  view of them would have it)
+          for (const n of who) if (WORK[n.rig.anim] && n.present) { n.rig.lodN = 0; n.rig.root.visible = true; n.rig.update(1 / 30, 0); }
           if (i % 2) continue;
           G.scene.updateMatrixWorld();
           for (const n of who) {
@@ -201,7 +211,7 @@ const runState = (key, flags) => ev(([key, flags, ONLY, TRACK_S]) => {
         for (const c of tr) if (![...best.keys()].some((k) => k.startsWith(c.who + '|'))) notes.push(`${c.who}: its track never reached a work pose in ${TRACK_S} s`);
       }
     }
-    return { out, notes, scenes };
+    return { out, notes, scenes, probe: WH.probeStats ? { n: WH.probeStats.n, meanMs: +(WH.probeStats.ms / Math.max(1, WH.probeStats.n)).toFixed(2), worstMs: +WH.probeStats.worstMs.toFixed(1), meanTris: Math.round(WH.probeStats.tris / Math.max(1, WH.probeStats.n)) } : null };
   }, [key, flags, ONLY, TRACK_S]);
 for (let si = 0; si < STATES.length; si++) {
   const [key, flags] = STATES[si];
@@ -218,7 +228,7 @@ for (let si = 0; si < STATES.length; si++) {
   if (!r) { check(`state ${tag} was measured`, false, 'the page died twice'); continue; }
   if (process.env.NOAIR_OUT) fs.appendFileSync(process.env.NOAIR_OUT, r.out.map((o) => JSON.stringify({ state: tag, ...o })).join('\n') + '\n');
   for (const o of r.out) { rows.push({ state: tag, ...o }); if (o.gap != null && o.gap > HAND) console.log(`  air ${o.scene} ${o.who} @${o.stop} ${o.anim} ${(o.gap * 100).toFixed(1)} cm`); }
-  console.log(`STATE ${tag}: ${r.out.length} cases in ${r.scenes.length} scenes, ${Math.round((Date.now() - t0) / 1000)} s` + (r.notes.length ? ' NOTES ' + JSON.stringify(r.notes.slice(0, 12)) : ''));
+  console.log(`STATE ${tag}: ${r.out.length} cases in ${r.scenes.length} scenes, ${Math.round((Date.now() - t0) / 1000)} s` + (r.probe ? ` probes ${JSON.stringify(r.probe)}` : '') + (r.notes.length ? ' NOTES ' + JSON.stringify(r.notes.slice(0, 12)) : ''));
 }
 
 // one line per distinct case (the same person at the same stop in several chapter states: the worst)
@@ -235,7 +245,7 @@ const warm = cases.filter((c) => c.act === 'warm');
 const air = cases.filter((c) => c.gap != null && c.gap > HAND && c.act !== 'warm'), feet = cases.filter(footBad), self = cases.filter((c) => c.gap == null && !c.stood);
 // (stood: the game found nothing in reach for the action and has the person stand there instead: listed, not an offender)
 const stood = cases.filter((c) => c.stood);
-for (const c of stood) console.log(`STOOD ${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim} [${c.states[0]}]`);
+for (const c of stood) console.log(`STOOD ${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}${c.why ? ': ' + c.why : ''} [${c.states[0]}]`);
 const line = (c) => `${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}: ${c.stood ? 'stood down' : c.hands ? Object.entries(c.hands).map(([s, [d, on]]) => `${s} ${(d * 100).toFixed(1)} cm${d < 0.79 ? ' from ' + on : ' (nothing in reach)'}`).join(', ') : 'own body'}${c.feet ? ` feet ${c.feet.map((h) => (h * 100).toFixed(1)).join('/')} cm` : ''} [${c.states[0]}${c.states.length > 1 ? ' +' + (c.states.length - 1) : ''}]`;
 if (process.env.LIST) for (const c of cases) console.log('CASE ' + line(c));
 for (const c of air.sort((a, b) => b.gap - a.gap)) console.log('OFFENDER hand ' + line(c));

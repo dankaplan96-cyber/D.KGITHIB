@@ -280,8 +280,9 @@ export class Resident extends NPC {
     for (const s of stops) {
       if (s.seat || s.pair || s._ws) continue;
       const an = this.actAnim(s); s._ws = true;
-      if (an === 'idle' || an === 'wipe' || s.act === 'warm') continue;
-      const m = workSpot(this.game, s.x, s.z, s.a, an, { y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), max: s.door ? 0.5 : 0.9 });
+      if (an === 'idle' || an === 'wipe' || s.act === 'warm' || s.door) continue;   // (a door: the last step to it is the knock's own, knockTick — its stop stays where a route ends)
+      const nav = this.W.nav;
+      const m = workSpot(this.game, s.x, s.z, s.a, an, { y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), ok: nav?.walkable ? (x, z) => nav.walkable(x, z) : null });
       if (m) { s.x = m.x; s.z = m.z; }
     }
     this.stops = stops;
@@ -333,7 +334,7 @@ export class Resident extends NPC {
     if (!stageOk(s, this.W.stage)) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
     if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
-    if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
+    if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; this.kGo = instant ? 0 : undefined; this.kIn = 1.1; return; }
     this.st = 'dwell';
     if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
     else if (s.a != null) this.targetAngle = s.a;
@@ -341,6 +342,7 @@ export class Resident extends NPC {
     this.note('at ' + (s.id || s.act));
   }
   leave() {
+    this.rig.handsFree = false;
     const s = this.stop;
     // what it picks up here it carries on from here
     if (s.carry !== undefined) this.carrySet(s.carry);
@@ -599,6 +601,7 @@ export class Resident extends NPC {
     // (a stop with `gest`: now and then a shrug or a sigh over the dry well, a breath out at the warm post)
     if (s.gest && (this.gestT -= dt) <= 0) { this.rig.doGesture(s.gest[Math.floor(this.rnd() * s.gest.length)]); this.gestT = 3 + this.rnd() * 4; }
     if (this.tmr <= 0) this.leave();
+    this.rig.handsFree = s.act === 'warm';   // (a hand held out to a heat post's warmth is not on it: workhands.js leaves it be)
     this.animate(this.actAnim(s), dt, 0);
   }
   // a pair meets: each waits for the other, then they talk (the one who sees the other waiting starts it; the other joins)
@@ -637,10 +640,22 @@ export class Resident extends NPC {
   }
   knockTick(dt, s) {
     // at its own door: a hand to the latch, a step in, gone for a while
+    // (NO-AIR: first the last step up to the door, so that the hand is on it: its stop is where the route ends, a
+    //  walking body's berth off the wall and out of any arm's reach of the leaf; the step in is that much shorter)
+    if (this.kGo === undefined) {
+      const m = s.act === 'noknock' ? null : workSpot(this.game, this.pos.x, this.pos.z, this.angle, 'tapTurn', { y: this.pos.y, max: 0.6, r: 0.3 });
+      this.kGo = m ? m.moved : 0; this.kIn = 1.1 * Math.max(0.3, 1 - this.kGo / 0.55);
+    }
+    if (this.kGo > 0.005) {
+      const step = Math.min(this.kGo, dt * 1.1); this.kGo -= step;
+      this.pos.x += Math.sin(this.angle) * step; this.pos.z += Math.cos(this.angle) * step;
+      this.animate('walk', dt, 1.1);
+      return;
+    }
     this.tmr -= dt;
     if (this.tmr > 0.5 || s.act === 'noknock') this.animate('tapTurn', dt, 0);
     else {
-      const k = 1 - this.tmr / 0.5, step = dt * 1.1;
+      const k = 1 - this.tmr / 0.5, step = dt * (this.kIn ?? 1.1);
       this.pos.x += Math.sin(this.angle) * step; this.pos.z += Math.cos(this.angle) * step;
       this.animate('walk', dt, 1.1);
     }

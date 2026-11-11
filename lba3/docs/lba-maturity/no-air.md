@@ -27,7 +27,7 @@ changed beats, cut from the film's own frames at the same scene times: `captures
 | The resident's question (14.9) | Both forearms held up in front of him, as if he carried a box. | One gesture: a thumb back over his shoulder at the harbour row he asks about. | A pointing gesture, not work; no contact expected. |
 | The resident's walk off (26.4–28.5) | His walk ended with his left foot over the pier's edge (the sole 7.8 m "over the ground": the sea). | The walk ends 0.3 m in. | Feet on the deck. |
 | Twinsen "mending the lamp" (29–31.6, 35.2–46.2) | Fists at chest height over the table: the screwdriver 22 cm from anything, the left hand 27 cm. | The lamp has what he mends (interiors.js): a brass collar on its stem held by one screw on his side. The screwdriver's tip sits in the screw, its shaft in line with it; each stroke of his wrist turns the screw a radian and it goes in (6 mm over the scene), the tip lifting a hair as the wrist comes back. His left hand is on the lamp's shade. The strokes stop while he looks over at Arthur. | Tip to screw ≤ 0.8 cm in the strokes (0.7 cm is the lift between strokes); left hand 1.1 cm from the shade; the screw turns 10.3 rad and goes in 5.9 mm. |
-| The screwdriver laid down (66.65–67.15) | It left his hand 11 cm from where it then lay (a jump in one frame). | His hand is solved to hold the tool exactly where it will lie; it lies by the table's near edge now, pointing away from him. | See the test line below. |
+| The screwdriver laid down (66.65–67.15) | It left his hand 11 cm from where it then lay (a jump in one frame). | His hand is solved to hold the tool exactly where it will lie; it lies by the table's near edge now, pointing away from him. | It moves 1.4 mm as it leaves his hand. |
 | Arthur at his boat (29–58) | Kneeling, his hands were 21–46 cm (right) and 29–41 cm (left) from anything: the hull lay on the floor, half a metre under them. The mast "fitted" by jumping 64 cm from his hand to the hull at 36.2. | The boat stands on a low crate, his building stand, its deck at his hands' height. His left palm holds the hull by the stern. The mast is upright in his right fist: it rests on the deck by its step as he tries it, goes up as he shows it ("Dad! The mast fits!"), comes down over the step and in — home at 36.2, the click — he holds it a moment and lets go; then that hand rubs the deck by the bow. | Left hand 0.1–0.5 cm from the hull; the mast is 0.8 mm from its fitted place while still in his hand and moves 0.8 mm as he lets go; right hand ≤ 1.0 cm from the deck afterwards. |
 | Zoé at the seed tray (29–39.5) | Right palm 0.9–19 cm (median 6.5), left 8.5–17 cm (median 14) from the tray. | Her palms press the soil of the two pots she is filling, in turn. | ≤ 1.4 cm (both hands); her right hand comes up to 5 cm off while she turns to look at Arthur (36.4–37.6), which is not counted. |
 
@@ -45,75 +45,72 @@ every area and room built, every person of `game.npcs` is taken through every ha
 - the story's people where their chapter places them (a placement's pose),
 - the cast rounds (castrounds.js) and the household rounds (roomlife.js) at each stop,
 - every resident (walkers.js: Citadel, the story residents, the islands, the rooms, the ports) at each stop of the
-  round their state gives them,
-- the room people who walk a track (hamlife.js, isleslife.js, deeplife.js), played for 64 s.
+  round their state gives them; a door's knock is measured from where the knock is made (the last step up to the leaf),
+- the room people who walk a track (hamlife.js, isleslife.js, deeplife.js), played for 64 s; each one at work is posed
+  as the camera's view of them has it (out of view the game poses people at a lower rate and without the hands layer).
 
 Each stop's pose is played on the person's own rig at the stop and the working hand's least gap over the action is
 taken (both hands for tinker, potting, kneelWork, search, use, pump; the right for reach, tapTurn, touchWater, setDown,
 pickup, reachHigh). An offender: a working hand more than 5 cm from any drawn surface, or a standing sole more than
 6 cm off the ground. `wipe` (hands dried on the apron: the body's own surface) and `warm` (a hand held out to a heat
-post's warmth) are listed, not measured.
+post's warmth) are listed, not measured. A stop where the game has the person stand instead of work is listed as
+STOOD with the reason and what is drawn before it (how far the first face and the first table-high top are).
 
-### What was changed (all generic; no per-stop edits yet)
-1. **Hands are put on what stands there** (`src/game/workhands.js`, a layer at the end of `Rig.update`, set on every
-   NPC): for a work action the top of the table, bench, crate, sill or rim in front (or the ground, for the actions
-   that go down to it), or the face of the wall, post, loom or door, is read from the physics' colliders once per stop,
-   and the arms are solved for the palms each frame on top of the action's own pose (with up to 0.64 rad more bend of
-   the chest when the thing is low or far). Not run for people the far / out-of-view posing rate skips.
-2. **Stops are stood at an arm's length** (`workSpot`): a round's work stop is moved along its own facing until its
-   thing is 0.5 m from the body's middle (the stops were set 0.8–1 m off: a walker's berth), where the place is free.
-   Residents' rounds (walkers.js `setRound`), the cast rounds and the household rounds (roomlife.js).
-3. **A track's walk ends on its spot** (engine/scripts.js `goto … near`): the room people's walks ended anywhere within
-   half a metre of the spot they then worked at.
-4. **Nothing there: no miming.** Where no surface is in reach the action is stood down (`Rig.standFor`): the person
-   stands at the stop instead of working the air. The sweep lists these as STOOD.
-5. Arthur's boat stand (Phase 1) is also where he works in play (his mark's `kneelWork`): the hull's deck has a
-   collider for his hands.
+### What was changed (generic; one story placement)
+1. **Hands are put on what is drawn there** (`src/game/workhands.js`, a layer at the end of `Rig.update`, set on every
+   NPC). Once per stop the triangles of the rigid meshes within 1.3 m of the worker's hands are gathered (nobody's
+   body; a big mesh is read by boxed runs of 96 triangles, indexed once), and each palm's place is found on them by
+   short rays from where the pose has the hands: down for a top (a table, a bench, a crate, a rim; the ground for the
+   actions that go down to it), forward for a face (a wall, a post, a door, a loom), trying up to 0.4 m along the
+   facing, 0.24 m up and down a face, the two hands nearer each other for a narrow thing, and as little more bend of
+   the chest as reaches (0 to 0.85 rad). The arms are then solved for the palms each frame on top of the action's own
+   pose. What was found at a stop (or not found) is kept for the person's next time there, until the story's flags
+   change. (The first version read the physics' colliders: a collider is a box or a cylinder round the thing, and a
+   palm on its face was 6 to 60 cm from the mesh. That is gone.)
+2. **Nothing in reach: no miming.** The action is stood down (`Rig.standFor`): the person stands at the stop instead
+   of working the air. A one-off move (setDown, pickup, reachHigh) is judged before it sets off.
+3. **Stops are stood at an arm's length** (`workSpot`): a round's work stop is moved along its own facing until its
+   thing is 0.5 m from the body's middle (the stops were set 0.8 to 1 m off: a walker's berth), where the place is
+   free, a route still ends there, and (the cast's rounds) nobody else's place is crowded. Read from the colliders;
+   from what is drawn where no collider stands on the line.
+4. **A knock steps up to its door** (walkers.js `knockTick`): the stop stays where the route ends; the last 0.1 to
+   0.6 m to the leaf are the knock's own, and the step in is that much shorter.
+5. **A track's walk ends on its spot** (engine/scripts.js `goto … near`).
+6. **A hand held out to a heat post** (`warm`) is left as it is (`rig.handsFree`).
+7. Chapter 1's worker at the lift stands at the lift's control (the opening's), both hands on it; he stood 2 m short
+   of the mast cranking the air (story/chapter1.js).
+8. Arthur's boat stand (Phase 1) is also where he works in play.
 
 ### Numbers
-The sweep could not be run whole: the machine was shared (load 15–32 on 4 cores, memory short), and pages with every
-area built died for lack of memory. What was measured:
-
-| Run | States covered | Distinct work cases | Hand in the air (> 5 cm) | On a thing | Stood down | Own body / warming |
+| Run | States | Distinct work cases | Hand in the air (> 5 cm) | On a thing | Stood down | Own body / warming |
 |---|---|---|---|---|---|---|
-| Base (ba23dfa6) | well, project ×2, zeelich ×2, dig (6 of 21) | ~220 | **172** (tinker 67, setDown 41, reach 20, kneelWork 16, tapTurn 11, touchWater 8, potting 6, other 3); typical gap 20–80 cm | ~30 | — | 14 / 4 |
-| After, changes 1–4 | well, project, zeelich, dig (4 of 21) | 219 | **66** | 61 | 77 | 14 / 4 |
-| After, as committed (a one-off action's look-ahead made stricter) | well only (1 of 21) | 99 | **21** (base, the same state: 74) | — | — | — |
+| Base (ba23dfa6) | 6 of 21 (well, project ×2, zeelich ×2, dig) | ~220 | **172** (tinker 67, setDown 41, reach 20, kneelWork 16, tapTurn 11, touchWater 8, potting 6, other 3); typical gap 20–80 cm | about 30 | — | 14 / 4 |
+| After, before the merge with the main branch | 21 of 21 (3 471 cases measured) | 269 | **2** (two room people on a track, il_zuzz and il_obo, measured out of the camera's view: the sweep now poses them as seen) | 96 | 150 | 16 / 6 |
 
 Feet: no standing worker's sole more than 6 cm off the ground in any run (0 offenders, before and after).
-The other 15–17 states (chapters 5–13) were not measured after the change. They run the same code on the same kinds
-of stops; their numbers are unknown, not assumed.
 
-`tests/no-air.mjs` therefore **fails today** on its hand check, by design: it lists what is left.
+### Cost (SwiftShader container, the machine shared: CPU time, no frame-rate claim)
+- A stop's first look (one gather and the rays): 1.5 to 4 ms mean over a whole sweep state (200 to 470 looks each,
+  1 800 to 2 300 triangles gathered per look), with every area built. In ordinary play in Citadel: 9 looks in the
+  first minute, about 6 ms each under a load of 14 on 4 cores; the first look of a session also indexes the big
+  meshes (the ground, the merged streets): 90 to 460 ms once, measured at boot. After a person's first time at a stop
+  nothing is gathered again there until the story's flags change.
+- Per frame: two arms solved per visible worker (as before).
 
 ### Left (honest list)
-1. **Hands on a collider that is not the thing's drawn surface** (most of the 66): the layer reads colliders, the sweep
-   measures triangles. Where a prop's collider is a wide box or cylinder round a thinner thing, the palm is put on the
-   collider's face, 6–60 cm from the mesh. Measured in the four states:
-   - Citadel: garrick@gar_tap, tobb@tobb_stall, gurt@gurt_trolley, nell@mark (6 cm), and the four house-door knocks
-     (maro, tilde: the door is set 14–17 cm back in the wall's collider);
-   - Zeelich: kira@kira_b, zr_fennick@fen_dark, @fen_post1, zr_oma@oma_box;
-   - Desert: dg_cook@cook_pot/@cook_pour/@cook_table, dg_clerk@clk_b, dg_mech@mech_pile/@mech_stake/@mech_fence,
-     dg_dig@dig_pile/@dig_rim, dg_surv@surv_scope, safi@safi_door, dkid@pebble (a pickup 36 cm over the sand);
-   - the Hamalayi: lh_sana@sana_barrels/@sana_rack, lh_tam@tam_wood4/@tam_fire, lh_grum@grum_cart/@grum_crates,
-     lh_bero@bero_cart, lh_mira@mira_pot;
-   - rooms: zoe@table and @stove (5.7 cm), hedda@hedda_stove (6 cm), wim@wim_bench/@wim_parts, luc@luc_serve,
-     osk@osk_crates, pask@pask_gate, il_zuzz, il_avra (5.4 cm);
-   - islands: Knartas kn_mother@mo_crates, kn_nets@ne_rack1/2; Mosquibee mb_bzzra, mb_tend1, mb_tend2 (the hives);
-     Old Watch ow_mason; the Orchard or_pick1, or_pick2, or_pell; the Platform pf_vill1, pf_vill2; Under-Gas ug_gauge,
-     ug_fitter, ug_foreman (the pump's round collider).
-   The fix per stop is one of: give the prop a collider that is its top or face; move the stop; or name it in
-   `workhands.js AIR_STOPS` ('who@stop': the person stands there instead). The list is in place and empty: nothing was
-   added to it without a sweep to check it.
-2. **77 stops stood down** (in the four states: Citadel 9, Zeelich 8, Desert 12, the Hamalayi 7, the islands 34, rooms 7):
-   nothing was in reach, so the person now stands at the stop instead of working. Each wants a small prop (a bench, a
-   crate, a pot) or a new place. None was added: no prop was placed without a picture to judge it by.
-3. **The story's placed poses** are not moved (a chapter's mark is checked by its own tests): chapter 2's worker at the
-   lift plays `use` 42 cm from the mast (the lift now has a control he could be put at).
-4. **Scripted scenes** in src/game/story/*.js other than the opening were not swept: their people get the hands layer
-   like everyone (it runs wherever an NPC plays a work action), but no scene was measured.
-5. **Looks**: the hands layer has not been looked at in play (only measured). A deep bend to a low crate (up to
-   0.64 rad on top of the action's own) may read as too much; palms lie flat on tops whatever the action.
-6. **Cost**: not measured. The layer solves two arms per visible worker per frame (about thirty small matrix updates
-   each) and reads a handful of colliders once per stop; no frame time was taken.
-7. The opening's Arthur close-ups stay on his face; his hands' work shows in the wide shots only.
+1. **Stops where the person now stands instead of working** (see the numbers; the full list is at the end). Three
+   kinds: nothing drawn within 2 m on the stop's line (a stop named for a thing that is not there, or faced past
+   it); the thing 0.6 to 2 m off and the stop not moved (the place by it is not free or not walkable); the thing in
+   front but out of these short arms' reach from a walker's berth (0.43 m from the collider: a low crate, a trough, a
+   cart's bed). Each wants its stop set by hand at the thing, a small prop, or the last step taken as the knock takes
+   it. None was done: no stop was moved and no prop placed without a picture to judge it by.
+2. **Track people who never reached a work pose in 64 s** are not measured (the sweep's NOTES name them: il_avra,
+   il_ione, il_zett in most states; keeper, il_mila, il_rudd, il_ulla, hl_dorje, il_nessa in some).
+3. **Scripted scenes** in src/game/story/*.js other than the opening were not swept: their NPCs get the hands layer
+   like everyone, but no scene was measured.
+4. **Looks**: the layer has been measured, not watched. A bend of up to 0.85 rad over a low crate may read as too
+   much; palms lie flat on tops and against faces whatever the action; a hand on a narrow thing can slide a few
+   centimetres past its edge with the action's own movement; a person who stands where they used to work looks idle.
+5. **Far people**: beyond the fog or out of the camera's view the layer does not run (and nothing is stood down
+   until the person is first seen at the stop).
+6. The opening's Arthur close-ups stay on his face; his hands' work shows in the wide shots only.
