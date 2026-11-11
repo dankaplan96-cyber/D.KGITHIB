@@ -7,7 +7,7 @@ export const steps = [
   ['intro', () => P.settle()],
   // CAMPAIGN-1 (hometap.js): the household problem first — the door waits for the tap, the tap is turned by hand (dry,
   // the pipe knocks), Arthur's cup carried from under the stove's overflow to the sink
-  ['the door: the tap first', () => { const e = game.room.exits.find((x) => !x.room); const r = P.through(e.x, e.z); return { ...r, room: game.room?.id, fail: game.room?.id === 'house' && !game.flags.pr_tap ? null : 'left the house before the tap' }; }],
+  ['the door: the tap first', () => { const e = game.room.exits.find((x) => !x.room); P.tapFirst = false; const r = P.through(e.x, e.z); P.tapFirst = true; return { ...r, room: game.room?.id, fail: game.room?.id === 'house' && !game.flags.pr_tap ? null : 'left the house before the tap' }; }],
   ['the kitchen tap: dry, the pipe knocks', () => {
     const H = game.story.chapters[0].home.parts.house; const r = P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'h_tap' });
     for (let i = 0; i < 60 && !game.flags.pr_tap; i++) { game.step(0.25); P.settle(); }

@@ -245,7 +245,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     cock: TP(CART0.x - PUSH - 0.3, CART0.z + 0.46, Math.PI, 'setDown'),           // the cart's cock (at the filler)
     deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd), cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
     filler: W(FIL.x, FIL.z), cistern: W(CIS.x, CIS.z), standpipe: W(TAP.x, TAP.z), sign: W(SIGN.x, SIGN.z),
-    dial: TP(DIAL.x, DIAL.z, Math.PI / 2, 'setDown'), crank: TP(CRANK.x - 0.05, CRANK.z, Math.PI / 2, 'tinker'), bench: W(PUMP.x, PUMP.z),
+    dial: TP(DIAL.x, DIAL.z, Math.PI / 2, 'setDown'), crank: TP(CRANK.x - 0.02, CRANK.z + 0.2, Math.PI / 2, 'tinker'), bench: W(PUMP.x, PUMP.z),   // (crank: his hand on the wheel's rim at the hub's height, not at its empty middle)
     lane: W(-6.6, 22.8), bay: { ...W(T.x1 - 0.5, DECK.z), z0: W(0, BAY.z0).z, z1: W(0, BAY.z1).z }, wheelAt: W(MAST.x, MAST.z),
     state: {}, running: false, cartK: 0,
     setDeck(y) {

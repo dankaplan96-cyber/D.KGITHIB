@@ -68,6 +68,9 @@ const endState = () => ev(() => {
     intro: !!f.intro, opening: !!f.opening, ball: !!G.hero.hasBall,
     objective: document.querySelector('#pause-objective').textContent.trim(), objectiveShown: G.hud.objT > 0 && !(G.hud.toastLog || []).some((m) => m.startsWith('Check the well')), // (CLAR-2: the panel comes up for a few seconds as control comes back, in either HUD; no toast repeats it)
     zoeOut: zoe.present && Math.hypot(zoe.pos.x - water.door.x, zoe.pos.z - water.door.z) < 2, zoeControlled: !!zoe.controlled,
+    // (CAMPAIGN-1, story/hometap.js: in a new game Zoé is still at the sink when control comes back; she goes next door
+    //  once the cup is in the sink)
+    zoeAtSink: (() => { const Z = G.story.chapters[0].home?.parts?.house?.zoe; return !!(Z && zoe.present && Math.hypot(zoe.pos.x - Z.x, zoe.pos.z - Z.z) < 0.8); })(), tapFirst: !!f.pr_v2 && !f.pr_tap,
     arthur: [ar.forceAnim, !!ar.controlled], hero: [+(G.hero.pos.x - G.rooms.house.center.x).toFixed(2), +G.hero.pos.z.toFixed(2)],
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
     saved: !!save?.flags?.opening, savedRoom: save?.room,
@@ -78,7 +81,7 @@ const endState = () => ev(() => {
   };
 });
 const good = (s) => s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
-  && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
+  && s.objective.startsWith("The tap's stopped again") && s.objective.includes('Try the kitchen tap') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.tapFirst && s.zoeAtSink && !s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
 
 // ---------------------------------------------------------------- 1. full playback
 await boot('new');
@@ -315,7 +318,7 @@ check('...and it still ends cleanly', good(await endState()));
 await boot('continue', false);
 await run(1.5);
 const cont = await endState();
-check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective.startsWith('Check the well') && cont.zoeOut && cont.arthur[0] === 'kneelWork', cont);
+check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective.startsWith("The tap's stopped again") && cont.zoeAtSink && cont.arthur[0] === 'kneelWork', cont);
 
 // ---------------------------------------------------------------- 5. new game again (from the title, with a save present)
 await boot('new', false);
@@ -325,6 +328,23 @@ const dup = await ev(() => ({ zoes: game.npcs.filter((n) => n.def.id === 'zoe').
 check('a second new game: same end state, nothing duplicated', good(again) && again.sceneKids === kids0 && dup.zoes === 1 && dup.lifts === 1, { again, dup });
 
 // ---------------------------------------------------------------- 6. the first objective is playable
+// (CAMPAIGN-1: the door first waits for the kitchen tap — a line, no hint — then, the tap tried, for the ball)
+const tapFirst = await ev(() => {
+  const G = game, e = G.room.exits.find((x) => x.to === 'outdoor');
+  G.step(1.2);
+  const said = [], sv = G.say; G.say = function (n, lines, ...a) { said.push(...lines); return sv.call(this, n, lines, ...a); };
+  G.hero.pos.set(e.x, 0, e.z); G.step(0.5);
+  const st = G.state;
+  for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  G.say = sv;
+  const r = { st, room: G.room?.id, tap: !!G.flags.pr_tap, said: said.slice(0, 3) };
+  const H = G.story.chapters[0].home.parts.house;
+  G.hero.pos.set(H.front.x, 0, H.front.z + 0.25); G.hero.angle = Math.PI; G.step(0.3);
+  G.input.taps.add('KeyE'); for (let i = 0; i < 300 && !G.flags.pr_tap; i++) { G.step(0.05); if (G.state === 'dialog') G.input.taps.add('KeyE'); }
+  for (let i = 0; i < 200 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  return { ...r, tried: !!G.flags.pr_tap, state: G.state };
+});
+check('the door first holds him for the kitchen tap; the tap tried by hand', tapFirst.st === 'dialog' && tapFirst.room === 'house' && !tapFirst.tap && tapFirst.said.some((l) => /tap first/i.test(l)) && !tapFirst.said.some((l) => /magic ball/i.test(l)) && tapFirst.tried && tapFirst.state === 'play', tapFirst);
 const blocked = await ev(() => {
   const G = game, e = G.room.exits.find((x) => x.to === 'outdoor');
   G.step(1.2); // (doors wait a moment after a room change)
@@ -343,7 +363,7 @@ const took = await ev(() => {
   G.hero.pos.set(e.x, 0, e.z); G.step(2.0);
   return { ball: G.hero.hasBall, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#pause-objective').textContent };
 });
-check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && took.obj.startsWith('Check the well'), took);
+check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && !took.obj.includes('cupboard'), took);
 
 const fails = done();
 await browser.close();

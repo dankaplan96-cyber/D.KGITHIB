@@ -52,7 +52,7 @@ export class LiftThread {
       case 'zl_kell': return { ...S.kell, anim: this.on && cur && !f.zt_ride ? 'use' : null };   // (his hand on the brake until the deck is up)
       case 'zl_brel':
         if (this.brel) return { x: this.brel.n.pos.x, z: this.brel.n.pos.z, a: this.brel.n.angle };   // (on his way: where he is)
-        return stuck ? { ...S.brelA } : this.on && cur && !f.zt_water ? { ...S.brelClear } : { ...S.brelTap, anim: 'use' };
+        return stuck ? { ...S.brelA } : this.on && cur && !f.zt_water ? { ...S.brelClear } : { ...S.brelTap, anim: 'kneelWork' };   // (NO-AIR: down at the trough under the running spout, his hands at its rim; a standing 'use' had nothing at that height before him and was stood down)
       case 'zl_irsa': return { ...S.irsa };
     }
     return undefined;

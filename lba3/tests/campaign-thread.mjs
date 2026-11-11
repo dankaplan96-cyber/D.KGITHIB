@@ -165,7 +165,7 @@ if (!ONLY || ONLY === 'B') {
     for (let i = 0; i < 200 && LT.brel; i++) game.step(0.25);
     const b = P.npc('zl_brel');
     return [!!f.zt_shove, k, !!f.zt_water, L.state.water, +Math.hypot(b.pos.x - L.spots.brelTap.x, b.pos.z - L.spots.brelTap.z).toFixed(1), b.placed?.anim];
-  }), (v) => v[0] && v[1] === 1 && v[2] && v[3] === true && v[4] < 1.2 && v[5] === 'use');
+  }), (v) => v[0] && v[1] === 1 && v[2] && v[3] === true && v[4] < 1.2 && v[5] === 'kneelWork');
   await shot('B7-cistern');
   is("B8 Irsa's bench: a wrong setting cranked answers too (no proof); set to the strip, the needle kicks the other way: the proof", await ev(() => {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero;

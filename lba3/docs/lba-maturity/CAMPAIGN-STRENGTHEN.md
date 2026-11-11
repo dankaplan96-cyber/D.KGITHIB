@@ -98,6 +98,20 @@ conversation (section 4).
 | 2 | 676 → **879** (03 + 04 + 05: 81 + 210 + 386 → 81 + 227 + 571) | 1,471 → 1,823 | 72 · 1,206 → 104 · 1,691 | 32.6 → **43.5** | home, the lane, the pump room and back (+185 s; segment 04's +17 s is the bot's depot fight, not a change) |
 | 3 | 235 → **416** (06) | 471 → 594 | 53 · 829 → 81 · 1,305 | 16.8 → **26.9** | Brel, the lift's hand actions and the ride, the cart, the bench (about +135 s; the rest is the bot's depot fight, longer in this run) |
 
+**Re-measured 11.11 after the merge** of `ccr-c1c2c4b9-dep6ed` (NO-AIR, depth wave 1, ZOE-LOOK, STEALTH-COVER, P12) into
+this branch: a fresh chain 01–06 from a new game, by input, Save & quit → Continue between segments, no failed segment,
+**0 deaths**, **1 ISO assist** (segment 06's depot fight, below 3 HP, as before):
+
+| Ch | bot s of free play (segments) | walked m | lines · words | est. first play (min) |
+|---|---|---|---|---|
+| 1 | **402** (01 + 02: 319 + 83) | 812 | 80 · 894 | about 22.8 |
+| 2 | **828** (03 + 04 + 05: 81 + 183 + 564) | 1,783 | 104 · 1,691 | about 42.0 |
+| 3 | **332** (06) | 533 | 81 · 1,305 | about 24.4 |
+
+The minutes are the earlier wave-1 estimates moved by 1.8 × the change in bot seconds: **estimates**. Chapter 3's drop
+against the run above is mostly the bot's depot fight (shorter in this run); chapter 2's, the bot's walks. Runs in
+`/dev/shm/t920run/a` (the session's scratch, not in the repository).
+
 The estimates use `chapter-balance.md`'s formula with one more deduction step counted in chapter 1 (which pipe), two in
 chapter 2 (which pipe is the new one; which cock) and two in chapter 3 (hook before bell; the dial). They are
 **estimates**. The runs: base in `/dev/shm/c1010/base`, wave 1 in `/dev/shm/c1010/new2` (logs, stats, traces, a picture
@@ -130,6 +144,22 @@ Did the player discover the problem, test an idea and see the result — or did 
 
 ## 5. Wave 1, as built (the treatment's sections 1–3)
 
+**Status (11.11, after the merge): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader;
+nobody has played it, nothing was listened to, no frame rate measured. Verified on the merged build: campaign-thread,
+prologue, chapter1, chapter2, zoe-resume, depot-watch, depot-corner, zeelich-life, zeelich-doors, sewers, save-migration,
+resume, opening, no-air (states 0–4, chapters 1–3, one process each: 0 offenders of hand or foot), overlaps,
+world-consistency, the new `tests/campaign-hands.mjs` (the hero's own hand at the thing, at the moment each campaign hand
+action takes effect, and the thread's working people), and the chain 01–06 above. The fixtures' old saves
+(`tests/fixtures/campaign/base-*`, and `save-migration`'s) load and play on. Pictures (game camera, deviceScaleFactor 1):
+`captures/campaign-wave1/` (`u*`: chapters 1–2; `x*`: the cup and chapter 3, not for sending).
+
+After the merge: Brel at the standpipe works with one hand in the trough under the spout (`touchWater`); his two-handed
+`use` there had nothing at that height before him and the NO-AIR layer stood him down. A new game's door waits for the
+tap, so `tests/lib/player.js` `P.through` tries the kitchen tap first (by input, `P.homeTap`; `P.tapFirst = false`
+leaves the door to refuse), and `opening.mjs`, `sewers.mjs` expect the thread's first objective, Zoé at the sink and the
+garden pipe's line on the way. The hero's hand actions are his own (`story/reach.js`); `workhands.js` is on NPCs only and
+never solves his arm, so the two do not meet.
+
 | Chapter | Before (base) | Now: what the player's hands do | Where |
 |---|---|---|---|
 | 1 Home | the film said the tap had stopped; control began with "take the ball" and "check the well"; Zoé had already gone next door | Zoé is still at the sink and Arthur at his boat. The door waits ("the tap first"). He holds his hand under the tap (not a drop; the brass riser beside the picture shakes and knocks three times). Arthur's cup stands on the stove under the boiler's overflow: he lifts it, carries it in his hand to the sink and puts it under the tap; one drop falls into it. Outside, the garden standpipe knocks as he passes, then the copper riser at the shut pump room up the lane ("toward the square"). Zoé is next door by the time he needs her kettle. In the cave he reaches into the pool at the shaft's foot (warm); a moment later a pump starts above (a hum, a shake) and the crystals grown up the old pillar lean toward it. After Sendell's two lines: the pump runs in cycles, he will watch the next | `story/hometap.js`; the kitchen, the yard, the lane, the well cave |
@@ -158,7 +188,14 @@ Citadel's lane pump No. 14 (Esmer).
 
 **Left open by wave 1** (for the next waves or the coordinator): the pump room has no prompts in chapters 3 onward
 (its door is open, the room is as he left it); Bram, who keeps the lane's hand pump, says
-nothing about the pump room (his lines are `story/life.js`'s side story).
+nothing about the pump room (his lines are `story/life.js`'s side story). Suites outside the list above that start a
+new game and walk out of the house now go through `P.homeTap` (in `P.through`); those that set the hero outside by hand,
+or check the old first objective text ("Check the well") right after the opening, were not run here and may need the
+same change as `opening.mjs` (e.g. `camera-doors`, `clarity`, `door-sweep`, `epilogue-home`, `interior-life`,
+`longsession`, `stability`, `well-town`). In the kitchen at the game camera the hero at the sink and Arthur's cup are
+small (the cup is a few pixels): the beat reads from its lines and the objective more than from the
+picture. The worker's last "hand-contact rework of the home module" was found already done at fe6dd248 (the tap, the
+cup, the catch basin through `story/reach.js`); nothing further was changed there.
 
 ## 6. The next waves (chapters 4–12 and the aftermath)
 

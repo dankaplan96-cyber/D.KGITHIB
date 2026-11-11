@@ -75,11 +75,14 @@ export class HomeTap {
       mergeStatic(pipe, { recolor: false });
       // the stove boiler's overflow: a thin iron pipe out of the tiles over the stove's right end, forward to its front
       // edge and turned down over it (the cup stands under it, where a hand set down from the room meets it: reach.js)
-      const cupAt = { x: STX + 0.5, y: 0.875, z: BZ + 0.53 };
+      // (it stands on a little iron trivet on the stove top, 9 cm up: the cup's rim at the height of his set-down hand)
+      const cupAt = { x: STX + 0.5, y: 0.965, z: BZ + 0.53 };
       const ov = new THREE.Group(); H.group.add(ov);
       const om = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, iron); m.position.set(x, y, z); m.rotation.x = rx; ov.add(m); };
       om(new THREE.CylinderGeometry(0.014, 0.014, 0.5, 6), cupAt.x, 1.27, BZ + 0.28, Math.PI / 2);
       om(new THREE.CylinderGeometry(0.014, 0.018, 0.12, 6), cupAt.x, 1.21, cupAt.z);
+      { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.008, 5, 12), iron); ring.position.set(cupAt.x, cupAt.y - 0.008, cupAt.z); ring.rotation.x = Math.PI / 2; ov.add(ring);
+        for (let i = 0; i < 3; i++) { const t = (i * 2 * Math.PI) / 3; om(new THREE.CylinderGeometry(0.006, 0.006, 0.09, 5), cupAt.x + Math.cos(t) * 0.044, 0.875 + 0.045, cupAt.z + Math.sin(t) * 0.044); } }   // (the trivet)
       mergeStatic(ov, { recolor: true });
       // Arthur's cup: blue enamel, a handle (moved: kept apart)
       const cup = new THREE.Group(); cup.userData.keep = true; H.group.add(cup);
