@@ -41,6 +41,7 @@ import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
 import * as P from './props.js';
 import { textures } from '../engine/textures.js';
+import { pumpDoors, pumpExit } from './pumproom.js';
 
 export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 }, sewerglobe: { x: 5960, z: 0 } };
 // DOORS-LBA2 #1-#5: LBA2's two lift hatches (its scenes 42 and 48 → 17), in our Citadel's metres. The lower town's
@@ -878,10 +879,12 @@ function buildHatch(scene, physics, world, def) {
 
 // (SEWER-LIFT, DOORS-LBA2: a hatch is no door: on its deck, the lever takes him down, story/sewers.js. The lower
 // town's pink house and the terrace's porch no longer lead down: the porch is gone, the house is Fosse's office.)
-export function sewerDoors() { return []; }
+// (CAMPAIGN-2: the lane's pump room is under the street too: its door and way out are Citadel's underground's, pumproom.js)
+export function sewerDoors(W, f) { return pumpDoors(W, f); }
 // back up a shaft: on the deck in its hatch (story/sewers.js brings it up the last stretch). 'sewer-pink' was the
 // pink house's way out before DOORS-LBA2: it is the street hatch's now.
-export function sewerExit(to) {
+export function sewerExit(to, W) {
+  const pe = pumpExit(to, W); if (pe) return pe;
   const id = { 'sewer-out': 'street', 'sewer-pink': 'street', 'sewer-stoneup': 'terrace' }[to], h = id && SEWER.hatches[id];
   if (h) return { x: h.x, z: h.z, a: h.id === 'street' ? -Math.PI / 2 : Math.PI / 2, stay: true };   // (on the deck: no door step off it; the street's faces its open west side)
   return null;

@@ -67,7 +67,8 @@ check('a new game: chapter 1, out of the house on Citadel', w.room === 'citadel'
 let r = await ev(() => ({ doors: game.story.doors().filter((d) => d.room === 'sewer' && !d.house).length, hatch: { x: game.story.sewers.H.x, z: game.story.sewers.H.z }, open: game.story.sewers.H.open }));
 check('the grate is there, shut: no way down yet', r.doors === 0 && !r.open && Number.isFinite(r.hatch.x), r);
 const HATCH = r.hatch;
-r = await ev((H) => P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }), HATCH);
+// (CAMPAIGN-1: on the way the garden pipe's knock is heard — a line of its own that comes first; the grate is then used again)
+r = await ev((H) => { let q = P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }); for (let i = 0; i < 2 && !game.flags.sw_hatch; i++) { P.settle(); q = P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }); } return q; }, HATCH);
 let s = await said();
 check('the grate looked at: the knocking and Arthur\'s chalk; lifted (INPUT)', has(s, /knocks down there/) && has(s, /Arthur's writing/) && (await flags()).sw_hatch === true, { r, s });
 await view('s1-grate');
@@ -162,7 +163,8 @@ await boot('continue');
 r = await ev(() => ({ f: Object.fromEntries(Object.entries(game.flags).filter(([k]) => k.startsWith('sw_'))), open: game.story.sewers.H.open, items: game.story.items().map((i) => i.id) }));
 check('Save → Continue: the story kept (the grate shut, as a loaded game finds it)', JSON.stringify(r.f) === JSON.stringify(before) && !r.open && !r.items.includes('sw_map'), { r, before });
 await said();
-r = await ev((H) => P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }), HATCH);
+// (CAMPAIGN-1: on the way the garden pipe's knock is heard — a line of its own that comes first; the grate is then used again)
+r = await ev((H) => { let q = P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }); for (let i = 0; i < 2 && !game.flags.sw_hatch; i++) { P.settle(); q = P.use(H.x, H.z, { near: 1.0, kind: 'swhatch' }); } return q; }, HATCH);
 const deck2 = await onDeck(HATCH);
 const press2 = await pressDown();
 r = await ev(() => { P.settle(); return { room: game.room?.id, gate: game.rooms.sewer?.hall.gateOpen }; });

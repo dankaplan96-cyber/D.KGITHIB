@@ -54,6 +54,7 @@ import { buildTraluCaveRoom } from './tralucave.js';
 import { buildBaggageRoom } from './baggage.js';
 import { buildTavCellarRoom } from './tavcellar.js';
 import { buildNellHouseRoom } from './nellhouse.js';
+import { PUMPROOM_AT, buildPumpRoom } from './pumproom.js';
 
 // Reference build times (ms, the development container, SwiftShader, quiet machine): only the loading card's pace,
 // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
@@ -71,6 +72,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   bumaze: [7200, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
   arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])), ...Object.fromEntries(Object.entries(IHOME_AT).map(([k, v]) => [k, [v.x, v.z]])) };
 for (const [k, v] of Object.entries(HAM_AT)) AT[k] = [v.x, v.z];   // (HAMALAYI-LIFE)
+AT.pumproom = [PUMPROOM_AT.x, PUMPROOM_AT.z];   // (CAMPAIGN-2: the lane's pump room)
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -81,7 +83,7 @@ export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
 // is built on the spot and recorded in regions.log with where it was read: tests/stability.mjs lists them.)
 export const CHAPTER_AREAS = {
   well: ['house', 'well'],
-  project: ['office', 'control', 'projoffice'],
+  project: ['office', 'control', 'projoffice', 'pumproom'],
   zeelich: ['zeelich', 'workshop', 'lighttop'],
   shell: ['c3shaft'],
   core: ['c3core'],
@@ -122,6 +124,7 @@ function groupDefs() {
   add('ticket', ['ticket'], buildTicketRoom);   // (LBA-CITADEL-3: the ticket office, LBA2's scene 8, in the 'baggage' building)
   add('pharmacy', ['pharmacy'], buildPharmacyRoom);   // (LBA-CITADEL-4: the pharmacy, LBA2's scene 22, in the 'bug2' house)
   add('nbrhouse', ['nbrhouse'], buildNbrHouseRoom);   // (LBA-CITADEL-5: the neighbours' house, LBA2's scene 9, in the 'nbr' house)
+  add('pumproom', ['pumproom'], (S, P) => ({ pumproom: buildPumpRoom(S, P) }));   // (CAMPAIGN-2: the pump room under the lane by Twinsen's home, chapter 2's wrong pipe)
   add('nellhouse', ['nellhouse'], buildNellHouseRoom);   // (LBA-CITADEL-6: Paul's house of LBA2's scene 7, now Nell's, in the 'wing2' house)
   add('tavcellar', ['tavcellar'], buildTavCellarRoom);   // (LBA-CITADEL-7: Chez Luc's cellar, LBA2's scene 4, under the tavern)
   add('baggage', ['baggage'], buildBaggageRoom);   // (LBA-CITADEL-8: the baggage claim, LBA2's scene 5, in the 'bug' house)

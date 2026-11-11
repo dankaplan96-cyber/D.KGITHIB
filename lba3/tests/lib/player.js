@@ -331,7 +331,18 @@
     }
   };
   // walk into a door / exit trigger and wait for the new scene
+  // CAMPAIGN-1 (story/hometap.js): in a new game the house's door waits until the kitchen tap has been tried. A suite
+  // that only needs to get out first does what a player does: his hand under the tap (input), the pipe's knock heard
+  // out. P.tapFirst = false leaves the door to refuse (the playthrough's own step checks that it does).
+  P.homeTap = () => {
+    const H = G.story.chapters?.[0]?.home?.parts?.house;
+    if (!H || G.room?.id !== 'house' || G.flags.chapterKey !== 'well' || !G.flags.pr_v2 || G.flags.pr_tap) return false;
+    P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'h_tap' });
+    for (let i = 0; i < 60 && !G.flags.pr_tap; i++) { G.step(0.25); P.settle(); }
+    return !!G.flags.pr_tap;
+  };
   P.through = (x, z, opts = {}) => {
+    if (P.tapFirst !== false) P.homeTap();
     const from = G.room?.id ?? 'citadel';
     const r = P.go(x, z, { tol: 0.25, stopOnTrans: true, ...opts });
     let t = 0; while ((G.trans || (G.room?.id ?? 'citadel') === from) && t < 3) { G.step(0.1); t += 0.1; }

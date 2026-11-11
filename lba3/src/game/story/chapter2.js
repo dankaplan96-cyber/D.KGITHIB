@@ -22,6 +22,7 @@ import { esmerShuttle } from '../shuttle.js';
 import { crossByShip } from '../travelfilm.js';
 import '../text/ch2.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
+import { LiftThread } from './zeelift.js';
 
 const DIAL = ['sun', 'wave', 'star'];
 // Zeelich's street folk and where they stand
@@ -30,6 +31,7 @@ const SOLUTION = [0, 1, 2];
 
 export class Chapter2 extends ChapterBase {
   get Z() { return this.game.rooms.zeelich; }
+  get lift() { return (this._lift ||= new LiftThread(this)); }   // CAMPAIGN-3: the cistern lift and Irsa's bench (zeelift.js)
   // where the project's ship sets him down: Zeelich Spaceport's deck (travel.js), the dock in a build without it
   arrival() { const Z = this.Z; return Z.spaceport?.landing || Z.dock; }
   inZ() { return this.game.room?.id === 'zeelich'; }
@@ -39,7 +41,12 @@ export class Chapter2 extends ChapterBase {
   npcDefs() {
     const S = this.Z?.npcSpots || {};
     const at = (k) => S[k] || { x: 0, z: 0, a: 0, pending: true }, pend = (k) => (S[k] ? {} : { pending: true });
+    const LS = this.Z?.lift?.spots || {}, la = (k) => (LS[k] ? { x: LS[k].x, z: LS[k].z, angle: LS[k].a } : { x: 0, z: 0, angle: 0, pending: true });
     return [
+      // CAMPAIGN-3: Mill Lane's people (zeelift.js): Kell at the cistern lift's brake, Brel the docker, Irsa at her pump works
+      { id: 'zl_kell', name: 'n_zl_kell', char: 'oku_b', color: '#bfe8d8', ...la('kell') },
+      { id: 'zl_brel', name: 'n_zl_brel', char: 'worker_b', color: '#e8c890', ...la('brelA') },
+      { id: 'zl_irsa', name: 'n_zl_irsa', char: 'nara_b', color: '#f0c8a8', ...la('irsa') },
       { id: 'baldino', name: 'n_baldino', char: 'baldino', color: '#ffd890', x: at('baldinoOut').x, z: at('baldinoOut').z, angle: at('baldinoOut').a, ...pend('baldinoOut') },
       { id: 'nara', name: 'n_nara', char: 'nara', color: '#ffc0a0', x: at('esmer1').x, z: at('esmer1').z, angle: at('esmer1').a, ...pend('esmer1') },
       { id: 'oku', name: 'n_oku', char: 'oku', color: '#bfe8d8', x: at('esmer2').x, z: at('esmer2').z, angle: at('esmer2').a, ...pend('esmer2') },
@@ -68,7 +75,9 @@ export class Chapter2 extends ChapterBase {
   place(id) {
     const f = this.f, R = this.game.rooms;
     const folk = ZFOLK.find((z) => z[0] === id);
-    if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk ? null : undefined;
+    const mill = id.startsWith('zl_');
+    if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk || mill ? null : undefined;
+    if (mill) return this.lift.place(id);
     if (!folk && !['baldino', 'nara', 'oku', 'doran', 'vesk', 'guard', 'zoe', 'worker'].includes(id)) return undefined;
     // (LAZY-REGIONS: Zoé and the worker are placed without Zeelich; the rest stand on it)
     if (id === 'zoe') return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
@@ -103,9 +112,10 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, Z = this.Z;
     g.enterRoom('zeelich', this.arrival(), true);
     g.hero.hasBall = true;
+    this.lift.begin(); this.lift.push();
     Z.ferry?.setVisible?.(false);   // (the sky-ferry at the dock is not how he came: no ferry crosses to Twinsun)
     this.story.refreshCast({ walk: true });
-    this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', 'c2_tw_arrive']], () => {
+    this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', this.lift.on ? 'zt_tw_arrive' : 'c2_tw_arrive']], () => {
       this.f.c2_started = true;
       this.story.refreshCast({ walk: true });
       this.confiscate();
@@ -147,6 +157,7 @@ export class Chapter2 extends ChapterBase {
   interactables(consider, dist) {
     const g = this.game, f = this.f, Z = g.regions?.built('zeelich'), h = g.hero;   // (LAZY-REGIONS: read each frame: never builds)
     if (!this.reached()) return;
+    this.lift.interactables(consider, dist);
     if (this.inZ()) {
       const mt = Z.millTop;
       if (f.c2_plan && !f.c2_cog && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.6, { kind: 'c2cog', label: 'p_climb' });
@@ -171,6 +182,7 @@ export class Chapter2 extends ChapterBase {
 
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, Z = g.regions?.built('zeelich');   // (LAZY-REGIONS: its things exist only once built)
+    if (this.lift.interact(it)) return true;
     switch (it.kind) {
       case 'c2cog':
         if (f.c2_planTaken && !f.c2_okuOK) { this.chain([['hero', 'c2_cog_ask']]); return true; }
@@ -220,6 +232,7 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.reached()) return false;
     const c = (lines, done) => { this.chain(lines, done); return true; };
+    if (this.lift.talk(npc)) return true;
     switch (id) {
       case 'doran': return c([['doran', 'c2_doran_idle']]);
       case 'nara':
@@ -235,7 +248,7 @@ export class Chapter2 extends ChapterBase {
         return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_2']]);
       case 'baldino':
         if (!f.c2_plan) {
-          return c([['baldino', 'c2_bal_1'], ['hero', 'c2_tw_bal1'], ['baldino', 'c2_bal_2'], ['baldino', 'c2_bal_3'], ['hero', 'c2_tw_bal2'], ['baldino', 'c2_bal_4'], ['baldino', 'c2_bal_5'], ['baldino', 'c2_bal_6'], ['baldino', 'c2_bal_7']], () => {
+          return c([...(this.lift.on ? [['baldino', 'zt_bal_bench']] : []), ['baldino', 'c2_bal_1'], ['hero', 'c2_tw_bal1'], ['baldino', 'c2_bal_2'], ['baldino', 'c2_bal_3'], ['hero', 'c2_tw_bal2'], ['baldino', 'c2_bal_4'], ['baldino', 'c2_bal_5'], ['baldino', 'c2_bal_6'], ['baldino', 'c2_bal_7']], () => {
             f.c2_plan = true; g.updateObjective(); g.save(false);
           });
         }
@@ -481,9 +494,10 @@ export class Chapter2 extends ChapterBase {
 
 
   // ---------------------------------------------------------------- per frame / rooms / saves
-  update() {
+  update(dt) {
     const g = this.game, f = this.f;
     if (!this.reached()) return;
+    this.lift.update(dt);
     // a save made during Zoe's segment resumes before it (in the workshop, as Twinsen)
     if (g.room?.id === 'lighttop' && !f.c2_zoeStart && g.state === 'play' && !g.trans) g.enterRoom(g.regions.has('workshop') ? 'workshop' : 'zeelich', null, true);
   }
@@ -493,6 +507,7 @@ export class Chapter2 extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, RG = this.game.regions;
+    this.lift.applyFlags();
     // SHAFT-CITADEL: the blast doors over the shaft at Citadel's station are shut from the end of this chapter until the
     // network's code opens them (chapter 10)
     this.game.world.station?.setSealed?.((f.c2_done || this.story.index > this.pos) && !f.c10_done && this.story.index <= this.story.chapters.findIndex((c) => c.key === 'network'), true);
@@ -511,6 +526,7 @@ export class Chapter2 extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c2_started) return '';
+    if (!f.c2_plan) { const lo = this.lift.objective(); if (lo) return lo; if (this.lift.on) return this.goal('zt_obj_baldino'); }
     const n = this.millsBraked();
     if (f.c2_veskDown) return this.goal('c2_obj_shaft');
     if (f.c2_shield) return this.goal('c2_obj_vesk');
@@ -524,6 +540,7 @@ export class Chapter2 extends ChapterBase {
   markers() {
     const f = this.f, Z = this.game.regions?.built('zeelich');
     if (!this.isCur() || !f.c2_started || !Z || (f.c2_zoeStart && !f.c2_broadcast)) return [];
+    if (this.lift.open) return [];   // (CAMPAIGN-3: the works are found by Brel's directions and the brass wheel: no marker)
     const mills = () => Z.mills.filter((m) => !f['c2_mill_' + m.id]).map((m) => m.brake);
     if (f.c2_shield || (f.c2_key && this.millsBraked() >= 3)) return this.stars(Z.platform.console);
     if (f.c2_key) return this.stars(mills());
@@ -548,6 +565,7 @@ export class Chapter2 extends ChapterBase {
     return [
       { key: 'c2_j_arrive', done: !!f.c2_started },
       { key: 'c2_j_taken', done: !!f.c2_planTaken },
+      ...this.lift.journal(),
       { key: 'c2_j_bal', done: !!f.c2_plan },
       { key: 'c2_j_back', done: !!f.c2_okuOK },
       { key: 'c2_j_parts', done: !!(f.c2_cog && f.c2_cyl) },

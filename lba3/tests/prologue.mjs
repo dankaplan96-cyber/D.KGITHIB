@@ -38,10 +38,30 @@ await ev(() => T.talkAll());
 // cupboard
 await ev(() => { const s = game.room.searches[0]; T.tp(s.x + 0.3, s.z, -Math.PI / 2); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
 is('the cupboard gives the ball', await ev(() => [game.hero.hasBall, game.state]), (v) => v[0] === true && v[1] === 'play');
+// CAMPAIGN-1 (story/hometap.js): the household problem before the door lets him out — the kitchen tap turned by hand
+// (dry: the pipe knocks), Arthur's cup carried from under the stove's overflow to the sink
+await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); game.step(1.2); T.tp(e.x, e.z, Math.PI); game.step(0.3); });
+is('leaving before the tap is tried: refused with a line, still in the house', await ev(() => [game.state, game.room?.id, !!game.flags.pr_tap]), (v) => v[0] === 'dialog' && v[1] === 'house' && v[2] === false);
+await ev(() => T.talkAll());
+await ev(() => { const H = game.story.chapters[0].home.parts.house; T.tp(H.front.x, H.front.z + 0.25, Math.PI); T.tap('KeyE'); for (let i = 0; i < 300 && !game.flags.pr_tap; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } });
+is('the kitchen tap tried by hand: dry, the pipe knocks, Zoé and Arthur answer', await ev(() => [game.flags.pr_tap, game.state, game.story.objective()]), (v) => v[0] === true && v[1] === 'play' && /cup/i.test(v[2]));
+await ev(() => { const H = game.story.chapters[0].home.parts.house; T.tp(H.stoveFront.x, H.stoveFront.z + 0.25, Math.PI); T.tap('KeyE'); for (let i = 0; i < 400 && !game.flags.pr_cup; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } game.step(0.6); T.talkAll(); });
+is("Arthur's cup carried from the stove's overflow to the sink, under the tap", await ev(() => { const H = game.story.chapters[0].home.parts.house, c = H.cup.position; return [game.flags.pr_cup, +Math.hypot(c.x - H.sinkAt.x, c.z - H.sinkAt.z).toFixed(2), game.state]; }), (v) => v[0] === true && v[1] < 0.05 && v[2] === 'play');
+await shot('P2b-cup.png');
 // leave the house
 await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); game.step(1.6); T.tp(e.x, e.z, Math.PI); game.step(1.2); });
 is('out of the house, in play', await ev(() => [game.state, game.room?.id ?? 'outdoor', T.p()]), (v) => v[0] === 'play' && v[1] === 'outdoor');
 await shot('P3-outside.png');
+// CAMPAIGN-1: the knocking followed outside (no prompt, no marker): the garden standpipe, the pipe at the pump room's
+// door up the lane (the room is shut in this chapter); Zoé goes next door once nobody can see her do it
+await ev(() => {
+  const hm = game.story.chapters[0].home, Y = hm.parts.yard, K = game.world.pumpKiosk, f = game.flags;
+  T.tp(Y.x - 1.0, Y.z + 0.8, 0); for (let i = 0; i < 80 && !f.pr_yard; i++) game.step(0.05); game.step(1.3); T.talkAll();
+  T.tp(K.pipe.x + 1.3, K.pipe.z + 0.7, 0); for (let i = 0; i < 80 && !f.pr_lane; i++) game.step(0.05); game.step(1.3); T.talkAll();
+  T.tp(K.door.x + 0.6, K.door.z, -Math.PI / 2); T.tap('KeyE'); game.step(0.05); window.__kiosk = [game.state, game.room?.id ?? 'outdoor']; T.talkAll();
+  T.tp(game.world.well.x - 3, game.world.well.z + 6, 0); for (let i = 0; i < 60 && !f.pr_zoeOut; i++) game.step(0.1);
+});
+is('the knocking followed: the garden pipe, the lane pipe (the pump room shut); Zoé has gone next door', await ev(() => { const f = game.flags, z = T.npc('zoe'), d = game.world.houses.find((h) => h.id === 'nbr').door; return [!!f.pr_yard, !!f.pr_lane, window.__kiosk, !!f.pr_zoeOut, +Math.hypot(z.pos.x - d.x, z.pos.z - d.z).toFixed(1)]; }), (v) => v[0] && v[1] && v[2][0] === 'dialog' && v[2][1] === 'outdoor' && v[3] && v[4] < 2.5);
 // Zoé next door first (CH1-LONGER: this order; tests/playthrough/01 meets Mira first): the kettle crystals
 // (from the lane behind her: she faces her neighbours' door, whose own prompt is at her front)
 await ev(() => { const z = T.npc('zoe'), a = z.angle + Math.PI; T.tp(z.pos.x + Math.sin(a) * 1.4, z.pos.z + Math.cos(a) * 1.4, a + Math.PI); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
@@ -89,6 +109,9 @@ await shot('P7-cave.png');
 // fight a mite with the ball
 // (16 tries a mite from 4–6 m, each waiting until the ball is back, magic kept up like his life: a mite that had
 // walked up to 2.5 m had the ball fly over it, and a still-flying ball was reset mid-throw, 25–26.10)
+// CAMPAIGN-1: the pool at the shaft's foot felt (warm); the pump starts above and the growth on the old pillar leans
+await ev(() => { const C = game.story.chapters[0].home.parts.cave, f = game.flags; T.tp(C.pool.x + 1.5, C.pool.z + 0.4, -Math.PI / 2); T.tap('KeyE'); for (let i = 0; i < 200 && !f.pr_pool; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } for (let i = 0; i < 300 && !f.pr_growth; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } game.step(3); T.talkAll(); });
+is('the pool is warm to his hand; the pump starts and the growth leans toward it', await ev(() => { const C = game.story.chapters[0].home.parts.cave; return [!!game.flags.pr_pool, !!game.flags.pr_growth, +C.lean.toFixed(2), game.state]; }), (v) => v[0] && v[1] && v[2] > 0.9 && v[3] === 'play');
 // (the well's own mites only: G.enemies holds every chapter's enemies, and teleporting to those elsewhere left the well)
 const mites = await ev(() => { const G = game, h = G.hero; h.hp = 10; let kills = 0; const well = G.enemies.filter((m) => /^mite\d+$/.test(m.def.id)); for (const m of well) { for (let i = 0; i < 16 && m.alive; i++) { h.pos.set(m.pos.x - 4 - (i % 3), 0, m.pos.z); h.angle = h.angleTo(m) + (i % 4 === 3 ? 0.2 : 0); if (G.ball.state !== 'idle') G.ball.state = 'idle'; T.tap('KeyF'); for (let k = 0; k < 30 && m.alive && !(k > 3 && G.ball.state === 'idle'); k++) G.step(0.1); h.hp = 10; h.mp = Math.max(h.mp, 4); } if (!m.alive) kills++; } return [kills, well.length, G.room?.id]; });
 is("the well's mites beaten with the ball", mites, (v) => v[1] > 0 && v[0] === v[1] && v[2] === 'well');

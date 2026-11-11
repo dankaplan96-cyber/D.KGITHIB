@@ -1322,7 +1322,7 @@ class Game {
   // where the hero is on the island map (inside a room: where that room is)
   mapHero() {
     if (!this.room || this.room.outdoor) return this.hero;
-    const pos = this.room.id === 'house' || this.room.id === 'cellar' ? this.world.houses[0] : this.room.id.startsWith('sewer') ? HATCH : this.world.well;
+    const pos = this.room.id === 'house' || this.room.id === 'cellar' ? this.world.houses[0] : this.room.id === 'pumproom' && this.world.pumpKiosk ? this.world.pumpKiosk : this.room.id.startsWith('sewer') ? HATCH : this.world.well;   // (CAMPAIGN-2: the lane's pump room)
     return { pos: { x: pos.x, z: pos.z }, angle: this.hero.angle };
   }
 
