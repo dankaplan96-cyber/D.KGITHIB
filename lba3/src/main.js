@@ -430,6 +430,9 @@ class Game {
       const root = this.room?.group || this.world.root;
       if (this.shadowCull.areas.has(root)) this.drawBatch.update(root);
       this.boxCull.hide(root, this.renderer.camera, this.drawBatch.enabled ? this.drawBatch.meshes(root) : undefined, this.renderer.renderer.shadowMap.enabled, FOGCULL.far);
+      // (ZPERF-1: and what stands in the scene itself outside the area, wholly beyond the fog's end: Citadel's scene-level
+      //  pieces seen from Zeelich, 2 400 m away)
+      this.boxCull.hideFar(this.scene, root, this.renderer.camera, FOGCULL.far, this.renderer.renderer.shadowMap.enabled);
     };
     // (PERF-SUBMIT: the frame's caster list serves this render only: a later render in the frame (a warm-up) walks the scene)
     this.renderer.post = () => { MW.castersF = -1; FOGCULL.cam = null; FOGCULL.far = Infinity; this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
