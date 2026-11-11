@@ -4169,3 +4169,18 @@ the gardens' `toArches` leads back to W-2's `fromGardens`. `toHouse` stays data 
 - now resolved: the gardens' exit, which waited for W-3, is active.
 
 - **Pushed:** `expansion/ballastra` at 973b2fc3 (three commits on 28deb808); the pictures are on that branch in `docs/future/world/W-3/`.
+
+## ZOE-LOOK-38 · Zoé toward a softer, more expressive animated look (a candidate for the user) · the laptop, 9.11.2026
+
+Order 38. Baseline: origin `568a05ed` (worktree `lba3-pk19`, detached; nothing committed or pushed). Diff:
+`requests/ZOE-LOOK-38.diff` (`tools/blender/zoe_poly.py`, `src/game/characters.js`: LOOKS.zoe belt hex and comment),
+`git apply --check` clean on `568a05ed`'s tree; model `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`.
+Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go to the user):
+`docs/future/characters/zoe/look-38/`.
+- Bigger lidded eyes with lashes, a smaller nose, fuller lips; swept-up hair and a tall ponytail on the existing tail bones,
+  a green band, a curled tip; green trims, a black belt with a silver buckle, a green cord with a dark pendant, green bangles,
+  gold hoops. Body proportions unchanged; no shader change.
+- Body 5616 → 7004 tris (+24.7 %), draws the same (hero 4 = 4; frame 166 = 166). Talk and blink work; the ponytail stays
+  3.6 cm or more clear of her body in 13 poses. solidnpc, chapter1, zoe-resume, cast-rounds and story-journeys PASS.
+- **Waiting for the user's decision** before it is applied (and before Twinsen gets the same treatment). The square's statue
+  takes the new Zoé too.

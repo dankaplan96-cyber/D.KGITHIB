@@ -1,0 +1,8 @@
+[
+  { "op": "script", "name": "twinsen TWINSEN-LOOK-38 baseline rebuild", "script": "tools/blender/twinsen_poly.py",
+    "args": ["C:/Users/dan/lba3-pk19/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/twinsen38/source/twinsen.rebuilt.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/twinsen38/source/twinsen.rebuilt.blend"] },
+  { "op": "preview", "name": "twinsen TWINSEN-LOOK-38 baseline views", "input": "art/blender/characters/twinsen38/source/twinsen.rebuilt.blend", "output": "art/blender/characters/twinsen38/previews/before",
+    "options": { "resolution": 720, "modes": ["neutral", "textured"], "orthoScale": 2.5 } },
+  { "op": "validate", "name": "twinsen TWINSEN-LOOK-38 baseline checks", "input": "art/blender/characters/twinsen38/source/twinsen.rebuilt.blend", "output": "art/blender/characters/twinsen38/reports/baseline.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 4100, "groundedAtZero": true, "skeleton": "art/characters/skeletons.json", "skeletonKey": "twinsen" } }
+]

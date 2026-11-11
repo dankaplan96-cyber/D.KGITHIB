@@ -63,8 +63,11 @@ export const LOOKS = {
     // ZOE-OPEN (CHAR-2): her head from designed sections at the measured size (brow, cheekbones, a rounded chin, a nose
     // of its own), a smaller smiling mouth, white almond eyes with iris and pupil under lid lines and brows, teardrop
     // hoops for the triangle earrings, and curled mitten hands with a thumb (docs/character-review.md §18).
-    // The sculpt below is the fallback.
-    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
+    // ZOE-LOOK-38 (the user, 9.11, a candidate): bigger lidded eyes with lashes, a smaller nose, fuller lips; her hair
+    // swept up into a tall ponytail in a green band (on the skeleton's tail bones), its tip curled; green trims at the
+    // top's neck and armholes, a black belt with a square silver buckle (belt: its baked hex), a green cord with a round
+    // dark pendant, green bangles, gold hoops. The sculpt below is the fallback.
+    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#2a2426', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
     // CHAR-OPEN (OPEN-3 #28): her arms hang at her sides (0.08 rad out from the skeleton's rest; 0.3 held the hands
     // 0.45 m out, the "rods standing off her sides"); the opening's pose layer was brought in by the same 0.22
