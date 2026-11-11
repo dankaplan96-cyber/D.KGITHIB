@@ -1,8 +1,52 @@
-// Chapter 3 (Zeelich): the plan confiscated at the dock, Baldino's workshop, the depot locker (the code cylinder,
+// Chapter 3 (Zeelich): the plan confiscated at the dock, (CAMPAIGN-3, zeelift.js) Brel's directions, the cistern lift
+// (the stair, the chain, the bell, the feed, the ride, the cart), Irsa's bench, Baldino's workshop, the depot locker (the code cylinder,
 // the plan back), Oku agrees, the cog at the top of the old mill, the three mills braked with the ball, the
 // key built, Zoé at the lighthouse (the dials: sun, wave, star), the platform shield, Vesk flies home, the console (the shaft at Citadel sealed).
 export const steps = [
   ['continue (arrival)', () => { P.settle(); return { started: game.flags.c2_started, taken: game.flags.c2_planTaken }; }],
+  // ---- CAMPAIGN-3: Mill Lane (all by input; each step judged on its saved flag). No marker leads to the works.
+  ['Brel at the bridge: the way to the brass wheel', () => { const r = P.talk('zl_brel', { run: true }); return { ...r, markers: game.story.cur.markers().length, fail: game.flags.zt_brel && game.story.cur.markers().length === 0 ? null : 'brel' }; }],
+  ['the lane: the lift stopped half way, Kell at the brake', () => {
+    const L = game.story.cur.lift.L; P.go(L.lane.x + 1.5, L.lane.z + 1.5, { tol: 1.0 }); game.step(0.5); P.settle(); const r = P.talk('zl_kell');
+    return { ...r, seen: !!game.flags.zt_seen, fail: game.flags.zt_kell ? null : 'kell' };
+  }],
+  ['up the stair: the chain let down onto the cart', () => {
+    const L = game.story.cur.lift.L, f = game.flags, h = game.hero;
+    P.go(L.spots.stairFoot.x, L.spots.stairFoot.z, { tol: 0.6, maxT: 60 }); const up = P.go(L.spots.stairTop.x, L.spots.stairTop.z, { tol: 0.7, maxT: 60 });
+    const r = P.use(L.hook.x, L.hook.z, { near: 1.0, kind: 'zt_hook' }); for (let i = 0; i < 60 && !f.zt_hook; i++) { game.step(0.25); P.settle(); }
+    return { up: up.r, y: +(h.pos.y - L.top).toFixed(2), ...r, fail: f.zt_hook ? null : 'hook' };
+  }],
+  ['the landing bell: Kell clears the lane, Vesk gives the mill line', () => {
+    const LT = game.story.cur.lift, L = LT.L, f = game.flags; const r = P.use(L.bell.x, L.bell.z, { near: 1.0, kind: 'zt_bell' });
+    for (let i = 0; i < 60 && !f.zt_bell; i++) { game.step(0.25); P.settle(); } P.settle();
+    return { ...r, fail: f.zt_bell ? null : 'bell' };
+  }],
+  ['down: the feed switch, the deck comes down', () => {
+    const LT = game.story.cur.lift, L = LT.L, f = game.flags;
+    P.go(L.feed.front.x, L.feed.front.z - 0.5, { tol: 0.8, maxT: 90 }); const r = P.use(L.feed.x, L.feed.z, { near: 1.0, kind: 'zt_feed' });
+    for (let i = 0; i < 80 && !(f.zt_feed && !LT.busy); i++) { game.step(0.25); P.settle(); }
+    return { ...r, low: +(L.deckY - L.low).toFixed(2), fail: f.zt_feed && Math.abs(L.deckY - L.low) < 0.01 ? null : 'feed' };
+  }],
+  ['the ride up with the cart', () => {
+    const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero; const r = P.use(L.deck.x, L.deck.z, { near: 1.9, kind: 'zt_ride' });
+    for (let i = 0; i < 80 && !f.zt_ride; i++) { game.step(0.25); P.settle(); } P.settle();
+    return { ...r, y: +(h.pos.y - L.top).toFixed(2), fail: f.zt_ride && Math.abs(h.pos.y - L.top) < 0.05 ? null : 'ride' };
+  }],
+  ['the cart shoved to the filler, its cock opened: the cistern fills', () => {
+    const LT = game.story.cur.lift, L = LT.L, f = game.flags;
+    const r = P.use(L.cart.x, L.cart.z, { near: 1.3, kind: 'zt_cart' }); for (let i = 0; i < 60 && !(f.zt_shove && !LT.busy); i++) { game.step(0.25); P.settle(); }
+    P.use(L.cartEnd.x - 1.12, L.cartEnd.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
+    return { ...r, k: L.cartK, water: L.state.water, fail: f.zt_water ? null : 'water' };
+  }],
+  ["Irsa's bench: the dial set to the strip, the crank", () => {
+    const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero;
+    const idle = () => { for (let i = 0; i < 60 && (h.steer || h.actT > 0); i++) game.step(0.25); P.settle(); };
+    const r = P.talk('zl_irsa', { run: true });
+    for (let k = 0; k < 2; k++) { P.use(L.dial.x, L.dial.z, { near: 0.9, kind: 'zt_dial' }); idle(); }
+    P.use(L.crank.x, L.crank.z, { near: 0.9, kind: 'zt_crank' }); idle(); for (let i = 0; i < 60 && !f.zt_bench; i++) { game.step(0.25); P.settle(); }
+    return { ...r, dial: LT.dial, fail: f.zt_bench ? null : 'bench' };
+  }],
+  // ---- the chapter as it was
   ['Baldino\'s workshop', () => {
     const Z = game.rooms.zeelich, d = Z.workshopDoor;
     const r = P.through(d.x, d.z, { run: true });

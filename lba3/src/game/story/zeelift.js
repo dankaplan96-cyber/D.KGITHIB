@@ -194,7 +194,7 @@ export class LiftThread {
     this.busy = true;
     const up = () => {
       g.setState('cutscene');
-      h.angle = Math.atan2(L.cart.x - h.pos.x, L.cart.z - h.pos.z);
+      h.angle = -Math.PI / 2;   // (at the cart's bar, facing it)
       g.audio.play('lever', L.spots.kell); g.audio.play('liftWinch', L.deck);
       g.cutscene = (dt) => { h.vel?.set(0, 0); h.rig.play('idle'); h.rig.update(dt, 0); h.sync(); };
       L.moveDeck(L.top, 4.6, [h], () => {
@@ -205,7 +205,7 @@ export class LiftThread {
         this.ch.chain([['hero', 'zt_ride_top']], () => { g.updateObjective(); g.save(false); });
       });
     };
-    walkIn(h, [L.ride], { a: -Math.PI / 2, then: up, fail: () => { this.busy = false; } });
+    walkIn(h, [{ x: L.ride.x + 0.9, z: L.ride.z }, L.ride], { a: -Math.PI / 2, then: up, fail: () => { this.busy = false; } });
   }
   // Brel leaves his carrying and walks to a spot (S.<key>), seen to go
   brelTo(key) {

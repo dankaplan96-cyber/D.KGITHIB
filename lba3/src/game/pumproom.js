@@ -114,6 +114,11 @@ export function buildPumpRoom(scene, physics) {
   for (const [x, z, ry] of [[LX + 0.6, 0.95, 0.1], [LX + 0.65, -3.2, 0.3]]) B.put(x, z, ry, (kk) => P.cargoCrate(kk, { color: '#6a5a44', w: 0.7, h: 0.6, d: 0.7 }));
   B.put(LX + 1.5, -3.3, -0.2, (kk) => P.barrel(kk, { pal: 'dark' }));
   k.at(-3.0, 0, -0.6, 0, () => P.hangingLamp(k, 2.35, H, { shade: '#8a5a2a' }));
+  for (let i = 0; i < 4; i++) k.add(cyl(0.07, 0.07, 2.6, 8), i % 2 ? MAT.copper() : MAT.iron(), -0.6 + (i % 2) * 0.16, 0.08 + Math.floor(i / 2) * 0.14, D / 2 - 0.45, 0, { rz: Math.PI / 2 });   // spare lengths by the front wall
+  B.col(-0.5, D / 2 - 0.45, 1.4, 0.2, 0.32, { noStand: true });
+  k.add(torus(0.3, 0.04, 6, 16), MAT.paint('#4a3a2a', 0.8), LX + 0.1, 1.5, 0.9, Math.PI / 2);                 // a coil of hose on the wall
+  k.add(torus(0.24, 0.04, 6, 16), MAT.paint('#4a3a2a', 0.8), LX + 0.14, 1.5, 0.9, Math.PI / 2);
+  k.add(cyl(0.14, 0.14, 0.02, 12), MAT.iron(), 1.2, 0.011, 1.0);                                                // the floor drain
   // the wall diagram over the pipes' way in
   k.add(rbox(2.16, 1.4, 0.05, 0.02), MAT.wood('dark'), -3.6, 2.05, BZ + 0.03);
   k.add(plane(2.0, 1.25), MAT.map(diagramTex()), -3.6, 2.05, BZ + 0.062);
@@ -160,12 +165,15 @@ export function buildPumpRoom(scene, physics) {
   k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.0, 0.72, PZ + 0.06);
   // the booster pump on its bed: a casing, a ribbed motor, a flywheel; the maker's plate on the casing's west end, its
   // gauge and paper strip on the east end
-  const PX = 4.5, PZ2 = -1.35;
+  const PX = 4.35, PZ2 = 0.75;
   k.add(rbox(1.9, 0.22, 0.9, 0.03), MAT.stone('slate', 1.2), PX, 0.11, PZ2);
   k.add(cyl(0.34, 0.34, 0.8, 16), MAT.paint('#2f6f74', 0.5), PX - 0.35, 0.58, PZ2, 0, { rz: Math.PI / 2 });
   k.add(cyl(0.26, 0.26, 0.7, 14), iron, PX + 0.45, 0.52, PZ2, 0, { rz: Math.PI / 2 });
   for (let i = 0; i < 5; i++) k.add(torus(0.27, 0.02, 5, 14), iron, PX + 0.2 + i * 0.12, 0.52, PZ2, Math.PI / 2);
-  k.add(cyl(CU.r, CU.r, 1.0, 10), cu, PX - 0.35, 0.58, PZ2 - 0.7, 0, { rx: Math.PI / 2 });
+  // (the copper pipe on from the tee: along the east wall and into the pump's casing)
+  k.add(cyl(CU.r, CU.r, PZ2 - PZ + 0.1, 10), cu, W / 2 - 0.14, CU.y, (PZ2 + PZ) / 2, 0, { rx: Math.PI / 2 });
+  k.add(cyl(CU.r, CU.r, 0.5, 10), cu, W / 2 - 0.36, CU.y - 0.11, PZ2, 0, { rz: Math.PI / 2 + 0.45 });
+  B.col(W / 2 - 0.14, (PZ2 + PZ) / 2 - 0.3, 0.12, (PZ2 - PZ) / 2 - 0.4, CU.y + 0.1, { noStand: true });
   k.add(plane(0.5, 0.16), MAT.map(plateTex()), PX - 0.35, 0.6, PZ2 + 0.345);
   const fly = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.05, 6, 20), MAT.paint('#b8302a', 0.4)); fly.position.set(PX + 0.86, 0.52, PZ2); fly.rotation.y = Math.PI / 2; B.group.add(fly);
   for (let s = 0; s < 3; s++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.04, 0.04), iron); sp.rotation.z = (s * Math.PI) / 3; fly.add(sp); }
@@ -184,7 +192,7 @@ export function buildPumpRoom(scene, physics) {
   R.pump = {
     diagram: { ...wpt(-3.6, BZ + 0.06), front: wpt(-3.6, BZ + 1.1) },
     feel: { upper: { ...wpt(UP.x, PZ), front: wpt(UP.x, PZ + 0.85) }, lower: { ...wpt(LO.x, PZ), front: wpt(LO.x, PZ + 0.85) }, copper: { ...wpt(CU.x, PZ), front: wpt(CU.x, PZ + 0.85) } },
-    pier: wpt(2.6, BZ + 1.3), alcoveX: B.cx + 3.75, cocks,
+    pier: wpt(2.6, BZ + 1.3), alcoveX: B.cx + 3.45, cocks,
     plate: { ...wpt(PX - 0.35, PZ2 + 0.35), front: wpt(PX - 0.35, PZ2 + 1.05) },
     gauge: { ...wpt(PX + 0.3, PZ2 + 0.2), front: wpt(PX + 0.3, PZ2 + 1.05), y: 1.45 },
     copperAt: (x) => ({ x: Math.max(B.cx + CU.x, Math.min(B.cx + RUN1, x)), y: CU.y, z: B.cz + PZ }),

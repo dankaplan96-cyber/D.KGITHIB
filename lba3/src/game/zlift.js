@@ -31,10 +31,10 @@ const T = { x0: -18.2, x1: -11.0, z0: 19.6, z1: 26.4, h: 3.6 };
 const BAY = { z0: 21.6, z1: 24.0 }, DECK = { x: -9.85, z: 22.8, hw: 1.1, hd: 1.15 };
 const HALF = 2.1, LOW = 0.14;
 const CIS = { x: -15.6, z: 22.35, r: 1.55, h: 1.9 };
-const CART0 = { x: -10.1, z: 22.35 }, PUSH = 3.05;
-const STAIR = { n: 12, x0: -11.4, tread: 0.55, z0: 26.4, w: 1.25 };
+const CART0 = { x: -10.2, z: 22.8 }, PUSH = 3.0;
+const STAIR = { n: 12, x0: -11.4, tread: 0.55, z0: 26.4, w: 1.8 };
 const WORKS = { x: -18.2, z0: 21.4, z1: 24.6 };
-const ZONE = [-21.6, 17.6, -6.6, 28.2];
+const ZONE = [-21.6, 17.6, -6.6, 28.7];
 export const liftClear = (x, z, pad = 0) => x > ZONE[0] - pad && x < ZONE[2] + pad && z > ZONE[1] - pad && z < ZONE[3] + pad;
 
 const signTex = (lines, { bg = '#e8dcc0', ink = '#2a1a10', w = 512, h = 128, size = 40 } = {}) => {
@@ -73,18 +73,19 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   const stairTopX = STAIR.x0 - STAIR.n * STAIR.tread;   // (−18.0: the stair's head; the parapet's gap there)
   para(T.x0, T.z0, T.x1, T.z0);                                   // north
   para(T.x0, T.z0, T.x0, T.z1);                                   // west
-  para(T.x0 + 1.25, T.z1, T.x1, T.z1);                            // south, from the stair's head on
+  para(T.x0 + 2.3, T.z1, T.x1, T.z1);                             // south, from the stair's head on (a way in 1.9 m wide)
   para(T.x1, T.z0, T.x1, BAY.z0 - 0.15); para(T.x1, BAY.z1 + 0.15, T.x1, T.z1);   // east, either side of the bay
   // ---- the stair up the south face, from the bridge's side (12 steps of 0.3 m), an outer rail
   for (let i = 0; i < STAIR.n; i++) {
     const x = STAIR.x0 - (i + 0.5) * STAIR.tread, top = Y0 + (i + 1) * (T.h / STAIR.n);
     add(box(STAIR.tread, top - Y0, STAIR.w), stone, x, (Y0 + top) / 2, STAIR.z0 + STAIR.w / 2);
     add(box(STAIR.tread + 0.04, 0.06, STAIR.w + 0.06), mat.cobble, x, top - 0.03, STAIR.z0 + STAIR.w / 2);
-    col({ type: 'box', x, z: STAIR.z0 + STAIR.w / 2, hw: STAIR.tread / 2 + 0.01, hd: STAIR.w / 2, rot: 0, top });
+    // (each step's brick runs on under the ones above it, to the stair's head: no seam between two steps to drop into;
+    //  stair: the height under his feet decides, step by step, and the steps ahead never push him aside)
+    { const xe = STAIR.x0 - i * STAIR.tread; col({ type: 'box', x: (xe + T.x0) / 2, z: STAIR.z0 + STAIR.w / 2 - 0.075, hw: (xe - T.x0) / 2, hd: STAIR.w / 2 + 0.075, rot: 0, top, stair: true }); }   // (0.15 m into the terrace's brick: no seam at the head either, physics.js groundInfo)
   }
   { // the head landing joins the terrace (its top step runs on to the west edge)
     const x0 = T.x0, x1 = stairTopX; add(box(x1 - x0, T.h, STAIR.w), stone, (x0 + x1) / 2, Y0 + T.h / 2, STAIR.z0 + STAIR.w / 2);
-    col({ type: 'box', x: (x0 + x1) / 2, z: STAIR.z0 + STAIR.w / 2, hw: (x1 - x0) / 2, hd: STAIR.w / 2, rot: 0, top: TOP });
     const len = STAIR.n * STAIR.tread, ang = Math.atan2(T.h, len);
     for (let i = 0; i <= STAIR.n; i += 3) add(cyl(0.035, 0.035, 0.95, 6), teal, STAIR.x0 - i * STAIR.tread, Y0 + i * (T.h / STAIR.n) + 0.47, STAIR.z0 + STAIR.w - 0.05);
     add(cyl(0.03, 0.03, Math.hypot(len, T.h), 6), teal, STAIR.x0 - len / 2, Y0 + T.h / 2 + 0.92, STAIR.z0 + STAIR.w - 0.05, 0, 0, Math.PI / 2 - ang);
@@ -169,7 +170,8 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     a2(box(2 * DECK.hw, 0.1, 2 * DECK.hd), wood, 0, -0.05, 0); a2(box(2 * DECK.hw + 0.1, 0.14, 0.1), steel, 0, -0.17, -DECK.hd + 0.05); a2(box(2 * DECK.hw + 0.1, 0.14, 0.1), steel, 0, -0.17, DECK.hd - 0.05);
     a2(box(0.06, 0.1, 2 * DECK.hd), red, DECK.hw - 0.03, 0.05, 0); a2(box(2 * DECK.hw, 0.1, 0.06), red, 0, 0.05, DECK.hd - 0.03); a2(box(2 * DECK.hw, 0.1, 0.06), red, 0, 0.05, -DECK.hd + 0.03);
     mergeStatic(g2, { recolor: true, retex: true }); deck.add(g2); }
-  const deckCol = col({ type: 'box', x: DECK.x, z: DECK.z, hw: DECK.hw, hd: DECK.hd, rot: 0, top: Y0 + HALF, bottom: Y0 + HALF - 0.25 });
+  // (its brick reaches 0.2 m into the terrace's: no seam to fall into between the deck and the upper landing)
+  const deckCol = col({ type: 'box', x: DECK.x - 0.1, z: DECK.z, hw: DECK.hw + 0.1, hd: DECK.hd, rot: 0, top: Y0 + HALF, bottom: Y0 + HALF - 0.25 });
   // the cart: a tank on a frame with four wheels, a push bar at its east end, a ring on top for the chain
   const cart = new THREE.Group(); cart.position.set(CART0.x, Y0 + HALF, CART0.z); cart.userData.keep = true; D.add(cart);
   const tank = new THREE.Group(); tank.position.set(0, 0.38, 0); cart.add(tank);
@@ -228,14 +230,14 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
       kell: { ...W(MH.x + MH.hw + 0.75, MH.z + 0.3), a: -Math.PI / 2 },
       brelA: { ...W(STK.x - 0.55, STK.z - 0.75), a: Math.PI / 4 }, brelB: { ...W(T.x1 + 0.75, DECK.z), a: -Math.PI / 2 }, brelClear: { ...W(STK.x - 1.2, STK.z - 0.2), a: -Math.PI / 2 },
       brelTap: { ...W(TAP.x, TAP.z - 0.85), a: 0 },
-      irsa: { ...W(BX - 1.15, WORKS.z1 + 0.25), a: Math.atan2(0.9, -1.2) }, irsaTap: { ...W(TAP.x + 0.95, TAP.z - 0.5), a: -Math.PI / 2 - 0.5 },
+      irsa: { ...W(BX - 0.25, WORKS.z1 + 1.0), a: Math.atan2(-1, -0.6) },   // (under her sign, off the bench's end: the crank's prompt is his) irsaTap: { ...W(TAP.x + 0.95, TAP.z - 0.5), a: -Math.PI / 2 - 0.5 },
       stairFoot: W(STAIR.x0 + 0.8, STAIR.z0 + STAIR.w / 2), stairTop: W(T.x0 + 0.6, T.z1 - 0.7),
     },
     hook: { ...W(HOOK.x, HOOK.z), front: W(HOOK.x - 0.75, HOOK.z - 0.05) },
     bell: { ...W(BELL.x, BELL.z), front: W(BELL.x - 0.75, BELL.z + 0.05) },
     feed: { ...W(MH.x, MH.z - MH.hd - 0.17), front: W(MH.x, MH.z - MH.hd - 0.95) },
-    ride: W(DECK.x + 0.05, DECK.z + 0.62), deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd),
-    cart: { ...W(CART0.x, CART0.z), front: W(CART0.x + 1.12, CART0.z) }, cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
+    ride: W(CART0.x + 1.13, CART0.z), deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd),
+    cart: { ...W(CART0.x + 0.6, CART0.z), front: W(CART0.x + 1.13, CART0.z) }, cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
     filler: W(FIL.x, FIL.z), cistern: W(CIS.x, CIS.z), standpipe: W(TAP.x, TAP.z), sign: W(SIGN.x, SIGN.z),
     dial: { ...W(DIAL.x, DIAL.z), front: W(DIAL.x - 0.85, DIAL.z) }, crank: { ...W(CRANK.x, CRANK.z), front: W(CRANK.x - 0.85, CRANK.z) }, bench: W(PUMP.x, PUMP.z),
     lane: W(-6.6, 22.8), bay: { ...W(T.x1 - 0.5, DECK.z), z0: W(0, BAY.z0).z, z1: W(0, BAY.z1).z }, wheelAt: W(MAST.x, MAST.z),

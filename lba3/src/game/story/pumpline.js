@@ -55,6 +55,9 @@ export class PumpLine {
     const f = this.f, g = this.game, W = g.world, K = this.kiosk;
     if (!this.on || !f.c1_water) return undefined;
     // the worker at the pump room's door until Twinsen has been and gone; then up at the station, as he was
+    // Zoé beside the sink (the tap is his to try), until the station's tour takes the story on
+    const HZ = this.home?.parts?.house?.zoe;
+    if (id === 'zoe' && HZ && !f.c1_tour) return { x: HZ.x, z: HZ.z, a: HZ.a, anim: null };
     if (id === 'worker' && K && !f.ct_wback) return { x: K.out.x - 0.2, z: K.out.z + 1.3, a: Math.PI / 2 + 0.9, anim: null };
     // the shopkeeper washes her counter down with the first hot water
     if (id === 'pippa' && f.ct_bypass && !f.c1_veskGone && W.stall) return { x: W.stall.x, z: W.stall.z, a: W.stall.a, anim: 'wipe' };
@@ -142,6 +145,7 @@ export class PumpLine {
             return;
           }
           f.ct_bypass = true; f.ct_seen = true;
+          this.story.refreshCast();   // (the street above: the shopkeeper at her counter)
           U.setState({ bypass: true, strip: !f.ct_strip });
           g.audio.play('waterRun', U.lowerAt); g.audio.play('gurgle', U.lowerAt); U.shake('lower', 0.8);
           this.push();

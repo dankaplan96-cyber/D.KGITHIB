@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:9200",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"
+        },
+        {
+          "name": "lba3.loadTimes",
+          "value": "{\"total\":15844,\"shaders\":97960,\"pace\":2.5336538461538463,\"prep\":{\"paint\":190,\"programs\":97,\"textures\":15,\"geometry\":322,\"geometryPart\":52,\"shadowBatches\":302,\"layers\":43772,\"batches\":1699,\"batchUpload\":553,\"startRoom\":11216,\"audioContext\":407,\"shadowPrograms\":11519,\"firstDraws\":13276,\"firstFrame\":14593}}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":5,\"room\":null,\"hero\":{\"x\":-54.4894329077805,\"z\":-36.79503485405657,\"hp\":8,\"mp\":5,\"magicLevel\":1,\"clovers\":3,\"coins\":11,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":false,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":1,\"chapterKey\":\"project\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-42.1,-2.4],\"house\":[\"citadel\",-45.6,76.5],\"office\":[\"citadel\",-64.7,11.2]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true},\"killed\":[\"mite2\",\"mite0\",\"mite1\",\"mite3\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\"],\"collected\":[],\"searched\":[\"cupboard\"],\"crates\":[5],\"loot\":[],\"at\":1794391345071,\"played\":833}"
+        }
+      ]
+    }
+  ]
+}
