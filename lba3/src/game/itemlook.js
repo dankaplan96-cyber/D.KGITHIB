@@ -257,7 +257,7 @@ const LOOKS = {
 };
 const TILT = { lance: 1.0, pocketset: -0.2, fork: 0.5, line: 0.7, heatflask: 0.3, ticket: -0.2, sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
 // an item's look: its own when it has one, otherwise its painted icon's (inventory.js icon kinds)
-const BY_ID = { lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
+const BY_ID = { pstrip: 'leaflet', lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
   kashes: 'coin', clovers: 'clover', crystals: 'crystal', kscreen: 'cloth', relay: 'cog', survey: 'pipemap', pcell: 'crystal' };
 const BY_ICON = { map: 'pipemap', stamp: 'permit', part: 'cog', crystal: 'crystal' };
 export function lookOf(id, icon) { return LOOKS[id] ? id : BY_ID[id] || BY_ICON[icon] || (LOOKS[icon] ? icon : 'cog'); }
