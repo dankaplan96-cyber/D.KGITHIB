@@ -56,6 +56,7 @@ import { IsleHomes } from './ihomes.js';
 import { HamalayiLife } from './hamlife.js';
 import { UndergroundLife } from './deeplife.js';
 import { IslesLife } from './isleslife.js';
+import { Depth } from './depth.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -98,6 +99,7 @@ export class Story {
     this.ulife = new UndergroundLife(this);   // UNDER-BAR: the underground's things answer by phase; the shield crew after the ending (deeplife.js)
     this.hlife = new HamalayiLife(this);   // HAMALAYI-LIFE: the monastery's hall, Lhar's houses and their people by the story's phase (hamlife.js)
     this.islife = new IslesLife(this);   // ISLES-BAR: Zeelich's islands' usable pieces and their people at home (isleslife.js)
+    this.depth = new Depth(this);   // DEPTH first wave: the twelve singing crystals, Old Jaspa's gems, the pilgrims' waystone (depth.js)
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -131,7 +133,7 @@ export class Story {
     return list;
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
-  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); }
+  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); this.depth.decorate(); }
 
   // ---- flow
   start() {
@@ -302,6 +304,8 @@ export class Story {
     if (pp.length) out.push({ title: t('pp_title'), lines: pp });
     const ip = this.ipeople.journal();
     if (ip.length) out.push({ title: t('ip_title'), lines: ip });
+    const dx = this.depth.journal();
+    if (dx.length) out.push({ title: this.depth.journalTitle(), lines: dx });
     return out;
   }
   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.hostel.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items()]; }
@@ -321,15 +325,17 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.hostel.interactables(consider, dist); this.shops.interactables(consider, dist); this.stands.interactables(consider, dist); this.ihomes.interactables(consider, dist); this.hlife.interactables(consider, dist); this.dlife.interactables(consider, dist); this.ulife.interactables(consider, dist); this.islife.interactables(consider, dist); }
-  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.hostel.interact(it) || this.stands.interact(it) || this.hlife.interact(it) || this.dlife.interact(it) || this.ulife.interact(it) || this.islife.interact(it) || this.ihomes.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.hostel.interactables(consider, dist); this.shops.interactables(consider, dist); this.stands.interactables(consider, dist); this.ihomes.interactables(consider, dist); this.hlife.interactables(consider, dist); this.dlife.interactables(consider, dist); this.ulife.interactables(consider, dist); this.islife.interactables(consider, dist); this.depth.interactables(consider, dist); }
+  interact(it) { return this.depth.interact(it) || this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.hostel.interact(it) || this.stands.interact(it) || this.hlife.interact(it) || this.dlife.interact(it) || this.ulife.interact(it) || this.islife.interact(it) || this.ihomes.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (!this.depth.talkFirst(npc)) this.talkRest(npc); }
+  // (the talk chain without depth.js: depth.js's hooks add their lines after a person's own, Depth.after)
+  talkRest(npc) { if (this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return true; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); return true; }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
   // EQUIP-2b (tools.js): the singing fork's note, the heat flask's blast, what the Esmer line can catch here
-  forkHit(o) { return this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o); }
+  forkHit(o) { return this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o) || this.depth.forkHit(o); }
   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o); }
   lineTargets() { return this.kit2b.lineTargets(); }
   ballTargets() { return this.cur.ballTargets(); }
@@ -345,7 +351,7 @@ export class Story {
     const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
     if (c) c.enabled = show;
   }
-  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); }
+  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
@@ -364,6 +370,7 @@ export class Story {
     this.ihomes.applyFlags();
     this.hlife.applyFlags();
     this.ulife.applyFlags();
+    this.depth.applyFlags();
     this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
     this.noWalk = true;   // (a load: everyone on their places)
     try { this.refreshCast(); } finally { this.noWalk = false; }
@@ -436,5 +443,5 @@ export class Story {
   }
   afterEnding() { this.cur.afterEnding?.(); }
   // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it
-  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.hostel, this.purposes, this.ipeople, this.ihomes, this.hlife, this.ulife]) c.regionBuilt?.(ids); }
+  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.hostel, this.purposes, this.ipeople, this.ihomes, this.hlife, this.ulife, this.depth]) c.regionBuilt?.(ids); }
 }

@@ -748,6 +748,20 @@ function cargoLift(W, parent, r) {
   mesh(lantern, cyl(0.006, 0.006, 0.16, 4), dark, 0, -0.08, 0, 0, { cast: false });
   mesh(lantern, cyl(0.07, 0.09, 0.2, 6), brassM, 0, -0.26, 0);
   mesh(lantern, cyl(0.06, 0.06, 0.13, 6), pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), 0, -0.26, 0, 0, { cast: false });
+  // (NO-AIR, the user 10.11: "the actions they do in the air": the worker's hand was "on the lift's control", and there
+  //  was none.) The control: an iron box strapped to the mast's landward face, at a standing man's chest, with one lever
+  //  in a slot across it: toward the sea (off), upright (hoist), toward the pier's end (swing over and lower). pose(u)
+  //  puts the lever where the cycle is. (On that face the opening's two pier shots both see it, and the hand on it.)
+  const CTRL = { a: Math.PI / 2, out: 0.24, y: deck + 0.9 };
+  const ctrl = new THREE.Group(); ctrl.position.set(mx + Math.sin(CTRL.a) * CTRL.out, CTRL.y, mz + Math.cos(CTRL.a) * CTRL.out); ctrl.rotation.y = CTRL.a; g.add(ctrl);
+  mesh(ctrl, bbox(0.26, 0.26, 0.18, 0.02, 1), housingM, 0, 0, 0.04);
+  mesh(ctrl, bbox(0.3, 0.03, 0.22, 0.01, 1), dark, 0, 0.135, 0.04);
+  mesh(ctrl, bbox(0.2, 0.012, 0.05, 0.004, 1), dark, 0, 0.152, 0.05);       // (the lever's slot plate)
+  const lever = new THREE.Group(); lever.name = 'liftLever'; lever.position.set(0, 0.13, 0.05); ctrl.add(lever);
+  mesh(lever, cyl(0.011, 0.013, 0.24, 6), dark, 0, 0.12, 0);
+  mesh(lever, new THREE.SphereGeometry(0.03, 10, 8), brassM, 0, 0.255, 0);
+  const knob = new THREE.Object3D(); knob.position.set(0, 0.255, 0); lever.add(knob);   // (where a hand holds it)
+  const LEVER = [0.42, 0.0, -0.42];   // (rad from upright, about the box's own depth: off, hoist, swing and lower)
   // the slewing head: the winch housing with the emblem (the project's mark), the boom, the pulley
   const turret = new THREE.Group(); turret.position.set(mx, deck + 3.2, mz); g.add(turret);
   mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), housingM, 0, 0.12, -0.15);
@@ -796,9 +810,9 @@ function cargoLift(W, parent, r) {
   const seg = (u, a, b) => sm((u - a) / (b - a));
   const cratePier = new THREE.Vector3(mx + Math.sin(yaw1) * ARM, PIER_C, mz + Math.cos(yaw1) * ARM);
   const L = {
-    group: g, crate, barge, turret, hook, lantern, puddle: pud, mast: { x: mx, z: mz }, cratePier, yaw1,
+    group: g, crate, barge, turret, hook, lantern, puddle: pud, mast: { x: mx, z: mz }, cratePier, yaw1, lever, knob,
     shakeK: 0, u: 1,
-    pose(u) {
+    pose(u, hold = false) {   // (hold: the lever stays where the cycle left it — the opening: nobody is at it at the end)
       this.u = u;
       // hook drop below the pulley (m): down to the crate, up with it, over, down to the deck, then up again
       const dCrate = (deck + tipY) - (BARGE_C + 0.4 + 0.27);
@@ -811,6 +825,9 @@ function cargoLift(W, parent, r) {
       else if (u < 0.88) { drop = dHigh + (dPier - dHigh) * seg(u, 0.7, 0.88); yaw = yaw1; carry = true; }
       else { drop = dPier + (dRest - dPier) * seg(u, 0.92, 1.0); yaw = yaw1; }
       turret.rotation.y = yaw;
+      // the control's lever: thrown to hoist as the crate leaves the barge, on to swing-and-lower as the boom turns, and
+      // back to off when the hook is up again (the cycle's end)
+      lever.rotation.z = LEVER[0] + (LEVER[1] - LEVER[0]) * seg(u, 0.22, 0.234) + (LEVER[2] - LEVER[1]) * seg(u, 0.44, 0.45) + (hold ? 0 : (LEVER[0] - LEVER[2]) * seg(u, 0.985, 1.0));
       cable.scale.y = drop;
       hook.position.set(0, 0.2 - drop, ARM);
       if (carry) {
@@ -830,8 +847,8 @@ function cargoLift(W, parent, r) {
   // the turret, the barge with the crate aboard, the hanging crate): 51 → 23 draws in each pass where the lift shows,
   // the same materials, the same triangles where they were. What moves on its own stays a group (the lantern, the
   // turret, the hook, the cable, the barge, the crate, the puddle's rings).
-  for (const o of [lantern, turret, barge, crate, pud, hook, cable]) o.userData.keep = true;
-  mergeStatic(g); for (const o of [turret, barge, crate]) mergeStatic(o, { recolor: true, retex: true });   // (HEADING-LOAD: folded by texture)
+  for (const o of [lantern, turret, barge, crate, pud, hook, cable, lever]) o.userData.keep = true;
+  mergeStatic(g); for (const o of [turret, barge, crate, lever]) mergeStatic(o, { recolor: true, retex: true });   // (HEADING-LOAD: folded by texture)
   L.pose(1);
   let ripT = 0;
   W.updaters.push((dt, tt) => {

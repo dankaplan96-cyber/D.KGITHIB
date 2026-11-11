@@ -9,7 +9,7 @@
 // object, ladder, scenaric triggers...). We keep the same three concepts.
 
 export class TrackRunner {
-  /** cmds: [{op:'goto',x,z,speed?} | {op:'wait',t} | {op:'face',a} | {op:'anim',name,t} | {op:'label',name} | {op:'jump',to} | {op:'loop'} | {op:'call',fn} ] */
+  /** cmds: [{op:'goto',x,z,speed?,near?} | {op:'wait',t} | {op:'face',a} | {op:'anim',name,t} | {op:'label',name} | {op:'jump',to} | {op:'loop'} | {op:'call',fn} ] */
   constructor(cmds) {
     this.cmds = cmds;
     this.pc = 0;
@@ -27,7 +27,14 @@ export class TrackRunner {
         case 'goto': {
           const dx = c.x - actor.pos.x, dz = c.z - actor.pos.z;
           const d = Math.hypot(dx, dz);
-          if (d < 0.5) { this.pc++; continue; }
+          if (d < (c.near ?? 0.5)) { this._g = null; this.pc++; continue; }
+          // (NO-AIR: `near`, a closer arrival — a person who then works at the spot with the hands stands on it, not half a
+          //  metre short of it; if something keeps it from getting there, it stays where it got to after a moment)
+          if (c.near != null) {
+            const G = this._g || (this._g = { d, t: 0 });
+            G.t += dt;
+            if (d < G.d - 0.02) { G.d = d; G.t = 0; } else if (G.t > 1.2) { this._g = null; this.pc++; continue; }
+          }
           return { dx: dx / d, dz: dz / d, speed: c.speed ?? 1 };
         }
         case 'wait':

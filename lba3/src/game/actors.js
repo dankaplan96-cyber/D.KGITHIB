@@ -11,6 +11,7 @@ import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
 import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { workHands } from './workhands.js';
 import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
@@ -825,6 +826,8 @@ export class Hero extends Actor {
       this.rig.hitDir = angleDiff(this.angle, a + Math.PI); // 0 = hit from the front
       if (heavy && this.hp > 0) { this.angle = a + Math.PI; this.act('knockdown', 0.5, null, 0, ['getup', 0.8]); }
     }
+    // (COL-1: with all twelve singing crystals, Sendell catches him once in the core: story/depth.js catchFall)
+    if (this.hp <= 0 && g.story?.depth?.catchFall?.(this)) return;
     if (this.hp <= 0) {
       if (this.clovers > 0) {
         // LBA2: a clover leaf revives you on the spot with full life
@@ -862,6 +865,7 @@ export class NPC extends Actor {
     this.forceAnim = def.anim || null;
     this.present = true;
     this.rig.plantIfFits();   // (ANIM-POLISH-3: the stance foot held in the walk, two-step stops, stepping turns: Rig._plant)
+    workHands(game, this);    // (NO-AIR: a working hand is put on what stands there: workhands.js)
   }
   setPresent(on) {
     this.present = on;

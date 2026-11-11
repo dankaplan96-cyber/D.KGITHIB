@@ -56,6 +56,7 @@ import { Inventory } from './game/inventory.js';
 import { FoundObject } from './game/found.js';
 import { stage as itemStage } from './game/itemlook.js';
 import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
+import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
 import { t, setLang, getLang } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
 import { BUILT } from './build-stamp.js';
@@ -630,7 +631,8 @@ class Game {
     // reward on top of the Whispering Cliffs (optional ball + jumping puzzle); kashes come from the givers
     const s = this.world.shard1Spot;
     this.pickups.spawn('clover', s.x, s.y, s.z, { id: 'cliff-clover' });
-    // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices)
+    // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices; COL-1: six more are
+    // given by puzzles, src/game/crystals.js and story/depth.js)
     this.spawnCrystals();
   }
   // the crystals whose spots are built (the mill's is on Zeelich: it appears when Zeelich is built), each once
@@ -743,7 +745,8 @@ class Game {
     }
     return out;
   }
-  crystalCount() { return this.collected.filter((id) => id.startsWith('sc-')).length; }
+  // (COL-1: twelve in all, src/game/crystals.js; each id once)
+  crystalCount() { return crystalsIn(this.collected).size; }
   applyCrystals() { this.hero.maxHp = 10 + this.crystalCount(); this.hero.hp = Math.min(this.hero.hp, this.hero.maxHp); }
 
   // ------------------------------------------------ rooms (interiors)
@@ -2504,9 +2507,11 @@ class Game {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;
         this.audio.play('shard');
-        this.hud.toast('toast_crystal', { n, max: this.crystalSpots().length });
+        this.hud.toast('toast_crystal', { n, max: CRYSTAL_TOTAL });
         if (n === 1) this.story.cur.chain([['hero', 'crystal_first']]);
-        if (n >= this.crystalSpots().length) { this.flags.crystalsAll = true; this.story.cur.chain([['hero', 'crystal_all']]); }
+        // (COL-1: crystalsAll keeps its meaning, the six lying in the world; all twelve is dx_crystals12)
+        if (!this.flags.crystalsAll && CRYSTAL_WORLD.every((id) => this.collected.includes(id))) { this.flags.crystalsAll = true; this.story.cur.chain([['hero', 'crystal_all']]); }
+        if (n >= CRYSTAL_TOTAL && !this.flags.dx_crystals12) { this.flags.dx_crystals12 = true; this.story.cur.chain([['hero', 'crystal_twelve']]); }
         this.save(false);
         break;
       }
