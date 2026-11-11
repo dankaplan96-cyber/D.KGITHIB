@@ -39,8 +39,8 @@
 // in the area's own frame (the region group's origin is added when it is built).
 import * as THREE from 'three';
 import { Walkers } from './walkers.js';
-import { Kit, MAT, rbox, cyl } from './props.js';
-import { woodpile, dryingRack, sledge } from './props-mountain.js';
+import { Kit, MAT, rbox, cyl, sphere } from './props.js';
+import { woodpile, dryingRack, sledge, logGeo, MM } from './props-mountain.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 const PI = Math.PI;
@@ -61,7 +61,12 @@ const idx = (S, key) => S.chapters.findIndex((c) => c.key === key);
 export const DIG_YARD = {
   pileA: { x: 31, z: -3.6 }, pileB: { x: 38, z: 14 },
   fire: { x: 50, z: -2.6 }, table: { x: 53.6, z: -2.6 }, barrels: { x: 46.6, z: -2.7 }, tripod: { x: 63.5, z: 8.0 },
+  hearth: { x: 48.35, z: -2.75 }, sieve: { x: 46.0, z: 34.2 },   // (NO-AIR 3: the kitchen's hearth stone between the barrels and the fire; the digger's spoil sieve outside the rope at the west rim)
 };
+// (NO-AIR 3) the School's water basin on the plaza's west edge, by the channel it is filled from; Kesh's things: the
+// children's pebble game on a flat stone by the oasis, the water jars Safi fills at the shore
+const BASIN = { x: -61.9, z: -78.8 };
+export const KESH_LIFE = { pebbles: { x: -45.6, z: -6.85 }, jars: { x: -43.0, z: -7.0 } };
 const Y = DIG_YARD, PA = Y.pileA, PB = Y.pileB, FI = Y.fire, TB = Y.table, BR = Y.barrels, TP = Y.tripod, DIGC = { x: 64, z: 28 };
 // (the crew's state: 'crew' at work (chapter 4, chapter 5 before the order), 'pack' (chapter 5 after it, the six who
 //  stayed); null: not here — another chapter, a sandstorm blowing (they shelter), or gone with the ferry)
@@ -78,13 +83,13 @@ const DESERT_PEOPLE = [
   // the surveyor at his tripod on the north rim, a look from the north-east rim, a word with his staff man, his notes at the kitchen's table
   { id: 'dg_surv', char: 'worker_b', tint: '#fff2dc', speed: 0.95, color: '#e8c030', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
-      L('surv_scope', TP.x, TP.z - 0.85, TP.x, TP.z + 4, 'browse', [14, 20], { gest: ['nod'] }),
+      L('surv_scope', TP.x + 0.2, TP.z - 0.85, TP.x + 0.2, TP.z + 4, 'draw', [14, 20], { gest: ['nod'] }),   // (NO-AIR 3: a hand on the instrument, stood half a step aside so that the hand is before it — it is a hand's width wide and head high)
       L('surv_rim', 77.6, 15.2, DIGC.x, DIGC.z, 'stand', [6, 9], { gest: ['nod'] }),
       L('surv_chat', 61.2, 6.2, 62.6, 5.8, 'stand', [16, 22], { pair: 'survey', mate: 'dg_rod' }),
       L('surv_notes', TB.x - 0.6, TB.z + 1.0, TB.x - 0.6, TB.z, 'browse', [8, 12]),
     ],
     pack: [
-      L('surv_fold', TP.x, TP.z - 0.85, TP.x, TP.z + 4, 'browse', [10, 14]),
+      L('surv_fold', TP.x + 0.2, TP.z - 0.85, TP.x + 0.2, TP.z + 4, 'draw', [10, 14]),
       L('surv_last', 61.0, 9.4, DIGC.x, DIGC.z, 'stand', [6, 9], { gest: ['sigh'] }),
       L('surv_notes', TB.x - 0.6, TB.z + 1.0, TB.x - 0.6, TB.z, 'browse', [8, 12]),
     ] } },
@@ -99,25 +104,25 @@ const DESERT_PEOPLE = [
   { id: 'dg_cook', char: 'farmerB', tint: '#fff0e6', speed: 0.9, color: '#f0a8a0', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('cook_pot', FI.x, FI.z + 1.15, FI.x, FI.z, 'browse', [14, 20], { gest: ['nod'] }),
-      L('cook_table', TB.x + 0.6, TB.z + 1.0, TB.x + 0.6, TB.z, 'put', [6, 9]),
-      L('cook_water', BR.x, BR.z + 1.2, BR.x, BR.z, 'draw', [5, 7], { carry: 'can' }),
-      L('cook_pour', FI.x - 1.0, FI.z + 0.9, FI.x, FI.z, 'put', [4, 6], { carry: null }),
+      L('cook_table', TB.x + 0.3, TB.z + 1.0, TB.x + 0.3, TB.z, 'put', [6, 9]),                       // (NO-AIR 3: her hand over the table, not past its end)
+      L('cook_water', BR.x + 0.33, BR.z + 1.2, BR.x + 0.33, BR.z, 'dip', [5, 7], { carry: 'can' }),   // (a hand down into the barrel: it stands waist high, and she stood before the gap between the two)
+      L('cook_pour', Y.hearth.x, Y.hearth.z + 1.05, Y.hearth.x, Y.hearth.z, 'put', [4, 6], { carry: null }),   // (the can set down on the hearth stone by the fire)
     ],
     pack: [
       L('cook_pot', FI.x, FI.z + 1.15, FI.x, FI.z, 'browse', [12, 18]),
-      L('cook_table', TB.x + 0.6, TB.z + 1.0, TB.x + 0.6, TB.z, 'put', [6, 9], { carry: 'basket' }),
-      L('cook_stow', PA.x + 0.4, PA.z - 1.2, PA.x + 0.4, PA.z, 'put', [5, 7], { carry: null }),
+      L('cook_table', TB.x + 0.3, TB.z + 1.0, TB.x + 0.3, TB.z, 'put', [6, 9], { carry: 'basket' }),
+      L('cook_stow', Y.hearth.x, Y.hearth.z + 1.05, Y.hearth.x, Y.hearth.z, 'put', [5, 7], { carry: null }),   // (NO-AIR 3: her things gathered on the hearth stone — the yard's pile has a worker on each side, and a bank behind it)
     ] } },
   // the porters: a crate off the yard's pile to the pile by the dig (chapter 5: back again), a breather at the kitchen
   { id: 'dg_haul', char: 'farmerC_b', tint: '#ffffff', speed: 0.95, color: '#e8a860', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
-      L('haul_a', PA.x, PA.z + 1.2, PA.x, PA.z, 'put', [4, 6], { carry: 'crate' }),
-      L('haul_b', PB.x, PB.z - 1.2, PB.x, PB.z, 'put', [5, 7], { carry: null }),
+      L('haul_a', PA.x + 0.12, PA.z + 1.2, PA.x + 0.12, PA.z, 'put', [4, 6], { carry: 'crate' }),   // (NO-AIR 3: before the pile's low crate — the pile's middle is the gap between its two)
+      L('haul_b', PB.x + 0.5, PB.z - 1.2, PB.x + 0.5, PB.z, 'put', [5, 7], { carry: null }),
       L('haul_rest', FI.x + 1.4, FI.z + 2.2, FI.x, FI.z, 'rest', [5, 8]),
     ],
     pack: [
-      L('haul_b', PB.x, PB.z - 1.2, PB.x, PB.z, 'put', [4, 6], { carry: 'crate' }),
-      L('haul_a', PA.x, PA.z + 1.2, PA.x, PA.z, 'put', [5, 7], { carry: null }),
+      L('haul_b', PB.x + 0.5, PB.z - 1.2, PB.x + 0.5, PB.z, 'put', [4, 6], { carry: 'crate' }),
+      L('haul_a', PA.x + 0.12, PA.z + 1.2, PA.x + 0.12, PA.z, 'put', [5, 7], { carry: null }),
       L('haul_rest', FI.x + 1.4, FI.z + 2.2, FI.x, FI.z, 'rest', [5, 8]),
     ] } },
   { id: 'dg_porter', char: 'worker', tint: '#e2eeff', speed: 1.0, color: '#80c8c8', start: 1, area: 'desert', phase: crew(true), rounds: {
@@ -135,33 +140,33 @@ const DESERT_PEOPLE = [
   { id: 'dg_mech', char: 'lharMan_b', tint: '#f0e2cc', speed: 0.9, color: '#c8a070', start: 0, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('mech_fence', 45.2, -6.75, 45.2, -8, 'browse', [12, 18], { gest: ['shrug'] }),
-      L('mech_stake', 59.4, 10.4, DIGC.x, DIGC.z, 'tend', [9, 13]),
+      L('mech_stake', 59.4, 10.4, DIGC.x, DIGC.z, 'dip', [9, 13]),   // (NO-AIR 3: a hand on the stake's head, trying it: kneeling, his hands were under it)
       L('mech_pile', PA.x, PA.z - 1.2, PA.x, PA.z, 'browse', [5, 8]),
     ],
     pack: [
       L('mech_fence', 45.2, -6.75, 45.2, -8, 'browse', [12, 18]),
-      L('mech_tripod', TP.x - 1.1, TP.z - 0.6, TP.x, TP.z, 'browse', [6, 9]),
+      L('mech_tripod', TP.x - 1.1, TP.z - 0.2, TP.x, TP.z - 0.2, 'draw', [6, 9]),   // (NO-AIR 3: a hand on the instrument's box, as the surveyor's)
       L('mech_pile', PA.x, PA.z - 1.2, PA.x, PA.z, 'browse', [5, 8]),
     ] } },
   // the digger: the spoil at the west rim, the dig's crates, his bowl at the kitchen's table
   { id: 'dg_dig', char: 'worker', tint: '#f6e4cc', speed: 1.0, color: '#d8a060', start: 2, area: 'desert', phase: crew(false), rounds: {
     crew: [
-      L('dig_rim', 46.6, 34.8, DIGC.x, DIGC.z, 'tend', [12, 16]),
-      L('dig_pile', PB.x, PB.z + 1.2, PB.x, PB.z, 'browse', [5, 8]),
+      L('dig_rim', Y.sieve.x, Y.sieve.z + 1.0, Y.sieve.x, Y.sieve.z, 'tend', [12, 16]),   // (NO-AIR 3: kneeling at the spoil sieve by the rim: his hands had only the rope's stake before them)
+      L('dig_pile', PB.x - 0.38, PB.z + 1.2, PB.x - 0.38, PB.z, 'tend', [5, 8]),          // (kneeling at the pile's crate: the ground rises on this side and its top is knee high)
       L('dig_eat', TB.x - 0.6, TB.z - 1.05, TB.x - 0.6, TB.z, 'browse', [10, 14]),
     ] } },
   // the site clerk: the crates counted at both piles, the table, a look through the post's fence at the bore
   { id: 'dg_clerk', char: 'archivist', tint: '#eef6ff', speed: 0.9, color: '#90b8c8', start: 2, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('clk_a', PA.x - 1.6, PA.z, PA.x, PA.z, 'browse', [6, 9]),
-      L('clk_b', PB.x + 1.6, PB.z, PB.x, PB.z, 'browse', [6, 9]),
-      L('clk_table', TB.x + 0.7, TB.z - 1.05, TB.x + 0.7, TB.z, 'browse', [8, 12]),
+      L('clk_b', PB.x + 1.6, PB.z, PB.x, PB.z, 'tend', [6, 9]),                         // (NO-AIR 3: kneeling to the crate's label: the ground is higher on this side, its top at his knees)
+      L('clk_table', TB.x + 0.4, TB.z - 1.05, TB.x + 0.4, TB.z, 'browse', [8, 12]),   // (both hands over the table: one was past its end)
       L('clk_post', 35.6, -6.6, 35.6, -9, 'stand', [5, 8], { gest: ['nod'] }),
     ],
     pack: [
       L('clk_a', PA.x - 1.6, PA.z, PA.x, PA.z, 'browse', [6, 9]),
       L('clk_post', 35.6, -6.6, 35.6, -9, 'stand', [6, 9], { gest: ['sigh'] }),
-      L('clk_table', TB.x + 0.7, TB.z - 1.05, TB.x + 0.7, TB.z, 'browse', [8, 12]),
+      L('clk_table', TB.x + 0.4, TB.z - 1.05, TB.x + 0.4, TB.z, 'browse', [8, 12]),
     ] } },
 
   // ---------------------------------------------------------------- the School's plaza (desertold.js: the mask's chin door,
@@ -177,8 +182,8 @@ const DESERT_PEOPLE = [
   { id: 'sc_pupa', char: 'lulu', tint: '#e6f2ff', speed: 1.2, color: '#a8d0ff', start: 0, area: 'desert', phase: school, rounds: {
     school: [
       L('a_spell', -59.6, -79.4, -57.6, -79.4, 'stand', [18, 26], { pair: 'spell', mate: 'sc_pupb' }),
-      L('a_draw', -61.85, -78.0, -63.7, -78.0, 'draw', [5, 7], { carry: 'can' }),
-      L('a_water', -56.4, -75.95, -56.4, -74.4, 'water', [8, 12], { carry: null }),
+      L('a_draw', BASIN.x + 0.95, BASIN.z + 0.5, BASIN.x, BASIN.z + 0.5, 'dip', [5, 7], { carry: 'can' }),   // (NO-AIR 3: a hand into the water basin at the plaza's edge: the channel's water lies below the paving, out of reach)
+      L('a_water', -56.4, -72.9, -56.4, -74.4, 'tend', [8, 12], { carry: null }),                            // (the herbs watered kneeling at the bed's north end: the bed is ankle high)
     ] } },
   { id: 'sc_pupb', char: 'tim', tint: '#eaffea', speed: 1.3, color: '#a0e0a0', start: 0, area: 'desert', phase: school, rounds: {
     school: [
@@ -188,7 +193,7 @@ const DESERT_PEOPLE = [
     ] } },
   { id: 'sc_pupc', char: 'desertkid_b', tint: '#fff2ec', speed: 1.4, color: '#ffc0a0', start: 1, area: 'desert', phase: school, rounds: {
     school: [
-      L('c_dip', -61.85, -79.6, -63.7, -79.6, 'dip', [4, 6]),
+      L('c_dip', BASIN.x + 0.95, BASIN.z - 0.5, BASIN.x, BASIN.z - 0.5, 'tend', [4, 6]),   // (the smallest pupil kneels at the basin, both hands in the water)
       L('c_pillar', -59.3, -76.0, -60.2, -75.1, 'stand', [5, 8], { gest: ['shrug'] }),
     ] } },
   // PURPOSES (3.11.2026): Oni, a pupil, on the rim walk before the dormitory's door (the great hall in the pool,
@@ -221,8 +226,12 @@ const SCHOOL_PLAZA = { x0: -62.35, x1: -54.7, z0: -80.45, z1: -68.4, min: 0.2 };
 // the gate (x 34…47, z −33…−28) is chapter 7's take-off: the glider stands there for its film (observatory.js SLOPE,
 // watched from (47, −31)), so no stop is west of x 50 between z −33 and the lip.
 const H3 = { x: -22.59, z: 22.54 }, H4 = { x: 4.29, z: 20.46 };
-export const MON_CAMP = { fire: { x: 50, z: -40 }, rack: { x: 51.5, z: -31.6 }, wood: { x: 57, z: -43.5 }, sledge: { x: 46.6, z: -46 }, crates: { x: 45.6, z: -35.4 }, tag: { x: 55.2, z: -36.6, r: 2.0 } };
+export const MON_CAMP = { fire: { x: 50, z: -40 }, rack: { x: 51.5, z: -31.6 }, wood: { x: 57, z: -43.5 }, sledge: { x: 46.6, z: -46 }, crates: { x: 45.6, z: -35.4 }, tag: { x: 55.2, z: -36.6, r: 2.0 },
+  seat: { x: 51.95, z: -40.1 }, bench: { x: 50.0, z: -42.4 } };   // (NO-AIR 3: a log seat east of the fire, the cook's bench north of it)
 const MC = MON_CAMP, LHAR_TAG = { x: -4, z: 27.5, r: 2.0 };
+// (NO-AIR 3: the three households' packing on the square — x, z, the way it lies, the blanket's colour — and the snowman)
+export const LHAR_PACK = [[-20.45, 9.6, 1.3, '#b0483a'], [-13.2, 2.75, 0.5, '#3a6a9a'], [-2.3, 0.7, -0.4, '#4a8a4a']];
+export const LHAR_SNOWMAN = { x: -2.5, z: 12.5 };
 // (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up; home in
 //  Lhar again after the ending, with Yorna, Pim and the story's villagers: story/epilogue.js EPILOGUE-HOME)
 const village = (trip) => (f, S) => {
@@ -243,12 +252,12 @@ const HAMALAYI_PEOPLE = [
   { id: 'lh_bero', char: 'lharMan', tint: '#f6eadc', speed: 0.9, color: '#d8a878', start: 0, area: 'hamalayi', phase: homeAt(village('c6_trip1'), 'mend'), rounds: {
     lhar: [
       DOOR('bero_home', H3, 0.5, 0.9, [6, 10], { carry: 'sack' }),
-      L('bero_cart', -17.1, 3.9, -17.3, 2.4, 'put', [5, 7], { carry: null }),
-      L('bero_sledge', -23.4, 10.0, -24.6, 8.6, 'browse', [8, 12]),
+      L('bero_cart', -17.3, 0.7, -17.3, 2.4, 'put', [5, 7], { carry: null }),   // (NO-AIR 3: at the cart's bed from its north end — its shafts' end, where he stood, has nothing to put a sack on)
+      L('bero_sledge', -24.2, 9.3, -24.6, 8.6, 'tend', [8, 12]),               // (kneeling at the load's lashings: a sledge is knee high)
     ],
     mon: [
       L('bero_wood', MC.wood.x - 1.4, MC.wood.z, MC.wood.x, MC.wood.z, 'browse', [10, 14], { carry: 'crate' }),
-      L('bero_fire', MC.fire.x + 1.2, MC.fire.z - 0.2, MC.fire.x, MC.fire.z, 'put', [4, 6], { carry: null }),
+      L('bero_fire', MC.seat.x + 1.0, MC.seat.z, MC.seat.x, MC.seat.z, 'put', [4, 6], { carry: null }),   // (the logs set down on the fire's log seat: the pot hangs a metre inside the stones)
       L('bero_view', 57.4, -30.2, 57.4, -20, 'stand', [5, 8], { gest: ['sigh'] }),
     ] } },
   // Sana: the washing off the rack and into house 4, the barrels; up there, mending at the rack, the pot, a look down
@@ -259,8 +268,8 @@ const HAMALAYI_PEOPLE = [
       L('sana_barrels', 3.0, 1.0, 3.6, -0.2, 'browse', [6, 9]),
     ],
     mon: [
-      L('sana_rack', MC.rack.x, MC.rack.z - 1.1, MC.rack.x, MC.rack.z, 'browse', [12, 18], { gest: ['nod'] }),
-      L('sana_pot', MC.fire.x, MC.fire.z + 1.2, MC.fire.x, MC.fire.z, 'browse', [8, 12]),
+      L('sana_rack', MC.rack.x - 0.5, MC.rack.z - 0.8, MC.rack.x - 0.5, MC.rack.z, 'draw', [12, 18], { gest: ['nod'] }),   // (a hand on the cloth that hangs there: the rack's middle is a gap between two)
+      L('sana_pot', MC.fire.x, MC.fire.z + 1.2, MC.fire.x, MC.fire.z, 'tend', [8, 12]),                               // (the fire fed, kneeling at its stones)
       L('sana_view', 54.4, -29.8, 54.4, -20, 'stand', [5, 8]),
     ] } },
   // Old Dorje: warm by the fire, watching the packing with a sigh; up there, the camp's fire and the washing
@@ -276,12 +285,12 @@ const HAMALAYI_PEOPLE = [
   // Tam: wood from the north woodpile to the fire, a look at the south woodpile; up there, the sledge unloaded by the gate
   { id: 'lh_tam', char: 'farmerA', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
     lhar: [
-      L('tam_wood', -17.4, -4.4, -15.8, -4.4, 'put', [4, 6], { carry: 'crate' }),
-      L('tam_fire', -5.2, 17.8, -4, 17.2, 'put', [4, 6], { carry: null }),
+      L('tam_wood', -17.4, -4.4, -15.8, -4.4, 'draw', [4, 6], { carry: 'crate' }),   // (a log pulled from the stack's end: its lid is over his head)
+      L('tam_fire', -6.7, 17.75, -5.7, 17.6, 'put', [4, 6], { carry: null }),         // (set down on the fire's log seat)
       L('tam_wood4', 6.5, 14.6, 7.5, 15.9, 'browse', [8, 12]),
     ],
     mon: [
-      L('tam_sledge', MC.sledge.x + 0.8, MC.sledge.z + 1.1, MC.sledge.x, MC.sledge.z, 'put', [4, 6], { carry: 'sack' }),
+      L('tam_sledge', MC.sledge.x, MC.sledge.z + 1.3, MC.sledge.x, MC.sledge.z, 'tend', [4, 6], { carry: 'sack' }),   // (kneeling at the sledge's load, a sack untied from it)
       L('tam_crates', MC.crates.x + 1.3, MC.crates.z - 0.4, MC.crates.x, MC.crates.z, 'put', [4, 6], { carry: null }),
       L('tam_warm', MC.fire.x + 0.85, MC.fire.z + 0.85, MC.fire.x, MC.fire.z, 'warm', [6, 9]),
     ] } },
@@ -299,7 +308,7 @@ const HAMALAYI_PEOPLE = [
   { id: 'lh_kid2', char: 'pim', tint: '#fff0ea', speed: 1.4, color: '#ffb8a0', start: 0, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
     lhar: [
       L('k2_tag', LHAR_TAG.x + 1.2, LHAR_TAG.z, LHAR_TAG.x, LHAR_TAG.z, 'stand', [22, 30], { pair: 'lhtag', mate: 'lh_kid1', play: 'tag', field: LHAR_TAG }),
-      L('k2_sledge', 9.6, 14.8, 10.6, 13.6, 'browse', [4, 6]),
+      L('k2_sledge', 9.6, 14.8, 10.6, 13.6, 'tend', [4, 6]),   // (a child at an empty sledge kneels at it)
     ],
     mon: [
       L('k2_tag', MC.tag.x + 1.2, MC.tag.z, MC.tag.x, MC.tag.z, 'stand', [22, 30], { pair: 'montag', mate: 'lh_kid1', play: 'tag', field: MC.tag }),
@@ -308,28 +317,28 @@ const HAMALAYI_PEOPLE = [
   // Mira: water from the trough to the pot on the fire, a word by the shrine; up there, the cooking
   { id: 'lh_mira', char: 'farmerB', tint: '#fffae6', speed: 0.9, color: '#f0c8a0', start: 0, area: 'hamalayi', phase: homeAt(village('c6_trip1'), 'mend'), rounds: {
     lhar: [
-      L('mira_trough', -15.6, 12.0, -17, 12.3, 'draw', [5, 7], { carry: 'can' }),
-      L('mira_pot', -3.0, 16.2, -4, 17.2, 'put', [5, 7], { carry: null }),
+      L('mira_trough', -15.6, 12.0, -17, 12.3, 'dip', [5, 7], { carry: 'can' }),   // (a hand down into the trough: its rim is knee high, a reach at chest height met nothing)
+      L('mira_pot', -3.6, 20.0, -3.6, 19.0, 'put', [5, 7], { carry: null }),      // (the can set down on the log seat by the fire)
       L('mira_shrine', -10.0, 9.5, -8, 13, 'stand', [6, 9], { gest: ['nod'] }),
     ],
     mon: [
-      L('mira_pot', MC.fire.x, MC.fire.z - 1.2, MC.fire.x, MC.fire.z, 'browse', [14, 20], { gest: ['nod'] }),
+      L('mira_pot', MC.bench.x, MC.bench.z - 1.0, MC.bench.x, MC.bench.z, 'browse', [14, 20], { gest: ['nod'] }),   // (at the cook's bench, the pot before her over it)
       L('mira_crates', MC.crates.x + 1.3, MC.crates.z + 0.6, MC.crates.x, MC.crates.z, 'browse', [6, 9], { carry: 'basket' }),
-      L('mira_back', MC.fire.x - 0.9, MC.fire.z - 0.9, MC.fire.x, MC.fire.z, 'put', [4, 6], { carry: null }),
+      L('mira_back', MC.bench.x - 1.5, MC.bench.z, MC.bench.x, MC.bench.z, 'put', [4, 6], { carry: null }),   // (the basket set down on the bench's end)
     ] } },
   // Grum: crates to the hand cart; up there, the sledge's load into the camp
   { id: 'lh_grum', char: 'farmerC_b', tint: '#eef0ff', speed: 0.85, color: '#c0c8e8', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
     lhar: [
       L('grum_crates', -26.0, 1.6, -26.3, 0.3, 'put', [4, 6], { carry: 'crate' }),
-      L('grum_cart', -15.9, 2.8, -17.3, 2.4, 'put', [5, 7], { carry: null }),
+      L('grum_cart', -16.17, 1.75, -17.3, 2.4, 'put', [5, 7], { carry: null }),   // (NO-AIR 3: at the cart's bed by its wheel: from its side his arm was a hand short of the load)
     ],
     mon: [
-      L('grum_sledge', MC.sledge.x - 0.4, MC.sledge.z + 1.3, MC.sledge.x, MC.sledge.z, 'put', [4, 6], { carry: 'crate' }),
-      L('grum_crates', MC.crates.x + 0.2, MC.crates.z + 1.2, MC.crates.x, MC.crates.z, 'put', [5, 7], { carry: null }),
+      L('grum_sledge', MC.sledge.x - 1.0, MC.sledge.z, MC.sledge.x, MC.sledge.z, 'tend', [4, 6], { carry: 'crate' }),   // (kneeling at the sledge from its other side)
+      L('grum_crates', MC.crates.x, MC.crates.z - 1.6, MC.crates.x, MC.crates.z - 0.6, 'put', [5, 7], { carry: null }),   // (on the barrel's lid at the pile's north end: its south end is the crate's bare side)
     ],
     // (HAMALAYI-LIFE: while Lhar is mended he carries the new slates that come down the lift to Bero's house, and back)
     mend: [
-      L('grum_lift', 17.0, -15.5, 24, -22, 'put', [5, 7], { carry: 'crate' }),
+      L('grum_lift', 30.81, -21.74, 29.75, -22.8, 'put', [5, 7], { carry: 'crate' }),   // (at the freight by the lift's foot: the slates come off that pile; he stood in the open 9 m from it)
       DOOR('grum_bero', H3, 0.5, 0.9, [4, 6], { carry: null }),
       L('grum_cart', -15.9, 2.8, -17.3, 2.4, 'browse', [4, 6]),
     ] } },
@@ -544,6 +553,83 @@ const herbBed = (k) => {
   for (let i = 0; i < 6; i++) for (const sx of [-1, 1]) k.add(cyl(0.02, 0.12, 0.2, 5), FLAT(i % 2 ? '#5f9a3a' : '#7ab04a'), sx * 0.2, 0.38, -l / 2 + 0.22 + i * (l - 0.44) / 5);
   return { hw: w / 2, hd: l / 2, top: 0.3 };
 };
+// ---- NO-AIR 3 (11.11.2026): the things the residents' hands were missing. Each is the work's own thing, low-poly, in
+// the area's one Kit (the materials the Kit already has: no draw call more), with a collider.
+// a seat by a fire: a log on two stumps, snow on it (as Lhar's own by its fire, hamalayi.js); what is carried to a
+// fire is set down on it — the pot hangs a metre inside the stones, out of anyone's reach
+const logSeat = (k) => {
+  for (const sx of [-0.45, 0.45]) k.add(cyl(0.13, 0.15, 0.26, 7), DARK(), sx, 0.13, 0);
+  k.add(logGeo(0.17, 1.4), MM.logs(), 0, 0.42, 0, PI / 2);
+  k.add(BOX(1.0, 0.05, 0.2), MM.snow(), 0.1, 0.6, 0);
+  return { hw: 0.7, hd: 0.2, top: 0.58 };
+};
+// the camp cook's bench: a plank on two log trestles, a chopping board with roots on it, a bowl, a crock
+const cookBench = (k) => {
+  k.add(BOX(1.2, 0.06, 0.5), WOOD(), 0, 0.74, 0);
+  for (const sx of [-1, 1]) k.add(cyl(0.11, 0.13, 0.71, 7), DARK(), sx * 0.44, 0.355, 0);
+  k.add(BOX(0.36, 0.025, 0.26), DARK(), 0, 0.782, 0.04);
+  for (const [x, z, c] of [[-0.07, 0.02, '#c8743a'], [0.05, 0.08, '#d8b060'], [0.08, -0.03, '#c8743a']]) k.add(cyl(0.028, 0.02, 0.1, 6), FLAT(c), x, 0.815, z, x * 9, { rz: PI / 2 });
+  k.add(cyl(0.11, 0.07, 0.06, 8), FLAT('#e8e0d0'), 0.42, 0.8, -0.08);
+  k.add(cyl(0.09, 0.1, 0.17, 8), FLAT('#8a5a3a'), -0.45, 0.855, -0.1);
+  return { hw: 0.62, hd: 0.27, top: 0.78 };
+};
+// a household's packing (Lhar before the lift takes it up): a crate, a rolled blanket strapped on a tied bundle beside it
+const packing = (k, c = '#b0483a') => {
+  k.at(-0.2, 0, 0, 0.12, () => crate1(k, 0.5));
+  k.add(sphere(0.21, 10, 7), FLAT('#d8c8a0'), 0.34, 0.16, 0.03, 0.4, { sx: 1.1, sy: 0.78, sz: 1.25 });
+  k.add(cyl(0.07, 0.07, 0.42, 8), FLAT(c), 0.34, 0.37, 0.03, 0.4, { rx: PI / 2 });
+  return { hw: 0.5, hd: 0.3, top: 0.5 };
+};
+// the children's snowman on Lhar's square: two balls, two twig arms, a carrot
+const snowman = (k) => {
+  k.add(sphere(0.3, 10, 7), MM.snow(), 0, 0.24, 0, 0, { sy: 0.86 });
+  k.add(sphere(0.2, 10, 7), MM.snow(), 0, 0.62, 0);
+  for (const sx of [-1, 1]) k.add(BOX(0.34, 0.022, 0.022), DARK(), sx * 0.36, 0.52, 0, 0, { rz: sx * 0.5 });
+  k.add(cyl(0.004, 0.03, 0.13, 5), FLAT('#e07a2a'), 0, 0.63, 0.25, 0, { rx: PI / 2 });
+  for (const sx of [-1, 1]) k.add(BOX(0.035, 0.035, 0.02), DARK(), sx * 0.07, 0.69, 0.18);
+  return { r: 0.3, top: 0.8 };
+};
+// the field kitchen's hearth stone: a waist-high block by the fire with a slab on it, the kettle on its end; pots and
+// cans are set down on it
+const hearthStone = (k) => {
+  k.add(BOX(0.7, 0.56, 0.46), FLAT('#9a9488'), 0, 0.28, 0, 0.06);
+  k.add(BOX(0.76, 0.05, 0.52), FLAT('#8a847a'), 0, 0.585, 0, 0.06);
+  k.add(cyl(0.1, 0.12, 0.15, 9), IRON(), -0.22, 0.685, 0.02);
+  k.add(cyl(0.018, 0.026, 0.16, 5), IRON(), -0.33, 0.71, 0.02, 0, { rz: 0.9 });
+  return { hw: 0.38, hd: 0.26, top: 0.61 };
+};
+// the dig's spoil sieve: a shallow plank frame on four stones with a mesh bottom, the sand heaped through it, a pail
+const sieve = (k) => {
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(BOX(0.14, 0.2, 0.14), FLAT('#8a847a'), sx * 0.3, 0.1, sz * 0.2);
+  for (const sz of [-1, 1]) k.add(BOX(0.8, 0.09, 0.04), WOOD(), 0, 0.245, sz * 0.27);
+  for (const sx of [-1, 1]) k.add(BOX(0.04, 0.09, 0.5), WOOD(), sx * 0.38, 0.245, 0);
+  k.add(BOX(0.74, 0.02, 0.5), FLAT('#b8a57a'), 0, 0.225, 0);
+  k.add(cyl(0.03, 0.3, 0.16, 8), FLAT('#d8b878'), 0.05, 0.08, 0);
+  k.add(cyl(0.13, 0.1, 0.24, 8), IRON(), 0.62, 0.12, 0.12);
+  return { hw: 0.42, hd: 0.3, top: 0.29 };
+};
+// the School's water basin: a low stone trough along the plaza's edge, filled from the channel beside it
+const basin = (k) => {
+  const w = 0.5, l = 1.7, h = 0.46, st = FLAT('#b8b0a2');
+  k.add(BOX(w, 0.1, l), st, 0, 0.05, 0);
+  for (const sx of [-1, 1]) k.add(BOX(0.09, h, l), st, sx * (w / 2 - 0.045), h / 2, 0);
+  for (const sz of [-1, 1]) k.add(BOX(w - 0.18, h, 0.09), st, 0, h / 2, sz * (l / 2 - 0.045));
+  k.add(BOX(w - 0.18, 0.02, l - 0.18), FLAT('#3a8aa8'), 0, h - 0.07, 0);
+  return { hw: w / 2, hd: l / 2, top: h };
+};
+// Kesh: the children's pebble game on a flat stone (five pebbles, one apart), and two water jars at the oasis' shore
+const pebbleStone = (k) => {
+  k.add(cyl(0.3, 0.34, 0.2, 9), FLAT('#b0a590'), 0, 0.1, 0);
+  for (const [x, z, c] of [[-0.1, 0.02, '#6a5a4a'], [0.0, -0.08, '#d8d0c0'], [0.08, 0.05, '#8a4a3a'], [0.02, 0.1, '#5a6a7a'], [0.17, -0.1, '#d8d0c0']]) k.add(sphere(0.03, 6, 4), FLAT(c), x, 0.215, z, 0, { sy: 0.6 });
+  return { r: 0.34, top: 0.21 };
+};
+const jarGeo = (h) => [[0.09, 0], [0.19, h * 0.32], [0.2, h * 0.55], [0.11, h * 0.88], [0.13, h]];
+const waterJars = (k) => {
+  // (stacked rings: a jar's profile from the Kit's own cylinders)
+  const jar = (x, z, h, c) => { const P = jarGeo(h); for (let i = 0; i < P.length - 1; i++) k.add(cyl(P[i + 1][0], P[i][0], P[i + 1][1] - P[i][1], 10), FLAT(c), x, (P[i][1] + P[i + 1][1]) / 2, z); k.add(cyl(0.1, 0.1, 0.02, 10), FLAT('#3a8aa8'), x, h - 0.04, z); };
+  jar(0, 0, 0.56, '#c0703a'); jar(0.42, 0.12, 0.44, '#b8643a');
+  return { hw: 0.42, hd: 0.24, top: 0.56 };
+};
 export function dressStoryLife(game, area) {
   const R = game.regions?.built(area);
   if (!R?.group || R._storyLife) return;
@@ -557,6 +643,12 @@ export function dressStoryLife(game, area) {
       put(BR.x + 0.33, BR.z - 0.1, 0, (k) => barrel1(k, 0.28, 0.78));
       put(TP.x, TP.z, 0, tripod);
       put(HERB_BED.x, HERB_BED.z, 0, herbBed);
+      // (NO-AIR 3: the things the crew's, the pupils' and Kesh's hands were missing)
+      put(Y.hearth.x, Y.hearth.z, 0, hearthStone);
+      put(Y.sieve.x, Y.sieve.z, 0, sieve);
+      put(BASIN.x, BASIN.z, 0, basin);
+      put(KESH_LIFE.pebbles.x, KESH_LIFE.pebbles.z, 0.4, pebbleStone);
+      put(KESH_LIFE.jars.x + 0.21, KESH_LIFE.jars.z + 0.06, 0, (k) => k.at(-0.21, 0, -0.06, 0, () => waterJars(k)));
     });
   } else if (area === 'hamalayi') {
     R._storyLife = dress(game, R, (put) => {
@@ -565,6 +657,13 @@ export function dressStoryLife(game, area) {
       put(MC.wood.x, MC.wood.z, -PI / 2, (k) => woodpile(k, { w: 1.6, h: 0.9 }));
       put(MC.sledge.x, MC.sledge.z, 0.3, (k) => sledge(k, { seed: 4 }));
       put(MC.crates.x, MC.crates.z, PI / 2, (k) => { crate1(k, 0.6); k.at(0.62, 0, 0.05, 0, () => barrel1(k, 0.28, 0.8)); k.at(0.05, 0.6, 0, 0, () => crate1(k, 0.45, -0.2)); return { hw: 0.75, hd: 0.4, top: 1.05 }; });
+      // (NO-AIR 3) the camp's fire: a log seat east of it, the cook's bench north of it
+      put(MC.seat.x, MC.seat.z, PI / 2, logSeat);
+      put(MC.bench.x, MC.bench.z, 0, cookBench);
+      // (NO-AIR 3) Lhar's square: each of the story's three households has its packing out by where it stands (castrounds.js
+      //  lhar1…3: clear of the doors' ways in), and the children have a snowman (Pim's stop)
+      for (const [x, z, ry, c] of LHAR_PACK) put(x, z, ry, (k) => packing(k, c));
+      put(LHAR_SNOWMAN.x, LHAR_SNOWMAN.z, 0.5, snowman);
     });
   } else R._storyLife = true;
 }

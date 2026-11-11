@@ -80,7 +80,7 @@ import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
 import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
 import { OTRBAR_ROOM, OTRHOTEL_ROOM } from './islandlife.js';
-import { workSpot, standsAt } from './workhands.js';
+import { workSpot, workStep, storySig, standsAt } from './workhands.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // WC-4: the spaceports' state for the chapter in progress (story/index.js Story): derived, never saved
@@ -661,7 +661,7 @@ export class StoryRounds {
     }
     if (S.st === 'dwell') this.dwell(n, S, dt);
     else this.walk(n, S, dt, D);
-    n.rig.update(dt, S.st === 'walk' && S.gait > 0.12 ? S.gait : 0);
+    n.rig.update(dt, S.st === 'walk' && S.gait > 0.12 ? S.gait : S.stepV || 0);
     n.sync();
     if (this.measure) { this.stats.ms += performance.now() - t0; this.stats.frames++; }
     return true;
@@ -698,7 +698,7 @@ export class StoryRounds {
     const t0 = this.measure ? performance.now() : 0;
     if (S.st === 'dwell') this.dwell(n, S, dt);
     else this.walk(n, S, dt, D);
-    n.rig.update(dt, S.st === 'walk' && S.gait > 0.12 ? S.gait : 0);
+    n.rig.update(dt, S.st === 'walk' && S.gait > 0.12 ? S.gait : S.stepV || 0);
     n.sync();
     if (this.measure) { this.stats.ms += performance.now() - t0; this.stats.frames++; this.stats.cast = (this.stats.cast || 0) + 1; }
     return true;
@@ -719,6 +719,7 @@ export class StoryRounds {
   arrive(n, S, first = false) {
     const s = S.stops[S.ri], d = s.dur;
     S.st = 'dwell'; S.path = null; S.vel = 0; S.stuckT = 0; S.replans = 0;
+    S.wk = undefined; S.stepV = 0;   // (NO-AIR: the last step up to the stop's thing is still to take: stepTick)
     S.tmr = d[0] + (d[1] - d[0]) * S.rnd() * (first ? 0.6 : 1);
     S.gestT = 1 + S.rnd() * 2;
     n.targetAngle = s.a; n.forceAnim = s.act === 'stand' || standsAt(n.def.id, s.id) ? null : s.act;
@@ -731,15 +732,72 @@ export class StoryRounds {
     if (S.path.length > 1 && Math.hypot(S.path[0].x - n.pos.x, S.path[0].z - n.pos.z) < 0.4) S.wi = 1;
     n.forceAnim = null;
   }
+  // NO-AIR: the last step up to the thing a stop works at, and back to the stop before the round goes on (as the
+  // residents', walkers.js stepTick; workhands.js workStep): taken where the hands find nothing in reach from the stop
+  // itself (the hands' layer has stood the action down), at once the next time. Never from the mark (the chapter's own
+  // place and pose), not into a door's reach, not by anybody else or where the chapter puts them: then the stop is
+  // worked, or stood at, where it is.
+  stepFor(n, s) {
+    if (s.mark || s.noStep || !s.act || s.act === 'stand' || standsAt(n.def.id, s.id)) return null;
+    const g = this.game, sig = storySig(g);
+    if (s._st && s._st.sig === sig) return s._st.m;
+    const doors = [...(g.story?.doors?.() || []), ...(g.room?.exits || [])];
+    const ok = (x, z) => !doors.some((d) => Math.hypot(d.x - x, d.z - z) < (d.r || 0.9) + DOOR_CLEAR);
+    const m = workStep(g, s.x, s.z, s.a, s.act, { y: g.physics.groundAt(s.x, s.z, n.pos.y + 0.3), ok, girth: n.bodyR || 0.45, scale: n.rig.root.scale.y || 1 });
+    s._st = { sig, m };
+    return m;
+  }
+  stepFree(n, m) {
+    const g = this.game;
+    if (Math.hypot(g.hero.pos.x - m.x, g.hero.pos.z - m.z) < 0.9) return false;
+    for (const o of g.npcs) if (o !== n && o.present && !o.away && !o.inside && (Math.hypot(o.pos.x - m.x, o.pos.z - m.z) < 1.0 || (o.placed && o.placed.x != null && !o.stops && Math.hypot(o.placed.x - m.x, o.placed.z - m.z) < 1.0))) return false;
+    return true;
+  }
+  stepNeed(n, s, need) { if (s._st) (this.needs ||= new Map()).set(n.def.id + '@' + s.id, { sig: s._st.sig, need, m: s._st.m }); }
+  stepTick(n, S, s, dt) {
+    let K = S.wk;
+    if (K === undefined) {
+      K = S.wk = null; S.wkTry = false;
+      // (where to, is looked for only once they are seen stood down at the stop — dwell: what is drawn there is read, and a
+      //  place nobody looks at is not drawn. Known from an earlier visit, this session: at once)
+      const known = (this.needs ||= new Map()).get(n.def.id + '@' + s.id), T = known && known.sig === storySig(this.game) ? known : null;
+      if (!T && Math.hypot(s.x - n.pos.x, s.z - n.pos.z) < 1.2 && !s.mark && s.act && s.act !== 'stand') S.wkTry = true;
+      else if (T && T.need && T.m && Math.hypot(s.x - n.pos.x, s.z - n.pos.z) < 1.2 && this.stepFree(n, T.m)) K = S.wk = { x: T.m.x, z: T.m.z, in: 0, go: true, back: false };
+    }
+    if (!K || !(K.go || K.back)) { S.stepV = 0; return false; }
+    const tx = K.back ? s.x : K.x, tz = K.back ? s.z : K.z, dx = tx - n.pos.x, dz = tz - n.pos.z, d = Math.hypot(dx, dz);
+    const sp = Math.min(S.def.speed || 0.9, 1.0) * clamp(d / 0.5, 0.4, 1), step = Math.min(d, sp * dt);
+    if (d > 1e-4) { n.pos.x += dx / d * step; n.pos.z += dz / d * step; }
+    if (d > 0.08) n.angle = dampAngle(n.angle, Math.atan2(dx, dz), 9, dt);
+    S.stepV = Math.max(0.3, sp);
+    n.forceAnim = null; n.rig.play('walk'); n.placeRig();
+    if (d - step < 0.02) {
+      n.pos.x = tx; n.pos.z = tz; S.stepV = 0;
+      if (K.back) { S.wk = null; S.ri = (S.ri + 1) % S.stops.length; this.plan(n, S); }
+      else { K.go = false; K.in = Math.hypot(K.x - s.x, K.z - s.z); n.forceAnim = s.act; }
+    }
+    return true;
+  }
   dwell(n, S, dt) {
     const g = this.game, s = S.stops[S.ri], h = g.hero;
+    if (this.stepTick(n, S, s, dt)) return;
     // standing about (not busy with her hands), she turns to Twinsen when he comes close, as the story's people do
     const near = Math.hypot(h.pos.x - n.pos.x, h.pos.z - n.pos.z) < 2.6 && s.act === 'stand';
     n.angle = dampAngle(n.angle, near ? n.angleTo(h) : s.a, 4, dt);
     if (s.gest && (S.gestT -= dt) <= 0) { n.rig.doGesture(s.gest[Math.floor(S.rnd() * s.gest.length)]); S.gestT = 4 + S.rnd() * 4; }
-    n.rig.play(s.act === 'stand' || standsAt(n.def.id, s.id) ? 'idle' : s.act);
+    // (NO-AIR: stood down — nothing in reach from here. From the stop: the last step up to the thing, now and at once the
+    //  next time. From the stepped place too: they keep to the stop the next time)
+    if (n.rig.standFor) {
+      if (S.wkTry) { S.wkTry = false; const m = this.stepFor(n, s); if (m && this.stepFree(n, m)) { this.stepNeed(n, s, true); S.wk = { x: m.x, z: m.z, in: 0, go: true, back: false }; } }
+      else if (S.wk && !S.wk.go && !S.wk.back && S.wk.in > 0.01) this.stepNeed(n, s, false);
+    }
+    // (NO-AIR 3: the work begins once they face their thing — begun while still turning, the hands' layer looked along
+    //  the wrong line, found nothing and stood the action down for the whole stop: walkers.js dwellTick)
+    const off = Math.abs(Math.atan2(Math.sin(s.a - n.angle), Math.cos(s.a - n.angle))), faced = off < 0.04;   // (within two degrees, and then exactly: the hands are placed along the stop's own line)
+    if (faced && off > 0 && !near) n.angle = s.a;
+    n.rig.play(s.act === 'stand' || standsAt(n.def.id, s.id) || (!faced && !s.mark) ? 'idle' : s.act);
     n.placeRig();
-    if ((S.tmr -= dt) <= 0) { S.ri = (S.ri + 1) % S.stops.length; this.plan(n, S); }
+    if ((S.tmr -= dt) <= 0) { if (S.wk && S.wk.in > 0.01) { S.wk.back = true; S.tmr = 0; } else { S.ri = (S.ri + 1) % S.stops.length; this.plan(n, S); } }   // (stepped up to its thing: first back to the stop, stepTick)
   }
   // along the route at a walk, round whoever is in the way (the hero, the people near): the walkers' right-hand step
   // aside, slowing and waiting when someone stands in the way; moved by the physics (never through a wall or furniture)

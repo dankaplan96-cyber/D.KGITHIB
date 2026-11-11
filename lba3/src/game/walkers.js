@@ -30,7 +30,7 @@ import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
-import { workSpot, standsAt } from './workhands.js';
+import { workSpot, workStep, knockStep, storySig, standsAt, STEP_ACTS } from './workhands.js';
 const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
 
 const DAY = 360;                       // seconds in a resident's "day": stops may keep to part of it (when: [from, to] of 0..1)
@@ -328,6 +328,7 @@ export class Resident extends NPC {
   // it has reached stop s (arrive at its slot): do what the stop says
   arrived(s, instant = false) {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
+    this.wk = undefined;   // (NO-AIR: the last step up to the stop's thing is still to take: stepTick)
     this.arrivedAt = instant ? -9 : this.game.time;   // (dwellTick: the stop settles before it turns)
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     this.gestT = 1 + this.rnd() * 2;
@@ -344,6 +345,9 @@ export class Resident extends NPC {
   leave() {
     this.rig.handsFree = false;
     const s = this.stop;
+    // (NO-AIR: it goes on from the stop's own slot. Seen, it has stepped back already — stepTick; unseen, it is put there)
+    if (this.wk) { if (this.wk.in > 0.01 && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < this.wk.in + 0.5) { this.pos.x = s.x; this.pos.z = s.z; } this.wk = null; }
+    this.wkTry = false;
     // what it picks up here it carries on from here
     if (s.carry !== undefined) this.carrySet(s.carry);
     const i = this.nextIndex(this.ri), nxt = this.stops[i];
@@ -586,8 +590,75 @@ export class Resident extends NPC {
       hand.add(m); m.position.set(0, this.carrying === 'sack' ? 0.1 : 0, this.carrying === 'sack' ? -0.02 : 0);
     }
   }
+  // NO-AIR: the last step up to the thing a stop works at (as a knock's to its door), and back to the stop's slot before
+  // it goes on. The slot is where its route ends, a walking body's berth off the thing; where the hands find nothing in
+  // reach from there (workhands.js stands the action down: rig.standFor), the work is done an arm's length from the thing
+  // instead (workStep: the place is free and level, the way to it too). Only then: a stop whose thing is in reach from
+  // the slot is worked from the slot, as it always was. Not into a doorway's keep-out, not by one of the story's people
+  // or where they are put, not onto another resident or the hero: then it stays at the slot.
+  // stepFor: where, for this stop (kept with the stop until the story's flags change what stands there); with it
+  // `need`: true once the slot has been found out of reach (the next time it steps up at once), false when the thing
+  // was out of reach from the stepped place as well (it stays at the slot).
+  stepFor(s, an = this.actAnim(s)) {
+    if (s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.noStep) return null;
+    const g = this.game, sig = storySig(g);
+    if (s._st && s._st.sig === sig && s._st.an === an) return s._st.m;
+    const W = this.W, keep = W.nav.keepOut || [];
+    const ok = (x, z) => { if (W.doorDist(x, z) < 0.95) return false; for (const d of keep) if (Math.hypot(x - d.x, z - d.z) < d.r + 0.2) return false; return true; };
+    const m = workStep(g, s.x, s.z, s.a, an, { y: g.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), ok, girth: this.bodyR, scale: this.rig.root.scale.y || 1 });
+    s._st = { sig, an, m, need: undefined };
+    return m;
+  }
+  // (whoever stands there now: the hero, the story's people — and where they are put — or another resident)
+  stepFree(m) {
+    const W = this.W, h = this.game.hero;
+    if (Math.hypot(h.pos.x - m.x, h.pos.z - m.z) < 0.9) return false;
+    for (const n of W.statics) if (Math.hypot(n.pos.x - m.x, n.pos.z - m.z) < 1.0 || (n.placed && n.placed.x != null && Math.hypot(n.placed.x - m.x, n.placed.z - m.z) < 1.0)) return false;
+    for (const r of W.res) if (r !== this && r.present && !r.away && !r.inside && Math.hypot(r.pos.x - m.x, r.pos.z - m.z) < 0.8) return false;
+    return true;
+  }
+  // (true: this frame was the step's)
+  stepTick(dt, s) {
+    let K = this.wk;
+    if (K === undefined) {
+      K = this.wk = null; this.wkTry = false;
+      // (first onto the slot itself: a walk ends within a step of it, and the hands are placed from where the stop was set)
+      const d0 = Math.hypot(s.x - this.pos.x, s.z - this.pos.z), works = STEP_ACTS.has(this.actAnim(s)) && !(s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.slotless);
+      if (works && d0 > 0.04 && d0 < 0.4 && !this._onSlot) { this._onSlot = true; this.wk = { x: s.x, z: s.z, in: 0, go: true, back: false, slot: true }; return this.stepTick(dt, s); }
+      this._onSlot = false;
+      // (where to, is looked for only once it is seen stood down at the slot — dwellTick: what is drawn there is read, and
+      //  a place nobody looks at is not drawn. Known from an earlier visit: at once)
+      const T = s._st && s._st.sig === storySig(this.game) && s._st.an === this.actAnim(s) ? s._st : null, m = T && T.need ? T.m : null;
+      if (!T && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 0.7 && !(s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.noStep)) this.wkTry = true;
+      else if (m && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 0.7 && this.stepFree(m)) {
+        K = this.wk = { x: m.x, z: m.z, in: 0, go: true, back: false };
+        // (reached unseen — after a load, or in the abstract state: it is there already as it comes into view)
+        if (this.arrivedAt === -9) { this.pos.x = m.x; this.pos.z = m.z; this.angle = this.targetAngle = s.a ?? this.angle; K.go = false; K.in = m.moved; this.sync(); }
+      }
+    }
+    if (!K) return false;
+    if (K.go || K.back) {
+      const tx = K.back ? s.x : K.x, tz = K.back ? s.z : K.z, dx = tx - this.pos.x, dz = tz - this.pos.z, d = Math.hypot(dx, dz);
+      // (pushed off it meanwhile — the hero walked into it: no step from wherever it is now)
+      if (d > 1.7) { if (K.back) { this.wk = null; this.leave(); } else this.wk = null; return K.back; }
+      const sp = Math.min(this.speed, 1.0) * clamp(d / 0.5, 0.4, 1), step = Math.min(d, sp * dt);
+      if (d > 1e-4) { this.pos.x += dx / d * step; this.pos.z += dz / d * step; }
+      if (d > 0.08) this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 9, dt);
+      if (d - step < 0.02) {
+        this.pos.x = tx; this.pos.z = tz;
+        if (K.back) { this.wk = null; this.gait = 0; this.animate('idle', dt, 0); this.leave(); return true; }
+        if (K.slot) { this.wk = undefined; this.arrivedAt = this.game.time - 0.9; this.animate('idle', dt, 0); return true; }   // (on the slot: now as an arrival there)
+        K.go = false; K.in = Math.hypot(K.x - s.x, K.z - s.z); this.arrivedAt = this.game.time - 0.9;
+      }
+      this.gait += (sp - this.gait) * Math.min(1, dt * 8);
+      this.animate('walk', dt, Math.max(0.3, this.gait));
+      return true;
+    }
+    return false;
+  }
   dwellTick(dt, s) {
     const h = this.game.hero;
+    if (this.stepTick(dt, s)) return;
     // it turns to whoever comes close (as the story's own people do), else to what the stop looks at
     // (STOP-TURN, 8.11.2026: the stop first, then the turn. Turning at once on arrival, a stop that ended facing away from
     //  its view (Oda by the bench she does not sit on: 140°) became one move of five steps; now it stands in its two steps
@@ -600,9 +671,21 @@ export class Resident extends NPC {
     this.keepClear(dt, s);
     // (a stop with `gest`: now and then a shrug or a sigh over the dry well, a breath out at the warm post)
     if (s.gest && (this.gestT -= dt) <= 0) { this.rig.doGesture(s.gest[Math.floor(this.rnd() * s.gest.length)]); this.gestT = 3 + this.rnd() * 4; }
-    if (this.tmr <= 0) this.leave();
+    if (this.tmr <= 0) { if (this.wk && this.wk.in > 0.01) { this.wk.back = true; this.tmr = 0; } else this.leave(); }   // (stepped up to its thing: first back to the slot, stepTick)
     this.rig.handsFree = s.act === 'warm';   // (a hand held out to a heat post's warmth is not on it: workhands.js leaves it be)
-    this.animate(this.actAnim(s), dt, 0);
+    // (NO-AIR 3: the work begins once it faces its thing. Begun while still turning — it arrives heading the way it walked —
+    //  the hands' layer looked for the thing along the wrong line, found nothing and stood the action down for the whole
+    //  stop; and turned to Twinsen it worked at the air beside him. It stands while it turns, and stands turned to him)
+    //  (faced: within two degrees, and then exactly — the hands are placed along the stop's own line)
+    const an = this.actAnim(s), off = an === 'idle' || this.targetAngle == null ? 0 : Math.abs(Math.atan2(Math.sin(this.targetAngle - this.angle), Math.cos(this.targetAngle - this.angle))), faced = off < 0.04;
+    if (faced && off > 0 && want === this.targetAngle) this.angle = this.targetAngle;
+    this.animate(faced ? an : 'idle', dt, 0);
+    // (NO-AIR: stood down — nothing in reach from here. From the slot: the last step up to the thing, now and at once the
+    //  next time. From the stepped place too: it keeps to its slot the next time)
+    if (this.rig.standFor && !s._gave) {
+      if (this.wkTry) { this.wkTry = false; const m = this.stepFor(s); if (m && this.stepFree(m)) { s._st.need = true; this.wk = { x: m.x, z: m.z, in: 0, go: true, back: false }; } else if (m) s._st = null; else if (s._st) s._st.need = false; }   // (somebody in the way: asked again the next time; nothing to step up to: it keeps to its slot)
+      else if (this.wk && !this.wk.go && !this.wk.back && this.wk.in > 0.01 && s._st) s._st.need = false;
+    }
   }
   // a pair meets: each waits for the other, then they talk (the one who sees the other waiting starts it; the other joins)
   pairTick(dt, s) {
@@ -643,7 +726,10 @@ export class Resident extends NPC {
     // (NO-AIR: first the last step up to the door, so that the hand is on it: its stop is where the route ends, a
     //  walking body's berth off the wall and out of any arm's reach of the leaf; the step in is that much shorter)
     if (this.kGo === undefined) {
-      const m = s.act === 'noknock' ? null : workSpot(this.game, this.pos.x, this.pos.z, this.angle, 'tapTurn', { y: this.pos.y, max: 1.7, r: 0.3 });
+      // (kept with the stop for where it arrived, until the story's flags change: the look at what is drawn is not free)
+      const key = storySig(this.game) + '|' + Math.round(this.pos.x * 10) + '|' + Math.round(this.pos.z * 10);
+      if (s._kn?.key !== key) s._kn = { key, m: s.act === 'noknock' ? null : knockStep(this.game, this.pos.x, this.pos.z, this.angle, { y: this.pos.y, girth: this.bodyR, scale: this.rig.root.scale.y || 1 }) };
+      const m = s._kn.m;
       this.kGo = m ? m.moved : 0; this.kIn = 1.1 * Math.max(0.3, 1 - this.kGo / 0.55);   // (a door two metres off — the islands', Zeelich's — is walked up to)
     }
     if (this.kGo > 0.005) {

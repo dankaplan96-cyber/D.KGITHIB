@@ -4,7 +4,8 @@
 //   - who: every NPC of game.npcs — the story's people where their chapter puts them (a placement's pose), the people
 //     of the cast rounds (castrounds.js) and the household rounds (roomlife.js) at each of their stops, every resident
 //     (walkers.js: Citadel's, the story residents', the islands', the rooms' and the ports') at each stop of the round
-//     their state gives them, and the room people who walk a track (hamlife.js, isleslife.js, deeplife.js: played for
+//     their state gives them — measured from where the game has them work: after the last step up to the thing
+//     (workhands.js workStep; a door's knock from its own last step) — and the room people who walk a track (hamlife.js, isleslife.js, deeplife.js: played for
 //     TRACK_S seconds, since a track's walk ends within half a metre of its spot)
 //   - what: the hand actions (WORK below). For each, the working hand's least distance, over the action, from its wrist,
 //     palm, fingertips or the tool it holds to the nearest drawn surface that is not the person's own body
@@ -15,8 +16,9 @@
 // each stop's pose is played on the person's own rig at the stop (their place and facing there), not walked to.
 // Output: one OFFENDER line each (who, where, action, distance), MEASURE lines with the counts. ONLY=<regexp> on
 // "chapter/scene/who"; LIST=1 prints every case; STATES=0,1,5 runs those states only (their index below); NOAIR_OUT=<file>
-// appends every measured case as a JSON line (a long sweep can be run in parts). GAME_URL (default
-// http://localhost:8123/). Automated runtime only.
+// appends every measured case as a JSON line (a long sweep can be run in parts). AREAS=hamalayi,isle_knartas builds only
+// those areas and rooms (a part of the sweep while working on one place; the whole sweep builds them all). GAME_URL
+// (default http://localhost:8123/). Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -27,6 +29,7 @@ const measure = (name, info) => console.log('MEASURE ' + name, JSON.stringify(in
 const HAND = +(process.env.HAND || 0.05), FOOT = 0.06, TRACK_S = 64;
 const ONLY = process.env.ONLY || '';
 const SEL = process.env.STATES ? process.env.STATES.split(',').map(Number) : null;
+const AREAS = process.env.AREAS ? process.env.AREAS.split(',') : null;
 
 // chapter states: the chapter's start, and the flags that move people or change what stands at their stops
 // (castrounds.js `when`, storylife.js / hamlife.js / ihomes.js phases)
@@ -48,13 +51,13 @@ if (browser) await browser.close();
 page.setDefaultTimeout(1800000);
 await open(page, '?nocine'); await menu(page, 'new');
 await page.addScriptTag({ path: fileURLToPath(new URL('./lib/contact.js', import.meta.url)) });
-return ev(async () => {
+return ev(async (AREAS) => {
   const RL = await import('./src/game/roomlife.js'), RG = await import('./src/game/regions.js'), WH = await import('./src/game/workhands.js');
   Object.assign(window, { RL, RG, WH });
   const G = game; P.settle();
   window.BASE = JSON.parse(JSON.stringify(G.flags));
   const t0 = performance.now();
-  G.regions.ensureAll('test');   // (every area and room: the sweep visits each that has people)
+  if (AREAS) for (const a of AREAS) G.regions.ensure(a, 'test'); else G.regions.ensureAll('test');   // (every area and room: the sweep visits each that has people)
   G.story.applyFlags(); G.step(0.2);
   window.setChapter = (key, extra = {}) => {
     const f = G.flags; P.settle();
@@ -97,7 +100,7 @@ return ev(async () => {
   const RS = () => G.story.interiors?.rounds;
   // every hand-work case of the state the game is in: { who, kind, stop, x, z, a, anim, scene, y? }
   NA.cases = () => {
-    const out = []; let stopAct = null; const add = (n, kind, stop, x, z, a, anim, y) => { if (WORK[anim]) out.push({ who: n.def.id, kind, stop, x, z, a: a ?? n.angle, anim, y, scene: (n.def.indoor && G.rooms[n.def.room]) ? n.def.room : (n.def.ambient && n.def.area && (n.def.area === 'citadel' || G.rooms[n.def.area])) ? n.def.area : NA.sceneAt(x, z), act: stopAct }); };
+    const out = []; let stopAct = null; const add = (n, kind, stop, x, z, a, anim, y, stepFn = null, atFn = null) => { if (WORK[anim]) out.push({ who: n.def.id, kind, stop, x, z, a: a ?? n.angle, anim, y, stepFn, atFn, scene: (n.def.indoor && G.regions.built(n.def.room)) ? n.def.room : (n.def.ambient && n.def.area && (n.def.area === 'citadel' || G.regions.built(n.def.area))) ? n.def.area : NA.sceneAt(x, z), act: stopAct }); };
     for (const n of G.npcs) {
       if (!n.rig?.j?.armR?.hand) continue;
       if (n.stops) {   // a resident: the round of its state
@@ -105,15 +108,19 @@ return ev(async () => {
         for (const s of n.stops) if (!s.seat) {
           stopAct = s.act;
           // (a door: the knock is made after the last step up to the leaf — walkers.js knockTick — so from there)
-          const k = s.door && s.act !== 'noknock' ? WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 1.7, r: 0.3 }) : null;
-          add(n, 'round', s.id, k ? k.x : s.x, k ? k.z : s.z, s.a, s.door ? 'tapTurn' : n.actAnim(s), s.y);
+          const knock = s.door && s.act !== 'noknock' ? () => (WH.knockStep ? WH.knockStep(G, s.x, s.z, s.a, { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), girth: n.bodyR, scale: n.rig.root.scale.y || 1 }) : WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 1.7, r: 0.3 })) : null;
+          // (any other stop it works at: from its slot; and where the hands find nothing in reach from there, from where its
+          //  last step up to the thing takes it — walkers.js stepFor, the game's own: NA.pose tries the slot first, as the game)
+          //  (asked for once the hero is by: what is drawn there is read, and a place far off is not drawn)
+          add(n, 'round', s.id, s.x, s.z, s.a, s.door ? 'tapTurn' : n.actAnim(s), s.y, !s.door && n.stepFor ? () => { delete s._st; return n.stepFor(s); } : null, knock);
         }
         stopAct = null;
         continue;
       }
       if (!n.present) continue;
       if (n.track?.cmds?.length) { let an = n.forceAnim, at = null, i = 0; for (const c of n.track.cmds) { if (c.op === 'call') { const d = {}; try { c.fn(d); } catch { /* (not a pose) */ } if ('forceAnim' in d) an = d.forceAnim; } else if (c.op === 'anim') an = c.name; else if (c.op === 'goto') at = c; else if (c.op === 'face' && at) add(n, 'track', 't' + i++, at.x, at.z, c.a, an, n.pos.y); } if (out.some((c) => c.who === n.def.id && c.kind === 'track')) continue; }
-      add(n, 'placed', 'mark', n.pos.x, n.pos.z, n.angle, n.forceAnim, n.pos.y);
+      // (the way the chapter faces them, not the way they happen to be turned this instant — still turning back from a round)
+      add(n, 'placed', 'mark', n.pos.x, n.pos.z, n.placed?.a ?? n.angle, n.forceAnim, n.pos.y);
     }
     return out;
   };
@@ -126,12 +133,14 @@ return ev(async () => {
       if (!D) continue;
       let stops = null;
       try { if (D.ch) stops = n.placed ? RL.castStops(G, D, n.placed, R.castNav(D)) : null; else { const room = G.regions.built(D.room); if (room && G.room === room && R.onMark(D, n.placed || { x: n.pos.x, z: n.pos.z, anim: n.forceAnim })) stops = R.stops(D, room); } } catch { stops = null; }
-      for (const s of stops || []) { if (s.mark) continue; if (WORK[s.act]) out.push({ who: n.def.id, kind: 'cast', stop: s.id, x: s.x, z: s.z, a: s.a, anim: s.act, y: n.pos.y, scene: G.room?.id ?? 'citadel' }); }   // (the rounds play the rig's pose of the act's own name: roomlife.js dwell)
+      for (const s of stops || []) { if (s.mark) continue; if (WORK[s.act]) out.push({ who: n.def.id, kind: 'cast', stop: s.id, x: s.x, z: s.z, a: s.a, anim: s.act, y: n.pos.y, stepFn: R.stepFor ? () => R.stepFor(n, s) : null, scene: G.room?.id ?? 'citadel' }); }   // (the rounds play the rig's pose of the act's own name: roomlife.js dwell)
     }
     return out;
   };
   // one case: the pose played on the person's own rig at the place; the least hand gap over the action, the feet
-  NA.pose = (c) => {
+  // (a stop with a step: the slot first; stood down there, the stepped place — as the game does, walkers.js dwellTick)
+  NA.pose = (c0) => { const { stepFn, atFn, ...c } = c0, k = atFn ? atFn() : null; if (k) { c.x = k.x; c.z = k.z; } const r = NA.pose1(c); if (!r.stood || !stepFn) return r; const m = stepFn(); return m ? { ...NA.pose1({ ...c, x: m.x, z: m.z }), stepped: true } : r; };
+  NA.pose1 = (c) => {
     const n = G.npcs.find((x) => x.def.id === c.who), rig = n.rig, W = WORK[c.anim];
     if (c.kind !== 'placed' && WH.standsAt?.(c.who, c.stop)) return { ...c, stood: true, listed: true, x: +c.x.toFixed(2), z: +c.z.toFixed(2), a: +(+c.a).toFixed(2), gap: null, hands: null, feet: null };   // (workhands.js AIR_STOPS: the person stands there)
     const keep = { x: n.pos.x, y: n.pos.y, z: n.pos.z, a: n.angle, vis: rig.root.visible, lod: rig.lodN, par: rig.root.parent, nf: rig.noFidget };
@@ -160,7 +169,7 @@ return ev(async () => {
     return out;
   };
   return { ms: Math.round(performance.now() - t0), rooms: Object.keys(G.rooms).length, npcs: G.npcs.length };
-});
+}, AREAS);
 };
 
 const rows = [];
@@ -246,12 +255,12 @@ const air = cases.filter((c) => c.gap != null && c.gap > HAND && c.act !== 'warm
 // (stood: the game found nothing in reach for the action and has the person stand there instead: listed, not an offender)
 const stood = cases.filter((c) => c.stood);
 for (const c of stood) console.log(`STOOD ${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}${c.why ? ': ' + c.why : ''} [${c.states[0]}]`);
-const line = (c) => `${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}: ${c.stood ? 'stood down' : c.hands ? Object.entries(c.hands).map(([s, [d, on]]) => `${s} ${(d * 100).toFixed(1)} cm${d < 0.79 ? ' from ' + on : ' (nothing in reach)'}`).join(', ') : 'own body'}${c.feet ? ` feet ${c.feet.map((h) => (h * 100).toFixed(1)).join('/')} cm` : ''} [${c.states[0]}${c.states.length > 1 ? ' +' + (c.states.length - 1) : ''}]`;
+const line = (c) => `${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}${c.stepped ? ' (stepped up)' : ''}: ${c.stood ? 'stood down' : c.hands ? Object.entries(c.hands).map(([s, [d, on]]) => `${s} ${(d * 100).toFixed(1)} cm${d < 0.79 ? ' from ' + on : ' (nothing in reach)'}`).join(', ') : 'own body'}${c.feet ? ` feet ${c.feet.map((h) => (h * 100).toFixed(1)).join('/')} cm` : ''} [${c.states[0]}${c.states.length > 1 ? ' +' + (c.states.length - 1) : ''}]`;
 if (process.env.LIST) for (const c of cases) console.log('CASE ' + line(c));
 for (const c of air.sort((a, b) => b.gap - a.gap)) console.log('OFFENDER hand ' + line(c));
 for (const c of feet) console.log('OFFENDER feet ' + line(c));
 const byAnim = {}; for (const c of cases) { const a = (byAnim[c.anim] ||= [0, 0]); a[0]++; if (c.gap != null && c.gap > HAND) a[1]++; }
-measure('cases', { states: SEL ? SEL.length : STATES.length, pagesDied: crashes, measured: rows.length, distinct: cases.length, byAnim, ownBody: self.length, warming: warm.length, stoodDown: stood.length, onAThing: cases.filter((c) => c.gap != null && c.gap <= HAND).length, handLimitCm: HAND * 100, footLimitCm: FOOT * 100 });
+measure('cases', { states: SEL ? SEL.length : STATES.length, pagesDied: crashes, measured: rows.length, distinct: cases.length, byAnim, ownBody: self.length, warming: warm.length, stoodDown: stood.length, onAThing: cases.filter((c) => c.gap != null && c.gap <= HAND).length, afterAStepUp: cases.filter((c) => c.stepped && c.gap != null && c.gap <= HAND).length, handLimitCm: HAND * 100, footLimitCm: FOOT * 100 });
 measure('offenders', { hands: air.length, feet: feet.length, worstCm: air[0] ? +(air[0].gap * 100).toFixed(1) : 0 });
 check('the sweep found the people at work (hundreds of stops over the chapters; a part of it — STATES, ONLY — its share)', ONLY ? cases.length > 0 : SEL ? cases.length > 40 * Math.min(3, SEL.length) : cases.length > 150, { distinct: cases.length });
 check(`no hand works on air: every working hand within ${HAND * 100} cm of a real surface at its contact`, air.length === 0, air.slice(0, 12).map(line));
