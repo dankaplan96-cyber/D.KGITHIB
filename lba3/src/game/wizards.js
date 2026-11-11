@@ -1,6 +1,7 @@
 // Twinsun's wizards, twelve years on (LBA2's, measured and looked at, nothing copied):
 //  - Bersimon the Weather Wizard's tent on Citadel's north plateau, where the original's stood (its S21, by the
-//    depot): a round tent of blue cloth with gold stars. Inside — bigger than the outside, as a wizard's tent is —
+//    depot): a round tent of red canvas under a rounded, pointed roof, as LBA2's (body 3; CITADEL-85), a few small
+//    gold stars on it. Inside — bigger than the outside, as a wizard's tent is —
 //    a stone room after the original's (the user's reference #63): a hearth with a great teal cauldron, a long table
 //    of bottles and bowls with benches, iron candle stands, star plaques on the walls, a spotted rug.
 //    Bersimon (look 'bersimon', body 111) tops up Twinsen's magic when they talk.
@@ -28,13 +29,18 @@ export const WIZ = { tent: { x: -100, z: -71 }, school: { local: { x: SCHOOL_SIT
 const TENT_IN = { x: 5400, z: 0 }, SCHOOL_IN = { x: 5600, z: 0 };   // (clear of the regions' ground patches)
 
 // ---------------------------------------------------------------- painted cloths and plaques
-const starCloth = () => canvasTex(512, 256, (x, W, H) => {
-  x.fillStyle = '#2a4a9a'; x.fillRect(0, 0, W, H);
-  x.fillStyle = '#23407f'; for (let i = 0; i < 16; i++) x.fillRect(i * 32, 0, 14, H);   // the cloth's panels
-  const star = (cx, cy, r) => { x.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.42 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); x.fill(); };
-  x.fillStyle = '#f0c850';
-  for (let i = 0; i < 26; i++) star((i * 97) % W, ((i * 61) % (H - 30)) + 15, 7 + (i % 3) * 3);
-  x.fillStyle = '#e8e0f8'; for (let i = 0; i < 6; i++) { x.beginPath(); x.arc((i * 151 + 40) % W, (i * 43 + 30) % H, 9, 0.6, 5.4); x.arc((i * 151 + 46) % W, (i * 43 + 27) % H, 8, 5.4, 0.6, true); x.fill(); }   // moons
+// (CITADEL-85: LBA2's tent is red. The canvas on the tent's lathe: u once round it (20.7 m: 4 cm a pixel), v up its
+//  profile (about 6 m: 2.3 cm a pixel), so a star is drawn twice as tall as wide to come out round. Sixteen gores with
+//  their seams, a darker hem with a gold line over it, and a dozen small stars: detail on the red, not a pattern)
+const redCloth = () => canvasTex(512, 256, (x, W, H) => {
+  x.fillStyle = '#b8362e'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#a32d27'; for (let i = 0; i < 16; i++) x.fillRect(i * 32, 0, 3, H);   // the gores' seams
+  x.fillStyle = '#c4433a'; for (let i = 0; i < 16; i++) x.fillRect(i * 32 + 10, 0, 12, H);   // (the cloth's sheen between them)
+  x.fillStyle = '#7e2420'; x.fillRect(0, H - 22, W, 22);   // the hem (v = 0 is the image's bottom row)
+  x.fillStyle = '#e0b54e'; x.fillRect(0, H - 27, W, 3);
+  const star = (cx, cy, r) => { x.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.42 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 1.75); } x.closePath(); x.fill(); };
+  x.fillStyle = '#e8c25a';
+  for (let i = 0; i < 12; i++) star((i * 43 + 17) % W, 40 + ((i * 67) % (H - 110)), 5 + (i % 2) * 2);
 });
 const starPlaque = (bg = '#2a5a8a') => canvasTex(256, 256, (x, W) => {
   x.fillStyle = '#1a2a3a'; x.beginPath(); x.arc(W / 2, W / 2, W / 2, 0, 7); x.fill();
@@ -69,18 +75,19 @@ const boardTex = () => canvasTex(512, 256, (x, W, H) => {
 function buildTentOutside(scene, physics) {
   const { x, z } = WIZ.tent, gy = physics.groundAt(x, z);
   const g = new THREE.Group(); g.name = 'wizardTent'; g.position.set(x, gy, z); scene.add(g);
-  const cloth = MAT.map(starCloth(), 0.9, { side: THREE.DoubleSide }), clothD = MAT.flat('#1e3670', 0.9);
+  const cloth = MAT.map(redCloth(), 0.9, { side: THREE.DoubleSide });
   const add = (geo, m, px, py, pz, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  add(new THREE.CylinderGeometry(3.15, 3.3, 1.7, 14, 1, true), cloth, 0, 0.85, 0);
-  add(new THREE.ConeGeometry(3.7, 3.3, 14), cloth, 0, 1.7 + 1.62, 0);
-  add(new THREE.TorusGeometry(3.45, 0.07, 6, 28).rotateX(Math.PI / 2), MAT.flat('#f0c850', 0.5), 0, 1.72, 0);
+  // (CITADEL-85: one rounded canvas, LBA2's form: an upright wall (inside the collider's 3.2 but for 0.1 m at its
+  //  foot) swelling into a full, rounded roof drawn up to a point; it was a blue drum under a straight cone with a
+  //  gold ring. The profile's points are spaced about evenly along it, so the cloth's v follows the canvas)
+  add(new THREE.LatheGeometry([[3.3, 0], [3.29, 0.55], [3.27, 1.1], [3.24, 1.6], [3.1, 2.15], [2.8, 2.65], [2.36, 3.1], [1.82, 3.5], [1.25, 3.86], [0.7, 4.22], [0.3, 4.6], [0.08, 4.86], [0.0001, 4.95]].map(([a, b]) => new THREE.Vector2(a, b)), 20), cloth, 0, 0, 0);
   // the door (east, toward the depot path): a dark opening, the flaps tied back
-  add(rbox(0.12, 1.55, 1.1, 0.02), MAT.flat('#141022'), 3.2, 0.78, 0);
-  for (const s of [-1, 1]) { const f = add(new THREE.ConeGeometry(0.36, 1.6, 3), MAT.flat('#e8c060', 0.8), 3.28, 0.8, s * 0.7); f.rotation.z = Math.PI; }
-  // the centre pole's star finial and a pennant
-  add(cyl(0.05, 0.05, 1.0, 6), MAT.wood('dark'), 0, 5.2, 0);
-  const st = add(new THREE.OctahedronGeometry(0.28, 0), MAT.glow('#ffe080', '#ffb020', 1.2), 0, 5.8, 0);
-  const pen = add(new THREE.PlaneGeometry(0.9, 0.35), MAT.flat('#c03a3a', 0.8, { side: THREE.DoubleSide }), 0.48, 5.45, 0);
+  add(rbox(0.12, 1.55, 1.1, 0.02), MAT.flat('#141022'), 3.22, 0.78, 0);
+  for (const s of [-1, 1]) { const f = add(new THREE.ConeGeometry(0.36, 1.6, 3), MAT.flat('#e8c060', 0.8), 3.3, 0.8, s * 0.7); f.rotation.z = Math.PI; }
+  // the centre pole's star finial and a pennant (gold against the sky over the red)
+  add(cyl(0.05, 0.05, 0.8, 6), MAT.wood('dark'), 0, 5.2, 0);
+  const st = add(new THREE.OctahedronGeometry(0.26, 0), MAT.glow('#ffe080', '#ffb020', 1.2), 0, 5.75, 0);
+  const pen = add(new THREE.PlaneGeometry(0.9, 0.35), MAT.flat('#e8c060', 0.8, { side: THREE.DoubleSide }), 0.48, 5.4, 0);
   // a sign by the path, as in the original: "Tent of the Weather Wizard"
   add(cyl(0.06, 0.07, 1.6, 6), MAT.wood('dark'), 4.4, 0.8, 1.9);
   add(plane(1.5, 0.38), MAT.map(signTex('Tent of the Weather Wizard'), 0.8, { side: THREE.DoubleSide }), 4.4, 1.45, 1.9, Math.PI / 2);
