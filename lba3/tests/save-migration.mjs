@@ -3,7 +3,7 @@
 // final chapter was split in two (The Shell, The Core) loads into the right half: the core room or a begun fight →
 // chapter 12; Sendell's chamber and earlier → chapter 11; the epilogue keeps its place (its position moved one on).
 // SHAFT-CITADEL: a save on Zeelich's drill platform during The Shell comes out at the shaft's new top, Citadel's station.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
 const { check, done } = checker({ info: 'always' });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });

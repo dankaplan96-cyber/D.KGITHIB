@@ -13,7 +13,7 @@
 //    terrain), across stairs (the arena's steps), with a wall behind (falls the other way) and with no room
 //    (slumps), the player leaving the scene, a dialogue, the pause, a story change of cast, a reload mid-fall.
 // Prints PASS/FAIL lines with the measured values (MEASURE lines for the tables in QA).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

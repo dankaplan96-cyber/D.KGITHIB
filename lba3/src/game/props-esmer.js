@@ -903,11 +903,67 @@ export function liftTower(P, { h = 11, w = 2.8 } = {}) {
   add(cached('eliftcageroof' + cw, () => bbox(cw + 0.1, 0.1, cw + 0.1, 0.02, 1)), brassM(), 0, 2.05, 0);
   add(cached('eliftcrates', () => tint(compose([[bbox(0.8, 0.7, 0.8, 0.04), -0.35, 0.5, 0.2], [bbox(0.6, 0.55, 0.6, 0.04), 0.4, 0.42, -0.3, 0, 0.4]]), '#b88850')), VC(), 0, 0, 0);
   const cable = add(cached('eliftcable', () => cyl(0.02, 0.02, 1, 4)), EM.dark(), 0, 0, 0);
+  // ZEELICH-1 item 5: the story's lift. Until setLevel is called the cage idles up and down its tower as before; then
+  // level 1 holds it at the deck (where one boards) and 0 at the foot of its shaft, DROP m below, under the clouds
+  // (the ride down to the Wannies' island). The lever on its post beside the tower: setLever(b) pulls it.
+  const DROP = 18;
+  P.add(cached('eliftshaft' + cw, () => bbox(cw + 0.1, 0.03, cw + 0.1, 0.01, 1)), EM.dark(), 0, 0.02, 0);
+  P.add(cached('eleverpost', () => compose([[bbox(0.34, 0.1, 0.34, 0.02), 0, 0.05, 0], [bbox(0.14, 1.0, 0.14, 0.02), 0, 0.5, 0]])), EM.rust(), w / 2 + 0.75, 0, w / 2 - 0.2);
+  const arm = new THREE.Group(); arm.position.set(w / 2 + 0.75, 1.0, w / 2 - 0.2);
+  const armM = new THREE.Mesh(cached('eleverarm', () => compose([[cyl(0.03, 0.03, 0.7, 6), 0, 0.35, 0], [new THREE.SphereGeometry(0.07, 8, 6), 0, 0.72, 0]])), EM.brass());
+  arm.add(armM); arm.rotation.x = -0.6;
+  const levG = new THREE.Group(); levG.position.set(P.x, P.y, P.z); levG.rotation.y = P.ry; levG.add(arm);
+  P.cyl(w / 2 + 0.75, w / 2 - 0.2, 0.22, 1.1);
+  const L = { level: null, target: null, pulled: false,
+    setLevel(t, instant) { this.target = Math.max(0, Math.min(1, t)); if (instant || this.level == null) this.level = this.target; },
+    setLever(b) { this.pulled = !!b; },
+    get moving() { return this.target != null && Math.abs(this.target - this.level) > 1e-3; },
+    local: { x: P.x, z: P.z, ry: P.ry, lever: P.pt(w / 2 + 0.75, w / 2 - 0.2), front: P.pt(0, w / 2 + 1.1), y: P.y } };
+  P.lift = L;
+  P.extra.push({ obj: levG, update: (dt) => { arm.rotation.x += ((L.pulled ? 0.6 : -0.6) - arm.rotation.x) * Math.min(1, dt * 6); } });
   P.extra.push({ obj: cage, update: (dt, t) => {
-    const u = 0.5 - 0.5 * Math.cos(t * 0.26), y = 0.2 + u * (h - 2.6);
+    let y;
+    if (L.target == null) { const u = 0.5 - 0.5 * Math.cos(t * 0.26); y = 0.2 + u * (h - 2.6); }
+    else { L.level += Math.sign(L.target - L.level) * Math.min(Math.abs(L.target - L.level), dt * 0.1); y = 0.2 - (1 - L.level) * DROP; }
     cage.position.y = P.y + y; cable.scale.y = Math.max(0.1, h - y - 2.1); cable.position.y = 2.1 + (h - y - 2.1) / 2;
   } });
   P.box(0, 0, w / 2 + 0.1, w / 2 + 0.1, h + 3, { seeThrough: false }); P.r = w;
+  return P;
+}
+// ZEELICH-1 item 5 (the Wannies' island): the gem mine's mouth — a mound of dark rock with a timber-framed tunnel, rails
+// coming out of it with an ore cart, a lamp and the MINE board; faces +z (its front spot: P.pt(0, 3.0))
+export function mineMouth(P) {
+  // (compact: its rock spans 5.8 × 3.8 m round the piece's centre; the mouth faces +z, the rails run out before it)
+  const rock = tm('rock', { color: '#5a4a44', rough: 0.95 }), timber = tm('planks', { color: '#8a6040' }), Z = 1.3;
+  for (const [x, y, z, sx, sy, sz] of [[0, 1.6, -1.4, 2.6, 2.4, 1.8], [-1.9, 1.0, -0.9, 1.2, 1.5, 1.3], [1.9, 1.1, -1.0, 1.2, 1.6, 1.3], [0, 3.3, -1.8, 1.9, 1.1, 1.3]])
+    P.add(cached('emound', () => new THREE.SphereGeometry(1, 12, 9)), rock, x, y, z + Z, 0, 0, 0, sx, sy, sz);
+  P.add(cached('eminehole', () => bbox(2.0, 2.3, 0.1, 0.02, 1)), EM.dark(), 0, 1.15, 0.05 + Z);
+  P.add(cached('eminefr', () => compose([[bbox(0.3, 2.6, 0.3, 0.03), -1.15, 1.3, 0.2], [bbox(0.3, 2.6, 0.3, 0.03), 1.15, 1.3, 0.2], [bbox(2.9, 0.34, 0.36, 0.03), 0, 2.72, 0.2]])), timber, 0, 0, Z);
+  P.add(wordPlane('MINE', 1.4, 0.34), signMat(), 0, 3.22, 0.4 + Z);
+  for (let i = 0; i < 6; i++) P.add(cached('eslpr', () => bbox(1.3, 0.08, 0.18, 0.01)), timber, 0, 0.04, 0.4 + Z + i * 0.5);
+  for (const sx of [-0.45, 0.45]) P.add(cached('erail3', () => bbox(0.06, 0.08, 3.0, 0.01)), EM.rust(), sx, 0.12, 1.6 + Z);
+  P.add(cached('eorecart', () => compose([[bbox(1.0, 0.6, 1.4, 0.05), 0, 0.55, 0], [cyl(0.16, 0.16, 1.2, 10).rotateZ(Math.PI / 2), 0, 0.18, -0.45], [cyl(0.16, 0.16, 1.2, 10).rotateZ(Math.PI / 2), 0, 0.18, 0.45]])), EM.rust(), 0, 0, 2.6 + Z);
+  P.add(cached('eore', () => compose([[new THREE.SphereGeometry(0.22, 7, 5), -0.2, 0.92, -0.2], [new THREE.SphereGeometry(0.2, 7, 5), 0.2, 0.9, 0.1], [new THREE.SphereGeometry(0.18, 7, 5), 0, 0.95, 0.35]])), tm('rock', { color: '#6a8a9a', rough: 0.6 }), 0, 0, 2.6 + Z);
+  P.add(cached('eminelamp', () => compose([[cyl(0.05, 0.06, 2.4, 6), 0, 1.2, 0]])), EM.rust(), 1.9, 0, 1.0 + Z);
+  P.add(cached('eminelampg', () => new THREE.SphereGeometry(0.16, 10, 8)), EM.glow(), 1.9, 2.5, 1.0 + Z);
+  P.box(0, -1.4 + Z, 2.9, 1.9, 4.2); P.box(0, 2.6 + Z, 0.55, 0.75, 1.0); P.r = 3.0;
+  return P;
+}
+// the chapel's bell: a timber frame with a little roof and a bronze bell, set before the chapel's door
+export function bellFrame(P) {
+  const timber = tm('planks', { color: '#8a6040' });
+  P.add(cached('ebellfr', () => compose([[bbox(0.18, 2.8, 0.18, 0.02), -0.7, 1.4, 0], [bbox(0.18, 2.8, 0.18, 0.02), 0.7, 1.4, 0], [bbox(1.7, 0.18, 0.22, 0.02), 0, 2.7, 0]])), timber);
+  P.add(cached('ebellroof', () => compose([[bbox(1.2, 0.08, 0.8, 0.02), -0.42, 3.05, 0, 0, 0, 0.55], [bbox(1.2, 0.08, 0.8, 0.02), 0.42, 3.05, 0, 0, 0, -0.55]])), tm('roof', { color: '#7a4a3a' }));
+  P.add(cached('ebell', () => lathe([[0.001, 0], [0.32, 0], [0.3, 0.06], [0.22, 0.3], [0.16, 0.5], [0.001, 0.54]], 14)), EM.brass(), 0, 2.05, 0);
+  P.cyl(-0.7, 0, 0.14, 2.8); P.cyl(0.7, 0, 0.14, 2.8); P.r = 1.0;
+  return P;
+}
+// a lettered board on two posts (faces +z)
+export function boardSign(P, { text = 'VILLAGE', w = 2.6 } = {}) {
+  P.add(cached('eboardposts' + w, () => compose([[bbox(0.14, 2.5, 0.14, 0.02), -w / 2 + 0.1, 1.25, 0], [bbox(0.14, 2.5, 0.14, 0.02), w / 2 - 0.1, 1.25, 0]])), tm('planks', { color: '#8a6040' }));
+  P.add(cached('eboard' + w, () => bbox(w, 0.6, 0.08, 0.02, 0.9)), tm('planks', { color: '#c8a070' }), 0, 2.15, 0.04);
+  P.add(wordPlane(text, w - 0.3, 0.36), signMat(), 0, 2.15, 0.09);
+  P.box(0, 0, w / 2, 0.14, 2.5); P.r = w / 2 + 0.2;
   return P;
 }
 // a deck rail between two island-local points at height y: posts and two brass rails

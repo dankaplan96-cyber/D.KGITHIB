@@ -16,7 +16,7 @@
 //  5b. (DISCREET-WALK) Discreet's sneak against LBA2's discreet walk (ANIM 94): its cycle, knee lift, reach and the pelvis's rise and
 //     fall within 15 %; the planted foot stays put straight on (30 / 60 / 120 fps), back-stepping and turning; the stop, hiding, a hit.
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

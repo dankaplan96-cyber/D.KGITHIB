@@ -3,7 +3,7 @@
 //      a textured part, an emissive part and a part marked keep stay as they are
 //   2. cell: a 60 m long group merged with cell 20 gives one mesh per cell
 //   3. Kit: MAT.flat / MAT.paint colours merge into one mesh per kind, MAT.glow keeps its own
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();

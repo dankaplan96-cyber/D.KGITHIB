@@ -24,6 +24,7 @@ import { ISLES, BOARD_NAME, hasIsland } from './zislands.js';
 import { DESERT_DOCK } from './desert.js';
 import { HAMALAYI_FIELD } from './hamalayi.js';
 import { ZEELICH } from './zeelich.js';
+import { buildZTerminalOutside } from './zterminal.js';
 import { ORDER } from './story/index.js';
 import { ctex, cached, bbox, cyl, lathe, pm, tm, brassM, Batch } from './kit.js';
 import { t } from './i18n.js';
@@ -207,6 +208,7 @@ export function travelRegion(game, id) {
     B.build();
     const b = boardMesh(Z.group, br.x + 3.4, Y, p.z0 + 2.2, Math.PI * 0.75, { title: 'ZEELICH SPACEPORT', lines: ['TWINSUN: CITADEL', 'BY SPACESHIP'], frame: '#7a3a8a', bg: '#2a1e34', ink: '#f0c040' });
     void b; P.add({ type: 'box', x: o.x + br.x + 3.4, z: o.z + p.z0 + 2.2, hw: 1.1, hd: 0.15, rot: Math.PI * 0.75, top: Y + 2.7, noStand: true });
+    buildZTerminalOutside(Z.group, P, Y);   // (SPACEPORT-1: the terminal's pavilion beside the bridge's end; its hall is zterminal.js)
     Z.spaceport = { pad: { x: o.x + p.pad.x, z: o.z + p.pad.z, y: Y }, landing: { x: o.x + p.pad.x, z: o.z + p.pad.z - 7.2, a: Math.PI }, deck: { x0: o.x + p.x0, x1: o.x + p.x1, z0: o.z + p.z0, z1: o.z + p.z1, y: Y } };
     pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: Z.spaceport.pad.x, z: Z.spaceport.pad.z, r: 6.4, landing: Z.spaceport.landing, name: 'tr_zeelich_port' });
     if (!Z.shuttlePad) drop('zeelich_shuttle');
