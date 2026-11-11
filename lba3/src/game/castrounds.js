@@ -72,13 +72,13 @@ export const CAST_ROUNDS = [
   // spot moves to the cool room's doorway once it draws — story/kesh.js — and there he has no round); both keep clear of
   // the pump and its gears
   { id: 'dtrader', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'trader'), speed: 0.8,
-    stops: [M([12, 18]), T('wares', -1.8, 0.8, [-2.6, 1.6], 'tinker', [8, 12]), T('water', 1.2, -2.6, [8, -11.6], 'stand', [5, 8], { gest: ['shrug'] })] },
+    stops: [M([12, 18]), T('wares', -0.7, 0.55, [-0.7, 1.4], 'tinker', [8, 12]), T('water', 1.2, -2.6, [8, -11.6], 'stand', [5, 8], { gest: ['shrug'] })] },
   { id: 'dkid', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'kid'), speed: 1.5,
-    stops: [M([6, 9]), T('pump', 2.6, 2.6, [14, -3], 'stand', [3, 5], { gest: ['nod'] }), T('pebble', -1.6, -2.0, [-1.6, -3.0], 'pickup', [3, 5])] },
+    stops: [M([6, 9]), T('pump', 2.6, 2.6, [14, -3], 'stand', [3, 5], { gest: ['nod'] }), T('pebble', -1.6, -2.0, [-1.6, -2.85], 'kneelWork', [3, 5])] },   // (NO-AIR 3: Brosk at his stall's counter from behind it; Sani kneels at the pebble game on its flat stone, storylife.js KESH_LIFE)
   // Hesk at his sand-yacht in Kesh: the runner, the sail's sheet
   { id: 'hesk', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'hesk'), speed: 1.0,
     when: (f, g) => (g.story.cur.key === 'dig' ? (f.c4_yacht || 'village') === 'village' : !!f.c5_planned && !f.c5_glider),
-    stops: [M([10, 16]), T('runner', -1.1, -2.6, [0.5, -4.2], 'kneelWork', [9, 13]), T('sheet', 4.5, -2.2, [2.0, -3.7], 'tinker', [7, 10])] },
+    stops: [M([10, 16]), T('runner', -0.8, -2.2, [1.5, -2.2], 'kneelWork', [9, 13]), T('sheet', 2.25, -0.9, [1.5, -2.2], 'tinker', [7, 10])] },   // (NO-AIR 3: both at the yacht's hull where it is parked, desert.js YACHT (−24, 11): the old stops faced past its ends)
   // Mother Tarra before her house: her porch, a look at the pump that matters to Kesh
   { id: 'tarra', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'tarra'), speed: 0.75,
     when: (f, g) => g.story.cur.key === 'dig' || !!f.c5_planned,
@@ -86,11 +86,11 @@ export const CAST_ROUNDS = [
   // Ilka at her camp (chapter 4 until the notebook is hers): her notes at the tent, a look toward the post
   { id: 'ilka', ch: ['dig'], room: 'desert', mark: spot('desert', 'ilka'), speed: 1.0,
     when: (f) => !f.c4_notebook,
-    stops: [M([12, 18]), T('notes', -2.5, -0.2, [-3.0, -3.0], 'tinker', [9, 13]), T('look', 2.6, -1.5, [32, 22], 'stand', [6, 9], { gest: ['nod'] })] },
+    stops: [M([12, 18]), T('notes', -0.4, -1.3, [-0.4, -2.4], 'tinker', [9, 13]), T('look', 2.6, -1.5, [32, 22], 'stand', [6, 9], { gest: ['nod'] })] },   // (NO-AIR 3: at her camp table by the tent)
   // chapter 5, the plan made: Ilka at the plaza (a look at the pump, her bag), Dallan once the steam is through
   { id: 'ilka', ch: ['steam'], room: 'desert', mark: near(plaza, 2.2, 1.0), speed: 1.0,
     when: (f) => !!f.c5_planned,
-    stops: [M([12, 18]), T('pump', 3.0, -1.6, [17.8, -10.0], 'stand', [6, 9], { gest: ['nod'] }), T('bag', -0.6, 2.6, [-0.6, 3.6], 'kneelWork', [6, 9])] },
+    stops: [M([12, 18]), T('pump', 3.0, -1.6, [17.8, -10.0], 'stand', [6, 9], { gest: ['nod'] }), T('bag', -0.6, 2.6, [-0.6, 3.6], 'stand', [6, 9], { gest: ['sigh', 'nod'] })] },   // (NO-AIR 3: no bag is drawn there: she stands a moment, thinking)
   { id: 'dallan', ch: ['steam'], room: 'desert', mark: near(plaza, -2.4, 1.6), speed: 0.95,
     when: (f) => !!f.c5_vent,
     stops: [M([12, 18]), T('dock', -2.6, -0.8, [-50, 0], 'stand', [6, 9], { gest: ['sigh'] }), T('pump', 1.0, 2.6, [22.4, -11.6], 'stand', [5, 8], { gest: ['nod'] })] },
@@ -105,25 +105,27 @@ export const CAST_ROUNDS = [
     stops: [M([12, 18]), T('shrine', -0.6, 4.8, [-2.0, 7.0], 'stand', [6, 9], { gest: ['nod'] }), T('packing', -3.4, 0.4, [-6.1, -6.8], 'stand', [5, 8], { gest: ['nod'] })] },   // (clear of the steam crack's prompt (kit2b.js): it stood 1.4 m from it)
   { id: 'pim', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'pim'), speed: 1.2,
     when: (f) => !f.c6_trip2,
-    stops: [M([8, 12]), T('icefall', 1.5, -3.0, [-5.6, -20.9], 'stand', [5, 8], { gest: ['sigh', 'shrug'] }), T('square', 0.5, 4.0, [0.5, 5.5], 'pickup', [4, 6])] },
+    stops: [M([8, 12]), T('icefall', 1.5, -3.0, [-5.6, -20.9], 'stand', [5, 8], { gest: ['sigh', 'shrug'] }), T('square', 0.5, 4.0, [0.5, 5.0], 'tinker', [4, 6])] },   // (NO-AIR 3: at the children's snowman, storylife.js LHAR_SNOWMAN: a child's hand does not reach the ground it picked from)
   { id: 'lhar1', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v1'), speed: 0.8, when: (f) => !f.c6_trip1,
-    stops: [M([10, 16]), T('sledge', -1.6, 1.8, [-6.6, 0.6], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: house 0's door leads in now: its stop by the door stood 1.8 m from the door's trigger, inside its reach and its way in; now by the sledge's side of the square, 3.6 m off)
+    stops: [M([10, 16]), T('sledge', -1.6, 1.8, [-2.5, 1.79], 'kneelWork', [6, 9])] },   // (HAMALAYI-LIFE: house 0's door leads in now: its stop by the door stood 1.8 m from the door's trigger, inside its reach and its way in; now by the sledge's side of the square, 3.6 m off)
   { id: 'lhar2', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v2'), speed: 0.8, when: (f) => !f.c6_trip1,
-    stops: [M([10, 16]), T('door', 0.4, 0.2, [1.9, -1.8], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: 2.9 m from Yorna's door's trigger: it stood on the rim of its reach and its way in)
+    stops: [M([10, 16]), T('door', 0.1, 0.95, [0.62, 1.85], 'kneelWork', [6, 9])] },   // (HAMALAYI-LIFE: 2.9 m from Yorna's door's trigger: it stood on the rim of its reach and its way in)
   { id: 'lhar3', ch: ['pass'], room: 'hamalayi', mark: spot('hamalayi', 'v3'), speed: 0.8, when: (f) => !f.c6_trip2,
-    stops: [M([10, 16]), T('door', -1.4, -1.6, [1.4, -2.1], 'setDown', [6, 9])] },   // (HAMALAYI-LIFE: house 2's door leads in now: off its way in (2.2 m out, ±0.7 m), 3 m from its trigger, still watching it)
+    stops: [M([10, 16]), T('door', -1.4, -1.6, [-2.48, -1.38], 'kneelWork', [6, 9])] },   // (HAMALAYI-LIFE: house 2's door leads in now: off its way in (2.2 m out, ±0.7 m), 3 m from its trigger, still watching it)
+  // (NO-AIR 3: the three households' stops above are at their packing now — a crate and a bundle each, storylife.js
+  //  LHAR_PACK — kneeling at it: they set things down on the air before a door; each stays clear of its door's way in)
   // the monastery's yard, the villagers settled (chapter 6 once up, chapter 7): the fire, the crates and the cart in the
   // west corner, the trough and the prayer wheels; the middle of the yard (the way from the gate) stays clear
   { id: 'lhar1', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(0), speed: 0.8, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip1,
-    stops: [M([10, 16]), T('fire', -1.8, -0.9, [-3.0, -1.6], 'tinker', [10, 14]), T('crates', -3.6, -0.4, [-4.7, -0.6], 'pickup', [5, 8])] },
+    stops: [M([10, 16]), T('fire', -1.79, -2.3, [-3.0, -1.6], 'kneelWork', [10, 14]), T('crates', -3.6, -0.4, [-4.7, -0.6], 'pickup', [5, 8])] },   // (NO-AIR 3: the fire tended kneeling at its stones — the pot hangs out of a standing reach)
   { id: 'lhar2', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(1), speed: 0.8, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip1,
-    stops: [M([10, 16]), T('wheels', -3.0, -4.6, [-3.55, -6.05], 'reach', [6, 9]), T('cart', -4.4, 0.4, [-5.0, 1.6], 'setDown', [6, 9])] },
+    stops: [M([10, 16]), T('wheels', -3.55, -5.15, [-3.55, -6.05], 'reach', [6, 9]), T('cart', -4.4, 0.4, [-5.0, 1.6], 'setDown', [6, 9])] },   // (NO-AIR 3: the wheels' stop square before a wheel)
   { id: 'lhar3', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(2), speed: 0.8, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip2,
     stops: [M([10, 16]), T('trough', 6.4, -2.4, [7.6, -2.4], 'touchWater', [6, 9]), T('wheels', 4.6, -4.6, [5.05, -6.05], 'reach', [6, 9])] },
   { id: 'yorna', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(3), speed: 0.9, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_up,
     stops: [M([12, 18]), T('wheels', 3.6, -5.0, [3.55, -6.05], 'reach', [6, 9]), T('bench', 5.2, -0.6, [6.6, 1.0], 'stand', [6, 9], { gest: ['nod'] })] },   // (clear of the frozen chest's prompt (kit2b.js): it stood 1.75 m from it)
   { id: 'pim', ch: ['pass', 'observatory'], room: 'hamalayi', mark: yard(4), speed: 1.2, when: (f, g) => g.story.cur.key === 'observatory' || !!f.c6_trip2,
-    stops: [M([8, 12]), T('sledge', -7.6, 3.4, [-8.8, 4.3], 'kneelWork', [7, 10]), T('trough', 3.6, -1.6, [4.6, -2.4], 'touchWater', [4, 6])] },
+    stops: [M([8, 12]), T('sledge', -8.15, 3.17, [-8.8, 4.3], 'kneelWork', [7, 10]), T('trough', 3.6, -1.6, [4.6, -2.4], 'touchWater', [4, 6])] },
   // the observatory's keeper (chapter 7), along the hall's south wall: the telescope's side, the bookshelf by the door;
   // never within reach of a floor mirror, nor on the beam's way
   { id: 'keeper', ch: ['observatory'], room: 'obsv', indoor: true, mark: spot('obsv', 'keeper'), speed: 0.75,
@@ -163,7 +165,7 @@ export const CAST_ROUNDS = [
   // Ilka and Dallan at the bore's post before the relay is set and after its fight; the relay's prompt (2.6 m round the
   // bore) stays clear
   { id: 'ilka', ch: ['network'], room: 'desert', mark: near(bore, -2.6, 2.4), speed: 1.0, when: (f) => !f.c10_boreRelay || f.c10_bore === true,
-    stops: [M([12, 18]), T('tank', -2.4, 1.6, [-3.4, 2.6], 'tinker', [8, 12]), T('look', 0.4, 2.2, [0.4, 12], 'stand', [5, 8], { gest: ['nod'] })] },
+    stops: [M([12, 18]), T('tank', -7.05, -0.4, [-8.1, -0.4], 'tinker', [8, 12]), T('look', 0.4, 2.2, [0.4, 12], 'stand', [5, 8], { gest: ['nod'] })] },   // (NO-AIR 3: at the post's crates west of the bore: the stop named for the tank faced open ground)
   { id: 'dallan', ch: ['network'], room: 'desert', mark: near(bore, 2.8, 2.6), speed: 0.95, when: (f) => !f.c10_boreRelay || f.c10_bore === true,
     stops: [M([12, 18]), T('fence', 2.4, 1.2, [6, 1.2], 'stand', [6, 9], { gest: ['sigh'] }), T('cabin', 1.2, 2.6, [1.2, 4], 'wipe', [5, 8])] },
   // Hesk by his glider at each of Twinsun's landings (chapter 10: he flies Twinsen between them)
