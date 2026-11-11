@@ -23,7 +23,7 @@ import { ChapterBase } from './base.js';
 import '../text/hostel.js';
 
 const HS_IDS = ['foreman', 'cook', 'worker1', 'worker2', 'worker3', 'worker4', 'sleeper'];
-const CHARS = { foreman: 'ztri1', cook: 'zmole2', worker1: 'zbee1', worker2: 'ztri2', worker3: 'zmole1', worker4: 'oku', sleeper: 'zbee2' };
+const CHARS = { foreman: 'ztri1', cook: 'zmole2', worker1: 'zbee1', worker2: 'ztri2', worker3: 'zmole1', worker4: 'oku_b', sleeper: 'zbee2' };
 const COLORS = { foreman: '#c8e0a0', cook: '#f0c0a0', worker1: '#f0d070', worker2: '#a8d8f0', worker3: '#d0c0e8', worker4: '#e0d0b0', sleeper: '#f0a0a0' };
 const BOX_KASHES = 20;
 

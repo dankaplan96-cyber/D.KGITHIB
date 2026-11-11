@@ -1,0 +1,82 @@
+{
+ "twinsen": {
+  "look": "twinsen",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 974964
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 968524
+   },
+   "heroCalls": 4,
+   "heroTris": 6440
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 6440,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "zoe": {
+  "look": "zoe",
+  "body": "zoe",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 234,
+    "triangles": 1093884
+   },
+   "withoutHero": {
+    "calls": 230,
+    "triangles": 1082564
+   },
+   "heroCalls": 4,
+   "heroTris": 11320
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 11320,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-07T19:43:17.363Z",
+ "candidates": {
+  "CAND_twinsen": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/twinsen/export/twinsen.json",
+  "CAND_zoe": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/export/zoe.json"
+ }
+}

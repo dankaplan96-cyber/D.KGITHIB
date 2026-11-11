@@ -2631,3 +2631,374 @@ grid z − 1. Pictures (ours only, the room's camera, Vega 8): `docs/future/worl
 - **Left:** the upper walk's FunFrock desk, stool and statue, the round wall lamps, the valve block by the landing, a
   teal box at (1, 21–22, 12–13), a grey block at (1, 9–11, 33) still cell blocks; no stair handrails, valve wheels,
   vent, fan or porthole; combat visibility not checked.
+
+## CAST-POLISH-HEROES · Twinsen's cuffs and Zoé's necklace (the Blender pass: the first two of its queue) · the laptop, 7.11.2026
+Diff: `requests/CAST-POLISH-HEROES.diff` (tools/blender/twinsen_poly.py, tools/blender/zoe_poly.py; against db5a1c9c, the
+same files on ddad5c12; `git apply --check` clean). The two new model files, to replace `assets/poly/twinsen.json` and
+`assets/poly/zoe.json` (single-line JSON, so not in the diff): `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json`, built
+from the patched scripts by the installed Blender 5.2.3 through `tools/blender-bridge` (`script` op). Working copies,
+jobs, Blender views and reports: `art/blender/characters/{twinsen,zoe}/`, `art/blender/characters/jobs/`. Pictures
+(ours, chapter 1, the game's renderer; before | after): `docs/future/characters/{twinsen,zoe}/`.
+- **Twinsen, CUFF-HEM.** Looked at in the game (Follow/Medium, the dialogue with Dot, 1.9 m close-ups, 13 poses): at
+  the play camera nothing reads wrong; up close the sleeve's cuff ended in the cone's bare edge (no thickness, a knife
+  edge from every side) over a flat dark lid. Now the cloth turns under in a rolled hem (out a little, under and back in
+  by 1.5 cm) over a dark inner wall and lid. Same place, length and bone (the forearm) as before; the fist is
+  untouched, so the ball, sword, glove and blowgun sit as before. `TW_CUFF_OLD=1` builds the old cuff. The unchanged
+  script rebuilt by Blender 5.2.3 gives the committed file exactly (every array equal), so the new file differs only by
+  the cuffs.
+- **Zoé, NECKLACE-ZOE.** The necklace was laid by rays cast at the skin and the dress but not at her neck (its own
+  part), so its two back ends found nothing and stayed where the original's lines are, 3.5 cm behind our slimmer neck,
+  and the loop was open there: in the close-ups two blue sticks stood in the air behind her neck. Now it is one closed,
+  smooth cord round the base of her neck: the measured V and collarbone points in front, behind it rests on the neck
+  just above the body's shell (ours: the original's back points are off our neck), each point laid on the nearest
+  surface and smoothed. Same colour, width, weights (torso → neck) and part. The V's upper arms are narrower than the
+  original's (they turn in to the neck instead of running out over the shoulder). `ZOE_NECKLACE_OLD=1` builds the old
+  one. Note: the unchanged script rebuilt by Blender 5.2.3 already differs from the committed file in 180 normals of
+  the necklace (positions identical); the new file carries that too.
+- **Contracts kept (checked on the files):** bone names and order, `eyes` and `mouths` entries identical, 4 weights per
+  vertex summing to 1, no new vertex colour (both edits use colours the models had: Twinsen's tunic #2a86ad and inner
+  #123f58, Zoé's #1b4b67), feet and top unchanged (Twinsen 0–2.1005 m, Zoé 0.004–2.0154 m). `validate`: no failure; one
+  warning each, the same as the baseline's (Twinsen: the eye objects' transforms; Zoé: 4 loose vertices). The bridge's own skeleton check reads `skeletons.json[look]`'s
+  keys instead of its `bones` (a bridge bug), so the bones were checked against `skeletons.json` separately.
+- **Budget** (triangles incl. eyes and mouth): Twinsen 3078 → 3274 (+6.4 %), Zoé 5474 → 5704 (+4.2 %); in the game's
+  frame the hero adds 4 draw calls before and after (body, silhouette pass, eyes, mouth) and 6048 → 6440 / 10860 →
+  11320 triangles (the body is drawn twice, by the silhouette pass too); no texture, no material, no bone added.
+- **In the game** (SwiftShader, both files served in place of `assets/poly/*.json`; the village square, Follow/Medium;
+  `docs/future/characters/*/`): at the Follow camera both read as before (the edits are for the close-ups, as
+  intended); in the 1.9 m close-ups and the review scene the cuff ends in a rounded hem, and Zoé's necklace sits on
+  her neck all the way round. Poses (a second rig in the developer yard, side and ¾: idle, walk, run, turn, jump, fall,
+  throw, sword, talk, pickup, use, hurt, doze): the hem rides the forearm with the cuff, the cord follows the neck and
+  chest, no new tear or clipping. The hero's frame: 4 draws before and after.
+  Evidence labels: **Automated runtime only** (tests, SwiftShader); the pictures were looked at, not played.
+- **Tests** (SwiftShader, both candidates in `assets/poly`): solidnpc 54/54 PASS; chapter1 23/23 PASS; story-journeys
+  30/30 PASS; cast-rounds 196 passed and 0 failed before its browser was closed from outside at the last case (the
+  epilogue's household rounds), that case alone then 14/14 PASS. Earlier runs of chapter1 and story-journeys stopped
+  the same way (a browser closed while booting), and chapter1 also once on its own 240 s boot limit (raised in the test
+  copy only). They passed from a renamed copy of the headless shell.
+- **GPU, a light run** (installed Chrome on the Vega 8, 1280×720, quality high, the village square at Follow/Medium,
+  20 s each, two before/after pairs, other agents' tests running): medians 34.9 / 36.2 ms before and 39.4 / 35.1 ms
+  after for Twinsen, 35.3 / 35.4 before and 17.9 / 35.4 after for Zoé, with means anywhere from 26 to 82 ms in either. The
+  laptop's load swamps any difference: **frame time not claimed**. The frame's triangles go up by 0.2 % (Twinsen) and 1 %
+  (Zoé) and the draw calls are unchanged. Reports: `art/blender/characters/reports/gpu-*.json`.
+- **Left:** Twinsen's cuffs show only up close (at Follow/Medium nothing changes, as intended). Zoé's V is narrower at
+  the top than the original's, and there is a small kink where the cord passes over the body's shell beside the neck.
+  The game pictures are taken from the same spot and camera, but the idle and the people around were not frozen in the
+  same phase. Character `textured` previews in the bridge are white (only the neutral views are useful).
+- To apply: `git apply requests/CAST-POLISH-HEROES.diff`, then copy `requests/CAST-POLISH-HEROES/{twinsen,zoe}.json` to
+  `assets/poly/`. To rebuild them: `twinsen_poly.py` / `zoe_poly.py` with `art/characters/skeletons.json`.
+
+## CAST-POLISH-CITADEL · Gilbert's moustache and the aprons (Pippa, farmerB, weaver) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL.diff` (tools/blender/cast_poly.py only; against db5a1c9c, the same file on ddad5c12 and
+c2684be7's CAST-POLISH-HEROES does not touch it; `git apply --check` clean). New model files for `assets/poly/`:
+`requests/CAST-POLISH-CITADEL/{gilbert,pippa,farmerB,weaver}.json`, built by `cast_poly.py <skel> <out> gilbert pippa
+farmerB weaver` in Blender 5.2.3 through the bridge (`CAST_BLEND` pointed outside `art/characters/`). HEAD's script
+rebuilt here gives the committed files to 1e-5 m (positions) and 1e-4 (normals), so the new files differ by the edits only.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{gilbert,pippa,farmerB}/`.
+- **Which people:** a census of Citadel in chapters 1 and 2 (the game, `census.mjs`) lists the story people present in
+  both: Zoé, Arthur, Gilbert, Mira, Pippa, Doran, Tim, Lulu, Joe, Bram, Odile, Nell, the guard, the Spheros, Dot (pim).
+  I surveyed seven of them in the review scene (Arthur, Pippa, Mira, Gilbert, Bram, Odile, Nell). Picked by visibility
+  and weakness: Gilbert (the Water Office story, chapter 1) and Pippa (her stall stands on the square where Citadel
+  starts).
+- **Gilbert, MOUSTACHE-1** (CAST `moustacheSwept`, his entry only; lharMan and dallan keep the balls): his moustache was
+  three balls a side, a string of beads in the close-ups. Now each side is one soft, tapered lobe along the same line,
+  flat on the lip, the two overlapping under the nose, still clear of the mouth (it talks). His hair hex #cfcfcf (role
+  `hair`). 3872 → 3856 triangles (−16).
+- **APRON-EDGE** (build(), every apron it makes: Pippa; farmerB, 7 people: hedda, tavi, farmer2, dg_cook, lh_mira,
+  up_wait, maro; weaver, 2: fenn, lomba. `APRON_EDGE_OLD=1` builds the old one): the apron was one sheet 1.2 cm off the
+  tunic, paper from the side. Its sides, foot and the bib's top now turn back 1 cm toward the body, in the exact apron
+  hex (role `apron`), with a hard edge between face and side. +32 triangles each (Pippa 2476 → 2508, farmerB and weaver
+  2396 → 2428). DRESS-1, checked on the game's own code (`dresscheck.mjs`, farmerB variants 1–6): the apron recolours
+  completely in every variant, none of its 192 vertices keeps the base hex. Separately, farmerB's `shoes` role never
+  recolours (3600 vertices keep #e8d0b8): that was already so before this pass, so nothing here caused it.
+- **Contracts:** bones (names, order), `eyes` and `mouths` identical; 4 weights summing to 1; no new colour; feet and top
+  unchanged. Hero frame with each as the hero (swapBody): 4 draw calls before and after.
+- **Looked at:**
+  - In the game (SwiftShader, `gamecap.mjs`), with each as the hero at the same square spot: Follow/Medium, Follow ¾,
+    the dialogue with Dot, close-ups front/¾/back.
+  - Poses (a second rig in the developer yard, side and ¾): idle, walk, run, turn, jump, fall, throw, sword, talk,
+    pickup, use, hurt, doze. The moustache rides the head. The apron's edges follow the apron with no tear.
+  - In the throw and the sword the bib sinks behind the tunic, before and after alike (not this edit).
+  - In Blender: the four views of Gilbert and Pippa, neutral and in colour (`turnaround-blender-after.jpg`).
+  - Both edits read up close and in the dialogue. At Follow/Medium, Gilbert's moustache reads as one shape; the apron's
+    edge is a pixel.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** −16 / +32 triangles a model, no draw call, material or texture added. The Vega 8 frame time was not run for
+  so small a change: the last pair (CAST-POLISH-HEROES) showed the machine's noise swamps far larger ones.
+- **Left:**
+  - Gilbert's side fringe is still a row of balls (the G1-ART design); lharMan and dallan keep the bead moustache.
+  - The Rabbibunnies' necks are plain long tubes (a race-wide proportion, not checked against LBA2 here).
+  - The bib-sinks-in-the-throw problem above.
+
+## CAST-POLISH-CITADEL-2 · Mira's glasses, Bram's and Odile's cap peaks, Nell's goggles · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-2.diff` (tools/blender/cast_poly.py only). It goes **on top of CAST-POLISH-CITADEL.diff**,
+which a7d14466 carries as a request and has not applied; `git apply --check` is clean on that base. New model files
+for `assets/poly/`: `requests/CAST-POLISH-CITADEL-2/{mira,bram,odile,nell}.json`. They were built by `cast_poly.py
+<skel> <out> mira bram odile nell` in Blender 5.2.3 through the bridge.
+Pictures (ours, chapters 1–2, before | after): `docs/future/characters/{mira,bram,odile,nell}/`.
+Each change is behind a CAST flag of that person only; with the flag off, the old shape is built.
+- **Mira, GLASSES-MIRA** (`glassesRim`):
+  - Before: her spectacles were flat wire rings 1.2 cm off the face and wider than it. From the side and ¾ they stood
+    in the air round the eyes like a scribble.
+  - Now: round rims (a thin cord) laid on the face round each eye, a bridge over the snout and an arm back toward each
+    ear, in the same dark colour. In the close-ups they read as glasses.
+  - 2330 → 2650 triangles (+13.7 %).
+- **Bram, PEAK-BRAM** (`peakCurved`):
+  - Before: the flat cap's peak was a flat box, a plank sticking out from the side.
+  - Now: a curved visor tucked under the crown's front, sloping down, shorter toward its sides, in the hat's shade.
+  - 3630 → 3670 triangles.
+- **Odile, PEAK-ODILE** (`peakCurved`):
+  - Before: the customs cap's peak was the same plank.
+  - Now: a curved visor from under the gold band, in the hat's shade.
+  - 2436 → 2476 triangles.
+- **Nell, GOGGLES-NELL** (`gogglesGlass`):
+  - Before: the goggles were two gold drums with flat gold faces, coins on her brow.
+  - Now: brass cups with a rolled rim round a dark glass lens, joined by a bridge. The lens colour is #382b14 (0.28 ×
+    the brass, not a LOOKS role; Nell's model is hers alone).
+  - Her file also takes CAST-POLISH-CITADEL's apron edge, which her model had not been rebuilt for.
+  - 2768 → 3126 triangles (+12.9 %, the apron's +32 included).
+- **Contracts:**
+  - Bone names, eyes and mouths are identical.
+  - Mira's `bones` list comes out in a different order (kneeL before hipL); the game maps bones by name.
+  - 4 weights per vertex summing to 1. Feet and top unchanged.
+  - The hero frame is 4 draw calls before and after, with each as the hero.
+- **Looked at:**
+  - The review scene: face front, ¾ and side.
+  - The game (SwiftShader, `gamecap.mjs`, each as the hero at the same square spot): Follow/Medium, the dialogue with
+    Dot, close-ups front, ¾ and back, and 13 poses × 2 views.
+  - At Follow/Medium Nell's goggles and Mira's glasses now read as such. The two peaks show in close-up and in the
+    dialogue only.
+- **Tests** (SwiftShader, the four files in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **validate:** 0 fails and 2 warnings, both already there before this batch:
+  - Bram's feet 1.2 cm below the floor;
+  - loose vertices in bram_coat, bram_trousers and odile_hat (the cap dome's culled faces).
+- **Cost:** +40 to +358 triangles a model (Mira +13.7 %, Nell +12.9 %; within the +25 % rule). No draw call, material
+  or texture added. Vega 8 frame time not run (the same reason as CAST-POLISH-CITADEL).
+- **Left:**
+  - Nell's leather apron: the tunic's flare shows through its lower part in a stride, and its pocket and buckle are
+    pale patches. Both already so before.
+  - Bram's peak shows only from the side and in the dialogue.
+  - The Rabbibunny neck tube (race-wide, not touched).
+
+## CAST-POLISH-CITADEL-3 · the guard's visor (and why the others of chapters 1–2 are left as they are) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-CITADEL-3.diff` (tools/blender/cast_poly.py only; it goes **on top of CAST-POLISH-CITADEL.diff
+and CAST-POLISH-CITADEL-2.diff**, `git apply --check` clean on that base). New model file:
+`requests/CAST-POLISH-CITADEL-3/guard.json` for `assets/poly/`. Pictures: `docs/future/characters/guard/`.
+- **Surveyed** in the review scene (faces front and ¾, the turnaround): Tim, Lulu, Doran, Joe, the guard and Dot (pim),
+  with Arthur done earlier. Only the guard has something that reads wrong at Follow/Medium and in the dialogue:
+  - his visor was a flat box across the eyes;
+  - its square corners stood off the round helmet;
+  - with the trunk in front of its middle, it read as two black bricks.
+
+  The others read as designed, so I propose no change for them. Forcing one change each would have made them worse,
+  not better.
+- **Guard, VISOR-GUARD** (CAST `visorCurved`, his entry only; vguardG, the Zeelich guards, keep the box): a band of the
+  helmet's own curve round the front (116°), 1–1.6 cm proud of it, in the same dark glass (#1a2830, not a role). The
+  'guard' look is the project security guard of chapters 1–2 alone; the enemy guards use vguard/vguardG.
+  3578 → 3718 triangles (+3.9 %).
+- **Contracts:** bones, eyes and mouths identical; 4 weights; no new colour; feet and top unchanged.
+  `validate`: 0 fails; its 2 warnings were already there before this change: the feet sit 1.2 cm below the floor, and
+  the coat, trousers and helmet have loose vertices.
+- **Looked at:**
+  - The review scene before and after (`lookdev-visor.jpg`).
+  - In the game (`gamecap.mjs`, LOOKS=guard): Follow/Medium, the dialogue with Dot, close-ups front, ¾ and back, and 13
+    poses.
+  - Blender views in colour (`turnaround-blender-after.jpg`).
+  - In the close-up and the dialogue the visor reads as one curved glass across the helmet.
+- **Tests** (SwiftShader, guard.json in `assets/poly`, a renamed copy of the headless shell): solidnpc 54/54,
+  chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, all PASS.
+  Evidence labels: **Automated runtime only**; pictures looked at, not played.
+- **Cost:** +140 triangles, no draw call, material or texture. Vega 8 frame time not run.
+- **Left:** the visor hides his eyes, as the box did (the design); the Grobos' flat ears (race-wide).
+- **Next:** Citadel's chapter 1–2 story people are done. The laptop moves to queue item 5 (CLOUD_ORDERS 28, by region).
+
+## CAST-POLISH-ZEELICH · the Esmers: robe edges with thickness, LBA2's boots, thicker arms (all six Esmer looks) · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ZEELICH.diff` (tools/blender/cast_poly.py only: `build_esmer`, a new `esmer_boot`, and a `foot`
+argument on `limb_legs` whose default is unchanged). It goes **on top of CAST-POLISH-HEROES, -CITADEL, -CITADEL-2 and
+-CITADEL-3**: `git apply --check` is clean on origin `2a3054e8` with those four applied. New model files for `assets/poly/`:
+`requests/CAST-POLISH-ZEELICH/{keeper,oku,xil,nara,clerk,councilChair}.json`. Pictures (**chapter 3+: not for the user**):
+`docs/future/characters/{keeper,oku,xil,nara,clerk,councilChair}/`.
+- **Why the Esmers.** The census (all 147 people at load) and a survey of Zeelich's and Otringal's people in the review
+  scene showed that the six Esmer looks read worst of the region. Between them they dress 28 people at load: keeper ×8,
+  clerk ×6, oku ×5, xil ×4, councilChair ×3, nara ×2. The isles' folk (`islandlife.js`) add about 20 more. In chapter 3,
+  seven of them stand on Zeelich's street: Nara, Oku, Ilo, Aven, Marl, Ennu and Oshra.
+  - The capsule body is LBA2's own and stays. I measured the user's LBA2 files read-only, numbers only, with
+    `tools/lba-source/measure.py`; nothing was extracted.
+  - Bodies 80 and 186: one capsule ±0.10–0.107 H from 0.2 H to the top.
+  - Three things were below the original or below our own finish standard:
+    - the robe was paint, with no thickness;
+    - the shoes were flat slippers half the original's size, under shins that ended in the air above them;
+    - the arms were sticks.
+
+  It is one builder, so the fix is race-wide. Faces, hats, glasses and colours are unchanged.
+- **ROBE-EDGE-ESMER:**
+  - the robe stands 0.8 cm off the body;
+  - its hem is a rolled edge, 1.6 cm out, with a flat underside back to the trousers;
+  - its collar is a rolled edge that turns in to the skin;
+  - both are in the trim's exact hex.
+- **BOOTS-ESMER:** the original's feet are 0.2 H long (−0.07 to +0.13 H about the ankle), 0.09 H wide and 0.05–0.066 H
+  tall. Ours were 0.04 H wide and 0.03 H tall. Now:
+  - each boot is 0.19 H long, 0.06 H wide and 0.06 H tall, with a flat sole and a rounded toe and heel. It is not the full
+    0.09 H wide because our legs stand closer together than the original's (±0.042 H against ±0.08 H), and wider boots
+    would touch;
+  - a shaft round the ankle covers the shin's end. Its lower half follows the foot and its upper half the shin;
+  - everything is in the shoes' hex.
+- **ARMS-ESMER:**
+  - LBA2's arms are ±0.021–0.027 H thick above the elbow; ours were 0.014–0.017 H. Now they are 0.017–0.020 H, as thick
+    as they can be and still clear the robe at the elbow (rest spread 0.03 rad);
+  - the cuffs grew with them.
+- `ESMER_OLD=1` rebuilds the old capsule, shoes and arms. With it, the rebuild equals the committed six files exactly
+  (every array equal).
+- **Contracts** (`art/blender/characters/jobs/polycheck.py`, reports in `art/blender/characters/zeelich/reports/`):
+  - bones, in the same order, eyes and mouths are identical;
+  - 4 weights a vertex, all summing to 1;
+  - no new colour;
+  - feet at 0.004 and the top unchanged.
+  - DRESS-1 (`dresscheck.mjs`, keeper, oku and clerk, variants 1–6): 0 vertices keep a base hex that a variant
+    overrides, so the new hem, collar and boots recolour with tunicTrim, tunic and shoes.
+  - `validate` (Blender, keeper and oku): 0 fails. One warning, loose vertices, was already there before (968 → 1224,
+    the cast's separate parts).
+- **Budget:**
+
+  | look | triangles before → after (body) | change | with eyes and mouth |
+  |---|---|---|---|
+  | keeper, xil, nara | 1504 → 1776 | +18.1 % | 1584 → 1856 |
+  | clerk | 1536 → 1808 | +17.7 % | 1616 → 1888 |
+  | oku, councilChair | 1884 → 2156 | +14.4 % | 1964 → 2236 |
+
+  - Draw calls are unchanged: the hero as an Esmer is 4 calls before and after (body, silhouette pass, eyes, mouth).
+  - Zeelich's street in chapter 3, Follow camera at Medium: 797 = 797 calls on SwiftShader and 760 = 760 on the Vega 8.
+    Triangles went up by 1360, 5 Esmers in view × 272.
+  - Each model gains 816 vertices, about +49 KB of vertex data at 60 B a vertex.
+  - No texture, no material, no new bone.
+- **Vega 8 frame time** (installed Chrome on this laptop's GPU, the game's own loop, 20 s, Zeelich's street, quality
+  medium; two before/after pairs):
+  - before: median 17.7 / 17.7 ms, p95 18.4 / 18.5 ms;
+  - after: median 17.6 / 17.6 ms, p95 18.2 / 18.3 ms.
+
+  There was no measurable regression. The frame sits at the 60 Hz cap, so headroom was not measured. Reports:
+  `gpu-*.json`.
+- **Looked at:**
+  - The review scene (lookdev, the game's own renderer): turnaround, face ¾, hand and walk before and after for all six.
+    Poses for keeper (slim) and oku (stooped and wide), side and ¾, before and after: idle, walk, run, turn, jump, fall,
+    throw, sword (heavy), talk, pickup, use, hurt, doze.
+  - In the game, with the hero swapped to each look (`gamecap.mjs`, Citadel's square, chapter 1): Follow/Medium, the
+    dialogue two-shot, and close-ups front, ¾ and back, before and after for all six.
+  - Zeelich's street in chapter 3 (`zeecap.mjs`), before and after.
+  - Blender views of keeper (before and after) and oku (after).
+
+  What I saw:
+  - at Follow/Medium the feet now read as boots, where they had been grey points;
+  - in the close-up the collar and hem are visible lips;
+  - in the walk and run the boots stay on the ground and the shafts stay on the shins.
+- **Tests** (SwiftShader, the six files in `assets/poly`, a renamed headless shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS.
+
+  `assets/poly` was put back afterwards. Evidence labels: **Automated runtime only**. The pictures were looked at, not
+  played.
+- **Left:**
+  - In the doze pose the Esmer's feet lie apart from the ends of the shins. This was already so with the old shoes, and
+    the bigger boots make it easier to see. It is the rig's pose, not the mesh, so it is not changed here.
+  - The hands are still LBA2's cone with three fingers and a thumb.
+  - keeper ×8 and oku ×5 are still one body each, apart from DRESS-1's colours. Their `_b` shape variants (order 24)
+    are the next Zeelich batch.
+  - The other Esmer looks share one face shape.
+  - Otringal's Quetch (councilB on Kira, Sanna and Ama; lharWoman on zc_petit) are not touched in this batch.
+
+## CAST-POLISH-ZEELICH-2 · keeper_b (the council guards), oku_b (three working Esmers), the clerk's and Sela's glasses · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ZEELICH-2.diff`. It goes **on top of CAST-POLISH-HEROES, -CITADEL, -CITADEL-2, -CITADEL-3
+and -ZEELICH**: `git apply --check` is clean on origin `7b34fc50` with those five applied. Files it changes:
+- `tools/blender/cast_poly.py`;
+- `src/game/characters.js`: 2 new LOOKS entries, nothing else changed;
+- the people's `char`: `src/game/storylife.js` (2 lines), `src/game/roomlife.js` (4 lines), `src/game/story/hostel.js`
+  (1 line);
+- `art/characters/skeletons.json`: 2 new looks, made with `tools/dump-skeletons.mjs keeper_b` and `… oku_b`. The file
+  is one line, so the diff carries it whole twice; regenerating with those two commands gives the same file;
+- `assets/poly/index.json`: + keeper_b, oku_b.
+
+Model files for `assets/poly/`, in `requests/CAST-POLISH-ZEELICH-2/`:
+- `keeper_b.json` and `oku_b.json`, new;
+- `clerk.json`, which replaces CAST-POLISH-ZEELICH's;
+- `councilB.json`.
+
+Pictures (**chapter 3+: not for the user**): `docs/future/characters/{keeper_b,oku_b,clerk,councilB}/`.
+- **keeper_b, Zeelich's council guard (order 24).** It follows LBA2's helmeted Esmer, body 80, measured read-only: a
+  head piece ±0.16 H wide from 0.78 H at the back to the top, with a peak forward over the face. The changes:
+  - a heavier build: not `slim`, so the capsule is 0.1 H round and the skeleton is oku's width, from the dump;
+  - a helmet, 1.25 R round. Its rim is over the brows, over the ears and down the back as a neck guard, and it is closed
+    underneath. It has a curved peak and is in the new role `helmet` #4a6a5a, with its underside 0.72× that colour;
+  - a belt in `belt` #6a4a2a with a brass `buckle` #e8c870.
+
+  Who takes it: **zc_guard, up_guard, zt_guard, zt_guard2**. Sefa (`keeper`), Ilo, Marl and Esren keep keeper, and so do
+  the isles' kn_fisher and ld_op.
+  - Triangles: 2224 with eyes and mouth (body 2144), +20.7 % on keeper.
+  - In chapter 9 on Zeelich's street, the guard by the council door now reads as a guard at Follow/Medium, beside Marl
+    in keeper.
+- **oku_b, a working Esmer (order 24).** The changes:
+  - upright (no stoop);
+  - a long robe flared out to just above the boots, with the same rolled hem lower down;
+  - a wrapped headcloth (wrap, crown and a short tail) in oku's `hat` hex, the wrap's lower turn 0.82× that colour,
+    instead of the round cap;
+  - dark brows (oku's are white);
+  - height 0.97.
+
+  Who takes it: **pask, ennu, hs_worker4**. Oku and Old Ossa (up_esmer) keep oku.
+  - Triangles: 2128 with eyes and mouth (body 2048), −5 % on oku.
+- **GLASSES-CLERK (clerk ×6) and GLASSES-SELA (councilB ×4: Sela, Kira, Sanna, Ama),** as GLASSES-MIRA (CAST
+  `glassesRim`). Both were flat wire octagons standing off the face. Now each is a round rim (a thin cord) laid on the
+  face, with a bridge and arms back to the ears.
+  - The clerk's cords are cheap (3 sides, 10 steps): 1808 → 1950 body, +7.9 % on CAST-POLISH-ZEELICH's clerk. That is
+    +27 % on the shipped clerk (1536) once both batches are in, just over the order's +25 %.
+  - Sela: 2662 → 2982 body, +12.0 %.
+- **Census after the change** (all 147 people at load): keeper ×4, keeper_b ×4, oku ×2, oku_b ×3. DRESS-1's numbering
+  is worked out again over the whole cast, so the guards now share keeper_b's own colours and variants, and Ilo, Marl
+  and Esren get the next keeper variants. Every dress is still different.
+- **Contracts:**
+  - the bone names and order equal the looks' skeletons;
+  - 4 weights a vertex;
+  - no colour that is neither a role nor a darker multiple of one;
+  - feet at 0.004.
+  - DRESS-1 (keeper_b and oku_b, variants 1–6): 0 vertices keep an overridden base hex, helmet and belt included.
+  - `validate` (Blender, keeper_b and oku_b): 0 fails. The one warning is the cast's loose vertices.
+  - The rebuild from the diff's script is byte-identical to the request's JSONs.
+- **In the game:**
+  - Draw calls: the hero as keeper_b, oku_b, clerk or councilB is 4 calls, as before.
+  - Zeelich's street in chapter 9, Follow/Medium: 709 = 709 calls on SwiftShader and 643 = 643 on the Vega 8, with
+    triangles +368 (SwiftShader) and +972 (Vega 8) respectively.
+  - In chapter 3 nothing changes in view: Ennu stands on the pier, out of frame.
+  - Vega 8 frame time (chapter 9 street, 20 s, two pairs, the before run serving the old chars through routes):
+    - before: median 17.3 / 17.4 ms, p95 18.2 / 18.2 ms;
+    - after: median 17.4 / 17.4 ms, p95 18.2 / 18.2 ms.
+
+    No measurable change; the frame sits at the 60 Hz cap.
+- **Looked at:**
+  - lookdev turnarounds against the CAST-POLISH-ZEELICH models;
+  - 13 poses × 2 views of keeper_b and oku_b: the helmet stays on the head through the throw, the sword and the doze,
+    and the long robe walks and runs;
+  - the game with the hero as each look: Follow/Medium, the dialogue and close-ups;
+  - Zeelich's street in chapters 3 and 9, before and after;
+  - Blender views of keeper_b and oku_b;
+  - the faces of the clerk and Sela, front, ¾ and side.
+- **Tests** (SwiftShader, every file of CAST-POLISH-ZEELICH and -ZEELICH-2 in `assets/poly`, the code changes in place):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - interior-life 144/144 PASS (zt_guard, zt_guard2 and pask at the terminal).
+
+  `assets/poly` was put back afterwards. Evidence labels: **Automated runtime only**. The pictures were looked at, not
+  played.
+- **Left:**
+  - the doze pose's feet, as in CAST-POLISH-ZEELICH;
+  - the helmet's 16 facets show up close;
+  - Otringal's Quetch otherwise read as designed: lharWoman (on zc_petit and others) is unchanged;
+  - Kira still wears Sela's shape. Only her colours are her own (DRESS-1); a `councilB_b` would be a later order-24
+    item;
+  - the cast's other order-24 models (farmerB, desertkid, lharMan, lharWoman, farmerA, clerk, farmerC, archivist) still
+    have no shape variants.

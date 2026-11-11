@@ -1,0 +1,4 @@
+[
+  { "op": "script", "name": "zoe NECKLACE-ZOE (2: round the neck's base, smoothed): candidate", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/export/zoe.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/work/zoe_poly.blend"] }
+]
