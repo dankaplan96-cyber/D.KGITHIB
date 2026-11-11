@@ -1481,23 +1481,46 @@ def finger_hand(b, side, sx, hd, ax, skin, palm_r, finger_len, finger_r, n_f=3, 
     """A hand with definition: a flat palm, fingers fanned out along the forearm's axis, a thumb forward off the inner side."""
     bone = bone or ('hand' + side)
     col = glove or skin
-    ax = Vector(ax).normalized()
-    p1 = (Vector((1, 0, 0)) - ax * ax.x).normalized()
-    p2 = ax.cross(p1).normalized()
-    if p2.z < 0:
-        p2 = -p2
+    if os.environ.get('HANDS_OLD'):   # (HANDS-36: as it was: the fingers fanned sideways, the palm forward, the thumb inward)
+        ax = Vector(ax).normalized()
+        p1 = (Vector((1, 0, 0)) - ax * ax.x).normalized()
+        p2 = ax.cross(p1).normalized()
+        if p2.z < 0:
+            p2 = -p2
+        hp_ = b.P('hand' + side, col, bone, 50)
+        c0 = Vector(hd) + ax * palm_r * 0.5
+        sphere(hp_, tuple(c0), palm_r, 8, 5, (1.0, 1.0, 0.7))
+        fp = b.P('finger' + side, claw or col, bone, 40)
+        ks = [(i - (n_f - 1) / 2) for i in range(n_f)]
+        for k in ks:
+            base = c0 + p1 * (k * palm_r * 0.62) + ax * palm_r * 0.5
+            tip = Vector(hd) + ax * (finger_len * (1 - 0.1 * abs(k))) + p1 * (k * palm_r * 0.85) + p2 * (palm_r * 0.15)
+            tube(hp_ if claw is None else fp, tuple(base), tuple(tip), finger_r, finger_r * 0.4, 5)
+        if thumb:
+            base = c0 + p1 * (-sx * palm_r * 0.7) + ax * palm_r * 0.2 + p2 * palm_r * 0.3
+            tip = Vector(hd) + ax * finger_len * 0.5 + p1 * (-sx * palm_r * 1.5) + p2 * (palm_r * 1.0)
+            tube(hp_, tuple(base), tuple(tip), finger_r * 1.2, finger_r * 0.5, 5)
+        return
+    # HANDS-36: as a hand hangs at the side: the palm flat toward the thigh, the fingers side by side front to back, each in
+    # two joints curling a little in toward the thigh, the thumb off the palm's front edge, forward (it was fanned
+    # sideways, the palm forward and the thumb in: from behind, a spread claw)
+    ax, fwd, inw = hand_axes(ax, sx)
+    hd = Vector(hd)
     hp_ = b.P('hand' + side, col, bone, 50)
-    c0 = Vector(hd) + ax * palm_r * 0.5
-    sphere(hp_, tuple(c0), palm_r, 8, 5, (1.0, 1.0, 0.7))
+    c0 = hd + ax * palm_r * 0.5
+    sphere(hp_, tuple(c0), palm_r, 8, 5, (0.7, 1.0, 1.0))
     fp = b.P('finger' + side, claw or col, bone, 40)
     ks = [(i - (n_f - 1) / 2) for i in range(n_f)]
     for k in ks:
-        base = c0 + p1 * (k * palm_r * 0.62) + ax * palm_r * 0.5
-        tip = Vector(hd) + ax * (finger_len * (1 - 0.1 * abs(k))) + p1 * (k * palm_r * 0.85) + p2 * (palm_r * 0.15)
-        tube(hp_ if claw is None else fp, tuple(base), tuple(tip), finger_r, finger_r * 0.4, 5)
+        base = c0 - fwd * (k * palm_r * 0.62) + ax * palm_r * 0.5
+        ln = finger_len * (1 - 0.1 * abs(k)) - palm_r
+        knuckle = base + ax * (ln * 0.5) - fwd * (k * palm_r * 0.1)
+        tip = base + ax * ln - fwd * (k * palm_r * 0.2) + inw * (ln * 0.22)
+        tube(hp_ if claw is None else fp, tuple(base), tuple(knuckle), finger_r, finger_r * 0.8, 5)
+        tube(hp_ if claw is None else fp, tuple(knuckle), tuple(tip), finger_r * 0.8, finger_r * 0.4, 5)
     if thumb:
-        base = c0 + p1 * (-sx * palm_r * 0.7) + ax * palm_r * 0.2 + p2 * palm_r * 0.3
-        tip = Vector(hd) + ax * finger_len * 0.5 + p1 * (-sx * palm_r * 1.5) + p2 * (palm_r * 1.0)
+        base = c0 + fwd * (palm_r * 0.75) + ax * palm_r * 0.1 + inw * (palm_r * 0.2)
+        tip = hd + ax * finger_len * 0.5 + fwd * (palm_r * 1.6) + inw * (palm_r * 0.55)
         tube(hp_, tuple(base), tuple(tip), finger_r * 1.2, finger_r * 0.5, 5)
 
 
@@ -1615,12 +1638,15 @@ def build_esmer(name):
         ax = [hd[i] - el[i] for i in range(3)]; al = math.sqrt(sum(c * c for c in ax)) or 1
         ax = [c / al for c in ax]
         hnd = b.P('hand' + s, L.get('gloves') or skin, 'hand' + s, 40)
-        tube(hnd, tuple(hd[i] - ax[i] * 0.01 for i in range(3)), tuple(hd[i] + ax[i] * 0.17 for i in range(3)), 0.04, 0.006, 7)   # (the long middle finger, as the old cone)
-        p1 = Vector((1, 0, 0)) - Vector(ax) * ax[0]
-        p1 = p1.normalized()
-        for k in (-1, 1):   # the two shorter fingers beside it
-            tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + p1 * (k * 0.026)), tuple(Vector(hd) + Vector(ax) * 0.125 + p1 * (k * 0.042)), 0.02, 0.005, 5)
-        tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + Vector((-sx * 0.03, 0, 0.03))), tuple(Vector(hd) + Vector(ax) * 0.08 + Vector((-sx * 0.045, 0, 0.07))), 0.017, 0.007, 5)   # the thumb
+        if os.environ.get('HANDS_OLD'):   # (HANDS-36: the hand as it was, fanned sideways, the thumb inward)
+            tube(hnd, tuple(hd[i] - ax[i] * 0.01 for i in range(3)), tuple(hd[i] + ax[i] * 0.17 for i in range(3)), 0.04, 0.006, 7)   # (the long middle finger, as the old cone)
+            p1 = Vector((1, 0, 0)) - Vector(ax) * ax[0]
+            p1 = p1.normalized()
+            for k in (-1, 1):   # the two shorter fingers beside it
+                tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + p1 * (k * 0.026)), tuple(Vector(hd) + Vector(ax) * 0.125 + p1 * (k * 0.042)), 0.02, 0.005, 5)
+            tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + Vector((-sx * 0.03, 0, 0.03))), tuple(Vector(hd) + Vector(ax) * 0.08 + Vector((-sx * 0.045, 0, 0.07))), 0.017, 0.007, 5)   # the thumb
+        else:
+            esmer_hand(hnd, Vector(hd), Vector(ax), sx)
     limb_legs(b, bp, pants, shoes, 0.045, 0.04, 0.13 * H * 0.9, 0.04, ZH=H, foot=True if OLD else (lambda s: esmer_boot(b, bp, shoes, H, s)))   # (from the hip joint, inside the capsule: a stride never shows a gap)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
@@ -1669,6 +1695,40 @@ def esmer_headcloth(b, L, R, H, zc):
     b.P('headclothLow', shade(hc, 0.82), 'head', 50).add(hp.v, low)
     zb = zc(0.95 * H) - R * 1.12
     tube(b.P('headclothTail', hc, 'head', 50), (0.0, 0.95 * H, zb + 0.01), (0.012, 0.86 * H, zb - 0.025), 0.03, 0.018, 8, squash=0.45)
+
+
+def hand_axes(ax, sx):
+    """HANDS-36: the frame of a hand hanging at the side: `ax` down the forearm, `fwd` the body's front (+z) made square to
+    it, `inw` toward the thigh (-x on the left hand, +x on the right) made square to both."""
+    ax = Vector(ax).normalized()
+    fwd = (Vector((0, 0, 1)) - ax * ax.z).normalized()
+    inw = ax.cross(fwd).normalized()
+    if inw.x * sx > 0:
+        inw = -inw
+    return ax, fwd, inw
+
+
+def esmer_hand(part, hd, ax, sx):
+    """HANDS-36: the Esmer hand, LBA2's cone kept as its long middle finger. It was built fanned sideways (the fingers
+    spread across the body, the palm forward, the thumb pointing in at the hip): from behind, at the Follow camera, a spread
+    claw. Now as a hand hangs: a palm flat toward the thigh, the three fingers side by side front to back down from it, each
+    in two joints curling a little in toward the thigh (relaxed), the thumb off the palm's front edge, forward. (Thin
+    five-sided fingers, their hidden ends open: about +75 triangles a hand.)"""
+    ax, fwd, inw = hand_axes(ax, sx)
+    # the palm: a ball flattened across (toward the thigh), long down the arm, wide front to back, from the wrist
+    tube(part, tuple(hd - ax * 0.035), tuple(hd + ax * 0.02), 0.025, 0.027, 6, cap=False)   # (the wrist, up into the forearm's end)
+    sphere(part, tuple(hd + ax * 0.032), 0.034, 7, 5, (0.6, 1.15, 1.0), exact=True)
+    for k, ln, r0 in ((1, 0.1, 0.0125), (0, 0.125, 0.0145), (-1, 0.105, 0.0125)):   # front, middle (the cone's point), back
+        base = hd + ax * 0.055 + fwd * (k * 0.02)
+        knuckle = base + ax * (ln * 0.5) + fwd * (k * 0.004)
+        tip = base + ax * ln + fwd * (k * 0.006) + inw * (ln * 0.2)
+        tube(part, tuple(base), tuple(knuckle), r0, r0 * 0.85, 5, cap=False)
+        tube(part, tuple(knuckle), tuple(tip), r0 * 0.85, r0 * 0.45, 5)
+    # the thumb: from the palm's front edge, forward and a little in, curled down
+    tb = hd + ax * 0.02 + fwd * 0.024 + inw * 0.004
+    tm = tb + ax * 0.028 + fwd * 0.024 + inw * 0.006
+    tube(part, tuple(tb), tuple(tm), 0.0135, 0.0115, 5, cap=False)
+    tube(part, tuple(tm), tuple(tm + ax * 0.03 + fwd * 0.01 + inw * 0.008), 0.0115, 0.006, 5)
 
 
 def esmer_boot(b, bp, shoes, H, s):
