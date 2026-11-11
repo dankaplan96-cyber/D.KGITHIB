@@ -2,7 +2,7 @@
 // scene change and let go (never credited) on a load; shadow and bloom state follow quality + visual mode in
 // every order (and on a start with saved Low settings); the frame-time overlay has its own key (F9), never
 // changes the behaviour, and a held key toggles it once.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const { check, done } = checker({ info: 'always' });

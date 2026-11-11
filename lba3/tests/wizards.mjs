@@ -1,7 +1,7 @@
 // Twinsun's wizards (src/game/wizards.js), open in every chapter: Bersimon's tent on Citadel's plateau (walk in
 // through its door, he tops up Twinsen's magic, walk back out), and the School of Magic's stone face on Desert
 // Island (walk in, the rector is there, Ker'aooc heals Twinsen, walk back out to the desert).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

@@ -15,7 +15,7 @@
 //  6. only the people near the camera and in view plant (FarCull, PLANT_VIEW.r 30 m);
 //  7. cost: Rig.update over the whole crowd, planting on and off (SwiftShader's CPU: ms, no fps claim).
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

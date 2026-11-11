@@ -25,7 +25,7 @@ node tests/weather.mjs         # WEATHER-1: the default test boot is today's loo
 node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outward-wound, triangle budget (+30 % max), the 509 placements, even texel density, no stretch, clear of the paths, deterministic; SHOTS=dir for four cliff views
 ```
 
-Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);
+Playwright is imported from `file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs` (the environment's copy);
 adjust the import if yours lives elsewhere. Screenshots are written to the current directory.
 
 ## Reading a verdict

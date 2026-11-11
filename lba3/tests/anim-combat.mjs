@@ -10,7 +10,7 @@
 //  - the combat stance comes with a lock and goes after the fight; no joint jumps (≤ 0.9 rad in a 60 fps frame, legs and
 //    chest; the throwing arm's whip ≤ 1.2).
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

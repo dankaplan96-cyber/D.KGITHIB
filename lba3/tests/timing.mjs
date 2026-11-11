@@ -6,7 +6,7 @@
 //   3. a press on a slow frame (several steps) acts once
 //   4. a volume slider event rebuilds nothing and does not cut the camera; a quality change does resize
 //   5. game.perf.stats() and game.loadTimes report sensible numbers
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

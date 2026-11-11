@@ -4,7 +4,7 @@
 //   3. the bonus is what Twinsen needs most (broke: kashes worth n; hurt badly: a heart)
 //   4. a container's untaken bonus stays (CONTAINERS); any other bonus blinks in its last 3 s and goes after 20 s
 //   5. no kashes lie around outdoors; a save keeps the giver taken
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
