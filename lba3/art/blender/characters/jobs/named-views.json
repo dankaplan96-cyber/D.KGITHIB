@@ -1,0 +1,106 @@
+[
+ {
+  "op": "preview",
+  "name": "baldino views",
+  "input": "art/blender/characters/named/work/baldino.blend",
+  "output": "art/blender/characters/named/previews/baldino",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "baldino checks",
+  "input": "art/blender/characters/named/work/baldino.blend",
+  "output": "art/blender/characters/named/reports/baldino.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 7000,
+   "skeleton": "art/blender/characters/named/source/skeletons.json",
+   "skeletonKey": "baldino"
+  }
+ },
+ {
+  "op": "preview",
+  "name": "hesk views",
+  "input": "art/blender/characters/named/work/hesk.blend",
+  "output": "art/blender/characters/named/previews/hesk",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "hesk checks",
+  "input": "art/blender/characters/named/work/hesk.blend",
+  "output": "art/blender/characters/named/reports/hesk.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 4500,
+   "skeleton": "art/blender/characters/named/source/skeletons.json",
+   "skeletonKey": "hesk"
+  }
+ },
+ {
+  "op": "preview",
+  "name": "yorna views",
+  "input": "art/blender/characters/named/work/yorna.blend",
+  "output": "art/blender/characters/named/previews/yorna",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "yorna checks",
+  "input": "art/blender/characters/named/work/yorna.blend",
+  "output": "art/blender/characters/named/reports/yorna.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 4500,
+   "skeleton": "art/blender/characters/named/source/skeletons.json",
+   "skeletonKey": "yorna"
+  }
+ },
+ {
+  "op": "preview",
+  "name": "councilC views",
+  "input": "art/blender/characters/named/work/councilC.blend",
+  "output": "art/blender/characters/named/previews/councilC",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "councilC checks",
+  "input": "art/blender/characters/named/work/councilC.blend",
+  "output": "art/blender/characters/named/reports/councilC.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 4500,
+   "skeleton": "art/blender/characters/named/source/skeletons.json",
+   "skeletonKey": "councilC"
+  }
+ }
+]

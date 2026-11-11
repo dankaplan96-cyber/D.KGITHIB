@@ -1,0 +1,369 @@
+{
+  "file": "art/blender/characters/named/work/hesk.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7598, 1.8338, 1.2134], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "242"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: hesk_belt -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_brows -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_coat -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_cuffL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_cuffR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_ear -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_ear.001 -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_earIn -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_earIn.001 -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_foreL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_foreR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_goggleGlass -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_goggleGlass",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_goggles -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_goggles",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_handL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_handR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_head -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_neck -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shinL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shinR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shoeL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shoeR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shoulderL -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_shoulderR -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_strap -> heskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_strap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_trousers -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_trunk -> heskRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_upperL -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: hesk_upperR -> heskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: hesk_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature heskRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 39,
+    "meshes": 38,
+    "triangles": 3728,
+    "materials": 15,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8799,
+        -0.012,
+        -0.3829
+      ],
+      "max": [
+        0.8799,
+        1.8218,
+        0.8306
+      ],
+      "size": [
+        1.7598,
+        1.8338,
+        1.2134
+      ]
+    }
+  },
+  "passed": true
+}

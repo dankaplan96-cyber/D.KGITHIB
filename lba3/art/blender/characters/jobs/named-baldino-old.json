@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "named: baldino with BALDINO_OLD=1 (must equal the baseline)", "script": "tools/blender/baldino_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/export/baldino.old.json"] }]

@@ -1,0 +1,379 @@
+{
+  "file": "art/blender/characters/named/work/councilC.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7317, 1.865, 1.3121], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "242"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: councilC_belt -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_brows -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_coat -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_coatHem -> councilCRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_coatHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_coatSkirt -> councilCRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_coatSkirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_cuffL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_cuffR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_ear -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_ear.001 -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_earIn -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_earIn.001 -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_foreL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_foreR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_handL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_handR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_hat -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_hatBand -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_hatBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_head -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_neck -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shinL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shinR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shoeL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shoeR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shoulderL -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_shoulderR -> councilCRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_trousers -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_trunk -> councilCRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_upperL -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: councilC_upperR -> councilCRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: councilC_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature councilCRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 40,
+    "meshes": 39,
+    "triangles": 3666,
+    "materials": 13,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8659,
+        -0.012,
+        -0.4215
+      ],
+      "max": [
+        0.8659,
+        1.853,
+        0.8906
+      ],
+      "size": [
+        1.7317,
+        1.865,
+        1.3121
+      ]
+    }
+  },
+  "passed": true
+}

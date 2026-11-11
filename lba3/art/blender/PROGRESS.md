@@ -288,26 +288,52 @@ through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` r
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, GPU light check (see
   the request note) · integrated: no (the user decides; then the cloud).
 
+### Named batch 1: Baldino, Hesk, Yorna, Councillor Brum: CAST-POLISH-NAMED (10.11.2026, worktree `lba3-items` at tmp `ed24df2b`)
+Queue 6, order 28 part 2. Base: the local tmp commit `ed24df2b` (origin `db3707df` + CAST-POLISH-UNDERGROUND), never pushed.
+Named cast listed by id, builder and chapters in `tools/testlab/requests/CAST-POLISH-NAMED.md`; surveyed in lookdev: Baldino,
+Doran, Hesk, Yorna, Brum, Xil (Vesk, the Esmers, Sela done in earlier batches). LBA2 body 139 measured read-only (numbers only).
+- BALDINO-EARS/-STRAP/-GOGGLES/-COLLAR (`baldino_poly.py`, `BALDINO_OLD=1` = HEAD's rebuild exactly): cushion ears (1.6 cm rim,
+  ~5 cm root, root in the head, a shallow darker dish), the strap a closed band round the whole head, the lenses in teal frames
+  (LBA2's byte 160), the collar 2.2 cm thick. 5781 -> 6173 (+6.8 %).
+- GOGGLES-HESK (CAST `gogglesUp`): brass cups with rims and dark glass up on the dome, a bridge, a band round the back of the
+  head (the drums and the stick were gone). 3426 -> 3728 (+8.8 %). Also on Gurt and Hobb (Citadel).
+- GROBO-COAT (CAST `coatLong`, env `GCOAT_SKIRT` 0.35): the long coat the looks describe, from under the belt to just below the
+  knee with a rolled hem band in the trim hex; 35 % of the hem on the skirt bones (more kicked it up in the walk and folded it
+  into the body seated). Yorna 3602 -> 3802 (+5.6 %; also Marda, Citadel), Brum 3466 -> 3666 (+5.8 %; also Mr Bazoo, Gunda).
+- The other 56 looks of the cast rebuild identical to HEAD's script. polycheck clean; validate 0 fails; DRESS-1 as before;
+  hero 4 = 4 draws each (Citadel, renderer.info).
+- Looked at: lookdev turnaround/back/faces, the game camera at 8.8 m, 13 poses x 2 and the seat for all four; the game (hero as
+  each look, Citadel ch 1): Follow/Medium, dialogue, close-ups; Blender four views neutral and coloured.
+- Tests: see the request note (TESTS_SUMMARY).
+- Files `characters/named/{source,export,work,previews,reports}`, jobs `named-*.json`, `jobs/jcmp.py`; pictures
+  `docs/future/characters/{baldino,hesk,yorna,councilC}/ch3plus-named-*` (chapter 3+: not for the user); request
+  `tools/testlab/requests/CAST-POLISH-NAMED*`. `assets/poly` put back after the tests.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, frame time not run ·
+  integrated: no (request).
+- Left: Doran unchanged (reads well); Yorna's fur-hat flaps read as small horns up close; the cast Grobos' flat brow strips;
+  Kira and Oni share lharWoman / desertkid.
+
 ## Current
-- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Next: Twinsen (TWINSEN-LOOK-38).
-- CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
+- CAST-POLISH-NAMED (first batch of the named cast: Baldino, Hesk, Yorna, Brum) delivered 10.11 in `lba3-items`, uncommitted;
+  the diff applies after CAST-POLISH-UNDERGROUND (on the tmp commit `ed24df2b`).
+- CAST-POLISH-UNDERGROUND sent 10.11; ZOE-LOOK-38 accepted by the user 9.11; Twinsen's ZOE-LOOK treatment waits until the queue is done.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, ~~the underground~~
 5. ~~HANDS-36~~ (order 36: request sent)
-6. The named cast
-7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
-   farmerA, farmerB, clerk, worker (and councilB for Kira; zmole2, zbee1, zbee2)
-8. Equipment: ~~the bonuses~~ (ITEMS-1); the ball, the sword
+6. The named cast: batch 1 ~~Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); next Doran (if anything), Yorna's hat flaps,
+   the Grobo brows; Vesk, Xil, Oku, Nara, Amaru, Sela done in earlier batches
+7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman, worker,
+   nara~~; farmerA, farmerB, clerk (and councilB for Kira; zmole2, zbee1, zbee2)
+8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
 ## Next action
-If the user likes ZOE-LOOK-38: the same treatment for Twinsen (order 38), then the cast region by region. If not: say
-which parts to keep (each is separable in `zoe_poly.py`). Otherwise back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
-orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
-`C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
-place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of
-tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+If the cloud takes CAST-POLISH-NAMED (or the user rejects GROBO-COAT: drop `coatLong` from the yorna and councilC CAST entries),
+go on with queue 6's rest (Yorna's fur-hat flaps; the Grobo brow strips, shared by every Grobo look: a wider change to
+check on farmerC, guard, bram, pim), then queue 7 (farmerA_b, farmerB_b, clerk_b, councilB_b for Kira). Worktree `lba3-items`
+holds the batch's code uncommitted (assets/poly put back). Server: scratch `nm/serve.py <root> 8261`; the renamed shell
+`ug/shell/ugshell.exe` as SHELL_EXE; the suites in scratch `nm/tests` (boot.mjs patched).

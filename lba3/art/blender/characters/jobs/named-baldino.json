@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "named: baldino candidate (+ .blend)", "script": "tools/blender/baldino_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/export/baldino.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/work/baldino.blend"] }]

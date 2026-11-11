@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "named: councilC (.blend)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/work/x", "councilC"] }]

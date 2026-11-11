@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "named: hesk, yorna, councilC candidates", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/export", "hesk", "yorna", "councilC"] }]

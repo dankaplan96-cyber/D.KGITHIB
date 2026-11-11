@@ -35,6 +35,7 @@ TW_Y0, TW_Y1, TW_W, TW_Z0, TW_Z1 = 0.799, 0.956, 0.077, -0.026, 0.153
 # a robe or coat that is round (a mole's, an elf's, a trooper's: Twinsen's cape and robe have 24), a Grobo's body (a metre
 # across) and its ear flaps
 BODY_N, BLOB_N, EAR_N = 20, 20, 24
+GCOAT_SKIRT = float(os.environ.get('GCOAT_SKIRT', '0.35'))   # (CAST-POLISH-NAMED: a Grobo's long coat, the skirt bones' share at its hem)
 
 
 def shade(hexc, k):
@@ -72,7 +73,7 @@ CAST = {
     'vguardG': dict(trim='#c8a050', epaulette='#c8a050', strap='#8a6a30', glove='#16141a', mouthLift=-0.4, browS=1.8, browTilt=-0.5),
     # ---- the Desert Island and Zeelich
     'ilka': dict(browTilt=0.3, mouthLift=0.9, earBend=(0.0, 0.4), earLen=1.0, pockets=True, pocketY=0.08),
-    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05),
+    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05, gogglesUp=True),   # (CAST-POLISH-NAMED: GOGGLES-HESK)
     'tarra': dict(browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.95, lip='#8a4a4a', hemH=0.06),
     'dallan': dict(browS=1.6, browTilt=-0.3, mouthLift=-0.3, mouthY=0.834, pockets=True, pocketY=0.12),
     'desertkid': dict(browS=0.8, mouthW=1.2, mouthLift=1.5, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=1.0),
@@ -80,13 +81,13 @@ CAST = {
     'desertTrader': dict(hatStyle='straw', browS=1.5, mouthLift=1.2, earS=0.95),
     'weaver': dict(cheekS=1.2, earBend=(0.0, 0.5), mouthLift=1.0, browTilt=0.2, earInCol='#e8a8b8'),
     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
-    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
+    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0, coatLong=0.3),   # (CAST-POLISH-NAMED: GROBO-COAT, his robe below the knee)
     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
     'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
                      moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
-    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
+    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95, coatLong=0.28),   # (CAST-POLISH-NAMED: GROBO-COAT, the felt coat below the knee)
     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
     'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
     'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
@@ -317,6 +318,38 @@ def build(name):
                 return bodyR[-1][1:]
             loft(b.P('belt', L['belt'], w_blob, 50), [ring(y_, max(hw_ * 1.012, hw0) * slim, max(zf_ * 1.012, zf0) + belly, min(zb_ * 1.012, zb0), BLOB_N, 0.7)
                                                       for y_, hw0, zf0, zb0 in ((cut - 0.004, 0.495, 0.475, -0.376), (cut + 0.05, 0.5, 0.481, -0.381)) for hw_, zf_, zb_ in [blob_at(y_)]])
+        if cp.get('coatLong') and L.get('belt'):
+            # CAST-POLISH-NAMED (GROBO-COAT): every Grobo had the same body, the coat cut at the hips over round trousers, so the
+            # looks written as long coats and robes (Yorna's felt coat, Councillor Brum's robe) were Doran's and Hesk's shape in
+            # other colours. Now the coat goes on from under the belt as a skirt, flaring a little and falling in soft folds to
+            # the hem (CAST coatLong = its height), finished with a rolled hem band in the trim colour; the round body stays
+            # inside it. It goes with the hips; toward the hem a share of it (GCOAT_SKIRT, 35 %) follows the skirt bones.
+            gh_ = cp['coatLong']
+            y_top = cut - 0.004
+            hw_, zf_, zb_ = blob_at(y_top)
+
+            def w_gcoat(p):
+                x, y, z = p
+                k = GCOAT_SKIRT * smooth(y_top, gh_ + 0.1, y)   # (more, and the walk kicked its back hem up, a seat folded its front into the body)
+                a = math.atan2(x, z - 0.02)
+                ca_, sa_ = math.cos(a), math.sin(a)
+                w = {bn: v * (1 - k) for bn, v in w_blob(p).items()}
+                for bn, v in (('skirtF', max(0, ca_) ** 2), ('skirtB', max(0, -ca_) ** 2), ('skirtL', max(0, sa_) ** 2), ('skirtR', max(0, -sa_) ** 2)):
+                    if v > 0:
+                        w[bn] = w.get(bn, 0) + k * v
+                return {bn: v for bn, v in w.items() if v > 1e-4}
+            secs_ = [(y_top, max(hw_ * 1.006, 0.49), max(zf_ * 1.006, 0.47), min(zb_ * 1.006, -0.37), 0.0),
+                     (y_top + (gh_ - y_top) * 0.45, 0.505, 0.485, -0.39, 0.012),
+                     (gh_ + 0.03, 0.52, 0.5, -0.405, 0.028)]
+
+            def fold_ring(y, hw, zf, zb, amp, d=0.0):
+                r_ = ring(y, (hw + d) * slim, zf + belly + d, zb - d, BLOB_N, 0.7)
+                return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4)), yy, z * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4))) for k, (x, yy, z) in enumerate(r_)]
+            loft(b.P('coatSkirt', tunic, w_gcoat, 50), [fold_ring(*s_) for s_ in secs_])
+            # the hem band: from just above the skirt's foot, over its edge and back in under it (1.2 cm proud, 2.2 cm thick)
+            hy_, hw2, zf2, zb2, a2 = secs_[-1]
+            loft(b.P('coatHem', trim, w_gcoat, 50), [fold_ring(hy_ + 0.035, hw2, zf2, zb2, a2, 0.001), fold_ring(hy_ + 0.012, hw2, zf2, zb2, a2, 0.012),
+                                                    fold_ring(hy_ - 0.008, hw2, zf2, zb2, a2, 0.008), fold_ring(hy_ - 0.012, hw2, zf2, zb2, a2, -0.01)])
     else:
         gown = outfit == 'gown'  # (LBA2's Zoé: a fitted red outfit, deep V neckline, bare arms, the legs separate)
         torso = b.P('torso', skin if gown else tunic, w_torso, 50)
@@ -1155,7 +1188,56 @@ def build(name):
                 tube(ht, (0, c[1] + R * 0.78, c[2]), (0, c[1] + R * 1.25, c[2]), R * 0.55, R * 0.5, 10)
                 disc(ht, (0, c[1] + R * 0.8, c[2]), R * 0.95, 12, 'y', 0.015)
                 tube(b.P('hatBand', shade(L['hat'], 0.6), head_w, 30), (0, c[1] + R * 0.8, c[2]), (0, c[1] + R * 0.9, c[2]), R * 0.57, R * 0.56, 12, cap=False)
-        if L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
+        if L.get('goggles') and cp.get('gogglesUp'):
+            # CAST-POLISH-NAMED (GOGGLES-HESK): his driving goggles were two flat gold drums facing forward off his brow, and
+            # the "strap round the head" a stick between them poking out at the sides. Now they sit pushed up on the dome of
+            # his head, turned up with it: brass cups with a rolled rim round dark glass (a darker shade of the brass, Nell's),
+            # a bridge between them, and a leather band from the cups' outer sides round the back of his head.
+            gg = b.P('goggles', '#c89a48', head_w, 40)
+            gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
+            hs3 = (1.0, 0.92, 1.08)
+            def on_head(th, dy, out=0.0):
+                """the point of the head's ellipsoid at height dy (from its centre) and angle th round from the front, `out` off it"""
+                k_ = math.sqrt(max(0.0, 1 - (dy / (R * hs3[1])) ** 2))
+                p_ = Vector((R * k_ * math.sin(th), dy, R * hs3[2] * k_ * math.cos(th)))
+                n_ = Vector((p_.x / hs3[0] ** 2, p_.y / hs3[1] ** 2, p_.z / hs3[2] ** 2)).normalized()
+                return Vector(c) + p_ + n_ * out, n_
+            gn_, gr_ = 10, R * 0.15
+            inner_ = []
+            for sxx in (1, -1):
+                th_ = sxx * math.atan2(R * 0.3, R * 0.8)
+                base_, n_ = on_head(th_, R * 0.6, -0.004)
+                e_ = base_ + n_ * 0.034
+                tube(gg, tuple(base_), tuple(e_), gr_ * 0.92, gr_, gn_, cap=False)
+                u_ = n_.cross(Vector((0, 1, 0)) if abs(n_.y) < 0.9 else Vector((1, 0, 0))).normalized()
+                w_ = n_.cross(u_).normalized()
+                cord(gg, [tuple(e_ + u_ * (gr_ * 1.02 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 1.02 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)], R * 0.022, 5, True)
+                lc_ = e_ - n_ * 0.005
+                gls_.add([tuple(lc_ + u_ * (gr_ * 0.95 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 0.95 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lc_ + n_ * 0.003)],
+                         [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
+                inner_.append(e_ - n_ * 0.012 - Vector((sxx * gr_, 0, 0)))
+            cord(gg, [tuple(inner_[0]), tuple((inner_[0] + inner_[1]) / 2 + Vector((0, 0.006, 0.006))), tuple(inner_[1])], R * 0.02, 5, False)   # (the bridge)
+            # the band: from one cup's outer side round the back of the head to the other's, rising to the cups in front
+            st_ = b.P('strap', '#3a2a20', head_w, 40)
+            th0, NS = math.atan2(R * 0.3, R * 0.8) + 0.12, 18
+            rows_ = []
+            for j_, (dyy, oo) in enumerate(((-0.012, -0.003), (-0.012, 0.009), (0.012, 0.009), (0.012, -0.003))):
+                row_ = []
+                for i_ in range(NS + 1):
+                    th_ = th0 + (2 * math.pi - 2 * th0) * i_ / NS
+                    dy_ = R * (0.43 + 0.17 * math.cos(th_)) + dyy
+                    row_.append(tuple(on_head(th_, dy_, oo)[0]))
+                rows_.append(row_)
+            m_ = NS + 1
+            st_.add([p for r_ in rows_ for p in r_], [[j * m_ + i, j * m_ + i + 1, (j + 1) * m_ + i + 1, (j + 1) * m_ + i] for j in range(3) for i in range(NS)])
+            for fi_, f_ in enumerate(st_.f):   # (wound to face out of the band: its outside out, its edges up and down)
+                i_ = fi_ % NS
+                bc_ = sum((Vector(rows_[j][i]) for j in range(4) for i in (i_, i_ + 1)), Vector()) / 8
+                a_, b_, c_ = (Vector(st_.v[i]) for i in f_[:3])
+                fc_ = sum((Vector(st_.v[i]) for i in f_), Vector()) / len(f_) - bc_
+                if (b_ - a_).cross(c_ - a_).dot(fc_) < 0:
+                    f_.reverse()
+        elif L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
             gg = b.P('goggles', '#c89a48', head_w, 40)
             for sxx in (1, -1):
                 disc(gg, (sxx * R * 0.3, c[1] + R * 0.62, c[2] + R * 0.8), R * 0.15, 10, 'z', R * 0.09)

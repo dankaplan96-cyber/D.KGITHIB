@@ -1,0 +1,399 @@
+{
+  "file": "art/blender/characters/named/work/yorna.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7037, 1.9103, 1.2521], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "242"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: yorna_belt -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_brows -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_coat -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_coatHem -> yornaRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_coatHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_coatSkirt -> yornaRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_coatSkirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_cuffL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_cuffR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_ear -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_ear.001 -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_earIn -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_earIn.001 -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_foreL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_foreR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_handL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_handR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_hat -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_hatRoll -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_hatRoll",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_hatRoll.001 -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_hatRoll.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_hatRoll.002 -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_hatRoll.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_head -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_neck -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shinL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shinR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shoeL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shoeR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shoulderL -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_shoulderR -> yornaRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_trousers -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_trunk -> yornaRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_upperL -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: yorna_upperR -> yornaRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: yorna_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature yornaRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 42,
+    "meshes": 41,
+    "triangles": 3802,
+    "materials": 15,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8518,
+        -0.012,
+        -0.4215
+      ],
+      "max": [
+        0.8518,
+        1.8983,
+        0.8306
+      ],
+      "size": [
+        1.7037,
+        1.9103,
+        1.2521
+      ]
+    }
+  },
+  "passed": true
+}

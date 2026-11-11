@@ -1,0 +1,339 @@
+{
+  "file": "art/blender/characters/named/work/baldino.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.1175, 1.77, 1.585], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "85"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: baldino_chest -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_chest",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_collar -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_collar",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_collarIn -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_collarIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_earDishL -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_earDishL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_earDishR -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_earDishR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_earL -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_earL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_earR -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_earR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_foreL -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_foreR -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_frame -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_frame",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_handL -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_handR -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_head -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_legL -> baldinoRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_legL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_legR -> baldinoRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_legR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_lensL -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_lensL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_lensR -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_lensR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_mouth -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_mouth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_sleeveL -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_sleeveL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_sleeveR -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_sleeveR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_smock -> baldinoRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_smock",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_strap -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_strap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_tail -> baldinoRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_tail",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_trousers -> baldinoRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: baldino_trunk -> baldinoRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: baldino_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature baldinoRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 30,
+    "meshes": 29,
+    "triangles": 6173,
+    "materials": 10,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.5588,
+        0.0,
+        -0.5768
+      ],
+      "max": [
+        0.5588,
+        1.77,
+        1.0082
+      ],
+      "size": [
+        1.1175,
+        1.77,
+        1.585
+      ]
+    }
+  },
+  "passed": true
+}

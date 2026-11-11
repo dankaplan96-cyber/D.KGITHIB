@@ -1,0 +1,2 @@
+[{ "op": "script", "name": "named: HEAD cast_poly.py, the whole cast", "script": "tools/blender/_head_cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/export/allhead"] },
+ { "op": "script", "name": "named: candidate cast_poly.py, the whole cast", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/named/export/allnew"] }]

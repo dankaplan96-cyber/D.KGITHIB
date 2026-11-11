@@ -1,0 +1,35 @@
+{
+ "bones_equal_baseline": false,
+ "bones_in_skeleton": true,
+ "eyes_equal": true,
+ "mouths_equal": true,
+ "weights_per_vertex": 4,
+ "weights_not_summing_to_1": 0,
+ "bad_bone_index": 0,
+ "body_tris": [
+  3506,
+  3706,
+  5.7
+ ],
+ "total_tris_incl_eyes_mouth_baseline": 3602,
+ "total_tris_incl_eyes_mouth_candidate": 3802,
+ "new_colours": [],
+ "tris_by_colour_changed": {
+  "#e8b84a": [
+   80,
+   200
+  ],
+  "#a83a2a": [
+   680,
+   760
+  ]
+ },
+ "lowest_y": [
+  -0.012,
+  -0.012
+ ],
+ "top_y": [
+  1.8983,
+  1.8983
+ ]
+}
