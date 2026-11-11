@@ -23,7 +23,7 @@
 // scatter's random draws, so everything else on the island keeps its place.
 import * as THREE from 'three';
 import { tm, pm, ctex, bbox, boxUV, cyl, lathe, Batch, compose, tint, cached } from './kit.js';
-import { capM } from './props-esmer.js';
+import { capM, glassM } from './props-esmer.js';
 
 const Y0 = 6.0;
 // ---- layout (Zeelich-local coordinates)
@@ -122,20 +122,24 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     const corb = cached('zlcorb', () => bbox(0.2, 0.22, 0.16, 0.02, 1));
     for (let x = X0 + 0.3; x < X1 - 0.2; x += 0.55) for (const s of [-1, 1]) B.add(corb, C.ashD, x, roofY - 0.25, WH.z + s * (WH.d / 2 + 0.06));
     for (let z = Z0 + 0.3; z < Z1 - 0.2; z += 0.55) for (const s of [-1, 1]) B.add(corb, C.ashD, WH.x + s * (WH.w / 2 + 0.06), roofY - 0.25, z, 0, Math.PI / 2, 0);
-    // the parapet: a low wall and merlons (open on the west side's north end, where the guards' stair arrives)
+    // the parapet: a low wall (open on the west side's north end, where the guards' stair arrives)
+    // (ZSTYLE-2: in the Esmer way, a band of glass blocks under a rounded coping and brass knobs on its ends, where it had
+    // Citadel's square merlons; its collider as before)
     const PT = 0.3, PH = 0.5, gap = [Z0 + PT, Z0 + PT + 1.45];
-    const wallRun = (ax, az, bx, bz) => {
+    const knob = cached('zlknob', () => tint(lathe([[0, 0], [0.13, 0.04], [0.15, 0.14], [0.08, 0.26], [0.02, 0.34], [0.015, 0.48], [0, 0.5]], 8), BRASS));
+    const wallRun = (ax, az, bx, bz, ends = '') => {
       const len = Math.hypot(bx - ax, bz - az), ry = Math.abs(bx - ax) > 1e-3 ? 0 : Math.PI / 2;
       B.add(bbox(len, PH, PT, 0.04, 1.8), C.ash, (ax + bx) / 2, roofY + PH / 2, (az + bz) / 2, 0, ry, 0);
-      const n = Math.max(1, Math.round(len / 0.95));
-      for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; B.add(cached('zlmerlon', () => bbox(0.46, 0.46, PT + 0.04, 0.04, 1.8)), C.ashD, ax + (bx - ax) * t, roofY + PH + 0.23, az + (bz - az) * t, 0, ry, 0); }
+      B.add(bbox(len + 0.12, 0.13, PT + 0.14, 0.06, 1.8), C.ashD, (ax + bx) / 2, roofY + PH + 0.065, (az + bz) / 2, 0, ry, 0);
+      B.add(boxUV(bbox(Math.max(0.2, len - 0.3), 0.26, PT + 0.04, 0.01, 1), 1), glassM(), (ax + bx) / 2, roofY + 0.24, (az + bz) / 2, 0, ry, 0);
+      for (const [px, pz] of [ends.includes('a') && [ax, az], ends.includes('b') && [bx, bz]].filter(Boolean)) B.add(knob, C.MVC, px, roofY + PH + 0.13, pz);
       // (the ball may skim the merlons on its way to the crate on the flue: the parapet doesn't stop it)
       col({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: ry ? PT / 2 : len / 2, hd: ry ? len / 2 : PT / 2, rot: 0, top: roofY + 0.95, noStand: true, seeThrough: true, noBall: true });
     };
-    wallRun(X0, Z1 - PT / 2, X1, Z1 - PT / 2);                         // south (the street side)
-    wallRun(X0, Z0 + PT / 2, X1, Z0 + PT / 2);                         // north
+    wallRun(X0, Z1 - PT / 2, X1, Z1 - PT / 2, 'ab');                   // south (the street side)
+    wallRun(X0, Z0 + PT / 2, X1, Z0 + PT / 2, 'ab');                   // north
     wallRun(X1 - PT / 2, Z0 + PT, X1 - PT / 2, Z1 - PT);               // east
-    wallRun(X0 + PT / 2, gap[1], X0 + PT / 2, Z1 - PT);                // west, south of the gap
+    wallRun(X0 + PT / 2, gap[1], X0 + PT / 2, Z1 - PT, 'a');           // west, south of the gap
     // the roof: flagstones, Bzizz's landing mark
     B.add(bbox(WH.w - 0.1, 0.04, WH.d - 0.1, 0.01, 1.6), C.ashD, WH.x, roofY + 0.0, WH.z);
     B.add(cached('zlmark', () => tint(new THREE.RingGeometry(0.62, 0.78, 24).rotateX(-Math.PI / 2), '#e8b84a')), C.VC, WH.x - 0.6, roofY + 0.03, WH.z - 0.2);
