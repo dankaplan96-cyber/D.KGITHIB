@@ -437,8 +437,9 @@ export function dressAsylum(R, physics) {
     at(A, 52.0, 20.15, Y(52, 20.6, 10) + 1.55, 0, () => noticeBoard(A.k, 1.6, 0.9, 6));
     at(A, 53.9, 20.12, Y(53.9, 20.6, 10) + 2.1, 0, () => wallClock(A.k, 0.2));
     for (const z of [26.6, 27.5]) put(A, 46.4, z, 10, HALF, filingCabinet, { color: '#5a6a5a' });
-    // the clone statues pushed into the corner by the stair, the workers' coats hung on them
-    for (const [x, z, ry, c] of [[61.4, 27.8, -2.4, '#3a5a7a'], [60.1, 28.5, -2.9, '#8a4a3a']]) {
+    // the clone statues pushed into the corner by the stair, the workers' coats hung on them (ASYLUM-21: against the
+    //  east wall, facing into the room; at z 28.5 a plinth stood on the floor's very edge, over the old black slot)
+    for (const [x, z, ry, c] of [[61.45, 26.5, -HALF - 0.25, '#3a5a7a'], [61.4, 27.75, -HALF + 0.2, '#8a4a3a']]) {
       const s = put(A, x, z, 10, ry, cloneStatue);
       A.k.at(s.lx, s.y + 1.5, s.lz, ry, () => coat(A.k, { c }));
     }

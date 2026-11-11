@@ -562,7 +562,7 @@ export function buildLba1Asylum(scene, physics) {
       // (order 20, against LBA1's own bricks: its walls teal-grey brick with brick caps, lighter than its dark
       //  flagstones; its walks and stairs teal grates; its maroon posts open lattice girders; its lattice windows; its
       //  boiler a boiler, not a brick tower (BOILER: cells without a brick of their own, drawn by asylumNow))
-      grate: true, grateGain: 1.35, capWalls: true, girders: true, lowLamps: true, pipeCol: '#a4c6c9', hidden: [BOILER, ...DRUMS.map(([x, z]) => [x, 5, z, x, 7, z])],
+      meetFloors: true, grate: true, grateGain: 1.35, capWalls: true, girders: true, lowLamps: true, pipeCol: '#a4c6c9', hidden: [BOILER, ...DRUMS.map(([x, z]) => [x, 5, z, x, 7, z])],
       grilles: [[13, 16, 5, 21, 6], [13, 16, 15, 21, 16]],
       clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
