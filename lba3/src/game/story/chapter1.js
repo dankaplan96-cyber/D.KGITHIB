@@ -668,6 +668,7 @@ export class Chapter1 extends ChapterBase {
       }
       C.pos[(i + 1) * 3] = Math.sin(th) * d; C.pos[(i + 1) * 3 + 1] = 0; C.pos[(i + 1) * 3 + 2] = Math.cos(th) * d;
     }
+    C.pos[2] = w.apex || 0;   // (P12: the patch starts where his torch throws it, a step before his feet; his sight is unchanged)
     C.geo.attributes.position.needsUpdate = true;
     w.cone.material.opacity = 0.26 + w.suspicion * 0.24;   // (Watcher's 0.14 hardly showed on the office's pale tiles)
   }
