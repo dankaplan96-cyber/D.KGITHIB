@@ -4,6 +4,23 @@ Written 10.11.2026 on `ccr-c1c2c4b9-dep6ed` at `2f1d3890` (artifact v76). **Desi
 nothing was played, no browser was run for it.** It is the "written list per region for the user to approve"
 (`WORKPLAN-2026-11-09.md`, wave E item 9). Every minute below is an **estimate**, not a measurement.
 
+**Build status (10.11.2026, first wave, part 1):** COL-1, HAM-1 and ISL-1 are **built** (`src/game/crystals.js`,
+`src/game/story/depth.js`, `src/game/text/depth.js`; test `tests/depth-1.mjs`; Automated runtime only, SwiftShader, no
+person has played them). The other 24 proposals are not built. Each built item's card below has a "Built" row saying
+where the build differs from the card.
+
+**Verified (11.11.2026)** after merging `ccr-c1c2c4b9-dep6ed` at `abbb7af2` (EQUIP-1, CITADEL-85, CAST-POLISH-UNDERGROUND
+on top of the build): the merge was clean. Automated runtime only (headless Chromium, SwiftShader; no person has played
+them, no timing or frame rate claimed). `tests/depth-1.mjs` passes (29 checks: both puzzles by the harness's keys with a
+wrong attempt and Save & quit → Continue half way, the count out of 12, max life, an old 6-crystal save). Also passing on
+the merged code: `chapter4`, `chapter5`, `chapter6`, `chapter7`, `hamalayi-life`, `isles-bar`, `island-people`,
+`zislands`, `voices`, `save-migration`, `saveslots`, `resume`, `world-consistency`, and playthrough segments 07 (the dig)
+and 09 (the pass) from saves of the main path: every step to its end, no death, no assist, 10 max life (the main path
+neither needs nor meets the new crystals). The test machine was shared and overloaded during the run: `saveslots` and
+`resume` first stopped on the harness's own 30 s screenshot/reload waits and segment 07's browser was killed once for
+lack of memory; each passed when run again (the two suites with longer harness waits, nothing else changed). Pictures of
+both places come from `SHOTS=dir node tests/depth-1.mjs` (nine, deviceScaleFactor 1).
+
 The user's worry (10.11): the main path is estimated at 4–5 h for a first play (the bot plays it in about 1 h 15 min);
 LBA1/LBA2 last several times longer for a newcomer, mostly through optional errands, reasons to go back, secrets and
 puzzles that make the player stop and think. The user's rules for this plan: long chapters are **not** shortened
@@ -188,6 +205,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | none to the story. Flags `dx_jaspa_ask/sorted`; the crystal `sc-jaspa` (COL-1) |
 | Test | a wrong sort (lamp, line, reset), the right sort by input, the crystal and +1 max life; the fork's ring as the alternate |
 | Evidence → principle | sample 3 (a visible feature marks the answer), P1, P2 |
+| **Built** (10.11.2026) | `story/depth.js` (ISL-1), `tests/depth-1.mjs`. Jaspa is a man in the game (his voice and model since ISLES-BAR), so the lines are his. His favour comes after his own line the first time he is spoken to. The tray and the two bins stand on a low bench by the sorting room's back wall (the room's gem table keeps its look); six stones, two warm (a pale crust of small crystals, dust motes rising). Twinsen takes the next stone from the tray and says what he sees (the clue is in the world, not only the journal), then sets it in a bin; both reaches are his right hand on the stone and into the bin ('pickup'). Failure: a warm one in PROJECT flashes the lamp at once (Jaspa: "That one sweats!"); all six in with a cold one in KEEP is the other mistake (his second line); both put every stone back on the tray. A stone in his hand is not saved (back on the tray after a load or if he walks off); the bins are (`dx_jaspa_bins`). The fork: struck by the tray, the warm stones still on it ring. Flags `dx_jaspa_ask/bins/tries/sorted/thx`, owed crystal `dx_owe_sc_jaspa`. |
 
 #### ISL-2 · Tellem's letters (a chain across both planets)
 | | |
@@ -282,6 +300,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | the dome must be in view from the waystone (the art pass checks the shot; if not, the clue moves to Tenpa's lines). Flags `dx_way_ask/face/open` |
 | Test | each wrong face's line, the right face by input, the crystal; Continue keeps the turned face |
 | Evidence → principle | sample 4 (the clue points at a visible landmark), P1 |
+| **Built** (10.11.2026) | `story/depth.js` (HAM-1), `tests/depth-1.mjs`. Closest fit to the card where the geometry decided: the monastery's roof, the glacier and the observatory all lie west of the stone (within 30° of each other), so the four quarters cannot point at four landmarks. The turning stone is an upper block round the pillar, under its cap, set at 45° to the pillar: one of its faces then looks straight at the observatory (measured 0.2° off), and its faces look over the plinth's corners, the only places on the top step wide enough to stand with both hands on a face's grips ('pumpGrip' pose; the test measures the hands within 8 cm of the face). Carvings in turning order: dome, roof, ice, houses. As found the dome faces down the valley; each turn says what now faces the west: the ice faces the glacier, the roof faces the monastery's roof, then the dome faces the dome on the ridge. The niche is a slab at the pillar's foot that sinks into the step; inside, the crystal and the words FOR THE LAST PILGRIM (the card's "the pilgrims left one each" is Tenpa's line after). Tenpa: his own line first, then the pilgrims; after three turns without it, "Ask the altar" (the hall's altar already says the dome was Sendell's shrine). Flags `dx_way_seen/ask/face/turns/open/hint/thx/read`, owed crystal `dx_owe_sc_waystone`. Whether the dome is noticed from the terrace is a design judgment (section 8); the pictures of the stone are in the test's SHOTS. |
 
 #### HAM-2 · Pim's kite and the goat path (a shortcut earned)
 | | |
@@ -496,6 +515,7 @@ and C12-3 too: chapter 12 about 18 min (0.9 T). All estimates by the balance for
 | Risks | **balance**: max life 22 makes chapters 10–12 easier for a thorough player; animation-combat rechecks the ridge, the bore and the core with 16 and 22. **Saves**: `crystalsAll` keeps its meaning (the first six, Sendell's chapter-11 line); the new set is `dx_crystals12`; an old save with six keeps +6 and its line; the quest crystals are owed rewards (`ChapterBase.reward`) so a save before pick-up does not lose one. |
 | Test | the count and max life after each; an old six-crystal save loads with 16 max life and `crystalsAll`; the twelfth triggers the line; chapter 12's catch happens once (death avoided once, then Retry rules as now) |
 | Evidence → principle | recollection: LBA1/LBA2's clover boxes hidden off the paths that let him carry more; P7 |
+| **Built** (10.11.2026) | `src/game/crystals.js` (the registry), `main.js` (the count of unique `sc-` ids, the toast "n/12", `crystalsAll` = the six lying in the world, `dx_crystals12` = all twelve), `story/depth.js` (quest crystals as owed rewards, caught up after a load; Sendell's catch; the epilogue line), `actors.js` (one line: Hero.damage asks `depth.catchFall` before a clover or a death). **Obtainable today: 8 of 12** (the six in the world, ISL-1, HAM-1). The slots of DES-1 (`sc-figures`), DES-2 (`sc-trial`), HAM-3 (`sc-pack`) and UND-1 (`sc-source`) exist with their reward plumbing (`giveCrystal`) and are marked `built: false` in `crystals.js`: nothing in the game gives them until those quests are built, so the all-twelve payoff cannot happen in normal play yet (the test reaches it staged). Sendell's catch comes before a clover is used, once per game (`dx_c12_caught`; a Retry that reloads a save from before it can see it again in that attempt). Not built: the holomap helper (it belongs to DES-3, second wave). The "all six" line now reads without a number (the count is out of 12). For the combat owner to review: the catch in `Hero.damage` and the balance with 16 to 22 max life (the card's risk). |
 
 Not proposed: raising the clover cap (9) or new clover boxes (the economy around 9 works, `chapter-balance.md` "Depot
 economy"); a second currency (Zlitos) or a casino (`ZEELICH_GAP.md` items 7 and 9: a system decision, larger than
@@ -585,5 +605,46 @@ Each `tests/depth-<id>.mjs` (player-input harness, one suite at a time, SwiftSha
 9. the chapter suites and the playthrough segment of that chapter still pass (for C11-1 and C12-1: updated);
 10. text: English only, and no night, evening or tonight in any new line (a grep over the new text keys).
 
-Status of this document: **Not implemented** (design only). Next step: the user approves, cuts or reorders the list;
-the coordinator gives the first wave to workers in pairs.
+Status of this document: the user approved the first wave (10.11.2026). **Built:** COL-1, HAM-1, ISL-1 (see their
+"Built" rows; Automated runtime only). **Not built:** the other nine of the first wave (UND-1, ISL-3, ZEE-1, DES-1,
+DES-2, HAM-2, HAM-3, C11-1, C12-1) and the whole second wave. When DES-1, DES-2, HAM-3 or UND-1 is built, it flips its
+entry in `src/game/crystals.js` to `built: true` and gives its crystal with `Depth.giveCrystal(id, x, y, z, area)`.
+
+---
+
+## The user's five side quests (11.11.2026) — these lead the build order
+
+The user's own proposals and rules, translated. They come before the rest of the first wave; **The Last Ferry is built
+first** (the user: it answers what bothered him in chapter 3 — a reason to enter a building, a puzzle that uses the magic
+ball, residents travelling somewhere, a clear geographic tie between two parts of the island; and even a player who
+never starts it remembers the captain who turns up on time for a ferry that doesn't sail: LBA's humour).
+
+**The user's rules for optional content**
+1. A side quest's reward is **something new the player can do in the world** (sail an old ferry line, invite a known
+   person home, find a use of the magic ball nobody taught him), not only a clover and kashes.
+2. A player who skips them gets a complete main story. A player who does them comes back to the same street and feels
+   something there changed because of him.
+3. **The test every side quest must pass: "If I come back here in three chapters, what can I see, hear or do that
+   wasn't here before?"** No answer, no quest.
+4. Side quests are **not** used to fix a main chapter that is too short: a short chapter gets its main path
+   strengthened (if chapter 2 ends before the Citadel had its place in the story, strengthen chapter 2's main route).
+5. Optional content is spread by places and people, **no quota of a quest per chapter**.
+
+| Id | Name, place | What the player actually does | What stays with him |
+|---|---|---|---|
+| U-1 | **The Last Ferry** — Zeelich, chapter 3 on | A sailings board hangs on the quay, but the last ferry left years ago. The captain still turns up on time. Twinsen goes into the winch house, turns the loading bridge, and threads the magic ball through an opening to release the catch from its far side. When the cable comes free, the player himself starts the first sailing. | A regular ferry line between two neighbourhoods that can already be reached on foot. A trader we met at the station starts selling tea on deck; the player can stay for the return sailing and hear what the passengers think of what is happening on the island (lines change with the story). |
+| U-2 | **One More Place** — Citadel, chapter 2 | Zoé has laid the table and put out one chair too many. The neighbour used to come every week; since he moved a street away nobody has invited him. When Twinsen reaches him, the neighbour insists on bringing his old radio. The player tunes it by a melody he knows from home, then goes back to the meal. | From then on he can come home in different chapters and sit down to a short meal with Zoé, Arthur and a known guest. Sometimes a new conversation, sometimes only music and food. Home stays a place to return to even with no quest marker on it. |
+| U-3 | **Off the Wall** — Desert Island | A girl has invented a ball game in the schoolyard. Her only rule: the bell must not be hit directly. She shows a rebound off a wall; the player chooses where to throw from and solves three short challenges. In the last one the girl moves the board because Twinsen found a solution she hadn't thought of. | A practice court to return to, with targets that can be moved. The real reward is better command of the existing ball: angles, rebounds, aiming without a fight's pressure. A player who works the trick out alone can use it without the quest. **Replaces DES-2** (Hougo's three trials) or merges with it: one rebound school, the girl's. |
+| U-4 | **Twelve Years Late** — Zeelich | A letter is left at the post office with an address that no longer exists. Instead of following an arrow, the player compares an old postcard with the view: the chimney is still there, the stairs became a ramp, a bakery stands where the clinic was. He finds the addressee through the island's own structure. | She was a photographer. She gives Twinsen her album: at several spots in the world he can open an old picture against today's view, and see what changed in twelve years without anyone reading him the history. |
+| U-5 | **The Quiet Channel** — the underground installation | A faint rhythm sounds from a service pipe. The player can go on along the main way, or stop and answer with three valves. The voice on the other side corrects Twinsen's rhythm. Bit by bit it turns out to be a maintenance worker from a cut-off station who uses the pipes to talk to his brother. | A listening channel opens in the control room; later it carries short messages that change with the story's events. After the ending, back at the station, the two brothers are heard in the same room for the first time. |
+
+Design notes for the builders: every hand action on a real object (the winch, the bridge's wheel, the radio's dial, the
+valves: NO-AIR); English player text; no night words ("the captain turns up on time", not "every morning" if it implies
+a night); new state under `dx_`; old saves load; each quest's test plays it by input, includes a wrong attempt and a
+save → Continue mid-way, and checks the "three chapters later" state by setting a later chapter and looking for the
+lasting change. The album (U-4) uses our own renders of our own earlier states of the places, never LBA1/LBA2 images.
+
+**Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
+proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
+is re-checked against rule 3 before it is built; one that only pays "a crystal" gets a lasting change or is dropped.
+Rule 4: C11-1 and C12-1 stay, as main-path work for the short last chapters, not as side quests.

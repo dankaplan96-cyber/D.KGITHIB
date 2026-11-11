@@ -113,7 +113,7 @@ Object.assign(STR.en, {
   ct_pad: 'Gamepad', ct_pad_text: 'Left stick: move · right stick: camera · D-pad: the four behaviours (↑ Normal, → Athletic, ↓ Aggressive, ← Discreet) · A: action / talk · X: attack · Y: ball · B: dodge · View: inventory · LT: holomap · RT: weapon wheel · LB: swap · RB: focus · R3: next target · L3: camera distance · Menu: pause',
   bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
   crystal_first: '(It hums, like the crystals in the well. A splinter of something much bigger.)',
-  crystal_all: '(All six. Together they hum one note, the same one I heard when Sendell spoke.)',
+  crystal_all: '(Now they hum together, one note: the same one I heard when Sendell spoke.)',
   it_crystals: 'Singing Crystals', itd_crystals: 'Splinters that hum like the crystals in the well. Each one makes me a little tougher.',
   gen_search_nothing: 'Nothing here.',
   inv_title: 'Inventory', journal_title: 'Journal', it_level: 'Level {n}',

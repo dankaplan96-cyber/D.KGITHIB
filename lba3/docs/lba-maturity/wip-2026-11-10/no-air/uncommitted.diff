@@ -1,0 +1,208 @@
+diff --git a/lba3/docs/lba-maturity/no-air.md b/lba3/docs/lba-maturity/no-air.md
+index 7d351d40..2ed80f53 100644
+--- a/lba3/docs/lba-maturity/no-air.md
++++ b/lba3/docs/lba-maturity/no-air.md
+@@ -27,7 +27,7 @@ changed beats, cut from the film's own frames at the same scene times: `captures
+ | The resident's question (14.9) | Both forearms held up in front of him, as if he carried a box. | One gesture: a thumb back over his shoulder at the harbour row he asks about. | A pointing gesture, not work; no contact expected. |
+ | The resident's walk off (26.4–28.5) | His walk ended with his left foot over the pier's edge (the sole 7.8 m "over the ground": the sea). | The walk ends 0.3 m in. | Feet on the deck. |
+ | Twinsen "mending the lamp" (29–31.6, 35.2–46.2) | Fists at chest height over the table: the screwdriver 22 cm from anything, the left hand 27 cm. | The lamp has what he mends (interiors.js): a brass collar on its stem held by one screw on his side. The screwdriver's tip sits in the screw, its shaft in line with it; each stroke of his wrist turns the screw a radian and it goes in (6 mm over the scene), the tip lifting a hair as the wrist comes back. His left hand is on the lamp's shade. The strokes stop while he looks over at Arthur. | Tip to screw ≤ 0.8 cm in the strokes (0.7 cm is the lift between strokes); left hand 1.1 cm from the shade; the screw turns 10.3 rad and goes in 5.9 mm. |
+-| The screwdriver laid down (66.65–67.15) | It left his hand 11 cm from where it then lay (a jump in one frame). | His hand is solved to hold the tool exactly where it will lie; it lies by the table's near edge now, pointing away from him. | See the test line below. |
++| The screwdriver laid down (66.65–67.15) | It left his hand 11 cm from where it then lay (a jump in one frame). | His hand is solved to hold the tool exactly where it will lie; it lies by the table's near edge now, pointing away from him. | It moves 1.4 mm as it leaves his hand. |
+ | Arthur at his boat (29–58) | Kneeling, his hands were 21–46 cm (right) and 29–41 cm (left) from anything: the hull lay on the floor, half a metre under them. The mast "fitted" by jumping 64 cm from his hand to the hull at 36.2. | The boat stands on a low crate, his building stand, its deck at his hands' height. His left palm holds the hull by the stern. The mast is upright in his right fist: it rests on the deck by its step as he tries it, goes up as he shows it ("Dad! The mast fits!"), comes down over the step and in — home at 36.2, the click — he holds it a moment and lets go; then that hand rubs the deck by the bow. | Left hand 0.1–0.5 cm from the hull; the mast is 0.8 mm from its fitted place while still in his hand and moves 0.8 mm as he lets go; right hand ≤ 1.0 cm from the deck afterwards. |
+ | Zoé at the seed tray (29–39.5) | Right palm 0.9–19 cm (median 6.5), left 8.5–17 cm (median 14) from the tray. | Her palms press the soil of the two pots she is filling, in turn. | ≤ 1.4 cm (both hands); her right hand comes up to 5 cm off while she turns to look at Arthur (36.4–37.6), which is not counted. |
+ 
+@@ -76,7 +76,7 @@ area built died for lack of memory. What was measured:
+ 
+ | Run | States covered | Distinct work cases | Hand in the air (> 5 cm) | On a thing | Stood down | Own body / warming |
+ |---|---|---|---|---|---|---|
+-| Base (ba23dfa6) | well, project ×2, zeelich ×2, dig (6 of 21) | ~220 | **172** (tinker 67, setDown 41, reach 20, kneelWork 16, tapTurn 11, touchWater 8, potting 6, other 3); typical gap 20–80 cm | ~30 | — | 14 / 4 |
++| Base (ba23dfa6) | well, project ×2, zeelich ×2, dig (6 of 21) | ~220 | **172** (tinker 67, setDown 41, reach 20, kneelWork 16, tapTurn 11, touchWater 8, potting 6, other 3); typical gap 20–80 cm | about 30 (the rest) | — | 14 / 4 |
+ | After, changes 1–4 | well, project, zeelich, dig (4 of 21) | 219 | **66** | 61 | 77 | 14 / 4 |
+ | After, as committed (a one-off action's look-ahead made stricter) | well only (1 of 21) | 99 | **21** (base, the same state: 74) | — | — | — |
+ 
+diff --git a/lba3/src/engine/rig.js b/lba3/src/engine/rig.js
+index f89d4f43..dfa55c0f 100644
+--- a/lba3/src/engine/rig.js
++++ b/lba3/src/engine/rig.js
+@@ -336,7 +336,7 @@ export function createHumanoid(opts = {}) {
+ // ------------------------------------------------------------------ animator
+ export class Rig {
+   constructor(root, j) {
+-    this.root = root;
++    this.root = root; root.userData.rig = true;   // (a body: not a thing a working hand rests on, workhands.js)
+     this.j = j;
+     this.phase = 0;
+     this.t = Math.random() * 10;
+diff --git a/lba3/src/game/workhands.js b/lba3/src/game/workhands.js
+index eea12a18..36dc69dc 100644
+--- a/lba3/src/game/workhands.js
++++ b/lba3/src/game/workhands.js
+@@ -108,31 +108,110 @@ function face(P, mid, feetY, sc, fx, fz, tops) {
+   return null;
+ }
+ 
++// ── The drawn thing. A collider is a box or a cylinder round the thing: a door set back in its wall, a pump inside a
++// wide round collider, a stall under its awning's box. A palm put on the collider's face was in the air beside the
++// thing (tests/no-air.mjs measures against the drawn triangles). So, once per stop and hand, the place found on the
++// collider is probed along the palm's way for what is DRAWN there: a short segment against the triangles of the rigid
++// meshes on screen (nobody's body). The hand goes to that; nothing drawn within SEEK of the collider's face: nothing
++// to work at (the person stands).
++const SEEK = 0.36, LIFT = 0.3;   // m: the drawn surface is looked for from LIFT before the collider's face to SEEK past it
++const _im = new THREE.Matrix4(), _wm = new THREE.Matrix4(), _inv = new THREE.Matrix4(), _A = new THREE.Vector3(), _B = new THREE.Vector3(), _bx = new THREE.Box3(), _sg = new THREE.Box3(), _sph = new THREE.Sphere();
++const drawn = (o) => {
++  if (!o.isMesh || o.isSkinnedMesh || !o.geometry?.attributes?.position) return false;
++  const m = Array.isArray(o.material) ? o.material[0] : o.material;
++  if (!m || m.visible === false) return false;
++  if (m.transparent && m.depthWrite === false && (m.opacity ?? 1) < 0.9) return false;
++  if (m.blending && m.blending !== 1) return false;
++  return true;
++};
++// the first crossing of the segment a→b (world) with one mesh under the world matrix M, as a fraction of the segment (< best)
++function segMesh(o, M, a, b, best) {
++  const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
++  _inv.copy(M).invert(); _A.copy(a).applyMatrix4(_inv); _B.copy(b).applyMatrix4(_inv);
++  _sg.makeEmpty(); _sg.expandByPoint(_A); _sg.expandByPoint(_B);
++  if (!_sg.intersectsBox(g.boundingBox)) return best;
++  const x0 = _sg.min.x - 1e-4, x1 = _sg.max.x + 1e-4, y0 = _sg.min.y - 1e-4, y1 = _sg.max.y + 1e-4, z0 = _sg.min.z - 1e-4, z1 = _sg.max.z + 1e-4;
++  const pos = g.attributes.position, ix = g.index ? g.index.array : null;
++  const il = pos.isInterleavedBufferAttribute, st = il ? pos.data.stride : 3, off = il ? pos.offset : 0, src = il ? pos.data.array : pos.array;
++  const dr = g.drawRange || { start: 0, count: Infinity };
++  const n = ix ? g.index.count : pos.count, i0 = Math.max(0, dr.start || 0), i1 = Math.min(n, i0 + (dr.count ?? Infinity));
++  const ox = _A.x, oy = _A.y, oz = _A.z, dx = _B.x - ox, dy = _B.y - oy, dz = _B.z - oz;
++  for (let i = i0; i + 2 < i1; i += 3) {
++    const ia = (ix ? ix[i] : i) * st + off, ib = (ix ? ix[i + 1] : i + 1) * st + off, ic = (ix ? ix[i + 2] : i + 2) * st + off;
++    const ax = src[ia], bx = src[ib], cx = src[ic];
++    if ((ax > x1 && bx > x1 && cx > x1) || (ax < x0 && bx < x0 && cx < x0)) continue;
++    const ay = src[ia + 1], by = src[ib + 1], cy = src[ic + 1];
++    if ((ay > y1 && by > y1 && cy > y1) || (ay < y0 && by < y0 && cy < y0)) continue;
++    const az = src[ia + 2], bz = src[ib + 2], cz = src[ic + 2];
++    if ((az > z1 && bz > z1 && cz > z1) || (az < z0 && bz < z0 && cz < z0)) continue;
++    // (Möller–Trumbore, either side of the triangle)
++    const e1x = bx - ax, e1y = by - ay, e1z = bz - az, e2x = cx - ax, e2y = cy - ay, e2z = cz - az;
++    const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x;
++    const det = e1x * px + e1y * py + e1z * pz; if (det > -1e-12 && det < 1e-12) continue;
++    const id = 1 / det, tx = ox - ax, ty = oy - ay, tz = oz - az;
++    const u = (tx * px + ty * py + tz * pz) * id; if (u < 0 || u > 1) continue;
++    const qx = ty * e1z - tz * e1y, qy = tz * e1x - tx * e1z, qz = tx * e1y - ty * e1x;
++    const v = (dx * qx + dy * qy + dz * qz) * id; if (v < 0 || u + v > 1) continue;
++    const t = (e2x * qx + e2y * qy + e2z * qz) * id;
++    if (t >= 0 && t < best) best = t;
++  }
++  return best;
++}
++let _best = 2, _mx = 0;
++function segWalk(o, a, b) {
++  if (!o.visible || o.userData.rig) return;
++  if (drawn(o)) {
++    const g = o.geometry;
++    if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, _im); _wm.multiplyMatrices(o.matrixWorld, _im); _best = segMesh(o, _wm, a, b, _best); } }
++    else {
++      if (!g.boundingSphere) g.computeBoundingSphere();
++      _sph.copy(g.boundingSphere).applyMatrix4(o.matrixWorld);
++      if (_sph.center.distanceTo(_mx) <= _sph.radius + _hl) _best = segMesh(o, o.matrixWorld, a, b, _best);
++    }
++  }
++  const ch = o.children; for (let i = 0; i < ch.length; i++) segWalk(ch[i], a, b);
++}
++let _hl = 0;
++const _sa = new THREE.Vector3(), _sb = new THREE.Vector3(), _sm = new THREE.Vector3();
++export const probeStats = { n: 0, ms: 0, worstMs: 0 };
++// how far past the collider's place `at` (along `dir`, the palm's way: down onto a top, in onto a face) the drawn
++// surface is: -LIFT..SEEK m; null: nothing drawn there
++function drawnAt(g, at, dir) {
++  const t0 = performance.now();
++  _sa.copy(at).addScaledVector(dir, -LIFT); _sb.copy(at).addScaledVector(dir, SEEK);
++  _mx = _sm.copy(_sa).add(_sb).multiplyScalar(0.5); _hl = (LIFT + SEEK) / 2; _best = 2;
++  segWalk(g.scene, _sa, _sb);
++  const ms = performance.now() - t0; probeStats.n++; probeStats.ms += ms; if (ms > probeStats.worstMs) probeStats.worstMs = ms;
++  return _best > 1 ? null : _best * (LIFT + SEEK) - LIFT;
++}
++
+ const _o = { x: 0, z: 0 }, _tmp = [];
+ // one hand's place on the thing, from where the pose has its palm (nat); back: pulled that far toward the worker (a
+ // table's far side is out of an arm's reach: its near edge is not). false: nothing of it is near that hand
+-function place(T, nat, fx, fz, back) {
++// off: how far past the collider's place the drawn surface is, along the palm's way (drawnAt)
++function place(T, nat, fx, fz, back, off = 0) {
+   if (T.face) {
+     edge(T.face, nat.x - fx * back, nat.z - fz * back, _e);
+     if (Math.abs(_e.d) > REACH + 0.1 + back) return false;
+-    _v.set(_e.x + _e.nx * 0.004, Math.max(T.face.bottom + 0.03, Math.min(T.face.top - 0.03, nat.y)), _e.z + _e.nz * 0.004);
++    const k = 0.004 - off;
++    _v.set(_e.x + _e.nx * k, Math.max(T.face.bottom + 0.03, Math.min(T.face.top - 0.03, nat.y)), _e.z + _e.nz * k);
+     _n.set(-_e.nx, 0, -_e.nz); _f.set(-_e.nx * 0.2, 1, -_e.nz * 0.2);
+     return true;
+   }
+   const x = nat.x - fx * back, z = nat.z - fz * back;
+   if (T.c) into(T.c, x, z, 0.045, _o); else { _o.x = x; _o.z = z; }
+   if (Math.hypot(_o.x - x, _o.z - z) > REACH) return false;
+-  _v.set(_o.x, T.top + 0.004, _o.z); _f.set(fx, -0.18, fz); _n.copy(DOWN);
++  _v.set(_o.x, T.top + 0.004 - off, _o.z); _f.set(fx, -0.18, fz); _n.copy(DOWN);
+   return true;
+ }
+ const palms = (j) => { j.armR.hand.localToWorld(_pR.copy(PALM)); j.armL.hand.localToWorld(_pL.set(-PALM.x, PALM.y, PALM.z)); };
+ // the hands onto the thing with the chest bent `lean` more and the hands `back` nearer; returns the worst a palm is left off
+-function reachFor(rig, spec, T, w, lean, back, store, fx, fz) {
++function reachFor(rig, spec, T, w, lean, back, store, fx, fz, off = null) {
+   const j = rig.j;
+   if (lean) { store.push([j.torso, j.torso.rotation.x, j.torso.rotation.y, j.torso.rotation.z]); j.torso.rotation.x += lean * w; j.torso.updateMatrixWorld(true); palms(j); }
+   let worst = 0;
+   for (const side of spec.hands) {
+-    if (!place(T, side === 'R' ? _pR : _pL, fx, fz, back)) { worst = 9; continue; }
++    if (!place(T, side === 'R' ? _pR : _pL, fx, fz, back, off ? off[side] : 0)) { worst = 9; continue; }
+     worst = Math.max(worst, solveHand(j['arm' + side], side, { palm: _v, fingers: _f, normal: _n }, w, store));
+   }
+   return worst;
+@@ -169,24 +248,44 @@ function touch(g, a, rig, dt) {
+     if (spec.hands.length === 1) _mid.copy(_pR); else _mid.copy(_pR).add(_pL).multiplyScalar(0.5);
+     S.T = find(g, rig, spec, _mid, p.y, sc, fx, fz);
+     if (S.T) {
+-      // how much of a bend it takes: tried once, on the pose as it is now
+-      let ok = false;
+-      for (const [lean, back] of PLANS) {
++      // how much of a bend it takes: tried once, on the pose as it is now; then what is drawn where each hand lands
++      // there (the collider's face is not the thing's), and the bend again for that
++      const off = S.off || (S.off = { R: 0, L: 0 }); off.R = off.L = 0;
++      const plan = (from, o) => {
++        for (let i = from; i < PLANS.length; i++) {
++          const [lean, back] = PLANS[i];
++          _tmp.length = 0;
++          const left = reachFor(rig, spec, S.T, 1, lean, back, _tmp, fx, fz, o);
++          restoreJoints(_tmp); j.torso.updateMatrixWorld(true); palms(j);
++          if (left < 0.02) { S.lean = lean; S.back = back; return i; }
++        }
++        return -1;
++      };
++      let at = plan(0, null);
++      if (at >= 0) {
++        // (the hands' places under that bend)
+         _tmp.length = 0;
+-        const left = reachFor(rig, spec, S.T, 1, lean, back, _tmp, fx, fz);
++        if (S.lean) { _tmp.push([j.torso, j.torso.rotation.x, j.torso.rotation.y, j.torso.rotation.z]); j.torso.rotation.x += S.lean; j.torso.updateMatrixWorld(true); palms(j); }
++        for (const side of spec.hands) {
++          if (!place(S.T, side === 'R' ? _pR : _pL, fx, fz, S.back)) { at = -1; break; }
++          _t.copy(_v).addScaledVector(_n, 0.004);
++          const d = drawnAt(g, _t, _n);
++          if (d == null) { at = -1; break; }
++          off[side] = -d;
++        }
+         restoreJoints(_tmp); j.torso.updateMatrixWorld(true); palms(j);
+-        if (left < 0.02) { S.lean = lean; S.back = back; ok = true; break; }
++        if (at >= 0 && (Math.abs(off.R) > 0.008 || Math.abs(off.L) > 0.008)) at = plan(at, off);
+       }
+-      if (!ok) S.T = null;
++      if (at < 0) S.T = null;
+     }
+     // nothing there, or out of reach: the hands do not work on the air — the person stands
+-    if (!S.T && !spec.env) { rig.standFor = rig.anim; S.key = ''; }
++    if (!S.T) { rig.standFor = rig.anim; S.key = ''; }
+   }
+   if (!S.T) { S.w = 0; return; }
+   S.w = Math.min(1, S.w + dt * 4);
+   const w = S.w * (spec.env ? Math.min(1, live * 1.4) : 1);
+   if (w <= 0.001) return;
+-  reachFor(rig, spec, S.T, w, S.lean, S.back, rig._ov || (rig._ov = []), fx, fz);
++  reachFor(rig, spec, S.T, w, S.lean, S.back, rig._ov || (rig._ov = []), fx, fz, S.off);
+ }
+ 
+ // Where to stand to work at what a stop faces: the stop moved along its own facing until what stands there is an arm's
