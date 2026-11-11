@@ -21,6 +21,8 @@ import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
+import { ASYLUM_DOOR } from './lba1places.js';
+import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -894,6 +896,32 @@ export function* buildWorldSteps(parentScene) {
   });
   for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // TREES-1 (the user, 4.11.2026: a tree stood inside Twinsen's house, its crown out through the thatch). okSpot keeps
+  // the scatter out of the square's ring (exclusions: POI.village) and the original's trees 1.6 m off the houses, but
+  // nothing kept the scattered trees and bushes out of the houses beyond the square: a tall tree grew in Twinsen's
+  // house and two in the harbour wing's neighbour, bushes in the museum and the stone house, crowns through the walls
+  // of the water house, the wing and the baggage hall. Now no tree, palm or bush stands within its crown's reach of a
+  // house's walls (the farthest leaf from its trunk, measured on the sculpts, at its scale and crown width; a leaf may
+  // touch the wall's face, 0.15 m, 0.1 for a bush: the original's tree by the harbour wing keeps its place), nor in the
+  // asylum's block-house or on the spaceport's footbridge (both built later, main.js; on the bridge only the trunk
+  // counts: a crown may lean over a deck at the ground). Filtered after the scatter like the rest above: no random
+  // draw moves and every other tree keeps its place. The grass, flowers and tulips keep out of the same floors below.
+  const BLOCKS = [...W.houses.map((h) => ({ x: h.x, z: h.z, ry: h.ry, w: h.w, d: h.d })),
+    { x: ASYLUM_DOOR.x - 0.3, z: ASYLUM_DOOR.z, ry: 0, w: 3.0, d: 3.6 },   // (lba1places.js asylumDoor: its stone block)
+    { x: (BRIDGE.x0 + BRIDGE.x1) / 2, z: BRIDGE.z, ry: 0, w: BRIDGE.x1 - BRIDGE.x0, d: BRIDGE.hw * 2, deck: true }];
+  // (how far (x, z) stands outside the nearest block's walls; inside, minus its depth)
+  const blockDist = (x, z, decks = true) => {
+    let m = Infinity;
+    for (const b of BLOCKS) {
+      if (b.deck && !decks) continue;
+      const dx = x - b.x, dz = z - b.z, c = Math.cos(b.ry), s = Math.sin(b.ry), ax = Math.abs(dx * c - dz * s) - b.w / 2, az = Math.abs(dx * s + dz * c) - b.d / 2;
+      m = Math.min(m, ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az));
+    }
+    return m;
+  };
+  const REACH = { round: 1.9, fruit: 1.9, tall: 0.9, pine: 1.67, palm: 2.87, bush: 0.85 };   // (vegetation.js, at scale 1)
+  for (const t of trees) if (!t.gone && (blockDist(t.x, t.z, false) < REACH[t.kind] * (CROWN[t.kind] ?? 1) * t.s - 0.15 || blockDist(t.x, t.z) < 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && blockDist(b.x, b.z) < REACH.bush * b.s - 0.1) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
@@ -945,6 +973,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
   clearLife(grass); clearLife(flowers);
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
+  for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
@@ -996,6 +1025,7 @@ export function* buildWorldSteps(parentScene) {
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
   const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7) lifeBeds.add(t.bed);
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
+  for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
   fillPools();   // (PERF-CALLS: the small kinds' pools made now, with the rest of the island: uploaded behind the loading screen)
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };

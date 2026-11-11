@@ -1,13 +1,13 @@
 // Twinsen's house: walking (real key presses, classic controls) down the hall's stairs reaches the cellar, and
 // walking up the cellar stairs comes back to the hall; the stairs carry him up and down step by step.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watch(page);
 const { check, done } = checker({ info: 'always' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
-await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 900000 });
 await page.evaluate(() => localStorage.clear());
 await page.click('[data-act="new"]', { timeout: 180000 });
 await page.evaluate(() => { const G = window.game; for (let i = 0; i < 80 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.5); });

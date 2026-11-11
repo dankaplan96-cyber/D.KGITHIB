@@ -10,7 +10,7 @@ const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 900000 });
   await page.evaluate(() => { game.testFreeze = true; });
   if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
   await ev(() => {

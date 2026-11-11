@@ -92,6 +92,7 @@ function analyse(L, S = {}) {
   const decor = L.decor.map(([x, z, y, sx, sy, sz, beta, kind, body]) => ({ x, z, y, sx, sy, sz, beta, kind, body }));
   for (const o of decor) o.shape = shapeOf(o, S);
   fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks: !!L.floorAt });
+  cutPlants(decor);
   // cells under a solid object
   const blocked = new Uint8Array(nx * nz);
   for (const o of decor) {
@@ -197,6 +198,34 @@ function analyse(L, S = {}) {
 //    its floor, the ground before its door levelled to it; where the ground still falls away, the stone plinth
 //    goes down to it (o.bury, its depth under the floor).
 const FIT_M = 2.6;
+// TREES-1 (the user, 4.11.2026: no tree may stand in a house): the original's trees, bushes and plants whose crown
+// reaches into one of its houses or towers as we build them (a tall tree stood in a house on Otringal, a bush across
+// two houses there, leaves through walls on Knartas and the Platform, a bush up into the Platform's deck, a nectar
+// tree in the Orchard's press house) are cut: o.cut. Each keeps its place in the build's lists, so the colours'
+// random draws (and all after them) stay as they were, but draws nothing and blocks nothing. The crown: the ellipse over the object's box (buildIsland's fit() scales
+// the sculpt to the box), more than 0.15 m into the house's footprint (a tower's circle), or into a deck's or slab's
+// above it when it grows up to its underside.
+function cutPlants(decor) {
+  const under = (o, b) => { const t = Math.max(0.12, b.sy), bottom = b.y + b.sy - t; return o.y < bottom && o.y + o.sy > bottom - 0.05; };
+  const blocks = decor.filter((o) => o.shape === 'house' || o.shape === 'tower' || o.shape === 'deck' || o.shape === 'slab');
+  for (const o of decor) {
+    if (o.shape !== 'tree' && o.shape !== 'bush' && o.shape !== 'plant' && o.shape !== 'blossom') continue;
+    // (a nectar tree's crown is wider than its box: props-esmer.js blossomTree, 0.94 m at 1.6 m tall)
+    const bl = o.shape === 'blossom' ? (0.94 * o.sy) / 1.6 : 0;
+    const rx = bl || Math.max(0.3, o.sx) / 2, rz = bl || Math.max(0.3, o.sz) / 2, R = Math.max(rx, rz), ry = (o.beta / 4096) * Math.PI * 2, c = Math.cos(ry), sn = Math.sin(ry);
+    o.cut = blocks.some((b) => {
+      if (Math.abs(o.x - b.x) > R + b.sx / 2 || Math.abs(o.z - b.z) > R + b.sz / 2) return false;
+      if ((b.shape === 'deck' || b.shape === 'slab') && !under(o, b)) return false;
+      for (let k = 0; k < 24; k++) {
+        // (the sculpt is scaled along its own axes, then turned by the object's beta: as fit() places it)
+        const a = (k / 24) * Math.PI * 2, lx = Math.cos(a) * rx, lz = Math.sin(a) * rz, x = o.x + c * lx + sn * lz, z = o.z - sn * lx + c * lz;
+        const inside = b.shape === 'tower' ? Math.min(b.sx, b.sz) * 0.48 - Math.hypot(x - b.x, z - b.z) : Math.min(b.sx / 2 - Math.abs(x - b.x), b.sz / 2 - Math.abs(z - b.z));
+        if (inside > 0.15) return true;
+      }
+      return Math.abs(o.x - b.x) < b.sx / 2 && Math.abs(o.z - b.z) < b.sz / 2;   // (the trunk's foot itself inside)
+    });
+  }
+}
 function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }) {
   const isH = (o) => o.shape === 'house' || o.shape === 'tower';
   const hs = decor.filter(isH);
@@ -1342,6 +1371,7 @@ function buildIsland(scene, physics, name, L, at) {
       }
       case 'figure': break;   // (a part of the figure: blocks the plan, drawn by the colossus)
       case 'blossom': {   // a nectar tree (ours: the Nectar Orchard)
+        if (o.cut) break;   // (TREES-1: the one in the press house, cutPlants)
         const P = new EP.Place(B, o.x, y0 - 0.05, o.z, 0); EP.blossomTree(P, { h: o.sy, seed: o.beta % 97 });
         col({ type: 'cyl', x: o.x, z: o.z, r: 0.28, top: y0 + o.sy * 0.6, noStand: true });
         break;
@@ -1475,7 +1505,7 @@ function buildIsland(scene, physics, name, L, at) {
         col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top, noStand: true });
         break;
       }
-      case 'tree': trees[o.body % 2].push(o); col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;
+      case 'tree': trees[o.body % 2].push(o); if (!o.cut) col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;   // (o.cut: TREES-1, cutPlants)
       case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
       case 'crate': {
         B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
@@ -1505,7 +1535,7 @@ function buildIsland(scene, physics, name, L, at) {
         small({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.12, ex / 2), hd: Math.max(0.12, ez / 2), top: y0 + h, noStand: true });
         break;
       }
-      case 'bush': bushes.push(o); if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: Math.min(ex, ez) * 0.35, top, noStand: true, seeThrough: true }); break;
+      case 'bush': bushes.push(o); if (!o.cut && Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: Math.min(ex, ez) * 0.35, top, noStand: true, seeThrough: true }); break;
       default: plants.push(o);
     }
   }
@@ -1636,7 +1666,9 @@ function buildIsland(scene, physics, name, L, at) {
   const fit = (geo, list, mat, lo = null, ys = 1) => {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
-    cullInstances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })), { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
+    // (TREES-1: a cut plant's colour is drawn all the same, so the island's random stream is unchanged)
+    const items = list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
+    if (items.length) cullInstances(group, geo, mat, items, { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
   // (lo: the coarse sculpts of a trade-off that is off, kit.js cullInstances: never built in play)
