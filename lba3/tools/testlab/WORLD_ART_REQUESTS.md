@@ -4514,3 +4514,15 @@ unmeasured eyes). Full note: `requests/CAST-CONNECT-1.md`.
 - **Tests** (the 61 rebuilt models in place): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS.
   13 poses looked at for Gilbert, Kira's model and Doran. Evidence label: Automated runtime only.
 - **Pictures:** `docs/future/characters/connect-1/` (the before|after sheet is chapter 1 people; Yorna's is ch3plus).
+## CAST-VARIANTS-1 · farmerA_b, farmerB_b, clerk_b; GROBO-GREY (no green elephants) · the desktop, 11.11.2026
+**Ready for the cloud, apply after CAST-CONNECT-1.** Full note: `requests/CAST-VARIANTS-1.md`.
+- **Variants** (order 28 queue 7): `farmerA_b` (bare-headed, heavier, longer smock, moustache) for Rod, Tam and Wim;
+  `farmerB_b` (no apron, pockets, lop ears) for Maro and the counter's waiting man; `clerk_b` (broader, headcloth, belted robe,
+  no spectacles) for Otringal's keeper, Aven and Dobb. New looks: diff + 3 models + `skeletons.add.json` + `index.add.json`.
+- **GROBO-GREY** (the user, 11.11: "why are there green elephants, it makes no sense"): `desertTrader`'s skin was sage
+  green-grey and Brix's green tint (multiplied over the whole model) made a green elephant in Citadel's village from
+  chapter 1. Skin `#a6a2a8`, Brix's and Gunda's tints a grey-lilac.
+- **For the cloud:** moving Tavi to farmerB_b made `interior-life`'s terminal talk to Ollo fail in chapter 9 and the
+  epilogue (twice); Tavi stays on farmerB. The talk test's choice of person looks fragile there.
+- **Tests:** solidnpc, chapter1, cast-rounds, story-journeys, walkers, island-people PASS; interior-life the same 4 failures
+  as the unchanged branch. Evidence label: Automated runtime only.
