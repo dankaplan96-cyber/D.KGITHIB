@@ -348,7 +348,7 @@ export const VOICES = {
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
-const ALIAS = { veskhorn: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
+const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
 // names that are not people (signs, notes, places): no voice
 const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
   'lighthouse', 'cliffs', 'orchard', 'depot', 'station', 'fort', 'pipe', 'camp']);

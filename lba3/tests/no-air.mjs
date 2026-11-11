@@ -38,6 +38,8 @@ const STATES = [
   ['pass', {}], ['pass', { c6_trip1: true }], ['pass', { c6_trip1: true, c6_trip2: true, c6_up: true, c6_thawed: true }],
   ['observatory', {}], ['evacuation', {}], ['council', {}], ['council', { c9_heard: true }],
   ['network', {}], ['shell', {}], ['core', {}], ['home', {}],
+  // CAMPAIGN-4 (story/digtest.js): chapter 5 with the bore test behind it, Dallan at the test stand's wire (21)
+  ['steam', { c5_planned: true, c5_routed: true, dt_v: 1, dt_strip: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

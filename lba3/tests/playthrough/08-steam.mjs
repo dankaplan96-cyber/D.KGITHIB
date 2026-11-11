@@ -1,6 +1,8 @@
 // Chapter 5 (Steam and Sand, Desert Island): Brosk's jar, water from the oasis, the shovel, digging out FunFrock's
 // condenser hall, the diagram, the old trooper, the valves (1, 3, 4), the hangar's glider and hatch (ball),
-// Dallan at the post, the relief valve, out before the vent blows, Tarra, Hesk, the glider north.
+// Dallan at the post, the relief valve, out before the vent blows, Tarra, Hesk, the glider north. CAMPAIGN-4
+// (story/digtest.js): at the post's test stand Vesk on the wire; the heat line thrown over to Kesh's pump; the log sent
+// to Citadel read on the teleprinter's tape (one trace); then Dallan at the gate.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['Brosk: the jar', () => ({ ...P.talk('dtrader', { run: true }), jar: game.flags.c5_jar, fail: game.flags.c5_jar ? null : 'jar' })],
@@ -17,6 +19,23 @@ export const steps = [
   ['the glider', () => { const g = game.rooms.condB.glider; return { ...P.use(g.x, g.z), seen: game.flags.c5_gliderSeen }; }],
   ['the hatch (ball)', () => { const tg = game.room.ballTargets.find((t) => t.hatch); for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 3.5, tg.z - Math.cos(a) * 3.5, { tol: 0.8, maxT: 40 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return { hatch: game.flags.c5_hatch, fail: game.flags.c5_hatch ? null : 'hatch' }; }],
   ['back out', () => { P.exitTo('cond-a'); return P.exitTo('cond-out'); }],
+  // CAMPAIGN-4 (a game from before the thread has none: skipped)
+  ['the stand: Vesk on the wire', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'no thread (an older save)' };
+    const S = G.rooms.desert.stand; const r = P.go(S.board.x - 1.5, S.board.z, { tol: 1.0, run: true, stopWhen: () => f.dt_wire }); P.settle();
+    return { r: r.r, wire: !!f.dt_wire, fail: f.dt_wire ? null : 'no wire' };
+  }],
+  ['the heat line over to Kesh', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'skipped' };
+    const S = G.rooms.desert.stand, p = S.heat.touch(); const r = P.use(p.x, p.z, { near: 0.9, kind: 'dt_heat' });
+    for (let i = 0; i < 60 && !f.dt_sent; i++) { G.step(0.25); P.settle(); }
+    return { ...r, divert: !!f.dt_divert, sent: !!f.dt_sent, hot: G.rooms.desert.pump.drive.hot, fail: f.dt_sent ? null : 'heat line' };
+  }],
+  ['the log on the tape', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'skipped' };
+    const S = G.rooms.desert.stand; const r = P.use(S.board.x, S.board.z, { near: 1.0, kind: 'dt_board' });
+    return { ...r, log: !!f.dt_log, fail: f.dt_log ? null : 'log' };
+  }],
   ['Dallan', () => ({ ...P.talk('dallan', { run: true }), ok: game.flags.c5_dallanOK, fail: game.flags.c5_dallanOK ? null : 'dallan' })],
   ['the relief valve', () => { const v = game.rooms.desert.bore.valve; const r = P.use(v.x, v.z, { run: true }); P.settle(); return { ...r, relief: game.flags.c5_relief, fail: game.flags.c5_relief ? null : 'relief' }; }],
   ['out before the vent', () => { const G = game, Post = G.rooms.desert.post; P.go(Post.x0 - 8, (Post.z0 + Post.z1) / 2, { tol: 1.5, run: true, maxT: 60 }); let t = 0; while (!G.flags.c5_vent && t < 30) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle(); return { vent: G.flags.c5_vent, hp: G.hero.hp, fail: G.flags.c5_vent ? null : 'vent' }; }],

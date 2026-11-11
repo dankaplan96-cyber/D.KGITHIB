@@ -20,6 +20,9 @@
 //        the bottom of the excavation is the Temple of Bù's gate; reveal() slides its stone door away
 //   R.ruins {x,z, door:{x,z}}                        FunFrock's buried condenser hall (chapter 5)
 //   R.bore {x,z}                                     the project's test bore inside the post (chapter 5)
+//   R.stand                                          the bore's test stand outside the post's gate, and the drill string
+//                                                    (teststand.js, chapters 4–5: story/digtest.js); R.pump.drive the
+//                                                    project's steam drive at the wind-pump's foot
 //   R.kesh                                           Kesh twelve years on (keshlife.js): the cool room, Lumi's loom, poles
 //   R.shutDoors [{id,x,y,z,ry}]  R.figures [{x,z}]  R.gateway {x,z}  R.school {x,z}   the original's old places (desertold.js)
 // Heights (WORLD-80 step 3): the ground is the original island's heightfield (its low plain 0.3–3 m, its ridge up to
@@ -39,6 +42,7 @@ import { roomOcc } from './roomocc.js';
 import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
+import { buildTestStand, buildSteamDrive } from './teststand.js';
 import {
   tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, LodBatch, emblemMaterial, emq, mergeGeos, BATCH,
 } from './kit.js';
@@ -798,6 +802,9 @@ export function* buildDesertSteps(scene, physics) {
       R.ballTargets.push(jam ? { x: G.x, y: G.y, z: G.z, r: 0.7, gear: i } : { x: G.x, y: G.y, z: G.z, r: 0.7, gearOk: i });
     }
   }
+  // CAMPAIGN-4: the project's steam drive at the tower's east foot, its pipe under the sand toward the post's gate: cold
+  // until the bore's heat line is thrown over to Kesh (teststand.js; story/digtest.js)
+  const drive = buildSteamDrive({ group, col, W, H, x: PUMP.x + 2.45, z: PUMP.z + 0.5, px: PUMP.x, pz: PUMP.z, tx: POST.x0, tz: POST.gateZ });
   // the pipe from the tank to the pond: the tremors shook its low joint apart. Once the gear is free the pump lifts
   // water and it sprays out there, short of the pond; pushing the collar home sends it on (story/dig.js)
   const joint = (() => {
@@ -840,7 +847,7 @@ export function* buildDesertSteps(scene, physics) {
   // the joint) → 'running' (water into the pond)
   const GUST = 3.4;   // seconds from one gust to the next
   R.pump = {
-    ...W(PUMP.x, PUMP.z), gears, jam: PUMP_JAM, joint, running: false, state: 'jammed', strain: 0, gustT: 0, onGust: null, _cyc: 0,
+    ...W(PUMP.x, PUMP.z), gears, jam: PUMP_JAM, joint, drive, running: false, state: 'jammed', strain: 0, gustT: 0, onGust: null, _cyc: 0,
     setState(s) {
       this.state = s; this.running = s === 'running';
       for (const G of gears) G.setTurning(s !== 'jammed');
@@ -1062,6 +1069,9 @@ export function* buildDesertSteps(scene, physics) {
     col({ type: 'box', x: bx + 5, z: bz + 2, hw: 1.7, hd: 1.0, top: postY + 2.6, noStand: true });
     cover.push({ x: ox + bx + 5, z: oz + bz + 2, r: 1.7 });
     R.bore = { ...W(bx, bz), valve: W(bx - 1.9, bz + 0.2), y: postY };
+    // CAMPAIGN-4: the bore's test stand outside the fence, south of the gate, and the drill string on the derrick
+    // (teststand.js; story/digtest.js)
+    R.stand = buildTestStand({ group, col, W, H, updaters, postY, bore: { x: bx, z: bz } });
     // the relief valve on the well-head: a big red wheel
     PB.add(new THREE.TorusGeometry(0.42, 0.06, 6, 20), pm('#c84a3a', 0.5, { metalness: 0.3 }), bx - 1.0, postY + 1.15, bz + 0.2, 0, Math.PI / 2, 0);
     PB.add(cyl(0.08, 0.08, 1.0, 8, 0), iron, bx - 0.6, postY + 1.15, bz + 0.2, 0, 0, Math.PI / 2);

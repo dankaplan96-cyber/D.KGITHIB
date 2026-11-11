@@ -16,6 +16,9 @@
 // again, Ilka's stronger hint, Save & quit → Continue with two discs open, a cold disc again (a toast this time), a
 // death → Retry, the three warm discs, the temple's line about the cold discs, the journal.
 // Hesk → the notebook still use the older teleport helpers (T: ISO), as before. PASS/FAIL lines and the exit code.
+// CAMPAIGN-4 (story/digtest.js): after the notebook, by INPUT: out of the gate, Dallan's hail; the keypad dark while the
+// bore test is on; the cutoff on the red and the kicks after the stop; the drill run up and cut again; the carbon torn
+// off; then the keypad. The old save with the notebook (format 3) has the test ahead of it too, and plays it.
 // (Played by an agent who knows the solution: not a first-time player's test.) SHOTS=<dir> keeps the ADV-2 views.
 import { launch, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
@@ -170,6 +173,22 @@ await boot('continue');
 const after = await ev((K) => { T.talkAll(); return JSON.stringify(K.map((k) => game.flags[k] ?? null)); }, KEYS);
 const rl = await ev(() => [game.room?.id, game.flags.chapterKey, game.rooms.desert.pump.state, game.rooms.desert.oasis.level.toFixed(2), T.obj()]);
 check('save/load mid-chapter: flags kept, the pump still running and the oasis full', before === after && rl[2] === 'running' && rl[3] === '1.00', { before, after, rl });
+// CAMPAIGN-4: the bore test at the post's stand, by INPUT (the whole test as a player plays it: tests/campaign-thread.mjs D)
+const boreTest = () => ev(() => {
+  const G = game, f = G.flags, S = G.rooms.desert.stand, n0 = { k: 0 }; const k0 = S.kick; S.kick = () => { n0.k++; k0(); };
+  P.go(S.board.x - 1.6, S.board.z + 0.3, { tol: 1.0, run: true, stopWhen: () => f.dt_hail }); P.settle();
+  const cut = () => { const p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' }); };
+  cut(); for (let i = 0; i < 80 && !f.dt_second; i++) { G.step(0.25); P.settle(); } const k1 = n0.k;
+  cut(); let t = 0; while (S.load < 0.97 && t < 15) { G.step(0.25); t += 0.25; }
+  cut(); for (let i = 0; i < 80 && !f.dt_again; i++) { G.step(0.25); P.settle(); }
+  P.use(S.strip.x, S.strip.z, { near: 0.9, kind: 'dt_strip' }); for (let i = 0; i < 40 && !f.dt_strip; i++) { G.step(0.25); P.settle(); }
+  S.kick = k0;
+  return { hail: !!f.dt_hail, second: !!f.dt_second, kicks1: k1, kicks2: n0.k - k1, again: !!f.dt_again, strip: !!f.dt_strip, item: G.story.items().some((i) => i.id === 'tstrip') };
+});
+const dark = await ev(() => { const g = game.rooms.desert.dig.gate; let r = P.use(g.x, g.z, { kind: 'c4gate', run: true }); if (!game.flags.dt_dark) r = P.use(g.x, g.z, { kind: 'c4gate', run: true });   /* (out of the post's gate on the way: Dallan's hail first) */ return { ...r, state: game.state, open: !!game.flags.c4_digOpen, dark: !!game.flags.dt_dark, obj: T.obj() }; }); s = await said();
+check('CAMPAIGN-4: out of the gate Dallan hails him; the keypad is dark while the bore test is on (the tag says so); the objective is the test (INPUT)', dark.state === 'play' && !dark.open && dark.dark && has(s, /BORE TEST/) && has(s, /pair of hands/) && /test/i.test(dark.obj), { dark, s });
+const bt = await boreTest(); s = await said();
+check('CAMPAIGN-4: the cutoff on the red, three-a-rest-three after the stop, the run again, the carbon (INPUT)', bt.hail && bt.second && bt.kicks1 === 6 && bt.kicks2 === 6 && bt.again && bt.strip && bt.item && has(s, /Something down there answers the drill/), { bt });
 // the dig's gate: the keypad, entered by the player (a wrong order first)
 await said();
 const kp1 = await ev(() => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { kind: 'c4gate', run: true }); return { ...r, state: game.state, items: [...document.querySelectorAll('#shop .item')].map((b) => b.textContent) }; });
@@ -312,6 +331,9 @@ await continueFrom(saveOf('save-k6.json'));
 ps = await pumpState();
 const k6 = await ev(() => ({ open: game.rooms.desert.dig.gate.isOpen, oasis: +game.rooms.desert.oasis.level.toFixed(2), obj: T.obj() }));
 check('old save with the notebook: the pump runs, the oasis is full, the dig still shut', ps.state === 'running' && k6.oasis === 1 && !k6.open, { ps, k6 });
+check('old save with the notebook: the bore test is ahead of it (the thread on, the drill turning)', await ev(() => game.story._dt.on && game.rooms.desert.stand.spinning), null);
+const bt2 = await boreTest();
+check('old save with the notebook: the bore test plays (INPUT)', bt2.hail && bt2.again && bt2.strip, bt2);
 const o5 = await ev(() => { const g = game.rooms.desert.dig.gate; P.use(g.x, g.z, { kind: 'c4gate', run: true }); const st = game.state; const r = P.menuPick(1); return { st, ...r, open: game.flags.c4_digOpen && game.rooms.desert.dig.gate.isOpen }; });
 check('old save with the notebook: the keypad asks, 4 · 1 · 7 opens the dig (INPUT)', o5.st === 'shop' && o5.open, o5);
 // (4) the keypad before the notebook: the worn keys, no menu (placed by the gate: ISO; pressed: INPUT)
