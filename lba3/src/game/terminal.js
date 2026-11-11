@@ -43,8 +43,11 @@ export const TERMINAL = {};
 export const TERMINAL_PLAN = (() => {
   const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2, BRDZ = -0.5;
   const PX0 = 1.2, PX1 = W / 2 - 0.3, PZ1 = BZ + 3.4, PH = 0.36, CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;   // (the ticket platform, its counter)
-  const KX = -1.9, KZ = BZ + 1.2;                                                                     // (the café's counter)
-  const ROWS = [-3.4, -1.2], ROWZ = -0.3, ROWN = 5, TX = KX - 2.0, TZ = KZ + 1.9;
+  // (the café's counter; F-13 follow-up: 1.4 m off the back wall, not 1.2 — the aisle behind it was 0.88 m, narrower than
+  //  Tavi (0.45 m each side): the walkers' planner found no way along it and sent him out round the hall from one end of
+  //  the counter to the other, where he stuck on the café's chairs. Now 1.08 m. The round table and its chairs stay put)
+  const KX = -1.9, KZ = BZ + 1.4;
+  const ROWS = [-3.4, -1.2], ROWZ = -0.3, ROWN = 5, TX = KX - 2.0, TZ = BZ + 3.1;
   return { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
     counterW: 4.2, counterD: 0.62, cafeW: 2.4,
     printer: { x: CX - 0.8, z: CZ }, cabinet: { x: CX + 1.2, z: BZ + 0.55, w: 1.6, d: 0.45 },

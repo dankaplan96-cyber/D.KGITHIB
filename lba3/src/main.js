@@ -2191,6 +2191,9 @@ class Game {
     this.story.interactables(consider, dist);
     this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
     if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
+    // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
+    //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
+    if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
     return best;
   }
 

@@ -842,11 +842,36 @@ export class Resident extends NPC {
       if (into > 0 && d < R + into + 0.02) { dx += nx * into; dz += nz * into; }
     }
     P.move(this, dx, dz);
+    // indoors, low furniture (a chair, a stool: under STEP_UP, so the physics lets a body over it) is walked round, not
+    // through: the route keeps 0.3 m from it (walknav lowR), but a sidestep round someone could carry a body into it —
+    // Mrs Lomba, giving way to Old Ressa between the terminal's café table and the wall, walked into its chair. A step
+    // that goes further into one is not taken; along one axis, if that does not
+    if (this.W.indoor) {
+      const x1 = this.pos.x, z1 = this.pos.z, d0 = this.lowDepth(x0, z0) + 1e-4;
+      if (this.lowDepth(x1, z1) > d0) {
+        const y = this.pos.y, w0 = P.overlapAt(x0, z0, y, this.radius) + 1e-4, ok = (x, z) => this.lowDepth(x, z) <= d0 && P.overlapAt(x, z, y, this.radius) <= w0;
+        if (ok(x1, z0)) this.pos.z = z0;
+        else if (ok(x0, z1)) this.pos.x = x0;
+        else { this.pos.x = x0; this.pos.z = z0; }
+      }
+    }
     for (const b of others) {
       const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45));
       const d1 = Math.hypot(this.pos.x - b.pos.x, this.pos.z - b.pos.z), d0 = Math.hypot(x0 - b.pos.x, z0 - b.pos.z);
       if (d1 < R - 0.01 && d1 < d0 - 1e-4) { this.pos.x = x0; this.pos.z = z0; return; }
     }
+  }
+  // how far a point (0.15 m round it: the legs) is into low furniture at its feet: a chair, a stool, a low table (walknav
+  // lowBrick's kind: 0.25–0.7 m over the floor; a route keeps 0.3 m from it at its cells' middles, 0.18 m between them)
+  lowDepth(x, z) {
+    const P = this.game.physics, y = this.pos.y;
+    let d = 0;
+    for (const c of P.near(x, z)) {
+      if (!c.enabled || c.stair || c.top - y < 0.25 || c.top - y > 0.7 || c.bottom > y + 0.4) continue;
+      const p = P._push(c, x, z, 0.15);
+      if (p) d = Math.max(d, Math.hypot(p.x, p.z));
+    }
+    return d;
   }
   // standing about (not seated, not walking: a stop, a chat, a wait), it steps out of another resident it overlaps, at a
   // shuffle (two whose stops lie close stand side by side, not inside each other); through the physics

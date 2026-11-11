@@ -301,7 +301,9 @@ export const ROOMS = {
       { id: 'lomba', char: 'weaver', tint: '#fff0e6', color: '#e8b0c0', speed: 0.8, start: 0, when: ['grounded', 'evac', 'after'], stops: [
         S('lomba_seat', by(tmSeat(1), -0.75, 0), seatOf(tmSeat(1), SEAT.termSeat), [30, 45], { carry: 'case' }),
         ask('lomba_ask', 1.3, [8, 12], { gest: ['shrug', 'sigh'], stage: NOW }),                      // (at the counter, again)
-        S('lomba_cafe', beside(TM.chairs[0], -1), seatOf(TM.chairs[0], SEAT.chair), [20, 30], { stage: NOW }),
+        // (from the chair's wall side: its other side is half a metre from Old Ressa's place by the seats, where she stands
+        //  — she does not sit —, and Mrs Lomba stepping round her walked into the chair)
+        S('lomba_cafe', beside(TM.chairs[0], 1), seatOf(TM.chairs[0], SEAT.chair), [20, 30], { stage: NOW }),
         TQ.stop('lomba_queue', 0, [20, 30], { gest: ['nod'] }),                                         // (the evacuation: first in the queue, on the list)
       ] },
       { id: 'ressa', char: 'tarra', tint: '#f0e8ff', color: '#c8a8e8', speed: 0.7, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
