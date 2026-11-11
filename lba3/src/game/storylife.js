@@ -89,7 +89,7 @@ const DESERT_PEOPLE = [
       L('surv_notes', TB.x - 0.6, TB.z + 1.0, TB.x - 0.6, TB.z, 'browse', [8, 12]),
     ] } },
   // his staff man: the far rim east, the rim west (by the dig's gate, well off it), back for a word
-  { id: 'dg_rod', char: 'farmerA', tint: '#e6eeff', speed: 1.05, color: '#a8c0f0', start: 0, area: 'desert', phase: crew(false), rounds: {
+  { id: 'dg_rod', char: 'farmerA_b', tint: '#e6eeff', speed: 1.05, color: '#a8c0f0', start: 0, area: 'desert', phase: crew(false), rounds: {
     crew: [
       L('rod_east', 75.6, 12.4, TP.x, TP.z, 'stand', [8, 12]),
       L('rod_chat', 62.6, 5.8, 61.2, 6.2, 'stand', [16, 22], { pair: 'survey', mate: 'dg_surv' }),
@@ -274,7 +274,7 @@ const HAMALAYI_PEOPLE = [
       L('old_rack', 50.0, -33.4, MC.rack.x, MC.rack.z, 'stand', [8, 12]),
     ] } },
   // Tam: wood from the north woodpile to the fire, a look at the south woodpile; up there, the sledge unloaded by the gate
-  { id: 'lh_tam', char: 'farmerA', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_tam', char: 'farmerA_b', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
     lhar: [
       L('tam_wood', -17.4, -4.4, -15.8, -4.4, 'put', [4, 6], { carry: 'crate' }),
       L('tam_fire', -5.2, 17.8, -4, 17.2, 'put', [4, 6], { carry: null }),
@@ -460,7 +460,7 @@ export const UPPER_ROOM = {
       D('uk_lift', -5.9, 1.6, PI / 2, 'stand', [4, 6], { carry: 'case' }),
       L('uk_counter', -1.2, 0.6, 1.0, 0.6, 'put', [5, 7], { carry: null }),     // (the case handed over at the counter's end, on the clerk's side: clear of the benches)
     ] },
-    { id: 'up_wait', char: 'farmerB', tint: '#fff0f4', color: '#f0b8c8', speed: 0.8, start: 0, when: upper, stops: [
+    { id: 'up_wait', char: 'farmerB_b', tint: '#fff0f4', color: '#f0b8c8', speed: 0.8, start: 0, when: upper, stops: [
       { id: 'uw_bench', x: -3.0, z: 1.75, a: PI, act: 'stand', seat: { x: -3.0, z: 2.6, a: PI, spec: BENCH_SEAT }, dur: [40, 60] },
       D('uw_board', -6.15, -1.7, -PI / 2, 'stand', [6, 9], { gest: ['sigh'] }),
     ] },

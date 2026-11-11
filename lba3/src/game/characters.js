@@ -280,6 +280,13 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
     eyes: '#d8b040', glasses: true, height: 1.0,
   },
+  clerk_b: {
+    // CAST-VARIANTS-1 (clerk's shape variant): a broader Esmer in a wrapped headcloth and a belted robe, no spectacles
+    // (cast_poly.py CAST clerk_b). Taken by Otringal's keeper (ot_keep), Aven (aven) and Dobb (ih_dobb); the council clerks,
+    // Corla and Otringal's clerk keep clerk
+    race: 'esmer', outfit: 'robe', hem: 0.08, stoop: 0.03, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
+    eyes: '#d8b040', hat: '#5a4a8a', height: 1.02,
+  },
   archivist: {
     // the project's archivist: a wary Quetch in a long grey-teal coat with brass buttons
     race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
@@ -289,6 +296,20 @@ export const LOOKS = {
   farmerA: {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
     hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#e8d090', height: 0.97, neck: 0.08,
+  },
+  farmerA_b: {
+    // CAST-VARIANTS-1 (order 28 queue 7, farmerA's shape variant): a heavier Quetch hand, bare-headed (the tuft shows), a
+    // longer smock with the sleeves down, a swept moustache (cast_poly.py CAST farmerA_b). Taken by Rod (dg_rod, the dig),
+    // Tam (lh_tam, the Hamalayi) and Wim (wim); Jorr, Garrick, Tibbo and the farm evacuees keep farmerA
+    race: 'quetch', outfit: 'tunic', hem: 0.45, belly: 0.14, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
+    hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', moustache: true, height: 0.99, neck: 0.08,
+  },
+  farmerB_b: {
+    // CAST-VARIANTS-1 (farmerB's shape variant): a Rabbibunny without the apron, patch pockets, both ears folded over (cast_poly.py
+    // CAST farmerB_b). Taken by Maro (maro, the plaza) and the counter's waiting man (up_wait); Tavi (the terminal's café),
+    // Hedda, the dig's cook, Mira of the Hamalayi and the farm evacuees keep farmerB
+    race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
+    eyes: '#3a2a1a', height: 0.9,
   },
   farmerB: {
     race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
@@ -388,7 +409,9 @@ export const LOOKS = {
     hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tail', nose: 'button', eyes: '#2a1a10', hat: '#d8b860', height: 0.62, neck: 0.08,
   },
   desertTrader: {
-    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
+    // (GROBO-GREY, the user 11.11: "why are there green elephants, it makes no sense": the skin was a sage green-grey
+    //  (#9aa898), and Brix's green tint on top made a green elephant in Citadel's village; a Grobo is grey, as in LBA2)
+    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#a6a2a8', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', hat: '#e8d8b0', height: 1.02,
   },
   weaver: {

@@ -253,7 +253,7 @@ export const ROOMS = {
   nellhouse: {
     floors: [hall(NL)],
     people: [
-      { id: 'wim', char: 'farmerA', tint: '#e6f0de', color: '#b8d890', speed: 1.0, start: 0, stops: [
+      { id: 'wim', char: 'farmerA_b', tint: '#e6f0de', color: '#b8d890', speed: 1.0, start: 0, stops: [
         // (the spot is Nell's, before her workbench: Wim works there facing the bench)
         L('wim_bench', NL.spot.x, NL.spot.z, NL.bench.x, NL.bench.z, 'browse', [16, 24], { spot: 'nell' }),   // (the Esmer engine on the bench)
         L('wim_parts', NL.parts.x - 0.1, NL.parts.z - 0.75, NL.parts.x, NL.parts.z, 'put', [5, 7], { carry: 'crate' }),   // (the crate of spare parts)
@@ -392,7 +392,7 @@ const CITADEL_PORT = [
     L('esren_kiosk', -11.6, 43.0, 4.5, 41, 'stand', [8, 12]),
   ] },
   // (WC-4: the family waits for a project ship in the evacuation too: on the list)
-  { id: 'gunda', char: 'councilC', tint: '#e6eee4', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+  { id: 'gunda', char: 'councilC', tint: '#ece8f0', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
     SB('gunda_bench', CB[1], -1, [30, 45], { carry: 'case' }),
     L('gunda_kid', -4.0, 36.0, -3.0, 36.4, 'stand', [16, 24], { pair: 'family', mate: 'bibi' }),
   ] },

@@ -328,7 +328,7 @@ const RD = (id, x, z, a, act, dur, o = {}) => ({ id, x, z, a, act, dur, ...o });
 export const OTRBAR_ROOM = {
   floors: [{ x0: -9.7, x1: -1.5, z0: -6.9, z1: -3.1, y: 0.6 }, { x0: -9.7, x1: 9.7, z0: -6.7, z1: 6.7, y: 0 }],   // (the raised floor first: a point is on the first floor that holds it)
   people: [
-    { id: 'ot_keep', char: 'clerk', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
+    { id: 'ot_keep', char: 'clerk_b', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
       RD('bk_counter', -5.6, 3.5, 0, 'browse', [14, 20], { gest: ['nod'] }), RD('bk_urns', -3.9, 3.5, 0, 'put', [6, 9]),
     ] },
     { id: 'ot_boss', char: 'councilChair', tint: '#ffe6ea', color: '#f0a0b0', speed: 0.7, start: 0, stays: true, when: ROOM_WHEN, stops: [

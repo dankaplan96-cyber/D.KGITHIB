@@ -62,6 +62,8 @@ CAST = {
     'lulu': dict(browS=0.7, browTilt=0.2, mouthW=1.0, mouthLift=1.6, lip='#b04058', lashes=True, bow=True, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hemH=0.06),
     'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a', gogglesGlass=True),
     'farmerA': dict(browS=1.3, browTilt=-0.1, mouthW=1.2, mouthLift=1.3, rolled=True, pockets=True, pocketY=0.06, noseS=1.1),
+    'farmerA_b': dict(browS=1.6, browTilt=-0.2, mouthW=1.1, mouthLift=0.6, pockets=True, pocketY=0.1, noseS=1.15, moustacheSwept=True),   # (CAST-VARIANTS-1: bare-headed, heavier, a longer smock, sleeves down, a moustache)
+    'farmerB_b': dict(browS=1.0, browTilt=0.3, cheekS=1.1, mouthLift=1.0, earBend=(1.1, 0.95), earLen=0.92, earInCol='#e8a8a0', pockets=True, pocketY=0.08),   # (CAST-VARIANTS-1: no apron, patch pockets, both ears folded over: lop ears)
     'farmerB': dict(browS=1.2, browTilt=0.1, cheekS=1.25, mouthLift=1.2, earBend=(0.35, 0.0), earSpread=1.0, earInCol='#e8a8a0'),
     'farmerC': dict(hatStyle='straw', mouthLift=1.3, browS=1.4, earS=0.95),
     'farmerC_b': dict(mouthLift=1.0, browS=1.6, browTilt=-0.15, earS=1.0),   # (CAST-POLISH-DESERT: bare-headed, lighter)
@@ -102,6 +104,7 @@ CAST = {
     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
+    'clerk_b': dict(browS=1.4, browTilt=0.1, mouthLift=0.6, noseS=1.0, headcloth=True, beltBand=True),   # (CAST-VARIANTS-1: a broader Esmer in a headcloth and a belted robe, no spectacles)
     'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05, glassesRim=True),   # (GLASSES-CLERK)
     'councilChair': dict(browS=1.7, browTilt=-0.3, mouthLift=-0.3, noseS=1.1),
     # (CAST-POLISH-ZEELICH-2, order 24: the shape variants of the most shared Esmer models)
