@@ -1,0 +1,99 @@
+{
+  "file": "art/blender/props/equip/sword/work/sword.baseline.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.2, 0.9476, 0.064], allowed largest side 0.5..1.2 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y -0.0056"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "material slots <= 3 (one draw call each in the game)",
+      "status": "pass",
+      "detail": "3: sword:7c6edb, sword:b05bfd, sword:dfe477"
+    },
+    {
+      "check": "materials carry a game recipe (lba3_material)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "triangles <= 800",
+      "status": "pass",
+      "detail": "328"
+    }
+  ],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 328,
+    "materials": 3,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.1,
+        -0.0056,
+        -0.032
+      ],
+      "max": [
+        0.1,
+        0.942,
+        0.032
+      ],
+      "size": [
+        0.2,
+        0.9476,
+        0.064
+      ]
+    }
+  },
+  "passed": true
+}

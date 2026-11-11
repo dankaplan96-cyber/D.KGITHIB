@@ -92,6 +92,30 @@ const after = await ev(() => JSON.stringify(Object.keys(game.flags).filter((k) =
 is('save → Continue: the chapter-1 flags and the open valves survive', [before === after, await ev(() => (game.world.valves || []).map((v) => v.open).join(','))], (v) => v[0] && /^true(,true)*$/.test(v[1]));
 await ev(() => { for (let i = 0; i < 120 && game.state !== 'play'; i++) game.step(0.05); T.talkAll(); });
 is('after Continue: the water flows, the station gate opens, an objective set', await ev(() => [game.flags.c1_water, game.world.gate.open, T.obj()]), (v) => v[0] === true && v[1] === true && v[2].length > 0);
+// CAMPAIGN-2 (story/pumpline.js): the square has water, the lane has none — the station waits until the wrong pipe is
+// found in the pump room on the lane (the steps by the E key at each thing; the walk between them by T.tp)
+is("the lane is still dry: the station's door waits, the objective sends him to his own tap", await ev(() => { const L = game.story.cur.line; return [L.on, L.open, game.story.doors().some((d) => d.room === 'control'), T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === false && /tap/i.test(v[3]));
+await ev(() => {
+  const G = game, h = G.hero;
+  // (a remark that starts as he arrives — the bypass seen behind the pier, an object's box — is heard out first)
+  // (he is put squarely before the thing, 0.8 m off it, facing it: its prompt is then the nearest; the game walks him to his place for the hand)
+  T.use = (p, wait = 0.3) => { const a = p.a ?? Math.atan2(p.x - p.front.x, p.z - p.front.z), sx = p.x - Math.sin(a) * 0.8, sz = p.z - Math.cos(a) * 0.8; T.tp(sx, sz, a); G.step(0.4); T.talkAll(); T.tp(sx, sz, a); T.tap('KeyE'); for (let i = 0; i < 200 && (h.steer || h.actT > 0); i++) G.step(0.05); G.step(wait); T.talkAll(); };
+  T.door(G.world.houses[0].door); T.talk('zoe');
+});
+is('home: the tap is dry, Zoé will knock on the pipe when it runs', await ev(() => [game.room?.id, game.flags.ct_dry, T.obj()]), (v) => v[0] === 'house' && v[1] === true && /pump room/i.test(v[2]));
+await ev(() => { const G = game, K = G.world.pumpKiosk; G.exitRoom(G.story.exitTo('outdoor'), true); G.step(0.3); T.talk('worker'); T.door(K.door); });
+is('the worker has opened "two pipes"; down in the pump room', await ev(() => [game.flags.ct_worker, game.room?.id, game.flags.ct_roomIn]), (v) => v[0] === true && v[1] === 'pumproom' && v[2] === true);
+await ev(() => { const U = game.room.pump; T.use(U.diagram); T.use(U.feel.upper); T.use(U.feel.lower); T.use(U.feel.copper); });
+is('the diagram shows two pipes; the third, copper, shivers under his hand', await ev(() => [game.flags.ct_diagram, game.flags.ct_felt]), (v) => v[0] === true && v[1] === true);
+await ev(() => { const U = game.room.pump; T.use(U.cocks.upper, 3.6); });
+is('the wrong cock: the square again, it springs back, nothing is broken', await ev(() => { const U = game.room.pump; return [game.flags.ct_wrong, !!game.flags.ct_bypass, U.cocks.upper.open, U.cocks.lower.open]; }), (v) => v[0] === 1 && v[1] === false && v[2] === false && v[3] === false);
+await ev(() => { const U = game.room.pump; T.use(U.cocks.lower, 3.8); });
+is("the right cock: the houses' line runs, the copper pipe is shut out", await ev(() => { const U = game.room.pump; return [game.flags.ct_bypass, U.cocks.lower.open, U.bypass, game.story.cur.line.done]; }), (v) => v[0] === true && v[1] === true && v[2] === true && v[3] === false);
+is('the way out waits for the strip and the plate', await ev(() => { const r = game.story.canExit(game.room, 'pump-out'); T.talkAll(); return [r, game.room?.id]; }), (v) => v[0] === false && v[1] === 'pumproom');
+await ev(() => { const U = game.room.pump; T.use(U.gauge, 3.2); for (let i = 0; i < 80 && game.state !== 'play'; i++) { game.step(0.1); T.talkAll(); } game.step(1.5); T.talkAll(); T.use(U.plate); });
+is("the gauge's strip taken, the maker's plate read: Irsa's Pump Works, Zeelich", await ev(() => { const L = game.story.cur.line; return [game.flags.ct_strip, game.flags.ct_plate, L.done, game.story.items().some((i) => i.id === 'pstrip'), game.story.doors().some((d) => d.room === 'control')]; }), (v) => v.every((x) => x === true));
+await ev(() => { const G = game; G.exitRoom(G.story.exitTo('pump-out'), true); G.step(0.5); T.talkAll(); });
+is('up in the street: the garden tap runs, the shopkeeper washes her counter', await ev(() => { const Y = game.story.chapters[0].home.parts.yard; return [game.room?.id ?? 'out', Y.stream.visible, T.npc('pippa').placed?.anim]; }), (v) => v[0] === 'out' && v[1] === true && v[2] === 'wipe');
 // station: Vesk's tour
 await ev(() => T.talk('vesk'));
 is("Vesk's tour done; Zoé is needed", await ev(() => [game.flags.c1_tour, game.flags.c1_needZoe]), (v) => v[0] === true && v[1] === true);

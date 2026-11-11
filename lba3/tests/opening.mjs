@@ -15,11 +15,19 @@
 //  10. OPEN-FILM: every line's speaker's mouth moves with it (the harbour's worker and resident, scene-only actors,
 //      too); no line plays the rig's looping talk gesture; the aerial move doesn't stop between 3 and 12.5 s; every
 //      footstep heard falls within 0.1 s of one of Zoé's feet coming down
+//  11. NO-AIR (the user, 10.11.2026: "the actions they do in the air"): every hand that works in the film is on the thing
+//      it works at, measured against the drawn triangles (tests/lib/contact.js), and the thing answers: the worker's hand
+//      on the lift's lever while the lever is thrown; both his hands on the crate's top as it comes down to the deck (and
+//      not through it); the screwdriver's tip in the lamp's screw and the screw turning in, Twinsen's other hand on the
+//      shade; Arthur's left hand on his hull, the mast seated by his right hand (home in its step before he lets go, and
+//      not moving as he does), then that hand on the deck; Zoé's palms on the tray's soil; the screwdriver not moving as
+//      it is laid down; everybody's standing feet on the ground
 //   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
 //   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
 //   not a vanishing)
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch as watchPage, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watchPage(page);
@@ -60,16 +68,20 @@ const endState = () => ev(() => {
     intro: !!f.intro, opening: !!f.opening, ball: !!G.hero.hasBall,
     objective: document.querySelector('#pause-objective').textContent.trim(), objectiveShown: G.hud.objT > 0 && !(G.hud.toastLog || []).some((m) => m.startsWith('Check the well')), // (CLAR-2: the panel comes up for a few seconds as control comes back, in either HUD; no toast repeats it)
     zoeOut: zoe.present && Math.hypot(zoe.pos.x - water.door.x, zoe.pos.z - water.door.z) < 2, zoeControlled: !!zoe.controlled,
+    // (CAMPAIGN-1, story/hometap.js: in a new game Zoé is still at the sink when control comes back; she goes next door
+    //  once the cup is in the sink)
+    zoeAtSink: (() => { const Z = G.story.chapters[0].home?.parts?.house?.zoe; return !!(Z && zoe.present && Math.hypot(zoe.pos.x - Z.x, zoe.pos.z - Z.z) < 0.8); })(), tapFirst: !!f.pr_v2 && !f.pr_tap,
     arthur: [ar.forceAnim, !!ar.controlled], hero: [+(G.hero.pos.x - G.rooms.house.center.x).toFixed(2), +G.hero.pos.z.toFixed(2)],
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
     saved: !!save?.flags?.opening, savedRoom: save?.room,
     sceneKids: G.scene.children.length,
     // (R5: the scene's grips turn hand bones, which the gameplay rig never touches: they must be back at rest)
-    handsTurned: [G.hero, zoe, ar].reduce((n, a) => n + ['armL', 'armR'].reduce((m, s) => m + Math.abs(a.rig.j[s].hand.rotation.x) + Math.abs(a.rig.j[s].hand.rotation.y) + Math.abs(a.rig.j[s].hand.rotation.z), 0), 0) < 1e-6,
+    // (NO-AIR: but for someone whose hands the game itself now holds on what they work at — Arthur at his boat: workhands.js)
+    handsTurned: [G.hero, zoe, ar].filter((a) => !a.rig._ov?.length).reduce((n, a) => n + ['armL', 'armR'].reduce((m, s) => m + Math.abs(a.rig.j[s].hand.rotation.x) + Math.abs(a.rig.j[s].hand.rotation.y) + Math.abs(a.rig.j[s].hand.rotation.z), 0), 0) < 1e-6,
   };
 });
 const good = (s) => s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
-  && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
+  && s.objective.startsWith("The tap's stopped again") && s.objective.includes('Try the kitchen tap') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.tapFirst && s.zoeAtSink && !s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
 
 // ---------------------------------------------------------------- 1. full playback
 await boot('new');
@@ -82,8 +94,17 @@ const polySizes = await ev(async () => {
   for (const n of names) { const j = await (await fetch(`assets/poly/${n}.json`)).json(); o[j.pos.length / 3] = (o[j.pos.length / 3] || []).concat(n); }
   return o;
 });
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/contact.js', import.meta.url)) });
 const watch = await ev((polySizes) => {
   const G = game, c = G.cine, cam = G.camera, v = new G.camera.position.constructor();
+  // NO-AIR: the hands' gaps (m) in the beats' own windows; lim: 3 cm
+  const NA = { lim: 0.03, lever: { n: 0, max: 0, off: [] }, crate: { n: 0, max: 0, off: [] }, tool: { n: 0, max: 0, off: [] }, shade: { n: 0, max: 0, off: [] }, hull: { n: 0, max: 0, off: [] }, deck: { n: 0, max: 0, off: [] }, pots: { n: 0, max: 0, off: [] },
+    through: 0, leverAt: {}, crateY: {}, screw: {}, mastSeat: null, mastJump: null, toolJump: null, feet: [] };
+  const within = (t, W) => W.some(([a, b]) => t >= a && t <= b);
+  const rec = (o, d, t) => { o.n++; if (d == null) d = 9; if (d > o.max) o.max = +d.toFixed(4); if (d > NA.lim && o.off.length < 5) o.off.push([+t.toFixed(2), +d.toFixed(3)]); };
+  const LIFT = G.world.cargoLift, HOUSE = G.rooms.house, TBL = HOUSE.table, BOAT = HOUSE.boat, HR = [HOUSE.group];
+  const P3 = () => new v.constructor();
+  let heldPrev = null;
   const cast = { twinsen: G.hero, zoe: G.npcs.find((n) => n.def.id === 'zoe'), arthur: G.npcs.find((n) => n.def.id === 'arthur') };
   const seen = new Set(), notPoly = [], pops = [], subsAt = [], solids = [], bumps = [];
   let prev = {}, lastSub = '', mid = null;
@@ -150,6 +171,46 @@ const watch = await ev((polySizes) => {
         if (d < 2 * BODY && Math.abs(a.pos.y - b.pos.y) < 1.5 && bumps.length < 12) bumps.push({ t: +c.t.toFixed(2), who: [ia, ib], d: +d.toFixed(2) });
       }
     }
+    // NO-AIR
+    if (!dark) {
+      const t = c.t, wk = c.extras.worker, tw = cast.twinsen, ar = cast.arthur, zo = cast.zoe;
+      if (!G.room && t > 13 && t < 29) {
+        if (within(t, [[14.3, 16.5], [20.5, 23.0]])) { G.scene.updateMatrixWorld(); rec(NA.lever, CT.handTo(wk, 'L', LIFT.lever, { tool: false }), t); }
+        for (const k of [13.6, 15.2, 22.0]) if (Math.abs(t - k) < 0.02) NA.leverAt[k] = +LIFT.lever.rotation.z.toFixed(3);
+        if (within(t, [[26.1, 27.15]])) {
+          G.scene.updateMatrixWorld();
+          for (const sd of ['R', 'L']) rec(NA.crate, CT.handTo(wk, sd, LIFT.crate, { tool: false }), t);
+          NA.through = Math.max(NA.through, CT.inBox([...CT.hand(wk.rig, 'R'), ...CT.hand(wk.rig, 'L')], LIFT.crate, { min: [-0.4, -0.4, -0.4], max: [0.4, 0.4, 0.4] }));
+          const y = LIFT.crate.getWorldPosition(P3()).y; NA.crateY.from ??= +y.toFixed(3); NA.crateY.to = +y.toFixed(3);
+        }
+      }
+      if (G.room === HOUSE) {
+        const heavy = i % 2 === 0;
+        if (heavy) G.scene.updateMatrixWorld();
+        if (within(t, [[29.2, 31.2], [35.8, 45.8]])) {
+          rec(NA.tool, CT.near(CT.tool(tw.rig, 'R', 9999), [TBL.lamp.screw], { max: 0.5 }).d, t);
+          if (heavy) rec(NA.shade, CT.handGap(tw, 'L', HR, 0.5).d, t);
+        }
+        for (const k of [29.1, 45.9]) if (Math.abs(t - k) < 0.02) NA.screw[k] = [+TBL.lamp.screw.rotation.z.toFixed(2), +(TBL.lamp.screw.position.distanceTo(TBL.lamp.at) * 1000).toFixed(1)];
+        if (heavy && within(t, [[29.2, 31.0], [35.6, 53.6]])) rec(NA.hull, CT.handGap(ar, 'L', HR, 0.5).d, t);
+        if (heavy && within(t, [[37.6, 53.6]])) rec(NA.deck, CT.handGap(ar, 'R', HR, 0.5).d, t);
+        // (her right hand comes a few cm off the soil while she turns to look over at Arthur, 36.4-37.6: not counted)
+        if (heavy && within(t, [[29.2, 36.3], [37.7, 39.2]])) for (const sd of ['R', 'L']) rec(NA.pots, CT.handGap(zo, sd, HR, 0.5).d, t);
+        // the mast: where its foot is against its fitted place while he still holds it; how far it moves as he lets go
+        const mast = BOAT.mast, sdv = TBL.screwdriver, mp = mast.getWorldPosition(P3()), sp = sdv.getWorldPosition(P3());
+        const held = { mast: mast.parent !== HOUSE.group, sd: sdv.parent !== HOUSE.group, mp, sp };
+        if (held.mast && t >= 36.2 && t <= 36.5) NA.mastSeat = Math.max(NA.mastSeat ?? 0, +(1000 * mp.distanceTo(P3().set(HOUSE.center.x + BOAT.mastRest.x, BOAT.mastRest.y + 0.005, HOUSE.center.z + BOAT.mastRest.z))).toFixed(1));
+        if (heldPrev?.mast && !held.mast) NA.mastJump = +(1000 * mp.distanceTo(heldPrev.mp)).toFixed(1);
+        if (heldPrev?.sd && !held.sd) NA.toolJump = +(1000 * sp.distanceTo(heldPrev.sp)).toFixed(1);
+        heldPrev = held;
+      } else heldPrev = null;
+      // feet: everyone standing (not walking, kneeling or in a turn's step) has both soles on the ground
+      for (const [id, a] of Object.entries(everyone)) {
+        if (!a.rig.root.visible || !a.rig.root.parent || (id === 'zoe' && !a.present) || /^(walk|run|kneel)/.test(a.rig.anim) || (G.room ? Math.abs(a.pos.x - G.room.center.x) >= 30 : a.pos.x > 500)) continue;
+        const f = CT.feet(a), m = Math.max(Math.abs(f[0]), Math.abs(f[1]));
+        if (m > 0.09 && NA.feet.length < 8) NA.feet.push({ id, t: +t.toFixed(2), anim: a.rig.anim, cm: +(m * 100).toFixed(1) });
+      }
+    }
     if (!dark && G.room === G.rooms.house) {
       if (TURNS.some(([a, b]) => c.t >= a && c.t <= b)) {
         const h = K.handle.getWorldPosition(new v.constructor());
@@ -188,7 +249,7 @@ const watch = await ev((polySizes) => {
   const subs = window.__cine.def.subs;
   G.audio.play = play0;
   const offbeat = stepsHeard.filter((s) => !footDown.some((d) => Math.abs(s - d) <= 0.1));
-  return { mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+  return { NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
 }, polySizes);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
@@ -204,6 +265,17 @@ check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and
 check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
 check('OPEN-FILM: the aerial move does not stop between 3 and 12.5 s (it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
 check("OPEN-FILM: every footstep heard is one of Zoé's feet coming down (within 0.1 s)", watch.steps.heard >= 10 && watch.steps.offbeat.length === 0, watch.steps);
+{ const N = watch.NA, ok = (o, n) => o.n >= n && o.off.length === 0;
+  check("NO-AIR: the worker's hand is on the lift's lever (within 3 cm) through both holds, and the lever is thrown under it", ok(N.lever, 120) && Math.abs(N.leverAt[15.2] - N.leverAt[13.6]) > 0.3 && Math.abs(N.leverAt[22] - N.leverAt[15.2]) > 0.3, { lever: N.lever, leverAt: N.leverAt });
+  check('NO-AIR: both his hands are on the crate as it comes down to the deck (within 3 cm, never through it), and it comes down with them', ok(N.crate, 50) && N.through <= 0.02 && N.crateY.from - N.crateY.to > 0.2, { crate: N.crate, throughM: N.through, crateY: N.crateY });
+  check("NO-AIR: the screwdriver's tip is in the lamp's screw (within 3 cm) while Twinsen mends it, and the screw turns in", ok(N.tool, 300) && Math.abs(N.screw[45.9][0] - N.screw[29.1][0]) > 3 && N.screw[29.1][1] - N.screw[45.9][1] > 3, { tool: N.tool, screw: N.screw });
+  check("NO-AIR: Twinsen's other hand is on the lamp's shade", ok(N.shade, 150), N.shade);
+  check("NO-AIR: Arthur's left hand is on his boat; his right, once the mast is in, on its deck", ok(N.hull, 250) && ok(N.deck, 200), { hull: N.hull, deck: N.deck });
+  check('NO-AIR: the mast is home in its step in his hand before he lets go (within 5 mm), and does not move as he does (it jumped 64 cm)', N.mastSeat != null && N.mastSeat <= 5 && N.mastJump != null && N.mastJump <= 5, { seatMm: N.mastSeat, jumpMm: N.mastJump });
+  check('NO-AIR: the screwdriver does not move as it is laid down (it jumped 11 cm)', N.toolJump != null && N.toolJump <= 10, { jumpMm: N.toolJump });
+  check("NO-AIR: Zoé's palms are on the soil of the tray's pots (within 3 cm)", ok(N.pots, 200), N.pots);
+  check('NO-AIR: standing feet are on the ground (no sole more than 9 cm off it)', N.feet.length === 0, N.feet);
+}
 await run(0.5);
 const full = await endState();
 check('played through: control in the house, objective, save, cast placed', good(full), full);
@@ -246,7 +318,7 @@ check('...and it still ends cleanly', good(await endState()));
 await boot('continue', false);
 await run(1.5);
 const cont = await endState();
-check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective.startsWith('Check the well') && cont.zoeOut && cont.arthur[0] === 'kneelWork', cont);
+check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective.startsWith("The tap's stopped again") && cont.zoeAtSink && cont.arthur[0] === 'kneelWork', cont);
 
 // ---------------------------------------------------------------- 5. new game again (from the title, with a save present)
 await boot('new', false);
@@ -256,6 +328,23 @@ const dup = await ev(() => ({ zoes: game.npcs.filter((n) => n.def.id === 'zoe').
 check('a second new game: same end state, nothing duplicated', good(again) && again.sceneKids === kids0 && dup.zoes === 1 && dup.lifts === 1, { again, dup });
 
 // ---------------------------------------------------------------- 6. the first objective is playable
+// (CAMPAIGN-1: the door first waits for the kitchen tap — a line, no hint — then, the tap tried, for the ball)
+const tapFirst = await ev(() => {
+  const G = game, e = G.room.exits.find((x) => x.to === 'outdoor');
+  G.step(1.2);
+  const said = [], sv = G.say; G.say = function (n, lines, ...a) { said.push(...lines); return sv.call(this, n, lines, ...a); };
+  G.hero.pos.set(e.x, 0, e.z); G.step(0.5);
+  const st = G.state;
+  for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  G.say = sv;
+  const r = { st, room: G.room?.id, tap: !!G.flags.pr_tap, said: said.slice(0, 3) };
+  const H = G.story.chapters[0].home.parts.house;
+  G.hero.pos.set(H.front.x, 0, H.front.z + 0.25); G.hero.angle = Math.PI; G.step(0.3);
+  G.input.taps.add('KeyE'); for (let i = 0; i < 300 && !G.flags.pr_tap; i++) { G.step(0.05); if (G.state === 'dialog') G.input.taps.add('KeyE'); }
+  for (let i = 0; i < 200 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  return { ...r, tried: !!G.flags.pr_tap, state: G.state };
+});
+check('the door first holds him for the kitchen tap; the tap tried by hand', tapFirst.st === 'dialog' && tapFirst.room === 'house' && !tapFirst.tap && tapFirst.said.some((l) => /tap first/i.test(l)) && !tapFirst.said.some((l) => /magic ball/i.test(l)) && tapFirst.tried && tapFirst.state === 'play', tapFirst);
 const blocked = await ev(() => {
   const G = game, e = G.room.exits.find((x) => x.to === 'outdoor');
   G.step(1.2); // (doors wait a moment after a room change)
@@ -274,7 +363,7 @@ const took = await ev(() => {
   G.hero.pos.set(e.x, 0, e.z); G.step(2.0);
   return { ball: G.hero.hasBall, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#pause-objective').textContent };
 });
-check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && took.obj.startsWith('Check the well'), took);
+check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && !took.obj.includes('cupboard'), took);
 
 const fails = done();
 await browser.close();

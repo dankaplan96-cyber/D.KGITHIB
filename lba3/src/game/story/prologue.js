@@ -20,6 +20,7 @@ import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
 import { mergeStatic } from '../../engine/merge.js';
 import { revealBeat, solidAt } from './revealcam.js';
+import { HomeTap } from './hometap.js';
 import '../text/well.js';
 
 const V = POI.village;
@@ -39,6 +40,7 @@ export class Prologue extends ChapterBase {
   constructor(story) {
     super(story);
     this.tremorT = 50;
+    this.home = new HomeTap(this);   // CAMPAIGN-1: the kitchen tap, Arthur's cup, the knocking, the pool and the growth (hometap.js)
   }
 
   // ---------------------------------------------------------------- actors
@@ -67,7 +69,7 @@ export class Prologue extends ChapterBase {
       { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...(R.wtent?.npcSpots?.bersimon || { x: 0, z: 0, a: 0, pending: true }), angle: R.wtent?.npcSpots?.bersimon?.a ?? 0 },
       { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...(R.school?.npcSpots?.magus || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.magus?.a ?? 0 },
       // SEWERS-1 (S-4): Fosse, the sewer man (LBA2's grumbling sewer worker, twelve years on), at the old hall's east pier
-      { id: 'fosse', name: 'n_fosse', char: 'farmerC', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
+      { id: 'fosse', name: 'n_fosse', char: 'farmerC_b', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
       { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...(R.school?.npcSpots?.keraooc || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.keraooc?.a ?? 0 },
     ];
   }
@@ -79,6 +81,7 @@ export class Prologue extends ChapterBase {
 
   // Esmer cargo on the pier, stamped with the energy project's emblem
   decorate() {
+    this.home.build();   // (CAMPAIGN-1: its things in the house, the yard and the cave, each once its area is built)
     if (!this.once('citadel')) return;
     const W = this.game.world, scene = W.root;
     const e = W.pierEnd;
@@ -211,6 +214,8 @@ export class Prologue extends ChapterBase {
   afterOpening() {
     const g = this.game, f = this.f;
     f.intro = true; f.opening = true;
+    f.pr_v2 = 1;   // (CAMPAIGN-1: a game begun with the home thread, hometap.js)
+    this.home.reset();
     if (!this.game.hero.hasBall) f.ballHint = true; // (Zoé said "Take your magic ball": the objective shows that step)
     this.opening = null;
     this.ferryAway();
@@ -232,6 +237,7 @@ export class Prologue extends ChapterBase {
     // Doran naps by his shed until the bell (or, in a save from before CH1-LONGER, his stamp) wakes him
     if (id === 'doran') { if (!this.isCur()) return undefined; const s = g.world.pierStart; return { x: s.x, z: s.z + 2.2, a: Math.PI, anim: f.pr_bell || f.stamp ? null : 'doze' }; }
     if (id !== 'zoe' && id !== 'arthur') return undefined;
+    const hp = this.home.place(id); if (hp !== undefined) return hp;   // (CAMPAIGN-1: Zoé at the sink until the cup is moved)
     const home = g.rooms.house.npcSpots[id];
     if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
     if (f.opening && !f.prologueDone && this.isCur()) {
@@ -267,12 +273,14 @@ export class Prologue extends ChapterBase {
       { key: 'pr_j_stones', done: true, show: f.pr_stones },
       { key: 'pr_j_cave', done: true, show: f.inWell },
       { key: 'pr_j_sendell', done: true, show: f.sendellHeard },
+      ...this.home.journal(),
     ].filter((l) => l.show).map(({ key, done }) => ({ key, done }));
   }
   objective() {
     const f = this.f, h = this.game.hero;
     const s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`;
     if (f.prologueDone) return `<b>${t('pr_obj_done')}</b>`;
+    const ho = this.home.objective(); if (ho) return ho;
     if (!h.hasBall) return `<b>${t('pr_obj_well')}</b>` + (f.ballHint ? s(false, 'pr_obj_ball') : '');
     if (f.inWell) return `<b>${t('pr_obj_cave')}</b>` + (f.nodes >= 3 ? '' : s(false, 'pr_obj_nodes'));
     if (!f.wellSeen) return `<b>${t('pr_obj_well')}</b>`;
@@ -313,6 +321,7 @@ export class Prologue extends ChapterBase {
 
   // can the player leave this room yet?
   canExit(room) {
+    if (room.id === 'house' && !this.home.canExit()) return false;   // (CAMPAIGN-1: the tap first)
     if (room.id === 'house' && !this.game.hero.hasBall) {
       this.chain([['hero', 'pr_tw_ballfirst']], () => { this.f.ballHint = true; this.game.updateObjective(); });
       return false;
@@ -348,6 +357,7 @@ export class Prologue extends ChapterBase {
   }
   interactables(consider, dist) {
     const g = this.game, W = g.world, f = this.f, h = g.hero;
+    this.home.interactables(consider, dist);
     if (!g.room) {
       // (the rusted lid: in Aggressive the prompt is a kick, as LBA's behaviours change what Twinsen does to the world)
       const kick = f.key && !f.pr_lidOpen && !f.inWell && !f.prologueDone && h.behaviour === 'aggressive';
@@ -363,6 +373,7 @@ export class Prologue extends ChapterBase {
 
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
+    if (this.home.interact(it)) return true;
     switch (it.kind) {
       case 'roomsearch':
         if (this.asylumSearch(it)) return true;
@@ -486,6 +497,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     const id = npc.def.id;
     const c = (lines, done) => { this.chain(lines, done); return true; };
+    if (this.home.talk(npc)) return true;
     switch (id) {
       case 'zoe':
         if (f.prologueDone) return c([['zoe', 'pr_zoe_after']]);
@@ -560,7 +572,8 @@ export class Prologue extends ChapterBase {
         f.inWell = true;
         f.nodes = 0;
         g.updateObjective();
-        this.chain([['hero', 'pr_cave_1'], ...(f.pr_stones ? [['hero', 'pr_cave_stones']] : []), ['hero', 'pr_cave_2']], () => g.save(false));
+        if (this.home.on && !f.pr_growth) this.home.pumpIn = 9;   // (CAMPAIGN-1: the pump's cycle is heard down here in any case)
+        this.chain([['hero', this.home.on ? 'prh_cave_in' : 'pr_cave_1'], ...(f.pr_stones ? [['hero', 'pr_cave_stones']] : []), ['hero', 'pr_cave_2']], () => g.save(false));
       }
     }
   }
@@ -624,6 +637,7 @@ export class Prologue extends ChapterBase {
   applyFlags() {
     const g = this.game, f = this.f;
     if (this.isCur()) this.ferryAway();   // (not at the pier at all before chapter 2: the opening film doesn't show it either)
+    this.home.applyFlags();
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
     g.world.well?.setWater?.(!!f.c1_water || (this.story.index ?? 0) > 1);   // (WELL-DRY: dry until chapter 2's water returns)
     g.hero.hasKey = !!f.key;
@@ -820,8 +834,9 @@ export class Prologue extends ChapterBase {
       this.spoke = true;
       g.cutscene = null;
       // (each line its shot; while Sendell speaks the vein swells and motes of light rise off it: sendellGlow)
-      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue(),
-        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close'][i], i === 0 ? 0.6 : 0.3); });
+      // (CAMPAIGN-1: his last thought is the reason to stay on Citadel: the pump's next cycle)
+      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2'], ...(this.f.pr_v2 ? [['hero', 'prh_tw_cycle']] : [])], () => this.endPrologue(),
+        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close', 'face'][i], i === 0 ? 0.6 : 0.3); });
     }
   }
   // the vein while Sendell speaks: brighter, breathing with the words, a few motes of light drifting up off it (the
@@ -863,6 +878,7 @@ export class Prologue extends ChapterBase {
 
   update(dt) {
     const g = this.game, f = this.f, h = g.hero;
+    this.home.update(dt);
     if (this.barrierT > 0 && (this.barrierT -= dt) <= 0) this.openBarrier();
     // CH1-LONGER: the lid swinging up, the bell's swing and tolls, the stones' glow, a line held back a moment
     const L = this.lid, B = this.bell, S = this.stones;

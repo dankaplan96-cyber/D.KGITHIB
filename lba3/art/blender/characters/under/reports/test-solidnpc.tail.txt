@@ -1,0 +1,25 @@
+bench {"id":"maro","sid":"maro_bench","char":"farmerB","sits":true,"inBrick":false,"carry":null,"st":"seated","n":3762,"under":0,"behind":0,"deep":0,"dy":0,"rest":0.008,"pos":[-53.3,2.6374206405449847,34.48527458965001],"a":3.141592653589793}
+bench {"id":"tilde","sid":"tilde_bench","char":"ilka","sits":true,"inBrick":false,"carry":null,"st":"seated","n":3675,"under":0,"behind":0,"deep":0,"dy":0,"rest":0.037,"pos":[-48.3,2.4266970500088063,34.458421333032376],"a":3.141592653589793}
+bench {"id":"dot","sid":"dot_bench","char":"pim","sits":true,"inBrick":false,"carry":null,"st":"seated","n":3758,"under":0,"behind":0,"deep":0,"dy":0,"rest":0.037,"pos":[-34.471090408760055,2.9046114326380867,43.560123590507125],"a":1.8707963267948966}
+bench {"id":"marda","sid":"marda_b1","char":"yorna","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3794,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[-66.75,2.23560280249669,28.4],"a":1.5707963267948966}
+bench {"id":"marda","sid":"marda_b2","char":"yorna","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3794,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[-94.4,2.2926869850892295,31.45],"a":0}
+bench {"id":"ume","sid":"ume_b1","char":"lharElder","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3951,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[-33.501363037505556,2.418914191444441,43.26015176233946],"a":1.8707963267948966}
+bench {"id":"ume","sid":"ume_b2","char":"lharElder","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3951,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[-44.449999999999996,2.21832555440756,43.4],"a":-1.5707963267948966}
+PASS Citadel: at each of its 11 bench stops a resident sits ON the seat (no part of the body under the seat's top or behind the backrest, the bottom resting on the seat), or, one who cannot sit (a dress to the ankles), stands by the bench clear of it [["oda_bench","lharWoman","stands",0,0,9,false],["brix_benchE","desertTrader","sits",0,0,0.053,false],["brix_lane","desertTrader","sits",0,0,0.053,false],["brix_lane2","desertTrader","sits",0,0,0.053,false],["maro_bench","farmerB","sits",0,0,0.008,false],["tilde_bench","ilka","sits",0,0,0.037,false],["dot_bench","pim","sits",0,0,0.037,false],["marda_b1","yorna","stands",0,0,9,false],["marda_b2","yorna","stands",0,0,9,false],["ume_b1","lharElder","stands",0,0,9,false],["ume_b2","lharElder","stands",0,0,9,false]]
+shared bench {"ume":"dwell","brix":"seated","d":0.96,"R":0.96,"dot":"dwell","dotSits":true,"d2":1.13,"R2":1.13}
+PASS a bench two rounds share holds one sitter: the second stands by it, clear of the first (Ume by Brix; Dot, who sits elsewhere, by Brix's taken seat) {"ume":"dwell","brix":"seated","d":0.96,"R":0.96,"dot":"dwell","dotSits":true,"d2":1.13,"R2":1.13}
+abstract sit [{"id":"brix","st":"seated","xz":0,"y":0},{"id":"maro","st":"seated","xz":0,"y":0},{"id":"tilde","st":"seated","xz":0,"y":0},{"id":"dot","st":"seated","xz":0,"y":0}]
+PASS a resident who sat down unseen (the abstract tier) is on its seat when seen, not in the bench at the stop's slot [{"id":"brix","st":"seated","xz":0,"y":0},{"id":"maro","st":"seated","xz":0,"y":0},{"id":"tilde","st":"seated","xz":0,"y":0},{"id":"dot","st":"seated","xz":0,"y":0}]
+zeelich rounds [4,4,4]
+bench {"id":"ilo","sid":"ilo_bench","char":"keeper","sits":false,"inBrick":false,"carry":"basket","st":"dwell","n":6251,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[2370.114249284967,6,1.9154854468572988],"a":1.8207963267948966}
+bench {"id":"aven","sid":"aven_b1","char":"clerk","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3393,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[2369,6,-3.4499999999999997],"a":0}
+bench {"id":"aven","sid":"aven_b3","char":"clerk","sits":false,"inBrick":false,"carry":null,"st":"dwell","n":3393,"under":0,"behind":0,"deep":0,"dy":0,"rest":9,"pos":[2403,6,-3.4499999999999997],"a":0}
+PASS Zeelich: at each of its 3 bench stops a resident sits on the seat (nothing under it or behind the back, resting on it), or, an Esmer (one robe to the ground, no hips to bend), stands by the bench [["ilo_bench","keeper",0,0,9],["aven_b1","clerk",0,0,9],["aven_b3","clerk",0,0,9]]
+Kesh: its residents' rounds have no bench stop (walkrounds.js desertRoster), nothing to sit on there
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 54 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

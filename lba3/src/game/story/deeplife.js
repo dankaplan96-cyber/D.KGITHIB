@@ -23,8 +23,8 @@ const COLLAR_REACH = 5.0;   // (as chapter3.js SHAFT_REACH)
 const LOOK_DY = 1.5;        // a thing answers only from about its own level (the gallery's board: not from the chasm floor)
 const CREW = {
   dp_guard: { room: 'c3shaft', char: 'keeper_b', tint: '#e4e8ff', color: '#a0a8e8' },
-  dp_tolli: { room: 'c3deep', char: 'worker', tint: '#fff2e0', color: '#e8c070' },
-  dp_sala: { room: 'c3core', char: 'nara', tint: '#eef4ff', color: '#a8c8f0' },
+  dp_tolli: { room: 'c3deep', char: 'worker_b', tint: '#fff2e0', color: '#e8c070' },
+  dp_sala: { room: 'c3core', char: 'nara_b', tint: '#eef4ff', color: '#a8c8f0' },
 };
 
 export class UndergroundLife extends ChapterBase {
@@ -60,7 +60,7 @@ export class UndergroundLife extends ChapterBase {
     const st = R.crew?.tolli;
     if (!st?.length) return null;
     const anims = ['tinker', 'reach', 'tinker'], T = [];
-    st.forEach((s, i) => T.push({ op: 'call', fn: (a) => { a.forceAnim = anims[i]; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.55 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 }));
+    st.forEach((s, i) => T.push({ op: 'call', fn: (a) => { a.forceAnim = anims[i]; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.55, near: 0.12 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 }));
     T.push({ op: 'loop' });
     return { x: st[0].x, z: st[0].z, a: st[0].a, anim: 'tinker', track: T };
   }

@@ -14,6 +14,7 @@
 //   R.platform {x, z, gate:{x,z}, console:{x,z}, shield:{on, setOn(b)}, pad:{x,z}, lift:{lower(cb)}}
 //   R.cloudY                  height of the cloud sea
 //   R.life                    the street twelve years on (zeelife.js: the watch house bakery, heat posts, burrow, scaffold)
+//   R.lift                    the Cistern Rise on Mill Lane: the freight lift, the cistern, Irsa's Pump Works (zlift.js; story/zeelift.js)
 //
 // Art pass: a floating island of Esmer architecture above a pink sea of clouds. West → east: the sky-ferry
 // pier and a horseshoe gateway, the Esmer street (whitewashed and lilac houses with onion domes, an arcade,
@@ -40,6 +41,7 @@ import { cullInstances } from './kit.js';
 import { viewCull } from '../engine/viewinst.js';
 import { buildZeelichLife, zlClear } from './zeelife.js';
 import { roomOcc } from './roomocc.js';
+import { buildCisternRise, liftClear } from './zlift.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
@@ -763,6 +765,9 @@ export function* buildZeelichSteps(scene, physics) {
   // ---------------------------------------------------------------- the street twelve years on (src/game/zeelife.js)
   const life = buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: houses[0].dome, occ: roomOcc(R, physics.terrain) });
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
+  // CAMPAIGN-3: the Cistern Rise on Mill Lane (the freight lift, the quarter's cistern, Irsa's Pump Works): src/game/zlift.js
+  const lift = buildCisternRise({ group, col, W, updaters, Y0, mat: { stone: tm('stone', { color: '#d6d2cc' }), planks: tm('planks'), cobble: tm('cobble'), brass: brassM(), teal: tealM(), steel: darkSteel() } });
+  yield;
 
   buildIslets();
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
@@ -818,6 +823,7 @@ export function* buildZeelichSteps(scene, physics) {
     platform,
     ferry,
     life,
+    lift,   // (CAMPAIGN-3: story/zeelift.js)
   });
 
   // VP-10 (the user, 7.11: "in Zeelich all the buildings disappear when you get close"): as on Citadel and in LBA2,
@@ -2197,7 +2203,7 @@ export function* buildZeelichSteps(scene, physics) {
       if (!onIsland(x, z, 2) || !isClear(x, z, 1)) continue;
       const v = items[0].length <= items[1].length ? 0 : 1;
       const s = 0.9 + r() * 0.35, it = { x, y: Y0 - 0.05, z, ry: r() * 6, s };
-      if (zlClear(x, z, 1)) continue;   // (after the draws: the island's other trees keep their places)
+      if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;   // (after the draws: the island's other trees keep their places)
       items[v].push(it);
       col({ type: 'cyl', x, z, r: 0.3, top: Y0 + 2.6 * s, seeThrough: true });
     }
@@ -2212,7 +2218,7 @@ export function* buildZeelichSteps(scene, physics) {
       const x = -48 + r() * 84, z = -28 + r() * 56;
       if (!onIsland(x, z, 1.2) || !isClear(x, z, 1.5)) continue;
       const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) };
-      if (zlClear(x, z, 1)) continue;
+      if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;
       rocks[i % 3].push(it);
       if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
     }
@@ -2227,7 +2233,7 @@ export function* buildZeelichSteps(scene, physics) {
       if (patch < 0.6) continue;   // (ZEELICH-2: tufts in a few patches on the granite, no lawn)
       const gr = { x, y: Y0 - 0.02, z, ry: r() * 6, s: 0.8 + r() * 0.7, color: new THREE.Color().setHSL(0.1 + r() * 0.04, 0.42, 0.5 + r() * 0.15) };   // (ZSTYLE-1: dry golden tufts, as Knartas' and Otringal's)
       const fl = r() < 0.35 ? [Math.floor(r() * 4), { x: x + (r() - 0.5) * 0.6, y: Y0, z: z + (r() - 0.5) * 0.6, ry: r() * 6, s: 0.9 + r() * 0.6 }] : null;
-      if (zlClear(x, z, 0.1)) continue;   // (the draws are made either way)
+      if (zlClear(x, z, 0.1) || liftClear(x, z, 0.1)) continue;   // (the draws are made either way)
       grass.push(gr);
       if (fl) flowers[fl[0]].push(fl[1]);
     }

@@ -35,6 +35,7 @@ TW_Y0, TW_Y1, TW_W, TW_Z0, TW_Z1 = 0.799, 0.956, 0.077, -0.026, 0.153
 # a robe or coat that is round (a mole's, an elf's, a trooper's: Twinsen's cape and robe have 24), a Grobo's body (a metre
 # across) and its ear flaps
 BODY_N, BLOB_N, EAR_N = 20, 20, 24
+GCOAT_SKIRT = float(os.environ.get('GCOAT_SKIRT', '0.35'))   # (CAST-POLISH-NAMED: a Grobo's long coat, the skirt bones' share at its hem)
 
 
 def shade(hexc, k):
@@ -61,6 +62,8 @@ CAST = {
     'lulu': dict(browS=0.7, browTilt=0.2, mouthW=1.0, mouthLift=1.6, lip='#b04058', lashes=True, bow=True, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hemH=0.06),
     'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a', gogglesGlass=True),
     'farmerA': dict(browS=1.3, browTilt=-0.1, mouthW=1.2, mouthLift=1.3, rolled=True, pockets=True, pocketY=0.06, noseS=1.1),
+    'farmerA_b': dict(browS=1.6, browTilt=-0.2, mouthW=1.1, mouthLift=0.6, pockets=True, pocketY=0.1, noseS=1.15, moustacheSwept=True),   # (CAST-VARIANTS-1: bare-headed, heavier, a longer smock, sleeves down, a moustache)
+    'farmerB_b': dict(browS=1.0, browTilt=0.3, cheekS=1.1, mouthLift=1.0, earBend=(1.1, 0.95), earLen=0.92, earInCol='#e8a8a0', pockets=True, pocketY=0.08),   # (CAST-VARIANTS-1: no apron, patch pockets, both ears folded over: lop ears)
     'farmerB': dict(browS=1.2, browTilt=0.1, cheekS=1.25, mouthLift=1.2, earBend=(0.35, 0.0), earSpread=1.0, earInCol='#e8a8a0'),
     'farmerC': dict(hatStyle='straw', mouthLift=1.3, browS=1.4, earS=0.95),
     'farmerC_b': dict(mouthLift=1.0, browS=1.6, browTilt=-0.15, earS=1.0),   # (CAST-POLISH-DESERT: bare-headed, lighter)
@@ -72,7 +75,7 @@ CAST = {
     'vguardG': dict(trim='#c8a050', epaulette='#c8a050', strap='#8a6a30', glove='#16141a', mouthLift=-0.4, browS=1.8, browTilt=-0.5),
     # ---- the Desert Island and Zeelich
     'ilka': dict(browTilt=0.3, mouthLift=0.9, earBend=(0.0, 0.4), earLen=1.0, pockets=True, pocketY=0.08),
-    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05),
+    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05, gogglesUp=True),   # (CAST-POLISH-NAMED: GOGGLES-HESK)
     'tarra': dict(browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.95, lip='#8a4a4a', hemH=0.06),
     'dallan': dict(browS=1.6, browTilt=-0.3, mouthLift=-0.3, mouthY=0.834, pockets=True, pocketY=0.12),
     'desertkid': dict(browS=0.8, mouthW=1.2, mouthLift=1.5, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=1.0),
@@ -80,11 +83,13 @@ CAST = {
     'desertTrader': dict(hatStyle='straw', browS=1.5, mouthLift=1.2, earS=0.95),
     'weaver': dict(cheekS=1.2, earBend=(0.0, 0.5), mouthLift=1.0, browTilt=0.2, earInCol='#e8a8b8'),
     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
-    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
+    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0, coatLong=0.3),   # (CAST-POLISH-NAMED: GROBO-COAT, his robe below the knee)
     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
+    'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
+                     moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
-    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
+    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95, coatLong=0.28),   # (CAST-POLISH-NAMED: GROBO-COAT, the felt coat below the knee)
     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
     'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
     'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
@@ -95,9 +100,11 @@ CAST = {
     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)
     'nara': dict(lashes=True, browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.9),
+    'nara_b': dict(lashes=True, browS=1.0, browTilt=0.1, mouthLift=0.6, noseS=0.95, robeLong=True, beltBand=True),   # (CAST-POLISH-UNDERGROUND: the long dress)
     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
+    'clerk_b': dict(browS=1.4, browTilt=0.1, mouthLift=0.6, noseS=1.0, headcloth=True, beltBand=True),   # (CAST-VARIANTS-1: a broader Esmer in a headcloth and a belted robe, no spectacles)
     'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05, glassesRim=True),   # (GLASSES-CLERK)
     'councilChair': dict(browS=1.7, browTilt=-0.3, mouthLift=-0.3, noseS=1.1),
     # (CAST-POLISH-ZEELICH-2, order 24: the shape variants of the most shared Esmer models)
@@ -207,6 +214,123 @@ def visor(part, cx, cy, cz, r_in, r_out, ang, drop, thick, n=8, sx=1.0):
     part.add(v_, f_)
 
 
+def _orient(v_, f_, ref):
+    """Each face wound so its normal points away from `ref` (a point inside the solid, or a function of the face's centroid
+    giving one): the game shades by the winding."""
+    out = []
+    for f in f_:
+        a, b_, c_ = Vector(v_[f[0]]), Vector(v_[f[1]]), Vector(v_[f[2]])
+        n = (b_ - a).cross(c_ - a)
+        cen = sum((Vector(v_[i]) for i in f), Vector((0, 0, 0))) / len(f)
+        r = Vector(ref(cen) if callable(ref) else ref)
+        out.append(f if n.dot(cen - r) >= 0 else f[::-1])
+    return out
+
+
+def brow_ridge(part, front, ey, ex, ew, eh, bs=1.0, tilt=0.0, arch=0.0, lift=0.005, drop=0.0, depth=0.85, sink=0.35):
+    """CAST-POLISH-NAMED-2, BROW-RIDGE (a Grobo's brows: 'a ridge of its skin, darker'): the same line over each eye as
+    brow_strips (inner, middle, outer: thickness eh*0.42/0.38/0.24*bs) as a rounded ridge on the face instead of a flat
+    ribbon. Seven stations along a smooth curve through the three points; each a half-round cross-section, `depth` of its
+    half-thickness proud of the face and `sink` of it below the surface (no gap where it meets the skin), tapering to a
+    rounded point at both ends."""
+    for sxx in (1, -1):
+        p3 = [(sxx * (ex - ew * 0.95), ey + eh * (2.55 + tilt)), (sxx * ex, ey + eh * (2.85 + arch)), (sxx * (ex + ew * 1.05), ey + eh * (2.35 - tilt))]
+        p3 = [(x, y - drop) for x, y in p3]
+        t3 = [eh * 0.42 * bs, eh * 0.38 * bs, eh * 0.24 * bs]
+        S = 7
+        pts, th = [], []
+        for i in range(S):
+            s = i / (S - 1)
+            # (a quadratic through the three points: s = 0, 0.5, 1)
+            l0, l1, l2 = 2 * (s - 0.5) * (s - 1), -4 * s * (s - 1), 2 * s * (s - 0.5)
+            x = p3[0][0] * l0 + p3[1][0] * l1 + p3[2][0] * l2
+            y = p3[0][1] * l0 + p3[1][1] * l1 + p3[2][1] * l2
+            t = t3[0] * l0 + t3[1] * l1 + t3[2] * l2
+            taper = math.sin(math.pi * (0.12 + 0.76 * s)) ** 0.5   # (rounded ends, the inner end a little fuller)
+            pts.append((x, y)); th.append(t * max(0.25, taper))
+        K = 6   # (the cross-section: from below the ridge, over its crest, to above it)
+        v_, rings = [], []
+        for (x, y), t in zip(pts, th):
+            z0 = front(x, y)
+            # (the face's normal here, from its slope)
+            dzx = (front(x + 0.002, y) - front(x - 0.002, y)) / 0.004
+            dzy = (front(x, y + 0.002) - front(x, y - 0.002)) / 0.004
+            nrm = Vector((-dzx, -dzy, 1.0)).normalized()
+            up = Vector((0, 1, 0)) - nrm * nrm.y
+            up.normalize()
+            base = Vector((x, y, z0 + lift)) - nrm * (t * sink)
+            ring_ = []
+            for k in range(K):
+                a = math.pi * k / (K - 1)
+                q = base + up * (-t * math.cos(a)) + nrm * (t * (depth + sink) * math.sin(a))
+                ring_.append(len(v_)); v_.append(tuple(q))
+            rings.append(ring_)
+        f_ = []
+        for i in range(S - 1):
+            for k in range(K - 1):
+                f_.append([rings[i][k], rings[i + 1][k], rings[i + 1][k + 1], rings[i][k + 1]])
+        # (the ends closed, and the flat underside against the face)
+        f_.append(list(rings[0])); f_.append(list(rings[-1]))
+        for i in range(S - 1):
+            f_.append([rings[i][0], rings[i][K - 1], rings[i + 1][K - 1], rings[i + 1][0]])
+        cen = [Vector((x, y, front(x, y) + lift)) for x, y in pts]
+
+        def ref(c, cen=cen):
+            # (inside the ridge: the nearest station's root on the face)
+            return min(cen, key=lambda q: (q - c).length)
+        part.add(v_, _orient(v_, f_, ref))
+
+
+def hug_tab(part, ctr, rad, scl, phi0, hw, y0, y1, d0, d1, n=7, m=6, rim=None):
+    """CAST-POLISH-NAMED-2, HAT-FLAPS: a thick tab of felt or fur lying on an ellipsoid (centre ctr, radius rad, axis scales
+    scl): it spans the angle phi0 ± hw round the y axis (0 = the front, + to the left) and the heights y0 (its bottom) to
+    y1 (its top), d0 to d1 off the surface, the top rounded. rim: (part, k) a rolled edge round the top and sides."""
+    def surf(phi, y, d):
+        fy = (y - ctr[1]) / (rad * scl[1])
+        r = rad * math.sqrt(max(0.02, 1 - fy * fy))
+        p = Vector((math.sin(phi) * r * scl[0], y, ctr[2] + math.cos(phi) * r * scl[2]))
+        nn = Vector((p.x / scl[0] ** 2, (y - ctr[1]) / scl[1] ** 2, (p.z - ctr[2]) / scl[2] ** 2)).normalized()
+        return p + nn * d
+    grid = []
+    for j in range(m):
+        tj = j / (m - 1)
+        y = y0 + (y1 - y0) * tj
+        wf = math.sqrt(max(0.12, 1 - max(0.0, (tj - 0.4) / 0.6) ** 2))   # (the top half rounds off)
+        grid.append([(phi0 + hw * wf * (2 * i / (n - 1) - 1), y) for i in range(n)])
+    v_ = []
+
+    def idx(j, i, side):
+        return (side * m + j) * n + i
+    for side, d in ((0, d0), (1, d1)):
+        for j in range(m):
+            for i in range(n):
+                v_.append(tuple(surf(grid[j][i][0], grid[j][i][1], d)))
+    f_ = []
+    for j in range(m - 1):
+        for i in range(n - 1):
+            f_.append([idx(j, i, 0), idx(j, i + 1, 0), idx(j + 1, i + 1, 0), idx(j + 1, i, 0)])
+            f_.append([idx(j, i, 1), idx(j, i + 1, 1), idx(j + 1, i + 1, 1), idx(j + 1, i, 1)])
+    for j in range(m - 1):   # (the two sides)
+        for i in (0, n - 1):
+            f_.append([idx(j, i, 0), idx(j + 1, i, 0), idx(j + 1, i, 1), idx(j, i, 1)])
+    for i in range(n - 1):   # (the bottom and the top edges)
+        for j in (0, m - 1):
+            f_.append([idx(j, i, 0), idx(j, i + 1, 0), idx(j, i + 1, 1), idx(j, i, 1)])
+
+    def ref(c):
+        # (inside the tab: on the middle surface under this point)
+        q = c - Vector(ctr)
+        q2 = Vector((q.x / scl[0], q.y / scl[1], q.z / scl[2]))
+        rr = math.sqrt(max(1e-9, q2.length_squared))
+        k = (rad + (d0 + d1) * 0.5) / rr
+        return Vector(ctr) + Vector((q2.x * k * scl[0], q2.y * k * scl[1], q2.z * k * scl[2]))
+    part.add(v_, _orient(v_, f_, ref))
+    if rim:
+        rp, rk = rim
+        edge = [grid[j][0] for j in range(m)] + grid[m - 1][1:n - 1] + [grid[j][n - 1] for j in range(m - 1, -1, -1)]
+        cord(rp, [tuple(surf(phi, y, (d0 + d1) * 0.5)) for phi, y in edge], (d1 - d0) * rk, 5, closed=False)
+
+
 def grobo_trunk(headY, hipsY, shY, neckY, kneeY, belly, slim=1.0):
     """TRUNK-1: a Grobo's trunk, the centre line and radius [(y, z, r)]: its root buried in the muzzle, then the three
     trunk bones' pivots, then the tip's two points. The same numbers as characters.js groboTrunk() (which places the
@@ -314,6 +438,38 @@ def build(name):
                 return bodyR[-1][1:]
             loft(b.P('belt', L['belt'], w_blob, 50), [ring(y_, max(hw_ * 1.012, hw0) * slim, max(zf_ * 1.012, zf0) + belly, min(zb_ * 1.012, zb0), BLOB_N, 0.7)
                                                       for y_, hw0, zf0, zb0 in ((cut - 0.004, 0.495, 0.475, -0.376), (cut + 0.05, 0.5, 0.481, -0.381)) for hw_, zf_, zb_ in [blob_at(y_)]])
+        if cp.get('coatLong') and L.get('belt'):
+            # CAST-POLISH-NAMED (GROBO-COAT): every Grobo had the same body, the coat cut at the hips over round trousers, so the
+            # looks written as long coats and robes (Yorna's felt coat, Councillor Brum's robe) were Doran's and Hesk's shape in
+            # other colours. Now the coat goes on from under the belt as a skirt, flaring a little and falling in soft folds to
+            # the hem (CAST coatLong = its height), finished with a rolled hem band in the trim colour; the round body stays
+            # inside it. It goes with the hips; toward the hem a share of it (GCOAT_SKIRT, 35 %) follows the skirt bones.
+            gh_ = cp['coatLong']
+            y_top = cut - 0.004
+            hw_, zf_, zb_ = blob_at(y_top)
+
+            def w_gcoat(p):
+                x, y, z = p
+                k = GCOAT_SKIRT * smooth(y_top, gh_ + 0.1, y)   # (more, and the walk kicked its back hem up, a seat folded its front into the body)
+                a = math.atan2(x, z - 0.02)
+                ca_, sa_ = math.cos(a), math.sin(a)
+                w = {bn: v * (1 - k) for bn, v in w_blob(p).items()}
+                for bn, v in (('skirtF', max(0, ca_) ** 2), ('skirtB', max(0, -ca_) ** 2), ('skirtL', max(0, sa_) ** 2), ('skirtR', max(0, -sa_) ** 2)):
+                    if v > 0:
+                        w[bn] = w.get(bn, 0) + k * v
+                return {bn: v for bn, v in w.items() if v > 1e-4}
+            secs_ = [(y_top, max(hw_ * 1.006, 0.49), max(zf_ * 1.006, 0.47), min(zb_ * 1.006, -0.37), 0.0),
+                     (y_top + (gh_ - y_top) * 0.45, 0.505, 0.485, -0.39, 0.012),
+                     (gh_ + 0.03, 0.52, 0.5, -0.405, 0.028)]
+
+            def fold_ring(y, hw, zf, zb, amp, d=0.0):
+                r_ = ring(y, (hw + d) * slim, zf + belly + d, zb - d, BLOB_N, 0.7)
+                return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4)), yy, z * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4))) for k, (x, yy, z) in enumerate(r_)]
+            loft(b.P('coatSkirt', tunic, w_gcoat, 50), [fold_ring(*s_) for s_ in secs_])
+            # the hem band: from just above the skirt's foot, over its edge and back in under it (1.2 cm proud, 2.2 cm thick)
+            hy_, hw2, zf2, zb2, a2 = secs_[-1]
+            loft(b.P('coatHem', trim, w_gcoat, 50), [fold_ring(hy_ + 0.035, hw2, zf2, zb2, a2, 0.001), fold_ring(hy_ + 0.012, hw2, zf2, zb2, a2, 0.012),
+                                                    fold_ring(hy_ - 0.008, hw2, zf2, zb2, a2, 0.008), fold_ring(hy_ - 0.012, hw2, zf2, zb2, a2, -0.01)])
     else:
         gown = outfit == 'gown'  # (LBA2's Zoé: a fitted red outfit, deep V neckline, bare arms, the legs separate)
         torso = b.P('torso', skin if gown else tunic, w_torso, 50)
@@ -436,9 +592,11 @@ def build(name):
                     px = sxx * 0.095 * wide
                     cols = [px - 0.04 * wide, px + 0.04 * wide]
                     rows_ = [py0, py0 - 0.1]
-                    v = [(x, y, skirt_z(y, x) + 0.01) for y in rows_ for x in cols]
+                    # (CONNECT-1: laid 4 mm on the cloth, the flap 7, not 1 cm and 1.3 cm off it: a card standing in front of the coat from the side)
+                    po_, pf0_ = (0.01, 0.013) if os.environ.get('CONNECT_OLD') else (0.004, 0.007)
+                    v = [(x, y, skirt_z(y, x) + po_) for y in rows_ for x in cols]
                     pc_.add(v, [[0, 2, 3, 1]])
-                    fv = [(x, y, skirt_z(y, x) + 0.013) for y in (py0 + 0.012, py0 - 0.02) for x in (cols[0] - 0.004, cols[1] + 0.004)]
+                    fv = [(x, y, skirt_z(y, x) + pf0_) for y in (py0 + 0.012, py0 - 0.02) for x in (cols[0] - 0.004, cols[1] + 0.004)]
                     pf_.add(fv, [[0, 2, 3, 1]])
 
         belt = b.P('belt', L.get('belt', '#5a3a1a'), w_waist, 50) if not gown else None
@@ -516,6 +674,14 @@ def build(name):
         disc(b.P('emblem', L['emblem'], 'torso', 30), (0, ey, ez + 0.007), 0.038 if grobo else 0.029, 8, 'z', 0.0)
     # ---------------------------------------------------------------- legs and feet
     pants, shoes = L.get('pants', '#555555'), L.get('shoes', '#3a2a1a')
+    # (CONNECT-1, the user 11.11: "the ears are in the air … every limb should be connected": the shins stopped 3 cm above
+    # the shoe's top (the trousers ended in the air over a loose shoe), a coat or dress to below the shin's start had no leg
+    # under it at all (the shoes stood alone under the hem), the ball hand hung 1.5 cm below the cuff with nothing between,
+    # and the Rabbibunnies' ears began 1 cm above the skull. Now each shin runs down inside its shoe (to 4.5 cm off the
+    # ground, under the shoe's top), a leg shows under any hem higher than the shoe, a wrist joins cuff and hand, and the
+    # ears grow from inside the head. CONNECT_OLD=1 builds the old parts.)
+    cold = bool(os.environ.get('CONNECT_OLD'))
+    shinY = (lambda ft: ft[1] + 0.03) if cold else (lambda ft: 0.045)
     for s, sx in (('L', 1), ('R', -1)):
         hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
         r1, r2 = (0.085 if grobo else 0.06) * slim * limb, (0.075 if grobo else 0.05) * slim * limb
@@ -523,14 +689,14 @@ def build(name):
             # (each leg of the outfit: from the hips, tapering to the ankle, like the original's leg panels)
             thigh = b.P('thigh' + s, tunic, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
             tube(thigh, (hp[0], hp[1] - 0.04, hp[2]), kn, 0.122, 0.1, 10)
-            tube(b.P('shin' + s, tunic, 'knee' + s, 50), kn, (ft[0], ft[1] + 0.02, ft[2]), 0.1, 0.075, 10)
+            tube(b.P('shin' + s, tunic, 'knee' + s, 50), kn, (ft[0], ft[1] + 0.02 if cold else 0.045, ft[2]), 0.1, 0.075, 10)
         elif grobo:
             tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], kn[1] + 0.12, kn[2]), (ft[0], ft[1] + 0.03, ft[2]), 0.11 * slim, 0.1 * slim, 9)
         elif hemY > kn[1] - 0.12:
             thigh = b.P('thigh' + s, pants, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
             tube(thigh, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, r1, r2 * 1.05, 8)
-        if hemY > ft[1] + 0.08 and not gown and not grobo:  # (a mid-length coat still shows the shins)
-            tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], ft[1] + 0.03, ft[2]), r2 * 1.05, r2 * 0.9, 8)
+        if (hemY > ft[1] + 0.08 if cold else hemY > 0.085) and not gown and not grobo:  # (a mid-length coat still shows the shins; CONNECT-1: any hem above the shoe)
+            tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], shinY(ft), ft[2]), r2 * 1.05, r2 * 0.9, 8)
             if teen and hemY > kn[1] - 0.12:
                 # (ARTHUR-12) the knee as a ball on its own bone: kneeling at his boat (kneelWork, 2.3 rad) opened the
                 # thigh's and the shin's tube ends into a gap; the ball fills the joint at any bend
@@ -585,6 +751,11 @@ def build(name):
         hp_ = b.P('hand' + s, cp.get('glove') or skin, 'hand' + s, 60)
         sphere(hp_, hc_, hr, 9, 6)
         hand_detail(hp_, hc_, hr, sx, bunny=bunny, grobo=grobo)
+        if not cold and not rolled:
+            # (CONNECT-1: the wrist, from inside the sleeve's end to the ball's middle, on the hand's bone, so the ball no longer
+            # hangs under the cuff with the coat showing between; a rolled sleeve's bare forearm already runs into the ball)
+            w0 = lerp(el, hd, 0.74)
+            tube(b.P('wrist' + s, cp.get('glove') or skin, 'hand' + s, 60), w0, hc_, hr * 0.52, hr * 0.6, 8)
         # the shoulder: flush with the sleeve, where it meets the body
         sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01 - sdrop, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
         if cp.get('epaulette'):   # (CAST-POLISH: a shoulder piece on the guards' coats)
@@ -928,20 +1099,22 @@ def build(name):
                 # CAST-POLISH-CITADEL-2 (GOGGLES-NELL): the goggles were two gold drums with flat gold faces, coins on her
                 # brow. Now each is a brass cup with a rolled rim round a dark glass lens set into it (a darker shade of the
                 # brass), joined over the nose by a short bridge; the strap as before.
+                # (CAST-POLISH-UNDERGROUND: CAST gogglesN / gogglesRimN give a cheaper pair, 12 and 6 round as Nell's by default)
+                gn_, gs_ = cp.get('gogglesN', 12), cp.get('gogglesRimN', 6)
                 gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
                 for sxx in (1, -1):
                     c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
                     e_ = (c[0], c[1] + 0.006, c[2] + 0.03)
-                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, 12, cap=False)
+                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, gn_, cap=False)
                     d_ = Vector(e_) - Vector(c)
                     d_.normalize()
                     u_ = d_.cross(Vector((1, 0, 0))).normalized()
                     w_ = d_.cross(u_).normalized()
-                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)]
-                    cord(gg, rim_, 0.0035 * sx_, 6, True)
+                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)]
+                    cord(gg, rim_, 0.0035 * sx_, gs_, True)
                     lens_c = Vector(e_) - d_ * 0.004
-                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)] + [tuple(lens_c + d_ * 0.003)]
-                    gls_.add(lv, [[k, (k + 1) % 12, 12] for k in range(12)], 180)
+                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lens_c + d_ * 0.003)]
+                    gls_.add(lv, [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
                 cord(gg, [(-0.012 * sx_, my(0.937), mz(0.118) + 0.012), (0, my(0.94), mz(0.122) + 0.014), (0.012 * sx_, my(0.937), mz(0.118) + 0.012)], 0.003 * sx_, 5, False)
             else:
                 for sxx in (1, -1):
@@ -979,6 +1152,13 @@ def build(name):
             rest_ = [v[i] * 0.4 for i in range(3)]
             ca, sa = math.cos(bend), math.sin(bend)   # (the folded part turns about the z axis: out and down)
             tip2 = (mid[0] + rest_[0] * ca + sxx * rest_[1] * sa, mid[1] + (rest_[1] * ca - sxx * rest_[0] * sa), mid[2] + rest_[2] - abs(bend) * 0.02)
+            if not os.environ.get('CONNECT_OLD'):
+                # (CONNECT-1: the ear's root sunk 2 cm into the skull under where it was: it began 1 cm above it. Only the hidden
+                # root moves; the ear's line from 6 cm up, the inner colour and the tip are where they were)
+                r_ = hw * 0.78
+                dzz = (base[2] - c[2]) / 1.05
+                ys_ = c[1] + math.sqrt(max(0.0, r_ * r_ - base[0] ** 2 - dzz * dzz))
+                tube(ear, (base[0], ys_ - 0.02, base[2]), (base[0] + v[0] * 0.1, base[1] + v[1] * 0.1, base[2] + v[2] * 0.1), 0.038, 0.042, 7, squash=0.4, cap=False)
             if abs(bend) < 1e-4:
                 tube(ear, base, tip, 0.042, 0.022, 7, squash=0.4)
                 tube(ein, (base[0], base[1] + 0.06, base[2] + 0.016), (base[0] + v[0] * 0.96, base[1] + v[1] * 0.93, base[2] + v[2] * 0.96 + 0.016 - 0.044 * 0), 0.02, 0.01, 6, squash=0.3)
@@ -1087,15 +1267,21 @@ def build(name):
         # the ears: great flat flaps, a little pulled forward at the outer edge, drooping to a rounded tip, a thick rim of skin round a
         # shallower dish in the inner colour (CAST-POLISH: the flat discs read as loudspeakers); CAST earTurn / earS
         eturn, eS = cp.get('earTurn', 0.3), cp.get('earS', 1.0)
+        # (CAST-POLISH-NAMED-2, EAR-ROOT, the user 11.11: "the ears are in the air": the flap's inner edge stopped ~4 cm off
+        # the side of the head, so from above, behind and the Follow camera the ground showed between ear and head. The
+        # centre comes in from 1.95 R to 1.72 R and the flap is 10 % wider across, so its inner edge sinks ~3 cm into the
+        # head and its outer edge stays within 5 % of where it was. GEAR_OLD=1: as before)
+        gear_old = bool(os.environ.get('GEAR_OLD'))
+        ecx, ewid = (1.95, 1.0) if gear_old else (1.72, 1.1)
         outline = []
         for k in range(EAR_N):
             t = 2 * math.pi * k / EAR_N
-            px = math.cos(t) * R * 0.98 * eS * (1.0 + 0.1 * math.sin(t))
+            px = math.cos(t) * R * 0.98 * eS * (1.0 + 0.1 * math.sin(t)) * ewid
             py = math.sin(t) * R * (1.12 if math.sin(t) < 0 else 0.92) * eS
             outline.append((px, py))
         n_ = len(outline)
         for sxx in (1, -1):
-            ec = (sxx * R * 1.95, c[1] + R * 0.18, c[2] - R * 0.22)
+            ec = (sxx * R * ecx, c[1] + R * 0.18, c[2] - R * 0.22)
             # (the flap lies in a plane turned about y by eturn: its outer edge forward; u outward, v up, w out of the face)
             pl = lambda u, v, w: (ec[0] + sxx * u * math.cos(eturn), ec[1] + v, ec[2] + w + u * math.sin(eturn))
             flip = (lambda f: f) if sxx > 0 else (lambda f: f[::-1])
@@ -1109,7 +1295,11 @@ def build(name):
         # CAST-POLISH: heavy brows (a Grobo's are a ridge of its skin, darker), a wide mouth on the muzzle that flanks the trunk
         # (its own mesh: it talks); (the trunk's rounded tip and wrinkles are trunk_loft's since TRUNK-1)
         if L.get('brows', True):
-            brow_strips(b.P('brows', cp.get('browCol') or shade(skin, 0.6), head_w, 30), front, c[1] + R * 0.3, R * 0.36, es_ * 0.66, es_ * 0.36, cp.get('browS', 1.7), cp.get('browTilt', 0.0), cp.get('browArch', 0.0), 0.006)
+            # (CAST-POLISH-NAMED-2, BROW-RIDGE: every Grobo's brows a rounded ridge, not a flat strip; GBROW_OLD=1 builds the strips)
+            if os.environ.get('GBROW_OLD'):
+                brow_strips(b.P('brows', cp.get('browCol') or shade(skin, 0.6), head_w, 30), front, c[1] + R * 0.3, R * 0.36, es_ * 0.66, es_ * 0.36, cp.get('browS', 1.7), cp.get('browTilt', 0.0), cp.get('browArch', 0.0), 0.006)
+            else:
+                brow_ridge(b.P('brows', cp.get('browCol') or shade(skin, 0.6), head_w, 55), front, c[1] + R * 0.3, R * 0.36, es_ * 0.66, es_ * 0.36, cp.get('browS', 1.7), cp.get('browTilt', 0.0), cp.get('browArch', 0.0),0.0)
         mc_ = (0, c[1] - R * 0.35, c[2] + R * 0.62)
         mfront = lambda x, y: mc_[2] + R * 0.55 * 0.9 * math.sqrt(max(0.02, 1 - (x / (R * 0.55)) ** 2 - ((y - mc_[1]) / (R * 0.55 * 0.85)) ** 2))
         mhh = R * 0.08 * cp.get('mouthH', 1.0)
@@ -1139,8 +1329,17 @@ def build(name):
                 # a fur hat: a deep rounded crown, a thick roll round it, a flap hanging at each side
                 sphere(ht, (0, c[1] + R * 0.84, c[2]), R * 0.66, 10, 6, (1.0, 0.85, 1.0))
                 tube(b.P('hatRoll', shade(L['hat'], 1.18), head_w, 90), (0, c[1] + R * 0.76, c[2]), (0, c[1] + R * 0.98, c[2]), R * 0.72, R * 0.7, 12, cap=False)
-                for sxx in (1, -1):
-                    tube(b.P('hatRoll', shade(L['hat'], 1.18), head_w, 90), (sxx * R * 0.7, c[1] + R * 0.7, c[2] - R * 0.05), (sxx * R * 0.8, c[1] + R * 0.1, c[2] - R * 0.05), R * 0.2, R * 0.15, 7, squash=0.7)
+                if os.environ.get('HATFLAP_OLD'):
+                    for sxx in (1, -1):
+                        tube(b.P('hatRoll', shade(L['hat'], 1.18), head_w, 90), (sxx * R * 0.7, c[1] + R * 0.7, c[2] - R * 0.05), (sxx * R * 0.8, c[1] + R * 0.1, c[2] - R * 0.05), R * 0.2, R * 0.15, 7, squash=0.7)
+                else:
+                    # (CAST-POLISH-NAMED-2, HAT-FLAPS: the side flaps were two tapering tubes standing out from under the roll and read
+                    # as little horns beside the head; now they are tied up over the crown, as a mountain fur hat's are on a fine day:
+                    # from the top of the roll each a thick rounded tab of the roll's fur lying up the dome toward the top, flat on
+                    # it, the two tips nearly meeting. HATFLAP_OLD=1: as before)
+                    for sxx in (1, -1):
+                        hug_tab(b.P('hatRoll', shade(L['hat'], 1.18), head_w, 90), (0, c[1] + R * 0.84, c[2]), R * 0.66, (1.0, 0.85, 1.0),
+                                sxx * math.pi * 0.5, 0.55, c[1] + R * 0.97, c[1] + R * 1.36, 0.003, 0.022, 6, 6)
             elif hs_ == 'bobble':
                 # a knitted cap pulled down over the brow with a bobble on top
                 sphere(ht, (0, c[1] + R * 0.7, c[2] + R * 0.02), R * 0.78, 10, 6, (1.0, 0.8, 1.0))
@@ -1150,7 +1349,56 @@ def build(name):
                 tube(ht, (0, c[1] + R * 0.78, c[2]), (0, c[1] + R * 1.25, c[2]), R * 0.55, R * 0.5, 10)
                 disc(ht, (0, c[1] + R * 0.8, c[2]), R * 0.95, 12, 'y', 0.015)
                 tube(b.P('hatBand', shade(L['hat'], 0.6), head_w, 30), (0, c[1] + R * 0.8, c[2]), (0, c[1] + R * 0.9, c[2]), R * 0.57, R * 0.56, 12, cap=False)
-        if L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
+        if L.get('goggles') and cp.get('gogglesUp'):
+            # CAST-POLISH-NAMED (GOGGLES-HESK): his driving goggles were two flat gold drums facing forward off his brow, and
+            # the "strap round the head" a stick between them poking out at the sides. Now they sit pushed up on the dome of
+            # his head, turned up with it: brass cups with a rolled rim round dark glass (a darker shade of the brass, Nell's),
+            # a bridge between them, and a leather band from the cups' outer sides round the back of his head.
+            gg = b.P('goggles', '#c89a48', head_w, 40)
+            gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
+            hs3 = (1.0, 0.92, 1.08)
+            def on_head(th, dy, out=0.0):
+                """the point of the head's ellipsoid at height dy (from its centre) and angle th round from the front, `out` off it"""
+                k_ = math.sqrt(max(0.0, 1 - (dy / (R * hs3[1])) ** 2))
+                p_ = Vector((R * k_ * math.sin(th), dy, R * hs3[2] * k_ * math.cos(th)))
+                n_ = Vector((p_.x / hs3[0] ** 2, p_.y / hs3[1] ** 2, p_.z / hs3[2] ** 2)).normalized()
+                return Vector(c) + p_ + n_ * out, n_
+            gn_, gr_ = 10, R * 0.15
+            inner_ = []
+            for sxx in (1, -1):
+                th_ = sxx * math.atan2(R * 0.3, R * 0.8)
+                base_, n_ = on_head(th_, R * 0.6, -0.004)
+                e_ = base_ + n_ * 0.034
+                tube(gg, tuple(base_), tuple(e_), gr_ * 0.92, gr_, gn_, cap=False)
+                u_ = n_.cross(Vector((0, 1, 0)) if abs(n_.y) < 0.9 else Vector((1, 0, 0))).normalized()
+                w_ = n_.cross(u_).normalized()
+                cord(gg, [tuple(e_ + u_ * (gr_ * 1.02 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 1.02 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)], R * 0.022, 5, True)
+                lc_ = e_ - n_ * 0.005
+                gls_.add([tuple(lc_ + u_ * (gr_ * 0.95 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 0.95 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lc_ + n_ * 0.003)],
+                         [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
+                inner_.append(e_ - n_ * 0.012 - Vector((sxx * gr_, 0, 0)))
+            cord(gg, [tuple(inner_[0]), tuple((inner_[0] + inner_[1]) / 2 + Vector((0, 0.006, 0.006))), tuple(inner_[1])], R * 0.02, 5, False)   # (the bridge)
+            # the band: from one cup's outer side round the back of the head to the other's, rising to the cups in front
+            st_ = b.P('strap', '#3a2a20', head_w, 40)
+            th0, NS = math.atan2(R * 0.3, R * 0.8) + 0.12, 18
+            rows_ = []
+            for j_, (dyy, oo) in enumerate(((-0.012, -0.003), (-0.012, 0.009), (0.012, 0.009), (0.012, -0.003))):
+                row_ = []
+                for i_ in range(NS + 1):
+                    th_ = th0 + (2 * math.pi - 2 * th0) * i_ / NS
+                    dy_ = R * (0.43 + 0.17 * math.cos(th_)) + dyy
+                    row_.append(tuple(on_head(th_, dy_, oo)[0]))
+                rows_.append(row_)
+            m_ = NS + 1
+            st_.add([p for r_ in rows_ for p in r_], [[j * m_ + i, j * m_ + i + 1, (j + 1) * m_ + i + 1, (j + 1) * m_ + i] for j in range(3) for i in range(NS)])
+            for fi_, f_ in enumerate(st_.f):   # (wound to face out of the band: its outside out, its edges up and down)
+                i_ = fi_ % NS
+                bc_ = sum((Vector(rows_[j][i]) for j in range(4) for i in (i_, i_ + 1)), Vector()) / 8
+                a_, b_, c_ = (Vector(st_.v[i]) for i in f_[:3])
+                fc_ = sum((Vector(st_.v[i]) for i in f_), Vector()) / len(f_) - bc_
+                if (b_ - a_).cross(c_ - a_).dot(fc_) < 0:
+                    f_.reverse()
+        elif L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
             gg = b.P('goggles', '#c89a48', head_w, 40)
             for sxx in (1, -1):
                 disc(gg, (sxx * R * 0.3, c[1] + R * 0.62, c[2] + R * 0.8), R * 0.15, 10, 'z', R * 0.09)
@@ -1379,7 +1627,11 @@ def limb_legs(b, bp, color, shoe, r1, r2, foot_len, foot_w, top=None, ZH=2.0, fo
         if top is None or top > kn[1]:
             a = (hp[0], min(hp[1], top) if top else hp[1], hp[2])
             tube(b.P('thigh' + s, color, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.06, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.06, k - 0.04, p[1])}, 50), a, kn, r1, r1 * 0.9, 7)
-        tube(b.P('shin' + s, color, 'knee' + s, 50), (kn[0], min(kn[1], top) if top else kn[1], kn[2]), (ft[0], ft[1] + 0.02, ft[2]), r1 * 0.9, r2, 7)
+        # (CONNECT-1: the shin ran to 2 cm above the foot bone, over a foot 6 cm tall at most, so the leg ended in the air above
+        # a loose foot (the moles, bees, tri-heads, Joe, Keraooc); now it runs down into the foot, to 4 cm off the ground.
+        # The Esmers' boots have a shaft over the shin's end: unchanged.)
+        sy_ = ft[1] + 0.02 if (callable(foot) or os.environ.get('CONNECT_OLD')) else 0.04
+        tube(b.P('shin' + s, color, 'knee' + s, 50), (kn[0], min(kn[1], top) if top else kn[1], kn[2]), (ft[0], sy_, ft[2]), r1 * 0.9, r2, 7)
         if callable(foot):   # (the Esmers' boots are their own: esmer_boots)
             foot(s)
             continue
@@ -1826,7 +2078,9 @@ def build_bee(name):
                 tube(b.P('lash', shade(dark, 0.55), 'head', 30), tuple(P_), tuple(P_ + dd * 0.022 * H + Vector((sxx * 0.003 * H, 0.008 * H, 0))), 0.0035 * H, 0.001 * H, 3, cap=False)
         ant = b.P('antenna', dark, 'head', 40)
         pts = [(sxx * 0.02 * H, 0.86 * H, 0.12 * H), (sxx * 0.025 * H, 0.97 * H, 0.15 * H), (sxx * 0.03 * H, 1.0 * H, 0.21 * H), (sxx * 0.03 * H, 0.985 * H, 0.27 * H)]
-        for i in range(3):
+        if not os.environ.get('CONNECT_OLD'):   # (CONNECT-1: the stalk's root 1-1.5 cm off the head: it grows from inside it now)
+            pts = [(sxx * 0.016 * H, 0.84 * H, 0.105 * H)] + pts
+        for i in range(len(pts) - 1):
             tube(ant, pts[i], pts[i + 1], 0.008 * H, 0.006 * H, 5)
         sphere(ant, pts[-1], 0.012 * H, 5, 4)
         tube(b.P('mandible', shade(dark, 0.7), 'head', 40), (sxx * 0.084 * H, 0.775 * H, 0.108 * H), (sxx * 0.064 * H, 0.73 * H, 0.185 * H), 0.012 * H, 0.002 * H, 5)
@@ -1874,7 +2128,12 @@ def build_bee(name):
         for k in (-1, 0, 1):   # three toes on each flat foot
             tube(b.P('toe' + s, shade(dark, 0.7), 'foot' + s, 30), (ft[0] + k * 0.014, 0.014, ft[2] + 0.1 * H * 0.6), (ft[0] + k * 0.02, 0.006, ft[2] + 0.1 * H * 0.8 + 0.05), 0.011, 0.002, 4)
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
-        tube(b.P('upper' + s, dark, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), (sx * R * 0.8, sh[1], sh[2] + 0.02), el, 0.022, 0.018, 6)
+        if os.environ.get('CONNECT_OLD'):
+            tube(b.P('upper' + s, dark, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), (sx * R * 0.8, sh[1], sh[2] + 0.02), el, 0.022, 0.018, 6)
+        else:
+            # (CONNECT-1: the foreleg began 3 cm out from the thorax, in the air beside the head; it starts inside the thorax now)
+            s0 = (sx * R * 0.3, sh[1] - 0.01, sh[2] + 0.02)
+            tube(b.P('upper' + s, dark, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), s0, el, 0.022, 0.018, 6)
         tube(b.P('fore' + s, dark, 'el' + s, 50), el, hd, 0.018, 0.014, 6)
         sphere(b.P('elbow' + s, jt, 'el' + s, 50), el, 0.021, 6, 4)
         hnd = b.P('hand' + s, dark, 'hand' + s, 50)
@@ -1942,7 +2201,7 @@ def build_mole(name):
         surf_grid(b.P('bib', apron, w_b, 30), xs_b, ys_b, rz, 0.006 * H)
         for sxx in (1, -1):
             surf_grid(b.P('strap', shade(apron, 0.85), w_b, 30), [[sxx * (0.055 - 0.014 * j * 0.0) * H + dx * H for dx in (-0.007, 0.007)] for j in range(4)], [0.58 * H, 0.64 * H, 0.70 * H, 0.77 * H], rz, 0.007 * H)
-        surf_grid(b.P('pocket', shade(apron, 0.8), w_b, 30), [[-0.055 * H, 0.0, 0.055 * H]] * 3, [0.315 * H, 0.345 * H, 0.375 * H], rz, 0.006 * H)
+        surf_grid(b.P('pocket', shade(apron, 0.8), w_b, 30), [[-0.055 * H, 0.0, 0.055 * H]] * 3, [0.315 * H, 0.345 * H, 0.375 * H], rz, (0.006 if os.environ.get('CONNECT_OLD') else 0.002) * H)   # (CONNECT-1: on the apron, not 1.2 cm off it)
     # the skull: a rounded cranium the snout grows from, ears on it
     sk = b.P('skull', pale, 'head', 60)
     sphere(sk, (0, 0.885 * H, 0.06 * H), 0.1 * H, 10, 7, (0.95, 0.93, 1.0))
@@ -2100,7 +2359,7 @@ def build_tri(name):
         surf_grid(pk, [[0.045 * H, 0.07 * H, 0.095 * H]] * 3, [0.625 * H, 0.645 * H, 0.665 * H], sz, 0.004 * H)
         flat_poly(b.P('hanky', L['tie'], w_t, 30), [(0.06 * H, 0.665 * H, sz(0.06 * H, 0.665 * H) + 0.006 * H), (0.075 * H, 0.665 * H, sz(0.075 * H, 0.665 * H) + 0.006 * H), (0.068 * H, 0.682 * H, sz(0.068 * H, 0.682 * H) + 0.006 * H)], (0, 0, 1))
         for y_ in (0.57, 0.52, 0.47):
-            facet(b.P('button', '#c8a050', w_t, 30), (0, y_ * H, sz(0, y_ * H) + 0.004 * H), (0, 0, 1), 0.0065 * H, 6)
+            facet(b.P('button', '#c8a050', w_t, 30), (0, y_ * H, sz(0, y_ * H) + (0.004 if os.environ.get('CONNECT_OLD') else 0.0015) * H), (0, 0, 1), 0.0065 * H, 6)   # (CONNECT-1: sewn on, not 6 mm off the cloth)
     else:   # shirtsleeves: collar flaps, a placket of buttons, a chest pocket, braces over the shoulders
         cl_ = b.P('collar', shade(suit, 0.9), w_t, 30)
         for sxx in (1, -1):
@@ -2218,6 +2477,8 @@ def build_vesk(name):
     loft(b.P('belt', brass, 'torso', 50), [ring(hipsY - 0.03, 0.168, 0.138, -0.143, 20, 0.7), ring(hipsY + 0.05, 0.17, 0.142, -0.142, 20, 0.7)])
     box(b.P('buckle', '#e8c870', 'torso', 30), -0.05, 0.05, hipsY - 0.035, hipsY + 0.055, 0.135, 0.16)
     ey_, ez_ = shY - 0.2, 0.17 + st * smooth(hipsY, neckY, shY - 0.2)
+    if not os.environ.get('CONNECT_OLD'):
+        ez_ -= 0.011   # (CONNECT-1: the emblem stood 1 cm proud of the coat: on it now)
     disc(b.P('emblemRim', brass, 'torso', 30), (0, ey_, ez_), 0.07, 8, 'z', 0.012)
     disc(b.P('emblem', glow, 'torso', 30), (0, ey_, ez_ + 0.008), 0.048, 8, 'z', 0.0)
     # the tall collar: a curved shell standing up behind the head, wider at the top, violet inside
@@ -2232,6 +2493,13 @@ def build_vesk(name):
             cf.append([j * M + i, j * M + i + 1, (j + 1) * M + i + 1, (j + 1) * M + i])
     b.P('collar', coat, 'torso', 40).add(cv, cf)
     b.P('collarIn', lining, 'torso', 40).add([(x * 0.97, y, z * 0.97 + 0.004) for x, y, z in cv], [f[::-1] for f in cf])
+    if not os.environ.get('VESK_OLD'):
+        # CAST-POLISH-UNDERGROUND (VESK-COLLAR; VESK_OLD=1 builds the old one): the collar was two bare shells 4 mm apart, its
+        # top and its two front edges a paper line against the sky in the close shots. Now the lining rolls over them: a round
+        # edge 1.8 cm thick along both fronts and the top, on the shells' middle, in the lining's violet.
+        mid = lambda j, i: (lambda q: (q[0] * 0.985, q[1], q[2] * 0.985 + 0.002))(cv[j * M + i])
+        edge = [mid(0, 0), mid(1, 0)] + [mid(2, i) for i in range(M)] + [mid(1, M - 1), mid(0, M - 1)]
+        cord(b.P('collarEdge', lining, 'torso', 40), edge, 0.009, 6, False)
     # pauldrons: angular brass plates on the shoulders
     for s_, sx in (('L', 1), ('R', -1)):
         sh = bp('sh' + s_)
@@ -2243,7 +2511,7 @@ def build_vesk(name):
         if s_ == 'R':
             tube(b.P('gauntlet', brass, 'el' + s_, 30), el, lerp(el, hd, 0.95), 0.085, 0.075, 7, hard=True)
             for k in (-1, 0, 1):
-                tube(b.P('claw', '#8a6a3a', 'hand' + s_, 30), (hd[0] + k * 0.03, hd[1], hd[2] + 0.02), (hd[0] + k * 0.035, hd[1] - 0.13, hd[2] + 0.07), 0.018, 0.004, 5)
+                tube(b.P('claw', '#8a6a3a', 'hand' + s_, 30), (hd[0] + k * 0.03, hd[1] + (0.0 if os.environ.get('CONNECT_OLD') else 0.025), hd[2] + 0.02), (hd[0] + k * 0.035, hd[1] - 0.13, hd[2] + 0.07), 0.018, 0.004, 5)   # (CONNECT-1: the claws' roots inside the gauntlet, not 9 mm under it)
             sphere(b.P('gauntletLight', glow, 'el' + s_, 60), lerp(el, hd, 0.5)[:2] + (lerp(el, hd, 0.5)[2] + 0.08,), 0.022, 6, 4)
         else:
             tube(b.P('fore' + s_, coat, 'el' + s_, 50), el, lerp(el, hd, 0.85), 0.058, 0.064, 8)
@@ -2333,7 +2601,8 @@ def build_elf(name):
     for s_, sx in (('L', 1), ('R', -1)):
         hp, k_, ft = bp('hip' + s_), bp('knee' + s_), bp('foot' + s_)
         tube(b.P('thigh' + s_, legs, lambda p, s_=s_, k=k_[1]: {'hip' + s_: 1 - smooth(k + 0.06, k - 0.04, p[1]), 'knee' + s_: smooth(k + 0.06, k - 0.04, p[1])}, 50), hp, k_, 0.055, 0.05, 8)
-        tube(b.P('shin' + s_, legs, 'knee' + s_, 50), k_, (ft[0], ft[1] + 0.03, ft[2]), 0.05, 0.045, 8)
+        # (CONNECT-1: the shin stopped 3 cm above the foot bone, over a shoe 8 cm tall: down into the shoe now)
+        tube(b.P('shin' + s_, legs, 'knee' + s_, 50), k_, (ft[0], ft[1] + 0.03 if os.environ.get('CONNECT_OLD') else 0.06, ft[2]), 0.05, 0.045, 8)
         sh = b.P('shoe' + s_, shoes, 'foot' + s_, 40)   # pointed, the toe curling up
         tube(sh, (ft[0], 0.05, ft[2] - 0.05), (ft[0], 0.05, ft[2] + 0.12), 0.06, 0.04, 8, squash=0.7)
         tube(sh, (ft[0], 0.05, ft[2] + 0.12), (ft[0], 0.11, ft[2] + 0.2), 0.04, 0.005, 6)
@@ -2341,6 +2610,10 @@ def build_elf(name):
         shp, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
         tube(b.P('upper' + s_, green, lambda p, s_=s_, e=el[1]: {'sh' + s_: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s_: smooth(e + 0.05, e - 0.03, p[1])}, 50), (shp[0], shp[1] + 0.02, shp[2]), el, 0.042, 0.035, 8)
         tube(b.P('fore' + s_, skin, 'el' + s_, 50), el, hd, 0.03, 0.028, 7)
+        if not os.environ.get('CONNECT_OLD'):
+            # (CONNECT-1: the sleeve stood 1.7 cm off the tunic's shoulder, the arm hanging beside the body; a round shoulder in
+            # the sleeve's green now fills the gap into the tunic)
+            sphere(b.P('shoulder' + s_, green, 'sh' + s_, 50), (shp[0] - sx * 0.035, shp[1] + 0.005, shp[2]), 0.05, 8, 6)
         hp_ = b.P('hand' + s_, skin, 'hand' + s_, 60)
         sphere(hp_, hd, 0.055, 8, 6)
         hand_detail(hp_, hd, 0.055, sx)   # (CAST-POLISH)
@@ -2417,7 +2690,7 @@ def build_fclone(name):
     loft(b.P('belt', red, 'torso', 40), [ell(530 * u, 281 * u, 261 * u, BODY_N, cz=10 * u), ell(585 * u, 280 * u, 260 * u, BODY_N, cz=10 * u)])
     box(b.P('buckle', '#070b17', 'torso', 40), -56 * u, 56 * u, 520 * u, 595 * u, 268 * u, 285 * u)
     for sx in (1, -1):
-        tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, 125 * u), (sx * 165 * u, 590 * u, 250 * u), 18 * u, 18 * u, 5, squash=0.4)
+        tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, (125 if os.environ.get('CONNECT_OLD') else 112) * u), (sx * 165 * u, 590 * u, (250 if os.environ.get('CONNECT_OLD') else 238) * u), 18 * u, 18 * u, 5, squash=0.4)   # (CONNECT-1: on the chest, not 1.8 cm off it)
         tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, -120 * u), (sx * 150 * u, 600 * u, -150 * u), 18 * u, 18 * u, 5, squash=0.4)
     # the pack and its bedroll
     box(b.P('pack', L.get('pack', '#872f1f'), 'torso', 40), -190 * u, 165 * u, 600 * u, 1000 * u, -330 * u, -150 * u)
@@ -2539,9 +2812,12 @@ def build_sphero(name):
     # legs: thigh, a ball knee, shin, a flat foot turned out
     for s, sx in (('L', 1), ('R', -1)):
         hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
-        tube(b.P('thigh' + s, coat, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.05, k - 0.03, p[1]), 'knee' + s: smooth(k + 0.05, k - 0.03, p[1])}, 50), hp, kn, 30 * u, 26 * u, 7)
+        # (CONNECT-1: the thigh began 3 cm under the star's lower edge (the leg hung in the air under the body); it starts
+        # inside the body now, 45 units above the hip joint)
+        tube(b.P('thigh' + s, coat, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.05, k - 0.03, p[1]), 'knee' + s: smooth(k + 0.05, k - 0.03, p[1])}, 50), hp if os.environ.get('CONNECT_OLD') else (hp[0], hp[1] + 45 * u, hp[2]), kn, 30 * u, 26 * u, 7)
         sphere(b.P('knee' + s, coatD, 'knee' + s, 50), kn, 42 * u, 8, 6)
-        tube(b.P('shin' + s, L.get('hair', '#ef7b53'), 'knee' + s, 50), kn, (ft[0], 60 * u, ft[2]), 24 * u, 20 * u, 6)
+        # (CONNECT-1: the shin ended 4 cm above its flat foot; now down into it)
+        tube(b.P('shin' + s, L.get('hair', '#ef7b53'), 'knee' + s, 50), kn, (ft[0], 60 * u if os.environ.get('CONNECT_OLD') else 24 * u, ft[2]), 24 * u, 20 * u, 6)
         f = b.P('foot' + s, L.get('shoes', '#1f4a27'), 'foot' + s, 30)
         tube(f, (ft[0] - sx * 40 * u, 18 * u, ft[2] - 20 * u), (ft[0] + sx * 90 * u, 14 * u, ft[2] + 60 * u), 34 * u, 12 * u, 6, squash=0.5)
     os.makedirs(OUTDIR, exist_ok=True)

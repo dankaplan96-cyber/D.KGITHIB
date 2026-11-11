@@ -105,7 +105,7 @@ export const ISLE_PEOPLE = {
     { id: 'kn_fisher', char: 'keeper', tint: '#f4eadc', color: '#d0b088', speed: 0.9, start: 1, rounds: {
       ord: [at('fi_skiff', -12.5, -48.8, 'tend', [12, 18], { d: 2.4 }), at('fi_barrel', -12.3, -18.8, 'draw', [5, 7], { carry: 'can', d: 0.9 }), at('fi_crates', -11.8, -15.8, 'put', [5, 7], { carry: null, d: 0.9 })],
     } },
-    { id: 'kn_mother', char: 'nara', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
+    { id: 'kn_mother', char: 'nara_b', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
       ord: [at('mo_crates', -8.3, -22.8, 'browse', [6, 9], { carry: 'basket', d: 1.0 }), dr('mo_home', 18.7, -17.5, [10, 14], { carry: null }), at('mo_bench', 9.7, -16.8, 'stand', [8, 12], { d: 1.0 })],
     } },
     { id: 'kn_kid', char: 'xil', scale: 0.72, tint: '#fff8e8', color: '#f0d890', speed: 1.35, rounds: {
@@ -328,7 +328,7 @@ const RD = (id, x, z, a, act, dur, o = {}) => ({ id, x, z, a, act, dur, ...o });
 export const OTRBAR_ROOM = {
   floors: [{ x0: -9.7, x1: -1.5, z0: -6.9, z1: -3.1, y: 0.6 }, { x0: -9.7, x1: 9.7, z0: -6.7, z1: 6.7, y: 0 }],   // (the raised floor first: a point is on the first floor that holds it)
   people: [
-    { id: 'ot_keep', char: 'clerk', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
+    { id: 'ot_keep', char: 'clerk_b', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
       RD('bk_counter', -5.6, 3.5, 0, 'browse', [14, 20], { gest: ['nod'] }), RD('bk_urns', -3.9, 3.5, 0, 'put', [6, 9]),
     ] },
     { id: 'ot_boss', char: 'councilChair', tint: '#ffe6ea', color: '#f0a0b0', speed: 0.7, start: 0, stays: true, when: ROOM_WHEN, stops: [

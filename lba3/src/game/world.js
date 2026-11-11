@@ -13,7 +13,7 @@ import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP,
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
 import { buildDinoFly } from './dinofly.js';
-import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
+import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
@@ -1239,8 +1239,9 @@ export function* buildWorldSteps(parentScene) {
   {
     const L = POI.lighthouse, g = H(L.x, L.z);
     const grp = new THREE.Group(); grp.position.set(L.x, g, L.z); scene.add(grp);
-    // (I-3: the tower is src/game/lighthouse.js: tapered bands, a door with its surround and step, windows, a gallery
-    // with a railing, the glazed lamp room and a cap; merged, one mesh per material, only the plaster casts)
+    // (I-3, CITADEL-85: the tower is src/game/lighthouse.js, in LBA2's shape: a square white tower with grey quoins, a
+    // gallery, the glazed lantern under a domed grey cap, the annex with the door at its foot; merged, one mesh per
+    // material, only the tower's plaster and dressed stone cast)
     const lampMat = new THREE.MeshStandardMaterial({ color: '#444', emissive: '#ffefb0', emissiveIntensity: 0.05, transparent: true, opacity: 0.85 });
     const { lampY } = buildLighthouse(grp, lampMat);
     // the beam (visible once the Sun Lens is restored)
@@ -1252,6 +1253,7 @@ export function* buildWorldSteps(parentScene) {
     const light = new THREE.PointLight('#ffe9b0', 0, 40, 1.5);
     light.position.y = lampY; grp.add(light);
     physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 20 });
+    physics.add({ type: 'box', x: L.x, z: L.z + (LH_ANNEX.z0 + LH_ANNEX.z1) / 2 + 0.03, hw: LH_ANNEX.hw + 0.05, hd: (LH_ANNEX.z1 - LH_ANNEX.z0) / 2 + 0.03, rot: 0, top: g + LH_ANNEX.top });   // (CITADEL-85: the annex, whose front corners stand outside the cylinder)
     physics.add({ type: 'box', x: L.x, z: L.z + 3.05, hw: LH_STEP_W / 2, hd: 0.25 + 0.12, rot: 0, top: g + 0.15, stair: true });   // (the doorstep, lighthouse.js, to z 3.3)
     for (const S of LH_STEPS) physics.add({ type: 'box', x: L.x, z: L.z + (S.z0 + S.z1) / 2, hw: LH_STEP_W / 2, hd: (S.z1 - S.z0) / 2 + 0.12, rot: 0, top: g + S.top, stair: true });   // (the steps up to the door; +0.12: overlapping, no seam to drop through under groundAt's 5 cm shrink, as the rooms' stairs)
     W.lighthouse = { lampMat, beam, light, power: 0 };

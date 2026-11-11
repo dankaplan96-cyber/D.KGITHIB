@@ -127,7 +127,7 @@ export const IHOME_AT = Object.fromEntries(IHOME_IDS.map((r, i) => [r, { x: 1040
 export const KEEPERS = {
   ih_ossa: { room: roomOf('otringal-63--45'), char: 'ztri1', color: '#c8b0f0' },
   ih_liwa: { room: roomOf('otringal-6--24'), char: 'nara', color: '#f0c0a8' },
-  ih_dobb: { room: roomOf('otringal-4--11'), char: 'clerk', color: '#a8c0e0' },
+  ih_dobb: { room: roomOf('otringal-4--11'), char: 'clerk_b', color: '#a8c0e0' },
   ih_brem: { room: roomOf('otringal--2-56'), char: 'oku', color: '#e0c890' },
   ih_gorrin: { room: roomOf('knartas-33--14'), char: 'keeper', color: '#e0a870' },
   ih_tesk: { room: roomOf('platform-27--31'), char: 'zmole1', color: '#b8c8a0' },

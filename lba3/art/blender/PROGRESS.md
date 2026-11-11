@@ -288,26 +288,98 @@ through the bridge equals `assets/poly/zoe.json` exactly, and `ZOE_LOOK_OLD=1` r
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles/draws measured, GPU light check (see
   the request note) · integrated: no (the user decides; then the cloud).
 
+### Equipment: the magic ball and the sword: EQUIP-1 (9.11.2026, worktree `C:\Users\dan\lba3-items`, detached at 68315019)
+Queue item 8 after ITEMS-1, the same method.
+- **Where:** `actors.js` MagicBall (the body, the halo; trail and flashes unchanged) and buildSword (in the right hand);
+  `itemlook.js` looks `ball`, `sword`; the HUD pill and selector ring (`hud.js`, glyphs from `combat.js` WEAPON_INFO).
+  Behaviour untouched: throw plan, bounces, recall, reach, damage, hand attach points, sounds.
+- **Reference** (the user's LBA2 SPRIRAW.HQR, decoded to scratch, looked at, deleted): the ball is a 14 px shaded marble per
+  level (gold, green, red; the fire ball a flat flame) with a white glint upper left, a dark rim, a 50 % dithered halo disc
+  and a trail of smaller balls. No sword reference (Yorna's sword is the game's own).
+- **New:** `src/game/equiplook.js`. Ball: vertex-painted marble per level (pole on the light, glint, rim), turned to the
+  camera in `fx`, emissive kept low (0.24 / 0.40 / 0.58 from the old 0.6 / 2.2 / 4 scale, kept as `glow` for the halo and
+  the charge), a halo picture with a disc wider than the ball, painted at `holdIn` too. Sword: sabre blade 6.4 cm wide with
+  flat + bevel facets, curved guard with ball ends, pommel, wrapped grip; 3 shared meshes; turned pi/2 about its line so the
+  edge leads slash1 and slash3 (measured: they struck with the flat). Inventory ball in the level's colour (inventory.js
+  `look`), HUD SVG icons.
+- **Blender** (`props/equip/jobs/equip-1.json`, 33 jobs OK): baselines and candidates imported, inspected, validated 13/13,
+  four views grey and coloured, round trip with equal triangles (ball 396, sword 515).
+- **In the game** (Vega 8, Chrome, Follow/Medium, Auto = Medium): ball in flight 5 = 5 draws, 478 -> 522 tris; sword held
+  8 -> 6 draws, 656 -> 1030 tris (both passes); swing 9 -> 7 draws; programs 86 = 86. Pictures `docs/future/items/{ball,sword}/`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles/programs measured, frame time
+  NOT verified (another agent's SwiftShader browser loaded the laptop) · integrated: no (request `tools/testlab/requests/EQUIP-1.diff`).
+- Tests: combat 75/76 (the base's dodge 30/60 fps FAIL, the same on HEAD), anim-combat 35/35, ball-close 6/6, anim-polish 55/55,
+  equip2 30/30, chapter1 23/23, givers 16/16, items-ceremony 20/20, shops 31/31, magic-levels 26/26 (details in `requests/EQUIP-1.md`).
+- Left: no bloom capture; the forehand still leads with the flat; the fire ball is an orange marble, not LBA2's flat flame.
+
+### Underground batch 1: worker_b, nara_b, VESK-COLLAR, Fosse: CAST-POLISH-UNDERGROUND (10.11.2026, worktree `lba3-items`)
+Detached at origin `db3707df`, clean. Census (`census-z.mjs`, 173 people at load) + the code: the underground's people are
+the epilogue's shield crew (Harl keeper_b, Tolli worker, Sala nara), Vesk in the core (ch 12), Baldino at the collar
+(ch 11-12); the sewers' only person is Fosse (farmerC). LBA2 bodies 80-83, 86, 186 measured read-only (numbers printed,
+nothing written): the Esmers share one capsule and differ by dress and headgear only.
+- VESK-COLLAR (`build_vesk`, `VESK_OLD=1` = the old collar): the collar's top and front edges were two bare shells 4 mm
+  apart; a rolled lining edge 1.8 cm thick now. 1722 -> 1878 (+9.1 %).
+- worker_b (Tolli dp_tolli, Anko dg_surv, Fennick zr_fennick): heavier, bare-headed, moustache, brass goggles up (Nell's
+  glass goggles at 8 sides: new CAST `gogglesN`/`gogglesRimN`, defaults = Nell's, nell rebuilds identical), rolled sleeves;
+  the crew's teal hexes kept. 2572 -> 3126 (+21.5 %).
+- nara_b (Sala dp_sala, Wenna zh_wenna, Mila kn_mother/il_mila, Sister Ione il_ione): the long dress (oku_b's robe code)
+  with a belt, its own palette. 2010 -> 2086 (+3.8 %).
+- Fosse -> the existing farmerC_b (no sun hat in the sewer; parts him from Grull and Tobb). 3634 -> 3330.
+- Checks: HEAD rebuild = shipped (nara exact; worker/vesk 0.0001 normal rounding); polycheck clean; validate 0 fails;
+  DRESS-1 as the base looks (worker's hair/shoes and variant-3 hair=belt false positives); hero 4 = 4 draws each.
+- Tests (SwiftShader): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, under-bar 15/15,
+  epilogue-home 12/12, sewers 32/32, sewers-ways 34/34 PASS.
+- Files `characters/under/`, jobs `under-*.json`; pictures `docs/future/characters/{vesk,worker_b,nara_b,farmerC_b}/ch3plus-*`
+  (not for the user); request `tools/testlab/requests/CAST-POLISH-UNDERGROUND*`. The worktree keeps the batch applied,
+  uncommitted (vesk/worker_b/nara_b and the index in assets/poly; art/characters/skeletons.json untouched).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (hero wearing each, Citadel; 13 poses) · performance:
+  draws/triangles measured, frame time not run · integrated: no (request).
+- Left: Baldino's paper ears and headband (his script); Harl shares keeper_b (a uniform); worker x4 / nara x12+ still
+  most shared; worker_b's goggle strap does not show from the side.
+
+### The named cast, batch 1: Baldino, Hesk, Yorna, Brum: CAST-POLISH-NAMED (built on the laptop 10.11, finished on the desktop 11.11)
+- BALDINO-EARS/-STRAP/-GOGGLES/-COLLAR, GOGGLES-HESK, GROBO-COAT (Yorna, Brum); details `tools/testlab/requests/CAST-POLISH-NAMED.md`.
+- The desktop (MIGRATE-39): the laptop's partial work taken from `wip/laptop/lba3-items`; the diff re-made against `8f826b7b`;
+  the four models rebuilt with Blender 5.3.0 = the laptop's 5.2.3 files byte for byte; tests solidnpc 54/54, chapter1 23/23,
+  cast-rounds 209/209, story-journeys 30/30 PASS.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (the laptop's pictures, looked at again) · performance:
+  draws/triangles measured · integrated: no (request).
+
+### Every limb joined, the Grobos' brows and ears, Yorna's hat: CAST-CONNECT-1 (the desktop, 11.11.2026)
+- The user, 11.11: "the ears are in the air", "every limb should be connected". New check `jobs/floating.py`: 51 of 61
+  models had loose parts (shoes apart from legs, no legs under long hems, hands under the cuffs, Grobo ears, bunny ears,
+  bees' forelegs/antennae, Joe's shoulders, Spheros' legs, pockets/buttons/straps); 3 left under 1.3 cm. BROW-RIDGE and
+  HAT-FLAPS for the Grobos/Yorna (queue 6's left items). Details `tools/testlab/requests/CAST-CONNECT-1.md`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (close-ups, 13 poses for three looks) · performance:
+  triangles measured (+1-11.5 %), no draw call · integrated: no (request).
+
+### Shape variants farmerA_b, farmerB_b, clerk_b and GROBO-GREY: CAST-VARIANTS-1 (the desktop, 11.11.2026)
+- Queue 7's first three variants, 8 people moved; the trader's green skin and Brix's green tint (the user: "green elephants").
+  Details `tools/testlab/requests/CAST-VARIANTS-1.md`. States: exported ✓ · loaded in game ✓ · visually inspected ✓ (turnarounds)
+  · performance: triangles measured · integrated: no (request).
+
 ## Current
-- ZOE-LOOK-38 delivered 9.11 and **accepted by the user 9.11 ("Zoé is good")**; the cloud applies it. Next: Twinsen (TWINSEN-LOOK-38).
-- CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11 (both code diffs rebased on origin b4f1763e; apply HAMALAYI, then HANDS-36). ITEMS-1, DESERT, ISLES applied by the cloud.
+- **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11; CAST-CONNECT-1 sent 11.11 (after NAMED).
+- CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
+- ZOE-LOOK-38 accepted by the user 9.11 ("Zoé is good"); the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue is done (the user, 9.11: "by the order we set").
+- EQUIP-1 (ball, sword) and CITADEL-85: applied by the cloud (CITADEL-85 as e2a9d1dc); the user kept the blade's quarter turn and accepted CITADEL-85 whole (10.11).
+- CAST-POLISH-HAMALAYI and HANDS-36 sent 8.11. ITEMS-1, DESERT, ISLES applied by the cloud.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, ~~the underground~~ (CAST-POLISH-UNDERGROUND)
 5. ~~HANDS-36~~ (order 36: request sent)
-6. The named cast
+6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); ~~Yorna's hat flaps, the Grobos' flat brows~~ (CAST-CONNECT-1, with every limb joined)
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
-   farmerA, farmerB, clerk, worker (and councilB for Kira; zmole2, zbee1, zbee2)
-8. Equipment: ~~the bonuses~~ (ITEMS-1); the ball, the sword
+   ~~worker, nara~~ (UNDERGROUND); ~~farmerA, farmerB, clerk~~ (VARIANTS-1); left: councilB for Kira, zmole2, zbee1, zbee2
+8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
 ## Next action
-If the user likes ZOE-LOOK-38: the same treatment for Twinsen (order 38), then the cast region by region. If not: say
-which parts to keep (each is separable in `zoe_poly.py`). Otherwise back to the queue after HANDS-36: region 5, the underground (the sewers' and the underground's people), or what the cloud
-orders next (CLOUD_ORDERS.md). The moles' claws could take the hands' front-to-back turn too (not asked). Worktree
-`C:\Users\dan\lba3-cast3` holds HAMALAYI + HANDS-36 applied, uncommitted (their JSONs, the index and skeletons.json in
-place). Browsers with `SHELL_EXE` (scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`), a test copy of
-tests/ with lib/boot.mjs patched (SHELL_EXE, the testlab playwright import).
+Order 28's regions are done (the underground last, 10.11), queue 6's first batch too (CAST-POLISH-NAMED, 11.11). By the order
+the user set (9.11): queue 6's left items (Yorna's fur-hat flaps, the cast Grobos' flat brow strips), then queue 7's `_b` variants (farmerA, farmerB, clerk; worker ×4 and nara ×12+
+still the most shared), queue 8 equipment is done, then 9 common props; **Twinsen's ZOE-LOOK treatment after the queue**.
+The moles' claws could take the hands' front-to-back turn too (not asked). A Vega 8 frame-time pair for EQUIP-1 on a quiet
+laptop is still owed.

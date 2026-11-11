@@ -289,6 +289,10 @@ export const VOICES = {
   dp_sala: { race: 'esmer', seed: 1703, f0: 228, k: 1.12, rate: 0.96, contour: 'arc', range: 4, legato: 0.7, spk: 1 },                // Sala, Zeelich's half of the crew: light
   zr_fennick: { race: 'quetch', seed: 1510, f0: 132, k: 0.96, rate: 1.08, contour: 'bounce', legato: 0.56, spk: 3 },                  // the heat fitter: busy
   zr_rezz: { race: 'esmer', seed: 1511, f0: 112, k: 0.82, tilt: 2.1, rate: 1.4, contour: 'arc', legato: 0.4, spk: 2 },                           // the grounded shuttle pilot
+  // (CAMPAIGN-3, Mill Lane's cistern lift: story/zeelift.js)
+  zl_kell: { race: 'esmer', seed: 1801, f0: 124, k: 0.86, rate: 0.82, contour: 'fall', range: 3, legato: 0.8, spk: 1, sex: 'm' },                // the lift's operator: steady, a hand on the brake
+  zl_brel: { race: 'quetch', seed: 1802, f0: 146, k: 0.99, rate: 1.16, contour: 'bounce', range: 5, legato: 0.5, spk: 2, sex: 'm' },             // the docker: quick, out of breath
+  zl_irsa: { race: 'esmer', seed: 1803, f0: 222, k: 1.1, rate: 0.98, contour: 'step', range: 4, legato: 0.62, spk: 3, sex: 'f' },                // the pumpwright: dry, exact
   zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful
   dw_guard: { race: 'quetch', seed: 1513, f0: 118, k: 0.95, rate: 1.0, contour: 'flat', range: 2.5, legato: 0.5, swing: 0.05, spk: 2 }, // the depot's Quetch guard (chapter 1): clipped
   // (DESERT-BAR's keepers, 8.11: Kesh's homes, the bunkhouse, the dormitory, S40; Quetch, each apart from Kesh's walkers)
@@ -344,7 +348,7 @@ export const VOICES = {
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
-const ALIAS = { bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
+const ALIAS = { veskhorn: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
 // names that are not people (signs, notes, places): no voice
 const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
   'lighthouse', 'cliffs', 'orchard', 'depot', 'station', 'fort', 'pipe', 'camp']);

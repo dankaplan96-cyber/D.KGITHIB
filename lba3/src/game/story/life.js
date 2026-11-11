@@ -291,7 +291,7 @@ export class TownLife extends ChapterBase {
   update(dt) {
     const g = this.game, h = g.hero, L = this.L;
     if (g.room?.id === 'house') this.homeStage();
-    if (g.room && h.steer) h.steer = null;
+    if (g.room && h.steer && !h.steer.indoor) h.steer = null;   // (its own walks are the lane's; a room's own steps — the kitchen tap, the pump room: indoor — are left alone)
     if (g.state !== 'play') return;
     if (this.later && (this.later.t -= dt) <= 0) { const fn = this.later.fn; this.later = null; fn(); }
     if (this.cs === 'bench') {

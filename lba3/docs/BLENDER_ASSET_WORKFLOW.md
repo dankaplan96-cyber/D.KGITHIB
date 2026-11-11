@@ -48,7 +48,7 @@ follows it is `.claude/agents/lba-blender-character-and-prop-artist.md`.
   Check `validate` with `"skeleton": "art/characters/skeletons.json", "skeletonKey": "<look>"` and ≤ 4 weights.
 - **What to judge:** silhouette at gameplay distance first, then head, face, hair, clothing volume and hems, hands,
   feet, accessories. Twinsen reads by his blue tunic, his hair tuft and his ponytail; Zoé has her own proportions and
-  her bun (never a recoloured Twinsen).
+  her swept-up ponytail with its green band (never a recoloured Twinsen).
   - The measured references are `docs/LBA2_MEASUREMENTS.md`, `docs/character-review.md` and
     `art/characters/<name>/manifest.json` (from the user's own LBA files, numbers only).
   - A fan render is not a reference.

@@ -10,6 +10,7 @@ node tests/prologue.mjs        # new game → prologue end → save
 node tests/well-town.mjs       # CH1-LONGER: chapter 1's town steps (Mira's proof, the rusted lid, the harbour bell, the bay rocks), Save → Continue at each, an old save
 node tests/chapter1.mjs        # chapter 1 end to end, with save → reload in the middle
 node tests/chapter2.mjs        # chapter 2 end to end, incl. the confiscated-plan setback
+node tests/campaign-thread.mjs # CAMPAIGN-1…3: the thread of chapters 1–3 against saves, by input: leaving the pump room mid-task, the wrong bypass setting and its correction, a save after a partial repair (the bypass; the cart hooked), a fall from the lift's landing, the street and Mill Lane after a reload, four saves from before the thread; ONLY=A|B|C, SHOTS=dir (fixtures: tests/fixtures/campaign/)
 node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt save recovery
 node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue = newest / Delete / New Game keeps slots / full storage
 node tests/uipass.mjs         # UI-PASS: Back / Esc the same on every screen (also with Pause or Up rebound), Controls: one list from the keys in use (first key in view, B gives up a wait), every settings row says what it does, the inventory's Close, a phone's touch buttons (aside in menus, an Inventory button), long messages wrap

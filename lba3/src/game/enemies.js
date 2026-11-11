@@ -12,6 +12,7 @@ import { sculptRigid } from '../engine/sculpt.js';
 import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
 import { createGuardianRig, createHaulerRig, createFan, createSlamMarks } from './bossmodels.js';
+import { solveHand, restoreJoints, PALM } from '../engine/handik.js';
 
 // SOLID-ENEMY (the user, 29.10: "what LBA2 did"): how wide each enemy's body is to Twinsen, who stops at it and slides
 // (Hero.keepApart; the enemy itself stops at him: Actor.keepOffHero). LBA2 makes every actor with a body solid to him
@@ -1108,6 +1109,35 @@ export function createEnemy(game, def) {
 // A patrolling person who can't hurt anyone but raises the alarm when they
 // see the player: used for Zoe's infiltration of the project office.
 // Shows a vision cone on the floor so the player can read it.
+//
+// P12 (the user, 11.11.2026: "the elephant in Zoé's part doesn't hold a torch" — the yellow patch on the floor read as a
+// torch's beam from empty hands): he holds a hand torch. A small rigid prop in his right fist, its barrel along the hand
+// (as the guards' rifles lie), a pale lit lens, a faint beam from the lens down to the floor before him; no light, no
+// shadow. The arm is held by the hand solver (engine/handik.js) as a layer over his walk and his idle: the fist before
+// his right hip at waist height, the lens the way he faces (so it turns with him as he looks back), tipped down at the
+// floor; as his suspicion grows the arm comes up and the torch points at whoever he has seen. His sight is unchanged.
+// Stopped (spotted: he speaks; the scene over), the cone and the beam go and the arm comes down, the torch in his hand
+// at his side; once the scene lets go of him (npc.controlled off) the torch is put away.
+const TORCH = { fwd: 0.7, down: 0.42, in: 0, tip: 0.62, apex: 0.55, size: 1.45 };   // the fist from the shoulder (× the arm's length), the barrel's tilt down (rad), the floor patch's apex before his feet (m), the prop's size (a watchman's big torch: it has to read from the room's high camera)
+const _tS = new THREE.Vector3(), _tE = new THREE.Vector3(), _tH = new THREE.Vector3(), _tP = new THREE.Vector3(), _tD = new THREE.Vector3(), _tN = new THREE.Vector3(), _tQ = new THREE.Vector3();
+const _tT = { palm: _tP, fingers: _tD, normal: _tN };
+function torchProp() {
+  const g = new THREE.Group(); g.name = 'torch';
+  // (the hand bone's −y runs down the arm to the fingertips, its +x is the right palm's face: the barrel lies in the palm)
+  const body = new THREE.CylinderGeometry(0.027, 0.027, 0.2, 10).translate(0, -0.07, 0), head = new THREE.CylinderGeometry(0.036, 0.046, 0.065, 12).translate(0, -0.2, 0);
+  const pos = new Float32Array([...body.toNonIndexed().attributes.position.array, ...head.toNonIndexed().attributes.position.array]);
+  const nor = new Float32Array([...body.toNonIndexed().attributes.normal.array, ...head.toNonIndexed().attributes.normal.array]);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  const barrel = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: '#23262c', roughness: 0.45, metalness: 0.5 }));
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.04, 12).rotateX(Math.PI / 2).translate(0, -0.2335, 0), new THREE.MeshBasicMaterial({ color: '#fff3c4' }));
+  // the beam: a faint cone from the lens (its apex) along the barrel; its length is set each frame to the floor
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1, 14, 1, true).rotateX(Math.PI).translate(0, -0.5, 0),
+    new THREE.MeshBasicMaterial({ color: '#ffe9a0', transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false }));
+  beam.position.y = -0.235; beam.renderOrder = 3;
+  for (const m of [barrel, lens, beam]) { m.castShadow = false; m.receiveShadow = false; g.add(m); }
+  g.userData = { lens, beam, barrel };
+  return g;
+}
 export class Watcher {
   constructor(game, npc, patrol, opts = {}) {
     this.game = game;
@@ -1129,9 +1159,50 @@ export class Watcher {
     this.cone = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.16, depthWrite: false }));
     this.cone.visible = false;
     game.scene.add(this.cone);
+    // (P12) the patch's apex where the torch throws it, a step before his feet (the sight itself is from his eyes: unchanged)
+    this.apex = TORCH.apex; geo.attributes.position.setZ(0, geo.attributes.position.getZ(0) + this.apex);
+    // (P12) the torch in his right fist
+    const hand = npc.rig?.j?.armR?.hand;
+    if (hand) {
+      const T = (this.torch = torchProp());
+      npc.rig.root.updateMatrixWorld(true);
+      const hs = hand.getWorldScale(_tS).x || 1;
+      T.scale.setScalar(TORCH.size / hs); T.position.set(PALM.x + 0.027 * TORCH.size / hs, 0, PALM.z);   // (its own size whatever the body's; the barrel's side against the palm)
+      T.visible = false; hand.add(T);
+      // (put away once the scene has let go of him: nothing updates a stopped watcher)
+      T.userData.barrel.onBeforeRender = () => { if (!this.active && !this.npc.controlled) T.visible = false; };
+    }
+    this.aim = 0;
   }
-  start() { this.active = true; this.wp = 0; this.waitT = 1; this.suspicion = 0; const [x, z] = this.patrol[0]; this.npc.placeAt({ x, z, a: 0, track: null }); this.cone.visible = true; }
-  stop() { this.active = false; this.cone.visible = false; }
+  start() { this.active = true; this.wp = 0; this.waitT = 1; this.suspicion = 0; this.aim = 0; const [x, z] = this.patrol[0]; this.npc.placeAt({ x, z, a: 0, track: null }); this.cone.visible = true; if (this.torch) { this.torch.visible = true; this.torch.userData.beam.visible = true; } }
+  stop() { this.active = false; this.cone.visible = false; if (this.torch) this.torch.userData.beam.visible = false; }
+  // (P12) the arm that holds the torch: solved for the fist's place each frame, on top of the walk's or the idle's own arm
+  // (what it turns is put back before the rig's next update: rig._ov, as the hands-on-things layer's)
+  holdTorch(dt) {
+    const n = this.npc, rig = n.rig, arm = rig.j?.armR, T = this.torch;
+    if (!T || !T.visible || !arm?.hand) return;
+    const store = rig._ov || (rig._ov = []);
+    if (store.length) restoreJoints(store);   // (a frame the rig skipped: its joints are still ours)
+    rig.root.updateMatrixWorld(true);
+    arm.sh.getWorldPosition(_tS); arm.el.getWorldPosition(_tE); arm.hand.getWorldPosition(_tH);
+    const L = _tS.distanceTo(_tE) + _tE.distanceTo(_tH), fx = Math.sin(n.angle), fz = Math.cos(n.angle), rx = -fz, rz = fx;   // (his right: −x when he faces +z)
+    // on his round: before the right hip, the barrel the way he faces and tipped down at the floor
+    _tP.set(_tS.x + (fx * TORCH.fwd - rx * TORCH.in) * L, _tS.y - TORCH.down * L, _tS.z + (fz * TORCH.fwd - rz * TORCH.in) * L);
+    _tD.set(fx * Math.cos(TORCH.tip), -Math.sin(TORCH.tip), fz * Math.cos(TORCH.tip));
+    // something has caught his eye: the arm comes up, the torch at them
+    this.aim = damp(this.aim, this.suspicion > 0.35 ? 1 : 0, 5, dt);
+    if (this.aim > 0.01) {
+      const h = this.game.hero, k = this.aim * this.aim * (3 - 2 * this.aim);
+      _tQ.set(h.pos.x - _tS.x, h.pos.y + (h.hiding ? 0.5 : 1.0) - _tS.y, h.pos.z - _tS.z).normalize();
+      _tP.x += (_tS.x + _tQ.x * 0.8 * L - _tP.x) * k; _tP.y += (_tS.y + _tQ.y * 0.8 * L - 0.12 * L - _tP.y) * k; _tP.z += (_tS.z + _tQ.z * 0.8 * L - _tP.z) * k;
+      _tD.lerp(_tQ, k).normalize();
+    }
+    _tN.set(-rx, 0, -rz);   // (the palm faces in, the thumb up)
+    solveHand(arm, 'R', _tT, 1, store);
+    // the beam's length: from the lens to the floor along the barrel (to 2.6 m: lifted at someone it ends in the air before them)
+    const ly = _tP.y + _tD.y * 0.17 * TORCH.size - n.pos.y;
+    T.userData.beam.scale.y = (_tD.y < -0.2 ? Math.min(2.6, Math.max(0.2, ly / -_tD.y)) : 2.6) / TORCH.size;
+  }
   update(dt) {
     if (!this.active) return;
     const g = this.game, n = this.npc, hero = g.hero, P = g.physics;
@@ -1157,7 +1228,11 @@ export class Watcher {
     }
     // vision: cone + line of sight, slower to notice a sneaking or hidden player
     const hd = n.distTo(hero);
-    const inCone = hd < this.range && Math.abs(angleDiff(n.angle, n.angleTo(hero))) < this.fov
+    // (the user, 7.11, Zoé's office: "he sees her even when she crouches behind the desk": a desk is lower than his eyes, so
+    //  the line of sight alone never hid her; crouched (discreet + action) at one of the room's cover spots (R.cover: the
+    //  desks, crates, cabinets) she is out of sight unless he is right on top of her)
+    const covered = hero.hiding && hd > 1.5 && (g.room?.cover ?? []).some((c) => Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z) < c.r + 0.35);
+    const inCone = !covered && hd < this.range && Math.abs(angleDiff(n.angle, n.angleTo(hero))) < this.fov
       && P.lineOfSight(n.pos.x, n.pos.y + 1.6, n.pos.z, hero.pos.x, hero.pos.y + (hero.hiding ? 0.6 : 1.2), hero.pos.z);
     const vis = hero.visibility();
     const rate = inCone ? (hd < 2 ? 3 : 1.3) * this.notice * Math.max(0.15, vis) * (1.2 - hd / this.range) : -this.cool;
@@ -1166,6 +1241,7 @@ export class Watcher {
     n.rig.play(moving ? 'walk' : 'idle');
     n.rig.update(dt, moving ? this.speed : 0);
     n.sync();
+    this.holdTorch(dt);
     this.cone.position.set(n.pos.x, n.pos.y + 0.04, n.pos.z);
     this.cone.rotation.y = n.angle;
     this.cone.material.color.setRGB(1, 1 - this.suspicion * 0.7, 0.5 - this.suspicion * 0.4);

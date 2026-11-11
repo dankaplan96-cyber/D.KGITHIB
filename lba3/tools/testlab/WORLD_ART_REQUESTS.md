@@ -3814,6 +3814,39 @@ user.
     could take the same front-to-back turn later;
   - Vesk's and Baldino's hands are their own scripts' and were not touched.
 
+## CAST-POLISH-UNDERGROUND · the underground's and the sewers' people: worker_b, nara_b, Vesk's collar, Fosse · the laptop, 10.11.2026
+**Ready for the cloud.** Diff: `requests/CAST-POLISH-UNDERGROUND.diff`, made on origin `db3707df` (`git diff HEAD`;
+`git apply --cached --check` clean on a scratch index read from it; `node --check` and `py_compile` pass). It changes
+`tools/blender/cast_poly.py` (CAST worker_b, nara_b; the goggles' resolution as CAST options with Nell's defaults; Vesk's
+collar edge), `src/game/characters.js` (2 LOOKS entries, the farmerC_b comment) and one or two `char` lines in
+`story/deeplife.js`, `story/zeelife.js`, `islandlife.js`, `story/isleslife.js`, `storylife.js`, `story/prologue.js`.
+Not in the diff (the single-line files): `requests/CAST-POLISH-UNDERGROUND/skeletons.add.json` `{worker_b, nara_b}` (same
+bones as worker and nara) and `index.add.json` `["worker_b","nara_b"]`. Models for `assets/poly/`: `vesk.json` (replaces),
+`worker_b.json`, `nara_b.json` (new). Full note with the census table: `requests/CAST-POLISH-UNDERGROUND.md`.
+Pictures (**chapter 3+: not for the user**): `docs/future/characters/{vesk,worker_b,nara_b,farmerC_b}/ch3plus-*.jpg`.
+- **Who:** the epilogue's shield crew (Guard Harl keeper_b, Tolli worker, Sala nara), Vesk in the core, Baldino at the
+  collar; in the sewers only Fosse (farmerC). nara dresses 9 people at load (16+ with the isles), worker 6.
+- **VESK-COLLAR:** the tall collar's top and front edges were two bare shells 4 mm apart (a paper line in the close
+  shots): now a rolled lining edge 1.8 cm thick. Triangles 1722 → 1878 (+9.1 %).
+- **worker_b** (order 24): heavier, bare-headed, a moustache, brass goggles on the brow, sleeves rolled, the crew's teal
+  hexes. Who takes it: **dp_tolli (Tolli), dg_surv (Surveyor Anko), zr_fennick (Fennick)**; the yard's worker, Teo,
+  Kasp and Brann keep worker (the hero's disguise too). 2572 → 3126 (+21.5 %).
+- **nara_b** (order 24): a long dress to the boots with a belt, its own palette; LBA2's Esmers (bodies 80-83, 86, 186,
+  measured read-only) share one capsule and differ by dress. Who takes it: **dp_sala (Sala), zh_wenna (Wenna), kn_mother
+  (Mila, and il_mila at home), il_ione (Sister Ione)**. 2010 → 2086 (+3.8 %).
+- **Fosse** takes the existing farmerC_b (bare-headed: no sun hat in the sewer; Grull and Tobb keep farmerC).
+- **Contracts:** bones and order = the base looks', 4 weights summing to 1, feet as before, eyes and mouth separate;
+  Vesk's eyes, mouth and colours unchanged; validate 0 fails; DRESS-1 variants 1-6 leave exactly what the shipped base
+  looks leave. Draw calls: the hero is 4 calls as each look, before and after. No texture or material.
+- **Tests** (SwiftShader, the files in `assets/poly`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209,
+  story-journeys 30/30, under-bar 15/15, epilogue-home 12/12, sewers 32/32, sewers-ways 34/34 PASS.
+
+  Evidence labels: **Automated runtime only**. Not verified: the crew looked at in their own rooms (under-bar reaches and
+  talks to them; the pictures are of the hero wearing each model in Citadel), the Zeelich and isles takers in their places,
+  Vega 8 frame time.
+- **Left:** Baldino's paper-thin ears and headband (his own script); Harl shares keeper_b with four council guards (a
+  uniform); the moles' claws untouched (no mole lives down there); worker_b's goggle strap does not show from the side.
+
 ## CURATOR-27a · Citadel and Zeelich against LBA2 on the 85/100 rubric (order 27a) · the laptop, 8.11.2026
 
 - **Files:** `docs/lba-maturity/resemblance-citadel.md`, `resemblance-zeelich.md`, `MATURITY-curator.md`, and the
@@ -4202,3 +4235,294 @@ Note with the evidence: `requests/ZOE-LOOK-38.md`. Pictures (chapter 1, may go t
   takes the new Zoé too.
 
 - **Accepted by the user, 9.11.2026: "Zoé is good"** (on before | after `game-closeup-34`, `lookdev-face-front`, `game-follow-medium-crop`). **Please apply:** `requests/ZOE-LOOK-38.diff`, then `requests/ZOE-LOOK-38/zoe.json` → `assets/poly/zoe.json`. When applying, update `docs/BLENDER_ASSET_WORKFLOW.md`, which still says Zoé reads by "her bun": it is now the ponytail. Twinsen is next (TWINSEN-LOOK-38, order 38).
+## EQUIP-1 · the magic ball and the sword (art queue item 8, after ITEMS-1) · the laptop, 9.11.2026
+Diff: `requests/EQUIP-1.diff` (code only, on 68315019 = origin `ccr-c1c2c4b9-dep6ed`; `git apply --check` on a scratch index: clean).
+Note with the numbers, tests and evidence labels: `requests/EQUIP-1.md`. Code: `src/game/equiplook.js` (new), `actors.js`
+(MagicBall look, buildSword), `itemlook.js`, `inventory.js`, `hud.js`. Art: `art/blender/props/equip/{ball,sword}/`. Pictures
+(Citadel, chapter 1, before | after on the Vega 8, may go to the user): `docs/future/items/{ball,sword}/`.
+- Ball: a shaded marble per level (gold, green, red, fire) facing the camera, glint and rim painted, glow kept low so the hue
+  survives; halo disc wider than the ball; the ball in his hand in his level's colour. 5 = 5 draw calls in flight, +44 tris.
+- Sword: broader sabre blade with a bevelled edge, curved guard, pommel, wrapped grip; turned so its edge leads the backhand
+  and the overhead blow. 8 -> 6 draw calls held (with shadows), +187 tris a pass. Inventory and HUD icons drawn to match.
+- Behaviour unchanged (arc, bounces, reach, damage, hand attach, sounds). Shader programs 86 = 86. Frame time not verified (shared laptop).
+
+- **The user, 10.11, on the sword blade's quarter turn (so the edge leads the backhand and overhead strikes): "keep it".** The rest of EQUIP-1 is the cloud's to apply: `requests/EQUIP-1.diff` (clean on origin db3707df; ZOE-LOOK-38 applies after it).
+
+# CITADEL-85: the curator's top Citadel fixes, a candidate for the user
+
+The laptop, 9–10.11.2026. Worktree `C:\Users\dan\lba3-o26`, detached at origin `68315019` (`ccr-c1c2c4b9-dep6ed`).
+Nothing is committed. The diff is `CITADEL-85.diff` (`git diff HEAD -- lba3/src`). It applies to `68315019`: checked
+with `git apply --cached --check` on a scratch index.
+
+Sources: `docs/lba-maturity/resemblance-citadel.md` (§1, §2, §4, §6, §8, the ranked fixes). LBA2's shapes were
+looked at in the curator's decoded renders, in place. Nothing from them is in the repo: no assets, no renders.
+
+## What changed
+
+| Place | LBA2 (curator) | Now | File |
+|---|---|---|---|
+| Lighthouse (fix 1) | square white stone tower, grey quoins, glazed lantern, domed grey cap, low annex with a wooden door | Square white tower with cut corners (half-width 2.2 m). Grey dressed quoins in long and short courses. Grey upper stage, corbelled gallery, dark teal railing. Octagonal glazed lantern with a wooden frame, domed grey cap, finial and rod. Octagonal rubble footing. Stone annex on the door side under a lean-to of boards, with the wooden door, a lantern and the old steps. White and grey only: the red bands are gone | `lighthouse.js`, `world.js` |
+| Bersimon's tent (fix 3) | a rounded red tent | One red canvas lathe: an upright wall that swells into a rounded roof with a point. 16 gores, a dark hem with a gold line, 12 small gold stars. The gold ring and the moons are gone. The pennant is gold | `wizards.js` |
+| Long hall (`baggage`, fix 2) | grey barrel vault along its length | A ribbed grey slate barrel along the 15 m length. The arched ends are the side walls; the front has a straight eave instead of the big gable | `architecture.js` (new `barrel`), `town.js` |
+| Nell's (`wing2`, fix 2) | brown barrel roof of boards | A plank barrel. The arch is over the door end (where the gable was), with gutters, a downpipe and the chimney | same |
+| Bug Street pair (fix 4, optional) | low pale roofs with a teal coping | Low hip roofs (pitch 0.2) of pale stone slabs, with teal eave boards and teal ridge and hip caps. Chimneys kept | `architecture.js` (new `hip`), `town.js` |
+| The school (`stone`, fix 4, optional) | brown tiled hip roof with a teal coping | A hip roof (pitch 0.5) of brown-red tiles with the teal coping | same |
+| Square lamps (fix 4, optional) | four gold globe lamps | The four lamps at the original's corners now have gold globes: one shared material. Their two point lights are warm (`#ffd9a0`, was `#9cc8ff`) at the same strength. No light added | `town.js` |
+
+**Kept:**
+- The lighthouse: its place, the door at +z with LIGHTHOUSE_DOOR 3.7 m out, the r 3.1 cylinder, the doorstep, the
+  four steps and their colliders, the lamp material, the beam and light (`lampY` 16.4 m, was 17.4), the bench, the
+  palms and the barrels. The `lighttop` room is untouched.
+- The tent: the r 3.2 collider, the door at x + 3.75, the room link and the sign.
+- The houses: footprints, doors, windows, colliders.
+
+**Added:**
+- The annex doorway is 2 cm wider than its surround's opening, so their reveals never share a plane (worldfit found
+  two 0.03 m² z-fights there).
+- One collider: a box for the lighthouse annex (x ±1.5, z +1.9 to +3.21 from the axis, top +3.9). Without it, his
+  body would go 0.2–0.4 m into the annex's front corners, which stand outside the cylinder. At x = 0 he still
+  reaches z 3.66, inside the door's r 1.0.
+- The houses' camera occluders follow the new roofs: a slab across the barrel's or the hip's span, from the crown down
+  to the eaves; the barrel's arc is covered.
+
+**Not done: the straight paved quay with white bollards.** It means reshaping the coast and the quay's ground
+(`island.js` and `world.js` terrain), plus new colliders on the walk from the ferry. That is a risky change to
+collision and paths, so it was skipped. The barrel roofs alone should not be read as the harbour's full +9.
+
+## Numbers (Automated runtime only)
+
+How they were taken:
+- Installed Chrome, ANGLE D3D11, Vega 8, on AC power, 1280×720, Medium.
+- Chapter 1 (`well`), Follow camera at Medium.
+- One stepped frame per spot: main pass only, counted at `renderBufferDirect`.
+- Same spots and settings before (a `git archive` of `68315019`) and after (the worktree).
+- Script: scratch `c85/cap.mjs` with `final.json`.
+
+The iso rows count the Follow frame at the hero's spot, not the iso picture.
+
+| Spot | Main calls before → after | Main triangles before → after |
+|---|---|---|
+| lh_door_f (lighthouse door) | 116 → 116 | 502,941 → 505,117 |
+| lh_path_f | 104 → 104 | 409,875 → 416,519 |
+| lh_iso (hero at −100, 97) | 30 → 30 | 184,113 → 184,537 |
+| tent_f | 54 → 52 | 282,381 → 282,469 |
+| tent_curator_f | 62 → 60 | 299,231 → 299,319 |
+| harb_fronts_f | 98 → 98 | 583,778 → 585,416 |
+| harb_arrive_f | 255 → 255 | 903,403 → 905,473 |
+| harb_lane_f | 169 → 170 | 762,283 → 763,881 |
+| bug_f | 82 → 82 | 405,417 → 411,091 |
+| sq_f | 139 → 139 | 520,197 → 525,871 |
+| school_f | 73 → 73 | 402,761 → 408,443 |
+
+The objects themselves (meshes / triangles):
+
+| Object | Before | After |
+|---|---|---|
+| Lighthouse group (all its materials, the lamp and the beam) | 8 / 6,204 | 8 / 6,580 |
+| `wizardTent` | 11 / 604 | 9 / 692 |
+| `townMerged` (all houses, the square's dressing; per 96 m cell, one mesh per material) | 64 / 65,178 | 57 / 66,816 |
+
+`townMerged` drops 7 meshes: the blue tile material leaves Bug Street, and the four globes now share one material.
+Shadow-pass calls: tent −2, sq_f +1, the rest equal.
+
+Some spots gain about 4,000 triangles more than the changed objects add (lh_path_f, bug_f, sq_f, school_f). The
+cause is not identified: residents' positions or merged cells drawn differently are likely. Treat those spots'
+triangle deltas as within noise.
+
+**Not measured cleanly: frame time, loading and memory.**
+- A first baseline-only run had the machine quiet: median 17.6–17.8 ms, p95 ≤ 18.4 ms (vsync-bound) at all spots.
+- During the final before/after runs another agent's test (`shops.mjs`, headless Chrome) was using the CPU. Both
+  sides then showed 100–300 ms tails.
+- Boot times and JS heap sizes were also disturbed.
+
+So no frame-time, loading or memory claim, in either direction.
+
+What did not change:
+- no texture added (the tent's canvas replaces the old one, same 512×256);
+- no new shader kind, no dynamic light, nothing animated per frame (the tent's finial and pennant were already).
+
+## Tests (scratch copies of the trees, Playwright from tools/testlab, SwiftShader per tests/lib/boot.mjs)
+
+How the suites were run:
+- Each tree served on 127.0.0.1 by a small Node server: Python's server dropped connections under load.
+- One suite at a time, each with a 30-minute timeout.
+- After = the worktree's five files; base = a `git archive` of `68315019`.
+
+| Suite | After | Base (68315019) | Reading |
+|---|---|---|---|
+| camcitadel | PASS | — | |
+| occluders | PASS | — | Includes the camera over `bug`, `bug2` and `stone`, and the walk behind them |
+| overlaps ONLY=citadel | PASS | — | Run again after the doorway fix: PASS |
+| worldfit | FAIL, 2 visual | FAIL, the same 2 visual | (2) is `nbr`'s door/window and a Zeelich window; (3) is 20 visible z-fights elsewhere. Neither is ours. The doorway fix removed two new 0.03 m² z-fights at the annex door; the small z-fight list then matches base line for line |
+| world-consistency | PASS | — | |
+| doors-lba2 | PASS | — | The tent's link and #10 "kept" included |
+| chapter10 | PASS | — | The lighthouse door, `lighttop`, the dials, the way out |
+| epilogue-home | PASS | — | The lamp room after the ending |
+| camsteady (full) | FAIL, 11 functional | FAIL, 9 functional | Already failing on base. The lighthouse bay route passes in both |
+
+**camsteady in detail.** The lba-mode "through a door in and out" failure is identical in both (6.2 / 9.2 / 9.2
+reversals a minute). That is Twinsen's house door, which is unchanged. The lists differ in four lines:
+- after only: free · street, Modern controls jolt; follow · harbour pier heading reversals;
+- base only: one street jitter line.
+
+The pier route passes south of the two barrel roofs, so it was run alone (`ONLY=pier MODES=follow`), four times
+alternating after/base/after/base. All four were identical, frame for frame: 2,169 frames, heading reversals
+10.3/min against his 6.8, max pitch 53°. The same FAIL on base. So the full-suite differences come from the run, not
+from this change.
+
+**Boot timeouts.** Earlier attempts of worldfit, world-consistency, camsteady and doors-lba2 timed out at boot
+(300 s) or crashed the page. At those times the laptop was busy with another agent's tests, or asleep
+(`ERR_NETWORK_IO_SUSPENDED`). They were run again on a quiet machine; the results above are those reruns.
+
+**Not run:**
+- house, transitions, chapter1, camfollow, the merge and perf suites;
+- the Test Lab compare (battery and plugged).
+
+## Evidence labels and what is not verified
+
+- **Automated runtime only:**
+  - pictures and counts (`docs/future/world/CITADEL-85/*.jpg`: before | after at matching spots and settings);
+  - the tests.
+- **Not played:** nobody walked these places with a pad or keyboard.
+- **Resemblance re-score:** not done by the curator.
+  - My estimate, provisional: lighthouse 67 → about 78–80; NW plateau 66 → about 72; harbour 73 → about 79 (no
+    quay); square 75 → about 79; terraces 71 → about 73.
+- **Not checked:**
+  - **The lighthouse at night or with the lens lit:** the beam is at 16.4 m now, 1 m lower.
+  - **The new collider in every chapter's lighthouse scene:** chapter 10 and the epilogue pass.
+  - **The roofs from the roof/wall cutaway:** occluders passes, but there was no visual check of a cutaway over a
+    barrel or hip roof.
+  - **The interiors:** unchanged. The `baggage` room and Nell's are separate rooms, so the outside shape does not
+    reach them.
+  - **No shot frames the whole tower from play height:** the Follow camera is steep and close, so the tower top is
+    seen only in the iso and from far away.
+- The school's tiles read more red-brown than LBA2's brown, because the roof texture is terracotta under a brown
+  tint.
+
+- **Rebased** on origin `db3707df` (world.js and wizards.js moved there; three-way, the changed lines identical). `git apply --check` is clean; EQUIP-1, ZOE-LOOK-38 and EXP-MERGE-35-base apply after it. OTRINGAL-37 is already on origin.
+- **A candidate for the user:** pictures `lh_iso`, `harb_iso`, `tent_f` sent 10.11; waiting for the user's word before the cloud applies it.
+
+- **Accepted by the user, 10.11.2026: "yes, all of it"**: the lighthouse, Bersimon's red tent, the harbour barrel roofs, and the extras (the Bug Street and school hip roofs, the statue's gold lamps). **Please apply** `requests/CITADEL-85.diff` (clean on origin db3707df). The quay with bollards was not built and stays open. After it lands, the curator re-scores the lighthouse, the NW plateau, the harbour and the square.
+
+---
+
+## DESKTOP-GTX1050 · the new work machine: set up, on the NVIDIA card, first numbers · the new machine's agent, 10.11.2026
+
+**To the laptop's agent: from now on this machine takes 34 CAM-34 (the GPU look at every region), 38 ZOE-LOOK,
+27a the curator and the expansion on `expansion/ballastra`. Please don't start them there; 27c (the Vega 8
+measurements) stays with the laptop.** I have not started any of them yet: this entry is the setup and the
+measurements only.
+
+Full report with every table: `lba3/docs/lba3-performance/HARDWARE/2026-11-10-gtx1050.md` (raw benchmark reports,
+the runner and the Quick Check's summary beside it in `2026-11-10-gtx1050/`).
+
+- **The machine is a laptop, not a desktop:** Acer Nitro AN515-53, Intel Core i5-8300H (4 cores / 8 threads),
+  NVIDIA GeForce GTX 1050 with 4 GB VRAM, 16 GB RAM, Windows 11 Home 26H2 (build 26300.9711), NVIDIA driver 582.78,
+  Chrome 157.0.8103.51, built-in 1920×1080 60 Hz screen at 125 %. Git 2.56, Node 26.13 (LTS), Blender 5.3 and the
+  Test Lab are installed; the clone is at `C:\Users\danka\dev\D.KGITHIB`.
+- **Why the first run was on the Intel UHD 630** (correcting `2026-11-10-desktop-first-run.md`: there is no monitor
+  cable to move): the NVIDIA driver was missing after the Windows reinstall, and once it was in, Windows still sent
+  Chrome to the power-saving GPU. Fixed with the per-app "High performance" graphics preference for `chrome.exe`
+  and the Test Lab's `electron.exe`. Verified: the game's overlay in the user's own Chrome and the benchmark both
+  report "NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11". A page's `powerPreference` made no difference on this
+  machine, so nothing is asked of the game.
+- **The game's benchmark, build 0.49.0 (87613283), Chrome, window 1536×788 at 1.25, plugged in, orbit camera**
+  (GTX 1050 numbers; they never stand in for the Vega 8):
+
+| route | Auto (held High) fps · GPU p50 | fixed Medium fps · GPU p50/p95 | fixed High fps · GPU p50/p95 | first run, Intel UHD 630 |
+|---|---|---|---|---|
+| street | 59.5 · 7.0 ms | 59.9 · 8.6 / 16.6 ms | 60 · 7.1 / 8.3 ms | 45.5 · 18.7 ms (Medium) |
+| interior | 60 · 6.0 ms | 60 · 5.6 / 6.1 ms | 60 · 5.5 / 6.1 ms | 53.7 · 16.1 ms (Medium) |
+| combat | 60 · 5.9 ms | 59.7 · 7.0 / 8.2 ms | 59.9 · 4.9 / 6.1 ms | 59.5 · 10.5 ms (Medium) |
+| transition | 60 · 6.0 ms | 60 · 5.8 / 9.6 ms | 60 · 5.3 / 6.6 ms | 59.9 · 10.3 ms (Medium → Low) |
+| arrival | 52.7 · 6.4 ms | 56.3 · 7.0 / 8.2 ms | 53.5 · 6.7 / 8.5 ms | 53.3 · 12.2 ms (Low) |
+| hamalayi | 60 · 5.9 ms | 60 · 4.1 / 5.0 ms | 60 · 5.6 / 6.5 ms | 60 · 11.7 ms (Low) |
+
+  - Auto never left High; "as played" kept the resolution factor at ×1. Every route is capped by the 60 Hz screen.
+  - **Arrival is not helped by the card:** 28 frames over 33 ms in the Auto run (11 behind the black, the longest
+    400 ms), with shadow batches, draw batches and geometry upload recorded in the frames before them. The first
+    run had the same (367 ms).
+  - The street's one 200 ms frame in the Auto run followed a shader program compiled in play.
+- **The Test Lab's Quick Check, development build** (run `2026-11-10T17-28-55-quick`): 6 of 8 passed. Street
+  traversal 59.4 fps (p95 16.9 ms, one 200 ms frame, GPU p50 6.4 ms, 195 calls, 839k triangles); the house door
+  52.1 fps (three stalls behind the loading); combat 59.7 fps. **Failed:** cold-launch (only the server's
+  `favicon.ico` 404) and save-restart-load ("Continue is offered after the restart": false, after the save
+  returned ok).
+- **For the cloud, proposed (tool code, I changed nothing):** `engine/server.mjs` listens on port 0, so
+  save-restart-load's relaunch serves the game from a new port, a new origin that cannot see the first one's save.
+  That is my reading of the code, not verified by a run. Keeping one port per run in dev mode and serving an empty
+  favicon would clear both failures. Also `launch.mjs` could pass `--disable-features=CalculateNativeWinOcclusion`:
+  my first Auto run opened behind another window and Chrome throttled it to one frame a second (discarded and
+  rerun).
+- **Evidence label:** Automated runtime only, on real hardware. One run each, no spread. Windows was still finishing
+  updates in the background (a restart pending). Not measured: battery, the desktop app, the Follow camera,
+  temperatures over a long session. Nobody played the routes by hand.
+- **Against the cloud's `2026-11-10-desktop-gtx1050.md`** (the user's run in the desktop app, minutes earlier): the CPU
+  it asks about is an Intel Core i5-8300H, a laptop part. That run fell to Medium for CPU pressure (street CPU work
+  p50 14.4 ms) and had a 4042 ms shadow-program step; mine in Chrome held High (street CPU work p50 7.3 ms, shadow
+  programs 441–480 ms). I have not isolated why (desktop app against Chrome, a first start after the new driver,
+  Windows updating in the background). Not done yet: the same benchmark in the desktop app on this machine.
+
+## MIGRATE-39-B · the desktop received the hand-over · the new machine's agent, 11.11.2026
+
+- `HANDOVER-DESKTOP.md` answers every heading of `HANDOVER-LAPTOP.md`: the clone merged on top of the laptop's last
+  commit, the tools installed (Blender 5.3 rebuilds `zoe.json` byte-identical to the repo's; chapter1 23/23), LBA1 and
+  LBA2 installed from GOG here, the 13 memory notes read.
+- **From now on only this machine pushes.** The queue continues here in the laptop's order: CAST-POLISH-NAMED (from
+  `wip/laptop/lba3-items`), then 28's queues 7 and 9, 27a (Desert Island, the Hamalayi, the Citadel re-score), Twinsen
+  after those, W-4 when ordered. 27c stays with the Vega 8 laptop.
+
+## CAST-POLISH-NAMED · the named cast, batch 1: Baldino's ears, strap, goggles and collar; Hesk's goggles; Yorna's and Brum's long coats · the laptop, 10.11.2026
+**Ready for the cloud.** Built on the laptop 10.11, finished on the desktop 11.11 (MIGRATE-39): diff `requests/CAST-POLISH-NAMED.diff`,
+now against `8f826b7b` (UNDERGROUND and ZOE-LOOK-38 already applied), `git apply --check` clean there. The four models rebuilt on the
+desktop with Blender 5.3.0 are byte-identical to the laptop's. It changes `tools/blender/baldino_poly.py` and `tools/blender/cast_poly.py` only.
+Models for `assets/poly/` (each replaces the shipped one): `requests/CAST-POLISH-NAMED/{baldino,hesk,yorna,councilC}.json`. No new
+look, no skeleton, index or `characters.js` change. Full note with the named-cast table: `requests/CAST-POLISH-NAMED.md`.
+Pictures (**chapter 3+ people: not for the user**): `docs/future/characters/{baldino,hesk,yorna,councilC}/ch3plus-named-*.jpg`.
+- **BALDINO-EARS / -STRAP / -GOGGLES / -COLLAR** (`BALDINO_OLD=1` builds the old parts): the flat ear boards are cushions with a
+  rounded rim and their root in the head; the strap a closed band round the whole head; the lenses in dark teal frames (LBA2
+  body 139's byte 160, measured read-only); the collar 2.2 cm thick. Triangles 5781 → 6173 (+6.8 %).
+- **GOGGLES-HESK** (CAST `gogglesUp`): brass cups with rims and dark glass pushed up on his head, a bridge, a band round the back
+  (were two flat drums and a stick). 3426 → 3728 (+8.8 %). Gurt and Hobb (Citadel) wear the same model.
+- **GROBO-COAT** (CAST `coatLong`): Yorna's felt coat and Brum's robe, as their LOOKS describe them, now fall from the belt to
+  just below the knee with a rolled hem band in the trim hex (they had Doran's hip-length shape). Yorna 3602 → 3802 (+5.6 %;
+  Marda too), Brum 3466 → 3666 (+5.8 %; Mr Bazoo and Gunda too). A silhouette change from the project's own descriptions, not
+  from LBA2: drop `coatLong` from the two CAST entries to keep the old cut.
+- **Contracts:** bones in the skeletons (yorna and councilC now also weight the skirt bones they already had), 4 weights summing
+  to 1, eyes and mouths unchanged, feet as before; validate 0 fails; DRESS-1 variants 1-6 as the shipped looks; the hero is 4
+  draw calls as each look, before and after; the other 56 cast looks rebuild identical.
+- **Tests** (SwiftShader, the four files in `assets/poly`): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS (run on the desktop, 11.11).
+
+  Evidence labels: **Automated runtime only**. Not verified: the four in their own places (pictures are of the hero wearing each
+  model in Citadel), Vega 8 frame time.
+- **Left:** Doran unchanged (reads well); Yorna's fur-hat flaps; the Grobos' flat brow strips; Kira and Oni share their models.
+
+
+## CAST-CONNECT-1 · every limb joined to the body; the Grobos' brows, ears and Yorna's hat · the desktop, 11.11.2026
+**Ready for the cloud, apply after CAST-POLISH-NAMED.** The user, 11.11: "the ears are in the air", then "every limb
+should be connected". A new check (`art/blender/characters/jobs/floating.py`) found loose parts in 51 of the 61 cast
+models; after this batch 3 are left, all under 1.3 cm (Arthur's hair at the back, Vesk's brow strips, zbee2's lashes on its
+unmeasured eyes). Full note: `requests/CAST-CONNECT-1.md`.
+- **Fixed:** shoes standing apart from the legs (nearly every look: the shin now runs into the shoe); no legs under long
+  dresses and coats (9 looks); ball hands hanging under the cuff (a wrist); the Grobos' ears off the side of the head; the
+  Grobos' flat brow strips (a rounded ridge); Yorna's fur-hat flaps that read as horns (tied up over the crown); the
+  Rabbibunnies' ears above the skull; the bees' forelegs and antennae; Joe's and Ker'aooc's shoulders; the Spheros' legs;
+  pockets, buttons, straps and Vesk's emblem and claws standing off the cloth.
+- **Files:** `requests/CAST-CONNECT-1.diff` (cast_poly.py only; every fix has an env flag that builds the old part) and 52
+  models in `requests/CAST-CONNECT-1/`. No new look, skeleton, index or characters.js change.
+- **Numbers:** +1 % to +11.5 % triangles per model (within +25 %), no draw call, no new colour; contracts clean.
+- **Tests** (the 61 rebuilt models in place): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS.
+  13 poses looked at for Gilbert, Kira's model and Doran. Evidence label: Automated runtime only.
+- **Pictures:** `docs/future/characters/connect-1/` (the before|after sheet is chapter 1 people; Yorna's is ch3plus).
+## CAST-VARIANTS-1 · farmerA_b, farmerB_b, clerk_b; GROBO-GREY (no green elephants) · the desktop, 11.11.2026
+**Ready for the cloud, apply after CAST-CONNECT-1.** Full note: `requests/CAST-VARIANTS-1.md`.
+- **Variants** (order 28 queue 7): `farmerA_b` (bare-headed, heavier, longer smock, moustache) for Rod, Tam and Wim;
+  `farmerB_b` (no apron, pockets, lop ears) for Maro and the counter's waiting man; `clerk_b` (broader, headcloth, belted robe,
+  no spectacles) for Otringal's keeper, Aven and Dobb. New looks: diff + 3 models + `skeletons.add.json` + `index.add.json`.
+- **GROBO-GREY** (the user, 11.11: "why are there green elephants, it makes no sense"): `desertTrader`'s skin was sage
+  green-grey and Brix's green tint (multiplied over the whole model) made a green elephant in Citadel's village from
+  chapter 1. Skin `#a6a2a8`, Brix's and Gunda's tints a grey-lilac.
+- **For the cloud:** moving Tavi to farmerB_b made `interior-life`'s terminal talk to Ollo fail in chapter 9 and the
+  epilogue (twice); Tavi stays on farmerB. The talk test's choice of person looks fragile there.
+- **Tests:** solidnpc, chapter1, cast-rounds, story-journeys, walkers, island-people PASS; interior-life the same 4 failures
+  as the unchanged branch. Evidence label: Automated runtime only.

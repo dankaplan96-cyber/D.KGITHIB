@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { damp, angleDiff, clamp } from './math.js';
 import { textures } from './textures.js';
 import { plain, twinOf } from './merge.js';
+import { restoreJoints } from './handik.js';
 
 // ------------------------------------------------------------------ blob shadow
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
@@ -335,7 +336,7 @@ export function createHumanoid(opts = {}) {
 // ------------------------------------------------------------------ animator
 export class Rig {
   constructor(root, j) {
-    this.root = root;
+    this.root = root; root.userData.rig = true;   // (a body: not a thing a working hand rests on, workhands.js)
     this.j = j;
     this.phase = 0;
     this.t = Math.random() * 10;
@@ -386,6 +387,9 @@ export class Rig {
   speakMouth(open, round = 0) { this.mTarget = open; this.mTargetRound = round; }
 
   play(anim) {
+    // (NO-AIR: a hand action with nothing there to do it on — `standFor`, set by the game's hands-on-things layer,
+    //  workhands.js — is not mimed: the person stands, until asked for anything else)
+    if (this.standFor) { if (anim === this.standFor) anim = 'idle'; else this.standFor = null; }
     if (this.anim !== anim) {
       // leaving a quick action (a strike, a throw, a hop) or stopping from a walk/run: the body settles back
       // over a moment instead of snapping into the new pose in a frame
@@ -900,6 +904,10 @@ export class Rig {
     const n = this.lodN | 0;
     if (n > 1) { this._lodDt = (this._lodDt || 0) + dt; if ((this._lodK = ((this._lodK ?? (this.root.id % n)) + 1) % n) !== 0) return; dt = this._lodDt; this._lodDt = 0; }
     else if (this._lodDt) { dt += this._lodDt; this._lodDt = 0; }
+    // (NO-AIR: a hand held on a thing — `this.contact`, set by the game for the people who work, src/game/workhands.js — is
+    //  a layer over the pose: what it turned last frame is put back before the pose eases on, so the easing never sees it.
+    //  Nothing here for a rig without one: the hero's body, the enemies')
+    if (this._ov && this._ov.length) restoreJoints(this._ov);
     const j = this.j;
     this.t += dt;
     this.actionT += dt;
@@ -1644,6 +1652,7 @@ export class Rig {
         m.emissiveIntensity = Math.max(this._baseIntensity[i], this.flash * 1.2);
       });
     }
+    if (this.contact) this.contact(this, dt);
   }
 }
 const _white = new THREE.Color(1, 1, 1);

@@ -63,8 +63,11 @@ export const LOOKS = {
     // ZOE-OPEN (CHAR-2): her head from designed sections at the measured size (brow, cheekbones, a rounded chin, a nose
     // of its own), a smaller smiling mouth, white almond eyes with iris and pupil under lid lines and brows, teardrop
     // hoops for the triangle earrings, and curled mitten hands with a thumb (docs/character-review.md §18).
-    // The sculpt below is the fallback.
-    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
+    // ZOE-LOOK-38 (the user, 9.11, a candidate): bigger lidded eyes with lashes, a smaller nose, fuller lips; her hair
+    // swept up into a tall ponytail in a green band (on the skeleton's tail bones), its tip curled; green trims at the
+    // top's neck and armholes, a black belt with a square silver buckle (belt: its baked hex), a green cord with a round
+    // dark pendant, green bangles, gold hoops. The sculpt below is the fallback.
+    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#2a2426', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
     // CHAR-OPEN (OPEN-3 #28): her arms hang at her sides (0.08 rad out from the skeleton's rest; 0.3 held the hands
     // 0.45 m out, the "rods standing off her sides"); the opening's pose layer was brought in by the same 0.22
@@ -119,6 +122,14 @@ export const LOOKS = {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'bald', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', hardhat: '#e8c030', headS: 0.95, neck: 0.07, height: 0.97,
   },
+  worker_b: {
+    // CAST-POLISH-UNDERGROUND (order 24, worker's shape variant): the project's maintenance hand, a heavier man in the same
+    // teal crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
+    // rolled (cast_poly.py CAST worker_b). Taken by Tolli (dp_tolli, the deep installation), Surveyor Anko (dg_surv, the dig)
+    // and Fennick (zr_fennick, Zeelich); the yard's worker, Teo (dg_porter), Kasp (dg_dig) and Brann keep worker (the hard hat)
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+    hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'cap', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', moustache: true, goggles: true, headS: 0.95, neck: 0.07, height: 0.97,
+  },
   guard: {
     // project security: broad Grobo in a teal-and-brass uniform, rounded helmet with a visor
     race: 'grobo', outfit: 'tunic', hem: 0.58, skin: '#9aa8b8', tunic: '#245a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#d8b04a', pants: '#203a48', shoes: '#2a2a2a',
@@ -144,6 +155,14 @@ export const LOOKS = {
     // Esmer stall-keeper on the Zeelich street: tall and slim, a coral robe with a gold trim
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
     eyes: '#e8a040', height: 1.06,
+  },
+  nara_b: {
+    // CAST-POLISH-UNDERGROUND (order 24, nara's shape variant: nara dresses more people than any other look): an Esmer woman
+    // in a long dress flared to the boots with a belt at the waist, in place of the short robe over trousers (cast_poly.py
+    // CAST nara_b; LBA2's Esmers share one body and differ by dress). Taken by Sala (dp_sala, the core), Wenna (zh_wenna),
+    // Mila of Knartas (kn_mother; il_mila at home takes hers) and Sister Ione (il_ione); Nara, Neska (sefa) and the rest keep nara
+    race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#eaa07e', ridge: '#4a7a8a', tunic: '#3a6a9a', tunicTrim: '#e8d8a8', belt: '#5a3a2a', buckle: '#e8c870', pants: '#2a3a5a', shoes: '#2a2420',
+    eyes: '#d89a40', height: 1.04,
   },
   oku: {
     // an old Esmer who remembers the Zeelich of before: stooped, a deep-teal robe, a white sash
@@ -261,6 +280,13 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
     eyes: '#d8b040', glasses: true, height: 1.0,
   },
+  clerk_b: {
+    // CAST-VARIANTS-1 (clerk's shape variant): a broader Esmer in a wrapped headcloth and a belted robe, no spectacles
+    // (cast_poly.py CAST clerk_b). Taken by Otringal's keeper (ot_keep), Aven (aven) and Dobb (ih_dobb); the council clerks,
+    // Corla and Otringal's clerk keep clerk
+    race: 'esmer', outfit: 'robe', hem: 0.08, stoop: 0.03, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
+    eyes: '#d8b040', hat: '#5a4a8a', height: 1.02,
+  },
   archivist: {
     // the project's archivist: a wary Quetch in a long grey-teal coat with brass buttons
     race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
@@ -270,6 +296,20 @@ export const LOOKS = {
   farmerA: {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
     hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#e8d090', height: 0.97, neck: 0.08,
+  },
+  farmerA_b: {
+    // CAST-VARIANTS-1 (order 28 queue 7, farmerA's shape variant): a heavier Quetch hand, bare-headed (the tuft shows), a
+    // longer smock with the sleeves down, a swept moustache (cast_poly.py CAST farmerA_b). Taken by Rod (dg_rod, the dig),
+    // Tam (lh_tam, the Hamalayi) and Wim (wim); Jorr, Garrick, Tibbo and the farm evacuees keep farmerA
+    race: 'quetch', outfit: 'tunic', hem: 0.45, belly: 0.14, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
+    hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', moustache: true, height: 0.99, neck: 0.08,
+  },
+  farmerB_b: {
+    // CAST-VARIANTS-1 (farmerB's shape variant): a Rabbibunny without the apron, patch pockets, both ears folded over (cast_poly.py
+    // CAST farmerB_b). Taken by Maro (maro, the plaza) and the counter's waiting man (up_wait); Tavi (the terminal's café),
+    // Hedda, the dig's cook, Mira of the Hamalayi and the farm evacuees keep farmerB
+    race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
+    eyes: '#3a2a1a', height: 0.9,
   },
   farmerB: {
     race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
@@ -284,7 +324,8 @@ export const LOOKS = {
   farmerC_b: {
     // CAST-POLISH-DESERT (order 24, farmerC's shape variant): a working Grobo, bare-headed (no hat: the ears and the crown
     // show), a lighter build (cast_poly.py CAST farmerC_b). Taken by Gorrum (dg_haul, the dig) and Bodo (lh_grum, the
-    // Hamalayi); Fosse, Grull (farmer3) and Tobb keep farmerC
+    // Hamalayi) and, since CAST-POLISH-UNDERGROUND, Fosse (fosse, the sewer man: no sun hat down there); Grull (farmer3) and
+    // Tobb keep farmerC
     race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.05, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', height: 1.04,
   },
@@ -368,7 +409,9 @@ export const LOOKS = {
     hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tail', nose: 'button', eyes: '#2a1a10', hat: '#d8b860', height: 0.62, neck: 0.08,
   },
   desertTrader: {
-    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
+    // (GROBO-GREY, the user 11.11: "why are there green elephants, it makes no sense": the skin was a sage green-grey
+    //  (#9aa898), and Brix's green tint on top made a green elephant in Citadel's village; a Grobo is grey, as in LBA2)
+    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#a6a2a8', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', hat: '#e8d8b0', height: 1.02,
   },
   weaver: {

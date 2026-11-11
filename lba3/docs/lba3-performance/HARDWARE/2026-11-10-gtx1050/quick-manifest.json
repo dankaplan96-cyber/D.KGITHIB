@@ -1,0 +1,48 @@
+{
+  "runId": "2026-11-10T17-28-55-quick",
+  "suite": "quick",
+  "toolVersion": "0.1.0",
+  "started": "2026-11-10T17:28:58.122Z",
+  "power": {
+    "source": "plugged in",
+    "charge": 79
+  },
+  "hardware": {
+    "cores": 8,
+    "ramGB": 15.8,
+    "display": [
+      "1920x1080 @ 60 Hz"
+    ],
+    "os": "Microsoft Windows 11 Home 10.0.26300",
+    "gpus": [
+      "NVIDIA GeForce GTX 1050 (driver 32.0.15.8278)",
+      "Intel(R) UHD Graphics 630 (driver 31.0.101.2140)"
+    ],
+    "cpu": "Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz",
+    "clocks": "Unavailable",
+    "temperatures": "Unavailable"
+  },
+  "game": {
+    "target": "dev",
+    "path": "..\\..",
+    "version": "0.49.0",
+    "commit": "87613283",
+    "specialBuild": "no: the unmodified game",
+    "display": {
+      "window": "1536×808",
+      "dpr": 1.25,
+      "focused": true,
+      "refreshHz": "Unavailable (browser)"
+    },
+    "debug": "Playwright: --remote-debugging-port=0 (127.0.0.1, ephemeral)"
+  },
+  "conditions": [
+    "power plugged in → plugged in"
+  ],
+  "stopped": false,
+  "finished": "2026-11-10T17:31:23.086Z",
+  "powerEnd": {
+    "source": "plugged in",
+    "charge": 81
+  }
+}

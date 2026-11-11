@@ -23,6 +23,7 @@ import { Watcher } from '../enemies.js';
 import { crossByShip } from '../travelfilm.js';
 import { revealBeat, solidAt, twoShot } from './revealcam.js';
 import { DepotWatch } from './depotwatch.js';
+import { PumpLine } from './pumpline.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -32,6 +33,7 @@ export class Chapter1 extends ChapterBase {
     super(story);
     this.steamT = 0;
     this.watch = new DepotWatch(this);   // P9: the depot's watch, from the first day to the valve (depotwatch.js)
+    this.line = new PumpLine(this);      // CAMPAIGN-2: the dry lane, the pump room, the wrong pipe (pumpline.js)
   }
 
   // ---------------------------------------------------------------- cast
@@ -72,6 +74,7 @@ export class Chapter1 extends ChapterBase {
     // (on their way somewhere the story sent them: where they are, the rest of the way still to walk — walkOff)
     const wk = this.walkers?.[id];
     if (wk) return { x: wk.n.pos.x, z: wk.n.pos.z, a: wk.n.angle, track: wk.n.track ? wk.n.track.cmds.slice(wk.n.track.pc) : null };
+    if (this.isCur()) { const lp = this.line.place(id); if (lp !== undefined) return lp; }   // (CAMPAIGN-2: the worker at the pump room's door, the shopkeeper at her counter)
     // (STAGING-1, the user 4.11: after the talk Twinsen stood in the beam pad's light: Vesk waits off the pad, in front
     //  of its arch (west), Zoé beside the way in; nobody has to step on the pad to talk to him)
     const PAD = st ? { vesk: { x: st.beamPad.x - 3.4, z: st.beamPad.z + 0.3, a: -Math.PI / 2 }, zoe: { x: st.beamPad.x - 4.7, z: st.beamPad.z + 2.1, a: Math.atan2(1.3, -1.8) } } : null;
@@ -85,7 +88,18 @@ export class Chapter1 extends ChapterBase {
       case 'worker':
         // (POLISH-A: on the pier's north side, working toward the crane's mast, 3.4 m from Xil and clear of Vesk's way off
         //  the gangway: he stood 0.6 m from Xil's middle, the two bodies in each other)
-        if (!f.c1_water) return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
+        if (!f.c1_water) {
+          // (NO-AIR: at the lift's control on the mast's landward face — island.js cargoLift — both hands on it; he
+          //  stood 2 m short of the mast and cranked the air)
+          const L = W.cargoLift;
+          if (L?.knob) {
+            L.knob.updateWorldMatrix(true, false);
+            const k = L.knob.getWorldPosition(new THREE.Vector3()), m = L.group.localToWorld(new THREE.Vector3(L.mast.x, 0, L.mast.z));
+            let dx = k.x - m.x, dz = k.z - m.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
+            return { x: k.x + dx * 0.46, z: k.z + dz * 0.46, a: Math.atan2(-dx, -dz), anim: 'use' };
+          }
+          return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
+        }
         return R.control?.npcSpots?.worker ?? { x: gateIn.x + 2, z: gateIn.z + 2, a: 0 };
       case 'guard':
         // (POLISH-A: on the quay beside the way onto the pier: he stood in the harbour bell's post and the mouth's pillar)
@@ -122,6 +136,7 @@ export class Chapter1 extends ChapterBase {
     W.ferry?.setVisible?.(false);
     g.audio.endCue();
     g.audio.setMood('calm');
+    this.line.begin();
     this.chain([['hero', 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => { this.f.c1_started = true; g.updateObjective(); g.save(false); });
   }
 
@@ -132,7 +147,7 @@ export class Chapter1 extends ChapterBase {
     const office = W.houses.find((h) => h.id === 'water');
     if (office && g.regions.has('office')) out.push({ house: 'water', x: office.door.x, z: office.door.z, r: 0.9, room: 'office' });
     const st = W.station;
-    if (st && f.c1_water && g.regions.has('control') && !f.c1_zoeStart) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
+    if (st && f.c1_water && this.line.done && g.regions.has('control') && !f.c1_zoeStart) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
     if (st && f.c1_zoeStart && !f.c1_zoeDone && g.regions.has('projoffice')) out.push({ x: st.office.door.x, z: st.office.door.z, r: 0.9, room: 'projoffice' });
     return out;
   }
@@ -147,6 +162,7 @@ export class Chapter1 extends ChapterBase {
   }
 
   canExit(room) {
+    if (!this.line.canExit(room)) return false;
     if (room.id === 'projoffice' && !this.f.c1_plan) { this.chain([['zoe', 'c1_zoe_notyet']]); return false; }
     return true;
   }
@@ -154,6 +170,7 @@ export class Chapter1 extends ChapterBase {
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const g = this.game, W = g.world, f = this.f;
+    this.line.interactables(consider, dist);
     if (!g.room) {
       consider(dist(W.well.x, W.well.z), 2.6, { kind: 'c1well', label: 'p_well' });
       if (f.c1_task) for (const v of W.valves || []) if (!v.open) consider(dist(v.x, v.z), v.kind === 'use' ? 1.8 : 2.4, { kind: 'valve', valve: v, label: v.kind === 'use' ? 'p_valve' : 'p_look' });
@@ -173,6 +190,7 @@ export class Chapter1 extends ChapterBase {
 
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
+    if (this.line.interact(it)) return true;
     switch (it.kind) {
       case 'c1well':
         if (f.c1_water) { this.chain([['hero', 'c1_well_hot']]); return true; }
@@ -218,6 +236,9 @@ export class Chapter1 extends ChapterBase {
     const g = this.game, f = this.f;
     const id = npc.def.id;
     const c = (lines, done) => { this.chain(lines, done); return true; };
+    if (this.line.talk(npc)) return true;
+    // (CAMPAIGN-2: the gauge's strip shown to Vesk, and told to Baldino on the radio)
+    const strip = this.line.on && f.ct_strip;
     switch (id) {
       case 'zoe':
         if (f.c1_needZoe && !f.c1_zoeStart) return c([['zoe', 'c1_zoe_gate1'], ['hero', 'c1_tw_gate'], ['zoe', 'c1_zoe_gate2'], ['zoe', 'c1_zoe_gate3']], () => this.startZoe());
@@ -226,7 +247,7 @@ export class Chapter1 extends ChapterBase {
         if (!f.c1_home) return c([['zoe', 'c1_zoe_home1'], ['hero', 'c1_tw_home1'], ['zoe', 'c1_zoe_home2a'], ['arthur', 'c1_ar_home1'], ['zoe', 'c1_zoe_home3'], ['arthur', 'c1_ar_home2']], () => { f.c1_home = true; g.updateObjective(); g.save(false); });
         return c([['zoe', f.c1_water ? 'c1_zoe_water' : 'c1_zoe_wait']]);
       case 'arthur':
-        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ['arthur', 'c1_ar_radio2'], ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
+        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['radio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
         return c([['arthur', f.c1_radio ? 'c1_ar_after' : 'c1_ar_idle']]);
       case 'vesk':
         if (!f.c1_task) {
@@ -235,7 +256,7 @@ export class Chapter1 extends ChapterBase {
           });
         }
         if (!f.c1_water) return c([['vesk', 'c1_vesk_wait']]);
-        if (!f.c1_tour) return c([['vesk', 'c1_vesk_tour1'], ['vesk', 'c1_vesk_tour1b'], ['hero', 'c1_tw_tour1b'], ['hero', 'c1_tw_tour1'], ['vesk', 'c1_vesk_tour2'], ['hero', 'c1_tw_tour2'], ['vesk', 'c1_vesk_tour3']], () => {
+        if (!f.c1_tour) return c([['vesk', 'c1_vesk_tour1'], ['vesk', 'c1_vesk_tour1b'], ['hero', 'c1_tw_tour1b'], ['hero', 'c1_tw_tour1'], ['vesk', 'c1_vesk_tour2'], ['hero', 'c1_tw_tour2'], ...(strip ? [['hero', 'ct_tw_strip'], ['vesk', 'ct_vesk_strip']] : []), ['vesk', 'c1_vesk_tour3']], () => {
           f.c1_tour = true; f.c1_needZoe = true; this.story.refreshCast(); g.updateObjective(); g.save(false);
         });
         if (f.c1_zoeDone && !f.c1_veskGone) return c([['zoe', 'c1_conf_zoe1'], ['vesk', 'c1_conf_vesk1'], ['hero', 'c1_conf_tw1'], ['vesk', 'c1_conf_vesk2'], ['zoe', 'c1_conf_zoe2'], ['vesk', 'c1_conf_vesk3'], ['hero', 'c1_conf_tw2'], ['vesk', 'c1_conf_vesk4']], () => this.veskLeaves());
@@ -338,7 +359,7 @@ export class Chapter1 extends ChapterBase {
     this.story.refreshCast();
     const done = () => { g.updateObjective(); g.save(false); };
     const shot = g.room ? null : this.waterShotFraming();
-    if (!shot) { W.station?.setActive?.(true); this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], done); return; }
+    if (!shot) { W.station?.setActive?.(true); this.chain([['narrator', 'c1_water_1'], ['hero', this.line.on ? 'ct_tw_water' : 'c1_tw_water']], done); return; }
     const A = g.audio, wl = W.well, gy = g.physics.groundAt(wl.x, wl.z), h = g.hero;
     let tt = 0, puffT = 0, lit = false;
     const light = () => { if (!lit) { lit = true; W.station?.setActive?.(true); } };   // (the posts warm up over the next seconds)
@@ -362,7 +383,7 @@ export class Chapter1 extends ChapterBase {
         light();
         g.cutscene = null;
         g.setState('play');
-        this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], () => { back(); done(); }, (i) => { if (i === 1) back(); });
+        this.chain([['narrator', 'c1_water_1'], ['hero', this.line.on ? 'ct_tw_water' : 'c1_tw_water']], () => { back(); done(); }, (i) => { if (i === 1) back(); });
       }
     };
   }
@@ -657,6 +678,7 @@ export class Chapter1 extends ChapterBase {
       }
       C.pos[(i + 1) * 3] = Math.sin(th) * d; C.pos[(i + 1) * 3 + 1] = 0; C.pos[(i + 1) * 3 + 2] = Math.cos(th) * d;
     }
+    C.pos[2] = w.apex || 0;   // (P12: the patch starts where his torch throws it, a step before his feet; his sight is unchanged)
     C.geo.attributes.position.needsUpdate = true;
     w.cone.material.opacity = 0.26 + w.suspicion * 0.24;   // (Watcher's 0.14 hardly showed on the office's pale tiles)
   }
@@ -837,6 +859,7 @@ export class Chapter1 extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
+    this.line.update(dt);
     this.tickWalkers(dt);
     if (this.waterT > 0 && g.state === 'play' && (this.waterT -= dt) <= 0) this.waterReturns();
     // the ferry is in the harbour once Vesk has arrived
@@ -862,6 +885,7 @@ export class Chapter1 extends ChapterBase {
       this.watcher?.start();
       if (!f.c1_zoeIntro) { f.c1_zoeIntro = true; this.chain([['zoe', 'c1_zoe_in']]); }
     }
+    this.line.onEnterRoom(id);
     if (id === 'control' && !f.c1_control) { f.c1_control = true; this.chain([['hero', 'c1_tw_control']]); }
     if (id === 'office' && !f.c1_officeSeen) { f.c1_officeSeen = true; this.chain([['mira', 'c1_mira_office']]); }
   }
@@ -872,6 +896,7 @@ export class Chapter1 extends ChapterBase {
 
   applyFlags(past, current) {
     const g = this.game, f = this.f, W = g.world;
+    this.line.applyFlags(current);
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
     // a save from between the third valve and the water scene must not leave the chapter stuck
     if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) { f.c1_water = true; W.well?.setWater?.(true); }
@@ -892,7 +917,7 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_zoeDone) return this.goal('c1_obj_confront');
     if (f.c1_zoeStart) return f.c1_plan ? this.goal('c1_obj_zoe_out') : this.goal('c1_obj_zoe');
     if (f.c1_needZoe) return this.goal('c1_obj_meetzoe');
-    if (f.c1_water) return this.goal('c1_obj_station');
+    if (f.c1_water) return this.line.objective() || this.goal('c1_obj_station');
     if (f.c1_task) return this.goal('c1_obj_valves') + valves.map((v) => this.sub(v.open, 'c1_valve_' + v.id)).join('');
     if (!f.c1_home) return this.goal('c1_obj_home1');
     return this.goal('c1_obj_harbour');
@@ -910,6 +935,7 @@ export class Chapter1 extends ChapterBase {
       m.push({ x, z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) });
     };
     if (!f.c1_started) return m;
+    const lm = this.line.markers(); if (lm) return lm;   // (CAMPAIGN-2: home, then the pump room on the lane)
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_task) npcAt('vesk', 'n_vesk');
@@ -926,6 +952,7 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_map && !f.c1_water) out.push({ id: 'pipemap', icon: 'map' });
     if (f.c1_needZoe && !f.c1_plan) out.push({ id: 'leaflet', icon: 'leaflet' });
     if (f.c1_plan && (!f.c2_planTaken || f.c2_planBack)) out.push({ id: 'evacplan', icon: 'plan' }); // (confiscated on Zeelich until recovered)
+    out.push(...this.line.items());
     return out;
   }
   // (G1-QUEST #3: the next, unfinished step was listed too, written as done, in the past tense. The journal keeps what
@@ -936,6 +963,7 @@ export class Chapter1 extends ChapterBase {
       { key: 'c1_j_morning', done: !!f.c1_started },
       { key: 'c1_j_vesk', done: !!f.c1_task },
       { key: 'c1_j_valves', done: !!f.c1_water },
+      ...this.line.journal(),
       { key: 'c1_j_station', done: !!f.c1_tour },
       { key: 'c1_j_plan', done: !!f.c1_plan },
       { key: 'c1_j_vesk_gone', done: !!f.c1_veskGone },

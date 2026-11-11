@@ -11,6 +11,8 @@ import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
 import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { workHands } from './workhands.js';
+import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -44,22 +46,14 @@ const DEG = Math.PI / 180;
 export const HERO_LOOK = 'twinsen';
 
 // The sword Yorna gives Twinsen (chapter 6): a short, slightly curved blade with a brass guard. Built along
-// the hand's -y (the continuation of the forearm), so arm swings read as blade swings.
+// the hand's -y (the continuation of the forearm), so arm swings read as blade swings. Its look (EQUIP-1: a broader
+// sabre blade with a bevelled edge, a curved guard, pommel and wrapped grip; three meshes, shared) is equiplook.js's.
 export function buildSword() {
-  const g = new THREE.Group();
-  // (TOWN-POLISH, I-28: a bright, mostly dielectric steel with a faint cool glow. At metalness 0.8 with no environment map
-  //  the blade drew dark grey, lost against the grey paving at the player's distance)
-  const steel = new THREE.MeshStandardMaterial({ color: '#f4f8fc', metalness: 0.35, roughness: 0.3, emissive: '#8fb4d8', emissiveIntensity: 0.35 });
-  const brass = new THREE.MeshStandardMaterial({ color: '#e0b25a', metalness: 0.7, roughness: 0.35 });
-  const grip = new THREE.MeshStandardMaterial({ color: '#5a3a24', roughness: 0.8 });
-  const add = (geo, m, y, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.rotation.z = rz; o.castShadow = true; g.add(o); return o; };
-  add(new THREE.CylinderGeometry(0.022, 0.024, 0.16, 8), grip, 0.0);
-  add(new THREE.SphereGeometry(0.032, 8, 6), brass, 0.09);
-  add(new THREE.BoxGeometry(0.2, 0.03, 0.05), brass, -0.09);
-  const blade = new THREE.Shape(); blade.moveTo(-0.022, 0); blade.lineTo(0.024, 0); blade.quadraticCurveTo(0.03, -0.4, 0.008, -0.72); blade.lineTo(-0.01, -0.66); blade.quadraticCurveTo(-0.02, -0.35, -0.022, 0);
-  const bg = new THREE.ExtrudeGeometry(blade, { depth: 0.012, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 1 }); bg.translate(0, 0, -0.006);
-  add(bg, steel, -0.1);
+  const g = swordMeshes(new THREE.Group());
   g.rotation.x = -0.25; // a little forward of the forearm line
+  // (EQUIP-1: the blade turned a quarter about its own line: its edge leads the backhand and the overhead blow (it led
+  //  with the flat), and the camera behind him sees its flat in the guard and those two swings, not a 3 px edge)
+  g.rotation.y = Math.PI / 2;
   g.position.y = -0.05;
   writeBodyStencil(g); // (the hero's silhouette doesn't show through his own sword)
   return g;
@@ -832,6 +826,8 @@ export class Hero extends Actor {
       this.rig.hitDir = angleDiff(this.angle, a + Math.PI); // 0 = hit from the front
       if (heavy && this.hp > 0) { this.angle = a + Math.PI; this.act('knockdown', 0.5, null, 0, ['getup', 0.8]); }
     }
+    // (COL-1: with all twelve singing crystals, Sendell catches him once in the core: story/depth.js catchFall)
+    if (this.hp <= 0 && g.story?.depth?.catchFall?.(this)) return;
     if (this.hp <= 0) {
       if (this.clovers > 0) {
         // LBA2: a clover leaf revives you on the spot with full life
@@ -869,6 +865,7 @@ export class NPC extends Actor {
     this.forceAnim = def.anim || null;
     this.present = true;
     this.rig.plantIfFits();   // (ANIM-POLISH-3: the stance foot held in the walk, two-step stops, stepping turns: Rig._plant)
+    workHands(game, this);    // (NO-AIR: a working hand is put on what stands there: workhands.js)
   }
   setPresent(on) {
     this.present = on;
@@ -1232,8 +1229,11 @@ export class MagicBall {
     this.state = 'idle';
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
-    this.mat = new THREE.MeshStandardMaterial({ color: '#ffe68a', emissive: '#ffc400', emissiveIntensity: 3, roughness: 0.2 });
-    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), this.mat);
+    // (EQUIP-1: a marble in the level's colour, its shading painted on and turned to the camera (fx), a moderate glow:
+    //  equiplook.js. `glow` is the old emissive scale, still what the halo and the charge are measured in)
+    this.mat = ballMaterial();
+    this.glow = 3;
+    this.mesh = new THREE.Mesh(ballGeo(1), this.mat);
     writeBodyStencil(this.mesh);
     this.mesh.visible = false;
     game.scene.add(this.mesh);
@@ -1257,7 +1257,7 @@ export class MagicBall {
     this.ribbon = new THREE.Mesh(tgeo, this.trailMat);
     this.ribbon.frustumCulled = false; this.ribbon.visible = false; this.ribbon.renderOrder = 4;
     game.scene.add(this.ribbon);
-    this.haloMat = new THREE.MeshBasicMaterial({ map: T.halo, color: '#ffd04a', opacity: 0.6, ...add });
+    this.haloMat = new THREE.MeshBasicMaterial({ map: ballGlowTexture(), color: '#ffd04a', opacity: 0.6, ...add });
     this.halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.haloMat);
     this.halo.visible = false; this.halo.renderOrder = 4;
     game.scene.add(this.halo);
@@ -1290,12 +1290,21 @@ export class MagicBall {
     this.holder = hero;
     this.mesh.visible = true;
     this.charge = 0;
-    this.mat.emissiveIntensity = 0.6;
+    this.paint(hero.magicLevel);   // (the level's colour in his hand too, not the last throw's)
+    this.setGlow(0.6);
     this.mesh.scale.setScalar(1);
     this.followHand();
   }
   cancelHold() { if (this.state === 'inhand') this.toHand(true); }
-  setCharge(k) { this.charge = k; this.mat.emissiveIntensity = 0.6 + k * 3.2; this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
+  setCharge(k) { this.charge = k; this.setGlow(0.6 + k * 3.2); this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
+  // the look of a level (1 yellow, 2 green, 3 red, 4 the fire ball): the body's painted marble, its glow, the trail and halo
+  paint(level) {
+    const L = Math.max(1, Math.min(4, level | 0 || 1)), col = BALL_LEVEL[L];
+    this.mesh.geometry = ballGeo(L);
+    this.mat.emissive.set(col[1]);
+    this.trailMat.color.set(col[1]); this.haloMat.color.set(col[1]);
+  }
+  setGlow(v) { this.glow = v; this.mat.emissiveIntensity = ballEmissive(v); }
   followHand() {
     const hand = this.holder?.rig.j?.armR?.hand;
     if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(this.mesh.position); this.mesh.position.y -= 0.08; }
@@ -1429,9 +1438,7 @@ export class MagicBall {
     if (opts.magic === undefined && this.magic) hero.mp -= 1;
     this.bounces = this.magic ? 4 : 0;
     this.carry = null;
-    const col = BALL_LEVEL[Math.max(1, Math.min(4, level))];
-    this.mat.color.set(col[0]); this.mat.emissive.set(col[1]);
-    this.trailMat.color.set(col[1]); this.haloMat.color.set(col[1]);
+    this.paint(level);
     this.sn = 0; // (a new throw, a new trail)
     this.fire = level >= 4;
     // released from the hand, at the hand's position (the release frame of the throw)
@@ -1450,7 +1457,7 @@ export class MagicBall {
     this.history = [];
     this.mesh.visible = true;
     this.mesh.scale.setScalar(charged ? 1.3 : 1);
-    this.mat.emissiveIntensity = charged ? 4 : 2.2;
+    this.setGlow(charged ? 4 : 2.2);
     this.preview(null);
   }
 
@@ -1590,14 +1597,17 @@ export class MagicBall {
       }
       this.ribbon.geometry.attributes.position.needsUpdate = true;
     }
+    // (EQUIP-1: the ball turned to the camera, so its painted glint and rim read from any side)
+    if (this.mesh.visible) this.mesh.quaternion.copy(cam.quaternion);
     // the halo
     const showHalo = !retro && this.mesh.visible && this.state !== 'idle';
     this.halo.visible = showHalo;
     if (showHalo) {
       this.halo.position.copy(this.mesh.position); this.halo.quaternion.copy(cam.quaternion);
-      const e = this.mat.emissiveIntensity, s = (0.5 + Math.min(e, 6) * 0.07) * this.mesh.scale.x * (1 + Math.sin(this.clock * 22) * 0.05);
+      // (the fire ball's glow flickers)
+      const e = this.glow, s = (0.5 + Math.min(e, 6) * 0.07) * this.mesh.scale.x * (1 + Math.sin(this.clock * 22) * 0.05 + (this.fire ? Math.sin(this.clock * 41) * 0.06 : 0));
       this.halo.scale.set(s, s, 1);
-      this.haloMat.opacity = Math.min(0.75, 0.25 + e * 0.08);
+      this.haloMat.opacity = Math.min(0.8, 0.3 + e * 0.09);
     }
     // the flashes: a glow that swells and fades, a ring that runs out (both face the camera)
     for (const f of this.flashes) {

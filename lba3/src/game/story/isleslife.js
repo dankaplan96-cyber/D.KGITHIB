@@ -31,7 +31,7 @@ const INDOOR = {
   il_pudd: { door: 'platform-27-12', of: 'pf_vill1', work: ['stove', 'chest'], anims: ['tinker', null] },
   il_rudd: { door: 'undergas-8--39', of: 'ug_gauge', work: ['desk', 'crates'], anims: ['tinker', null] },
   il_avra: { door: 'otringal--4--60', char: 'ztri2', color: '#a8d0f0', work: ['bookcase', 'pew'], anims: ['tinker', 'reach'] },
-  il_ione: { door: 'otringal-52--60', char: 'nara', color: '#f4f4ff', work: ['desk', 'jarshelf'], anims: ['tinker', 'reach'], heals: true },
+  il_ione: { door: 'otringal-52--60', char: 'nara_b', color: '#f4f4ff', work: ['desk', 'jarshelf'], anims: ['tinker', 'reach'], heals: true },
   il_jaspa: { door: 'knartas-28-29', char: 'keeper', color: '#d8b8a0', work: ['shelf', 'sacks'], anims: ['tinker', 'reach'] },
   il_zuzz: { door: 'mosquibee-26-15', char: 'zbee1', color: '#f0d070', work: ['barrels', 'sacks'], anims: ['tinker', 'reach'] },
   il_zett: { door: 'orchard-4-28', char: 'zbee2', color: '#c0e090', work: ['barrels', 'crates'], anims: ['tinker', 'reach'] },
@@ -103,7 +103,7 @@ export class IslesLife extends ChapterBase {
     const T = [];
     stops.forEach((s, i) => {
       const an = anims[i] || 'tinker';
-      T.push({ op: 'call', fn: (a) => { a.forceAnim = an; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.5 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 });
+      T.push({ op: 'call', fn: (a) => { a.forceAnim = an; } }, { op: 'goto', x: s.x, z: s.z, speed: 0.5, near: 0.12 }, { op: 'face', a: s.a }, { op: 'wait', t: 6 + i * 2 });
     });
     if (stops.length > 1) T.push({ op: 'loop' });
     return T;

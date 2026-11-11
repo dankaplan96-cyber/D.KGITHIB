@@ -104,7 +104,7 @@ export function citadelRoster(game) {
       bench('oda_bench', -49, -7.4, [18, 28]),
     ]) },
     // the old man: benches along the lane, the well, a long look at the pump
-    { id: 'brix', char: 'desertTrader', tint: '#d8f0d0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
+    { id: 'brix', char: 'desertTrader', tint: '#e8e4f0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
       bench('brix_benchE', -35.8, 2.6, [28, 44]),
       look('brix_warm', -33.25, 1.25, -33.25, 0.35, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit; POLISH-14 b: by the shop's wall north of the door now, he stands on its far side from the door, town.js)
       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
@@ -113,7 +113,7 @@ export function citadelRoster(game) {
       bench('brix_lane2', -43.3, 43.4, [24, 36]),
     ]) },
     // two neighbours who meet between the plaza's benches and talk
-    { id: 'maro', char: 'farmerB', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
+    { id: 'maro', char: 'farmerB_b', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
       home('maro_home', -46.1, 27.2, [10, 16], { stage: [0, 1], carry: null }),
       look('maro_meet', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [26, 36], { pair: 'plaza', mate: 'tilde', stage: [0, 1] }),
       bench('maro_bench', -53.3, 34.4, [16, 24], { stage: [0, 1] }),
@@ -237,7 +237,7 @@ export function zeelichRoster(game) {
       bench('ilo_bench', -31, 2.2, [20, 30]),
     ]) },
     // an Esmer man: the boulevard's benches and what he looks at from each
-    { id: 'aven', char: 'clerk', tint: '#ffffff', speed: 0.95, start: 0, color: '#a0d8d0', stops: ok([
+    { id: 'aven', char: 'clerk_b', tint: '#ffffff', speed: 0.95, start: 0, color: '#a0d8d0', stops: ok([
       bench('aven_b1', -31, -4.6, [22, 34]),
       look('aven_gate', -44.5, -1.6, -52, 0, [6, 10]),
       look('aven_mill', -4.0, -3.0, -2, -20, [8, 12]),
