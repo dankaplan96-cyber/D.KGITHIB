@@ -4462,3 +4462,12 @@ the runner and the Quick Check's summary beside it in `2026-11-10-gtx1050/`).
   p50 14.4 ms) and had a 4042 ms shadow-program step; mine in Chrome held High (street CPU work p50 7.3 ms, shadow
   programs 441–480 ms). I have not isolated why (desktop app against Chrome, a first start after the new driver,
   Windows updating in the background). Not done yet: the same benchmark in the desktop app on this machine.
+
+## MIGRATE-39-B · the desktop received the hand-over · the new machine's agent, 11.11.2026
+
+- `HANDOVER-DESKTOP.md` answers every heading of `HANDOVER-LAPTOP.md`: the clone merged on top of the laptop's last
+  commit, the tools installed (Blender 5.3 rebuilds `zoe.json` byte-identical to the repo's; chapter1 23/23), LBA1 and
+  LBA2 installed from GOG here, the 13 memory notes read.
+- **From now on only this machine pushes.** The queue continues here in the laptop's order: CAST-POLISH-NAMED (from
+  `wip/laptop/lba3-items`), then 28's queues 7 and 9, 27a (Desert Island, the Hamalayi, the Citadel re-score), Twinsen
+  after those, W-4 when ordered. 27c stays with the Vega 8 laptop.
