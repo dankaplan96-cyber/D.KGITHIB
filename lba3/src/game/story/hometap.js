@@ -3,8 +3,9 @@
 // "I'll check the well"; Zoé: "I'll ask next door"): it does not show those again.
 //
 //   1. The kitchen. Zoé is still at the sink, Arthur at his boat. The tap is dry but the brass pipe over the sink knocks:
-//      Twinsen turns the tap himself (his hand on its handle; the pipe shakes on the wall). Arthur has put his cup under
-//      the wrong pipe (the stove's overflow): Twinsen carries it to the sink, under the tap, and one drip falls into it.
+//      Twinsen holds his hand under the spout (not a drop; the pipe shakes on the wall). Arthur has put his cup under
+//      the wrong pipe (the stove boiler's overflow): Twinsen lifts it, carries it in his hand to the sink and puts it
+//      under the tap, and one drip falls into it. (Every hand at a real thing: story/reach.js.)
 //   2. The yard. The garden standpipe by the door knocks too, and up the lane the pipe at the pump room's door: the sound
 //      runs toward the square. (Heard as he passes; no prompt, no marker.)
 //   3. The well's bottom. The pool at the shaft's foot is warm to his hand; when the pump starts above, the crystals
@@ -18,14 +19,13 @@ import * as THREE from 'three';
 import { t as tr } from '../i18n.js';
 import { mergeStatic } from '../../engine/merge.js';
 import { buildPumpKiosk } from '../pumproom.js';
+import { touch, handTo } from './reach.js';
 import '../text/thread.js';
 
-// a few steps to a thing in a room (story/life.js cancels walks indoors that are not marked as the room's own)
-const walkIn = (h, pts, o) => { h.walkTo(pts, o); if (h.steer) h.steer.indoor = true; };
 
 const STX = -3.35;                       // the stove's middle, the house's frame (interiors.js buildHouse)
 const YARD = { x: -43.9, z: 74.7 };      // the garden standpipe: across the path from the door, where the lane's pipe ends
-const POOL = { x: -8.0, z: 1.9, r: 0.95 };   // the foot of the shaft, the cave's frame (interiors.js buildWell)
+const POOL = { x: -8.0, z: 1.9, r: 0.6, h: 0.44 };   // the catch basin at the foot of the shaft, the cave's frame (interiors.js buildWell): knee high, so a hand reaches its water
 const GROW = { x: -3.0, z: 1.5, r: 0.7 };    // the slate pillar nearest the shaft: the growth is on its west side
 const _v = new THREE.Vector3();
 
@@ -73,12 +73,13 @@ export class HomeTap {
       pm(new THREE.SphereGeometry(0.03, 8, 6), 0, 1.3, 0);
       for (const y of [1.75, 2.45]) pm(new THREE.TorusGeometry(0.028, 0.008, 5, 10), 0, y, 0);
       mergeStatic(pipe, { recolor: false });
-      // the stove's overflow: a thin iron pipe from the flue forward to the stove's front edge, turned down over it
-      const cupAt = { x: STX - 0.45, y: 0.875, z: BZ + 0.62 };
+      // the stove boiler's overflow: a thin iron pipe out of the tiles over the stove's right end, forward to its front
+      // edge and turned down over it (the cup stands under it, where a hand set down from the room meets it: reach.js)
+      const cupAt = { x: STX + 0.5, y: 0.875, z: BZ + 0.53 };
       const ov = new THREE.Group(); H.group.add(ov);
       const om = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, iron); m.position.set(x, y, z); m.rotation.x = rx; ov.add(m); };
-      om(new THREE.CylinderGeometry(0.014, 0.014, 0.46, 6), cupAt.x, 1.2, BZ + 0.39, Math.PI / 2);
-      om(new THREE.CylinderGeometry(0.014, 0.018, 0.12, 6), cupAt.x, 1.14, cupAt.z);
+      om(new THREE.CylinderGeometry(0.014, 0.014, 0.5, 6), cupAt.x, 1.27, BZ + 0.28, Math.PI / 2);
+      om(new THREE.CylinderGeometry(0.014, 0.018, 0.12, 6), cupAt.x, 1.21, cupAt.z);
       mergeStatic(ov, { recolor: true });
       // Arthur's cup: blue enamel, a handle (moved: kept apart)
       const cup = new THREE.Group(); cup.userData.keep = true; H.group.add(cup);
@@ -94,23 +95,27 @@ export class HomeTap {
       // (the kitchen floor wet in front of the sink: chapter 2, the tap Arthur left open; story/pumpline.js)
       const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), new THREE.MeshStandardMaterial({ color: '#6fa8c8', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.45 }));
       puddle.rotation.x = -Math.PI / 2; puddle.scale.set(1.25, 0.8, 1); puddle.position.set(bx + 0.1, 0.012, BZ + 1.05); puddle.visible = false; H.group.add(puddle);
-      P.house = { H, K, o, BZ, pipe, cup, drop, cupAt, sinkAt, puddle, shake: 0,
-        spout: { x: K.spout.x, z: K.spout.z }, front: { x: K.spout.x, z: o.z + BZ + 1.12 },
-        stove: { x: o.x + cupAt.x, z: o.z + cupAt.z }, stoveFront: { x: o.x + cupAt.x + 0.12, z: o.z + BZ + 1.24 },
+      // his hand under the spout, over the basin's front (the tap's handle is at the wall, out of an arm's reach across
+      // the sink); his hand on the cup on the stove
+      const tap = touch(K.spout.x + 0.18, o.z + BZ + 0.44, Math.PI, 'setDown'), cupT = touch(o.x + cupAt.x, o.z + cupAt.z, Math.PI, 'setDown');
+      P.house = { H, K, o, BZ, pipe, cup, drop, cupAt, sinkAt, puddle, shake: 0, tap, cupT,
+        spout: { x: K.spout.x, z: K.spout.z }, front: tap.front,
+        stove: { x: cupT.x, z: cupT.z }, stoveFront: cupT.front,
         zoe: { x: o.x - 0.9, z: o.z + BZ + 1.75, a: Math.atan2(-1.4, -1.48) } };
       this.setCup();
     }
     const R = g.regions?.built?.('well');
     if (!P.cave && R?.group) {
       const o = R.group.position;
-      // the pool at the shaft's foot: a low curb of dressed stones round warm water
+      // the catch basin at the shaft's foot: a knee-high drum of dressed slate, warm water at its lip
       const grp = new THREE.Group(); grp.position.set(POOL.x, 0, POOL.z); R.group.add(grp);
       const slate = new THREE.MeshStandardMaterial({ color: '#5d6470', roughness: 0.9 });
-      for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, s = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.16 + (i % 3) * 0.03, 0.26), slate); s.position.set(Math.sin(a) * POOL.r, 0.08, Math.cos(a) * POOL.r); s.rotation.y = a; s.castShadow = true; grp.add(s); }
+      { const d = new THREE.Mesh(new THREE.CylinderGeometry(POOL.r + 0.08, POOL.r + 0.14, POOL.h, 14), slate); d.position.y = POOL.h / 2; d.castShadow = true; grp.add(d);
+        const lip = new THREE.Mesh(new THREE.TorusGeometry(POOL.r + 0.04, 0.05, 6, 16), slate); lip.rotation.x = Math.PI / 2; lip.position.y = POOL.h; grp.add(lip); }
       mergeStatic(grp, { recolor: true });
-      const water = new THREE.Mesh(new THREE.CircleGeometry(POOL.r - 0.08, 20), new THREE.MeshStandardMaterial({ color: '#7fd0d8', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.78, emissive: '#1f6a78', emissiveIntensity: 0.35 }));
-      water.rotation.x = -Math.PI / 2; water.position.set(POOL.x, 0.1, POOL.z); R.group.add(water);
-      g.physics.add({ type: 'cyl', x: o.x + POOL.x, z: o.z + POOL.z, r: POOL.r + 0.1, top: 0.75, noStand: true, seeThrough: true });   // (walked round, reached into from its curb)
+      const water = new THREE.Mesh(new THREE.CircleGeometry(POOL.r, 20), new THREE.MeshStandardMaterial({ color: '#7fd0d8', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.78, emissive: '#1f6a78', emissiveIntensity: 0.35 }));
+      water.rotation.x = -Math.PI / 2; water.position.set(POOL.x, POOL.h + 0.012, POOL.z); R.group.add(water);
+      g.physics.add({ type: 'cyl', x: o.x + POOL.x, z: o.z + POOL.z, r: POOL.r + 0.04, top: 0.75, noStand: true, seeThrough: true });   // (walked round, reached into from beside it)
       // the growth: crystals climbing the old pillar's west side (they lean when the pump runs: kept apart, one draw)
       const glow = new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 0.9, roughness: 0.25 });
       const growth = new THREE.Group(); growth.position.set(GROW.x - GROW.r - 0.02, 0, GROW.z + 0.1); growth.userData.keep = true; R.group.add(growth);
@@ -126,7 +131,7 @@ export class HomeTap {
   setCup() {
     const P = this.parts.house; if (!P) return;
     const at = this.f.pr_cup || !this.f.pr_v2 ? P.sinkAt : P.cupAt;
-    P.cup.position.set(at.x, at.y, at.z); P.cup.rotation.set(0, 0.6, 0); P.carry = false;
+    P.cup.position.set(at.x, at.y, at.z); P.cup.rotation.set(0, 0.6, 0); P.carry = false; P.putT = null;
   }
   // a new game's first frame of play (the things were built before its flags were set)
   reset() { this.setCup(); this.setGrowth(0); }
@@ -153,12 +158,13 @@ export class HomeTap {
   interactables(consider, dist) {
     const g = this.game, f = this.f, P = this.parts.house;
     if (this.on && g.room?.id === 'house' && P) {
-      consider(dist(P.spout.x, P.spout.z), 1.5, { kind: 'h_tap', label: 'p_tap' });
-      if (!f.pr_cup && !P.carry) consider(dist(P.stove.x, P.stove.z), 1.45, { kind: 'h_cup', label: 'p_cup' });
+      consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
+      // (the cup is his to move once the tap has been tried: it stands an arm's length from the sink, and its prompt would take the tap's)
+      if (f.pr_tap && !f.pr_cup && !P.carry) consider(dist(P.stove.x, P.stove.z), 1.45, { kind: 'h_cup', label: 'p_cup' });
     }
     const C = this.parts.cave;
     if (this.on && C && g.room === C.R) {
-      consider(dist(C.pool.x, C.pool.z), 1.75, { kind: 'h_pool', label: 'p_feel' });
+      consider(dist(C.pool.x, C.pool.z), 1.6, { kind: 'h_pool', label: 'p_feel' });
       if (f.pr_growth) consider(dist(C.grow.x, C.grow.z), 1.3, { kind: 'h_growth', label: 'p_look' });
     }
     const Kk = this.parts.kiosk;
@@ -167,39 +173,36 @@ export class HomeTap {
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, ch = this.ch, P = this.parts.house, C = this.parts.cave;
     switch (it.kind) {
-      case 'h_tap': {
-        // his hand on the handle (he steps to the sink first): it squeaks round, nothing comes, the pipe knocks
-        const turn = () => h.actAt(P.spout.x, P.spout.z, 'use', 1.25, () => {
-          g.audio.play('tapSqueak'); this.turnT = 0; this.knock(true);
+      case 'h_tap':
+        // his hand under the spout (he steps to the sink first): not a drop, and the pipe knocks behind the tiles
+        handTo(h, P.tap, () => {
+          this.knock(true);
           if (f.pr_cup) { this.drip(); ch.chain([['hero', 'prh_tap_3']]); return; }
           if (f.pr_tap) { ch.chain([['hero', 'prh_tap_2']]); return; }
           ch.chain([['hero', 'prh_tap_1'], ['zoe', 'prh_zoe_1'], ['zoe', 'prh_zoe_2'], ['arthur', 'prh_ar_1']], () => { f.pr_tap = true; g.updateObjective(); g.save(false); });
-        }, 0.5);
-        walkIn(h, [P.front], { a: Math.PI, then: turn, fail: turn });
+        });
         return true;
-      }
       case 'h_cup': {
-        if (!f.pr_tap) { ch.chain([['hero', 'prh_cup_first']]); return true; }
-        // lifted off the stove (the hand on it), carried to the sink, set down under the tap; a drip falls into it
-        const set = () => h.actAt(P.spout.x, P.spout.z, 'use', 1.1, () => {
-          f.pr_cup = true; this.setCup(); g.audio.play('put');
+        // his hand on it on the stove, carried in that hand to the sink, put into the basin under the tap; a drip falls into it
+        const set = () => handTo(h, P.tap, () => {
+          f.pr_cup = true; P.carry = false; P.putFrom = P.cup.position.clone(); P.putT = 0; g.audio.play('put');
           this.drip();
           ch.chain([['hero', 'prh_cup_2'], ['arthur', 'prh_ar_2'], ['zoe', 'prh_zoe_3']], () => { g.updateObjective(); g.save(false); });
-        }, 0.5);
-        const lift = () => h.actAt(P.stove.x, P.stove.z, 'use', 1.0, () => {
-          P.carry = true; g.audio.play('tick');
-          ch.chain([['hero', 'prh_cup_1']], () => walkIn(h, [{ x: P.stoveFront.x + 0.5, z: P.front.z + 0.25 }, P.front], { a: Math.PI, then: set, fail: set }));
-        }, 0.45);
-        walkIn(h, [P.stoveFront], { a: Math.PI, then: lift, fail: lift });
+        });
+        handTo(h, P.cupT, () => { P.carry = true; g.audio.play('tick'); ch.chain([['hero', 'prh_cup_1']], set); });
         return true;
       }
-      case 'h_pool':
-        h.actAt(C.pool.x, C.pool.z, 'pickup', 1.0, () => {
+      case 'h_pool': {
+        // he bends to the basin from where he came to it, turned so that his hand (not his chest) is over the water
+        const a0 = Math.atan2(C.pool.x - h.pos.x, C.pool.z - h.pos.z), d = POOL.r + 0.44;
+        const p = { x: C.pool.x, z: C.pool.z, a: a0 + 0.64, clip: 'pickup', front: { x: C.pool.x - Math.sin(a0) * d, z: C.pool.z - Math.cos(a0) * d } };
+        handTo(h, p, () => {
           g.audio.play('trickle');
-          g.particles.burst(C.pool.x, 0.2, C.pool.z, '#cfefff', 6, 1.2);
+          g.particles.burst(C.pool.x - Math.sin(a0) * 0.3, POOL.h + 0.05, C.pool.z - Math.cos(a0) * 0.3, '#cfefff', 6, 1.2);
           ch.chain([['hero', f.pr_pool ? 'prh_pool_2' : 'prh_pool_1']], () => { if (!f.pr_pool) { f.pr_pool = true; g.save(false); this.pumpIn = 1.2; } });
-        }, 0.5);
+        });
         return true;
+      }
       case 'h_growth': ch.chain([['hero', 'prh_growth_look']]); return true;
       case 'h_kiosk': g.audio.play('doorLocked'); this.rattle('kiosk'); ch.chain([['hero', 'ct_kiosk_locked']]); return true;
     }
@@ -256,7 +259,7 @@ export class HomeTap {
     if (P) {
       // the pipe's shake, the handle's turn, the cup in his hand, the drop
       if (P.shake > 0) { P.shake = Math.max(0, P.shake - dt); P.pipe.rotation.z = Math.sin(g.time * 55) * 0.012 * P.shake; P.pipe.position.y = Math.sin(g.time * 70) * 0.004 * P.shake; }
-      if (this.turnT != null) { this.turnT += dt; const k = Math.min(1, this.turnT / 0.5); P.K.handle.rotation.y = Math.sin(k * Math.PI) * 1.3; if (k >= 1) { this.turnT = null; P.K.handle.rotation.y = 0; } }
+      if (P.putT != null) { P.putT += dt; const k = Math.min(1, P.putT / 0.22); P.cup.position.set(P.putFrom.x + (P.sinkAt.x - P.putFrom.x) * k, P.putFrom.y + (P.sinkAt.y - P.putFrom.y) * k, P.putFrom.z + (P.sinkAt.z - P.putFrom.z) * k); if (k >= 1) { P.putT = null; this.setCup(); } }
       if (P.carry) {
         const hand = h.rig.j?.armR?.hand;
         if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(_v); P.cup.position.set(_v.x - P.o.x, _v.y - 0.06, _v.z - P.o.z); }
@@ -264,7 +267,8 @@ export class HomeTap {
       if (P.dripT != null) {
         P.dripT += dt;
         const y0 = P.K.spout.y, y1 = P.sinkAt.y + 0.08, k = Math.min(1, P.dripT / 0.42);
-        P.drop.visible = k < 1; P.drop.position.set(P.K.spout.x - P.o.x, y0 + (y1 - y0) * k * k, P.K.spout.z - P.o.z);
+        const sx = P.K.spout.x - P.o.x, sz = P.K.spout.z - P.o.z;
+        P.drop.visible = k < 1; P.drop.position.set(sx + (P.sinkAt.x - sx) * k, y0 + (y1 - y0) * k * k, sz + (P.sinkAt.z - sz) * k);
         if (k >= 1) { P.dripT = null; g.audio.play('tick', P.spout); }
       }
       // the wall knocks by itself while the question is open
@@ -306,7 +310,7 @@ export class HomeTap {
 
   applyFlags() {
     const f = this.f;
-    this.later = []; this.pendingLine = null; this.pumpIn = null; this.turnT = null;
+    this.later = []; this.pendingLine = null; this.pumpIn = null;
     // (a game begun with the thread and loaded after the cup: Zoé is next door, as she was)
     if (f.pr_v2 && f.pr_cup) f.pr_zoeOut = true;
     this.build();

@@ -19,10 +19,10 @@
 // or one that never took the strip) finds the lift mended and the cistern full, and the chapter plays as it did.
 import * as THREE from 'three';
 import { revealBeat } from './revealcam.js';
+import { handTo } from './reach.js';
 import '../text/thread.js';
 
 const DIALS = ['steady', 'double', 'triple'];
-const walkIn = (h, pts, o) => { h.walkTo(pts, o); if (h.steer) h.steer.indoor = true; };
 
 export class LiftThread {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; this.dial = 0; }
@@ -81,7 +81,7 @@ export class LiftThread {
     if (f.zt_bell && !f.zt_feed && down) consider(dist(L.feed.x, L.feed.z), 1.4, { kind: 'zt_feed', label: 'p_feed' });
     if (f.zt_feed && !f.zt_ride && !L.moving && Math.abs(L.deckY - L.low) < 0.05 && h.pos.y < L.y0 + 0.6) consider(dist(L.deck.x, L.deck.z), 2.3, { kind: 'zt_ride', label: 'p_ride' });
     if (f.zt_ride && !f.zt_shove && up) consider(dist(L.cart.x, L.cart.z), 1.7, { kind: 'zt_cart', label: 'p_cart' });
-    if (f.zt_shove && !f.zt_water && up) consider(dist(L.cartEnd.x - 1.12, L.cartEnd.z), 1.7, { kind: 'zt_cock', label: 'p_cock' });
+    if (f.zt_shove && !f.zt_water && up) consider(dist(L.cock.x, L.cock.z), 1.6, { kind: 'zt_cock', label: 'p_cock' });
     if (f.zt_irsa2 && !f.zt_bench && down) {
       consider(dist(L.dial.x, L.dial.z), 1.1, { kind: 'zt_dial', label: 'p_dial' });
       consider(dist(L.crank.x, L.crank.z), 1.1, { kind: 'zt_crank', label: 'p_crank' });
@@ -89,18 +89,18 @@ export class LiftThread {
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, ch = this.ch, L = this.L;
-    const at = (p, fn, dur = 1.1, t = 0.5) => { const go = () => h.actAt(p.x, p.z, 'use', dur, fn, t); walkIn(h, [p.front], { a: Math.atan2(p.x - p.front.x, p.z - p.front.z), then: go, fail: go }); };
+    const at = (p, fn, dur = null) => handTo(h, p, fn, dur);   // (his hand on the thing: story/reach.js)
     switch (it.kind) {
       case 'zt_cistern': ch.chain([['hero', !this.on || !ch.isCur() || f.zt_water ? 'zt_cistern_full' : 'zt_cistern']]); return true;
       case 'zt_standpipe': ch.chain([['hero', !this.on || !ch.isCur() || f.zt_water ? 'zt_standpipe' : 'zt_standpipe_dry']]); return true;
       case 'zt_sign': ch.chain([['hero', 'zt_works_sign']]); return true;
       case 'zt_hook':
         // the hand wheel on the post lets the frame's chain down: the hook drops onto the cart's ring
-        at(L.hook, () => { L.turnHook(); g.audio.play('winch', L.hook); this.after(1.1, () => g.audio.play('clunk', L.cart)); this.pending = { t: 1.3, fn: () => { f.zt_hook = true; L.state.hooked = true; ch.chain([['hero', 'zt_hook_1']], () => { g.updateObjective(); g.save(false); }); } }; }, 1.5);
+        at(L.hook, () => { L.turnHook(); g.audio.play('winch', L.hook); this.after(1.1, () => g.audio.play('clunk', L.cart)); this.pending = { t: 1.3, fn: () => { f.zt_hook = true; L.state.hooked = true; ch.chain([['hero', 'zt_hook_1']], () => { g.updateObjective(); g.save(false); }); } }; }, 1.7);
         return true;
       case 'zt_bell':
         if (!f.zt_hook) { ch.chain([['hero', 'zt_bell_first']]); return true; }
-        at(L.bell, () => { L.ringBell(); for (let i = 0; i < 3; i++) this.after(i * 0.4, () => g.audio.play('clang', L.bell)); this.pending = { t: 1.5, fn: () => this.belled() }; }, 1.2);
+        at(L.bell, () => { L.ringBell(); for (let i = 0; i < 3; i++) this.after(i * 0.4, () => g.audio.play('clang', L.bell)); this.pending = { t: 1.5, fn: () => this.belled() }; }, 1.4);
         return true;
       case 'zt_feed':
         at(L.feed, () => {
@@ -119,18 +119,14 @@ export class LiftThread {
         at(L.cart, () => {
           f.zt_shove = true; this.busy = true; g.audio.play('thump', L.cart); this.roll = { t: 0 };
           ch.chain([['hero', 'zt_cart_1']]);
-        }, 1.0, 0.45);
+        });
         return true;
-      case 'zt_cock': {
-        const p = { x: L.cartEnd.x - 1.12 - 0.5, z: L.cartEnd.z + 0.02, front: { x: L.cartEnd.x - 1.12 - 0.3, z: L.cartEnd.z + 0.95 } };
-        at(p, () => { g.audio.play('valve', p); this.busy = true; this.tip = { t: 0 }; });
-        return true;
-      }
+      case 'zt_cock': at(L.cock, () => { g.audio.play('valve', L.cock); this.busy = true; this.tip = { t: 0 }; }); return true;
       case 'zt_dial':
         at(L.dial, () => {
           this.dial = (this.dial + 1) % 3; L.state.dial = this.dial; L.setState({ ...L.state });
           g.audio.play('select'); ch.chain([['hero', 'zt_dial_' + DIALS[this.dial]]], () => g.updateObjective());
-        }, 0.9, 0.4);
+        });
         return true;
       case 'zt_crank':
         at(L.crank, () => {
@@ -142,7 +138,7 @@ export class LiftThread {
             if (!good) { ch.chain([['hero', 'zt_crank_wrong']]); return; }
             ch.chain([['hero', 'zt_crank_right'], ['zl_irsa', 'zt_irsa_5'], ['hero', 'zt_tw_irsa'], ['zl_irsa', 'zt_irsa_6']], () => { f.zt_bench = true; g.updateObjective(); g.save(false); });
           } };
-        }, 2.4, 0.4);
+        }, 2.6);
         return true;
     }
     return false;
@@ -205,7 +201,8 @@ export class LiftThread {
         this.ch.chain([['hero', 'zt_ride_top']], () => { g.updateObjective(); g.save(false); });
       });
     };
-    walkIn(h, [{ x: L.ride.x + 0.9, z: L.ride.z }, L.ride], { a: -Math.PI / 2, then: up, fail: () => { this.busy = false; } });
+    // (onto the deck from the lane, to his place at the cart's bar)
+    h.walkTo([{ x: L.ride.x + 1.0, z: L.ride.z }, L.ride], { a: -Math.PI / 2, then: up, fail: () => { this.busy = false; } }); if (h.steer) h.steer.indoor = true;
   }
   // Brel leaves his carrying and walks to a spot (S.<key>), seen to go
   brelTo(key) {

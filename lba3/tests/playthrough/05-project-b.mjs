@@ -27,10 +27,10 @@ export const steps = [
   ["the gauge's strip", () => { const U = game.room.pump; const r = P.use(U.gauge.x, U.gauge.z, { near: 0.9, kind: 'ct_strip' }); for (let i = 0; i < 40 && !game.flags.ct_strip; i++) { game.step(0.25); P.settle(); } game.step(2.6); P.settle(); return { ...r, fail: game.flags.ct_strip ? null : 'ct_strip' }; }],
   ["the pump's plate: Irsa's Pump Works, Zeelich", () => { const U = game.room.pump; const r = P.use(U.plate.x, U.plate.z, { near: 0.9, kind: 'ct_plate' }); return { ...r, done: game.story.cur.line.done, fail: game.flags.ct_plate && game.story.cur.line.done ? null : 'ct_plate' }; }],
   ['up: the garden tap runs', () => { const e = game.room.exits[0]; P.through(e.x, e.z); P.settle(); const Y = game.story.chapters[0].home.parts.yard; const r = P.use(Y.x, Y.z, { near: 1.1, kind: 'ct_yard' }); return { ...r, runs: Y.stream.visible, fail: !game.room && Y.stream.visible ? null : 'the garden tap' }; }],
-  ['home: the tap Arthur left open, shut by hand', () => {
+  ['home: the tap Arthur left open runs cold under his hand', () => {
     const H = game.story.chapters[0].home.parts.house, h = game.hero; const r = P.talk('zoe', { run: true }); const ran = H.K.stream.visible;
     P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'ct_tap' }); for (let i = 0; i < 40 && !game.flags.ct_tapShut; i++) { game.step(0.25); P.settle(); }
-    return { ...r, ran, shut: !!game.flags.ct_tapShut, stream: H.K.stream.visible, fail: game.flags.ct_home && ran && game.flags.ct_tapShut && !H.K.stream.visible ? null : 'home' };
+    return { ...r, ran, felt: !!game.flags.ct_tapShut, fail: game.flags.ct_home && ran && game.flags.ct_tapShut ? null : 'home' };
   }],
   // ---- the station, as it was
   ['Vesk: the tour', () => ({ ...P.talk('vesk', { run: true }), fail: game.flags.c1_tour ? null : 'tour' })],

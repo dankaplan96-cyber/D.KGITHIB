@@ -11,9 +11,10 @@
 //
 // CONTRACT (story/pumpline.js)
 //   PUMPROOM_AT, buildPumpRoom(scene, physics) → room 'pumproom' (regions.js)
-//   R.pump {diagram, feel: {upper, lower, copper}, pier, alcoveX, cocks: {upper, lower} each {x, z, front, set(open)},
+//   R.pump {diagram, feel: {upper, lower, copper}, pier, alcoveX, cocks: {upper, lower} each {x, z, a, clip, front, set(open)},
 //           plate, gauge, strip (mesh), setState({bypass, wrong, strip}), shake(which, t), kick(), copper (the shaking run)}
-//           points are world {x, z}; `front` is where he stands to put a hand on the thing
+//           points are world {x, z}; a thing he handles is a touch point (story/reach.js: where the hand goes, the way he
+//           faces, the clip for its height, `front`: where he stands for the hand to meet it)
 //   buildPumpKiosk(game) → W.pumpKiosk {x, z, door {x, z}, out {x, z, a}, pipe {x, y, z}, grp (the riser: it rattles)}
 //   pumpDoors(W, flags) / pumpExit(to, W): the door leads down once the project's worker has unlocked it (chapter 2 with
 //   the water back, and every later chapter); 'pump-out' leads back up before it
@@ -22,6 +23,7 @@ import { RoomBuilder } from './interiors.js';
 import * as P from './props.js';
 import { MAT, rbox, plane, cyl, torus, sphere, canvasTex } from './props.js';
 import { mergeStatic } from '../engine/merge.js';
+import { touch } from './story/reach.js';
 
 export const PUMPROOM_AT = { x: 9700, z: 600 };
 const KIOSK = { x: -48.9, z: 65.6, w: 2.3, d: 2.1, h: 2.25 };   // on the grass west of the lane, its door toward the lane (east)
@@ -126,12 +128,12 @@ export function buildPumpRoom(scene, physics) {
   // ---- three pipes out of the back wall: each a riser, an elbow and a run east along the wall, behind the pier
   const PZ = BZ + 0.42, RUN1 = 5.25;
   const riser = (x, y, m, r) => { k.add(cyl(r, r, y, 10), m, x, y / 2, PZ); k.add(sphere(r * 1.25, 10, 8), m, x, y, PZ); k.add(torus(r * 1.3, 0.02, 6, 12), brass, x, 0.4, PZ, 0, { rx: Math.PI / 2 }); B.ccol(x, PZ, r + 0.04, y, { noStand: true }); };
-  const UP = { x: -1.7, y: 2.35, r: 0.11 }, LO = { x: -0.5, y: 1.6, r: 0.11 }, CU = { x: 0.7, y: 0.8, r: 0.085 };
+  const UP = { x: -1.7, y: 2.35, r: 0.11 }, LO = { x: -0.5, y: 1.6, r: 0.11 }, CU = { x: 0.7, y: 1.05, r: 0.085 };   // (the copper one at the height of a hand laid on it; the old ones are felt on their risers at 1.48 m: story/reach.js)
   riser(UP.x, UP.y, old, UP.r); riser(LO.x, LO.y, old2, LO.r);
-  k.add(cyl(UP.r, UP.r, 4.2 - UP.x, 10), old, (4.2 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
+  k.add(cyl(UP.r, UP.r, 4.45 - UP.x, 10), old, (4.45 + UP.x) / 2, UP.y, PZ, 0, { rz: Math.PI / 2 });
   // (the lower run and the copper one move: Zoé's knocks, the copper's shiver — each its own mesh)
   const mk = (geo, m, x, y, z, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.z = rz; o.castShadow = true; B.group.add(o); return o; };
-  const lowerRun = mk(new THREE.CylinderGeometry(LO.r, LO.r, 5.0 - LO.x, 10), old2, (5.0 + LO.x) / 2, LO.y, PZ, Math.PI / 2);
+  const lowerRun = mk(new THREE.CylinderGeometry(LO.r, LO.r, 5.1 - LO.x, 10), old2, (5.1 + LO.x) / 2, LO.y, PZ, Math.PI / 2);
   const copper = new THREE.Group(); copper.userData.keep = true; B.group.add(copper);
   const cm = (geo, x, y, z, rz = 0, rx = 0) => { const o = new THREE.Mesh(geo, cu); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; copper.add(o); };
   cm(new THREE.CylinderGeometry(CU.r, CU.r, CU.y, 10), CU.x, CU.y / 2, PZ);
@@ -150,19 +152,20 @@ export function buildPumpRoom(scene, physics) {
   const cock = (x, yTop, m, r) => {
     k.add(cyl(r, r, yTop - 1.0, 10), m, x, (yTop + 1.0) / 2, PZ);
     k.add(sphere(r * 1.25, 10, 8), m, x, yTop, PZ);
-    k.add(rbox(0.3, 0.3, 0.3, 0.04), brass, x, 1.15, PZ);
+    k.add(rbox(0.3, 0.3, 0.3, 0.04), brass, x, 1.2, PZ);
     k.add(cyl(r, r, 0.75, 10), m, x, 0.62, PZ);
-    const piv = new THREE.Group(); piv.position.set(x, 1.15, PZ + 0.19); B.group.add(piv);
+    const piv = new THREE.Group(); piv.position.set(x, 1.2, PZ + 0.19); B.group.add(piv);
     const bar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.05), MAT.paint('#b8302a', 0.4)); bar.position.x = 0.19; piv.add(bar);
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 10), iron); hub.rotation.x = Math.PI / 2; piv.add(hub);
     B.ccol(x, PZ, 0.2, 1.4, { noStand: true });
     // (shut: the handle across the pipe; open: along it, pointing down)
-    return { ...wpt(x, PZ), front: wpt(x, PZ + 0.95), open: false, set(b) { this.open = !!b; piv.rotation.z = b ? -Math.PI / 2 : 0; } };
+    // (his hand on the handle's bar, 0.15 m along it from the hub)
+    return { ...touch(B.cx + x + 0.15, B.cz + PZ + 0.24, Math.PI, 'tinker'), open: false, set(b) { this.open = !!b; piv.rotation.z = b ? -Math.PI / 2 : 0; } };
   };
-  const cocks = { upper: cock(4.2, UP.y, old, UP.r), lower: cock(5.0, LO.y, old2, LO.r) };
+  const cocks = { upper: cock(4.45, UP.y, old, UP.r), lower: cock(5.1, LO.y, old2, LO.r) };
   // the copper pipe's own way: up from its run into the lower leg under the cock (a bolted tee), and on to the pump
-  k.add(cyl(CU.r, CU.r, 0.5, 10), cu, 5.0, 0.6, PZ + 0.16, 0, { rx: 0.5 });
-  k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.0, 0.72, PZ + 0.06);
+  k.add(cyl(CU.r, CU.r, 0.5, 10), cu, 5.1, 0.84, PZ + 0.1, 0, { rx: 0.35 });
+  k.add(rbox(0.26, 0.2, 0.26, 0.03), brass, 5.1, 0.72, PZ + 0.04);
   // the booster pump on its bed: a casing, a ribbed motor, a flywheel; the maker's plate on the casing's west end, its
   // gauge and paper strip on the east end
   const PX = 4.35, PZ2 = 0.75;
@@ -183,18 +186,20 @@ export function buildPumpRoom(scene, physics) {
   const face = new THREE.Mesh(new THREE.CircleGeometry(0.17, 20), MAT.map(dialTex())); face.position.set(PX + 0.1, 1.45, PZ2 + 0.03); B.group.add(face);
   k.add(torus(0.17, 0.02, 6, 20), brass, PX + 0.1, 1.45, PZ2 + 0.03);
   const needle = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.15, 0.01), MAT.flat('#1a1a1a', 0.5)); needle.geometry.translate(0, 0.065, 0); needle.position.set(PX + 0.1, 1.45, PZ2 + 0.045); B.group.add(needle);
-  k.add(rbox(0.22, 0.16, 0.14, 0.02), MAT.wood('dark'), PX + 0.42, 1.0, PZ2 + 0.1);
-  const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.42), MAT.map(stripTex())); strip.position.set(PX + 0.42, 0.78, PZ2 + 0.18); strip.rotation.x = -0.12; B.group.add(strip);
+  k.add(cyl(0.025, 0.03, 1.08, 6), brass, PX + 0.42, 0.76, PZ2 + 0.4);
+  k.add(rbox(0.22, 0.16, 0.14, 0.02), MAT.wood('dark'), PX + 0.42, 1.36, PZ2 + 0.4);
+  const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.42), MAT.map(stripTex())); strip.position.set(PX + 0.42, 1.1, PZ2 + 0.48); strip.rotation.x = -0.1; B.group.add(strip);
   B.light('#ffe8c0', 4.5, 11, -2.6, 2.9, -0.4);
   B.light('#ffd8a0', 3.2, 7, 4.4, 2.8, -1.6);
 
   let kickT = null; const shakes = { copper: 0, lower: 0, upper: 0 };
   R.pump = {
     diagram: { ...wpt(-3.6, BZ + 0.06), front: wpt(-3.6, BZ + 1.1) },
-    feel: { upper: { ...wpt(UP.x, PZ), front: wpt(UP.x, PZ + 0.85) }, lower: { ...wpt(LO.x, PZ), front: wpt(LO.x, PZ + 0.85) }, copper: { ...wpt(CU.x, PZ), front: wpt(CU.x, PZ + 0.85) } },
+    // (the old pipes felt on their risers at an arm's height, the copper one with a hand laid on its elbow)
+    feel: { upper: touch(B.cx + UP.x, B.cz + PZ + 0.06, Math.PI, 'reach'), lower: touch(B.cx + LO.x, B.cz + PZ + 0.06, Math.PI, 'reach'), copper: touch(B.cx + CU.x, B.cz + PZ + 0.04, Math.PI, 'setDown') },
     pier: wpt(2.6, BZ + 1.3), alcoveX: B.cx + 3.45, cocks,
     plate: { ...wpt(PX - 0.35, PZ2 + 0.35), front: wpt(PX - 0.35, PZ2 + 1.05) },
-    gauge: { ...wpt(PX + 0.3, PZ2 + 0.2), front: wpt(PX + 0.3, PZ2 + 1.05), y: 1.45 },
+    gauge: touch(B.cx + PX + 0.42, B.cz + PZ2 + 0.48, Math.PI, 'setDown'),   // (the strip's end, in his hand as he tears it off)
     copperAt: (x) => ({ x: Math.max(B.cx + CU.x, Math.min(B.cx + RUN1, x)), y: CU.y, z: B.cz + PZ }),
     lowerAt: wpt(LO.x + 1.2, PZ), upperAt: wpt(UP.x + 2.5, PZ),
     setState({ bypass = false, wrong = false, strip = true } = {}) { cocks.lower.set(bypass); cocks.upper.set(wrong); R.pump.bypass = bypass; strip_(strip); },

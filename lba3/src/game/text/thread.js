@@ -4,7 +4,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   n_zl_kell: 'Kell', n_zl_brel: 'Brel', n_zl_irsa: 'Irsa', n_veskhorn: 'Vesk (speaking tube)',
-  p_tap: 'Turn', p_cup: 'Move', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
+  p_tap: 'Try', p_cup: 'Move', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
   p_hook: 'Hook', p_bell: 'Ring', p_feed: 'Switch', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
 
   // ------------------------------------------------------------ chapter 1: home
@@ -22,8 +22,8 @@ Object.assign(STR.en, {
   prh_tap_2: '(Still dry. Still knocking.)',
   prh_tap_3: '(A drip, straight into the cup. So the water is still in there.)',
   prh_cup_1: "(Arthur's cup, under the stove's overflow. The water comes in on the brass pipe, over the sink.)",
+  ct_ar_shut: "I'm shutting it! I'm shutting it.",
   prh_cup_2: '(There. Under the right pipe.)',
-  prh_cup_first: '(The cup can wait. The tap first.)',
   prh_leave: '(The tap first. Zoé is waiting.)',
   prh_yard: '(The garden pipe is knocking too. It runs under the lane, toward the square.)',
   prh_lane: "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)",
@@ -83,7 +83,7 @@ Object.assign(STR.en, {
   it_pstrip: 'Gauge Strip', itd_pstrip: "From the pump room under the lane. Three kicks, a rest, three kicks: a push coming up the project's pipe.",
   ct_zoe_runs: "It runs! Cold, too. Arthur left the tap open to be sure, so now we also have a clean floor.",
   ct_ar_runs: 'I left it open so we would KNOW. It worked. We know.',
-  ct_tap_runs: '(Cold water. As it should be.)',
+  ct_tap_runs: '(Cold. As it should be.)',
   ct_pippa_step: "Water, and it's hot! First wash this counter has had in a week. Mind your sleeves.",
   ct_tw_strip: 'Your new pipe was taking our lane\'s water. And it carries this. Three kicks, a rest, three kicks.',
   ct_vesk_strip: "A bypass left on the wrong setting. My fitters will hear of it. And the kicks? A new pump settling. Irsa's pumps always knock for a month.",

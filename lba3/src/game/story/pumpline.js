@@ -11,16 +11,15 @@
 // water to the square (it springs back; Zoé knocks once), the lower one fills the houses' line (two knocks). Shut off,
 // the copper pipe's gauge still kicks: the push comes up the project's pipe, from the fortress end. He tears off the
 // gauge's strip and reads the booster pump's plate: IRSA'S PUMP WORKS · MILL LANE · ZEELICH. Up in the street the
-// garden tap runs, the shopkeeper washes her counter, and at home the tap Arthur left open floods the sink until
-// Twinsen shuts it. Then the station: Vesk calls the kicks "a new pump settling", and the radio's Baldino knows Irsa.
+// garden tap runs, the shopkeeper washes her counter, and at home the tap Arthur left open runs into the sink (cold
+// under Twinsen's hand; Arthur shuts it). Then the station: Vesk calls the kicks "a new pump settling", and the radio's Baldino knows Irsa.
 //
 // Flags (new, saved): ct_v (a game that came to the water's return with the thread), ct_dry, ct_worker, ct_diagram,
 // ct_felt, ct_seen, ct_wrong, ct_bypass, ct_strip, ct_plate, ct_home, ct_tapShut, ct_wback. A save from before has no
 // ct_v: the thread counts as done (the bypass set right, the strip gone) and the chapter plays as it did.
+import { handTo } from './reach.js';
 import '../text/thread.js';
 
-// a few steps to a thing in a room (story/life.js cancels walks indoors that are not marked as the room's own)
-const walkIn = (h, pts, o) => { h.walkTo(pts, o); if (h.steer) h.steer.indoor = true; };
 
 export class PumpLine {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; }
@@ -94,7 +93,7 @@ export class PumpLine {
     const g = this.game, f = this.f, K = this.kiosk, H = this.home?.parts?.house;
     if (!g.room && K && !f.c1_water) consider(dist(K.door.x, K.door.z), 1.5, { kind: 'ct_kiosk', label: 'p_door' });
     if (!this.on || !f.c1_water) return;
-    if (g.room?.id === 'house' && H && !f.c1_veskGone) consider(dist(H.spout.x, H.spout.z), 1.5, { kind: 'ct_tap', label: 'p_tap' });
+    if (g.room?.id === 'house' && H && !f.c1_veskGone) consider(dist(H.tap.x, H.tap.z), 1.45, { kind: 'ct_tap', label: 'p_tap' });
     const Y = this.home?.parts?.yard;
     if (!g.room && Y && f.ct_bypass) consider(dist(Y.x, Y.z), 1.3, { kind: 'ct_yard', label: 'p_look' });
     const R = this.R, U = R?.pump;
@@ -107,21 +106,18 @@ export class PumpLine {
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, ch = this.ch, U = this.R?.pump, H = this.home?.parts?.house;
-    const at = (p, fn, dur = 1.1) => walkIn(h, [p.front], { a: Math.atan2(p.x - p.front.x, p.z - p.front.z), then: () => h.actAt(p.x, p.z, 'use', dur, fn, 0.5), fail: () => h.actAt(p.x, p.z, 'use', dur, fn, 0.5) });
+    const at = (p, fn, dur = null) => handTo(h, p, fn, dur);   // (his hand on the thing: story/reach.js)
     switch (it.kind) {
       case 'ct_kiosk': g.audio.play('doorLocked'); ch.chain([['hero', 'ct_kiosk_locked']]); return true;
       case 'ct_yard': ch.chain([['hero', 'ct_yard_runs']]); return true;
-      case 'ct_tap': {
-        // his hand on the kitchen tap again: dry and knocking; or, the line open, shut on the water Arthur left running
-        const turn = () => h.actAt(H.spout.x, H.spout.z, 'use', 1.25, () => {
-          g.audio.play('tapSqueak'); this.home.turnT = 0;
+      case 'ct_tap':
+        // his hand under the kitchen tap again: dry and knocking; or, the line open, in the cold water Arthur left running
+        handTo(h, H.tap, () => {
           if (!f.ct_bypass) { this.home.knock(true); ch.chain([['hero', 'ct_tap_dry']]); return; }
-          if (!f.ct_tapShut) { f.ct_tapShut = true; this.push(); g.save(false); }
-          ch.chain([['hero', 'ct_tap_runs']]);
-        }, 0.5);
-        walkIn(h, [H.front], { a: Math.PI, then: turn, fail: turn });
+          const first = !f.ct_tapShut;
+          ch.chain([['hero', 'ct_tap_runs'], ...(first ? [['arthur', 'ct_ar_shut']] : [])], () => { if (first) { f.ct_tapShut = true; g.save(false); } });   // (it is shut by the time he comes back in)
+        });
         return true;
-      }
       case 'ct_diagram': g.audio.play('paper'); ch.chain([['hero', 'ct_diagram']], () => { if (!f.ct_diagram) { f.ct_diagram = true; g.updateObjective(); g.save(false); } }); return true;
       case 'ct_feel': {
         const p = U.feel[it.which];
@@ -152,7 +148,7 @@ export class PumpLine {
           this.after(1.2, () => this.knocks(2));
           this.pending = { t: 2.1, fn: () => ch.chain([['hero', 'ct_cock_right'], ['hero', 'ct_zoe_knock2'], ['hero', 'ct_pulse']], () => { g.updateObjective(); g.save(false); }) };
           g.updateObjective(); g.save(false);
-        }, 1.3);
+        }, 1.5);
         return true;
       }
       case 'ct_plate': ch.chain([['hero', f.ct_plate ? 'ct_plate_again' : 'ct_plate']], () => { if (!f.ct_plate) { f.ct_plate = true; g.updateObjective(); g.save(false); } }); return true;

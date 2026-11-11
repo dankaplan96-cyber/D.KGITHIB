@@ -18,14 +18,16 @@
 //   buildCisternRise({ group, col, W, updaters, Y0, mat }) → R.lift:
 //     top (y of the terrace), half, low (the deck's heights), deckY (now)
 //     spots {kell, brelA, brelB, brelClear, irsa, tap, stairFoot, stairTop}
-//     hook {x, z, front}, bell {x, z, front}, feed {x, z, front}, ride {x, z}, deck {x, z}, cart {x, z, front}, filler {x, z}
-//     dial {x, z, front}, crank {x, z, front}, standpipe {x, z}, cistern {x, z}, sign {x, z}
+//     hook, bell, feed, cart (its push bar), cock (its cock, at the filler), dial, crank: touch points {x, z, a, clip, front}
+//     (story/reach.js: each thing stands at the height of the hand of its clip); ride (= cart.front), deck {x, z}, filler,
+//     standpipe, cistern, sign {x, z}
 //     setState({ deck: 'half'|'low'|'top', hooked, fed, cart: 'deck'|'filler', water, dial })   the look for a story state
 //     moveDeck(to, secs, riders, done)   the deck (and the cart on it, and whoever rides) to a height
 //     pushCart(k)  0…1 along the rails to the filler; tipCart(k); ringBell(); dropHook(k); spinCrank(); kick(dir)
 //   liftClear(x, z, pad)   the scatter keeps off it (zeelich.js)
 import * as THREE from 'three';
 import { mergeStatic } from '../engine/merge.js';
+import { touch } from './story/reach.js';
 
 const T = { x0: -18.2, x1: -11.0, z0: 19.6, z1: 26.4, h: 3.6 };
 const BAY = { z0: 21.6, z1: 24.0 }, DECK = { x: -9.85, z: 22.8, hw: 1.1, hd: 1.15 };
@@ -179,11 +181,11 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   { const g2 = new THREE.Group(); const a2 = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; g2.add(o); };
     a2(cyl(0.36, 0.36, 1.15, 14), paint('#3f7f9a', 0.5), 0, 0.36, 0, 0, Math.PI / 2); for (const x of [-0.42, 0.42]) a2(new THREE.TorusGeometry(0.365, 0.025, 5, 16), brass, x, 0.36, 0, 0, 0);
     g2.children.slice(1).forEach((c) => { c.rotation.y = Math.PI / 2; });
-    a2(new THREE.TorusGeometry(0.07, 0.018, 5, 10), steel, 0, 0.77, 0); a2(cyl(0.07, 0.09, 0.1, 8), brass, -0.5, 0.7, 0);
+    a2(new THREE.TorusGeometry(0.07, 0.018, 5, 10), steel, 0, 0.77, 0); a2(cyl(0.045, 0.055, 0.16, 8), brass, -0.3, 0.62, 0.4, Math.PI / 2);
     mergeStatic(g2, { recolor: false }); tank.add(g2); }
   { const g2 = new THREE.Group(); const a2 = (geo, m, x, y, z, rx = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.x = rx; o.castShadow = true; g2.add(o); };
     a2(box(1.3, 0.08, 0.7), wood, 0, 0.34, 0); for (const x of [-0.45, 0.45]) for (const z of [-0.36, 0.36]) a2(cyl(0.17, 0.17, 0.07, 12), dark, x, 0.17, z, Math.PI / 2);
-    a2(box(0.05, 0.6, 0.05), steel, 0.66, 0.66, -0.3); a2(box(0.05, 0.6, 0.05), steel, 0.66, 0.66, 0.3); a2(box(0.05, 0.05, 0.66), steel, 0.66, 0.95, 0);
+    a2(box(0.05, 0.66, 0.05), steel, 0.66, 0.69, -0.3); a2(box(0.05, 0.66, 0.05), steel, 0.66, 0.69, 0.3); a2(box(0.05, 0.05, 0.66), steel, 0.66, 1.02, 0);
     mergeStatic(g2, { recolor: true, retex: true }); cart.add(g2); }
   const cartCol = col({ type: 'box', x: CART0.x, z: CART0.z, hw: 0.68, hd: 0.4, rot: 0, top: Y0 + HALF + 1.2, bottom: Y0 + HALF, noStand: true });
   const cartCol2 = col({ type: 'box', x: CART0.x - PUSH, z: CART0.z, hw: 0.68, hd: 0.4, rot: 0, top: TOP + 1.2, bottom: TOP, noStand: true }); cartCol2.enabled = false;
@@ -193,8 +195,8 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   add(box(1.1, 0.1, 0.1), teal, T.x1 + 0.6, TOP + 2.72, CART0.z);
   // the chain's hand wheel on the south post, the bell on the north one (their brackets)
   const HOOK = { x: T.x1 - 0.2, z: BAY.z1 + 0.2 }, BELL = { x: T.x1 - 0.2, z: BAY.z0 - 0.2 };
-  const hwheel = dyn(new THREE.TorusGeometry(0.16, 0.022, 5, 14), red, HOOK.x, TOP + 1.15, HOOK.z); hwheel.rotation.y = Math.PI / 2; hwheel.userData.keep = true;
-  add(box(0.34, 0.06, 0.06), steel, HOOK.x + 0.15, TOP + 1.15, HOOK.z);
+  const hwheel = dyn(new THREE.TorusGeometry(0.16, 0.022, 5, 14), red, HOOK.x, TOP + 1.2, HOOK.z); hwheel.rotation.y = Math.PI / 2; hwheel.userData.keep = true;
+  add(box(0.34, 0.06, 0.06), steel, HOOK.x + 0.15, TOP + 1.2, HOOK.z);
   const bell = new THREE.Group(); bell.position.set(BELL.x, TOP + 1.55, BELL.z); bell.userData.keep = true; D.add(bell);
   dyn(new THREE.CylinderGeometry(0.05, 0.13, 0.2, 10), brass, 0, -0.12, 0, bell); dyn(new THREE.CylinderGeometry(0.008, 0.008, 0.36, 4), dark, 0, -0.38, 0, bell);
   add(box(0.34, 0.05, 0.05), steel, BELL.x + 0.15, TOP + 1.57, BELL.z);
@@ -214,17 +216,18 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   const pour = dyn(new THREE.CylinderGeometry(0.03, 0.05, 0.5, 6), water.material, FIL.x + 0.25, TOP + 1.1, FIL.z); pour.rotation.z = 0.9; pour.visible = false; pour.castShadow = false; pour.userData.keep = true;
   const face = dyn(new THREE.CircleGeometry(0.15, 18), new THREE.MeshStandardMaterial({ map: dialTex(), roughness: 0.6 }), PUMP.x - 0.02, Y0 + 1.86, PUMP.z); face.rotation.y = -Math.PI / 2; face.userData.keep = true;
   const needle = dyn(new THREE.BoxGeometry(0.012, 0.13, 0.008), dark, PUMP.x - 0.035, Y0 + 1.86, PUMP.z); needle.geometry.translate(0, 0.055, 0); needle.rotation.y = -Math.PI / 2; needle.userData.keep = true;
-  const DIAL = { x: PUMP.x - 0.05, z: PUMP.z - 0.75 }, CRANK = { x: PUMP.x - 0.05, z: PUMP.z + 0.78 };
+  const DIAL = { x: BX - 0.25, z: PUMP.z - 0.75 }, CRANK = { x: BX - 0.25, z: PUMP.z + 0.78 };   // (at the bench's front edge: within his reach)
   const knob = new THREE.Group(); knob.position.set(DIAL.x, Y0 + 0.97, DIAL.z); knob.userData.keep = true; D.add(knob);
   dyn(new THREE.CylinderGeometry(0.11, 0.12, 0.07, 12), brass, 0, 0, 0, knob); dyn(new THREE.BoxGeometry(0.03, 0.03, 0.12), red, 0, 0.045, -0.05, knob);
   mergeStatic(knob, { recolor: true, retex: true });
-  const crank = new THREE.Group(); crank.position.set(CRANK.x - 0.12, Y0 + 1.18, CRANK.z); crank.userData.keep = true; D.add(crank);
+  const crank = new THREE.Group(); crank.position.set(CRANK.x, Y0 + 1.18, CRANK.z); crank.userData.keep = true; D.add(crank);
   { const w2 = dyn(new THREE.TorusGeometry(0.2, 0.025, 5, 14), red, 0, 0, 0, crank); w2.rotation.y = Math.PI / 2; dyn(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 6), dark, -0.08, 0.2, 0, crank).rotation.z = Math.PI / 2; }
   mergeStatic(crank, { recolor: true, retex: true });
-  add(cyl(0.03, 0.03, 0.5, 6), steel, CRANK.x + 0.1, Y0 + 1.18, CRANK.z - 0.3, 0, Math.PI / 2, 0);
+  add(cyl(0.03, 0.03, 0.3, 6), steel, CRANK.x + 0.02, Y0 + 1.03, CRANK.z, 0, 0, 0);   // the crank's stand on the bench
   mergeStatic(S, { recolor: true, retex: true });
 
   // ---- state and motion
+  const TP = (x, z, a, clip) => { const p = W(x, z); return touch(p.x, p.z, a, clip); };
   const A = {
     top: TOP, half: Y0 + HALF, low: Y0 + LOW, deckY: Y0 + HALF, y0: Y0,
     spots: {
@@ -234,13 +237,15 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
       irsa: { ...W(BX - 0.25, WORKS.z1 + 1.0), a: Math.atan2(-1, -0.6) },   // (under her sign, off the bench's end: the crank's prompt is his) irsaTap: { ...W(TAP.x + 0.95, TAP.z - 0.5), a: -Math.PI / 2 - 0.5 },
       stairFoot: W(STAIR.x0 + 0.8, STAIR.z0 + STAIR.w / 2), stairTop: W(T.x0 + 0.6, T.z1 - 0.7),
     },
-    hook: { ...W(HOOK.x, HOOK.z), front: W(HOOK.x - 0.75, HOOK.z - 0.05) },
-    bell: { ...W(BELL.x, BELL.z), front: W(BELL.x - 0.75, BELL.z + 0.05) },
-    feed: { ...W(MH.x, MH.z - MH.hd - 0.17), front: W(MH.x, MH.z - MH.hd - 0.95) },
-    ride: W(CART0.x + 1.13, CART0.z), deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd),
-    cart: { ...W(CART0.x + 0.6, CART0.z), front: W(CART0.x + 1.13, CART0.z) }, cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
+    // (what his hand goes to — story/reach.js: the point, the way he faces it, the clip for its height, where he stands)
+    hook: TP(HOOK.x - 0.04, HOOK.z, Math.PI / 2, 'tinker'),                       // the chain's hand wheel
+    bell: TP(BELL.x, BELL.z, Math.PI / 2, 'tinker'),                              // the bell's cord
+    feed: TP(MH.x, MH.z - MH.hd - 0.2, 0, 'tinker'),                              // the feed switch
+    cart: TP(CART0.x + 0.66, CART0.z, -Math.PI / 2, 'setDown'),                   // the cart's push bar (on the deck)
+    cock: TP(CART0.x - PUSH - 0.3, CART0.z + 0.46, Math.PI, 'setDown'),           // the cart's cock (at the filler)
+    deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd), cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
     filler: W(FIL.x, FIL.z), cistern: W(CIS.x, CIS.z), standpipe: W(TAP.x, TAP.z), sign: W(SIGN.x, SIGN.z),
-    dial: { ...W(DIAL.x, DIAL.z), front: W(DIAL.x - 0.85, DIAL.z) }, crank: { ...W(CRANK.x, CRANK.z), front: W(CRANK.x - 0.85, CRANK.z) }, bench: W(PUMP.x, PUMP.z),
+    dial: TP(DIAL.x, DIAL.z, Math.PI / 2, 'setDown'), crank: TP(CRANK.x - 0.05, CRANK.z, Math.PI / 2, 'tinker'), bench: W(PUMP.x, PUMP.z),
     lane: W(-6.6, 22.8), bay: { ...W(T.x1 - 0.5, DECK.z), z0: W(0, BAY.z0).z, z1: W(0, BAY.z1).z }, wheelAt: W(MAST.x, MAST.z),
     state: {}, running: false, cartK: 0,
     setDeck(y) {
@@ -254,6 +259,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
       tank.rotation.z = 0.55 * tip;
     },
     setHook(k) { const y1 = this.deckY + 1.22, y0 = TOP + 2.25, y = y0 + (y1 - y0) * k; hook.position.y = y; const len = TOP + 2.68 - y; chain.scale.y = Math.max(0.05, len); chain.position.y = y + len / 2; hook.visible = chain.visible = this.cartK <= 0; },
+    get ride() { return this.cart.front; },   // (he rides at the cart's bar)
     setState(s = {}) {
       const st = (this.state = { deck: 'half', hooked: false, fed: false, cart: 'deck', water: false, dial: 0, ...s });
       this.setCart(st.cart === 'filler' ? 1 : 0, 0);

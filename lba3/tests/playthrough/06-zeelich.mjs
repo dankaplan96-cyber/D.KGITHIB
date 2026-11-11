@@ -35,7 +35,7 @@ export const steps = [
   ['the cart shoved to the filler, its cock opened: the cistern fills', () => {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags;
     const r = P.use(L.cart.x, L.cart.z, { near: 1.3, kind: 'zt_cart' }); for (let i = 0; i < 60 && !(f.zt_shove && !LT.busy); i++) { game.step(0.25); P.settle(); }
-    P.use(L.cartEnd.x - 1.12, L.cartEnd.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
+    P.use(L.cock.x, L.cock.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
     return { ...r, k: L.cartK, water: L.state.water, fail: f.zt_water ? null : 'water' };
   }],
   ["Irsa's bench: the dial set to the strip, the crank", () => {

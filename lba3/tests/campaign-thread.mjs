@@ -86,12 +86,13 @@ if (!ONLY || ONLY === 'A') {
     const e = game.room.exits[0]; P.through(e.x, e.z); P.settle();
     return [!!game.flags.ct_strip, !!game.flags.ct_plate, game.story.cur.line.done, game.room?.id ?? 'citadel', game.story.items().some((i) => i.id === 'pstrip')];
   }), (v) => v[0] && v[1] && v[2] && v[3] === 'citadel' && v[4]);
-  is('A7 the street: the garden tap runs; at home the tap Arthur left open runs until he shuts it', await ev(() => {
+  is('A7 the street: the garden tap runs; at home the tap Arthur left open runs cold under his hand (it is shut by the time he comes back in)', await ev(() => {
     const hm = game.story.chapters[0].home.parts, Y = hm.yard, H = hm.house, h = game.hero;
     const yard = Y.stream.visible; P.talk('zoe', { run: true }); const ran = H.K.stream.visible;
     P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'ct_tap' }); for (let i = 0; i < 40 && !game.flags.ct_tapShut; i++) { game.step(0.25); P.settle(); }
-    return [yard, !!game.flags.ct_home, ran, !!game.flags.ct_tapShut, H.K.stream.visible];
-  }), (v) => v[0] && v[1] && v[2] && v[3] && v[4] === false);
+    const e = game.room.exits.find((x) => !x.room); P.through(e.x, e.z); P.settle(); const d = game.world.houses[0].door; P.through(d.x, d.z); P.settle();
+    return [yard, !!game.flags.ct_home, ran, !!game.flags.ct_tapShut, game.room?.id, H.K.stream.visible];
+  }), (v) => v[0] && v[1] && v[2] && v[3] && v[4] === 'house' && v[5] === false);
   await shot('A7-home-runs');
   // returning after completion
   await handover();
@@ -160,7 +161,7 @@ if (!ONLY || ONLY === 'B') {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags;
     P.use(L.cart.x, L.cart.z, { near: 1.3, kind: 'zt_cart' }); for (let i = 0; i < 60 && !(f.zt_shove && !LT.busy); i++) { game.step(0.25); P.settle(); }
     const k = +L.cartK.toFixed(2);
-    P.use(L.cartEnd.x - 1.12, L.cartEnd.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
+    P.use(L.cock.x, L.cock.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
     for (let i = 0; i < 200 && LT.brel; i++) game.step(0.25);
     const b = P.npc('zl_brel');
     return [!!f.zt_shove, k, !!f.zt_water, L.state.water, +Math.hypot(b.pos.x - L.spots.brelTap.x, b.pos.z - L.spots.brelTap.z).toFixed(1), b.placed?.anim];
