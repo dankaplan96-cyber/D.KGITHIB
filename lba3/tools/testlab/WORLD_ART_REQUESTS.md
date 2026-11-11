@@ -4497,3 +4497,20 @@ Pictures (**chapter 3+ people: not for the user**): `docs/future/characters/{bal
   model in Citadel), Vega 8 frame time.
 - **Left:** Doran unchanged (reads well); Yorna's fur-hat flaps; the Grobos' flat brow strips; Kira and Oni share their models.
 
+
+## CAST-CONNECT-1 · every limb joined to the body; the Grobos' brows, ears and Yorna's hat · the desktop, 11.11.2026
+**Ready for the cloud, apply after CAST-POLISH-NAMED.** The user, 11.11: "the ears are in the air", then "every limb
+should be connected". A new check (`art/blender/characters/jobs/floating.py`) found loose parts in 51 of the 61 cast
+models; after this batch 3 are left, all under 1.3 cm (Arthur's hair at the back, Vesk's brow strips, zbee2's lashes on its
+unmeasured eyes). Full note: `requests/CAST-CONNECT-1.md`.
+- **Fixed:** shoes standing apart from the legs (nearly every look: the shin now runs into the shoe); no legs under long
+  dresses and coats (9 looks); ball hands hanging under the cuff (a wrist); the Grobos' ears off the side of the head; the
+  Grobos' flat brow strips (a rounded ridge); Yorna's fur-hat flaps that read as horns (tied up over the crown); the
+  Rabbibunnies' ears above the skull; the bees' forelegs and antennae; Joe's and Ker'aooc's shoulders; the Spheros' legs;
+  pockets, buttons, straps and Vesk's emblem and claws standing off the cloth.
+- **Files:** `requests/CAST-CONNECT-1.diff` (cast_poly.py only; every fix has an env flag that builds the old part) and 52
+  models in `requests/CAST-CONNECT-1/`. No new look, skeleton, index or characters.js change.
+- **Numbers:** +1 % to +11.5 % triangles per model (within +25 %), no draw call, no new colour; contracts clean.
+- **Tests** (the 61 rebuilt models in place): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30 PASS.
+  13 poses looked at for Gilbert, Kira's model and Doran. Evidence label: Automated runtime only.
+- **Pictures:** `docs/future/characters/connect-1/` (the before|after sheet is chapter 1 people; Yorna's is ch3plus).

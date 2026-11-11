@@ -345,8 +345,16 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ (the laptop's pictures, looked at again) · performance:
   draws/triangles measured · integrated: no (request).
 
+### Every limb joined, the Grobos' brows and ears, Yorna's hat: CAST-CONNECT-1 (the desktop, 11.11.2026)
+- The user, 11.11: "the ears are in the air", "every limb should be connected". New check `jobs/floating.py`: 51 of 61
+  models had loose parts (shoes apart from legs, no legs under long hems, hands under the cuffs, Grobo ears, bunny ears,
+  bees' forelegs/antennae, Joe's shoulders, Spheros' legs, pockets/buttons/straps); 3 left under 1.3 cm. BROW-RIDGE and
+  HAT-FLAPS for the Grobos/Yorna (queue 6's left items). Details `tools/testlab/requests/CAST-CONNECT-1.md`.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ (close-ups, 13 poses for three looks) · performance:
+  triangles measured (+1-11.5 %), no draw call · integrated: no (request).
+
 ## Current
-- **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11.
+- **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11; CAST-CONNECT-1 sent 11.11 (after NAMED).
 - CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
 - ZOE-LOOK-38 accepted by the user 9.11 ("Zoé is good"); the cloud applies it. Twinsen (TWINSEN-LOOK-38) waits until the queue is done (the user, 9.11: "by the order we set").
 - EQUIP-1 (ball, sword) and CITADEL-85: applied by the cloud (CITADEL-85 as e2a9d1dc); the user kept the blade's quarter turn and accepted CITADEL-85 whole (10.11).
@@ -358,7 +366,7 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
 4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~, ~~the isles~~, ~~Desert Island~~, ~~the Hamalayi~~, ~~the underground~~ (CAST-POLISH-UNDERGROUND)
 5. ~~HANDS-36~~ (order 36: request sent)
-6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); left: Yorna's hat flaps, the Grobos' flat brows
+6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); ~~Yorna's hat flaps, the Grobos' flat brows~~ (CAST-CONNECT-1, with every limb joined)
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
    ~~worker, nara~~ (UNDERGROUND); farmerA, farmerB, clerk (and councilB for Kira; zmole2, zbee1, zbee2)
 8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
