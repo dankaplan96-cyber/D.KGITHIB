@@ -21,7 +21,7 @@ import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
-import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill } from './lba1places.js';
+import { ASYLUM_DOOR, climbPaveDist, climbClear, climbMasonry, climbRampFill, CLIMB_RAMP } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
@@ -357,7 +357,52 @@ function houseFlats(x, z, h) {
 }
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
-  return climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight);
+  return climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight));
+}
+
+// CLIMB-2 (the user's photo, 5.11: the cobbles folded into a pit beside the retaining wall): the paved ramp up to the
+// fort (lba1places.js CLIMB_RAMP) is one even surface. Inside its corridor the ground is the ramp's own smooth incline,
+// level across: its line is the ground along the ramp's middle as it was, smoothed and never falling on the way up; it
+// is the whole ground within 1.8 m of the middle (the paving, the kerbs, the wall's foot) and eases back to the land
+// by 2.6 m. Past the square's kerb ring to the fork; the ground everywhere else is unchanged, and the physics walks the
+// same heightfield the paving is painted on. (CLIMB_OFF: the ground as it stood before, for the scatter's view of it)
+let CLIMB_OFF = false, CLIMB_PROF = null;
+const CLIMB_S0 = 10.6, CLIMB_FULL = 1.8, CLIMB_EASE = 2.6, CLIMB_DS = 0.25;
+const CLIMB_BOX = [-41.8, -38.4, -30.6, -11.6];
+function climbLocal(x, z) {
+  let best = 1e9, bs = 0, s0 = 0;
+  for (let i = 0; i < CLIMB_RAMP.length - 1; i++) {
+    const [ax, az] = CLIMB_RAMP[i], [bx, bz] = CLIMB_RAMP[i + 1], dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz);
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (L * L))), d = Math.hypot(x - ax - dx * t, z - az - dz * t);
+    if (d < best) { best = d; bs = s0 + t * L; }
+    s0 += L;
+  }
+  return [bs, best, s0];
+}
+function climbProfile() {
+  const [, , L] = climbLocal(0, 0), n = Math.ceil(L / CLIMB_DS) + 1, at = (s) => {
+    let s0 = 0;
+    for (let i = 0; i < CLIMB_RAMP.length - 1; i++) {
+      const [ax, az] = CLIMB_RAMP[i], [bx, bz] = CLIMB_RAMP[i + 1], l = Math.hypot(bx - ax, bz - az);
+      if (s <= s0 + l || i === CLIMB_RAMP.length - 2) { const t = Math.min(1, (s - s0) / l); return [ax + (bx - ax) * t, az + (bz - az) * t]; }
+      s0 += l;
+    }
+  };
+  CLIMB_OFF = true;
+  let p = Array.from({ length: n }, (_, i) => islandHeight(...at(Math.min(L, i * CLIMB_DS))));
+  CLIMB_OFF = false;
+  for (let pass = 0; pass < 4; pass++) p = p.map((v, i) => { let a = 0, c = 0; for (let j = -6; j <= 6; j++) { const k = i + j; if (k >= 0 && k < n) { a += p[k]; c++; } } return a / c; });
+  for (let i = 1; i < n; i++) p[i] = Math.max(p[i], p[i - 1]);
+  return { p, L };
+}
+function climbGround(x, z, h) {
+  if (CLIMB_OFF || PRE80 || x < CLIMB_BOX[0] || x > CLIMB_BOX[2] || z < CLIMB_BOX[1] || z > CLIMB_BOX[3]) return h;
+  const [s, o, L] = climbLocal(x, z);
+  if (o >= CLIMB_EASE || s < CLIMB_S0 || s > L) return h;
+  CLIMB_PROF ??= climbProfile();
+  const P = CLIMB_PROF.p, f = s / CLIMB_DS, i = Math.min(P.length - 2, Math.floor(f)), ph = P[i] + (P[i + 1] - P[i]) * (f - i);
+  const w = (1 - smoothstep(CLIMB_FULL, CLIMB_EASE, o)) * smoothstep(CLIMB_S0, CLIMB_S0 + 1.6, s) * (1 - smoothstep(L - 1.2, L, s));
+  return lerp(h, ph, w);
 }
 export const debugHeight = islandHeight;
 
@@ -499,8 +544,19 @@ function scatterGround(T) {
       if (d !== 0) pre.set(k, T.heights[k] + d);
     }
   }
+  // (CLIMB-2: and the ramp's corridor as it stood before its even incline, so no random draw moves)
+  {
+    const [x0, z0, x1, z1] = CLIMB_BOX;
+    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      if (pre.has(k)) continue;
+      CLIMB_OFF = true; const before = islandHeight(x, z); CLIMB_OFF = false;
+      const d = before - islandHeight(x, z);
+      if (d !== 0) pre.set(k, T.heights[k] + d);
+    }
+  }
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => PRE80_BOXES.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
