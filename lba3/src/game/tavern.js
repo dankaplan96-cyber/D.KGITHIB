@@ -1,0 +1,168 @@
+// LBA-CITADEL-1 (the laptop's proposal, the user 1.11: "fixes and additions from the first and second games, and
+// logical additions for twelve years later"; "the stairs and the upper floor where they were too: things change in
+// twelve years, but it should look about 80 % alike"): Chez Luc, Citadel's tavern, after LBA2's scene 3. In LBA2 its
+// door is on the square's south side, where our 'south' house (the one with the pink awning) stands; the house had no
+// inside. Our own geometry, from a study of the original's layout (numbers and descriptions only; nothing copied):
+//   - a hall of about 21 × 32 of the original's cells (≈ 10 × 15 m, ≈ 5.8 m high) of pale grey stone blocks, a floor
+//     of grey square tiles with a dark border
+//   - as the game's camera sees it: the long wall on the left with three small high windows; the gallery (≈ 2.4 m up)
+//     along the short back wall, under two windows with red blinds, round tables with red stools on it; a straight
+//     stair against the gallery's face climbing toward the left wall, teal iron railings, white globe lamps on the
+//     newels; a shut arched door in the gallery's face (the original's cellar, scene 4)
+//   - the jukebox at the stair's foot, a red sofa against the stair's side, the bar at the front left by the door (a
+//     pale counter along the wall turning into the room, a tap barrel and bottles on it, red stools), square tables with
+//     red chairs in the front, teal potted plants, a picture high on the long wall
+// Twelve years on (ours): the harbour's people drink here now. A ferry timetable board by the stair's foot, glazed
+// Esmer jars on the shelf behind the bar, one of the project's heat radiators under the long wall's windows. The
+// jukebox stays.
+//
+// CONTRACT
+//   TAVERN_AT                  where the room stands (regions.js)
+//   buildTavernRoom(scene, physics) → { tavern }   (regions.js group 'tavern')
+//   tavernDoors(W) / tavernExit(to, W)   the 'south' house's door leads in; 'tavern-out' leads back out before it
+//   R.npcSpots.luc              behind the bar (the story layer may put Luc there)
+import * as THREE from 'three';
+import { RoomBuilder } from './interiors.js';
+import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, table, chair, jar, counter, noticeBoard, pottedPlant, railing, barrel } from './props.js';
+
+export const TAVERN_AT = { x: 6600, z: 0 };
+
+const RED = () => MAT.paint('#b0302c', 0.45), TEAL = () => MAT.paint('#2f6f74', 0.5);
+
+// a bar stool: a red cushion on a chrome post and a foot ring
+function stool(k, h = 0.72) {
+  k.add(lathe([[0.001, 0], [0.19, 0], [0.2, 0.04], [0.17, 0.09], [0.001, 0.1]], 14), RED(), 0, h, 0);
+  k.add(cyl(0.035, 0.035, h, 8), MAT.steel(), 0, h / 2, 0);
+  k.add(cyl(0.2, 0.22, 0.04, 14), MAT.steel(), 0, 0.02, 0);
+  k.add(new THREE.TorusGeometry(0.16, 0.012, 5, 16).rotateX(Math.PI / 2), MAT.steel(), 0, 0.3, 0);
+  return { r: 0.22, top: h + 0.1 };
+}
+// the jukebox: a rounded red cabinet with a teal arch, a glowing window and a grille
+function jukebox(k) {
+  k.add(rbox(0.9, 1.25, 0.55, 0.12), RED(), 0, 0.62, 0);
+  k.add(lathe([[0.001, 0], [0.45, 0], [0.45, 0.06], [0.3, 0.32], [0.001, 0.42]], 16), TEAL(), 0, 1.24, 0);
+  k.add(plane(0.62, 0.42), MAT.glow('#ffe8a0', '#ffb040', 1.1), 0, 0.98, 0.281);
+  k.add(plane(0.62, 0.3), MAT.paint('#3a3a40', 0.4), 0, 0.42, 0.281);
+  for (let i = 0; i < 5; i++) k.add(rbox(0.58, 0.02, 0.02, 0.005), MAT.steel(), 0, 0.3 + i * 0.06, 0.29);
+  return { hw: 0.46, hd: 0.3, top: 1.6 };
+}
+// the red sofa: a long padded seat with a rolled back
+function sofa(k, w = 2.0) {
+  k.add(rbox(w, 0.34, 0.7, 0.08), RED(), 0, 0.3, 0);
+  k.add(rbox(w, 0.55, 0.2, 0.09), RED(), 0, 0.7, -0.27);
+  for (const s of [-1, 1]) k.add(rbox(0.16, 0.5, 0.7, 0.07), RED(), s * (w / 2 - 0.08), 0.42, 0);
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) k.add(cyl(0.03, 0.03, 0.14, 6), MAT.steel(), sx * (w / 2 - 0.1), 0.07, sz * 0.28);
+  return { hw: w / 2, hd: 0.36, top: 0.95 };
+}
+
+export function buildTavernRoom(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'tavern', TAVERN_AT.x, TAVERN_AT.z);
+  const R = B.room, k = B.k;
+  const W = 10, D = 15, H = 5.6;
+  R.view = 16; R.follow = 0.3; R.music = 'home';
+  // (the original's walls are pale grey blocks with a cool cast: the grey stone texture lightened toward them, lit a
+  //  little from within as the sewers' masonry is, so a face turned from every lamp still reads as stone)
+  const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
+  const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
+  const floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
+  const LX = -W / 2, BZ = -D / 2, DOORZ = 6.1;
+  B.shell({ floor, slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
+    back: [{ kind: 'window', at: 0.6, w: 1.0, h: 1.2, y0: 3.4, curtain: '#b0302c' }, { kind: 'window', at: 3.0, w: 1.0, h: 1.2, y0: 3.4, curtain: '#b0302c' }],
+    left: [{ at: DOORZ, w: 1.8, h: 2.6, y0: 0, kind: 'door' },
+      { kind: 'window', at: -1.0, w: 0.8, h: 1.0, y0: 3.3 }, { kind: 'window', at: 1.6, w: 0.8, h: 1.0, y0: 3.3 }, { kind: 'window', at: 4.2, w: 0.8, h: 1.0, y0: 3.3 }] });
+  R.exits.push({ x: B.cx + LX + 0.5, z: B.cz + DOORZ, r: 0.85, to: 'tavern-out' });
+  R.spawn = { x: B.cx + LX + 1.6, z: B.cz + DOORZ, a: Math.PI / 2 };
+
+  // --- the gallery along the back wall: a stone deck 2.4 m up on a solid face, an arched door in its face
+  const GX0 = LX + 0.3, GX1 = W / 2 - 0.3, GZ0 = BZ + 0.3, GZ1 = BZ + 4.5, GH = 2.4;
+  k.add(rbox(GX1 - GX0, GH, GZ1 - GZ0, 0.03), stone, (GX0 + GX1) / 2, GH / 2, (GZ0 + GZ1) / 2);
+  k.add(rbox(GX1 - GX0 + 0.1, 0.14, GZ1 - GZ0 + 0.1, 0.03), cap, (GX0 + GX1) / 2, GH - 0.07, (GZ0 + GZ1) / 2);
+  k.add(rbox(GX1 - GX0 - 0.2, 0.02, GZ1 - GZ0 - 0.2, 0.01), floor, (GX0 + GX1) / 2, GH + 0.005, (GZ0 + GZ1) / 2);
+  B.col((GX0 + GX1) / 2, (GZ0 + GZ1) / 2, (GX1 - GX0) / 2, (GZ1 - GZ0) / 2, GH);
+  // the arched door under the gallery (the original's way down to the cellar, scene 4: shut)
+  const AX = 3.6;
+  k.add(rbox(1.2, 1.7, 0.08, 0.02), MAT.wood('dark'), AX, 0.85, GZ1 + 0.04);
+  k.add(cyl(0.6, 0.6, 0.08, 16).rotateX(Math.PI / 2), MAT.wood('dark'), AX, 1.7, GZ1 + 0.04);
+  k.add(rbox(1.5, 0.16, 0.14, 0.02), cap, AX, 2.38, GZ1 + 0.07);
+  for (const sx of [-1, 1]) k.add(rbox(0.16, 2.3, 0.14, 0.02), cap, AX + sx * 0.68, 1.15, GZ1 + 0.07);
+  k.add(cyl(0.04, 0.04, 0.03, 8).rotateX(Math.PI / 2), MAT.iron(), AX + 0.35, 1.0, GZ1 + 0.1);
+  // --- the stair against the gallery's face, climbing toward the left wall, and its landing at the top
+  const SZ0 = GZ1, SZ1 = GZ1 + 1.3, N = 8, run = 0.5, rise = GH / N, SX0 = 1.6;   // (its foot at x = SX0)
+  for (let i = 0; i < N; i++) {
+    const top = rise * (i + 1), x = SX0 - (i + 0.5) * run;
+    k.add(rbox(run + 0.02, top, SZ1 - SZ0, 0.015), stone, x, top / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
+    k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), cap, x, top - 0.03, (SZ0 + SZ1) / 2);
+    B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.04, (SZ1 - SZ0) / 2, top, { stair: true });
+  }
+  const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
+  k.add(rbox(LX1 - GX0, GH, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, GH / 2, (SZ0 + SZ1) / 2);
+  k.add(rbox(LX1 - GX0 + 0.06, 0.14, SZ1 - SZ0 + 0.06, 0.02), cap, (GX0 + LX1) / 2, GH - 0.07, (SZ0 + SZ1) / 2);
+  B.col((GX0 + LX1) / 2, (SZ0 + SZ1) / 2, (LX1 - GX0) / 2, (SZ1 - SZ0) / 2, GH);
+  // teal iron railings: the stair's open side and the landing's, the gallery's edge over the stair and on to the right
+  railing(k, [[SX0, SZ1], [GX0, SZ1]], { h: 0.95, mat: TEAL(), step: 0.5 });
+  k.at(0, GH, 0, 0, () => railing(k, [[LX1 + 0.1, SZ0 - 0.05], [GX1, SZ0 - 0.05]], { h: 0.95, mat: TEAL(), step: 0.45 }));
+  B.col((SX0 + GX0) / 2, SZ1, (SX0 - GX0) / 2, 0.06, GH + 1.0, { seeThrough: true, noStand: true });
+  B.col((LX1 + GX1) / 2, SZ0 - 0.05, (GX1 - LX1) / 2, 0.06, GH + 1.0, { seeThrough: true, noStand: true });
+  // white globe lamps on the newels (the original's: the stair's foot, its top, the gallery's far end)
+  for (const [x, y, z] of [[SX0, 0, SZ1], [GX0 + 0.1, GH, SZ1], [GX1 - 0.05, GH, SZ0 - 0.05]]) {
+    k.add(cyl(0.05, 0.06, 1.1, 8), TEAL(), x, y + 0.55, z);
+    k.add(sphere(0.17, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.2), x, y + 1.22, z);
+  }
+  // up there: round tables with red stools, a plant in each corner
+  for (const [x, z] of [[-0.6, BZ + 1.6], [1.9, BZ + 2.9], [3.7, BZ + 1.3]]) {
+    B.put(x, z, 0, (kk) => table(kk, { w: 0.8, h: 0.95, round: true, pal: 'pale' }), { y: GH });
+    for (let s = 0; s < 3; s++) { const a = s * 2.1 + 0.4; B.put(x + Math.sin(a) * 0.65, z + Math.cos(a) * 0.65, 0, (kk) => stool(kk, 0.62), { y: GH }); }
+  }
+  for (const x of [GX0 + 0.4, GX1 - 0.4]) k.at(x, GH, GZ0 + 0.3, 0, () => pottedPlant(k, { kind: 'spiky', s: 1.1, potColor: '#3a3a40' }));
+
+  // --- the bar at the front left by the door: a counter along the left wall turning into the room at its back end,
+  // the tap barrel and bottles on it, red stools along it, the bottle shelf on the wall behind
+  const BARX = LX + 1.6, BZ0 = 0.6, BZ1 = 4.6;
+  k.at(BARX, 0, (BZ0 + BZ1) / 2, Math.PI / 2, () => counter(k, { w: BZ1 - BZ0, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
+  B.col(BARX, (BZ0 + BZ1) / 2, 0.36, (BZ1 - BZ0) / 2, 1.1, { noStand: true });
+  k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
+  B.col(BARX + 0.65, BZ0 - 0.1, 0.8, 0.36, 1.1, { noStand: true });
+  k.at(BARX, 1.08, BZ0 + 0.8, 0, () => { barrel(k, { r: 0.26, h: 0.62, pal: 'dark' }); k.add(cyl(0.02, 0.02, 0.2, 6), MAT.brass(), 0.27, 0.35, 0, 0, { rz: Math.PI / 2 }); });
+  for (const [z, c, kind] of [[2.0, '#2f8a7a', 'bottle'], [2.4, '#7a3a2a', 'bottle'], [3.0, '#2f6f74', 'bottle'], [3.6, '#c8a050', 'jar']]) jar(k, BARX - 0.05, 1.1, z, kind, c, 1.1);
+  for (let i = 0; i < 5; i++) B.put(BARX + 0.8, BZ0 + 0.5 + i * 0.8, 0, (kk) => stool(kk));
+  B.put(BARX + 1.6, BZ0 - 0.9, 0, (kk) => stool(kk));
+  // the shelf behind the bar: bottles and, twelve years on, glazed Esmer jars from the harbour; the bar's name board
+  for (const y of [1.6, 2.15]) k.add(rbox(0.3, 0.05, 3.4, 0.01), MAT.wood('dark'), LX + 0.32, y, (BZ0 + BZ1) / 2);
+  for (let i = 0; i < 7; i++) jar(k, LX + 0.32, 1.63, BZ0 + 0.35 + i * 0.47, i % 3 === 1 ? 'urn' : 'bottle', ['#2f8a9a', '#c84a7a', '#e8b84a', '#3a72c4', '#2f8a7a', '#7a3a2a', '#8a5ac0'][i], i % 3 === 1 ? 0.8 : 1.0);
+  for (let i = 0; i < 6; i++) jar(k, LX + 0.32, 2.18, BZ0 + 0.5 + i * 0.5, 'bottle', ['#2f6f74', '#c8a050', '#7a3a2a'][i % 3], 0.95);
+  k.add(plane(1.6, 0.5), MAT.paper('#f2e6c8', '#b0302c', 'leaf'), LX + 0.03, 2.75, (BZ0 + BZ1) / 2, Math.PI / 2);
+  R.npcSpots = { luc: { x: B.cx + LX + 0.85, z: B.cz + 2.7, a: Math.PI / 2 } };
+
+  // --- the floor: the jukebox at the stair's foot, the red sofa against the stair's side, square tables in front
+  // (the jukebox stands beside the stair's foot, off the way up: the stair is climbed from its foot end only)
+  B.put(SX0 + 1.4, SZ1 + 0.8, 0, (kk) => jukebox(kk));
+  const juke = B.light('#ffb060', 1.6, 3, SX0 + 1.4, 1.0, SZ1 + 1.4);
+  R.updaters.push((dt, t) => { if (juke) juke.intensity = 1.4 + Math.sin(t * 6) * 0.25; });
+  B.put(-0.9, SZ1 + 0.42, 0, (kk) => sofa(kk, 2.2));
+  for (const [x, z] of [[0.9, 3.4], [3.3, 5.4], [3.4, 1.6]]) {
+    B.put(x, z, 0, (kk) => table(kk, { w: 1.2, d: 0.9, h: 0.8, pal: 'pale' }));
+    for (const [dx, dz, a] of [[0, -0.75, 0], [0, 0.75, Math.PI], [-0.85, 0, Math.PI / 2], [0.85, 0, -Math.PI / 2]]) B.put(x + dx, z + dz, a, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
+  }
+  for (const [x, z] of [[LX + 0.5, D / 2 - 0.5], [W / 2 - 0.5, SZ1 + 0.6], [W / 2 - 0.6, D / 2 - 0.6]]) k.at(x, 0, z, 0, () => pottedPlant(k, { kind: 'spiky', s: 1.2, potColor: '#3a3a40' }));
+  // a picture high on the long wall (the original has one there)
+  k.add(plane(0.9, 1.2), MAT.paper('#e8d6a8', '#2f6f74', 'star'), LX + 0.03, 3.4, -3.2, Math.PI / 2);
+  // twelve years on: the ferry's timetable on the gallery's face by the stair's foot, a project heat radiator under
+  // the long wall's windows
+  k.at(2.3, 1.5, SZ0 + 0.02, 0, () => noticeBoard(k, 0.8, 0.55, 7));
+  k.add(rbox(0.14, 0.6, 1.6, 0.03), MAT.copper(), LX + 0.12, 0.45, -1.0);
+  for (let i = 0; i < 8; i++) k.add(rbox(0.16, 0.55, 0.05, 0.01), MAT.copper(), LX + 0.13, 0.45, -1.7 + i * 0.2);
+
+  B.light('#ffe2b8', 6.5, 12, -1.5, 4.4, 3.5); B.light('#ffe2b8', 6.0, 12, 2.5, 4.6, -2.0); B.light('#fff0d8', 3.5, 7, 1.5, GH + 2.2, BZ + 2.0); B.light('#ffd8a0', 3, 5, BARX + 0.4, 2.4, 2.6);
+  return { tavern: B.finish() };
+}
+
+// the 'south' house's door leads in; coming out, Twinsen stands 1.2 m before it, facing away
+export function tavernDoors(W) {
+  const h = W?.houses?.find((x) => x.id === 'south');
+  return h?.door ? [{ house: 'south', x: h.door.x, z: h.door.z, r: 0.9, room: 'tavern' }] : [];
+}
+export function tavernExit(to, W) {
+  if (to !== 'tavern-out') return null;
+  const h = W?.houses?.find((x) => x.id === 'south'); if (!h?.door) return null;
+  return { x: h.door.x + Math.sin(h.ry) * 1.2, z: h.door.z + Math.cos(h.ry) * 1.2, a: h.ry };
+}
