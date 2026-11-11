@@ -13,7 +13,7 @@
 // done() prints functional checks, errors, resources and visual captures separately, then one VERDICT line,
 // and sets the exit code: non-zero on any FAIL. A FAIL captured after done() (or with no done() at all) still
 // makes the exit code non-zero and is printed as a late FAIL.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { fileURLToPath } from 'node:url';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 export const URL0 = process.env.GAME_URL || 'http://localhost:8123/';

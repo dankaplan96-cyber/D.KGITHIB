@@ -350,6 +350,101 @@ const ESMER_WORDS = ['SHUTTLE', 'GRAND HALL', 'MARKET', 'FOUNTAIN', 'HARBOUR', '
   'LOADING DECK', 'KEEP CLEAR', 'NO NAKED FLAMES', 'MIND THE EDGE', 'CRANE AREA', 'LOOKOUT', 'BRIDGE', 'HIGH TOWN',
   'LIFT', 'CARGO DOCK', 'TRADING POST', 'QUAY', 'WEIGH BEAM', 'ORCHARD', 'PRESS HOUSE', 'CLOUD CATCHER', 'OLD WATCH', 'TELESCOPE', 'THE FIGURE',
   'MINE', 'BUILDING COMPANY', 'CHAPEL', 'ORE'];   // (ZEELICH-1 item 5: the Wannies' island)
+// OTR-VARIETY (the cloud's night order 3, "Cacophony"; docs/future/CLUTTER_AUDIT.md): Otringal's original house
+// positions were all drawn as the same domed Esmer shell, a field of copies. On the original's numbers (its big masses
+// where they were, ~80 %): neighbours built wall to wall become one building (some kept off the walls they met face to
+// face), a filler is left out, and the yard's twenty wall lengths (the original's body 146, 1.34 m thick: drawn as
+// houses only because they were not thinner) are the cargo yard's wall again. Each building has a kind that says what
+// it is: warehouses by the quay and in the yard (dressed stone, a wide door and a hoist, a flat roof), stores with a
+// sign, houses up the lanes (flat roofs with a parapet, balconies, awnings), and domes only on the civic buildings
+// round the plaza and a few landmarks of the high town.
+// The harbour bar's and the Imperial Hotel's houses (otrbar.js, otrhotel.js find their doors by these names) are
+// not touched. Otringal only: its STYLE's layout, shape and house below.
+// (no new materials: a kind takes one of the island's wall colours, or the stone a warehouse is built of; each new
+// material would be one more island-wide mesh drawn from every view)
+const OTR_CIVIC = 3, OTR_COOL = 4;   // (STYLE.otringal.walls: the pale cream, the lilac grey)
+const OTR = {
+  // the original's buildings (x, z) built as one, in the box round them or the box given ([x0, x1, z0, z1]: kept off
+  // the neighbours' walls, which they met face to face, and opening a lane or a small square beside them)
+  merge: [
+    { of: [[48.62, -60.41], [53.01, -58.33], [53.22, -53.98]], box: [48.6, 55.33, -64.59, -55.8] },   // the high town's hall (three slivers; a square west of it, a lane north)
+    { of: [[55.6, -45.33], [55.62, -50.47]], box: [52.13, 58.7, -51.6, -41.86] },   // a high town house
+    { of: [[-3.1, -52.82], [1.92, -52.82]], box: [-6.21, 3.82, -55.8, -49.41] },     // the south terrace's long house
+    { of: [[-5.56, 56.29], [1.74, 56.29]] },                                         // the lower town's trading post (two copies side by side)
+    { of: [[-20.79, -10.21]], box: [-23.47, -18.4, -13.05, -7.37] },                 // the hotel's neighbour, off its wall
+    { of: [[62.77, -45.1]], box: [59.07, 66.47, -48.3, -41.4] },                     // the high town's store, off the house behind it
+  ],
+  drop: [[38.97, -52.01]],   // a 2 m box on the high town's rim (the 1.4 m sliver beside the bar stays: it keeps the bar's door where it is)
+  // each kept building's kind (at its place, merged ones at their first part's): sy its new height (m)
+  kinds: [
+    // the harbour and the yard: warehouses
+    { at: [-54.99, -14.66], kind: 'warehouse' },
+    { at: [39.75, 43.23], kind: 'warehouse' },
+    // the plaza: the Grand Hall's twin over the lower town and the hall across from the hotel are civic; the hotel's
+    // neighbour a flat two-storey house
+    { at: [3.79, 30.88], kind: 'civic' }, { at: [3.77, 25.54], kind: 'civic' }, { at: [3.82, -10.88], kind: 'civic' },
+    { at: [-20.79, -10.21], kind: 'house', flat: true, sy: 6.3, wall: OTR_COOL, balconyP: 1 },
+    { at: [15.83, 6.17], kind: 'house', flat: true, sy: 5.0 },
+    // the south terrace
+    { at: [-3.1, -52.82], kind: 'house', flat: true, sy: 5.4, awningP: 1 },
+    { at: [3.42, -59.34], kind: 'house', flat: true, awningP: 1, wall: OTR_COOL },
+    { at: [16.7, -71.48], kind: 'house', flat: true, awningP: 1 },
+    // the high town: its domed hall and two domed houses on the skyline, the rest flat, one store
+    { at: [48.62, -60.41], kind: 'civic' },
+    { at: [55.6, -45.33], kind: 'house', flat: true, sy: 6.2, balconyP: 1 },
+    { at: [45.02, -52.27], kind: 'house', flat: true, sy: 6.2, balconyP: 1, wall: OTR_COOL },
+    { at: [59.43, -59.52], kind: 'house', flat: true, sy: 4.3, awningP: 1 },
+    { at: [62.77, -45.1], kind: 'store', sign: 'MARKET', sy: 5.4 },
+    // the lower town: the trading post, two houses
+    { at: [-5.56, 56.29], kind: 'store', sign: 'TRADING POST' },
+    { at: [2.78, 64.63], kind: 'house', flat: true, sy: 4.4, awningP: 1, wall: OTR_COOL },
+    { at: [11.88, 43.21], kind: 'house', flat: true, awningP: 1 },
+  ],
+};
+let OTR_SPEC = [];   // (the last layout's kinds at the buildings' places: S.house reads them)
+const near0 = (o, [x, z], r = 0.2) => Math.abs(o[0] - x) < r && Math.abs(o[1] - z) < r;
+function otrLayout(L) {
+  const decor = L.decor.filter((d) => !(d[7] === 'building' && OTR.drop.some((p) => near0(d, p)))).map((d) => (d[8] === 146 ? [...d] : d));   // (the yard's lengths copied: trimmed below)
+  const spec = [];
+  for (const m of OTR.merge) {
+    const parts = m.of.map((p) => decor.find((d) => d[7] === 'building' && near0(d, p))).filter(Boolean);
+    if (parts.length !== m.of.length) continue;
+    const [x0, x1, z0, z1] = m.box || [Math.min(...parts.map((d) => d[0] - d[3] / 2)), Math.max(...parts.map((d) => d[0] + d[3] / 2)), Math.min(...parts.map((d) => d[1] - d[5] / 2)), Math.max(...parts.map((d) => d[1] + d[5] / 2))];
+    const y = Math.min(...parts.map((d) => d[2])), top = Math.max(...parts.map((d) => d[2] + d[4])), a = parts[0];
+    const one = [+((x0 + x1) / 2).toFixed(2), +((z0 + z1) / 2).toFixed(2), y, +(x1 - x0).toFixed(2), +(top - y).toFixed(2), +(z1 - z0).toFixed(2), a[6], a[7], a[8]];
+    decor.splice(decor.indexOf(a), 1, one);
+    for (const d of parts.slice(1)) decor.splice(decor.indexOf(d), 1);
+    const k = OTR.kinds.find((q) => near0(a, q.at)); if (k) k.place = [one[0], one[1]];
+  }
+  // the yard's wall lengths stop at a building they ran into (two met the moored barges' hulls)
+  const yard = decor.filter((d) => d[8] === 146), solid = decor.filter((d) => d[7] === 'building' && d[8] !== 146 && d[4] >= 1);
+  for (const w of yard) {
+    for (const b of solid) {
+      const ox = Math.min(w[0] + w[3] / 2, b[0] + b[3] / 2) - Math.max(w[0] - w[3] / 2, b[0] - b[3] / 2), oz = Math.min(w[1] + w[5] / 2, b[1] + b[5] / 2) - Math.max(w[1] - w[5] / 2, b[1] - b[5] / 2);
+      if (ox <= 0.02 || oz <= 0.02) continue;
+      const i = w[3] >= w[5] ? 0 : 1, s = i ? 5 : 3, sg = Math.sign(w[i] - b[i]) || 1, edge = b[i] + sg * (b[s] / 2 + 0.3), far = w[i] + sg * w[s] / 2;
+      w[s] = +Math.abs(far - edge).toFixed(2); w[i] = +((far + edge) / 2).toFixed(2);
+      if (Math.sign(far - edge) !== sg) w[s] = 0;
+    }
+  }
+  const out = decor.filter((d) => !(d[8] === 146 && (Math.min(d[3], d[5]) < 0.5 || Math.max(d[3], d[5]) < 1.2)));   // (a length cut away to nothing is gone)
+  for (const k of OTR.kinds) {
+    const p = k.place || k.at, d = out.find((q) => q[7] === 'building' && near0(q, p, 0.3)); if (!d) continue;
+    if (k.sy) { const i = out.indexOf(d); out[i] = [...d]; out[i][4] = k.sy; }
+    spec.push({ x: p[0], z: p[1], k });
+  }
+  OTR_SPEC = spec;
+  return { ...L, decor: out };
+}
+// a building's look by its kind (merged over look(o) in buildIsland's house; M: its materials: walls, stone)
+function otrHouse(o, M) {
+  const s = OTR_SPEC.find((q) => Math.hypot(q.x - o.x, q.z - o.z) < 1.2)?.k; if (!s) return null;
+  const wall = (i) => M.walls[i % M.walls.length];
+  if (s.kind === 'warehouse') return { role: 'store', domed: false, wall: M.stone, trim: '#7a7884', awningP: 0, balconyP: 0 };
+  if (s.kind === 'store') return { role: 'store', domed: false, sign: s.sign, balconyP: 0, ...(s.wall ? { wall: wall(s.wall) } : {}) };
+  if (s.kind === 'civic') return { wall: wall(OTR_CIVIC), balconyP: 0, awningP: 0 };
+  return { ...(s.flat ? { domed: false } : {}), ...(s.wall ? { wall: wall(s.wall) } : {}), balconyP: s.balconyP ?? 0.55, awningP: s.awningP ?? 0.6 };
+}
 const STYLE = {
   otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
     // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
@@ -358,6 +453,8 @@ const STYLE = {
     walls: ['#fbf0ea', '#f8e8d8', '#f6dce6', '#fff4e0', '#f1e2f6'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#8a5ac0', '#e8c8ff']],
     grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
     crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
+    // (OTR-VARIETY: fewer buildings, each of a kind; the yard's wall lengths a wall: OTR above)
+    layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : null), cellBatch: 48,
     landmark(api) {
       const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
       const pois = [{ ...api.S.target }];
@@ -374,7 +471,13 @@ const STYLE = {
       }
       // the market: stalls in the open plaza, facing the fountain, crates and jars behind them
       api.open('stall', 4, { lo: 3.0, space: 7, around: { x: -12, z: 8, r: 18 }, face: f || api.S.target, opts: (i) => ({ goods: ['fruit', 'cloth', 'jars', 'fruit'][i % 4], a: ['#e8608a', '#3fa8b8', '#f0c040', '#9a5ac8'][i % 4], b: '#f8eee4', seed: i + 1 }) });
-      api.street({ benches: 4, clutter: 10, kinds: ['jars', 'crates', 'planter', 'bin', 'barrels'], lamps: 11, doors: 0.8, banners: 9, lines: true, fillSpacing: 8 });
+      // (OTR-VARIETY: what the yard and the high town's square are for: cargo stacked by the yard's wall, a stall)
+      // (the yard is a patch of its own over the moored barges, not the landing's walkable area: its stacks are set down)
+      for (const [x, z, ry, i] of [[40.6, 37.2, 0, 0], [44.2, 37.0, 0.3, 1], [62.4, 37.6, -0.2, 2], [65.0, 62.2, 1.6, 3]]) api.add('crates', x, z, ry, { kind: 'wood', n: 2 + (i % 3), seed: i + 21 });
+      api.add('barrels', 61.0, 63.0, 0.4, {});
+      api.open('stall', 1, { lo: 2.6, space: 6, around: { x: 45, z: -60, r: 4 }, face: { x: 51.9, z: -60.2 }, opts: () => ({ goods: 'cloth', a: '#2f8a9a', b: '#f8eee4', seed: 9 }) });
+      // (OTR-VARIETY: doors 1, every door's front kept clear: at 0.8 a door could lose it to a bench, as the hotel's did)
+      api.street({ benches: 4, clutter: 10, kinds: ['jars', 'crates', 'planter', 'bin', 'barrels'], lamps: 11, doors: 1, banners: 9, lines: true, fillSpacing: 8 });
       api.signs([{ word: 'MARKET', x: -14, z: 8 }]);
     },
   },
@@ -1158,6 +1261,17 @@ const BARE = {
 };
 
 // ================================================================== one island
+// (OTR-VARIETY: S.cellBatch, the island's pieces merged per square of that size (drawbatch.js's CELL, on the world's
+// grid) instead of island-wide. A material that only a few buildings far apart use was one piece across the whole
+// island, under drawbatch.js's 3000-triangle cut: its cell's batch had the island's bounds and was drawn from
+// everywhere. Same interface as kit.js Batch for the builders: add, addM, build)
+class CellBatch {
+  constructor(parent, size, ox, oz) { this.parent = parent; this.size = size; this.ox = ox; this.oz = oz; this.cells = new Map(); }
+  at(x, z) { const k = Math.floor((x + this.ox) / this.size) + ',' + Math.floor((z + this.oz) / this.size); let b = this.cells.get(k); if (!b) this.cells.set(k, (b = new Batch(this.parent))); return b; }
+  add(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) { this.at(x, z).add(geo, mat, x, y, z, rx, ry, rz, sx, sy, sz); return this; }
+  addM(geo, mat, m) { this.at(m.elements[12], m.elements[14]).addM(geo, mat, m); return this; }
+  build() { const out = []; for (const b of this.cells.values()) out.push(...b.build()); return out; }
+}
 function buildIsland(scene, physics, name, L, at) {
   const ox = at.x, oz = at.z;
   const S = STYLE[name] || {};
@@ -1276,7 +1390,7 @@ function buildIsland(scene, physics, name, L, at) {
   R.env.fogColor = new THREE.Color(R.env.fog);
 
   // --- the objects, as our pieces
-  const B = new Batch(group);
+  const B = S.cellBatch ? new CellBatch(group, S.cellBatch, ox, oz) : new Batch(group);
   const walls = (S.walls || ['#fbf0f0', '#f1e2f6', '#f8e8d8', '#e6f0f4', '#f6dce6']).map((c) => tm('plasterWall', { color: c, rough: 0.95 }));
   // (each dome colour its own material: kit.tm keys a texture by name, which made all four the first one)
   const domes = (S.domes || [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']]).map(([a, b]) => EP.cm(domeTex(a, b), { rough: 0.4 }));
@@ -1317,6 +1431,8 @@ function buildIsland(scene, physics, name, L, at) {
   // thinner, so no two share a plane; what they collide with is unchanged)
   const jy = (o) => (((o.body * 7 + Math.round(o.x * 13 + o.z * 17 + o.y * 29)) % 8 + 8) % 8) * 0.003;
   const landFrac = (o) => { let n = 0, t = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) { t++; if (raw(o.x + a * o.sx, o.z + b * o.sz) != null) n++; } return n / t; };
+  // (OTR-VARIETY: the ends of Otringal's yard-wall lengths; where one ends with no other meeting it, a gate pier)
+  const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
     if (o.shape === 'skip') continue;   // (drawn by the style's own piece, or left out: a rail, a beam)
@@ -1387,6 +1503,26 @@ function buildIsland(scene, physics, name, L, at) {
         if (o.sy > 4.5) EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM });
         break;
       }
+      case 'yardWall': {   // (OTR-VARIETY: a length of Otringal's cargo-yard wall: plaster in the island's colour on a
+        // stone footing down to the ground, a tiled band and a stone coping; a pier where it ends free (the yard's
+        // gateways). Its collider is the original's box, as when it was drawn as a house)
+        const al = ex >= ez, len = al ? ex : ez, th = al ? ez : ex, hh = o.sy;
+        const ends = [[o.x - (al ? len / 2 : 0), o.z - (al ? 0 : len / 2)], [o.x + (al ? len / 2 : 0), o.z + (al ? 0 : len / 2)]];
+        let g = y0; for (const [px, pz] of [...ends, [o.x, o.z]]) g = Math.min(g, Math.max(tgy(px, pz), CLOUD_Y - 1));
+        const foot = y0 - g + 0.5, box = (l, h, t, rr = 0.04) => (al ? bbox(l, h, t, rr, 1.8) : bbox(t, h, l, rr, 1.8));
+        B.add(box(len, foot, th + 0.1), stoneM, o.x, y0 + 0.5 - foot / 2 + jy(o), o.z);
+        B.add(box(len - 0.03, hh - 0.66, th - 0.14, 0.02), pick(o, walls), o.x, y0 + 0.5 + (hh - 0.66) / 2 - 0.02, o.z);
+        B.add(box(len - 0.4, 0.26, th - 0.06, 0.01), EP.EM.tiles(), o.x, y0 + hh - 0.48, o.z);
+        B.add(box(len + 0.02, 0.18, th + 0.16), stoneM, o.x, y0 + hh - 0.09 + jy(o), o.z);
+        for (const [px, pz] of ends) {
+          if (yardEnds.filter(([qx, qz]) => Math.hypot(qx - px, qz - pz) < 0.4).length > 1) continue;
+          const pw = th + 0.2, cx = px - (al ? Math.sign(px - o.x) * (pw / 2 - 0.05) : 0), cz = pz - (al ? 0 : Math.sign(pz - o.z) * (pw / 2 - 0.05)), y1 = y0 + 0.5 - foot, y2 = top + 0.4;
+          B.add(bbox(pw, y2 - y1, pw, 0.05, 1.8), stoneM, cx, (y1 + y2) / 2, cz);
+          B.add(cached('isle-yardknob', () => new THREE.SphereGeometry(0.26, 12, 8)), brass, cx, y2 + 0.2, cz);
+        }
+        col({ type: 'box', x: o.x, z: o.z, hw: ex / 2, hd: ez / 2, top, noStand: true });
+        break;
+      }
       case 'pole': {
         if (S.flowerTrees) { const P = new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2); EP.giantFlower(P, { h: o.sy, color: ['#f0c030', '#e8608a', '#f4eee0', '#c050d0'][o.body % 4], seed: o.body + 1 }); }
         else { const P = new EP.Place(B, o.x, y0, o.z, 0); EP.pole(P, { h: o.sy, flag: (S.lines || ['#e8608a'])[o.body % (S.lines || [1]).length] }); }
@@ -1408,7 +1544,7 @@ function buildIsland(scene, physics, name, L, at) {
         // (as tests/worldfit.mjs measures it: 0.5–1 m out and 0.4 m either side, ground more than 0.1 under the floor)
         const half = (toward[0] ? ex : ez) / 2;
         const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
-        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), ...(S.house?.(o, { walls, stone: stoneM }) || {}), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
         // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
         // place is offered instead))
         if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry }); }
