@@ -97,7 +97,8 @@ is('after Continue: the water flows, the station gate opens, an objective set', 
 is("the lane is still dry: the station's door waits, the objective sends him to his own tap", await ev(() => { const L = game.story.cur.line; return [L.on, L.open, game.story.doors().some((d) => d.room === 'control'), T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === false && /tap/i.test(v[3]));
 await ev(() => {
   const G = game, h = G.hero;
-  T.use = (p, wait = 0.3) => { T.tp(p.front.x, p.front.z, Math.atan2(p.x - p.front.x, p.z - p.front.z)); T.tap('KeyE'); for (let i = 0; i < 160 && (h.steer || h.actT > 0); i++) G.step(0.05); G.step(wait); T.talkAll(); };
+  // (a remark that starts as he arrives — the bypass seen behind the pier, an object's box — is heard out first)
+  T.use = (p, wait = 0.3) => { T.tp(p.front.x, p.front.z, Math.atan2(p.x - p.front.x, p.z - p.front.z)); G.step(0.4); T.talkAll(); T.tp(p.front.x, p.front.z, Math.atan2(p.x - p.front.x, p.z - p.front.z)); T.tap('KeyE'); for (let i = 0; i < 160 && (h.steer || h.actT > 0); i++) G.step(0.05); G.step(wait); T.talkAll(); };
   T.door(G.world.houses[0].door); T.talk('zoe');
 });
 is('home: the tap is dry, Zoé will knock on the pipe when it runs', await ev(() => [game.room?.id, game.flags.ct_dry, T.obj()]), (v) => v[0] === 'house' && v[1] === true && /pump room/i.test(v[2]));
@@ -110,7 +111,7 @@ is('the wrong cock: the square again, it springs back, nothing is broken', await
 await ev(() => { const U = game.room.pump; T.use(U.cocks.lower, 3.8); });
 is("the right cock: the houses' line runs, the copper pipe is shut out", await ev(() => { const U = game.room.pump; return [game.flags.ct_bypass, U.cocks.lower.open, U.bypass, game.story.cur.line.done]; }), (v) => v[0] === true && v[1] === true && v[2] === true && v[3] === false);
 is('the way out waits for the strip and the plate', await ev(() => { const r = game.story.canExit(game.room, 'pump-out'); T.talkAll(); return [r, game.room?.id]; }), (v) => v[0] === false && v[1] === 'pumproom');
-await ev(() => { const U = game.room.pump; T.use(U.gauge, 3.2); T.use(U.plate); });
+await ev(() => { const U = game.room.pump; T.use(U.gauge, 3.2); for (let i = 0; i < 80 && game.state !== 'play'; i++) { game.step(0.1); T.talkAll(); } game.step(1.5); T.talkAll(); T.use(U.plate); });
 is("the gauge's strip taken, the maker's plate read: Irsa's Pump Works, Zeelich", await ev(() => { const L = game.story.cur.line; return [game.flags.ct_strip, game.flags.ct_plate, L.done, game.story.items().some((i) => i.id === 'pstrip'), game.story.doors().some((d) => d.room === 'control')]; }), (v) => v.every((x) => x === true));
 await ev(() => { const G = game; G.exitRoom(G.story.exitTo('pump-out'), true); G.step(0.5); T.talkAll(); });
 is('up in the street: the garden tap runs, the shopkeeper washes her counter', await ev(() => { const Y = game.story.chapters[0].home.parts.yard; return [game.room?.id ?? 'out', Y.stream.visible, T.npc('pippa').placed?.anim]; }), (v) => v[0] === 'out' && v[1] === true && v[2] === 'wipe');

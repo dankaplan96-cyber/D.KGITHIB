@@ -63,7 +63,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
 
   // ---- the terrace, its coping and parapet (open at the stair's head and at the lift's bay)
   add(box(cw, T.h, cd), stone, cx, Y0 + T.h / 2, cz);
-  add(box(cw + 0.3, 0.14, cd + 0.3), mat.cobble, cx, TOP - 0.065, cz);
+  add(box(cw + 0.3, 0.14, cd + 0.3), stone, cx, TOP - 0.065, cz);
   col({ type: 'box', x: cx, z: cz, hw: cw / 2, hd: cd / 2, rot: 0, top: TOP });
   const para = (x0, z0, x1, z1) => {
     const w = Math.abs(x1 - x0) + 0.28, d = Math.abs(z1 - z0) + 0.28;
@@ -79,7 +79,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   for (let i = 0; i < STAIR.n; i++) {
     const x = STAIR.x0 - (i + 0.5) * STAIR.tread, top = Y0 + (i + 1) * (T.h / STAIR.n);
     add(box(STAIR.tread, top - Y0, STAIR.w), stone, x, (Y0 + top) / 2, STAIR.z0 + STAIR.w / 2);
-    add(box(STAIR.tread + 0.04, 0.06, STAIR.w + 0.06), mat.cobble, x, top - 0.03, STAIR.z0 + STAIR.w / 2);
+    add(box(STAIR.tread + 0.04, 0.06, STAIR.w + 0.06), stone, x, top - 0.03, STAIR.z0 + STAIR.w / 2);
     // (each step's brick runs on under the ones above it, to the stair's head: no seam between two steps to drop into;
     //  stair: the height under his feet decides, step by step, and the steps ahead never push him aside)
     { const xe = STAIR.x0 - i * STAIR.tread; col({ type: 'box', x: (xe + T.x0) / 2, z: STAIR.z0 + STAIR.w / 2 - 0.075, hw: (xe - T.x0) / 2, hd: STAIR.w / 2 + 0.075, rot: 0, top, stair: true }); }   // (0.15 m into the terrace's brick: no seam at the head either, physics.js groundInfo)
@@ -160,7 +160,8 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
 
   // ---- what moves
   const D = new THREE.Group(); group.add(D);
-  const dyn = (geo, m, x, y, z, parent = D) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  // (the small moving parts cast no shadow of their own — a draw each in the shadow pass; the deck, the cart and the wheel do)
+  const dyn = (geo, m, x, y, z, parent = D) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); parent.add(o); return o; };
   // the brass wheel on the mast: eight spokes, turning in the wind
   const wheel = new THREE.Group(); wheel.position.set(MAST.x - 0.48, TOP + MAST.h - 0.9, MAST.z); wheel.userData.keep = true; D.add(wheel);
   { const g2 = new THREE.Group(); const rim = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.07, 6, 24), brass); g2.add(rim); for (let i = 0; i < 4; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.05, 0.05), brass); sp.rotation.z = (i * Math.PI) / 4; g2.add(sp); } const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.14, 10), brass); hub.rotation.x = Math.PI / 2; g2.add(hub); mergeStatic(g2, { recolor: false }); g2.rotation.y = Math.PI / 2; wheel.add(g2); wheel.userData.spin = g2; }
