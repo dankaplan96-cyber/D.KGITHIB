@@ -110,7 +110,10 @@ this branch: a fresh chain 01–06 from a new game, by input, Save & quit → Co
 
 The minutes are the earlier wave-1 estimates moved by 1.8 × the change in bot seconds: **estimates**. Chapter 3's drop
 against the run above is mostly the bot's depot fight (shorter in this run); chapter 2's, the bot's walks. Runs in
-`/dev/shm/t920run/a` (the session's scratch, not in the repository).
+`/dev/shm/t920run/a` (the session's scratch, not in the repository). After the last fixes (the trivet, the crank, Brel)
+segments 01 and 06 were played again: 01 passed (289 bot s, no death); 06 from the chain's save stopped once after the
+depot fight (the bot stuck on its way to the locker: "go:stuck", outside this job's places) and passed on the re-run
+(416 bot s, no death, 1 ISO assist in the depot fight).
 
 The estimates use `chapter-balance.md`'s formula with one more deduction step counted in chapter 1 (which pipe), two in
 chapter 2 (which pipe is the new one; which cock) and two in chapter 3 (hook before bell; the dial). They are
@@ -153,8 +156,12 @@ action takes effect, and the thread's working people), and the chain 01–06 abo
 (`tests/fixtures/campaign/base-*`, and `save-migration`'s) load and play on. Pictures (game camera, deviceScaleFactor 1):
 `captures/campaign-wave1/` (`u*`: chapters 1–2; `x*`: the cup and chapter 3, not for sending).
 
-After the merge: Brel at the standpipe works with one hand in the trough under the spout (`touchWater`); his two-handed
-`use` there had nothing at that height before him and the NO-AIR layer stood him down. A new game's door waits for the
+After the merge: Brel at the standpipe kneels at the trough under the spout (`kneelWork`, hands 0.4 / 0.9 cm from it);
+his standing `use` there had nothing at that height before him and the NO-AIR layer stood him down. Arthur's cup stands
+on a small iron trivet on the stove top (the set-down hand was 8.2 cm above the cup; now 0.6 cm), and the bench crank
+is taken by its wheel's rim at the hub's height (6.6 cm off its empty middle; now 0.5 cm). `campaign-hands.mjs` on the
+final build: every campaign hand action of the hero within 5 cm of the thing (the kitchen tap 5.0 cm, the rest
+0.0–4.4 cm; one of the two bypass cocks is measured); Kell's hands on the brake 0.2 / 0.9 cm. A new game's door waits for the
 tap, so `tests/lib/player.js` `P.through` tries the kitchen tap first (by input, `P.homeTap`; `P.tapFirst = false`
 leaves the door to refuse), and `opening.mjs`, `sewers.mjs` expect the thread's first objective, Zoé at the sink and the
 garden pipe's line on the way. The hero's hand actions are his own (`story/reach.js`); `workhands.js` is on NPCs only and
