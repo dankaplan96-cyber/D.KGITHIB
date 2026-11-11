@@ -36,12 +36,14 @@ import { buildValveRoom } from './valveroom.js';
 import { buildArena } from './arena.js';
 import { ISLES, hasIsland, buildIsle } from './zislands.js';
 import { buildSewerRooms } from './sewers.js';
+import { buildTavernRoom } from './tavern.js';
+import { buildBazooRoom } from './bazoo.js';
 
 // Reference build times (ms, the development container, SwiftShader, quiet machine): only the loading card's pace,
 // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
 const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, workshop: 180, lighttop: 140, cellar: 70,
   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
-  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
+  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
   isle_celebration: 160, isle_undergas: 320, isle_cxislet: 80, isle_platform: 180, isle_liftdock: 120, isle_tralu: 290,
   isle_orchard: 230, isle_oldwatch: 90, isle: 250 };
 // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
@@ -51,7 +53,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
   bumaze: [7200, 0], buhalls: [7400, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0] };
+  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0] };
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
 const isleAt = (id) => { const i = ISLES.indexOf(id.slice(5)); return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -99,6 +101,8 @@ function groupDefs() {
   add('valves', ['valves'], (S, P) => ({ valves: buildValveRoom(S, P) }));
   add('arena', ['arena'], (S, P) => ({ arena: buildArena(S, P) }));
   add('sewer', ['sewer', 'sewervault'], buildSewerRooms);   // (WA-14: Citadel's old sewers and their treasure room)
+  add('tavern', ['tavern'], buildTavernRoom);   // (LBA-CITADEL-1: Chez Luc, LBA2's scene 3, in the 'south' house)
+  add('bazoo', ['bazoo'], buildBazooRoom);   // (LBA-CITADEL-2: Mr Bazoo's shop, LBA2's scene 14, in the 'museum' building)
   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
   return G;
 }

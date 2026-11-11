@@ -4,6 +4,8 @@
 import { wizardDoors, wizardExit } from '../wizards.js';
 import { lba1Doors, lba1Exit } from '../lba1places.js';
 import { sewerDoors, sewerExit } from '../sewers.js';
+import { tavernDoors, tavernExit } from '../tavern.js';
+import { bazooDoors, bazooExit } from '../bazoo.js';
 import { t } from '../i18n.js';
 import { CHAPTER_AREAS } from '../regions.js';
 import { Prologue } from './prologue.js';
@@ -183,9 +185,9 @@ export class Story {
   }
   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items()]; }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
-  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors()]; }
+  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world)]; }
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
-  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
   // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
   townDoors() {
