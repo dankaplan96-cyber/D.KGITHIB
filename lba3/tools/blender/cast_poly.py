@@ -63,6 +63,7 @@ CAST = {
     'farmerA': dict(browS=1.3, browTilt=-0.1, mouthW=1.2, mouthLift=1.3, rolled=True, pockets=True, pocketY=0.06, noseS=1.1),
     'farmerB': dict(browS=1.2, browTilt=0.1, cheekS=1.25, mouthLift=1.2, earBend=(0.35, 0.0), earSpread=1.0, earInCol='#e8a8a0'),
     'farmerC': dict(hatStyle='straw', mouthLift=1.3, browS=1.4, earS=0.95),
+    'farmerC_b': dict(mouthLift=1.0, browS=1.6, browTilt=-0.15, earS=1.0),   # (CAST-POLISH-DESERT: bare-headed, lighter)
     'bram': dict(browS=2.1, browTilt=-0.3, hatStyle='flatcap', mouthLift=-0.6, mouthW=0.9, earS=1.0, earTurn=0.2, peakCurved=True),
     'pippa': dict(browS=1.0, cheekS=1.35, mouthLift=1.4, earBend=(0.0, 0.7), mouthW=1.1),
     'mira': dict(browTilt=0.4, browS=0.9, earLen=1.08, mouthLift=0.5, glassesRim=True),
@@ -75,11 +76,12 @@ CAST = {
     'tarra': dict(browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.95, lip='#8a4a4a', hemH=0.06),
     'dallan': dict(browS=1.6, browTilt=-0.3, mouthLift=-0.3, mouthY=0.834, pockets=True, pocketY=0.12),
     'desertkid': dict(browS=0.8, mouthW=1.2, mouthLift=1.5, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=1.0),
+    'desertkid_b': dict(browS=0.8, browTilt=0.3, mouthW=1.1, mouthLift=1.7, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=0.95),   # (CAST-POLISH-DESERT: the sun hat)
     'desertTrader': dict(hatStyle='straw', browS=1.5, mouthLift=1.2, earS=0.95),
     'weaver': dict(cheekS=1.2, earBend=(0.0, 0.5), mouthLift=1.0, browTilt=0.2, earInCol='#e8a8b8'),
     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
-    'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1),
+    'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),

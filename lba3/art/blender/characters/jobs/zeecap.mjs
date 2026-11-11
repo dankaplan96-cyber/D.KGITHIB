@@ -1,6 +1,6 @@
 // node zeecap.mjs <outdir>   env CAND_<look>=<file> as gamecap.mjs; SHELL_EXE (a renamed headless shell); GPU=1: the installed
 // Chrome on this machine's GPU, frame times only (20 s, the game's own loop). KEY/FLAGS: another chapter by its flags (as
-// tests/cast-rounds.mjs); IDS: only these people (comma list) framed, viewed close and spoken to.
+// tests/cast-rounds.mjs); ROOM: another outdoor room (an isle: isle_platform…; needs KEY); IDS: only these people (comma list) framed, viewed close and spoken to.
 // The real game (?nocine, new game), chapter 3 by its flags (as tests/zeelich-life.mjs): Zeelich's street, where the Esmers
 // live. Pictures (chapter 3+: NOT for the user): street-follow.png (Twinsen facing the street's Esmers, Follow camera at the
 // player's distance), dialogue-<id>.png (the game's own two-shot with an Esmer), esmer-<id>.png (a fixed 2.6 m 3/4 view of
@@ -22,8 +22,8 @@ await page.goto(BASE + '?nocine', { waitUntil: 'load', timeout: 300000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading')?.classList.contains('hidden') && !window.game.preparing, null, { timeout: 1500000 });
 await ev(() => { game.testFreeze = true; });
 await page.click('[data-act="new"]', { timeout: 300000 });
-const KEY = process.env.KEY || null, FLAGS = JSON.parse(process.env.FLAGS || '{}'), IDS = process.env.IDS ? process.env.IDS.split(',') : null;
-const R = await ev(async ({ KEY, FLAGS }) => {
+const ROOM = process.env.ROOM || 'zeelich', KEY = process.env.KEY || null, FLAGS = JSON.parse(process.env.FLAGS || '{}'), IDS = process.env.IDS ? process.env.IDS.split(',') : null;
+const R = await ev(async ({ KEY, FLAGS, ROOM, IDS }) => {
   const G = game; G.testFreeze = true; G.step(0.2);
   window.T = { talkAll(max = 120) { for (let i = 0; i < max && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); } };
   T.talkAll();
@@ -36,13 +36,14 @@ const R = await ev(async ({ KEY, FLAGS }) => {
     f.chapter = G.story.chapters.findIndex((c) => c.key === KEY); G.hero.hasBall = true;
     for (const id of RG.CHAPTER_AREAS[KEY] || []) G.regions.ensure(id, 'test');
     G.story.applyFlags(); G.step(0.2);
-    if (G.room?.id !== 'zeelich') G.enterRoom('zeelich', null, true);
+    if (ROOM !== 'zeelich') G.regions.ensure(ROOM, 'test');
+    if (G.room?.id !== ROOM) G.enterRoom(ROOM, null, true, true);
     G.story.refreshCast(); G.step(1); T.talkAll();
   }
   const CH = await import('/src/game/characters.js');
-  const es = G.npcs.filter((n) => n.present !== false && n.pos && n.group?.visible !== false && CH.LOOKS[n.def.char]?.race === 'esmer' && Math.abs(n.pos.x - G.hero.pos.x) < 80);
+  const es = G.npcs.filter((n) => n.present !== false && n.pos && n.group?.visible !== false && (ROOM !== 'zeelich' || CH.LOOKS[n.def.char]?.race === 'esmer') && (IDS ? IDS.includes(n.def.id) : Math.abs(n.pos.x - G.hero.pos.x) < 80));
   return { room: G.room?.id, chapterKey: G.flags.chapterKey, hero: [G.hero.pos.x, G.hero.pos.z], esmers: es.map((n) => ({ id: n.def.id, char: n.def.char, x: +n.pos.x.toFixed(2), z: +n.pos.z.toFixed(2) })) };
-}, { KEY, FLAGS });
+}, { KEY, FLAGS, ROOM, IDS });
 if (IDS) R.esmers = R.esmers.filter((e) => IDS.includes(e.id));
 log(JSON.stringify(R));
 const shot = async (name, hideHud = true) => { await ev((h) => { const hud = document.querySelector('#hud'); if (hud) hud.style.visibility = h ? 'hidden' : ''; game.renderer.render(); }, hideHud); await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 300000 }); log('shot', name); };

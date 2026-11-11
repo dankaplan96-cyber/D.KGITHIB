@@ -281,6 +281,13 @@ export const LOOKS = {
     race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.12, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
     eyes: '#2a2a2a', hat: '#6a5a3a', height: 1.04,
   },
+  farmerC_b: {
+    // CAST-POLISH-DESERT (order 24, farmerC's shape variant): a working Grobo, bare-headed (no hat: the ears and the crown
+    // show), a lighter build (cast_poly.py CAST farmerC_b). Taken by Gorrum (dg_haul, the dig) and Bodo (lh_grum, the
+    // Hamalayi); Fosse, Grull (farmer3) and Tobb keep farmerC
+    race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.05, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', height: 1.04,
+  },
   // ---- the Hamalayi (chapters 6–7)
   yorna: {
     // Yorna: an old Grobo mountain guide; a thick felt coat in red and ochre, a fur hat
@@ -339,6 +346,13 @@ export const LOOKS = {
   desertkid: {
     race: 'quetch', kid: true, outfit: 'tunic', hem: 0.62, tunic: '#e8d8b0', tunicTrim: '#c86a3a', belt: '#c86a3a', pants: '#8a6a4a', shoes: '#6a4a2a',
     hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tuft', nose: 'button', eyes: '#2a1a10', height: 0.62, neck: 0.08,
+  },
+  desertkid_b: {
+    // CAST-POLISH-DESERT (order 24, desertkid's shape variant): a child in a wide straw sun hat, the hair in a short tail
+    // (cast_poly.py CAST desertkid_b). Taken by Pico (Citadel's walker) and Rafi (sc_pupc, the School's plaza); Sani (dkid),
+    // Oni, Oona (sc_in3) and Little Kel (lh_kid1) keep desertkid
+    race: 'quetch', kid: true, outfit: 'tunic', hem: 0.62, tunic: '#e8d8b0', tunicTrim: '#c86a3a', belt: '#c86a3a', pants: '#8a6a4a', shoes: '#6a4a2a',
+    hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tail', nose: 'button', eyes: '#2a1a10', hat: '#d8b860', height: 0.62, neck: 0.08,
   },
   desertTrader: {
     race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',

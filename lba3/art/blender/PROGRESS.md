@@ -168,23 +168,62 @@ in the scratch repo `scratchpad/z28/base`).
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance verified ✓ (light) · integrated: no (request).
 - Left: doze feet (rig); helmet facets up close; Kira still Sela's shape (a councilB_b later); lharWoman unchanged (reads fine).
 
+### Isles batch 1: zmole1_b (the Wannies at work): CAST-POLISH-ISLES (8.11.2026, worktree `C:\Users\dan\lba3-cast2`)
+ZEELICH-2 pushed (b8d3d9ae); the cloud applied HEROES, CITADEL 1-3 and ZEELICH. New worktree `lba3-cast2` at local HEAD
+803efcd1 (origin b8d3d9ae + ZEELICH-2 applied, its JSONs in assets/poly); the old `lba3-blend` worktree is stale.
+- Survey: the isles' people (islandlife.js) are the Esmers (done) and Zeelich's other races (moles, bees, tri-heads), all
+  reading as designed; the tri-heads' flat feet are LBA2 body 84's (a flat plate ~0.11 H), left. zmole1 is the most shared
+  (x8 with Grumm and hs_worker3).
+- zmole1_b: miner's cap (role hat #d8a838) with band, peak and lamp; leather apron (role apron #7a5a3a, zmole2's apron
+  code). People: pf_miner1 (Burr), pf_miner2 (Delve), ug_fitter (Dunt). Body 2578 -> 3010 (+16.8 %); 3 draws as zmole1.
+- Code: characters.js +1 LOOKS; islandlife.js 3 chars; skeletons.json + zmole1_b (bones = zmole1's); index.json.
+- Checks: contracts, DRESS-1 1-6 clean, validate 0 fails; the Platform in chapter 4 before/after (ROUTES: old islandlife.js).
+- Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, island-people 65/65 PASS.
+- The worktree keeps the batch applied, uncommitted: zmole1_b.json and the index in assets/poly (the code needs them).
+- Files `characters/isles/`; pictures `docs/future/characters/zmole1_b/` (chapter 4+: never to the user); request
+  `tools/testlab/requests/CAST-POLISH-ISLES*`. zeecap.mjs takes ROOM (an isle room, with KEY).
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles measured, Vega 8 frame time
+  not run (no draw added) · integrated: no (request).
+- Left: the Esmer children (xil x0.72); zmole2, zbee1, zbee2 (x6 each) one body each; doze feet.
+
+### Desert batch 1: desertkid_b, farmerC_b, GLASSES-ARCHIVIST: CAST-POLISH-DESERT (8.11.2026, `lba3-cast2`)
+ISLES pushed (f4f66ab7) and committed locally as HEAD 59dab6e3 ("local base: + CAST-POLISH-ISLES"); this diff is against it.
+- Census (`desert/reports/census-all.json`): the dig x8, the School x5 (+3 inside), Kesh x3, the story people. Order 24's
+  models there: desertkid x6, farmerC x5, archivist x5 (also wearing the flat glasses).
+- desertkid_b: straw sun hat (role hat #d8b860) + tail of hair; people pico, sc_pupc; body 2444 -> 2928 (+19.8 %).
+- farmerC_b: bare-headed, belly 0.05; people dg_haul (Gorrum), lh_grum (Bodo); 3538 -> 3234.
+- GLASSES-ARCHIVIST (CAST glassesRim): 2414 -> 2734 (+13.3 %).
+- Code: characters.js +2 LOOKS; storylife.js 3 chars, walkrounds.js 1 (pico); skeletons.json +2; index.json +2.
+- Checks: contracts, validate 0 fails, DRESS-1 clean on farmerC_b/archivist (desertkid_b = shipped desertkid's own result);
+  hero 4 draws; School 145 = 145 calls, dig 180 = 180.
+- Tests: solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, walkers 37/37 PASS. desert-life NOT
+  finished: a reload did not boot in 20 min after 21 PASS / 0 FAIL; the same on a clean HEAD export (after 12 PASS).
+  An environment limit on this laptop; asked the cloud to run it.
+- The worktree keeps the batch applied, uncommitted (the three JSONs and the index in assets/poly).
+- Tools: zeecap.mjs with IDS no longer limits people to 80 m of the hero.
+- States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: draws/triangles measured, frame time not run ·
+  integrated: no (request).
+- Left: farmerC_b's lighter belly hardly shows; desertkid's 96 base-hair vertices (pre-existing); worker x4 one body.
+
 ## Current
-- CAST-POLISH-ZEELICH-2 ready for the cloud (applies on origin + HEROES, CITADEL, -2, -3, ZEELICH).
+- CAST-POLISH-DESERT ready for the cloud (diff against 59dab6e3); desert-life to be run in the cloud.
 
 ## Queue
 1. ~~Twinsen~~ (CUFF-HEM, request sent)
 2. ~~Zoé~~ (NECKLACE-ZOE, request sent)
 3. ~~Citadel's recurring people~~ (CITADEL, -2, -3)
-4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), the isles, Desert Island, the Hamalayi,
-   the underground
+4. CLOUD_ORDERS 28, by region: ~~Zeelich and Otringal~~ (ZEELICH, ZEELICH-2), ~~the isles~~ (ISLES), ~~Desert Island~~
+   (DESERT), the Hamalayi, the underground
 5. The named cast
-6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku~~; farmerB, desertkid, lharMan, lharWoman, farmerA,
-   clerk, farmerC, archivist (and councilB for Kira)
+6. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC~~; lharMan, lharWoman,
+   farmerA, farmerB, clerk, archivist (glasses done), worker (and councilB for Kira; zmole2, zbee1, zbee2)
 7. Equipment: the ball, the sword
 8. Common props
 
 ## Next action
-Region 2, Zeelich's isles (islandlife.js people: ot_*, kn_*, or_*, ce_*, ld_*, ow_*; they wear nara/oku/xil/keeper/clerk):
-census them (they load lazily: ensure the isles' regions first), survey in lookdev, pick by visibility and weakness, same
-loop; report CAST-POLISH-ISLES. Diffs on top of ZEELICH-2 (scratch base: apply it to `base` as commit after6). Browsers
-with `SHELL_EXE` (renamed headless shell copy), server 8257, before runs of code changes through zeecap's ROUTES.
+Region 4, the Hamalayi (storylife.js lh_* people: lharMan, lharWoman, lharElder, farmerA, desertkid, pim, farmerB,
+farmerC_b; the hamalayi*.js places): census by chapter (KEY flags as cast-rounds), survey in lookdev; order 24's lharMan x6,
+lharWoman x6, farmerA x6 come first (`_b` variants, people by id), plus any that reads wrong; same loop in
+`C:\Users\dan\lba3-cast2`; report CAST-POLISH-HAMALAYI; diff against the then HEAD. Browsers with `SHELL_EXE`
+(scratch `z28/hs/z28shell.exe`), server 8257 (`z28/serve.py <root> 8257`, in the background), a test copy of tests/ with
+lib/boot.mjs patched (SHELL_EXE, the testlab playwright import; quitAndKeep's boot wait raised to 1 200 000 ms).

@@ -3304,3 +3304,161 @@ Pictures (**chapter 3+: not for the user**): `docs/future/characters/{keeper_b,o
   - the cast's other order-24 models (farmerB, desertkid, lharMan, lharWoman, farmerA, clerk, farmerC, archivist) still
     have no shape variants.
 - Applies directly on the current origin (which has the earlier cast batches): `git apply --check` clean. Note: the clerk is +27 % over the shipped file across both batches, just above the +25 % rule (ZEELICH's boots and robe plus these glasses): accept or ask for a trim.
+
+## CAST-POLISH-ISLES · zmole1_b: the Wannies at work (Burr, Delve and Dunt), the isles' most shared model · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-ISLES.diff`, against `803efcd1` (origin `b8d3d9ae` with CAST-POLISH-ZEELICH-2 applied);
+`git apply --check` is clean on it. Files it changes:
+- `tools/blender/cast_poly.py`: CAST `zmole1_b` and a `minerCap` block in `build_mole`;
+- `src/game/characters.js`: 1 new LOOKS entry, nothing else changed;
+- `src/game/islandlife.js`: 3 `char` lines;
+- `art/characters/skeletons.json`: + zmole1_b, made with `tools/dump-skeletons.mjs zmole1_b`. Its bones are identical
+  to zmole1's. The file is one line, so the diff carries it whole;
+- `assets/poly/index.json`: + zmole1_b.
+
+New model file: `requests/CAST-POLISH-ISLES/zmole1_b.json` for `assets/poly/`. Pictures (**chapter 4+: not for the
+user**): `docs/future/characters/zmole1_b/`.
+- **Survey of the isles** (`islandlife.js`, at most 8 people an isle):
+  - their Esmers (nara ×6, xil ×5 with the two children, oku ×5, keeper ×2) were done in CAST-POLISH-ZEELICH;
+  - the rest are Zeelich's other races: moles zmole1 ×6 and zmole2 ×4, bees zbee1 ×4 and zbee2 ×3, tri-heads ztri1 ×2
+    and ztri2 ×2.
+
+  In lookdev and at Follow distance they read as designed. I checked the tri-heads' feet against LBA2 (body 84, read-only):
+  the original's are also a flat plate, about 0.11 H long, so they are left as they are.
+
+  What is left is sharing. zmole1 is now the most shared model on the isles: ×8 with Old Grumm and the hostel's worker,
+  as shared as keeper was. All the Wannies of the Platform and the gas works are one grey-violet robed mole in
+  DRESS-1's colours.
+- **zmole1_b** (order 24's kind of shape variant: another hat, another coat), the Wannies' working dress:
+  - a miner's cap on the crown, with the ears coming out at its sides;
+  - a darker band and a peak over the snout's root;
+  - a lamp on the front: its housing 0.6× the cap's hex, the glass a pale #f4e8b0 that is not a role;
+  - a leather apron with a bib, straps and a pocket over the robe, the robe's hem and collar in the apron's shade. This
+    is the code zmole2 already uses.
+
+  Colours are the roles `hat` #d8a838 and `apron` #7a5a3a, plus darker multiples of them.
+
+  Who takes it: **pf_miner1 (Burr), pf_miner2 (Delve), ug_fitter (Dunt)**. Old Grumm (zmole1), hs_worker3,
+  ug_foreman, pf_foreman and pf_chaplain keep zmole1.
+- **Budget:**
+  - Triangles: body 2578 → 3010 (+16.8 % on zmole1), 3042 with the mouth. In the game the hero measures 5188 → 6052
+    triangles (the body twice: the silhouette pass).
+  - Draw calls: the hero as zmole1_b is 3 calls, as zmole1 (body, silhouette pass, mouth).
+  - On the Platform (chapter 4, Follow/Medium) the frame is 144 = 144 calls. Its triangle count changes with who is in
+    view (504468 against 503604 in this pair), so the per-model cost (+432 a person) is the measure.
+  - No texture or material.
+- **Contracts:**
+  - bones identical to zmole1's, in order, and so are the mouth;
+  - 4 weights a vertex;
+  - feet at 0.004.
+  - DRESS-1 variants 1–6: 0 vertices keep an overridden base hex (tunic, apron, hat).
+  - `validate` (Blender): 0 fails. The one warning is the cast's loose vertices.
+  - zmole1 and zmole2 rebuilt unchanged to within float rounding (1e-5 m positions, 1e-4 normals); the committed files
+    are kept.
+- **Looked at:**
+  - lookdev turnaround and Follow-distance view;
+  - 13 poses × 2 views: the cap stays on the head through the throw, the sword and the doze;
+  - the game with the hero as each: Follow/Medium, dialogue and close-ups;
+  - the Platform in chapter 4, before and after. For the before run the old islandlife.js was served through
+    `zeecap.mjs` ROUTES;
+  - Blender views.
+
+  At Follow distance on the Platform, Burr now reads as a miner (the yellow cap and lamp, the apron) beside Foreman
+  Krum. A first, smaller cap did not read at that distance and was enlarged.
+- **Tests** (SwiftShader, zmole1_b.json and the index in `assets/poly`, the code changes in place, a renamed headless
+  shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - island-people 65/65 PASS.
+
+  Evidence labels: **Automated runtime only**. The pictures were looked at, not played. Vega 8 frame time was not run
+  for this batch: no draw call was added, and the triangle cost per person is about ZEELICH-2's keeper_b's.
+- **Left:**
+  - the isles' two Esmer children (kn_kid, ow_kid) are xil at 0.72 scale, an adult's proportions made smaller;
+  - zmole2 ×6 and zbee1/zbee2 ×6 each still share one body;
+  - the doze pose's feet, as in CAST-POLISH-ZEELICH.
+
+## CAST-POLISH-DESERT · desertkid_b (a sun hat), farmerC_b (bare-headed), the archivist's glasses · the laptop, 8.11.2026
+Diff: `requests/CAST-POLISH-DESERT.diff`, against `59dab6e3` (origin + ZEELICH-2 + ISLES, the local base);
+`git apply --check` is clean on it. Files it changes:
+- `tools/blender/cast_poly.py`: CAST desertkid_b, farmerC_b, archivist `glassesRim`;
+- `src/game/characters.js`: 2 new LOOKS entries, nothing else changed;
+- `src/game/storylife.js`: 3 `char` lines;
+- `src/game/walkrounds.js`: 1 `char` line;
+- `art/characters/skeletons.json`: + desertkid_b, farmerC_b, made with `tools/dump-skeletons.mjs`. desertkid_b has three
+  extra bones, tail0–2, for its swinging tail of hair; farmerC_b's trunk bones sit 6–7 cm further back over its smaller
+  belly. The file is one line, so the diff carries it whole;
+- `assets/poly/index.json`: + desertkid_b, farmerC_b.
+
+Model files for `assets/poly/`, in `requests/CAST-POLISH-DESERT/`:
+- `desertkid_b.json` and `farmerC_b.json`, new;
+- `archivist.json`, which replaces the shipped one.
+
+Pictures (**chapter 4+: not for the user**, except Pico's, which are Citadel's): `docs/future/characters/{desertkid_b,
+farmerC_b,archivist}/`.
+- **Census of Desert Island.** At the dig there are 8 people: worker ×3, farmerA, farmerB, farmerC, lharMan,
+  archivist. At the School 5 more: magus, lulu, tim, and desertkid ×2 (Rafi, Oni). Inside the School there are 3: lulu,
+  tim, desertkid. In Kesh: lulu, tim, archivist (Bashir). The story people are Sani (desertkid), Brosk, Hesk, Ilka,
+  Dallan and Tarra.
+
+  Order 24's models here are desertkid ×6 (Sani, Oni, Rafi, Oona, Pico, Little Kel), farmerC ×5 (Fosse, Grull, Tobb,
+  Gorrum, Bodo) and archivist ×5. The archivist wore the same flat wire octagons as the clerk and Sela.
+- **desertkid_b:** a wide straw sun hat (role `hat` #d8b860; its band is the straw hat's usual 0.55× shade) and a
+  short tail of hair instead of the tuft. Who takes it: **pico (Pico, Citadel's walker) and sc_pupc (Rafi, the
+  School's plaza)**. Sani (dkid), Oni, Oona (sc_in3) and Little Kel (lh_kid1) keep desertkid.
+  - Triangles: body 2444 → 2928 (+19.8 %).
+  - On Citadel's square, Pico now walks in a sun hat.
+- **farmerC_b:** a working Grobo, bare-headed (no hat, so the crown and ears show), with a lighter belly (0.05 against
+  0.12). Who takes it: **dg_haul (Gorrum, the dig) and lh_grum (Bodo, the Hamalayi)**. Fosse, Grull (farmer3) and Tobb
+  keep farmerC.
+  - Triangles: body 3538 → 3234 (−8.6 %).
+- **GLASSES-ARCHIVIST** (archivist ×5: the archivist, Bashir, dg_clerk, Kip, Bern): the same change as GLASSES-SELA, a
+  round rim on the face with a bridge and arms to the ears.
+  - Triangles: 2414 → 2734 (+13.3 %).
+- **Contracts:**
+  - bones in each look's skeleton;
+  - eyes and mouths unchanged on archivist;
+  - 4 weights a vertex;
+  - no colour that is neither a role nor a darker multiple of one;
+  - feet as before: farmerC's −1.2 cm was already in the shipped model.
+  - `validate` (Blender, desertkid_b and farmerC_b): 0 fails.
+  - The rebuild from the diff's script is byte-identical to the request's JSONs, and desertkid and farmerC rebuild
+    unchanged.
+- **DRESS-1** (variants 1–6):
+  - farmerC_b and archivist recolour every role.
+  - desertkid_b leaves 96 vertices in the base hair hex, and in variant 5 708 vertices in the base shoe hex. **The
+    shipped desertkid gives the same result** (96 hair, 828 shoes in variant 5). Variant 5's hair goes to #6a4a2a, which
+    is the shoes' own hex, so the check counts recoloured hair as shoes left; the 96 hair vertices are a pre-existing
+    oddity of that model, not this change.
+- **Budget:**
+  - Draw calls: the hero as any of the three looks is 4 calls, as before.
+  - In the hero frame: desertkid_b 4968 → 5936 triangles, farmerC_b 7172 → 6564, archivist 4908 → 5548.
+  - School plaza (chapter 4, Follow/Medium): 145 = 145 calls, +484 triangles.
+  - Dig site (chapter 5): 180 = 180 calls, +16 triangles (Gorrum's hat off, the clerk's glasses on).
+  - No texture or material. Vega 8 frame time not run.
+- **Looked at:**
+  - lookdev turnarounds and faces;
+  - 13 poses × 2 views of desertkid_b and farmerC_b: the hat and the tail of hair follow the head through jump, throw,
+    the sword and the doze;
+  - the game with the hero as each, before and after: Follow/Medium, the dialogue and close-ups;
+  - the School plaza and the dig site, before and after, through `zeecap.mjs` ROOM=desert with ROUTES for the old char
+    lines;
+  - Blender views.
+- **Tests** (SwiftShader, the three files and the index in `assets/poly`, the code in place, a renamed headless shell):
+  - solidnpc 54/54 PASS;
+  - chapter1 23/23 PASS;
+  - cast-rounds 209/209 PASS;
+  - story-journeys 30/30 PASS;
+  - walkers 37/37 PASS (Pico).
+  - **desert-life did not finish:** 21 checks passed and 0 failed, then a reload of the page did not finish booting
+    within 20 minutes. The same test on a clean export of `59dab6e3` (served on port 8258) also did not finish: it stopped
+    at the same kind of reload after 12 passes. So this test cannot finish on this laptop tonight with or without the
+    change, and **desert-life is unproven for this batch: please run it in the cloud.**
+
+  Evidence labels: **Automated runtime only**. The pictures were looked at, not played.
+- **Left:**
+  - farmerC_b's lighter belly hardly shows; the read is the bare head;
+  - desertkid's 96 base-hair vertices (above);
+  - lharMan, lharWoman and farmerA (×6 each, order 24) are mostly the Hamalayi's and Citadel's: next region;
+  - worker ×4 (3 at the dig) still share one body.
