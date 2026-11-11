@@ -98,7 +98,8 @@ is("the lane is still dry: the station's door waits, the objective sends him to 
 await ev(() => {
   const G = game, h = G.hero;
   // (a remark that starts as he arrives — the bypass seen behind the pier, an object's box — is heard out first)
-  T.use = (p, wait = 0.3) => { const a = p.a ?? Math.atan2(p.x - p.front.x, p.z - p.front.z); T.tp(p.front.x, p.front.z, a); G.step(0.4); T.talkAll(); T.tp(p.front.x, p.front.z, a); T.tap('KeyE'); for (let i = 0; i < 160 && (h.steer || h.actT > 0); i++) G.step(0.05); G.step(wait); T.talkAll(); };
+  // (he is put squarely before the thing, 0.8 m off it, facing it: its prompt is then the nearest; the game walks him to his place for the hand)
+  T.use = (p, wait = 0.3) => { const a = p.a ?? Math.atan2(p.x - p.front.x, p.z - p.front.z), sx = p.x - Math.sin(a) * 0.8, sz = p.z - Math.cos(a) * 0.8; T.tp(sx, sz, a); G.step(0.4); T.talkAll(); T.tp(sx, sz, a); T.tap('KeyE'); for (let i = 0; i < 200 && (h.steer || h.actT > 0); i++) G.step(0.05); G.step(wait); T.talkAll(); };
   T.door(G.world.houses[0].door); T.talk('zoe');
 });
 is('home: the tap is dry, Zoé will knock on the pipe when it runs', await ev(() => [game.room?.id, game.flags.ct_dry, T.obj()]), (v) => v[0] === 'house' && v[1] === true && /pump room/i.test(v[2]));
