@@ -107,6 +107,11 @@ MOUTH = [(-0.081, 0.592), (0.081, 0.592), (0.0, 0.558)]     # byte 144: a small 
 # z 0.053) to a top tip (0.242, 0.888) and a long lower tip (0.296, 0.538); in his clips they rest turned 15-46° back
 EAR = [(0.175, 0.807), (0.242, 0.888), (0.268, 0.80), (0.296, 0.538), (0.173, 0.645)]
 EAR_Z, EAR_BACK, EAR_T = 0.053, math.radians(32), 0.011
+# CAST-POLISH-NAMED (BALDINO_OLD=1 builds the ears, strap, goggles and collar as before): the ears' corners cut a little
+# (most at the outer corner, least at the tips), their root edge at x 0.155 (inside the head: it stood 2.6 cm off its side), the half-thickness at the
+# rim, through the middle and behind the centre (H)
+OLD = os.environ.get('BALDINO_OLD') == '1'
+EAR_ROUND, EAR_ROOT_X, EAR_RIM, EAR_MID, EAR_CEN = (0.0, 0.07, 0.2, 0.05, 0.0), 0.155, 0.004, 0.009, 0.007   # (the cut per corner: the tips keep their height)
 # the goggles: two hexagonal lenses (x 0.086-0.162, y 0.700-0.780) on the face's plane z 0.199, a strap (byte 160)
 # across the brow over their tops (y 0.780-0.796) to the head's sides (±0.162, 0.78, 0.171); the eyes behind them at
 # (±0.118, 0.732)
@@ -125,6 +130,16 @@ bp = lambda n: tuple(B[n]['p'])
 m = lambda p: tuple(c * BH for c in p)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 b = Builder('baldino', B)
+
+
+def lerp2(a, c, t):
+    return (a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t)
+
+
+def shade(hexc, k):
+    """a darker shade (k < 1) of a colour (the same multiple as cast_poly.py shade)"""
+    c = [min(255, int(int(hexc.lstrip('#')[i:i + 2], 16) * k)) for i in (0, 2, 4)]
+    return '#%02x%02x%02x' % tuple(c)
 
 
 def lerp_rows(rows, y):
@@ -286,43 +301,135 @@ for s_, sx in (('L', 1), ('R', -1)):
         dx, dz = x - root.x, z - root.z
         # (turn the ear's outer edge back about the vertical through its root: Ry(+θ) on the left, mirrored)
         return (root.x + dx * ca + sx * dz * sa, y, root.z - sx * dx * sa + dz * ca)
-    ear = b.P('ear' + s_, COL['skin'], lambda p, s_=s_, sx=sx: {'head': 1 - smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH), 'ear' + s_: smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH)}, 35)
-    front = [m(rot(sx * x, y, EAR_Z + EAR_T / 2)) for x, y in EAR]
-    back = [m(rot(sx * x, y, EAR_Z - EAR_T / 2)) for x, y in EAR]
-    n = len(EAR)
-    vv = front + back
-    ff = [list(range(n)) if sx > 0 else list(reversed(range(n))), [n + i for i in (reversed(range(n)) if sx > 0 else range(n))]]
-    ff += [[i, (i + 1) % n, n + (i + 1) % n, n + i] if sx < 0 else [(i + 1) % n, i, n + i, n + (i + 1) % n] for i in range(n)]
+    w_ear = lambda p, s_=s_, sx=sx: {'head': 1 - smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH), 'ear' + s_: smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH)}
+    ear = b.P('ear' + s_, COL['skin'], w_ear, 35)
+    if OLD:
+        front = [m(rot(sx * x, y, EAR_Z + EAR_T / 2)) for x, y in EAR]
+        back = [m(rot(sx * x, y, EAR_Z - EAR_T / 2)) for x, y in EAR]
+        n = len(EAR)
+        vv = front + back
+        ff = [list(range(n)) if sx > 0 else list(reversed(range(n))), [n + i for i in (reversed(range(n)) if sx > 0 else range(n))]]
+        ff += [[i, (i + 1) % n, n + (i + 1) % n, n + i] if sx < 0 else [(i + 1) % n, i, n + i, n + (i + 1) % n] for i in range(n)]
+        ear.add(vv, ff)
+        continue
+    # CAST-POLISH-NAMED (BALDINO-EARS): the ears were flat five-sided boards 2.2 cm thick with square edges, standing 2.6 cm
+    # off the side of the head (paper from the side and in the close shot). The same measured kite with its corners cut
+    # (EAR_ROUND; the two tips nearly kept), now a cushion: 1.6 cm at the rounded rim, 3.6 cm through the middle, about
+    # 5 cm at the root, the root sunk into the head, a very shallow dish on the front a shade darker than the skin; still
+    # one plate on its ear bone.
+    out_ = []
+    for k_ in range(len(EAR) - 1):
+        p0, p1 = EAR[k_], EAR[k_ + 1]
+        r0, r1 = EAR_ROUND[k_], EAR_ROUND[k_ + 1]   # (the cut at this edge's two corners)
+        out_ += ([p0] if k_ == 0 else []) + [lerp2(p0, p1, r0) if k_ else None, lerp2(p0, p1, 1 - r1)]
+    out_ = [p for p in out_ if p is not None] + [EAR[-1]]
+    out_ = [((EAR_ROOT_X if k_ in (0, len(out_) - 1) else x), y) for k_, (x, y) in enumerate(out_)]
+    cx_ = sum(x for x, _ in out_) / len(out_)
+    cy_ = sum(y for _, y in out_) / len(out_)
+    n = len(out_)
+
+    def lv(s, w, cx_=cx_, cy_=cy_, rot=rot, sx=sx):
+        """the ring at s (1 = the rim, 0 = the centre), w H in front (+) or behind (−) the ear's plane; thicker at the root"""
+        pts = []
+        for x, y in out_:
+            px, py = cx_ + (x - cx_) * s, cy_ + (y - cy_) * s
+            root_ = 1 + 0.45 * smooth(EAR[0][0] + 0.04, EAR_ROOT_X, px)
+            pts.append(m(rot(sx * px, py, EAR_Z + w * root_)))
+        return pts
+    vv = lv(1.0, EAR_RIM) + lv(1.0, -EAR_RIM) + lv(0.82, EAR_MID) + lv(0.82, -EAR_MID) + lv(0.6, EAR_MID * 0.95)
+    vv.append(m(rot(sx * cx_, cy_, EAR_Z - EAR_CEN)))
+    iRf, iRb, iMf, iMb, iDf, iCb = 0, n, 2 * n, 3 * n, 4 * n, 5 * n
+    q = lambda a, c_: [[a + i, a + (i + 1) % n, c_ + (i + 1) % n, c_ + i] for i in range(n)]
+    ff = q(iRb, iRf) + q(iRf, iMf) + q(iMf, iDf) + q(iMb, iRb) + [[iMb + i, iCb, iMb + (i + 1) % n] for i in range(n)]
     ear.add(vv, ff)
+    dish = b.P('earDish' + s_, shade(COL['skin'], 0.9), w_ear, 35)
+    dish.add(lv(0.6, EAR_MID * 0.95) + [m(rot(sx * cx_, cy_, EAR_Z + EAR_MID * 0.75))], [[i, (i + 1) % n, n] for i in range(n)])
+    cen_ = Vector(m(rot(sx * cx_, cy_, EAR_Z)))
+    npl_ = (Vector(m(rot(sx * cx_, cy_, EAR_Z + 1.0))) - cen_).normalized()   # (the ear's front, out of its plane)
+    for prt_ in (ear, dish):   # (each face wound to face out of the cushion, whichever way the outline runs on this side)
+        for f_ in prt_.f:
+            a_, b_, c_ = (Vector(prt_.v[i]) for i in f_[:3])
+            d_ = sum((Vector(prt_.v[i]) for i in f_), Vector()) / len(f_) - cen_
+            out_dir = npl_ if prt_ is dish else d_ + npl_ * d_.dot(npl_) * 20
+            if (b_ - a_).cross(c_ - a_).dot(out_dir) < 0:
+                f_.reverse()
 
 # the goggles: a hexagonal lens on each eye standing a little proud of the face (the original's are transparent:
 # opaque here, a dark sea-blue), the eye a small bright dot just in front of the glass (it blinks)
+
+
+def orient(part, start, want):
+    """wind the part's faces from `start` on so that each faces `want(centre)` (a direction)"""
+    for f_ in part.f[start:]:
+        a_, b_, c_ = (Vector(part.v[i]) for i in f_[:3])
+        fc_ = sum((Vector(part.v[i]) for i in f_), Vector()) / len(f_)
+        if (b_ - a_).cross(c_ - a_).dot(want(fc_)) < 0:
+            f_.reverse()
+
+
+frame = None if OLD else b.P('frame', COL['frame'], 'head', 30)
 for s_, sx in (('L', 1), ('R', -1)):
     hexa = [(sx * x, y) for x, y in LENS]
     lz = max(max(on_face(x, y, 0.0)[2] for x, y in hexa) / BH + 0.006, LENS_Z)
     lens = b.P('lens' + s_, COL['lens'], 'head', 30)
     K = len(hexa)
-    vv = [m((x, y, lz)) for x, y in hexa] + [on_face(x, y, -0.004) for x, y in hexa]
-    ff = [list(range(K)), ]
-    ff += [[k, K + k, K + (k + 1) % K, (k + 1) % K] for k in range(K)]
-    # (wound to face out: the front cap counter-clockwise seen from the front)
-    if (Vector(vv[1]) - Vector(vv[0])).cross(Vector(vv[2]) - Vector(vv[0])).z < 0:
-        ff = [list(reversed(f)) for f in ff]
-    lens.add(vv, ff)
+    if OLD:
+        vv = [m((x, y, lz)) for x, y in hexa] + [on_face(x, y, -0.004) for x, y in hexa]
+        ff = [list(range(K)), ]
+        ff += [[k, K + k, K + (k + 1) % K, (k + 1) % K] for k in range(K)]
+        # (wound to face out: the front cap counter-clockwise seen from the front)
+        if (Vector(vv[1]) - Vector(vv[0])).cross(Vector(vv[2]) - Vector(vv[0])).z < 0:
+            ff = [list(reversed(f)) for f in ff]
+        lens.add(vv, ff)
+    else:
+        # CAST-POLISH-NAMED (BALDINO-GOGGLES): the lenses were bare blue hexagonal blocks on the face. LBA2 draws a dark teal
+        # frame (byte 160, y 0.70-0.79) round its transparent lenses: here each glass sits in a frame 1.8 cm wide and 0.9 cm
+        # proud of it, its outer wall down to the face, its inner wall down to the glass.
+        gx_, gy_ = sum(x for x, _ in hexa) / K, sum(y for _, y in hexa) / K
+        outer = [(gx_ + (x - gx_) * 1.24, gy_ + (y - gy_) * 1.24) for x, y in hexa]
+        lens.add([m((x, y, lz)) for x, y in hexa], [list(range(K))])
+        orient(lens, 0, lambda c: Vector((0, 0, 1)))
+        zr = lz + 0.0045
+        outer = [(max(-0.165, min(0.165, x)), y) for x, y in outer]   # (no wider than the head there: it turns back)
+        o_back = [on_face(max(-0.157, min(0.157, x)), y, -0.004) for x, y in outer]
+        o_back = [(x * BH, y * BH, max(z_, (zr - 0.024) * BH)) for (x, y), (_, _, z_) in zip(outer, o_back)]   # (at most 5 cm deep)
+        vv = [m((x, y, zr)) for x, y in outer] + [m((x, y, zr)) for x, y in hexa] + [m((x, y, lz - 0.0005)) for x, y in hexa] + o_back
+        q_ = lambda a, c: [[a + k, a + (k + 1) % K, c + (k + 1) % K, c + k] for k in range(K)]
+        gc_ = Vector(m((gx_, gy_, zr)))
+        radial = lambda fc, gc_=gc_: Vector((fc.x - gc_.x, fc.y - gc_.y, 0))
+        for faces_, want in ((q_(0, K), lambda fc: Vector((0, 0, 1))),               # (the frame's front)
+                             (q_(K, 2 * K), lambda fc, r=radial: -r(fc)),              # (its inner wall, down to the glass)
+                             (q_(3 * K, 0), radial)):                                  # (its outer wall, down to the face)
+            f0 = len(frame.f)
+            frame.add(vv, faces_)
+            orient(frame, f0, want)
     ex, ey = sx * EYE_C[0], EYE_C[1]
     b.eye(m((ex, ey, lz + 0.003)), [([m((ex + EYE_R * math.cos(2 * math.pi * k / 8), ey + EYE_R * math.sin(2 * math.pi * k / 8), lz + 0.003)) for k in range(8)], COL['eye'])])
-# the strap: a band laid on the brow from one side of the head to the other, between the lenses' tops
 st = b.P('strap', COL['frame'], 'head', 40)
-xs = [-0.164 + 0.328 * k / 16 for k in range(17)]
 y0, y1 = 0.776, 0.794
-vv = []
-for x in xs:
-    if abs(x) > 0.155:      # (round the side of the head: back to z 0.15)
-        p0, p1 = m((x, y0, 0.16)), m((x, y1, 0.15))
-        vv += [p0, p1]
-    else:
-        vv += [on_face(x, y0, 0.005), on_face(x, y1, 0.005)]
-st.add(vv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(len(xs) - 1)])
+if OLD:
+    # the strap: a band laid on the brow from one side of the head to the other, between the lenses' tops
+    xs = [-0.164 + 0.328 * k / 16 for k in range(17)]
+    vv = []
+    for x in xs:
+        if abs(x) > 0.155:      # (round the side of the head: back to z 0.15)
+            p0, p1 = m((x, y0, 0.16)), m((x, y1, 0.15))
+            vv += [p0, p1]
+        else:
+            vv += [on_face(x, y0, 0.005), on_face(x, y1, 0.005)]
+    st.add(vv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(len(xs) - 1)])
+else:
+    # CAST-POLISH-NAMED (BALDINO-STRAP): the strap was a single sheet 1 cm off the brow, cut off at the sides of the head
+    # (and its edge zigzagged over the faceted face). Now a band 1.2 cm proud of the head's own sections, closed along
+    # its top and bottom edges, all the way round (under the ears' roots), so it reads from the side and from behind.
+    def head_ring(y, d):
+        hw, zf, zb = lerp_rows(HEAD, y)
+        return ring(y * BH, (hw + d) * BH, (zf + d) * BH, (zb - d) * BH, HN, 0.7)
+    rows_ = [head_ring(y0, -0.002), head_ring(y0, 0.006), head_ring(y1, 0.006), head_ring(y1, -0.002)]
+    vv = [p for r_ in rows_ for p in r_]
+    st.add(vv, [[j * HN + i, j * HN + (i + 1) % HN, (j + 1) * HN + (i + 1) % HN, (j + 1) * HN + i] for j in range(3) for i in range(HN)])
+    hc_ = Vector((0, (y0 + y1) / 2 * BH, 0.03 * BH))
+    orient(st, 0, lambda fc: Vector((fc.x - hc_.x, 0, fc.z - hc_.z)) + Vector((0, (fc.y - hc_.y) * 4, 0)))
 
 # ------------------------------------------------------------------ the collar: standing up round the back of the head
 headY = bp('head')[1]
@@ -337,6 +444,7 @@ col = b.P('collar', COL['collar'], w_collar, 60)
 col.normal = UP
 CK = 14
 cv = []
+CT = 0.0 if OLD else 0.011   # (CAST-POLISH-NAMED, BALDINO-COLLAR: its thickness, H)
 for k in range(CK + 1):
     a = math.pi * 0.42 + (math.pi * 1.16) * k / CK          # from the left front round the back to the right front
     s, c = math.sin(a), math.cos(a)
@@ -346,6 +454,23 @@ for k in range(CK + 1):
     cz = 0.0
     cv += [m((s * rx, ybot, cz + c * rz)), m((s * (rx - 0.012), ytop, cz + c * (rz - 0.005)))]
 col.add(cv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(CK)])
+if not OLD:
+    # CAST-POLISH-NAMED (BALDINO-COLLAR): the stand-up collar was one sheet (a white line seen edge-on from the side, paper
+    # at its top and front ends). Now 2.2 cm thick: the same outside, an inside a shade darker, the top edge and the two
+    # front ends closed; still drawn flat (one constant shade, as the original's solid polygon).
+    cin = b.P('collarIn', shade(COL['collar'], 0.8), w_collar, 60)
+    cin.normal = UP
+    iv = []
+    for k in range(CK + 1):
+        a = math.pi * 0.42 + (math.pi * 1.16) * k / CK
+        s, c = math.sin(a), math.cos(a)
+        ytop = COLLAR_BACK - (COLLAR_BACK - COLLAR_SIDE) * abs(s)
+        ybot = 0.673 - (0.673 - 0.540) * abs(s)
+        iv += [m((s * (0.19 - CT), ybot, c * (0.178 - CT))), m((s * (0.19 - 0.012 - CT), ytop - 0.002, c * (0.178 - 0.005 - CT)))]
+    cin.add(iv, [[2 * i + 1, 2 * i + 3, 2 * i + 2, 2 * i] for i in range(CK)])
+    o_ = len(col.v)   # (add() counts from the new vertices: the outside's are at −o_ from them)
+    col.add(iv, [[2 * i + 1 - o_, 2 * i + 3 - o_, 2 * i + 3, 2 * i + 1] for i in range(CK)] +
+            [[0 - o_, 1 - o_, 1, 0], [2 * CK + 1 - o_, 2 * CK - o_, 2 * CK, 2 * CK + 1]])   # (the top edge; the front ends)
 
 os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
 tris = b.export(OUT)
