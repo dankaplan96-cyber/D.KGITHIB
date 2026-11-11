@@ -85,7 +85,7 @@ for (const [label, key, extra] of STATES) {
     const r = await ev(([room, walkIn]) => {
       const G = game, out = {};
       if (G.room) { const e = G.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); P.settle(); }
-      if (walkIn) { const o = G.story.exitTo(room + '-out'); G.exitRoom({ ...o, a: o.a + Math.PI }, true, true); G.step(0.3); out.enter = P.enter(room).r; }
+      if (walkIn) { const o = G.story.exitTo(room + '-out'); G.exitRoom({ ...o, a: o.a + Math.PI }, true, true); G.step(0.3); window.said.length = 0; out.enter = P.enter(room).r; if (out.enter !== 'entered') out.said = window.said.slice(-4).map((q) => q.n + ': ' + q.lines.join(' ').slice(0, 80)); }
       else { G.regions.ensure(room, 'test'); G.step(0.3); out.enter = 'not walked in'; }
       out.room = G.room?.id ?? 'citadel';
       return out;
@@ -94,8 +94,9 @@ for (const [label, key, extra] of STATES) {
     const live = await ev(([room]) => { const G = game; for (let i = 0; i < 40; i++) G.step(0.5); const R = G.regions.built(room), c = R.center;
       const floors = RL.ROOMS[room].floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y }));
       const here = people(room).filter((r) => r.present && !r.away).map((r) => r.def.id);
-      // (one who has just arrived at a stop is still turning to it: looked at again a moment later)
-      let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit(room, floors); }
+      // (one who has just arrived at a stop is still turning to it: looked at again a moment later — 2.5 s: since STOP-TURN
+      //  (walkers.js dwellTick) a stop first settles 1.2 s, then turns; Ama at her forms cabinet took 2.2 s)
+      let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit(room, floors); }
       const spot = Object.values(R.npcSpots || {})[0];
       const keeper = people(room)[0];
       return { here, audit: a, spot: spot ? { x: +(spot.x - c.x).toFixed(2), z: +(spot.z - c.z).toFixed(2) } : null, keeperStop0: keeper ? { x: +(keeper.stops[0].x - c.x).toFixed(2), z: +(keeper.stops[0].z - c.z).toFixed(2) } : null, logs: Object.fromEntries(people(room).map((q) => [q.def.id, q.log.filter((l) => / at |seated|chat over/.test(l)).length])) }; }, [room]);
@@ -107,7 +108,7 @@ for (const [label, key, extra] of STATES) {
     for (const [id, n] of Object.entries(live.logs)) visits[id] = (visits[id] || 0) + n;
     if (walkIn && key === 'project') await shot(room);   // (the room with its people, the hero by the door)
     if (walkIn) {
-      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); const shop = game.state === 'shop'; if (shop) { P.tap('Escape', 0.1); P.settle(); } out[id] = { r: r.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')), ...(shop ? { shop } : {}) }; } return out; }, [live.here]);   // (SHOPS-1: a keeper's talk ends in their shop: left with Esc before the next talk)
+      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); const shop = game.state === 'shop'; if (shop) { P.tap('Escape', 0.1); P.settle(); } out[id] = { r: r.r, to: r.to, sp: r.speakers, ...(r.skipped ? { sk: r.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')), ...(shop ? { shop } : {}) }; } return out; }, [live.here]);   // (SHOPS-1: a keeper's talk ends in their shop: left with Esc before the next talk)
       check(`${label}, ${room}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
       if (key === 'project') console.log(`  ${room} lines: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
       if (key === 'evacuation' && live.here.length) await shot(room + '-evacuation');
@@ -137,14 +138,14 @@ const portCheck = async (label, key, extra, want, talk) => {
   iso(`Citadel Spaceport, ${label}: the hero put on the deck by the bridge (exitRoom)`);
   const r = await ev(() => { const G = game; for (let i = 0; i < 60; i++) G.step(0.5);
     const S = G.world.spaceport, d = S.deck, b = S.board, fl = [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1 }, { x0: S.bridge.x0, x1: S.bridge.x1, z0: S.bridge.z - S.bridge.hw, z1: S.bridge.z + S.bridge.hw }];
-    let a = audit('port_citadel', fl); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit('port_citadel', fl); }
+    let a = audit('port_citadel', fl); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit('port_citadel', fl); }
     // standing (not walking): off the walkway, the pad's ring, the board's reading spot
     const clear = people('port_citadel').filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: q.pos.x < S.pad.x - 4 && Math.abs(q.pos.z - S.bridge.z) < 1.9, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 5.6, board: Math.hypot(q.pos.x - (b.x + 0.6), q.pos.z - b.z) < 1.0 })).filter((q) => q.walkway || q.ring || q.board);
     return { here: people('port_citadel').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, stops: people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, x: s.x, z: s.z }))) }; });
   check(`Citadel Spaceport, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r.here);
   check(`Citadel Spaceport, ${label}: each on the deck, off the furniture, facing sensibly; nobody stands on the walkway, in the pad's ring or on the board's reading spot`, r.bad.length === 0 && r.clear.length === 0, { bad: r.bad, clear: r.clear });
   if (talk && want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`Citadel Spaceport, ${label}: each answers a talk (INPUT), the line fits the flights (${key})`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { const G = game; G.exitRoom({ x: -12.5, z: 39.5, a: Math.PI / 2 + 0.3 }, true, true); for (let i = 0; i < 10; i++) G.step(0.5); });
@@ -164,11 +165,11 @@ for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapt
   await ev((key) => { setChapter(key); const G = game; G.regions.ensure('zeelich', 'test'); G.step(0.3); if (G.room?.id !== 'zeelich') { G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true); } G.step(0.5); }, key);
   iso(`Zeelich Spaceport, ${label}: chapter set by its flags; the hero put on the deck (enterRoom)`);
   const r = await ev(() => { const G = game, Z = G.regions.built('zeelich'), S = Z.spaceport, d = S.deck; for (let i = 0; i < 60; i++) G.step(0.5);
-    let a = audit('port_zeelich', [d]); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit('port_zeelich', [d]); }
+    let a = audit('port_zeelich', [d]); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit('port_zeelich', [d]); }
     const clear = people('port_zeelich').filter((q) => q.present && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: Math.abs(q.pos.x - S.pad.x) < 2.2 && q.pos.z < S.landing.z + 0.5, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 6.0 })).filter((q) => q.walkway || q.ring);
     return { here: people('port_zeelich').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, all: a }; });
   check(`Zeelich Spaceport, ${label}: its two Esmer travellers are there, on the deck, clear of the walkway and the pad's ring`, r.here.length === 2 && r.bad.length === 0 && r.clear.length === 0, r);
-  const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+  const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
   check(`Zeelich Spaceport, ${label}: each answers a talk (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
   console.log(`  zeelich port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
   if (key === 'council') { await ev(() => { const G = game, S = G.regions.built('zeelich').spaceport; G.enterRoom('zeelich', { x: S.landing.x - 3, z: S.landing.z + 2, a: Math.PI * 0.8 }, true); for (let i = 0; i < 10; i++) G.step(0.5); }); await shot('spaceport-zeelich'); }
@@ -201,7 +202,7 @@ for (const [room, label, key, extra, want, notice] of TERM) {
     for (let i = 0; i < 60; i++) G.step(0.5);
     const R = G.regions.built(room), c = R.center;
     const floors = RL.ROOMS[room].floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y }));
-    let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit(room, floors); }
+    let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit(room, floors); }
     out.here = people(room).filter((q) => q.present && !q.away).map((q) => q.def.id);
     out.bad = a.filter((q) => q.bad.length); out.all = a;
     // (standing or sitting, not walking: clear of where Twinsen stands to use the counter and read the board, of the
@@ -219,7 +220,7 @@ for (const [room, label, key, extra, want, notice] of TERM) {
   check(`${room}, ${label}: the notice ${notice ? `is up and reads ${notice === 'grounded' ? 'GROUNDED' : notice === 'list' ? 'the project\'s boarding by its list' : 'the council\'s order'}` : 'is down'} (the GROUNDED one ${notice === 'grounded' ? 'up' : 'down'})`, r.notice === notice && r.grounded === (notice === 'grounded'), { kind: r.notice, grounded: r.grounded });
   for (const [id, n] of Object.entries(r.logs)) visits[id] = (visits[id] || 0) + n;
   if (want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`${room}, ${label}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  ${room} ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { for (let i = 0; i < 6; i++) game.step(0.5); });

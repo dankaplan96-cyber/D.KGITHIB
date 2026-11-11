@@ -294,7 +294,10 @@
     }
     const d = G.story.doors().find((x) => x.room === id && (x.region || 'citadel') === P.here());
     if (!d) return { r: 'no door to ' + id + ' from ' + P.here() };
-    const r = P.through(d.x, d.z, opts);
+    let r = P.through(d.x, d.z, opts);
+    // (a remark that opened on the way stopped the walk — chapter 1's "the garden pipe is knocking too" as he passes it —:
+    //  P.through has read it, as a player would; walk on to the door, once)
+    if (P.here() !== id && r.r === 'state:dialog') r = P.through(d.x, d.z, opts);
     return { r: P.here() === id ? 'entered' : 'failed:' + r.r };
   };
   P.talk = (id, opts = {}) => {
@@ -333,7 +336,7 @@
         skipped.push({ speakers: s.speakers, lines: s.lines }); P.note(`talk ${id}: a dialogue by ${s.speakers.join(',')} opened on the way (${s.lines} lines); read it, talk again`);
         continue;
       }
-      return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines, ...(skipped.length ? { skipped } : {}) };
+      return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines, speakers: s.speakers, ...(skipped.length ? { skipped } : {}) };
     }
   };
   // walk into a door / exit trigger and wait for the new scene
