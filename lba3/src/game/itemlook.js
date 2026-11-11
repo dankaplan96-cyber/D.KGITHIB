@@ -12,7 +12,8 @@
 // above (camera alpha 60 x MUL_ANGLE 4 = 240 of 4096); the selected inventory object turns one unit a millisecond (a
 // turn in 4.1 s), the found object two (a turn in 2.05 s).
 import * as THREE from 'three';
-import { pickupModel, buildSword } from './actors.js';
+import { pickupModel } from './actors.js';
+import { ballLookMesh, swordMeshes } from './equiplook.js';
 import { blowgunModel, pistolModel, gloveModel, pulseModel } from './weapons.js';
 import { penguinModel, lanternModel } from './gadgets.js';
 import { jetpackModel } from './jetpack.js';
@@ -54,8 +55,11 @@ function cogGeo(r = 0.12, teeth = 10, th = 0.04) {
 // ------------------------------------------------------------------ the looks
 // look id → () => Object3D. `tilt` lays a long thing across the view so it is seen turning, not spun on its own axis.
 const LOOKS = {
-  // the magic ball (actors.js MagicBall: the same gold, its glow kept lower so it reads as a ball, not a lamp)
-  ball: () => { const g = new THREE.Group(); put(g, new THREE.SphereGeometry(0.12, 24, 18), M('#ffe68a', { emissive: '#ffb000', emissiveIntensity: 0.55, roughness: 0.25 })); return g; },
+  // the magic ball (EQUIP-1: the game's marble, equiplook.js, in the colour of his level: ball, ball2..ball4 (inventory.js))
+  ball: () => { const g = new THREE.Group(); g.add(ballLookMesh(1)); return g; },
+  ball2: () => { const g = new THREE.Group(); g.add(ballLookMesh(2)); return g; },
+  ball3: () => { const g = new THREE.Group(); g.add(ballLookMesh(3)); return g; },
+  ball4: () => { const g = new THREE.Group(); g.add(ballLookMesh(4)); return g; },
   // the holomap: a glass globe of the island on a brass foot
   holomap: () => {
     const g = new THREE.Group();
@@ -180,7 +184,7 @@ const LOOKS = {
     const g = new THREE.Group(); put(g, new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false }), M('#fff6a0', { emissive: '#ffd23a', emissiveIntensity: 0.8 }), 0, 0, -0.015); return g;
   },
   // story things of later chapters (a look each, in the same style)
-  sword: () => buildSword(),
+  sword: () => { const g = swordMeshes(new THREE.Group()); g.rotation.x = -0.25; return g; },   // (its flat to the view; in his hand: actors.js buildSword)
   pulse: () => pulseModel(false),   // (the one in his hand: weapons.js)
   jar: () => {
     const g = new THREE.Group();

@@ -1,0 +1,80 @@
+[
+ {
+  "op": "preview",
+  "name": "vesk views",
+  "input": "art/blender/characters/under/work/vesk.blend",
+  "output": "art/blender/characters/under/previews/vesk",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "vesk checks",
+  "input": "art/blender/characters/under/work/vesk.blend",
+  "output": "art/blender/characters/under/reports/vesk.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 5000,
+   "skeleton": "art/blender/characters/under/source/skeletons.json",
+   "skeletonKey": "vesk"
+  }
+ },
+ {
+  "op": "preview",
+  "name": "worker_b views",
+  "input": "art/blender/characters/under/work/worker_b.blend",
+  "output": "art/blender/characters/under/previews/worker_b",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "worker_b checks",
+  "input": "art/blender/characters/under/work/worker_b.blend",
+  "output": "art/blender/characters/under/reports/worker_b.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 5000,
+   "skeleton": "art/blender/characters/under/source/skeletons.json",
+   "skeletonKey": "worker_b"
+  }
+ },
+ {
+  "op": "preview",
+  "name": "nara_b views",
+  "input": "art/blender/characters/under/work/nara_b.blend",
+  "output": "art/blender/characters/under/previews/nara_b",
+  "options": {
+   "resolution": 640,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 2.8
+  }
+ },
+ {
+  "op": "validate",
+  "name": "nara_b checks",
+  "input": "art/blender/characters/under/work/nara_b.blend",
+  "output": "art/blender/characters/under/reports/nara_b.validate.json",
+  "options": {
+   "target": "character",
+   "maxTriangles": 5000,
+   "skeleton": "art/blender/characters/under/source/skeletons.json",
+   "skeletonKey": "nara_b"
+  }
+ }
+]

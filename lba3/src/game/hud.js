@@ -4,6 +4,7 @@ import { t, getLang } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { Color, Vector3 } from 'three';
 import { WEAPON_INFO } from './combat.js';
+import { ballIcon, SWORD_ICON } from './equiplook.js';
 import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
@@ -116,7 +117,9 @@ export class HUD {
     const c = h.combat, w = c.weapon, g = this.game;
     const wn = this.wpName(h, w);
     // (shown for a moment when the weapon changes; not for the one he already held when play starts or loads)
-    if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
+    if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').innerHTML = this.wpIcon(h, w); el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
+    // (the ball's icon in the colour of his level: redrawn when the level changes)
+    if (w === 'ball' && this._wl !== h.magicLevel) { this._wl = h.magicLevel; el.querySelector('.ico').innerHTML = this.wpIcon(h, w); }
     // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
     const a = h.arms || {};
     // (EQUIP-2b: the heat flask's carried heat, the seconds it has left; '—' cold)
@@ -168,6 +171,8 @@ export class HUD {
     const mark = s.why === 'roof' || s.why === 'ground' ? '✕' : '';
     if (el.lastChild.textContent !== mark) el.lastChild.textContent = mark;
   }
+  // a weapon's icon (markup: EQUIP-1's drawn ball and sword, equiplook.js; the others their glyph)
+  wpIcon(h, w) { return w === 'ball' ? ballIcon(h.magicLevel) : w === 'sword' ? SWORD_ICON : WEAPON_INFO[w]?.icon || ''; }
   wpName(h, w) { return t(w === 'blowgun' && h.arms?.blowtron ? 'wp_blowtron' : 'wp_' + w); }
   weaponFlash() { const el = $('#weapon'); el?.classList.add('flash'); this.flashT = 0.25; this.weaponShowT = 1.5; }
   // the selector ring: open while held; returns the chosen weapon when it closes
@@ -195,7 +200,7 @@ export class HUD {
           }
           Object.assign(el.querySelector('.mid').style, { left: '145px', top: '145px' });
         }
-        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${this.wpName(h, w)}</small>` : ''; }
+        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${this.wpIcon(h, w)}<small>${this.wpName(h, w)}</small>` : ''; }
       }
       const mv = input.move();
       if (Math.hypot(mv.x, mv.y) > 0.5) {

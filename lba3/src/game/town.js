@@ -72,12 +72,14 @@ const HOUSES = [
   // the south one. They stand on one floor, the south one's (flatWith: the original's ground there is low), and no pad
   // of their own (noPad: their floors are enough). The north one's floor eases back over 2 m, not 2.6: the ground round
   // the stepping stones' foot, 3.3 m off its corner, stays as it was (world.js measures their first step from it).
-  { id: 'bug', x: -61.4, z: -14.3, ry: Math.PI / 2, noPad: true, flatWith: 'bug2', ease: 2.0, w: 6.2, d: 8.2, h: 3.3, door: { x: -0.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
+  // (CITADEL-85: LBA2's pair have low pale roofs edged in teal, not gables: a low hip of pale stone slabs, teal boards)
+  { id: 'bug', x: -61.4, z: -14.3, ry: Math.PI / 2, noPad: true, flatWith: 'bug2', ease: 2.0, w: 6.2, d: 8.2, h: 3.3, door: { x: -0.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'stone', hip: { pitch: 0.2, tile: '#f2f0ea', coping: '#3f9a94' }, shutters: '#d8a13b', chimneyX: 0.25,
     windows: [{ side: 'front', x: 1.5 }, { side: 'right', x: 0 }, { side: 'back', x: 0.6 }] },
   // (WORLD-FIX: the stone house stood with its west end on the ramp up to the plateau and its back 0.8 m from the
   // terrace (the ground 2.3 m up its back wall, 1.4 m over its west window) and a window under its door's surround:
   // narrower and shallower, 2.4 m east and 1.2 m south, the window to the other side of the door)
-  { id: 'stone', x: -28.6, z: -23.4, ry: 0.05, w: 6.4, d: 5.0, h: 3.1, door: { x: 1.6 }, wall: 'stone', roof: 'planks', pitch: 0.4, shutters: '#3f9a6a', chimney: false,
+  // (CITADEL-85: LBA2's school has a hip roof of brown tiles with a teal coping)
+  { id: 'stone', x: -28.6, z: -23.4, ry: 0.05, w: 6.4, d: 5.0, h: 3.1, door: { x: 1.6 }, wall: 'stone', roof: 'roof', hip: { pitch: 0.5, tile: '#a2826c', coping: '#3f9a94' }, shutters: '#3f9a6a', chimney: false,
     windows: [{ side: 'front', x: -1.3 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
@@ -94,17 +96,19 @@ const HOUSES = [
   { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0, w: 1.6, h: 2.4, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#ece8e2', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
     windows: [{ side: 'front', x: -1.5 }, { side: 'left', x: 0 }] },
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
-  { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', pitch: 0.5, shutters: '#3b5bb8', chimney: false,
+  // (CITADEL-85: LBA2's long hall has a grey barrel vault along its length, ribbed; its gable across the front is gone)
+  { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', barrel: { axis: 'x', rise: 0.27, ribs: true }, shutters: '#3b5bb8', chimney: false,
     windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
   // (HARBOUR-ONE: wing2 in rubble, as LBA2's body 49 is (rubble walls under a plank roof) and as Doran's shed beside
   // it: the hall in ashlar under slate, the two smaller houses in rubble under boards, LBA2's harbour pair)
-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
+  // (CITADEL-85: and its neighbour a brown barrel of boards, the arch over the door's end)
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', barrel: { axis: 'z', rise: 0.26 }, shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
   // WORLD-80 (appended, so the houses above keep their seeds and places in W.houses):
   // Bug Street's south house (the original's scene 22, 6.9 × 5.2 m), beside the north one, which shares its floor
-  { id: 'bug2', x: -62.3, z: -8.2, ry: Math.PI / 2, noPad: true, w: 4.9, d: 6.6, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#f6e6cc', roof: 'roof', shutters: '#3f9a6a', chimneyX: -0.25,
+  { id: 'bug2', x: -62.3, z: -8.2, ry: Math.PI / 2, noPad: true, w: 4.9, d: 6.6, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#f6e6cc', roof: 'stone', hip: { pitch: 0.2, tile: '#ece8e0', coping: '#3f9a94' }, shutters: '#3f9a6a', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.3, w: 0.6 }, { side: 'left', x: 0 }] },
   // (DOORS-LBA2 #3: the stone house's porch on the terrace, 'stoneup', is gone: LBA2's second way down there is a lift
   // hatch flush with the terrace, sewers.js HATCHES.terrace)
@@ -193,7 +197,9 @@ function bench(parent, x, y, z, ry) {
 }
 // Citadel street lamp (as in LBA2): grey post on a stepped pyramid base, two
 // curled arms like a lyre, a big blue glass globe on top
-function lamp(parent, x, y, z) {
+// (CITADEL-85: gold: LBA2's square lamps have gold globes; one shared material for them, so they merge into one draw)
+let GOLD_GLOBE = null;
+function lamp(parent, x, y, z, gold = false) {
   const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
   const metal = mat('#7d8088', 0.55, { metalness: 0.35 });
   put(g, new THREE.CylinderGeometry(0.2, 0.36, 0.3, 4), metal, 0, 0.15, 0, Math.PI / 4);
@@ -205,7 +211,8 @@ function lamp(parent, x, y, z) {
     const pts = [[0.04, 2.25], [0.22, 2.42], [0.34, 2.68], [0.33, 2.92], [0.22, 3.0], [0.16, 2.9]].map(([px, py]) => new THREE.Vector3(px * sx, py, 0));
     put(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.035, 6), metal, 0, 0, 0);
   }
-  const glass = new THREE.MeshStandardMaterial({ color: '#2f7fd8', roughness: 0.22, metalness: 0.1, emissive: '#3a8cff', emissiveIntensity: 0.25 });
+  const glass = gold ? (GOLD_GLOBE ??= new THREE.MeshStandardMaterial({ color: '#e8b440', roughness: 0.25, metalness: 0.2, emissive: '#ffb830', emissiveIntensity: 0.25 }))
+    : new THREE.MeshStandardMaterial({ color: '#2f7fd8', roughness: 0.22, metalness: 0.1, emissive: '#3a8cff', emissiveIntensity: 0.25 });
   put(g, new THREE.SphereGeometry(0.34, 22, 16), glass, 0, 3.12, 0);
   put(g, new THREE.CylinderGeometry(0.04, 0.06, 0.1, 8), metal, 0, 3.5, 0);
   return g;
@@ -520,11 +527,12 @@ export function buildTown(scene, W) {
 
   // static street dressing goes into one group that is merged per material at the end
   const dress = new THREE.Group(); scene.add(dress);
-  // lamps around the square, at the original's four corners (the other street lamps: island.js)
+  // lamps around the square, at the original's four corners (the other street lamps: island.js); their globes gold as
+  // the original's (CITADEL-85), and the two lights in them warm to match (the same two lights, the same strength)
   const SQUARE_LAMPS = PROPS.lamps.slice(0, 4);
   for (const [i, [x, z]] of SQUARE_LAMPS.entries()) {
-    lamp(dress, x, H(x, z), z);
-    if (i < 2) { const l = new THREE.PointLight('#9cc8ff', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
+    lamp(dress, x, H(x, z), z, true);
+    if (i < 2) { const l = new THREE.PointLight('#ffd9a0', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
     physics.add({ type: 'cyl', x, z, r: 0.2, top: H(x, z) + 3, seeThrough: true });
   }
   // benches facing the well
@@ -586,8 +594,16 @@ export function buildTown(scene, W) {
     const b = built[i], y = W.houses[i].g - 0.05, pitch = hd.pitch ?? 0.62, oh = hd.overhang ?? 0.38;
     const half = hd.w / 2 + oh, ridge = y + hd.h + b.gableH, rot = hd.ry;
     occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: hd.w / 2 + 0.05, hd: hd.d / 2 + 0.05, y0: y - 1, y1: y + hd.h, name: hd.id });
-    occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: half, hd: hd.d / 2 + oh + 0.1, y0: ridge - half * pitch - 0.35, y1: ridge + 0.15, slope: pitch, name: hd.id + ' roof' });
-    if (hd.chimney !== false) {
+    const B = b.roofOcc;
+    if (B) {   // (CITADEL-85: a barrel roof: the slab across its span, from the crown down to the eaves)
+      const y1 = y + B.crownY + 0.15, ye = y + B.eaveY;
+      occ.add({ kind: 'box', x: hd.x, z: hd.z, rot: B.axis === 'x' ? rot + Math.PI / 2 : rot, hw: B.c, hd: B.len / 2 + 0.1, y0: ye - 0.35, y1, slope: (y1 - ye) / B.c, name: hd.id + ' roof' });
+      if (B.chim) {
+        const { cx, cz } = B.chim;
+        occ.add({ kind: 'box', x: hd.x + Math.cos(rot) * cx + Math.sin(rot) * cz, z: hd.z - Math.sin(rot) * cx + Math.cos(rot) * cz, rot, hw: 0.4, hd: 0.4, y0: y + B.chim.y0, y1: y + B.chim.y1, name: hd.id + ' chimney' });
+      }
+    } else occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: half, hd: hd.d / 2 + oh + 0.1, y0: ridge - half * pitch - 0.35, y1: ridge + 0.15, slope: pitch, name: hd.id + ' roof' });
+    if (hd.chimney !== false && !B) {
       const cx = (hd.chimneyX ?? 0.28) * hd.w, cz = -hd.d * 0.18, ch = 1.4 + b.gableH * 0.5;
       const yb = y + hd.h + b.gableH * (1 - Math.abs(cx) / (hd.w / 2)) - 0.3;
       occ.add({ kind: 'box', x: hd.x + Math.cos(rot) * cx + Math.sin(rot) * cz, z: hd.z - Math.sin(rot) * cx + Math.cos(rot) * cz, rot, hw: 0.4, hd: 0.4, y0: yb, y1: yb + ch + 0.35, name: hd.id + ' chimney' });
