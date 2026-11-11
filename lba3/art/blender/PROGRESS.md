@@ -353,6 +353,11 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 - States: exported ✓ · loaded in game ✓ · visually inspected ✓ (close-ups, 13 poses for three looks) · performance:
   triangles measured (+1-11.5 %), no draw call · integrated: no (request).
 
+### Shape variants farmerA_b, farmerB_b, clerk_b and GROBO-GREY: CAST-VARIANTS-1 (the desktop, 11.11.2026)
+- Queue 7's first three variants, 8 people moved; the trader's green skin and Brix's green tint (the user: "green elephants").
+  Details `tools/testlab/requests/CAST-VARIANTS-1.md`. States: exported ✓ · loaded in game ✓ · visually inspected ✓ (turnarounds)
+  · performance: triangles measured · integrated: no (request).
+
 ## Current
 - **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11; CAST-CONNECT-1 sent 11.11 (after NAMED).
 - CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
@@ -368,7 +373,7 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 5. ~~HANDS-36~~ (order 36: request sent)
 6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); ~~Yorna's hat flaps, the Grobos' flat brows~~ (CAST-CONNECT-1, with every limb joined)
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
-   ~~worker, nara~~ (UNDERGROUND); farmerA, farmerB, clerk (and councilB for Kira; zmole2, zbee1, zbee2)
+   ~~worker, nara~~ (UNDERGROUND); ~~farmerA, farmerB, clerk~~ (VARIANTS-1); left: councilB for Kira, zmole2, zbee1, zbee2
 8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
