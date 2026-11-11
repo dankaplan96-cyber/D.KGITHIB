@@ -1,0 +1,99 @@
+{
+  "file": "art/blender/props/equip/sword/work/sword.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.244, 0.9519, 0.0647], allowed largest side 0.5..1.2 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "material slots <= 3 (one draw call each in the game)",
+      "status": "pass",
+      "detail": "3: sword:sword-blade, sword:sword-brass, sword:sword-grip"
+    },
+    {
+      "check": "materials carry a game recipe (lba3_material)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "triangles <= 800",
+      "status": "pass",
+      "detail": "515"
+    }
+  ],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 515,
+    "materials": 3,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.122,
+        0.0,
+        -0.0323
+      ],
+      "max": [
+        0.122,
+        0.9519,
+        0.0323
+      ],
+      "size": [
+        0.244,
+        0.9519,
+        0.0647
+      ]
+    }
+  },
+  "passed": true
+}

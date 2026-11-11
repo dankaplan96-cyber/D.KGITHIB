@@ -289,3 +289,136 @@ export function stoneColumnGeometry(seed, depth, groundY = () => -1e9) {
   geo.computeVertexNormals();
   return geo;
 }
+
+// STONES-PLATEAU (release audit v75, F1; the same complaint STONES-31 answered: "stones that look like plain boxes"):
+// the Whispering Cliffs plateau's ring of six standing stones were bare flat-grey boxes and the shard's pedestal a
+// plain eight-sided drum. Like the stepping stones they are now drawn in the cliff rocks' own material (the stratified
+// cliff texture, vertex tones, flat facets) and merged into ONE geometry: one draw for all seven, where there were seven.
+//   a standing stone: a slab, broad face to the ring's centre, an irregular polygon of seven or eight corners in an
+//     uneven oval, ring over ring, narrowing towards a worn, slanted crown, leaning its own way, a stratum's ledge here
+//     and there; lichen on the crown's upward facets and a few on the sides; an earth stain where it leaves the ground.
+//   the pedestal: hand-cut, not lathed: a broad foot slab, a shaft, an overhanging chamfered top slab, each octagon's
+//     corners a little off true, paler than the stones (dressed stone), moss in the angle of the foot.
+// spec: { stones: [{ x, z, ry, h, seed }], pedestal: { x, z, y, h }, ground(x, z) } in world coordinates; every
+// stone's foot reaches 0.4 m under the lowest ground round it.
+export function plateauStonesGeometry({ stones, pedestal, ground }) {
+  const pos = [], uv = [], col = [];
+  const LICHEN = [[0.62, 0.74, 0.42], [0.72, 0.78, 0.5], [0.5, 0.66, 0.3]];
+  const FOOTMOSS = [[0.6, 0.8, 0.4], [0.68, 0.84, 0.46]];   // (a dusty moss in the angle of the pedestal's foot)
+  const EARTH = [0.74, 0.6, 0.46];
+  // one piece: its own generator, texture patch and tone; local points turned by ry and set at (X, Y, Z)
+  const piece = (seed, X, Y, Z, ry, base) => {
+    const hr = rng(seed), ou = hr() * 9, ov = hr() * 9, c = Math.cos(ry), s = Math.sin(ry);
+    const W = (p) => [X + p[0] * c + p[2] * s, Y + p[1], Z - p[0] * s + p[2] * c];
+    const tri = (a, b, cc, out, tint = null) => {
+      let A = W(a), B = W(b), C = W(cc);
+      const o = [out[0] * c + out[2] * s, out[1], -out[0] * s + out[2] * c];
+      const ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2], vx = C[0] - A[0], vy = C[1] - A[1], vz = C[2] - A[2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      const l = Math.hypot(nx, ny, nz); if (l < 1e-7) return;
+      nx /= l; ny /= l; nz /= l;
+      if (nx * o[0] + ny * o[1] + nz * o[2] < 0) { [B, C] = [C, B]; [b, cc] = [cc, b]; nx = -nx; ny = -ny; nz = -nz; }
+      const cap = Math.abs(ny) > 0.707;
+      // (U along the facet's own horizontal in the piece's frame, V by height: the strata stay level and move with it)
+      const lnx = nx * c - nz * s, lnz = nx * s + nz * c;
+      let hx = lnz, hz = -lnx; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl;
+      const sh = Math.min(1.1, Math.max(0.78, 0.94 + ny * 0.14)) * (0.96 + hr() * 0.08);
+      const t = tint || base;
+      for (const [P, p] of [[A, a], [B, b], [C, cc]]) {
+        pos.push(P[0], P[1], P[2]);
+        if (cap) uv.push(p[0] * TEX + ou, p[2] * TEX + ov); else uv.push((p[0] * hx + p[2] * hz) * TEX + ou, p[1] * TEX + ov);
+        const e = tint ? 1 : Math.min(1, Math.max(0, (P[1] - ground(P[0], P[2])) / 0.7)), k = e * e * (3 - 2 * e);
+        col.push(t[0] * sh * (EARTH[0] + (1 - EARTH[0]) * k), t[1] * sh * (EARTH[1] + (1 - EARTH[1]) * k), t[2] * sh * (EARTH[2] + (1 - EARTH[2]) * k));
+      }
+    };
+    return { hr, tri };
+  };
+  // the sides between successive rings (each quad cut on its own diagonal), the tint chosen per quad
+  const band = (tri, hr, A, B, mid, tintAt = () => null) => {
+    const n = A.length;
+    for (let k = 0; k < n; k++) {
+      const k1 = (k + 1) % n, t = tintAt(k);
+      // (a flat band, a ledge's top or a slab's underside, faces up when it steps in, down when it steps out)
+      const flat = Math.abs(A[k][1] - B[k][1]) < 0.03, o = flat ? [0, Math.hypot(B[k][0], B[k][2]) < Math.hypot(A[k][0], A[k][2]) ? 1 : -1, 0] : [Math.cos(mid[k]), 0, Math.sin(mid[k])];
+      if (hr() < 0.5) { tri(A[k], A[k1], B[k1], o, t); tri(A[k], B[k1], B[k], o, t); }
+      else { tri(A[k], A[k1], B[k], o, t); tri(A[k1], B[k1], B[k], o, t); }
+    }
+  };
+  const pick = (hr, L) => L[Math.floor(hr() * L.length)];
+
+  for (const S of stones) {
+    const b0 = 0.92 + rng(S.seed + 1)() * 0.08;
+    const { hr, tri } = piece(S.seed, S.x, 0, S.z, S.ry, [b0 * 0.98, b0 * 0.97, b0 * 0.93]);
+    const g0 = ground(S.x, S.z);
+    let low = g0;
+    for (let a = 0; a < 8; a++) low = Math.min(low, ground(S.x + Math.sin(a * Math.PI / 4) * 0.7, S.z + Math.cos(a * Math.PI / 4) * 0.7));
+    const foot = low - 0.4, top = g0 + S.h;
+    const nS = hr() < 0.5 ? 7 : 8, step = (2 * Math.PI) / nS, th0 = hr() * step;
+    const ang = Array.from({ length: nS }, (_, k) => th0 + k * step + (hr() - 0.5) * step * 0.35);
+    const mid = ang.map((a, k) => (k + 1 < nS ? (a + ang[k + 1]) / 2 : (a + ang[0] + 2 * Math.PI) / 2));
+    // an uneven oval: broad along local x (its broad faces are the ±z sides), each corner its own way out
+    const rx = 0.5 + hr() * 0.08, rz = 0.27 + hr() * 0.06;
+    const R0 = ang.map((a) => (rx * rz) / Math.hypot(rz * Math.cos(a), rx * Math.sin(a)) * (0.9 + hr() * 0.18));
+    const la = hr() * Math.PI * 2, lean = 0.02 + hr() * 0.04;
+    const off = (y) => { const d = Math.max(0, y - g0) * lean; return [Math.cos(la) * d, Math.sin(la) * d]; };
+    const taper = (y) => { const f = Math.max(0, Math.min(1, (y - g0) / S.h)); return 1 - 0.3 * f * f; };
+    const ring = (y, R, yj) => { const [cx, cz] = off(y); return ang.map((a, k) => [cx + Math.cos(a) * R[k], y + (hr() - 0.5) * yj, cz + Math.sin(a) * R[k]]); };
+    const rings = [ring(foot, R0, 0)];
+    let y = foot;
+    const crownY = top - 0.45 - hr() * 0.2;
+    while (y < crownY - 0.05) {
+      y = Math.min(crownY, y + 0.55 + hr() * 0.45);
+      const t = taper(y);
+      let R = R0.map((r) => r * t * (0.95 + hr() * 0.1));
+      rings.push(ring(y, R, y < crownY - 0.05 ? 0.14 : 0.04));
+      if (y < crownY - 0.4 && hr() < 0.35) {   // a stratum's ledge: the ring above steps in a few cm
+        y += 0.05; R = R.map((r) => r * (0.92 + hr() * 0.04));
+        rings.push(ring(y, R, 0.02));
+      }
+    }
+    // the crown: slanted (one shoulder higher), worn round in two steps to an off-centre point
+    const sa = hr() * Math.PI * 2, slant = 0.18 + hr() * 0.2;
+    const sl = (p) => (Math.cos(sa) * p[0] + Math.sin(sa) * p[2]) * slant;
+    const last = rings[rings.length - 1];
+    const sh1 = last.map((p) => { const [cx, cz] = off(p[1]); const f = 0.78 + hr() * 0.08; return [cx + (p[0] - cx) * f, top - 0.22 + sl(p) + (hr() - 0.5) * 0.05, cz + (p[2] - cz) * f]; });
+    const sh2 = sh1.map((p) => { const [cx, cz] = off(p[1]); const f = 0.45 + hr() * 0.15; return [cx + (p[0] - cx) * f, p[1] + 0.12 + hr() * 0.06, cz + (p[2] - cz) * f]; });
+    for (let r = 0; r + 1 < rings.length; r++) {
+      const hi = rings[r + 1][0][1] > top - 1.2;
+      band(tri, hr, rings[r], rings[r + 1], mid, () => (hi && hr() < 0.18 ? pick(hr, LICHEN) : null));
+    }
+    band(tri, hr, last, sh1, mid, () => (hr() < 0.3 ? pick(hr, LICHEN) : null));
+    band(tri, hr, sh1, sh2, mid, () => (hr() < 0.6 ? pick(hr, LICHEN) : null));
+    const [cx, cz] = off(top);
+    const apex = [cx + Math.cos(sa) * 0.06, top + 0.02 + slant * 0.06, cz + Math.sin(sa) * 0.06];
+    for (let k = 0; k < nS; k++) tri(sh2[k], sh2[(k + 1) % nS], apex, [0, 1, 0], hr() < 0.65 ? pick(hr, LICHEN) : null);
+    // the foot's underside (under the ground: closed so a low camera never sees in)
+    for (let k = 0; k < nS; k++) tri(rings[0][k], rings[0][(k + 1) % nS], [0, foot, 0], [0, -1, 0]);
+  }
+
+  if (pedestal) {
+    // dressed stone, paler: octagons, each corner a little off true; moss in the angle of the foot
+    const { x: X, z: Z, y: Y, h } = pedestal;
+    const { hr, tri } = piece(48611, X, Y, Z, 0.3, [1.12, 1.1, 1.04]);
+    const n = 8, ang = Array.from({ length: n }, (_, k) => (k + 0.5) * (Math.PI / 4) + (hr() - 0.5) * 0.05);
+    const mid = ang.map((a) => a + Math.PI / 8);
+    const oct = (y, r, j) => ang.map((a) => { const rr = r * (1 + (hr() - 0.5) * j); return [Math.cos(a) * rr, y + (hr() - 0.5) * 0.015, Math.sin(a) * rr]; });
+    const L = [
+      oct(-0.45, 1.12, 0.02), oct(0.2, 1.12, 0.03),            // the foot slab (its lower part under the ground)
+      oct(0.2, 0.86, 0.02), oct(0.27, 0.82, 0.02),             // the foot's top, stepping in to the shaft's chamfer
+      oct(h - 0.2, 0.76, 0.02),                                // the shaft
+      oct(h - 0.2, 0.9, 0.02), oct(h - 0.16, 0.95, 0.02),      // the top slab's underside and its chamfered edge
+      oct(h - 0.03, 0.95, 0.02), oct(h, 0.88, 0.02),           // its edge and the worn arris to the top
+    ];
+    for (let r = 0; r + 1 < L.length; r++) band(tri, hr, L[r], L[r + 1], mid, () => (r === 1 && hr() < 0.4 ? pick(hr, FOOTMOSS) : null));
+    const topR = L[L.length - 1], C = [0, h + 0.005, 0];
+    for (let k = 0; k < n; k++) tri(topR[k], topR[(k + 1) % n], C, [0, 1, 0]);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}

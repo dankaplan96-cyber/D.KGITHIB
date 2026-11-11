@@ -214,6 +214,23 @@ export class Physics {
     p.x = nx; p.z = nz;
   }
 
+  // Does this brick stop an actor whose feet are at y? (the bricks move() pushes him out of)
+  stops(c, y) {
+    return c.enabled && !c.stair && !((c.top <= y + STEP_UP && !(c.block && c.top > y + BLOCK_LOW)) || c.bottom > y + 1.7);
+  }
+
+  // How far a circle (x, z, r) with the feet at y reaches into the bricks that stop an actor there (the same bricks
+  // move() pushes him out of); 0: clear of them all. (DEPOT-CORNER: a save made where he stood wedged, game.unwedge)
+  overlapAt(x, z, y, r) {
+    let worst = 0;
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
+      if (!this.stops(c, y) || !this._inside(c, x, z, r)) continue;
+      const push = this._push(c, x, z, r);
+      worst = Math.max(worst, push ? Math.hypot(push.x, push.z) : r);
+    }
+    return worst;
+  }
+
   // Vertical integration; returns true when landing this frame. (actor.gravity: an actor's own for the moment — the
   // hero's jump, actors.js JUMP — else GRAVITY)
   fall(actor, dt) {

@@ -13,9 +13,9 @@ import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP,
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
 import { buildDinoFly } from './dinofly.js';
-import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
+import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks, stoneColumnGeometry } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -1235,8 +1235,9 @@ export function* buildWorldSteps(parentScene) {
   {
     const L = POI.lighthouse, g = H(L.x, L.z);
     const grp = new THREE.Group(); grp.position.set(L.x, g, L.z); scene.add(grp);
-    // (I-3: the tower is src/game/lighthouse.js: tapered bands, a door with its surround and step, windows, a gallery
-    // with a railing, the glazed lamp room and a cap; merged, one mesh per material, only the plaster casts)
+    // (I-3, CITADEL-85: the tower is src/game/lighthouse.js, in LBA2's shape: a square white tower with grey quoins, a
+    // gallery, the glazed lantern under a domed grey cap, the annex with the door at its foot; merged, one mesh per
+    // material, only the tower's plaster and dressed stone cast)
     const lampMat = new THREE.MeshStandardMaterial({ color: '#444', emissive: '#ffefb0', emissiveIntensity: 0.05, transparent: true, opacity: 0.85 });
     const { lampY } = buildLighthouse(grp, lampMat);
     // the beam (visible once the Sun Lens is restored)
@@ -1248,6 +1249,7 @@ export function* buildWorldSteps(parentScene) {
     const light = new THREE.PointLight('#ffe9b0', 0, 40, 1.5);
     light.position.y = lampY; grp.add(light);
     physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 20 });
+    physics.add({ type: 'box', x: L.x, z: L.z + (LH_ANNEX.z0 + LH_ANNEX.z1) / 2 + 0.03, hw: LH_ANNEX.hw + 0.05, hd: (LH_ANNEX.z1 - LH_ANNEX.z0) / 2 + 0.03, rot: 0, top: g + LH_ANNEX.top });   // (CITADEL-85: the annex, whose front corners stand outside the cylinder)
     physics.add({ type: 'box', x: L.x, z: L.z + 3.05, hw: LH_STEP_W / 2, hd: 0.25 + 0.12, rot: 0, top: g + 0.15, stair: true });   // (the doorstep, lighthouse.js, to z 3.3)
     for (const S of LH_STEPS) physics.add({ type: 'box', x: L.x, z: L.z + (S.z0 + S.z1) / 2, hw: LH_STEP_W / 2, hd: (S.z1 - S.z0) / 2 + 0.12, rot: 0, top: g + S.top, stair: true });   // (the steps up to the door; +0.12: overlapping, no seam to drop through under groundAt's 5 cm shrink, as the rooms' stairs)
     W.lighthouse = { lampMat, beam, light, power: 0 };
@@ -1299,7 +1301,6 @@ export function* buildWorldSteps(parentScene) {
     let n = Math.ceil((P.h - base) / 1.05), endTop = P.h - 0.15;
     for (let pass = 0; pass < 2; pass++) { endTop = Math.max(P.h - 0.15, rimTop(at(n, n - 1))); n = Math.ceil((endTop + 0.15 - base) / 1.05); }
     W.stones = [];
-    const stoneMat = mat('#8d8578', { roughness: 0.95 });
     const rockMat = W_cliffs.mesh.material;   // (STONES-31: the cliff rocks' own material: one program, no new texture)
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
@@ -1382,16 +1383,23 @@ export function* buildWorldSteps(parentScene) {
 
     // shard pedestal on top of the plateau
     const pg = H(P.x, P.z);
-    add(scene, new THREE.CylinderGeometry(0.8, 1.0, 1.0, 8), mat('#cfc6b4'), P.x, pg + 0.5, P.z);
     physics.add({ type: 'cyl', x: P.x, z: P.z, r: 0.9, top: pg + 1.0 });
     W.shard1Spot = { x: P.x, y: pg + 2.0, z: P.z };
-    // some standing stones up there
+    // some standing stones up there, round the shard's pedestal
+    // (STONES-PLATEAU, release audit v75: they were bare flat-grey boxes and the pedestal a plain grey drum, seven draws;
+    //  now rough slabs of the cliff's own rock with lichen, broad face to the centre, and a hand-cut pedestal, in the
+    //  cliff rocks' material as the stepping stones (STONES-31): one mesh for all seven, cliffs.js plateauStonesGeometry.
+    //  The colliders are the ones they had)
+    const ring = [];
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2;
       const x = P.x + Math.cos(a) * 6.5, z = P.z + Math.sin(a) * 6.5 / 1.15;
-      add(scene, new THREE.BoxGeometry(0.9, 3 + (i % 2), 0.6), stoneMat, x, H(x, z) + 1.5, z, { ry: -a });
+      ring.push({ x, z, ry: Math.atan2(Math.cos(a), Math.sin(a)) + Math.sin(i * 2.3) * 0.22, h: 3 + (i % 2) * 0.5, seed: 7301 + i * 613 });
       physics.add({ type: 'cyl', x, z, r: 0.6, top: H(x, z) + 3.5 });
     }
+    const plateauStones = new THREE.Mesh(plateauStonesGeometry({ stones: ring, pedestal: { x: P.x, z: P.z, y: pg, h: 1.0 }, ground: H }), W_cliffs.mesh.material);
+    plateauStones.castShadow = plateauStones.receiveShadow = true; plateauStones.name = 'plateauStones';
+    scene.add(plateauStones);
   }
 
   yield 'landmarks';

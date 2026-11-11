@@ -104,7 +104,7 @@ Object.assign(STR.en, {
 Object.assign(STR.en, {
   rs_dg_surv_1: "The rim moved a finger's width since spring. I wrote it down. Nobody read it.",
   rs_dg_rod_1: "Best view on the island, the far rim. Mostly of the surveyor's back.",
-  rs_dg_cook_1: "The crew eats at sunset. Well, when the sun dips a bit. It never quite goes.",
+  rs_dg_cook_1: "The crew eats when I bang the pot. I bang the pot when I'm hungry.",
   rs_dg_haul_0: "Ask Imre what's in the crates. He has a list. He loves his list.",
   rs_dg_haul_1: "Big crates, little crates. My back can't tell them apart anymore.",
   rs_dg_porter_0: "The yacht man waves when he passes. I wave back with a crate. It's harder than it looks.",

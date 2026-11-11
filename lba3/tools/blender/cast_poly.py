@@ -83,6 +83,8 @@ CAST = {
     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
+    'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
+                     moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
@@ -95,6 +97,7 @@ CAST = {
     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)
     'nara': dict(lashes=True, browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.9),
+    'nara_b': dict(lashes=True, browS=1.0, browTilt=0.1, mouthLift=0.6, noseS=0.95, robeLong=True, beltBand=True),   # (CAST-POLISH-UNDERGROUND: the long dress)
     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
@@ -928,20 +931,22 @@ def build(name):
                 # CAST-POLISH-CITADEL-2 (GOGGLES-NELL): the goggles were two gold drums with flat gold faces, coins on her
                 # brow. Now each is a brass cup with a rolled rim round a dark glass lens set into it (a darker shade of the
                 # brass), joined over the nose by a short bridge; the strap as before.
+                # (CAST-POLISH-UNDERGROUND: CAST gogglesN / gogglesRimN give a cheaper pair, 12 and 6 round as Nell's by default)
+                gn_, gs_ = cp.get('gogglesN', 12), cp.get('gogglesRimN', 6)
                 gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
                 for sxx in (1, -1):
                     c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
                     e_ = (c[0], c[1] + 0.006, c[2] + 0.03)
-                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, 12, cap=False)
+                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, gn_, cap=False)
                     d_ = Vector(e_) - Vector(c)
                     d_.normalize()
                     u_ = d_.cross(Vector((1, 0, 0))).normalized()
                     w_ = d_.cross(u_).normalized()
-                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)]
-                    cord(gg, rim_, 0.0035 * sx_, 6, True)
+                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)]
+                    cord(gg, rim_, 0.0035 * sx_, gs_, True)
                     lens_c = Vector(e_) - d_ * 0.004
-                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)] + [tuple(lens_c + d_ * 0.003)]
-                    gls_.add(lv, [[k, (k + 1) % 12, 12] for k in range(12)], 180)
+                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lens_c + d_ * 0.003)]
+                    gls_.add(lv, [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
                 cord(gg, [(-0.012 * sx_, my(0.937), mz(0.118) + 0.012), (0, my(0.94), mz(0.122) + 0.014), (0.012 * sx_, my(0.937), mz(0.118) + 0.012)], 0.003 * sx_, 5, False)
             else:
                 for sxx in (1, -1):
@@ -2232,6 +2237,13 @@ def build_vesk(name):
             cf.append([j * M + i, j * M + i + 1, (j + 1) * M + i + 1, (j + 1) * M + i])
     b.P('collar', coat, 'torso', 40).add(cv, cf)
     b.P('collarIn', lining, 'torso', 40).add([(x * 0.97, y, z * 0.97 + 0.004) for x, y, z in cv], [f[::-1] for f in cf])
+    if not os.environ.get('VESK_OLD'):
+        # CAST-POLISH-UNDERGROUND (VESK-COLLAR; VESK_OLD=1 builds the old one): the collar was two bare shells 4 mm apart, its
+        # top and its two front edges a paper line against the sky in the close shots. Now the lining rolls over them: a round
+        # edge 1.8 cm thick along both fronts and the top, on the shells' middle, in the lining's violet.
+        mid = lambda j, i: (lambda q: (q[0] * 0.985, q[1], q[2] * 0.985 + 0.002))(cv[j * M + i])
+        edge = [mid(0, 0), mid(1, 0)] + [mid(2, i) for i in range(M)] + [mid(1, M - 1), mid(0, M - 1)]
+        cord(b.P('collarEdge', lining, 'torso', 40), edge, 0.009, 6, False)
     # pauldrons: angular brass plates on the shoulders
     for s_, sx in (('L', 1), ('R', -1)):
         sh = bp('sh' + s_)

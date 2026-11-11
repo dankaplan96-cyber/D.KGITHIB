@@ -467,7 +467,10 @@ const sailTex = () => ctex('yachtSail', 128, 256, (x, W, H) => {
 const awningTex = (a, b) => ctex('aw' + a + b, 64, 64, (x, S) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? b : a; x.fillRect(i * S / 4, 0, S / 4, S); } });
 const signTex = (text, bg = '#2f6a7a', w = 256) => ctex('sign' + text, w, 96, (x, W, H) => {   // (w: a longer text needs a wider board)
   x.fillStyle = bg; x.fillRect(0, 0, W, H); x.strokeStyle = '#f2e6c8'; x.lineWidth = 6; x.strokeRect(6, 6, W - 12, H - 12);
-  x.fillStyle = '#f2e6c8'; x.font = 'bold 38px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 2);
+  // (SIGN-BACK: a text wider than the board inside its border is set smaller to fit: the research post's read
+  //  "OINT PROJECT · RESEARCH POS", both ends cut off)
+  x.font = 'bold 38px sans-serif'; const fit = Math.min(38, Math.floor(38 * (W - 36) / Math.max(1, x.measureText(text).width)));
+  x.fillStyle = '#f2e6c8'; x.font = `bold ${fit}px sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 2);
 }, false);
 
 // ================================================================== palms (the oasis's swaying ones, and still ones elsewhere)
@@ -1072,7 +1075,10 @@ export function* buildDesertSteps(scene, physics) {
     PB.add(bbox(1.1, 0.6, 0.4, 0.05, 1), pm('#fff4d0', 0.3, { emissive: '#ffe0a0', emissiveIntensity: 1.2 }), 56.6, postY + 8, -9.4, 0.4, 0.6, 0);
     PB.build();
     // a sign on the gate
-    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8, side: THREE.DoubleSide }));
+    // (SIGN-BACK, release audit v75: one double-sided plane read mirrored from inside the post; two planes back to
+    //  back in one geometry, each drawn from its front only, read the right way round from both sides: still one draw)
+    const both = cached('emqBoth', () => mergeGeos([[emq(), new THREE.Matrix4()], [emq(), new THREE.Matrix4().makeRotationY(Math.PI)]]));
+    const sg = new THREE.Mesh(both, new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8 }));
     sg.scale.set(3.4, 0.9, 1); sg.position.set(POST.x0 - 0.1, postY + 3.3, POST.gateZ); sg.rotation.y = -Math.PI / 2; group.add(sg);
     R.reads.push({ id: 'post', ...W(POST.x0 - 2.2, POST.gateZ), r: 1.8 });   // (read from before the gate)
     dressPost({ group, H, col, ox, oz, updaters, occ: () => roomOcc(R, physics.terrain) }, POST);   // (POLISH-AUDIT #15: awnings, a break corner, the equipment of the job)
