@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
-from lbapoly import Builder, hand_detail, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
+from lbapoly import Builder, hand_detail, loft, mouth_lens, ring, smooth, sphere, trunk_loft, trunk_weights, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUT = args[0], args[1]
@@ -253,27 +253,14 @@ def on_face(x, y, lift=0.003):
 
 # the trunk: a tube along its centre line, tapering; weighted head → trunk0 → trunk1 → trunk2 down its length
 TB = [bp('trunk0'), bp('trunk1'), bp('trunk2')]
-
-
-def w_trunk(p):
-    y = p[1]
-    a = smooth(TB[0][1] + 0.08, TB[0][1] - 0.12, y)          # (the root stays with the face)
-    c = smooth(TB[1][1] + 0.12, TB[1][1] - 0.06, y)
-    d = smooth(TB[2][1] + 0.10, TB[2][1] - 0.06, y)
-    return {k: v for k, v in (('head', 1 - a), ('trunk0', a * (1 - c)), ('trunk1', c * (1 - d)), ('trunk2', d)) if v > 1e-4}
-
-
-trunk = b.P('trunk', COL['skin'], w_trunk, 60)
-TN = 10
-tr = []
-for k, (y, z, r) in enumerate(TRUNK):
-    a = TRUNK[max(0, k - 1)]
-    c = TRUNK[min(len(TRUNK) - 1, k + 1)]
-    ty, tz = c[0] - a[0], c[1] - a[1]
-    ln = math.hypot(ty, tz)
-    ny, nz = -tz / ln, ty / ln            # (the normal in the y-z plane)
-    tr.append([m((r * math.sin(2 * math.pi * i / TN), y + ny * r * math.cos(2 * math.pi * i / TN), z + nz * r * math.cos(2 * math.pi * i / TN))) for i in range(TN)])
-loft(trunk, tr, cap_top=True)
+# TRUNK-1 (the user, 5.11: "their trunk doesn't look good"): it was nine 10-sided rings joined straight (a facet line at each
+# measured section), cut off flat at the tip, its weights handed over on height alone in short zones (it folded where the
+# swing turned it). Now the same measured centre line and radii as one smooth tube on the curve through them (lbapoly
+# trunk_loft: rings every 6.5 cm, closer over the wrinkles, 10 sides), a rounded tip, three faint wrinkles on its top, weighted along its length
+# with wide hand-overs at the bones (trunk_weights)
+trunk = b.P('trunk', COL['skin'], 'head', 80)
+tarc = trunk_loft(trunk, [(y * BH, z * BH, r * BH) for y, z, r in TRUNK], 10, 0.065, ridges=((0.2, 0.06), (0.27, 0.06), (0.34, 0.05)))
+trunk.weights = trunk_weights(tarc, [tarc(p) for p in TB])
 # the mouth: a small teal triangle laid on the face under the trunk's root
 mo = b.P('mouth', COL['mouth'], 'head', 20)
 mv = [on_face(x, y, 0.004) for x, y in MOUTH]

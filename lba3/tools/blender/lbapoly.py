@@ -149,6 +149,114 @@ def tube(part, a, b, ra, rb, n=8, cap=True, squash=1.0, hard=False):
     return part
 
 
+def catmull(pts, k=16):
+    """TRUNK-1: points on the Catmull-Rom curve through pts (tuples of any length: a position and, say, a radius), k per
+    interval, both ends included."""
+    out, n = [], len(pts)
+    for i in range(n - 1):
+        a, b, c, d = pts[max(0, i - 1)], pts[i], pts[i + 1], pts[min(n - 1, i + 2)]
+        for j in range(k):
+            t = j / k
+            t2, t3 = t * t, t * t * t
+            out.append(tuple(0.5 * (2 * b[q] + (c[q] - a[q]) * t + (2 * a[q] - 5 * b[q] + 4 * c[q] - d[q]) * t2 + (3 * b[q] - a[q] - 3 * c[q] + d[q]) * t3)
+                             for q in range(len(b))))
+    out.append(tuple(pts[-1]))
+    return out
+
+
+def trunk_loft(part, pts, n=10, step=0.07, ridges=(), ridge_w=0.025, x=0.0):
+    """TRUNK-1: a trunk (a Grobo's) as ONE smooth tube along the curve through pts = [(y, z, radius)] in the plane x = 0,
+    from its root (buried in the face) to a rounded tip: rings every `step` of length on the Catmull-Rom curve (so it
+    bends without kinks and tapers smoothly: the radius is on the same curve), a domed end instead of a flat cap.
+    ridges = [(s, depth)]: faint wrinkles at those fractions of its length, raised on its outer side only (the side away
+    from the body, which the camera sees). Returns arc(p): the fraction of the length at a vertex, for its weights."""
+    dense = catmull(pts, 16)
+    acc = [0.0]
+    for a, b in zip(dense, dense[1:]):
+        acc.append(acc[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    total = acc[-1]
+
+    def at(s):
+        """centre (y, z), radius and unit tangent (ty, tz) at the length s"""
+        s = max(0.0, min(total, s))
+        i = max(0, min(len(dense) - 2, next((k for k in range(1, len(acc)) if acc[k] >= s), len(acc) - 1) - 1))
+        seg = acc[i + 1] - acc[i]
+        t = (s - acc[i]) / seg if seg > 1e-12 else 0.0
+        a, b = dense[i], dense[i + 1]
+        ty, tz = b[0] - a[0], b[1] - a[1]
+        ln = math.hypot(ty, tz) or 1.0
+        return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t), a[2] + (b[2] - a[2]) * t, (ty / ln, tz / ln)
+
+    # (stations: `step` apart, three times closer over the wrinkles so each one is a ridge, not a facet)
+    ss, s = [0.0], 0.0
+    while s < total:
+        u = s / total
+        s += step / 3 if any(abs(u - s0) < 2.2 * ridge_w for s0, _ in ridges) else step
+        ss.append(min(s, total))
+    if len(ss) > 2 and total - ss[-2] < step * 0.4:
+        del ss[-2]
+    rings = []
+    for s in ss:
+        (cy, cz), r, (ty, tz) = at(s)
+        ny, nz = -tz, ty                          # (the normal in the y-z plane)
+        u = s / total
+        rr = []
+        for i in range(n):
+            th = 2 * math.pi * i / n
+            ox, on = math.sin(th), math.cos(th)
+            # (the outer side: the one facing away from the body, -normal for a trunk hanging forward and down)
+            out_ = max(0.0, -on)
+            bump = 1 + sum(dep * math.exp(-((u - s0) / ridge_w) ** 2) for s0, dep in ridges) * out_ if ridges else 1.0
+            rr.append((x + r * bump * ox, cy + r * bump * on * ny, cz + r * bump * on * nz))
+        rings.append(rr)
+    # the round tip: three shrinking rings and an apex along the end's tangent
+    (cy, cz), r, (ty, tz) = at(total)
+    ny, nz = -tz, ty
+    for ph in (0.55, 1.0, 1.35):                 # (the last ring's small cap closes it at 0.98 of the radius)
+        cr, off = r * math.cos(ph), r * math.sin(ph)
+        rings.append([(x + cr * math.sin(2 * math.pi * i / n), cy + ty * off + cr * math.cos(2 * math.pi * i / n) * ny,
+                       cz + tz * off + cr * math.cos(2 * math.pi * i / n) * nz) for i in range(n)])
+    # orient the faces outward (as tube(): the ring order counter-clockwise seen from the tip)
+    (y0, z0), _, (ty0, tz0) = at(0.0)
+    a0 = Vector((x, y0, z0))
+    if (Vector(rings[0][1]) - a0).cross(Vector(rings[0][0]) - a0).dot(Vector((0.0, ty0, tz0))) > 0:
+        rings = [list(reversed(rg)) for rg in rings]
+    f0 = len(part.f)
+    loft(part, rings, cap_top=True)              # (the root's end is buried in the face: left open)
+    for k in range(f0, len(part.f)):
+        part.f[k].angle = 180                    # (smooth all over: no edge to keep on a trunk)
+
+    def arc(p):
+        best, bs = 1e30, 0.0
+        for k, d in enumerate(dense):
+            q = (p[1] - d[0]) ** 2 + (p[2] - d[1]) ** 2
+            if q < best:
+                best, bs = q, acc[k]
+        return bs / total
+    arc.total = total
+    return arc
+
+
+def trunk_weights(arc, piv, root='head', bones=('trunk0', 'trunk1', 'trunk2'), k=0.45):
+    """TRUNK-1: weights along a trunk from its root bone through its chain: each bone takes over round its pivot (piv:
+    the fraction of the length at each bone, from arc()), the hand-over spread over k of the gap to the neighbours, so
+    a swing bends the trunk in a smooth curve instead of folding it at a joint."""
+    zones = []
+    for i, s in enumerate(piv):
+        lo = s - (piv[i - 1] if i else 0.0)
+        hi = (piv[i + 1] if i + 1 < len(piv) else 1.0) - s
+        zones.append((s - k * lo, s + k * hi))   # (k < 0.5: neighbouring hand-overs never overlap)
+
+    def w(p):
+        u = arc(p)
+        g = [smooth(a, b, u) for a, b in zones]
+        out = {root: 1 - g[0]}
+        for i, bn in enumerate(bones):
+            out[bn] = g[i] * (1 - g[i + 1]) if i + 1 < len(g) else g[i]
+        return {b: v for b, v in out.items() if v > 1e-4}
+    return w
+
+
 def sphere(part, c, r, nu=10, nv=7, s=(1.0, 1.0, 1.0), hard=False, exact=False):
     """A ball (an ellipsoid with the scales s). CAST-UNIFORM: at least the segments SPHERE_MIN asks for its size, and
     smooth-shaded all over (a ball has no edge to keep), unless hard. `exact` keeps the segments asked (a ball mostly
