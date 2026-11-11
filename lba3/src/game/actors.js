@@ -11,6 +11,7 @@ import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
 import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { workHands } from './workhands.js';
 import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
@@ -864,6 +865,7 @@ export class NPC extends Actor {
     this.forceAnim = def.anim || null;
     this.present = true;
     this.rig.plantIfFits();   // (ANIM-POLISH-3: the stance foot held in the walk, two-step stops, stepping turns: Rig._plant)
+    workHands(game, this);    // (NO-AIR: a working hand is put on what stands there: workhands.js)
   }
   setPresent(on) {
     this.present = on;

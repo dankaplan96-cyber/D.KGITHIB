@@ -85,7 +85,18 @@ export class Chapter1 extends ChapterBase {
       case 'worker':
         // (POLISH-A: on the pier's north side, working toward the crane's mast, 3.4 m from Xil and clear of Vesk's way off
         //  the gangway: he stood 0.6 m from Xil's middle, the two bodies in each other)
-        if (!f.c1_water) return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
+        if (!f.c1_water) {
+          // (NO-AIR: at the lift's control on the mast's landward face — island.js cargoLift — both hands on it; he
+          //  stood 2 m short of the mast and cranked the air)
+          const L = W.cargoLift;
+          if (L?.knob) {
+            L.knob.updateWorldMatrix(true, false);
+            const k = L.knob.getWorldPosition(new THREE.Vector3()), m = L.group.localToWorld(new THREE.Vector3(L.mast.x, 0, L.mast.z));
+            let dx = k.x - m.x, dz = k.z - m.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
+            return { x: k.x + dx * 0.46, z: k.z + dz * 0.46, a: Math.atan2(-dx, -dz), anim: 'use' };
+          }
+          return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
+        }
         return R.control?.npcSpots?.worker ?? { x: gateIn.x + 2, z: gateIn.z + 2, a: 0 };
       case 'guard':
         // (POLISH-A: on the quay beside the way onto the pier: he stood in the harbour bell's post and the mouth's pillar)
