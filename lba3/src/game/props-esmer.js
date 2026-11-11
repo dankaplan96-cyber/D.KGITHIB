@@ -866,6 +866,55 @@ export function blossomTree(P, { h = 3.2, seed = 0 } = {}) {
   P.cyl(0, 0, 0.25, h * 0.6); P.r = 0.9;
   return P;
 }
+// ZEELICH-2: Otringal's plants as the original's (numbers and a look at its bodies only): its street trees (bodies 52–54,
+// 1.2 m square, 3.3 m tall) a square stone planter of greenery with a thin twisting trunk and a long golden plume; its
+// gardens' fan plant (body 18, 2.8 × 3.0 m, 3.8 m tall) golden blades spread like a fan with red fruit. Our own shapes,
+// vertex-coloured, one material (no green crowns on Otringal: the original's vegetation there is gold).
+export function frondTree(P, { h = 3.3, s = 1.2, seed = 0 } = {}) {
+  const v = seed % 3;
+  P.add(cached('efrond' + v, () => {
+    const r = rng(211 + v * 31), parts = [];
+    parts.push([tint(bbox(1, 0.5, 1, 0.04, 1), '#b8b2aa'), 0, 0.25, 0]);
+    parts.push([tint(bbox(1.06, 0.08, 1.06, 0.02, 1), '#d8d2c8'), 0, 0.52, 0]);
+    for (let k = 0; k < 5; k++) parts.push([tint(new THREE.IcosahedronGeometry(0.2 + r() * 0.08, 0), k % 2 ? '#5a8a52' : '#7aa05a'), (r() - 0.5) * 0.6, 0.58, (r() - 0.5) * 0.6]);
+    const tw = [[0, 0.5, 0]]; for (let k = 1; k <= 6; k++) { const a = k * 1.3 + v; tw.push([Math.sin(a) * 0.09 * (1 - k / 8), 0.5 + k * 0.33, Math.cos(a) * 0.09 * (1 - k / 8)]); }
+    parts.push([tint(tube(tw, 0.045, 5, 1), '#a8642e')]);
+    parts.push([tint(lathe([[0, 0], [0.12, 0.12], [0.2, 0.45], [0.2, 0.85], [0.13, 1.15], [0.05, 1.32], [0, 1.4]], 8), '#e0a03a'), tw[6][0], 2.42, tw[6][2], 0.08 * (v - 1), 0, 0.06]);
+    for (let k = 0; k < 4; k++) { const a = k * 1.6 + v; parts.push([tint(new THREE.IcosahedronGeometry(0.11, 0), '#f4cc6a'), tw[6][0] + Math.sin(a) * 0.17, 2.6 + k * 0.25, tw[6][2] + Math.cos(a) * 0.17]); }
+    return compose(parts, true);
+  }), EM.vc(), 0, 0, 0, 0, seed * 0.7, 0, s, h / 3.82, s);
+  P.box(0, 0, s / 2, s / 2, 0.55); P.r = s * 0.7;
+  return P;
+}
+export function goldPlant(P, { h = 3.8, w = 2.8, seed = 0 } = {}) {
+  P.add(cached('egoldplant', () => {
+    const r = rng(307), parts = [];
+    const blade = () => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(0.34, 0.5, 0.16, 1.2); sh.lineTo(0, 1.32); sh.lineTo(-0.16, 1.2); sh.quadraticCurveTo(-0.34, 0.5, 0, 0); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: false, curveSegments: 4 }); g.translate(0, 0, -0.02); return g; };
+    parts.push([tint(cyl(0.12, 0.16, 0.7, 6), '#8a5a2a'), 0, 0.35, 0]);
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * Math.PI * 2 + r() * 0.4, lean = 0.45 + r() * 0.35, sc = 0.9 + r() * 0.35;
+      parts.push([tint(blade(), k % 2 ? '#e8b440' : '#d8963a'), Math.sin(a) * 0.12, 0.62, Math.cos(a) * 0.12, lean, a, 0, sc, sc * 1.4, sc]);
+    }
+    for (let k = 0; k < 4; k++) { const a = k * 1.7 + 0.5; parts.push([tint(new THREE.SphereGeometry(0.16, 8, 6), '#c0383a'), Math.sin(a) * 0.55, 1.5 + r() * 0.6, Math.cos(a) * 0.55]); }
+    return compose(parts, true);
+  }), EM.vc(), 0, 0, 0, 0, seed * 1.1, 0, w / 2.6, h / 2.5, w / 2.6);
+  P.cyl(0, 0, w * 0.22, h * 0.6); P.r = w * 0.45;
+  return P;
+}
+// Otringal's railings (the original's body 5, 90 of them): grey stone posts with a teal band, two teal metal rails;
+// a hazard-striped bar on teal legs where the original's is striped (body 50). Along +x, len long, h high.
+export function railing(P, { len = 1.7, h = 1.3, hazard = false } = {}) {
+  const n = Math.max(2, Math.round(len / 1.7) + 1);
+  for (let q = 0; q < n; q++) {
+    const u = -len / 2 + (q / (n - 1)) * len;
+    if (hazard) { P.add(cached('erailleg', () => cyl(0.06, 0.07, 1, 6)), EM.teal(), u, h / 2, 0, 0, 0, 0, 1, h, 1); continue; }
+    P.add(cached('erailpost', () => lathe([[0.11, 0], [0.11, 0.86], [0.06, 1.0], [0, 1.04]], 8, 0, Math.PI / 8)), EM.stone(), u, 0, 0, 0, 0, 0, 1, h, 1);
+    P.add(cached('erailband', () => cyl(0.118, 0.118, 0.1, 8, 0, true)), EM.teal(), u, h * 0.72, 0);
+  }
+  if (hazard) P.add(bbox(len, 0.14, 0.1, 0.02, 1), EM.hazard(), 0, h * 0.92, 0);
+  else for (const y of [0.42, 0.84]) P.add(bbox(len, 0.08, 0.06, 0.015, 1), EM.teal(), 0, h * y, 0);
+  return P;
+}
 // a broken column: a turned stone shaft snapped off at a slant (its height varies)
 export function brokenCol(P, { h = 2.2 } = {}) {
   P.add(cached('ebrokecol', () => { const g = lathe([[0.42, 0], [0.42, 0.18], [0.3, 0.26], [0.28, 1.0], [0.27, 1.0]], 10, 1.2), p = g.attributes.position; for (let i = 0; i < p.count; i++) if (p.getY(i) > 0.5) p.setY(i, p.getY(i) - p.getX(i) * 0.35); g.computeVertexNormals(); return g; }), EM.stone(), 0, 0, 0, 0, 0, 0, 1, h, 1);
@@ -1013,6 +1062,65 @@ export const latticeTex = () => ctex('elattice', 128, 128, (x, S) => {
 let LATTICE = null;
 export const latticeM = () => (LATTICE ||= new THREE.MeshStandardMaterial({ map: latticeTex(), roughness: 0.4, emissive: '#3a2a50', emissiveIntensity: 0.4 }));
 
+// ZEELICH-2 (the user, 4.11: "Zeelich doesn't look like LBA2's Zeelich"): LBA2's Esmer look, for the places that ask
+// for it (Otringal: zislands.js STYLE.look; the terminal island: zeelich.js). Measured on the original's Otringal
+// bodies drawn from the play camera's side (numbers only): walls banded with glass blocks, cyan #68a9ce on a dark
+// joint, where ours had painted diamonds in teal, gold and rose; window glass teal (#4c768b–#78a1a7), where ours was
+// violet; low faceted octagonal caps in pale aqua (#78a1a7–#a1b9ba) or gold mosaic (#ab7945) under a gold spike,
+// where ours had tall ribbed onions; a plain stone coping where ours had scalloped merlons. Set while a place is
+// built (setLook(true)), cleared after (setLook(null)); without it every builder draws as before.
+let LOOK = null;
+export function setLook(on) { LOOK = on ? {} : null; }
+export const glassTex = () => ctex('eglass', 128, 128, (x, S) => {
+  const r = rng(29), q = S / 4;
+  x.fillStyle = '#34525c'; x.fillRect(0, 0, S, S);
+  for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+    const x0 = i * q + 2, y0 = j * q + 2, w = q - 4, k = 0.92 + r() * 0.14;
+    const g = x.createLinearGradient(x0, y0, x0 + w, y0 + w);
+    g.addColorStop(0, `rgb(${176 * k | 0},${222 * k | 0},${238 * k | 0})`); g.addColorStop(0.5, `rgb(${120 * k | 0},${184 * k | 0},${216 * k | 0})`); g.addColorStop(1, `rgb(${92 * k | 0},${150 * k | 0},${184 * k | 0})`);
+    x.fillStyle = g; x.fillRect(x0, y0, w, w);
+    x.fillStyle = 'rgba(230,244,250,0.5)'; x.fillRect(x0 + 3, y0 + 3, w - 10, 2); x.fillRect(x0 + 3, y0 + 3, 2, w - 10);
+  }
+});
+export const glassM = () => cm(glassTex(), { rough: 0.4, metal: 0 });
+// the band of tiles on a building (frieze, door frame, drum): glass blocks in LBA2's look
+export const archTiles = () => (LOOK ? glassM() : EM.tiles());
+// window glass: pale stone glazing bars on teal glass (in LBA2's look; the violet lattice otherwise)
+const tealLatticeTex = () => ctex('etlattice', 128, 128, (x, S) => {
+  const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, '#5e9cac'); g.addColorStop(1, '#2e6474'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+  x.fillStyle = 'rgba(220,240,244,0.22)'; x.fillRect(8, 8, 40, 6);
+  x.strokeStyle = '#d8d8d0'; x.lineWidth = 6; x.beginPath();
+  for (const v of [0, 64, 128]) { x.moveTo(v, 0); x.lineTo(v, S); x.moveTo(0, v); x.lineTo(S, v); }
+  x.stroke(); x.lineWidth = 2.5; x.beginPath(); for (const v of [32, 96]) { x.moveTo(v, 0); x.lineTo(v, S); x.moveTo(0, v); x.lineTo(S, v); } x.stroke();
+});
+let TLATTICE = null;
+export const tealGlassM = () => (TLATTICE ||= new THREE.MeshStandardMaterial({ map: tealLatticeTex(), roughness: 0.3, metalness: 0.1, emissive: '#1c4a58', emissiveIntensity: 0.35 }));
+export const windowM = () => (LOOK ? tealGlassM() : latticeM());
+// a cap's painted surface: mottled stucco-marble with fine tesserae (aqua, or gold mosaic)
+export const capTex = (base, hi) => ctex('ecap' + base + hi, 128, 128, (x, S) => {
+  const r = rng(base.length * 11 + 5);
+  x.fillStyle = base; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 70; i++) {
+    const px = r() * S, py = r() * S, rr = 4 + r() * 14, rot = r() * 3;
+    x.globalAlpha = 0.25 + r() * 0.25; x.fillStyle = r() < 0.6 ? hi : '#1e2828';
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { x.beginPath(); x.ellipse(px + ox, py + oy, rr, rr * 0.7, rot, 0, 7); x.fill(); }
+  }
+  x.globalAlpha = 0.16; x.strokeStyle = '#1e2a2a'; x.lineWidth = 1;
+  for (let v = 0; v <= S; v += 8) { x.beginPath(); x.moveTo(v, 0); x.lineTo(v, S); x.moveTo(0, v); x.lineTo(S, v); x.stroke(); }
+  x.globalAlpha = 1;
+});
+export const capM = ([base, hi]) => cm(capTex(base, hi), { rough: 0.55, metal: 0.05 });
+// the Esmer cap (radius R0 at its eave, height H): a low faceted octagon with a gold ring at its eave (the spike on
+// top: capSpike, 1 tall at scale 1)
+const CAP = [[1, 0], [1, 0.07], [0.92, 0.13], [0.79, 0.36], [0.57, 0.63], [0.3, 0.86], [0.1, 0.97], [0, 1]];
+export function capParts(R0, H) {
+  const k = R0.toFixed(2) + '|' + H.toFixed(2);
+  const shell = cached('ecapshell' + k, () => { const g = lathe(CAP.map(([a, b]) => [a * R0, b * H]), 8, 1.1, Math.PI / 8).toNonIndexed(); g.computeVertexNormals(); return g; });
+  const rib = cached('ecapring' + k, () => new THREE.TorusGeometry(R0 * 1.01, Math.max(0.035, R0 * 0.035), 4, 8).rotateX(Math.PI / 2).rotateY(Math.PI / 8).translate(0, 0.04, 0));
+  return { shell, rib };
+}
+export const capSpike = () => cached('ecapspike', () => lathe([[0, 0], [0.13, 0], [0.13, 0.06], [0.07, 0.14], [0.1, 0.24], [0.04, 0.34], [0.02, 0.92], [0, 1]], 8));
+
 // the onion dome (radius R0 at its foot, height H): a shell and gilded ribs along it (the finial goes on top)
 const ONION = [[1, 0], [1.12, 0.128], [1.16, 0.256], [1.06, 0.42], [0.78, 0.585], [0.42, 0.728], [0.16, 0.862], [0.02, 1]];
 const onionAt = (t) => { for (let i = 1; i < ONION.length; i++) if (t <= ONION[i][1]) { const [a0, b0] = ONION[i - 1], [a1, b1] = ONION[i]; return a0 + (a1 - a0) * ((t - b0) / (b1 - b0)); } return 0.02; };
@@ -1058,16 +1166,31 @@ export function domeStack(P, { x = 0, z = 0, base, h, R, wallM, domeM, drum = tr
   const M = (ly, lx = 0, lz = 0, lry = 0, s = 1) => { const [wx, wz] = P.pt(x + lx, z + lz); return new THREE.Matrix4().compose(_bv.set(wx, P.y + ly, wz), _bq.setFromEuler(_be.set(0, P.ry + lry, 0, 'YXZ')), _bs.set(s, s, s)); };
   const Hd = h - base, fin = Math.min(0.85, Math.max(0.3, Hd * 0.13)), rest = Hd - fin * 0.92;
   let R0 = R / 1.16, hdr = drum ? Math.min(1.2, Math.max(0.4, rest * 0.22)) : 0, hdm = rest - hdr;
-  if (hdm > 2.0 * R0) { if (drum) hdr += hdm - 2.0 * R0; hdm = 2.0 * R0; }
-  if (hdm < R0) R0 = Math.max(0.6, hdm);
+  if (LOOK) {   // (ZEELICH-2: a low faceted cap, its eave R wide; a drum takes the height the cap leaves, a tower's cap may be steep)
+    const capMax = drum ? 0.72 : 1.8;
+    R0 = R; hdr = drum ? Math.min(1.2, Math.max(0.4, rest * 0.3)) : 0; hdm = rest - hdr;
+    if (hdm > capMax * R0) { if (drum) hdr += hdm - capMax * R0; hdm = capMax * R0; }
+    hdm = Math.max(0.3, hdm);
+  } else {
+    if (hdm > 2.0 * R0) { if (drum) hdr += hdm - 2.0 * R0; hdm = 2.0 * R0; }
+    if (hdm < R0) R0 = Math.max(0.6, hdm);
+  }
   if (drum) {
-    const k = R0.toFixed(2) + '|' + hdr.toFixed(2), bh = Math.min(0.28, hdr * 0.25);
-    P.B.addM(cached('edrum' + k, () => lathe([[R0 + 0.1, 0], [R0 + 0.1, 0.14], [R0, 0.2], [R0, hdr - 0.14], [R0 + 0.12, hdr - 0.1], [R0 + 0.12, hdr], [0, hdr]], 20, 2.2)), wallM, M(base));
-    if (hdr >= 0.5) P.B.addM(cached('edrumband' + k, () => cyl(R0 + 0.012, R0 + 0.012, bh, 20, 1, true)), EM.tiles(), M(base + 0.2 + bh / 2));
-    if (hdr >= 0.85) {
+    // (ZEELICH-2: in LBA2's look an octagonal drum, the glass-block band, teal glass)
+    const seg = LOOK ? 8 : 20, k = R0.toFixed(2) + '|' + hdr.toFixed(2) + (LOOK ? '|8' : ''), bh = Math.min(0.28, hdr * 0.25);
+    P.B.addM(cached('edrum' + k, () => lathe([[R0 + 0.1, 0], [R0 + 0.1, 0.14], [R0, 0.2], [R0, hdr - 0.14], [R0 + 0.12, hdr - 0.1], [R0 + 0.12, hdr], [0, hdr]], seg, 2.2, LOOK ? Math.PI / 8 : 0)), wallM, M(base));
+    if (hdr >= 0.5) P.B.addM(cached('edrumband' + k, () => cyl(R0 + 0.012, R0 + 0.012, LOOK ? Math.min(0.6, hdr * 0.4) : bh, seg, 1, true).rotateY(LOOK ? Math.PI / 8 : 0)), archTiles(), M(base + 0.2 + (LOOK ? Math.min(0.6, hdr * 0.4) : bh) / 2));
+    if (hdr >= 0.85 && !LOOK) {
       const wo = { x: 0, y: 0, w: +Math.min(0.3, R0 * 0.2).toFixed(2), h: +Math.min(0.55, hdr * 0.42).toFixed(2), horse: true };
       for (let q = 0; q < 8; q++) { const a = (q / 8) * Math.PI * 2; P.B.addM(fillGeo(wo, 0.02, 0), latticeM(), M(base + 0.24 + bh + (hdr - 0.38 - bh - wo.h) / 2, Math.sin(a) * (R0 + 0.014), Math.cos(a) * (R0 + 0.014), a)); }
     }
+  }
+  if (LOOK) {
+    const C0 = capParts(R0, hdm), sp = Math.min(1.0, Math.max(0.35, R0 * 0.4));
+    P.B.addM(C0.shell, domeM, M(base + hdr));
+    P.B.addM(C0.rib, EM.brass(), M(base + hdr));
+    P.B.addM(capSpike(), EM.brass(), M(base + hdr + hdm - 0.04, 0, 0, 0, sp));
+    return { R0, top: base + hdr + hdm };
   }
   const D0 = domeParts(R0, hdm, { ribs: R0 > 1.2 ? 8 : 6 });
   P.B.addM(D0.shell, domeM, M(base + hdr));
@@ -1083,7 +1206,7 @@ export function domeStack(P, { x = 0, z = 0, base, h, R, wallM, domeM, drum = tr
 //   (OTR-VARIETY: balconyP / awningP, the chances of a balcony and of the awning; 0.55 and 0.6 as before)
 export function esmerBuilding(P, o) {
   const r = rng(((o.seed | 0) + 1) * 7919 + 17);
-  const { w, d, h } = o, small = Math.min(w, d), wallM = o.wall, stone = EM.stone(), vc = EM.vc(), lat = latticeM();
+  const { w, d, h } = o, small = Math.min(w, d), wallM = o.wall, stone = EM.stone(), vc = EM.vc(), lat = windowM();
   const trim = o.trim || '#3a86b8', accent = o.accent || '#e8b84a', role = o.role || 'house';
   const domed = !!o.domeM && o.domed !== false && h > 4.5 && small >= 2.4;
   const parapet = h >= 2.6 && small >= 1.2 ? 0.46 : 0;
@@ -1157,7 +1280,7 @@ export function esmerBuilding(P, o) {
     add(panelGeo(+sd.len.toFixed(3), ph, t, ops[sd.n].map((op) => ({ x: op.x, y: op.y, w: op.w, h: op.h, horse: true }))), wallM, m);
     // the tiled frieze under the cornice, a string course between the floors
     const fl = sd.face - 0.5;
-    if (!low) add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
+    if (!low) add(bbox(fl, 0.32, 0.05, 0.01, 1), archTiles(), T(m, 0, ph - 0.5, t + 0.02));
     if (row2) add(bbox(fl, 0.1, 0.12, 0.02, 1.8), stone, T(m, 0, row2.y - 0.32, t + 0.04));
     if (row2) fx(sd.n, 'band', -fl / 2, fl / 2, row2.y - 0.37, row2.y - 0.27);
     for (const op of ops[sd.n]) {
@@ -1169,7 +1292,7 @@ export function esmerBuilding(P, o) {
         fx(sd.n, 'door', op.x - op.w / 2 - (op.alfiz ? 0.41 : 0.2), op.x + op.w / 2 + (op.alfiz ? 0.41 : 0.2), op.y, op.y + (op.alfiz ? ah + 0.06 : op.h + 0.2));
       } else fx(sd.n, op.balcony ? 'balcony' : 'window', op.x - Math.max(op.w / 2 + 0.15, op.balcony ? 0.95 : 0), op.x + Math.max(op.w / 2 + 0.15, op.balcony ? 0.95 : 0), op.y - (op.balcony ? 0.5 : op.y < 1 ? 0.3 : 0.08), op.y + op.h + 0.14);
       if (op.door) {
-        add(frameGeo(S0, 0.2, 0.1), EM.tiles(), T(mo, 0, 0, t - 0.02));
+        add(frameGeo(S0, 0.2, 0.1), archTiles(), T(mo, 0, 0, t - 0.02));
         add(fillGeo(S0, 0.03, 0.05), EM.wood(), T(mo, 0, 0, t * 0.3));
         add(cached('edring', () => new THREE.TorusGeometry(0.07, 0.016, 5, 12)), EM.brass(), T(mo, op.w * 0.28, 1.05, t * 0.3 + 0.07));
         // the alfiz: a painted rectangle round the arch
@@ -1207,7 +1330,19 @@ export function esmerBuilding(P, o) {
   const Wt = W - 2 * inset, Dt = D - 2 * inset;
   add(bbox(Wt + 0.34, corn, Dt + 0.34, 0.05, 1.8), stone, M(0, top - corn / 2, 0));
   add(bbox(Wt + 0.16, 0.1, Dt + 0.16, 0.03, 1.8), stone, M(0, top - corn - 0.04, 0));
-  if (parapet) {
+  if (parapet && LOOK) {
+    // (ZEELICH-2: no scalloped merlons in LBA2's look: a plain coping round the roof and, where no cap stands on it, a
+    // low hipped roof in the cap's colour over the cornice, its eaves out past the walls as the original's roofs)
+    for (const [len, ax, lry] of [[Wt + 0.24, Dt / 2 + 0.06, 0], [Wt + 0.24, Dt / 2 + 0.06, Math.PI], [Dt, Wt / 2 + 0.06, Math.PI / 2], [Dt, Wt / 2 + 0.06, -Math.PI / 2]]) {
+      const c = Math.cos(lry), s = Math.sin(lry);
+      add(bbox(len, 0.22, 0.24, 0.03, 1.8), stone, M(s * ax, top + 0.11, c * ax, lry));
+    }
+    if (!domed && o.domeM && !solid) {
+      const rh = Math.min(1.4, Math.max(0.5, Math.min(Wt, Dt) * 0.22)), hx = Wt / 2 + 0.2, hz = Dt / 2 + 0.2;
+      add(cached('ehiproof', () => { const g = lathe([[1, 0], [1, 0.06], [0, 1]], 4, 1, Math.PI / 4).toNonIndexed(); g.computeVertexNormals(); return g; }), o.domeM, M(0, top + 0.02, 0, 0, 0, hx / Math.SQRT1_2, rh, hz / Math.SQRT1_2));
+      add(capSpike(), EM.brass(), M(0, top + rh - 0.04, 0, 0, 0, 0.45, 0.45, 0.45));
+    }
+  } else if (parapet) {
     const mg = merlonGeo(), sy = parapet / 0.5;
     for (const [len, ax, lry] of [[Wt, Dt / 2 + 0.06, 0], [Wt, Dt / 2 + 0.06, Math.PI], [Dt, Wt / 2 + 0.06, Math.PI / 2], [Dt, Wt / 2 + 0.06, -Math.PI / 2]]) {
       const n = Math.floor((len - 0.5) / 0.62), c = Math.cos(lry), s = Math.sin(lry);

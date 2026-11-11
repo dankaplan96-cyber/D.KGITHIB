@@ -23,6 +23,7 @@
 // scatter's random draws, so everything else on the island keeps its place.
 import * as THREE from 'three';
 import { tm, pm, ctex, bbox, boxUV, cyl, lathe, Batch, compose, tint, cached } from './kit.js';
+import { capM } from './props-esmer.js';
 
 const Y0 = 6.0;
 // ---- layout (Zeelich-local coordinates)
@@ -291,8 +292,17 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     const grow = ([r, hh]) => [r * 1.015 + 0.012, hh];
     const fresh = [[R0, 0], [R0 * 1.12, R0 * 0.25], [R0 * 1.16, R0 * 0.5], [R0 * 1.06, R0 * 0.82]].map(grow);
     const bare = [[R0 * 1.06, R0 * 0.82], [R0 * 0.86, R0 * 1.06], [R0 * 0.62, R0 * 1.26]].map(grow);
-    L.add(lathe(fresh, 28, 1.1, -Math.PI * 0.62, Math.PI * 1.24), tm(domeTex('#6a8ae8', '#f0f4ff'), { rough: 0.2, metal: 0.15 }), x, y, z);
-    L.add(lathe(bare, 28, 1.1, -Math.PI * 0.62, Math.PI * 1.24), tm('plaster', { color: '#bab0b4', rough: 0.95 }), x, y, z);
+    if (PH.cap) {
+      // (ZEELICH-2: the dome is LBA2's low faceted cap now (zeelich.js): the new tiles over the cap's lower faces on its
+      // south side, five of its eight, a band of bare mortar above them; the new ones a brighter aqua than the old)
+      const { R: Rc, H: Hc } = PH.cap, g2 = ([r, hh]) => [r * 1.02 + 0.012, hh + 0.004];
+      const flat = (pts) => { const g = lathe(pts.map(g2), 5, 1.1, -Math.PI * 5 / 8, Math.PI * 5 / 4).toNonIndexed(); g.computeVertexNormals(); return g; };
+      L.add(flat([[Rc, 0], [Rc, Hc * 0.07], [Rc * 0.92, Hc * 0.13], [Rc * 0.79, Hc * 0.36]]), capM(['#5aaab8', '#c8f0f0']), x, y, z);
+      L.add(flat([[Rc * 0.79, Hc * 0.36], [Rc * 0.66, Hc * 0.52]]), tm('plaster', { color: '#bab0b4', rough: 0.95 }), x, y, z);
+    } else {
+      L.add(lathe(fresh, 28, 1.1, -Math.PI * 0.62, Math.PI * 1.24), tm(domeTex('#6a8ae8', '#f0f4ff'), { rough: 0.2, metal: 0.15 }), x, y, z);
+      L.add(lathe(bare, 28, 1.1, -Math.PI * 0.62, Math.PI * 1.24), tm('plaster', { color: '#bab0b4', rough: 0.95 }), x, y, z);
+    }
     const rr = R0 * 1.55, poles = 6;
     for (let k = 0; k < poles; k++) {
       const a = (k / poles) * Math.PI * 2 + 0.3, px = x + Math.sin(a) * rr, pz = z + Math.cos(a) * rr * 0.92;
@@ -315,7 +325,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     rodT(LF, [fx + 0.25, top + 3.42, fz + 0.75], [fx + 0.25, Y0 + 1.3, fz + 0.75], 0.008, '#d8c8a0', C.VC, 4);
     L.add(cached('zlbucket', () => tint(cyl(0.16, 0.12, 0.26, 10), '#8a8a90')), C.MVC, fx + 0.25, Y0 + 1.17, fz + 0.75);
     // tile stacks on the roof and at the wall's foot
-    const tileStack = cached('zltiles', () => { const parts = []; for (let i = 0; i < 6; i++) parts.push([tint(bbox(0.34, 0.05, 0.26, 0.01, 1), i % 2 ? '#a888f0' : '#9a78e0'), 0, i * 0.055, 0, 0, i * 0.05, 0]); return compose(parts, true); });
+    const tileStack = cached('zltiles', () => { const parts = []; for (let i = 0; i < 6; i++) parts.push([tint(bbox(0.34, 0.05, 0.26, 0.01, 1), i % 2 ? '#7ab8c0' : '#5aa0ac'), 0, i * 0.055, 0, 0, i * 0.05, 0]); return compose(parts, true); });   // (ZEELICH-2: aqua tiles for the cap)
     L.add(tileStack, C.VC, x - 1.9, top + 0.03, z + 1.6);
     L.add(tileStack, C.VC, x + 1.75, Y0 + 0.0, PH.front + 0.55, 0, 0.4, 0);
     L.add(tileStack, C.VC, x + 2.15, Y0 + 0.0, PH.front + 0.75, 0, -0.3, 0);

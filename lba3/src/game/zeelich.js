@@ -29,7 +29,7 @@ import * as THREE from 'three';
 import { fitAdd } from './worldfit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
-import { domeParts, finialGeo, esmerBuilding, Place } from './props-esmer.js';
+import { esmerBuilding, Place, setLook, glassM, tealGlassM, capParts, capSpike, capM } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
 import { textures, keyJSON } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
@@ -68,12 +68,16 @@ const MILLS = [
   { id: 'east', x: 22, z: -17.5, face: -0.55, brake: 0.25 },
   { id: 'south', x: -2.5, z: 21.5, face: 2.45, brake: Math.PI },
 ];
+// (ZEELICH-2, the user 4.11: "Zeelich doesn't look like LBA2's Zeelich": the street in LBA2's Esmer look, measured on
+// the original's Otringal (zislands.js OTR_LBA2): taupe stucco, glass-block bands, teal glass, low faceted caps in aqua
+// or gold with a gold spike, a plain coping; where it had cream and lilac walls under violet, teal, orange and rose
+// onions with scalloped merlons. Each house keeps its place, size, door and role; the council's cap is the gold one.)
 const HOUSES = [
-  { x: -40.5, z: -10.2, ry: 0, w: 6.2, d: 5.2, h: 3.8, wall: '#fbf2ee', trim: '#3a86b8', dome: ['#7d5cc0', '#e0c0ff'], minaret: 1, seed: 1 },
-  { x: -25.5, z: -13.3, ry: 0, w: 8.2, d: 5.6, h: 4.3, wall: '#e6d2f0', trim: '#c8508a', dome: ['#2a9a9c', '#a8f4e4'], arcade: 3, seed: 2 },
-  { x: -11, z: -10.6, ry: 0, w: 6.0, d: 5.0, h: 3.6, wall: '#f8dcd8', trim: '#3a72c4', dome: ['#d8963a', '#ffe2a0'], seed: 3 },
-  { x: -38.5, z: 10.6, ry: Math.PI, w: 6.6, d: 5.4, h: 3.9, wall: '#f4eee6', trim: '#2f7a84', dome: ['#d0607e', '#ffc4d4'], minaret: -1, seed: 4 },
-  { x: -12, z: 12.2, ry: Math.PI, w: 7.6, d: 6.2, h: 4.0, wall: '#f0dfc4', trim: '#2f7a84', workshop: true, seed: 5, doorX: -1.5 },
+  { x: -40.5, z: -10.2, ry: 0, w: 6.2, d: 5.2, h: 3.8, wall: '#e2d6cc', trim: '#3a7a8a', dome: ['#78a8ae', '#b4d8d8'], minaret: 1, seed: 1 },
+  { x: -25.5, z: -13.3, ry: 0, w: 8.2, d: 5.6, h: 4.3, wall: '#d8cec8', trim: '#a87838', dome: ['#b0824a', '#e6c47e'], arcade: 3, seed: 2 },
+  { x: -11, z: -10.6, ry: 0, w: 6.0, d: 5.0, h: 3.6, wall: '#e0d2c8', trim: '#3a6a80', dome: ['#6c9ea8', '#a8d0d4'], seed: 3 },
+  { x: -38.5, z: 10.6, ry: Math.PI, w: 6.6, d: 5.4, h: 3.9, wall: '#e6dcd2', trim: '#2f7a84', dome: ['#82b0b4', '#c0e0de'], minaret: -1, seed: 4 },
+  { x: -12, z: 12.2, ry: Math.PI, w: 7.6, d: 6.2, h: 4.0, wall: '#e4d4bc', trim: '#2f7a84', workshop: true, seed: 5, doorX: -1.5 },
 ];
 
 // ================================================================== materials
@@ -710,7 +714,8 @@ export function* buildZeelichSteps(scene, physics) {
   // ================================================================ ground: island top, grassy lip, cliffs
   function buildGround() {
     const top = slabGeo(ISL, 0.6, TILE.grass);
-    const ground = mesh(group, top, tm('grass', { color: '#fff2c4', rough: 0.95 }), 0, Y0 - 0.6, 0, 0, { cast: false });
+    // (ZEELICH-2: pale granite as LBA2's Zeelich ground, which has no lawns: measured #a8a196 with #dbd3c9 lights)
+    const ground = mesh(group, top, tm('concrete', { color: '#f6f2ec', rough: 0.95 }), 0, Y0 - 0.6, 0, 0, { cast: false });
     void ground;
     // cliff skirt: rings of the outline going down and in, a turf lip on top, strata of lilac-ochre rock
     const ring = resample(ISL, 1.6), n = ring.length;
@@ -723,9 +728,9 @@ export function* buildZeelichSteps(scene, physics) {
     // make sure normals point away from the centre
     if ((ring[0][0] - cx) * nrm[0][0] + (ring[0][1] - cz) * nrm[0][1] < 0) for (const q of nrm) { q[0] = -q[0]; q[1] = -q[1]; }
     const levels = [
-      { y: 0, out: 0, s: 1, c: '#a8b85a' }, { y: -0.3, out: 0.32, s: 1, c: '#8aa048' }, { y: -0.9, out: 0.18, s: 1, c: '#9a7a5a' },
-      { y: -2.6, out: -0.4, s: 0.99, c: '#c49a8a' }, { y: -5.5, out: -1.4, s: 0.95, c: '#b88aa0' }, { y: -9, out: -1.0, s: 0.86, c: '#a888b0' },
-      { y: -13, out: -2.0, s: 0.72, c: '#9a80a8' }, { y: -19, out: -2.0, s: 0.5, c: '#8a7aa0' }, { y: -27, out: 0, s: 0.24, c: '#7a6a90' },
+      { y: 0, out: 0, s: 1, c: '#e0d8cc' }, { y: -0.3, out: 0.32, s: 1, c: '#d0c8bc' }, { y: -0.9, out: 0.18, s: 1, c: '#c0b8ac' },   // (ZEELICH-2: grey-white rock, not turf and lilac)
+      { y: -2.6, out: -0.4, s: 0.99, c: '#d4ccc2' }, { y: -5.5, out: -1.4, s: 0.95, c: '#c4beb6' }, { y: -9, out: -1.0, s: 0.86, c: '#b6b0aa' },
+      { y: -13, out: -2.0, s: 0.72, c: '#a8a4a0' }, { y: -19, out: -2.0, s: 0.5, c: '#9a9694' }, { y: -27, out: 0, s: 0.24, c: '#8c8888' },
     ];
     const pos = [], cols = [], uvs = [], idx = [];
     const c = new THREE.Color();
@@ -787,11 +792,11 @@ export function* buildZeelichSteps(scene, physics) {
 
   // ================================================================ paths: paved street + plaza, dirt tracks to the mills
   function buildPaths() {
-    const cobble = tm('cobble', { color: '#f6dcd4', rough: 0.85 });
+    const cobble = tm('cobble', { color: '#ece6f2', rough: 0.85 });   // (ZEELICH-2: lavender grey, as LBA2's Zeelich paving)
     const street = [[-49.6, -3.4], [-34, -3.6], [-16, -3.4], [0, -3.6], [16, -3.3], [30, -3.5], [36.2, -2.9], [36.2, 2.9], [30, 3.5], [16, 3.3], [0, 3.6], [-16, 3.4], [-34, 3.6], [-49.6, 3.4]];
     B.add(slabGeo(street, 0.05, TILE.cobble), cobble, 0, Y0, 0);
     const plaza = []; for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; plaza.push([PLAZA.x + Math.sin(a) * PLAZA.r, PLAZA.z + Math.cos(a) * PLAZA.r]); }
-    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm('cobble', { color: '#ecd6e4', rough: 0.85 }), 0, Y0, 0);
+    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm('cobble', { color: '#e2dcec', rough: 0.85 }), 0, Y0, 0);
     // a mosaic star in the plaza
     const star = []; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 3.2 : 5.6; star.push([PLAZA.x + Math.sin(a) * rr, PLAZA.z + Math.cos(a) * rr]); }
     B.add(slabGeo(star, 0.075, 1.0), tm(tileTex('#3a7ac8', '#e8b84a', '#c84a7a'), { rough: 0.5 }), 0, Y0, 0);
@@ -980,20 +985,20 @@ export function* buildZeelichSteps(scene, physics) {
     const G = new THREE.Group(); G.position.set(x, Y0, 0); G.rotation.y = Math.PI / 2; group.add(G);
     const GB = new Batch(G);
     const o = { x: 0, y: 0.02, w: 5.0, h: 4.6, horse: true };
-    GB.add(panelGeo(half * 2 + 1.0, H, 0.9, [o]), tm('plasterWall', { color: '#fbf0f0' }), 0, 0, -0.45);
-    GB.add(frameGeo(o, 0.38, 1.0, 1), tm(tileTex(), { rough: 0.5 }), 0, 0, -0.5);
+    GB.add(panelGeo(half * 2 + 1.0, H, 0.9, [o]), tm('plasterWall', { color: '#e2d6cc' }), 0, 0, -0.45);   // (ZEELICH-2: stucco, glass blocks)
+    GB.add(frameGeo(o, 0.38, 1.0, 1), glassM(), 0, 0, -0.5);
     // alfiz (rectangular frame around the arch), cornice, merlons, brass finials
-    const trim = tm('stone', { color: '#d8a8c8' });
+    const trim = tm('stone', { color: '#b8aca4' });
     for (const s of [-1, 1]) GB.add(bbox(0.22, 4.9, 0.14, 0.03, 1), trim, s * 3.05, 2.45, 0.5);
     GB.add(bbox(6.32, 0.22, 0.14, 0.03, 1), trim, 0, 4.95, 0.5);
     GB.add(bbox(6.32, 0.22, 0.14, 0.03, 1), trim, 0, 4.95, -0.5);
     for (const s of [-1, 1]) GB.add(bbox(0.22, 4.9, 0.14, 0.03, 1), trim, s * 3.05, 2.45, -0.5);
     GB.add(boxUV(bbox(half * 2 + 1.5, 0.3, 1.4, 0.06, 1), 1.6), tm('stone', { color: '#f4e8ee' }), 0, H + 0.12, 0);
     const merlon = cached('merlon', () => { const s = new THREE.Shape(); s.moveTo(-0.3, 0); s.lineTo(0.3, 0); s.lineTo(0.3, 0.3); s.quadraticCurveTo(0.3, 0.62, 0, 0.72); s.quadraticCurveTo(-0.3, 0.62, -0.3, 0.3); s.lineTo(-0.3, 0); return boxUV(new THREE.ExtrudeGeometry(s, { depth: 0.36, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 1, curveSegments: 6 }), 1); });
-    for (let i = -3; i <= 3; i++) GB.add(merlon, tm('plasterWall', { color: '#fbf0f0' }), i * 0.85, H + 0.27, -0.18);
+    void merlon;   // (ZEELICH-2: no merlons)
     for (const s of [-1, 1]) {
-      GB.add(lathe([[0.55, 0], [0.55, 0.3], [0.45, 0.4], [0.45, H + 0.6], [0.6, H + 0.75], [0.6, H + 0.95], [0, H + 0.95]], 16, 1.6), tm('plasterWall', { color: '#ead8f0' }), s * (half + 0.4), 0, 0);
-      GB.add(lathe([[0, 0], [0.42, 0.05], [0.5, 0.35], [0.38, 0.7], [0.15, 1.0], [0.03, 1.35], [0, 1.4]], 16, 1.0), tm(domeTex('#3a9aa0', '#b0fff0'), { rough: 0.4 }), s * (half + 0.4), H + 0.95, 0);
+      GB.add(lathe([[0.55, 0], [0.55, 0.3], [0.45, 0.4], [0.45, H + 0.6], [0.6, H + 0.75], [0.6, H + 0.95], [0, H + 0.95]], 8, 1.6, Math.PI / 8), tm('plasterWall', { color: '#d8cec8' }), s * (half + 0.4), 0, 0);
+      GB.add(capParts(0.64, 1.3).shell, capM(['#78a8ae', '#b4d8d8']), s * (half + 0.4), H + 0.95, 0);
       GB.add(lathe([[0, 0], [0.06, 0], [0.06, 0.25], [0.12, 0.32], [0.03, 0.45], [0.02, 0.8], [0, 0.82]], 8), brassM(), s * (half + 0.4), H + 2.3, 0);
     }
     GB.build();
@@ -1008,8 +1013,8 @@ export function* buildZeelichSteps(scene, physics) {
     const HB = new Batch(G);
     const { w, d, h } = o, t = 0.32, base = 0.32;
     const wallM = tm('plasterWall', { color: o.wall });
-    const stoneM = tm('stone', { color: '#e8d8ea' });
-    const tiles = tm(tileTex(o.trim, '#e8b84a', o.workshop ? '#e07a3a' : '#d8608a'), { rough: 0.45 });
+    const stoneM = tm('stone', { color: '#e4dcd8' });
+    const tiles = glassM();   // (ZEELICH-2: glass blocks, as LBA2's Esmer walls)
     const trimM = tm('plasterWall', { color: o.trim });
     const f = frame(o.x, o.z, o.ry);
     // plinth
@@ -1035,7 +1040,7 @@ export function* buildZeelichSteps(scene, physics) {
       { n: 'left', len: d - 2 * t, pos: [-w / 2 + t, base, 0], ry: -Math.PI / 2 },
       { n: 'right', len: d - 2 * t, pos: [w / 2 - t, base, 0], ry: Math.PI / 2 },
     ];
-    const lattice = tm(latticeTex(), { rough: 0.4, emissive: '#3a2a50', ei: 0.4 });
+    const lattice = tealGlassM();   // (ZEELICH-2: teal glass)
     const doorM = tm('planks', { color: o.workshop ? '#b8e0d8' : '#c8906a', rough: 0.8 });
     // (WORLD-FIX: what stands round each opening, in wall coordinates seen from outside: tests/worldfit.mjs)
     const fitOps = [], fx = (side, kind, x0, x1, y0, y1) => { const e = { side, kind, x0, x1, y0, y1 }; fitOps.push(e); return e; };
@@ -1100,14 +1105,16 @@ export function* buildZeelichSteps(scene, physics) {
       for (let i = 0; i < nn; i++) {
         const lx = -((nn - 1) * 0.62) / 2 + i * 0.62;
         const [px, pz] = ry === 0 || ry === Math.PI ? [lx, z - Math.cos(ry) * 0.12] : [z - Math.sin(ry) * 0.12, lx];
-        HB.add(merlon, wallM, px, h, pz, 0, ry, 0);
+        void px; void pz;
       }
     }
+    void merlon;   // (ZEELICH-2: no scalloped merlons: a plain coping round the roof, as LBA2's Esmer roofs)
+    for (const [len, x, z, ry] of [[w + 0.24, 0, d / 2 - 0.06, 0], [w + 0.24, 0, -d / 2 + 0.06, 0], [d - 0.24, w / 2 - 0.06, 0, Math.PI / 2], [d - 0.24, -w / 2 + 0.06, 0, Math.PI / 2]]) HB.add(bbox(len, 0.22, 0.24, 0.03, 1), stoneM, x, h + 0.1, z, 0, ry, 0);
     // the dome (or Baldino's observatory) on a drum
     const dr = Math.min(w, d) * 0.3, dx = o.workshop ? -w * 0.18 : (rr() - 0.5) * 0.6, dz = o.workshop ? -0.4 : -0.2;
-    HB.add(lathe([[dr + 0.08, 0], [dr + 0.08, 0.15], [dr, 0.2], [dr, 0.95], [dr + 0.12, 1.0], [dr + 0.12, 1.12], [0, 1.12]], 24, TILE.plaster), wallM, dx, h, dz);
-    HB.add(cyl(dr + 0.01, dr + 0.01, 0.3, 24, 1, true), tiles, dx, h + 0.55, dz);
-    for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; HB.add(fillGeo({ x: 0, y: 0, w: 0.2, h: 0.36, horse: true }, 0, 0, 0.5), lattice, dx + Math.sin(a) * (dr + 0.012), h + 0.36, dz + Math.cos(a) * (dr + 0.012), 0, a, 0); }
+    HB.add(lathe([[dr + 0.08, 0], [dr + 0.08, 0.15], [dr, 0.2], [dr, 0.95], [dr + 0.12, 1.0], [dr + 0.12, 1.12], [0, 1.12]], o.workshop ? 24 : 8, TILE.plaster, o.workshop ? 0 : Math.PI / 8), wallM, dx, h, dz);   // (ZEELICH-2: an octagonal drum under a cap)
+    HB.add(cyl(dr + 0.01, dr + 0.01, 0.3, o.workshop ? 24 : 8, 1, true).rotateY(o.workshop ? 0 : Math.PI / 8), tiles, dx, h + 0.55, dz);
+    for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; HB.add(fillGeo({ x: 0, y: 0, w: 0.2, h: 0.36, horse: true }, 0, 0, 0.5), lattice, dx + Math.sin(a) * (dr * (o.workshop ? 1 : 0.924) + 0.012), h + 0.36, dz + Math.cos(a) * (dr * (o.workshop ? 1 : 0.924) + 0.012), 0, a, 0); }
     const R0 = dr * 1.02;
     let domeTop;
     if (o.workshop) {
@@ -1118,13 +1125,13 @@ export function* buildZeelichSteps(scene, physics) {
       HB.add(cyl(0.12, 0.17, 1.9, 12, 1), brassM(), dx, h + 1.12 + R0 * 1.0, dz + R0 * 0.9, 0.95, 0, 0);
       domeTop = h + 1.12 + R0;
     } else {
-      // the onion on its drum, gilded ribs and the crescent finial: the Esmer dome every Zeelich building shares
-      // (props-esmer.js domeParts / finialGeo; same outline as before)
-      const [ca, cb] = o.dome, DP = domeParts(R0, R0 * 1.95, { ribs: 8, seg: 28 });
-      HB.add(DP.shell, tm(domeTex(ca, cb), { rough: 0.38, metal: 0.1 }), dx, h + 1.12, dz);
-      HB.add(DP.rib, brassM(), dx, h + 1.12, dz);
-      domeTop = h + 1.12 + R0 * 1.95;
-      HB.add(finialGeo(), brassM(), dx, domeTop - 0.06, dz);
+      // the cap on its drum: the Esmer roof every Zeelich building shares
+      // (ZEELICH-2: LBA2's low faceted cap, props-esmer.js capParts, in aqua or gold, a gold spike: no onion)
+      const CP = capParts(R0 * 1.12, R0 * 0.85);
+      HB.add(CP.shell, capM(o.dome), dx, h + 1.12, dz);
+      HB.add(CP.rib, brassM(), dx, h + 1.12, dz);
+      domeTop = h + 1.12 + R0 * 0.85;
+      HB.add(capSpike(), brassM(), dx, domeTop - 0.04, dz, 0, 0, 0, 0.7);
     }
     // minaret: slender tower with a balcony and a small onion cap
     if (o.minaret) {
@@ -1136,10 +1143,10 @@ export function* buildZeelichSteps(scene, physics) {
       HB.add(cached('balr', () => new THREE.TorusGeometry(0.92, 0.04, 6, 24).rotateX(Math.PI / 2)), brassM(), mx, mh - 1.2, mz);
       for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; HB.add(fillGeo({ x: 0, y: 0, w: 0.26, h: 0.62, horse: true }, 0, 0, 0.5), lattice, mx + Math.sin(a) * 0.505, mh - 0.95, mz + Math.cos(a) * 0.505, 0, a, 0); }
       const [ca, cb] = o.dome;
-      const MP = domeParts(0.56, 1.3, { ribs: 6, seg: 16 });
-      HB.add(MP.shell, tm(domeTex(ca, cb), { rough: 0.38 }), mx, mh, mz);
+      const MP = capParts(0.66, 1.0);   // (ZEELICH-2: a steep cap, as the original's towers)
+      HB.add(MP.shell, capM([ca, cb]), mx, mh, mz);
       HB.add(MP.rib, brassM(), mx, mh, mz);
-      HB.add(cached('mfin', () => lathe([[0, 0], [0.05, 0], [0.09, 0.12], [0.04, 0.22], [0.015, 0.6], [0, 0.62]], 8)), brassM(), mx, mh + 1.25, mz);
+      HB.add(cached('mfin', () => lathe([[0, 0], [0.05, 0], [0.09, 0.12], [0.04, 0.22], [0.015, 0.6], [0, 0.62]], 8)), brassM(), mx, mh + 0.96, mz);
       col({ ...wpos(f, mx, mz), type: 'cyl', r: 0.78, top: Y0 + mh, fades: true });
     }
     // arcade porch in front
@@ -1190,7 +1197,7 @@ export function* buildZeelichSteps(scene, physics) {
     keepClear(o.x - ext - 0.6, o.z - ext - 0.6, o.x + ext + 0.6, o.z + ext + 0.6);
     const doorW = f(doorX, d / 2 + arcadeDepth + 0.75);
     // (where the dome sits, for the scaffold of the one being re-tiled: zeelife.js; houses facing south only)
-    const dome = o.workshop || o.ry ? null : { x: o.x + dx, z: o.z + dz, y: Y0 + h + 1.12, R0, roof: Y0 + h, front: o.z + d / 2 };
+    const dome = o.workshop || o.ry ? null : { x: o.x + dx, z: o.z + dz, y: Y0 + h + 1.12, R0, roof: Y0 + h, front: o.z + d / 2, cap: { R: R0 * 1.12, H: R0 * 0.85, colors: o.dome } };   // (ZEELICH-2: cap: its shape, for zeelife.js's re-tiling)
     return { group: G, door: doorW, fader, dome, ...out };
   }
   function wpos(f, lx, lz) { const [x, z] = f(lx, lz); return { x, z }; }
@@ -1867,7 +1874,7 @@ export function* buildZeelichSteps(scene, physics) {
           const px = p.getX(i), py = p.getY(i), pz = p.getZ(i), a = Math.atan2(px, pz);
           const k = 1 + Math.sin(a * 5 + seed) * 0.08 + Math.sin(a * 11 + py * 4) * 0.05;
           p.setXYZ(i, px * k, py * (1 + Math.sin(a * 3 + seed) * 0.15), pz * k);
-          cc.set(py > -0.02 ? '#c8d880' : py > -0.15 ? '#8aa048' : '#b890b0').multiplyScalar(0.85 + 0.15 * Math.sin(py * 9 + a * 2));
+          cc.set(py > -0.02 ? '#e0d8cc' : py > -0.15 ? '#c4bcb0' : '#aca6a4').multiplyScalar(0.85 + 0.15 * Math.sin(py * 9 + a * 2));
           c.push(cc.r, cc.g, cc.b);
         }
         geo.setAttribute('color', new THREE.Float32BufferAttribute(c, 3));
@@ -1879,7 +1886,9 @@ export function* buildZeelichSteps(scene, physics) {
       // a tiny Esmer house with a dome on the bigger ones, a puff tree on others
       if (s > 10) {
         // (the shared Esmer building, props-esmer.js, its door toward the island)
-        esmerBuilding(new Place(IB, x, y + 0.1 * s * 1.2, z, Math.atan2(-x, -z)), { w: 3.4, d: 3.4, h: 5.2, wallH: 2.95, wall: tm('plasterWall', { color: '#fbf0f0' }), domeM: tm(domeTex('#8a5ac0', '#e8c8ff'), { rough: 0.4 }), trim: '#3a86b8', seed });
+        setLook(true);   // (ZEELICH-2: in LBA2's look, as the street)
+        esmerBuilding(new Place(IB, x, y + 0.1 * s * 1.2, z, Math.atan2(-x, -z)), { w: 3.4, d: 3.4, h: 5.2, wallH: 2.95, wall: tm('plasterWall', { color: '#e2d6cc' }), domeM: capM(['#78a8ae', '#b4d8d8']), trim: '#3a7a8a', seed });
+        setLook(null);
       } else {
         IB.add(puffTreeGeo(seed % 2), VC(), x + 1, y + 0.1 * s * 1.2, z, 0, 0, 0, 1.4);
       }
@@ -1894,8 +1903,8 @@ export function* buildZeelichSteps(scene, physics) {
     return cached('puff' + v, () => {
       const rr = rng(v * 13 + 5), parts = [];
       const trunk = tube([[0, -0.1, 0], [0.12, 1.0, 0.05], [0.05 + v * 0.2, 2.0, -0.1], [0.25, 2.8, 0.0]], 0.16, 7, 1);
-      parts.push([tint(trunk, '#9a7a8a')]);
-      const puffCols = v ? ['#f8c8dc', '#ffe8f2', '#f0b0d0'] : ['#e0c8f8', '#f4e8ff', '#c8a8f0'];
+      parts.push([tint(trunk, '#8a5a3a')]);
+      const puffCols = v ? ['#f0c860', '#ffe0a0', '#e0a840'] : ['#e8b450', '#f8d890', '#d89a38'];   // (ZEELICH-2: gold, as LBA2's Zeelich plants)
       const blobs = [[0.25, 3.3, 0, 1.15], [-0.6, 2.9, 0.3, 0.8], [0.9, 2.8, -0.2, 0.75], [0.1, 3.0, -0.7, 0.7], [0.3, 4.0, 0.2, 0.7]];
       for (const [bx, by, bz, br] of blobs) {
         const g = new THREE.IcosahedronGeometry(br, 2), p = g.attributes.position, c = [], cc = new THREE.Color(), nn = new THREE.Vector3();
@@ -1951,7 +1960,7 @@ export function* buildZeelichSteps(scene, physics) {
       const x = -50 + r() * 88, z = -30 + r() * 60;
       if (!onIsland(x, z, 0.3) || !isClear(x, z, 0.2)) continue;
       const patch = Math.sin(x * 0.21) + Math.sin(z * 0.27 + x * 0.05);
-      if (patch < -0.6) continue;
+      if (patch < 0.6) continue;   // (ZEELICH-2: tufts in a few patches on the granite, no lawn)
       const gr = { x, y: Y0 - 0.02, z, ry: r() * 6, s: 0.8 + r() * 0.7, color: new THREE.Color().setHSL(0.16 + r() * 0.06, 0.45, 0.55 + r() * 0.15) };
       const fl = r() < 0.35 ? [Math.floor(r() * 4), { x: x + (r() - 0.5) * 0.6, y: Y0, z: z + (r() - 0.5) * 0.6, ry: r() * 6, s: 0.9 + r() * 0.6 }] : null;
       if (zlClear(x, z, 0.1)) continue;   // (the draws are made either way)
