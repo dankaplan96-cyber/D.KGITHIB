@@ -587,3 +587,42 @@ Each `tests/depth-<id>.mjs` (player-input harness, one suite at a time, SwiftSha
 
 Status of this document: **Not implemented** (design only). Next step: the user approves, cuts or reorders the list;
 the coordinator gives the first wave to workers in pairs.
+
+---
+
+## The user's five side quests (11.11.2026) — these lead the build order
+
+The user's own proposals and rules, translated. They come before the rest of the first wave; **The Last Ferry is built
+first** (the user: it answers what bothered him in chapter 3 — a reason to enter a building, a puzzle that uses the magic
+ball, residents travelling somewhere, a clear geographic tie between two parts of the island; and even a player who
+never starts it remembers the captain who turns up on time for a ferry that doesn't sail: LBA's humour).
+
+**The user's rules for optional content**
+1. A side quest's reward is **something new the player can do in the world** (sail an old ferry line, invite a known
+   person home, find a use of the magic ball nobody taught him), not only a clover and kashes.
+2. A player who skips them gets a complete main story. A player who does them comes back to the same street and feels
+   something there changed because of him.
+3. **The test every side quest must pass: "If I come back here in three chapters, what can I see, hear or do that
+   wasn't here before?"** No answer, no quest.
+4. Side quests are **not** used to fix a main chapter that is too short: a short chapter gets its main path
+   strengthened (if chapter 2 ends before the Citadel had its place in the story, strengthen chapter 2's main route).
+5. Optional content is spread by places and people, **no quota of a quest per chapter**.
+
+| Id | Name, place | What the player actually does | What stays with him |
+|---|---|---|---|
+| U-1 | **The Last Ferry** — Zeelich, chapter 3 on | A sailings board hangs on the quay, but the last ferry left years ago. The captain still turns up on time. Twinsen goes into the winch house, turns the loading bridge, and threads the magic ball through an opening to release the catch from its far side. When the cable comes free, the player himself starts the first sailing. | A regular ferry line between two neighbourhoods that can already be reached on foot. A trader we met at the station starts selling tea on deck; the player can stay for the return sailing and hear what the passengers think of what is happening on the island (lines change with the story). |
+| U-2 | **One More Place** — Citadel, chapter 2 | Zoé has laid the table and put out one chair too many. The neighbour used to come every week; since he moved a street away nobody has invited him. When Twinsen reaches him, the neighbour insists on bringing his old radio. The player tunes it by a melody he knows from home, then goes back to the meal. | From then on he can come home in different chapters and sit down to a short meal with Zoé, Arthur and a known guest. Sometimes a new conversation, sometimes only music and food. Home stays a place to return to even with no quest marker on it. |
+| U-3 | **Off the Wall** — Desert Island | A girl has invented a ball game in the schoolyard. Her only rule: the bell must not be hit directly. She shows a rebound off a wall; the player chooses where to throw from and solves three short challenges. In the last one the girl moves the board because Twinsen found a solution she hadn't thought of. | A practice court to return to, with targets that can be moved. The real reward is better command of the existing ball: angles, rebounds, aiming without a fight's pressure. A player who works the trick out alone can use it without the quest. **Replaces DES-2** (Hougo's three trials) or merges with it: one rebound school, the girl's. |
+| U-4 | **Twelve Years Late** — Zeelich | A letter is left at the post office with an address that no longer exists. Instead of following an arrow, the player compares an old postcard with the view: the chimney is still there, the stairs became a ramp, a bakery stands where the clinic was. He finds the addressee through the island's own structure. | She was a photographer. She gives Twinsen her album: at several spots in the world he can open an old picture against today's view, and see what changed in twelve years without anyone reading him the history. |
+| U-5 | **The Quiet Channel** — the underground installation | A faint rhythm sounds from a service pipe. The player can go on along the main way, or stop and answer with three valves. The voice on the other side corrects Twinsen's rhythm. Bit by bit it turns out to be a maintenance worker from a cut-off station who uses the pipes to talk to his brother. | A listening channel opens in the control room; later it carries short messages that change with the story's events. After the ending, back at the station, the two brothers are heard in the same room for the first time. |
+
+Design notes for the builders: every hand action on a real object (the winch, the bridge's wheel, the radio's dial, the
+valves: NO-AIR); English player text; no night words ("the captain turns up on time", not "every morning" if it implies
+a night); new state under `dx_`; old saves load; each quest's test plays it by input, includes a wrong attempt and a
+save → Continue mid-way, and checks the "three chapters later" state by setting a later chapter and looking for the
+lasting change. The album (U-4) uses our own renders of our own earlier states of the places, never LBA1/LBA2 images.
+
+**Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
+proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
+is re-checked against rule 3 before it is built; one that only pays "a crystal" gets a lasting change or is dropped.
+Rule 4: C11-1 and C12-1 stay, as main-path work for the short last chapters, not as side quests.
