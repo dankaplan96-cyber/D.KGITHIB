@@ -32,7 +32,7 @@
 //   }
 import * as THREE from 'three';
 import { Kit, MAT, rbox, plane, cyl, sphere, lathe, slab, canvasTex, pottedPlant, locker, rug, stove, dresser, table, bench, floorLamp, pot, kettle, plate,
-  ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand } from './props.js';
+  ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand, bookcase, jar, barrel } from './props.js';
 import { tileTex, cm, latticeM } from './props-esmer.js';
 
 export const ASYLUM_FRONT = { x: -26.5, z: -50.58, a: 0 };   // (the fort's south wall, outer face at its foot; out = +z)
@@ -266,6 +266,32 @@ function zcrate(k, { s = 0.72, open = false } = {}) {
   if (open) for (let i = 0; i < 5; i++) k.add(lathe([[0, 0], [0.05, 0.05], [0.04, 0.16], [0, 0.22]], 5), warmGlow(), -0.18 + (i % 3) * 0.18, s - 0.12, -0.12 + Math.floor(i / 3) * 0.22, i, { rz: (i - 2) * 0.2 });
   return { hw: s / 2, hd: s / 2, top: s };
 }
+// a sack of grain (faces +z): a soft lump, its neck tied
+function sack(k, { s = 1 } = {}) {
+  const m = MAT.flat('#cdb88a', 0.95);
+  k.add(rbox(0.46 * s, 0.4 * s, 0.34 * s, 0.13 * s), m, 0, 0.2 * s, 0, 0, { jit: true });
+  k.add(rbox(0.2 * s, 0.1 * s, 0.16 * s, 0.04 * s), m, 0, 0.44 * s, 0);
+  k.add(cyl(0.06 * s, 0.07 * s, 0.03 * s, 8), MAT.flat('#8a6a3a', 0.95), 0, 0.41 * s, 0);
+  return { hw: 0.25 * s, hd: 0.19 * s, top: 0.5 * s };
+}
+// the larder's shelves (faces +z): an open case, jars and crocks on its shelves, a sack on the bottom one
+function pantryShelf(k, { w = 1.5, seed = 1 } = {}) {
+  const fp = bookcase(k, { w, h: 1.9, d: 0.4, pal: 'honey', shelves: 4, fill: false });
+  const r = rngOf(seed), step = (1.9 - 0.2) / 4, cols = ['#c8702a', '#2f8a9a', '#a8582a', '#e8b84a'];
+  for (let i = 1; i < 4; i++) for (let x = -w / 2 + 0.16; x < w / 2 - 0.12; x += 0.2 + r() * 0.12) jar(k, x, 0.12 + i * step, (r() - 0.5) * 0.12, r() < 0.4 ? 'crock' : 'jar', cols[Math.floor(r() * cols.length)], 0.8 + r() * 0.3);
+  k.at(-w / 4, 0.12, 0.02, 0.2, () => sack(k, { s: 0.6 })); k.at(w / 4, 0.12, 0.02, -0.3, () => sack(k, { s: 0.55 }));
+  return fp;
+}
+// the linen loft's shelves (faces +z): folded blankets in the bunks' colours
+function linenShelf(k, { w = 1.5, seed = 1 } = {}) {
+  const fp = bookcase(k, { w, h: 1.9, d: 0.4, pal: 'honey', shelves: 4, fill: false });
+  const r = rngOf(seed), step = (1.9 - 0.2) / 4, cols = ['#2f7f86', '#e8b84a', '#d8608a', '#f2e6c8', '#3a6fb0', '#efe6d2'];
+  for (let i = 0; i < 4; i++) for (let x = -w / 2 + 0.3; x < w / 2 - 0.2; x += 0.46) {
+    const n = 2 + Math.floor(r() * 3);
+    for (let j = 0; j < n; j++) k.add(rbox(0.38, 0.08, 0.3, 0.025), MAT.flat(cols[Math.floor(r() * cols.length)], 0.9), x + (r() - 0.5) * 0.04, 0.16 + i * step + j * 0.085, 0, (r() - 0.5) * 0.1);
+  }
+  return fp;
+}
 // a guard's post: a stool, a lantern on an upturned crate, a flask
 function guardPost(k) {
   const md = MAT.wood('dark'), br = MAT.brass();
@@ -339,7 +365,7 @@ export function dressAsylum(R, physics) {
     put(A, 29.0, 6.6, 5, 0, hammock, { span: 2.6 });
     put(A, 31.6, 15.6, 5, 0, hammock, { span: 2.6, cols: ['#2f8a9a', '#e8b84a', '#f2e6c8'] });
     flatRug(A, 29.5, 11.5, 5, 2.6, 1.8, rugB, 5);
-    put(A, 34.6, 6.0, 5, 0, pottedPlant, { kind: 'leafy', potColor: '#e8b84a' });
+    put(A, 34.8, 6.45, 5, 0, pottedPlant, { kind: 'leafy', potColor: '#e8b84a' });   // (in front of LBA1's cabinet at the room's corner, not half in it)
   }
   // ---- the long hall (LBA1's corridor, z 31–36): a runner, warm lamps and benches along its north side, clear of
   //      the walk and of Vesk's door (x 41–42)
@@ -422,6 +448,34 @@ export function dressAsylum(R, physics) {
     for (const [x, z, s] of [[2.2, 37.9, 0.7], [3.15, 37.85, 0.6]]) put(A, x, z, 5, 0.2, (k) => crate(k, s));
     const pw = W(13.97, 41.4), py = Y(13, 41.4, 5);
     A.k.at(pw.x - o.x, py + 1.2, pw.z - o.z, -HALF, () => { const k = A.k; k.add(rbox(0.8, 0.54, 0.04, 0.01), MAT.brass(), 0, 0, 0); k.add(plane(0.74, 0.48), MAT.map(plaqueTex(COUNCIL_PLAQUE), 0.45), 0, 0, 0.022); });
+  }
+  // ---- (order 8) the rooms ASYLUM-2 had left bare, on the way up the west side: LBA1's room west of the nurses'
+  //      station (x 6–13, z 20–30), its flight up the west wall to a landing (x 1–4, z 20–24) and the loft over the
+  //      dorm's west end (x 1–8, z 3–18); and the landing at the top of the stair from the long hall (x 1–5, z 31–35).
+  //      The room is the kitchen's larder now (next door to it): shelves of jars, sacks, barrels and crates under the
+  //      flight; the loft is the hostel's linen loft (sheets drying, blankets on the shelves, the laundry basket)
+  {
+    const A = area('larder');
+    for (const [x, seed] of [[7.2, 1], [9.2, 2]]) put(A, x, 20.3, 5, 0, pantryShelf, { seed });
+    { const ty = Y(12.4, 20.5, 8); at(A, 12.4, 20.5, ty, 0.3, () => sack(A.k)); at(A, 11.6, 20.5, ty, -0.4, () => sack(A.k, { s: 0.85 }));
+      at(A, 13.2, 21.4, Y(13.2, 21.4, 8), 0, () => { jar(A.k, 0, 0, 0, 'crock', '#a8582a'); jar(A.k, 0.22, 0, 0.1, 'crock', '#2f8a9a', 0.8); }); }
+    const tb = put(A, 9.4, 25.2, 5, 0, table, { w: 1.6, d: 0.8 });
+    at(A, 9.4, 25.2, tb.y + 0.78, 0, () => { const k = A.k; pot(k, -0.45, 0, 0, { r: 0.12, h: 0.14 }); plate(k, 0.1, 0, 0.1, 0, '#f2ead6', 0.12, false); jar(k, 0.45, 0, -0.15, 'jar', '#c8702a'); k.at(0.25, 0, -0.2, 0.4, () => sack(k, { s: 0.55 })); });
+    for (const [x, z, ry, s] of [[13.55, 27.4, HALF, 1], [13.55, 28.3, HALF + 0.3, 0.9], [12.8, 27.8, 0.2, 0.8]]) put(A, x, z, 5, ry, sack, { s });
+    for (const [x, z] of [[2.0, 29.7], [3.0, 30.3]]) put(A, x, z, 5, 0, barrel, { r: 0.3, h: 0.82 });
+    for (const [x, z, s] of [[1.7, 28.2, 0.62], [2.7, 28.5, 0.5]]) put(A, x, z, 5, 0.25, (k) => crate(k, s));
+    put(A, 6.8, 29.6, 5, 0, floorLamp);
+  }
+  {
+    const A = area('loft');
+    put(A, 5.0, 3.3, 15, 0, linenShelf, { seed: 3 });
+    washAt(A, 5.4, 13.5, 15, HALF, { w: 3.0, cols: ['#f4eee0', '#efe6d2', '#2f7f86', '#f4eee0', '#e8b84a'] });
+    put(A, 7.0, 5.6, 15, -HALF, chest, { w: 0.9, d: 0.5, h: 0.48, pal: 'honey' });
+    put(A, 7.2, 8.6, 15, 0, barrel, { r: 0.28, h: 0.5, pal: 'pale' });   // (the laundry basket)
+    at(A, 7.2, 8.6, Y(7.2, 8.6, 15) + 0.46, 0.5, () => { for (const [dx, c] of [[-0.06, '#f4eee0'], [0.07, '#d8608a']]) A.k.add(rbox(0.36, 0.08, 0.3, 0.03), MAT.flat(c, 0.9), dx, 0, dx); });
+    // the landing at the top of the stair from the long hall
+    put(A, 1.3, 33.5, 9, HALF, bench, { w: 1.4 });
+    put(A, 1.6, 35.4, 9, 0, pottedPlant, { kind: 'leafy', potColor: '#3a8a9a' });
   }
   // ---- the upper walk to the front door (on the slab over the ward: it fades with the ward's lid), and the doors in
   //      LBA1's tall portal (cells 37, 9–14): two leaves, lattice side lights, a glowing fanlight
@@ -545,12 +599,16 @@ export function dressAsylum(R, physics) {
     cook: S(18.7, 5, 21.3, -HALF, "the cook at the old nurses' counter", [18, 5, 21]),
     worker3: S(15.6, 14, 3.9, Math.PI * 0.85, 'a worker on the upper walk', [14, 14, 4.09]),
     worker4: S(22.0, 5, 24.25, 0, 'a worker at the mess table, off shift (on the bench)', null, { pose: 'sit' }),
-    sleeper: S(10.5, 5, 12, HALF, 'a sleeper in a lower bunk (a: from head to feet)', [14.06, 5, 10.28], { pose: 'lie' }),
+    sleeper: S(10.62, 5, 12, HALF, 'a sleeper in a lower bunk (a: from head to feet)', [14.06, 5, 10.28], { pose: 'lie' }),
     guard1: S(2.4, 5, 45.6, 0, "Vesk's guard at the head of the store's stair", [2, 5, 45.88]),
     guard2: S(11.6, 1, 49.2, -HALF, "Vesk's guard deep in the store, by the boiler", null),
   };
-  R.npcSpots.sleeper.y = Y(10.5, 12, 5) + 0.15 + 0.17;   // (on the lower bunk's mattress, on the plinth)
-  R.npcSpots.worker4.y = Y(22.0, 24.25, 5) + 0.47;        // (on the bench)
+  // (the rig's poses, rig.js: 'sleep' lays the body flat at its root, so the root goes on the mattress; 'sit' holds the
+  //  hips 0.48 m over the root, a seat's height, so the root stays near the floor: at the bench's top + 0.47 he sat a
+  //  bench above it, his knees through the table. Wix 0.1 m toward his feet: his head on the pillow, his hands out of
+  //  the wall at the bunk's head)
+  R.npcSpots.sleeper.y = Y(10.62, 12, 5) + 0.15 + 0.17;   // (on the lower bunk's mattress, on the plinth)
+  R.npcSpots.worker4.y = Y(22.0, 24.25, 5) + 0.08;         // (his hips 0.1 m over the bench, his robe's hem at the floor)
   // ---- the story's handles
   const reg = R.searches.find((s) => s.id === 'asylum_register');
   R.asylumHostel = {

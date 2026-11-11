@@ -322,7 +322,8 @@ export function buildLba1Asylum(scene, physics) {
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
       stone: 'grey', lamp: '#ffd9a8', lampI: 15, view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps)
-      gridZones: true, overhead: true,
+      gridZones: true, overhead: true, footing: { depth: 9, below: 1 },   // (order 8: the store's edge, its walls carried down into the dark)
+      clear: [[44, 30, 63, 62, 17]],   // (order 8: the cell block's ceiling beams (cells 17–18), their pillars cut away on the camera's side: slabs hanging over the cells and the corridor)
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
       //  room LBA1 kept behind a moving door, its door broken through the corridor wall at cells 41–42 of z 30)
