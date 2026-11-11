@@ -20,7 +20,7 @@ node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed 
 node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migration, Settings line, knobs, commit points, power, calibration cache, Auto benchmark
 ```
 
-Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);
+Playwright is imported from `file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs` (the environment's copy);
 adjust the import if yours lives elsewhere. Screenshots are written to the current directory.
 
 ## Reading a verdict

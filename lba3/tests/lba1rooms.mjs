@@ -2,7 +2,7 @@
 // Citadel (in through the door, its guards are posted after the prologue, the old register in the office, out by
 // the stair-well), and the Temple of Bù's maze and halls (down the stair from our temple, through the maze to the
 // halls with their crystal mites, and back up at the far end).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

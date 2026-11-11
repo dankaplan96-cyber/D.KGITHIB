@@ -18,7 +18,7 @@
 //   R.npcSpots: wtent {bersimon}, school {magus, keraooc}
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
-import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug } from './props.js';
+import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug, railing, barrel, M, TEX } from './props.js';
 import { DESERT } from './desert.js';
 import { SCHOOL_SITE, SCHOOL_DOOR } from './desertold.js';
 
@@ -145,55 +145,211 @@ function buildTentRoom(scene, physics) {
 }
 
 // ---------------------------------------------------------------- inside the School of Magic
+// LBA-DESERT-1 (the laptop's proposal; the user 2.11: "check the desert island, the temple of Bù twelve years after
+// LBA2, and the School of Magic"): the School's great hall after LBA2's scene 27, about 80 % alike. Our own geometry,
+// from a study of the original's layout (numbers and descriptions only; nothing copied). One of the original's cells
+// is 0.63 m here and one of its layers 0.4 m (the user 2.11: "make them bigger, it's really small": 1.5 times the
+// first cut, the camera close and following Twinsen as in his own house). As the game's camera sees it:
+//   - the long back wall of grey stone with seven tall windows of teal glass, the short left wall with an arch
+//     between two columns and two round star windows
+//   - the classroom raised 2.2 m in the back left corner: the teacher's dais along the left wall (a red-clothed
+//     table, two benches against the wall, a star on the floor), the blackboard on the back wall, two rows of three
+//     benches facing the dais
+//   - a short stair down from the classroom to a walkway 1.35 m up that runs to the front along a ridge of rock, an
+//     iron fence on its open side; near its far end a stair down into the hall between two gargoyle posts
+//   - the dining hall below: eight long tables with bowls, bottles and candles; at its back a dais 0.8 m up with the
+//     star chest and candle stands, reached by a stepped pyramid; rocks heaped where the walkway meets it
+//   - the door at the front of the hall
+// Twelve years on (ours): Ker'aooc's cot and her cabinet of remedies by the door; everything else as it was.
 function buildSchoolRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'school', SCHOOL_IN.x, SCHOOL_IN.z);
   const R = B.room, k = B.k;
-  const W = 18, D = 12, H = 5.2;
-  R.view = 19; R.follow = 0.3; R.music = 'home';
-  const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
-  const penta = pentaTex(); penta.wrapS = penta.wrapT = THREE.RepeatWrapping; penta.repeat.set(W / 1.5, D / 1.5);   // (a pentagram on every 1.5 m slab)
-  // (WORLD-ART-7: a school hall — dark wood panelling below the stone and a brass rail, over warm slabs)
-  B.shell({ floor: MAT.map(penta, 0.85), slab: rough, body: stone, low: MAT.wainscot('dark'), rail: MAT.brass(), cap: MAT.iron(), H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
-    back: [{ at: -7.4, w: 2.0, h: 2.8, y0: 0, kind: 'door' }] });
-  const BZ = -D / 2;
-  R.exits.push({ x: B.cx - 7.4, z: B.cz + BZ + 0.5, r: 0.9, to: 'school-out' });
-  R.spawn = { x: B.cx - 7.4, z: B.cz + BZ + 1.9, a: 0 };
-  // star windows along the back wall, glowing teal
-  const plq = MAT.map(starPlaque('#1a6a6a'), 0.4, { transparent: true, emissive: '#2a8a8a', emissiveIntensity: 0.6 });
-  for (const x of [-3.5, 0.5, 4.5]) k.add(plane(1.3, 1.3), plq, x, 2.8, BZ + 0.03);
-  // the dais with the blackboard (back right) and the rector's red-clothed table
-  k.add(rbox(5.2, 0.4, 3.0, 0.05), rough, 6.0, 0.2, BZ + 1.5);
-  k.add(rbox(5.2, 0.2, 0.6, 0.05), rough, 6.0, 0.1, BZ + 3.3);
-  B.col(6.0, BZ + 1.5, 2.6, 1.5, 0.4, { stair: true });
-  k.add(rbox(3.2, 1.7, 0.12, 0.02), MAT.wood('dark'), 6.0, 2.4, BZ + 0.1);
-  k.add(plane(3.0, 1.5), MAT.map(boardTex(), 0.9), 6.0, 2.4, BZ + 0.17);
-  B.put(4.6, BZ + 4.3, 0, (kk) => { table(kk, { w: 1.4, d: 0.9, pal: 'dark' }); kk.add(rbox(1.5, 0.04, 1.0, 0.01), MAT.cloth('#a01818', '#7a1010'), 0, 0.8, 0); return { hw: 0.7, hd: 0.45, top: 0.82 }; });
-  k.at(4.6, 0.82, BZ + 4.3, 0, () => { jar(k, 0, 0, 0, 'bottle', '#3a3a5a', 1.2); });
-  // long tables of bowls and bottles in two rows (the students' benches)
-  for (const [x, z] of [[-4.5, -0.6], [-4.5, 2.6], [0.6, -0.6], [0.6, 2.6]]) {
-    B.put(x, z, 0, (kk) => { table(kk, { w: 3.6, d: 0.9, pal: 'dark' }); return { hw: 1.8, hd: 0.45, top: 0.8 }; });
-    B.put(x, z + 0.8, 0, (kk) => { bench(kk, { w: 3.2, pal: 'dark' }); return { hw: 1.6, hd: 0.18, top: 0.45 }; });
-    k.at(x, 0.8, z, 0, () => {
-      plate(k, -1.2, 0, 0.1, 0, '#c89a6a', 0.14, false); plate(k, -0.3, 0, -0.1, 0, '#a07a5a', 0.12, false); plate(k, 0.8, 0, 0.12, 0, '#c89a6a', 0.13, false);
-      jar(k, 0.3, 0, 0.15, 'bottle', '#3a7a8a', 1.1); jar(k, 1.4, 0, -0.1, 'jar', '#c8a050', 0.9); candle(k, -0.8, 0, -0.15);
-    });
+  const s = 0.63, L = 0.4, W = 41 * s, D = 39 * s, H = 9.0;
+  const X = (lx) => (lx - 22) * s - W / 2, Z = (lz) => (lz - 3) * s - D / 2;   // (the original's cell → the room's frame)
+  const CL = 8 * L, CD = 10 * L, WK = 5 * L, DS = 3 * L;   // classroom, its dais, the walkway, the hall's dais
+  R.view = 12.5; R.follow = 0.7; R.music = 'home';
+  // (the original's walls are a light grey stone: the grey stone texture lightened toward it and lit a little from
+  //  within, as Chez Luc's is, so the long wall reads as stone in the hall's dim light)
+  const stone = M('sc_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#dcdad6', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
+  const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.2), iron = MAT.iron();
+  const flags = MAT.tiles('#8e8c88', '#827f7a', '#3a3a3c', false, 3), checks = MAT.tiles('#a29f9a', '#6f6d6a', '#3a3a3c', true, 4);
+  const rockM = MAT.rubble('grey');
+  const glass = MAT.map(latticeTex(), 0.3, { emissive: '#3fb8a8', emissiveIntensity: 0.8, emissiveMap: latticeTex() });
+  const DOORX = (X(56) + X(61)) / 2, DOORW = X(61) - X(56);
+  const WINS = [35, 39, 43, 47, 51, 55, 59];
+  B.shell({ floor: flags, slab: rough, body: stone, low: stone, rail: iron, cap, H, t: 0.6, dado: 0.8, rimH: 0.5, rimMat: rough, W, D,
+    rimGaps: [{ x: DOORX, w: DOORW }],
+    back: WINS.map((lx) => ({ kind: 'window', at: X(lx), w: 1.4, h: 3.4, y0: 4.2, glass, frame: cap, sill: cap, mullion: iron, lining: stone })) });
+  // (each window's round head: teal glass in a stone arch)
+  for (const lx of WINS) {
+    k.add(new THREE.CircleGeometry(0.7, 16, 0, Math.PI), glass, X(lx), 7.6, -D / 2 + 0.02);
+    k.add(new THREE.TorusGeometry(0.76, 0.08, 5, 16, Math.PI), cap, X(lx), 7.6, -D / 2 + 0.05);
   }
-  // Ker'aooc's corner: a cot, shelves of remedies, a basin
-  k.add(rbox(1.0, 0.45, 2.1, 0.06), MAT.wood('honey'), -W / 2 + 0.8, 0.22, 3.6);
-  k.add(rbox(0.95, 0.12, 2.0, 0.05), MAT.cloth('#e8e2d0', '#c8c0a8'), -W / 2 + 0.8, 0.5, 3.6);
-  B.col(-W / 2 + 0.8, 3.6, 0.5, 1.05, 0.56, { noStand: true });
-  k.add(rbox(0.3, 0.06, 2.4, 0.02), MAT.wood('dark'), -W / 2 + 0.18, 1.9, 0.6);
-  for (let i = 0; i < 6; i++) jar(k, -W / 2 + 0.18, 1.93, -0.4 + i * 0.4, i % 2 ? 'jar' : 'bottle', ['#6ab84a', '#c8a050', '#3a7a8a', '#b85a8a', '#8a5a3a', '#4a9a7a'][i], 0.8);
-  // pillars
-  const pill = lathe([[0.001, 0], [0.55, 0], [0.45, 0.3], [0.4, H - 0.4], [0.55, H], [0.001, H]], 10);
-  for (const x of [-2.0, 3.2]) { k.add(pill, stone, x, 0, 1.0); B.ccol(x, 1.0, 0.48, H); }
-  B.light('#ffe0b0', 4, 12, -4, 4.2, 1); B.light('#ffe0b0', 4, 12, 3, 4.2, 1); B.light('#9ff0f0', 2, 8, 0.5, 3, BZ + 1);
-  R.npcSpots = {
-    magus: { x: B.cx + 5.2, z: B.cz + BZ + 1.9, a: 0.3 },
-    keraooc: { x: B.cx - W / 2 + 2.1, z: B.cz + 2.2, a: Math.PI / 2 },
+  // a solid of cells [lx0, lx1) × [lz0, lz1) up to top, its top paved
+  const block = (lx0, lz0, lx1, lz1, top, face, pave, extra = {}) => {
+    const x0 = X(lx0), x1 = X(lx1), z0 = Z(lz0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    k.add(rbox(x1 - x0, top, z1 - z0, 0.03), face, cx, top / 2, cz);
+    if (pave) k.add(rbox(x1 - x0 - 0.04, 0.02, z1 - z0 - 0.04, 0.005), pave, cx, top + 0.005, cz);
+    return B.col(cx, cz, (x1 - x0) / 2 + 0.06, (z1 - z0) / 2 + 0.06, top, extra);   // (6 cm over each edge: abutting blocks shrink 5 cm each under groundAt and left a 10 cm seam to fall into)
   };
-  B.giver('sm_remedies', -W / 2 + 0.9, 0.6, ['life', 'life', 'magic'], 1, { r: 1.1 });
+  // rough rock lumps over cells [lx0, lx1) × [lz0, lz1), from y0 up to about top: they stand as one solid
+  const rocks = (lx0, lz0, lx1, lz1, y0, top, seed = 1) => {
+    let r = seed * 9301 + 49297; const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+    const x0 = X(lx0), x1 = X(lx1), z0 = Z(lz0), z1 = Z(lz1);
+    const n = Math.max(2, Math.round((x1 - x0) * (z1 - z0) / 0.9));
+    for (let i = 0; i < n; i++) {
+      const x = x0 + 0.25 + rnd() * (x1 - x0 - 0.5), z = z0 + 0.25 + rnd() * (z1 - z0 - 0.5), h = (top - y0) * (0.7 + rnd() * 0.4), w = 0.5 + rnd() * 0.5;
+      k.add(sphere(0.5, 9, 7), rockM, x, y0 + h * 0.45, z, rnd() * 3, { sx: w * 1.4, sy: h, sz: w * 1.2 });
+    }
+    B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, top, { noStand: true });
+  };
+
+  // --- the classroom, 2.2 m up in the back left corner; the pit of rock in front of it (out of reach)
+  block(22, 3, 40, 18, CL, rough, checks);
+  B.col((X(22) + X(40)) / 2, Z(18) + 0.04, (X(40) - X(22)) / 2, 0.05, CL + 1.1, { seeThrough: true, noStand: true });   // (its open edge: no fall into the pit)
+  k.add(rbox(X(42) - X(22), 0.04, Z(42) - Z(18), 0.01), MAT.rubble('slate'), (X(22) + X(42)) / 2, 0.02, (Z(18) + Z(42)) / 2);
+  rocks(22, 18, 42, 42, 0, 1.3, 3);
+  // the teacher's dais along the left wall, one step up from the classroom in its middle
+  block(22, 3, 29, 18, CD, cap, flags);
+  block(29, 8, 30, 13, CL + L, cap, flags);
+  k.add(plane(2.2, 2.2), MAT.map(starFloorTex(), 0.8, { transparent: true }), X(25.5), CD + 0.02, Z(13.5), 0, { rx: -Math.PI / 2 });
+  B.put(X(27.5), Z(9), 0, (kk) => { table(kk, { w: 1.0, d: 0.9, h: 0.75, pal: 'dark' }); kk.add(rbox(1.1, 0.04, 1.0, 0.01), MAT.cloth('#a01818', '#7a1010'), 0, 0.76, 0); for (const sx of [-1, 1]) kk.add(rbox(0.04, 0.3, 1.0, 0.01), MAT.cloth('#a01818', '#7a1010'), sx * 0.55, 0.62, 0); return { hw: 0.55, hd: 0.5, top: 0.8 }; }, { y: CD });
+  k.at(X(27.5), CD + 0.78, Z(9), 0, () => { jar(k, 0.1, 0, 0, 'bottle', '#3a3a5a', 1.2); candle(k, -0.25, 0, 0.15); });
+  for (const lz of [5, 16]) B.put(X(22) + 0.3, Z(lz), Math.PI / 2, (kk) => bench(kk, { w: 1.3, pal: 'dark' }), { y: CD });
+  // two rows of three benches facing the dais
+  for (const lz of [5, 15.5]) for (const lx of [33.5, 35.5, 37.5]) B.put(X(lx), Z(lz), Math.PI / 2, (kk) => bench(kk, { w: 1.3, pal: 'dark' }), { y: CL });
+  // the blackboard on the back wall, over the dais's corner
+  k.add(rbox(3.4, 1.8, 0.1, 0.02), MAT.wood('dark'), X(31), CL + 2.2, -D / 2 + 0.06);
+  k.add(plane(3.2, 1.6), MAT.map(boardTex(), 0.9), X(31), CL + 2.2, -D / 2 + 0.12);
+  // the arch between two columns in the left wall, two round star windows beside it
+  const pillar = lathe([[0.001, 0], [0.32, 0], [0.3, 0.15], [0.24, 0.26], [0.24, 3.0], [0.31, 3.15], [0.32, 3.3], [0.001, 3.3]], 12);
+  for (const lz of [9, 12.5]) { k.add(pillar, cap, X(22) + 0.32, CD, Z(lz)); B.ccol(X(22) + 0.32, Z(lz), 0.3, CD + 3.3); }
+  k.add(plane(Z(12.5) - Z(9) - 0.5, 3.2), MAT.flat('#141618', 0.95), X(22) + 0.02, CD + 1.6, (Z(9) + Z(12.5)) / 2, Math.PI / 2);
+  k.add(new THREE.TorusGeometry((Z(12.5) - Z(9)) / 2, 0.18, 6, 18, Math.PI), cap, X(22) + 0.24, CD + 3.3, (Z(9) + Z(12.5)) / 2, Math.PI / 2);
+  const plq = MAT.map(starPlaque('#1a6a6a'), 0.4, { transparent: true, emissive: '#2a8a8a', emissiveIntensity: 0.7 });
+  for (const lz of [6.2, 15.3]) k.add(plane(1.4, 1.4), plq, X(22) + 0.03, CD + 2.6, Z(lz), Math.PI / 2);
+
+  // --- the stair down to the walkway, the rocks either side of it
+  for (let i = 0; i < 3; i++) {
+    const top = CL - L * (i + 1), x = X(40 + i) + s / 2, z0 = Z(8), z1 = Z(13);
+    k.add(rbox(s + 0.02, top, z1 - z0, 0.015), cap, x, top / 2, (z0 + z1) / 2);
+    B.col(x, (z0 + z1) / 2, s / 2 + 0.12, (z1 - z0) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
+  }
+  rocks(40, 3, 47, 8, CL - 0.3, CL + 0.6, 5);
+  rocks(40, 13, 43, 18, WK, CL + 0.6, 7);
+
+  // --- the walkway along the ridge of rock, 1.35 m up, to the front; the stair down into the hall near its end
+  block(43, 8, 46, 41, WK, stone, flags);
+  block(43, 41, 47, 42, WK + 0.9, rough, null, { noStand: true });   // (its front parapet)
+  const RIDGE = WK + 2.4;   // (the ridge of rock between the walkway and the pit)
+  k.add(rbox(X(43) - X(42) + 0.1, RIDGE, Z(42) - Z(18), 0.06), rough, (X(42) + X(43)) / 2, RIDGE / 2, (Z(18) + Z(42)) / 2);
+  B.col((X(42) + X(43)) / 2, (Z(18) + Z(42)) / 2, (X(43) - X(42)) / 2 + 0.05, (Z(42) - Z(18)) / 2, RIDGE, { noStand: true });
+  rocks(42, 18, 43, 42, RIDGE - 0.8, RIDGE + 0.6, 11);
+  // the iron fence on its open side, broken where the stair goes down
+  const FX = X(46) - 0.04, SZ0 = Z(35), SZ1 = Z(39);
+  for (const [z0, z1] of [[Z(8), SZ0], [SZ1, Z(41)]]) {
+    k.at(0, WK, 0, 0, () => railing(k, [[FX, z0], [FX, z1]], { h: 1.0, mat: iron, step: 0.35 }));
+    B.col(FX, (z0 + z1) / 2, 0.06, (z1 - z0) / 2, WK + 1.0, { seeThrough: true, noStand: true });
+  }
+  for (let i = 0; i < 4; i++) {
+    const top = WK - L * (i + 1), x = X(46 + i) + s / 2;
+    k.add(rbox(s + 0.02, top, SZ1 - SZ0, 0.015), cap, x, top / 2, (SZ0 + SZ1) / 2);
+    B.col(x, (SZ0 + SZ1) / 2, s / 2 + 0.12, (SZ1 - SZ0) / 2, top, { stair: true });
+  }
+  for (const z of [SZ0, SZ1]) {
+    railing(k, [[X(46), z], [X(50), z]], { h: 0.9, mat: iron, step: 0.4 });
+    B.col((X(46) + X(50)) / 2, z, (X(50) - X(46)) / 2, 0.05, WK + 0.9, { seeThrough: true, noStand: true });
+  }
+  // gargoyle posts at the stair's head, globe lamps at the walkway's front end
+  for (const z of [SZ0, SZ1]) k.at(FX, WK, z, -Math.PI / 2, () => gargoylePost(k, cap, iron));
+  for (const z of [Z(39.6), Z(40.6)]) {
+    k.add(cyl(0.14, 0.18, 1.2, 10), stone, X(43) + 0.3, WK + 0.6, z);
+    k.add(sphere(0.2, 14, 10), MAT.glow('#bff4ff', '#7fd8ff', 1.3), X(43) + 0.3, WK + 1.4, z);
+    B.ccol(X(43) + 0.3, z, 0.18, WK + 1.6, { noStand: true });
+  }
+  B.put(X(44), Z(9.5), 0, (kk) => barrel(kk, { r: 0.32, h: 0.85, pal: 'dark' }), { y: WK });
+
+  // --- the hall's dais at the back, the stepped pyramid up to it, the rocks where it meets the walkway
+  block(47, 3, 63, 11, DS, stone, flags);
+  block(50, 11, 60, 16, L, cap, flags); block(51, 11, 59, 15, 2 * L, cap, flags); block(52, 11, 58, 14, DS, cap, flags);
+  rocks(47, 3, 50, 10, DS, WK + 1.4, 13);
+  B.put(X(55.5), Z(4.6), 0, (kk) => starChest(kk), { y: DS });
+  for (const [lx, lz] of [[52, 5], [59.5, 5], [53, 10], [58, 10]]) B.put(X(lx), Z(lz), 0, (kk) => candleStand(kk, iron), { y: DS });
+  B.put(X(45.5), Z(8.7), 0, (kk) => candleStand(kk, iron), { y: WK });   // (in the walkway's back corner, off the way to the stair)
+
+  // --- the dining hall: eight long tables, two to a row, with bowls, bottles and candles
+  const rows = [[19, [[48, 52], [54, 62]]], [23, [[48, 56], [58, 62]]], [27, [[48, 56], [58, 62]]], [31, [[48, 52], [54, 62]]]];
+  let seed = 0;
+  for (const [lz, runs] of rows) for (const [a, b] of runs) {
+    const x = (X(a) + X(b)) / 2, z = Z(lz) + s, w = X(b) - X(a) - 0.2, sd = seed;
+    B.put(x, z, 0, (kk) => table(kk, { w, d: 0.78, h: 0.8, pal: 'dark' }));
+    k.at(x, 0.8, z, 0, () => {
+      for (let i = 0; i < Math.floor(w / 0.6); i++) {
+        const px = -w / 2 + 0.35 + i * 0.6, kind = (i + sd) % 4;
+        if (kind === 0) plate(k, px, 0, 0.12, 0, '#c89a6a', 0.13, false);
+        else if (kind === 1) jar(k, px, 0, -0.1, 'bottle', ['#3a7a8a', '#6a8a9a', '#2f6f74'][sd % 3], 1.1);
+        else if (kind === 2) plate(k, px, 0, -0.08, 0, '#a07a5a', 0.12, false);
+        else candle(k, px, 0, 0.1);
+      }
+    });
+    seed++;
+  }
+  // Ker'aooc's corner by the door: a cot and her cabinet of remedies
+  B.put(X(61.5), Z(37.5), 0, (kk) => { kk.add(rbox(0.95, 0.45, 2.0, 0.06), MAT.wood('honey'), 0, 0.22, 0); kk.add(rbox(0.9, 0.12, 1.9, 0.05), MAT.cloth('#e8e2d0', '#c8c0a8'), 0, 0.5, 0); return { hw: 0.48, hd: 1.0, top: 0.56 }; });
+  B.put(X(62) - 0.25, Z(33.5), -Math.PI / 2, (kk) => {
+    kk.add(rbox(1.6, 1.9, 0.4, 0.03), MAT.wood('dark'), 0, 0.95, 0);
+    for (const y of [0.6, 1.1, 1.6]) for (let i = 0; i < 4; i++) jar(kk, -0.55 + i * 0.37, y, 0.22, i % 2 ? 'jar' : 'bottle', ['#6ab84a', '#c8a050', '#3a7a8a', '#b85a8a'][i], 0.8);
+    return { hw: 0.8, hd: 0.2, top: 1.9 };
+  });
+  B.giver('sm_remedies', X(61.2), Z(32), ['life', 'life', 'magic'], 1, { r: 1.1 });
+  // the door's stone frame in the front
+  for (const sx of [-1, 1]) { k.add(rbox(0.55, 3.6, 0.75, 0.03), cap, DOORX + sx * (DOORW / 2 + 0.27), 1.8, D / 2 + 0.3); B.col(DOORX + sx * (DOORW / 2 + 0.27), D / 2 + 0.3, 0.28, 0.38, 3.6); }
+  k.add(rbox(DOORW + 1.1, 0.5, 0.75, 0.03), cap, DOORX, 3.85, D / 2 + 0.3);
+  R.exits.push({ x: B.cx + DOORX, z: B.cz + D / 2 - 0.3, r: 0.9, to: 'school-out' });
+  R.spawn = { x: B.cx + DOORX, z: B.cz + D / 2 - 1.7, a: Math.PI };
+
+  B.light('#ffe0b0', 6, 20, X(55), 5.5, Z(24)); B.light('#ffe0b0', 5, 16, X(31), CL + 3.2, Z(10)); B.light('#9ff0f0', 3, 18, X(48), 6.2, Z(6)); B.light('#ffd8a0', 3, 10, X(55), DS + 2.0, Z(6));
+  R.npcSpots = {
+    magus: { x: B.cx + X(26), z: B.cz + Z(11), a: Math.PI / 2 },
+    keraooc: { x: B.cx + X(60), z: B.cz + Z(35.5), a: -Math.PI / 2 },
+  };
   return B.finish();
+}
+// the hall's teal window glass: leaded diamonds
+const latticeTex = () => canvasTex(128, 256, (x, W, H) => {
+  x.fillStyle = '#2a8a80'; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '0,40,40' : '160,255,240'},${Math.random() * 0.15})`; x.fillRect(Math.random() * W, Math.random() * H, 10, 10); }
+  x.strokeStyle = '#14302c'; x.lineWidth = 5;
+  for (let d = -H; d < W + H; d += 32) { x.beginPath(); x.moveTo(d, 0); x.lineTo(d + H, H); x.stroke(); x.beginPath(); x.moveTo(d, H); x.lineTo(d + H, 0); x.stroke(); }
+});
+// the star on the teacher's dais
+const starFloorTex = () => canvasTex(256, 256, (x, W) => {
+  x.clearRect(0, 0, W, W);
+  x.strokeStyle = 'rgba(40,36,34,0.85)'; x.lineWidth = 6;
+  x.beginPath(); x.arc(W / 2, W / 2, 110, 0, 7); x.stroke();
+  x.beginPath(); for (let i = 0; i <= 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 4 / 5; x.lineTo(W / 2 + Math.cos(a) * 110, W / 2 + Math.sin(a) * 110); } x.stroke();
+});
+// the hall's props: a gargoyle on a stone post, the star chest, a twisted iron candle stand
+function gargoylePost(k, stone, iron) {
+  k.add(rbox(0.36, 1.1, 0.36, 0.03), stone, 0, 0.55, 0);
+  k.add(sphere(0.2, 10, 8), MAT.flat('#5a5650', 0.8), 0, 1.3, 0.04, 0, { sx: 1, sy: 0.9, sz: 1.2 });
+  for (const sx of [-1, 1]) k.add(cyl(0.01, 0.05, 0.22, 6), iron, sx * 0.12, 1.5, 0, 0, { rz: -sx * 0.4 });
+  for (const sx of [-1, 1]) k.add(sphere(0.03, 6, 4), MAT.glow('#ff6a3a', '#ff3a1a', 1.4), sx * 0.07, 1.33, 0.22);
+}
+function starChest(k) {
+  k.add(rbox(0.9, 0.5, 0.6, 0.03), MAT.paint('#1e2830', 0.5), 0, 0.25, 0);
+  k.add(rbox(0.94, 0.06, 0.64, 0.02), MAT.brass(), 0, 0.52, 0);
+  const st = MAT.map(starPlaque('#1e2830'), 0.5, { transparent: true });
+  for (const x of [-0.25, 0.05, 0.3]) k.add(plane(0.22, 0.22), st, x, 0.27, 0.305);
+  return { hw: 0.47, hd: 0.32, top: 0.56 };
+}
+function candleStand(k, iron) {
+  k.add(cyl(0.18, 0.2, 0.04, 10), iron, 0, 0.02, 0);
+  for (let i = 0; i < 6; i++) k.add(rbox(0.03, 0.2, 0.03, 0.005), iron, 0, 0.12 + i * 0.2, 0, i * 0.5);
+  k.add(cyl(0.11, 0.06, 0.06, 10), iron, 0, 1.3, 0);
+  k.add(cyl(0.05, 0.05, 0.16, 8), MAT.flat('#f2e2c2', 0.6), 0, 1.41, 0);
+  k.add(lathe([[0.001, 0], [0.018, 0.015], [0.001, 0.06]], 6), MAT.glow('#fff0b0', '#ffb030', 3), 0, 1.5, 0);
+  return { r: 0.2, top: 1.4 };
 }
 
 export function buildWizards(scene, physics, desert, world) {

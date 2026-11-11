@@ -3,7 +3,7 @@
 // melee and targeting, the dodge's invulnerability, the ball at low frame rates (no tunnelling), recall,
 // scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
 // the ball switch, weapon save/load, dodge distance at 30 vs 60 fps and by direction (LBA2's), and the ball's LBA2 rules (magic, bounces, fetch).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

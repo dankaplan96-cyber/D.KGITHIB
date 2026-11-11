@@ -71,48 +71,50 @@ function till(k) {
 export function buildTicketRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'ticket', TICKET_AT.x, TICKET_AT.z);
   const R = B.room, k = B.k;
-  const W = 6.4, D = 6.4, H = 3.6;
-  R.view = 9; R.follow = 0.22; R.music = 'home';
+  // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
+  //  furniture keeps its size)
+  const F = 1.5, W = 6.4 * F, D = 6.4 * F, H = 4.0;
+  R.view = 10; R.follow = 0.55; R.music = 'home';
   // (the same pale grey blocks as the tavern and the shop: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 1.9;
+  const LX = -W / 2, BZ = -D / 2, DOORZ = 1.9 * F;
   B.shell({ floor: MAT.tiles('#ecebe6', '#2c2c32', '#5a5a60', true, 8), slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.5, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
-    back: [{ kind: 'window', at: -1.2, w: 0.9, h: 1.0, y0: 1.5, curtain: '#b0302c' }, { kind: 'window', at: 2.0, w: 0.9, h: 1.0, y0: 1.5, curtain: '#b0302c' }],
+    back: [{ kind: 'window', at: -1.2 * F, w: 0.9, h: 1.0, y0: 1.6, curtain: '#b0302c' }, { kind: 'window', at: 2.0 * F, w: 0.9, h: 1.0, y0: 1.6, curtain: '#b0302c' }],
     left: [{ at: DOORZ, w: 1.3, h: 2.4, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.75, to: 'ticket-out' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
   // --- the counter across the room at half its depth, the cabinet at its left end, the till and the tickets on it
-  const CZ = -0.4, CX0 = LX + 0.9, CX1 = W / 2 - 1.0;
+  const CZ = -0.4 * F, CX0 = LX + 0.9, CX1 = W / 2 - 1.0 * F;
   k.add(rbox(CX1 - CX0, 1.0, 0.6, 0.12), METAL(), (CX0 + CX1) / 2, 0.5, CZ);
   k.add(rbox(CX1 - CX0 + 0.08, 0.05, 0.66, 0.02), DARK(), (CX0 + CX1) / 2, 1.02, CZ);
   B.col((CX0 + CX1) / 2, CZ, (CX1 - CX0) / 2, 0.32, 1.05, { noStand: true });
   k.add(rbox(0.75, 1.15, 0.6, 0.04), MAT.wood('honey'), LX + 0.45, 0.575, CZ);
   for (const y of [0.35, 0.85]) k.add(rbox(0.6, 0.02, 0.02, 0.005), MAT.brass(), LX + 0.45, y, CZ + 0.31);
   B.col(LX + 0.45, CZ, 0.4, 0.32, 1.2, { noStand: true });
-  k.at(0.6, 1.045, CZ, 0, () => till(k));
-  for (let i = 0; i < 4; i++) k.add(rbox(0.22, 0.012, 0.14, 0.004), MAT.paint(['#f2ead6', '#e8d8a8', '#f2ead6', '#d8e8f0'][i], 0.7), 1.6 + (i % 2) * 0.03, 1.05 + i * 0.012, CZ + 0.05);
-  R.npcSpots = { clerk: { x: B.cx + 0.6, z: B.cz + CZ - 0.75, a: 0 } };
+  k.at(0.6 * F, 1.045, CZ, 0, () => till(k));
+  for (let i = 0; i < 4; i++) k.add(rbox(0.22, 0.012, 0.14, 0.004), MAT.paint(['#f2ead6', '#e8d8a8', '#f2ead6', '#d8e8f0'][i], 0.7), 1.6 * F + (i % 2) * 0.03, 1.05 + i * 0.012, CZ + 0.05);
+  R.npcSpots = { clerk: { x: B.cx + 0.6 * F, z: B.cz + CZ - 0.75, a: 0 } };
   // --- the staff's side behind it: a chair, stools, the plant on its stand, the bench with the luggage
   B.put(LX + 1.3, BZ + 0.9, 0.6, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
-  for (const x of [-0.9, 1.2]) B.put(x, CZ - 1.1, 0, (kk) => stool(kk));
-  B.put(0.15, BZ + 0.75, 0, (kk) => { kk.add(cyl(0.4, 0.45, 0.25, 16), DARK(), 0, 0.125, 0); return { r: 0.45, top: 0.25 }; });
-  k.at(0.15, 0.25, BZ + 0.75, 0, () => pottedPlant(k, { kind: 'spiky', s: 1.2, potColor: '#3a3a40' }));
+  for (const x of [-0.9 * F, 1.2 * F]) B.put(x, CZ - 1.3, 0, (kk) => stool(kk));
+  B.put(0.15 * F, BZ + 0.75, 0, (kk) => { kk.add(cyl(0.4, 0.45, 0.25, 16), DARK(), 0, 0.125, 0); return { r: 0.45, top: 0.25 }; });
+  k.at(0.15 * F, 0.25, BZ + 0.75, 0, () => pottedPlant(k, { kind: 'spiky', s: 1.2, potColor: '#3a3a40' }));
   B.put(W / 2 - 1.1, BZ + 0.45, 0, (kk) => luggageBench(kk));
   // --- the public's side in front: red chairs along the left wall and the front, two globe lamps
-  for (const z of [0.6, 2.9]) B.put(LX + 0.45, z, Math.PI / 2, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
-  for (const x of [0.4, 1.2, 2.0]) B.put(x, D / 2 - 0.45, Math.PI, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
-  for (const [x, z] of [[LX + 0.5, 1.15], [-0.6, D / 2 - 0.5]]) B.put(x, z, 0, (kk) => postLamp(kk));
+  for (const z of [0.6 * F, 2.9 * F]) B.put(LX + 0.45, z, Math.PI / 2, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
+  for (const x of [0.4 * F, 1.2 * F, 2.0 * F]) B.put(x, D / 2 - 0.45, Math.PI, (kk) => chair(kk, { pal: 'pale', cushion: '#b0302c' }));
+  for (const [x, z] of [[LX + 0.5, 1.15 * F], [-0.6 * F, D / 2 - 0.5]]) B.put(x, z, 0, (kk) => postLamp(kk));
   // --- the walls: the Temple poster and the clock on the left, the ship poster between the back windows
-  k.add(plane(0.75, 1.0), templePoster(), LX + 0.03, 1.75, -1.6, Math.PI / 2);
-  k.add(cyl(0.24, 0.24, 0.05, 20), DARK(), LX + 0.05, 2.85, -0.4, 0, { rz: Math.PI / 2 });
-  k.add(new THREE.CircleGeometry(0.21, 20), MAT.map(CANV.clock(), 0.6), LX + 0.085, 2.85, -0.4, Math.PI / 2);
-  k.add(plane(1.0, 0.72), shipPoster(), 0.4, 1.95, BZ + 0.03);
+  k.add(plane(0.75, 1.0), templePoster(), LX + 0.03, 1.75, -1.6 * F, Math.PI / 2);
+  k.add(cyl(0.24, 0.24, 0.05, 20), DARK(), LX + 0.05, 3.0, -0.4 * F, 0, { rz: Math.PI / 2 });
+  k.add(new THREE.CircleGeometry(0.21, 20), MAT.map(CANV.clock(), 0.6), LX + 0.085, 3.0, -0.4 * F, Math.PI / 2);
+  k.add(plane(1.0, 0.72), shipPoster(), 0.4 * F, 2.05, BZ + 0.03);
   // twelve years on: the ferry's timetable by the door
   k.at(LX + 0.03, 1.5, DOORZ - 1.15, Math.PI / 2, () => noticeBoard(k, 0.6, 0.5, 13));
 
-  B.light('#ffe8c8', 4.5, 8, -0.5, 3.0, 0.8); B.light('#ffe8c8', 3.5, 7, 1.8, 3.0, -1.6);
+  B.light('#ffe8c8', 5, 12, -0.5 * F, 3.4, 0.8 * F); B.light('#ffe8c8', 4, 10, 1.8 * F, 3.4, -1.6 * F);
   return { ticket: B.finish() };
 }
 

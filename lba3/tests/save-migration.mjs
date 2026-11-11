@@ -2,7 +2,7 @@
 // a corrupt save is set aside (never deleted) and a new game starts with a message. A format-4 save from before the
 // final chapter was split in two (The Shell, The Core) loads into the right half: the core room or a begun fight →
 // chapter 12; Sendell's chamber and earlier → chapter 11; the epilogue keeps its place (its position moved one on).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
 const { check, done } = checker({ info: 'always' });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });

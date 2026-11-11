@@ -6,7 +6,7 @@
 // 2. In the game: a character's line babbles, signs and notes stay silent, the radio is band-limited, and nothing
 //    keeps sounding after the text is skipped, the dialogue closes, or a cinematic pauses.
 // Not a listening test: nothing here says how a voice sounds to a person.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

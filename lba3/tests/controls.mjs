@@ -5,7 +5,7 @@
 // CTRL-1 (4–8): LBA2's tank controls, the ball's arcs and aimed distance (the automatic aim at enemies kept), the follow
 // camera — measured by input at 60 / 30 fps (MEASURE lines); CONTROL-FEEL: the jump's height and length (6b). ONLY=tank,jump,ball,camera
 // runs just those sections.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });

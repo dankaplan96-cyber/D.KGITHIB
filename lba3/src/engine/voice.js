@@ -31,7 +31,7 @@ function vowelKey(text, i) {
   return VOWEL_KEYS[(text.charCodeAt(i) + i) % VOWEL_KEYS.length];
 }
 
-const LEVEL = 0.21;      // a syllable's peak gain into the voice bus (before the voice volume)
+const LEVEL = 0.19;      // a syllable's peak gain into the voice bus (before the voice volume; VOICE-SOFT: 0.21 was too present)
 const LEAD = 0.03;       // schedule this far ahead of the audio clock (never in the past: no clicks)
 const MAXQ = 0.22;       // the text ran ahead of the voice by more than this: drop the syllable, don't queue
 const CHANNELS = 2;      // pooled filter chains
@@ -41,8 +41,10 @@ const CHANNELS = 2;      // pooled filter chains
 // (syllables), legato (voiced share of a syllable), swing (long-short alternation), foot (stress every n),
 // contour, range (semitones), jit (melodic randomness), quant (snap the melody to a scale), vib [Hz, cents],
 // trem [Hz, depth], glide (portamento s), atk / rel (s), level, mouth (how wide the talking mouth opens, 0-1: FACES-HANDS).
+// (VOICE-SOFT, the user 2.11: "too annoying, too robotic, a clipped voice": softer edges and smoother glides; every voice's
+//  syllables join at least 60 % (Babble.syllable))
 const BASE = { k: 1, vowel: [1, 1], f3: 1, tilt: 1.75, breath: 0.07, bright: 3800, nasal: 0.15, rate: 1, legato: 0.72, swing: 0.12, foot: 2,
-  contour: 'arc', range: 4, jit: 0.45, quant: null, vib: [5.2, 12], trem: null, glide: 0.035, atk: 0.028, rel: 0.045, level: 1, mouth: 1 };
+  contour: 'arc', range: 4, jit: 0.45, quant: null, vib: [5.2, 12], trem: null, glide: 0.035, atk: 0.032, rel: 0.05, level: 1, mouth: 1 };
 export const RACES = {
   // Quetch (Twinsen's people): the plain, warm speaking voice everyone else is heard against
   quetch: {},
@@ -125,7 +127,7 @@ export const VOICES = {
   bashir: { race: 'quetch', seed: 137, f0: 118, k: 0.94, rate: 0.78, contour: 'fall', vib: [5, 20], tilt: 2.0 },
   ume: { race: 'bunny', seed: 333, f0: 158, k: 1.06, rate: 0.75, vib: [5.2, 26], contour: 'fall', legato: 0.8 },
   // --- Rabbibunnies
-  mira: { race: 'bunny', seed: 301, f0: 205, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
+  mira: { race: 'bunny', seed: 301, f0: 214, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
   pippa: { race: 'bunny', seed: 302, f0: 230, k: 1.22, rate: 1.2, contour: 'zigzag', range: 5, legato: 0.45 },                     // the merchant: quick patter
   bersimon: { race: 'bunny', seed: 303, f0: 150, k: 1.1, rate: 0.95, vib: [5.8, 26], contour: 'sing' },
   magus: { race: 'bunny', seed: 304, f0: 125, k: 1.06, rate: 0.85, legato: 0.75, contour: 'fall' },                 // Rector Hougo
@@ -175,6 +177,26 @@ function rng(seed) {
 }
 
 // the voice for a speaker's name key ('n_zoe', 'n_zoeradio', ''), or null
+// VOICE-SEX (the user 2.11: "tell men and women apart more"): the grown women and men among the named speakers. A woman's
+// voice in the ambiguous middle moves up (to at least about 215 Hz) with a smaller head's formants and a little more
+// breath; a man's moves down (to about 170 Hz at most) with a slightly bigger head's. Children keep their own voices; Twinsen and Zoé keep the original's measured pitch.
+const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', 'oda', 'tilde', 'ilo', 'kira', 'ume', 'mira', 'pippa', 'farmer2', 'ilka',
+  'weaver', 'odile', 'nara', 'maro',
+  // (those still without a voice of their own: the fallback below gives them a woman's)
+  'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi']);
+const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
+  'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
+  'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
+  'luc', 'hobb', 'fenn', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo']);
+const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
+function sexed(v, sex) {
+  if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;
+  // (only a voice in the ambiguous middle moves; the others already read as a woman or a man and keep their place)
+  if (sex === 'f' && v.f0 < 210) { v.f0 = Math.round(215 + (v.f0 - 175) * 0.6); v.k = Math.max(v.k, 1.12); v.breath += 0.02; }
+  else if (sex === 'm' && v.f0 > 160) { v.f0 = Math.round(160 + (v.f0 - 160) * 0.4); v.k *= 0.97; }
+  return v;
+}
+
 export function voiceFor(nameKey) {
   if (!nameKey || !nameKey.startsWith('n_')) return null;
   let id = nameKey.slice(2);
@@ -185,10 +207,12 @@ export function voiceFor(nameKey) {
   let own = VOICES[id];
   if (!own) { // someone without a voice of their own: a Quetch voice from the name, stable
     const h = hashStr(id);
-    own = { race: 'quetch', seed: h, f0: 110 + (h % 170), k: 0.92 + ((h >>> 8) % 26) / 100, rate: 0.9 + ((h >>> 16) % 25) / 100,
-      contour: ['arc', 'fall', 'sing', 'bounce'][(h >>> 20) % 4] };
+    // (VOICE-SEX: a clearly male or a clearly female voice, never the ambiguous middle)
+    const f = WOMEN.has(id) ? 1 : MEN.has(id) ? 0 : (h >>> 27) & 1;
+    own = { race: 'quetch', seed: h, f0: f ? 212 + (h % 44) : 105 + (h % 45), k: f ? 1.13 + ((h >>> 8) % 8) / 100 : 0.9 + ((h >>> 8) % 9) / 100,
+      rate: 0.9 + ((h >>> 16) % 25) / 100, contour: ['arc', 'fall', 'sing', 'bounce'][(h >>> 20) % 4], sex: f ? 'f' : 'm' };
   }
-  const v = { ...BASE, ...RACES[own.race || 'quetch'], ...own, id, radio: radio || id === 'radio' };
+  const v = sexed({ ...BASE, ...RACES[own.race || 'quetch'], ...own, id, radio: radio || id === 'radio' }, own.sex || (WOMEN.has(id) ? 'f' : MEN.has(id) ? 'm' : null));
   if (v.radio) v.level *= 0.9;
   return v;
 }
@@ -286,9 +310,9 @@ export class Babble {
     if (text !== this.text) { this.text = text; this.lineHash = hashStr(text); this.syl = 0; this.acc = 4 - v.rate; this.pend = []; }
     for (let i = from; i < to; i++) {
       const c = text[i] || ' ';
-      if (BREAK.has(c)) { if (PUNCT.has(c)) this.acc = -1.2; continue; } // a pause at punctuation
+      if (BREAK.has(c)) { if (PUNCT.has(c)) this.acc = -1.2; continue; } // a pause at punctuation, a breath between words
       this.acc += v.rate;
-      if (this.acc < 4) continue; // ≈ 10 syllables a second at the normal text speed, scaled by the voice's rate
+      if (this.acc < 4) continue; // ≈ 9.5 syllables a second at the normal text speed, scaled by the voice's rate (VOICE-SOFT: 10 was a clatter)
       this.acc = 0;
       this.syllable(text, i);
     }
@@ -407,18 +431,19 @@ export class Babble {
     if (stress) st += 0.5;
     st = quantize(st, v.quant);
     const f = v.f0 * Math.pow(2, st / 12);
+    const leg = v.race === 'tri' || v.race === 'robot' ? v.legato : Math.max(v.legato, 0.55);   // (VOICE-SOFT: a person's syllables join a little; the triangle-heads and machines stay clipped by design)
 
     // ---- rhythm: syllable length from the voice's rate, swing (long-short) and stress
     const swing = 1 + v.swing * (n % 2 ? -1 : 1);
     const dur = Math.min(0.24, Math.max(0.055, (0.088 / Math.pow(v.rate, 0.7)) * swing * (stress ? 1.15 : 1) * (0.92 + r() * 0.16)));
     // the next syllable waits for this one's release (a clear dip between syllables), at most for its length
-    this.tNext = ts + Math.min(dur, dur * v.legato + v.rel * 0.8);
+    this.tNext = ts + Math.min(dur, dur * leg + v.rel * 0.8);
 
     // ---- the mouth (FACES-HANDS): one open-and-close per syllable, as far as its vowel opens it, shut lips on m/b/p/w
     {
       const vk = vowelKey(text, i), cm = (text[i] || '').toLowerCase();
       const wall = this.mt + (ts - now);
-      this.mev.push({ a: wall + (HISS.has(cm) ? 0.03 : 0.012), d: Math.max(0.07, Math.min(dur, dur * v.legato + 0.04)),
+      this.mev.push({ a: wall + (HISS.has(cm) ? 0.03 : 0.012), d: Math.max(0.07, Math.min(dur, dur * leg + 0.04)),
         o: MOUTH_OPEN[vk] * (LIPS.has(cm) ? 0.55 : 1) * (stress ? 1 : 0.88) * v.mouth, r: MOUTH_ROUND[vk] });
       if (this.mev.length > 24) this.mev.shift();
     }
@@ -437,7 +462,7 @@ export class Babble {
     const hiss = HISS.has(c0), tap = STOP.has(c0), nas = NASAL.has(c0);
     const snuff = v.snuffle && (i === s0 || n === 0);
     const cd = hiss ? 0.045 : tap ? 0.016 : snuff ? 0.07 : 0;
-    const peak = LEVEL * (stress ? 1.18 : 1) * (tail === '!' ? 1.15 : 1);
+    const peak = LEVEL * (stress ? 1.18 : 1) * (tail === '!' ? 1.15 : 1) * (0.92 + r() * 0.16);
     if (cd && v.breath > 0) {
       const cg = ch.consG.gain, ca = peak * (hiss ? 0.18 : snuff ? 0.3 : 0.3);
       ch.cons.frequency.setValueAtTime(snuff ? 900 : hiss ? 4600 * Math.sqrt(v.k) : 2300 * v.k, ts);
@@ -473,7 +498,7 @@ export class Babble {
     g.cancelScheduledValues(tv);
     g.setTargetAtTime(peak, tv, v.atk / 3);
     g.setTargetAtTime(peak * 0.78, tv + v.atk, dur * 0.5);
-    g.setTargetAtTime(0, tv + Math.max(v.atk, dur * v.legato), v.rel / 3);
+    g.setTargetAtTime(0, tv + Math.max(v.atk, dur * leg), v.rel / 3);
   }
 }
 

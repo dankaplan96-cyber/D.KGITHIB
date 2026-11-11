@@ -3,7 +3,7 @@
 // pickups, music voices, live intervals and listeners, JS heap. The first cycles warm caches up; growth is
 // judged between cycle 5 and the last. Played through the input harness. Software rendering (SwiftShader):
 // the memory/object counts are meaningful, frame times are not.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { chromium } from 'file:///C:/Users/dan/lba3/lba3/tools/testlab/node_modules/playwright/index.mjs';
 import { open, menu, checker, watch, URL0 } from './lib/boot.mjs';
 const N = +(process.env.CYCLES || 30);
 const { check, done } = checker();
