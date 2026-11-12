@@ -381,3 +381,23 @@ and colours, buildings-interiors (the cloud) for doors and rooms.
 
 The first eight bring Twinsen's quarter to about 86. The lighthouse and the harbour come to about 80–82; the rest stay
 in the high 70s.
+
+## Re-score after CITADEL-85 (the desktop, 12.11.2026)
+CLOUD_ORDERS 40 item 6: the lighthouse, the north-west plateau, the harbour and the square, now that CITADEL-85
+(`e2a9d1dc`: an LBA2-like lighthouse tower, Bersimon's rounded red tent, barrel roofs on the long hall and Nell's, hip
+roofs on Bug Street and the school, gold square lamps) is in. **Our side:** build `501714ce`, Chrome on the desktop's
+GTX 1050, the play camera (Follow, Medium) and, for the lighthouse, a free camera aimed at the tower (the play camera
+looks down at Twinsen below the cliff and cuts the tower off). Pictures: `captures/curator-citadel-85/` (chapters 1–2).
+**Reference side:** the scores above and their written descriptions of R-ISO / R-MAP (the laptop's renders are not on the
+desktop), so every changed category is **M** at best. `tools/worldscore.mjs` on this build: Citadel 82.1 (coast 90.8,
+height 80.0, landmarks 97.5, objects 48.3).
+
+| District | Before | After | What changed (only these categories move) |
+|---|---|---|---|
+| Lighthouse headland | 67, critical | **84** | architecture 8 → 17: now a square white stone tower with grey quoins, a lantern, a domed cap and an annex at its foot, LBA2's description (`c1`, `c2`); landmarks 14 → 18; palette 8 → 12. **The critical landmark failure is resolved.** Left: the tower's proportions not measured against R-ISO 35 here |
+| North-west plateau | 66, critical | **73** | architecture 13 → 16 and palette 7 → 9: Bersimon's tent is now red and rounded (`c3`, `c3b`), as LBA2's body 3; landmarks 13 → 15. **The critical failure (the tent) is resolved.** Left: the project depot (containers, fences, pipes) still crowds the plateau |
+| Harbour and harbour wing | 73 | **76** | architecture 12 → 15: the long hall and Nell's have barrel roofs, as LBA2's (`c4`, `c5`). Left: the quay is a natural shore, not LBA2's straight paved platform |
+| Town square and Bug Street | 75 | **78** | landmarks 16 → 18: the gold globe lamps stand round the statue again (`c6`, `c7`); architecture 12 → 13: Bug Street's pair have low hip roofs (`c8`), nearer LBA2's flat-roofed pair than the gables were. Left: grass inside the square where LBA2 has formal paving and four lawns |
+
+None reaches 85 yet. The largest points left: the harbour's quay (a straight paved platform), the square's paving, and
+the plateau's crowding by the depot (a twelve-years addition: the cloud's call).

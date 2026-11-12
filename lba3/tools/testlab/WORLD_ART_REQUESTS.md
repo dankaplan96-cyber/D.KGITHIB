@@ -4619,3 +4619,19 @@ back, and from the side. The chapter is reached as `chapter4.mjs` does. Pictures
 - **Draw calls** (`renderer.info`, one frame at the same spot): at the lever 154 → 155, 6 m back 152 → 152; triangles
   +1.3 k.
 - Tests (SwiftShader): chapter4 59/59 (a first run passed its 46 checks but stopped on 10 `ERR_NETWORK_IO_SUSPENDED` file loads, the machine's network paused; rerun clean), campaign-hands 3/3, chapter5 23/23 PASS. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+
+## CURATOR-27a · Desert Island, the Hamalayi, and Citadel re-scored after CITADEL-85 · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 6. Provisional editorial scores (the pack's rubric; not reviewed by the user). Reports:
+`docs/lba-maturity/resemblance-desert.md`, `resemblance-hamalayi.md`, and a new last section in `resemblance-citadel.md`.
+`tools/worldscore.mjs` on this build: Citadel 82.1, Desert Island 83.1 (it was 85.0), the Hamalayi 27.4 partial.
+- **Desert Island:** the village 72, the standing figures and the gateway **64 (critical landmark)**, the great hall and
+  the face 74, the coast 84. The original's objects, drawn from the user's files with the repo's study renderer (scratch
+  only), show: village houses with **rows of small round domes on their parapets**, a teal-trimmed domed tower house;
+  the 5.2 m figures are **peach columns with a red band and a teal dome cap** (ours: dark hooded figures); the gateway's
+  beam is **chequered black and white**; S28 is **a giant grey stone face**. Two art batches proposed in the report.
+- **The Hamalayi:** 69, all L (our own region by the user's direction; no LBA1 grid renderer on the desktop). Re-score after
+  wave 3 (Lhar, the Pass, the Observatory) lands.
+- **Citadel after CITADEL-85:** the lighthouse 67 → **84** and the north-west plateau 66 → **73**, both critical failures
+  resolved; the harbour 73 → 76; the square 75 → 78. Pictures `captures/curator-citadel-85/` (chapters 1–2).
+- **Question for the cloud:** should the desktop send the Desert batches (Kesh's domes and colour; the figures, gateway and
+  pillars in LBA2's language)? The hooded figures may carry a story purpose now: say so first.
