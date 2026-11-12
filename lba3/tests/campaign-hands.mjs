@@ -135,10 +135,34 @@ await ev(() => { const K = game.world.pumpKiosk; P.through(K.door.x, K.door.z); 
 { let r = []; for (let k = 0; k < 4 && !(await ev(() => !!game.flags.ev_gate)); k++) r = await use('ev_cock', 'game.room.pump.culvert', 0.9); take(r); }   // (use() returns every turn so far)
 await browser.close();
 
+// chapter 9 (CAMPAIGN-7): the service door (Kell asked, the ride up; fixture base-12-heard), the carbon laid on the log
+// (new-12-drawer), the stop at the console (new-12-vote), the isolator on each relay's terminal and on Kell's feed box
+// (new-12-stop); Kell at his brake with the lane dry
+await start('base-12-heard');
+await ev(() => { const G = game, f = G.flags; P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); P.exitTo('up-down'); P.talk('zl_kell', { run: true }); for (let i = 0; i < 60 && G.story._cn.kell.busy; i++) G.step(0.1);
+  const L = G.rooms.zeelich.lift; P.use(L.deck.x, L.deck.z, { near: 1.9, kind: 'cn_ride' }); for (let i = 0; i < 300 && !(f.cn_kell && G.state === 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } });
+take(await use('cn_service', 'game.rooms.zeelich.lift.service', 0.9));
+await browser.close();
+await start('new-12-drawer');
+take(await use('cn_compare', 'game.rooms.archive.drawer', 0.6));
+await browser.close();
+await start('new-12-vote');
+take(await use('cn_stop', 'game.rooms.zeelich.platform.stop', 0.8));
+await browser.close();
+await start('new-12-stop');
+people.push(await person('zl_kell'));
+await ev(() => { P.enter('workshop', { run: true }); P.settle(); });
+take(await use('cn_iso', 'game.rooms.workshop.life.terminals.A', 0.6));
+await ev(() => { for (let i = 0; i < 40; i++) { game.step(0.1); P.settle(); } });
+take(await use('cn_iso', 'game.rooms.workshop.life.terminals.B', 0.6).then((a) => a.slice(-1)));
+await ev(() => { for (let i = 0; i < 40; i++) { game.step(0.1); P.settle(); } P.enter('zeelich'); });
+take(await use('cn_clip', 'game.rooms.zeelich.lift.isoAt', 0.6));
+await browser.close();
+
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock'];
+const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip'];
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

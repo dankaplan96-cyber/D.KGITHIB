@@ -13,10 +13,19 @@
 // reverse the bore. But only Vesk's console below can switch it, and the shaft opens only on a code sent
 // from every station at once. Baldino: "A network!" → chapter 10.
 import { ChapterBase } from './base.js';
+//
+// CAMPAIGN-7 (wave 5): in a game with the thread (story/cnline.js, story._cn; Mill Lane's part in story/zeelift.js) the
+// archive's door is shut to him by Vesk's standing order and Kell takes him up to its back gallery; the BORE cabinet holds
+// the uncut log of test 14 and the order that cut it; the vote orders the bore stopped, he throws the stop at the platform's
+// console, Mill Lane goes dry, Baldino's isolator is tried at his bench and gives the lane back; the chapter ends there.
 import { Watcher } from '../enemies.js';
+import { CouncilThread } from './cnline.js';
+import { KellThread } from './zeelift.js';
 import '../text/ch9.js';
 
 export class Council extends ChapterBase {
+  get thread() { return (this.story._cn ||= new CouncilThread(this)); }
+  get kell() { return (this._kell ||= new KellThread(this)); }
   get Z() { return this.game.rooms.zeelich; }
   get U() { return this.game.rooms.upper; }
   get C() { return this.game.rooms.council; }
@@ -39,6 +48,7 @@ export class Council extends ChapterBase {
   place(id) {
     const f = this.f, R = this.game.rooms;
     if (!this.reached()) return ['clerk', 'chair', 'councilB', 'councilC', 'archivist'].includes(id) ? null : undefined;
+    { const tp = this.thread.place(id); if (tp !== undefined) return tp; }
     if (!['clerk', 'chair', 'councilB', 'councilC', 'archivist', 'baldino', 'dallan', 'nara', 'oku', 'guard', 'vesk', 'doran', 'hesk', 'worker'].includes(id)) return undefined;
     if (['vesk', 'doran', 'hesk', 'worker'].includes(id)) return null;
     // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
@@ -67,6 +77,7 @@ export class Council extends ChapterBase {
     g.enterRoom('zeelich', Z.spaceport?.landing || Z.dock, true);   // (off the project ship, on Zeelich Spaceport's deck)
     g.hero.hasBall = true;
     this.freezeMills();
+    this.thread.begin();
     this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c9_narr'], ['hero', 'c9_tw_arrive']], () => { this.f.c9_started = true; g.updateObjective(); g.save(false); });
   }
@@ -81,8 +92,10 @@ export class Council extends ChapterBase {
     return out;
   }
   exitTo(to) {
-    if (!['up-down', 'up-council', 'up-archive', 'council-out', 'archive-out'].includes(to)) return null;
+    if (!['up-down', 'up-council', 'up-archive', 'council-out', 'archive-out', 'archive-gallery'].includes(to)) return null;
     const Z = this.Z, U = this.U, C = this.C, A = this.A;
+    // CAMPAIGN-7: the back gallery's service door, down to Mill Lane's landing (outside the stair-house on the terrace)
+    if (to === 'archive-gallery') { const L = this.game.regions.built('zeelich')?.lift; return L ? { room: 'zeelich', ...L.hutFront } : null; }
     if (!U) return null;
     const ux = U.spawn.x + 5, uz = U.spawn.z; // the antechamber's centre
     switch (to) {
@@ -108,20 +121,24 @@ export class Council extends ChapterBase {
     };
     if (to === 'up-council' && !f.c9_clerk) return refuse(this.stamps() ? 'c9_clerk_half' : 'c9_clerk_none');
     if (to === 'up-archive' && !f.c9_heard) return refuse('c9_clerk_archive');
+    if (to === 'up-archive' && this.thread.refuseArchive()) return false;   // (CAMPAIGN-7: Vesk's standing order, read on the door)
     return true;
   }
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const f = this.f, r = this.room();
+    if (this.isCur()) this.thread.interactables(consider, dist);
     if (!this.isCur() || r !== 'archive' || f.c9_plans) return;
     const A = this.A;
     if (!f.c9_coat) consider(dist(A.locker.x, A.locker.z), 1.4, { kind: 'c9coat', label: 'p_coat' });
     if (!f.c9_key && A.keys) consider(dist(A.keys.x, A.keys.z), 1.3, { kind: 'c9key', label: 'p_take' });
-    for (const c of A.cabinets) consider(dist(c.x, c.z), 1.2, { kind: 'c9cab', cab: c, label: 'p_cabinet' });
+    for (const c of A.cabinets) if (!(c.label === 'BORE' && f.cn_drawer)) consider(dist(c.x, c.z), 1.2, { kind: 'c9cab', cab: c, label: 'p_cabinet' });
   }
+  talkFirst(npc) { return this.thread.talkFirst(npc); }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
+    if (this.thread.interact(it)) return true;
     switch (it.kind) {
       case 'c9coat':
         h.act('use', 0.6, () => {
@@ -139,6 +156,7 @@ export class Council extends ChapterBase {
           g.audio.play('chest');
           if (c.label !== 'BORE') { this.chain([['hero', c.label === 'TUNNELS' ? 'c9_cab_tunnels' : 'c9_cab_ferries']]); return; }
           if (!f.c9_key) { g.audio.play('doorLocked'); f.c9_locked = true; this.chain([['hero', 'c9_cab_locked']], () => g.updateObjective()); return; }
+          if (this.thread.on) { this.thread.openBore(); return; }   // (CAMPAIGN-7: the drawer, the log of test 14 and the order that cut it)
           f.c9_plans = true; this.watcher?.stop();
           g.audio.play('shard');
           this.chain([['hero', 'c9_cab_bore']], () => { g.updateObjective(); g.save(false); g.found('plans', 'c9_toast_plans'); });
@@ -223,6 +241,16 @@ export class Council extends ChapterBase {
     const g = this.game, f = this.f;
     if (this.busy) return;
     this.busy = true;
+    // CAMPAIGN-7: in a game with the thread the proof is the log of his own test, and the council orders the bore stopped
+    // (he throws the stop himself: cnline.js); the chapter goes on
+    if (this.thread.on) {
+      const V = this.thread.verdictLines();
+      this.chain(V.proof, () => {
+        f.c9_dallan = true; this.story.refreshCast({ walk: true }); g.audio.play('door');
+        this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ...V.end], () => { this.busy = false; this.thread.voted(); });
+      });
+      return;
+    }
     this.chain([['hero', 'c9_tw_plans'], ['councilB', 'c9_councilB_2'], ['councilC', 'c9_councilC_2']], () => {
       f.c9_dallan = true; this.story.refreshCast({ walk: true }); g.audio.play('door');
       this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ['councilC', 'c9_councilC_3'], ['chair', 'c9_chair_3']], () => {
@@ -241,14 +269,16 @@ export class Council extends ChapterBase {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
     if (id !== 'archive') this.leaveArchive();
+    this.thread.onEnterRoom(id);
     if (id === 'council' && f.c9_clerk && !f.c9_heard) this.hearing();
     else if (id === 'council' && f.c9_plans && !f.c9_vote) this.verdict();
-    if (id === 'archive' && !f.c9_plans) {
+    if (id === 'archive' && !f.c9_plans && !f.cn_drawer) {
       const arch = this.npc('archivist');
       if (arch && !this.watcher) { arch.controlled = true; this.watcher = new Watcher(g, arch, this.A.patrol, { range: 6.0, fov: 0.7, onSpot: () => this.spotted() }); }
       if (f.c9_coat) this.wearCoat(true);
       this.watcher?.start();
-      if (!f.c9_archSeen) { f.c9_archSeen = true; this.chain([['hero', 'c9_arch_door']]); }
+      // (CAMPAIGN-7: in by the back gallery, up over his round)
+      if (!f.c9_archSeen) { f.c9_archSeen = true; this.chain([['hero', this.thread.on && f.cn_kell === true ? 'cn_tw_gallery' : 'c9_arch_door']]); }
     }
   }
   onExitRoom(id) { if (id === 'archive') this.leaveArchive(); }
@@ -265,7 +295,7 @@ export class Council extends ChapterBase {
     g.audio.play('alert');
     this.chain([['archivist', f.c9_coat ? 'c9_arch_spot_coat' : 'c9_arch_spot'], ['hero', 'c9_tw_spot']], () => {
       g.startTransition(() => {
-        const sp = A.spawn, h = g.hero;
+        const sp = this.thread.on && f.cn_kell === true ? A.gallery : A.spawn, h = g.hero;   // (CAMPAIGN-7: back up on the gallery he came in by)
         h.pos.set(sp.x, g.physics.groundAt(sp.x, sp.z), sp.z); h.angle = sp.a ?? 0;
         if (this.room() === 'archive' && !f.c9_plans) this.watcher.start();
       });
@@ -275,8 +305,10 @@ export class Council extends ChapterBase {
     const g = this.game;
     if (!this.isCur()) return;
     if (this.watcher?.active && g.state === 'play') this.watcher.update(dt);
+    this.thread.update(dt);
   }
   applyFlags() {
+    this.thread.applyFlags();
     this.game.regions?.whenBuilt?.('archive', (A) => A.keys?.setTaken(!!this.f.c9_key));
     if (!this.isCur() || !this.Z) return;
     this.freezeMills();
@@ -289,6 +321,7 @@ export class Council extends ChapterBase {
   markers() {
     const f = this.f, Z = this.game.regions?.built('zeelich');
     if (!this.isCur() || !f.c9_started || !Z) return [];
+    { const tm = this.thread.markers(); if (tm) return tm; }
     if (this.stamps() >= 2 || f.c9_clerk) return this.stars(Z.councilDoor);
     if (f.c9_form) {
       const mills = f.c9_okuAsk && !f.c9_oku && this.millsFree() < 3 ? Z.mills.filter((m) => !f['c9_free_' + m.id]).map((m) => m.brake) : [];
@@ -299,6 +332,7 @@ export class Council extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c9_started) return '';
+    { const to = this.thread.objective(); if (to) return to; }
     if (f.c9_plans) return this.goal('c9_obj_back');
     if (f.c9_heard) return this.goal('c9_obj_archive') + (f.c9_locked || f.c9_key ? this.sub(!!f.c9_key, 'c9_sub_key') : '');
     if (f.c9_clerk) return this.goal('c9_obj_council');
@@ -315,6 +349,7 @@ export class Council extends ChapterBase {
     const out = [];
     if (f.c9_form && !f.c9_clerk) out.push({ id: 'petition', icon: 'stamp', n: this.stamps() });
     if (f.c9_plans) out.push({ id: 'plans', icon: 'plan' });
+    out.push(...this.thread.items());
     return out;
   }
   journal() {
@@ -322,8 +357,11 @@ export class Council extends ChapterBase {
     return [
       { key: 'c9_j_petition', done: !!f.c9_form },
       { key: 'c9_j_heard', done: !!f.c9_heard },
-      { key: 'c9_j_plans', done: !!f.c9_plans },
-      { key: 'c9_j_vote', done: !!f.c9_vote },
+      ...(this.thread.on ? this.thread.journal().filter((l) => ['cn_j_order', 'cn_j_kell'].includes(l.key)) : []),
+      { key: 'c9_j_plans', done: !!f.c9_plans && f.cn_log !== true },
+      ...(this.thread.on ? this.thread.journal().filter((l) => l.key === 'cn_j_log') : []),
+      { key: this.thread.on ? 'cn_j_vote' : 'c9_j_vote', done: !!f.c9_vote },
+      ...(this.thread.on ? this.thread.journal().filter((l) => !['cn_j_order', 'cn_j_kell', 'cn_j_log'].includes(l.key)) : []),
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

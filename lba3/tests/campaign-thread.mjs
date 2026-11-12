@@ -36,7 +36,15 @@
 //      the board half read and Save & quit (her run resumes before it), the run again to the landing; fixture
 //      new-11-landing (Twinsen at the landing): the pump room, a Save & quit there, the cock kicked back in a kick and
 //      turned in the rest, a save before the boarding, the boarding, the bridge after a reload, the landing revisited
-// ONLY=A|B|C|D|E|F|G|H|I runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
+//   J  (CAMPAIGN-7) the saves from before wave 5: base-12 chapter 9 at its start (the thread on: its stop is ahead),
+//      base-12-heard after the hearing (the archive's door shut by Vesk's order: Kell next), base-12-plans with the plans in
+//      hand in the archive (the gallery and the log count as done; the vote orders the stop, the chapter goes on)
+//   K  chapter 9's thread (CAMPAIGN-7, story/cnline.js, zeelift.js KellThread; fixtures from this wave's playthrough): the
+//      order, Kell, a Save & quit with the deck down for them, the ride, a Save & quit at the service door, the gallery,
+//      leaving by the gallery mid-task and back in; the BORE drawer open and a Save & quit before the carbon is laid on the
+//      log; the stop at the console and a Save & quit with Mill Lane dry; the bench with one relay clipped and a Save &
+//      quit; the other relay; the isolator on Kell's feed → chapter 10, and Mill Lane after a reload there
+// ONLY=A|B|C|D|E|F|G|H|I|J|K runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -608,6 +616,108 @@ if (!ONLY || ONLY === 'I') {
     const r = P.talk('bram', { run: true }); return [...st, r.r, !!f.ev_board];
   }), (v) => v[0] < 9 && v[1] < 9 && v[2] < 9 && v[3] === false && v[4] === true && v[5] < 4 && v[6] === 'talked' && v[7]);
   is('I10 and the chapter goes on: the control room, Vesk on the screen', await ev(() => { P.enter('control', { run: true }); P.wait(0.5); P.settle(); return !!game.flags.c8_vesk; }), (v) => v === true);
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ J: the saves from before wave 5 (CAMPAIGN-7)
+const OBJ = () => document.querySelector('#objective').textContent;
+if (!ONLY || ONLY === 'J' || ONLY === 'C') {
+  await start('base-12');
+  is('C15 a save from before, chapter 9 at its start: loads; the stop is ahead, so the thread is on, nothing of it past; it goes on: Baldino and the petition', await ev(() => {
+    const f = game.flags; const st = [f.chapterKey, f.cn_v, !!f.cn_closed, !!f.cn_kell, !!f.cn_log];
+    const r = P.talk('baldino', { run: true }); return [...st, r.r, !!f.c9_form];
+  }), (v) => v[0] === 'council' && v[1] === 1 && !v[2] && !v[3] && !v[4] && v[6]);
+  await browser.close();
+  await start('base-12-heard');
+  is('C16 a save from before, after the hearing: loads; the thread is on; the order hangs by the archive\'s door, which refuses him with it read; the objective sends him to Kell', await ev(() => {
+    const G = game, f = G.flags; const st = [f.cn_v, !!f.cn_closed];
+    if (G.room?.id === 'council') P.exitTo('council-out');
+    const shown = G.rooms.upper.order.shown;
+    const r = P.exitTo('up-archive'); P.settle();
+    return [...st, shown, G.room?.id, f.cn_closed, OBJ()];
+  }), (v) => v[0] === 1 && !v[1] && v[2] && v[3] === 'upper' && v[4] === true && /Kell/.test(v[5]));
+  await shot('C16-order');
+  await browser.close();
+  await start('base-12-plans');
+  is('C17 a save from before, the plans in hand in the archive: loads; the gallery and the log count as done (the front door is his); back in the chamber the vote orders the stop and the chapter goes on, to the console', await ev(() => {
+    const G = game, f = G.flags; const st = [f.cn_v, f.cn_kell, f.cn_log, G.room?.id];
+    P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30);
+    return [...st, !!f.c9_vote, f.chapterKey, OBJ()];
+  }), (v) => v[0] === 1 && v[1] === 'past' && v[2] === 'past' && v[3] === 'archive' && v[4] && v[5] === 'council' && /console/i.test(v[6]));
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ K: chapter 9's thread (CAMPAIGN-7)
+if (!ONLY || ONLY === 'K') {
+  await start('new-12-heard');
+  is('K0 the save: chapter 9 after the hearing, in the chamber; the archive\'s door read: shut by the order; Kell asked: the deck comes down for them', await ev(() => {
+    const G = game, f = G.flags; P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const closed = f.cn_closed;
+    P.exitTo('up-down'); const r = P.talk('zl_kell', { run: true }); for (let i = 0; i < 60 && G.story._cn.kell.busy; i++) G.step(0.1);
+    const L = G.rooms.zeelich.lift; return [closed, r.r, !!f.cn_kellAsk, +(L.deckY - L.low).toFixed(2), OBJ()];
+  }), (v) => v[0] === true && v[1] === 'talked' && v[2] && v[3] === 0 && /Ride/i.test(v[4]));
+  await handover();
+  is('K1 Save & quit → Continue with the deck down for them: it is still down; the ride is there to take; up with Kell, he opens the service door', await ev(() => {
+    const G = game, f = G.flags, L = G.rooms.zeelich.lift; const low = +(L.deckY - L.low).toFixed(2);
+    const r = P.use(L.deck.x, L.deck.z, { near: 1.9, kind: 'cn_ride' }); for (let i = 0; i < 300 && !(f.cn_kell && G.state === 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    const k = P.npc('zl_kell'); return [low, r.target?.kind, f.cn_kell, +(G.hero.pos.y - L.top).toFixed(2), +Math.hypot(k.pos.x - L.service.x, k.pos.z - L.service.z).toFixed(1)];
+  }), (v) => v[0] === 0 && v[1] === 'cn_ride' && v[2] === true && Math.abs(v[3]) < 0.2 && v[4] < 2.5);
+  await shot('K1-door');
+  await handover();
+  is('K2 Save & quit → Continue at the service door: the door still open (Kell gone back to his brake); through it, the back gallery; out by the gallery\'s door mid-task, back on the terrace; and in again', await ev(() => {
+    const G = game, f = G.flags, L = G.rooms.zeelich.lift; const k = P.npc('zl_kell');
+    const kAt = +Math.hypot(k.pos.x - L.spots.kell.x, k.pos.z - L.spots.kell.z).toFixed(1);
+    const go = () => { P.use(L.service.x, L.service.z, { near: 0.9, kind: 'cn_service' }); for (let i = 0; i < 60 && G.room?.id !== 'archive'; i++) { G.step(0.1); P.settle(); } P.settle(); return [G.room?.id, +G.hero.pos.y.toFixed(1)]; };
+    const in1 = go(); const out = P.exitTo('archive-gallery'); P.settle(); const back = [G.room?.id, +(G.hero.pos.y - L.top).toFixed(1)]; const in2 = go();
+    return [kAt, in1, out.to, back, in2, OBJ()];
+  }), (v) => v[0] < 1 && v[1][0] === 'archive' && v[1][1] > 2 && v[2] === 'zeelich' && v[3][0] === 'zeelich' && Math.abs(v[3][1]) < 0.3 && v[4][0] === 'archive' && /plans/i.test(v[5]));
+  await shot('K2-gallery');
+  await browser.close();
+  await start('new-12-drawer');
+  is('K3 the save: the BORE drawer open (the log, the order that cut it), the carbon still in his pocket; the archivist off his watch; the objective the comparison', await ev(() => {
+    const G = game, f = G.flags; return [G.room?.id, !!f.cn_drawer, !!f.cn_log, G.rooms.archive.drawer.open, !!G.story.cur.watcher?.active, G.story.items().some((i) => i.id === 'tstrip'), OBJ()];
+  }), (v) => v[0] === 'archive' && v[1] && !v[2] && v[3] && !v[4] && v[5] && /carbon/i.test(v[6]));
+  is('K4 the carbon laid on the log: line for line; the plans in hand, the carbon handed on (out of his pocket); the chamber next', await ev(() => {
+    const G = game, f = G.flags, D = G.rooms.archive.drawer; const r = P.use(D.x, D.z, { near: 0.6, kind: 'cn_compare' }); for (let i = 0; i < 80 && !f.cn_log; i++) { G.step(0.1); P.settle(); }
+    return [r.target?.kind, f.cn_log, !!f.c9_plans, G.story.items().some((i) => i.id === 'tstrip'), OBJ()];
+  }), (v) => v[0] === 'cn_compare' && v[1] === true && v[2] && !v[3] && /council/i.test(v[4]));
+  await browser.close();
+  await start('new-12-vote');
+  is('K5 the save: the stop ordered; the guard stands aside (his line); the stop thrown at the console: the BORE needle down, the GROUND needle still kicking; Mill Lane dry (the cart half way, no water)', await ev(() => {
+    const G = game, f = G.flags, S = G.rooms.zeelich.platform.stop, L = G.rooms.zeelich.lift; const g = P.talk('guard', { run: true });
+    const r = P.use(S.x, S.z, { kind: 'cn_stop', near: 0.8, run: true }); for (let i = 0; i < 200 && !(f.cn_stop && G.state === 'play' && !G.story._cn.busy); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    return [g.r, r.target?.kind, !!f.cn_stop, S.thrown, S.loose, +(L.deckY - L.y0).toFixed(2), L.cartK, !!L.state.water, OBJ()];
+  }), (v) => v[0] === 'talked' && v[1] === 'cn_stop' && v[2] && v[3] && v[4] && v[5] > 1.5 && v[5] < 2.5 && v[6] === 0 && !v[7] && /bench/i.test(v[8]));
+  await handover();
+  is('K6 Save & quit → Continue with Mill Lane dry: still dry (the cart half way, Kell on his brake, Brel\'s empty jug); the console\'s stop still thrown', await ev(() => {
+    const G = game, f = G.flags, L = G.rooms.zeelich.lift, S = G.rooms.zeelich.platform.stop; const b = P.talk('zl_brel', { run: true });
+    return [!!f.cn_stop, +(L.deckY - L.y0).toFixed(2), !!L.state.water, P.npc('zl_kell').forceAnim, b.r, S.thrown];
+  }), (v) => v[0] && v[1] > 1.5 && v[1] < 2.5 && !v[2] && v[3] === 'use' && v[4] === 'talked' && v[5]);
+  await shot('K6-dry');
+  await browser.close();
+  await start('new-12-stop');
+  is('K7 the save: after the stop; the bench: Baldino hands over the isolator; on the first relay it holds that one (the other jumps)', await ev(() => {
+    const G = game, f = G.flags; P.enter('workshop', { run: true }); P.settle(); const T = G.rooms.workshop.life.terminals, S = G.rooms.workshop.life.state;
+    const r = P.use(T.A.x, T.A.z, { kind: 'cn_iso', near: 0.6 }); for (let i = 0; i < 60 && !f.cn_isoA; i++) { G.step(0.1); P.settle(); }
+    return [!!f.cn_isoGot, r.target?.kind, !!f.cn_isoA, S.loose, S.iso, !!f.cn_iso];
+  }), (v) => v[0] && v[1] === 'cn_iso' && v[2] && v[3] && v[4] === 'A' && !v[5]);
+  await handover();
+  is('K8 Save & quit → Continue with one relay clipped: the bench still loose, the isolator still on the first relay; on the second: both tried, the isolator in his pocket; the objective Kell\'s feed', await ev(() => {
+    const G = game, f = G.flags, T = G.rooms.workshop.life.terminals, S = G.rooms.workshop.life.state; for (let i = 0; i < 5; i++) G.step(0.1); const st = [G.room?.id, S.loose, S.iso];
+    const r = P.use(T.B.x, T.B.z, { kind: 'cn_iso', near: 0.6 }); for (let i = 0; i < 80 && !f.cn_iso; i++) { G.step(0.1); P.settle(); }
+    return [...st, r.target?.kind, !!f.cn_iso, G.story.items().some((i) => i.id === 'iso'), OBJ()];
+  }), (v) => v[0] === 'workshop' && v[1] && v[2] === 'A' && v[3] === 'cn_iso' && v[4] && v[5] && /feed/i.test(v[6]));
+  is('K9 Mill Lane: the isolator on Kell\'s feed box: the deck rises, the standpipe runs; Baldino on the radio: a network → chapter 10', await ev(() => {
+    const G = game, f = G.flags; P.enter('zeelich'); const L = G.rooms.zeelich.lift; const r = P.use(L.isoAt.x, L.isoAt.z, { kind: 'cn_clip', near: 0.6, run: true });
+    let water = false; for (let i = 0; i < 300 && f.chapterKey === 'council'; i++) { G.step(0.1); water ||= !!L.state.water; if (G.state === 'dialog') P.settle(); }
+    P.settle(60); P.settle(30); return [r.target?.kind, !!f.cn_lane, water, f.chapterKey];
+  }), (v) => v[0] === 'cn_clip' && v[1] && v[2] && v[3] === 'network');
+  await handover();
+  is('K10 Save & quit → Continue in chapter 10, then Mill Lane: the lift up, the standpipe running, the isolator on the feed box; Brel checks his jug twice', await ev(() => {
+    const G = game, f = G.flags; if (G.room?.id !== 'zeelich') P.enter('zeelich'); const L = G.rooms.zeelich.lift; P.settle();
+    const b = P.talk('zl_brel', { run: true });
+    return [f.chapterKey, +(L.deckY - L.y0).toFixed(2), !!L.state.water, L.isoShown(), b.r];
+  }), (v) => v[0] === 'network' && v[1] > 3 && v[2] && v[3] && v[4] === 'talked');
+  await shot('K10-lane');
   await browser.close();
 }
 done();

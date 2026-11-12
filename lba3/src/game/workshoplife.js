@@ -20,6 +20,7 @@ import * as THREE from 'three';
 import { Kit, MAT, rbox, plane, cyl, sphere, lathe, torus, pipe, canvasTex } from './props.js';
 import * as P from './props.js';
 import { buildRelay } from './valveroom.js';
+import { touch } from './story/reach.js';
 
 // a paper label or note
 const noteTex = (lines, { w = 128, h = 96, bg = '#f8f2d8', ink = '#3a4a8a', font = '14px cursive, serif', dy = 18 } = {}) => canvasTex(w, h, (x, W, H) => {
@@ -174,6 +175,20 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
   const beamM = new THREE.MeshBasicMaterial({ color: '#ffe0a0', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 6, 1, true), beamM); beam.visible = false; g.add(beam);
   const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _d = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+  // CAMPAIGN-7 (wave 5, chapter 9): each relay's terminal post, where Baldino's isolator clips on — relay A's on the table in
+  // front of it, relay B's on a post by the hoist's foot (its cable up the chain) — and the isolator itself (hidden until
+  // he has it). Both clamps at about 1.05 m: his hand's height setting a thing down (story/reach.js)
+  const TA = { x: -2.72, z: 2.87 }, TB = { x: hX, z: hz - 0.62 };
+  k.add(cyl(0.022, 0.03, 0.15, 8), brass, TA.x, th + 0.075, TA.z); k.add(rbox(0.07, 0.04, 0.05, 0.008), iron, TA.x, th + 0.17, TA.z);
+  k.add(pipe([[TA.x, th + 0.17, TA.z + 0.02], [TA.x, th + 0.12, TA.z + 0.08], [-2.72, th + 0.2, 3.0]], 0.006, 0.05, 4), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  k.add(cyl(0.05, 0.07, 0.04, 10), iron, TB.x, 0.02, TB.z); k.add(cyl(0.022, 0.026, 0.98, 8), brass, TB.x, 0.51, TB.z); k.add(rbox(0.07, 0.04, 0.05, 0.008), iron, TB.x, 1.02, TB.z);
+  k.add(pipe([[TB.x, 1.02, TB.z + 0.03], [TB.x, 1.3, TB.z + 0.3], [hX, beamY - 0.3, hz]], 0.006, 0.12, 4), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  B.ccol(TB.x, TB.z, 0.07, 1.05, { noStand: true, seeThrough: true });
+  const iso = new THREE.Group(); iso.visible = false; g.add(iso);
+  { const ik = new Kit(iso); ik.add(rbox(0.09, 0.055, 0.07, 0.01), brass, 0, 0.035, 0); ik.add(cyl(0.012, 0.012, 0.03, 6), MAT.paint('#c8302a', 0.4), 0.025, 0.075, 0); ik.add(rbox(0.012, 0.03, 0.05, 0.003), iron, -0.05, 0.02, 0); ik.flush(); }
+  iso.traverse((m) => { if (m.isMesh) m.castShadow = false; });
+  const isoAt = { A: [TA.x, th + 0.19, TA.z], B: [TB.x, 1.04, TB.z] };
+  { const wa = B.world(TA.x, TA.z), wb = B.world(TB.x, TB.z); L.terminals = { A: touch(wa.x, wa.z, 0, 'setDown'), B: touch(wb.x, wb.z, 0, 'setDown') }; }
 
   // ------------------------------------------------ the stove fan (left wall), mended again and again
   const fX = -3.62, fZ = -0.2;
@@ -287,8 +302,19 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
     if (linked) { relayB.userData.setOn(true); glowB.visible = true; glowB.material.color.set('#ffc060'); }
     else if (on) { const b = Math.sin(blinkT * 9) > 0; relayB.userData.setOn(b); glowB.visible = b; glowB.material.color.set('#ff5040'); }
     else { relayB.userData.setOn(false); glowB.visible = false; }
-    beam.visible = linked;
-    if (linked) {
+    // CAMPAIGN-7: the loose line (chapter 9 after the stop): both relays jump in threes, three kicks and a rest, unless the
+    // isolator holds the one it is clipped to (S.loose; S.iso 'A' | 'B' | null: written by story/cnline.js)
+    let lnk = linked;
+    if (S.loose) {
+      const ph = tt % 2.4, kick = ph < 0.75 && ph % 0.25 < 0.12, hA = S.iso === 'A', hB = S.iso === 'B';
+      relayA.userData.setOn(hA || kick); glowA.visible = hA || kick; relayA.position.y = th + (!hA && kick ? 0.012 : 0);
+      relayB.userData.setOn(hB || kick); glowB.visible = hB || kick; glowB.material.color.set(hB ? '#ffc060' : '#ff5040'); relayB.position.y = 0.02 + (!hB && kick ? 0.012 : 0);
+      lnk = false;
+    } else { relayA.position.y = th; relayB.position.y = 0.02; }
+    iso.visible = !!isoAt[S.iso];
+    if (iso.visible) iso.position.set(...isoAt[S.iso]);
+    beam.visible = lnk;
+    if (lnk) {
       _d.subVectors(_b, _a); const l = _d.length();
       beam.position.copy(_a).addScaledVector(_d, 0.5); beam.scale.set(1, l, 1); beam.quaternion.setFromUnitVectors(_up, _d.normalize());
       beamM.opacity = 0.35 + 0.25 * Math.sin(tt * 6);

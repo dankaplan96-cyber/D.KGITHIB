@@ -58,6 +58,7 @@ const TRANSITIONS = [
   ['pass.js', 'trip', 'same', "chapter 6: the lift's trip up to the monastery (the Hamalayi)"],
   ['pass.js', 'update', 'same', 'chapter 6 → 7: the Hamalayi, both'],
   ['passline.js', 'board', 'same', "chapter 6 (wave 3): the riders step onto the lift's platform, he takes the crank (the winch, the Hamalayi)"],
+  ['cnline.js', 'end', 'same', "chapter 9 → 10 (CAMPAIGN-7, a game with the thread): Mill Lane, the lift running again → Baldino's workshop, both on Zeelich"],
   ['passline.js', 'restUp', 'same', 'chapter 6 (wave 3): at the lift\'s top the riders go on to the camp (the Hamalayi)'],
   ['prologue.js', 'endPrologue', 'same', "chapter 1 → 2: up from the well's cave into Citadel's square"],
   ['sewers.js', 'rideStep', 'same', "the sewer lifts under the lower town's street and the terrace (a room under Citadel)"],

@@ -52,6 +52,11 @@ const STATES = [
   ['evacuation', { c8_started: true, ev_v: 1, ev_cart: true }],
   ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true }],
   ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true, ev_seen: true, ev_gate: true, ev_board: true }],
+  // CAMPAIGN-7 (story/cnline.js): chapter 9 with the thread: the stop ordered (Baldino by the platform's console, the
+  // guard at the gate, 27); the stop thrown (Mill Lane dry: Kell's hand on the brake with the cart half way, Brel at the dry
+  // tap; Baldino at his loose bench, 28)
+  ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true }],
+  ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true, cn_stop: true, cn_isoGot: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

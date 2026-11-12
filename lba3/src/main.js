@@ -2546,6 +2546,7 @@ class Game {
     if (this.room) {
       for (const e of this.room.exits) {
         if (this.exitRefused?.e === e) continue;
+        if (e.y != null && Math.abs(h.pos.y - e.y) > 1.2) continue;   // (an exit up on a gallery: not from the floor under it — CAMPAIGN-7)
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
           // a door between two rooms of one building (Twinsen's house and its cellar)
           if (e.room) { this.audio.play('doorIn'); this.walkNext = true; const from = this.room.id; this.enterRoom(e.room, (R2) => R2.entries?.[from] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }

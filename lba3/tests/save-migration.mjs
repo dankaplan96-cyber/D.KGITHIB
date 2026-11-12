@@ -31,6 +31,7 @@ async function run(name, save) {
     return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80),
       ps: [!!game.flags.ps_v, !!game.flags.ob_v, !!game.regions?.built('hamalayi')?.line?.active],
       ev: [!!game.flags.ev_v, !!game.flags.ev_cart, game.world.laneGate ? game.world.laneGate.gate.open : null],
+      cn: [game.flags.cn_v ?? null, game.flags.cn_closed ?? null, game.flags.cn_kell ?? null, game.flags.cn_log ?? null, !!game.flags.c9_vote, !!game.rooms.upper?.order?.shown],
       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
   results.push([name, r, errs.length ? errs : 'no errors']);
@@ -64,8 +65,14 @@ await run('wave-3 base: chapter 7 with the telescope turned', fixture('base-10-s
 await run('wave-4 base: chapter 8 at its start', fixture('base-11'));
 await run('wave-4 base: chapter 8, the town in its shelters', fixture('base-11-town'));
 await run('wave-4 base: chapter 8, Zoé\'s run behind it', fixture('base-11-relay'));
+await run('wave-5 base: chapter 9 at its start', fixture('base-12'));
+await run('wave-5 base: chapter 9 after the hearing', fixture('base-12-heard'));
+await run('wave-5 base: chapter 9 with the plans in hand', fixture('base-12-plans'));
 for (const r of results) console.log(JSON.stringify(r));
-const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re]] = results;
+const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re], [, h9, h9e], [, h9h, h9he], [, h9p, h9pe]] = results;
+check('a chapter-9 save from before wave 5, at its start, loads without an error; the stop is ahead, so the thread is on, none of its steps past', ['play', 'dialog'].includes(h9.state) && h9.cur === 'council' && h9.cn[0] === 1 && !h9.cn[1] && !h9.cn[2] && !h9.cn[3] && h9e === 'no errors', [h9, h9e]);
+check('a chapter-9 save from before wave 5, after the hearing, loads without an error; the thread is on, Vesk\'s order up beside the archive\'s door, nothing past', ['play', 'dialog'].includes(h9h.state) && h9h.cur === 'council' && h9h.cn[0] === 1 && !h9h.cn[1] && !h9h.cn[2] && h9h.cn[5] && h9he === 'no errors', [h9h, h9he]);
+check('a chapter-9 save from before wave 5, the plans in hand, loads without an error; the gallery and the log count as done (past), the vote still ahead', ['play', 'dialog'].includes(h9p.state) && h9p.cur === 'council' && h9p.cn[0] === 1 && h9p.cn[2] === 'past' && h9p.cn[3] === 'past' && !h9p.cn[4] && h9pe === 'no errors', [h9p, h9pe]);
 check('a chapter-8 save from before wave 4, at its start, loads without an error; the lane is ahead, so its thread is on and the arrival plays (the cart at the shut gate)', ['play', 'dialog', 'cutscene'].includes(g8.state) && g8.cur === 'evacuation' && g8.ev[0] && g8.ev[2] === false && g8e === 'no errors', [g8, g8e]);
 check('a chapter-8 save from before wave 4, the town in its shelters, loads without an error; the thread is on, the arrival counts as seen (he has been home)', ['play', 'dialog'].includes(g8t.state) && g8t.cur === 'evacuation' && g8t.ev[0] && g8t.ev[1] && g8t.ev[2] === false && g8te === 'no errors', [g8t, g8te]);
 check('a chapter-8 save from before wave 4, Zoé\'s run behind it, loads without an error; the lane counts as done (no thread, the gate open)', ['play', 'dialog'].includes(g8r.state) && g8r.cur === 'evacuation' && !g8r.ev[0] && g8r.ev[2] === true && g8re === 'no errors', [g8r, g8re]);
