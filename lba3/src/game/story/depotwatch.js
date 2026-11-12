@@ -48,7 +48,9 @@ export class DepotWatch {
     const D = this.game.world.depot, Y = D?.yard;
     if (!Y) return 'out';
     const v = D.valve;
-    if (v && Math.hypot(p.x - v.x, p.z - v.z) < 2.4) return 'yard';
+    // (by the valve counts as the yard only on the yard's side of the line: the rail on the line (P17) keeps the path
+    //  public right in front of it)
+    if (v && p.z >= Y.z0 - 0.3 && Math.hypot(p.x - v.x, p.z - v.z) < 2.4) return 'yard';
     if (p.x < Y.x0 || p.x > Y.x1 || p.z > Y.z1) return 'out';
     if (p.z >= Y.z0) return 'yard';
     return p.z > Y.z0 - 6 ? 'path' : 'out';

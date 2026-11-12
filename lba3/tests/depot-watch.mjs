@@ -50,6 +50,14 @@ const s2 = await ev(() => { const G = game, D = G.world.depot, h = G.hero, hp0 =
   let r; for (const [x, z] of pts) { r = P.go(x, z, { tol: 0.7, fight: false, maxT: 40 }); const f = W8.fighting(); if (f.length) worst = f; if (G.state !== 'play') break; }
   return { r: r.r, hp: [hp0, h.hp], warned: !!G.flags.c1_depotWarned, fighting: worst, said: W8.said(), zone: G.story.depot.zone(), at: [h.pos.x, h.pos.z].map((v) => +v.toFixed(1)) }; });
 check('2. the path through the depot is public: walked from the west gate to the east gate (INPUT), no warning, nobody comes at him, not hurt', s2.r === 'arrived' && !s2.warned && !s2.fighting.length && s2.hp[1] >= s2.hp[0] && !s2.said.length, s2);
+// ---- 2b. P17 (the user, 12.11): the valve is not turned from the path. Walked (INPUT) to the rail on the line right in
+// front of it and faced to it: the key offers no valve there, and it is still the public path
+const s2b = await ev(() => { const G = game, D = G.world.depot, h = G.hero, v = G.world.valves.find((q) => q.id === 'depot'), R = G.world.depotRail;
+  const r = P.go(v.x, R.z - 0.6, { tol: 0.3, fight: false, maxT: 30 });
+  P.go(v.x, v.z, { tol: 0.2, fight: false, maxT: 2 }); P.release(); G.step(0.2); P.face(v.x, v.z); G.step(0.1);
+  const it = G.findInteractable();
+  return { r: r.r, rail: !!R, at: [h.pos.x, h.pos.z].map((q) => +q.toFixed(2)), line: D.yard.z0, offered: it ? `${it.kind}:${it.id ?? it.valve?.id ?? ''}` : null, zone: G.story.depot.zone(), warned: !!G.flags.c1_depotWarned }; });
+check('2b. at the rail in front of the depot valve, on the path side of the line (INPUT): no valve offered, the zone is the path, no warning', s2b.rail && s2b.at[1] < s2b.line && !/valve:depot/.test(s2b.offered || '') && s2b.zone !== 'yard' && !s2b.warned, s2b);
 
 // ---- 3. into the yard: warned and turned out
 const s3 = await ev(() => { const G = game, D = G.world.depot, h = G.hero, hp0 = h.hp; W8.said();
