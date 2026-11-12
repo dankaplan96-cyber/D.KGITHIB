@@ -257,7 +257,7 @@ export function zeelichRoster(game) {
 // Local coordinates as desert.js / keshlife.js lay them out (the island is at x 3400): the oasis (-40, -15, r 7.5), the cool
 // room (-70, -6) whose door faces south, Lumi's loom in the shade of the striped sail (-58, -0.6), the ferry board (-21.6, 15.2)
 export const DESERT_ROSTER_IDS = ['safi', 'tamu', 'bashir'];
-const DESERT_BODY = { safi: 'lulu', tamu: 'tim', bashir: 'archivist' };
+const DESERT_BODY = { safi: 'lulu', tamu: 'tim', bashir: 'archivist_b' };   // (CAST-VARIANTS-3: Bashir the field archivist)
 export function desertRoster(game) {
   const R = game.regions?.built('desert');
   if (!R) return null;
@@ -280,7 +280,7 @@ export function desertRoster(game) {
       look('tamu_mid', -50.5, 4.0, -54, 0, [2, 4]),
     ] },
     // an old man who watches Lumi work, the water and the porch's shade
-    { id: 'bashir', char: 'archivist', tint: '#f4e8c8', speed: 0.8, start: 0, color: '#d8c890', stops: [
+    { id: 'bashir', char: 'archivist_b', tint: '#f4e8c8', speed: 0.8, start: 0, color: '#d8c890', stops: [
       look('bas_loom', -62.6, -2.0, -58.2, -0.4, [20, 30], { act: 'rest' }),
       look('bas_oasis', -48.6, -8.2, -42, -12, [8, 12]),
       look('bas_porch', -72.2, -0.8, -70.5, -2.8, [12, 18]),

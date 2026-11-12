@@ -318,6 +318,14 @@ export const LOOKS = {
     race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
     hair: '#6a5a4a', skin: '#e0b090', hairStyle: 'tuft', nose: 'long', eyes: '#3a2a1a', glasses: true, collar: true, buttons: true, height: 0.98, neck: 0.08,
   },
+  archivist_b: {
+    // CAST-VARIANTS-3 (archivist's shape variant, order 28 queue 7's last): a field archivist for the desert: a wide straw sun
+    // hat, no spectacles and no collar, the coat cut shorter, sleeves rolled, a leather satchel strap across the chest, a broader
+    // build and a round nose (cast_poly.py CAST archivist_b). Taken by Bashir (Kesh) and the dig's site clerk (dg_clerk); the
+    // archivist, Kip (the tavern) and Bern (the terminal) keep archivist
+    race: 'quetch', outfit: 'tunic', hem: 0.4, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
+    hair: '#6a5a4a', skin: '#e0b090', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#d8c490', height: 0.98, neck: 0.08,
+  },
   // ---- Citadel's hill farms (chapter 8)
   farmerA: {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',

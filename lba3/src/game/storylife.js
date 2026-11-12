@@ -156,7 +156,7 @@ const DESERT_PEOPLE = [
       L('dig_eat', TB.x - 0.6, TB.z - 1.05, TB.x - 0.6, TB.z, 'browse', [10, 14]),
     ] } },
   // the site clerk: the crates counted at both piles, the table, a look through the post's fence at the bore
-  { id: 'dg_clerk', char: 'archivist', tint: '#eef6ff', speed: 0.9, color: '#90b8c8', start: 2, area: 'desert', phase: crew(true), rounds: {
+  { id: 'dg_clerk', char: 'archivist_b', tint: '#eef6ff', speed: 0.9, color: '#90b8c8', start: 2, area: 'desert', phase: crew(true), rounds: {
     crew: [
       L('clk_a', PA.x - 1.6, PA.z, PA.x, PA.z, 'browse', [6, 9]),
       L('clk_b', PB.x + 1.6, PB.z, PB.x, PB.z, 'tend', [6, 9]),                         // (NO-AIR 3: kneeling to the crate's label: the ground is higher on this side, its top at his knees)

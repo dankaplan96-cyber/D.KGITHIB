@@ -85,6 +85,7 @@ CAST = {
     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0, coatLong=0.3),   # (CAST-POLISH-NAMED: GROBO-COAT, his robe below the knee)
     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
+    'archivist_b': dict(browS=1.1, browTilt=0.1, mouthLift=0.5, mouthW=1.0, pockets=True, pocketY=0.1, rolled=True, strap='#6a4a2a', noseS=1.05),   # (CAST-VARIANTS-3: the field archivist, a sun hat and a satchel strap)
     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
     'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
                      moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
