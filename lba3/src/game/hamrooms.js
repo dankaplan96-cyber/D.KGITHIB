@@ -138,11 +138,12 @@ export function dressLharRoom(R, info, which, physics) {
   const solid = (name, x, z, hw, hd, top) => { const c = physics.add({ type: 'box', x: gp.x + x, z: gp.z + z, hw, hd, top, noStand: true }); c.enabled = false; R.colliders?.push(c); (cols[name] ||= []).push(c); };
   // moving day: two tied bundles and a corded crate
   group('pack', (kk) => {
-    const p = spot(0.66, 0.36);
+    // (PLACE-1: the bundles and the crate side by side: the crate stood 12 cm into the sacks)
+    const p = spot(0.76, 0.36);
     if (!p) return;
-    solid('pack', p[0], p[1], 0.66, 0.36, 0.6);
-    kk.at(p[0] - 0.3, 0, p[1], 0.2, () => sackPile(kk, { seed: 3 + which.length }));
-    kk.at(p[0] + 0.34, 0, p[1], -0.1, () => { crate(kk, 0.55, { pal: 'honey' }); for (const s of [-1, 1]) kk.add(rbox(0.57, 0.02, 0.03, 0.005), MAT.cloth('#c8b08a', '#a89070'), 0, 0.3 + s * 0.12, 0.29); });
+    solid('pack', p[0], p[1], 0.76, 0.36, 0.6);
+    kk.at(p[0] - 0.36, 0, p[1], 0.2, () => sackPile(kk, { seed: 3 + which.length }));
+    kk.at(p[0] + 0.42, 0, p[1], -0.1, () => { crate(kk, 0.55, { pal: 'honey' }); for (const s of [-1, 1]) kk.add(rbox(0.57, 0.02, 0.03, 0.005), MAT.cloth('#c8b08a', '#a89070'), 0, 0.3 + s * 0.12, 0.29); });
   });
   // mending, in the houses whose people come down to it
   group('mend', (kk) => {

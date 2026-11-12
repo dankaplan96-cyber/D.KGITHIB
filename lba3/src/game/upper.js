@@ -133,7 +133,8 @@ function buildArchive(scene, physics) {
   // shelf rows (cover), each a long bookcase with ledgers
   for (const [x, z] of [[-3, -1.5], [1, -1.5], [-3, 2.0], [1, 2.0]]) { B.put(x, z + 0.42, 0, (kk) => P.bookcase(kk, { w: 2.8, seed: 3 + x })); B.put(x, z, Math.PI, (kk) => P.bookcase(kk, { w: 2.8, seed: 7 + z }), { noCol: true }); }
   // crates of files waiting to be shelved, and the archivist's desk (more cover in the front half)
-  for (const [x, z, r] of [[-1.2, 4.6, 0.2], [3.8, 3.6, -0.3], [4.6, 3.9, 0.1]]) B.put(x, z, r, (kk) => P.cargoCrate(kk, { w: 1.0, h: 1.2, d: 1.0, color: '#5a6a62' }));
+  // (PLACE-1: the third crate beside the second, not 28 cm into it)
+  for (const [x, z, r] of [[-1.2, 4.6, 0.2], [3.8, 3.6, -0.3], [5.0, 3.9, 0.1]]) B.put(x, z, r, (kk) => P.cargoCrate(kk, { w: 1.0, h: 1.2, d: 1.0, color: '#5a6a62' }));
   B.put(5.4, 1.6, -Math.PI / 2, (kk) => P.desk(kk));
   // the archivist's key ring on the desk's near end (CHAPTER-BALANCE: the BORE cabinet is locked; story/council.js)
   const ring = new THREE.Group(); ring.position.set(5.2, 0.8, 1.1); B.group.add(ring);
@@ -150,8 +151,9 @@ function buildArchive(scene, physics) {
   });
   R.cabinets = cabinets;
   // the technicians' locker by the door
-  B.put(-W / 2 + 1.0, 1.6, Math.PI / 2, (kk) => P.locker(kk));
-  R.locker = { x: B.cx - W / 2 + 1.8, z: B.cz + 1.6 };
+  // (PLACE-1: its back against the wall, not 0.7 m out from it)
+  B.put(-W / 2 + 0.3, 1.6, Math.PI / 2, (kk) => P.locker(kk));
+  R.locker = { x: B.cx - W / 2 + 1.1, z: B.cz + 1.6 };
   R.patrol = [[-5.5, -4], [5.5, -4], [5.5, 0.2], [-5.5, 0.2]].map(([x, z]) => [B.cx + x, B.cz + z]);
   R.npcSpots = {};
   B.light('#d8f4ff', 5, 12, -2, 4, 0); B.light('#d8f4ff', 5, 12, 4, 4, -2);

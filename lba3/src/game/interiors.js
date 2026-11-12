@@ -54,6 +54,7 @@ export class RoomBuilder {
   }
   // place a prop builder at (x, z) turned by ry and give it a collider from its footprint
   put(x, z, ry, fn, opts = {}, colExtra = { noStand: true }) {
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.next = fn;   // (PLACE-1: the piece's name for tests/place-scan.mjs)
     const fp = this.k.at(x, opts.y || 0, z, ry, () => fn(this.k, opts));
     if (fp && !opts.noCol) {
       // (a piece stood on a raised floor, opts.y: its collider's top is up there with it, else it was walked through)
@@ -419,13 +420,14 @@ function buildHouse(scene, physics) {
     k.add(lathe([[0.001, 0], [0.07, 0], [0.08, 0.03], [0.075, 0.035], [0.001, 0.012]], 12), MAT.flat(c, 0.35, { metalness: 0.6 }), x, 1.45, BZ + 0.07, 0, { rx: Math.PI / 2 });
     k.add(cyl(0.01, 0.01, 0.25, 5), MAT.flat(c, 0.35, { metalness: 0.6 }), x, 1.62, BZ + 0.07);
   }
-  // firewood basket in the corner
-  k.at(-4.05, 0, BZ + 0.55, 0, () => {
-    k.add(lathe([[0.001, 0], [0.24, 0], [0.28, 0.32], [0.3, 0.34], [0.27, 0.34], [0.25, 0.04], [0.001, 0.04]], 14), MAT.wood('pale'), 0, 0, 0);
-    for (let i = 0; i < 6; i++) k.add(cyl(0.05, 0.05, 0.55, 7), MAT.wood(i % 2 ? 'honey' : 'grey'), Math.cos(i * 1.2) * 0.1, 0.42 + (i % 2) * 0.05, Math.sin(i * 1.2) * 0.1, i, { rz: Math.PI / 2 - 0.2 });
+  // firewood basket in the corner (PLACE-1: a narrow one, the logs standing in it, between the divider and the range:
+  //  the wide one and its lying logs stood 19 cm into the range)
+  k.at(-4.17, 0, BZ + 0.5, 0, () => {
+    k.add(lathe([[0.001, 0], [0.24, 0], [0.28, 0.32], [0.3, 0.34], [0.27, 0.34], [0.25, 0.04], [0.001, 0.04]], 14), MAT.wood('pale'), 0, 0, 0, 0, { sx: 0.6, sz: 0.6 });
+    for (let i = 0; i < 6; i++) k.add(cyl(0.04, 0.045, 0.6, 7), MAT.wood(i % 2 ? 'honey' : 'grey'), Math.cos(i * 1.05) * 0.075, 0.33 + (i % 2) * 0.04, Math.sin(i * 1.05) * 0.075, i, { rz: Math.cos(i * 1.05) * 0.12, rx: -Math.sin(i * 1.05) * 0.12 });
   });
-  B.ccol(-4.05, BZ + 0.55, 0.3, 0.6, { noStand: true });
-  B.giver('firewood', -4.05, BZ + 0.55, ['life', 'magic'], 1, { r: 1.0, top: 0.6 });
+  B.ccol(-4.17, BZ + 0.5, 0.19, 0.6, { noStand: true });
+  B.giver('firewood', -4.17, BZ + 0.5, ['life', 'magic'], 1, { r: 1.0, top: 0.6 });
   const stoveLight = B.light('#ff8a3a', 3.2, 4.5, stX, 0.6, BZ + 1.0);
 
   // --- dresser with plates
@@ -586,7 +588,7 @@ function buildHouse(scene, physics) {
   mast.position.set(mastRest.x, mastRest.y, mastRest.z); mast.rotation.y = mastRest.ry;
   B.group.add(mast);
   R.boat = { mast, mastRest, ...B.world(abX, abZ), ry: 0.75, deck: abH + 0.0895 };   // (deck: the deck plank's top)
-  k.at(3.38, 0.0, 2.95, -1.3, () => P.plushDino(k));   // (HOUSE-FIX: sitting against the toy chest; it floated in front of it)
+  k.at(3.27, 0.0, 2.95, -1.3, () => P.plushDino(k));   // (HOUSE-FIX: sitting against the toy chest; it floated in front of it; PLACE-1: not 11 cm into it)
   P.spinningTop(k, 2.6, 2.95);
   k.add(sphere(0.1, 12, 8), MAT.paint('#e03a3a', 0.4), 1.42, 0.1, 1.5);   // (clear of the boat's stand)
   B.put(3.9, 1.35, 0, P.sideTable, {});
@@ -1881,7 +1883,8 @@ function buildLightTop(scene, physics) {
   for (const [deg, r] of [[318, 2.55], [329, 2.6]]) { const [x, z] = pol((deg * Math.PI) / 180, r); B.put(x, z, deg, P.barrel, { r: 0.21, h: 0.6, pal: 'grey' }); k.add(cyl(0.03, 0.03, 0.04, 8), brass, x + 0.06, 0.6, z); }
   { const [x, z] = pol((15 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0.3, () => { k.add(lathe([[0.001, 0], [0.13, 0], [0.16, 0.3], [0.001, 0.3]], 14), MAT.paint('#c8302a', 0.45), 0, 0, 0); k.add(torus(0.15, 0.01, 4, 10, Math.PI), MAT.iron(), 0, 0.3, 0, 0); k.add(cyl(0.14, 0.14, 0.01, 12), MAT.flat('#d8c890', 0.9), 0, 0.27, 0); }); B.ccol(x, z, 0.18, 0.32, { noStand: true }); }
   { const [x, z] = pol((50 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0, () => { for (let i = 0; i < 4; i++) k.add(torus(0.22 - i * 0.03, 0.035, 5, 16), MAT.cloth('#c9a66b', '#7a5a30'), 0, 0.035 + i * 0.06, 0, 0, { rx: Math.PI / 2 }); }); B.ccol(x, z, 0.26, 0.3, { noStand: true, seeThrough: true }); }
-  { const [x, z] = pol((-20 * Math.PI) / 180, 2.5); B.put(x, z, 0.4, P.crate, 0.5); B.giver('crate', x, z, ['money', 'life', 'magic'], 3, { r: 1.0, top: 0.6 }); }
+  { const [x, z] = pol((-15 * Math.PI) / 180, 2.5); B.put(x, z, 0.4, P.crate, 0.5);   // (PLACE-1: -15°, not -20°: it stood 9 cm into the second barrel)
+    B.giver('crate', x, z, ['money', 'life', 'magic'], 3, { r: 1.0, top: 0.6 }); }
 
   // --- light: cool daylight from the glazing, the lamp's warm glow
   B.light('#dceeff', 5, 8, -1.6, 2.3, -1.6);

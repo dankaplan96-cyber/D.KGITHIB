@@ -89,7 +89,9 @@ export class Kit {
   get top() { return this.stack[this.stack.length - 1]; }
   push(x, y, z, ry = 0) { _m.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(0, ry, 0)), _s.set(1, 1, 1)); this.stack.push(this.top.clone().multiply(_m)); return this; }
   pop() { this.stack.pop(); return this; }
-  at(x, y, z, ry, fn) { this.push(x, y, z, ry); try { return fn(); } finally { this.pop(); } }
+  // (PLACE-1: tests/place-scan.mjs sets globalThis.__PLACE_REC before the game loads, to measure each placed piece;
+  //  unset in play, where this costs one property read)
+  at(x, y, z, ry, fn) { this.push(x, y, z, ry); const R = globalThis.__PLACE_REC, f = R && R.open(this, fn); try { return fn(); } finally { if (f) R.close(this, f); this.pop(); } }
   _local(x, y, z, ry, o) {
     _m.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(o.rx || 0, ry, o.rz || 0, 'YXZ')), _s.set(o.sx ?? 1, o.sy ?? 1, o.sz ?? 1));
     return this.top.clone().multiply(_m);
@@ -100,12 +102,14 @@ export class Kit {
     if (!b) { b = []; this.buckets.set(mat, b); }
     const jit = o.jit ? [this.r(), this.r()] : [0, 0];
     b.push({ geo, m: this._local(x, y, z, ry, o), s: [o.sx ?? 1, o.sy ?? 1, o.sz ?? 1], o: jit, swap: !!o.swap });
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.add(this, geo, b[b.length - 1].m, mat);
     return this;
   }
   // separate (animated) mesh, transformed by the current stack
   mesh(geo, mat, x = 0, y = 0, z = 0, ry = 0, o = {}) {
     const m = new THREE.Mesh(geo, mat);
-    this._local(x, y, z, ry, o).decompose(m.position, m.quaternion, m.scale);
+    const L = this._local(x, y, z, ry, o); L.decompose(m.position, m.quaternion, m.scale);
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.add(this, geo, L, mat);
     m.castShadow = o.cast ?? true; m.receiveShadow = true;
     this.group.add(m);
     return m;

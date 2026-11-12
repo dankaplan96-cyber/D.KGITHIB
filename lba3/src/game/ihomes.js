@@ -275,6 +275,17 @@ function build(rid, scene, physics) {
   const taken = [{ x0: LX - 0.1, x1: LX + 2.0, z0: doorZ - 0.95, z1: doorZ + 0.95 }];
   for (const wz of windows) taken.push({ x0: LX - 0.1, x1: LX + 0.5, z0: wz - 0.6, z1: wz + 0.6, wallOnly: true });
   const free = (x0, x1, z0, z1) => x0 >= LX + 0.02 && x1 <= RX - 0.02 && z0 >= BZ + 0.02 && z1 <= FZ - 0.02 && !taken.some((q) => x1 > q.x0 - 0.12 && x0 < q.x1 + 0.12 && z1 > q.z0 - 0.12 && z0 < q.z1 + 0.12);
+  // (PLACE-1: the far walls' pilasters stand 0.32 m out of the back wall: a piece is not put into one — stoves, shelves,
+  //  chests and beds stood up to 25 cm in them; a slot clear of them first, else the piece stands in front of them)
+  const pil = o.pilasters || [];
+  const onPil = (c) => pil.some((q) => c.x + c.hx > q.x0 && c.x - c.hx < q.x1 && c.z + c.hz > q.z0 && c.z - c.hz < q.z1);
+  const offPil = (c) => {
+    if (!onPil(c)) return c;
+    const d = { ...c };
+    if (c.ry === 0) d.z = BZ + 0.34 + c.hz;                          // (on the back wall: out in front of them)
+    else if (c.x - c.hx < LX + 0.4) d.z = Math.max(c.z, BZ + 0.34 + c.hz);   // (on the left wall: along it, past the corner one)
+    return onPil(d) ? null : d;
+  };
   const slots = (p, wall) => {
     const out = [], st = 0.2, { fw, fd } = p;
     if (wall === 'back') for (let x = LX + fw / 2 + 0.1; x <= RX - fw / 2 - 0.05; x += st) out.push({ x, z: BZ + fd / 2 + 0.04, ry: 0, hx: fw / 2, hz: fd / 2 });
@@ -294,7 +305,8 @@ function build(rid, scene, physics) {
       // (along a wall, from a seeded place, so two houses of one kind differ; the row and the middle in order)
       const s0 = wall === 'row' || wall === 'mid' ? 0 : Math.floor(r() * cand.length);
       let got = null;
-      for (let i = 0; i < cand.length && !got; i++) { const c = cand[(s0 + i) % cand.length]; if (free(c.x - c.hx, c.x + c.hx, c.z - c.hz, c.z + c.hz)) got = c; }
+      for (let i = 0; i < cand.length && !got; i++) { const c = cand[(s0 + i) % cand.length]; if (!onPil(c) && free(c.x - c.hx, c.x + c.hx, c.z - c.hz, c.z + c.hz)) got = c; }
+      for (let i = 0; i < cand.length && !got; i++) { const c = offPil(cand[(s0 + i) % cand.length]); if (c && free(c.x - c.hx, c.x + c.hx, c.z - c.hz, c.z + c.hz)) got = c; }
       if (!got) continue;
       if (p.keeper) taken.push({ x0: got.x - got.hx, x1: got.x + got.hx, z0: BZ, z1: got.z + got.hz });   // (the keeper's place behind the counter)
       else taken.push({ x0: got.x - got.hx, x1: got.x + got.hx, z0: got.z - got.hz, z1: got.z + got.hz });

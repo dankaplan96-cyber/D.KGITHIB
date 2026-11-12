@@ -325,7 +325,8 @@ function buildSchoolRoom(scene, physics) {
   }
   // Ker'aooc's corner by the door: a cot and her cabinet of remedies
   B.put(X(61.5), Z(37.5), 0, (kk) => { kk.add(rbox(0.95, 0.45, 2.0, 0.06), MAT.wood('honey'), 0, 0.22, 0); kk.add(rbox(0.9, 0.12, 1.9, 0.05), MAT.cloth('#e8e2d0', '#c8c0a8'), 0, 0.5, 0); return { hw: 0.48, hd: 1.0, top: 0.56 }; });
-  B.put(X(62) - 0.25, Z(33.5), -Math.PI / 2, (kk) => {
+  // (PLACE-1: 0.3 m on along the wall: the long table's end stood 10 cm into the cabinet)
+  B.put(X(62) - 0.25, Z(33.5) + 0.3, -Math.PI / 2, (kk) => {
     kk.add(rbox(1.6, 1.9, 0.4, 0.03), MAT.wood('dark'), 0, 0.95, 0);
     for (const y of [0.6, 1.1, 1.6]) for (let i = 0; i < 4; i++) jar(kk, -0.55 + i * 0.37, y, 0.22, i % 2 ? 'jar' : 'bottle', ['#6ab84a', '#c8a050', '#3a7a8a', '#b85a8a'][i], 0.8);
     return { hw: 0.8, hd: 0.2, top: 1.9 };
