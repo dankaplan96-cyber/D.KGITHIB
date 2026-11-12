@@ -3,8 +3,13 @@
 // final chapter was split in two (The Shell, The Core) loads into the right half: the core room or a begun fight →
 // chapter 12; Sendell's chamber and earlier → chapter 11; the epilogue keeps its place (its position moved one on).
 // SHAFT-CITADEL: a save on Zeelich's drill platform during The Shell comes out at the shaft's new top, Citadel's station.
+// CAMPAIGN-5: saves made on the build before wave 3 (tests/fixtures/campaign base-09, base-09-trip1, base-10-scope) load
+// without an error; the line's thread is on only where its steps are still ahead (the trips; the telescope).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+const fixture = (name) => JSON.parse(JSON.parse(fs.readFileSync(fileURLToPath(new URL(`./fixtures/campaign/${name}.save.json`, import.meta.url)), 'utf8')).origins[0].localStorage.find((e) => e.name === 'lba3_save_v1').value);
 const { check, done } = checker({ info: 'always' });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const results = [];
@@ -21,6 +26,7 @@ async function run(name, save) {
     const cur = JSON.parse(localStorage.getItem('lba3_save_v1') || 'null');
     const st = game.world.station, h = game.hero;
     return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80),
+      ps: [!!game.flags.ps_v, !!game.flags.ob_v, !!game.regions?.built('hamalayi')?.line?.active],
       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
   results.push([name, r, errs.length ? errs : 'no errors']);
@@ -48,8 +54,14 @@ const shellNow = { ...shellFlags, chapter: 10, c3_cooled: false, c3_pillar0: fal
 await run('v5 shell, on Zeelich\'s platform', { ...v5, room: 'zeelich', hero: { ...v5.hero, x: 2452, z: 2 }, flags: { ...shellNow } });
 await run('v5 shell, in the shaft\'s room', { ...v5, room: 'c3shaft', hero: { ...v5.hero, x: 1797, z: -1 }, flags: { ...shellNow } });
 await run('v5 shell, in Zeelich\'s street', { ...v5, room: 'zeelich', hero: { ...v5.hero, x: 2400, z: 0 }, flags: { ...shellNow } });
+await run('wave-3 base: chapter 6 at the landing', fixture('base-09'));
+await run('wave-3 base: chapter 6 between the trips', fixture('base-09-trip1'));
+await run('wave-3 base: chapter 7 with the telescope turned', fixture('base-10-scope'));
 for (const r of results) console.log(JSON.stringify(r));
-const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street]] = results;
+const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se]] = results;
+check('a chapter-6 save from before wave 3, at the landing, loads into play without an error; the trips are ahead, so the line\'s thread is on', ['play', 'dialog'].includes(f6.state) && f6.cur === 'pass' && f6.ps[0] && f6e === 'no errors', [f6, f6e]);
+check('a chapter-6 save from before wave 3, between the trips, loads without an error; the line\'s steps count as done (no thread, the line still)', ['play', 'dialog'].includes(f6t.state) && f6t.cur === 'pass' && !f6t.ps[0] && !f6t.ps[2] && f6te === 'no errors', [f6t, f6te]);
+check('a chapter-7 save from before wave 3, the telescope turned, loads without an error; the fourth setting counts as done (no thread)', ['play', 'dialog'].includes(f7s.state) && f7s.cur === 'observatory' && !f7s.ps[1] && f7se === 'no errors', [f7s, f7se]);
 check('a v1 save (no lists) loads into play in chapter project, upgraded, the v1 kept as a backup', a.state === 'play' && a.chapterKey === 'project' && a.cur === 'project' && a.keys.includes('lba3_save_v1_backup_v1') && a.savedV > 1, a);
 check('a save in a missing room lands outdoors in play, the old save kept as a backup', b.state === 'play' && b.room === null && b.chapterKey === 'project' && b.keys.includes('lba3_save_v1_backup_v2'), b);
 check('a corrupt save is set aside (never deleted), a new game starts with a message', c.keys.includes('lba3_save_v1_unreadable') && c.chapterKey === 'well' && c.chapter === 0 && c.toast.length > 0, c);

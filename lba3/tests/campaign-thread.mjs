@@ -20,7 +20,16 @@
 //      (failure and retry), the second run, the carbon, the keypad live; a return after completion
 //   E  chapter 5 (fixture new-08-routed: FunFrock's valves just set): the wire, a save before the heat line, the heat
 //      line, the log sent, Dallan before and after the tape is read; a return after completion
-// ONLY=A|B|C|D|E runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
+//   C8–C11 (CAMPAIGN-5) the saves from before wave 3: base-09 chapter 6 at the landing (the trips ahead: the thread on),
+//      base-09-trip1 chapter 6 between the trips (no thread: the old trip, no brake), base-10 chapter 7 at the monastery
+//      (the telescope ahead: on), base-10-scope chapter 7 with the telescope turned (no thread: the drone next)
+//   F  chapter 6 (CAMPAIGN-5, story/passline.js; fixture new-09-lift: the rope just cut): the riders boarded and the line
+//      read, leaving mid-task (Save & quit with them boarded), a start too late and the retry, the trip in the green, the
+//      second trip, a save between the trips; fixture new-09-top (he has just ridden up): a save before the brake, the
+//      monastery waiting, the brake and the last of Lhar, a return after completion
+//   G  chapter 7 (fixture new-10-lit: the crystal just lit): the fourth setting by hand, a save between the follow and the
+//      reading, the ring read, the glacier's turn, a return after completion
+// ONLY=A|B|C|D|E|F|G runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -247,6 +256,43 @@ if (!ONLY || ONLY === 'C') {
     P.talk('dtrader', { run: true }); return [...st, !!f.c5_jar];
   }), (v) => v[0] === 'steam' && !v[1] && v[2] === false && v[3] === false && !v[4] && v[5] > 3 && v[6]);
   await browser.close();
+  // CAMPAIGN-5: the saves from before wave 3
+  await start('base-09');
+  is('C8 a save from before, chapter 6 at the landing: loads; the trips are ahead of it, so the thread is on (the line kicking); it goes on: the tree over the gorge', await ev(() => {
+    const f = game.flags, T = game.story._ps, L = game.regions.built('hamalayi').line; let k = 0; const k0 = L.onKick; L.onKick = (i) => { k++; k0?.(i); };
+    for (let i = 0; i < 260; i++) game.step(0.05); L.onKick = k0;
+    const st = [f.chapterKey, f.ps_v, T.on6, L.active, k];
+    const tg = game.room.ballTargets.find((t) => t.tree); for (let j = 0; j < 6 && !tg.done; j++) { const a = j * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.throwAt(tg.x, tg.z); P.settle(); }
+    return [...st, !!f.c6_bridge];
+  }), (v) => v[0] === 'pass' && v[1] === 1 && v[2] && v[3] && v[4] >= 3 && v[5]);
+  await browser.close();
+  await start('base-09-trip1');
+  is('C9 a save from before, chapter 6 between the trips: loads; the line\'s steps count as done (no thread, no kicks, no brake asked for); the mites, then the old trip at one press', await ev(() => {
+    const f = game.flags, T = game.story._ps, M = game.regions.built('hamalayi'), L = M.line;
+    const st = [f.chapterKey, !!f.c6_trip1, !!f.ps_v, T.on6, L.active];
+    P.fight({ maxT: 120 }); P.settle();
+    const w = M.lift.winch; P.use(w.x, w.z, { kind: 'c6winch' }); for (let i = 0; i < 400 && !f.c6_trip2; i++) { game.step(0.1); if (game.state !== 'play') P.settle(); }
+    return [...st, !!f.c6_trip2, !!T.boarded, document.querySelector('#objective').textContent];
+  }), (v) => v[0] === 'pass' && v[1] && !v[2] && !v[3] && v[4] === false && v[5] && !v[6] && !/brake|kicks/i.test(v[7]));
+  is('C9 and it goes on: up, and the monastery ends the chapter without a brake', await ev(() => {
+    const f = game.flags, M = game.regions.built('hamalayi'), p = M.lift.pad; P.go(p.x, p.z, { tol: 0.6 }); for (let i = 0; i < 400 && !f.c6_up; i++) game.step(0.1); P.settle();
+    const Y = M.monastery.yard; P.go(Y.x, Y.z, { tol: 2, maxT: 200 }); P.settle(60); P.settle(30);
+    return [!!f.c6_up, !!f.ps_safe, f.chapterKey];
+  }), (v) => v[0] && !v[1] && v[2] === 'observatory');
+  await browser.close();
+  await start('base-10');
+  is('C10 a save from before, chapter 7 at the monastery: loads; the telescope is ahead of it, so the thread is on (the line kicking outside)', await ev(() => {
+    const f = game.flags, T = game.story._ps, L = game.regions.built('hamalayi').line;
+    for (let i = 0; i < 20; i++) game.step(0.05);
+    return [f.chapterKey, f.ob_v, T.on7, L.active, !!f.c7_scope];
+  }), (v) => v[0] === 'observatory' && v[1] === 1 && v[2] && v[3] && !v[4]);
+  await browser.close();
+  await start('base-10-scope');
+  is('C11 a save from before, chapter 7 with the telescope turned: loads; the fourth setting counts as done (no thread); the drone is next', await ev(() => {
+    const f = game.flags, T = game.story._ps;
+    return [f.chapterKey, !!f.c7_scope, !!f.ob_v, T.on7, document.querySelector('#objective').textContent, game.story.cur.journal().some((l) => l.key === 'ob_j_dir')];
+  }), (v) => v[0] === 'observatory' && v[1] && !v[2] && !v[3] && /drone/i.test(v[4]) && !v[5]);
+  await browser.close();
 }
 
 // ------------------------------------------------------------------ D: chapter 4, the bore test (CAMPAIGN-4)
@@ -349,6 +395,101 @@ if (!ONLY || ONLY === 'E') {
     const f = game.flags, D = game.regions.built('desert'), S = D.stand;
     return [S.heat.on, D.pump.drive.hot, !!f.dt_sent, D.post.gate.isOpen, game.story.items().some((i) => i.id === 'tstrip')];
   }), (v) => v.every((x) => x === true));
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ F: chapter 6, the line (CAMPAIGN-5)
+// (the crank, by input: walk to where the hand meets its grip, wait for the gauge's needle in the green — or, for the
+// failure, in the amber — and press E there)
+const CRANK = (when) => ev((when) => {
+  const G = game, f = G.flags, L = G.regions.built('hamalayi').line, Th = G.story._ps, lift = G.rooms.hamalayi.lift, p = L.crank.touch();
+  P.go(p.front.x, p.front.z, { tol: 0.3 }); P.face(p.x, p.z);
+  const ok = when === 'green' ? () => L.green() && L.phase() < L.surge + 0.7 : () => L.phase() > L.greenEnd + 0.8 && L.phase() < L.greenEnd + 1.6;
+  let t = 0; while (!ok() && t < 15) { G.step(0.05); t += 0.05; }
+  const ph = +L.phase().toFixed(2), tg = P.target()?.kind; P.tap('KeyE', 0.1);
+  let top = 0; for (let i = 0; i < 900 && (Th.run || Th.busy || G.state !== 'play'); i++) { G.step(0.05); top = Math.max(top, lift.y - lift.y0); if (G.state === 'dialog') P.settle(); }
+  P.settle();
+  return { ph, tg, top: +top.toFixed(1), miss: f.ps_miss || 0, trip1: !!f.c6_trip1, trip2: !!f.c6_trip2 };
+}, when);
+const BOARD = () => ev(() => { const G = game, L = G.regions.built('hamalayi').line, Th = G.story._ps, p = L.crank.touch(); const r = P.use(p.front.x, p.front.z, { kind: 'ps_winch', near: 0.6 }); for (let i = 0; i < 200 && (G.trans || Th.busy || G.state !== 'play'); i++) { G.step(0.05); if (G.state === 'dialog') P.settle(); } return { lines: r.lines, boarded: Th.boarded, read: !!G.flags.ps_read }; });
+if (!ONLY || ONLY === 'F') {
+  await start('new-09-lift');
+  is('F0 the save: chapter 6, the rope just cut; the thread on, the line kicking, the objective the first trip between the kicks', await ev(() => {
+    const f = game.flags, T = game.story._ps, L = game.regions.built('hamalayi').line; for (let i = 0; i < 20; i++) game.step(0.05);
+    return [f.chapterKey, !!f.c6_rope, T.on6, T.open6, L.active, !!f.ps_read, document.querySelector('#objective').textContent];
+  }), (v) => v[0] === 'pass' && v[1] && v[2] && v[3] && v[4] && !v[5] && /between the kicks/i.test(v[6]));
+  is('F1 the riders board (E at the winch); a kick comes as they stand there and he reads it on the gauge', await BOARD(), (v) => v.boarded === 1 && v.read && v.lines >= 6);
+  await shot('F1-boarded');
+  await handover();
+  is('F2 Save & quit → Continue with the riders on the platform: they are back at their places (nothing lost), the line read stays read', await ev(() => {
+    const f = game.flags, T = game.story._ps, n = P.npc('lhar1'), pad = game.rooms.hamalayi.lift.pad; const away = +Math.hypot(n.pos.x - pad.x, n.pos.z - pad.z).toFixed(1);
+    return [T.boarded, !!f.ps_read, away, !!f.c6_trip1];
+  }), (v) => v[0] === 0 && v[1] && v[2] > 3 && !v[3]);
+  is('F2 boarded again: one line, no second reading', await BOARD(), (v) => v.boarded === 1 && v.lines <= 2);
+  is('F3 a start too late (the needle in the amber): the next kick stops the winch part way up and the platform runs back down with them; said once', await CRANK('amber'), (v) => v.tg === 'ps_winch' && v.miss === 1 && !v.trip1 && v.top > 0.5);
+  is('F3 the riders are still on the platform at the foot, the crank his again', await ev(() => { const T = game.story._ps, lift = game.rooms.hamalayi.lift, n = P.npc('lhar2'); return [T.boarded, +(lift.y - lift.y0).toFixed(2), +Math.hypot(n.pos.x - lift.pad.x, n.pos.z - lift.pad.z).toFixed(1)]; }), (v) => v[0] === 1 && Math.abs(v[1]) < 0.05 && v[2] < 1.5);
+  is('F4 the retry in the green: the first trip is up; the ice mites', await CRANK('green'), (v) => v.trip1 && v.miss === 1);
+  await shot('F4-trip1');
+  is('F5 the mites driven off; the second trip boarded and cranked in the green', await ev(() => { P.fight({ maxT: 120 }); P.settle(); return true; }).then(() => BOARD()).then(() => CRANK('green')), (v) => v.trip2);
+  await handover();
+  is('F5 Save & quit → Continue after the second trip: Yorna at the top crank, the platform at the foot for him, the line still kicking', await ev(() => {
+    const f = game.flags, M = game.regions.built('hamalayi'), n = P.npc('yorna'), c = M.lift.crank; for (let i = 0; i < 20; i++) game.step(0.05);
+    return [!!f.c6_trip2, !!f.c6_up, +Math.hypot(n.pos.x - c.x, n.pos.z - c.z).toFixed(1), M.line.active, +(M.lift.y - M.lift.y0).toFixed(2)];
+  }), (v) => v[0] && !v[1] && v[2] < 1.5 && v[3] && Math.abs(v[4]) < 0.1);
+  await browser.close();
+  await start('new-09-top');
+  is('F6 the save: up the cliff, the brake not locked; Yorna at the crank; the objective the brake; the monastery does not end the chapter', await ev(() => {
+    const f = game.flags, M = game.regions.built('hamalayi'), n = P.npc('yorna'), c = M.lift.crank, obj = document.querySelector('#objective').textContent;
+    const Y = M.monastery.yard; P.go(Y.x, Y.z, { tol: 2, maxT: 120 }); P.settle(); for (let i = 0; i < 40; i++) game.step(0.05);
+    return [!!f.c6_up, !!f.ps_safe, +Math.hypot(n.pos.x - c.x, n.pos.z - c.z).toFixed(1), obj, !!f.c6_done, f.chapterKey];
+  }), (v) => v[0] && !v[1] && v[2] < 1.5 && /brake/i.test(v[3]) && !v[4] && v[5] === 'pass');
+  is('F7 the upper brake locked (by hand): the platform goes down and comes up with Tam and Bodo through a kick, and holds', await ev(() => {
+    const G = game, f = G.flags, L = G.regions.built('hamalayi').line, Th = G.story._ps, b = L.brake.touch();
+    P.use(b.front.x, b.front.z, { kind: 'ps_brake', near: 0.6 }); for (let i = 0; i < 900 && (Th.busy || Th.run || G.state !== 'play'); i++) { G.step(0.05); if (G.state === 'dialog') P.settle(); } P.settle();
+    const ph = (id) => P.npc(id)?.phaseKey; return { safe: !!f.ps_safe, on: L.brake.on, held: !!Th.restHeld, tam: ph('lh_tam'), bodo: ph('lh_grum'), obj: document.querySelector('#objective').textContent };
+  }), (v) => v.safe && v.on && v.held && v.tam === 'mon' && v.bodo === 'mon' && /monastery/i.test(v.obj));
+  await shot('F7-brake');
+  await handover();
+  is('F8 Save & quit → Continue after completion: the brake shown locked, Tam and Bodo at the camp, Yorna gone to the yard, the objective the monastery; it ends the chapter', await ev(() => {
+    const G = game, f = G.flags, M = G.regions.built('hamalayi'), n = P.npc('yorna'), c = M.lift.crank; for (let i = 0; i < 20; i++) G.step(0.05);
+    const st = [M.line.brake.on, P.npc('lh_tam')?.phaseKey, +Math.hypot(n.pos.x - c.x, n.pos.z - c.z).toFixed(1), document.querySelector('#objective').textContent];
+    const Y = M.monastery.yard; P.go(Y.x, Y.z, { tol: 2, maxT: 200 }); P.settle(60); P.settle(30);
+    return [...st, f.chapterKey];
+  }), (v) => v[0] === true && v[1] === 'mon' && v[2] > 3 && /monastery/i.test(v[3]) && v[4] === 'observatory');
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ G: chapter 7, the fourth setting (CAMPAIGN-5)
+if (!ONLY || ONLY === 'G') {
+  await start('new-10-lit');
+  is('G0 the save: chapter 7, the crystal lit; the thread on; the objective the fourth setting; the glacier turn not offered', await ev(() => {
+    const f = game.flags, T = game.story._ps, O = game.regions.built('obsv');
+    if (game.room?.id !== 'obsv') { const d = game.rooms.hamalayi.observatory.door; P.through(d.x, d.z); }
+    P.go(O.telescope.x - 1.4, O.telescope.z - 0.2, { tol: 0.4 }); P.face(O.telescope.x, O.telescope.z);
+    return [f.chapterKey, !!f.c7_sendell, T.on7, T.open7, document.querySelector('#objective').textContent, P.target()?.kind];
+  }), (v) => v[0] === 'observatory' && v[1] && v[2] && v[3] && /fourth setting/i.test(v[4]) && v[5] !== 'c7scope');
+  is('G1 the lever to four (by hand): the tube jerks in threes and stops pointing down', await ev(() => {
+    const G = game, T = G.story._ps, Tl = G.rooms.obsv.telescope, p = Tl.lever.touch(); P.use(p.front.x, p.front.z, { kind: 'ob_set', near: 0.6 });
+    for (let i = 0; i < 300 && (T.follow || T.busy || G.state !== 'play'); i++) { G.step(0.05); if (G.state === 'dialog') P.settle(); } P.settle();
+    return [Tl.n, T.followed, !!G.flags.ob_follow, document.querySelector('#objective').textContent];
+  }), (v) => v[0] === 4 && v[1] && v[2] && /read/i.test(v[3]));
+  await shot('G1-fourth');
+  await handover();
+  is('G2 Save & quit → Continue between the follow and the reading: the lever at four, the read still to do', await ev(() => {
+    const T = game.story._ps, Tl = game.regions.built('obsv')?.telescope; return [game.room?.id, Tl?.n, T.followed, document.querySelector('#objective').textContent];
+  }), (v) => v[1] === 4 && v[2] && /read/i.test(v[3]));
+  is('G3 the ring read: Citadel; then setting three, the glacier (the dome turns, the vent\'s ice melts)', await ev(() => {
+    const G = game, f = G.flags, said = []; const s0 = G.say.bind(G); G.say = (n, l, ...r) => { said.push([].concat(l).join(' ')); return s0(n, l, ...r); };
+    if (G.room?.id !== 'obsv') { const d = G.rooms.hamalayi.observatory.door; P.through(d.x, d.z); }
+    const O = G.rooms.obsv;
+    P.use(O.telescope.ring.x, O.telescope.ring.z, { kind: 'ob_read', near: 0.8 }); P.settle();
+    const dir = !!f.ob_dir; P.use(O.telescope.x, O.telescope.z, { kind: 'c7scope' }); P.settle(); G.say = s0;
+    return [dir, said.some((l) => /CITADEL/.test(l)), !!f.c7_scope, O.telescope.n, document.querySelector('#objective').textContent];
+  }), (v) => v[0] && v[1] && v[2] && v[3] === 3 && /drone/i.test(v[4]));
+  await handover();
+  is('G4 Save & quit → Continue after completion: the lever at three, the journal has the bearing, no prompt of the fourth setting', await ev(() => {
+    const T = game.story._ps, Tl = game.regions.built('obsv')?.telescope; return [Tl?.n, game.story.cur.journal().some((l) => l.key === 'ob_j_dir'), T.open7];
+  }), (v) => v[0] === 3 && v[1] && !v[2]);
   await browser.close();
 }
 done();

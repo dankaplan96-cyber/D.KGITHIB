@@ -1,6 +1,9 @@
 // Chapter 6 (The Pass, Hamalayi): the frozen tree felled over the gorge (ball) and walked across, Lhar,
 // Yorna, the heating station needs a fuse, Pim's kite (ball) → the fuse, the heat on, the lift: the frozen
 // mooring rope (the sword), two winch trips (the ice mites between), ride up, on to the monastery.
+// CAMPAIGN-5 (story/passline.js; a game with the thread, ps_v): the line kicks three and a rest; each trip's riders board
+// (the first time a kick comes as they stand there: he reads it), then he cranks when the line's gauge drops into the green;
+// up top he locks the upper brake and the last of Lhar come up. A save without the thread plays the old trips.
 export const steps = [
   ['continue (Hamalayi)', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['fell the tree over the gorge (ball)', () => {
@@ -24,9 +27,45 @@ export const steps = [
     for (let k = 0; k < 4 && !G.flags.c6_rope; k++) { P.tap('KeyK', 0.8); P.settle(); }
     return { sword: h.hasSword, weapon: h.combat.weapon, rope: G.flags.c6_rope, fail: G.flags.c6_rope ? null : 'rope' };
   }],
-  ['winch: trip 1', () => { const G = game, w = G.rooms.hamalayi.lift.winch; P.use(w.x, w.z); let t = 0; while (!G.flags.c6_trip1 && t < 40) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } return { trip1: G.flags.c6_trip1, fail: G.flags.c6_trip1 ? null : 'trip1' }; }],
+  // (the trip: board the riders at the winch (E), then the crank (E) once the gauge's needle has dropped into the green)
+  ['winch: trip 1', () => {
+    const G = game, f = G.flags, M = G.rooms.hamalayi, L = M.line, T = G.story._ps;
+    if (!f.ps_v) { const w = M.lift.winch; P.use(w.x, w.z); let t = 0; while (!f.c6_trip1 && t < 40) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } return { trip1: f.c6_trip1, fail: f.c6_trip1 ? null : 'trip1' }; }
+    const out = { tries: 0, boards: 0 };
+    for (let k = 0; k < 6 && !f.c6_trip1; k++) {
+      const p = L.crank.touch();
+      if (T.boarded !== 1) { P.use(p.front.x, p.front.z, { kind: 'ps_winch', near: 0.6 }); P.settle(); out.boards++; continue; }
+      let t = 0; while (!(L.green() && L.phase() < L.surge + 0.8) && t < 15) { G.step(0.1); t += 0.1; }   // (the needle in the green)
+      P.face(p.x, p.z); P.tap('KeyE', 0.1); out.tries++;
+      for (let i = 0; i < 400 && !f.c6_trip1 && (T.run || T.busy || G.state !== 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    }
+    P.settle();
+    return { ...out, read: !!f.ps_read, miss: f.ps_miss || 0, trip1: f.c6_trip1, fail: f.c6_trip1 ? null : 'trip1' };
+  }],
   ['the ice mites', () => P.fight({ maxT: 120 })],
-  ['winch: trip 2', () => { const G = game, w = G.rooms.hamalayi.lift.winch; P.use(w.x, w.z); let t = 0; while (!G.flags.c6_trip2 && t < 40) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } return { trip2: G.flags.c6_trip2, fail: G.flags.c6_trip2 ? null : 'trip2' }; }],
-  ['ride up', () => { const G = game, p = G.rooms.hamalayi.lift.pad; P.go(p.x, p.z, { tol: 0.6 }); let t = 0; while (!G.flags.c6_up && t < 30) { G.step(0.1); t += 0.1; } P.settle(); return { up: G.flags.c6_up, y: +G.hero.pos.y.toFixed(1), fail: G.flags.c6_up ? null : 'ride' }; }],
+  ['winch: trip 2', () => {
+    const G = game, f = G.flags, M = G.rooms.hamalayi, L = M.line, T = G.story._ps;
+    if (!f.ps_v) { const w = M.lift.winch; P.use(w.x, w.z); let t = 0; while (!f.c6_trip2 && t < 40) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } return { trip2: f.c6_trip2, fail: f.c6_trip2 ? null : 'trip2' }; }
+    const out = { tries: 0, boards: 0 };
+    for (let k = 0; k < 6 && !f.c6_trip2; k++) {
+      const p = L.crank.touch();
+      if (T.boarded !== 2) { P.use(p.front.x, p.front.z, { kind: 'ps_winch', near: 0.6 }); P.settle(); out.boards++; continue; }
+      let t = 0; while (!(L.green() && L.phase() < L.surge + 0.8) && t < 15) { G.step(0.1); t += 0.1; }
+      P.face(p.x, p.z); P.tap('KeyE', 0.1); out.tries++;
+      for (let i = 0; i < 400 && !f.c6_trip2 && (T.run || T.busy || G.state !== 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    }
+    P.settle();
+    return { ...out, miss: f.ps_miss || 0, trip2: f.c6_trip2, fail: f.c6_trip2 ? null : 'trip2' };
+  }],
+  // (Yorna cranks him up in a quiet: he stands on the platform until she does)
+  ['ride up', () => { const G = game, p = G.rooms.hamalayi.lift.pad; P.go(p.x, p.z, { tol: 0.6 }); let t = 0; while (!G.flags.c6_up && t < 40) { G.step(0.1); t += 0.1; } P.settle(); return { up: G.flags.c6_up, y: +G.hero.pos.y.toFixed(1), fail: G.flags.c6_up ? null : 'ride' }; }],
+  ['the upper brake (the last of Lhar)', () => {
+    const G = game, f = G.flags, L = G.rooms.hamalayi.line, T = G.story._ps;
+    if (!f.ps_v) return { skip: 'no thread' };
+    const b = L.brake.touch(); P.use(b.front.x, b.front.z, { kind: 'ps_brake', near: 0.6 });
+    for (let i = 0; i < 400 && (T.busy || T.run || G.state !== 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    P.settle();
+    return { safe: !!f.ps_safe, brake: L.brake.on, fail: f.ps_safe ? null : 'brake' };
+  }],
   ['to the monastery → chapter 7', () => { const M = game.rooms.hamalayi.monastery.yard; P.go(M.x, M.z, { tol: 2, maxT: 200 }); P.settle(60); P.settle(30); return { chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'observatory' ? null : 'no chapter 7' }; }],
 ];

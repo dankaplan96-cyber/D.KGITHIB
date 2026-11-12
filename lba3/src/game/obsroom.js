@@ -14,6 +14,8 @@
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, rbox, plane, cyl, sphere, torus, lathe, canvasTex } from './props.js';
+import { mergeStatic } from '../engine/merge.js';
+import { touch } from './story/reach.js';
 
 // grid (local): the beam enters at (-5.5, -2) heading +x
 const START = { x: -5.5, z: -2, dx: 1, dz: 0 };
@@ -45,9 +47,65 @@ export function buildObsRoom(scene, physics) {
   })), 0, 3.4, -D / 2 + 0.02);
   // the telescope on a brass mount
   k.add(cyl(0.5, 0.7, 1.0, 16), MAT.stone('slate'), 4.0, 0.5, 4.0);
-  k.add(cyl(0.22, 0.32, 3.4, 16), MAT.brass(), 4.0, 2.4, 4.0, 0, { rx: -0.7 });
   B.ccol(4.0, 4.0, 0.8, 1.2);
-  R.telescope = { x: B.cx + 4.0, z: B.cz + 4.0 };
+  // CAMPAIGN-5 (story/passline.js): the tube on a yoke that turns (azimuth) and tips (elevation); a bearing ring round the
+  // mount's top, read from above, with a pointer that turns with the yoke; the setting lever on the mount's west side
+  // (four notches: 1 the stars, 2 the suns, 3 the glacier, 4 the snow: it follows the snow fields when they shake)
+  const TX = 4.0, TZ = 4.0;
+  const yaw = new THREE.Group(); yaw.position.set(TX, 1.0, TZ); B.group.add(yaw);
+  { const yk = new THREE.Group(); yaw.add(yk);
+    const y1 = new THREE.Mesh(cyl(0.12, 0.16, 0.5, 10), MAT.brass()); y1.position.y = 0.25; yk.add(y1);
+    const pt = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.34, 4).rotateX(Math.PI / 2), MAT.brass()); pt.position.set(0, 0.03, 0.66); yk.add(pt);
+    mergeStatic(yk, { recolor: true }); }
+  const pitch = new THREE.Group(); pitch.position.y = 0.55; yaw.add(pitch);
+  { const tb = new THREE.Mesh(cyl(0.2, 0.28, 2.6, 16), MAT.brass()); tb.rotation.x = Math.PI / 2; tb.position.z = 0.7; tb.castShadow = true; pitch.add(tb); }
+  const ringTex = canvasTex(512, 512, (x, Wd, Hd) => {
+    const c = Wd / 2; x.clearRect(0, 0, Wd, Hd);
+    x.fillStyle = '#c8a050'; x.beginPath(); x.arc(c, c, 254, 0, 7); x.arc(c, c, 150, 0, 7, true); x.fill();
+    x.strokeStyle = '#6a4a20'; x.lineWidth = 3; for (const r of [252, 152]) { x.beginPath(); x.arc(c, c, r, 0, 7); x.stroke(); }
+    for (let i = 0; i < 32; i++) { const a = (i / 32) * Math.PI * 2; x.beginPath(); x.moveTo(c + Math.sin(a) * 236, c - Math.cos(a) * 236); x.lineTo(c + Math.sin(a) * (i % 4 ? 246 : 226), c - Math.cos(a) * (i % 4 ? 246 : 226)); x.stroke(); }
+    // the names round it (north, the room's −z, at the top of the texture), each where it lies from the peak
+    x.fillStyle = '#3a2410'; x.font = 'bold 26px serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    for (const [deg, name, r, px] of [[0, 'PEAK', 200, 26], [62, 'MONASTERY', 200, 22], [250, 'GLACIER', 200, 24], [205, 'LHAR', 200, 24], [150, 'CITADEL', 222, 22], [150, 'DESERT ISLE', 178, 16]]) {
+      const a = (deg * Math.PI) / 180;
+      x.save(); x.translate(c + Math.sin(a) * r, c - Math.cos(a) * r); x.rotate(a); x.font = `bold ${px}px serif`; x.fillText(name, 0, 0); x.restore();
+    }
+  });
+  ringTex.wrapS = ringTex.wrapT = THREE.ClampToEdgeWrapping;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.9, 40), new THREE.MeshStandardMaterial({ map: ringTex, transparent: true, alphaTest: 0.4, roughness: 0.4, metalness: 0.5 }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(TX, 1.005, TZ); ring.castShadow = false; B.group.add(ring);
+  // (the ring's texture: the room's −z up; the RingGeometry's uv maps x → u, y → v: laid flat, +v is −z)
+  // the setting lever: a brass arm off a boss on the mount's west side, turning in the x–y plane through four notches
+  const LV = { x: TX - 0.5, y: 0.92, z: TZ };
+  k.add(cyl(0.08, 0.08, 0.1, 10), MAT.brass(), LV.x - 0.02, LV.y, LV.z, 0, { rz: Math.PI / 2 });
+  k.add(plane(0.34, 0.12), MAT.map(canvasTex(256, 96, (x) => { x.fillStyle = '#e8d8b0'; x.fillRect(0, 0, 256, 96); x.fillStyle = '#3a2410'; x.font = 'bold 30px serif'; x.textAlign = 'center'; x.fillText('1  2  3  4', 128, 44); x.font = '18px serif'; x.fillText('STARS SUNS ICE SNOW', 128, 80); })), TX - 0.575, LV.y - 0.2, LV.z, -Math.PI / 2);
+  const lever = new THREE.Group(); lever.position.set(LV.x - 0.06, LV.y, LV.z); B.group.add(lever);
+  { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.36, 0.035), MAT.brass()); arm.position.y = 0.18; lever.add(arm);
+    const kn = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), MAT.brass()); kn.position.y = 0.36; lever.add(kn);
+    mergeStatic(lever, { recolor: true }); }
+  // (about z: the arm leans out west (−x) from straight up; setting 1 the most upright, 4 the most out)
+  const NOTCH = { 1: 0.35, 2: 0.62, 3: 0.89, 4: 1.16 };
+  // (its bearing on the ring: clockwise from the room's −z; the yoke's az = π − bearing)
+  const POSE = { stars: { az: Math.PI, el: 0.87 }, down: { az: Math.PI - (150 * Math.PI) / 180, el: -0.22 }, glacier: { az: Math.PI - (250 * Math.PI) / 180, el: 0.2 } };
+  const ease = { from: null, to: null, t: 1 };
+  R.telescope = {
+    x: B.cx + TX, z: B.cz + TZ, n: 1,
+    ring: { x: B.cx + TX - 1.15, z: B.cz + TZ + 0.2 },
+    setting(n) { this.n = n; lever.rotation.z = NOTCH[n] || NOTCH[1]; },
+    // the knob where it is now, in the hand of a man facing the mount's west side (+x): a 'tinker' reach
+    lever: { touch() { const a = lever.rotation.z, kx = lever.position.x - Math.sin(a) * 0.36, kz = lever.position.z; return touch(B.cx + kx, B.cz + kz, Math.PI / 2, 'tinker'); } },
+    pose(name) { const p = POSE[name] || POSE.stars; yaw.rotation.y = p.az; pitch.rotation.x = -p.el; ease.t = 1; this.at = { ...p }; },
+    // a jerk on the way from the stars to its bearing (k: how far along, 0..1): a step, overshooting, settling
+    jerk(k) { const a = POSE.stars, b = POSE.down, s = Math.min(1, k); ease.from = { az: yaw.rotation.y, el: -pitch.rotation.x }; ease.to = { az: a.az + (b.az - a.az + (b.az - a.az > Math.PI ? -2 * Math.PI : b.az - a.az < -Math.PI ? 2 * Math.PI : 0)) * s, el: a.el + (b.el - a.el) * s }; ease.t = 0; },
+  };
+  R.telescope.setting(1); R.telescope.pose('stars');
+  R.updaters.push((dt) => {
+    if (ease.t >= 1) return;
+    ease.t = Math.min(1, ease.t + dt / 0.35);
+    const u = ease.t, o = 1 + Math.sin(u * Math.PI) * 0.25 * (1 - u);   // (a jerk: a quick step that overshoots a little)
+    yaw.rotation.y = ease.from.az + (ease.to.az - ease.from.az) * Math.min(1.1, u * o);
+    pitch.rotation.x = -(ease.from.el + (ease.to.el - ease.from.el) * Math.min(1.1, u * o));
+  });
   // the shrine: a niche in the back wall with Sendell's crystal on a plinth
   const crystalM = new THREE.MeshStandardMaterial({ color: '#bfefff', emissive: '#6ad0ff', emissiveIntensity: 0.15, roughness: 0.1, transparent: true, opacity: 0.9, flatShading: true });
   k.add(cyl(0.45, 0.55, 1.0, 10), MAT.stone('lav'), CRYSTAL.x, 0.5, CRYSTAL.z - 0.6);

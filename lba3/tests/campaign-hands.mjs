@@ -4,8 +4,10 @@
 // cup taken and set in the sink (a new game, by input); chapter 2: the three pipes felt, the two cocks, the gauge's strip
 // (fixture new-04); chapter 3: the chain's wheel, the bell, the feed switch, the cart's bar, its cock, the dial, the
 // crank (fixture new-05); CAMPAIGN-4, chapter 4: the cutoff pulled, pushed up, pulled again, the carbon torn off (fixture
-// new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times. HAND (default
-// 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
+// new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times; CAMPAIGN-5,
+// chapter 6: the winch's crank started in the green (fixture new-09-lift, the riders boarded first), the upper brake
+// (new-09-top), chapter 7: the telescope's setting lever (new-10-lit). HAND (default 0.05 m) is the limit, as
+// tests/no-air.mjs. Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -107,10 +109,30 @@ people.push(await person('dallan'));
 take(await use('dt_heat', 'game.rooms.desert.stand.heat.touch()', 0.9));
 await browser.close();
 
+// chapter 6: the winch's crank (the riders boarded, then the crank in the green) and the upper brake
+await start('new-09-lift');
+await ev(() => { const L = game.rooms.hamalayi.line, p = L.crank.touch(); P.use(p.front.x, p.front.z, { kind: 'ps_winch', near: 0.6 }); for (let i = 0; i < 200 && (game.trans || game.story._ps.busy || game.state !== 'play'); i++) { game.step(0.05); if (game.state === 'dialog') P.settle(); } });
+take(await ev(() => {
+  window.KIND = 'ps_winch'; const G = game, L = G.rooms.hamalayi.line, h = G.hero, p = L.crank.touch();
+  P.go(p.front.x, p.front.z, { tol: 0.3 }); P.face(p.x, p.z);
+  let t = 0; while (!(L.green() && L.phase() < L.surge + 0.7) && t < 15) { G.step(0.05); t += 0.05; }
+  P.tap('KeyE', 0.1); for (let i = 0; i < 40 && (h.steer || h.actT > 0) && G.state === 'play'; i++) G.step(0.1);
+  return window.GAPS.filter((g) => g.kind === 'ps_winch');
+}));
+await browser.close();
+await start('new-09-top');
+take(await use('ps_brake', 'game.rooms.hamalayi.line.brake.touch()', 0.6));
+await browser.close();
+// chapter 7: the telescope's setting lever
+await start('new-10-lit');
+await ev(() => { if (game.room?.id !== 'obsv') { const d = game.rooms.hamalayi.observatory.door; P.through(d.x, d.z); } });
+take(await use('ob_set', 'game.rooms.obsv.telescope.lever.touch()', 0.6));
+await browser.close();
+
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat'];
+const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set'];
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

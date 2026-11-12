@@ -13,11 +13,14 @@
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import '../text/ch6.js';
+import { PassThread } from './passline.js';
 
 const FIRST = ['lhar1', 'lhar2'], SECOND = ['yorna', 'pim', 'lhar3'];
 
 export class Pass extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
+  // CAMPAIGN-5: the pulse on the lift's line, the trips in the quiet, the upper brake (passline.js; one thread for 6 and 7)
+  get ps() { return (this.story._ps ||= new PassThread(this.story)); }
   inM() { return this.game.room?.id === 'hamalayi'; }
   mitesLeft() { return this.game.enemies.filter((e) => e.def?.id?.startsWith('imite') && e.present && e.alive).length; }
 
@@ -71,6 +74,7 @@ export class Pass extends ChapterBase {
     //  yet waits for it, Story.refreshCast)
     const M = this.M;
     if (!M) return undefined;
+    { const tp = this.ps.place(id); if (tp !== undefined) return tp; }   // (CAMPAIGN-5: riders boarded; Yorna at the top crank)
     const S = M.npcSpots, y = M.monastery.yard;
     const yard = (k) => ({ x: y.x - 3 + k * 1.5, z: y.z + (k % 2), a: Math.PI });
     // (HAMALAYI-LIFE: past this chapter the village is up at the monastery, whatever the save holds: a save with only a
@@ -96,6 +100,8 @@ export class Pass extends ChapterBase {
   begin() {
     const g = this.game, M = this.M;
     g.enterRoom('hamalayi', M.landing, true);
+    this.ps.begin6();   // (CAMPAIGN-5: a game that reaches chapter 6 now has the line's pulse ahead)
+    this.ps.push();
     this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c6_narr'], ['hesk', 'c6_hesk_1'], ['hero', 'c6_tw_1']], () => {
       this.f.c6_started = true; g.updateObjective(); g.save(false);
@@ -105,11 +111,13 @@ export class Pass extends ChapterBase {
   interactables(consider, dist) {
     const f = this.f, M = this.M, h = this.game.hero;
     if (!this.isCur() || !this.inM()) return;
+    this.ps.interactables(consider, dist);
     if (f.c6_yorna && !f.c6_heat) consider(dist(M.heatPost.x, M.heatPost.z), 1.8, { kind: 'c6heat', label: f.c6_fuse ? 'p_heat' : 'p_look' });
-    if (f.c6_liftReady && !f.c6_trip2 && Math.abs(h.pos.y - M.lift.y0) < 1.2) consider(dist(M.lift.winch.x, M.lift.winch.z), 1.6, { kind: 'c6winch', label: 'p_winch' });
+    if (f.c6_liftReady && !f.c6_trip2 && !this.ps.owns() && Math.abs(h.pos.y - M.lift.y0) < 1.2) consider(dist(M.lift.winch.x, M.lift.winch.z), 1.6, { kind: 'c6winch', label: 'p_winch' });
   }
   interact(it) {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: its things exist only once built)
+    if (this.ps.interact(it)) return true;
     switch (it.kind) {
       case 'c6heat':
         if (!f.c6_fuse) { this.chain([['hero', 'c6_heat_locked']], () => { f.c6_needFuse = true; g.updateObjective(); }); return true; }
@@ -161,6 +169,8 @@ export class Pass extends ChapterBase {
     switch (id) {
       case 'hesk': return c([['hesk', 'c6_hesk_1']]);
       case 'yorna':
+        if (this.ps.open6 && f.c6_liftReady && !f.c6_trip2 && f.ps_read) return c([['yorna', 'ps_yorna_wait']]);   // (CAMPAIGN-5)
+        if (this.ps.open6 && f.c6_up) return c([['yorna', 'ps_brake_2']]);
         if (!f.c6_yorna) return c([['yorna', 'c6_yorna_1'], ['hero', 'c6_tw_y1'], ['yorna', 'c6_yorna_2'], ['yorna', 'c6_yorna_3'], ['yorna', 'c6_yorna_4']], () => { f.c6_yorna = true; g.updateObjective(); g.save(false); });
         if (f.c6_thawed && !f.c6_liftReady) return c([['yorna', 'c6_yorna_lift'], ['yorna', 'c6_yorna_sword1'], ['hero', 'c6_tw_sword'], ['yorna', 'c6_yorna_sword2']], () => {
           f.c6_liftReady = true; f.c6_sword = true;
@@ -185,23 +195,31 @@ export class Pass extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
+    this.ps.update(dt);
     M.snow.focus = h.pos;
-    if (this.thawT > 0 && (this.thawT -= dt) <= 0) { f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast({ walk: true }); this.chain([['hero', 'c6_thawed']], () => { g.updateObjective(); g.save(false); }); }
+    if (this.thawT > 0 && (this.thawT -= dt) <= 0) {
+      f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast({ walk: true });
+      // (CAMPAIGN-5: and the line kicks as he looks at it: the lamps, the cable)
+      const more = this.ps.seenLines('ps_lamps', 'ps_lamps');
+      this.chain([['hero', 'c6_thawed'], ...more], () => { g.updateObjective(); g.save(false); }, (i) => { if (i === 1) this.ps.cue('hero', 'ps_lamps'); });
+    }
     // the mites are gone: say so on the objective line
     const left = f.c6_trip1 && !f.c6_trip2 ? this.mitesLeft() : -1;
     if (left !== this.lastLeft) { this.lastLeft = left; g.updateObjective(); }
     if (g.state !== 'play' || !this.inM()) return;
     if (f.c6_bridge && !f.c6_lhar && Math.hypot(h.pos.x - M.lhar.x, h.pos.z - M.lhar.z) < 20) { f.c6_lhar = true; this.chain([['hero', 'c6_lhar_in']], () => g.updateObjective()); }
     // the last ride: stand on the platform and Yorna cranks
-    if (f.c6_trip2 && !f.c6_up && !this.riding && Math.hypot(h.pos.x - M.lift.pad.x, h.pos.z - M.lift.pad.z) < 1.2 && Math.abs(h.pos.y - M.lift.y0) < 0.8) {
+    // (CAMPAIGN-5: with the line's pulse she waits for a quiet: rideOK)
+    if (f.c6_trip2 && !f.c6_up && !this.riding && Math.hypot(h.pos.x - M.lift.pad.x, h.pos.z - M.lift.pad.z) < 1.2 && Math.abs(h.pos.y - M.lift.y0) < 0.8 && this.ps.rideOK()) {
       this.riding = true;
       g.setState('cutscene'); g.cutscene = () => {};
       M.lift.ride(true, [h], () => {
         g.cutscene = null; g.setState('play'); this.riding = false;
         f.c6_up = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
+        this.ps.atTop();   // (CAMPAIGN-5: Yorna tells him of the upper brake)
       });
     }
-    if (f.c6_up && !f.c6_done && Math.hypot(h.pos.x - M.monastery.yard.x, h.pos.z - M.monastery.yard.z) < 7) {
+    if (f.c6_up && !f.c6_done && (!this.ps.on6 || f.ps_safe) && Math.hypot(h.pos.x - M.monastery.yard.x, h.pos.z - M.monastery.yard.z) < 7) {
       f.c6_done = true;
       this.chain([['narrator', 'c6_monastery'], ['yorna', 'c6_yorna_end'], ['pim', 'c6_pim_end']], () => { g.save(false); g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); });
     }
@@ -209,6 +227,7 @@ export class Pass extends ChapterBase {
   applyFlags() {
     const f = this.f;
     if (!this.reached()) return;
+    this.ps.applyFlags();   // (CAMPAIGN-5: the line, its pulse and the upper brake as the flags have them)
     // the sword is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c6_sword || this.story.index > this.pos) this.game.hero.hasSword = true;
     if (f.c6_heat && !f.c6_thawed) f.c6_thawed = true;
@@ -223,13 +242,15 @@ export class Pass extends ChapterBase {
     if (f.c6_kite) { M.kite.setVisible(false); for (const tg of M.ballTargets) if (tg.kite) tg.done = true; }
     if (f.c6_heat) { M.heatPost.setOn(true); if (!f.c6_thawed) f.c6_thawed = true; }
     if (f.c6_thawed) M.lift.thaw();
-    if (f.c6_up) M.lift.ride(true, [], null);
+    // (at the top at once: a save made on the platform up there, c6_up, loaded him under it at the cliff's foot, with no way up)
+    if (f.c6_up) M.lift.snap(true);
   }
   // GUIDE: the tree, Lhar, the heating station, Pim and his kite, the winch, the monastery on the Hamalayi's map (base.js star)
   markers() {
     const f = this.f, M = this.game.regions?.built('hamalayi');
     if (!this.isCur() || !f.c6_started || !M) return [];
     const tg = (k) => M.ballTargets.find((t) => t[k]);
+    { const pm = this.ps.marker6(); if (pm) return this.stars(pm); }   // (CAMPAIGN-5: the upper brake)
     if (f.c6_up) return this.stars(M.monastery.gate);
     if (f.c6_trip2) return this.stars(M.lift.pad);
     if (f.c6_trip1) return this.mitesLeft() > 0 ? [] : this.stars(M.lift.winch);
@@ -246,6 +267,7 @@ export class Pass extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c6_started) return '';
+    { const po = this.ps.objective6(); if (po) return po; }   // (CAMPAIGN-5: the trips between the kicks, the brake)
     if (f.c6_up) return this.goal('c6_obj_monastery');
     if (f.c6_trip2) return this.goal('c6_obj_up');
     if (f.c6_trip1) return this.mitesLeft() > 0 ? this.goal('c6_obj_mites') : this.goal('c6_obj_trip2');
@@ -266,6 +288,7 @@ export class Pass extends ChapterBase {
       { key: 'c6_j_lhar', done: !!f.c6_yorna },
       { key: 'c6_j_heat', done: !!f.c6_thawed },
       { key: 'c6_j_up', done: !!f.c6_up },
+      { key: 'ps_j_line', done: !!f.ps_safe },
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

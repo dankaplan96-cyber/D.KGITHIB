@@ -1,8 +1,9 @@
 // Chapter 7 (The Observatory, Hamalayi): up to the observatory, the keeper, the frozen second window (ball), the four mirrors carry both beams,
-// the telescope, out, the heavy drone at the vent (ball), the seal's three warm discs (ball), the vent opened, back to the monastery gate.
+// (CAMPAIGN-5: the telescope's fourth setting follows the snow fields' shaking; its ring read), the telescope, out, the heavy drone at the vent (ball), the seal's three warm discs (ball), the vent opened, back to the monastery gate.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
-  ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; const r = P.through(d.x, d.z, { run: true }); return { ...r, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
+  // (CAMPAIGN-5: out of the yard the snow shakes beside him and he says so: read it, as a player would, and walk on)
+  ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; let r = P.through(d.x, d.z, { run: true }); for (let k = 0; k < 2 && game.room?.id !== 'obsv'; k++) { P.settle(); r = P.through(d.x, d.z, { run: true }); } return { ...r, snow: !!game.flags.ob_snow, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
   ['the keeper', () => ({ ...P.talk('keeper'), keeper: game.flags.c7_keeper, fail: game.flags.c7_keeper ? null : 'keeper' })],
   ['the frozen window (ball)', () => {
     // (CHAPTER-BALANCE: the second sun's slit in the back wall is iced over; the ball breaks it, thrown from the floor before it)
@@ -11,6 +12,21 @@ export const steps = [
     return { ice: !!G.flags.c7_ice, fail: G.flags.c7_ice ? null : 'ice' };
   }],
   ['the mirrors', () => { const G = game, O = G.rooms.obsv; for (let pass = 0; pass < 3 && !G.flags.c7_lit; pass++) for (const m of O.mirrors) { if (G.flags.c7_lit) break; P.use(m.x, m.z, { near: 1.0 }); P.wait(0.5); P.settle(); } return { lit: G.flags.c7_lit, fail: G.flags.c7_lit ? null : 'mirrors' }; }],
+  // CAMPAIGN-5 (a game with the thread, ob_v): the telescope's fourth setting (the lever, by hand), its follow, the ring read
+  ['the telescope: the fourth setting', () => {
+    const G = game, f = G.flags, T = G.story._ps, O = G.rooms.obsv;
+    if (!f.ob_v) return { skip: 'no thread' };
+    const p = O.telescope.lever.touch(); P.use(p.front.x, p.front.z, { kind: 'ob_set', near: 0.6 });
+    for (let i = 0; i < 200 && (T.follow || T.busy || G.state !== 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    P.settle();
+    return { set: O.telescope.n, followed: T.followed, fail: T.followed ? null : 'follow' };
+  }],
+  ['the telescope: read the ring', () => {
+    const G = game, f = G.flags, O = G.rooms.obsv;
+    if (!f.ob_v) return { skip: 'no thread' };
+    P.use(O.telescope.ring.x, O.telescope.ring.z, { kind: 'ob_read', near: 0.8 }); P.settle();
+    return { dir: !!f.ob_dir, fail: f.ob_dir ? null : 'ring' };
+  }],
   ['the telescope', () => { const O = game.rooms.obsv; const r = P.use(O.telescope.x, O.telescope.z); return { ...r, scope: game.flags.c7_scope, fail: game.flags.c7_scope ? null : 'scope' }; }],
   ['out', () => { const e = game.room.exits.find((x) => x.to === 'obs-out') || game.room.exits[0]; return P.through(e.x, e.z); }],
   ['the heavy drone at the vent', () => { const G = game, V = G.rooms.hamalayi.vent; P.go(V.x + 8, V.z + 8, { tol: 2, run: true, maxT: 120 }); P.settle(); const r = P.fight({ maxT: 180, range: 6 }); const d = G.story.cur.heavy?.(); return { ...r, drone: d ? d.alive : null, fail: d && d.alive ? 'drone' : null }; }],

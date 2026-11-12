@@ -13,6 +13,7 @@ import { ChapterBase } from './base.js';
 import '../text/ch7.js';
 import { storyJourney } from '../travelfilm.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
+import { PassThread } from './passline.js';
 
 // (WC-1) the glider on the monks' slope for its departure film, from the monastery's gate, and where it is watched from
 // (on the terrace's lip east of the gate, clear of the rope lift's winch, nose south over the drop to Lhar; REV-HAM: on chapter
@@ -22,6 +23,8 @@ const SLOPE = { x: 6.3, z: 3.8, a: 0, lx: 14.3, lz: 2.8 };
 
 export class Observatory extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
+  // CAMPAIGN-5: the snow fields' shaking and the telescope's fourth setting (passline.js; one thread for 6 and 7)
+  get ps() { return (this.story._ps ||= new PassThread(this.story)); }
   get O() { return this.game.rooms.obsv; }
   room() { return this.game.room?.id; }
   heavy() { return this.game.enemies.find((e) => e.def?.id === 'heavydrone'); }
@@ -54,6 +57,7 @@ export class Observatory extends ChapterBase {
   begin() {
     const g = this.game, M = this.M;
     g.enterRoom('hamalayi', { x: M.monastery.yard.x, z: M.monastery.yard.z + 2, a: Math.PI }, true);
+    this.ps.begin7();   // (CAMPAIGN-5: a game that reaches chapter 7 now has the fourth setting ahead)
     this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c7_narr'], ['yorna', 'c7_yorna_1']], () => { this.f.c7_started = true; g.updateObjective(); g.save(false); });
   }
@@ -73,7 +77,8 @@ export class Observatory extends ChapterBase {
     if (r === 'obsv') {
       const O = this.O;
       if (f.c7_keeper && !f.c7_lit) for (const m of O.mirrors) consider(dist(m.x, m.z), 1.2, { kind: 'c7mirror', mirror: m, label: 'p_mirror' });
-      if (f.c7_sendell && !f.c7_scope) consider(dist(O.telescope.x, O.telescope.z), 1.8, { kind: 'c7scope', label: 'p_scope' });
+      this.ps.interactables7(consider, dist);   // (CAMPAIGN-5: the setting lever, the ring)
+      if (f.c7_sendell && !f.c7_scope && this.ps.scopeOK()) consider(dist(O.telescope.x, O.telescope.z), 1.8, { kind: 'c7scope', label: 'p_scope' });
     } else if (r === 'hamalayi') {
       const V = this.M.vent;
       if (f.c7_droneDown && !f.c7_vent) consider(dist(V.x, V.z), 4.2, { kind: 'c7vent', label: 'p_vent' });
@@ -81,6 +86,7 @@ export class Observatory extends ChapterBase {
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
+    if (this.ps.interact7(it)) return true;
     switch (it.kind) {
       case 'c7mirror': {
         const m = it.mirror;
@@ -95,6 +101,7 @@ export class Observatory extends ChapterBase {
       }
       case 'c7scope':
         f.c7_scope = true; this.M.vent.melt(); g.audio.play('door'); g.camRig.shake(0.3);
+        this.O.telescope?.setting?.(3); this.O.telescope?.pose?.('glacier');   // (CAMPAIGN-5: setting three, the glacier)
         this.story.refreshCast({ walk: true });
         this.chain([['narrator', 'c7_scope'], ['keeper', 'c7_keeper_5']], () => { g.updateObjective(); g.save(false); });
         return true;
@@ -138,7 +145,7 @@ export class Observatory extends ChapterBase {
     if (silent) return;
     g.audio.play('shard'); g.audio.cue?.('revelation');
     const beat = this.crystalBeat();   // (REVEAL-CAMS: the camera closes on Twinsen and the lit crystal; null with ?nocine and in the tests)
-    this.chain([['narrator', 'c7_lit'], ['sendell', 'c7_sendell_1'], ['hero', 'c7_tw_s1'], ['sendell', 'c7_sendell_2'], ['sendell', 'c7_sendell_3'], ['sendell', 'ml_c7_gift'], ['hero', 'c7_tw_s2'], ['sendell', 'c7_sendell_4'], ['keeper', 'c7_keeper_4']], () => {
+    this.chain([['narrator', 'c7_lit'], ['sendell', 'c7_sendell_1'], ['hero', 'c7_tw_s1'], ['sendell', 'c7_sendell_2'], ['sendell', 'c7_sendell_3'], ['sendell', 'ml_c7_gift'], ['hero', 'c7_tw_s2'], ['sendell', 'c7_sendell_4'], ['keeper', this.ps.keeperLine()]], () => {
       beat?.release();
       g.audio.endCue?.(); f.c7_sendell = true; g.updateObjective(); g.save(false);
       this.story.magic.grant(3);   // MAGIC-LEVELS (story/magic.js): Sendell's light in the ball: level 3, the red ball
@@ -162,6 +169,7 @@ export class Observatory extends ChapterBase {
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'keeper':
+        if (this.ps.talk7(npc)) return true;   // (CAMPAIGN-5: the fourth setting)
         if (!f.c7_keeper) return c([['keeper', 'c7_keeper_1'], ['hero', 'c7_tw_k1'], ['keeper', 'c7_keeper_2'], ['keeper', 'c7_keeper_3'], ['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun'], ['hero', 'c7_mirror_hint']], () => { f.c7_keeper = true; g.updateObjective(); g.save(false); });
         if (f.c7_sendell && !f.c7_scope) return c([['keeper', 'c7_keeper_4']]);
         if (!f.c7_lit) return c([['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun']]);
@@ -190,9 +198,10 @@ export class Observatory extends ChapterBase {
     if (!gt) return null;
     return { id: 'c7_slope', region: 'hamalayi', mode: 'glider', craft: 'glider', x: gt.x + SLOPE.x, z: gt.z + SLOPE.z, a: SLOPE.a, landing: { x: gt.x + SLOPE.lx, z: gt.z + SLOPE.lz, a: 0 } };
   }
-  update() {
+  update(dt) {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
+    this.ps.update(dt);
     M.snow.focus = h.pos;
     // (the frozen slit's ball target answers to this chapter, however it began: a load, or chapter 6 played on)
     const O = g.regions?.built('obsv');
@@ -213,6 +222,7 @@ export class Observatory extends ChapterBase {
   applyFlags() {
     const f = this.f, RG = this.game.regions;
     if (!this.reached()) return;
+    this.ps.applyFlags();   // (CAMPAIGN-5: the line's pulse, the telescope's setting as the flags have them)
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     RG.whenBuilt('obsv', (O) => {
@@ -246,6 +256,7 @@ export class Observatory extends ChapterBase {
     if (f.c7_droneDown && f.c7_sealSeen && this.discsLit() < 3) return this.goal('c7_obj_discs', { n: this.discsLit() });
     if (f.c7_droneDown) return this.goal('c7_obj_vent');
     if (f.c7_scope) return this.goal('c7_obj_drone');
+    { const po = this.ps.objective7(); if (po) return po; }   // (CAMPAIGN-5: the fourth setting)
     if (f.c7_sendell) return this.goal('c7_obj_scope');
     if (f.c7_keeper || r === 'obsv') return this.goal('c7_obj_mirrors');
     return this.goal('c7_obj_ridge');
@@ -255,6 +266,7 @@ export class Observatory extends ChapterBase {
     return [
       { key: 'c7_j_keeper', done: !!f.c7_keeper },
       { key: 'c7_j_sendell', done: !!f.c7_sendell },
+      { key: 'ob_j_dir', done: !!f.ob_dir },
       { key: 'c7_j_vent', done: !!f.c7_vent },
       { key: 'c7_j_home', done: !!f.c7_vent },
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
