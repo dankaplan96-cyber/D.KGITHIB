@@ -9,9 +9,16 @@
 // Pure planning: no audio here. The plan is played either from pre-rendered phrases (assets/voice, rendered offline
 // by tools/voice-render/synth.mjs from these same gestures) or by the live synthesis in voice.js; the talking mouth
 // is driven from the same syllable times.
+//
+// P18-VOICES: planLine now plans a line one of two ways (setVoiceMode): 'classic', the gestures below, or 'words'
+// (voicewords.js), whose syllables follow the line's own English words.
+import { planWords } from './voicewords.js';
 
 // vowel formants F1–F3 (Hz, an adult voice; scaled by the voice's k); 'm' is a closed-mouth hum
-export const VOWELS = { a: [730, 1100, 2450], e: [530, 1840, 2480], i: [310, 2200, 2950], o: [540, 880, 2400], u: [340, 870, 2250], y: [330, 1900, 2500], m: [260, 1000, 2300] };
+export const VOWELS = { a: [730, 1100, 2450], e: [530, 1840, 2480], i: [310, 2200, 2950], o: [540, 880, 2400], u: [340, 870, 2250], y: [330, 1900, 2500], m: [260, 1000, 2300],
+  // P18-VOICES (Words): the rest of English's vowels (Peterson and Barney's adult values): ae "trap", ih "kit", uh
+  // "strut", uu "foot", er "nurse", ax the unstressed schwa. (A diphthong is a vowel and the one it glides to: vk, vk2.)
+  ae: [660, 1720, 2410], ih: [390, 1990, 2550], uh: [640, 1190, 2390], uu: [440, 1020, 2240], er: [490, 1350, 1690], ax: [500, 1450, 2450] };
 // consonants: kind, voiced, length (s), formant targets or loci, the noise band (Hz) of a fricative or burst, lips closed
 export const CONS = {
   m: { k: 'nasal', vo: 1, d: 0.065, F: [260, 1000, 2300], lips: 1 },
@@ -31,10 +38,19 @@ export const CONS = {
   p: { k: 'stop', vo: 0, d: 0.065, F: [250, 900, 2200], nz: 1200, lips: 1 },
   t: { k: 'stop', vo: 0, d: 0.06, F: [250, 1750, 2600], nz: 3600 },
   k: { k: 'stop', vo: 0, d: 0.065, F: [250, 1900, 2300], nz: 2300 },
+  // P18-VOICES (Words): th (thin), dh (this), sh, zh (measure), ch, j (judge), ng (sing); the noise of th and dh is
+  // weak and wide, sh and zh lower than s and z; ch and j a closure, a burst and a short sh / zh
+  th: { k: 'fric', vo: 0, d: 0.06, F: [350, 1450, 2600], nz: 6200, weak: 1 },
+  dh: { k: 'fric', vo: 1, d: 0.045, F: [300, 1500, 2550], nz: 5200, weak: 1 },
+  sh: { k: 'fric', vo: 0, d: 0.08, F: [350, 1950, 2550], nz: 3000 },
+  zh: { k: 'fric', vo: 1, d: 0.065, F: [300, 1900, 2500], nz: 3000 },
+  ch: { k: 'affr', vo: 0, d: 0.085, F: [250, 1950, 2550], nz: 3000 },
+  j: { k: 'affr', vo: 1, d: 0.07, F: [250, 1900, 2500], nz: 3000 },
+  ng: { k: 'nasal', vo: 1, d: 0.065, F: [260, 2000, 2450] },
 };
 // the talking mouth: how far each vowel opens it (0-1) and how round it holds the lips (+ rounded o/u, - spread i/e)
-export const MOUTH_OPEN = { a: 1, e: 0.72, i: 0.46, o: 0.86, u: 0.56, y: 0.46, m: 0.08 };
-export const MOUTH_ROUND = { a: 0, e: -0.35, i: -0.8, o: 1, u: 0.8, y: -0.5, m: 0.2 };
+export const MOUTH_OPEN = { a: 1, e: 0.72, i: 0.46, o: 0.86, u: 0.56, y: 0.46, m: 0.08, ae: 0.9, ih: 0.55, uh: 0.78, uu: 0.6, er: 0.6, ax: 0.6 };
+export const MOUTH_ROUND = { a: 0, e: -0.35, i: -0.8, o: 1, u: 0.8, y: -0.5, m: 0.2, ae: -0.3, ih: -0.6, uh: 0, uu: 0.6, er: 0.3, ax: 0 };
 
 export const INTENTS = ['tell', 'ask', 'excl', 'no', 'worry', 'warm', 'cont'];
 
@@ -100,7 +116,7 @@ export function clauses(text) {
   for (const c of out) { c.n = Math.max(1, Math.round(c.w * ratio)); total += c.n; }
   while (total > 26) { const c = out.reduce((a, b) => (b.n > a.n ? b : a)); c.n--; total--; }
   if (out.length) out[out.length - 1].pause = 0;
-  return out.map(({ n, intent, pause, quiet }) => ({ n, intent, pause, quiet }));
+  return out.map(({ n, intent, pause, quiet, s }) => ({ n, intent, pause, quiet, s }));   // (s: the clause's text, P18 Words)
 }
 
 // ---------------------------------------------------------------- the speaker's speech values
@@ -209,9 +225,18 @@ function quantize(st, mode) {
   return o * 12 + best;
 }
 
+// P18-VOICES: how a line's syllables are chosen. 'words' (the default): from the line's own English letters
+// (voicewords.js: letter-to-sound rules, its words, their stress); 'classic': from the speaker's own sounds (below).
+let MODE = 'words';
+export function setVoiceMode(m) { MODE = m === 'classic' ? 'classic' : 'words'; return MODE; }
+export const voiceMode = () => MODE;
+
 // the whole line, laid out for the live synthesis: { phrases: [{ t0, g (gesture), intent, n }], dur, syl (every
-// syllable with its time from the start of the line) }. o: { maxDur, seed, hesitate }
+// syllable with its time from the start of the line) }. o: { maxDur, seed, hesitate, mode (this line only) }
 export function planLine(v, text, o = {}) {
+  return (o.mode || MODE) === 'words' ? planWords(v, text, o) : planClassic(v, text, o);
+}
+export function planClassic(v, text, o = {}) {
   const cl = clauses(text);
   const h = (o.seed ?? 0) ^ hashStr(text) ^ v.seed;
   const build = (speed, fewer = 1) => {

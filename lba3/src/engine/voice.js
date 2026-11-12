@@ -22,7 +22,21 @@
 // Cost: nothing per frame (pump only checks a line waiting for its bank). Synthesis: the filter chains are built once
 // per audio context and pooled; a line makes its few sources. Phrases: a bank is fetched and decoded once, off the
 // main thread; a line makes one buffer source per clause.
-import { VOWELS, CONS, MOUTH_OPEN, MOUTH_ROUND, planLine, hashStr } from './voiceplan.js';
+//
+// P18-VOICES (the user, 12.11: "The characters' voices are fine. I want it to sound more like English in terms of the
+// letters, if possible"): two ways to speak, Settings → Sound → Voice Style (setVoiceMode):
+//   - 'words' (the default): the line's syllables follow its own English words (voicewords.js: letter-to-sound rules,
+//     stress, punctuation), blurred so it stays babble. A phrase bank can't follow arbitrary words, so the line is
+//     rendered when it starts by the sample-level formant synthesiser the banks of VOICE-PHRASE were made with
+//     (voicesynth.js: a glottal pulse, cascade formants gliding sample by sample, voicing carried through the voiced
+//     consonants) and played as one buffer (_words). A speaker who has a phrase bank keeps that bank's own pitch and
+//     pace (wordsVoice), so Twinsen is the 130 Hz Twinsen heard since VOICES-PIPER, not the synthesis's 195 Hz. Cost:
+//     one render per line when it starts (docs/lba-maturity/P18-VOICES.md); nothing per frame; no bank is fetched or
+//     decoded (the manifest only, for the pitch and pace).
+//   - 'classic': the voices as before P18 (the speaker's own sounds, the Piper phrase banks, the live synthesis).
+import { VOWELS, CONS, MOUTH_OPEN, MOUTH_ROUND, planLine, hashStr, setVoiceMode as setPlanMode, voiceMode } from './voiceplan.js';
+import { renderLine, workerSource } from './voicesynth.js';
+export { voiceMode };
 
 const BW = [90, 120, 170]; // the synthesis's formant bandwidths (Hz)
 
@@ -292,6 +306,7 @@ export const VOICES = {
   // (CAMPAIGN-3, Mill Lane's cistern lift: story/zeelift.js)
   zl_kell: { race: 'esmer', seed: 1801, f0: 124, k: 0.86, rate: 0.82, contour: 'fall', range: 3, legato: 0.8, spk: 1, sex: 'm' },                // the lift's operator: steady, a hand on the brake
   zl_brel: { race: 'quetch', seed: 1802, f0: 146, k: 0.99, rate: 1.16, contour: 'bounce', range: 5, legato: 0.5, spk: 2, sex: 'm' },             // the docker: quick, out of breath
+  ev_tobin: { race: 'quetch', seed: 1804, f0: 142, k: 0.98, rate: 1.04, contour: 'arc', range: 4, legato: 0.62, spk: 2, sex: 'm' },     // Tobin in the lane's queue (CAMPAIGN-6, laneline.js; P18: he had no voice of his own)
   zl_irsa: { race: 'esmer', seed: 1803, f0: 222, k: 1.1, rate: 0.98, contour: 'step', range: 4, legato: 0.62, spk: 3, sex: 'f' },                // the pumpwright: dry, exact
   zr_oma: { race: 'quetch', seed: 1512, f0: 214, k: 1.14, rate: 0.88, contour: 'flat', range: 3, legato: 0.72, spk: 1 },              // keeps the council's notices: even, careful
   dw_guard: { race: 'quetch', seed: 1513, f0: 118, k: 0.95, rate: 1.0, contour: 'flat', range: 2.5, legato: 0.5, swing: 0.05, spk: 2 }, // the depot's Quetch guard (chapter 1): clipped
@@ -464,6 +479,57 @@ export function bankOf(v) {
   const st = Math.max(-1.5, Math.min(1.5, 12 * Math.log2(v.f0 / (B[bid].f0 || v.f0))));
   return [bid, Math.pow(2, st / 12)];
 }
+// P18-VOICES: a bank's own pace (syllables a second of sound, the median of its longer clips) and the voice a Words
+// line is synthesised in: a speaker heard from a bank keeps the bank's pitch (moved to the resident's, as bankOf) and
+// pace; one without a bank keeps their own
+const PACE = new Map();
+function bankPace(id) {
+  if (PACE.has(id)) return PACE.get(id);
+  const r = [];
+  for (const c of Object.values(MANIFEST.banks[id]?.clips || {})) if (c.s.length >= 3 && c.e > c.a) r.push(c.s.length / (c.e - c.a));
+  r.sort((x, y) => x - y);
+  const p = r.length ? r[r.length >> 1] : 0;
+  PACE.set(id, p);
+  return p;
+}
+export function wordsVoice(v) {
+  const b = v && bankOf(v);
+  if (!b) return v;
+  const info = MANIFEST.banks[b[0]], pace = bankPace(b[0]);
+  // (and the bank's connected speech, a legato of 0.9 at least: the phrases leave no air between words. Measured on 20
+  //  lines: at 0.75, 36 % of the joins dropped more than 15 dB, at 0.9 28 %, the phrases 16 %; at 1.0 the syllables
+  //  ran together, 11.6 dB of syllabic modulation against the phrases' 16-25)
+  return { ...v, f0: Math.round((info.f0 || v.f0) * b[1]), rate: pace ? pace / 6.6 : v.rate, legato: Math.max(v.legato, 0.9), bank: b[0], bankRate: b[1] };
+}
+// the plan a speaker's line gets in the mode in use (cinematic.js voiceSeconds: how long the voice is heard)
+export function planVoiceLine(v, text, o = {}) {
+  if (voiceMode() !== 'words') return planLine(v, text, o);
+  const vw = wordsVoice(v);
+  return planLine(vw, text, { ...o, mode: 'words', target: bankLength(vw, text, o) });
+}
+// (tests and tools: how long a speaker's line is heard in classic: from their bank's clips, else the classic plan)
+export function classicLength(v, text, o = {}) { return bankLength(wordsVoice(v), text, o) ?? planLine(v, text, { ...o, mode: 'classic' }).dur; }
+// how long the classic line is heard from a speaker's bank: the clips the classic plan would play (each clause's
+// intention, the nearest length, the mean of its variants' sound) and the pauses between them (as _clips joins them);
+// null without a bank (the classic plan's own length is then the line's)
+function bankLength(vw, text, o = {}) {
+  if (!vw?.bank) return null;
+  const info = MANIFEST.banks[vw.bank], rate = vw.bankRate || 1;
+  const plan = planLine(vw, text, { ...o, mode: 'classic' });
+  let t = 0;
+  plan.phrases.forEach((ph, i) => {
+    const key = info.len[ph.intent] ? ph.intent : 'tell', L = info.len[key];
+    let best = L[0]; for (const l of L) if (Math.abs(l - ph.n) < Math.abs(best - ph.n)) best = l;
+    let sum = 0, k = 0;
+    for (let j = 0; j < (info.var[key] || 1); j++) { const c = info.clips[`${key}.${best}.${j}`]; if (c) { sum += c.e != null ? c.e - c.a : c.sp; k++; } }
+    t += (k ? sum / k : 0) / rate;
+    const next = plan.phrases[i + 1];
+    if (next) t += Math.max(MIN_JOIN, next.t0 - (ph.t0 + ph.g.dur));
+  });
+  return t > 0 ? t : null;
+}
+export function setVoiceMode(m) { return setPlanMode(m); }
+
 function loadBank(id, sr = 48000) {
   let e = BANKS.get(id);
   if (e) { e.used = Date.now(); return e.p; }
@@ -510,7 +576,7 @@ function clipFor(bank, intent, n, recent, seed) {
 // out the chain's power for its vowel at its pitch and gives the vowel its natural weight instead (an open "a" the
 // fullest); every voice and vowel is brought to the level of Twinsen's "a". (Before, each voice's `level` was set by
 // hand.) A voiced consonant's dip is measured against its own formants the same way.
-const VOWEL_WEIGHT = { a: 1, o: 0.92, e: 0.86, u: 0.72, i: 0.68, y: 0.7, m: 0.5 };
+const VOWEL_WEIGHT = { a: 1, o: 0.92, e: 0.86, u: 0.72, i: 0.68, y: 0.7, m: 0.5, ae: 0.95, ih: 0.72, uh: 0.9, uu: 0.75, er: 0.8, ax: 0.78 };
 function chainPower(v, vk, f0, Fc = null) {
   const bp = (f, fc, Q) => 1 / (1 + Q * Q * (f / fc - fc / f) ** 2);                          // |H|^2, a band-pass of peak 1
   const lp = (f, fc, Q) => 1 / ((1 - (f / fc) ** 2) ** 2 + (f / (fc * Q)) ** 2);               // |H|^2, a two-pole low-pass
@@ -538,6 +604,51 @@ const CHANNELS = 3;       // pooled synthesis chains: one speaking, the others f
 const FADE = 0.025;       // a line cut short (skipped, closed) fades with this time constant, its sources end 0.15 s later
 const MIN_JOIN = 0.1;     // VOICE-FLOW: the least silence between two clauses' phrases (a comma's pause is 0.13 s)
 const HM_GAP = 0.28;      // the beat between Twinsen's "hm" and his answer (as heard before VOICE-FLOW)
+// P18-VOICES: a Words line, rendered: its consonants' noise (the soft style's is 0.35: a little more, so the words'
+// fricatives and bursts are there to shape them, still under the vowels), the level each line is brought to before
+// the bus (its voiced part's RMS), and the gain into the bus (set so a conversation is as loud as with the phrases)
+const WORDS_CONS = 0.5;
+const WORDS_RMS = 0.1;
+const WORDS_LEVEL = 0.245;  // (P18 measured: 0.5 left the chapter-1 conversation 2.8 LU louder than with the phrases; 0.28, 1.2)
+const WORDS_LENIS = 0.15;   // (a voiceless consonant's murmur inside a phrase, voicesynth.js o.lenis; its 50 ms fall there)
+const WORDS_LEAD = 0.02;  // (the rendered line's silence before its first sound)
+// the worker that renders Words lines off the main thread (voicesynth.js workerSource: a blob), the lines it has sent
+// back (by job id; a line skipped meanwhile is dropped), and whether a context renders offline (the render harnesses
+// and the tests: there the line is rendered in step, so a render repeats exactly)
+let WORKER = null, WORKER_OFF = false, JOB = 0, WORK_RATE = 0.01;   // (WORK_RATE: the worker's seconds of work per second of sound, learned)
+const DONE = new Map(), PENDING = new Map();   // (job id -> the Babble waiting for it: its line starts as the answer comes)
+function synthWorker() {
+  if (WORKER || WORKER_OFF) return WORKER;
+  try {
+    if (typeof Worker !== 'function' || typeof Blob !== 'function' || typeof URL?.createObjectURL !== 'function') throw new Error('no worker');
+    WORKER = new Worker(URL.createObjectURL(new Blob([workerSource()], { type: 'text/javascript' })));
+    WORKER.onmessage = (e) => {
+      const id = e.data.id;
+      if (id < 0) return;
+      DONE.set(id, e.data); while (DONE.size > 6) DONE.delete(DONE.keys().next().value);
+      const b = PENDING.get(id); PENDING.delete(id);
+      if (b && b.waiting?.render === id) b.pump();
+    };
+    WORKER.onerror = (e) => { console.warn('voice worker failed', e?.message); WORKER_OFF = true; WORKER = null; };
+  } catch { WORKER_OFF = true; WORKER = null; }
+  return WORKER;
+}
+const isOffline = (ctx) => typeof OfflineAudioContext !== 'undefined' && ctx instanceof OfflineAudioContext;
+// the worker made and warmed before the first line (prepare: a fresh worker's first render ran ~10x slower, 200 ms for
+// a 2.7 s line, in the tests' headless game): two short throwaway lines, their results dropped (job ids below 0)
+let WARMED = false;
+function warmWorker(sr) {
+  if (WARMED) return;
+  const W = synthWorker();
+  if (!W) return;
+  WARMED = true;
+  const syl = [{ t: 0, c: 's', cd: 0.07, on: [['s', 0.07]], vk: 'a', vk2: 'ih', vd: 0.35, coda: '', cod: 0.12, co: [['n', 0.06], ['t', 0.06]], a: 0, b: -1, amp: 1, stress: true, wEnd: true, last: false },
+    { t: 0.54, c: 'l', cd: 0.05, on: [['l', 0.05]], vk: 'o', vd: 0.3, coda: '', cod: 0, co: [], a: -1, b: -3, amp: 0.9, stress: false, wEnd: true, last: true }];
+  const v = { k: 1, vowel: [1, 1], f0: 150, vib: [5, 10], breath: 0.05, glide: 0.04, atk: 0.05, rel: 0.08, tilt: 2, bright: 2600, nasal: 0.1, bwScale: 1, consLvl: 0.35 };
+  for (const id of [-1, -2]) W.postMessage({ id, v, g: { syl, leg: 0.8, breath: 1 }, o: { sr, seed: 1, lead: WORDS_LEAD, tail: 0.1, cons: WORDS_CONS, words: true, lenis: WORDS_LENIS }, rms: WORDS_RMS });
+}
+export let WORDS_ENGINE = 'render';   // ('chain': the live synthesis instead; tools/voice-render/p18.mjs compares them)
+export function setWordsEngine(e) { WORDS_ENGINE = e === 'chain' ? 'chain' : 'render'; }
 let LAST_HEARD = { key: null, intent: null };   // (Twinsen hesitates before answering a question or a worry)
 
 export class Babble {
@@ -568,7 +679,9 @@ export class Babble {
   prepare(keys, o = {}) {
     const mp = manifest();
     const sr = this.audio.ctx?.sampleRate ?? this.audio._pre?.sampleRate;   // (AUDIO-FIX: before init, the rate of the context made ahead, not 48 kHz)
-    const go = () => Promise.all(keys.map((k) => { const b = bankOf(voiceFor(k)); return b ? loadBank(b[0], sr) : null; }));
+    // (P18-VOICES: the Words voices need the manifest only, for a banked speaker's pitch and pace, and the worker)
+    if (voiceMode() === 'words' && this.audio.ctx && WORDS_ENGINE === 'render' && !isOffline(this.audio.ctx)) warmWorker(this.audio.ctx.sampleRate);
+    const go = () => (voiceMode() === 'words' ? Promise.resolve([]) : Promise.all(keys.map((k) => { const b = bankOf(voiceFor(k)); return b ? loadBank(b[0], sr) : null; })));
     if (MANIFEST) return o.wait ? go() : (go(), null);
     return mp ? (o.wait ? mp.then(go) : (mp.then(go), null)) : null;
   }
@@ -589,8 +702,20 @@ export class Babble {
   pump() {
     const W = this.waiting;
     if (!W) return;
-    const e = BANKS.get(W.bank[0]);
     const now = this._live() ? this.audio.ctx.currentTime : this.mt;
+    if (W.words) { if (MANIFEST || now - W.t >= BANK_WAIT) { this.waiting = null; this._wordsLine(W.text, W.hes); } return; }
+    // (a Words line back from the worker; one that has not come back in a second is rendered here)
+    if (W.render) {
+      const d = DONE.get(W.render);
+      if (d || now - W.t >= 1 || !WORKER) {
+        this.waiting = null; DONE.delete(W.render);
+        if (d) WORK_RATE = 0.7 * WORK_RATE + 0.3 * Math.min(0.2, d.ms / 1000 / Math.max(0.2, d.pcm.length / W.sr));
+        // (the mouth and the count started with the line; here the sound, at its time or where the line has got to)
+        if (this._live()) this._words(W.plan, W.text, W.T0, W.vw, d ? { pcm: d.pcm, ms: d.ms, sr: W.sr } : null);
+      }
+      return;
+    }
+    const e = BANKS.get(W.bank[0]);
     if (e?.state === 'ready' || e?.state === 'failed' || now - W.t >= BANK_WAIT) { this.waiting = null; this._speak(W.plan, W.text); }
   }
   // the talking mouth now: {o: how open (0-1), r: how round}; the visible syllables are the audible ones, same timing
@@ -628,7 +753,15 @@ export class Babble {
     // Twinsen hesitates, sometimes, before answering a question or a worry
     const heard = LAST_HEARD;
     const hes = v.manner === 'hesitate' && heard.key && heard.key !== this.key && (heard.intent === 'ask' || heard.intent === 'worry') && (hashStr(text) % 3) !== 0;
-    const plan = planLine(v, text, { maxDur: this.opts.maxDur, hesitate: hes });
+    // P18-VOICES: a Words line (the first one may wait a moment for the manifest: a banked speaker's pitch and pace)
+    if (voiceMode() === 'words') {
+      const mp = manifest();
+      this.lines++;
+      if (!MANIFEST && mp) { this.waiting = { words: true, text, hes, t: this._live() ? this.audio.ctx.currentTime : this.mt }; LAST_HEARD = { key: this.key, intent: null }; return; }
+      this._wordsLine(text, hes);
+      return;
+    }
+    const plan = planLine(v, text, { maxDur: this.opts.maxDur, hesitate: hes, mode: 'classic' });
     LAST_HEARD = { key: this.key, intent: plan.phrases.length ? plan.phrases[plan.phrases.length - 1].intent : null };
     this.lines++;
     if (!plan.phrases.length) return;
@@ -644,18 +777,46 @@ export class Babble {
     }
     this._speak(plan, text);
   }
-  _speak(plan, text) {
+  _wordsLine(text, hes) {
+    const vw = wordsVoice(this.v);
+    const plan = planLine(vw, text, { maxDur: this.opts.maxDur, hesitate: hes, mode: 'words', target: bankLength(vw, text, { maxDur: this.opts.maxDur }) });
+    LAST_HEARD = { key: this.key, intent: plan.phrases.length ? plan.phrases[plan.phrases.length - 1].intent : null };
+    if (!plan.phrases.length) return;
+    // in the game: rendered by the worker. The line is set to start a moment from now, the render's expected time
+    // (learned from the worker's last answers) and 40 ms, at most 250 ms: the mouth and the syllable count start then,
+    // whatever happens; the sound starts then too when the worker has answered in time, else it joins the line where
+    // it has got to, faded in over 20 ms (_words), so the mouth and the sound stay together.
+    const W = this._live() && WORDS_ENGINE === 'render' && !isOffline(this.audio.ctx) && synthWorker();
+    if (W) {
+      const id = ++JOB, now = this.audio.ctx.currentTime;
+      const J = this._job(plan, text, vw);
+      const T0 = now + LEAD + Math.min(0.25, 0.04 + WORK_RATE * (plan.dur + 0.2) * 1.5);
+      this.waiting = { render: id, plan, text, vw, sr: J.o.sr, t: now, T0 };
+      PENDING.set(id, this); if (PENDING.size > 6) PENDING.delete(PENDING.keys().next().value);
+      W.postMessage({ id, ...J });
+      this.count += plan.syl.filter((x) => !x.hum).length;
+      this._mouth(plan.syl, T0, now);
+      return;
+    }
+    this._speak(plan, text, vw);
+  }
+  _speak(plan, text, vw = null, pcm = null) {
     const live = this._live(), A = this.audio, ctx = A.ctx;
     const now = live ? ctx.currentTime : this.mt;
     const T0 = now + LEAD;
     let syl = null;
-    if (live) {
+    if (live && vw) { syl = WORDS_ENGINE === 'chain' ? this._synth(plan, T0, vw) : this._words(plan, text, T0, vw, pcm); this.count += syl.filter((s) => !s.hum).length; }
+    else if (live) {
       const b = bankOf(this.v), e = b && BANKS.get(b[0]);
       if (e?.state === 'ready') { e.used = Date.now(); syl = this._clips(plan, text, b, e, T0); }
       if (!syl) syl = this._synth(plan, T0);
       this.count += syl.filter((s) => !s.hum).length;
-    } else syl = plan.syl;
-    // the talking mouth: one open-and-close per syllable, as far as its vowel opens it, lips shut on m b p v w
+    }
+    if (!syl) syl = plan.syl;
+    this._mouth(syl, T0, now);
+  }
+  // the talking mouth: one open-and-close per syllable, as far as its vowel opens it, lips shut on m b p v w
+  _mouth(syl, T0, now) {
     const wall = this.mt + (T0 - now), v = this.v;
     for (const s of syl) {
       const C = s.c && CONS[s.c];
@@ -717,6 +878,56 @@ export class Babble {
     return syl;
   }
 
+  // ---------------------------------------------------------------- P18-VOICES: a Words line, rendered
+  // the whole line rendered at once by the sample-level synthesiser (voicesynth.js renderLine) at the context's rate,
+  // brought to WORDS_RMS over its voiced part, its rare peaks softened, and played as
+  // one buffer; released like the phrases (a 25 ms fade). In the game the render runs in a worker (_wordsLine), so the
+  // frame the line starts on does no synthesis; offline (the render harnesses, the tests) it is done here, in step with
+  // the render clock. Returns the syllables (for the mouth), timed from T0.
+  _job(plan, text, v) {
+    // (at the context's own rate: a buffer at half of it is brought up by the playback's linear interpolation, which
+    //  measured as clicks at the bursts, crest 8.5 against 5.9 before it)
+    const sr = this.audio.ctx.sampleRate;
+    const leg = plan.phrases[0]?.g.leg ?? 0.8, breath = Math.max(1, ...plan.phrases.map((p) => p.g.breath || 1));
+    // (only the values the synthesiser reads: a plain object a worker can be sent)
+    const vv = {}; for (const k of ['k', 'vowel', 'f0', 'vib', 'breath', 'glide', 'atk', 'rel', 'tilt', 'bright', 'nasal', 'bwScale', 'consLvl']) vv[k] = v[k];
+    return { v: vv, g: { syl: plan.syl, leg, breath }, o: { sr, seed: (hashStr(text) ^ v.seed) >>> 0, lead: WORDS_LEAD, tail: 0.15, cons: WORDS_CONS, words: true, lenis: WORDS_LENIS }, rms: WORDS_RMS };
+  }
+  _words(plan, text, T0, v, pcm = null) {
+    const ctx = this.audio.ctx, lead = WORDS_LEAD;
+    let sr;
+    if (pcm) sr = pcm.sr;
+    else {
+      const J = this._job(plan, text, v), c0 = typeof performance !== 'undefined' ? performance.now() : 0;
+      pcm = { pcm: renderLine(J.v, J.g, J.o, J.rms), ms: 0 };
+      pcm.ms = (typeof performance !== 'undefined' ? performance.now() : 0) - c0;
+      sr = J.o.sr;
+    }
+    const buf = ctx.createBuffer(1, pcm.pcm.length, sr);
+    buf.getChannelData(0).set(pcm.pcm);
+    this.cpu = { ms: pcm.ms, sec: pcm.pcm.length / sr, sr, worker: !!pcm.sr };
+    const out = ctx.createGain(); out.gain.value = WORDS_LEVEL * (v.vol ?? 1) * (v.radio ? 1.6 : 1) * (plan.phrases[0]?.quiet ? 0.72 : 1);
+    let dest = out;
+    if (v.radio) { const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9; out.connect(bp); dest = bp; }
+    dest.connect(this.audio.voiceBus);
+    const utt = { gain: out, srcs: [], released: false, end: T0 + plan.dur + 0.15, nodes: dest === out ? [out] : [out, dest] };
+    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+    // (a line whose sound comes after its time joins it where it has got to, faded in; past its end, nothing)
+    const at = T0 - lead, nowc = ctx.currentTime;
+    if (at >= nowc + 0.004) src.start(at);
+    else {
+      const when = nowc + 0.01, off = when - at;
+      if (off >= buf.duration - 0.05) { for (const n of utt.nodes) n.disconnect(); src.disconnect(); return plan.syl; }
+      const lv = out.gain.value; out.gain.setValueAtTime(0, when); out.gain.linearRampToValueAtTime(lv, when + 0.02);
+      src.start(when, off);
+    }
+    this.clips.add(src);
+    src.onended = () => { src.disconnect(); this.clips.delete(src); for (const n of utt.nodes) n.disconnect(); };
+    utt.srcs.push(src);
+    this.utt = utt;
+    return plan.syl;
+  }
+
   // ---------------------------------------------------------------- the synthesis
   _build(ctx) {
     this.ctx = ctx;
@@ -760,8 +971,8 @@ export class Babble {
   }
   // the whole planned line on one pooled chain: one tone for the line, its syllables joined (voicing carries through
   // the voiced consonants inside a word), pitch and formants gliding; scheduled now, nothing per frame
-  _synth(plan, T0) {
-    const ctx = this.audio.ctx, v = this.v;
+  _synth(plan, T0, vOwn = null) {
+    const ctx = this.audio.ctx, v = vOwn || this.v;
     if (ctx !== this.ctx) this._build(ctx);
     const now = ctx.currentTime;
     // the chain that is free soonest (a line cut short a moment ago may still be fading on another)
@@ -818,21 +1029,25 @@ export class Babble {
     for (let i = 0; i < syl.length; i++) {
       const s = syl[i], C = s.c ? CONS[s.c] : null, T = t0 + s.t, Tv = T + s.cd;
       const peak = LEVEL * (v.vol ?? 1) * s.amp * sylGain(v, s.vk, f((s.a + s.b) / 2)), prev = syl[i - 1];
-      const joined = prev && s.t - (prev.t + prev.cd + prev.vd + (prev.coda ? 0.05 : 0)) < 0.02;   // (no pause before)
-      // the consonant: voicing carries on through a voiced one (lower), stops for a voiceless one
-      if (C) {
-        const lvl = (C.k === 'nasal' ? 0.22 : C.k === 'liquid' ? 0.28 : C.k === 'glide' ? 0.34 : C.k === 'fric' && C.vo ? 0.15 : C.k === 'stop' && C.vo ? 0.06 : 0.02) * dip;
-        const pc = LEVEL * (v.vol ?? 1) * s.amp * consGain(v, C, f(s.a));
-        env.setTargetAtTime(pc * lvl, T, first || !joined ? atk : 0.01);
-        if (C.F) for (let j = 0; j < 3; j++) { const Fz = (j === 0 ? C.F[0] * Math.sqrt(v.k) : C.F[j] * v.k); ch.F[j].f.frequency.setTargetAtTime(Fz, T, 0.015); ch.F[j].f.Q.setTargetAtTime(Fz / (BW[j] * S.bw * Math.sqrt(v.k)), T, 0.015); }
-        if (C.k === 'nasal') { mg.setTargetAtTime(mur + 0.12, T, 0.012); mg.setTargetAtTime(mur, Tv, 0.02); }
+      const joined = prev && s.t - (prev.t + prev.cd + prev.vd + (prev.co ? prev.cod || 0 : prev.coda ? 0.05 : 0)) < 0.02;   // (no pause before)
+      // a consonant from Ta for d seconds: voicing carries on through a voiced one (lower), stops for a voiceless one
+      // (P18-VOICES: a Words syllable has a cluster before its vowel and its own consonants after, s.on / s.co)
+      const consAt = (C, Ta, d, edge, coda, inside) => {
+        const lvl = (C.k === 'nasal' ? 0.22 : C.k === 'liquid' ? 0.28 : C.k === 'glide' ? 0.34 : C.k === 'fric' && C.vo ? 0.15 : (C.k === 'stop' || C.k === 'affr') && C.vo ? 0.06 : vOwn && inside ? WORDS_LENIS : 0.02) * dip * (coda && C.vo ? 1.3 : 1);
+        const pc = LEVEL * (v.vol ?? 1) * s.amp * consGain(v, C, f(coda ? s.b : s.a));
+        env.setTargetAtTime(pc * lvl, Ta, edge ? atk : vOwn && inside && !C.vo ? 0.05 : 0.01);
+        if (C.F) for (let j = 0; j < 3; j++) { const Fz = (j === 0 ? C.F[0] * Math.sqrt(v.k) : C.F[j] * v.k); ch.F[j].f.frequency.setTargetAtTime(Fz, Ta, 0.015); ch.F[j].f.Q.setTargetAtTime(Fz / (BW[j] * S.bw * Math.sqrt(v.k)), Ta, 0.015); }
+        if (C.k === 'nasal') { mg.setTargetAtTime(mur + 0.12, Ta, 0.012); mg.setTargetAtTime(mur, Ta + d, 0.02); }
         if (C.nz && S.cons > 0) {
-          const ca = peak * (C.k === 'stop' ? 0.25 : C.vo ? 0.12 : 0.2) * S.cons;
-          const ta = C.k === 'stop' ? Tv - 0.012 : T + 0.005, td = C.k === 'stop' ? 0.008 : s.cd * 0.6;
+          const ca = peak * (C.k === 'stop' ? 0.25 : C.vo ? 0.12 : 0.2) * S.cons * (C.weak ? 0.5 : 1) * (coda && C.k === 'stop' ? 0.5 : 1) * (vOwn ? WORDS_CONS / 0.35 : 1);
+          const ta = C.k === 'stop' ? Ta + d - 0.012 : C.k === 'affr' ? Ta + d * 0.45 : Ta + 0.005, td = C.k === 'stop' ? 0.008 : C.k === 'affr' ? d * 0.5 : d * 0.6;
           ch.cons.frequency.setValueAtTime(C.nz * Math.sqrt(v.k), ta);
           cg.setTargetAtTime(ca, ta, 0.004); cg.setTargetAtTime(0, ta + td, 0.012);
         }
-      } else if (!first && joined) env.setTargetAtTime(peak * 0.3 * dip, T - 0.015, 0.008);  // (a vowel after a vowel: a light break)
+      };
+      if (s.on && s.on.length) { let Ta = T; s.on.forEach(([key, d], j) => { consAt(CONS[key], Ta, d, j === 0 && (first || !joined), false, !first && joined); Ta += d; }); }
+      else if (C && !s.on) consAt(C, T, s.cd, first || !joined, false);
+      else if (!first && joined) env.setTargetAtTime(peak * 0.3 * dip, T - 0.015, 0.008);  // (a vowel after a vowel: a light break)
       else if (first || !joined) env.setTargetAtTime(0, T, 0.005);
       // the vowel: formants (and the pitch) glide to it, the voice opens to its peak, then eases off a little
       const vow = VOWELS[s.vk] || VOWELS.a;
@@ -848,9 +1063,12 @@ export class Babble {
       env.setTargetAtTime(peak * 0.84, Tv + Math.max(0.04, s.vd * 0.3), s.vd * 0.6);
       // the end of a clause (or before a pause): a soft release
       const next = syl[i + 1];
-      const gapAfter = next ? next.t - (s.t + s.cd + s.vd) : 1;
-      if (s.coda) { const cF = CONS[s.coda].F; ch.F[1].f.frequency.setTargetAtTime(cF[1] * v.k, Tv + s.vd, 0.015); env.setTargetAtTime(peak * 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur + 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur, Tv + s.vd + 0.06, 0.02); }
-      if (gapAfter > 0.07 || s.last) env.setTargetAtTime(0, Tv + s.vd * 0.85 + (s.coda ? 0.05 : 0), rel * (s.last ? 1.4 : 1));
+      const codDur = s.co ? s.cod || 0 : s.coda ? 0.05 : 0;
+      const gapAfter = next ? next.t - (s.t + s.cd + s.vd + (s.co ? codDur : 0)) : 1;
+      if (s.vk2) { const v2 = VOWELS[s.vk2]; for (let j = 0; j < 3; j++) { const Fz = v2[j] * v.k * (j < 2 ? v.vowel[j] : 1); ch.F[j].f.frequency.setTargetAtTime(Fz, Tv + s.vd * 0.3, s.vd * 0.25); } }
+      if (s.co && s.co.length) { let Ta = Tv + s.vd; for (const [key, d] of s.co) { consAt(CONS[key], Ta, d, false, true, !!next && gapAfter < 0.02); Ta += d; } }
+      else if (s.coda) { const cF = CONS[s.coda].F; ch.F[1].f.frequency.setTargetAtTime(cF[1] * v.k, Tv + s.vd, 0.015); env.setTargetAtTime(peak * 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur + 0.3, Tv + s.vd, 0.012); mg.setTargetAtTime(mur, Tv + s.vd + 0.06, 0.02); }
+      if (gapAfter > 0.07 || s.last) env.setTargetAtTime(0, Tv + (s.co && s.co.length ? s.vd + codDur * 0.85 : s.vd * 0.85 + codDur), rel * (s.last ? 1.4 : 1));
       first = false;
     }
     const utt = { gain: ch.gate, srcs: nodes, released: false, end: t0 + dur + 0.1, ch, src };

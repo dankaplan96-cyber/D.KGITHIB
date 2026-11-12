@@ -18,8 +18,7 @@
 // The runner owns the camera while it plays (CameraRig.cine), hides the HUD, shows subtitles and a "hold to
 // skip" prompt with the player's real binding, and pauses with the game (pause menu, lost tab focus).
 import * as THREE from 'three';
-import { voiceFor } from './voice.js';
-import { planLine } from './voiceplan.js';
+import { voiceFor, planVoiceLine } from './voice.js';
 
 const HOLD = 0.9;                 // seconds to hold for a skip
 const PROMPT_SHOW = 3.5;          // the skip prompt fades after this long without input
@@ -42,7 +41,7 @@ export const lineCps = (text, d) => Math.min(50, Math.max(28, text.length / (d *
 // the typing time)
 export const voiceSeconds = (text, d, voice = null) => {
   const v = voice && voiceFor(voice);
-  return v ? planLine(v, text, { maxDur: Math.max(0.6, d - 0.15) }).dur + LINE_LEAD : text.length / lineCps(text, d);
+  return v ? planVoiceLine(v, text, { maxDur: Math.max(0.6, d - 0.15) }).dur + LINE_LEAD : text.length / lineCps(text, d);
 };
 const LINE_LEAD = 0.03;
 

@@ -9,7 +9,7 @@ import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { Weather, weatherEnabled } from './game/weather.js';
 import { AudioEngine } from './engine/audio.js';
-import { driveMouth } from './engine/voice.js';
+import { driveMouth, setVoiceMode } from './engine/voice.js';
 import { Perf, gpuQuality, oldGpuQuality, integratedGpu, startupMark, startupReport } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
@@ -205,7 +205,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'words', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
     if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
@@ -223,6 +223,9 @@ class Game {
     // device in use: a pad gets Modern movement and the Free camera, the keyboard Classic (tank) controls and the
     // Follow camera behind Twinsen, as in the original. Choosing Movement or Camera in Settings turns it off
     if (!['on', 'off'].includes(this.settings.autoControls)) this.settings.autoControls = 'on';
+    // P18-VOICES: how the characters babble: 'words' (shaped by the line's English letters, the default, also for
+    // settings saved before) or 'classic' (the voices before; Settings → Sound → Voice Style)
+    if (!['words', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'words';
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -1999,6 +2002,7 @@ class Game {
       hud: () => t('set_h_hud_' + (s.hud === 'lba' ? 'lba' : 'modern')),
       weather: () => t('set_h_wx_' + (s.weather === 'off' ? 'off' : 'on')),
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
+      voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'words')),
     };
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
@@ -2115,6 +2119,7 @@ class Game {
     this.audio.vol.music = s.music;
     this.audio.vol.sfx = s.sfx;
     this.audio.vol.voice = s.voice;
+    if (changed('voiceMode')) setVoiceMode(s.voiceMode);
     this.audio.applyVolumes();
     this._applied = { ...now, quality: s.quality, qualityAuto: s.qualityAuto };   // (Auto names its tier in applyGraphics)
     store.set(SET_KEY, s);

@@ -34,11 +34,13 @@ export async function openRenderer({ roots }) {
   return {
     page,
     // one render: returns the mix and the voice alone as Float32Arrays
-    async render({ root = 'game', style = null, scene, opts = {}, music = null, banks = null, inject = null }) {
-      const r = await page.evaluate(async ({ root, style, scene, opts, music, banks, inject }) => {
+    // (P18-VOICES: mode 'words' | 'classic', engine 'render' | 'chain': how a Words line is made)
+    async render({ root = 'game', style = null, scene, opts = {}, music = null, banks = null, inject = null, mode = null, engine = null }) {
+      const r = await page.evaluate(async ({ root, style, scene, opts, music, banks, inject, mode, engine }) => {
         const V = await import(`http://voice.local/${root}/src/engine/voice.js`);
         const S = await import('http://voice.local/game/tools/voice-render/scene.js');
         if (style && V.setVoiceStyle) V.setVoiceStyle(style);
+        V.setVoiceMode?.(mode || 'classic'); V.setWordsEngine?.(engine || 'render');
         if (inject) Object.assign(V.VOICES, inject);   // (voices only the sampler has, e.g. one from another branch)
         if (music) opts.music = await (await fetch(`http://voice.local/game/assets/music/${music}`)).arrayBuffer();
         if (opts.presFromStyle && V.voiceStyle) opts.pres = V.voiceStyle().pres;
@@ -48,7 +50,7 @@ export async function openRenderer({ roots }) {
         const t0 = performance.now();
         const out = await S.renderScene(V, scene, opts);
         return { mix: S.f32Base64(out.mix), voice: S.f32Base64(out.voice), sr: out.sr, log: out.log, count: out.count, played: out.played, ms: performance.now() - t0 };
-      }, { root, style, scene, opts, music, banks, inject });
+      }, { root, style, scene, opts, music, banks, inject, mode, engine });
       const dec = (b) => { const buf = Buffer.from(b, 'base64'); return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4); };
       return { ...r, mix: dec(r.mix), voice: dec(r.voice) };
     },
