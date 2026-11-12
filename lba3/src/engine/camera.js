@@ -192,6 +192,12 @@ const CH_QUICK_GAP = 1.5, CH_QUICK_NEAR = 1.5, CH_QUICK_HOLD = 0.25, CH_QUICK_V 
 const CH_WALK_CUT = 0.6, CH_WALK_T = 0.5, CH_WALK_T0 = 0.2, CH_TURN_SRCH = 0.15, CH_TURN_V = 0.6, CH_DOOR_STAY = 1.2, CH_SW_MIN = 0.8;
 // CAM-KEYWALK: walking, his back kept while it gives this much arm (m) that sees him, for this long (s) before a swing is let go
 const CH_WALK_KEEP = 4.5, CH_WALK_KEEP_T = 0.15, CH_WALK_HOLD = 3.5, CH_WALK_GRACE = 0.4, CH_WALK_SW = (45 * Math.PI) / 180;   // (and the most a swing may take meanwhile)
+// CAM-WALKFAR: while he walks on ahead, each radian of a swing past CH_WALK_SW costs this much more (a swing that far turns the view
+// across his own way: by the fort's south-west tower, walking down out of the passage, a 70° swing at the whole arm beat a
+// 40° one at 0.8 of it and the view stood 70° off his back for a second; the reservoir pipe's volume up there had hidden
+// that); bounded: at most +0.87 at the whole arm (70°), so a far swing there still beats an arm drawn in to 0.42 of it
+// (+2.55); backing up toward the view, or standing, the costs are as before
+const CH_K_SW_WALK = 2.0;
 const CH_SIDE = [0.17, 0.35, 0.52], CH_STUCK_T = 0.3, CH_SIDE_HOLD = 4, CH_SIDE_OUT = 5, CH_FRESH_HOLD = 1.5, CH_SW_STILL = 0.3, CH_DOOR_T = 1.0, CH_DOOR_R = 3, CH_DOOR_OUT_V = 7, CH_DOOR_OUT_A = 18, CH_DOOR_OUT_T = 3;
 const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
 // G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
@@ -918,15 +924,16 @@ export class CameraRig {
       const f = CH_FRAC[S.fi], a = full * f, armCost = CH_K_ARM * (1 - f), set = CH_CANDS[f >= 0.8 ? 0 : 1], p0 = pq(a, 0);
       if (S.best && armCost >= S.best.cost) break;
       for (; S.ci < set.length; S.ci++) {
-        const [sw, rise, c0] = set[S.ci], cost = c0 + armCost;
+        const [sw, rise, c0] = set[S.ci], cost = c0 + armCost, far = S.walk ? CH_K_SW_WALK * Math.max(0, Math.abs(sw) - CH_WALK_SW) : 0;
         if (Math.abs(sw) > (S.maxSw ?? Infinity)) continue;   // (CAM-KEYWALK: walking with his back kept, a small swing only)
         if (S.best && cost >= S.best.cost) break;
+        if (S.best && cost + far >= S.best.cost) continue;   // (CAM-WALKFAR: the list is in the order of cost without it)
         const q = pq(a, rise);
         if (Math.abs(q - p0) < Math.abs(rise) * 0.5) continue;   // (past the top or the bottom: no real rise or dip)
         if (n-- <= 0) return false;
         const ok = this._chaseOK(T, yaw0 + sw, a, q, heroV, rise);
         if (ok < 0) continue;
-        const c = cost + ok;
+        const c = cost + far + ok;
         if (!S.best || c < S.best.cost) S.best = { sw, rise, cost: c, f };
       }
     }
@@ -934,10 +941,10 @@ export class CameraRig {
   }
 
   // CAM-CLEAR-2: the cost of keeping the view it has (its swing and rise at the arm fractions), or Infinity
-  _chaseKeep(T, yaw0, sw, rise, full, pq, heroV) {
+  _chaseKeep(T, yaw0, sw, rise, full, pq, heroV, walk = false) {
     for (const f of CH_FRAC) {
       const ok = this._chaseOK(T, yaw0 + sw, full * f, pq(full * f, rise), heroV, rise);
-      if (ok >= 0) return Math.abs(sw) * CH_K_SW + Math.abs(rise) * CH_K_RISE + CH_K_ARM * (1 - f) + ok;
+      if (ok >= 0) return Math.abs(sw) * CH_K_SW + Math.abs(rise) * CH_K_RISE + CH_K_ARM * (1 - f) + ok + (walk ? CH_K_SW_WALK * Math.max(0, Math.abs(sw) - CH_WALK_SW) : 0);
     }
     return Infinity;
   }
@@ -959,6 +966,8 @@ export class CameraRig {
       // before: a swing out and back as he passes turned the view against his own turns; it looks round once he stands)
       const walking = C.pT && Math.hypot(T.x - C.pT.x, T.z - C.pT.z) / dt > 0.6;
       C.baseT = base ? C.baseT + dt : 0; C.blockT = base || walking ? 0 : (C.blockT || 0) + dt;
+      // (CAM-WALKFAR: walking on ahead — away from the view's side, within 60° of it —, not backing up toward it)
+      const ahead = walking && (T.x - C.pT.x) * Math.sin(yaw0) + (T.z - C.pT.z) * Math.cos(yaw0) < -0.5 * Math.hypot(T.x - C.pT.x, T.z - C.pT.z);
       // CAM-WALKSWING (the School's channel on Desert Island: turned toward the camp and walking up out of it past the
       // school's wall, the arm stood at 0.8-3.2 m for 2-6 s, his back filling the screen): walking too, once his back has
       // stayed blocked outright with the arm drawn in under CH_WALK_CUT of it for CH_WALK_T s — no corner he walks past,
@@ -1009,8 +1018,8 @@ export class CameraRig {
         // (a few candidates a frame — CH_SEARCH_N —, all at once for a new shot behind the fade; only those cheaper by
         // CH_K_KEEP than keeping the view it has)
         if (fresh || !C.srch) {
-          const keep = C.swGoal === 0 && C.riseGoal === 0 ? (b0 >= 0 ? b0 : Infinity) : fresh ? Infinity : this._chaseKeep(T, yaw0, C.swGoal, C.riseGoal, full, pq, heroV);
-          C.srch = { fi: 0, ci: 0, maxSw: backKeep ? CH_WALK_SW : Infinity, best: keep < Infinity ? { keep: true, cost: keep - CH_K_KEEP, k0: keep } : null };
+          const keep = C.swGoal === 0 && C.riseGoal === 0 ? (b0 >= 0 ? b0 : Infinity) : fresh ? Infinity : this._chaseKeep(T, yaw0, C.swGoal, C.riseGoal, full, pq, heroV, ahead);
+          C.srch = { fi: 0, ci: 0, maxSw: backKeep ? CH_WALK_SW : Infinity, walk: ahead, best: keep < Infinity ? { keep: true, cost: keep - CH_K_KEEP, k0: keep } : null };
         }
         if (this._chaseSearch(C.srch, T, yaw0, full, pq, heroV, fresh ? Infinity : CH_SEARCH_N)) {
           const b = C.srch.best;
