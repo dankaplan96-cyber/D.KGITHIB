@@ -496,8 +496,10 @@ export function wordsVoice(v) {
   const b = v && bankOf(v);
   if (!b) return v;
   const info = MANIFEST.banks[b[0]], pace = bankPace(b[0]);
-  // (and the bank's connected speech: no air between words below a legato of 0.75, as the phrases have none)
-  return { ...v, f0: Math.round((info.f0 || v.f0) * b[1]), rate: pace ? pace / 6.6 : v.rate, legato: Math.max(v.legato, 0.75), bank: b[0], bankRate: b[1] };
+  // (and the bank's connected speech, a legato of 0.9 at least: the phrases leave no air between words. Measured on 20
+  //  lines: at 0.75, 36 % of the joins dropped more than 15 dB, at 0.9 28 %, the phrases 16 %; at 1.0 the syllables
+  //  ran together, 11.6 dB of syllabic modulation against the phrases' 16-25)
+  return { ...v, f0: Math.round((info.f0 || v.f0) * b[1]), rate: pace ? pace / 6.6 : v.rate, legato: Math.max(v.legato, 0.9), bank: b[0], bankRate: b[1] };
 }
 // the plan a speaker's line gets in the mode in use (cinematic.js voiceSeconds: how long the voice is heard)
 export function planVoiceLine(v, text, o = {}) {

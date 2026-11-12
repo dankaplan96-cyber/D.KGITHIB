@@ -22,7 +22,8 @@ const raw = (name, data) => { const p = join(OUT, name); writeFileSync(p, Buffer
 const enc = (name, data, args) => { const p = raw('.' + name + '.f32', data); execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'f32le', '-ar', String(SR), '-ac', '1', '-i', p, ...args, join(OUT, name)]); rmSync(p); };
 const wav = (name, data) => enc(name, data, ['-ar', '22050', '-c:a', 'pcm_s16le']);
 const mp3 = (name, data) => enc(name, data, ['-c:a', 'libmp3lame', '-q:a', '6']);
-const spectro = (name, wavName) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(OUT, wavName), '-lavfi', 'showspectrumpic=s=640x200:legend=1:fscale=lin:stop=8000:color=intensity,format=pal8', join(OUT, name)]);
+// (the whole 0-11 kHz: its zoom option, stop=8000, drew a mirrored band near 1.4 kHz that is not in the audio)
+const spectro = (name, wavName) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(OUT, wavName), '-lavfi', 'showspectrumpic=s=640x240:legend=1:color=intensity,format=pal8', join(OUT, name)]);
 // a speaker's lines for listening: each turn from its first sound to 0.25 s after its last, 0.6 s apart (the reading
 // time between the dialogue boxes left out: the files stay small)
 function trimmed(scene, r) {
