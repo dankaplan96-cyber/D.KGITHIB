@@ -1,0 +1,66 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index a69e3cc4..617e671d 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -318,6 +318,14 @@ export const LOOKS = {
+     race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
+     hair: '#6a5a4a', skin: '#e0b090', hairStyle: 'tuft', nose: 'long', eyes: '#3a2a1a', glasses: true, collar: true, buttons: true, height: 0.98, neck: 0.08,
+   },
++  archivist_b: {
++    // CAST-VARIANTS-3 (archivist's shape variant, order 28 queue 7's last): a field archivist for the desert: a wide straw sun
++    // hat, no spectacles and no collar, the coat cut shorter, sleeves rolled, a leather satchel strap across the chest, a broader
++    // build and a round nose (cast_poly.py CAST archivist_b). Taken by Bashir (Kesh) and the dig's site clerk (dg_clerk); the
++    // archivist, Kip (the tavern) and Bern (the terminal) keep archivist
++    race: 'quetch', outfit: 'tunic', hem: 0.4, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
++    hair: '#6a5a4a', skin: '#e0b090', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#d8c490', height: 0.98, neck: 0.08,
++  },
+   // ---- Citadel's hill farms (chapter 8)
+   farmerA: {
+     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
+diff --git a/lba3/src/game/storylife.js b/lba3/src/game/storylife.js
+index 9b36742a..569455a4 100644
+--- a/lba3/src/game/storylife.js
++++ b/lba3/src/game/storylife.js
+@@ -156,7 +156,7 @@ const DESERT_PEOPLE = [
+       L('dig_eat', TB.x - 0.6, TB.z - 1.05, TB.x - 0.6, TB.z, 'browse', [10, 14]),
+     ] } },
+   // the site clerk: the crates counted at both piles, the table, a look through the post's fence at the bore
+-  { id: 'dg_clerk', char: 'archivist', tint: '#eef6ff', speed: 0.9, color: '#90b8c8', start: 2, area: 'desert', phase: crew(true), rounds: {
++  { id: 'dg_clerk', char: 'archivist_b', tint: '#eef6ff', speed: 0.9, color: '#90b8c8', start: 2, area: 'desert', phase: crew(true), rounds: {
+     crew: [
+       L('clk_a', PA.x - 1.6, PA.z, PA.x, PA.z, 'browse', [6, 9]),
+       L('clk_b', PB.x + 1.6, PB.z, PB.x, PB.z, 'tend', [6, 9]),                         // (NO-AIR 3: kneeling to the crate's label: the ground is higher on this side, its top at his knees)
+diff --git a/lba3/src/game/walkrounds.js b/lba3/src/game/walkrounds.js
+index cb2d77ff..6736f4e4 100644
+--- a/lba3/src/game/walkrounds.js
++++ b/lba3/src/game/walkrounds.js
+@@ -257,7 +257,7 @@ export function zeelichRoster(game) {
+ // Local coordinates as desert.js / keshlife.js lay them out (the island is at x 3400): the oasis (-40, -15, r 7.5), the cool
+ // room (-70, -6) whose door faces south, Lumi's loom in the shade of the striped sail (-58, -0.6), the ferry board (-21.6, 15.2)
+ export const DESERT_ROSTER_IDS = ['safi', 'tamu', 'bashir'];
+-const DESERT_BODY = { safi: 'lulu', tamu: 'tim', bashir: 'archivist' };
++const DESERT_BODY = { safi: 'lulu', tamu: 'tim', bashir: 'archivist_b' };   // (CAST-VARIANTS-3: Bashir the field archivist)
+ export function desertRoster(game) {
+   const R = game.regions?.built('desert');
+   if (!R) return null;
+@@ -280,7 +280,7 @@ export function desertRoster(game) {
+       look('tamu_mid', -50.5, 4.0, -54, 0, [2, 4]),
+     ] },
+     // an old man who watches Lumi work, the water and the porch's shade
+-    { id: 'bashir', char: 'archivist', tint: '#f4e8c8', speed: 0.8, start: 0, color: '#d8c890', stops: [
++    { id: 'bashir', char: 'archivist_b', tint: '#f4e8c8', speed: 0.8, start: 0, color: '#d8c890', stops: [
+       look('bas_loom', -62.6, -2.0, -58.2, -0.4, [20, 30], { act: 'rest' }),
+       look('bas_oasis', -48.6, -8.2, -42, -12, [8, 12]),
+       look('bas_porch', -72.2, -0.8, -70.5, -2.8, [12, 18]),
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 4767bc7f..febea1fd 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -85,6 +85,7 @@ CAST = {
+     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
+     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0, coatLong=0.3),   # (CAST-POLISH-NAMED: GROBO-COAT, his robe below the knee)
+     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
++    'archivist_b': dict(browS=1.1, browTilt=0.1, mouthLift=0.5, mouthW=1.0, pockets=True, pocketY=0.1, rolled=True, strap='#6a4a2a', noseS=1.05),   # (CAST-VARIANTS-3: the field archivist, a sun hat and a satchel strap)
+     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
+     'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
+                      moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
