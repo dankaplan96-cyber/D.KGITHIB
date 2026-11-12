@@ -133,6 +133,8 @@ export function contactRadius(char, scale = 1) {
 const EASE = 1.2;          // m/s: out of an overlap he did not walk into (a scene put him there, or they stepped into him)
 const PRESS_PASS = 1.2;    // s: pressing on a story person in a gap too narrow to go round before he squeezes past
 const _bodies = [], _bodyPool = [];
+const _footM = { x: 0, z: 0 };   // (Hero.footOfSlope's answer)
+const SLIDE_POSE = 0.07;   // s of sliding before the fall pose shows (Hero.update)
 
 // ------------------------------------------------------------------ hero
 export class Hero extends Actor {
@@ -343,7 +345,7 @@ export class Hero extends Actor {
     jet?.step(this, dt, input, wx, wz);   // (the pack's thrust and steering, before the move and the fall)
     this.prevPos.copy(this.pos);
     if (this.rescue) this.rescueStep(dt);   // (SLIDE-RESCUE: the hop off a slide that could not go on, below)
-    else P.move(this, this.vel.x * dt, this.vel.y * dt);
+    else { const m = this.footOfSlope(this.vel.x * dt, this.vel.y * dt); P.move(this, m.x, m.z); }
     jet?.clearance(this);
     this.applyKnockback(dt);
     this.keepApart(dt);
@@ -369,6 +371,10 @@ export class Hero extends Actor {
     // too steep to stand on: slide down (and no jumping from here)
     const steep = this.onGround && !this.rescue ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
     this.sliding = !!steep;
+    // (the slide's pose and loose feet only once it has gone on for more than a frame or two: a foot set on a face whose
+    //  slide puts him straight back where he stood — a rock across its foot, the Hamalayi peak ring's — read as a 15 Hz
+    //  swap of the walk and fall poses while the key was held; keyboard review, 11.11)
+    this.slideT = steep ? (this.slideT || 0) + dt : 0;
     if (steep) this.slideStep(steep, dt);
     else { this.slideAnchor = null; this.slideSide = 0; }
     if (landed) {
@@ -433,14 +439,14 @@ export class Hero extends Actor {
     else if (this.hurtT > 0) anim = 'hurt';
     else if (cs.upper && moving) anim = this.speed > 3.6 ? 'run' : 'walk';
     else if (cs.anim) anim = cs.anim;
-    else if (!this.onGround || this.sliding) anim = jet?.firing ? 'jet' : this.vy > 0.5 ? 'jump' : 'fall';
+    else if (!this.onGround || this.slideT > SLIDE_POSE) anim = jet?.firing ? 'jet' : this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 3.6 ? 'run' : 'walk';
     else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';
     this.rig.play(anim);
     // (the rig plants his feet in world space: it needs this frame's place and facing, and to know he stands on firm ground)
     this.rig.root.position.copy(this.pos); this.rig.root.position.y += this.visY || 0; this.rig.root.rotation.y = this.angle;
-    this.rig.plantFrame = this.onGround && !this.sliding;
+    this.rig.plantFrame = this.onGround && !(this.slideT > SLIDE_POSE);
     // engaged in a fight (a locked target, a move, a held charge or heavy blow, a hit taken, and 2.5 s after): his idle
     // is his combat stance for the weapon in hand; with a lock his head and chest turn to the target
     const C = this.combat, lock = g.targeting?.lock;
@@ -708,6 +714,26 @@ export class Hero extends Actor {
       const f = this.findFooting() || this.findFooting(2.6, 4);
       if (f) this.hopTo(f); else this.respawnFromFall(false);
     }
+  }
+
+  // SLIDE-RESCUE keyboard review (11.11): walked up into ground too steep to stand on, at its foot (where physics.move's
+  // own cliff test, the rise over this frame's few centimetres, still lets him in), he stepped onto the face and slid
+  // back off it on alternate frames for as long as the key was held: the walk and fall poses swapped at 15 Hz and the
+  // slide's progress clock restarted every other frame. Standing on firm ground, a step up into a steep face now goes
+  // along its foot (the uphill part taken out) or not at all, as at a wall. A step down onto a face, or a jump, is as
+  // before: he slides
+  footOfSlope(dx, dz) {
+    const o = _footM; o.x = dx; o.z = dz;
+    if (!this.onGround || this.sliding || (!dx && !dz)) return o;
+    const P = this.game.physics, p = this.pos;
+    const upFace = (x, z) => { const st = P.steepAt(x, z, p.y); return st && P.groundInfo(x, z, p.y).h > p.y + 0.01 ? st : null; };
+    const st = upFace(p.x + dx, p.z + dz);
+    if (!st) return o;
+    const k = dx * st.dx + dz * st.dz;   // (st.dx, st.dz: the way down the face; k < 0: up it)
+    if (k >= 0) return o;
+    const ax = dx - k * st.dx, az = dz - k * st.dz;
+    if (upFace(p.x + ax, p.z + az)) { o.x = 0; o.z = 0; } else { o.x = ax; o.z = az; }
+    return o;
   }
 
   // somewhere he can stand after a hop: not steep, not water, nothing solid there, and the ground round it (0.45 m)

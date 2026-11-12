@@ -21,6 +21,7 @@ check('D2: a refused exit says its line once while he stands in the door (6 s)',
 const d1 = await ev(() => {
   const G = game, h = G.hero, out = {}; P.settle();
   const s = G.room.searches[0]; P.use(s.x, s.z);                         // the ball from the cupboard
+  P.homeTap();   // (CAMPAIGN-1: a new game's door holds until the kitchen tap and Arthur's cup are done: the house steps first)
   for (const fps of [30, 60]) {
     P.go(1001.2, 6.6, { tol: 0.3 }); P.face(1001.2, 11.3);
     G.input.keys.add('ArrowUp'); let t = 0;
@@ -28,7 +29,8 @@ const d1 = await ev(() => {
     G.input.keys.delete('ArrowUp');
     out[fps] = { z: +h.pos.z.toFixed(2), left: !!G.trans || G.room?.id !== 'house' };
     P.settle();
-    if (G.room?.id !== 'house') { const d = G.world.houses[0].door; P.through(d.x, d.z); P.settle(); }
+    // (back in through P.enter: the yard's remark as he comes out — hometap.js pr_yard — can stop the walk to the door)
+    if (G.room?.id !== 'house') { P.enter('house'); P.settle(); }
   }
   return out;
 });
@@ -40,6 +42,9 @@ const d3 = await ev(() => {
   const G = game, h = G.hero; P.settle();
   if (G.room) { const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); }
   P.settle();
+  // (a remark the walk out set off — the yard's standpipe, hometap.js pr_yard, 0.9 s after the door — is read first:
+  //  opening in the timed window, it held the game in dialogue with him on the bank, the 'sliding: true' of 11.11)
+  for (let i = 0; i < 20; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
   G.lastSafe = { x: -60, z: 40 };
   const hp0 = h.hp;
   h.pos.set(-77.65, -0.35, 52.76); h.onGround = true; h.vel.set(0, 0);

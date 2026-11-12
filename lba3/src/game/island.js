@@ -2312,7 +2312,7 @@ function supportGeo() {
   return cached('psupport', () => ({ pad: boxUV(bbox(0.5, 0.18, 0.5, 0.04, 1), TILE.concrete) }));
 }
 // draw a profile as a pipe: tube, flanges, trestles; returns sampled points
-function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null } = {}) {
+function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null, cover = () => true, vents = true } = {}) {
   const { xs, zs, y, gr, ds } = prof;
   const i1 = to ?? prof.n - 1;
   const pts = [];
@@ -2383,12 +2383,12 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     let k = 0, lastM = -1e9;
     for (let i = from + 2; i <= i1 - 2; i++) {
       const s = (i - from) * ds;
-      if (y[i] - gr[i] > -0.35 || s - lastM < 5.5 || avoid(xs[i], zs[i])) continue;
+      if (y[i] - gr[i] > -0.35 || s - lastM < 5.5 || avoid(xs[i], zs[i]) || !cover(xs[i], zs[i])) continue;
       lastM = s; k++;
       const x = xs[i], z = zs[i], g = W.H(x, z);
       B.add(cached('pcover', () => cyl(0.46, 0.5, 0.1, 14)), darkSteel(), x, g + 0.03, z);
       B.add(cached('pcoverr', () => new THREE.TorusGeometry(0.34, 0.025, 5, 14).rotateX(Math.PI / 2)), darkSteel(), x, g + 0.1, z);
-      if (k % 2 === 0) {   // (a vent standpipe beside it)
+      if (vents && k % 2 === 0) {   // (a vent standpipe beside it)
         const vx = x + 0.9, vz = z + 0.2, vg = W.H(vx, vz);
         B.add(cyl(0.12, 0.12, 1.0, 10), tealM(), vx, vg + 0.5, vz);
         B.add(cyl(0.2, 0.0, 0.2, 10), darkSteel(), vx, vg + 1.08, vz);
@@ -2608,10 +2608,23 @@ function buildPipeline(W, root, r) {
   }
   // --- the branch to the reservoir on the Whispering Cliffs
   {
-    const yb = gSt + 3.4;
-    pipeRun(B, [[BRANCH[0][0], gSt + 0.3, BRANCH[0][1]], [BRANCH[0][0], yb, BRANCH[0][1]]], 0.24);
-    const bp = pipeProfile(W, BRANCH, { y0: yb, clear: 2.6 });
-    pipeVolumes(W, drawPipe(W, B, bp, { r: 0.24, avoid }).pts, 0.24);
+    // (P5/P10's leftover, 11.11: it rose 3.4 m at the station's wall and swung across the fort climb's top landing in mid-air,
+    //  2.4 m over its north-west corner post with no support. It leaves the station under the ground now, under the
+    //  climb, and comes up out of the shelf's grass west of the landing and its path through a concrete collar, onto its
+    //  trestles: nothing over the walkway (1.6 m down: at 0.85 the shelf's step cut through it beside the landing). BRANCH and the scatter's clearance along it are unchanged)
+    const bp = pipeProfile(W, BRANCH, { clear: 2.6, bury: [{ a: BRANCH[0], b: [-40.2, -40.1], ramp: 6, depth: 1.6 }] });
+    // (its access covers only on level ground — one sat tilted half in the air on the shelf's step beside the landing —
+    //  and no vent standpipes: one stood in the landing's cheek wall, the next would stand on the shelf's path)
+    const flat = (x, z) => { const g = W.H(x, z); return [[0.6, 0], [-0.6, 0], [0, 0.6], [0, -0.6]].every(([dx, dz]) => Math.abs(W.H(x + dx, z + dz) - g) < 0.12); };
+    pipeVolumes(W, drawPipe(W, B, bp, { r: 0.24, avoid, cover: flat, vents: false }).pts, 0.24);
+    // where it comes up out of the ground lower than a man, it is solid (the trestles are; a pipe at knee height walked
+    // through is not built)
+    for (let i = 0; i < bp.n - 2; i += 2) {
+      const ya = bp.y[i], yb2 = bp.y[i + 2], ga = bp.gr[i], gb = bp.gr[i + 2];
+      if ((ya + 0.24 < ga && yb2 + 0.24 < gb) || Math.min(ya - ga, yb2 - gb) - 0.24 > 1.8) continue;
+      const ax = bp.xs[i], az = bp.zs[i], bx = bp.xs[i + 2], bz = bp.zs[i + 2];
+      W.physics.add({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: 0.3, hd: Math.hypot(bx - ax, bz - az) / 2 + 0.05, rot: Math.atan2(bx - ax, bz - az), top: Math.max(ya, yb2) + 0.27, noStand: true, seeThrough: true });
+    }
     const last = bp.n - 1, rx = bp.xs[last], rz = bp.zs[last], ry0 = bp.y[last];
     const top = POI_PLATEAU.h + 0.85, vz = CLIFF_VALVE.z;
     pipeRun(B, [[rx, ry0, rz], [rx, top, rz], [rx, top, vz + 0.55]], 0.24);
