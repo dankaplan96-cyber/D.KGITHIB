@@ -358,6 +358,9 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
   Details `tools/testlab/requests/CAST-VARIANTS-1.md`. States: exported ✓ · loaded in game ✓ · visually inspected ✓ (turnarounds)
   · performance: triangles measured · integrated: no (request).
 
+### Kira's look and zmole2_b, zbee1_b, zbee2_b, nara_c: CAST-VARIANTS-2 (the desktop, 12.11.2026)
+- Queue 7 done. Details `tools/testlab/requests/CAST-VARIANTS-2.md`. States: exported ✓ · loaded in game ✓ · visually inspected ✓ · performance: triangles · integrated: no (request).
+
 ## Current
 - **The desktop (GTX 1050) is the work machine from 11.11 (MIGRATE-39).** CAST-POLISH-NAMED sent 11.11; CAST-CONNECT-1 sent 11.11 (after NAMED).
 - CAST-POLISH-UNDERGROUND sent 10.11 (diff clean on origin e2a9d1dc; ZOE-LOOK-38 applies after it): VESK-COLLAR, worker_b, nara_b, Fosse on farmerC_b.
@@ -373,7 +376,7 @@ nothing written): the Esmers share one capsule and differ by dress and headgear 
 5. ~~HANDS-36~~ (order 36: request sent)
 6. The named cast: ~~batch 1, Baldino, Hesk, Yorna, Brum~~ (CAST-POLISH-NAMED); ~~Yorna's hat flaps, the Grobos' flat brows~~ (CAST-CONNECT-1, with every limb joined)
 7. The most shared models' shape variants (`<look>_b`): ~~keeper, oku, zmole1, desertkid, farmerC, lharMan, lharWoman~~;
-   ~~worker, nara~~ (UNDERGROUND); ~~farmerA, farmerB, clerk~~ (VARIANTS-1); left: councilB for Kira, zmole2, zbee1, zbee2
+   ~~worker, nara~~ (UNDERGROUND); ~~farmerA, farmerB, clerk~~ (VARIANTS-1); ~~Kira, zmole2, zbee1, zbee2, nara again~~ (VARIANTS-2)
 8. Equipment: ~~the bonuses~~ (ITEMS-1); ~~the ball, the sword~~ (EQUIP-1)
 9. Common props
 
