@@ -12,8 +12,11 @@
 //                outlined red (the other piece of a pair yellow); ONLY=room,room limits the rooms; FRAMES=i,j only those
 //   REPORT=<file.json>  every finding with its measure; DUMP=<file.json> the raw collection (placejudge.mjs reads it)
 // The chapter state is a new game's (room furniture does not change with the chapters; the quest props that do are
-// listed in docs/lba-maturity/PLACE-1.md). Outdoors (Citadel, the regions, the isles) only what Kit placed is known:
-// there the pieces are judged for inside / float / sunk only (no walls, no doors' lanes).
+// listed in docs/lba-maturity/PLACE-1.md). Outdoors (Citadel, Zeelich, the isles, the Desert and the Hamalayi) PLACE-2
+// measures what is built outside the Kit too (tests/lib/placeout.js: Batch parts, merged meshes, the meshes and
+// instances left in the scene, grouped into pieces by their maker) and judges them with outdoor rules
+// (placejudge.mjs judgeOut: inside, building walls, float/sunk against the ground, doors, stairs, walkways, paths,
+// benches, signs, wall-type pieces). docs/lba-maturity/PLACE-2.md has the outdoor list.
 // Run: BOOT_TIMEOUT=900000 GAME_URL=http://localhost:8123/ node tests/place-scan.mjs   (~3 min). Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import { judge, judgeOut } from './lib/placejudge.mjs';
@@ -54,9 +57,77 @@ const LEFT = [
   ['hamalayi', 'inside', 'custom', 'low (10 cm, outdoors): a market piece touching the stall', [4337.17, -34]],
   // not measurable here: the round room's glazing parts are arcs, their boxes reach into the room (the cabinet's back is
   // at 2.68 m from the middle, the glass at 2.9–3.0 m; looked at: it stands before the glazing)
+  // PLACE-2, outdoors (docs/lba-maturity/PLACE-2.md): the areas a campaign wave is changing, measured, not changed
+  ['desert', '*', '*', 'after the campaign wave: the Desert dig, the test stand and Kesh\'s pump and heat-line places are being changed (PLACE-1 "Not in this job")'],
+  ['hamalayi', '*', '*', 'after campaign wave 3: Lhar, the pass and the observatory (chapters 6–7) are being changed'],
+  // Citadel (chapters 1–2)
+  ['citadel', 'inside', 'buildTownLife', 'by design: Nell\'s lean-to, the bench under its roof against its back wall (one structure, two builders)', [-102.8, 34.32]],
+  ['citadel', 'inside', 'barrels', 'low (4 cm): the station\'s barrels, the lying one against a standing one', [-38.35, -60.4]],
+  ['citadel', 'inside', 'barrels', 'by design: the depot yard\'s barrels, a lying one against the standing ones and the hand cart (looked at)', [-75.6, -77.2]],
+  ['citadel', 'inside', 'barrels', 'by design: the depot yard\'s barrels against the hand cart (4 cm)', [-75.47, -75.76]],
+  ['citadel', 'inside', 'handcart', 'by design: one hand cart, its wheels and its body', [-77.03, -76.26]],
+  ['citadel', 'inside', 'crateStack', 'low (7–17 cm): a stack\'s crates turned against each other in the depot yard'],
+  ['citadel', 'inside', 'crate', 'low (9 cm): the harbour\'s Esmer crate stack, a wooden crate against a teal one', [-81.38, 43.22]],
+  ['citadel', 'inside', 'buildLid', 'by design: the dry well\'s lid and the crates\' lids resting on them (chapter 1 decoration)'],
+  ['citadel', 'inside', 'cargoLift', 'low (4 cm): the cargo lift\'s frame against its crate', [-85.3, -0.92]],
+  ['citadel', 'inside', 'windsock', 'by design: the glider field\'s sock on its mast', [-102.82, -68]],
+  ['citadel', 'wall', 'meshFence', 'by design: the depot gate\'s hinge post beside the fence\'s end post', [-65, -77.3]],
+  ['citadel', 'sunk', 'meshFence', 'by design: a fence post planted in the ground', [-65, -77.3]],
+  ['citadel', 'wall', 'barrels', 'low (12 cm): a depot barrel against the yard\'s fence', [-74.8, -77.3]],
+  ['citadel', 'float', 'custom', 'not a standing piece: the sewer hatch lever\'s quadrant on its post (sewers.js; the post is drawn outside the piece)'],
+  ['citadel', 'float', 'flowerBox', 'low (6 cm): a window box under Twinsen\'s window', [-46.7, 82.1]],
+  ['citadel', 'walk', 'mkCrate', 'by design: cargo by the crane on the quay\'s deck (3.2 m wide)', [-128.69, 43.4]],
+  ['citadel', 'path', 'handcart', 'by design: the depot\'s staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)'],
+  ['citadel', 'path', 'barrels', 'by design: the depot\'s staff yard behind the painted line; goods along its fence'],
+  ['citadel', 'path', 'crateMesh', 'by design: the depot\'s breakable crates (W.crates: there to be broken)'],
+  ['citadel', 'path', 'well', 'by design: the square\'s well, the paths meet round it', [-41.6, -4]],
+  ['citadel', 'path', 'pot', 'by design: the pot beside the tavern\'s door, where its path ends', [-45.59, 26.6]],
+  ['citadel', 'path', 'barrel', 'by design: Twinsen\'s barrels by his house (the home-barrels search spot)', [-48.77, 74.46]],
+  // Zeelich
+  ['zeelich', 'wall', 'cartWheel', 'by design: the cart wheel leaning against Baldino\'s wall (its turned box reaches into his collider)'],
+  ['zeelich', 'sunk', 'cartWheel', 'by design: the leaning wheel\'s rim on the ground'],
+  // the isles (chapters 4–5): what is left after the original's small things are seated on what is under them
+  ['isle_otringal', 'float', 'fit', 'not measurable: the original\'s fitted pieces (a brass finial on a wall pier, looked at): the wall\'s top is not recorded as ground'],
+  ['isle_knartas', 'float', 'fit', 'not measurable: a bush on the quay\'s paving, a slab with no brick under it (looked at: it stands on the paving)'],
+  ['isle_mosquibee', 'float', 'fit', 'not measurable: the original\'s fitted pieces on the bank\'s lip'],
+  ['isle_platform', 'float', 'fit', 'not measurable: a cypress on the bank\'s edge, its crown over the drop (looked at: its trunk on the ground)'],
+  ['isle_otringal', 'inside', 'railing', 'by design (7–10 cm): a railing\'s end meeting the stall\'s canopy post and the planks against it'],
+  ['isle_otringal', 'inside', 'crate', 'low (4–9 cm): a stack\'s crates touching'],
+  ['isle_otringal', 'sunk', 'jar', 'low (9 cm): seated on the lowest ground under it, on a slope'],
+  ['isle_otringal', 'sunk', 'crate', 'low (9–29 cm): seated on the lowest ground under it on a slope; the stall\'s crate under its counter'],
+  ['isle_otringal', 'float', 'jars', 'by design: the stall\'s jars on its sloping shelf'],
+  ['isle_otringal', 'float', 'zplant', 'not a standing piece: the plant in its planter'],
+  ['isle_otringal', 'door', 'planter', 'by design: beside the hotel\'s door, in the trigger\'s ring, the way in clear (island-doors)'],
+  ['isle_knartas', 'inside', 'jar', 'low (16 cm): the original\'s two jars side by side'],
+  ['isle_knartas', 'inside', 'crate', 'low (4 cm): a stack\'s crates touching'],
+  ['isle_knartas', 'float', 'fence', 'low: a fence along a slope, its rails level (one end 57 cm over the bank)'],
+  ['isle_knartas', 'float', 'pole', 'low: a washing pole on the bank\'s edge'],
+  ['isle_knartas', 'float', 'barrel', 'low: a container barrel on a slope (containers.js)'],
+  ['isle_knartas', 'sunk', 'jar', 'low (11–40 cm): the original\'s jars seated on the lowest ground under them, on the bank'],
+  ['isle_knartas', 'door', 'jar', 'low: beside the homes\' doors, in the trigger\'s ring; the way in clear (island-doors)'],
+  ['isle_mosquibee', 'inside', 'crate', 'low (5 cm): a stack\'s crates touching'],
+  ['isle_mosquibee', 'float', 'jar', 'not measurable: on the bank\'s lip, where the drawn ground and the heights differ (looked at: it stands on the grass)'],
+  ['isle_celebration', 'float', 'pole', 'low (19–21 cm): a banner pole on the slope\'s edge'],
+  ['isle_undergas', 'inside', 'crate', 'low (6–8 cm): the original\'s crates in rows, side by side'],
+  ['isle_undergas', 'wall', 'crate', 'low: a crate of the island home\'s planner against the wall\'s pilaster (ihomes.js)'],
+  ['isle_undergas', 'float', 'jar', 'low: a jar on the slope\'s edge'],
+  ['isle_undergas', 'float', 'crate', 'by design: the original\'s crate on top of the row'],
+  ['isle_undergas', 'float', 'planter', 'low (18 cm): a planter on a slope'],
+  ['isle_undergas', 'sunk', 'jar', 'low (10–13 cm): seated on the lowest ground under it'],
+  ['isle_platform', 'inside', 'crate', 'low (4 cm): a stack\'s crates touching'],
+  ['isle_platform', 'sunk', 'jar', 'low: seated on the lowest ground; one 3.2 m jar half in the bank as the original has it'],
+  ['isle_platform', 'sunk', 'bench', 'low (13–18 cm): a bench set on the lowest ground under it on a slope (zislands.js groundUnder: rather sunk than floating)'],
+  ['isle_liftdock', 'inside', 'railRun', 'by design (9 cm): the deck\'s rail behind the goods at its edge'],
+  ['isle_liftdock', 'inside', 'crate', 'low (4–5 cm): a stack\'s crates touching'],
+  ['isle_liftdock', 'float', 'jar', 'by design: jars at the deck\'s edge (the samples past the edge read the cloud sea)'],
+  ['isle_orchard', 'inside', 'crate', 'low (4–10 cm): a stack\'s crates touching'],
+  ['isle_orchard', 'sunk', 'crate', 'low (10–20 cm): goods set on the lowest ground under them on the orchard\'s slopes (zislands.js groundUnder: rather sunk than floating)'],
+  ['isle_orchard', 'sunk', 'honeyJars', 'low (9–20 cm): as the crates beside them'],
+  ['isle_orchard', 'sunk', 'bench', 'low (10 cm): a bench on a slope'],
+  ['isle_orchard', 'float', 'crate', 'low: a stack\'s top crate over a slope\'s low side'],
   ['lighttop', 'wall', 'transmitterCabinet', 'not measurable: a round wall\'s parts are arcs whose boxes reach into the room; looked at, it stands before the glazing', [-0.82, -2.24]],
 ];
-const left = (f) => LEFT.find(([r, k, it, why, near]) => r === f.room && k === f.kind && it === f.item && (!near || Math.hypot(f.at[0] - near[0], f.at[1] - near[1]) < 0.6));
+const left = (f) => LEFT.find(([r, k, it, why, near]) => r === f.room && (k === '*' || k === f.kind) && (it === '*' || it === f.item) && (!near || Math.hypot(f.at[0] - near[0], f.at[1] - near[1]) < 0.6));
 
 const { browser, page } = await launch({ width: 960, height: 540 });
 page.setDefaultTimeout(1800000);
@@ -108,6 +179,7 @@ const all = [];
 let pieces = 0, outPieces = 0;
 for (const [id, A] of Object.entries(data)) {
   const r = A.outdoor && A.out ? judgeOut(id, A) : judge(id, A); pieces += r.pieces;
+  if (A.out?.leftOut?.length) console.log(`LEFT OUT ${id}: ${A.out.leftOut.length} of the original's small things not drawn: ${JSON.stringify(A.out.leftOut.reduce((a, q) => (a[q.why] = (a[q.why] || 0) + 1, a), {}))}`);
   if (A.outdoor && A.out) { outPieces += r.own; console.log(`OUTDOOR ${id}: ${r.pieces} pieces (${r.kit} Kit, ${r.own} built outside it), ${A.out.walls.length} wall parts, ${A.out.doors.length} doors, ${A.out.stairs.length} stairs, ${A.out.walks.length} walkways; not pieces: ${JSON.stringify(A.out.skipped)}`); }
   if (r.find.length) console.log(`AREA ${id}: ${r.pieces} pieces, ${r.find.length} findings`);
   for (const f of r.find) { f.left = left(f)?.[3] || null; console.log(`  ${f.left ? 'left ' : 'FOUND'} ${f.kind.padEnd(6)} ${f.item}#${f.frame} at ${f.at.join(', ')} (world ${f.world.join(', ')}): ${f.what} — ${f.measure}${f.left ? ' [LEFT: ' + f.left + ']' : ''}`); }
@@ -139,6 +211,10 @@ if (process.env.SHOTS) {
 }
 
 check(`every interior collected and judged (${Object.keys(data).length} rooms, ${pieces} pieces)`, Object.keys(data).length >= (ONLY ? ONLY.length : 100) && pieces > 0);
+// (PLACE-2: the outdoor areas measured beyond the Kit: Citadel's dressing, Zeelich's street, the nine isles)
+const OUTDOOR = ['citadel', 'zeelich', 'isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_liftdock', 'isle_orchard', 'isle_oldwatch'].filter((id) => !ONLY || ONLY.includes(id));
+const thin = OUTDOOR.filter((id) => !(data[id]?.out?.pieces?.length >= 20));
+check(`the outdoor areas' dressing built outside the Kit measured (${outPieces} pieces; every one of ${OUTDOOR.length} areas ≥ 20)`, !thin.length, thin);
 const open_ = all.filter((f) => !f.left);
 check(`no piece out of place but those measured and left (${open_.length})`, open_.length === 0, open_.slice(0, 12).map((f) => `${f.room} ${f.kind} ${f.item}#${f.frame} at ${f.at}: ${f.measure}`));
 await browser.close();

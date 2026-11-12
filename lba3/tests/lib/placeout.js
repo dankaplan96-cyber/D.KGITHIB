@@ -127,7 +127,7 @@ PLACE.collectOut = async (ids) => {
     for (const c of PH.near(x, z)) { if (!c.enabled || c.noStand || c.top > yMax || c.top <= g) continue; if (PH._inside(c, x, z, 0.06)) g = c.top; }
     return g;
   };
-  const veg = /^(?!(planter|boxPlanter|flowerBox|flowerBed|flowerTub|tulipBed)$)(\w*(tree|palm|bush|shrub|grass|flower|tulip|fern|plant|reed|frond|cactus|hedge|ivy|vine|moss|scatter|blossom)\w*|lodBatch.*)$/i;
+  const veg = /^(?!(planter|boxPlanter|flowerBox|flowerBed|flowerTub|tulipBed)$)(\w*(tree|palm|bush|shrub|grass|flower|tulip|fern|plant|reed|frond|cactus|hedge|ivy|vine|moss|scatter|blossom)\w*|lodBatch.*|fit|plantShrubs|placeRocks)$/i;   // (zislands.js fit: the original's trees, bushes, rocks)
   for (const id of ids) {
     const list = raw.get(id), C = id === 'citadel' ? [0, 0] : [G.rooms[id].center?.x ?? 0, G.rooms[id].center?.z ?? 0];
     // union-find over the parts of one key whose boxes touch (2 cm), on a 2 m grid; `ok` picks the parts that may link
@@ -207,7 +207,7 @@ PLACE.collectOut = async (ids) => {
     const walks = cols.filter((c) => !c.noStand && c.type === 'box' && Math.min(c.hw, c.hd) <= 1.6 && Math.max(c.hw, c.hd) >= 1.25 && c.top - PH.terrain.heightAt(c.x, c.z) >= 0.4 && dropSide(c, 1) && dropSide(c, -1) && inA(c)).map(colJ);
     const solid = cols.filter((c) => !c.noStand && !c.seeThrough && c.top - Math.max(c.bottom ?? -50, PH.terrain.heightAt(c.x, c.z)) >= 1.9 && (c.type === 'box' ? Math.max(c.hw, c.hd) >= 1.2 : c.r >= 1.4) && inA(c)).map(colJ);
     const fl = floors.filter((f) => { const c = f[0][0]; return pieces.some((P) => Math.abs(P.mid[0] - c[0]) < 12 && Math.abs(P.mid[1] - c[1]) < 12); });
-    out[id] = { outdoor: true, stats, c: C, pieces, walls, floors: fl, doors: dl, stairs, walks, solid, skipped: Object.fromEntries(Object.entries(skipped).filter(([k]) => k.startsWith(id + ':'))) };
+    out[id] = { outdoor: true, leftOut: G.rooms[id]?.leftOut || [], stats, c: C, pieces, walls, floors: fl, doors: dl, stairs, walks, solid, skipped: Object.fromEntries(Object.entries(skipped).filter(([k]) => k.startsWith(id + ':'))) };
   }
   return out;
 };

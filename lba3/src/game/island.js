@@ -1987,7 +1987,7 @@ function buildStation(W0, root, r) {
   }
   crateStack(W, grp, [[58.3, 31.4, 2], [58.6, 32.6, 1], [57.2, 32.2, 1, 0.8]], r);
   techCrates(W, grp, [[57.8, 34.6, 2, 0.95], [58.4, 36.0, 1, 0.95]], r);
-  barrels(W, grp, [[37.6, 41.5], [38.3, 41.9], [37.8, 40.6, false]], r);   // (PLACE-2: 0.7 m out of the station's corner and its downpipe, which went through them)
+  barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.8, 40.6, false]], r);   // (PLACE-2: out of the station's corner and its downpipe, which went through them; 1 m apart, not 15 cm into each other)
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
   for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);

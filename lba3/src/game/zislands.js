@@ -1555,6 +1555,10 @@ function buildIsland0(scene, physics, name, L, at) {
 
   const R = {
     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
+    // (PLACE-2: the original's jars and crates as drawn, world x, z, radius, top — some have no collider: containers.js
+    //  takes one as a container where the original's search zone is, and puts no new piece through one)
+    smallThings: [],
+    leftOut: [],   // (PLACE-2: the original's small things not drawn, and why: tests/place-scan.mjs lists them)
     music: 'zeelich', cloudY: CY,
     // (ZSTYLE-2: an island without its own sky takes Zeelich's overcast pale grey, as the hub (zeelich.js, ZSTYLE-1); it
     // took the hub's old pink sky and fog)
@@ -1676,10 +1680,14 @@ function buildIsland0(scene, physics, name, L, at) {
   });
   const seat0 = (o, ex, ez) => {
     if (!SEAT.test(o.shape) || o.shape === 'pole' && S.flowerTrees) return o.y;
-    if (doorWays.some((w) => o.x > w.x0 && o.x < w.x1 && o.z > w.z0 && o.z < w.z1 && Math.abs(o.y - w.y) < 1.0)) return null;
+    const out = (why) => { R.leftOut.push({ shape: o.shape, x: +(ox + o.x).toFixed(2), z: +(oz + o.z).toFixed(2), why }); return null; };
+    if (doorWays.some((w) => o.x > w.x0 && o.x < w.x1 && o.z > w.z0 && o.z < w.z1 && Math.abs(o.y - w.y) < 1.0)) return out('doorway');
     const s = [[0, 0], [-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].map(([a, b]) => supportAt(o.x + a * ex, o.z + b * ez, o.y + 0.5, o));
     const lo = Math.min(...s), hi = Math.max(...s);
-    if (o.shape !== 'fence' && hi - lo > 0.6) return null;
+    // (standing on another of the original's objects at its own height — a crate on a barge's deck, on a block: as it was)
+    if (A.decor.some((d) => d !== o && !SEAT.test(d.shape) && Math.abs(o.x - d.x) <= Math.max(0.2, d.sx) / 2 && Math.abs(o.z - d.z) <= Math.max(0.2, d.sz) / 2 && d.y + d.sy <= o.y + 0.1 && d.y + d.sy >= o.y - 0.3)) return o.y;
+    if (hi - lo > (o.shape === 'fence' ? 1.2 : o.shape === 'post' || o.shape === 'pole' ? 0.6 : 1.0)) return out('cliff face');
+    if (o.y + o.sy < lo) return out('buried');
     return Math.abs(o.y - lo) > 0.04 && Math.abs(o.y - lo) <= 0.8 ? lo : o.y;
   };
   for (const o of [...A.decor].sort((a, b) => a.y - b.y)) seated.set(o, seat0(o, Math.max(0.2, o.sx), Math.max(0.2, o.sz)));
@@ -1900,6 +1908,7 @@ function buildIsland0(scene, physics, name, L, at) {
       case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
       case 'crate': {
         B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
+        R.smallThings.push({ x: ox + o.x, z: oz + o.z, r: Math.hypot(ex, ez) * 0.45, top });
         if (Math.max(ex, ez) >= 0.5) small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.45, hd: ez * 0.45, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -1915,6 +1924,7 @@ function buildIsland0(scene, physics, name, L, at) {
           break;
         }
         B.add(jarG, jarM, o.x, y0, o.z, 0, 0, 0, rr, o.sy, rr);
+        R.smallThings.push({ x: ox + o.x, z: oz + o.z, r: rr, top });
         if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -2059,6 +2069,9 @@ function buildIsland0(scene, physics, name, L, at) {
     }
     const f = BUILD[it.kind]; if (!f) continue;
     const fr = FOOT[it.kind]?.(it.o) || { r: 0.5 };
+    // (PLACE-2: goods set down on a bank steeper than a metre's drop across their footprint — Otringal's crate stack on
+    //  the slope below the quay: one crate 41 cm in the bank, another 33 cm over it — are left out)
+    if (!A.floorAt && /^(crates|barrels|jars|honey|bench)$/.test(it.kind)) { const rr = Math.min(1.2, (fr.r ?? Math.max(fr.hw, fr.hd)) * 0.8); let lo = Infinity, hi = -Infinity; for (let q = 0; q < 8; q++) { const a = (q / 8) * Math.PI * 2, g = gy(it.x + Math.sin(a) * rr, it.z + Math.cos(a) * rr); lo = Math.min(lo, g); hi = Math.max(hi, g); } if (hi - lo > 1.0) { R.leftOut.push({ shape: it.kind, x: +(ox + it.x).toFixed(2), z: +(oz + it.z).toFixed(2), why: 'steep bank' }); continue; } }
     const P = new EP.Place(B, it.x, groundUnder(it.x, it.z, Math.min(1.2, (fr.r ?? Math.max(fr.hw, fr.hd)) * 0.6)), it.z, it.ry);
     f(P, it.o || {});
     for (const c of P.cols) col(c);

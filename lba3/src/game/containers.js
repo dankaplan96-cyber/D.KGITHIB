@@ -284,6 +284,9 @@ function onPiece(physics, R, x, z) {
     const d = Math.hypot(c.x - x, c.z - z);
     if (d < bd) { bd = d; best = c; }
   }
+  // (PLACE-2: an isle's jar or crate without a collider of its own, zislands.js R.smallThings: the original's search
+  //  zone at a jar is that jar, not a barrel put through it)
+  for (const t of R.smallThings || []) { const top = t.top - gh, d = Math.hypot(t.x - x, t.z - z); if (t.r <= 1.4 && top >= 0.4 && top <= 2.6 && d < bd) { bd = d; best = { type: 'cyl', x: t.x, z: t.z, r: t.r, top: t.top }; } }
   if (!best || (R.clearOf && !R.clearOf(best.x, best.z))) return null;
   const r = best.type === 'cyl' ? best.r : Math.hypot(best.hw, best.hd);
   if (standRoom(physics, R, best.x, best.z, r, gh) < 2) return null;
@@ -296,6 +299,7 @@ export function pieceRoom(physics, R, px, pz, r) {
   const gh = physics.groundAt(px, pz);
   if (gh < -0.3 || Math.abs(groundRound(physics, px, pz) - gh) > 0.3) return 'not level';
   if (physics.near(px, pz).some((c) => c.enabled && c.top > gh + 0.05 && physics._inside(c, px, pz, r + 0.15))) return 'collider';
+  if ((R.smallThings || []).some((t) => t.top > gh + 0.05 && Math.hypot(t.x - px, t.z - pz) < t.r + r + 0.15)) return 'a jar or crate';   // (PLACE-2)
   if (standRoom(physics, R, px, pz, r, gh) < 4) return 'no room to stand';
   // (not by the island's edge or a drop)
   for (let q2 = 0; q2 < 8; q2++) { const b = (q2 * Math.PI) / 4, bx = px + Math.sin(b) * (r + 1.3), bz = pz + Math.cos(b) * (r + 1.3); if ((R.land && !R.land(bx, bz)) || physics.groundAt(bx, bz, gh + 0.4) < gh - 0.7) return 'brink'; }

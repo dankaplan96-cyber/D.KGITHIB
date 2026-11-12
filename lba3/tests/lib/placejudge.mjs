@@ -284,7 +284,7 @@ export function judgeOut(id, A) {
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
     for (const b of nearby(a, a._r + 3)) {
-      if (b === a || (b.kit && a.kit)) continue;
+      if (b === a) continue;
       if (a.veg || b.veg) {
         const T = a.veg ? a : b, P = a.veg ? b : a; if (P.veg || !P.dress || flat(P) || T.y1 - T.y0 < 2.5 || /rock|boulder/i.test(T.name)) continue;
         const trunk = [[T.mid[0] - 0.1, T.mid[1] - 0.1], [T.mid[0] + 0.1, T.mid[1] - 0.1], [T.mid[0] + 0.1, T.mid[1] + 0.1], [T.mid[0] - 0.1, T.mid[1] + 0.1]];

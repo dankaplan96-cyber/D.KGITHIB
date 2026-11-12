@@ -1015,7 +1015,7 @@ export function* buildZeelichSteps(scene, physics) {
     techCrates([[-51.6, -1.5, 2, 0.9], [-52.6, -1.6, 1, 0.8]]);
     // walkable deck
     col({ type: 'box', x: cxp, z: 0, hw: L / 2, hd: hw - 0.15, rot: 0, top: Y0, seeThrough: true });
-    lamps.push([-62.8, -hw + 0.35], [-56, -hw + 0.35], [-51, hw - 0.35]);
+    lamps.push([-62.8, -hw + 0.35], [-56.8, -hw + 0.35], [-51, hw - 0.35]);   // (PLACE-2: the middle one between two railing posts, not on the one at −56.0)
     keepClear(-64, -4, -46, 4);
   }
 
