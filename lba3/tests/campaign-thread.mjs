@@ -337,8 +337,8 @@ if (!ONLY || ONLY === 'E') {
     return [!!f.dt_divert, S.heat.on, D.pump.drive.hot, !!f.dt_sent, game.story.objective().replace(/<[^>]+>/g, ' ')];
   }), (v) => v[0] && v[1] && v[2] && v[3] && /read/i.test(v[4]));
   await shot('E3-sent');
-  is('E4 Dallan before the tape is read: it has gone to Citadel; the gate stays shut', await ev(() => { const r = P.talk('dallan', { run: true }); return [r.lines, !!game.flags.c5_dallanOK, game.rooms.desert.post.gate.isOpen]; }), (v) => v[0] >= 1 && !v[1] && !v[2]);
-  is('E5 the tape read (one trace; his carbon has two); put to Dallan: the gate opens', await ev(() => {
+  is('E4 Dallan before the tape is read: it has gone to Citadel; no leave for the relief valve yet', await ev(() => { const r = P.talk('dallan', { run: true }); return [r.lines, !!game.flags.c5_dallanOK]; }), (v) => v[0] >= 1 && !v[1]);
+  is('E5 the tape read (one trace; his carbon has two); put to Dallan: he looks the other way (the relief valve is his to open)', await ev(() => {
     const f = game.flags, S = game.regions.built('desert').stand;
     P.use(S.board.x, S.board.z, { near: 1.0, kind: 'dt_board' }); const log = !!f.dt_log;
     const r = P.talk('dallan', { run: true });
