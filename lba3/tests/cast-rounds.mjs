@@ -115,9 +115,9 @@ const CASES = [
   { label: 'chapter 6, Lhar', key: 'pass', flags: { c6_started: true, c6_bridge: true, c6_lhar: true }, room: 'hamalayi', ids: ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'] },
   { label: 'chapter 7, the monastery\'s yard', key: 'observatory', flags: { ...DONE6, c7_started: true }, room: 'hamalayi', ids: ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'], keepOff: 'yard', ways: { from: 'gate', to: 'yard' } },
   { label: 'chapter 7, the observatory', key: 'observatory', flags: { ...DONE6, c7_started: true, c7_keeper: true }, room: 'obsv', ids: ['keeper'], ways: { to: 'prompts' } },
-  { label: 'chapter 8, the well', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['gilbert'] },
-  { label: 'chapter 8, the hill farms', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['farmer1', 'farmer2', 'farmer3'] },
-  { label: 'chapter 8, the quay', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['tim', 'lulu', 'xil'], ways: { to: 'ferry' } },
+  { label: 'chapter 8, the well', key: 'evacuation', flags: { c8_started: true, ev_v: 1, ev_cart: true }, room: 'citadel', ids: ['gilbert'] },
+  { label: 'chapter 8, the hill farms', key: 'evacuation', flags: { c8_started: true, ev_v: 1, ev_cart: true }, room: 'citadel', ids: ['farmer1', 'farmer2', 'farmer3'] },
+  { label: 'chapter 8, the quay', key: 'evacuation', flags: { c8_started: true, ev_v: 1, ev_cart: true }, room: 'citadel', ids: ['tim', 'lulu', 'xil'], ways: { to: 'ferry' } },
   { label: 'chapter 9, Zeelich\'s street', key: 'council', flags: { c9_started: true, c9_form: true }, room: 'zeelich', ids: ['nara', 'oku'] },
   { label: 'chapter 9, Baldino\'s workshop', key: 'council', flags: { c9_started: true }, room: 'workshop', ids: ['baldino'] },
   { label: 'chapter 9, the council between sittings', key: 'council', flags: { c9_started: true, c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true }, room: 'council', ids: ['chair', 'councilB', 'councilC'], ways: { to: 'dais' } },
@@ -301,7 +301,7 @@ for (const C of CASES) {
 if (!ONLY || ONLY.test('chapter 8, the hill farms')) {
   const mf = await ev(() => {
     // (a load resumes before Zoé's run — evacuation.js applyFlags —: her run is set after it, as starting it does)
-    setChapter('evacuation', { c8_started: true, c8_home: true });
+    setChapter('evacuation', { c8_started: true, c8_home: true, ev_v: 1, ev_cart: true });   // (CAMPAIGN-6: the arrival's cut-away already seen)
     goTo('citadel', ['farmer1']); game.flags.c8_zoeStart = true;
     const G = game, n = G.npcs.find((q) => q.def.id === 'farmer1'), R = RS(), out = {};
     for (let i = 0; i < 400 && !(R.st.get('farmer1')?.active && Math.hypot(n.pos.x - n.placed.x, n.pos.z - n.placed.z) > 1.0); i++) G.step(0.1);
