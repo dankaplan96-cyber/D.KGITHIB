@@ -7,7 +7,7 @@
   const R = globalThis.__PLACE_REC = { frames: [], stack: [], next: null, loose: [], geos: new WeakSet() };
   R.open = (kit, fn) => {
     let src = String(fn);
-    if (R.next && /fn\(this\.k/.test(src)) src = 'put:' + (R.next.name || String(R.next).slice(0, 200));
+    if (R.next && /fn\((this\.)?k\b/.test(src)) src = 'put:' + (R.next.name || String(R.next).slice(0, 200));   // (PLACE-3: the Hamalayi's put() too)
     R.next = null;
     let parent = null; for (let i = R.stack.length - 1; i >= 0; i--) if (R.stack[i].kit === kit) { parent = R.stack[i]; break; }
     const f = { kit, M: kit.top.clone(), inv: null, src: src.slice(0, 260), box: [1e9, 1e9, 1e9, -1e9, -1e9, -1e9], n: 0, parent, i: R.frames.length, parts: [] };

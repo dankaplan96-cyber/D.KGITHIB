@@ -1484,7 +1484,18 @@ export function* buildDesertSteps(scene, physics) {
     flag.position.set(0.35, 5.0, 0); yacht.add(flag);
   }
   const YACHT = { x: -24, z: 11, a: 0 };
-  yacht.position.set(YACHT.x, H(YACHT.x, YACHT.z), YACHT.z); group.add(yacht);
+  // (PLACE-3: parked, the yacht stands on its three wheels: tipped to the ground under them (pitch and roll in its own
+  //  frame, then its heading). Set where it stops, not while it rides: at the village one rear wheel stood 26 cm in the
+  //  sand slope)
+  yacht.rotation.order = 'YXZ';
+  const seat = () => {
+    const ry = yacht.rotation.y, c = Math.cos(ry), s = Math.sin(ry), x0 = yacht.position.x, z0 = yacht.position.z;
+    const at = (lx, lz) => H(x0 + lx * c + lz * s, z0 - lx * s + lz * c);
+    const hA = at(-0.9, 1.5), hB = at(-0.9, -1.5), hF = at(1.62, 0), hR = (hA + hB) / 2, k = (hF - hR) / 2.52;
+    yacht.rotation.z = Math.atan(k); yacht.rotation.x = -Math.atan((hA - hB) / 3);
+    yacht.position.y = hR + 0.9 * k;
+  };
+  yacht.position.set(YACHT.x, H(YACHT.x, YACHT.z), YACHT.z); group.add(yacht); seat();
   const yachtCol = col({ type: 'box', x: YACHT.x, z: YACHT.z, hw: 1.8, hd: 0.7, top: H(YACHT.x, YACHT.z) + 0.8, noStand: true });
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const YPATHS = YACHT_ROUTES;   // (keshlife.js: Hesk's poles keep clear of them)
@@ -1495,7 +1506,7 @@ export function* buildDesertSteps(scene, physics) {
     placeAt(key) {
       const e = ENDS[key]; if (!e) return;
       const P = e[2], a = P[P.length - 2], b = P[P.length - 1];
-      yacht.position.set(e[0], H(e[0], e[1]), e[1]); yacht.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
+      yacht.position.set(e[0], H(e[0], e[1]), e[1]); yacht.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); seat();
       yachtCol.x = ox + e[0]; yachtCol.z = oz + e[1]; yachtCol.top = H(e[0], e[1]) + 0.8; yachtCol.rot = yacht.rotation.y; physics.update(yachtCol);   // (turned with the hull: it stayed east-west)
       this.x = ox + e[0]; this.z = oz + e[1];
     },
@@ -1515,10 +1526,10 @@ export function* buildDesertSteps(scene, physics) {
     const t = Math.min(1, d / Y.L[i]), a = Y.P[i], b = Y.P[i + 1];
     const x = a[0] + (b[0] - a[0]) * t, z = a[1] + (b[1] - a[1]) * t;
     yacht.position.set(x, H(x, z), z); yacht.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
-    yacht.rotation.z = Math.sin(Y.d * 0.7) * 0.03;
+    yacht.rotation.z = Math.sin(Y.d * 0.7) * 0.03; yacht.rotation.x = 0;
     if (Y.hero) { Y.hero.pos.set(ox + x, H(x, z) + 0.75, oz + z); Y.hero.angle = Math.atan2(b[0] - a[0], b[1] - a[1]); Y.hero.vy = 0; Y.hero.onGround = true; }
     if (Y.d >= Y.tot) {
-      R.yacht.riding = null;
+      R.yacht.riding = null; seat();
       yachtCol.x = ox + x; yachtCol.z = oz + z; yachtCol.top = H(x, z) + 0.8; yachtCol.rot = yacht.rotation.y; physics.update(yachtCol); yachtCol.enabled = true;
       R.yacht.x = ox + x; R.yacht.z = oz + z;
       if (Y.hero) { const side = -Math.atan2(b[1] - a[1], b[0] - a[0]) + Math.PI / 2; const hx = x + Math.cos(side) * 1.8, hz = z - Math.sin(side) * 1.8; Y.hero.pos.set(ox + hx, H(hx, hz), oz + hz); }

@@ -27,6 +27,9 @@ const FURN = /^(cot|bunk|shelf|clothshelf|glassshelf|jarshelf|honeyshelf|lectern
 const STORAGE = /^(crates|bigcrates|barrels|sacks|boxes|crate|barrel|chest|cargoCrate|sack|sacks|suitcaseStack|box|boxes|keg|basket|trunk)$/i;
 
 export function nameOf(src) {
+  // (PLACE-3: the Hamalayi's inline pieces: a dry-stone wall's coping, a snow drift)
+  if (/coping === 'slate'/.test(src)) return 'wallCoping';
+  if (/^\(\) => \{\s*K\.add\(driftGeo/.test(src)) return 'drift';
   let m = /^put:\(?(\w+)/.exec(src); if (m && m[1] !== 'k' && m[1] !== 'kk') return m[1];
   if ((m = /^put:\(kk?\)\s*=>\s*(?:P\.)?(\w+)/.exec(src))) return m[1];
   if ((m = /P\.(\w+)\(/.exec(src))) return m[1];
@@ -256,12 +259,19 @@ const OUT_WALLTYPE = /^(wallShelf|shelf|shelves|rack|toolRack|toolBoard|wallLamp
 // outdoor dressing (what this sweep is for); other pieces built outside the Kit are a building's or a site's fixtures
 // (a pipe's valve, a window, a kerb): obstacles for the dressing, not judged themselves
 export const OUT_DRESS = /bench|seat|crate|barrel|keg|sack|lamp|lantern|cart|stall|planter|tub$|^pot$|bin$|sign|board|^post$|pole|bollard|fence|jar|hive|tent|stool|table|chest|trough|basket|^box|wheel|^tools$|rug|firePit|trunk|spool|pickaxe|shovel|skiff|netRack|netHeap|laundry|hangingLine|flowerBed|flowerBox|fountain|^well$|bell|telescope|gasBottles|warnSign|kiosk|bannerPole|windsock|heatPosts|radio|chalk|mooring|barrier|bucket|ladder|cask|bale|pallet|^jars$|stand$|rack|shelf|cabinet|locker|booth|easel|poster|planks|canopy|ropeCoil|floodMast|cartWheel|staff/i;
+// (PLACE-3: the Kit's buildings outdoors: their pieces are fixtures)
+export const OUT_BUILDING = /^(house|hall|observatory|gate|lba1-gate|lba1-waystone)$/;
 export const OUT_FIXTURE_SKIP = /^(_build|Terrain\._build|fieldRing|peek|update|curbs|kerb)$/;
 export function judgeOut(id, A) {
-  const kit = pieces(A).list.map((P) => ({ name: P.name, parts: P.parts.map((p) => [p[0], p[1], p[2], null]), hull: P.hull, y0: P.y0, y1: P.y1, mid: P.mid, g: [P.f.g], kit: true, i: P.f.i, fwd: P.f.fwd }));
+  // (PLACE-3: a Kit piece of a building — a house's door and window frames, the observatory's windows and its telescope's
+  //  barrel, the monastery's gate in its wall — is the building's fixture, as outside the Kit: an obstacle, not judged;
+  //  so are a wall's coping and the snow drifts (ground, banked against walls by design))
+  const FR = new Map(A.frames.map((f) => [f.i, f]));
+  const fixture = (f) => { if (/^(wallCoping|drift\w*)$/.test(nameOf(f.src))) return true; for (let q = f; q; q = FR.get(q.p)) if (OUT_BUILDING.test(nameOf(q.src))) return true; return false; };
+  const kit = pieces(A).list.map((P) => ({ name: P.name, parts: P.parts.map((p) => [p[0], p[1], p[2], null]), hull: P.hull, y0: P.y0, y1: P.y1, mid: P.mid, g: [P.f.g], kit: true, i: P.f.i, fwd: P.f.fwd, fix: fixture(P.f) }));
   const O = A.out || { pieces: [], walls: [], doors: [], stairs: [], walks: [], solid: [] };
   const own = O.pieces.filter((P) => !OUT_FIXTURE_SKIP.test(P.name)).map((P) => ({ ...P, i: 100000 + P.i, dress: !P.veg && OUT_DRESS.test(P.name) }));
-  for (const P of kit) P.dress = true;
+  for (const P of kit) P.dress = !P.fix;
   const list = [...kit, ...own];
   const find = [];
   const at = (P) => [r2(P.mid[0] - A.c[0]), r2(P.mid[1] - A.c[1])];
