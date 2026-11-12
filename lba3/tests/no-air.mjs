@@ -47,6 +47,11 @@ const STATES = [
   // of Lhar still packing below (22); chapter 7 with the telescope's fourth setting read (23)
   ['pass', { c6_heat: true, c6_thawed: true, c6_liftReady: true, c6_sword: true, c6_rope: true, c6_trip1: true, c6_trip2: true, c6_up: true, ps_v: 1, ps_read: true, ps_trip1: true, ps_trip2: true }],
   ['observatory', { c7_keeper: true, c7_ice: true, c7_lit: true, c7_sendell: true, ob_v: 1, ob_follow: true, ob_dir: true }],
+  // CAMPAIGN-6 (story/laneline.js): chapter 8 with the lane: its start (Hedda and Tobin at their door, 24); the lane at the
+  // landing waiting for the gate, Zoé with them (25); boarded, the lane in the bridge's queue (26)
+  ['evacuation', { c8_started: true, ev_v: 1, ev_cart: true }],
+  ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true }],
+  ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true, ev_seen: true, ev_gate: true, ev_board: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

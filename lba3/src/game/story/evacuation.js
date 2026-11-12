@@ -14,6 +14,7 @@ import { tm, pm, bbox, cyl, mesh, Batch } from '../kit.js';
 import '../text/ch8.js';
 import { buildShelter, centreForWheel, shelterFrame, addCart, addBundle, addBale } from './shelters.js';
 import { crossByShip } from '../travelfilm.js';
+import { LaneThread } from './laneline.js';
 
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
@@ -28,7 +29,8 @@ const LANDING = { x: -58, z: -60 }, GATHER = { x: -89, z: 96.5 };
 // down to the house's lane, west past the bay to the lighthouse path.
 const ROAD = [[-70.8, 91.4], [-74, 93.2], [-79.5, 94.2], [-87, 95.6]];
 // (each farmer's first leg: out of his farm and down to the lighthouse path; round the houses and fences)
-const LEAD = [[[-52.1, 35], [-61.1, 44.5], [-67.1, 64.5], [-68.1, 82]], [[-32, 47.7], [-37.5, 55.2], [-42.5, 57.7], [-44, 57.2], [-63.5, 77.2]], [[-68, 72.7], [-68, 81.7]]];
+// (CAMPAIGN-6: farmer 2 goes round the garden railing's west end: the lane's mouth has its water gate, shut in this chapter)
+const LEAD = [[[-52.1, 35], [-61.1, 44.5], [-67.1, 64.5], [-68.1, 82]], [[-32, 47.7], [-37.5, 55.2], [-42.5, 57.7], [-44, 57.2], [-51.5, 57.9], [-60.5, 59.0], [-63.5, 77.2]], [[-68, 72.7], [-68, 81.7]]];
 const MARCH_SPEED = 2.1, MARCH_T = 20, MARCH_FAR = 26, MARCH_HARD = 90;
 // (the lever and its cistern stand on the yard's floor, clear of the station's tanks as rebuilt to the original layout)
 const FORT = { door: { x: -50, z: -71 }, lever: { x: -33, z: -70 } };
@@ -44,12 +46,14 @@ const DEPOT_F = shelterFrame(DEPOT_C.x, DEPOT_C.z, DEPOT_RY);
 export class Evacuation extends ChapterBase {
   get W() { return this.game.world; }
   get gather() { return { ...GATHER }; }   // (where Zoé's run ends: tests read it here)
+  // CAMPAIGN-6: the lane left behind, its water gate, the list cart, the culvert's cock (laneline.js; asked first)
+  get ev() { return (this.story._ev ||= new LaneThread(this)); }
   outdoors() { return !this.game.room; }
   farmsDone() { return FARMS.filter((p) => this.f['c8_' + p.id]).length; }
   townDone() { const f = this.f; return !!(f.c8_gilbert && f.c8_fort && f.c8_depot && f.c8_mira && f.c8_pippa); }
 
   npcDefs() {
-    return FARMS.map((p) => ({ id: p.id, name: 'n_' + p.id, char: p.char, color: '#e8d0a0', x: p.x, z: p.z, angle: p.a }));
+    return [...FARMS.map((p) => ({ id: p.id, name: 'n_' + p.id, char: p.char, color: '#e8d0a0', x: p.x, z: p.z, angle: p.a })), ...this.ev.npcDefs()];
   }
   enemyDefs() {
     const P = [[-38, -75], [-30, -75], [-30, -69], [-38, -69]];
@@ -67,6 +71,7 @@ export class Evacuation extends ChapterBase {
   // ---------------------------------------------------------------- props on Citadel for this chapter
   decorate() {
     if (!this.once('citadel')) return;
+    this.ev.decorate();   // (CAMPAIGN-6: the lane's water gate and landing stand in every chapter; the board and the cart are this one's)
     const g = this.game, W = this.W, root = W.root, P = g.physics;
     const H = (x, z) => W.H(x, z);
     const grp = new THREE.Group(); grp.visible = false; root.add(grp);
@@ -130,6 +135,7 @@ export class Evacuation extends ChapterBase {
 
   place(id) {
     const f = this.f, W = this.W;
+    { const lp = this.ev.place(id); if (lp !== undefined) return lp; }   // (CAMPAIGN-6: the lane's people, the cart's driver, Zoé at the landing)
     const farm = FARMS.find((p) => p.id === id);
     if (farm) {
       if (!this.reached()) return null;
@@ -169,7 +175,12 @@ export class Evacuation extends ChapterBase {
     W.ferry?.setVisible?.(true);
     this.showProps(true);
     this.story.refreshCast({ walk: true });
-    this.chain([['narrator', 'c8_narr'], ['radio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => { this.f.c8_started = true; g.updateObjective(); g.save(false); });
+    this.ev.begin();   // (CAMPAIGN-6: a game that reaches chapter 8 now has the lane ahead)
+    this.chain([['narrator', 'c8_narr'], ['radio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => {
+      this.f.c8_started = true; g.updateObjective(); g.save(false);
+      // (CAMPAIGN-6: from the plateau he sees the project's cart come down to the lane's shut gate and turn away)
+      if (this.ev.on && !this.f.ev_cart) this.ev.pass(() => this.chain([['hero', 'ev_cart_1']], () => g.save(false)));
+    });
   }
 
   doors() { return this.story.townDoors(); }
@@ -177,6 +188,7 @@ export class Evacuation extends ChapterBase {
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const f = this.f, g = this.game;
+    this.ev.interactables(consider, dist);   // (CAMPAIGN-6: the board, the culvert's pipe and cock)
     if (!this.isCur() || !this.outdoors()) return;
     if (f.c8_gilbert && !f.c8_fort) consider(dist(FORT.lever.x, FORT.lever.z), 1.6, { kind: 'c8lever', label: 'p_lever' });
     if (f.c8_gilbert && !f.c8_depot) { const p = DEPOT_F.at(1.9, 0); consider(dist(p.x, p.z), 2.2, { kind: 'c8hatch', label: 'p_shelter' }); }
@@ -187,6 +199,7 @@ export class Evacuation extends ChapterBase {
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
+    if (this.ev.interact(it)) return true;
     switch (it.kind) {
       case 'c8lever':
         h.act('use', 1.0, () => {
@@ -230,7 +243,8 @@ export class Evacuation extends ChapterBase {
     }
     switch (id) {
       case 'zoe':
-        if (!f.c8_home) return c([['zoe', 'c8_zoe_1'], ['arthur', 'c8_ar_1'], ['zoe', 'c8_zoe_2'], ['hero', 'c8_tw_z1'], ['zoe', 'c8_zoe_3'], ['arthur', 'c8_ar_2'], ['zoe', 'c8_zoe_4']], () => { f.c8_home = true; this.progress(); });
+        if (!f.c8_home) return c([['zoe', 'c8_zoe_1'], ['arthur', 'c8_ar_1'], ['zoe', 'c8_zoe_2'], ['hero', 'c8_tw_z1'], ['zoe', 'c8_zoe_3'], ['arthur', 'c8_ar_2'], ['zoe', 'c8_zoe_4'],
+          ...(this.ev.on && f.ev_cart ? [['hero', 'ev_tw_cart'], ['zoe', 'ev_zoe_cart']] : [])], () => { f.c8_home = true; this.progress(); });   // (CAMPAIGN-6: the cart he saw)
         if (this.townDone() && !f.c8_zoeStart) return c([['hero', 'c8_tw_z2'], ['zoe', 'c8_zoe_5']], () => this.startZoe());
         return c([['zoe', 'c8_zoe_4']]);
       case 'arthur': return c([['arthur', 'c8_ar_2']]);
@@ -315,6 +329,8 @@ export class Evacuation extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     this.finishMarch();
     this.chain([['zoe', 'c8_zoe_lh'], ['zoe', 'c8_zoe_lh2'], ['zoe', 'c8_zoe_lh3']], () => {
+      // (CAMPAIGN-6: with the lane ahead she stays on: the board on this path, then the lane's people: laneline.js)
+      if (this.ev.on && !f.ev_board) { f.c8_relay = true; this.progress(); return; }
       f.c8_zoeDone = true; f.c8_relay = true;
       g.startTransition(() => {
         h.swapBody('twinsen'); h.hasBall = true; h.noBehaviours = false; h.behaviour = this.saved?.behaviour || 'normal'; g.hud.behaviour(h.behaviour);
@@ -325,10 +341,23 @@ export class Evacuation extends ChapterBase {
       });
     });
   }
+  // CAMPAIGN-6: Zoé's part over at the lane's landing: Twinsen again, standing at `at` (laneline.js)
+  backToTwinsen(at, then) {
+    const g = this.game, f = this.f, h = g.hero;
+    this.finishMarch();
+    g.startTransition(() => {
+      f.c8_zoeDone = true;
+      h.swapBody('twinsen'); h.hasBall = true; h.noBehaviours = false; h.behaviour = this.saved?.behaviour || 'normal'; g.hud.behaviour(h.behaviour);
+      h.pos.set(at.x, g.physics.groundAt(at.x, at.z), at.z); h.angle = at.a ?? 0;
+      this.story.refreshCast({ walk: true });
+      this.progress();
+    }, null, then);
+  }
   onEnterRoom(id) {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
-    if (id === 'control' && f.c8_relay && !f.c8_vesk) {
+    this.ev.onEnterRoom(id);
+    if (id === 'control' && f.c8_relay && !f.c8_vesk && this.ev.ready()) {
       this.chain([['narrator', 'c8_control_1'], ['vesk', 'c8_vesk_1'], ['hero', 'c8_tw_c1'], ['zoeradio', 'c8_zoe_radio'], ['hero', 'c8_tw_c2']], () => { f.c8_vesk = true; this.progress(); });
     }
     void g;
@@ -337,10 +366,13 @@ export class Evacuation extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (!this.isCur()) return;
     this.marchStep(dt);
+    this.ev.update(dt);
     if (f.c8_zoeStart && !f.c8_zoeDone && this.farmsDone() >= 3 && this.outdoors() && g.state === 'play' && !this.ending && Math.hypot(h.pos.x - GATHER.x, h.pos.z - GATHER.z) < 6) { this.ending = true; this.endZoe(); }
   }
   applyFlags() {
     const f = this.f, W = this.W;
+    this.ending = false;
+    this.ev.applyFlags();   // (CAMPAIGN-6: before the run's own reset below: the lane's part of Zoé's run resets with it)
     // (the fences and the open shelters stay through chapter 10, while the town waits underground; and through 11 and 12,
     //  when the shaft's lift brings him up in the station's yard (SHAFT-CITADEL), as they are when he comes up in play)
     // (CITADEL-3-9: and through chapter 9, the council, when the ship back from Zeelich is open: played on from chapter 8
@@ -360,6 +392,7 @@ export class Evacuation extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c8_started) return '';
+    { const lo = this.ev.objective(); if (lo) return lo; }   // (CAMPAIGN-6: the board, the lane, the gate, the boarding)
     if (f.c8_vesk) return this.goal('c8_obj_ship');
     if (f.c8_relay) return this.goal('c8_obj_control');
     if (f.c8_zoeStart) { const n = this.farmsDone(); return n >= 3 ? this.goal('c8_obj_lighthouse') : this.goal('c8_obj_farms', { n }); }
@@ -369,6 +402,7 @@ export class Evacuation extends ChapterBase {
   }
   items() { return this.f.c8_mira ? [{ id: 'valvekey', icon: 'key' }] : []; }
   markers() {
+    { const lm = this.ev.markers(); if (lm) return lm; }   // (CAMPAIGN-6)
     const sp = this.W.spaceport;
     return this.isCur() && this.f.c8_vesk && sp ? [{ x: sp.pad.x, z: sp.pad.z, kind: 'star', color: '#ffcf4a', r: 7, edge: true }] : [];
   }
@@ -380,6 +414,8 @@ export class Evacuation extends ChapterBase {
       { key: 'c8_j_farms', done: !!f.c8_zoeDone },
       { key: 'c8_j_relay', done: !!f.c8_relay },
       { key: 'c8_j_vesk', done: !!f.c8_vesk },
-    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
+    ].filter((l) => l.done).concat(this.ev.journal());   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
+  // CAMPAIGN-6: the lane's people are spoken to before the town's own stories (index.js talkRest)
+  talkFirst(npc) { return this.ev.talkFirst(npc); }
 }

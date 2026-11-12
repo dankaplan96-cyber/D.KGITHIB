@@ -348,7 +348,7 @@ export const VOICES = {
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
-const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell' };   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
+const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
 // names that are not people (signs, notes, places): no voice
 const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
   'lighthouse', 'cliffs', 'orchard', 'depot', 'station', 'fort', 'pipe', 'camp']);
@@ -371,7 +371,7 @@ const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farme
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
   'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2', 'tibbo',
   'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'kn_quill', 'kn_fisher', 'or_pell', 'or_pick2', 'ce_steward', 'ce_dancer2', 'ld_op', 'ld_crane', 'ld_load1', 'ow_mason',
-  'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zr_fennick', 'zr_rezz', 'dw_guard', 'ih_jorr', 'ih_brann', 'hs_foreman', 'hs_worker2', 'hs_worker3', 'hs_worker4']);
+  'ev_tobin', 'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zr_fennick', 'zr_rezz', 'dw_guard', 'ih_jorr', 'ih_brann', 'hs_foreman', 'hs_worker2', 'hs_worker3', 'hs_worker4']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;

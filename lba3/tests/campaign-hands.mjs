@@ -6,7 +6,8 @@
 // crank (fixture new-05); CAMPAIGN-4, chapter 4: the cutoff pulled, pushed up, pulled again, the carbon torn off (fixture
 // new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times; CAMPAIGN-5,
 // chapter 6: the winch's crank started in the green (fixture new-09-lift, the riders boarded first), the upper brake
-// (new-09-top), chapter 7: the telescope's setting lever (new-10-lit). HAND (default 0.05 m) is the limit, as
+// (new-09-top), chapter 7: the telescope's setting lever (new-10-lit); CAMPAIGN-6, chapter 8: the culvert's cock in the
+// pump room (new-11-landing; turned until it opens, a kicked-back turn measured too). HAND (default 0.05 m) is the limit, as
 // tests/no-air.mjs. Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -128,11 +129,16 @@ await start('new-10-lit');
 await ev(() => { if (game.room?.id !== 'obsv') { const d = game.rooms.hamalayi.observatory.door; P.through(d.x, d.z); } });
 take(await use('ob_set', 'game.rooms.obsv.telescope.lever.touch()', 0.6));
 await browser.close();
+// chapter 8: the culvert's cock in the pump room (looked at first, then turned until it opens: in a kick it is kicked back)
+await start('new-11-landing');
+await ev(() => { const K = game.world.pumpKiosk; P.through(K.door.x, K.door.z); P.settle(); const U = game.room?.pump; if (U) { P.use(U.culvert.x, U.culvert.z, { near: 0.9, kind: 'ev_culvert' }); P.settle(); } });
+{ let r = []; for (let k = 0; k < 4 && !(await ev(() => !!game.flags.ev_gate)); k++) r = await use('ev_cock', 'game.room.pump.culvert', 0.9); take(r); }   // (use() returns every turn so far)
+await browser.close();
 
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set'];
+const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock'];
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

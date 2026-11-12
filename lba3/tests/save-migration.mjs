@@ -5,6 +5,9 @@
 // SHAFT-CITADEL: a save on Zeelich's drill platform during The Shell comes out at the shaft's new top, Citadel's station.
 // CAMPAIGN-5: saves made on the build before wave 3 (tests/fixtures/campaign base-09, base-09-trip1, base-10-scope) load
 // without an error; the line's thread is on only where its steps are still ahead (the trips; the telescope).
+// CAMPAIGN-6: saves made on the build before wave 4 (base-11 chapter 8 at its start, base-11-town with the town's shelters
+// open, base-11-relay with Zoé's run behind it) load without an error; the lane's thread is on only where the relay is
+// still ahead, and the arrival counts as seen once he has been home.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -27,6 +30,7 @@ async function run(name, save) {
     const st = game.world.station, h = game.hero;
     return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80),
       ps: [!!game.flags.ps_v, !!game.flags.ob_v, !!game.regions?.built('hamalayi')?.line?.active],
+      ev: [!!game.flags.ev_v, !!game.flags.ev_cart, game.world.laneGate ? game.world.laneGate.gate.open : null],
       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
   results.push([name, r, errs.length ? errs : 'no errors']);
@@ -57,8 +61,14 @@ await run('v5 shell, in Zeelich\'s street', { ...v5, room: 'zeelich', hero: { ..
 await run('wave-3 base: chapter 6 at the landing', fixture('base-09'));
 await run('wave-3 base: chapter 6 between the trips', fixture('base-09-trip1'));
 await run('wave-3 base: chapter 7 with the telescope turned', fixture('base-10-scope'));
+await run('wave-4 base: chapter 8 at its start', fixture('base-11'));
+await run('wave-4 base: chapter 8, the town in its shelters', fixture('base-11-town'));
+await run('wave-4 base: chapter 8, Zoé\'s run behind it', fixture('base-11-relay'));
 for (const r of results) console.log(JSON.stringify(r));
-const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se]] = results;
+const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re]] = results;
+check('a chapter-8 save from before wave 4, at its start, loads without an error; the lane is ahead, so its thread is on and the arrival plays (the cart at the shut gate)', ['play', 'dialog', 'cutscene'].includes(g8.state) && g8.cur === 'evacuation' && g8.ev[0] && g8.ev[2] === false && g8e === 'no errors', [g8, g8e]);
+check('a chapter-8 save from before wave 4, the town in its shelters, loads without an error; the thread is on, the arrival counts as seen (he has been home)', ['play', 'dialog'].includes(g8t.state) && g8t.cur === 'evacuation' && g8t.ev[0] && g8t.ev[1] && g8t.ev[2] === false && g8te === 'no errors', [g8t, g8te]);
+check('a chapter-8 save from before wave 4, Zoé\'s run behind it, loads without an error; the lane counts as done (no thread, the gate open)', ['play', 'dialog'].includes(g8r.state) && g8r.cur === 'evacuation' && !g8r.ev[0] && g8r.ev[2] === true && g8re === 'no errors', [g8r, g8re]);
 check('a chapter-6 save from before wave 3, at the landing, loads into play without an error; the trips are ahead, so the line\'s thread is on', ['play', 'dialog'].includes(f6.state) && f6.cur === 'pass' && f6.ps[0] && f6e === 'no errors', [f6, f6e]);
 check('a chapter-6 save from before wave 3, between the trips, loads without an error; the line\'s steps count as done (no thread, the line still)', ['play', 'dialog'].includes(f6t.state) && f6t.cur === 'pass' && !f6t.ps[0] && !f6t.ps[2] && f6te === 'no errors', [f6t, f6te]);
 check('a chapter-7 save from before wave 3, the telescope turned, loads without an error; the fourth setting counts as done (no thread)', ['play', 'dialog'].includes(f7s.state) && f7s.cur === 'observatory' && !f7s.ps[1] && f7se === 'no errors', [f7s, f7se]);

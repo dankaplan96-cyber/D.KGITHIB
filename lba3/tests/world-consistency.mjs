@@ -46,6 +46,7 @@ const TRANSITIONS = [
   ['evacuation.js', 'interact', 'film:crossByShip', 'chapter 8 → 9: Citadel → Zeelich by a project ship'],
   ['evacuation.js', 'startZoe', 'same', "chapter 8: Zoé's part, on Citadel"],
   ['evacuation.js', 'endZoe', 'same', "chapter 8: back to Twinsen at the station's control room, on Citadel"],
+  ['evacuation.js', 'backToTwinsen', 'same', "chapter 8 (CAMPAIGN-6): Zoé's part over at the lane's landing, back to Twinsen beside her, on Citadel"],
   ['isleslife.js', 'ride', 'same', "ISLES-BAR: Mosquibee's honey hoist, the meadow to its ledge (the same island)"],
   ['islands.js', 'board', 'film:travelTo', "a terminal's counter: out through the gate under the black, then the travel's journey film from the pad"],
   // (GLIDER-FILM, 5.11, split fly: fly plays the glider's film (storyJourney) and then calls flyTo, whose scene change

@@ -189,6 +189,42 @@ export function buildPumpRoom(scene, physics) {
   k.add(cyl(0.025, 0.03, 1.08, 6), brass, PX + 0.42, 0.76, PZ2 + 0.4);
   k.add(rbox(0.22, 0.16, 0.14, 0.02), MAT.wood('dark'), PX + 0.42, 1.36, PZ2 + 0.4);
   const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.42), MAT.map(stripTex())); strip.position.set(PX + 0.42, 1.1, PZ2 + 0.48); strip.rotation.x = -0.1; B.group.add(strip);
+  // ---- CAMPAIGN-6 (story/laneline.js): the culvert under the lane's mouth drains up here. Its cast-iron pipe climbs out of a
+  // grated sump in the floor and drops into the copper pipe from above; a cock of its own on the riser (the third pipe's
+  // cock). Shut, the culvert keeps its water; open, the project's pull on the copper pipe draws it off toward the fortress.
+  const CV = { x: 1.9, z: PZ + 0.28, top: 1.36 }, SUMP = { x: 1.9, z: BZ + 1.12 };
+  const ciron = MAT.paint('#3a3f45', 0.7);
+  k.add(cyl(0.08, 0.08, CV.top, 10), ciron, CV.x, CV.top / 2, CV.z);
+  k.add(sphere(0.1, 10, 8), ciron, CV.x, CV.top, CV.z);
+  k.add(cyl(0.08, 0.08, CV.z - PZ, 10), ciron, CV.x, CV.top, (CV.z + PZ) / 2, 0, { rx: Math.PI / 2 });
+  k.add(cyl(0.08, 0.08, CV.top - CU.y, 10), ciron, CV.x, (CV.top + CU.y) / 2, PZ);
+  k.add(rbox(0.22, 0.12, 0.22, 0.02), brass, CV.x, CU.y + 0.02, PZ);                  // (the collar where it meets the copper)
+  k.add(rbox(0.26, 0.26, 0.26, 0.04), brass, CV.x, 1.2, CV.z);                        // the cock's body
+  k.add(plane(0.34, 0.12), MAT.map(signTex(['CULVERT'], { bg: '#3a3f45', ink: '#e8e4d4', w: 256, h: 90, size: 46 })), CV.x, 0.62, CV.z + 0.085);
+  B.ccol(CV.x, CV.z, 0.14, 1.4, { noStand: true });
+  // the sump: a stone kerb and an iron grate flush with the floor; the culvert's water under the bars when it is full
+  k.add(rbox(0.86, 0.04, 0.86, 0.01), MAT.stone('slate', 1.2), SUMP.x, 0.02, SUMP.z);
+  k.add(plane(0.66, 0.66), MAT.flat('#101418', 1), SUMP.x, 0.043, SUMP.z, 0, { rx: -Math.PI / 2 });
+  for (let i = 0; i < 7; i++) k.add(rbox(0.025, 0.03, 0.66, 0.005), iron, SUMP.x - 0.3 + i * 0.1, 0.055, SUMP.z);
+  const sumpWater = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.64), new THREE.MeshStandardMaterial({ color: '#5f93ad', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.85 }));
+  sumpWater.rotation.x = -Math.PI / 2; sumpWater.position.set(SUMP.x, 0.048, SUMP.z); sumpWater.visible = false; B.group.add(sumpWater);
+  const cvPiv = new THREE.Group(); cvPiv.position.set(CV.x, 1.2, CV.z + 0.16); B.group.add(cvPiv);
+  { const bar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.05), MAT.paint('#b8302a', 0.4)); bar.position.x = 0.19; bar.castShadow = true; cvPiv.add(bar);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 10), iron); hub.rotation.x = Math.PI / 2; cvPiv.add(hub); }
+  let cvJolt = 0, cvOpen = false, sumpLv = 0, sumpDir = 0;
+  const culvert = {
+    ...touch(B.cx + CV.x + 0.15, B.cz + CV.z + 0.21, Math.PI, 'tinker'),
+    look: { ...wpt(SUMP.x, SUMP.z), front: wpt(SUMP.x, SUMP.z + 0.9) },
+    get open() { return cvOpen; },
+    // (shut: across the pipe; open: along it, pointing down)
+    set(b) { cvOpen = !!b; cvPiv.rotation.z = b ? -Math.PI / 2 : 0; },
+    // the copper pipe kicks the handle back out of the hand: it swings part way and slams shut
+    jolt() { cvJolt = 0.45; },
+    // the water in the sump: full (b) or drained, at once or over ~2 s
+    setFull(b, instant = false) { if (instant) { sumpLv = b ? 1 : 0; sumpDir = 0; } else sumpDir = b ? 1 : -1; },
+    get full() { return sumpLv > 0.5; },
+  };
+
   B.light('#ffe8c0', 4.5, 11, -2.6, 2.9, -0.4);
   B.light('#ffd8a0', 3.2, 7, 4.4, 2.8, -1.6);
 
@@ -206,13 +242,22 @@ export function buildPumpRoom(scene, physics) {
     shake(which, t = 0.6) { shakes[which] = Math.max(shakes[which], t); },
     kick() { kickT = 0; },
     bypass: false, beat: 0,
+    // CAMPAIGN-6: the culvert's pipe and its cock (above); surge: the copper pipe kicks in threes whatever the bypass
+    // (chapter 8: every watt to the bore); kicking(): inside a kick now (the three beats and a little after them)
+    culvert, sumpAt: wpt(SUMP.x, SUMP.z), surge: false,
+    phase() { const G = globalThis.game; return G ? G.time % 2.4 : 0; },
+    kicking() { return R.pump.phase() < 0.9; },
   };
   const strip_ = (b) => { strip.visible = !!b; };
   // the copper pipe shivers three beats and rests while it takes the lane's water; shut off, only the gauge kicks
   R.updaters.push((dt) => {
     const G = globalThis.game; if (!G || G.room !== R) return;
     const U = R.pump, tt = G.time, ph = tt % 2.4, beat = ph < 0.75 ? Math.floor(ph / 0.25) : -1, on = beat >= 0 && ph % 0.25 < 0.12;
-    if (beat !== U.beat) { U.beat = beat; if (beat >= 0) { if (!U.bypass) { shakes.copper = 0.16; G.audio.play('rattle', U.copperAt(G.hero.pos.x)); } else { kickT = 0; G.audio.play('tick', U.gauge); } } }
+    if (beat !== U.beat) { U.beat = beat; if (beat >= 0) { if (!U.bypass || U.surge) { shakes.copper = 0.16; G.audio.play('rattle', U.copperAt(G.hero.pos.x)); } if (U.bypass) { kickT = 0; G.audio.play('tick', U.gauge); } } }
+    // (CAMPAIGN-6: the culvert's cock kicked back; the sump's water going down)
+    if (cvJolt > 0) { cvJolt = Math.max(0, cvJolt - dt); cvPiv.rotation.z = cvOpen ? -Math.PI / 2 : -Math.sin((cvJolt / 0.45) * Math.PI) * 0.7; }
+    if (sumpDir) { sumpLv = Math.min(1, Math.max(0, sumpLv + sumpDir * dt / 2.0)); if (sumpLv === 0 || sumpLv === 1) sumpDir = 0; }
+    sumpWater.visible = sumpLv > 0.02; sumpWater.position.y = 0.012 + 0.036 * sumpLv;
     const sc = shakes.copper; if (sc > 0) shakes.copper = Math.max(0, sc - dt);
     copper.position.y = sc > 0 ? Math.sin(tt * 90) * 0.012 : 0; copper.position.z = sc > 0 ? Math.cos(tt * 77) * 0.008 : 0;
     const sl = shakes.lower; if (sl > 0) shakes.lower = Math.max(0, sl - dt); lowerRun.position.y = LO.y + (sl > 0 ? Math.sin(tt * 80) * 0.01 : 0);
