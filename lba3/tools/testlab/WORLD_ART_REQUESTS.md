@@ -4678,3 +4678,16 @@ CLOUD_ORDERS 40 item 3, the cloud's answer (b): the openable containers only. **
 - **For the cloud (a one-line test fix, not sent as a diff):** `tests/containers.mjs:252` loads the harness with
   `new URL('./lib/player.js', import.meta.url).pathname`, which on Windows is `/C:/…` and becomes `C:\C:\…`.
   `fileURLToPath(new URL(…))` (as `camcitadel.mjs` does) lets the suite finish on the desktop.
+
+## TWINSEN-ORIG · Twinsen's head and hair as the user chose them (replaces TWINSEN-LOOK-38's) · the desktop, 12.11.2026
+**Ready for the cloud: `requests/TWINSEN-ORIG.diff` + `TWINSEN-ORIG/twinsen.json`** (`tools/blender/twinsen_poly.py`; applies on
+the branch as it is). The user, after many tries on 12.11: the shipped knot "looks like an undefined pipe", the head
+"distorted"; the version kept was marked by the user ("the best, but without the band") and confirmed ("the head version now
+is excellent, leave it like this"; "yes").
+- **Head:** smoothed on LBA2's sections, not stretched, not narrowed; one smooth arc above the brow to a round apex.
+- **Hair:** LBA2's three flat-shaded balls at their measured places. **No band.** The face (eyes, nose, brows) stays.
+- 4336 triangles (+10.6 % on the shipped 3920); floating.py OK; `TW_LOOK_38=1` and `TW_LOOK_OLD=1 TW_LEGS_OLD=1` rebuild the
+  shipped and the pre-38 models identically.
+- Tests: solidnpc, chapter1, cast-rounds, story-journeys PASS; prologue's intermittent "well's mites" check failed on both the
+  unchanged branch and this one in alternating runs, and passed on both: not this change. Pictures `docs/future/characters/
+  twinsen/look-38/twinsen-orig-*.jpg` (chapter 1, the user saw them).
