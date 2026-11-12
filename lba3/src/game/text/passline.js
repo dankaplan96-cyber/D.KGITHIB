@@ -31,7 +31,7 @@ Object.assign(STR.en, {
   ps_j_line: 'The lift\'s line kicks like the kitchen wall: three and a rest. I winched Lhar up in the quiet between kicks, then locked the old upper brake so the rest could come up without counting.',
 
   // ------------------------------------------------------------ chapter 7: the fourth setting
-  ob_snow: '(The snow fields shake. Powder jumps off them in threes, in a line down the mountain.)',
+  ob_snow: '(The snow shakes under my feet. Powder jumps off it in threes, in a line down the mountain.)',
   ob_keeper_4: 'Before the glacier, my fourth setting. It follows the snow fields when they shake. They have shaken in threes since the melt.',
   ob_keeper_wait: 'Setting four. The lever on the mount.',
   ob_follow: '(It jerked three times, rested, jerked three more... and stopped. Pointing down.)',

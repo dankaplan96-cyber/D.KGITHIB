@@ -81,7 +81,10 @@ export function buildWinchLine({ group, col, W, H, kit, updaters, lift, winch, t
   { const a = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.06, 0.58), ironM); a.position.set(0, 0, 0.27); crankP.add(a);
     const g = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.2, 8), dark); g.rotation.z = Math.PI / 2; g.position.set(0.1, 0, 0.55); crankP.add(g);
     mergeStatic(crankP, { recolor: true, retex: true }); }
-  const crank = { t: null, rest: -0.12 };
+  // (its rest: the grip at the hand's height of a man standing at it, on the ground there — a little below the winch's
+  //  boards: the arm tips down to meet him; 'tinker' holds the hand 1.17–1.26 m up)
+  const crank = { t: null, rest: 0 };
+  for (let k = 0; k < 3; k++) { const gz = wz + Math.cos(crank.rest) * 0.55, dy = H(CX + 0.12 - 0.38, gz + 0.55) + 1.2 - CY; crank.rest = -Math.asin(Math.max(-0.9, Math.min(0.9, dy / 0.55))); }
   crankP.rotation.x = crank.rest;
   // the grip where it rests: in the hand of a man facing the drum's end from in front (−z), a 'tinker' reach
   const grip = () => { const y = Math.sin(-crank.rest) * 0.55, z = Math.cos(crank.rest) * 0.55; void y; return W(CX + 0.12, wz + z); };
@@ -110,11 +113,12 @@ export function buildWinchLine({ group, col, W, H, kit, updaters, lift, winch, t
   { const d = new THREE.Vector3(lift.x - 0.4 - B0.x, lift.y1 + 3.6 - by - 0.9, top.z + 1.2 - B0.z), len = d.length();
     kit.add(new THREE.CylinderGeometry(0.02, 0.02, len, 5).translate(0, len / 2, 0).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize())), ironM, B0.x, by + 0.9, B0.z); }
   col({ type: 'box', x: B0.x, z: B0.z, hw: 0.2, hd: 0.2, top: by + 1.0, noStand: true });
-  const brakeP = new THREE.Group(); brakeP.position.set(B0.x - 0.18, by + 0.8, B0.z); D.add(brakeP);
+  // (the lever on the stand's side toward the ramp (+z): he comes up from the platform and stands at it facing −z)
+  const brakeP = new THREE.Group(); brakeP.position.set(B0.x, by + 0.8, B0.z + 0.18); D.add(brakeP);
   { const l = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.42, 0.05), ironM); l.position.y = 0.21; brakeP.add(l);
     const k = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), new THREE.MeshStandardMaterial({ color: '#c8302a', roughness: 0.45 })); k.position.y = 0.42; brakeP.add(k);
     mergeStatic(brakeP, { recolor: true, retex: true }); }
-  const OFF = 0.0, ON = -1.05;   // (about x: up = off; pulled toward him (−z), down = locked)
+  const OFF = 0.0, ON = 1.05;   // (about x: up = off; pulled toward him (+z), down = locked)
   const knob = () => ({ x: brakeP.position.x, y: brakeP.position.y + Math.cos(brakeP.rotation.x) * 0.42, z: brakeP.position.z + Math.sin(brakeP.rotation.x) * 0.42 });
 
   // ---- the clock and what a kick does
@@ -126,11 +130,11 @@ export function buildWinchLine({ group, col, W, H, kit, updaters, lift, winch, t
     green() { const p = this.phase(); return p >= P.surge && p <= greenEnd; },
     sync(t) { st.t = t; st.k = P.kicks.findIndex((k) => k > t); if (st.k < 0) st.k = P.kicks.length; st.rested = t >= P.surge; },
     gauge: { ...W(G0.x, G0.z + 0.95), y: GY, look: W(G0.x, G0.z) },
-    crank: { touch() { const p = grip(); return touch(p.x, p.z, Math.PI, 'tinker'); }, kick() { crank.t = 0; } },
+    crank: { mesh: crankP, touch() { const p = grip(); return touch(p.x, p.z, Math.PI, 'tinker'); }, kick() { crank.t = 0; } },
     brake: {
-      on: false, ...W(B0.x, B0.z),
+      on: false, ...W(B0.x, B0.z), mesh: brakeP,
       set(b) { this.on = !!b; brakeP.rotation.x = b ? ON : OFF; },
-      touch() { const k = knob(), p = W(k.x, k.z); return touch(p.x, p.z, 0, 'tinker'); },
+      touch() { const k = knob(), p = W(k.x, k.z); return touch(p.x, p.z, Math.PI, 'tinker'); },
     },
     // (for the tests: how far the lamps swing now, where the gauge's needle stands 0..1)
     swing() { return lamps.reduce((m, l) => Math.max(m, Math.abs(l.a) + Math.abs(l.b)), 0); },

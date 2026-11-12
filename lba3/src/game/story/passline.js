@@ -55,7 +55,7 @@ export class PassThread {
   begin7() { this.f.ob_v = 1; }
   applyFlags() {
     const f = this.f;
-    this.endRun(); this.boarded = 0; this.busy = false; this.later = []; this.follow = null; this.followed = !!f.ob_follow;
+    this.endRun(); this.boarded = 0; this.busy = false; this.later = []; this.follow = null; this.followed = !!f.ob_follow; this.snowAt = null;
     // a save from before with the step still ahead of it: the thread is on
     if (this.key === 'pass' && !f.ps_v && !f.c6_trip1 && !f.c6_done) f.ps_v = 1;
     if (this.key === 'observatory' && !f.ob_v && !f.c7_scope && !f.c7_done) f.ob_v = 1;
@@ -87,8 +87,16 @@ export class PassThread {
     if (near < 45) { g.audio.play('pipeKnock', w); if (i === 0) g.audio.play('rattle', M.lift.pad); }
     if (near < 9 && g.state === 'play') g.camRig.shake(0.02);
     if (this.key === 'observatory') {
-      // (a line from the peak down toward the project's heat station, the kicks marching down it: seen from the yard)
-      const A = M.observatory, B = M.heatPost, k = 0.55 + 0.15 * i, x = A.x + (B.x - A.x) * k, z = A.z + (B.z - A.z) * k;
+      // (out of the yard the first time: the snow beside him jumps in a line down the mountain, kick by kick; then he says so)
+      const A = M.observatory, B = M.heatPost, dl = Math.hypot(B.x - A.x, B.z - A.z), ux = (B.x - A.x) / dl, uz = (B.z - A.z) / dl;
+      if (this.snowAt) {
+        const S = this.snowAt, sx = S.x + uz * 3 + ux * (1.5 + 3 * i), sz = S.z - ux * 3 + uz * (1.5 + 3 * i), sy = g.physics.groundAt(sx, sz, h.pos.y + 3);
+        g.particles.burst(sx, sy + 0.25, sz, '#f4f8ff', 22, 2.8); g.particles.burst(sx + ux * 0.6, sy + 0.25, sz + uz * 0.6, '#e6eef8', 12, 1.9);
+        g.audio.play('pipeKnock', { x: sx, z: sz });
+        if (i === 2) { this.snowAt = null; this.f.ob_snow = true; this.ch.chain([['hero', 'ob_snow']], () => g.save(false)); }
+      }
+      // (and every kick: a line from the peak down toward the project's heat station, the kicks marching down it)
+      const k = 0.55 + 0.15 * i, x = A.x + (B.x - A.x) * k, z = A.z + (B.z - A.z) * k;
       if (Math.hypot(h.pos.x - x, h.pos.z - z) < 90) {
         const y = g.physics.groundAt(x, z);
         g.particles.burst(x, y + 0.3, z, '#f4f8ff', 18, 2.6);
@@ -97,14 +105,22 @@ export class PassThread {
       }
     }
   }
-  // the lines a step of the chapter says while the line kicks, and the kick timed to them (pass.js: the winch thawed;
-  // observatory.js: the chapter's start in the yard): the line's clock put just before a kick as the line shows
+  // the line a step of the chapter says while the line kicks, and the kick timed to it (pass.js: the winch thawed): the
+  // line's clock put just before a kick as the line shows
   seenLines(flag, key) {
     if (this.f[flag] || !(this.key === 'pass' ? this.on6 : this.on7)) return [];
     this.f[flag] = true;
     return [['hero', key]];
   }
-  cue(id, key) { if (id === 'hero' && (key === 'ps_lamps' || key === 'ob_snow')) this.L?.sync(this.L.period - 0.35); }
+  cue(id, key) { if (id === 'hero' && key === 'ps_lamps') this.L?.sync(this.L.period - 0.35); }
+  // chapter 7: out of the monastery's yard the first time (12 to 25 m from it, on his way to the ridge), the line kicks at
+  // once, beside him (kicked)
+  snowWalk() {
+    const g = this.game, f = this.f, M = this.M, h = g.hero, L = this.L;
+    if (this.key !== 'observatory' || !this.on7 || f.ob_snow || f.c7_scope || this.snowAt || !M || !L || !this.inM() || g.state !== 'play' || g.trans) return;
+    const y = M.monastery.yard, d = Math.hypot(h.pos.x - y.x, h.pos.z - y.z);
+    if (d > 12 && d < 25) { this.snowAt = { x: h.pos.x, z: h.pos.z }; L.sync(L.period - 0.3); }
+  }
   // the quiet: the pawl drops back with a click (the cue to start)
   rested() {
     const g = this.game, M = this.M, h = g.hero;
@@ -373,5 +389,6 @@ export class PassThread {
     const L = this.L;
     if (L && !L.onKick) this.push();
     if (L) { const want = this.pulse(); if (L.active !== want) L.active = want; }
+    this.snowWalk();
   }
 }

@@ -59,9 +59,7 @@ export class Observatory extends ChapterBase {
     g.enterRoom('hamalayi', { x: M.monastery.yard.x, z: M.monastery.yard.z + 2, a: Math.PI }, true);
     this.ps.begin7();   // (CAMPAIGN-5: a game that reaches chapter 7 now has the fourth setting ahead)
     this.story.refreshCast({ walk: true });
-    // (CAMPAIGN-5: and down the mountain the snow fields shake as he looks)
-    const more = this.ps.seenLines('ob_snow', 'ob_snow');
-    this.chain([['narrator', 'c7_narr'], ['yorna', 'c7_yorna_1'], ...more], () => { this.f.c7_started = true; g.updateObjective(); g.save(false); }, (i) => { if (i === 2) this.ps.cue('hero', 'ob_snow'); });
+    this.chain([['narrator', 'c7_narr'], ['yorna', 'c7_yorna_1']], () => { this.f.c7_started = true; g.updateObjective(); g.save(false); });
   }
   doors() {
     const M = this.game.regions.built('hamalayi');   // (a door in the Hamalayi: once it is built)
