@@ -4656,3 +4656,25 @@ The user, 12.11: **"the old computer was sold"**. What follows for the plan:
   Low holds 60 fps but for one hitch). For the cloud: (1) Medium's interior runs at 47 fps there (GPU 19 ms); (2) **a
   single 1,583 ms frame on the street in the fixed Low run**, one 1,566 ms `setTimeout` callback 1.6 s after the preset
   changed to Low: a player picking Low in the settings may meet it once. Not investigated (the preset change's code).
+
+## QUEUE-9-CONTAINERS · the openable containers read as openable: one brass cue in every region · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 3, the cloud's answer (b): the openable containers only. **Ready for the cloud:
+`requests/QUEUE-9-CONTAINERS.diff`** (`src/game/containers.js` only; applies on the branch as it is).
+- **The cue, the same everywhere:** brass. A brass boss and a ring handle on the lid's middle; a barrel's rim bound in a
+  brass band; a crate's four top corners capped and a hasp on its front; the desert trunk's lock plate. Built once
+  (`openParts`: six shapes made once and shared) in **one material of its own** (`#e9bd52`, roughness 0.38, metalness 0.2):
+  the game's metal brass (`MAT.brass`, `brassM`) read as dark brown from the play camera with nothing to reflect.
+- **Where:** Citadel's barrels and crates (props.js pieces, through the containers' Kit); Desert Island's crate, barrel
+  and trunk (`DESERT_PIECE`); Zeelich's new Esmer pieces (`newPiece`); a giver on an isle's round piece already standing
+  (a jar or barrel, `onPiece`) gets the boss and handle only (a jar's neck is narrower than its body; a crate stack's top
+  may be off its middle: left as is). Bins and luggage keep their own look.
+- **Kept:** sizes, footprints, colliders (each builder's returned `r` / `hw` / `hd` / `top` unchanged), places, the
+  lists' order, the glint.
+- **Draw calls** (Chrome on the GTX 1050, `renderer.info`, the same Citadel view at the same moment): **150 → 150**.
+  Triangles at that view 984k → 992k.
+- **Pictures:** `docs/future/props/containers/citadel-*` (chapter 1, may go to the user); `ch3plus-desert-*` (not for the
+  user). Not looked at: the isles' jars and Zeelich's new pieces (the code path is the desert's; worth a look in the cloud).
+- Tests (SwiftShader): cast-rounds 209/209, chapter1 32/32, zislands 13/13 PASS; containers 28 checks passed, 0 failed, then the script stops reading `tests/lib/player.js` at a doubled Windows path (`C:\C:\…`): **the same on the unchanged branch** (28 passed, the same stop), a Windows path in the test, not this change. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+- **For the cloud (a one-line test fix, not sent as a diff):** `tests/containers.mjs:252` loads the harness with
+  `new URL('./lib/player.js', import.meta.url).pathname`, which on Windows is `/C:/…` and becomes `C:\C:\…`.
+  `fileURLToPath(new URL(…))` (as `camcitadel.mjs` does) lets the suite finish on the desktop.
