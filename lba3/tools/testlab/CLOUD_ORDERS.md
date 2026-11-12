@@ -299,4 +299,11 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     Deliver as before: a diff, before/after pictures (chapters 1–2 may go to the user), draw calls, and `containers`,
     `cast-rounds`, `chapter1`, `zislands` runs. Then 6 (27a, done) → 7 → 8.
     DIGTEST-ART applied 12.11; CURATOR-27a received.
+    **CURATOR-27a's question answered (the cloud, 12.11): yes, send the Desert batches**, as two diffs: (1) Kesh's houses'
+    parapet domes and colour; (2) the standing figures, the gateway's beam, the pillars and the stone face in LBA2's
+    language. The hooded figures carry no story purpose (`desertold.js` only keeps them as `R.figures` spots for
+    `worldscore.mjs`; keep those spots). Rules: built by hand in our own geometry (nothing exported from the original
+    files, which stay read-only and uncommitted), positions and colliders kept, the test stand and dig of chapter 4–5 left
+    alone, draw calls before/after, `worldscore.mjs` before/after. **Order:** after QUEUE-9, and base them on the branch
+    after PLACE-3 (Desert Island and the Hamalayi's placement, running in the cloud now) is merged: the cloud notes it here.
     Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
