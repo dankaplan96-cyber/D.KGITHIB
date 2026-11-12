@@ -5,8 +5,8 @@ Zeelich's street, the nine isles and most of Citadel's dressing were not measure
 outside the Kit too, judges it with outdoor rules, and fixes what it found.
 
 Status: **Automated runtime only** (SwiftShader, a booted game, a new game's state; nobody has played these places for
-this job). Build: branch `worktree-agent-adca22f9d57adb331` from `77813b9f` (artifact v82); commits `be403ad0`, `6ae3ef10`
-and the report commit. Settings: the tests' default boot (`?nocine`, a new game, every area built with
+this job). Build: branch `worktree-agent-adca22f9d57adb331` from `77813b9f` (artifact v82); commits `be403ad0`, `6ae3ef10`,
+`e8d30f97` (the fixes) and the report's. Settings: the tests' default boot (`?nocine`, a new game, every area built with
 `regions.ensureAll`), 960 × 540.
 
 ## How it is measured (`tests/place-scan.mjs`, rerunnable)
@@ -131,6 +131,23 @@ container fixes (Otringal, High Platform) have no pictures: the measure is the e
 
 | Suite | Result | Notes |
 |---|---|---|
+| place-scan | PASS 3/3 | 135 areas, 7225 pieces (5166 outdoors outside the Kit), 324 findings all on the LEFT list (PLACE-1's 34 among them) |
+| chapter1 | PASS 32/32 | Citadel's shop crates and barrels, the harbour |
+| opening | PASS 41/41 | |
+| walkers | PASS 37/37 | the residents' routes (Kira's planter stop moved with it) |
+| townlife | PASS 64/64 | |
+| cast-rounds | PASS 209/209 | |
+| zeelich-doors | PASS 22/22 | |
+| zeelich-life | PASS 39/39 | the street's people, the plaza, the pier |
+| island-doors | PASS 89/89 | the isles' homes' doors with the seated and left-out things |
+| zislands | PASS 13/13 | the first run's page crashed (out of memory, a shared machine); rerun alone |
+| hamalayi-life | PASS 18/18 | (no Hamalayi change) |
+| work-step | PASS 10/10 | |
+| overlaps | PASS (1 functional, 25 visual) | |
+| door-sweep | PASS 5/5 | the first run crashed (out of memory); rerun alone |
+| travel | PASS 27/27 | the Zeelich shuttle board moved; the first run crashed (out of memory); rerun alone |
+| no-air | 2/3; 1 offender, not ours | `AREAS=` Zeelich and the nine isles (Citadel and the house always built), every chapter state: 2113 cases (Zeelich 291, the isles 1065, Citadel 590): 0 hands in the air and 0 feet off the ground in Zeelich and on the isles. The one offender is PLACE-1's: Garrick at Citadel's flower bed (`gar_tend`, left hand 5.7 cm), not changed here. The heat posts' and the fire's "warm" stops (hands held out to them, 13–42 cm) are printed, not judged as work |
+| containers | 40/41 | the one failure ("the house keeps its givers ... refill") fails the same on the base build `77813b9f` (run there too): Twinsen's house, not changed here; the isles' containers pass |
 
 ## Next
 
