@@ -230,6 +230,7 @@ export function* buildHamalayiSteps(scene, physics) {
   //   opts: y (absolute base), col: 'box' | 'cyl' | false, stand (may be stood on), see (camera looks over), nocheck
   const put = (area, name, x, z, ry, fn, o = {}) => {
     const k = kitOf(area), gy = o.y ?? H(x, z);
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.next = { name };   // (PLACE-3: the piece's name for tests/place-scan.mjs)
     let fp = k.at(x, gy, z, ry, () => fn(k)) || {};
     if (fp instanceof Kit) fp = {};
     const rad = footR(fp.hw != null || fp.r != null ? fp : { r: 0.3 });
@@ -329,7 +330,7 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const c of dryWall(kitOf('landing'), fold, { h: 0.95, seed: 7 })) { check('fold', c.x, c.z, 0.5); col({ type: 'box', ...c, seeThrough: true }); }
     put('landing', 'foldHay', -23.2, 79.6, 1.4, (k) => hayRack(k, { w: 1.4 }));
     put('landing', 'foldTrough', -20.2, 83.0, 0.2, (k) => trough(k, { len: 1.3, spout: false }));
-    const [wx, wz] = loc(HUT.x, HUT.z, 0.4, 2.2 + 0.42, -0.3);
+    const [wx, wz] = loc(HUT.x, HUT.z, 0.4, 2.2 + 0.62, -0.3);   // (PLACE-3: 0.2 m off the gable: its lid was in the window's shutters)
     put('landing', 'hutWood', wx, wz, 0.4 + Math.PI / 2, (k) => woodpile(k, { w: 1.6, h: 1.0 }), { nocheck: true });
     put('landing', 'hutTrough', -7.6, 83.4, 0.4, (k) => trough(k, { len: 1.6 }));
     put('landing', 'hutSledge', -15.2, 85.6, 0.9, (k) => sledge(k, { seed: 2 }), { stand: true });
@@ -457,7 +458,8 @@ export function* buildHamalayiSteps(scene, physics) {
     put('lhar', 'cart', -17.3, 2.4, 0.3 + Math.PI / 2, (k) => handCart(k, { load: 'sacks', seed: 4 }));
     put('lhar', 'sledge', -24.6, 8.6, 0.3 + 1.4, (k) => sledge(k, { seed: 1 }), { stand: true });
     put('lhar', 'sledge2', 10.6, 13.6, 2.2, (k) => sledge(k, { seed: 2, load: false }), { stand: true });
-    put('lhar', 'barrels', 3.6, -0.2, -0.2, (k) => { barrel(k, { r: 0.3, h: 0.8 }); k.at(0.62, 0, 0.1, 0.4, () => barrel(k, { r: 0.28, h: 0.75, pal: 'dark' })); k.at(0.3, 0, -0.55, 0.2, () => crate(k, 0.55)); return { hw: 0.75, hd: 0.6, top: 0.85 }; });
+    // (PLACE-3: the crate was in house 2's corner, 51 cm into it: now on the barrels' other side, the three 0.2 m off the front)
+    put('lhar', 'barrels', 3.43, 0.0, -0.2, (k) => { barrel(k, { r: 0.3, h: 0.8 }); k.at(0.62, 0, 0.1, 0.4, () => barrel(k, { r: 0.28, h: 0.75, pal: 'dark' })); k.at(-0.64, 0, 0.05, 0.2, () => crate(k, 0.55)); return { hw: 0.95, hd: 0.4, top: 0.85 }; });
     put('lhar', 'crates', -26.3, 0.3, 0.3, (k) => { crate(k, 0.6); k.at(0.05, 0.6, 0.02, 0.3, () => crate(k, 0.5, { pal: 'honey' })); k.at(0.7, 0, 0.1, -0.2, () => barrel(k, { r: 0.28, h: 0.78 })); return { hw: 0.7, hd: 0.4, top: 1.1 }; });
     // the goat pen beyond the west houses: a fence with a gate, a hay rack, a shelter roof on posts, a trough
     {
@@ -612,7 +614,7 @@ export function* buildHamalayiSteps(scene, physics) {
     wheel(k, 0.5, MAT.iron(), 0.0, 1.2, 0, { spokes: 6 });
     k.add(cyl(0.035, 0.035, 0.4, 6, 0), wd, -0.5, 1.6, 0, 0, { rz: Math.PI / 2 });
     return { r: 0.55, top: 1.7 };
-  }, { y: L3, nocheck: true });
+  }, { nocheck: true });   // (PLACE-3: on the ground there, not at L3: it stood 20 cm over the terrace's snow)
   put('lift', 'signTop', 20.5, -32.5, 0, (k) => mountainSign(k, [{ text: 'MONASTERY', a: 1.61 }, { text: 'OBSERVATORY', a: -2.82 }, { text: 'LIFT', a: 0.86 }]));
   put('lift', 'woodTop', 29.0, -27.2, Math.PI, (k) => woodpile(k, { w: 1.6, h: 0.9 }));
   put('lift', 'driftTop', 19.5, -27.8, 0.2, (k) => drift(k, 0, -0.1, 0, 3, 0.6, 1.6, 0, 2), { col: false, nocheck: true });
@@ -711,7 +713,8 @@ export function* buildHamalayiSteps(scene, physics) {
     for (const [bx, bz, a] of ob.buttresses) col({ type: 'box', x: OBS.x + bx, z: OBS.z + bz, hw: 0.36, hd: 0.62, rot: a, top: gy + 4.2, noStand: true });
     const sa = -2.09, sr = 7.3;
     stoneHouse('obs', OBS.x + Math.sin(sa) * sr, OBS.z + Math.cos(sa) * sr, sa, 3.2, 2.4, 2.2, { seed: 7, trim: TRIM.teal, doorC: TRIM.blue, chimney: false, door: 0.5 });
-    put('obs', 'obsSupplies', OBS.x - 5.4, OBS.z + 2.8, -1.1, (k) => { crate(k, 0.6); k.at(0.7, 0, 0.05, 0.3, () => barrel(k, { r: 0.3, h: 0.8 })); k.at(0.1, 0.6, 0.0, -0.2, () => crate(k, 0.45, { pal: 'honey' })); return { hw: 0.75, hd: 0.4, top: 1.1 }; });
+    put('obs', 'obsSupplies', OBS.x - 5.68, OBS.z + 2.95, -1.1,   // (PLACE-3: 0.3 m out: the crate was against the plinth's batter)
+      (k) => { crate(k, 0.6); k.at(0.7, 0, 0.05, 0.3, () => barrel(k, { r: 0.3, h: 0.8 })); k.at(0.1, 0.6, 0.0, -0.2, () => crate(k, 0.45, { pal: 'honey' })); return { hw: 0.75, hd: 0.4, top: 1.1 }; });
     put('obs', 'signObs', -2.3, -66.8, 0, (k) => mountainSign(k, [{ text: 'OBSERVATORY', a: -1.5 }, { text: 'MONASTERY', a: 0.66 }]));
   }
   R.observatory = { ...W(OBS.x, OBS.z), door: W(OBS.x, OBS.z + 6.0) };

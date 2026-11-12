@@ -17,6 +17,9 @@
 // instances left in the scene, grouped into pieces by their maker) and judges them with outdoor rules
 // (placejudge.mjs judgeOut: inside, building walls, float/sunk against the ground, doors, stairs, walkways, paths,
 // benches, signs, wall-type pieces). docs/lba-maturity/PLACE-2.md has the outdoor list.
+// PLACE-3 (docs/lba-maturity/PLACE-3.md) swept the Desert and the Hamalayi; the Hamalayi's put() names its pieces, and the
+// Kit's buildings outdoors (a house's frames, the observatory's windows, the monastery's gate, walls' copings, snow
+// drifts) are fixtures, as outside the Kit. SHOTS works for pieces built outside the Kit; VIEWS for regions.
 // Run: BOOT_TIMEOUT=900000 GAME_URL=http://localhost:8123/ node tests/place-scan.mjs   (~3 min). Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import { judge, judgeOut } from './lib/placejudge.mjs';
@@ -57,9 +60,24 @@ const LEFT = [
   ['hamalayi', 'inside', 'custom', 'low (10 cm, outdoors): a market piece touching the stall', [4337.17, -34]],
   // not measurable here: the round room's glazing parts are arcs, their boxes reach into the room (the cabinet's back is
   // at 2.68 m from the middle, the glass at 2.9–3.0 m; looked at: it stands before the glazing)
-  // PLACE-2, outdoors (docs/lba-maturity/PLACE-2.md): the areas a campaign wave is changing, measured, not changed
-  ['desert', '*', '*', 'after the campaign wave: the Desert dig, the test stand and Kesh\'s pump and heat-line places are being changed (PLACE-1 "Not in this job")'],
-  ['hamalayi', '*', '*', 'after campaign wave 3: Lhar, the pass and the observatory (chapters 6–7) are being changed'],
+  // PLACE-3, outdoors (docs/lba-maturity/PLACE-3.md): the Desert and the Hamalayi after the campaign waves
+  ['desert', 'float', 'tent', 'not a standing piece: a tent\'s guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)'],
+  ['desert', 'inside', 'lantern', 'by design (5 cm): a lantern hung from its post\'s arm (desertdress.js lanternPost)'],
+  ['desert', 'inside', 'wheel', 'by design: the sand-yacht\'s wheels in their forks, under its axle and bowsprit (one vehicle, desert.js)'],
+  ['desert', 'inside', 'windsock', 'by design: the glider field\'s sock on its mast'],
+  ['hamalayi', 'inside', 'windsock', 'by design: the glider field\'s sock on its mast'],
+  ['hamalayi', 'inside', 'barrel', 'low (5 cm): the two barrels by house 2 touching', [4304.02, 0.22]],
+  ['hamalayi', 'float', 'crate', 'low: a stack\'s top crate turned on the one under it, a corner over its edge (Lhar\'s west crates, the observatory\'s supplies)'],
+  ['hamalayi', 'inside', 'winch', 'by design (chapter 6): the frozen winch in its ice (pass.js thaws it)'],
+  ['hamalayi', 'float', 'winch', 'not changed: the lift winch\'s sled 12 cm over the snow; wave 3\'s crank sits on its drum at this height (winchline.js): reported, not moved', [4326.3, -21.06]],
+  ['hamalayi', 'inside', 'freight', 'low (4 cm): the freight\'s crate against its barrel'],
+  ['hamalayi', 'inside', 'yardCrates', 'low (5 cm): the yard\'s crate against its barrel'],
+  ['hamalayi', 'inside', 'decorate', 'by design: the frozen mooring rope\'s post by the winch, the rope tied to the winch (pass.js)'],
+  ['hamalayi', 'wall', 'wheels', 'by design: the prayer wheels\' roof against the monastery hall\'s front (a lean-to row)'],
+  ['hamalayi', 'float', 'wheels', 'not measurable: the prayer wheels stand on the yard\'s paving, which is not recorded as ground (looked at: on the paving)'],
+  ['hamalayi', 'wall', 'barrel', 'not measurable: the observatory\'s round wall, its parts arcs whose boxes reach out; the barrel stands 0.5 m off its plinth', [4280.59, -68.4]],
+  ['hamalayi', 'sunk', 'foldHay', 'low (9 cm): the fold\'s hay rack in the snow'],
+  ['hamalayi', 'sunk', 'custom', 'by design: LBA1\'s old gate set on the lowest ground under its posts (hamalayi.js place), its foot in the snow', [4294.5, 58]],
   // Citadel (chapters 1–2)
   ['citadel', 'inside', 'buildTownLife', 'by design: Nell\'s lean-to, the bench under its roof against its back wall (one structure, two builders)', [-102.8, 34.32]],
   ['citadel', 'inside', 'barrels', 'low (4 cm): the station\'s barrels, the lying one against a standing one', [-38.35, -60.4]],
@@ -149,13 +167,15 @@ if (process.env.VIEWS) {
   const views = JSON.parse(fs.readFileSync(process.env.VIEWS)), dir = process.env.SHOTS || '.'; fs.mkdirSync(dir, { recursive: true });
   await page.evaluate(async () => { await PLACE.init(); const G = game; for (let i = 0; i < 200 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } });
   for (const v of views) {
-    const ok = await page.evaluate(([v]) => { const G = game, R = v.room === 'citadel' ? null : G.regions.ensure(v.room, 'test'); const c = R ? [R.center.x, R.center.z] : [0, 0];
+    const ok = await page.evaluate(([v]) => { const G = game, R = v.room === 'citadel' ? null : G.regions.ensure(v.room, 'test'); const cc = R ? R.center || G.regions.centreOf(v.room) : null, c = cc ? [cc.x, cc.z] : [0, 0];   // (PLACE-3: a region keeps its centre in regions.js)
       const f = [v.focus[0] + c[0], v.focus[1] + c[1]], a = [v.at[0] + c[0], v.at[1] + c[1]]; PLACE.stage(v.room, f, a); window.__f = f; return true; }, [v]).catch((e) => String(e).slice(0, 200));
     if (ok !== true) { console.log('VIEW', v.name, 'failed', ok); continue; }
     await page.screenshot({ path: path.join(dir, v.name + '-game.jpg'), type: 'jpeg', quality: 80 });
+    // (PLACE-3: DRAWS=1 counts one frame's draw calls and triangles at the game camera's view, all passes; counts only)
+    const dc = process.env.DRAWS ? await page.evaluate(() => { const G = game, R = G.renderer.renderer; G.perf.beginFrame(); G.renderer.render(); return [R.info.render.calls + G.perf.sub, R.info.render.triangles]; }) : null;
     const url = await page.evaluate((v) => PLACE.close(window.__f, [], v.span || 4.2, v.dir || null), v);
     fs.writeFileSync(path.join(dir, v.name + '-close.jpg'), Buffer.from(url.split(',')[1], 'base64'));
-    console.log('VIEW', v.name, 'written');
+    console.log('VIEW', v.name, 'written' + (dc ? ` draws ${dc[0]} tris ${dc[1]}` : ''));
   }
   await browser.close();
   process.exit(0);
@@ -197,8 +217,10 @@ if (process.env.SHOTS) {
   for (const f of all) {
     if (FR && !FR.includes(f.frame)) continue;
     const key = f.room + '#' + f.frame; if (seen.has(key)) continue; seen.add(key);
-    const P = f.A.frames.find((q) => q.i === f.frame), Q = f.other != null ? f.A.frames.find((q) => q.i === f.other) : null;
-    const box = (fr, all, color) => { const ps = []; const kids = (x) => { ps.push(...x.parts); for (const c of all.frames.filter((c) => c.p === x.i)) kids(c); }; kids(fr); const pts = ps.flatMap((p) => p[0]); return { hull: pts, y0: Math.min(...ps.map((p) => p[1])), y1: Math.max(...ps.map((p) => p[2])), color }; };
+    // (PLACE-3: a piece built outside the Kit, outdoors, is A.out's piece i − 100000: its own hull and heights)
+    const ownP = (i) => (i >= 100000 ? f.A.out?.pieces?.find((q) => q.i === i - 100000) : null);
+    const P = ownP(f.frame) || f.A.frames.find((q) => q.i === f.frame), Q = f.other != null ? ownP(f.other) || f.A.frames.find((q) => q.i === f.other) : null;
+    const box = (fr, all, color) => { if (fr.hull) return { hull: fr.hull, y0: fr.y0, y1: fr.y1, color }; const ps = []; const kids = (x) => { ps.push(...x.parts); for (const c of all.frames.filter((c) => c.p === x.i)) kids(c); }; kids(fr); const pts = ps.flatMap((p) => p[0]); return { hull: pts, y0: Math.min(...ps.map((p) => p[1])), y1: Math.max(...ps.map((p) => p[2])), color }; };
     const outl = [box(P, f.A, 0xff2020)]; if (Q) outl.push(box(Q, f.A, 0xffd020));
     // (a box of lines round each: the hull of every part's corners)
     for (const o of outl) { const xs = o.hull.map((p) => p[0]), zs = o.hull.map((p) => p[1]); o.hull = [[Math.min(...xs), Math.min(...zs)], [Math.max(...xs), Math.min(...zs)], [Math.max(...xs), Math.max(...zs)], [Math.min(...xs), Math.max(...zs)]]; }
@@ -211,8 +233,9 @@ if (process.env.SHOTS) {
 }
 
 check(`every interior collected and judged (${Object.keys(data).length} rooms, ${pieces} pieces)`, Object.keys(data).length >= (ONLY ? ONLY.length : 100) && pieces > 0);
-// (PLACE-2: the outdoor areas measured beyond the Kit: Citadel's dressing, Zeelich's street, the nine isles)
-const OUTDOOR = ['citadel', 'zeelich', 'isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_liftdock', 'isle_orchard', 'isle_oldwatch'].filter((id) => !ONLY || ONLY.includes(id));
+// (PLACE-2: the outdoor areas measured beyond the Kit: Citadel's dressing, Zeelich's street, the nine isles; PLACE-3: the
+//  Desert and the Hamalayi)
+const OUTDOOR = ['citadel', 'zeelich', 'isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_liftdock', 'isle_orchard', 'isle_oldwatch', 'desert', 'hamalayi'].filter((id) => !ONLY || ONLY.includes(id));
 const thin = OUTDOOR.filter((id) => !(data[id]?.out?.pieces?.length >= 20));
 check(`the outdoor areas' dressing built outside the Kit measured (${outPieces} pieces; every one of ${OUTDOOR.length} areas ≥ 20)`, !thin.length, thin);
 const open_ = all.filter((f) => !f.left);

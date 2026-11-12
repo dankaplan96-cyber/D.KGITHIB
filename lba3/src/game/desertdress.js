@@ -266,12 +266,13 @@ function kit({ group, H, col, ox, oz, updaters, y0 }) {
         K.add(cyl(0.02, 0.02, 0.28, 5, 0), darkWood, qx, gy(qx, qz) + 0.1, qz, 0.5, 0, 0);
       }
     },
+    // a cable drum lying on its flange (PLACE-3: the lower flange 14 cm over the ground, nothing under it)
     spool(x, z) {
-      const y = gy(x, z);
-      for (const s of [-1, 1]) K.add(cyl(0.62, 0.62, 0.06, 14, 0), wood, x, y + 0.45 + s * 0.28, z);
-      K.add(cyl(0.3, 0.3, 0.5, 12, 0), '#222222', x, y + 0.45, z);
-      K.add(new THREE.TorusGeometry(0.4, 0.05, 5, 16), '#2a2a2a', x, y + 0.55, z, Math.PI / 2, 0, 0);
-      col({ type: 'cyl', x, z, r: 0.64, top: y + 0.9, noStand: true });
+      const y = gy(x, z) + 0.31;
+      for (const s of [-1, 1]) K.add(cyl(0.62, 0.62, 0.06, 14, 0), wood, x, y + s * 0.28, z);
+      K.add(cyl(0.3, 0.3, 0.5, 12, 0), '#222222', x, y, z);
+      K.add(new THREE.TorusGeometry(0.4, 0.05, 5, 16), '#2a2a2a', x, y + 0.1, z, Math.PI / 2, 0, 0);
+      col({ type: 'cyl', x, z, r: 0.64, top: y + 0.31, noStand: true });
     },
     drum(x, z, color) {   // a fuel or water drum with rolled rims
       const y = gy(x, z);

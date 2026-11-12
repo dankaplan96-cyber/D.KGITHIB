@@ -192,7 +192,17 @@ export function buildOldPlaces(C) {
   const lowWall = (x, z, len, ry, h = 1.2, mat = M.adobe('#e6b07e')) => { const g = H(x, z); B.add(bbox(len, h + 0.3, 0.32, 0.05, 2.2), mat, x, g + (h - 0.3) / 2, z, 0, ry, 0); B.add(bbox(len + 0.06, 0.12, 0.42, 0, 1), M.stone, x, g + h + 0.04, z, 0, ry, 0); col({ type: 'box', x, z, hw: len / 2, hd: 0.2, rot: ry, top: g + h, noStand: true, seeThrough: true }); };
   // a wooden trough on legs
   // (PURPOSES: the corral's troughs still hold water: Bram's lance fills at them, story/kit2.js waterNear)
-  const trough = (x, z, ry, len = 3.2) => { (R.troughs ||= []).push({ ...W(x, z), y: H(x, z) }); const g = H(x, z); B.add(bbox(len, 0.5, 0.8, 0.04, 1), M.plank, x, g + 0.75, z, 0, ry, 0); const f = frame(x, z, ry); for (const s of [-1, 1]) for (const t of [-1, 1]) { const [px, pz] = f(s * (len / 2 - 0.3), t * 0.3); B.add(cyl(0.05, 0.05, 0.6, 6), M.darkWood, px, g + 0.3, pz); } col({ type: 'box', x, z, hw: len / 2, hd: 0.45, rot: ry, top: g + 1.0, noStand: true, seeThrough: true }); };
+  // (PLACE-3: each leg stands on the ground under it, the box level over the highest of them less 0.15 m: on the corral's
+  //  ridges a leg's foot hung up to a metre over the sand)
+  const trough = (x, z, ry, len = 3.2) => {
+    const f = frame(x, z, ry), legs = [];
+    for (const s of [-1, 1]) for (const t of [-1, 1]) { const [px, pz] = f(s * (len / 2 - 0.3), t * 0.3); legs.push([px, pz, H(px, pz)]); }
+    const g = Math.max(H(x, z), ...legs.map((q) => q[2] - 0.15));
+    (R.troughs ||= []).push({ ...W(x, z), y: g });
+    B.add(bbox(len, 0.5, 0.8, 0.04, 1), M.plank, x, g + 0.75, z, 0, ry, 0);
+    for (const [px, pz, h] of legs) { const L = g + 0.52 - h; B.add(cyl(0.05, 0.05, L, 6), M.darkWood, px, h + L / 2 - 0.02, pz); }
+    col({ type: 'box', x, z, hw: len / 2, hd: 0.45, rot: ry, top: g + 1.0, noStand: true, seeThrough: true });
+  };
 
   // ================================================================ the School of Magic
   {
@@ -333,7 +343,8 @@ export function buildOldPlaces(C) {
     }
     fitAdd({ region: 'desert', name: 'tower s28', x: W(T.x, T.z).x, z: W(T.x, T.z).z, ry: 0, oy: gy, w: T.w, d: T.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6, openings: [{ side: 'left', kind: 'door', x0: -2.3, x1: -0.7, y0: 0, y1: 2.4 }] });
   }
-  for (const [x, z] of [[-55.7, -73.9], [-58.1, -74.1]]) { const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }
+  for (const [x, z] of [[-55.45, -73.9], [-58.1, -74.1]]) {   // (PLACE-3: the first 0.25 m east: it stood 9 cm in the planter's box)
+    const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }
   // the two standing figures on the knolls west of the village (bodies 0 and 33), looking out over the beach
   stoneFigure(-117.8, -31.9, Math.PI / 2, 5.18, M.grey);
   stoneFigure(-83.3, -31.9, Math.PI * 0.75, 5.18, M.grey);
@@ -350,7 +361,7 @@ export function buildOldPlaces(C) {
     for (const [x, z] of NS) rail(x, z, 3.24, Math.PI / 2);
     for (const [x, z] of EW) rail(x, z, 3.24, 0);
     { const g = H(45.7, -61.5); for (const s of [-1, 1]) { B.add(cyl(0.08, 0.09, 1.5, 7), M.darkWood, 45.7, g + 0.7, -61.5 + s * 1.5); } B.add(bbox(0.08, 0.08, 2.84, 0, 1), M.wood, 45.0, g + 1.0, -61.5, 0, 0, 0.35); }   // the gate, swung open
-    trough(48.1, -54.8, Math.PI / 2); trough(59.0, -53.7, Math.PI / 2); trough(49.6, -67.5, 0, 2.6);
+    trough(46.9, -54.0, 0); trough(58.8, -53.2, 0);   // (PLACE-3: along the ridges they stood across: one end of each hung 0.8–1 m over the slope) trough(49.6, -67.5, 0, 2.6);
     // the water tank on posts (body 83) and the lean-to (85–90)
     { const x = 49.4, z = -65.0, g = H(x, z); for (const [dx, dz] of [[-0.9, -1.1], [0.9, -1.1], [0.9, 1.1], [-0.9, 1.1]]) B.add(cyl(0.09, 0.1, 3.0, 6), M.darkWood, x + dx, g + 1.5, z + dz); B.add(cyl(1.1, 1.1, 1.7, 16, 1.5, false), tm('planks', { color: '#b88a5a' }), x, g + 3.85, z); for (const y of [3.2, 4.5]) B.add(new THREE.TorusGeometry(1.12, 0.04, 6, 24).rotateX(Math.PI / 2), M.iron, x, g + y, z); col({ type: 'box', x, z, hw: 1.2, hd: 1.3, top: g + 5.0, noStand: true, seeThrough: true }); }
     { const x = 60.0, z = -75.2, g = H(x, z); for (const [dx, dz] of [[-1.7, -1.0], [1.7, -1.0], [-1.7, 1.0], [1.7, 1.0]]) B.add(cyl(0.08, 0.09, 2.4, 6), M.darkWood, x + dx, g + 1.2, z + dz); B.add(bbox(4.1, 0.1, 2.6, 0, 1), M.plank, x, g + 2.42, z, 0.12, 0, 0); B.add(bbox(4.3, 2.3, 0.25, 0.05, 2.2), M.adobe('#e6b07e'), x, g + 1.15, z + 1.15); col({ type: 'box', x, z: z + 1.15, hw: 2.15, hd: 0.15, top: g + 2.3, noStand: true, seeThrough: true }); }
@@ -381,23 +392,28 @@ export function buildOldPlaces(C) {
   // Hesk's spare gear by his berth, a palm grove with its rocks on the south-west shore where the School's mesa stood,
   // barrels and sacks in the corral, jars by Kesh's south houses. Each a collider of its kind (a jar or a crate stops
   // him; a sack is stepped over).
-  const jar = (x, z, c = '#c86a3a', k = 1) => { const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm(c, 0.85), x, g, z, 0, 0, 0, k); col({ type: 'cyl', x, z, r: 0.35 * k, top: g + 0.9 * k, noStand: true, seeThrough: true }); };
-  const crate = (x, z, ry, s = 0.8) => { const g = H(x, z); B.add(bbox(s, s, s, 0, 1), M.plank, x, g + s / 2, z, 0, ry, 0); col({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: ry, top: g + s }); };
-  const barrel = (x, z) => { const g = H(x, z); B.add(cyl(0.3, 0.27, 0.86, 12, 1), M.wood, x, g + 0.43, z); for (const hy of [0.16, 0.7]) B.add(cyl(0.305, 0.305, 0.05, 12, 0), M.iron, x, g + hy, z); col({ type: 'cyl', x, z, r: 0.31, top: g + 0.88 }); };
-  const sack = (x, z, ry) => { const g = H(x, z); B.add(cached('w80d-sack', () => new THREE.SphereGeometry(0.42, 10, 7).scale(1, 0.62, 0.8)), pm('#d8c49a', 0.95), x, g + 0.24, z, 0, ry, 0); col({ type: 'cyl', x, z, r: 0.4, top: g + 0.45, seeThrough: true }); };
+  // (PLACE-3: each on the lowest ground under its footprint, not the ground at its middle: on a slope one side stood
+  //  16–65 cm in the air; rather a little sunk in the sand than floating)
+  const gLow = (x, z, r) => { let g = H(x, z); for (let k = 0; k < 8; k++) g = Math.min(g, H(x + Math.cos(k * Math.PI / 4) * r * 0.8, z + Math.sin(k * Math.PI / 4) * r * 0.8)); return g; };
+  const jar = (x, z, c = '#c86a3a', k = 1) => { const g = gLow(x, z, 0.34 * k); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm(c, 0.85), x, g, z, 0, 0, 0, k); col({ type: 'cyl', x, z, r: 0.35 * k, top: g + 0.9 * k, noStand: true, seeThrough: true }); };
+  const crate = (x, z, ry, s = 0.8) => { const g = gLow(x, z, s * 0.7); B.add(bbox(s, s, s, 0, 1), M.plank, x, g + s / 2, z, 0, ry, 0); col({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: ry, top: g + s }); };
+  const barrel = (x, z) => { const g = gLow(x, z, 0.3); B.add(cyl(0.3, 0.27, 0.86, 12, 1), M.wood, x, g + 0.43, z); for (const hy of [0.16, 0.7]) B.add(cyl(0.305, 0.305, 0.05, 12, 0), M.iron, x, g + hy, z); col({ type: 'cyl', x, z, r: 0.31, top: g + 0.88 }); };
+  const sack = (x, z, ry) => { const g = gLow(x, z, 0.4); B.add(cached('w80d-sack', () => new THREE.SphereGeometry(0.42, 10, 7).scale(1, 0.62, 0.8)), pm('#d8c49a', 0.95), x, g + 0.24, z, 0, ry, 0); col({ type: 'cyl', x, z, r: 0.4, top: g + 0.45, seeThrough: true }); };
   // S40: jars by its door and along its garden wall, a woodpile and crates in the yard
   for (const [x, z, c] of [[-40.6, -41.2, '#c86a3a'], [-40.6, -36.3, '#d8a050'], [-34.4, -44.2, '#a85030'], [-36.2, -44.3, '#c86a3a'], [-38.0, -44.4, '#d8a050']]) jar(x, z, c);
-  crate(-31.2, -41.6, 0.3); crate(-31.3, -40.6, 0.3, 0.7); barrel(-31.0, -36.8); sack(-33.0, -35.2, 0.4); sack(-33.8, -35.6, 1.2);
+  crate(-31.2, -41.6, 0.3); crate(-31.3, -40.6, 0.3, 0.7); barrel(-31.0, -36.8); sack(-33.0, -35.2, 0.4); sack(-33.85, -35.3, 1.2);   // (PLACE-3: the second 0.3 m off the house: 23 cm in its wall)
   // Hesk's berth: spare gear east of the yacht's stop (clear of its lines, the board and the poles)
-  for (const [x, z] of [[-13.2, 3.6], [-12.4, 4.3]]) barrel(x, z);
-  crate(-14.0, 2.4, 0.2); crate(-13.1, 1.6, 0.2, 0.7); sack(-11.6, 2.8, 0.9);
+  // (PLACE-3: on the ridge's gentler foot south of the sail: on its crest the crates and the barrels stood 20–65 cm over
+  //  one side)
+  for (const [x, z] of [[-14.0, 4.5], [-13.4, 5.1]]) barrel(x, z);
+  crate(-15.7, 4.3, 0.2); crate(-15.0, 5.1, 0.2, 0.7); sack(-15.6, 5.9, 0.9);
   { const g = H(-12.6, 0.2); B.add(cyl(0.22, 0.22, 3.6, 8, 1), tm('planks', { color: '#e8d8b8' }), -12.6, g + 0.25, 0.2, 0, 0, Math.PI / 2); col({ type: 'box', x: -12.6, z: 0.2, hw: 1.8, hd: 0.25, top: g + 0.45, seeThrough: true }); }   // (a rolled sail; all of it south of the track and the yacht's lines)
   // the south-west shore where the School's mesa stood: a grove of palms among rocks (the original has its trees there)
   for (const [x, z, s, ry] of [[-70.5, 38.5, 1.0, 0.4], [-66.2, 42.8, 1.1, 2.2], [-73.4, 44.6, 0.9, 1.1], [-68.0, 48.2, 1.0, 3.5], [-62.8, 38.0, 0.95, 5.0]]) C.palm(x, z, s, ry);
   // the corral: barrels and sacks by the troughs
   barrel(50.8, -56.6); barrel(51.6, -57.0); sack(47.2, -57.4, 0.3); sack(48.0, -58.1, 1.5); crate(57.4, -58.2, 0.4); crate(58.3, -58.2, 0.4, 0.7);
   // Kesh's south houses: jars at their corners (clear of their doors, the containers and the people's places)
-  for (const [x, z, c] of [[-33.0, 12.4, '#d8a050'], [-32.4, 13.2, '#c86a3a'], [-39.4, 18.2, '#a85030'], [-46.6, 19.4, '#d8a050'], [-47.4, 18.6, '#c86a3a']]) jar(x, z, c, 0.9);
+  for (const [x, z, c] of [[-33.0, 12.4, '#d8a050'], [-32.4, 13.2, '#c86a3a'], [-39.4, 18.2, '#a85030'], [-46.6, 19.4, '#d8a050'], [-47.6, 19.15, '#c86a3a']]) jar(x, z, c, 0.9);   // (PLACE-3: the last one out of the house's back wall: 41 cm in it)
 
   // PURPOSES (3.11.2026): the three old doors kept are lived in; their doors are story/purposes.js's (d.own: no "Locked.")
   const own = (id) => { const d = R.shutDoors.find((e) => e.id === id); if (d) d.own = true; return d || null; };
