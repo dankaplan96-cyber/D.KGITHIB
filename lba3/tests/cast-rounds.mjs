@@ -335,10 +335,26 @@ const still = await ev(() => {
   goTo('upper', ['clerk']); watch('chapter 9, the antechamber: the clerk at his counter', ['clerk']);
   setChapter('network', { c10_started: true, c10_pulse: true });
   goTo('workshop', ['baldino']); watch('chapter 10, the workshop (the hop-pack\'s peg by the door leaves no free spot): Baldino at his bench', ['baldino']);
-  goTo('lighttop', ['zoe']); watch('chapter 10, the lamp room (the dial bank): Zoé and Arthur', ['zoe', 'arthur']);
+  goTo('lighttop', ['zoe']); watch('chapter 10, the lamp room (the dial bank): Zoé (Arthur is at home in a game with the wave-6 thread)', ['zoe', 'arthur']);
+  // CAMPAIGN-8 (story/netline.js): the friends at the handles they took over stand there, working (their hands on it)
+  const hands = (label, ids) => { out[label + ' (anims)'] = { anims: ids.map((id) => { const n = G.npcs.find((q) => q.def.id === id); return n?.present ? n.placed?.anim ?? null : 'absent'; }) }; };
+  const NW = { c10_started: true, c10_pulse: true, nw_v: 1, nw_arthur: true };
+  setChapter('network', { ...NW });
+  goTo('house', ['arthur']); watch('chapter 10, home: Arthur by the radio', ['arthur']); hands('chapter 10, home', ['arthur']);
+  setChapter('network', { ...NW, c10_mill: true, nw_irsa: true });
+  goTo('zeelich', ['zl_irsa']); watch('chapter 10, Mill Lane: Irsa at Kell\'s feed switch', ['zl_irsa']); hands('chapter 10, Mill Lane', ['zl_irsa']);
+  setChapter('network', { ...NW, c10_miraAsk: true, c10_valveSet: { 0: true, 1: true, 2: true }, c10_valves: true, nw_gauge: true, nw_mira: true, nw_wheel: 2 });
+  goTo('valves', ['mira']); watch('chapter 10, the valve room: Mira at a wheel', ['mira']); hands('chapter 10, the valve room', ['mira']);
+  setChapter('network', { ...NW, c10_zoeAsk: true, c10_dials: [2, 0, 1], c10_light: true, nw_zoe: true });
+  goTo('lighttop', ['zoe']); watch('chapter 10, the lamp room: Zoé at the dial bank', ['zoe']); hands('chapter 10, the lamp room', ['zoe']);
+  setChapter('network', { ...NW, c10_ilka: true, c10_boreRelay: true, c10_boreW2: true, c10_guardDown: true, c10_bore: true, nw_ilka: true });
+  goTo('desert', ['ilka', 'dallan']); watch('chapter 10, the bore: Ilka at the relief wheel, Dallan at the relay', ['ilka', 'dallan']); hands('chapter 10, the bore', ['ilka', 'dallan']);
+  setChapter('network', { ...NW, c10_pim: true, c10_keeper: true, c10_domeRelay: true, c10_domeLit: true, c10_dome: true, nw_yorna: true });
+  goTo('obsv', ['yorna', 'pim']); watch('chapter 10, the dome: Yorna at the lever, Pim at a mirror', ['yorna', 'pim']); hands('chapter 10, the dome', ['yorna', 'pim']);
   return out;
 });
 for (const [label, q] of Object.entries(still)) {
+  if (q?.anims) { check(`CAMPAIGN-8 ${label}: each friend placed at work at the handle`, q.anims.every((x) => x === 'use' || x === 'tinker'), q); continue; }
   if (!q?.ids) continue;
   const ok = label.includes('archive') ? q.rounds.every((r) => r === null) : q.moved.every((d) => d < 0.01) && q.rounds.every((r) => r === null);
   check(`left out: ${label} — no round${label.includes('archive') ? '' : ', they stand on their marks'}`, q.ids.length > 0 && ok, q);

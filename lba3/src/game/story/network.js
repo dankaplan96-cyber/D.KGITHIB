@@ -16,6 +16,7 @@ import { ChapterBase } from './base.js';
 import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
 import { SHAFT_TOP } from '../island.js';
 import { storyJourney } from '../travelfilm.js';
+import { NetThread } from './netline.js';
 import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
@@ -38,6 +39,9 @@ const BAL_AT_SHAFT = { x: SHAFT_TOP.x - 1.6, z: SHAFT_TOP.z + 4.4, a: Math.atan2
 const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', desert: 'desert', condA: 'desert', condB: 'desert', hamalayi: 'hamalayi', obsv: 'hamalayi' };
 
 export class Network extends ChapterBase {
+  // CAMPAIGN-8 (wave 6): the friends seen taking their stations over, the knocking turned to four (story/netline.js)
+  get thread() { return (this.story._nw ||= new NetThread(this)); }
+  codeBoxAt() { return CODE_BOX; }
   get R() { return this.game.rooms; }
   get Z() { return this.R.zeelich; }
   get D() { return this.R.desert; }
@@ -153,6 +157,7 @@ export class Network extends ChapterBase {
     const f = this.f, R = this.R;
     if (!this.reached()) return undefined;
     if (id === 'vesk' || id === 'doran') return null;
+    { const tp = this.thread.place(id); if (tp !== undefined) return tp; }
     if (!['baldino', 'hesk', 'oku', 'mira', 'zoe', 'arthur', 'ilka', 'dallan', 'pim'].includes(id)) return undefined;
     // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
     //  yet waits for it, Story.refreshCast)
@@ -181,10 +186,11 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f;
     g.world.station?.setSealed?.(true, true);   // (SHAFT-CITADEL: still shut since chapter 3; the code below opens it)
     g.hero.swapBody?.('twinsen'); g.hero.hasBall = true; g.hero.disguised = false;
+    this.thread.begin();
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast({ walk: true });
     // (Twinsen got Baldino's test pair talking in chapter 3: he remembers it)
-    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
+    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ...(this.thread.on ? [['baldino', 'nw_bal_iso']] : []), ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
       this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
@@ -262,12 +268,13 @@ export class Network extends ChapterBase {
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const g = this.game, f = this.f, r = this.room(), h = g.hero;
-    if (!this.isCur() || !f.c10_started) return;
+    if (!this.isCur() || !f.c10_started || this.thread.busy) return;
+    this.thread.interactables(consider, dist);
     if (r === 'zeelich') {
       const mt = this.Z.millTop;
       if (f.c10_millBraked && !f.c10_mill && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.8, { kind: 'c10mill', label: 'p_relay' });
     } else if (!r) {   // (Citadel, outdoors: Baldino's code box at the shaft's collar)
-      if (this.done() >= 5 && !f.c10_done) consider(dist(CODE_BOX.x, CODE_BOX.z), 1.8, { kind: 'c10console', label: 'p_station' });
+      if (this.done() >= 5 && !f.c10_done && !this.thread.on) consider(dist(CODE_BOX.x, CODE_BOX.z), 1.8, { kind: 'c10console', label: 'p_station' });   // (CAMPAIGN-8: the joint instead, netline.js)
     } else if (r === 'valves' && f.c10_miraAsk && !f.c10_valves) {
       for (const v of this.R.valves.valves) consider(dist(v.x, v.z), 1.1, { kind: 'c10valve', valve: v, label: 'p_valve' });
     } else if (r === 'lighttop' && f.c10_zoeAsk && !f.c10_light) {
@@ -281,7 +288,8 @@ export class Network extends ChapterBase {
     }
   }
   interact(it) {
-    const g = this.game, f = this.f, h = g.hero;
+    const g = this.game, f = this.f, h = g.hero, T = this.thread;
+    if (T.interact(it)) return true;
     switch (it.kind) {
       case 'c10mill':
         h.act('use', 1.0, () => {
@@ -293,11 +301,13 @@ export class Network extends ChapterBase {
       case 'c10valve': {
         const v = it.valve;
         h.act('use', 0.6, () => {
-          v.setOpen(!v.open); (f.c10_valveSet ||= {})[v.i] = v.open; g.audio.play(v.open ? 'valve' : 'valveShut');
+          v.setOpen(!v.open); (f.c10_valveSet ||= {})[v.i] = v.open; g.audio.play(v.open ? 'valve' : 'valveShut'); T.lastValve = v.i;
           const lv = this.gaugeLevels(); this.R.valves.gauges.set(lv);
           if (lv.every((x) => x === 2)) {
             this.lightRelay('valves'); g.audio.play('shard');
-            this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
+            // (CAMPAIGN-8: he holds the wheel he turned last, and Mira takes it as he lets go)
+            if (T.on && T.f.nw_mira !== 'past') { T.busy = true; T.after(0.4, () => T.valvesDone(() => this.stationDone('valves'))); }
+            else this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
           }
         }, 0.3);
         return true;
@@ -309,12 +319,23 @@ export class Network extends ChapterBase {
           const right = f.c10_dials.filter((v, i) => v === LIGHT_CODE[i]).length;
           if (right === 3) {
             this.R.lighttop.transmitter?.setOn?.(true); this.lightRelay('light');
-            this.chain([['arthur', 'c10_ar_right'], ['arthur', 'c10_ar_mic'], ['zoe', 'c10_zoe_3']], () => this.stationDone('light'));
+            // (CAMPAIGN-8: Zoé reads the needle, Arthur says it from home, and she takes the dial bank as he lets go)
+            if (T.on && T.arthurHome()) { T.busy = true; T.after(0.35, () => T.lightDone(it.i, () => this.stationDone('light'))); }
+            else this.chain([['arthur', 'c10_ar_right'], ['arthur', 'c10_ar_mic'], ['zoe', 'c10_zoe_3']], () => this.stationDone('light'));
           } else g.hud.toast(right === 2 ? 'c10_ar_close' : 'c10_ar_wrong');
         }, 0.3);
         return true;
       }
       case 'c10bore':
+        // (CAMPAIGN-8: the relay's steam is the relief wheel; Ilka takes the wheel as the drones come)
+        if (T.on && f.nw_ilka !== 'past') {
+          T.boreRelay(() => {
+            f.c10_boreRelay = true; this.boreT = 0; this.boreWant = undefined;
+            this.story.refreshCast({ walk: true }); g.audio.play('alert');
+            this.chain([['hero', 'c10_drones']], () => { g.updateObjective(); g.save(false); });
+          });
+          return true;
+        }
         h.act('use', 1.0, () => {
           f.c10_boreRelay = true; this.lightRelay('bore'); this.boreT = 0; this.boreWant = undefined;
           this.story.refreshCast({ walk: true }); g.audio.play('alert');
@@ -322,9 +343,11 @@ export class Network extends ChapterBase {
         }, 0.5);
         return true;
       case 'c10domeRelay':
-        h.act('use', 1.0, () => { f.c10_domeRelay = true; g.audio.play('chest'); this.chain([['narrator', 'c10_relay_dome']], () => { g.updateObjective(); g.save(false); }); }, 0.5);
+        h.act('use', 1.0, () => { f.c10_domeRelay = true; g.audio.play('chest'); const nw = T.on && f.nw_yorna !== 'past'; if (nw) T.domeRelay(); this.chain([['narrator', nw ? 'nw_relay_dome' : 'c10_relay_dome']], () => { g.updateObjective(); g.save(false); }); }, 0.5);
         return true;
       case 'c10scope':
+        // (CAMPAIGN-8: the setting lever to SUNS by hand; Yorna takes it as he lets go)
+        if (T.on && f.nw_yorna !== 'past') { T.domeScope(() => this.stationDone('dome')); return true; }
         f.c10_domeLit = true; g.audio.play('door'); g.camRig.shake(0.3); this.lightRelay('dome');
         this.chain([['narrator', 'c10_scope'], ['pim', 'c10_pim_2'], ['keeper', 'c10_keeper_2']], () => this.stationDone('dome'));
         return true;
@@ -380,8 +403,10 @@ export class Network extends ChapterBase {
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.isCur()) return false;
+    if (this.thread.talkFirst(npc)) return true;
     const c = (lines, done) => { this.chain(lines, done); return true; };
     const ok = () => { this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false); };
+    const ln = (k) => this.thread.line(k);
     switch (id) {
       case 'hesk':
         if (!f.c10_started) return false;
@@ -393,7 +418,7 @@ export class Network extends ChapterBase {
         if (!f.c10_okuAsk) return c([['oku', 'c10_oku_1']], () => { f.c10_okuAsk = true; ok(); });
         return c([['oku', f.c10_mill ? 'c10_oku_2' : f.c10_millBraked ? 'c10_oku_brake' : 'c10_oku_1']]);
       case 'mira':
-        if (!f.c10_miraAsk) return c([['mira', 'c10_mira_1'], ['mira', 'c10_mira_2']], () => { f.c10_miraAsk = true; g.startTransition(() => { g.enterRoom('valves', null, true); ok(); this.chain([['narrator', 'c10_valves_in'], ['hero', 'c10_valve_hint']]); }); });
+        if (!f.c10_miraAsk) return c([['mira', 'c10_mira_1'], ['mira', 'c10_mira_2']], () => { f.c10_miraAsk = true; g.startTransition(() => { g.enterRoom('valves', null, true); ok(); if (!this.thread.valvesIn()) this.chain([['narrator', 'c10_valves_in'], ['hero', 'c10_valve_hint']]); }); });
         return c([['mira', f.c10_valves ? 'c10_mira_3' : 'c10_mira_2']]);
       case 'zoe':
         if (!f.c10_zoeAsk) return c([['zoe', 'c10_zoe_1'], ['arthur', 'c10_ar_1'], ['zoe', 'c10_zoe_2']], () => { f.c10_zoeAsk = true; ok(); });
@@ -407,8 +432,8 @@ export class Network extends ChapterBase {
         //  life back whenever he is hurt, as Yorna's broth does on the Hamalayi; not while the fight is on: wave 2 has its heart)
         const h = g.hero, hurt = h.hp < h.maxHp && !(f.c10_boreRelay && !f.c10_bore), water = hurt ? [['ilka', 'c10_ilka_water']] : [];
         if (hurt) { h.hp = h.maxHp; g.audio.play('heal'); g.hud.toast('c10_toast_water'); g.hud.stats?.(h); }
-        if (!f.c10_ilka) return c([...water, ['ilka', 'c10_ilka_1'], ['ilka', 'c10_ilka_2']], () => { f.c10_ilka = true; ok(); });
-        return c([...water, ['ilka', f.c10_bore ? 'c10_ilka_3' : 'c10_ilka_2']]);
+        if (!f.c10_ilka) return c([...water, ['ilka', 'c10_ilka_1'], ['ilka', ln('c10_ilka_2')]], () => { f.c10_ilka = true; ok(); });
+        return c([...water, ['ilka', f.c10_bore ? 'c10_ilka_3' : ln('c10_ilka_2')]]);
       }
       case 'dallan': return c([['dallan', 'c10_dallan_1']]);
       case 'yorna': case 'pim': {
@@ -416,12 +441,12 @@ export class Network extends ChapterBase {
         //  the save holds, as little as 4: Yorna's broth puts his life back whenever he is hurt, before the ridge's crawler)
         const h = g.hero, hurt = id === 'yorna' && h.hp < h.maxHp, tea = hurt ? [['yorna', 'c10_yorna_broth']] : [];
         if (hurt) { h.hp = h.maxHp; g.audio.play('heal'); g.hud.toast('c10_toast_broth'); g.hud.stats?.(h); }
-        if (!f.c10_pim) return c([...tea, ['yorna', 'c10_yorna_1'], ['pim', 'c10_pim_1'], ['yorna', 'c10_yorna_2']], () => { f.c10_pim = true; ok(); });
-        return c([...tea, [id, id === 'pim' ? 'c10_pim_2' : 'c10_yorna_2']]);
+        if (!f.c10_pim) return c([...tea, ['yorna', 'c10_yorna_1'], ['pim', 'c10_pim_1'], ['yorna', ln('c10_yorna_2')]], () => { f.c10_pim = true; ok(); });
+        return c([...tea, [id, id === 'pim' ? 'c10_pim_2' : ln('c10_yorna_2')]]);
       }
       case 'keeper':
-        if (f.c10_pim && !f.c10_keeper) return c([['keeper', 'c10_keeper_1']], () => { f.c10_keeper = true; ok(); });
-        return c([['keeper', f.c10_dome ? 'c10_keeper_2' : 'c10_keeper_1']]);
+        if (f.c10_pim && !f.c10_keeper) return c([['keeper', ln('c10_keeper_1')]], () => { f.c10_keeper = true; ok(); });
+        return c([['keeper', f.c10_dome ? 'c10_keeper_2' : ln('c10_keeper_1')]]);
     }
     return false;
   }
@@ -432,7 +457,9 @@ export class Network extends ChapterBase {
     if (this.sending) return;
     this.sending = true;
     g.audio.cue?.('revelation');
-    this.chain([['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']], () => {
+    // (CAMPAIGN-8: Baldino has said his piece at the joint; Irsa and Arthur answer too)
+    const call = this.thread.on ? [['hero', 'c10_tw_p1'], ...this.thread.rollCall(), ['baldino', 'c10_bal_p2']] : [['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']];
+    this.chain(call, () => {
       g.camRig.shake(0.8); g.audio.play('horn');
       this.game.world.station?.setSealed?.(false);   // (the blast doors over the collar draw back)
       // MAGIC-LEVELS (story/magic.js): the five stations' heat comes up the open shaft: level 4, the fire ball
@@ -482,6 +509,7 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
     if (this.landSay && g.state === 'play' && !g.trans && !g.cine) { this.landSay = false; this.chain([['hesk', 'c10_hesk_land']], () => { g.updateObjective(); g.save(false); }); }
+    this.thread.update(dt);
     if (this.room() === 'hamalayi') this.M.snow.focus = g.hero.pos;
     if (!f.c10_boreRelay || f.c10_bore) { if (this.boreWant != null) { this.boreWant = undefined; this.boreT = 0; } }
     else if (g.state === 'play') {
@@ -526,6 +554,7 @@ export class Network extends ChapterBase {
     }
     // (Baldino's code box stays on the code line while he waits at the collar: through The Shell and The Core too)
     if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
+    this.thread.push();   // (CAMPAIGN-8: the code line's joint beside it; the isolator off Kell's feed box)
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
   }
   regionBuilt() { this.showProps(); }
@@ -533,6 +562,7 @@ export class Network extends ChapterBase {
     const f = this.f, on = this.isCur();
     // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c10_pulse || this.story.index > this.pos) this.game.hero.hasPulse = true;
+    this.thread.applyFlags();
     this.showProps();
     if (!on) return;
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
@@ -551,6 +581,7 @@ export class Network extends ChapterBase {
   markers() {
     const f = this.f, g = this.game, RG = g.regions;
     if (!this.isCur() || !f.c10_started) return [];
+    { const tm = this.thread.markers(); if (tm) return tm; }
     if (this.done() >= 5) return f.c10_done ? [] : this.stars(CODE_BOX);
     const Z = RG?.built('zeelich'), D = RG?.built('desert'), M = RG?.built('hamalayi'), office = g.world?.houses?.find((h) => h.id === 'water')?.door;
     return this.stars(!f.c10_mill && Z?.millTop, !f.c10_valves && office, !f.c10_light && LIGHTHOUSE_DOOR, !f.c10_bore && D?.bore, !f.c10_dome && M?.observatory?.door);
@@ -558,21 +589,24 @@ export class Network extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c10_started) return this.goal('c10_obj_bal');
+    { const to = this.thread.objective(); if (to) return to; }
     const n = this.done();
     if (n >= 5) return this.goal('c10_obj_platform');
-    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, 'c10_sub_light') + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
+    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.thread.subIrsa() + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, 'c10_sub_light') + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
   }
   items() {
     if (!this.reached() || !this.f.c10_started) return [];
     const left = 5 - this.done();
-    return left > 0 && this.isCur() ? [{ id: 'relay', icon: 'part', n: left }] : [];
+    return [...(left > 0 && this.isCur() ? [{ id: 'relay', icon: 'part', n: left }] : []), ...this.thread.items()];
   }
   journal() {
     const f = this.f;
     return [
       { key: 'c10_j_plan', done: !!f.c10_started },
       { key: 'c10_j_fly', done: !!f.c10_started },
+      ...this.thread.journal().filter((l) => l.key !== 'nw_j_held'),
       { key: 'c10_j_all', done: !!f.c10_done },
+      ...this.thread.journal().filter((l) => l.key === 'nw_j_held'),
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

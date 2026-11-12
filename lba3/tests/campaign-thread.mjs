@@ -44,7 +44,14 @@
 //      leaving by the gallery mid-task and back in; the BORE drawer open and a Save & quit before the carbon is laid on the
 //      log; the stop at the console and a Save & quit with Mill Lane dry; the bench with one relay clipped and a Save &
 //      quit; the other relay; the isolator on Kell's feed → chapter 10, and Mill Lane after a reload there
-// ONLY=A|B|C|D|E|F|G|H|I|J|K runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
+//   L  (CAMPAIGN-8) the saves from before wave 6: base-13 chapter 10 at its start in the workshop (the thread on, nothing past:
+//      Irsa waits by Kell's feed box), base-13-cit on Citadel with the mill done (Mill Lane past; Arthur's count plays on the
+//      radio, his place at home), base-13-desert with three stations done (Mira, Zoé, Ilka past; Arthur in the lamp room)
+//   M  chapter 10's thread (CAMPAIGN-8, story/netline.js; fixtures from this wave's playthrough): Mira's reading and a Save &
+//      quit after it, the wheels and Mira's takeover; the lamp room half set and a Save & quit, the dials, Zoé's takeover;
+//      Arthur at home by the radio (a return home); Mill Lane after a reload (Irsa on the switch); the joint: a try in a
+//      knock thrown off, a Save & quit, the try in the rest after the fourth → chapter 11
+// ONLY=A|B|C|D|E|F|G|H|I|J|K|L|M runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -717,6 +724,92 @@ if (!ONLY || ONLY === 'K') {
     return [f.chapterKey, +(L.deckY - L.y0).toFixed(2), !!L.state.water, L.isoShown(), b.r];
   }), (v) => v[0] === 'network' && v[1] > 3 && v[2] && v[3] && v[4] === 'talked');
   await shot('K10-lane');
+  await browser.close();
+}
+// ------------------------------------------------------------------ L: the saves from before wave 6 (CAMPAIGN-8)
+// (a friend's takeover, a reading, a radio call: scenes in play; waited out, reading what is said)
+const NWAIT = `const G = game; for (let i = 0; i < 400 && (G.story._nw?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle();`;
+const nwWait = () => ev((c) => { new Function(c)(); }, NWAIT);
+if (!ONLY || ONLY === 'L' || ONLY === 'C') {
+  await start('base-13');
+  is('C18 a save from before, chapter 10 at its start: loads; the thread is on, nothing of it past; on Mill Lane Irsa waits by Kell\'s feed box (the isolator still on it), its prompt is to unclip it', await ev(() => {
+    const G = game, f = G.flags; const st = [f.chapterKey, f.nw_v, f.nw_irsa ?? null, f.nw_arthur ?? null, document.querySelector('#objective').textContent];
+    P.enter('zeelich', { run: true }); const L = G.rooms.zeelich.lift, n = P.npc('zl_irsa'); P.go(L.isoAt.front.x, L.isoAt.front.z, { tol: 0.4, run: true }); P.face(L.isoAt.x, L.isoAt.z);
+    return [...st, L.isoShown(), +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(1), P.target()?.kind];
+  }), (v) => v[0] === 'network' && v[1] === 1 && v[2] === null && v[3] === null && /Mill Lane/.test(v[4]) && v[5] === true && v[6] < 2 && v[7] === 'nw_unclip');
+  await browser.close();
+  await start('base-13-cit');
+  is('C19 a save from before, on Citadel with the mill done: loads; Mill Lane counts as done (he has left Zeelich); Arthur\'s count comes on the radio in play, and his place is at home by the radio', await ev(() => {
+    const G = game, f = G.flags; const st = [f.nw_v, f.nw_irsa]; for (let i = 0; i < 40 && !f.nw_arthur; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } P.settle();
+    const p = G.story.cur.thread.place('arthur'); return [...st, f.nw_arthur, p && +p.x.toFixed(0)];
+  }), (v) => v[0] === 1 && v[1] === 'past' && v[2] === true && v[3] > 990 && v[3] < 1010);
+  await browser.close();
+  await start('base-13-desert');
+  is('C20 a save from before, three stations done: loads; Mira, Zoé and Ilka count as done (past), Arthur stays with Zoé in the lamp room, no radio call; the dome is ahead', await ev(() => {
+    const G = game, f = G.flags; for (let i = 0; i < 30; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    return [f.nw_mira, f.nw_zoe, f.nw_ilka, f.nw_yorna ?? null, f.nw_arthur, G.story.cur.thread.place('arthur') ?? 'base', !!f.c10_dome];
+  }), (v) => v[0] === 'past' && v[1] === 'past' && v[2] === 'past' && v[3] === null && v[4] === 'past' && v[5] === 'base' && !v[6]);
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ M: chapter 10's thread (CAMPAIGN-8)
+if (!ONLY || ONLY === 'M') {
+  await start('new-13-cit');
+  is('M0 the save: chapter 10 on Citadel, Irsa holding Mill Lane, Arthur\'s count heard; Mira brings him down and reads the fortress gauge before a wheel is touched', await ev(() => {
+    const G = game, f = G.flags; const st = [f.nw_irsa, f.nw_arthur]; if (!P.npc('mira')?.present) P.enter('office', { run: true }); P.talk('mira', { run: true }); P.wait(1.5); P.settle();
+    return [...st, G.room?.id, !!(f.c10_valveSet && Object.values(f.c10_valveSet).some(Boolean))];
+  }), (v) => v[0] === true && v[1] === true && v[2] === 'valves' && v[3] === false);
+  await nwWait();
+  is('M1 after the reading: Mira by the board, the fortress needle kicking; Save & quit → Continue in the valve room', await ev(() => { const m = P.npc('mira'), V = game.rooms.valves; return [game.flags.nw_gauge, game.room?.id, +Math.hypot(m.pos.x - V.board.x, m.pos.z - V.board.z).toFixed(1)]; }), (v) => v[0] === true && v[1] === 'valves' && v[2] < 2.5);
+  await shot('M1-gauge');
+  await handover();
+  is('M2 after Continue: still read (no second reading); the wheels set by hand: he holds the last, Mira takes it as he lets go (her hands on it)', await ev(() => {
+    const G = game, f = G.flags, V = G.rooms.valves; const st = [f.nw_gauge, G.room?.id];
+    for (let pass = 0; pass < 3 && !f.c10_valves; pass++) for (const v of V.valves) { if (f.c10_valves || G.story._nw.busy) break; P.use(v.x, v.z, { near: 0.9 }); P.settle(); }
+    for (let i = 0; i < 300 && (G.story._nw.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle();
+    const m = P.npc('mira'); return [...st, f.c10_valves, f.nw_mira, m.rig.anim];
+  }), (v) => v[0] === true && v[1] === 'valves' && v[2] === true && v[3] === true && v[4] === 'use');
+  await shot('M2-mira');
+  is('M3 the lamp room: Zoé alone (Arthur home), one dial turned, then Save & quit', await ev(() => {
+    const G = game, f = G.flags; P.exitTo('valves-out'); if (G.room) { const e = G.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); } P.talk('zoe', { run: true });
+    const L = G.rooms.lighttop, s = L.searches.find((x) => x.id === 'dial1'); P.use(s.x, s.z, { near: 0.8 }); P.settle();
+    const a = P.npc('arthur'); return [G.room?.id, f.c10_zoeAsk, !!a?.present && Math.abs(a.pos.x - L.group.position.x) < 10, (f.c10_dials || [])[0]];
+  }), (v) => v[0] === 'lighttop' && v[1] === true && !v[2] && v[3] === 1);
+  await handover();
+  is('M4 after Continue the dial is where he left it; the rest set by input; Zoé comes round and takes the dial bank as he lets go; down the stairs past her by input', await ev(() => {
+    const G = game, f = G.flags, L = G.rooms.lighttop; const d0 = (f.c10_dials || [])[0];
+    for (let pass = 0; pass < 3 && !f.c10_light; pass++) for (const i of [1, 2, 3]) { if (f.c10_light || G.story._nw.busy) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); }
+    for (let i = 0; i < 300 && (G.story._nw.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle();
+    const z = P.npc('zoe'), za = z.rig.anim; const r = P.exitTo('outdoor-lighthouse');
+    return [d0, f.c10_light, f.nw_zoe, za, r.r, G.room?.id ?? 'out'];
+  }), (v) => v[0] === 1 && v[1] === true && v[2] === true && v[3] === 'use' && v[5] === 'out');
+  is('M5 a return home: Arthur by the radio, his hands on it; he is still counting four', await ev(() => {
+    const G = game; P.enter('house', { run: true }); P.settle(); const a = P.npc('arthur'); const r = P.talk('arthur', { run: true }); return [G.room?.id, a.present, a.placed?.anim, r.r];
+  }), (v) => v[0] === 'house' && v[1] && v[2] === 'tinker' && v[3] === 'talked');
+  await shot('M5-arthur');
+  await browser.close();
+  await start('new-13-cit');
+  is('M6 Mill Lane after a reload (a return): the isolator off Kell\'s box, Irsa at the feed switch with her hands on it, the lift up', await ev(() => {
+    const G = game; P.shipTo('citadel_port'); P.settle(); if (P.here() !== 'zeelich') return ['not on Zeelich', P.here()];
+    const L = G.rooms.zeelich.lift, n = P.npc('zl_irsa'); P.go(L.lane.x, L.lane.z, { tol: 1.2, run: true }); for (let i = 0; i < 20; i++) G.step(0.1);
+    return [L.isoShown(), n.placed?.anim, +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(2), +(L.deckY - L.y0).toFixed(1)];
+  }), (v) => v[0] === false && v[1] === 'use' && v[2] < 0.9 && v[3] > 3);
+  await shot('M6-irsa');
+  await browser.close();
+  await start('new-13-five');
+  is('M7 the save: all five lit, at the station; Baldino says what the joint wants; a try just after the third knock: the fourth throws the clip off (said once)', await ev(() => {
+    const G = game, f = G.flags, T = G.story._nw, J = T.joint(); P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); for (let i = 0; i < 200 && (T.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    let t = 0; while (!(T.phase() > 0.5 && T.phase() < 0.6) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' }); for (let i = 0; i < 100 && (T.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    return [f.nw_jointTold, T.lastTry?.ok, f.nw_joint ?? null, f.nw_kick];
+  }), (v) => v[0] === true && v[1] === false && v[2] === null && v[3] === true);
+  await shot('M7-joint');
+  await handover();
+  is('M8 Save & quit → Continue: the joint still open, Baldino\'s word remembered; the try in the rest after the fourth holds, the roll call, the doors open → chapter 11', await ev(() => {
+    const G = game, f = G.flags, T = G.story._nw, J = T.joint(); const st = [f.nw_jointTold, f.nw_joint ?? null];
+    let t = 0; while (!(T.phase() > 1.35 && T.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' });
+    for (let i = 0; i < 400 && f.chapterKey === 'network'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    return [...st, T.lastTry?.ok, f.nw_joint, f.chapterKey];
+  }), (v) => v[0] === true && v[1] === null && v[2] === true && v[3] === true && v[4] === 'shell');
   await browser.close();
 }
 done();

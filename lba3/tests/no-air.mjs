@@ -57,6 +57,12 @@ const STATES = [
   // tap; Baldino at his loose bench, 28)
   ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true }],
   ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true, cn_stop: true, cn_isoGot: true }],
+  // CAMPAIGN-8 (story/netline.js): chapter 10 with the thread at its start (Irsa waiting by Kell's feed box, Arthur at home by
+  // the radio, 29); all five stations held (Irsa at the feed switch, Mira at a wheel, Zoé at the dial bank, Ilka at the relief
+  // wheel and Dallan at the relay, Yorna at the lever and Pim at a mirror; Baldino at the station, 30)
+  ['network', { c10_started: true, c10_pulse: true, nw_v: 1 }],
+  ['network', { c10_started: true, c10_pulse: true, c10_okuAsk: true, c10_millBraked: true, c10_mill: true, c10_miraAsk: true, c10_valveSet: { 0: true, 1: true, 2: true }, c10_valves: true, c10_zoeAsk: true, c10_dials: [2, 0, 1], c10_light: true, c10_ilka: true, c10_boreRelay: true, c10_boreW2: true, c10_guardDown: true, c10_bore: true, c10_pim: true, c10_keeper: true, c10_domeRelay: true, c10_domeLit: true, c10_dome: true,
+    nw_v: 1, nw_irsa: true, nw_irsaTold: true, nw_arthur: true, nw_gauge: true, nw_mira: true, nw_wheel: 2, nw_zoe: true, nw_ilka: true, nw_yorna: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

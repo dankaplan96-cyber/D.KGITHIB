@@ -160,10 +160,55 @@ await ev(() => { for (let i = 0; i < 40; i++) { game.step(0.1); P.settle(); } P.
 take(await use('cn_clip', 'game.rooms.zeelich.lift.isoAt', 0.6));
 await browser.close();
 
+// chapter 10 (CAMPAIGN-8, story/netline.js): his hand on each handle as a friend takes it over — the isolator off Kell's
+// feed box (base-13, a save from before the wave at the chapter's start: Mill Lane), the valve wheel he holds and the dial
+// (new-13-cit), the bore's relief wheel (new-13-desert), the telescope's lever (new-13-ham), the joint (new-13-five) —, and
+// each friend's hands on the handle after (Irsa, Mira, Zoé, Ilka, Dallan, Yorna, Pim) and Arthur's on the radio at home
+const nwHold = (kind, code) => ev(([kind, code]) => {
+  const G = game; window.KIND = kind; new Function(code)();
+  for (let i = 0; i < 400 && (G.story._nw?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+  P.settle(); return window.GAPS.filter((g) => g.kind === kind && g.anim === 'tinker');
+}, [kind, code]);
+await start('base-13');
+await ev(() => { P.enter('zeelich', { run: true }); P.settle(); });
+take(await nwHold('nw_unclip', 'const L = game.rooms.zeelich.lift; P.use(L.isoAt.x, L.isoAt.z, { near: 0.6, run: true, kind: "nw_unclip" });'));
+people.push(await person('zl_irsa'));
+await browser.close();
+await start('new-13-cit');
+people.push(await person('arthur'));   // (only if the house is the scene: absent elsewhere, which the check allows)
+await ev(() => { if (!P.npc('mira')?.present) P.enter('office', { run: true }); P.talk('mira', { run: true }); P.wait(1.5); P.settle(); for (let i = 0; i < 300 && (game.story._nw?.busy || game.state === 'dialog'); i++) { if (game.state === 'dialog') P.settle(); else game.step(0.1); } });
+take(await nwHold('nw_wheel', 'const V = game.rooms.valves; for (let pass = 0; pass < 3 && !game.flags.c10_valves && !game.story._nw.busy; pass++) for (const v of V.valves) { if (game.flags.c10_valves || game.story._nw.busy) break; P.use(v.x, v.z, { near: 0.9 }); P.settle(); }'));
+people.push(await person('mira'));
+await ev(() => { P.exitTo('valves-out'); if (game.room) { const e = game.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); } P.talk('zoe', { run: true }); });
+take(await nwHold('nw_dial', 'const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light || game.story._nw.busy) break; const s = L.searches.find((x) => x.id === "dial" + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); }'));
+people.push(await person('zoe'));
+await ev(() => { P.exitTo('outdoor-lighthouse'); P.enter('house', { run: true }); P.settle(); });
+people.push(await person('arthur'));
+await browser.close();
+await start('new-13-desert');
+take(await nwHold('nw_relief', 'P.talk("ilka", { run: true }); const b = game.rooms.desert.bore; P.use(b.x, b.z, { run: true });'));
+people.push(await person('ilka'));
+await browser.close();
+await start('new-13-ham');
+people.push(await person('dallan'));   // (the bore's fight over: Dallan at the relay; absent off Desert Island, which the check allows)
+await ev(() => { if (P.here() !== 'hamalayi' && game.room?.id !== 'obsv') P.flyTo(2); P.talk('yorna', { run: true }); const d = game.rooms.hamalayi.observatory.door; for (let k = 0; k < 3 && game.room?.id !== 'obsv'; k++) { P.through(d.x, d.z, { run: true }); P.settle(); } for (let k = 0; k < 2 && !game.flags.c10_keeper; k++) P.talk('keeper'); const t = game.rooms.obsv.telescope; P.use(t.x, t.z, { kind: 'c10domeRelay' }); P.wait(1); P.settle(); for (let i = 0; i < 100 && game.story._nw?.busy; i++) game.step(0.1); P.settle(); });
+take(await nwHold('nw_lever', 'const t = game.rooms.obsv.telescope; P.use(t.x, t.z, { kind: "c10scope" });'));
+people.push(await person('yorna'));
+people.push(await person('pim'));
+await browser.close();
+await start('new-13-five');
+await ev(() => { const J = game.story._nw.joint(); P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); for (let i = 0; i < 200 && (game.story._nw.busy || game.state === 'dialog'); i++) { if (game.state === 'dialog') P.settle(); else game.step(0.1); } });
+take(await nwHold('nw_joint', 'const G = game, T = G.story._nw, J = T.joint(); let t = 0; while (!(T.phase() > 1.35 && T.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.use(J.x, J.z, { near: 0.6, kind: "nw_joint" });'));
+await browser.close();
+
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
+// (CAMPAIGN-8: the friends who take a handle over in chapter 10 must not be stood down: their hands are on it, within 1 cm)
+const NW = ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur'], NWHAND = +(process.env.NWHAND || 0.012);
+const nwp = people.filter((p) => NW.includes(p.id) && !p.absent);
+check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip'];
+const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint'];
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

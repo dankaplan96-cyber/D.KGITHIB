@@ -5,6 +5,11 @@
 // glider to Citadel, the walk into the station's yard → Baldino's code box at the bore (SHAFT-CITADEL) → chapter 11.
 // Steps move by teleport (a LOGIC test), except the lamp room: from the stair top Zoé, each dial and the way back
 // down are walked to by input (tests/lib/player.js), with Zoé and Arthur standing by (GATE-1 B-1).
+// CAMPAIGN-8 (wave 6, story/netline.js): the chapter begins with the thread on (nextChapter → begin): the isolator off Kell's
+// feed box on Mill Lane (Irsa takes the switch), Arthur's count on the radio from home (he is not in the lamp room), Mira's
+// reading of her gauge, each friend taking the handle as he lets go (Mira, Zoé, Ilka, Yorna; Pim at a mirror, Dallan at
+// the relay), and the code line's joint at the station: a try in a knock is thrown off, a try in the rest after the fourth
+// holds. The takeovers are waited out (T.wait); the lamp room is still played by input.
 // Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
 // had to be beaten through its own rule (an ISO assist, logged), the run ends CHAPTER 10 ASSISTED with exit code 2.
 import { launch, checker } from './lib/boot.mjs';
@@ -43,6 +48,8 @@ const boot = async (mode) => {
         if (!spot) T.miss.push(id);
         G.step(0.8); h.angle = Math.atan2(n.pos.x - h.pos.x, n.pos.z - h.pos.z); T.tap('KeyE'); G.step(0.05); T.talkAll(); },
       miss: [],
+      // (CAMPAIGN-8: a friend's takeover, Mira's reading, a radio call: scenes in play; wait them out, reading what is said)
+      wait(max = 400) { for (let i = 0; i < max && (G.story._nw?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans); i++) { if (G.state === 'dialog') T.talkAll(); else G.step(0.1); } G.step(0.2); },
       useAt(x, z, y = null) { T.tp(x + 0.9, z + 0.3, 0, y); G.hero.angle = Math.atan2(x - G.hero.pos.x, z - G.hero.pos.z); G.step(0.3); T.tap('KeyE'); G.step(1.6); T.talkAll(); },
       // walk onto an exit and let the room change happen
       exit(to) { const e = G.room.exits.find((x) => x.to === to); if (!e) return 'no exit ' + to; T.tp(e.x, e.z, 0, e.y ?? Math.max(G.hero.pos.y, G.room.deckY ?? -1e9) + 0.5); G.step(1.6); T.talkAll(); return G.room?.id ?? 'out'; },
@@ -88,10 +95,19 @@ is('Oku on Zeelich asks for the mill braked', await ev(() => { T.out(); T.talk('
 is("the old mill's relay set (1/5); the mill turns again", await ev(() => { const mt = game.rooms.zeelich.millTop; T.useAt(mt.x, mt.z, mt.y); return [game.flags.c10_mill, game.rooms.zeelich.mills[0].spinning, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);   // braked to climb it; src/game/story/network.js: released once the relay is set
 await shot('C10-01-mill.png');
 is('Hesk is not on Zeelich (no glider to another planet)', await ev(() => [T.npc('hesk')?.present ?? null, game.story.cur.region()]), (v) => v[0] !== true && v[1] === 'zeelich');
+is('CAMPAIGN-8 Mill Lane: the isolator off Kell\'s feed box; Irsa takes the switch as he lets go (her hands on it), the lift still up; the isolator in his pocket', await ev(() => { const G = game, L = G.rooms.zeelich.lift; T.tp(L.isoAt.front.x + 0.3, L.isoAt.front.z - 1.2); const r = P.use(L.isoAt.x, L.isoAt.z, { near: 0.6, kind: 'nw_unclip' }); T.wait(); const n = T.npc('zl_irsa');
+  return [r.target?.kind, G.flags.nw_irsa, n.rig.anim, +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(2), G.story.items().some((i) => i.id === 'iso'), L.isoShown(), +(L.deckY - L.y0).toFixed(1), T.obj()]; }),
+  (v) => v[0] === 'nw_unclip' && v[1] === true && v[2] === 'use' && v[3] < 0.9 && v[4] && v[5] === false && v[6] > 3);
+await shot('C10-01b-irsa.png');
 is('the spaceship to Citadel', await ev(() => T.ship('zeelich_port')), (v) => v[0] === 'out');
+is('CAMPAIGN-8 on Citadel: Arthur on the radio from home counts the kitchen pipe (four now); his place is at home by the radio, not the lamp room', await ev(() => { T.wait(); const p = game.story.cur.thread.place('arthur'); return [game.flags.nw_arthur, p && +p.x.toFixed(1), p?.anim]; }), (v) => v[0] === true && v[1] > 990 && v[1] < 1010 && v[2] === 'tinker');
 await shot('C10-02-citadel-landing.png');
-is('Mira sends him to the valve room', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); game.step(1.5); T.talkAll(); return [r, game.flags.c10_miraAsk, game.room?.id]; }), (v) => v[0] === 'office' && v[1] === true && v[2] === 'valves');
-is("the valve room's relay: the three gauges level", await ev(() => { const V = game.rooms.valves; for (const i of [0, 1, 2]) { const v = V.valves[i]; T.useAt(v.x, v.z); } return [game.story.cur.gaugeLevels(), game.flags.c10_valves]; }), (v) => v[0].every((x) => x === v[0][0]) && v[1] === true);
+is('Mira sends him to the valve room; CAMPAIGN-8: she reads the fortress gauge before anyone acts (the needle kicks four and rests)', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); game.step(1.5); T.talkAll(); T.wait();
+  const V = game.rooms.valves, gs = V.gauges.set, rec = []; V.gauges.set = (vals) => { rec.push(vals[0]); gs.call(V.gauges, vals); }; for (let t = 0; t < 3.0; t += 1 / 30) game.step(1 / 30); V.gauges.set = gs;
+  const base = Math.min(...rec); let peaks = 0, up = false; for (const x of rec) { const k = x > base + 0.1; if (k && !up) peaks++; up = k; }
+  return [r, game.flags.c10_miraAsk, game.room?.id, game.flags.nw_gauge, peaks]; }), (v) => v[0] === 'office' && v[1] === true && v[2] === 'valves' && v[3] === true && v[4] === 4);
+is("the valve room's relay: the three gauges level; CAMPAIGN-8: Mira takes the wheel he held as he lets go (her hands on it)", await ev(() => { const V = game.rooms.valves; for (const i of [0, 1, 2]) { const v = V.valves[i]; T.useAt(v.x, v.z); } T.wait(); const m = T.npc('mira'), w = V.valves[game.flags.nw_wheel ?? 0];
+  return [game.story.cur.gaugeLevels(), game.flags.c10_valves, game.flags.nw_mira, m.rig.anim, +Math.hypot(m.pos.x - w.x, m.pos.z - (w.z - 0.72)).toFixed(2)]; }), (v) => v[0].every((x) => x === v[0][0]) && v[1] === true && v[2] === true && v[3] === 'use' && v[4] < 0.8);
 await shot('C10-03-valves.png');
 is('out of the valve room and the office', await ev(() => { const a = T.exit('valves-out'); const b = T.out(); return [a, b]; }), (v) => v[1] === 'out');
 // REV-TY-5 T1 (for players): at a dial (a plain search until Zoé has asked) within her reach, facing Zoé, E is hers.
@@ -116,14 +132,15 @@ const dialWalk = await ev(() => { const G = game, L = G.rooms.lighttop, h = G.he
   }
   return { people, out, trace: P.trace.slice(-6) }; });
 check('B-1: every lighthouse dial is walked to from the stairs by input and turns (E), with Zoé and Arthur standing by', dialWalk.out.length === 3 && dialWalk.out.every((d) => d.r === 'used' && d.target === 'c10dial' && d.turned), dialWalk);
-is('the lighthouse dials set by input, the relay (3/5)', await ev(() => { const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); } return [game.flags.c10_dials, game.flags.c10_light, T.obj()]; }), (v) => v[1] === true && v[2].length > 0);
+is('the lighthouse dials set by input, the relay (3/5); CAMPAIGN-8: Zoé comes round and takes the dial bank as he lets go (Arthur is at home)', await ev(() => { const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light || game.story._nw?.busy) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); } T.wait(); const z = T.npc('zoe');
+  return [game.flags.c10_dials, game.flags.c10_light, T.obj(), game.flags.nw_zoe, z.rig.anim, T.npc('arthur')?.present && game.room?.id === 'lighttop' && T.npc('arthur').pos.x > 1590 && T.npc('arthur').pos.x < 1610]; }), (v) => v[1] === true && v[2].length > 0 && v[3] === true && v[4] === 'use' && !v[5]);
 await shot('C10-04-lighthouse.png');
 // the cast is put back on its spots when the relay is done (Story.refreshCast): he must still get from the dial bank
 // back down the stairs (B-1: it shut him in front of the cabinet)
 is('B-1: after the relay, down the stairs from the dial bank by input', await ev(() => { const h = game.hero, from = [+h.pos.x.toFixed(2), +h.pos.z.toFixed(2)]; const r = P.exitTo('outdoor-lighthouse'); return [from, r.r, game.room?.id ?? 'out']; }), (v) => v[2] === 'out');
 is("Hesk's glider to Desert Island", await ev(() => { if (game.room?.id === 'lighttop') T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(1); }), (v) => v === 'desert');
 await shot('C10-05-desert-landing.png');
-is('Ilka; the bore relay set; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length]; }), (v) => v[0] === true && v[1] === true && v[2] > 0);
+is('Ilka; the bore relay set; CAMPAIGN-8: he opens the relief wheel, Ilka takes it as he lets go; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); T.wait(); const n = T.npc('ilka'); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length, game.flags.nw_ilka, n.rig.anim]; }), (v) => v[0] === true && v[1] === true && v[2] > 0 && v[3] === true && v[4] === 'use');
 // the bore fight, two waves (DIFFICULTY): the three drones first (they come one after another), then Vesk's clone, the Grobo
 // guard and the sentry. Each by throws (the AI uses unseeded Math.random, so an enemy can dodge many throws in a row): each
 // throw from a fresh side and distance, aimed again a moment before it leaves the hand (a charged one at an armoured guard,
@@ -166,22 +183,27 @@ await shot('C10-06-bore.png');
 is('the glider to the Hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(2); }), (v) => v === 'hamalayi');
 await shot('C10-07-monastery.png');
 is('Yorna and Pim', await ev(() => { T.talk('yorna'); return [game.flags.c10_pim]; }), (v) => v[0] === true);
-is("the dome's relay (5/5), an objective set", await ev(() => { const r = T.door(game.rooms.hamalayi.observatory.door); T.talk('keeper'); const t = game.rooms.obsv.telescope; T.useAt(t.x, t.z); T.useAt(t.x, t.z); return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj()]; }), (v) => v[1] === true && v[2] === true && v[3] === true && v[4].length > 0);
+is("the dome's relay (5/5), an objective set; CAMPAIGN-8: Pim at a mirror, the lever to SUNS, Yorna takes it as he lets go", await ev(() => { const r = T.door(game.rooms.hamalayi.observatory.door); T.talk('keeper'); const t = game.rooms.obsv.telescope; T.useAt(t.x, t.z); T.wait(); T.useAt(t.x, t.z); T.wait(); const y = T.npc('yorna'), p = T.npc('pim');
+  return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj(), game.flags.nw_yorna, y.present && y.rig.anim, p.present && p.rig.anim, t.n]; }), (v) => v[1] === true && v[2] === true && v[3] === true && v[4].length > 0 && v[5] === true && v[6] === 'tinker' && v[7] === 'use' && v[8] === 2);
 await shot('C10-08-dome.png');
 // SHAFT-CITADEL: the shaft's top is the bore in Citadel's station (the user's decision, 2.11.2026): the code goes out there,
 // reached by Twinsun's own routes (the glider to Citadel, then on foot up the plateau into the fort's yard)
 is('the glider back to Citadel: Baldino waits at the bore in the station, the blast doors still shut', await ev(() => { T.out(); const L = game.story.cur.landing('hamalayi'); T.tp(L.x, L.z); const r = T.fly(0); const b = T.npc('baldino'), st = game.world.station; return [r, game.room?.id ?? null, b.present, +Math.hypot(b.pos.x - st.bore.x, b.pos.z - st.bore.z).toFixed(1), !!st.sealed, T.obj()]; }), (v) => v[1] === null && v[2] === true && v[3] < 6 && v[4] === true && /station/i.test(v[5]));
-is('from the glider\'s landing on the plateau he walks into the station\'s yard to the bore (INPUT)', await ev(() => { const G = game, b = G.world.station.bore;
+is('from the glider\'s landing on the plateau he walks into the station\'s yard to the bore (INPUT)', await ev(() => { const G = game, b = G.world.station.bore, J = G.story._nw.joint();
   // (ISO: this test came here by flags, not through chapter 1, whose water opens the station's gate; a load opens it from
   //  the same flag: chapter1.js applyFlags)
   if (G.flags.c1_water) G.world.gate.open = true; for (let i = 0; i < 40; i++) G.step(0.1);
-  P.trace.length = 0; const r = P.go(b.x + 0.9, b.z + 4.0, { tol: 0.8, maxT: 120 }); return [r.r, G.findInteractable()?.kind, r.r === 'arrived' ? '' : P.trace.slice(-6), [+G.hero.pos.x.toFixed(1), +G.hero.pos.z.toFixed(1)]]; }), (v) => v[0] === 'arrived' && v[1] === 'c10console');
-const fin = await ev(() => { const st = game.world.station, x = st.bore.x, z = st.bore.z + 3.6; T.useAt(x, z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id, !!st.sealed]; });
+  P.trace.length = 0; const r = P.go(J.touch.front.x, J.touch.front.z, { tol: 0.5, maxT: 120 }); P.face(J.x, J.z); return [r.r, G.findInteractable()?.kind, r.r === 'arrived' ? '' : P.trace.slice(-6), [+G.hero.pos.x.toFixed(1), +G.hero.pos.z.toFixed(1)]]; }), (v) => v[0] === 'arrived' && v[1] === 'nw_joint');
+// CAMPAIGN-8: the joint. Baldino first; a try in a knock (just after the third) is thrown off by the fourth; one in the rest after the fourth holds
+is('CAMPAIGN-8 the joint: Baldino says what it wants; clipped just after the third knock, the fourth throws it off (said once)', await ev(() => { const G = game, T2 = G.story._nw; T.tap('KeyE'); T.wait();
+  let t = 0; while (!(T2.phase() > 0.5 && T2.phase() < 0.6) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); return [!!G.flags.nw_jointTold, T2.lastTry, !!G.flags.nw_joint, !!G.flags.nw_kick]; }), (v) => v[0] && v[1] && v[1].ok === false && !v[2] && v[3]);
+await shot('C10-09-joint.png');
+const fin = await ev(() => { const G = game, st = G.world.station, T2 = G.story._nw; let t = 0; while (!(T2.phase() > 1.35 && T2.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); const tr = T2.lastTry; for (let i = 0; i < 30; i++) { G.step(0.2); T.talkAll(); } return [G.flags.c10_done, G.flags.chapterKey, G.room?.id, !!st.sealed, tr, !!G.flags.nw_joint]; });
 log('code box', fin);
 { const miss = await ev(() => T.miss); if (miss.length) log('talk prompt not theirs from any side:', miss); }
 // the verdict (R7-VERDICTS: was CHAPTER 10 DONE / ASSISTED (exit 2, "not a pass") / NOT DONE, now one policy)
 check('at a dial within Zoé\'s reach, facing her, E is for Zoé (none within her reach: no dial takes her prompt)', facedZoe.room === 'lighttop' && (facedZoe.e === 'zoe' || (facedZoe.e === 'out of reach' && facedZoe.d >= 2.2)), facedZoe);
-check('chapter 10 done at Baldino\'s code box by the bore in Citadel\'s station: the blast doors open, the next chapter (shell) set, in the shaft', fin[0] === true && fin[1] === 'shell' && fin[3] === false && fin[2] === 'c3shaft', fin);
+check('chapter 10 done at the code line\'s joint by the bore in Citadel\'s station (CAMPAIGN-8: the isolator clipped on in the rest after the fourth knock): the blast doors open, the next chapter (shell) set, in the shaft', fin[0] === true && fin[1] === 'shell' && fin[3] === false && fin[2] === 'c3shaft' && fin[4]?.ok === true && fin[5], fin);
 check('every ball target hit by a real throw (an ISO assist is not a pass)', !assists.length, assists);
 const fails = done();
 await browser.close();
