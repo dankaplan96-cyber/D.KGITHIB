@@ -4580,3 +4580,10 @@ beside it). The desktop app's own Electron 43.7.9 on the checkout, a fresh profi
 - **Street:** longest frame 17.0 ms in 4 runs (no 288 ms GC frame); CPU work p50 7.6–10.7 / p95 9.4–13.0 ms; Auto held High.
 - **Arrival:** long frames only behind the black (the known batch building); one 34 ms frame outside it in 4 runs.
 - **No code change** (no before/after to show). What to measure on the Vega 8 (27c) is listed in the report.
+
+## CAST-VARIANTS-3 · archivist_b, the field archivist · the desktop, 12.11.2026
+**Ready for the cloud: applies on the branch as it is (`0e31b6d8`).** Full note: `requests/CAST-VARIANTS-3.md`. Queue 7 is done with this.
+- `archivist_b` (archivist ×5): a straw sun hat, no spectacles or collar, a shorter coat, rolled sleeves, a leather strap
+  across the chest, broader, a round nose. For Bashir (Kesh) and the dig's site clerk; the archivist, Kip and Bern keep archivist.
+- −2.0 % triangles; archivist rebuilds identical; floating.py OK; DRESS-1 variants 1–6 clean for both.
+- Tests: solidnpc 54/54, cast-rounds 209/209, desert-life 30/30, story-journeys 30/30, chapter4 59/59 PASS. Evidence label: Automated runtime only. Next: queue 9 (the common props).
