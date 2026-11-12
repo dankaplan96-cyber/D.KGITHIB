@@ -50,9 +50,11 @@ const LEFT = [
   ['hamalayi', 'inside', 'barrel', 'low (5 cm, outdoors): a barrel against its stack', [4304.19, 0.02]],
   ['hamalayi', 'inside', 'crate', 'low (7 cm, outdoors): a crate against its stack', [4304, -0.68]],
   ['hamalayi', 'inside', 'fn', 'low (4–6 cm, outdoors): stacked goods touching'],
-  ['hamalayi', 'inside', 'custom', 'low (10 cm, outdoors): two market pieces touching at the stall', [4334, -34]],
-  // medium: seen, left for now
-  ['lighttop', 'wall', 'transmitterCabinet', 'medium: the flat cabinet against the round glazing, its back corners through two mullions; the radio\'s story stops stand at it', [-0.82, -2.24]],
+  ['hamalayi', 'inside', 'custom', 'low (10 cm, outdoors): a market piece touching the stall', [4330.83, -34]],
+  ['hamalayi', 'inside', 'custom', 'low (10 cm, outdoors): a market piece touching the stall', [4337.17, -34]],
+  // not measurable here: the round room's glazing parts are arcs, their boxes reach into the room (the cabinet's back is
+  // at 2.68 m from the middle, the glass at 2.9–3.0 m; looked at: it stands before the glazing)
+  ['lighttop', 'wall', 'transmitterCabinet', 'not measurable: a round wall\'s parts are arcs whose boxes reach into the room; looked at, it stands before the glazing', [-0.82, -2.24]],
 ];
 const left = (f) => LEFT.find(([r, k, it, why, near]) => r === f.room && k === f.kind && it === f.item && (!near || Math.hypot(f.at[0] - near[0], f.at[1] - near[1]) < 0.6));
 
