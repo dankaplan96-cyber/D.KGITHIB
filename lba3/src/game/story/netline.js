@@ -55,7 +55,7 @@ export class NetThread {
       if (f.c10_boreRelay || f.c10_bore) f.nw_ilka ||= 'past';
       if (f.c10_pim) f.nw_yorna ||= 'past';
     }
-    this.busy = false; this.walks = []; this.later = []; this.hold = null;
+    this.busy = false; this.walks = []; this.later = []; this.hold = null; this.reTo = 2.0; this.reN = 4;   // (after a load the room's meshes settle first)
     for (const n of this.game.npcs) if (n.nwWalk) { n.nwWalk = false; n.controlled = false; }
     this.push();
   }
@@ -390,6 +390,23 @@ export class NetThread {
       ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ...(this.arthurHome() ? [['arthurradio', 'nw_radio_arthur']] : [])];
   }
 
+  // ---------------------------------------------------------------- the friends' hands, looked for again
+  // (workhands.js finds what a working person's hands go on among the meshes drawn round them, once per stop, and stands
+  //  them down where it finds nothing. A friend placed in a room while that room is not the scene — a load in the
+  //  street, the room built behind it — found nothing there and stood: when the hero comes in, look again)
+  // (true while one of them still stands: it is looked for again a little later, a few times)
+  rehands() {
+    let stood = false;
+    this.game.scene?.updateMatrixWorld?.(true);   // (the room's things where they stand now, before a frame has drawn them)
+    for (const id of ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur']) {
+      const n = this.npc(id); if (!n?.present || !n.placed?.anim || n.controlled) continue;
+      if (n.rig.standFor) { stood = true; n.rig.standFor = null; }
+      if (n._wh) { n._wh.plans?.clear(); n._wh.key = ''; n._wh.pre = ''; }
+    }
+    return stood;
+  }
+  onEnterRoom() { if (this.cur() && this.on) { this.reTo = 1.0; this.reN = 4; } }
+
   // ---------------------------------------------------------------- what moves
   after(t, fn) { this.later.push({ t, fn }); }
   update(dt) {
@@ -398,6 +415,7 @@ export class NetThread {
     this.stepWalks(dt);
     if (!this.cur() || !this.on) return;
     this.pt += dt;
+    if (this.reTo != null && g.state === 'play' && !g.trans && (this.reTo -= dt) <= 0) { this.reTo = null; if (this.rehands() && (this.reN = (this.reN ?? 4) - 1) > 0) this.reTo = 1.5; }
     // (a save from before the thread that has left Zeelich: Mill Lane counts as done — Baldino brings the isolator himself)
     if (f.nw_old && !f.nw_irsa && g.state === 'play' && !g.trans && this.ch.region() !== 'zeelich') f.nw_irsa = 'past';
     const k = kickAt(this.phase()), r = this.room();

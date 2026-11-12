@@ -262,7 +262,7 @@ export class Network extends ChapterBase {
     }));
     g.openMenu('fly_title', items, (it) => this.fly(it.id));
   }
-  onEnterRoom() { if (this.isCur()) this.story.refreshCast({ walk: true }); this.setupRoom(); }
+  onEnterRoom() { if (this.isCur()) this.story.refreshCast({ walk: true }); this.setupRoom(); this.thread.onEnterRoom(); }
   onExitRoom() { if (this.isCur()) this.story.refreshCast({ walk: true }); }
 
   // ---------------------------------------------------------------- interaction
