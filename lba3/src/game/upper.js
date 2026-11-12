@@ -178,8 +178,8 @@ function buildArchive(scene, physics) {
     B.col(SX1 + 0.03, GZ1 + 3.5 * TR, 0.05, 3.5 * TR, GY + 1.0, { noStand: true, seeThrough: true, bottom: 0 });
     k.add(plane(0.7, 0.22), label('SERVICE'), SDX, GY + 2.25, GZ0 + 0.03);
   }
-  R.gallery = { x: B.cx + SDX, z: B.cz + GZ0 + 0.75, a: -Math.PI / 2, y: GY };   // (where Mill Lane's service landing brings him: in front of the door, facing the stair)
-  R.exits.push({ x: B.cx + SDX, z: B.cz + GZ0 + 0.12, r: 0.42, y: GY, to: 'archive-gallery' });
+  R.gallery = { x: B.cx + SDX, z: B.cz + GZ0 + 0.8, a: -Math.PI / 2, y: GY };   // (where Mill Lane's service landing brings him: in front of the door, facing the stair)
+  R.exits.push({ x: B.cx + SDX, z: B.cz + GZ0 + 0.05, r: 0.36, y: GY, to: 'archive-gallery' });
   // shelf rows (cover), each a long bookcase with ledgers
   for (const [x, z] of [[-3, -1.5], [1, -1.5], [-3, 2.0], [1, 2.0]]) { B.put(x, z + 0.42, 0, (kk) => P.bookcase(kk, { w: 2.8, seed: 3 + x })); B.put(x, z, Math.PI, (kk) => P.bookcase(kk, { w: 2.8, seed: 7 + z }), { noCol: true }); }
   // crates of files waiting to be shelved, and the archivist's desk (more cover in the front half)

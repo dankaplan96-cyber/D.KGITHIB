@@ -186,6 +186,8 @@ export class CouncilThread {
     return false;
   }
   npc(id) { return this.ch.npc(id); }
+  // the isolator's test on Baldino's bench is under way (story/workshop.js keeps the Test Pair's own prompts off meanwhile)
+  trial() { const f = this.f; return this.cur() && this.on && !!f.cn_isoGot && !f.cn_iso; }
   // the people, asked before the chapter's own talk
   talkFirst(npc) {
     const f = this.f, ch = this.ch, id = npc.def.id;

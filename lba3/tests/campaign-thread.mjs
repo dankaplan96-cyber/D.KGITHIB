@@ -620,7 +620,6 @@ if (!ONLY || ONLY === 'I') {
 }
 
 // ------------------------------------------------------------------ J: the saves from before wave 5 (CAMPAIGN-7)
-const OBJ = () => document.querySelector('#objective').textContent;
 if (!ONLY || ONLY === 'J' || ONLY === 'C') {
   await start('base-12');
   is('C15 a save from before, chapter 9 at its start: loads; the stop is ahead, so the thread is on, nothing of it past; it goes on: Baldino and the petition', await ev(() => {
@@ -634,7 +633,7 @@ if (!ONLY || ONLY === 'J' || ONLY === 'C') {
     if (G.room?.id === 'council') P.exitTo('council-out');
     const shown = G.rooms.upper.order.shown;
     const r = P.exitTo('up-archive'); P.settle();
-    return [...st, shown, G.room?.id, f.cn_closed, OBJ()];
+    return [...st, shown, G.room?.id, f.cn_closed, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 1 && !v[1] && v[2] && v[3] === 'upper' && v[4] === true && /Kell/.test(v[5]));
   await shot('C16-order');
   await browser.close();
@@ -642,7 +641,7 @@ if (!ONLY || ONLY === 'J' || ONLY === 'C') {
   is('C17 a save from before, the plans in hand in the archive: loads; the gallery and the log count as done (the front door is his); back in the chamber the vote orders the stop and the chapter goes on, to the console', await ev(() => {
     const G = game, f = G.flags; const st = [f.cn_v, f.cn_kell, f.cn_log, G.room?.id];
     P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30);
-    return [...st, !!f.c9_vote, f.chapterKey, OBJ()];
+    return [...st, !!f.c9_vote, f.chapterKey, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 1 && v[1] === 'past' && v[2] === 'past' && v[3] === 'archive' && v[4] && v[5] === 'council' && /console/i.test(v[6]));
   await browser.close();
 }
@@ -653,7 +652,7 @@ if (!ONLY || ONLY === 'K') {
   is('K0 the save: chapter 9 after the hearing, in the chamber; the archive\'s door read: shut by the order; Kell asked: the deck comes down for them', await ev(() => {
     const G = game, f = G.flags; P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const closed = f.cn_closed;
     P.exitTo('up-down'); const r = P.talk('zl_kell', { run: true }); for (let i = 0; i < 60 && G.story._cn.kell.busy; i++) G.step(0.1);
-    const L = G.rooms.zeelich.lift; return [closed, r.r, !!f.cn_kellAsk, +(L.deckY - L.low).toFixed(2), OBJ()];
+    const L = G.rooms.zeelich.lift; return [closed, r.r, !!f.cn_kellAsk, +(L.deckY - L.low).toFixed(2), document.querySelector('#objective').textContent];
   }), (v) => v[0] === true && v[1] === 'talked' && v[2] && v[3] === 0 && /Ride/i.test(v[4]));
   await handover();
   is('K1 Save & quit → Continue with the deck down for them: it is still down; the ride is there to take; up with Kell, he opens the service door', await ev(() => {
@@ -668,24 +667,24 @@ if (!ONLY || ONLY === 'K') {
     const kAt = +Math.hypot(k.pos.x - L.spots.kell.x, k.pos.z - L.spots.kell.z).toFixed(1);
     const go = () => { P.use(L.service.x, L.service.z, { near: 0.9, kind: 'cn_service' }); for (let i = 0; i < 60 && G.room?.id !== 'archive'; i++) { G.step(0.1); P.settle(); } P.settle(); return [G.room?.id, +G.hero.pos.y.toFixed(1)]; };
     const in1 = go(); const out = P.exitTo('archive-gallery'); P.settle(); const back = [G.room?.id, +(G.hero.pos.y - L.top).toFixed(1)]; const in2 = go();
-    return [kAt, in1, out.to, back, in2, OBJ()];
+    return [kAt, in1, out.to, back, in2, document.querySelector('#objective').textContent];
   }), (v) => v[0] < 1 && v[1][0] === 'archive' && v[1][1] > 2 && v[2] === 'zeelich' && v[3][0] === 'zeelich' && Math.abs(v[3][1]) < 0.3 && v[4][0] === 'archive' && /plans/i.test(v[5]));
   await shot('K2-gallery');
   await browser.close();
   await start('new-12-drawer');
   is('K3 the save: the BORE drawer open (the log, the order that cut it), the carbon still in his pocket; the archivist off his watch; the objective the comparison', await ev(() => {
-    const G = game, f = G.flags; return [G.room?.id, !!f.cn_drawer, !!f.cn_log, G.rooms.archive.drawer.open, !!G.story.cur.watcher?.active, G.story.items().some((i) => i.id === 'tstrip'), OBJ()];
+    const G = game, f = G.flags; return [G.room?.id, !!f.cn_drawer, !!f.cn_log, G.rooms.archive.drawer.open, !!G.story.cur.watcher?.active, G.story.items().some((i) => i.id === 'tstrip'), document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'archive' && v[1] && !v[2] && v[3] && !v[4] && v[5] && /carbon/i.test(v[6]));
   is('K4 the carbon laid on the log: line for line; the plans in hand, the carbon handed on (out of his pocket); the chamber next', await ev(() => {
     const G = game, f = G.flags, D = G.rooms.archive.drawer; const r = P.use(D.x, D.z, { near: 0.6, kind: 'cn_compare' }); for (let i = 0; i < 80 && !f.cn_log; i++) { G.step(0.1); P.settle(); }
-    return [r.target?.kind, f.cn_log, !!f.c9_plans, G.story.items().some((i) => i.id === 'tstrip'), OBJ()];
+    return [r.target?.kind, f.cn_log, !!f.c9_plans, G.story.items().some((i) => i.id === 'tstrip'), document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'cn_compare' && v[1] === true && v[2] && !v[3] && /council/i.test(v[4]));
   await browser.close();
   await start('new-12-vote');
   is('K5 the save: the stop ordered; the guard stands aside (his line); the stop thrown at the console: the BORE needle down, the GROUND needle still kicking; Mill Lane dry (the cart half way, no water)', await ev(() => {
-    const G = game, f = G.flags, S = G.rooms.zeelich.platform.stop, L = G.rooms.zeelich.lift; const g = P.talk('guard', { run: true });
+    const G = game, f = G.flags, S = G.rooms.zeelich.platform.stop, L = G.rooms.zeelich.lift; if (G.room?.id === 'council') P.exitTo('council-out'); if (G.room?.id === 'upper') P.exitTo('up-down'); const g = P.talk('guard', { run: true });
     const r = P.use(S.x, S.z, { kind: 'cn_stop', near: 0.8, run: true }); for (let i = 0; i < 200 && !(f.cn_stop && G.state === 'play' && !G.story._cn.busy); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
-    return [g.r, r.target?.kind, !!f.cn_stop, S.thrown, S.loose, +(L.deckY - L.y0).toFixed(2), L.cartK, !!L.state.water, OBJ()];
+    return [g.r, r.target?.kind, !!f.cn_stop, S.thrown, S.loose, +(L.deckY - L.y0).toFixed(2), L.cartK, !!L.state.water, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'talked' && v[1] === 'cn_stop' && v[2] && v[3] && v[4] && v[5] > 1.5 && v[5] < 2.5 && v[6] === 0 && !v[7] && /bench/i.test(v[8]));
   await handover();
   is('K6 Save & quit → Continue with Mill Lane dry: still dry (the cart half way, Kell on his brake, Brel\'s empty jug); the console\'s stop still thrown', await ev(() => {
@@ -704,7 +703,7 @@ if (!ONLY || ONLY === 'K') {
   is('K8 Save & quit → Continue with one relay clipped: the bench still loose, the isolator still on the first relay; on the second: both tried, the isolator in his pocket; the objective Kell\'s feed', await ev(() => {
     const G = game, f = G.flags, T = G.rooms.workshop.life.terminals, S = G.rooms.workshop.life.state; for (let i = 0; i < 5; i++) G.step(0.1); const st = [G.room?.id, S.loose, S.iso];
     const r = P.use(T.B.x, T.B.z, { kind: 'cn_iso', near: 0.6 }); for (let i = 0; i < 80 && !f.cn_iso; i++) { G.step(0.1); P.settle(); }
-    return [...st, r.target?.kind, !!f.cn_iso, G.story.items().some((i) => i.id === 'iso'), OBJ()];
+    return [...st, r.target?.kind, !!f.cn_iso, G.story.items().some((i) => i.id === 'iso'), document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'workshop' && v[1] && v[2] === 'A' && v[3] === 'cn_iso' && v[4] && v[5] && /feed/i.test(v[6]));
   is('K9 Mill Lane: the isolator on Kell\'s feed box: the deck rises, the standpipe runs; Baldino on the radio: a network → chapter 10', await ev(() => {
     const G = game, f = G.flags; P.enter('zeelich'); const L = G.rooms.zeelich.lift; const r = P.use(L.isoAt.x, L.isoAt.z, { kind: 'cn_clip', near: 0.6, run: true });

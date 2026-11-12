@@ -97,6 +97,7 @@ export class WorkshopLife extends ChapterBase {
     if (!this.open || !this.here()) return;
     const f = this.f, S = this.L.spots, done = !!f.w_pair;
     if (!this.ready) consider(dist(S.lever.x, S.lever.z), S.lever.r, { kind: 'wlook', what: 'pre', label: 'p_look' });   // (before Baldino's hello: hands off)
+    else if (this.story._cn?.trial()) { /* (CAMPAIGN-7: the bench is Baldino's isolator test now: its terminals' prompts, not the pair's) */ }
     else {
       consider(dist(S.lever.x, S.lever.z), S.lever.r, { kind: 'wlever', label: done ? 'p_look' : this.on ? 'p_switch_off' : 'p_switch_on' });
       consider(dist(S.tap.x, S.tap.z), S.tap.r, { kind: 'wtap', label: done ? 'p_look' : f.w_tap ? 'p_tap_close' : 'p_tap_open' });
