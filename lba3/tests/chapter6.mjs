@@ -2,6 +2,10 @@
 // across the gorge (ball) → Lhar, Yorna → the heating station (no fuse) → Pim's kite on the icefall (ball) →
 // the fuse, the winch thaws → two trips up the cliff with ice mites in between → the last ride → the
 // monastery → the next chapter.
+// CAMPAIGN-5 (story/passline.js): the line kicks three and a rest (the lamps swing, the gauge red in the surge, green in
+// the quiet); the riders board and a kick comes as they stand there (read); a start too late is stopped by the next kick
+// and the platform runs back down with them (the trip lost, nothing more); started in the green, it is up; Yorna cranks
+// him up in a quiet; the monastery waits for the upper brake; locked, the last of Lhar ride up through a kick and it holds.
 import { launch, checker } from './lib/boot.mjs';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, done } = checker({ info: 'always' });
@@ -59,11 +63,31 @@ is('the heating station needs a fuse', await ev(() => { const p = game.rooms.ham
 is('Pim asks for his kite', await ev(() => { T.talk('pim'); return [game.flags.c6_kiteAsk, T.obj()]; }), (v) => v[0] === true);
 is('the kite freed by the ball', await ev(() => { const tg = game.room.ballTargets.find((t) => t.kite); return [T.hit(tg), game.flags.c6_kite]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
 is("Pim's fuse", await ev(() => { T.talk('pim'); return [game.flags.c6_fuse, T.obj()]; }), (v) => v[0] === true);
-is('the heating on, the winch thawed, an objective set', await ev(() => { const p = game.rooms.hamalayi.heatPost; T.useAt(p.x, p.z); game.step(5); T.talkAll(); return [game.flags.c6_heat, game.flags.c6_thawed, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
+is('the heating on, the winch thawed, an objective set; the line kicks as he looks (the lamps swing, said)', await ev(() => { const p = game.rooms.hamalayi.heatPost, L = game.rooms.hamalayi.line; T.useAt(p.x, p.z); let sw = 0; const said = []; const s0 = game.say.bind(game); game.say = (n, l, ...r) => { said.push([].concat(l).join(' ')); return s0(n, l, ...r); };
+  for (let i = 0; i < 120 && !game.flags.ps_lamps; i++) { game.step(0.05); sw = Math.max(sw, L.swing()); }
+  for (let i = 0; i < 20; i++) { game.step(0.05); sw = Math.max(sw, L.swing()); if (game.state === 'dialog') { T.tap('KeyE'); } }
+  T.talkAll(); game.say = s0; return [game.flags.c6_heat, game.flags.c6_thawed, T.obj(), !!game.flags.ps_v, L.active, +sw.toFixed(3), said.some((l) => /lamps/i.test(l))]; }),
+  (v) => v[0] === true && v[1] === true && v[2].length > 0 && v[3] && v[4] && v[5] > 0.02 && v[6]);
+// the pulse itself: three kicks in the surge, the needle in the red; in the quiet it drops to the green and climbs through amber
+is('the line\'s gauge: red through the three kicks, green in the quiet while a whole trip fits, amber after', await ev(() => { const G = game, L = G.rooms.hamalayi.line; const seen = { red: 0, green: 0, amber: 0 }, kicks = []; const k0 = L.onKick; L.onKick = (i) => { kicks.push([+L.phase().toFixed(2), i]); k0?.(i); };
+  for (let i = 0; i < 260; i++) { G.step(0.05); const v = L.needle(); if (L.surging()) { if (v > 0.8) seen.red++; } else if (L.green()) { if (v >= 0.1 && v <= L.vGreen + 0.01) seen.green++; } else if (v > L.vGreen) seen.amber++; if (G.state === 'dialog') T.talkAll(); }
+  L.onKick = k0; return { seen, kicks: kicks.length, first3: kicks.slice(0, 3).map((k) => k[1]), period: L.period, greenEnd: +L.greenEnd.toFixed(2), ride: +L.ride.toFixed(2) }; }),
+  (v) => v.seen.red > 0 && v.seen.green > 0 && v.seen.amber > 0 && v.kicks >= 3 && v.first3.join() === '0,1,2' && v.greenEnd > v.period * 0.3);
 is('Yorna: the lift ready', await ev(() => { T.talk('yorna'); return [game.flags.c6_liftReady, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C6-02-lift.png');
 is('the sword cuts the mooring rope', await ev(() => { const G = game, h = G.hero, R = G.story.cur.rope; const before = [h.hasSword, h.combat.weapon]; T.tp(R.x - 1.2, R.z); h.angle = Math.atan2(R.x - h.pos.x, R.z - h.pos.z); G.step(0.2); T.tap('KeyK'); G.step(0.8); T.talkAll(); return [before, G.flags.c6_rope, T.obj()]; }), (v) => v[0][0] === true && v[1] === true && v[2].length > 0);
-is('the first trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip1; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip1, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+// (the crank: he stands where his hand meets its grip, and presses E there)
+const crankAt = `(() => { const G = game, L = G.rooms.hamalayi.line, p = L.crank.touch(); T.tp(p.front.x, p.front.z, p.a, G.rooms.hamalayi.lift.y0); G.step(0.2); T.tap('KeyE'); G.step(0.05); })()`;
+const waitRun = `(() => { const G = game, Th = G.story._ps; for (let i = 0; i < 900 && (Th.run || Th.busy || G.state !== 'play'); i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); })()`;
+is('the first trip: the riders board; a kick comes as they stand there and he reads it (the objective: between the kicks)', await ev((c) => { const G = game, Th = G.story._ps; eval(c); for (let i = 0; i < 80 && (G.trans || G.state !== 'dialog'); i++) G.step(0.05); T.talkAll(); const pad = G.rooms.hamalayi.lift.pad, n = T.npc('lhar1');
+  return [Th.boarded, !!G.flags.ps_read, +Math.hypot(n.pos.x - pad.x, n.pos.z - pad.z).toFixed(1), T.obj(), !!G.flags.c6_trip1]; }, crankAt), (v) => v[0] === 1 && v[1] && v[2] < 1.5 && /between the kicks/i.test(v[3]) && /green/i.test(v[3]) && !v[4]);
+await shot('C6-02a-boarded.png');
+is('a start too late (amber): the next kick stops the winch, the crank kicks back, the platform runs back down with them; only the trip is lost', await ev(([c, w]) => { const G = game, L = G.rooms.hamalayi.line, lift = G.rooms.hamalayi.lift, Th = G.story._ps; let t = 0; while (!(L.phase() > L.greenEnd + 0.8 && L.phase() < L.greenEnd + 1.6) && t < 15) { G.step(0.05); t += 0.05; }
+  const ph = +L.phase().toFixed(2); eval(c); let top = 0; for (let i = 0; i < 400 && (Th.run || Th.busy || G.state !== 'play'); i++) { G.step(0.05); top = Math.max(top, lift.y - lift.y0); if (G.state === 'dialog') T.talkAll(); } T.talkAll();
+  const n = T.npc('lhar1'); return { ph, top: +top.toFixed(1), miss: G.flags.ps_miss, trip1: !!G.flags.c6_trip1, boarded: Th.boarded, y: +(n.pos.y - lift.y0).toFixed(2), platY: +(lift.y - lift.y0).toFixed(2), state: G.state }; }, [crankAt, waitRun]),
+  (v) => v.miss === 1 && !v.trip1 && v.boarded === 1 && v.top > 0.5 && v.top < 9 && Math.abs(v.y) < 0.3 && Math.abs(v.platY) < 0.05 && v.state === 'play');
+is('started in the green: the trip goes up (Tashi and Dawa at the top); the ice mites come', await ev(([c, w]) => { const G = game, L = G.rooms.hamalayi.line; let t = 0; while (!(L.green() && L.phase() < L.surge + 0.6) && t < 15) { G.step(0.05); t += 0.05; } eval(c); eval(w); return [G.flags.c6_trip1, G.flags.ps_trip1, G.flags.ps_miss, T.obj()]; }, [crankAt, waitRun]),
+  (v) => v[0] === true && v[1] === true && v[2] === 1 && v[3].length > 0);
 // COMBAT-2: the ice mites' frost slide. One mite, the others held still: he stands 4.5 m off on open snow. It crouches and its
 // streak shows the line (told), slides along it (committed) and bites him standing in it; the next one he steps out of the
 // line once it holds still (the last 0.3 s): the slide misses and the mite spins on the ice (the opening)
@@ -114,9 +138,16 @@ is('the ice mites driven off', await ev(() => { const G = game, h = G.hero, P = 
       if (Math.abs(y - m.pos.y) < 0.6 && !P.solidAt(x, z, y + 0.5, 0.4) && P.lineOfSight(x, y + 1.2, z, m.pos.x, m.pos.y + 0.6, m.pos.z)) return { x, y, z }; }
     return { x: m.pos.x - 3, y: P.groundAt(m.pos.x - 3, m.pos.z), z: m.pos.z }; };
   for (const m of ms) for (let i = 0; i < 30 && m.alive; i++) { const s = spot(m); h.pos.set(s.x, s.y, s.z); h.angle = h.angleTo(m); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); } return [ms.length, ms.filter((m) => m.alive).length, T.obj()]; }), (v) => v[0] > 0 && v[1] === 0);
-is('the second trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip2; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip2, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
-is('Twinsen rides the platform up', await ev(() => { const G = game, p = G.rooms.hamalayi.lift.pad; T.tp(p.x, p.z); for (let i = 0; i < 400 && !G.flags.c6_up; i++) G.step(0.05); return [G.flags.c6_up, G.hero.pos.y.toFixed(1), T.obj()]; }), (v) => v[0] === true && v[2].length > 0);
+is('the second trip: boarded, cranked in the green, up', await ev(([c, w]) => { const G = game, L = G.rooms.hamalayi.line, Th = G.story._ps; eval(c); for (let i = 0; i < 80 && (G.trans || Th.busy); i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); const b = Th.boarded;
+  let t = 0; while (!(L.green() && L.phase() < L.surge + 0.6) && t < 15) { G.step(0.05); t += 0.05; } eval(c); eval(w); return [b, G.flags.c6_trip2, G.flags.ps_trip2, T.obj()]; }, [crankAt, waitRun]), (v) => v[0] === 2 && v[1] === true && v[2] === true && v[3].length > 0);
+is('Twinsen rides the platform up (Yorna cranks in a quiet); she tells him of the upper brake', await ev(() => { const G = game, p = G.rooms.hamalayi.lift.pad, L = G.rooms.hamalayi.line; let t = 0; while (!L.surging() && t < 15) { G.step(0.05); t += 0.05; } T.tp(p.x, p.z); G.step(0.1); const startedInSurge = G.state === 'cutscene';
+  for (let i = 0; i < 600 && !G.flags.c6_up; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_up, startedInSurge, G.hero.pos.y.toFixed(1), T.obj()]; }), (v) => v[0] === true && v[1] === false && /brake/i.test(v[3]));
 await shot('C6-03-top.png');
+is('the monastery waits: the chapter does not end before the brake is locked', await ev(() => { const G = game, M = G.rooms.hamalayi.monastery.yard; T.tp(M.x, M.z, 0, 30); for (let i = 0; i < 40; i++) G.step(0.05); T.talkAll(); return [G.flags.c6_done, G.flags.chapterKey, T.obj()]; }), (v) => !v[0] && v[1] === 'pass' && /brake/i.test(v[2]));
+is('the upper brake locked by hand: the last of Lhar (Tam, Bodo) ride up through a kick and the platform holds; then the monastery', await ev(() => { const G = game, L = G.rooms.hamalayi.line, Th = G.story._ps, b = L.brake.touch(); T.tp(b.front.x, b.front.z, b.a, 30); G.step(0.2); T.tap('KeyE'); G.step(0.05);
+  for (let i = 0; i < 900 && (Th.busy || Th.run || G.state !== 'play'); i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); G.step(1);
+  const ph = (id) => T.npc(id)?.phaseKey; return { safe: !!G.flags.ps_safe, brake: L.brake.on, held: !!Th.restHeld, tam: ph('lh_tam'), bodo: ph('lh_grum'), obj: T.obj(), j: G.story.cur.journal().some((l) => l.key === 'ps_j_line') }; }),
+  (v) => v.safe && v.brake && v.held && v.tam === 'mon' && v.bodo === 'mon' && /monastery/i.test(v.obj) && v.j);
 is('chapter 6 ends at the monastery: the next chapter (observatory)', await ev(() => { const G = game, M = G.rooms.hamalayi.monastery.yard, L = G.rooms.hamalayi.lift.top; T.tp(L.x, L.z - 2, 0, 30); G.step(0.3); const h = G.hero; for (let i = 0; i < 300 && !G.flags.c6_done; i++) { const a = Math.atan2(M.x - h.pos.x, M.z - h.pos.z); G.physics.move(h, Math.sin(a) * 0.15, Math.cos(a) * 0.15); G.step(0.02); } T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c6_done, G.flags.chapterKey, Math.round(h.pos.x), Math.round(h.pos.z), Math.round(h.pos.y)]; }), (v) => v[0] === true && v[1] === 'observatory');
 const fails = done();
 await browser.close();

@@ -13,7 +13,8 @@
 //   R.landing {x,z,a}; R.glider {x,z}; R.gliderObj (its Group); R.hut {x,z}
 //   R.gorge {tree:{x,y,z, fallen, fell(instant?)}}  ballTargets entry {…, tree:true}
 //   R.lhar {x,z}; R.npcSpots {yorna, pim, v1, v2, v3, keeper, hesk} {x,z,a}
-//   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done)}; R.heatPost {x,z, on, setOn(b)}
+//   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done), speed, y, halt(), jolt()};
+//   R.line the line's pulse, lamps, cable, crank, gauge and upper brake (winchline.js); R.heatPost {x,z, on, setOn(b)}
 //   R.slide {x,z}  (the rockslide that blocks the ledge)
 //   R.monastery {gate:{x,z}, yard:{x,z}, hall:{x,z,y,ry,sill}}  (hall: the hall's door on its porch: story/hamlife.js)
 //   R.chimney(doorId, on), R.lharWindows(on): a house's smoke, Lhar's window glow (story/hamlife.js, by the story's phase)
@@ -34,6 +35,7 @@ import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
 import { makeTree } from './hamalayi-tree.js';
 import { roomOcc, occCollider } from './roomocc.js';
+import { buildWinchLine } from './winchline.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
@@ -554,8 +556,10 @@ export function* buildHamalayiSteps(scene, physics) {
   const ropeLine = new THREE.Mesh(cyl(0.03, 0.03, 1, 5, 0), rope); group.add(ropeLine);
   const platCol = col({ type: 'box', x: LIFT.x, z: LIFT.z, hw: 1.5, hd: 1.3, top: liftY0 + 0.08 });
   let platY = liftY0, platGoal = liftY0, riders = [], liftDone = null;
+  let joltT = null;   // (CAMPAIGN-5: a surge shakes the platform on its ropes)
   const placePlat = () => {
-    plat.position.set(LIFT.x, platY, LIFT.z);
+    const jx = joltT == null ? 0 : Math.exp(-joltT * 5) * Math.sin(joltT * 40) * 0.06;
+    plat.position.set(LIFT.x + jx, platY, LIFT.z);
     platCol.top = platY + 0.08;
     ropeLine.position.set(LIFT.x, (platY + L3 + 3.7) / 2, LIFT.z); ropeLine.scale.y = Math.max(0.1, L3 + 3.7 - platY);
   };
@@ -570,10 +574,21 @@ export function* buildHamalayiSteps(scene, physics) {
     atTop() { return platY > liftY1 - 0.1; },
     pad: W(LIFT.x, LIFT.z),
     winch: W(LIFT.x + 2.4, LIFT.z + 2.2), crank: W(LIFT.top.x + 1.6, LIFT.top.z - 1.0),
+    // CAMPAIGN-5 (story/passline.js): the platform's speed on a trip (m/s; null: as it always rode), where it is, a
+    // halt where it is, a jolt on its ropes
+    speed: null,
+    get y() { return platY; },
+    halt() { platGoal = platY; liftDone = null; riders = []; },
+    // (where a load finds it: at once, so a save made on it at the top is stood on there, not under it: pass.js)
+    snap(up) { this.up = !!up; platY = platGoal = up ? liftY1 : liftY0; liftDone = null; riders = []; placePlat(); },
+    jolt() { joltT = 0; },
   };
+  // CAMPAIGN-5: the line carries the pulse (winchline.js: the lamps, the cable, the crank, the gauge, the upper brake)
+  R.line = buildWinchLine({ group, col, W, H, kit: kitOf('lift'), updaters, lift: { x: LIFT.x, z: LIFT.z, y0: liftY0, y1: liftY1 }, winch: { x: LIFT.x + 2.4, z: LIFT.z + 1.2, y: liftY0 }, top: { x: LIFT.top.x, z: LIFT.top.z, y: L3 }, rope });
   updaters.push((dt) => {
+    if (joltT != null) { joltT += dt; if (joltT > 1.0) joltT = null; placePlat(); }
     if (Math.abs(platGoal - platY) < 0.001) return;
-    const d = Math.sign(platGoal - platY) * Math.min(Math.abs(platGoal - platY), dt * 1.6);
+    const d = Math.sign(platGoal - platY) * Math.min(Math.abs(platGoal - platY), dt * (R.lift.speed || 1.6));
     platY += d; placePlat();
     for (const a of riders) { a.pos.y = platY + 0.08; a.vy = 0; a.onGround = true; a.sync?.(); }
     if (Math.abs(platGoal - platY) < 0.001) { const cb = liftDone; liftDone = null; riders = []; cb?.(); }

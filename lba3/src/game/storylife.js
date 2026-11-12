@@ -234,10 +234,12 @@ export const LHAR_PACK = [[-20.45, 9.6, 1.3, '#b0483a'], [-13.2, 2.75, 0.5, '#3a
 export const LHAR_SNOWMAN = { x: -2.5, z: 12.5 };
 // (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up; home in
 //  Lhar again after the ending, with Yorna, Pim and the story's villagers: story/epilogue.js EPILOGUE-HOME)
+// (CAMPAIGN-5: with the lift's line kicking, the last households wait in Lhar until the upper brake holds: story/passline.js)
+export const LAST = (f) => !!f.c6_trip2 && (!f.ps_v || !!f.ps_safe || !!f.c6_done);
 const village = (trip) => (f, S) => {
   const i = S.index, p = idx(S, 'pass');
   if (i < p) return 'lhar';
-  if (S.cur?.key === 'pass') return f[trip] ? 'mon' : 'lhar';
+  if (S.cur?.key === 'pass') return (typeof trip === 'function' ? trip(f) : f[trip]) ? 'mon' : 'lhar';
   if (S.cur?.key === 'home') return 'lhar';
   if (MEND.has(S.cur?.key)) return 'mend';
   return 'mon';
@@ -273,7 +275,7 @@ const HAMALAYI_PEOPLE = [
       L('sana_view', 54.4, -29.8, 54.4, -20, 'stand', [5, 8]),
     ] } },
   // Old Dorje: warm by the fire, watching the packing with a sigh; up there, the camp's fire and the washing
-  { id: 'lh_old', char: 'lharElder', tint: '#fff6ea', speed: 0.7, color: '#e0c8f0', start: 0, area: 'hamalayi', phase: (f, S) => (S.cur?.key === 'home' ? null : village('c6_trip2')(f, S)), rounds: {
+  { id: 'lh_old', char: 'lharElder', tint: '#fff6ea', speed: 0.7, color: '#e0c8f0', start: 0, area: 'hamalayi', phase: (f, S) => (S.cur?.key === 'home' ? null : village(LAST)(f, S)), rounds: {
     lhar: [
       L('old_fire', -4.8, 16.1, -4, 17.2, 'warm', [14, 20], { gest: ['sigh'] }),
       L('old_look', -11.0, 6.6, -16, 3, 'stand', [8, 12], { gest: ['sigh', 'shrug'] }),
@@ -283,7 +285,7 @@ const HAMALAYI_PEOPLE = [
       L('old_rack', 50.0, -33.4, MC.rack.x, MC.rack.z, 'stand', [8, 12]),
     ] } },
   // Tam: wood from the north woodpile to the fire, a look at the south woodpile; up there, the sledge unloaded by the gate
-  { id: 'lh_tam', char: 'farmerA_b', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_tam', char: 'farmerA_b', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village(LAST), rounds: {
     lhar: [
       L('tam_wood', -17.4, -4.4, -15.8, -4.4, 'draw', [4, 6], { carry: 'crate' }),   // (a log pulled from the stack's end: its lid is over his head)
       L('tam_fire', -6.7, 17.75, -5.7, 17.6, 'put', [4, 6], { carry: null }),         // (set down on the fire's log seat)
@@ -305,7 +307,7 @@ const HAMALAYI_PEOPLE = [
       L('k1_tag', MC.tag.x - 1.2, MC.tag.z, MC.tag.x, MC.tag.z, 'stand', [22, 30], { pair: 'montag', mate: 'lh_kid2', play: 'tag', field: MC.tag }),
       D('k1_c', 48.4, -36.6, 2.0, 'stand', [3, 5]),
     ] } },
-  { id: 'lh_kid2', char: 'pim', tint: '#fff0ea', speed: 1.4, color: '#ffb8a0', start: 0, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_kid2', char: 'pim', tint: '#fff0ea', speed: 1.4, color: '#ffb8a0', start: 0, area: 'hamalayi', phase: village(LAST), rounds: {
     lhar: [
       L('k2_tag', LHAR_TAG.x + 1.2, LHAR_TAG.z, LHAR_TAG.x, LHAR_TAG.z, 'stand', [22, 30], { pair: 'lhtag', mate: 'lh_kid1', play: 'tag', field: LHAR_TAG }),
       L('k2_sledge', 9.6, 14.8, 10.6, 13.6, 'tend', [4, 6]),   // (a child at an empty sledge kneels at it)
@@ -327,7 +329,7 @@ const HAMALAYI_PEOPLE = [
       L('mira_back', MC.bench.x - 1.5, MC.bench.z, MC.bench.x, MC.bench.z, 'put', [4, 6], { carry: null }),   // (the basket set down on the bench's end)
     ] } },
   // Grum: crates to the hand cart; up there, the sledge's load into the camp
-  { id: 'lh_grum', char: 'farmerC_b', tint: '#eef0ff', speed: 0.85, color: '#c0c8e8', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+  { id: 'lh_grum', char: 'farmerC_b', tint: '#eef0ff', speed: 0.85, color: '#c0c8e8', start: 1, area: 'hamalayi', phase: village(LAST), rounds: {
     lhar: [
       L('grum_crates', -26.0, 1.6, -26.3, 0.3, 'put', [4, 6], { carry: 'crate' }),
       L('grum_cart', -16.17, 1.75, -17.3, 2.4, 'put', [5, 7], { carry: null }),   // (NO-AIR 3: at the cart's bed by its wheel: from its side his arm was a hand short of the load)

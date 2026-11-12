@@ -43,6 +43,10 @@ const STATES = [
   ['network', {}], ['shell', {}], ['core', {}], ['home', {}],
   // CAMPAIGN-4 (story/digtest.js): chapter 5 with the bore test behind it, Dallan at the test stand's wire (21)
   ['steam', { c5_planned: true, c5_routed: true, dt_v: 1, dt_strip: true }],
+  // CAMPAIGN-5 (story/passline.js): chapter 6 up the cliff with the brake not yet locked: Yorna at the top crank, the last
+  // of Lhar still packing below (22); chapter 7 with the telescope's fourth setting read (23)
+  ['pass', { c6_heat: true, c6_thawed: true, c6_liftReady: true, c6_sword: true, c6_rope: true, c6_trip1: true, c6_trip2: true, c6_up: true, ps_v: 1, ps_read: true, ps_trip1: true, ps_trip2: true }],
+  ['observatory', { c7_keeper: true, c7_ice: true, c7_lit: true, c7_sendell: true, ob_v: 1, ob_follow: true, ob_dir: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

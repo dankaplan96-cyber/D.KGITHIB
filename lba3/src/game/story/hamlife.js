@@ -23,12 +23,13 @@ import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { IH, roomOf } from '../ihomes.js';
 import { HR, dressLharRoom } from '../hamrooms.js';
+import { LAST } from '../storylife.js';
 import { canvasTex, MAT, plane } from '../props.js';
 import '../text/hamlife.js';
 
 const LATE = new Set(['evacuation', 'council', 'network', 'shell', 'core']);
 const HOUSE = { lhar0: 'lhamo', lhar1: 'yorna', lhar2: 'dorje', lhar3: 'bero', lhar4: 'sana' };
-const TRIP = { lhar0: 'c6_trip1', lhar1: 'c6_trip2', lhar2: 'c6_trip2', lhar3: 'c6_trip1', lhar4: 'c6_trip1' };
+const TRIP = { lhar0: 'c6_trip1', lhar1: 'c6_trip2', lhar2: LAST, lhar3: 'c6_trip1', lhar4: 'c6_trip1' };   // (lhar2: Old Dorje's, up with the last of Lhar: storylife.js LAST)
 // the indoor selves: their room, when they are home, their outdoor self (storylife.js: dress and tint)
 const OWNERS = {
   hl_bero: { room: 'lhar3', when: 'mend', of: 'lh_bero', char: 'lharMan', tint: '#f6eadc', color: '#d8a878', work: ['stove', 'bed'], anims: ['tinker', 'wipe'] },
@@ -57,7 +58,7 @@ export class HamalayiLife extends ChapterBase {
   // a house of Lhar now: its phase's things ('pack' | 'mend' | null) and whether somebody lives in it (hearth, smoke)
   house(room) {
     const ph = this.phase(), f = this.f;
-    if (ph === 'pack') return f[TRIP[room]] ? { set: null, home: false } : { set: 'pack', home: true };
+    if (ph === 'pack') return (typeof TRIP[room] === 'function' ? TRIP[room](f) : f[TRIP[room]]) ? { set: null, home: false } : { set: 'pack', home: true };
     if (ph === 'camp') return { set: null, home: false };
     if (ph === 'home') return { set: null, home: true };
     const k = this.key(), who = HOUSE[room];
@@ -234,7 +235,7 @@ export class HamalayiLife extends ChapterBase {
   }
   apply(force) {
     const RG = this.RG; if (!RG) return;
-    const ph = this.phase(), key = `${ph}|${this.key()}|${this.f.c6_trip1 ? 1 : 0}${this.f.c6_trip2 ? 1 : 0}`;
+    const ph = this.phase(), key = `${ph}|${this.key()}|${this.f.c6_trip1 ? 1 : 0}${this.f.c6_trip2 ? 1 : 0}${LAST(this.f) ? 1 : 0}`;
     const M = this.M;
     if (!force && key === this._key) return;
     this._key = key;
