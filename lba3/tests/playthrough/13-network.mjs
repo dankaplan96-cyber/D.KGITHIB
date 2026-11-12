@@ -73,10 +73,11 @@ export const steps = [
     if (!f.nw_v) { const r = P.use(b.x, b.z + 3.6, { run: true, kind: 'c10console' }); P.settle(60); P.settle(30); return { ...r, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === 'shell' ? null : 'no chapter 11' }; }
     // (CAMPAIGN-8: Baldino says what the joint wants; the first try at once, then in the rest after the fourth knock)
     const T = G.story._nw, J = T.joint(), out = { tries: [], told: null };
-    const r0 = P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); NWAIT(); out.told = !!f.nw_jointTold; out.r0 = r0.r;
+    const r0 = P.go(J.touch.front.x, J.touch.front.z, { tol: 0.4, run: true }); P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); NWAIT(); out.told = !!f.nw_jointTold; out.r0 = r0.r;
     for (let k = 0; k < 6 && !f.nw_joint; k++) {
-      if (k > 0) { let t = 0; while (!(T.phase() > 1.35 && T.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } }
-      P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' }); out.tries.push(T.lastTry); NWAIT(60);
+      // (after a miss he waits at the joint for the fourth knock, and presses as it passes, as Arthur and Mira said)
+      if (k > 0) { P.go(J.touch.front.x, J.touch.front.z, { tol: 0.25, maxT: 8 }); P.face(J.x, J.z); let t = 0; while (!(T.phase() > 1.48 && T.phase() < 1.62) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.tap('KeyE', 0.1); } else P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' });
+      NWAIT(60); out.tries.push(T.lastTry);
     }
     P.settle(60); P.settle(30); for (let i = 0; i < 30 && f.chapterKey !== 'shell'; i++) { G.step(0.2); P.settle(); }
     return { ...out, joint: !!f.nw_joint, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === 'shell' ? null : 'no chapter 11' }; }],

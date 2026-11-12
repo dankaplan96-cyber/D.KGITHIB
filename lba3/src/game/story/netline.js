@@ -113,9 +113,10 @@ export class NetThread {
     return undefined;
   }
   get D() { return this.game.regions?.built?.('desert'); }
-  // Mill Lane: Irsa beside the motor house, then at the feed switch (her left hand on it: he stands at the feed box beside)
+  // Mill Lane: Irsa beside the motor house, then at the feed switch (her hands on the box at the switch: he stood at the isolator
+  // beside it). The friends' spots and their actions were tried for the hands (tests/campaign-hands.mjs: within 1.2 cm)
   irsaWait() { const L = this.L; return { x: L.feed.x - 0.9, z: L.feed.z - 1.05, a: 0.55 }; }
-  irsaSwitch() { const L = this.L; return { x: L.feed.x - 0.36, z: L.feed.front.z, a: 0, anim: 'use' }; }
+  irsaSwitch() { const L = this.L; return { x: L.feed.x - 0.36, z: L.feed.front.z - 0.04, a: 0, anim: 'tinker' }; }
   // the valve room: the wheels (story/network.js valves: their spots 0.72 m before the wheel's face), the gauge board
   wheel(i) { const v = this.game.rooms.valves.valves[i]; return { x: v.x, z: v.z - 0.72 }; }
   wheelTouch(i) { const w = this.wheel(i); return touch(w.x + 0.24, w.z + 0.03, Math.PI, 'tinker'); }
@@ -128,21 +129,22 @@ export class NetThread {
     const L = this.game.rooms.lighttop, s = L.searches.find((x) => x.id === 'dial' + (i + 1)), k = this.dialKnob(i);
     return touch(k.x, k.z, Math.atan2(k.x - s.x, k.z - s.z), 'tinker');
   }
-  zoeDial() { const p = this.lightPt(230, 1.95), k = this.dialKnob(0); return { ...p, a: Math.atan2(k.x - p.x, k.z - p.z), anim: 'use' }; }
+  zoeDial() { const p = this.lightPt(230, 1.95), k = this.dialKnob(0); return { ...p, a: Math.atan2(k.x - p.x, k.z - p.z), anim: 'tinker' }; }
   // the bore: the relief wheel on the well-head (desert.js: a red wheel in the y–z plane, 1.0 m west of the bore, its hub
   // 1.15 m up), its rim in his right hand from the west; the relay on the frame (network.js decorate)
   reliefWheel() { const b = this.D.bore; return { x: b.x - 1.0, z: b.z + 0.2 }; }
   reliefTouch() { const w = this.reliefWheel(); return touch(w.x - 0.05, w.z - 0.4, Math.PI / 2, 'tinker'); }
-  ilkaWheel() { const w = this.reliefWheel(); return { x: w.x - 0.5, z: w.z, a: Math.PI / 2, anim: 'use' }; }
+  ilkaWheel() { const w = this.reliefWheel(); return { x: w.x - 0.54, z: w.z, a: Math.PI / 2, anim: 'tinker' }; }
   dallanRelay() { const b = this.D.bore; return { x: b.x + 1.4 + 0.72, z: b.z - 1.2, a: -Math.PI / 2, anim: 'tinker' }; }
   // the dome: Pim at the frame's edge of the mirror nearest the relay; Yorna at the telescope's setting lever
   pimMirror() {
     const O = this.game.rooms.obsv, T = O.telescope, rx = T.x - 1.3, rz = T.z - 0.4;
     const m = O.mirrors.reduce((a, b) => (Math.hypot(b.x - rx, b.z - rz) < Math.hypot(a.x - rx, a.z - rz) ? b : a));
-    const r = m.type === 'A' ? Math.PI / 4 : -Math.PI / 4, tx = Math.cos(r), tz = -Math.sin(r);   // (the frame's width runs along its local x)
-    const s = (Math.hypot(m.x + tx - rx, m.z + tz - rz) < Math.hypot(m.x - tx - rx, m.z - tz - rz)) ? 1 : -1;
-    const x = m.x + tx * s * 0.78, z = m.z + tz * s * 0.78;
-    return { x, z, a: Math.atan2(m.x - x, m.z - z), anim: 'use' };
+    // (behind the mirror, his hands on the back of its frame: the glass faces the relay; obsroom.js turns the frame's
+    //  face, local +z, to the turntable's angle, ±45° by its type; he stands at the turntable's rim)
+    const r = m.type === 'A' ? Math.PI / 4 : -Math.PI / 4, nx = Math.sin(r), nz = Math.cos(r), s = (nx * (rx - m.x) + nz * (rz - m.z)) > 0 ? -1 : 1;
+    const x = m.x + nx * s * 0.5, z = m.z + nz * s * 0.5;   // (a boy's arms: at the turntable's rim; 'tinker' puts his hands on the frame's back)
+    return { x, z, a: Math.atan2(m.x - x, m.z - z), anim: 'tinker' };
   }
   yornaLever() { const p = this.game.rooms.obsv.telescope.lever.touch(); return { ...p.front, a: p.a, anim: 'tinker' }; }
 

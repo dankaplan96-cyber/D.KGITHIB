@@ -97,7 +97,7 @@ await shot('C10-01-mill.png');
 is('Hesk is not on Zeelich (no glider to another planet)', await ev(() => [T.npc('hesk')?.present ?? null, game.story.cur.region()]), (v) => v[0] !== true && v[1] === 'zeelich');
 is('CAMPAIGN-8 Mill Lane: the isolator off Kell\'s feed box; Irsa takes the switch as he lets go (her hands on it), the lift still up; the isolator in his pocket', await ev(() => { const G = game, L = G.rooms.zeelich.lift; T.tp(L.isoAt.front.x + 0.3, L.isoAt.front.z - 1.2); const r = P.use(L.isoAt.x, L.isoAt.z, { near: 0.6, kind: 'nw_unclip' }); T.wait(); const n = T.npc('zl_irsa');
   return [r.target?.kind, G.flags.nw_irsa, n.rig.anim, +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(2), G.story.items().some((i) => i.id === 'iso'), L.isoShown(), +(L.deckY - L.y0).toFixed(1), T.obj()]; }),
-  (v) => v[0] === 'nw_unclip' && v[1] === true && v[2] === 'use' && v[3] < 0.9 && v[4] && v[5] === false && v[6] > 3);
+  (v) => v[0] === 'nw_unclip' && v[1] === true && v[2] === 'tinker' && v[3] < 0.9 && v[4] && v[5] === false && v[6] > 3);
 await shot('C10-01b-irsa.png');
 is('the spaceship to Citadel', await ev(() => T.ship('zeelich_port')), (v) => v[0] === 'out');
 is('CAMPAIGN-8 on Citadel: Arthur on the radio from home counts the kitchen pipe (four now); his place is at home by the radio, not the lamp room', await ev(() => { T.wait(); const p = game.story.cur.thread.place('arthur'); return [game.flags.nw_arthur, p && +p.x.toFixed(1), p?.anim]; }), (v) => v[0] === true && v[1] > 990 && v[1] < 1010 && v[2] === 'tinker');
@@ -133,14 +133,14 @@ const dialWalk = await ev(() => { const G = game, L = G.rooms.lighttop, h = G.he
   return { people, out, trace: P.trace.slice(-6) }; });
 check('B-1: every lighthouse dial is walked to from the stairs by input and turns (E), with Zoé and Arthur standing by', dialWalk.out.length === 3 && dialWalk.out.every((d) => d.r === 'used' && d.target === 'c10dial' && d.turned), dialWalk);
 is('the lighthouse dials set by input, the relay (3/5); CAMPAIGN-8: Zoé comes round and takes the dial bank as he lets go (Arthur is at home)', await ev(() => { const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light || game.story._nw?.busy) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); } T.wait(); const z = T.npc('zoe');
-  return [game.flags.c10_dials, game.flags.c10_light, T.obj(), game.flags.nw_zoe, z.rig.anim, T.npc('arthur')?.present && game.room?.id === 'lighttop' && T.npc('arthur').pos.x > 1590 && T.npc('arthur').pos.x < 1610]; }), (v) => v[1] === true && v[2].length > 0 && v[3] === true && v[4] === 'use' && !v[5]);
+  return [game.flags.c10_dials, game.flags.c10_light, T.obj(), game.flags.nw_zoe, z.rig.anim, T.npc('arthur')?.present && game.room?.id === 'lighttop' && T.npc('arthur').pos.x > 1590 && T.npc('arthur').pos.x < 1610]; }), (v) => v[1] === true && v[2].length > 0 && v[3] === true && v[4] === 'tinker' && !v[5]);
 await shot('C10-04-lighthouse.png');
 // the cast is put back on its spots when the relay is done (Story.refreshCast): he must still get from the dial bank
 // back down the stairs (B-1: it shut him in front of the cabinet)
 is('B-1: after the relay, down the stairs from the dial bank by input', await ev(() => { const h = game.hero, from = [+h.pos.x.toFixed(2), +h.pos.z.toFixed(2)]; const r = P.exitTo('outdoor-lighthouse'); return [from, r.r, game.room?.id ?? 'out']; }), (v) => v[2] === 'out');
 is("Hesk's glider to Desert Island", await ev(() => { if (game.room?.id === 'lighttop') T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(1); }), (v) => v === 'desert');
 await shot('C10-05-desert-landing.png');
-is('Ilka; the bore relay set; CAMPAIGN-8: he opens the relief wheel, Ilka takes it as he lets go; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); T.wait(); const n = T.npc('ilka'); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length, game.flags.nw_ilka, n.rig.anim]; }), (v) => v[0] === true && v[1] === true && v[2] > 0 && v[3] === true && v[4] === 'use');
+is('Ilka; the bore relay set; CAMPAIGN-8: he opens the relief wheel, Ilka takes it as he lets go; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); T.wait(); const n = T.npc('ilka'); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length, game.flags.nw_ilka, n.rig.anim]; }), (v) => v[0] === true && v[1] === true && v[2] > 0 && v[3] === true && v[4] === 'tinker');
 // the bore fight, two waves (DIFFICULTY): the three drones first (they come one after another), then Vesk's clone, the Grobo
 // guard and the sentry. Each by throws (the AI uses unseeded Math.random, so an enemy can dodge many throws in a row): each
 // throw from a fresh side and distance, aimed again a moment before it leaves the hand (a charged one at an armoured guard,
@@ -184,7 +184,7 @@ is('the glider to the Hamalayi', await ev(() => { const L = game.story.cur.landi
 await shot('C10-07-monastery.png');
 is('Yorna and Pim', await ev(() => { T.talk('yorna'); return [game.flags.c10_pim]; }), (v) => v[0] === true);
 is("the dome's relay (5/5), an objective set; CAMPAIGN-8: Pim at a mirror, the lever to SUNS, Yorna takes it as he lets go", await ev(() => { const r = T.door(game.rooms.hamalayi.observatory.door); T.talk('keeper'); const t = game.rooms.obsv.telescope; T.useAt(t.x, t.z); T.wait(); T.useAt(t.x, t.z); T.wait(); const y = T.npc('yorna'), p = T.npc('pim');
-  return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj(), game.flags.nw_yorna, y.present && y.rig.anim, p.present && p.rig.anim, t.n]; }), (v) => v[1] === true && v[2] === true && v[3] === true && v[4].length > 0 && v[5] === true && v[6] === 'tinker' && v[7] === 'use' && v[8] === 2);
+  return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj(), game.flags.nw_yorna, y.present && y.rig.anim, p.present && p.rig.anim, t.n]; }), (v) => v[1] === true && v[2] === true && v[3] === true && v[4].length > 0 && v[5] === true && v[6] === 'tinker' && v[7] === 'tinker' && v[8] === 2);
 await shot('C10-08-dome.png');
 // SHAFT-CITADEL: the shaft's top is the bore in Citadel's station (the user's decision, 2.11.2026): the code goes out there,
 // reached by Twinsun's own routes (the glider to Citadel, then on foot up the plateau into the fort's yard)
@@ -198,7 +198,7 @@ is('from the glider\'s landing on the plateau he walks into the station\'s yard 
 is('CAMPAIGN-8 the joint: Baldino says what it wants; clipped just after the third knock, the fourth throws it off (said once)', await ev(() => { const G = game, T2 = G.story._nw; T.tap('KeyE'); T.wait();
   let t = 0; while (!(T2.phase() > 0.5 && T2.phase() < 0.6) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); return [!!G.flags.nw_jointTold, T2.lastTry, !!G.flags.nw_joint, !!G.flags.nw_kick]; }), (v) => v[0] && v[1] && v[1].ok === false && !v[2] && v[3]);
 await shot('C10-09-joint.png');
-const fin = await ev(() => { const G = game, st = G.world.station, T2 = G.story._nw; let t = 0; while (!(T2.phase() > 1.35 && T2.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); const tr = T2.lastTry; for (let i = 0; i < 30; i++) { G.step(0.2); T.talkAll(); } return [G.flags.c10_done, G.flags.chapterKey, G.room?.id, !!st.sealed, tr, !!G.flags.nw_joint]; });
+const fin = await ev(() => { const G = game, st = G.world.station, T2 = G.story._nw; let t = 0; while (!(T2.phase() > 1.48 && T2.phase() < 1.62) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); const tr = T2.lastTry; for (let i = 0; i < 30; i++) { G.step(0.2); T.talkAll(); } return [G.flags.c10_done, G.flags.chapterKey, G.room?.id, !!st.sealed, tr, !!G.flags.nw_joint]; });
 log('code box', fin);
 { const miss = await ev(() => T.miss); if (miss.length) log('talk prompt not theirs from any side:', miss); }
 // the verdict (R7-VERDICTS: was CHAPTER 10 DONE / ASSISTED (exit 2, "not a pass") / NOT DONE, now one policy)

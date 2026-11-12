@@ -15,7 +15,7 @@ import { MAT } from './props.js';
 import { mergeStatic } from '../engine/merge.js';
 import { touch } from './story/reach.js';
 
-const CLAMP_Y = 1.19;   // the clamp's top over the deck: where a 'tinker' hand is (story/reach.js: 1.17–1.26)
+const CLAMP_Y = 1.215;   // the clamp's top over the deck: where a 'tinker' hand is (story/reach.js: 1.17–1.26)
 
 export function buildCodeJoint({ root, physics, x, z, box }) {
   const gy = physics.groundAt(x, z);

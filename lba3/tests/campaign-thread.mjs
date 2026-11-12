@@ -782,7 +782,7 @@ if (!ONLY || ONLY === 'M') {
     for (let i = 0; i < 300 && (G.story._nw.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle();
     const z = P.npc('zoe'), za = z.rig.anim; const r = P.exitTo('outdoor-lighthouse');
     return [d0, f.c10_light, f.nw_zoe, za, r.r, G.room?.id ?? 'out'];
-  }), (v) => v[0] === 1 && v[1] === true && v[2] === true && v[3] === 'use' && v[5] === 'out');
+  }), (v) => v[0] === 1 && v[1] === true && v[2] === true && v[3] === 'tinker' && v[5] === 'out');
   is('M5 a return home: Arthur by the radio, his hands on it; he is still counting four', await ev(() => {
     const G = game; P.enter('house', { run: true }); P.settle(); const a = P.npc('arthur'); const r = P.talk('arthur', { run: true }); return [G.room?.id, a.present, a.placed?.anim, r.r];
   }), (v) => v[0] === 'house' && v[1] && v[2] === 'tinker' && v[3] === 'talked');
@@ -793,12 +793,12 @@ if (!ONLY || ONLY === 'M') {
     const G = game; P.shipTo('citadel_port'); P.settle(); if (P.here() !== 'zeelich') return ['not on Zeelich', P.here()];
     const L = G.rooms.zeelich.lift, n = P.npc('zl_irsa'); P.go(L.lane.x, L.lane.z, { tol: 1.2, run: true }); for (let i = 0; i < 20; i++) G.step(0.1);
     return [L.isoShown(), n.placed?.anim, +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(2), +(L.deckY - L.y0).toFixed(1)];
-  }), (v) => v[0] === false && v[1] === 'use' && v[2] < 0.9 && v[3] > 3);
+  }), (v) => v[0] === false && v[1] === 'tinker' && v[2] < 0.9 && v[3] > 3);
   await shot('M6-irsa');
   await browser.close();
   await start('new-13-five');
   is('M7 the save: all five lit, at the station; Baldino says what the joint wants; a try just after the third knock: the fourth throws the clip off (said once)', await ev(() => {
-    const G = game, f = G.flags, T = G.story._nw, J = T.joint(); P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); for (let i = 0; i < 200 && (T.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    const G = game, f = G.flags, T = G.story._nw, J = T.joint(); P.go(J.touch.front.x, J.touch.front.z, { tol: 0.4, run: true }); P.use(J.x, J.z, { run: true, kind: 'nw_joint', near: 0.6 }); for (let i = 0; i < 200 && (T.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
     let t = 0; while (!(T.phase() > 0.5 && T.phase() < 0.6) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' }); for (let i = 0; i < 100 && (T.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
     return [f.nw_jointTold, T.lastTry?.ok, f.nw_joint ?? null, f.nw_kick];
   }), (v) => v[0] === true && v[1] === false && v[2] === null && v[3] === true);
@@ -806,7 +806,7 @@ if (!ONLY || ONLY === 'M') {
   await handover();
   is('M8 Save & quit → Continue: the joint still open, Baldino\'s word remembered; the try in the rest after the fourth holds, the roll call, the doors open → chapter 11', await ev(() => {
     const G = game, f = G.flags, T = G.story._nw, J = T.joint(); const st = [f.nw_jointTold, f.nw_joint ?? null];
-    let t = 0; while (!(T.phase() > 1.35 && T.phase() < 1.5) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.use(J.x, J.z, { near: 0.6, kind: 'nw_joint' });
+    P.go(J.touch.front.x, J.touch.front.z, { tol: 0.25, maxT: 8 }); P.face(J.x, J.z); let t = 0; while (!(T.phase() > 1.48 && T.phase() < 1.62) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.tap('KeyE', 0.1);
     for (let i = 0; i < 400 && f.chapterKey === 'network'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
     return [...st, T.lastTry?.ok, f.nw_joint, f.chapterKey];
   }), (v) => v[0] === true && v[1] === null && v[2] === true && v[3] === true && v[4] === 'shell');
