@@ -24,7 +24,7 @@ steps in `tests/playthrough/07…14`).
 | 5 Steam and Sand (`steam`, steam.js + digtest.js) | Brosk's jar | water carried, the shovel, the buried door dug out · the condenser hall: the diagram, the old trooper, valves 1, 3, 4 · the hangar, the glider's hatch (ball) · ● at the stand, the heat line thrown over to KESH (Kesh's pump puffs and turns faster, seen at once and again in Kesh) · ● the tape of what was sent to Citadel read: one trace · Dallan (● shown what he sent) · the relief valve · the run out before the vent blows | Dallan takes the ferry and lists the evacuees (told) · ● Vesk on the wire: Kesh keeps its water, wind or no wind; then "drill channel only" · Zoé reads the shell map on the radio (told) | Hesk flies him north in the cargo glider |
 | 6 The Pass (`pass`, pass.js) | the gorge | the frozen tree felled (ball) · the heating station: Pim's kite (ball), the fuse · the frozen rope (sword) · two winch trips, ice mites between · the ride up | Yorna knows the road | Lhar is safe in the monastery |
 | 7 The Observatory (`observatory`, observatory.js) | the monastery gate | the frozen window (ball), four mirrors, the telescope · the heavy drone · the seal's warm discs (ball) · the vent | Sendell speaks openly (told) · Arthur's radio: Citadel is evacuating (told) | the second vent is open |
-| 8 Evacuation (`evacuation`, evacuation.js + shelters.js) | home, changed | Gilbert, Mira, Pippa recruited · the fortress lever (control drones) · the depot wheel (ball) · Zoé's run with the hill families (played as Zoé) · the lighthouse gathering · the control room | Vesk's message from below (told) · Mira finds the old valve room (told) | he boards a project ship for Zeelich |
+| 8 Evacuation (`evacuation`, evacuation.js + shelters.js + laneline.js) | home, changed; ● from the plateau the list cart is seen at the lane's shut water gate, every seat empty (a cut-away) | Gilbert, Mira, Pippa recruited · the fortress lever (control drones) · the depot wheel (ball) · Zoé's run with the hill families (played as Zoé) · the lighthouse gathering · ● as Zoé: the cart's schedule read against the driver's route on the lighthouse path's board, Bram, Hedda and Tobin brought to the landing · ● as Twinsen: the culvert's cock in the pump room, opened in the rest between the copper pipe's kicks · the control room | Vesk's message from below (told) · Mira finds the old valve room (told) · ● Bram knows the float gate · ● the cart comes through the open gate and the lane boards it (seen) | he boards a project ship for Zeelich |
 | 9 The Council (`council`, council.js) | Zeelich's street | the street's people, the petition · Nara's and Oku's stamps (three mills freed, ball) · the clerk · the hearing · the archive in a borrowed coat, the archivist's keys, the BORE cabinet | the council's fear, Dallan's proof (told) · the turn: only the core's console reverses the bore (told) | the council agrees; the network is needed |
 | 10 Baldino's Network (`network`, network.js) | Oku | five legs in any order: the old mill's relay (brake, climb) · Citadel's valve room (three valves) and the lighthouse dials · Desert Island's bore relay (drones) · the Hamalayi's dome (telescope) · the code box at the station | the allies answer at each station (told on the radio) | the shaft's blast doors open |
 | 11 The Shell (`shell`, chapter3.js) | the lift down | the cooling diagram, valves A and C, the ball switch for the ladder · a patrol drone · the galleries: three pillars (ball), stepping stones | Sendell explains what is under the shell (told) · Baldino on the radio | he walks from Sendell's chamber into the core |
@@ -49,7 +49,7 @@ base game's own presence under the shell ("her", the young being Sendell watches
 | 3 Zeelich — a town that needs the project | 3 Zeelich | the landing, the confiscation, Baldino, the depot, the mills, the shield | **built (wave 1)**: Mill Lane's cistern lift, Kell, Brel, Irsa and her bench. Vesk was confronted on Citadel in chapter 2 and stands behind his shield here, so he "helps restart the motor" from his platform, on the lift's speaking tube: he gives the quarter the mill line and says why |
 | 4 The excavation — a test with a cost | 4 The Dig and 5 Steam and Sand | the research post, Dallan, the test bore under pressure, the relief valve | **built (wave 2, section 5b)**: Vesk is sealed in the shaft by then: the controlled test is run with **Dallan** at the instruments and Vesk on the project's wire, the player at the cutoff; the second vibration comes after the stop (three and a rest); Vesk diverts heat to Kesh's oasis pump (a real help); the filed log shows one vibration |
 | 5 Hamalayi — the road under the ice | 6 The Pass and 7 The Observatory | the gorge, the winch trips, Yorna, the mirrors and the telescope | **built (wave 3, section 5c)**: the winch line's supports carry the pulse: the trips are started between surges (seen and heard, read on a gauge); the upper brake from the far side; the telescope's fourth setting gives the direction: under the installations, toward Citadel |
-| 7 The evacuation — Zoé finds the omission | 8 Evacuation | Zoé's run (played), the shelters, the 30 % list | the omitted district is the lane of chapter 2 (the pump room's lane): a project cart passes its closed gate with empty seats; Twinsen opens the way through the pump room; the lane's people (Bram, the neighbours, Pippa) are seen to board. (The treatment has this after its section 6; the game's order keeps it before the council) |
+| 7 The evacuation — Zoé finds the omission | 8 Evacuation | Zoé's run (played), the shelters, the 30 % list | **built (wave 4, section 5d)**: the omitted district is the lane of chapter 2 (the pump room's lane): the project's list cart comes to its shut water gate with empty seats and turns away; Zoé reads its schedule against the driver's route and brings the lane's people to the landing; Twinsen opens the gate through the pump room (the culvert's cock on the copper pipe); Bram, Hedda and Tobin (the neighbours) and Pippa are seen to board. (The treatment has this after its section 6; the game's order keeps it before the council) |
 | 6 The evidence — Vesk closes a door | 9 The Council | the archive, the archivist's keys, the BORE cabinet, Dallan's proof | the archive is closed to Twinsen by Vesk's standing order (the reason: a stop before a bypass exists cuts the quarter's water); **Kell takes him up the service lift**; the cabinet holds the unedited test log of chapter 4/5 and the order that cut it, signed |
 | 9 The failed shutdown | 9 The Council's end → 10's start | "only the core's console can reverse the bore" (told) | played: the council orders the stop, the player throws it at the platform's console: the drill winds down, the pulse goes on, Mill Lane's lift and taps lose pressure; Baldino's isolator holds one branch at a time (tried on his Test Pair bench, which exists as a side story) |
 | 10 The network — allies take responsibility | 10 Baldino's Network | the five legs, the allies on the radio | each ally is seen to take the station over as he leaves it; Irsa takes Zeelich's bypass; Arthur hears the irregular interval (the kitchen's knocking), Mira verifies it on the valve room's gauge |
@@ -157,6 +157,23 @@ carbon), and the new reading (200 words a minute, 0.6 s a line). The kicks are w
 the first five chapters all have their problem found by hand; the median moves when the later waves add theirs. Logs:
 `/dev/shm/logs/w2-*.log`, stats `/dev/shm/w2/*-st0[78].json` (the session's scratch, not in the repository).
 
+**Chapter 8, wave 4** (12.11; base = this branch at `24b3e51a` before the wave, served as its own build beside the wave's;
+both played by the same bot, ASSIST=1, from the same save `base-11` — chapter 8 at its start, made on the build before the
+wave —, in three parts with Save & quit → Continue between them: to Pippa, Zoé's run, the rest; no death, no ISO assist in
+either):
+
+| Ch | bot s of free play: base → wave 4 | of which the new steps | lines · words | scenes (not counted) | est. first play (min): base → wave 4 | what the seconds are |
+|---|---|---|---|---|---|---|
+| 8 | 403.9 (201.2 + 110.4 + 92.3) → **475.7** (193.5 + 188.9 + 93.3) | 94.3 (the board 6.5; Bram 36.3 and Hedda 12.6 as Zoé, mostly the walk from the lighthouse path to the lane; the landing 17.4; the pump room 7.5; the cock 8.8, one turn kicked back; the walk up to the boarding 5.2) | 33 · 631 → 67 · 1,140 | 7.2 → 35.1 s (the arrival's cut-away 8.9 s, the boarding 19.1 s) | 18.5 → **about 26** | the lane, Zoé's half and Twinsen's; the rest swings with the bot (to Pippa −7.7 s, the control room and the ship −20.6 s: its stuck walk to the station in the base run) |
+
+The minutes are **estimates**: the 9.11 estimate moved by 1.8 × the new steps' bot seconds (+2.8 min), 60 s for each of two
+more deduction steps (the schedule against the route; which pipe drains the culvert and when to turn its cock: +2.0 min) and
+the new reading (+509 words at 200 a minute, +34 lines at 0.6 s: +2.9 min). Against the old median (16.9) chapter 8 is now
+about 1.55, over the 125 % line (it was 1.10). Nothing in it is padding: the walk Zoé makes from the lighthouse path back
+to the lane is the longest new piece (about 40 s of the bot's), and it is the lane the player sees her save. The user's
+decision of 8.11 (long chapters are not shortened) is kept; no step was cut to make room. Logs `/dev/shm/w4/base-*.log`,
+`new2-a.log`, `fin-b.log`, `new-c.log`, stats `/dev/shm/w4/*st11*.json` (the session's scratch, not in the repository).
+
 ## 4. The missing playable step, chapter by chapter
 
 Did the player discover the problem, test an idea and see the result — or did a person do all three?
@@ -170,7 +187,7 @@ Did the player discover the problem, test an idea and see the result — or did 
 | 5 | told (the diagram; Dallan) | played (valves, the relief valve) | shown (the vent, the geysers) | the cost: Vesk's diversion that helps Kesh, and the log that leaves the second vibration out → **built (wave 2)**: he throws Vesk's heat line, reads the cut log, holds the carbon |
 | 6 | told (Yorna) | played (tree, kite, rope, winch) | shown (the lift runs) | the pulse is not in the pass at all: nothing here moves because of it → **built (wave 3)**: the line kicks, he reads it on the gauge, starts each trip in the quiet (a late start costs the trip) and locks the upper brake for the last of Lhar |
 | 7 | told (Sendell) | played (mirrors, discs) | shown (the vent) | the direction is told, not read off an instrument he sets → **built (wave 3)**: the snow fields shake in threes; he sets the telescope to four, it follows the shaking, he reads the bearing: Citadel |
-| 8 | told (the list is known since chapter 2) | played (shelters, Zoé's run) | shown (the gathering) | the omission is never seen happening (the cart that passes the gate) |
+| 8 | told (the list is known since chapter 2) | played (shelters, Zoé's run) | shown (the gathering) | the omission is never seen happening (the cart that passes the gate) → **built (wave 4)**: the cart is seen to turn away at the shut gate; Zoé reads the schedule against the route herself; he drains the culvert by the copper pipe's cock in a rest; the lane is seen to board |
 | 9 | told (the council) | played (stamps, the archive) | told (the turn) | what the cabinet proves is not his own test; the shutdown everyone argues about is never tried |
 | 10 | told (Baldino) | played (five relays) | told (radio) | the allies are voices; nobody is seen taking a station over |
 | 11 | told (Sendell) | played (valves, pillars) | told | nothing answers him; the installation is a set of locks |
@@ -383,6 +400,109 @@ Chapter 7 is still short (about 15 estimated minutes, 0.89 of the old median): i
 The full `campaign-thread` (A–E) and the residents' suites were not rerun on this build.
 
 
+## 5d. Wave 4, as built (the treatment's section 7, in chapter 8)
+
+**Status (12.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played
+it, nothing was listened to (the cart's horn and rumble, the gate's clang, the pipe's knock and the drain's gurgle are the
+game's existing synthesized sounds), no frame rate measured.
+
+**Wave 4's verification** (port 8920 snapshot of this branch; one suite at a time; the machine shared — one no-air page
+died under memory pressure and was run again alone):
+
+| Suite | Verdict | What it covered |
+|---|---|---|
+| `tests/playthrough/11-evacuation.mjs` (seg.mjs, by input, ASSIST=1, from `base-11`, in three parts with Save & quit → Continue between them) | PASS, every part (part B again after the board moved); 0 deaths, 0 ISO assists | the arrival's cut-away from a save before the wave, the shelters, Zoé's run, the board's two sheets, Bram, Hedda and Tobin, the landing, the pump room, the cock (first try kicked back, the second in the rest), the boarding, the control room, the ship to chapter 9 |
+| `tests/chapter8.mjs` (Evacuation's chapter suite) | PASS 20/20, twice (the second on the final build) | the gate shut over a full culvert at a new chapter 8's start and the cart's cut-away skipped with E; the relay with Zoé staying on; the sheets one by one (Pippa to the landing); the three told and walked to the landing; the handover; the culvert looked at, the cock kicked back in a kick and opened in the rest; the boarding seen (the cart in the lane, four seated); the bridge; the control room; the ship |
+| `tests/campaign-thread.mjs` ONLY=H, I | PASS (H 5/5, I 14/14) | C12–C14: three saves from before the wave; I: the board half read and Save & quit (her run resumes before it), the run again to the landing, a Save & quit in the pump room, the kicked-back turn and the turn in the rest, a save after the cock and before the boarding, the boarding, the bridge and the landing after a reload, the control room |
+| `tests/campaign-hands.mjs` | PASS | the culvert's cock 0.0 cm and 0.2 cm (a kicked-back turn and the opening one); waves 1–3's unchanged |
+| `tests/no-air.mjs` STATES=14, 24 (new), 25 (new), 26 (new), one process each | 14, 24, 25 PASS; 26 measured with 0 offenders, its verdict FAIL on a page crash | chapter 8 without the lane, at its start with it, the lane waiting at the landing, the lane in the bridge's queue. 24 and 26 died on their first pages (memory: another worker's browsers on the machine); 24 passed alone; 26's second page measured all 127 cases (0 hand or foot offenders) but the first page's crash stays in its verdict |
+| `tests/save-migration.mjs` | PASS (17 checks, 3 new) | `base-11`, `base-11-town`, `base-11-relay` load without an error; the thread on only where the relay is ahead; the arrival counted as seen once home |
+| `tests/resume.mjs`, `tests/chapter1.mjs`, `tests/opening.mjs` | PASS each | unchanged (the gate's posts stand in the lane in every chapter, open) |
+| `tests/cast-rounds.mjs` | PASS (after one FAIL: its chapter-8 states set only `c8_started`, which is a save from before the wave at the chapter's start: the arrival played over its free play; the states now say the arrival was seen) | the story people's rounds in chapters 3–10 |
+| `tests/world-consistency.mjs` | FAIL, not this wave's: its static journey check lists two `startTransition` calls of wave 3's `story/passline.js` (`board`, `restUp`) as not on its allow-list; this wave's `backToTwinsen` is on it. Chapter 8's residents and rounds pass | the residents and the cast per chapter; the journeys' allow-list |
+
+| Chapter | Before (base) | Now: what the player does | Where |
+|---|---|---|---|
+| 8 Evacuation | the 30 % list was known since chapter 2 and never seen to leave anyone out; Zoé's run ended at the lighthouse with the relay; the lane by Twinsen's home played no part | **Arriving** on the plateau, a cut-away: the project's list cart (a teal motor wagon, two side benches, the project's worker at the wheel) comes down the plaza's road to the lane's old water gate, stops at it (a toot of the horn: it is shut, a sheet of water over the culvert's grate behind it, the float up in its cage), and turns off to the fields with every seat empty. E skips it after a moment. "From up here I can see our lane." At home he tells Zoé; she knows the gate ("shut since they closed Mira's office; the culvert under it is full") and will read the timetable the project posts at every stop. **As Zoé**, after the hill farms and the relay at the lighthouse (as before), the board at the lighthouse path's stop: the SCHEDULE (stop 4, LANE GATE: Bram, Hedda, Tobin, every round) and the driver's ROUTE (the lane crossed out: GATE SHUT, NO STOP), read in either order: "On paper the lane is picked up every round. On the road nobody stops." She goes to the lane: Bram at his pump ("the man on the bridge said wait for the cart; it came to the gate and went away again; twice"), Hedda and Tobin outside their door (packed since breakfast); told, they walk to the cart landing inside the gate (a flagged stop by the pump house); Pippa is there already with bread for the lane. Zoé at the landing: back to **Twinsen**, beside her: Bram knows it is a float gate ("culvert full, gate shut; Mira's pump used to empty it"); every pipe on the lane meets in the pump room. **Below**, the copper pipe kicks in threes again, harder, and the floor grate brims: the culvert's cast-iron pipe climbs out of it and drops into the copper pipe, with a cock of its own. Looked at: "The copper one pulls toward the fortress: it pulled our water away in spring." Turned by hand in a kick, the pipe kicks the handle back out of his hand (said once; then a toast); turned in the rest, it opens: the grate gurgles dry down the project's own pipe, and up on the lane something heavy clanks. **Up in the lane**, a cut-away: the cart comes down the road and in through the open gate to the landing; the driver ("Gate's open, so the lane's on my route. That's how routes work"), Bram, Hedda, Tobin and Pippa ("I'm not on any list. I'm on the cart") board one by one onto the benches; the cart backs out and drives off to the bridge. Zoé goes back to the hill families; the control room is next, as before. At the bridge the lane stands in the queue for the ships, Pippa sells from there | `story/laneline.js`, `lanegate.js`, `pumproom.js`; the lane's mouth on Citadel (Bug Street), the pump room, the lighthouse path, the spaceport bridge |
+
+**Why this shape.** The treatment's "Zoé compares the evacuation schedule with the actual transport route; an inhabited
+lower district has no pickup; the player arrives in time to see a vehicle pass its closed gate with empty seats" is played
+as written, with the lane the player knows from chapters 1–2 (his own street) as that district. The omission is a system's,
+not a speech: the water office was called non-essential, so the culvert filled, so the float gate shut, so the driver's
+route was drawn round the lane while the schedule kept its names. Zoé finds it with her own eyes on two sheets; Twinsen
+"reopens a usable route through infrastructure he knows": the pump room's copper pipe, the one that took the lane's water
+in chapter 2, drains the culvert, and it is turned in the rest between the kicks he learned to read in chapter 6 (the thread
+"three kicks and a rest", used where it fits: the pipe is the pulse's own). Nothing is missable or optional: the board, the
+three people and the cock are on the main route, each marked; the chapter's own steps are kept (the shelters, the farms,
+the relay, Vesk on the screen). The treatment's "residents from chapter 3 board" is the lane's people here (the plan's
+decision): Bram from chapter 2's lane, Hedda (the neighbour of chapter 1's kettle) and her husband Tobin (new), Pippa.
+
+**New flags only** (old saves load and go on): `ev_v ev_cart ev_s ev_r ev_sched ev_bram ev_hedda ev_landing ev_in ev_seen
+ev_kick ev_gate ev_board`. The marker `ev_v` is set when chapter 8 begins, or on loading a chapter-8 save from before whose
+relay (the end of Zoé's run) is still ahead; in such a save made after he has been home the arrival counts as seen
+(`ev_cart: 'past'`: no journal line for a cut-away he never saw). Without the marker every new step counts as done: the gate
+stands open, no board, no cart, no stop; Zoé's run ends at the lighthouse and he is put at the control room, as before. A
+save during Zoé's run resumes before it, as every save in her run always did; the lane's part of it (the sheets read, the
+people told) resets with it. The water gate and the landing stand in every chapter, the gate open (only the chapter-8 lane
+shuts it until the cock is turned); the board and the cart are chapter 8's.
+
+**Hands.** One new hand action: the culvert's cock (`story/reach.js` `tinker`, the handle at 1.2 m like chapter 2's two
+cocks), both the kicked-back turn and the turn that opens it. Measured in `tests/campaign-hands.mjs`: 0.0 cm and 0.2 cm from
+the handle at the moment each takes effect. Zoé's reading of the board is a look (no hand). The riders step up to the
+cart's side and sit on its benches (the rig's `sit`, their feet on the bed); the driver sits at the wheel.
+
+**Vega 8 budget** (draw calls and triangles of one frame, all passes, the same save `base-11-town` and camera spots,
+1280×720, Medium; SwiftShader: counts only, no timing):
+
+| Spot (save `base-11-town`) | draw calls: base → wave 4 | triangles: base → wave 4 |
+|---|---|---|
+| the lane at the landing, looking north (the gate) | 300 → 307 | 1,140,658 → 1,144,588 |
+| the plaza's south end, looking at the lane | 182 → 194 | 974,803 → 983,923 |
+| the lighthouse path's stop (the board) | 294 → 298 | 1,041,544 → 1,045,204 |
+| the pump room by the pier (the culvert's pipe) | 33 → 35 | 49,290 → 52,684 |
+| the spaceport bridge | 270 → 275 | 1,222,016 → 1,223,310 |
+| the lane, the cart at the landing (wave 4 only) | — → 320 | — → 1,146,316 |
+| the lane waiting at the landing, five people (wave 4 only) | — → 329 | — → 1,159,776 |
+| the spaceport bridge, the lane in the queue (wave 4 only) | — → 295 | — → 1,241,858 |
+
+At most +12 calls where the gate and Hedda and Tobin at their door are in view (the plaza's end), +7 at the gate itself,
++0.9 % triangles. The static parts (the posts and caps, the grate's frame and bars and its dark floor, the landing, its stone
+bench, the signs) are one Kit of three materials (the posts' sand stone, iron, one atlas texture for every sign and both
+sheets); the two leaves are one instanced mesh; the float and its rod one mesh; the water over the grate one. The board is
+a Kit of two (its wood, the atlas), shown only in chapter 8. The cart is a Batch of five materials (its teal, iron, planks,
+the hazard stripes, the atlas), drawn only while it drives (+13 calls then). The people are the story's own (Hedda, Tobin:
+two more in the lane in chapter 8, the most of the cost when the five wait). The counts were taken after the gate's moving
+parts and materials were folded together (first measure: 309, 194, 300, 35, 276).
+
+**Files.** New: `src/game/story/laneline.js` (the thread: `story._ev`, owned by evacuation.js and asked first),
+`src/game/lanegate.js` (the gate, its posts, float and grate, the landing, the board, the list cart and its paths),
+`src/game/text/laneline.js`. Hooked into: `story/evacuation.js` (npcDefs, decorate, place, begin, interactables,
+interact, talk at home, `endZoe` keeps Zoé on in a game with the lane, a new `backToTwinsen` at the landing, the control
+room waits for the boarding, update, applyFlags, objective, markers, journal, `talkFirst`), `pumproom.js` (the culvert's
+pipe out of a grated sump, its cock and the sump's water; `surge`: the copper pipe kicks whatever the bypass), `story/index.js`
+(one call: a chapter's own `talkFirst` before the town's stories), `engine/voice.js` (Hedda in the lane speaks with Hedda's
+voice; Tobin a man's). `pumpline.js` (chapter 2's thread) is untouched: its room is reused. The farmers' walk in Zoé's run
+(farmer 2) goes round the garden railing's west end instead of through the lane's mouth, where the gate is now.
+Tests: `tests/playthrough/11`, `tests/chapter8.mjs` (the chapter suite of Evacuation), `campaign-thread.mjs` (H: C12–C14,
+the saves from before; I: the lane by input), `campaign-hands.mjs`, `no-air.mjs` (states 24–26), `save-migration.mjs` (3 new),
+`world-consistency.mjs` (the new transition on its allow-list); fixtures `tests/fixtures/campaign/base-11`, `base-11-town`,
+`base-11-relay` (made on the build before the wave) and `new-11-town`, `new-11-landing` (made by this wave's playthrough).
+Pictures (for the coordinator only): `captures/campaign-wave4/x-*.jpg`.
+
+**Left open by wave 4:** the arrival's cut-away and the boarding are reveal beats (a hard cut to a camera in the lane and
+back); in the tests (`?nocine`) they play without the beat, and the pictures `x-ch8-1`, `x-ch8-6*` are framed by a fixed
+camera set for the picture, not the game's own beat. From the plateau the lane is far below (the line says he sees it);
+whether a first-time player links the cut-away to the lane he is walking home to is not judged. The kick window at the
+cock is the pump room's own cycle (three beats in 0.75 s, a rest of 1.65 s; a turn lands about half a second after E):
+nobody has judged whether it is easy to find; a wrong turn costs about two seconds. The riders sit on the side benches in
+the rig's `sit` pose; Bram's big frame overlaps his neighbour a little (seen in `x-ch8-6c-seated`). The board and the
+landing's sign are readable at the board, small from the play camera's distance. Zoé's walk from the lighthouse path to
+the lane is the longest new piece of the chapter. The walkers' planner routes Hedda and Tobin round their garden; a player
+watching may see them take the long way. `tests/world-consistency.mjs` needs wave 3's two transitions on its allow-list (not
+this wave's file to change: wave 3 just merged). No-air state 26's verdict carries a page crash from memory pressure (its
+cases measured clean on the second page). Chapter 8 is now over the 125 % line by the estimate (about 1.55 of the old
+median).
+
 ## 6. The next waves (chapters 4–12 and the aftermath)
 
 Rules for every wave: new flags only, a marker per thread as above (a save from before counts the step as done); every
@@ -395,7 +515,7 @@ them all is the one wave 1 started: **three kicks and a rest**, first heard in t
 |---|---|---|---|---|
 | 2 (**built**, 5b) | 4 The Dig, 5 Steam and Sand | `story/digtest.js` (new) owned by `dig.js`/`steam.js`; the research post's test stand in `desert.js` (a cutoff lever, an instrument board with two needles, the project's wire). Chapter 4: after the notebook, Dallan runs the scheduled test and needs a second pair of hands at the cutoff; the player throws it, the drill's needle falls, the second needle kicks three and a rest **after** the stop; "again" reproduces it once. Chapter 5: Vesk on the wire diverts heat to Kesh's oasis pump (the oasis' pump of chapter 4 runs: seen); the log Dallan sends is seen on the board with one trace; the copy the player keeps (an item) has two | `dt_v dt_cut dt_second dt_again dt_divert dt_log` | `tests/playthrough/07`, `08`; `tests/chapter3.mjs`, `chapter4.mjs`; a new section in `campaign-thread.mjs` (the test left half way, a save between the two cut-offs) |
 | 3 (**built**, 5c) | 6 The Pass, 7 The Observatory | `pass.js`: the winch line's pylons carry the pulse (their lamps and cables shake three and a rest; a surge stops the winch): the two trips are started in the rest between surges (a readable gauge at the winch, a sound cue), a missed start only costs the trip; from the far side the player locks the upper brake so Lhar's people cross without timing. `observatory.js`: the telescope's fourth setting follows the shaking of the snow fields: the line points under the installations, toward Citadel | `ps_v ps_read ps_trip1 ps_trip2 ps_safe ob_dir` (as built: also `ps_lamps ps_miss ob_v ob_snow ob_follow`) | `tests/playthrough/09`, `10`; `tests/chapter6.mjs`, `chapter7.mjs` (the suites of The Pass and The Observatory) |
-| 4 | 8 Evacuation | `evacuation.js` + `pumpline.js` (reused): the lane of chapter 2 is the district off the list; on arriving the player sees the project's cart pass the lane's closed gate with empty seats (a cut-away, then control); Zoé (played) reads the schedule against the route at the lighthouse and takes the lane's people to the landing; Twinsen opens the lane's old water gate from the pump room (the bypass he knows: the third pipe's cock drains the culvert) so the cart can come through. Bram, the neighbours and Pippa are seen to board. No side quest is needed | `ev_v ev_cart ev_sched ev_gate ev_board` | `tests/playthrough/11`; `tests/chapter7.mjs`; a save in the pump room during the evacuation |
+| 4 (**built**, 5d) | 8 Evacuation | `evacuation.js` + `pumpline.js` (reused): the lane of chapter 2 is the district off the list; on arriving the player sees the project's cart pass the lane's closed gate with empty seats (a cut-away, then control); Zoé (played) reads the schedule against the route at the lighthouse and takes the lane's people to the landing; Twinsen opens the lane's old water gate from the pump room (the bypass he knows: the third pipe's cock drains the culvert) so the cart can come through. Bram, the neighbours and Pippa are seen to board. No side quest is needed | `ev_v ev_cart ev_sched ev_gate ev_board` (as built: also `ev_s ev_r ev_bram ev_hedda ev_landing ev_in ev_seen ev_kick`) | `tests/playthrough/11`; `tests/chapter8.mjs` (the chapter suite of Evacuation); a save in the pump room during the evacuation (`campaign-thread` I5) |
 | 5 | 9 The Council (the evidence, the failed shutdown) | `council.js` + `zeelift.js` (Kell): the archive is closed to Twinsen by Vesk's standing order, read on its door; Kell takes him up the cistern lift's service landing to the archive's back gallery (only if the lift was mended on the main route: it always was); the BORE cabinet holds the uncut log (two traces) and the order that cut it, with Vesk's reason in his hand. After the hearing the council orders the stop: the player throws it at the platform's console; the bore's needle falls, the pulse's does not, Mill Lane's taps fail (Kell's lift stops, Brel's jug); Baldino's isolator on the Test Pair bench (`workshop.js`) holds one relay steady at a time: tried by hand | `cn_v cn_closed cn_kell cn_log cn_stop cn_iso` | `tests/playthrough/12`; `tests/chapter8.mjs`; `zeelich-life.mjs` (Mill Lane's states) |
 | 6 | 10 Baldino's Network | `network.js`: at each leg the ally walks to the station and takes its handle as the player lets go (seen before he leaves: Irsa at Mill Lane's bypass, Mira at the valve room's wheels, Zoé at the lighthouse dials, Ilka and Dallan at the vent, Yorna and Pim at the dome); Arthur, at home on the radio, counts the knocking (three and a rest, then four): Mira reads the same on the valve room's gauge before anyone acts on it. The hardest station (the damaged connection at the station's code box) stays Twinsen's | `nw_v nw_irsa nw_mira nw_zoe nw_ilka nw_yorna nw_arthur` | `tests/playthrough/13`; `tests/chapter9.mjs`; `cast-rounds.mjs` (the allies' places) |
 | 7 | 11 The Shell, 12 The Core | `chapter3.js` + a new `story/answer.js`: in the machinery a damper answers three and a rest with a pattern of its own; the player repeats it at a knocker (a real lever), gets a second reply, and the replies mark the safe catwalks; a failing shutter is held open for him, later the gallery's door is shut behind him (shown first, explained by Sendell after). The banked throw is taught on a safe plate before the stepping stones need it; a checkpoint (autosave) before the core. Chapter 12: the last act in four steps he has done before (reroute one branch at a cock, Irsa's "holding" on the radio, the central lock, the signal to Zoé); Vesk chooses in view; the guards name the cut log and the list | `sh_v sh_knock sh_reply sh_held sh_shut co_branch co_irsa co_lock co_signal` | `tests/playthrough/14`; `tests/chapter10.mjs`; `under-bar.mjs` |

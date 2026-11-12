@@ -130,7 +130,8 @@ export function buildLaneGate(game) {
   const gy = (x, z) => PH.groundAt(x, z);
   const root = new THREE.Group(); root.name = 'lanegate'; W.root.add(root);
   const k = new Kit(root);
-  const stone = MAT.stone('sand', 1.4), slate = MAT.stone('slate', 1.2), iron = MAT.iron(), atlas = atlasMat();
+  // (three materials for all the static parts: the posts' sand stone, iron, the signs' atlas — one merged mesh each)
+  const stone = MAT.stone('sand', 1.4), slate = stone, iron = MAT.iron(), atlas = atlasMat();
 
   // ---- the posts, their caps, the gate's plate (outside, north face) and the float's cage (inside, on the west post)
   const y0 = Math.max(gy(GATE.x0, GATE.z), gy(GATE.x1, GATE.z));
@@ -147,14 +148,15 @@ export function buildLaneGate(game) {
   const FC = { x: GATE.x0 + 0.02, z: GATE.z + POST / 2 + 0.16 };
   for (const [dx, dz] of [[-0.07, -0.07], [0.07, -0.07], [-0.07, 0.07], [0.07, 0.07]]) k.add(new THREE.CylinderGeometry(0.012, 0.012, 1.0, 5), iron, FC.x + dx, yw + 0.52, FC.z + dz);
   k.add(new THREE.BoxGeometry(0.2, 0.04, 0.2), iron, FC.x, yw + 1.03, FC.z); k.add(new THREE.BoxGeometry(0.2, 0.04, 0.2), iron, FC.x, yw + 0.03, FC.z);
-  const float = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), MAT.paint('#c4402e', 0.45)); float.castShadow = true; root.add(float);
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.5, 5), iron); root.add(rod);
+  // (the float and its rod up to the catch: one mesh, painted)
+  const float = new THREE.Mesh(mergeBoxes([new THREE.SphereGeometry(0.075, 12, 8), new THREE.CylinderGeometry(0.012, 0.012, 0.5, 5).translate(0, 0.25, 0)]), MAT.paint('#c4402e', 0.45));
+  float.castShadow = true; root.add(float);
 
   // ---- the leaves (each its own pivot at its post's inner face)
-  const lg = leafGeo();
-  const pivW = new THREE.Group(), pivE = new THREE.Group();
+  // (both leaves are one instanced mesh: their pivots are only the transforms its two instances take)
+  const leaves = new THREE.InstancedMesh(leafGeo(), iron, 2); leaves.castShadow = true; leaves.receiveShadow = true; root.add(leaves);
+  const pivW = new THREE.Object3D(), pivE = new THREE.Object3D();
   pivW.position.set(GATE.x0 + POST / 2, y0, GATE.z); pivE.position.set(GATE.x1 - POST / 2, y0, GATE.z);
-  for (const p of [pivW, pivE]) { const m = new THREE.Mesh(lg, iron); m.castShadow = true; m.receiveShadow = true; p.add(m); root.add(p); }
   const col = PH.add({ type: 'box', x: GRATE.x, z: GATE.z, hw: (GATE.x1 - GATE.x0) / 2 - POST / 2, hd: 0.08, top: y0 + 1.4, noStand: true, enabled: false });
 
   // ---- the culvert's grate inside the gate: a stone frame, iron bars, the pit's dark under them, the water over them
@@ -164,7 +166,7 @@ export function buildLaneGate(game) {
     k.add(new THREE.BoxGeometry(0.1, 0.06, GRATE.hd * 2), slate, GRATE.x + s * (GRATE.hw + 0.05), gyG + 0.02, GRATE.z);
   }
   for (let i = 0; i <= 18; i++) k.add(new THREE.BoxGeometry(0.03, 0.03, GRATE.hd * 2), iron, GRATE.x - GRATE.hw + (i * GRATE.hw * 2) / 18, gyG + 0.04, GRATE.z);
-  const pit = new THREE.Mesh(new THREE.PlaneGeometry(GRATE.hw * 2, GRATE.hd * 2).rotateX(-Math.PI / 2), MAT.flat('#141a1e', 1)); pit.position.set(GRATE.x, gyG + 0.022, GRATE.z); pit.receiveShadow = true; root.add(pit);
+  k.add(new THREE.PlaneGeometry(GRATE.hw * 2, GRATE.hd * 2).rotateX(-Math.PI / 2), iron, GRATE.x, gyG + 0.022, GRATE.z);   // (the pit's dark iron floor: static)
   const waterM = new THREE.MeshStandardMaterial({ color: '#4a7f9c', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.72, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   const sheet = new THREE.Mesh(new THREE.CircleGeometry(1, 24).rotateX(-Math.PI / 2), waterM);
   sheet.scale.set(GRATE.hw + 0.3, 1, GRATE.hd + 0.42); sheet.position.set(GRATE.x, gyG + 0.05, GRATE.z + 0.1); root.add(sheet);
@@ -174,7 +176,7 @@ export function buildLaneGate(game) {
   k.add(rbox(LANDING.hw * 2, LANDING.h + 0.25, LANDING.hd * 2, 0.03), slate, LANDING.x, yl + (LANDING.h - 0.25) / 2, LANDING.z);
   PH.add({ type: 'box', x: LANDING.x, z: LANDING.z, hw: LANDING.hw, hd: LANDING.hd, top: yl + LANDING.h });
   const bx = LANDING.x - LANDING.hw + 0.28, ytop = yl + LANDING.h;
-  k.add(rbox(0.38, 0.06, 1.9, 0.02), MAT.planks('honey'), bx, ytop + 0.45, LANDING.z);
+  k.add(rbox(0.38, 0.06, 1.9, 0.02), stone, bx, ytop + 0.45, LANDING.z);   // (a stone bench)
   for (const dz of [-0.75, 0.75]) k.add(new THREE.BoxGeometry(0.3, 0.42, 0.06), iron, bx, ytop + 0.21, LANDING.z + dz);
   PH.add({ type: 'box', x: bx, z: LANDING.z, hw: 0.2, hd: 0.95, top: ytop + 0.5, noStand: true });
   const sp = { x: LANDING.x + LANDING.hw - 0.12, z: LANDING.z - LANDING.hd + 0.14 };
@@ -194,11 +196,13 @@ export function buildLaneGate(game) {
     const u = p * p * (3 - 2 * p);
     // (both swing in, toward the landing: the west leaf from +x round to +z, the east one from −x round to +z)
     pivW.rotation.y = -OPEN * u; pivE.rotation.y = Math.PI + OPEN * u;
+    pivW.updateMatrix(); pivE.updateMatrix(); leaves.setMatrixAt(0, pivW.matrix); leaves.setMatrixAt(1, pivE.matrix);
+    leaves.instanceMatrix.needsUpdate = true; leaves.computeBoundingSphere();
     col.enabled = p < 0.5;
   };
   const poseWater = () => {
     sheet.visible = lv > 0.02; sheet.scale.set((GRATE.hw + 0.3) * (0.4 + 0.6 * lv), 1, (GRATE.hd + 0.42) * (0.4 + 0.6 * lv)); waterM.opacity = 0.3 + 0.42 * lv;
-    float.position.set(FC.x, yw + 0.12 + 0.82 * lv, FC.z); rod.position.set(FC.x, yw + 0.37 + 0.82 * lv, FC.z);
+    float.position.set(FC.x, yw + 0.12 + 0.82 * lv, FC.z);
   };
   const L = W.laneGate = {
     root, k,
@@ -230,7 +234,7 @@ export function buildLaneBoard(game) {
   const { x, z } = BOARD, y = PH.groundAt(x, z);
   for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.1, 2.7, 0.1), wood, x + s * 0.95, y + 0.85, z);   // (down into the slope)
   k.add(rbox(1.9, 1.05, 0.06, 0.02), wood, x, y + 1.42, z - 0.03);
-  k.add(rbox(2.1, 0.06, 0.4, 0.02), MAT.stone('slate', 1.2), x, y + 2.22, z);
+  k.add(rbox(2.1, 0.06, 0.4, 0.02), wood, x, y + 2.22, z);   // (its little roof: the same wood)
   k.add(atlasPlane(1.7, 0.21, 512, 128, 1024, 192), atlas, x, y + 1.82, z + 0.006);
   k.add(atlasPlane(0.78, 0.49, 0, 192, 512, 512), atlas, x - 0.42, y + 1.37, z + 0.006);
   k.add(atlasPlane(0.78, 0.49, 512, 192, 1024, 512), atlas, x + 0.42, y + 1.37, z + 0.006);
@@ -245,7 +249,7 @@ export function buildLaneBoard(game) {
 function buildCart(parent, game) {
   const grp = new THREE.Group(); grp.visible = false; parent.add(grp);
   const B = new Batch(grp);
-  const teal = MAT.paint('#2f6f74', 0.5), iron = MAT.iron(), steel = MAT.steel(), wood = MAT.planks('honey'), hazard = tm('hazard'), dark = MAT.flat('#26262a', 0.9);
+  const teal = MAT.paint('#2f6f74', 0.5), iron = MAT.iron(), steel = iron, wood = MAT.planks('honey'), hazard = tm('hazard'), dark = iron;   // (five materials: the wheels, hubs and fittings all iron)
   const bx = (m, w, h, d, x, y, z, rx = 0, ry = 0, rz = 0) => B.add(new THREE.BoxGeometry(w, h, d), m, x, y, z, rx, ry, rz);
   bx(teal, 1.6, 0.16, 3.5, 0, 0.5, 0);                                  // the chassis and the bed
   for (const s of [-1, 1]) { bx(hazard, 0.03, 0.2, 3.3, s * 0.815, 0.36, 0); bx(teal, 0.06, 0.32, 2.65, s * 0.78, 0.74, -0.38); }   // the skirts, the side rails
