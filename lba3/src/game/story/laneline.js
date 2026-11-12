@@ -49,7 +49,8 @@ export class LaneThread {
     buildLaneBoard(this.game);
     return L;
   }
-  begin() { this.f.ev_v = 1; }
+  // (a new chapter 8: the gate shut over a full culvert, the board up, the pump room's copper pipe kicking)
+  begin() { this.f.ev_v = 1; this.push(); }
   // (cur: chapter 8 in progress)
   applyFlags() {
     const f = this.f, g = this.game, cur = this.cur();
@@ -58,7 +59,11 @@ export class LaneThread {
     // (a save during Zoé's run resumes before it: evacuation.js; her part of the lane with it)
     if (cur && this.on && f.c8_zoeStart && !f.c8_zoeDone) { for (const k of ['ev_s', 'ev_r', 'ev_sched', 'ev_bram', 'ev_hedda']) delete f[k]; f.c8_relay = false; }
     this.endScene(true); this.walks.clear(); this.later = []; this.passWait = 0;
-    const L = this.L;
+    this.push();
+  }
+  // the lane's things as the flags have them (a load, the chapter's start)
+  push() {
+    const f = this.f, g = this.game, cur = this.cur(), L = this.L;
     if (L) {
       const shut = cur && this.on && !f.ev_gate;
       L.gate.setOpen(!shut, true); L.culvert.setFull(shut, true);
@@ -154,8 +159,9 @@ export class LaneThread {
     const g = this.game, f = this.f, L = this.L, h = g.hero;
     if (!this.cur() || !this.on || this.scene) return;
     if (!g.room && L?.board && this.zoeNow() && f.c8_relay && !f.ev_sched) {
-      consider(dist(L.board.sched.front.x, L.board.sched.front.z), 0.75, { kind: 'ev_sched', label: 'p_sched' });
-      consider(dist(L.board.route.front.x, L.board.route.front.z), 0.75, { kind: 'ev_route', label: 'p_route' });
+      // (measured to the sheet itself, which she faces: the nearer sheet's prompt)
+      consider(dist(L.board.sched.x, L.board.sched.z), 1.4, { kind: 'ev_sched', label: 'p_sched' });
+      consider(dist(L.board.route.x, L.board.route.z), 1.4, { kind: 'ev_route', label: 'p_route' });
     }
     const U = this.R?.pump;
     if (g.room?.id === 'pumproom' && U?.culvert && f.c8_zoeDone && !this.zoeNow()) {

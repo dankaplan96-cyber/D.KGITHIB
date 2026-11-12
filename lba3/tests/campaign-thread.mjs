@@ -500,7 +500,6 @@ if (!ONLY || ONLY === 'G') {
   await browser.close();
 }
 // ------------------------------------------------------------------ H: the saves from before wave 4 (CAMPAIGN-6)
-const OBJ = () => document.querySelector('#objective').textContent;
 if (!ONLY || ONLY === 'H' || ONLY === 'C') {
   await start('base-11');
   is('C12 a save from before, chapter 8 at its start: loads; the lane is ahead, so the thread is on; the arrival plays: the list cart comes down to the shut gate, every seat empty, and turns away', await ev(() => {
@@ -509,7 +508,7 @@ if (!ONLY || ONLY === 'H' || ONLY === 'C') {
       if (T.scene?.kind === 'pass') { seenCart ||= L.cart.group.visible; riders = Math.max(riders, T.scene.seated?.size || 0); stopped ||= T.scene.wait > 0.5; }
       if (G.state === 'dialog') P.settle(); else G.step(0.05);
     }
-    return [f.chapterKey, f.ev_v, seenCart, riders, stopped, !!f.ev_cart, L.gate.open, L.culvert.full, G.state, OBJ()];
+    return [f.chapterKey, f.ev_v, seenCart, riders, stopped, !!f.ev_cart, L.gate.open, L.culvert.full, G.state, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'evacuation' && v[1] === 1 && v[2] && v[3] === 0 && v[4] && v[5] && v[6] === false && v[7] === true && v[8] === 'play' && /home/i.test(v[9]));
   is('C12 it goes on: home, Zoé hears of the cart (the gate shut since the water office closed)', await ev(() => {
     P.enter('house', { run: true }); const r = P.talk('zoe'); return [r.lines, !!game.flags.c8_home, game.story.cur.journal().some((l) => l.key === 'ev_j_cart')];
@@ -518,13 +517,13 @@ if (!ONLY || ONLY === 'H' || ONLY === 'C') {
   await start('base-11-town');
   is('C13 a save from before, chapter 8 with the town in its shelters: loads; the thread is on, the arrival counts as seen (he has been home); Hedda and Tobin wait at their door, the gate shut', await ev(() => {
     const G = game, f = G.flags, L = G.world.laneGate, T = G.story._ev; for (let i = 0; i < 40; i++) G.step(0.05);
-    const h = P.npc('ev_hedda'); return [f.ev_v, !!f.ev_cart, !!T.scene, h?.present, L.gate.open, OBJ()];
+    const h = P.npc('ev_hedda'); return [f.ev_v, !!f.ev_cart, !!T.scene, h?.present, L.gate.open, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 1 && v[1] && !v[2] && v[3] && v[4] === false && /Zo/.test(v[5]));
   is('C13 it goes on: Zoé starts her run', await ev(() => { const r = P.talk('zoe', { run: true }); P.wait(1); P.settle(); return [!!game.flags.c8_zoeStart, game.hero.body]; }), (v) => v[0] && v[1] === 'zoe');
   await browser.close();
   await start('base-11-relay');
   is('C14 a save from before, chapter 8 with Zoé\'s run behind it: loads; the lane counts as done (no thread, the gate open, no board); the control room is next and Vesk speaks there', await ev(() => {
-    const G = game, f = G.flags, L = G.world.laneGate; const st = [!!f.ev_v, L.gate.open, L.board.group.visible, OBJ()];
+    const G = game, f = G.flags, L = G.world.laneGate; const st = [!!f.ev_v, L.gate.open, L.board.group.visible, document.querySelector('#objective').textContent];
     P.enter('control', { run: true }); P.wait(0.5); P.settle(); return [...st, !!f.c8_vesk];
   }), (v) => !v[0] && v[1] === true && v[2] === false && /control/i.test(v[3]) && v[4]);
   await browser.close();
@@ -541,7 +540,7 @@ const ZOERUN = () => ev(() => {
 const READ = (which) => ev((which) => { const B = game.world.laneGate.board, s = B[which]; const r = P.use(s.front.x, s.front.z, { near: 0.3, kind: which === 'sched' ? 'ev_sched' : 'ev_route' }); P.settle(); return { r: r.r, s: !!game.flags.ev_s, r2: !!game.flags.ev_r, sched: !!game.flags.ev_sched }; }, which);
 const COCK = (when) => ev((when) => {
   const G = game, f = G.flags, h = G.hero, U = G.room.pump, c = U.culvert;
-  P.go(c.front.x, c.front.z, { tol: 0.3 }); P.face(c.x, c.z);
+  P.go(c.front.x, c.front.z, { tol: 0.1 }); P.face(c.x, c.z); for (let i = 0; i < 20 && (h.steer || h.actT > 0); i++) G.step(0.05);   // (at his spot, facing it: E then plays the hand at once)
   // (the hand meets the handle ~0.5 s after E: pressed just before a kick lands it in the kick; just after the kicks, in the rest)
   const want = when === 'kick' ? [0.05, 0.25] : [0.95, 1.15];
   let t = 0; while (!(U.phase() > want[0] && U.phase() < want[1]) && t < 4) { G.step(1 / 60); t += 1 / 60; }
@@ -553,22 +552,22 @@ const COCK = (when) => ev((when) => {
 if (!ONLY || ONLY === 'I') {
   await start('new-11-town');
   is('I0 the save: chapter 8, the shelters open, Zoé\'s run ahead; the lane\'s gate shut, the culvert full, the board up on the lighthouse path', await ev(() => {
-    const f = game.flags, L = game.world.laneGate; return [f.chapterKey, f.ev_v, !!f.ev_cart, L.gate.open, L.culvert.full, L.board.group.visible, OBJ()];
+    const f = game.flags, L = game.world.laneGate; return [f.chapterKey, f.ev_v, !!f.ev_cart, L.gate.open, L.culvert.full, L.board.group.visible, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'evacuation' && v[1] === 1 && v[2] && v[3] === false && v[4] && v[5] && /Zo/.test(v[6]));
   is('I1 Zoé\'s run to the relay: she stays on, and the board is next', await ZOERUN(), (v) => v.relay && v.body === 'zoe' && v.farms === 3);
   is('I1 the route read first (one of two): the objective keeps the schedule', await READ('route'), (v) => v.r2 && !v.s && !v.sched);
   await shot('I1-board');
   await handover();
   is('I2 Save & quit → Continue half way through the board: her run resumes before it (as every save in her run): Twinsen, the farms and the board to do again, nothing of the lane kept', await ev(() => {
-    const f = game.flags; return [game.hero.body, !!f.c8_zoeStart, !!f.c8_relay, !!f.ev_r, game.story.cur.farmsDone(), OBJ()];
-  }), (v) => v[0] === 'twinsen' && !v[1] && !v[2] && !v[3] && v[4] === 0 && /Zo/.test(v[5]));
+    const f = game.flags; return [game.hero.body, !!f.c8_zoeStart, !!f.c8_relay, !!f.ev_r, game.story.cur.farmsDone(), document.querySelector('#objective').textContent];
+  }), (v) => v[0] !== 'zoe' && !v[1] && !v[2] && !v[3] && v[4] === 0 && /Zo/.test(v[5]));
   is('I3 the run again; the schedule and the route read: the lane is on one and crossed off the other', await ZOERUN().then(() => READ('sched')).then(() => READ('route')), (v) => v.s && v.r2 && v.sched);
   is('I3 Bram, then Hedda and Tobin told; they walk to the landing; Zoé there: back to Twinsen, Bram on the float gate', await ev(() => {
     const G = game, f = G.flags, L = G.world.laneGate; P.talk('bram', { run: true }); P.talk('ev_hedda', { run: true });
     P.go(L.landing.x + 1.6, L.landing.z + 0.4, { tol: 1.2, run: true, maxT: 120 });
     let t = 0; while (!(f.c8_zoeDone && G.hero.body === 'twinsen' && G.state === 'play' && !G.trans) && t < 60) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle();
     const d = (id) => +Math.hypot(P.npc(id).pos.x - L.landing.x, P.npc(id).pos.z - L.landing.z).toFixed(1);
-    return [!!f.ev_bram, !!f.ev_hedda, !!f.c8_zoeDone, G.hero.body, d('bram'), d('ev_hedda'), d('ev_tobin'), d('pippa'), OBJ()];
+    return [!!f.ev_bram, !!f.ev_hedda, !!f.c8_zoeDone, G.hero.body, d('bram'), d('ev_hedda'), d('ev_tobin'), d('pippa'), document.querySelector('#objective').textContent];
   }), (v) => v[0] && v[1] && v[2] && v[3] === 'twinsen' && v[4] < 2.5 && v[5] < 2.5 && v[6] < 2.5 && v[7] < 2.5 && /water gate/i.test(v[8]));
   await shot('I3-landing');
   await browser.close();
@@ -582,20 +581,23 @@ if (!ONLY || ONLY === 'I') {
   await shot('I4-room');
   await handover();
   is('I5 Save & quit → Continue in the pump room: there, the sump full, the cock shut, the pipe kicking, the objective the cock', await ev(() => {
-    const G = game, U = G.room?.pump; return [G.room?.id, U?.culvert.full, U?.culvert.open, U?.surge, !!G.flags.ev_seen, OBJ()];
+    const G = game, U = G.room?.pump; return [G.room?.id, U?.culvert.full, U?.culvert.open, U?.surge, !!G.flags.ev_seen, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'pumproom' && v[1] && !v[2] && v[3] && v[4] && /water gate/i.test(v[5]));
   is('I6 turned in a kick: the copper pipe kicks the handle back; said once; nothing changes', await COCK('kick'), (v) => v.tg === 'ev_cock' && v.kicks === 1 && !v.gate && !v.open && v.outside === false);
   is('I6 turned in the rest: it opens; the culvert drains, and up on the lane the gate opens', await COCK('rest'), (v) => v.gate && v.open && v.outside === true);
   await shot('I6-open');
   await handover();
   is('I7 Save & quit → Continue after the cock, before the boarding: in the pump room, the cock open, the sump dry, the gate open outside; the objective the landing', await ev(() => {
-    const G = game, U = G.room?.pump, L = G.world.laneGate; return [G.room?.id, U?.culvert.open, U?.culvert.full, L.gate.open, L.culvert.full, OBJ()];
+    const G = game, U = G.room?.pump, L = G.world.laneGate; return [G.room?.id, U?.culvert.open, U?.culvert.full, L.gate.open, L.culvert.full, document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'pumproom' && v[1] && !v[2] && v[3] && !v[4] && /landing/i.test(v[5]));
   is('I8 up the steps: the cart comes in through the gate, the lane boards (Bram, Hedda, Tobin, Pippa) and is driven off; Zoé goes back to the hill families', await ev(() => {
-    const G = game, f = G.flags; P.exitTo('pump-out'); let t = 0, inLane = false, seated = 0;
-    while (!(f.ev_board && G.state === 'play') && t < 90) { const S = G.story._ev.scene; if (S) { seated = Math.max(seated, S.seated?.size || 0); if (G.world.laneGate.cart.z > 61) inLane = true; } if (G.state === 'dialog') P.settle(); else { G.step(0.1); t += 0.1; } }
-    P.settle();
-    return [!!f.ev_board, inLane, seated, G.world.laneGate.cart.group.visible, OBJ()];
+    const G = game, f = G.flags, T = G.story._ev; let t = 0, inLane = false, seated = 0;
+    // (watched frame by frame through the scene's own pose: the bot's walk out plays the whole boarding as it settles)
+    const pr = T.poseRiders; T.poseRiders = function (dt) { const S = T.scene; if (S) { seated = Math.max(seated, S.seated?.size || 0); if (G.world.laneGate.cart.z > 61) inLane = true; } return pr.call(T, dt); };
+    P.exitTo('pump-out');
+    while (!(f.ev_board && G.state === 'play') && t < 90) { if (G.state === 'dialog') P.settle(); else { G.step(0.1); t += 0.1; } }
+    P.settle(); T.poseRiders = pr;
+    return [!!f.ev_board, inLane, seated, G.world.laneGate.cart.group.visible, document.querySelector('#objective').textContent];
   }), (v) => v[0] && v[1] && v[2] === 4 && !v[3] && /control/i.test(v[4]));
   await shot('I8-boarded');
   await handover();

@@ -35,7 +35,7 @@ const POST = 0.34, LEAF = (GATE.x1 - GATE.x0 - POST) / 2, OPEN = 1.48;
 const GRATE = { x: (GATE.x0 + GATE.x1) / 2, z: 61.4, hw: 1.45, hd: 0.36 };
 const LANDING = { x: -48.9, z: 62.45, hw: 0.95, hd: 1.5, h: 0.14 };
 // the board on the lighthouse path's stop (north edge of the path, facing the path)
-const BOARD = { x: -85.1, z: 93.4, ry: 0 };   // (east of the rock by the path's end, on the sand)
+const BOARD = { x: -89.6, z: 95.0, ry: 0 };   // (on the flat by the gather point, west of the rock; facing the path)
 // the cart's own frame: +z forward; its riders' roots on the bed (BED), the benches' tops 0.45 m above
 const BED = 0.58;
 const SEATS = [[-0.55, -1.2, Math.PI / 2], [0.55, -1.2, -Math.PI / 2], [-0.55, -0.45, Math.PI / 2], [0.55, -0.45, -Math.PI / 2], [-0.55, 0.3, Math.PI / 2], [0.55, 0.3, -Math.PI / 2]];

@@ -70,7 +70,7 @@ is('the three hill farms told', await ev(() => { for (const id of ['farmer1', 'f
 await shot('C8-03-farms.png');
 is('the lighthouse relay; Zoé stays on: the cart\'s schedule on the board is next', await ev(() => { const G = game; { const Gp = G.story.chapters.find((c) => c.key === 'evacuation').gather; T.tp(Gp.x, Gp.z + 1); } for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj(), !!G.flags.c8_zoeDone]; }), (v) => v[0] === true && v[1] === 'zoe' && /schedule/i.test(v[2]) && !v[3]);
 is('the board: the schedule, then the route; the lane is on one and crossed off the other; Pippa goes to the landing', await ev(() => { const G = game, f = G.flags, B = G.world.laneGate.board, out = [];
-  for (const s of [B.sched, B.route]) { T.tp(s.front.x, s.front.z, Math.PI); G.step(0.3); out.push(G.findInteractable()?.kind); T.tap('KeyE'); G.step(0.3); T.talkAll(); T.talkAll(); }
+  for (const s of [B.sched, B.route]) { T.talkAll(); T.tp(s.front.x, s.front.z, Math.PI); G.step(0.3); out.push(G.findInteractable()?.kind ?? G.state + '@' + G.hero.pos.x.toFixed(2) + ',' + G.hero.pos.z.toFixed(2)); T.tap('KeyE'); G.step(0.3); T.talkAll(); T.talkAll(); }
   const pp = T.npc('pippa'), L = G.world.laneGate.landing; return [...out, !!f.ev_s, !!f.ev_r, !!f.ev_sched, +Math.hypot(pp.pos.x - L.x, pp.pos.z - L.z).toFixed(1), T.obj()]; }),
   (v) => v[0] === 'ev_sched' && v[1] === 'ev_route' && v[2] && v[3] && v[4] && v[5] < 3 && /landing/i.test(v[6]));
 await shot('C8-03b-board.png');
