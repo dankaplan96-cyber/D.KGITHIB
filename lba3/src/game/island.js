@@ -2582,9 +2582,10 @@ function buildPipeline(W, root, r) {
     B.add(boxUV(bbox(3.9, 0.06, 1.2, 0.02, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), V.x, g + 0.03, zl);
     // P17 (the user, 12.11.2026: "you can turn the pipe without crossing the line that makes them attack"): the valve stood
     // 1.3 m past the yard's painted line and its wheel answered the key from the public path, 0.3 m short of the line. A
-    // waist-high hazard rail on the line in front of it: the wheel is reached only from inside the yard (story/depotwatch.js)
+    // waist-high hazard rail on the line in front of it: the wheel is reached only from inside the yard (story/depotwatch.js);
+    // its east end leaves the short way in past the line from the east gate (1.6 m to the fence)
     {
-      const lz = V.z - 1.3 - 0.15, xa = V.x - 1.6, xb = V.x + 2.4, top = 0.95, haz = tm('hazard', { rough: 0.6 });
+      const lz = V.z - 1.3 - 0.15, xa = V.x - 1.6, xb = V.x + 1.4, top = 0.95, haz = tm('hazard', { rough: 0.6 });
       for (const x of [xa, (xa + xb) / 2, xb]) member(B, [x, W.H(x, lz), lz], [x, W.H(x, lz) + top, lz], 0.08, tealM(), 1, 0.02);
       for (const y of [top - 0.06, top * 0.5]) {
         const ga = W.H(xa, lz) + y, gb = W.H(xb, lz) + y, len = Math.hypot(xb - xa, gb - ga);
