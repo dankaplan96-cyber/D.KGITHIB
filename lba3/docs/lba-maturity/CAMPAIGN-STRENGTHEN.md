@@ -412,10 +412,10 @@ died under memory pressure and was run again alone):
 | Suite | Verdict | What it covered |
 |---|---|---|
 | `tests/playthrough/11-evacuation.mjs` (seg.mjs, by input, ASSIST=1, from `base-11`, in three parts with Save & quit → Continue between them) | PASS, every part (part B again after the board moved); 0 deaths, 0 ISO assists | the arrival's cut-away from a save before the wave, the shelters, Zoé's run, the board's two sheets, Bram, Hedda and Tobin, the landing, the pump room, the cock (first try kicked back, the second in the rest), the boarding, the control room, the ship to chapter 9 |
-| `tests/chapter8.mjs` (Evacuation's chapter suite) | PASS 20/20, twice (the second on the final build) | the gate shut over a full culvert at a new chapter 8's start and the cart's cut-away skipped with E; the relay with Zoé staying on; the sheets one by one (Pippa to the landing); the three told and walked to the landing; the handover; the culvert looked at, the cock kicked back in a kick and opened in the rest; the boarding seen (the cart in the lane, four seated); the bridge; the control room; the ship |
+| `tests/chapter8.mjs` (Evacuation's chapter suite) | PASS 20/20, three times (the last on the final build) | the gate shut over a full culvert at a new chapter 8's start and the cart's cut-away skipped with E; the relay with Zoé staying on; the sheets one by one (Pippa to the landing); the three told and walked to the landing; the handover; the culvert looked at, the cock kicked back in a kick and opened in the rest; the boarding seen (the cart in the lane, four seated); the bridge; the control room; the ship |
 | `tests/campaign-thread.mjs` ONLY=H, I | PASS (H 5/5, I 14/14) | C12–C14: three saves from before the wave; I: the board half read and Save & quit (her run resumes before it), the run again to the landing, a Save & quit in the pump room, the kicked-back turn and the turn in the rest, a save after the cock and before the boarding, the boarding, the bridge and the landing after a reload, the control room |
 | `tests/campaign-hands.mjs` | PASS | the culvert's cock 0.0 cm and 0.2 cm (a kicked-back turn and the opening one); waves 1–3's unchanged |
-| `tests/no-air.mjs` STATES=14, 24 (new), 25 (new), 26 (new), one process each | 14, 24, 25 PASS; 26 measured with 0 offenders, its verdict FAIL on a page crash | chapter 8 without the lane, at its start with it, the lane waiting at the landing, the lane in the bridge's queue. 24 and 26 died on their first pages (memory: another worker's browsers on the machine); 24 passed alone; 26's second page measured all 127 cases (0 hand or foot offenders) but the first page's crash stays in its verdict |
+| `tests/no-air.mjs` STATES=14, 24 (new), 25 (new), 26 (new), one process each | PASS each (0 offenders of hand or foot) | chapter 8 without the lane, at its start with it, the lane waiting at the landing, the lane in the bridge's queue. 24 and 26 died on their first pages in the first sweep (memory: other browsers on the machine) and passed run again alone, 26 on the final build |
 | `tests/save-migration.mjs` | PASS (17 checks, 3 new) | `base-11`, `base-11-town`, `base-11-relay` load without an error; the thread on only where the relay is ahead; the arrival counted as seen once home |
 | `tests/resume.mjs`, `tests/chapter1.mjs`, `tests/opening.mjs` | PASS each | unchanged (the gate's posts stand in the lane in every chapter, open) |
 | `tests/cast-rounds.mjs` | PASS (after one FAIL: its chapter-8 states set only `c8_started`, which is a save from before the wave at the chapter's start: the arrival played over its free play; the states now say the arrival was seen) | the story people's rounds in chapters 3–10 |
@@ -447,8 +447,8 @@ people told) resets with it. The water gate and the landing stand in every chapt
 shuts it until the cock is turned); the board and the cart are chapter 8's.
 
 **Hands.** One new hand action: the culvert's cock (`story/reach.js` `tinker`, the handle at 1.2 m like chapter 2's two
-cocks), both the kicked-back turn and the turn that opens it. Measured in `tests/campaign-hands.mjs`: 0.0 cm and 0.2 cm from
-the handle at the moment each takes effect. Zoé's reading of the board is a look (no hand). The riders step up to the
+cocks), both the kicked-back turn and the turn that opens it. Measured in `tests/campaign-hands.mjs`: 0.0 cm and 0.2 cm from the
+cock's drawn surface at the moment each takes effect. Zoé's reading of the board is a look (no hand). The riders step up to the
 cart's side and sit on its benches (the rig's `sit`, their feet on the bed); the driver sits at the wheel.
 
 **Vega 8 budget** (draw calls and triangles of one frame, all passes, the same save `base-11-town` and camera spots,
@@ -499,8 +499,7 @@ the rig's `sit` pose; Bram's big frame overlaps his neighbour a little (seen in 
 landing's sign are readable at the board, small from the play camera's distance. Zoé's walk from the lighthouse path to
 the lane is the longest new piece of the chapter. The walkers' planner routes Hedda and Tobin round their garden; a player
 watching may see them take the long way. `tests/world-consistency.mjs` needs wave 3's two transitions on its allow-list (not
-this wave's file to change: wave 3 just merged). No-air state 26's verdict carries a page crash from memory pressure (its
-cases measured clean on the second page). Chapter 8 is now over the 125 % line by the estimate (about 1.55 of the old
+this wave's file to change: wave 3 just merged). Chapter 8 is now over the 125 % line by the estimate (about 1.55 of the old
 median).
 
 ## 6. The next waves (chapters 4–12 and the aftermath)
