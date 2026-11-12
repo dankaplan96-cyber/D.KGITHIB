@@ -94,7 +94,7 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
   { const c = new THREE.CatmullRomCurve3([[SX + 0.18, Y + 0.3, SZ], [SX + 0.6, H(SX + 0.6, SZ) + 0.03, SZ + 0.3], [SX + 1.6, H(SX + 1.6, SZ + 1.0) + 0.03, SZ + 1.4], [26.1, postY + 0.03, -22.6]].map((p) => new THREE.Vector3(...p)));
     add(new THREE.TubeGeometry(c, 16, 0.03, 5, false), dark, 0, 0, 0); }
   col({ type: 'box', x: SX - 0.18, z: SZ, hw: 0.26, hd: 0.66, top: Y + 1.95 });     // (the cabinet and the desk to 0.44 m in front of its face: the desk's lip and the levers' knobs stand out past it)
-  col({ type: 'cyl', x: WB.x, z: WB.z, r: 0.22, top: Y + 1.12 });
+  col({ type: 'cyl', x: WB.x, z: WB.z, r: 0.1, top: Y + 1.12 });   // (its post: Dallan stands close at the box, his hands on its top)
 
   // ---- what moves: the dials' needles, the levers, the paper, the tape, the lamp
   const needle = (z) => { const n = new THREE.Group(); n.position.set(DIAL.x - 0.014, DIAL.y, z); n.rotation.y = -Math.PI / 2; D.add(n); const m = dyn(new THREE.BoxGeometry(0.012, 0.14, 0.006), dark, 0, 0.06, 0, n); m.castShadow = false; dyn(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 8), dark, 0, 0, 0, n).rotation.x = Math.PI / 2; return n; };
@@ -152,7 +152,7 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
   };
   const A = {
     y: Y, board: W(SX - 0.95, SZ), tape: W(SX - 0.5, SZ - 0.26), wire: W(WB.x, WB.z), dials: { ...W(DIAL.x, SZ), y: DIAL.y },
-    spots: { dallan: { ...W(WB.x - 0.62, WB.z), a: Math.PI / 2 }, hero: { ...W(SX - 1.15, SZ + 0.1), a: Math.PI / 2 } },
+    spots: { dallan: { ...W(WB.x - 0.45, WB.z), a: Math.PI / 2 }, hero: { ...W(SX - 1.15, SZ + 0.1), a: Math.PI / 2 } },
     // (the touch points: story/reach.js; 'tinker' puts the hand at 1.17–1.26 m, the knobs stand at ~1.24 m)
     cut: { on: true, set(b) { this.on = !!b; cutP.rotation.z = b ? RUN : CUT; }, touch() { const k = knob(cutP, cutP.rotation.z), p = W(k.x, k.z); return touch(p.x, p.z, Math.PI / 2, 'tinker'); } },
     heat: { on: false, set(b) { this.on = !!b; heatP.rotation.z = b ? CUT : RUN; }, touch() { const k = knob(heatP, heatP.rotation.z), p = W(k.x, k.z); return touch(p.x, p.z, Math.PI / 2, 'tinker'); } },

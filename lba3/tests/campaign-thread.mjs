@@ -300,7 +300,7 @@ if (!ONLY || ONLY === 'D') {
     const S = game.regions.built('desert').stand, f = game.flags;
     P.use(S.strip.x, S.strip.z, { near: 0.9, kind: 'dt_strip' }); for (let i = 0; i < 40 && !f.dt_strip; i++) { game.step(0.25); P.settle(); }
     const item = game.story.items().some((i) => i.id === 'tstrip'), calm = game.enemies.filter((e) => e.def.group === 'dpost').some((e) => e.def.calm());
-    for (let i = 0; i < 60; i++) game.step(0.25);
+    P.settle(); for (let i = 0; i < 60; i++) { game.step(0.25); if (game.state !== 'play') P.settle(); }   // (the carbon's little ceremony first)
     const n = P.npc('dallan'), away = +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1);
     const g = game.rooms.desert.dig.gate; P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle();
     return [!!f.dt_strip, item, calm, away, !!f.c4_digOpen];

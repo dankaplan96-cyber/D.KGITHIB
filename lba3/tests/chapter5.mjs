@@ -3,6 +3,8 @@
 // 4; FunFrock's drones) → the hangar (glider, roof hatch by ball) → Dallan at the gate → the relief valve and
 // the geysers → Tarra, Zoé on the radio → Hesk and the glider → chapter 11 (until chapters 6-10 exist).
 import { launch, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
+const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));   // (CAMPAIGN-4's steps are played by input: tests/lib/player.js)
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
@@ -47,6 +49,7 @@ const boot = async (mode) => {
 };
 
 await boot('new');
+await page.addScriptTag({ path: HARNESS });
 is('chapter 5 (steam) starts at Kesh on Desert Island, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true,
     dt_v: 1, dt_hail: true, dt_cut: true, dt_second: true, dt_again: true, dt_strip: true });   // (CAMPAIGN-4: as a game that ran the bore test in chapter 4)
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'steam' && v[1] === 'desert' && v[2] === 'play' && v[3].length > 0);

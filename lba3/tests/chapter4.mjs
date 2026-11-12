@@ -185,6 +185,7 @@ const boreTest = () => ev(() => {
   S.kick = k0;
   return { hail: !!f.dt_hail, second: !!f.dt_second, kicks1: k1, kicks2: n0.k - k1, again: !!f.dt_again, strip: !!f.dt_strip, item: G.story.items().some((i) => i.id === 'tstrip') };
 });
+await said();   // (the reload above: the line watch starts again here)
 const dark = await ev(() => { const g = game.rooms.desert.dig.gate; let r = P.use(g.x, g.z, { kind: 'c4gate', run: true }); if (!game.flags.dt_dark) r = P.use(g.x, g.z, { kind: 'c4gate', run: true });   /* (out of the post's gate on the way: Dallan's hail first) */ return { ...r, state: game.state, open: !!game.flags.c4_digOpen, dark: !!game.flags.dt_dark, obj: T.obj() }; }); s = await said();
 check('CAMPAIGN-4: out of the gate Dallan hails him; the keypad is dark while the bore test is on (the tag says so); the objective is the test (INPUT)', dark.state === 'play' && !dark.open && dark.dark && has(s, /BORE TEST/) && has(s, /pair of hands/) && /test/i.test(dark.obj), { dark, s });
 const bt = await boreTest(); s = await said();
