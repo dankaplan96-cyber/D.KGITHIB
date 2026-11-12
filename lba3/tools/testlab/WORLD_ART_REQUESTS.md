@@ -4587,3 +4587,18 @@ beside it). The desktop app's own Electron 43.7.9 on the checkout, a fresh profi
   across the chest, broader, a round nose. For Bashir (Kesh) and the dig's site clerk; the archivist, Kip and Bern keep archivist.
 - −2.0 % triangles; archivist rebuilds identical; floating.py OK; DRESS-1 variants 1–6 clean for both.
 - Tests: solidnpc 54/54, cast-rounds 209/209, desert-life 30/30, story-journeys 30/30, chapter4 59/59 PASS. Evidence label: Automated runtime only. Next: queue 9 (the common props).
+
+## QUEUE-9 · a question before the common props · the desktop, 12.11.2026
+Queue 9 is "common props" with no list. What I found:
+- **No shared prop module:** every place builds its own barrels, crates, sacks, lamps and benches (`island.js`
+  barrelGeo/crateGeo/lamp/bench; `town.js`, `desertdress.js`, `desertold.js`, `props-esmer.js`, `baggage.js`,
+  `hamalayi.js`, `containers.js`, `asylumhostel.js` …; 61 `crate(`, 45 `barrel(`, 44 `bench(`, 111 `lamp(` calls).
+- **Citadel's read well** from Follow/Medium on the GTX 1050 (the station's barrels, the fort's crates, the square's lamps and
+  a bench: `captures/queue9/citadel-props-play-camera.jpg`, chapters 1–2). CITADEL-85 already reworked them.
+- **The places where they stand are PLACE-2's** (outdoor dressing in Zeelich's street, the isles and Citadel's streets),
+  which CLOUD_ORDERS 40 says not to touch while the cloud works there.
+**Question:** which props should queue 9 cover, and where? Some options: (a) one shared `props-common.js` (barrel, crate,
+sack, chest) that the regions then adopt, delivered as a module plus a per-region adoption diff the cloud applies after
+PLACE-2; (b) only the openable containers (`containers.js`: crate, barrel, chest), which the player interacts with in
+every region; (c) only the places PLACE-2 does not cover (Desert Island, the Hamalayi, the interiors). Until the answer
+comes, the desktop goes on with item 5 (DIGTEST-ART).
