@@ -57,6 +57,7 @@ export class TestThread {
   begin4() { this.f.dt_v = 1; }
   applyFlags() {
     const f = this.f;
+    if (this.dw) { this.dw.n.controlled = false; this.dw = null; }
     this.run = null; this.busy = false; this.later = []; this.pending = null;
     // a chapter-4 save from before, the dig gate still shut: the test is ahead of it
     if (this.key === 'dig' && !f.dt_v && !f.c4_digOpen && !f.c4_done) f.dt_v = 1;
@@ -169,7 +170,7 @@ export class TestThread {
           ch.chain([['hero', 'dt_strip'], ['dallan', 'dt_bye']], () => {
             f.dt_strip = true; this.busy = false;
             g.found('tstrip', 'dt_toast_strip');
-            this.story.refreshCast({ walk: true });   // (Dallan goes back in to his log)
+            this.walkDallan();   // (Dallan goes back in through the gate, seen to go)
             g.updateObjective(); g.save(false);
           });
         });
@@ -284,6 +285,27 @@ export class TestThread {
     if ((this.sampleT -= dt) <= 0 || gv) { this.sampleT = 0.1; S.paper.trace(S.load, gv || (this.lastG > 0.5 ? -0.4 : 0)); this.lastG = gv; }
     if (R.phase === 'down' && R.t >= (R.good ? GOOD_END : EARLY_END)) { this.run = null; this.afterRun(R); }
   }
+  // the test done: Dallan walks from the stand back in through the open gate to his bore (his own steps: the cast's
+  // round by the bore would otherwise hold him where he stood)
+  walkDallan() {
+    const n = this.ch.npc('dallan'), D = this.D;
+    if (!n?.present || !D) { this.story.refreshCast(); return; }
+    const g = D.post.gate, to = this.place('dallan');
+    n.controlled = true; n.forceAnim = null; n.track = null;
+    this.dw = { n, to, pts: [{ x: g.x - 1.0, z: g.z - 0.4 }, { x: g.x + 1.4, z: g.z + 0.6 }, to], t: 0 };
+  }
+  stepDallan(dt) {
+    const W = this.dw; if (!W) return;
+    const g = this.game, n = W.n, p = W.pts[0];
+    W.t += dt;
+    const done = () => { n.controlled = false; this.dw = null; n.placeAt(W.to); this.story.refreshCast(); };
+    if (!p || !n.present || !this.inD() || W.t > 30) { done(); return; }
+    const dx = p.x - n.pos.x, dz = p.z - n.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.3) { W.pts.shift(); if (!W.pts.length) done(); return; }
+    const want = Math.atan2(dx, dz); n.angle += Math.atan2(Math.sin(want - n.angle), Math.cos(want - n.angle)) * Math.min(1, dt * 7);
+    g.physics.move(n, Math.sin(n.angle) * 1.25 * dt, Math.cos(n.angle) * 1.25 * dt); g.physics.fall?.(n, dt);
+    n.rig.play('walk'); n.rig.update(dt, 1.25); n.sync();
+  }
   after(t, fn) { this.later.push({ t, fn }); }
   // in every chapter from the fourth (story/index.js update): the drill's hum while it turns, and the steam drive's puffs
   // once the heat line goes to Kesh — Desert Island as he left it, whenever he comes back
@@ -305,6 +327,7 @@ export class TestThread {
     if (!S || !this.inD()) return;
     const D = this.D, dr = D.pump?.drive;
     if (g.state === 'play') this.stepRun(dt);
+    if (g.state === 'play') this.stepDallan(dt);
     if (g.state !== 'play' || g.trans || this.busy) return;
     // chapter 4: out of the gate with the notebook, the storm gone: Dallan's hail
     if (this.open4 && !f.dt_hail && !this.ch.stormy) {

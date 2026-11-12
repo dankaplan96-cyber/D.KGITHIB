@@ -88,13 +88,15 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
   // the wire's box on its post, right of the cabinet, and its handset on the hook
   const WB = { x: SX - 0.35, z: SZ + 1.8 };   // (a step right of the cutoff: Dallan at it is not in the way of the lever)
   add(cyl(0.04, 0.05, 0.86, 8), steel, WB.x, Y + 0.45, WB.z);
-  add(box(0.36, 0.26, 0.3), teal, WB.x, Y + 0.99, WB.z);
-  add(box(0.08, 0.06, 0.26), dark, WB.x - 0.1, Y + 1.15, WB.z, 0, 0, 0);
+  add(box(0.6, 0.05, 0.72), steel, WB.x, Y + 0.98, WB.z);                 // (a writing shelf round it: the log, the handset; Dallan's hands rest on it)
+  add(box(0.3, 0.22, 0.26), teal, WB.x + 0.1, Y + 1.11, WB.z);
+  add(box(0.08, 0.06, 0.26), dark, WB.x - 0.06, Y + 1.25, WB.z, 0, 0, 0);
+  add(box(0.22, 0.01, 0.3), cream, WB.x - 0.14, Y + 1.01, WB.z - 0.18, 0, 0.2, 0);   // (his log sheet)
   // the cable from the cabinet's back along the sand to the fence, toward the derrick
   { const c = new THREE.CatmullRomCurve3([[SX + 0.18, Y + 0.3, SZ], [SX + 0.6, H(SX + 0.6, SZ) + 0.03, SZ + 0.3], [SX + 1.6, H(SX + 1.6, SZ + 1.0) + 0.03, SZ + 1.4], [26.1, postY + 0.03, -22.6]].map((p) => new THREE.Vector3(...p)));
     add(new THREE.TubeGeometry(c, 16, 0.03, 5, false), dark, 0, 0, 0); }
   col({ type: 'box', x: SX - 0.18, z: SZ, hw: 0.26, hd: 0.66, top: Y + 1.95 });     // (the cabinet and the desk to 0.44 m in front of its face: the desk's lip and the levers' knobs stand out past it)
-  col({ type: 'cyl', x: WB.x, z: WB.z, r: 0.1, top: Y + 1.12 });   // (its post: Dallan stands close at the box, his hands on its top)
+  col({ type: 'box', x: WB.x + 0.05, z: WB.z, hw: 0.25, hd: 0.36, top: Y + 1.0, noStand: true });   // (the shelf, a little short of its front edge: Dallan stands close at it, his hands on its top)
 
   // ---- what moves: the dials' needles, the levers, the paper, the tape, the lamp
   const needle = (z) => { const n = new THREE.Group(); n.position.set(DIAL.x - 0.014, DIAL.y, z); n.rotation.y = -Math.PI / 2; D.add(n); const m = dyn(new THREE.BoxGeometry(0.012, 0.14, 0.006), dark, 0, 0.06, 0, n); m.castShadow = false; dyn(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 8), dark, 0, 0, 0, n).rotation.x = Math.PI / 2; return n; };
