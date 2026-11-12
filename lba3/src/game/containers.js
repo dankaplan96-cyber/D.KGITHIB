@@ -156,6 +156,41 @@ const DESERT_PIECE = {
 };
 const rad = (fp) => fp.r ?? Math.hypot(fp.hw, fp.hd);
 
+// ---------------------------------------------------------------- QUEUE-9: the openable look
+// (the cloud's QUEUE-9 answer, 12.11: the containers the player opens should read as openable from Follow/Medium in every
+//  region, one look per kind, built once here.) The cue is the same everywhere, so it is learnt once: brass. A brass boss
+// and a ring handle on the lid's middle; a barrel's (or jar's) rim bound in a brass band; a crate's four top corners
+// capped in brass and a hasp on its front; a trunk's lock plate. The shapes are made once and shared, in the brass every
+// region shares: one bright, barely metallic brass of its own (the game's metal brass reads dark brown from the play
+// camera, with nothing to reflect), the same material on every island, so they join the batches like the pieces (one
+// material more where a batch cell had none). Sizes, footprints, colliders, places and the lists' order are as before.
+// Bins and luggage keep their own look (a bin's flap and a suitcase read as what they are).
+const OPEN_G = {};
+const og = (k, f) => OPEN_G[k] ||= f();
+const G_HANDLE = () => og('h', () => new THREE.TorusGeometry(0.08, 0.02, 6, 14, Math.PI));   // (a half ring standing up)
+const G_BOSS = () => og('b', () => new THREE.CylinderGeometry(0.065, 0.08, 0.03, 12));
+const G_RIM = (r) => og('r' + r.toFixed(3), () => new THREE.TorusGeometry(r, 0.03, 5, 24));
+const G_CAP = () => og('c', () => new THREE.BoxGeometry(0.16, 0.04, 0.16));
+const G_HASP = () => og('p', () => new THREE.BoxGeometry(0.13, 0.16, 0.026));
+const G_LOCK = () => og('l', () => new THREE.BoxGeometry(0.15, 0.17, 0.026));
+const OPEN_M = () => pm('#e9bd52', 0.38, { metalness: 0.2 });
+const OPENABLE = new Set(['barrel', 'crate', 'trunk']);
+// the parts in a piece's own frame (y up from its foot, +z its front): [geometry, x, y, z, rx]
+function openParts(kind, fp, { rim = true } = {}) {
+  const top = fp.top, out = [[G_BOSS(), 0, top + 0.014, 0, 0], [G_HANDLE(), 0, top + 0.026, 0, 0]];
+  if (fp.r != null) { if (rim) out.push([G_RIM(fp.r * 0.9), 0, top - 0.02, 0, Math.PI / 2]); }
+  else {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) out.push([G_CAP(), sx * (fp.hw - 0.075), top + 0.012, sz * (fp.hd - 0.075), 0]);
+    out.push([kind === 'trunk' ? G_LOCK() : G_HASP(), 0, top - 0.085, fp.hd + 0.014, 0]);
+  }
+  return out;
+}
+// into a region's batch at (x, y, z) turned ry (world-local, as DESERT_PIECE draws)
+function openInto(B, kind, fp, x, y, z, ry, opts) {
+  const c = Math.cos(ry), sn = Math.sin(ry), m = OPEN_M();
+  for (const [g, px, py, pz, rx] of openParts(kind, fp, opts)) B.add(g, m, x + px * c + pz * sn, y + py, z - px * sn + pz * c, rx, ry, 0);
+}
+
 // Citadel's NPC places (as citydress.js keeps them clear) and the crystals (main.js crystalSpots)
 const NPC_SPOTS = [[-39.6, -2.4], [-40.8, -1.1], [-46.2, -0.9], [-118, 45.2], [-49, 4], [-47.7, 4], [-35.5, -11.5], [-40, 6], [-34, -7.5], [-50, 30], [-30, 45], [-60, 55], [-29.3, 75.3]];
 const CRYSTALS = [[-113, 85], [-28, 40], [-45, -84], [-85, -49.5]];
@@ -240,7 +275,11 @@ export function buildCitadelContainers(root, physics, W) {
     }
     if (!at) { skipped.push(`${c.id} (${c.x.toFixed(1)}, ${c.z.toFixed(1)}): ${first}`); continue; }
     const y = H(at.x, at.z) - 0.02, ry = c.ry ?? ((at.x * 7.3 + at.z * 3.1) % (Math.PI * 2));
-    const got = kit.at(at.x, y, at.z, ry, () => BUILD[c.kind](kit)) || fp;
+    const got = kit.at(at.x, y, at.z, ry, () => {
+      const f = BUILD[c.kind](kit);
+      if (OPENABLE.has(c.kind)) for (const [g, px, py, pz, rx] of openParts(c.kind, f)) kit.add(g, OPEN_M(), px, py, pz, 0, { rx });   // (QUEUE-9)
+      return f;
+    }) || fp;
     if (got.r != null) physics.add({ type: 'cyl', x: at.x, z: at.z, r: got.r, top: y + got.top, noStand: true, seeThrough: true });
     else physics.add({ type: 'box', x: at.x, z: at.z, hw: got.hw, hd: got.hd, rot: ry, top: y + got.top, noStand: true, seeThrough: true });
     const gv = { id: c.id, x: at.x, z: at.z, r: rad(got) + 1.05, top: got.top, kinds: c.kinds, n: c.n, kind: c.kind };
@@ -290,7 +329,7 @@ function onPiece(physics, R, x, z) {
   if (!best || (R.clearOf && !R.clearOf(best.x, best.z))) return null;
   const r = best.type === 'cyl' ? best.r : Math.hypot(best.hw, best.hd);
   if (standRoom(physics, R, best.x, best.z, r, gh) < 2) return null;
-  return { x: best.x, z: best.z, y: gh, r: r + 1.05, top: best.top - gh, kind: 'piece' };
+  return { x: best.x, z: best.z, y: gh, r: r + 1.05, top: best.top - gh, kind: 'piece', round: best.type === 'cyl' && best.r <= 0.6 ? best.r : null };
 }
 // can a new piece of radius r stand at (x, z) in region R? a reason it can't, or null
 export function pieceRoom(physics, R, px, pz, r) {
@@ -316,6 +355,7 @@ function newPiece(physics, R, B, x, z, k, kitKind = null) {
     if (kitKind) {
       const ry = (px * 3.7 + pz) % 6.283;
       const got = DESERT_PIECE[kitKind](B, px - o.x, gh - 0.02, pz - o.z, ry);
+      if (OPENABLE.has(kitKind)) openInto(B, kitKind, got, px - o.x, gh - 0.02, pz - o.z, ry);   // (QUEUE-9)
       if (got.r != null) physics.add({ type: 'cyl', x: px, z: pz, r: got.r, top: gh + got.top, noStand: true, seeThrough: true });
       else physics.add({ type: 'box', x: px, z: pz, hw: got.hw, hd: got.hd, rot: ry, top: gh + got.top, noStand: true, seeThrough: true });
       return { x: px, z: pz, y: gh, r: rad(got) + 1.05, top: got.top, kind: kitKind };
@@ -323,6 +363,7 @@ function newPiece(physics, R, B, x, z, k, kitKind = null) {
     const Pl = new EP.Place(B, px - o.x, gh - 0.02, pz - o.z, (px * 3.7 + pz) % 6.283);
     if (kind === 'crate') EP.crate(Pl, { s: 0.7, kind: 'wood' }); else EP.barrel(Pl, { color: '#b07850' });
     if (kind === 'crate') Pl.box(0, 0, 0.37, 0.37, 0.72);
+    openInto(B, kind, kind === 'crate' ? { hw: 0.35, hd: 0.35, top: 0.72 } : { r: 0.3, top: 0.86 }, px - o.x, gh - 0.02, pz - o.z, (px * 3.7 + pz) % 6.283);   // (QUEUE-9)
     for (const c of Pl.cols) physics.add({ ...c, x: c.x + o.x, z: c.z + o.z });
     return { x: px, z: pz, y: gh, r: r + 1.05, top: kind === 'crate' ? 0.72 : 0.86, kind };
   }
@@ -379,7 +420,11 @@ export function buildRegionContainers(rooms, physics) {
     let B = batches.get(R); if (!B) { B = new Batch(R.group); batches.set(R, B); }
     const at = (!kitKind && onPiece(physics, R, x, z)) || newPiece(physics, R, B, x, z, k, kitKind);
     if (!at) { o.skipped.push(`${id} (${x.toFixed(1)}, ${z.toFixed(1)}): no room`); return; }
-    R.givers.push({ id, ...at, kinds, n });
+    // (QUEUE-9: a giver on a round piece already standing, an isle's jar or barrel: the brass boss and ring handle on its
+    //  top's middle; no band, a jar's neck is narrower than its body. A crate stack's top may be off its middle: left)
+    if (at.kind === 'piece' && at.round) { const o = R.group.position; openInto(B, 'barrel', { r: at.round, top: at.top }, at.x - o.x, at.y, at.z - o.z, 0, { rim: false }); }
+    const { round: _r, ...gv } = at;
+    R.givers.push({ id, ...gv, kinds, n });
     o.placed.push({ id, kind: at.kind, x: +at.x.toFixed(2), z: +at.z.toFixed(2), moved: +Math.hypot(at.x - x, at.z - z).toFixed(2) });
   };
   const Z = rooms.zeelich;

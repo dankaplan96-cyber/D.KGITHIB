@@ -22,6 +22,7 @@ import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 const { check, done } = checker();
 let { browser, context, page, errs } = await launch();
 await open(page, '?nocine');
@@ -249,7 +250,7 @@ await page.click('#gameover [data-act="retry"]', { timeout: 60000 });
 await reloaded;
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.state === 'play', null, { timeout: 300000 }).catch(() => {});
 await page.evaluate(() => { game.testFreeze = true; });
-await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).pathname });
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/player.js', import.meta.url)) });   // (fileURLToPath: a Windows path too)
 await helpers();
 const retry = await ev(() => ({ state: game.state, loot: C.loot().map((p) => p.k).sort() }));
 check('death → Retry: the bonuses left before the last save are back, once each', go === 'gameover' && JSON.stringify(retry.loot) === JSON.stringify(before) && before.length > 0, { go, before, retry });
