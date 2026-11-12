@@ -78,9 +78,10 @@ export class TestThread {
     const f = this.f, R = this.game.rooms.desert;   // (read through rooms: the cast waits for the area: index.js refreshCast)
     if (!this.on) return undefined;
     if (this.key === 'dig' && f.c4_notebook && !f.dt_strip && !f.c4_carving) return { ...R.stand.spots.dallan, anim: 'tinker' };
-    // (the test done: back in by his office to write the log; not his round's mark, so he is seen to walk there:
-    //  castrounds.js would keep him on its round wherever he stood)
-    if (this.key === 'dig' && f.dt_strip && !f.c4_carving) { const o = R.post.office; return { x: o.x + 2.0, z: o.z + 1.0, a: -Math.PI / 2 }; }
+    // (the test done: back in through the gate, to stand by his bore — in a straight line from the stand through the open
+    //  gate, as a walk goes; not his round's mark, so he is seen to walk there: castrounds.js would keep him on its round
+    //  wherever he stood)
+    if (this.key === 'dig' && f.dt_strip && !f.c4_carving) { const g = R.post.gate; return { x: g.x + 3.3, z: g.z + 2.0, a: Math.PI / 2 }; }
     if (this.key === 'steam' && f.c5_planned && !f.c5_vent) return { ...R.stand.spots.dallan, anim: 'tinker' };
     return undefined;
   }
