@@ -259,8 +259,9 @@ if (run('chapter 6')) {
 
 // ---------------------------------------------------------------- chapter 7
 if (run('chapter 7')) {
-  await ev(([D]) => setChapter('observatory', { ...D, c7_started: true }), [DONE6]);
-  iso('chapter 7: its start (chapter 6 done, c7_started)');
+  // (ob_snow: wave 3's snow remark is a story beat out of the yard, not the residents': taken as seen here)
+  await ev(([D]) => setChapter('observatory', { ...D, c7_started: true, ob_snow: true }), [DONE6]);
+  iso('chapter 7: its start (chapter 6 done, c7_started, the snow remark seen)');
   await area('chapter 7, the monastery', 'village', 'mon', CAMP, 8);
 }
 
