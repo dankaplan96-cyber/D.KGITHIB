@@ -530,8 +530,26 @@ median).
 it, nothing was listened to (the deck's winch, the door, the lever, the needles' clunk, the radio and the standpipe are the
 game's existing synthesized sounds), no frame rate measured.
 
-**Wave 5's verification**: see the table at the end of this section (port 8920 snapshot of this branch; one suite at a time;
-the machine shared).
+**Wave 5's verification** (port 8920 snapshot of this branch; one suite at a time; the machine shared):
+
+| Suite | Verdict | What it covered |
+|---|---|---|
+| `tests/playthrough/12-council.mjs` (seg.mjs, by input, ASSIST=1, from `base-12`) | PASS on the final build, in one piece; 0 deaths, 0 ISO assists | the whole chapter with the thread on (a save from before: its stop ahead): the order read at the door, Kell, the ride, the service door, down the gallery, the coat, the keys, the drawer (no carbon in that game: the log taken as it is), the vote, the guard and the stop, the bench (both relays), Kell's feed → chapter 10. Also in five parts with Save & quit → Continue between them from the same save with the carbon in the pocket (the comparison played; made the fixtures): PASS after one STOP — caught at the key ring, the bot was put back on the gallery (the first build's catch) and walked out by its service door; the door's exit was made narrower and a step further from where he lands, and that run passed; a one-piece run on that build stopped the same way, so a catch now puts him back at the front door as before, and the one-piece run above passed |
+| `tests/chapter9.mjs` (The Council's chapter suite) | PASS 24/24 (after one FAIL of its own: its teleports onto the gallery under the archivist's eyes; it now steps to the old door's corner as the playthrough does) | the order and the refusal; Kell, the deck, the ride, the door; the gallery and its watcher; the coat, the wrong cabinet, the locked cabinet, the key, the drawer, the carbon on the log; the vote that goes on; the stop (needles, Mill Lane dry); the bench (one relay, then the other); the lane → network |
+| `tests/campaign-thread.mjs` ONLY=J, K | PASS (J 3/3, K 11/11) | C15–C17 (`base-12`, `base-12-heard`, `base-12-plans`); K: the order, Kell, a Save & quit with the deck down, the ride, a Save & quit at the open service door, the gallery, out by its door mid-task and back in; the drawer and a Save & quit before the carbon; the stop and a Save & quit with Mill Lane dry; the bench with one relay clipped and a Save & quit; the second relay; Kell's feed → chapter 10; Mill Lane after a reload there |
+| `tests/campaign-hands.mjs` | PASS (after one FAIL: the console's stop not reached from the chamber; the suite now walks out first) | the service door 0.0 cm (0.5 in the first run), the carbon on the log 0.0 cm, the STOP 0.3 cm, the isolator on each terminal 0.1 / 0.1 cm, on Kell's feed box 0.0 cm; Kell's hands on his brake with the lane dry 0.2 / 0.9 cm; waves 1–4's unchanged |
+| `tests/no-air.mjs` STATES=27, 28 (new), one process each | PASS each (0 offenders of hand or foot) | chapter 9 with the stop ordered (Baldino by the console, the guard), with the stop thrown (Mill Lane dry, Baldino at his loose bench) |
+| `tests/zeelich-life.mjs` | PASS 40/40 | Mill Lane's three states in chapter 9 (before the stop; dry: the cart half way, Kell on his brake, Brel's "Air"; the isolator on: the deck up, the water, Brel's full jug), and the street's own as before |
+| `tests/zeelich-doors.mjs` | PASS 22/22 | every street door in and out (the terrace's new stair-house is not one of them: its door is the story's) |
+| `tests/save-migration.mjs` | PASS (20 checks, 3 new) | `base-12`, `base-12-heard`, `base-12-plans` load without an error; the thread on, the steps they are past counted as done |
+| `tests/world-consistency.mjs` | PASS 37/37 | the residents and the cast per chapter; the journeys' allow-list (cnline.js `end` on it) |
+| `tests/resume.mjs`, `tests/chapter1.mjs`, `tests/opening.mjs` | PASS each (2, 32, 41) | unchanged (the stair-house stands on the terrace in every chapter, its door shut) |
+| `tests/cast-rounds.mjs` | PASS 209/209 | the story people's rounds in chapters 3–10 |
+
+(`zeelich-doors`, `world-consistency` and `cast-rounds` failed once on a 404: they import the game's modules by an absolute path
+and the snapshot was first served under a sub-path; served at the root they pass. `campaign-thread` K, `save-migration`,
+`resume`, `chapter1`, `opening` and `no-air` ran on the build before the last two changes — the catch back to the door and the
+lines for a game without the carbon —, which touch none of what they cover.)
 
 | Chapter | Before (base) | Now: what the player does | Where |
 |---|---|---|---|
@@ -570,21 +588,25 @@ the same save `base-12-heard` on both builds and the same camera spots — `/dev
 
 | Spot (save `base-12-heard`) | draw calls: base → wave 5 | triangles: base → wave 5 |
 |---|---|---|
-| Mill Lane, east of the lift | 564 → 562 | 382,688 → 382,650 |
-| the cistern terrace by the service door | 866 → 871 | 461,757 → 461,937 |
+| Mill Lane, east of the lift | 564 → 561 | 382,688 → 382,704 |
+| the cistern terrace by the service door | 866 → 869 | 461,757 → 461,927 |
 | the platform's console | 192 → 198 | 229,336 → 229,824 |
 | the antechamber, by the archive door | 63 → 66 | 47,965 → 47,971 |
 | the archive, by its door | 72 → 73 | 579,265 → 587,035 |
 | the workshop, at the relay table | 253 → 253 | 217,871 → 219,055 |
 
-At most +6 calls (the console: the STOP lever and its knob, two needles, the dials' one material), +5 on the terrace (the
-stair-house's door leaf, its sign's quad), +1.3 % triangles in the archive (the gallery, its stack and stair, merged into the
+At most +6 calls (the console: the STOP lever and its knob, two needles, the dials' one material), +3 on the terrace (the
+stair-house's door leaf, its sign's quad; first measured +5, before the two signs shared a material and the leaf's shadow was
+dropped), +3 in the antechamber (the order, the plate), +1.3 % triangles in the archive (the gallery, its stack and stair, merged into the
 room's Kit). The stair-house and its sign join the rise's merged static group; its sign shares one material with Irsa's
 sign (one canvas, two halves of it); the door leaf and the isolator on the feed box are one merged mesh each and cast no
 shadow; the gallery is in the archive's Kit (its materials the room's own); the order is one quad, the deliveries' plate in
 the antechamber's Kit; the bench's terminals in the workshop's Kit, the isolator one small Kit drawn only while clipped on.
 (These counts are of the frame as `renderer.render()` draws it in the probe, the same way on both builds; they run higher
-than the waves' earlier tables, which counted through the game's own frame.)
+than the waves' earlier tables, which counted through the game's own frame. Measured again from the save after the stop
+(`new-12-stop`, the wave's build only): the workshop with the bench loose 256 calls; the outdoor spots of that save drew far
+fewer calls in this probe — 175 at Mill Lane — which says more about the probe's frame than the scene, so they are not
+compared.)
 
 **Files.** New: `src/game/story/cnline.js` (the thread: `story._cn`, owned by council.js and asked first),
 `src/game/text/cnline.js`. Hooked into: `story/council.js` (the thread's place, begin, the archive's door, the gallery's way
@@ -602,6 +624,19 @@ suite of The Council), `campaign-thread.mjs` (J: C15–C17, the saves from befor
 `base-12-plans` (made on the build before the wave by segments 11 and 12) and `new-12-heard`, `new-12-drawer`,
 `new-12-vote`, `new-12-stop` (made by this wave's playthrough from `base-12` with the wave-2 carbon put in the pocket by hand:
 `dt_v`, `dt_strip`). Pictures (for the coordinator only): `captures/campaign-wave5/x-*.jpg`.
+
+**Left open by wave 5:** the order and the plate read from a close look (the picture `x-ch9-1-order` is framed by a fixed
+camera); from the play camera they are small, and the lines carry them. The stop's Mill Lane cut-away is a reveal beat, off
+in the tests (`?nocine`): `x-ch9-7-lane-dry` is framed by a fixed camera at the beat's own position, not seen through the
+beat. The console's dials are on the screen's frame; the GROUND needle's kicks were checked in a still and by state, not
+watched. The gallery's stealth: from up there the archivist's whole round is in sight, but whether a first-time player waits
+for his back before taking the stair is not judged; the bot does (about 10 s). Kell walks from the deck to the stair-house's
+door in a straight line of his own (two points), not by the walkers' planner. The bench's two relays jump on a fixed 2.4 s
+cycle (three kicks in 0.75 s, the pump room's rhythm). The fixtures `new-12-*` carry the wave-2 carbon put in by hand (no
+chain from a new game reached chapter 9 in this session: segment 08 of a chain from `base-06` stopped twice, the bot stuck on
+its way back to Tarra in Kesh after the vent — chapter 5, no file of which this wave touches; not investigated). Chapter 9 is
+now over the 125 % line by the estimate (about 1.54 of the old median). Chapter 10's own opening ("five stations…") follows
+on unchanged; wave 6 can take Kell's lift on the isolator as Zeelich's first held station.
 
 ## 6. The next waves (chapters 4–12 and the aftermath)
 
