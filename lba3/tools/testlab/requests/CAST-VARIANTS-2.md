@@ -1,6 +1,7 @@
 # CAST-VARIANTS-2 · Kira's own look; zmole2_b, zbee1_b, zbee2_b, nara_c · the desktop, 11-12.11.2026
 
-Order 28 queue 7, the rest: "councilB for Kira; zmole2, zbee1, zbee2", and nara again (still 9 people after nara_b). Apply **after CAST-VARIANTS-1** (both apply in order
+Order 28 queue 7, the rest: "councilB for Kira; zmole2, zbee1, zbee2", and nara again (still 9 people after nara_b). Applies on the branch as it is (`5852e1b1`: the cloud applied CAST-VARIANTS-1 as d0c31b18; the islandlife.js hunks remade on its
+NO-AIR 3 file; checked with `git apply --check`). (First made to apply in order
 on origin `f4636a26`; checked on a scratch index).
 
 ## Files

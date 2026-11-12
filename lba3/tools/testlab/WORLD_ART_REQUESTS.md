@@ -4528,7 +4528,7 @@ unmeasured eyes). Full note: `requests/CAST-CONNECT-1.md`.
   as the unchanged branch. Evidence label: Automated runtime only.
 
 ## CAST-VARIANTS-2 · Kira's own look; zmole2_b, zbee1_b, zbee2_b, nara_c · the desktop, 12.11.2026
-**Ready for the cloud, apply after CAST-VARIANTS-1.** Full note: `requests/CAST-VARIANTS-2.md`. Queue 7 is done with this.
+**Ready for the cloud: applies on the branch as it is (CAST-VARIANTS-1 is applied).** Full note: `requests/CAST-VARIANTS-2.md`. Queue 7 is done with this.
 - `kira`: Kira (Zeelich's plaza gardener) stops sharing lharWoman: a straw hat, rolled sleeves, a gardener's apron, gloves.
 - `zmole2_b` (a small mole at work: miner's cap, belt) for the underground's carrier and gauge-reader; `zbee1_b` (heavier, a
   satchel: a new `pouch` option in `build_bee`) for a tender and a loader; `zbee2_b` (no crown, a satchel) for the carter and
