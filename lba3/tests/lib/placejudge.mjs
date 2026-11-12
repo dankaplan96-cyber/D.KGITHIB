@@ -223,13 +223,208 @@ export function judge(id, A) {
   return { id, pieces: list.length, structure: structure.length, find };
 }
 
+// ================================================================== PLACE-2: outdoors
+// The pieces of an outdoor area: the Kit's (as indoors) and those tests/lib/placeout.js grouped from what was built
+// outside it. Findings, each with its measure:
+//   inside   two pieces' drawn parts go ≥ 4 cm into each other (as indoors); a tree's trunk (a 0.2 m post at the middle
+//            of a tree ≥ 2.5 m tall, its lowest 2 m) through a piece's parts
+//   wall     a piece's parts go ≥ 12 cm into a building's wall (a structure's tall thin part) or a solid building
+//            collider (≥ 1.9 m tall, ≥ 2.4 m long)
+//   float    a standing piece's lowest part ≥ 5 cm over the ground (terrain, standable bricks, slabs, other pieces' tops)
+//            at its middle and at every corner of its footprint (20 % in); or one side ≥ 15 cm over it while another
+//            touches (on a slope); trees and bushes ≥ 10 cm
+//   sunk     the ground ≥ 8 cm over its lowest part at its middle and at every corner (buried all round)
+//   door     a standing piece ≥ 6 cm into a door's way (the 0.9 m lane 1.6 m out from a house's door, or within 0.5 m of
+//            a door's trigger where the door's facing is not known)
+//   stair    a standing piece ≥ 6 cm into a stair's brick, at the stair's height
+//   walk     a standing piece in the middle of a walkway or bridge (a long, narrow standable brick ≥ 0.4 m over the
+//            terrain: ≥ 6 cm into its middle, its width less 0.4 m each side)
+//   path     a standing piece ≥ 0.25 m tall reaching within 0.5 m of a path's centre line (Citadel's paths: world.js
+//            pathDist; elsewhere no path data)
+//   bench    a bench whose seat faces a wall, a building or a tall piece less than 0.8 m before its front edge (its
+//            facing: from its back, the highest part, to its middle)
+//   sign     a sign's text side (a plane with a painted map) faces a wall less than 0.6 m off, or faces away from the
+//            path it stands by (Citadel: the path's nearest point behind it, its back blank)
+//   wallaway a piece that belongs on or against a wall (a shelf, a rack, a wall lamp, a cabinet ...) ≥ 0.35 m from every
+//            wall, building and tall piece
+const OUT_ARCH = /^(rockWallRun|column|ibeam|beam|pillar|railing|gargoylePost|arch|crystals|boulder|stalagmites|stalagmite|eggs|rock|rocks|wallLamp|signPlate|cableTray|pipeline|pipe|tilt|gatePillar|hornedHead|wallRun|fence|fenceRun|palisade|wall|kerb)$/i;
+const OUT_HUNG = /hang|lamp|sconce|lantern|chandelier|bell|sign|shelf|rack|board|clock|banner|flag|bunting|wire|cable|line|washing|awning|canopy|sail|kite|bird|cloud|light|glow|mist|spark|beam|net|rope/i;
+const OUT_JOINT = /^(railing|railRun|fence|post|pole|bannerPole|hangingLine|laundry|lamp|flagPole|meshFence|gateLeaf)$/i;
+const OUT_BENCH = /^(bench|waitingBench|parkBench|seat|benches)$/i;
+const OUT_SIGN = /sign|board|notice|plaque|timetable|placard|poster|menu|plate/i;
+const OUT_WALLTYPE = /^(wallShelf|shelf|shelves|rack|toolRack|toolBoard|wallLamp|sconce|plaque|hangingSign|cupboard|cabinet|locker|wardrobe|bookcase|dresser|filingCabinet|goodsShelf)$/i;
+// outdoor dressing (what this sweep is for); other pieces built outside the Kit are a building's or a site's fixtures
+// (a pipe's valve, a window, a kerb): obstacles for the dressing, not judged themselves
+export const OUT_DRESS = /bench|seat|crate|barrel|keg|sack|lamp|lantern|cart|stall|planter|tub$|^pot$|bin$|sign|board|^post$|pole|bollard|fence|jar|hive|tent|stool|table|chest|trough|basket|^box|wheel|^tools$|rug|firePit|trunk|spool|pickaxe|shovel|skiff|netRack|netHeap|laundry|hangingLine|flowerBed|flowerBox|fountain|^well$|bell|telescope|gasBottles|warnSign|kiosk|bannerPole|windsock|heatPosts|radio|chalk|mooring|barrier|bucket|ladder|cask|bale|pallet|^jars$|stand$|rack|shelf|cabinet|locker|booth|easel|poster|planks|canopy|ropeCoil|floodMast|cartWheel|staff/i;
+export const OUT_FIXTURE_SKIP = /^(_build|Terrain\._build|fieldRing|peek|update|curbs|kerb)$/;
+export function judgeOut(id, A) {
+  const kit = pieces(A).list.map((P) => ({ name: P.name, parts: P.parts.map((p) => [p[0], p[1], p[2], null]), hull: P.hull, y0: P.y0, y1: P.y1, mid: P.mid, g: [P.f.g], kit: true, i: P.f.i, fwd: P.f.fwd }));
+  const O = A.out || { pieces: [], walls: [], doors: [], stairs: [], walks: [], solid: [] };
+  const own = O.pieces.filter((P) => !OUT_FIXTURE_SKIP.test(P.name)).map((P) => ({ ...P, i: 100000 + P.i, dress: !P.veg && OUT_DRESS.test(P.name) }));
+  for (const P of kit) P.dress = true;
+  const list = [...kit, ...own];
+  const find = [];
+  const at = (P) => [r2(P.mid[0] - A.c[0]), r2(P.mid[1] - A.c[1])];
+  const add = (kind, P, what, measure, extra = {}) => find.push({ room: id, kind, item: P.name, frame: P.i, at: at(P), world: [r2(P.mid[0]), r2(P.mid[1])], what, measure, maker: P.maker || 'Kit', ...extra });
+  const flat = (P) => FLAT.test(P.name) || P.y1 - P.y0 < 0.03;
+  const hungN = (P) => WALLMOUNT.test(P.name) || OUT_HUNG.test(P.name);
+  const ground = (P) => P.g.filter((v) => v != null);
+  const gmid = (P) => P.g[0] ?? ground(P)[0] ?? null;
+  const stands = (P) => !flat(P) && gmid(P) != null && P.y0 < gmid(P) + 1.2;
+  const rad = (P) => Math.max(...P.hull.map((h) => Math.hypot(h[0] - P.mid[0], h[1] - P.mid[1])));
+  // a grid of the pieces, for pairs
+  const cell = 4, grid = new Map();
+  list.forEach((P, k) => { P._k = k; P._r = rad(P); const gx = Math.floor(P.mid[0] / cell), gz = Math.floor(P.mid[1] / cell); const key = gx + ',' + gz; if (!grid.has(key)) grid.set(key, []); grid.get(key).push(k); });
+  const nearby = (P, d) => { const out = []; const gx = Math.floor(P.mid[0] / cell), gz = Math.floor(P.mid[1] / cell), n = Math.ceil((d + 3) / cell); for (let a = gx - n; a <= gx + n; a++) for (let b = gz - n; b <= gz + n; b++) for (const k of grid.get(a + ',' + b) || []) out.push(list[k]); return out; };
+  const colH = (c) => colHull(c);
+  const solids = (O.solid || []).map((c) => [colH(c), Math.max(c.bottom, -5), c.top, c]);
+  const kitWalls = pieces(A).structure.filter((p) => p[2] - p[1] >= 1.5);
+  const walls = [...(O.walls || []).map((w) => [w[0], w[1], w[2]]), ...kitWalls];
+  // 1. inside each other (and trees' trunks through pieces)
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+    for (const b of nearby(a, a._r + 3)) {
+      if (b === a) continue;
+      if (a.veg || b.veg) {
+        const T = a.veg ? a : b, P = a.veg ? b : a; if (P.veg || !P.dress || flat(P) || T.y1 - T.y0 < 2.5 || /rock|boulder/i.test(T.name)) continue;
+        const trunk = [[T.mid[0] - 0.1, T.mid[1] - 0.1], [T.mid[0] + 0.1, T.mid[1] - 0.1], [T.mid[0] + 0.1, T.mid[1] + 0.1], [T.mid[0] - 0.1, T.mid[1] + 0.1]];
+        let best = 0; for (const p of P.parts) { if (p[0].length < 3 || yo(p[1], p[2], T.y0, T.y0 + 2) < 0.1) continue; best = Math.max(best, pen2(p[0], trunk)); }
+        if (best >= 0.04 && !find.some((f) => f.kind === 'inside' && f.frame === P.i && f.other === T.i)) add('inside', P, `a tree's trunk (${T.name}) through ${P.name}`, `a 0.2 m trunk at the tree's middle ${Math.round(best * 100)} cm into its parts`, { depth: r2(best), other: T.i, otherItem: T.name });
+        continue;
+      }
+      if (b._k < i) continue;
+      if (!a.dress && !b.dress) continue;
+      if (flat(a) || flat(b) || (OUT_ARCH.test(a.name) && OUT_ARCH.test(b.name))) continue;
+      if (OUT_JOINT.test(a.name) && OUT_JOINT.test(b.name)) continue;   // (rails, fences, lines and the poles they run between meet by design)
+      if (/rock|boulder|stalag|cliff/i.test(a.name + b.name)) continue;
+      if (yo(a.y0, a.y1, b.y0, b.y1) < 0.04 || pen2(a.hull, b.hull) < 0.04) continue;
+      let best = 0;
+      for (const pa of a.parts) for (const pb of b.parts) { if (pa[0].length < 3 || pb[0].length < 3) continue; const dy = yo(pa[1], pa[2], pb[1], pb[2]); if (dy < 0.04) continue; const d = Math.min(pen2(pa[0], pb[0]), dy); if (d > best) best = d; }
+      if (best >= 0.04) { const P = a.y1 - a.y0 < b.y1 - b.y0 ? a : b, Q = P === a ? b : a; add('inside', P, `${P.name} goes into ${Q.name} (#${Q.i} at ${at(Q).join(', ')})`, `parts overlap ${Math.round(best * 100)} cm (footprint SAT and height)`, { depth: r2(best), other: Q.i, otherItem: Q.name }); }
+    }
+  }
+  // 2. into a building's wall
+  for (const P of list) {
+    if (!P.dress || flat(P) || OUT_ARCH.test(P.name) || hungN(P)) continue;
+    let best = 0, what = '';
+    for (const pa of P.parts) {
+      if (pa[0].length < 3) continue;
+      for (const s of walls) { const dy = yo(pa[1], pa[2], s[1], s[2]); if (dy < 0.08) continue; const d = Math.min(pen2(pa[0], s[0]), dy); if (d > best) { best = d; what = 'a wall part'; } }
+      for (const s of solids) { const dy = yo(pa[1], pa[2], s[1], s[2]); if (dy < 0.08) continue; const d = Math.min(pen2(pa[0], s[0]), dy); if (d > best) { best = d; what = `a building's collider (${s[3].t} at ${r2(s[3].x)}, ${r2(s[3].z)})`; } }
+    }
+    if (best >= 0.12) add('wall', P, `${P.name} goes into a building's wall`, `drawn parts ${Math.round(best * 100)} cm into ${what}`, { depth: r2(best) });
+  }
+  // 3. float / sunk against the ground (terrain, bricks, slabs, other pieces' tops)
+  const pts = (P) => [P.mid, ...P.hull.map((h) => [h[0] + (P.mid[0] - h[0]) * 0.2, h[1] + (P.mid[1] - h[1]) * 0.2])];
+  for (const P of list) {
+    if (!stands(P) || (hungN(P) && !P.veg) || (!P.dress && !P.veg) || (P.veg && P.y1 - P.y0 < 1.5)) continue;
+    if (gmid(P) < -0.3) continue;   // (over the sea: boats, buoys)
+    const S = pts(P), gs = P.kit ? S.map(() => P.g[0]) : P.g;
+    const sup = S.map((pt, k) => {
+      let sp = gs[k] ?? gmid(P);
+      for (const Q of nearby(P, P._r + 2)) { if (Q === P) continue; for (const q of Q.parts) if (q[0].length >= 3 && q[2] <= P.y0 + 0.03 && q[2] > sp && inside(q[0], pt)) sp = q[2]; }
+      for (const s of O.floors || []) if (s[2] <= P.y0 + 0.03 && s[2] > sp && inside(s[0], pt)) sp = s[2];
+      return sp;
+    });
+    const gaps = sup.map((s) => P.y0 - s), lo = Math.min(...gaps), hi = Math.max(...gaps);
+    const lim = P.veg ? 0.1 : 0.05;
+    const m = `lowest part y ${r2(P.y0)}; the ground at its middle and corners ${sup.map(r2).join(' / ')} (terrain, bricks, slabs, pieces under it)`;
+    // (hung on a wall: a window's flower box, a lamp on its bracket — over the ground by design, against a wall)
+    if (lo >= lim && P.y0 - Math.max(...sup) >= 0.4 && P.hull.some((h) => walls.some((w) => w[1] < P.y1 && w[2] > P.y0 && distToHull(w[0], h) < 0.15) || solids.some((w) => w[1] < P.y1 && w[2] > P.y0 && distToHull(w[0], h) < 0.15)
+      || nearby(P, 3).some((Q) => Q !== P && !Q.veg && Q.y1 - Q.y0 >= 1.2 && Q.y0 < P.y1 && Q.y1 > P.y0 && distToHull(Q.hull, h) < 0.15))) continue;
+    // (buried whole: a dig's chest under the sand, by design)
+    if (P.y1 < Math.min(...sup) + 0.1) continue;
+    if (lo >= lim) add('float', P, `${P.name} floats over the ground`, `${Math.round(lo * 100)} cm over the ground everywhere under it — ${m}`, { gap: r2(lo) });
+    else if (!P.veg && hi >= 0.15 && P.hull.length >= 3 && rad(P) > 0.2) add('float', P, `${P.name} stands with one side in the air (a slope)`, `one side ${Math.round(hi * 100)} cm over the ground, another touching — ${m}`, { gap: r2(hi), side: true });
+    else if (!P.veg && -hi >= 0.08 && !/crystal|boulder|rock|stalag|egg|spike|root|stone|stump|pile|block|post|pole|laundry|line|lamp|mast|signpost|windsock/i.test(P.name)) add('sunk', P, `${P.name} sinks into the ground`, `${Math.round(-hi * 100)} cm under the ground everywhere under it — ${m}`, { gap: r2(hi) });
+  }
+  // (posts and poles are planted: not sunk)
+  // 4. in a door's way, a stair, a walkway, a path
+  const stood = (P) => stands(P) && P.dress && !OUT_ARCH.test(P.name) && P.y1 - P.y0 >= 0.25;
+  for (const d of O.doors || []) {
+    let lane;
+    if (d.ry != null) {
+      const dx = Math.sin(d.ry), dz = Math.cos(d.ry), nx = -dz, nz = dx, hw = 0.45, len = 1.6;
+      lane = [[d.x + nx * hw, d.z + nz * hw], [d.x - nx * hw, d.z - nz * hw], [d.x - nx * hw + dx * len, d.z - nz * hw + dz * len], [d.x + nx * hw + dx * len, d.z + nz * hw + dz * len]];
+    } else { const R = (d.r ?? 0.9) + 0.1; lane = []; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; lane.push([d.x + Math.cos(a) * R, d.z + Math.sin(a) * R]); } }
+    for (const P of nearby({ mid: [d.x, d.z] }, 3)) {
+      if (!stood(P)) continue;
+      const pe = Math.max(0, ...P.parts.filter((q) => q[0].length >= 3 && q[1] < gmid(P) + 1.9 && q[2] > gmid(P) + 0.1).map((q) => pen2(q[0], lane)));
+      if (pe >= 0.06) add('door', P, `${P.name} stands in the way to the door ${d.to || ''}`.trim(), `drawn parts ${Math.round(pe * 100)} cm into ${d.ry != null ? 'the 0.9 m lane 1.6 m out from the door' : `the door trigger's ring (${d.r} m + 0.1 m)`}`, { d: r2(pe), door: d.to });
+    }
+  }
+  for (const s of O.stairs || []) {
+    const h = colH(s);
+    for (const P of nearby({ mid: [s.x, s.z] }, (s.hw ?? s.r ?? 1) + (s.hd ?? 0) + 2)) {
+      if (!stood(P) || P.y0 > s.top + 0.3 || P.y0 < s.top - 2) continue;
+      const pe = Math.max(0, ...P.parts.filter((q) => q[0].length >= 3).map((q) => pen2(q[0], h)));
+      if (pe >= 0.06) add('stair', P, `${P.name} stands on a stair's step`, `drawn parts ${Math.round(pe * 100)} cm into the stair's brick at ${r2(s.x)}, ${r2(s.z)} (top ${r2(s.top)})`, { d: r2(pe) });
+    }
+  }
+  for (const s of O.walks || []) {
+    const narrow = s.hw < s.hd ? { ...s, hw: Math.max(0.05, s.hw - 0.4) } : { ...s, hd: Math.max(0.05, s.hd - 0.4) };
+    const h = colH(narrow);
+    for (const P of nearby({ mid: [s.x, s.z] }, Math.max(s.hw, s.hd) + 2)) {
+      if (!stood(P) || Math.abs(P.y0 - s.top) > 0.3) continue;
+      const pe = Math.max(0, ...P.parts.filter((q) => q[0].length >= 3).map((q) => pen2(q[0], h)));
+      if (pe >= 0.06) add('walk', P, `${P.name} stands in the middle of a walkway or bridge`, `drawn parts ${Math.round(pe * 100)} cm into the middle of the walkway's brick at ${r2(s.x)}, ${r2(s.z)} (${r2(s.hw * 2)} × ${r2(s.hd * 2)} m, top ${r2(s.top)})`, { d: r2(pe) });
+    }
+  }
+  for (const P of list) if (P.path != null && stood(P) && P.path < 0.5 && !hungN(P)) add('path', P, `${P.name} stands on a path`, `its footprint ${r2(P.path)} m from the path's centre line (world.js pathDist)`, { d: r2(P.path) });
+  // walls, buildings and tall pieces round a point (for benches, signs, wall-type pieces)
+  const blockAt = (q, y, self) => {
+    for (const w of walls) if (w[1] < y + 1 && w[2] > y + 0.5 && inside(w[0], q)) return 'a wall';
+    for (const s of solids) if (s[1] < y + 1 && s[2] > y + 0.5 && inside(s[0], q) && !(self && inside(s[0], self.mid))) return 'a building';
+    for (const Q of nearby({ mid: q }, 2)) if (Q !== self && !Q.veg && Q.y1 - Q.y0 >= 1.2 && Q.y0 < y + 0.5 && !OUT_HUNG.test(Q.name) && inside(Q.hull, q)) return `a tall piece (${Q.name})`;
+    return null;
+  };
+  const ray = (p, dir, y, self, max) => { for (let t = 0; t <= max; t += 0.05) { const b = blockAt([p[0] + dir[0] * t, p[1] + dir[1] * t], y, self); if (b) return [t, b]; } return [max, null]; };
+  // 5. benches facing a wall
+  for (const P of list) {
+    if (!OUT_BENCH.test(P.name) || P.parts.length < 2) continue;
+    const top = P.parts.reduce((a, p) => (p[2] > a[2] ? p : a));
+    const tm = top[0].reduce((a, q) => [a[0] + q[0] / top[0].length, a[1] + q[1] / top[0].length], [0, 0]);
+    let f = [P.mid[0] - tm[0], P.mid[1] - tm[1]], L = Math.hypot(f[0], f[1]);
+    if (P.fwd && L < 0.05) { f = P.fwd; L = 1; }
+    if (L < 0.05) continue;
+    f = [f[0] / L, f[1] / L];
+    const front = Math.max(...P.hull.map((h) => (h[0] - P.mid[0]) * f[0] + (h[1] - P.mid[1]) * f[1]));
+    const p0 = [P.mid[0] + f[0] * (front + 0.02), P.mid[1] + f[1] * (front + 0.02)];
+    const [t, b] = ray(p0, f, gmid(P) ?? P.y0, P, 0.8);
+    if (b) add('bench', P, `${P.name} faces ${b} ${r2(t)} m before its seat`, `a ray from the seat's front edge along its facing (back → middle) meets ${b} at ${r2(t)} m (< 0.8 m)`, { d: r2(t) });
+  }
+  // 6. signs: the text side facing a wall, or away from the path
+  for (const P of list) {
+    if ((!OUT_SIGN.test(P.name) && !P.parts.some((p) => p[3]?.[2] === 1)) || /gate|leaf|door/i.test(P.name)) continue;
+    const faces = P.parts.filter((p) => p[3] && p[3][2] === 1);
+    if (!faces.length) continue;
+    const ns = faces.map((p) => p[3]);
+    for (const p of faces) {
+      const n = p[3];
+      if (ns.some((m) => m[0] * n[0] + m[1] * n[1] < -0.7)) continue;   // (two-sided: text on both faces)
+      const c = p[0].reduce((a, q) => [a[0] + q[0] / p[0].length, a[1] + q[1] / p[0].length], [0, 0]);
+      const [t, b] = ray([c[0] + n[0] * 0.05, c[1] + n[1] * 0.05], n, Math.max(gmid(P) ?? 0, p[1] - 1), P, 0.6);
+      if (b) { add('sign', P, `${P.name}'s text faces ${b} ${r2(t)} m off`, `a ray from the text plane's middle along its normal meets ${b} at ${r2(t)} m (< 0.6 m)`, { d: r2(t) }); break; }
+      if (P.toPath && Math.hypot(...P.toPath) > 0.5 && (n[0] * P.toPath[0] + n[1] * P.toPath[1]) / Math.hypot(...P.toPath) < -0.5) { add('sign', P, `${P.name}'s text faces away from the path`, `text normal ${n[0]}, ${n[1]}; the path's nearest point is ${r2(Math.hypot(...P.toPath))} m the other way (world.js pathDist)`, {}); break; }
+    }
+  }
+  // 7. wall-type pieces away from every wall
+  for (const P of list) {
+    if (!OUT_WALLTYPE.test(P.name)) continue;
+    let best = 9;
+    for (const h of P.hull) for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; const [t, b] = ray(h, [Math.cos(a), Math.sin(a)], gmid(P) ?? P.y0, P, 0.6); if (b) best = Math.min(best, t); }
+    if (best >= 0.35) add('wallaway', P, `${P.name} stands away from every wall`, `rays in 8 directions from its footprint's corners meet no wall, building or tall piece within ${best >= 9 ? 0.6 : r2(best)} m`, {});
+  }
+  return { id, pieces: list.length, own: own.length, kit: kit.length, dress: own.filter((P) => P.dress).length, veg: own.filter((P) => P.veg).length, find };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const D = JSON.parse(fs.readFileSync(process.argv[2]));
   const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
   let n = 0;
   for (const [id, A] of Object.entries(D)) {
     if (only && !only.includes(id)) continue;
-    const r = judge(id, A); n += r.find.length;
+    const r = A.outdoor && A.out ? judgeOut(id, A) : judge(id, A); n += r.find.length;
     if (r.find.length || process.env.ALL) console.log(`AREA ${id}: ${r.pieces} pieces, ${r.find.length} findings`);
     for (const f of r.find) console.log(`  ${f.kind.padEnd(7)} ${f.item}#${f.frame} at ${f.at.join(', ')}: ${f.what} — ${f.measure}`);
   }

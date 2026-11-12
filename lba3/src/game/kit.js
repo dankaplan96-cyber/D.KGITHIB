@@ -98,7 +98,8 @@ export class Batch {
     _m4.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz, 'YXZ')), _s.set(sx, sy, sz));
     return this.addM(geo, mat, _m4.clone());
   }
-  addM(geo, mat, m) { if (!this.items.has(mat)) this.items.set(mat, []); this.items.get(mat).push([geo, m]); return this; }
+  // (PLACE-2: tests/place-scan.mjs measures each part; unset in play, where this costs one property read)
+  addM(geo, mat, m) { if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.bpart(this, geo, m, mat); if (!this.items.has(mat)) this.items.set(mat, []); this.items.get(mat).push([geo, m]); return this; }
   build() {
     const out = [];
     for (const [mat, list] of this.items) {

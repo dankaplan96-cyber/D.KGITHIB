@@ -245,7 +245,7 @@ export function zeelichRoster(game) {
     ]) },
     // the plaza's gardener: the planters by the fountain, water from the basin
     { id: 'kira', char: 'kira', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0c0f0', stops: ok([
-      look('kira_a', -18.4, -3.4, -18.4, -5.2, [14, 20], { act: 'tend', carry: null }),
+      look('kira_a', -20.6, -3.4, -20.6, -5.2, [14, 20], { act: 'tend', carry: null }),   // (PLACE-2: her planter moved 2.2 m west, out of the plaza's)
       look('kira_draw', -24, 3.6, -24, 0, [5, 7], { act: 'draw', carry: 'can' }),
       look('kira_b', -6, 3.4, -6, 5.2, [9, 13], { act: 'water' }),
       look('kira_rest', -12.5, 1.6, -24, 0, [5, 8], { act: 'rest', carry: null }),

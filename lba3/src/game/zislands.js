@@ -15,6 +15,7 @@
 //   ISLES [name]; preloadIslands() (before the game is built); buildIslands(scene, physics) → { isle_<name>: R }
 //   R.isle (name); R.spawn {x,z,a} beside the shuttle; R.pad {x,z,y} the shuttle (its interactable); R.cloudY
 //   R.land(x, z) → is this ground (not sea); R.sample [{x,z}] points of the main walkable area
+import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
@@ -1554,6 +1555,10 @@ function buildIsland0(scene, physics, name, L, at) {
 
   const R = {
     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
+    // (PLACE-2: the original's jars and crates as drawn, world x, z, radius, top — some have no collider: containers.js
+    //  takes one as a container where the original's search zone is, and puts no new piece through one)
+    smallThings: [],
+    leftOut: [],   // (PLACE-2: the original's small things not drawn, and why: tests/place-scan.mjs lists them)
     music: 'zeelich', cloudY: CY,
     // (ZSTYLE-2: an island without its own sky takes Zeelich's overcast pale grey, as the hub (zeelich.js, ZSTYLE-1); it
     // took the hub's old pink sky and fog)
@@ -1656,8 +1661,41 @@ function buildIsland0(scene, physics, name, L, at) {
   const overPass = (o) => G && o.x + o.sx / 2 > G.x0 && o.x - o.sx / 2 < G.x1 && o.z + o.sz / 2 > G.z0 && o.z - o.sz / 2 < G.z1;
   const faderOf = (grp) => { const mats = new Map(); grp.traverse((q) => { if (q.isMesh) q.material = [q.material].flat().map((mm) => { if (!mats.has(mm)) { const c = mm.clone(); if (c.transparent) { c.userData.alwaysTransparent = true; c.userData.baseOpacity = c.opacity; } mats.set(mm, c); } return mats.get(mm); })[0]; }); return { mats: [...mats.values()] }; };
   const yardEnds = A.decor.filter((q) => q.shape === 'yardWall').flatMap((q) => { const al = q.sx >= q.sz, h2 = (al ? q.sx : q.sz) / 2; return [[q.x - (al ? h2 : 0), q.z - (al ? 0 : h2)], [q.x + (al ? h2 : 0), q.z + (al ? 0 : h2)]]; });
+  // PLACE-2: the original's small things (crates, jars, fences, posts, poles, planks, poster stands) stand on what is
+  // under them here, not at the original's height: our ground is the original's every second cell, smoothed, so a crate
+  // at its old height floated over a bank or sank into it (Otringal's terraces, Knartas's quays: 8–96 cm, measured by
+  // tests/place-scan.mjs). The support is the terrain or a deck, slab, wall or roof of the decor under it no more than
+  // 0.5 m over the original's height; one standing over a drop of more than 0.6 m across its own footprint (on a cliff
+  // face: Otringal's banks) is left out. Off by more than 0.8 m: it is on something the plan does not hold; left as it was.
+  const SEAT = /^(crate|jar|fence|post|pole|planks|poster)$/;
+  // (and a crate or a jar under it: the original's stacks stay stacked)
+  const tops = A.decor.filter((d) => /^(deck|slab|wall|house|tower|annex|drum|yardWall|pier|crate|jar)$/.test(d.shape)).map((d) => ({ d, x: d.x, z: d.z, hx: Math.max(0.2, d.sx) / 2, hz: Math.max(0.2, d.sz) / 2, top: d.y + d.sy }));
+  const seated = new Map();   // (each thing's height as it stands here, lowest first: a crate on a seated crate follows it)
+  const supportAt = (x, z, cap, self) => { let g = gy(x, z); for (const t of tops) { if (t.d === self || Math.abs(x - t.x) > t.hx || Math.abs(z - t.z) > t.hz) continue; if (seated.has(t.d) && seated.get(t.d) == null) continue; const tp = (seated.has(t.d) ? seated.get(t.d) : t.d.y) + t.d.sy; if (t.top <= cap && tp > g) g = tp; } return g; };
+  // (the way in to each house's door, 2.2 m out from its wall and 0.75 m either side, as the dressing keeps it: an
+  //  original's jar or crate standing there is left out — Knartas's jar on a home's doorstep)
+  const doorWays = A.decor.filter((d) => d.fitted && (d.shape === 'house' || d.shape === 'tower') && d.face && !d.noDoor).map((d) => {
+    const t = d.face, fx = d.x + t[0] * d.sx / 2, fz = d.z + t[1] * d.sz / 2;
+    return { x0: t[0] ? Math.min(fx, fx + t[0] * 2.2) : d.x - 0.75, x1: t[0] ? Math.max(fx, fx + t[0] * 2.2) : d.x + 0.75, z0: t[1] ? Math.min(fz, fz + t[1] * 2.2) : d.z - 0.75, z1: t[1] ? Math.max(fz, fz + t[1] * 2.2) : d.z + 0.75, y: d.y };
+  });
+  const seat0 = (o, ex, ez) => {
+    if (!SEAT.test(o.shape) || o.shape === 'pole' && S.flowerTrees) return o.y;
+    const out = (why) => { R.leftOut.push({ shape: o.shape, x: +(ox + o.x).toFixed(2), z: +(oz + o.z).toFixed(2), why }); return null; };
+    if (doorWays.some((w) => o.x > w.x0 && o.x < w.x1 && o.z > w.z0 && o.z < w.z1 && Math.abs(o.y - w.y) < 1.0)) return out('doorway');
+    const s = [[0, 0], [-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].map(([a, b]) => supportAt(o.x + a * ex, o.z + b * ez, o.y + 0.5, o));
+    const lo = Math.min(...s), hi = Math.max(...s);
+    // (standing on another of the original's objects at its own height — a crate on a barge's deck, on a block: as it was)
+    if (A.decor.some((d) => d !== o && !SEAT.test(d.shape) && Math.abs(o.x - d.x) <= Math.max(0.2, d.sx) / 2 && Math.abs(o.z - d.z) <= Math.max(0.2, d.sz) / 2 && d.y + d.sy <= o.y + 0.1 && d.y + d.sy >= o.y - 0.3)) return o.y;
+    if (hi - lo > (o.shape === 'fence' ? 1.2 : o.shape === 'post' || o.shape === 'pole' ? 0.6 : 1.0)) return out('cliff face');
+    if (o.y + o.sy < lo) return out('buried');
+    return Math.abs(o.y - lo) > 0.04 && Math.abs(o.y - lo) <= 0.8 ? lo : o.y;
+  };
+  for (const o of [...A.decor].sort((a, b) => a.y - b.y)) seated.set(o, seat0(o, Math.max(0.2, o.sx), Math.max(0.2, o.sz)));
+  const seat = (o) => seated.get(o);
   for (const o of A.decor) {
-    const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
+    const ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz), y0 = seat(o);
+    if (y0 == null) continue;
+    const top = y0 + o.sy;
     if (o.shape === 'skip' || S.open?.(o)) continue;   // (drawn by the style's own piece, or left out: a rail, a beam; S.open: a way through, ISLES-BAR)
     if (!o.solid && o.shape !== 'deck' && Math.hypot(o.x - pad.x, o.z - pad.z) < 4.2 + Math.max(o.sx, o.sz) / 2) continue;   // (under the shuttle's pad)
     // (a small thing standing on a steep slope gets no block: he would slide into it and be held there)
@@ -1669,6 +1707,7 @@ function buildIsland0(scene, physics, name, L, at) {
     const small = (c) => { if (!onSteep) col(c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c); };
     const shape = o.shape === 'house' && o.sy > 3 && landFrac(o) < 0.35 ? 'hulk'
       : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
+    placeTag(shape);   // (PLACE-2: each object a piece of its shape, for tests/place-scan.mjs; nothing in play)
     switch (shape) {
       case 'hulk': {   // a big object standing in the clouds by a quay: a moored barge
         const along = ez >= ex, P = new EP.Place(B, o.x, S.hulk ? S.hulk.y : CY + 0.4, o.z, along ? 0 : Math.PI / 2);
@@ -1869,6 +1908,7 @@ function buildIsland0(scene, physics, name, L, at) {
       case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
       case 'crate': {
         B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
+        R.smallThings.push({ x: ox + o.x, z: oz + o.z, r: Math.hypot(ex, ez) * 0.45, top });
         if (Math.max(ex, ez) >= 0.5) small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.45, hd: ez * 0.45, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -1884,6 +1924,7 @@ function buildIsland0(scene, physics, name, L, at) {
           break;
         }
         B.add(jarG, jarM, o.x, y0, o.z, 0, 0, 0, rr, o.sy, rr);
+        R.smallThings.push({ x: ox + o.x, z: oz + o.z, r: rr, top });
         if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -1957,6 +1998,7 @@ function buildIsland0(scene, physics, name, L, at) {
       default: plants.push(o);
     }
   }
+  placeTag(null);
   // ISLES-BAR (S.flights): a flight of dressed steps up a bank too steep to walk, from a (its foot, local x, z) to b (its
   // head), w m wide: risers of at most 0.24 m; each step's collider runs back under the higher ones to the head (no seam;
   // the height under his feet decides, as on the decks' stairs and KNARTAS-LEDGE's door steps). Where the bank's own
@@ -1994,7 +2036,7 @@ function buildIsland0(scene, physics, name, L, at) {
     (R.hoists ||= []).push({ id: Hs.id, foot: spot(Hs.foot), head: spot(Hs.head), tower: { x: ox + tx, z: oz + tz } });
   }
   // --- the dressing: the plan's pieces, merged into the island's batch (one draw per material)
-  const honey = (P) => { EP.crate(P, { s: 0.62, kind: 'nectar' }); EP.honeyJars(P, { n: 5, ly: 0.62, collide: false }); EP.honeyJars(P, { n: 2, lx: 0.62, lz: 0.2, seed: 7, collide: false }); P.box(0, 0, 0.36, 0.36, 0.95); P.r = 0.6; return P; };
+  const honey = (P) => { EP.crate(P, { s: 0.62, kind: 'nectar' }); EP.honeyJars(P, { n: 5, ly: 0.62, collide: false }); EP.honeyJars(P, { n: 2, lx: 0.74, lz: 0.2, seed: 7, collide: false }); P.box(0, 0, 0.36, 0.36, 0.95); P.r = 0.6; return P; };   // (PLACE-2: the two jars beside the crate 12 cm clear of it, not 12 cm into it)
   const barrels = (P) => { EP.barrel(P, { lx: -0.36 }); EP.barrel(P, { lx: 0.36, color: '#9a6a48' }); EP.barrel(P, { lz: 0.58, color: '#b88a58' }); return P; };
   const BUILD = {
     bin: (P) => EP.bin(P, { color: S.binColor || '#2f7f86' }), planter: EP.planter, boxPlanter: EP.boxPlanter, bench: EP.bench, lamp: EP.lamp,
@@ -2027,6 +2069,9 @@ function buildIsland0(scene, physics, name, L, at) {
     }
     const f = BUILD[it.kind]; if (!f) continue;
     const fr = FOOT[it.kind]?.(it.o) || { r: 0.5 };
+    // (PLACE-2: goods set down on a bank steeper than a metre's drop across their footprint — Otringal's crate stack on
+    //  the slope below the quay: one crate 41 cm in the bank, another 33 cm over it — are left out)
+    if (!A.floorAt && /^(crates|barrels|jars|honey|bench)$/.test(it.kind)) { const rr = Math.min(1.2, (fr.r ?? Math.max(fr.hw, fr.hd)) * 0.8); let lo = Infinity, hi = -Infinity; for (let q = 0; q < 8; q++) { const a = (q / 8) * Math.PI * 2, g = gy(it.x + Math.sin(a) * rr, it.z + Math.cos(a) * rr); lo = Math.min(lo, g); hi = Math.max(hi, g); } if (hi - lo > 1.0) { R.leftOut.push({ shape: it.kind, x: +(ox + it.x).toFixed(2), z: +(oz + it.z).toFixed(2), why: 'steep bank' }); continue; } }
     const P = new EP.Place(B, it.x, groundUnder(it.x, it.z, Math.min(1.2, (fr.r ?? Math.max(fr.hw, fr.hd)) * 0.6)), it.z, it.ry);
     f(P, it.o || {});
     for (const c of P.cols) col(c);

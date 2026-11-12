@@ -147,6 +147,8 @@ wardrobe from the room camera; the lighthouse crate is hard to see in its pictur
 
 ## Next
 
+- (Done in PLACE-2, `PLACE-2.md`: the outdoor builders' placements recorded and judged — Citadel's dressing, Zeelich's
+  street, the nine isles.)
 - Round rooms (the lighthouse top): judge walls by their triangles, not their parts' boxes.
 - Record the outdoor builders' placements (citydress, townbits, zeelich, zislands) so the sweep covers them.
 - Sweep the Desert dig/test stand and Kesh's pump and heat-line places after the campaign wave.

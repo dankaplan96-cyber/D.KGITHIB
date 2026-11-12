@@ -192,6 +192,7 @@ class Batch {
     return this.addM(geo, mat, _m4.clone());
   }
   addM(geo, mat, m) {
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.bpart(this, geo, m, mat);   // (PLACE-2: tests/place-scan.mjs measures each part; one property read in play)
     if (!this.items.has(mat)) this.items.set(mat, []);
     this.items.get(mat).push([geo, m]);
     return this;
@@ -684,7 +685,7 @@ function buildHarbour(W0, root, r) {
   lamp(W, g, -63.2, -11.2);
   { const tacc = { list: [], cups: [], parent: g }; tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r, tacc); tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r, tacc); tulipFlush(tacc); }
   bench(W, g, -65.0, -6.6, Math.PI, r);   // (BENCHES-1: 0.4 m back from the tulip bed before it: 1.2 m clear for the sitter's feet)
-  barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
+  barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-70.3, 6.2, true]], r);   // (PLACE-2: the lying one 0.5 m off the harbour master's shed: its end was 21 cm in the wall)
   W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);
   netHeap(W, g, -73.0, 2.2, r);
@@ -1986,7 +1987,7 @@ function buildStation(W0, root, r) {
   }
   crateStack(W, grp, [[58.3, 31.4, 2], [58.6, 32.6, 1], [57.2, 32.2, 1, 0.8]], r);
   techCrates(W, grp, [[57.8, 34.6, 2, 0.95], [58.4, 36.0, 1, 0.95]], r);
-  barrels(W, grp, [[36.9, 41.0], [37.6, 41.4], [37.1, 40.1, false]], r);
+  barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.8, 40.6, false]], r);   // (PLACE-2: out of the station's corner and its downpipe, which went through them; 1 m apart, not 15 cm into each other)
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
   for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
@@ -2668,7 +2669,9 @@ function buildPipeline(W, root, r) {
 
 // ================================================================== dressing: crates, signposts, the stump
 // Breakable crates keep their order in W.crates (saves store broken ones by index).
-const CRATES = [[-30, 0], [-31, 1.3], [-52, -2], [-81, -76], [-70, -76], [-68, -75.6], [-86, -64], [-38, -71], [-27, -27], [-46, -26]];
+// (PLACE-2: the first two stood inside the square's shop (its walls round them, out of reach): by its north wall now,
+//  outside; their places in the list kept)
+const CRATES = [[-30.4, 4.9], [-28.8, 4.9], [-52, -2], [-81, -76], [-70, -76], [-68, -75.6], [-86, -64], [-38, -71], [-27, -27], [-46, -26]];
 function buildDressing(W, root, r) {
   const grp = new THREE.Group(); grp.name = 'dressing'; root.add(grp);
   for (const [x, z] of CRATES) {

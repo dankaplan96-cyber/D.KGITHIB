@@ -136,6 +136,7 @@ export function mergeStatic(group, { minParts = 2, recolor = false, cell = 0, re
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = list[0].castShadow; mesh.receiveShadow = list[0].receiveShadow; mesh.renderOrder = list[0].renderOrder;
     mesh.name = 'merged';
+    if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.merged(list, mesh, group);   // (PLACE-2: tests/place-scan.mjs keeps each part's place; one property read in play)
     group.add(mesh);
     for (const o of list) { o.parent.remove(o); removed++; }
   }
