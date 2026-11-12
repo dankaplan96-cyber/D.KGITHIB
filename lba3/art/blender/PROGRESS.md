@@ -386,3 +386,8 @@ the user set (9.11): queue 6's left items (Yorna's fur-hat flaps, the cast Grobo
 still the most shared), queue 8 equipment is done, then 9 common props; **Twinsen's ZOE-LOOK treatment after the queue**.
 The moles' claws could take the hands' front-to-back turn too (not asked). A Vega 8 frame-time pair for EQUIP-1 on a quiet
 laptop is still owed.
+
+**12.11 (the desktop):** CAST-VARIANTS-2 sent (queue 7 but `archivist_b`). **TWINSEN-LOOK-38** (topknot with a gold band at
+the scalp, a rounder head, a nose; the user saw every pass) and **ARTHUR-LOOK-38** (the user: Arthur "not at the level of
+Twinsen and Zoé": head, hair, nose, tunic, round shoulders) sent as requests. Next by CLOUD_ORDERS 40: GPU-V82, PERF-1050,
+`archivist_b`, queue 9.

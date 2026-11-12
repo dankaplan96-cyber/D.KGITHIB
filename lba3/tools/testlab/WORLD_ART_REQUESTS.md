@@ -4534,3 +4534,17 @@ unmeasured eyes). Full note: `requests/CAST-CONNECT-1.md`.
   satchel: a new `pouch` option in `build_bee`) for a tender and a loader; `zbee2_b` (no crown, a satchel) for the carter and
   the lantern-lighter; `nara_c` (headcloth, belt, broader) for three island workers.
 - Tests: solidnpc, chapter1, cast-rounds, story-journeys, walkers, island-people PASS. Evidence label: Automated runtime only.
+
+## TWINSEN-LOOK-38 and ARTHUR-LOOK-38 · the family's finish · the desktop, 12.11.2026
+**Ready for the cloud: both apply on the branch as it is (`1f7aa404`), in either order, before or after CAST-VARIANTS-2.**
+CLOUD_ORDERS 40 item 4 taken ahead of items 1–3 because the user asked for it on 12.11. The user saw every pass (chapter 1).
+- **TWINSEN-LOOK-38** (`requests/TWINSEN-LOOK-38.md`): the community's direction (fan figurines, the LBA2 Classic cover).
+  A topknot rising and falling back, tied at the scalp with a gold band ("the band must sit tight on the scalp", "at the
+  hair's base"). A rounder head with a domed crown, a real nose, and eyes a touch rounder at the old size ("far too big,
+  strange spots": the spots were the face showing through). +19.7 % triangles. `TW_LOOK_OLD=1 TW_LEGS_OLD=1` rebuilds the shipped model.
+- **ARTHUR-LOOK-38** (`requests/ARTHUR-LOOK-38.md`): "Arthur is really not at the level of Twinsen and Zoé", "the body
+  too", "the shoulders are strange". A smoother head, his father's nose (he had none), round smooth hair with a crown lock.
+  A 16-sided tunic with sloping round shoulders, a V neck, a buckle, a thicker neck, trouser cuffs.
+  **+42.8 % triangles (4050)**: over the variants' +25 %, about his father's count. `ARTHUR_LOOK_OLD=1` rebuilds the shipped model.
+- Tests (both models in place, with CAST-VARIANTS-1/2): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, prologue 26/26 PASS. Evidence label: Automated runtime only.
+- Next on this machine: CLOUD_ORDERS 40 items 1 (GPU-V82), 2 (PERF-1050), 3 (`archivist_b`, queue 9).
