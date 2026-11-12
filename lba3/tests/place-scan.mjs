@@ -65,6 +65,8 @@ const LEFT = [
   ['desert', 'inside', 'lantern', 'by design (5 cm): a lantern hung from its post\'s arm (desertdress.js lanternPost)'],
   ['desert', 'inside', 'wheel', 'by design: the sand-yacht\'s wheels in their forks, under its axle and bowsprit (one vehicle, desert.js)'],
   ['desert', 'inside', 'windsock', 'by design: the glider field\'s sock on its mast'],
+  ['desert', 'inside', 'buildTestStand', 'by design: the drill string\'s banded drive drum (DIGTEST-ART) on its kelly, its collar under it (teststand.js)'],
+  ['desert', 'inside', 'a2', 'by design: the drill string\'s kelly and collar through its drive drum (DIGTEST-ART, teststand.js)'],
   ['hamalayi', 'inside', 'windsock', 'by design: the glider field\'s sock on its mast'],
   ['hamalayi', 'inside', 'barrel', 'low (5 cm): the two barrels by house 2 touching', [4304.02, 0.22]],
   ['hamalayi', 'float', 'crate', 'low: a stack\'s top crate turned on the one under it, a corner over its edge (Lhar\'s west crates, the observatory\'s supplies)'],
