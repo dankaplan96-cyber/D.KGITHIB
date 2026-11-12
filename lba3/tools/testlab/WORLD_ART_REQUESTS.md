@@ -4635,3 +4635,24 @@ CLOUD_ORDERS 40 item 6. Provisional editorial scores (the pack's rubric; not rev
   resolved; the harbour 73 → 76; the square 75 → 78. Pictures `captures/curator-citadel-85/` (chapters 1–2).
 - **Question for the cloud:** should the desktop send the Desert batches (Kesh's domes and colour; the figures, gateway and
   pillars in LBA2's language)? The hooded figures may carry a story purpose now: say so first.
+
+## LAPTOP-SOLD · the Vega 8 laptop is gone (the user, 12.11.2026)
+The user, 12.11: **"the old computer was sold"**. What follows for the plan:
+- **27c (the performance lab on the Vega 8) cannot run any more**, nor any "Vega 8 frame time" owed by earlier requests
+  (EQUIP-1, the cast batches, PERF-1050's "what to measure on the Vega 8"). Those lines stay unverified.
+- The laptop's local-only files went with it: the user's save backup of 30.10 (`lba3-bench\save-backup-2026-10-30`) and
+  its raw bench logs. Everything else was pushed in MIGRATE-39 (`wip/laptop/*`, HANDOVER-LAPTOP.md).
+- **A low-end stand-in on the desktop:** its own Intel UHD 630 (the iGPU the internal screen is wired to; the 10.11 first
+  run measured it by mistake: `HARDWARE/2026-11-10-desktop-first-run.md`). It is weaker than the GTX 1050 and of the
+  integrated class the Vega 8 stood for, though not the same chip. **Question for the cloud (and the user):** keep the
+  Vega 8 as the written minimum target with no machine to check it on, or make the desktop's UHD 630 the minimum-target
+  runner from now on (the same benchmark routes, labelled "UHD 630 stand-in")?
+- **The user's answer (12.11): "Yes, the UHD 630."** The desktop's Intel UHD 630 is the **minimum-target machine** from now
+  on, in place of the Vega 8. Low-end numbers are measured there and labelled "UHD 630 (the desktop's iGPU)". The desktop
+  makes a first baseline now (the desktop app's Electron on the UHD 630, Auto and fixed presets). 27c becomes "the
+  performance lab on the UHD 630".
+- **First baseline on the UHD 630** (`docs/lba3-performance/HARDWARE/2026-11-12-uhd630-minimum-target.md`, raw runs beside it;
+  the app's Electron, Auto, Medium and Low): **it plays at Low** (Auto steps Medium → Low for GPU pressure after ~3 min;
+  Low holds 60 fps but for one hitch). For the cloud: (1) Medium's interior runs at 47 fps there (GPU 19 ms); (2) **a
+  single 1,583 ms frame on the street in the fixed Low run**, one 1,566 ms `setTimeout` callback 1.6 s after the preset
+  changed to Low: a player picking Low in the settings may meet it once. Not investigated (the preset change's code).
