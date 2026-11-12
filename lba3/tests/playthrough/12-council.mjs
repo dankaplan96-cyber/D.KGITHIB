@@ -49,7 +49,7 @@ export const steps = [
   // (patrol[3] → patrol[0]), then straight to the BORE cabinet. Caught, he is sent back to the door: up to 3 times)
   // (CHAPTER-BALANCE: the BORE cabinet is locked; the key ring is on the archivist's desk by his round's near side. As a
   // player times it: wait by the door till he turns north up the far side (patrol[3] → patrol[0]), his back to the desk)
-  // (CAMPAIGN-7: caught, he is sent back up to the gallery he came in by: down its stair again first, as above)
+  // (CAMPAIGN-7: caught, he is sent back to the door as before, also when he came in by the gallery; still up there, down its stair first)
   ['the archivist\'s keys', () => { const G = game, A = G.rooms.archive, K = A.keys; let r, misses = 0, waited = 0;
     const down = () => { const w = G.story.cur.watcher; for (let j = 0; j < 3 && G.hero.pos.y > 1; j++) { for (let t = 0; w?.active && t < 60 && w.wp !== 2; t += 0.1) { G.step(0.1); waited += 0.1; if (G.state !== 'play') P.settle(); } P.sneakTo(A.spawn.x + 0.8, A.spawn.z, w, { tol: 0.8, maxT: 60 }); P.settle(); } };
     if (G.hero.behaviour !== 'normal') P.tap('F1');

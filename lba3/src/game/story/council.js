@@ -295,7 +295,7 @@ export class Council extends ChapterBase {
     g.audio.play('alert');
     this.chain([['archivist', f.c9_coat ? 'c9_arch_spot_coat' : 'c9_arch_spot'], ['hero', 'c9_tw_spot']], () => {
       g.startTransition(() => {
-        const sp = this.thread.on && f.cn_kell === true ? A.gallery : A.spawn, h = g.hero;   // (CAMPAIGN-7: back up on the gallery he came in by)
+        const sp = A.spawn, h = g.hero;   // (back to the door, as he says — CAMPAIGN-7: also when he came in by the back gallery)
         h.pos.set(sp.x, g.physics.groundAt(sp.x, sp.z), sp.z); h.angle = sp.a ?? 0;
         if (this.room() === 'archive' && !f.c9_plans) this.watcher.start();
       });
