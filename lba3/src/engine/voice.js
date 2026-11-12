@@ -365,7 +365,8 @@ export const VOICES = {
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
 const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
 // names that are not people (signs, notes, places): no voice
-const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
+// (cn_iso: chapter 9's isolator, a device's name on its prompt, not a speaker)
+const SILENT = new Set(['note', 'cn_iso', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
   'lighthouse', 'cliffs', 'orchard', 'depot', 'station', 'fort', 'pipe', 'camp']);
 
 // the voice for a speaker's name key ('n_zoe', 'n_zoeradio', ''), or null
