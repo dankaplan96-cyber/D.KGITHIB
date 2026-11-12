@@ -27,9 +27,11 @@ None of the checks run above. Carried from RELEASE-AUDIT-v75, not rerun here:
 - `worldfit`: a door over a window on the neighbours' house, a window into Zeelich house 3's corner, 20 z-fighting
   patches (F-11). Owner: world-polish.
 - `weather` (Zeelich's fog at light phase 0.79), `jetpack` (lit flames 8 draw calls, budget 6), `spaceport` (the
-  gate's walk out lands 1.77 m off; the evacuation queue walk), `longsession` (geometries 1138 → 1162 over 30 cycles):
+  gate's walk out lands 1.77 m off; the evacuation queue walk), `longsession` (geometries 1138 → 1162 over 30 cycles; 12.11: 1140 → 1164, the same, after its setup was fixed for
+  the house's remarks):
   F-12. Owners as named in each suite.
-- Intermittent, passed on rerun before: `combat` dodge distance at 30 and 60 fps; `prologue` the well's mites (3 of 4);
+- Intermittent, passed on rerun before: `combat` dodge distance at 30 and 60 fps; `prologue` the well's mites (3 of 4 — likely the test throwing from
+  inside the cave's west wall once the mites gather there; it now throws from open floor, 12.11, 5d7d1c13);
   `saveslots` slot picture; `overlaps` two Lhar roof spots; `sewers` three well-house lift checks; `sewers-ways` two
   out-of-door spots (status.md).
 
