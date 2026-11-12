@@ -156,6 +156,14 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
     eyes: '#e8a040', height: 1.06,
   },
+  nara_c: {
+    // CAST-VARIANTS-2 (nara's second shape variant: nara still dressed 9 people after nara_b): an Esmer woman at work on the
+    // isles, broader, a wrapped headcloth and a belt over the short robe (cast_poly.py CAST nara_c). Taken by Knartas's
+    // net-mender (kn_nets), the orchard's picker (or_pick1) and the sketcher (ow_sketch); Nara, Neska (sefa), Ulla, the
+    // dancer, Lissa and Liwa keep nara
+    race: 'esmer', outfit: 'robe', hem: 0.08, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
+    eyes: '#e8a040', hat: '#f2c45a', height: 1.04,
+  },
   nara_b: {
     // CAST-POLISH-UNDERGROUND (order 24, nara's shape variant: nara dresses more people than any other look): an Esmer woman
     // in a long dress flared to the boots with a belt at the waist, in place of the short robe over trousers (cast_poly.py
@@ -184,9 +192,21 @@ export const LOOKS = {
     // a Mosquibee porter: a gold abdomen with brown bands, green eyes
     race: 'bee', outfit: 'tunic', tunic: '#e0a83a', tunicTrim: '#5a3a1a', skin: '#5a4a4a', eyes: '#3a9a4a', wing: '#8ac8b0', height: 1.0,
   },
+  zbee1_b: {
+    // CAST-VARIANTS-2 (zbee1's shape variant): a heavier Mosquibee porter, a fuller abdomen, a satchel on a strap across it
+    // (cast_poly.py build_bee `pouch`). Taken by the first tender (mb_tend1) and the second loader (ld_load2); the other
+    // tender, the flier and Zuzz keep zbee1
+    race: 'bee', outfit: 'tunic', tunic: '#e0a83a', tunicTrim: '#5a3a1a', skin: '#5a4a4a', eyes: '#3a9a4a', wing: '#8ac8b0', belly: 0.1, pouch: '#8a5a2a', height: 1.0,
+  },
   zbee2: {
     // a Mosquibee matron: a red abdomen, plain, a little gold crown
     race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', crown: '#f2c45a', belly: 0.06, height: 1.0,
+  },
+  zbee2_b: {
+    // CAST-VARIANTS-2 (zbee2's shape variant): a working Mosquibee in the matron's red, without her crown, slimmer, a satchel
+    // on a strap (cast_poly.py build_bee `pouch`). Taken by the orchard's carter (or_carter) and the lantern-lighter
+    // (ce_lanterns); Bzzra, Zett and Otringal's guest keep zbee2
+    race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', pouch: '#7a4a2a', height: 1.0,
   },
   ztri1: {
     // a triangle-headed Zeelichian clerk: a green suit, a red tie, a flat blond top
@@ -209,6 +229,12 @@ export const LOOKS = {
   zmole2: {
     // a smaller mole in a white smock with a red apron (the original's homemaker)
     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
+  },
+  zmole2_b: {
+    // CAST-VARIANTS-2 (zmole2's shape variant): a small Wannie at work: no apron (the belt and buckle show), a miner's cap
+    // with its lamp (cast_poly.py CAST zmole2_b). Taken by the underground's carrier and gauge-reader (ug_carrier, ug_gauge);
+    // the two villagers keep zmole2
+    race: 'mole', outfit: 'robe', tunic: '#ecebe6', hat: '#d8a838', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
   },
   joe: {
     // Joe the Elf, Twinsen's old friend from LBA2 (tools/blender/cast_poly.py build_elf): a green pointed hat with a
@@ -352,6 +378,12 @@ export const LOOKS = {
   lharWoman: {
     race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
     hair: '#1a1210', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, height: 0.9, neck: 0.08,
+  },
+  kira: {
+    // CAST-VARIANTS-2: Kira, Zeelich's plaza gardener, her own look (she shared lharWoman with Dawa, Sana and Oda): a wide straw
+    // hat, sleeves rolled to the elbow, a gardener's apron and leather gloves, her dress in a warmer green (cast_poly.py CAST kira)
+    race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#3a7a4a', tunicTrim: '#f2d8a0', belt: '#8a5a2a', pants: '#3a7a4a', shoes: '#3a2a1a',
+    hair: '#5a3a1a', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, hat: '#e8d090', apron: '#d8c8a0', height: 0.9, neck: 0.08,
   },
   lharWoman_b: {
     // CAST-POLISH-HAMALAYI (order 24, lharWoman's shape variant): an older Lhar woman, the hair up in a bun, a fuller figure

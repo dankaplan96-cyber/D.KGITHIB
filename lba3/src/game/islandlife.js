@@ -108,7 +108,7 @@ export const ISLE_PEOPLE = {
     { id: 'kn_quill', char: 'oku', tint: '#e8f4ff', color: '#90b8e0', speed: 0.8, rounds: {
       ord: [at('qu_boats', -20.6, -30.4, 'stand', [12, 18], { d: 2.6, gest: ['nod'] }), at('qu_light', -15.8, -16.8, 'stand', [10, 14], { d: 1.0, gest: ['sigh'] }), at('qu_bench', -14.3, -35.8, 'stand', [6, 9])],
     } },
-    { id: 'kn_nets', char: 'nara', tint: '#f0fff4', color: '#a0e0b8', speed: 0.85, rounds: {
+    { id: 'kn_nets', char: 'nara_c', tint: '#f0fff4', color: '#a0e0b8', speed: 0.85, rounds: {
       ord: [at('ne_rack1', -29.8, -38.3, 'browse', [18, 26], { d: 1.0 }), at('ne_crate', -17.3, -40.3, 'put', [5, 7], { carry: 'basket', d: 1.0, dir: PI }), at('ne_rack2', -11.8, -41.8, 'browse', [16, 22], { d: 1.0, carry: null })],
     } },
     { id: 'kn_fisher', char: 'keeper', tint: '#f4eadc', color: '#d0b088', speed: 0.9, start: 1, rounds: {
@@ -126,7 +126,7 @@ export const ISLE_PEOPLE = {
     { id: 'mb_bzzra', char: 'zbee2', tint: '#fff4d8', color: '#f0c050', speed: 0.8, rounds: {
       ord: [at('bz_great', 27.3, -11.4, 'browse', [14, 20], { d: 2.2, dir: PI }), keep('bz_stall', 31.7, -13.8, -2.68, 'put', [10, 14]), at('bz_hive', 29.7, -19.8, 'tend', [8, 12], { d: 1.0, gest: ['shrug'] })],
     } },
-    { id: 'mb_tend1', char: 'zbee1', tint: '#fff8e0', color: '#e8c060', speed: 0.95, rounds: {
+    { id: 'mb_tend1', char: 'zbee1_b', tint: '#fff8e0', color: '#e8c060', speed: 0.95, rounds: {
       ord: [at('t1_hive', 17.7, -13.8, 'tend', [10, 14], { d: 1.0 }), at('t1_bed', 26.2, -17.3, 'tend', [6, 9], { carry: 'can', d: 1.0 }), at('t1_honey', 21.7, -6.3, 'put', [5, 7], { carry: null, d: 1.0 })],
     } },
     { id: 'mb_tend2', char: 'zbee1', tint: '#f0ffe8', color: '#b0e090', speed: 0.95, start: 1, rounds: {
@@ -142,13 +142,13 @@ export const ISLE_PEOPLE = {
       // (his round keeps to the press yard's west side: the press house's giver, by its door, stays out of talk reach)
       ord: [at('pe_crates', -0.4, 15.6, 'tend', [16, 22], { d: 1.0, dir: -PI / 2, gest: ['nod'] }), at('pe_crates2', -4.4, 18.1, 'tend', [6, 9], { d: 1.0 }), at('pe_bed', -1.4, 13.1, 'tend', [6, 9], { d: 1.4, dir: -PI / 2 })],
     } },
-    { id: 'or_pick1', char: 'nara', tint: '#fffbe6', color: '#f0d880', speed: 0.9, rounds: {
+    { id: 'or_pick1', char: 'nara_c', tint: '#fffbe6', color: '#f0d880', speed: 0.9, rounds: {
       ord: [at('p1_bed', -3.9, 7.6, 'tend', [10, 14], { d: 1.4 }), at('p1_bed2', 4.6, 7.6, 'tend', [10, 14], { d: 1.4, carry: 'basket' }), at('p1_crates', -4.4, 18.1, 'tend', [5, 7], { carry: null, d: 1.0 })],
     } },
     { id: 'or_pick2', char: 'xil', tint: '#f2ffee', color: '#a8e0a0', speed: 0.9, start: 1, rounds: {
       ord: [at('p2_bed', -1.4, 13.1, 'tend', [10, 14], { d: 1.4 }), at('p2_bed2', -7.9, 14.1, 'tend', [10, 14], { d: 1.4, carry: 'basket' }), at('p2_honey', 1.6, 15.6, 'tend', [5, 7], { carry: null, d: 1.0 })],
     } },
-    { id: 'or_carter', char: 'zbee2', tint: '#e8f4ff', color: '#a0c0f0', speed: 1.05, rounds: {
+    { id: 'or_carter', char: 'zbee2_b', tint: '#e8f4ff', color: '#a0c0f0', speed: 1.05, rounds: {
       ord: [at('ca_crates', -0.4, 15.6, 'put', [5, 7], { carry: 'crate', d: 1.6, dir: -PI / 2 }), at('ca_pad', -21.9, 2.1, 'stand', [5, 7], { carry: null, d: 4.2, dir: PI / 2, gest: ['shrug'] }), at('ca_bench', -9.9, -4.9, 'stand', [6, 9], { d: 1.0 })],
     } },
   ] },
@@ -163,7 +163,7 @@ export const ISLE_PEOPLE = {
     { id: 'ce_dancer2', char: 'xil', tint: '#f0ecff', color: '#c0b0f0', speed: 1.0, rounds: {
       ord: [op('d2_dance', -2.4, 3.6, -0.9, 'stand', [16, 22], { pair: 'celdance', mate: 'ce_dancer1' }), op('d2_bench', -6.6, -5.4, 0.7, 'stand', [6, 9])],
     } },
-    { id: 'ce_lanterns', char: 'zbee2', tint: '#fff6e0', color: '#f0c070', speed: 0.8, rounds: {
+    { id: 'ce_lanterns', char: 'zbee2_b', tint: '#fff6e0', color: '#f0c070', speed: 0.8, rounds: {
       ord: [at('la_stand', -4.45, 2.55, 'browse', [18, 26], { d: 1.0, dir: 2.0 + PI }), at('la_pole', -4.93, 1.81, 'reachHigh', [5, 8], { d: 0.6, dir: -2.57 })],
     } },
   ], avoid: [[2.2, 0.6, 5.0]] },   // (the figure's base)
@@ -175,10 +175,10 @@ export const ISLE_PEOPLE = {
     { id: 'ug_fitter', char: 'zmole1_b', tint: '#fff0e6', color: '#e0b090', speed: 0.8, start: 1, rounds: {
       ord: [at('fi_pump', -13, -17.5, 'tend', [14, 20], { d: 1.6 }), at('fi_holder', -12.5, -33, 'tend', [8, 12], { d: 3.2 })],
     } },
-    { id: 'ug_carrier', char: 'zmole2', tint: '#fff8f0', color: '#f0c0a0', speed: 0.8, rounds: {
+    { id: 'ug_carrier', char: 'zmole2_b', tint: '#fff8f0', color: '#f0c0a0', speed: 0.8, rounds: {
       ord: [at('ca_a', -29.3, -31.3, 'put', [5, 7], { carry: 'crate', d: 1.0 }), at('ca_b', -14.8, -23.3, 'put', [5, 7], { carry: null, d: 1.0 }), at('ca_barrel', -24.3, -30.8, 'dip', [5, 7], { d: 0.9 })],
     } },
-    { id: 'ug_gauge', char: 'zmole2', tint: '#eef8ff', color: '#a0c8e0', speed: 0.8, rounds: {
+    { id: 'ug_gauge', char: 'zmole2_b', tint: '#eef8ff', color: '#a0c8e0', speed: 0.8, rounds: {
       ord: [at('ga_holder', -24, -41, 'stand', [10, 14], { d: 3.2, gest: ['nod'] }), at('ga_holder2', -12.5, -33, 'draw', [10, 14], { d: 3.2, dir: 0 }), at('ga_crates', -18.3, -41.8, 'stand', [5, 7], { d: 1.0 })],
     } },
   ] },
@@ -214,7 +214,7 @@ export const ISLE_PEOPLE = {
     { id: 'ld_load1', char: 'oku', tint: '#fff4e8', color: '#e8c0a0', speed: 0.95, rounds: {
       ord: [at('l1_a', 7.6, 14.6, 'put', [4, 6], { carry: 'crate', d: 1.0 }), at('l1_b', -2.4, 16.1, 'draw', [4, 6], { carry: null, d: 1.0 }), at('l1_rest', 3.6, 14.6, 'stand', [5, 7], { d: 1.4 })],
     } },
-    { id: 'ld_load2', char: 'zbee1', tint: '#fff0f0', color: '#f0a8a8', speed: 1.05, start: 1, rounds: {
+    { id: 'ld_load2', char: 'zbee1_b', tint: '#fff0f0', color: '#f0a8a8', speed: 1.05, start: 1, rounds: {
       ord: [at('l2_a', 3.6, 14.6, 'put', [4, 6], { carry: 'crate', d: 1.0 }), at('l2_b', -11.9, 13.6, 'put', [4, 6], { carry: null, d: 1.0 })],
     } },
   ] },
@@ -226,7 +226,7 @@ export const ISLE_PEOPLE = {
     { id: 'ow_mason', char: 'ztri2', tint: '#fff0e0', color: '#e0b890', speed: 0.85, rounds: {
       ord: [at('ma_tower', 9.9, -18, 'tend', [14, 20], { d: 3.4 }), at('ma_dome', 14.6, -12.9, 'tend', [8, 12], { d: 1.6, dir: -PI / 2, carry: 'crate' }), at('ma_back', 9.9, -18, 'put', [5, 7], { d: 3.6, carry: null })],
     } },
-    { id: 'ow_sketch', char: 'nara', tint: '#eefcf4', color: '#a8e0c8', speed: 0.85, rounds: {
+    { id: 'ow_sketch', char: 'nara_c', tint: '#eefcf4', color: '#a8e0c8', speed: 0.85, rounds: {
       ord: [at('sk_post', 11.5, -11.7, 'stand', [16, 22], { d: 1.0 }), at('sk_bench', -3.2, 5.8, 'stand', [10, 14], { d: 1.0 })],
     } },
     { id: 'ow_kid', char: 'xil', scale: 0.72, tint: '#fff4f0', color: '#f0c0b0', speed: 1.4, rounds: {
