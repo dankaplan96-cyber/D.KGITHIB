@@ -253,6 +253,27 @@ const k3 = await ev(() => {
 });
 check('chapter 9: the street\'s residents (Fennick, Rezz, Oma) never stand or walk before a house door (300 s of their rounds)', k3.n > 600 && k3.here.includes('zr_oma') && Object.keys(k3.hits).length === 0, k3);
 
+// ---- CAMPAIGN-7: Mill Lane's states in chapter 9 (story/zeelift.js KellThread; the thread's flags set by hand, ISO)
+iso('chapter 9 with the thread: Mill Lane before the stop, after it (dry), and with the isolator on Kell\'s feed');
+const ml = await ev(() => {
+  const G = game, f = G.flags, L = G.rooms.zeelich.lift, said = [];
+  const sv = G.say; G.say = function (n, lines, ...a) { said.push(...lines); return sv.call(this, n, lines, ...a); };
+  const look = () => ({ deck: +(L.deckY - L.y0).toFixed(2), cartK: L.cartK, fed: !!L.state.fed, water: !!L.state.water, kell: P.npc('zl_kell')?.forceAnim || null });
+  const st = (o) => { Object.assign(f, o); G.story.applyFlags(); P.settle(); return look(); };
+  const out = {};
+  out.before = st({ cn_v: 1 });
+  out.dry = st({ c9_heard: true, c9_plans: true, c9_vote: true, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true });
+  said.length = 0; P.talk('zl_brel', { run: true }); P.talk('zl_kell', { run: true }); out.drySaid = said.slice();
+  out.back = st({ cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true });
+  said.length = 0; P.talk('zl_brel', { run: true }); out.backSaid = said.slice();
+  out.iso = G.rooms.zeelich.lift.isoAt ? true : false;
+  for (const k of Object.keys(f)) if (k.startsWith('cn_') && k !== 'cn_v') delete f[k];
+  Object.assign(f, { c9_plans: false, c9_vote: false }); G.story.applyFlags(); P.settle();
+  G.say = sv;
+  return out;
+});
+check('chapter 9, Mill Lane: before the stop the lift is up and the standpipe runs; after the stop the cart hangs half way, unfed, the tap dry (Kell\'s hand on his brake, Brel\'s empty jug); with the isolator on the feed the deck is up and the water runs again', ml.before.water && ml.before.deck > 3 && !ml.dry.water && !ml.dry.fed && ml.dry.cartK === 0 && ml.dry.deck > 1.5 && ml.dry.deck < 2.5 && ml.dry.kell === 'use' && ml.drySaid.some((l) => /Air/.test(l)) && ml.back.water && ml.back.fed && ml.back.deck > 3 && ml.backSaid.some((l) => /Full jug/.test(l)), ml);
+
 // ---- chapter 10: the network
 iso('chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)');
 await ev(() => { const f = game.flags; Object.assign(f, { c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_plans: true, c9_vote: true }); game.story.nextChapter(); P.settle(); });

@@ -43,6 +43,7 @@ import { viewCull } from '../engine/viewinst.js';
 import { buildZeelichLife, zlClear } from './zeelife.js';
 import { roomOcc } from './roomocc.js';
 import { buildCisternRise, liftClear } from './zlift.js';
+import { touch } from './story/reach.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
@@ -1908,6 +1909,7 @@ export function* buildZeelichSteps(scene, physics) {
 
   // ================================================================ the drill platform, its gate and shield
   function buildPlatform() {
+    let consoleStop = null;   // (CAMPAIGN-7: the bore's stop on the console)
     const PB = new Batch(group);
     // deck: octagon with the shaft hole; teal skirt, hazard edge, brass trim
     const hole = new THREE.Path(); hole.absarc(PAD.x, -PAD.z, SHAFT_R, 0, Math.PI * 2, true);
@@ -2052,8 +2054,35 @@ export function* buildZeelichSteps(scene, physics) {
       CB.add(boxUV(bbox(1.2, 0.75, 0.12, 0.04, 1), 1), darkSteel(), 0, 1.55, -0.25, -0.15, 0, 0);
       CB.add(cached('cscreen', () => new THREE.PlaneGeometry(1.05, 0.6)), pm('#7ff8ff', 0.3, { emissive: '#30c8f0', emissiveIntensity: 1.4 }), 0, 1.56, -0.18, -0.15, 0, 0);
       for (let k = 0; k < 3; k++) { CB.add(cyl(0.025, 0.025, 0.3, 6, 1), darkSteel(), -0.45 + k * 0.3, 1.2, 0.2, 0.4, 0, 0); CB.add(cached('knobr', () => new THREE.SphereGeometry(0.06, 8, 6)), pm(['#e04030', '#e8b84a', '#40c060'][k], 0.4, { emissive: ['#802010', '#806010', '#106030'][k] }), -0.45 + k * 0.3, 1.33, 0.26); }
+      // CAMPAIGN-7 (wave 5, chapter 9): the bore's STOP on the desk's right end, and two dials on the screen's frame, BORE and
+      // GROUND (their faces in the batch; the lever and the two needles move: story/cnline.js)
+      CB.add(boxUV(bbox(0.2, 0.06, 0.16, 0.02, 1), 1), darkSteel(), 0.55, 1.1, 0.12, -0.35, 0, 0);
+      const dialFace = cached('cndial', () => new THREE.CircleGeometry(0.11, 20));
+      const dialM = new THREE.MeshStandardMaterial({ color: '#f2ecdc', roughness: 0.6, map: (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#f2ecdc'; x.fillRect(0, 0, 256, 128); x.strokeStyle = '#2a2a2a'; x.lineWidth = 3; x.fillStyle = '#2a2a2a'; x.font = 'bold 15px sans-serif'; x.textAlign = 'center'; [['BORE', 64], ['GROUND', 192]].forEach(([l, cx]) => { for (let v = 0; v <= 6; v++) { const a = Math.PI * (1.15 + v * 0.117); x.beginPath(); x.moveTo(cx + Math.cos(a) * 40, 64 + Math.sin(a) * 40); x.lineTo(cx + Math.cos(a) * 52, 64 + Math.sin(a) * 52); x.stroke(); } x.fillText(l, cx, 100); }); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })() });
+      for (const [dx, u] of [[-0.3, 0], [0.3, 0.5]]) { const gq = dialFace.clone(); const uv = gq.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, u + uv.getX(i) * 0.5); CB.add(gq, dialM, dx, 1.62, -0.165, -0.15, 0, 0); }
       CB.build();
       col({ type: 'box', x: CX, z: CZ, hw: 0.8, hd: 0.45, rot: -Math.PI / 2 + 0.35, top: Y0 + 1.1, noStand: true, seeThrough: true });
+      const stopL = new THREE.Group(); stopL.position.set(0.55, 1.13, 0.12); G.add(stopL);
+      const nM = pm('#2a2a2a', 0.6);
+      stopL.add(new THREE.Mesh(cached('cnlev', () => { const gq = new THREE.CylinderGeometry(0.018, 0.018, 0.24, 6); gq.translate(0, 0.12, 0); return gq; }), darkSteel()));
+      const knobS = new THREE.Mesh(cached('knobr', () => new THREE.SphereGeometry(0.06, 8, 6)), pm('#e04030', 0.4, { emissive: '#802010' })); knobS.position.y = 0.25; stopL.add(knobS);
+      const needles = [-0.3, 0.3].map((dx) => { const nd = new THREE.Mesh(cached('cnneedle', () => { const gq = new THREE.BoxGeometry(0.008, 0.085, 0.004); gq.translate(0, 0.04, 0); return gq; }), nM); nd.position.set(dx, 1.62 - 0.01, -0.15); nd.rotation.x = -0.15; G.add(nd); return nd; });
+      for (const o of [stopL, ...needles]) o.traverse((m) => { if (m.isMesh) m.castShadow = false; });
+      const rot = G.rotation.y, c0 = Math.cos(rot), s0 = Math.sin(rot);
+      const loc = (lx, lz) => W(CX + lx * c0 + lz * s0, CZ - lx * s0 + lz * c0);   // (a point of the console's own frame, in the world)
+      const lp = loc(0.55, 0.12);
+      // (he faces the console's back, its −z: in the world the way its frame's −z points)
+      consoleStop = { ...touch(lp.x, lp.z, Math.atan2(-s0, -c0), 'tinker'), thrown: false, loose: false, t: 0,
+        set(thrown, loose) { this.thrown = !!thrown; this.loose = !!loose; } };
+      updaters.push((dt, t) => {
+        const S = consoleStop;
+        stopL.rotation.x += ((S.thrown ? 0.9 : -0.5) - stopL.rotation.x) * Math.min(1, dt * 10);
+        // BORE: steady near the top while the drill runs, falls to nothing once stopped; GROUND: three kicks and a rest
+        const bore = S.thrown ? -1.1 : 0.5 + Math.sin(t * 7) * 0.03;
+        needles[0].rotation.z += (-bore - needles[0].rotation.z) * Math.min(1, dt * (S.thrown ? 2.5 : 8));
+        const ph = t % 2.4, kick = S.loose && ph < 0.75 ? Math.abs(Math.sin((ph / 0.25) * Math.PI)) : 0;
+        needles[1].rotation.z = 1.0 - kick * 1.6;
+      });
     }
     PB.build();
     // the shield: a curved translucent energy wall between the pylons
@@ -2115,7 +2144,7 @@ export function* buildZeelichSteps(scene, physics) {
       reset() { pad.position.y = DECK; padCol.top = DECK; this.down = false; this.busy = false; },
     };
     keepClear(34, -8, 62, 8);
-    return { ...W(PAD.x, PAD.z), y: DECK, gate: W(GATE.x - 1.2, 0), console: W(CX, CZ), shield: shieldApi, pad: W(PAD.x, PAD.z), lift };
+    return { ...W(PAD.x, PAD.z), y: DECK, gate: W(GATE.x - 1.2, 0), console: W(CX, CZ), stop: consoleStop, shield: shieldApi, pad: W(PAD.x, PAD.z), lift };
   }
 
   // ================================================================ the sea of clouds, puffs, distant islets

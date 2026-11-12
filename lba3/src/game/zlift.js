@@ -24,6 +24,8 @@
 //     setState({ deck: 'half'|'low'|'top', hooked, fed, cart: 'deck'|'filler', water, dial })   the look for a story state
 //     moveDeck(to, secs, riders, done)   the deck (and the cart on it, and whoever rides) to a height
 //     pushCart(k)  0…1 along the rails to the filler; tipCart(k); ringBell(); dropHook(k); spinCrank(); kick(dir)
+//     CAMPAIGN-7: service (the service door's handle on the terrace's stair-house), hutFront, isoAt (the isolator's place
+//     on the feed box), kellDeck, kellDoor (Kell's spots), setService(open), setIso(on)
 //   liftClear(x, z, pad)   the scatter keeps off it (zeelich.js)
 import * as THREE from 'three';
 import { mergeStatic } from '../engine/merge.js';
@@ -151,11 +153,23 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   for (let i = 0; i < 6; i++) add(box(0.03, 0.34 - (i % 3) * 0.06, 0.05), steel, WORKS.x - 0.08, Y0 + 1.72, BZc - 0.75 + i * 0.3);
   const SIGN = { x: WORKS.x - 0.05, z: WORKS.z1 + 1.0 };
   add(box(0.06, 0.56, 1.7), wood, SIGN.x, Y0 + 2.2, SIGN.z);
-  add(new THREE.PlaneGeometry(1.6, 0.46), new THREE.MeshStandardMaterial({ map: signTex(["IRSA'S PUMP WORKS"], { size: 46 }), roughness: 0.8 }), SIGN.x - 0.035, Y0 + 2.2, SIGN.z, -Math.PI / 2);
+  // (one sign material for both of the rise's painted signs: Irsa's on the top half, the service door's on the bottom half
+  //  — CAMPAIGN-7; the Vega 8 budget: no material of its own for the second)
+  const signM = new THREE.MeshStandardMaterial({ map: (() => { const a = signTex(["IRSA'S PUMP WORKS"], { size: 46 }).image, b = signTex(['SERVICE · ARCHIVE'], { size: 50 }).image, c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.drawImage(a, 0, 0); x.drawImage(b, 0, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; })(), roughness: 0.8 });
+  const half = (w, h, top) => { const gq = new THREE.PlaneGeometry(w, h), uv = gq.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, (top ? 0.5 : 0) + uv.getY(i) * 0.5); return gq; };
+  add(half(1.6, 0.46, true), signM, SIGN.x - 0.035, Y0 + 2.2, SIGN.z, -Math.PI / 2);
   // the brass wheel's mast at the terrace's north-west corner (the wheel itself turns: below)
   const MAST = { x: T.x0 + 0.45, z: T.z0 + 0.45, h: 5.4 };
   add(cyl(0.07, 0.1, MAST.h, 8), teal, MAST.x, TOP + MAST.h / 2, MAST.z); add(box(0.5, 0.1, 0.1), teal, MAST.x - 0.2, TOP + MAST.h - 0.9, MAST.z);
   col({ type: 'cyl', x: MAST.x, z: MAST.z, r: 0.14, top: TOP + MAST.h, noStand: true, seeThrough: true });
+  // CAMPAIGN-7 (wave 5): the service landing's door: a small stone stair-house on the terrace's north edge, its teal door on
+  // the south face (the service stair inside climbs to the upper district: the archive's back gallery). Kell's key
+  const HUT = { x0: -14.1, x1: -12.7, z0: 19.75, z1: 20.95, h: 2.55 }, hcx = (HUT.x0 + HUT.x1) / 2, hcz = (HUT.z0 + HUT.z1) / 2;
+  add(box(HUT.x1 - HUT.x0, HUT.h, HUT.z1 - HUT.z0), stone, hcx, TOP + HUT.h / 2, hcz);
+  add(box(HUT.x1 - HUT.x0 + 0.2, 0.14, HUT.z1 - HUT.z0 + 0.2), teal, hcx, TOP + HUT.h + 0.07, hcz);
+  add(box(0.92, 2.0, 0.04), dark, hcx, TOP + 1.0, HUT.z1 + 0.005);
+  add(half(0.9, 0.24, false), signM, hcx, TOP + 2.2, HUT.z1 + 0.012);
+  col({ type: 'box', x: hcx, z: hcz, hw: (HUT.x1 - HUT.x0) / 2, hd: (HUT.z1 - HUT.z0) / 2, rot: 0, top: TOP + HUT.h + 0.15, noStand: true });
   // (the stair's head: a rail across its west end)
   add(box(0.08, 0.95, STAIR.w), teal, T.x0 - 0.02, TOP + 0.47, STAIR.z0 + STAIR.w / 2);
   col({ type: 'box', x: T.x0 - 0.04, z: STAIR.z0 + STAIR.w / 2, hw: 0.06, hd: STAIR.w / 2, rot: 0, top: TOP + 1.0, bottom: TOP - 0.2, noStand: true, seeThrough: true });
@@ -208,6 +222,14 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   const sw = new THREE.Group(); sw.position.set(MH.x, Y0 + 1.0, MH.z - MH.hd - 0.17); sw.userData.keep = true; D.add(sw);
   dyn(new THREE.BoxGeometry(0.05, 0.34, 0.05), brass, 0, 0.15, 0, sw); dyn(new THREE.SphereGeometry(0.045, 8, 6), red, 0, 0.33, 0, sw);
   mergeStatic(sw, { recolor: true, retex: true });
+  // CAMPAIGN-7: the service door's leaf (hinged on its west side; swung in when Kell unlocks it) and Baldino's isolator,
+  // clipped on the feed box beside the switch once Mill Lane runs off it (both hidden or shut until then)
+  const leaf = new THREE.Group(); leaf.position.set(hcx - 0.44, TOP + 0.02, HUT.z1 + 0.03); leaf.userData.keep = true; D.add(leaf);
+  { const lf = dyn(new THREE.BoxGeometry(0.86, 1.96, 0.05), teal, 0.43, 0.98, 0, leaf); lf.castShadow = false; dyn(new THREE.SphereGeometry(0.035, 8, 6), brass, 0.76, 1.12, 0.05, leaf); }
+  mergeStatic(leaf, { recolor: true, retex: true });
+  const isoClip = new THREE.Group(); isoClip.position.set(MH.x + 0.2, Y0 + 1.06, MH.z - MH.hd - 0.19); isoClip.visible = false; isoClip.userData.keep = true; D.add(isoClip);
+  dyn(new THREE.BoxGeometry(0.09, 0.055, 0.07), brass, 0, 0, 0, isoClip); dyn(new THREE.CylinderGeometry(0.012, 0.012, 0.03, 6), red, 0.025, 0.04, 0, isoClip);
+  mergeStatic(isoClip, { recolor: true, retex: true });
   const fly = dyn(new THREE.TorusGeometry(0.33, 0.05, 6, 18), red, MH.x, Y0 + MH.h + 0.38, MH.z + 0.42); fly.userData.keep = true;
   { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.04, 0.04), steel); fly.add(sp); const sp2 = sp.clone(); sp2.rotation.z = Math.PI / 2; fly.add(sp2); }
   // the cistern's float (up the rod as it fills), the standpipe's water, the bench pump's gauge, dial and crank
@@ -246,6 +268,13 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     deck: W(DECK.x, DECK.z), deckR: Math.max(DECK.hw, DECK.hd), cartEnd: W(CART0.x - PUSH + 1.12, CART0.z),
     filler: W(FIL.x, FIL.z), cistern: W(CIS.x, CIS.z), standpipe: W(TAP.x, TAP.z), sign: W(SIGN.x, SIGN.z),
     dial: TP(DIAL.x, DIAL.z, Math.PI / 2, 'setDown'), crank: TP(CRANK.x - 0.02, CRANK.z + 0.2, Math.PI / 2, 'tinker'), bench: W(PUMP.x, PUMP.z),   // (crank: his hand on the wheel's rim at the hub's height, not at its empty middle)
+    // CAMPAIGN-7: the service door's handle (he faces north at it), where one stands outside it, the isolator's place on
+    // the feed box, Kell's spot on the deck beside him and at the door
+    service: TP(hcx + 0.3, HUT.z1 + 0.06, Math.PI, 'tinker'), hutFront: { ...W(hcx, HUT.z1 + 0.9), a: Math.PI }, isoAt: TP(MH.x + 0.2, MH.z - MH.hd - 0.21, 0, 'tinker'),
+    kellDeck: { ...W(DECK.x + 0.55, DECK.z - 0.65), a: -Math.PI / 2 }, kellDoor: { ...W(hcx - 0.6, HUT.z1 + 0.5), a: Math.PI * 0.75 },
+    setService(open) { leaf.rotation.y = open ? 1.4 : 0; },
+    setIso(on) { isoClip.visible = !!on; },
+    isoShown() { return isoClip.visible; },
     lane: W(-6.6, 22.8), bay: { ...W(T.x1 - 0.5, DECK.z), z0: W(0, BAY.z0).z, z1: W(0, BAY.z1).z }, wheelAt: W(MAST.x, MAST.z),
     state: {}, running: false, cartK: 0,
     setDeck(y) {

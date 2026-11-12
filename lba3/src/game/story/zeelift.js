@@ -297,3 +297,171 @@ export class LiftThread {
     }
   }
 }
+
+// CAMPAIGN-7 (wave 5, chapter 9): Mill Lane again. Not a chapter: story/cnline.js (the council's thread, owned by
+// council.js) owns it and asks it first. Kell takes Twinsen up his lift to the service door on the cistern's terrace (it
+// opens on the archive's back gallery: Vesk's standing order is on the front door, not on Kell's landing). When the
+// council's stop is thrown at the platform, Mill Lane loses its line: the afternoon cart stops half way, Brel's jug comes
+// up empty (the project's valve shuts when the line drops). Baldino's isolator, clipped on the motor house's feed box,
+// holds the lane's one relay on the mills: the deck rises, the standpipe runs.
+// Flags (the thread's, cnline.js): cn_closed (the order read), cn_kellAsk (Kell agreed: the deck down for them),
+// cn_kell (up with him, the service door open), cn_stop (the lane dry), cn_iso (the isolator in hand), cn_lane (on Kell's
+// feed: the lane runs). Without cn_v (a save from before) nothing here changes the lane.
+export class KellThread {
+  constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; this.walk = null; this.busy = false; this.later = []; }
+  get f() { return this.game.flags; }
+  get on() { return !!this.f.cn_v; }
+  get L() { return this.game.regions?.built?.('zeelich')?.lift; }
+  cur() { return this.ch.isCur(); }
+  dry() { const f = this.f; return this.on && !!f.cn_stop && !f.cn_lane; }
+  // the lift's look in chapter 9 (null: chapter 3's thread decides, as it always did)
+  look() {
+    const f = this.f;
+    if (!this.on) return null;
+    const ci = this.story.chapters.findIndex((c) => c.key === 'council');
+    if (this.story.index < ci) return null;
+    if (this.cur() && f.cn_kellAsk && !f.cn_kell) return { deck: 'low', cart: 'filler', fed: true, water: true };
+    if (this.dry()) return { deck: 'half', cart: 'deck', fed: false, water: false };
+    if (f.cn_lane) return { deck: 'top', cart: 'deck', fed: true, water: true };
+    return null;
+  }
+  push() {
+    const L = this.L; if (!L) return;
+    const s = this.look(); if (s) L.setState(s);
+    L.setIso(!!this.f.cn_lane);
+    L.setService(this.cur() && this.on && this.f.cn_kell === true && !this.f.c9_plans);
+  }
+  applyFlags() { this.walk = null; this.busy = false; this.later = []; this.kellUp = false; this.game.regions?.whenBuilt?.('zeelich', () => this.push()); }
+  // Kell by the service door once he has opened it (this visit), else at his brake; Brel at the dry tap
+  place(id) {
+    const L = this.L;
+    if (!L || !this.cur() || !this.on) return undefined;
+    if (id === 'zl_kell') {
+      if (this.walk) return undefined;
+      if (this.kellUp) return { ...L.kellDoor, y: L.top };
+      return { ...L.spots.kell, anim: this.dry() ? 'use' : null };   // (his hand on the brake while the deck hangs half way)
+    }
+    return undefined;
+  }
+
+  // ---------------------------------------------------------------- interaction
+  interactables(consider, dist) {
+    const g = this.game, f = this.f, L = this.L, h = g.hero;
+    if (!L || !this.cur() || !this.on || g.room?.id !== 'zeelich' || this.busy) return;
+    const up = Math.abs(h.pos.y - L.top) < 0.6, down = Math.abs(h.pos.y - L.y0) < 0.6;
+    if (f.cn_kellAsk && !f.cn_kell && down && !L.moving && Math.abs(L.deckY - L.low) < 0.05) consider(dist(L.deck.x, L.deck.z), 2.3, { kind: 'cn_ride', label: 'p_ride' });
+    if (f.cn_kell === true && !f.c9_plans && up) consider(dist(L.service.x, L.service.z), 1.3, { kind: 'cn_service', label: 'p_service' });
+    if (f.cn_iso && !f.cn_lane && down) consider(dist(L.isoAt.x, L.isoAt.z), 1.2, { kind: 'cn_clip', label: 'p_clip' });
+  }
+  interact(it) {
+    const g = this.game, h = g.hero, L = this.L;
+    switch (it.kind) {
+      case 'cn_ride': this.ride(); return true;
+      case 'cn_service':
+        this.busy = true;
+        handTo(h, L.service, () => {
+          L.setService(true); g.audio.play('door', L.service);
+          this.after(0.5, () => { this.busy = false; this.kellUp = false; g.enterRoom('archive', (R) => R.gallery); });
+        });
+        return true;
+      case 'cn_clip': this.clip(); return true;
+    }
+    return false;
+  }
+  talk(npc) {
+    const g = this.game, f = this.f, ch = this.ch, id = npc.def.id;
+    if (!this.cur() || !this.on || this.busy) return false;
+    const c = (lines, done) => { ch.chain(lines, done); return true; };
+    if (id === 'zl_kell') {
+      if (this.dry()) return c([['zl_kell', 'cn_lane_kell']]);
+      if (f.cn_lane) return c([['zl_kell', 'cn_kell_late']]);
+      if (f.cn_kell && this.kellUp) return c([['zl_kell', 'cn_kell_after']]);
+      if (f.cn_closed && !f.cn_kell && !f.c9_plans) {
+        if (f.cn_kellAsk) return c([['zl_kell', 'cn_kell_wait']]);
+        return c([['zl_kell', 'cn_kell_1'], ['hero', 'cn_tw_kell'], ['zl_kell', f.zt_water ? 'cn_kell_2' : 'cn_kell_2b'], ['zl_kell', 'cn_kell_3']], () => {
+          f.cn_kellAsk = true; g.updateObjective(); g.save(false);
+          // the deck comes down for them (the cart stays up at the filler)
+          const L = this.L; this.busy = true; g.audio.play('lever', L.spots.kell); g.audio.play('liftWinch', L.deck);
+          L.moveDeck(L.low, 3.2, [], () => { this.busy = false; g.audio.play('clunk', L.deck); g.updateObjective(); });
+        });
+      }
+      return false;
+    }
+    if (id === 'zl_brel') { if (this.dry()) return c([['zl_brel', 'cn_lane_brel']]); if (f.cn_lane) return c([['zl_brel', 'cn_brel_late']]); return false; }
+    if (id === 'zl_irsa' && this.dry()) return c([['zl_irsa', 'cn_lane_irsa']]);
+    return false;
+  }
+
+  // ---------------------------------------------------------------- Kell takes him up
+  ride() {
+    const g = this.game, f = this.f, h = g.hero, L = this.L, kell = this.ch.npc('zl_kell');
+    this.busy = true;
+    const up = () => {
+      g.setState('cutscene');
+      h.angle = -Math.PI / 2;
+      if (kell?.present) { kell.controlled = true; kell.placeAt({ ...L.kellDeck }); kell.rig.play('idle'); }
+      g.audio.play('lever', L.spots.kell); g.audio.play('liftWinch', L.deck);
+      g.cutscene = (dt) => { h.vel?.set(0, 0); h.rig.play('idle'); h.rig.update(dt, 0); h.sync(); if (kell?.present) { kell.rig.update(dt, 0); kell.sync(); } };
+      L.moveDeck(L.top, 4.6, [h, ...(kell?.present ? [kell] : [])], () => {
+        g.cutscene = null; g.setState('play'); g.audio.play('clunk', L.deck);
+        L.setState({ deck: 'top', cart: 'filler', fed: true, water: true });
+        // Kell steps off across the landing to the service door and unlocks it
+        if (kell?.present) { const d = L.kellDoor; this.walk = { n: kell, pts: [{ x: L.deck.x - 1.25, z: L.kellDeck.z }, { x: d.x, z: d.z }], i: 0, t: 0, done: () => this.unlock() }; }
+        else this.unlock();
+      });
+    };
+    h.walkTo([{ x: L.ride.x + 1.0, z: L.ride.z }, L.ride], { a: -Math.PI / 2, then: up, fail: () => { this.busy = false; } }); if (h.steer) h.steer.indoor = true;
+  }
+  unlock() {
+    const g = this.game, f = this.f, L = this.L, kell = this.ch.npc('zl_kell');
+    this.kellUp = true;
+    if (kell?.present) { kell.controlled = false; kell.placeAt({ ...L.kellDoor, y: L.top, anim: 'use' }); }
+    g.audio.play('clunk', L.service); L.setService(true); g.audio.play('door', L.service);
+    this.ch.chain([['zl_kell', 'cn_kell_door']], () => {
+      f.cn_kell = true; this.busy = false;
+      if (kell?.present) kell.placeAt({ ...L.kellDoor, y: L.top });
+      g.updateObjective(); g.save(false);
+    });
+  }
+  // the isolator on Kell's feed box: the lane runs off the mills; the deck rises, the standpipe runs
+  clip() {
+    const g = this.game, f = this.f, h = g.hero, L = this.L, ch = this.ch;
+    this.busy = true;
+    handTo(h, L.isoAt, () => {
+      L.setIso(true); g.audio.play('clunk', L.isoAt); f.cn_lane = true;
+      ch.chain([['hero', 'cn_lane_clip']], () => {
+        L.state.fed = true; L.running = true; g.audio.play('motor', L.feed); g.audio.play('liftWinch', L.deck);
+        ch.chain([['zl_kell', 'cn_lane_kell2']]);
+        L.moveDeck(L.top, 4.0, [], () => {
+          g.audio.play('clunk', L.deck);
+          L.setState({ deck: 'top', cart: 'deck', fed: true, water: true }); L.setIso(true);
+          g.audio.play('trickle', L.standpipe);
+          this.story.refreshCast();
+          ch.chain([['zl_brel', 'cn_lane_brel2'], ['zl_kell', 'cn_lane_kell3']], () => { this.busy = false; g.save(false); this.ch.thread.end(); });
+        });
+      });
+    });
+  }
+  // the stop's cut-away: the afternoon cart on its way up, the line gone, the deck held half way; Brel's jug
+  cut(beat) {
+    const L = this.L;
+    if (!L) return;
+    L.setState({ deck: 'low', cart: 'deck', fed: true, water: true });
+    L.moveDeck(L.half, 1.4, [], () => { L.setState({ deck: 'half', cart: 'deck', fed: false, water: false }); this.game.audio.play('clunk', L.deck); });
+    void beat;
+  }
+  after(t, fn) { this.later.push({ t, fn }); }
+  update(dt) {
+    const g = this.game;
+    if (this.later.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter((l) => l.t <= 0); this.later = this.later.filter((l) => l.t > 0); for (const l of due) l.fn(); }
+    const W = this.walk;
+    if (!W) return;
+    const n = W.n, tg = W.pts[W.i]; W.t += dt;
+    if (!tg || W.t > 12) { this.walk = null; W.done(); return; }
+    const dx = tg.x - n.pos.x, dz = tg.z - n.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.25) { W.i++; if (W.i >= W.pts.length) { this.walk = null; W.done(); } return; }
+    const hd = Math.atan2(dx, dz); n.angle += Math.atan2(Math.sin(hd - n.angle), Math.cos(hd - n.angle)) * Math.min(1, dt * 8);
+    g.physics.move(n, Math.sin(n.angle) * 1.3 * dt, Math.cos(n.angle) * 1.3 * dt); g.physics.fall?.(n, dt);
+    n.rig.play('walk'); n.rig.update(dt, 1.3); n.sync();
+  }
+}

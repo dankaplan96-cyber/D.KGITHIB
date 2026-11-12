@@ -43,13 +43,14 @@ const boot = async (mode) => {
       door(d) { T.tp(d.x, d.z + 1.5); G.step(1.2); T.tp(d.x, d.z); G.step(1.2); T.talkAll(); return G.room?.id ?? 'out'; },
       out() { const e = G.room.exits[0]; T.tp(e.x, e.z); G.step(1.6); T.talkAll(); return G.room?.id ?? 'out'; },
       f() { return { ...G.flags }; },
+      run(s) { for (let i = 0; i < s * 5; i++) { G.step(0.2); T.talkAll(); } },
       obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
 };
 
 await boot('new');
-is('chapter 9 (council) starts on Zeelich, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true });
+is('chapter 9 (council) starts on Zeelich, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true, dt_v: 1, dt_strip: true, zt_v: 1, zt_water: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }), (v) => v[0] === 'council' && v[1] === 'zeelich' && v[2] === 'play' && v[3].length > 0);
 await shot('C9-00-dock.png');
 is('the street folk (Mosquibees, moles, triangle heads) stand on the street and talk', await ev(() => ['zbee1', 'zbee2', 'zmole1', 'zmole2', 'ztri1', 'ztri2'].map((id) => { const n = T.npc(id); if (!n) return id + ' missing'; const g = game.physics.groundAt(n.pos.x, n.pos.z, n.pos.y + 1); T.talk(id); return id + (Math.abs(g - n.pos.y) < 0.3 ? ' on the street' : ' OFF THE GROUND') + (game.state === 'play' ? ', talked' : ' STUCK ' + game.state); })), (v) => v.length === 6 && v.every((x) => x.endsWith('on the street, talked')));
@@ -65,16 +66,36 @@ is('the archive refused before the hearing', await ev(() => { const r = T.exit('
 is('the clerk takes the petition', await ev(() => { T.talk('clerk'); return [game.flags.c9_clerk, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 is('the hearing, an objective set', await ev(() => { const r = T.exit('up-council'); game.step(0.5); T.talkAll(); return [r, game.flags.c9_heard, T.obj()]; }), (v) => v[0] === 'council' && v[1] === true && v[2].length > 0);
 await shot('C9-03-council.png');
-is('into the archive, its watcher on', await ev(() => { T.exit('council-out'); const r = T.exit('up-archive'); game.step(0.3); T.talkAll(); return [r, !!game.story.cur.watcher?.active]; }), (v) => v[0] === 'archive' && v[1] === true);
+// CAMPAIGN-7 (story/cnline.js; this chapter's thread is on in a game that begins it): the archive's door shut by Vesk's
+// standing order; Kell takes him up to the service door; the back gallery
+is("after the hearing the archive's door is shut by Vesk's standing order, read on it; the objective names Kell", await ev(() => { T.exit('council-out'); const r = T.exit('up-archive'); T.talkAll(); return [r, game.flags.cn_v, game.flags.cn_closed, game.rooms.upper.order.shown, T.obj()]; }), (v) => v[0] === 'upper' && v[1] === 1 && v[2] === true && v[3] && /Kell/.test(v[4]));
+await shot('C9-03b-order.png');
+is('Kell agrees and brings the deck down; on it with him, up to the terrace; he opens the service door', await ev(() => {
+  const G = game, f = G.flags, L = G.rooms.zeelich.lift; T.exit('up-down'); T.talk('zl_kell'); T.run(4); const low = +(L.deckY - L.low).toFixed(2);
+  T.useAt(L.deck.x, L.deck.z); T.run(16); return [!!f.cn_kellAsk, low, f.cn_kell, +(G.hero.pos.y - L.top).toFixed(2), T.obj()]; }), (v) => v[0] && v[1] === 0 && v[2] === true && Math.abs(v[3]) < 0.2 && /plans/i.test(v[4]));
+await shot('C9-03c-service.png');
+is('through the service door: the archive\'s back gallery, up over the archivist\'s round, its watcher on', await ev(() => { const L = game.rooms.zeelich.lift; T.useAt(L.service.x, L.service.z, L.top); for (let i = 0; i < 60 && (game.room?.id !== 'archive' || game.trans); i++) { game.step(0.1); T.talkAll(); } game.step(0.2); const st = [game.room?.id, +game.hero.pos.y.toFixed(1), !!game.story.cur.watcher?.active]; const A = game.rooms.archive; T.talkAll(); T.tp(A.spawn.x, A.spawn.z, A.spawn.a); T.talkAll(); return st; }), (v) => v[0] === 'archive' && v[1] > 2 && v[2] === true);
 await shot('C9-04-archive.png');
 is("the worker's coat: disguised", await ev(() => { const L = game.rooms.archive.locker; T.useAt(L.x, L.z); return [game.flags.c9_coat, game.hero.body, game.hero.disguised]; }), (v) => v[0] === true && v[1] === 'worker' && v[2] === true);
 is('the wrong cabinet (FERRIES) has no plans', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'FERRIES'); T.useAt(c.x, c.z); return [game.flags.c9_plans]; }), (v) => !v[0]);
 // CHAPTER-BALANCE: the BORE cabinet is locked until the archivist's key ring is taken from his desk
 is('the BORE cabinet without the key: locked, no plans; the objective names the key', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, game.flags.c9_locked, T.obj()]; }), (v) => !v[0] && v[1] === true && /key/i.test(v[2]));
 is("the archivist's key ring taken from his desk", await ev(() => { const K = game.rooms.archive.keys; T.useAt(K.x, K.z); return [game.flags.c9_key, K.taken]; }), (v) => v[0] === true && v[1] === true);
-is('the BORE cabinet: the plans, an objective set', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the BORE cabinet: its drawer: the log of test 14 and the order that cut it; the objective the carbon', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.cn_drawer, game.rooms.archive.drawer.open, game.flags.c9_plans, T.obj()]; }), (v) => v[0] === true && v[1] && !v[2] && /carbon/i.test(v[3]));
+is('his carbon laid on the log: the plans and the log in hand, the carbon handed on', await ev(() => { const D = game.rooms.archive.drawer; T.useAt(D.x, D.z); T.run(4); return [game.flags.cn_log, game.flags.c9_plans, game.story.items().some((i) => i.id === 'tstrip'), T.obj()]; }), (v) => v[0] === true && v[1] === true && !v[2] && v[3].length > 0);
 log('spot test', await ev(() => { const G = game; return [G.story.cur.watcher?.active]; }));
-is('chapter 9 ends with the vote: back to Twinsen, the next chapter (network)', await ev(() => { const r1 = T.exit('archive-out'); const b = game.hero.body; const r2 = T.exit('up-council'); game.step(0.5); T.talkAll(); for (let i = 0; i < 20; i++) { game.step(0.2); T.talkAll(); } return [r1, b, r2, game.flags.c9_vote, game.flags.chapterKey]; }), (v) => v[1] === 'twinsen' && v[2] === 'council' && v[3] === true && v[4] === 'network');
+is('the vote orders the bore stopped; the chapter goes on (back to Twinsen, still chapter 9), the objective the platform\'s console', await ev(() => { const r1 = T.exit('archive-out'); const b = game.hero.body; const r2 = T.exit('up-council'); game.step(0.5); T.talkAll(); for (let i = 0; i < 20; i++) { game.step(0.2); T.talkAll(); } return [r1, b, r2, game.flags.c9_vote, game.flags.chapterKey, T.obj()]; }), (v) => v[1] === 'twinsen' && v[2] === 'council' && v[3] === true && v[4] === 'council' && /console/i.test(v[5]));
+is('the stop thrown at the console: the BORE needle falls, the GROUND needle kicks on; Mill Lane dry (the cart half way, no water); the objective the bench', await ev(() => {
+  const G = game, f = G.flags; T.exit('council-out'); T.exit('up-down'); const S = G.rooms.zeelich.platform.stop, L = G.rooms.zeelich.lift; T.useAt(S.x, S.z); T.run(20);
+  return [f.cn_stop, S.thrown, S.loose, +(L.deckY - L.y0).toFixed(2), !!L.state.water, T.obj()]; }), (v) => v[0] === true && v[1] && v[2] && v[3] > 1.5 && v[3] < 2.5 && !v[4] && /bench/i.test(v[5]));
+await shot('C9-05-console.png');
+is('the bench: the isolator on one relay, then the other; one at a time; the objective Kell\'s feed', await ev(() => {
+  const G = game, f = G.flags; const r = T.door(G.rooms.zeelich.workshopDoor); T.run(4); const T2 = G.rooms.workshop.life.terminals;
+  const at = (p) => { T.tp(p.front.x, p.front.z, p.a); T.tap('KeyE'); T.run(4); }; at(T2.A); const a = [!!f.cn_isoA, G.rooms.workshop.life.state.iso]; at(T2.B); T.run(2);
+  return [r, !!f.cn_isoGot, a, !!f.cn_isoB, !!f.cn_iso, T.obj()]; }), (v) => v[0] === 'workshop' && v[1] && v[2][0] && v[2][1] === 'A' && v[3] && v[4] && /feed/i.test(v[5]));
+is('chapter 9 ends on Mill Lane: the isolator on Kell\'s feed, the lift and the water back; the next chapter (network)', await ev(() => {
+  const G = game, f = G.flags; T.out(); const L = G.rooms.zeelich.lift; T.tp(L.isoAt.front.x, L.isoAt.front.z, L.isoAt.a); T.tap('KeyE'); let water = false; for (let i = 0; i < 150 && f.chapterKey === 'council'; i++) { G.step(0.2); T.talkAll(); water ||= !!L.state.water; }
+  return [!!f.cn_lane, water, f.chapterKey]; }), (v) => v[0] && v[1] && v[2] === 'network');
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
