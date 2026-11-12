@@ -2190,6 +2190,15 @@ class Game {
     // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
     this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
+    // an unsearched container he faces squarely and is nearer than the rest: nothing else takes the key, it searches
+    // (CONTAINERS-3: facing the house's dresser, Zoé at the sink 1.2 m to his side got "Talk" and the tap beside it
+    //  "Tap" from every level place in front of it, so the dresser could not be searched while she stood there)
+    // (a person he faces at least as squarely still wins)
+    const gv = best && h.onGround ? this.giverInReach() : null;
+    if (gv) {
+      const ga = aim(gv.x, gv.z);
+      if (ga > 0.7 && !(faced && fa >= ga) && dist(gv.x, gv.z) < bd) return null;
+    }
     if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
     // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
     //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
