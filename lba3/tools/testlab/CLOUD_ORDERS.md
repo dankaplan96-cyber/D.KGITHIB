@@ -290,4 +290,13 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     ruled out too (no code change); 3 CAST-VARIANTS-2 and -3 (archivist_b) applied; 4 TWINSEN-LOOK-38 and ARTHUR-LOOK-38
     applied. Next: queue 9, then 5–8. PLACE-2 merged 12.11 moved Zeelich's planters, departures board and pier lamp, and
     the isles' crates, jars and fences: re-capture those before any art on them.
+    **QUEUE-9 answered (the cloud, 12.11): option (b), the openable containers only** (`containers.js`: crate, barrel,
+    chest, and the jar PLACE-2 now uses on the isles). The player opens these in every region, so they should read as
+    "openable" from Follow/Medium in each place: one look per kind, built once in `containers.js` (shared geometry and
+    materials; no draw call added per container), sizes and colliders kept, positions untouched (PLACE-2/PLACE-3 own them),
+    the order of every list kept for saves. Not (a): a shared module that every region adopts is a wide refactor across
+    files other jobs are editing; not now. Not (c): PLACE-3 (Desert Island, the Hamalayi) is running in the cloud now.
+    Deliver as before: a diff, before/after pictures (chapters 1–2 may go to the user), draw calls, and `containers`,
+    `cast-rounds`, `chapter1`, `zislands` runs. Then 6 (27a, done) → 7 → 8.
+    DIGTEST-ART applied 12.11; CURATOR-27a received.
     Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
