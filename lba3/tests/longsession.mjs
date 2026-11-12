@@ -32,8 +32,11 @@ const sample = () => page.evaluate(() => {
 const rows = [];
 for (let i = 0; i < N; i++) {
   await page.evaluate(() => {
-    const G = game, d = G.world.houses[0].door;
-    P.through(d.x, d.z); P.settle();
+    // (P.enter: CAMPAIGN-1's remark as he steps out of the house the first time, "the garden pipe is knocking too",
+    //  stops the walk back to the door; P.enter reads it and walks on, as a player would)
+    const G = game;
+    P.enter('house'); P.settle();
+    if (G.room?.id !== 'house') throw new Error('not back in the house: ' + (G.room?.id ?? 'citadel'));
     const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); P.settle();
     for (let k = 0; k < 3; k++) { P.tap('KeyF', 0.05); G.step(1.5); }
     const n = G.npcs.filter((x) => x.present && !x.def.noTalk).sort((a, b) => a.pos.distanceTo(G.hero.pos) - b.pos.distanceTo(G.hero.pos))[0];

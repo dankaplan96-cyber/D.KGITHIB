@@ -250,6 +250,9 @@
     // (a player presses E as soon as the prompt is for this thing, close enough: no need to reach the exact spot)
     const ready = () => { const tg = P.target(); if (!tg || Math.hypot(hero().pos.x - x, hero().pos.z - z) >= 2.2) return false; if (kind) return tg.kind === kind; return tg.x == null ? tg.kind !== 'npc' : Math.hypot(tg.x - x, tg.z - z) <= match; };   // (a story thing's prompt carries no position: any non-person prompt here)
     let r = P.go(x, z, { tol: near, run, stopWhen: ready });
+    // (a remark that opened on the way stopped the walk short of the thing — chapter 1's "the garden pipe is knocking
+    //  too" as he steps out of the house, 80 m from the well —: read it, as a player would, and walk on, twice at most)
+    for (let k = 0; k < 2 && r.r === 'state:dialog' && Math.hypot(hero().pos.x - x, hero().pos.z - z) >= 2.2; k++) { P.settle(); r = P.go(x, z, { tol: near, run, stopWhen: ready }); }
     if (r.r !== 'arrived' && r.r !== 'state:dialog') { P.face(x, z); if (!ready()) return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] }; }   // (blocked short of it, but its prompt is up: fine)
     let tg = null;
     if (G.state === 'play') {
