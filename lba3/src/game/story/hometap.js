@@ -84,11 +84,16 @@ export class HomeTap {
       { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.008, 5, 12), iron); ring.position.set(cupAt.x, cupAt.y - 0.008, cupAt.z); ring.rotation.x = Math.PI / 2; ov.add(ring);
         for (let i = 0; i < 3; i++) { const t = (i * 2 * Math.PI) / 3; om(new THREE.CylinderGeometry(0.006, 0.006, 0.09, 5), cupAt.x + Math.cos(t) * 0.044, 0.875 + 0.045, cupAt.z + Math.sin(t) * 0.044); } }   // (the trivet)
       mergeStatic(ov, { recolor: true });
-      // Arthur's cup: blue enamel, a handle (moved: kept apart)
+      // Arthur's cup: enamel, a handle (moved: kept apart)
+      // (GPU-V82, the desktop on the GTX 1050: from the room camera the blue cup was 5 × 4 px, the blue of the kettle beside
+      //  it on the dark stove, and the beat did not read. Now half as big again (a boy's big mug), white enamel with a blue
+      //  rim and handle, glossier: a light spot on the dark stove top and in the sink's basin)
       const cup = new THREE.Group(); cup.userData.keep = true; H.group.add(cup);
-      const enamel = new THREE.MeshStandardMaterial({ color: '#3a6fb0', roughness: 0.35, metalness: 0.2 });
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.036, 0.085, 12), enamel); body.position.y = 0.0425; cup.add(body);
-      const ear = new THREE.Mesh(new THREE.TorusGeometry(0.026, 0.007, 5, 10, Math.PI), enamel); ear.position.set(0.042, 0.045, 0); ear.rotation.z = -Math.PI / 2; cup.add(ear);
+      const enamel = new THREE.MeshStandardMaterial({ color: '#f1f1ec', roughness: 0.22, metalness: 0.05 });
+      const rimM = new THREE.MeshStandardMaterial({ color: '#2f62b0', roughness: 0.25, metalness: 0.1 });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.054, 0.125, 14), enamel); body.position.y = 0.0625; cup.add(body);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.006, 5, 14), rimM); rim.position.y = 0.124; rim.rotation.x = Math.PI / 2; cup.add(rim);
+      const ear = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.009, 5, 10, Math.PI), rimM); ear.position.set(0.062, 0.064, 0); ear.rotation.z = -Math.PI / 2; cup.add(ear);
       mergeStatic(cup, { recolor: false });
       // one drop from the spout (shown as it falls)
       const drop = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 5), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.1, emissive: '#5a8ab0', emissiveIntensity: 0.3 }));
