@@ -4602,3 +4602,20 @@ sack, chest) that the regions then adopt, delivered as a module plus a per-regio
 PLACE-2; (b) only the openable containers (`containers.js`: crate, barrel, chest), which the player interacts with in
 every region; (c) only the places PLACE-2 does not cover (Desert Island, the Hamalayi, the interiors). Until the answer
 comes, the desktop goes on with item 5 (DIGTEST-ART).
+
+## DIGTEST-ART · the test stand reads from the lever · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 5. **Ready for the cloud: `requests/DIGTEST-ART.diff`** (`src/game/teststand.js` only; applies on the
+branch as it is). Looked at in Chrome on the GTX 1050 from the play camera (Follow, Medium) at the cutoff lever, 2 m and 6 m
+back, and from the side. The chapter is reached as `chapter4.mjs` does. Pictures stay on the desktop's branch
+(`docs/future/digtest-art/ch3plus-*`, chapter 4: **not for the user**).
+- **Why the drill did not read:** from the lever the derrick stands 20.8 m off. Its rotary table (1.8 m up) falls behind the
+  post's name board on screen; the kelly and swivel (4–7 m) are at or over the frame's top. The band the camera sees over
+  the board and the pressure tank is about 2.5–4.5 m.
+- **Now:** a drive drum on the kelly at 3.6 m, 1.7 m across, its rim in eight yellow and black hazard bands that sweep
+  round as it turns (5.5 rad/s, as the string); a collar under it and a cap over it. It is in the string's own merged mesh.
+- **The dials:** faces 0.46 m across (were 0.33), set 0.74 m apart (were 0.58), so each shows beside him; the ticks, the
+  CUT mark and the labels heavier; the needles longer (0.21 m with a tip, were 0.14) and twice as broad, each merged into
+  one mesh (was two). The lever, its prompt, `board`, `dials`, `spots` and the colliders are where they were.
+- **Draw calls** (`renderer.info`, one frame at the same spot): at the lever 154 → 155, 6 m back 152 → 152; triangles
+  +1.3 k.
+- Tests (SwiftShader): chapter4 59/59 (a first run passed its 46 checks but stopped on 10 `ERR_NETWORK_IO_SUSPENDED` file loads, the machine's network paused; rerun clean), campaign-hands 3/3, chapter5 23/23 PASS. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
