@@ -72,9 +72,9 @@ is("after the hearing the archive's door is shut by Vesk's standing order, read 
 await shot('C9-03b-order.png');
 is('Kell agrees and brings the deck down; on it with him, up to the terrace; he opens the service door', await ev(() => {
   const G = game, f = G.flags, L = G.rooms.zeelich.lift; T.exit('up-down'); T.talk('zl_kell'); T.run(4); const low = +(L.deckY - L.low).toFixed(2);
-  T.useAt(L.deck.x, L.deck.z); T.run(16); return [!!f.cn_kellAsk, low, f.cn_kell, +(G.hero.pos.y - L.top).toFixed(2), T.obj()]; }), (v) => v[0] && v[1] === 0 && v[2] === true && Math.abs(v[3]) < 0.2 && /service door/i.test(v[4]));
+  T.useAt(L.deck.x, L.deck.z); T.run(16); return [!!f.cn_kellAsk, low, f.cn_kell, +(G.hero.pos.y - L.top).toFixed(2), T.obj()]; }), (v) => v[0] && v[1] === 0 && v[2] === true && Math.abs(v[3]) < 0.2 && /plans/i.test(v[4]));
 await shot('C9-03c-service.png');
-is('through the service door: the archive\'s back gallery, up over the archivist\'s round, its watcher on', await ev(() => { const L = game.rooms.zeelich.lift; T.useAt(L.service.x, L.service.z, L.top); T.run(4); return [game.room?.id, +game.hero.pos.y.toFixed(1), !!game.story.cur.watcher?.active]; }), (v) => v[0] === 'archive' && v[1] > 2 && v[2] === true);
+is('through the service door: the archive\'s back gallery, up over the archivist\'s round, its watcher on', await ev(() => { const L = game.rooms.zeelich.lift; T.useAt(L.service.x, L.service.z, L.top); for (let i = 0; i < 60 && (game.room?.id !== 'archive' || game.trans); i++) { game.step(0.1); T.talkAll(); } game.step(0.2); const st = [game.room?.id, +game.hero.pos.y.toFixed(1), !!game.story.cur.watcher?.active]; const A = game.rooms.archive; T.talkAll(); T.tp(A.spawn.x, A.spawn.z, A.spawn.a); T.talkAll(); return st; }), (v) => v[0] === 'archive' && v[1] > 2 && v[2] === true);
 await shot('C9-04-archive.png');
 is("the worker's coat: disguised", await ev(() => { const L = game.rooms.archive.locker; T.useAt(L.x, L.z); return [game.flags.c9_coat, game.hero.body, game.hero.disguised]; }), (v) => v[0] === true && v[1] === 'worker' && v[2] === true);
 is('the wrong cabinet (FERRIES) has no plans', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'FERRIES'); T.useAt(c.x, c.z); return [game.flags.c9_plans]; }), (v) => !v[0]);

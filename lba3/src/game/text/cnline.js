@@ -43,6 +43,8 @@ Object.assign(STR.en, {
 
   // ---- the verdict, in a game with the thread: the council orders the stop
   cn_tw_log: "And this. The log of test 14, uncut, with two traces, and Vesk's order cutting the second one. I ran that test. Here is my own carbon of it.",
+  cn_tw_log_b: "And this. The log of test 14 at the desert station, uncut, with two traces, and Vesk's order cutting the second one, in his own hand.",
+  cn_tw_cab_b: "Test 14. Dallan's test at the desert station. Two traces, and he filed one.",
   cn_councilC_log: '"I will not drain a quarter over noise." He wrote down his reason. Mill Lane is my ward.',
   cn_chair_stop: "The council has heard enough. By vote of this council, the Joint Project's bore is to be stopped. Now, not when it suits him.",
   cn_councilC_stop: "And if he was right about Mill Lane?",

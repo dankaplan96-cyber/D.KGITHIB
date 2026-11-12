@@ -214,7 +214,7 @@ export class CouncilThread {
     const g = this.game, f = this.f, ch = this.ch, A = this.A;
     f.cn_drawer = true; A.drawer?.setOpen(true); this.ch.watcher?.stop();
     g.audio.play('shard');
-    ch.chain([['hero', 'c9_cab_bore'], ['hero', 'cn_cab_1'], ['narrator', 'cn_cab_2'], ['hero', 'cn_tw_cab']], () => {
+    ch.chain([['hero', 'c9_cab_bore'], ['hero', 'cn_cab_1'], ['narrator', 'cn_cab_2'], ['hero', f.dt_v ? 'cn_tw_cab' : 'cn_tw_cab_b']], () => {
       if (!f.dt_strip) { this.logged(); return; }   // (no carbon in this game: the log is taken as it is)
       g.updateObjective(); g.save(false);
     });
@@ -229,7 +229,7 @@ export class CouncilThread {
   // ---------------------------------------------------------------- the verdict (council.js asks): the council orders the stop
   verdictLines() {
     const f = this.f;
-    const proof = f.cn_log === true ? [['hero', 'c9_tw_plans'], ['hero', 'cn_tw_log'], ['councilB', 'c9_councilB_2'], ['councilC', 'cn_councilC_log']] : [['hero', 'c9_tw_plans'], ['councilB', 'c9_councilB_2'], ['councilC', 'c9_councilC_2']];
+    const proof = f.cn_log === true ? [['hero', 'c9_tw_plans'], ['hero', f.dt_strip ? 'cn_tw_log' : 'cn_tw_log_b'], ['councilB', 'c9_councilB_2'], ['councilC', 'cn_councilC_log']] : [['hero', 'c9_tw_plans'], ['councilB', 'c9_councilB_2'], ['councilC', 'c9_councilC_2']];
     const end = [['councilC', 'c9_councilC_3'], ['chair', 'cn_chair_stop'], ['councilC', 'cn_councilC_stop'], ['chair', 'cn_chair_stop2'], ['baldino', 'cn_bal_stop']];
     return { proof, end };
   }

@@ -147,6 +147,7 @@ await start('new-12-drawer');
 take(await use('cn_compare', 'game.rooms.archive.drawer', 0.6));
 await browser.close();
 await start('new-12-vote');
+await ev(() => { if (game.room?.id === 'council') P.exitTo('council-out'); if (game.room?.id === 'upper') P.exitTo('up-down'); });
 take(await use('cn_stop', 'game.rooms.zeelich.platform.stop', 0.8));
 await browser.close();
 await start('new-12-stop');
