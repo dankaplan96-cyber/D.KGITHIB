@@ -285,14 +285,14 @@ hours unmeasured. Per core chapter: the bot's latest measured free play (Automat
 | 5 | 277–290 (two runs) | about 19.3 | Vesk's heat line thrown to Kesh's pump (seen there), the log sent with one trace read against the carbon, put to Dallan (wave 2: +31 bot s, +3.1 min) | 11.11, segment 08 |
 | 6 | 264–278 (two runs) | about 16.8 | the lift's line kicks three and a rest: read on its gauge with the riders aboard, each trip started on the green (a late start costs the trip), Yorna's quiet, the upper brake for the last of Lhar (wave 3: +24 to +27 bot s, +2.8 min) | 12.11, segment 09 |
 | 7 | 178–219 (two runs; the second +39 s of bot walk) | about 15.0 | the snow shaking beside him, the telescope's fourth setting by hand, the bearing read: Citadel (wave 3: +8 bot s, +1.7 min) | 12.11, segment 10 |
-| 8 | 350 | 18.5 | (wave 4) | 9.11 run 3 |
+| 8 | 404 → 476 (12.11, before and after, the same bot and save) | about 26 | the list cart seen to turn away at the lane's shut water gate (a cut-away); as Zoé the schedule read against the driver's route, Bram, Hedda and Tobin brought to the landing; as Twinsen the culvert's cock in the pump room turned in a rest between the copper pipe's kicks (a turn in a kick is kicked back); the lane seen to board (wave 4: +94 bot s of new steps, +7.7 min) | 12.11, segment 11 in three parts |
 | 9 | 212 | 15.6 | (wave 5) | 9.11 run 3 |
 | 10 | 542 | 29.5 | (wave 6) | 9.11 run 3 |
 | 11 | 249 | 13.8 | (wave 7) | 9.11 run 3 |
 | 12 | 66 | 7.3 | (wave 7) | 9.11 run 3 |
 | Ep. | 1 | 0.9 | (wave 8) | 9.11 run 3 |
 
-The estimates add up to about **247 minutes (about 4 hours) of main route** (after wave 3) — an estimate. The rest of the 15 hours is
+The estimates add up to about **255 minutes (about 4.3 hours) of main route** (after wave 4) — an estimate. The rest of the 15 hours is
 meant to come from the later waves' steps, the optional content and the expansion (WORKPLAN-2026-11-09.md); none of it is
 claimed until measured, and a person's own play is the real measure.
 
