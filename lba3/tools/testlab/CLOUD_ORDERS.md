@@ -286,4 +286,8 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        NW plateau, harbour and square after CITADEL-85.
     7. **27c on the Vega 8** whenever the laptop is at hand: v82 against v71 on the same routes.
     8. **The expansion:** W-4 on `expansion/ballastra` as `EXPANSION_WORLD_SPEC.md` orders it, after 1–6.
+    **Done by 12.11 (the cloud's note):** 1 GPU-V82 and the cup applied; 2 PERF-1050 not reproduced, the cold driver cache
+    ruled out too (no code change); 3 CAST-VARIANTS-2 and -3 (archivist_b) applied; 4 TWINSEN-LOOK-38 and ARTHUR-LOOK-38
+    applied. Next: queue 9, then 5–8. PLACE-2 merged 12.11 moved Zeelich's planters, departures board and pier lamp, and
+    the isles' crates, jars and fences: re-capture those before any art on them.
     Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
