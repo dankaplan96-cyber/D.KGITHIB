@@ -576,7 +576,8 @@ export function buildTown(scene, W) {
   const sh = at('shop', 3.9, 3.3);
   globeSign(dress, sh[0], gy(sh), sh[1]);
   physics.add({ type: 'cyl', x: sh[0], z: sh[1], r: 0.15, top: gy(sh) + 3, seeThrough: true });
-  for (const [lx, lz] of [[-3.0, 3.4], [-3.4, 2.6]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  // (PLACE-2: the second stood half inside the shop's front wall at its corner: out by the corner, beside the first)
+  for (const [lx, lz] of [[-3.0, 3.4], [-3.85, 3.25]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
   { const p = at('shop', -3.2, 3.0); W.givers.push({ id: 'shop-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money'], n: 3 }); }
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));

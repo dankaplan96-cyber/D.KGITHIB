@@ -26,6 +26,7 @@
 //
 // Heights the story may need: walking level Y0 = 6.0, platform deck DECK = 6.42 (both world y), cloud sea
 // R.cloudY = -3. Mill brakes are 3.0 m above the ground; the old mill's balcony (R.millTop.y) is 8.75 m up.
+import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
 import { fitAdd } from './worldfit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
@@ -366,7 +367,8 @@ class Batch {
     _m4.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz, 'YXZ')), _s.set(sx, sy, sz));
     return this.addM(geo, mat, _m4.clone());
   }
-  addM(geo, mat, m) { if (!this.items.has(mat)) this.items.set(mat, []); this.items.get(mat).push([geo, m]); return this; }
+  // (PLACE-2: tests/place-scan.mjs measures each part; unset in play, where this costs one property read)
+  addM(geo, mat, m) { if (globalThis.__PLACE_REC) globalThis.__PLACE_REC.bpart(this, geo, m, mat); if (!this.items.has(mat)) this.items.set(mat, []); this.items.get(mat).push([geo, m]); return this; }
   build() {
     const out = [];
     for (const [mat, list] of this.items) {
@@ -1001,10 +1003,14 @@ export function* buildZeelichSteps(scene, physics) {
     col({ type: 'box', x: x0 + 0.1, z: 0, hw: 0.1, hd: hw, rot: 0, top: Y0 + 1.05, noStand: true, seeThrough: true });
     // mooring bollards at the gap and a coiled rope
     for (const x of [-61.2, -54.0]) {
+      placeTag('bollard');   // (PLACE-2: names the piece for tests/place-scan.mjs; nothing in play)
       B.add(lathe([[0.2, 0], [0.2, 0.32], [0.14, 0.38], [0.14, 0.5], [0.24, 0.56], [0.22, 0.64], [0, 0.66]], 14), darkSteel(), x, Y0, hw - 0.35);
       col({ type: 'cyl', x, z: hw - 0.35, r: 0.25, top: Y0 + 0.66, noStand: true, seeThrough: true });
     }
-    B.add(cached('coil', () => compose([0, 1, 2, 3].map((k) => [new THREE.TorusGeometry(0.32 - k * 0.05, 0.045, 6, 18).rotateX(Math.PI / 2), 0, 0.05 + k * 0.07, 0]))), pm('#c8a878', 0.9), -55.4, Y0, -1.4);
+    placeTag('ropeCoil');
+    // (PLACE-2: 0.6 m off the lamp at −56, not against its foot)
+    B.add(cached('coil', () => compose([0, 1, 2, 3].map((k) => [new THREE.TorusGeometry(0.32 - k * 0.05, 0.045, 6, 18).rotateX(Math.PI / 2), 0, 0.05 + k * 0.07, 0]))), pm('#c8a878', 0.9), -54.9, Y0, -1.2);
+    placeTag(null);
     // cargo by the pier root
     techCrates([[-51.6, -1.5, 2, 0.9], [-52.6, -1.6, 1, 0.8]]);
     // walkable deck
@@ -1501,7 +1507,9 @@ export function* buildZeelichSteps(scene, physics) {
     }
     // clutter by the wall: crates, a cart wheel, a gear rack, a barrel
     techCrates([wpos(f, w / 2 + 0.9, 0.8).x !== undefined ? [wpos(f, w / 2 + 0.9, 0.8).x, wpos(f, w / 2 + 0.9, 0.8).z, 1, 0.8] : [0, 0]]);
+    placeTag('cartWheel');   // (PLACE-2: names the piece for tests/place-scan.mjs; nothing in play)
     HB.add(cached('cartwheel', () => compose([[new THREE.TorusGeometry(0.5, 0.06, 6, 22)], ...[0, 1, 2, 3].map((k) => [bbox(1.0, 0.05, 0.05, 0.01, 1), 0, 0, 0, 0, 0, (k * Math.PI) / 4]), [cyl(0.08, 0.08, 0.16, 8).rotateX(Math.PI / 2)]])), tm('wood', { color: '#a87850' }), -w / 2 - 0.25, 0.55, 1.2, 0, Math.PI / 2 - 0.2, 0.15);
+    placeTag(null);
     return {};
   }
 
@@ -1509,6 +1517,7 @@ export function* buildZeelichSteps(scene, physics) {
   function buildPlaza() {
     const { x, z } = PLAZA;
     // fountain: tiled octagonal basin, brass bowl, water
+    placeTag('fountain');   // (PLACE-2: names the pieces for tests/place-scan.mjs; nothing in play)
     const stone = tm('stone', { color: '#dedad6' });   // (ZSTYLE-1: grey stone and a glass-block band, not rose tiles)
     B.add(lathe([[1.9, 0], [1.95, 0.05], [1.95, 0.55], [2.05, 0.62], [2.05, 0.72], [1.7, 0.72], [1.7, 0.2], [0, 0.2]], 8, 1.2), stone, x, Y0, z, 0, Math.PI / 8, 0);
     B.add(cyl(1.97, 1.97, 0.3, 8, 1, true), glassM(), x, Y0 + 0.36, z, 0, Math.PI / 8, 0);
@@ -1523,6 +1532,7 @@ export function* buildZeelichSteps(scene, physics) {
     updaters.push((dt, t) => { water.material.map.offset.set(t * 0.03, t * 0.02); });
     col({ type: 'cyl', x, z, r: 2.05, top: Y0 + 0.72 });
     // market stall: timber frame, striped canopy, counter of fruit, jars and a rug
+    placeTag('stall');
     const sx = x, sz = z + 9.2, G = new THREE.Group(); G.position.set(sx, Y0, sz); G.rotation.y = Math.PI; group.add(G);
     const SB = new Batch(G);
     const wood = tm('wood', { color: '#c89868' });
@@ -1538,6 +1548,7 @@ export function* buildZeelichSteps(scene, physics) {
     for (let i = 0; i < 4; i++) SB.add(cached('jar', () => lathe([[0, 0], [0.12, 0], [0.16, 0.12], [0.14, 0.26], [0.08, 0.32], [0.09, 0.38], [0, 0.38]], 10)), tm(tileTex('#2f8a9a', '#e8b84a', '#c84a7a'), { rough: 0.4 }), 1.1 + (i % 2) * 0.3, 0.97, 0.45 + Math.floor(i / 2) * 0.3);
     SB.add(cached('rugstall', () => new THREE.PlaneGeometry(1.1, 0.8)), pm('#ffffff', 0.95, { map: rugTex(['#2a6a8a', '#a8304a', '#e8b84a', '#f4e6c8', '#3a2030'], 7), side: THREE.DoubleSide, transparent: true, alphaTest: 0.5 }), -1.6, 1.4, 0.0, 0, Math.PI / 2, Math.PI / 2);
     SB.build();
+    placeTag(null);
     col({ type: 'box', x: sx, z: sz - 0.7, hw: 1.8, hd: 0.45, rot: 0, top: Y0 + 1.0, noStand: true, seeThrough: true });
     for (const [px, pz] of [[-1.6, 0.9], [1.6, 0.9]]) col({ type: 'cyl', x: sx + px, z: sz + pz, r: 0.12, top: Y0 + 2.5, seeThrough: true });
     // (CAM-COVER, release audit v75 F-8: the canopy is a scenery volume for the play camera, as a porch is — the camera
@@ -1565,6 +1576,7 @@ export function* buildZeelichSteps(scene, physics) {
     }));
     const lm = tm('brass', { color: '#d8c0a0', rough: 0.4, metal: 0.6 }), lg = pm('#fff4e4', 0.3, { emissive: '#ffd8a8', emissiveIntensity: 1.4 });   // (ZSTYLE-1: warm white, not pink)
     for (const [x, z] of lamps) {
+      placeTag('lamp');   // (PLACE-2: names each piece for tests/place-scan.mjs; nothing in play)
       const ry = z > 0 ? -Math.PI / 2 : Math.PI / 2;
       B.add(lampGeo.metal, lm, x, Y0, z, 0, ry, 0);
       B.add(lampGeo.glass, lg, x, Y0, z, 0, ry, 0);
@@ -1575,6 +1587,7 @@ export function* buildZeelichSteps(scene, physics) {
     //  planter 0.9 m before its seat, one with a post before its middle — and stand between the lamps now: ZEELICH_SEATS)
     const benches = ZEELICH_SEATS;
     for (const [x, z, ry] of benches) {
+      placeTag('bench');
       const f = frame(x, z, ry), at = (lx, ly, lz) => { const [a, b] = f(lx, lz); return [a, Y0 + ly, b]; };
       for (const s of [-1, 1]) B.add(boxUV(bbox(0.24, 0.48, 0.55, 0.05, 1), 1), tm('stone', { color: '#dcd8d4' }), ...at(s * 0.75, 0.24, 0), 0, ry, 0);
       for (let k = 0; k < 3; k++) B.add(boxUV(bbox(1.8, 0.06, 0.15, 0.02, 1), 1), tm('wood', { color: '#c89060' }), ...at(0, 0.5, -0.17 + k * 0.17), 0, ry, 0);
@@ -1582,13 +1595,16 @@ export function* buildZeelichSteps(scene, physics) {
       col({ type: 'box', ...wpos(f, 0, 0), hw: 0.95, hd: 0.35, rot: ry, top: Y0 + 0.55, seeThrough: true });
     }
     // planters with odd Zeelich plants (BENCHES-1: the one by the boulevard's west bench stood half through its end, at −30.5: 1.5 m off it now)
-    const planters = [[-44, -5.6], [-44, 5.6], [-27.8, -5.2], [-18.4, -5.2], [-6, 5.2], [8, -5.2], [17.5, 5.2], [33, -5.0], [33, 5.0], [PLAZA.x + 6.6, PLAZA.z - 4], [PLAZA.x + 7.3, PLAZA.z + 2.6]];
+    // (PLACE-2: the one at −18.4 stood half in the plaza's planter at its rim, 34 cm into it; the one at 8 had the lamp
+    //  post at 8.5 through its pot's rim: 2.2 m west and 1.2 m west, the same row, clear of the lamps and the benches)
+    const planters = [[-44, -5.6], [-44, 5.6], [-27.8, -5.2], [-20.6, -5.2], [-6, 5.2], [6.8, -5.2], [17.5, 5.2], [33, -5.0], [33, 5.0], [PLAZA.x + 6.6, PLAZA.z - 4], [PLAZA.x + 7.3, PLAZA.z + 2.6]];
     // (ZSTYLE-1: LBA2's Zeelich street plants, measured on the original's Otringal: street trees in square planters with
     // a golden plume (bodies 52–54) and a golden fan plant with red fruit (body 18), props-esmer.js frondTree / goldPlant
     // as on our Otringal; where they were glowing orb stalks, violet striped bulbs and curl ferns in rose-tiled pots.
     // The same places and colliders)
     const pot = cached('planter', () => lathe([[0, 0.05], [0.62, 0], [0.72, 0.08], [0.7, 0.5], [0.8, 0.56], [0.8, 0.68], [0.62, 0.68], [0.62, 0.6], [0, 0.6]], 8, 1.2));
     planters.forEach(([x, z], i) => {
+      placeTag('planter');
       { const kind = Math.floor(r() * 3); for (let k = 0; k < (kind === 0 ? 4 : 1); k++) r(); }   // (the old plants' draws: the island's random stream unchanged after them)
       if (i % 2 === 0) frondTree(new Place(B, x, Y0, z, (i * 0.9) % 1.6), { h: 3.1, s: 1.2, seed: i });
       else {
@@ -1598,6 +1614,7 @@ export function* buildZeelichSteps(scene, physics) {
       }
       col({ type: 'cyl', x, z, r: 0.78, top: Y0 + 0.68, seeThrough: true });
     });
+    placeTag(null);
   }
   function plantAt(x, y, z, kind, s = 1) {
     if (kind === 0) {
@@ -1875,13 +1892,15 @@ export function* buildZeelichSteps(scene, physics) {
     // crates, tech crates, barrels, floodlight masts
     techCrates([[5.4, 11.0, 2, 0.9], [6.5, 10.6, 1, 0.8], [17.6, 24.45, 1, 0.9], [11.75, 24.5, 2, 0.85]]);
     const barrel = cached('zbarrel', () => { const pts = []; for (let i = 0; i <= 8; i++) { const k = i / 8; pts.push([0.32 + Math.sin(k * Math.PI) * 0.06, k * 0.95]); } return compose([[lathe(pts, 14, 1)], [new THREE.CircleGeometry(0.33, 14).rotateX(-Math.PI / 2), 0, 0.95, 0]]); });
-    for (const [x, z] of [[4.9, 13.0], [5.1, 13.8], [23.0, 10.4], [22.3, 10.2]]) { B.add(barrel, tm('metal', { color: '#e8b84a', rough: 0.6, metal: 0.3 }), x, Y0, z); col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 0.95, noStand: true, seeThrough: true }); }
+    for (const [x, z] of [[4.9, 13.0], [5.1, 13.8], [23.0, 10.4], [22.3, 10.2]]) { placeTag('barrel'); B.add(barrel, tm('metal', { color: '#e8b84a', rough: 0.6, metal: 0.3 }), x, Y0, z); col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 0.95, noStand: true, seeThrough: true }); }
     for (const [x, z] of [[4.6, 24.6], [23.4, 9.6]]) {
+      placeTag('floodMast');
       B.add(lathe([[0, 0], [0.4, 0], [0.4, 0.12], [0.15, 0.2], [0.1, 6.5], [0.15, 6.6], [0, 6.65]], 12, TILE.teal), tealM(), x, Y0, z);
       B.add(bbox(1.4, 0.12, 0.16, 0.03, 1), brassM(), x, Y0 + 6.5, z, 0, Math.atan2(14 - x, 17 - z) + Math.PI / 2, 0);
       for (const s of [-0.5, 0.5]) { const a = Math.atan2(14 - x, 17 - z); B.add(cached('flood', () => lathe([[0, 0], [0.12, 0], [0.18, 0.18], [0.18, 0.22], [0, 0.22]], 12).rotateX(Math.PI / 2 + 0.5)), brassM(), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); B.add(cached('floodL', () => new THREE.CircleGeometry(0.17, 14).translate(0, 0, 0.225).rotateX(0.5)), pm('#fffbe8', 0.3, { emissive: '#fff4c8', emissiveIntensity: 2.0 }), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); }
       col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 6.5, seeThrough: true });
     }
+    placeTag(null);
     keepClear(D.x0 - 1, D.z0 - 1, D.x1 + 1, D.z1 + 1);
     const patrol = [[7.2, 13.8], [13.5, 12.2], [18.6, 12.8], [18.8, 19.2], [13.2, 20.6], [7.4, 19.0]];
     return { ...W((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: patrol.map(([x, z]) => [x + ox, z + oz]), locker: W(LK.x, LK.z - 0.75) };

@@ -225,7 +225,9 @@ export function travelRegion(game, id) {
       const sp = Z.shuttlePad, cx = o.x, cz = o.z, a = Math.atan2(cx - sp.x, cz - sp.z);
       pt('zeelich_shuttle', { region: 'zeelich', mode: 'shuttle', x: sp.x, z: sp.z, r: 5.0, landing: { x: sp.x + Math.sin(a) * 5.4, z: sp.z + Math.cos(a) * 5.4, a }, name: 'isle_zeelich' });
       // its departures board: Zeelich's places only
-      const bx = sp.x + Math.sin(a + 1.1) * 6.0, bz = sp.z + Math.cos(a + 1.1) * 6.0;
+      // (PLACE-2: at a + 1.1 it stood in the plaza's market stall, its roof through the canopy's corner: round to the
+      //  open ground west of the pad, 2.9 m from the stall)
+      const bx = sp.x + Math.sin(a + 1.7) * 6.0, bz = sp.z + Math.cos(a + 1.7) * 6.0;
       boardMesh(Z.group, bx - cx, gy(bx, bz), bz - cz, Math.atan2(sp.x + Math.sin(a) * 5.4 - bx, sp.z + Math.cos(a) * 5.4 - bz), { title: 'ESMER SHUTTLE', lines: ISLES.slice(0, 5).map((n) => BOARD_NAME[n]).concat(['… AND ' + (ISLES.length - 5) + ' MORE']), frame: '#7a3a8a', bg: '#2a1e34', ink: '#f0c040' });
       P.add({ type: 'box', x: bx, z: bz, hw: 1.1, hd: 0.15, rot: Math.atan2(sp.x + Math.sin(a) * 5.4 - bx, sp.z + Math.cos(a) * 5.4 - bz), top: gy(bx, bz) + 2.7, noStand: true });
     }

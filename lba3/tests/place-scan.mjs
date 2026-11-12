@@ -16,7 +16,7 @@
 // there the pieces are judged for inside / float / sunk only (no walls, no doors' lanes).
 // Run: BOOT_TIMEOUT=900000 GAME_URL=http://localhost:8123/ node tests/place-scan.mjs   (~3 min). Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
-import { judge } from './lib/placejudge.mjs';
+import { judge, judgeOut } from './lib/placejudge.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,9 +61,16 @@ const left = (f) => LEFT.find(([r, k, it, why, near]) => r === f.room && k === f
 const { browser, page } = await launch({ width: 960, height: 540 });
 page.setDefaultTimeout(1800000);
 await page.addInitScript({ path: lib('placerec.js') });
+// (PLACE-2: three's module hands itself to the recorder as it loads, so the recorder knows where each mesh is added;
+//  the game's files are served as they are)
+await page.route('**/vendor/three/build/three.module.min.js', async (route) => {
+  const res = await route.fetch(), body = await res.text();
+  await route.fulfill({ response: res, body: body + "\nimport * as __PLACE_T from './three.module.min.js'; globalThis.__PLACE_REC?.three?.(__PLACE_T);\n" });
+});
 await open(page, '?nocine');
 await menu(page, 'new');
 await page.addScriptTag({ path: lib('placecollect.js') });
+await page.addScriptTag({ path: lib('placeout.js') });
 const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
 // VIEWS=<file.json>: [{ name, room, focus: [x, z], at: [x, z], span?, dir? [x, z] }] in the room's frame (its centre; Citadel: the world):
 // Twinsen put at `at`, the game camera's picture and a nearer look at `focus`, nothing judged (before/after pictures)
@@ -88,14 +95,20 @@ const data = await page.evaluate(async (ONLY) => {
   for (let i = 0; i < 200 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
   G.regions.ensureAll('test'); G.step(0.1);
   const ids = ['citadel', ...Object.keys(G.rooms)].filter((id) => (id === 'citadel' || G.regions.centreOf(id)) && (!ONLY || ONLY.includes(id)));
-  return PLACE.collect(ids);
+  const D = PLACE.collect(ids);
+  // (PLACE-2: outdoors, what the Kit did not place)
+  const outIds = ids.filter((id) => D[id]?.outdoor);
+  const O = await PLACE.collectOut(outIds);
+  for (const id of outIds) D[id].out = O[id];
+  return D;
 }, ONLY);
 if (process.env.DUMP) fs.writeFileSync(process.env.DUMP, JSON.stringify(data));
 
 const all = [];
-let pieces = 0;
+let pieces = 0, outPieces = 0;
 for (const [id, A] of Object.entries(data)) {
-  const r = judge(id, A); pieces += r.pieces;
+  const r = A.outdoor && A.out ? judgeOut(id, A) : judge(id, A); pieces += r.pieces;
+  if (A.outdoor && A.out) { outPieces += r.own; console.log(`OUTDOOR ${id}: ${r.pieces} pieces (${r.kit} Kit, ${r.own} built outside it), ${A.out.walls.length} wall parts, ${A.out.doors.length} doors, ${A.out.stairs.length} stairs, ${A.out.walks.length} walkways; not pieces: ${JSON.stringify(A.out.skipped)}`); }
   if (r.find.length) console.log(`AREA ${id}: ${r.pieces} pieces, ${r.find.length} findings`);
   for (const f of r.find) { f.left = left(f)?.[3] || null; console.log(`  ${f.left ? 'left ' : 'FOUND'} ${f.kind.padEnd(6)} ${f.item}#${f.frame} at ${f.at.join(', ')} (world ${f.world.join(', ')}): ${f.what} — ${f.measure}${f.left ? ' [LEFT: ' + f.left + ']' : ''}`); }
   all.push(...r.find.map((f) => ({ ...f, A })));
