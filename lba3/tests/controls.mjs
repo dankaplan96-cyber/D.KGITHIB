@@ -52,7 +52,10 @@ const padA = await ev(() => {
 check('pad A searches the cupboard in Athletic instead of jumping', (padA.state === 'dialog' || padA.state === 'found') && padA.dy < 0.05 && padA.ball, padA);   // (found: the ball's found-object box comes first, I-24)
 // away from anything, A in Athletic still jumps
 const jump = await ev(() => {
-  const G = game; G.hero.behaviour = 'athletic'; const h = G.hero, c = G.rooms.house.center; h.pos.set(c.x, 0, c.z); h.onGround = true; G.step(0.3);
+  const G = game; G.hero.behaviour = 'athletic'; const h = G.hero, c = G.rooms.house.center;
+  for (let i = 0; i < 80 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  // (CAMPAIGN-1 put the kitchen tap, Arthur's cup and Zoé in reach of the room's middle: the first free spot around it)
+  for (const [dx, dz] of [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2], [1.2, 1.2], [-1.2, 1.2], [1.2, -1.2], [-1.2, -1.2]]) { h.pos.set(c.x + dx, 0, c.z + dz); h.onGround = true; G.step(0.3); if (!G.findInteractable() && G.state === 'play') break; }
   const near = !!G.findInteractable(), y0 = h.pos.y;
   PAD.buttons[0] = { pressed: true }; G.step(1 / 60); PAD.buttons[0] = { pressed: false }; G.step(0.15);
   const r = { near, dy: +(h.pos.y - y0).toFixed(2) }; G.step(1); G.hero.behaviour = 'normal'; navigator.getGamepads = () => []; G.input.lastDevice = 'kbd';
