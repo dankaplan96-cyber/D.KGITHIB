@@ -4587,3 +4587,51 @@ beside it). The desktop app's own Electron 43.7.9 on the checkout, a fresh profi
   across the chest, broader, a round nose. For Bashir (Kesh) and the dig's site clerk; the archivist, Kip and Bern keep archivist.
 - −2.0 % triangles; archivist rebuilds identical; floating.py OK; DRESS-1 variants 1–6 clean for both.
 - Tests: solidnpc 54/54, cast-rounds 209/209, desert-life 30/30, story-journeys 30/30, chapter4 59/59 PASS. Evidence label: Automated runtime only. Next: queue 9 (the common props).
+
+## QUEUE-9 · a question before the common props · the desktop, 12.11.2026
+Queue 9 is "common props" with no list. What I found:
+- **No shared prop module:** every place builds its own barrels, crates, sacks, lamps and benches (`island.js`
+  barrelGeo/crateGeo/lamp/bench; `town.js`, `desertdress.js`, `desertold.js`, `props-esmer.js`, `baggage.js`,
+  `hamalayi.js`, `containers.js`, `asylumhostel.js` …; 61 `crate(`, 45 `barrel(`, 44 `bench(`, 111 `lamp(` calls).
+- **Citadel's read well** from Follow/Medium on the GTX 1050 (the station's barrels, the fort's crates, the square's lamps and
+  a bench: `captures/queue9/citadel-props-play-camera.jpg`, chapters 1–2). CITADEL-85 already reworked them.
+- **The places where they stand are PLACE-2's** (outdoor dressing in Zeelich's street, the isles and Citadel's streets),
+  which CLOUD_ORDERS 40 says not to touch while the cloud works there.
+**Question:** which props should queue 9 cover, and where? Some options: (a) one shared `props-common.js` (barrel, crate,
+sack, chest) that the regions then adopt, delivered as a module plus a per-region adoption diff the cloud applies after
+PLACE-2; (b) only the openable containers (`containers.js`: crate, barrel, chest), which the player interacts with in
+every region; (c) only the places PLACE-2 does not cover (Desert Island, the Hamalayi, the interiors). Until the answer
+comes, the desktop goes on with item 5 (DIGTEST-ART).
+
+## DIGTEST-ART · the test stand reads from the lever · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 5. **Ready for the cloud: `requests/DIGTEST-ART.diff`** (`src/game/teststand.js` only; applies on the
+branch as it is). Looked at in Chrome on the GTX 1050 from the play camera (Follow, Medium) at the cutoff lever, 2 m and 6 m
+back, and from the side. The chapter is reached as `chapter4.mjs` does. Pictures stay on the desktop's branch
+(`docs/future/digtest-art/ch3plus-*`, chapter 4: **not for the user**).
+- **Why the drill did not read:** from the lever the derrick stands 20.8 m off. Its rotary table (1.8 m up) falls behind the
+  post's name board on screen; the kelly and swivel (4–7 m) are at or over the frame's top. The band the camera sees over
+  the board and the pressure tank is about 2.5–4.5 m.
+- **Now:** a drive drum on the kelly at 3.6 m, 1.7 m across, its rim in eight yellow and black hazard bands that sweep
+  round as it turns (5.5 rad/s, as the string); a collar under it and a cap over it. It is in the string's own merged mesh.
+- **The dials:** faces 0.46 m across (were 0.33), set 0.74 m apart (were 0.58), so each shows beside him; the ticks, the
+  CUT mark and the labels heavier; the needles longer (0.21 m with a tip, were 0.14) and twice as broad, each merged into
+  one mesh (was two). The lever, its prompt, `board`, `dials`, `spots` and the colliders are where they were.
+- **Draw calls** (`renderer.info`, one frame at the same spot): at the lever 154 → 155, 6 m back 152 → 152; triangles
+  +1.3 k.
+- Tests (SwiftShader): chapter4 59/59 (a first run passed its 46 checks but stopped on 10 `ERR_NETWORK_IO_SUSPENDED` file loads, the machine's network paused; rerun clean), campaign-hands 3/3, chapter5 23/23 PASS. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+
+## CURATOR-27a · Desert Island, the Hamalayi, and Citadel re-scored after CITADEL-85 · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 6. Provisional editorial scores (the pack's rubric; not reviewed by the user). Reports:
+`docs/lba-maturity/resemblance-desert.md`, `resemblance-hamalayi.md`, and a new last section in `resemblance-citadel.md`.
+`tools/worldscore.mjs` on this build: Citadel 82.1, Desert Island 83.1 (it was 85.0), the Hamalayi 27.4 partial.
+- **Desert Island:** the village 72, the standing figures and the gateway **64 (critical landmark)**, the great hall and
+  the face 74, the coast 84. The original's objects, drawn from the user's files with the repo's study renderer (scratch
+  only), show: village houses with **rows of small round domes on their parapets**, a teal-trimmed domed tower house;
+  the 5.2 m figures are **peach columns with a red band and a teal dome cap** (ours: dark hooded figures); the gateway's
+  beam is **chequered black and white**; S28 is **a giant grey stone face**. Two art batches proposed in the report.
+- **The Hamalayi:** 69, all L (our own region by the user's direction; no LBA1 grid renderer on the desktop). Re-score after
+  wave 3 (Lhar, the Pass, the Observatory) lands.
+- **Citadel after CITADEL-85:** the lighthouse 67 → **84** and the north-west plateau 66 → **73**, both critical failures
+  resolved; the harbour 73 → 76; the square 75 → 78. Pictures `captures/curator-citadel-85/` (chapters 1–2).
+- **Question for the cloud:** should the desktop send the Desert batches (Kesh's domes and colour; the figures, gateway and
+  pillars in LBA2's language)? The hooded figures may carry a story purpose now: say so first.
