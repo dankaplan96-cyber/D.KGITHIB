@@ -281,8 +281,8 @@ hours unmeasured. Per core chapter: the bot's latest measured free play (Automat
 | 1 | 402 | about 22.8 | the dry tap, Arthur's cup, the pipes followed outside, the warm pool, the growth and the pump's cycle (wave 1) | 11.11 chain |
 | 2 | 828 | about 42.0 | the dry lane, the pump room: the diagram, three pipes by hand, the bypass (a wrong cock and its correction), the strip, the plate, the street after (wave 1) | 11.11 chain |
 | 3 | 332 | about 24.4 | Brel's directions, the cistern lift by hand, the ride with the cart, the cistern, Irsa's bench (wave 1) | 11.11 chain |
-| 4 | 291 | about 21.8 | the bore test at the post's stand: taken for Dallan's new hand, the cutoff on the red and the kicks after the stop, the run again (a cut too soon shows nothing), the carbon (wave 2: +32 bot s, +3.3 min) | 11.11, segment 07 |
-| 5 | 277 | about 19.3 | Vesk's heat line thrown to Kesh's pump (seen there), the log sent with one trace read against the carbon, put to Dallan (wave 2: +31 bot s, +3.1 min) | 11.11, segment 08 |
+| 4 | 228–291 (two runs) | about 21.8 | the bore test at the post's stand: taken for Dallan's new hand, the cutoff on the red and the kicks after the stop, the run again (a cut too soon shows nothing), the carbon (wave 2: +32 bot s, +3.3 min) | 11.11, segment 07 |
+| 5 | 277–290 (two runs) | about 19.3 | Vesk's heat line thrown to Kesh's pump (seen there), the log sent with one trace read against the carbon, put to Dallan (wave 2: +31 bot s, +3.1 min) | 11.11, segment 08 |
 | 6 | 236 | 14.0 | (wave 3) | 9.11 run 3 |
 | 7 | 222 | 13.3 | (wave 3) | 9.11 run 3 |
 | 8 | 350 | 18.5 | (wave 4) | 9.11 run 3 |

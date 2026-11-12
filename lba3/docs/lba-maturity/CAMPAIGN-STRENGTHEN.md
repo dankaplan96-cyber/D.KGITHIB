@@ -131,8 +131,8 @@ between them; no death, no ISO assist in either run):
 
 | Ch | bot s of free play: base → wave 2 | of which the new steps | walked m | lines · words | est. first play (min): base → wave 2 | what the seconds are |
 |---|---|---|---|---|---|---|
-| 4 | 224.6 → **291.4** | 32.3 (the hail 2.6, the first cut 15.7, the second run 10.8, the carbon 3.2) | 533 → 563 | 53 · 902 → 73 · 1,131 | 18.5 → **about 21.8** | the test at the stand; the other +34 s are the bot's sneak for the notebook (107 s against 74 s: the storm's timing, not a change) |
-| 5 | 262.1 → **277.1** | 31.0 (the wire 16.4, the heat line 14.0, the tape 0.6) | 577 → 589 | 33 · 499 → 49 · 702 | 16.2 → **about 19.3** | the stand: the wire, the lever, the tape (the rest of the segment ran 16 s faster: the bot's walks and fight) |
+| 4 | 224.6 → **291.4**, final build **228.4** | 32.3, final 28.5 (the hail 2.6, the first cut 12–15.7, the second run 10.7, the carbon 3.2) | 533 → 563 / 502 | 53 · 902 → 73 · 1,131 | 18.5 → **about 21.8** | the test at the stand; the rest swings with the bot's sneak for the notebook (107 s, 64 s against the base's 74 s: the storm's timing, not a change) |
+| 5 | 262.1 → **277.1**, final build **289.8** | 31.0 both runs (the wire 16.4, the heat line 14.0, the tape 0.5) | 577 → 589 / 610 | 33 · 499 → 49 · 702 | 16.2 → **about 19.3** | the stand: the wire, the lever, the tape; the rest swings with the bot's walks and the hall's trooper (43 s, 55 s) |
 
 The minutes are **estimates**: the 9.11 estimate of the chapter moved by 1.8 × the new steps' bot seconds, 60 s for one more
 deduction step each (chapter 4: cut only when the bit is down — a cut too soon shows nothing; chapter 5: the tape against the
@@ -222,8 +222,18 @@ cup, the catch basin through `story/reach.js`); nothing further was changed ther
 
 ## 5b. Wave 2, as built (the treatment's section 4, in chapters 4 and 5)
 
-**Status (11.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played
-it, nothing was listened to, no frame rate measured. Suite verdicts: see "Wave 2's verification" below.
+**Status (12.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played
+it, nothing was listened to, no frame rate measured.
+
+**Wave 2's verification** (port 9210 snapshot of this branch; one suite at a time): `campaign-thread` PASS (A, B, C1–C7
+on the wave's build; D and E re-run on the final build after a server stop broke the first full run at D3: D 9/9, E 7/7),
+`campaign-hands` PASS (every hero hand of the campaign within 5 cm: the cutoff 0.4 / 2.4 / 0.5 cm, the carbon 0.6 cm,
+the heat line 2.8 cm; Dallan at the wire's shelf in chapter 4, hands 0.2 / 0.7 cm; in chapter 5 NO-AIR stands him down,
+idle, which the rule allows), `chapter4` PASS (the bore test by input after the notebook; the format-3 save with the
+notebook plays the test), `chapter5` PASS (the wire, the heat line, the tape by input), `no-air` states 5–9 and the new
+21 (0 offenders), `save-migration` PASS, `resume` PASS, `chapter1` PASS (smoke), segments 07 and 08 by input from the
+chain's save after 06 (twice: PASS, no death, no ISO assist). Pictures in `captures/campaign-wave2/` (`x-*`, for the
+coordinator).
 
 | Chapter | Before (base) | Now: what the player does | Where |
 |---|---|---|---|
