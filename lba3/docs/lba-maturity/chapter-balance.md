@@ -283,8 +283,8 @@ hours unmeasured. Per core chapter: the bot's latest measured free play (Automat
 | 3 | 332 | about 24.4 | Brel's directions, the cistern lift by hand, the ride with the cart, the cistern, Irsa's bench (wave 1) | 11.11 chain |
 | 4 | 228–291 (two runs) | about 21.8 | the bore test at the post's stand: taken for Dallan's new hand, the cutoff on the red and the kicks after the stop, the run again (a cut too soon shows nothing), the carbon (wave 2: +32 bot s, +3.3 min) | 11.11, segment 07 |
 | 5 | 277–290 (two runs) | about 19.3 | Vesk's heat line thrown to Kesh's pump (seen there), the log sent with one trace read against the carbon, put to Dallan (wave 2: +31 bot s, +3.1 min) | 11.11, segment 08 |
-| 6 | 236 | 14.0 | (wave 3) | 9.11 run 3 |
-| 7 | 222 | 13.3 | (wave 3) | 9.11 run 3 |
+| 6 | 264–278 (two runs) | about 16.8 | the lift's line kicks three and a rest: read on its gauge with the riders aboard, each trip started on the green (a late start costs the trip), Yorna's quiet, the upper brake for the last of Lhar (wave 3: +24 to +27 bot s, +2.8 min) | 12.11, segment 09 |
+| 7 | 178–219 (two runs; the second +39 s of bot walk) | about 15.0 | the snow shaking beside him, the telescope's fourth setting by hand, the bearing read: Citadel (wave 3: +8 bot s, +1.7 min) | 12.11, segment 10 |
 | 8 | 350 | 18.5 | (wave 4) | 9.11 run 3 |
 | 9 | 212 | 15.6 | (wave 5) | 9.11 run 3 |
 | 10 | 542 | 29.5 | (wave 6) | 9.11 run 3 |
@@ -292,7 +292,7 @@ hours unmeasured. Per core chapter: the bot's latest measured free play (Automat
 | 12 | 66 | 7.3 | (wave 7) | 9.11 run 3 |
 | Ep. | 1 | 0.9 | (wave 8) | 9.11 run 3 |
 
-The estimates add up to about **243 minutes (about 4 hours) of main route** — an estimate. The rest of the 15 hours is
+The estimates add up to about **247 minutes (about 4 hours) of main route** (after wave 3) — an estimate. The rest of the 15 hours is
 meant to come from the later waves' steps, the optional content and the expansion (WORKPLAN-2026-11-09.md); none of it is
 claimed until measured, and a person's own play is the real measure.
 

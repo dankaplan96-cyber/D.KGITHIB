@@ -2,7 +2,8 @@
 // (CAMPAIGN-5: the telescope's fourth setting follows the snow fields' shaking; its ring read), the telescope, out, the heavy drone at the vent (ball), the seal's three warm discs (ball), the vent opened, back to the monastery gate.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
-  ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; const r = P.through(d.x, d.z, { run: true }); return { ...r, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
+  // (CAMPAIGN-5: out of the yard the snow shakes beside him and he says so: read it, as a player would, and walk on)
+  ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; let r = P.through(d.x, d.z, { run: true }); for (let k = 0; k < 2 && game.room?.id !== 'obsv'; k++) { P.settle(); r = P.through(d.x, d.z, { run: true }); } return { ...r, snow: !!game.flags.ob_snow, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
   ['the keeper', () => ({ ...P.talk('keeper'), keeper: game.flags.c7_keeper, fail: game.flags.c7_keeper ? null : 'keeper' })],
   ['the frozen window (ball)', () => {
     // (CHAPTER-BALANCE: the second sun's slit in the back wall is iced over; the ball breaks it, thrown from the floor before it)
