@@ -359,9 +359,14 @@ const took = await ev(() => {
   G.hero.pos.set(s.x + 0.3, 0, s.z); G.hero.angle = -Math.PI / 2; G.step(0.3);
   G.input.taps.add('KeyE'); G.step(0.1);
   for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
+  // (the door holds for Arthur's cup too, hometap.js: from the stove's overflow to the sink, by hand)
+  const H = G.story.chapters[0].home.parts.house;
+  G.hero.pos.set(H.stoveFront.x, 0, H.stoveFront.z + 0.25); G.hero.angle = Math.PI; G.step(0.3);
+  G.input.taps.add('KeyE'); for (let i = 0; i < 400 && !G.flags.pr_cup; i++) { G.step(0.05); if (G.state === 'dialog') G.input.taps.add('KeyE'); }
+  for (let i = 0; i < 200 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
   const e = G.room.exits.find((x) => x.to === 'outdoor');
   G.hero.pos.set(e.x, 0, e.z); G.step(2.0);
-  return { ball: G.hero.hasBall, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#pause-objective').textContent };
+  return { ball: G.hero.hasBall, cup: !!G.flags.pr_cup, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#pause-objective').textContent };
 });
 check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && !took.obj.includes('cupboard'), took);
 

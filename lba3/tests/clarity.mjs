@@ -80,7 +80,7 @@ await route('prologue', async () => {
   results.prologue.handoff = h0; results.prologue.cupboard = cup; results.prologue.outside = out; results.prologue.key = key;
 });
 const P1 = results.prologue;
-check('hand-off: the first goal is on screen, once (not as a toast repeating it)', P1.handoff.items.filter((i) => /well/i.test(i.text)).length === 1, P1.handoff.items);
+check('hand-off: the first goal is on screen, once (not as a toast repeating it)', P1.handoff.items.filter((i) => i.kind === 'objective').length === 1 && !P1.handoff.items.some((i) => i.kind === 'toast' && /tap|well/i.test(i.text)), P1.handoff.items);
 check('hand-off: no weapon pill ("Fists") for a weapon he already had', !P1.handoff.items.some((i) => i.kind === 'weapon'), P1.handoff.items);
 check('out of the house: at most 2 text items on screen', P1.outside.n <= 2, P1.outside.items);
 check('the cupboard: the ball and holomap toast names the player\'s keys (not a fixed F/M)', (await ev(() => { const k = (a) => game.input.label(a); return C.log.some((e) => e.kind === 'toast' && e.text.includes(k('ball')) && e.text.includes(k('map'))); })), P1.log);
