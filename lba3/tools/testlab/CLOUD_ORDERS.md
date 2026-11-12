@@ -270,8 +270,9 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        split), the 288 ms frame with a 37 MB GC on the street, the 117 ms frame after arrival, the street's CPU work on
        High. Before/after in the same runner on the GTX 1050, numbers labelled with the machine; the code as a diff. The
        Vega 8 must not get worse: say what to measure there (27c), never claim it from the 1050.
-    3. **28, the cast, the rest of queue 7, then queue 9:** `councilB_b` for Kira, the bees' and moles' variants (zbee1,
-       zbee2, zmole2), `archivist_b` (×5 share it); then queue 9 (the common props). Rules as before (each clothing role in
+    3. **28, the cast, the rest of queue 7, then queue 9:** CAST-VARIANTS-2 (Kira, zmole2_b, zbee1_b, zbee2_b, nara_c)
+       arrived while this was written; the cloud applies it next. Left: `archivist_b` (×5 share it); then queue 9 (the
+       common props). Rules as before (each clothing role in
        its LOOKS hex for DRESS-1, ≤ +25 % triangles, skeleton and bone names kept). Tavi on farmerB_b may be retried: the
        cloud fixed the terminal talk test's fragility on 12.11 (a person faced squarely now wins over the departures board).
     4. **TWINSEN-LOOK-38** (after 3, by the order the user set): Twinsen given Zoé's treatment, a candidate for the user,
