@@ -58,9 +58,20 @@ await ev(async () => {
       const facing = st === 'walk' || st === 'plan' || want.some((a) => a != null && dA(a) < 0.6);
       if (!facing) bad.push('faces ' + r.angle.toFixed(2) + ' (stop ' + (s?.a ?? 0).toFixed(2) + ')');
       if (!seated && Math.abs(p.y - fy) > 0.1) bad.push('not on the floor: y ' + p.y.toFixed(2));
-      out.push({ id: r.def.id, st, stop: s?.id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +p.y.toFixed(2), bad });
+      out.push({ id: r.def.id, st, age: +(G.time - (r.arrivedAt ?? -1e9)).toFixed(1), stop: s?.id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +p.y.toFixed(2), bad });
     }
     return out;
+  };
+  // the audit, looked at again a moment later for one who has just arrived at a stop and is still turning to it (2.5 s:
+  // since STOP-TURN, walkers.js dwellTick, a stop first settles 1.2 s, then turns; Ama at her forms cabinet took 2.2 s);
+  // and once more when every one still facing away arrived during that moment (zt_guard2, its walk to its post by the door
+  // slowed for 20 s by the hero standing 1.5 m from it, was looked at again within its 1.2 s of settling). One who has
+  // stood at its stop 2.5 s and faces away still fails
+  window.auditSettled = (place, floors) => {
+    const faces = (a) => a.filter((q) => q.bad.some((b) => b.startsWith('faces')));
+    let a = audit(place, floors);
+    for (let k = 0; k < 2 && faces(a).length && (k === 0 || faces(a).every((q) => q.age < 2.5)); k++) { game.step(2.5); a = audit(place, floors); }
+    return a;
   };
 });
 
@@ -94,9 +105,7 @@ for (const [label, key, extra] of STATES) {
     const live = await ev(([room]) => { const G = game; for (let i = 0; i < 40; i++) G.step(0.5); const R = G.regions.built(room), c = R.center;
       const floors = RL.ROOMS[room].floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y }));
       const here = people(room).filter((r) => r.present && !r.away).map((r) => r.def.id);
-      // (one who has just arrived at a stop is still turning to it: looked at again a moment later — 2.5 s: since STOP-TURN
-      //  (walkers.js dwellTick) a stop first settles 1.2 s, then turns; Ama at her forms cabinet took 2.2 s)
-      let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit(room, floors); }
+      const a = auditSettled(room, floors);   // (one who has just arrived at a stop is still turning to it: auditSettled)
       const spot = Object.values(R.npcSpots || {})[0];
       const keeper = people(room)[0];
       return { here, audit: a, spot: spot ? { x: +(spot.x - c.x).toFixed(2), z: +(spot.z - c.z).toFixed(2) } : null, keeperStop0: keeper ? { x: +(keeper.stops[0].x - c.x).toFixed(2), z: +(keeper.stops[0].z - c.z).toFixed(2) } : null, logs: Object.fromEntries(people(room).map((q) => [q.def.id, q.log.filter((l) => / at |seated|chat over/.test(l)).length])) }; }, [room]);
@@ -138,7 +147,7 @@ const portCheck = async (label, key, extra, want, talk) => {
   iso(`Citadel Spaceport, ${label}: the hero put on the deck by the bridge (exitRoom)`);
   const r = await ev(() => { const G = game; for (let i = 0; i < 60; i++) G.step(0.5);
     const S = G.world.spaceport, d = S.deck, b = S.board, fl = [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1 }, { x0: S.bridge.x0, x1: S.bridge.x1, z0: S.bridge.z - S.bridge.hw, z1: S.bridge.z + S.bridge.hw }];
-    let a = audit('port_citadel', fl); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit('port_citadel', fl); }
+    const a = auditSettled('port_citadel', fl);
     // standing (not walking): off the walkway, the pad's ring, the board's reading spot
     const clear = people('port_citadel').filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: q.pos.x < S.pad.x - 4 && Math.abs(q.pos.z - S.bridge.z) < 1.9, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 5.6, board: Math.hypot(q.pos.x - (b.x + 0.6), q.pos.z - b.z) < 1.0 })).filter((q) => q.walkway || q.ring || q.board);
     return { here: people('port_citadel').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, stops: people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, x: s.x, z: s.z }))) }; });
@@ -165,7 +174,7 @@ for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapt
   await ev((key) => { setChapter(key); const G = game; G.regions.ensure('zeelich', 'test'); G.step(0.3); if (G.room?.id !== 'zeelich') { G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true); } G.step(0.5); }, key);
   iso(`Zeelich Spaceport, ${label}: chapter set by its flags; the hero put on the deck (enterRoom)`);
   const r = await ev(() => { const G = game, Z = G.regions.built('zeelich'), S = Z.spaceport, d = S.deck; for (let i = 0; i < 60; i++) G.step(0.5);
-    let a = audit('port_zeelich', [d]); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit('port_zeelich', [d]); }
+    const a = auditSettled('port_zeelich', [d]);
     const clear = people('port_zeelich').filter((q) => q.present && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: Math.abs(q.pos.x - S.pad.x) < 2.2 && q.pos.z < S.landing.z + 0.5, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 6.0 })).filter((q) => q.walkway || q.ring);
     return { here: people('port_zeelich').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, all: a }; });
   check(`Zeelich Spaceport, ${label}: its two Esmer travellers are there, on the deck, clear of the walkway and the pad's ring`, r.here.length === 2 && r.bad.length === 0 && r.clear.length === 0, r);
@@ -202,7 +211,7 @@ for (const [room, label, key, extra, want, notice] of TERM) {
     for (let i = 0; i < 60; i++) G.step(0.5);
     const R = G.regions.built(room), c = R.center;
     const floors = RL.ROOMS[room].floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y }));
-    let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(2.5); a = audit(room, floors); }
+    const a = auditSettled(room, floors);
     out.here = people(room).filter((q) => q.present && !q.away).map((q) => q.def.id);
     out.bad = a.filter((q) => q.bad.length); out.all = a;
     // (standing or sitting, not walking: clear of where Twinsen stands to use the counter and read the board, of the

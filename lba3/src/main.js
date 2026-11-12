@@ -2194,6 +2194,9 @@ class Game {
     // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
     //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
     if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
+    // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
+    //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
+    if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
     return best;
   }
 

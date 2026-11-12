@@ -908,7 +908,7 @@ export class NPC extends Actor {
     this.pinY = p.pin && p.y != null ? p.y : null;
     if (this.pinY != null) this.pos.y = this.pinY;
     if (p.a != null) this.angle = this.targetAngle = p.a;
-    this.forceAnim = p.anim ?? null;
+    this.forceAnim = p.anim ?? null; this.backTo = false;
     if ('track' in p) this.track = p.track ? new TrackRunner(p.track) : null;
     this.sync();
   }
@@ -921,14 +921,24 @@ export class NPC extends Actor {
     const near = this.distTo(hero) < 3.2;
     let moving = false;
     const x0 = this.pos.x, z0 = this.pos.z;
+    // (busy at his work and turned to a speaker: once the talk is over he turns back to his work before he takes it up
+    //  again — Dallan at the test stand's wire stayed turned to where Twinsen had stood, his hands found nothing on that
+    //  line and the work was stood down for good, workhands.js. No more work than the turn itself: done once faced)
+    const back = !!this.backTo && this.busy() && this.targetAngle != null && !this.talking && !(this.listenTo && this.listenTo !== this);
+    if (!back) this.backTo = false;
     if (this.listenTo && this.listenTo !== this) {
       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
+      if (this.busy()) this.backTo = true;
     } else if (this.pinY != null || this.forceAnim === 'doze') {
       // (pinned, sitting or asleep: he keeps his place and his facing; dozing, he sleeps through the talk too)
     } else if (this.talking || (near && !this.busy())) {
       // (GAME-1, the user: a person busy at something — Arthur kneeling at his boat — keeps at it when Twinsen walks
       //  by, and turns to him only once Twinsen talks to him)
       this.angle = dampAngle(this.angle, this.angleTo(hero), 6, dt);
+      if (this.talking && this.busy()) this.backTo = true;
+    } else if (back && !(this.track && this.track.cmds[this.track.pc])) {
+      this.angle = dampAngle(this.angle, this.targetAngle, 5, dt);
+      if (Math.abs(angleDiff(this.angle, this.targetAngle)) < 0.03) { this.angle = this.targetAngle; this.backTo = false; }
     } else if (this.track) {
       const s = this.track.step(this, dt);
       if (s.speed > 0) {
@@ -942,7 +952,7 @@ export class NPC extends Actor {
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
     if (moving && this.gait < 0.15) moving = false;
-    this.rig.play((this.pinY != null && this.forceAnim) || this.forceAnim === 'doze' ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
+    this.rig.play((this.pinY != null && this.forceAnim) || this.forceAnim === 'doze' ? this.forceAnim : this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : (!this.backTo && this.forceAnim) || 'idle');
     this.placeRig();
     this.rig.update(dt, moving ? this.gait : 0);
     this.sync();
