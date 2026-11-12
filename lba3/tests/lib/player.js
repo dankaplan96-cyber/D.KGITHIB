@@ -59,14 +59,18 @@
   // can the hero step from (x, y, z) to (nx, nz)? → the new height, or null
   // (in sub-steps of ~0.1 m, as the hero moves frame by frame: a bump steeper than walkable inside a longer step
   // would otherwise pass here and stop him there)
+  // gentle: while a plan is made with it, sand or rock that rises more steeply than this (rise / run) is not walked up,
+  // though the hero could (physics.js MAX_SLOPE, 1.1). Steps and stairs (bricks) are not slopes. (P.plan's option)
+  let gentle = 0;
   const stepTo = (x, y, z, nx, nz) => {
     probe.radius = hero().radius; probe.pos.set(x, y, z); probe.onGround = true;
-    const n = Math.max(1, Math.ceil(Math.hypot(nx - x, nz - z) / 0.1));
+    const n = Math.max(1, Math.ceil(Math.hypot(nx - x, nz - z) / 0.1)), sub = Math.hypot(nx - x, nz - z) / n;
     for (let i = 1; i <= n; i++) {
-      const px = x + (nx - x) * i / n, pz = z + (nz - z) * i / n;
+      const px = x + (nx - x) * i / n, pz = z + (nz - z) * i / n, yb = probe.pos.y;
       PH.move(probe, px - probe.pos.x, pz - probe.pos.z);
       if (Math.hypot(probe.pos.x - px, probe.pos.z - pz) > 0.04) return null;
-      probe.pos.y = PH.groundAt(px, pz, probe.pos.y);
+      const gi = PH.groundInfo(px, pz, yb); probe.pos.y = gi.h;
+      if (gentle && !gi.brick && gi.h - yb > gentle * sub) return null;
     }
     const ny = PH.groundAt(nx, nz, probe.pos.y);
     if (ny < y - (P.dropOK ? 7 : 2.2)) return null;   // a drop that would hurt (allowed, up to a few metres, when nothing else leads out)
@@ -116,7 +120,11 @@
     }
     return out;
   };
-  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false, people = false, pad = 0 } = {}) => {
+  P.plan = (tx, tz, opts = {}) => {
+    gentle = opts.gentle || 0;
+    try { return search(tx, tz, opts); } finally { gentle = 0; }
+  };
+  const search = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false, people = false, pad = 0 } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
     const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
     if (people) avoid.push(...bodies(tx, tz, pad));   // (after he got stuck: round the people, I-19/I-21; pad: a wider berth, I-16)
@@ -218,8 +226,15 @@
           // The new plan goes round the people standing there: they are solid (SOLID-NPC) and the first plan does
           // not see them, so a line through someone beside a brick (Nara between her case and a street lamp on
           // Zeelich) pinned him there for good (I-19, I-21)
+          // The new plan also keeps off sand and rock nearly as steep as he can climb, if there is a gentler way: on such a
+          // bank the planner's 0.1 m steps pass a diagonal cell that his own steps, turned on Classic keys to within a few
+          // degrees of it, are refused (they slide him along its foot), and the cell by cell plan led him back to the same
+          // face each time. On the way back from the post to Kesh (segment 08) he stood at Kesh's east bank until the walk
+          // gave up; a player takes the gentler slope a few metres along it.
           P.release(); P.holdFor(['ArrowDown'], 0.4);
-          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2, people: true }); wi = 1;
+          const again = { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2, people: true };
+          plan = P.plan(tx, tz, { ...again, gentle: 0.8 }); if (!plan.ok) plan = P.plan(tx, tz, again);
+          wi = 1;
         }
         lastP = { x: h.pos.x, z: h.pos.z, t };
       }
