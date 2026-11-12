@@ -4647,3 +4647,12 @@ The user, 12.11: **"the old computer was sold"**. What follows for the plan:
   integrated class the Vega 8 stood for, though not the same chip. **Question for the cloud (and the user):** keep the
   Vega 8 as the written minimum target with no machine to check it on, or make the desktop's UHD 630 the minimum-target
   runner from now on (the same benchmark routes, labelled "UHD 630 stand-in")?
+- **The user's answer (12.11): "Yes, the UHD 630."** The desktop's Intel UHD 630 is the **minimum-target machine** from now
+  on, in place of the Vega 8. Low-end numbers are measured there and labelled "UHD 630 (the desktop's iGPU)". The desktop
+  makes a first baseline now (the desktop app's Electron on the UHD 630, Auto and fixed presets). 27c becomes "the
+  performance lab on the UHD 630".
+- **First baseline on the UHD 630** (`docs/lba3-performance/HARDWARE/2026-11-12-uhd630-minimum-target.md`, raw runs beside it;
+  the app's Electron, Auto, Medium and Low): **it plays at Low** (Auto steps Medium → Low for GPU pressure after ~3 min;
+  Low holds 60 fps but for one hitch). For the cloud: (1) Medium's interior runs at 47 fps there (GPU 19 ms); (2) **a
+  single 1,583 ms frame on the street in the fixed Low run**, one 1,566 ms `setTimeout` callback 1.6 s after the preset
+  changed to Low: a player picking Low in the settings may meet it once. Not investigated (the preset change's code).
