@@ -3,7 +3,9 @@
 // holds — to the nearest drawn surface that is not his body (tests/lib/contact.js). Chapter 1: the kitchen tap, Arthur's
 // cup taken and set in the sink (a new game, by input); chapter 2: the three pipes felt, the two cocks, the gauge's strip
 // (fixture new-04); chapter 3: the chain's wheel, the bell, the feed switch, the cart's bar, its cock, the dial, the
-// crank (fixture new-05). HAND (default 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
+// crank (fixture new-05); CAMPAIGN-4, chapter 4: the cutoff pulled, pushed up, pulled again, the carbon torn off (fixture
+// new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times. HAND (default
+// 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -85,10 +87,30 @@ take(await use('zt_dial', 'game.story.cur.lift.L.dial', 0.9));
 take(await use('zt_crank', 'game.story.cur.lift.L.crank', 0.9));
 await browser.close();
 
+// chapter 4: the bore test at the post's stand
+await start('new-07-notebook');
+await ev(() => { const f = game.flags, Post = game.rooms.desert.post; P.go(Post.gate.x - 6, Post.gate.z + 3, { tol: 1.5, run: true, stopWhen: () => f.dt_hail }); P.settle(); });
+people.push(await person('dallan'));
+take(await use('dt_cut', 'game.rooms.desert.stand.cut.touch()', 0.9));
+await ev(() => { for (let i = 0; i < 80 && !game.flags.dt_second; i++) { game.step(0.25); P.settle(); } });
+take(await use('dt_cut', 'game.rooms.desert.stand.cut.touch()', 0.9).then((a) => a.slice(-1)));
+await ev(() => { const S = game.rooms.desert.stand; let t = 0; while (S.load < 0.97 && t < 15) { game.step(0.25); t += 0.25; } });
+take(await use('dt_cut', 'game.rooms.desert.stand.cut.touch()', 0.9).then((a) => a.slice(-1)));
+await ev(() => { for (let i = 0; i < 80 && !game.flags.dt_again; i++) { game.step(0.25); P.settle(); } });
+take(await use('dt_strip', 'game.rooms.desert.stand.strip', 0.9));
+await browser.close();
+
+// chapter 5: the heat line
+await start('new-08-routed');
+await ev(() => { const f = game.flags, S = game.rooms.desert.stand; P.go(S.board.x - 1.5, S.board.z, { tol: 1.0, run: true, stopWhen: () => f.dt_wire }); P.settle(); });
+people.push(await person('dallan'));
+take(await use('dt_heat', 'game.rooms.desert.stand.heat.touch()', 0.9));
+await browser.close();
+
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank'];
+const kinds = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat'];
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

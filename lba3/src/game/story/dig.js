@@ -22,6 +22,7 @@ import { ChapterBase } from './base.js';
 import { YACHT_ROUTES } from '../keshlife.js';
 import { IH } from '../ihomes.js';
 import '../text/ch4.js';
+import { TestThread } from './digtest.js';
 
 const STORM_PERIOD = 50, STORM_LEN = 28; // (CH4-STORM: the calm between storms 45 → 22 s) // seconds (game time) between storms, and how long one blows
 const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
@@ -29,6 +30,8 @@ const OFFICE = 'ih_post_cabin0';   // (the post's office inside: ihomes.js, the 
 
 export class Dig extends ChapterBase {
   get D() { return this.game.rooms.desert; }
+  // CAMPAIGN-4: the bore test at the post's stand, and its cost in chapter 5 (digtest.js; one thread for both chapters)
+  get test() { return (this.story._dt ||= new TestThread(this.story)); }
   get T() { return this.game.rooms.butemple; }
   inD() { return this.game.room?.id === 'desert'; }
   seals() { return [0, 1, 2].filter((i) => this.f['c4_seal' + i]).length; }
@@ -69,11 +72,12 @@ export class Dig extends ChapterBase {
     const D = this.D;
     if (!D) return [];
     const P = D.post.patrol, n = P.length, h = Math.floor(n / 2);
+    const calm = () => this.test.calm();   // (CAMPAIGN-4: Dallan's "he's with me" while Twinsen is his hand at the test)
     const out = [
-      { id: 'pdrone1', kind: 'drone', group: 'dpost', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !f.c4_done },
-      { id: 'pdrone2', kind: 'drone', group: 'dpost', x: P[h][0], z: P[h][1], patrol: P, wp: (h + 1) % n, when: (f) => this.isCur(f) && !f.c4_done },
-      { id: 'pguard1', kind: 'guard', group: 'dpost', x: P[n - 1][0], z: P[n - 1][1], patrol: [...P].reverse(), wp: 1, when: (f) => this.isCur(f) && !f.c4_done },
-      { id: 'pgdog1', kind: 'gdog', coat: 'greybrown', group: 'dpost', x: P[h][0], z: P[h][1], patrol: [...P].reverse(), wp: (n - h) % n, when: (f) => this.isCur(f) && !f.c4_done },
+      { id: 'pdrone1', kind: 'drone', group: 'dpost', x: P[0][0], z: P[0][1], patrol: P, wp: 1, calm, when: (f) => this.isCur(f) && !f.c4_done },
+      { id: 'pdrone2', kind: 'drone', group: 'dpost', x: P[h][0], z: P[h][1], patrol: P, wp: (h + 1) % n, calm, when: (f) => this.isCur(f) && !f.c4_done },
+      { id: 'pguard1', kind: 'guard', group: 'dpost', x: P[n - 1][0], z: P[n - 1][1], patrol: [...P].reverse(), wp: 1, calm, when: (f) => this.isCur(f) && !f.c4_done },
+      { id: 'pgdog1', kind: 'gdog', coat: 'greybrown', group: 'dpost', x: P[h][0], z: P[h][1], patrol: [...P].reverse(), wp: (n - h) % n, calm, when: (f) => this.isCur(f) && !f.c4_done },
     ];
     // crystal mites on the lower terraces
     const dg = D.dig;
@@ -99,9 +103,11 @@ export class Dig extends ChapterBase {
         if (f.c4_seals3 && this.T) return this.T.npcSpots.ilka;   // (she follows him into the temple)
         if (f.c4_notebook && D.dig) return this.ilkaRim();          // (and waits at the dig before that)
         return S.ilka;
-      case 'dallan':
+      case 'dallan': {
         if (f.c4_carving && this.T) return this.T.npcSpots.dallan;
+        const tp = this.test.place(id); if (tp !== undefined) return tp;   // (CAMPAIGN-4: at the test stand's wire)
         return S.dallan;
+      }
       case 'guard': return this.stormy ? null : S.guard;
       case 'dkid': return this.story.kesh?.saniSpot() || S.kid;   // (in the cool room's doorway once it draws: kesh.js)
       case 'dtrader': return S.trader;
@@ -119,6 +125,7 @@ export class Dig extends ChapterBase {
     g.world.station?.setSealed?.(true, true);   // (SHAFT-CITADEL: Vesk sealed the shaft at Citadel's station at the end of chapter 3)
     g.enterRoom('desert', D.dock, true);
     g.hero.hasBall = true;
+    this.test.begin4();   // (CAMPAIGN-4: a game that reaches chapter 4 now has the bore test ahead)
     D.ferry?.setVisible?.(true);
     this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c4_arrive'], ['doran', 'c4_doran_1'], ['hero', 'c4_tw_arrive']], () => {
@@ -136,6 +143,7 @@ export class Dig extends ChapterBase {
     //  an office with no notebook)
     const desk = this.deskSpot();
     if (this.isCur() && desk && f.c4_ilka && !f.c4_notebook && g.room?.id === OFFICE) consider(dist(desk.x, desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
+    if (this.isCur()) this.test.interactables(consider, dist);
     if (!this.isCur() || !this.inD()) return;
     // the wind-pump: listen at the tower while it is jammed; push the shaken joint home while it sprays
     const pu = D.pump;
@@ -160,6 +168,7 @@ export class Dig extends ChapterBase {
   }
   interact(it) {
     const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: its things exist only once built)
+    if (this.test.interact(it)) return true;
     switch (it.kind) {
       case 'c4rope':
         f.c4_rope = true; D.rope.setVisible(false); g.found('rope', 'c4_toast_rope');
@@ -173,6 +182,8 @@ export class Dig extends ChapterBase {
       case 'c4gate':
         // without the code he only sees the worn keys; with the notebook he enters it himself
         if (!f.c4_notebook) { this.chain([['hero', 'c4_gate_locked']], () => { if (!f.c4_worn) { f.c4_worn = true; g.save(false); } }); return true; }
+        // (CAMPAIGN-4: the barrier runs off the post's line, cut while the bore test is on)
+        if (this.test.gateDark()) { this.chain([['hero', 'dt_keypad_dark']], () => { if (!f.dt_dark) { f.dt_dark = true; g.updateObjective(); g.save(false); } }); return true; }
         g.openMenu('c4_keypad', CODES.map((key) => ({ key })), (it) => this.enterCode(it.key));
         return true;
       case 'c4listen': {
@@ -191,6 +202,7 @@ export class Dig extends ChapterBase {
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.isCur()) return false;
+    if (this.test.talk(npc)) return true;   // (CAMPAIGN-4: Dallan at the test stand)
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'doran': return c([['doran', 'c4_doran_1']]);
@@ -382,7 +394,7 @@ export class Dig extends ChapterBase {
     this.chain([['hero', 'c4_carving_1'], ['ilka', 'c4_ilka_c1'], ['ilka', 'c4_ilka_c2'], ['hero', 'c4_tw_cold'], ['hero', 'c4_tw_c1'], ['ilka', 'c4_ilka_c3']], () => {
       f.c4_carving = true;
       this.story.refreshCast({ walk: true });
-      this.chain([['dallan', 'c4_dallan_1'], ['ilka', 'c4_ilka_d1'], ['dallan', 'c4_dallan_2'], ['hero', 'c4_tw_d1'], ['dallan', 'c4_dallan_3'], ['ilka', 'c4_ilka_end']], () => {
+      this.chain([['dallan', 'c4_dallan_1'], ...(f.dt_strip ? [['dallan', 'dt_dallan_dig']] : []), ['ilka', 'c4_ilka_d1'], ['dallan', 'c4_dallan_2'], ['hero', 'c4_tw_d1'], ['dallan', 'c4_dallan_3'], ['ilka', 'c4_ilka_end']], () => {
         f.c4_done = true;
         g.save(false);
         g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
@@ -397,6 +409,7 @@ export class Dig extends ChapterBase {
   // ---------------------------------------------------------------- per frame
   update(dt) {
     const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: a per-frame read never builds the area)
+    if (this.isCur()) this.test.update(dt);
     if (!this.isCur() || !D) return;
     D.pump.onGust ??= () => this.gust();
     // the oasis fills after the pump starts
@@ -439,6 +452,7 @@ export class Dig extends ChapterBase {
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     this.game.regions.whenBuilt('desert', () => this.applyDesert());
+    this.test.applyFlags();   // (CAMPAIGN-4: the stand, the drill, the heat line and the pump's drive as the flags have them)
   }
   applyDesert() {
     const f = this.f, D = this.D;
@@ -463,6 +477,7 @@ export class Dig extends ChapterBase {
     if (f.c4_seals3) return this.stars(D.dig.door);
     if (f.c4_digOpen && f.c4_bottom) return this.stars(D.dig.carvings);
     if (f.c4_digOpen) return this.stars(D.dig);
+    const tm = this.test.marker(); if (tm) return this.stars(tm);   // (CAMPAIGN-4: the test stand)
     if (f.c4_notebook) return this.stars(D.dig.gate);
     if (f.c4_ilka) return this.stars(this.game.room?.id === OFFICE && this.deskSpot() ? this.deskSpot().at : D.post.desk);   // (the office's door; inside, the desk)
     if (f.c4_trust) return f.c4_heskAsk && !f.c4_rope ? this.stars(D.rope) : this.stars(this.starNpc('hesk'));
@@ -476,6 +491,7 @@ export class Dig extends ChapterBase {
     if (f.c4_seals3) return this.goal(this.game.room?.id === 'butemple' || f.c4_templeSeen ? 'c4_obj_carving' : 'c4_obj_temple');
     if (f.c4_digOpen && f.c4_bottom) return this.goal('c4_obj_seals', { n: this.seals() }) + (f.c4_coldHits ? this.sub(false, 'c4_sub_warm') : '');
     if (f.c4_digOpen) return this.goal('c4_obj_bottom');
+    const to = this.test.objective4(); if (to) return to;   // (CAMPAIGN-4: the bore test)
     if (f.c4_notebook) return this.goal('c4_obj_dig');
     if (f.c4_ilka) return this.goal('c4_obj_notebook') + this.sub(false, 'c4_sub_storm');
     if (f.c4_trust) return this.goal('c4_obj_ilka') + this.sub(!!f.c4_rope, f.c4_heskAsk ? 'c4_sub_rope' : 'c4_sub_hesk');
@@ -487,6 +503,7 @@ export class Dig extends ChapterBase {
     const f = this.f, out = [];
     if (f.c4_rope && !f.c4_rode) out.push({ id: 'rope', icon: 'rope' });
     if (f.c4_notebook && !f.c4_done) out.push({ id: 'notebook', icon: 'leaflet' });
+    out.push(...this.test.items());   // (CAMPAIGN-4: the carbon of test 14, kept)
     return out;
   }
   // The chapter's steps, each shown once the one before is done; after a shown step, the facts he has heard or seen
@@ -497,7 +514,7 @@ export class Dig extends ChapterBase {
       { key: 'c4_j_arrive', done: !!f.c4_started, facts: [...fact(f.c4_brosk, 'c4_j_brosk'), ...fact(f.c4_sani, 'c4_j_sani'), ...fact(f.c4_gearMiss, 'c4_j_gearok'), ...fact(f.c4_gear1 && !f.c4_pump, 'c4_j_leak'), ...fact(f.c4_worn && !f.c4_notebook, 'c4_j_worn')] },
       { key: 'c4_j_pump', done: !!f.c4_trust },
       { key: 'c4_j_ilka', done: !!f.c4_ilka },
-      { key: 'c4_j_notebook', done: !!f.c4_notebook, facts: [...fact(f.c4_codeTries, 'c4_j_code'), ...fact(f.c4_crack, 'c4_j_crack'), ...fact(f.c4_bottom, 'c4_j_discs'), ...fact(f.c4_coldHits, 'c4_j_cold')] },
+      { key: 'c4_j_notebook', done: !!f.c4_notebook, facts: [...fact(f.dt_strip, 'dt_j_test'), ...fact(f.c4_codeTries, 'c4_j_code'), ...fact(f.c4_crack, 'c4_j_crack'), ...fact(f.c4_bottom, 'c4_j_discs'), ...fact(f.c4_coldHits, 'c4_j_cold')] },
       { key: 'c4_j_carving', done: !!f.c4_carving },
       { key: 'c4_j_dallan', done: !!f.c4_done },
     ];

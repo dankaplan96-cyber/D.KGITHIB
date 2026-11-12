@@ -12,6 +12,7 @@ import { ChapterBase } from './base.js';
 import { t as t5 } from '../i18n.js';
 import '../text/ch5.js';
 import { storyJourney } from '../travelfilm.js';
+import { TestThread } from './digtest.js';
 
 const GOOD = { 1: true, 2: false, 3: true, 4: true };
 // (WC-1) the glider's spot for its departure film, from the buried hall's centre (desert.js R.ruins), and the spot it is
@@ -20,6 +21,8 @@ const ROOF = { x: 2, z: 7, a: -Math.PI / 2, lx: 2, lz: 12 };   // (nose west: it
 
 export class Steam extends ChapterBase {
   get D() { return this.game.rooms.desert; }
+  // CAMPAIGN-4: the heat line to Kesh's pump and the log sent with one trace (digtest.js, shared with dig.js)
+  get test() { return (this.story._dt ||= new TestThread(this.story)); }
   get A() { return this.game.rooms.condA; }
   get Bh() { return this.game.rooms.condB; }
   room() { return this.game.room?.id; }
@@ -44,6 +47,7 @@ export class Steam extends ChapterBase {
     //  yet waits for it, Story.refreshCast)
     const D = this.D;
     if (!D) return undefined;
+    if (id === 'dallan') { const tp = this.test.place(id); if (tp !== undefined) return tp; }   // (CAMPAIGN-4: at the test stand's wire)
     const pz = D.plaza, S = D.npcSpots;
     const around = (k, n = 6, r = 3.2) => { const a = (k / n) * Math.PI * 2; return { x: pz.x + Math.cos(a) * r, z: pz.z + Math.sin(a) * r, a: a + Math.PI / 2 + Math.PI }; };
     switch (id) {
@@ -95,6 +99,7 @@ export class Steam extends ChapterBase {
   interactables(consider, dist) {
     const g = this.game, f = this.f, D = g.regions?.built('desert'), r = this.room();   // (LAZY-REGIONS: read each frame: never builds)
     if (!this.isCur()) return;
+    this.test.interactables(consider, dist);
     if (r === 'desert') {
       if (f.c5_planned && !f.c5_dug) consider(dist(D.ruins.door.x, D.ruins.door.z), 2.4, { kind: 'c5drift', label: f.c5_shovel ? 'p_dig' : 'p_look' });
       if (f.c5_jar && !f.c5_water) consider(dist(D.oasisEdge.x, D.oasisEdge.z), 2.2, { kind: 'c5fill', label: 'p_fill' });
@@ -112,6 +117,7 @@ export class Steam extends ChapterBase {
   }
   interact(it) {
     const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: its things exist only once built)
+    if (this.test.interact(it)) return true;
     switch (it.kind) {
       case 'c5drift':
         if (!f.c5_shovel) { this.chain([['hero', 'c5_drift']], () => { f.c5_needShovel = true; g.updateObjective(); }); return true; }
@@ -214,6 +220,7 @@ export class Steam extends ChapterBase {
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id, h = g.hero;
     if (!this.isCur()) return false;
+    if (this.test.talk(npc)) return true;   // (CAMPAIGN-4: Dallan at the stand: the wire, the heat line, the log, the gate)
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'dtrader':
@@ -230,7 +237,7 @@ export class Steam extends ChapterBase {
         }
         return c([['dallan', f.c5_dallanOK ? 'c5_dallan_gate3' : 'c5_dallan_3']]);
       case 'tarra':
-        if (f.c5_vent && !f.c5_clover) return c([['tarra', 'c5_tarra_2']], () => { f.c5_clover = true; h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('c5_toast_clover'); this.radio(); });
+        if (f.c5_vent && !f.c5_clover) return c([...(f.dt_divert ? [['tarra', 'dt_tarra_steam']] : []), ['tarra', 'c5_tarra_2']], () => { f.c5_clover = true; h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('c5_toast_clover'); this.radio(); });
         if (f.c5_vent && !f.c5_radio) { this.radio(); return true; }
         return c([['tarra', f.c5_vent ? 'c4_tarra_idle' : 'c5_tarra_1']]);
       case 'ilka':
@@ -254,6 +261,7 @@ export class Steam extends ChapterBase {
   // ---------------------------------------------------------------- per frame
   update(dt) {
     const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
+    if (this.isCur()) this.test.update(dt);
     if (!this.isCur() || !D) return;
     // the geysers after the relief valve opens: get clear of the post
     if (f.c5_relief && !f.c5_vent && g.state === 'play') {
@@ -361,6 +369,7 @@ export class Steam extends ChapterBase {
     if (f.c5_radio) return this.stars(this.starNpc('hesk'));
     if (f.c5_vent) return this.stars(this.starNpc('tarra'));
     if (f.c5_relief) return [];
+    const tm = this.test.marker(); if (tm) return this.stars(tm);   // (CAMPAIGN-4: the test stand)
     if (f.c5_routed) return this.stars(D.bore.valve);
     if (f.c5_dug || f.c5_shovel) return this.stars(D.ruins.door);
     if (f.c5_jar && !f.c5_water) return this.stars(D.oasisEdge);
@@ -374,7 +383,7 @@ export class Steam extends ChapterBase {
     if (f.c5_radio) return this.goal('c5_obj_hesk');
     if (f.c5_vent) return this.goal('c5_obj_kesh');
     if (f.c5_relief) return this.goal('c5_obj_out');
-    if (f.c5_routed) return this.goal('c5_obj_relief');
+    if (f.c5_routed) return this.test.objective5() || this.goal('c5_obj_relief');   // (CAMPAIGN-4: the heat line, the log)
     if (f.c5_dug) return this.goal('c5_obj_valves') + this.sub(!!f.c5_diagram, 'c5_sub_diagram');
     if (f.c5_needShovel || f.c5_jar) return this.goal('c5_obj_hall') + this.sub(!!f.c5_water, 'c5_sub_water') + this.sub(!!f.c5_shovel, 'c5_sub_shovel');
     return this.goal('c5_obj_hall');
@@ -391,6 +400,7 @@ export class Steam extends ChapterBase {
       { key: 'c5_j_plan', done: !!f.c5_planned },
       { key: 'c5_j_ferry', done: !!f.c5_planned },
       { key: 'c5_j_routed', done: !!f.c5_routed },
+      { key: 'dt_j_log', done: !!f.dt_log },
       { key: 'c5_j_vent', done: !!f.c5_vent },
       { key: 'c5_j_north', done: !!f.c5_glider },
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)

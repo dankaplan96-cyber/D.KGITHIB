@@ -1,7 +1,9 @@
 // Chapter 4 (The Dig, Desert Island): Mother Tarra and the wind-pump (ADV-2: the jammed gear by ball from the
 // west, the shaken pipe joint pushed home), Hesk and the rope, the sand-yacht to Ilka's camp, the notebook from the
 // research post in a sandstorm, the dig's gate (the keypad: 4 · 1 · 7 from the notebook), down the terraces, the
-// three warm seals (ball), into the Temple of Bù, the great carving.
+// three warm seals (ball), into the Temple of Bù, the great carving. CAMPAIGN-4 (story/digtest.js): out of the post with
+// the notebook, Dallan's hail at the bore's test stand; the cutoff pulled on the red, the second needle's kicks after the
+// stop; the drill run up again by the lever, cut on the red again; the carbon torn off. Then the dig.
 export const steps = [
   ['continue (Desert Island)', () => { P.settle(); return { room: game.room?.id, chapter: game.flags.chapterKey }; }],
   ['Mother Tarra', () => ({ ...P.talk('tarra', { run: true }), task: game.flags.c4_pumpTask, fail: game.flags.c4_pumpTask ? null : 'tarra' })],
@@ -29,6 +31,38 @@ export const steps = [
     const r = d ? P.use(d.at.x, d.at.z, { near: 1.2, kind: 'c4desk' }) : { r: 'no desk' }; P.wait(1); P.settle();
     const out = P.exitTo('ih_post_cabin0-out');
     return { waited: t, stormy: G.story.cur.stormy, enter: e.r, ...r, out: out.to, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
+  }],
+  // CAMPAIGN-4: the bore test (a game from before the thread, whose dig gate was already open, has none: skipped)
+  ['out of the post: Dallan at the test stand', () => {
+    const G = game, T = G.story._dt, f = G.flags, Post = G.rooms.desert.post;
+    if (!T?.on) return { r: 'no thread (an older save)' };
+    const r = P.go(Post.gate.x - 6, Post.gate.z + 3, { tol: 1.5, run: true, stopWhen: () => f.dt_hail });
+    P.settle();
+    return { r: r.r, hail: !!f.dt_hail, fail: f.dt_hail ? null : 'no hail' };
+  }],
+  ['the test: the cutoff on the red, the ground kicks after the stop', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'skipped' };
+    const S = G.rooms.desert.stand, n0 = P.kicks = 0; const k0 = S.kick; S.kick = () => { P.kicks++; k0(); };
+    const p = S.cut.touch(); const r = P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' });
+    for (let i = 0; i < 80 && !f.dt_second; i++) { G.step(0.25); P.settle(); }
+    S.kick = k0;
+    return { ...r, kicks: P.kicks - n0, second: !!f.dt_second, fail: f.dt_second ? null : 'no second needle' };
+  }],
+  ['again: lever up, the bit down to the red, cut', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'skipped' };
+    const S = G.rooms.desert.stand; P.kicks = 0; const k0 = S.kick; S.kick = () => { P.kicks++; k0(); };
+    let p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' });
+    let t = 0; while (S.load < 0.97 && t < 15) { G.step(0.25); t += 0.25; }
+    p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' });
+    for (let i = 0; i < 80 && !f.dt_again; i++) { G.step(0.25); P.settle(); }
+    S.kick = k0;
+    return { waited: t, kicks: P.kicks, again: !!f.dt_again, early: f.dt_early || 0, fail: f.dt_again ? null : 'no second run' };
+  }],
+  ['the carbon torn off', () => {
+    const G = game, T = G.story._dt, f = G.flags; if (!T?.on) return { r: 'skipped' };
+    const S = G.rooms.desert.stand; const r = P.use(S.strip.x, S.strip.z, { near: 0.9, kind: 'dt_strip' });
+    for (let i = 0; i < 40 && !f.dt_strip; i++) { G.step(0.25); P.settle(); }
+    return { ...r, strip: !!f.dt_strip, item: G.story.items().some((i) => i.id === 'tstrip'), fail: f.dt_strip ? null : 'carbon' };
   }],
   ['the dig\'s gate (the keypad)', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle(); return { ...r, menu: m.r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
   ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],

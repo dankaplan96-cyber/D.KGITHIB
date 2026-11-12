@@ -3,6 +3,8 @@
 // 4; FunFrock's drones) → the hangar (glider, roof hatch by ball) → Dallan at the gate → the relief valve and
 // the geysers → Tarra, Zoé on the radio → Hesk and the glider → chapter 11 (until chapters 6-10 exist).
 import { launch, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
+const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));   // (CAMPAIGN-4's steps are played by input: tests/lib/player.js)
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
@@ -47,7 +49,9 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-is('chapter 5 (steam) starts at Kesh on Desert Island, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true });
+await page.addScriptTag({ path: HARNESS });
+is('chapter 5 (steam) starts at Kesh on Desert Island, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true,
+    dt_v: 1, dt_hail: true, dt_cut: true, dt_second: true, dt_again: true, dt_strip: true });   // (CAMPAIGN-4: as a game that ran the bore test in chapter 4)
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'steam' && v[1] === 'desert' && v[2] === 'play' && v[3].length > 0);
 await shot('C5-00-kesh.png');
 is("the trader's jar, the objectives set", await ev(() => { T.talk('dtrader'); return [game.flags.c5_jar, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
@@ -65,6 +69,10 @@ await shot('C5-02-hangar.png');
 is('the glider seen', await ev(() => { const g = game.rooms.condB.glider; T.useAt(g.x, g.z); return game.flags.c5_gliderSeen; }), (v) => v === true);
 is('the hatch switch hit', await ev(() => { const tg = game.room.ballTargets.find((t) => t.hatch); return [T.hit(tg), game.flags.c5_hatch]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
 is('back out to the desert', await ev(() => { T.exit('cond-a'); return T.exit('cond-out'); }), (v) => v === 'desert');
+// CAMPAIGN-4 (story/digtest.js), by INPUT: Vesk on the wire at the test stand, the heat line over to Kesh, the log read
+is('CAMPAIGN-4: at the stand, Vesk on the wire; the objective is the heat line', await ev(() => { const f = game.flags, S = game.rooms.desert.stand; P.go(S.board.x - 1.5, S.board.z, { tol: 1.0, run: true, stopWhen: () => f.dt_wire }); P.settle(); return [f.dt_wire, T.obj()]; }), (v) => v[0] === true && /heat line/i.test(v[1]));
+is('CAMPAIGN-4: the heat line thrown: the pump\'s drive hot, the log sent (the tape out)', await ev(() => { const f = game.flags, D = game.rooms.desert, p = D.stand.heat.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_heat' }); for (let i = 0; i < 60 && !f.dt_sent; i++) { game.step(0.25); P.settle(); } return [f.dt_divert, D.pump.drive.hot, f.dt_sent, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === true && /read/i.test(v[3]));
+is('CAMPAIGN-4: the tape read (one trace)', await ev(() => { const S = game.rooms.desert.stand; P.use(S.board.x, S.board.z, { near: 1.0, kind: 'dt_board' }); return game.flags.dt_log; }), (v) => v === true);
 is('Dallan agrees, the post gate opens', await ev(() => { T.talk('dallan'); return [game.flags.c5_dallanOK, game.rooms.desert.post.gate.isOpen, T.obj()]; }), (v) => v[0] === true && v[1] === true);
 is('the relief valve opened, an objective set', await ev(() => { const v = game.rooms.desert.bore.valve; T.useAt(v.x, v.z); return [game.flags.c5_relief, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C5-03-geysers.png');

@@ -13,7 +13,14 @@
 //      ride, the cistern, the bench (a wrong setting first), Baldino; and a return after completion (the deck, the cart,
 //      the standpipe, Kell, Brel and Irsa after a reload)
 //   C  the saves from before: each loads and goes on; a step it has passed counts as done, a step ahead of it is played
-// ONLY=A|B|C runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
+//      (chapters 1–3; and CAMPAIGN-4: base-06 chapter 4 at the pier, base-07-dig chapter 4 with the dig open, base-07
+//      chapter 5 in Kesh, all three made on the build before the bore test)
+//   D  chapter 4 (CAMPAIGN-4, story/digtest.js; fixture new-07-notebook: the notebook just taken): Dallan's hail, the first
+//      cut and the kicks after it, a save between the two cut-offs, the dark keypad (leaving mid-task), a cut too soon
+//      (failure and retry), the second run, the carbon, the keypad live; a return after completion
+//   E  chapter 5 (fixture new-08-routed: FunFrock's valves just set): the wire, a save before the heat line, the heat
+//      line, the log sent, Dallan before and after the tape is read; a return after completion
+// ONLY=A|B|C|D|E runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -218,6 +225,130 @@ if (!ONLY || ONLY === 'C') {
     const r = P.talk('baldino', { run: true });
     return [...st, !!f.c2_plan];
   }), (v) => v[0] === 'zeelich' && v[1] === false && v[2] === 0 && v[3] === 1 && v[4] === true && v[5] && v[6] === true);
+  await browser.close();
+  // CAMPAIGN-4: chapters 4 and 5 from before the bore test
+  await start('base-06');
+  is('C5 a save from before, chapter 4 at Kesh\'s pier: loads; the bore test is ahead of it, so the thread is on (the drill turning, Dallan at his place in the post until the notebook); it goes on: Tarra', await ev(() => {
+    const f = game.flags, T = game.story._dt, S = game.regions.built('desert').stand, n = P.npc('dallan');
+    const st = [f.chapterKey, f.dt_v, T.on, S.spinning, +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1)];
+    P.talk('tarra', { run: true }); return [...st, !!f.c4_pumpTask];
+  }), (v) => v[0] === 'dig' && v[1] === 1 && v[2] && v[3] && v[4] > 5 && v[5]);
+  await browser.close();
+  await start('base-07-dig');
+  is('C6 a save from before, chapter 4 with the dig gate already open: loads; the test counts as done (no thread, the drill stopped, Dallan in the post, the keypad as before, no carbon asked for)', await ev(() => {
+    const f = game.flags, T = game.story._dt, S = game.regions.built('desert').stand, n = P.npc('dallan'), D = game.regions.built('desert');
+    return [f.chapterKey, !!f.c4_digOpen, !!f.dt_v, T.on, S.spinning, +Math.hypot(n.pos.x - D.npcSpots.dallan.x, n.pos.z - D.npcSpots.dallan.z).toFixed(1), document.querySelector('#objective').textContent];
+  }), (v) => v[0] === 'dig' && v[1] && !v[2] && !v[3] && v[4] === false && v[5] < 2 && !/test/i.test(v[6]));
+  await browser.close();
+  await start('base-07');
+  is('C7 a save from before, chapter 5 in Kesh: loads; no thread (the pump\'s drive cold, the heat line on the bore, nothing sent, Dallan not at the stand); Brosk\'s jar goes on as before', await ev(() => {
+    const f = game.flags, T = game.story._dt, D = game.regions.built('desert'), S = D.stand, n = P.npc('dallan');
+    const st = [f.chapterKey, T.on, D.pump.drive.hot, S.heat.on, !!f.dt_sent, n.present ? +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1) : 99];
+    P.talk('dtrader', { run: true }); return [...st, !!f.c5_jar];
+  }), (v) => v[0] === 'steam' && !v[1] && v[2] === false && v[3] === false && !v[4] && v[5] > 3 && v[6]);
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ D: chapter 4, the bore test (CAMPAIGN-4)
+// (a kick counter on the stand's ground needle, and the stand's own state, read the same way each time)
+const STAND = () => ev(() => { const S = game.regions.built('desert').stand; if (!S._k) { S._k = 0; const k0 = S.kick; S.kick = () => { S._k++; k0(); }; } return true; });
+const kicks = () => ev(() => game.regions.built('desert').stand._k);
+if (!ONLY || ONLY === 'D') {
+  await start('new-07-notebook');
+  is('D0 the save: chapter 4, the notebook just taken in the storm, inside the post; the thread on, the drill turning, Dallan at the stand\'s wire, the objective still the dig', await ev(() => {
+    const f = game.flags, T = game.story._dt, S = game.regions.built('desert').stand, n = P.npc('dallan');
+    return [f.chapterKey, !!f.c4_notebook, T.on, T.open4, S.spinning, +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1), !!f.dt_hail, document.querySelector('#objective').textContent];
+  }), (v) => v[0] === 'dig' && v[1] && v[2] && v[3] && v[4] && v[5] < 1.5 && !v[6] && /dig/i.test(v[7]));
+  await STAND();
+  is('D1 out of the gate: Dallan takes him for the new hand ("he\'s with me": the post\'s watch calm), the objective is the test', await ev(() => {
+    const f = game.flags, Post = game.rooms.desert.post; P.go(Post.gate.x - 6, Post.gate.z + 3, { tol: 1.5, run: true, stopWhen: () => f.dt_hail }); const sp = game.state; P.settle();
+    return [!!f.dt_hail, sp, game.enemies.filter((e) => e.def.group === 'dpost').every((e) => e.def.calm()), game.story.objective().replace(/<[^>]+>/g, ' ')];
+  }), (v) => v[0] && v[1] === 'dialog' && v[2] && /cutoff/i.test(v[3]));
+  await shot('D1-hail');
+  is('D2 the cutoff pulled on the red: the drill winds down, its needle falls, and after the stop the ground needle kicks three, rests, three', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags, p = S.cut.touch();
+    P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' }); for (let i = 0; i < 80 && !f.dt_second; i++) { game.step(0.25); P.settle(); }
+    return [!!f.dt_cut, !!f.dt_second, S._k, S.spinning, +S.load.toFixed(2), S.cut.on];
+  }), (v) => v[0] && v[1] && v[2] === 6 && v[3] === false && v[4] === 0 && v[5] === false);
+  await shot('D2-first-cut');
+  // a save between the two cut-offs
+  await handover();
+  is('D3 Save & quit → Continue between the two cuts: the drill stopped, the lever at CUT, the paper with one run, Dallan at the wire, the watch still calm, the objective to run it again', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags, n = P.npc('dallan');
+    return [!!f.dt_second, !!f.dt_again, S.spinning, S.cut.on, +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1), game.enemies.filter((e) => e.def.group === 'dpost').every((e) => e.def.calm()), game.story.objective().replace(/<[^>]+>/g, ' ')];
+  }), (v) => v[0] && !v[1] && v[2] === false && v[3] === false && v[4] < 1.5 && v[5] && /again/i.test(v[6]));
+  await STAND();
+  is('D4 leaving mid-task: the dig\'s keypad is dark while the test is on (its tag says why); the barrier stays down', await ev(() => {
+    const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true, kind: 'c4gate' });
+    return [r.r, game.state, !!game.flags.c4_digOpen, !!game.flags.dt_dark];
+  }), (v) => v[1] === 'play' && v[2] === false && v[3]);
+  is('D5 a failure: lever up and cut at once, before the bit is down: no kick after the stop; Dallan: too soon (a quick retry)', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags; S._k = 0;
+    let p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' }); const up = S.spinning;
+    p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' }); const load = +S.load.toFixed(2);
+    for (let i = 0; i < 30 && !f.dt_early; i++) { game.step(0.25); P.settle(); }
+    return [up, load < 0.9, S._k, f.dt_early || 0, !!f.dt_again];
+  }), (v) => v[0] && v[1] && v[2] === 0 && v[3] === 1 && !v[4]);
+  is('D6 again, done right: lever up, the needle climbs to the red, cut: the same three and a rest after the stop', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags; S._k = 0;
+    let p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' });
+    let t = 0; while (S.load < 0.97 && t < 15) { game.step(0.25); t += 0.25; }
+    p = S.cut.touch(); P.use(p.x, p.z, { near: 0.9, kind: 'dt_cut' }); for (let i = 0; i < 80 && !f.dt_again; i++) { game.step(0.25); P.settle(); }
+    return [t, S._k, !!f.dt_again];
+  }), (v) => v[0] > 3 && v[1] === 6 && v[2]);
+  is('D7 the carbon torn off (the item, two traces); Dallan goes back in, the watch is the post\'s again, the keypad lights: the notebook\'s code opens the dig', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags;
+    P.use(S.strip.x, S.strip.z, { near: 0.9, kind: 'dt_strip' }); for (let i = 0; i < 40 && !f.dt_strip; i++) { game.step(0.25); P.settle(); }
+    const item = game.story.items().some((i) => i.id === 'tstrip'), calm = game.enemies.filter((e) => e.def.group === 'dpost').some((e) => e.def.calm());
+    P.settle(); for (let i = 0; i < 60; i++) { game.step(0.25); if (game.state !== 'play') P.settle(); }   // (the carbon's little ceremony first)
+    const n = P.npc('dallan'), away = +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1);
+    const g = game.rooms.desert.dig.gate; P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle();
+    return [!!f.dt_strip, item, calm, away, !!f.c4_digOpen];
+  }), (v) => v[0] && v[1] && !v[2] && v[3] > 2 && v[4]);
+  await shot('D7-carbon');
+  await handover();
+  is('D8 Save & quit → Continue after completion: the drill still stopped, the paper torn, the carbon kept, the gate open, the journal has the test', await ev(() => {
+    const S = game.regions.built('desert').stand, f = game.flags;
+    return [S.spinning, S.cut.on, game.story.items().some((i) => i.id === 'tstrip'), !!f.c4_digOpen, game.story.cur.journal().some((l) => l.key === 'dt_j_test')];
+  }), (v) => v[0] === false && v[1] === false && v[2] && v[3] && v[4]);
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ E: chapter 5, the heat line and the log (CAMPAIGN-4)
+if (!ONLY || ONLY === 'E') {
+  await start('new-08-routed');
+  is('E0 the save: chapter 5, FunFrock\'s valves set; the thread on, Dallan at the stand, the pump\'s drive cold, nothing sent', await ev(() => {
+    const f = game.flags, T = game.story._dt, D = game.regions.built('desert'), S = D.stand, n = P.npc('dallan');
+    return [f.chapterKey, !!f.c5_routed, T.on, T.open5, +Math.hypot(n.pos.x - S.spots.dallan.x, n.pos.z - S.spots.dallan.z).toFixed(1), D.pump.drive.hot, !!f.dt_sent];
+  }), (v) => v[0] === 'steam' && v[1] && v[2] && v[3] && v[4] < 1.5 && v[5] === false && v[6] === false);
+  is('E1 back at the post: Vesk on the wire (Kesh keeps its water); the objective is the heat line, its star on the stand', await ev(() => {
+    const f = game.flags, S = game.regions.built('desert').stand; if (game.room?.id !== 'desert') { const e = game.room?.exits?.find((x) => x.to === 'cond-out'); if (e) P.through(e.x, e.z); }
+    P.go(S.board.x - 1.5, S.board.z, { tol: 1.0, run: true, stopWhen: () => f.dt_wire }); P.settle();
+    return [!!f.dt_wire, game.story.objective().replace(/<[^>]+>/g, ' '), game.story.cur.markers().length];
+  }), (v) => v[0] && /heat line/i.test(v[1]) && v[2] === 1);
+  await handover();
+  is('E2 Save & quit → Continue mid-task: the wire heard, the heat line still to throw, Dallan at the stand; he says so', await ev(() => {
+    const f = game.flags, r = P.talk('dallan', { run: true });
+    return [!!f.dt_wire, !!f.dt_divert, r.lines, game.story.objective().replace(/<[^>]+>/g, ' ')];
+  }), (v) => v[0] && !v[1] && v[2] >= 1 && /heat line/i.test(v[3]));
+  is('E3 the heat line thrown over to KESH: the pump\'s drive is hot; Vesk asks for test 14, drill channel only; the teleprinter sends it (the tape out, SENT lit)', await ev(() => {
+    const f = game.flags, D = game.regions.built('desert'), S = D.stand, p = S.heat.touch();
+    P.use(p.x, p.z, { near: 0.9, kind: 'dt_heat' }); for (let i = 0; i < 60 && !f.dt_sent; i++) { game.step(0.25); P.settle(); }
+    return [!!f.dt_divert, S.heat.on, D.pump.drive.hot, !!f.dt_sent, game.story.objective().replace(/<[^>]+>/g, ' ')];
+  }), (v) => v[0] && v[1] && v[2] && v[3] && /read/i.test(v[4]));
+  await shot('E3-sent');
+  is('E4 Dallan before the tape is read: it has gone to Citadel; no leave for the relief valve yet', await ev(() => { const r = P.talk('dallan', { run: true }); return [r.lines, !!game.flags.c5_dallanOK]; }), (v) => v[0] >= 1 && !v[1]);
+  is('E5 the tape read (one trace; his carbon has two); put to Dallan: he looks the other way (the relief valve is his to open)', await ev(() => {
+    const f = game.flags, S = game.regions.built('desert').stand;
+    P.use(S.board.x, S.board.z, { near: 1.0, kind: 'dt_board' }); const log = !!f.dt_log;
+    const r = P.talk('dallan', { run: true });
+    return [log, r.lines, !!f.c5_dallanOK, game.rooms.desert.post.gate.isOpen, game.story.cur.journal().some((l) => l.key === 'dt_j_log')];
+  }), (v) => v[0] && v[1] >= 7 && v[2] && v[3] && v[4]);
+  await handover();
+  is('E6 Save & quit → Continue after completion: the heat line at KESH, the drive hot, the tape out, the gate open, the carbon still kept', await ev(() => {
+    const f = game.flags, D = game.regions.built('desert'), S = D.stand;
+    return [S.heat.on, D.pump.drive.hot, !!f.dt_sent, D.post.gate.isOpen, game.story.items().some((i) => i.id === 'tstrip')];
+  }), (v) => v.every((x) => x === true));
   await browser.close();
 }
 done();
