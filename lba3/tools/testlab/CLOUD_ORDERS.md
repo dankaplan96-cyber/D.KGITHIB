@@ -249,3 +249,40 @@ Rules unchanged: numbers and descriptions only from LBA1/LBA2; pictures past cha
 **11.11, the cloud to the desktop agent:** MIGRATE-39 is checked and done (A.1–A.8, B, C all answered). CAST-POLISH-NAMED and CAST-CONNECT-1 are applied (b08fc8f4) with their models. **The answer to CAM-34's open question (the user, 11.11): the camera felt chaotic "only at the hostel entrance".** So the portico's box stays withdrawn and no other camera change is wanted; CAM-34 is closed. Go on with the queue as you listed it (queue 7's `_b` variants, then queue 9, then Twinsen; 27a Desert and Hamalayi). The listening WAVs did not reach the desktop's OneDrive; the user was told.
 
 Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it at the start of each session.
+
+40. **The desktop's queue from 12.11 (the user: "if there are tasks for the local agent with Blender and the graphics
+    card, make an orderly list").** State: artifact **v82** (`ccr-c1c2c4b9-dep6ed`, the commit "Build stamp for artifact
+    v82"; merge it first). Applied by the cloud since your last batch: CAST-VARIANTS-1 and GROBO-GREY (with CAST-POLISH-NAMED,
+    CAST-CONNECT-1), the campaign's waves 1–2 (chapters 1–5), NO-AIR 2/3, PLACE-1 (`docs/lba-maturity/PLACE-1.md`), the
+    reservoir pipe under the fort climb, CAM-WALKFAR (camera.js). **The cloud is working on, don't touch:** `pass.js`,
+    `observatory.js` and the Lhar/Pass/Observatory places (campaign wave 3, chapters 6–7); outdoor dressing in Zeelich's
+    street, the isles and Citadel's streets (PLACE-2); `src/game/story/*`. One at a time, each reported in
+    `WORLD_ART_REQUESTS.md` with a diff in `requests/` (`git apply --check` clean on origin) and pushed before the next:
+    1. **GPU-V82, a short look at what changed (report; fix only art).** Follow/Medium on the GTX 1050: (a) the new game's
+       kitchen: the dry tap and Arthur's cup carried to the sink — from the game camera the cup is a few pixels; if the
+       beat does not read from the picture, make the cup and the tap read (size, colour, a highlight) within the kitchen;
+       (b) the rooms PLACE-1 changed in chapters 1–2 (Twinsen's house: the firewood basket, the toy chest; the pharmacy's
+       plant; the lighthouse top; Nell's shop bench): anything that now reads wrong; (c) the fort's SW tower walk (the
+       camera now swings at most ~40°) and the reservoir pipe coming up west of the climb's landing. Pictures may go to
+       the user (chapters 1–2). Report as GPU-V82.
+    2. **PERF-1050 (the work order's item 2):** the four findings of `docs/lba3-performance/HARDWARE/2026-11-10-desktop-gtx1050.md`:
+       the ~4 s shadow-program compile behind the black (compile earlier or in parallel, KHR_parallel_shader_compile, or
+       split), the 288 ms frame with a 37 MB GC on the street, the 117 ms frame after arrival, the street's CPU work on
+       High. Before/after in the same runner on the GTX 1050, numbers labelled with the machine; the code as a diff. The
+       Vega 8 must not get worse: say what to measure there (27c), never claim it from the 1050.
+    3. **28, the cast, the rest of queue 7, then queue 9:** `councilB_b` for Kira, the bees' and moles' variants (zbee1,
+       zbee2, zmole2), `archivist_b` (×5 share it); then queue 9 (the common props). Rules as before (each clothing role in
+       its LOOKS hex for DRESS-1, ≤ +25 % triangles, skeleton and bone names kept). Tavi on farmerB_b may be retried: the
+       cloud fixed the terminal talk test's fragility on 12.11 (a person faced squarely now wins over the departures board).
+    4. **TWINSEN-LOOK-38** (after 3, by the order the user set): Twinsen given Zoé's treatment, a candidate for the user,
+       turnaround and in-game pictures (chapter 1: the user may see them).
+    5. **DIGTEST-ART (chapter 4; pictures stay with you):** campaign wave 2's test stand at Desert Island's research post
+       (`teststand.js`, `desert.js` `R.stand`): the drill's turning string sits high in the derrick and is seldom in the play
+       camera; the two dials read at the stand but are small further off. Make the turning part and the two needles read
+       from Follow/Medium at the cutoff lever (a turning part lower on the derrick, bigger dial faces and needles); keep the
+       lever, its prompt and the colliders where they are; draw calls before/after. Run `chapter4`, `campaign-hands`.
+    6. **27a curator:** Desert Island and the Hamalayi (scores with evidence), and the re-score of Citadel's lighthouse,
+       NW plateau, harbour and square after CITADEL-85.
+    7. **27c on the Vega 8** whenever the laptop is at hand: v82 against v71 on the same routes.
+    8. **The expansion:** W-4 on `expansion/ballastra` as `EXPANSION_WORLD_SPEC.md` orders it, after 1–6.
+    Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
