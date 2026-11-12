@@ -46,6 +46,7 @@ const LINE = 'Hello there! Have you seen the lighthouse keeper? The water gets w
 const off = await ev(async ({ MAIN, OTHERS, LINE, keys, base, PLACES }) => {
   const lab = await import(new URL('tests/lib/voicelab.js', base).href);
   const V = await import(new URL('src/engine/voice.js', base).href);
+  V.setVoiceMode?.('classic');   // (P18-VOICES: this part measures the classic synthesis; tests/voice-phrase.mjs has the Words voices)
   const m = {};
   for (const id of [...MAIN, ...OTHERS]) { const r = await lab.render(V, 'n_' + id, LINE); m[id] = { ...lab.analyse(r.data, r.sr), syl: r.syllables, f: lab.features(lab.analyse(r.data, r.sr)) }; }
   // repeatable: the same line from the same speaker renders the same
