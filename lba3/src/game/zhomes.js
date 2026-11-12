@@ -76,12 +76,15 @@ export function esmerRoom(id, { W, D, H = 3.3, wall = '#eadcd2', dado = '#2f7a84
     k.add(plane(W - 0.6, 0.42), band, 0, H - 0.5, BZ + 0.02);
     k.add(plane(D - 0.6, 0.42), band, LX + 0.02, H - 0.5, 0, Math.PI / 2);
     // rounded pilasters in the far corner and along the back
-    for (const x of [LX + 0.18, 0, W / 2 - 0.3]) k.add(cyl(0.16, 0.2, H - 0.2, 12), MAT.plaster(wall), x, (H - 0.2) / 2, BZ + 0.12);
+    for (const x of PILASTERS(W)) k.add(cyl(0.16, 0.2, H - 0.2, 12), MAT.plaster(wall), x, (H - 0.2) / 2, BZ + 0.12);
   }
   B.light(light, 4.2, 12, 0, H - 0.6, 0.3);
   reg[id] = { looks: [], npcSpots: {} };
-  return { B, R, k, LX, BZ, W, D, H, reg, X: (x) => B.cx + x, Z: (z) => B.cz + z };
+  // (PLACE-1: where the pilasters stand, for a room that places its pieces itself: ihomes.js keeps them clear)
+  const pilasters = withBand ? PILASTERS(W).map((x) => ({ x0: x - 0.2, x1: x + 0.2, z0: BZ, z1: BZ + 0.32 })) : [];
+  return { B, R, k, LX, BZ, W, D, H, reg, pilasters, X: (x) => B.cx + x, Z: (z) => B.cz + z };
 }
+const PILASTERS = (W) => [-W / 2 + 0.18, 0, W / 2 - 0.3];
 const look = (o, x, z, key, r = 1.1) => o.reg[o.R.id].looks.push({ x: o.X(x), z: o.Z(z), r, key });
 
 // ---------------------------------------------------------------- Mr Pelleck's house
@@ -91,11 +94,12 @@ function pelleck(scene, physics) {
   // the back wall: ledgers floor to ceiling, the desk of forms, the filing cabinet
   k.at(-1.6, 0, BZ + 0.22, 0, () => bookcase(k, { w: 1.6, h: 2.3, d: 0.34, pal: 'dark', seed: 31, shelves: 5 }));
   B.col(-1.6, BZ + 0.22, 0.8, 0.18, 2.3, { noStand: true });
-  B.put(0.7, BZ + 0.55, 0, (kk) => desk(kk, { w: 1.5, d: 0.72, pal: 'dark', leather: '#2f5a6a' }));
-  k.at(0.3, 0.78, BZ + 0.45, 0, () => deskLamp(k, { shade: '#2f7a84' }));
-  ledger(k, 0.95, 0.78, BZ + 0.5, 0.2, '#2a4a6a');
-  papers(k, 1.25, 0.78, BZ + 0.6, 4, 7, 'form');
-  B.put(0.7, BZ + 1.3, Math.PI, (kk) => officeChair(kk, { color: '#2f5a6a' }));
+  // (PLACE-1: the desk clear of the back wall's middle pilaster, x 0: it stood 10 cm into it)
+  B.put(0.95, BZ + 0.55, 0, (kk) => desk(kk, { w: 1.5, d: 0.72, pal: 'dark', leather: '#2f5a6a' }));
+  k.at(0.55, 0.78, BZ + 0.45, 0, () => deskLamp(k, { shade: '#2f7a84' }));
+  ledger(k, 1.2, 0.78, BZ + 0.5, 0.2, '#2a4a6a');
+  papers(k, 1.5, 0.78, BZ + 0.6, 4, 7, 'form');
+  B.put(0.95, BZ + 1.3, Math.PI, (kk) => officeChair(kk, { color: '#2f5a6a' }));
   B.put(2.0, BZ + 0.35, 0, (kk) => filingCabinet(kk, { w: 0.5, d: 0.6, h: 1.3, n: 4, color: '#6a8a8a' }));
   k.at(2.0, 1.32, BZ + 0.35, 0, () => papers(k, 0, 0, 0, 3, 3, 'form'));
   k.at(0.7, 1.75, BZ + 0.04, 0, () => frame(k, 0.6, 0.45, canvasTex(128, 96, (x, w, h) => { x.fillStyle = '#f2ead6'; x.fillRect(0, 0, w, h); x.fillStyle = '#2a3a5a'; x.font = 'bold 16px serif'; x.textAlign = 'center'; x.fillText('JOINT PROJECT', w / 2, 34); x.fillText('BOOKKEEPER', w / 2, 56); x.fillText('Z. PELLECK', w / 2, 80); }), { mat: MAT.brass() }));
@@ -115,14 +119,16 @@ function pelleck(scene, physics) {
   for (let i = 0; i < 6; i++) k.add(rbox(0.24, 0.02, 0.24, 0.004), MAT.paint(i < 2 ? '#7a4aa8' : '#3a7ac8', 0.35), -0.4 + i * 0.16, 0.79, 0.55 + (i % 2) * 0.12);
   k.add(rbox(0.24, 0.02, 0.24, 0.004), MAT.paint('#7a4aa8', 0.35), 0.45, 0.79, 0.85, 0, { rz: 0.0 });
   look(o, 0.0, 1.5, 'zh_pel_tiles');
-  look(o, 0.7, BZ + 1.6, 'zh_pel_forms');
+  look(o, 0.95, BZ + 1.6, 'zh_pel_forms');
   // crates of blue tiles for the dome by the door, the bed and chest in the near corner
   for (const [x, z, s] of [[LX + 0.6, 3.0 - 0.1, 0.7], [LX + 1.35, 3.0 - 0.1, 0.6], [LX + 0.62, 2.95 - 0.1, 0.55]]) B.put(x, z - 0.3, 0.1, (kk) => crate(kk, s, { pal: 'pale' }), { y: x === LX + 0.62 && s === 0.55 ? 0.7 : 0, noCol: s === 0.55 });
   k.add(plane(0.36, 0.14), MAT.map(tagTex('BLUE', '#d8e8f0', '#2a4a8a'), 0.8), LX + 0.6, 0.45, 2.6 + 0.06 - 0.1 + 0.35 - 0.3 + 0.01);
-  B.put(W / 2 - 1.1, D / 2 - 1.25, Math.PI / 2, (kk) => bed(kk, { w: 1.2, l: 2.0, pal: 'dark', quilt: ['#3a7ac8', '#e8dcc0', '#7a4aa8', '#e8dcc0', '#3a7ac8'] }));
-  B.put(W / 2 - 2.6, D / 2 - 0.5, 0, (kk) => chest(kk, { w: 0.8, d: 0.45, h: 0.45, pal: 'dark' }));
+  // (PLACE-1: its head against the right wall, not its foot — the head stood out in the room, the armchair's back in
+  //  its foot — and along the near rim, the chest at its foot)
+  B.put(W / 2 - 1.1, D / 2 - 0.75, -Math.PI / 2, (kk) => bed(kk, { w: 1.2, l: 2.0, pal: 'dark', quilt: ['#3a7ac8', '#e8dcc0', '#7a4aa8', '#e8dcc0', '#3a7ac8'] }));
+  B.put(W / 2 - 2.6, D / 2 - 0.6, 0, (kk) => chest(kk, { w: 0.8, d: 0.45, h: 0.45, pal: 'dark' }));
   k.at(0, 0, 0.6, 0, () => hangingLamp(k, 2.4, H, { shade: '#2f7a84' }));
-  B.put(LX + 0.45, BZ + 0.45, 0, (kk) => pottedPlant(kk, { kind: 'spiky', s: 1.0, potColor: '#3a7a8a' }));
+  B.put(LX + 0.62, BZ + 0.55, 0, (kk) => pottedPlant(kk, { kind: 'spiky', s: 1.0, potColor: '#3a7a8a' }));   // (PLACE-1: off the corner pilaster)
   B.light('#ffd8a0', 2.4, 6, 0.6, 1.4, BZ + 0.9);
   return { zh_pelleck: B.finish() };
 }
@@ -168,7 +174,8 @@ function nara(scene, physics) {
   ZH.zh_nara.setHeld = (b) => { held.visible = !!b; few.visible = !b; for (const c of cols) c.enabled = !!b; fewCol.enabled = !b; };
   ZH.zh_nara.setHeld(true);
   // Nara's own corner, near right (the near left is the way in): a bed, a hanging and a shelf of seed jars on the left wall
-  B.put(W / 2 - 0.65, D / 2 - 1.1, 0, (kk) => bed(kk, { w: 1.1, l: 1.9, pal: 'pale', quilt: ['#c8a0f4', '#f2ead6', '#f4a0c8', '#f2ead6', '#3a8a7a'] }));
+  // (PLACE-1: its head to the near wall, in the corner; it stood out in the room, the foot at the wall)
+  B.put(W / 2 - 0.65, D / 2 - 1.1, Math.PI, (kk) => bed(kk, { w: 1.1, l: 1.9, pal: 'pale', quilt: ['#c8a0f4', '#f2ead6', '#f4a0c8', '#f2ead6', '#3a8a7a'] }));
   k.at(LX + 0.04, 1.6, -0.2, Math.PI / 2, () => hanging(k, { w: 1.0, h: 1.2, bands: ['#3a8a7a', '#f2ead6', '#f4a0c8', '#f2ead6', '#3a8a7a'] }));
   k.at(LX + 0.2, 1.45, -1.9, Math.PI / 2, () => { wallShelf(k, { w: 1.1, pal: 'pale' }); for (let i = 0; i < 6; i++) jar(k, -0.45 + i * 0.18, 0.03, 0, 'jar', ['#c8a050', '#3a8a7a', '#f4a0c8'][i % 3], 0.8); });
   k.at(-0.6, 0, 0.6, 0, () => hangingLamp(k, 2.5, H, { shade: '#3a8a7a' }));

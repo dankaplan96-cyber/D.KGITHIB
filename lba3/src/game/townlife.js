@@ -310,8 +310,9 @@ export function buildTownLife(root, physics, W) {
       for (const pz of [-1.55, 1.55]) k.add(cyl(0.06, 0.07, 3.16, 6), MAT.wood('dark'), -1.2, 1.58, pz);
       k.at(0.85, 0, 0, -Math.PI / 2, () => P.workbench(k, { w: 2.2, d: 0.7, h: 0.88 }));
       // spare parts on the bench: gears, a shuttle landing leg, a crate of springs; tools on the back wall
-      for (let i = 0; i < 3; i++) k.add(torus(0.08 + i * 0.03, 0.02, 4, 10), MAT.steel(), 0.8, 0.92 + i * 0.02, -0.7 + i * 0.12, 0, { rx: Math.PI / 2 });
-      k.add(cyl(0.05, 0.08, 0.7, 8), MAT.paint('#b82a24', 0.45), 0.85, 0.95, -0.1, 0, { rz: Math.PI / 2 - 0.2 });
+      // (PLACE-1: the gears lying on the bench top, 0.88, not 2 cm over it; the landing leg lying on it, not 8 cm into it)
+      for (let i = 0; i < 3; i++) k.add(torus(0.08 + i * 0.03, 0.02, 4, 10), MAT.steel(), 0.8, 0.9 + i * 0.02, -0.7 + i * 0.12, 0, { rx: Math.PI / 2 });
+      k.add(cyl(0.05, 0.08, 0.7, 8), MAT.paint('#b82a24', 0.45), 0.85, 0.96, -0.1, 0, { rz: Math.PI / 2 });
       for (let i = 0; i < 4; i++) k.add(rbox(0.03, 0.3 + (i % 2) * 0.1, 0.05, 0.01), MAT.steel(), 1.21, 1.5, -0.9 + i * 0.25);
       benchLamp = new THREE.PointLight('#ffd890', 0, 5); k._local(0.4, 2.0, 0, 0, {}).decompose(benchLamp.position, benchLamp.quaternion, benchLamp.scale); g.add(benchLamp);
       // the coupler, once it is on the bench: a brass drum with fins, glowing as it heats (at the front of the bench's

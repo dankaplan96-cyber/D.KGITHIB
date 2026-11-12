@@ -123,9 +123,9 @@ export function buildPharmacyRoom(scene, physics) {
   B.put(P.honeyShelves[0], P.backZ, 0, (kk) => shelves(kk, 1.7, honey));
   B.put(P.ladderX, BZ + 0.22, 0, (kk) => ladder(kk));
   B.put(P.honeyShelves[1], P.backZ, 0, (kk) => shelves(kk, 1.7, honey));
-  k.at(-0.65, 0, BZ + 0.55, 0, () => pottedPlant(k, { kind: 'leafy', s: 1.5, potColor: '#5e5c66' }));
-  for (let i = 0; i < 5; i++) k.add(sphere(0.06, 8, 6), MAT.flat('#c8302a', 0.4), -0.65 + Math.sin(i * 1.9) * 0.3, 1.05 + (i % 2) * 0.12, BZ + 0.55 + Math.cos(i * 1.9) * 0.25);
-  B.ccol(-0.65, BZ + 0.55, 0.45, 1.2);
+  k.at(-0.33, 0, BZ + 0.55, 0, () => pottedPlant(k, { kind: 'leafy', s: 1.5, potColor: '#5e5c66' }));   // (PLACE-1: in the gap between two shelves, not 13 cm into the left one)
+  for (let i = 0; i < 5; i++) k.add(sphere(0.06, 8, 6), MAT.flat('#c8302a', 0.4), -0.33 + Math.sin(i * 1.9) * 0.3, 1.05 + (i % 2) * 0.12, BZ + 0.55 + Math.cos(i * 1.9) * 0.25);
+  B.ccol(-0.33, BZ + 0.55, 0.45, 1.2);
 
   // --- the oval counter in the middle: the till, a green flask and glasses, a bauble tree at each end
   const { CX, CZ, CW } = P;
