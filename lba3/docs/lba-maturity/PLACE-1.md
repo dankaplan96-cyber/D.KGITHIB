@@ -123,9 +123,27 @@ at a fixed spot) and `-before-close.jpg` / `-after-close.jpg` (a nearer look fro
 places (may be shown): Pelleck's bed and desk, Nara's bed, the house's kitchen and toy corner, the pharmacy, the
 lighthouse top, Nell's shop. Others are named `x-*` (the archive, the School of Magic, three island homes).
 
-## Suites (Automated runtime only; one at a time on a shared machine)
+Looked at: Pelleck's bed (head now at the right wall, the chest at its foot), his desk (clear of the middle pilaster),
+Nara's bed (head in the near corner), the pharmacy's plant (in the gap), the toy corner (the Dino-Fly beside the chest),
+Nell's bench (the leg lying on the top), the archive (crates apart, locker at the wall), three island homes (stove,
+shelf and chest off the pilasters; the layouts changed). Weak evidence: the kitchen's basket is mostly behind the
+wardrobe from the room camera; the lighthouse crate is hard to see in its picture (the measure is the evidence there).
 
-See the job report; the table is kept there and in the commit message.
+## Suites (Automated runtime only; one at a time, SwiftShader, a shared machine; each with its own server)
+
+| Suite | Result | Notes |
+|---|---|---|
+| place-scan | PASS 2/2 | 135 areas, 2059 pieces, 34 findings all on the LEFT list |
+| interior-life | 142/144 | the same 2 fail on the pre-fix build (run there too): the terminal's evacuation talk picks a sign for Old Ressa; Zeelich terminal's chapter-9 guard faces −2.36 at `ztg2_door` |
+| no-air | 1 offender; 6 states lost to memory | the full sweep: states 1–15 measured, Garrick at Citadel's flower bed (`gar_tend`, left hand 5.7 cm; untouched area) — not reproduced in state 1 alone (105 cases, 0 offenders); states 16–21 died (the page out of memory, twice each, shared machine), rerun with `AREAS=` the changed rooms: 0 hands in the air, 0 feet off the ground |
+| work-step | PASS 10/10 | |
+| overlaps | PASS 26/26 | and `ONLY=zh_pelleck,zh_nara,archive`: PASS, 0 failing |
+| door-sweep | PASS 5/5 | |
+| chapter1 | PASS 32/32 | |
+| island-doors | PASS 89/89 | the 25 island homes whose layouts changed |
+| zeelich-doors | PASS 22/22 | Pelleck's and Nara's houses |
+| chapter9 | PASS 18/18 | the archive (stealth room): its watcher, the worker's coat at the moved locker, the cabinets |
+| hamalayi-life | PASS 18/18 | Lhar's moving day |
 
 ## Next
 
