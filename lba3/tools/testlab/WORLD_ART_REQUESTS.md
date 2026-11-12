@@ -4548,3 +4548,35 @@ CLOUD_ORDERS 40 item 4 taken ahead of items 1–3 because the user asked for it 
   **+42.8 % triangles (4050)**: over the variants' +25 %, about his father's count. `ARTHUR_LOOK_OLD=1` rebuilds the shipped model.
 - Tests (both models in place, with CAST-VARIANTS-1/2): solidnpc 54/54, chapter1 23/23, cast-rounds 209/209, story-journeys 30/30, prologue 26/26 PASS. Evidence label: Automated runtime only.
 - Next on this machine: CLOUD_ORDERS 40 items 1 (GPU-V82), 2 (PERF-1050), 3 (`archivist_b`, queue 9).
+
+## GPU-V82 · v82 looked at on the GTX 1050 from the play camera; ARTHUR'S CUP made to read · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 1. Chrome 1536×819 (devicePixelRatio 1.25) on `ANGLE (NVIDIA GeForce GTX 1050, D3D11)`, the game's
+defaults: Follow, Medium, quality Auto. A new game on `f4e3218e`, driven by a local script (the prologue test's steps).
+No console errors. Pictures (chapters 1–2, may be shown): `captures/gpu-v82/`.
+- **(a) The kitchen beat: it did not read.** Measured from the room camera with Twinsen 1.6 m to the side: **the cup was
+  5.2 px tall and 4.4 px wide**, the same blue as the kettle beside it on the dark stove top. In the sink it was a blue dot
+  beside the green watering can, and while he stands at the stove his body covers it. The brass riser and the elbow over
+  the sink read (the riser is ~95 px long); the spout itself is small but sits where the pipe leads the eye.
+  **Fix: `requests/GPU-V82-CUP.diff`** (`src/game/story/hometap.js`, the cup's three meshes only; the cloud's story files
+  are not touched: apply it when convenient). The cup is half as big again (a boy's big mug, 12.5 cm), white enamel with a
+  blue rim and handle, glossier. It is **7.6 px** tall now, a light spot on the dark stove and in the basin
+  (`1-kitchen-cup-before-top-after-bottom.jpg`). Its place, the trivet, the hand's set-down and every flag are unchanged.
+  Tests on the change: see below.
+- **(b) PLACE-1's rooms (chapters 1–2): nothing reads wrong.** The house's toy corner: the Dino-Fly beside the chest.
+  The kitchen's firewood basket is behind the wardrobe from the room camera, as PLACE-1 noted. The pharmacy's plant is in its gap.
+  The lighthouse top's crate and barrels read. Nell's bench reads with the landing leg lying on it. (`2-place1-rooms-ch1-2.jpg`)
+- **(c) The fort.** The SW tower passage walked west and south-west at Follow: the view stays behind him through the
+  passage, with no swing seen. The reservoir branch comes up out of the shelf's grass west of the landing onto its trestles and
+  reads as a pipe from the landing and from the north (`3-fort-sw-tower-walk-and-pipe.jpg`).
+- Tests (the cup in place, SwiftShader): prologue 31/31, chapter1 32/32, chapter2 21/21 PASS. Evidence label: Automated runtime and the desktop's eyes on the GTX 1050. Nobody played it.
+
+## PERF-1050 · the four GTX 1050 findings re-measured in the app's Electron on v82: none reproduce · the desktop, 12.11.2026
+CLOUD_ORDERS 40 item 2. Full report: `docs/lba3-performance/HARDWARE/2026-11-12-gtx1050-electron.md` (raw runs and the runner
+beside it). The desktop app's own Electron 43.7.9 on the checkout, a fresh profile each run: three Auto runs and one High.
+- **Shadow programs:** 515–543 ms before the first route, **0 ms behind the black**, every run. The 4 s step fits a cold
+  NVIDIA driver cache (the user's run was the first app start after the 582.78 driver); not proven: that needs the driver's
+  shader cache cleared, and the user decides that. An optional hardening is described (split the scene-change warm-up as
+  the load-time one is).
+- **Street:** longest frame 17.0 ms in 4 runs (no 288 ms GC frame); CPU work p50 7.6–10.7 / p95 9.4–13.0 ms; Auto held High.
+- **Arrival:** long frames only behind the black (the known batch building); one 34 ms frame outside it in 4 runs.
+- **No code change** (no before/after to show). What to measure on the Vega 8 (27c) is listed in the report.
