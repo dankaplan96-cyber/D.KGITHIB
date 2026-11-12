@@ -306,4 +306,6 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     files, which stay read-only and uncommitted), positions and colliders kept, the test stand and dig of chapter 4–5 left
     alone, draw calls before/after, `worldscore.mjs` before/after. **Order:** after QUEUE-9, and base them on the branch
     after PLACE-3 (Desert Island and the Hamalayi's placement, running in the cloud now) is merged: the cloud notes it here.
+    **PLACE-3 merged 12.11** (Desert: the corral troughs, Hesk's yacht and spare gear, jars, sacks and crates moved; the
+    Hamalayi: a crate, the woodpile, the observatory's supplies, the old crank stand): re-capture before the Desert batches.
     Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
