@@ -63,3 +63,7 @@ the custom head shader (the 18–21 "own shader code" draws per view) is theirs 
   - **Walkers' carried props allocate new geometry on every pick-up and never free it.** On the Zeelich street, 180 s
     added 20 geometries and grew `renderer.info.memory.geometries` by +20. In the three-visit route, each exit added
     +3 (`walkers.js` CARRY).
+- Art commit `1ca971f0` (`zeelich.js` only). Waste fix written in `walkers.js` (`carryOf`) but not yet committed.
+- Base snapshot at `/dev/shm/t930base` (port 8931); candidate at `/dev/shm/t930` (port 8930).
+- Added to the harness: the first time a workshop mark is seen on the walk (raycast) and the carried-prop geometry
+  counter.

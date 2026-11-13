@@ -836,6 +836,7 @@ export function* buildZeelichSteps(scene, physics) {
     ferry,
     life,
     lift,   // (CAMPAIGN-3: story/zeelift.js)
+    workshopMarks: (houses[4].marks || []).map(([x, y, z]) => ({ ...W(x, z), y: Y0 + y })),   // (TECH-ART-1: tests/techart-zeelich.mjs)
   });
 
   // VP-10 (the user, 7.11: "in Zeelich all the buildings disappear when you get close"): as on Citadel and in LBA2,
@@ -1545,7 +1546,9 @@ export function* buildZeelichSteps(scene, physics) {
     placeTag('cartWheel');   // (PLACE-2: names the piece for tests/place-scan.mjs; nothing in play)
     HB.add(cached('cartwheel', () => compose([[new THREE.TorusGeometry(0.5, 0.06, 6, 22)], ...[0, 1, 2, 3].map((k) => [bbox(1.0, 0.05, 0.05, 0.01, 1), 0, 0, 0, 0, 0, (k * Math.PI) / 4]), [cyl(0.08, 0.08, 0.16, 8).rotateX(Math.PI / 2)]])), tm('wood', { color: '#a87850' }), -w / 2 - 0.25, 0.55, 1.2, 0, Math.PI / 2 - 0.2, 0.15);
     placeTag(null);
-    return {};
+    // (TECH-ART-1: where his marks stand, the hanging sign and the east board, for tests/techart-zeelich.mjs: [x, y, z] in
+    //  the island's frame)
+    return { marks: [[...f(sx, d / 2 + 0.78), 2.62], [...f(-w / 2 - 0.06, -1.9), 2.55]].map(([x, z, y]) => [x, y, z]) };
   }
 
   // ================================================================ plaza: fountain and the market stall
