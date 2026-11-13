@@ -51,6 +51,114 @@ with a cap"). I invent no other reference detail.
 Not chosen: the character. Twinsen and the residents read at Follow distance. That is the character artist's area, and
 the custom head shader (the 18–21 "own shader code" draws per view) is theirs as well.
 
+## The art change (commit `1ca971f0`; `src/game/zeelich.js` only)
+
+One complete view: the workshop as the way from the spaceport meets it, and its entrance.
+
+1. **The doors on Zeelich's street.** All five houses share `esmerHouse`, and each door gets three changes:
+   - **A dark reveal.** `revealGeo` is a U band lining the jambs and the arch soffit, from the leaf out to the ring, in
+     shadow-dark stone (`#463c36`).
+   - **A keystone over the crown.** It uses the plinth's stone.
+   - **On Baldino's door, a stone lintel as the alfiz's head.** It stands 0.2 m proud of the wall and puts a shadow
+     line over the arch.
+
+   Everything uses the plinth's stone map, so drawbatch folds it into the stone draw that is already there.
+2. **The workshop's arch ring is brass.** Brass is the material of Baldino's round window and his observatory dome, so
+   the door ties to the owner's other marks. Its olive leaf already matches his smock (`#67734b`). The other four houses
+   keep LBA2's glass-block ring (ZSTYLE-1), now edged by the dark reveal.
+3. **His ribbed patch is now a painted galvanised grey:** metalness 0.45 → 0.12, roughness 0.48 → 0.62, colour
+   `#b8c0bc` → `#c4ccc8`. It no longer draws as a black hole: luminance 0.007 → 0.020 on the shaded back face, and its
+   ribs read.
+4. **His board on the east wall,** square to the gravel path that the spaceport's way comes up:
+   - The cog-and-spanner of his hanging sign (the same face material), on brass.
+   - Under it, a gold arrow pointing north, round the corner to the street door.
+   - It sits flat on the wall, between the window and the back corner's pier, inside his collider. Nothing new to bump
+     into, and no collider changes.
+   - No text, so there is nothing to translate.
+
+No position, collider, door trigger, prompt, wall cutaway or camera shape changed. PLACE-2's places are kept.
+`R.workshopMarks` is new: the world spots of the hanging sign and the east board, read by
+`tests/techart-zeelich.mjs` only.
+
+### Measured on the same route (Automated runtime only)
+
+Conditions: `tests/techart-zeelich.mjs`, 1366×768, Medium by hand, Follow at Medium, chapter 3 by flags, a fixed hero
+spot per view, the camera snapped, 60 settled frames. Run on the base (`/dev/shm/t930base`), on the art-only commit,
+and on the final candidate.
+
+| | base | art only | final |
+|---|---|---|---|
+| Workshop mark first seen on the walk from the landing (raycast from the Follow lens) | door and hanging sign at **17.2 s**, after he turned to the door 2.1 m from it | **east board at 2.7 s**, 24.1 m from the door, 25 m from the lens; door and sign at 17.2 s | the same as art only |
+| Walk by input from the landing to the door | 16.1 s, arrived | 16.1 s, arrived | 16.1 s, arrived |
+| Three visits in and out of the workshop | in, out, 2.47 m from the door | the same | the same |
+| Door view: arch ring against the foot band (luminance) | 0.090 against 0.094 (no edge) | brass 0.026 against 0.094 | the same |
+| Draws per view (main + shadow): dock / bridge / street / door / back / resident | 132 / 165 / 188 / 145 / 114 / 152 | 132 / 166 / 191 / 146 / 114 / 152 | 132 / 166 / 189 / 146 / 114 / 152 |
+| Main-pass triangles per view: door / street | 260,381 / 378,212 | 261,907 / 379,818 | 261,907 / 379,738 |
+| Textures, shader programs | 414, 169 | 414, 169 | 414, 169 |
+
+Cost of the art: about +1 draw in views that hold the workshop (the board's face) and about +1.5k triangles in each
+view (reveal bands, keystones, lintel, board, arrow). No new texture or program.
+
+Pictures (team only, chapter 3):
+- `captures/tech-art-1/base/`, `art-only/` and `final/`, all `x-*.jpg`.
+- Side by side: `x-door-compare.jpg`, `x-route-compare.jpg`, `x-resident-compare.jpg`, `x-street-compare.jpg`.
+
+## The waste fix (commit `d91a3b80`; `src/game/walkers.js`)
+
+**What was wasted.**
+- The town's residents pick things up on their rounds: a basket, a crate, a can, a case, a sack (`walkers.js` CARRY).
+- Every pick-up ran the kind's builder, which created new `CylinderGeometry`, `TorusGeometry`, `BoxGeometry` and
+  `SphereGeometry` objects.
+- The old prop was only removed from the hand, never disposed. Each pick-up was a fresh set of GPU buffers that stayed
+  allocated for the session.
+- The materials were already cached (`rig.js` `mat()`), so only the geometry was wasted.
+
+**The fix.**
+- Each kind's group is built once, as a module-owned template (`CARRY_T`).
+- A carrier gets `template.clone()`. Object3D.clone shares the geometry and the materials; the carrier owns only its
+  clone's transform.
+- Nothing disposes a template, and nothing edits one. `placeCarry` moves the clone only.
+- This is the smallest fix: two lines of logic, and no new pipeline.
+
+**Measured counters (Automated runtime only; `tests/techart-zeelich.mjs`, the same run as above).**
+
+| Counter | base | final |
+|---|---|---|
+| Carried-prop geometries created over the whole run (boot, chapter 3, six views, the walk, three visits, 120 s on the street) | **26** | **3** (the first build of one kind) |
+| The same, during 120 s of street life by the plaza | **10** | **0** |
+| `renderer.info.memory.geometries` growth over those 120 s | **+3** | **0** |
+| Live geometries after the resident view | 1363 | 1357 |
+| Probe `leak.mjs`, 180 s on the Zeelich street: geometries created / live growth | 20 / +20 | 0 (see the note under "Risks") |
+| Probe `leak.mjs`, 180 s on Citadel's square (new game): carried-prop geometries | 7 | 3 (the can's template, once) |
+
+**Estimates derived from the source, not measured.**
+- A pick-up made 2–5 geometries of 24–343 vertices (about 1–15 KB each with normals and UVs), so about 3 GPU buffers
+  each.
+- At the measured Zeelich rate, about 6.7 geometries a minute, an hour of town life would have left about 400
+  geometries and about 1,200 buffers behind.
+- The fix makes this zero after the first pick-up of each kind.
+- This counts allocations and buffers. It is not a frame-time claim.
+
+**Hypotheses examined and dropped.**
+- **Duplicate materials keeping the batcher from grouping props.** `zeelich.js` and `kit.js` keep two caches, so the
+  same brass exists twice. But drawbatch folds plain and texture-only materials by their map, so both copies already
+  draw together. No draw to save.
+- **Workshop re-entry rebuilding batches.** The first visit builds its drawbatch and shadowcull cells (31 geometries,
+  20 materials). Visits two and three build none.
+- **Per-frame allocation on the street.** None, standing or walking.
+- **The three dogs' identical part geometries** (about 400 KB of duplicate vertex data). Real but bounded, built once
+  at region build. Left as a follow-up.
+
+## Where else it applies
+
+- **The waste fix** is in the shared resident system (`Walkers`), so it holds wherever residents carry things: Citadel,
+  Desert Island, the Hamalayi, Zeelich's isles and the interiors with rounds. Spot-checked on Citadel's square: 7
+  carried-prop geometries in 180 s on the base, 3 on the candidate (the can, built once). `townlife`, `walkers`,
+  `interior-life` and `cast-rounds` are in the suite list below.
+- **The art change** covers all five doors of Zeelich's street, which share the builder. It does not extend to
+  `props-esmer.js` `esmerBuilding` (Zeelich's isles and the terminal's pavilion). Those doors have no glass-block foot
+  band, so F2's cause is absent there, and a bulk change across the isles would need its own captures.
+
 ## Notes as I go (crash log)
 
 - 13.11: reset to base, doc started.
