@@ -25,12 +25,14 @@ await ev(async () => {
   // the waste counter (TECH-ART-1): every BufferGeometry given its first position attribute, and how many of them came
   // from the walkers' carried props (walkers.js)
   const THREE = await import('three');
-  const C = window.__taGeo = { all: 0, carry: 0 };
+  const C = window.__taGeo = { all: 0, carry: 0, carryMat: 0 };
   const ps = THREE.BufferGeometry.prototype.setAttribute;
   THREE.BufferGeometry.prototype.setAttribute = function (n, a) {
     if (n === 'position' && !this.__ta) { this.__ta = 1; C.all++; if (/walkers\.js/.test(new Error().stack.split('\n').slice(2, 5).join(' '))) C.carry++; }
     return ps.call(this, n, a);
   };
+  const sv = THREE.Material.prototype.setValues;   // (and the materials made from the carried props' code: a throwaway default material counts too)
+  THREE.Material.prototype.setValues = function (v) { if (/walkers\.js/.test(new Error().stack.split('\n').slice(2, 9).join(' '))) C.carryMat++; return sv.call(this, v); };
 });
 await ev((Q) => {
   const G = game;
@@ -159,12 +161,12 @@ const SECS = +process.env.SECS || 120;
 const life = await ev((SECS) => {
   const G = game, R = G.renderer.renderer, C = window.__taGeo;
   taAt(-24, 1.5, Math.PI / 2);
-  const a = { all: C.all, carry: C.carry, live: R.info.memory.geometries };
+  const a = { all: C.all, carry: C.carry, carryMat: C.carryMat, live: R.info.memory.geometries };
   for (let s = 0; s < SECS; s++) for (let i = 0; i < 30; i++) G.frame(1 / 30, i === 29);
-  return { secs: SECS, made: C.all - a.all, carried: C.carry - a.carry, liveGrowth: R.info.memory.geometries - a.live };
+  return { secs: SECS, made: C.all - a.all, carried: C.carry - a.carry, walkersMaterials: C.carryMat - a.carryMat, liveGrowth: R.info.memory.geometries - a.live };
 }, SECS);
 const geoAll = await ev(() => window.__taGeo);
-console.log('WASTE carried-prop geometries made over the whole run: ' + geoAll.carry + ' (of ' + geoAll.all + ' geometries made in all); street life ' + JSON.stringify(life));
+console.log('WASTE carried-prop geometries made over the whole run: ' + geoAll.carry + ' (of ' + geoAll.all + ' geometries made in all); materials made from walkers.js code: ' + geoAll.carryMat + '; street life ' + JSON.stringify(life));
 console.log('COUNTS ' + JSON.stringify(counts));
 done();
 await browser.close();

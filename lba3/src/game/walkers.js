@@ -94,12 +94,20 @@ const CARRY = {
   },
 };
 
-// TECH-ART-1: each kind is built once and a carrier holds a clone of it (Object3D.clone shares the geometry and the
-// cached materials). Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
+// TECH-ART-1: each kind is built once and a carrier holds a copy of it that shares the template's geometry and its
+// (cached) materials. Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
 // in chapter 3, each a new set of GPU buffers. The templates belong to this module and are never disposed or edited; a
-// carrier only moves, hides or drops its own clone.
+// carrier only moves, hides or drops its own copy. (The copy is made by hand: Object3D.clone's `new Mesh()` makes a
+// default material and geometry for every mesh only to replace them.)
 const CARRY_T = new Map();
-const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return CARRY_T.get(kind).clone(); };
+const share = (o) => {
+  const c = o.isMesh ? new THREE.Mesh(o.geometry, o.material) : new THREE.Group();
+  c.position.copy(o.position); c.quaternion.copy(o.quaternion); c.scale.copy(o.scale);
+  c.castShadow = o.castShadow; c.receiveShadow = o.receiveShadow; c.visible = o.visible;
+  for (const ch of o.children) c.add(share(ch));
+  return c;
+};
+const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return share(CARRY_T.get(kind)); };
 
 // ------------------------------------------------------------------ the manager (one per game)
 export class Walkers {
