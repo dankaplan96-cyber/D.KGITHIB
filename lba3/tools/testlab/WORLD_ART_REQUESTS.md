@@ -4691,3 +4691,111 @@ is excellent, leave it like this"; "yes").
 - Tests: solidnpc, chapter1, cast-rounds, story-journeys PASS; prologue's intermittent "well's mites" check failed on both the
   unchanged branch and this one in alternating runs, and passed on both: not this change. Pictures `docs/future/characters/
   twinsen/look-38/twinsen-orig-*.jpg` (chapter 1, the user saw them).
+
+## DESERT-ART 1–2 · Desert Island's old places in LBA2's language (CURATOR-27a's two batches) · the desktop, 13.11.2026
+CLOUD_ORDERS 40, "CURATOR-27a's question answered", and 41 item 3: the two Desert batches, after QUEUE-9 and PLACE-3 (in work
+when order 41 arrived, so sent before its items 1–2; GPU-V85 is next). **Ready for the cloud, a
+series, in this order: `requests/DESERT-ART-1.diff`, then `requests/DESERT-ART-2.diff` on top of it** (`src/game/desert.js`,
+`src/game/desertold.js`; both made against origin 516f6145 and checked there with `git apply --check`, 1 then 2).
+The user, 13.11, during this work: **"assume twelve years have passed, so changes make sense; this is a decision"**, and then,
+asked whether to still send both batches: **"send both"**. So both bring back LBA2's shapes and colours for these landmarks
+and keep every twelve-years addition (the awnings and shutters, the cool room, the well, the research post, the dig).
+Reference: the original's objects drawn from the user's GOG files with the repo's study renderer (bodies 0, 33, 64, 80, 52,
+19, 24, 94, 95), scratch only, never committed. Built by hand in our own geometry; nothing exported.
+
+**1 · Kesh's houses** (`desert.js` HOUSES and the house builder; `desertold.js` adobe() for S40):
+- The walls in LBA2's peach, each house its own shade (`#ecb79c`, `#f2c5aa`, `#e6ab90`, `#f4cfb6`, `#e9b094`; S40 `#eab496`):
+  they were tan-ochre.
+- Low, faceted round domes on the parapets (bodies 94–97): two on the front parapet, one on the back's far half (clear of
+  the rooftop jars), each on a thin ring, in the wall's own plaster. S40 (body 24): two small five-sided domes on its front
+  parapet.
+- The Pueblo roof beams (vigas) are gone from the five houses and S40: LBA2's houses have none. Awnings, shutters, stairs,
+  doors, jars kept.
+- No teal band: the original's teal on house 19 is its rooftop telescope, not a band (the curator's report guessed one).
+**2 · The landmarks** (`desertold.js`):
+- **The standing figures (bodies 0, 33):** `domeFigure` replaces the dark hooded statues: a peach column narrowing to a
+  waist, flaring to a drum, a band (body 0 red, body 33 green, as the original's) and a pointed teal cap, eight-sided.
+  `stoneFigure` removed (no other user).
+- **The twin pillars north of the post (bodies 80, 81):** `ballPillar` replaces the horned pillars there: a slender
+  peach shaft, a small buttress at its foot (within the collider), a dark iron ball with a spike on top, a small bracket.
+  The other horned pillars (body 32 and ours at the School) stay horned.
+- **The gateway (body 64):** the beam chequered black and white, two squares deep (a 64 px canvas texture, `ctex`), with
+  rounded edges; the grey cap and the seven discs removed; the posts peach.
+- **S28, the dig crew's bunkhouse (body 52, LBA2's giant grey stone face):** the tower in the island's grey stone (was
+  stone under adobe), its west wall carved as a face over the door: V-set brows, dark eye sockets with heavy lids, cheeks,
+  the long nose, a dark mouth between two lips, all above the door's head (2.4 m) and within the wall's length. The west
+  wall's four windows become the eyes (the east wall keeps its three). The door, its sill, the crew's board
+  (`R.s28board`) and the door's room are where they were.
+- **Kept everywhere:** positions, every collider (each new builder keeps the old one's collider exactly), `R.figures`
+  (the four spots `worldscore.mjs` matches), `R.gateway`, `fitAdd` registrations, the shut doors, the test stand and the
+  dig of chapters 4–5.
+
+**Numbers** (Chrome on the GTX 1050, the desktop):
+- **Desert group, counted, people and camera out of it** (meshes, as draw calls at most): **419 → 417**; triangles
+  389,346 → 388,796. The five houses each lose the beams' mesh (−5); the old places gain teal, red, green and the checker
+  (+4); S28's adobe goes (−1). From the play camera (`renderer.info`, same spots) the counts move by −4…+5 with the
+  people walking, on both trees: no change readable there.
+- **worldscore.mjs** (Desert Island): 82.8 before and after (it measures ground, colliders and registered buildings, which
+  are unchanged; the art itself is the rubric's part).
+- **The curator's rubric, re-scored provisionally** (editorial, not reviewed by the user): Kesh 72 → ~78 (architecture
+  12 → 16, palette 10 → 12); the figures and the gateway 64 → ~79 (landmarks 14 → 16, architecture 8 → 16, palette 7 → 13):
+  the critical-landmark failure resolved; the great hall and the face 74 → ~78 (S28 reads as a face).
+**Tests** (SwiftShader, the changed tree on 6d6f0721; the cloud's edits since, the derrick's collider and the third
+trough, touch none of these parts):
+- chapter4 59/59, island-doors 89/89, desert-life 30/30 PASS.
+- place-scan (CLOUD_ORDERS 41 item 3): functional 2 passed, 1 failed, **the same on the unchanged origin 516f6145**: 14 pieces
+  out of place (Knartas's island parts, 4–5 cm), 132 measured and left, on both trees; none on Desert Island.
+- desert-bar 16 passed, **1 failed: the same on the unchanged branch** ("chapter 8, Citadel evacuating: … Safi and Jorr
+  talk of Citadel's news": Safi still says chapter 4's line about the wind-catcher). Story, not this change; for the cloud.
+- worldfit: functional PASS, 2 visual (an opening in Citadel's "house nbr", Zeelich house 3's window, z-fighting in
+  Citadel): **the same on the unchanged branch**; nothing on Desert Island.
+- **For the cloud (a one-line test fix, as containers.mjs):** `tests/desert-bar.mjs:151` loads the harness with
+  `path.dirname(new URL(import.meta.url).pathname)`, which on Windows is `/C:/…` → `C:\C:\…`, so the suite stops after its
+  13th check; `fileURLToPath(new URL('./lib/player.js', import.meta.url))` lets it finish (run so here, locally only).
+**Pictures** (chapter 4: **not for the user**): `docs/future/desert-art/ch3plus-ba1-before-after.jpg` (Kesh, S40),
+`ch3plus-ba2-before-after.jpg` (the figures, the pillars, the gateway, S28), `ch3plus-s28-face.jpg` (the face, close).
+Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+**Order 41 item 6 (27c on the Vega 8):** the laptop was sold (LAPTOP-SOLD, 12.11); the user chose the desktop's Intel UHD 630
+as the minimum-target machine. 27c runs there: v85 against the UHD 630 baseline of 12.11, labelled "UHD 630".
+
+## GPU-V85 · the new chapters' objects from the play camera: what reads, what does not (the look; fixes follow) · the desktop, 13.11.2026
+CLOUD_ORDERS 41 item 1. Chrome on the GTX 1050, v85 (3c0ad77b, the build stamp's tree), 1536×819 CSS (the screen's 125 %:
+1920×985 px), the defaults (Follow, Medium; rooms by their own `R.view` camera). Each chapter from its campaign fixture
+(`tests/fixtures/campaign/*.save.json`, Continue), Twinsen placed at the object's use spot (`touch().front` or the prompt's
+spot), facing it, the camera settled 2.5 s. Pictures (chapters 6–12, **not for the user**): `docs/future/gpu-v85/ch3plus-*.jpg`.
+Evidence: the desktop's eyes on the pictures; nobody played. Reveal beats: off with `?nocine` (as in every suite), so they were
+read in the source only (`story/revealcam.js`).
+
+| Ch | Object (fixture) | Reads? | What is seen at the use spot |
+|---|---|---|---|
+| 6 | the crank (new-09-lift) | yes | the winch drum and its crank wheel beside him; his body covers the handle itself at the crank's front |
+| 6 | the gauge by the winch | yes, but | a clear dial (green/red arc, LINE) beside him from the crank; **at its own read spot his head covers it** (he stands 1 m in front of the face, the camera behind him at its height) |
+| 6 | the line's three lamps | partly | from the crank the lowest lamp shows small at the frame's top, the other two above the frame; the ride's beat (`passline.js:231`) frames the platform, which carries them |
+| 7 | the bearing ring (new-10-lit) | yes | the brass ring round the telescope's foot with its engraved marks, large in the dome's room camera |
+| 7 | the setting lever | weak | a small dark handle on the ring, under the barrel; it reads only as part of the ring |
+| 8 | the lane's water gate (new-11-landing) | yes | the black two-leaf grate over the full culvert, framed by its posts; the arrival beat (`laneline.js:320`) looks straight at it |
+| 8 | the culvert cock (pump room) | **no** | at the use spot he stands behind the brick pier; the cock is a small red handle on the copper pipe on the pier's far side, a few pixels |
+| 9 | Vesk's order sheet (new-12-heard) | weak | a small pale sheet over a dark plate right of the archive door, smaller than his head in the room camera |
+| 9 | the BORE drawer (new-12-drawer) | yes | the labelled cabinet (TUNNELS / BORE / FERRIES), the drawer out with white papers |
+| 10 | the code line's joint (new-13-five) | **no** | at its front (0.5 m) the 1.2 m post and its 16 cm clamp are behind his back; beside it the feed box's lamp reads, the joint does not |
+| 10 | the isolator on it (`J.clip(true)`) | **no** | a 9 × 5.5 × 12 cm brass block on the clamp: the same picture with and without it |
+| 11 | the damper (new-14-deep) | yes | the glowing orange disc high on the far wall, from the stair's foot; the steam over it |
+| 11 | the fitters' knocker | **no** | on the catwalk at its spot nothing reads as a knocker; the pipe run and the wall's dark boxes only |
+| 11 | the held shutter (`hold(true)`) | yes | the barred shutter in its hazard frame, the purple crystal holding it |
+| 12 | the branch cock (new-15-last) | yes | a red wheel on its stand inside a hazard ring, its sign beside it |
+| 12 | the central lock | yes | the teal pedestal and its sign at the foot of Vesk's platform |
+| 12 | the bar | weak | a dark bar on the pedestal's top, under his hands; small against the pedestal |
+
+**Draw calls** at the use spots (`renderer.info`, one frame): ch6 70–89, ch7 63, ch8 45 (pump room) / 330 (the lane, Citadel
+outdoors), ch9 55–63, ch10 190, ch11 77–87, ch12 140.
+**What the desktop will fix next (art only: sizes, faces, contrast; no lever, prompt, collider or position moved), one
+diff each, each with its chapter's suite and `campaign-hands`:**
+1. GPU-V85-JOINT (`codejoint.js`): the clamp and the isolator made to read beside him: a bigger clamp head, the isolator
+   as a brass block several times larger with its red pin and a band of hazard paint, so the knock and the clip show.
+2. GPU-V85-KNOCKER (the knocker in `underground.js` `buildDeep`): a knocker that reads as one (a brass hammer head on its
+   arm, a striking plate), at its place.
+3. GPU-V85-COCK (`pumproom.js`): the culvert cock's handle bigger and red, a brass collar on the pipe, seen past the pier.
+4. GPU-V85-SHEET (`upper.js`): Vesk's order sheet larger and paler, its plate brighter.
+5. Smaller: the ring's lever as a lever (a knob that reads), the gauge's face 30 % larger (seen past his head).
+Not for art: the gauge's read spot puts his head in front of its face (a spot change, the cloud's call); the lamps sit above
+the play camera's frame at the crank (the ride's beat shows them).
