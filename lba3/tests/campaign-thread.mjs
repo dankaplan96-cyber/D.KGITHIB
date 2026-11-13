@@ -733,7 +733,7 @@ const nwWait = () => ev((c) => { new Function(c)(); }, NWAIT);
 if (!ONLY || ONLY === 'L' || ONLY === 'C') {
   await start('base-13');
   is('C18 a save from before, chapter 10 at its start: loads; the thread is on, nothing of it past; on Mill Lane Irsa waits by Kell\'s feed box (the isolator still on it), its prompt is to unclip it', await ev(() => {
-    const G = game, f = G.flags; const st = [f.chapterKey, f.nw_v, f.nw_irsa ?? null, f.nw_arthur ?? null, document.querySelector('#objective').textContent];
+    const G = game, f = G.flags; const st = [f.chapterKey, f.nw_v, f.nw_irsa ?? null, f.nw_arthur ?? null, G.story.cur.objective()];   // (the whole objective: its lines)
     P.enter('zeelich', { run: true }); const L = G.rooms.zeelich.lift, n = P.npc('zl_irsa'); P.go(L.isoAt.front.x, L.isoAt.front.z, { tol: 0.4, run: true }); P.face(L.isoAt.x, L.isoAt.z);
     return [...st, L.isoShown(), +Math.hypot(n.pos.x - L.feed.x, n.pos.z - L.feed.z).toFixed(1), P.target()?.kind];
   }), (v) => v[0] === 'network' && v[1] === 1 && v[2] === null && v[3] === null && /Mill Lane/.test(v[4]) && v[5] === true && v[6] < 2 && v[7] === 'nw_unclip');
@@ -778,7 +778,8 @@ if (!ONLY || ONLY === 'M') {
   await handover();
   is('M4 after Continue the dial is where he left it; the rest set by input; Zoé comes round and takes the dial bank as he lets go; down the stairs past her by input', await ev(() => {
     const G = game, f = G.flags, L = G.rooms.lighttop; const d0 = (f.c10_dials || [])[0];
-    for (let pass = 0; pass < 3 && !f.c10_light; pass++) for (const i of [1, 2, 3]) { if (f.c10_light || G.story._nw.busy) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); }
+    // (each dial turned until it reads its part of the code — star, sun, wave: 2, 0, 1 — as a player listening to Zoé would)
+    for (const i of [1, 2, 3]) for (let k = 0; k < 3 && !f.c10_light && !G.story._nw.busy && (f.c10_dials || [0, 1, 2])[i - 1] !== [2, 0, 1][i - 1]; k++) { const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); }
     for (let i = 0; i < 300 && (G.story._nw.busy || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle();
     const z = P.npc('zoe'), za = z.rig.anim; const r = P.exitTo('outdoor-lighthouse');
     return [d0, f.c10_light, f.nw_zoe, za, r.r, G.room?.id ?? 'out'];

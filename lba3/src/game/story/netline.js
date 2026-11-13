@@ -44,12 +44,15 @@ export class NetThread {
   arthurHome() { return this.on && this.f.nw_zoe !== 'past'; }
 
   // ---------------------------------------------------------------- state
-  begin() { this.f.nw_v = 1; }
+  // (a game without chapter 9's isolator on Kell's feed box — wave 5's thread not played — has no Mill Lane step: Baldino
+  //  holds his isolator himself)
+  begin() { this.f.nw_v = 1; if (!this.f.cn_lane) this.f.nw_irsa = 'past'; }
   applyFlags() {
     const f = this.f, g = this.game, cur = this.cur();
     // a save from before the thread, in chapter 10: the thread is on; a step it is past counts as done
     if (cur && !f.nw_v) {
       f.nw_v = 1; f.nw_old = true;   // (where the save stands is known only once it is loaded: Mill Lane is decided in update)
+      if (!f.cn_lane) f.nw_irsa ||= 'past';
       if (f.c10_valves) { f.nw_gauge ||= 'past'; f.nw_mira ||= 'past'; f.nw_arthur ||= 'past'; }
       if (f.c10_light) { f.nw_zoe ||= 'past'; f.nw_arthur ||= 'past'; }
       if (f.c10_boreRelay || f.c10_bore) f.nw_ilka ||= 'past';
