@@ -92,7 +92,8 @@ export class ShellThread {
     if (id === 'dp_guard') return f.co_signal && !f.c3_done && C?.guardSpot ? { ...C.guardSpot } : null;
     return undefined;
   }
-  veskKey() { const K = this.R('c3core').lock.key, s = standFor('tinker', K.x, K.z, K.a); return { x: s.x, z: s.z, a: K.a }; }
+  // (Vesk at his lock: his hands on its top by the key's side — workhands.js puts them there — facing it)
+  veskKey() { const K = this.R('c3core').lock.top, s = standFor('tinker', K.x, K.z, K.a); return { x: s.x, z: s.z, a: K.a }; }
 
   // ---------------------------------------------------------------- HUD (chapter3.js asks first; null: its own)
   objective() {
