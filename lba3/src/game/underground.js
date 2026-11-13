@@ -1999,17 +1999,17 @@ function buildCore(scene, physics) {
     });
   }
 
-  // --- CAMPAIGN-9 (story/answer.js): the last act's machinery. Vesk's central lock on his platform (a keyed lever: his key on
-  //  its side, the bar on its front at hand height); the branch manifold on the deck ring beyond the platform (the bore's main
+  // --- CAMPAIGN-9 (story/answer.js): the last act's machinery. Vesk's central lock on the deck at the foot of his platform's
+  //  steps, right of them (a keyed lever: his key on its side, the bar on its front at hand height); the branch manifold on the deck ring beyond the platform (the bore's main
   //  riser up to Citadel with the fitters' knocker on it, and Mill Lane's branch with its two-way cock: BORE or MILLS); where
   //  the council's guards stop when they come in. Static parts in the room's kit; the bar, the key, the cock's handle and the
   //  knocker one mesh each
   {
     const PF = (lx, lz) => [CP[0] + Math.sin(cpA) * lz + Math.cos(cpA) * lx, CP[1] + Math.cos(cpA) * lz - Math.sin(cpA) * lx];
-    const PY = 0.9;   // the platform's top
+    const PY = 0.0;   // (the deck: the lock stands at the foot of the platform's steps, where the walk to it is plain)
     const one = (grp, fill) => { const kk = new Kit(grp); fill(kk); kk.flush(); grp.traverse((o) => { if (o.isMesh) o.castShadow = false; }); return grp; };
-    // the lock: a teal pedestal on the platform, right of the console
-    const LX0 = 1.15, LZ0 = 0.15;
+    // the lock: a teal pedestal on the deck, right of the platform's steps, its bar toward the arena
+    const LX0 = 1.7, LZ0 = 3.2;
     k.at(CP[0], 0, CP[1], cpA, () => {
       k.add(rbox(0.5, 1.0, 0.42, 0.05), teal(), LX0, PY + 0.5, LZ0);
       k.add(rbox(0.56, 0.08, 0.48, 0.02), iron(), LX0, PY + 1.04, LZ0);

@@ -347,6 +347,11 @@ export class ShellThread {
     if (this.msg && play && h.actT <= 0 && this.pt - this.msg.last > MSG_GAP) { const m = this.msg; this.msg = null; this.endMessage(m); }
     // the plates line him up (standing still on one)
     this.plates(dt);
+    // nudges for a stuck player only (HINTS-LESS): the knocker after her first answer, the mirror once the middle stone is up
+    if (k === 'shell') {
+      this.ch.nudge(dt, 'sh_knock', r === 'c3deep' && !!f.sh_knock && !f.sh_reply && !!f.c3_ladder && !this.busy, 60, 'sh_toast_knock');
+      this.ch.nudge(dt, 'sh_mirror', r === 'c3gallery' && !!f.c3_pillar1 && !f.c3_pillar2, 45, 'sh_toast_mirror');
+    }
     if (r === 'c3deep' && k === 'shell') this.deep(dt, crossed, play);
     if (r === 'c3core' && this.act()) {
       const C = this.R('c3core');

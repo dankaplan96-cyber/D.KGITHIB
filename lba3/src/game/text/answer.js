@@ -19,6 +19,7 @@ Object.assign(STR.en, {
   sh_k4: "Four is Arthur's count from up top. Down here she says two.",
   sh_knone: 'Nothing answers that.',
   sh_toast_knone: 'Nothing answers',
+  sh_toast_knock: 'The damper answers the shell with two. Knock two at the fitters\' knocker',
   sh_four: "Four. Slow. She's counting back at me.",
   sh_west: 'And the vents at the other end just shut. All the way to valve C.',
   sh_held: "The shutter's coming down... Crystal. It grew up under it. It's holding it open.",
