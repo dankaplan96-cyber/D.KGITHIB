@@ -92,10 +92,11 @@ export function buildWinchLine({ group, col, W, H, kit, updaters, lift, winch, t
   // ---- the gauge on its post, right of the crank, its face toward the man at the crank
   const G0 = { x: wx + 1.95, z: wz + 0.62 }, gy = H(G0.x, G0.z), GY = gy + 1.45;
   kit.add(new THREE.CylinderGeometry(0.05, 0.06, 1.3, 8), dark, G0.x, gy + 0.65, G0.z - 0.1);
-  kit.add(new THREE.CylinderGeometry(0.27, 0.27, 0.12, 20), ironM, G0.x, GY, G0.z - 0.08, 0, { rx: Math.PI / 2 });
-  kit.add(new THREE.BoxGeometry(0.62, 0.05, 0.3), ironM, G0.x, GY + 0.31, G0.z - 0.03);   // (its little snow roof)
+  // (GPU-V85: the gauge 30 % larger: at its read spot his head covered the old face; now its arc shows round him)
+  kit.add(new THREE.CylinderGeometry(0.35, 0.35, 0.12, 24), ironM, G0.x, GY, G0.z - 0.08, 0, { rx: Math.PI / 2 });
+  kit.add(new THREE.BoxGeometry(0.8, 0.05, 0.32), ironM, G0.x, GY + 0.4, G0.z - 0.03);   // (its little snow roof)
   col({ type: 'cyl', x: G0.x, z: G0.z - 0.1, r: 0.2, top: GY + 0.35, noStand: true });
-  const face = new THREE.Mesh(new THREE.CircleGeometry(0.24, 28), new THREE.MeshStandardMaterial({ roughness: 0.6, map: canvasTex(192, 192, (x) => {
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.31, 32), new THREE.MeshStandardMaterial({ roughness: 0.6, map: canvasTex(192, 192, (x) => {
     const c = 96, arc = (v0, v1, color, w = 26) => { x.strokeStyle = color; x.lineWidth = w; x.beginPath(); x.arc(c, c, 66, ang(v0) - Math.PI / 2, ang(v1) - Math.PI / 2); x.stroke(); };
     x.fillStyle = '#f2ecdc'; x.beginPath(); x.arc(c, c, 94, 0, 7); x.fill();
     arc(0.0, 0.1, '#9aa6b0'); arc(0.1, vG, '#3aa64a'); arc(vG, 0.9, '#e0a020'); arc(0.9, 1.05, '#c8302a');
@@ -104,7 +105,7 @@ export function buildWinchLine({ group, col, W, H, kit, updaters, lift, winch, t
   }) }));
   face.position.set(G0.x, GY, G0.z - 0.015); face.castShadow = false; D.add(face);
   const needle = new THREE.Group(); needle.position.set(G0.x, GY, G0.z - 0.005); D.add(needle);
-  { const n = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.2, 0.008), new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.6 })); n.position.y = 0.08; n.castShadow = false; needle.add(n); }
+  { const n = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.26, 0.008), new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.6 })); n.position.y = 0.1; n.castShadow = false; needle.add(n); }
 
   // ---- the upper brake at the top, west of the frame: a stand, a ratchet wheel, a red lever, a rod up to the top wheel
   const B0 = { x: top.x - 2.0, z: top.z - 1.0 }, by = H(top.x - 2.0, top.z - 1.0);

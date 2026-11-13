@@ -1118,8 +1118,11 @@ function buildDeep(scene, physics) {
     { const kk = new Kit(kn);
       kk.add(pipe([[0, 0, 0], [0, -0.1, 0.22], [0, -0.15, 0.37]], 0.022, 0.05, 6), iron(), 0, 0, 0);
       kk.add(cyl(0.032, 0.032, 0.2, 10), MAT.paint('#b8302a', 0.4), 0, -0.15, 0.39, 0, { rz: Math.PI / 2 });
-      kk.add(rbox(0.05, 0.12, 0.05, 0.01), iron(), 0, 0.06, -0.02); kk.add(cyl(0.05, 0.05, 0.1, 10), brass(), 0, 0.13, -0.03, 0, { rz: Math.PI / 2 });
+      // (GPU-V85: the hammer a real brass head, and a brass band on the header where it strikes, so the knocker reads
+      //  as one from the catwalk; the grip, its place and size, as they were)
+      kk.add(rbox(0.07, 0.14, 0.07, 0.01), iron(), 0, 0.06, -0.02); kk.add(cyl(0.07, 0.07, 0.24, 12), brass(), 0, 0.15, 0.0, 0, { rz: Math.PI / 2 });
       kk.flush(); kn.traverse((o) => { if (o.isMesh) o.castShadow = false; }); }
+    kt.add(cyl(0.1, 0.1, 0.26, 12), brass(), KX, HY, HZ, 0, { rz: Math.PI / 2 });   // (the brass band on the header where the hammer strikes)
     const GX = KX, GZ = HZ + 0.16 + 0.39, GY = HY - 0.14 - 0.15;   // (the grip's centre: 1.21 m over the deck)
     k.at(KX + 0.36, HY - 0.32, BZ + 0.02, 0, () => signPlate(k, 0.42, 0.24, signMat(['KNOCKER', 'SHIFT CALLS'], { w: 192, h: 110, emblem: false })));
     let strikeT = -1, damperK = 0;

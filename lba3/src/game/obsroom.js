@@ -80,8 +80,9 @@ export function buildObsRoom(scene, physics) {
   k.add(cyl(0.08, 0.08, 0.1, 10), MAT.brass(), LV.x - 0.02, LV.y, LV.z, 0, { rz: Math.PI / 2 });
   k.add(plane(0.34, 0.12), MAT.map(canvasTex(256, 96, (x) => { x.fillStyle = '#e8d8b0'; x.fillRect(0, 0, 256, 96); x.fillStyle = '#3a2410'; x.font = 'bold 30px serif'; x.textAlign = 'center'; x.fillText('1  2  3  4', 128, 44); x.font = '18px serif'; x.fillText('STARS SUNS ICE SNOW', 128, 80); })), TX - 0.575, LV.y - 0.2, LV.z, -Math.PI / 2);
   const lever = new THREE.Group(); lever.position.set(LV.x - 0.06, LV.y, LV.z); B.group.add(lever);
-  { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.36, 0.035), MAT.brass()); arm.position.y = 0.18; lever.add(arm);
-    const kn = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), MAT.brass()); kn.position.y = 0.36; lever.add(kn);
+  // (GPU-V85: the arm heavier and its knob red and larger, so the lever reads apart from the brass ring under it)
+  { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.05), MAT.brass()); arm.position.y = 0.18; lever.add(arm);
+    const kn = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 9), MAT.paint('#b8302a', 0.4)); kn.position.y = 0.36; lever.add(kn);
     mergeStatic(lever, { recolor: true }); }
   // (about z: the arm leans out west (−x) from straight up; setting 1 the most upright, 4 the most out)
   const NOTCH = { 1: 0.35, 2: 0.62, 3: 0.89, 4: 1.16 };

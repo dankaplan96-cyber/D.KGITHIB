@@ -25,7 +25,12 @@ export function buildCodeJoint({ root, physics, x, z, box }) {
   const add = (geo, m, px, py, pz, par = S) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); o.castShadow = false; par.add(o); return o; };
   add(new THREE.CylinderGeometry(0.045, 0.055, CLAMP_Y - 0.05, 8), iron, 0, (CLAMP_Y - 0.05) / 2, 0);
   add(new THREE.BoxGeometry(0.26, 0.03, 0.26), iron, 0, 0.015, 0);
-  add(new THREE.BoxGeometry(0.16, 0.05, 0.1), iron, 0, CLAMP_Y - 0.075, 0);   // the lower jaw (fixed), its top 0.05 under the clamp's
+  // (GPU-V85: the clamp's jaws broader and in hazard yellow, so the joint reads beside him and from the approach; its top
+  //  stays at CLAMP_Y, where the hand is. A yellow and black ring on the deck round the post's foot marks the spot when
+  //  his back hides the clamp at its front)
+  const hazard = MAT.paint('#e8b830', 0.55);
+  add(new THREE.BoxGeometry(0.3, 0.05, 0.17), hazard, 0, CLAMP_Y - 0.075, 0);   // the lower jaw (fixed), its top 0.05 under the clamp's
+  for (let k = 0; k < 8; k++) { const r = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.46, 3, 1, (k * Math.PI) / 4, Math.PI / 4).rotateX(-Math.PI / 2), k % 2 ? cable : hazard); r.position.y = 0.006; r.castShadow = false; S.add(r); }
   // the cable: off the deck from the collar's side (−z), up the post to the clamp, out of it and down to the box
   const bx = box.x - x, bz = box.z - z;
   const run = (pts) => { const c = new THREE.CatmullRomCurve3(pts.map(([a, b, c2]) => new THREE.Vector3(a, b, c2))); add(new THREE.TubeGeometry(c, 16, 0.022, 5), cable, 0, 0, 0); };
@@ -34,10 +39,12 @@ export function buildCodeJoint({ root, physics, x, z, box }) {
   mergeStatic(S, { recolor: true });
   // the upper jaw, cracked across: it jumps on the knocks
   const jaw = new THREE.Group(); jaw.position.set(0, CLAMP_Y - 0.05, 0); jaw.userData.keep = true; G.add(jaw);
-  add(new THREE.BoxGeometry(0.16, 0.05, 0.1), iron, 0, 0.025, 0, jaw);
+  add(new THREE.BoxGeometry(0.3, 0.05, 0.17), hazard, 0, 0.025, 0, jaw);
   // Baldino's isolator on the clamp, as on Kell's feed box (zlift.js): a brass block and its red pin
   const clip = new THREE.Group(); clip.position.set(0, CLAMP_Y + 0.03, 0); clip.visible = false; clip.userData.keep = true; G.add(clip);
-  add(new THREE.BoxGeometry(0.09, 0.055, 0.12), brass, 0, 0, 0, clip); add(new THREE.CylinderGeometry(0.012, 0.012, 0.03, 6), red, 0.025, 0.04, 0, clip);
+  // (GPU-V85: the isolator large enough to read once clipped: a brass block over the jaws, its red pin and a red tag)
+  add(new THREE.BoxGeometry(0.22, 0.1, 0.24), brass, 0, 0.03, 0, clip); add(new THREE.CylinderGeometry(0.025, 0.025, 0.09, 8), red, 0.06, 0.12, 0, clip);
+  add(new THREE.BoxGeometry(0.008, 0.12, 0.09), red, 0.115, -0.03, 0.06, clip);
   mergeStatic(clip, { recolor: true });
   const col = physics.add({ type: 'cyl', x, z, r: 0.1, top: gy + CLAMP_Y, noStand: true, seeThrough: true });
   let clipped = false;
