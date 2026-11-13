@@ -21,9 +21,10 @@ await ev(() => { game.enterRoom('c3sendell', null, true); game.step(0.1); });
 await reloadContinue();
 const d17 = await ev(() => { const G = game, f = G.flags, s0 = G.state; let lines = 0;
   for (let i = 0; i < 400 && !f.c3_sendell; i++) { if (G.state === 'dialog') { lines++; P.tap('KeyE', 0.05); } else G.step(1 / 30); }
-  return { s0, lines, sendell: !!f.c3_sendell, state: G.state };
+  return { s0, lines, sendell: !!f.c3_sendell, state: G.state, seal: f.sh_shut ?? null };
 });
-check('D17: Continue in the middle of Sendell\'s scene plays it on to its end (the way to the core opens)', d17.s0 === 'dialog' && d17.sendell, d17);
+// (CAMPAIGN-9: in a game with the shell's thread the arch grows shut behind him first, in play, and her scene follows it)
+check('D17: Continue in the middle of Sendell\'s scene plays it on to its end (the way to the core opens)', (d17.s0 === 'dialog' || d17.seal === true) && d17.sendell, d17);
 
 // D16: the core fight, saved in its second phase (all three pylons), resumes after Continue (chapter 12, The Core)
 await ev(() => { const G = game, f = G.flags; P.settle(); f.c3_sendell = true; f.chapterKey = 'core'; f.chapter = G.story.chapters.findIndex((c) => c.key === 'core'); G.story.refreshCast(); const ch = G.story.cur;

@@ -343,6 +343,78 @@ function flushNoShadow(kt) { const n = kt.group.children.length; kt.flush(); for
 const ang = (ax, az, bx, bz) => Math.atan2(bx - ax, bz - az);
 const polar = (phi, r, cx = 0, cz = 0) => [cx + Math.sin(phi) * r, cz + Math.cos(phi) * r];
 
+// ================================================================ CAMPAIGN-9 (wave 7, story/answer.js): shared pieces
+// a brass bank-shot panel's reflection: the flying ball, about to reach the first panel of `list` from its front, is put where
+// it meets the panel and sent off mirrored (horizontally), rising (the panels lean back). The core's panels, the shaft's test
+// receiver and the galleries' survey mirror all use it.
+function reflectOff(list, ball, dt) {
+  if (!ball || ball.state !== 'fly' || !list?.length) return false;
+  const v = ball.vel, p = ball.pos;
+  for (const f of list) {
+    const vn = v.x * f.nx + v.z * f.nz;
+    if (vn >= -0.5) continue;
+    const dist = (p.x - f.x) * f.nx + (p.z - f.z) * f.nz;
+    // reflect on the last frame before the ball would reach the panel's collider (front face + ball radius)
+    if (dist < -0.05 || dist > -vn * dt + 0.34) continue;
+    const lat = (p.x - f.x) * -f.nz + (p.z - f.z) * f.nx;
+    if (Math.abs(lat) > f.hw + 0.2 || p.y < f.y0 - 0.3 || p.y > f.y1 + 0.4) continue;
+    const s0 = Math.max(0, (dist - 0.3) / -vn);
+    p.x += v.x * s0; p.z += v.z * s0; p.y += v.y * s0;
+    v.x -= 2 * vn * f.nx; v.z -= 2 * vn * f.nz; v.x *= 0.95; v.z *= 0.95;
+    v.y = Math.max(v.y, f.kick);
+    f.flash = 1;
+    const g = globalThis.game; g?.audio?.play?.('bounce'); g?.particles?.burst?.(p.x, p.y, p.z, '#ffe9a0', 8, 2.5);
+    return true;
+  }
+  return false;
+}
+const NO_AIM = Object.freeze({ lit: true });   // (a ball target the aim assist leaves alone: main.js, as the core's receivers)
+// a brass throw plate like the core's (story/chapter3.js ensurePlates): a dark disc, a brass ring and an arrow along +z turned
+// to `a`. Its brass is one shared glowing material (the story pulses it: answer.js)
+const plateM = () => M('ugplate7', () => stdM({ color: '#c8a050', metalness: 0.6, roughness: 0.35, emissive: '#ffb040', emissiveIntensity: 0.35 }));
+const plateArrow = () => cached('platearrow', () => { const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0.42), new THREE.Vector3(-0.16, 0, 0.1), new THREE.Vector3(0.16, 0, 0.1)]); g.computeVertexNormals(); return g; });
+function throwPlate(k, x, y, z, a) {
+  k.at(x, y, z, a, () => {
+    k.add(P.disc(0.34, 24), MAT.flat('#4a3a24', 0.6), 0, 0.004, 0, 0, { rx: -Math.PI / 2 });
+    k.add(new THREE.RingGeometry(0.34, 0.46, 24), plateM(), 0, 0.006, 0, 0, { rx: -Math.PI / 2 });
+    k.add(plateArrow(), plateM(), 0, 0.009, 0);
+  });
+}
+// a brass panel on its post, as the core's reflectors (its face turned to `ry`, leaning back), into a kit; the reflection's
+// entry for reflectOff, in world metres (wx, wz: the panel's world centre)
+function bankPanel(k, x, z, ry, y0 = 0) {
+  k.at(x, y0, z, ry, () => {
+    k.add(rbox(0.2, 2.6, 0.2, 0.04), tealP(), 0, 1.3, -0.25);
+    tilt(k, 0, 1.35, 0, 0, -0.22, 0, () => {
+      k.add(rbox(1.7, 1.5, 0.08, 0.04), brass(), 0, 0, 0);
+      k.add(rbox(1.84, 0.1, 0.14, 0.03), iron(), 0, 0.8, 0); k.add(rbox(1.84, 0.1, 0.14, 0.03), iron(), 0, -0.8, 0);
+      for (let c = 0; c < 4; c++) k.add(sphere(0.04, 6, 4), iron(), (c % 2 ? 1 : -1) * 0.78, c < 2 ? 0.7 : -0.7, 0.05);
+    });
+    k.add(rbox(0.12, 0.12, 0.5, 0.02), iron(), 0, 1.35, -0.18);
+    k.add(rbox(0.6, 0.06, 0.6, 0.02), iron(), 0, 0.03, -0.25);
+  });
+}
+// the panel's normal for a ball coming in along `ain` (radians, the way a throw faces) and leaving toward (tx, tz)
+function bankNormal(qx, qz, ain, tx, tz) {
+  const ix = Math.sin(ain), iz = Math.cos(ain), ox = tx - qx, oz = tz - qz, ol = Math.hypot(ox, oz) || 1;
+  const nx = ox / ol - ix, nz = oz / ol - iz, nl = Math.hypot(nx, nz) || 1;
+  return { nx: nx / nl, nz: nz / nl, ry: Math.atan2(nx / nl, nz / nl) };
+}
+// her crystal: a cluster of violet crystals (the galleries' kind) grown up from the floor, one merged mesh in its own group,
+// hidden until the story shows it (the held shutter's braces, the sealed arch)
+function herCrystal(parent, spots, seed) {
+  const g = new THREE.Group(); parent.add(g);
+  const ck = new Kit(g), r = rng(seed);
+  for (const [x, z, h, s] of spots) {
+    ck.add(crystalGeo(), VIOLET(), x, 0, z, r() * 6, { sx: 0.32 * s, sy: h, sz: 0.32 * s, rx: (r() - 0.5) * 0.2, rz: (r() - 0.5) * 0.2 });
+    for (let j = 0; j < 3; j++) { const a = r() * 6.3, d = 0.18 * s; ck.add(crystalGeo(), VIOLET(), x + Math.cos(a) * d, 0, z + Math.sin(a) * d, r() * 6, { sx: 0.16 * s, sy: h * (0.35 + r() * 0.35), sz: 0.16 * s, rx: Math.cos(a) * 0.3, rz: -Math.sin(a) * 0.3 }); }
+  }
+  ck.flush();
+  g.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+  g.visible = false;
+  return g;
+}
+
 // ================================================================ 1. c3shaft — bottom of the drill shaft
 // Raw rock round a project landing: the lift (the station's pad, empty, under its liner on four guide columns),
 // the bore column turning inside its lattice casing, a tunnel mouth on to the deep installation.
@@ -556,6 +628,34 @@ function buildShaft(scene, physics) {
   for (const [x, y, z] of [[LX + 1.0, 2.2, -0.2], [-2.9, 2.8, BZ + 1.0]]) B.light('#40c8ff', 2.4, 4, x, y, z);
   pebbles(k, W, D, 110, 7, rockD, [[LS.x, LS.z, 3.3], [BC.x, BC.z, 2.6], [tunnelX, BZ + 2.5, 2.2], [cx, cz, 1.5], [LS.x + 2.6, LS.z + 0.2, 1.2], [1.5, 0.6, 2.2], [tX, tZ, 1.2], [gX, gZ, 1.6]]);
   B.light('#d8c8e8', 2.5, 24, -1, 7, 1);
+
+  // --- CAMPAIGN-9 (story/answer.js): the crew's test receiver for the core's pylons, by the east wall. A pylon's receiver behind
+  //  a blast stub (no line of sight from the landing), a brass panel beside it, a brass plate on the floor in front of the bore:
+  //  the bank shot the core asks for, tried where nothing shoots back. Static parts in the room's kit; the receiver one mesh
+  {
+    const PA = Math.PI / 2, PX = 2.6, PZ = 1.2, QX = 6.6, QZ = 1.38, TX2 = 7.9, TZ2 = -1.6, TY2 = 1.75;   // (the ball leaves his hand 0.19 m right of the plate: the panel is centred on its line)
+    throwPlate(k, PX, 0, PZ, PA);
+    const n = bankNormal(QX - 0.55, QZ, PA, TX2, TZ2);   // (the ball turns about 0.55 m before the panel's middle: aimed from there)
+    bankPanel(k, QX, QZ, n.ry);
+    const rc = B.col(QX, QZ, 0.85, 0.12, 2.3, { rot: n.ry, noStand: true });
+    // the blast stub between the landing and the receiver, and its sign
+    k.add(rbox(0.22, 2.2, 1.8, 0.04), MAT.plates('#5a6670', 1), 6.15, 1.1, -1.3);
+    k.add(rbox(0.26, 0.14, 1.84, 0.03), hazard(), 6.15, 2.25, -1.3);
+    k.at(6.03, 1.45, -1.3, -Math.PI / 2, () => signPlate(k, 1.1, 0.42, signMat(['PYLON RECEIVER', 'TEST · BANK IT'], { w: 384, h: 140, emblem: false })));
+    B.col(6.15, -1.3, 0.12, 0.92, 2.2, { noStand: true });
+    // the receiver on its post, caged in brass as the core's
+    k.at(TX2, 0, TZ2, 0, () => { column(k, TY2 - 0.5, 0.18); for (let c = 0; c < 4; c++) k.add(cyl(0.02, 0.02, 1.0, 5), brass(), Math.sin(c * 1.57) * 0.4, TY2, Math.cos(c * 1.57) * 0.4); k.add(torus(0.42, 0.03, 5, 16), brass(), 0, TY2 + 0.5, 0, 0, { rx: Math.PI / 2 }); k.add(torus(0.42, 0.03, 5, 16), brass(), 0, TY2 - 0.5, 0, 0, { rx: Math.PI / 2 }); });
+    B.ccol(TX2, TZ2, 0.45, TY2 + 0.6, { noStand: true });
+    const em = stdM({ color: '#ff6a2a', emissive: '#ff4a10', emissiveIntensity: 2.0, roughness: 0.25 }, 0, { noShadow: true });
+    const rec = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), em); rec.position.set(TX2, TY2, TZ2); rec.scale.y = 1.5; rec.castShadow = false; B.group.add(rec);
+    const mir = { ...B.world(QX, QZ), y: 1.35, nx: n.nx, nz: n.nz, hw: 0.85, y0: 0.5, y1: 2.2, kick: 2.0, collider: rc, flash: 0 };
+    R.mirrors = [mir];
+    const tg = { ...B.world(TX2, TZ2), y: TY2, r: 1.0, teach: true, node: NO_AIM };
+    R.ballTargets.push(tg);
+    R.teach = { plate: { ...B.world(PX, PZ), a: PA }, target: tg, lit: false, mat: plateM(),
+      setLit(b) { this.lit = !!b; em.color.set(b ? '#bff4ff' : '#ff6a2a'); em.emissive.set(b ? '#40c8ff' : '#ff4a10'); em.emissiveIntensity = b ? 2.6 : 2.0; } };
+    R.updaters.push((dt) => reflectOff(R.mirrors, globalThis.game?.ball, dt));
+  }
 
   flushNoShadow(kt);
   R.updaters.push((dt, t) => {
@@ -842,7 +942,11 @@ function buildDeep(scene, physics) {
   const lamp = new THREE.Mesh(sphere(0.09, 10, 8), stdM({ color: '#ffd0c0', emissive: '#ff3020', emissiveIntensity: 2.2 }, 0, { noShadow: true })); lamp.position.set(doorX + 1.2, 3.62, BZ + 0.48); B.group.add(lamp);
   const doorCol = B.col(doorX, BZ + 0.6, 1.45, 0.6, 3.0);
   let shutT = 0, shutGoal = 0;
-  R.coolDoor = { ...B.world(doorX, BZ + 0.6), isOpen: false, collider: doorCol, open(instant = false) { this.isOpen = true; shutGoal = 1; if (instant) shutT = 1; doorCol.enabled = false; lamp.material.emissive.set('#30ff60'); } };
+  let holdT = -1;
+  R.coolDoor = { ...B.world(doorX, BZ + 0.6), isOpen: false, collider: doorCol, open(instant = false) { this.isOpen = true; shutGoal = 1; if (instant) shutT = 1; doorCol.enabled = false; lamp.material.emissive.set('#30ff60'); },
+    // CAMPAIGN-9 (story/answer.js): the heat comes back and the shutter starts down; her crystal grows up at its posts and holds it
+    // at 2.15 m (the way stays open). instant: as held (a load)
+    held: false, hold(instant = false) { this.held = true; this.isOpen = true; doorCol.enabled = false; holdT = instant ? 9 : 0; lamp.material.emissive.set('#ffb030'); R.holdCols?.forEach((c) => { c.enabled = true; }); } };
   k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(P.TEX.hazard().clone(), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.8, to: 'c3-gallery' });
   R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.75, to: 'c3-shaft' });
@@ -971,6 +1075,67 @@ function buildDeep(scene, physics) {
   B.light('#ff6a40', 2.5, 4, doorX, 3.2, BZ + 1.0);
   B.light('#c8d0e8', 2.5, 26, 0, 8, 2);
 
+  // --- CAMPAIGN-9 (story/answer.js): the heat stack over the catwalk. An old flue mouth in the back wall at the catwalk's east
+  //  end (older than the project: it runs on into the rock, toward her), a damper flap hanging over it; the stack's header
+  //  along the back wall with four vent bars over the deck, steam out of each until a damper latches it shut; the fitters'
+  //  signal knocker on the header by the flue. Static parts in the room's kits; the damper, the knocker one mesh each; the
+  //  four vents' flaps one instanced mesh
+  {
+    const HZ = BZ + 0.16, HY = UY + 1.5, NY = UY + 1.08, FX = -0.7, KX = -1.5;
+    const stackM = MAT.paint('#6e6a66', 0.5);
+    kt.add(pipe([[FX - 0.32, HY, HZ], [-10.3, HY, HZ]], 0.09, 0.2, 8), stackM, 0, 0, 0);
+    kt.add(sphere(0.12, 10, 8), stackM, -10.3, HY, HZ);
+    for (const x of [-9.0, -6.0, -3.8, -2.3]) kt.add(rbox(0.08, 0.3, 0.2, 0.02), iron(), x, HY + 0.08, HZ - 0.06);
+    // the flue mouth: a stone ring in the wall, dark inside; the damper's housing round its top
+    k.add(torus(0.34, 0.07, 6, 18), MAT.stone('slate', 1), FX, HY, BZ + 0.03);
+    k.add(P.disc(0.32, 18), MAT.flat('#0a080c', 1), FX, HY, BZ + 0.02);
+    k.add(rbox(0.82, 0.14, 0.24, 0.03), iron(), FX, HY + 0.4, HZ);
+    k.at(FX + 0.62, HY + 0.5, BZ + 0.02, 0, () => signPlate(k, 0.5, 0.22, signMat(['DAMPER'], { w: 192, h: 84, emblem: false })));
+    const dk = new THREE.Group(); dk.position.set(FX, HY + 0.36, HZ + 0.07); B.group.add(dk);
+    { const kk = new Kit(dk); kk.add(rbox(0.66, 0.66, 0.05, 0.01), iron(), 0, -0.33, 0); kk.add(rbox(0.7, 0.06, 0.08, 0.01), brass(), 0, -0.04, 0.03); kk.add(rbox(0.12, 0.12, 0.08, 0.02), brass(), 0, -0.5, 0.05); kk.flush(); dk.traverse((o) => { if (o.isMesh) o.castShadow = false; }); }
+    // the vents: a drop from the header, a slotted bar over the deck; a flap hinged over each bar's mouth
+    const VX = [-9.7, -7.4, -4.6, -3.0];
+    for (const x of VX) {
+      kt.add(cyl(0.05, 0.05, HY - NY - 0.05, 8), stackM, x, (HY + NY) / 2, HZ);
+      kt.add(rbox(1.0, 0.12, 0.16, 0.03), stackM, x, NY, HZ + 0.06);
+      for (let i = -4; i <= 4; i++) kt.add(rbox(0.04, 0.02, 0.01, 0.003), dark(), x + i * 0.1, NY - 0.05, HZ + 0.145);
+    }
+    const flapGeo = new THREE.BoxGeometry(1.02, 0.15, 0.03).translate(0, -0.075, 0.015);
+    const flaps = new THREE.InstancedMesh(flapGeo, MAT.paint('#c8a040', 0.45), VX.length); flaps.castShadow = false; B.group.add(flaps);
+    const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
+    const setFlap = (i, u) => { _p.set(VX[i], NY + 0.08, HZ + 0.16); _e.set(-1.25 * (1 - u), 0, 0); _q.setFromEuler(_e); _m.compose(_p, _q, _s); flaps.setMatrixAt(i, _m); flaps.instanceMatrix.needsUpdate = true; };
+    R.vents = VX.map((x, i) => {
+      const v = { i, side: i < 2 ? 'west' : 'east', ...B.world(x, BZ + 1.15), x0: B.cx + x - 0.55, x1: B.cx + x + 0.55, z0: B.cz + BZ, z1: B.cz + BZ + 2.3, y: UY,
+        nozzle: { ...B.world(x, HZ + 0.2), y: NY - 0.06 }, latched: false, u: 0,
+        latch(instant = false) { this.latched = true; if (instant) { this.u = 1; setFlap(i, 1); } } };
+      setFlap(i, 0);
+      return v;
+    });
+    // the knocker: a lever on a bracket under the header, its grip at hand height over the deck; pulled down, its hammer
+    // strikes the header
+    kt.add(rbox(0.14, 0.12, 0.22, 0.02), iron(), KX, HY - 0.12, HZ + 0.08);
+    const kn = new THREE.Group(); kn.position.set(KX, HY - 0.14, HZ + 0.16); B.group.add(kn);
+    { const kk = new Kit(kn);
+      kk.add(pipe([[0, 0, 0], [0, -0.1, 0.22], [0, -0.15, 0.37]], 0.022, 0.05, 6), iron(), 0, 0, 0);
+      kk.add(cyl(0.032, 0.032, 0.2, 10), MAT.paint('#b8302a', 0.4), 0, -0.15, 0.39, 0, { rz: Math.PI / 2 });
+      kk.add(rbox(0.05, 0.12, 0.05, 0.01), iron(), 0, 0.06, -0.02); kk.add(cyl(0.05, 0.05, 0.1, 10), brass(), 0, 0.13, -0.03, 0, { rz: Math.PI / 2 });
+      kk.flush(); kn.traverse((o) => { if (o.isMesh) o.castShadow = false; }); }
+    const GX = KX, GZ = HZ + 0.16 + 0.39, GY = HY - 0.14 - 0.15;   // (the grip's centre: 1.21 m over the deck)
+    k.at(KX + 0.36, HY - 0.32, BZ + 0.02, 0, () => signPlate(k, 0.42, 0.24, signMat(['KNOCKER', 'SHIFT CALLS'], { w: 192, h: 110, emblem: false })));
+    let strikeT = -1, damperK = 0;
+    R.knocker = { x: B.cx + GX, z: B.cz + GZ, y: GY, strike() { strikeT = 0; } };
+    R.damper = { ...B.world(FX, HZ + 0.3), y: HY, clank(k2) { damperK = Math.max(damperK, k2); } };
+    R.updaters.push((dt) => {
+      if (strikeT >= 0) { strikeT += dt; const u = strikeT < 0.12 ? strikeT / 0.12 : Math.max(0, 1 - (strikeT - 0.12) / 0.3); kn.rotation.x = 0.42 * u; if (strikeT > 0.45) { strikeT = -1; kn.rotation.x = 0; } }
+      damperK = Math.max(0, damperK - dt * 5); dk.rotation.x = -0.55 * damperK;
+      for (const v of R.vents) if (v.latched && v.u < 1) { v.u = Math.min(1, v.u + dt / 0.25); setFlap(v.i, v.u); }
+    });
+    // the shutter held: her crystal grown up at both door posts under its edge (shown by story/answer.js)
+    R.holdCrystal = herCrystal(B.group, [[doorX - 1.02, BZ + 0.34, 2.15, 1.1], [doorX + 1.02, BZ + 0.34, 2.15, 1.1]], 4417);
+    R.holdCrystal.position.set(0, 0, 0);
+    R.holdCols = [B.ccol(doorX - 1.02, BZ + 0.34, 0.28, 2.1, { enabled: false, noStand: true }), B.ccol(doorX + 1.02, BZ + 0.34, 0.28, 2.1, { enabled: false, noStand: true })];
+  }
+
   flushNoShadow(kt);
   let wasFlow = '';
   R.updaters.push((dt, tt) => {
@@ -979,7 +1144,13 @@ function buildDeep(scene, physics) {
     // stair and shutter animation
     if (stairT < stairGoal) { stairT = Math.min(1, stairT + dt / 1.6); const e = stairT * stairT * (3 - 2 * stairT); flight.rotation.x = STOW * (1 - e); placeChains(); }
     else if (stairT >= 1 && flight.rotation.x !== 0) { flight.rotation.x = 0; placeChains(); }
-    if (shutT < shutGoal) { shutT = Math.min(1, shutT + dt / 2.2); shutter.position.y = 3.1 * shutT * shutT * (3 - 2 * shutT); }
+    if (holdT >= 0) {   // (CAMPAIGN-9: down with a judder, caught by her crystal, pushed back up to 2.15 m)
+      holdT += dt; const Cg = R.holdCrystal, top = shutter.position.y;
+      if (holdT < 0.5) shutter.position.y = Math.max(1.75, top - dt * 3.2) + Math.sin(holdT * 70) * 0.025;
+      else shutter.position.y = Math.min(2.15, Math.max(top, 1.75) + dt * 1.2);
+      const g = Math.max(0, Math.min(1, (holdT - 0.35) / 0.35)); if (Cg) { Cg.visible = g > 0; Cg.scale.set(1, Math.max(0.01, g), 1); }
+      if (holdT > 9) { shutter.position.y = 2.15; if (Cg) { Cg.visible = true; Cg.scale.set(1, 1, 1); } }
+    } else if (shutT < shutGoal) { shutT = Math.min(1, shutT + dt / 2.2); shutter.position.y = 3.1 * shutT * shutT * (3 - 2 * shutT); }
     else if (shutT >= 1) shutter.position.y = 3.1;
     // valve wheels spin toward their state; coolant flows
     for (const v of R.valves) {
@@ -1117,7 +1288,10 @@ function buildGallery(scene, physics) {
 
   // --- three crystal pillars in the chasm, each with a heart the ball can wake
   R.pillars = [];
-  const PIL = [{ x: -2.4, z: -3.9, h: 8.5, s: 0.95 }, { x: 0.9, z: -6.0, h: 9.5, s: 0.95 }, { x: 0.1, z: -8.3, h: 10.5, s: 1.1 }];
+  // (CAMPAIGN-9, story/answer.js: the third pillar stands north of the stones' line, its heart on the side away from the start
+  //  shelf: no throw from the shelf or the first stones reaches it past the pillar's body. A brass plate on the middle stone and
+  //  the crew's survey mirror on the far cliff make the bank shot; the aim assist leaves its heart alone)
+  const PIL = [{ x: -2.4, z: -3.9, h: 8.5, s: 0.95 }, { x: 0.9, z: -6.0, h: 9.5, s: 0.95 }, { x: 2.2, z: 3.4, h: 10.5, s: 1.1, face: 1 }];
   PIL.forEach((p, i) => {
     const g = new THREE.Group(); B.group.add(g);
     const pk = new Kit(g);
@@ -1130,12 +1304,12 @@ function buildGallery(scene, physics) {
     pk.add(crystalGeo(), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });
     for (let j = 0; j < 7; j++) { const a = (j / 7) * Math.PI * 2 + r(), d = 0.5 + r() * 0.5; pk.add(crystalGeo(), body, p.x + Math.cos(a) * d * p.s, CY, p.z + Math.sin(a) * d * p.s, r() * 3, { sx: (0.25 + r() * 0.2) * p.s, sy: p.h * (0.3 + r() * 0.45), sz: (0.25 + r() * 0.2) * p.s, rx: Math.cos(a) * 0.25, rz: -Math.sin(a) * 0.25 }); }
     // the heart: a fat crystal set into the pillar's face toward the start shelf, at shelf height
-    const hx = p.x - 0.75 * p.s, hy = DY + 1.6, hz = p.z;
+    const fc = p.face || -1, hx = p.x + fc * (p.face ? 0.8 : 0.75) * p.s, hy = DY + 1.6, hz = p.z;
     pk.add(new THREE.OctahedronGeometry(0.55, 0), heart, hx, hy, hz, 0.4, { sy: 1.5 });
     pk.flush();
-    const light = B.light('#7af0ff', 0, 9, hx - 0.8, hy + 0.5, hz);
+    const light = B.light('#7af0ff', 0, 9, hx + fc * 0.8, hy + 0.5, hz);
     light.userData.base = 0.0;
-    const glow = glowSprite('#9ff4ff', 2.6, 0); glow.position.set(hx - 0.1, hy, hz); B.group.add(glow);
+    const glow = glowSprite('#9ff4ff', 2.6, 0); glow.position.set(hx + fc * 0.1, hy, hz); B.group.add(glow);
     B.ccol(p.x, p.z, 0.85 * p.s, DY + 6);
     const pl = {
       i, ...B.world(hx, hz), y: hy, lit: false, light, t: 0,
@@ -1143,7 +1317,7 @@ function buildGallery(scene, physics) {
     };
     pl.body = body; pl.heart = heart; pl.glow = glow;
     R.pillars.push(pl);
-    R.ballTargets.push({ ...B.world(hx, hz), y: hy, r: 1.0, pillar: i });
+    R.ballTargets.push({ ...B.world(hx, hz), y: hy, r: 1.0, pillar: i, ...(p.face ? { node: NO_AIM } : {}) });
   });
 
   // --- the stepping stones, three sets, raised from the chasm floor (colliders only when up)
@@ -1156,6 +1330,7 @@ function buildGallery(scene, physics) {
     sk.add(cyl(SR - 0.06, SR - 0.04, 0.05, 7), rock, 0, 0.0, 0, j);
     tilt(sk, SR * 0.8, -0.6, 0, j * 1.3, 0, -0.9, () => crystals(sk, 3, 0.35, 400 + j, [CYAN(), VIOLET()]));
     sk.add(torus(SR - 0.12, 0.03, 4, 7), crackMat, 0, 0.012, 0, j, { rx: Math.PI / 2 });
+    if (j === 2) throwPlate(sk, 0, 0.03, 0, Math.PI / 2);   // (CAMPAIGN-9: the bank shot's plate on the middle stone, facing the far cliff)
     sk.flush();
     const low = CY - 0.9;
     g.position.y = low;
@@ -1163,6 +1338,25 @@ function buildGallery(scene, physics) {
     return { g, c, low, top: DY - 0.02, t: -1, delay: 0 };
   });
   const raised = [false, false, false];
+  // CAMPAIGN-9: the crew's survey mirror, a tall brass panel on a post up from the chasm floor against the far cliff, turned so a
+  // throw from the middle stone's plate comes off it onto the third heart
+  {
+    const QX = CX1 - 0.3, QZ = 0.19, P2 = R.pillars[2], H2 = { x: P2.x - B.cx, z: P2.z - B.cz };
+    const n = bankNormal(QX, QZ, Math.PI / 2, H2.x, H2.z);
+    k.at(QX, 0, QZ, n.ry, () => {
+      k.add(rbox(0.2, DY + 1.9 - CY, 0.2, 0.04), tealP(), 0, (CY + DY + 1.9) / 2, -0.22);
+      tilt(k, 0, DY + 0.2, 0, 0, -0.12, 0, () => {
+        k.add(rbox(1.6, 2.8, 0.08, 0.04), brass(), 0, 0, 0);
+        for (const y of [-1.42, 0, 1.42]) k.add(rbox(1.74, 0.1, 0.14, 0.03), iron(), 0, y, 0);
+        for (let c = 0; c < 6; c++) k.add(sphere(0.04, 6, 4), iron(), (c % 2 ? 1 : -1) * 0.74, [1.3, 0, -1.3][c >> 1], 0.05);
+      });
+      for (const y of [DY - 0.6, DY + 1.2]) k.add(rbox(0.12, 0.12, 0.5, 0.02), iron(), 0, y, -0.12);
+      k.at(0.2, DY + 1.85, -0.2, 0, () => signPlate(k, 0.7, 0.26, signMat(['SURVEY MIRROR'], { w: 256, h: 96, emblem: false })));
+    });
+    const rc = B.col(QX, QZ, 0.8, 0.12, DY + 1.7, { rot: n.ry, noStand: true, bottom: CY });
+    R.mirrors = [{ ...B.world(QX, QZ), y: DY + 0.2, nx: n.nx, nz: n.nz, hw: 0.8, y0: DY - 1.2, y1: DY + 1.6, kick: 3.6, collider: rc, flash: 0 }];
+    R.updaters.push((dt) => reflectOff(R.mirrors, globalThis.game?.ball, dt));
+  }
   R.stones = {
     group: stoneGroup, sets: SETS.map((s) => s.map((j) => stones[j])), raised,
     raise(i, instant = false) {
@@ -1170,6 +1364,7 @@ function buildGallery(scene, physics) {
       SETS[i].forEach((j, n) => { const s = stones[j]; s.c.enabled = true; s.t = instant ? 99 : -n * 0.35; });
     },
   };
+  R.stonePlate = { ...B.world(SP[2][0], SP[2][1]), a: Math.PI / 2, stone: stones[2], up: () => raised[1] && stones[2].t > 1.5, mat: plateM() };
 
   // --- giant crystals: the gallery's forest, on the shelves and up the walls
   const giant = (x, y, z, n, s, sd, mats, ry = 0, rx = 0, rz = 0) => tilt(kt, x, y, z, ry, rx, rz, () => crystals(kt, n, s, sd, mats, 0.45));
@@ -1448,6 +1643,17 @@ function buildSendell(scene, physics) {
 
   // exits and spawn
   { const [x, z] = polar(ENT, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-gallery' }); const [sx, sz] = polar(ENT, Rr - 2.0); R.spawn = { ...B.world(sx, sz), a: ang(sx, sz, 0, 0) }; }
+  // CAMPAIGN-9 (story/answer.js): her crystal grown across the arch he came in by, once he is through (shown, then explained by
+  // Sendell); hidden until then, and again once the shield holds and she sleeps
+  {
+    const spots = [[-0.14, 2.5, 1.0], [-0.07, 2.9, 1.15], [0, 2.7, 1.2], [0.07, 2.95, 1.1], [0.14, 2.4, 1.0]].map(([da, h, sc]) => { const [x, z] = polar(ENT + da, Rr - 0.42); return [x, z, h, sc]; });
+    const seal = herCrystal(B.group, spots, 5203);
+    const cols = spots.filter((_, i) => i % 2 === 0).map(([x, z]) => B.ccol(x, z, 0.42, 2.8, { enabled: false, noStand: true }));
+    let gT = -1;
+    R.seal = { ...B.world(...polar(ENT, Rr - 0.5)), shut: false,
+      set(on, instant = false) { this.shut = !!on; cols.forEach((c) => { c.enabled = !!on; }); if (!on) { seal.visible = false; gT = -1; return; } gT = instant ? 9 : 0; seal.visible = true; } };
+    R.updaters.push((dt) => { if (gT < 0 || gT > 9) return; gT += dt; const g = Math.min(1, gT / 0.8); seal.scale.set(1, Math.max(0.01, g * g * (3 - 2 * g)), 1); if (gT > 9) seal.scale.set(1, 1, 1); });
+  }
   { const [x, z] = polar(EXI, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-core' }); }
   // UNDER-BAR: the first relief of the two suns (by the way in), and her pool
   { const [x, z] = polar(Math.PI * 1.42, Rr - 1.0); R.looks = [{ id: 'relief', ...B.world(x, z), y: 0, r: 1.3 }, { id: 'pool', ...B.world(0, 0), y: 0, r: PR + 1.25 }]; }
@@ -1761,28 +1967,7 @@ function buildCore(scene, physics) {
   R.bossSpot = { ...B.world(0.6, -1.4), y: 2.4 };
 
   // --- ball bank shots: mirror the flying magic ball off the brass panels (horizontal reflection)
-  const reflectBall = (ball, dt) => {
-    if (!ball || ball.state !== 'fly') return false;
-    const v = ball.vel, p = ball.pos;
-    for (const f of R.reflectors) {
-      const vn = v.x * f.nx + v.z * f.nz;
-      if (vn >= -0.5) continue;
-      const dist = (p.x - f.x) * f.nx + (p.z - f.z) * f.nz;
-      // reflect on the last frame before the ball would reach the panel's collider (front face + ball radius)
-      if (dist < -0.05 || dist > -vn * dt + 0.34) continue;
-      const lat = (p.x - f.x) * -f.nz + (p.z - f.z) * f.nx;
-      if (Math.abs(lat) > f.hw + 0.2 || p.y < f.y0 - 0.3 || p.y > f.y1 + 0.4) continue;
-      // move the ball to where it meets the panel, then send it off mirrored
-      const s0 = Math.max(0, (dist - 0.3) / -vn);
-      p.x += v.x * s0; p.z += v.z * s0; p.y += v.y * s0;
-      v.x -= 2 * vn * f.nx; v.z -= 2 * vn * f.nz; v.x *= 0.95; v.z *= 0.95;
-      v.y = Math.max(v.y, f.kick); // the panels lean back a little: the ball comes off them rising
-      f.flash = 1;
-      const g = globalThis.game; g?.audio?.play?.('bounce'); g?.particles?.burst?.(p.x, p.y, p.z, '#ffe9a0', 8, 2.5);
-      return true;
-    }
-    return false;
-  };
+  const reflectBall = (ball, dt) => reflectOff(R.reflectors, ball, dt);   // (CAMPAIGN-9: the shared reflection, as before)
   R.reflectBall = reflectBall;
 
   // --- the bore's bleed line (CHAPTER-BALANCE, 7.11.2026): a valve stand on the deck ring, its pipe running down into
@@ -1811,6 +1996,83 @@ function buildCore(scene, physics) {
       const goal = R.bleed.open ? 1 : 0; turn += Math.sign(goal - turn) * Math.min(Math.abs(goal - turn), dt * 1.2);
       piv.children.forEach((c) => { c.rotation.z = -turn * Math.PI * 3; });
       glow.material.opacity = R.bleed.open ? 0.55 + Math.sin(tt * 7) * 0.2 : 0;
+    });
+  }
+
+  // --- CAMPAIGN-9 (story/answer.js): the last act's machinery. Vesk's central lock on the deck at the foot of his platform's
+  //  steps, right of them (a keyed lever: his key on its side, the bar on its front at hand height); the branch manifold on the deck ring beyond the platform (the bore's main
+  //  riser up to Citadel with the fitters' knocker on it, and Mill Lane's branch with its two-way cock: BORE or MILLS); where
+  //  the council's guards stop when they come in. Static parts in the room's kit; the bar, the key, the cock's handle and the
+  //  knocker one mesh each
+  {
+    const PF = (lx, lz) => [CP[0] + Math.sin(cpA) * lz + Math.cos(cpA) * lx, CP[1] + Math.cos(cpA) * lz - Math.sin(cpA) * lx];
+    const PY = 0.0;   // (the deck: the lock stands at the foot of the platform's steps, where the walk to it is plain)
+    const one = (grp, fill) => { const kk = new Kit(grp); fill(kk); kk.flush(); grp.traverse((o) => { if (o.isMesh) o.castShadow = false; }); return grp; };
+    // the lock: a teal pedestal on the deck, right of the platform's steps, its bar toward the arena
+    const LX0 = 1.7, LZ0 = 3.2;
+    k.at(CP[0], 0, CP[1], cpA, () => {
+      k.add(rbox(0.5, 1.12, 0.42, 0.05), teal(), LX0, PY + 0.56, LZ0);
+      k.add(rbox(0.56, 0.08, 0.9, 0.02), iron(), LX0, PY + 1.16, LZ0);   // (its top at 1.2 m, wide: the hands of whoever turns the key rest on it)
+      k.add(rbox(0.14, 0.2, 0.14, 0.02), iron(), LX0, PY + 1.17, LZ0 + 0.16);
+      k.add(cyl(0.07, 0.07, 0.06, 12), brass(), LX0 - 0.25, PY + 1.08, LZ0, 0, { rz: Math.PI / 2 });
+      k.at(LX0, PY + 0.62, LZ0 + 0.215, 0, () => signPlate(k, 0.44, 0.3, signMat(['CENTRAL LOCK', 'DRILL · SHIELD'], { w: 256, h: 170, bg: '#6a2a24', emblem: false })));
+    });
+    const [lpx, lpz] = PF(LX0, LZ0);
+    B.ccol(lpx, lpz, 0.34, PY + 1.1, { noStand: true });
+    const bar = new THREE.Group(); { const [x, z] = PF(LX0, LZ0 + 0.2); bar.position.set(x, PY + 1.21, z); bar.rotation.y = cpA; B.group.add(bar); }
+    one(bar, (kk) => { kk.add(rbox(0.06, 0.06, 0.44, 0.015), iron(), 0, 0, 0.2); kk.add(cyl(0.035, 0.035, 0.16, 10), MAT.paint('#b8302a', 0.4), 0, 0, 0.42, 0, { rz: Math.PI / 2 }); kk.add(cyl(0.05, 0.05, 0.1, 10), brass(), 0, 0, 0, 0, { rz: Math.PI / 2 }); });
+    const key = new THREE.Group(); { const [x, z] = PF(LX0 - 0.29, LZ0); key.position.set(x, PY + 1.08, z); key.rotation.y = cpA - Math.PI / 2; B.group.add(key); }
+    one(key, (kk) => { kk.add(rbox(0.02, 0.03, 0.09, 0.005), brass(), 0, 0, 0.045); kk.add(torus(0.03, 0.01, 5, 12), brass(), 0, 0, 0.11); });
+    const gripW = B.world(...PF(LX0, LZ0 + 0.62)), keyW = B.world(...PF(LX0 - 0.39, LZ0)), lockW = B.world(lpx, lpz), topW = B.world(...PF(LX0 - 0.62, LZ0));
+    let barGoal = 0, barNow = 0, keyGoal = 0, keyNow = 0, barKick = 0;
+    R.lock = { ...lockW, grip: { ...gripW, y: PY + 1.21, a: cpA + Math.PI }, key: { ...keyW, y: PY + 1.08, a: cpA + Math.PI / 2 }, vesk: { ...topW, a: cpA + Math.PI / 2 },   // (where Vesk stands at it, facing it: his hands on its top)
+      lifted: false, turned: false,
+      turn(on, instant = false) { this.turned = !!on; keyGoal = on ? 1 : 0; if (instant) keyNow = keyGoal; },
+      lift(on, instant = false) { this.lifted = !!on; barGoal = on ? 1 : 0; if (instant) barNow = barGoal; },
+      slam() { barKick = 1; } };
+    // the branch manifold beyond the platform, turned to the arena
+    const [MX, MZ] = polar(Math.PI * 0.45, 8.6), MA = ang(MX, MZ, 0, 0);
+    const MF = (lx, lz) => [MX + Math.sin(MA) * lz + Math.cos(MA) * lx, MZ + Math.cos(MA) * lz - Math.sin(MA) * lx];
+    const mainM = MAT.paint('#6e6a66', 0.5);
+    k.at(MX, 0, MZ, MA, () => {
+      k.add(cyl(0.17, 0.17, 4.2, 14), mainM, -0.6, 2.1, -0.3);
+      for (const y of [0.15, 2.0, 4.1]) k.add(cyl(0.24, 0.24, 0.08, 14), brass(), -0.6, y, -0.3);
+      k.add(pipe([[-0.6, 4.1, -0.3], [-0.6, 4.4, -0.9], [-0.6, 4.4, -3.4]], 0.17, 0.3, 12), mainM, 0, 0, 0);
+      // Mill Lane's branch: off the riser to the cock, out to the right and down into the deck; the mills' line up into the cock
+      k.add(pipe([[-0.45, 1.0, -0.3], [0.2, 1.0, -0.3], [0.38, 1.0, 0]], 0.08, 0.15, 8), mainM, 0, 0, 0);
+      k.add(pipe([[0.62, 1.0, 0], [1.25, 1.0, 0], [1.3, 0.9, 0], [1.3, 0.0, 0]], 0.08, 0.15, 8), mainM, 0, 0, 0);
+      k.add(pipe([[0.5, 0.0, 0.0], [0.5, 0.86, 0.0]], 0.08, 0.15, 8), MAT.paint('#4a7a54', 0.5), 0, 0, 0);
+      k.add(sphere(0.17, 12, 10), MAT.paint('#3a4448', 0.45), 0.5, 1.0, 0, 0, { sy: 0.85 });
+      k.add(cyl(0.035, 0.035, 0.14, 8), MAT.steel(), 0.5, 1.13, 0);
+      k.at(0.95, 1.45, 0.02, 0, () => { k.add(cyl(0.03, 0.03, 1.45, 6), iron(), 0.3, -0.72, -0.05); signPlate(k, 0.62, 0.34, signMat(['MILL LANE', 'BORE · MILLS'], { w: 256, h: 140, emblem: false })); });
+      k.at(-0.6, 2.4, -0.12, 0, () => signPlate(k, 0.5, 0.3, signMat(['KNOCKER', 'MAIN TO CITADEL'], { w: 256, h: 150, emblem: false })));
+      k.add(rbox(0.12, 0.1, 0.16, 0.02), iron(), -0.6, 1.36, -0.08);
+    });
+    B.col(...MF(0.3, -0.1), 1.05, 0.4, 2.2, { rot: MA, noStand: true });
+    B.ccol(...MF(-0.6, -0.3), 0.22, 4.4, { noStand: true });
+    // the cock's quarter-turn handle: along the pipe toward the riser (BORE) or out toward him (MILLS)
+    const cock = new THREE.Group(); { const [x, z] = MF(0.5, 0); cock.position.set(x, 1.2, z); cock.rotation.y = MA; B.group.add(cock); }
+    const handle = new THREE.Group(); cock.add(handle);
+    one(handle, (kk) => { kk.add(rbox(0.36, 0.035, 0.05, 0.01), MAT.paint('#b8302a', 0.4), -0.18, 0, 0); kk.add(cyl(0.04, 0.04, 0.04, 10), brass(), 0, 0, 0); });
+    let cockGoal = 0, cockNow = 0, cockKick = 0;
+    const cgrip = B.world(...MF(0.5 - 0.3, 0));
+    R.branch = { ...cgrip, y: 1.2, a: MA + Math.PI, mills: false,
+      set(on, instant = false) { this.mills = !!on; cockGoal = on ? 1 : 0; if (instant) cockNow = cockGoal; },
+      kick() { cockKick = 1; } };
+    // the knocker on the riser: pulled down, its hammer strikes the main
+    const kn = new THREE.Group(); { const [x, z] = MF(-0.6, 0.0); kn.position.set(x, 1.36, z); kn.rotation.y = MA; B.group.add(kn); }
+    one(kn, (kk) => { kk.add(pipe([[0, 0, 0], [0, -0.08, 0.2], [0, -0.15, 0.33]], 0.022, 0.05, 6), iron(), 0, 0, 0); kk.add(cyl(0.032, 0.032, 0.2, 10), MAT.paint('#b8302a', 0.4), 0, -0.15, 0.35, 0, { rz: Math.PI / 2 }); kk.add(cyl(0.05, 0.05, 0.1, 10), brass(), 0, 0.09, -0.1, 0, { rz: Math.PI / 2 }); });
+    const kgrip = B.world(...MF(-0.6, 0.35));
+    let strikeT = -1;
+    R.coreKnocker = { ...kgrip, y: 1.21, a: MA + Math.PI, strike() { strikeT = 0; } };
+    { const [gx, gz] = PF(0.1, 3.6); R.guardSpot = { ...B.world(gx, gz), a: cpA + Math.PI }; }
+    R.updaters.push((dt) => {
+      barNow += Math.sign(barGoal - barNow) * Math.min(Math.abs(barGoal - barNow), dt * 2.5); barKick = Math.max(0, barKick - dt * 4);
+      bar.rotation.x = -0.9 * barNow - 0.25 * Math.sin(barKick * Math.PI);
+      keyNow += Math.sign(keyGoal - keyNow) * Math.min(Math.abs(keyGoal - keyNow), dt * 3); key.rotation.z = keyNow * Math.PI / 2;
+      cockNow += Math.sign(cockGoal - cockNow) * Math.min(Math.abs(cockGoal - cockNow), dt * 2.5); cockKick = Math.max(0, cockKick - dt * 4);
+      handle.rotation.y = cockNow * Math.PI / 2 - 0.35 * Math.sin(cockKick * Math.PI);
+      if (strikeT >= 0) { strikeT += dt; const u = strikeT < 0.12 ? strikeT / 0.12 : Math.max(0, 1 - (strikeT - 0.12) / 0.3); kn.rotation.x = 0.42 * u; if (strikeT > 0.45) { strikeT = -1; kn.rotation.x = 0; } }
     });
   }
 

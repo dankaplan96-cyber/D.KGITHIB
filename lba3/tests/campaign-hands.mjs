@@ -49,8 +49,8 @@ const person = (id) => ev((id) => {
   return { id, want, now, stood, R: gap('R'), L: gap('L') };
 }, id);
 
-// (ONLY10=1: chapter 10's part alone, while working on it)
-if (!process.env.ONLY10) {
+// (ONLY10=1: chapter 10's part alone, while working on it; ONLY11=1: chapters 11–12's)
+if (!process.env.ONLY10 && !process.env.ONLY11) {
 // chapter 1: a new game, in the kitchen
 await start(null);
 take(await use('h_tap', 'game.story.chapters[0].home.parts.house.spout', 1.2));
@@ -164,6 +164,7 @@ await browser.close();
 
 }
 
+if (!process.env.ONLY11) {
 // chapter 10 (CAMPAIGN-8, story/netline.js): his hand on each handle as a friend takes it over — the isolator off Kell's
 // feed box (base-13, a save from before the wave at the chapter's start: Mill Lane), the valve wheel he holds and the dial
 // (new-13-cit), the bore's relief wheel (new-13-desert), the telescope's lever (new-13-ham), the joint (new-13-five) —, and
@@ -204,17 +205,54 @@ await ev(() => { const J = game.story._nw.joint(); P.go(J.touch.front.x, J.touch
 take(await nwHold('nw_joint', 'const G = game, T = G.story._nw, J = T.joint(); P.go(J.touch.front.x, J.touch.front.z, { tol: 0.25, maxT: 8 }); P.face(J.x, J.z); let t = 0; while (!(T.phase() > 1.48 && T.phase() < 1.62) && t < 4) { G.step(1 / 30); t += 1 / 30; } P.tap("KeyE", 0.1);'));
 await browser.close();
 
+}
+
+// chapters 11–12 (CAMPAIGN-9, story/answer.js; ONLY11=1: this part alone): the fitters' knocker on the catwalk (new-14-deep);
+// in the last act (new-15-last) the branch cock (turned until it holds: a kicked-back turn is measured too), the central lock's
+// bar (until it stays up), the main's knocker; Vesk's hands on his key once he has turned it
+if (!process.env.ONLY10) {
+const SWAIT = 'const G = game; for (let i = 0; i < 500 && (G.story._sh?.busy || G.state === "dialog" || G.hero.actT > 0 || G.hero.steer || G.trans || G.story._sh?.msg); i++) { if (G.state === "dialog") P.settle(); else G.step(0.1); } P.settle();';
+const shWait = () => ev((c) => { new Function(c)(); }, SWAIT);
+await start('new-14-deep');
+await ev(() => { const G = game, D = G.room; const tg = D.ballTargets.find((x) => x.ballSwitch); P.hitTarget(tg, 3.5, { run: false, maxT: 40 }); P.settle(); P.go(D.ladder.x, D.ladder.z - 0.2, { tol: 0.5 }); for (let i = 0; i < 500 && !G.flags.sh_knock; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } });
+await shWait();
+await ev(() => { const L = game.room.ladder; P.go(L.x, L.z - 5.4, { tol: 0.4 }); });
+take(await use('sh_knock', 'game.room.knocker', 0.7));
+await shWait();
+await browser.close();
+// (a turn timed by the knocking's clock, from the handle's front: E when the clock is in [lo, hi))
+const timed = (kind, sel, lo, hi) => ev(([kind, sel, lo, hi]) => { const G = game, h = G.hero, sh = G.story._sh, p = new Function('return ' + sel)(); window.KIND = kind;
+  const fx = p.x - Math.sin(p.a) * 0.55 + Math.cos(p.a) * 0.38, fz = p.z - Math.cos(p.a) * 0.55 - Math.sin(p.a) * 0.38; P.go(fx, fz, { tol: 0.15, maxT: 8, fight: false }); P.face(p.x, p.z);
+  for (let w = 0; w < 400 && !(sh.phase() >= lo && sh.phase() < hi); w++) G.step(1 / 60); P.tap('KeyE', 0.05); for (let w = 0; w < 80 && (h.steer || h.actT > 0); w++) G.step(0.05);
+  return window.GAPS.filter((g) => g.kind === kind); }, [kind, sel, lo, hi]);
+await start('new-15-last');
+take((await timed('co_cock', 'game.room.branch', 3.45, 3.55)).slice(-1));   // (in a knock: kicked back, measured)
+await shWait();
+take((await timed('co_cock', 'game.room.branch', 1.6, 2.2)).slice(-1));     // (in the rest: turned)
+await ev(() => { const G = game; for (let i = 0; i < 600 && !G.flags.co_vesk; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } });
+await shWait();
+people.push(await person('vesk'));
+take((await timed('co_lock', 'game.room.lock.grip', 1.4, 1.9)).slice(-1));
+await shWait();
+take(await use('co_knock', 'game.room.coreKnocker', 0.8));
+await browser.close();
+}
+
 for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
 check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
 // (CAMPAIGN-8: the friends who take a handle over in chapter 10 must not be stood down: their hands are on it, within 1 cm)
 const NW = ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur'], NWHAND = +(process.env.NWHAND || 0.012);
 const nwp = people.filter((p) => NW.includes(p.id) && !p.absent);
-check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
+check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, process.env.ONLY11 ? true : nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds0 = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint'];
-const kinds = process.env.ONLY10 ? kinds0.filter((k) => k.startsWith('nw_')) : kinds0;
+const kinds0 = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint', 'sh_knock', 'co_cock', 'co_lock', 'co_knock'];
+const kinds = process.env.ONLY10 ? kinds0.filter((k) => k.startsWith('nw_')) : process.env.ONLY11 ? kinds0.filter((k) => /^(sh|co)_/.test(k)) : kinds0;
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 const nwRows = rows.filter((r) => r.kind.startsWith('nw_'));
-check(`chapter 10's hand actions (CAMPAIGN-8) each within ${NWHAND * 100} cm of the handle`, nwRows.length >= 6 && nwRows.every((r) => r.d <= NWHAND), nwRows);
+check(`chapter 10's hand actions (CAMPAIGN-8) each within ${NWHAND * 100} cm of the handle`, process.env.ONLY11 ? true : nwRows.length >= 6 && nwRows.every((r) => r.d <= NWHAND), nwRows);
+// (CAMPAIGN-9: chapters 11–12's hand actions and Vesk at his key, within about 1 cm)
+const shRows = rows.filter((r) => /^(sh|co)_/.test(r.kind)), vk = people.find((p) => p.id === 'vesk');
+check(`chapters 11–12's hand actions (CAMPAIGN-9) each within ${NWHAND * 100} cm of the thing`, process.env.ONLY10 ? true : shRows.length >= 4 && shRows.every((r) => r.d <= NWHAND), shRows);
+check(`Vesk at his central lock: working, both hands within ${NWHAND * 100} cm of his key (not stood down)`, process.env.ONLY10 ? true : !!vk && !vk.absent && vk.want && !vk.stood && Math.max(vk.R, vk.L) <= NWHAND, vk);
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

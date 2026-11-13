@@ -8,6 +8,9 @@
 // CAMPAIGN-6: saves made on the build before wave 4 (base-11 chapter 8 at its start, base-11-town with the town's shelters
 // open, base-11-relay with Zoé's run behind it) load without an error; the lane's thread is on only where the relay is
 // still ahead, and the arrival counts as seen once he has been home.
+// CAMPAIGN-9: saves made on the build before wave 7 (base-14 chapter 11 in the shaft, base-14-deep in the machinery,
+// base-14-gal in the galleries, base-15 chapter 12 in the fight) load without an error; the shell's thread and the last act's
+// are on, the steps a save is past counted as done.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -32,6 +35,8 @@ async function run(name, save) {
       ps: [!!game.flags.ps_v, !!game.flags.ob_v, !!game.regions?.built('hamalayi')?.line?.active],
       ev: [!!game.flags.ev_v, !!game.flags.ev_cart, game.world.laneGate ? game.world.laneGate.gate.open : null],
       nw: [game.flags.nw_v ?? null, game.flags.nw_irsa ?? null, game.flags.nw_mira ?? null, game.flags.nw_zoe ?? null, game.flags.nw_ilka ?? null, game.flags.nw_yorna ?? null, game.flags.nw_arthur ?? null, !!game.flags.c10_started],
+      sh: [game.flags.sh_v ?? null, game.flags.sh_bank ?? null, game.flags.sh_knock ?? null, game.flags.sh_reply ?? null, game.flags.sh_held ?? null, game.flags.sh_shut ?? null],
+      co: [game.flags.co_v ?? null, game.flags.co_go ?? null, game.flags.co_branch ?? null, game.flags.co_lock ?? null, !!game.flags.c3_fight],
       cn: [game.flags.cn_v ?? null, game.flags.cn_closed ?? null, game.flags.cn_kell ?? null, game.flags.cn_log ?? null, !!game.flags.c9_vote, !!game.rooms.upper?.order?.shown],
       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
@@ -72,6 +77,10 @@ await run('wave-5 base: chapter 9 with the plans in hand', fixture('base-12-plan
 await run('wave-6 base: chapter 10 at its start', fixture('base-13'));
 await run('wave-6 base: chapter 10 on Citadel, the mill done', fixture('base-13-cit'));
 await run('wave-6 base: chapter 10 on Desert Island, three stations done', fixture('base-13-desert'));
+await run('wave-7 base: chapter 11 in the shaft', fixture('base-14'));
+await run('wave-7 base: chapter 11 in the machinery', fixture('base-14-deep'));
+await run('wave-7 base: chapter 11 in the galleries, cooled', fixture('base-14-gal'));
+await run('wave-7 base: chapter 12 in the fight', fixture('base-15'));
 for (const r of results) console.log(JSON.stringify(r));
 const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re], [, h9, h9e], [, h9h, h9he], [, h9p, h9pe]] = results;
 check('a chapter-9 save from before wave 5, at its start, loads without an error; the stop is ahead, so the thread is on, none of its steps past', ['play', 'dialog'].includes(h9.state) && h9.cur === 'council' && h9.cn[0] === 1 && !h9.cn[1] && !h9.cn[2] && !h9.cn[3] && h9e === 'no errors', [h9, h9e]);
@@ -95,10 +104,16 @@ check('a v5 save on Zeelich\'s drill platform during The Shell comes out on Cita
 check('a v5 save in the shaft\'s room stays there, in chapter 11', ['play', 'dialog'].includes(e5shaft.state) && e5shaft.room === 'c3shaft' && e5shaft.cur === 'shell', e5shaft);
 check('a v5 save in Zeelich\'s street during The Shell stays on Zeelich (only the platform moved)', e5street.state === 'play' && e5street.room === 'zeelich' && e5street.cur === 'shell', e5street);
 // CAMPAIGN-8 (wave 6): saves made on the build before it (tests/fixtures/campaign base-13, base-13-cit, base-13-desert)
-const [[, n10, n10e], [, n10c, n10ce], [, n10d, n10de]] = results.slice(-3);
+const [[, n10, n10e], [, n10c, n10ce], [, n10d, n10de]] = results.slice(-7, -4);
 check('a chapter-10 save from before wave 6, at its start (the workshop), loads without an error; the thread is on, nothing of it past (Irsa\'s lane, Arthur\'s count, every friend\'s takeover ahead)', ['play', 'dialog'].includes(n10.state) && n10.cur === 'network' && n10.nw[0] === 1 && n10.nw.slice(1, 7).every((x) => x === null) && n10e === 'no errors', [n10, n10e]);
 check('a chapter-10 save from before wave 6, on Citadel with the mill done, loads without an error; Mill Lane counts as done (past: he has left Zeelich), Arthur\'s count and the Citadel stations ahead', ['play', 'dialog'].includes(n10c.state) && n10c.cur === 'network' && n10c.nw[0] === 1 && n10c.nw[1] === 'past' && n10c.nw[2] === null && n10c.nw[3] === null && n10ce === 'no errors', [n10c, n10ce]);
 check('a chapter-10 save from before wave 6, three stations done, loads without an error; Mira, Zoé (Arthur with her in the lamp room) and Ilka count as done (past), the dome ahead', ['play', 'dialog'].includes(n10d.state) && n10d.cur === 'network' && n10d.nw[0] === 1 && n10d.nw[2] === 'past' && n10d.nw[3] === 'past' && n10d.nw[4] === 'past' && n10d.nw[5] === null && n10de === 'no errors', [n10d, n10de]);
+// CAMPAIGN-9 (wave 7): saves made on the build before it
+const [[, o11, o11e], [, o11d, o11de], [, o11g, o11ge], [, o12, o12e]] = results.slice(-4);
+check('a chapter-11 save from before wave 7, in the shaft, loads without an error; the thread is on, nothing of it past', ['play', 'dialog'].includes(o11.state) && o11.cur === 'shell' && o11.room === 'c3shaft' && o11.sh[0] === 1 && o11.sh.slice(1).every((x) => x === null) && o11e === 'no errors', [o11, o11e]);
+check('a chapter-11 save from before wave 7, in the machinery, loads without an error; the test receiver is past, the damper\'s answer and the knocker ahead', ['play', 'dialog'].includes(o11d.state) && o11d.cur === 'shell' && o11d.room === 'c3deep' && o11d.sh[0] === 1 && o11d.sh[1] === 'past' && o11d.sh[2] === null && o11d.sh[3] === null && o11de === 'no errors', [o11d, o11de]);
+check('a chapter-11 save from before wave 7, in the galleries (cooled), loads without an error; the answer, the knocker and the held shutter count as done (past), the shut arch ahead', ['play', 'dialog'].includes(o11g.state) && o11g.cur === 'shell' && o11g.room === 'c3gallery' && o11g.sh[2] === 'past' && o11g.sh[3] === 'past' && o11g.sh[4] === 'past' && o11g.sh[5] === null && o11ge === 'no errors', [o11g, o11ge]);
+check('a chapter-12 save from before wave 7, in the fight, loads without an error; the fight resumes, the last act\'s thread is on, none of it past', ['play', 'dialog'].includes(o12.state) && o12.cur === 'core' && o12.room === 'c3core' && o12.co[0] === 1 && o12.co[1] === null && o12.co[2] === null && o12e === 'no errors', [o12, o12e]);
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

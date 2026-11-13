@@ -53,9 +53,9 @@ base game's own presence under the shell ("her", the young being Sendell watches
 | 6 The evidence — Vesk closes a door | 9 The Council | the archive, the archivist's keys, the BORE cabinet, Dallan's proof | **built (wave 5, section 5e)**: the archive is closed to Twinsen by Vesk's standing order (the reason: a stop before a bypass exists cuts the quarter's water); **Kell takes him up the service lift**; the cabinet holds the unedited test log of chapter 4/5 and the order that cut it, signed |
 | 9 The failed shutdown | 9 The Council's end → 10's start | "only the core's console can reverse the bore" (told) | **built (wave 5, section 5e)**, at the end of chapter 9: the council orders the stop, the player throws it at the platform's console: the drill winds down, the pulse goes on, Mill Lane's lift and taps lose pressure; Baldino's isolator holds one branch at a time (tried on his Test Pair bench, which exists as a side story), then on Kell's feed |
 | 10 The network — allies take responsibility | 10 Baldino's Network | the five legs, the allies on the radio | each ally is seen to take the station over as he leaves it; Irsa takes Zeelich's bypass; Arthur hears the irregular interval (the kitchen's knocking), Mira verifies it on the valve room's gauge |
-| 8 Below the shell — someone answers | 11 The Shell | the machinery, the galleries, Sendell | the three-and-a-rest knock is answered: a mechanism replies to a pattern he did not send, he repeats it and gets a different reply, and steers by it; a failing passage is held open for him, later a door is sealed "for his protection" (shown before it is explained). It is "her", not a new guardian; Sendell stays distinct |
-| 11 The deep installation — reach the controls | 11 The Shell (its second half) and 12's approach | the catwalk, the ball switch, the stepping stones, the banked shots of chapter 12 | one sustained run: the pulse read to cross moving machinery, a banked throw taught safely before it is needed, a way back opened from the far side, the allies heard, a checkpoint before Vesk |
-| 12 The decision — keep the water running | 12 The Core | the pylons, the coil, shield mode, the guards | the last act made specific: one branch rerouted, Irsa's confirmation, the central lock released, Zoé's signal; Vesk's choice is seen and the falsified log and the list are named when the guards take him |
+| 8 Below the shell — someone answers | 11 The Shell | the machinery, the galleries, Sendell | the three-and-a-rest knock is answered: a mechanism replies to a pattern he did not send, he repeats it and gets a different reply, and steers by it; a failing passage is held open for him, later a door is sealed "for his protection" (shown before it is explained). It is "her", not a new guardian; Sendell stays distinct → **built (wave 7, section 5g)**: the damper's two, the knocker, the vents she latches; the shutter held by her crystal, the arch shut behind him, explained by Sendell |
+| 11 The deep installation — reach the controls | 11 The Shell (its second half) and 12's approach | the catwalk, the ball switch, the stepping stones, the banked shots of chapter 12 | one sustained run: the pulse read to cross moving machinery, a banked throw taught safely before it is needed, a way back opened from the far side, the allies heard, a checkpoint before Vesk → **built (wave 7, 5g)**: the bank shot tried on the crew's test receiver, then needed for the third heart; the steam read and passed by her answers; the checkpoint in Sendell's chamber |
+| 12 The decision — keep the water running | 12 The Core | the pylons, the coil, shield mode, the guards | the last act made specific: one branch rerouted, Irsa's confirmation, the central lock released, Zoé's signal; Vesk's choice is seen and the falsified log and the list are named when the guards take him → **built (wave 7, 5g)** |
 | Playable aftermath | Epilogue | dinner, the end, Keep Exploring | the kitchen: the player turns the tap (cold), Arthur's cup stands under it "just in case", a moment with Zoé |
 
 ## 3. The measurement (the main route; side content, idle, loading and repeated failures left out)
@@ -215,6 +215,31 @@ longer than the 9.11 figure (542): a later bot and build (its climb of the old m
 the two builds of this session. Logs `/dev/shm/w6/pt13-*.log`, stats `/dev/shm/w6/st13-*.json` (the session's scratch, not in
 the repository).
 
+**Chapters 11–12, wave 7** (13.11; base = `ccr-c1c2c4b9-dep6ed` at `a39aaed3` before the wave, served as its own build beside the
+wave's; all runs by the same bot, ASSIST=1). Chapter 11 from `base-14` (chapter 11 at its start in the shaft, made on the build
+before the wave by the joint of segment 13 from `new-13-five`): the base once, the wave's build twice. Chapter 12 from `base-15`
+(chapter 12 in the fight, made on the build before the wave), on both builds with the same steps file (on the base its last-act
+steps find no thread and pass): the fight played out identically on both (deterministic steps), so the difference is the wave's.
+
+| Ch | bot s of free play: base → wave 7 | of which the new steps | lines · words | scenes (not counted) | est. first play (min): base → wave 7 | what the seconds are |
+|---|---|---|---|---|---|---|
+| 11 | 350.3 → **171.4**, second run **236.1**, on the final build **177.5** | about 28 (the test receiver 5.1; the damper's answer, the knocker and the steam +18.2 over the old valve C step: 27.2 against 9.0; the third heart's plate throw about 4; the held shutter about 1) | 18 · 230 → 31 · 421 | 0 → 0 | 13.8 → **about 17.7** | the new steps; the rest swings with the bot's crossing of the stepping stones (228.4 s in the base run, two falls; 67.4 and 120.2 s in the wave's, none and one) and its throws at the pillars (71.4 → 27.3 / 42.3 s) |
+| 12 | 61.7 → **96.4** (same save, same fight; from `base-14` in one piece on the final build 127.4, its fight 83.3) | 34.7 (the branch 13.1, the lock 7.7 — one slam, then up —, the signal and the guard 13.5, Vesk's choice +0.4) | 29 · 374 → 43 · 531 | 15.6 → 3.9 s | 7.3 → **about 11.3** | the last act; the fight is the same in both runs (61.0 s) |
+
+The minutes are **estimates**: the 9.11 estimate of the chapter moved by 1.8 × the new steps' bot seconds (chapter 11 about 28 s:
++0.8 min; chapter 12 34.7 s: +1.0 min), 60 s for each new deduction step (chapter 11: knock her two back; the bank off the mirror
+— +2.0 min; chapter 12: the bar after her answer, not after the three; twice for water — +2.0 min; the cock in the rest is chapter
+8's) and the new reading (chapter 11 +191 words, +13 lines: +1.1 min; chapter 12 +157 words, +14 lines: +0.9 min). Against the old
+median (16.9) chapter 11 is now about 1.05 (it was 0.82), chapter 12 about 0.67 (it was 0.43, the shortest; still under the 75 %
+line: it is the finale's fight and its last act, and nothing in it was padded). The base run at chapter 11 (350 s) is longer than
+the 9.11 figure (249) because of the bot's two falls from the stones; the two wave runs are the comparison's spread. The wave's
+segment 14 also ran in one piece from `base-14` (171.4 + 205.4 bot s, 0 deaths, 0 ISO assists; the central lock then stood on Vesk's platform and the bot's walk up to it took 106 s: it now stands on the deck at the platform's foot) and in two parts with Save & quit →
+Continue between them (`new-15-last`). Two earlier runs from `base-14`/`base-15` stopped in the pylon fight on the base build (the
+bot throwing from one plate with the guardian between, 300 s); one run of the wave's build stopped there too, before the last
+act: the fight is the base's, and the segment's pylon step now has an ISO fallback under ASSIST, logged (not used in the runs
+above). Logs `/dev/shm/w7/pt14-*.log`, `pt15-*.log`, stats `/dev/shm/w7/st14-*.json`, `st15-*.json` (the session's scratch, not in
+the repository).
+
 ## 4. The missing playable step, chapter by chapter
 
 Did the player discover the problem, test an idea and see the result — or did a person do all three?
@@ -231,8 +256,8 @@ Did the player discover the problem, test an idea and see the result — or did 
 | 8 | told (the list is known since chapter 2) | played (shelters, Zoé's run) | shown (the gathering) | the omission is never seen happening (the cart that passes the gate) → **built (wave 4)**: the cart is seen to turn away at the shut gate; Zoé reads the schedule against the route herself; he drains the culvert by the copper pipe's cock in a rest; the lane is seen to board |
 | 9 | told (the council) | played (stamps, the archive) | told (the turn) | what the cabinet proves is not his own test; the shutdown everyone argues about is never tried → **built (wave 5)**: the cabinet holds the log of the test he ran, his carbon laid on it; he throws the stop himself and sees what it does and does not stop |
 | 10 | told (Baldino) | played (five relays) | told (radio) | the allies are voices; nobody is seen taking a station over → **built (wave 6)**: each friend takes the handle as he lets go, seen; Arthur's count and Mira's gauge turn the knocking to four; the joint in the rest after the fourth is his |
-| 11 | told (Sendell) | played (valves, pillars) | told | nothing answers him; the installation is a set of locks |
-| 12 | told (Vesk) | played (pylons, coil) | shown (the shell holds) | the last act is a boss pattern, not a decision made with the things he has learned |
+| 11 | told (Sendell) | played (valves, pillars) | told | nothing answers him; the installation is a set of locks → **built (wave 7)**: the damper answers the shell's three with two; he knocks two back, she counts four and the steam over the catwalk stops; the shutter is held for him and the arch shut behind him (shown, then explained); the bank shot taught before the crossing needs it |
+| 12 | told (Vesk) | played (pylons, coil) | shown (the shell holds) | the last act is a boss pattern, not a decision made with the things he has learned → **built (wave 7)**: after the fight, four steps he has done before: Mill Lane's branch turned in the rest, Irsa's "holding", Vesk's own key and the bar lifted after her answer, two knocks for Zoé; the guard names the cut log and the list |
 | Epilogue | — | — | told (dinner) | the tap is never turned again |
 
 ## 5. Wave 1, as built (the treatment's sections 1–3)
@@ -768,6 +793,122 @@ with the isolator off and nobody at the switch (wave 7 can give her the "holding
 save made at the chapter's start never hears Baldino ask for the isolator (the objective's line and the star on the box
 carry it). The joint is small from the play camera (`x-ch10-7a`: the post and its clamp beside the code box): the objective, the prompt and Baldino's line carry it; the jaw's jump is seen in a close look only. Chapter 10 is now about 1.98 of the old median by the estimate, the longest core chapter.
 
+## 5g. Wave 7, as built (the treatment's sections 8, 11 and 12, in chapters 11 and 12)
+
+**Status (13.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played it,
+nothing was listened to (the knocks, the damper's clank, the steam's hiss, the crystal, the cock, the lever and the radio are the
+game's existing synthesized sounds), no frame rate measured.
+
+**Wave 7's verification** (port 8920 snapshot of this branch, the base on 8921; one suite at a time):
+
+| Suite | Verdict | What it covered |
+|---|---|---|
+| `tests/playthrough/14-shell.mjs` (seg.mjs, by input, ASSIST=1, from `base-14`) | PASS in one piece on the final build (177.5 + 127.4 bot s, 0 deaths, 0 ISO assists); before the last fixes also in one piece, in two parts with Save & quit → Continue between them (`new-15-last`) and chapter 12 alone from `base-15`: PASS each, 0 deaths, 0 ISO assists | the test receiver from its plate; the diagram, valve A, the ball switch; her answer from the stair's foot, the knocker (two knocks, her reply), valve C; the shutter held; two pillars, the crossing with the third heart off the mirror from the middle stone; the shut arch and Sendell; the fight (pylons, bleed, coil), Vesk's choice; the branch cock, Irsa, Vesk's key; the lock (a slam, then up); two knocks → the epilogue, Keep Exploring. Two runs stopped in the base's pylon fight (below) |
+| `tests/chapter3.mjs` (the suite of The Shell and The Core) | PASS 47/47 on the final build (after two FAILs of its own: its teleports into the doorway and onto the plate met a refused exit and her remark; its key taps for the last act; the game was changed for the first: refused at the shutter, he goes on through once the line is read) | the shaft's test receiver; the steam, the damper's answer, a step into the steam, three knocks and two, valve C; the held shutter; two pillars, the third from the plate; a save → Continue in the galleries; the shut arch, Sendell, the way back shut; chapter 12's card; the journal (7 lines and 1); the fight as before; the last act: the cock kicked back and turned, Irsa and Vesk's key, the bar slammed and lifted, two knocks → the epilogue |
+| `tests/campaign-thread.mjs` ONLY=N, O, P | PASS (N 4/4, O 8/8, P 4/4; P again after Vesk's spot moved) | N: C21–C24, the saves from before; O: chapter 11 by input with three Save & quit → Continue (after her answer, with the shutter held, in her chamber); P: the last act with a Save & quit after Vesk's key |
+| `tests/campaign-hands.mjs` | PASS (ONLY11 on the final build, after one FAIL: Vesk stood down at his key, now on the lock's top); the full run (chapters 1–12) before that: every other row PASS | his hand: the knocker 0.3 cm, the cock 0.5 / 0.2 cm (a kicked-back turn and the turn that holds), the bar 0.2 cm, the main's knocker 0.0 cm; Vesk at his lock R 0.1 / L 0.8 cm; waves 1–6 unchanged |
+| `tests/no-air.mjs` STATES=18, 19 and 31, 32 (new) | PASS each, one process per pair (0 offenders of hand or foot) | chapters 11 and 12 at their starts; chapter 11 with the thread (Irsa at Kell's switch); the last act (Vesk at his lock, Guard Harl in the core) |
+| `tests/save-migration.mjs` | PASS (4 new) | `base-14`, `base-14-deep`, `base-14-gal`, `base-15` load without an error; the threads on, the steps they are past counted as done |
+| `tests/under-bar.mjs` | PASS 15/15 | the underground's looks and people in chapters 11–12 and the epilogue (the arch open again, the stones, the crew) |
+| `tests/resume.mjs` | PASS (after one FAIL of its own: D17 wanted a dialogue at once on Continue in Sendell's chamber; with the thread the arch grows shut first, in play, and her scene follows to its end) | D16, D17 |
+| `tests/world-consistency.mjs`, `tests/voices.mjs` | PASS each | no new journey (the thread starts no transition); no new speaker key |
+| `tests/cast-rounds.mjs`, `tests/chapter1.mjs`, `tests/opening.mjs` | PASS each | unchanged |
+
+(The pictures' probe (`captures/campaign-wave7/`) also ran every new step on the final build. The ledger's chapter-11 base run
+and `campaign-thread` O's first run were on builds before the last fixes — the knocker's busy answer, the exit after the held
+shutter —; O was run again and passed.)
+
+| Chapter | Before (base) | Now: what the player does | Where |
+|---|---|---|---|
+| 11 The Shell | the lift down; in the machinery a cooling diagram, valves A and C, a ball switch for the catwalk's ladder; the shutter opened by the cooling; three pillars woken by direct throws raised the stepping stones; Sendell told what lies under the shell; nothing answered him, and the core's bank shots were first met under the guardian's fire | **The shaft.** Baldino adds one thing on the radio: the crew tested the pylons' receivers on a target by the bore; it can't be hit straight. By the east wall a pylon receiver stands behind a blast stub, a brass panel beside it, a brass plate on the floor (the core's look). Standing still on the plate lines him up; the throw comes off the panel, round the stub, and the receiver turns blue ("Remember the plate"). Optional, on the way (the objective's line), never a lock. **The machinery.** Steam pours from four vent bars on the stack along the back wall over the catwalk. The shell's knocking comes up the pipes, three and a rest, and in the rest a damper on an old stone flue at the catwalk's east end clanks twice. The first time he is where the damper is in view (from the stair's foot, the ball switch), its two knocks slam the vents' flaps shut over the catwalk's east end: "Three... and two. The two come from that damper. Not the drill." "Up at home Arthur counted four. Only the first of these carries that far." Up the lowered stair, the west end still steams (a step in burns 1 and pushes him back, said once); the quiet east end leads to the fitters' knocker (a lever under the stack: "KNOCKER · SHIFT CALLS"). Each E is a knock; a pause ends the message. Three is answered with two, as she answers the shell; four and other counts get nothing (said once). Two: she knocks back four, slow ("She's counting back at me"), and the west end's flaps slam shut one after the other, all the way to valve C. **The shutter.** Cooled, its lock lets go as before; as he comes up to it, the heat comes back and the shutter starts down with a judder; violet crystal grows up out of the floor at both its posts and pushes it back to 2.15 m and holds it ("Crystal. It grew up under it. It's holding it open"). Nothing explains it yet. **The galleries.** The third pillar now stands north of the stones' line with its heart on the far side: no throw from the shelf or the first stones reaches it past the pillar. The first two hearts are thrown at as before; when the middle stone rises it carries a brass plate, and the crew's survey mirror stands against the far cliff ("The third heart faces the far side. That brass mirror... and a plate on the middle stone"). Standing still on the plate, the throw goes off the mirror onto the third heart; its stones rise; on to the far shelf. **Sendell's chamber.** As he comes in, crystal grows across the arch behind him, wall to wall ("It's grown shut behind me"); then Sendell's words, with three more: "She held the shutter for you. You knocked, and she answered. Nobody has answered her in a long time." "And the door behind me?" "Her too. She keeps what she cares for where she thinks it is safe." "She would keep all of you down here, warm, if I let her. Do not let anyone do that, Twinsen. Not her, and not Vesk." Her light renews him: the checkpoint, said ("Checkpoint. Sendell's light renews you"). The arch stays shut ("There's no going back that way") until the shield holds | `story/answer.js` (`ShellThread`, owned by `chapter3.js`: `story._sh`), `text/answer.js`, `underground.js` (the shaft's receiver, the stack, the damper, the vents, the knocker, the held shutter, the third pillar and the mirror, the stone's plate, the seal) |
+| 12 The Core | the fight (the pylons, the bleed valve, Vesk's coil), then Vesk's fall, the player's choice (pull him clear or leave him), and one line: "Shield mode." — a boss pattern, the decision told | The fight and the choice as they were. Then **the last act, in four steps he has done before**. "Not the bore yet. Mill Lane still hangs on its line. Stop it now and Kell's cart drops again." (chapter 9's stop). **1. The branch.** On the deck ring beyond Vesk's platform, the bore's main riser to Citadel with Mill Lane's branch and its two-way cock (BORE · MILLS). The pipe knocks with the shell (three, her two, a rest); turned in a knock the cock kicks back out of his hand (chapter 8; said once, then a toast); in the rest it turns to MILLS. **2. Irsa.** On the radio, from Kell's switch on Mill Lane (she keeps it now in chapters 11–12): "It jumped when you turned it... and it's holding." "The lane's on the mills. Kell's cart is still up. Holding, Twinsen." **Vesk chooses, in view.** He gets up from the rail ("You pulled me out of that. And the lane holds without my line." / "Don't look at me like that. I heard her..."), walks down to his central lock at the foot of the platform's steps and turns his own key: "Then I have no reason left to hold it. The lock's yours." **3. The central lock.** Its bar lifted between the shell's three and her two is slammed back by her two ("Like the joint up top: after her answer, not after the three", chapter 10); lifted in the rest after her two, it stays up and the drill winds down ("...and she's still knocking"). **4. The signal.** Two knocks on the main's knocker: at home Arthur hears them on the kitchen pipe ("Mum! The kitchen pipe! Two! Twice for water, that's Dad!", chapter 2's signal); Zoé: "Signal's going out. Sun, wave, star." Another count gets "that's not ours. Twice for water, once for nothing." The bore turns to a shield, Sendell: "She is asleep again", the arch behind opens. **The guard.** Guard Harl comes in by the arch: "Chief Engineer Vesk. By order of the joint council: for the test log you cut, and for the lane you left off the evacuation list." Vesk: "I kept the water running. Write that down too." "It's written down. Next to the rest. Come along." → the epilogue | `story/answer.js`, `chapter3.js` (`veskFalls` hands the end to `lastAct`), `underground.js` (the lock, the manifold, its cock and knocker, the guard's spot) |
+
+**Why this shape.** Section 4 said chapter 11 had nothing that answered him and was a set of locks, and chapter 12's last act
+was a boss pattern. The answer is the campaign's own thread turned round: the knocking he has followed since the kitchen wall
+is the cracked shell's three, and down here something knocks back. Chapter 10's "four" (Arthur's count, Mira's needle) is
+explained in play, not told: the first of her two answers is the knock that carries up to the kitchen. He learns her count
+by watching the damper, repeats it at a knocker that is a real lever on the stack, and her replies are what make the catwalk
+passable (the vents she slams shut are the way, the ones still steaming are not). The held shutter is shown and left
+unexplained; Sendell explains it and the shut arch together, and the explanation carries the finale's theme (she keeps what
+she cares for, warm, "for its protection": not her, and not Vesk). The core's bank shot is taught twice before the guardian
+asks for it: once where nothing shoots back (the crew's test receiver, optional), once where the crossing needs it (the third
+heart from the middle stone). The last act separates what keeps people alive from the control: Mill Lane's branch goes over
+to Irsa's mills first (chapter 9 showed what a stop does to the lane; chapter 8's cock is turned in the rest), Irsa's
+"holding" is heard (she keeps Kell's switch now), and only then does Vesk give up his lock — his own choice, made in view,
+for the reason he gave in chapter 9 (the lane's water), which no longer holds. The bar is chapter 10's joint (after the
+answer, not after the three); the signal is chapter 2's (twice for water), heard by the boy who has listened to the pipe
+since chapter 1. The guard names the cut log (chapters 4, 5, 9) and the lane left off the list (chapter 8); Vesk's "I kept
+the water running" is true and changes nothing. No new region, no new fight, no new villain; Sendell stays as she was; the
+guardian's fight, its pylons, bleed valve and coil, and the help/leave choice are as they were.
+
+**New flags only** (old saves load and go on): `sh_v sh_bank sh_knock sh_reply sh_held sh_shut` · `co_v co_go co_branch
+co_irsa co_vesk co_lock co_signal`. The markers: `sh_v` is set when chapter 11 begins, or on loading a chapter-11 save from
+before; in such a save a step it is past counts as done ('past'): been past the shaft → the test receiver; cooled (or valve C
+open) → the answer and the knocker; cooled and in the galleries → the held shutter; Sendell's words → the shut arch (never
+shown: the arch stays open in such a game). `co_v` is set when chapter 12 begins or on loading any chapter-12 save from
+before (every one is ahead of the last act). A save in the last act (`co_go` with the coil broken) loads back into the last
+act, not into the fight again (the base game replayed the fight's end: no base save is in it). Without the markers the
+chapters play as they did. Irsa stands at Kell's switch on Mill Lane in chapters 11–12 in every game.
+
+**Hands.** Four new hand actions, all through `story/reach.js` (`tinker`): the fitters' knocker on the catwalk (its grip
+1.21 m over the deck), the branch cock's handle (a kicked-back turn and the turn that holds), the central lock's bar, the
+main's knocker. Vesk's hand on his key once he has turned it (`tinker`, placed by the story; NO-AIR's `workhands.js` puts his
+hands on the lock). Measured in `tests/campaign-hands.mjs` (the table above).
+
+**Vega 8 budget** (draw calls and triangles of one frame, all passes, 960×540, Medium; SwiftShader: counts only, no timing; the
+same saves on both builds and the same spots, the room's enemies set aside; the probe a script in the session's scratch):
+
+| Spot (save) | draw calls: base → wave 7 | triangles: base → wave 7 |
+|---|---|---|
+| the shaft, by the bore (`base-14`; the test receiver) | 57 → 61 | 92,730 → 95,249 |
+| the machinery, the stair's foot (`base-14-deep`) | 68 → 71 | 115,232 → 119,566 |
+| the machinery, under the catwalk's east end (the damper, the knocker) | 73 → 76 | 120,112 → 124,446 |
+| the machinery, before the shutter | 71 → 73 | 120,074 → 124,406 |
+| the galleries, the start shelf's brink (`base-14-gal`; the third pillar, the mirror) | 59 → 62 | 58,874 → 60,285 |
+| Sendell's chamber, by the pool (`base-14-gal`) | 62 → 57 | 38,130 → 37,408 |
+| the core (`base-15`, in the fight; the lock, the manifold) | 130 → 134 | 124,921 → 128,707 |
+| the machinery, the shutter held (wave 7 only) | — → 77 | — → 124,790 |
+| Sendell's chamber, the arch shut (wave 7 only) | — → 63 | — → 39,090 |
+
+At most +4 calls, +3.6 % triangles (the machinery). The new static parts are in the rooms' own kits with the rooms' materials
+(the stack and its vents, the flue, the receiver's cage and stub, the brass panels, the mirror, the lock's pedestal, the manifold);
+the moving parts are one mesh each (the damper, the knocker, the receiver, the bar, the key, the cock's handle, the core's knocker);
+the four vents' flaps one instanced mesh; her crystal (the shutter's braces, the arch's seal) one merged mesh each, drawn only
+when shown; the two throw plates share one glowing material. In the core the camera frames the whole arena from both spots (the
+same frame twice). Sendell's chamber draws 5 fewer calls on the wave's build: the save from before enters it into the shut arch's
+beat first (her light not yet up when the frame was taken); it follows the scene's state, it is not a saving.
+
+**Files.** New: `src/game/story/answer.js` (the thread: `ShellThread`, `story._sh`, owned by `chapter3.js` and asked first),
+`src/game/text/answer.js`. Hooked into: `story/chapter3.js` (the thread's place, begin for both parts, the shutter's and the
+arch's exits, interactables and interact, the test receiver's ball target, a pillar woken, Sendell's scene as its own method with
+the seal first and the checkpoint after, `veskFalls` hands the end to `lastAct`, a save in the last act comes back to it, update,
+applyFlags, applyRooms, objective, journal), `underground.js` (the shared reflection `reflectOff` — the core's panels use it as
+before —, the throw plate and bank panel, her crystal; the shaft's test receiver; the stack, its flue and damper, the four vents and
+their flaps, the knocker, the held shutter's crystal and `coolDoor.hold`; the third pillar moved north with its heart on the far
+side, the survey mirror, the middle stone's plate; the seal on Sendell's arch; the central lock, the branch manifold, its cock and
+knocker, the guard's spot). `voice.js`, `netline.js`, `cnline.js`, `laneline.js`, `passline.js` are not touched (no new speaker:
+Irsa on the radio, Arthur, Zoé, Vesk, Sendell, Baldino and Guard Harl have their voices). Tests: `tests/playthrough/14-shell.mjs`
+(the new steps by input; the pylon step's ISO fallback under ASSIST), `tests/chapter3.mjs` (the suite of The Shell and The Core),
+`campaign-thread.mjs` (N: C21–C24, the saves from before; O: chapter 11 by input with Save & quit; P: the last act with Save &
+quit), `campaign-hands.mjs` (the four new hand actions and Vesk at his lock; `ONLY11=1`), `no-air.mjs` (states 31, 32),
+`save-migration.mjs` (4 new), `resume.mjs` (D17 accepts the seal first); fixtures `tests/fixtures/campaign/base-14`, `base-14-deep`,
+`base-14-gal`, `base-15` (made on the build before the wave) and `new-14-deep`, `new-15-last` (made by this wave's playthrough).
+Pictures (for the coordinator only): `captures/campaign-wave7/x-*.jpg`.
+
+**Left open by wave 7:** The play camera is wide in these rooms: the damper and its flue, the vents' flaps, the knocker, the
+manifold's cock and the lock read small (the steam, the clank, the lines and the objective carry them; the pictures are from
+the game camera with the hero there). Her first answer comes when he is within about 10 m of the damper (or after 40 s in the
+room); a player who goes straight to the diagram at the entrance meets it a little later. The steam is a cost, not a lock: a
+player can walk through the west end's vents (1 per vent, pushed back) to valve C without the knocker; the knocker makes the way
+safe. The rhythm (the shell's three in 0.68 s, her two at 1.25 and 1.5 s, a 3.6 s cycle) is the same in both chapters; whether a
+first-time player reads "the rest after her two" for the lock from the sound and the cock's kicks is not judged (a wrong lift
+costs a second and a line). Vesk walks from the rail to his lock in a straight line of the story's own (over the platform's
+steps; no planner). Guard Harl is the one guard who comes in; "the council's guards" in Baldino's line are more than are shown.
+The chapter-12 pylon fight is the base's: the bot sometimes stalls at one plate (seen on both builds); the segment's ISO fallback
+covers it, logged. Chapter 12 is still under the 75 % line by the estimate (about 0.67 of the old median): it is the finale.
+The epilogue (wave 8: the tap) is untouched; the shut arch opens again once the shield holds, so the epilogue's crew walk
+through as before. `chapter10.mjs` was not rerun (no file of chapter 10 was touched).
+
 ## 6. The next waves (chapters 4–12 and the aftermath)
 
 Rules for every wave: new flags only, a marker per thread as above (a save from before counts the step as done); every
@@ -783,7 +924,7 @@ them all is the one wave 1 started: **three kicks and a rest**, first heard in t
 | 4 (**built**, 5d) | 8 Evacuation | `evacuation.js` + `pumpline.js` (reused): the lane of chapter 2 is the district off the list; on arriving the player sees the project's cart pass the lane's closed gate with empty seats (a cut-away, then control); Zoé (played) reads the schedule against the route at the lighthouse and takes the lane's people to the landing; Twinsen opens the lane's old water gate from the pump room (the bypass he knows: the third pipe's cock drains the culvert) so the cart can come through. Bram, the neighbours and Pippa are seen to board. No side quest is needed | `ev_v ev_cart ev_sched ev_gate ev_board` (as built: also `ev_s ev_r ev_bram ev_hedda ev_landing ev_in ev_seen ev_kick`) | `tests/playthrough/11`; `tests/chapter8.mjs` (the chapter suite of Evacuation); a save in the pump room during the evacuation (`campaign-thread` I5) |
 | 5 (**built**, 5e) | 9 The Council (the evidence, the failed shutdown) | `council.js` + `zeelift.js` (Kell): the archive is closed to Twinsen by Vesk's standing order, read on its door; Kell takes him up the cistern lift's service landing to the archive's back gallery (only if the lift was mended on the main route: it always was); the BORE cabinet holds the uncut log (two traces) and the order that cut it, with Vesk's reason in his hand. After the hearing the council orders the stop: the player throws it at the platform's console; the bore's needle falls, the pulse's does not, Mill Lane's taps fail (Kell's lift stops, Brel's jug); Baldino's isolator on the Test Pair bench (`workshop.js`) holds one relay steady at a time: tried by hand | `cn_v cn_closed cn_kell cn_log cn_stop cn_iso` | `tests/playthrough/12`; `tests/chapter8.mjs`; `zeelich-life.mjs` (Mill Lane's states) |
 | 6 (**built**, 5f) | 10 Baldino's Network | `network.js` + `story/netline.js` + `codejoint.js`: at each leg the ally walks to the station and takes its handle as the player lets go (seen before he leaves: Irsa at Mill Lane's bypass, Mira at the valve room's wheels, Zoé at the lighthouse dials, Ilka and Dallan at the vent, Yorna and Pim at the dome); Arthur, at home on the radio, counts the knocking (three and a rest, then four): Mira reads the same on the valve room's gauge before anyone acts on it. The hardest station (the damaged connection at the station's code box) stays Twinsen's | `nw_v nw_irsa nw_mira nw_zoe nw_ilka nw_yorna nw_arthur` (as built: also `nw_old nw_irsaTold nw_gauge nw_wheel nw_jointTold nw_kick nw_joint`) | `tests/playthrough/13`; `tests/chapter10.mjs` (the chapter suite of Baldino's Network); `campaign-thread.mjs` L, M; `campaign-hands.mjs`; `cast-rounds.mjs` (the allies' places) |
-| 7 | 11 The Shell, 12 The Core | `chapter3.js` + a new `story/answer.js`: in the machinery a damper answers three and a rest with a pattern of its own; the player repeats it at a knocker (a real lever), gets a second reply, and the replies mark the safe catwalks; a failing shutter is held open for him, later the gallery's door is shut behind him (shown first, explained by Sendell after). The banked throw is taught on a safe plate before the stepping stones need it; a checkpoint (autosave) before the core. Chapter 12: the last act in four steps he has done before (reroute one branch at a cock, Irsa's "holding" on the radio, the central lock, the signal to Zoé); Vesk chooses in view; the guards name the cut log and the list | `sh_v sh_knock sh_reply sh_held sh_shut co_branch co_irsa co_lock co_signal` | `tests/playthrough/14`; `tests/chapter10.mjs`; `under-bar.mjs` |
+| 7 (**built**, 5g) | 11 The Shell, 12 The Core | `chapter3.js` + a new `story/answer.js`: in the machinery a damper answers three and a rest with a pattern of its own; the player repeats it at a knocker (a real lever), gets a second reply, and the replies mark the safe catwalks; a failing shutter is held open for him, later the gallery's door is shut behind him (shown first, explained by Sendell after). The banked throw is taught on a safe plate before the stepping stones need it; a checkpoint (autosave) before the core. Chapter 12: the last act in four steps he has done before (reroute one branch at a cock, Irsa's "holding" on the radio, the central lock, the signal to Zoé); Vesk chooses in view; the guards name the cut log and the list | `sh_v sh_knock sh_reply sh_held sh_shut co_branch co_irsa co_lock co_signal` | `tests/playthrough/14`; `tests/chapter10.mjs`; `under-bar.mjs` |
 | 8 | Epilogue | `epilogue.js` + `hometap.js` (its parts): after the dinner, control in the kitchen: the tap turned by hand runs cold, Arthur's cup stands under it "just in case", a word with Zoé, then the end screen | `ep_tap` | `tests/epilogue-home.mjs`; `tests/playthrough/14` (its last step); a fresh run 01–14 |
 
 After the last wave: a fresh chain 01–14 from a new game, by input, with its numbers in the table of section 3.

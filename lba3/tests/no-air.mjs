@@ -63,6 +63,11 @@ const STATES = [
   ['network', { c10_started: true, c10_pulse: true, nw_v: 1 }],
   ['network', { c10_started: true, c10_pulse: true, c10_okuAsk: true, c10_millBraked: true, c10_mill: true, c10_miraAsk: true, c10_valveSet: { 0: true, 1: true, 2: true }, c10_valves: true, c10_zoeAsk: true, c10_dials: [2, 0, 1], c10_light: true, c10_ilka: true, c10_boreRelay: true, c10_boreW2: true, c10_guardDown: true, c10_bore: true, c10_pim: true, c10_keeper: true, c10_domeRelay: true, c10_domeLit: true, c10_dome: true,
     nw_v: 1, nw_irsa: true, nw_irsaTold: true, nw_arthur: true, nw_gauge: true, nw_mira: true, nw_wheel: 2, nw_zoe: true, nw_ilka: true, nw_yorna: true }],
+  // CAMPAIGN-9 (story/answer.js): chapter 11 with the thread (Irsa keeps Kell's switch on Mill Lane, 31); chapter 12's last act
+  // with Vesk at his central lock, his key turned, and the council's guard come in (32)
+  ['shell', { c3_started: true, sh_v: 1, nw_v: 1, nw_irsa: true }],
+  ['core', { c3_started: true, c3_cooled: true, c3_sendell: true, c3_fight: true, c3_pylon0: true, c3_pylon1: true, c3_pylon2: true, c3_overload: true, c3_bleed: true, c3_coil: 3, c3_turned: true, c3_veskHelped: true,
+    sh_v: 1, co_v: 1, co_go: true, co_branch: true, co_irsa: true, co_vesk: true, co_lock: true, co_signal: true }],
 ];
 
 // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)

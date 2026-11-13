@@ -5,6 +5,11 @@
 // Ball targets are first tried with a real throw; if a throw misses, the hit is applied directly and the
 // log says "forced" (aiming is covered by the earlier tests; this one checks the story can be finished).
 // Also: a save taken mid-chapter (after the galleries) reloads with the progress intact.
+// CAMPAIGN-9 (wave 7, story/answer.js): the crew's test receiver in the shaft (a bank shot from its plate); in the machinery the
+// steam over the catwalk, the damper's answer (two after the shell's three) and the east end gone quiet, the fitters' knocker
+// (three answered with two, two with four slow: the west end quiet); the shutter held by her crystal; the third heart from
+// the middle stone's plate off the survey mirror; the arch shut behind him and Sendell's words; after the coil the last act:
+// the branch cock (kicked back in a knock, turned in the rest), Irsa, Vesk's key, the lock's bar after her two, two knocks.
 import { launch, checker } from './lib/boot.mjs';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, done } = checker({ info: 'always' });
@@ -22,6 +27,7 @@ const boot = async (mode) => {
     const G = window.game; G.testFreeze = true;
     window.T = {
       tap(c) { G.input.taps.add(c); G.step(1 / 60); },
+      press(c) { G.input.keys.add(c); G.input.taps.add(c); G.step(1 / 60); G.input.keys.delete(c); G.step(1 / 30); },
       talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play' && G.state !== 'ending'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
       tp(x, z, a = 0, y = null) { const h = G.hero; h.pos.set(x, y == null ? G.physics.groundAt(x, z) : G.physics.groundAt(x, z, y + 1), z); h.angle = a; h.onGround = true; h.vy = 0; h.vel?.set(0, 0); if (G.camRig.lba) G.camRig.lba.init = false; G.step(0.1); },
       npc(id) { return G.npcs.find((n) => n.def.id === id); },
@@ -65,22 +71,38 @@ is('up the lift: out in the station\'s yard on Citadel, beside the bore\'s colla
   (v) => v[1] === null && v[2] < 5.5 && v[3] === false && v[4] === 'c3down' && v[5] === 'play');
 is('the collar takes him back down the shaft', await ev(() => { T.tap('KeyE'); game.step(1.6); T.talkAll(); return [game.room?.id, game.flags.chapterKey]; }), (v) => v[0] === 'c3shaft' && v[1] === 'shell');
 
+// CAMPAIGN-9: the crew's test receiver, from its plate (standing still lines him up), off the panel
+is('the shaft: the crew\'s test receiver hit by a bank shot from its plate (Baldino says so)', await ev(() => { const G = game, S = G.room.teach, h = G.hero; T.tp(S.plate.x, S.plate.z, 0); h.hp = h.maxHp; G.step(0.8); const a = h.angle;
+  G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(2.0); T.talkAll(); return { a: +a.toFixed(2), lit: S.lit, bank: G.flags.sh_bank }; }), (v) => Math.abs(v.a - Math.PI / 2) < 0.05 && v.lit && v.bank === true);
 // the deep installation
 is('down to the deep installation', await ev(() => T.exit('c3-deep')), (v) => v === 'c3deep');
+is('the machinery: steam out of all four vents over the catwalk; near the stair the damper answers the shell\'s three with two, the east end goes quiet', await ev(() => {
+  const G = game, D = G.room, f = G.flags; const st = D.vents.map((v) => v.latched).join(); T.tp(D.ladder.x, D.ladder.z + 0.5, Math.PI);
+  for (let i = 0; i < 400 && !f.sh_knock; i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [st, f.sh_knock, D.vents.map((v) => v.latched).join()]; }),
+  (v) => v[0] === 'false,false,false,false' && v[1] === true && v[2] === 'false,false,true,true');
 await shot('C3-01-deep.png');
 is('the cooling diagram read', await ev(() => { const D = game.room; T.useAt(D.diagram.x, D.diagram.z); return [game.flags.c3_diagram, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 is('the wrong valve (B) opens but cools nothing', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
 await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); });
 is('valve A opened (not cooled yet)', await ev(() => { const v = game.room.valves.find((x) => x.id === 'A'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
 is("the ladder's ball switch hit, the ladder down", await ev(() => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return [T.hit(tg), game.flags.c3_ladder]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
+is('on the catwalk, a step into the west end\'s steam burns and pushes him back', await ev(() => { const G = game, D = G.room, h = G.hero, W = D.vents[1]; T.tp(W.x + 0.9, W.z, -Math.PI / 2, 3.0); h.hp = h.maxHp; h.invuln = 0; const hp = h.hp;
+  for (let i = 0; i < 30; i++) { G.input.keys.add('ArrowUp'); G.step(1 / 30); } G.input.keys.delete('ArrowUp'); G.step(0.6); T.talkAll(); return [hp - h.hp, +h.pos.y.toFixed(1)]; }), (v) => v[0] >= 1 && v[1] === 3);
+is('the knocker: three knocks are answered with two (nothing changes); two knocks: four slow, the west end goes quiet', await ev(() => {
+  const G = game, D = G.room, K = D.knocker, f = G.flags, h = G.hero, sh = G.story._sh;
+  const knock = (n) => { T.tp(K.x - 0.38, K.z + 0.55, Math.PI, 3.0); for (let i = 0; i < n; i++) { for (let w = 0; w < 60 && h.actT > 0; w++) G.step(0.05); T.tap('KeyE'); for (let w = 0; w < 40 && (h.steer || h.actT > 0); w++) G.step(0.05); } for (let i = 0; i < 200 && (sh.msg || sh.busy || G.state === 'dialog'); i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); };
+  knock(3); const a = [f.sh_reply ?? null, D.vents.map((v) => v.latched).join()]; knock(2); return [...a, f.sh_reply, D.vents.map((v) => v.latched).join()]; }),
+  (v) => v[0] === null && v[1] === 'false,false,true,true' && v[2] === true && v[3] === 'true,true,true,true');
 is('valve C on the catwalk: cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'C'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled, game.hero.pos.y.toFixed(2), v.y]; }), (v) => v[0] === true && v[1] === true);
 is('the machinery cooled, an objective set', await ev(() => [game.flags.c3_cooled, T.obj()]), (v) => v[0] === true && v[1].length > 0);
 await shot('C3-02-cooled.png');
 
-// the galleries
-is('on to the crystal galleries', await ev(() => T.exit('c3-gallery')), (v) => v === 'c3gallery');
+// the galleries (CAMPAIGN-9: the shutter starts down as he reaches it; her crystal holds it)
+is('at the shutter: it comes down and her crystal holds it open; on to the crystal galleries (still in the doorway once the line is read)', await ev(() => { let r = T.exit('c3-gallery'); const held = !!game.flags.sh_held; for (let i = 0; i < 60 && game.room?.id !== 'c3gallery'; i++) { game.step(0.1); T.talkAll(); } return [held, game.room?.id]; }), (v) => v[0] && v[1] === 'c3gallery');
 await shot('C3-03-gallery.png');
-is('the three pillars hit', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => T.hit(tg))), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+is('the first two pillars hit', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null && !x.node).map((tg) => T.hit(tg))), (v) => v.length === 2 && v.every((x) => x !== 'FAILED'));
+is('the third heart faces the far side: from the middle stone\'s plate (it lines him up), the throw comes off the survey mirror onto it', await ev(() => { const G = game, R = G.room, S = R.stonePlate, h = G.hero, tg = R.ballTargets.find((x) => x.pillar === 2);
+  G.step(2); T.talkAll(); T.tp(S.x + 0.15, S.z - 0.1, 0, 3.0); h.hp = h.maxHp; G.step(0.8); T.talkAll(); G.step(0.6); const a = h.angle; G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(2.0); T.talkAll(); return { a: +a.toFixed(2), up: S.up(), done: tg.done, node: !!tg.node }; }), (v) => v.up && v.node && Math.abs(v.a - Math.PI / 2) < 0.05 && v.done);
 is('the stones raised, an objective set', await ev(() => [game.flags.c3_pillar0, game.flags.c3_pillar1, game.flags.c3_pillar2, T.obj()]), (v) => v[0] && v[1] && v[2] && v[3].length > 0);
 await shot('C3-04-stones.png');
 
@@ -92,7 +114,8 @@ is('save → Continue: the chapter-11 progress survives, back in the galleries',
 
 // Sendell
 is('on to Sendell', await ev(() => { if (game.room?.id !== 'c3gallery') T.exit('c3-gallery'); return T.exit('c3-sendell'); }), (v) => v === 'c3sendell');
-is("Sendell's words, the core objective", await ev(() => { T.talkAll(); return [game.flags.c3_sendell, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is("the arch he came in by grows shut behind him first; then Sendell's words (why), the checkpoint, the core objective", await ev(() => { for (let i = 0; i < 40 && !game.flags.c3_sendell; i++) { game.step(0.1); T.talkAll(); } T.talkAll(); return [game.flags.sh_shut, !!game.room.seal?.shut, game.flags.c3_sendell, game.hero.hp === game.hero.maxHp, T.obj()]; }), (v) => v[0] === true && v[1] && v[2] === true && v[3] && v[4].length > 0);
+is('the way back is shut (her crystal across the arch)', await ev(() => { T.exit('c3-gallery'); T.talkAll(); return game.room?.id; }), (v) => v === 'c3sendell');
 await shot('C3-05-sendell.png');
 
 // the core: Vesk, the guardian, the pylons
@@ -105,7 +128,7 @@ is("Sendell's door: chapter 12 (The Core) begins under its own title card, in th
   return { j0, key: game.flags.chapterKey, chapter: game.flags.chapter, card, room: game.room?.id, state: game.state }; }),
   (v) => v.key === 'core' && v.chapter === 11 && /Chapter 12/.test(v.card) && /The Core/.test(v.card) && v.room === 'c3core' && v.j0.includes('11. The Shell') && !v.j0.includes('12. The Core'));
 is('in the core: the fight starts, an objective set', await ev(() => { T.talkAll(); return [game.room?.id, game.flags.c3_fight, T.obj()]; }), (v) => v[0] === 'c3core' && v[1] === true && v[2].length > 0);
-is('the journal keeps both chapters: 11 The Shell (its four lines) and 12 The Core (its first line only, the fight begun; the pylons are still the objective)', await ev(() => game.story.journal().filter((c) => /Shell|Core/.test(c.title)).map((c) => [c.title, c.lines.length])), (v) => v.length === 2 && v[0][0] === '11. The Shell' && v[0][1] === 4 && v[1][0] === '12. The Core' && v[1][1] === 1);
+is('the journal keeps both chapters: 11 The Shell (its four lines and the thread\'s three: the answer, the held shutter, the shut arch) and 12 The Core (its first line only, the fight begun; the pylons are still the objective)', await ev(() => game.story.journal().filter((c) => /Shell|Core/.test(c.title)).map((c) => [c.title, c.lines.length])), (v) => v.length === 2 && v[0][0] === '11. The Shell' && v[0][1] === 7 && v[1][0] === '12. The Core' && v[1][1] === 1);
 is('the guardian is there and alive', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }), (v) => Array.isArray(v) && v[0] === true && v[2] === true);
 is("the core can't be left during the fight", await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }), (v) => v === 'c3core');
 await shot('C3-06-core.png');
@@ -170,6 +193,18 @@ is('a ball at it while it climbs knocks it out of the dive (stunned)', dvBall, (
 is('the bleed valve turned (its prompt, E): Ilka takes the surge, Vesk raises the coil, an objective set', await ev(() => { const G = game, B = G.room.bleed, h = G.hero; T.tp(B.x, B.z); const g = G.story.cur.guardian; if (g) { g.state = 'stunned'; g.stateT = 0; } h.hp = h.maxHp; G.step(0.2); T.tap('KeyE'); G.step(1.6); T.talkAll(); G.step(0.5); T.talkAll(); const tg = G.room.ballTargets.find((x) => x.coil); return { bleed: G.flags.c3_bleed, open: B.open, coil: !!tg, obj: T.obj() }; }), (v) => v.bleed === true && v.open && v.coil && /coil/i.test(v.obj));
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
 is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);
+// CAMPAIGN-9: the last act (after Vesk's choice, taken with E by talkAll): the branch cock, Irsa, Vesk's key, the lock, the signal
+is('the last act begins: the objective names Mill Lane\'s branch, the guardian is gone', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); return [game.flags.c3_turned, game.flags.co_go, /Mill Lane/.test(T.obj()), !!game.story.cur.guardian?.present]; }), (v) => v[0] === true && v[1] === true && v[2] && !v[3]);
+// (put at the handle's front, facing it, then E — held for a frame, as a key press — when the knocking's clock is in [lo, hi):
+//  the hand meets the handle about half a second after the press)
+const turnAt = async (kind, sel, lo, hi) => ev(([kind, sel, lo, hi]) => { const G = game, sh = G.story._sh, h = G.hero, p = new Function('return ' + sel)(); T.talkAll(); T.tp(p.x - Math.sin(p.a) * 0.55 + Math.cos(p.a) * 0.38, p.z - Math.cos(p.a) * 0.55 - Math.sin(p.a) * 0.38, p.a); G.step(0.3);
+  for (let w = 0; w < 400 && !(sh.phase() > lo && sh.phase() < hi); w++) G.step(1 / 60); T.press('KeyE'); for (let w = 0; w < 60 && (h.steer || h.actT > 0); w++) G.step(0.05); for (let i = 0; i < 300 && (sh.busy || G.state === 'dialog'); i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return G.flags; }, [kind, sel, lo, hi]);
+is('the cock turned in a knock kicks back', await turnAt('co_cock', 'game.room.branch', 3.4, 3.5).then((f) => f.co_branch ?? null), (v) => v === null);
+is('the cock turned in the rest: Mill Lane on the mills, Irsa holding, Vesk walks to his lock and turns his own key', await turnAt('co_cock', 'game.room.branch', 1.7, 2.1).then(async (f) => { await ev(() => { for (let i = 0; i < 400 && !game.flags.co_vesk; i++) { game.step(0.1); if (game.state === 'dialog') T.talkAll(); } T.talkAll(); }); return ev(() => [game.flags.co_branch, game.flags.co_irsa, game.flags.co_vesk, game.room.lock.turned]); }), (v) => v[0] === true && v[1] === true && v[2] === true && v[3]);
+is('the lock\'s bar lifted in the gap before her two is slammed back; lifted after them it stays up, the drill winds down', await turnAt('co_lock', 'game.room.lock.grip', 0.3, 0.4).then(async (f) => { const a = f.co_lock ?? null; const g = await turnAt('co_lock', 'game.room.lock.grip', 1.4, 1.6); await ev(() => game.step(3)); return [a, g.co_lock, await ev(() => +game.room.drill.spin.toFixed(2))]; }), (v) => v[0] === null && v[1] === true && v[2] < 0.1);
+is('two knocks on the main: the signal, the shield, the guard; the chapter ends', await ev(() => { const G = game, K = G.room.coreKnocker, h = G.hero; T.talkAll(); T.tp(K.x - Math.sin(K.a) * 0.55 + Math.cos(K.a) * 0.38, K.z - Math.cos(K.a) * 0.55 - Math.sin(K.a) * 0.38, K.a); G.step(0.3);
+  for (let i = 0; i < 2; i++) { for (let w = 0; w < 60 && h.actT > 0; w++) G.step(0.05); T.press('KeyE'); for (let w = 0; w < 40 && (h.steer || h.actT > 0); w++) G.step(0.05); }
+  for (let i = 0; i < 400 && G.flags.chapterKey === 'core'; i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } return [G.flags.co_signal, G.flags.c3_done, G.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 'home');
 is('the chapter ends: the epilogue (after chapter 12, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state, game.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 12 && v[5] === 'home');
 
 // epilogue: dinner → end screen
