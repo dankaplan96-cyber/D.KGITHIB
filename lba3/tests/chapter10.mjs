@@ -88,7 +88,8 @@ await ev(() => { T.useOn = (x, z) => { const G = game; T.tp(x, z); G.step(0.2); 
 is('chapter 10 (network) starts in Baldino\'s workshop, the relays objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 8, chapterKey: 'council', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
     c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true,
     cn_v: 1, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true, cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true });   // (CAMPAIGN-7: chapter 9 ended with the isolator on Kell's feed box)
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.flags.c10_started, T.obj()]; }), (v) => v[0] === 'network' && v[2] === true && v[3].length > 0);
+  G.hero.hasBall = true; G.story.chapters.find((c) => c.key === 'council')?.thread?.applyFlags?.();   // (chapter 9's flags, put on as a load would: Mill Lane's lift up on the isolator)
+  G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.flags.c10_started, T.obj()]; }), (v) => v[0] === 'network' && v[2] === true && v[3].length > 0);
 await shot('C10-00-workshop.png');
 is('Oku on Zeelich asks for the mill braked', await ev(() => { T.out(); T.talk('oku'); return [game.room?.id, game.flags.c10_okuAsk]; }), (v) => v[0] === 'zeelich' && v[1] === true);
 { const b = await ev(() => { const G = game, f = G.flags, m = G.rooms.zeelich.mills[0]; return [T.hit({ ...m.brake, get done() { return !!f.c10_millBraked; } }), m.spinning]; });
@@ -197,7 +198,10 @@ is('from the glider\'s landing on the plateau he walks into the station\'s yard 
   if (G.flags.c1_water) G.world.gate.open = true; for (let i = 0; i < 40; i++) G.step(0.1);
   P.trace.length = 0; const r = P.go(J.touch.front.x, J.touch.front.z, { tol: 0.5, maxT: 120 }); P.face(J.x, J.z); return [r.r, G.findInteractable()?.kind, r.r === 'arrived' ? '' : P.trace.slice(-6), [+G.hero.pos.x.toFixed(1), +G.hero.pos.z.toFixed(1)]]; }), (v) => v[0] === 'arrived' && v[1] === 'nw_joint');
 // CAMPAIGN-8: the joint. Baldino first; a try in a knock (just after the third) is thrown off by the fourth; one in the rest after the fourth holds
-is('CAMPAIGN-8 the joint: Baldino says what it wants; clipped just after the third knock, the fourth throws it off (said once)', await ev(() => { const G = game, T2 = G.story._nw; T.tap('KeyE'); T.wait(); const J = T2.joint(); P.go(J.touch.front.x, J.touch.front.z, { tol: 0.12, maxT: 6 }); P.face(J.x, J.z);
+is('CAMPAIGN-8 the joint: Baldino says what it wants; clipped just after the third knock, the fourth throws it off (said once)', await ev(() => { const G = game, T2 = G.story._nw; T.tap('KeyE'); T.wait(); const J = T2.joint();
+  // (on the touch point's own spot, facing it: the hand meets the clamp about half a second after the press, and the knock is
+  //  read at that moment; a walk on the way first would carry a press just after the third knock into the rest)
+  T.tp(J.touch.front.x, J.touch.front.z, J.touch.a);
   let t = 0; while (!(T2.phase() > 0.5 && T2.phase() < 0.6) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); return [!!G.flags.nw_jointTold, T2.lastTry, !!G.flags.nw_joint, !!G.flags.nw_kick]; }), (v) => v[0] && v[1] && v[1].ok === false && !v[2] && v[3]);
 await shot('C10-09-joint.png');
 const fin = await ev(() => { const G = game, st = G.world.station, T2 = G.story._nw; let t = 0; while (!(T2.phase() > 1.48 && T2.phase() < 1.62) && t < 4) { G.step(1 / 30); t += 1 / 30; } T.tap('KeyE'); T.wait(60); const tr = T2.lastTry; for (let i = 0; i < 30; i++) { G.step(0.2); T.talkAll(); } return [G.flags.c10_done, G.flags.chapterKey, G.room?.id, !!st.sealed, tr, !!G.flags.nw_joint]; });

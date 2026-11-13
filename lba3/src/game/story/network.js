@@ -458,7 +458,7 @@ export class Network extends ChapterBase {
     this.sending = true;
     g.audio.cue?.('revelation');
     // (CAMPAIGN-8: Baldino has said his piece at the joint; Irsa and Arthur answer too)
-    const call = this.thread.on ? [['hero', 'c10_tw_p1'], ...this.thread.rollCall(), ['baldino', 'c10_bal_p2']] : [['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']];
+    const call = this.thread.on ? [['hero', 'c10_tw_p1'], ...this.thread.rollCall(), ['baldino', this.thread.line('c10_bal_p2')]] : [['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']];
     this.chain(call, () => {
       g.camRig.shake(0.8); g.audio.play('horn');
       this.game.world.station?.setSealed?.(false);   // (the blast doors over the collar draw back)
@@ -592,7 +592,7 @@ export class Network extends ChapterBase {
     { const to = this.thread.objective(); if (to) return to; }
     const n = this.done();
     if (n >= 5) return this.goal('c10_obj_platform');
-    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.thread.subIrsa() + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, 'c10_sub_light') + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
+    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.thread.subIrsa() + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, this.thread.line('c10_sub_light')) + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
   }
   items() {
     if (!this.reached() || !this.f.c10_started) return [];
@@ -605,7 +605,7 @@ export class Network extends ChapterBase {
       { key: 'c10_j_plan', done: !!f.c10_started },
       { key: 'c10_j_fly', done: !!f.c10_started },
       ...this.thread.journal().filter((l) => l.key !== 'nw_j_held'),
-      { key: 'c10_j_all', done: !!f.c10_done },
+      { key: this.thread.line('c10_j_all'), done: !!f.c10_done },
       ...this.thread.journal().filter((l) => l.key === 'nw_j_held'),
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }

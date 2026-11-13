@@ -68,6 +68,10 @@ Object.assign(STR.en, {
   nw_radio_arthur: "Four, and a rest, Dad. Still four. I'm holding the radio!",
 
   nw_sub_irsa: "Mill Lane: Baldino's isolator (Irsa)",
+  nw_sub_light: 'Citadel: the lighthouse (Zoé)',
+  nw_radio_zoe: 'Lighthouse holding. The needle is perfectly still, and so am I.',
+  nw_bal_p2: 'Sending now. Five stations, one signal...',
+  nw_j_all: "Oku, Irsa, Mira, Zoé, Ilka and Dallan, and Pim, Yorna and Sefa held their stations for a minute, Arthur counting at home, and the shaft's blast doors ground open. Vesk is at the bottom with the only console that can turn the bore around.",
   nw_obj_joint: "Clip the isolator on the code line's joint, in a rest",
   nw_j_irsa: "Irsa holds Mill Lane by hand on the mills' line, so Baldino's isolator could come with me.",
   nw_j_four: "Arthur counted the kitchen pipe from home: the knocking is four now, not three. Mira read the same on her fortress gauge.",

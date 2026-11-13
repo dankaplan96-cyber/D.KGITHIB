@@ -225,8 +225,13 @@ export class NetThread {
     }
     return false;
   }
-  // the lines that change in a game with the thread (network.js asks): Ilka's second, Yorna's send-off, Sefa's first
-  line(key) { const f = this.f; if (!this.on) return key; if (key === 'c10_ilka_2' && !f.nw_ilka) return 'nw_ilka_2'; if (key === 'c10_yorna_2' && f.nw_yorna !== 'past') return 'nw_yorna_2'; if (key === 'c10_keeper_1' && f.nw_yorna !== 'past') return 'nw_keeper_1'; return key; }
+  // the lines that change in a game with the thread (network.js asks): Ilka's second, Yorna's send-off, Sefa's first, and
+  // where Arthur was in the lamp room
+  line(key) { const f = this.f; if (!this.on) return key; if (key === 'c10_ilka_2' && !f.nw_ilka) return 'nw_ilka_2'; if (key === 'c10_yorna_2' && f.nw_yorna !== 'past') return 'nw_yorna_2'; if (key === 'c10_keeper_1' && f.nw_yorna !== 'past') return 'nw_keeper_1';
+    // (Arthur is at home on the radio, not in the lamp room: the lighthouse is Zoé's alone; the call has seven voices now)
+    if (this.arthurHome() && { c10_sub_light: 1, c10_radio_zoe: 1, c10_j_all: 1 }[key]) return 'nw_' + key.slice(4);
+    if (key === 'c10_bal_p2') return 'nw_bal_p2';
+    return key; }
 
   // ---------------------------------------------------------------- the takeover
   // He holds the handle (touch point p, his hand on it: a held 'tinker'); `contact` runs as his hand meets it, then
@@ -389,7 +394,7 @@ export class NetThread {
   // the roll call while the code goes (network.js sendCode): Irsa and Arthur too
   rollCall() {
     const f = this.f;
-    return [['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ...(f.nw_irsa === true ? [['zl_irsaradio', 'nw_radio_irsa']] : []),
+    return [['miraradio', 'c10_radio_mira'], ['zoeradio', this.line('c10_radio_zoe')], ['okuradio', 'c10_radio_oku'], ...(f.nw_irsa === true ? [['zl_irsaradio', 'nw_radio_irsa']] : []),
       ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ...(this.arthurHome() ? [['arthurradio', 'nw_radio_arthur']] : [])];
   }
 
