@@ -49,8 +49,8 @@ const person = (id) => ev((id) => {
   return { id, want, now, stood, R: gap('R'), L: gap('L') };
 }, id);
 
-// (ONLY10=1: chapter 10's part alone, while working on it)
-if (!process.env.ONLY10) {
+// (ONLY10=1: chapter 10's part alone, while working on it; ONLY11=1: chapters 11–12's)
+if (!process.env.ONLY10 && !process.env.ONLY11) {
 // chapter 1: a new game, in the kitchen
 await start(null);
 take(await use('h_tap', 'game.story.chapters[0].home.parts.house.spout', 1.2));
