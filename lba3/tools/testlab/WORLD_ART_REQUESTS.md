@@ -4693,7 +4693,8 @@ is excellent, leave it like this"; "yes").
   twinsen/look-38/twinsen-orig-*.jpg` (chapter 1, the user saw them).
 
 ## DESERT-ART 1–2 · Desert Island's old places in LBA2's language (CURATOR-27a's two batches) · the desktop, 13.11.2026
-CLOUD_ORDERS 40, "CURATOR-27a's question answered": the two Desert batches, after QUEUE-9 and PLACE-3. **Ready for the cloud, a
+CLOUD_ORDERS 40, "CURATOR-27a's question answered", and 41 item 3: the two Desert batches, after QUEUE-9 and PLACE-3 (in work
+when order 41 arrived, so sent before its items 1–2; GPU-V85 is next). **Ready for the cloud, a
 series, in this order: `requests/DESERT-ART-1.diff`, then `requests/DESERT-ART-2.diff` on top of it** (`src/game/desert.js`,
 `src/game/desertold.js`; both made against origin 516f6145 and checked there with `git apply --check`, 1 then 2).
 The user, 13.11, during this work: **"assume twelve years have passed, so changes make sense; this is a decision"**, and then,
@@ -4742,6 +4743,8 @@ Reference: the original's objects drawn from the user's GOG files with the repo'
 **Tests** (SwiftShader, the changed tree on 6d6f0721; the cloud's edits since, the derrick's collider and the third
 trough, touch none of these parts):
 - chapter4 59/59, island-doors 89/89, desert-life 30/30 PASS.
+- place-scan (CLOUD_ORDERS 41 item 3): functional 2 passed, 1 failed, **the same on the unchanged origin 516f6145**: 14 pieces
+  out of place (Knartas's island parts, 4–5 cm), 132 measured and left, on both trees; none on Desert Island.
 - desert-bar 16 passed, **1 failed: the same on the unchanged branch** ("chapter 8, Citadel evacuating: … Safi and Jorr
   talk of Citadel's news": Safi still says chapter 4's line about the wind-catcher). Story, not this change; for the cloud.
 - worldfit: functional PASS, 2 visual (an opening in Citadel's "house nbr", Zeelich house 3's window, z-fighting in
@@ -4752,3 +4755,5 @@ trough, touch none of these parts):
 **Pictures** (chapter 4: **not for the user**): `docs/future/desert-art/ch3plus-ba1-before-after.jpg` (Kesh, S40),
 `ch3plus-ba2-before-after.jpg` (the figures, the pillars, the gateway, S28), `ch3plus-s28-face.jpg` (the face, close).
 Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+**Order 41 item 6 (27c on the Vega 8):** the laptop was sold (LAPTOP-SOLD, 12.11); the user chose the desktop's Intel UHD 630
+as the minimum-target machine. 27c runs there: v85 against the UHD 630 baseline of 12.11, labelled "UHD 630".
