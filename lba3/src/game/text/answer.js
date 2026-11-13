@@ -53,7 +53,7 @@ Object.assign(STR.en, {
   co_vesk_key: "Then I have no reason left to hold it. The lock's yours.",
   co_tw_key: 'Thank you.',
   co_lock_ok: "It's off. The drill's winding down... and she's still knocking.",
-  co_lock_slam: 'Her two slammed it back. After her answer, not after the three.',
+  co_lock_slam: 'Her two slammed it back. Like the joint up top: after her answer, not after the three.',
   co_lock_knock: 'The knock slammed it back. Lift it in the rest after her two.',
   co_toast_slam: 'Slammed back: lift it in the rest after her two',
   co_ar_wrong: "Dad? I heard knocking, but that's not ours. Twice for water, once for nothing.",

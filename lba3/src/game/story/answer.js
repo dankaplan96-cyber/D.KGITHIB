@@ -67,7 +67,7 @@ export class ShellThread {
   applyRooms() {
     const f = this.f, S = this.R('c3shaft'), D = this.R('c3deep'), N = this.R('c3sendell'), C = this.R('c3core');
     if (S?.teach && f.sh_bank === true) { S.teach.setLit(true); S.teach.target.done = true; }
-    if (D?.vents) for (const v of D.vents) if ((v.side === 'east' && f.sh_knock) || (v.side === 'west' && f.sh_reply) || !f.sh_v) v.latch(true);
+    if (D?.vents) for (const v of D.vents) if ((v.side === 'east' && f.sh_knock) || (v.side === 'west' && f.sh_reply) || !f.sh_v || f.c3_done || this.key() === 'core') v.latch(true);   // (quiet once he is past them: the core, the epilogue)
     if (D?.coolDoor && f.sh_held === true && f.c3_cooled) D.coolDoor.hold(true);
     N?.seal?.set(f.sh_shut === true && !f.c3_done && !f.co_signal, true);
     if (C?.lock) {
