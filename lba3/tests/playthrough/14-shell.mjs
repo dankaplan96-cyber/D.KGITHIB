@@ -10,6 +10,8 @@ export const steps = [
   ['continue', () => { P.settle();
     // (SWAIT: the thread's scenes in play — her answers, Irsa, Vesk's walk — waited out, reading what is said, as a player would)
     window.SWAIT = (max = 400, until = null) => { const G = game; let i = 0; for (; i < max && (G.story._sh?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans || G.story._sh?.msg || (until && !until())); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(); return i; };
+    // (STRY: to a handle's front, facing it; E when the knocking's clock is in [lo, hi) — a player timing it by ear)
+    window.STRY = (p, lo, hi) => { const G = game, h = G.hero, sh = G.story._sh, fx = p.x - Math.sin(p.a) * 0.55 + Math.cos(p.a) * 0.38, fz = p.z - Math.cos(p.a) * 0.55 - Math.sin(p.a) * 0.38; P.go(fx, fz, { tol: 0.15, maxT: 8, fight: false }); P.face(p.x, p.z); for (let w = 0; w < 400 && !(sh.phase() >= lo && sh.phase() < hi); w++) G.step(1 / 60); P.tap('KeyE', 0.05); for (let w = 0; w < 80 && (h.steer || h.actT > 0); w++) G.step(0.05); };
     return { chapter: game.flags.chapterKey, room: game.room?.id, sh: game.flags.sh_v ?? null }; }],
   // (the crew's test receiver: stand still on the brass plate — it lines him up — and throw; up to three tries, as a player)
   ['the test receiver (a bank shot from the plate)', () => { const G = game, S = G.room?.teach; if (!S || G.flags.sh_bank) return { r: 'none or done', bank: G.flags.sh_bank ?? null };
@@ -75,7 +77,11 @@ export const steps = [
   ['the core → chapter 12', () => { P.exitTo('c3-core'); P.settle(); return { chapter: game.flags.chapterKey, fight: game.flags.c3_fight, room: game.room?.id, fail: game.flags.chapterKey === 'core' ? null : 'no chapter 12' }; }],
   // (the guardian's fight as a player plays it: stun it with the ball, then the plate's bank shot in the 2.6 s it
   // sags — P.coreFight; walking plate to plate under its bolt fans killed the bot)
-  ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); const n = G.story.cur.pylons(); return { ...r, pylons: n, fail: n >= 3 ? null : 'pylons' }; }],
+  // (the bot sometimes stands throwing from one plate with the guardian between: seen on the build before wave 7 too, 2 runs of
+  //  2 from base-14/base-15. Under ASSIST, after its own 300 s: the pylons left converted through the story's own call — ISO)
+  ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); let n = G.story.cur.pylons(), iso = 0;
+    if (P.assist && n < 3 && !G.hero.dead) { for (const i of [0, 1, 2]) if (!G.flags['c3_pylon' + i]) { G.story.cur.convertPylon(i); P.settle(); iso++; } n = G.story.cur.pylons(); P.note('ISO assist: ' + iso + ' pylon(s) converted'); }
+    return { ...r, pylons: n, iso, fail: n >= 3 ? null : 'pylons' }; }],
   // (CHAPTER-BALANCE) the overload: the bore's bleed valve on the deck ring, turned while the guardian is stunned
   ['the bleed valve', () => { const G = game; P.settle(); const r = P.coreFight('bleed'); P.settle(); return { ...r, bleed: G.flags.c3_bleed, coil: !!G.room.ballTargets.find((x) => x.coil), fail: G.flags.c3_bleed ? null : 'bleed' }; }, null, { retryFrom: 'the core → chapter 12' }],
   // the coil: three ball hits while the overloaded guardian fights (input: stun it, then the coil in the window)
@@ -89,11 +95,13 @@ export const steps = [
   // Mill Lane's branch cock: turned as soon as he is there (a kick throws it back: then in the rest, as a player who has heard
   // it), then Irsa on the radio and Vesk at his key, waited out
   ['Mill Lane\'s branch (the cock in the rest)', () => { const G = game, f = G.flags, B = G.room.branch; if (!f.co_v) return { r: 'no thread' }; const out = [];
-    for (let k = 0; k < 6 && !f.co_branch; k++) { P.use(B.x, B.z, { near: 0.8, kind: 'co_cock' }); SWAIT(100); out.push(+G.story._sh.phase().toFixed(2)); if (!f.co_branch) { for (let w = 0; w < 40 && G.story._sh.phase() < 1.8; w++) G.step(0.05); } }
+    // (the first turn as soon as he is there; after a kick, as a player who has heard the knocks: from its handle, E in the
+    //  quiet after her two — the hand meets the handle about half a second after the press)
+    for (let k = 0; k < 6 && !f.co_branch; k++) { if (k === 0) P.use(B.x, B.z, { near: 0.8, kind: 'co_cock' }); else STRY(B, 1.6, 2.2); SWAIT(100); out.push(f.co_branch ? 'turned' : 'kicked'); }
     SWAIT(400, () => !!f.co_vesk); return { tries: out, branch: f.co_branch, irsa: f.co_irsa, vesk: f.co_vesk, fail: f.co_vesk ? null : 'branch' }; }],
   // the central lock's bar: lifted at once the first time (a slam teaches), then in the rest after her two
   ['the central lock (after her two)', () => { const G = game, f = G.flags, L = G.room.lock; if (!f.co_v) return { r: 'no thread' }; const out = [];
-    for (let k = 0; k < 6 && !f.co_lock; k++) { if (k > 0) for (let w = 0; w < 80 && !(G.story._sh.phase() > 1.55 && G.story._sh.phase() < 2.0); w++) G.step(0.05); P.use(L.grip.x, L.grip.z, { near: 0.8, kind: 'co_lock' }); SWAIT(100); out.push(f.co_lock ? 'up' : 'slam'); }
+    for (let k = 0; k < 6 && !f.co_lock; k++) { if (k === 0) P.use(L.grip.x, L.grip.z, { near: 0.8, kind: 'co_lock' }); else STRY(L.grip, 1.4, 1.9); SWAIT(100); out.push(f.co_lock ? 'up' : 'slam'); }
     return { tries: out, lock: f.co_lock, fail: f.co_lock ? null : 'lock' }; }],
   // two knocks on the main: Arthur hears them, Zoé sends the signal; the shield, the guard; the chapter ends
   ['the signal to Zoé (two knocks)', () => { const G = game, f = G.flags, K = G.room.coreKnocker, h = G.hero; if (!f.co_v) return { r: 'no thread' };

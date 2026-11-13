@@ -827,7 +827,10 @@ if (!ONLY || ONLY === 'M') {
 // ------------------------------------------------------------------ N: the saves from before wave 7 (CAMPAIGN-9)
 // (her answers, the held shutter, Irsa, Vesk's walk: scenes in play; waited out, reading what is said. SW_INSTALL puts a
 // helper on the page: SWAIT(max, until) steps the game while the thread is busy or `until` is not yet true)
-const SW_INSTALL = () => ev(() => { window.SWAIT = (max = 400, until = null) => { const G = game; let i = 0; for (; i < max && (G.story._sh?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans || G.story._sh?.msg || (until && !until())); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(); return i; }; });
+const SW_INSTALL = () => ev(() => { window.SWAIT = (max = 400, until = null) => { const G = game; let i = 0; for (; i < max && (G.story._sh?.busy || G.state === 'dialog' || G.hero.actT > 0 || G.hero.steer || G.trans || G.story._sh?.msg || (until && !until())); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(); return i; };
+  // (STRY: to a handle's front, facing it; E when the knocking's clock is in [lo, hi) — a player timing it by ear; the hand
+  //  meets the handle about half a second after the press)
+  window.STRY = (p, lo, hi) => { const G = game, h = G.hero, sh = G.story._sh, fx = p.x - Math.sin(p.a) * 0.55 + Math.cos(p.a) * 0.38, fz = p.z - Math.cos(p.a) * 0.55 - Math.sin(p.a) * 0.38; P.go(fx, fz, { tol: 0.15, maxT: 8, fight: false }); P.face(p.x, p.z); for (let w = 0; w < 400 && !(sh.phase() >= lo && sh.phase() < hi); w++) G.step(1 / 60); P.tap('KeyE', 0.05); for (let w = 0; w < 80 && (h.steer || h.actT > 0); w++) G.step(0.05); }; });
 if (!ONLY || ONLY === 'N' || ONLY === 'C') {
   await start('base-14');
   is('C21 a save from before, chapter 11 at its start (the shaft): loads; the thread is on, nothing of it past; the crew\'s test receiver unlit, its plate and the objective\'s line there', await ev(() => {
@@ -926,12 +929,11 @@ if (!ONLY || ONLY === 'P') {
   await SW_INSTALL();
   is('P1 the save: the coil broken, Vesk pulled clear, the last act begun; it loads into the last act (no guardian, no fight again); the cock turned in a knock kicks back (said once)', await ev(() => {
     const G = game, f = G.flags, B = G.room.branch, T = G.story._sh; const st = [f.chapterKey, f.c3_turned, f.co_go, !!G.story.cur.guardian?.present, /Mill Lane/.test(G.story.cur.objective())];
-    P.go(B.x, B.z + 0.5, { tol: 0.6, fight: false }); let t = 0; while (!(T.phase() > 3.2 || T.phase() < 0.05) && t < 5) { G.step(1 / 30); t += 1 / 30; } P.use(B.x, B.z, { near: 0.8, kind: 'co_cock' }); SWAIT(100);
+    STRY(B, 3.45, 3.55); SWAIT(100);
     return [...st, f.co_branch ?? null];
   }), (v) => v[0] === 'core' && v[1] === true && v[2] === true && v[3] === false && v[4] && v[5] === null);
   is('P2 the cock in the rest: Mill Lane on the mills; Irsa on the radio: holding; Vesk gets up, walks to his lock and turns his own key', await ev(() => {
-    const G = game, f = G.flags, B = G.room.branch, T = G.story._sh; let t = 0; while (!(T.phase() > 1.75 && T.phase() < 2.1) && t < 5) { G.step(1 / 30); t += 1 / 30; }
-    P.use(B.x, B.z, { near: 0.8, kind: 'co_cock' }); SWAIT(500, () => !!f.co_vesk);
+    const G = game, f = G.flags, B = G.room.branch; STRY(B, 1.6, 2.2); SWAIT(500, () => !!f.co_vesk);
     const v = P.npc('vesk'), K = G.room.lock.key; return [f.co_branch, f.co_irsa, f.co_vesk, +Math.hypot(v.pos.x - K.x, v.pos.z - K.z).toFixed(2), G.room.lock.turned];
   }), (v) => v[0] === true && v[1] === true && v[2] === true && v[3] < 1.0 && v[4]);
   await shot('P2-vesk-key');
@@ -939,9 +941,8 @@ if (!ONLY || ONLY === 'P') {
   await SW_INSTALL();
   is('P3 after Continue: still the last act, Vesk at his lock, the key turned; the bar lifted in the gap before her two is slammed back (said once); lifted in the rest after them, it stays up and the drill winds down', await ev(() => {
     const G = game, f = G.flags, L = G.room.lock, T = G.story._sh; const v = P.npc('vesk'); const st = [f.co_vesk, L.turned, +Math.hypot(v.pos.x - L.key.x, v.pos.z - L.key.z).toFixed(2), !!G.story.cur.guardian?.present];
-    P.go(L.grip.x, L.grip.z + 0.3, { tol: 0.6, fight: false });
-    let t = 0; while (!(T.phase() > 0.2 && T.phase() < 0.35) && t < 5) { G.step(1 / 30); t += 1 / 30; } P.use(L.grip.x, L.grip.z, { near: 0.8, kind: 'co_lock' }); SWAIT(100); const a = f.co_lock ?? null;
-    t = 0; while (!(T.phase() > 1.3 && T.phase() < 1.6) && t < 5) { G.step(1 / 30); t += 1 / 30; } P.use(L.grip.x, L.grip.z, { near: 0.8, kind: 'co_lock' }); SWAIT(100); G.step(3);
+    STRY(L.grip, 0.3, 0.5); SWAIT(100); const a = f.co_lock ?? null;
+    STRY(L.grip, 1.4, 1.9); SWAIT(100); G.step(3);
     return [...st, a, f.co_lock, +G.room.drill.spin.toFixed(2)];
   }), (v) => v[0] === true && v[1] && v[2] < 1.0 && !v[3] && v[4] === null && v[5] === true && v[6] < 0.1);
   is('P4 three knocks on the main: Arthur on the radio, not ours; two: twice for water, Zoé sends the signal, the shield holds, the guard names the cut log and the list; the epilogue', await ev(() => {

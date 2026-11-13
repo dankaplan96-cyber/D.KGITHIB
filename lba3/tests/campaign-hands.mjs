@@ -220,12 +220,20 @@ await ev(() => { const L = game.room.ladder; P.go(L.x, L.z - 5.4, { tol: 0.4 });
 take(await use('sh_knock', 'game.room.knocker', 0.7));
 await shWait();
 await browser.close();
+// (a turn timed by the knocking's clock, from the handle's front: E when the clock is in [lo, hi))
+const timed = (kind, sel, lo, hi) => ev(([kind, sel, lo, hi]) => { const G = game, h = G.hero, sh = G.story._sh, p = new Function('return ' + sel)(); window.KIND = kind;
+  const fx = p.x - Math.sin(p.a) * 0.55 + Math.cos(p.a) * 0.38, fz = p.z - Math.cos(p.a) * 0.55 - Math.sin(p.a) * 0.38; P.go(fx, fz, { tol: 0.15, maxT: 8, fight: false }); P.face(p.x, p.z);
+  for (let w = 0; w < 400 && !(sh.phase() >= lo && sh.phase() < hi); w++) G.step(1 / 60); P.tap('KeyE', 0.05); for (let w = 0; w < 80 && (h.steer || h.actT > 0); w++) G.step(0.05);
+  return window.GAPS.filter((g) => g.kind === kind); }, [kind, sel, lo, hi]);
 await start('new-15-last');
-for (let k = 0; k < 5; k++) { take(await use('co_cock', 'game.room.branch', 0.8)); await shWait(); if (await ev(() => !!game.flags.co_branch)) break; await ev(() => { for (let w = 0; w < 40 && game.story._sh.phase() < 1.8; w++) game.step(0.05); }); }
+take((await timed('co_cock', 'game.room.branch', 3.45, 3.55)).slice(-1));   // (in a knock: kicked back, measured)
+await shWait();
+take((await timed('co_cock', 'game.room.branch', 1.6, 2.2)).slice(-1));     // (in the rest: turned)
 await ev(() => { const G = game; for (let i = 0; i < 600 && !G.flags.co_vesk; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } });
 await shWait();
 people.push(await person('vesk'));
-for (let k = 0; k < 5; k++) { await ev(() => { if (game.flags.co_lock) return; for (let w = 0; w < 80 && !(game.story._sh.phase() > 1.3 && game.story._sh.phase() < 1.6); w++) game.step(0.05); }); take(await use('co_lock', 'game.room.lock.grip', 0.8)); await shWait(); if (await ev(() => !!game.flags.co_lock)) break; }
+take((await timed('co_lock', 'game.room.lock.grip', 1.4, 1.9)).slice(-1));
+await shWait();
 take(await use('co_knock', 'game.room.coreKnocker', 0.8));
 await browser.close();
 }
