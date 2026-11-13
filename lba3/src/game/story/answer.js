@@ -93,7 +93,7 @@ export class ShellThread {
     return undefined;
   }
   // (Vesk at his lock: his hands on its top by the key's side — workhands.js puts them there — facing it)
-  veskKey() { const K = this.R('c3core').lock.top, s = standFor('tinker', K.x, K.z, K.a); return { x: s.x, z: s.z, a: K.a }; }
+  veskKey() { const V = this.R('c3core').lock.vesk; return { x: V.x, z: V.z, a: V.a }; }
 
   // ---------------------------------------------------------------- HUD (chapter3.js asks first; null: its own)
   objective() {

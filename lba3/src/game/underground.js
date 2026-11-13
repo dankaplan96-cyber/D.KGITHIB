@@ -2012,7 +2012,7 @@ function buildCore(scene, physics) {
     const LX0 = 1.7, LZ0 = 3.2;
     k.at(CP[0], 0, CP[1], cpA, () => {
       k.add(rbox(0.5, 1.12, 0.42, 0.05), teal(), LX0, PY + 0.56, LZ0);
-      k.add(rbox(0.56, 0.08, 0.48, 0.02), iron(), LX0, PY + 1.16, LZ0);   // (its top at 1.2 m: the hands of whoever turns the key rest on it)
+      k.add(rbox(0.56, 0.08, 0.9, 0.02), iron(), LX0, PY + 1.16, LZ0);   // (its top at 1.2 m, wide: the hands of whoever turns the key rest on it)
       k.add(rbox(0.14, 0.2, 0.14, 0.02), iron(), LX0, PY + 1.17, LZ0 + 0.16);
       k.add(cyl(0.07, 0.07, 0.06, 12), brass(), LX0 - 0.25, PY + 1.08, LZ0, 0, { rz: Math.PI / 2 });
       k.at(LX0, PY + 0.62, LZ0 + 0.215, 0, () => signPlate(k, 0.44, 0.3, signMat(['CENTRAL LOCK', 'DRILL · SHIELD'], { w: 256, h: 170, bg: '#6a2a24', emblem: false })));
@@ -2023,9 +2023,9 @@ function buildCore(scene, physics) {
     one(bar, (kk) => { kk.add(rbox(0.06, 0.06, 0.44, 0.015), iron(), 0, 0, 0.2); kk.add(cyl(0.035, 0.035, 0.16, 10), MAT.paint('#b8302a', 0.4), 0, 0, 0.42, 0, { rz: Math.PI / 2 }); kk.add(cyl(0.05, 0.05, 0.1, 10), brass(), 0, 0, 0, 0, { rz: Math.PI / 2 }); });
     const key = new THREE.Group(); { const [x, z] = PF(LX0 - 0.29, LZ0); key.position.set(x, PY + 1.08, z); key.rotation.y = cpA - Math.PI / 2; B.group.add(key); }
     one(key, (kk) => { kk.add(rbox(0.02, 0.03, 0.09, 0.005), brass(), 0, 0, 0.045); kk.add(torus(0.03, 0.01, 5, 12), brass(), 0, 0, 0.11); });
-    const gripW = B.world(...PF(LX0, LZ0 + 0.62)), keyW = B.world(...PF(LX0 - 0.39, LZ0)), lockW = B.world(lpx, lpz), topW = B.world(...PF(LX0 - 0.13, LZ0));
+    const gripW = B.world(...PF(LX0, LZ0 + 0.62)), keyW = B.world(...PF(LX0 - 0.39, LZ0)), lockW = B.world(lpx, lpz), topW = B.world(...PF(LX0 - 0.62, LZ0));
     let barGoal = 0, barNow = 0, keyGoal = 0, keyNow = 0, barKick = 0;
-    R.lock = { ...lockW, grip: { ...gripW, y: PY + 1.21, a: cpA + Math.PI }, key: { ...keyW, y: PY + 1.08, a: cpA + Math.PI / 2 }, top: { ...topW, y: PY + 1.2, a: cpA + Math.PI / 2 },
+    R.lock = { ...lockW, grip: { ...gripW, y: PY + 1.21, a: cpA + Math.PI }, key: { ...keyW, y: PY + 1.08, a: cpA + Math.PI / 2 }, vesk: { ...topW, a: cpA + Math.PI / 2 },   // (where Vesk stands at it, facing it: his hands on its top)
       lifted: false, turned: false,
       turn(on, instant = false) { this.turned = !!on; keyGoal = on ? 1 : 0; if (instant) keyNow = keyGoal; },
       lift(on, instant = false) { this.lifted = !!on; barGoal = on ? 1 : 0; if (instant) barNow = barGoal; },
