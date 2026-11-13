@@ -1065,7 +1065,10 @@ export function* buildDesertSteps(scene, physics) {
     PB.add(cyl(0.35, 0.35, 0.5, 12, 0), pm('#c84a3a', 0.5, { metalness: 0.4 }), bx, postY + 1.45, bz);
     PB.add(cyl(1.0, 1.0, 3.2, 18, 1), pm('#d8dde0', 0.4, { metalness: 0.5 }), bx + 5, postY + 1.6, bz + 2, 0, 0, Math.PI / 2);
     PB.add(tube([[bx + 0.8, postY + 0.8, bz], [bx + 2.5, postY + 1.0, bz + 1], [bx + 3.4, postY + 1.6, bz + 2]], 0.12, 8, 1), iron, 0, 0, 0);
-    col({ type: 'box', x: bx, z: bz, hw: b, hd: b, top: postY + h, noStand: true, seeThrough: true });
+    // (CAMPAIGN-8: the derrick's box stops at the relief wheel's plane, the two west legs on their own: the wheel on the
+    //  well-head's west side is taken by hand from the west, story/netline.js; it stood 0.55 m inside the box)
+    col({ type: 'box', x: bx + (b - 0.95) / 2, z: bz, hw: (b + 0.95) / 2, hd: b, top: postY + h, noStand: true, seeThrough: true });
+    for (const s of [-1, 1]) col({ type: 'cyl', x: bx - b, z: bz + s * b, r: 0.2, top: postY + h, noStand: true, seeThrough: true });
     col({ type: 'box', x: bx + 5, z: bz + 2, hw: 1.7, hd: 1.0, top: postY + 2.6, noStand: true });
     cover.push({ x: ox + bx + 5, z: oz + bz + 2, r: 1.7 });
     R.bore = { ...W(bx, bz), valve: W(bx - 1.9, bz + 0.2), y: postY };

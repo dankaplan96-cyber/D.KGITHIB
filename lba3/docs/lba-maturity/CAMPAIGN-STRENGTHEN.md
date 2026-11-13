@@ -26,7 +26,7 @@ steps in `tests/playthrough/07…14`).
 | 7 The Observatory (`observatory`, observatory.js) | the monastery gate | the frozen window (ball), four mirrors, the telescope · the heavy drone · the seal's warm discs (ball) · the vent | Sendell speaks openly (told) · Arthur's radio: Citadel is evacuating (told) | the second vent is open |
 | 8 Evacuation (`evacuation`, evacuation.js + shelters.js + laneline.js) | home, changed; ● from the plateau the list cart is seen at the lane's shut water gate, every seat empty (a cut-away) | Gilbert, Mira, Pippa recruited · the fortress lever (control drones) · the depot wheel (ball) · Zoé's run with the hill families (played as Zoé) · the lighthouse gathering · ● as Zoé: the cart's schedule read against the driver's route on the lighthouse path's board, Bram, Hedda and Tobin brought to the landing · ● as Twinsen: the culvert's cock in the pump room, opened in the rest between the copper pipe's kicks · the control room | Vesk's message from below (told) · Mira finds the old valve room (told) · ● Bram knows the float gate · ● the cart comes through the open gate and the lane boards it (seen) | he boards a project ship for Zeelich |
 | 9 The Council (`council`, council.js + cnline.js + zeelift.js) | Zeelich's street | the street's people, the petition · Nara's and Oku's stamps (three mills freed, ball) · the clerk · the hearing · ● the archive's door read: Vesk's standing order · ● Kell asked, the ride up on his deck, the service door · ● the back gallery, down its stair past the archivist's round · the borrowed coat, the archivist's keys · ● the BORE drawer: the log of test 14 and the order that cut it, his carbon laid on it · ● the stop thrown at the platform's console · ● Baldino's isolator on one bench relay, then the other · ● the isolator on Kell's feed box | the council's fear, Dallan's proof (told) · ● the needles: BORE falls, GROUND kicks on (seen) · ● Mill Lane dry (a cut-away) · ● Vesk on the wire · ● Baldino reads the console: the bore's own switch is at the bottom, behind doors that open to a code from every station | ● Mill Lane runs off the isolator; one relay at a time: a network is needed (radio) |
-| 10 Baldino's Network (`network`, network.js) | Oku | five legs in any order: the old mill's relay (brake, climb) · Citadel's valve room (three valves) and the lighthouse dials · Desert Island's bore relay (drones) · the Hamalayi's dome (telescope) · the code box at the station | the allies answer at each station (told on the radio) | the shaft's blast doors open |
+| 10 Baldino's Network (`network`, network.js + netline.js) | Oku | five legs in any order: the old mill's relay (brake, climb) · ● Mill Lane on the way to the port: the isolator off Kell's feed box (Irsa takes the switch) · Citadel's valve room (● Mira reads her gauge first; three valves, ● she takes the wheel he holds) and the lighthouse dials (● Zoé takes the bank) · Desert Island's bore relay (● the relief wheel, Ilka takes it as the drones come; Dallan at the relay after) · the Hamalayi's dome (● the lever to SUNS, Yorna takes it; Pim at a mirror) · ● the code line's joint at the station: the isolator clipped on in the rest after the fourth knock | ● Arthur at home on the radio counts the kitchen pipe: four now · the allies answer at each station (radio; Irsa and Arthur too) | the shaft's blast doors open |
 | 11 The Shell (`shell`, chapter3.js) | the lift down | the cooling diagram, valves A and C, the ball switch for the ladder · a patrol drone · the galleries: three pillars (ball), stepping stones | Sendell explains what is under the shell (told) · Baldino on the radio | he walks from Sendell's chamber into the core |
 | 12 The Core (`core`, chapter3.js ChapterCore) | Vesk speaks, the guardian comes | three pylons converted by shots banked off copper plates while the guardian fights · the bleed valve · Vesk's coil broken (three hits) · the bore switched to shield mode | Zoé, Mira and Oku power the pylons (radio) · the council's guards take Vesk | the shell holds |
 | Epilogue (`home`, epilogue.js) | dinner at home | Keep Exploring (free roam) | the ending | — |
@@ -196,6 +196,25 @@ longest new pieces are the bench (33–44 s of the bot's: in the door, Baldino's
 is kept. Logs `/dev/shm/t920/run/base-12?.log`, `s-pt12.log`, `nw-12?.log`, stats `/dev/shm/t920/run/*st12*.json` (the
 session's scratch, not in the repository).
 
+**Chapter 10, wave 6** (13.11; base = `ccr-c1c2c4b9-dep6ed` at `3415d941` before the wave, served as its own build beside the
+wave's; all runs by the same bot, ASSIST=1, from the same save `base-13` — chapter 10 at its start, in the workshop, made on the
+build before the wave —, each in one piece by input; no death, no ISO assist in any run). The wave's build was run twice (the
+second with a clock on the takeovers: the seconds in play while a friend walks up and takes the handle):
+
+| Ch | bot s of free play: base → wave 6 | of which the new steps | lines · words | scenes (not counted) | est. first play (min): base → wave 6 | what the seconds are |
+|---|---|---|---|---|---|---|
+| 10 | 693.3 → **784.0**, second run **753.8** | about 35 (Mill Lane on the way to the port +1.8 net — its own 12.2, the ship's walk 10.4 shorter —; Citadel's valve room and lamp room +7.3; the relief wheel +3.5; the dome's takeover about 7; the joint +14.2 / +16.2: a try in a knock, then the rest after the fourth). The takeovers alone: 32.4 s (Mill Lane 3.4, the valve room 7.6, the lamp room 7.0, the bore 4.9, the dome 7.2, the joint's lines 2.3) | 66 · 1,033 → 84 · 1,302 (a new game also hears Baldino's line about his isolator: +1 · 53) | 7.2 → 10.6 s | 29.5 → **about 33.4** | the friends' takeovers, Arthur's count and Mira's reading, the joint; the rest swings with the bot: the walk from the lighthouse to Hesk +25 s in both wave runs (stuck at the same corner the base run also hit, once more), the ridge to the dome +46 s (its crawler: from the save `new-13-ham` the same step took 63.7 s on the wave's build and 131.7 s on the base) |
+
+The minutes are **estimates**: the 9.11 estimate moved by 1.8 × the new steps' bot seconds (about 35 s: +1.1 min), 60 s for one
+more deduction step (the clip in the rest after the fourth knock, not after the third: +1.0 min) and the new reading (+322 words
+at 200 a minute, +19 lines at 0.6 s: +1.8 min). Against the old median (16.9) chapter 10 is now about 1.98 (it was 1.75), the
+longest core chapter still. Nothing in it is padding: Mill Lane is on the way from the mill to the port (the run there is 1.8 s
+longer than the run without it); each takeover is a friend walking a few metres to the handle he holds (3–8 s); the joint is
+one try in the rest. The user's decision of 8.11 (long chapters are not shortened) is kept. The base run here (693 bot s) is
+longer than the 9.11 figure (542): a later bot and build (its climb of the old mill alone is 168 s); the comparison is between
+the two builds of this session. Logs `/dev/shm/w6/pt13-*.log`, stats `/dev/shm/w6/st13-*.json` (the session's scratch, not in
+the repository).
+
 ## 4. The missing playable step, chapter by chapter
 
 Did the player discover the problem, test an idea and see the result — or did a person do all three?
@@ -211,7 +230,7 @@ Did the player discover the problem, test an idea and see the result — or did 
 | 7 | told (Sendell) | played (mirrors, discs) | shown (the vent) | the direction is told, not read off an instrument he sets → **built (wave 3)**: the snow fields shake in threes; he sets the telescope to four, it follows the shaking, he reads the bearing: Citadel |
 | 8 | told (the list is known since chapter 2) | played (shelters, Zoé's run) | shown (the gathering) | the omission is never seen happening (the cart that passes the gate) → **built (wave 4)**: the cart is seen to turn away at the shut gate; Zoé reads the schedule against the route herself; he drains the culvert by the copper pipe's cock in a rest; the lane is seen to board |
 | 9 | told (the council) | played (stamps, the archive) | told (the turn) | what the cabinet proves is not his own test; the shutdown everyone argues about is never tried → **built (wave 5)**: the cabinet holds the log of the test he ran, his carbon laid on it; he throws the stop himself and sees what it does and does not stop |
-| 10 | told (Baldino) | played (five relays) | told (radio) | the allies are voices; nobody is seen taking a station over |
+| 10 | told (Baldino) | played (five relays) | told (radio) | the allies are voices; nobody is seen taking a station over → **built (wave 6)**: each friend takes the handle as he lets go, seen; Arthur's count and Mira's gauge turn the knocking to four; the joint in the rest after the fourth is his |
 | 11 | told (Sendell) | played (valves, pillars) | told | nothing answers him; the installation is a set of locks |
 | 12 | told (Vesk) | played (pylons, coil) | shown (the shell holds) | the last act is a boss pattern, not a decision made with the things he has learned |
 | Epilogue | — | — | told (dinner) | the tap is never turned again |
@@ -638,6 +657,117 @@ its way back to Tarra in Kesh after the vent — chapter 5, no file of which thi
 now over the 125 % line by the estimate (about 1.54 of the old median). Chapter 10's own opening ("five stations…") follows
 on unchanged; wave 6 can take Kell's lift on the isolator as Zeelich's first held station.
 
+## 5f. Wave 6, as built (the treatment's section 10, in chapter 10)
+
+**Status (13.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played
+it, nothing was listened to (the knock, the clunk of the isolator, the valve, the steam, the lever and the radio are the
+game's existing synthesized sounds), no frame rate measured. The wave was built by one worker and finished by another after
+a container restart (the first worker's snapshots and servers were lost; its four commits were kept): every result below is
+from the second worker's runs on a fresh snapshot.
+
+**Wave 6's verification** (port 8920 snapshot of this branch, the base on 8921; one suite at a time):
+
+| Suite | Verdict | What it covered |
+|---|---|---|
+| `tests/playthrough/13-network.mjs` (seg.mjs, by input, ASSIST=1, from `base-13`) | PASS twice on the wave's build, in one piece; 0 deaths, 0 ISO assists (the base build from the same save: PASS, 0, 0) | the whole chapter with the thread on (a save from before: nothing past): Oku, the brake, the climb, the mill's relay, down; Mill Lane: the isolator off, Irsa on the switch; the ship; Arthur's count in play; Mira's reading; the wheels and Mira's takeover; Zoé, the dials and her takeover; the bore: the relief wheel, Ilka's takeover, the drones and the guards; the dome: Pim to a mirror, the lever, Yorna's takeover; the joint: the first try at once (thrown off, in a knock), the next in the rest after the fourth → chapter 11 |
+| `tests/chapter10.mjs` (Baldino's Network's chapter suite) | PASS 30/30 (after one FAIL of its own, two checks; fixed in the suite, below) | the chapter by teleport, the lamp room by input; each takeover, Arthur's place at home, Mira's gauge kicking four times a cycle, the joint thrown off after the third knock and holding in the rest after the fourth, the code → chapter 11 |
+| `tests/campaign-thread.mjs` ONLY=L, M | PASS (L 3/3, M 9/9; M again after the last text change) | L: C18–C20 (`base-13`, `base-13-cit`, `base-13-desert`); M: Mira's reading and a Save & quit after it; the wheels; the lamp room half set and a Save & quit, the dials, Zoé's takeover, down past her by input; Arthur by the radio at home; Mill Lane after a reload; the joint thrown off, a Save & quit, the joint in the rest → chapter 11 |
+| `tests/campaign-hands.mjs` | PASS 5/5 | his hand: the isolator off the box 0.0 cm, the last wheel 0.0, the last dial 0.0, the relief wheel 0.4, the lever 0.0, the joint 0.1; the friends' hands (right / left): Irsa 0.1 / 0.7, Mira 0.5 / 0.4, Zoé 0.1 / 0.8, Arthur 0.3 / 1.0, Ilka 0.7 / 0.5, Dallan 0.3 / 1.0, Yorna 0.2 / 1.1, Pim 0.6 / 0.6 cm, none stood down; waves 1–5's unchanged |
+| `tests/no-air.mjs` STATES=29, 30 (new), one process each | PASS each (0 offenders of hand or foot) | chapter 10 with the thread at its start (Irsa waiting by Kell's box, Arthur at home); all five stations held (every friend at a handle, Baldino at the station) |
+| `tests/save-migration.mjs` | PASS 23/23 (3 new) | `base-13`, `base-13-cit`, `base-13-desert` load without an error; the thread on, the stations they are past counted as done |
+| `tests/cast-rounds.mjs` | PASS 221/221 | the story people's rounds in chapters 3–10; the friends placed at their handles, working (6 new checks) |
+| `tests/world-consistency.mjs` | PASS 37/37 | the residents and the cast per chapter; the journeys' allow-list (no new transition: the thread starts none) |
+| `tests/voices.mjs` | PASS 27/27 (after one FAIL: `n_cn_iso`, wave 5's item name, counted as a speaker without a voice; now in `SILENT`) | every `n_*` key: Irsa on the radio is Irsa's voice, band-limited |
+| `tests/resume.mjs`, `tests/chapter1.mjs`, `tests/opening.mjs` | PASS each (2, 32, 41) | unchanged |
+
+(`chapter10`'s two failures were the suite's own: it puts chapter 9's flags on by hand and calls the next chapter, so Mill Lane's
+lift never got the look a load gives it (the deck half way, as in a dry lane); it now applies chapter 9's thread as a load would.
+And its try "just after the third knock" walked a few centimetres to the clamp first, which carried the hand's contact into
+the rest; it now stands on the touch point before the press (contact at 1.05 s: thrown off, as meant). The game was not changed
+for either. `world-consistency`, `voices`, `resume`, `save-migration`, `no-air`, `cast-rounds`, `chapter1`, `opening`,
+`chapter10` and `campaign-thread` M ran on the final build; the playthrough, `campaign-hands`, `campaign-thread` L and the draw
+calls on the build before the last text change — the lines where Arthur was still in the lamp room, below —, which touches
+none of what they measure.)
+
+**The last text change** (this session): in a game with the thread Arthur is at home, but four lines still had him in the lamp
+room. The objective's lighthouse line now reads "Citadel: the lighthouse (Zoé)"; Zoé's answer in the roll call "Lighthouse
+holding. The needle is perfectly still, and so am I."; Baldino's "Five stations, one signal" (seven voices answer); the
+journal's line names Irsa and Yorna and has Arthur "counting at home". A save from before in which the lighthouse was done
+keeps the old lines (Arthur was there).
+
+| Chapter | Before (base) | Now: what the player does | Where |
+|---|---|---|---|
+| 10 Baldino's Network | five relays in any order; at each station he set the relay and the ally said a line; the code box at the station took the code from the radio's roll call (the allies as voices); Arthur stood beside Zoé in the lamp room and read the needle | **The isolator.** In the workshop Baldino adds one thing: the station's code line is old project cable with a cracked joint, nothing holds it but his isolator, so he wants it back off Kell's feed box; Irsa will hold the lane by hand ("Fetch it on your way to the port"). **Mill Lane.** On the way from the old mill to the port, Irsa waits by the motor house: she has run the mills' line onto Kell's feed switch, the bypass the chief kept promising, and it jumps when the ground knocks, so a hand stays on it. He unclips the isolator (his hand on it), the motor coughs; Irsa steps in, her hands on the switch: "...and holds. Got her." Kell: "Is that you holding my lift up, Irsa?" The deck stays up, the water runs; the isolator is in his pocket. (Missed: at the station Baldino says Irsa sent it over on his ship, holding the lane by hand.) **Arthur's count.** On Citadel, the first time in play, Arthur on the radio from home (Zoé gave him the kitchen pipe instead of the lighthouse): three and a rest... and now four, a little one at the end; he counted it ten times. Twinsen: it was always three. Baldino will time the code to the rest after four, "if the boy counted right"; Mira's gauges sit on the old mains. **Mira's gauge.** Brought down to the valve room, Mira walks to the board before a wheel is touched: "Nobody touches a wheel on a boy's count. Watch the fortress needle with me." The FORTRESS needle kicks one, two, three and, a beat late, a small fourth, then rests (the needles kick with the knocking for the rest of the chapter). "Four. The boy's right." **The wheels.** He sets the three gauges as before; on the last wheel his hands stay on it, it kicks; Mira comes round ("It kicks like a mule. Let go, I've got it"), he steps back, she takes it. **The dials.** Zoé alone in the lamp room reads the needle herself; on the last dial it is still; Arthur says "Station ready!" on the radio from home; she comes round the lens to the bank's west end and takes it as he lets go ("Hands off, Twinsen. The frequency's mine"). **The bore.** Ilka's instruction now includes the relief wheel: he sets the relay on the frame and opens the wheel a quarter turn (his hands on its rim), steam rattles up, the lamp lights, the wheel kicks; the drones come and Ilka takes the wheel ("Go! I've got the wheel"); after the fight Dallan is at the relay. **The dome.** Yorna comes up the ridge ("somebody has to tell him when to let go"); Pim takes the nearest mirror by its frame; he puts the telescope's lever to SUNS by hand, the tube swings, the relay burns; Yorna takes the lever. **The joint.** At the station the code line comes up off the deck onto an iron post beside Baldino's code box, its clamp cracked through, the upper jaw jumping on every knock. Baldino: clip the isolator on in a rest. Clipped after the third knock, the fourth throws it off ("Four, not three"; said once, then a short notice); clipped in the rest after the fourth, it bites and holds. The roll call has seven voices: Mira, Zoé (the needle still, "and so am I"), Oku, Irsa ("Kell's lane is holding. So am I"), Ilka, Pim, Arthur ("Four, and a rest, Dad. Still four"); "Five stations, one signal"; the blast doors open → chapter 11 | `story/netline.js` (`NetThread`, owned by network.js: `story._nw`), `text/netline.js`, `codejoint.js` (the joint), `story/network.js` (the hooks), `desert.js` (the derrick's collision stops at the relief wheel's plane) |
+
+**Why this shape.** The treatment asks for allies seen taking a station over, not heard. Each takeover is the same small
+action in play, never a cut-away: his hands on a real handle that kicks with the knocking, the friend walks the last metres
+and puts hers on it, he steps back. Every friend says why it is hers: Mira will not have anyone else turn her valves, Zoé
+holds her own old warning's frequency, Ilka had the instruction ready, Yorna came up to tell him when to let go, Irsa wanted
+the bypass the project never built. The thread "three kicks and a rest" changes for the first time in the campaign, and the
+player learns it from two people who would know: the boy who has listened to the kitchen pipe since chapter 1, checked by the
+engineer on her own gauge before anyone acts on a boy's count. That count is then the thing the player uses: the joint at the
+station is clipped in the rest after the fourth, and a clip after the third is thrown off — the skill of every earlier wave
+(act in the rest) with the new rhythm. Baldino's invention keeps its limit from chapter 9 (one isolator, one place), which is
+why Irsa must hold Kell's lane by hand. No new fight, no new region; the five stations, their order and their puzzles are
+as they were.
+
+**New flags only** (old saves load and go on): `nw_v nw_irsa nw_irsaTold nw_old nw_arthur nw_gauge nw_mira nw_wheel nw_zoe
+nw_ilka nw_yorna nw_jointTold nw_kick nw_joint`. The marker `nw_v` is set when chapter 10 begins, or on loading a chapter-10
+save from before (then `nw_old`). In such a save a station already done counts as past: the valve room → Mira, Arthur and the
+gauge 'past'; the lighthouse → Zoé and Arthur 'past' (Arthur stays in the lamp room, as in that game; no radio call); the
+bore → Ilka 'past'; Pim asked → Yorna 'past'. Mill Lane: a save without chapter 9's isolator on Kell's box (`cn_lane`) has
+no Mill Lane step (Baldino has his isolator); an old save that leaves Zeelich without the step counts it as past (Baldino:
+Irsa sent it over on his ship), as does a new game that reaches the joint without it. The joint itself is never skipped:
+it is the code's last step in every game with the marker. Without the marker the chapter plays as it did.
+
+**Hands.** Six new hand actions, all through `story/reach.js` ('tinker', held while the friend walks up): the isolator off
+Kell's feed box, the last valve wheel, the last dial, the bore's relief wheel, the telescope's setting lever, the joint's
+clamp. Eight friends placed working at a handle: Irsa at the feed switch, Mira at a valve wheel ('use'), Zoé at the dial
+bank, Ilka at the relief wheel, Dallan at the relay on the frame, Yorna at the lever, Pim at the back of a mirror's frame,
+Arthur at the radio at home. Measured in `tests/campaign-hands.mjs` (above): his hand 0.0–0.4 cm from the handle; the
+friends' hands 0.1–1.1 cm, none stood down.
+
+**Vega 8 budget** (draw calls and triangles of one frame, all passes, 1280×720, Medium; SwiftShader: counts only, no timing;
+the same save `new-13-five` — all five stations held, at the station — on both builds and the same camera spots; the probe a
+script in the session's scratch):
+
+| Spot (save `new-13-five`) | draw calls: base → wave 6 | triangles: base → wave 6 |
+|---|---|---|
+| Citadel, the station's code box | 197 → 200 | 574,104 → 574,492 |
+| home, by the radio | 74 → 77 | 218,083 → 222,133 |
+| the valve room, before the wheels | 116 → 116 | 34,326 → 34,326 |
+| the lamp room, at the dial bank | 174 → 171 | 142,412 → 138,362 |
+| Mill Lane, by Kell's feed box | 575 → 573 | 337,943 → 337,907 |
+| Desert Island, the bore's relief wheel | 217 → 217 | 246,878 → 246,386 |
+| the dome, by the telescope | 99 → 102 | 26,384 → 30,602 |
+
+At most +3 calls: at the station the joint (the post, its foot plate and cable one merged mesh; the jaw; the isolator, drawn
+only while clipped on, no shadows from the small parts); at home and in the dome a person who now stands there (Arthur by
+the radio; Yorna at the lever), with −3 in the lamp room where Arthur no longer stands and −2 on Mill Lane where the isolator
+is off the box. The relief wheel and the lever were already drawn.
+
+**Files.** New: `src/game/story/netline.js` (the thread: `story._nw`, owned by network.js and asked first),
+`src/game/text/netline.js`, `src/game/codejoint.js`. Hooked into: `story/network.js` (the thread's begin and flags, Baldino's
+added line, places, interactables, the five stations' endings with a takeover, talk with the thread's lines, the roll call,
+objective, markers, journal, items), `desert.js` (the derrick's collision box stops at the relief wheel's plane, two legs on
+their own). `src/engine/voice.js`: one `SILENT` entry (`cn_iso`, the isolator's name from wave 5, which the `voices` suite
+counted as a speaker without a voice). Tests: `tests/playthrough/13`, `tests/chapter10.mjs` (the chapter suite of Baldino's
+Network), `campaign-thread.mjs` (L: C18–C20, the saves from before; M: the thread by input with Save & quit),
+`campaign-hands.mjs`, `no-air.mjs` (states 29, 30), `save-migration.mjs` (3 new), `cast-rounds.mjs` (the friends at their
+handles); fixtures `tests/fixtures/campaign/base-13`, `base-13-cit`, `base-13-desert` (made on the build before the wave) and
+`new-13-cit`, `new-13-desert`, `new-13-ham`, `new-13-five` (made by this wave's playthrough). Pictures (for the coordinator
+only): `captures/campaign-wave6/x-*.jpg`.
+
+**Left open by wave 6:** Arthur stands by the radio in the toy corner, not at the kitchen pipe his lines are about (the
+radio is where he talks from). The takeovers' walks are straight lines of the story's own (no planner): short ways in rooms
+and yards, checked for the lamp room's one-person gap by input (`chapter10`, `campaign-thread` M4), not elsewhere. The
+joint's timing is read when the hand meets the clamp, about half a second after the press: the window (1.52–2.6 s of a 3 s
+cycle) is forgiving to a press during the fourth knock; whether a first-time player reads "the rest after four" from the
+needles, Arthur and the joint's jaw is not judged. Irsa holds the switch in chapter 10 only: in chapters 11–12 Mill Lane runs
+with the isolator off and nobody at the switch (wave 7 can give her the "holding" on the radio the treatment names). An old
+save made at the chapter's start never hears Baldino ask for the isolator (the objective's line and the star on the box
+carry it). The joint is small from the play camera (`x-ch10-7a`: the post and its clamp beside the code box): the objective, the prompt and Baldino's line carry it; the jaw's jump is seen in a close look only. Chapter 10 is now about 1.98 of the old median by the estimate, the longest core chapter.
+
 ## 6. The next waves (chapters 4–12 and the aftermath)
 
 Rules for every wave: new flags only, a marker per thread as above (a save from before counts the step as done); every
@@ -652,7 +782,7 @@ them all is the one wave 1 started: **three kicks and a rest**, first heard in t
 | 3 (**built**, 5c) | 6 The Pass, 7 The Observatory | `pass.js`: the winch line's pylons carry the pulse (their lamps and cables shake three and a rest; a surge stops the winch): the two trips are started in the rest between surges (a readable gauge at the winch, a sound cue), a missed start only costs the trip; from the far side the player locks the upper brake so Lhar's people cross without timing. `observatory.js`: the telescope's fourth setting follows the shaking of the snow fields: the line points under the installations, toward Citadel | `ps_v ps_read ps_trip1 ps_trip2 ps_safe ob_dir` (as built: also `ps_lamps ps_miss ob_v ob_snow ob_follow`) | `tests/playthrough/09`, `10`; `tests/chapter6.mjs`, `chapter7.mjs` (the suites of The Pass and The Observatory) |
 | 4 (**built**, 5d) | 8 Evacuation | `evacuation.js` + `pumpline.js` (reused): the lane of chapter 2 is the district off the list; on arriving the player sees the project's cart pass the lane's closed gate with empty seats (a cut-away, then control); Zoé (played) reads the schedule against the route at the lighthouse and takes the lane's people to the landing; Twinsen opens the lane's old water gate from the pump room (the bypass he knows: the third pipe's cock drains the culvert) so the cart can come through. Bram, the neighbours and Pippa are seen to board. No side quest is needed | `ev_v ev_cart ev_sched ev_gate ev_board` (as built: also `ev_s ev_r ev_bram ev_hedda ev_landing ev_in ev_seen ev_kick`) | `tests/playthrough/11`; `tests/chapter8.mjs` (the chapter suite of Evacuation); a save in the pump room during the evacuation (`campaign-thread` I5) |
 | 5 (**built**, 5e) | 9 The Council (the evidence, the failed shutdown) | `council.js` + `zeelift.js` (Kell): the archive is closed to Twinsen by Vesk's standing order, read on its door; Kell takes him up the cistern lift's service landing to the archive's back gallery (only if the lift was mended on the main route: it always was); the BORE cabinet holds the uncut log (two traces) and the order that cut it, with Vesk's reason in his hand. After the hearing the council orders the stop: the player throws it at the platform's console; the bore's needle falls, the pulse's does not, Mill Lane's taps fail (Kell's lift stops, Brel's jug); Baldino's isolator on the Test Pair bench (`workshop.js`) holds one relay steady at a time: tried by hand | `cn_v cn_closed cn_kell cn_log cn_stop cn_iso` | `tests/playthrough/12`; `tests/chapter8.mjs`; `zeelich-life.mjs` (Mill Lane's states) |
-| 6 | 10 Baldino's Network | `network.js`: at each leg the ally walks to the station and takes its handle as the player lets go (seen before he leaves: Irsa at Mill Lane's bypass, Mira at the valve room's wheels, Zoé at the lighthouse dials, Ilka and Dallan at the vent, Yorna and Pim at the dome); Arthur, at home on the radio, counts the knocking (three and a rest, then four): Mira reads the same on the valve room's gauge before anyone acts on it. The hardest station (the damaged connection at the station's code box) stays Twinsen's | `nw_v nw_irsa nw_mira nw_zoe nw_ilka nw_yorna nw_arthur` | `tests/playthrough/13`; `tests/chapter9.mjs`; `cast-rounds.mjs` (the allies' places) |
+| 6 (**built**, 5f) | 10 Baldino's Network | `network.js` + `story/netline.js` + `codejoint.js`: at each leg the ally walks to the station and takes its handle as the player lets go (seen before he leaves: Irsa at Mill Lane's bypass, Mira at the valve room's wheels, Zoé at the lighthouse dials, Ilka and Dallan at the vent, Yorna and Pim at the dome); Arthur, at home on the radio, counts the knocking (three and a rest, then four): Mira reads the same on the valve room's gauge before anyone acts on it. The hardest station (the damaged connection at the station's code box) stays Twinsen's | `nw_v nw_irsa nw_mira nw_zoe nw_ilka nw_yorna nw_arthur` (as built: also `nw_old nw_irsaTold nw_gauge nw_wheel nw_jointTold nw_kick nw_joint`) | `tests/playthrough/13`; `tests/chapter10.mjs` (the chapter suite of Baldino's Network); `campaign-thread.mjs` L, M; `campaign-hands.mjs`; `cast-rounds.mjs` (the allies' places) |
 | 7 | 11 The Shell, 12 The Core | `chapter3.js` + a new `story/answer.js`: in the machinery a damper answers three and a rest with a pattern of its own; the player repeats it at a knocker (a real lever), gets a second reply, and the replies mark the safe catwalks; a failing shutter is held open for him, later the gallery's door is shut behind him (shown first, explained by Sendell after). The banked throw is taught on a safe plate before the stepping stones need it; a checkpoint (autosave) before the core. Chapter 12: the last act in four steps he has done before (reroute one branch at a cock, Irsa's "holding" on the radio, the central lock, the signal to Zoé); Vesk chooses in view; the guards name the cut log and the list | `sh_v sh_knock sh_reply sh_held sh_shut co_branch co_irsa co_lock co_signal` | `tests/playthrough/14`; `tests/chapter10.mjs`; `under-bar.mjs` |
 | 8 | Epilogue | `epilogue.js` + `hometap.js` (its parts): after the dinner, control in the kitchen: the tap turned by hand runs cold, Arthur's cup stands under it "just in case", a word with Zoé, then the end screen | `ep_tap` | `tests/epilogue-home.mjs`; `tests/playthrough/14` (its last step); a fresh run 01–14 |
 

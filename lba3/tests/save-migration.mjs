@@ -31,6 +31,7 @@ async function run(name, save) {
     return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80),
       ps: [!!game.flags.ps_v, !!game.flags.ob_v, !!game.regions?.built('hamalayi')?.line?.active],
       ev: [!!game.flags.ev_v, !!game.flags.ev_cart, game.world.laneGate ? game.world.laneGate.gate.open : null],
+      nw: [game.flags.nw_v ?? null, game.flags.nw_irsa ?? null, game.flags.nw_mira ?? null, game.flags.nw_zoe ?? null, game.flags.nw_ilka ?? null, game.flags.nw_yorna ?? null, game.flags.nw_arthur ?? null, !!game.flags.c10_started],
       cn: [game.flags.cn_v ?? null, game.flags.cn_closed ?? null, game.flags.cn_kell ?? null, game.flags.cn_log ?? null, !!game.flags.c9_vote, !!game.rooms.upper?.order?.shown],
       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
@@ -68,6 +69,9 @@ await run('wave-4 base: chapter 8, Zoé\'s run behind it', fixture('base-11-rela
 await run('wave-5 base: chapter 9 at its start', fixture('base-12'));
 await run('wave-5 base: chapter 9 after the hearing', fixture('base-12-heard'));
 await run('wave-5 base: chapter 9 with the plans in hand', fixture('base-12-plans'));
+await run('wave-6 base: chapter 10 at its start', fixture('base-13'));
+await run('wave-6 base: chapter 10 on Citadel, the mill done', fixture('base-13-cit'));
+await run('wave-6 base: chapter 10 on Desert Island, three stations done', fixture('base-13-desert'));
 for (const r of results) console.log(JSON.stringify(r));
 const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re], [, h9, h9e], [, h9h, h9he], [, h9p, h9pe]] = results;
 check('a chapter-9 save from before wave 5, at its start, loads without an error; the stop is ahead, so the thread is on, none of its steps past', ['play', 'dialog'].includes(h9.state) && h9.cur === 'council' && h9.cn[0] === 1 && !h9.cn[1] && !h9.cn[2] && !h9.cn[3] && h9e === 'no errors', [h9, h9e]);
@@ -90,6 +94,11 @@ check('a v4 save in the epilogue stays in the epilogue (its position moves from 
 check('a v5 save on Zeelich\'s drill platform during The Shell comes out on Citadel beside the station\'s bore, in chapter 11', e5plat.state === 'play' && e5plat.room === null && e5plat.cur === 'shell' && e5plat.bore < 6, e5plat);
 check('a v5 save in the shaft\'s room stays there, in chapter 11', ['play', 'dialog'].includes(e5shaft.state) && e5shaft.room === 'c3shaft' && e5shaft.cur === 'shell', e5shaft);
 check('a v5 save in Zeelich\'s street during The Shell stays on Zeelich (only the platform moved)', e5street.state === 'play' && e5street.room === 'zeelich' && e5street.cur === 'shell', e5street);
+// CAMPAIGN-8 (wave 6): saves made on the build before it (tests/fixtures/campaign base-13, base-13-cit, base-13-desert)
+const [[, n10, n10e], [, n10c, n10ce], [, n10d, n10de]] = results.slice(-3);
+check('a chapter-10 save from before wave 6, at its start (the workshop), loads without an error; the thread is on, nothing of it past (Irsa\'s lane, Arthur\'s count, every friend\'s takeover ahead)', ['play', 'dialog'].includes(n10.state) && n10.cur === 'network' && n10.nw[0] === 1 && n10.nw.slice(1, 7).every((x) => x === null) && n10e === 'no errors', [n10, n10e]);
+check('a chapter-10 save from before wave 6, on Citadel with the mill done, loads without an error; Mill Lane counts as done (past: he has left Zeelich), Arthur\'s count and the Citadel stations ahead', ['play', 'dialog'].includes(n10c.state) && n10c.cur === 'network' && n10c.nw[0] === 1 && n10c.nw[1] === 'past' && n10c.nw[2] === null && n10c.nw[3] === null && n10ce === 'no errors', [n10c, n10ce]);
+check('a chapter-10 save from before wave 6, three stations done, loads without an error; Mira, Zoé (Arthur with her in the lamp room) and Ilka count as done (past), the dome ahead', ['play', 'dialog'].includes(n10d.state) && n10d.cur === 'network' && n10d.nw[0] === 1 && n10d.nw[2] === 'past' && n10d.nw[3] === 'past' && n10d.nw[4] === 'past' && n10d.nw[5] === null && n10de === 'no errors', [n10d, n10de]);
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
