@@ -309,3 +309,37 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     **PLACE-3 merged 12.11** (Desert: the corral troughs, Hesk's yacht and spare gear, jars, sacks and crates moved; the
     Hamalayi: a crate, the woodpile, the observatory's supplies, the old crank stand): re-capture before the Desert batches.
     Only the user can: listen (the WAVs), judge fight fairness, time a first play. Pictures past chapter 2 stay on the desktop.
+
+41. **The desktop's queue from 13.11 (the user: "direct tasks to the local agent").** State: artifact **v85**
+    (`ccr-c1c2c4b9-dep6ed`, the commit "Build stamp for artifact v85"; merge it first). Applied by the cloud since order 40:
+    QUEUE-9-CONTAINERS, DIGTEST-ART, CAST-VARIANTS-3, TWINSEN-ORIG; the campaign's waves 3–7 (chapters 6–12:
+    `CAMPAIGN-STRENGTHEN.md` 5c–5g), PLACE-2 and PLACE-3 (`PLACE-2.md`, `PLACE-3.md`), P17 (chapter 2's depot rail), P18
+    (the voices from the line's letters: `P18-VOICES.md`, Settings → Sound → Voice Style), CONTAINERS-3. **The cloud is
+    working on, don't touch:** `epilogue.js`, `hometap.js` (campaign wave 8, the epilogue), then a fresh chain 01–14;
+    `src/game/story/*`. Pictures past chapter 2 stay on the desktop. One at a time, each reported in `WORLD_ART_REQUESTS.md`
+    with a diff in `requests/` (`git apply --check` clean on origin) and pushed before the next:
+    1. **GPU-V85, the new chapters' objects from the play camera (report; fix only art).** The waves report these as
+       small or unseen through the game's own camera (Follow/Medium on the GTX 1050, at the spot where the player uses
+       them): chapter 6 the line's three lamps, the gauge by the winch and the crank; chapter 7 the telescope's bearing
+       ring and lever; chapter 8 the lane's water gate and the culvert cock in the pump room; chapter 9 Vesk's order
+       sheet by the archive door and the BORE drawer; chapter 10 the code line's joint and the isolator on it; chapter 11
+       the damper and the fitters' knocker, the held shutter; chapter 12 the branch cock, the central lock, the bar. For
+       each: does it read, and is the reveal camera's beat (`camera.js` reveal beats, off in the tests) framing it? Make
+       what does not read readable (bigger faces, contrast, a lower part) without moving levers, prompts or colliders;
+       draw calls before/after. Run the chapter's suite and `campaign-hands` for each change.
+    2. **VOICE-HW (P18 on real hardware; measure only, nobody listens).** In Chrome and in the app's Electron on the GTX
+       1050: the Words voices render in a blob worker. Measure from the box opening to the first sound, per line, over the
+       chapter-1 kitchen conversation and a Zeelich street talk; any line that falls back or comes late (the code joins a
+       late render with a 20 ms fade); the main thread's longest task while a line renders. Classic for comparison. A
+       report, numbers labelled with the machine; a diff only if a fault is found.
+    3. **DESERT-ART-1 and -2 (approved in order 40; PLACE-3 is merged now):** (1) Kesh's houses' parapet domes and colour;
+       (2) the standing figures, the gateway's beam, the pillars and the stone face in LBA2's language. Built by hand in
+       our own geometry (nothing exported from the original files), positions, colliders and `R.figures` spots kept, the
+       test stand and the corral's three troughs left alone; draw calls and `worldscore.mjs` before/after; run
+       `desert-life`, `chapter4`, `place-scan`.
+    4. **27a re-score of the Hamalayi** after wave 3 (Lhar, the Pass, the Observatory) and PLACE-3.
+    5. **Tavi on farmerB_b** (CAST-VARIANTS-1's leftover) may be retried: `interior-life` passes now.
+    6. **27c on the Vega 8** whenever the laptop is at hand: v85 against v71 on the same routes (the new chapters' stations
+       included).
+    7. **The expansion:** W-4 on `expansion/ballastra` as `EXPANSION_WORLD_SPEC.md` orders it, after 1–5.
+    Only the user can: play, listen, judge fight fairness, time a first play.
