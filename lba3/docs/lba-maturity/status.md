@@ -66,6 +66,8 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 - 11.11: **the camera felt chaotic only at the hostel door, not elsewhere** (the user, answering the desktop agent's CAM-34 question). The portico's camOnly box stays withdrawn; the camera elsewhere stays as it is; no general camera rework.
 - 11.11 (late): **night mode** (the user). Work on without asking, at most two workers, small bounded jobs first: finish campaign wave 1 and NO-AIR 2, merge, test, publish once as a broad batch; then the audit follow-ups, then campaign wave 2 onward. Nothing that needs the user's eyes or ears is claimed done.
 - 10.11: the user bought a new desktop with a GTX 1050 graphics card: it becomes the **work and test machine** (the local agent, Blender, the test lab, the GPU looks). The Vega 8 laptop stays the **minimum target** for performance.
+- 13.11: **twelve years have passed in the world, so changes to LBA2's places make sense** (the user to the desktop agent, during DESERT-ART: "this is a decision"); LBA2's shapes and colours come back to its landmarks while the twelve years' additions stay. Then "send both" (DESERT-ART 1 and 2, applied 13.11).
+- 13.11: the P18 voices: "better" (Words is the default).
 
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 
