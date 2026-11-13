@@ -94,6 +94,13 @@ const CARRY = {
   },
 };
 
+// TECH-ART-1: each kind is built once and a carrier holds a clone of it (Object3D.clone shares the geometry and the
+// cached materials). Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
+// in chapter 3, each a new set of GPU buffers. The templates belong to this module and are never disposed or edited; a
+// carrier only moves, hides or drops its own clone.
+const CARRY_T = new Map();
+const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return CARRY_T.get(kind).clone(); };
+
 // ------------------------------------------------------------------ the manager (one per game)
 export class Walkers {
   constructor(game, { indoor = false } = {}) {
@@ -369,7 +376,7 @@ export class Resident extends NPC {
     if (!kind || !CARRY[kind]) return;
     const hand = this.rig.j?.armR?.hand;
     if (!hand) return;
-    const m = CARRY[kind]();
+    const m = carryOf(kind);
     if (kind === 'sack') { m.position.set(0.0, 0.1, -0.02); }
     hand.add(m);
     this.carryMesh = m;

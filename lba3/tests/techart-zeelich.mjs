@@ -131,8 +131,11 @@ const route = await ev(async ([lx, lz, la, dx, dz]) => {
   };
   taAt(lx, lz, la);
   const t0 = G.time;
-  const r1 = P.go(o.x + dx, o.z + dz - 2.5, { tol: 0.8, run: false, maxT: 120, fight: false, stopWhen: sample }); P.settle();
-  const walked = { ok: Math.hypot(G.hero.pos.x - o.x - dx, G.hero.pos.z - o.z - (dz - 2.5)) < 1.2, t: +(G.time - t0).toFixed(1), at: [+(G.hero.pos.x - o.x).toFixed(2), +(G.hero.pos.z - o.z).toFixed(2)] };
+  const r1 = P.go(o.x + dx, o.z + dz - 2.5, { tol: 0.8, run: false, maxT: 120, fight: false, stopWhen: sample });
+  P.face(Z.workshopDoor.x, Z.workshopDoor.z);   // (he turns to the door, as a player would)
+  for (let i = 0; i < 90; i++) { G.step(1 / 30); sample(); }   // (3 s standing at the door: the camera comes round behind him)
+  P.settle();
+  const walked = { ok: Math.hypot(G.hero.pos.x - o.x - dx, G.hero.pos.z - o.z - (dz - 2.5)) < 1.2, t: +(r1?.t ?? 0).toFixed(1), at: [+(G.hero.pos.x - o.x).toFixed(2), +(G.hero.pos.z - o.z).toFixed(2)] };
   const visits = [];
   window.__taRebuilds = window.__taRebuilds || 0;
   for (let k = 0; k < 3; k++) {
