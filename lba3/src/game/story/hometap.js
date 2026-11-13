@@ -168,9 +168,14 @@ export class HomeTap {
   interactables(consider, dist) {
     const g = this.game, f = this.f, P = this.parts.house;
     if (this.on && g.room?.id === 'house' && P) {
-      consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
-      // (the cup is his to move once the tap has been tried: it stands an arm's length from the sink, and its prompt would take the tap's)
-      if (f.pr_tap && !f.pr_cup && !P.carry) consider(dist(P.stove.x, P.stove.z), 1.45, { kind: 'h_cup', label: 'p_cup' });
+      // (P20, the user 13.11: tried once, the tap kept the key at the sink — "Still dry. Still knocking." — and the cup on the
+      //  stove beside it never got it. While the cup waits, the tap gives way: the cup's prompt, from the sink or the stove)
+      const cupNext = f.pr_tap && !f.pr_cup;
+      if (!cupNext) consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
+      // (the cup is his to move once the tap has been tried: it stands an arm's length from the sink)
+      // (P20: a walk or a clip cut short by a key left the cup in his hand, no prompt and the door shut for good. Once its
+      //  move has had 4 s, a cup still in his hand is offered again: E puts it in the sink)
+      if (cupNext && (!P.carry || g.time - (this.cupT0 ?? -99) > 4)) consider(Math.min(dist(P.stove.x, P.stove.z), dist(P.tap.x, P.tap.z)), 1.6, { kind: 'h_cup', label: 'p_cup' });
     }
     const C = this.parts.cave;
     if (this.on && C && g.room === C.R) {
@@ -194,11 +199,13 @@ export class HomeTap {
         return true;
       case 'h_cup': {
         // his hand on it on the stove, carried in that hand to the sink, put into the basin under the tap; a drip falls into it
-        const set = () => handTo(h, P.tap, () => {
+        this.cupT0 = g.time;
+        const set = () => { this.cupT0 = g.time; handTo(h, P.tap, () => {
           f.pr_cup = true; P.carry = false; P.putFrom = P.cup.position.clone(); P.putT = 0; g.audio.play('put');
           this.drip();
           ch.chain([['hero', 'prh_cup_2'], ['arthur', 'prh_ar_2'], ['zoe', 'prh_zoe_3']], () => { g.updateObjective(); g.save(false); });
-        });
+        }); };
+        if (P.carry) { set(); return true; }   // (P20: already in his hand: straight to the sink)
         handTo(h, P.cupT, () => { P.carry = true; g.audio.play('tick'); ch.chain([['hero', 'prh_cup_1']], set); });
         return true;
       }
