@@ -4757,3 +4757,45 @@ trough, touch none of these parts):
 Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
 **Order 41 item 6 (27c on the Vega 8):** the laptop was sold (LAPTOP-SOLD, 12.11); the user chose the desktop's Intel UHD 630
 as the minimum-target machine. 27c runs there: v85 against the UHD 630 baseline of 12.11, labelled "UHD 630".
+
+## GPU-V85 · the new chapters' objects from the play camera: what reads, what does not (the look; fixes follow) · the desktop, 13.11.2026
+CLOUD_ORDERS 41 item 1. Chrome on the GTX 1050, v85 (3c0ad77b, the build stamp's tree), 1536×819 CSS (the screen's 125 %:
+1920×985 px), the defaults (Follow, Medium; rooms by their own `R.view` camera). Each chapter from its campaign fixture
+(`tests/fixtures/campaign/*.save.json`, Continue), Twinsen placed at the object's use spot (`touch().front` or the prompt's
+spot), facing it, the camera settled 2.5 s. Pictures (chapters 6–12, **not for the user**): `docs/future/gpu-v85/ch3plus-*.jpg`.
+Evidence: the desktop's eyes on the pictures; nobody played. Reveal beats: off with `?nocine` (as in every suite), so they were
+read in the source only (`story/revealcam.js`).
+
+| Ch | Object (fixture) | Reads? | What is seen at the use spot |
+|---|---|---|---|
+| 6 | the crank (new-09-lift) | yes | the winch drum and its crank wheel beside him; his body covers the handle itself at the crank's front |
+| 6 | the gauge by the winch | yes, but | a clear dial (green/red arc, LINE) beside him from the crank; **at its own read spot his head covers it** (he stands 1 m in front of the face, the camera behind him at its height) |
+| 6 | the line's three lamps | partly | from the crank the lowest lamp shows small at the frame's top, the other two above the frame; the ride's beat (`passline.js:231`) frames the platform, which carries them |
+| 7 | the bearing ring (new-10-lit) | yes | the brass ring round the telescope's foot with its engraved marks, large in the dome's room camera |
+| 7 | the setting lever | weak | a small dark handle on the ring, under the barrel; it reads only as part of the ring |
+| 8 | the lane's water gate (new-11-landing) | yes | the black two-leaf grate over the full culvert, framed by its posts; the arrival beat (`laneline.js:320`) looks straight at it |
+| 8 | the culvert cock (pump room) | **no** | at the use spot he stands behind the brick pier; the cock is a small red handle on the copper pipe on the pier's far side, a few pixels |
+| 9 | Vesk's order sheet (new-12-heard) | weak | a small pale sheet over a dark plate right of the archive door, smaller than his head in the room camera |
+| 9 | the BORE drawer (new-12-drawer) | yes | the labelled cabinet (TUNNELS / BORE / FERRIES), the drawer out with white papers |
+| 10 | the code line's joint (new-13-five) | **no** | at its front (0.5 m) the 1.2 m post and its 16 cm clamp are behind his back; beside it the feed box's lamp reads, the joint does not |
+| 10 | the isolator on it (`J.clip(true)`) | **no** | a 9 × 5.5 × 12 cm brass block on the clamp: the same picture with and without it |
+| 11 | the damper (new-14-deep) | yes | the glowing orange disc high on the far wall, from the stair's foot; the steam over it |
+| 11 | the fitters' knocker | **no** | on the catwalk at its spot nothing reads as a knocker; the pipe run and the wall's dark boxes only |
+| 11 | the held shutter (`hold(true)`) | yes | the barred shutter in its hazard frame, the purple crystal holding it |
+| 12 | the branch cock (new-15-last) | yes | a red wheel on its stand inside a hazard ring, its sign beside it |
+| 12 | the central lock | yes | the teal pedestal and its sign at the foot of Vesk's platform |
+| 12 | the bar | weak | a dark bar on the pedestal's top, under his hands; small against the pedestal |
+
+**Draw calls** at the use spots (`renderer.info`, one frame): ch6 70–89, ch7 63, ch8 45 (pump room) / 330 (the lane, Citadel
+outdoors), ch9 55–63, ch10 190, ch11 77–87, ch12 140.
+**What the desktop will fix next (art only: sizes, faces, contrast; no lever, prompt, collider or position moved), one
+diff each, each with its chapter's suite and `campaign-hands`:**
+1. GPU-V85-JOINT (`codejoint.js`): the clamp and the isolator made to read beside him: a bigger clamp head, the isolator
+   as a brass block several times larger with its red pin and a band of hazard paint, so the knock and the clip show.
+2. GPU-V85-KNOCKER (the knocker in `underground.js` `buildDeep`): a knocker that reads as one (a brass hammer head on its
+   arm, a striking plate), at its place.
+3. GPU-V85-COCK (`pumproom.js`): the culvert cock's handle bigger and red, a brass collar on the pipe, seen past the pier.
+4. GPU-V85-SHEET (`upper.js`): Vesk's order sheet larger and paler, its plate brighter.
+5. Smaller: the ring's lever as a lever (a knob that reads), the gauge's face 30 % larger (seen past his head).
+Not for art: the gauge's read spot puts his head in front of its face (a spot change, the cloud's call); the lamps sit above
+the play camera's frame at the crank (the ride's beat shows them).
