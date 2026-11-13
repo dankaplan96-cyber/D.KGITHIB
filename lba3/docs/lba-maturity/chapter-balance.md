@@ -287,12 +287,12 @@ hours unmeasured. Per core chapter: the bot's latest measured free play (Automat
 | 7 | 178–219 (two runs; the second +39 s of bot walk) | about 15.0 | the snow shaking beside him, the telescope's fourth setting by hand, the bearing read: Citadel (wave 3: +8 bot s, +1.7 min) | 12.11, segment 10 |
 | 8 | 404 → 476 (12.11, before and after, the same bot and save) | about 26 | the list cart seen to turn away at the lane's shut water gate (a cut-away); as Zoé the schedule read against the driver's route, Bram, Hedda and Tobin brought to the landing; as Twinsen the culvert's cock in the pump room turned in a rest between the copper pipe's kicks (a turn in a kick is kicked back); the lane seen to board (wave 4: +94 bot s of new steps, +7.7 min) | 12.11, segment 11 in three parts |
 | 9 | 210 → 327 (12.11, before and after, the same bot and save; 440 in a run with the carbon in his pocket and one catch in the archive) | about 26 | the archive's door shut by Vesk's standing order (read); Kell's lift up to the service door; the back gallery and its stair past the archivist; the log of test 14 in the BORE drawer, his carbon laid on it; the stop thrown at the platform's console (the drill stops, the kicks do not; Mill Lane dry, a cut-away); Baldino's isolator tried on each bench relay, then on Kell's feed (wave 5: +144 to +158 bot s of new steps, +10.4 min; the archive's stealth swings with the bot, not counted) | 12.11, segment 12 in five parts |
-| 10 | 542 | 29.5 | (wave 6) | 9.11 run 3 |
+| 10 | 693 → 784 / 754 (13.11, before and after, the same bot and save; two runs after) | about 33.4 | Irsa takes Kell's feed switch on Mill Lane as he unclips Baldino's isolator (on the way to the port); Arthur's count on the radio from home (four now) and Mira's reading of her fortress gauge before a wheel is touched; at each station the friend takes the handle he holds (Mira a wheel, Zoé the dial bank, Ilka the relief wheel, Yorna the lever, Pim a mirror, Dallan the relay); the code line's joint clipped in the rest after the fourth knock (a clip after the third is thrown off) (wave 6: about +35 bot s of new steps, +3.9 min; the rest of the difference is the bot's route to Hesk and its fight on the ridge, not counted) | 13.11, segment 13 in one piece |
 | 11 | 249 | 13.8 | (wave 7) | 9.11 run 3 |
 | 12 | 66 | 7.3 | (wave 7) | 9.11 run 3 |
 | Ep. | 1 | 0.9 | (wave 8) | 9.11 run 3 |
 
-The estimates add up to about **265 minutes (about 4.4 hours) of main route** (after wave 5) — an estimate. The rest of the 15 hours is
+The estimates add up to about **269 minutes (about 4.5 hours) of main route** (after wave 6) — an estimate. The rest of the 15 hours is
 meant to come from the later waves' steps, the optional content and the expansion (WORKPLAN-2026-11-09.md); none of it is
 claimed until measured, and a person's own play is the real measure.
 
