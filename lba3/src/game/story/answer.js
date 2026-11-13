@@ -31,7 +31,7 @@ import '../text/answer.js';
 export const ANSWER = { cycle: 3.6, three: [0, 0.25, 0.5], two: [1.25, 1.5], len: 0.18, lift: [1.75, 3.45] };
 const KNOCKS = [...ANSWER.three.map((a) => ({ a, her: false })), ...ANSWER.two.map((a) => ({ a, her: true }))];
 const knockAt = (p) => { for (const k of KNOCKS) { const u = (p - k.a) / ANSWER.len; if (u >= -0.15 && u <= 1.15) return k; } return null; };
-const MSG_GAP = 2.2;   // s of quiet after a knock that ends a message at the knocker
+const MSG_GAP = 2.6;   // s of quiet after a knock that ends a message at the knocker
 
 export class ShellThread {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; this.busy = false; this.pt = 0; this.later = []; this.walks = []; this.msg = null; this.inT = 0; this.said = {}; }
@@ -373,8 +373,10 @@ export class ShellThread {
     for (const kk of KNOCKS) if (crossed(kk.a)) {
       if (kk.her) { D.damper.clank(kk.a === ANSWER.two[0] ? 1 : 0.65); g.audio.play('clunk', D.damper); }
       else g.audio.play('pipeKnock', D.damper);
-      // her first answer, seen: on her second knock, once he has had a moment in the room
-      if (kk.her && kk.a === ANSWER.two[1] && !f.sh_knock && !this.busy && play && this.inT > 2.5) this.firstAnswer();
+      // her first answer, seen: on her second knock, once he is where the damper and the catwalk are in view (or has been in
+      // the room a while)
+      const near = Math.hypot(h.pos.x - D.damper.x, h.pos.z - D.damper.z) < 10.5;
+      if (kk.her && kk.a === ANSWER.two[1] && !f.sh_knock && !this.busy && play && this.inT > 2.5 && (near || this.inT > 40)) this.firstAnswer();
     }
     // the steam out of every vent not latched: a white plume down over the deck; standing in one burns and pushes him out
     this.steamT = (this.steamT || 0) - dt;
