@@ -29,6 +29,7 @@ import '../text/ch3.js';
 import { FinaleFx, COIL_Y, COIL_R } from './finale-fx.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 import { SHAFT_TOP } from '../island.js';
+import { ShellThread } from './answer.js';
 
 const ROOMS = { 'c3-shaft': 'c3shaft', 'c3-deep': 'c3deep', 'c3-gallery': 'c3gallery', 'c3-sendell': 'c3sendell', 'c3-core': 'c3core' };
 const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the exchanger, B to the drain
@@ -46,6 +47,8 @@ const SHAFT_REACH = 5.0;
 export class Chapter3 extends ChapterBase {
   get part() { return 1; }   // 1: The Shell (to Sendell), 2: The Core (ChapterCore)
   get R() { return this.game.rooms; }
+  // CAMPAIGN-9 (wave 7): the answer under the shell and the last act (story/answer.js; one instance for both parts)
+  get sh() { return (this.story._sh ||= new ShellThread(this)); }
   on() { return this.isCur(); }
   pylons() { return [0, 1, 2].filter((i) => this.f['c3_pylon' + i]).length; }
 
@@ -64,6 +67,7 @@ export class Chapter3 extends ChapterBase {
   place(id) {
     const f = this.f;
     if (!this.reached()) return undefined;
+    { const tp = this.sh.place(id); if (tp !== undefined) return tp; }
     if (id === 'vesk') return f.c3_done ? null : (this.R.c3core?.npcSpots?.vesk ?? null);
     return undefined;
   }
@@ -78,6 +82,7 @@ export class Chapter3 extends ChapterBase {
       // fight from it) starts at full life, not at whatever the galleries left him with (2 of 3 bot runs had died at
       // 6 HP and come back at 6 HP each time)
       g.hero.hp = g.hero.maxHp;
+      this.sh.beginCore();
       const to = this.exitTo('c3-core');
       g.enterRoom('c3core', to?.x != null ? to : null, true);
       return;
@@ -85,7 +90,8 @@ export class Chapter3 extends ChapterBase {
     g.world.station?.setSealed?.(false, true);   // (SHAFT-CITADEL: the network's code opened the collar's blast doors)
     if (!this.R.c3shaft) return; // (rooms missing in this build)
     g.enterRoom('c3shaft', null, true);
-    this.chain([['narrator', 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1']], () => {
+    this.sh.begin();
+    this.chain([['narrator', 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1'], ...this.sh.arriveLines()], () => {
       this.f.c3_started = true; g.updateObjective(); g.save(false);
     });
   }
@@ -109,6 +115,10 @@ export class Chapter3 extends ChapterBase {
       return false;
     }
     if (room.id === 'c3core' && this.f.c3_fight && !this.f.c3_done) { this.chain([['hero', 'c3_exit_block']]); return false; }
+    // CAMPAIGN-9: the heat shutter comes down as he reaches it (her crystal holds it: answer.js); the arch behind him in Sendell's
+    // chamber is grown shut until the shield holds
+    if (this.part === 1 && room.id === 'c3deep' && to === 'c3-gallery' && this.sh.shell() && this.f.c3_cooled && !this.f.sh_held) { this.sh.holdShutter(); return false; }
+    if (room.id === 'c3sendell' && to === 'c3-gallery' && this.sh.sealed()) { if (this.game.state === 'play') this.chain([['hero', 'sh_sealed']]); return false; }
     return true;
   }
   // chapter 12: its title card, then The Core's first scene (its rooms are built behind the black)
@@ -122,6 +132,7 @@ export class Chapter3 extends ChapterBase {
   interactables(consider, dist) {
     const g = this.game, f = this.f, room = g.room?.id, h = g.hero;
     if (!this.on()) return;
+    this.sh.interactables(consider, dist);
     if (!room) {   // (Citadel, outdoors: the shaft's collar in the station's yard)
       if (this.R.c3shaft) consider(dist(SHAFT_TOP.x, SHAFT_TOP.z), SHAFT_REACH, { kind: 'c3down', label: 'p_down' });
     } else if (room === 'c3deep') {
@@ -138,6 +149,7 @@ export class Chapter3 extends ChapterBase {
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
+    if (this.sh.interact(it)) return true;
     switch (it.kind) {
       case 'c3down':
         g.startTransition(() => { g.enterRoom('c3shaft', null, true); g.updateObjective(); });
@@ -186,6 +198,7 @@ export class Chapter3 extends ChapterBase {
       if (tg.done) continue;
       if (Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 1) + 0.15) continue;
       if (room === 'c3deep' && tg.ballSwitch) { tg.done = true; this.lowerLadder(); return true; }
+      if (room === 'c3shaft' && tg.teach) { tg.done = true; this.sh.teachHit(); return true; }
       if (room === 'c3gallery' && tg.pillar != null) { tg.done = true; this.lightPillar(tg.pillar); return true; }
       if (room === 'c3core' && tg.coil) { this.hitCoil(tg); return true; }
       if (room === 'c3core' && tg.pylon != null) {
@@ -217,6 +230,7 @@ export class Chapter3 extends ChapterBase {
     g.hud.toast('c3_toast_pillar', { n });
     if (n >= 3) this.chain([['hero', 'c3_stones_all']], () => { g.updateObjective(); g.save(false); });
     else g.save(false);
+    this.sh.onPillar(i);
   }
 
   // ---------------------------------------------------------------- the core
@@ -308,13 +322,14 @@ export class Chapter3 extends ChapterBase {
     g.particles.burst(C.console.x, (C.floorY ?? 0) + 1.6, C.console.z, '#ffd080', 40, 6);
     g.audio.play('break'); g.camRig.shake(0.45);
     if (fx) { fx.burst(); fx.throwVesk(vesk); } else vesk?.rig?.play?.('hurt');
-    this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down']], () => this.veskChoice(() => this.chain([['hero', 'c3_tw_switch']], () => {
+    // (CAMPAIGN-9: after his choice, the last act in four steps: answer.js lastAct; without the thread, the switch as before)
+    this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down']], () => this.veskChoice(() => (f.co_v ? this.sh.lastAct() : this.chain([['hero', 'c3_tw_switch']], () => {
       g.hero?.act?.('use', 0.8);
       C.drill?.setMode?.('shield');
       C.field?.setLevel?.(1);
       g.audio.play('horn'); g.camRig.shake(0.3);
       this.chain([['sendell', 'c3_sendell_end'], ['balradio', 'c3_bal_end']], () => this.finish());
-    })));
+    }))));
   }
   // VESK-CHOICE (the campaign): the console sparks over Vesk where he fell. Twinsen pulls him clear, or leaves him for the
   // council's guards; Vesk answers as himself (the engineer who would have left him), and the ending remembers it (the end
@@ -348,21 +363,26 @@ export class Chapter3 extends ChapterBase {
     if (!this.on()) return;
     if (id === 'c3deep' && !f.c3_deepSeen) { f.c3_deepSeen = true; this.chain([['hero', 'c3_deep_in']], () => g.updateObjective()); }
     if (id === 'c3gallery' && !f.c3_gallerySeen) { f.c3_gallerySeen = true; this.chain([['hero', 'c3_gallery_in'], ['hero', 'c3_gallery_hint']], () => g.updateObjective()); }
-    if (id === 'c3sendell' && !f.c3_sendell) {
-      const S = this.R.c3sendell;
-      S.presence?.setVisible?.(true); S.presence?.setIntensity?.(1);
-      g.audio.cue?.('revelation');   // (UNDER-BAR: her chamber's moment has the revelation's music, as the well's Sendell scene: prologue.js)
-      const beat = this.sendellBeat(S);   // (REVEAL-CAMS: the camera closes on Twinsen and her light; null with ?nocine and in the tests)
-      this.chain([['sendell', 'c3_sendell_1'], ['hero', 'c3_tw_sendell1'], ['sendell', 'c3_sendell_2'], ['hero', 'c3_tw_sendell2'], ['sendell', 'c3_sendell_3'],
-        ['hero', 'c3_tw_sendell3'], ['sendell', 'c3_sendell_4'], ...(f.crystalsAll ? [['sendell', 'c3_sendell_crystals']] : []), ['balradio', 'c3_bal_radio2'], ['balradio', 'c3_bal_radio3']], () => {
-        beat?.release();
-        f.c3_sendell = true; S.presence?.setIntensity?.(0.45); g.updateObjective(); g.save(false);
-      }, (i, id) => { if (id === 'balradio') beat?.release(); });   // (her words done: the view eases back as Baldino's radio comes in)
-    }
+    // (CAMPAIGN-9: the arch he came in by grows shut behind him first, shown; Sendell explains it in her words)
+    if (id === 'c3sendell' && !f.c3_sendell && !this.sh.sealFirst(() => this.sendellScene())) this.sendellScene();
     if (id === 'c3core' && !f.c3_fight && !this.resumeFight) {
       this.chain([['vesk', 'c3_core_vesk1'], ['hero', 'c3_core_tw1'], ['vesk', 'c3_core_vesk2'], ['vesk', 'c3_core_vesk3']], () => this.startFight());
     }
     if (id === 'c3core' && f.c3_fight && !f.c3_turned) g.audio.setMood?.('boss');
+  }
+  sendellScene() {
+    const g = this.game, f = this.f;
+    const S = this.R.c3sendell;
+    S.presence?.setVisible?.(true); S.presence?.setIntensity?.(1);
+    g.audio.cue?.('revelation');   // (UNDER-BAR: her chamber's moment has the revelation's music, as the well's Sendell scene: prologue.js)
+    const beat = this.sendellBeat(S);   // (REVEAL-CAMS: the camera closes on Twinsen and her light; null with ?nocine and in the tests)
+    this.chain([['sendell', 'c3_sendell_1'], ['hero', 'c3_tw_sendell1'], ['sendell', 'c3_sendell_2'], ['hero', 'c3_tw_sendell2'], ['sendell', 'c3_sendell_3'],
+      ['hero', 'c3_tw_sendell3'], ['sendell', 'c3_sendell_4'], ...this.sh.sendellLines(), ...(f.crystalsAll ? [['sendell', 'c3_sendell_crystals']] : []), ['balradio', 'c3_bal_radio2'], ['balradio', 'c3_bal_radio3']], () => {
+      beat?.release();
+      f.c3_sendell = true; S.presence?.setIntensity?.(0.45); g.updateObjective();
+      // (CAMPAIGN-9: the checkpoint before the core, at full life, said)
+      if (f.sh_v) { g.hero.hp = g.hero.maxHp; g.save(false); g.hud.toast('sh_toast_checkpoint'); } else g.save(false);
+    }, (i, id) => { if (id === 'balradio') beat?.release(); });   // (her words done: the view eases back as Baldino's radio comes in)
   }
   // REVEAL-CAMS: Twinsen stands at the pool's rim, a few metres from her light and not across the room at the door, and the
   // camera comes in to a medium two-shot of the two of them; it holds through her words and eases back to the play view
@@ -409,6 +429,7 @@ export class Chapter3 extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f;
     if (!this.on()) return;
+    this.sh.update(dt);
     if (this.resumeFight && g.room?.id === 'c3core' && g.state === 'play' && !g.trans) { this.resumeFight = false; this.startFight(); }
     // during the fight, standing still on a plate lines Twinsen up for the bank shot
     if (g.room?.id === 'c3core') {
@@ -440,6 +461,7 @@ export class Chapter3 extends ChapterBase {
   applyFlags(past) {
     const f = this.f;
     if (!this.reached()) return;
+    if (this.isCur()) this.sh.applyFlags();   // (CAMPAIGN-9: the thread on in a save from before, its steps past counted done)
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     if (this.part === 1) this.game.regions.whenBuilt('c3deep', () => this.applyRooms());   // (the rooms, for both parts: once)
@@ -447,8 +469,9 @@ export class Chapter3 extends ChapterBase {
     // a fight interrupted by a reload restarts once play is under way in the core (no intro again: the load enters the
     // room while the title is still up, and a dialogue started then is cut by the switch to play)
     if (f.c3_fight && !f.c3_turned) { f.c3_fight = false; this.resumeFight = true; }
-    if (f.c3_turned && !f.c3_done) f.c3_turned = false;
-    if (f.c3_overload && !f.c3_done) { f.c3_overload = false; f.c3_coil = 0; }
+    // (CAMPAIGN-9: a save in the last act — the coil broken, co_go — comes back to the last act, not to the overload)
+    if (f.c3_turned && !f.c3_done && !f.co_go) f.c3_turned = false;
+    if (f.c3_overload && !f.c3_done && !f.co_go) { f.c3_overload = false; f.c3_coil = 0; }
     void past;
   }
   // the underground's rooms as the flags have them
@@ -464,14 +487,17 @@ export class Chapter3 extends ChapterBase {
     if (C) {
       for (const i of [0, 1, 2]) if (f['c3_pylon' + i]) { for (const tg of C.ballTargets || []) if (tg.pylon === i) tg.done = true; this.convertPylon(i, true); }
       if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); this.fx?.wreckNow(); }
+      else if (f.c3_turned && f.co_go) this.fx?.wreckNow();   // (CAMPAIGN-9: a load in the last act: the console is burnt)
       C.bleed?.setOpen(!!(f.c3_bleed || f.c3_done));
     }
     if (f.c3_sendell) { R.c3sendell?.presence?.setVisible?.(true); R.c3sendell?.presence?.setIntensity?.(0.45); }
+    this.sh.applyRooms();
   }
 
   // ---------------------------------------------------------------- HUD
   objective() {
     const f = this.f, room = this.game.room?.id;
+    { const so = this.sh.objective(); if (so) return so; }
     if (this.part === 2) {
       if (f.c3_overload && !f.c3_turned && !f.c3_bleed) return this.goal('c3_obj_bleed');
       if (f.c3_overload && !f.c3_turned) return this.goal('c3_obj_coil', { n: f.c3_coil || 0 });
@@ -486,14 +512,21 @@ export class Chapter3 extends ChapterBase {
   }
   journal() {
     const f = this.f;
+    // (CAMPAIGN-9: the thread's lines where they happened: the answer before the cooling, the held shutter after it, the shut arch
+    //  before Sendell's words; the last act's three before the end, which the guard's words close)
+    const sh = this.sh.journal(), one = (k) => sh.filter((l) => l.key === k);
     const lines = this.part === 2 ? [
       { key: 'c3_j_core', done: !!f.c3_fight || !!f.c3_overload || !!f.c3_turned },
       { key: 'c3_j_pylons', done: this.pylons() >= 3 },
-      { key: 'c3_j_vesk', done: !!f.c3_done },
+      ...one('co_j_lane'), ...one('co_j_vesk'), ...one('co_j_signal'),
+      { key: f.co_v ? 'co_j_end' : 'c3_j_vesk', done: !!f.c3_done },
     ] : [
       { key: 'c3_j_shaft', done: !!f.c3_started },
+      ...one('sh_j_answer'),
       { key: 'c3_j_cool', done: !!f.c3_cooled },
+      ...one('sh_j_held'),
       { key: 'c3_j_gallery', done: !!(f.c3_pillar0 && f.c3_pillar1 && f.c3_pillar2) },
+      ...one('sh_j_shut'),
       { key: 'c3_j_sendell', done: !!f.c3_sendell },
     ];
     return lines.filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
