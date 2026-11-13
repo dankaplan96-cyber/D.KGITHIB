@@ -97,7 +97,7 @@ is('the machinery cooled, an objective set', await ev(() => [game.flags.c3_coole
 await shot('C3-02-cooled.png');
 
 // the galleries (CAMPAIGN-9: the shutter starts down as he reaches it; her crystal holds it)
-is('at the shutter: it comes down and her crystal holds it open; on to the crystal galleries', await ev(() => { let r = T.exit('c3-gallery'); const held = !!game.flags.sh_held; if (r !== 'c3gallery') { for (let i = 0; i < 40; i++) { game.step(0.1); T.talkAll(); } r = T.exit('c3-gallery'); } return [held, r]; }), (v) => v[0] && v[1] === 'c3gallery');
+is('at the shutter: it comes down and her crystal holds it open; on to the crystal galleries (still in the doorway once the line is read)', await ev(() => { let r = T.exit('c3-gallery'); const held = !!game.flags.sh_held; for (let i = 0; i < 60 && game.room?.id !== 'c3gallery'; i++) { game.step(0.1); T.talkAll(); } return [held, game.room?.id]; }), (v) => v[0] && v[1] === 'c3gallery');
 await shot('C3-03-gallery.png');
 is('the first two pillars hit', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null && !x.node).map((tg) => T.hit(tg))), (v) => v.length === 2 && v.every((x) => x !== 'FAILED'));
 is('the third heart faces the far side: from the middle stone\'s plate (it lines him up), the throw comes off the survey mirror onto it', await ev(() => { const G = game, R = G.room, S = R.stonePlate, h = G.hero, tg = R.ballTargets.find((x) => x.pillar === 2);

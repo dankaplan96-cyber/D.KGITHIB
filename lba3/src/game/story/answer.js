@@ -169,10 +169,12 @@ export class ShellThread {
     const f = this.f;
     if (this.key() === 'core') { this.signal(m.n); return; }
     if (m.n === 2 && f.sh_reply !== true && f.sh_reply !== 'past') { this.secondReply(); return; }
-    if (m.n === 3 || (m.n === 2 && f.sh_reply)) { this.after(0.5, () => this.herTwo()); if (m.n === 3) this.once('sh_k3', 'sh_k3', 'sh_toast_k3'); return; }
-    this.once('sh_kn', m.n === 4 ? 'sh_k4' : 'sh_knone', 'sh_toast_knone');
+    // (busy until the answer — or the silence — and its remark are over: a knock struck meanwhile is not a new message)
+    this.busy = true;
+    if (m.n === 3 || (m.n === 2 && f.sh_reply)) { this.after(0.5, () => this.herTwo()); this.after(1.1, () => (m.n === 3 ? this.once('sh_k3', 'sh_k3', 'sh_toast_k3') : (this.busy = false))); return; }
+    this.after(0.8, () => this.once('sh_kn', m.n === 4 ? 'sh_k4' : 'sh_knone', 'sh_toast_knone'));
   }
-  once(id, key, toast) { if (!this.said[id]) { this.said[id] = true; this.after(0.4, () => this.ch.chain([['hero', key]])); } else if (toast) this.game.hud.toast(toast); }
+  once(id, key, toast) { if (!this.said[id]) { this.said[id] = true; this.ch.chain([['hero', key]], () => { this.busy = false; }); } else { if (toast) this.game.hud.toast(toast); this.busy = false; } }
   // her two, out of turn (an answer to his three)
   herTwo() { const D = this.R('c3deep'); if (!D?.damper) return; for (const [i, d] of [0, 0.25].entries()) this.after(d, () => { D.damper.clank(i ? 0.65 : 1); this.game.audio.play('clunk', D.damper); }); }
   // her second reply: four slow knocks on the damper, then the west vents latch one after the other
@@ -198,7 +200,8 @@ export class ShellThread {
     f.sh_held = true; this.busy = true;
     D.coolDoor.hold(); g.audio.play('rumble'); g.camRig.shake(0.2);
     this.after(0.45, () => { g.audio.play('shard', D.coolDoor); g.particles.burst(D.coolDoor.x, 1.0, D.coolDoor.z, '#c8a0ff', 18, 3); });
-    this.after(1.1, () => this.ch.chain([['hero', 'sh_held']], () => { this.busy = false; g.updateObjective(); g.save(false); }));
+    // (refused at the exit before this — he walked straight into it —: once the line is read he goes on through, still in it)
+    this.after(1.1, () => this.ch.chain([['hero', 'sh_held']], () => { this.busy = false; g.exitRefused = null; g.updateObjective(); g.save(false); }));
   }
   teachHit() {
     const g = this.game, f = this.f, S = this.R('c3shaft');
