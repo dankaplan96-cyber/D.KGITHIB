@@ -86,12 +86,13 @@ const TRACKS = [
   // the land bridge and along the pool's east rim to the School of Magic (desertold.js)
   [[-46, -2], [-47, -26], [-45, -46], [-49, -58], [-49.5, -66.3], [-60, -67.3]],
 ];
+// (DESERT-ART 1, CURATOR-27a: the walls in LBA2's peach, each house its own shade of it; they were tan-ochre)
 const HOUSES = [
-  { x: -60, z: -8, w: 6.4, d: 5.2, h: 3.4, ry: 0.15, stair: 1, tint: '#e9b98a', awning: '#c84a3a' },
-  { x: -64, z: 10, w: 5.4, d: 5.0, h: 3.0, ry: Math.PI / 2 + 0.1, tint: '#f0c898' },
-  { x: -50, z: 16, w: 7.2, d: 5.4, h: 3.8, ry: Math.PI, stair: -1, tint: '#e2a878', awning: '#2f7a9a', tarra: true },
-  { x: -36, z: 15, w: 5.0, d: 4.6, h: 3.0, ry: Math.PI - 0.2, tint: '#f2d2a8' },
-  { x: -54, z: -18, w: 5.6, d: 4.8, h: 3.2, ry: 0.5, tint: '#e6b07e', awning: '#e8b84a' },
+  { x: -60, z: -8, w: 6.4, d: 5.2, h: 3.4, ry: 0.15, stair: 1, tint: '#ecb79c', awning: '#c84a3a' },
+  { x: -64, z: 10, w: 5.4, d: 5.0, h: 3.0, ry: Math.PI / 2 + 0.1, tint: '#f2c5aa' },
+  { x: -50, z: 16, w: 7.2, d: 5.4, h: 3.8, ry: Math.PI, stair: -1, tint: '#e6ab90', awning: '#2f7a9a', tarra: true },
+  { x: -36, z: 15, w: 5.0, d: 4.6, h: 3.0, ry: Math.PI - 0.2, tint: '#f4cfb6' },
+  { x: -54, z: -18, w: 5.6, d: 4.8, h: 3.2, ry: 0.5, tint: '#e9b094', awning: '#e8b84a' },
 ];
 
 const rr = rng(4141);
@@ -597,8 +598,18 @@ export function* buildDesertSteps(scene, physics) {
     // parapet with soft rounded corners, and the roof slab inside it
     for (const [px, pz, pw, pd] of [[0, hd.d / 2 - 0.12, hd.w, 0.24], [0, -hd.d / 2 + 0.12, hd.w, 0.24], [hd.w / 2 - 0.12, 0, 0.24, hd.d], [-hd.w / 2 + 0.12, 0, 0.24, hd.d]]) HB.add(bbox(pw, 0.55, pd, 0.1, 2.2), wall, px, hd.h + 0.55, pz);
     HB.add(bbox(hd.w - 0.4, 0.1, hd.d - 0.4, 0.02, 2), tm('plaster', { color: '#d8a878' }), 0, hd.h + 0.32, 0);
-    // vigas: roof beams poking through the front and back walls
-    for (let k = -hd.w / 2 + 0.6; k < hd.w / 2 - 0.3; k += 0.8) for (const s of [-1, 1]) HB.add(cyl(0.09, 0.1, 0.5, 7, 0), darkWood, k, hd.h - 0.1, s * (hd.d / 2 + 0.2), Math.PI / 2, 0, 0);
+    // (DESERT-ART 1, CURATOR-27a: LBA2's village houses carry low round domes on their parapets (bodies 94-97), not
+    //  Pueblo roof beams: two on the front parapet, one on the back's far half (clear of the rooftop jars), in the wall's
+    //  own plaster: no draw call added. Faceted, as the original's)
+    {
+      const dome = cached('kesh-pdome', () => new THREE.SphereGeometry(1, 10, 3, 0, Math.PI * 2, 0, Math.PI / 2));
+      const ring = cached('kesh-pdring', () => new THREE.CylinderGeometry(1, 1, 1, 10));
+      for (const [u, s] of [[-hd.w / 4, 1], [hd.w / 4, 1], [hd.w / 4, -1]]) {
+        const dz = s * (hd.d / 2 - 0.12), y = hd.h + 0.82;
+        HB.add(ring, wall, u, y + 0.05, dz, 0, 0, 0, 0.72, 0.1, 0.36);
+        HB.add(dome, wall, u, y + 0.1, dz, 0, 0, 0, 0.62, 0.5, 0.34);
+      }
+    }
     // door: recessed, framed in wood, a plank leaf ajar
     HB.add(bbox(1.25, 2.15, 0.3, 0.04, 1), dark, 0.6, 1.08, hd.d / 2 - 0.05);
     HB.add(bbox(1.45, 0.16, 0.38, 0.03, 1), wood, 0.6, 2.2, hd.d / 2 + 0.02);

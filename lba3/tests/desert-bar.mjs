@@ -19,6 +19,7 @@ import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 const { check, done } = checker();
 let { browser, context, page } = await launch();
 const ev = (f, a) => page.evaluate(f, a);
@@ -148,7 +149,7 @@ const reloaded = page.waitForEvent('load', { timeout: 300000 });
 await page.click('#gameover [data-act="retry"]', { timeout: 60000 });
 await reloaded;
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.state !== 'gameover', null, { timeout: 300000 });
-await page.addScriptTag({ path: path.join(path.dirname(new URL(import.meta.url).pathname), 'lib/player.js') });
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/player.js', import.meta.url)) });   // (fileURLToPath: a Windows path too)
 await ev(() => { game.testFreeze = true; game.step(0.3); P.settle(); });
 await helpers(); await said();
 const retry = await ev(() => { const G = game, h = G.hero; return { room: G.room?.id, hp: h.hp, max: h.maxHp, state: G.state, ch: G.flags.chapterKey }; });
