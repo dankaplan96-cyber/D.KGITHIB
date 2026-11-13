@@ -1,0 +1,22 @@
+diff --git a/lba3/src/game/upper.js b/lba3/src/game/upper.js
+index 9edc87aa..2f6c3d5a 100644
+--- a/lba3/src/game/upper.js
++++ b/lba3/src/game/upper.js
+@@ -45,12 +45,14 @@ function buildUpper(scene, physics) {
+   // CAMPAIGN-7 (wave 5): beside the archive's door, the deliveries' brass plate (always there) and Vesk's standing order
+   // (pinned up in chapter 9 only: story/cnline.js shows it)
+   k.add(plane(0.5, 0.2), MAT.map(canvasTex(256, 100, (x, Wd, Hd) => { x.fillStyle = '#b8903a'; x.fillRect(0, 0, Wd, Hd); x.strokeStyle = '#5a4010'; x.lineWidth = 5; x.strokeRect(4, 4, Wd - 8, Hd - 8); x.fillStyle = '#3a2808'; x.textAlign = 'center'; x.font = 'bold 19px sans-serif'; x.fillText('DELIVERIES:', Wd / 2, 32); x.font = 'bold 15px sans-serif'; x.fillText('MILL LANE SERVICE LANDING', Wd / 2, 58); x.font = 'bold 19px sans-serif'; x.fillText('RING FOR KELL', Wd / 2, 84); }), 0.45, { metalness: 0.4 }), 4.95, 1.25, BZ + 0.045);
+-  const order = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.56), MAT.map(canvasTex(168, 224, (x, Wd, Hd) => {
+-    x.fillStyle = '#f4efe0'; x.fillRect(0, 0, Wd, Hd); x.fillStyle = '#1e2a3a'; x.textAlign = 'center'; x.font = 'bold 15px sans-serif'; x.fillText('STANDING ORDER', Wd / 2, 26);
++  // (GPU-V85: the sheet half as large again, with a red border, and pinned higher: at its read spot his head covered the
++  //  0.42 m sheet from the room's camera; now it shows over him)
++  const order = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.83), MAT.map(canvasTex(168, 224, (x, Wd, Hd) => {
++    x.fillStyle = '#f4efe0'; x.fillRect(0, 0, Wd, Hd); x.strokeStyle = '#b02a2a'; x.lineWidth = 8; x.strokeRect(4, 4, Wd - 8, Hd - 8); x.fillStyle = '#1e2a3a'; x.textAlign = 'center'; x.font = 'bold 15px sans-serif'; x.fillText('STANDING ORDER', Wd / 2, 26);
+     x.font = '12px serif'; ['Twinsen of Citadel', 'is not to be admitted', "to the project's records.", '', 'A stop before the Mill Lane', "bypass cuts that quarter's", 'water.'].forEach((l, i) => x.fillText(l, Wd / 2, 56 + i * 17));
+     x.font = 'italic bold 26px serif'; x.fillText('V.', Wd - 34, Hd - 24); x.fillStyle = '#b02a2a'; x.beginPath(); x.arc(Wd / 2, 8, 4, 0, 7); x.fill();
+   }), 0.9));
+-  order.position.set(4.95, 1.66, BZ + 0.035); order.visible = false; B.group.add(order);
++  order.position.set(4.95, 2.02, BZ + 0.035); order.visible = false; B.group.add(order);
+   R.order = { x: B.cx + 4.95, z: B.cz + BZ + 0.9, show(b) { order.visible = !!b; }, get shown() { return order.visible; } };
+   // the clerk's counter, a bell, ledgers; benches for the waiting; a noticeboard of forms
+   B.put(1.0, 1.4, 0, (kk) => P.counter(kk, { w: 3.2 }));

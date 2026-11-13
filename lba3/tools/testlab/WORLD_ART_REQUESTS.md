@@ -4799,3 +4799,30 @@ diff each, each with its chapter's suite and `campaign-hands`:**
 5. Smaller: the ring's lever as a lever (a knob that reads), the gauge's face 30 % larger (seen past his head).
 Not for art: the gauge's read spot puts his head in front of its face (a spot change, the cloud's call); the lamps sit above
 the play camera's frame at the crank (the ride's beat shows them).
+
+## GPU-V85 fixes · four diffs: the joint and isolator, the knocker, Vesk's order sheet, the lever and the gauge · the desktop, 13.11.2026
+CLOUD_ORDERS 41 item 1, after the look above. **Ready for the cloud, each on its own (independent files), made against origin
+a469743e and checked there with `git apply --check`:** `requests/GPU-V85-JOINT.diff` (`codejoint.js`), `GPU-V85-KNOCKER.diff`
+(`underground.js`), `GPU-V85-SHEET.diff` (`upper.js`), `GPU-V85-TOUCHUPS.diff` (`obsroom.js`, `winchline.js`). Art only: no lever,
+prompt, touch point, collider or position moved; the clamp's top stays at `CLAMP_Y`, the knocker's grip and the lever's arm
+length (the touch reads them) as they were.
+- **JOINT (ch 10):** the jaws 0.30 × 0.17 m (were 0.16 × 0.10) in hazard yellow; a yellow and black ring on the deck round the
+  post's foot (r 0.30–0.46, in the merged static mesh); the isolator a 0.22 × 0.10 × 0.24 m brass block (was 0.09 × 0.055 × 0.12)
+  with a red pin and a red tag. At its front his back still covers the clamp from the Follow camera (he stands 0.5 m from it,
+  facing it); from the approach and close by it now reads, clipped or not (`ch3plus-joint-isolator-close.jpg`).
+- **KNOCKER (ch 11):** the hammer a brass head (r 0.07, 0.24 long; was r 0.05, 0.10) and a brass band on the header where it
+  strikes: the band reads from the catwalk; the grip is unchanged.
+- **SHEET (ch 9):** Vesk's order 0.62 × 0.83 m (was 0.42 × 0.56) with a red border, pinned at 2.02 m (was 1.66): at its read spot
+  it now shows over his head (`R.order`'s read spot unchanged; the deliveries' plate under it unchanged).
+- **TOUCHUPS (ch 6, 7):** the gauge 30 % larger (face r 0.31, its roof raised to clear it): its arc shows round his head at the
+  read spot. The setting lever's arm heavier and its knob red (r 0.07): from the dome's camera it is still mostly behind him
+  and the barrel; it reads close by.
+- **Not sent:** the culvert cock (ch 8). A longer red handle with a pale grip was tried: from the pump room's camera the brick
+  pier stands between the camera and the cock, so nothing of it shows at the use spot either way. **For the cloud: a camera or
+  layout call** (the pier's cut-away, `R.view` for that corner, or the cock on the pier's camera side).
+- **Draw calls** (`renderer.info` at the use spots, before → after): the joint 190 → 191 (the hazard paint), every other spot
+  the same (outdoor spots ±2 with the people walking). Triangles +36…+70 per spot.
+- **Tests** (SwiftShader, the four changes together on 614e23ca): chapter6 24/24, chapter7 20/20, chapter8 20/20, chapter9
+  24/24, chapter10 30/30, chapter3 (chapters 11–12) 47/47, campaign-hands 7/7 (its hand-gap checks included) PASS.
+- Pictures (chapters 6–12, **not for the user**): `docs/future/gpu-v85/ch3plus-before-after-at-use-spots.jpg`,
+  `ch3plus-joint-isolator-close.jpg`. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
