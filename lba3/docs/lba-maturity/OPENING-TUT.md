@@ -49,7 +49,7 @@ dismissed, and anything done before its tip appears completes it.
 ## 2. What is taught where (coverage of every current player action)
 
 Bindings: Classic (the keyboard default) / Modern / pad. Review: **Pause → Controls** lists every key (and is where
-they are rebound); Settings → Game → Show control tips turns the tips off or on.
+they are rebound); Settings → Controls → Show control tips turns the tips off or on.
 
 | Action | First useful | Prompt shown (tips on) | Proves understanding | Review later |
 |---|---|---|---|---|
@@ -109,7 +109,7 @@ Each lesson is **locked → eligible → shown → done | gone**.
 - **Saved** with the game (`tut: { v: 1, done, gone }` in the save, beside the flags, never among them). A death, a
   reload or a Continue keep it. A save from before this build has no `tut`: every lesson counts as done (a player under
   way gets no tips). A new game starts afresh.
-- **Tips off** (Settings → Game → Show control tips → Off): no panel and no dialogue key hint; lessons are still
+- **Tips off** (Settings → Controls → Show control tips → Off): no panel and no dialogue key hint; lessons are still
   recognised; the existing story nudges (the lid after 30 s, the bell after 35 s) and the acquisition toasts stay,
   since they are part of the quests' fairness. No quest step waits on a lesson.
 - **Cost**: a handful of comparisons a frame in play; the barrels' two line tests four times a second in the yard; no

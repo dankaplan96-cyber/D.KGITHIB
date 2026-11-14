@@ -9,7 +9,7 @@
 //
 // Each lesson: `when()` its eligibility (where and when it is any use), `text()` the prompt, and its completion, which is
 // always the action itself, observed here or reported by the game (event()): never the prompt having been shown. Actions
-// done before a tip would have appeared complete it all the same. Turning tips off (Settings: Show control tips) hides
+// done before a tip would have appeared complete it all the same. Turning tips off (Settings, Controls: Show control tips) hides
 // the panel and the dialogue's key hint; the lessons are still recognised, and no quest ever waits on one.
 //
 // Cost: a handful of comparisons per frame in play; the one line-of-sight test (the barrels) runs four times a second

@@ -929,7 +929,7 @@ and the kitchen tap (the knocking draws the player to it); the cupboard and Open
 steps away with the neighbours' kettle; the garden standpipe by hand; the project's copper heat pipe on the lane as the
 low obstacle for Athletic and the jump; the two barrels by the house as the magic ball's target (the game's own aim
 assist and arc preview); contextual tips later in chapter 1 (Discreet at the kids, Aggressive at the lid, the dodge
-in the cave). Settings, Game: "Show control tips". Files: `src/game/tutorial.js` (new), `story/hometap.js`,
+in the cave). Settings, Controls: "Show control tips". Files: `src/game/tutorial.js` (new), `story/hometap.js`,
 `story/prologue.js`, `text/opening.js`, `text/thread.js`, `index.html` (the Settings row), `src/main.js` (the hooks:
 the tutorial's update, the dialogue's advance, interactions, save and load). Test: `tests/opening-tutorial.mjs`.
 

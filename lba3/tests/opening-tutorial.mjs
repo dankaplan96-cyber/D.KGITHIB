@@ -153,8 +153,8 @@ await shot('a20-after');
 
 // ============================================================ B: tips off, the experienced player, remap, gamepad
 await page.reload(); await open(page, '?nocine');
-// Settings, Game: Show control tips: Off (the menu's own button)
-await page.click('[data-act="settings"]'); await page.click('.seg[data-setting="tips"] button[data-v="off"]'); await page.click('#settings [data-act="back"]');
+// Settings, Controls: Show control tips: Off (the menu's own button)
+await page.click('[data-act="settings"]'); await page.click('#settings [data-tab="controls"]'); await page.click('.seg[data-setting="tips"] button[data-v="off"]'); await page.click('#settings [data-act="back"]');
 check('B0 Settings has "Show control tips"; Off is kept', await ev(() => game.settings.tips === 'off' && !!document.querySelector('.seg[data-setting="tips"]')), await ev(() => game.settings.tips));
 await newGame(); await helpers();
 const off = await ev(() => {
