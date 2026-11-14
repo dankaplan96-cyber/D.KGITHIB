@@ -1,0 +1,50 @@
+ran in: the desktop app's Electron (Chrome/150.0.7871.250 Electron/43.7.9; test lab copy, Playwright), source checkout C:/Users/danka/dev/lba3-562/lba3 (desktop/copy-game.mjs) · game.version 0.49.0
+profile: C:\Users\danka\dev\lba3-bench\electron-profile-1794475177685 (fresh: APPDATA pointed at C:/Users/danka/dev/lba3-bench/electron-profile-1794475177685) · window 1536x864 @ dpr 1.25 · KHR_parallel_shader_compile yes
+GPU (the game's canvas): ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)
+nvidia-smi (util, memory, temp): 1 %, 0 MiB, 57 before · 49 %, 947 MiB, 59 after
+settings at start: quality high, Quality Auto on
+mode auto · started 2026-11-12T09:19:38.100Z · benchmark took 2.2 min
+
+LBA3: The Awakening benchmark — Quality Auto as played · build 0.49.0 · 2026-11-12 09:24
+GPU (as reported by the browser): NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11 · power: plugged in · window 1536×864 · devicePixelRatio 1.25 · frame-rate limit off
+display (as the OS reports it): 60 Hz · 1536x864 · fullscreen
+processor (as the OS reports it): Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz · 8 logical cores · 15.8 GB memory
+camera: orbit (the benchmark's free orbit)
+benchmark preparation before the first route (not measured; each step its own task, ms): arena 14 · zeelich 538 (15 steps, longest 106) · desert 901 (7 steps, longest 648) · hamalayi 592 (7 steps, longest 312) · shadow programs 550 · 3416 ms in all
+  scene changes' preparation behind the black (a step per black frame; count / longest / total ms): shadow batches 19 / 0 / 0 · draw batches back 16 / 37 / 78 · geometry 114 / 39 / 245 · batch meshes 19 / 0 / 0 · textures 19 / 5 / 56 · shadow programs 19 / 0 / 0 · shader warm-up 19 / 126 / 366 · shader warm-up (early) 3 / 53 / 154 · texture layers 3 / 23 / 55 · draw batches 3 / 306 / 524
+Auto at the start: High (gpu undefined · cpu undefined; guess) · GPU timer: yes
+
+route        fps   frame p50 / p95 / p99 / max ms   >33 / >50 / >100 (behind black)   GPU p50 / p95   CPU work p50 / p95   state at start -> end
+  street        60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   14.07 / 17.29   10.2 / 13.4   High -> High
+      frames at each state: High 100 % · calls 485 (shadow 32) · triangles 1695k · CPU probe 6.1 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.2 (p95 0.3) ms · uploads a frame p50 36 (70 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 1.4 / 1.44 (173) · hero 0.4 / 0.39 (1) · enemies 0.1 / 0.13 (35) · physics 0.3 / 0.36 (224.7) · interact 0.1 / 0.11 (1) · camera 0 / 0.01 (2) · other sim 0.8 / 0.82 (0) · submit other 1.4 / 1.41 (1) · submit main 4.9 / 5.26 (1) · submit shadow 0.5 / 0.55 (15) · submit post 0.2 / 0.21 (1)
+  interior      60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   12 / 14.41   4.1 / 5.1   High -> High
+      frames at each state: High 100 % · calls 169 (shadow 9) · triangles 176k · CPU probe 6.7 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.2 (p95 0.4) ms · uploads a frame p50 28 (65 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.2 / 0.22 (173) · hero 0.3 / 0.33 (1) · enemies 0.1 / 0.06 (31) · physics 0.1 / 0.12 (69) · interact 0.1 / 0.06 (1) · camera 0 / 0.01 (2) · other sim 0.7 / 0.69 (0) · submit other 0.7 / 0.69 (1) · submit main 1.7 / 1.72 (1) · submit shadow 0.1 / 0.15 (15) · submit post 0.2 / 0.19 (1)
+  combat        60   16.7 / 16.8 / 16.9 / 33.4   0 / 0 / 0 (0)   8.37 / 13.04   4.5 / 5.6   High -> High
+      frames at each state: High 100 % · calls 169 (shadow 9) · triangles 175k · CPU probe 5.2 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.4) ms · uploads a frame p50 31 (102 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.2 / 0.28 (173.1) · hero 0.3 / 0.35 (1) · enemies 0.4 / 0.41 (40) · physics 0.3 / 0.35 (370.5) · interact 0 / 0.04 (1) · camera 0 / 0 (2) · other sim 0.7 / 0.66 (0) · submit other 0.5 / 0.52 (1) · submit main 1.6 / 1.66 (1) · submit shadow 0.1 / 0.15 (15) · submit post 0.2 / 0.19 (1)
+  transition    60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   10.12 / 14.9   4.2 / 9.8   High -> High
+      frames at each state: High 100 % · calls 167 (shadow 9) · triangles 171k · CPU probe 5.4 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.2 (p95 0.4) ms · uploads a frame p50 26 (60 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0 / 0.32 (92.6) · hero 0.1 / 0.14 (0.5) · enemies 0.1 / 0.1 (19.3) · physics 0 / 0.11 (73) · interact 0 / 0.04 (0.5) · camera 0 / 0.01 (2) · other sim 0.6 / 0.65 (0) · submit other 1 / 0.98 (0.9) · submit main 1.9 / 2.83 (0.9) · submit shadow 0.2 / 0.31 (13.4) · submit post 0.2 / 0.18 (0.9)
+  arrival     58.2   16.7 / 16.8 / 33.4 / 149.9   10 / 5 / 2 (10)   9.3 / 10.63   5.8 / 12.9   High -> High
+      frames at each state: High 100 % · calls 173 (shadow 9) · triangles 177k · CPU probe 5.3 ms · pacing: on the refresh 99 % · 17.2–20 ms 0 % · longer 1 % · callback late p50 0.2 (p95 0.4) ms · uploads a frame p50 32 (103 KB)
+      every frame over 33 ms: 67@0.5s black [frame before: work 81 ms, shadow batches built 78 ms] 50@0.5s black [frame before: work 51 ms] 150@0.7s black [frame before: work 135 ms, draw batches built 112 ms, +0 geometries, +1 textures on the GPU] {main thread 52 ms | main thread 135 ms | main thread 53 ms} 50@0.7s black [frame before: work 53 ms, +80 geometries, +0 textures on the GPU, geometry upload] 50@0.8s black [frame before: work 60 ms] 67@3.5s black [frame before: work 74 ms, shadow batches built 72 ms] 50@3.5s black [frame before: work 54 ms] 117@3.6s black [frame before: work 121 ms, draw batches built 105 ms, +0 geometries, +2 textures on the GPU] {main thread 121 ms} 50@3.7s black [frame before: work 35 ms, +35 geometries, +0 textures on the GPU, geometry upload] 50@3.8s black [frame before: work 55 ms]
+      CPU by section, p50 / mean ms (calls a frame): people 0.6 / 0.63 (116.4) · hero 0.2 / 0.19 (0.7) · enemies 0.1 / 0.1 (24.2) · physics 0.1 / 0.2 (156) · interact 0.1 / 0.06 (0.7) · camera 0 / 0.01 (2) · other sim 1 / 2.38 (0) · submit other 1.1 / 1.17 (0.9) · submit main 1.9 / 2.28 (0.9) · submit shadow 0.2 / 0.22 (14) · submit post 0.2 / 0.18 (0.9)
+  hamalayi      60   16.7 / 16.9 / 16.9 / 17   0 / 0 / 0 (0)   11.12 / 11.95   5 / 5.6   High -> High
+      frames at each state: High 100 % · calls 175 (shadow 9) · triangles 176k · CPU probe 5.2 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.2 (p95 0.3) ms · uploads a frame p50 28 (65 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.6 / 0.62 (173) · hero 0.2 / 0.22 (1) · enemies 0.1 / 0.13 (36) · physics 0.2 / 0.2 (140.5) · interact 0.1 / 0.06 (1) · camera 0 / 0 (2) · other sim 0.6 / 0.61 (0) · submit other 1 / 1.02 (1) · submit main 1.8 / 1.83 (1) · submit shadow 0.1 / 0.15 (15) · submit post 0.2 / 0.19 (1)
+
+draw batches: 7 area builds, 1398 ms in all · pieces in batches now 1404, left and drawn on their own 206, rejoined at scene changes 23 · shadow batches: 7 area builds, 524 ms
+
+Auto's decisions during the run (s since the page opened · what · why -> the state after):
+      211.0 s · settled: High held — evaluation passed: 59.9 fps over 61 s · frame p90 ≤ 16.8 ms · CPU p90 ≤ 15.8 ms · GPU p90 ≤ 17.6 ms · missed 0 % → High
+
+Auto now: High
+  runs: High: resolution 100 %, MSAA 4×, bloom, soft shadows, shadow map 4096, High's small shadows, 8 lamps, High's grass distance, full-rate animation, full far detail
+  start: guess · nothing cached for this machine · key NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11|mains|1536x864@1.25|Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz
+  last window: ok · 60 fps · frame p90 16.8 ms · CPU p90 5.2 ms · GPU p90 12.1 ms · missed 0 %
+
+Frame time includes the GPU (the browser waits for it); "CPU work" is the game's own simulation + render submission per frame; "GPU" the GPU's own time (timer query, every other frame).
+
+no page errors

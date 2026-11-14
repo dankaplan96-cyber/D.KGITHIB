@@ -1,0 +1,4 @@
+.venv/
+soundfonts/*.sf2
+soundfonts/*.sf3
+__pycache__/

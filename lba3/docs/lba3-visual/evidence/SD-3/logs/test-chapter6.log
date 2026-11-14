@@ -1,0 +1,24 @@
+start [ 'pass', 'hamalayi', 'play', 'Cross the gorge' ]
+tree [ 'thrown', true, 'Follow the trail up to the village' ]
+cross [ '33.0', '2.99', '37.8' ]
+lhar [ true, 'Talk to the people of Lhar' ]
+yorna [ true, "Switch on the project's heating station" ]
+station [ true, "Switch on the project's heating station◆ Find a fuse" ]
+pim [
+  true,
+  "Switch on the project's heating station◆ Find a fuse◆ Free Pim's kite from the icefall"
+]
+kite [ 'thrown', true ]
+fuse [
+  true,
+  "Switch on the project's heating station◆ Find a fuse◆ Free Pim's kite from the icefall"
+]
+heat [ true, true, 'Tell Yorna the winch is free' ]
+lift ready [ true, "Cut the platform's frozen mooring rope" ]
+sword + rope [ [ true, 'sword' ], true, 'Winch the first villagers up the cliff' ]
+trip 1 [ true, 'Drive off the ice mites' ]
+mites [ 3, 0, 'Winch the rest of the villagers up' ]
+trip 2 [ true, 'Ride the platform up' ]
+ride up [ true, '22.1', 'Go to the monastery' ]
+to monastery [ true, 'observatory', 4334, -38, 22 ]
+no errors

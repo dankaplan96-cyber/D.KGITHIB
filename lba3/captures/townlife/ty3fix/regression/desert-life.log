@@ -1,0 +1,32 @@
+ISO  chapter 3 finished by flags (as tests/chapter4.mjs): the sealed shaft sends Twinsen to Desert Island (chapter 4)
+PASS chapter 4 starts on Desert Island 
+PASS the cool room (and its stair, from the side), Lumi's loom and Hesk's flag poles are solid; Lumi works at her loom 
+PASS chapter 4 (pump seized): Brosk tells of the cool room — the last two jars going warm, the wind-catcher turned (INPUT) 
+PASS …and Lumi keeps her work from someone off the project's ferry (no screen yet) 
+PASS the door: FunFrock's old blockhouse, dug out of the dune; two jars inside; the wind-catcher turned (INPUT) 
+PASS up the stair on the east wall to the roof by walking; the crank turns the cowl a quarter at a time (INPUT) 
+PASS into the wind with no screen: sand pours down the tower into the room (a setback, not the end) 
+PASS the roof's parapet keeps him on the roof (north, west and south edges, INPUT) 
+PASS Brosk notices the sand in his dates 
+PASS Save & quit → Continue: the cowl still faces the wind, the sand is still in the room, the journal has it 
+ISO  chapter 4: the wind-pump's three gears and Tarra's trust set by flags (c4_gear0-2, c4_pump, c4_pumpTask, c4_trust)
+PASS with water in the oasis the cool room holds five jars; Lumi hands over her new screen (INPUT) 
+PASS on the roof the screen goes over the mouth; already into the wind, the room draws at once (INPUT) 
+PASS after: Sani plays in the cool room's doorway; the screen is no longer carried; a toast says the room draws 
+PASS the jars at the door are cold: a drink there restores life (INPUT) 
+PASS Brosk pays five kashes (one coin, owed until picked up, then his; INPUT); the journal closes 
+PASS afterwards Brosk, Lumi and Sani each have a line about the cool room 
+PASS Mother Tarra's lines stay chapter 4's own (the main story first) 
+ISO  order B: the k_ flags cleared (a fresh story), the cowl back to its storm position
+PASS other order: Lumi's screen first, fitted while the mouth faces away, then two turns: the room draws, no sand (INPUT) 
+PASS saved before he picked Brosk's coin up: on Continue the five kashes are his (a toast says so); the room still draws 
+ISO  chapter 5 by flags (c4_done → nextChapter, as tests/chapter5.mjs), the k_ flags cleared again
+PASS chapter 5: talking to Brosk gives his jar for the shovel trade (the chapter's errand first, not the cool room) 
+ISO  chapter 5: the jar filled and the shovel traded by flags (c5_water, c5_shovel; tests/chapter5.mjs plays them)
+PASS …then Brosk tells of the cool room in chapter 5's words (the steam could boil the oasis) 
+PASS in chapter 5 Lumi hands over the screen straight away (Kesh trusts him since the pump) 
+ISO  chapter 5: the vent opened by flags (c5_routed, c5_dallanOK, c5_relief, c5_vent)
+PASS after the vent: done the same way; Brosk and Lumi speak of the quiet since the vent and Dallan at the cool room 
+PASS the yacht stop board: the ferry chalked out once the project took it 
+no errors
+ALL PASSED

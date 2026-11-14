@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dino-Fly Lookdev</title>
+<style>html,body{margin:0;height:100%;background:#9fc4e6;overflow:hidden;font:12px system-ui}
+.lbl{position:fixed;top:6px;color:#123;background:#ffffffcc;padding:1px 6px;border-radius:8px}</style>
+<base href="../../../../">
+<script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head><body>
+<script type="module">
+// CH-DF review scene: the Dino-Fly from src/game/dinofly.js in five views side by side, same light and distance
+// for before/after (front, three-quarter, side, top, and the game camera: FOV 43.6°, 13.4 m, 38° down).
+//   ?t=2          seconds of the creature's own updater (breathing, gaze, stretch) before the frame is frozen
+//   &hero=x,z     a stand-in hero at this ground position (the head turns to it inside 9 m); default: none
+//   &rest=1       the model in its bind pose (no nap pose), if dinofly.js supports it
+//   &ov={"DOZE":{"neck0":[30,0,0]}}   pose overrides (degrees per bone)
+//   &tw=0         hide Twinsen (shown for scale 3 m to the creature's left, facing it)
+//   &mat=grey     plain grey (shape only)    &panel=480x400    &dist=17 (camera distance of the four model views)  &ly=1.2&lz=0 (their target)
+import * as THREE from 'three';
+import { buildDinoFly, DINOFLY_POSES } from './src/game/dinofly.js';
+import * as CH from './src/game/characters.js';
+const q = new URLSearchParams(location.search);
+const [PW, PH] = (q.get('panel') || '480x400').split('x').map(Number);
+const VIEWS = [['front', 0], ['3/4', -0.62], ['side', -Math.PI / 2], ['top', null], ['game', -0.62]];
+const W0 = PW * VIEWS.length;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setPixelRatio(1); r.setSize(W0, PH); r.toneMapping = THREE.NeutralToneMapping;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fc4e6');
+scene.add(new THREE.HemisphereLight('#d8ecff', '#6a7a4a', 1.2));
+const sun = new THREE.DirectionalLight('#fff3e0', 2.2); sun.position.set(-3.5, 6, 2.5); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: '#7f9a5a', roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const grid = new THREE.GridHelper(60, 60, '#30343a', '#4a5a40'); grid.position.y = 0.003; grid.material.opacity = 0.45; grid.material.transparent = true; scene.add(grid);
+
+if (q.get('ov')) for (const [k, v] of Object.entries(JSON.parse(q.get('ov')))) Object.assign(DINOFLY_POSES[k], v);
+const W = { H: () => 0, physics: { add() {} }, updaters: [], pets: [], _hero: null };
+if (CH.preloadCharacters) await CH.preloadCharacters();
+const root = buildDinoFly(scene, W, 0, 0, 0, { rest: q.get('rest') === '1', turn: 0 });
+if (root.userData.ready) await root.userData.ready;   // (the polygon model loads its JSON first)
+let tw = null;
+if (q.get('tw') !== '0') {
+  tw = CH.createCharacter('twinsen');
+  tw.root.position.set(3.0, 0, 1.2); tw.fixedYaw = -Math.PI / 2; tw.t = 0; tw.blinkT = 99; tw.fidgetT = 99;
+  scene.add(tw.root);
+}
+if (q.get('hero')) { const [x, z] = q.get('hero').split(',').map(Number); W._hero = { pos: new THREE.Vector3(x, 0, z) }; }
+const T = +(q.get('t') || 2);
+for (let i = 0, n = Math.round(T * 30); i < n; i++) { for (const u of W.updaters) u(1 / 30, i / 30, W._hero); }
+if (tw) { tw.play('idle'); tw.update(1 / 60, 0); tw.root.rotation.y = tw.fixedYaw; }
+if (q.get('mat') === 'grey') { const g = new THREE.MeshStandardMaterial({ color: '#a4a4a4', roughness: 0.8 }); root.traverse((m) => { if (m.isMesh) m.material = g; }); }
+// stats: triangles and draw calls of the creature alone
+let tris = 0, meshes = 0;
+root.traverse((m) => { if (m.isMesh) { meshes++; const g = m.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+const box = new THREE.Box3().setFromObject(root);
+const cams = VIEWS.map(([name, az], i) => {
+  const c = new THREE.PerspectiveCamera(name === 'game' ? 43.6 : 30, PW / PH, 0.1, 200);
+  if (name === 'top') { c.up.set(0, 0, 1); c.position.set(0, +(q.get('dist') || 17) * 1.3, 0.001); c.lookAt(0, 0, 0); }
+  else if (name === 'game') { const d = 13.4, p = 38 * Math.PI / 180; c.position.set(Math.sin(az) * Math.cos(p) * d, 1 + Math.sin(p) * d, Math.cos(az) * Math.cos(p) * d); c.lookAt(0, 1, 0); }
+  else { const d = +(q.get('dist') || 17); const ly = +(q.get('ly') || 1.2), lz = +(q.get('lz') || 0); c.position.set(Math.sin(az) * d, ly + 0.4, lz + Math.cos(az) * d); c.lookAt(0, ly, lz); }
+  const l = document.createElement('div'); l.className = 'lbl'; l.style.left = (i * PW + 6) + 'px'; l.textContent = name; document.body.appendChild(l);
+  return c;
+});
+r.setScissorTest(true);
+VIEWS.forEach((v, i) => { r.setViewport(i * PW, 0, PW, PH); r.setScissor(i * PW, 0, PW, PH); r.render(scene, cams[i]); });
+r.info.autoReset = true;
+root.updateMatrixWorld(true);
+const bonesAt = {};
+if (root.userData.model) for (const n of ['body', 'head', 'tail1', 'tail2', 'neck1', 'footL', 'footR', 'wing2L', 'wing2R']) bonesAt[n] = root.userData.model.bones[n].getWorldPosition(new THREE.Vector3()).toArray().map((x) => +x.toFixed(2));
+window.dfStats = { bonesAt, tris, meshes, size: box.getSize(new THREE.Vector3()).toArray().map((x) => +x.toFixed(2)), min: box.min.toArray().map((x) => +x.toFixed(2)), max: box.max.toArray().map((x) => +x.toFixed(2)) };
+window.dfDone = true;
+</script></body></html>

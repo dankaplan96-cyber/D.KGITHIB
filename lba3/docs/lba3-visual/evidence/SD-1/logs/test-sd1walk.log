@@ -1,0 +1,16 @@
+PASS walk: house door → spaceport pad (arrived, 15.1s, stuck 0) 
+PASS walk: pad → board reading spot (arrived, 4.3s, stuck 0) 
+PASS walk: board → kiosk hatch (arrived, 2.3s, stuck 0) 
+PASS walk: kiosk → waiting benches (arrived, 3.3s, stuck 0) 
+PASS walk: benches → shuttle (arrived, 3.8s, stuck 0) 
+PASS walk: square → harbour (arrived, 20.1s, stuck 0) 
+PASS walk: harbour → pier head (arrived, 1.7s, stuck 0) 
+PASS walk: pier → customs (Odile) (arrived, 4s, stuck 0) 
+PASS walk: quay → ferry timetable (arrived, 2.6s, stuck 0) 
+PASS walk: quay → lane junction (arrived, 15.4s, stuck 0) 
+PASS walk: junction → square (arrived, 6.4s, stuck 0) 
+PASS walk: square → shop door (arrived, 3.7s, stuck 0) 
+PASS walk: shop → bug street door (arrived, 5.9s, stuck 0) 
+PASS walk: bug street → pump (Bram) (arrived, 15.7s, stuck 0) 
+no errors
+ALL PASSED

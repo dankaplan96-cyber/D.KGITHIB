@@ -1,0 +1,21 @@
+8.19 s · frame 1
+8.28 s region build 37 ms
+8.29 s · frame 2
+8.89 s region build 601 ms
+8.91 s · frame 3
+10.04 s region build 1126 ms
+10.06 s · frame 4
+10.81 s region build 755 ms
+10.82 s · frame 5
+12.68 s warmShadows 1857 ms
+12.70 s · frame 6
+12.71 s · frame 7
+12.73 s route street setup 1 ms
+13.20 s · frame 8
+14.65 s · frame 16
+
+LBA3: The Awakening benchmark — visits (cold entry, repeated visits, sustained play) · build 0.42.1 · 2026-10-30 22:24
+camera: Follow (the player's follow camera at Far, along the route) · quality Auto · routes street · cold 2 s each · 0 cycles × 12 s · sustained 0 s
+benchmark preparation before the first route (not measured; each step its own task, ms): arena 25 · zeelich 554 · desert 1038 · hamalayi 733 · shadow programs 1857 · 12712 ms in all
+  cold     street         9   4.7   66.6 / 583.2 / 583.2 / 583.2    66.7 %   6 / 6 / 4 (0)   24.6 / 466.2   151   13.5   Medium
+      every frame over 33 ms: 483@0.5s [frame before: work 466 ms, shadow cache rebuilt (dropped: casters changed)] {main thread 486 ms, style/layout 2: user-callback FrameRequestCallback src/main.js:135629 466 ms} 50@0.6s [frame before: work 25 ms] 150@0.7s [frame before: work 15 ms] {main thread 164 ms: user-callback FrameRequestCallback src/main.js:135629 33 ms} 67@0.8s [frame before: work 33 ms] 583@1.4s [frame before: work 18 ms] {no long animation frame reported over it: the main thread likely free (GPU process, driver or compositor)} 550@1.9s [frame before: work 34 ms] {main thread 53 ms (a long task; no script named) | main thread 57 ms (a long task; no script named)}

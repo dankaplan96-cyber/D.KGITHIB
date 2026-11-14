@@ -1,0 +1,16 @@
+# q_retro.js: the 1997 look (flat shading) and every SHADE-COST switch compile without shader errors
+street-a retro: programs +22, errors 0
+house-a retro: programs +0, errors 0
+terrain grassSkip=false: errors 0
+terrain nrmVarying=true: errors 0
+terrain diag=implicit: errors 0
+terrain diag=grass: errors 0
+terrain diag=unlit: errors 0
+terrain sunLambert=true: errors 0
+SC_LAMP_OLD: errors 0
+SC_IBL_OLD: errors 0
+SC_SUN_OLD: errors 0
+setOldCentre: errors 0
+setOldLuma: errors 0
+setOldEdges: errors 0
+errors: none

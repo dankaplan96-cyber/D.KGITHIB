@@ -1,0 +1,87 @@
+// HAMALAYI-LIFE: the monastery's hall, Lhar's houses by the story's phase, their people at home, the region's things
+// that can be used (src/game/story/hamlife.js, src/game/hamrooms.js). English only.
+import { STR } from '../i18n.js';
+
+Object.assign(STR.en, {
+  // ---- Brother Tenpa, who keeps the monks' hall
+  n_hl_monk: 'Brother Tenpa',
+  hl_monk_pack: "The gates are open and the soup is on. Lhar only has to get up the cliff.",
+  hl_monk_pack_2: "Mind the big wheel. It squeaks if you spin it the wrong way. Which way is wrong? Ask the wheel.",
+  hl_monk_camp: "Forty guests and one kettle. The kettle is coping better than I am.",
+  hl_monk_camp_2: "The old ones and the little ones sleep in here. The rest of Lhar snores by the wall.",
+  hl_monk_mend: "The ground has been still since the vent breathed. Half of Lhar goes down to mend each day and comes back up for supper.",
+  hl_monk_mend_2: "Sefa came down from his dome and ate three bowls. He says the sky and his charts agree again.",
+  hl_monk_network: "Pim says you're putting a box on Sefa's dome. Bring the boy back with all his fingers.",
+  hl_monk_home: "The hall is ours again. Very quiet. I miss the children's noise, a little.",
+  hl_monk_home_2: "Lhar took our cheese home with it. All of it. We gave it gladly. Mostly.",
+  // ---- the hall's things
+  hh_altar: "A blue stone on the altar among the butter lamps, faintly warm. The monks say it came down from the dome when the dome was Sendell's shrine.",
+  hh_wheel: "The big wheel turns with a low hum. Every name in Lhar is carved round its rim.",
+  hh_tea: "Butter tea from the monks' urn. Salty and hot. The feeling comes back into your fingers.",
+  hh_beds_pack: "Bedrolls already laid out in rows. The monks are expecting the whole village.",
+  hh_beds_camp: "Bedrolls in rows: Lhar's old ones and small ones sleep in here, nearest the stove.",
+  hh_beds_mend: "The bedrolls are still laid out. Lhar mends its houses by day and comes back up to sleep.",
+
+  // ---- the people at home
+  hl_bero_mend: "Three cracks in the back wall and a slate gone over the door. That's all the melt did. Grandfather built well.",
+  hl_bero_mend_2: "We sleep up at the monastery till Yorna says. I come down to mend. And to be home a bit.",
+  hl_bero_network: "They say you're stringing a box across the whole world. I'm patching a roof. We all do what we can.",
+  hl_sana_mend: "New flags for the day we all come back. The old ones faded while nobody was watching them.",
+  hl_sana_mend_2: "Red for the fire, blue for the sky, then the rest. I lose count of the knots when people talk to me. Not you. Others.",
+  hl_lhamo_mend: "Menders eat like wolves. Soup at noon here, and I carry the rest up the lift for supper.",
+  hl_lhamo_mend_2: "My own stove again. The monks' kettle is a fine kettle. It's not mine.",
+  hl_dorje_home: "Seventy winters in this corner, and one up a cliff. My own fire again. Sit, lad.",
+  hl_dorje_home_2: "The monks sent us home with cheese. I didn't ask for it. I ate it.",
+  hl_yorna_evacuation: "Hesk says your Citadel is packing up. Ours is unpacking. Bero's roof first, then the rest.",
+  hl_yorna_evacuation_2: "The ledger says who mends what. Lhar argues with the ledger. The ledger wins.",
+  hl_yorna_council: "We vote on everything in this room. Roofs, goats, who sits nearest the stove. The stove always loses.",
+  hl_yorna_council_2: "A few more weeks of quiet ground and we come home for good. Pim wants to stay with the monks. He says the food is better. It is.",
+  hl_sefa_evacuation: "The dome needs a rest, and so do I. I'm writing up the day we lit the crystal. Nobody will believe a word of it.",
+  hl_sefa_evacuation_2: "Since the vent opened, the snow stays where it falls. A good sign. Good signs are rare up here.",
+  hl_sefa_council: "The second sun's beam reaches the crystal every day now. I log it. Somebody should.",
+  hl_sefa_council_2: "Knock here if you must. Not on the dome. The dome is resting.",
+
+  // ---- Lhar's houses by the phase (their own look: ihomes.js ih_ham_lharN, then these)
+  ih_ham_lhar0_pack: "Bowls tied up in a cloth, the cauldron by the door. Lhamo's kitchen is moving up the cliff.",
+  ih_ham_lhar0_empty: "The cauldron is gone and the stove is cold. Lhamo's kitchen is cooking at the monastery now.",
+  ih_ham_lhar0_mend: "The stove is lit again. Bowls stacked for the menders, roots in the jars.",
+  ih_ham_lhar1_pack: "The ledger's pages are tied shut for the trip. Yorna will pack her own house last.",
+  ih_ham_lhar1_empty: "Benches round a cold stove. The ledger went up the lift with Yorna.",
+  ih_ham_lhar1_mend: "The ledger is back on its stand, open at a page headed ROOFS.",
+  ih_ham_lhar2_pack: "Furs rolled and tied. Old Dorje says he isn't going. His furs are.",
+  ih_ham_lhar2_empty: "The furs are gone from the bed. The stool waits for Old Dorje.",
+  ih_ham_lhar3_pack: "Sacks by the door. Bero is carrying the house up the cliff one sack at a time.",
+  ih_ham_lhar3_empty: "Bare boards and a cold stove. A crack runs up the back wall that wasn't there last winter.",
+  ih_ham_lhar3_mend: "Fresh mortar in the crack, new slates by the bed. Bero's grandfather's beam still holds.",
+  ih_ham_lhar4_pack: "The half-done flag is rolled off the loom and tied. Sana's wool is in a sack by the door.",
+  ih_ham_lhar4_empty: "The loom stands bare. Sana took her wool and her flag up the cliff.",
+  ih_ham_lhar4_mend: "New flags hang across the room to dry, red and blue. The loom has a fresh one on it.",
+
+  // ---- the region's things
+  hl_notice_pack: "A notice in Yorna's hand: MOVING DAY. Sacks to the cart, the cart to the lift. Old ones and small ones go up first.",
+  hl_notice_camp: "LHAR IS AT THE MONASTERY. Don't sleep in the houses. The ground can't be trusted. - Yorna",
+  hl_notice_mend: "MENDING ROTA. Roofs first, then walls, then whatever Bero says. Soup at Lhamo's at noon. Back up the lift for supper.",
+  hl_notice_home: "WELCOME HOME. The monks' cheese is in Lhamo's kitchen. Take some. Please.",
+  hl_pen: "An empty goat pen. The goats went up the monks' path ahead of everyone, the clever things.",
+  hl_pen_home: "The pen is still empty. The goats like the monks' meadow better and won't come down.",
+  hl_shrine: "Lhar's shrine, three stone steps and a pole. Every flag line in the village starts from it, and everyone meets here.",
+  hl_heat: "The project's heat station hums now. It keeps the winch thawed beautifully. The village, not so much.",
+  hl_pwheel: "The prayer wheels turn one after another: clack, clack, clack. Small hands have worn the handles smooth.",
+  hl_pwheel_pack: "The prayer wheels turn stiffly in the cold. Nobody has spun them in a while.",
+  hl_obs_pass: "Bolted from inside. Somebody in there is humming over the clicks of a big brass instrument.",
+  hl_obs_home: "Locked. A slate hangs on the door: SEFA, NEXT DOOR.",
+
+  // ---- the village's residents (storylife.js): the camp while Lhar is mended, and home
+  rs_lh_tam_mend: "Bero gets the roofs, I get the woodpile up here. Fair, he says. He would.",
+  rs_lh_kid1_mend: "We're not allowed down to Lhar yet. The grown-ups go every day. It's not fair.",
+  rs_lh_kid2_mend: "Brother Tenpa lets us spin the big wheel inside. Three times each. I spun it four.",
+  rs_lh_grum_mend: "Down the lift with a sack of slates, up with an empty sack. Somebody has to.",
+  rs_lh_old_mend: "Down that lift twice a day? Not me. I'll go home once, properly, when Yorna says.",
+  rs_lh_bero_home: "Roof's on, walls are dry, and the floor's cold. Cold! I could kiss it.",
+  rs_lh_sana_home: "Look up. New flags, every one. Lhar is Lhar again.",
+  rs_lh_tam_home: "Wood first, same as ever. Some things don't move house.",
+  rs_lh_kid1_home: "The goats wouldn't come down. Brother Tenpa says they've joined the monastery.",
+  rs_lh_kid2_home: "Home! Our house smells of smoke and cheese now. Good smoke.",
+  rs_lh_mira_home: "Everyone wants soup at once. Same as before. I missed it.",
+  rs_lh_grum_home: "Every crate came back down. I counted. Then I stopped counting. Again.",
+});

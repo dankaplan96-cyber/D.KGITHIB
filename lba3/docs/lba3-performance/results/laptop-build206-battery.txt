@@ -1,0 +1,16 @@
+LBA3: The Awakening benchmark · build 0.31.0 (build 206) · 2026-10-27 10:15 (the user's laptop, Vega 8, ON BATTERY, pasted in chat)
+Target set by the user the same day: Medium 60 fps on battery, High 60 fps plugged in.
+window 1366×768 · DPR 1 · startup: build 10.6 s · shader preparation 6.4 s · 76 programs at the title · 0 compiles while measured
+
+fps (GPU p50 ms):     low              medium            high
+  street            39.5 (20.34)     24.4 (37.57)      17.3 (54.17)
+  interior          57.7 (9.77)      48.2 (16.09)      49.6 (16.2)
+  combat            54.8 (7.31)      51.7 (13.65)      32.6 (23.98)
+  transition        52.5 (9.92)      33.4 (20.67)      33.2 (22.73)
+  arrival           43.7 (15.3)      31.3 (27.51)      22.1 (42.46)
+street triangles: low 611k · medium 1097k · high 1262k · draw calls medium 257 (shadow 60)
+
+breakdown at Medium, street GPU p50 (ms): as is 37.07 · no shadows 26.96 · no lamps 33.1 · res x0.6 24.95 · shadow map kept 32.14 · no MSAA 31.75 · 8-bit 35.81 · depth resolve on 55.52 · shadow filter basic 32.71 · shadow 512 37.07 · FXAA instead of MSAA 35.81 · batches off 35.61
+breakdown at Medium, interior GPU p50 (ms): as is 21.16 · no shadows 14.87 · no lamps 14.76 · res x0.6 12.91 · no MSAA 16.3 · FXAA instead of MSAA 14.36 · shadow filter basic 17.85
+
+Against build 172 plugged in (same laptop): Medium street 9.6 ms GPU → 37.6 on battery (×3.9): the GPU's clocks drop on battery.

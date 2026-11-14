@@ -1,0 +1,32 @@
+PASS 144 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at144":{"walk":1.58,"swing":0.437}}
+PASS 144 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at144":0.437}
+PASS 120 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at120":{"walk":1.59,"swing":0.442}}
+PASS 120 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at120":0.442}
+PASS 30 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at30":{"walk":1.59,"swing":0.467}}
+PASS 30 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at30":0.467}
+PASS 20 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at20":{"walk":1.6,"swing":0.5}}
+PASS 20 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at20":0.5}
+PASS 15 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at15":{"walk":1.59,"swing":0.467}}
+PASS 15 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at15":0.467}
+PASS 10 fps: walking covers the same ground in 1 s as at 60 {"at60":{"walk":1.59,"swing":0.45},"at10":{"walk":1.59,"swing":0.5}}
+PASS 10 fps: a sword swing lasts as long as at 60 {"at60":0.45,"at10":0.5}
+       (the old loop at 10 fps walked 0.62 m in 1 s against 1.59 at 60)
+PASS a 1.5 s stall is simulated as at most 4 steps; the rest is dropped {"jump":0.27,"steps":4,"lost":1.367,"speedBefore":2,"speedAfter":2}
+PASS ...and the frames after it move at normal speed (as fast as just before it, ±5 %) {"jump":0.27,"steps":4,"lost":1.367,"speedBefore":2,"speedAfter":2}
+PASS a ball press during a 3-step frame throws once {"throws":1,"takeoffs":1}
+PASS a jump press during a 3-step frame jumps once {"throws":1,"takeoffs":1}
+PASS a volume slider event costs little and rebuilds nothing {"median":0,"max":0.3,"cuts":0,"sameSize":true,"resizedOnQuality":true,"shadowMedium":1024,"music":0.7}
+PASS a volume slider event does not cut the camera {"median":0,"max":0.3,"cuts":0,"sameSize":true,"resizedOnQuality":true,"shadowMedium":1024,"music":0.7}
+PASS a quality change still resizes and sets the shadow map {"median":0,"max":0.3,"cuts":0,"sameSize":true,"resizedOnQuality":true,"shadowMedium":1024,"music":0.7}
+PASS perf.stats: frames, fps, sim/render split and draw calls {"frames":30,"fps":30,"frameMs":{"p50":33.33,"p95":33.33,"p99":33.33,"max":33.33},"simMs":{"p50":2.1,"p95":6.3},"renderMs":{"p50":1.5,"p95":4.4},"steps":{"mean":1,"max":1},"lostS":0,"calls":40,"tris":28758,"callsP95":40,"draws":40,"shadowCalls":2}
+PASS loadTimes: each region timed on its own {"world":1829,"spaceport":263,"townlife":63,"citydress":91,"interiors":910,"zeelich":883,"underground":305,"desert":442,"condenser":30,"temple":23,"wizards":26,"lba1":214,"hamalayi":409,"obsroom":8,"upper":235,"valves":23,"arena":5,"islands":2177,"actors":332,"total":8391,"shaders":27672}
+PASS frame-rate limit off: every refresh is a frame (60 Hz → 16.7 ms) {"frames":600,"mean":16.67,"min":16.67,"max":16.67,"after":[16.67,16.67,16.67],"skippedTapKept":null}
+PASS limit 30 on a 60 Hz screen: every other refresh, an even 33.3 ms {"frames":300,"mean":33.33,"min":33.33,"max":33.33,"after":[16.67,33.33,33.33],"skippedTapKept":true}
+PASS limit 60 on a 60 Hz screen: every refresh {"frames":600,"mean":16.67,"min":16.67,"max":16.67,"after":[16.67,16.67,16.67],"skippedTapKept":null}
+PASS limit 60 on a 144 Hz screen: 60 frames a second on average (13.9/20.8 ms: 144 is not a multiple of 60) {"frames":600,"mean":16.67,"min":13.89,"max":20.83,"after":[6.94,13.89,20.83],"skippedTapKept":true}
+PASS limit 30 on a 144 Hz screen: 30 a second on average {"frames":300,"mean":33.33,"min":27.78,"max":34.72,"after":[6.94,34.72,34.72],"skippedTapKept":true}
+PASS limit 30: after a 120 ms hitch, back to 33.3 ms frames (no burst to catch up) {"frames":150,"mean":34.04,"min":33.33,"max":136.67,"after":[33.33,33.33,33.33],"skippedTapKept":true}
+PASS limit 30: a key tapped on a skipped refresh waits for the next frame {"frames":300,"mean":33.33,"min":33.33,"max":33.33,"after":[16.67,33.33,33.33],"skippedTapKept":true}
+PASS automatic resolution: 33 ms frames at the 30 limit are on budget (no step down); without the limit they are not {"off60":{"frames":600,"mean":16.67,"min":16.67,"max":16.67,"after":[16.67,16.67,16.67],"skippedTapKept":null},"cap30at60":{"frames":300,"mean":33.33,"min":33.33,"max":33.33,"after":[16.67,33.33,33.33],"skippedTapKept":true},"cap60at60":{"frames":600,"mean":16.67,"min":16.67,"max":16.67,"after":[16.67,16.67,16.67],"skippedTapKept":null},"cap60at144":{"frames":600,"mean":16.67,"min":13.89,"max":20.83,"after":[6.94,13.89,20.83],"skippedTapKept":true},"cap30at144":{"frames":300,"mean":33.33,"min":27.78,"max":34.72,"after":[6.94,34.72,34.72],"skippedTapKept":true},"hitch":{"frames":150,"mean":34.04,"min":33.33,"max":136.67,"after":[33.33,33.33,33.33],"skippedTapKept":true},"dynAt30":1,"dynUncapped":0.9}
+no errors
+ALL PASSED

@@ -1,0 +1,54 @@
+start [
+  'network',
+  'workshop',
+  true,
+  "Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)◆ (Hesk's glider is at the dock on Zeelich)"
+]
+oku [ 'zeelich', true ]
+brake [ 'thrown', false ]
+mill relay [
+  true,
+  true,
+  "Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+]
+to citadel out
+mira [ 'office', true, 'valves' ]
+valves [ [ 2, 2, 2 ], true ]
+out [ 'office', 'out' ]
+lighthouse [
+  'lighttop',
+  [ true, 1598.5, -0.6, 'play' ],
+  'play',
+  true,
+  1599.7,
+  -1
+]
+dials [
+  [ 2, 0, 1 ],
+  true,
+  "Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+]
+to desert desert
+ilka [ true, true, 3 ]
+drones [
+  [
+    'ndrone0: thrown (6 throws)',
+    'ndrone1: thrown (4 throws)',
+    'ndrone2: thrown (8 throws)'
+  ],
+  [ false, false, false ],
+  true,
+  "Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+]
+to hamalayi hamalayi
+pim [ true ]
+dome [ 'hamalayi', true, true, true, 'Go to the drill platform on Zeelich' ]
+to zeelich [ 'zeelich', 'Go to the drill platform on Zeelich' ]
+console [ true, 'shell', 'c3shaft' ]
+no errors
+CHAPTER 10 DONE
+
+real	1m13.340s
+user	0m2.985s
+sys	0m0.885s
+rc=0

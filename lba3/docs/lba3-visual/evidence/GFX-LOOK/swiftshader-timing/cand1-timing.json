@@ -1,0 +1,98 @@
+[
+ {
+  "cfg": "battery",
+  "scene": "street",
+  "v": "as is",
+  "total": 2050,
+  "submit": 11.4,
+  "gpu": 2038.6,
+  "p90": 2250.9,
+  "calls": 237,
+  "tris": 827538,
+  "runs": [
+   2016.3,
+   1986.2,
+   2147.6
+  ]
+ },
+ {
+  "cfg": "battery",
+  "scene": "interior",
+  "v": "as is",
+  "total": 703.4,
+  "submit": 5.9,
+  "gpu": 697.5,
+  "p90": 897.5,
+  "calls": 170,
+  "tris": 414574,
+  "runs": [
+   673.2,
+   738.3,
+   698.8
+  ]
+ },
+ {
+  "cfg": "eco",
+  "scene": "street",
+  "v": "as is",
+  "total": 2578.3,
+  "submit": 10.1,
+  "gpu": 2568.2,
+  "p90": 3296,
+  "calls": 232,
+  "tris": 827410,
+  "runs": [
+   3496.1,
+   2071.7,
+   2167.1
+  ]
+ },
+ {
+  "cfg": "eco",
+  "scene": "interior",
+  "v": "as is",
+  "total": 1369.1,
+  "submit": 5.6,
+  "gpu": 1363.5,
+  "p90": 1525.2,
+  "calls": 167,
+  "tris": 414494,
+  "runs": [
+   1332.2,
+   1413.8,
+   1361.4
+  ]
+ },
+ {
+  "cfg": "medium",
+  "scene": "street",
+  "v": "as is",
+  "total": 4073.7,
+  "submit": 10.2,
+  "gpu": 4063.5,
+  "p90": 4501.5,
+  "calls": 238,
+  "tris": 833437,
+  "runs": [
+   4168.6,
+   4108.4,
+   3944.2
+  ]
+ },
+ {
+  "cfg": "medium",
+  "scene": "interior",
+  "v": "as is",
+  "total": 1478.6,
+  "submit": 5,
+  "gpu": 1473.6,
+  "p90": 1645.7,
+  "calls": 170,
+  "tris": 414574,
+  "runs": [
+   1475.9,
+   1403.3,
+   1556.7
+  ]
+ }
+]

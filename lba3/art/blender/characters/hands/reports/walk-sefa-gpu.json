@@ -1,0 +1,16 @@
+{
+ "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "walker": {
+  "id": "sefa",
+  "char": "nara",
+  "speed": 0.8
+ },
+ "groundSpeed": 0.078,
+ "seconds": 14.55,
+ "frames": {
+  "n": 125,
+  "p50": 36,
+  "p95": 54.4
+ },
+ "errors": []
+}

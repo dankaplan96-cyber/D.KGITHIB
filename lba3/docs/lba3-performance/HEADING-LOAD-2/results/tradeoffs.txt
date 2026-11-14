@@ -1,0 +1,117 @@
+HEADING-LOAD-2: visible trade-offs, priced and NOT applied (their switches stay off in play)
+SwiftShader, 1366x768, Auto held at Medium, battery profile, Follow camera at Far; each heading's frozen frame drawn as is
+and with the trade-off on (q_area.js W_SHOTS=1, one benchgpu variant); pixels: the variant's final image against the
+as-is image of the same frame (probes/tradediff.sh). 1366x768 = 1,049,088 px. Counts only: no GPU time here.
+
+1) The islands' trees, bushes and rocks coarse beyond the preset's distance (Medium 34 m), as Citadel's trees are
+   (benchgpu 'GPU: island trees coarse beyond the preset distance (trade-off)'; the coarse sculpts exist only when a
+   probe builds them: W_CULLLO=1, kit.js CULL_INST.lo). Run on the build before the terrain change (its as-is totals
+   differ from the final ones by the terrain only; the trade-off's triangles are the trees').
+   a) far geometry only, the shadows as now (the static shadow cache kept: trade-<island>):
+   Otringal
+      heading 0 (0°, camera yaw 6.20): main 38 calls 350k tris ->    [island trees coarse] main 38 calls 347k tris (Δ main 0 calls -2.8k tris)
+      heading 1 (45°, camera yaw 6.99): main 40 calls 449k tris ->    [island trees coarse] main 40 calls 388k tris (Δ main 0 calls -60.8k tris)
+      heading 2 (90°, camera yaw 7.77): main 44 calls 588k tris ->    [island trees coarse] main 44 calls 503k tris (Δ main 0 calls -84.6k tris)
+      heading 3 (135°, camera yaw 8.56): main 46 calls 609k tris ->    [island trees coarse] main 46 calls 500k tris (Δ main 0 calls -108.8k tris)
+      heading 4 (180°, camera yaw 9.34): main 47 calls 634k tris ->    [island trees coarse] main 47 calls 523k tris (Δ main 0 calls -111.1k tris)
+      heading 5 (225°, camera yaw 10.13): main 45 calls 558k tris ->    [island trees coarse] main 45 calls 484k tris (Δ main 0 calls -74.4k tris)
+      heading 6 (270°, camera yaw 10.91): main 41 calls 467k tris ->    [island trees coarse] main 41 calls 437k tris (Δ main 0 calls -29.5k tris)
+      heading 7 (315°, camera yaw 11.70): main 39 calls 308k tris ->    [island trees coarse] main 39 calls 308k tris (Δ main 0 calls 0.0k tris)
+      h0: 40 px differ (24 by more than 2 levels, max 15) box x 180-186 y 0-9
+      h1: 0 px differ (0 by more than 2 levels, max 0)
+      h2: 589 px differ (426 by more than 2 levels, max 149) box x 24-70 y 65-91
+      h3: 0 px differ (0 by more than 2 levels, max 0)
+      h4: 6731 px differ (3646 by more than 2 levels, max 145) box x 179-915 y 47-154
+      h5: 2085 px differ (1083 by more than 2 levels, max 187) box x 558-1365 y 61-222
+      h6: 839 px differ (576 by more than 2 levels, max 131) box x 890-1269 y 86-122
+      h7: 0 px differ (0 by more than 2 levels, max 0)
+   Knartas
+      heading 0 (0°, camera yaw 3.28): main 49 calls 375k tris ->    [island trees coarse] main 49 calls 369k tris (Δ main 0 calls -6.3k tris)
+      heading 1 (45°, camera yaw 4.06): main 45 calls 474k tris ->    [island trees coarse] main 45 calls 391k tris (Δ main 0 calls -82.3k tris)
+      heading 2 (90°, camera yaw 4.85): main 41 calls 370k tris ->    [island trees coarse] main 41 calls 305k tris (Δ main 0 calls -64.7k tris)
+      heading 3 (135°, camera yaw 5.63): main 43 calls 201k tris ->    [island trees coarse] main 43 calls 201k tris (Δ main 0 calls 0.0k tris)
+      heading 4 (180°, camera yaw 6.42): main 41 calls 184k tris ->    [island trees coarse] main 41 calls 184k tris (Δ main 0 calls 0.0k tris)
+      heading 5 (225°, camera yaw 7.20): main 41 calls 200k tris ->    [island trees coarse] main 41 calls 200k tris (Δ main 0 calls 0.0k tris)
+      heading 6 (270°, camera yaw 7.99): main 38 calls 232k tris ->    [island trees coarse] main 38 calls 232k tris (Δ main 0 calls 0.0k tris)
+      heading 7 (315°, camera yaw 8.77): main 40 calls 266k tris ->    [island trees coarse] main 40 calls 266k tris (Δ main 0 calls 0.0k tris)
+      h0: 43 px differ (24 by more than 2 levels, max 46) box x 0-7 y 49-59
+      h1: 759 px differ (495 by more than 2 levels, max 70) box x 635-678 y 0-45
+      h2: 513 px differ (295 by more than 2 levels, max 183) box x 1227-1365 y 0-44
+      h3: 0 px differ (0 by more than 2 levels, max 0)
+      h4: 0 px differ (0 by more than 2 levels, max 0)
+      h5: 0 px differ (0 by more than 2 levels, max 0)
+      h6: 0 px differ (0 by more than 2 levels, max 0)
+      h7: 0 px differ (0 by more than 2 levels, max 0)
+   b) as Citadel's trees do it, near trees also casting with their coarse sculpt (the cache redrawn for both frames,
+      W_DROP=1: trade2-<island>):
+   Otringal
+      heading 0 (0°, camera yaw 6.20): main 38 calls 350k tris ->    [island trees coarse] main 38 calls 347k tris (Δ main 0 calls -2.8k tris)
+      heading 1 (45°, camera yaw 6.99): main 40 calls 449k tris ->    [island trees coarse] main 40 calls 388k tris (Δ main 0 calls -60.8k tris)
+      heading 2 (90°, camera yaw 7.77): main 44 calls 588k tris ->    [island trees coarse] main 44 calls 503k tris (Δ main 0 calls -84.6k tris)
+      heading 3 (135°, camera yaw 8.56): main 46 calls 609k tris ->    [island trees coarse] main 46 calls 500k tris (Δ main 0 calls -108.8k tris)
+      heading 4 (180°, camera yaw 9.34): main 47 calls 634k tris ->    [island trees coarse] main 47 calls 523k tris (Δ main 0 calls -111.1k tris)
+      heading 5 (225°, camera yaw 10.13): main 45 calls 558k tris ->    [island trees coarse] main 45 calls 484k tris (Δ main 0 calls -74.4k tris)
+      heading 6 (270°, camera yaw 10.91): main 41 calls 467k tris ->    [island trees coarse] main 41 calls 437k tris (Δ main 0 calls -29.5k tris)
+      heading 7 (315°, camera yaw 11.70): main 39 calls 308k tris ->    [island trees coarse] main 39 calls 308k tris (Δ main 0 calls 0.0k tris)
+      h0: 15711 px differ (9210 by more than 2 levels, max 85) box x 180-978 y 0-767
+      h1: 14241 px differ (9020 by more than 2 levels, max 39) box x 0-1002 y 0-704
+      h2: 13242 px differ (8099 by more than 2 levels, max 149) box x 24-1291 y 16-484
+      h3: 17487 px differ (10846 by more than 2 levels, max 57) box x 0-1365 y 42-681
+      h4: 22336 px differ (11141 by more than 2 levels, max 145) box x 179-1365 y 47-767
+      h5: 7748 px differ (4472 by more than 2 levels, max 187) box x 176-1365 y 61-759
+      h6: 15229 px differ (10264 by more than 2 levels, max 131) box x 0-1269 y 86-746
+      h7: 15757 px differ (9046 by more than 2 levels, max 50) box x 121-1092 y 35-767
+   Knartas
+      heading 0 (0°, camera yaw 3.28): main 49 calls 375k tris ->    [island trees coarse] main 49 calls 369k tris (Δ main 0 calls -6.3k tris)
+      heading 1 (45°, camera yaw 4.06): main 45 calls 474k tris ->    [island trees coarse] main 45 calls 391k tris (Δ main 0 calls -82.3k tris)
+      heading 2 (90°, camera yaw 4.85): main 41 calls 370k tris ->    [island trees coarse] main 41 calls 305k tris (Δ main 0 calls -64.7k tris)
+      heading 3 (135°, camera yaw 5.63): main 43 calls 201k tris ->    [island trees coarse] main 43 calls 201k tris (Δ main 0 calls 0.0k tris)
+      heading 4 (180°, camera yaw 6.42): main 41 calls 184k tris ->    [island trees coarse] main 41 calls 184k tris (Δ main 0 calls 0.0k tris)
+      heading 5 (225°, camera yaw 7.20): main 41 calls 200k tris ->    [island trees coarse] main 41 calls 200k tris (Δ main 0 calls 0.0k tris)
+      heading 6 (270°, camera yaw 7.99): main 38 calls 232k tris ->    [island trees coarse] main 38 calls 232k tris (Δ main 0 calls 0.0k tris)
+      heading 7 (315°, camera yaw 8.77): main 40 calls 266k tris ->    [island trees coarse] main 40 calls 266k tris (Δ main 0 calls 0.0k tris)
+      h0: 4303 px differ (1754 by more than 2 levels, max 76) box x 0-1323 y 16-513
+      h1: 5721 px differ (2932 by more than 2 levels, max 89) box x 0-1344 y 0-646
+      h2: 3237 px differ (1504 by more than 2 levels, max 183) box x 213-1365 y 0-384
+      h3: 2025 px differ (844 by more than 2 levels, max 52) box x 519-1362 y 176-429
+      h4: 2391 px differ (1318 by more than 2 levels, max 39) box x 0-1365 y 218-489
+      h5: 1562 px differ (1022 by more than 2 levels, max 62) box x 164-1357 y 115-489
+      h6: 1488 px differ (989 by more than 2 levels, max 57) box x 0-1365 y 83-671
+      h7: 2228 px differ (1111 by more than 2 levels, max 94) box x 50-1163 y 10-221
+   In words: beyond 34 m the far trees' crowns read slightly blockier at the horizon (a) — 0 to 6.7k px, up to 0.64 %
+   of the image, at the headings that look across the island; with the coarse shadows too (b) the shade under the near
+   trees changes outline: 7.7k-22k px (0.7-2.1 %) on Otringal, 1.5k-5.7k px on Knartas. Saves 0-111k triangles a frame
+   (Otringal mean over 8 headings -59k, Knartas -19k).
+
+2) The Hamalayi's pines detailed to 22 m instead of Medium's 34 (benchgpu 'GPU: trees detailed to 22 m', an existing
+   switch; final build, trade4-hamalayi; the LOD batches' states put back after each variant):
+   Hamalayi
+      heading 0 (0°, camera yaw 6.28): main 42 calls 276k tris ->    [trees detailed to 22] main 42 calls 233k tris (Δ main 0 calls -43.2k tris)
+      heading 1 (45°, camera yaw 7.07): main 49 calls 320k tris ->    [trees detailed to 22] main 49 calls 264k tris (Δ main 0 calls -56.1k tris)
+      heading 2 (90°, camera yaw 7.85): main 43 calls 279k tris ->    [trees detailed to 22] main 43 calls 223k tris (Δ main 0 calls -56.1k tris)
+      heading 3 (135°, camera yaw 8.64): main 33 calls 135k tris ->    [trees detailed to 22] main 33 calls 115k tris (Δ main 0 calls -20.4k tris)
+      heading 4 (180°, camera yaw 9.42): main 29 calls 81k tris ->    [trees detailed to 22] main 29 calls 81k tris (Δ main 0 calls 0.0k tris)
+      heading 5 (225°, camera yaw 10.21): main 29 calls 99k tris ->    [trees detailed to 22] main 29 calls 94k tris (Δ main 0 calls -5.3k tris)
+      heading 6 (270°, camera yaw 11.00): main 33 calls 175k tris ->    [trees detailed to 22] main 33 calls 142k tris (Δ main 0 calls -33.4k tris)
+      heading 7 (315°, camera yaw 11.78): main 38 calls 240k tris ->    [trees detailed to 22] main 38 calls 212k tris (Δ main 0 calls -28.1k tris)
+      h0: 18019 px differ (10530 by more than 2 levels, max 242) box x 0-1365 y 0-148
+      h1: 9156 px differ (3419 by more than 2 levels, max 226) box x 86-1152 y 0-111
+      h2: 18195 px differ (7382 by more than 2 levels, max 242) box x 439-1295 y 0-146
+      h3: 7179 px differ (3491 by more than 2 levels, max 242) box x 951-1288 y 0-115
+      h4: 0 px differ (0 by more than 2 levels, max 0)
+      h5: 1168 px differ (472 by more than 2 levels, max 110) box x 185-242 y 70-98
+      h6: 6602 px differ (4099 by more than 2 levels, max 242) box x 0-823 y 0-134
+      h7: 5748 px differ (3445 by more than 2 levels, max 241) box x 590-1143 y 0-104
+   In words: the pines 22-34 m away switch to their coarse sculpt; the change sits at the top of the image (the
+   ridge's pines against the sky): 0-18k px (up to 1.7 %), up to 242 levels on silhouette pixels. Saves 0-56k
+   triangles a frame (mean over 8 headings -30k).
+
+3) Not priced with a switch (no lever exists; each would be new simplified geometry, a visible change):
+   - Zeelich: the town's buildings 30-100 m away in the draw batches (scenery 157-295k a heading, in view).
+   - Otringal / Knartas: the town's buildings (scenery 142-345k a heading, in view; the 0-15 m bin alone 122k at 180 deg).
+   - The desert: its terrain is now drawn only where in view (11-120k); a coarser far terrain would be the next lever.
+
+Screenshots (for the record only; chapters 3-12 areas):
+   /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/heading2/tradeoffs/otringal-h1-asis.png, otringal-h1-trees-coarse-far-only.png, otringal-h1-trees-coarse-with-shadows.png (+ -diff.png), the same for h4
+   /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/heading2/tradeoffs/knartas-h1-*.png, knartas-h2-*.png
+   /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/heading2/tradeoffs/hamalayi-h0-asis.png, hamalayi-h0-pines-detailed-to-22m.png (+ -diff.png), the same for h2

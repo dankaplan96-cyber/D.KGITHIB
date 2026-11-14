@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "zeelich-old: Esmers rebuilt with ESMER_OLD=1 (the baseline)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/source", "keeper", "oku", "xil", "nara", "clerk", "councilChair"] }]

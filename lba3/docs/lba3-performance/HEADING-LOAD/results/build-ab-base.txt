@@ -1,0 +1,30 @@
+heading 1 (45°, camera yaw 5.50): main 127 calls 576k tris · shadow 18 calls 10k tris
+   scenery 60/306k · grass 12/106k · terrain 5/49k · characters 44/48k · trees 2/45k · water 1/22k · particles 2/1k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 10/46/205/44/0 · grass 14/48/44/0/0 · terrain 0/10/10/20/10 · characters 24/23/0/1/0 · trees 0/0/45/0/0 · water 22/0/0/0/0 · particles 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 6/81 · grass 17/106 · particles 0/1
+   [no characters+no particles] main 81 calls 527k tris · shadow 17 calls 9k tris  (Δ main -46 calls -49.0k tris)
+      scenery 60/306k · grass 12/106k · terrain 5/49k · trees 2/45k · water 1/22k · sky 1/0k
+heading 3 (135°, camera yaw 7.07): main 111 calls 583k tris · shadow 7 calls 4k tris
+   scenery 53/299k · grass 12/106k · trees 2/59k · terrain 6/59k · characters 33/39k · water 1/22k · particles 2/1k · transparent 1/0k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 12/93/141/51/2 · grass 9/47/49/0/0 · trees 0/0/59/0/0 · terrain 0/10/10/20/20 · characters 31/6/0/1/0 · water 22/0/0/0/0 · particles 0/0/0/0/0 · transparent 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 4/82 · grass 15/106 · particles 0/1
+   [no characters+no particles] main 76 calls 544k tris · shadow 6 calls 3k tris  (Δ main -35 calls -39.2k tris)
+      scenery 53/299k · grass 12/106k · trees 2/59k · terrain 6/59k · water 1/22k · transparent 1/0k · sky 1/0k
+heading 4 (180°, camera yaw 7.85): main 191 calls 808k tris · shadow 7 calls 4k tris
+   scenery 112/451k · grass 12/106k · trees 2/99k · terrain 8/78k · characters 40/50k · water 1/22k · transparent 13/2k · particles 2/1k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 12/57/177/159/47 · grass 5/40/60/0/0 · trees 0/0/99/0/0 · terrain 0/10/10/20/39 · characters 31/0/3/13/2 · water 22/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 83/149 · grass 19/106 · transparent 0/0 · particles 0/1
+   [no characters+no particles] main 149 calls 757k tris · shadow 6 calls 3k tris  (Δ main -42 calls -50.1k tris)
+      scenery 112/451k · grass 12/106k · trees 2/99k · terrain 8/78k · water 1/22k · transparent 13/2k · sky 1/0k
+heading 5 (225°, camera yaw 8.64): main 211 calls 917k tris · shadow 7 calls 4k tris
+   scenery 126/476k · trees 2/169k · grass 13/113k · terrain 8/78k · characters 47/57k · water 1/22k · transparent 11/2k · particles 2/1k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 19/49/165/197/47 · trees 0/0/169/0/0 · grass 6/38/68/0/0 · terrain 10/0/10/20/39 · characters 31/3/8/12/3 · water 22/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 97/149 · grass 67/113 · transparent 0/0 · particles 0/1
+   [no characters+no particles] main 162 calls 860k tris · shadow 6 calls 3k tris  (Δ main -49 calls -57.5k tris)
+      scenery 126/476k · trees 2/169k · grass 13/113k · terrain 8/78k · water 1/22k · transparent 11/2k · sky 1/0k
+heading 6 (270°, camera yaw 9.42): main 169 calls 866k tris · shadow 7 calls 4k tris
+   scenery 94/410k · trees 2/211k · grass 13/113k · characters 46/61k · terrain 5/49k · water 1/22k · particles 2/1k · transparent 5/0k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 57/23/157/153/20 · trees 0/0/211/0/0 · grass 7/38/65/2/0 · characters 32/8/10/9/1 · terrain 10/0/10/10/20 · water 22/0/0/0/0 · particles 0/0/0/0/0 · transparent 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 66/84 · grass 72/113 · particles 0/1
+   [no characters+no particles] main 121 calls 805k tris · shadow 6 calls 3k tris  (Δ main -48 calls -61.1k tris)
+      scenery 94/410k · trees 2/211k · grass 13/113k · terrain 5/49k · water 1/22k · transparent 5/0k · sky 1/0k

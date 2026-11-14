@@ -1,0 +1,7 @@
+seg:01-prologue-surface::s01.json rc=0 596s
+seg:02-prologue-cave:s01.json:s02.json rc=0 203s
+seg:03-project-a:s02.json:s03.json rc=0 229s
+seg:04-project-valves:s03.json:s04.json rc=0 468s
+seg:05-project-b:s04.json:s05.json rc=1 190s
+seg:06-zeelich:s05.json:s06.json rc=1 1s
+DONE

@@ -1,0 +1,302 @@
+[
+ {
+  "op": "import",
+  "name": "heart: baseline into a .blend",
+  "input": "art/blender/props/items/heart/source/heart.baseline.polyprop.json",
+  "blend": "art/blender/props/items/heart/work/heart.baseline.blend"
+ },
+ {
+  "op": "import",
+  "name": "heart: candidate into the working .blend",
+  "input": "art/blender/props/items/heart/export/heart.candidate.polyprop.json",
+  "blend": "art/blender/props/items/heart/work/heart.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "heart: baseline report",
+  "input": "art/blender/props/items/heart/source/heart.baseline.polyprop.json",
+  "output": "art/blender/props/items/heart/reports/baseline.inspect.json"
+ },
+ {
+  "op": "inspect",
+  "name": "heart: candidate report",
+  "input": "art/blender/props/items/heart/work/heart.blend",
+  "output": "art/blender/props/items/heart/reports/candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "heart: candidate checks",
+  "input": "art/blender/props/items/heart/work/heart.blend",
+  "output": "art/blender/props/items/heart/reports/candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.1,
+   "maxSize": 0.5,
+   "groundedAtZero": false
+  }
+ },
+ {
+  "op": "preview",
+  "name": "heart: baseline views",
+  "input": "art/blender/props/items/heart/work/heart.baseline.blend",
+  "output": "art/blender/props/items/heart/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "preview",
+  "name": "heart: candidate views",
+  "input": "art/blender/props/items/heart/work/heart.blend",
+  "output": "art/blender/props/items/heart/previews/candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "export",
+  "name": "heart: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/items/heart/work/heart.blend",
+  "output": "art/blender/props/items/heart/export/heart.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "clover: baseline into a .blend",
+  "input": "art/blender/props/items/clover/source/clover.baseline.polyprop.json",
+  "blend": "art/blender/props/items/clover/work/clover.baseline.blend"
+ },
+ {
+  "op": "import",
+  "name": "clover: candidate into the working .blend",
+  "input": "art/blender/props/items/clover/export/clover.candidate.polyprop.json",
+  "blend": "art/blender/props/items/clover/work/clover.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "clover: baseline report",
+  "input": "art/blender/props/items/clover/source/clover.baseline.polyprop.json",
+  "output": "art/blender/props/items/clover/reports/baseline.inspect.json"
+ },
+ {
+  "op": "inspect",
+  "name": "clover: candidate report",
+  "input": "art/blender/props/items/clover/work/clover.blend",
+  "output": "art/blender/props/items/clover/reports/candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "clover: candidate checks",
+  "input": "art/blender/props/items/clover/work/clover.blend",
+  "output": "art/blender/props/items/clover/reports/candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.1,
+   "maxSize": 0.5,
+   "groundedAtZero": false
+  }
+ },
+ {
+  "op": "preview",
+  "name": "clover: baseline views",
+  "input": "art/blender/props/items/clover/work/clover.baseline.blend",
+  "output": "art/blender/props/items/clover/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "preview",
+  "name": "clover: candidate views",
+  "input": "art/blender/props/items/clover/work/clover.blend",
+  "output": "art/blender/props/items/clover/previews/candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "export",
+  "name": "clover: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/items/clover/work/clover.blend",
+  "output": "art/blender/props/items/clover/export/clover.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "flask: baseline into a .blend",
+  "input": "art/blender/props/items/flask/source/flask.baseline.polyprop.json",
+  "blend": "art/blender/props/items/flask/work/flask.baseline.blend"
+ },
+ {
+  "op": "import",
+  "name": "flask: candidate into the working .blend",
+  "input": "art/blender/props/items/flask/export/flask.candidate.polyprop.json",
+  "blend": "art/blender/props/items/flask/work/flask.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "flask: baseline report",
+  "input": "art/blender/props/items/flask/source/flask.baseline.polyprop.json",
+  "output": "art/blender/props/items/flask/reports/baseline.inspect.json"
+ },
+ {
+  "op": "inspect",
+  "name": "flask: candidate report",
+  "input": "art/blender/props/items/flask/work/flask.blend",
+  "output": "art/blender/props/items/flask/reports/candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "flask: candidate checks",
+  "input": "art/blender/props/items/flask/work/flask.blend",
+  "output": "art/blender/props/items/flask/reports/candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.1,
+   "maxSize": 0.5,
+   "groundedAtZero": false
+  }
+ },
+ {
+  "op": "preview",
+  "name": "flask: baseline views",
+  "input": "art/blender/props/items/flask/work/flask.baseline.blend",
+  "output": "art/blender/props/items/flask/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "preview",
+  "name": "flask: candidate views",
+  "input": "art/blender/props/items/flask/work/flask.blend",
+  "output": "art/blender/props/items/flask/previews/candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "export",
+  "name": "flask: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/items/flask/work/flask.blend",
+  "output": "art/blender/props/items/flask/export/flask.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "coin: baseline into a .blend",
+  "input": "art/blender/props/items/coin/source/coin.baseline.polyprop.json",
+  "blend": "art/blender/props/items/coin/work/coin.baseline.blend"
+ },
+ {
+  "op": "import",
+  "name": "coin: candidate into the working .blend",
+  "input": "art/blender/props/items/coin/export/coin.candidate.polyprop.json",
+  "blend": "art/blender/props/items/coin/work/coin.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "coin: baseline report",
+  "input": "art/blender/props/items/coin/source/coin.baseline.polyprop.json",
+  "output": "art/blender/props/items/coin/reports/baseline.inspect.json"
+ },
+ {
+  "op": "inspect",
+  "name": "coin: candidate report",
+  "input": "art/blender/props/items/coin/work/coin.blend",
+  "output": "art/blender/props/items/coin/reports/candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "coin: candidate checks",
+  "input": "art/blender/props/items/coin/work/coin.blend",
+  "output": "art/blender/props/items/coin/reports/candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.1,
+   "maxSize": 0.5,
+   "groundedAtZero": false
+  }
+ },
+ {
+  "op": "preview",
+  "name": "coin: baseline views",
+  "input": "art/blender/props/items/coin/work/coin.baseline.blend",
+  "output": "art/blender/props/items/coin/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "preview",
+  "name": "coin: candidate views",
+  "input": "art/blender/props/items/coin/work/coin.blend",
+  "output": "art/blender/props/items/coin/previews/candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.6
+  }
+ },
+ {
+  "op": "export",
+  "name": "coin: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/items/coin/work/coin.blend",
+  "output": "art/blender/props/items/coin/export/coin.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ }
+]

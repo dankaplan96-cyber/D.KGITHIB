@@ -1,0 +1,297 @@
+// NO-AIR (the user, 10.11.2026: "in the whole game, don't do things in the air"): nobody's hands work on nothing.
+// A sweep over every person the game places, in every chapter (and the chapter states that change who is where), in
+// every area and room that has people:
+//   - who: every NPC of game.npcs — the story's people where their chapter puts them (a placement's pose), the people
+//     of the cast rounds (castrounds.js) and the household rounds (roomlife.js) at each of their stops, every resident
+//     (walkers.js: Citadel's, the story residents', the islands', the rooms' and the ports') at each stop of the round
+//     their state gives them — measured from where the game has them work: after the last step up to the thing
+//     (workhands.js workStep; a door's knock from its own last step) — and the room people who walk a track (hamlife.js, isleslife.js, deeplife.js: played for
+//     TRACK_S seconds, since a track's walk ends within half a metre of its spot)
+//   - what: the hand actions (WORK below). For each, the working hand's least distance, over the action, from its wrist,
+//     palm, fingertips or the tool it holds to the nearest drawn surface that is not the person's own body
+//     (tests/lib/contact.js: exact, against the triangles on screen), and both soles' height over the ground
+//   - an offender: a hand farther than HAND m from anything, or a standing foot more than FOOT m off the ground
+// 'wipe' (hands dried on the apron) is the body's own surface: listed, not measured against the world.
+// ISO: each chapter state is set by its flags (as tests/cast-rounds.mjs), the hero is put by each person measured, and
+// each stop's pose is played on the person's own rig at the stop (their place and facing there), not walked to.
+// Output: one OFFENDER line each (who, where, action, distance), MEASURE lines with the counts. ONLY=<regexp> on
+// "chapter/scene/who"; LIST=1 prints every case; STATES=0,1,5 runs those states only (their index below); NOAIR_OUT=<file>
+// appends every measured case as a JSON line (a long sweep can be run in parts). AREAS=hamalayi,isle_knartas builds only
+// those areas and rooms (a part of the sweep while working on one place; the whole sweep builds them all). GAME_URL
+// (default http://localhost:8123/). Automated runtime only.
+import { launch, open, menu, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+const { check, done } = checker();
+let browser, page;
+const ev = (f, a) => page.evaluate(f, a);
+const measure = (name, info) => console.log('MEASURE ' + name, JSON.stringify(info));
+const HAND = +(process.env.HAND || 0.05), FOOT = 0.06, TRACK_S = 64;
+const ONLY = process.env.ONLY || '';
+const SEL = process.env.STATES ? process.env.STATES.split(',').map(Number) : null;
+const AREAS = process.env.AREAS ? process.env.AREAS.split(',') : null;
+
+// chapter states: the chapter's start, and the flags that move people or change what stands at their stops
+// (castrounds.js `when`, storylife.js / hamlife.js / ihomes.js phases)
+const STATES = [
+  ['well', {}], ['project', {}], ['project', { c1_water: true, c1_veskGone: true }],
+  ['zeelich', {}], ['zeelich', { c2_shield: true }],
+  ['dig', {}], ['dig', { c4_ilka: true, c4_notebook: true, c4_seals3: true }],
+  ['steam', {}], ['steam', { c5_planned: true }], ['steam', { c5_planned: true, c5_vent: true, c5_ferryTaken: true, c5_glider: true }],
+  ['pass', {}], ['pass', { c6_trip1: true }], ['pass', { c6_trip1: true, c6_trip2: true, c6_up: true, c6_thawed: true }],
+  ['observatory', {}], ['evacuation', {}], ['council', {}], ['council', { c9_heard: true }],
+  ['network', {}], ['shell', {}], ['core', {}], ['home', {}],
+  // CAMPAIGN-4 (story/digtest.js): chapter 5 with the bore test behind it, Dallan at the test stand's wire (21)
+  ['steam', { c5_planned: true, c5_routed: true, dt_v: 1, dt_strip: true }],
+  // CAMPAIGN-5 (story/passline.js): chapter 6 up the cliff with the brake not yet locked: Yorna at the top crank, the last
+  // of Lhar still packing below (22); chapter 7 with the telescope's fourth setting read (23)
+  ['pass', { c6_heat: true, c6_thawed: true, c6_liftReady: true, c6_sword: true, c6_rope: true, c6_trip1: true, c6_trip2: true, c6_up: true, ps_v: 1, ps_read: true, ps_trip1: true, ps_trip2: true }],
+  ['observatory', { c7_keeper: true, c7_ice: true, c7_lit: true, c7_sendell: true, ob_v: 1, ob_follow: true, ob_dir: true }],
+  // CAMPAIGN-6 (story/laneline.js): chapter 8 with the lane: its start (Hedda and Tobin at their door, 24); the lane at the
+  // landing waiting for the gate, Zoé with them (25); boarded, the lane in the bridge's queue (26)
+  ['evacuation', { c8_started: true, ev_v: 1, ev_cart: true }],
+  ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true }],
+  ['evacuation', { c8_started: true, c8_home: true, c8_gilbert: true, c8_fort: true, c8_depot: true, c8_mira: true, c8_pippa: true, c8_zoeStart: true, c8_zoeDone: true, c8_relay: true, ev_v: 1, ev_cart: true, ev_s: true, ev_r: true, ev_sched: true, ev_bram: true, ev_hedda: true, ev_landing: true, ev_seen: true, ev_gate: true, ev_board: true }],
+  // CAMPAIGN-7 (story/cnline.js): chapter 9 with the thread: the stop ordered (Baldino by the platform's console, the
+  // guard at the gate, 27); the stop thrown (Mill Lane dry: Kell's hand on the brake with the cart half way, Brel at the dry
+  // tap; Baldino at his loose bench, 28)
+  ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true }],
+  ['council', { c9_started: true, c9_form: true, c9_nara: true, c9_okuAsk: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_key: true, c9_plans: true, c9_dallan: true, c9_vote: true, cn_v: 1, cn_closed: true, cn_kellAsk: true, cn_kell: true, cn_drawer: true, cn_log: true, cn_stop: true, cn_isoGot: true }],
+  // CAMPAIGN-8 (story/netline.js): chapter 10 with the thread at its start (Irsa waiting by Kell's feed box, Arthur at home by
+  // the radio, 29); all five stations held (Irsa at the feed switch, Mira at a wheel, Zoé at the dial bank, Ilka at the relief
+  // wheel and Dallan at the relay, Yorna at the lever and Pim at a mirror; Baldino at the station, 30)
+  ['network', { c10_started: true, c10_pulse: true, nw_v: 1 }],
+  ['network', { c10_started: true, c10_pulse: true, c10_okuAsk: true, c10_millBraked: true, c10_mill: true, c10_miraAsk: true, c10_valveSet: { 0: true, 1: true, 2: true }, c10_valves: true, c10_zoeAsk: true, c10_dials: [2, 0, 1], c10_light: true, c10_ilka: true, c10_boreRelay: true, c10_boreW2: true, c10_guardDown: true, c10_bore: true, c10_pim: true, c10_keeper: true, c10_domeRelay: true, c10_domeLit: true, c10_dome: true,
+    nw_v: 1, nw_irsa: true, nw_irsaTold: true, nw_arthur: true, nw_gauge: true, nw_mira: true, nw_wheel: 2, nw_zoe: true, nw_ilka: true, nw_yorna: true }],
+  // CAMPAIGN-9 (story/answer.js): chapter 11 with the thread (Irsa keeps Kell's switch on Mill Lane, 31); chapter 12's last act
+  // with Vesk at his central lock, his key turned, and the council's guard come in (32)
+  ['shell', { c3_started: true, sh_v: 1, nw_v: 1, nw_irsa: true }],
+  ['core', { c3_started: true, c3_cooled: true, c3_sendell: true, c3_fight: true, c3_pylon0: true, c3_pylon1: true, c3_pylon2: true, c3_overload: true, c3_bleed: true, c3_coil: 3, c3_turned: true, c3_veskHelped: true,
+    sh_v: 1, co_v: 1, co_go: true, co_branch: true, co_irsa: true, co_vesk: true, co_lock: true, co_signal: true }],
+];
+
+// a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)
+const PER = +(process.env.PER || 3);
+const session = async () => {
+if (browser) await browser.close();
+({ browser, page } = await launch({ width: 960, height: 540 }));
+page.setDefaultTimeout(1800000);
+await open(page, '?nocine'); await menu(page, 'new');
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/contact.js', import.meta.url)) });
+return ev(async (AREAS) => {
+  const RL = await import('./src/game/roomlife.js'), RG = await import('./src/game/regions.js'), WH = await import('./src/game/workhands.js');
+  Object.assign(window, { RL, RG, WH });
+  const G = game; P.settle();
+  window.BASE = JSON.parse(JSON.stringify(G.flags));
+  const t0 = performance.now();
+  if (AREAS) for (const a of AREAS) G.regions.ensure(a, 'test'); else G.regions.ensureAll('test');   // (every area and room: the sweep visits each that has people)
+  G.story.applyFlags(); G.step(0.2);
+  window.setChapter = (key, extra = {}) => {
+    const f = G.flags; P.settle();
+    for (const k of Object.keys(f)) delete f[k];
+    Object.assign(f, JSON.parse(JSON.stringify(BASE)), { prologueDone: key !== 'well', intro: true, chapterKey: key, c1_water: key !== 'project', c1_done: true }, extra);
+    f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true;
+    G.story.applyFlags(); G.step(0.2);
+  };
+  const V3 = G.hero.pos.constructor;
+  // the hand actions: which hand must be on something (req), and how the action runs (a loop: sampled once settled; a
+  // one-off move, `shot` seconds long: sampled all through, the contact is its lowest / farthest point)
+  const WORK = (window.WORK = {
+    tinker: { req: ['R', 'L'] }, kneelWork: { req: ['R', 'L'] }, potting: { req: ['R', 'L'] }, search: { req: ['R', 'L'] }, use: { req: ['R', 'L'] },
+    pump: { req: ['R', 'L'] }, pumpGrip: { req: ['R', 'L'] }, reach: { req: ['R'] }, tapTurn: { req: ['R'] }, touchWater: { req: ['R'] }, door: { req: ['R'] },
+    setDown: { req: ['R'], shot: 1.2 }, pickup: { req: ['R'], shot: 0.95 }, reachHigh: { req: ['R'], shot: 1.3 },
+    wipe: { self: true },
+  });
+  const NA = (window.NA = {});
+  // which scene a place is in: an interior or an outdoor area (the nearest room centre that owns it), else Citadel
+  NA.sceneAt = (x, z) => {
+    let best = null, bd = Infinity;
+    for (const [id, R] of Object.entries(G.rooms)) {
+      const c = R?.center || R?.group?.position; if (!c) continue;
+      const d = Math.hypot(x - c.x, z - c.z), lim = R.outdoor ? (R.radius || 320) : 60;
+      if (d < lim && d < bd) { bd = d; best = id; }
+    }
+    return best || 'citadel';
+  };
+  NA.go = (scene, x, z) => {
+    const h = G.hero, here = G.room?.id ?? 'citadel';
+    if (here !== scene) {
+      if (scene === 'citadel') G.exitRoom({ x, z, a: 0 }, true, true);
+      else G.enterRoom(scene, null, true, true);
+      G.story.refreshCast(); G.step(0.3); P.settle();
+    }
+    const R = G.room;
+    if (!R || R.outdoor) { h.pos.set(x, G.physics.groundAt(x, z), z); h.onGround = true; h.vy = 0; if (G.camRig.lba) G.camRig.lba.init = false; G.step(0.2); P.settle(); }
+    return G.room?.id ?? 'citadel';
+  };
+  const RS = () => G.story.interiors?.rounds;
+  // every hand-work case of the state the game is in: { who, kind, stop, x, z, a, anim, scene, y? }
+  NA.cases = () => {
+    const out = []; let stopAct = null; const add = (n, kind, stop, x, z, a, anim, y, stepFn = null, atFn = null) => { if (WORK[anim]) out.push({ who: n.def.id, kind, stop, x, z, a: a ?? n.angle, anim, y, stepFn, atFn, scene: (n.def.indoor && G.regions.built(n.def.room)) ? n.def.room : (n.def.ambient && n.def.area && (n.def.area === 'citadel' || G.regions.built(n.def.area))) ? n.def.area : NA.sceneAt(x, z), act: stopAct }); };
+    for (const n of G.npcs) {
+      if (!n.rig?.j?.armR?.hand) continue;
+      if (n.stops) {   // a resident: the round of its state
+        if (n.away === 'story' || !n.stops.length) continue;
+        for (const s of n.stops) if (!s.seat) {
+          stopAct = s.act;
+          // (a door: the knock is made after the last step up to the leaf — walkers.js knockTick — so from there)
+          const knock = s.door && s.act !== 'noknock' ? () => (WH.knockStep ? WH.knockStep(G, s.x, s.z, s.a, { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), girth: n.bodyR, scale: n.rig.root.scale.y || 1 }) : WH.workSpot(G, s.x, s.z, s.a, 'tapTurn', { y: G.physics.groundAt(s.x, s.z, (s.y ?? 1e9) + 0.4), max: 1.7, r: 0.3 })) : null;
+          // (any other stop it works at: from its slot; and where the hands find nothing in reach from there, from where its
+          //  last step up to the thing takes it — walkers.js stepFor, the game's own: NA.pose tries the slot first, as the game)
+          //  (asked for once the hero is by: what is drawn there is read, and a place far off is not drawn)
+          add(n, 'round', s.id, s.x, s.z, s.a, s.door ? 'tapTurn' : n.actAnim(s), s.y, !s.door && n.stepFor ? () => { delete s._st; return n.stepFor(s); } : null, knock);
+        }
+        stopAct = null;
+        continue;
+      }
+      if (!n.present) continue;
+      if (n.track?.cmds?.length) { let an = n.forceAnim, at = null, i = 0; for (const c of n.track.cmds) { if (c.op === 'call') { const d = {}; try { c.fn(d); } catch { /* (not a pose) */ } if ('forceAnim' in d) an = d.forceAnim; } else if (c.op === 'anim') an = c.name; else if (c.op === 'goto') at = c; else if (c.op === 'face' && at) add(n, 'track', 't' + i++, at.x, at.z, c.a, an, n.pos.y); } if (out.some((c) => c.who === n.def.id && c.kind === 'track')) continue; }
+      // (the way the chapter faces them, not the way they happen to be turned this instant — still turning back from a round)
+      add(n, 'placed', 'mark', n.pos.x, n.pos.z, n.placed?.a ?? n.angle, n.forceAnim, n.pos.y);
+    }
+    return out;
+  };
+  // the rounds of the story's own people (cast rounds in the area the hero is in; the household rounds): their stops
+  NA.roundCases = () => {
+    const out = [], R = RS(); if (!R) return out;
+    for (const n of G.npcs) {
+      if (n.stops || !n.present) continue;
+      let D = null; try { D = R.defFor(n); } catch { D = null; }
+      if (!D) continue;
+      let stops = null;
+      try { if (D.ch) stops = n.placed ? RL.castStops(G, D, n.placed, R.castNav(D)) : null; else { const room = G.regions.built(D.room); if (room && G.room === room && R.onMark(D, n.placed || { x: n.pos.x, z: n.pos.z, anim: n.forceAnim })) stops = R.stops(D, room); } } catch { stops = null; }
+      for (const s of stops || []) { if (s.mark) continue; if (WORK[s.act]) out.push({ who: n.def.id, kind: 'cast', stop: s.id, x: s.x, z: s.z, a: s.a, anim: s.act, y: n.pos.y, stepFn: R.stepFor ? () => R.stepFor(n, s) : null, scene: G.room?.id ?? 'citadel' }); }   // (the rounds play the rig's pose of the act's own name: roomlife.js dwell)
+    }
+    return out;
+  };
+  // one case: the pose played on the person's own rig at the place; the least hand gap over the action, the feet
+  // (a stop with a step: the slot first; stood down there, the stepped place — as the game does, walkers.js dwellTick)
+  NA.pose = (c0) => { const { stepFn, atFn, ...c } = c0, k = atFn ? atFn() : null; if (k) { c.x = k.x; c.z = k.z; } const r = NA.pose1(c); if (!r.stood || !stepFn) return r; const m = stepFn(); return m ? { ...NA.pose1({ ...c, x: m.x, z: m.z }), stepped: true } : r; };
+  NA.pose1 = (c) => {
+    const n = G.npcs.find((x) => x.def.id === c.who), rig = n.rig, W = WORK[c.anim];
+    if (c.kind !== 'placed' && WH.standsAt?.(c.who, c.stop)) return { ...c, stood: true, listed: true, x: +c.x.toFixed(2), z: +c.z.toFixed(2), a: +(+c.a).toFixed(2), gap: null, hands: null, feet: null };   // (workhands.js AIR_STOPS: the person stands there)
+    const keep = { x: n.pos.x, y: n.pos.y, z: n.pos.z, a: n.angle, vis: rig.root.visible, lod: rig.lodN, par: rig.root.parent, nf: rig.noFidget };
+    const indoor = G.room && !G.room.outdoor;
+    const y = G.physics.groundAt(c.x, c.z, (c.y ?? (indoor ? G.hero.pos.y : 1e9)) + 0.4);
+    n.pos.set(c.x, y, c.z); n.angle = c.a;
+    rig.root.visible = true; rig.lodN = 0; rig.noFidget = true; if (!rig.root.parent) G.scene.add(rig.root);
+    const dt = 1 / 30, frames = Math.round((W.shot ? W.shot + 0.15 : 2.6) / dt), from = W.shot ? 3 : 36;
+    const free = rig.handsFree; rig.handsFree = c.act === 'warm';
+    rig.standFor = null; rig.play('idle'); rig.update(dt, 0); rig.play(c.anim);
+    const best = { R: { d: 9 }, L: { d: 9 } }; let feet = [0, 0], stood = false;
+    G.scene.updateMatrixWorld();
+    for (let i = 0; i < frames; i++) {
+      rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
+      rig.play(c.anim); rig.update(dt, 0);
+      rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
+      rig.root.updateMatrixWorld(true);
+      if (rig.anim !== c.anim && i > 20) { stood = true; const la = WH.lookAhead ? WH.lookAhead(G, n.pos.x, n.pos.y, n.pos.z, n.angle, rig.root.scale.y || 1) : null; c = { ...c, why: (n._wh?.why || '') + (la ? ` (drawn ahead: a face at ${la.face.map((d) => d ?? '-').join('/')} m, a top ${la.top ? la.top[1] + ' m high at ' + la.top[0] + ' m' : 'nowhere'})` : '') }; break; }   // (stood down: nothing there to work at, workhands.js)
+      if (i < from || W.self) continue;
+      for (const s of W.req) { const r = CT.handGap(n, s, CT.roots(), 0.8); const d = r.d ?? 0.8; if (d < best[s].d) best[s] = { d, on: r.name, i }; }
+      if (i === frames - 1 || (W.shot && i === Math.round(W.shot * 0.45 / dt))) feet = CT.feet(n);
+    }
+    const out = { ...c, stood, x: +c.x.toFixed(2), z: +c.z.toFixed(2), a: +(+c.a).toFixed(2), gap: W.self || stood ? null : Math.max(...W.req.map((s) => best[s].d)), hands: W.self || stood ? null : Object.fromEntries(W.req.map((s) => [s, [+best[s].d.toFixed(3), best[s].on || '-']])), feet: /^kneel/.test(c.anim) || c.anim === 'pickup' ? null : feet };
+    n.pos.set(keep.x, keep.y, keep.z); n.angle = keep.a; rig.root.visible = keep.vis; rig.lodN = keep.lod; rig.noFidget = keep.nf; if (!keep.par) rig.root.parent?.remove(rig.root);
+    rig.standFor = null; rig.handsFree = free; rig.play('idle'); rig.root.position.copy(n.pos); rig.root.rotation.y = n.angle;
+    return out;
+  };
+  return { ms: Math.round(performance.now() - t0), rooms: Object.keys(G.rooms).length, npcs: G.npcs.length };
+}, AREAS);
+};
+
+const rows = [];
+let ran = 0, crashes = 0;
+const runState = (key, flags) => ev(([key, flags, ONLY, TRACK_S]) => {
+    const G = game, only = ONLY ? new RegExp(ONLY) : null, out = [], notes = [];
+    setChapter(key, flags);
+    const ok = (c) => !only || only.test(`${key}/${c.scene}/${c.who}`) || only.test(key);
+    const all = NA.cases();
+    const scenes = [...new Set([...all.map((c) => c.scene), ...G.npcs.filter((n) => !n.stops && n.present && n.def.id !== 'hero').map((n) => NA.sceneAt(n.pos.x, n.pos.z))])];
+    for (const scene of scenes) {
+      const mine = all.filter((c) => c.scene === scene);
+      const first = mine[0] || (() => { const n = G.npcs.find((n) => !n.stops && n.present && NA.sceneAt(n.pos.x, n.pos.z) === scene); return n && { x: n.pos.x, z: n.pos.z }; })();
+      if (!first) continue;
+      let at; try { at = NA.go(scene, first.x, first.z); } catch (e) { notes.push(`${scene}: ${e.message}`); continue; }
+      if (at !== scene) { notes.push(`${scene}: the hero is in ${at}`); continue; }
+      // the story's people's rounds here (they depend on the hero's area)
+      const list = [...mine.filter((c) => c.kind !== 'track'), ...NA.roundCases()].filter(ok);
+      for (const c of list) {
+        if (!G.room || G.room.outdoor) NA.go(scene, c.x + 3 * Math.sin(c.a + 2.6), c.z + 3 * Math.cos(c.a + 2.6));
+        try { out.push(NA.pose(c)); } catch (e) { notes.push(`${c.who} ${c.stop}: ${e.message}`); }
+      }
+      // the tracks: played
+      const tr = mine.filter((c) => c.kind === 'track').filter(ok);
+      if (tr.length) {
+        const who = [...new Set(tr.map((c) => c.who))].map((id) => G.npcs.find((n) => n.def.id === id));
+        const best = new Map();
+        for (let i = 0, N = Math.round(TRACK_S * 15); i < N; i++) {
+          G.step(1 / 15);
+          if (G.state !== 'play') P.settle();
+          // (as seen: a person out of the camera's view is posed at a lower rate and without the hands layer — the game's
+          //  step leaves the people it does not draw that way; here each one at work is posed once more as the camera's
+          //  view of them would have it)
+          for (const n of who) if (WORK[n.rig.anim] && n.present) { n.rig.lodN = 0; n.rig.root.visible = true; n.rig.update(1 / 30, 0); }
+          if (i % 2) continue;
+          G.scene.updateMatrixWorld();
+          for (const n of who) {
+            const an = n.rig.anim, W = WORK[an]; if (!W || W.self || !n.present) continue;
+            const stop = tr.filter((c) => c.who === n.def.id).sort((a, b) => Math.hypot(a.x - n.pos.x, a.z - n.pos.z) - Math.hypot(b.x - n.pos.x, b.z - n.pos.z))[0];
+            const k = n.def.id + '|' + stop.stop + '|' + an;
+            const b = best.get(k) || { ...stop, anim: an, x: n.pos.x, z: n.pos.z, a: n.angle, n: 0, hands: Object.fromEntries(W.req.map((s) => [s, [9, '-']])), feet: null };
+            b.n++; b.x = n.pos.x; b.z = n.pos.z; b.a = n.angle;
+            if (b.n > 12 && b.n < 60) { for (const s of W.req) { const r = CT.handGap(n, s, CT.roots(), 0.8), d = r.d ?? 0.8; if (d < b.hands[s][0]) b.hands[s] = [+d.toFixed(3), r.name || '-']; } if (!/^kneel/.test(an)) b.feet = CT.feet(n); }
+            best.set(k, b);
+          }
+        }
+        for (const b of best.values()) { if (b.n <= 13) continue; b.gap = Math.max(...Object.values(b.hands).map((h) => h[0])); b.x = +b.x.toFixed(2); b.z = +b.z.toFixed(2); b.a = +b.a.toFixed(2); out.push(b); }
+        for (const c of tr) if (![...best.keys()].some((k) => k.startsWith(c.who + '|'))) notes.push(`${c.who}: its track never reached a work pose in ${TRACK_S} s`);
+      }
+    }
+    return { out, notes, scenes, probe: WH.probeStats ? { n: WH.probeStats.n, meanMs: +(WH.probeStats.ms / Math.max(1, WH.probeStats.n)).toFixed(2), worstMs: +WH.probeStats.worstMs.toFixed(1), meanTris: Math.round(WH.probeStats.tris / Math.max(1, WH.probeStats.n)) } : null };
+  }, [key, flags, ONLY, TRACK_S]);
+for (let si = 0; si < STATES.length; si++) {
+  const [key, flags] = STATES[si];
+  const tag = key + (Object.keys(flags).length ? '+' + Object.keys(flags).join('+') : '');
+  if (SEL && !SEL.includes(si)) continue;
+  if (ONLY && !new RegExp(ONLY).test(tag) && !/\//.test(ONLY)) continue;
+  const t0 = Date.now();
+  let r = null;
+  // (a page that dies — the machine out of memory under other work — is started again, once per state)
+  for (let go = 0; go < 2 && !r; go++) {
+    try { if (go || ran++ % PER === 0) measure('built', await session()); r = await runState(key, flags); }
+    catch (e) { crashes++; console.log(`NOTE state ${tag}: the page died (${String(e.message).split('\n')[0]}); ${go ? 'given up' : 'again on a fresh page'}`); ran = 1; }
+  }
+  if (!r) { check(`state ${tag} was measured`, false, 'the page died twice'); continue; }
+  if (process.env.NOAIR_OUT) fs.appendFileSync(process.env.NOAIR_OUT, r.out.map((o) => JSON.stringify({ state: tag, ...o })).join('\n') + '\n');
+  for (const o of r.out) { rows.push({ state: tag, ...o }); if (o.gap != null && o.gap > HAND) console.log(`  air ${o.scene} ${o.who} @${o.stop} ${o.anim} ${(o.gap * 100).toFixed(1)} cm`); }
+  console.log(`STATE ${tag}: ${r.out.length} cases in ${r.scenes.length} scenes, ${Math.round((Date.now() - t0) / 1000)} s` + (r.probe ? ` probes ${JSON.stringify(r.probe)}` : '') + (r.notes.length ? ' NOTES ' + JSON.stringify(r.notes.slice(0, 12)) : ''));
+}
+
+// one line per distinct case (the same person at the same stop in several chapter states: the worst)
+const byKey = new Map();
+for (const r of rows) {
+  const k = `${r.scene}|${r.who}|${r.stop}|${r.anim}|${Math.round(r.x)}|${Math.round(r.z)}`;
+  const p = byKey.get(k);
+  if (!p) byKey.set(k, { ...r, states: [r.state] }); else { p.states.push(r.state); if ((r.gap ?? 0) > (p.gap ?? 0)) Object.assign(p, { gap: r.gap, hands: r.hands, feet: r.feet, state: r.state, stood: false }); }
+}
+const cases = [...byKey.values()];
+const footBad = (c) => c.feet && c.feet.some((h) => Math.abs(h) > FOOT);
+// ('warm': a hand held out to a heat post's warmth, not on it: listed, not an offender)
+const warm = cases.filter((c) => c.act === 'warm');
+const air = cases.filter((c) => c.gap != null && c.gap > HAND && c.act !== 'warm'), feet = cases.filter(footBad), self = cases.filter((c) => c.gap == null && !c.stood);
+// (stood: the game found nothing in reach for the action and has the person stand there instead: listed, not an offender)
+const stood = cases.filter((c) => c.stood);
+for (const c of stood) console.log(`STOOD ${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}${c.why ? ': ' + c.why : ''} [${c.states[0]}]`);
+const line = (c) => `${c.scene} ${c.who} @${c.stop} (${c.x}, ${c.z}) ${c.anim}${c.stepped ? ' (stepped up)' : ''}: ${c.stood ? 'stood down' : c.hands ? Object.entries(c.hands).map(([s, [d, on]]) => `${s} ${(d * 100).toFixed(1)} cm${d < 0.79 ? ' from ' + on : ' (nothing in reach)'}`).join(', ') : 'own body'}${c.feet ? ` feet ${c.feet.map((h) => (h * 100).toFixed(1)).join('/')} cm` : ''} [${c.states[0]}${c.states.length > 1 ? ' +' + (c.states.length - 1) : ''}]`;
+if (process.env.LIST) for (const c of cases) console.log('CASE ' + line(c));
+for (const c of air.sort((a, b) => b.gap - a.gap)) console.log('OFFENDER hand ' + line(c));
+for (const c of feet) console.log('OFFENDER feet ' + line(c));
+const byAnim = {}; for (const c of cases) { const a = (byAnim[c.anim] ||= [0, 0]); a[0]++; if (c.gap != null && c.gap > HAND) a[1]++; }
+measure('cases', { states: SEL ? SEL.length : STATES.length, pagesDied: crashes, measured: rows.length, distinct: cases.length, byAnim, ownBody: self.length, warming: warm.length, stoodDown: stood.length, onAThing: cases.filter((c) => c.gap != null && c.gap <= HAND).length, afterAStepUp: cases.filter((c) => c.stepped && c.gap != null && c.gap <= HAND).length, handLimitCm: HAND * 100, footLimitCm: FOOT * 100 });
+measure('offenders', { hands: air.length, feet: feet.length, worstCm: air[0] ? +(air[0].gap * 100).toFixed(1) : 0 });
+check('the sweep found the people at work (hundreds of stops over the chapters; a part of it — STATES, ONLY — its share)', ONLY ? cases.length > 0 : SEL ? cases.length > 40 * Math.min(3, SEL.length) : cases.length > 150, { distinct: cases.length });
+check(`no hand works on air: every working hand within ${HAND * 100} cm of a real surface at its contact`, air.length === 0, air.slice(0, 12).map(line));
+check(`feet on the ground: every standing worker's soles within ${FOOT * 100} cm of it`, feet.length === 0, feet.slice(0, 12).map(line));
+const fails = done();
+await browser.close();
+process.exit(fails ? 1 : 0);

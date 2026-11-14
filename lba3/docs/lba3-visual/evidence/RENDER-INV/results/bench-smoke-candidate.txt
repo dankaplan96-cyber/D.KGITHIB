@@ -1,0 +1,46 @@
+LBA3: The Awakening benchmark · build 0.31.0 · 2026-10-24 17:27
+GPU (as reported by the browser): Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver · preset picked for it on a first start: high · playing on: medium · automatic resolution: on (off while measuring)
+NOTE: software rendering (no GPU acceleration in this browser/app): every number below is CPU-drawn
+window 640×360 · devicePixelRatio 1 · user agent Chrome/141.0.7390.37
+camera: free orbit from a fixed heading for every route (your camera setting: lba) · WEBGL_multi_draw yes
+frame-rate limit: off (off while measuring) · shortest frame interval seen 16.6 ms (≈ 60 Hz)
+startup: build 9.6 s (Citadel 2.3 s; largest other areas: islands 2.6, zeelich 1.1, interiors 0.9, desert 0.5 s) · shader preparation 23.9 s
+memory: 1684 geometries and 497 textures on the GPU · 397 shader programs · JavaScript heap 756 MB · GPU timer: yes
+
+quality low: render pixel ratio 0.85 · MSAA 0× · FXAA on · shadows off · bloom off · lamp lights 2 · grass/flowers to 36 m · trees detailed to 26 m
+  street       2.4 fps · frame p50 16.7 p95 1849.9 p99 1849.9 max 1849.9 ms · stalls>50ms 6 (0 behind black) · >33ms 6 >100ms 6 of 14 · longest 1850, 1600, 800 ms · sim CPU p50 6.4 (p95 13.2) ms · render submit CPU p50 5.3 ms · lamps lit 2 · draw calls 136 (p95 234, shadow 0) · GPU draws 150 · triangles 572k · warm-up max 1850 ms · limited by (estimate): keeps up with a 60 Hz display
+  interior     2.3 fps · frame p50 266.6 p95 2716.6 p99 2716.6 max 2716.6 ms · stalls>50ms 15 (1 behind black) · >33ms 15 >100ms 14 of 17 · longest 2717, 983, 533 ms · sim CPU p50 4.9 (p95 159.5) ms · render submit CPU p50 3.1 ms · lamps lit 2 · draw calls 96 (p95 101, shadow 0) · GPU draws 96 · triangles 206k · warm-up max 2717 ms · limited by (estimate): GPU (8.0 of 266.6 ms is CPU work; the rest is waiting: resolution, shadows, MSAA, lamps)
+  combat      10.8 fps · frame p50 83.3 p95 200 p99 233.4 max 233.4 ms · stalls>50ms 49 (0 behind black) · >33ms 59 >100ms 21 of 65 · longest 233, 217, 217 ms · sim CPU p50 5.7 (p95 10.3) ms · render submit CPU p50 2.7 ms · lamps lit 1 · draw calls 112 (p95 113, shadow 0) · GPU draws 112 · triangles 124k · warm-up max 283 ms · limited by (estimate): GPU (8.4 of 83.3 ms is CPU work; the rest is waiting: resolution, shadows, MSAA, lamps)
+  transition   3.6 fps · frame p50 250 p95 500.1 p99 600.1 max 600.1 ms · stalls>50ms 18 (1 behind black) · >33ms 19 >100ms 18 of 21 · longest 600, 500, 500 ms · sim CPU p50 1.8 (p95 12.6) ms · render submit CPU p50 6.2 ms · lamps lit 1 · draw calls 282 (p95 288, shadow 0) · GPU draws 458 · triangles 934k · warm-up max 550 ms · limited by (estimate): GPU (8.0 of 250 ms is CPU work; the rest is waiting: resolution, shadows, MSAA, lamps)
+  arrival      4.3 fps · frame p50 166.7 p95 566.6 p99 849.9 max 849.9 ms · stalls>50ms 20 (2 behind black) · >33ms 21 >100ms 20 of 26 · longest 850, 567, 450 ms · sim CPU p50 8.3 (p95 263.3) ms · render submit CPU p50 3.1 ms · lamps lit 0 · draw calls 27 (p95 110, shadow 0) · GPU draws 27 · triangles 73k · warm-up max 650 ms · limited by (estimate): GPU (11.4 of 166.7 ms is CPU work; the rest is waiting: resolution, shadows, MSAA, lamps)
+
+breakdown at Medium (one cost taken away at a time):
+  street · as is                 0.9 fps · frame p50 1033.3 p95 2349.9 ms · submit CPU 12.5 ms · calls 293 · render pixel ratio 1
+  street · no shadows            0.3 fps · frame p50 3499.8 p95 3499.8 ms · submit CPU 1375.7 ms · calls 284 · render pixel ratio 1
+  street · no lamps              1.1 fps · frame p50 50.1 p95 2666.5 ms · submit CPU 6.8 ms · calls 175 · render pixel ratio 1
+  street · res x0.6              1.1 fps · frame p50 1266.5 p95 2666.6 ms · submit CPU 9 ms · calls 299 · render pixel ratio 0.6
+  street · shadow map kept       1.3 fps · frame p50 900 p95 1216.6 ms · submit CPU 9.8 ms · calls 256 · render pixel ratio 1
+  street · no MSAA               0.9 fps · frame p50 1166.5 p95 2150 ms · submit CPU 13.8 ms · calls 372 · render pixel ratio 1
+  street · 8-bit target          2.7 fps · frame p50 83.3 p95 1283.3 ms · submit CPU 7.7 ms · calls 287 · render pixel ratio 1
+  street · depth resolve on      0.6 fps · frame p50 2049.9 p95 2166.5 ms · submit CPU 7.6 ms · calls 267 · render pixel ratio 1
+  street · shadow filter basic   1.3 fps · frame p50 1066.6 p95 1200 ms · submit CPU 1054.5 ms · calls 182 · render pixel ratio 1
+  street · shadow map 512        1.1 fps · frame p50 1383.3 p95 1383.3 ms · submit CPU 6.8 ms · calls 194 · render pixel ratio 1
+  street · FXAA instead of MSAA     1 fps · frame p50 1116.6 p95 1150 ms · submit CPU 11.1 ms · calls 203 · render pixel ratio 1
+  street · draw batches off      1.3 fps · frame p50 550 p95 1466.6 ms · submit CPU 9 ms · calls 320 · render pixel ratio 1
+  interior · as is               1.4 fps · frame p50 800 p95 1049.9 ms · submit CPU 3.2 ms · calls 97 · render pixel ratio 1
+  interior · no shadows          1.8 fps · frame p50 366.6 p95 1483.2 ms · submit CPU 3.1 ms · calls 94 · render pixel ratio 1
+  interior · no lamps            2.2 fps · frame p50 366.7 p95 1116.7 ms · submit CPU 3.8 ms · calls 97 · render pixel ratio 1
+  interior · res x0.6            3.1 fps · frame p50 316.7 p95 683.3 ms · submit CPU 3.4 ms · calls 97 · render pixel ratio 0.6
+  interior · shadow map kept     3.5 fps · frame p50 300 p95 650 ms · submit CPU 3.5 ms · calls 94 · render pixel ratio 1
+  interior · no MSAA             1.7 fps · frame p50 650 p95 950 ms · submit CPU 3.1 ms · calls 97 · render pixel ratio 1
+  interior · 8-bit target        3.1 fps · frame p50 383.3 p95 683.4 ms · submit CPU 3.9 ms · calls 97 · render pixel ratio 1
+  interior · depth resolve on    2.4 fps · frame p50 366.7 p95 750.1 ms · submit CPU 3.1 ms · calls 97 · render pixel ratio 1
+  interior · shadow filter basic     2 fps · frame p50 483.3 p95 883.4 ms · submit CPU 3.5 ms · calls 97 · render pixel ratio 1
+  interior · shadow map 512      2.8 fps · frame p50 350 p95 700 ms · submit CPU 3.7 ms · calls 97 · render pixel ratio 1
+  interior · FXAA instead of MSAA   1.9 fps · frame p50 466.7 p95 866.7 ms · submit CPU 2.9 ms · calls 98 · render pixel ratio 1
+  interior · draw batches off    2.8 fps · frame p50 383.4 p95 783.3 ms · submit CPU 3.2 ms · calls 103 · render pixel ratio 1
+
+Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only; "GPU time" (when shown) is the GPU's own time for a frame.
+
+(load average before 2.28 2.5 2.97 · after 4.13 3.29 3.19)
+no page errors

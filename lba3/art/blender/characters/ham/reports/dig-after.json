@@ -1,0 +1,48 @@
+{
+ "room": "desert",
+ "chapterKey": "steam",
+ "hero": [
+  3292,
+  4
+ ],
+ "esmers": [
+  {
+   "id": "dg_haul",
+   "char": "farmerC_b",
+   "x": 3431,
+   "z": -2.4
+  },
+  {
+   "id": "dg_mech",
+   "char": "lharMan_b",
+   "x": 3445.2,
+   "z": -6.75
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 3438.1,
+   "z": 2.425,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   3438.1,
+   -4.575
+  ],
+  "n": 2,
+  "info": {
+   "calls": 196,
+   "triangles": 298730
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "dg_haul",
+ "errors": [],
+ "at": "2026-11-08T17:44:51.395Z",
+ "candidates": {}
+}

@@ -1,0 +1,56 @@
+heading 0 (0°, camera yaw 3.28): main 49 calls 534k tris · shadow 3 calls 0k tris
+   trees 6/270k · scenery 29/241k · terrain 4/17k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 19/77/111/62/0 · scenery 1/53/103/84/0 · terrain 0/10/0/3/4 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 111/270 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 6/269.7k · drawBatch:isle_knartas@isle_knartas 17/236.8k · Mesh:terrain@isle_knartas 4/16.9k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 14/4.4k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 43 calls 528k tris · shadow 3 calls 0k tris  (Δ main -6 calls -5.9k tris)
+      trees 6/270k · scenery 29/241k · terrain 4/17k · transparent 4/0k
+heading 1 (45°, camera yaw 4.06): main 46 calls 547k tris · shadow 6 calls 0k tris
+   trees 6/270k · scenery 26/255k · terrain 4/17k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 38/81/78/72/0 · scenery 7/47/117/84/0 · terrain 0/10/0/3/4 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 196/270 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 6/269.7k · drawBatch:isle_knartas@isle_knartas 17/250.1k · Mesh:terrain@isle_knartas 4/16.9k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 12/4.6k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 40 calls 541k tris · shadow 6 calls 0k tris  (Δ main -6 calls -5.9k tris)
+      trees 6/270k · scenery 26/255k · terrain 4/17k · transparent 4/0k
+heading 2 (90°, camera yaw 4.85): main 42 calls 497k tris · shadow 9 calls 1k tris
+   trees 5/264k · scenery 25/215k · terrain 2/13k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 32/94/75/63/0 · scenery 7/37/117/53/0 · terrain 0/10/0/3/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 136/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 13/210.1k · Mesh:terrain@isle_knartas 2/12.9k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 15/4.8k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 36 calls 491k tris · shadow 9 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 25/215k · terrain 2/13k · transparent 4/0k
+heading 3 (135°, camera yaw 5.63): main 43 calls 438k tris · shadow 11 calls 1k tris
+   trees 5/264k · scenery 26/156k · terrain 2/13k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 54/90/85/34/0 · scenery 8/38/110/0/0 · terrain 10/0/0/3/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 26/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 9/150.9k · Mesh:terrain@isle_knartas 2/12.9k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 19/4.8k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 37 calls 432k tris · shadow 11 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 26/156k · terrain 2/13k · transparent 4/0k
+heading 4 (180°, camera yaw 6.42): main 41 calls 421k tris · shadow 11 calls 1k tris
+   trees 5/264k · scenery 25/142k · terrain 1/10k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 53/92/111/7/0 · scenery 22/25/96/0/0 · terrain 10/0/0/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 26/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 8/137.2k · Mesh:terrain@isle_knartas 1/9.8k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 19/4.8k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 35 calls 415k tris · shadow 11 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 25/142k · terrain 1/10k · transparent 4/0k
+heading 5 (225°, camera yaw 7.20): main 41 calls 421k tris · shadow 11 calls 1k tris
+   trees 5/264k · scenery 25/142k · terrain 1/10k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 49/103/105/7/0 · scenery 37/9/96/0/0 · terrain 0/10/0/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 41/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 8/137.2k · Mesh:terrain@isle_knartas 1/9.8k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 19/4.8k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 35 calls 415k tris · shadow 11 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 25/142k · terrain 1/10k · transparent 4/0k
+heading 6 (270°, camera yaw 7.99): main 38 calls 431k tris · shadow 12 calls 1k tris
+   trees 5/264k · scenery 22/152k · terrain 1/10k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 32/114/111/7/0 · scenery 37/17/97/0/0 · terrain 0/10/0/0/0 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 64/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 10/147.5k · Mesh:terrain@isle_knartas 1/9.8k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 14/4.4k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 32 calls 425k tris · shadow 12 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 22/152k · terrain 1/10k · transparent 4/0k
+heading 7 (315°, camera yaw 8.77): main 40 calls 440k tris · shadow 6 calls 1k tris
+   trees 5/264k · scenery 23/157k · terrain 2/13k · characters 4/6k · transparent 4/0k · particles 2/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): trees 26/71/144/23/0 · scenery 0/44/113/0/0 · terrain 0/10/0/0/3 · characters 6/0/0/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:isle_knartas@isle_knartas #ffffff cast 90/264 · Instanced:spriteBatch@isle_knartas #fff4f8 0/0 · Instanced:blobBatch #ffffff 0/0
+   top: Instanced:isle_knartas@isle_knartas 5/263.6k · drawBatch:isle_knartas@isle_knartas 11/152.8k · Mesh:terrain@isle_knartas 2/12.9k · Skinned:?@actors 2/5.9k · Mesh:isle_knartas@isle_knartas 14/4.4k · Instanced:spriteBatch@isle_knartas 1/0.1k · Mesh:head@actors 2/0.1k · Mesh:esmerShuttle@isle_knartas 1/0.0k · Instanced:blobBatch 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 34 calls 434k tris · shadow 6 calls 1k tris  (Δ main -6 calls -5.9k tris)
+      trees 5/264k · scenery 23/157k · terrain 2/13k · transparent 4/0k

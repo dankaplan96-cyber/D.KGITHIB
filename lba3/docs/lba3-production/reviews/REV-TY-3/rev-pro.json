@@ -1,0 +1,75 @@
+{
+ "start": {
+  "state": "play",
+  "room": "house",
+  "pos": [
+   1001.55,
+   0,
+   -1.75
+  ],
+  "hp": 10,
+  "chapter": "well",
+  "obj": "Check the well",
+  "coins": 0,
+  "clovers": 2,
+  "owe": {},
+  "lying": []
+ },
+ "house stage": 0,
+ "desk look": {
+  "r": "used",
+  "kind": "lhome"
+ },
+ "desk lines": [
+  "n_hero: Zoé's board for the Water Office: a pin for every house waiting for the project's heat. Ours is near the top."
+ ],
+ "cupboard": {
+  "r": "used",
+  "ball": true
+ },
+ "exit": {
+  "r": "transition",
+  "from": "house",
+  "to": "citadel"
+ },
+ "boat box (prologue, walked to)": {
+  "r": "used",
+  "label": "p_look",
+  "pliers": false,
+  "items": [],
+  "journal": null
+ },
+ "boat box lines": [
+  "n_hero: Arthur's boat box. Paint, string, a spare sail. His things."
+ ],
+ "boat box again": {
+  "pliers": false
+ },
+ "again lines": [
+  "n_hero: Arthur's boat box. Paint, string, a spare sail. His things."
+ ],
+ "pump (prologue)": {
+  "r": "used",
+  "label": "p_look",
+  "pin": false
+ },
+ "pump lines": [
+  "n_hero: The old pump. Seized, and dry as the well."
+ ],
+ "end": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -41.63,
+   2.32,
+   66.47
+  ],
+  "hp": 10,
+  "chapter": "well",
+  "obj": "Check the well",
+  "coins": 0,
+  "clovers": 2,
+  "owe": {},
+  "lying": []
+ }
+}

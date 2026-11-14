@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "under-1: vesk (VESK-COLLAR), worker_b, nara_b; worker, nara, nell (must stay as shipped)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-items/lba3/art/blender/characters/under/source/skeletons.json", "C:/Users/dan/lba3-items/lba3/art/blender/characters/under/export", "vesk", "worker_b", "nara_b", "worker", "nara", "nell"] }]

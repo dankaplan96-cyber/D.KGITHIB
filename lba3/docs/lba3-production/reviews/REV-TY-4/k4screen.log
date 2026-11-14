@@ -1,0 +1,13 @@
+start: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":1,"k_turns":3,"k_sand":true},"cowl":1,"jars":5,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":false}],"coins":7,"hp":"4/11","pos":[3352.15,5,10.82],"lying":[],"state":"play"}
+sani (wet): "talked"
+sani lines: ["n_dkid: The pump is working! I can hear it from my roof!","n_dkid: Hesk says the pump's wheel always looks into the wind. And his flags point where the wind goes."]
+brosk (wet, sand): "talked"
+brosk lines: ["n_dtrader: Sand! In my dates! Whatever you did up there, do the opposite."]
+lumi: "talked"
+lumi lines: ["n_weaver: You fixed the pump? Then you're welcome at my loom any time. Mind the threads.","n_weaver: Sand in the cool room. That's what happens without a screen. I wove a new one.","n_weaver: Tie it over the mouth and keep the mouth into the wind, or it's just a chimney. My knees don't do that stair.","TOAST k_toast_screen"]
+lumi again: "talked"
+lumi again lines: ["n_weaver: The screen goes over the wind-catcher's mouth. Mouth into the wind."]
+inventory: [{"id":"evacplan","icon":"plan"},{"id":"kscreen","icon":"cloth"}]
+end: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":1,"k_turns":3,"k_sand":true,"k_screen":true},"cowl":1,"jars":5,"ferry":true,"items":["evacplan","kscreen"],"journal":[{"key":"k_j_cool","done":false},{"key":"k_j_screen","done":false}],"coins":7,"hp":"4/11","pos":[3342.63,5,-1.5],"lying":[],"state":"play"}
+kept save-k3.json
+no errors

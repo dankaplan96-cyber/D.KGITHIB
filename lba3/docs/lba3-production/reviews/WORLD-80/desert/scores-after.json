@@ -1,0 +1,1028 @@
+{
+ "version": "0.31.0",
+ "weights": {
+  "coast": 30,
+  "height": 20,
+  "landmarks": 30,
+  "objects": 20
+ },
+ "results": [
+  {
+   "id": "desert",
+   "name": "Desert Island",
+   "parts": {
+    "coast": 97.66575127500981,
+    "height": 78.23425518424797,
+    "landmarks": 88.14792173943562,
+    "objects": 68.29097779053355
+   },
+   "notes": [],
+   "diffs": [
+    {
+     "part": "landmarks",
+     "what": "village house (S36): ours is 32.4 m south of the original's (original at our (3354.6,-16), ours at (3364,15))",
+     "gain": 1.153846153846154,
+     "at": [
+      3354.6,
+      -16
+     ]
+    },
+    {
+     "part": "landmarks",
+     "what": "the village (doors S35, S36, S38, S39): ours is 15.1 m south of the original's (original at our (3347.6,-12.9), ours at (3350,2))",
+     "gain": 0.923076923076923,
+     "at": [
+      3347.6,
+      -12.9
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too high by 3.0 m on average over 777 m² round our (3339.4, -10.2) (original 1.6 m, ours 4.6 m after the lift)",
+     "gain": 0.8546008553986749,
+     "at": [
+      3339.4,
+      -10.2
+     ]
+    },
+    {
+     "part": "landmarks",
+     "what": "village house (S38), the tall one: ours is 21.8 m south-west of the original's (original at our (3352.2,-4.6), ours at (3336,10))",
+     "gain": 0.7730769230769231,
+     "at": [
+      3352.2,
+      -4.6
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3340.9, -69.6) (27 m square): original → ours talls 0 → 2, fences 0 → 9, props 6 → 18",
+     "gain": 0.7698929444997152,
+     "at": [
+      3340.9,
+      -69.6
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too high by 2.3 m on average over 692 m² round our (3358.2, 7.1) (original 2.8 m, ours 5.1 m after the lift)",
+     "gain": 0.5924949020877643,
+     "at": [
+      3358.2,
+      7.1
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3393.1, -37.5) (27 m square): original → ours buildings 1 → 0, talls 3 → 1, props 5 → 0",
+     "gain": 0.3977272727272727,
+     "at": [
+      3393.1,
+      -37.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3390.7, -10.2) (27 m square): original → ours buildings 1 → 0, props 13 → 6",
+     "gain": 0.3977272727272727,
+     "at": [
+      3390.7,
+      -10.2
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3452.4, -87.4) (27 m square): original → ours talls 3 → 0, fences 9 → 7, props 8 → 5",
+     "gain": 0.385711728970327,
+     "at": [
+      3452.4,
+      -87.4
+     ]
+    },
+    {
+     "part": "landmarks",
+     "what": "the house at S10 / S127: ours is 12.9 m south of the original's (original at our (3448,-42.8), ours at (3450,-30))",
+     "gain": 0.36923076923076925,
+     "at": [
+      3448,
+      -42.8
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3368.2, -67.2) (27 m square): original → ours talls 2 → 0, fences 1 → 0, props 5 → 1",
+     "gain": 0.3436004973025027,
+     "at": [
+      3368.2,
+      -67.2
+     ]
+    },
+    {
+     "part": "landmarks",
+     "what": "village house, the west one: ours is 12.1 m south of the original's (original at our (3351.1,4), ours at (3350,16))",
+     "gain": 0.32307692307692304,
+     "at": [
+      3351.1,
+      4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3358.6, 42) (27 m square): original → ours fences 1 → 0, props 5 → 0",
+     "gain": 0.3125,
+     "at": [
+      3358.6,
+      42
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3454.8, -114.7) (27 m square): original → ours buildings 6 → 3, talls 5 → 2",
+     "gain": 0.2796627708052734,
+     "at": [
+      3454.8,
+      -114.7
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3385.9, 44.3) (27 m square): original → ours talls 2 → 0, fences 1 → 0, props 4 → 1",
+     "gain": 0.2686828801418114,
+     "at": [
+      3385.9,
+      44.3
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3331.3, 39.6) (27 m square): original → ours talls 5 → 1",
+     "gain": 0.22513671885243697,
+     "at": [
+      3331.3,
+      39.6
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3418, -7.9) (27 m square): original → ours props 5 → 1",
+     "gain": 0.22513671885243697,
+     "at": [
+      3418,
+      -7.9
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too low by 5.1 m on average over 120 m² round our (3423.9, 51.1) (original 8.7 m, ours 3.7 m after the lift)",
+     "gain": 0.22492581109002863,
+     "at": [
+      3423.9,
+      51.1
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3361, 14.7) (27 m square): original → ours fences 1 → 0, props 10 → 6",
+     "gain": 0.21365815243741285,
+     "at": [
+      3361,
+      14.7
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3286.3, -74.4) (27 m square): original → ours buildings 1 → 0, talls 2 → 0, fences 1 → 0, props 2 → 1",
+     "gain": 0.18010937508194957,
+     "at": [
+      3286.3,
+      -74.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3308.8, -17.4) (27 m square): original → ours props 3 → 0",
+     "gain": 0.17045454545454544,
+     "at": [
+      3308.8,
+      -17.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3475, -30.4) (27 m square): original → ours props 3 → 0",
+     "gain": 0.17045454545454544,
+     "at": [
+      3475,
+      -30.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3365.8, -39.9) (27 m square): original → ours talls 3 → 1, fences 1 → 0, props 17 → 16",
+     "gain": 0.1534618387290779,
+     "at": [
+      3365.8,
+      -39.9
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3336.1, -15) (27 m square): original → ours props 3 → 10",
+     "gain": 0.13052034620377764,
+     "at": [
+      3336.1,
+      -15
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3345.6, -124.2) (27 m square): original → ours talls 1 → 0, props 2 → 0",
+     "gain": 0.11846377845006571,
+     "at": [
+      3345.6,
+      -124.2
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3495.1, 53.9) (27 m square): original → ours talls 1 → 0, props 2 → 0",
+     "gain": 0.11846377845006571,
+     "at": [
+      3495.1,
+      53.9
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3499.9, -0.7) (27 m square): original → ours talls 1 → 0, props 2 → 0",
+     "gain": 0.11846377845006571,
+     "at": [
+      3499.9,
+      -0.7
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3504.6, -55.3) (27 m square): original → ours talls 1 → 0, props 2 → 0",
+     "gain": 0.11846377845006571,
+     "at": [
+      3504.6,
+      -55.3
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too low by 3.3 m on average over 76 m² round our (3419.4, 0.3) (original 7.3 m, ours 4.0 m after the lift)",
+     "gain": 0.09280929674182697,
+     "at": [
+      3419.4,
+      0.3
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3395.5, -64.8) (27 m square): original → ours props 2 → 0",
+     "gain": 0.0900546875409748,
+     "at": [
+      3395.5,
+      -64.8
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3400.2, -119.4) (27 m square): original → ours props 2 → 0",
+     "gain": 0.0900546875409748,
+     "at": [
+      3400.2,
+      -119.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3306.4, 9.9) (27 m square): original → ours buildings 0 → 3",
+     "gain": 0.08522727272727272,
+     "at": [
+      3306.4,
+      9.9
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too high by 2.5 m on average over 76 m² round our (3447.2, 10.4) (original 2.0 m, ours 4.5 m after the lift)",
+     "gain": 0.06932481088509782,
+     "at": [
+      3447.2,
+      10.4
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too high by 2.9 m on average over 62 m² round our (3377.9, -43.5) (original 1.2 m, ours 4.1 m after the lift)",
+     "gain": 0.06630785594014553,
+     "at": [
+      3377.9,
+      -43.5
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too low by 2.4 m on average over 73 m² round our (3365.6, 4.4) (original 7.4 m, ours 5.0 m after the lift)",
+     "gain": 0.06563501243555808,
+     "at": [
+      3365.6,
+      4.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3397.9, -92.1) (27 m square): original → ours talls 1 → 0, props 2 → 1",
+     "gain": 0.06164559663188388,
+     "at": [
+      3397.9,
+      -92.1
+     ]
+    },
+    {
+     "part": "height",
+     "what": "ground too high by 2.3 m on average over 67 m² round our (3400.1, -40.5) (original 0.5 m, ours 2.8 m after the lift)",
+     "gain": 0.057560864377120054,
+     "at": [
+      3400.1,
+      -40.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3291.1, -129) (27 m square): original → ours talls 1 → 0, props 1 → 0",
+     "gain": 0.05681818181818182,
+     "at": [
+      3291.1,
+      -129
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3447.7, -32.8) (27 m square): original → ours buildings 1 → 0, props 1 → 0",
+     "gain": 0.05681818181818182,
+     "at": [
+      3447.7,
+      -32.8
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3511.8, -137.2) (27 m square): original → ours talls 1 → 0, props 1 → 0",
+     "gain": 0.05681818181818182,
+     "at": [
+      3511.8,
+      -137.2
+     ]
+    },
+    {
+     "part": "coast",
+     "what": "our land where the original has sea: 56 m² round our (3514.2, -120.7), x 3508…3518, z -124…-117",
+     "gain": 0.05470126582171275,
+     "at": [
+      3514.2,
+      -120.7
+     ]
+    },
+    {
+     "part": "coast",
+     "what": "our land where the original has sea: 50 m² round our (3331.5, -37.6), x 3330…3333, z -46…-30",
+     "gain": 0.04893362132847523,
+     "at": [
+      3331.5,
+      -37.6
+     ]
+    },
+    {
+     "part": "coast",
+     "what": "original-only land (ours is sea): 41 m² round our (3336.3, -74.4), x 3335…3338, z -80…-69",
+     "gain": 0.04119262455865247,
+     "at": [
+      3336.3,
+      -74.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3450.1, -60.1) (27 m square): original → ours fences 23 → 22",
+     "gain": 0.04011967407032087,
+     "at": [
+      3450.1,
+      -60.1
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3336.1, -15) (27 m square): original → ours buildings 3 → 2",
+     "gain": 0.03537251414308329,
+     "at": [
+      3336.1,
+      -15
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3509.4, -109.9) (27 m square): original → ours props 3 → 2",
+     "gain": 0.03537251414308329,
+     "at": [
+      3509.4,
+      -109.9
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3288.7, -101.7) (27 m square): original → ours props 2 → 1",
+     "gain": 0.03323650572279297,
+     "at": [
+      3288.7,
+      -101.7
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3442.9, 21.8) (27 m square): original → ours props 2 → 1",
+     "gain": 0.03323650572279297,
+     "at": [
+      3442.9,
+      21.8
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3472.6, -3.1) (27 m square): original → ours props 2 → 1",
+     "gain": 0.03323650572279297,
+     "at": [
+      3472.6,
+      -3.1
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3427.5, -117) (27 m square): original → ours talls 2 → 1",
+     "gain": 0.03323650572279297,
+     "at": [
+      3427.5,
+      -117
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3358.6, 42) (27 m square): original → ours talls 0 → 2",
+     "gain": 0.033236505722792964,
+     "at": [
+      3358.6,
+      42
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3343.3, -96.9) (27 m square): original → ours props 0 → 2",
+     "gain": 0.033236505722792964,
+     "at": [
+      3343.3,
+      -96.9
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3388.3, 17) (27 m square): original → ours talls 0 → 2",
+     "gain": 0.033236505722792964,
+     "at": [
+      3388.3,
+      17
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": true,
+     "what": "more than twice the original’s round our (3415.6, 19.4) (27 m square): original → ours talls 0 → 2",
+     "gain": 0.033236505722792964,
+     "at": [
+      3415.6,
+      19.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3279.1, 7.5) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3279.1,
+      7.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3328.9, 66.9) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3328.9,
+      66.9
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3363.4, -12.6) (27 m square): original → ours buildings 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3363.4,
+      -12.6
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3370.6, -94.5) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3370.6,
+      -94.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3413.2, 46.7) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3413.2,
+      46.7
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3440.5, 49.1) (27 m square): original → ours buildings 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3440.5,
+      49.1
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3438.1, 76.4) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3438.1,
+      76.4
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3465.4, 78.8) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3465.4,
+      78.8
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3445.3, -5.5) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3445.3,
+      -5.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3422.8, -62.5) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3422.8,
+      -62.5
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3479.7, -85) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3479.7,
+      -85
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3482.1, -112.3) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3482.1,
+      -112.3
+     ]
+    },
+    {
+     "part": "objects",
+     "surplus": false,
+     "what": "fewer than the original’s round our (3524.8, 29) (27 m square): original → ours props 1 → 0",
+     "gain": 0.02840909090909091,
+     "at": [
+      3524.8,
+      29
+     ]
+    }
+   ],
+   "landmarks": [
+    {
+     "name": "the village (doors S35, S36, S38, S39)",
+     "w": 2,
+     "orig": [
+      3347.6,
+      -12.9
+     ],
+     "ours": [
+      3350,
+      2
+     ],
+     "by": "spots.plaza",
+     "dist": 15.1,
+     "score": 60,
+     "note": "Kesh's plaza is 15 m south of the original's village centre: the village was not moved (WORLD-80 step 3: the oasis and the pump stand where the original's north houses stood; its story spots and tests are pinned)"
+    },
+    {
+     "name": "village house (S35)",
+     "w": 1,
+     "orig": [
+      3341.8,
+      -17.6
+     ],
+     "ours": [
+      3346,
+      -18
+     ],
+     "by": "registered building \"house kesh4\"",
+     "dist": 4.2,
+     "score": 100,
+     "note": null
+    },
+    {
+     "name": "village house (S39)",
+     "w": 1,
+     "orig": [
+      3340.3,
+      -6.2
+     ],
+     "ours": [
+      3340,
+      -8
+     ],
+     "by": "registered building \"house kesh0\"",
+     "dist": 1.8,
+     "score": 100,
+     "note": null
+    },
+    {
+     "name": "village house, the west one",
+     "w": 1,
+     "orig": [
+      3351.1,
+      4
+     ],
+     "ours": [
+      3350,
+      16
+     ],
+     "by": "registered building \"house kesh2\"",
+     "dist": 12.1,
+     "score": 72,
+     "note": null
+    },
+    {
+     "name": "village house (S38), the tall one",
+     "w": 1,
+     "orig": [
+      3352.2,
+      -4.6
+     ],
+     "ours": [
+      3336,
+      10
+     ],
+     "by": "registered building \"house kesh1\"",
+     "dist": 21.8,
+     "score": 33,
+     "note": null
+    },
+    {
+     "name": "village house (S36)",
+     "w": 1,
+     "orig": [
+      3354.6,
+      -16
+     ],
+     "ours": [
+      3364,
+      15
+     ],
+     "by": "registered building \"house kesh3\"",
+     "dist": 32.4,
+     "score": 0,
+     "note": "the original's S36 stands where our oasis basin is; our nearest house is 30 m off"
+    },
+    {
+     "name": "the big house by the village (S40)",
+     "w": 2,
+     "orig": [
+      3364.5,
+      -38.9
+     ],
+     "ours": [
+      3364.5,
+      -38.9
+     ],
+     "by": "registered building \"house s40\"",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: built (desertold.js), its door shut"
+    },
+    {
+     "name": "the tall building at S28",
+     "w": 2,
+     "orig": [
+      3404,
+      1.3
+     ],
+     "ours": [
+      3404,
+      1.3
+     ],
+     "by": "registered building \"tower s28\"",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: a tower in its hollow under the ridge, its door shut"
+    },
+    {
+     "name": "the walled compound (S24), its main house",
+     "w": 2,
+     "orig": [
+      3440.2,
+      -119.3
+     ],
+     "ours": [
+      3440.2,
+      -119.3
+     ],
+     "by": "registered building \"compound house 94\"",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: built, with the second house, the yard walls and the well"
+    },
+    {
+     "name": "the walled compound (S24), its second house",
+     "w": 1,
+     "orig": [
+      3452.4,
+      -118.2
+     ],
+     "ours": [
+      3452.4,
+      -118.2
+     ],
+     "by": "registered building \"compound house 95\"",
+     "dist": 0,
+     "score": 100,
+     "note": null
+    },
+    {
+     "name": "the great hall (body 48)",
+     "w": 2,
+     "orig": [
+      3332.2,
+      -61.7
+     ],
+     "ours": [
+      3332.2,
+      -61.7
+     ],
+     "by": "registered building \"the school hall\"",
+     "dist": 0.1,
+     "score": 100,
+     "note": "WORLD-80 step 3: the School of Magic's hall in the pool (the user's decision)"
+    },
+    {
+     "name": "the high façade beside it (body 43)",
+     "w": 1,
+     "orig": [
+      3330.9,
+      -72.7
+     ],
+     "ours": [
+      3330.9,
+      -72.7
+     ],
+     "by": "registered building \"the school mask\"",
+     "dist": 0.1,
+     "score": 100,
+     "note": "WORLD-80 step 3: the School of Magic's stone mask, its door in the chin (the user's decision)"
+    },
+    {
+     "name": "the house at body 49",
+     "w": 1,
+     "orig": [
+      3352.2,
+      -76.9
+     ],
+     "ours": [
+      3352.2,
+      -76.9
+     ],
+     "by": "registered building \"house b49\"",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: built, its door shut"
+    },
+    {
+     "name": "the house on the north-west plateau (S113)",
+     "w": 1,
+     "orig": [
+      3284.7,
+      -99.6
+     ],
+     "ours": [
+      3284.7,
+      -99.6
+     ],
+     "by": "registered building \"hut s113\"",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: built, its door shut"
+    },
+    {
+     "name": "the house at S10 / S127",
+     "w": 1,
+     "orig": [
+      3448,
+      -42.8
+     ],
+     "ours": [
+      3450,
+      -30
+     ],
+     "by": "registered building \"post cabin 1\"",
+     "dist": 12.9,
+     "score": 68,
+     "note": "inside the research post (an addition): the post's east cabin stands 13 m from the original's house and is named for it here (docs/WORLD_SIMILARITY.md #5)"
+    },
+    {
+     "name": "the islet's door (S183)",
+     "w": 1,
+     "orig": [
+      3517.8,
+      -120.8
+     ],
+     "ours": [
+      3517.6,
+      -120.8
+     ],
+     "by": "nearest door of ours",
+     "dist": 0.3,
+     "score": 100,
+     "note": "WORLD-80 step 3: a shut door in the cove's cliff"
+    },
+    {
+     "name": "the 5.2 m standing figure or pillar west of the village (body 0)",
+     "w": 1,
+     "orig": [
+      3282.2,
+      -31.9
+     ],
+     "ours": [
+      3282.2,
+      -31.9
+     ],
+     "by": "spots.figures",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: a hooded stone figure on its knoll (desertold.js)"
+    },
+    {
+     "name": "its twin, 35 m east (body 33)",
+     "w": 1,
+     "orig": [
+      3316.7,
+      -31.9
+     ],
+     "ours": [
+      3316.7,
+      -31.9
+     ],
+     "by": "spots.figures",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: a hooded stone figure on the promontory"
+    },
+    {
+     "name": "the gateway: two posts (5.2 and 6.1 m) under a 9 m beam",
+     "w": 1,
+     "orig": [
+      3443,
+      26.3
+     ],
+     "ours": [
+      3443.6,
+      24.8
+     ],
+     "by": "spots.gateway",
+     "dist": 1.6,
+     "score": 100,
+     "note": "WORLD-80 step 3: the gate over the track to the dig, centred on the track (1.6 m from the original's centre)"
+    },
+    {
+     "name": "the twin 5.2 m pillars (bodies 80, 81)",
+     "w": 1,
+     "orig": [
+      3455.7,
+      -54.1
+     ],
+     "ours": [
+      3455.7,
+      -54.1
+     ],
+     "by": "spots.figures",
+     "dist": 0.1,
+     "score": 100,
+     "note": "WORLD-80 step 3: two horned stone pillars north of the post"
+    },
+    {
+     "name": "the 4.6 m figure on the islet (body 104)",
+     "w": 1,
+     "orig": [
+      3518.3,
+      -122.3
+     ],
+     "ours": [
+      3518.3,
+      -122.3
+     ],
+     "by": "spots.figures",
+     "dist": 0,
+     "score": 100,
+     "note": "WORLD-80 step 3: a hooded stone figure in the islet's cove"
+    }
+   ],
+   "partial": false,
+   "measure": {
+    "landOrig": 29237,
+    "landOurs": 29847,
+    "iou": 0.977,
+    "lift": 0.01,
+    "mae": 0.4,
+    "spread": 1.85,
+    "objectsOrig": 315,
+    "objectsOurs": 231
+   },
+   "score": 85.04914849928993
+  }
+ ]
+}

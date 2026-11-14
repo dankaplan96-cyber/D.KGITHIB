@@ -1,0 +1,31 @@
+[0s +0s] continue (Desert Island): {"room":"desert","chapter":"dig"} | desert [3292,2,4] hp 9 | Find the professor who found the crystals
+[2s +2s] Mother Tarra: {"r":"talked","to":"tarra","state":"play","lines":8,"task":true,"fail":null} | desert [3349.9,5,10.84] hp 9 | Restart the wind-pump (0/3)
+[8s +6s] the pump's three gears (ball): {"gears":[true,true,true],"pump":true,"fail":null} | desert [3367.13,5,-4.31] hp 9 | Talk to Mother Tarra
+[8s +1s] Tarra trusts him: {"r":"talked","to":"tarra","state":"play","lines":6,"trust":true,"fail":null} | desert [3352.15,5,10.94] hp 9 | Find Ilka's camp under the north mesa◆ Hesk can take you on his sand-yacht
+[9s +1s] Hesk: {"r":"talked","to":"hesk","state":"play","lines":4,"ask":true} | desert [3373.28,4.74,12.65] hp 9 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[11s +2s] the rope from the pier: {"r":"used","target":{"kind":"c4rope","id":"p_rope","label":"p_rope"},"state":"play","lines":2,"rope":true,"fail":null} | desert [3300.36,2,3.06] hp 9 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[12s +2s] the sand-yacht to the camp: {"r":"talked","to":"hesk","state":"play","lines":2,"yacht":"camp","fail":null} | desert [3390.98,5,-41.38] hp 9 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+[13s +0s] Ilka: {"r":"talked","to":"ilka","state":"play","lines":14,"ilka":true,"fail":null} | desert [3391.91,5,-42.22] hp 9 | Get Ilka's notebook from the research post◆ Go in during a sandstorm
+[37s +25s] the notebook (in a sandstorm): {"waited":0,"stormy":false,"r":"used","target":{"kind":"c4desk","id":"p_desk","label":"p_desk"},"state":"play","lines":4,"notebook":true,"fail":null} | desert [3436.25,5.35,-27.11] hp 9 | Open the dig and reach the bottom
+[40s +2s] the dig's gate: {"r":"used","target":{"kind":"c4gate","id":"p_code","label":"p_code"},"state":"play","lines":2,"open":true,"fail":null} | desert [3446.76,5.01,19.84] hp 9 | Open the three seals (0/3)
+[41s +1s] down to the bottom: {"r":"arrived","y":0.2,"bottom":0.1999999999999993,"fail":null} | desert [3464.64,0.2,26.63] hp 9 | Open the three seals (0/3)
+[48s +7s] the three seals (ball): {"seals":[true,true,true],"fail":null} | desert [3466.36,0.2,22.67] hp 9 | Enter the Temple of Bù
+[52s +5s] into the temple: {"r":"transition","from":"desert","to":"butemple","seen":true,"fail":null} | butemple [3821.5,0,-4.8] hp 9 | Read the great carving in the temple
+[54s +2s] the great carving → chapter 5: {"r":"used","target":{"kind":"c4carve","id":"p_carving","label":"p_carving"},"state":"play","lines":44,"carving":true,"chapter":"steam","fail":null} | desert [3351.5,5,1.5] hp 9 | Get into FunFrock's condenser hall
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[237.7] go → (3460.6, 26.2) plan ok=false pts=4 left=0.77
+[243.7] go → (3466.7, 22.1) plan ok=true pts=3 left=0.43
+[251.2] go → (3464.3, 30.7) plan ok=false pts=2 left=0.42
+[254.2] go: transition (desert → desert, trans true) at (3464.71, 29.51)
+[255.3] go → (3835.6, -4.6) plan ok=true pts=2 left=0.54
+[260.6] threat: fight
+[262.2] fight tmite1 d=4.2 st=chase aim=it e@3834.4,0.0,-3.2 me@3832.2,0.3,-4.5 ball=idle hp 2→1 me 9 mp 7.344166666666668
+[263.4] fight tmite1 d=2.6 st=dead aim=it e@3834.7,0.0,-3.6 me@3832.2,0.3,-4.5 ball=idle hp 1→0 me 9 mp 6.7758333333333365
+[263.4] fight → {"left":0,"dead":false,"hp":9,"t":2.4}
+[264.5] go → (3835.6, -4.6) plan ok=true pts=2 left=0.24
+[265.1] go → (3835.6, -4.6) plan ok=true pts=2 left=0.19
+[265.1] go → (3835.6, -4.6) plan ok=true pts=2 left=0.19
+kept docs/lba3-production/reviews/REV-TY-4/save-07b.json
+no errors
+rc 0

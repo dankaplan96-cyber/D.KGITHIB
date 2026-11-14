@@ -1,0 +1,479 @@
+{
+  "file": "art/blender/characters/hands/work/ztri1-new.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.5801, 1.9266, 0.4319], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0040"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "98"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: ztri1_belt -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_brows -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_buckle -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_button -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_button",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_button.001 -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_button.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_button.002 -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_button.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_cuffL -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_cuffR -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_ear -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_ear.001 -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_earIn -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_earIn.001 -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_footL -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_footL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_footR -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_footR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_foreL -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_foreR -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_fringe -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_fringe",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_hair -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_handL -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_handR -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_hanky -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_hanky",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_head -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_knot -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_knot",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_lapel -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_lapel",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_neck -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_nose -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_pocket -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_pocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_shinL -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_shinR -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_shirt -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_shirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_sideburn -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_sideburn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_sideburn.001 -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_sideburn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_suit0 -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_suit0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_suit1 -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_suit1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_thighL -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_thighR -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_tie -> ztri1Rig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_tie",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_upperL -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: ztri1_upperR -> ztri1Rig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: ztri1_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature ztri1Rig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 49,
+    "meshes": 48,
+    "triangles": 1769,
+    "materials": 19,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.29,
+        0.004,
+        -0.112
+      ],
+      "max": [
+        0.29,
+        1.9306,
+        0.3199
+      ],
+      "size": [
+        0.5801,
+        1.9266,
+        0.4319
+      ]
+    }
+  },
+  "passed": true
+}

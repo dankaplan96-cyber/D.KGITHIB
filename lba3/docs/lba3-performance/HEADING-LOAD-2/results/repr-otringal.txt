@@ -1,0 +1,10 @@
+isle_otringal: 7 batches (trees 18, trees 18, trees 58, trees 107, trees 8, trees 7, trees 13)
+heading 0°: pixels differ 0 · main 38 calls 350k tris (batches, culled) vs 38 calls 1132k (InstancedMeshes, as before)
+heading 45°: pixels differ 0 · main 40 calls 449k tris (batches, culled) vs 40 calls 1131k (InstancedMeshes, as before)
+heading 90°: pixels differ 0 · main 44 calls 588k tris (batches, culled) vs 44 calls 1233k (InstancedMeshes, as before)
+heading 135°: pixels differ 0 · main 46 calls 609k tris (batches, culled) vs 46 calls 1192k (InstancedMeshes, as before)
+heading 180°: pixels differ 0 · main 47 calls 634k tris (batches, culled) vs 47 calls 1257k (InstancedMeshes, as before)
+heading 225°: pixels differ 0 · main 45 calls 558k tris (batches, culled) vs 45 calls 1266k (InstancedMeshes, as before)
+heading 270°: pixels differ 0 · main 41 calls 467k tris (batches, culled) vs 41 calls 1264k (InstancedMeshes, as before)
+heading 315°: pixels differ 0 · main 39 calls 308k tris (batches, culled) vs 39 calls 1137k (InstancedMeshes, as before)
+worst 0 pixels differ

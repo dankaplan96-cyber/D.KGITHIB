@@ -1,0 +1,80 @@
+[0.4] go → (3351.0, 11.5) plan ok=true pts=5 left=0.67
+[14.3] go → (3364.3, -7.0) plan ok=true pts=3 left=0.21
+[23.9] go → (3367.8, -11.6) plan ok=true pts=2 left=0.35
+[25.3] go → (3367.8, -11.6) plan ok=true pts=2 left=0.2
+[28.1] go → (3351.0, 11.5) plan ok=true pts=3 left=0.65
+[36.2] go → (3374.5, 13.2) plan ok=true pts=3 left=0.92
+[42.4] go → (3300.0, 2.8) plan ok=true pts=7 left=0.39
+[59.1] go → (3300.0, 2.8) plan ok=true pts=2 left=0.16
+[63.4] go → (3374.5, 13.2) plan ok=true pts=6 left=0.53
+[84.9] go → (3393.0, -43.0) plan ok=true pts=2 left=0.73
+[87.7] go → (3431.2, -21.0) plan ok=true pts=7 left=0.53
+[97.2] threat: fight
+[97.8] dodge a bolt
+[98.7] fight pguard1 d=6.8 st=chase aim=none e@3428.3,1.6,-16.6 me@3424.5,1.6,-23.1 ball=fly hp 3→3 me 10 mp 7.344166666666668
+[98.7] go → (3428.3, -16.6) plan ok=true pts=2 left=3.49
+[100.2] dodge a bolt
+[101.5] fight pguard1 d=5.0 st=chase aim=none e@3426.9,1.6,-18.7 me@3423.8,1.7,-23.1 ball=idle hp 3→3 me 10 mp 8
+[102.6] fight pguard1 d=5.4 st=recover aim=other:pdrone2@3430.0,-17.0 d8.7 e@3426.6,1.6,-19.2 me@3423.8,1.7,-23.1 ball=fly hp 3→3 me 10 mp 7.344166666666668
+[105.1] fight pguard1 d=4.8 st=aim aim=other:pdrone2@3430.0,-17.0 d8.7 e@3426.5,1.6,-20.4 me@3423.8,1.7,-23.1 ball=fly hp 3→3 me 10 mp 7.207500000000005
+[107.5] fight pguard1 d=3.8 st=aim aim=none e@3426.5,1.6,-21.4 me@3423.8,1.7,-23.1 ball=return hp 3→3 me 10 mp 7.059166666666675
+[107.9] dodge a bolt
+[108.9] fight: pguard1 unreachable from here, leaving it
+[108.9] fight pguard1 d=3.2 st=chase aim=none e@3426.5,1.6,-21.7 me@3421.4,1.9,-24.9 ball=return hp 3→3 me 9 mp 6.525833333333344
+[108.9] fight → {"left":0,"dead":false,"hp":9,"t":11.1}
+[110.6] hurt 9→8 at (3423.9, 1.7, -22.6) near: pdrone2:patrol,pguard1:recover 
+[112.9] hurt 8→7 at (3425.4, 1.6, -20.8) near: pdrone2:patrol,pguard1:strike 
+[115.1] hurt 7→6 at (3425.4, 1.6, -20.9) near: pdrone2:patrol,pguard1:recover 
+[117.6] hurt 6→5 at (3425.5, 1.6, -20.9) near: pdrone2:patrol,pguard1:strike 
+[119.8] hurt 5→4 at (3425.1, 1.6, -20.7) near: pdrone2:patrol,pguard1:strike 
+[121.4] stuck at (3424.7, -20.4): replan
+[121.9] hurt 4→3 at (3424.1, 1.6, -20.0) near: pdrone2:patrol,pguard1:strike 
+[124.1] hurt 3→2 at (3424.7, 1.6, -19.4) near: pdrone2:patrol,pguard1:strike 
+[126.2] hurt 2→1 at (3425.2, 1.6, -18.7) near: pdrone2:patrol,pguard1:strike 
+[128.3] hurt 1→0 at (3425.5, 1.6, -18.0) near: pdrone2:patrol,pguard1:strike 
+[132.6] hurt 12→11 at (3425.5, 1.6, -18.4) near: pdrone2:patrol,pguard1:strike 
+[134.1] threat: fight
+[135.5] fight pguard1 d=0.9 st=windup aim=it e@3424.6,1.6,-17.7 me@3425.5,1.6,-18.3 ball=idle hp 3→2 me 11 mp 7.344166666666668
+[137.0] fight pguard1 d=1.0 st=chase aim=it e@3425.2,1.6,-17.9 me@3425.5,1.6,-18.8 ball=idle hp 2→2 me 10 mp 7.86916666666667
+[138.7] fight pguard1 d=0.9 st=windup aim=it e@3425.5,1.6,-17.6 me@3425.5,1.6,-18.8 ball=idle hp 2→1 me 10 mp 7.344166666666668
+[140.0] fight pguard1 d=1.2 st=recover aim=it e@3425.5,1.6,-18.4 me@3425.5,1.6,-19.7 ball=idle hp 1→1 me 9 mp 7.810833333333337
+[141.2] fight pguard1 d=1.3 st=strike aim=it e@3425.5,1.6,-18.8 me@3425.5,1.6,-20.0 ball=idle hp 1→1 me 8 mp 8
+[142.3] fight pguard1 d=1.2 st=chase aim=it e@3425.5,1.6,-19.2 me@3425.6,1.6,-20.6 ball=idle hp 1→1 me 8 mp 8
+[143.5] fight pguard1 d=1.4 st=recover aim=it e@3425.5,1.6,-20.0 me@3425.7,1.6,-21.4 ball=idle hp 1→1 me 7 mp 8
+[144.7] fight pguard1 d=1.4 st=chase aim=it e@3425.5,1.6,-20.0 me@3425.7,1.6,-21.6 ball=idle hp 1→1 me 7 mp 8
+[145.8] fight pguard1 d=1.6 st=dead aim=it e@3425.5,1.6,-19.8 me@3425.5,1.6,-21.6 ball=idle hp 1→0 me 7 mp 7.344166666666668
+[145.8] fight → {"left":0,"dead":false,"hp":7,"t":10.8}
+[148.4] stuck at (3425.5, -21.2): replan
+[151.3] stuck at (3425.3, -21.0): replan
+[154.3] stuck at (3425.5, -20.8): replan
+[159.8] stuck at (3425.4, -20.8): replan
+[162.7] stuck at (3425.5, -21.1): replan
+[168.2] go → (3436.6, -27.5) plan ok=true pts=2 left=0.66
+[175.7] go → (3436.6, -27.5) plan ok=true pts=2 left=0.17
+[181.6] go → (3446.8, 20.3) plan ok=true pts=5 left=0.55
+[195.6] go → (3446.8, 20.3) plan ok=true pts=2 left=0.03
+[338.0] go → (3465.5, 27.0) plan ok=true pts=5 left=0.18
+[339.6] threat: fight
+[341.0] fight dmite1 d=5.8 st=chase aim=it e@3453.0,2.0,24.2 me@3449.0,4.8,21.4 ball=idle hp 2→1 me 10 mp 7.344166666666668
+[342.2] fight dmite1 d=4.8 st=dead aim=other:pt@3461.6,25.3 d13.2 e@3453.3,2.2,23.4 me@3449.0,4.8,21.4 ball=idle hp 1→0 me 10 mp 6.787500000000003
+[342.2] fight → {"left":0,"dead":false,"hp":10,"t":2.4}
+[344.4] go → (3465.5, 27.0) plan ok=true pts=4 left=0.58
+[347.3] go → (3463.2, 27.8) plan ok=true pts=2 left=0.22
+[351.1] go → (3463.9, 26.8) plan ok=true pts=2 left=0.2
+[352.2] threat: fight
+[353.8] fight dmite2 d=5.5 st=chase aim=other:pt@3463.6,24.4 d3.2 e@3464.5,0.2,23.9 me@3460.7,0.2,25.9 ball=impact hp 2→2 me 10 mp 7
+[355.2] fight dmite2 d=4.1 st=chase aim=it e@3462.8,0.2,24.5 me@3460.7,0.2,25.9 ball=idle hp 2→2 me 10 mp 6.495833333333335
+[356.4] fight dmite2 d=2.5 st=chase aim=other:pt@3461.6,25.3 d1.0 e@3463.0,0.2,24.8 me@3460.7,0.2,25.9 ball=idle hp 2→2 me 10 mp 5.915833333333337
+[357.6] fight dmite2 d=2.5 st=chase aim=it e@3463.3,0.2,26.4 me@3460.7,0.2,25.9 ball=idle hp 2→2 me 10 mp 5.335833333333339
+[359.2] fight dmite2 d=2.6 st=chase aim=it e@3462.7,0.2,27.5 me@3460.7,0.2,25.9 ball=idle hp 2→1 me 10 mp 4.907500000000008
+[360.6] fight dmite2 d=2.6 st=dead aim=it e@3462.4,0.2,28.2 me@3460.7,0.2,25.9 ball=idle hp 1→0 me 10 mp 4.39750000000001
+[360.6] fight → {"left":0,"dead":false,"hp":10,"t":7.2}
+[365.7] go → (3463.9, 27.2) plan ok=true pts=2 left=0.16
+[370.2] go → (3464.7, 27.7) plan ok=true pts=2 left=0.28
+[376.2] go → (3464.3, 30.7) plan ok=false pts=2 left=0.35
+[378.1] go: transition (desert → desert, trans true) at (3464.42, 29.44)
+[379.2] go → (3835.6, -4.6) plan ok=true pts=2 left=0.54
+[385.6] threat: fight
+[387.3] fight tmite1 d=5.8 st=dead aim=it e@3834.5,0.0,-1.3 me@3832.6,0.3,-4.5 ball=idle hp 2→0 me 10 mp 9.344166666666668
+[387.3] fight → {"left":0,"dead":false,"hp":10,"t":1.2}
+[388.5] go → (3835.6, -4.6) plan ok=true pts=2 left=0.32

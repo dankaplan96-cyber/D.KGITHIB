@@ -1,0 +1,216 @@
+diff --git a/lba3/tools/blender/twinsen_poly.py b/lba3/tools/blender/twinsen_poly.py
+index 180b1f8..7f37c6d 100644
+--- a/lba3/tools/blender/twinsen_poly.py
++++ b/lba3/tools/blender/twinsen_poly.py
+@@ -34,7 +34,7 @@ S = 2.1  # the game's height for H (top of the hair)
+ COL = {
+     'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#553916', 'hairTuft': '#6a4722',
+     'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
+-    'cord': '#e8b04c', 'lidSkin': '#c29068', 'brow': '#4a3014', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#5c2622',
++    'cord': '#e8b04c', 'band': '#d8a83a', 'lidSkin': '#c29068', 'brow': '#4a3014', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#5c2622',
+ }
+ HEAD_K = 1.0                      # the head at the original's measured size (≈0.156 H wide; it was drawn ×1.24 before)
+ CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
+@@ -494,6 +494,13 @@ for sx in (1, -1):
+     sole = Part('sole' + s, 'sole', fb, angle=30)
+     box_wedge(sole, cx - 0.026, cx + 0.026, -0.052, 0.088, 0.0, 0.006, 0.006)
+     PARTS.append(sole)
++    if not os.environ.get('TW_LEGS_OLD'):
++        # (CONNECT-1 for the hero, the user 11.11: "every limb should be connected": under the robe there were no legs, so a
++        # stride or a run showed the slipper on its own inside the open robe. A bare shin from above the knee down into the
++        # slipper, on the knee's bone, hidden by the robe when he stands)
++        shin = Part('shin' + s, 'skin', lambda p, s=s: {'knee' + s: 1.0}, angle=60)
++        tube(shin, (cx, 0.27, 0.0), (cx, 0.03, 0.004), 0.024, 0.019, 10, cap0=True)
++        PARTS.append(shin)
+     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
+     # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
+     cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
+@@ -628,15 +635,56 @@ def head_ring(y, half):
+     return pts
+ 
+ 
+-head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=85, big=True)  # (smooth shading across the cheek corners; the silhouette keeps its LBA2 wedge)
++head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=(110 if not os.environ.get('TW_LOOK_OLD') else 85), big=True)  # (smooth shading across the cheek corners; the silhouette keeps its LBA2 wedge)
+ # smoother than the original: 11 points per half section, and a blended section between each measured pair
+-K = 11
++# TWINSEN-LOOK-38 (after ZOE-LOOK-38, the user's chosen direction for the cast: "a softer, more expressive animated look";
++# TW_LOOK_OLD=1 builds the head and eyes as before): each half section's corners cut twice (Chaikin, the ends kept on the
++# centre line), 15 points a half (28 round the head, was 20) and two blended sections between each measured pair: the
++# LBA2 wedge keeps its proportions but loses its facets
++TW_LOOK = not os.environ.get('TW_LOOK_OLD')
++
++
++def chaikin(half, it=2):
++    for _ in range(it):
++        out = [half[0]]
++        for (xa, za), (xb, zb) in zip(half, half[1:]):
++            out += [(0.75 * xa + 0.25 * xb, 0.75 * za + 0.25 * zb), (0.25 * xa + 0.75 * xb, 0.25 * za + 0.75 * zb)]
++        out.append(half[-1])
++        half = out
++    return half
++
++
++K = 14 if TW_LOOK else 11
+ FINE = []
+-for (y0, h0), (y1, h1) in zip(HEAD, HEAD[1:]):
++# (TWINSEN-LOOK-38, second pass, after the user's two figurine pictures (12.11): the head toward an egg: corners cut three
++# times; the crown 25 % taller above the brow line (tw_y), and the jaw drawn in toward the chin (tw_kx: 0.88 of the width at
++# the chin, the full width from the cheekbones up), so the face narrows to a rounded chin instead of the LBA2 wedge's flat
++# underside)
++def tw_y(y):
++    return y if (not TW_LOOK or y <= 0.9) else 0.9 + (y - 0.9) * 1.25
++
++
++def tw_kx(y):
++    return 1.0 if not TW_LOOK else 0.88 + 0.12 * smooth(0.822, 0.88, y)
++
++
++HEADS = [(tw_y(y), [(x * tw_kx(y), z) for x, z in chaikin(h, 3)]) for y, h in HEAD] if TW_LOOK else HEAD
++for (y0, h0), (y1, h1) in zip(HEADS, HEADS[1:]):
+     a, b = resample(h0, 25), resample(h1, 25)
+     FINE.append((y0, h0))
+-    FINE.append(((y0 + y1) / 2, [((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2) for pa, pb in zip(a, b)]))
+-FINE.append(HEAD[-1])
++    for t in (0.5,):
++        FINE.append((y0 + (y1 - y0) * t, [(pa[0] + (pb[0] - pa[0]) * t, pa[1] + (pb[1] - pa[1]) * t) for pa, pb in zip(a, b)]))
++FINE.append(HEADS[-1])
++CROWN_TOP = (0, tw_y(0.956), 0.035)
++if TW_LOOK:
++    # (TWINSEN-LOOK-38: the crown domed instead of a flat lid: four more rings above the top section, drawn in toward its
++    # middle on a quarter circle, 2.2 % H higher at the top, so the egg closes round under the knot)
++    yt, ht = FINE[-1]
++    zc_ = sum(z for _, z in ht) / len(ht)
++    for t in (0.35, 0.6, 0.8, 0.93):
++        k = math.sqrt(max(0.0, 1 - t * t))
++        FINE.append((yt + 0.022 * t, [(x * k, zc_ + (z - zc_) * k) for x, z in ht]))
++    CROWN_TOP = (0, yt + 0.0225, zc_)
+ rings = [head_ring(y, hh) for y, hh in FINE]
+ loft(head, rings)
+ # chin and crown: close the ends on a point
+@@ -645,14 +693,14 @@ o = len(head.v)
+ head.add([(0, 0.799, 0.095)], [])
+ head.f += [[(i + 1) % n, i, o] for i in range(n)]
+ top0 = (len(rings) - 1) * n
+-head.add([(0, 0.956, 0.035)], [])
++head.add([CROWN_TOP], [])
+ head.f += [[top0 + i, top0 + (i + 1) % n, o + 1] for i in range(n)]
+ PARTS.append(head)
+ 
+ 
+ def head_front(x, y):
+     # z of the face surface at (x, y), for placing the eyes on it
+-    for (y0, h0), (y1, h1) in zip(HEAD, HEAD[1:]):
++    for (y0, h0), (y1, h1) in zip(HEADS, HEADS[1:]):
+         if y0 <= y <= y1:
+             t = (y - y0) / (y1 - y0)
+             def fz(h):
+@@ -683,6 +731,15 @@ def head_front(x, y):
+ # points down, so LbaMaterial's ramp gives one constant dark shade from any side (the original's colours on screen:
+ # palette 17 #2b1b07 on the crown, 18–19 #331f0b–#3b270f on the tuft).
+ HAIR = ((0.951, -0.052, 0.0494), (0.925, -0.103, 0.0355), (0.890, -0.118, 0.0247))   # centre y, z, radius (H)
++# TWINSEN-LOOK-38 (the user 12.11, a fan's figurine as the direction the game's community wants: a topknot): the same
++# three masses moved up into a knot standing on the top of the crown, tied at its root with a band, its tip arching up and
++# back (TW_LOOK_OLD: LBA2's tuft down the back of the head). The weights and the tail bones' follow-through are as before.
++if not os.environ.get('TW_LOOK_OLD'):
++    # (third pass, the user 12.11 on the second: "the band must sit tight on the scalp", and the game's cover art as the
++    # direction: the knot's root half sunk in the crown, so the band sits on the skin; the tail rises and falls back in a
++    # long arc, thicker, its tip low behind the head)
++    _ct = CROWN_TOP
++    HAIR = ((_ct[1] - 0.006, _ct[2] - 0.030, 0.0330), (_ct[1] + 0.062, _ct[2] - 0.060, 0.0350), (_ct[1] + 0.070, _ct[2] - 0.150, 0.0260))
+ HAIR_FILL = 0.7          # how much of the waist between two balls is filled (0: the balls' union, 1: their hull)
+ HAIR_M = 12              # points per ring
+ HAIR_DOWN = (0.0, -1.0, 0.0)
+@@ -741,6 +798,12 @@ HAIR_U = {}
+ hair = Part('hair', 'hair', lambda p: w_hair(HAIR_U[tuple(round(c, 6) for c in p)]), big=True,
+             normal=HAIR_DOWN, color=lambda p: 'hair' if HAIR_U[tuple(round(c, 6) for c in p)] < 0.55 else 'hairTuft')
+ stations, front, tip = hair_sweep()
++if not os.environ.get('TW_LOOK_OLD'):
++    # (TWINSEN-LOOK-38, fifth pass, the user 12.11: "the band is in the middle of the hair, it must be at the hair's
++    # base": the band at the skin, and the hair below it drawn in to 85 % of the band's own section, so no hair shows
++    # between the band and the scalp; the knot starts at the band)
++    BAND_ST = min((st_ for st_ in stations if st_[3] >= -0.3), key=lambda st_: abs(st_[0][0] - (CROWN_TOP[1] - 0.002)))
++    stations = [(c_, d_, min(r_, BAND_ST[2] * 0.85) if u_ < BAND_ST[3] else r_, u_) for c_, d_, r_, u_ in stations]
+ hv, hf, us = [], [], []
+ for (cy, cz), (ty, tz), r, u in stations:
+     # ring in the plane across the sweep: x across, n = the sweep's normal in the mid-plane
+@@ -765,6 +828,16 @@ hair.add(hv, hf)
+ for p, u in zip(hair.v[start:], us):
+     HAIR_U[tuple(round(c, 6) for c in p)] = u
+ PARTS.append(hair)
++if not os.environ.get('TW_LOOK_OLD'):
++    # (TWINSEN-LOOK-38: the knot's band, a short thick ring round the hair where the knot leaves the crown, weighted as the
++    # hair is there, so the follow-through carries it)
++    # (the band where the knot leaves the scalp: the station nearest a point 9 mm above the crown's skin)
++    bc = BAND_ST   # (fourth pass: at the skin itself, half sunk)
++    ub = bc[3]
++    (cy, cz), (ty, tz), r, _u = bc
++    band = Part('hairBand', 'band', lambda p, ub=ub: w_hair(ub), angle=60)   # (gold, as on the game's cover: the medallion cord's colour)
++    tube(band, (0.0, cy - ty * 0.018, cz - tz * 0.018), (0.0, cy + ty * 0.008, cz + tz * 0.008), r * 1.10, r * 1.06, 14, cap0=True)   # (reaching down into the scalp at the back)
++    PARTS.append(band)
+ 
+ # HERO-LOOK (I-23, the user 31.10: "the medallion is just a plain disc, not on a necklace as in the original"). LBA2's
+ # Twinsen (BODY.HQR body 1) does wear it on a necklace: besides its polygons the body has 15 line primitives, which the
+@@ -906,10 +979,17 @@ for sx in (1, -1):
+         p = (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
+         return scale_about(tilt(p) if False else p, CHIN, HEAD_K)
+     # almond: wider than tall, the outer corner a touch higher
+-    white = [on_face(0.016 * math.cos(t), 0.0085 * math.sin(t)) for t in [2 * math.pi * k / 10 for k in range(10)]]
++    # (TWINSEN-LOOK-38: the eye 16 % wider and 30 % taller, rounder, on 16 points; the iris and pupil larger; a catch-light)
++    # (fifth pass, the user 12.11: "the eyes are far too big and there are strange spots in them": back near the old size,
++    # a touch rounder; the white lifted 0.8 mm off the face, so the curved face no longer shows through its flat edges)
++    EW, EH = (0.0170, 0.0100) if TW_LOOK else (0.016, 0.0085)
++    NW = 12 if TW_LOOK else 10
++    WL = 0.0008 if TW_LOOK else 0.0
++    white = [on_face(EW * math.cos(t), EH * math.sin(t), WL) for t in [2 * math.pi * k / NW for k in range(NW)]]
+     ic = (sx * -0.002, 0.0)
+-    iris = [on_face(ic[0] + 0.0068 * math.cos(t), ic[1] + 0.0068 * math.sin(t), 0.0012) for t in [2 * math.pi * k / 10 for k in range(10)]]
+-    pupil = [on_face(ic[0] + 0.003 * math.cos(t), ic[1] + 0.003 * math.sin(t), 0.0022) for t in [2 * math.pi * k / 8 for k in range(8)]]
++    IR, PR = (0.0071, 0.0032) if TW_LOOK else (0.0068, 0.003)
++    iris = [on_face(ic[0] + IR * math.cos(t), ic[1] + IR * math.sin(t), 0.0012 + WL) for t in [2 * math.pi * k / (14 if TW_LOOK else 10) for k in range(14 if TW_LOOK else 10)]]
++    pupil = [on_face(ic[0] + PR * math.cos(t), ic[1] + PR * math.sin(t), 0.0022 + WL) for t in [2 * math.pi * k / (10 if TW_LOOK else 8) for k in range(10 if TW_LOOK else 8)]]
+     piv = scale_about((cx, cy, cz), CHIN, HEAD_K)
+     # HERO-LOOK (faces in close-up, WORKLIST #8): an upper lid. Without one the iris sat in a full ring of white, a stare
+     # that read as startled (uncanny) in the dialogue close-ups. The lid (the skin a shade darker) comes down over the top
+@@ -918,13 +998,14 @@ for sx in (1, -1):
+     LID = 7
+     us = [i / (LID - 1) * 2 - 1 for i in range(LID)]
+     outer = lambda u: max(0.0, u * sx)
+-    edge = [(u * 0.0168, EYE_LID * (1 - u * u) ** 0.7 + 0.0007 * outer(u)) for u in us]
+-    top = [(u * 0.0176, 0.0085 * 1.07 * math.sqrt(max(0.0, 1 - u * u)) + 0.0006) for u in us]
++    LIDY = 0.0042 if TW_LOOK else EYE_LID   # (TWINSEN-LOOK-38: a heavy upper lid over the top of the round eye, as the cover's)
++    edge = [(u * EW * 1.05, LIDY * (1 - u * u) ** 0.7 + 0.0007 * outer(u)) for u in us]
++    top = [(u * EW * 1.1, EH * 1.07 * math.sqrt(max(0.0, 1 - u * u)) + 0.0006) for u in us]
+     lid = [on_face(dx, dy, 0.0026) for dx, dy in edge] + [on_face(dx, dy, 0.0026) for dx, dy in reversed(top)]
+     lash_lo = [(dx, dy - 0.0004) for dx, dy in edge]
+     lash_hi = [(dx + 0.0016 * outer(u) * sx, dy + 0.0010 + 0.0010 * outer(u)) for (dx, dy), u in zip(edge, us)]
+     lash = [on_face(dx, dy, 0.003) for dx, dy in lash_lo] + [on_face(dx, dy, 0.003) for dx, dy in reversed(lash_hi)]
+-    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil'), (lid, 'lidSkin'), (lash, 'lid')]})
++    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil')] + [(lid, 'lidSkin'), (lash, 'lid')]})
+ 
+ # HERO-LOOK: brows. He had none (LBA2's in-game model has none at its 30 px head height); in the close-ups a face with no
+ # brows reads blank and childlike, and he is a grown man now. Short, a little arched, thicker at the inner end, in his
+@@ -935,7 +1016,7 @@ for sx in (1, -1):
+     for i in range(5):
+         u = i / 4
+         x = sx * (0.0205 + 0.034 * u)
+-        yc = EYE_Y + 0.0172 + 0.0042 * math.sin(math.pi * min(1.0, u * 1.15)) - 0.0012 * u
++        yc = EYE_Y + (0.0182 if TW_LOOK else 0.0172) + 0.0042 * math.sin(math.pi * min(1.0, u * 1.15)) - 0.0012 * u   # (TWINSEN-LOOK-38: above the taller eye)
+         h = 0.0031 * (1 - u) + 0.0013 * u
+         st.append((x, yc, h))
+     lo = [(x, y - h, head_front(x, y - h) + 0.0024) for x, y, h in st]
+@@ -957,7 +1038,14 @@ NOSE = [hf(0, 0.8785, -0.0012),                                   # 0 the bridge
+         hf(0, 0.8555, 0.0022),                                    # 5 under the tip
+         hf(0, 0.8648, 0.0082),                                    # 6 the tip
+         hf(0.0047, 0.8628, 0.0062), hf(-0.0047, 0.8628, 0.0062)]   # 7, 8 the tip's sides
+-nose.add(NOSE, [[0, 1, 7], [0, 7, 6], [0, 6, 8], [0, 8, 2], [1, 3, 7], [2, 8, 4], [7, 3, 5], [7, 5, 6], [6, 5, 8], [8, 5, 4]])
++if TW_LOOK:
++    # (TWINSEN-LOOK-38: a small rounded nose, as Zoé's: a ball squashed front to back on the snout, its back half sunk in the
++    # face, and a short soft bridge into the brow; the tip 7 mm proud, a little lower and rounder than the pyramid's point)
++    tip = (0.0, 0.8625, head_front(0.0, 0.8625) + 0.0012)
++    sphere(nose, tip, 0.0078, 10, 7, 0.9)
++    tube(nose, (0.0, 0.8755, head_front(0.0, 0.8755) - 0.0025), (0.0, 0.8645, head_front(0.0, 0.8645) + 0.0005), 0.0058, 0.0074, 10, cap0=False, cap1=False, squash=0.62)
++else:
++    nose.add(NOSE, [[0, 1, 7], [0, 7, 6], [0, 6, 8], [0, 8, 2], [1, 3, 7], [2, 8, 4], [7, 3, 5], [7, 5, 6], [6, 5, 8], [8, 5, 4]])
+ PARTS.append(nose)
+ 
+ 

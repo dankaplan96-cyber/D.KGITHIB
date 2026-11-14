@@ -1,0 +1,32 @@
+From 7b27a0858db6cde9b7b0c76e9813b7d6453d7ac2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 10:36:18 +0000
+Subject: [PATCH 03/10] =?UTF-8?q?Campaign=20wave=208:=20the=20narrator's?=
+ =?UTF-8?q?=20line=20after=20the=20dinner=20no=20longer=20repeats=20Zo?=
+ =?UTF-8?q?=C3=A9's=20"slowly"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/text/thread.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lba3/src/game/text/thread.js b/lba3/src/game/text/thread.js
+index 060d80c2..0e388514 100644
+--- a/lba3/src/game/text/thread.js
++++ b/lba3/src/game/text/thread.js
+@@ -39,7 +39,7 @@ Object.assign(STR.en, {
+   prh_j_growth: 'At the bottom of the well the water was warm, and the crystals on the masonry moved when a pump started above.',
+ 
+   // ------------------------------------------------------------ the epilogue: the tap again (CAMPAIGN-10, story/hometap.js EpilogueTap)
+-  ep_narr_after: 'Dinner. Then the whole story, slowly.',
++  ep_narr_after: 'Later. Empty plates, and most of the story told.',
+   ep_ar_ask: 'Dad! Come and turn the tap. I want to hear the pipe.',
+   ep_zoe_ask: "He's had his ear on that pipe for four days. Go on.",
+   ep_obj_tap: 'Turn the kitchen tap. Arthur is listening',
+-- 
+2.43.0
+

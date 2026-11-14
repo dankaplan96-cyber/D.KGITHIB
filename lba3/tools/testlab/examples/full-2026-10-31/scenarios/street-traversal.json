@@ -1,0 +1,104 @@
+{
+  "test": "street-traversal",
+  "target": "packaged",
+  "game": "C:/Users/dan/lba3-games/0.43.3/LBA3 The Awakening.exe",
+  "created": "2026-10-31T14:38:59.896Z",
+  "start": {
+    "x": -46,
+    "z": 2,
+    "a": 1.5707963267948966
+  },
+  "timeline": [
+    [
+      0,
+      "down",
+      "ArrowUp"
+    ],
+    [
+      3,
+      "up",
+      "ArrowUp"
+    ],
+    [
+      3,
+      "down",
+      "ArrowRight"
+    ],
+    [
+      4,
+      "up",
+      "ArrowRight"
+    ],
+    [
+      4,
+      "down",
+      "ArrowUp"
+    ],
+    [
+      7,
+      "up",
+      "ArrowUp"
+    ],
+    [
+      7,
+      "down",
+      "ArrowRight"
+    ],
+    [
+      8,
+      "up",
+      "ArrowRight"
+    ],
+    [
+      8,
+      "down",
+      "ArrowUp"
+    ],
+    [
+      11,
+      "up",
+      "ArrowUp"
+    ],
+    [
+      11,
+      "down",
+      "ArrowRight"
+    ],
+    [
+      12,
+      "up",
+      "ArrowRight"
+    ],
+    [
+      12,
+      "down",
+      "ArrowUp"
+    ],
+    [
+      15,
+      "up",
+      "ArrowUp"
+    ],
+    [
+      15,
+      "down",
+      "ArrowRight"
+    ],
+    [
+      16,
+      "up",
+      "ArrowRight"
+    ],
+    [
+      16,
+      "down",
+      "ArrowUp"
+    ],
+    [
+      20,
+      "up",
+      "ArrowUp"
+    ]
+  ],
+  "note": "teleport to the start (game.exitRoom, instant), settle 3 s, then the key timeline in real time"
+}

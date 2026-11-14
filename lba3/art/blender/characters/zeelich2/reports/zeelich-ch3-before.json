@@ -1,0 +1,67 @@
+{
+ "room": "zeelich",
+ "chapterKey": "zeelich",
+ "hero": [
+  2396,
+  36.8
+ ],
+ "esmers": [
+  {
+   "id": "nara",
+   "char": "nara",
+   "x": 2365.5,
+   "z": -3.2
+  },
+  {
+   "id": "oku",
+   "char": "oku",
+   "x": 2376,
+   "z": 7
+  },
+  {
+   "id": "ilo",
+   "char": "keeper",
+   "x": 2373.4,
+   "z": 7.2
+  },
+  {
+   "id": "ennu",
+   "char": "oku",
+   "x": 2388.5,
+   "z": 40
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 2378.528709125715,
+   "z": 19.21718775201481,
+   "a": -2.7489051535897917
+  },
+  "centre": [
+   2375.85,
+   12.75
+  ],
+  "n": 4,
+  "info": {
+   "calls": 797,
+   "triangles": 526959
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "oku",
+ "errors": [],
+ "at": "2026-11-08T04:15:57.698Z",
+ "candidates": {
+  "CAND_clerk": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/clerk.json",
+  "CAND_councilChair": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/councilChair.json",
+  "CAND_keeper": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/keeper.json",
+  "CAND_nara": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/nara.json",
+  "CAND_oku": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/oku.json",
+  "CAND_xil": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/xil.json"
+ }
+}

@@ -1,0 +1,34 @@
+=== 05-project-b start 2026-11-01T22:09:05Z LOAD=/dev/shm/gatefix/saves/f/04.json SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/05-project-b.mjs
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-54.5,18.8,-36.8] hp 11 | Visit Vesk at the old fortress
+[7s +7s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":14,"fail":null} | control [1399.67,0,-1.22] hp 4 | Meet Zoé at the station gate
+[9s +2s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 4 | Zoé: find the plan without being seen
+[13s +3s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.14,0,-3.68] hp 4 | Zoé: get out with the plan
+[95s +83s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [13.32,2.35,26.5] hp 4 | Confront Vesk at the beam pad
+[105s +10s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"gone":true,"fail":null} | citadel [-19.46,16.36,-61.05] hp 4 | Go home. Arthur is calling you
+[110s +4s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":12,"radio":true,"fail":null} | citadel [-43.98,2.34,77.2] hp 4 | Talk to Doran at the harbour
+[113s +3s] Doran at the harbour: {"r":"talked","to":"doran","state":"play","lines":6,"ship":true,"fail":null} | citadel [-116.93,1.8,44.66] hp 4 | Meet Doran at the spaceport
+[117s +4s] the project's ship at the spaceport → Zeelich: {"r":"used","target":{"kind":"c1ship","id":"p_board","label":"p_board"},"state":"play","lines":16,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 4 | Find Baldino's workshop
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[215.7] stuck at (13.5, 26.8): replan
+[218.6] stuck at (13.2, 26.7): replan
+[221.6] stuck at (13.5, 26.5): replan
+[227.3] go → (-18.0, -60.6) plan ok=true pts=23 left=0.68
+[326.1] go → (-46.1, 77.2) plan ok=true pts=24 left=0.27
+[364.1] go: transition (citadel → citadel, trans true) at (-45.56, 76.52)
+[365.0] go → (1002.1, 2.1) plan ok=true pts=2 left=0.61
+[369.8] go → (1001.2, 11.3) plan ok=false pts=2 left=0.56
+[375.0] go: transition (house → house, trans true) at (1001.41, 10.70)
+[375.8] go → (-118.0, 45.2) plan ok=true pts=9 left=0.91
+[397.3] go → (0.3, 41.0) plan ok=true pts=12 left=0.55
+[423.1] go → (0.3, 41.0) plan ok=true pts=2 left=0.18
+kept /dev/shm/gatefix/saves/f/05.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 05-project-b end rc=0 wall=298s 2026-11-01T22:14:03Z

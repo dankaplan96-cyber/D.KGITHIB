@@ -1,0 +1,43 @@
+PASS Bram, Officer Odile and Nell are on Citadel at their places 
+PASS the house: Zoé's board, the old trunk, the mend box, the heat meter and Arthur's bench each have a short look (INPUT) 
+PASS before the heat network (prologue) Zoé's board and the meter say the house is waiting 
+PASS …and show it: every pin on the board red, the meter's needle at rest, no note on it (stage 0) (REV-TY-1 D4) 
+PASS Arthur's workbench stands where the house's camera sees it (nothing tall in between) (REV-TY-1 D2) 
+PASS prologue: the pump is dry and Bram only remarks on it (no side story yet) 
+ISO  prologue: Twinsen put outdoors by the garden (exitRoom) for the boat box
+PASS prologue: Arthur's boat box is only looked at; the pliers stay in it, no journal line (REV-TY-1 D6) 
+PASS chapter 2: Bram asks about his pump; the valve pin needs pliers Twinsen doesn't have 
+PASS Arthur admits he borrowed the pliers (his boat box, by the pond) 
+PASS the boat box has the pliers; the pin comes out; three strokes and the pump runs (INPUT) 
+PASS with the pin out the pump answers from the trough side where the pin came out, and from round it (REV-TY-3 N3) 
+  stroke from trough side: prompt 2.56 m from the grip, walk ≤ 2.35 m/s, 45 stroke frames, hands to grip first 0.005 last 0.025 max 0.051 m, handle lifted -0.42 and pushed down 0.26 rad
+  stroke from lane south: prompt 2.54 m from the grip, walk ≤ 2.39 m/s, 45 stroke frames, hands to grip first 0.004 last 0.025 max 0.051 m, handle lifted -0.42 and pushed down 0.26 rad
+  stroke from north: prompt 1.34 m from the grip, walk ≤ 2.4 m/s, 45 stroke frames, hands to grip first 0.004 last 0.025 max 0.051 m, handle lifted -0.42 and pushed down 0.26 rad
+PASS asked from the trough side, the lane or the north, he walks round to the grip at walking pace (≤ 2.5 m/s) through nothing solid, and works it standing at the grip, clear of the plinth (REV-TY-3 N2) 
+PASS his hands stay on the handle's grip through the whole stroke, first and last frames included (< 0.15 m); the handle is lifted and pushed down (REV-TY-1 D7) 
+PASS the pump's water restores life; Bram thanks him with a clover (owed until picked up, then in his pocket); the journal tracks it 
+ISO  Twinsen put on the lane beside the pipe (exitRoom), then walks by holding Up
+PASS the copper pipe stops him (he is not lifted onto it); at the pump's footpath, where it runs under the ground, he walks across (REV-TY-1 D3) 
+PASS the trough can't be stood on; the pump sign's post, the customs barrier's post, the pipe and its valve box are solid (REV-TY-1 D3) 
+PASS Officer Odile holds the "soup pot"; opening it: a heat coupler, carried 
+PASS on the bench it runs and heats; left too long it trips and goes cold (a limited setback) 
+  coupler by stage: cool: {"c":"#000000","e":0,"light":0,"halo":0,"puffs":0} {"top":"seen","front":"seen","west":"seen","east":"seen"} | warming: {"c":"#b0280a","e":0.9,"light":0.6,"halo":0.22,"puffs":1} {"top":"seen","front":"seen","west":"seen","east":"seen"} | glowing: {"c":"#ff6414","e":2.4,"light":2.6,"halo":0.6,"puffs":4} {"top":"seen","front":"seen","west":"seen","east":"seen"} | about to trip: {"c":"#ffd890","e":3.28,"light":4.05,"halo":0.87,"puffs":7} {"top":"seen","front":"seen","west":"seen","east":"seen"}
+PASS he sets it down from his place at the bench's west end, facing the bench (REV-TY-3, TY-1 D1) 
+PASS the coupler is in view from the normal camera while it heats: not hidden by the shop's roof or by Twinsen at the bench (REV-TY-3, TY-1 D1) 
+PASS its four heat stages look different: brass and still (cool), dull red with wisps (warming), bright orange with a halo and a light on the bench (glowing), yellow-white with a column of steam (about to trip) 
+PASS Nell knows the coupler: Xil was getting her one from Zeelich (REV-TY-1 D8) 
+PASS restarted, taken off while glowing, cooled in the barrel, set back: it settles and the engine runs (INPUT) 
+PASS Odile clears the coupler's papers; the crate's tag reads CLEARED; Nell pays part of what she owes Xil for it (REV-TY-1 D8) 
+PASS Nell's payment: three coins, owed until picked up, then his (INPUT) 
+PASS save & quit → Continue: the pump runs, the crate is cleared, the engine is settled 
+PASS other order: pliers first, the pump fixed before Bram asked; Bram still thanks him 
+PASS saved before he picked Bram's clover up: on Continue it is in his pocket (a toast says so), nothing owed (REV-TY-1 D5) 
+PASS a save made with the coupler heating comes back with it cold on the bench (restartable) 
+PASS saved before he picked Nell's coins up: on Continue the three kashes are his, nothing owed (REV-TY-1 D5) 
+PASS with the project's heat on, the board shows Bug Street green and the harbour row red, the meter's needle up with Zoé's note (stage 1) (REV-TY-1 D4) 
+PASS evacuation: Bram's line follows the dark posts 
+PASS after Zoé found the plan, her board reads differently (the red pins are the houses left out) and shows her chalk ring round them (stage 2) 
+PASS from the square he walks to the pump, its handle, the garden, customs, the repair shop and its barrel and back (INPUT) 
+PASS Nell's shop (bench, engine, barrel) and the garden's raised beds are off the dirt paths (> 2.3 m from a path's middle) (REV-TY-1 D1) 
+no errors
+ALL PASSED

@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8124",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"lba\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"textSize\":\"normal\",\"shake\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"keys\":{},\"v\":2}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":3,\"room\":null,\"hero\":{\"x\":-55.99503015986184,\"z\":-36.734214864015804,\"hp\":4,\"mp\":8,\"magicLevel\":1,\"clovers\":3,\"coins\":7,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\"},\"flags\":{\"chapter\":1,\"chapterKey\":\"project\",\"intro\":true,\"opening\":true,\"tremorSeen\":true,\"wellSeen\":true,\"key\":true,\"metXil\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"inWell\":true,\"nodes\":3,\"sendellHeard\":true,\"prologueDone\":true,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"drone2\",\"drone1\",\"guard1\",\"gdog1\"],\"collected\":[],\"searched\":[\"cupboard\"],\"crates\":[4,5]}"
+        }
+      ]
+    }
+  ]
+}

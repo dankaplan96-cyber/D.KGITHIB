@@ -1,0 +1,50 @@
+{
+ "room": "desert",
+ "chapterKey": "steam",
+ "hero": [
+  3292,
+  4
+ ],
+ "esmers": [
+  {
+   "id": "dg_haul",
+   "char": "farmerC_b",
+   "x": 3431,
+   "z": -2.4
+  },
+  {
+   "id": "dg_mech",
+   "char": "lharMan",
+   "x": 3445.2,
+   "z": -6.75
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 3438.1,
+   "z": 2.425,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   3438.1,
+   -4.575
+  ],
+  "n": 2,
+  "info": {
+   "calls": 196,
+   "triangles": 298918
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "dg_haul",
+ "errors": [],
+ "at": "2026-11-08T17:33:13.244Z",
+ "candidates": {
+  "CAND_lharMan": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig4/lharMan.committed.json"
+ }
+}

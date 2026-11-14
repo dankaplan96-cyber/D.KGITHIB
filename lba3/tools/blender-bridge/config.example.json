@@ -1,0 +1,4 @@
+{
+  "_comment": "Copy to config.local.json (git-ignored) only if Blender is not in a standard place. Order of discovery: --blender <exe>, the LBA3_BLENDER environment variable, config.local.json, Program Files\\Blender Foundation\\* (newest first), Steam, %LOCALAPPDATA%\\Programs, then PATH.",
+  "blender": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe"
+}

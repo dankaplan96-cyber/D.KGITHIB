@@ -1,0 +1,55 @@
+street-a  noise                                differ       0 (0.000 %) over2      0 over8      0 max 0
+street-a  terrain grass read everywhere        differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  terrain world normal varying         differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  lamps set up everywhere              differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  indirect specular always             differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  sun shadow read when turned away     differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  output own pixel filtered            differ      20 (0.002 %) over2      0 over8      0 max 1 restored 0
+street-a  output lumas rooted everywhere       differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-a  all seven as before                  differ      20 (0.002 %) over2      0 over8      0 max 1 restored 0
+street-a  TRADE terrain sun without specular   differ  681197 (64.932 %) over2 618659 over8  50591 max 125 restored 0
+street-a  TRADE opaque front to back           differ      38 (0.004 %) over2     26 over8     11 max 63 restored 0
+street-b  noise                                differ       0 (0.000 %) over2      0 over8      0 max 0
+street-b  terrain grass read everywhere        differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  terrain world normal varying         differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  lamps set up everywhere              differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  indirect specular always             differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  sun shadow read when turned away     differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  output own pixel filtered            differ      23 (0.002 %) over2      0 over8      0 max 1 restored 0
+street-b  output lumas rooted everywhere       differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-b  all seven as before                  differ      23 (0.002 %) over2      0 over8      0 max 1 restored 0
+street-b  TRADE terrain sun without specular   differ  567230 (54.069 %) over2 529670 over8  96647 max 97 restored 0
+street-b  TRADE opaque front to back           differ      64 (0.006 %) over2     53 over8     33 max 48 restored 0
+street-c  noise                                differ       0 (0.000 %) over2      0 over8      0 max 0
+street-c  terrain grass read everywhere        differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  terrain world normal varying         differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  lamps set up everywhere              differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  indirect specular always             differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  sun shadow read when turned away     differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  output own pixel filtered            differ      15 (0.001 %) over2      0 over8      0 max 1 restored 0
+street-c  output lumas rooted everywhere       differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+street-c  all seven as before                  differ      15 (0.001 %) over2      0 over8      0 max 1 restored 0
+street-c  TRADE terrain sun without specular   differ  574697 (54.781 %) over2 488749 over8   1663 max 115 restored 0
+street-c  TRADE opaque front to back           differ      41 (0.004 %) over2     35 over8     27 max 200 restored 0
+house-a   noise                                differ       0 (0.000 %) over2      0 over8      0 max 0
+house-a   terrain grass read everywhere        differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-a   terrain world normal varying         differ       1 (0.000 %) over2      0 over8      0 max 1 restored 0
+house-a   lamps set up everywhere              differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-a   indirect specular always             differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-a   sun shadow read when turned away     differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-a   output own pixel filtered            differ      17 (0.002 %) over2      0 over8      0 max 1 restored 0
+house-a   output lumas rooted everywhere       differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-a   all seven as before                  differ      18 (0.002 %) over2      0 over8      0 max 1 restored 0
+house-a   TRADE terrain sun without specular   differ  264594 (25.221 %) over2 234565 over8   2332 max 117 restored 0
+house-a   TRADE opaque front to back           differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   noise                                differ       0 (0.000 %) over2      0 over8      0 max 0
+house-b   terrain grass read everywhere        differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   terrain world normal varying         differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   lamps set up everywhere              differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   indirect specular always             differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   sun shadow read when turned away     differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   output own pixel filtered            differ      40 (0.004 %) over2      0 over8      0 max 1 restored 0
+house-b   output lumas rooted everywhere       differ       0 (0.000 %) over2      0 over8      0 max 0 restored 0
+house-b   all seven as before                  differ      40 (0.004 %) over2      0 over8      0 max 1 restored 0
+house-b   TRADE terrain sun without specular   differ  326015 (31.076 %) over2 303405 over8  15159 max 104 restored 0
+house-b   TRADE opaque front to back           differ      60 (0.006 %) over2     48 over8     24 max 56 restored 0

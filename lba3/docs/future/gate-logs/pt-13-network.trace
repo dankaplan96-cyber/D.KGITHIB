@@ -1,0 +1,147 @@
+[0.3] go → (1502.8, -3.0) plan ok=true pts=2 left=0.3
+[2.2] go: transition (workshop → workshop, trans true) at (1502.78, -2.32)
+[3.1] go → (2376.0, 7.0) plan ok=true pts=2 left=0.61
+[5.9] go → (2398.0, -10.9) plan ok=true pts=4 left=0.43
+[15.5] go → (2399.8, -14.3) plan ok=true pts=2 left=0.32
+[16.5] go → (2400.2, -16.2) plan ok=true pts=2 left=0.05
+[17.6] go → (2400.7, -17.8) plan ok=true pts=2 left=0.26
+[19.2] go → (2400.7, -17.8) plan ok=true pts=2 left=0.14
+[22.8] go → (2401.4, -19.5) plan ok=true pts=2 left=0.21
+[24.9] go → (2401.4, -19.5) plan ok=true pts=2 left=0.22
+[30.0] go → (2401.2, -21.3) plan ok=true pts=2 left=0.07
+[31.8] go → (2401.2, -21.3) plan ok=true pts=2 left=0.09
+[35.7] go → (2400.2, -22.7) plan ok=true pts=2 left=0.25
+[41.1] go → (2400.2, -22.7) plan ok=true pts=2 left=0.28
+[46.4] go → (2398.5, -23.4) plan ok=true pts=2 left=0.28
+[52.0] go → (2398.5, -23.4) plan ok=true pts=2 left=0.24
+[57.2] go → (2396.7, -23.2) plan ok=true pts=2 left=0.08
+[59.0] go → (2396.7, -23.2) plan ok=true pts=2 left=0.14
+[62.8] go → (2395.3, -22.2) plan ok=true pts=2 left=0.24
+[68.0] go → (2398.0, -16.7) plan ok=true pts=4 left=0.66
+[71.1] go → (2398.0, -16.7) plan ok=true pts=2 left=0.05
+[73.1] go → (2394.6, -20.6) plan ok=true pts=4 left=0.23
+[86.3] go: no way round, taking a drop
+[86.3] go → (2399.8, -14.3) plan ok=true pts=5 left=0.34
+[89.2] hurt 7→5 at (2402.6, 6.0, -18.4) near: nobody 
+[91.7] go → (2396.0, 40.4) plan ok=false pts=6 left=1.28
+[106.9] stuck at (2396.1, 39.1): replan
+[112.3] stuck at (2395.9, 39.2): replan
+[117.7] stuck at (2396.6, 39.2): replan
+[123.2] stuck at (2395.9, 39.1): replan
+[128.6] stuck at (2396.1, 39.0): replan
+[134.1] stuck at (2395.9, 39.1): replan
+[141.0] go → (-65.5, 11.0) plan ok=true pts=9 left=0.27
+[157.2] go: transition (citadel → citadel, trans true) at (-64.83, 11.36)
+[158.0] go → (1198.8, 0.9) plan ok=true pts=4 left=0.73
+[163.8] go → (4995.8, -3.0) plan ok=true pts=2 left=0.3
+[166.8] go → (4995.8, -3.0) plan ok=true pts=2 left=0.29
+[168.1] go → (4998.6, -3.0) plan ok=true pts=2 left=0.32
+[169.9] go → (4998.6, -3.0) plan ok=true pts=2 left=0.2
+[171.1] go → (5001.4, -3.0) plan ok=true pts=2 left=0.4
+[172.2] go → (5001.4, -3.0) plan ok=true pts=2 left=0.3
+[173.7] go → (5004.2, -3.0) plan ok=true pts=2 left=0.38
+[175.8] go → (5004.2, -3.0) plan ok=true pts=2 left=0.08
+[176.0] go → (5004.2, -3.0) plan ok=true pts=2 left=0.01
+[176.0] go → (5004.2, -3.0) plan ok=true pts=2 left=0.01
+[176.8] go → (4994.5, 2.5) plan ok=true pts=2 left=0.15
+[183.4] go: transition (valves → valves, trans true) at (4995.23, 2.45)
+[184.2] go → (1202.7, -3.0) plan ok=true pts=2 left=0.22
+[186.7] go: transition (office → office, trans true) at (1202.75, -2.34)
+[187.5] go → (-107.5, 94.2) plan ok=true pts=12 left=0.08
+[212.4] go: transition (citadel → citadel, trans true) at (-106.56, 94.02)
+[213.2] go → (1598.5, -0.6) plan ok=true pts=5 left=0.65
+[216.0] go → (1598.5, -0.6) plan ok=true pts=2 left=0.35
+[217.6] ISO assist: moved zoe,arthur 3 m west, off the lighthouse dial bank (B-1)
+[217.6] go → (1599.0, -1.1) plan ok=true pts=2 left=0.2
+[218.7] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.0] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.2] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.5] go → (1599.5, -1.3) plan ok=true pts=2 left=0.2
+[220.7] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.0] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.2] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.5] go → (1600.1, -1.5) plan ok=true pts=2 left=0.25
+[226.5] stuck at (1600.2, -1.3): replan
+[228.2] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[228.5] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[228.7] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[230.2] ISO assist: moved zoe,arthur 3 m west, off the lighthouse dial bank (B-1)
+[230.2] go → (1601.4, -1.1) plan ok=false pts=6 left=0.51
+[234.8] go: transition (lighttop → lighttop, trans true) at (1601.26, -0.55)
+[235.7] go → (-59.8, -60.0) plan ok=true pts=28 left=0.91
+[278.5] stuck at (-40.3, -40.1): replan
+[284.0] stuck at (-40.7, -40.0): replan
+[289.4] stuck at (-40.3, -40.5): replan
+[445.3] go → (3439.4, -15.6) plan ok=true pts=11 left=0.72
+[470.5] stuck at (3406.5, -19.4): replan
+[482.3] go → (3442.0, -18.0) plan ok=false pts=3 left=1.9
+[483.7] go → (3442.0, -18.0) plan ok=false pts=2 left=1.92
+[489.5] go → (3455.5, -19.0) plan ok=true pts=4 left=3.54
+[493.9] hurt 5→4 at (3447.3, 1.6, -17.6) near: ndrone0:chase 
+[497.1] fight ndrone0 d=2.6 st=chase aim=it e@3452.5,1.6,-18.6 me@3448.9,1.6,-17.4 ball=idle hp 3→3 me 3 mp 12
+[498.2] fight ndrone0 d=3.9 st=dead aim=it e@3452.7,1.6,-18.7 me@3448.9,1.6,-17.4 ball=idle hp 3→0 me 3 mp 11.344166666666668
+[498.2] go → (3455.0, -24.8) plan ok=true pts=2 left=3.47
+[501.5] fight ndrone1 d=5.5 st=chase aim=it e@3454.8,1.6,-23.9 me@3451.2,1.6,-19.1 ball=idle hp 3→3 me 5 mp 12
+[502.6] fight ndrone1 d=6.0 st=dead aim=it e@3454.9,1.6,-24.0 me@3451.2,1.6,-19.1 ball=idle hp 3→0 me 5 mp 11.344166666666668
+[502.6] go → (3454.5, -9.1) plan ok=true pts=3 left=3.29
+[508.2] fight ndrone2 d=4.8 st=search aim=none e@3450.0,1.6,-10.9 me@3455.1,1.6,-15.0 ball=idle hp 3→3 me 5 mp 11.344166666666668
+[509.4] fight ndrone2 d=6.5 st=search aim=none e@3448.4,1.6,-11.9 me@3455.1,1.6,-15.0 ball=idle hp 3→3 me 5 mp 10.787500000000003
+[509.4] go → (3448.4, -11.9) plan ok=true pts=2 left=3.58
+[510.6] go → (3447.1, -13.6) plan ok=true pts=4 left=0.48
+[515.0] fight ndrone2 d=6.6 st=patrol aim=none e@3443.2,1.6,-12.2 me@3447.3,1.6,-13.6 ball=idle hp 3→3 me 5 mp 12
+[515.1] go → (3443.1, -12.2) plan ok=true pts=2 left=0.33
+[517.9] fight ndrone2 d=4.4 st=patrol aim=it e@3439.1,1.6,-12.0 me@3443.2,1.6,-12.4 ball=idle hp 3→3 me 5 mp 12
+[517.9] go → (3439.1, -12.0) plan ok=true pts=2 left=0.49
+[520.8] fight ndrone2 d=4.1 st=patrol aim=it e@3436.9,1.6,-15.3 me@3439.4,1.6,-12.6 ball=idle hp 3→3 me 5 mp 12
+[520.9] go → (3436.8, -15.3) plan ok=true pts=2 left=0.45
+[523.4] fight: ndrone2 unreachable from here, leaving it
+[523.4] fight ndrone2 d=3.7 st=patrol aim=it e@3435.4,1.6,-17.7 me@3436.9,1.6,-15.2 ball=idle hp 3→3 me 5 mp 12
+[524.1] grab: 0 pickups, hp 5
+[525.5] fight ndrone2 d=3.6 st=dead aim=it e@3436.3,1.6,-19.8 me@3436.9,1.6,-15.2 ball=impact hp 3→0 me 5 mp 11.075833333333334
+[525.9] go → (3426.7, -18.5) plan ok=true pts=3 left=3.26
+[530.9] fight nsentry d=5.9 st=chase aim=it e@3428.3,1.6,-17.5 me@3432.3,1.6,-16.8 ball=idle hp 6→6 me 5 mp 11.344166666666668
+[531.6] dodge a bolt
+[532.1] fight nsentry d=4.1 st=chase aim=it e@3430.3,1.6,-17.1 me@3434.3,1.6,-16.3 ball=idle hp 6→6 me 5 mp 10.76416666666667
+[532.1] go → (3430.3, -17.1) plan ok=true pts=2 left=0.37
+[533.3] hurt 5→3 at (3432.1, 1.6, -16.8) near: nclone:aim,nsentry:bash 
+[536.7] hurt 3→2 at (3432.0, 1.6, -15.9) near: nclone:recover,nsentry:bash 
+[539.3] hurt 2→1 at (3431.3, 1.6, -15.2) near: nclone:recover,nsentry:chase 
+[541.7] fight nsentry d=4.0 st=open aim=it e@3433.0,1.6,-15.7 me@3431.7,1.6,-15.2 ball=idle hp 6→2 me 1 mp 12
+[542.7] ISO assist: 2 enemies beaten (nguard,nsentry)
+[543.9] go → (3432.4, -16.2) plan ok=true pts=3 left=0.24
+[544.7] go → (3433.2, -17.5) plan ok=true pts=2 left=0.1
+[545.7] go → (3437.2, -14.2) plan ok=true pts=2 left=0.26
+[549.3] grab: 3 pickups, hp 12
+[550.4] go → (3320.0, 2.2) plan ok=true pts=14 left=0.94
+[718.6] go → (4335.5, -39.0) plan ok=true pts=2 left=0.94
+[720.4] go → (4286.0, -66.0) plan ok=true pts=9 left=0.09
+[728.7] go → (4286.0, -66.0) plan ok=true pts=5 left=0.19
+[730.2] threat: fight
+[731.4] fight ncrawler d=4.8 st=windup aim=it e@4312.7,24.5,-49.9 me@4316.0,22.1,-49.9 ball=idle hp 12→9 me 12 mp 11.344166666666668
+[732.6] fight ncrawler d=3.3 st=recover aim=it e@4312.7,24.5,-49.9 me@4316.9,22.0,-49.9 ball=idle hp 9→6 me 10 mp 10.752500000000003
+[733.8] fight ncrawler d=4.2 st=recover aim=it e@4312.7,24.5,-49.9 me@4316.9,22.0,-49.9 ball=idle hp 6→6 me 10 mp 11.160833333333338
+[734.9] fight ncrawler d=4.2 st=chase aim=it e@4314.6,23.4,-49.9 me@4316.9,22.0,-49.9 ball=idle hp 6→3 me 10 mp 10.569166666666673
+[736.1] fight ncrawler d=2.4 st=dead aim=it e@4314.6,23.4,-49.9 me@4316.9,22.0,-49.9 ball=idle hp 3→0 me 10 mp 9.977500000000008
+[736.1] fight → {"left":0,"dead":false,"hp":10,"t":6}
+[748.7] stuck at (4307.8, -60.7): replan
+[758.0] threat: fight
+[759.4] fight nmite1 d=5.5 st=dead aim=other:nmite0@4292.2,-59.4 d7.3 e@4295.7,27.4,-60.2 me@4299.3,28.1,-61.2 ball=idle hp 2→-1 me 10 mp 11.344166666666668
+[759.4] fight → {"left":0,"dead":false,"hp":10,"t":1.2}
+[760.4] threat: fight
+[761.9] fight nmite0 d=5.9 st=dead aim=it e@4293.1,26.5,-59.0 me@4295.7,29.1,-62.3 ball=idle hp 2→-1 me 10 mp 11.230833333333338
+[761.9] fight → {"left":0,"dead":false,"hp":10,"t":1.2}
+[764.4] go: transition (hamalayi → hamalayi, trans true) at (4286.76, -65.45)
+[765.3] go → (4596.5, 4.0) plan ok=true pts=1 left=0.85
+[766.8] go → (4604.0, 4.0) plan ok=false pts=2 left=1.18
+[774.3] stuck at (4602.8, 4.2): replan
+[776.7] go → (4604.0, 4.0) plan ok=false pts=4 left=1.18
+[783.2] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[783.2] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[785.7] stuck at (4605.0, 3.3): replan
+[790.2] go → (4594.0, 4.5) plan ok=true pts=3 left=0.16
+[796.6] go: transition (obsv → obsv, trans true) at (4594.75, 4.63)
+[797.4] go → (4334.2, -37.0) plan ok=true pts=6 left=0.48
+[951.0] go → (1.4, 40.3) plan ok=true pts=14 left=0.6
+[966.2] stuck at (-33.4, -22.6): replan
+[988.3] go → (2434.9, -4.3) plan ok=false pts=10 left=0.86
+[1003.1] go → (2434.9, -4.3) plan ok=false pts=3 left=0.91

@@ -1,0 +1,24 @@
+diff --git a/lba3/src/game/actors.js b/lba3/src/game/actors.js
+index 3bd040e..ae3700b 100644
+--- a/lba3/src/game/actors.js
++++ b/lba3/src/game/actors.js
+@@ -762,6 +762,8 @@ export class NPC extends Actor {
+     if (this.shadow) this.shadow.visible = on;
+     if (this.collider) this.collider.enabled = on;
+   }
++  // busy at something of his own (a placement's anim other than standing or listening): he does not turn to a passer-by
++  busy() { return !!this.forceAnim && this.forceAnim !== 'idle' && this.forceAnim !== 'listen'; }
+   // put the NPC somewhere (chapter placement): {x, z, a, anim, track}
+   placeAt(p) {
+     this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
+@@ -781,7 +783,9 @@ export class NPC extends Actor {
+     const x0 = this.pos.x, z0 = this.pos.z;
+     if (this.listenTo && this.listenTo !== this) {
+       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
+-    } else if (this.talking || near) {
++    } else if (this.talking || (near && !this.busy())) {
++      // (GAME-1, the user: a person busy at something — Arthur kneeling at his boat — keeps at it when Twinsen walks
++      //  by, and turns to him only once Twinsen talks to him)
+       this.angle = dampAngle(this.angle, this.angleTo(hero), 6, dt);
+     } else if (this.track) {
+       const s = this.track.step(this, dt);

@@ -1,0 +1,344 @@
+[
+ {
+  "n": 1,
+  "overrides": {
+   "tunic": "#4a1b36",
+   "tunicTrim": "#64284b",
+   "pants": "#2f201a",
+   "belt": "#1a2c26",
+   "buckle": "#d8b04a",
+   "hair": "#c89a50",
+   "shoes": "#1c2019",
+   "crest": "#69553c"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#4a1b36",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#64284b",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#2f201a",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#1a2c26",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#c89a50",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#1c2019",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#69553c",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ },
+ {
+  "n": 2,
+  "overrides": {
+   "tunic": "#3e7029",
+   "tunicTrim": "#57973c",
+   "pants": "#28473a",
+   "belt": "#422743",
+   "buckle": "#d8b04a",
+   "hair": "#3a2a2a",
+   "shoes": "#262731",
+   "crest": "#5b9f94"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#3e7029",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#57973c",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#28473a",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#422743",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#3a2a2a",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#262731",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#5b9f94",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ },
+ {
+  "n": 3,
+  "overrides": {
+   "tunic": "#1f1f55",
+   "tunicTrim": "#2e2f73",
+   "pants": "#331e36",
+   "belt": "#2e331e",
+   "buckle": "#d8b04a",
+   "hair": "#5a3a1a",
+   "shoes": "#251f1d",
+   "crest": "#794573"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#1f1f55",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#2e2f73",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#331e36",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#2e331e",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#5a3a1a",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#251f1d",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#794573",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ },
+ {
+  "n": 4,
+  "overrides": {
+   "tunic": "#663825",
+   "tunicTrim": "#8a4f37",
+   "pants": "#3c4125",
+   "belt": "#242f3d",
+   "buckle": "#d8b04a",
+   "hair": "#9a9a98",
+   "shoes": "#232d29",
+   "crest": "#789253"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#663825",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#8a4f37",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#3c4125",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#242f3d",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#9a9a98",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#232d29",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#789253",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ },
+ {
+  "n": 5,
+  "overrides": {
+   "tunic": "#225f45",
+   "tunicTrim": "#33805f",
+   "pants": "#22303c",
+   "belt": "#392125",
+   "buckle": "#d8b04a",
+   "hair": "#6a4a2a",
+   "shoes": "#28212a",
+   "crest": "#4d5e87"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#225f45",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#33805f",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#22303c",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#392125",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#6a4a2a",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#28212a",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#4d5e87",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ },
+ {
+  "n": 6,
+  "overrides": {
+   "tunic": "#441b4a",
+   "tunicTrim": "#5c2864",
+   "pants": "#2f1a1f",
+   "belt": "#1a2c1c",
+   "buckle": "#d8b04a",
+   "hair": "#8a4a20",
+   "shoes": "#1f2019",
+   "crest": "#693c3c"
+  },
+  "left": {
+   "tunic": {
+    "base": "#1f5a62",
+    "to": "#441b4a",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "tunicTrim": {
+    "base": "#2f7a84",
+    "to": "#5c2864",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "pants": {
+    "base": "#2a2a34",
+    "to": "#2f1a1f",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "belt": {
+    "base": "#3a2a20",
+    "to": "#1a2c1c",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "hair": {
+    "base": "#5a4a8a",
+    "to": "#8a4a20",
+    "verticesStillBase": 0,
+    "inBase": 36
+   },
+   "shoes": {
+    "base": "#2a2026",
+    "to": "#1f2019",
+    "verticesStillBase": 0,
+    "inBase": 0
+   },
+   "crest": {
+    "base": "#5a4a8a",
+    "to": "#693c3c",
+    "verticesStillBase": 0,
+    "inBase": 36
+   }
+  }
+ }
+]

@@ -1,0 +1,333 @@
+{
+ "atTitle": {
+  "heap": {
+   "usedMB": 126,
+   "totalMB": 128
+  },
+  "rss": {
+   "otherMB": 255,
+   "gpuMB": 944,
+   "rendererMB": 948
+  }
+ },
+ "top": {
+  "geometries": 3724,
+  "totalMB": 639,
+  "asideMB": 23,
+  "aside": [
+   {
+    "area": "room:desert",
+    "key": "full",
+    "b": 6.9
+   },
+   {
+    "area": "citadel",
+    "key": "full",
+    "b": 6
+   },
+   {
+    "area": "room:hamalayi",
+    "key": "full",
+    "b": 4.1
+   },
+   {
+    "area": "room:isle_otringal",
+    "key": "full",
+    "b": 1.2
+   },
+   {
+    "area": "room:isle_knartas",
+    "key": "full",
+    "b": 0.7
+   },
+   {
+    "area": "room:isle_mosquibee",
+    "key": "full",
+    "b": 0.7
+   },
+   {
+    "area": "room:isle_undergas",
+    "key": "full",
+    "b": 0.7
+   },
+   {
+    "area": "room:isle_platform",
+    "key": "full",
+    "b": 0.7
+   },
+   {
+    "area": "room:isle_orchard",
+    "key": "full",
+    "b": 0.5
+   },
+   {
+    "area": "room:isle_tralu",
+    "key": "full",
+    "b": 0.5
+   }
+  ],
+  "largest": [
+   {
+    "area": "room:isle_otringal",
+    "name": "Mesh",
+    "v": 474483,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 21.8
+   },
+   {
+    "area": "room:isle_mosquibee",
+    "name": "Mesh",
+    "v": 307599,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 14.4
+   },
+   {
+    "area": "room:isle_knartas",
+    "name": "Mesh",
+    "v": 210239,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 9.7
+   },
+   {
+    "area": "room:isle_tralu",
+    "name": "Mesh",
+    "v": 171905,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 7.9
+   },
+   {
+    "area": "room:isle_orchard",
+    "name": "Mesh",
+    "v": 154653,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 7.5
+   },
+   {
+    "area": "room:isle_platform",
+    "name": "Mesh",
+    "v": 148842,
+    "attrs": "position,normal,uv,color",
+    "inst": 0,
+    "MB": 6.8
+   },
+   {
+    "area": "room:isle_platform",
+    "name": "Mesh",
+    "v": 191217,
+    "attrs": "position,normal,uv",
+    "inst": 0,
+    "MB": 6.8
+   },
+   {
+    "area": "room:isle_otringal",
+    "name": "Mesh",
+    "v": 172676,
+    "attrs": "position,normal,uv",
+    "inst": 0,
+    "MB": 6
+   },
+   {
+    "area": "room:isle_otringal",
+    "name": "Mesh",
+    "v": 164683,
+    "attrs": "position,normal,uv",
+    "inst": 0,
+    "MB": 5.7
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   },
+   {
+    "area": "room:desert",
+    "name": "terrain",
+    "v": 90601,
+    "attrs": "position,color,normal,splat,splat2",
+    "inst": 0,
+    "MB": 5
+   }
+  ],
+  "byAttr": [
+   [
+    "position,color,normal,splat,splat2",
+    236
+   ],
+   [
+    "position,normal,uv",
+    217
+   ],
+   [
+    "position,normal,uv,color",
+    123
+   ],
+   [
+    "position,normal,color,skinIndex,skinWeight",
+    15
+   ],
+   [
+    "position",
+    15
+   ],
+   [
+    "position,normal,uv,color,rm",
+    11
+   ],
+   [
+    "position,normal,color,uv",
+    8
+   ],
+   [
+    "position,normal,color",
+    7
+   ]
+  ]
+ },
+ "inPlay": {
+  "heap": {
+   "usedMB": 127,
+   "totalMB": 129
+  },
+  "rss": {
+   "otherMB": 311,
+   "gpuMB": 944,
+   "rendererMB": 998
+  }
+ },
+ "after4Regions": {
+  "heap": {
+   "usedMB": 129,
+   "totalMB": 131
+  },
+  "rss": {
+   "otherMB": 310,
+   "gpuMB": 1137,
+   "rendererMB": 1130
+  },
+  "info": {
+   "geometries": 1875,
+   "textures": 492
+  }
+ },
+ "errors": []
+}
