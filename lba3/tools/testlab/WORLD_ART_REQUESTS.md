@@ -5029,10 +5029,7 @@ were added objects, and the 14.11 no-clutter rule (above, in `CLOUD_ORDERS.md`) 
   rest of the gap is height round Kesh: the village stands on ground higher than the original's. **Option for the cloud:**
   lower Kesh's ground toward the original's (≈ +1 to the height part), which touches the village's story places, stairs and
   the arrival; not done.
-- **The way down to the Temple of Bù.** In LBA2, the temple is entered through the stone face (S28): its door leads to
-  scene 28, the temple's entrance, and down. Ours goes in by the dig, and S28's face is the crew's bunkhouse (DESERT-ART 2
-  gave it the face). **Proposal:** make the face's door the way down again (a stair inside the face to the temple's first
-  room), with the dig kept as the crew's works or a second way. It moves a story entrance (`story/*`, the chapter's
-  gating, the bunkhouse's people), so it is the cloud's to decide; the desktop can build the face's inside and stair once
-  ordered.
+- **The way down to the Temple of Bù: withdrawn (the user corrected it, 14.11).** The stone face (S28) is the magic
+  school, not the temple's entrance; in LBA2 the way down is a **well**. No proposal from the desktop on it; the user
+  closed ISLAND-85 ("leave it all, enough"), Citadel's declutter pass included.
 - Not run: no suites (nothing sent).
