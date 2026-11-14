@@ -1,33 +1,25 @@
-// The campaign thread of chapters 1–3 (CAMPAIGN-TREATMENT, sections 1–3): the kitchen tap and Arthur's cup, the pump room
+// The campaign thread of chapters 1–3 (CAMPAIGN-TREATMENT, sections 1–3): the kitchen tap and the yard's standpipe, the pump room
 // under the lane, Zeelich's cistern lift and Irsa's bench. English only (i18n.t falls back to it).
 import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   n_zl_kell: 'Kell', n_zl_brel: 'Brel', n_zl_irsa: 'Irsa', n_veskhorn: 'Vesk (speaking tube)',
-  p_tap: 'Try', p_cup: 'Move', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
+  p_tap: 'Try', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
   p_hook: 'Hook', p_bell: 'Ring', p_feed: 'Switch', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
 
   // ------------------------------------------------------------ chapter 1: home
-  prh_obj: "The tap's stopped again",
-  prh_sub_tap: 'Try the kitchen tap',
-  prh_sub_cup: "Move Arthur's cup from the stove to the sink",
-  prh_obj_follow: 'Follow the knocking outside',
-  prh_zoe_1: 'Dry again. But listen. Something is still knocking in there.',
-  prh_zoe_2: "Then it isn't empty. It's stuck somewhere. I'll ask next door once I've dried these.",
-  prh_zoe_3: "Go on. Follow it. I'll be next door.",
-  prh_ar_1: "I put my cup under the pipe, Dad. For when it comes back.",
-  prh_ar_2: "Oh. THAT pipe. Pipes should have labels.",
+  // (OPENING-TUT: Arthur's cup and Zoé's lines at the sink are gone; Zoé is next door, as the film showed)
   prh_ar_boat: 'The mast holds! Tim says a boat needs water. I say first it needs a sail.',
+  prh_ar_knock: "It's knocked like that since breakfast. Like someone wants to come in.",
+  prh_ar_knock2: "Knock, knock, knock. If it's a plumber, he's very small.",
+  prh_ar_trick: "You're taking the ball? Tim says you can't do the trick shots any more. I said you can.",
   prh_tap_1: '(Not a drop. But the pipe is knocking behind the tiles. Water is pushing at something.)',
   prh_tap_2: '(Still dry. Still knocking.)',
-  prh_tap_3: '(A drip, straight into the cup. So the water is still in there.)',
-  prh_cup_1: "(Arthur's cup, under the stove's overflow. The water comes in on the brass pipe, over the sink.)",
   ct_ar_shut: "I'm shutting it! I'm shutting it.",
-  prh_cup_2: '(There. Under the right pipe.)',
-  prh_leave: '(The kitchen tap first. Zoé is waiting by the sink.)',
-  prh_leave_cup: "(Arthur's cup first. It's on the stove: it goes to the sink.)",
-  prh_yard: '(The garden pipe is knocking too. It runs under the lane, toward the square.)',
+  prh_yard: '(The garden pipe is dry too, and knocking. It runs under the lane, toward the square.)',
+  prh_yard_2: '(Dry. Knocking.)',
   prh_lane: "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)",
+  prh_lane0: "(Knocking, here, where the project's pipe goes into the ground. Like the kitchen wall.)",
   prh_cave_in: "Crystals? These weren't here before.",
   prh_pool_1: '(Warm. Well water is never warm.)',
   prh_pool_2: '(Still warm.)',

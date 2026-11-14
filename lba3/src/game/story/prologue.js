@@ -35,12 +35,18 @@ const BELL = { x: -119.2, z: 41.4, arm: 0.8, h: 2.95 };
 // over the sea between them (a jump over the sea would be refused mid-air: physics.js WATER_FLOOR)
 const BAY = [{ x: -67.4, z: 96.2, r: 1.15 }, { x: -68.9, z: 97.36, r: 1.05 }, { x: -70.36, z: 98.49, r: 1.0 }];
 const BAY_RISE = [0.95, 1.95, 2.95];   // over the highest sand round the first rock
+// OPENING-TUT: Zoé in the yard, back from next door with their kettle, between the garden standpipe and the picket fence:
+// in view as he steps out of the door, off the way north and out of the barrels' throwing lane (west of the door)
+const ZOE_YARD = { x: -42.6, z: 73.7 };
+// the two barrels against the house's north wall (town.js: the 'home-barrels' giver): the yard's practice target for the
+// magic ball (a generous one: both barrels, from the lid to the ground)
+const BARREL_R = 0.95, BARREL_Y = 0.55;
 
 export class Prologue extends ChapterBase {
   constructor(story) {
     super(story);
     this.tremorT = 50;
-    this.home = new HomeTap(this);   // CAMPAIGN-1: the kitchen tap, Arthur's cup, the knocking, the pool and the growth (hometap.js)
+    this.home = new HomeTap(this);   // CAMPAIGN-1: the kitchen tap, the knocking, the yard's standpipe, the pool and the growth (hometap.js)
   }
 
   // ---------------------------------------------------------------- actors
@@ -237,12 +243,13 @@ export class Prologue extends ChapterBase {
     // Doran naps by his shed until the bell (or, in a save from before CH1-LONGER, his stamp) wakes him
     if (id === 'doran') { if (!this.isCur()) return undefined; const s = g.world.pierStart; return { x: s.x, z: s.z + 2.2, a: Math.PI, anim: f.pr_bell || f.stamp ? null : 'doze' }; }
     if (id !== 'zoe' && id !== 'arthur') return undefined;
-    const hp = this.home.place(id); if (hp !== undefined) return hp;   // (CAMPAIGN-1: Zoé at the sink until the cup is moved)
     const home = g.rooms.house.npcSpots[id];
     if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
+    // (OPENING-TUT: back from next door with the neighbours' kettle, in the yard: the film saw her go; the player meets her
+    //  as he steps out, on his way. The cup that kept her at the sink is gone)
     if (f.opening && !f.prologueDone && this.isCur()) {
-      const hs = g.world.houses.find((h) => h.id === 'nbr') || g.world.houses.find((h) => h.id === 'water');
-      return { x: hs.door.x + Math.sin(hs.ry) * 1.1, z: hs.door.z + Math.cos(hs.ry) * 1.1, a: hs.ry + Math.PI, anim: 'idle' };
+      const d = g.world.houses[0].door, ox = d.x + Math.sin(g.world.houses[0].ry) * 1.4, oz = d.z + Math.cos(g.world.houses[0].ry) * 1.4;
+      return { x: ZOE_YARD.x, z: ZOE_YARD.z, a: Math.atan2(ox - ZOE_YARD.x, oz - ZOE_YARD.z), anim: 'idle' };
     }
     return { x: home.x, z: home.z, a: home.a, anim: null };
   }
@@ -280,7 +287,6 @@ export class Prologue extends ChapterBase {
     const f = this.f, h = this.game.hero;
     const s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`;
     if (f.prologueDone) return `<b>${t('pr_obj_done')}</b>`;
-    const ho = this.home.objective(); if (ho) return ho;
     if (!h.hasBall) return `<b>${t('pr_obj_well')}</b>` + (f.ballHint ? s(false, 'pr_obj_ball') : '');
     if (f.inWell) return `<b>${t('pr_obj_cave')}</b>` + (f.nodes >= 3 ? '' : s(false, 'pr_obj_nodes'));
     if (!f.wellSeen) return `<b>${t('pr_obj_well')}</b>`;
@@ -321,7 +327,6 @@ export class Prologue extends ChapterBase {
 
   // can the player leave this room yet?
   canExit(room) {
-    if (room.id === 'house' && !this.home.canExit()) return false;   // (CAMPAIGN-1: the tap first)
     if (room.id === 'house' && !this.game.hero.hasBall) {
       this.chain([['hero', 'pr_tw_ballfirst']], () => { this.f.ballHint = true; this.game.updateObjective(); });
       return false;
@@ -336,8 +341,6 @@ export class Prologue extends ChapterBase {
       // (LBA-CITADEL: the director's own doors too — the places of LBA2's Citadel opened inside their buildings, the
       //  tavern and the rest, open in every chapter — so their houses are not offered as locked)
       const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d) => d.house));
-      // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
-      if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
       // (PURPOSES: the 'shop' house is Tibbo's counter, its door story/shops.js's)
       W.houses.forEach((h, i) => { if (i > 0 && h.id !== 'shop' && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', id: h.id, label: 'p_door' }); });
       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
@@ -689,6 +692,16 @@ export class Prologue extends ChapterBase {
         if (!this._lidBall) { this._lidBall = true; this.pending = { t: 0.4, fn: () => this.chain([['hero', 'pr_lid_ball']]) }; }
         return true;
       }
+      // OPENING-TUT: the barrels by the house, the yard's practice target (the ball's own hit flash and sparks, a hollow
+      // knock and a puff of dust; the first time, Twinsen's word). Each throw hits them once, as any target
+      const T = this.barrels();
+      if (T && Math.hypot(p.x - T.x, p.z - T.z) < BARREL_R && p.y > T.y - BARREL_Y - 0.1 && p.y < T.y + 0.75) {
+        g.audio.play('pipeKnock', T); g.particles.burst(T.x, T.y + 0.45, T.z, '#c8a070', 10, 1.6);
+        T.hits = (T.hits || 0) + 1;
+        g.tutorial?.event('target');
+        if (!f.pr_barrel) { f.pr_barrel = true; this.pending = { t: 0.5, fn: () => this.chain([['hero', f.pr_arTrick ? 'pr_barrel_hit_ar' : 'pr_barrel_hit']]) }; }
+        return true;
+      }
       return false;
     }
     if (g.room !== g.rooms.well) return false;
@@ -697,11 +710,22 @@ export class Prologue extends ChapterBase {
     }
     return false;
   }
-  // the bell is a target the ball's aim curves toward, from the quay (it hangs out of reach)
+  // the bell is a target the ball's aim curves toward, from the quay (it hangs out of reach); so are the yard's barrels
+  // (the normal aim assist: Settings, Aim assist; offered only with a clear line to them, as every target)
   ballTargets() {
-    const g = this.game, f = this.f, B = this.bell;
-    if (g.room || !B || f.pr_bell || f.prologueDone || Math.hypot(g.hero.pos.x - B.x, g.hero.pos.z - B.z) > 16) return [];
+    const g = this.game, f = this.f, B = this.bell, h = g.hero;
+    if (g.room || f.prologueDone) return [];
+    const T = this.barrels();
+    if (T && Math.hypot(h.pos.x - T.x, h.pos.z - T.z) < 16) return [T];
+    if (!B || f.pr_bell || Math.hypot(h.pos.x - B.x, h.pos.z - B.z) > 16) return [];
     return [{ x: B.x, y: B.y, z: B.z }];
+  }
+  // the yard's two barrels as one target: their middle, half way up (null where the town has none)
+  barrels() {
+    if (this._barrels !== undefined) return this._barrels;
+    const gv = this.game.world?.givers?.find((x) => x.id === 'home-barrels');
+    if (!gv) return null;
+    return (this._barrels = { x: gv.x, y: this.game.physics.groundAt(gv.x, gv.z) + BARREL_Y, z: gv.z, r: BARREL_R });
   }
 
   // Sendell's call: the ball is pulled into the crystal vein.

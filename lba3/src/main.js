@@ -53,6 +53,7 @@ import { koGone } from './game/death.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
+import { Tutorial } from './game/tutorial.js';   // (OPENING-TUT: the control tips)
 import { FoundObject } from './game/found.js';
 import { stage as itemStage } from './game/itemlook.js';
 import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
@@ -205,7 +206,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'words', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'words', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', tips: 'on', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
     if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
@@ -407,6 +408,7 @@ class Game {
     this.hitStop = 0;
     this.hud = new HUD(this);
     this.inventory = new Inventory(this);
+    this.tutorial = new Tutorial(this);
     this.foundObj = new FoundObject(this);   // I-24: the found-object ceremony (found.js)
     this.hud.buildMapImage(this.terrain);
     // (an area not built yet reads as missing while the story, the travel network and the cast are set up; each
@@ -1341,6 +1343,7 @@ class Game {
       hero: { x: this.room && !air ? h.pos.x : this.lastSafe.x, z: this.room && !air ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
       loot: this.lootSnapshot(),
+      tut: this.tutorial.snapshot(),   // (OPENING-TUT: the control tips' lessons, apart from the story's flags)
     };
   }
   // CONTAINERS: what a searched container (a giver, a broken crate) let out and nobody has taken yet, where it lies
@@ -1402,6 +1405,7 @@ class Game {
     this.searched = s.searched || [];
     this.brokenCrates = s.crates || [];
     this.played = Number.isFinite(s.played) ? s.played : null;
+    this.tutorial.load(s.tut);   // (a save from before the tips has none: its lessons count as done)
     this.applyCrystals();
     for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
@@ -1456,6 +1460,7 @@ class Game {
     startupMark('new game');
     store.del(SAVE_KEY);   // (the autosave only: the manual slots are never touched by a new game)
     this.played = 0;
+    this.tutorial.reset();   // (OPENING-TUT: a new game's control tips start afresh)
     this.beginPlay();
     this.story.start();
   }
@@ -1993,6 +1998,7 @@ class Game {
       difficulty: () => t('set_h_df_' + s.difficulty),
       textSpeed: () => t('set_h_ts'),
       autoTalk: () => t('set_h_at_' + (s.autoTalk === 'off' ? 'off' : 'on'), { k: this.hud.key('interact') }),
+      tips: () => t('set_h_tips_' + (s.tips === 'off' ? 'off' : 'on')),
       textSize: () => t('set_h_tsz'),
       shake: () => t('set_h_shake'),
       keys: () => t('set_h_keys'),
@@ -2218,6 +2224,7 @@ class Game {
   tryInteract() {
     const it = this.findInteractable();
     if (!it) return false;
+    this.tutorial.event('interact', it.kind);
     if (it.kind === 'npc') { (this.talkers ??= new Set()).add(it.npc); this.story.talk(it.npc); }   // (G1-CAM: the one he spoke to is in the two-shot from the first line)
     else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
     else if (it.kind === 'pet') it.pet.talk(this);
@@ -2740,7 +2747,8 @@ class Game {
       case 'play': this.updatePlay(dt); break;
       case 'dialog':
         this.hud.updateDialog(dt);
-        if (input.pressed('interact') || input.pressed('action') || input.pressed('click') || input.pressed('recenter')) this.hud.advance();
+        if (input.pressed('interact') || input.pressed('action') || input.pressed('click') || input.pressed('recenter')) { this.tutorial.event('advance'); this.hud.advance(); }
+        this.tutorial.dialog();   // (OPENING-TUT: the box's key hint, in the device in use)
         this.updateBubble();
         {
           // Twinsen gestures when he speaks and turns to whoever else is talking
@@ -2867,6 +2875,7 @@ class Game {
     const input = this.input, h = this.hero;
     if (this.foundObj.next()) return;   // (an object received during a dialogue or a scene: its box, now play is back)
     this.dirty = true;
+    this.tutorial.update(dt);   // (OPENING-TUT: before the keys below act, so it sees the inventory's and the map's)
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }

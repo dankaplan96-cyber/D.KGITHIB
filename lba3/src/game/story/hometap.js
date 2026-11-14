@@ -2,18 +2,21 @@
 // played before anything needs saving. It continues from the opening film (the tap coughed, ran warm, stopped again;
 // "I'll check the well"; Zoé: "I'll ask next door"): it does not show those again.
 //
-//   1. The kitchen. Zoé is still at the sink, Arthur at his boat. The tap is dry but the brass pipe over the sink knocks:
-//      Twinsen holds his hand under the spout (not a drop; the pipe shakes on the wall). Arthur has put his cup under
-//      the wrong pipe (the stove boiler's overflow): Twinsen lifts it, carries it in his hand to the sink and puts it
-//      under the tap, and one drip falls into it. (Every hand at a real thing: story/reach.js.)
-//   2. The yard. The garden standpipe by the door knocks too, and up the lane the pipe at the pump room's door: the sound
-//      runs toward the square. (Heard as he passes; no prompt, no marker.)
+//   1. The kitchen. Arthur is at his boat; Zoé has gone next door, as the film showed. The brass pipe over the sink knocks
+//      by itself until Twinsen tries the tap: he holds his hand under the spout (not a drop; the pipe shakes on the wall)
+//      and Arthur says it has knocked like that since breakfast. Optional: the door only waits for the magic ball (the
+//      film's "Take your magic ball").
+//   2. The yard. The garden standpipe by the door: his hand on its handle, it knocks too ("it runs under the lane, toward
+//      the square"); up the lane the pipe at the pump room's door knocks as he passes. The project's fitters left spare
+//      pipe lengths on the path (a low stack: jumped in Athletic, or walked round).
 //   3. The well's bottom. The pool at the shaft's foot is warm to his hand; when the pump starts above, the crystals
 //      grown on the old masonry lean toward it. Sendell's words stay as they were. His last thought gives the reason to
 //      stay on Citadel: the pump runs in cycles, and he wants to watch the next.
 //
-// Flags (new, saved): pr_v2 (a game begun with this thread), pr_tap, pr_cup, pr_zoeOut, pr_yard, pr_lane, pr_pool,
-// pr_growth. A save from before has no pr_v2: every step counts as done and the chapter plays as it did.
+// OPENING-TUT (the user, 14.11.2026): Arthur's cup objective is gone (its cup, trivet, overflow pipe, lines and the door
+// that waited for it). Flags (saved): pr_v2 (a game begun with this thread), pr_tap, pr_yard, pr_lane, pr_pool,
+// pr_growth, pr_arTrick. A save from before has no pr_v2: every step counts as done and the chapter plays as it did; a
+// save with pr_cup or pr_zoeOut (the cup's flags) loads and plays on: they are no longer read.
 // Not a chapter: story/prologue.js owns it and asks it first (as chapter1.js asks depotwatch.js).
 import * as THREE from 'three';
 import { t as tr } from '../i18n.js';
@@ -23,18 +26,16 @@ import { touch, handTo } from './reach.js';
 import '../text/thread.js';
 
 
-const STX = -3.35;                       // the stove's middle, the house's frame (interiors.js buildHouse)
 const YARD = { x: -43.9, z: 74.7 };      // the garden standpipe: across the path from the door, where the lane's pipe ends
 const POOL = { x: -8.0, z: 1.9, r: 0.6, h: 0.44 };   // the catch basin at the foot of the shaft, the cave's frame (interiors.js buildWell): knee high, so a hand reaches its water
 const GROW = { x: -3.0, z: 1.5, r: 0.7 };    // the slate pillar nearest the shaft: the growth is on its west side
-const _v = new THREE.Vector3();
 
 export class HomeTap {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; this.knockT = 2; this.parts = {}; }
   get f() { return this.game.flags; }
   get on() { return !!this.f.pr_v2 && this.ch.isCur() && !this.f.prologueDone; }
-  // the house's steps still to do (a save from before the thread has none)
-  get indoors() { return this.on && !this.f.pr_cup; }
+  // the kitchen pipe knocks by itself until he has tried the tap (a save from before the thread: never)
+  get indoors() { return this.on && !this.f.pr_tap; }
 
   // ---------------------------------------------------------------- the things
   build() {
@@ -57,14 +58,16 @@ export class HomeTap {
       // (its water, once the houses' line is open again: chapter 2, story/pumpline.js)
       const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.64, 6), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.05, transparent: true, opacity: 0.75, emissive: '#5a8ab0', emissiveIntensity: 0.2 }));
       stream.position.set(YARD.x + 0.2, gy + 0.52, YARD.z); stream.visible = false; stream.userData.keep = true; W.root.add(stream);
-      P.yard = { grp, stream, x: YARD.x, z: YARD.z, y: gy, t: null };
+      // his hand on the handle on top (the set-down clip's hand height, 1.05 m: the handle's top is 1.04), from the path's
+      // side, facing west (OPENING-TUT: the water inspected by hand, as at the kitchen tap)
+      const hand = touch(YARD.x, YARD.z, -Math.PI / 2, 'setDown');
+      P.yard = { grp, stream, x: YARD.x, z: YARD.z, y: gy, t: null, hand, front: hand.front };
       // the pump room's door on the lane (src/game/pumproom.js): shut in this chapter; its pipe knocks
       P.kiosk = W.pumpKiosk || buildPumpKiosk(g);
     }
     const H = g.regions?.built?.('house');
     if (!P.house && H?.kitchen && H.group) {
       const K = H.kitchen, o = H.group.position, BZ = K.spout.z - o.z - 0.27, bx = K.spout.x - o.x;
-      const iron = new THREE.MeshStandardMaterial({ color: '#3d3f45', roughness: 0.6, metalness: 0.5 });
       // the supply: a brass riser up the wall beside the picture, an elbow across to the tap's plate (it shakes: kept apart)
       const pipe = new THREE.Group(); pipe.position.set(bx - 0.27, 0, BZ + 0.035); pipe.userData.keep = true; H.group.add(pipe);
       const pm = (geo, x, y, z, rz = 0) => { const m = new THREE.Mesh(geo, brass); m.position.set(x, y, z); m.rotation.z = rz; pipe.add(m); };
@@ -73,44 +76,13 @@ export class HomeTap {
       pm(new THREE.SphereGeometry(0.03, 8, 6), 0, 1.3, 0);
       for (const y of [1.75, 2.45]) pm(new THREE.TorusGeometry(0.028, 0.008, 5, 10), 0, y, 0);
       mergeStatic(pipe, { recolor: false });
-      // the stove boiler's overflow: a thin iron pipe out of the tiles over the stove's right end, forward to its front
-      // edge and turned down over it (the cup stands under it, where a hand set down from the room meets it: reach.js)
-      // (it stands on a little iron trivet on the stove top, 9 cm up: the cup's rim at the height of his set-down hand)
-      const cupAt = { x: STX + 0.5, y: 0.965, z: BZ + 0.53 };
-      const ov = new THREE.Group(); H.group.add(ov);
-      const om = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, iron); m.position.set(x, y, z); m.rotation.x = rx; ov.add(m); };
-      om(new THREE.CylinderGeometry(0.014, 0.014, 0.5, 6), cupAt.x, 1.27, BZ + 0.28, Math.PI / 2);
-      om(new THREE.CylinderGeometry(0.014, 0.018, 0.12, 6), cupAt.x, 1.21, cupAt.z);
-      { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.008, 5, 12), iron); ring.position.set(cupAt.x, cupAt.y - 0.008, cupAt.z); ring.rotation.x = Math.PI / 2; ov.add(ring);
-        for (let i = 0; i < 3; i++) { const t = (i * 2 * Math.PI) / 3; om(new THREE.CylinderGeometry(0.006, 0.006, 0.09, 5), cupAt.x + Math.cos(t) * 0.044, 0.875 + 0.045, cupAt.z + Math.sin(t) * 0.044); } }   // (the trivet)
-      mergeStatic(ov, { recolor: true });
-      // Arthur's cup: enamel, a handle (moved: kept apart)
-      // (GPU-V82, the desktop on the GTX 1050: from the room camera the blue cup was 5 × 4 px, the blue of the kettle beside
-      //  it on the dark stove, and the beat did not read. Now half as big again (a boy's big mug), white enamel with a blue
-      //  rim and handle, glossier: a light spot on the dark stove top and in the sink's basin)
-      const cup = new THREE.Group(); cup.userData.keep = true; H.group.add(cup);
-      const enamel = new THREE.MeshStandardMaterial({ color: '#f1f1ec', roughness: 0.22, metalness: 0.05 });
-      const rimM = new THREE.MeshStandardMaterial({ color: '#2f62b0', roughness: 0.25, metalness: 0.1 });
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.054, 0.125, 14), enamel); body.position.y = 0.0625; cup.add(body);
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.006, 5, 14), rimM); rim.position.y = 0.124; rim.rotation.x = Math.PI / 2; cup.add(rim);
-      const ear = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.009, 5, 10, Math.PI), rimM); ear.position.set(0.062, 0.064, 0); ear.rotation.z = -Math.PI / 2; cup.add(ear);
-      mergeStatic(cup, { recolor: false });
-      // one drop from the spout (shown as it falls)
-      const drop = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 5), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.1, emissive: '#5a8ab0', emissiveIntensity: 0.3 }));
-      drop.visible = false; H.group.add(drop);
-      // in the sink the cup stands in the basin under the spout's line, the watering can beside it
-      const sinkAt = { x: bx - 0.13, y: K.basin.y + 0.02, z: K.spout.z - o.z + 0.03 };
       // (the kitchen floor wet in front of the sink: chapter 2, the tap Arthur left open; story/pumpline.js)
       const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), new THREE.MeshStandardMaterial({ color: '#6fa8c8', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.45 }));
       puddle.rotation.x = -Math.PI / 2; puddle.scale.set(1.25, 0.8, 1); puddle.position.set(bx + 0.1, 0.012, BZ + 1.05); puddle.visible = false; H.group.add(puddle);
       // his hand under the spout, over the basin's front (the tap's handle is at the wall, out of an arm's reach across
-      // the sink); his hand on the cup on the stove
-      const tap = touch(K.spout.x + 0.18, o.z + BZ + 0.44, Math.PI, 'setDown'), cupT = touch(o.x + cupAt.x, o.z + cupAt.z, Math.PI, 'setDown');
-      P.house = { H, K, o, BZ, pipe, cup, drop, cupAt, sinkAt, puddle, shake: 0, tap, cupT,
-        spout: { x: K.spout.x, z: K.spout.z }, front: tap.front,
-        stove: { x: cupT.x, z: cupT.z }, stoveFront: cupT.front,
-        zoe: { x: o.x - 0.9, z: o.z + BZ + 1.75, a: Math.atan2(-1.4, -1.48) } };
-      this.setCup();
+      // the sink)
+      const tap = touch(K.spout.x + 0.18, o.z + BZ + 0.44, Math.PI, 'setDown');
+      P.house = { H, K, o, BZ, pipe, puddle, shake: 0, tap, spout: { x: K.spout.x, z: K.spout.z }, front: tap.front };
     }
     const R = g.regions?.built?.('well');
     if (!P.cave && R?.group) {
@@ -136,51 +108,22 @@ export class HomeTap {
       this.setGrowth(this.f.pr_growth || !this.f.pr_v2 ? 1 : 0);
     }
   }
-  setCup() {
-    const P = this.parts.house; if (!P) return;
-    const at = this.f.pr_cup || !this.f.pr_v2 ? P.sinkAt : P.cupAt;
-    P.cup.position.set(at.x, at.y, at.z); P.cup.rotation.set(0, 0.6, 0); P.carry = false; P.putT = null;
-  }
   // a new game's first frame of play (the things were built before its flags were set)
-  reset() { this.setCup(); this.setGrowth(0); }
+  reset() { this.setGrowth(0); }
   setGrowth(k) { const C = this.parts.cave; if (!C) return; C.lean = k; C.growth.rotation.z = -0.22 * k; C.growth.scale.y = 1 + 0.12 * k; }
 
   // ---------------------------------------------------------------- the story's hooks (prologue.js asks first)
-  // Zoé at the sink and Arthur at his boat until the cup stands under the right pipe; then she is next door (as the
-  // film said), put there once nobody can see it happen
-  place(id) {
-    const f = this.f, P = this.parts.house;
-    if (!this.on || id !== 'zoe' || f.pr_zoeOut || !P) return undefined;
-    return { x: P.zoe.x, z: P.zoe.z, a: P.zoe.a, anim: null };
-  }
-  canExit() {
-    // both house steps before the door: Zoé stays at the sink until the cup stands under the right pipe, and the town's
-    // well needs her next door (her kettle crystals), so leaving with the cup undone would stall chapter 1
-    if (!this.indoors) return true;
-    this.ch.chain([['hero', this.f.pr_tap ? 'prh_leave_cup' : 'prh_leave']]);
-    return false;
-  }
-  objective() {
-    const f = this.f, s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${tr(key)}</span>`;
-    if (!this.indoors) return null;
-    return `<b>${tr('prh_obj')}</b>` + s(!!f.pr_tap, 'prh_sub_tap') + (f.pr_tap ? s(false, 'prh_sub_cup') : '') + (this.game.hero.hasBall ? '' : s(false, 'pr_obj_ball'));
-  }
+  // (OPENING-TUT: the cup's hooks are gone: Zoé is not held at the sink, the door does not wait, the objective is the
+  //  chapter's own "Check the well" with the ball's step. Nothing here holds the player.)
   interactables(consider, dist) {
-    const g = this.game, f = this.f, P = this.parts.house;
-    if (this.on && g.room?.id === 'house' && P) {
-      // (P20, the user 13.11: tried once, the tap kept the key at the sink — "Still dry. Still knocking." — and the cup on the
-      //  stove beside it never got it. While the cup waits, the tap gives way: the cup's prompt, from the sink or the stove)
-      const cupNext = f.pr_tap && !f.pr_cup;
-      if (!cupNext) consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
-      // (the cup is his to move once the tap has been tried: it stands an arm's length from the sink)
-      // (P20: a walk or a clip cut short by a key left the cup in his hand, no prompt and the door shut for good. Once its
-      //  move has had 4 s, a cup still in his hand is offered again: E puts it in the sink)
-      if (cupNext && (!P.carry || g.time - (this.cupT0 ?? -99) > 4)) consider(Math.min(dist(P.stove.x, P.stove.z), dist(P.tap.x, P.tap.z)), 1.6, { kind: 'h_cup', label: 'p_cup' });
-    }
+    const g = this.game, P = this.parts.house, Y = this.parts.yard;
+    if (this.on && g.room?.id === 'house' && P) consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
+    // the garden standpipe: his hand on it (from the path; not from the other side of the lane's pipe)
+    if (this.on && !g.room && Y && Math.abs(g.hero.pos.y - Y.y) < 0.6) consider(dist(Y.x, Y.z), 1.5, { kind: 'h_yard', label: 'p_tap' });
     const C = this.parts.cave;
     if (this.on && C && g.room === C.R) {
       consider(dist(C.pool.x, C.pool.z), 1.6, { kind: 'h_pool', label: 'p_feel' });
-      if (f.pr_growth) consider(dist(C.grow.x, C.grow.z), 1.3, { kind: 'h_growth', label: 'p_look' });
+      if (this.f.pr_growth) consider(dist(C.grow.x, C.grow.z), 1.3, { kind: 'h_growth', label: 'p_look' });
     }
     const Kk = this.parts.kiosk;
     if (Kk && !g.room && this.ch.isCur()) consider(dist(Kk.door.x, Kk.door.z), 1.5, { kind: 'h_kiosk', label: 'p_door' });
@@ -189,24 +132,22 @@ export class HomeTap {
     const g = this.game, f = this.f, h = g.hero, ch = this.ch, P = this.parts.house, C = this.parts.cave;
     switch (it.kind) {
       case 'h_tap':
-        // his hand under the spout (he steps to the sink first): not a drop, and the pipe knocks behind the tiles
+        // his hand under the spout (he steps to the sink first): not a drop, and the pipe knocks behind the tiles; Arthur,
+        // at his boat, has heard it all morning
         handTo(h, P.tap, () => {
           this.knock(true);
-          if (f.pr_cup) { this.drip(); ch.chain([['hero', 'prh_tap_3']]); return; }
           if (f.pr_tap) { ch.chain([['hero', 'prh_tap_2']]); return; }
-          ch.chain([['hero', 'prh_tap_1'], ['zoe', 'prh_zoe_1'], ['zoe', 'prh_zoe_2'], ['arthur', 'prh_ar_1']], () => { f.pr_tap = true; g.updateObjective(); g.save(false); });
+          const ar = this.ch.speaker('arthur'), near = ar?.present && ar.distTo(h) < 8;
+          ch.chain([['hero', 'prh_tap_1'], ...(near ? [['arthur', 'prh_ar_knock']] : [])], () => { f.pr_tap = true; g.updateObjective(); g.save(false); });
         });
         return true;
-      case 'h_cup': {
-        // his hand on it on the stove, carried in that hand to the sink, put into the basin under the tap; a drip falls into it
-        this.cupT0 = g.time;
-        const set = () => { this.cupT0 = g.time; handTo(h, P.tap, () => {
-          f.pr_cup = true; P.carry = false; P.putFrom = P.cup.position.clone(); P.putT = 0; g.audio.play('put');
-          this.drip();
-          ch.chain([['hero', 'prh_cup_2'], ['arthur', 'prh_ar_2'], ['zoe', 'prh_zoe_3']], () => { g.updateObjective(); g.save(false); });
-        }); };
-        if (P.carry) { set(); return true; }   // (P20: already in his hand: straight to the sink)
-        handTo(h, P.cupT, () => { P.carry = true; g.audio.play('tick'); ch.chain([['hero', 'prh_cup_1']], set); });
+      case 'h_yard': {
+        // his hand on the garden standpipe's handle: dry, and it knocks too; the sound runs on under the lane
+        const Y = this.parts.yard;
+        handTo(h, Y.hand, () => {
+          this.rattle('yard');
+          ch.chain([['hero', f.pr_yard ? 'prh_yard_2' : 'prh_yard']], () => { if (!f.pr_yard) { f.pr_yard = true; g.updateObjective(); g.save(false); } });
+        });
         return true;
       }
       case 'h_pool': {
@@ -225,11 +166,12 @@ export class HomeTap {
     }
     return false;
   }
+  // Arthur at his boat, in the house: the morning (before the ball), then the trick he wants to see (once)
   talk(npc) {
-    const f = this.f, ch = this.ch, id = npc.def.id;
-    if (!this.indoors || this.game.room?.id !== 'house') return false;
-    if (id === 'zoe') { ch.chain([['zoe', f.pr_tap ? 'prh_zoe_2' : 'prh_zoe_1']]); return true; }
-    if (id === 'arthur') { ch.chain([['arthur', f.pr_tap ? 'prh_ar_1' : 'prh_ar_boat']]); return true; }
+    const f = this.f, ch = this.ch, id = npc.def.id, g = this.game;
+    if (!this.on || g.room?.id !== 'house' || id !== 'arthur') return false;
+    if (!g.hero.hasBall) { ch.chain([['arthur', f.pr_tap ? 'prh_ar_knock2' : 'prh_ar_boat']]); return true; }
+    if (!f.pr_arTrick) { ch.chain([['arthur', 'prh_ar_trick']], () => { f.pr_arTrick = true; g.save(false); }); return true; }
     return false;
   }
   journal() {
@@ -253,10 +195,6 @@ export class HomeTap {
     const at = which === 'kiosk' ? T.pipe : T;
     for (let i = 0; i < 3; i++) (this.later ||= []).push({ t: i * 0.22, fn: () => { g.audio.play('pipeKnock', at); g.particles.burst(at.x, (at.y ?? T.y) + 0.9, at.z, '#b8a890', 3, 0.8); } });
   }
-  drip() {
-    const P = this.parts.house; if (!P) return;
-    P.dripT = 0;
-  }
   // the pump starts above the cave: a hum and a thump through the rock, the growth leaning toward it
   pumpStarts() {
     const g = this.game, f = this.f, C = this.parts.cave, ch = this.ch;
@@ -274,37 +212,18 @@ export class HomeTap {
     if (this.later?.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter((l) => l.t <= 0); this.later = this.later.filter((l) => l.t > 0); for (const l of due) l.fn(); }
     if (this.pendingLine && g.state === 'play' && (this.pendingLine.t -= dt) <= 0) { const fn = this.pendingLine.fn; this.pendingLine = null; fn(); }
     if (P) {
-      // the pipe's shake, the handle's turn, the cup in his hand, the drop
+      // the pipe's shake
       if (P.shake > 0) { P.shake = Math.max(0, P.shake - dt); P.pipe.rotation.z = Math.sin(g.time * 55) * 0.012 * P.shake; P.pipe.position.y = Math.sin(g.time * 70) * 0.004 * P.shake; }
-      if (P.putT != null) { P.putT += dt; const k = Math.min(1, P.putT / 0.22); P.cup.position.set(P.putFrom.x + (P.sinkAt.x - P.putFrom.x) * k, P.putFrom.y + (P.sinkAt.y - P.putFrom.y) * k, P.putFrom.z + (P.sinkAt.z - P.putFrom.z) * k); if (k >= 1) { P.putT = null; this.setCup(); } }
-      if (P.carry) {
-        const hand = h.rig.j?.armR?.hand;
-        if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(_v); P.cup.position.set(_v.x - P.o.x, _v.y - 0.06, _v.z - P.o.z); }
-      }
-      if (P.dripT != null) {
-        P.dripT += dt;
-        const y0 = P.K.spout.y, y1 = P.sinkAt.y + 0.08, k = Math.min(1, P.dripT / 0.42);
-        const sx = P.K.spout.x - P.o.x, sz = P.K.spout.z - P.o.z;
-        P.drop.visible = k < 1; P.drop.position.set(sx + (P.sinkAt.x - sx) * k, y0 + (y1 - y0) * k * k, sz + (P.sinkAt.z - sz) * k);
-        if (k >= 1) { P.dripT = null; g.audio.play('tick', P.spout); }
-      }
-      // the wall knocks by itself while the question is open
+      // the wall knocks by itself until he has tried the tap (what draws him to the sink: no marker)
       if (this.indoors && g.room === P.H && g.state === 'play' && (this.knockT -= dt) <= 0) { this.knockT = 5.5; this.knock(); }
     }
-    // the yard's standpipe and the lane's pipe, as he comes by: the sound runs toward the square
-    if (this.on && f.pr_tap && !g.room && g.state === 'play' && !g.trans) {
-      if (Y && !f.pr_yard && Math.hypot(h.pos.x - Y.x, h.pos.z - Y.z) < 3.4) {
-        f.pr_yard = true; this.rattle('yard');
-        this.pendingLine = { t: 0.9, fn: () => this.ch.chain([['hero', 'prh_yard']], () => { g.updateObjective(); g.save(false); }) };
-      } else if (Kk && f.pr_yard && !f.pr_lane && !this.pendingLine && Math.hypot(h.pos.x - Kk.pipe.x, h.pos.z - Kk.pipe.z) < 3.6) {
+    // the yard's standpipe knocks once as he first comes by (its prompt is his to take); the lane's pipe at the pump
+    // room's door, as he passes it: the sound runs toward the square
+    if (this.on && !g.room && g.state === 'play' && !g.trans) {
+      if (Y && !this.yardHeard && !f.pr_yard && Math.hypot(h.pos.x - Y.x, h.pos.z - Y.z) < 3.4) { this.yardHeard = true; this.rattle('yard'); }
+      else if (Kk && !f.pr_lane && !this.pendingLine && Math.hypot(h.pos.x - Kk.pipe.x, h.pos.z - Kk.pipe.z) < 3.6) {
         f.pr_lane = true; this.rattle('kiosk');
-        this.pendingLine = { t: 0.9, fn: () => this.ch.chain([['hero', 'prh_lane']], () => g.save(false)) };
-      }
-      // Zoé goes next door (the film's word) once neither her door nor the neighbours' is in view
-      if (f.pr_cup && !f.pr_zoeOut) {
-        const hs = g.world.houses.find((x) => x.id === 'nbr') || g.world.houses.find((x) => x.id === 'water');
-        const far = Math.hypot(h.pos.x - hs.door.x, h.pos.z - hs.door.z);
-        if (far > 40 || (far > 12 && this.story.chapters[1]?.unseen?.({ x: hs.door.x, y: g.physics.groundAt(hs.door.x, hs.door.z), z: hs.door.z }))) { f.pr_zoeOut = true; this.story.refreshCast(); }
+        this.pendingLine = { t: 0.9, fn: () => this.ch.chain([['hero', f.pr_yard ? 'prh_lane' : 'prh_lane0']], () => g.save(false)) };
       }
     }
     for (const T of [Y, Kk]) if (T && T.t != null) { T.t += dt; const k = Math.max(0, 1 - T.t / 0.9); T.grp.rotation.z = Math.sin(T.t * 48) * 0.035 * k; if (k <= 0) { T.t = null; T.grp.rotation.z = 0; } }
@@ -327,13 +246,10 @@ export class HomeTap {
 
   applyFlags() {
     const f = this.f;
-    this.later = []; this.pendingLine = null; this.pumpIn = null;
-    // (a game begun with the thread and loaded after the cup: Zoé is next door, as she was)
-    if (f.pr_v2 && f.pr_cup) f.pr_zoeOut = true;
+    this.later = []; this.pendingLine = null; this.pumpIn = null; this.yardHeard = false;
     this.build();
-    this.setCup();
     const C = this.parts.cave; if (C) { C.pump = null; this.setGrowth(f.pr_growth || !f.pr_v2 ? 1 : 0); }
-    if (this.parts.house) { this.parts.house.dripT = null; this.parts.house.drop.visible = false; this.parts.house.shake = 0; }
+    if (this.parts.house) this.parts.house.shake = 0;
   }
 }
 
