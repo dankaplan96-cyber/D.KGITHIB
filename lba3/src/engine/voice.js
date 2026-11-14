@@ -36,7 +36,21 @@
 //   - 'classic': the voices as before P18 (the speaker's own sounds, the Piper phrase banks, the live synthesis).
 import { VOWELS, CONS, MOUTH_OPEN, MOUTH_ROUND, planLine, hashStr, setVoiceMode as setPlanMode, voiceMode } from './voiceplan.js';
 import { renderLine, workerSource } from './voicesynth.js';
+import { metaFor } from '../game/text/voicemeta.js';
 export { voiceMode };
+//
+// VOICE-2 (the user, 14.11: "the voices resemble English, but sound monotonous, robotic and excessively deep; they lack
+// expression and natural phrasing"): a third way to speak, 'expressive', the new default (docs/lba-maturity/VOICE-2.md):
+//   - the phrase banks of assets/voice2 (tools/voice-render/piper-expressive.py): natural performances of a made-up
+//     language with its own sound (open syllables, pure vowels, each people's consonants), each clip one connected
+//     phrase performed for an intention (neutral, a clause that goes on, curious, uncertain, pleased, concerned,
+//     urgent, annoyed), chosen from several renderings by its measured melody, its accent measured;
+//   - each clause of a line gets its intention from the line's metadata (src/game/text/voicemeta.js, by the line's
+//     key, looked up by its text) or, without it, from its words and punctuation (voiceplan.js intentOf); the clip of
+//     that intention, the nearest length, and where the line names the word that carries the accent, the clip whose
+//     measured accent sits nearest to it; a relieved line may open with a released breath, an uncertain one with a
+//     short hesitation; the pauses between clauses as planned, never stretched (_expr);
+//   - a new line never starts over the fading tail of the last one (quietAt).
 
 const BW = [90, 120, 170]; // the synthesis's formant bandwidths (Hz)
 
@@ -453,7 +467,24 @@ let MANIFEST = null, MANIFEST_P = null;
 const BANKS = new Map();  // id -> { state: 'loading' | 'ready' | 'failed', buf, used, p }
 const DECODERS = new Map();   // sample rate -> an OfflineAudioContext that only decodes
 // where the banks are (tests and the render tools; null: none, synthesis only)
-export function voiceBanks(url) { BANK_URL = url; MANIFEST = null; MANIFEST_P = null; BANKS.clear(); }
+export function voiceBanks(url) { BANK_URL = url; MANIFEST = null; MANIFEST_P = null; BANKS.clear(); BANK2_URL = url ? url.replace(/voice\/?$/, 'voice2/') : null; MAN2 = null; MAN2_P = null; }
+// VOICE-2: the Expressive banks (assets/voice2), their own manifest; their banks share BANKS, keyed 'x:<id>'
+let BANK2_URL = (typeof window !== 'undefined' && window.LBA_VOICE2_URL) || 'assets/voice2/';
+let MAN2 = null, MAN2_P = null;
+function manifest2() {
+  if (MAN2 || MAN2_P || !BANK2_URL || typeof fetch !== 'function') return MAN2_P;
+  MAN2_P = fetch(BANK2_URL + 'manifest.json').then((r) => (r.ok ? r.json() : null)).catch(() => null).then((m) => (MAN2 = m));
+  return MAN2_P;
+}
+// the Expressive bank a voice speaks from: [bank id, playback rate] or null (a resident moved toward their own pitch
+// by at most a semitone: the banks' speakers already sit where the families should)
+export function exprBankOf(v) {
+  if (!v || !MAN2) return null;
+  const b = bankOf(v, MAN2);
+  if (!b) return null;
+  const st = Math.max(-1, Math.min(1, 12 * Math.log2(b[1])));
+  return [b[0], Math.pow(2, st / 12)];
+}
 function manifest() {
   if (MANIFEST || MANIFEST_P || !BANK_URL || typeof fetch !== 'function') return MANIFEST_P;
   MANIFEST_P = fetch(BANK_URL + 'manifest.json').then((r) => (r.ok ? r.json() : null)).catch(() => null).then((m) => (MANIFEST = m));
@@ -461,14 +492,14 @@ function manifest() {
 }
 // the bank a voice speaks from: [bank id, playback rate] or null
 const FAMILY_RACES = new Set(['quetch', 'grobo', 'bunny', 'esmer']);
-export function bankOf(v) {
-  if (!v || !MANIFEST) return null;
-  const B = MANIFEST.banks;
+export function bankOf(v, MAN = MANIFEST) {
+  if (!v || !MAN) return null;
+  const B = MAN.banks;
   if (B[v.id] && !B[v.id].family) return [v.id, 1];
   if (!FAMILY_RACES.has(v.race)) return null;
   const sex = v.kid ? 'kid' : v.sex === 'f' || WOMEN.has(v.id) ? 'f' : v.sex === 'm' || MEN.has(v.id) ? 'm' : v.f0 >= 190 ? 'f' : 'm';
   // VOICES-PIPER: a family has several speakers (manifest.families); the resident's id picks one, the same every visit
-  const F = MANIFEST.families || {};
+  const F = MAN.families || {};
   let fam = `${v.race}-${sex}`;
   if (!F[fam] && !B[fam]) fam = sex === 'kid' ? 'quetch-kid' : `quetch-${sex}`;
   const list = (F[fam] || [fam]).filter((b) => B[b]);
@@ -495,18 +526,49 @@ function bankPace(id) {
 }
 export function wordsVoice(v) {
   const b = v && bankOf(v);
-  if (!b) return v;
+  if (!b) return v && !WORDS_LEGACY ? brighter(v) : v;
   const info = MANIFEST.banks[b[0]], pace = bankPace(b[0]);
   // (and the bank's connected speech, a legato of 0.9 at least: the phrases leave no air between words. Measured on 20
   //  lines: at 0.75, 36 % of the joins dropped more than 15 dB, at 0.9 28 %, the phrases 16 %; at 1.0 the syllables
   //  ran together, 11.6 dB of syllabic modulation against the phrases' 16-25)
-  return { ...v, f0: Math.round((info.f0 || v.f0) * b[1]), rate: pace ? pace / 6.6 : v.rate, legato: Math.max(v.legato, 0.9), bank: b[0], bankRate: b[1] };
+  const w = { ...v, f0: Math.round((info.f0 || v.f0) * b[1]), rate: pace ? pace / 6.6 : v.rate, legato: Math.max(v.legato, 0.9), bank: b[0], bankRate: b[1] };
+  return WORDS_LEGACY ? w : brighter(w);
+}
+// VOICE-2: the Words voice after 14.11 (setWordsLegacy(true): as it was, for the comparisons). Measured on 14.11 (Twinsen,
+// Zoé, Arthur, Vesk, Joss: docs/lba-maturity/VOICE-2.md): the spectrum fell 7-12 dB an octave (the Piper phrases 4-7),
+// next to nothing above 3 kHz, Twinsen at 130 Hz and Vesk at 93, voiced 75-92 % of the time, a vibrato on every vowel.
+// Now: the pitch of the speaker's Expressive bank (Twinsen 158, Vesk 112; without it, two semitones up), a source a
+// third less tilted, the brightness ceiling the soft style had lowered by 38 % raised again (to 4.6 kHz at most), the
+// formants a fifth narrower (less muffled), the vibrato down to 40 %, voiceless consonants nearly silent again inside
+// a phrase (job: lenis), and their noise 2 dB stronger
+export let WORDS_LEGACY = false;
+export function setWordsLegacy(on) { WORDS_LEGACY = !!on; }
+function brighter(w) {
+  const xb = exprBankOf(w);
+  const f0 = xb ? Math.round(MAN2.banks[xb[0]].f0 * xb[1]) : w.bank ? Math.round(w.f0 * Math.pow(2, 2 / 12)) : w.f0;
+  return { ...w, f0, tilt: w.tilt - 0.35, bright: Math.min(4600, w.bright * 1.45), bwScale: (w.bwScale || 1) * 0.8, vib: [w.vib[0], w.vib[1] * 0.4], breath: w.breath * 1.2, legato: Math.max(0.8, Math.min(w.legato, 0.9)) };
 }
 // the plan a speaker's line gets in the mode in use (cinematic.js voiceSeconds: how long the voice is heard)
 export function planVoiceLine(v, text, o = {}) {
-  if (voiceMode() !== 'words') return planLine(v, text, o);
+  if (voiceMode() === 'expressive') {
+    // (VOICE-2: the plan, its length that of the Expressive clips its clauses would play: their sound and the pauses)
+    const meta = metaFor(text), p = planLine(v, text, { ...o, meta, mode: 'classic' }), b = exprBankOf(v);
+    if (!b || !p.phrases.length) return p;
+    const info = MAN2.banks[b[0]];
+    let t = 0;
+    p.phrases.forEach((ph, i) => {
+      let key = ph.intent; while (key && !info.len[key]) key = EXPR_NEAR[key];
+      const L = info.len[key || 'tell'] || [1]; let best = L[0]; for (const l of L) if (Math.abs(l - ph.n) < Math.abs(best - ph.n)) best = l;
+      let s = 0, k = 0; for (let j = 0; j < (info.var[key] || 1); j++) { const c = info.clips[`${key}.${best}.${j}`]; if (c) { s += (c.e ?? c.sp) - (c.a ?? 0); k++; } }
+      t += (k ? s / k : 0) / b[1];
+      const nx = p.phrases[i + 1]; if (nx) t += Math.max(MIN_JOIN, nx.t0 - (ph.t0 + ph.g.dur));
+    });
+    if (t > 0) p.dur = o.maxDur ? Math.min(t, o.maxDur) : t;
+    return p;
+  }
+  if (voiceMode() !== 'words') return planLine(v, text, { ...o, meta: metaFor(text) });
   const vw = wordsVoice(v);
-  return planLine(vw, text, { ...o, mode: 'words', target: bankLength(vw, text, o) });
+  return planLine(vw, text, { ...o, mode: 'words', target: bankLength(vw, text, o), v2: !WORDS_LEGACY, meta: WORDS_LEGACY ? null : metaFor(text) });
 }
 // (tests and tools: how long a speaker's line is heard in classic: from their bank's clips, else the classic plan)
 export function classicLength(v, text, o = {}) { return bankLength(wordsVoice(v), text, o) ?? planLine(v, text, { ...o, mode: 'classic' }).dur; }
@@ -531,13 +593,14 @@ function bankLength(vw, text, o = {}) {
 }
 export function setVoiceMode(m) { return setPlanMode(m); }
 
-function loadBank(id, sr = 48000) {
-  let e = BANKS.get(id);
+function loadBank(id, sr = 48000, set = 'c') {
+  const key = set === 'x' ? 'x:' + id : id;
+  let e = BANKS.get(key);
   if (e) { e.used = Date.now(); return e.p; }
-  const info = MANIFEST?.banks?.[id];
+  const info = (set === 'x' ? MAN2 : MANIFEST)?.banks?.[id];
   if (!info) return Promise.resolve(null);
   e = { state: 'loading', buf: null, used: Date.now() };
-  e.p = fetch(BANK_URL + info.file).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+  e.p = fetch((set === 'x' ? BANK2_URL : BANK_URL) + info.file).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
     .then((ab) => {
       // (decoded by a context of its own, off the main thread, at the rate it will play at: played from 16 kHz, the
       //  browser's linear resampling left images at 12–20 kHz, about 52 dB down)
@@ -547,7 +610,7 @@ function loadBank(id, sr = 48000) {
     })
     .then((buf) => { e.buf = buf; e.state = 'ready'; evict(); return buf; })
     .catch((err) => { console.warn('voice bank failed', id, err); e.state = 'failed'; return null; });
-  BANKS.set(id, e);
+  BANKS.set(key, e);
   return e.p;
 }
 function evict() {
@@ -556,6 +619,47 @@ function evict() {
   const now = Date.now(), ready = [...BANKS.entries()].filter(([, b]) => b.state === 'ready');
   const old = ready.filter(([, b]) => now - b.used > 30000).sort((x, y) => x[1].used - y[1].used);
   for (const [k] of old.slice(0, Math.max(0, ready.length - BANKS_KEPT))) BANKS.delete(k);
+}
+// VOICE-2: the Expressive clip for a clause: its intention (one the bank lacks: the nearest it has), the nearest length,
+// then among that length's variants: with an accent asked for (acc, 0 the first word to 1 the last), the one whose
+// measured accent is nearest; a breath first (relief) or a hesitation first when asked, else not; none used in the
+// last six; then the line's own hash, so the same line is the same performance
+const EXPR_NEAR = { unsure: 'worry', worry: 'tell', warm: 'tell', excl: 'tell', no: 'tell', cont: 'tell', ask: 'tell', hm: null };
+function exprClip(bank, intent, n, recent, seed, acc, o) {
+  let key = intent;
+  while (key && !bank.len[key]) key = EXPR_NEAR[key];
+  if (!key) return null;
+  const L = bank.len[key];
+  let best = L[0]; for (const l of L) if (Math.abs(l - n) < Math.abs(best - n)) best = l;
+  const nv = bank.var[key] || 1, cands = [];
+  for (let k = 0; k < nv; k++) {
+    const id = `${key}.${best}.${k}`, c = bank.clips[id];
+    if (!c) continue;
+    let cost = recent.includes(id) ? 4 : 0;
+    if (acc != null && c.acc != null) cost += Math.abs(c.acc - acc) * 2;
+    cost += (!!c.br !== !!o.breath ? 1.5 : 0) + (key === 'unsure' ? 0 : !!c.hes !== !!o.hes ? 1.5 : 0);
+    cands.push({ id, c, cost: cost + (((seed >>> (k * 3)) & 7) / 7) * 0.4 });
+  }
+  if (!cands.length) return null;
+  const pick = cands.reduce((a, b) => (b.cost < a.cost ? b : a));
+  recent.push(pick.id); if (recent.length > 6) recent.shift();
+  return { id: pick.id, ...pick.c, a: pick.c.a ?? 0, e: pick.c.e ?? pick.c.sp };
+}
+// VOICE-2: the speaker's own timing between clauses (the brief: Vesk's tension in his pauses and delivery, not his
+// pitch): Vesk measured, longer pauses, but short and decisive before a refusal or an urgent order; Baldino quick
+// between clauses, then a beat before the last one (the awkward part); Zoé's concern quickens her; Twinsen as planned
+function mannerGap(manner, ph, next, beforeLast) {
+  if (manner === 'clipped') return next.intent === 'no' || next.intent === 'excl' ? 0.75 : 1.3;
+  if (manner === 'momentum') return beforeLast ? 1.6 : 0.75;
+  if (manner === 'sharp') return ph.intent === 'worry' || next.intent === 'worry' ? 0.85 : 1;
+  return 1;
+}
+// where in a clause (0 its first word, 1 its last) the word that carries the accent is
+function accentAt(s, word) {
+  const W = (s || '').toLowerCase().match(/[\p{L}\d']+/gu) || [];
+  const w = String(word).toLowerCase().replace(/[^\p{L}\d']/gu, '');
+  const i = W.indexOf(w);
+  return i < 0 || W.length < 2 ? null : i / (W.length - 1);
 }
 // the clip for a clause: its intention, the nearest length, a variant not used lately
 function clipFor(bank, intent, n, recent, seed) {
@@ -682,7 +786,16 @@ export class Babble {
     const sr = this.audio.ctx?.sampleRate ?? this.audio._pre?.sampleRate;   // (AUDIO-FIX: before init, the rate of the context made ahead, not 48 kHz)
     // (P18-VOICES: the Words voices need the manifest only, for a banked speaker's pitch and pace, and the worker)
     if (voiceMode() === 'words' && this.audio.ctx && WORDS_ENGINE === 'render' && !isOffline(this.audio.ctx)) warmWorker(this.audio.ctx.sampleRate);
+    const mx = voiceMode() === 'words' && !WORDS_LEGACY ? manifest2() : null;   // (VOICE-2: the Words voice takes its pitch from the Expressive bank)
+    // (VOICE-2: the Expressive voices load their own banks, from their own manifest)
+    if (voiceMode() === 'expressive') {
+      const mp2 = manifest2();
+      const go2 = () => Promise.all(keys.map((k) => { const b = exprBankOf(voiceFor(k)); return b ? loadBank(b[0], sr, 'x') : null; }));
+      if (MAN2) return o.wait ? go2() : (go2(), null);
+      return mp2 ? (o.wait ? mp2.then(go2) : (mp2.then(go2), null)) : null;
+    }
     const go = () => (voiceMode() === 'words' ? Promise.resolve([]) : Promise.all(keys.map((k) => { const b = bankOf(voiceFor(k)); return b ? loadBank(b[0], sr) : null; })));
+    if (mx && o.wait) return Promise.all([mx, mp]).then(go);
     if (MANIFEST) return o.wait ? go() : (go(), null);
     return mp ? (o.wait ? mp.then(go) : (mp.then(go), null)) : null;
   }
@@ -716,8 +829,10 @@ export class Babble {
       }
       return;
     }
-    const e = BANKS.get(W.bank[0]);
-    if (e?.state === 'ready' || e?.state === 'failed' || now - W.t >= BANK_WAIT) { this.waiting = null; this._speak(W.plan, W.text); }
+    // (VOICE-2: an Expressive line waiting for its manifest, then for its bank)
+    if (W.expr && !W.bank) { if (MAN2 || now - W.t >= BANK_WAIT) { this.waiting = null; this._exprLine(W.text, W.hes); } return; }
+    const e = BANKS.get(W.set === 'x' ? 'x:' + W.bank[0] : W.bank[0]);
+    if (e?.state === 'ready' || e?.state === 'failed' || now - W.t >= BANK_WAIT) { this.waiting = null; this._speak(W.plan, W.text, null, null, W.set === 'x' ? W.meta || {} : null); }
   }
   // the talking mouth now: {o: how open (0-1), r: how round}; the visible syllables are the audible ones, same timing
   mouth(now = this.mt) {
@@ -739,7 +854,11 @@ export class Babble {
   hush() {
     this.mev.length = 0; this.waiting = null;
     const ctx = this.audio.ctx;
-    if (this.utt && ctx) this._release(this.utt, ctx.currentTime);
+    if (this.utt && ctx) {
+      // (VOICE-2: a voice still sounding fades over about 90 ms; the next line starts after that, never over it)
+      if (!this.utt.released && this.utt.end > ctx.currentTime) this.quietAt = ctx.currentTime + 0.09;
+      this._release(this.utt, ctx.currentTime);
+    }
     this.utt = null;
   }
   // sources alive (for tests: 0 a moment after stop / hush): the synthesis's tones and the phrases playing
@@ -755,6 +874,14 @@ export class Babble {
     const heard = LAST_HEARD;
     const hes = v.manner === 'hesitate' && heard.key && heard.key !== this.key && (heard.intent === 'ask' || heard.intent === 'worry') && (hashStr(text) % 3) !== 0;
     // P18-VOICES: a Words line (the first one may wait a moment for the manifest: a banked speaker's pitch and pace)
+    // VOICE-2: an Expressive line (the first one may wait a moment for the banks' manifest)
+    if (voiceMode() === 'expressive') {
+      const mp2 = manifest2();
+      this.lines++;
+      if (!MAN2 && mp2) { this.waiting = { expr: true, text, hes, t: this._live() ? this.audio.ctx.currentTime : this.mt }; LAST_HEARD = { key: this.key, intent: null }; return; }
+      this._exprLine(text, hes);
+      return;
+    }
     if (voiceMode() === 'words') {
       const mp = manifest();
       this.lines++;
@@ -780,7 +907,7 @@ export class Babble {
   }
   _wordsLine(text, hes) {
     const vw = wordsVoice(this.v);
-    const plan = planLine(vw, text, { maxDur: this.opts.maxDur, hesitate: hes, mode: 'words', target: bankLength(vw, text, { maxDur: this.opts.maxDur }) });
+    const plan = planLine(vw, text, { maxDur: this.opts.maxDur, hesitate: hes, mode: 'words', target: bankLength(vw, text, { maxDur: this.opts.maxDur }), v2: !WORDS_LEGACY, meta: WORDS_LEGACY ? null : this.opts.meta || metaFor(text) });
     LAST_HEARD = { key: this.key, intent: plan.phrases.length ? plan.phrases[plan.phrases.length - 1].intent : null };
     if (!plan.phrases.length) return;
     // in the game: rendered by the worker. The line is set to start a moment from now, the render's expected time
@@ -801,12 +928,35 @@ export class Babble {
     }
     this._speak(plan, text, vw);
   }
-  _speak(plan, text, vw = null, pcm = null) {
+  // VOICE-2: an Expressive line: planned (its clauses, intentions, the metadata), then spoken from the voice's
+  // Expressive bank (waiting a moment for a bank still decoding); a voice without one is synthesised as in Classic
+  _exprLine(text, hes) {
+    const v = this.v, meta = this.opts.meta || metaFor(text);   // (opts.meta: the audition view's chosen intention)
+    const plan = planLine(v, text, { maxDur: this.opts.maxDur, hesitate: hes && !meta?.breath, mode: 'classic', meta });
+    LAST_HEARD = { key: this.key, intent: plan.phrases.length ? plan.phrases[plan.phrases.length - 1].intent : null };
+    if (!plan.phrases.length) return;
+    const bank = this._live() && exprBankOf(v);
+    if (bank) {
+      const e = BANKS.get('x:' + bank[0]);
+      if (!e || e.state === 'loading') {
+        if (!e) loadBank(bank[0], this.audio.ctx.sampleRate, 'x');
+        this.waiting = { plan, text, bank, set: 'x', meta, t: this.audio.ctx.currentTime };
+        return;
+      }
+    }
+    this._speak(plan, text, null, null, meta || {});
+  }
+  _speak(plan, text, vw = null, pcm = null, xmeta = null) {
     const live = this._live(), A = this.audio, ctx = A.ctx;
     const now = live ? ctx.currentTime : this.mt;
-    const T0 = now + LEAD;
+    const T0 = Math.max(now + LEAD, live ? this.quietAt || 0 : 0);   // (VOICE-2: never over the last line's fading tail)
     let syl = null;
-    if (live && vw) { syl = WORDS_ENGINE === 'chain' ? this._synth(plan, T0, vw) : this._words(plan, text, T0, vw, pcm); this.count += syl.filter((s) => !s.hum).length; }
+    if (live && xmeta) {
+      const b = exprBankOf(this.v), e = b && BANKS.get('x:' + b[0]);
+      if (e?.state === 'ready') { e.used = Date.now(); syl = this._expr(plan, text, b, e, T0, xmeta); }
+      if (!syl) syl = this._synth(plan, T0);
+      this.count += syl.filter((s) => !s.hum).length;
+    } else if (live && vw) { syl = WORDS_ENGINE === 'chain' ? this._synth(plan, T0, vw) : this._words(plan, text, T0, vw, pcm); this.count += syl.filter((s) => !s.hum).length; }
     else if (live) {
       const b = bankOf(this.v), e = b && BANKS.get(b[0]);
       if (e?.state === 'ready') { e.used = Date.now(); syl = this._clips(plan, text, b, e, T0); }
@@ -879,6 +1029,65 @@ export class Babble {
     return syl;
   }
 
+  // ---------------------------------------------------------------- VOICE-2: an Expressive line
+  // each clause: the Expressive bank's clip of its intention (exprClip: the nearest length; the accent where the line's
+  // emphasis is; a breath first for relief; never the clip just used), one after another with the clause's planned
+  // pause between their measured sound edges. The line is fitted to its time (a cinematic's subtitle): a shorter clip
+  // for each clause first, then its last clauses are left out; the clips are never stretched. One playback rate for the
+  // whole line (a resident's small pitch move), so its clauses stay in one voice. Returns the syllables (the mouth).
+  _expr(plan, text, [id, rate], bank, T0, meta) {
+    const ctx = this.audio.ctx, info = MAN2.banks[id];
+    const recent = this.recent.get('x:' + id) || []; this.recent.set('x:' + id, recent);
+    const h = hashStr(text);
+    const out = ctx.createGain(); out.gain.value = CLIP_LEVEL * (info.gain ?? 1) * (this.v.radio ? 1.6 : 1) * (plan.phrases[0]?.quiet ? 0.72 : 1);
+    let dest = out;
+    if (this.v.radio) { const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9; out.connect(bp); dest = bp; }
+    dest.connect(this.audio.voiceBus);
+    const utt = { gain: out, srcs: [], released: false, end: T0, nodes: dest === out ? [out] : [out, dest] };
+    // the clips, chosen before anything plays (so the line can be fitted to its time)
+    const picks = [];
+    if (plan.phrases[0]?.g.syl[0]?.hum && info.len.hm) { const c = exprClip(info, 'hm', 1, recent, h, null, {}); if (c) picks.push({ c, gap: HM_GAP }); }
+    plan.phrases.forEach((ph, i) => {
+      const next = plan.phrases[i + 1];
+      const acc = ph.emph ? accentAt(ph.s, ph.emph) : null;
+      const c = exprClip(info, ph.intent, ph.n, recent, h + i * 31, acc, { breath: i === 0 && meta.breath, hes: i === 0 && meta.hesitate });
+      if (c) picks.push({ c, gap: next ? Math.max(MIN_JOIN, (next.t0 - (ph.t0 + ph.g.dur)) * mannerGap(this.v.manner, ph, next, i === plan.phrases.length - 2)) : 0, ph });
+    });
+    const total = () => picks.reduce((a, p, i) => a + (p.c.e - p.c.a) / rate + (i < picks.length - 1 ? p.gap : 0), 0);
+    const maxDur = this.opts.maxDur;
+    if (maxDur) {
+      // (a cinematic's subtitle: each clause a shorter clip, longest first, then the last clauses go)
+      for (let k = 0; k < 8 && total() > maxDur; k++) {
+        const p = picks.filter((x) => x.ph && x.ph.n > 1).sort((x, y) => (y.c.e - y.c.a) - (x.c.e - x.c.a))[0];
+        if (!p) break;
+        p.ph = { ...p.ph, n: Math.max(1, Math.floor(p.ph.n * 0.7)) };
+        const c = exprClip(info, p.ph.intent, p.ph.n, recent, h + 97 * k, null, {});
+        if (c) p.c = c;
+      }
+      while (picks.length > 1 && total() > maxDur) picks.pop();
+    }
+    let t = 0, heard = null, gap = 0, alive = 0, last = 0;
+    const syl = [];
+    for (const p of picks) {
+      const c = p.c;
+      if (heard != null) t = Math.max(t, heard + gap - c.a / rate);
+      const s = ctx.createBufferSource(); s.buffer = bank.buf; s.playbackRate.value = rate;
+      s.connect(out);
+      s.start(T0 + t, c.o, c.d);
+      last = Math.max(last, t + c.d / rate);
+      this.clips.add(s); alive++;
+      s.onended = () => { s.disconnect(); this.clips.delete(s); if (--alive === 0) for (const n of utt.nodes) n.disconnect(); };
+      utt.srcs.push(s);
+      this.played.push(`x:${id}:${c.id}`); if (this.played.length > 128) this.played.shift();
+      for (const [st, cd, vd, vk, c0, amp] of c.s) syl.push({ t: t + st / rate, cd: cd / rate, vd: vd / rate, vk, c: c0, amp, stress: amp > 1, hum: vk === 'm' && !c0 });
+      heard = t + c.e / rate; gap = p.gap;
+    }
+    if (!alive) for (const n of utt.nodes) n.disconnect();
+    utt.end = T0 + Math.max(t, last - 0.1) + 0.25;
+    this.utt = utt;
+    return syl;
+  }
+
   // ---------------------------------------------------------------- P18-VOICES: a Words line, rendered
   // the whole line rendered at once by the sample-level synthesiser (voicesynth.js renderLine) at the context's rate,
   // brought to WORDS_RMS over its voiced part, its rare peaks softened, and played as
@@ -892,7 +1101,7 @@ export class Babble {
     const leg = plan.phrases[0]?.g.leg ?? 0.8, breath = Math.max(1, ...plan.phrases.map((p) => p.g.breath || 1));
     // (only the values the synthesiser reads: a plain object a worker can be sent)
     const vv = {}; for (const k of ['k', 'vowel', 'f0', 'vib', 'breath', 'glide', 'atk', 'rel', 'tilt', 'bright', 'nasal', 'bwScale', 'consLvl']) vv[k] = v[k];
-    return { v: vv, g: { syl: plan.syl, leg, breath }, o: { sr, seed: (hashStr(text) ^ v.seed) >>> 0, lead: WORDS_LEAD, tail: 0.15, cons: WORDS_CONS, words: true, lenis: WORDS_LENIS }, rms: WORDS_RMS };
+    return { v: vv, g: { syl: plan.syl, leg, breath }, o: { sr, seed: (hashStr(text) ^ v.seed) >>> 0, lead: WORDS_LEAD, tail: 0.15, cons: WORDS_CONS, words: true, lenis: WORDS_LEGACY ? WORDS_LENIS : 0.07, nzDb: WORDS_LEGACY ? -22 : -20 }, rms: WORDS_RMS };
   }
   _words(plan, text, T0, v, pcm = null) {
     const ctx = this.audio.ctx, lead = WORDS_LEAD;

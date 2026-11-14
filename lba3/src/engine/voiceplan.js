@@ -52,7 +52,7 @@ export const CONS = {
 export const MOUTH_OPEN = { a: 1, e: 0.72, i: 0.46, o: 0.86, u: 0.56, y: 0.46, m: 0.08, ae: 0.9, ih: 0.55, uh: 0.78, uu: 0.6, er: 0.6, ax: 0.6 };
 export const MOUTH_ROUND = { a: 0, e: -0.35, i: -0.8, o: 1, u: 0.8, y: -0.5, m: 0.2, ae: -0.3, ih: -0.6, uh: 0, uu: 0.6, er: 0.3, ax: 0 };
 
-export const INTENTS = ['tell', 'ask', 'excl', 'no', 'worry', 'warm', 'cont'];
+export const INTENTS = ['tell', 'ask', 'excl', 'no', 'worry', 'warm', 'cont', 'unsure'];   // (VOICE-2: unsure, the uncertain reply)
 
 // the sounds a race's speakers favour (consonants, then vowels, most used first) and how often a word ends on a hum
 const PHON = {
@@ -83,22 +83,38 @@ export function writtenSyllables(s) {
   return n;
 }
 
+// VOICE-2: more cues than the punctuation for a line without metadata (src/game/text/voicemeta.js): an uncertain
+// reply (maybe, I think, I don't know...), an urgent call (run, hurry, look out...), a pleased one (thanks, well done,
+// at last...), an annoyed one (enough, honestly...)
+const UNSURE_WORDS = /\b(maybe|perhaps|i think|i guess|i suppose|probably|not sure|i don'?t know|who knows|somehow|um+|er+|hm+|i wonder)\b/i;
+const URGENT_WORDS = /^(run|hurry|quick|quickly|look out|watch out|careful|get (down|back|out|away)|stop|help|now|move|wait|down|duck)\b|\b(hurry|right now|look out|watch out|run!)/i;
+const PLEASED_WORDS = /\b(thank|thanks|well done|at last|finally|wonderful|great|lovely|perfect|phew|brilliant|splendid|nice)\b/i;
+const ANNOYED_WORDS = /\b(enough|honestly|typical|leave me|not again|go away|ridiculous|nonsense)\b/i;
+export function intentOf(whole, endPunct) {
+  if (endPunct.includes('?')) return UNSURE_WORDS.test(whole) && !/^(what|where|who|why|how|when)\b/i.test(whole) ? 'unsure' : 'ask';
+  if (NO_WORDS.test(whole) || ANNOYED_WORDS.test(whole)) return 'no';
+  if (endPunct.includes('!')) return URGENT_WORDS.test(whole) ? 'excl' : WARM_WORDS.test(whole) || PLEASED_WORDS.test(whole) ? 'warm' : 'excl';
+  if (endPunct === '...' || endPunct === '…') return UNSURE_WORDS.test(whole) ? 'unsure' : 'worry';
+  if (WORRY_WORDS.test(whole)) return 'worry';
+  if (WARM_WORDS.test(whole) || PLEASED_WORDS.test(whole)) return 'warm';
+  if (UNSURE_WORDS.test(whole)) return 'unsure';
+  return 'tell';
+}
+
 // the line's clauses: [{ n (syllables to speak), intent, pause (s after it), quiet (an aside in parentheses) }]
-export function clauses(text) {
+// VOICE-2: meta (voicemeta.js metaFor): each sentence's intention, the word that carries its accent (emph), an extra
+// pause before a sentence; the clauses carry sentence (its index) and emph
+export function clauses(text, meta = null) {
   const out = [];
   const re = /([^.,;:!?…—]+)(\.\.\.|…|[.,;:!?—]+|$)/g;
-  let m, sentence = [];
+  let m, sentence = [], si = 0;
   const flush = (endPunct) => {
     // the sentence's last clause carries its intention; the ones before it go on
     const whole = sentence.map((c) => c.s).join(' ').trim();
-    let intent = 'tell';
-    if (endPunct.includes('?')) intent = 'ask';
-    else if (NO_WORDS.test(whole)) intent = 'no';
-    else if (endPunct.includes('!')) intent = WARM_WORDS.test(whole) ? 'warm' : 'excl';
-    else if (endPunct === '...' || endPunct === '…' || WORRY_WORDS.test(whole)) intent = 'worry';
-    else if (WARM_WORDS.test(whole)) intent = 'warm';
-    sentence.forEach((c, i) => { c.intent = i === sentence.length - 1 ? intent : 'cont'; out.push(c); });
-    sentence = [];
+    const intent = meta?.intent(si) || intentOf(whole, endPunct);
+    if (meta && si > 0 && out.length && meta.pause(si)) out[out.length - 1].pause += meta.pause(si);
+    sentence.forEach((c, i) => { c.intent = i === sentence.length - 1 ? intent : 'cont'; c.sentence = si; out.push(c); });
+    sentence = []; si++;
   };
   while ((m = re.exec(text)) && m[0]) {
     const s = m[1].replace(/[()"“”]/g, ' ').trim(), p = m[2] || '';
@@ -116,7 +132,18 @@ export function clauses(text) {
   for (const c of out) { c.n = Math.max(1, Math.round(c.w * ratio)); total += c.n; }
   while (total > 26) { const c = out.reduce((a, b) => (b.n > a.n ? b : a)); c.n--; total--; }
   if (out.length) out[out.length - 1].pause = 0;
-  return out.map(({ n, intent, pause, quiet, s }) => ({ n, intent, pause, quiet, s }));   // (s: the clause's text, P18 Words)
+  // (VOICE-2: the emphasis word of each sentence, on the clause that holds it, else on its last clause)
+  if (meta) {
+    const last = si - 1;
+    for (let k = 0; k <= last; k++) {
+      const e = meta.emph(k, k === last);
+      if (!e) continue;
+      const cs = out.filter((c) => c.sentence === k);
+      const hit = cs.find((c) => new RegExp(`\\b${e.replace(/[^\p{L}\d']/gu, '')}\\b`, 'iu').test(c.s)) || cs[cs.length - 1];
+      if (hit) hit.emph = e;
+    }
+  }
+  return out.map(({ n, intent, pause, quiet, s, sentence, emph }) => ({ n, intent, pause, quiet, s, sentence, emph: emph || null }));   // (s: the clause's text, P18 Words)
 }
 
 // ---------------------------------------------------------------- the speaker's speech values
@@ -140,7 +167,7 @@ const pick = (r, s) => s[Math.min(s.length - 1, Math.floor(Math.pow(r(), 1.35) *
 //   wEnd, last }], dur, breath (scale) }; t is the syllable's start (its consonant), times in seconds from 0.
 export function gesture(v, n, intent, seed, o = {}) {
   const r = rng(seed), S = speech(v), R0 = S.range;
-  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1] }[intent] || [1, 0, 1, 1])];
+  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1], unsure: [0.7, 0.02, 1.12, 0.85] }[intent] || [1, 0, 1, 1])];
   // (Zoé's concern sharpens her delivery: quicker and more defined, a little higher, not louder or shriller)
   if (intent === 'worry' && v.manner === 'sharp') { mod[0] = 0.7; mod[1] = 0.08; mod[2] = 0.94; mod[3] = 0.95; }
   const R = R0 * mod[0], off = mod[1] * R0, dScale = mod[2] / (o.speed || 1), ampI = mod[3] * (o.quiet ? 0.72 : 1);
@@ -197,6 +224,7 @@ export function gesture(v, n, intent, seed, o = {}) {
         if (intent === 'ask' && ask === 'rise') { b = a + Math.max(3, 0.6 * R0); }
         else if (intent === 'ask') { a += 0.45 * R0; b = a + 0.1 * R0; }
         else if (intent === 'cont') b = a + 0.15 * R0;
+        else if (intent === 'unsure') b = a + 0.22 * R0;
         else if (intent === 'warm') { a += 0.15 * R0; b = a - 0.55 * R0; }
         else if (intent === 'worry') b = a - 0.15 * R0;
         else if (intent === 'excl') b = a - 0.5 * R0;
@@ -227,8 +255,11 @@ function quantize(st, mode) {
 
 // P18-VOICES: how a line's syllables are chosen. 'words' (the default): from the line's own English letters
 // (voicewords.js: letter-to-sound rules, its words, their stress); 'classic': from the speaker's own sounds (below).
-let MODE = 'words';
-export function setVoiceMode(m) { MODE = m === 'classic' ? 'classic' : 'words'; return MODE; }
+// VOICE-2: 'expressive' (the new default): the clauses and their intentions of planClassic, spoken from the
+// Expressive phrase banks (assets/voice2) by voice.js; a voice without a bank renders the classic plan.
+let MODE = 'expressive';
+export const VOICE_MODES = ['expressive', 'words', 'classic'];
+export function setVoiceMode(m) { MODE = VOICE_MODES.includes(m) ? m : 'expressive'; return MODE; }
 export const voiceMode = () => MODE;
 
 // the whole line, laid out for the live synthesis: { phrases: [{ t0, g (gesture), intent, n }], dur, syl (every
@@ -237,13 +268,13 @@ export function planLine(v, text, o = {}) {
   return (o.mode || MODE) === 'words' ? planWords(v, text, o) : planClassic(v, text, o);
 }
 export function planClassic(v, text, o = {}) {
-  const cl = clauses(text);
+  const cl = clauses(text, o.meta || null);
   const h = (o.seed ?? 0) ^ hashStr(text) ^ v.seed;
   const build = (speed, fewer = 1) => {
     const phrases = []; let t = 0;
     cl.forEach((c, i) => {
       const g = gesture(v, Math.max(1, Math.round(c.n * fewer)), c.intent, h + i * 7919, { quiet: c.quiet, speed, hesitate: i === 0 && o.hesitate });
-      phrases.push({ t0: t, g, intent: c.intent, n: g.syl.filter((x) => !x.hum).length, quiet: c.quiet });
+      phrases.push({ t0: t, g, intent: c.intent, n: g.syl.filter((x) => !x.hum).length, quiet: c.quiet, s: c.s, emph: c.emph });
       t += g.dur + c.pause * (speech(v).manner === 'spacious' ? 1.4 : 1) / speed;
     });
     return { phrases, dur: t };

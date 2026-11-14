@@ -283,11 +283,18 @@ export function clauseWords(s) {
 // one clause, spoken: the gesture voiceplan.js makes ({ syl, dur, leg, breath }), its syllables from its words.
 // words: from clauseWords (some may be marked .drop); o: { speed, quiet, hesitate, squeeze (how much the small words
 // and unstressed vowels are shortened, 0-1) }
+// VOICE-2 (o.v2, the Words voice after 14.11): the stressed syllables longer and louder, the small words quicker and
+// softer, a wider melody with a clear accent on the clause's key word (o.emph, from the metadata), a question's rise
+// larger; measured before: every syllable within about 2 dB of the next (the Piper phrases 3-8 dB), the melody's
+// spread 1.2-2.6 semitones (the phrases 2-3.4)
+const X1 = { range: 1, sd: 1.2, ud: 0.82, sa: 1.12, fa: 0.86, nuc: 0.38, nucA: 1.06, rise: 1 };
+const X2 = { range: 1.45, sd: 1.3, ud: 0.72, sa: 1.28, fa: 0.72, nuc: 0.55, nucA: 1.12, rise: 1.4 };
 function speakClause(v, words, intent, seed, o = {}) {
+  const X = o.v2 ? X2 : X1;
   const r = rng(seed), S = speech(v), R0 = S.range, fav = favoured(v, S);
-  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1] }[intent] || [1, 0, 1, 1])];
+  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1], unsure: [0.7, 0.02, 1.12, 0.85] }[intent] || [1, 0, 1, 1])];
   if (intent === 'worry' && v.manner === 'sharp') { mod[0] = 0.7; mod[1] = 0.08; mod[2] = 0.94; mod[3] = 0.95; }
-  const R = R0 * mod[0], off = mod[1] * R0, dScale = mod[2] / (o.speed || 1), ampI = mod[3] * (o.quiet ? 0.72 : 1);
+  const R = R0 * mod[0] * X.range, off = mod[1] * R0, dScale = mod[2] / (o.speed || 1), ampI = mod[3] * (o.quiet ? 0.72 : 1);
   const clipped = (S.manner === 'clipped' && (intent === 'no' || intent === 'excl')) || (S.manner === 'sharp' && intent === 'worry');
   const sq = o.squeeze || 0;
   const W = words.filter((x) => !x.drop);
@@ -298,6 +305,8 @@ function speakClause(v, words, intent, seed, o = {}) {
   const ask = S.ask === 'mix' ? (r() < 0.6 ? 'rise' : 'high') : S.ask;
   // the clause's nuclear accent: its last stressed syllable
   let nucK = -1; { let kk = 0; for (const x of W) for (const s of x.syl) { if (s.stress) nucK = kk; kk++; } }
+  // (VOICE-2: the word the metadata names carries the accent)
+  if (o.emph) { const e = String(o.emph).toLowerCase().replace(/[^\p{L}\d']/gu, ''); let kk = 0; for (const x of W) { if (x.w === e) { const j = Math.max(0, x.syl.findIndex((s) => s.stress)); nucK = kk + j; x.syl[j].stress = 1; break; } kk += x.syl.length; } }
   for (let wi = 0; wi < W.length; wi++) {
     const word = W[wi], lastWord = wi === W.length - 1;
     if (S.manner === 'momentum' && lastWord && n >= 5) t += 0.17;
@@ -328,7 +337,7 @@ function speakClause(v, words, intent, seed, o = {}) {
       const cd = ons.reduce((a, x) => a + x, 0), cod = cos.reduce((a, x) => a + x, 0);
       // (the vowel gives up most of its consonants' time: a syllable heavy with consonants is about as long as a light
       //  one, so the speaker keeps their syllables a second)
-      let vd = base * (stress ? 1.2 : word.fn ? 0.66 - 0.12 * sq : 0.82 - 0.1 * sq) - cd * 0.8 - cod * 0.75;
+      let vd = base * (stress ? X.sd : word.fn ? 0.66 - 0.12 * sq : X.ud - 0.1 * sq) - cd * 0.8 - cod * 0.75;
       if (VV.length > 1 || LONG.has(vp)) vd *= 1.12; else if (vp === 'ax') vd *= 0.72;
       vd = Math.max(word.fn ? 0.04 : 0.05, vd);
       if (wEnd) vd *= 1.06;
@@ -345,14 +354,15 @@ function speakClause(v, words, intent, seed, o = {}) {
         case 'zigzag': st += [0.24, -0.16, 0.12, -0.08][k % 4] * R; break;
         case 'boing': st += 0.2 * R * Math.sin(Math.PI * p); break;
       }
-      if (stress) st += (nuclear ? 0.38 : 0.22) * R * (intent === 'excl' ? 1.3 : intent === 'no' ? 0.5 : 1);
+      if (stress) st += (nuclear ? X.nuc : 0.22) * R * (intent === 'excl' ? 1.3 : intent === 'no' ? 0.5 : 1);
       else if (word.fn) st -= 0.08 * R;
       st += (r() - 0.5) * 0.24 * R * Math.min(1, v.jit / 0.45);
       let a = st, b = st - 0.06 * R;
       if (last) {
-        if (intent === 'ask' && ask === 'rise') { b = a + Math.max(3, 0.6 * R0); }
+        if (intent === 'ask' && ask === 'rise') { b = a + Math.max(3, 0.6 * R0) * X.rise; }
         else if (intent === 'ask') { a += 0.45 * R0; b = a + 0.1 * R0; }
         else if (intent === 'cont') b = a + 0.15 * R0;
+        else if (intent === 'unsure') b = a + 0.22 * R0;
         else if (intent === 'warm') { a += 0.15 * R0; b = a - 0.55 * R0; }
         else if (intent === 'worry') b = a - 0.15 * R0;
         else if (intent === 'excl') b = a - 0.5 * R0;
@@ -360,7 +370,7 @@ function speakClause(v, words, intent, seed, o = {}) {
       } else if (intent === 'ask' && ask === 'high' && nuclear) { a += 0.45 * R0; b = a; }
       if (v.quant === 'penta' || v.quant === 'whole') { a = quantize(a, v.quant); b = last ? b : a; }
       a = Math.max(-1.2 * R0 - 2, Math.min(1.4 * R0 + 3, a)); b = Math.max(-1.2 * R0 - 3, Math.min(1.4 * R0 + 5, b));
-      const amp = ampI * (stress ? 1.12 : word.fn ? 0.86 : 0.94) * (nuclear ? 1.06 : 1) * (1 - 0.2 * p) * (last ? 0.9 : 1) * (0.95 + r() * 0.1);
+      const amp = ampI * (stress ? X.sa : word.fn ? X.fa : 0.94) * (nuclear ? X.nucA : 1) * (1 - 0.2 * p) * (last ? 0.9 : 1) * (0.95 + r() * 0.1);
       syl.push({
         t, c: on[0] || '', cd: +cd.toFixed(4), vk: VV[0], vk2: VV[1] || null, vd: +vd.toFixed(4), coda: '', cod: +cod.toFixed(4),
         on: on.map((c, i) => [c, ons[i]]), co: co.map((c, i) => [c, cos[i]]),
@@ -377,7 +387,7 @@ function speakClause(v, words, intent, seed, o = {}) {
 // the whole line from its words: the same shape as planClassic's ({ phrases, dur, syl }), about as long.
 // o: { maxDur, seed, hesitate }
 export function planWords(v, text, o = {}) {
-  const cl = clauses(text);
+  const cl = clauses(text, o.meta || null);
   const h = (o.seed ?? 0) ^ hashStr(text) ^ v.seed;
   // (today's length, so the typing and the voice end together: for a speaker heard from a phrase bank the length of
   //  the clips the classic line would play, o.target (voice.js); else the classic plan's)
@@ -389,7 +399,7 @@ export function planWords(v, text, o = {}) {
     cl.forEach((c, i) => {
       let words = W[i];
       if (!words.filter((x) => !x.drop).length) words = [{ w: 'm', fn: false, syl: [{ on: [], v: 'hum', co: [], stress: 1 }] }];
-      const g = speakClause(v, words, c.intent, h + i * 7919, { quiet: c.quiet, speed, squeeze, hesitate: i === 0 && o.hesitate });
+      const g = speakClause(v, words, c.intent, h + i * 7919, { quiet: c.quiet, speed, squeeze, hesitate: i === 0 && o.hesitate, v2: !!o.v2, emph: c.emph });
       phrases.push({ t0: t, g, intent: c.intent, n: g.syl.filter((x) => !x.hum).length, quiet: c.quiet });
       t += g.dur + c.pause * (S.manner === 'spacious' ? 1.4 : 1) / speed;
     });
@@ -430,7 +440,7 @@ export function planWords(v, text, o = {}) {
     best.x.syl[best.i - 1].co = [...best.x.syl[best.i - 1].co, ...gone.on.slice(0, 1)];
     p = build(sp, 1);
   }
-  while (p.dur > goal && sp < 1.299) { sp += 0.05; p = build(sp, 1); }
+  while (p.dur > goal && sp < (o.v2 ? 1.399 : 1.299)) { sp += 0.05; p = build(sp, 1); }   // (VOICE-2: its longer stressed syllables may need a little more)
   // too short (a line of a few long words): a little slower, never below the speaker's own pace by more than a tenth
   if (p.dur < target * 0.8) { const b = build(0.9, 0); if (b.dur <= target * 1.08) p = b; }
   while (p.dur > hard && p.phrases.length > 1) { p.phrases.pop(); const l = p.phrases[p.phrases.length - 1]; p.dur = l.t0 + l.g.dur; }

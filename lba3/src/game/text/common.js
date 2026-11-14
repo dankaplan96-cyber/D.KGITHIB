@@ -98,7 +98,8 @@ Object.assign(STR.en, {
   set_h_hud_lba: 'Life, magic and kashes appear only when they change.', set_h_hud_modern: 'Life, magic, minimap, behaviours and weapon stay on screen.',
   set_h_wx_on: 'Outdoors, rain, wind and the light of the day change as you play.', set_h_wx_off: 'Clear skies and steady light.',
   set_h_music: 'Music volume.', set_h_sfx: 'Footsteps, blows, doors and other sounds.', set_h_voice: 'Character voices. Their words are always written on screen.',
-  voice_mode: 'Voice Style', vm_words: 'Words', vm_classic: 'Classic',
+  voice_mode: 'Voice Style', vm_expressive: 'Expressive', vm_words: 'Words', vm_classic: 'Classic',
+  set_h_vm_expressive: 'Natural phrases in an invented language, shaped by each line\'s mood.',
   set_h_vm_words: 'The babble follows the sounds of each line\'s words.', set_h_vm_classic: 'The babble as before: each character\'s own sounds.',
   set_h_tabs: '{k}: change page.', set_h_fold: 'More: {list}.',
   // the controls screen's table (main.js buildKeyTable): the keys in use, rebound ones by their names

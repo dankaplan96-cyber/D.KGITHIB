@@ -117,3 +117,69 @@ function fft(re, im) {
 
 // the slice of a track between two times
 export const slice = (data, sr, a, b) => data.subarray(Math.floor(a * sr), Math.min(data.length, Math.floor(b * sr)));
+
+// ---------------------------------------------------------------- VOICE-2 (the user, 14.11: "monotonous, robotic and
+// excessively deep"): the measures that brief asks for, beside the ones above. Numbers only.
+// prosody: a pitch track (YIN, 10 ms hop, 40 ms window, 60-600 Hz) over the voiced frames: its median, 5th-95th
+// percentile range in semitones, the standard deviation in semitones (how much the melody moves), the change over
+// the last 250 ms of voicing (a rise or a fall at the end), and the track itself (for the pictures)
+export function prosody(data, sr) {
+  const hop = Math.round(sr * 0.01), W = Math.round(sr * 0.04), lmin = Math.floor(sr / 600), lmax = Math.ceil(sr / 60);
+  const dd = new Float32Array(lmax + 2), track = [];
+  let emax = 0;
+  for (let s = 0; s + W <= data.length; s += hop) { let e = 0; for (let i = 0; i < W; i++) e += data[s + i] * data[s + i]; emax = Math.max(emax, e / W); }
+  for (let s = 0; s + W + lmax + 1 < data.length; s += hop) {
+    let e = 0; for (let i = 0; i < W; i++) e += data[s + i] * data[s + i];
+    if (e / W < emax * 1e-3) { track.push(0); continue; }   // (30 dB under the loudest: not speech)
+    let run = 0; dd[0] = 1;
+    for (let L = 1; L <= lmax + 1; L++) { let d = 0; for (let i = 0; i < W; i += 2) { const x = data[s + i] - data[s + i + L]; d += x * x; } run += d; dd[L] = run > 0 ? (d * L) / run : 1; }
+    let bl = 0; for (let L = lmin; L <= lmax; L++) if (dd[L] < 0.15) { while (L + 1 <= lmax && dd[L + 1] < dd[L]) L++; bl = L; break; }
+    track.push(bl ? sr / bl : 0);
+  }
+  // (octave errors: a frame more than 9 semitones from the median is dropped)
+  const v0 = track.filter((x) => x > 0).sort((a, b) => a - b), med0 = v0[v0.length >> 1] || 0;
+  const clean = track.map((x) => (x && Math.abs(12 * Math.log2(x / med0)) < 9 ? x : 0));
+  const v = clean.filter((x) => x > 0).sort((a, b) => a - b);
+  const pc = (p) => v[Math.min(v.length - 1, Math.floor(p * (v.length - 1)))] || 0;
+  const med = pc(0.5);
+  const st = v.map((x) => 12 * Math.log2(x / med)), mean = st.reduce((a, x) => a + x, 0) / Math.max(1, st.length);
+  const sd = Math.sqrt(st.reduce((a, x) => a + (x - mean) ** 2, 0) / Math.max(1, st.length));
+  const idx = clean.map((x, i) => (x ? i : -1)).filter((i) => i >= 0), lastI = idx[idx.length - 1] ?? 0;
+  const tail = idx.filter((i) => i > lastI - 25), q = Math.max(1, Math.floor(tail.length / 3));
+  const avg = (a) => a.reduce((s, i) => s + 12 * Math.log2(clean[i] / med), 0) / Math.max(1, a.length);
+  const endSt = tail.length >= 6 ? avg(tail.slice(-q)) - avg(tail.slice(0, q)) : 0;
+  return { f0Med: Math.round(med), f0P5: Math.round(pc(0.05)), f0P95: Math.round(pc(0.95)), rangeSt90: med ? +(12 * Math.log2(pc(0.95) / Math.max(1, pc(0.05)))).toFixed(1) : 0,
+    pitchSdSt: +sd.toFixed(2), endSt: +endSt.toFixed(1), voicedFrames: v.length, track: clean.map((x) => Math.round(x)) };
+}
+// the long-term spectrum: its tilt (dB per octave, a least-squares line over third-octave bands 200 Hz-5 kHz: steeper
+// is darker), the share of energy under 250 Hz (boom, a deep voice's chest) and over 3 kHz (air, consonants), centroid
+export function balance(data, sr) {
+  const N = 2048, win = new Float32Array(N); for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1));
+  const P = new Float64Array(N / 2), re = new Float64Array(N), im = new Float64Array(N);
+  let frames = 0;
+  for (let s = 0; s + N <= data.length; s += N / 2) {
+    let fe = 0; for (let i = 0; i < N; i++) fe += data[s + i] * data[s + i];
+    if (fe / N < 1e-6) continue;
+    for (let i = 0; i < N; i++) { re[i] = data[s + i] * win[i]; im[i] = 0; }
+    fft(re, im); frames++;
+    for (let k = 1; k < N / 2; k++) P[k] += re[k] * re[k] + im[k] * im[k];
+  }
+  let et = 0, lo = 0, hi = 0, cn = 0; const xs = [], ys = [];
+  for (let k = 1; k < N / 2; k++) { const f = (k * sr) / N; et += P[k]; cn += P[k] * f; if (f < 250) lo += P[k]; if (f > 3000) hi += P[k]; }
+  for (let fc = 200; fc <= 5000; fc *= Math.pow(2, 1 / 3)) {
+    let e = 0; for (let k = Math.floor((fc / Math.pow(2, 1 / 6)) * N / sr); k <= Math.ceil((fc * Math.pow(2, 1 / 6)) * N / sr); k++) e += P[k] || 0;
+    if (e > 0) { xs.push(Math.log2(fc)); ys.push(10 * Math.log10(e)); }
+  }
+  const mx = xs.reduce((a, x) => a + x, 0) / Math.max(1, xs.length), my = ys.reduce((a, x) => a + x, 0) / Math.max(1, ys.length);
+  const slope = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / Math.max(1e-9, xs.reduce((a, x) => a + (x - mx) ** 2, 0));
+  return { tiltDbOct: +slope.toFixed(1), lowShare: +(lo / Math.max(1e-12, et)).toFixed(3), highShare: +(hi / Math.max(1e-12, et)).toFixed(4), centroid: Math.round(cn / Math.max(1e-12, et)) };
+}
+// the syllables' loudness contrast: the spread (standard deviation, dB) of the syllable peaks (an even line has every
+// syllable as loud as the next)
+export function contrast(data, sr) {
+  const env = envelope(data, sr), mx = Math.max(1e-9, ...env), floor = mx * Math.pow(10, -25 / 20);
+  const pk = [];
+  for (let i = 6; i < env.length - 6; i++) { if (env[i] < floor) continue; let ok = true; for (let k = i - 6; k <= i + 6; k++) if (env[k] > env[i]) { ok = false; break; } if (ok && (!pk.length || i - pk[pk.length - 1] >= 12)) pk.push(i); }
+  const L = pk.map((i) => db(env[i])), m = L.reduce((a, x) => a + x, 0) / Math.max(1, L.length);
+  return { peakSdDb: +Math.sqrt(L.reduce((a, x) => a + (x - m) ** 2, 0) / Math.max(1, L.length)).toFixed(1), syllables: pk.length };
+}
