@@ -409,3 +409,21 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        door with a line that says why).
     Report the table in `WORLD_ART_REQUESTS.md` (`## LANDMARKS-KEEP`) with pictures of the misses; no pictures past
     chapter 2's places to the user.
+
+44. **Night mode, 14.11 (the user: "night mode: continue by the plan, and give the local agent tasks too").** The cloud's
+    answers to ISLAND-85, then the queue. One at a time, each a request with a diff, pushed before the next.
+    1. **CITADEL-DECLUTTER (approved):** your ISLAND-85 proposal, under the no-clutter rule: street by street, take away
+       what has no job (the second bench, the stray crate pile, repeated lamps and planters), never a story place,
+       a person's spot (`R.npcSpots`, `R.figures`, walkers' paths), a container the player opens, or one of the
+       original's main buildings (order 43). Before/after pictures from the play camera per street, objects removed per
+       street, draw calls before/after, `worldscore.mjs` before/after. Run `place-scan`, `walkers`, `containers`,
+       `chapter1` when it is ready (the cloud runs the rest when applying).
+    2. **Desert Island:** the 30 matching palms/bushes are **not** sent (no job). Kesh's ground stays (its story places
+       and arrival). Close the gap, if at all, by taking away, as in Citadel.
+    3. **TEMPLE-WAY (approved, art half):** the original's way down to the Temple of Bù goes through the stone face's
+       door again (it is one of the original's main entrances, order 43). Build the face's inside: a short stair down
+       to the temple's first room, readable from the play camera, its door where S28's is; the bunkhouse's people and
+       beds move to the crew's huts by the dig (keep them; say where). **Don't touch `story/*` or the chapter's gating:**
+       leave the new way in as a named handle (`R.templeWay = { door, foot }`) and say in the report how it should
+       join; the cloud wires the story (which chapter opens it, the dig kept as the crew's works or a second way).
+    4. Then order 43 (LANDMARKS-KEEP), then order 41's items 4–7.
