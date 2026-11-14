@@ -205,7 +205,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'words', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'expressive', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
     if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
@@ -225,7 +225,11 @@ class Game {
     if (!['on', 'off'].includes(this.settings.autoControls)) this.settings.autoControls = 'on';
     // P18-VOICES: how the characters babble: 'words' (shaped by the line's English letters, the default, also for
     // settings saved before) or 'classic' (the voices before; Settings → Sound → Voice Style)
-    if (!['words', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'words';
+    if (!['expressive', 'words', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'expressive';
+    // VOICE-2 (the user, 14.11, of Words: "monotonous, robotic and excessively deep"): 'expressive' is the new default;
+    // settings saved before it hold 'words' because it was the default then (P18 wrote it for everyone), so they move
+    // to Expressive once. Words and Classic stay in Settings → Sound → Voice Style; a choice made after this is kept.
+    if (!(this.settings.voiceV >= 2)) { if (this.settings.voiceMode === 'words') this.settings.voiceMode = 'expressive'; this.settings.voiceV = 2; }
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -2002,7 +2006,7 @@ class Game {
       hud: () => t('set_h_hud_' + (s.hud === 'lba' ? 'lba' : 'modern')),
       weather: () => t('set_h_wx_' + (s.weather === 'off' ? 'off' : 'on')),
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
-      voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'words')),
+      voiceMode: () => t('set_h_vm_' + (['classic', 'words'].includes(s.voiceMode) ? s.voiceMode : 'expressive')),
     };
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
@@ -3105,6 +3109,8 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
+// VOICE-2: the developer-only voice audition view (?voicelab; src/engine/voicelab.js), loaded only with the flag
+if (/[?&]voicelab\b/.test(location.search)) import('./engine/voicelab.js').then((m) => m.openVoiceLab()).catch((e) => console.warn('voicelab', e));
 Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
 
 // the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the

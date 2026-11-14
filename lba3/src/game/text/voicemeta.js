@@ -91,6 +91,67 @@ export const VOICE_META = {
   c1_doran_ferry2: ['pleased', 'neutral'], c1_doran_board: ['neutral', 'pleased'], c1_xil_1: ['annoyed', 'annoyed'], c1_xil_2: ['pleased', 'pleased'],
   c1_pippa_1: ['neutral', 'curious'], c1_pippa_heat: ['neutral', 'pleased', 'pleased', 'curious'], c1_pippa_2: ['concerned', 'neutral'],
   c1_tim: ['urgent', 'curious', 'pleased'], c1_tim_heat: ['pleased', 'pleased'], c1_lulu_heat: ['neutral', 'neutral', 'annoyed'], c1_lulu: ['concerned', 'neutral', 'pleased'],
+  // ---------------------------------------------------------------- chapter 2, Zeelich (c2_)
+  c2_doran_1: ['neutral', 'neutral', 'pleased'], c2_tw_arrive: ['neutral', 'neutral'], c2_doran_idle: { i: 'pleased', h: 1 },
+  c2_bal_1: { i: ['pleased', 'relieved', 'urgent', 'uncertain'], e: [null, null, 'Mind'] }, c2_tw_bal1: { i: ['neutral', 'curious'], e: [null, 'really'] },
+  c2_bal_2: ['neutral', 'neutral', 'neutral'], c2_bal_3: ['concerned', 'concerned'], c2_tw_bal2: { i: 'annoyed', e: 'stop' },
+  c2_bal_4: { i: ['urgent', 'urgent', 'neutral'], e: ['No'] }, c2_bal_5: ['pleased', 'uncertain', 'neutral'], c2_bal_6: ['neutral', 'neutral'],
+  c2_bal_7: ['concerned', 'concerned', 'neutral', 'neutral'], c2_bal_wait: ['neutral', 'urgent'], c2_bal_build: ['pleased', 'neutral', 'uncertain'],
+  c2_bal_built: ['pleased', 'pleased', 'uncertain', 'neutral', 'pleased'], c2_bal_after: ['neutral', 'concerned'],
+  c2_zoe_in: { i: ['neutral', 'neutral', 'uncertain'], e: [null, null, 'order'] }, c2_zoe_broadcast: ['neutral', 'concerned', 'urgent', 'urgent'],
+  c2_zoe_after: ['relieved', 'pleased', 'concerned'], c2_zoe_notyet: 'annoyed',
+  c2_vesk_1: { i: ['neutral', 'neutral', 'curious'], e: [null, 'Baldino', 'you'] }, c2_tw_vesk1: { i: ['annoyed', 'annoyed'], e: [null, 'thirty'] },
+  c2_vesk_2: { i: ['annoyed', 'neutral', 'concerned', 'neutral'], e: ['everyone'] }, c2_bal_vesk: { i: ['urgent', 'urgent'], e: ['IS'] },
+  c2_vesk_3: ['annoyed', 'annoyed', 'neutral'], c2_tw_vesk2: 'annoyed', c2_vesk_4: ['neutral', 'concerned'],
+  c2_after_tw: { i: ['urgent', 'concerned', 'urgent'], e: ['ship'] }, c2_ship_bal: ['neutral', 'neutral'], c2_ship_bal2: ['neutral', 'uncertain'],
+  c2_after_bal: ['neutral', 'urgent', 'urgent'], c2_ar_sealed: ['curious', 'neutral', 'concerned'], c2_zoe_sealed: ['concerned', 'concerned'],
+  c2_tw_sealed0: 'annoyed', c2_bal_sealed1: ['neutral', 'concerned', 'uncertain'], c2_tw_sealed: { i: 'annoyed', e: 'wait' },
+  c2_bal_sealed2: ['annoyed', 'neutral', 'neutral'], c2_doran_sealed: ['curious', 'neutral', 'neutral', 'neutral'],
+  // ---------------------------------------------------------------- chapter 3, under the shell (c3_)
+  c3_tw_arrive: ['concerned', 'concerned', 'concerned'], c3_bal_radio1: ['curious', 'concerned', 'urgent'], c3_sendell_1: 'neutral',
+  c3_tw_sendell1: { i: ['curious', 'curious', 'curious'], e: [null, 'her', 'under'] }, c3_sendell_2: ['neutral', 'concerned'],
+  c3_tw_sendell2: 'annoyed', c3_sendell_3: ['concerned', 'concerned', 'concerned'], c3_tw_sendell3: ['neutral', 'neutral'], c3_sendell_4: ['neutral', 'concerned'],
+  c3_sendell_crystals: ['neutral', 'pleased', 'urgent'], c3_bal_radio2: ['urgent', 'neutral', 'neutral'], c3_bal_radio3: ['pleased', 'neutral', 'neutral'],
+  c3_core_vesk1: ['neutral', 'pleased', 'pleased', 'neutral'], c3_core_tw1: { i: ['urgent', 'concerned', 'neutral', 'urgent'], e: ['alive'] },
+  c3_core_vesk2: ['annoyed', 'annoyed', 'neutral'], c3_core_vesk3: ['annoyed', 'annoyed'], c3_vesk_over1: ['annoyed', 'annoyed', 'annoyed'],
+  c3_tw_over: ['urgent', 'urgent', 'neutral'], c3_vesk_over2: { i: ['annoyed', 'annoyed', 'urgent', 'urgent'], e: ['Over', 'built'] },
+  c3_vesk_over3: { i: 'annoyed', e: 'me' }, c3_vesk_coil: ['annoyed', 'urgent'], c3_vesk_hit1: ['urgent', 'annoyed'],
+  c3_vesk_hit2: { i: ['concerned', 'urgent', 'urgent'], h: 1 }, c3_vesk_down: ['annoyed', 'annoyed'], c3_tw_down: ['annoyed', 'annoyed'],
+  c3_vesk_helped: { i: ['uncertain', 'concerned', 'neutral', 'neutral'], h: 1 }, c3_vesk_left: ['annoyed', 'annoyed', 'annoyed'],
+  c3_tw_switch: ['neutral', 'uncertain'], c3_bal_end: { i: ['relieved', 'pleased', 'pleased', 'neutral'] }, c3_sendell_end: ['relieved', 'pleased'],
+  // ---------------------------------------------------------------- the epilogue (ep_)
+  ep_zoe_1: { i: 'annoyed', e: 'dinner' }, ep_tw_1: { i: ['pleased', 'pleased'], e: ['am', 'that'] }, ep_ar_1: ['urgent', 'curious', 'curious', 'curious'],
+  ep_tw_2: { i: 'pleased', h: 1 }, ep_zoe_2: ['pleased', 'pleased'], ep_zoe_3: ['neutral', 'neutral', 'pleased', 'pleased'],
+  ep_gilbert: ['pleased', 'pleased', 'pleased'], ep_mira: ['pleased', 'pleased'], ep_doran: ['relieved', 'pleased', 'pleased', 'pleased'],
+  ep_arthur: 'curious', ep_zoe_idle: ['pleased', 'pleased', 'pleased'], ep_baldino_vesk: ['neutral', 'neutral', 'annoyed', 'annoyed'],
+  // ---------------------------------------------------------------- the middle chapters: Sendell, Arthur's call, home again
+  c5_doran_1: ['curious', 'annoyed', 'uncertain', 'uncertain', 'pleased'], c5_zoe_radio2: ['concerned', 'concerned', 'concerned'], c5_tw_radio: ['neutral', 'curious'],
+  c5_zoe_radio3: ['pleased', 'neutral', 'concerned'], c7_sendell_1: 'neutral', c7_tw_s1: ['neutral', 'concerned', 'concerned'],
+  c7_sendell_2: ['neutral', 'concerned', 'concerned', 'concerned'], c7_tw_s2: { i: 'curious', e: 'she' }, c7_sendell_4: ['neutral', 'neutral', 'urgent'],
+  c7_tw_v1: 'pleased', c7_arthur_1: { i: ['curious', 'urgent', 'urgent', 'urgent', 'urgent'] }, c7_tw_ar1: ['neutral', 'curious'],
+  c7_arthur_2: ['concerned', 'concerned', 'concerned', 'concerned'], c7_tw_ar2: { i: ['urgent', 'neutral', 'urgent'], e: [null, null, 'nobody'] },
+  c8_tw_1: ['concerned', 'concerned', 'neutral'], c8_zoe_1: { i: ['relieved', 'pleased'], b: 1 }, c8_ar_1: ['pleased', 'pleased', 'curious', 'curious'],
+  c8_zoe_2: ['concerned', 'concerned'], c8_tw_z1: ['neutral', 'curious'], c8_ar_2: ['urgent', 'neutral', 'annoyed'], c8_zoe_4: ['neutral', 'neutral', 'pleased'],
+  c8_gil_1: { i: ['urgent', 'annoyed', 'annoyed', 'annoyed'], e: [null, null, 'MY'] }, c8_tw_g1: ['urgent', 'neutral', 'neutral'],
+  c8_gil_2: ['pleased', 'pleased', 'uncertain', 'neutral'], c8_gil_after: ['urgent', 'pleased', 'pleased'], c8_mira_1: ['neutral', 'annoyed', 'annoyed'],
+  c8_tw_m1: ['urgent', 'neutral'], c8_mira_2: ['pleased', 'neutral'], c8_mira_after: ['pleased', 'pleased', 'pleased'], c8_zoe_5: ['neutral', 'neutral', 'neutral'],
+  c8_zoe_lh3: ['concerned', 'concerned', 'annoyed'], c8_tw_c1: ['concerned', 'concerned', 'concerned'], c8_tw_c2: ['neutral', 'neutral', 'neutral'],
+  c9_tw_arrive: ['concerned', 'neutral', 'neutral'], c9_tw_b1: ['concerned', 'neutral', 'curious'], c9_bal_3: ['neutral', 'neutral', 'uncertain', 'pleased'],
+  c9_tw_c2: 'neutral', c9_bal_c3: { i: ['pleased', 'pleased', 'urgent'], e: ['network'] }, c9_tw_c3: 'pleased',
+  dt_vesk_0: 'neutral', dt_vesk_1: ['neutral', 'neutral', 'neutral'], dt_vesk_2: ['annoyed', 'annoyed'], dt_tw_again: ['neutral', 'concerned'],
+  dt_vesk_3: ['annoyed', 'annoyed'], dt_vesk_4: { i: ['annoyed', 'annoyed'], h: 1 }, dt_tw_gate1: ['annoyed', 'neutral', 'annoyed'],
+  dp_vesk_fight: ['annoyed', 'annoyed'], dp_vesk_over: { i: 'urgent', e: 'console' },
+  co_vesk_up_helped: ['uncertain', 'neutral'], co_vesk_up_left: ['annoyed', 'neutral', 'neutral'], co_vesk_key: ['neutral', 'neutral'], co_tw_key: 'pleased',
+  co_bal_end: { i: ['relieved', 'pleased', 'neutral'] }, co_vesk_guard: ['annoyed', 'annoyed'], co_ar_two: { i: ['urgent', 'urgent', 'urgent', 'urgent', 'pleased'] },
+  co_zoe_sig: ['pleased', 'neutral', 'neutral'], cn_vesk_1: ['neutral', 'neutral', 'neutral', 'annoyed'], cn_vesk_2: ['annoyed', 'annoyed', 'annoyed'],
+  cn_tw_vesk: { i: 'annoyed', e: 'cut' }, cn_bal_iso2: ['neutral', 'neutral', 'pleased', 'uncertain', 'concerned'],
+  zt_vesk_1: ['neutral', 'neutral', 'neutral'], zt_vesk_2: ['curious', 'neutral', 'neutral', 'neutral'], zt_bal_bench: ['curious', 'curious', 'pleased', 'pleased'],
+  l_tw_pliers: 'curious', l_ar_pliers1: { i: ['uncertain', 'uncertain', 'neutral'], h: 1 }, l_tw_pliers2: { i: 'curious', e: 'now' }, l_ar_pliers2: ['neutral', 'uncertain', 'uncertain', 'uncertain'],
+  e2_ar_hint: ['urgent', 'pleased', 'neutral'], e2_tw_set: 'curious', e2_ar_set3: ['concerned', 'concerned', 'urgent'], e2_ar_set4: ['pleased', 'pleased'],
+  nw_ar_1: ['curious', 'neutral', 'neutral', 'concerned'], nw_tw_ar: { i: ['curious', 'concerned', 'neutral'], e: ['Four', 'three'] }, nw_ar_home: ['annoyed', 'neutral', 'neutral', 'pleased'],
+  nw_zoe_hold: ['annoyed', 'pleased'], nw_zoe_right: ['relieved', 'pleased'], c10_ar_close: ['urgent', 'pleased'], c10_ar_right: ['relieved', 'pleased'],
+  c10_ar_mic: { i: ['curious', 'curious', 'neutral', 'pleased'] }, c10_zoe_3: ['pleased', 'neutral', 'pleased'], c10_bal_p3: ['relieved', 'pleased', 'pleased', 'urgent'],
+  c10_tw_p1: 'concerned', c10_tw_p2: 'neutral', c10_bal_p2: { i: ['neutral', 'uncertain'] },
 };
 
 // the brief's intentions -> the plan's (voiceplan.js clauses: tell, ask, excl, no, worry, warm, unsure)
@@ -115,6 +176,8 @@ export function metaFor(text) {
 // (a text module loaded after the first lookup: build the map again)
 export function resetVoiceMeta() { BY_TEXT = null; }
 const norm = (s) => s.replace(/\s+/g, ' ').trim();
+// (the audition view and the tests: a delivery from a value written as in VOICE_META, e.g. 'urgent')
+export const expandMeta = (m) => expand(m);
 function expand(m) {
   const o = typeof m === 'string' || Array.isArray(m) ? { i: m } : m;
   const I = Array.isArray(o.i) ? o.i : [o.i];

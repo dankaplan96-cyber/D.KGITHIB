@@ -143,7 +143,7 @@ CAST = {
     'sendell': dict(sid=372, f0=250, rf=1.0, ls=1.35, ns=0.5, hp=140, people='esmer', c='lmnvsh', v='aeou',
                     fx={'tail': 0.75, 'top': ['treble', '-1', '6000', 'lowpass', '9000'], 'spirit': {'octave': -18, 'verb': (45, 75, -8)}}),
     'gilbert': dict(sid=None, f0=112, rf=1.05, ls=1.08, ns=0.7, hp=80, people='grobo', c='grbdhm', v='ouao'),
-    'mira':    dict(sid=595, f0=228, rf=1.05, ls=0.92, ns=0.85, hp=110, people='quetch', c='mlrsvn', v='aieo'),
+    'mira':    dict(sid=595, f0=228, rf=1.05, ls=0.92, ns=0.85, hp=110, people='bunny', c='mlrsvn', v='aieo'),
     'doran':   dict(sid=None, f0=108, rf=1.0, ls=1.1, ns=0.7, hp=75, people='grobo', c='brdgmn', v='oua'),
 }
 # the families: three speakers each, the pitch they are brought towards (each keeps their own within it)
