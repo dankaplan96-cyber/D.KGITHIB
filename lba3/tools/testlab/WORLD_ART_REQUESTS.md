@@ -4891,3 +4891,124 @@ kitchen, the dormitory, the front), each picture twice, as played and with every
   him, but added 38–154 draw calls along the walk (166 → 320 at the front) and changed the zone's LBA1 behaviour the
   asylum suite checks (the zone cut whole). Left as LBA1 does it; a question for the user and the cloud.
 - **The doors:** asked the user which doors read wrong (next).
+
+## HOME-CELLAR · the cellar worth going down to (CLOUD_ORDERS 42.1) · the desktop, 14.11.2026
+**Ready for the cloud: `requests/HOME-CELLAR.diff`** (`interiors.js` `buildCellar`, and two lines in `main.js`; `git apply
+--check` clean on both branches). Pictures (chapter 1, may go to the user): `docs/future/home/cellar-before-after.jpg`,
+`cellar-works-close.jpg`.
+- **His corner:** over the sideboard a cork board in a frame: a hand-drawn map of two islands with a red route and an X, three
+  snapshots in frames (a lighthouse, a sail, a moon), red pins; two brass cups kept on the bookcases; his old blue tunic on a
+  peg by the stairs. All drawn here (canvas and our shapes), nothing from the original files.
+- **The house's works** in the north-west corner: the water comes down from the house in a copper pipe past a meter and the
+  main stopcock (a red wheel, shut), to a tank with copper bands and a gauge (collider r 0.4). Art only. **For the cloud:**
+  the stopcock could be the other end of the opening's dry tap (a look line, or turning it as a later beat): your call.
+- **Training:** a mat between the dummy and the target. The target and the dummy are groups of their own now and **answer the
+  ball and the fist**: a damped rocking, `Game.impact` (the game's wood knock and burst); the ball leaves a scorch on the
+  target that fades over 3 s; both are `R.ballTargets` (never done: the thrown ball curves toward them here). No story flag.
+  **The two lines in `main.js`:** `meleeWorld` also asks `this.room?.meleeHit?.(…)` (a room had no way to answer a punch),
+  and a room's ball target may give its own `material`/`result` and receives the hit point (`t2.onHit(p)`; the others
+  ignore it, default `machine`/`switch` as before). Checked in Chrome: the ball on the target and the dummy, a punch on the
+  dummy, each rocks and settles.
+- **Kept:** the stairs, exits, entries, spawn, the window, both givers, `story/arsenal.js`'s nook and boards, `kit2`'s tin.
+- **Draw calls** (the room's camera): 21 → 26. Triangles 53.8k → 56.7k.
+- Tests (SwiftShader): prologue 31/31, chapter1 32/32, house, arsenal 34/34, interior-life 144/144, containers 41/41 PASS;
+  place-scan: the same 14 Knartas findings as origin, none in the cellar. **opening:** its checks passed, then a reload
+  timed out at 4 min (the machine busy); not re-run (the user: no need to run tests all the time): **run it when applying**.
+
+## HOME-BATH · the house's bathroom, a corner of the cellar walled off (CLOUD_ORDERS 42.2) · the desktop, 14.11.2026
+**Ready for the cloud: `requests/HOME-BATH.diff`, after `HOME-CELLAR.diff`** (a series: both in `buildCellar`; checked in
+that order on origin). Pictures (chapter 1): `docs/future/home/bath-in-cellar.jpg`, `bath-close.jpg`.
+- **Where, and why not off the hall:** the hall's only free-looking corner (south-east, east of the front door) holds the
+  story's spots (`homelife.js` R.life: the old trunk, the mended things' crate, the heat line's meter); a first build there
+  covered all three. So, as the order allows: a corner of the cellar walled off, where the house's water comes down (the
+  works of HOME-CELLAR): the cellar's east side, x 2.6–5.5, z −2.6–1.0, clear of the arsenal's nook and boards, kit2's tin
+  (3.55, 3.45) and the givers. The bench on the east wall moves 1.6 m south, out of it.
+- **The room:** three low plastered walls like the house's dividers (the camera sees in over them; the cellar's east wall
+  closes it); **its doorway** toward the room in its west wall (z −0.2–0.7), an opening as the house's inner doors are,
+  nothing to wire. Inside: blue-white tiles on the floor and up to 1 m on the walls, a tub along the north wall (brass taps,
+  a hand shower on its hook), the toilet against the east wall (wooden seat, lid up, cistern), a washbasin on a cupboard
+  with its mirror on the west wall, two towels on a brass rail, a bath mat; a copper pipe brings the water along the north
+  wall's top. Colliders: the tub, the toilet, the washbasin.
+- **The taps are art only.** `R.bath = { room, basin, tub, toilet, door }` (world) for the cloud to make them say the water is
+  off in the opening.
+- **Draw calls** (the room's camera, steady frames, on today's origin): 37 → 45 for HOME-CELLAR and HOME-BATH together;
+  triangles 98k → 113k.
+- **Not run** (the user, 14.11: "no need to run tests all the time"): the order's `opening`, `prologue`, `chapter1`,
+  `containers`, `place-scan`, house suites on the bath. **For the cloud: run them when applying.** Checked: the pictures
+  from the play camera; the series applies.
+
+## HOME-BATH, replaced · the bathroom in the corner of Arthur's room, not the cellar (the user) · the desktop, 14.11.2026
+The user, on the cellar version: "I didn't like the bathroom downstairs, and it stands in the middle of the room: at least
+against the walls"; then, marking the corner on a picture: "in the corner here makes sense". **`requests/HOME-BATH.diff` is
+replaced** (same name; the cellar version is withdrawn, nothing of it is in the new diff). It applies on origin alone and
+after `HOME-CELLAR.diff` (both checked). Pictures (chapter 1): `docs/future/home/bath-before-after.jpg`, `bath-close.jpg`.
+- **Where:** the south-east corner of Arthur's room, x −7.3 to −4.5, z 9.6 to the south wall: against the house's south wall
+  and the hall's divider (by the stairwell). Only a plant stood there; it moves 2.7 m west. Clear of Arthur's bed,
+  workbench, toy chest, rug and desk, and of the hall's story spots (R.life).
+- **The room:** two low papered walls like the house's dividers (the camera sees in over them). **Its doorway** is in its
+  north wall (x −5.5 to −4.7), from Arthur's room, an opening as the house's inner doors are: nothing to wire. (On the
+  hall's side the stairwell leaves 0.8 m to the south wall: too narrow for a door there.)
+- **Inside:** tiles on the floor and to 1 m on the walls, a tub along the south wall (brass taps, a hand shower), a
+  washbasin with its mirror on the west wall (facing the camera), the toilet against the hall's divider, two towels on a
+  brass rail, a bath mat. Colliders: tub, washbasin, toilet. `R.bath = { room: 'house', basin, tub, toilet, door }` for the
+  taps the cloud makes say the water is off.
+- **Draw calls** (the house's camera, steady frames): Arthur's room 67 → 69, by the bathroom 80 → 82.
+- **Not run** (the user: no need to run tests all the time): the order's suites. **For the cloud: run `opening`,
+  `prologue`, `chapter1`, `house`, `interior-life`, `place-scan` when applying**, and check the walk into it from
+  Arthur's door. Checked: pictures from the play camera.
+
+## HOME-BATH, larger (the user: "too small") · the desktop, 14.11.2026
+**`requests/HOME-BATH.diff` replaced again** (same corner of Arthur's room; applies on origin alone and after HOME-CELLAR).
+- **Size:** 2.8 × 1.9 m → **4.3 × 2.9 m** (x −8.8 to −4.5, z 8.6 to the south wall). Arthur's rug and toy blocks move 0.8 m
+  north, clear of its wall; the plant from that corner to x −9.4. His bed, workbench, toy chest, desk and door stay.
+- **Inside:** a **shower** in the south-west corner (a white tray and drain, a copper riser up the corner to a brass head,
+  a red tap, a curtain on an L rail with its post, half drawn), the tub beside it along the south wall, the washbasin and
+  its mirror on the west wall, **the toilet on the north wall facing the room** (it was behind the hall's divider from the
+  camera), two towels on a rail, a bath mat, tiles. The doorway from Arthur's room as before (x −5.5 to −4.7).
+  `R.bath` adds `shower`. Colliders: tub, washbasin, toilet, the rail's post (the tray is stood on).
+- **Draw calls** (the house's camera): Arthur's room 67 → 74. Pictures: `docs/future/home/bath-before-after.jpg`, `bath-close.jpg`.
+- Not run (as before): the order's suites. **For the cloud: run them when applying, and walk in from Arthur's door.**
+
+## HOME-BATH, a room of its own: walls, a door, a glass shower (the user) · the desktop, 14.11.2026
+The user, of the last version: "there is no door, and it looks odd": low walls like a booth, the shower with its curtain,
+both a tub and a shower; the door "opens by itself". **`requests/HOME-BATH.diff` replaced again** (same corner of
+Arthur's room, 4.3 × 2.9 m; applies on origin alone and after HOME-CELLAR). Picture: `docs/future/home/bath-close.jpg`.
+- **Walls:** its north and west walls stand to 2.6 m (plaster inside over 1.15 m of tiles, the house's paper outside, a
+  wooden cap). They drop to the house's low 1.15 m only while he is in Arthur's room just north or west of it, where they
+  would stand between him and the camera (an updater on his place; the house's near walls are low the same way).
+- **The door:** a wooden leaf on a hinge in the north wall's doorway (x −5.5 to −4.7), swinging in as he comes within
+  1.5 m and closing behind him; no collider (open before he reaches it); its upper half goes with the walls.
+- **No tub:** a glass shower in the south-west corner (two glass sides in a brass frame, the way in at its north-east, a
+  tray and drain, the copper riser up the corner to its head, a red tap). Along the south wall a towel cupboard (folded
+  towels on it) and a laundry basket. Washbasin and mirror on the west wall, the toilet on the north wall facing the room,
+  towels on a rail, a mat (Arthur's rug's weave: no new texture). Colliders: the glass sides, washbasin, toilet, cupboard,
+  basket. `R.bath = { room, basin, shower, toilet, door }`.
+- **Draw calls** (the house's camera, steady frames, the same spots on origin and with it): inside 76 → 80, at its door
+  80 → 85, Arthur's room 71 → 77, the hall 81 → 91. The walls' upper group and the door leaf cast no shadow (they come and
+  go: kept out of the static shadow cache; with shadows the hall was 97).
+- Not run: the order's suites (**for the cloud when applying**), nor a walk through the door by the harness.
+
+## HOME-BATH, final: low walls like the rest of the house (the user) · the desktop, 14.11.2026
+The user, of the 2.6 m walls: "half height is better, like in the rest of the game". **`requests/HOME-BATH.diff` replaced**
+(applies on origin alone and after HOME-CELLAR). The walls are the house's low dividers again (1.15 m, tiled inside to
+their cap); the walls' upper group and its updater are gone. **Kept from the last version:** the door, now a leaf as high
+as the walls, swinging in by itself within 1.5 m (no collider, no shadow: it moves); the glass shower without a tub; the
+towel cupboard and laundry basket; the washbasin with its mirror back on a stand; the toilet facing the room; towels; mat.
+**Draw calls** (same spots, origin → with it): inside 76 → 78, at its door 80 → 83, Arthur's room 71 → 74, the hall 81 → 84.
+Picture: `docs/future/home/bath-close.jpg`. Not run: the order's suites and a walk through the door (**for the cloud**).
+
+## SIDE-WELL · the hostel's second way in made readable (the user) · the desktop, 14.11.2026
+The user, 14.11: "the second way in, below, is not understood": arriving inside it is not clear where you are or where you
+came from; why is there a second way in at all; what was in LBA1? **LBA1 had it:** the asylum's two exits to the yard (zone
+type 0 to scene 1): the main one on the upper level, and the low stair-well (zone 9.5–11.5, 1–5, 41.5–42.5). The user chose
+to keep it and make it clear. **Ours was a floor patch** (`R.exits` asylum-out at cell 10.5, 42.6, r 1.0) by the south wall,
+2.4 m behind where he lands, with nothing to see.
+**`requests/SIDE-WELL.diff`** (`lba1places.js` only; `git apply --check` clean on origin): LBA1's stair-well as a pit in the
+floor where its zone is (`carve` cells x 10–11, y 2–4, z 42–43): two wooden steps down a cell each (stair colliders) to the
+pit's floor, a dark way on at its foot, railings on its east and west edges (colliders), and a tall post beside it with a
+lamp and a sign, **WAY OUT / DOWN TO THE YARD**, high enough to show over the wall in front of the pit from the room's camera.
+The way out moves to the pit's foot (cell 10.5, 43.15, r 0.65): he goes down the steps before the door takes him. Where he
+lands coming in is unchanged (cell 10.5, 5, 39.8, facing into the room; the sign just behind him).
+- Checked: by the harness (keys only) from where he lands to the way out: down the steps, the transition, out on Citadel
+  by the block-house. Pictures: `docs/future/hostel-side-well.jpg` (before / after from the room's camera; from above).
+- Not run (the user: fewer test runs): `asylum`, `lba1rooms`, `chapter1`: **for the cloud when applying**.
