@@ -54,7 +54,7 @@ check('pad A searches the cupboard in Athletic instead of jumping', (padA.state 
 const jump = await ev(() => {
   const G = game; G.hero.behaviour = 'athletic'; const h = G.hero, c = G.rooms.house.center;
   for (let i = 0; i < 80 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
-  // (CAMPAIGN-1 put the kitchen tap, Arthur's cup and Zoé in reach of the room's middle: the first free spot around it)
+  // (CAMPAIGN-1 put the kitchen tap and Arthur in reach of the room's middle: the first free spot around it)
   for (const [dx, dz] of [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2], [1.2, 1.2], [-1.2, 1.2], [1.2, -1.2], [-1.2, -1.2]]) { h.pos.set(c.x + dx, 0, c.z + dz); h.onGround = true; G.step(0.3); if (!G.findInteractable() && G.state === 'play') break; }
   const near = !!G.findInteractable(), y0 = h.pos.y;
   PAD.buttons[0] = { pressed: true }; G.step(1 / 60); PAD.buttons[0] = { pressed: false }; G.step(0.15);

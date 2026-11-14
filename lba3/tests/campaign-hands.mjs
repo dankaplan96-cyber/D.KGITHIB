@@ -1,7 +1,7 @@
 // CAMPAIGN-1…3 NO-AIR check for the hero's own hand actions in the campaign thread (story/reach.js): at the moment
 // each action takes effect (the act's callback), the right hand's least distance — wrist, palm, fingertips or what it
-// holds — to the nearest drawn surface that is not his body (tests/lib/contact.js). Chapter 1: the kitchen tap, Arthur's
-// cup taken and set in the sink (a new game, by input); chapter 2: the three pipes felt, the two cocks, the gauge's strip
+// holds — to the nearest drawn surface that is not his body (tests/lib/contact.js). Chapter 1: the kitchen tap, the garden
+// standpipe's handle (a new game, by input; OPENING-TUT: Arthur's cup is gone); chapter 2: the three pipes felt, the two cocks, the gauge's strip
 // (fixture new-04); chapter 3: the chain's wheel, the bell, the feed switch, the cart's bar, its cock, the dial, the
 // crank (fixture new-05); CAMPAIGN-4, chapter 4: the cutoff pulled, pushed up, pulled again, the carbon torn off (fixture
 // new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times; CAMPAIGN-5,
@@ -54,9 +54,9 @@ if (!process.env.ONLY10 && !process.env.ONLY11) {
 // chapter 1: a new game, in the kitchen
 await start(null);
 take(await use('h_tap', 'game.story.chapters[0].home.parts.house.spout', 1.2));
-take(await use('h_cup', 'game.story.chapters[0].home.parts.house.stove', 1.2));
-await ev(() => { for (let i = 0; i < 40 && !game.flags.pr_cup; i++) { game.step(0.25); P.settle(); } });
-take(await ev(() => window.GAPS.filter((g) => g.kind === 'h_cup')).then((a) => a.slice(1)));
+// (OPENING-TUT: Arthur's cup is gone; out of the door, the garden standpipe's handle by hand instead)
+await ev(() => { const s = game.room.searches[0]; P.use(s.x, s.z); for (let i = 0; i < 40 && game.state !== 'play'; i++) { if (game.state === 'found') P.tap('KeyE', 0.2); P.settle(); } const e = game.room.exits.find((x) => x.to === 'outdoor'); P.through(e.x, e.z); P.settle(); });
+take(await use('h_yard', 'game.story.chapters[0].home.parts.yard', 1.2));
 await browser.close();
 
 // chapter 2: the pump room
@@ -245,7 +245,7 @@ const NW = ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur'
 const nwp = people.filter((p) => NW.includes(p.id) && !p.absent);
 check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, process.env.ONLY11 ? true : nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
 for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
-const kinds0 = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint', 'sh_knock', 'co_cock', 'co_lock', 'co_knock'];
+const kinds0 = ['h_tap', 'h_yard', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint', 'sh_knock', 'co_cock', 'co_lock', 'co_knock'];
 const kinds = process.env.ONLY10 ? kinds0.filter((k) => k.startsWith('nw_')) : process.env.ONLY11 ? kinds0.filter((k) => /^(sh|co)_/.test(k)) : kinds0;
 check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
 const nwRows = rows.filter((r) => r.kind.startsWith('nw_'));
@@ -254,5 +254,8 @@ check(`chapter 10's hand actions (CAMPAIGN-8) each within ${NWHAND * 100} cm of 
 const shRows = rows.filter((r) => /^(sh|co)_/.test(r.kind)), vk = people.find((p) => p.id === 'vesk');
 check(`chapters 11–12's hand actions (CAMPAIGN-9) each within ${NWHAND * 100} cm of the thing`, process.env.ONLY10 ? true : shRows.length >= 4 && shRows.every((r) => r.d <= NWHAND), shRows);
 check(`Vesk at his central lock: working, both hands within ${NWHAND * 100} cm of his key (not stood down)`, process.env.ONLY10 ? true : !!vk && !vk.absent && vk.want && !vk.stood && Math.max(vk.R, vk.L) <= NWHAND, vk);
+// (OPENING-TUT: the yard's standpipe, his hand on its handle, within about 1 cm)
+const yardRows = rows.filter((r) => r.kind === 'h_yard');
+check(`the garden standpipe (OPENING-TUT): his hand within ${NWHAND * 100} cm of its handle`, process.env.ONLY10 || process.env.ONLY11 ? true : yardRows.length >= 1 && yardRows.every((r) => r.d <= NWHAND), yardRows);
 check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
 done();

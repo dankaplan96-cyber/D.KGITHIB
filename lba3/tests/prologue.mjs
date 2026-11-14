@@ -38,34 +38,28 @@ await ev(() => T.talkAll());
 // cupboard
 await ev(() => { const s = game.room.searches[0]; T.tp(s.x + 0.3, s.z, -Math.PI / 2); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
 is('the cupboard gives the ball', await ev(() => [game.hero.hasBall, game.state]), (v) => v[0] === true && v[1] === 'play');
-// CAMPAIGN-1 (story/hometap.js): the household problem before the door lets him out — the kitchen tap turned by hand
-// (dry: the pipe knocks), Arthur's cup carried from under the stove's overflow to the sink
-await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); game.step(1.2); T.tp(e.x, e.z, Math.PI); game.step(0.3); });
-is('leaving before the tap is tried: refused with a line, still in the house', await ev(() => [game.state, game.room?.id, !!game.flags.pr_tap]), (v) => v[0] === 'dialog' && v[1] === 'house' && v[2] === false);
-await ev(() => T.talkAll());
+// CAMPAIGN-1 (story/hometap.js), OPENING-TUT: the kitchen tap turned by hand (dry: the pipe knocks, Arthur heard it all
+// morning); optional: the door waits only for the ball (Arthur's cup step is gone)
 await ev(() => { const H = game.story.chapters[0].home.parts.house; T.tp(H.front.x, H.front.z + 0.25, Math.PI); T.tap('KeyE'); for (let i = 0; i < 300 && !game.flags.pr_tap; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } });
-is('the kitchen tap tried by hand: dry, the pipe knocks, Zoé and Arthur answer', await ev(() => [game.flags.pr_tap, game.state, game.story.objective()]), (v) => v[0] === true && v[1] === 'play' && /cup/i.test(v[2]));
-await ev(() => { const H = game.story.chapters[0].home.parts.house; T.tp(H.stoveFront.x, H.stoveFront.z + 0.25, Math.PI); T.tap('KeyE'); for (let i = 0; i < 400 && !game.flags.pr_cup; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } game.step(0.6); T.talkAll(); });
-is("Arthur's cup carried from the stove's overflow to the sink, under the tap", await ev(() => { const H = game.story.chapters[0].home.parts.house, c = H.cup.position; return [game.flags.pr_cup, +Math.hypot(c.x - H.sinkAt.x, c.z - H.sinkAt.z).toFixed(2), game.state]; }), (v) => v[0] === true && v[1] < 0.05 && v[2] === 'play');
-await shot('P2b-cup.png');
+is('the kitchen tap tried by hand: dry, the pipe knocks; the objective stays the well', await ev(() => [game.flags.pr_tap, game.state, game.story.objective()]), (v) => v[0] === true && v[1] === 'play' && /well/i.test(v[2]) && !/cup/i.test(v[2]));
+await shot('P2b-tap.png');
 // leave the house
 await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); game.step(1.6); T.tp(e.x, e.z, Math.PI); game.step(1.2); });
 is('out of the house, in play', await ev(() => [game.state, game.room?.id ?? 'outdoor', T.p()]), (v) => v[0] === 'play' && v[1] === 'outdoor');
 await shot('P3-outside.png');
-// CAMPAIGN-1: the knocking followed outside (no prompt, no marker): the garden standpipe, the pipe at the pump room's
-// door up the lane (the room is shut in this chapter); Zoé goes next door once nobody can see her do it
+// CAMPAIGN-1: the knocking followed outside: the garden standpipe tried by hand (OPENING-TUT), the pipe at the pump room's
+// door up the lane as he passes it (the room is shut in this chapter); Zoé is in the yard, back from next door
 await ev(() => {
   const hm = game.story.chapters[0].home, Y = hm.parts.yard, K = game.world.pumpKiosk, f = game.flags;
-  T.tp(Y.x - 1.0, Y.z + 0.8, 0); for (let i = 0; i < 80 && !f.pr_yard; i++) game.step(0.05); game.step(1.3); T.talkAll();
+  T.tp(Y.front.x, Y.front.z, Y.hand.a); T.tap('KeyE'); for (let i = 0; i < 120 && !f.pr_yard; i++) { game.step(0.05); if (game.state === 'dialog') T.talkAll(); } game.step(0.5); T.talkAll();
   T.tp(K.pipe.x + 1.3, K.pipe.z + 0.7, 0); for (let i = 0; i < 80 && !f.pr_lane; i++) game.step(0.05); game.step(1.3); T.talkAll();
   T.tp(K.door.x + 0.6, K.door.z, -Math.PI / 2); T.tap('KeyE'); game.step(0.05); window.__kiosk = [game.state, game.room?.id ?? 'outdoor']; T.talkAll();
-  T.tp(game.world.well.x - 3, game.world.well.z + 6, 0); for (let i = 0; i < 60 && !f.pr_zoeOut; i++) game.step(0.1);
 });
-is('the knocking followed: the garden pipe, the lane pipe (the pump room shut); Zoé has gone next door', await ev(() => { const f = game.flags, z = T.npc('zoe'), d = game.world.houses.find((h) => h.id === 'nbr').door; return [!!f.pr_yard, !!f.pr_lane, window.__kiosk, !!f.pr_zoeOut, +Math.hypot(z.pos.x - d.x, z.pos.z - d.z).toFixed(1)]; }), (v) => v[0] && v[1] && v[2][0] === 'dialog' && v[2][1] === 'outdoor' && v[3] && v[4] < 2.5);
-// Zoé next door first (CH1-LONGER: this order; tests/playthrough/01 meets Mira first): the kettle crystals
-// (from the lane behind her: she faces her neighbours' door, whose own prompt is at her front)
-await ev(() => { const z = T.npc('zoe'), a = z.angle + Math.PI; T.tp(z.pos.x + Math.sin(a) * 1.4, z.pos.z + Math.cos(a) * 1.4, a + Math.PI); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
-is("Zoé next door gives the kettle crystals (Mira's proof)", await ev(() => [game.flags.pr_kettle, game.flags.key]), (v) => v[0] === true && !v[1]);
+is('the knocking followed: the garden pipe by hand, the lane pipe (the pump room shut); Zoé in the yard by the door', await ev(() => { const f = game.flags, z = T.npc('zoe'), d = game.world.houses[0].door; return [!!f.pr_yard, !!f.pr_lane, window.__kiosk, +Math.hypot(z.pos.x - d.x, z.pos.z - d.z).toFixed(1)]; }), (v) => v[0] && v[1] && v[2][0] === 'dialog' && v[2][1] === 'outdoor' && v[3] < 7);
+// Zoé first (CH1-LONGER: this order; tests/playthrough/01 meets Mira first): the kettle crystals from next door
+// (from in front of her: she faces Twinsen's door)
+await ev(() => { T.near('zoe', 1.5); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
+is("Zoé gives next door's kettle crystals (Mira's proof)", await ev(() => [game.flags.pr_kettle, game.flags.key]), (v) => v[0] === true && !v[1]);
 // the well
 await ev(() => { T.atWell(); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
 is('the well looked at', await ev(() => [game.flags.wellSeen, game.flags.key]), (v) => v[0] === true);
