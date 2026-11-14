@@ -671,7 +671,7 @@ export class AudioEngine {
       case 'equipFists': this._knock({ f: 300, drop: 0.8, dur: 0.035, vol: 0.035, click: 1500, cv: 1 }); this._knock({ f: 280, drop: 0.8, dur: 0.04, vol: 0.04, click: 1300, cv: 1, at: 0.07 }); break;
       case 'equipGlove': this._burst({ dur: 0.15, vol: 0.05, f: 950, f1: 600, type: 'bandpass', q: 1.5, atk: 0.02 }); this._knock({ f: 200, drop: 0.7, dur: 0.06, vol: 0.055, click: 1200, cv: 0.9, at: 0.14 }); break;
       // ---- moves: a tiptoe (Discreet, far under a step), hiding (cloth drawn in), a light landing (a short jump)
-      case 'step-sneak': this._burst({ dur: 0.04, vol: 0.15, f: 420, f1: 160 }); break;
+      case 'step-sneak': this._burst({ dur: 0.04, vol: 0.11, f: 420, f1: 160 }); break;
       case 'hide': this._burst({ dur: 0.26, vol: 0.04, f: 1100, f1: 650, type: 'bandpass', q: 0.9, atk: 0.06 }); this._burst({ dur: 0.08, vol: 0.05, f: 300, f1: 140, at: 0.16 }); break;
       case 'landSoft': this._burst({ dur: 0.06, vol: 0.19, f: 480, f1: 160 }); this._burst({ dur: 0.05, vol: 0.13, f: 420, f1: 150, at: 0.05 }); break;
       // ---- low life: two soft low heartbeats and a low note under them, once as his life falls under a third
@@ -735,7 +735,7 @@ export class AudioEngine {
       // (its crack under 3 kHz, a triangle under it: no square)
       case 'wDart': this._burst({ dur: 0.08, vol: 0.11, f: 2200, f1: 800, type: 'bandpass', q: 2 }); this._tone({ type: 'triangle', f0: 700, f1: 420, dur: 0.05, vol: 0.03 }); break;
       case 'wLaser': this._tone({ type: 'triangle', f0: 1500, f1: 480, dur: 0.16, vol: 0.07 }); this._tone({ f0: 2100, f1: 1100, dur: 0.1, vol: 0.025 }); break;
-      case 'wLightning': this._burst({ dur: 0.32, vol: 0.22, f: 2800, f1: 500, type: 'bandpass', q: 0.8 }); this._tone({ type: 'triangle', f0: 140, f1: 60, dur: 0.3, vol: 0.08 }); this._burst({ dur: 0.04, vol: 0.08, f: 3000, f1: 1500, type: 'bandpass', q: 1.5, at: 0.08 }); break;
+      case 'wLightning': this._burst({ dur: 0.32, vol: 0.22, f: 2800, f1: 500, type: 'bandpass', q: 0.8, atk: 0.008 }); this._tone({ type: 'triangle', f0: 140, f1: 60, dur: 0.3, vol: 0.08 }); this._burst({ dur: 0.04, vol: 0.08, f: 3000, f1: 1500, type: 'bandpass', q: 1.5, at: 0.08 }); break;
       case 'tPip': { const k = Math.max(0, Math.min(1, this._opt?.k ?? 0)); this._tone({ f0: 820 + 900 * k, f1: 860 + 940 * k, dur: 0.07, vol: 0.018 + 0.03 * k }); break; }
       case 'tSqueal': this._tone({ type: 'triangle', f0: 1800, f1: 3200, dur: 0.45, vol: 0.05 }); this._tone({ type: 'triangle', f0: 2400, f1: 1900, dur: 0.5, vol: 0.025, at: 0.05 }); this._burst({ dur: 0.4, vol: 0.04, f: 3200, f1: 2200, type: 'bandpass', q: 6 }); break;
       case 'tJet': this._tone({ type: 'triangle', f0: 170, f1: 90, dur: 0.08, vol: 0.06 }); this._burst({ dur: 0.32, vol: 0.12, f: 2200, f1: 900, type: 'bandpass', q: 1.2, at: 0.03 }); break;

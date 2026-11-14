@@ -237,7 +237,8 @@ const sea = await ev(() => {
   return { spot, played: SND.played(), home: B.state === 'idle' };
 });
 console.log('sea', JSON.stringify(sea));
-check('ball into the sea: a splash (ballSplash), no bounce, home with one catch', !sea.none && sea.played.includes('ballSplash') && !cnt(sea.played, /^bounce/) && sea.home && cnt(sea.played, /^catch$/) === 1, sea);
+const afterSplash = sea.played ? sea.played.slice(sea.played.indexOf('ballSplash') + 1) : [];
+check('ball into the sea: a splash (ballSplash), no bounce after it (a skip on the shore before it may sound), home with one catch', !sea.none && sea.played.includes('ballSplash') && !cnt(afterSplash, /^bounce/) && sea.home && cnt(sea.played, /^catch$/) === 1, sea);
 
 // ---------------------------------------------------------------- 7. weapons and tools through play()
 const arms = await ev(() => {
@@ -282,6 +283,15 @@ const bounds = await ev(async (names) => {
   const dB = (x) => (x > 1e-10 ? 20 * Math.log10(x) : -200);
   const out = {};
   for (const name of names) {
+    // (three takes: the level is their mean, the peak and the click the worst of them; noise differs take to take)
+    const takes = [];
+    for (let t = 0; t < 3; t++) takes.push(await one(name));
+    const mute = await render(name, 0); let mp = 0; { const a = mute.getChannelData(0), b = mute.getChannelData(1); for (let i = 0; i < a.length; i++) mp = Math.max(mp, Math.abs(a[i]), Math.abs(b[i])); }
+    const lin = takes.map((x) => Math.pow(10, x.l50 / 10)).reduce((s, x) => s + x, 0) / takes.length;
+    out[name] = { peak: Math.max(...takes.map((x) => x.peak)), l50: +(10 * Math.log10(lin)).toFixed(1), click: Math.max(...takes.map((x) => x.click)), mute: +dB(mp).toFixed(0) };
+  }
+  return out;
+  async function one(name) {
     const buf = await render(name, 0.8), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length;
     let peak = 0, on = -1;
     for (let i = 0; i < n; i++) { const v = Math.max(Math.abs(L[i]), Math.abs(R[i])); if (v > peak) peak = v; }
@@ -291,10 +301,8 @@ const bounds = await ev(async (names) => {
     const K = await kw(buf), kl = K.getChannelData(0), kr = K.getChannelData(1), w = 2400;
     const cum = new Float64Array(n + 1); for (let i = 0; i < n; i++) cum[i + 1] = cum[i] + kl[i] * kl[i] + kr[i] * kr[i];
     let l50 = -200; for (let i = 0; i + w <= n; i += 600) l50 = Math.max(l50, -0.691 + 10 * Math.log10((cum[i + w] - cum[i]) / w + 1e-12));
-    const mute = await render(name, 0); let mp = 0; { const a = mute.getChannelData(0), b = mute.getChannelData(1); for (let i = 0; i < a.length; i++) mp = Math.max(mp, Math.abs(a[i]), Math.abs(b[i])); }
-    out[name] = { peak: +dB(peak).toFixed(1), l50: +l50.toFixed(1), click: +(jump / (peak || 1)).toFixed(3), mute: +dB(mp).toFixed(0) };
+    return { peak: +dB(peak).toFixed(1), l50: +l50.toFixed(1), click: +(jump / (peak || 1)).toFixed(3) };
   }
-  return out;
 }, heard);
 console.log('bounds', JSON.stringify(bounds));
 const VOICE_L50 = -9.3;   // a voice line's 50 ms loudness (docs/lba-maturity/action-sound.md, tools/sfx-render.mjs)
