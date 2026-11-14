@@ -26,8 +26,8 @@ const SHOW_DELAY = 0.6;     // s eligible before the tip shows (a lesson met in 
 const MIN_SHOW = 1.2;       // s a shown tip stays up through a flicker of its eligibility (not past its completion)
 const LOS_EVERY = 0.25;     // s between the barrels' line-of-sight tests
 const ADVANCES = 3;         // manual dialogue advances before the box's key hint goes
-// the project's pipe along the lane (x −43.5, z 66.0–72.1, 0.6 m high: island.js/town's lane pipe): the jump practice,
-// over it or walked round its end
+// the project's copper heat pipe along the lane (x −43.5, z 66.0–72.1, 0.6 m high, too high to step over: lanegate.js
+// names it): the jump practice, over it in Athletic or walked round its end
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // every lesson, in the order a tip is offered when several apply (one at a time). talk/use/advance/map have no panel of
 // their own: the game's own prompt ("E Talk"), the dialogue box's key hint and the toast at the cupboard teach them
@@ -170,8 +170,7 @@ export class Tutorial {
     // the barrels' line of sight, a few times a second and only in the yard
     if (at === 'yard' && (this.losT -= dt) <= 0) {
       this.losT = LOS_EVERY;
-      const T = g.story.cur?.barrels?.();
-      this.los = !!T && Math.hypot(h.pos.x - T.x, h.pos.z - T.z) < 12 && g.physics.clearTo(h.pos.x, h.pos.y + 1.4, h.pos.z, T.x, T.y, T.z, 0.8);
+      this.los = this.barrelsClear(h);
     }
     // the first lesson that applies, not done and not let go
     let want = null;
@@ -192,6 +191,16 @@ export class Tutorial {
     const mx = this.max(want);
     if (mx && this.shownT[want] > mx) { this.gone.add(want); this.hide(); this.cur = null; return; }
     this.show(this.text(want));
+  }
+  // a throw from here can reach the barrels: the line to them clear along both sides of the ball's way (it leaves his
+  // hand a little to his side): from the door the house's corner hides them, a few steps up the path they are in view
+  barrelsClear(h) {
+    const g = this.g, T = g.story.cur?.barrels?.();
+    if (!T) return false;
+    const dx = T.x - h.pos.x, dz = T.z - h.pos.z, d = Math.hypot(dx, dz);
+    if (d > 12 || d < 1) return false;
+    const sx = (-dz / d) * 0.35, sz = (dx / d) * 0.35, P = g.physics, y = h.pos.y + 1.4;
+    return P.clearTo(h.pos.x + sx, y, h.pos.z + sz, T.x + sx, T.y, T.z + sz, 0.8) && P.clearTo(h.pos.x - sx, y, h.pos.z - sz, T.x - sx, T.y, T.z - sz, 0.8);
   }
   // the real actions, whatever is on screen
   observe(dt, h, I) {
