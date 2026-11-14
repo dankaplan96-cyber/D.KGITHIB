@@ -307,11 +307,11 @@ const g = await page.evaluate(async () => {
   G.settings.voiceMode = 'expressive'; G.applySettings();
   B.prepare(['n_zoe']); await wait(1500);
   const l2 = B.lines, p2 = B.played.length;
-  const tl = performance.now();
+  // (the voice's own work when a line starts: the metadata, the plan, the clips chosen and scheduled)
+  const exl = B._exprLine.bind(B), xms = []; B._exprLine = (...a) => { const t0 = performance.now(); const r = exl(...a); xms.push(performance.now() - t0); return r; };
   G.say('n_zoe', ['There you are! You climbed into the well and vanished. What did you find?', 'And look at their kettle.'], null, zoe);
-  G.step(1 / 30); out.exprStartMs = +(performance.now() - tl).toFixed(1);
   speak = 0; mouth = 0; active = 0;
-  for (let i = 0; i < 40; i++) { G.step(1 / 30); await wait(33); speak = Math.max(speak, level()); mouth = Math.max(mouth, B.mouth().o); active = Math.max(active, B.active); }
+  for (let i = 0; i < 70; i++) { G.step(1 / 30); await wait(33); speak = Math.max(speak, level()); mouth = Math.max(mouth, B.mouth().o); active = Math.max(active, B.active); }
   out.expr = { lines: B.lines - l2, played: B.played.slice(p2), speak, mouth, active };
   G.input.taps.add('KeyE'); G.step(0.02);
   for (let i = 0; i < 3; i++) { G.step(1 / 30); await wait(33); }
@@ -322,6 +322,7 @@ const g = await page.evaluate(async () => {
   G.input.taps.add('KeyE'); G.step(0.02);
   await wait(300);
   out.expr.closed = { state: G.state, v: B.v, live: B.live };
+  out.exprStartMs = +Math.max(...xms).toFixed(2); delete B._exprLine;
   A.voiceBus.disconnect(an);
   return out;
 });
@@ -336,7 +337,7 @@ check('in the game, Words: the next line starts its own; revealing it releases i
 const gx = g.expr;
 check('in the game, Expressive: one line, clips from Zoé\'s Expressive bank, heard, the mouth moving', gx.lines === 1 && gx.played.length >= 1 && gx.played.every((x) => x.startsWith('x:zoe:')) && gx.speak > 0.01 && gx.mouth > 0.3 && gx.active === 1, gx);
 check('in the game, Expressive: revealing the next line releases it (silent 0.3 s later); closing leaves nothing', gx.afterReveal.tail < 0.001 && gx.afterReveal.live === 0 && gx.afterReveal.lines === 2 && gx.closed.state === 'play' && gx.closed.v === null && gx.closed.live === 0, { reveal: gx.afterReveal, closed: gx.closed });
-check('in the game, Expressive: the frame a line starts on stays light (under 8 ms, planning and scheduling only)', g.exprStartMs < 8, g.exprStartMs);
+check('in the game, Expressive: a line\'s start costs the main thread little (the metadata, the plan, the clips scheduled: under 5 ms; no synthesis)', g.exprStartMs < 5, g.exprStartMs);
 
 // ------------------------------------------------------------------ 3. P18-VOICES: the setting, saved and loaded
 const KEY = 'sunshard_settings_v1';
@@ -345,7 +346,7 @@ const loadAs = async (stored) => {
   await open(page, '?nocine');
   return page.evaluate(async () => ({ setting: game.settings.voiceMode, mode: (await import('./src/engine/voice.js')).voiceMode() }));
 };
-const before = await page.evaluate((k) => { const s = JSON.parse(localStorage.getItem(k) || '{}'); delete s.voiceMode; return JSON.stringify(s); }, KEY);
+const before = await page.evaluate((k) => { const s = JSON.parse(localStorage.getItem(k) || '{}'); delete s.voiceMode; delete s.voiceV; return JSON.stringify(s); }, KEY);
 const s1 = await loadAs(before), s2 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'loud' })), s3 = await loadAs('{not json');
 // (VOICE-2: and Words saved before VOICE-2, when it was the default, moves to Expressive once; Words chosen after stays)
 const s5 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'words' })), s6 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'words', voiceV: 2 }));

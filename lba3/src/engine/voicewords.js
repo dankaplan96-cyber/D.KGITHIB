@@ -288,7 +288,7 @@ export function clauseWords(s) {
 // larger; measured before: every syllable within about 2 dB of the next (the Piper phrases 3-8 dB), the melody's
 // spread 1.2-2.6 semitones (the phrases 2-3.4)
 const X1 = { range: 1, sd: 1.2, ud: 0.82, sa: 1.12, fa: 0.86, nuc: 0.38, nucA: 1.06, rise: 1 };
-const X2 = { range: 1.45, sd: 1.38, ud: 0.74, sa: 1.28, fa: 0.72, nuc: 0.55, nucA: 1.12, rise: 1.4 };
+const X2 = { range: 1.45, sd: 1.3, ud: 0.72, sa: 1.28, fa: 0.72, nuc: 0.55, nucA: 1.12, rise: 1.4 };
 function speakClause(v, words, intent, seed, o = {}) {
   const X = o.v2 ? X2 : X1;
   const r = rng(seed), S = speech(v), R0 = S.range, fav = favoured(v, S);
@@ -440,7 +440,7 @@ export function planWords(v, text, o = {}) {
     best.x.syl[best.i - 1].co = [...best.x.syl[best.i - 1].co, ...gone.on.slice(0, 1)];
     p = build(sp, 1);
   }
-  while (p.dur > goal && sp < 1.299) { sp += 0.05; p = build(sp, 1); }
+  while (p.dur > goal && sp < (o.v2 ? 1.399 : 1.299)) { sp += 0.05; p = build(sp, 1); }   // (VOICE-2: its longer stressed syllables may need a little more)
   // too short (a line of a few long words): a little slower, never below the speaker's own pace by more than a tenth
   if (p.dur < target * 0.8) { const b = build(0.9, 0); if (b.dur <= target * 1.08) p = b; }
   while (p.dur > hard && p.phrases.length > 1) { p.phrases.pop(); const l = p.phrases[p.phrases.length - 1]; p.dur = l.t0 + l.g.dur; }
