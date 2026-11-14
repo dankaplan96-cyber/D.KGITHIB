@@ -343,3 +343,52 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        included).
     7. **The expansion:** W-4 on `expansion/ballastra` as `EXPANSION_WORLD_SPEC.md` orders it, after 1–5.
     Only the user can: play, listen, judge fight fairness, time a first play.
+
+42. **TECH-ART-1 on the Vega 8 (the cloud, 14.11; measure only, no code change expected).** The cloud's technical-artist
+    pass at the chapter-3 Zeelich landing (`docs/lba-maturity/TECH-ART-1.md`): the street doors got a dark reveal and a
+    keystone, Baldino's door a stone lintel and a brass ring, his board on the east wall; and residents' carried props are
+    now built once per kind and shared (before: every pick-up built new geometry that was never freed). The cloud measured
+    counts only, on SwiftShader (+1 draw and about +1.5k triangles in the views that hold the workshop; carried-prop
+    geometries over a run 26 → 3; no live-geometry growth in 120 s of street life, +3 before). **Frame times need the
+    Vega 8 laptop.** Numbers from the GTX 1050 may be added but are labelled as such and never stand in for the
+    laptop's. Pictures are chapter 3: they stay on the laptop and the desktop.
+    1. **Builds (A/B by commit; there is no runtime switch).**
+       - A, the base: `b38d29e4` ("Desktop requests applied: HOSTEL-CUT, HOSTEL-STEP, PERF-OWP-SPRITES").
+       - B, the candidate: the last commit whose subject starts with "TECH-ART-1" on `ccr-c1c2c4b9-dep6ed` (or the
+         coordinator's merge of it). Optional third column, the art alone: the commit "TECH-ART-1 art: the Zeelich
+         street doors …" (A plus the doors, without the waste fix).
+       - Two clean worktrees, e.g. `git worktree add ..\ta1-A b38d29e4` and `git worktree add ..\ta1-B <B>`. A has no
+         harness: copy `lba3\tests\techart-zeelich.mjs` from B into A's `lba3\tests\` (it reads B's extra marks only
+         where they exist).
+       - Serve each `lba3` folder on its own port:
+         `python -m http.server 8971 --bind 127.0.0.1 --directory ..\ta1-A\lba3`, and 8972 for B.
+    2. **The runner on the real GPU.** As `HANDOVER-LAPTOP.md` says, run from a scratch copy of `tests\` (never edit the
+       repo's tests): swap the Playwright import in `lib\boot.mjs` to `tools\testlab\node_modules\playwright`, and in
+       `launch()` replace the SwiftShader arguments with
+       `{ headless: false, args: ['--use-angle=d3d11', '--ignore-gpu-blocklist'] }`. The harness prints
+       `ENV {… "gpu": …}` first: it must name the Vega 8 (ANGLE Direct3D11). If it says SwiftShader, stop and fix the
+       launch; never report those numbers.
+    3. **Conditions, the same for every run.** Plugged in (then, if time allows, the whole set again on battery);
+       Windows' power mode unchanged between runs; nothing else open; display scaling 100 %. The harness runs a
+       1366×768 window at pixel ratio 1 (`W`, `H`: the defaults), chapter 3 by flags, Follow at Medium, Visual 2026,
+       MSAA, each view's hero spot fixed and the camera snapped.
+    4. **Runs.** For each of `QUALITY=low` (the preset the Vega 8 gets by itself) and `QUALITY=medium`: A, B, A, B, A,
+       B (three each, alternating, one at a time), each one
+       `set LIVE=10& set WARM=3& set SECS=600& set GAME_URL=http://127.0.0.1:8971/& node tests\techart-zeelich.mjs`
+       (port 8972 for B). `LIVE=10` lets the game's own loop draw real frames for 3 s of warm-up and then 10 s at each
+       of the six views (dock, bridge, street, door, back, resident). `SECS=600` is the stepped street-life count: ten
+       minutes of game time on the street, counts only.
+    5. **Record, per run** (from the harness's output lines; keep the raw logs):
+       - `ENV`: GPU string, quality, size, pixel ratio.
+       - `LIVE <view>`: frame time p50 / p95 / p99 / max; CPU simulation and CPU render submission p50 / p95 (`simMs`,
+         `renderMs`: CPU only); `gpuMs`, the GPU's own time from the timer query ("Unavailable" when null); draw calls,
+         triangles, `heapMB`, live geometries.
+       - `VIEW <view>`: draws (main / shadow), triangles, geometries, materials, textures, programs.
+       - `WASTE`: carried-prop geometries made over the run, and the street life's `made` / `carried` / `liveGrowth`.
+       - Plugged in or battery, Windows power mode, Chrome version, any other load on the laptop.
+    6. **Report** as TECH-ART-1-VEGA8 in `WORLD_ART_REQUESTS.md`: per quality and per view, the median of the three A
+       runs against the median of the three B runs, with the spread. Call a difference real only where it is larger
+       than the spread between the A runs; write "unstable" where the A runs disagree by more than 10 % at p95. Keep
+       CPU submission and GPU time apart. Expected, not claimed: no frame-time change from the art; the waste fix shows
+       as no geometry growth over a long street session, not as a higher frame rate. If B is worse at p95 beyond the
+       spread, name the view and send its `LIVE` lines: the cloud looks for the cause.
