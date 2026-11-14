@@ -343,3 +343,32 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        included).
     7. **The expansion:** W-4 on `expansion/ballastra` as `EXPANSION_WORLD_SPEC.md` orders it, after 1–5.
     Only the user can: play, listen, judge fight fairness, time a first play.
+
+42. **HOME-CELLAR and HOME-BATH (the user, 14.11, P23: "add things to the room downstairs in Twinsen's house: right now it
+    is pointless and gives nothing; and why don't they have a toilet and a shower... a bit strange").** Before order 41's
+    remaining items. Merge `ccr-c1c2c4b9-dep6ed` first. **The cloud is working on, don't touch:** `hometap.js`,
+    `prologue.js`, `chapter1.js`, `text/opening.js`, `text/thread.js`, `well.js`, `tutorial*.js`, `index.html` (OPENING-TUT:
+    the opening at home becomes a playable tutorial; the Arthur cup objective is gone); Zeelich (TECH-ART-1). Each part a
+    diff in `requests/` (`git apply --check` clean on origin), reported in `WORLD_ART_REQUESTS.md`, pushed before the next.
+    1. **HOME-CELLAR (`interiors.js` `buildCellar`, LBA2 scene 1: Twinsen's training room).** Today: a target, a straw
+       dummy, two bookcases, a radio on a sideboard, a barrel and crates (two givers), a poster, a bench, two armchairs.
+       Make it a room worth going down to, one that says who lives here twelve years on:
+       - **His own corner:** things from the old adventures (framed pictures, a map pinned up, a kept trophy or two, a
+         tunic on a hook), all drawn by hand in our geometry (nothing from the original files), read from the play camera.
+       - **The house's works:** the pipes from the house's water come down here (the main stopcock, a meter, a boiler or
+         tank): it makes the opening's dry tap something you can see the other end of. Art only; no new interaction on
+         it (that is the opening's, in the cloud): if you think it should be usable, say so in the report.
+       - **The training room as a training room:** the target and the dummy answer the ball and the fist where they do
+         not yet (a wobble, a sound already in the game, a mark that fades), so the cellar is a place to practise. Small
+         code in `interiors.js`/`roomlife.js` only, no new story flags.
+       - **Keep:** the stairs, `R.exits`/`R.entries`/`R.spawn`, the window, the two givers, and the spots later chapters
+         use in this room (`story/arsenal.js` the cellar nook and the boards; `story/kit2.js` the tin under a tile): run
+         `arsenal`/`kit2` tests or check their positions stay clear.
+    2. **HOME-BATH:** the house has no toilet, washbasin or shower. Add a small bathroom that fits LBA2's house (tiles,
+       a basin with a mirror, a toilet, a shower or a tub, towels), where it fits the existing plan without breaking the
+       hall, the stairwell, the kitchen or their colliders and cut-aways: off the hall, or a corner of the cellar walled off,
+       your call with a picture. If a new door or room is needed, wire it like the house's other doors and say how. Its
+       taps are art only (in the opening the house's water is off: the cloud will make them say so).
+    For both: captures from the play camera before/after, draw calls before/after, run `opening`, `prologue`, `chapter1`,
+    `containers`, `place-scan`, `house-*`/interior suites that cover the house. No text past chapter 2 in pictures sent to
+    the user. Only the user can: play, listen, judge.
