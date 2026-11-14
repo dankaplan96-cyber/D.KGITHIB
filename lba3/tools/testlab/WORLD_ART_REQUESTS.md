@@ -4826,3 +4826,20 @@ length (the touch reads them) as they were.
   24/24, chapter10 30/30, chapter3 (chapters 11–12) 47/47, campaign-hands 7/7 (its hand-gap checks included) PASS.
 - Pictures (chapters 6–12, **not for the user**): `docs/future/gpu-v85/ch3plus-before-after-at-use-spots.jpg`,
   `ch3plus-joint-isolator-close.jpg`. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+
+## HOSTEL-STEP · stuck in the hostel's first cell door (the user's report) · the desktop, 14.11.2026
+The user, 14.11, playing the published build, a photo: Twinsen at the door of the hostel's first cell (`asylumhostel.js`
+cellA, the bunk room for two), "stuck there". **Reproduced** (Chrome, the repo on 82d48f78, keys only through
+`tests/lib/player.js`): from inside the cell to the corridor `P.go` times out at the door; held Up from the step he moves
+2–4 cm. Frame by frame: 3 cm before the door line he drops from the step (1.73) to the cell's floor (1.30), the threshold
+(top 2.17) is then a wall 0.87 m high and `physics.move` pushes him back 0.45 m; again and again.
+**Cause:** the step's collider (`col(A, …)`, hd 0.39) ends where the threshold brick's begins, and `groundInfo` trims each
+box by 5 cm (`_inside(c, x, z, -0.05)`): a 3 cm strip with nothing under it but the cell's floor box. The way in was fine
+(a drop); the way out was not.
+**Ready for the cloud: `requests/HOSTEL-STEP.diff`** (`asylumhostel.js` only, one line; `git apply --check` clean on
+82d48f78): the step's collider runs 0.2 m on under the threshold (centre +0.1 m, hd 0.49); the step is drawn as before.
+- After: in and out of the cell both arrive; from the doorway he walks on into the corridor (2.3 m, at 2.17).
+- Tests (SwiftShader): asylum 10/10, chapter1 32/32 PASS. Evidence: Automated runtime; the user's own play found it.
+- **For the cloud, a wider check:** any two touching box colliders of different tops at a door or step meet the same 5 cm
+  trims (a strip of 10 cm where neither counts). A sweep over the LBA1 rooms' carved doors and added steps would find the
+  rest (`lba1places.js` carve + the steps the dressing adds).
