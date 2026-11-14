@@ -4987,3 +4987,12 @@ Arthur's room, 4.3 × 2.9 m; applies on origin alone and after HOME-CELLAR). Pic
   80 → 85, Arthur's room 71 → 77, the hall 81 → 91. The walls' upper group and the door leaf cast no shadow (they come and
   go: kept out of the static shadow cache; with shadows the hall was 97).
 - Not run: the order's suites (**for the cloud when applying**), nor a walk through the door by the harness.
+
+## HOME-BATH, final: low walls like the rest of the house (the user) · the desktop, 14.11.2026
+The user, of the 2.6 m walls: "half height is better, like in the rest of the game". **`requests/HOME-BATH.diff` replaced**
+(applies on origin alone and after HOME-CELLAR). The walls are the house's low dividers again (1.15 m, tiled inside to
+their cap); the walls' upper group and its updater are gone. **Kept from the last version:** the door, now a leaf as high
+as the walls, swinging in by itself within 1.5 m (no collider, no shadow: it moves); the glass shower without a tub; the
+towel cupboard and laundry basket; the washbasin with its mirror back on a stand; the toilet facing the room; towels; mat.
+**Draw calls** (same spots, origin → with it): inside 76 → 78, at its door 80 → 83, Arthur's room 71 → 74, the hall 81 → 84.
+Picture: `docs/future/home/bath-close.jpg`. Not run: the order's suites and a walk through the door (**for the cloud**).

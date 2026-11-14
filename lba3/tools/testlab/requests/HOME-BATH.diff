@@ -1,5 +1,5 @@
 diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
-index f0e5b4e0..0d03181a 100644
+index f0e5b4e0..e8d346e4 100644
 --- a/lba3/src/game/interiors.js
 +++ b/lba3/src/game/interiors.js
 @@ -649,9 +649,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
@@ -15,7 +15,7 @@ index f0e5b4e0..0d03181a 100644
    B.giver('arthurbed', HX0 + 1.0, abZ, ['life'], 1, { r: 1.4, top: 0.6 });
    B.light('#ffe0b0', 6, 9, -9.0, 2.3, 7.5);
    // the parents' bedroom (the original's, north-west): x HX0..LX, z HZ0..-BZ. The double bed's headboard against the
-@@ -677,6 +677,108 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
+@@ -677,6 +677,91 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
    B.giver('readchair', HX0 + 0.85, 0.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
    k.at(-11.2, 0, 0.6, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
    B.light('#ffe0b0', 4, 7, -9.0, 2.3, 0.0);
@@ -24,41 +24,26 @@ index f0e5b4e0..0d03181a 100644
 +  //      like a booth, the shower with its curtain, both a tub and a shower"): the house's bathroom in the south-east
 +  //      corner of Arthur's room, 4.3 × 2.9 m, against the house's south wall and the hall's divider (a plant stood
 +  //      there; his rug and blocks 0.8 m north for it; the hall's own south-east corner holds the story's R.life spots).
-+  //      A room of its own: its north and west walls stand to 2.6 m, and drop to the house's low height (1.15) only while
-+  //      he is in Arthur's room just north or west of it, where they would stand between him and the camera (as the
-+  //      house's near walls are low). Its door, from Arthur's room, opens by itself as he comes to it and closes behind
-+  //      him (no collider: it is open before he reaches it). Inside: tiles, a glass shower in the south-west corner, the
++  //      Its walls low like the house's dividers (the user, of a 2.6 m version: "half height is better, like the rest of
++  //      the game"). Its door, from Arthur's room, a leaf as high as the walls, opens by itself as he comes to it and
++  //      closes behind him (no collider: it is open before he reaches it). Inside: tiles, a glass shower in the south-west corner, the
 +  //      washbasin and its mirror on the west wall, the toilet on the north wall, a towel cupboard and a laundry basket on
 +  //      the south wall, towels on a rail, a mat. Taps art only (the opening's water is off): R.bath gives their places.
 +  {
-+    const X0 = -8.8, X1 = LX, Z0 = 8.6, ZS = HZ1 - 0.2, WH = 2.6, DL = -5.525, DR = -4.675, DH = 2.1;
-+    const woodD = MAT.wood('dark'), paperM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond'), plasterM = MAT.plaster('#ece6da');
++    const X0 = -8.8, X1 = LX, Z0 = 8.6, ZS = HZ1 - 0.2, DL = -5.525, DR = -4.675;
++    const woodD = MAT.wood('dark'), paperM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond');
 +    const div = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: paperM, cap: woodD, rail: woodD, low: MAT.wainscot('honey'), dado: 0.9, doors });
 +    div(X0, Z0, X1, Z0, [{ at: DL + 0.425 - X0, w: DR - DL }]);   // the north wall, its doorway at x −5.5 to −4.7
 +    div(X0, Z0, X0, HZ1);                                          // the west wall
-+    // their upper part, 1.15–2.6 m (and the lintel over the door), in a group of its own: shown or cut as he stands
-+    const upG = new THREE.Group(); B.group.add(upG); const uk = new Kit(upG), t = 0.22, uy = (1.15 + WH) / 2, uh = WH - 1.15;
-+    uk.add(rbox(DL - X0 + t / 2, uh, t, 0.01), paperM, (X0 + DL) / 2, uy, Z0);
-+    uk.add(rbox(X1 - DR, uh, t, 0.01), paperM, (DR + X1) / 2, uy, Z0);
-+    uk.add(rbox(DR - DL, WH - DH, t, 0.01), paperM, (DL + DR) / 2, (DH + WH) / 2, Z0);
-+    uk.add(rbox(t, uh, HZ1 - Z0, 0.01), paperM, X0, uy, (Z0 + HZ1) / 2);
-+    uk.add(rbox(X1 - X0 + 0.1, 0.08, t + 0.1, 0.03), woodD, (X0 + X1) / 2, WH + 0.04, Z0);
-+    uk.add(rbox(t + 0.1, 0.08, HZ1 - Z0, 0.03), woodD, X0, WH + 0.04, (Z0 + HZ1) / 2);
-+    uk.add(plane(X1 - X0 - 0.11 - 0.11, uh), plasterM, (X0 + X1) / 2, uy, Z0 + t / 2 + 0.003);          // plaster inside, over the tiles
-+    uk.add(plane(HZ1 - Z0 - 0.11, uh), plasterM, X0 + t / 2 + 0.003, uy, (Z0 + HZ1) / 2, Math.PI / 2);
-+    uk.at(X0 + 0.11 + 0.02, 1.62, 9.5, Math.PI / 2, () => { uk.add(rbox(0.6, 0.72, 0.04, 0.02), woodD, 0, 0, 0); uk.add(plane(0.52, 0.64), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.022); });   // the mirror over the washbasin
-+    uk.flush();
-+    upG.traverse((o) => { if (o.isMesh) o.castShadow = false; });   // (it comes and goes: out of the house's static shadow cache)
 +    const tileM = MAT.tiles('#e9e2d2', '#d8cdb6', '#8a7a62', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
 +    const ix0 = X0 + 0.11, ix1 = X1 - 0.11, iz0 = Z0 + 0.11;
 +    k.add(plane(ix1 - ix0, ZS - iz0), tileM, (ix0 + ix1) / 2, 0.012, (iz0 + ZS) / 2, 0, { rx: -Math.PI / 2 });
 +    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.002, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
 +    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.002, 0);
-+    // the door: a wooden leaf on a hinge at the doorway's east side, swinging in; its upper half goes with the walls
++    // the door: a wooden leaf as high as the walls, on a hinge at the doorway's east side, swinging in
 +    const pivot = new THREE.Group(); pivot.position.set(DR, 0, Z0); B.group.add(pivot);
 +    const leafLo = new THREE.Mesh(rbox(DR - DL - 0.04, 1.15, 0.05, 0.01), MAT.planks('honey')); leafLo.position.set(-(DR - DL) / 2, 0.575, 0); pivot.add(leafLo);
-+    const leafHi = new THREE.Mesh(rbox(DR - DL - 0.04, DH - 1.17, 0.05, 0.01), MAT.planks('honey')); leafHi.position.set(-(DR - DL) / 2, (1.17 + DH) / 2, 0); pivot.add(leafHi);
-+    for (const m of [leafLo, leafHi]) { m.castShadow = false; m.receiveShadow = true; }   // (it moves: no shadow cache rebuilds)
++    leafLo.castShadow = false; leafLo.receiveShadow = true;   // (it moves: no shadow cache rebuilds)
 +    // the glass shower in the south-west corner: a tray, two glass sides in a brass frame, the riser up the corner to its head
 +    { const SW = 1.0, SX = ix0 + SW / 2, SZ = ZS - SW / 2, glass = MAT.glass('#cfeaf2', 0.28), cu = MAT.copper();
 +      k.add(rbox(SW, 0.08, SW, 0.03), white, SX, 0.04, SZ);
@@ -79,6 +64,8 @@ index f0e5b4e0..0d03181a 100644
 +      k.add(lathe([[0.001, 0], [0.18, 0.0], [0.24, 0.08], [0.26, 0.11], [0.001, 0.11]], 16), white, 0, 0.78, 0.02, 0, { sz: 0.8 });
 +      k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
 +      k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
++      k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);                                        // the mirror's stand
++      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
 +    });
 +    B.col(ix0 + 0.25, 9.5, 0.24, 0.42, 0.9, { noStand: true });
 +    // the toilet against the north wall, facing into the room: its pan, a wooden seat, the lid up, the cistern
@@ -107,15 +94,11 @@ index f0e5b4e0..0d03181a 100644
 +      k.add(rbox(0.28, 0.5, 0.03, 0.01), blue, 0.16, 0.74, 0.04);
 +    });
 +    k.at(-6.5, 0, 9.95, 0, () => P.rug(k, 1.2, 0.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));   // (Arthur's rug's own weave: no new texture)
-+    // the walls' cut and the door, each frame: (his place in the house's frame)
++    // the door, each frame
 +    const dw = B.world((DL + DR) / 2, Z0); let open = 0;
 +    R.updaters.push((dt) => {
 +      const h = globalThis.game?.hero; if (!h) return;
-+      const hx = h.pos.x - B.cx, hz = h.pos.z - B.cz;
-+      const inBath = hx > X0 && hx < X1 && hz > Z0 && hz < HZ1;
-+      const behind = !inBath && hx < LX && hz > -BZ && hx > X0 - 4 && hz > Z0 - 4.5;   // (in Arthur's room just north or west of it)
-+      upG.visible = !behind; leafHi.visible = !behind;
-+      const near = Math.hypot(h.pos.x - dw.x, h.pos.z - dw.z) < 1.5;
++            const near = Math.hypot(h.pos.x - dw.x, h.pos.z - dw.z) < 1.5;
 +      open += ((near ? 1 : 0) - open) * Math.min(1, dt * 6);
 +      pivot.rotation.y = (Math.PI / 2) * open;
 +    });
