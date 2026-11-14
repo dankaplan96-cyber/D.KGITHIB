@@ -32,6 +32,7 @@ const lib = (f) => fileURLToPath(new URL('./lib/' + f, import.meta.url));
 // Measured and left (docs/lba-maturity/PLACE-1.md has each with its priority): [room, kind, item, why, near [x, z]
 // in the room's frame (Citadel: the world)]
 const LEFT = [
+  ['house', 'float', 'custom', 'by design: the bathroom\'s towel rail on the wall (HOME-BATH, the desktop 14.11): towels hang', [-7.35, 8.79]],
   // by design: what the measure reads as wrong is meant
   ['tavern', 'back', 'jukebox', 'by design: LBA2\'s Chez Luc has it at the stair\'s foot (tavern.js); Kip\'s stop is at its front', [3.4, -1.35]],
   ['otrbar', 'back', 'aquarium', 'by design: LBA2\'s Otringal bar has it in the middle, by the booths (otrbar.js)', [4.6, 1.6]],
