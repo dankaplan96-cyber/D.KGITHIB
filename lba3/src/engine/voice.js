@@ -550,6 +550,22 @@ function brighter(w) {
 }
 // the plan a speaker's line gets in the mode in use (cinematic.js voiceSeconds: how long the voice is heard)
 export function planVoiceLine(v, text, o = {}) {
+  if (voiceMode() === 'expressive') {
+    // (VOICE-2: the plan, its length that of the Expressive clips its clauses would play: their sound and the pauses)
+    const meta = metaFor(text), p = planLine(v, text, { ...o, meta, mode: 'classic' }), b = exprBankOf(v);
+    if (!b || !p.phrases.length) return p;
+    const info = MAN2.banks[b[0]];
+    let t = 0;
+    p.phrases.forEach((ph, i) => {
+      let key = ph.intent; while (key && !info.len[key]) key = EXPR_NEAR[key];
+      const L = info.len[key || 'tell'] || [1]; let best = L[0]; for (const l of L) if (Math.abs(l - ph.n) < Math.abs(best - ph.n)) best = l;
+      let s = 0, k = 0; for (let j = 0; j < (info.var[key] || 1); j++) { const c = info.clips[`${key}.${best}.${j}`]; if (c) { s += (c.e ?? c.sp) - (c.a ?? 0); k++; } }
+      t += (k ? s / k : 0) / b[1];
+      const nx = p.phrases[i + 1]; if (nx) t += Math.max(MIN_JOIN, nx.t0 - (ph.t0 + ph.g.dur));
+    });
+    if (t > 0) p.dur = o.maxDur ? Math.min(t, o.maxDur) : t;
+    return p;
+  }
   if (voiceMode() !== 'words') return planLine(v, text, { ...o, meta: metaFor(text) });
   const vw = wordsVoice(v);
   return planLine(vw, text, { ...o, mode: 'words', target: bankLength(vw, text, o), v2: !WORDS_LEGACY, meta: WORDS_LEGACY ? null : metaFor(text) });
