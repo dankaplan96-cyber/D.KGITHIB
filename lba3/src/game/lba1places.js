@@ -771,7 +771,7 @@ export function buildLba1Asylum(scene, physics) {
       lids: [{ box: ASYLUM_CELLS[0], cut: 6, name: 'cellA', sight: true }, { box: ASYLUM_CELLS[1], cut: 6, name: 'cellB', sight: true }, { box: VESK_ROOM, cut: 7, name: 'vesk', sight: true }],
       // (ASYLUM-2: the first cell's door opened like Twinsen's, at corridor level, a step inside it; Vesk's office, a
       //  room LBA1 kept behind a moving door, its door broken through the corridor wall at cells 41–42 of z 30)
-      carve: [[56, 4, 50, 57, 6, 50], [56, 5, 45, 57, 6, 45], [41, 5, 30, 42, 9, 30]],
+      carve: [[56, 4, 50, 57, 6, 50], [56, 5, 45, 57, 6, 45], [41, 5, 30, 42, 9, 30], [10, 2, 42, 11, 4, 43]],   // (…, SIDE-WELL: the stair-well's pit)
     });
     R.grade = 0.45; R.gradeTint = [1.03, 1.0, 0.95];   // (WA-13b: LBA1's grey stone, chroma 4-6; ASYLUM-2: lived in, the Esmer colours a little up, warm)
     // (ASYLUM-4, the user: "check how they did it in the first game": LBA1's bricks are drawn lit from above and the
@@ -786,8 +786,40 @@ export function buildLba1Asylum(scene, physics) {
     R.indoor = { sunDir: [0.34, 0.6, 0.72] };
     // the two exits, as LBA1's: the low stair-well (the side door: you come in at its top) and the main entrance on
     // the upper level (the front door: its doors stand in the tall portal between the two posts, you come in before them)
-    const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
-    R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
+    // (SIDE-WELL, the user, 14.11: "the second way in, below, is not understood": the side way was a floor patch by a wall
+    //  2.4 m behind where he lands, nothing to see. LBA1's exit there is its low stair-well (zone 9.5–11.5, 1–5, 41.5–42.5):
+    //  now a pit in the floor with three steps down, railings on its sides, a lit sign; the way out is at its foot)
+    const ex = R.cell(10.5, 1, 43.15), sp = R.cell(10.5, 5, 39.8);
+    R.exits.push({ x: ex.x, z: ex.z, r: 0.65, to: 'asylum-out' });
+    {
+      const k = new Kit(R.group), wood = MAT.wood('dark'), CH = R.cell(0, 1, 0).y, o = R.group.position;
+      const L = (x, z) => { const w = R.cell(x, 0, z); return [w.x - o.x, w.z - o.z]; };
+      const cw = R.cell(1, 0, 0).x - R.cell(0, 0, 0).x;   // (a cell's width, m)
+      // the steps: two treads from the floor (5) down to the pit's floor (2), each a cell's height
+      for (const [z0, z1, top] of [[41.5, 42.08, 4], [42.08, 42.66, 3]]) {
+        const [lx, lz] = L(10.5, (z0 + z1) / 2), d = (z1 - z0) * cw, hgt = (top - 2) * CH;
+        k.add(rbox(2 * cw - 0.04, hgt, d, 0.02), wood, lx, 2 * CH + hgt / 2, lz);
+        const w = R.cell(10.5, 0, (z0 + z1) / 2); physics.add({ type: 'box', x: w.x, z: w.z, hw: cw - 0.02, hd: d / 2, rot: 0, top: top * CH, stair: true });
+      }
+      { const [lx, lz] = L(10.5, 43.1); k.add(plane(2 * cw - 0.1, 0.7 * cw), MAT.flat('#14100c', 1), lx, 2 * CH + 0.01, lz, 0, { rx: -Math.PI / 2 }); }   // the way on, into the dark
+      // the railings on its east and west edges, on the floor (5)
+      for (const x of [9.5, 11.5]) {
+        const [lx, lz] = L(x, 42.5), len = 2 * cw;
+        k.add(rbox(0.06, 0.06, len, 0.01), wood, lx, 5 * CH + 0.95, lz);
+        for (const z of [41.55, 42.5, 43.45]) { const [px, pz] = L(x, z); k.add(cyl(0.035, 0.035, 0.95, 6), wood, px, 5 * CH + 0.475, pz); }
+        const w = R.cell(x, 0, 42.5); physics.add({ type: 'box', x: w.x, z: w.z, hw: 0.06, hd: len / 2, rot: 0, top: 5 * CH + 1.0, noStand: true, seeThrough: true });
+      }
+      // the sign on a post beside it, toward the room and the camera, with its lamp
+      const [sx, sz] = L(12.3, 41.3), sy = 5 * CH;
+      k.add(cyl(0.04, 0.04, 2.7, 6), wood, sx, sy + 1.35, sz);   // (tall: the sign shows over the wall in front of the pit, from the room's camera)
+      k.at(sx, sy + 2.35, sz + 0.05, Math.PI / 4, () => {
+        k.add(rbox(0.78, 0.36, 0.04, 0.01), wood, 0, 0, 0);
+        k.add(plane(0.72, 0.3), MAT.map(canvasTex(288, 120, (x, W, H) => { x.fillStyle = '#e8dcb0'; x.fillRect(0, 0, W, H); x.fillStyle = '#2a1e10'; x.textAlign = 'center'; x.font = 'bold 44px sans-serif'; x.fillText('WAY OUT', W / 2, 52); x.font = 'bold 24px sans-serif'; x.fillText('DOWN TO THE YARD', W / 2, 94); }), 0.8), 0, 0, 0.022);
+      });
+      k.add(cyl(0.07, 0.05, 0.1, 10), MAT.glow('#ffe2a0', '#ffb040', 1.6), sx, sy + 2.75, sz);
+      { const w = R.cell(12.3, 0, 41.3); physics.add({ type: 'cyl', x: w.x, z: w.z, r: 0.08, top: sy + 2.7, noStand: true, seeThrough: true }); }
+      k.flush();
+    }
     R.spawn = { x: sp.x, z: sp.z, a: Math.PI };
     const fx = R.cell(36.75, 14, 11.5), fs = R.cell(34.4, 14, 11.5);
     R.exits.push({ x: fx.x, z: fx.z, r: 1.0, to: 'asylum-front' });

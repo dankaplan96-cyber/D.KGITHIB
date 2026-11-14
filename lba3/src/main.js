@@ -2426,6 +2426,7 @@ class Game {
       hitSet.add(c); this.breakCrate(c); this.impact(c.x, c.y, c.z, 'wood', 'break'); any = true;
     }
     if (this.story.meleeHit?.({ hero, move: D, inArc, hitSet })) any = true;
+    if (this.room?.meleeHit?.({ hero, move: D, inArc, hitSet })) any = true;   // (HOME-CELLAR: a room's own things: the cellar's dummy and target)
     return any;
   }
 
@@ -2440,7 +2441,7 @@ class Game {
     }
     if (this.story.ballHit(p)) return { material: 'machine', result: 'switch' };
     // switches a room offers by itself ({x,y,z,r, onHit()})
-    if (this.room) { for (const t2 of this.room.ballTargets) if (t2.onHit && !t2.done && Math.hypot(p.x - t2.x, p.y - t2.y, p.z - t2.z) < (t2.r || 0.7)) { t2.onHit(); return { material: 'machine', result: 'switch' }; } return null; }
+    if (this.room) { for (const t2 of this.room.ballTargets) if (t2.onHit && !t2.done && Math.hypot(p.x - t2.x, p.y - t2.y, p.z - t2.z) < (t2.r || 0.7)) { t2.onHit(p); return { material: t2.material || 'machine', result: t2.result || 'switch' }; } return null; }
     for (const c of this.world.crates) if (c.alive && p.distanceTo(new THREE.Vector3(c.x, c.y, c.z)) < 0.9) { this.breakCrate(c); return { material: 'wood', result: 'break' }; }
     const T = this.world.target;
     if (!T.hit && Math.hypot(p.x - T.x, p.y - T.y, p.z - T.z) < 1.25) { this.hitTarget(); return { material: 'wood', result: 'switch' }; }

@@ -649,9 +649,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   k.at(adX + 0.5, 0.78, adZ - 0.02, -0.4, () => P.toyBoat(k));
   B.put(HX0 + 0.42, 9.3, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
   B.giver('arthurchest', HX0 + 0.42, 9.3, ['money'], 15, { r: 1.2, top: 0.6 });
-  k.at(-8.8, 0, 8.1, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
-  k.at(-8.4, 0, 8.4, 0.4, () => P.toyBlocks(k));
-  k.at(-5.1, 0, HZ1 - 0.6, 0, () => P.pottedPlant(k, { s: 0.9 }));
+  k.at(-8.8, 0, 7.3, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
+  k.at(-8.4, 0, 7.6, 0.4, () => P.toyBlocks(k));
+  k.at(-9.4, 0, HZ1 - 0.6, 0, () => P.pottedPlant(k, { s: 0.9 }));   // (HOME-BATH: it stood where the bathroom is)
   B.giver('arthurbed', HX0 + 1.0, abZ, ['life'], 1, { r: 1.4, top: 0.6 });
   B.light('#ffe0b0', 6, 9, -9.0, 2.3, 7.5);
   // the parents' bedroom (the original's, north-west): x HX0..LX, z HZ0..-BZ. The double bed's headboard against the
@@ -677,6 +677,91 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   B.giver('readchair', HX0 + 0.85, 0.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
   k.at(-11.2, 0, 0.6, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
   B.light('#ffe0b0', 4, 7, -9.0, 2.3, 0.0);
+  // ---- HOME-BATH (CLOUD_ORDERS 42; the user: "why don't they have a toilet and a shower"; of the versions before: "at least
+  //      against the walls", "in the corner here makes sense", "too small", "there is no door, and it looks odd: low walls
+  //      like a booth, the shower with its curtain, both a tub and a shower"): the house's bathroom in the south-east
+  //      corner of Arthur's room, 4.3 × 2.9 m, against the house's south wall and the hall's divider (a plant stood
+  //      there; his rug and blocks 0.8 m north for it; the hall's own south-east corner holds the story's R.life spots).
+  //      Its walls low like the house's dividers (the user, of a 2.6 m version: "half height is better, like the rest of
+  //      the game"). Its door, from Arthur's room, a leaf as high as the walls, opens by itself as he comes to it and
+  //      closes behind him (no collider: it is open before he reaches it). Inside: tiles, a glass shower in the south-west corner, the
+  //      washbasin and its mirror on the west wall, the toilet on the north wall, a towel cupboard and a laundry basket on
+  //      the south wall, towels on a rail, a mat. Taps art only (the opening's water is off): R.bath gives their places.
+  {
+    const X0 = -8.8, X1 = LX, Z0 = 8.6, ZS = HZ1 - 0.2, DL = -5.525, DR = -4.675;
+    const woodD = MAT.wood('dark'), paperM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond');
+    const div = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: paperM, cap: woodD, rail: woodD, low: MAT.wainscot('honey'), dado: 0.9, doors });
+    div(X0, Z0, X1, Z0, [{ at: DL + 0.425 - X0, w: DR - DL }]);   // the north wall, its doorway at x −5.5 to −4.7
+    div(X0, Z0, X0, HZ1);                                          // the west wall
+    const tileM = MAT.tiles('#e9e2d2', '#d8cdb6', '#8a7a62', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
+    const ix0 = X0 + 0.11, ix1 = X1 - 0.11, iz0 = Z0 + 0.11;
+    k.add(plane(ix1 - ix0, ZS - iz0), tileM, (ix0 + ix1) / 2, 0.012, (iz0 + ZS) / 2, 0, { rx: -Math.PI / 2 });
+    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.002, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
+    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.002, 0);
+    // the door: a wooden leaf as high as the walls, on a hinge at the doorway's east side, swinging in
+    const pivot = new THREE.Group(); pivot.position.set(DR, 0, Z0); B.group.add(pivot);
+    const leafLo = new THREE.Mesh(rbox(DR - DL - 0.04, 1.15, 0.05, 0.01), MAT.planks('honey')); leafLo.position.set(-(DR - DL) / 2, 0.575, 0); pivot.add(leafLo);
+    leafLo.castShadow = false; leafLo.receiveShadow = true;   // (it moves: no shadow cache rebuilds)
+    // the glass shower in the south-west corner: a tray, two glass sides in a brass frame, the riser up the corner to its head
+    { const SW = 1.0, SX = ix0 + SW / 2, SZ = ZS - SW / 2, glass = MAT.glass('#cfeaf2', 0.28), cu = MAT.copper();
+      k.add(rbox(SW, 0.08, SW, 0.03), white, SX, 0.04, SZ);
+      k.add(P.disc(0.04, 10), MAT.iron(), SX, 0.082, SZ, 0, { rx: -Math.PI / 2 });
+      k.add(plane(SW - 0.35, 1.9), glass, ix0 + (SW - 0.35) / 2, 1.03, ZS - SW);                               // its north side, the way in at its east end
+      k.add(plane(SW, 1.9), glass, ix0 + SW, 1.03, ZS - SW / 2, Math.PI / 2);                                   // its east side
+      for (const [x, z, l, ry2] of [[ix0 + (SW - 0.35) / 2, ZS - SW, SW - 0.35, 0], [ix0 + SW, ZS - SW / 2, SW, Math.PI / 2]]) k.add(rbox(l, 0.03, 0.03, 0), brass, x, 1.98, z, ry2);
+      for (const [x, z] of [[ix0 + SW, ZS - SW], [ix0 + SW - 0.35, ZS - SW]]) k.add(cyl(0.015, 0.015, 1.98, 6), brass, x, 0.99, z);
+      k.add(cyl(0.02, 0.02, 2.05, 8), cu, ix0 + 0.06, 1.03, ZS - 0.06);
+      k.add(cyl(0.015, 0.015, 0.36, 8), cu, ix0 + 0.18, 2.03, ZS - 0.18, Math.PI / 4, { rz: Math.PI / 2 });
+      k.add(cyl(0.09, 0.05, 0.05, 14), brass, ix0 + 0.32, 1.98, ZS - 0.32);
+      k.add(torus(0.04, 0.012, 6, 12), MAT.paint('#c0302a', 0.45), ix0 + 0.06, 1.05, ZS - 0.12, 0, { rx: Math.PI / 2 });   // its tap
+      B.col(ix0 + (SW - 0.35) / 2, ZS - SW, (SW - 0.35) / 2, 0.03, 2.0, { noStand: true, seeThrough: true });
+      B.col(ix0 + SW, ZS - SW / 2, 0.03, SW / 2, 2.0, { noStand: true, seeThrough: true }); }
+    // the washbasin on a cupboard against the west wall, facing in, its mirror on the wall over it
+    k.at(ix0 + 0.25, 0, 9.5, Math.PI / 2, () => {
+      k.add(rbox(0.82, 0.78, 0.44, 0.02), MAT.wood('honey'), 0, 0.39, 0);
+      k.add(lathe([[0.001, 0], [0.18, 0.0], [0.24, 0.08], [0.26, 0.11], [0.001, 0.11]], 16), white, 0, 0.78, 0.02, 0, { sz: 0.8 });
+      k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
+      k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
+      k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);                                        // the mirror's stand
+      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
+    });
+    B.col(ix0 + 0.25, 9.5, 0.24, 0.42, 0.9, { noStand: true });
+    // the toilet against the north wall, facing into the room: its pan, a wooden seat, the lid up, the cistern
+    k.at(-6.15, 0, iz0 + 0.3, 0, () => {
+      k.add(lathe([[0.001, 0], [0.13, 0], [0.12, 0.2], [0.19, 0.36], [0.2, 0.4], [0.001, 0.4]], 14), white, 0, 0, 0.05, 0, { sz: 1.3 });
+      k.add(torus(0.17, 0.03, 6, 16), woodD, 0, 0.42, 0.07, 0, { rx: Math.PI / 2, sz: 1.25 });
+      k.add(rbox(0.36, 0.42, 0.04, 0.02), woodD, 0, 0.62, -0.18, 0, { rx: -0.12 });
+      k.add(rbox(0.42, 0.34, 0.18, 0.03), white, 0, 0.82, -0.25);
+      k.add(cyl(0.012, 0.012, 0.14, 6), brass, 0.12, 1.02, -0.24);
+    });
+    B.ccol(-6.15, iz0 + 0.32, 0.28, 0.8, { noStand: true });
+    // the towel cupboard and the laundry basket on the south wall; towels on a rail on the north wall; a mat
+    const red = MAT.cloth('#e0503a', '#c83e2c'), blue = MAT.cloth('#3b78d8', '#2f62b0');
+    k.at(-6.9, 0, ZS - 0.22, Math.PI, () => {
+      k.add(rbox(0.9, 0.86, 0.42, 0.02), MAT.wood('honey'), 0, 0.43, 0);
+      for (const s2 of [-1, 1]) k.add(sphere(0.02, 6, 5), brass, s2 * 0.08, 0.6, 0.22);
+      [[red, 0.88], [blue, 0.93], [red, 0.98]].forEach(([m, y]) => k.add(rbox(0.36, 0.05, 0.28, 0.02), m, -0.18, y, 0));   // (the towels' two cloths)
+    });
+    B.col(-6.9, ZS - 0.22, 0.45, 0.21, 0.9, { noStand: true });
+    k.add(lathe([[0.001, 0], [0.2, 0], [0.22, 0.45], [0.23, 0.48], [0.001, 0.48]], 12), MAT.wood('honey'), -5.95, 0, ZS - 0.25);   // the laundry basket
+    k.add(sphere(0.12, 8, 6), blue, -5.95, 0.47, ZS - 0.25, 0, { sy: 0.5 });
+    B.ccol(-5.95, ZS - 0.25, 0.23, 0.5, { noStand: true });
+    k.at(-7.35, 0, iz0 + 0.05, 0, () => {
+      k.add(cyl(0.015, 0.015, 0.7, 8), brass, 0, 0.98, 0.02, 0, { rz: Math.PI / 2 });
+      k.add(rbox(0.3, 0.6, 0.03, 0.01), red, -0.16, 0.7, 0.04);
+      k.add(rbox(0.28, 0.5, 0.03, 0.01), blue, 0.16, 0.74, 0.04);
+    });
+    k.at(-6.5, 0, 9.95, 0, () => P.rug(k, 1.2, 0.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));   // (Arthur's rug's own weave: no new texture)
+    // the door, each frame
+    const dw = B.world((DL + DR) / 2, Z0); let open = 0;
+    R.updaters.push((dt) => {
+      const h = globalThis.game?.hero; if (!h) return;
+            const near = Math.hypot(h.pos.x - dw.x, h.pos.z - dw.z) < 1.5;
+      open += ((near ? 1 : 0) - open) * Math.min(1, dt * 6);
+      pivot.rotation.y = (Math.PI / 2) * open;
+    });
+    R.bath = { room: 'house', basin: B.world(ix0 + 0.7, 9.5), shower: B.world(ix0 + 1.2, ZS - 0.5), toilet: B.world(-6.15, iz0 + 0.8), door: dw };
+  }
   // the hall: x LX..HX1, z -BZ..HZ1 — armchairs round a rug, the family portrait, the stairs down
   k.at(-0.8, 0, 6.3, 0, () => P.rug(k, 3.2, 2.4, ['#2a4a7a', '#a8382a', '#e9c46a', '#f2ead6', '#1a2a3a'], 5));
   B.put(-1.9, 5.6, Math.PI / 2 + 0.35, P.armchair, {});
@@ -739,20 +824,59 @@ function buildCellar(scene, physics) {
   R.exits.push({ ...B.world(LX + 0.65, sz), r: 0.6, room: 'house', back: true });
   R.spawn = { ...B.world(LX + 0.4 + N * run + 0.9, sz), a: Math.PI / 2 };
   // the target on the north wall, the dummy before it
-  k.at(-1.5, 1.55, BZ + 0.05, 0, () => {
-    for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) k.add(P.disc(r, 28), MAT.paint(c, 0.7), 0, 0, 0.01 + (0.5 - r) * 0.01);
-    k.add(torus(0.51, 0.04, 6, 28), MAT.wood('dark'), 0, 0, 0.02);
+  // (HOME-CELLAR, CLOUD_ORDERS 42: the training room as a training room. Each in a group of its own: the ball or a punch
+  //  sets it rocking (a spring that dies away), with the game's own wood knock and burst (Game.impact); the ball leaves a
+  //  scorch on the target that fades. Both are things the thrown ball curves toward here (R.ballTargets, never done).
+  //  No story flag: nothing is kept)
+  const TGT = { x: -1.5, y: 1.55, z: BZ + 0.05 }, DUM = { x: -1.5, z: BZ + 2.4 };
+  const tg = new THREE.Group(); tg.position.set(TGT.x, TGT.y + 0.5, TGT.z); B.group.add(tg);   // (hung from its top: it swings out from the wall)
+  { const tk = new Kit(tg);
+    for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) tk.add(P.disc(r, 28), MAT.paint(c, 0.7), 0, -0.5, 0.01 + (0.5 - r) * 0.01);
+    tk.add(torus(0.51, 0.04, 6, 28), MAT.wood('dark'), 0, -0.5, 0.02);
+    tk.add(cyl(0.012, 0.012, 0.12, 6), MAT.iron(), 0, 0.03, 0.02, 0, { rx: Math.PI / 2 });   // (its peg)
+    tk.flush(); }
+  const marks = [0, 1, 2].map(() => { const m = new THREE.Mesh(P.disc(0.07, 14), new THREE.MeshBasicMaterial({ color: '#2a1608', transparent: true, opacity: 0, depthWrite: false })); m.position.set(0, -0.5, 0.032); m.visible = false; tg.add(m); return m; });
+  const dg = new THREE.Group(); dg.position.set(DUM.x, 0, DUM.z); B.group.add(dg);
+  { const dk = new Kit(dg), straw = MAT.flat('#d8b860', 0.95), sack = MAT.cloth('#c8b890', '#8a7a58');
+    dk.add(cyl(0.04, 0.05, 1.0, 8), MAT.wood('dark'), 0, 0.5, 0);
+    dk.add(rbox(0.6, 0.14, 0.6, 0.04), MAT.wood('dark'), 0, 0.07, 0);
+    dk.add(lathe([[0.001, 0], [0.22, 0.02], [0.26, 0.3], [0.24, 0.55], [0.12, 0.62], [0.001, 0.64]], 12), sack, 0, 0.75, 0);
+    dk.add(sphere(0.17, 12, 10), sack, 0, 1.55, 0);
+    for (const s2 of [-1, 1]) dk.add(cyl(0.06, 0.06, 0.5, 8), straw, s2 * 0.32, 1.15, 0, 0, { rz: s2 * 1.2 });
+    dk.add(P.disc(0.06, 12), MAT.paint('#e03a3a', 0.6), 0, 1.58, 0.17);
+    dk.flush(); }
+  B.ccol(DUM.x, DUM.z, 0.32, 1.7);
+  k.add(rbox(2.2, 0.03, 2.6, 0.01), MAT.cloth('#2f6f78', '#24585f'), DUM.x, 0.015, DUM.z - 0.4);   // (the training mat between the dummy and the target)
+  // the rocking: a damped spring per thing (its tilt toward where the blow came from)
+  const rock = { t: { ax: 0, az: 0, vx: 0, vz: 0 }, d: { ax: 0, az: 0, vx: 0, vz: 0 } };
+  const knock = (S, dx, dz, k) => { const l = Math.hypot(dx, dz) || 1; S.vx += (dz / l) * k; S.vz -= (dx / l) * k; };
+  let mi = 0;
+  const tw = B.world(TGT.x, TGT.z), dw = B.world(DUM.x, DUM.z), game = () => globalThis.game;
+  const hitTarget = (p) => {
+    const h = game()?.hero; knock(rock.t, 0, -1, 2.2);
+    if (p) { const m = marks[mi++ % marks.length]; m.position.x = THREE.MathUtils.clamp(p.x - tw.x, -0.4, 0.4); m.position.y = THREE.MathUtils.clamp(p.y - (TGT.y + 0.5), -0.9, -0.1); m.material.opacity = 0.75; m.visible = true; }
+    void h;
+  };
+  const hitDummy = (from) => { knock(rock.d, dw.x - from.x, dw.z - from.z, 3.2); };
+  R.ballTargets.push({ x: tw.x, y: TGT.y, z: tw.z + 0.1, r: 0.55, material: 'wood', result: 'hit', onHit(p) { hitTarget(p); } });
+  R.ballTargets.push({ x: dw.x, y: 1.2, z: dw.z, r: 0.5, material: 'wood', result: 'hit', onHit() { hitDummy(game()?.hero.pos || tw); } });
+  // the fist (and the sword): Game.meleeWorld asks the room (R.meleeHit)
+  R.meleeHit = ({ hero, inArc, hitSet }) => {
+    const g = game(); let any = false;
+    if (!hitSet.has(rock.d) && inArc(dw.x, dw.z, 0.35) && hero.pos.y < 0.8) { hitSet.add(rock.d); hitDummy(hero.pos); g?.impact(dw.x, 1.2, dw.z, 'wood', 'hit'); any = true; }
+    if (!hitSet.has(rock.t) && inArc(tw.x, tw.z + 0.1, 0.45) && hero.pos.y < 0.8) { hitSet.add(rock.t); hitTarget(null); g?.impact(tw.x, TGT.y, tw.z + 0.1, 'wood', 'hit'); any = true; }
+    return any;
+  };
+  R.updaters.push((dt) => {
+    for (const [S, G, stiff] of [[rock.t, tg, 60], [rock.d, dg, 40]]) {
+      S.vx += (-stiff * S.ax - 3.2 * S.vx) * dt; S.vz += (-stiff * S.az - 3.2 * S.vz) * dt;
+      S.ax = THREE.MathUtils.clamp(S.ax + S.vx * dt, -0.35, 0.35); S.az = THREE.MathUtils.clamp(S.az + S.vz * dt, -0.35, 0.35);
+      if (Math.abs(S.ax) + Math.abs(S.az) + Math.abs(S.vx) + Math.abs(S.vz) < 1e-3) { S.ax = S.az = S.vx = S.vz = 0; }
+      G.rotation.x = S.ax; G.rotation.z = G === tg ? 0 : S.az;   // (the target hangs on the wall: it only swings out)
+      if (G === tg) G.rotation.x = Math.min(0, -Math.abs(S.ax));
+    }
+    for (const m of marks) if (m.visible) { m.material.opacity -= dt * 0.25; if (m.material.opacity <= 0) { m.material.opacity = 0; m.visible = false; } }
   });
-  k.at(-1.5, 0, BZ + 2.4, 0, () => {
-    const straw = MAT.flat('#d8b860', 0.95), sack = MAT.cloth('#c8b890', '#8a7a58');
-    k.add(cyl(0.04, 0.05, 1.0, 8), MAT.wood('dark'), 0, 0.5, 0);
-    k.add(rbox(0.6, 0.14, 0.6, 0.04), MAT.wood('dark'), 0, 0.07, 0);
-    k.add(lathe([[0.001, 0], [0.22, 0.02], [0.26, 0.3], [0.24, 0.55], [0.12, 0.62], [0.001, 0.64]], 12), sack, 0, 0.75, 0);
-    k.add(sphere(0.17, 12, 10), sack, 0, 1.55, 0);
-    for (const s of [-1, 1]) k.add(cyl(0.06, 0.06, 0.5, 8), straw, s * 0.32, 1.15, 0, 0, { rz: s * 1.2 });
-    k.add(P.disc(0.06, 12), MAT.paint('#e03a3a', 0.6), 0, 1.58, 0.17);
-  });
-  B.ccol(-1.5, BZ + 2.4, 0.32, 1.7);
   // bookshelves and a chair on the west wall, the radio set on a sideboard on the north wall
   for (const [z, sd] of [[-2.2, 4], [-1.0, 8]]) B.put(LX + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 1.9, pal: 'honey', seed: sd });
   B.put(LX + 0.9, 0.6, Math.PI / 2, P.chair, { cushion: '#2f6f78' }, { noStand: true, seeThrough: true });
@@ -769,6 +893,61 @@ function buildCellar(scene, physics) {
   B.put(-1.4, 1.3, 0.5, P.armchair, {});
   B.put(0.6, 1.8, -0.3, P.armchair, {});
   B.put(-0.4, 0.6, 0, P.floorLamp, {});
+  // ---- HOME-CELLAR: his own corner, twelve years on (drawn here, nothing of the original's): over the sideboard a cork
+  //      board — the old map of the islands pinned up with its route, three snapshots of the old adventures in frames;
+  //      two cups kept on the bookcases; his old tunic on a peg by the stairs
+  const mem = (w, h, draw) => MAT.map(canvasTex(w, h, draw), 0.85);
+  k.at(2.2, 1.95, BZ + 0.03, 0, () => {
+    k.add(rbox(1.36, 0.84, 0.04, 0.01), MAT.wood('dark'), 0, 0, 0);
+    k.add(plane(1.26, 0.74), MAT.flat('#b8885a', 0.95), 0, 0, 0.022);
+    k.add(plane(0.56, 0.42), mem(224, 168, (x, W2, H2) => {   // the map: two islands in a blue sea, a red route between them
+      x.fillStyle = '#e8dcb8'; x.fillRect(0, 0, W2, H2); x.fillStyle = '#8fb8c8'; x.fillRect(6, 6, W2 - 12, H2 - 12);
+      x.fillStyle = '#d8c08a'; x.beginPath(); x.ellipse(64, 70, 42, 30, 0.3, 0, 7); x.fill(); x.beginPath(); x.ellipse(168, 112, 30, 22, -0.4, 0, 7); x.fill();
+      x.fillStyle = '#6a9a58'; x.beginPath(); x.ellipse(58, 66, 18, 12, 0.3, 0, 7); x.fill();
+      x.strokeStyle = '#c0302a'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.moveTo(78, 82); x.quadraticCurveTo(120, 140, 152, 108); x.stroke();
+      x.setLineDash([]); x.font = 'bold 22px serif'; x.fillStyle = '#c0302a'; x.fillText('X', 160, 118);
+    }), -0.3, 0.05, 0.026, 0, { rz: -0.04 });
+    const shots = [['#f6d27a', '#4a7aa8', 'tower'], ['#a8d8f0', '#e8e4dc', 'sail'], ['#2a3050', '#f2e8c0', 'moon']];
+    shots.forEach(([sky, fg, kind], i) => {
+      k.add(plane(0.24, 0.19), mem(96, 76, (x, W2, H2) => {
+        x.fillStyle = '#f4efe2'; x.fillRect(0, 0, W2, H2); x.fillStyle = sky; x.fillRect(6, 6, W2 - 12, H2 - 12); x.fillStyle = fg;
+        if (kind === 'tower') { x.fillRect(40, 22, 14, 44); x.fillStyle = '#c0302a'; x.fillRect(38, 16, 18, 8); }
+        else if (kind === 'sail') { x.beginPath(); x.moveTo(30, 60); x.lineTo(70, 60); x.lineTo(50, 18); x.closePath(); x.fill(); x.fillStyle = '#6a4a2a'; x.fillRect(24, 60, 50, 6); }
+        else { x.beginPath(); x.arc(48, 36, 16, 0, 7); x.fill(); x.fillStyle = sky; x.beginPath(); x.arc(56, 32, 14, 0, 7); x.fill(); }
+      }), 0.2 + (i % 2) * 0.26, 0.17 - Math.floor(i / 2) * 0.25, 0.026, 0, { rz: (i - 1) * 0.06 });
+    });
+    for (const [px, py] of [[-0.55, 0.24], [-0.05, 0.24], [0.2, 0.26], [0.46, 0.26], [0.2, 0.01]]) k.add(sphere(0.012, 6, 5), MAT.paint('#c0302a', 0.5), px, py, 0.03);
+  });
+  for (const [z, h] of [[-2.2, 0.26], [-1.0, 0.2]]) k.at(LX + 0.3, 1.92, z, Math.PI / 2, () => {   // the cups on the bookcases
+    k.add(lathe([[0.001, 0], [0.07, 0], [0.07, 0.025], [0.022, 0.04], [0.018, h * 0.45], [0.075, h * 0.62], [0.085, h], [0.07, h], [0.001, h * 0.66]], 14), MAT.brass(), 0, 0, 0);
+    for (const s2 of [-1, 1]) k.add(torus(0.035, 0.008, 5, 10), MAT.brass(), s2 * 0.085, h * 0.78, 0, 0, { rz: Math.PI / 2 });
+  });
+  k.at(LX + 0.03, 0, 2.72, Math.PI / 2, () => {   // his old tunic on a peg, between the poster and the stairs
+    k.add(cyl(0.015, 0.015, 0.12, 6), MAT.wood('dark'), 0, 1.72, 0.06, 0, { rx: Math.PI / 2 });
+    const tunic = MAT.cloth('#3a78c0', '#2a5a98');
+    k.add(lathe([[0.001, 0], [0.22, 0], [0.2, 0.45], [0.17, 0.62], [0.06, 0.7], [0.001, 0.7]], 10), tunic, 0, 0.98, 0.12, 0, { sz: 0.45 });
+    for (const s2 of [-1, 1]) k.add(cyl(0.05, 0.06, 0.34, 8), tunic, s2 * 0.2, 1.48, 0.12, 0, { rz: s2 * 0.35 });
+  });
+  // ---- HOME-CELLAR: the house's works in the north-west corner: the water comes down from the house in a copper pipe, past
+  //      the meter and the main stopcock (shut: the opening's dry tap has its other end here), to a tank. Art only
+  { const cu = MAT.copper(), tx = LX + 0.55, tz = BZ + 0.6;
+    k.add(cyl(0.035, 0.035, H - 0.3, 8), cu, LX + 0.12, 0.3 + (H - 0.3) / 2, BZ + 1.25);                                   // down from the house
+    k.add(cyl(0.035, 0.035, 1.1, 8), cu, LX + 0.12, 0.85, BZ + 0.7, 0, { rx: Math.PI / 2 });                                   // along the wall to the tank
+    k.add(cyl(0.035, 0.035, 0.45, 8), cu, LX + 0.34, 0.85 + 0.0, tz, 0, { rz: Math.PI / 2 });
+    k.at(LX + 0.06, 1.35, BZ + 1.25, Math.PI / 2, () => {   // the meter on the wall beside the pipe
+      k.add(rbox(0.26, 0.26, 0.1, 0.02), MAT.iron(), 0.0, 0, 0.05);
+      k.add(P.disc(0.095, 20), MAT.flat('#f2ead6', 0.6), 0, 0, 0.102);
+      k.add(rbox(0.012, 0.08, 0.004, 0), MAT.flat('#1a1a1a'), 0.01, 0.025, 0.106, 0, { rz: -0.6 });
+    });
+    k.add(cyl(0.07, 0.07, 0.12, 10), MAT.brass(), LX + 0.12, 1.0, BZ + 1.25);                                                  // the stopcock's body
+    k.add(torus(0.11, 0.018, 6, 16), MAT.paint('#c0302a', 0.45), LX + 0.24, 1.0, BZ + 1.25, 0, { rz: Math.PI / 2 });          // its wheel
+    k.add(cyl(0.012, 0.012, 0.14, 6), MAT.iron(), LX + 0.18, 1.0, BZ + 1.25, 0, { rz: Math.PI / 2 });
+    k.add(cyl(0.36, 0.36, 1.3, 18), MAT.paint('#9aa8a0', 0.5), tx, 0.67, tz);                                                 // the tank
+    k.add(sphere(0.36, 18, 8), MAT.paint('#9aa8a0', 0.5), tx, 1.32, tz);
+    for (const y of [0.25, 1.05]) k.add(torus(0.365, 0.025, 5, 22), MAT.copper(), tx, y, tz, 0, { rx: Math.PI / 2 });
+    k.add(cyl(0.08, 0.08, 0.03, 10), MAT.brass(), tx + 0.2, 0.9, tz + 0.29, 0, { rx: Math.PI / 2 });                       // its gauge
+    B.ccol(tx, tz, 0.4, 1.6);
+  }
   B.light('#ffd8a0', 6, 10, 0, 2.2, -0.5);
   B.light('#ffcf90', 3, 5, -0.4, 1.5, 0.6);
   return B.finish();
