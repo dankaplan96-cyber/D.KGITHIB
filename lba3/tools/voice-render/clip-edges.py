@@ -29,6 +29,9 @@ def edges(seg, sp):
     return a, min(e, sp)
 
 def main():
+    global VOICE
+    import sys
+    if len(sys.argv) > 1: VOICE = sys.argv[1]   # (VOICE-2: assets/voice2, the Expressive banks)
     mfile = os.path.join(VOICE, 'manifest.json')
     man = json.load(open(mfile))
     for bid, b in man['banks'].items():

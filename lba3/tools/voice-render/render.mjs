@@ -6,7 +6,7 @@
 //   const r = await R.render({ root: 'game', style: 'soft', scene, opts }); // { mix, voice: Float32Array, sr, log }
 //   await R.close();
 import { createRequire } from 'node:module';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,9 +35,14 @@ export async function openRenderer({ roots }) {
     page,
     // one render: returns the mix and the voice alone as Float32Arrays
     // (P18-VOICES: mode 'words' | 'classic', engine 'render' | 'chain': how a Words line is made)
-    async render({ root = 'game', style = null, scene, opts = {}, music = null, banks = null, inject = null, mode = null, engine = null }) {
-      const r = await page.evaluate(async ({ root, style, scene, opts, music, banks, inject, mode, engine }) => {
+    // (VOICE-2: mode 'expressive'; legacy: the Words voice as it was on 14.11; the game's text modules are loaded, so a
+    //  line's metadata (src/game/text/voicemeta.js) is found by its text as in the game)
+    async render({ root = 'game', style = null, scene, opts = {}, music = null, banks = null, inject = null, mode = null, engine = null, legacy = false }) {
+      const texts = existsSync(join(roots[root], 'src/game/text')) ? readdirSync(join(roots[root], 'src/game/text')).filter((f) => f.endsWith('.js')) : [];
+      const r = await page.evaluate(async ({ root, style, scene, opts, music, banks, inject, mode, engine, legacy, texts }) => {
+        await Promise.all(texts.map((f) => import(`http://voice.local/${root}/src/game/text/${f}`).catch(() => null)));
         const V = await import(`http://voice.local/${root}/src/engine/voice.js`);
+        V.setWordsLegacy?.(!!legacy);
         const S = await import('http://voice.local/game/tools/voice-render/scene.js');
         if (style && V.setVoiceStyle) V.setVoiceStyle(style);
         V.setVoiceMode?.(mode || 'classic'); V.setWordsEngine?.(engine || 'render');
@@ -50,7 +55,7 @@ export async function openRenderer({ roots }) {
         const t0 = performance.now();
         const out = await S.renderScene(V, scene, opts);
         return { mix: S.f32Base64(out.mix), voice: S.f32Base64(out.voice), sr: out.sr, log: out.log, count: out.count, played: out.played, ms: performance.now() - t0 };
-      }, { root, style, scene, opts, music, banks, inject, mode, engine });
+      }, { root, style, scene, opts, music, banks, inject, mode, engine, legacy, texts });
       const dec = (b) => { const buf = Buffer.from(b, 'base64'); return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4); };
       return { ...r, mix: dec(r.mix), voice: dec(r.voice) };
     },

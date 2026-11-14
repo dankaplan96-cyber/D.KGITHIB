@@ -285,7 +285,7 @@ export function clauseWords(s) {
 // and unstressed vowels are shortened, 0-1) }
 function speakClause(v, words, intent, seed, o = {}) {
   const r = rng(seed), S = speech(v), R0 = S.range, fav = favoured(v, S);
-  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1] }[intent] || [1, 0, 1, 1])];
+  const mod = [...({ tell: [1, 0, 1, 1], ask: [1, 0.05, 1, 1], excl: [1.35, 0.18, 0.95, 1.1], no: [0.65, -0.12, 0.92, 1], worry: [0.5, 0.12, 1.08, 0.85], warm: [1, 0.05, 1.06, 0.92], cont: [1, 0, 0.98, 1], unsure: [0.7, 0.02, 1.12, 0.85] }[intent] || [1, 0, 1, 1])];
   if (intent === 'worry' && v.manner === 'sharp') { mod[0] = 0.7; mod[1] = 0.08; mod[2] = 0.94; mod[3] = 0.95; }
   const R = R0 * mod[0], off = mod[1] * R0, dScale = mod[2] / (o.speed || 1), ampI = mod[3] * (o.quiet ? 0.72 : 1);
   const clipped = (S.manner === 'clipped' && (intent === 'no' || intent === 'excl')) || (S.manner === 'sharp' && intent === 'worry');
@@ -353,6 +353,7 @@ function speakClause(v, words, intent, seed, o = {}) {
         if (intent === 'ask' && ask === 'rise') { b = a + Math.max(3, 0.6 * R0); }
         else if (intent === 'ask') { a += 0.45 * R0; b = a + 0.1 * R0; }
         else if (intent === 'cont') b = a + 0.15 * R0;
+        else if (intent === 'unsure') b = a + 0.22 * R0;
         else if (intent === 'warm') { a += 0.15 * R0; b = a - 0.55 * R0; }
         else if (intent === 'worry') b = a - 0.15 * R0;
         else if (intent === 'excl') b = a - 0.5 * R0;
