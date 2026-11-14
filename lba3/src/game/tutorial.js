@@ -116,17 +116,14 @@ export class Tutorial {
       case 'jump': return at === 'yard' && h.behaviour === 'athletic' && this.nearPipe() && h.onGround;
       case 'ball': {
         const T = g.story.cur?.barrels?.();
-        if (at !== 'yard' || !h.hasBall || !T || g.ball?.state !== 'idle') return false;
+        if (at !== 'yard' || !h.hasBall || !T) return false;
         if (Math.hypot(h.pos.x - T.x, h.pos.z - T.z) > 12) return false;
         return this.los;
       }
-      case 'arc': { const T = g.story.cur?.barrels?.(); return at === 'yard' && this.done.has('ball') && !!T && g.ball?.state === 'idle' && Math.hypot(h.pos.x - T.x, h.pos.z - T.z) < 12 && this.los; }
-      case 'magic': {
-        const T = g.story.cur?.barrels?.();
-        if (at !== 'yard' || !T || h.mp >= 1 || Math.hypot(h.pos.x - T.x, h.pos.z - T.z) > 7) return false;
-        const gv = g.world.givers?.find((x) => x.id === 'home-barrels');
-        return !!gv && !g.giverTaken?.(gv);
-      }
+      case 'arc': { const T = g.story.cur?.barrels?.(); return at === 'yard' && this.done.has('ball') && !!T && Math.hypot(h.pos.x - T.x, h.pos.z - T.z) < 12 && this.los; }
+      // out of magic while practising: the ball still flies (LBA2: it comes back at its first contact), it only stops
+      // bouncing; a flask refills it. Said once, a few seconds (no healing or magic lesson is forced on him)
+      case 'magic': return (at === 'yard' || at === 'town') && h.hasBall && h.mp < 1;
       case 'discreet': { const k = g.npcs.find((n) => n.def.id === 'tim'); return at === 'town' && f.kidsAsked && !f.overheard && !!k && h.distTo(k) < 12; }
       case 'normal': return !!f.overheard && h.behaviour === 'discreet' && at === 'town';
       case 'kick': { const W = g.world.well; return at === 'town' && !!W && !!f.pr_lidStuck && !f.pr_lidOpen && Math.hypot(h.pos.x - W.x, h.pos.z - W.z) < 8; }
@@ -134,7 +131,7 @@ export class Tutorial {
     return false;
   }
   // an optional tip's time on screen in all before it is let go (none: it stays while it applies)
-  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 20, discreet: 40, normal: 10 }[id]; }
+  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10 }[id]; }
   text(id) {
     const g = this.g, d = this.dev(), K = (a) => this.key(a);
     switch (id) {
@@ -153,7 +150,7 @@ export class Tutorial {
         return t('tut_ball', { aim, k: K('ball') });
       }
       case 'arc': return t('tut_arc', { k: K('ball') });
-      case 'magic': return t('tut_magic', { k: K('interact') });
+      case 'magic': return t('tut_magic');
       case 'discreet': return t('tut_discreet', { k: this.mode(4) });
       case 'normal': return t('tut_normal', { k: this.mode(1) });
       case 'kick': return g.hero.behaviour === 'aggressive' ? t('tut_kick', { k: K('interact') }) : t('tut_aggressive', { k: this.mode(3) });

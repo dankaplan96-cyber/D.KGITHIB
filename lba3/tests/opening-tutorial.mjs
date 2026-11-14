@@ -36,8 +36,8 @@ const helpers = () => ev(async () => {
   window.TT = {
     code(a) { return inp.keyFor(a); },
     door() { return game.room.exits.find((x) => x.to === 'outdoor'); },
-    out() { const e = TT.door(); const r = P.through(e.x, e.z); game.step(0.6); return r; },
-    inside() { const d = game.world.houses[0].door; P.through(d.x, d.z); game.step(0.6); },
+    out() { P.settle(); const e = TT.door(); const r = P.through(e.x, e.z); game.step(0.6); return r; },
+    inside() { P.settle(); const d = game.world.houses[0].door; P.through(d.x, d.z); game.step(0.6); },
     labels(a) { return game.hud.key(a); },
     tipHas(...words) { const s = document.querySelector('#tip.show')?.textContent || ''; return words.every((w) => s.includes(w)); },
     // the tip box keeps clear of the dialogue, the prompt and the middle of the screen (where Twinsen is)
@@ -116,10 +116,10 @@ check('A12 switched: the tip moves on to the action button\'s new use: Jump', s.
 await shot('a12-jump-tip');
 const miss = await ev(() => { const h = game.hero; P.face(-40, 69.6); const hp = h.hp; game.input.keys.add('ArrowUp'); game.step(1.6); game.input.keys.delete('ArrowUp'); game.step(0.4); return { x: +h.pos.x.toFixed(2), hp: h.hp, hp0: hp, jumped: game.tutorial.done.has('jump') }; });
 check('A13 running into the pipe without a jump: stopped on his side, no harm, nothing to redo', miss.x < -43.7 && miss.hp === miss.hp0 && !miss.jumped, miss);
-const jump = await ev(() => { const h = game.hero; P.go(-46.4, 69.6, { tol: 0.3, run: true }); P.face(-40, 69.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(0.5); return { x: +h.pos.x.toFixed(2), done: game.tutorial.done.has('jump'), tip: game.tutorial.shown }; });
+const jump = await ev(() => { const h = game.hero; P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(0.5); return { x: +h.pos.x.toFixed(2), done: game.tutorial.done.has('jump'), tip: game.tutorial.shown }; });
 check('A14 the running jump clears the pipe (landing on the grass beyond); Jump learned', jump.x > -43.2 && jump.done && jump.tip !== 'jump', jump);
 // the barrels: a tip, into the house and out with it up, misses, a hit, the arc
-await ev(() => { P.tap('F1', 0.1); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(1.2); });
+await ev(() => { P.tap('F1', 0.1); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(1.2); });
 s = await T();
 check('A15 the barrels in view: one tip, aim and throw in the real keys', s.tip === 'ball' && (await ev(() => TT.tipHas(TT.labels('ball'), 'barrels'))), s);
 await shot('a15-ball-tip');
@@ -128,6 +128,7 @@ check('A16 into the house and out with the tip up: hidden inside, back outside, 
 const misses = await ev(() => {
   const h = game.hero, B = game.story.cur.barrels(), times = [];
   for (let i = 0; i < 3; i++) { P.face(B.x + 6, B.z - 20); const t0 = game.time; P.tap('KeyF', 0.05); let k = 0; while (game.ball.state === 'idle' && k++ < 30) game.step(1 / 30); while (game.ball.state !== 'idle' && game.time - t0 < 8) game.step(1 / 30); times.push(+(game.time - t0).toFixed(2)); }
+  game.step(0.8);
   return { times, hit: !!game.flags.pr_barrel, mp: h.mp, tip: game.tutorial.shown };
 });
 check('A17 three throws away from the barrels: back in his hand each time within 3.5 s, nothing hit, the tip stays', misses.times.every((x) => x < 3.5) && !misses.hit && misses.tip === 'ball', misses);
@@ -137,16 +138,17 @@ check('A18 then the optional arc tip', hit.tip === 'arc' || (await ev(() => game
 await shot('a18-arc-tip');
 const arc = await ev(() => { const B = game.story.cur.barrels(); P.face(B.x, B.z); game.input.keys.add('KeyF'); game.step(0.8); const dots = game.ball.dots.some((d) => d.visible) || game.ball.landMark.visible; game.input.keys.delete('KeyF'); game.step(2.4); P.settle(); return { dots, done: game.tutorial.done.has('arc'), mp: game.hero.mp }; });
 check('A19 holding the ball key shows the arc (the game\'s own preview dots and ring); learned on the hold', arc.dots && arc.done, arc);
-// out of magic by the barrels: the barrels give a flask (the house's giver, LBA2's way)
+// out of magic (every throw costs one, as in LBA2): a short word that the ball still works, and it does: a throw at the
+// barrels with no magic left still hits and comes back
 const magic = await ev(() => {
   const B = game.story.cur.barrels(), h = game.hero;
   for (let i = 0; i < 12 && h.mp >= 1; i++) { P.face(B.x + 5, B.z - 20); P.tap('KeyF', 0.05); let k = 0; while (game.ball.state !== 'idle' && k++ < 200) game.step(1 / 30); }
-  P.go(B.x + 1.6, B.z - 0.9, { tol: 0.3 }); game.step(1.0);
+  game.step(1.0);
   const tip = game.tutorial.shown, text = document.querySelector('#tip.show')?.textContent;
-  P.face(B.x, B.z); P.tap('KeyE', 0.1); game.step(1.5); P.grab?.(4); P.settle(); game.step(0.5);
-  return { tip, text, mp: h.mp, done: game.tutorial.done.has('magic') };
+  const n0 = B.hits || 0; P.face(B.x, B.z); P.tap('KeyF', 0.05); let k = 0; while (game.ball.state === 'idle' && k++ < 30) game.step(1 / 30); while (game.ball.state !== 'idle' && k++ < 300) game.step(1 / 30);
+  return { tip, text, mp: h.mp, hit: (B.hits || 0) > n0, ball: game.ball.state };
 });
-check('A20 out of magic by the barrels: a tip to search them; searched, magic back, learned', magic.tip === 'magic' && magic.mp > 0 && magic.done, magic);
+check('A20 out of magic: one short word (the ball still flies, no bounces), and a throw at the barrels still hits and returns', magic.tip === 'magic' && magic.mp === 0 && magic.hit && magic.ball === 'idle', magic);
 await shot('a20-after');
 
 // ============================================================ B: tips off, the experienced player, remap, gamepad
@@ -169,7 +171,8 @@ check('B1 the actions are still recognised with tips off (moved, talked)', off.d
 // tips on again (pause, Settings): nothing already done is asked for
 await ev(() => { game.settings.tips = 'on'; game.applySettings?.(); game.step(1.0); });
 s = await T();
-check('B2 tips on again: Move is not asked for again; the yard\'s tip (the ball) is the one up', !['move', 'inventory', 'talk'].includes(s.tip) && s.tip === 'ball', s);
+check('B2 tips on again: what was done with tips off is not asked for (Move, Talk); what was not is (Open Inventory)', !['move', 'talk'].includes(s.tip) && s.tip === 'inventory', s);
+await ev(() => { P.tap(TT.code('inventory'), 0.3); P.tap(TT.code('inventory'), 0.3); game.step(1.0); });
 // experienced: Athletic and a jump before the pipe's tip could show
 const exp = await ev(() => { P.tap('F2', 0.1); game.step(0.2); P.tap('Space', 0.05); game.step(1.0); P.tap('F1', 0.1); const seenAt = []; P.go(-45.0, 69.6, { tol: 0.4 }); for (let i = 0; i < 6; i++) { game.step(0.3); seenAt.push(game.tutorial.shown); } return { seenAt, done: [...game.tutorial.done] }; });
 check('B3 an experienced player switches and jumps before the tip: Athletic and Jump learned, no tip by the pipe', exp.done.includes('athletic') && exp.done.includes('jump') && !exp.seenAt.some((x) => x === 'athletic' || x === 'jump'), exp);
@@ -191,18 +194,18 @@ await ev(() => {
   window.__pad.axes[0] = 0.5; game.step(0.1); window.__pad.axes[0] = 0; game.step(1.0);
 });
 const pad = await ev(() => ({ dev: game.input.lastDevice, tip: game.tutorial.shown, text: document.querySelector('#tip.show')?.textContent, cam: game.settings.camera }));
-check('B5 switching to a gamepad mid-tip: the tip shows the pad\'s buttons (Y, the left stick)', pad.dev === 'pad' && /\bY\b/.test(pad.text || '') && /stick/.test(pad.text || ''), pad);
-await shot('b5-pad-tip');
+check('B5 a gamepad mid-tip: auto controls give it the Free camera, and its tip comes up in the pad\'s terms (Right stick)', pad.dev === 'pad' && pad.cam === 'free' && pad.tip === 'camera' && /Right stick/.test(pad.text || ''), pad);
+await shot('b5-pad-camera-tip');
+const cam = await ev(() => { window.__pad.axes[2] = 0.8; game.step(0.5); window.__pad.axes[2] = 0; game.step(1.2); return { done: game.tutorial.done.has('camera'), tip: game.tutorial.shown, text: document.querySelector('#tip.show')?.textContent }; });
+check('B6 the right stick turns the camera: learned; the next tip (the ball) in the pad\'s buttons (left stick, Y)', cam.done && cam.tip === 'ball' && /\bY\b/.test(cam.text || '') && /left stick/.test(cam.text || ''), cam);
+await shot('b6-pad-ball-tip');
 const padThrow = await ev(() => { const B = game.story.cur.barrels(); const n0 = B.hits || 0; window.__pad.buttons[3].pressed = true; game.step(1 / 30); window.__pad.buttons[3].pressed = false; let thrown = false; for (let i = 0; i < 30; i++) { game.step(1 / 30); thrown ||= game.ball.state === 'fly'; } game.step(2.4); return { thrown, hits: (B.hits || 0) - n0, done: game.tutorial.done.has('ball'), ball: game.ball.state }; });
-check('B6 the pad\'s Y throws (the game\'s own binding) and the ball comes back', padThrow.thrown && padThrow.ball === 'idle', padThrow);
-// Free camera (the pad's): the camera tip at the door, completed by the right stick
-const cam = await ev(() => { TT.inside(); TT.out(); game.step(1.0); const tip = game.tutorial.shown, text = document.querySelector('#tip.show')?.textContent; window.__pad.axes[2] = 0.8; game.step(0.5); window.__pad.axes[2] = 0; game.step(0.5); return { tip, text, cam: game.settings.camera, done: game.tutorial.done.has('camera') }; });
-check('B7 Free camera (the pad\'s): a camera tip at the door ("Right stick"), learned by turning it', cam.cam === 'free' && (cam.done || cam.tip === 'camera') && (!cam.text || /Right stick/.test(cam.text)), cam);
+check('B7 the pad\'s Y throws (the game\'s own binding) and the ball comes back', padThrow.thrown && padThrow.ball === 'idle', padThrow);
 // back to the keyboard mid-tip: the labels follow
 const back = await ev(() => { game.input.keys.add('ArrowLeft'); game.input.lastDevice = 'kbd'; game.step(0.3); game.input.keys.delete('ArrowLeft'); navigator.getGamepads = () => []; game.step(0.6); return { dev: game.input.lastDevice, text: document.querySelector('#tip.show')?.textContent ?? null, tip: game.tutorial.shown }; });
 check('B8 back to the keyboard: no pad button left in the tip', back.dev === 'kbd' && !/\b(Y|View|Left stick|Right stick)\b/.test(back.text || ''), back);
 // optional practice left unfinished, on to the well: no yard tip in town, the well's step plays
-const well = await ev(() => { const W = game.world.well; const r = P.go(W.x + 2.6, W.z + 0.4, { tol: 0.8, run: true, maxT: 200 }); P.settle(); game.step(1.0); const tips = new Set(); for (let i = 0; i < 6; i++) { game.step(0.3); if (game.tutorial.shown) tips.add(game.tutorial.shown); } const u = P.use(W.x, W.z, { near: 1.8, kind: 'well' }); return { r: r.r, tips: [...tips], seen: !!game.flags.wellSeen, arc: game.tutorial.done.has('arc'), d: +Math.hypot(game.hero.pos.x - W.x, game.hero.pos.z - W.z).toFixed(1) }; });
+const well = await ev(() => { const W = game.world.well; let r; for (let k = 0; k < 4; k++) { r = P.go(W.x + 2.6, W.z + 0.4, { tol: 0.8, run: true, maxT: 200 }); P.settle(); if (r.r === 'arrived') break; } game.step(1.0); const tips = new Set(); for (let i = 0; i < 6; i++) { game.step(0.3); if (game.tutorial.shown) tips.add(game.tutorial.shown); } const u = P.use(W.x, W.z, { near: 1.8, kind: 'well' }); return { r: r.r, tips: [...tips], seen: !!game.flags.wellSeen, arc: game.tutorial.done.has('arc'), d: +Math.hypot(game.hero.pos.x - W.x, game.hero.pos.z - W.z).toFixed(1) }; });
 check('B9 on to the well with practice unfinished: no yard tip in town, the well inspected (the story goes on)', well.seen && !well.tips.some((x) => ['ball', 'arc', 'athletic', 'jump', 'camera', 'magic', 'inventory'].includes(x)), well);
 await shot('b9-well');
 // reproduced (flags set for the check, a second pass: these places are minutes of play away): the lid's tip
@@ -214,6 +217,7 @@ check('B10 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then 
 const legacy = await ev(() => {
   const s0 = game.snapshot(); delete s0.tut;
   s0.room = 'house'; s0.hero.x = game.rooms.house.npcSpots.twinsen.x; s0.hero.z = game.rooms.house.npcSpots.twinsen.z; s0.hero.hasBall = false;
+  s0.searched = (s0.searched || []).filter((k) => k !== 'cupboard');
   Object.assign(s0.flags, { pr_v2: 1, pr_tap: true, pr_cup: false, pr_zoeOut: false, key: false, pr_lidStuck: false, wellSeen: false, pr_kettle: false, pr_yard: false, pr_barrel: false });
   localStorage.setItem('lba3_save_v1', JSON.stringify(s0)); return true;
 });
@@ -229,6 +233,7 @@ const c1 = await ev(() => {
 check('C1 a save from the cup\'s days (tap tried, cup not moved, no tutorial state): loads; no tip; ball, door, Zoé in the yard', !c1.tip && c1.ball && c1.to === 'citadel' && c1.zoe < 8 && !c1.tipOut, c1);
 await ev(() => {
   const s0 = game.snapshot(); delete s0.tut; Object.assign(s0.flags, { pr_v2: 1, pr_tap: true, pr_cup: true, pr_zoeOut: true });
+  s0.room = null; s0.hero.x = -44.8; s0.hero.z = 71.5; s0.hero.hasBall = true;
   localStorage.setItem('lba3_save_v1', JSON.stringify(s0));
 });
 await page.reload(); await open(page, '?nocine'); await menu(page, 'continue');

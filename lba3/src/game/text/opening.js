@@ -48,7 +48,7 @@ Object.assign(STR.en, {
   tut_aim_pad: 'Aim at the barrels with the left stick.',
   tut_ball: '{aim} {k} Throw the magic ball',
   tut_arc: 'Hold {k} to see where it lands',
-  tut_magic: 'Out of magic: {k} Search the barrels',
+  tut_magic: 'Out of magic: the ball still flies, but no longer bounces. Flasks refill it.',
   tut_discreet: '{k} Switch to Discreet: sneak up quietly',
   tut_normal: '{k} Back to Normal',
   tut_aggressive: '{k} Switch to Aggressive: kick and punch',
