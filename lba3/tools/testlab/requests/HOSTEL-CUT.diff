@@ -1,0 +1,16 @@
+diff --git a/lba3/src/game/lba1room.js b/lba3/src/game/lba1room.js
+index f0e9dbca..0bacb3fd 100644
+--- a/lba3/src/game/lba1room.js
++++ b/lba3/src/game/lba1room.js
+@@ -262,7 +262,10 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+       for (let y = cutY; y < 25; y++) if (C.has(`${x},${y},${z}`)) {
+         addLid(`${x},${y},${z}`, i);
+         // (d.sight: the beams over its floor also cut it while they stand between him and the camera, as the leftovers)
+-        if (d.sight && inBox(x, z) && floorCol(x, z) && !overCell.has(ock(x, y, z))) overCell.set(ock(x, y, z), i);
++        // (the user, 14.11: "walls disappear for no reason": the cells' beams cleared away (opts.clear: not drawn) still stood
++        //  on his sight line here, so walking the corridor past cell A cut its walls with nothing between him and the
++        //  camera. Only cells that are drawn count)
++        if (d.sight && inBox(x, z) && floorCol(x, z) && !cleared(x, y, z) && !overCell.has(ock(x, y, z))) overCell.set(ock(x, y, z), i);
+       }
+     }
+     return { i, box: [bx0, by0, bz0, bx1, by1, bz1], cut: cutY, zone: d.zone, name: d.name, sight: !!d.sight, cols: inc.size, f: 1, active: false, hold: 0 };

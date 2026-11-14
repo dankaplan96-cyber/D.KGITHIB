@@ -4873,3 +4873,21 @@ base / candidate pairs on the same commit.
   and 1 of 2 on the unchanged branch (known intermittent, TWINSEN-ORIG): **watch it when applying**.
 - Not measured yet (the brief's later steps): Auto's governor against the measured costs, interiors, combat, transitions,
   the Hamalayi, the remaining chapters; battery runs. Raw runs stay on the desktop (`lba3-bench\owp\`).
+
+## HOSTEL-CUT · walls of the hostel's cells cut away with nothing in the way (the user's report) · the desktop, 14.11.2026
+The user, 14.11: in the hostel "the walls disappear for no reason; the place is still not good, and not accurate for doors".
+Walked by the harness through the hostel (17 stops: the side way in, the corridors, both cells' doors, Vesk's door, the
+kitchen, the dormitory, the front), each picture twice, as played and with every lid shown, the difference marked
+(`docs/future/hostel-cut-04-06.jpg`, chapter 1–2 place).
+- **Found: cell A's walls cut while he walked the corridor beside it** (stop 04, he outside the cell, nothing between him
+  and the camera). The cells' lids are `sight` lids: their beams on his sight line cut them. Those beams were cleared
+  long ago (`opts.clear`, cells 17–18: not drawn) but still registered on the sight line, so invisible beams cut the walls.
+- **`requests/HOSTEL-CUT.diff`** (`lba1room.js` only, one condition; `git apply --check` clean on origin): only cells
+  that are drawn count on the sight line. After: no cut at stop 04; inside the cell the camera-side walls still go (06).
+  No draw call, no mesh added (only the asylum uses lids: `lba1places.js`).
+- Tests (SwiftShader): asylum 10/10, lba1rooms 8/8, chapter1 32/32 PASS.
+- **Tried and dropped:** the large office zone (LBA1's type-3 zone 1, 28 × 16 cells) cuts every camera-side wall along its
+  whole length when he steps in (walls up to 18 m from him, stop 14). Splitting it into 8-cell squares cut only round
+  him, but added 38–154 draw calls along the walk (166 → 320 at the front) and changed the zone's LBA1 behaviour the
+  asylum suite checks (the zone cut whole). Left as LBA1 does it; a question for the user and the cloud.
+- **The doors:** asked the user which doors read wrong (next).
