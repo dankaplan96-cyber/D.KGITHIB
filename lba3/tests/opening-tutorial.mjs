@@ -208,9 +208,21 @@ check('B8 back to the keyboard: no pad button left in the tip', back.dev === 'kb
 const well = await ev(() => { const W = game.world.well; let r; for (let k = 0; k < 4; k++) { r = P.go(W.x + 2.6, W.z + 0.4, { tol: 0.8, run: true, maxT: 200 }); P.settle(); if (r.r === 'arrived') break; } game.step(1.0); const tips = new Set(); for (let i = 0; i < 6; i++) { game.step(0.3); if (game.tutorial.shown) tips.add(game.tutorial.shown); } const u = P.use(W.x, W.z, { near: 1.8, kind: 'well' }); return { r: r.r, tips: [...tips], seen: !!game.flags.wellSeen, arc: game.tutorial.done.has('arc'), d: +Math.hypot(game.hero.pos.x - W.x, game.hero.pos.z - W.z).toFixed(1) }; });
 check('B9 on to the well with practice unfinished: no yard tip in town, the well inspected (the story goes on)', well.seen && !well.tips.some((x) => ['ball', 'arc', 'athletic', 'jump', 'camera', 'magic', 'inventory'].includes(x)), well);
 await shot('b9-well');
+// the kids by the square, by input: asked, they brush him off; then Discreet's tip; sneaking up, he overhears them;
+// then Normal's tip
+const kids = await ev(() => {
+  P.talk('tim', { run: true }); P.settle(); game.step(1.2);
+  const t1 = document.querySelector('#tip.show')?.textContent; P.tap('F4', 0.2); game.step(0.4);
+  const k = P.npc('tim'), h = game.hero;
+  for (let i = 0; i < 120 && !game.flags.overheard; i++) { P.face(k.pos.x, k.pos.z, 0.2); game.input.keys.add('ArrowUp'); game.step(0.1); game.input.keys.delete('ArrowUp'); if (h.distTo(k) < 1.6) break; }
+  P.settle(); game.step(1.2);
+  const t2 = document.querySelector('#tip.show')?.textContent; P.tap('F1', 0.2); game.step(0.4);
+  return { t1, t2, overheard: !!game.flags.overheard, done: ['discreet', 'normal'].filter((x) => game.tutorial.done.has(x)) };
+});
+check('B10 the kids brush him off: Switch to Discreet; overheard, then Back to Normal; both learned', /Discreet/.test(kids.t1 || '') && kids.overheard && /Normal/.test(kids.t2 || '') && kids.done.length === 2, kids);
 // reproduced (flags set for the check, a second pass: these places are minutes of play away): the lid's tip
 const kick = await ev(() => { const f = game.flags, W = game.world.well; f.key = true; f.pr_lidStuck = true; game.hero.hasKey = true; game.story.cur.setLid('stuck'); P.go(W.x + 2.4, W.z + 0.4, { tol: 0.5 }); game.step(1.2); const t1 = document.querySelector('#tip.show')?.textContent; P.tap('F3', 0.2); game.step(1.0); const t2 = document.querySelector('#tip.show')?.textContent; return { t1, t2 }; });
-check('B10 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then the kick\'s key', /Aggressive/.test(kick.t1 || '') && /Kick the lid/.test(kick.t2 || ''), kick);
+check('B11 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then the kick\'s key', /Aggressive/.test(kick.t1 || '') && /Kick the lid/.test(kick.t2 || ''), kick);
 
 // ============================================================ C: old saves
 // a save from the cup's days, in the house after the tap, the cup not moved, no tutorial state
