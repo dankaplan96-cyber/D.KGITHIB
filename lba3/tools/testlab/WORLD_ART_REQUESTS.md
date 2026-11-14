@@ -4826,3 +4826,68 @@ length (the touch reads them) as they were.
   24/24, chapter10 30/30, chapter3 (chapters 11–12) 47/47, campaign-hands 7/7 (its hand-gap checks included) PASS.
 - Pictures (chapters 6–12, **not for the user**): `docs/future/gpu-v85/ch3plus-before-after-at-use-spots.jpg`,
   `ch3plus-joint-isolator-close.jpg`. Evidence label: Automated runtime, and the desktop's eyes on the GTX 1050. Nobody played it.
+
+## HOSTEL-STEP · stuck in the hostel's first cell door (the user's report) · the desktop, 14.11.2026
+The user, 14.11, playing the published build, a photo: Twinsen at the door of the hostel's first cell (`asylumhostel.js`
+cellA, the bunk room for two), "stuck there". **Reproduced** (Chrome, the repo on 82d48f78, keys only through
+`tests/lib/player.js`): from inside the cell to the corridor `P.go` times out at the door; held Up from the step he moves
+2–4 cm. Frame by frame: 3 cm before the door line he drops from the step (1.73) to the cell's floor (1.30), the threshold
+(top 2.17) is then a wall 0.87 m high and `physics.move` pushes him back 0.45 m; again and again.
+**Cause:** the step's collider (`col(A, …)`, hd 0.39) ends where the threshold brick's begins, and `groundInfo` trims each
+box by 5 cm (`_inside(c, x, z, -0.05)`): a 3 cm strip with nothing under it but the cell's floor box. The way in was fine
+(a drop); the way out was not.
+**Ready for the cloud: `requests/HOSTEL-STEP.diff`** (`asylumhostel.js` only, one line; `git apply --check` clean on
+82d48f78): the step's collider runs 0.2 m on under the threshold (centre +0.1 m, hd 0.49); the step is drawn as before.
+- After: in and out of the cell both arrive; from the doorway he walks on into the corridor (2.3 m, at 2.17).
+- Tests (SwiftShader): asylum 10/10, chapter1 32/32 PASS. Evidence: Automated runtime; the user's own play found it.
+- **For the cloud, a wider check:** any two touching box colliders of different tops at a door or step meet the same 5 cm
+  trims (a strip of 10 cm where neither counts). A sweep over the LBA1 rooms' carved doors and added steps would find the
+  rest (`lba1places.js` carve + the steps the dressing adds).
+
+## PERF-OWP-1 · the first island arrival and the busiest street on the UHD 630 (the user's performance brief) · the desktop, 14.11.2026
+The user, 13.11: run the open-world performance brief on the playable build, first island arrival and busiest street
+first, reproduce, fix, matched before/after. The minimum target is this desktop's **Intel UHD 630** (the Vega 8 was sold),
+in the desktop app's Electron through the low-power launcher copy, plugged in, Auto (→ Medium; dpr 1.25, a 1920×1080
+buffer, MSAA 2, shadows 1024). Runner: `tools/testlab/examples/arrival-probe.mjs` (New Game, the opening skipped, then a
+first arrival in Zeelich by `enterRoom` as a door or travel does, a roam through the area's people's spots, back, a warm
+revisit, back, then `bench.visits` on the street; every frame from each mark with what ran in it, a hook on
+`renderBufferDirect` naming the object behind each new program / geometry and why its program changed). A/B: interleaved
+base / candidate pairs on the same commit.
+- **A correction first:** my first runs left the game paused (the Escape that skips the opening paused it; `warmScene`
+  runs only in play), so they showed shaders compiled in view 3–5 s after the arrival and 271 materials without a program.
+  That was the probe, not the game: in play the warm-up runs (14 steps behind the black). The probe now resumes first.
+- **The street (Citadel's square, follow camera, Auto = Medium): healthy.** 60 fps, frame p50 16.7 / p95 16.8 ms, 0 % over
+  the refresh over 30 s sustained; one 50 ms frame at its cold start (shadow cache rebuilt). Nothing to fix there.
+- **The first arrival in Zeelich (12 cold runs):** black 1.96–2.28 s, control at 2.68–3.0 s; **no program compiled in
+  view** in any run; roaming after it smooth (max 37 ms). Inside the black: one task of draw batches 290–370 ms and one of
+  10 programs 250–370 ms (blackout only, not seen).
+- **Found and fixed: the first container glint after the arrival** (a 67–72 ms frame in view, 7 of 8 base runs): one
+  draw of the glint's sprite took 39–50 ms. Its program was linked, but ANGLE/D3D11 finishes a program on its first real
+  draw. **`requests/PERF-OWP-SPRITES.diff`** (`main.js`): `warmSprites()` draws the glint and the speaker's bubble once,
+  a speck under a pixel in front of the camera, through the game's own render while the loading screen is up (a draw
+  into a scratch target alone left 2 of 4 runs slow). **After: 0 of 4 slow sprite draws** (base 3 of 4 in the same pairs,
+  7 of 8 over both series); black and control unchanged (2.05–2.17 s vs 2.08–2.28 s).
+- Left: a 53–67 ms frame in view in about 1 run in 3, 0.5–3 s after control, the frame before doing 43–60 ms of the
+  game's own work (no compile, no upload): not traced yet (a CPU profile of that frame is next).
+- Tests (SwiftShader): chapter1 32/32 PASS; prologue: "the well's mites beaten with the ball" failed 3 of 3 with the change
+  and 1 of 2 on the unchanged branch (known intermittent, TWINSEN-ORIG): **watch it when applying**.
+- Not measured yet (the brief's later steps): Auto's governor against the measured costs, interiors, combat, transitions,
+  the Hamalayi, the remaining chapters; battery runs. Raw runs stay on the desktop (`lba3-bench\owp\`).
+
+## HOSTEL-CUT · walls of the hostel's cells cut away with nothing in the way (the user's report) · the desktop, 14.11.2026
+The user, 14.11: in the hostel "the walls disappear for no reason; the place is still not good, and not accurate for doors".
+Walked by the harness through the hostel (17 stops: the side way in, the corridors, both cells' doors, Vesk's door, the
+kitchen, the dormitory, the front), each picture twice, as played and with every lid shown, the difference marked
+(`docs/future/hostel-cut-04-06.jpg`, chapter 1–2 place).
+- **Found: cell A's walls cut while he walked the corridor beside it** (stop 04, he outside the cell, nothing between him
+  and the camera). The cells' lids are `sight` lids: their beams on his sight line cut them. Those beams were cleared
+  long ago (`opts.clear`, cells 17–18: not drawn) but still registered on the sight line, so invisible beams cut the walls.
+- **`requests/HOSTEL-CUT.diff`** (`lba1room.js` only, one condition; `git apply --check` clean on origin): only cells
+  that are drawn count on the sight line. After: no cut at stop 04; inside the cell the camera-side walls still go (06).
+  No draw call, no mesh added (only the asylum uses lids: `lba1places.js`).
+- Tests (SwiftShader): asylum 10/10, lba1rooms 8/8, chapter1 32/32 PASS.
+- **Tried and dropped:** the large office zone (LBA1's type-3 zone 1, 28 × 16 cells) cuts every camera-side wall along its
+  whole length when he steps in (walls up to 18 m from him, stop 14). Splitting it into 8-cell squares cut only round
+  him, but added 38–154 draw calls along the walk (166 → 320 at the front) and changed the zone's LBA1 behaviour the
+  asylum suite checks (the zone cut whole). Left as LBA1 does it; a question for the user and the cloud.
+- **The doors:** asked the user which doors read wrong (next).
