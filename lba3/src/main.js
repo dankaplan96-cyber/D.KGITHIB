@@ -223,13 +223,12 @@ class Game {
     // device in use: a pad gets Modern movement and the Free camera, the keyboard Classic (tank) controls and the
     // Follow camera behind Twinsen, as in the original. Choosing Movement or Camera in Settings turns it off
     if (!['on', 'off'].includes(this.settings.autoControls)) this.settings.autoControls = 'on';
-    // P18-VOICES: how the characters babble: 'words' (shaped by the line's English letters, the default, also for
-    // settings saved before) or 'classic' (the voices before; Settings → Sound → Voice Style)
-    if (!['expressive', 'words', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'expressive';
-    // VOICE-2 (the user, 14.11, of Words: "monotonous, robotic and excessively deep"): 'expressive' is the new default;
-    // settings saved before it hold 'words' because it was the default then (P18 wrote it for everyone), so they move
-    // to Expressive once. Words and Classic stay in Settings → Sound → Voice Style; a choice made after this is kept.
-    if (!(this.settings.voiceV >= 2)) { if (this.settings.voiceMode === 'words') this.settings.voiceMode = 'expressive'; this.settings.voiceV = 2; }
+    // Voice Style (Settings → Sound): 'expressive' (VOICE-2, the default) or 'classic' (the voices before P18).
+    // (The user, 14.11, after the A/B: Expressive and Classic "the best"; both Words versions "terrible, not pleasant to
+    //  the ear at all". Words left the menu; a saved 'words' — the old default or a choice — loads as Expressive. The
+    //  Words engine stays for the ?voicelab comparison only.)
+    if (!['expressive', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'expressive';
+    this.settings.voiceV = 3;
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -2021,7 +2020,7 @@ class Game {
       hud: () => t('set_h_hud_' + (s.hud === 'lba' ? 'lba' : 'modern')),
       weather: () => t('set_h_wx_' + (s.weather === 'off' ? 'off' : 'on')),
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
-      voiceMode: () => t('set_h_vm_' + (['classic', 'words'].includes(s.voiceMode) ? s.voiceMode : 'expressive')),
+      voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'expressive')),
     };
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;

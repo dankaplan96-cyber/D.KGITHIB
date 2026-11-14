@@ -348,9 +348,9 @@ const loadAs = async (stored) => {
 };
 const before = await page.evaluate((k) => { const s = JSON.parse(localStorage.getItem(k) || '{}'); delete s.voiceMode; delete s.voiceV; return JSON.stringify(s); }, KEY);
 const s1 = await loadAs(before), s2 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'loud' })), s3 = await loadAs('{not json');
-// (VOICE-2: and Words saved before VOICE-2, when it was the default, moves to Expressive once; Words chosen after stays)
+// (VOICE-2, then the user 14.11: Words left the menu; any saved Words, the old default or a choice, loads as Expressive)
 const s5 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'words' })), s6 = await loadAs(JSON.stringify({ ...JSON.parse(before), voiceMode: 'words', voiceV: 2 }));
-check('settings saved before P18 or VOICE-2 (no Voice Style, a wrong value, unreadable, Words as the old default): the game loads with Expressive; Words chosen since stays Words', [s1, s2, s3, s5].every((x) => x.setting === 'expressive' && x.mode === 'expressive') && s6.setting === 'words' && s6.mode === 'words', { s1, s2, s3, s5, s6 });
+check('settings with no Voice Style, a wrong value, unreadable, or Words (the old default or a choice, Words left the menu): the game loads with Expressive', [s1, s2, s3, s5, s6].every((x) => x.setting === 'expressive' && x.mode === 'expressive'), { s1, s2, s3, s5, s6 });
 const pick = await page.evaluate(async () => {
   const b = document.querySelector('#settings .seg[data-setting="voiceMode"] button[data-v="classic"]');
   b.click();
@@ -358,6 +358,6 @@ const pick = await page.evaluate(async () => {
     setting: game.settings.voiceMode, mode: (await import('./src/engine/voice.js')).voiceMode(), stored: JSON.parse(localStorage.getItem('sunshard_settings_v1')).voiceMode };
 });
 const s4 = await loadAs(await page.evaluate((k) => localStorage.getItem(k), KEY));
-check('Settings → Sound → Voice Style (Expressive / Words / Classic): Classic picked is applied, saved, and still Classic after a reload', pick.page === 'sound' && pick.label === 'Voice Style' && pick.buttons.join() === 'Expressive,Words,Classic' && pick.setting === 'classic' && pick.mode === 'classic' && pick.stored === 'classic' && s4.setting === 'classic' && s4.mode === 'classic', { pick, reload: s4 });
+check('Settings → Sound → Voice Style (Expressive / Classic): Classic picked is applied, saved, and still Classic after a reload', pick.page === 'sound' && pick.label === 'Voice Style' && pick.buttons.join() === 'Expressive,Classic' && pick.setting === 'classic' && pick.mode === 'classic' && pick.stored === 'classic' && s4.setting === 'classic' && s4.mode === 'classic', { pick, reload: s4 });
 await browser.close();
 done();
