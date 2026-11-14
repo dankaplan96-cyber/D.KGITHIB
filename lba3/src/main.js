@@ -508,6 +508,7 @@ class Game {
     { let at = 0.74; const creep = setInterval(() => { at += (0.8 - at) * 0.12; loadBar(at, 900); }, 1000);
       try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); } finally { clearInterval(creep); } }
     this.warmMenus();
+    this.warmSprites();
     if (this.autoQ?.on()) this.autoQ.prewarm();   // (AUTO-QUALITY: bloom and FXAA can switch on in play: their pass programs now)
     lap('programs');
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
@@ -1075,6 +1076,20 @@ class Game {
     const may = new Set();
     for (const A of this.shadowCull?.areas.values() ?? []) { for (const M of A.members) may.add(M.o); for (const M of A.solo) may.add(M.o); }
     return warmShadowPrograms(R, C.renderTarget2, this.scene, this.camera, this.env.sun.target.position, (o) => may.has(o), range);
+  }
+  // PERF-OWP (the UHD 630, ANGLE on D3D11): the container's glint (containers.js ContainerCues) and the speaker's bubble
+  // are sprites hidden until they are needed. Their programs are linked in the warm-up, but the driver finishes a
+  // program on its first real draw: the first glint shown after an arrival in Zeelich took one 47–49 ms draw, a 67 ms
+  // frame in view (7 of 8 cold arrivals). One draw of each through the game's own render (its scene, passes and targets:
+  // a draw into a scratch target alone left 2 of 4 runs slow), a speck 2 m in front of the camera, under a pixel, while
+  // the loading screen is up: 0 of 4 slow after. (warmSpritesOff: as before — the A/B switch)
+  warmSprites() {
+    if (this.warmSpritesOff || !this.renderer.composer) return;
+    const mats = [this.cues?.sprites?.[0]?.material, this.bubble?.material].filter(Boolean);
+    if (!mats.length) return;
+    const cam = this.camera, fwd = cam.getWorldDirection(new THREE.Vector3()), sps = [];
+    for (const [i, m] of mats.entries()) { const sp = new THREE.Sprite(m); sp.position.copy(cam.position).addScaledVector(fwd, 2 + i * 0.1); sp.scale.setScalar(1e-4); sp.frustumCulled = false; this.scene.add(sp); sps.push(sp); }
+    try { this.renderer.render(); } catch (e) { console.warn('sprite warm-up', e); } finally { for (const sp of sps) this.scene.remove(sp); }
   }
   // PERF-ARRIVAL: the behaviour menu's portraits (their own scene and lights, drawn straight to the screen) compiled
   // their programs the first time Ctrl was held in play
