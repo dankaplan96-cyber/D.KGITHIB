@@ -645,6 +645,15 @@ function exprClip(bank, intent, n, recent, seed, acc, o) {
   recent.push(pick.id); if (recent.length > 6) recent.shift();
   return { id: pick.id, ...pick.c, a: pick.c.a ?? 0, e: pick.c.e ?? pick.c.sp };
 }
+// VOICE-2: the speaker's own timing between clauses (the brief: Vesk's tension in his pauses and delivery, not his
+// pitch): Vesk measured, longer pauses, but short and decisive before a refusal or an urgent order; Baldino quick
+// between clauses, then a beat before the last one (the awkward part); Zoé's concern quickens her; Twinsen as planned
+function mannerGap(manner, ph, next, beforeLast) {
+  if (manner === 'clipped') return next.intent === 'no' || next.intent === 'excl' ? 0.75 : 1.3;
+  if (manner === 'momentum') return beforeLast ? 1.6 : 0.75;
+  if (manner === 'sharp') return ph.intent === 'worry' || next.intent === 'worry' ? 0.85 : 1;
+  return 1;
+}
 // where in a clause (0 its first word, 1 its last) the word that carries the accent is
 function accentAt(s, word) {
   const W = (s || '').toLowerCase().match(/[\p{L}\d']+/gu) || [];
@@ -1042,7 +1051,7 @@ export class Babble {
       const next = plan.phrases[i + 1];
       const acc = ph.emph ? accentAt(ph.s, ph.emph) : null;
       const c = exprClip(info, ph.intent, ph.n, recent, h + i * 31, acc, { breath: i === 0 && meta.breath, hes: i === 0 && meta.hesitate });
-      if (c) picks.push({ c, gap: next ? Math.max(MIN_JOIN, next.t0 - (ph.t0 + ph.g.dur)) : 0, ph });
+      if (c) picks.push({ c, gap: next ? Math.max(MIN_JOIN, (next.t0 - (ph.t0 + ph.g.dur)) * mannerGap(this.v.manner, ph, next, i === plan.phrases.length - 2)) : 0, ph });
     });
     const total = () => picks.reduce((a, p, i) => a + (p.c.e - p.c.a) / rate + (i < picks.length - 1 ? p.gap : 0), 0);
     const maxDur = this.opts.maxDur;
