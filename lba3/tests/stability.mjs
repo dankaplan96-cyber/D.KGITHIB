@@ -21,7 +21,7 @@ check('D2: a refused exit says its line once while he stands in the door (6 s)',
 const d1 = await ev(() => {
   const G = game, h = G.hero, out = {}; P.settle();
   const s = G.room.searches[0]; P.use(s.x, s.z);                         // the ball from the cupboard
-  P.homeTap();   // (CAMPAIGN-1: a new game's door holds until the kitchen tap and Arthur's cup are done: the house steps first)
+  P.homeTap();   // (OPENING-TUT: a no-op now: the door waits only for the ball)
   for (const fps of [30, 60]) {
     P.go(1001.2, 6.6, { tol: 0.3 }); P.face(1001.2, 11.3);
     G.input.keys.add('ArrowUp'); let t = 0;

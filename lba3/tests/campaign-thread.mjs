@@ -243,10 +243,11 @@ if (!ONLY || ONLY === 'B') {
 // ------------------------------------------------------------------ C: saves from before the thread
 if (!ONLY || ONLY === 'C') {
   await start('base-01');
-  is('C1 a save from before, mid-chapter 1 (in the well): loads; the home steps count as done (the cup in the sink, the growth grown), the cave plays as it did', await ev(() => {
-    const f = game.flags, hm = game.story.chapters[0].home, H = hm.parts.house, C = hm.parts.cave;
-    return [f.chapterKey ?? f.chapter, game.room?.id, !!f.pr_v2, hm.on, +Math.hypot(H.cup.position.x - H.sinkAt.x, H.cup.position.z - H.sinkAt.z).toFixed(2), C.lean, game.state];
-  }), (v) => v[1] === 'well' && v[2] === false && v[3] === false && v[4] < 0.05 && v[5] === 1 && v[6] === 'play');
+  // (OPENING-TUT: Arthur's cup is gone; the house's part is the kitchen tap alone, and it holds nothing)
+  is('C1 a save from before, mid-chapter 1 (in the well): loads; the home steps count as done (the growth grown), the cave plays as it did', await ev(() => {
+    const f = game.flags, hm = game.story.chapters[0].home, C = hm.parts.cave;
+    return [f.chapterKey ?? f.chapter, game.room?.id, !!f.pr_v2, hm.on, !!hm.indoors, C.lean, game.state];
+  }), (v) => v[1] === 'well' && v[2] === false && v[3] === false && v[4] === false && v[5] === 1 && v[6] === 'play');
   await browser.close();
   await start('base-03');
   is('C2 a save from before, mid-chapter 2 (the valves ahead): loads; the pump room is ahead of it, so the thread is on (the room shut until the water is back)', await ev(() => {

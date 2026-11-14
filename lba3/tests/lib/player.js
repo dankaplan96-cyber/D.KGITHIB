@@ -358,23 +358,9 @@
     }
   };
   // walk into a door / exit trigger and wait for the new scene
-  // CAMPAIGN-1 (story/hometap.js): in a new game the house's door waits until the kitchen tap has been tried. A suite
-  // that only needs to get out first does what a player does: his hand under the tap (input), the pipe's knock heard
-  // out. P.tapFirst = false leaves the door to refuse (the playthrough's own step checks that it does).
-  P.homeTap = () => {
-    const H = G.story.chapters?.[0]?.home?.parts?.house;
-    if (!H || G.room?.id !== 'house' || G.flags.chapterKey !== 'well' || !G.flags.pr_v2 || G.flags.pr_cup) return false;
-    if (!G.flags.pr_tap) {
-      P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'h_tap' });
-      for (let i = 0; i < 60 && !G.flags.pr_tap; i++) { G.step(0.25); P.settle(); }
-    }
-    // then Arthur's cup (the door holds for both): from the stove to the sink
-    if (G.flags.pr_tap && !G.flags.pr_cup) {
-      P.use(H.stove.x, H.stove.z, { near: 1.2, kind: 'h_cup' });
-      for (let i = 0; i < 80 && !G.flags.pr_cup; i++) { G.step(0.25); P.settle(); }
-    }
-    return !!G.flags.pr_cup;
-  };
+  // (CAMPAIGN-1 had the house's door wait for the kitchen tap and Arthur's cup; OPENING-TUT, 14.11: the cup is gone and the
+  //  door waits for nothing but the magic ball. P.homeTap stays for the suites that call it: it does nothing now)
+  P.homeTap = () => true;
   P.through = (x, z, opts = {}) => {
     if (P.tapFirst !== false) P.homeTap();
     const from = G.room?.id ?? 'citadel';
