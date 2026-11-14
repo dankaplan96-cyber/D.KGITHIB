@@ -103,12 +103,23 @@ async function perSpeaker(set, tag) {
     const scene = dialog(lines.map(([, , text]) => [id, text]), { gap: 0.5 });
     scene.turns.forEach((t, i) => { t.say = true; if (lines[i]) { t.label = lines[i][0]; t.lineKey = lines[i][1]; } });
     report.rows[who] = {};
+    const byMode = {};
     for (const m of want) {
       const r = await render(scene, m);
       const turns = turnsOf(scene, r);
+      byMode[m] = turns.map((u) => u.x);
       mp3(`${who}-${tag}-${m}.mp3`, trimmed(turns.map((u) => u.x)));
       report.rows[who][m] = { ebu: ebu(trimmed(turns.map((u) => u.x), 0.3)), lines: turns.map(({ t, x }) => lineRow(t, x)), ms: Math.round(r.ms) };
       process.stdout.write(`${who} ${m} done\n`);
+    }
+    // one file to compare by: each line in every mode, one after another, each mode announced by its number of soft
+    // beeps (the order of `want`: 1 beep the first mode, 2 the second ...), 1.2 s between lines
+    if (tag === 'ab') {
+      const beep = (k) => { const n = Math.floor(SR * (0.12 * k + 0.25)), x = new Float32Array(n); for (let j = 0; j < k; j++) for (let i = 0; i < SR * 0.07; i++) { const s = Math.floor(SR * 0.12 * j) + i; x[s] = 0.05 * Math.sin(2 * Math.PI * 660 * i / SR) * Math.sin(Math.PI * i / (SR * 0.07)); } return x; };
+      const parts = [];
+      lines.forEach((_, i) => { want.forEach((m, k) => { parts.push(beep(k + 1)); parts.push(trimmed([byMode[m][i]], 0.35)); }); parts.push(new Float32Array(Math.floor(0.8 * SR))); });
+      const all = new Float32Array(parts.reduce((a, p) => a + p.length, 0)); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
+      mp3(`${who}-AB-compare.mp3`, all);
     }
   }
 }
