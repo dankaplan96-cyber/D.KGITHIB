@@ -5012,3 +5012,27 @@ lands coming in is unchanged (cell 10.5, 5, 39.8, facing into the room; the sign
 - Checked: by the harness (keys only) from where he lands to the way out: down the steps, the transition, out on Citadel
   by the block-house. Pictures: `docs/future/hostel-side-well.jpg` (before / after from the room's camera; from above).
 - Not run (the user: fewer test runs): `asylum`, `lba1rooms`, `chapter1`: **for the cloud when applying**.
+
+## ISLAND-85 · Citadel and Desert toward 85, and the way down to the Temple of Bù (the user) · the desktop, 14.11.2026
+The user, 14.11: "Citadel, and find another solution for Desert Island; what about the way down to the Temple of Bù?"
+(the islands' sizes stay; the Kesh village does not move). **No diff this time:** the only things that moved the scores
+were added objects, and the 14.11 no-clutter rule (above, in `CLOUD_ORDERS.md`) forbids adding for the count's sake.
+- **Citadel, 82.1** (coast 90.8, height 80.0, landmarks 97.5, objects 48.6; 270 objects in the original, 626 ours). Tried:
+  benches, rope barriers, garden and rail fences at the original's own places in its fuller squares. All 13 were left out
+  by `citydress.js`'s own checks (steep, path, a collider, the keep): our ground there is not the original's. Withdrawn
+  (82.2, noise). **What would raise it is taking away:** the objects part is lowest because ours has 2.3× the original's
+  count. A Citadel declutter pass under the new rule (remove what has no job, by street, with before/after pictures and
+  counts) would do the user's rule and the score at once. **Proposed, not started:** waits for the cloud/the user.
+- **Desert Island, 83.1.** Tried: the original's palms, bushes, cacti and fence sections (30, numbers from
+  `tools/worldscore/ref/desert.json`) where its land is fuller than ours, kept off the tracks, buildings, Kesh and the dig:
+  83.8 and natural in pictures, **but not sent** (adds 30 with no job but matching). Parked in the desktop's worktree. The
+  rest of the gap is height round Kesh: the village stands on ground higher than the original's. **Option for the cloud:**
+  lower Kesh's ground toward the original's (≈ +1 to the height part), which touches the village's story places, stairs and
+  the arrival; not done.
+- **The way down to the Temple of Bù.** In LBA2, the temple is entered through the stone face (S28): its door leads to
+  scene 28, the temple's entrance, and down. Ours goes in by the dig, and S28's face is the crew's bunkhouse (DESERT-ART 2
+  gave it the face). **Proposal:** make the face's door the way down again (a stair inside the face to the temple's first
+  room), with the dig kept as the crew's works or a second way. It moves a story entrance (`story/*`, the chapter's
+  gating, the bunkhouse's people), so it is the cloud's to decide; the desktop can build the face's inside and stair once
+  ordered.
+- Not run: no suites (nothing sent).
