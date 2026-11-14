@@ -4914,3 +4914,25 @@ kitchen, the dormitory, the front), each picture twice, as played and with every
 - Tests (SwiftShader): prologue 31/31, chapter1 32/32, house, arsenal 34/34, interior-life 144/144, containers 41/41 PASS;
   place-scan: the same 14 Knartas findings as origin, none in the cellar. **opening:** its checks passed, then a reload
   timed out at 4 min (the machine busy); not re-run (the user: no need to run tests all the time): **run it when applying**.
+
+## HOME-BATH · the house's bathroom, a corner of the cellar walled off (CLOUD_ORDERS 42.2) · the desktop, 14.11.2026
+**Ready for the cloud: `requests/HOME-BATH.diff`, after `HOME-CELLAR.diff`** (a series: both in `buildCellar`; checked in
+that order on origin). Pictures (chapter 1): `docs/future/home/bath-in-cellar.jpg`, `bath-close.jpg`.
+- **Where, and why not off the hall:** the hall's only free-looking corner (south-east, east of the front door) holds the
+  story's spots (`homelife.js` R.life: the old trunk, the mended things' crate, the heat line's meter); a first build there
+  covered all three. So, as the order allows: a corner of the cellar walled off, where the house's water comes down (the
+  works of HOME-CELLAR): the cellar's east side, x 2.6–5.5, z −2.6–1.0, clear of the arsenal's nook and boards, kit2's tin
+  (3.55, 3.45) and the givers. The bench on the east wall moves 1.6 m south, out of it.
+- **The room:** three low plastered walls like the house's dividers (the camera sees in over them; the cellar's east wall
+  closes it); **its doorway** toward the room in its west wall (z −0.2–0.7), an opening as the house's inner doors are,
+  nothing to wire. Inside: blue-white tiles on the floor and up to 1 m on the walls, a tub along the north wall (brass taps,
+  a hand shower on its hook), the toilet against the east wall (wooden seat, lid up, cistern), a washbasin on a cupboard
+  with its mirror on the west wall, two towels on a brass rail, a bath mat; a copper pipe brings the water along the north
+  wall's top. Colliders: the tub, the toilet, the washbasin.
+- **The taps are art only.** `R.bath = { room, basin, tub, toilet, door }` (world) for the cloud to make them say the water is
+  off in the opening.
+- **Draw calls** (the room's camera, steady frames, on today's origin): 37 → 45 for HOME-CELLAR and HOME-BATH together;
+  triangles 98k → 113k.
+- **Not run** (the user, 14.11: "no need to run tests all the time"): the order's `opening`, `prologue`, `chapter1`,
+  `containers`, `place-scan`, house suites on the bath. **For the cloud: run them when applying.** Checked: the pictures
+  from the play camera; the series applies.

@@ -1,0 +1,75 @@
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index aa837490..bdd4d43f 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -804,7 +804,7 @@ function buildCellar(scene, physics) {
+   B.giver('crates', 3.9, BZ + 0.8, ['life', 'magic'], 2, { r: 1.2, top: 0.7 });
+   // the Dino-Fly poster on the west wall over the chair (HOUSE-FIX: it hung in the air over the cut-away east wall)
+   k.at(LX + 0.02, 1.6, 1.25, Math.PI / 2, () => P.frame(k, 0.8, 1.0, P.painting('dinofly')));
+-  B.put(W / 2 - 0.6, 0.6, -Math.PI / 2, P.bench, { w: 1.4 });
++  B.put(W / 2 - 0.6, 2.2, -Math.PI / 2, P.bench, { w: 1.4 });   // (HOME-BATH: it stood where the bathroom is)
+   B.put(-1.4, 1.3, 0.5, P.armchair, {});
+   B.put(0.6, 1.8, -0.3, P.armchair, {});
+   B.put(-0.4, 0.6, 0, P.floorLamp, {});
+@@ -863,6 +863,61 @@ function buildCellar(scene, physics) {
+     k.add(cyl(0.08, 0.08, 0.03, 10), MAT.brass(), tx + 0.2, 0.9, tz + 0.29, 0, { rx: Math.PI / 2 });                       // its gauge
+     B.ccol(tx, tz, 0.4, 1.6);
+   }
++  // ---- HOME-BATH (CLOUD_ORDERS 42, the user: "why don't they have a toilet and a shower"): the house's bathroom, a corner
++  //      of the cellar walled off where the water comes down (the hall's south-east corner holds the trunk, the mended
++  //      things and the heat line's meter: the story's spots, R.life). East side, x 2.6–5.5, z −2.6–1.0: low plastered
++  //      walls like the house's dividers (the camera sees in over them), its doorway toward the room as the house's inner
++  //      doors are (an opening, no leaf). Inside: tiles, a tub along the north wall, the toilet against the east wall, a
++  //      washbasin with its mirror and the towels on the west wall, a bath mat. Taps art only (the opening's water is
++  //      off): R.bath gives the cloud their places.
++  {
++    const BX = 2.6, Z0 = -2.6, Z1 = 1.0, EX = W / 2, woodD = MAT.wood('dark'), plast = MAT.plaster('#e6dfd2');
++    const div = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: plast, cap: woodD, rail: woodD, low: MAT.wainscot('honey'), dado: 0.9, doors });
++    div(BX, Z0, BX, Z1, [{ at: 2.85, w: 0.9 }]);   // the west wall, its doorway at z −0.2–0.7
++    div(BX, Z0, EX, Z0);                             // the north wall
++    div(BX, Z1, EX, Z1);                             // the south wall
++    const tileM = MAT.tiles('#eef4f4', '#cfe0e6', '#8a9aa2', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
++    k.add(plane(EX - BX - 0.11, Z1 - Z0 - 0.22), tileM, (BX + 0.11 + EX) / 2, 0.012, (Z0 + Z1) / 2, 0, { rx: -Math.PI / 2 });
++    const wallTiles = (x, z, len, ry) => k.add(plane(len, 1.0), tileM, x, 0.5, z, ry);
++    wallTiles((BX + 0.11 + EX) / 2, Z0 + 0.112, EX - BX - 0.11, 0);                          // the north wall's inner face
++    wallTiles(BX + 0.112, (Z0 + 0.11 + Z0 + 2.4) / 2, 2.29, Math.PI / 2);                     // the west wall's, to the doorway
++    // the tub along the north wall: white, a pale inside, brass taps at its east end, a hand shower on its hook
++    const TB = { x: EX - 0.95, z: Z0 + 0.5, l: 1.62, w: 0.74, h: 0.55 };
++    k.add(rbox(TB.l, TB.h, TB.w, 0.08), white, TB.x, TB.h / 2, TB.z);
++    k.add(rbox(TB.l - 0.16, 0.02, TB.w - 0.16, 0.06), MAT.flat('#d8e6ea', 0.25), TB.x, TB.h - 0.01, TB.z);
++    for (const s2 of [-1, 1]) k.add(cyl(0.025, 0.025, 0.12, 8), brass, TB.x + TB.l / 2 - 0.1, TB.h + 0.06, TB.z + s2 * 0.14);
++    k.add(cyl(0.02, 0.02, 0.22, 8), brass, TB.x + TB.l / 2 - 0.06, TB.h + 0.16, TB.z, 0, { rz: Math.PI / 2 });
++    k.add(cyl(0.035, 0.05, 0.16, 10), brass, TB.x + TB.l / 2 - 0.14, TB.h + 0.24, TB.z - 0.22, 0, { rz: 0.5 });   // the hand shower
++    B.col(TB.x, TB.z, TB.l / 2, TB.w / 2, TB.h, { noStand: true });
++    k.at(TB.x, 0, TB.z + 0.66, 0, () => P.rug(k, 1.0, 0.5, ['#3b78d8', '#e9c46a', '#f2ead6', '#e0503a', '#1a3a6a'], 3));   // the bath mat
++    // the toilet against the east wall, facing the room: its pan, a wooden seat, the lid up, the cistern on the wall
++    k.at(EX - 0.32, 0, -0.35, -Math.PI / 2, () => {
++      k.add(lathe([[0.001, 0], [0.13, 0], [0.12, 0.2], [0.19, 0.36], [0.2, 0.4], [0.001, 0.4]], 14), white, 0, 0, 0.05, 0, { sz: 1.3 });
++      k.add(torus(0.17, 0.03, 6, 16), woodD, 0, 0.42, 0.07, 0, { rx: Math.PI / 2, sz: 1.25 });
++      k.add(rbox(0.36, 0.42, 0.04, 0.02), woodD, 0, 0.62, -0.18, 0, { rx: -0.12 });
++      k.add(rbox(0.42, 0.34, 0.18, 0.03), white, 0, 0.82, -0.25);
++      k.add(cyl(0.012, 0.012, 0.14, 6), brass, 0.12, 1.02, -0.24);
++    });
++    B.ccol(EX - 0.3, -0.35, 0.28, 0.8, { noStand: true });
++    // the washbasin on a cupboard against the west wall, facing in, its mirror standing behind it; the towels by it
++    k.at(BX + 0.36, 0, -1.25, Math.PI / 2, () => {
++      k.add(rbox(0.82, 0.78, 0.44, 0.02), MAT.wood('honey'), 0, 0.39, 0);
++      k.add(lathe([[0.001, 0], [0.18, 0.0], [0.24, 0.08], [0.26, 0.11], [0.001, 0.11]], 16), white, 0, 0.78, 0.02, 0, { sz: 0.8 });
++      k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
++      k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
++      k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);
++      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
++    });
++    B.col(BX + 0.36, -1.25, 0.24, 0.42, 0.9, { noStand: true });
++    k.at(BX + 0.16, 0, -2.15, Math.PI / 2, () => {
++      k.add(cyl(0.015, 0.015, 0.7, 8), brass, 0, 0.98, 0.02, 0, { rz: Math.PI / 2 });
++      k.add(rbox(0.3, 0.6, 0.03, 0.01), MAT.cloth('#e0503a', '#c83e2c'), -0.16, 0.7, 0.04);
++      k.add(rbox(0.28, 0.5, 0.03, 0.01), MAT.cloth('#3b78d8', '#2f62b0'), 0.16, 0.74, 0.04);
++    });
++    // the water's way in: a copper pipe along the north wall's top from the works in the far corner (art only)
++    k.add(cyl(0.03, 0.03, EX - BX, 8), MAT.copper(), (BX + EX) / 2, 1.12, Z0 - 0.02, 0, { rz: Math.PI / 2 });
++    R.bath = { room: 'cellar', basin: B.world(BX + 0.75, -1.25), tub: B.world(TB.x, TB.z + 0.7), toilet: B.world(EX - 0.8, -0.35), door: B.world(BX, 0.25) };
++  }
+   B.light('#ffd8a0', 6, 10, 0, 2.2, -0.5);
+   B.light('#ffcf90', 3, 5, -0.4, 1.5, 0.6);
+   return B.finish();
