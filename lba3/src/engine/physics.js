@@ -158,6 +158,15 @@ export class Physics {
     return false;
   }
 
+  // ... and which one (ACTION-SOUND-2: the ball's bounce asks what it struck), or null
+  solidCollider(x, z, y, r = 0) {
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
+      if (!c.enabled || c.seeThrough && c.noBall) continue;
+      if (c.top > y - r && c.bottom < y + r && this._inside(c, x, z, r)) return c;
+    }
+    return null;
+  }
+
   // Is the point inside a collider that is seen through but stops the ball (a chain-link fence, a railing; not one
   // marked noBall)? Line of sight passes these, solidAt does not: the aim uses this to leave out what the ball can't reach.
   ballFenceAt(x, z, y, r = 0) {

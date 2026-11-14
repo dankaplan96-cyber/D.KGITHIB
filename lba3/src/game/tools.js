@@ -668,25 +668,7 @@ export class Tools {
     this.hauls = []; this.cord = null; this.zip = null;
     this.cordMesh.visible = false; this.cordTip.visible = false;
   }
-  sound(kind, k = 0) {
-    const au = this.game.audio;
-    if (!au?.ctx || au.ctx.state !== 'running') return;
-    if (kind === 'pip') { au._tone({ type: 'sine', f0: 820 + 900 * k, f1: 860 + 940 * k, dur: 0.07, vol: 0.018 + 0.03 * k }); }
-    if (kind === 'squeal') { au._tone({ type: 'sawtooth', f0: 1800, f1: 3600, dur: 0.45, vol: 0.035 }); au._tone({ type: 'square', f0: 2400, f1: 1900, dur: 0.5, vol: 0.02, at: 0.05 }); au._burst({ dur: 0.4, vol: 0.05, f: 4000, f1: 2500, type: 'bandpass', q: 6 }); }
-    if (kind === 'jet') { au._tone({ type: 'triangle', f0: 170, f1: 90, dur: 0.08, vol: 0.06 }); au._burst({ dur: 0.32, vol: 0.12, f: 2200, f1: 900, type: 'bandpass', q: 1.2, at: 0.03 }); }
-    if (kind === 'dry') { au._tone({ type: 'triangle', f0: 170, f1: 120, dur: 0.07, vol: 0.05 }); au._burst({ dur: 0.08, vol: 0.04, f: 700, type: 'bandpass', q: 3, at: 0.05 }); }
-    if (kind === 'fill') { for (let i = 0; i < 5; i++) au._tone({ type: 'sine', f0: 210 + i * 30, f1: 320 + i * 35, dur: 0.09, vol: 0.05, at: i * 0.11 }); au._burst({ dur: 0.6, vol: 0.05, f: 900, f1: 500, type: 'lowpass', q: 1 }); }
-    if (kind === 'steam') { au._burst({ dur: 0.7, vol: 0.09, f: 5200, f1: 2600, type: 'highpass', q: 0.7 }); }
-    // EQUIP-2b: the fork's note (a strike, then two pure tones that die away), the line's whip, ratchet and twang, the
-    // flask's draw, its whoomp, its cold click and the hiss as the heat fades
-    if (kind === 'ring') { au._tone({ type: 'triangle', f0: 2600, f1: 2400, dur: 0.04, vol: 0.03 }); au._tone({ type: 'sine', f0: 1318, f1: 1312, dur: 1.4, vol: 0.045, at: 0.01 }); au._tone({ type: 'sine', f0: 1976, f1: 1970, dur: 0.9, vol: 0.02, at: 0.01 }); }
-    if (kind === 'cast') { au._burst({ dur: 0.18, vol: 0.07, f: 1800, f1: 600, type: 'bandpass', q: 2 }); au._tone({ type: 'triangle', f0: 320, f1: 180, dur: 0.07, vol: 0.04 }); }
-    if (kind === 'reel') { for (let i = 0; i < 6; i++) au._tone({ type: 'square', f0: 900, f1: 860, dur: 0.02, vol: 0.018, at: i * 0.05 }); }
-    if (kind === 'twang') { au._tone({ type: 'triangle', f0: 150, f1: 110, dur: 0.3, vol: 0.05 }); au._tone({ type: 'sine', f0: 300, f1: 220, dur: 0.25, vol: 0.02 }); }
-    if (kind === 'slack') { au._burst({ dur: 0.15, vol: 0.03, f: 500, type: 'lowpass', q: 1 }); }
-    if (kind === 'blast') { au._burst({ dur: 0.5, vol: 0.12, f: 900, f1: 200, type: 'lowpass', q: 0.8 }); au._tone({ type: 'sine', f0: 90, f1: 50, dur: 0.35, vol: 0.08 }); }
-    if (kind === 'click') { au._tone({ type: 'triangle', f0: 1200, f1: 1100, dur: 0.03, vol: 0.03 }); au._burst({ dur: 0.05, vol: 0.02, f: 2000, type: 'bandpass', q: 3, at: 0.02 }); }
-    if (kind === 'draw') { au._tone({ type: 'sine', f0: 180, f1: 420, dur: 0.5, vol: 0.04 }); au._burst({ dur: 0.5, vol: 0.04, f: 1200, f1: 2400, type: 'bandpass', q: 1.5 }); }
-    if (kind === 'fizz') { au._burst({ dur: 0.6, vol: 0.035, f: 4000, f1: 2000, type: 'highpass', q: 0.7 }); }
-  }
+  // ACTION-SOUND-2: the tools' synthesised voices live in the engine (AudioEngine._synth 'tPip' … 'tFizz') and play
+  // through AudioEngine.play as every other effect: gaps, the count of voices, the stats (the pip's k: its nearness)
+  sound(kind, k = 0) { this.game.audio?.play?.('t' + kind[0].toUpperCase() + kind.slice(1), null, { k }); }
 }
