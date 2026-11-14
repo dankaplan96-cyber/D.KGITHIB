@@ -51,14 +51,14 @@ export class HomeTap {
       add(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 8), brass, 0, 0.55, 0);
       add(new THREE.CylinderGeometry(0.022, 0.022, 0.2, 8), brass, 0.1, 0.92, 0, 0, Math.PI / 2);
       add(new THREE.CylinderGeometry(0.02, 0.026, 0.08, 8), brass, 0.2, 0.88, 0);
-      add(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 8), brass, 0, 1.03, 0);
+      add(new THREE.CylinderGeometry(0.055, 0.055, 0.03, 10), brass, 0, 1.045, 0);   // (the handle: its top at 1.06 m, where the set-down hand comes down on it)
       add(new THREE.CylinderGeometry(0.13, 0.1, 0.22, 10, 1, true), tin, 0.2, 0.11, 0).material.side = THREE.DoubleSide;
       mergeStatic(grp, { recolor: false });
       g.physics.add({ type: 'cyl', x: YARD.x, z: YARD.z, r: 0.2, top: gy + 1.05, noStand: true, seeThrough: true });
       // (its water, once the houses' line is open again: chapter 2, story/pumpline.js)
       const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.64, 6), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.05, transparent: true, opacity: 0.75, emissive: '#5a8ab0', emissiveIntensity: 0.2 }));
       stream.position.set(YARD.x + 0.2, gy + 0.52, YARD.z); stream.visible = false; stream.userData.keep = true; W.root.add(stream);
-      // his hand on the handle on top (the set-down clip's hand height, 1.05 m: the handle's top is 1.04), from the path's
+      // his hand on the handle on top (the set-down clip's hand height, 1.05 m: the handle's top is 1.06), from the path's
       // side, facing west (OPENING-TUT: the water inspected by hand, as at the kitchen tap)
       const hand = touch(YARD.x, YARD.z, -Math.PI / 2, 'setDown');
       P.yard = { grp, stream, x: YARD.x, z: YARD.z, y: gy, t: null, hand, front: hand.front };
