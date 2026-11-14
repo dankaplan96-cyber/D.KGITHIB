@@ -4996,3 +4996,19 @@ as the walls, swinging in by itself within 1.5 m (no collider, no shadow: it mov
 towel cupboard and laundry basket; the washbasin with its mirror back on a stand; the toilet facing the room; towels; mat.
 **Draw calls** (same spots, origin → with it): inside 76 → 78, at its door 80 → 83, Arthur's room 71 → 74, the hall 81 → 84.
 Picture: `docs/future/home/bath-close.jpg`. Not run: the order's suites and a walk through the door (**for the cloud**).
+
+## SIDE-WELL · the hostel's second way in made readable (the user) · the desktop, 14.11.2026
+The user, 14.11: "the second way in, below, is not understood": arriving inside it is not clear where you are or where you
+came from; why is there a second way in at all; what was in LBA1? **LBA1 had it:** the asylum's two exits to the yard (zone
+type 0 to scene 1): the main one on the upper level, and the low stair-well (zone 9.5–11.5, 1–5, 41.5–42.5). The user chose
+to keep it and make it clear. **Ours was a floor patch** (`R.exits` asylum-out at cell 10.5, 42.6, r 1.0) by the south wall,
+2.4 m behind where he lands, with nothing to see.
+**`requests/SIDE-WELL.diff`** (`lba1places.js` only; `git apply --check` clean on origin): LBA1's stair-well as a pit in the
+floor where its zone is (`carve` cells x 10–11, y 2–4, z 42–43): two wooden steps down a cell each (stair colliders) to the
+pit's floor, a dark way on at its foot, railings on its east and west edges (colliders), and a tall post beside it with a
+lamp and a sign, **WAY OUT / DOWN TO THE YARD**, high enough to show over the wall in front of the pit from the room's camera.
+The way out moves to the pit's foot (cell 10.5, 43.15, r 0.65): he goes down the steps before the door takes him. Where he
+lands coming in is unchanged (cell 10.5, 5, 39.8, facing into the room; the sign just behind him).
+- Checked: by the harness (keys only) from where he lands to the way out: down the steps, the transition, out on Citadel
+  by the block-house. Pictures: `docs/future/hostel-side-well.jpg` (before / after from the room's camera; from above).
+- Not run (the user: fewer test runs): `asylum`, `lba1rooms`, `chapter1`: **for the cloud when applying**.
