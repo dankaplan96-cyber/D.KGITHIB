@@ -4843,3 +4843,33 @@ box by 5 cm (`_inside(c, x, z, -0.05)`): a 3 cm strip with nothing under it but 
 - **For the cloud, a wider check:** any two touching box colliders of different tops at a door or step meet the same 5 cm
   trims (a strip of 10 cm where neither counts). A sweep over the LBA1 rooms' carved doors and added steps would find the
   rest (`lba1places.js` carve + the steps the dressing adds).
+
+## PERF-OWP-1 · the first island arrival and the busiest street on the UHD 630 (the user's performance brief) · the desktop, 14.11.2026
+The user, 13.11: run the open-world performance brief on the playable build, first island arrival and busiest street
+first, reproduce, fix, matched before/after. The minimum target is this desktop's **Intel UHD 630** (the Vega 8 was sold),
+in the desktop app's Electron through the low-power launcher copy, plugged in, Auto (→ Medium; dpr 1.25, a 1920×1080
+buffer, MSAA 2, shadows 1024). Runner: `tools/testlab/examples/arrival-probe.mjs` (New Game, the opening skipped, then a
+first arrival in Zeelich by `enterRoom` as a door or travel does, a roam through the area's people's spots, back, a warm
+revisit, back, then `bench.visits` on the street; every frame from each mark with what ran in it, a hook on
+`renderBufferDirect` naming the object behind each new program / geometry and why its program changed). A/B: interleaved
+base / candidate pairs on the same commit.
+- **A correction first:** my first runs left the game paused (the Escape that skips the opening paused it; `warmScene`
+  runs only in play), so they showed shaders compiled in view 3–5 s after the arrival and 271 materials without a program.
+  That was the probe, not the game: in play the warm-up runs (14 steps behind the black). The probe now resumes first.
+- **The street (Citadel's square, follow camera, Auto = Medium): healthy.** 60 fps, frame p50 16.7 / p95 16.8 ms, 0 % over
+  the refresh over 30 s sustained; one 50 ms frame at its cold start (shadow cache rebuilt). Nothing to fix there.
+- **The first arrival in Zeelich (12 cold runs):** black 1.96–2.28 s, control at 2.68–3.0 s; **no program compiled in
+  view** in any run; roaming after it smooth (max 37 ms). Inside the black: one task of draw batches 290–370 ms and one of
+  10 programs 250–370 ms (blackout only, not seen).
+- **Found and fixed: the first container glint after the arrival** (a 67–72 ms frame in view, 7 of 8 base runs): one
+  draw of the glint's sprite took 39–50 ms. Its program was linked, but ANGLE/D3D11 finishes a program on its first real
+  draw. **`requests/PERF-OWP-SPRITES.diff`** (`main.js`): `warmSprites()` draws the glint and the speaker's bubble once,
+  a speck under a pixel in front of the camera, through the game's own render while the loading screen is up (a draw
+  into a scratch target alone left 2 of 4 runs slow). **After: 0 of 4 slow sprite draws** (base 3 of 4 in the same pairs,
+  7 of 8 over both series); black and control unchanged (2.05–2.17 s vs 2.08–2.28 s).
+- Left: a 53–67 ms frame in view in about 1 run in 3, 0.5–3 s after control, the frame before doing 43–60 ms of the
+  game's own work (no compile, no upload): not traced yet (a CPU profile of that frame is next).
+- Tests (SwiftShader): chapter1 32/32 PASS; prologue: "the well's mites beaten with the ball" failed 3 of 3 with the change
+  and 1 of 2 on the unchanged branch (known intermittent, TWINSEN-ORIG): **watch it when applying**.
+- Not measured yet (the brief's later steps): Auto's governor against the measured costs, interiors, combat, transitions,
+  the Hamalayi, the remaining chapters; battery runs. Raw runs stay on the desktop (`lba3-bench\owp\`).
