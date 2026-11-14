@@ -31,8 +31,8 @@ const ADVANCES = 3;         // manual dialogue advances before the box's key hin
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // every lesson, in the order a tip is offered when several apply (one at a time). talk/use/advance/map have no panel of
 // their own: the game's own prompt ("E Talk"), the dialogue box's key hint and the toast at the cupboard teach them
-export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'talk', 'use', 'advance', 'map'];
-const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick']);
+export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map'];
+const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge']);
 
 let styled = false;
 function addStyle() {
@@ -96,8 +96,8 @@ export class Tutorial {
   // where the player is: chapter 1 before the well, and which place
   where() {
     const g = this.g, f = g.flags, h = g.hero;
-    if (f.chapterKey !== 'well' || f.prologueDone || f.inWell) return null;
-    if (g.room) return g.room.id === 'house' ? 'house' : 'room';
+    if (f.chapterKey !== 'well' || f.prologueDone) return null;
+    if (g.room) return g.room.id === 'house' ? 'house' : g.room.id === 'well' ? 'cave' : 'room';
     const d = g.world.houses?.[0]?.door;
     const home = d ? Math.hypot(h.pos.x - d.x, h.pos.z - d.z) : 99;
     return home < 22 ? 'yard' : 'town';
@@ -127,11 +127,13 @@ export class Tutorial {
       case 'discreet': { const k = g.npcs.find((n) => n.def.id === 'tim'); return at === 'town' && f.kidsAsked && !f.overheard && !!k && h.distTo(k) < 12; }
       case 'normal': return !!f.overheard && h.behaviour === 'discreet' && at === 'town';
       case 'kick': { const W = g.world.well; return at === 'town' && !!W && !!f.pr_lidStuck && !f.pr_lidOpen && Math.hypot(h.pos.x - W.x, h.pos.z - W.z) < 8; }
+      // the first creature that comes for him, in the well's cave: the dodge (the ball he knows)
+      case 'dodge': return at === 'cave' && g.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup') && h.distTo(e) < 7);
     }
     return false;
   }
   // an optional tip's time on screen in all before it is let go (none: it stays while it applies)
-  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10 }[id]; }
+  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10, dodge: 10 }[id]; }
   text(id) {
     const g = this.g, d = this.dev(), K = (a) => this.key(a);
     switch (id) {
@@ -154,6 +156,7 @@ export class Tutorial {
       case 'discreet': return t('tut_discreet', { k: this.mode(4) });
       case 'normal': return t('tut_normal', { k: this.mode(1) });
       case 'kick': return g.hero.behaviour === 'aggressive' ? t('tut_kick', { k: K('interact') }) : t('tut_aggressive', { k: this.mode(3) });
+      case 'dodge': return t('tut_dodge', { k: K('dodge') });
     }
     return '';
   }
@@ -222,6 +225,7 @@ export class Tutorial {
     if (g.settings.camera === 'free' && (I.padAxes[2] || I.padAxes[3] || I.down('camL') || I.down('camR') || I.mouse.rightDrag)) this.finish('camera');
     if (g.settings.camera === 'lba' && (I.pressed('recenter') || I.pressed('recenterPad'))) this.finish('camera');
     if (h.combat?.throwing?.charging) this.finish('arc');
+    if (h.combat?.dodgeT > 0) this.finish('dodge');
     if (g.flags.pr_lidOpen) this.finish('kick');
     if (this.mp0 != null && h.mp > this.mp0) this.finish('magic');
     this.mp0 = h.mp;

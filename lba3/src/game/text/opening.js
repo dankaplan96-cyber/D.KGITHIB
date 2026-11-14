@@ -53,6 +53,7 @@ Object.assign(STR.en, {
   tut_normal: '{k} Back to Normal',
   tut_aggressive: '{k} Switch to Aggressive: kick and punch',
   tut_kick: '{k} Kick the lid',
+  tut_dodge: '{k} Dodge',
   tut_dlg_next: ' Next',
   tut_dlg_all: ' Show all',
 
