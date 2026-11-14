@@ -10,6 +10,11 @@
 //   the workshop's static batches are counted on each visit: TECH-ART-1's waste counter).
 // SHOTS=dir writes x-<view>.jpg (Zeelich is chapter 3: x- pictures are for the team only).
 // QUALITY=low|medium|high (default medium, by hand). W=, H= the window.
+// LIVE=secs (off by default): at each view, after the counts, the game's own loop runs live (real requestAnimationFrame
+// frames, the hero standing) for WARM s (default 3) and then LIVE s, and game.perf.stats() is printed as LIVE <view>:
+// frame-time p50/p95/p99/max, CPU simulation and render submission p50/p95, draw calls, and the GPU's own time per frame
+// where the browser offers a timer query (else null). Meant for a real GPU (CLOUD_ORDERS order 42, the Vega 8); on
+// SwiftShader its times mean nothing.
 // Automated runtime only (SwiftShader here): counts, never frame rates.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -17,6 +22,7 @@ import path from 'node:path';
 const { check, done } = checker({ info: 'always' });
 const W = +process.env.W || 1366, H = +process.env.H || 768, Q = process.env.QUALITY || 'medium';
 const SHOTS = process.env.SHOTS || null;
+const LIVE = +process.env.LIVE || 0, WARM = process.env.WARM != null ? +process.env.WARM : 3;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const { browser, page } = await launch({ width: W, height: H });
 const ev = (f, a) => page.evaluate(f, a);
@@ -42,10 +48,10 @@ await ev((Q) => {
   G.hero.hasBall = true; G.story.nextChapter(); P.settle();
   // counters: one rendered frame through renderBufferDirect (as tests/drawcalls.mjs and residents.mjs frameCost)
   window.taCost = () => {
-    const R = G.renderer.renderer; const c = { main: 0, shadow: 0, tris: 0 };
+    const R = G.renderer.renderer; const c = { main: 0, shadow: 0, tris: 0 }, drawnMats = new Set();
     const orig = R.renderBufferDirect.bind(R);
     R.renderBufferDirect = (cam, scene, geo, mat, obj, grp) => {
-      c[scene ? 'main' : 'shadow']++;
+      c[scene ? 'main' : 'shadow']++; if (scene) drawnMats.add(mat);
       const n = grp ? grp.count : geo.index ? geo.index.count : geo.attributes.position?.count || 0;
       if (scene) c.tris += (obj.isInstancedMesh ? obj.count : 1) * n / 3;
       return orig(cam, scene, geo, mat, obj, grp);
@@ -53,7 +59,9 @@ await ev((Q) => {
     G.perf?.beginFrame?.(); G.frame(1 / 30, true);
     R.renderBufferDirect = orig;
     const m = R.info.memory;
-    return { draws: c.main + c.shadow, main: c.main, shadow: c.shadow, tris: Math.round(c.tris), geometries: m.geometries, textures: m.textures, programs: R.info.programs.length };
+    // (materials: three keeps no count, so the unique materials on every mesh in the scene graph, and those the main pass drew)
+    const sceneMats = new Set(); G.scene.traverse((o) => { if (o.material) for (const q of [].concat(o.material)) sceneMats.add(q); });
+    return { draws: c.main + c.shadow, main: c.main, shadow: c.shadow, tris: Math.round(c.tris), geometries: m.geometries, materials: sceneMats.size, drawnMaterials: drawnMats.size, textures: m.textures, programs: R.info.programs.length };
   };
   // the hero at a spot, the camera snapped and settled
   window.taAt = (lx, lz, a) => {
@@ -69,6 +77,18 @@ const env = await ev(() => { const G = game, gl = G.renderer.renderer.getContext
 console.log('ENV ' + JSON.stringify(env));
 check('chapter 3 begins on Zeelich', env.room === 'zeelich' && env.chapter === 'zeelich', env);
 
+// LIVE: the game's own loop, real frames, the hero standing at the view (the camera as the snap left it)
+const live = async (name) => {
+  if (!LIVE) return;
+  await page.bringToFront();   // (a window in the background is drawn at 8 fps by design: PERF-BATTERY)
+  await ev(() => { game.foreground?.(); game.testFreeze = false; game.perf.reset(); });
+  await page.waitForTimeout(WARM * 1000);
+  await ev(() => game.perf.reset());
+  await page.waitForTimeout(LIVE * 1000);
+  const st = await ev(() => { const s = game.perf.stats() || { frames: 0 }; game.testFreeze = true; const m = performance.memory; return { ...s, background: !!game.background, heapMB: m ? +(m.usedJSHeapSize / 1048576).toFixed(1) : null, geometries: game.renderer.renderer.info.memory.geometries }; });
+  console.log(`LIVE ${name} ${JSON.stringify({ frames: st.frames, fps: st.fps, frameMs: st.frameMs, simMs: st.simMs, renderMs: st.renderMs, gpuMs: st.gpuMs, calls: st.calls, draws: st.draws, tris: st.tris, lostS: st.lostS, bgFrames: st.pace?.bg, background: st.background, heapMB: st.heapMB, geometries: st.geometries })}`);
+  if (!st.frames || st.background) console.log(`LIVE ${name}: NOT VALID (${!st.frames ? 'no frame drawn in the window' : 'the window was in the background'})`);
+};
 const shot = async (name) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, 'x-' + name + '.jpg'), type: 'jpeg', quality: 82, timeout: 600000 }); };
 // the workshop door (local), the nearest resident to it
 const spots = await ev(() => { const G = game, Z = G.rooms.zeelich, o = Z.group.position, d = Z.workshopDoor; return { door: [d.x - o.x, d.z - o.z], land: [Z.spaceport.landing.x - o.x, Z.spaceport.landing.z - o.z, Z.spaceport.landing.a] }; });
@@ -87,6 +107,7 @@ for (const [name, x, z, a] of VIEWS) {
   counts[name] = c;
   console.log(`VIEW ${name} ${JSON.stringify(at)} ${JSON.stringify(c)}`);
   await shot(name);
+  await live(name);
 }
 // Twinsen beside a resident: the nearest present one to the workshop door, he stands 1.6 m from it, facing it
 const rs = await ev(([dx, dz]) => {
@@ -100,6 +121,7 @@ if (rs.length) {
   const c = await ev(() => taCost()); counts.resident = c;
   console.log(`VIEW resident ${r.id} ${JSON.stringify(at)} ${JSON.stringify(c)}`);
   await shot('resident');
+  await live('resident');
 }
 
 // the route by input: landing → the workshop door → in and out three times. On the way, every 0.5 s of game time: is
@@ -165,6 +187,21 @@ const life = await ev((SECS) => {
   for (let s = 0; s < SECS; s++) for (let i = 0; i < 30; i++) G.frame(1 / 30, i === 29);
   return { secs: SECS, made: C.all - a.all, carried: C.carry - a.carry, walkersMaterials: C.carryMat - a.carryMat, liveGrowth: R.info.memory.geometries - a.live };
 }, SECS);
+// the carried props after the street life: every carrier holds its prop in its hand, drawn (meshes with geometry and a
+// material, shown); carriers of one kind share one geometry per part (the candidate) or hold their own (the base)
+const held = await ev(() => {
+  const out = [];
+  for (const n of game.npcs) {
+    const m = n.carryMesh; if (!m) continue;
+    const parts = []; m.traverse((o) => { if (o.isMesh) parts.push(o); });
+    let shown = true; for (let p = m; p; p = p.parent) if (!p.visible) shown = false;
+    out.push({ id: n.def.id, kind: n.carrying, inHand: !!m.parent && m.parent !== game.scene, parts: parts.length, drawable: parts.every((o) => o.geometry?.attributes?.position && o.material && !Array.isArray(o.material)), shown, geo0: parts[0]?.geometry.uuid });
+  }
+  const byKind = {}; for (const c of out) (byKind[c.kind] ??= new Set()).add(c.geo0);
+  return { carriers: out.map(({ geo0, ...c }) => c), kinds: Object.fromEntries(Object.entries(byKind).map(([k, s]) => [k, { carriers: out.filter((c) => c.kind === k).length, firstPartGeometries: s.size }])) };
+});
+console.log('HELD ' + JSON.stringify(held));
+check('carried props: each carrier holds a drawable prop in its hand', held.carriers.every((c) => c.inHand && c.parts > 0 && c.drawable), held);
 const geoAll = await ev(() => window.__taGeo);
 console.log('WASTE carried-prop geometries made over the whole run: ' + geoAll.carry + ' (of ' + geoAll.all + ' geometries made in all); materials made from walkers.js code: ' + geoAll.carryMat + '; street life ' + JSON.stringify(life));
 console.log('COUNTS ' + JSON.stringify(counts));
