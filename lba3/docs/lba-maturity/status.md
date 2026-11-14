@@ -70,6 +70,7 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 - 13.11: the P18 voices: "better" (Words is the default).
 - 14.11: **the Arthur cup objective is rejected** (P22). Then: **wave 8 (the epilogue's kitchen: the tap, Arthur's cup, the word with Zoé) is no longer relevant after the opening's change — dropped**; its patches stay in `lba3/tools/testlab/wip-2026-11-13/wave8` only as a record, not to be applied.
 - 14.11: **the voices A/B** (P21, `captures/voice-2/ab`): "the fourth and the first are the best; the second and the third are terrible, not pleasant to the ear at all" — **Expressive (the default) and Classic stay; Words (both the 14.11 and the improved version) leaves Settings**; a saved Words loads as Expressive; the Words engine is kept only for `?voicelab`.
+- 14.11: **no clutter** (to the desktop agent): "don't load the whole game with unnecessary things; no need for a million benches; it must not be crowded" — a standing rule at the top of `CLOUD_ORDERS.md` (every object has a job, replace before adding, free floor, added/removed counted in every request); it binds cloud workers too.
 
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 

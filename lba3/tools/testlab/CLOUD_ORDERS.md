@@ -14,6 +14,18 @@ descriptions only from LBA1/LBA2, no spoilers past chapter 2 to the user).
 New standing rule (the user, 3.11, `WORLD_CONSISTENCY.md` R11): **every place has a meaning for the journey, even a
 small one; no superfluous LBA1/LBA2 places, no cacophony of buildings.** Apply it to everything you build or dress.
 
+**New standing rule (the user, 14.11): "don't load the whole game with unnecessary things; no need for a million benches; it
+must not be crowded."** It binds every order, old and new, before anything else in it:
+- **Every object you add has a job:** the story, an interaction, who lives or works there, or finding the way. "It fills
+  the space" is not a job. No second bench, crate pile, barrel, lamp or planter where one already does that job nearby.
+- **Replace before you add.** When a place needs something, first change or move what is there; when you add, look
+  for something to take away in the same place.
+- **Leave floor and walls empty.** Free floor around paths, doors and props you use; a wall may stay bare. A room or
+  a street should read in one look from the play camera.
+- **Every request reports the count:** objects added and removed per room/area, with a before/after picture from the
+  play camera. A diff that adds more than it removes says why each addition is needed.
+- If a place already looks crowded, say so in the report and propose what to take away (don't wait to be asked).
+
 ## Tonight's queue
 1. **ASYLUM-2** (answered in `WORLD_ART_REQUESTS.md`, "the cloud's answer"): build the two entrances as LBA1 had them,
    the Esmer workers' hostel dressing, Vesk's store behind it (crates stamped ZEELICH, the hidden humming crate, his
@@ -369,6 +381,7 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        hall, the stairwell, the kitchen or their colliders and cut-aways: off the hall, or a corner of the cellar walled off,
        your call with a picture. If a new door or room is needed, wire it like the house's other doors and say how. Its
        taps are art only (in the opening the house's water is off: the cloud will make them say so).
-    For both: captures from the play camera before/after, draw calls before/after, run `opening`, `prologue`, `chapter1`,
+    For both: **the 14.11 no-clutter rule above applies: a few chosen things with a job, not a full room**; captures
+    from the play camera before/after, objects added/removed, draw calls before/after, run `opening`, `prologue`, `chapter1`,
     `containers`, `place-scan`, `house-*`/interior suites that cover the house. No text past chapter 2 in pictures sent to
     the user. Only the user can: play, listen, judge.
