@@ -502,6 +502,15 @@ function frameGeo(o, ring, depth, tile = 1) {
     return boxUV(new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 1 }), tile);
   });
 }
+// TECH-ART-1: an opening's reveal lining, a U band `inset` wide just inside its outline, `depth` deep: the jambs and the
+// arch's soffit in their own (dark) material, where the wall panel's cut showed its pale plaster
+function revealGeo(o, inset, depth, tile = 1) {
+  return cached('rv' + JSON.stringify(o) + inset + depth + tile, () => {
+    const outer = openingPts(o, 0), inner = openingPts(o, -inset).reverse();
+    const s = toPath(new THREE.Shape(), outer.concat(inner));
+    return boxUV(new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false }), tile);
+  });
+}
 // flat filled opening (door leaf, lattice), slightly larger than the hole
 function fillGeo(o, grow, depth, tile = 0.5) {
   return cached('fi' + JSON.stringify(o) + grow + depth + tile, () => {
@@ -827,6 +836,7 @@ export function* buildZeelichSteps(scene, physics) {
     ferry,
     life,
     lift,   // (CAMPAIGN-3: story/zeelift.js)
+    workshopMarks: (houses[4].marks || []).map(([x, y, z]) => ({ ...W(x, z), y: Y0 + y })),   // (TECH-ART-1: tests/techart-zeelich.mjs)
   });
 
   // VP-10 (the user, 7.11: "in Zeelich all the buildings disappear when you get close"): as on Citadel and in LBA2,
@@ -1213,6 +1223,7 @@ export function* buildZeelichSteps(scene, physics) {
       ...DIAG.map(([n, sx, sz]) => [C * Math.SQRT2 - 0.3, sx * (w / 2 - C / 2), sz * (d / 2 - C / 2), Math.atan2(sx, sz), n])] : null;
     const lattice = tealGlassM();   // (ZEELICH-2: teal glass)
     const doorM = tm('planks', { color: o.workshop ? '#b8e0d8' : '#c8906a', rough: 0.8 });
+    const revealM = tm('stone', { color: '#463c36' });   // (TECH-ART-1: the door's reveal, in shadow-dark stone)
     // (WORLD-FIX: what stands round each opening, in wall coordinates seen from outside: tests/worldfit.mjs)
     const fitOps = [], fx = (side, kind, x0, x1, y0, y1) => { const e = { side, kind, x0, x1, y0, y1 }; fitOps.push(e); return e; };
     for (const sd of sides) {
@@ -1233,18 +1244,27 @@ export function* buildZeelichSteps(scene, physics) {
           for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; HB.addM(cached('rivb', () => new THREE.SphereGeometry(0.045, 6, 4)), brassM(), at(op.x + Math.cos(a) * (op.w / 2 + 0.06), cy + Math.sin(a) * (op.w / 2 + 0.06), t + 0.14)); }
           continue;
         }
-        HB.addM(frameGeo(op, op.door ? 0.2 : 0.13, 0.1), op.door ? tiles : trimM, at(0, 0, t - 0.02));
+        // (TECH-ART-1, F2: the door's arch ring was the foot band's own glass blocks, luminance 0.090 against the band's
+        //  0.094, so the door's edge was lost in the band; Baldino's ring is the brass of his round window and his
+        //  observatory, the other houses keep LBA2's glass-block ring, now edged by the dark reveal and the keystone below)
+        HB.addM(frameGeo(op, op.door ? 0.2 : 0.13, 0.1), op.door ? (o.workshop ? brassM() : tiles) : trimM, at(0, 0, t - 0.02));
         if (op.door) {
           // recessed plank door with brass studs, alfiz frame, a lantern
           HB.addM(fillGeo(op, 0.05, 0.08, 0.6), doorM, at(0, 0, t * 0.3));
+          // (TECH-ART-1: a dark reveal from the leaf out to the ring, the jambs and soffit in shadow-dark stone: the same
+          //  stone map as the plinth, so drawbatch folds it into the stone's draw; and a keystone over the crown)
+          HB.addM(revealGeo(op, 0.035, t * 0.7 - 0.1), revealM, at(0, 0, t * 0.3 + 0.08));
+          HB.addM(cached('keystone', () => boxUV(bbox(0.24, 0.26, 0.12, 0.02, 1), TILE.stone)), stoneM, at(op.x, op.y + op.h + 0.06, t + 0.08));
+          fe.y1 = Math.max(fe.y1, op.y + op.h + 0.19);
           for (let k = 0; k < 10; k++) HB.addM(cached('stud', () => new THREE.SphereGeometry(0.035, 6, 4)), brassM(), at(op.x + ((k % 2) - 0.5) * 0.7, 0.3 + Math.floor(k / 2) * 0.42, t * 0.3 + 0.1));
           HB.addM(cached('dring', () => new THREE.TorusGeometry(0.08, 0.018, 6, 14)), brassM(), at(op.x + 0.32, 1.1, t * 0.3 + 0.12));
           // (WORLD-FIX: the alfiz stays clear of the frieze above and the lantern beside it, or is left out)
           const aw = op.w + 0.6, ah = Math.min(op.h + 0.55, friezeY - 0.09);
           if (ah - 0.07 >= op.y + op.h + 0.22) {
             for (const s of [-1, 1]) HB.addM(bbox(0.14, ah, 0.08, 0.02, 1), trimM, at(op.x + s * aw / 2, ah / 2, t + 0.03));
-            HB.addM(bbox(aw + 0.14, 0.14, 0.08, 0.02, 1), trimM, at(op.x, ah, t + 0.03));
-            Object.assign(fe, { x0: op.x - aw / 2 - 0.07, x1: op.x + aw / 2 + 0.07, y1: ah + 0.07 });
+            // (TECH-ART-1: the alfiz's head is a stone lintel, 0.2 m proud of the wall, its shadow line over the arch)
+            HB.addM(cached('lintel' + aw.toFixed(2), () => boxUV(bbox(aw + 0.3, 0.18, 0.2, 0.03, 1), TILE.stone)), stoneM, at(op.x, ah - 0.02, t + 0.1));
+            Object.assign(fe, { x0: op.x - aw / 2 - 0.15, x1: op.x + aw / 2 + 0.15, y1: ah + 0.07 });
           }
           HB.addM(boxUV(bbox(1.9, 0.14, 0.7, 0.03, 1), 1), stoneM, at(op.x, -base + 0.07, t + 0.35));
         } else {
@@ -1501,17 +1521,34 @@ export function* buildZeelichSteps(scene, physics) {
     // ZSTYLE-2: Baldino's patched walls: ribbed metal sheets bolted over the back and the east side, clear of the windows,
     // the glass-block foot and the frieze (4 cm proud of the wall, inside his collider)
     {
-      const rib = tm(ribTex(), { rough: 0.48, metal: 0.45, color: '#b8c0bc' }), y0 = 1.2, y1 = Math.min(3.25, h - 0.7);
+      // (TECH-ART-1, F1: at metalness 0.45 with no reflections to show, the sheet drew near-black, luminance 0.007 against
+      //  the wall's 0.067: a 3.4 m dark rectangle on the face the spaceport's way meets, read as a door; now a painted
+      //  galvanised grey that keeps its ribs)
+      const rib = tm(ribTex(), { rough: 0.62, metal: 0.12, color: '#c4ccc8' }), y0 = 1.2, y1 = Math.min(3.25, h - 0.7);
       HB.add(boxUV(bbox(3.4, y1 - y0, 0.04, 0.01, 1), 1.0), rib, 1.1, (y0 + y1) / 2, -d / 2 - 0.03);
       HB.add(boxUV(bbox(0.04, y1 - y0, 2.2, 0.01, 1), 1.0), rib, w / 2 + 0.03, (y0 + y1) / 2, -1.5);
       for (const [bx, bz] of [[-0.45, -d / 2 - 0.06], [2.65, -d / 2 - 0.06]]) for (const by of [y0 + 0.12, y1 - 0.12]) HB.add(cached('ribbolt', () => new THREE.SphereGeometry(0.035, 6, 4)), brassM(), bx, by, bz);
+      // (TECH-ART-1, F1: Baldino's own board on his east wall, square to the gravel path the spaceport's way comes up by:
+      //  the cog-and-spanner of his hanging sign (the same face material) on brass, and under it a gold arrow north, round
+      //  the corner to his door on the street. Flat on the wall between the window and the back corner's pier, inside his
+      //  collider: nothing to bump into)
+      const bx = -w / 2 - 0.03, bz = -1.9;   // (the board's back 5 mm off the wall's face)
+      HB.add(cached('wsboard', () => boxUV(bbox(0.05, 0.86, 1.32, 0.02, 1), 1)), brassM(), bx, 2.55, bz);
+      HB.add(cached('wsbface', () => new THREE.PlaneGeometry(1.2, 0.75)), pm('#ffffff', 0.6, { map: workshopSignTex() }), bx - 0.03, 2.55, bz, 0, -Math.PI / 2, 0);
+      const arrow = cached('wsarrow', () => {
+        const s = new THREE.Shape(); s.moveTo(-0.55, -0.08); s.lineTo(0.2, -0.08); s.lineTo(0.2, -0.22); s.lineTo(0.55, 0); s.lineTo(0.2, 0.22); s.lineTo(0.2, 0.08); s.lineTo(-0.55, 0.08); s.closePath();
+        return tint(new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false }), '#e8c060');
+      });
+      HB.add(arrow, VC(), -w / 2 - 0.005, 1.62, bz + 0.2, 0, -Math.PI / 2, 0);   // (its +x along the house's +z: north, toward the street)
     }
     // clutter by the wall: crates, a cart wheel, a gear rack, a barrel
     techCrates([wpos(f, w / 2 + 0.9, 0.8).x !== undefined ? [wpos(f, w / 2 + 0.9, 0.8).x, wpos(f, w / 2 + 0.9, 0.8).z, 1, 0.8] : [0, 0]]);
     placeTag('cartWheel');   // (PLACE-2: names the piece for tests/place-scan.mjs; nothing in play)
     HB.add(cached('cartwheel', () => compose([[new THREE.TorusGeometry(0.5, 0.06, 6, 22)], ...[0, 1, 2, 3].map((k) => [bbox(1.0, 0.05, 0.05, 0.01, 1), 0, 0, 0, 0, 0, (k * Math.PI) / 4]), [cyl(0.08, 0.08, 0.16, 8).rotateX(Math.PI / 2)]])), tm('wood', { color: '#a87850' }), -w / 2 - 0.25, 0.55, 1.2, 0, Math.PI / 2 - 0.2, 0.15);
     placeTag(null);
-    return {};
+    // (TECH-ART-1: where his marks stand, the hanging sign and the east board, for tests/techart-zeelich.mjs: [x, y, z] in
+    //  the island's frame)
+    return { marks: [[...f(sx, d / 2 + 0.78), 2.62], [...f(-w / 2 - 0.06, -1.9), 2.55]].map(([x, z, y]) => [x, y, z]) };
   }
 
   // ================================================================ plaza: fountain and the market stall

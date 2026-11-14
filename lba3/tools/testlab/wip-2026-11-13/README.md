@@ -13,3 +13,6 @@ then finish, test and merge as the coordinator always does.
   (before: every pick-up built and leaked fresh geometry and a throwaway material); the capture and count harness;
   `TECH-ART-1.md` in progress. Stopped while re-running the final and baseline counters; the suites and the Vega 8
   handoff (a CLOUD_ORDERS item) are still to do.
+  **Finished 14.11:** the seven patches applied cleanly on `b38d29e4`, then the counters re-run, the suites, the
+  captures pruned and the Vega 8 handoff (CLOUD_ORDERS order 42) committed on top. See `docs/lba-maturity/TECH-ART-1.md`.
+  These patches are now a record only; do not apply them again.
