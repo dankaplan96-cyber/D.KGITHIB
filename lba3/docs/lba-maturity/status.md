@@ -68,6 +68,7 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 - 10.11: the user bought a new desktop with a GTX 1050 graphics card: it becomes the **work and test machine** (the local agent, Blender, the test lab, the GPU looks). The Vega 8 laptop stays the **minimum target** for performance.
 - 13.11: **twelve years have passed in the world, so changes to LBA2's places make sense** (the user to the desktop agent, during DESERT-ART: "this is a decision"); LBA2's shapes and colours come back to its landmarks while the twelve years' additions stay. Then "send both" (DESERT-ART 1 and 2, applied 13.11).
 - 13.11: the P18 voices: "better" (Words is the default).
+- 14.11: **the Arthur cup objective is rejected** (P22). Then: **wave 8 (the epilogue's kitchen: the tap, Arthur's cup, the word with Zoé) is no longer relevant after the opening's change — dropped**; its patches stay in `lba3/tools/testlab/wip-2026-11-13/wave8` only as a record, not to be applied.
 
 ## Playtest inbox (the user's reports, newest last; each goes to a worker and gets a status)
 
