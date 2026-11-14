@@ -1,0 +1,28 @@
+PASS the audio context starts with the first click (New Game) 
+PASS sliders set the music, effects, voice (x2.2, VOICE-MIX) and ambience buses 
+PASS each place asks for its music (house ≠ outdoors) 
+PASS one music voice playing after each door, at most two alive (one fading) 
+PASS volumes kept after a relaunch 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 5 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional, 56 note
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/music/island_b.mp3
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/sphero2.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/zbee1.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/zbee2.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/arthur.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/guard.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/tarra.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/pippa.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/ztri2.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/twinsen.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/weaver.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/zmole1.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/nara.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/bersimon.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8180/assets/poly/mira.json
+  … 41 more
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

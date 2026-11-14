@@ -1,0 +1,146 @@
+diff --git a/lba3/src/engine/drawcull.js b/lba3/src/engine/drawcull.js
+index 8525e035..307c72a0 100644
+--- a/lba3/src/engine/drawcull.js
++++ b/lba3/src/engine/drawcull.js
+@@ -640,9 +640,13 @@ function boxDepth(b, v) {
+   for (let c = 0; c < 8; c++) { _cv.set(c & 1 ? b.max.x : b.min.x, c & 2 ? b.max.y : b.min.y, c & 4 ? b.max.z : b.min.z).applyMatrix4(v); if (-_cv.z < d) d = -_cv.z; }
+   return d;
+ }
+-const _box = new THREE.Box3(), _fr = new THREE.Frustum(), _pm = new THREE.Matrix4(), _iv = new THREE.Matrix4();
++const _box = new THREE.Box3(), _fr = new THREE.Frustum(), _pm = new THREE.Matrix4(), _iv = new THREE.Matrix4(), _fbox = new THREE.Box3();
++// (ZPERF-1, BoxCull.hideFar: the scene's own subtrees outside the area — the shadow reach in m, the box margin in m, the
++//  frames between box refreshes and between candidate-list refreshes)
++const FAR_REACH = 400, FAR_MARGIN = 2, FAR_REFRESH = 30, FAR_LIST_REFRESH = 120;
++const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
+ export class BoxCull {
+-  constructor() { this.lists = new WeakMap(); this.off = []; this.layered = []; this.enabled = true; this.n = 0; this.tested = 0; this.nFog = 0; this.nCast = 0; }
++  constructor() { this.lists = new WeakMap(); this.off = []; this.layered = []; this.enabled = true; this.n = 0; this.tested = 0; this.nFog = 0; this.nCast = 0; this.nFar = 0; this.far = !(typeof location !== 'undefined' && /[?&]nofar/.test(location.search)); }
+   // the area's terrain tiles and instanced tiles (found once per area root; a tile's box is recomputed when its
+   // instances or count change); TITLE-LOAD: and its big plain meshes
+   listFor(root) {
+@@ -695,6 +699,76 @@ export class BoxCull {
+     for (const E of this.listFor(root)) if (E.o.visible) test(E.o, this.boxOf(E));
+     this.n = this.off.length + this.layered.length;
+   }
++  // ZPERF-1: what stands in the scene itself, outside the area on show. Citadel's wizard's tent, the LBA1 asylum's
++  // front, block-house and climb, Kit's lane and a few story props are built into the scene, not Citadel's root, so they
++  // stay shown in every region: from the middle of Zeelich's street, looking west across the 2 400 m to Citadel (the
++  // camera's far plane is 2 500 m), they were 78 of the frame's 235 draw calls, every one of them beyond the fog's end
++  // (290 m there), painted in the background's colour. Each such subtree is tested whole, by the world box of its meshes,
++  // with the same rule as the draws above: wholly outside the view, or wholly beyond the fog's end in view depth, and
++  // only with materials that take the fog in normal blending, and only one wholly farther than the fog's end from the
++  // camera. Then it is left out of the frame (`visible`, restored by restore() with the rest). One that casts a shadow
++  // is left in unless it lies farther than `reach` m from the camera (the sun's shadow box spans at most ~120 m around
++  // the focus: environment.js), so no shadow changes either. Off with `?nofar` or BoxCull.far = false (A/B).
++  // Subtrees with lights (their count is in the shader programs), skinned, instanced, batched meshes, points, lines,
++  // sprites, meshes not frustum-culled or with their own onBeforeRender are never taken; the actors are FarCull's.
++  // Boxes: worked out again when the subtree's root moves, and every FAR_REFRESH frames (a part that moves within it).
++  hideFar(scene, root, camera, far = Infinity, shadows = true, reach = FAR_REACH) {
++    this.nFar = 0;
++    if (!this.enabled || this.far === false || !scene || !root || !camera || !(far < Infinity)) return;
++    const F = (this.farTick = (this.farTick || 0) + 1);
++    if (!this.farList || this._farN !== scene.children.length || F - this._farT >= FAR_LIST_REFRESH || this._farRoot !== root) this.farCandidates(scene, root, F);
++    camera.updateMatrixWorld();
++    _iv.copy(camera.matrixWorld).invert();
++    _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, _iv));
++    const cp = camera.position;
++    for (const E of this.farList) {
++      const c = E.o;
++      if (!c.visible || c.parent !== scene) continue;
++      if (!E.box || F - E.t >= FAR_REFRESH || !c.matrixWorld.equals(E.m)) { if (!this.farBox(E, F)) continue; }
++      if (!E.draws) continue;
++      _box.copy(E.box).expandByScalar(FAR_MARGIN);
++      const d = _box.distanceToPoint(cp);
++      if (!(d > far)) continue;   // (only what lies beyond the fog's end in every direction: near things are three's to cull)
++      if (_fr.intersectsBox(_box) && !(boxDepth(_box, _iv) > far)) continue;
++      if (E.casts && shadows && d < reach) continue;
++      c.visible = false; this.off.push(c); this.nFar++;
++    }
++    this.n += this.nFar;
++  }
++  farCandidates(scene, root, F) {
++    const L = (this.farList = []);
++    this._farN = scene.children.length; this._farT = F; this._farRoot = root;
++    for (const c of scene.children) {
++      if (c === root || c.isLight || c.isCamera || c.isScene) continue;
++      let ok = true, meshes = 0;
++      c.traverse((o) => {
++        if (!ok) return;
++        if (o.isLight || o.isCamera || o.isSkinnedMesh || o.isInstancedMesh || o.isBatchedMesh || o.isPoints || o.isLine || o.isSprite || o.isBone) { ok = false; return; }
++        if (!o.isMesh) return;
++        meshes++;
++        const M = o.material;
++        if (!o.frustumCulled || o.onBeforeRender !== BASE_OBR || !o.geometry?.attributes?.position || !takesFog(M)) { ok = false; return; }
++        for (const m of Array.isArray(M) ? M : [M]) if (m.blending !== THREE.NormalBlending) { ok = false; return; }
++      });
++      if (ok && meshes) L.push({ o: c, box: null, m: new THREE.Matrix4(), t: -Infinity, casts: false, draws: 0 });
++    }
++  }
++  // the world box of a subtree's shown meshes and whether any of them casts (false: nothing to test)
++  farBox(E, F) {
++    const c = E.o, B = (E.box ??= new THREE.Box3()).makeEmpty();
++    let casts = false, draws = 0, ok = true;
++    c.traverseVisible((o) => {
++      if (!ok || !o.isMesh) return;
++      if (o.isSkinnedMesh || o.isInstancedMesh || o.isBatchedMesh || !o.frustumCulled) { ok = false; return; }   // (one added since the list was made)
++      const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
++      if (!g.boundingBox || g.boundingBox.isEmpty()) return;
++      _fbox.copy(g.boundingBox).applyMatrix4(o.matrixWorld); B.union(_fbox);
++      draws++; if (o.castShadow) casts = true;
++    });
++    if (!ok || !Number.isFinite(B.min.x + B.min.y + B.min.z + B.max.x + B.max.y + B.max.z)) { E.draws = 0; E.box = null; E.t = F; E.m.copy(c.matrixWorld); return false; }
++    E.casts = casts; E.draws = draws; E.t = F; E.m.copy(c.matrixWorld);
++    return true;
++  }
+   restore() {
+     for (const o of this.off) o.visible = true; this.off.length = 0;
+     for (const o of this.layered) o.layers.mask = (o.layers.mask & ~CO_BIT) | MAIN_BIT; this.layered.length = 0;
+diff --git a/lba3/src/engine/perf.js b/lba3/src/engine/perf.js
+index 2f89e78f..bf8487fd 100644
+--- a/lba3/src/engine/perf.js
++++ b/lba3/src/engine/perf.js
+@@ -135,6 +135,7 @@ export class Perf {
+ // where the browser exposes it (Chrome hides it on some systems; then none: the report says so). Results arrive a
+ // few frames later; a frame the driver marks "disjoint" (a power state change, another program) is dropped. This
+ // is the number that tells a GPU-bound frame (pixels, shadows, MSAA) from a CPU-bound one (draw calls, simulation).
++const GPU_MS_MAX = 10000;   // (ZPERF-1: a frame's GPU time above this is not a measurement)
+ export class GpuTimer {
+   static make(gl) { const ext = gl?.getExtension?.('EXT_disjoint_timer_query_webgl2'); return ext ? new GpuTimer(gl, ext) : null; }
+   constructor(gl, ext) { this.gl = gl; this.ext = ext; this.free = []; this.frames = []; this.f = null; this.cur = null; this.ms = []; this.pass = new Map(); }
+@@ -169,17 +170,20 @@ export class GpuTimer {
+       let tot = 0;
+       for (const [label, q] of F.q) { const ms = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; by[label] = (by[label] || 0) + ms; tot += ms; this.free.push(q); }
+       if (disjoint) { this.disjoint = (this.disjoint || 0) + 1; continue; }   // (PERF-HIGH: counted: a GPU power-state change)
++      // (ZPERF-1: a result no frame can have — 737 873 ms came back, not marked disjoint, on the user's Vega 8 under load —
++      //  is dropped and counted apart, so it reaches neither a percentile nor the Auto governor)
++      if (!(tot >= 0 && tot < GPU_MS_MAX)) { this.invalid = (this.invalid || 0) + 1; continue; }
+       this.onFrame?.(tot);
+       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
+       if (F.tag != null) { const T = (this.tags ??= new Map()); let a = T.get(F.tag); if (!a) T.set(F.tag, (a = [])); a.push(tot); if (a.length > 600) a.shift(); }
+       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
+     }
+   }
+-  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.tags?.clear(); }
++  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.invalid = 0; this.tags?.clear(); }
+   stats() {
+     if (!this.ms.length) return null;
+     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
+-    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
++    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, invalid: this.invalid || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
+   }
+ }
+ 
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index 24decc92..bb7d0bca 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -430,6 +430,9 @@ class Game {
+       const root = this.room?.group || this.world.root;
+       if (this.shadowCull.areas.has(root)) this.drawBatch.update(root);
+       this.boxCull.hide(root, this.renderer.camera, this.drawBatch.enabled ? this.drawBatch.meshes(root) : undefined, this.renderer.renderer.shadowMap.enabled, FOGCULL.far);
++      // (ZPERF-1: and what stands in the scene itself outside the area, wholly beyond the fog's end: Citadel's scene-level
++      //  pieces seen from Zeelich, 2 400 m away)
++      this.boxCull.hideFar(this.scene, root, this.renderer.camera, FOGCULL.far, this.renderer.renderer.shadowMap.enabled);
+     };
+     // (PERF-SUBMIT: the frame's caster list serves this render only: a later render in the frame (a warm-up) walks the scene)
+     this.renderer.post = () => { MW.castersF = -1; FOGCULL.cam = null; FOGCULL.far = Infinity; this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };

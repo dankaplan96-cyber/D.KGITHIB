@@ -1,0 +1,13 @@
+{"r":{"r":"arrived","t":8.099999999999982},"tg":"npc"}
+play+prompt {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op0.85 @1071,667,200,39","cls":"prompt.show weapon.show","state":"play"}
+dialog {"prompt":"","weapon":"✦Magic BallR: Fists op1.00 @1071,667,200,39","dialog":"8,525,1264,187","next":"1239,685,16,20","cls":"prompt weapon.show","state":"dialog"}
+play after dialog {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"play"}
+inventory {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"inventory"}
+play after inventory {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"play"}
+map {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"map"}
+play after map {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"play"}
+pause {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"pause"}
+play after pause {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"","cls":"prompt.show weapon","state":"play"}
+away {"prompt":"","weapon":"","cls":"prompt weapon","state":"play"}
+back near Zoe {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"","cls":"prompt.show weapon","state":"play"}
+no page errors

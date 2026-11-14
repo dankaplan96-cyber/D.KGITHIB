@@ -1,0 +1,25 @@
+LBA3 benchmark (full) · build 0.40.0 (build 271) · 2026-10-30 08:44 · the user's Vega 8 laptop, ON BATTERY
+display: rAF 59.9 Hz, but nothing drawn 56.5 Hz (17.7 ms) — the display/OS paces at ~56 on battery again
+
+summary · fps fixed / as played
+             low (no shadows)     medium               high
+  street     56.8 / 56.2          45.8 / 48.6 (×0.85)  31.3 / 40.8
+  interior   60 / 60              60 / 55.8            48.9 / 53.6
+  combat     60 / 57.8            60 / 53              56 / 53.5
+  transition 60 / 59.5            53.8 / 55.1          41.9 / 51.3
+  arrival    54.7 / 53.3          44.1 / 42.9          36 / 36.6
+  hamalayi   59.8 / 60            54 / 50.9            41.7 / 42.3
+(vs 0.38.0 battery: Low street 45.9 → 56.8, arrival 32.5 → 54.7; Medium street 47.1 → 45.8, arrival 44.8 → 44.1)
+
+MEDIUM STREET BREAKDOWN, GPU p50 ms (as is 18.92, submit 10.4):
+  no edge smoothing 17.27 (−1.65) · no shadows 17.09 (−1.8; submit −2.8 ms) · no lamps 17.56 (−1.4) · res ×0.6 15.02 (−3.9)
+  res ×0.9 sharpened 18.11 vs not sharpened 18.28 (the sharpen is free) · shadow pass writes colour 19.47 (depth-only saves 0.55)
+  shadow map 512 18.55 · draw batches off 20.48 (calls 197) · shadow cache off 20.22 · battery profile off 22.59 (MSAA 2× + 9 reads)
+  interior: as is 11.51 · no edge smoothing 9.80 (−1.7) · no lamps 9.85 · res ×0.9 10.4
+READING
+- Low street GPU 12.85 vs Medium "no shadows" 17.09: besides 85 % resolution (~1.5 ms) the difference is Medium's vegetation
+  distance (grass/flowers to 46 m vs 26 m, trees detailed to 34 m vs 18 m) — the biggest single GPU lever left on the street.
+- Edge smoothing costs ~1.7 ms on battery (cheaper than FXAA's ~2–4 ms, but not free); the sharpen costs nothing.
+- CPU: Medium street game CPU 12.8–15.5 ms; shadows cost ~2.8 ms of submit CPU (casters).
+DECISION (LOOK-FIRST-3): Auto's floor Medium-eco keeps shadows, MSAA/edges, 4 lamps (2 on battery) and 90 % resolution, and takes
+  Low's vegetation distance and small casters (the far grass and far small shadows are what goes).

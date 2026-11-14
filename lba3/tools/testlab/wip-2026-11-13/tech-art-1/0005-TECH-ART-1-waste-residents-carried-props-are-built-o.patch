@@ -1,0 +1,62 @@
+From d91a3b807db981afbfacd217f694f9d94b395cc0 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 13:11:15 +0000
+Subject: [PATCH 5/7] TECH-ART-1 waste: residents' carried props are built once
+ per kind and cloned (shared immutable geometry, module-owned); every pick-up
+ built and leaked fresh geometry before
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/walkers.js       | 9 ++++++++-
+ lba3/tests/techart-zeelich.mjs | 7 +++++--
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/lba3/src/game/walkers.js b/lba3/src/game/walkers.js
+index 0a1a405e..74aa5d31 100644
+--- a/lba3/src/game/walkers.js
++++ b/lba3/src/game/walkers.js
+@@ -94,6 +94,13 @@ const CARRY = {
+   },
+ };
+ 
++// TECH-ART-1: each kind is built once and a carrier holds a clone of it (Object3D.clone shares the geometry and the
++// cached materials). Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
++// in chapter 3, each a new set of GPU buffers. The templates belong to this module and are never disposed or edited; a
++// carrier only moves, hides or drops its own clone.
++const CARRY_T = new Map();
++const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return CARRY_T.get(kind).clone(); };
++
+ // ------------------------------------------------------------------ the manager (one per game)
+ export class Walkers {
+   constructor(game, { indoor = false } = {}) {
+@@ -369,7 +376,7 @@ export class Resident extends NPC {
+     if (!kind || !CARRY[kind]) return;
+     const hand = this.rig.j?.armR?.hand;
+     if (!hand) return;
+-    const m = CARRY[kind]();
++    const m = carryOf(kind);
+     if (kind === 'sack') { m.position.set(0.0, 0.1, -0.02); }
+     hand.add(m);
+     this.carryMesh = m;
+diff --git a/lba3/tests/techart-zeelich.mjs b/lba3/tests/techart-zeelich.mjs
+index 1328e176..11a9fe8b 100644
+--- a/lba3/tests/techart-zeelich.mjs
++++ b/lba3/tests/techart-zeelich.mjs
+@@ -131,8 +131,11 @@ const route = await ev(async ([lx, lz, la, dx, dz]) => {
+   };
+   taAt(lx, lz, la);
+   const t0 = G.time;
+-  const r1 = P.go(o.x + dx, o.z + dz - 2.5, { tol: 0.8, run: false, maxT: 120, fight: false, stopWhen: sample }); P.settle();
+-  const walked = { ok: Math.hypot(G.hero.pos.x - o.x - dx, G.hero.pos.z - o.z - (dz - 2.5)) < 1.2, t: +(G.time - t0).toFixed(1), at: [+(G.hero.pos.x - o.x).toFixed(2), +(G.hero.pos.z - o.z).toFixed(2)] };
++  const r1 = P.go(o.x + dx, o.z + dz - 2.5, { tol: 0.8, run: false, maxT: 120, fight: false, stopWhen: sample });
++  P.face(Z.workshopDoor.x, Z.workshopDoor.z);   // (he turns to the door, as a player would)
++  for (let i = 0; i < 90; i++) { G.step(1 / 30); sample(); }   // (3 s standing at the door: the camera comes round behind him)
++  P.settle();
++  const walked = { ok: Math.hypot(G.hero.pos.x - o.x - dx, G.hero.pos.z - o.z - (dz - 2.5)) < 1.2, t: +(r1?.t ?? 0).toFixed(1), at: [+(G.hero.pos.x - o.x).toFixed(2), +(G.hero.pos.z - o.z).toFixed(2)] };
+   const visits = [];
+   window.__taRebuilds = window.__taRebuilds || 0;
+   for (let k = 0; k < 3; k++) {
+-- 
+2.43.0
+

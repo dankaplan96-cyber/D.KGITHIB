@@ -1,0 +1,43 @@
+== camsteady (after merging origin f30d36d)
+no errors
+ALL PASSED
+== camclear (after merging origin f30d36d)
+no errors
+ALL PASSED
+== occluders (after merging origin f30d36d)
+MEASURE the rise over the south house (1/60 s) {"frames":740,"mode":"2026","accMax":25.1,"accP95":19.7,"yawRateMax":43.5,"pitchDeg":[26.4,48]}
+no errors
+ALL PASSED
+== controls (after merging origin f30d36d)
+MEASURE camera route (LBA view; NDC; m; m/s²; °/s) {"start":{"room":"desert","x":3348,"z":-100,"a":5.497787143782138,"bad":0},"f60":{"frames":960,"maxNdc":0.31,"outOfBox":0,"lead":0.28,"worstBehind":-2.41,"accP95":10.9,"accMax":15.4,"accYMax":3.4,"yawRateMax":0,"driftAfterStop":0.36,"moveTurnOnSpo
+MEASURE camera hidden behind something solid {"at":[-35.8,-69.1],"swing":44.9,"seen":true,"yawRateMax":58.2,"accMax":38.9,"maxNdc":0.38}
+MEASURE camera on stairs (m; m/s²) {"room":"isle_platform","steps":6,"rise":1.26,"f60":{"climbed":1.26,"maxNdc":0.31,"outOfBox":0,"accYMax":2,"accMax":4.1,"accP95":3.7},"f30":{"climbed":1.26,"maxNdc":0.3,"outOfBox":0,"accYMax":1.7,"accMax":4.2,"accP95":3.7}}
+no errors
+ALL PASSED
+== transitions (after merging origin f30d36d)
+no errors
+ALL PASSED
+== stability (after merging origin f30d36d)
+no errors
+ALL PASSED
+== townlife (after merging origin f30d36d)
+no errors
+ALL PASSED
+== opening (after merging origin f30d36d)
+no errors
+ALL PASSED
+== combat (after merging origin f30d36d)
+no errors
+ALL PASSED
+== chapter1 (after merging origin f30d36d)
+end [ 'play', 'zeelich', 'zeelich' ]
+no errors
+== occluders (after merging origin e65f548, CHAR-2)
+no errors
+ALL PASSED
+== opening (after merging origin e65f548, CHAR-2)
+no errors
+ALL PASSED
+== camsteady (after merging origin e65f548, CHAR-2)
+no errors
+ALL PASSED

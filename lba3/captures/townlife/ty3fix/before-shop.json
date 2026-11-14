@@ -1,0 +1,429 @@
+{
+ "odile+crate+nell": {
+  "open": true,
+  "cs": "hand"
+ },
+ "SE: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -102.04,
+   2.37,
+   35.08
+  ],
+  "before": "hand",
+  "cs": "bench",
+  "t": 0.3,
+  "at": [
+   -102.06,
+   2.38,
+   35.07
+  ],
+  "cam": [
+   -92.4,
+   10.4,
+   47.2
+  ],
+  "hero": [
+   -102.06,
+   35.07
+  ],
+  "yawDeg": 396
+ },
+ "  SE h05": {
+  "heat": 0.13,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h30": {
+  "heat": 0.3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h60": {
+  "heat": 0.6,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h115": {
+  "heat": 1.12,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-101.1,5.2,34.8",
+   "side_e": "seen"
+  }
+ },
+ "S: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -102.38,
+   2.37,
+   35.19
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 0.3,
+  "at": [
+   -102.38,
+   2.37,
+   35.16
+  ],
+  "cam": [
+   -103.1,
+   10.4,
+   49.7
+  ],
+  "hero": [
+   -102.38,
+   35.16
+  ],
+  "yawDeg": 357
+ },
+ "  S h05": {
+  "heat": 0.13,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by TWINSEN @-102.4,4.4,35.4",
+   "side_e": "seen"
+  }
+ },
+ "  S h30": {
+  "heat": 0.3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by TWINSEN @-102.4,4.4,35.5",
+   "side_e": "seen"
+  }
+ },
+ "  S h60": {
+  "heat": 0.6,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by TWINSEN @-102.4,4.4,35.5",
+   "side_e": "seen"
+  }
+ },
+ "  S h115": {
+  "heat": 1.12,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by TWINSEN @-102.4,4.4,35.5",
+   "side_e": "seen"
+  }
+ },
+ "  S far view": {
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-102.2,5.5,35.3",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.4,5.3,35.3",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,5.3,35.3"
+  }
+ },
+ "W: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -103.12,
+   2.43,
+   34.66
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 0.3,
+  "at": [
+   -103.11,
+   2.43,
+   34.64
+  ],
+  "cam": [
+   -110.7,
+   10.4,
+   42.3
+  ],
+  "hero": [
+   -103.11,
+   34.64
+  ],
+  "yawDeg": 315
+ },
+ "  W h05": {
+  "heat": 0.13,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,3.6,33.3"
+  }
+ },
+ "  W h30": {
+  "heat": 0.3,
+  "v": {
+   "top": "seen",
+   "front_s": "HIDDEN by TWINSEN @-103.3,4.4,34.5",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,3.6,33.3"
+  }
+ },
+ "  W h60": {
+  "heat": 0.6,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,3.6,33.3"
+  }
+ },
+ "  W h115": {
+  "heat": 1.12,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by TWINSEN @-103.1,4.1,34.1",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,3.6,33.3"
+  }
+ },
+ "  W far view": {
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-103.0,5.1,34.2",
+   "front_s": "HIDDEN by BufferGeometry @-103.1,5.2,34.4",
+   "side_w": "HIDDEN by BufferGeometry @-103.3,5.2,34.3",
+   "side_e": "HIDDEN by BufferGeometry @-103.0,5.2,34.3"
+  }
+ },
+ "E: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -101.29,
+   2.37,
+   34.29
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 0.3,
+  "at": [
+   -101.31,
+   2.37,
+   34.29
+  ],
+  "cam": [
+   -87.3,
+   10.4,
+   36.5
+  ],
+  "hero": [
+   -101.31,
+   34.29
+  ],
+  "yawDeg": 441
+ },
+ "  E h05": {
+  "heat": 0.13,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "  E h30": {
+  "heat": 0.3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "  E h60": {
+  "heat": 0.6,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "  E h115": {
+  "heat": 1.12,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "  E far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "path points": [
+  [
+   30,
+   6,
+   -99.8,
+   39.1
+  ],
+  [
+   330,
+   6,
+   -105.8,
+   39.1
+  ]
+ ],
+ "path-30-eastbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -116.3,
+   10.3,
+   37.7
+  ],
+  "hero": [
+   -100.08,
+   39.26
+  ],
+  "yawDeg": 264,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.2,3.6,33.3"
+  }
+ },
+ "path-30-eastbound far": {
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-103.6,5.1,33.6",
+   "front_s": "HIDDEN by BufferGeometry @-103.7,5.1,33.8",
+   "side_w": "HIDDEN by BufferGeometry @-103.8,5.1,33.6",
+   "side_e": "HIDDEN by BufferGeometry @-103.5,5.1,33.6"
+  }
+ },
+ "path-30-westbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -83.4,
+   10.3,
+   38.6
+  ],
+  "hero": [
+   -99.52,
+   39.23
+  ],
+  "yawDeg": 93,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "path-30-westbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.1,3.6,33.2",
+   "side_e": "seen"
+  }
+ },
+ "path-330-eastbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -122.2,
+   9.9,
+   38.5
+  ],
+  "hero": [
+   -106.07,
+   39.17
+  ],
+  "yawDeg": 267,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.3,3.5,33.3"
+  }
+ },
+ "path-330-eastbound far": {
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-104.2,5.1,33.7",
+   "front_s": "HIDDEN by BufferGeometry @-104.4,5.1,33.9",
+   "side_w": "HIDDEN by BufferGeometry @-104.5,5.1,33.7",
+   "side_e": "HIDDEN by BufferGeometry @-104.2,5.1,33.8"
+  }
+ },
+ "path-330-westbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -89.4,
+   10,
+   38.6
+  ],
+  "hero": [
+   -105.51,
+   39.2
+  ],
+  "yawDeg": 93,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "path-330-westbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "errors": []
+}

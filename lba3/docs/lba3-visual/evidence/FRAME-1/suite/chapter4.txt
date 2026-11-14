@@ -1,0 +1,82 @@
+sealed shaft [
+  'dig',
+  'desert',
+  'play',
+  'Find the professor who found the crystals'
+]
+PASS Tarra asks for the pump and points to Brosk and Sani, not to the answer (INPUT) 
+PASS the objective: restart the wind-pump (no count to tick off) 
+PASS Brosk blames the test bore's tremors (INPUT) 
+PASS Sani hears it from the roof: two gears clack, one grinds — not which (INPUT) 
+PASS after Sani the objective adds the method: find the gear that grinds 
+PASS Listen at the tower (INPUT): Twinsen hears it as Sani said, and asks which 
+PASS a gust: the sound gears rock, the jammed one holds and shudders; the clack and grind cues fire (called, not heard) 
+PASS a wrong guess (a sound gear, INPUT): it rings and swings back, "Not that one", nothing else changes 
+PASS the journal recalls Brosk, Sani and the sound gear (facts, not the answer) 
+PASS Sani's hint grows after the mistake: the grinding one doesn't turn, it spits sand (INPUT) 
+PASS the jammed gear knocked loose (INPUT): the train turns, the water sprays at the joint 
+PASS the objective: stop the leak in the pipe 
+PASS Brosk, half right: the shaking knocked that pipe loose (INPUT) 
+PASS Save → Continue mid-pump: still turning, still spraying, the gear stays freed (no gust, no listen prompt) 
+PASS the joint pushed home (INPUT): the spray stops, the pump runs 
+PASS the oasis fills 
+PASS Tarra trusts him and names Ilka (INPUT) 
+PASS Brosk takes the credit, once 
+hesk [
+  true,
+  "Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier"
+]
+rope [ true ]
+ride [ 'camp', 'play', 3391, -41 ]
+ilka [
+  true,
+  "Get Ilka's notebook from the research post◆ Go in during a sandstorm"
+]
+storm [ true, true, '1.00' ]
+desk [ true, 'Open the dig and reach the bottom' ]
+PASS save/load mid-chapter: flags kept, the pump still running and the oasis full 
+PASS the keypad opens a choice of the worn keys' orders (INPUT, no auto-entry) 
+PASS a wrong order: a buzz and a red light, the barrier stays down, the notebook is named (INPUT) 
+PASS the journal: the notebook (its last page has the code) and that a wrong order buzzes 
+PASS the notebook's order (4 · 1 · 7) opens the dig (INPUT) 
+PASS Ilka waits at the dig rim, clear of the keypad 
+PASS Ilka at the rim before he goes down: "go on down" (INPUT) 
+PASS walking down: the warm crack is remarked on first, then the five discs (INPUT) 
+PASS the objective counts the door's seals (n/3) 
+PASS the carving over the door can be inspected: five vents puffing (INPUT) 
+PASS a warm disc opens and glows, counted in the objective (INPUT) 
+FAIL a cold disc: a thud, and every open disc grinds shut (line, flags, glow) (INPUT) {"c1":{"k":0,"r":"hit"},"F":{"s":[false,false,false],"cold":3,"seals3":false,"bottom":true,"crack":true,"on":[false,false,false]},"s4":[]}
+PASS after a cold disc the objective recalls what it does 
+PASS Ilka's hint after a cold disc is the stronger one (walked back up, INPUT) 
+PASS two warm discs open (2/3) (INPUT) 
+PASS Save & quit → Continue: two discs still open (flags, glow, targets) and the cold count kept 
+PASS Continue: the dig's barrier still up (open once, not twice) 
+PASS a cold disc again: both close, a toast this time instead of the speech (INPUT) 
+PASS death → Retry: the open disc and the cold count come back from the save (ISO death) 
+PASS death → Retry: the pump still runs (no gust, no spray) 
+PASS the three warm discs open the temple door (INPUT) 
+PASS the journal recalls the crack, the discs and what a cold disc does (not the answer) 
+temple [
+  'butemple',
+  true,
+  'transition',
+  'Read the great carving in the temple'
+]
+PASS into the temple through the opened door (INPUT) 
+carving [ true, true, 'used' ]
+PASS the carving: Twinsen ties the cold discs to the closing vents 
+next [ 'steam', 'desert', "Get into FunFrock's condenser hall" ]
+PASS chapter 5 follows 
+PASS old save (format 3), chapter 4 start: the pump is jammed, its gear target live 
+PASS old save: the jammed gear frees before Tarra has asked (INPUT) 
+PASS old save: the joint pushed home (INPUT) 
+PASS Tarra, asked after the pump already runs: "before anyone asked you?", then her trust and Ilka (INPUT) 
+PASS the objective moves on to Ilka 
+PASS old mid-pump save (gears 0 and 2 freed under the old rule): still jammed, objective "Restart the wind-pump" 
+PASS old mid-pump save: completable (the jammed gear frees, INPUT) 
+PASS old save with the notebook: the pump runs, the oasis is full, the dig still shut 
+PASS old save with the notebook: the keypad asks, 4 · 1 · 7 opens the dig (INPUT) 
+PASS the keypad without the notebook: the 1, 4 and 7 worn shiny, no menu, the gate shut (INPUT) 
+PASS the journal keeps the worn keys 
+no errors
+1 FAILED

@@ -1,0 +1,67 @@
+From 8cdcbcbb0862e14dbb1897b8ab5a290449361d92 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 12:46:11 +0000
+Subject: [PATCH 08/10] =?UTF-8?q?campaign-hands:=20Zo=C3=A9's=20apron=20wi?=
+ =?UTF-8?q?pe=20after=20the=20dinner=20is=20her=20own=20surface,=20listed?=
+ =?UTF-8?q?=20(as=20no-air)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/story/hometap.js | 2 +-
+ lba3/tests/campaign-hands.mjs  | 9 +++++----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/lba3/src/game/story/hometap.js b/lba3/src/game/story/hometap.js
+index d2177da5..bb1e122c 100644
+--- a/lba3/src/game/story/hometap.js
++++ b/lba3/src/game/story/hometap.js
+@@ -429,7 +429,7 @@ export class EpilogueTap {
+   // after the dinner's last line: the kitchen is the player's
+   afterDinner() {
+     const g = this.game, ch = this.ch;
+-    this.story.refreshCast({ walk: true });   // (Arthur off to the sink, Zoé clearing the table)
++    this.story.refreshCast({ walk: true });   // (Arthur off to the sink, Zoé drying her hands by the table)
+     ch.chain([['narrator', 'ep_narr_after'], ['arthur', 'ep_ar_ask'], ['zoe', 'ep_zoe_ask']], () => { g.updateObjective(); g.save(false); });
+   }
+   canExit(room) {
+diff --git a/lba3/tests/campaign-hands.mjs b/lba3/tests/campaign-hands.mjs
+index e718e6b0..cb581a9a 100644
+--- a/lba3/tests/campaign-hands.mjs
++++ b/lba3/tests/campaign-hands.mjs
+@@ -8,8 +8,8 @@
+ // chapter 6: the winch's crank started in the green (fixture new-09-lift, the riders boarded first), the upper brake
+ // (new-09-top), chapter 7: the telescope's setting lever (new-10-lit); CAMPAIGN-6, chapter 8: the culvert's cock in the
+ // pump room (new-11-landing; turned until it opens, a kicked-back turn measured too). CAMPAIGN-10, the epilogue: the kitchen
+-// tap's handle, turned open and shut again by his hand on its knob (new-16-kitchen), within about 1 cm; Zoé clearing the
+-// table. HAND (default 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
++// tap's handle, turned open and shut again by his hand on its knob (new-16-kitchen), within about 1 cm; Zoé drying her hands
++// by the table (listed). HAND (default 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
+ import { launch, open, menu, checker } from './lib/boot.mjs';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -240,7 +240,7 @@ await browser.close();
+ }
+ 
+ // the epilogue (CAMPAIGN-10, story/hometap.js EpilogueTap): after the dinner, the kitchen tap's handle by his hand on its knob,
+-// turned open and (after the lines) shut again; Zoé clearing the table
++// turned open and (after the lines) shut again; Zoé drying her hands by the table (her apron: listed)
+ if (!process.env.ONLY10 && !process.env.ONLY11) {
+ await start('new-16-kitchen');
+ people.push(await person('zoe'));
+@@ -250,7 +250,8 @@ await browser.close();
+ }
+ 
+ for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
+-check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
++// ('wipe', hands dried on the apron, is the body's own surface: listed, not measured against the world, as tests/no-air.mjs)
++check('the thread\'s people: a working hand is on a thing (or the person stands, or dries her hands)', people.every((p) => p.absent || !p.want || p.stood || p.want === 'wipe' || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
+ // (CAMPAIGN-8: the friends who take a handle over in chapter 10 must not be stood down: their hands are on it, within 1 cm)
+ const NW = ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur'], NWHAND = +(process.env.NWHAND || 0.012);
+ const nwp = people.filter((p) => NW.includes(p.id) && !p.absent);
+-- 
+2.43.0
+

@@ -1,0 +1,2 @@
+1920x1080 {"room":"workshop","lift":1,"out":{"low":[["BufferGeometry",1.14,1.06,1.43],["BufferGeometry",1.16,1.06,1.41],["BufferGeometry",1.49,1.03,1.28],["BufferGeometry",2.22,0.96,0.96]],"high":[]}}
+960x540 {"room":"workshop","lift":1,"out":{"low":[["BufferGeometry",1.14,1.06,1.43],["BufferGeometry",1.16,1.06,1.41],["BufferGeometry",1.49,1.03,1.28],["BufferGeometry",2.22,0.96,0.96]],"high":[]}}

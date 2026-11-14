@@ -1,0 +1,120 @@
+{
+ "loaded": {
+  "on": false,
+  "heat": 0,
+  "sync": 0,
+  "lift": 1,
+  "up": true,
+  "tap": true,
+  "pair": false,
+  "paid": false,
+  "ask": true,
+  "trips": 2,
+  "room": "workshop",
+  "coins": 7,
+  "state": "play",
+  "chapter": "zeelich",
+  "coinPickups": []
+ },
+ "switch on": {
+  "r": "used",
+  "tgt": "wlever",
+  "label": "p_switch_on"
+ },
+ "to crank": {
+  "sync": 0.63,
+  "target": "wcrank"
+ },
+ "press at sync ~0.98": {
+  "s0": 0.985,
+  "pairAtPress": false,
+  "pair": true,
+  "up": false,
+  "tap": true,
+  "lift": 0
+ },
+ "lines": [
+  "Both lamps hold steady. The little panel fills, one light at a time.",
+  "n_baldino: Listen to that! They hear each other. Ilo owes me a dinner.",
+  "n_baldino: The shuttle yard pays for every pair that works. Half is yours.",
+  "TOAST w_toast_pair"
+ ],
+ "after": {
+  "st": {
+   "on": false,
+   "heat": 0.3,
+   "sync": 1,
+   "lift": 0,
+   "up": false,
+   "tap": true,
+   "pair": true,
+   "paid": true,
+   "ask": true,
+   "trips": 2,
+   "room": "workshop",
+   "coins": 12,
+   "state": "play",
+   "chapter": "zeelich",
+   "coinPickups": []
+  },
+  "relayB": {
+   "state": {
+    "on": false,
+    "up": false,
+    "tap": true,
+    "heat": 0.18,
+    "sync": 1,
+    "done": true,
+    "pulse": true
+   },
+   "lift": 0
+  }
+ },
+ "crank now": {
+  "r": "used",
+  "tgt": "wcrank",
+  "label": "p_look"
+ },
+ "crank now lines": [
+  "n_hero: Leave it up there. They're talking."
+ ],
+ "tap now": {
+  "r": "used",
+  "tgt": "wtap",
+  "label": "p_look"
+ },
+ "tap now lines": [
+  "n_hero: It's dripping nicely. I'll leave it."
+ ],
+ "after Continue": {
+  "st": {
+   "on": false,
+   "heat": 0,
+   "sync": 0,
+   "lift": 0,
+   "up": false,
+   "tap": true,
+   "pair": true,
+   "paid": true,
+   "ask": true,
+   "trips": 2,
+   "room": "workshop",
+   "coins": 12,
+   "state": "play",
+   "chapter": "zeelich",
+   "coinPickups": []
+  },
+  "relayB": {
+   "state": {
+    "on": false,
+    "up": false,
+    "tap": true,
+    "heat": 0.18,
+    "sync": 1,
+    "done": true,
+    "pulse": true
+   },
+   "lift": 0
+  }
+ }
+}

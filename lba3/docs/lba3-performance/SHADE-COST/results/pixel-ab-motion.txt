@@ -1,0 +1,19 @@
+# q_motion.js, full resolution held, every change undone in B (all seven; terrain = grass skip + normal)
+street    24 frames: pixels differing per frame 15 8 13 10 14 17 23 22 15 11 10 21 22 12 14 18 14 13 15 19 14 17 21 23 (worst 23 of 1049088, max level 5) · output pass exact 1 edgeAA 0.25 sharpen 0
+interior  24 frames: pixels differing per frame 33 30 24 25 20 34 29 21 26 27 30 28 25 36 28 32 24 28 34 33 31 17 24 22 (worst 36 of 1049088, max level 2) · output pass exact 1 edgeAA 0.25 sharpen 0
+combat    24 frames: pixels differing per frame 17 15 16 15 15 14 16 16 16 14 14 15 14 15 14 14 14 15 14 15 16 14 15 14 (worst 17 of 1049088, max level 1) · output pass exact 1 edgeAA 0.25 sharpen 0
+
+# q_motion.js, full resolution held, B undoes all but the output pass's own pixel (W_OLD=terrain,lamp,ibl,sun,luma)
+street    undone: terrain,lamp,ibl,sun,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 1 edgeAA 0.25 sharpen 0
+interior  undone: terrain,lamp,ibl,sun,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 1 edgeAA 0.25 sharpen 0
+combat    undone: terrain,lamp,ibl,sun,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 1 edgeAA 0.25 sharpen 0
+
+# q_motion.js repeated, all undone (a second run: the same counts as the first within 1-2 px a frame)
+street    undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 15 8 12 14 13 20 24 23 15 12 10 21 23 12 15 21 14 12 13 18 14 16 20 22 (worst 24 of 1049088, max level 5) · output pass exact 1 edgeAA 0.25 sharpen 0
+interior  undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 33 30 24 25 20 34 30 21 26 27 30 28 25 36 28 32 23 29 34 33 31 17 24 22 (worst 36 of 1049088, max level 2) · output pass exact 1 edgeAA 0.25 sharpen 0
+combat    undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 16 16 15 17 15 15 16 17 16 14 15 15 14 14 14 15 15 17 15 16 14 14 14 14 (worst 17 of 1049088, max level 1) · output pass exact 1 edgeAA 0.25 sharpen 0
+
+# q_motion.js at a held resolution factor 0.9 (W_SCALE=0.9: the output pass's filtered taps and sharpening, exact 0), all undone
+street    undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 0 edgeAA 0.25 sharpen 0.35
+interior  undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 0 edgeAA 0.25 sharpen 0.35
+combat    undone: terrain,lamp,ibl,sun,centre,luma · 24 frames: pixels differing per frame 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (worst 0 of 1049088, max level 0) · output pass exact 0 edgeAA 0.25 sharpen 0.35

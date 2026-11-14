@@ -1,0 +1,9 @@
+audio exit=0 173s VERDICT: PASS
+music exit=0 138s VERDICT: PASS
+voices exit=0 79s VERDICT: PASS
+menus exit=0 134s VERDICT: PASS
+opening exit=0 614s VERDICT: PASS
+stability exit=0 92s VERDICT: PASS
+shipfiles exit=0 68s VERDICT: PASS
+longsession exit=0 119s VERDICT: PASS
+DONE

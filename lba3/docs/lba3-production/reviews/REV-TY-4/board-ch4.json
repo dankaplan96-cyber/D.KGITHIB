@@ -1,0 +1,29 @@
+{
+ "start": {
+  "room": "desert",
+  "ch": "dig",
+  "k": {},
+  "cowl": 2,
+  "jars": 2,
+  "ferry": true,
+  "items": [
+   "evacplan"
+  ],
+  "coins": 7,
+  "hp": "9/11",
+  "pos": [
+   3292,
+   2,
+   4
+  ],
+  "lying": [],
+  "state": "play"
+ },
+ "walk": {
+  "r": "arrived",
+  "ferryTaken": false
+ },
+ "vis board": {
+  "board": "VISIBLE 18.8 m, ndc -0.30,0.24"
+ }
+}

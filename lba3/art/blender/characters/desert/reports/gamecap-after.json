@@ -1,0 +1,191 @@
+{
+ "desertkid": {
+  "look": "desertkid",
+  "body": "desertkid",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973814
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 968846
+   },
+   "heroCalls": 4,
+   "heroTris": 4968
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4968,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "desertkid_b": {
+  "look": "desertkid_b",
+  "body": "desertkid_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 975756
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 969820
+   },
+   "heroCalls": 4,
+   "heroTris": 5936
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5936,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "farmerC": {
+  "look": "farmerC",
+  "body": "farmerC",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 191,
+    "triangles": 976592
+   },
+   "withoutHero": {
+    "calls": 187,
+    "triangles": 969420
+   },
+   "heroCalls": 4,
+   "heroTris": 7172
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 7172,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "farmerC_b": {
+  "look": "farmerC_b",
+  "body": "farmerC_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 976064
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 969500
+   },
+   "heroCalls": 4,
+   "heroTris": 6564
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 6564,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "archivist": {
+  "look": "archivist",
+  "body": "archivist",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 187,
+    "triangles": 974706
+   },
+   "withoutHero": {
+    "calls": 183,
+    "triangles": 969158
+   },
+   "heroCalls": 4,
+   "heroTris": 5548
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5548,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T06:47:52.052Z",
+ "candidates": {}
+}

@@ -1,0 +1,454 @@
+diff --git a/lba3/docs/MUSIC.md b/lba3/docs/MUSIC.md
+index 3d35b0d2..e96a334b 100644
+--- a/lba3/docs/MUSIC.md
++++ b/lba3/docs/MUSIC.md
+@@ -56,6 +56,7 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
+ | Sea Wind (MUSIC-2) | the open island, second piece of the `island` playlist; first piece of the Desert's | 3:00 | — (one pass, ends) | E dorian, 12/8 | `island_b.*` |
+ | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
+ | The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`); **score only, not rendered yet**: until it is in the manifest the mood plays the stealth mix (`MOODS.asylum.alt`) | ≈1:54 (intro 9.5 s, body 1:35; computed from the score) | 1:35 | B minor, 3/4 | `tools/music/tracks/asylum.py` |
++| Prayer Flags (ORDER 25) | the Hamalayi outdoors (the `hamalayi` playlist, with its silences), the observatory (`mountain`); **score only, not rendered yet**: until it is in the manifest the mood and the playlist play The Well (`MOODS.mountain.alt`) | ≈2:27 (intro 13.3 s, body 2:13; computed from the score) | 2:13 | A dorian, 4/4 | `tools/music/tracks/mountain.py` |
+ 
+ Each score file starts with a section plan (bars, instruments, what happens to the themes).
+ 
+@@ -75,8 +76,23 @@ through the walls (`office`) instead of the family's Home; the tavern plays the
+ terminal goes on with the island's pieces; Tralu's cave plays The Well (was Home; the Temple of the Dark Monk already moved
+ to it in REVIEW-ZEELICH); Otringal's bar plays Zeelich's playlist at full volume, and Zeelich Spaceport's terminal and the
+ Imperial Hotel hear it through the walls (`zeelich_in`, ORDER 23f, as `office`) (all three were Citadel's Home).
+-Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Hamalayi outdoors (The
+-Well), the Desert (the island pieces).
++Left as they are, without a better piece: Bersimon's tent and the School of Magic (Home), the Desert (the island pieces).
++(The Hamalayi outdoors had The Well too: ORDER 25 below.)
++
++## ORDER 25: the Hamalayi's own piece (2026-11-08)
++
++The Hamalayi outdoors and the observatory played The Well, the caves' piece. **Prayer Flags**
++(`tools/music/tracks/mountain.py`): a slow modal piece in A dorian, 4/4, 72 bpm, for the snow terraces, Lhar and the
++monastery: a pan flute tune over a hummed drone and a harp ringing in open fifths, a temple bell, snow glints on the
++celesta; the tune an octave up with a horn answering it; the monastery as a plain low chant in C lydian (the same notes
++from C) over the drone and the bell; on the peak the Entity cell on a solo flute in A lydian with its wonder harmony
++moved up a fifth (A, B/A, G#m7, Amaj7), the shrine where Sendell speaks; the tune back on the flute, thinning to the
++drone and the bell before the loop. No drums but a bell tree and one soft timpani roll. Original, written by hand;
++nothing of LBA's music was used or consulted. **Not rendered** (the laptop it was written on has no FluidSynth, FFmpeg
++or soundfont): `build.py mountain` updates the manifest, and then the Hamalayi and the observatory play it with no code
++change. Until then `MOODS.mountain = { track: 'mountain', alt: 'well' }` and `PLAYLISTS.hamalayi = ['mountain']`
++play The Well (a playlist piece missing from the manifest now plays its mood's `alt`, as a single-track mood does).
++The underground keeps The Well (`under`, `cave`) and the deep installation the facility mix.
+ 
+ ## How the music is made (pipeline)
+ 
+@@ -145,8 +161,8 @@ track reproduces the same MIDI, FLAC and MP3 bit for bit.
+ 
+ * **Playlists (MUSIC-2)**: the places the player stays in rotate through pieces instead of looping one track
+   (`PLAYLISTS` in music.js): Citadel town and harbour `village` ↔ `village_b`; the open island `island` ↔ `island_b`;
+-  Zeelich `zeelich` ↔ `zeelich_b`; the Desert `island_b` ↔ `island`; the Hamalayi `well` alone (until it has a piece of its
+-  own). Each piece is played **once, to its end**: a looping render to the end of its body (it fades over its last
++  Zeelich `zeelich` ↔ `zeelich_b`; the Desert `island_b` ↔ `island`; the Hamalayi `mountain` alone (ORDER 25; The Well
++  stands in until it is rendered: a playlist piece missing from the manifest plays its mood's `alt`). Each piece is played **once, to its end**: a looping render to the end of its body (it fades over its last
+   6 s, the link back to the top, which thins out in every score), a MUSIC-2 piece to its last note. Then
+   **outdoors a silence of 20–60 s** (uniform; ambience, surf and wind go on), and the next piece of the list starts from
+   its first bar; **indoors** (and in the Zeelich interiors that use the playlist) the next piece follows at once.
+diff --git a/lba3/src/engine/music.js b/lba3/src/engine/music.js
+index 3c077898..122da8d5 100644
+--- a/lba3/src/engine/music.js
++++ b/lba3/src/engine/music.js
+@@ -30,11 +30,14 @@ export const MOODS = {
+   zeelich: { list: 'zeelich' },
+   zeelich_in: { list: 'zeelich', gain: 0.6, lowpass: 1100 }, // (ORDER 23f) Zeelich's halls: the island heard through the walls, as 'office'
+   desert: { list: 'desert' },     // (shares the island pieces until the Desert has its own)
+-  hamalayi: { list: 'hamalayi' }, // (the well's music until the mountain has its own; with silences outdoors)
++  hamalayi: { list: 'hamalayi' }, // (the mountain's own piece, with silences outdoors; ORDER 25)
+   station: 'facility', control: 'facility', facility: 'facility',
+   stealth: 'facility_stealth',
+   // (ORDER 19) the old asylum's own piece (tools/music/tracks/asylum.py); `alt` plays while a track is not rendered yet
+   asylum: { track: 'asylum', alt: 'facility_stealth' },
++  // (ORDER 25) the Hamalayi's own piece, Prayer Flags (tools/music/tracks/mountain.py): the observatory, and through
++  // PLAYLISTS.hamalayi the snow outdoors; The Well stands in until it is rendered (the caves keep The Well)
++  mountain: { track: 'mountain', alt: 'well' },
+   combat: 'combat',
+   revelation: 'revelation',
+   boss: 'finale', finale: 'finale',
+@@ -47,7 +50,7 @@ export const PLAYLISTS = {
+   island: ['island', 'island_b'],
+   zeelich: ['zeelich', 'zeelich_b'],
+   desert: ['island_b', 'island'],
+-  hamalayi: ['well'],
++  hamalayi: ['mountain'],   // (ORDER 25: the well's piece stood in here; a piece not rendered yet plays its mood's `alt`)
+ };
+ const GAP = [20, 60]; // s of silence between two pieces outdoors (uniform)
+ // what to prefetch once a track is playing (a playlist piece first prefetches the next piece of its list)
+@@ -55,7 +58,7 @@ const NEXT = {
+   main_theme: ['home'], home: ['village'], village: ['island', 'combat'], island: ['village', 'combat'],
+   village_b: ['island', 'combat'], island_b: ['village', 'combat'], zeelich_b: ['workshop', 'combat'],
+   well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
+-  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'],
++  workshop: ['zeelich'], facility_stealth: ['facility'], asylum: ['facility', 'island'], mountain: ['combat'],
+ };
+ 
+ // moods that end a running story cue
+@@ -202,7 +205,8 @@ export class Music {
+   _list(key) {
+     let L = this.lists.get(key);
+     if (!L) {
+-      const tracks = (PLAYLISTS[key] || [key]).filter((n) => this.has(n));
++      // (a piece not in the manifest yet plays the stand-in its mood names, MOODS[n].alt, as _alt does for a single track)
++      const tracks = [...new Set((PLAYLISTS[key] || [key]).map((n) => (this.has(n) ? n : MOODS[n]?.alt)).filter((n) => n && this.has(n)))];
+       L = { key, tracks, idx: Math.floor(this.rand() * tracks.length) % Math.max(1, tracks.length), started: false, gapUntil: 0, mode: 'phrase' };
+       this.lists.set(key, L);
+     }
+diff --git a/lba3/src/engine/softfx.js b/lba3/src/engine/softfx.js
+index da37b8c7..ce4fbf00 100644
+--- a/lba3/src/engine/softfx.js
++++ b/lba3/src/engine/softfx.js
+@@ -186,8 +186,10 @@ export class SoftParticles {
+ // narrow, rise, swell and wander sideways, and thin out at the top, so the column billows instead of being a tube.
+ export class Plume {
+   // rate puffs/s at level 1 · rise m/s · h height m · w0, w1 diameter at the base / at the top · a peak alpha
++  // · cell (1 the lumpy puff, 0 the round soft glow) · fi, fo (fraction of a puff's life its fade-in ends, its fade-out
++  // starts) · color (anything THREE.Color takes, or [r, g, b] linear, which may exceed 1 for sunlit steam)
+   constructor(o = {}) {
+-    Object.assign(this, { rate: 10, rise: 2.4, h: 8, w0: 0.6, w1: 3, color: '#f4f8ff', a: 0.5, add: 0.1, spread: 0.25, drift: 0.9, grav: -0.3 }, o);
++    Object.assign(this, { rate: 10, rise: 2.4, h: 8, w0: 0.6, w1: 3, color: '#f4f8ff', a: 0.5, add: 0.1, spread: 0.25, drift: 0.9, grav: -0.3, cell: 1, fi: 0.1, fo: 0.4 }, o);
+     this.acc = 0;
+   }
+   tick(fx, dt, x, y, z, level = 1) {
+@@ -198,7 +200,7 @@ export class Plume {
+       const rise = this.rise * (0.85 + rnd() * 0.3), life = this.h / rise * (0.9 + rnd() * 0.2);
+       fx.spawn({ x: x + (rnd() - 0.5) * this.w0 * 0.5, y: y + rnd() * rise * dt, z: z + (rnd() - 0.5) * this.w0 * 0.5,
+         vx: (rnd() - 0.5) * this.spread, vy: rise, vz: (rnd() - 0.5) * this.spread,
+-        color: this.color, a: this.a * (0.8 + rnd() * 0.4), s0: this.w0 * (0.7 + rnd() * 0.6), s1: this.w1 * (0.75 + rnd() * 0.5), life, grav: this.grav, drag: 0, drift: this.drift, add: this.add, cell: 1, fi: 0.1, fo: 0.4 });
++        color: this.color, a: this.a * (0.8 + rnd() * 0.4), s0: this.w0 * (0.7 + rnd() * 0.6), s1: this.w1 * (0.75 + rnd() * 0.5), life, grav: this.grav, drag: 0, drift: this.drift, add: this.add, cell: this.cell, fi: this.fi, fo: this.fo });
+     }
+   }
+ }
+diff --git a/lba3/src/game/hamalayi.js b/lba3/src/game/hamalayi.js
+index 273f4df9..37a5ba3c 100644
+--- a/lba3/src/game/hamalayi.js
++++ b/lba3/src/game/hamalayi.js
+@@ -352,7 +352,19 @@ export function* buildHamalayiSteps(scene, physics) {
+     const KT = kitOf('trail');
+     for (let i = 0; i < TRAIL.length - 1; i++) {
+       const [ax, az] = TRAIL[i], [bx, bz] = TRAIL[i + 1], L = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / L, uz = (bz - az) / L;
+-      let prev = null;
++      // (REV-HAM-ART: the posts are kept in runs and a run is drawn only with two posts or more: where the rules below
++      //  dropped a post's neighbours, a lone post stood by the trail with no rope)
++      let run = [];
++      const flush = () => {
++        if (run.length >= 2) run.forEach(([x, y, z], j) => {
++          KT.add(cyl(0.07, 0.09, 1.25, 6, 0), MAT_WOOD(), x, y + 0.55, z);
++          KT.add(new THREE.SphereGeometry(0.09, 6, 3), snowM, x, y + 1.18, z, 0, { sy: 0.5 });
++          col({ type: 'cyl', x, z, r: 0.12, top: y + 1.2, noStand: true, seeThrough: true });
++          const q = run[j - 1];
++          if (q) B.add(tube([[q[0], q[1] + 1.05, q[2]], [(q[0] + x) / 2, (q[1] + y) / 2 + 0.82, (q[2] + z) / 2], [x, y + 1.05, z]], 0.022, 4, 1), rope, 0, 0, 0);
++        });
++        run = [];
++      };
+       // (REV-HAM: one open side for the whole leg, the side most of its posts read as the lower one: near a switchback
+       //  the reading flipped from one post to the next, and the rope zigzagged across the trail at chest height)
+       const sideAt = (d) => { const cx = ax + ux * d, cz = az + uz * d; return H(cx - uz * 3.4, cz + ux * 3.4) < H(cx + uz * 3.4, cz - ux * 3.4) ? 1 : -1; };
+@@ -374,14 +386,17 @@ export function* buildHamalayiSteps(scene, physics) {
+         };
+         let x = cx - side * uz * 3.4, z = cz + side * ux * 3.4, k = 0;
+         for (; k < 5 && onSlide(x, z); k++) { x += side * uz * 0.3; z -= side * ux * 0.3; }
+-        if (onSlide(x, z)) { prev = null; continue; }
++        if (onSlide(x, z)) { flush(); continue; }
+         const y = H(x, z);
+-        KT.add(cyl(0.07, 0.09, 1.25, 6, 0), MAT_WOOD(), x, y + 0.55, z);
+-        KT.add(new THREE.SphereGeometry(0.09, 6, 3), snowM, x, y + 1.18, z, 0, { sy: 0.5 });
+-        col({ type: 'cyl', x, z, r: 0.12, top: y + 1.2, noStand: true, seeThrough: true });
+-        if (prev) B.add(tube([[prev[0], prev[1] + 1.05, prev[2]], [(prev[0] + x) / 2, (prev[1] + y) / 2 + 0.82, (prev[2] + z) / 2], [x, y + 1.05, z]], 0.022, 4, 1), rope, 0, 0, 0);
+-        prev = [x, y, z];
++        // (REV-HAM-ART: nor at the foot of the bank under the terrace's snow lip, where the ground 0.9 m further out stands
++        //  higher than the post's top (leg 3 by Lhar: the post stood on the rock under the lip and its rope ran up
++        //  through the lip to the next post on the terrace); and no rope between two posts a level apart)
++        let under = false; for (let a = 0; a < 8 && !under; a++) under = H(x + Math.sin(a * Math.PI / 4) * 0.9, z + Math.cos(a * Math.PI / 4) * 0.9) > y + 1.0;
++        if (under) { flush(); continue; }
++        if (run.length && Math.abs(y - run[run.length - 1][1]) > 1.0) flush();
++        run.push([x, y, z]);
+       }
++      flush();
+     }
+   }
+   for (let i = 0; i < TRAIL.length - 1; i++) {
+@@ -489,12 +504,19 @@ export function* buildHamalayiSteps(scene, physics) {
+   // (REV-HAM: the shed stood 1.2 m from the post, so a player at the post with his back to it had the Follow camera
+   //  over the shed's roof, 3 m from him, showing him through it as a silhouette. It stands 3.6 m off now, out of the
+   //  KEEP round the post; the pipe runs low along the snow from its wall to the post's foot)
+-  const SH = { x: HP.x - 4.8, z: HP.z + 0.6 };
++  // (REV-HAM-ART: 4.8 m due west of the post it still stood on the line from the post back to the Follow camera when
++  //  he turns from the post to the winch (east): the camera looked down over its roof and showed his legs through it.
++  //  It backs onto the cliff foot now, south-west of the post (the cliff rises at z −24.5 here), its gauge to the
++  //  yard; that line passes 2 m clear of it, and nobody stands between it and the rock)
++  const SH = { x: 15.0, z: -23.0 };
+   {
+-    const gy = H(HP.x, HP.z), gs = H(SH.x, SH.z);
++    const gy = H(HP.x, HP.z), gs = Math.min(H(SH.x, SH.z), H(SH.x - 1.2, SH.z), H(SH.x + 1.2, SH.z), H(SH.x, SH.z + 0.9));   // (on its lowest corner: the yard falls 0.2 m westward here)
+     B.add(bbox(2.4, 2.2, 1.8, 0.06, 2), teal, SH.x, gs + 1.1, SH.z);
+     B.add(cyl(0.12, 0.12, 2.2, 8, 0), pm('#c8a050', 0.4, { metalness: 0.6 }), HP.x, gy + 1.1, HP.z);
+-    B.add(tube([[SH.x + 1.15, gs + 0.55, SH.z - 0.35], [SH.x + 1.55, gs + 0.14, SH.z - 0.4], [HP.x - 0.6, gy + 0.14, HP.z + 0.05], [HP.x - 0.08, gy + 0.5, HP.z]], 0.08, 6, 1), iron, 0, 0, 0);
++    { // the pipe out of the shed's east wall, down onto the snow, along it to the post's foot and up into it
++      const ux = HP.x - SH.x - 1.55, uz = HP.z - SH.z + 0.2, ul = Math.hypot(ux, uz), ex = ux / ul, ez = uz / ul;
++      const run = [0.2, 0.4, 0.6, 0.8].map((t) => { const x = SH.x + 1.55 + ux * t, z = SH.z - 0.2 + uz * t; return [x, H(x, z) + 0.14, z]; });
++      B.add(tube([[SH.x + 1.15, gs + 0.55, SH.z - 0.2], [SH.x + 1.55, gs + 0.14, SH.z - 0.2], ...run, [HP.x - ex * 0.6, gy + 0.14, HP.z - ez * 0.6], [HP.x - ex * 0.08, gy + 0.5, HP.z - ez * 0.08]], 0.08, 6, 1), iron, 0, 0, 0); }
+     col({ type: 'box', x: SH.x, z: SH.z, hw: 1.2, hd: 0.9, top: gs + 2.2, noStand: true });   // (a wall, not a step: like the winch beside it, nobody stands on the shed's roof)
+     col({ type: 'cyl', x: HP.x, z: HP.z, r: 0.25, top: gy + 2.4, noStand: true });
+     put('lift', 'heatCabinet', SH.x, SH.z, 0, (k) => heatCabinetDress(k), { y: gs, col: false, nocheck: true });
+@@ -653,12 +675,18 @@ export function* buildHamalayiSteps(scene, physics) {
+   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
+   // (FX-SOFT: the vent's steam was a hard white open cone: now a billowing column of soft puffs, from the game's particle
+   //  system, which the room's updaters get as their third argument)
+-  const steamPl = new Plume({ rate: 15, rise: 3.2, h: 15, w0: 1.4, w1: 6.4, a: 0.5, add: 0.08, drift: 1.6, spread: 0.6, color: '#eef6ff' });
++  // (REV-HAM-ART: seen against the basin's dark cliff the column read as a brown, dusty cloud: ~70 small puffs at half
++  //  alpha in an off-white let the rock through each one, and their many lobes speckled it. Now ~48 larger puffs, denser
++  //  (0.7), plain white (linear 1.0–1.1, no glow), holding their density longer before they thin (fade from 55 % of
++  //  their life). A/B in one session on the Vega 8, from (4254, −47.8) looking west, twice each: the column's region mean
++  //  luminance 146–152 → 168–171, its grain 4.0–4.2 → 3.1–3.3; live puffs ~72 → ~48, their summed quad area ~0.87 of
++  //  before; the same one draw call. Brighter than 1, or the round soft cell, read as a glowing lamp, not steam)
++  const steamPl = new Plume({ rate: 9, rise: 3.0, h: 15, w0: 1.8, w1: 7.4, a: 0.7, add: 0.04, drift: 1.2, spread: 0.45, color: [1.0, 1.04, 1.1], cell: 1, fi: 0.15, fo: 0.55 });
+   let steamLevel = 0;
+   updaters.push((dt, t, fx) => { if (steamLevel > 0 && fx) steamPl.tick(fx, dt, ox + VENT.x, H(VENT.x, VENT.z) + 0.9, oz + VENT.z, steamLevel); });
+   const seal = mesh(group, cyl(1.6, 1.6, 0.3, 18, 0), tm('stone', { color: '#b8a898' }), VENT.x, H(VENT.x, VENT.z) + 0.15, VENT.z, 0);
+   R.vent = {
+-    ...W(VENT.x, VENT.z), open: false, melted: false,
++    ...W(VENT.x, VENT.z), open: false, melted: false, plume: steamPl,
+     melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
+     setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steamLevel = b ? 1 : 0; },
+   };
+@@ -707,7 +735,7 @@ export function* buildHamalayiSteps(scene, physics) {
+     }
+     // (the random pines keep off the walks and out of the lift station's yard: filtered, so the stream of the
+     // random sequence — and every rock placed after it — stays as it was)
+-    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (Math.hypot(t.x - 26, t.z + 20.5) < 8 || PATHS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.9)) list.splice(i, 1); }
++    for (let i = list.length - 1; i >= 0; i--) { const t = list[i]; if (Math.hypot(t.x - 26, t.z + 20.5) < 8 || Math.hypot(t.x - SH.x, t.z - SH.z) < 3.2 || PATHS.some(([P, hw]) => seg(P, t.x, t.z) < hw + 0.9)) list.splice(i, 1); }   // (REV-HAM-ART: nor through the heat station's shed)
+     for (const [x, z, s] of [[-4, 94, 1.1], [-0.5, 97.5, 0.85], [-8, 96, 0.95], [18, 66, 1.15], [21.5, 64, 0.9], [-24, 66, 1.0], [-27.5, 63, 1.2], [-21, 94, 1.0], [27, 58, 1.05], [-31, -1, 1.1], [-34.5, 19, 1.0], [15, 24, 0.95], [12, -31, 1.0], [9, -34, 0.85], [44.5, -28.5, 1.0], [20, -50, 1.1], [23, -53, 0.9], [46, -52, 1.0]]) {
+       if (terrain.slopeAt(x, z) > 0.5) { dress.log.push(`pine @${x},${z} on a slope`); continue; }
+       check('pine', x, z, 0.5 * s);
+@@ -738,7 +766,7 @@ export function* buildHamalayiSteps(scene, physics) {
+     }
+     // (REVIEW-HAMALAYI: none on a walk or in the icefall's spur — one stood him on top of it at the tree bridge's north end;
+     //  marked after the draws, kept in the list, so nothing else moves or changes its shape)
+-    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27);
++    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27) || Math.hypot(q.x - SH.x, q.z - SH.z) < 1.8 + q.s;   // (REV-HAM-ART: none in the heat station's shed)
+     const rm = pm('#ffffff', 0.95, { vertexColors: true });
+     for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !r.off && !lba1.within(r.x, r.z, 0.8)));
+     for (const r of rocks) if (r.s > 0.6 && !r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
+diff --git a/lba3/src/game/obsroom.js b/lba3/src/game/obsroom.js
+index cdf39c15..906a1f5c 100644
+--- a/lba3/src/game/obsroom.js
++++ b/lba3/src/game/obsroom.js
+@@ -21,7 +21,7 @@ export function buildObsRoom(scene, physics) {
+   const B = new RoomBuilder(scene, physics, 'obsv', 4600, 0);
+   const R = B.room, k = B.k;
+   const W = 13, D = 13, H = 6.5;
+-  R.view = 15; R.follow = 0.25; R.music = 'well';
++  R.view = 15; R.follow = 0.25; R.music = 'mountain';   // (ORDER 25: the Hamalayi's own piece, not the caves' Well)
+   B.shell({
+     W, D, H, t: 0.5, floor: MAT.tiles('#d8d0c4', '#9aa0b4', '#7a7468', true, 4), slab: MAT.stone('grey'), body: MAT.stone('sand', 2), low: MAT.stone('slate', 1),
+     rail: MAT.brass(), cap: MAT.stone('grey'), dado: 1.0, rimH: 0.5,
+diff --git a/lba3/src/game/props-mountain.js b/lba3/src/game/props-mountain.js
+index 712baae1..49590e51 100644
+--- a/lba3/src/game/props-mountain.js
++++ b/lba3/src/game/props-mountain.js
+@@ -237,8 +237,11 @@ export function mountainHouse(k, o = {}) {
+     const lx = i % 2 ? 0.62 : 0.36, lz = i % 2 ? 0.36 : 0.62;
+     k.add(box(lx, 0.4, lz), stoneM, sx * (w / 2 - lx / 2 + 0.03), f + 0.22 + i * 0.46, sz * (d / 2 - lz / 2 + 0.03), 0, { jit: true });
+   }
+-  for (const sz of [-1, 1]) k.add(rbox(w + 0.08, 0.2, 0.26, 0.02), woodD, 0, f + h - 0.1, sz * (d / 2 - 0.08));
+-  for (const sx of [-1, 1]) k.add(rbox(0.26, 0.2, d + 0.08, 0.02), woodD, sx * (w / 2 - 0.08), f + h - 0.1, 0);
++  // (REV-HAM-ART: the band's top 2 cm above the wall's: level with it, the wood and the stone shared one plane under the
++  //  roof and flickered (tests/overlaps.mjs, Lhar's houses 3 and 5); it now caps the wall's outer edge, below the roof
++  //  slab's underside there (f + h + 0.06), its ends buried in the gables' sill)
++  for (const sz of [-1, 1]) k.add(rbox(w + 0.08, 0.22, 0.26, 0.02), woodD, 0, f + h - 0.09, sz * (d / 2 - 0.08));
++  for (const sx of [-1, 1]) k.add(rbox(0.26, 0.22, d + 0.08, 0.02), woodD, sx * (w / 2 - 0.08), f + h - 0.09, 0);
+   // the roof: two thick slate slabs on a ridge along x, snow on them, bargeboards, rafter tails, icicles
+   const tp = Math.tan(pitch), cp = Math.cos(pitch), sp = Math.sin(pitch), th = 0.22;
+   const run = d / 2 + ovE, yE = f + h + 0.06 - ovE * tp, yR = yE + run * tp, L = run / cp + 0.1, RW = w + 2 * ovG;
+diff --git a/lba3/tests/music.mjs b/lba3/tests/music.mjs
+index bf0508b8..0d287c37 100644
+--- a/lba3/tests/music.mjs
++++ b/lba3/tests/music.mjs
+@@ -19,14 +19,16 @@ async function until(fn, arg, timeout = 30) {
+ await open(page, '?nocine'); await menu(page, 'new');
+ await until(() => game.audio.ctx && game.audio.music.manifest && Object.keys(game.audio.music.manifest.tracks).length);
+ const man = await ev(() => ({ tracks: game.audio.music.manifest.tracks }));
+-const { PLAYLISTS } = await ev(() => import('./src/engine/music.js').then((m) => ({ PLAYLISTS: m.PLAYLISTS })));
++const { PLAYLISTS, MOODS } = await ev(() => import('./src/engine/music.js').then((m) => ({ PLAYLISTS: m.PLAYLISTS, MOODS: m.MOODS })));
+ 
+ // ---------------------------------------------------------------- files
+ const shipped = new Set(Object.values(gameFiles()));
+ const files = Object.values(man.tracks).map((t) => 'assets/music/' + t.file);
+ check('every track in the manifest is a shipped file (tools/game-files.mjs)', files.every((f) => shipped.has(f)), files.filter((f) => !shipped.has(f)));
+ const named = [...new Set(Object.values(PLAYLISTS).flat())];
+-check('every playlist piece is in the manifest', named.every((n) => man.tracks[n]), named.filter((n) => !man.tracks[n]));
++// (a piece written but not rendered yet — ORDER 25's mountain — counts when its mood names a stand-in that is: the playlist plays that)
++const has = (n) => !!man.tracks[n] || !!(MOODS[n]?.alt && man.tracks[MOODS[n].alt]);
++check('every playlist piece is in the manifest (or its stand-in is)', named.every(has), named.filter((n) => !has(n)));
+ const lens = Object.fromEntries(Object.entries(PLAYLISTS).map(([k, l]) => [k, l.filter((n) => man.tracks[n]).length]));
+ check('Citadel town, the island and Zeelich have two pieces or more', lens.citadel >= 2 && lens.island >= 2 && lens.zeelich >= 2, lens);
+ check('every track has its bar lines (manifest bars, for phrase starts and bar-line crossfades)', Object.values(man.tracks).every((t) => t.bars?.length > 8), Object.entries(man.tracks).filter(([, t]) => !(t.bars?.length > 8)).map(([k]) => k));
+diff --git a/lba3/tools/music/tracks/__init__.py b/lba3/tools/music/tracks/__init__.py
+index fefae419..67243eb5 100644
+--- a/lba3/tools/music/tracks/__init__.py
++++ b/lba3/tools/music/tracks/__init__.py
+@@ -1,4 +1,5 @@
+ # Build order (see docs/MUSIC.md for the scene each one belongs to).
+ ORDER = ['main_theme', 'home', 'village', 'island', 'well', 'workshop', 'facility', 'combat', 'zeelich', 'revelation', 'finale', 'homecoming', 'opening',
+          'village_b', 'island_b', 'zeelich_b',  # (MUSIC-2: the second pieces of the playlists)
+-         'asylum']  # (ORDER 19: the old asylum's own piece)
++         'asylum',  # (ORDER 19: the old asylum's own piece)
++         'mountain']  # (ORDER 25: the Hamalayi's own piece, Prayer Flags)
+diff --git a/lba3/tools/music/tracks/mountain.py b/lba3/tools/music/tracks/mountain.py
+new file mode 100644
+index 00000000..704c85a4
+--- /dev/null
++++ b/lba3/tools/music/tracks/mountain.py
+@@ -0,0 +1,150 @@
++"""Prayer Flags — the Hamalayi: the snow terraces, Lhar under its frozen waterfall, the monastery on the upper terrace,
++the observatory on the peak (src/game/hamalayi.js, obsroom.js).
++
++ORDER 25 (REV-HAM-ART). The Hamalayi outdoors and the observatory played The Well, the cave piece, so the high snow
++sounded like the caves under Citadel. This is the mountain's own piece: thin cold air, a long view, a village of stone
++houses with flags strung from roof to roof, and monks keeping the old monastery.
++
++A slow modal piece in A dorian, 4/4, 72 bpm. A pan flute tune over a low hummed drone and a harp that rings in open
++fifths; a temple bell; snow glints on the celesta. The monastery is the same notes heard from C (C lydian, the same
++key signature): a plain chant for low voices over a hummed drone, the bell on every other bar, no harp. On the peak the
++Entity cell (themes.py ENT_A, up a fifth from its D: A E F# D#) on a solo flute in A lydian, its wonder harmony moved
++with it (A, B/A, G#m7, Amaj7) — the shrine where Sendell speaks — then back through E7sus4 to the tune.
++No drums but a bell tree and one soft timpani roll; no brass but one horn answering the tune.
++
++  intro  1-4    wind, the hummed drone on A and E, the bell, snow on the celesta
++  A      5-12   pan flute: the mountain tune (A dorian), the harp under it, the drone in the bass
++  A2    13-20   the tune an octave up, a horn answers it from across the valley; strings below
++  B     21-28   the monastery: low chant in C lydian over the drone, the bell; a timpani roll into the peak
++  C     29-36   the peak: the Entity cell on the flute in A lydian, glass and harp, a bell tree; E7sus4 leads home
++  A'    37-44   the tune on the flute, the harp; thins out to the drone and the bell (loops to bar 5)
++
++Original work for this fan project, written by hand note by note; no melody, recording, MIDI or arrangement of the
++Little Big Adventure soundtracks was used or consulted (docs/MUSIC.md).
++"""
++from score import Song, P, pad, arp, bassline, roll, hit
++from themes import ENT_A, shift
++
++TUNE = ('E5:h. D5:e E5:e | A4:q. B4:e C5:q D5:q | E5:h G5:q F#5:q | E5:w |'
++        'D5:h. C5:e D5:e | E5:q. D5:e C5:q B4:q | A4:q. B4:e G4:q E4:q | A4:w')
++
++
++def song():
++    S = Song('mountain', 833333, title='Prayer Flags', role='the Hamalayi outdoors, the observatory')
++    S.intro_bars, S.body_bars = 4, 40
++    S.mix = {'room': {'rt60': 3.6, 'predelay': 0.03, 'bright': 0.42}, 'wet': {'front': 0.32, 'mid': 0.4, 'back': 0.5},
++             'lufs': -18.0}
++
++    S.chords(1, 'A5 | G/A | A5 | Em/A')
++    S.chords(5, 'Am | Am | Em/G | Am | G | C | Am Em | Am')
++    S.chords(13, 'Am | Am C | C | G | Em | Am Em | C G | Am')
++    S.chords(21, 'C | D/C | C | D/C | Am7 | Bm7 | Cmaj7 | D')
++    S.chords(29, 'A | B/A | G#m7 | Amaj7 | F#m7 | Dmaj7 | Bm7 | E7sus4')
++    S.chords(37, 'Am | Am | Em/G | Am | G | C | Am | A5')
++
++    pf = S.part('panflute', 'panflute', stem='front', pan=54, vol=92, legato=True, dyn='mp')
++    fl = S.part('flute', 'flute', stem='front', pan=60, vol=88, legato=True, dyn='p')
++    hn = S.part('horn', 'horn', stem='back', pan=82, vol=84, legato=True, dyn='p')
++    chn = S.part('chant', 'choir', stem='mid', pan=50, vol=86, legato=True, dyn='p')
++    hum = S.part('hum', 'oohs', stem='back', pan=64, vol=74, legato=True, dyn='pp')
++    bell = S.part('bell', 'tubular', stem='back', pan=40, vol=70, dyn='p')
++    cel = S.part('celesta', 'celesta', stem='mid', pan=30, vol=70, dyn='p')
++    hp = S.part('harp', 'harp', stem='mid', pan=36, vol=86, dyn='mp')
++    st = S.part('strings', 'strings_slow', stem='mid', pan=70, vol=80, legato=True, dyn='pp')
++    gl = S.part('glass', 'glass', stem='back', pan=56, vol=60, dyn='pp')
++    wind = S.part('wind', 'atmos', stem='back', pan=24, vol=58, dyn='pp')
++    cb = S.part('bass', 'contrabass', stem='mid', pan=64, vol=88, legato=True, dyn='pp')
++    tp = S.part('timpani', 'timpani', stem='back', pan=60, vol=80, dyn='p')
++    dr = S.part('perc', 'drums', stem='back', pan=50, vol=70, dyn='p')
++
++    def ring(b0, b1, vel=0):
++        # the harp: open fifths ringing up and back, two notes a beat
++        arp(hp, b0, b1, '0 1 2 3 2 1 2 1', step=0.5, n=4, low=P('A3'), high=P('E5'), length=1.3, vel=vel)
++
++    def drone(b0, b1, notes='A2+E3'):
++        hum.line(b0, ' | '.join([f'{notes}:w'] * (b1 - b0)))
++
++    # ------------------------------------------------------------ intro (1-4): wind, drone, bell, snow
++    pad(wind, 1, 5, n=2, low=P('A3'), high=P('E4'))
++    wind.hairpin(1, 3, 'ppp', 'pp')
++    drone(1, 5)
++    hum.hairpin(1, 3, 'ppp', 'pp')
++    hit(bell, 1, 'A4', vel=56, dur=3.5)
++    hit(bell, 3, 'E4', vel=50, dur=3.5)
++    cel.line(1, 'r:q E6:e r:e r:h | r:h. B5:e r:e | r:q A6:e r:e r:q E6:e r:e | r:w')
++    cb.line(3, 'A1:w | A1:w')
++    cb.hairpin(3, 5, 'ppp', 'pp')
++
++    # ------------------------------------------------------------ A (5-12): the tune on the pan flute
++    pf.line(5, TUNE)
++    pf.hairpin(5, 8, 'p', 'mp')
++    pf.hairpin(11, 13, 'mp', 'p')
++    ring(5, 13)
++    hp.dyn(5, 'p')
++    bassline(cb, 5, 13, 'R:w', octave=1)
++    cb.dyn(5, 'pp')
++    drone(5, 9)
++    cel.line(9, 'r:h. B5:e r:e | r:w | r:q E6:e r:e r:h | r:w')
++
++    # ------------------------------------------------------------ A2 (13-20): an octave up; a horn answers
++    pf.line(13, 'A5:h. G5:e A5:e | E5:q. F#5:e G5:q A5:q')
++    pf.line(17, 'G5:h. F#5:e G5:e | A5:q. G5:e E5:q D5:q | E5:h D5:q B4:q | A4:w')
++    pf.hairpin(13, 15, 'mp', 'mf')
++    pf.hairpin(17, 21, 'mf', 'p')
++    hn.line(15, 'E4:h C4:q D4:q | B3:h. r:q')
++    hn.line(19, 'G3:h B3:h | A3:w')
++    hn.hairpin(15, 17, 'p', 'mp')
++    hn.hairpin(19, 21, 'mp', 'pp')
++    pad(st, 13, 21, n=4, low=P('E3'), high=P('C5'))
++    st.hairpin(13, 17, 'pp', 'p')
++    st.hairpin(17, 21, 'p', 'pp')
++    ring(13, 21, vel=-4)
++    bassline(cb, 13, 21, 'R:w', octave=1)
++    hit(bell, 13, 'A4', vel=50, dur=3.5)
++
++    # ------------------------------------------------------------ B (21-28): the monastery, low chant in C lydian
++    chn.line(21, 'E4:h E4:q D4:q | E4:q F#4:q E4:h | G4:h. E4:q | D4:w |'
++                 'E4:h C4:q D4:q | B3:h D4:h | E4:h. D4:q | D4:h. r:q')
++    chn.hairpin(21, 25, 'p', 'mp')
++    chn.hairpin(26, 29, 'mp', 'p')
++    pad(hum, 21, 29, n=2, low=P('C3'), high=P('G3'))
++    hum.dyn(21, 'pp')
++    for b, p in ((21, 'C5'), (23, 'G4'), (25, 'C5'), (27, 'E4')):
++        hit(bell, b, p, vel=54, dur=3.5)
++    bassline(cb, 21, 29, 'R:w', octave=1)
++    pad(st, 25, 29, n=3, low=P('E3'), high=P('B3'))
++    st.dyn(25, 'pp')
++    roll(tp, 28, 'A2', 4, 26, 52)
++
++    # ------------------------------------------------------------ C (29-36): the peak, the Entity cell in A lydian
++    fl.line(29, shift(ENT_A, 7))   # A4 E5 F#5 D#5 … (the cell, up a fifth from D)
++    fl.line(33, 'C#5:q. B4:e A4:q C#5:q | F#5:h. E5:q | D5:q. C#5:e B4:q D5:q | E5:h. r:q')
++    fl.hairpin(29, 31, 'p', 'mp')
++    fl.hairpin(34, 37, 'mp', 'p')
++    hit(dr, 29, 'belltree', vel=40, dur=2)
++    pad(gl, 29, 37, n=3, low=P('A3'), high=P('E4'))
++    gl.hairpin(29, 33, 'ppp', 'pp')
++    arp(hp, 29, 37, '0 1 2 3 4 3 2 1', step=0.5, n=5, low=P('A3'), high=P('C#6'), length=1.3, vel=-6)
++    arp(cel, 29, 37, '4 r r r 3 r r r', step=0.5, n=5, low=P('A5'), high=P('E7'), length=1.0, vel=-10)
++    pad(wind, 29, 37, n=2, low=P('A3'), high=P('E4'))
++    wind.dyn(29, 'ppp')
++    bassline(cb, 29, 37, 'R:w', octave=1)
++
++    # ------------------------------------------------------------ A' (37-44): the tune on the flute; thins out
++    fl.line(37, 'E5:h. D5:e E5:e | A4:q. B4:e C5:q D5:q | E5:h G5:q F#5:q | E5:w |'
++                'D5:h. C5:e D5:e | E5:q. D5:e C5:q B4:q | A4:h. r:q | r:w')
++    fl.hairpin(37, 39, 'p', 'mp')
++    fl.hairpin(41, 44, 'mp', 'pp')
++    ring(37, 43, vel=-4)
++    hp.hairpin(41, 43, 'p', 'pp')
++    pad(st, 37, 42, n=4, low=P('E3'), high=P('C5'))
++    st.dyn(37, 'pp')
++    bassline(cb, 37, 43, 'R:w', octave=1)
++    cb.line(43, 'A1:w | A1:w')
++    drone(41, 45)
++    hum.hairpin(41, 45, 'pp', 'ppp')
++    hit(bell, 43, 'A4', vel=48, dur=3.5)
++    cel.line(43, 'r:q E6:e r:e r:h | r:h. B5:e r:e')
++    pad(wind, 41, 45, n=2, low=P('A3'), high=P('E4'))
++    wind.dyn(41, 'ppp')
++    return S

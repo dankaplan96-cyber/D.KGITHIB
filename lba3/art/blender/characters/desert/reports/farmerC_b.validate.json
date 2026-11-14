@@ -1,0 +1,339 @@
+{
+  "file": "art/blender/characters/desert/work/farmerC_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7317, 1.82, 1.1834], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "242"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: farmerC_b_belt -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_brows -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_coat -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_cuffL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_cuffR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_ear -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_ear.001 -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_earIn -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_earIn.001 -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_foreL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_foreR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_handL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_handR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_head -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_neck -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shinL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shinR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shoeL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shoeR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shoulderL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_shoulderR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_trousers -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_trunk -> farmerC_bRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_upperL -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: farmerC_b_upperR -> farmerC_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: farmerC_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature farmerC_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 36,
+    "meshes": 35,
+    "triangles": 3330,
+    "materials": 12,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8659,
+        -0.012,
+        -0.3829
+      ],
+      "max": [
+        0.8659,
+        1.808,
+        0.8006
+      ],
+      "size": [
+        1.7317,
+        1.82,
+        1.1834
+      ]
+    }
+  },
+  "passed": true
+}

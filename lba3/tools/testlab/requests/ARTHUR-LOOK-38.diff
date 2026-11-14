@@ -1,0 +1,295 @@
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 02a3be7..4767bc7 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -374,7 +374,11 @@ def build(name):
+     # a preteen (ARTHUR-12, characters.js design()): the skeleton gives the proportions; here a slimmer build than an
+     # adult's — narrower body, thinner limbs and neck, smaller hands — at full scale
+     teen = not kid and bool(L.get('teen'))
+-    limb = 0.86 if teen else 1.0
++    # ARTHUR-LOOK (the user 12.11: "Arthur is really not at the level of Twinsen and Zoé", then "yes, the body too"): his
++    # body finished as theirs are: a rounder tunic (16 sides, the shoulders sloping, soft folds in the skirt), a V opening
++    # at the neck, a buckle, fuller arms and neck, trousers with a turned-up cuff at the ankle. ARTHUR_LOOK_OLD=1: as before.
++    aT = teen and not os.environ.get('ARTHUR_LOOK_OLD')
++    limb = (0.92 if aT else 0.86) if teen else 1.0
+     grobo, bunny, esmer = race == 'grobo', race == 'bunny', race == 'esmer'
+     wide = (1.5 if grobo else 1.0) * slim * (0.92 if kid else 0.9 if teen else 1.0)
+     belly = L.get('belly', 0) or 0
+@@ -396,7 +400,7 @@ def build(name):
+     waistY = hipsY + 0.05
+     chestY = shY - 0.11
+     zc = lambda y: stoop * 0.5 * smooth(waistY, neckY, y)  # the stoop leans the chest forward
+-    N = 12   # (the tunic's rounded box, LBA2's townsfolk's: its flat front and corners are the design; finer, the apron and pockets laid on it sink in)
++    N = 16 if aT else 12   # (the tunic's rounded box, LBA2's townsfolk's: its flat front and corners are the design; finer, the apron and pockets laid on it sink in)
+ 
+     # SEAM-1: the tunic's top (torso) and its skirt (hips) met in one ring at the waist, each side rigid to its own bone, so
+     # walking (the torso turns against the hips) opened the seam 3-5 cm and the skirt's edge stuck out through the belt in
+@@ -483,9 +487,41 @@ def build(name):
+             ring(waistY - 0.01, tw, 0.115 * wide + belly * 0.7, -0.095 * wide, N, 0.75, cz=zc(waistY)),
+             ring((waistY + chestY) / 2, tw * 1.08 + belly * 0.3, 0.125 * wide + belly, -0.1 * wide, N, 0.72, cz=zc((waistY + chestY) / 2)),
+             ring(chestY, 0.2 * wide, 0.135 * wide + belly * 0.5, -0.11 * wide, N, 0.7, cz=zc(chestY)),
+-            ring(shY + 0.015, shX + 0.035 * wide, 0.095 * wide, -0.09 * wide, N, 0.6, cz=zc(shY)),
++        ] + ([ring(shY - 0.025, shX + 0.02 * wide, 0.118 * wide, -0.102 * wide, N, 0.66, cz=zc(shY)),
++              ring(shY + 0.015, shX - 0.01 * wide, 0.092 * wide, -0.088 * wide, N, 0.72, cz=zc(shY)),
++              ring((shY + neckY) / 2 + 0.01, 0.11 * wide, 0.075 * wide, -0.07 * wide, N, 0.8, cz=(zc(shY) + neckZ) / 2)] if aT else
++             [ring(shY + 0.015, shX + 0.035 * wide, 0.095 * wide, -0.09 * wide, N, 0.6, cz=zc(shY))]) + [
+             ring(neckY - 0.005, 0.075 * wide, 0.06 * wide, -0.055 * wide, N, 0.9, cz=neckZ),
+         ], cap_top=True)
++        if aT and not gown:
++            # (ARTHUR-LOOK) the V opening at the neck: the skin in a narrow V laid on the tunic's front, edged in the trim
++            def tz_(y):   # the tunic's front centre at y (the sections above, straight between)
++                pts_ = [(chestY, 0.135 * wide + zc(chestY)), (shY - 0.025, 0.118 * wide + zc(shY)), (shY + 0.015, 0.092 * wide + zc(shY)),
++                        ((shY + neckY) / 2 + 0.01, 0.075 * wide + (zc(shY) + neckZ) / 2), (neckY - 0.005, 0.06 * wide + neckZ)]
++                for (ya, za), (yb, zb) in zip(pts_, pts_[1:]):
++                    if ya <= y <= yb:
++                        return za + (zb - za) * (y - ya) / (yb - ya)
++                return pts_[0][1] if y < pts_[0][0] else pts_[-1][1]
++            vt_, vb_, vw_ = neckY - 0.038, chestY - 0.01, 0.046 * wide   # (its top under the collar band, which covers the neck's foot)
++            # (laid on the chest in six rows, each on the tunic's surface: one flat triangle cut into the curved chest)
++            on_ = lambda x, y, lift: (x, y, tz_(y) * (1 - 0.55 * abs(x)) + lift)
++            e_ = 0.011
++            vskin = b.P('vneck', skin, 'torso', 30)
++            vtr = b.P('vneckEdge', trim, 'torso', 30)
++            NV_ = 6
++            ys_ = [vb_ + (vt_ - vb_) * i / NV_ for i in range(NV_ + 1)]
++            wv_ = [vw_ * i / NV_ for i in range(NV_ + 1)]
++            sv_, sf_ = [], []
++            for y_, w_ in zip(ys_, wv_):
++                sv_ += [on_(-w_, y_, 0.004), on_(w_, y_, 0.004)]
++            for i in range(NV_):
++                sf_.append([2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2])
++            vskin.add(sv_, sf_)
++            for sxx in (1, -1):
++                ev_ = []
++                for y_, w_ in zip(ys_, wv_):
++                    ev_ += [on_(sxx * w_, y_ - (e_ * 0.9 if w_ == 0 else 0), 0.0055), on_(sxx * (w_ + e_), y_ - (e_ * 0.5 if w_ == 0 else 0), 0.0055)]
++                vtr.add(ev_, [[2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2] if sxx > 0 else [2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(NV_)])
+         if gown:
+             # the bodice over the skin: the same sections a little larger, the front cut down in a V to the bust
+             bod = b.P('bodice', tunic, w_torso, 50)
+@@ -561,7 +597,7 @@ def build(name):
+         if hemY >= hipsY - 0.12:   # (a short tunic hangs from the waist over the hips, it does not flare out like a bell: Tim's)
+             hemR = min(hemR, hipR * 1.08)
+         rings.append(ring(hemY, hemR, hemR * 0.85, -hemR * 0.8, N, 0.7))
+-        if (outfit in ('dress', 'robe') or hemY < hipsY - 0.4) and not gown:
++        if (outfit in ('dress', 'robe') or hemY < hipsY - 0.4 or aT) and not gown:
+             # soft folds below the hips, deeper toward the hem (cloth, not a tube)
+             def fold(r, amp):
+                 return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4)), y, z * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4))) for k, (x, y, z) in enumerate(r)]
+@@ -628,6 +664,11 @@ def build(name):
+         if (L.get('buckle') or cp.get('buckle')) and not (L.get('bow') or cp.get('bow')) and not gown:
+             fz = 0.118 * wide + belly * 0.72 + zc(waistY)
+             box(b.P('buckle', L.get('buckle') or cp.get('buckle') or '#d8b04a', w_waist, 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
++        elif aT and not gown:   # (ARTHUR-LOOK: a square brass buckle, its middle the belt's colour, as his mother's)
++            fz = 0.118 * wide + belly * 0.72 + zc(waistY)
++            bk_ = b.P('buckle', '#c8a050', w_waist, 20)
++            for x0, x1, y0, y1 in ((-0.028, 0.028, waistY + 0.026, waistY + 0.04), (-0.028, 0.028, waistY - 0.025, waistY - 0.011), (-0.028, -0.016, waistY - 0.011, waistY + 0.026), (0.016, 0.028, waistY - 0.011, waistY + 0.026)):
++                box(bk_, x0, x1, y0, y1, fz - 0.006, fz + 0.008)
+         if L.get('apron'):
+             # CAST-POLISH: an apron that follows the body: a bib on the chest with a strap over each shoulder, the skirt of it
+             # laid on the tunic's skirt (it used to be a flat panel the flare cut through), a patch pocket, a trim along the hem
+@@ -701,7 +742,9 @@ def build(name):
+             thigh = b.P('thigh' + s, pants, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
+             tube(thigh, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, r1, r2 * 1.05, 8)
+         if (hemY > ft[1] + 0.08 if cold else hemY > 0.085) and not gown and not grobo:  # (a mid-length coat still shows the shins; CONNECT-1: any hem above the shoe)
+-            tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], shinY(ft), ft[2]), r2 * 1.05, r2 * 0.9, 8)
++            tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], shinY(ft), ft[2]), r2 * (1.12 if aT else 1.05), r2 * (1.0 if aT else 0.9), 10 if aT else 8)
++            if aT:   # (ARTHUR-LOOK: the trousers' hem turned up into a cuff over the shoe's top)
++                tube(b.P('trouserCuff' + s, shade(pants, 0.86), 'knee' + s, 40), (ft[0], 0.13, ft[2]), (ft[0], 0.085, ft[2]), r2 * 1.12, r2 * 1.12, 10)
+             if teen and hemY > kn[1] - 0.12:
+                 # (ARTHUR-12) the knee as a ball on its own bone: kneeling at his boat (kneelWork, 2.3 rad) opened the
+                 # thigh's and the shin's tube ends into a gap; the ball fills the joint at any bend
+@@ -735,15 +778,22 @@ def build(name):
+         rolled = bool(L.get('rolled') or cp.get('rolled')) and not gown   # (sleeves rolled to the elbow: the bare forearm, a roll of cloth)
+         up = b.P('upper' + s, sleeve, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
+         sdrop = cp.get('shoulderDrop', 0.0)   # (G1-ART: the sleeve's top and the shoulder ball lowered onto the tunic's slope: a round shoulder, not a post at the corner)
+-        tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, ra * 1.05, ra, 8)
++        # (ARTHUR-LOOK, the user 12.11: "the shoulders are strange": the sleeve's flat top stood above the tunic as a square
++        # pad. Now the sleeve starts inside a round shoulder ball of its own width, the ball's top just over the tunic's
++        # shoulder line, so the cloth runs from the neck over a round shoulder into the sleeve)
++        SB_ = (sh[0] - sx * 0.025, sh[1] - 0.02, sh[2]) if aT else None
++        if aT:
++            tube(up, SB_, el, ra * 1.04, ra, 10)
++        else:
++            tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, ra * 1.05, ra, 8)
+         wrist = lerp(el, hd, 0.82)
+         if rolled:
+             # the forearm bare and slim to the wrist; the sleeve rolled up in a band just below the elbow (it keeps
+             # the elbow's crease covered: the roll is on the forearm's bone, the upper sleeve meets it)
+             # (it runs on to the hand bone, under the ball hand: a bare forearm stopping at the sleeve's wrist left a
+             # gap before the ball that showed in the opening's close-ups)
+-            tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, ra * 0.72, ra * 0.56, 8)
+-            tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, -0.02), lerp(el, hd, 0.2), ra * 1.1, ra * 1.04, 8)
++            tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, ra * (0.78 if aT else 0.72), ra * (0.58 if aT else 0.56), 10 if aT else 8)
++            tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, -0.02), lerp(el, hd, 0.2), ra * 1.1, ra * 1.04, 10 if aT else 8)
+         else:
+             tube(b.P('fore' + s, sleeve, 'el' + s, 50), el, wrist, ra * (0.85 if gown else 1), ra * (0.8 if gown else 1.08), 8)  # (sleeves widen a little toward the cuff)
+         if not gown and not rolled:
+@@ -762,7 +812,10 @@ def build(name):
+             w0 = lerp(el, hd, 0.74)
+             tube(b.P('wrist' + s, cp.get('glove') or skin, 'hand' + s, 60), w0, hc_, hr * 0.52, hr * 0.6, 8)
+         # the shoulder: flush with the sleeve, where it meets the body
+-        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01 - sdrop, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
++        if aT:
++            sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), SB_, ra * 1.04, 12, 8, (1.0, 1.0, 1.0), exact=True)
++        else:
++            sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01 - sdrop, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
+         if cp.get('epaulette'):   # (CAST-POLISH: a shoulder piece on the guards' coats)
+             sphere(b.P('epaulette', cp['epaulette'], 'sh' + s, 40), (sh[0] - sx * 0.012, sh[1] + 0.036, sh[2]), ra * 1.3, 9, 5, (1.3, 0.42, 1.2), exact=True)   # (a flat cushion on the shoulder ball)
+         if L.get('brace') and s == 'R':
+@@ -770,7 +823,7 @@ def build(name):
+ 
+     # ---------------------------------------------------------------- neck and head
+     head_w = lambda p: {'head': 1.0}
+-    nr = (0.075 if grobo else 0.052) * (1.0 if not kid else 0.9) * (0.88 if teen else 1.0)
++    nr = (0.075 if grobo else 0.052) * (1.0 if not kid else 0.9) * ((1.04 if aT else 0.88) if teen else 1.0)   # (ARTHUR-LOOK: a boy's neck, not a stalk)
+     tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60),
+          (0, neckY - 0.04, neckZ), (0, headY + 0.08, headZ), nr, nr * 0.95, 8)
+     # LBA2 heads are big: scale the design's head about the chin (quetch/esmer ×1.2, bunny ×1.1)
+@@ -818,28 +871,52 @@ def build(name):
+         z0, z1 = Hc[2] - hd_ * 0.95, Hc[2] + hd_ * 1.12
+         my = lambda y: y0 + (y - TW_Y0) / (TW_Y1 - TW_Y0) * (y1 - y0)
+         mz = lambda z: z0 + (z - TW_Z0) / (TW_Z1 - TW_Z0) * (z1 - z0)
+-        K = 11
++        # ARTHUR-LOOK (the user 12.11: "Arthur is really not at the level of Twinsen and Zoé"): his head as his father's new
++        # one is drawn: each section's outline rounded (Chaikin) and on 13 points a side instead of 11, the row between
++        # sections on a Catmull-Rom curve instead of a straight midpoint, so the egg reads round and not cut from facets;
++        # the crown domed under the hair. ARTHUR_LOOK_OLD=1 builds him as before.
++        aL = teen and not os.environ.get('ARTHUR_LOOK_OLD')
++        K = 13 if aL else 11
+         rr = []
+         FINE = []
+-        for (ya, ha), (yb, hb) in zip(TW_HEAD, TW_HEAD[1:]):
+-            ra_, rb_ = resample(ha, 25), resample(hb, 25)
+-            FINE += [(ya, ha), ((ya + yb) / 2, [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for p, q in zip(ra_, rb_)])]
+-        FINE.append(TW_HEAD[-1])
++        if aL:
++            R25 = [resample(h_, 25) for _, h_ in TW_HEAD]
++            nS = len(TW_HEAD)
++            for i in range(nS - 1):
++                for t in ((0.0, 0.5) if i < nS - 2 else (0.0, 0.5, 1.0)):
++                    ia, ib, ic, id_ = max(0, i - 1), i, i + 1, min(nS - 1, i + 2)
++                    cr_ = lambda a, b, c, d: 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t ** 3)
++                    yv = cr_(TW_HEAD[ia][0], TW_HEAD[ib][0], TW_HEAD[ic][0], TW_HEAD[id_][0])
++                    FINE.append((yv, [(max(0.0, cr_(R25[ia][k][0], R25[ib][k][0], R25[ic][k][0], R25[id_][k][0])), cr_(R25[ia][k][1], R25[ib][k][1], R25[ic][k][1], R25[id_][k][1])) for k in range(25)]))
++        else:
++            for (ya, ha), (yb, hb) in zip(TW_HEAD, TW_HEAD[1:]):
++                ra_, rb_ = resample(ha, 25), resample(hb, 25)
++                FINE += [(ya, ha), ((ya + yb) / 2, [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for p, q in zip(ra_, rb_)])]
++            FINE.append(TW_HEAD[-1])
+         for y, half in FINE:
++            if aL:
++                half = [(0.0, half[0][1])] + half[1:-1] + [(0.0, half[-1][1])]
++                for _ in range(2):
++                    o2 = [half[0]]
++                    for (xa, za), (xb, zb) in zip(half, half[1:]):
++                        o2 += [(0.75 * xa + 0.25 * xb, 0.75 * za + 0.25 * zb), (0.25 * xa + 0.75 * xb, 0.25 * za + 0.75 * zb)]
++                    o2.append(half[-1])
++                    half = o2
+             h = resample(half, K)
+             pts = [(x * sx_, my(y), mz(z)) for x, z in h] + [(-x * sx_, my(y), mz(z)) for x, z in reversed(h[1:-1])]
+             rr.append(pts)
+         top_ = (0.956, 0.035)
+-        if cp.get('dome'):
++        if cp.get('dome') or aL:
+             # G1-ART: a bald crown rounded over (the skull's top section closed on a point leaves a flat lid, which a bald
+             # head shows from every side): three rings on a quarter-round over the top section, about its middle
+             y_t, half_t = TW_HEAD[-1]
+             h_t = resample(half_t, K)
++            dome_ = cp.get('dome') or 0.008   # (ARTHUR-LOOK: a low dome, under the hair)
+             for th in (30, 55, 75):
+-                s_, dy_ = math.cos(math.radians(th)), cp['dome'] * math.sin(math.radians(th))
++                s_, dy_ = math.cos(math.radians(th)), dome_ * math.sin(math.radians(th))
+                 ring_ = [(x * s_, z_ * s_ + top_[1] * (1 - s_)) for x, z_ in h_t]
+                 rr.append([(x * sx_, my(y_t + dy_), mz(z)) for x, z in ring_] + [(-x * sx_, my(y_t + dy_), mz(z)) for x, z in reversed(ring_[1:-1])])
+-            top_ = (y_t + cp['dome'], top_[1])
++            top_ = (y_t + dome_, top_[1])
+         hp = b.P('head', skin, head_w, 80)
+         loft(hp, rr)
+         n = len(rr[0])
+@@ -888,6 +965,14 @@ def build(name):
+         # the nose, a little proud of the snout the head sections already give every Quetch: 'ball' (round, the farmer's),
+         # 'long' (a drooping hook: the old and the stern), 'button' (a small dab: the young); CAST noseS scales it
+         nk = None if teen else L.get('nose')   # (Arthur's face stays as it shipped)
++        if aL:
++            # ARTHUR-LOOK: his father's new nose (twinsen_poly.py, TWINSEN-LOOK-38) a size smaller: a round tip proud of the
++            # face and a short soft bridge into the brow (he had none: the snout of the head sections alone)
++            np_ = b.P('nose', shade(skin, 0.97), head_w, 80)
++            ty_ = my(0.8625)
++            sphere(np_, (0, ty_, front(0, ty_) + 0.0012 * sx_), 0.0072 * sx_, 10, 7, (1.0, 0.9, 1.0))
++            ya_, yb_ = my(0.8755), my(0.8645)
++            tube(np_, (0, ya_, front(0, ya_) - 0.0025 * sx_), (0, yb_, front(0, yb_) + 0.0005 * sx_), 0.0054 * sx_, 0.0068 * sx_, 10, cap=False, squash=0.62)
+         ns_ = cp.get('noseS', 1.0) * (0.9 if nk == 'ball' else 1.0)
+         ncol = shade(skin, 0.95)
+         if nk == 'ball':
+@@ -928,14 +1013,20 @@ def build(name):
+         if style != 'bald':   # (CAST-POLISH: a bun sits on hair, not on a bald head)
+             # the hair as a shell 6 mm off the skull, covering the back and the crown, its line rising from behind
+             # the ears to the top (long hair covers more of the sides)
+-            cap = b.P('hair', hair, head_w, 70)
+-            M_ = 13
++            cap = b.P('hair', hair, head_w, 180 if aL else 70)   # (ARTHUR-LOOK: shaded smooth, not in facets)
++            M_ = 15 if aL else 13
+             zcuts = [0.0, 0.03, 0.05, 0.07, 0.085] if style not in ('longtail', 'bun') else [0.02, 0.05, 0.07, 0.09, 0.1]
+             off_ = 0.007
+             if L.get('hairCuts') or cp.get('hairCuts'):   # (a fuller head of hair: the line further forward over the top, a little thicker; ARTHUR-12)
+-                zcuts, off_ = L.get('hairCuts') or cp['hairCuts'], 0.012
++                zcuts, off_ = L.get('hairCuts') or cp['hairCuts'], (0.017 if aL else 0.012)   # (ARTHUR-LOOK: a fuller head of hair)
+             rows = []
+-            for (y, half), zc_ in zip(TW_HEAD[2:], zcuts):
++            hsecs = list(zip(TW_HEAD[2:], zcuts))
++            if aL:   # (ARTHUR-LOOK: a row between each two, so the hair's outline from behind is round, not a hexagon)
++                h2 = []
++                for ((ya, ha), za), ((yb, hb), zb) in zip(hsecs, hsecs[1:]):
++                    h2 += [((ya, ha), za), (((ya + yb) / 2, [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for p, q in zip(resample(ha, 25), resample(hb, 25))]), (za + zb) / 2)]
++                hsecs = h2 + [hsecs[-1]]
++            for (y, half), zc_ in hsecs:
+                 full = resample(half, 25)
+                 pts = [(x, z) for x, z in full if z <= zc_]
+                 arc = list(reversed(pts)) + [(-x, z) for x, z in pts[1:]]
+@@ -951,9 +1042,14 @@ def build(name):
+                     r = math.hypot(x, z - 0.06) or 1
+                     row.append((x * sx_ + x / r * off_, my(y), mz(z) + (z - 0.06) / r * off_))
+                 rows.append(row)
++            crown_ = (0, my(0.966), mz(0.045)) if (L.get('hairCuts') or cp.get('hairCuts')) else (0, my(0.962), mz(0.03))
++            if aL:   # (ARTHUR-LOOK: the crown rounded over: a row two thirds of the way to the top point, lifted, not a flat fan)
++                crown_ = (0, my(0.972), mz(0.035))
++                last_ = rows[-1]
++                rows.append([(x * 0.55, y + (crown_[1] - y) * 0.75, z + (crown_[2] - z) * 0.55) for x, y, z in last_])
+             vv = [p for r in rows for p in r]
+             ff = [[(j + 1) * M_ + i, (j + 1) * M_ + i + 1, j * M_ + i + 1, j * M_ + i] for j in range(len(rows) - 1) for i in range(M_ - 1)]
+-            vv.append((0, my(0.966), mz(0.045)) if (L.get('hairCuts') or cp.get('hairCuts')) else (0, my(0.962), mz(0.03)))   # (the crown: over the fuller line's top)
++            vv.append(crown_)   # (the crown: over the fuller line's top)
+             o_ = (len(rows) - 1) * M_
+             ff += [[o_ + i + 1, o_ + i, len(vv) - 1] for i in range(M_ - 1)]
+             cap.add(vv, ff)
+@@ -983,12 +1079,23 @@ def build(name):
+             # (ARTHUR-12, Arthur at twelve) the fringe swept up off the forehead into a low quiff, three locks combed back
+             # from it over the crown, and a short tuft arching back at the crown that answers his father's knot (the
+             # small boy's upright spikes are gone)
+-            tf = b.P('tuft', hair, head_w, 40)
+-            sphere(tf, (0, my(0.948), mz(0.058)), 1.0, 9, 6, (0.05 * sx_, my(0.964) - my(0.948), mz(0.1) - mz(0.058)))
+-            for dx in (-0.024, 0.0, 0.024):
+-                tube(tf, (dx * sx_, my(0.958), mz(0.05)), (dx * 1.15 * sx_, my(0.963), mz(0.0)), 0.016 * sx_, 0.004, 6, squash=0.6)
+-            tube(tf, (0, my(0.955), mz(-0.012)), (0, my(0.966), mz(-0.03)), 0.017 * sx_, 0.012 * sx_, 6, squash=0.8)
+-            tube(tf, (0, my(0.966), mz(-0.03)), (0, my(0.958), mz(-0.046)), 0.012 * sx_, 0.004, 6, squash=0.8)
++            tf = b.P('tuft', hair, head_w, 80 if aL else 40)
++            nq_, sq_ = ((14, 9), 10) if aL else ((9, 6), 6)   # (ARTHUR-LOOK: the quiff and the locks on more sides, shaded smooth)
++            sphere(tf, (0, my(0.948), mz(0.058)), 1.0, nq_[0], nq_[1], (0.05 * sx_, my(0.964) - my(0.948), mz(0.1) - mz(0.058)))
++            if aL:
++                # (ARTHUR-LOOK: the three flat locks on the top are gone (they stood up as boards); the crown tuft a round lock
++                # that rises and arches back, tapering, as his father's knot does, not a folded stub: two round segments, a
++                # ball at the bend and at the tip so neither shows a seam)
++                k0, k1, k2 = (0, my(0.956), mz(-0.006)), (0, my(0.975), mz(-0.024)), (0, my(0.969), mz(-0.046))
++                tube(tf, k0, k1, 0.019 * sx_, 0.015 * sx_, sq_)
++                sphere(tf, k1, 0.015 * sx_, 10, 7)
++                tube(tf, k1, k2, 0.015 * sx_, 0.007 * sx_, sq_)
++                sphere(tf, k2, 0.007 * sx_, 8, 5)
++            else:
++                for dx in (-0.024, 0.0, 0.024):
++                    tube(tf, (dx * sx_, my(0.958), mz(0.05)), (dx * 1.15 * sx_, my(0.963), mz(0.0)), 0.016 * sx_, 0.004, sq_, squash=0.6)
++                tube(tf, (0, my(0.955), mz(-0.012)), (0, my(0.966), mz(-0.03)), 0.017 * sx_, 0.012 * sx_, sq_, squash=0.8)
++                tube(tf, (0, my(0.966), mz(-0.03)), (0, my(0.958), mz(-0.046)), 0.012 * sx_, 0.004, sq_, squash=0.8)
+         elif style == 'tuft' and not L.get('hat'):
+             # a spiky tuft over the forehead
+             tf = b.P('tuft', hair, head_w, 30)

@@ -1,0 +1,19 @@
+LBA3: The Awakening benchmark · build 0.34.0 (build 241) · 2026-10-28 17:57 (the user's Vega 8 laptop, pasted in chat), PLUGGED IN
+(0.34.0 = CAM-CLEAR-2 + CAST-UNIFORM (+23% character tris) + VOICE-MIX-2 on top of build 228; no performance work yet)
+
+summary · fps at full resolution / as played (automatic resolution on: the factor it settled at)
+             low                medium              high
+  street     60 / 60 (×1)       59.8 / 60 (×1)      54.5 / 54.7 (×0.9)
+  interior   57.2 / 60 (×1)     59.3 / 60 (×1)      58.8 / 60 (×0.9)
+  combat     60 / 59.8 (×1)     60 / 57.6 (×1)      60 / 60 (×0.9)
+  transition 59.5 / 60 (×1)     59 / 59.8 (×1)      57.3 / 59.5 (×0.9)
+  arrival    47.3 / 60 (×1)     58.8 / 60 (×1)      45 / 52.2 (×0.6)
+  hamalayi   60 / 60 (×1)       60 / 60 (×1)        59.7 / 60 (×0.8)
+Against build 228 plugged in: the ~56.5 fps plateau is almost gone this run (only Medium as-played combat 57.6, p95 18.2);
+High street 50.7 → 54.5 (still CPU-bound), High arrival 48.7 → 45.
+
+HIGH street fixed: sim 3.4 + render submit 14.1 ms, GPU 13.61 [scene 11.55 · shadow map 1.9], 260 calls (p95 287, shadow 84), GPU draws 397, 875k tris
+HIGH arrival fixed: sim 5.9 + submit 15.0, GPU 14.94 (p95 23.16), 357 calls (shadow 31), 612k tris; as played 52.2 at ×0.6 (submit 12.8, 351 calls)
+MEDIUM street fixed: sim 3.4 + submit 8.2, GPU 9.1, 181 calls (shadow 15), 462k tris (228: 165 calls, 410k) · as played 187 calls / 469k
+LOW street: submit 6.4 (228: 4.3), 149 calls (228: 129), 369k tris (228: 328k)
+Medium street breakdown, submit CPU ms: as is 9.4 · no shadows 7.4 · shadow map kept 6.9 · no MSAA 6.9 · draw batches off 10.0 (230 calls) · shadow cache off 10.1 (222 calls)

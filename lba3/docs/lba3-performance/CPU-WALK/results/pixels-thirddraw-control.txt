@@ -1,0 +1,6 @@
+pixel A/B · medium · 1366x768 · per shot: frozen vs PERF-CPU walk [frozen twice] · frozen vs three's full update [three twice] (objects in frozen ranges)
+street: 0 [0] · 0 [0] (1286) | 0 [0] · 0 [0] (1286) | 5 [0] · 5 [0] (1288) | 0 [0] · 0 [0] (1287) | 0 [0] · 0 [0] (1288) | 5 [0] · 5 [0] (1333)
+interior: 0 [0] · 0 [0] (524) | 0 [0] · 0 [0] (525) | 167 [0] · 167 [0] (523) | 0 [0] · 0 [0] (527) | 244 [0] · 244 [0] (527) | 0 [0] · 0 [0] (527)
+12 shots: frozen walk vs PERF-CPU walk 421 pixels differ (frozen walk twice: 0); frozen walk vs three's full update 421 (three twice: 0)
+{"sum":{"AC":421,"AA":0,"AB":421,"BB":0},"shots":12}
+(354.0 s)

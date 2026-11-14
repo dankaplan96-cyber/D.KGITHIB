@@ -1,0 +1,13 @@
+merge rc=0 1s 0 fails · ALL PASSED
+dynres rc=0 106s 0 fails · ALL PASSED
+stability rc=0 64s 0 fails · ALL PASSED
+transitions rc=0 50s 0 fails · ALL PASSED
+occluders rc=1 437s 16 fails · 16 FAILED
+camclear rc=0 675s 0 fails · ALL PASSED
+townlife rc=0 583s 0 fails · ALL PASSED
+holomap rc=0 89s 0 fails · ALL PASSED
+deaths rc=0 56s 0 fails · ALL PASSED
+opening rc=0 540s 0 fails · ALL PASSED
+DONE
+occluders (rerun, merged-town lookup): occluders rc=0 567s 0 fails · ALL PASSED
+opening after merging OPEN-3 (9750466): opening rc=0 386s 0 fails · ALL PASSED

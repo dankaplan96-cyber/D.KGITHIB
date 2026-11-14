@@ -1,0 +1,7 @@
+PASS the audio context starts with the first click (New Game) 
+FAIL sliders set the music, effects, voice and ambience buses {"music":0.30000001192092896,"sfx":0.5,"voice":0.4399999976158142,"amb":0.30000001192092896}
+PASS each place asks for its music (house ≠ outdoors) 
+PASS one music voice playing after each door, at most two alive (one fading) 
+PASS volumes kept after a relaunch 
+no errors
+1 FAILED

@@ -1,0 +1,129 @@
+diff --git a/lba3/src/engine/renderer.js b/lba3/src/engine/renderer.js
+index 8cadac3..ac276dd 100644
+--- a/lba3/src/engine/renderer.js
++++ b/lba3/src/engine/renderer.js
+@@ -320,6 +320,7 @@ class ScaledRenderPass extends RenderPass {
+   }
+ }
+ 
++const GRADE = 0.72;   // WA-13 (proto)
+ export class Renderer {
+   constructor(container) {
+     this.container = container;
+@@ -432,6 +433,11 @@ export class Renderer {
+         .replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )');
+       this.noOutputEdges = true;
+     }
++    // WA-13 (proto): LBA2's muted palette: the picture's chroma scaled by `grade` after tone mapping (the luma kept)
++    this.output.uniforms.grade = { value: GRADE };
++    { const M = this.output.material;
++      M.fragmentShader = M.fragmentShader.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform float grade;')
++        .replace('// color space', 'gl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), gl_FragColor.rgb, grade ), 0.0 );\n\t\t\t// color space'); }
+     this._outFS = this.output.material.fragmentShader;
+     if (typeof location !== 'undefined' && /[?&]oldedges\b/.test(location.search)) this.setOldEdges(true);
+     c.addPass(this.output);
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index 9c8062a..702bed5 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -403,6 +403,11 @@ function islandSplat(x, z, h, slope, w) {
+     w[3] = Math.max(w[3], soil * 2.5);
+     w[0] *= 1 - soil * 0.95;
+   }
++  if (h > 1.2) {   // WA-12 (proto)
++    const [soil, rock] = wildGround(x, z, n);
++    w[3] = Math.max(w[3], soil * 2.5); w[0] *= 1 - soil * 0.95;
++    w[2] = Math.max(w[2], rock * 1.2);
++  }
+   // the quay is paved
+   if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - (QUAY.x1 - 1)) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
+   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
+@@ -412,6 +417,18 @@ function islandSplat(x, z, h, slope, w) {
+   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); w[1] *= 1 - Math.min(1, w[2]); }
+ }
+ 
++// WA-12 (proto): LBA2's Citadel is mostly bare ground outside the town: broad patches (~20 m) of brown soil and of grey
++// rock showing through the grass, kept off the town, the fort and a little way off the paths. Returns [soil, rock] 0..1.
++function wildGround(x, z, n = 0) {
++  if (Math.hypot(x - POI.village.x, z - POI.village.z) < 40) return [0, 0];
++  if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < POI.fort.half + 8) return [0, 0];
++  const away = smoothstep(2.4, 4.5, pathDist(x, z));
++  const a = fbm(x * 0.05 + 11.3, z * 0.05 - 4.2, 3) + n * 0.12, b = fbm(x * 0.045 - 6.1, z * 0.045 + 9.7, 3) + n * 0.12;
++  const rock = smoothstep(0.1, 0.2, b) * away;
++  const soil = smoothstep(0.0, 0.1, a) * (1 - rock) * Math.max(away, 0.6);
++  return [soil, rock];
++}
++
+ // how much bare soil (vs lawn) the town ground shows at x,z
+ function townSoil(x, z, n = 0) {
+   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
+@@ -886,6 +903,7 @@ export function* buildWorldSteps(parentScene) {
+     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouseS(x, z, 0.4))) continue;
+     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
+     if (pathDistScatter(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
++    { const [soil, rock] = wildGround(x, z); if (soil + rock > 0.4) continue; }   // WA-12 (proto)
+     if (keepClear(x, z, -0.6)) continue;
+     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
+     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index f6597e1..73b2329 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -18,7 +18,7 @@
+ import * as THREE from 'three';
+ import { Terrain } from '../engine/terrain.js';
+ import { textures } from '../engine/textures.js';
+-import { rng, smoothstep } from '../engine/math.js';
++import { rng, smoothstep, fbm } from '../engine/math.js';
+ import { SpriteBatch } from '../engine/spritebatch.js';
+ import { MAX_SLOPE } from '../engine/physics.js';
+ import { rockGeometry, treeGeometry } from './vegetation.js';
+@@ -1125,6 +1125,21 @@ function planIsland(name, L, A, debug = false) {
+ // ================================================================== ground colours (Zeelich's palette)
+ const C = (c) => new THREE.Color(c);
+ const COL0 = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rockHi: C('#ecd0d4'), dust: C('#e8d4c0'), rim: C('#c8a0b8'), path: C('#f0d8c0'), pave: C('#fff0e8') };
++// WA-11 (proto): each island's own ground, as in LBA2 (the originals' grey share 39–74 %, their grass 0–11 %): broad
++// patches of bare rock and of paving across the flat land, in the island's own stone colour. rock / pave: the share of
++// the flat land; t: the noise level above which a patch lies, for that share (the patch noise is ~N(0, 0.3)).
++const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
++function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
++const BARE = {
++  otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
++  cxislet: { rock: 0.2, pave: 0.4, stone: '#c8c0cc' },
++  knartas: { rock: 0.45, pave: 0.1, stone: '#b4b0ac' },      // grey rock, a tiled terrace
++  mosquibee: { rock: 0.4, pave: 0, stone: '#b8b0a4' },
++  celebration: { rock: 0.65, pave: 0.05, stone: '#8c8490' }, // dark rock (and lava)
++  undergas: { rock: 0.65, pave: 0.05, stone: '#7c7880' },
++  platform: { rock: 0.4, pave: 0.35, stone: '#8c8c90' },     // dark rock and paving
++  liftdock: { rock: 0.5, pave: 0.1, stone: '#a0a0a4' },
++};
+ 
+ // ================================================================== one island
+ function buildIsland(scene, physics, name, L, at) {
+@@ -1180,6 +1195,15 @@ function buildIsland(scene, physics, name, L, at) {
+     const k = atData(x, z);
+     if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * 0.5);
+     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
++    if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
++  };
++  // WA-11 (proto): [rock, pave] shares of the island's bare patches at x,z (none on the landing pad or the paved squares)
++  const BG = BARE[name] && { ...BARE[name], col: C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
++  const bare = (x, z) => {
++    if (Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return [0, 0];
++    const r = smoothstep(BG.tr - 0.03, BG.tr + 0.03, fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
++    const p = smoothstep(BG.tp - 0.03, BG.tp + 0.03, fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3)) * (1 - r);
++    return [r, p];
+   };
+   const splatFn = (x, z, h, slope, wt) => {
+     wt[0] = 1; wt[1] = 0; wt[2] = 0; wt[3] = 0; wt[4] = 0;
+@@ -1190,6 +1214,10 @@ function buildIsland(scene, physics, name, L, at) {
+     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
+     if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
+     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
++    if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
++      const [r, p] = bare(x, z);
++      wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p);
++    }
+   };
+   const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
+   group.add(terrain.mesh);

@@ -1,0 +1,9 @@
+geometry / move / hide edits on frozen batched pieces (street, 416 pieces, GEO.n 0)
+  position needsUpdate: left its batch · an untouched piece stayed · GEO.n 0 → 1
+  index needsUpdate: left its batch · an untouched piece stayed · GEO.n 1 → 2
+  position replaced (setAttribute, another version): left its batch · an untouched piece stayed · GEO.n 2 → 3
+  moved 1 cm: left its batch · an untouched piece stayed · GEO.n 3 → 3
+  hidden: left its batch · an untouched piece stayed · GEO.n 3 → 3
+ALL AS EXPECTED
+{}
+(0.7 s)

@@ -1,0 +1,365 @@
+{
+  "prop": {
+    "name": "chest_honey",
+    "builder": "chest",
+    "opts": {
+      "w": 0.8,
+      "d": 0.46,
+      "h": 0.44,
+      "pal": "honey"
+    },
+    "recipes": [
+      [
+        "wood",
+        "honey"
+      ],
+      [
+        "brass"
+      ],
+      [
+        "iron"
+      ]
+    ],
+    "usedAt": "src/game/interiors.js:501 (a honey chest; the same builder makes the chests at homelife.js:115, interiors.js:540/622, nbrhouse.js:98)"
+  },
+  "at": "2026-11-07T16:37:03.297Z",
+  "gpu": false,
+  "steps": [],
+  "checks": [
+    {
+      "name": "test spot clear of other colliders",
+      "ok": true,
+      "info": 0
+    },
+    {
+      "name": "same number of parts (draw calls) as the original",
+      "ok": true,
+      "info": [
+        3,
+        3
+      ]
+    },
+    {
+      "name": "part brass: the same cached game material as the original",
+      "ok": true,
+      "info": "b107474c-9dee-4835-95cc-afc49a189a3d"
+    },
+    {
+      "name": "part brass: size and place (orientation) match within 1 mm",
+      "ok": true,
+      "info": {
+        "size": [
+          0.65,
+          0.6022,
+          0.4975
+        ],
+        "orig": [
+          0.65,
+          0.6022,
+          0.4975
+        ],
+        "centreDiff": 0
+      }
+    },
+    {
+      "name": "part brass: triangles unchanged",
+      "ok": true,
+      "info": [
+        676,
+        676
+      ]
+    },
+    {
+      "name": "part iron: the same cached game material as the original",
+      "ok": true,
+      "info": "8d9725df-712f-4e48-b298-daaff9f0780e"
+    },
+    {
+      "name": "part iron: size and place (orientation) match within 1 mm",
+      "ok": true,
+      "info": {
+        "size": [
+          0.836,
+          0.048,
+          0.096
+        ],
+        "orig": [
+          0.836,
+          0.048,
+          0.096
+        ],
+        "centreDiff": 0
+      }
+    },
+    {
+      "name": "part iron: triangles unchanged",
+      "ok": true,
+      "info": [
+        160,
+        160
+      ]
+    },
+    {
+      "name": "part wood:honey: the same cached game material as the original",
+      "ok": true,
+      "info": "06b4af70-fdbe-4c72-a284-da06a1106314"
+    },
+    {
+      "name": "part wood:honey: size and place (orientation) match within 1 mm",
+      "ok": true,
+      "info": {
+        "size": [
+          0.8,
+          0.6053,
+          0.5043
+        ],
+        "orig": [
+          0.8,
+          0.6053,
+          0.5043
+        ],
+        "centreDiff": 0
+      }
+    },
+    {
+      "name": "part wood:honey: triangles unchanged",
+      "ok": true,
+      "info": [
+        268,
+        268
+      ]
+    },
+    {
+      "name": "draw calls in the game: candidate = original",
+      "ok": true,
+      "info": {
+        "none": {
+          "calls": 46,
+          "triangles": 19996
+        },
+        "orig": {
+          "calls": 52,
+          "triangles": 22204
+        },
+        "cand": {
+          "calls": 52,
+          "triangles": 22204
+        }
+      }
+    },
+    {
+      "name": "triangles drawn in the game: candidate = original",
+      "ok": true,
+      "info": {
+        "none": {
+          "calls": 46,
+          "triangles": 19996
+        },
+        "orig": {
+          "calls": 52,
+          "triangles": 22204
+        },
+        "cand": {
+          "calls": 52,
+          "triangles": 22204
+        }
+      }
+    },
+    {
+      "name": "looks the same from the game camera (mean pixel difference on the prop < 2/255)",
+      "ok": true,
+      "info": {
+        "propPixels": 465272,
+        "meanDiffOnProp": 0.004,
+        "maxDiff": 28
+      }
+    },
+    {
+      "name": "collision: he stops at the same place, from the front and from the side",
+      "ok": true,
+      "info": {
+        "orig": {
+          "fromFront": {
+            "x": 0,
+            "z": 0.63
+          },
+          "fromSide": {
+            "x": 0.8,
+            "z": 0
+          }
+        },
+        "cand": {
+          "fromFront": {
+            "x": 0,
+            "z": 0.63
+          },
+          "fromSide": {
+            "x": 0.8,
+            "z": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "info": []
+    }
+  ],
+  "blender": {
+    "exe": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+    "version": "5.2.3",
+    "how": "standard location"
+  },
+  "game": {
+    "floorY": 0,
+    "spotClear": 0,
+    "orig": [
+      {
+        "name": "06b4af",
+        "mat": "06b4af70-fdbe-4c72-a284-da06a1106314",
+        "tris": 268,
+        "verts": 804,
+        "size": [
+          0.8,
+          0.6053,
+          0.5043
+        ],
+        "centre": [
+          0,
+          0.3027,
+          0
+        ]
+      },
+      {
+        "name": "b10747",
+        "mat": "b107474c-9dee-4835-95cc-afc49a189a3d",
+        "tris": 676,
+        "verts": 2028,
+        "size": [
+          0.65,
+          0.6022,
+          0.4975
+        ],
+        "centre": [
+          0,
+          0.2961,
+          0.0012
+        ]
+      },
+      {
+        "name": "8d9725",
+        "mat": "8d9725df-712f-4e48-b298-daaff9f0780e",
+        "tris": 160,
+        "verts": 110,
+        "size": [
+          0.836,
+          0.048,
+          0.096
+        ],
+        "centre": [
+          0,
+          0.2488,
+          0
+        ]
+      }
+    ],
+    "cand": [
+      {
+        "name": "brass",
+        "mat": "b107474c-9dee-4835-95cc-afc49a189a3d",
+        "tris": 676,
+        "verts": 1592,
+        "size": [
+          0.65,
+          0.6022,
+          0.4975
+        ],
+        "centre": [
+          0,
+          0.2961,
+          0.0012
+        ]
+      },
+      {
+        "name": "iron",
+        "mat": "8d9725df-712f-4e48-b298-daaff9f0780e",
+        "tris": 160,
+        "verts": 274,
+        "size": [
+          0.836,
+          0.048,
+          0.096
+        ],
+        "centre": [
+          0,
+          0.2488,
+          0
+        ]
+      },
+      {
+        "name": "wood:honey",
+        "mat": "06b4af70-fdbe-4c72-a284-da06a1106314",
+        "tris": 268,
+        "verts": 660,
+        "size": [
+          0.8,
+          0.6053,
+          0.5043
+        ],
+        "centre": [
+          0,
+          0.3027,
+          0
+        ]
+      }
+    ],
+    "fp": {
+      "hw": 0.4,
+      "hd": 0.23,
+      "top": 0.6056
+    },
+    "info": {
+      "none": {
+        "calls": 46,
+        "triangles": 19996
+      },
+      "orig": {
+        "calls": 52,
+        "triangles": 22204
+      },
+      "cand": {
+        "calls": 52,
+        "triangles": 22204
+      }
+    },
+    "pixels": {
+      "propPixels": 465272,
+      "meanDiffOnProp": 0.004,
+      "maxDiff": 28
+    },
+    "walks": {
+      "orig": {
+        "fromFront": {
+          "x": 0,
+          "z": 0.63
+        },
+        "fromSide": {
+          "x": 0.8,
+          "z": 0
+        }
+      },
+      "cand": {
+        "fromFront": {
+          "x": 0,
+          "z": 0.63
+        },
+        "fromSide": {
+          "x": 0.8,
+          "z": 0
+        }
+      }
+    }
+  },
+  "passed": true
+}

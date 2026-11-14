@@ -1,0 +1,8 @@
+{"isle":"otringal","word":"GRAND HALL","result":"arrived","secs":10.6,"left":1.29,"from":[3.6,8.3],"at":[4.69,-16.14,3.004],"y":12.71,"calls":143,"tris":2250948,"state":"play"}
+{"isle":"knartas","word":"HARBOUR","result":"arrived","secs":7,"left":1.39,"from":[-15.7,-37.9],"at":[-11.58,-22.46,-1.323],"y":2.59,"calls":153,"tris":921034,"state":"play"}
+{"isle":"mosquibee","word":"HIVES","result":"arrived","secs":6.9,"left":1.33,"from":[23.5,-30.4],"at":[26.47,-8.18,2.859],"y":21.32,"calls":141,"tris":553230,"state":"play"}
+{"isle":"celebration","word":"FESTIVAL","result":"arrived","secs":3.1,"left":1.32,"from":[3.7,1.9],"at":[1.71,1.78,-2.769],"y":9.53,"calls":143,"tris":228196,"state":"play"}
+{"isle":"undergas","word":"GAS WORKS","result":"arrived","secs":6.5,"left":1.27,"from":[-35.5,-29],"at":[-15.96,-24.96,1.48],"y":21.32,"calls":127,"tris":261714,"state":"play"}
+{"isle":"cxislet","word":"OUTPOST","result":"arrived","secs":5.7,"left":1.26,"from":[4.5,3.5],"at":[-4.82,-9.15,-1.899],"y":4.72,"calls":108,"tris":142782,"state":"play"}
+{"isle":"platform","word":"LOADING DECK","result":"arrived","secs":3.7,"left":1.24,"from":[35.9,-36.3],"at":[35.98,-29.84,0.378],"y":4.35,"calls":142,"tris":694328,"state":"play"}
+no errors

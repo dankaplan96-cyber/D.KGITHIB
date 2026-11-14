@@ -1,0 +1,830 @@
+{
+ "conditions": "headless Chromium, SwiftShader (ANGLE), 1280x720, default settings, new game ?nocine; each spot: enterRoom (+ hero placed/turned), game.step(2.0), two warm renders, then renderer.info of one composed frame (all passes). CPU-side counts only; no GPU timing. Budget: calls <= before x 1.10, or under 775. Landmark spots: each build its own R.landmark (the stand and look moved where the planner camera model chose a clearer view), so those rows compare views, not identical camera positions.",
+ "rows": [
+  {
+   "spot": "otringal-arrival",
+   "callsBefore": 157,
+   "callsAfter": 160,
+   "dCalls": 3,
+   "trisBefore": 2269986,
+   "trisAfter": 2862406,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 982,
+   "geometriesAfter": 983,
+   "heroBefore": [
+    1903.59,
+    1808.35,
+    3.06
+   ],
+   "heroAfter": [
+    1904.3,
+    1809.33,
+    3.091
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.12
+    },
+    "landmark": {
+     "fg": 0.1,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.6
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "otringal-landmark",
+   "callsBefore": 144,
+   "callsAfter": 148,
+   "dCalls": 4,
+   "trisBefore": 2262634,
+   "trisAfter": 2858382,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 983,
+   "geometriesAfter": 984,
+   "heroBefore": [
+    1905.81,
+    1783.81,
+    -3.114
+   ],
+   "heroAfter": [
+    1912.31,
+    1784.31,
+    -2.456
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.12
+    },
+    "landmark": {
+     "fg": 0.1,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.6
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "knartas-arrival",
+   "callsBefore": 177,
+   "callsAfter": 173,
+   "dCalls": -4,
+   "trisBefore": 932268,
+   "trisAfter": 1110974,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1015,
+   "geometriesAfter": 1018,
+   "heroBefore": [
+    2214.35,
+    1762.05,
+    0.134
+   ],
+   "heroAfter": [
+    2214.35,
+    1762.05,
+    0.134
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.03
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "knartas-landmark",
+   "callsBefore": 185,
+   "callsAfter": 186,
+   "dCalls": 1,
+   "trisBefore": 926436,
+   "trisAfter": 1103328,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1015,
+   "geometriesAfter": 1018,
+   "heroBefore": [
+    2217.71,
+    1778.71,
+    -2.101
+   ],
+   "heroAfter": [
+    2214.21,
+    1783.21,
+    2.727
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.03
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "mosquibee-arrival",
+   "callsBefore": 141,
+   "callsAfter": 145,
+   "dCalls": 4,
+   "trisBefore": 582788,
+   "trisAfter": 668950,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1036,
+   "geometriesAfter": 1041,
+   "heroBefore": [
+    2583.54,
+    1769.62,
+    0.141
+   ],
+   "heroAfter": [
+    2583.54,
+    1769.62,
+    0.141
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.07
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "mosquibee-landmark",
+   "callsBefore": 143,
+   "callsAfter": 141,
+   "dCalls": -2,
+   "trisBefore": 564110,
+   "trisAfter": 647214,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1036,
+   "geometriesAfter": 1041,
+   "heroBefore": [
+    2587.21,
+    1792.71,
+    3.129
+   ],
+   "heroAfter": [
+    2583.21,
+    1793.21,
+    2.424
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.07
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "celebration-arrival",
+   "callsBefore": 146,
+   "callsAfter": 146,
+   "dCalls": 0,
+   "trisBefore": 248570,
+   "trisAfter": 260714,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1056,
+   "geometriesAfter": 1061,
+   "heroBefore": [
+    2895.79,
+    1807.84,
+    -2.681
+   ],
+   "heroAfter": [
+    2895.79,
+    1807.84,
+    -2.681
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.1
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "celebration-landmark",
+   "callsBefore": 135,
+   "callsAfter": 138,
+   "dCalls": 3,
+   "trisBefore": 247944,
+   "trisAfter": 260310,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1056,
+   "geometriesAfter": 1061,
+   "heroBefore": [
+    2896.6,
+    1800.6,
+    -1.572
+   ],
+   "heroAfter": [
+    2898.6,
+    1798.1,
+    -1.199
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.1
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "undergas-arrival",
+   "callsBefore": 148,
+   "callsAfter": 149,
+   "dCalls": 1,
+   "trisBefore": 322680,
+   "trisAfter": 339234,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1085,
+   "geometriesAfter": 1091,
+   "heroBefore": [
+    3184.54,
+    1771.02,
+    1.379
+   ],
+   "heroAfter": [
+    3184.54,
+    1771.02,
+    1.379
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.25
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "undergas-landmark",
+   "callsBefore": 133,
+   "callsAfter": 130,
+   "dCalls": -3,
+   "trisBefore": 294576,
+   "trisAfter": 303938,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1085,
+   "geometriesAfter": 1091,
+   "heroBefore": [
+    3205.21,
+    1775.21,
+    1.371
+   ],
+   "heroAfter": [
+    3201.21,
+    1775.71,
+    1.756
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.02,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.25
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "cxislet-arrival",
+   "callsBefore": 132,
+   "callsAfter": 134,
+   "dCalls": 2,
+   "trisBefore": 144968,
+   "trisAfter": 223204,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1108,
+   "geometriesAfter": 1115,
+   "heroBefore": [
+    3554.52,
+    1803.55,
+    -2.463
+   ],
+   "heroAfter": [
+    3554.52,
+    1803.55,
+    -2.463
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 1
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "cxislet-landmark",
+   "callsBefore": 108,
+   "callsAfter": 118,
+   "dCalls": 10,
+   "trisBefore": 143376,
+   "trisAfter": 222752,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1108,
+   "geometriesAfter": 1116,
+   "heroBefore": [
+    3544.1,
+    1790.6,
+    -2.464
+   ],
+   "heroAfter": [
+    3546.1,
+    1786.6,
+    -0.495
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.05
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 1
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "platform-arrival",
+   "callsBefore": 153,
+   "callsAfter": 153,
+   "dCalls": 0,
+   "trisBefore": 698630,
+   "trisAfter": 885516,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1139,
+   "geometriesAfter": 1147,
+   "heroBefore": [
+    3915.88,
+    1763.69,
+    0.071
+   ],
+   "heroAfter": [
+    3915.88,
+    1763.69,
+    0.071
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.33
+    },
+    "landmark": {
+     "fg": 0.07,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.33
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "platform-landmark",
+   "callsBefore": 153,
+   "callsAfter": 169,
+   "dCalls": 16,
+   "trisBefore": 721852,
+   "trisAfter": 921684,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1139,
+   "geometriesAfter": 1149,
+   "heroBefore": [
+    3916.21,
+    1771.21,
+    0.044
+   ],
+   "heroAfter": [
+    3918.21,
+    1768.71,
+    -0.669
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.33
+    },
+    "landmark": {
+     "fg": 0.07,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.33
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "liftdock-arrival",
+   "callsBefore": 169,
+   "callsAfter": 169,
+   "dCalls": 0,
+   "trisBefore": 159962,
+   "trisAfter": 160506,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1162,
+   "geometriesAfter": 1172,
+   "heroBefore": [
+    4199.19,
+    1811.02,
+    2.07
+   ],
+   "heroAfter": [
+    4199.19,
+    1811.02,
+    2.07
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.08,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.18
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "liftdock-landmark",
+   "callsBefore": 163,
+   "callsAfter": 168,
+   "dCalls": 5,
+   "trisBefore": 158844,
+   "trisAfter": 159508,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1162,
+   "geometriesAfter": 1172,
+   "heroBefore": [
+    4206.1,
+    1807.1,
+    3.117
+   ],
+   "heroAfter": [
+    4205.1,
+    1812.1,
+    3.018
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.08,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.18
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "tralu-arrival",
+   "callsBefore": 179,
+   "callsAfter": 179,
+   "dCalls": 0,
+   "trisBefore": 254364,
+   "trisAfter": 292348,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1193,
+   "geometriesAfter": 1203,
+   "heroBefore": [
+    4534.94,
+    1804.58,
+    1.942
+   ],
+   "heroAfter": [
+    4534.94,
+    1804.58,
+    1.942
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "tralu-landmark",
+   "callsBefore": 162,
+   "callsAfter": 170,
+   "dCalls": 8,
+   "trisBefore": 253046,
+   "trisAfter": 291818,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1193,
+   "geometriesAfter": 1203,
+   "heroBefore": [
+    4542.48,
+    1804.98,
+    3.107
+   ],
+   "heroAfter": [
+    4538.48,
+    1805.48,
+    2.327
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.17
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "orchard-arrival",
+   "callsBefore": 112,
+   "callsAfter": 112,
+   "dCalls": 0,
+   "trisBefore": 260046,
+   "trisAfter": 280462,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1213,
+   "geometriesAfter": 1223,
+   "heroBefore": [
+    4856.52,
+    1801.26,
+    1.664
+   ],
+   "heroAfter": [
+    4856.52,
+    1801.26,
+    1.664
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.05,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.23
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "orchard-landmark",
+   "callsBefore": 102,
+   "callsAfter": 103,
+   "dCalls": 1,
+   "trisBefore": 259716,
+   "trisAfter": 280134,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1213,
+   "geometriesAfter": 1223,
+   "heroBefore": [
+    4870.06,
+    1805.56,
+    -3.131
+   ],
+   "heroAfter": [
+    4869.06,
+    1810.56,
+    3.053
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0.02
+    },
+    "landmark": {
+     "fg": 0.05,
+     "body": 0,
+     "moved": true,
+     "fg0": 0.23
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "oldwatch-arrival",
+   "callsBefore": 97,
+   "callsAfter": 97,
+   "dCalls": 0,
+   "trisBefore": 58074,
+   "trisAfter": 58074,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1225,
+   "geometriesAfter": 1235,
+   "heroBefore": [
+    5196.29,
+    1788.3,
+    2.146
+   ],
+   "heroAfter": [
+    5196.29,
+    1788.3,
+    2.146
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": false,
+     "fg0": 0.03
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "oldwatch-landmark",
+   "callsBefore": 88,
+   "callsAfter": 88,
+   "dCalls": 0,
+   "trisBefore": 57730,
+   "trisAfter": 57730,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1225,
+   "geometriesAfter": 1235,
+   "heroBefore": [
+    5209.33,
+    1787.33,
+    3.027
+   ],
+   "heroAfter": [
+    5209.33,
+    1787.33,
+    3.027
+   ],
+   "views": {
+    "arrival": {
+     "fg": 0
+    },
+    "landmark": {
+     "fg": 0.03,
+     "body": 0,
+     "moved": false,
+     "fg0": 0.03
+    }
+   },
+   "withinBudget": true
+  },
+  {
+   "spot": "story-street",
+   "callsBefore": 918,
+   "callsAfter": 921,
+   "dCalls": 3,
+   "trisBefore": 630035,
+   "trisAfter": 658035,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1704,
+   "geometriesAfter": 1717,
+   "heroBefore": [
+    2372,
+    6,
+    2.67
+   ],
+   "heroAfter": [
+    2372,
+    6,
+    2.67
+   ],
+   "views": null,
+   "withinBudget": true
+  },
+  {
+   "spot": "story-plaza",
+   "callsBefore": 843,
+   "callsAfter": 846,
+   "dCalls": 3,
+   "trisBefore": 571080,
+   "trisAfter": 597720,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1706,
+   "geometriesAfter": 1719,
+   "heroBefore": [
+    2374,
+    -2,
+    3.342
+   ],
+   "heroAfter": [
+    2374,
+    -2,
+    3.342
+   ],
+   "views": null,
+   "withinBudget": true
+  },
+  {
+   "spot": "story-east",
+   "callsBefore": 951,
+   "callsAfter": 954,
+   "dCalls": 3,
+   "trisBefore": 635288,
+   "trisAfter": 663288,
+   "texturesBefore": 499,
+   "texturesAfter": 505,
+   "geometriesBefore": 1717,
+   "geometriesAfter": 1730,
+   "heroBefore": [
+    2394,
+    0,
+    -2.071
+   ],
+   "heroAfter": [
+    2394,
+    0,
+    -2.071
+   ],
+   "views": null,
+   "withinBudget": true
+  }
+ ],
+ "builds": {
+  "before": "d1addce (REV-V-1 head)",
+  "after": "6a0bdbe (SD-2-FIX on d1addce; the later merges of a9c1ec8 touch no Zeelich file)"
+ },
+ "planCost": "planIsland per island in the browser (plans.txt, ms column, one cold run, SwiftShader box under load): 39-500 ms after the view() search; it runs once at load. No baseline planning time was measured, so the added cost is not quantified"
+}

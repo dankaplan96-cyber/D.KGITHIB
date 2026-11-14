@@ -1,0 +1,120 @@
+{
+  "file": "art/blender/props/items/flask/source/flask.baseline.polyprop.json",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "bonus:flask.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.248,
+        0.248,
+        0.341
+      ],
+      "mesh": {
+        "vertices": 744,
+        "faces": 248,
+        "triangles": 248,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "bonus:flask"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "bonus:flask",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "bonus:flask",
+        "recipe": null,
+        "color": "#5ab0ff",
+        "roughness": 1,
+        "metalness": 0,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    }
+  ],
+  "images": [],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 1,
+    "meshes": 1,
+    "triangles": 248,
+    "materials": 1,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.124,
+        -0.124,
+        -0.124
+      ],
+      "max": [
+        0.124,
+        0.217,
+        0.124
+      ],
+      "size": [
+        0.248,
+        0.341,
+        0.248
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "flask",
+    "units": "metres; +y up; front +z; origin at the bonus centre (it bobs about it)",
+    "source": {
+      "kind": "code-built bonus",
+      "builder": "src/game/actors.js PICK.flask (HEAD e3876e05)"
+    },
+    "footprint": null,
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.124,
+        -0.124,
+        -0.124
+      ],
+      "max": [
+        0.124,
+        0.217,
+        0.124
+      ],
+      "size": [
+        0.248,
+        0.341,
+        0.248
+      ]
+    },
+    "triangles": 248
+  }
+}

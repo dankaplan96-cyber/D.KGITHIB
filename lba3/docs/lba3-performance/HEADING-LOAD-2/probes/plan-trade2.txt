@@ -1,0 +1,3 @@
+# name probe settings — the islands' tree trade-off again, its shadows priced (the cache redrawn for both frames)
+trade2-otringal q_area.js W_AREA=isle_otringal W_FAST=1 W_CULLLO=1 W_DROP=1 W_SHOTS=1 W_VARS=island_trees_coarse
+trade2-knartas q_area.js W_AREA=isle_knartas W_FAST=1 W_CULLLO=1 W_DROP=1 W_SHOTS=1 W_VARS=island_trees_coarse

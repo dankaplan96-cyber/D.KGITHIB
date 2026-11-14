@@ -1,0 +1,33 @@
+PASS 1920×1080: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 1920×1080: Esc from the settings resumes play 
+PASS 1920×1080: the canvas fills the window 
+PASS 1920×1080: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1920×1080: the pause menu fits 
+PASS 1366×768: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 1366×768: Esc from the settings resumes play 
+PASS 1366×768: the canvas fills the window 
+PASS 1366×768: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1366×768: the pause menu fits 
+PASS 1280×720: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 1280×720: Esc from the settings resumes play 
+PASS 1280×720: the canvas fills the window 
+PASS 1280×720: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1280×720: the pause menu fits 
+PASS 1024×768: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 1024×768: Esc from the settings resumes play 
+PASS 1024×768: the canvas fills the window 
+PASS 1024×768: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1024×768: the pause menu fits 
+PASS 800×600: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 800×600: Esc from the settings resumes play 
+PASS 800×600: the canvas fills the window 
+PASS 800×600: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 800×600: the pause menu fits 
+PASS 640×360: settings pages fit with Back, no text cut, no scrolling unless Advanced is open 
+PASS 640×360: Esc from the settings resumes play 
+PASS 640×360: the canvas fills the window 
+PASS 640×360: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 640×360: the pause menu fits 
+PASS reduced motion: the selected menu entry and settings row don't animate (they do without it) 
+no errors
+ALL PASSED

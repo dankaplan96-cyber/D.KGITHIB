@@ -1,0 +1,38 @@
+=== house: reachable floor 188 m²
+spawn at 1.2,9.9 walk-dist 0.07
+entry:cellar at -2.05,8.8 walk-dist 0.05
+BLOCKED exit:outdoor at 1.2,11.35 walk-dist 0.21 (r 0.75)
+exit:cellar at -3.45,8.9 walk-dist 0.05 (r 0.7)
+npc:zoe at -2.32,-2.62 walk-dist 0.08
+npc:arthur at 2.15,2.15 walk-dist 0
+npc:twinsen at -0.45,-0.25 walk-dist 0
+life:zoeDesk at -6.4,8.17 walk-dist 0.05
+life:bench at -12.38,2.2 walk-dist 0.06
+life:trunk at 3.1,9.1 walk-dist 0.07
+life:mendBox at 2.65,10.2 walk-dist 0.05
+life:meter at 3.55,10.45 walk-dist 0
+search:cupboard at -3.2,-1.6 walk-dist 0.07 (r 1.4)
+BLOCKED giver:firewood at -4.05,-2.95 walk-dist 0.78 (r 1)
+BLOCKED giver:dresser at -0.82,-3.22 walk-dist 0.67 (r 1.3)
+BLOCKED giver:nightstand at -4.2,0.95 walk-dist 0.55 (r 1)
+BLOCKED giver:chest at -4.18,0.1 walk-dist 0.63 (r 1.1)
+BLOCKED giver:toychest at 3.85,2.85 walk-dist 0.6 (r 1.1)
+BLOCKED giver:arthurchest at -13.08,-1.6 walk-dist 0.63 (r 1.2)
+BLOCKED giver:arthurbed at -12.5,4.9 walk-dist 0.95 (r 1.4)
+BLOCKED giver:bookcase at -13.28,9.3 walk-dist 0.53 (r 1.3)
+BLOCKED giver:readchair at -10.6,9.6 walk-dist 0.74 (r 1.2)
+BLOCKED giver:hallchair at -1.9,5.6 walk-dist 0.74 (r 1.2)
+op:twSpot at -0.45,-0.25 walk-dist 0
+op:zoTray at -1.78,-2.6 walk-dist 0.06
+op:zoSink at -2.42,-2.55 walk-dist 0.07
+op:twEnd at 1.55,-1.75 walk-dist 0
+op:walk1 at 1.15,-1.2 walk-dist 0.05
+op:walk2 at 1.25,2.6 walk-dist 0.05
+op:walk3 at 1.2,6.5 walk-dist 0.07
+overlap [[-4.5,7.3,1.25],[-6.5,7,1.25],0.11,0.22]
+overlap [[-3.35,-3.14,0.9],[-4.05,-2.95,0.6],0.26,0.49]
+=== cellar: reachable floor 74.6 m²
+spawn at -1.8,3.55 walk-dist 0.05
+BLOCKED FAR exit:house at -4.85,3.55 walk-dist 1 (r 0.6)
+BLOCKED giver:barrel at 4.6,-4 walk-dist 0.65 (r 1.1)
+BLOCKED giver:crates at 3.9,-3.7 walk-dist 0.25 (r 1.2)

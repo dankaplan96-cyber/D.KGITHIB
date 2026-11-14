@@ -1,0 +1,17 @@
+5.09 s · frame 1
+5.11 s region build 22 ms
+5.13 s · frame 2
+5.69 s region build 553 ms
+5.70 s · frame 3
+6.95 s region build 1241 ms
+6.97 s · frame 4
+8.03 s region build 1020 ms
+9.24 s warmShadows 1204 ms
+9.25 s route street setup 1 ms
+10.44 s · frame 5
+
+LBA3: The Awakening benchmark — visits (cold entry, repeated visits, sustained play) · build 0.42.1 · 2026-10-30 22:23
+camera: Follow (the player's follow camera at Far, along the route) · quality Auto · routes street · cold 2 s each · 0 cycles × 12 s · sustained 0 s
+benchmark preparation: none (the areas were built already)
+  cold     street         1   2.1   466.6 / 466.6 / 466.6 / 466.6     100 %   1 / 1 / 1 (0)   1176.2 / 1176.2   188   1854.7   Medium
+      every frame over 33 ms: 467@0.5s [frame before: work 12 ms] {main thread 2239 ms (a long task; no script named) | main thread 1179 ms (a long task; no script named)}

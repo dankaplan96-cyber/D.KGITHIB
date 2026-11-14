@@ -1,0 +1,36 @@
+# Every Zeelich island (q_rank.js W_FAST=1, headings 0/90/180/270, Follow camera at Far, Auto Medium, battery, 1366x768,
+# SwiftShader counts): main-pass mean triangles, base (63b7e84, port 8932) -> this build (port 8931); then calls/triangles per heading
+
+isle_otringal: mean 1222k -> 495k (-59 %)
+   base  0° 39/1132k 90° 45/1233k 180° 49/1257k 270° 43/1264k
+   after 0° 35/335k 90° 42/580k 180° 44/616k 270° 38/450k
+isle_knartas: mean 471k -> 289k (-39 %)
+   base  0° 50/534k 90° 43/497k 180° 41/421k 270° 38/431k
+   after 0° 45/372k 90° 39/365k 180° 41/184k 270° 38/234k
+isle_mosquibee: mean 236k -> 189k (-20 %)
+   base  0° 32/337k 90° 24/139k 180° 22/154k 270° 31/314k
+   after 0° 28/271k 90° 21/128k 180° 20/98k 270° 29/257k
+isle_celebration: mean 106k -> 69k (-35 %)
+   base  0° 25/125k 90° 22/123k 180° 22/94k 270° 21/81k
+   after 0° 25/110k 90° 22/59k 180° 22/57k 270° 21/50k
+isle_undergas: mean 121k -> 117k (-3 %)
+   base  0° 38/169k 90° 26/88k 180° 25/109k 270° 29/116k
+   after 0° 35/167k 90° 25/82k 180° 25/105k 270° 28/114k
+isle_cxislet: mean 100k -> 93k (-7 %)
+   base  0° 19/100k 90° 16/99k 180° 17/99k 270° 18/100k
+   after 0° 19/98k 90° 16/89k 180° 17/89k 270° 18/95k
+isle_platform: mean 347k -> 219k (-37 %)
+   base  0° 31/304k 90° 39/395k 180° 38/384k 270° 29/303k
+   after 0° 28/182k 90° 33/293k 180° 32/237k 270° 26/163k
+isle_liftdock: mean 65k -> 65k (+0 %)
+   base  0° 32/68k 90° 18/64k 180° 28/64k 270° 28/64k
+   after 0° 32/68k 90° 18/64k 180° 28/64k 270° 28/64k
+isle_tralu: mean 126k -> 122k (-3 %)
+   base  0° 49/138k 90° 25/115k 180° 25/115k 270° 41/136k
+   after 0° 49/136k 90° 25/113k 180° 25/109k 270° 41/130k
+isle_orchard: mean 139k -> 136k (-2 %)
+   base  0° 18/149k 90° 19/126k 180° 20/127k 270° 22/153k
+   after 0° 18/146k 90° 19/124k 180° 20/123k 270° 22/149k
+isle_oldwatch: mean 24k -> 20k (-17 %)
+   base  0° 16/24k 90° 16/24k 180° 16/24k 270° 16/24k
+   after 0° 16/19k 90° 16/19k 180° 16/21k 270° 16/22k

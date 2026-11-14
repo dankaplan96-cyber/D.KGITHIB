@@ -1,0 +1,34 @@
+PASS Citadel: the original's outdoor spots hold a container (bins, barrels, crates, a suitcase trolley), none skipped 
+PASS Citadel: each stands within 3 m of its spot 
+PASS Zeelich and its islands have containers 
+PASS the verb prompt ("Search") by an unsearched container, gone once searched 
+PASS a hop by the bin pops one bonus (kashes for a broke Twinsen), in flight 
+PASS it lands outside the bin (not inside it) 
+PASS it lands, and is still there 40 s later (no timeout, no blinking) 
+PASS he takes it by walking over it (+2 kashes: the original's n) 
+PASS full life: the barrel's heart lands beside it, is not taken, stays on the ground 
+PASS ...and is still there 25 s later 
+PASS hurt: walking over it heals him and it is gone 
+PASS full magic: a flask stays; with magic spent he takes it 
+PASS kashes are taken whatever his life and magic 
+PASS mashing Space/E at a container: one bonus, recorded once 
+PASS the interact key searches it in another behaviour (Athletic), with the prompt shown 
+PASS (two hearts are left lying for the reload) 
+first presses that searched nothing (pressed again), part 1: []
+PASS after a reload the bonuses left lying are back, same kind, same place 
+PASS the save holds them (loot) and the containers stay searched 
+PASS a searched container gives nothing more after the reload 
+PASS taking it after the reload works, and the save forgets it 
+PASS away in Zeelich the Citadel bonus is kept, unseen 
+PASS back on Citadel it is there, where it landed, and he takes it 
+PASS Zeelich's bonus waits in Zeelich (not seen on Citadel) 
+PASS a door in mid-flight: the bonus lands and waits 
+PASS a line of dialogue in mid-flight: it lands meanwhile 
+PASS a save in mid-air keeps it; loaded, it falls to the ground (one copy) 
+first presses that searched nothing (pressed again), part 2: [{"actT":0.05,"busy":false,"state":"play","pad":false,"reach":"otringal-c1","ground":true,"beh":"normal","trans":false}]
+PASS death → Retry: the bonuses left before the last save are back, once each 
+PASS a quest reward (owed pickups) is not container loot and still settles its debt 
+PASS a glint twinkles over an unsearched container, none over a searched one 
+first presses that searched nothing (pressed again): []
+no errors
+ALL PASSED

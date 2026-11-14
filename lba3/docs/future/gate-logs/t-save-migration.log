@@ -1,0 +1,31 @@
+=== save-migration start 2026-11-01T19:02:37Z
+["v1 save (no lists)",{"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v1"],"savedV":5,"toast":""},"no errors"]
+["save in a missing room",{"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v2"],"savedV":5,"toast":""},"no errors"]
+["corrupt save",{"state":"cinematicEnd","room":null,"chapter":0,"chapterKey":"well","cur":"well","keys":["lba3_save_v1_unreadable"],"savedV":null,"toast":"The save couldn't be loaded. It was kept aside; starting a new game."},"no errors"]
+["v4 in the core room",{"state":"dialog","room":"c3core","chapter":11,"chapterKey":"core","cur":"core","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"},"no errors"]
+["v4 in Sendell's chamber, her words done",{"state":"play","room":"c3sendell","chapter":10,"chapterKey":"shell","cur":"shell","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"},"no errors"]
+["v4 in the gallery",{"state":"dialog","room":"c3gallery","chapter":10,"chapterKey":"shell","cur":"shell","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"},"no errors"]
+["v4 fight begun (pylon 1)",{"state":"play","room":"c3core","chapter":11,"chapterKey":"core","cur":"core","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"},"no errors"]
+["v4 the epilogue",{"state":"play","room":null,"chapter":12,"chapterKey":"home","cur":"home","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"},"no errors"]
+PASS a v1 save (no lists) loads into play in chapter project, upgraded, the v1 kept as a backup {"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v1"],"savedV":5,"toast":""}
+PASS a save in a missing room lands outdoors in play, the old save kept as a backup {"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v2"],"savedV":5,"toast":""}
+PASS a corrupt save is set aside (never deleted), a new game starts with a message {"state":"cinematicEnd","room":null,"chapter":0,"chapterKey":"well","cur":"well","keys":["lba3_save_v1_unreadable"],"savedV":null,"toast":"The save couldn't be loaded. It was kept aside; starting a new game."}
+PASS a v4 save in the core room loads into chapter 12 (The Core), upgraded, the v4 kept as a backup {"state":"dialog","room":"c3core","chapter":11,"chapterKey":"core","cur":"core","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"}
+PASS a v4 save in Sendell's chamber stays in chapter 11 (The Shell) {"state":"play","room":"c3sendell","chapter":10,"chapterKey":"shell","cur":"shell","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"}
+PASS a v4 save in the gallery stays in chapter 11 (The Shell) {"state":"dialog","room":"c3gallery","chapter":10,"chapterKey":"shell","cur":"shell","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"}
+PASS a v4 save with the core fight begun loads into chapter 12 (The Core) {"state":"play","room":"c3core","chapter":11,"chapterKey":"core","cur":"core","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"}
+PASS a v4 save in the epilogue stays in the epilogue (its position moves from 11 to 12) {"state":"play","room":null,"chapter":12,"chapterKey":"home","cur":"home","keys":["lba3_save_v1","lba3_save_v1_backup_v4"],"savedV":5,"toast":"Magic level 4: the fire ball"}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 8 passed, 0 failed
+errors:     none, 1 expected (provoked by the test)
+  EXPECTED console error: save load failed Error: unreadable save
+    at Game.startContinue (http://localhost:8750/src/main.js:1275:21)
+    at Game.act (http://localhost:8750/src/main.js:1518:75)
+    at eval (eval at evaluate (:290:30), <anonymous>:1:38)
+    at UtilityScript.evaluate (<anonymous>:292:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)  (the corrupt save is read on purpose; the game logs it and starts fresh)
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== save-migration end rc=0 wall=690s 2026-11-01T19:14:07Z

@@ -1,0 +1,10 @@
+isle_knartas: 5 batches (trees 8, trees 4, trees 41, trees 6, trees 4)
+heading 0°: pixels differ 0 · main 49 calls 375k tris (batches, culled) vs 49 calls 534k (InstancedMeshes, as before)
+heading 45°: pixels differ 0 · main 45 calls 474k tris (batches, culled) vs 45 calls 547k (InstancedMeshes, as before)
+heading 90°: pixels differ 0 · main 41 calls 370k tris (batches, culled) vs 41 calls 497k (InstancedMeshes, as before)
+heading 135°: pixels differ 0 · main 43 calls 201k tris (batches, culled) vs 43 calls 439k (InstancedMeshes, as before)
+heading 180°: pixels differ 0 · main 41 calls 184k tris (batches, culled) vs 41 calls 422k (InstancedMeshes, as before)
+heading 225°: pixels differ 0 · main 41 calls 200k tris (batches, culled) vs 41 calls 422k (InstancedMeshes, as before)
+heading 270°: pixels differ 0 · main 38 calls 232k tris (batches, culled) vs 38 calls 432k (InstancedMeshes, as before)
+heading 315°: pixels differ 0 · main 40 calls 266k tris (batches, culled) vs 40 calls 440k (InstancedMeshes, as before)
+worst 0 pixels differ

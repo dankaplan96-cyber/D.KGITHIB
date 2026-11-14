@@ -1,0 +1,1067 @@
+// WORLD-LIFE (WORKLIST #37): residents who walk. A Resident is an NPC (the same models, talk prompt and voices) that is
+// not placed by the story: it follows a daily round of stops (src/game/walkrounds.js), walking between them over the
+// game's own walkable ground (src/game/walknav.js), and does what a person does at each: sits on a bench, stands at the
+// well, browses the stall, tends a flower bed, carries a basket home, chats with a neighbour, goes in at its own door.
+//
+//   - Avoidance: a resident steps round the hero, round the story's people and round each other (the right-hand rule, so
+//     two who meet head on pass), slows or waits when someone stands in the way, and never pushes anyone: actors have no
+//     bodies in the physics, so "never pushing the hero" is that a resident keeps out of his way, not the reverse.
+//   - Stuck: a resident that stops making progress plans again from where it stands; stuck again, it is put on its way
+//     (or at its stop) where the camera cannot see it; in view it waits and tries again, and gives the stop up in the end.
+//   - Talk: spoken to, a resident stops, turns and talks (its mouth moves with its voice, voice.js driveMouth), then
+//     goes on. The story's own people (anyone a chapter places) are not Residents and stay exactly where they are put.
+//   - Cost: only residents near the hero (or in view) are simulated every frame; the rest are stepped twice a second along
+//     their route with no physics and no animation (a stand-in for "where they would be"), and a resident out of sight
+//     is not drawn at all (the camera culls it, FarCull hides it far off).
+//   - The town's state (G1 world-life): a stop may belong to one of two states of the town, `stage: 0` (the well is dry:
+//     chapter 1, and chapter 2 until the valves are open) or `stage: 1` (the water is back, hot, the project's heat
+//     posts lit). A resident skips the other state's stops, and when the state changes the ones standing at the wrong
+//     stops move on within a few seconds. Nothing is saved: the state is read from the story's own flags each frame.
+// A resident's state is not saved: after a load every resident starts its round again at its first stop.
+//   - Indoors (INTERIOR-LIFE, src/game/roomlife.js): the people of Citadel's interiors are Residents too, with a manager of
+//     their own (game.roomWalkers: `new Walkers(game, { indoor: true })`; a definition with `indoor: true` joins it). Its
+//     planner walks the rooms' floors (walknav.js addFloor) on a finer grid; a resident of the room the hero is in is
+//     simulated every frame, every other one is stepped in the abstract state (no physics, no animation), as a street
+//     resident far off is. The two spaceports' people (`outdoor`) are in it too, tiered as the street's are (near the hero
+//     and in view: in full). The street's manager and its residents are unchanged by it.
+import * as THREE from 'three';
+import { NPC, contactRadius } from './actors.js';
+import { LOOKS } from './characters.js';
+import { WalkNav } from './walknav.js';
+import { mat } from '../engine/rig.js';
+import { dampAngle, rng, clamp } from '../engine/math.js';
+import { workSpot, workStep, knockStep, storySig, standsAt, STEP_ACTS } from './workhands.js';
+const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
+
+const DAY = 360;                       // seconds in a resident's "day": stops may keep to part of it (when: [from, to] of 0..1)
+const FULL_R = 60, REDUCED_R = 110;    // metres: simulated every frame / a third of the frames; beyond (or out of view): abstract
+const NEAR_R = 14;                     // metres: simulated every frame in view; out of the view a third of the frames (it may be about to come round)
+const CLOSE_R = 6;                     // metres: always simulated every frame, in view or not (WC-4: was NEAR_R for both)
+const STATICS_T = 0.1;                 // s: how often the list of the story's people near the hero is made again (their positions are read live)
+const OTHERS_R = 6;                    // m: the residents a walker steers round are those this near (its reach is under 3.5 m)
+const hashId = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
+const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+// a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
+export const stageOk = (s, stage) => s.stage == null || (Array.isArray(s.stage) ? s.stage.includes(stage) : s.stage === stage);
+
+// ------------------------------------------------------------------ what a resident may carry
+const CARRY = {
+  basket: () => {
+    const g = new THREE.Group();
+    const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.115, 0.13, 10, 1, true), mat('#b88a4a', { side: THREE.DoubleSide }));
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.02, 10), mat('#8a6430'));
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.014, 5, 12, Math.PI), mat('#8a6430'));
+    const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 6), mat('#d8c64a'));
+    wick.position.y = -0.16; base.position.y = -0.22; arch.position.y = -0.1; fruit.position.set(0.02, -0.15, 0.01);
+    g.add(wick, base, arch, fruit);
+    return g;
+  },
+  crate: () => {
+    const g = new THREE.Group();
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.26, 0.3), mat('#a67a48'));
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.375, 0.05, 0.315), mat('#6a4a2a'));
+    box.position.set(0, -0.2, 0.12); band.position.set(0, -0.2, 0.12);
+    g.add(box, band);
+    return g;
+  },
+  can: () => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.1, 0.17, 10), mat('#5a8ab8', { metalness: 0.3 }));
+    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.024, 0.2, 6), mat('#5a8ab8', { metalness: 0.3 }));
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.012, 5, 10, Math.PI), mat('#3a5a80'));
+    body.position.y = -0.16; spout.position.set(0, -0.12, 0.17); spout.rotation.x = 1.0; arch.position.y = -0.08; arch.rotation.y = Math.PI / 2;
+    g.add(body, spout, arch);
+    return g;
+  },
+  // INTERIOR-LIFE: a traveller's case (the spaceports, the ticket office): a small leather case with a handle and straps
+  case: () => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.13), mat('#7a4a2a'));
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 5, 10, Math.PI), mat('#3a2414'));
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.31, 0.14), mat('#c8a050'));
+    body.position.y = -0.2; handle.position.y = -0.05; strap.position.set(0.1, -0.2, 0);
+    const strap2 = strap.clone(); strap2.position.x = -0.1;
+    g.add(body, handle, strap, strap2);
+    return g;
+  },
+  sack: () => {
+    const g = new THREE.Group();
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.17, 9, 7), mat('#c8b48a'));
+    s.scale.set(1, 1.2, 0.9); s.position.set(0, -0.2, 0.05);
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 5), mat('#a8946a')); knot.position.set(0, -0.02, 0.05);
+    g.add(s, knot);
+    return g;
+  },
+};
+
+// ------------------------------------------------------------------ the manager (one per game)
+export class Walkers {
+  constructor(game, { indoor = false } = {}) {
+    this.game = game;
+    this.res = [];
+    this.indoor = indoor;
+    // (INTERIOR-LIFE: indoors a 0.25 m grid — a bar's back, a shop's counter gap are narrower than any lane — and the
+    //  body's own 0.45 m reach (the physics pushes a body that close off a stool or a counter: a route planned nearer
+    //  stuck there), the walls' shoulders costed from 0.8 m; a chair or a stool's foot given a 0.3 m berth, not the street's
+    //  half metre round a bench: the tables' chairs would close the room)
+    this.nav = indoor ? new WalkNav(game, { cell: 0.25, safeR: 0.45, hugR: 0.8, lowR: 0.3 }) : new WalkNav(game);
+    this.nav.pathDist = indoor ? null : game.world.pathDist;
+    this.rounds = null;           // set by walkrounds.js
+    this.pairs = new Map();
+    this.stamp = -1; this.frozen = false; this.statics = [];
+    this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3();
+    this.hero = { x: 0, z: 0, inside: false, room: null };
+    this.dayT = 0;
+    this.stage = this.stageNow(); this.pippa = null;
+    this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
+    this.measure = false;         // (tests / the perf probe: time every resident's update)
+    this.debug = false;           // (debugging: each walker's last steering numbers, Resident.dbg; WC-4: no longer made while measuring)
+    this.doors = indoor ? [] : (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
+    this.nav.keepOut = this.doors;
+  }
+  // the nearest doorway to a point (a house's own, and the story's: a resident does not stand in one)
+  doorDist(x, z) {
+    let d = 1e9;
+    for (const o of this.doors) d = Math.min(d, Math.hypot(o.x - x, o.z - z) - o.r);
+    return d;
+  }
+  add(r) { this.res.push(r); }
+  // the doors a walker keeps out of (a doorway is for the one who goes through it)
+  setKeepOut(list) { this.nav.keepOut = list; this.nav.cells.clear(); this.nav.cache.clear(); }
+  // once a frame (the first resident to update asks)
+  prep() {
+    const g = this.game;
+    if (this.stamp === g.time) return;
+    this.stamp = g.time;
+    this.dayT = ((g.time / DAY) % 1 + 1) % 1;
+    const h = g.hero, R = g.room;
+    this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor; this.hero.room = this.hero.inside ? R.id : null;
+    // the town's state: 0 the well is dry, 1 the water is back (hot)
+    const stage = this.stageNow();
+    if (stage !== this.stage) { this.stage = stage; this.stageChanged(); }
+    this.frozen = g.state === 'cutscene' || g.state === 'cinematic' || g.state === 'cinematicEnd' || !!g.reveal?.on;
+    // the camera's frustum (matrices as of the last drawn frame: a frame behind is fine for this)
+    const cam = g.camera;
+    cam.updateMatrixWorld();
+    this._m.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    this.frustum.setFromProjectionMatrix(this._m);
+    // the story's people near the hero: obstacles a resident walks round (WC-4: who they are is looked over ten times a
+    //  second, not every frame: their positions are read live, and they stand where they are put or walk a small round)
+    if (!(g.time - (this._statT ?? -9) < STATICS_T) || g.time < this._statT) {
+      this._statT = g.time;
+      this.statics.length = 0;
+      for (const n of g.npcs) {
+        if (n.ambient || !n.present) continue;
+        const dx = n.pos.x - h.pos.x, dz = n.pos.z - h.pos.z;
+        if (dx * dx + dz * dz < 4900) this.statics.push(n);
+      }
+    }
+    // the story's people on Citadel (where they stand now): routes keep clear of them; the cast's make-up is part of a route's key
+    // (INTERIOR-LIFE: indoors none of this, nor the stall keeper's sorting below: the street's manager does it)
+    if (this.indoor) { this.nav.step(120); return; }
+    if (g.time - (this._castT ?? -9) > 0.5) {   // (twice a second is plenty: they stand where they are put)
+      this._castT = g.time;
+      const soft = this.nav.soft; soft.length = 0; let sig = '';
+      this.pippa = null;
+      // (WC-4: where the chapter put them, n.placed, not where they stand now: a story person on a small round (WC-2) changed
+      //  the key every half second, and every resident's leg was planned again; the walk itself steers round them live)
+      for (const n of g.npcs) if (!n.ambient && n.present && Math.abs(n.pos.x) < 300) { const q = n.placed && n.placed.x != null ? n.placed : n.pos; soft.push(q); sig += Math.round(q.x) + ',' + Math.round(q.z) + ';'; if (n.def.id === 'pippa') this.pippa = n; }
+      if (sig !== this.nav.sig) { this.nav.sig = sig; if (this.nav.cache.size > 300) this.nav.cache.clear(); }
+    }
+    this.nav.step(120);
+    // the stall keeper sorts her fruit while no one is by (a story person: only her pose and which way she faces are set here,
+    // nothing else of hers; with Twinsen near she is hers again and turns to him as every story person does)
+    const pi = this.pippa, st = g.world.stall;
+    if (pi && st && !pi.controlled && !pi.listenTo && Math.hypot(pi.pos.x - st.x, pi.pos.z - st.z) < 0.6) {   // (only at her own place: a later chapter may stand her elsewhere)
+      const d = Math.hypot(pi.pos.x - h.pos.x, pi.pos.z - h.pos.z), far = !g.room && d > 5.5;
+      if (far && !pi.forceAnim && !pi.talking) pi.forceAnim = 'tinker';
+      else if (!far && pi.forceAnim === 'tinker') pi.forceAnim = null;
+      // (she stands in front of her counter, facing the well: sorting, she turns to the counter, and back; within 3.4 m of
+      //  Twinsen she is her own again and turns to him, as every story person does)
+      if (pi.forceAnim === 'tinker' || (!pi.forceAnim && !pi.talking && d > 3.4)) {
+        const want = st.a + (pi.forceAnim === 'tinker' ? Math.PI : 0), dt = Math.min(0.1, Math.max(0, g.time - (this._pt ?? g.time)));
+        pi.angle = dampAngle(pi.angle, want, 4, dt);
+      }
+      this._pt = g.time;
+    }
+  }
+  // (TOWN-LIFE-3: and 2, the evacuation (chapter 8): the heat posts dark, the town packing; a stop may name several states,
+  //  `stage: [0, 1]`)
+  stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : g.story.cur?.key === 'evacuation' ? 2 : 1; }
+  // the town's state changed (the valves opened): whoever stands at a stop of the other state moves on soon, one after another
+  // (one nobody sees is put on its way at once, as after a load: the rounds were made before the save's flags were in)
+  stageChanged() {
+    for (const r of this.res) {
+      const s = r.stops[r.ri];
+      if (!s || stageOk(s, this.stage) || r.st !== 'dwell') continue;
+      if (this.unseen(r.pos.x, r.pos.z, r.pos.y)) r.reset();
+      else r.tmr = Math.min(r.tmr, 1.5 + r.rnd() * 5);
+    }
+  }
+  inView(x, y, z, r = 1.6) { this._v.set(x, y + 0.9, z); return this.frustum.containsPoint(this._v) || this._sphere(r); }
+  _sphere(r) { const s = _sph; s.center.copy(this._v); s.radius = r; return this.frustum.intersectsSphere(s); }
+  tierOf(r) {
+    if (this.force != null) return this.force;   // (tests: simulate every resident in full, wherever the hero is)
+    if (this.indoor && !r.def.outdoor) return r.def.room && r.def.room === this.hero.room ? 0 : 2;   // (INTERIOR-LIFE: the hero's room in full, the others abstract; a spaceport's people as the street's, below)
+    const dx = r.pos.x - this.hero.x, dz = r.pos.z - this.hero.z, d = Math.hypot(dx, dz);
+    if (this.hero.inside || d > REDUCED_R + 40) return 2;
+    if (d < CLOSE_R) return 0;
+    // (WC-4: one 6–14 m off and out of the camera's view is stepped a third of the frames, with their time: nobody sees it,
+    //  and the frame it comes into view it is simulated in full again)
+    if (!this.inView(r.pos.x, r.pos.y, r.pos.z)) return d < NEAR_R ? 1 : 2;
+    return d < FULL_R ? 0 : d < REDUCED_R ? 1 : 2;
+  }
+  // can the camera not see this point (a place to put a stuck resident back on its way)?
+  unseen(x, z, y) {
+    const d = Math.hypot(x - this.hero.x, z - this.hero.z);
+    if (this.indoor && this.hero.inside) return d > 40 || (d > 6 && !this.inView(x, y, z, 2.2));   // (another room: out of sight; outdoors, the street's rule below)
+    if (this.hero.inside || d > 70) return true;
+    return d > 6 && !this.inView(x, y, z, 2.2);
+  }
+  // the other bodies a walker keeps clear of: the hero and the story's people (statics), and the other residents
+  others(self, out) {
+    out.length = 0;
+    const h = this.game.hero;
+    out.push(h);
+    for (const n of this.statics) out.push(n);
+    // (one the story or a test took off the streets is not there; WC-4: one further than OTHERS_R is out of its reach)
+    const sx = self.pos.x, sz = self.pos.z;
+    for (const r of this.res) if (r !== self && r.present && !r.away && !r.inside && Math.abs(r.pos.x - sx) < OTHERS_R && Math.abs(r.pos.z - sz) < OTHERS_R) out.push(r);
+    return out;
+  }
+  // a resident's pair mate meets it: both leave together
+  pair(id) { let p = this.pairs.get(id); if (!p) this.pairs.set(id, (p = { ready: new Set(), until: 0, speaker: null, turnT: 0 })); return p; }
+}
+const _sph = new THREE.Sphere();
+
+// ------------------------------------------------------------------ one resident
+export class Resident extends NPC {
+  constructor(game, def) {
+    super(game, def);
+    this.ambient = true;
+    const W = def.indoor ? (game.roomWalkers ||= new Walkers(game, { indoor: true })) : (game.walkers ||= new Walkers(game));
+    W.add(this);
+    this.W = W;
+    this.speed = def.speed || 1.1;
+    const mesh = this.rig.mesh;
+    if (def.tint && mesh?.material?.color) mesh.material.color.set(def.tint);
+    if (def.scale) this.rig.root.scale.multiplyScalar(def.scale);
+    this.bodyR = contactRadius(def.char, this.rig.root.scale.x);   // (its girth: the hero and the others keep out of it)
+    this.rnd = rng(hashId(def.id));
+    this.stops = [];
+    this.ri = 0; this.st = 'dwell'; this.tmr = 0;
+    this.path = null; this.wi = 0; this.job = null;
+    this.carrying = null; this.carryMesh = null; this.walkFrom = { x: 0, z: 0 };
+    this.vel = 0; this.gait = 0;
+    this.engaged = false; this.hold = 0; this.yieldT = 0; this.yieldV = null;
+    this.stuckT = 0; this.replans = 0; this.lastRescue = -99; this.rescues = 0;
+    // (PERF-SUBMIT, smoothness: the reduced tier's every-3rd-frame step and the abstract tier's half-second tick start at a
+    //  phase of the resident's own, so the street's residents don't all take theirs in the same frame — a regular bump
+    //  in the frame time every 3rd frame and every 30th; each one's own rate is unchanged)
+    { const h0 = hashId(def.id) >>> 0; this.accA = ((h0 % 30) / 60); this.accB = 0; this.skipN = (h0 >>> 5) % 3; }
+    this.tier = 2; this.noGate = 0;
+    this.sit = null; this.inside = false; this.insideT = 0; this.away = null;
+    this.log = [];               // the last few things it did (tests and debugging)
+    if (def.round) this.setRound(def.round.map((s) => ({ ...s })), def.start || 0);
+  }
+  // the story gave the streets back: it starts its round again at the stop it was on
+  reset() {
+    this.engaged = false; this.inside = false; this.hold = 0; this.sit = null; this.path = null; this.job = null; this.insideT = 0;
+    const stage = this.W.stageNow();
+    for (let k = 0; k < this.stops.length && !stageOk(this.stops[this.ri], stage); k++) this.ri = (this.ri + 1) % this.stops.length;
+    const s = this.stops[this.ri];
+    this.slotAt(s); this.arrived(s, true);
+    return { x: s.x, z: s.z, a: s.a ?? this.angle };
+  }
+  // the round is given once the world is ready (walkrounds.js); the resident starts part-way through its first stop
+  setRound(stops, start = 0) {
+    // (NO-AIR: a stop it works at — its hands on a table, a crate, a rim, a door — is stood at an arm's length from the
+    //  thing: workhands.js workSpot; the stops were set a metre off, and the hands worked on the air between)
+    for (const s of stops) {
+      if (s.seat || s.pair || s._ws) continue;
+      const an = this.actAnim(s); s._ws = true;
+      if (an === 'idle' || an === 'wipe' || s.act === 'warm' || s.door) continue;   // (a door: the last step to it is the knock's own, knockTick — its stop stays where a route ends)
+      const nav = this.W.nav;
+      const m = workSpot(this.game, s.x, s.z, s.a, an, { y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), ok: nav?.walkable ? (x, z) => nav.walkable(x, z) : null });
+      if (m) { s.x = m.x; s.z = m.z; }
+    }
+    this.stops = stops;
+    this.ri = start % stops.length;
+    const stage = this.W.stageNow();
+    for (let k = 0; k < stops.length && !stageOk(stops[this.ri], stage); k++) this.ri = (this.ri + 1) % stops.length;   // (it starts at a stop of the town's state)
+    const s = this.stops[this.ri];
+    for (let i = 0; i <= this.ri; i++) if (stops[i].carry !== undefined) this.carrySet(stops[i].carry);   // (what it holds at this point of its round)
+    this.slotAt(s);
+    this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() * 0.8 : 4;
+    this.st = 'dwell';
+    this.arrived(s, true);
+  }
+  // its area was built (src/main.js addActors gave it its definition): it starts its round now
+  placeAt(p) {
+    if (this.def.round && !this.stops.length) { this.setRound(this.def.round.map((s) => ({ ...s })), this.def.start || 0); return; }
+    super.placeAt(p);
+  }
+  note(s) { this.log.push(`${this.game.time.toFixed(1)} ${s}`); if (this.log.length > 24) this.log.shift(); }
+  get stop() { return this.stops[this.ri]; }
+  get here() { return this.pos; }
+
+  // ---------------------------------------------------------------- stops
+  // put it at a stop's slot (its standing place), facing as the stop says
+  slotAt(s) {
+    this.pos.set(s.x, this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), s.z);
+    this.angle = this.targetAngle = s.a ?? this.angle;
+    this.vy = 0; this.onGround = true; this.sit = null;
+    this.sync();
+  }
+  // the height to look for the ground from: the terrain's, or the level of a world whose ground is floor bricks (Zeelich)
+  groundHint(x, z) { const L = this.W.nav.levelAt(x, z); return (L != null ? L : this.game.physics.terrain.heightAt(x, z)) + 0.3; }
+  nextIndex(from) {
+    const n = this.stops.length, day = this.W.dayT, stage = this.W.stage;
+    for (let k = 1; k <= n; k++) {
+      const i = (from + k) % n, s = this.stops[i];
+      if (s.when && (day < s.when[0] || day > s.when[1])) continue;
+      if (!stageOk(s, stage)) continue;   // (a stop of another state of the town)
+      return i;
+    }
+    return (from + 1) % n;
+  }
+  // it has reached stop s (arrive at its slot): do what the stop says
+  arrived(s, instant = false) {
+    this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
+    this.wk = undefined;   // (NO-AIR: the last step up to the stop's thing is still to take: stepTick)
+    this.arrivedAt = instant ? -9 : this.game.time;   // (dwellTick: the stop settles before it turns)
+    this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
+    this.gestT = 1 + this.rnd() * 2;
+    if (!stageOk(s, this.W.stage)) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
+    if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
+    if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
+    if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; this.kGo = instant ? 0 : undefined; this.kIn = 1.1; return; }
+    this.st = 'dwell';
+    if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
+    else if (s.a != null) this.targetAngle = s.a;
+    if (instant && this.targetAngle != null) this.angle = this.targetAngle;   // (INTERIOR-LIFE: reached unseen, in the abstract state: it faces its stop's way when it comes into view)
+    this.note('at ' + (s.id || s.act));
+  }
+  leave() {
+    this.rig.handsFree = false;
+    const s = this.stop;
+    // (NO-AIR: it goes on from the stop's own slot. Seen, it has stepped back already — stepTick; unseen, it is put there)
+    if (this.wk) { if (this.wk.in > 0.01 && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < this.wk.in + 0.5) { this.pos.x = s.x; this.pos.z = s.z; } this.wk = null; }
+    this.wkTry = false;
+    // what it picks up here it carries on from here
+    if (s.carry !== undefined) this.carrySet(s.carry);
+    const i = this.nextIndex(this.ri), nxt = this.stops[i];
+    this.ri = i;
+    // (a leg from the stop's own slot is planned once for the whole session; from anywhere else it is planned afresh)
+    const fromSlot = Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 1.0 && !s.slotless;
+    this.planTo(nxt, fromSlot ? `${this.def.id}:${s.id}>${nxt.id}` : null);
+  }
+  planTo(s, key) {
+    this.st = 'plan'; this.planT = 0;
+    this.job = this.W.nav.request(this.pos, s, { key, prio: 1 });
+    this.note('plan → ' + (s.id || s.act));
+  }
+  // ---------------------------------------------------------------- carrying
+  carrySet(kind) {
+    if (kind === this.carrying) return;
+    if (this.carryMesh) { this.carryMesh.parent?.remove(this.carryMesh); this.carryMesh = null; }
+    this.carrying = kind || null;
+    if (!kind || !CARRY[kind]) return;
+    const hand = this.rig.j?.armR?.hand;
+    if (!hand) return;
+    const m = CARRY[kind]();
+    if (kind === 'sack') { m.position.set(0.0, 0.1, -0.02); }
+    hand.add(m);
+    this.carryMesh = m;
+  }
+  // ---------------------------------------------------------------- sitting
+  // SOLID-NPC (the user, 29.10: a resident sat inside a bench, the body through the backrest, the legs through the seat).
+  // The sitter is put on the bench's own seat: its bottom on the seat's top, its back in front of the backrest, its shins
+  // in front of the seat's edge, facing away from the backrest. Where the bottom and the back of THIS body are in the sit
+  // pose (a Grobo's hips are low and its belly wide, a Rabbibunny's legs long, a child small) is measured once per body
+  // from the posed mesh (sitShape); the bench's shape is the seat's (walkrounds.js seatAt: BENCHES in town.js, island.js,
+  // citydress.js, zeelich's). Its coat's back panel folds under it on the seat instead of hanging down through it.
+  seatPose(s) {
+    const seat = s.seat, sp = seat.spec || BENCH_RED, sh = this.sitShape(), sx = Math.sin(seat.a), sz = Math.cos(seat.a);
+    // along the way it faces from the bench's middle: back clear of the backrest, shins clear of the seat's edge
+    // (0.07 m clear of the backrest: hair hanging down the back swings with the head as it dozes and looks about)
+    const zl = Math.max(sp.back + 0.07 - sh.back, sp.front + 0.015 - sh.shin);
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));   // (the ground in front of the bench: the bench's own collider must not count)
+    return { x: seat.x + sx * zl, z: seat.z + sz * zl, y0, y1: y0 + sp.seatY + 0.008 - sh.bottom };
+  }
+  // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
+  // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
+  // (the same for a long dress or robe down to the ankles (hem under 0.3: Oda's, the user's photo of 2.11 by the statue): its
+  //  rigid skirt panels hang through the seat's slats; a knee-length tunic or coat sits as before)
+  canSit() { const L = LOOKS[this.def.char]; return L?.race !== 'esmer' && !((L?.outfit === 'dress' || L?.outfit === 'robe') && (L?.hem ?? 1) < 0.3); }
+  // two rounds may share a bench (Brix's and Ume's by the lane's planter): one seat to a bench, the second stands by it
+  benchTaken(seat) { return this.W.res.some((r) => r !== this && !r.away && r.sit?.seat && Math.hypot(r.sit.seat.x - seat.x, r.sit.seat.z - seat.z) < 0.3 && r.st !== 'sitout'); }
+  sitDown(s, instant) {
+    this.st = 'sitin';
+    const p = this.seatPose(s);
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: p.x, z: p.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, ya: p.y0, yb: p.y1, y: p.y1, down: true, seat: s.seat };
+    if (instant) this.angle = this.targetAngle = s.seat.a;
+    this.note('sit');
+  }
+  standUp(s) {
+    this.st = 'sitout';
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, ya: this.pos.y, yb: y0, y: this.pos.y, down: false };
+  }
+  // the coat's back and side panels lie on the seat under it (the rig's sit pose leaves the back panel hanging straight
+  // down from the waist, through the seat): after the rig's own pose, every frame it sits
+  foldCoat() {
+    const S = this.rig.j?.skirt;
+    if (!S) return;
+    S.B.rotation.x = -1.4; S.L.rotation.x = Math.min(S.L.rotation.x, -1.25); S.R.rotation.x = Math.min(S.R.rotation.x, -1.25);
+  }
+  // where this body's bottom, back and shins are in the sit pose, relative to its feet's point (metres, the way it faces
+  // +z): measured once per body and size from the posed mesh, the rig put back as it was
+  sitShape() {
+    const key = this.def.char + '@' + this.rig.root.scale.x.toFixed(3);
+    let sh = SIT_SHAPES.get(key);
+    if (sh) return sh;
+    const rig = this.rig, root = rig.root, j = rig.j, anim = rig.anim ?? 'idle';
+    rig.play('sit'); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    this.foldCoat();
+    root.updateMatrixWorld(true);
+    const inv = _m4.copy(root.matrixWorld).invert(), sc = root.scale.x;
+    const loc = (o) => o.getWorldPosition(_v1).applyMatrix4(inv).clone();
+    const hip = loc(j.legL.hip), hip2 = loc(j.legR.hip), knee = loc(j.legL.knee);
+    const legX = Math.max(Math.abs(hip.x), Math.abs(hip2.x));
+    const pts = [];
+    root.traverse((o) => {
+      if (!o.isMesh || !o.visible || !o.geometry?.attributes?.position || o === this.carryMesh) return;
+      let c = o; while (c && c !== root) { if (c === this.carryMesh) return; c = c.parent; }
+      const pa = o.geometry.attributes.position, step = Math.max(1, Math.floor(pa.count / 2500));
+      for (let i = 0; i < pa.count; i += step) { _v1.fromBufferAttribute(pa, i); if (o.isSkinnedMesh) o.applyBoneTransform(i, _v1); _v1.applyMatrix4(o.matrixWorld).applyMatrix4(inv); pts.push(_v1.x, _v1.y, _v1.z); }
+    });
+    // the bottom: the underside of the thighs (between the hips and the knees, over the legs)
+    let bottom = 9;
+    for (let i = 0; i < pts.length; i += 3) { const x = pts[i], y = pts[i + 1], z = pts[i + 2]; if (z > hip.z + 0.03 && z < knee.z - 0.1 && Math.abs(x) < legX + 0.12 && y > hip.y - 0.4) bottom = Math.min(bottom, y); }
+    if (bottom > 8) bottom = hip.y - 0.1;
+    // the back: the rearmost point from the seat up to the backrest's top (0.55 m over the seat)
+    let back = 9, shin = 9, foot = 9;
+    for (let i = 0; i < pts.length; i += 3) { const y = pts[i + 1], z = pts[i + 2]; if (y > bottom + 0.03 && y < bottom + 0.55 / sc) back = Math.min(back, z); if (y < bottom - 0.02 && z > hip.z) shin = Math.min(shin, z); foot = Math.min(foot, y); }
+    if (back > 8) back = hip.z - 0.15;
+    if (shin > 8) shin = knee.z - 0.08;
+    sh = { bottom: bottom * sc, back: back * sc, shin: shin * sc, foot: foot * sc, knee: knee.z * sc };
+    SIT_SHAPES.set(key, sh);
+    rig.play(anim); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    // (CPU-WALK: the matrices put back too. The measure above left every part's matrix in the sit pose; the pose put back
+    //  is often the very numbers it had, and the shown-world update (drawcull.js) recomputes only what changed, so a part
+    //  that did not move afterwards was drawn seated — a resident's arm or hat for several frames: `?walkcheck`)
+    root.updateMatrixWorld(true);
+    return sh;
+  }
+  // ---------------------------------------------------------------- talking with the player (src/game/story/citizens.js)
+  engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.yieldT = 0; this.note('talk'); }
+  release() { this.engaged = false; this.hold = 0.7; }
+  // SOLID-NPC: the hero walks on into it (Hero.keepApart): it steps out of his way, to the side of his line it already
+  // stands on and a little back, at a walk, through the physics (never into a wall or off its ground); seated, talking,
+  // at its door or indoors it stays where it is
+  giveWay(hx, hz, vx, vz) {
+    if (this.engaged || this.sit || this.inside || this.away || this.st === 'knock' || this.st === 'seated') return;
+    if (this.yieldT > 0.2) return;
+    const dx = this.pos.x - hx, dz = this.pos.z - hz, d = Math.hypot(dx, dz) || 1, v = Math.hypot(vx, vz) || 1;
+    const ux = vx / v, uz = vz / v, side = Math.sign(ux * dz - uz * dx) || (this.rnd() < 0.5 ? -1 : 1);
+    let yx = -uz * side * 0.85 + (dx / d) * 0.35, yz = ux * side * 0.85 + (dz / d) * 0.35;
+    const l = Math.hypot(yx, yz) || 1; yx /= l; yz /= l;
+    this.yieldV = { x: yx, z: yz }; this.yieldT = 0.8;
+    this.note('gives way');
+  }
+  yieldTick(dt) {
+    this.yieldT -= dt;
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, sp = Math.max(0.9, this.speed);
+    this.moveClear(this.yieldV.x * sp * dt, this.yieldV.z * sp * dt, this.W.others(this, _others));
+    P.fall(this, dt);
+    this.angle = dampAngle(this.angle, Math.atan2(this.yieldV.x, this.yieldV.z), 6, dt);
+    const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
+    this.gait += (v - this.gait) * Math.min(1, dt * 8);
+    this.animate(this.gait > 0.12 ? 'walk' : 'idle', dt, this.gait > 0.12 ? this.gait : 0);
+  }
+
+  // ---------------------------------------------------------------- the frame
+  update(dt) {
+    const W = this.W;
+    if (W.measure) { const t0 = performance.now(); this._update(dt); W.stats.ms += performance.now() - t0; return; }
+    this._update(dt);
+  }
+  _update(dt) {
+    const W = this.W;
+    W.prep();
+    if (this.away || W.frozen || !this.stops.length) return;   // (no round yet: its area is not built)
+    if (this.engaged) { this.engagedTick(dt); return; }
+    const tier = W.tierOf(this);
+    if (tier !== this.tier) { if (this.tier === 2) this.wake(); this.tier = tier; }
+    if (tier === 2) {
+      this.accA += dt;
+      if (this.accA < 0.5) return;
+      const d = this.accA; this.accA = 0;
+      W.stats.abstract++;
+      this.abstractTick(d);
+      return;
+    }
+    if (tier === 1) {
+      this.accB += dt;
+      if (++this.skipN % 3 !== 0) return;
+      dt = this.accB; this.accB = 0;
+      W.stats.reduced++;
+    } else { if (this.accB) { dt += this.accB; this.accB = 0; } W.stats.full++; }   // (back in full: the frames it skipped are its time too)
+    this.tick(dt, tier);
+  }
+  // leaving the abstract state: stand on the ground it is over
+  wake() {
+    if (this.sit) this.pos.y = this.st === 'sitout' ? this.sit.yb : this.sit.y;   // (seated: on the seat)
+    else if (!this.inside) this.pos.y = this.game.physics.groundAt(this.pos.x, this.pos.z, this.groundHint(this.pos.x, this.pos.z));
+    this.vy = 0; this.onGround = true;
+    this.sync();
+  }
+  // being talked to: stop, turn to him, and the talk animation when it is the one speaking
+  engagedTick(dt) {
+    const h = this.game.hero;
+    if (this.st !== 'sitin' && this.st !== 'seated') this.angle = dampAngle(this.angle, this.angleTo(h), 6, dt);
+    const seated = this.st === 'seated' || this.st === 'sitin';
+    this.rig.play(seated ? 'sit' : this.talking ? 'talk' : 'idle');
+    this.placeRig();
+    this.rig.update(dt, 0);
+    if (seated) this.foldCoat();
+    this.placeCarry(seated);
+    this.sync();
+  }
+
+  // ---------------------------------------------------------------- the simulation (tier 0 and 1)
+  tick(dt, tier) {
+    const g = this.game, P = g.physics, W = this.W, s = this.stop;
+    if (this.yieldT > 0 && !this.sit) { this.yieldTick(dt); return; }
+    if (this.hold > 0) { this.hold -= dt; this.animate('idle', dt, 0); return; }
+    if (this.st !== 'walk') this.separate(dt);
+    // (TOWN-LIFE-3: a stop with `play` — the children's games, a broom at a doorstep — is run by townplay.js while it is
+    //  there: dwelling, chatting with its mate or seated; walking to it and planning are this file's as before)
+    if (s?.play && W.play && W.play.tick(this, dt, s)) return;
+    switch (this.st) {
+      case 'dwell': return this.dwellTick(dt, s);
+      case 'pairwait': return this.pairTick(dt, s);
+      case 'chat': return this.chatTick(dt, s);
+      case 'knock': return this.knockTick(dt, s);
+      case 'inside': return this.insideTick(dt, s);
+      case 'sitin': case 'sitout': return this.sitTick(dt, s);
+      case 'seated': return this.seatedTick(dt, s);
+      case 'plan': return this.planTick(dt, s);
+      case 'walk': return this.walkTick(dt, tier);
+      default: this.st = 'dwell';
+    }
+  }
+  // the pose for a stop's act
+  actAnim(s) {
+    if (s.id && standsAt(this.def.id, s.id)) return 'idle';   // (NO-AIR: nothing there a hand can be on: workhands.js AIR_STOPS)
+    switch (s.act) {
+      case 'tend': return 'kneelWork';
+      case 'water': return 'potting';
+      case 'draw': return 'reach';
+      case 'browse': return 'tinker';
+      case 'rest': return 'wipe';
+      case 'put': return 'setDown';
+      case 'knock': return 'tapTurn';
+      case 'dip': return 'touchWater';
+      case 'warm': return 'reach';   // (a hand held out to a heat post)
+      // (the rooms' rounds name the rig's own work clips: they play as named, not as idle)
+      default: return DIRECT_ACTS.has(s.act) ? s.act : 'idle';
+    }
+  }
+  animate(anim, dt, speed) {
+    this.rig.play(anim);
+    this.placeRig();
+    this.rig.update(dt, speed);
+    if (anim === 'sit') this.foldCoat();
+    this.placeCarry(anim === 'sit');
+    this.sync();
+  }
+  // what it carries is set down on the seat beside it while it sits (held, it would hang through the bench), and taken up
+  // again as it stands
+  placeCarry(seated) {
+    const m = this.carryMesh;
+    if (!m) return;
+    const root = this.rig.root, hand = this.rig.j?.armR?.hand;
+    if (seated && m.parent !== root) {
+      const sh = this.sitShape(), sc = root.scale.x, drop = CARRY_DROP[this.carrying] ?? 0.25;
+      root.add(m); m.position.set(-Math.max(0.45, (this.bodyR || 0.45) + 0.1) / sc, sh.bottom / sc + drop, (sh.back + 0.22) / sc); m.rotation.set(0, 0, 0);
+    } else if (!seated && hand && m.parent !== hand) {
+      hand.add(m); m.position.set(0, this.carrying === 'sack' ? 0.1 : 0, this.carrying === 'sack' ? -0.02 : 0);
+    }
+  }
+  // NO-AIR: the last step up to the thing a stop works at (as a knock's to its door), and back to the stop's slot before
+  // it goes on. The slot is where its route ends, a walking body's berth off the thing; where the hands find nothing in
+  // reach from there (workhands.js stands the action down: rig.standFor), the work is done an arm's length from the thing
+  // instead (workStep: the place is free and level, the way to it too). Only then: a stop whose thing is in reach from
+  // the slot is worked from the slot, as it always was. Not into a doorway's keep-out, not by one of the story's people
+  // or where they are put, not onto another resident or the hero: then it stays at the slot.
+  // stepFor: where, for this stop (kept with the stop until the story's flags change what stands there); with it
+  // `need`: true once the slot has been found out of reach (the next time it steps up at once), false when the thing
+  // was out of reach from the stepped place as well (it stays at the slot).
+  stepFor(s, an = this.actAnim(s)) {
+    if (s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.noStep) return null;
+    const g = this.game, sig = storySig(g);
+    if (s._st && s._st.sig === sig && s._st.an === an) return s._st.m;
+    const W = this.W, keep = W.nav.keepOut || [];
+    const ok = (x, z) => { if (W.doorDist(x, z) < 0.95) return false; for (const d of keep) if (Math.hypot(x - d.x, z - d.z) < d.r + 0.2) return false; return true; };
+    const m = workStep(g, s.x, s.z, s.a, an, { y: g.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), ok, girth: this.bodyR, scale: this.rig.root.scale.y || 1 });
+    s._st = { sig, an, m, need: undefined };
+    return m;
+  }
+  // (whoever stands there now: the hero, the story's people — and where they are put — or another resident)
+  stepFree(m) {
+    const W = this.W, h = this.game.hero;
+    if (Math.hypot(h.pos.x - m.x, h.pos.z - m.z) < 0.9) return false;
+    for (const n of W.statics) if (Math.hypot(n.pos.x - m.x, n.pos.z - m.z) < 1.0 || (n.placed && n.placed.x != null && Math.hypot(n.placed.x - m.x, n.placed.z - m.z) < 1.0)) return false;
+    for (const r of W.res) if (r !== this && r.present && !r.away && !r.inside && Math.hypot(r.pos.x - m.x, r.pos.z - m.z) < 0.8) return false;
+    return true;
+  }
+  // (true: this frame was the step's)
+  stepTick(dt, s) {
+    let K = this.wk;
+    if (K === undefined) {
+      K = this.wk = null; this.wkTry = false;
+      // (first onto the slot itself: a walk ends within a step of it, and the hands are placed from where the stop was set)
+      const d0 = Math.hypot(s.x - this.pos.x, s.z - this.pos.z), works = STEP_ACTS.has(this.actAnim(s)) && !(s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.slotless);
+      if (works && d0 > 0.04 && d0 < 0.4 && !this._onSlot) { this._onSlot = true; this.wk = { x: s.x, z: s.z, in: 0, go: true, back: false, slot: true }; return this.stepTick(dt, s); }
+      this._onSlot = false;
+      // (where to, is looked for only once it is seen stood down at the slot — dwellTick: what is drawn there is read, and
+      //  a place nobody looks at is not drawn. Known from an earlier visit: at once)
+      const T = s._st && s._st.sig === storySig(this.game) && s._st.an === this.actAnim(s) ? s._st : null, m = T && T.need ? T.m : null;
+      if (!T && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 0.7 && !(s.seat || s.pair || s.door || s.play || s._gave || s.act === 'warm' || s.noStep)) this.wkTry = true;
+      else if (m && Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 0.7 && this.stepFree(m)) {
+        K = this.wk = { x: m.x, z: m.z, in: 0, go: true, back: false };
+        // (reached unseen — after a load, or in the abstract state: it is there already as it comes into view)
+        if (this.arrivedAt === -9) { this.pos.x = m.x; this.pos.z = m.z; this.angle = this.targetAngle = s.a ?? this.angle; K.go = false; K.in = m.moved; this.sync(); }
+      }
+    }
+    if (!K) return false;
+    if (K.go || K.back) {
+      const tx = K.back ? s.x : K.x, tz = K.back ? s.z : K.z, dx = tx - this.pos.x, dz = tz - this.pos.z, d = Math.hypot(dx, dz);
+      // (pushed off it meanwhile — the hero walked into it: no step from wherever it is now)
+      if (d > 1.7) { if (K.back) { this.wk = null; this.leave(); } else this.wk = null; return K.back; }
+      const sp = Math.min(this.speed, 1.0) * clamp(d / 0.5, 0.4, 1), step = Math.min(d, sp * dt);
+      if (d > 1e-4) { this.pos.x += dx / d * step; this.pos.z += dz / d * step; }
+      if (d > 0.08) this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 9, dt);
+      if (d - step < 0.02) {
+        this.pos.x = tx; this.pos.z = tz;
+        if (K.back) { this.wk = null; this.gait = 0; this.animate('idle', dt, 0); this.leave(); return true; }
+        if (K.slot) { this.wk = undefined; this.arrivedAt = this.game.time - 0.9; this.animate('idle', dt, 0); return true; }   // (on the slot: now as an arrival there)
+        K.go = false; K.in = Math.hypot(K.x - s.x, K.z - s.z); this.arrivedAt = this.game.time - 0.9;
+      }
+      this.gait += (sp - this.gait) * Math.min(1, dt * 8);
+      this.animate('walk', dt, Math.max(0.3, this.gait));
+      return true;
+    }
+    return false;
+  }
+  dwellTick(dt, s) {
+    const h = this.game.hero;
+    if (this.stepTick(dt, s)) return;
+    // it turns to whoever comes close (as the story's own people do), else to what the stop looks at
+    // (STOP-TURN, 8.11.2026: the stop first, then the turn. Turning at once on arrival, a stop that ended facing away from
+    //  its view (Oda by the bench she does not sit on: 140°) became one move of five steps; now it stands in its two steps
+    //  and turns 1.2 s later, a turn of its own (the rig's stepping turn). A small turn (< 0.3 rad) goes on at once)
+    const dh = this.distTo(h), want = dh < 3.0 && !s.act?.match(/tend|water|draw|warm/) ? this.angleTo(h) : this.targetAngle;
+    const settling = this.game.time - (this.arrivedAt ?? -9) < 1.2 && want != null && Math.abs(Math.atan2(Math.sin(want - this.angle), Math.cos(want - this.angle))) > 0.3;
+    if (want != null && !settling) this.angle = dampAngle(this.angle, want, 4, dt);
+    // in the way of a door or of someone the story put here: move on soon
+    this.tmr -= dt;
+    this.keepClear(dt, s);
+    // (a stop with `gest`: now and then a shrug or a sigh over the dry well, a breath out at the warm post)
+    if (s.gest && (this.gestT -= dt) <= 0) { this.rig.doGesture(s.gest[Math.floor(this.rnd() * s.gest.length)]); this.gestT = 3 + this.rnd() * 4; }
+    if (this.tmr <= 0) { if (this.wk && this.wk.in > 0.01) { this.wk.back = true; this.tmr = 0; } else this.leave(); }   // (stepped up to its thing: first back to the slot, stepTick)
+    this.rig.handsFree = s.act === 'warm';   // (a hand held out to a heat post's warmth is not on it: workhands.js leaves it be)
+    // (NO-AIR 3: the work begins once it faces its thing. Begun while still turning — it arrives heading the way it walked —
+    //  the hands' layer looked for the thing along the wrong line, found nothing and stood the action down for the whole
+    //  stop; and turned to Twinsen it worked at the air beside him. It stands while it turns, and stands turned to him)
+    //  (faced: within two degrees, and then exactly — the hands are placed along the stop's own line)
+    const an = this.actAnim(s), off = an === 'idle' || this.targetAngle == null ? 0 : Math.abs(Math.atan2(Math.sin(this.targetAngle - this.angle), Math.cos(this.targetAngle - this.angle))), faced = off < 0.04;
+    if (faced && off > 0 && want === this.targetAngle) this.angle = this.targetAngle;
+    this.animate(faced ? an : 'idle', dt, 0);
+    // (NO-AIR: stood down — nothing in reach from here. From the slot: the last step up to the thing, now and at once the
+    //  next time. From the stepped place too: it keeps to its slot the next time)
+    if (this.rig.standFor && !s._gave) {
+      if (this.wkTry) { this.wkTry = false; const m = this.stepFor(s); if (m && this.stepFree(m)) { s._st.need = true; this.wk = { x: m.x, z: m.z, in: 0, go: true, back: false }; } else if (m) s._st = null; else if (s._st) s._st.need = false; }   // (somebody in the way: asked again the next time; nothing to step up to: it keeps to its slot)
+      else if (this.wk && !this.wk.go && !this.wk.back && this.wk.in > 0.01 && s._st) s._st.need = false;
+    }
+  }
+  // a pair meets: each waits for the other, then they talk (the one who sees the other waiting starts it; the other joins)
+  pairTick(dt, s) {
+    const P = this.W.pair(s.pair), mate = this.W.res.find((r) => r.def.id === s.mate);
+    this.waitT += dt;
+    this.angle = dampAngle(this.angle, mate ? this.angleTo(mate) : this.targetAngle ?? this.angle, 5, dt);
+    if (mate?.st === 'chat' && P.until > this.game.time) { this.st = 'chat'; this.chatInit(s); }
+    else if (mate && mate.st === 'pairwait') {
+      P.until = this.game.time + this.tmr; P.speaker = this.def.id; P.turnT = 1.5 + this.rnd() * 2;
+      this.st = 'chat'; this.chatInit(s);
+    } else if (this.waitT > 45) { P.ready.delete(this.def.id); this.note('mate never came'); this.leave(); return; }
+    this.animate('idle', dt, 0);
+  }
+  chatInit(s) { this.W.pair(s.pair).ready.delete(this.def.id); this.chatT = 0; this.gestT = 1 + this.rnd() * 2; }
+  chatTick(dt, s) {
+    const g = this.game, P = this.W.pair(s.pair), mate = this.W.res.find((r) => r.def.id === s.mate);
+    this.angle = dampAngle(this.angle, mate ? this.angleTo(mate) : this.angle, 5, dt);
+    const mine = P.speaker === this.def.id;
+    if (mine) {
+      P.turnT -= dt;
+      if (P.turnT <= 0) { P.speaker = s.mate; P.turnT = 2.2 + this.rnd() * 2.6; }
+    }
+    // the speaker talks (the talk pose gestures; the mouth opens and closes in words and breaths), the other listens and nods
+    this.chatT += dt;
+    if (mine) {
+      const w = Math.sin(this.chatT * 13.1) * Math.sin(this.chatT * 7.3 + 1.2), breath = Math.sin(this.chatT * 2.3) > -0.35 ? 1 : 0.15;
+      this.rig.speakMouth(clamp(0.3 + 0.6 * Math.abs(w), 0, 1) * breath, 0.3 * Math.sin(this.chatT * 5));
+      this.animate('talk', dt, 0);
+    } else {
+      this.gestT -= dt;
+      if (this.gestT <= 0) { this.rig.doGesture(this.rnd() < 0.7 ? 'nod' : 'shrug'); this.gestT = 2 + this.rnd() * 3; }
+      this.animate('listen', dt, 0);
+    }
+    if (g.time >= P.until) { this.note('chat over'); this.leave(); }
+  }
+  knockTick(dt, s) {
+    // at its own door: a hand to the latch, a step in, gone for a while
+    // (NO-AIR: first the last step up to the door, so that the hand is on it: its stop is where the route ends, a
+    //  walking body's berth off the wall and out of any arm's reach of the leaf; the step in is that much shorter)
+    if (this.kGo === undefined) {
+      // (kept with the stop for where it arrived, until the story's flags change: the look at what is drawn is not free)
+      const key = storySig(this.game) + '|' + Math.round(this.pos.x * 10) + '|' + Math.round(this.pos.z * 10);
+      if (s._kn?.key !== key) s._kn = { key, m: s.act === 'noknock' ? null : knockStep(this.game, this.pos.x, this.pos.z, this.angle, { y: this.pos.y, girth: this.bodyR, scale: this.rig.root.scale.y || 1 }) };
+      const m = s._kn.m;
+      this.kGo = m ? m.moved : 0; this.kIn = 1.1 * Math.max(0.3, 1 - this.kGo / 0.55);   // (a door two metres off — the islands', Zeelich's — is walked up to)
+    }
+    if (this.kGo > 0.005) {
+      const step = Math.min(this.kGo, dt * 1.1); this.kGo -= step;
+      this.pos.x += Math.sin(this.angle) * step; this.pos.z += Math.cos(this.angle) * step;
+      this.animate('walk', dt, 1.1);
+      return;
+    }
+    this.tmr -= dt;
+    if (this.tmr > 0.5 || s.act === 'noknock') this.animate('tapTurn', dt, 0);
+    else {
+      const k = 1 - this.tmr / 0.5, step = dt * (this.kIn ?? 1.1);
+      this.pos.x += Math.sin(this.angle) * step; this.pos.z += Math.cos(this.angle) * step;
+      this.animate('walk', dt, 1.1);
+    }
+    if (this.tmr <= 0) this.goInside(s);
+  }
+  goInside(s) {
+    this.inside = true; this.insideT = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 10; this.st = 'inside';
+    this.setPresent(false);
+    this.note('in');
+  }
+  insideTick(dt, s) {
+    this.insideT -= dt;
+    if (this.insideT > 0) return;
+    // it comes out where it went in (the front of its door), a moment's pause, and on
+    this.inside = false; this.setPresent(true);
+    this.placeAtSlot(s);
+    this.st = 'dwell'; this.tmr = 1.2; this.targetAngle = null;
+    this.note('out');
+  }
+  placeAtSlot(s) {
+    this.pos.set(s.x, this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)), s.z);
+    this.angle = s.a + Math.PI; this.targetAngle = null; this.sync();
+  }
+  sitTick(dt, s) {
+    const S = this.sit; S.t += dt;
+    const k = clamp(S.t / S.dur, 0, 1), e = k * k * (3 - 2 * k);
+    const st = this.st;
+    if (S.a != null) this.angle = dampAngle(this.angle, S.a, 7, dt);
+    // onto the seat (its height, SOLID-NPC: seatPose) as the sit pose comes in, off it as the stand comes
+    const a = S.from, b = S.to;
+    this.pos.x = a.x + (b.x - a.x) * e; this.pos.z = a.z + (b.z - a.z) * e;
+    const ky = S.down ? clamp((k - 0.3) / 0.7, 0, 1) : clamp(k / 0.6, 0, 1), ey = ky * ky * (3 - 2 * ky);
+    this.pos.y = S.ya + (S.yb - S.ya) * ey;
+    if (st === 'sitin') this.animate(k > 0.35 ? 'sit' : 'idle', dt, 0);
+    else this.animate(k < 0.55 ? 'sit' : 'idle', dt, 0);
+    if (k >= 1) {
+      if (st === 'sitin') { this.st = 'seated'; this.note('seated'); }
+      else { this.sit = null; this.arrivedAfterStand(); }
+    }
+  }
+  seatedTick(dt, s) {
+    this.tmr -= dt;
+    this.animate('sit', dt, 0);
+    if (this.tmr <= 0) this.standUp(s);
+  }
+  arrivedAfterStand() {
+    this.angle = this.targetAngle = this.angle;
+    this.st = 'dwell'; this.tmr = 0;   // (straight on: the sitting was the stop)
+    this.leave();
+  }
+  // a door or one of the story's people it is standing close to for too long
+  keepClear(dt, s) {
+    if (s.seat || s.door) return;
+    const W = this.W; let near = W.doorDist(this.pos.x, this.pos.z) < 0.9;
+    for (const n of W.statics) if (!near && Math.hypot(n.pos.x - this.pos.x, n.pos.z - this.pos.z) < 1.0) { near = true; break; }
+    if (near) { this.clearT = (this.clearT || 0) + dt; if (this.clearT > 5) { this.clearT = 0; this.tmr = Math.min(this.tmr, 0); this.note('made room'); } } else this.clearT = 0;
+  }
+
+  // ---------------------------------------------------------------- planning and walking
+  planTick(dt, s) {
+    this.planT += dt;
+    this.angle = dampAngle(this.angle, this.targetAngle ?? this.angle, 3, dt);
+    this.animate('idle', dt, 0);
+    const j = this.job;
+    if (!j || !j.done) { if (this.planT > 40) { this.note('plan timed out'); this.arrivedElsewhere(); } return; }
+    if (!j.ok || !j.pts || j.pts.length < 1) { this.noRoute(); return; }
+    this.startWalk(j.pts);
+  }
+  noRoute() {
+    this.noPath = (this.noPath || 0) + 1;
+    this.note('no route to ' + (this.stop.id || '?'));
+    if (this.noPath >= 2) { this.noPath = 0; this.arrivedElsewhere(); return; }
+    this.planTo(this.stop, null);
+  }
+  // it cannot get to the stop: it stays where it is and has its stop's time here instead, then goes on with the round
+  arrivedElsewhere() {
+    const s = this.stop;
+    this.st = 'dwell'; this.tmr = 2 + this.rnd() * 3; this.stops[this.ri] = { ...s, seat: null, door: null, pair: null, act: 'idle', _gave: true, slotless: true };
+    this.path = null; this.job = null;
+  }
+  startWalk(pts) {
+    this.path = pts; this.wi = 0; this.walkFrom = { x: this.pos.x, z: this.pos.z };
+    // (the first point is the cell it started in: skip it when it is behind)
+    if (pts.length > 1 && Math.hypot(pts[0].x - this.pos.x, pts[0].z - this.pos.z) < 0.9) this.wi = 1;
+    this.st = 'walk'; this.stuckT = 0; this.noPath = 0; this.lastPos = { x: this.pos.x, z: this.pos.z, t: this.game.time }; this.waitT = 0;
+  }
+  // along the path to the stop's slot, round whoever is in the way
+  walkTick(dt, tier) {
+    const g = this.game, P = g.physics, W = this.W, s = this.stop, path = this.path;
+    if (!path) { this.st = 'dwell'; return; }
+    while (this.wi < path.length - 1 && Math.hypot(path[this.wi].x - this.pos.x, path[this.wi].z - this.pos.z) < 0.55) this.wi++;
+    const last = this.wi >= path.length - 1;
+    const bx = last ? s.x : path[this.wi].x, bz = last ? s.z : path[this.wi].z;
+    const gx = bx - this.pos.x, gz = bz - this.pos.z, d = Math.hypot(gx, gz);
+    if (last && (d < 0.35 || (d < 0.6 && this.stuckT > 0.7))) { this.arrived(s); return; }   // (held up a step short of its slot by a bench's edge or a bin: that is the stop)
+    // it steers for a point a little way ahead on the route's own line (not for the corner itself): after a sidestep round
+    // someone it comes back to the line the route was checked along, instead of cutting across whatever lies between
+    const ax0 = this.wi > 0 ? path[this.wi - 1].x : this.walkFrom.x, az0 = this.wi > 0 ? path[this.wi - 1].z : this.walkFrom.z;
+    const sdx = bx - ax0, sdz = bz - az0, sL = Math.hypot(sdx, sdz) || 1;
+    const kk = clamp(((this.pos.x - ax0) * sdx + (this.pos.z - az0) * sdz) / (sL * sL), 0, 1);
+    const look = Math.min(sL, kk * sL + 1.4) / sL;
+    const tx = ax0 + sdx * look, tz = az0 + sdz * look;
+    let dx = tx - this.pos.x, dz = tz - this.pos.z, dl = Math.hypot(dx, dz);
+    if (dl < 0.05) { dx = gx; dz = gz; dl = Math.max(d, 1e-4); }
+    const ux = dx / dl, uz = dz / dl;
+    // ------------------------------------------------ avoidance: the right-hand rule (everyone sidesteps the same way, so
+    // two who meet head on pass), room round everyone, slow or wait when someone stands in the way
+    let ax = 0, az = 0, slow = 1, blocked = false;
+    for (const b of W.others(this, _others)) {
+      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz);
+      const rr = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.isHero ? 0.75 : b.ambient ? 0.35 : 0.8), reachD = rr + 1.1;
+      if (dd > reachD || dd < 1e-3) continue;
+      const w = (reachD - dd) / reachD, ahead = (-rx * ux - rz * uz) / dd;   // > 0: in front of it
+      if (ahead > 0.1) {
+        // (BENCHES-1: round the hero or a story person it steps to the usual side unless that side is the more crowded — a
+        //  wall or a trunk at the two places it would pass through, or someone else standing by them: Twinsen in the 2.2 m
+        //  gap between the south house's corner and the original's tree, which the lane's old bench used to close (the child
+        //  stepped into the wall and waited), or between Twinsen and Sphero at the square's south corner (a wide circle).
+        //  The same round a resident standing still (Ume by a bench she does not sit on: Pico stepped in between her and the
+        //  bench and stuck); two walking residents keep the one rule, so two who meet head on pass. The side is chosen once,
+        //  as it comes up to them along its route, and kept while they stay in its way: chosen again from where it has stepped
+        //  to, it turned back and forth, wedged between Twinsen and Gilbert by the well)
+        let side = 1;
+        if (!b.ambient || b.st !== 'walk') {
+          const ms = (this.passSides ||= new Map());
+          let mem = ms.get(b);
+          if (mem && g.time - mem.t < 1.0) side = mem.side;
+          else {
+            const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
+            const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
+              if (P.blockedAt(px, pz, y, me)) n += 2;
+              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 1.3) n += 2; } return n; };   // (a person by it as much as a wall: it keeps a berth of 0.8 m from them, and half a metre more to pass between)
+            if (crowd(1) > crowd(-1)) side = -1;
+          }
+          if (mem) { mem.side = side; mem.t = g.time; } else ms.set(b, { side, t: g.time });   // (WC-4: kept, not made anew each frame)
+        }
+        ax += -uz * w * 1.7 * side; az += ux * w * 1.7 * side;
+        const gap = dd - rr;
+        // (the hero and the story's people it waits for; another resident standing about it just steps round, slowly)
+        if (ahead > 0.55 && gap < 1.0) { slow = Math.min(slow, Math.max(b.ambient ? 0.45 : 0, clamp(gap / 1.0, 0.0, 1))); if (gap < 0.3 && !b.ambient) blocked = true; }
+      }
+      ax += (rx / dd) * w * 0.9; az += (rz / dd) * w * 0.9;
+    }
+    let vx = ux + ax, vz = uz + az;
+    const vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
+    // never into someone's reach: the hero's and the story's people (they stand where they are put), and never into another resident (SOLID-NPC); no component of the
+    // move goes toward them inside 1.15 m, and inside 0.95 m it steps back
+    for (const b of _others) {
+      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz), hard = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.ambient ? 0.05 : 0.3);
+      if (dd >= hard || dd < 1e-3) continue;
+      const nx = rx / dd, nz = rz / dd, into = -(vx * nx + vz * nz);
+      if (into > 0) { vx += nx * into; vz += nz * into; }
+      if (dd < hard - 0.15) { vx += nx * 0.7; vz += nz * 0.7; }
+    }
+    let sp = this.speed * slow * (last ? clamp(d / 1.2, 0.35, 1) : 1);
+    if (blocked) { this.waitT += dt; if (this.waitT > 3) sp = Math.max(sp, this.speed * 0.45); }   // (it eases round after a while)
+    else this.waitT = Math.max(0, this.waitT - dt);
+    this.vel += (sp - this.vel) * Math.min(1, dt * 4);
+    // ------------------------------------------------ move by the game's own collision rules
+    const x0 = this.pos.x, z0 = this.pos.z, want = Math.atan2(vx, vz);
+    this.angle = dampAngle(this.angle, want, 7, dt);
+    const dAng = Math.abs(Math.atan2(Math.sin(want - this.angle), Math.cos(want - this.angle)));
+    const align = Math.max(0.15, Math.cos(Math.min(1.4, dAng)));
+    const step = this.vel * dt * align;
+    if (step > 1e-4) this.moveClear(Math.sin(this.angle) * step, Math.cos(this.angle) * step, _others);
+    P.fall(this, dt);
+    const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
+    this.gait += (v - this.gait) * Math.min(1, dt * 8);
+    this.animate(this.gait > 0.12 ? 'walk' : 'idle', dt, this.gait > 0.12 ? this.gait : 0);
+    if (this.W.debug) this.dbg = { slow: +slow.toFixed(2), blocked, sp: +sp.toFixed(2), v: +v.toFixed(2), d: +d.toFixed(2), wi: this.wi, n: path.length, stuck: +this.stuckT.toFixed(1), vel: +this.vel.toFixed(2) };   // (tests: what it was doing)
+    // ------------------------------------------------ stuck: it wants to go and does not get anywhere
+    if (sp > 0.3 * this.speed && v < 0.25 * sp && !blocked) this.stuckT += dt; else this.stuckT = Math.max(0, this.stuckT - dt * 0.5);
+    if (this.stuckT > 1.4) this.unstick();
+  }
+  // SOLID-NPC: a step by the physics that never takes it into anyone's body (the hero's, the story's people's, another
+  // resident's: the two girths, bodyR): the part of the step toward someone it touches is dropped (it slides round
+  // them), and a step that still ends inside someone, closer than it was, is not taken
+  moveClear(dx, dz, others) {
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, me = this.bodyR || 0.45;
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45)), rx = x0 - b.pos.x, rz = z0 - b.pos.z, d = Math.hypot(rx, rz);
+      if (d >= R + Math.hypot(dx, dz) + 0.02 || d < 1e-4) continue;
+      const nx = rx / d, nz = rz / d, into = -(dx * nx + dz * nz);
+      if (into > 0 && d < R + into + 0.02) { dx += nx * into; dz += nz * into; }
+    }
+    P.move(this, dx, dz);
+    // indoors, low furniture (a chair, a stool: under STEP_UP, so the physics lets a body over it) is walked round, not
+    // through: the route keeps 0.3 m from it (walknav lowR), but a sidestep round someone could carry a body into it —
+    // Mrs Lomba, giving way to Old Ressa between the terminal's café table and the wall, walked into its chair. A step
+    // that goes further into one is not taken; along one axis, if that does not
+    if (this.W.indoor) {
+      const x1 = this.pos.x, z1 = this.pos.z, d0 = this.lowDepth(x0, z0) + 1e-4;
+      if (this.lowDepth(x1, z1) > d0) {
+        const y = this.pos.y, w0 = P.overlapAt(x0, z0, y, this.radius) + 1e-4, ok = (x, z) => this.lowDepth(x, z) <= d0 && P.overlapAt(x, z, y, this.radius) <= w0;
+        if (ok(x1, z0)) this.pos.z = z0;
+        else if (ok(x0, z1)) this.pos.x = x0;
+        else { this.pos.x = x0; this.pos.z = z0; }
+      }
+    }
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45));
+      const d1 = Math.hypot(this.pos.x - b.pos.x, this.pos.z - b.pos.z), d0 = Math.hypot(x0 - b.pos.x, z0 - b.pos.z);
+      if (d1 < R - 0.01 && d1 < d0 - 1e-4) { this.pos.x = x0; this.pos.z = z0; return; }
+    }
+  }
+  // how far a point (0.15 m round it: the legs) is into low furniture at its feet: a chair, a stool, a low table (walknav
+  // lowBrick's kind: 0.25–0.7 m over the floor; a route keeps 0.3 m from it at its cells' middles, 0.18 m between them)
+  lowDepth(x, z) {
+    const P = this.game.physics, y = this.pos.y;
+    let d = 0;
+    for (const c of P.near(x, z)) {
+      if (!c.enabled || c.stair || c.top - y < 0.25 || c.top - y > 0.7 || c.bottom > y + 0.4) continue;
+      const p = P._push(c, x, z, 0.15);
+      if (p) d = Math.max(d, Math.hypot(p.x, p.z));
+    }
+    return d;
+  }
+  // standing about (not seated, not walking: a stop, a chat, a wait), it steps out of another resident it overlaps, at a
+  // shuffle (two whose stops lie close stand side by side, not inside each other); through the physics
+  separate(dt) {
+    if (this.sit || this.inside || this.engaged) return;
+    const me = this.bodyR || 0.45;
+    let px = 0, pz = 0;
+    for (const r of this.W.res) {
+      if (r === this || !r.present || r.inside || r.away) continue;
+      const R = me + (r.bodyR || 0.45), rx = this.pos.x - r.pos.x, rz = this.pos.z - r.pos.z;
+      if (Math.abs(rx) >= R || Math.abs(rz) >= R) continue;
+      const d = Math.hypot(rx, rz);
+      if (d >= R) continue;
+      // (both step apart, half each; from one who is seated it steps the whole way)
+      const k = r.sit ? 1 : 0.5;
+      if (d < 1e-3) { const a = this.rnd() * 6.283; px += Math.sin(a) * R * k; pz += Math.cos(a) * R * k; } else { px += (rx / d) * (R - d) * k; pz += (rz / d) * (R - d) * k; }
+    }
+    const l = Math.hypot(px, pz);
+    if (l < 1e-3) return;
+    const m = Math.min(l, 0.8 * dt);
+    this.game.physics.move(this, (px / l) * m, (pz / l) * m);
+  }
+  unstick() {
+    const g = this.game, W = this.W;
+    this.stuckT = 0;
+    this.replans++;
+    this.note(`stuck at ${this.pos.x.toFixed(1)},${this.pos.z.toFixed(1)} (replan ${this.replans})`);
+    const s = this.stop;
+    if (this.replans <= 2) {   // plan again from here
+      this.planTo(s, null);
+      return;
+    }
+    // out of sight: put it further along its way (or at the stop), no one sees it
+    if (W.unseen(this.pos.x, this.pos.z, this.pos.y)) {
+      const path = this.path;
+      // (POLISH: only to a point the camera can't see either — the first such point along the way, or the stop. Before,
+      //  after five replans it was put on the next point even in view: a child seen sliding 30 m across the plaza)
+      let q = null;
+      if (path) for (let i = this.wi; i < path.length; i++) { const p = path[i]; if (Math.hypot(p.x - this.pos.x, p.z - this.pos.z) > 2.5 && W.unseen(p.x, p.z, this.pos.y)) { q = p; break; } }
+      if (!q && W.unseen(s.x, s.z, this.pos.y)) q = s;
+      if (q) {
+        this.pos.set(q.x, g.physics.groundAt(q.x, q.z, this.groundHint(q.x, q.z)), q.z);
+        this.sync();
+        this.rescues++; this.note(`put on its way at ${q.x.toFixed(1)},${q.z.toFixed(1)}`);
+        this.replans = 0;
+        this.planTo(s, null);
+        return;
+      }
+    }
+    // in view: wait a while and try again; in the end give the stop up
+    if (this.replans > 7) { this.note('gave the stop up'); this.replans = 0; this.arrivedElsewhere(); return; }
+    this.planTo(s, null);
+  }
+
+  // ---------------------------------------------------------------- the abstract state (out of view or far off)
+  abstractTick(dt) {
+    const s = this.stop;
+    switch (this.st) {
+      case 'plan': {
+        const j = this.job;
+        if (!j || !j.done) { this.planT += dt; if (this.planT > 40) this.arrivedElsewhere(); return; }
+        if (!j.ok || !j.pts) { this.noRoute(); return; }
+        this.startWalk(j.pts); return;
+      }
+      case 'walk': {
+        let left = this.speed * dt, path = this.path;
+        if (!path) { this.st = 'dwell'; return; }
+        while (left > 0 && this.wi < path.length) {
+          const wp = path[this.wi], dx = wp.x - this.pos.x, dz = wp.z - this.pos.z, d = Math.hypot(dx, dz);
+          if (d <= left) { this.pos.x = wp.x; this.pos.z = wp.z; left -= d; this.wi++; }
+          else { this.pos.x += dx / d * left; this.pos.z += dz / d * left; this.angle = Math.atan2(dx, dz); left = 0; }
+        }
+        if (this.wi >= path.length) {
+          this.pos.x = s.x; this.pos.z = s.z;
+          this.arrived(s, true);
+          if (this.st === 'sitin') { this.pos.x = this.sit.to.x; this.pos.z = this.sit.to.z; this.pos.y = this.sit.y; this.st = 'seated'; }
+          if (this.st === 'knock') this.goInside(s);
+        }
+        return;
+      }
+      case 'dwell': this.tmr -= dt; if (this.tmr <= 0) this.leave(); return;
+      case 'seated': this.tmr -= dt; if (this.tmr <= 0) { this.sit = null; this.pos.x = s.x; this.pos.z = s.z; this.st = 'dwell'; this.tmr = 0; this.leave(); } return;
+      // (seated in the abstract state: put on its seat as the walk's end above does — it went 'seated' where it stood, at
+      //  the stop's slot on the ground in front of the bench, and showed sitting inside the bench when it came into view:
+      //  the user's "a woman sits INSIDE the bench" by the statue)
+      case 'sitin': if (this.sit) { this.pos.x = this.sit.to.x; this.pos.z = this.sit.to.z; this.pos.y = this.sit.y; if (this.sit.a != null) this.angle = this.targetAngle = this.sit.a; this.sit.t = this.sit.dur; } this.st = 'seated'; return;
+      case 'sitout': this.sit = null; this.st = 'dwell'; this.tmr = 0; this.leave(); return;
+      case 'knock': this.goInside(s); return;
+      case 'inside': this.insideTick(dt, s); return;
+      case 'pairwait': {
+        const P = this.W.pair(s.pair), mate = this.W.res.find((r) => r.def.id === s.mate);
+        this.waitT += dt;
+        if (mate && (mate.st === 'pairwait' || mate.st === 'chat')) { if (mate.st === 'pairwait') { P.until = this.game.time + this.tmr; P.speaker = this.def.id; } this.st = 'chat'; this.chatInit(s); this.chatEnd = P.until; }
+        else if (this.waitT > 45) { P.ready.delete(this.def.id); this.leave(); }
+        return;
+      }
+      case 'chat': { const P = this.W.pair(s.pair); if (this.game.time >= P.until) this.leave(); return; }
+      default: this.st = 'dwell';
+    }
+  }
+}
+const _others = [];
+const CARRY_DROP = { basket: 0.235, crate: 0.335, can: 0.25, sack: 0.37, case: 0.35 };   // (from the item's hand point down to its base)
+const SIT_SHAPES = new Map(), _m4 = new THREE.Matrix4(), _v1 = new THREE.Vector3();
+// the red slatted bench (town.js, island.js): the seat's top over its feet, the backrest's front face and the seat's
+// front edge along the way the sitter faces (m, from the bench's middle); other benches give their own (seat.spec)
+export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };

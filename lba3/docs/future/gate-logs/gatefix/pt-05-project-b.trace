@@ -1,0 +1,33 @@
+[0.4] go → (-25.7, -58.5) plan ok=false pts=4 left=22.97
+[7.1] hurt 11→10 at (-48.5, 18.7, -42.7) near: nobody 
+[12.2] hurt 10→9 at (-46.6, 18.7, -45.9) near: nobody sliding
+[17.2] hurt 9→8 at (-46.6, 18.7, -45.9) near: nobody sliding
+[22.6] hurt 8→7 at (-46.6, 18.7, -45.9) near: nobody sliding
+[28.0] hurt 7→6 at (-46.6, 18.7, -45.9) near: nobody sliding
+[33.0] hurt 6→5 at (-46.6, 18.7, -45.9) near: nobody 
+[38.5] hurt 5→4 at (-46.6, 18.7, -45.9) near: nobody sliding
+[40.6] stuck at (-44.3, -48.3): replan
+[49.5] go: transition (citadel → citadel, trans true) at (-26.40, -59.05)
+[50.6] go → (1398.4, -1.8) plan ok=true pts=3 left=0.81
+[54.8] go → (1404.3, -4.0) plan ok=true pts=3 left=0.23
+[57.1] go: transition (control → control, trans true) at (1403.77, -3.69)
+[57.9] go → (-46.5, -63.5) plan ok=true pts=3 left=0.94
+[83.8] go → (1298.8, -3.9) plan ok=true pts=2 left=0.41
+[83.9] go → (1298.8, -3.9) plan ok=true pts=2 left=0.02
+[102.5] go → (1304.8, -4.5) plan ok=false pts=4 left=0.34
+[110.8] go → (1304.8, -4.5) plan ok=false pts=19 left=1291.86
+[204.3] stuck at (13.3, 26.6): replan
+[207.3] stuck at (13.5, 26.9): replan
+[212.7] stuck at (13.3, 26.6): replan
+[215.7] stuck at (13.5, 26.8): replan
+[218.6] stuck at (13.2, 26.7): replan
+[221.6] stuck at (13.5, 26.5): replan
+[227.3] go → (-18.0, -60.6) plan ok=true pts=23 left=0.68
+[326.1] go → (-46.1, 77.2) plan ok=true pts=24 left=0.27
+[364.1] go: transition (citadel → citadel, trans true) at (-45.56, 76.52)
+[365.0] go → (1002.1, 2.1) plan ok=true pts=2 left=0.61
+[369.8] go → (1001.2, 11.3) plan ok=false pts=2 left=0.56
+[375.0] go: transition (house → house, trans true) at (1001.41, 10.70)
+[375.8] go → (-118.0, 45.2) plan ok=true pts=9 left=0.91
+[397.3] go → (0.3, 41.0) plan ok=true pts=12 left=0.55
+[423.1] go → (0.3, 41.0) plan ok=true pts=2 left=0.18

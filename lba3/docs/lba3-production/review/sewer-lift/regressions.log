@@ -1,0 +1,28 @@
+sewers.log:functional: 30 passed, 0 failed
+sewers.log:VERDICT: PASS
+townlife.log:functional: 64 passed, 0 failed
+townlife.log:VERDICT: PASS
+walkers.log:FAIL ten residents walk round Citadel (six more wait, hidden, for Zeelich and Kesh to be built), all in the cast, none sharing an id with a story character {"n":11,"all":17,"ids":["oda","brix","maro","tilde",
+walkers.log:FAIL each has a round of at least 3 stops [5,6,6,6,6,7,10,6,4,2,4]
+walkers.log:FAIL every stop is walkable, off every doorway and over a metre from every place a chapter puts anyone {"bad":["sefa_crates: not walkable"],"places":27,"doors":9}
+walkers.log:FAIL over five minutes every resident covers ground (≥ 40 m) and visits at least 3 different stops {"oda":[167,4],"brix":[141,5],"maro":[92,4],"tilde":[133,4],"garrick":[171,5],"pico":[364,7],"dot":[283,9],
+walkers.log:functional: 33 passed, 4 failed
+walkers.log:VERDICT: FAIL (4 functional)
+walkers-BASE.log:FAIL ten residents walk round Citadel (six more wait, hidden, for Zeelich and Kesh to be built), all in the cast, none sharing an id with a story character {"n":11,"all":17,"ids":["oda","brix","maro","ti
+walkers-BASE.log:FAIL each has a round of at least 3 stops [5,6,6,6,6,7,10,6,4,2,4]
+walkers-BASE.log:FAIL every stop is walkable, off every doorway and over a metre from every place a chapter puts anyone {"bad":["sefa_crates: not walkable"],"places":27,"doors":9}
+walkers-BASE.log:FAIL over five minutes every resident covers ground (≥ 40 m) and visits at least 3 different stops {"oda":[167,4],"brix":[141,5],"maro":[92,4],"tilde":[133,4],"garrick":[171,5],"pico":[364,7],"dot":[28
+walkers-BASE.log:functional: 33 passed, 4 failed
+walkers-BASE.log:VERDICT: FAIL (4 functional)
+chapter1.log:functional: 23 passed, 0 failed
+chapter1.log:VERDICT: PASS
+chapter2.log:functional: 18 passed, 0 failed
+chapter2.log:VERDICT: PASS
+transitions.log:functional: 6 passed, 0 failed
+transitions.log:VERDICT: PASS
+saveslots.log:functional: 25 passed, 0 failed
+saveslots.log:VERDICT: PASS
+drawcalls.log:functional: 1 passed, 0 failed
+drawcalls.log:VERDICT: PASS
+perfbudget.log:functional: 8 passed, 0 failed
+perfbudget.log:VERDICT: PASS

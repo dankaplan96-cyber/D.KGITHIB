@@ -1,0 +1,1651 @@
+[
+ {
+  "label": "lba · street and square",
+  "stats": {
+   "frames": 4901,
+   "dur": 79.9,
+   "heroPath": 97.9,
+   "camPath": 101.1,
+   "camPerM": 1.03,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 4.5,
+   "accMax": 10.8,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0.8,
+   "revDist": 23.3,
+   "stillT": 25.4,
+   "stillTurnDeg": 0,
+   "stillMove": 9.44,
+   "snaps": 0,
+   "maxStep": 0.07,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.4,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "follow": {
+     "m": 101.12,
+     "top": 3840,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     10.85,
+     18.82,
+     "mode:lba follow:0.024",
+     "hero -40.3,2.2,-3.9 hs 2.00",
+     "dp 0.000,0.000,0.024",
+     "dF 0.000,0.000,0.024",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,0.000,0.024"
+    ],
+    "ang": [
+     0,
+     81.88,
+     "mode:lba follow:0.034",
+     "hero -36.8,2.2,2.9 hs 2.00",
+     "dp 0.031,-0.000,0.015",
+     "dF 0.031,-0.000,0.015",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.031,-0.000,0.015"
+    ],
+    "step": [
+     0.07,
+     65.37,
+     "mode:lba follow:0.065",
+     "hero -62.8,3.0,-14.0 hs 2.00",
+     "dp 0.043,0.000,0.048",
+     "dF 0.043,0.000,0.048",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.043,0.000,0.048"
+    ]
+   },
+   "score": 3.79
+  },
+  "notes": [
+   "timeout",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -36.74,
+    2.2,
+    2.87
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · along house walls",
+  "stats": {
+   "frames": 2952,
+   "dur": 47.4,
+   "heroPath": 90,
+   "camPath": 114.1,
+   "camPerM": 1.27,
+   "turnDeg": 120.3,
+   "turnPerM": 1.34,
+   "rateP95": 20.1,
+   "rateMax": 41.4,
+   "angAccP95": 63.1,
+   "angAccMax": 91.6,
+   "accP95": 17.1,
+   "accMax": 27.6,
+   "revYaw": 1.3,
+   "revPitch": 3.8,
+   "revY": 3.8,
+   "revDist": 13.9,
+   "stillT": 1.7,
+   "stillTurnDeg": 9.1,
+   "stillMove": 4.64,
+   "snaps": 0,
+   "maxStep": 0.2,
+   "maxTurnStepDeg": 0.69,
+   "maxPitch": 48,
+   "steepT": 0,
+   "pitchPerMin": 83.2,
+   "yawPerMin": 113.8,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "follow": {
+     "m": 94.21,
+     "top": 2466,
+     "rev": 0
+    },
+    "swing": {
+     "m": 24.71,
+     "top": 171,
+     "rev": 1.3
+    },
+    "rise": {
+     "m": 18.06,
+     "top": 158,
+     "rev": 3.8
+    }
+   },
+   "worst": {
+    "acc": [
+     27.62,
+     126.37,
+     "mode:lba follow:0.013 swingBy:steep rise:0.006",
+     "hero -61.5,2.5,-19.9 hs 2.00",
+     "dp 0.053,0.076,-0.009",
+     "dF 0.009,-0.004,-0.009",
+     "dlift 0.000 dpitch 0.0058 dyaw 0.0000 dlook 0.009,-0.004,-0.009"
+    ],
+    "ang": [
+     91.61,
+     90.77,
+     "mode:lba follow:0.042 swing:-0.000 swingBy:steep rise:0.007",
+     "hero -43.1,2.3,20.8 hs 2.00",
+     "dp 0.068,0.090,0.036",
+     "dF 0.000,0.000,0.042",
+     "dlift 0.000 dpitch 0.0071 dyaw -0.0004 dlook 0.000,0.000,0.042"
+    ],
+    "step": [
+     0.2,
+     95.42,
+     "mode:lba follow:0.019 swing:0.017 swingBy:steep",
+     "hero -44.1,2.3,29.0 hs 0.90",
+     "dp -0.088,0.000,0.176",
+     "dF -0.010,0.000,0.016",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0169 dlook -0.010,0.000,0.016"
+    ]
+   },
+   "score": 34.56
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -52.64,
+    2.76,
+    -21.02
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · through a door in and out",
+  "stats": {
+   "frames": 1852,
+   "dur": 26.4,
+   "heroPath": 35.8,
+   "camPath": 40.2,
+   "camPerM": 1.12,
+   "turnDeg": 59.1,
+   "turnPerM": 1.65,
+   "rateP95": 17.9,
+   "rateMax": 29.9,
+   "angAccP95": 59.8,
+   "angAccMax": 92.8,
+   "accP95": 14.4,
+   "accMax": 25.5,
+   "revYaw": 4.5,
+   "revPitch": 6.8,
+   "revY": 6.8,
+   "revDist": 15.9,
+   "stillT": 7.4,
+   "stillTurnDeg": 1.17,
+   "stillMove": 2.39,
+   "snaps": 0,
+   "maxStep": 0.11,
+   "maxTurnStepDeg": 0.5,
+   "maxPitch": 48,
+   "steepT": 0,
+   "pitchPerMin": 94,
+   "yawPerMin": 68.1,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {
+    "follow": {
+     "m": 35.13,
+     "top": 977,
+     "rev": 0
+    },
+    "swing": {
+     "m": 8.24,
+     "top": 91,
+     "rev": 0
+    },
+    "rise": {
+     "m": 11.37,
+     "top": 140,
+     "rev": 2.3
+    }
+   },
+   "worst": {
+    "acc": [
+     25.49,
+     137.17,
+     "mode:lba follow:0.004 swing:0.000 swingBy:steep",
+     "hero -36.9,2.3,78.3 hs 1.76",
+     "dp 0.001,0.000,0.001",
+     "dF 0.003,0.000,0.002",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0003 dlook 0.003,0.000,0.002"
+    ],
+    "ang": [
+     92.81,
+     137.17,
+     "mode:lba follow:0.004 swing:0.000 swingBy:steep",
+     "hero -36.9,2.3,78.3 hs 1.76",
+     "dp 0.001,0.000,0.001",
+     "dF 0.003,0.000,0.002",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0003 dlook 0.003,0.000,0.002"
+    ],
+    "step": [
+     0.11,
+     141.22,
+     "mode:lba follow:0.041 swingBy:steep rise:-0.006",
+     "hero -43.8,2.3,77.8 hs 2.00",
+     "dp -0.003,-0.077,-0.077",
+     "dF -0.036,0.000,-0.021",
+     "dlift 0.000 dpitch -0.0064 dyaw 0.0000 dlook -0.036,0.000,-0.021"
+    ]
+   },
+   "score": 6.83
+  },
+  "notes": [
+   "house",
+   "citadel",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -38.86,
+    2.3,
+    66.88
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · out of the house door (the view on the way out)",
+  "stats": {
+   "frames": 979,
+   "dur": 11.9,
+   "heroPath": 14.3,
+   "camPath": 10.5,
+   "camPerM": 0.74,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 4.6,
+   "accMax": 10.8,
+   "revYaw": 5,
+   "revPitch": 5,
+   "revY": 5,
+   "revDist": 30.3,
+   "stillT": 4.2,
+   "stillTurnDeg": 0,
+   "stillMove": 1.14,
+   "snaps": 0,
+   "maxStep": 0.07,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 33.2,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {
+    "follow": {
+     "m": 9.81,
+     "top": 402,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     10.84,
+     177.75,
+     "mode:lba follow:0.023",
+     "hero -38.4,2.3,76.9 hs 2.00",
+     "dp -0.017,0.000,-0.017",
+     "dF -0.017,0.000,-0.017",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.017,0.000,-0.017"
+    ],
+    "ang": [
+     0,
+     178.28,
+     "mode:lba follow:0.073",
+     "hero -39.5,2.2,76.5 hs 2.00",
+     "dp -0.052,0.000,-0.052",
+     "dF -0.052,0.000,-0.052",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.052,0.000,-0.052"
+    ],
+    "step": [
+     0.07,
+     178.28,
+     "mode:lba follow:0.073",
+     "hero -39.5,2.2,76.5 hs 2.00",
+     "dp -0.052,0.000,-0.052",
+     "dF -0.052,0.000,-0.052",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.052,0.000,-0.052"
+    ]
+   },
+   "score": 4.19
+  },
+  "notes": [
+   "first view out 26.4°",
+   "steeper than 45° for 0.00 s",
+   "max 26.4°",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -39.45,
+    2.23,
+    76.52
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · harbour pier",
+  "stats": {
+   "frames": 1954,
+   "dur": 30.8,
+   "heroPath": 55.2,
+   "camPath": 58.5,
+   "camPerM": 1.06,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 3.6,
+   "accMax": 12,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0,
+   "revDist": 13.6,
+   "stillT": 2.7,
+   "stillTurnDeg": 0,
+   "stillMove": 1.92,
+   "snaps": 0,
+   "maxStep": 0.08,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.4,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "follow": {
+     "m": 58.49,
+     "top": 1755,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     12.05,
+     199.97,
+     "mode:lba follow:0.027",
+     "hero -119.5,1.8,43.8 hs 2.00",
+     "dp 0.027,-0.000,0.000",
+     "dF 0.027,-0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.027,-0.000,0.000"
+    ],
+    "ang": [
+     0,
+     207.43,
+     "mode:lba follow:0.034",
+     "hero -107.3,1.8,40.0 hs 2.00",
+     "dp 0.031,0.000,-0.014",
+     "dF 0.031,-0.000,-0.014",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.031,-0.000,-0.014"
+    ],
+    "step": [
+     0.08,
+     200.75,
+     "mode:lba follow:0.080",
+     "hero -118.0,1.8,43.4 hs 2.00",
+     "dp 0.080,-0.000,0.000",
+     "dF 0.080,-0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.080,-0.000,0.000"
+    ]
+   },
+   "score": 7.16
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -100.79,
+    2.31,
+    38.09
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · near cliffs (the bay to the lighthouse)",
+  "stats": {
+   "frames": 2440,
+   "dur": 39.6,
+   "heroPath": 74.2,
+   "camPath": 80.6,
+   "camPerM": 1.09,
+   "turnDeg": 19.2,
+   "turnPerM": 0.26,
+   "rateP95": 3.3,
+   "rateMax": 14.3,
+   "angAccP95": 8.5,
+   "angAccMax": 93.1,
+   "accP95": 4.1,
+   "accMax": 25.5,
+   "revYaw": 0,
+   "revPitch": 1.5,
+   "revY": 4.5,
+   "revDist": 12.1,
+   "stillT": 2.1,
+   "stillTurnDeg": 0,
+   "stillMove": 1.18,
+   "snaps": 0,
+   "maxStep": 0.08,
+   "maxTurnStepDeg": 0.24,
+   "maxPitch": 36,
+   "steepT": 0,
+   "pitchPerMin": 29.1,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {
+    "follow": {
+     "m": 78.78,
+     "top": 2268,
+     "rev": 0
+    },
+    "rise": {
+     "m": 5.28,
+     "top": 33,
+     "rev": 1.5
+    }
+   },
+   "worst": {
+    "acc": [
+     25.49,
+     222.12,
+     "mode:lba follow:0.032",
+     "hero -62.9,2.0,78.6 hs 2.00",
+     "dp -0.020,0.000,0.024",
+     "dF -0.020,0.000,0.024",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.020,0.000,0.024"
+    ],
+    "ang": [
+     93.1,
+     222.12,
+     "mode:lba follow:0.032",
+     "hero -62.9,2.0,78.6 hs 2.00",
+     "dp -0.020,0.000,0.024",
+     "dF -0.020,0.000,0.024",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.020,0.000,0.024"
+    ],
+    "step": [
+     0.08,
+     219.67,
+     "mode:lba follow:0.043 rise:0.004",
+     "hero -59.5,2.2,75.0 hs 2.00",
+     "dp -0.044,0.054,0.041",
+     "dF -0.015,0.000,0.041",
+     "dlift 0.000 dpitch 0.0039 dyaw 0.0000 dlook -0.015,0.000,0.041"
+    ]
+   },
+   "score": 6.52
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -90.76,
+    0.81,
+    92.21
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · standing, turning on the spot, short corrections",
+  "stats": {
+   "frames": 1055,
+   "dur": 15.8,
+   "heroPath": 8.9,
+   "camPath": 9.4,
+   "camPerM": 1.06,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 3.8,
+   "accMax": 7.4,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0,
+   "revDist": 11.4,
+   "stillT": 11,
+   "stillTurnDeg": 0,
+   "stillMove": 1.41,
+   "snaps": 0,
+   "maxStep": 0.05,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.4,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "follow": {
+     "m": 9.39,
+     "top": 363,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     7.44,
+     263.33,
+     "mode:lba follow:0.027",
+     "hero -46.2,2.2,44.4 hs 1.50",
+     "dp -0.025,0.000,0.011",
+     "dF -0.025,0.000,0.011",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.025,0.000,0.011"
+    ],
+    "ang": [
+     0
+    ],
+    "step": [
+     0.05,
+     265.7,
+     "mode:lba follow:0.045",
+     "hero -49.5,2.2,43.1 hs 2.00",
+     "dp -0.045,0.000,0.000",
+     "dF -0.045,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.045,0.000,0.000"
+    ]
+   },
+   "score": 1.29
+  },
+  "notes": [],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -51.94,
+    2.29,
+    42.06
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · combat (four mites in the fields)",
+  "stats": {
+   "frames": 913,
+   "dur": 13.7,
+   "heroPath": 1.2,
+   "camPath": 0.1,
+   "camPerM": 0.09,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 0.2,
+   "accMax": 2.4,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0,
+   "revDist": 0,
+   "stillT": 13,
+   "stillTurnDeg": 0,
+   "stillMove": 0.1,
+   "snaps": 0,
+   "maxStep": 0,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.4,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.5,
+   "rules": {
+    "follow": {
+     "m": 0.11,
+     "top": 71,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     2.44,
+     271.07,
+     "mode:lba follow:0.003",
+     "hero -45.0,2.2,46.8 hs 1.00",
+     "dp 0.000,0.000,-0.003",
+     "dF 0.000,0.000,-0.003",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,0.000,-0.003"
+    ],
+    "ang": [
+     0
+    ],
+    "step": [
+     0,
+     277.35,
+     "mode:lba follow:0.000",
+     "hero -45.0,2.2,46.8 hs 0.00",
+     "dp 0.000,0.000,-0.000",
+     "dF 0.000,0.000,-0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,0.000,-0.000"
+    ]
+   },
+   "score": 0.08
+  },
+  "notes": [
+   "{\"left\":0,\"dead\":false,\"hp\":10,\"t\":10.2}"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -45,
+    2.24,
+    46.78
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "lba · street, Modern controls",
+  "stats": {
+   "frames": 3940,
+   "dur": 63.9,
+   "heroPath": 92.9,
+   "camPath": 77.1,
+   "camPerM": 0.83,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 3.6,
+   "accMax": 9.1,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0.9,
+   "revDist": 12.2,
+   "stillT": 0.8,
+   "stillTurnDeg": 0,
+   "stillMove": 0.01,
+   "snaps": 0,
+   "maxStep": 0.07,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.4,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "follow": {
+     "m": 77.06,
+     "top": 2407,
+     "rev": 0
+    }
+   },
+   "worst": {
+    "acc": [
+     9.15,
+     333.55,
+     "mode:lba follow:0.023",
+     "hero -63.7,3.3,-16.3 hs 1.93",
+     "dp 0.021,0.000,0.010",
+     "dF 0.021,0.000,0.010",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.021,0.000,0.010"
+    ],
+    "ang": [
+     0,
+     349.98,
+     "mode:lba follow:0.033",
+     "hero -38.7,2.2,1.7 hs 1.87",
+     "dp 0.033,-0.000,0.006",
+     "dF 0.033,-0.000,0.006",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.033,-0.000,0.006"
+    ],
+    "step": [
+     0.07,
+     334.4,
+     "mode:lba follow:0.070",
+     "hero -62.4,3.1,-15.4 hs 2.00",
+     "dp 0.044,0.000,0.054",
+     "dF 0.044,0.000,0.054",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.044,0.000,0.054"
+    ]
+   },
+   "score": 0.21
+  },
+  "notes": [
+   "timeout",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -38.67,
+    2.2,
+    1.66
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · street and square",
+  "stats": {
+   "frames": 4901,
+   "dur": 79.9,
+   "heroPath": 97.9,
+   "camPath": 101.7,
+   "camPerM": 1.04,
+   "turnDeg": 117.2,
+   "turnPerM": 1.2,
+   "rateP95": 13.6,
+   "rateMax": 21.4,
+   "angAccP95": 19,
+   "angAccMax": 120.4,
+   "accP95": 8.7,
+   "accMax": 38.1,
+   "revYaw": 0.8,
+   "revPitch": 0,
+   "revY": 5.3,
+   "revDist": 15.8,
+   "stillT": 25.4,
+   "stillTurnDeg": 0.02,
+   "stillMove": 2.91,
+   "snaps": 0,
+   "maxStep": 0.06,
+   "maxTurnStepDeg": 0.36,
+   "maxPitch": 27.4,
+   "steepT": 0,
+   "pitchPerMin": 0.7,
+   "yawPerMin": 98.1,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "auto": {
+     "m": 21.66,
+     "top": 567,
+     "rev": 0.8
+    },
+    "ground": {
+     "m": 0.18,
+     "top": 67,
+     "rev": 0.8
+    }
+   },
+   "worst": {
+    "acc": [
+     38.1,
+     423.38,
+     "mode:free keep:0.000 ground:-0.000",
+     "hero -48.2,2.6,-7.4 hs 6.02",
+     "dp 0.042,-0.004,0.008",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.042,-0.004,0.008"
+    ],
+    "ang": [
+     120.39,
+     403.77,
+     "mode:free keep:0.000 auto:0.001 ground:-0.000",
+     "hero -57.3,2.3,-6.0 hs 0.00",
+     "dp -0.022,0.002,-0.007",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0010 dlook -0.022,0.002,0.001"
+    ],
+    "step": [
+     0.06,
+     353.18,
+     "mode:free keep:0.000 auto:0.007 ground:-0.001",
+     "hero -39.5,2.2,0.9 hs 2.00",
+     "dp 0.043,-0.001,-0.036",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0070 dlook -0.016,0.000,-0.029"
+    ]
+   },
+   "score": 2.96
+  },
+  "notes": [
+   "timeout",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -36.74,
+    2.2,
+    2.87
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · along house walls",
+  "stats": {
+   "frames": 2952,
+   "dur": 47.4,
+   "heroPath": 90,
+   "camPath": 98.5,
+   "camPerM": 1.09,
+   "turnDeg": 328.5,
+   "turnPerM": 3.65,
+   "rateP95": 24.1,
+   "rateMax": 186.9,
+   "angAccP95": 86.5,
+   "angAccMax": 8387.3,
+   "accP95": 12.9,
+   "accMax": 1433.1,
+   "revYaw": 0,
+   "revPitch": 15.2,
+   "revY": 24,
+   "revDist": 19,
+   "stillT": 1.7,
+   "stillTurnDeg": 12.94,
+   "stillMove": 1.96,
+   "snaps": 0,
+   "maxStep": 0.39,
+   "maxTurnStepDeg": 3.12,
+   "maxPitch": 71.8,
+   "steepT": 15.2,
+   "pitchPerMin": 287.5,
+   "yawPerMin": 408.2,
+   "joltsPerMin": 12.6,
+   "shakeT": 0.7,
+   "rules": {
+    "auto": {
+     "m": 53.52,
+     "top": 773,
+     "rev": 0
+    },
+    "occ": {
+     "m": 34.62,
+     "top": 424,
+     "rev": 7.6
+    },
+    "ground": {
+     "m": 20.59,
+     "top": 258,
+     "rev": 16.4
+    }
+   },
+   "worst": {
+    "acc": [
+     1433.1,
+     441.18,
+     "mode:free keep:0.000 auto:-0.005 occ:-0.133 ground:0.028",
+     "hero -43.0,2.3,22.0 hs 2.00",
+     "dp 0.124,-0.031,0.025",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0046 dlook 0.003,0.000,0.033"
+    ],
+    "ang": [
+     8387.3,
+     441.17,
+     "mode:free auto:-0.004 occ:-0.133 ground:0.030",
+     "hero -43.0,2.3,22.0 hs 2.00",
+     "dp 0.123,0.367,0.024",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0044 dlook 0.003,0.000,0.033"
+    ],
+    "step": [
+     0.39,
+     441.17,
+     "mode:free auto:-0.004 occ:-0.133 ground:0.030",
+     "hero -43.0,2.3,22.0 hs 2.00",
+     "dp 0.123,0.367,0.024",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0044 dlook 0.003,0.000,0.033"
+    ]
+   },
+   "score": 29.05
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -52.64,
+    2.76,
+    -21.02
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · through a door in and out",
+  "stats": {
+   "frames": 1852,
+   "dur": 26.4,
+   "heroPath": 35.8,
+   "camPath": 43.2,
+   "camPerM": 1.21,
+   "turnDeg": 212.2,
+   "turnPerM": 5.93,
+   "rateP95": 21.4,
+   "rateMax": 35.5,
+   "angAccP95": 89.6,
+   "angAccMax": 286.1,
+   "accP95": 20.2,
+   "accMax": 40.8,
+   "revYaw": 4.5,
+   "revPitch": 25,
+   "revY": 25,
+   "revDist": 18.2,
+   "stillT": 7.4,
+   "stillTurnDeg": 18.99,
+   "stillMove": 7.69,
+   "snaps": 0,
+   "maxStep": 0.14,
+   "maxTurnStepDeg": 0.59,
+   "maxPitch": 65,
+   "steepT": 5,
+   "pitchPerMin": 276.3,
+   "yawPerMin": 263.3,
+   "joltsPerMin": 2.3,
+   "shakeT": 0,
+   "rules": {
+    "auto": {
+     "m": 19.24,
+     "top": 334,
+     "rev": 4.5
+    },
+    "occ": {
+     "m": 28.66,
+     "top": 465,
+     "rev": 6.8
+    },
+    "ground": {
+     "m": 10.41,
+     "top": 445,
+     "rev": 20.4
+    }
+   },
+   "worst": {
+    "acc": [
+     40.78,
+     503.45,
+     "mode:free keep:0.000 occ:-0.008 ground:-0.005",
+     "hero -43.3,2.3,73.6 hs 0.00",
+     "dp -0.005,-0.009,0.002",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.012,0.000,0.005"
+    ],
+    "ang": [
+     286.1,
+     484.63,
+     "mode:free occ:-0.058 ground:0.005",
+     "hero -38.5,2.3,75.6 hs 2.00",
+     "dp -0.031,-0.019,0.025",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.022,0.001,0.025"
+    ],
+    "step": [
+     0.14,
+     503.7,
+     "mode:free keep:0.000 occ:-0.133 ground:-0.015",
+     "hero -43.3,2.3,73.6 hs 0.00",
+     "dp 0.108,-0.074,-0.048",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.001,0.000,0.000"
+    ]
+   },
+   "score": 24.74
+  },
+  "notes": [
+   "house",
+   "citadel",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -38.86,
+    2.3,
+    66.88
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · out of the house door (the view on the way out)",
+  "stats": {
+   "frames": 979,
+   "dur": 11.9,
+   "heroPath": 14.3,
+   "camPath": 10.6,
+   "camPerM": 0.74,
+   "turnDeg": 37.5,
+   "turnPerM": 2.63,
+   "rateP95": 16.1,
+   "rateMax": 22,
+   "angAccP95": 67,
+   "angAccMax": 110.5,
+   "accP95": 10.4,
+   "accMax": 17.1,
+   "revYaw": 0,
+   "revPitch": 5,
+   "revY": 35.3,
+   "revDist": 15.1,
+   "stillT": 4.2,
+   "stillTurnDeg": 2.63,
+   "stillMove": 0.66,
+   "snaps": 0,
+   "maxStep": 0.04,
+   "maxTurnStepDeg": 0.37,
+   "maxPitch": 60.9,
+   "steepT": 2.8,
+   "pitchPerMin": 172.5,
+   "yawPerMin": 55.2,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {
+    "auto": {
+     "m": 1.81,
+     "top": 31,
+     "rev": 0
+    },
+    "occ": {
+     "m": 6.9,
+     "top": 176,
+     "rev": 0
+    },
+    "ground": {
+     "m": 3.57,
+     "top": 236,
+     "rev": 10.1
+    }
+   },
+   "worst": {
+    "acc": [
+     17.09,
+     523.08,
+     "mode:free occ:0.014 ground:0.003",
+     "hero -41.3,2.3,79.0 hs 1.80",
+     "dp 0.001,0.008,0.000",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.014,-0.001,0.003"
+    ],
+    "ang": [
+     110.51,
+     522.95,
+     "mode:free auto:-0.000 occ:0.023 ground:-0.001",
+     "hero -41.4,2.3,78.9 hs 0.00",
+     "dp -0.015,0.008,-0.002",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0004 dlook 0.005,-0.001,0.004"
+    ],
+    "step": [
+     0.04,
+     522.3,
+     "mode:free keep:0.000 auto:-0.002 occ:0.032 ground:0.020",
+     "hero -42.2,2.3,78.4 hs 2.00",
+     "dp -0.001,0.034,0.012",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0020 dlook 0.027,-0.001,0.019"
+    ]
+   },
+   "score": 8.84
+  },
+  "notes": [
+   "first view out 65.7°",
+   "steeper than 45° for 4.75 s",
+   "max 65.7°",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -39.45,
+    2.23,
+    76.52
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · harbour pier",
+  "stats": {
+   "frames": 1954,
+   "dur": 30.8,
+   "heroPath": 55.2,
+   "camPath": 56.9,
+   "camPerM": 1.03,
+   "turnDeg": 51.8,
+   "turnPerM": 0.94,
+   "rateP95": 13.1,
+   "rateMax": 21.4,
+   "angAccP95": 25.8,
+   "angAccMax": 120.4,
+   "accP95": 7,
+   "accMax": 23,
+   "revYaw": 1.9,
+   "revPitch": 0,
+   "revY": 5.8,
+   "revDist": 13.6,
+   "stillT": 2.7,
+   "stillTurnDeg": 0.07,
+   "stillMove": 0.53,
+   "snaps": 0,
+   "maxStep": 0.06,
+   "maxTurnStepDeg": 0.36,
+   "maxPitch": 26.9,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 113.1,
+   "joltsPerMin": 0,
+   "shakeT": 0.7,
+   "rules": {
+    "auto": {
+     "m": 9.64,
+     "top": 287,
+     "rev": 1.9
+    }
+   },
+   "worst": {
+    "acc": [
+     22.98,
+     542.95,
+     "mode:free auto:0.002",
+     "hero -112.9,1.8,43.6 hs 0.00",
+     "dp -0.025,-0.000,0.002",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0017 dlook -0.017,-0.000,0.014"
+    ],
+    "ang": [
+     120.39,
+     542.95,
+     "mode:free auto:0.002",
+     "hero -112.9,1.8,43.6 hs 0.00",
+     "dp -0.025,-0.000,0.002",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0017 dlook -0.017,-0.000,0.014"
+    ],
+    "step": [
+     0.06,
+     541.52,
+     "mode:free auto:0.007",
+     "hero -110.7,1.8,41.9 hs 2.00",
+     "dp -0.039,-0.000,-0.039",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0070 dlook -0.027,-0.000,0.019"
+    ]
+   },
+   "score": 3.71
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -100.79,
+    2.31,
+    38.09
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · near cliffs (the bay to the lighthouse)",
+  "stats": {
+   "frames": 2440,
+   "dur": 39.6,
+   "heroPath": 74.2,
+   "camPath": 80,
+   "camPerM": 1.08,
+   "turnDeg": 123,
+   "turnPerM": 1.66,
+   "rateP95": 21.4,
+   "rateMax": 21.4,
+   "angAccP95": 40.1,
+   "angAccMax": 120.5,
+   "accP95": 6.9,
+   "accMax": 20.7,
+   "revYaw": 1.5,
+   "revPitch": 4.5,
+   "revY": 16.7,
+   "revDist": 10.6,
+   "stillT": 2.1,
+   "stillTurnDeg": 1.13,
+   "stillMove": 0.44,
+   "snaps": 0,
+   "maxStep": 0.06,
+   "maxTurnStepDeg": 0.36,
+   "maxPitch": 28.9,
+   "steepT": 0,
+   "pitchPerMin": 9.7,
+   "yawPerMin": 201.9,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {
+    "auto": {
+     "m": 22.11,
+     "top": 520,
+     "rev": 1.5
+    },
+    "ground": {
+     "m": 1.22,
+     "top": 275,
+     "rev": 4.5
+    }
+   },
+   "worst": {
+    "acc": [
+     20.69,
+     587.45,
+     "mode:free keep:0.000 auto:-0.004 ground:-0.000",
+     "hero -85.4,0.5,93.4 hs 0.00",
+     "dp -0.022,0.004,0.027",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0040 dlook -0.021,0.004,-0.007"
+    ],
+    "ang": [
+     120.48,
+     587.43,
+     "mode:free keep:0.000 auto:-0.005 ground:-0.000",
+     "hero -85.4,0.5,93.4 hs 0.50",
+     "dp -0.026,0.005,0.032",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw -0.0047 dlook -0.025,0.005,-0.008"
+    ],
+    "step": [
+     0.06,
+     570.02,
+     "mode:free keep:0.000 auto:0.007 ground:-0.000",
+     "hero -60.3,2.2,75.9 hs 2.00",
+     "dp -0.046,-0.001,-0.031",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0070 dlook -0.023,-0.001,0.024"
+    ]
+   },
+   "score": 6.58
+  },
+  "notes": [
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -90.76,
+    0.81,
+    92.21
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · standing, turning on the spot, short corrections",
+  "stats": {
+   "frames": 1055,
+   "dur": 16.6,
+   "heroPath": 8.9,
+   "camPath": 8.8,
+   "camPerM": 1,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0.7,
+   "angAccP95": 0,
+   "angAccMax": 40.1,
+   "accP95": 8.3,
+   "accMax": 14.6,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0,
+   "revDist": 7.3,
+   "stillT": 11.7,
+   "stillTurnDeg": 0,
+   "stillMove": 0.58,
+   "snaps": 0,
+   "maxStep": 0.03,
+   "maxTurnStepDeg": 0.01,
+   "maxPitch": 26.9,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0.1,
+   "joltsPerMin": 0,
+   "shakeT": 0,
+   "rules": {},
+   "worst": {
+    "acc": [
+     14.6,
+     616.92,
+     "mode:free",
+     "hero -51.9,2.3,42.1 hs 0.00",
+     "dp -0.016,0.002,-0.016",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.016,0.002,-0.016"
+    ],
+    "ang": [
+     40.13,
+     614.97,
+     "mode:free auto:0.000",
+     "hero -48.5,2.2,43.0 hs 2.00",
+     "dp -0.029,-0.000,-0.012",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0002 dlook -0.031,-0.000,-0.012"
+    ],
+    "step": [
+     0.03,
+     616.87,
+     "mode:free",
+     "hero -51.9,2.3,42.1 hs 1.50",
+     "dp -0.023,0.002,-0.022",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.023,0.002,-0.022"
+    ]
+   },
+   "score": 0.5
+  },
+  "notes": [],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -51.94,
+    2.29,
+    42.06
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · combat (four mites in the fields)",
+  "stats": {
+   "frames": 1015,
+   "dur": 15.4,
+   "heroPath": 1.2,
+   "camPath": 1.2,
+   "camPerM": 1,
+   "turnDeg": 0,
+   "turnPerM": 0,
+   "rateP95": 0,
+   "rateMax": 0,
+   "angAccP95": 0,
+   "angAccMax": 0,
+   "accP95": 0.6,
+   "accMax": 14.6,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 0,
+   "revDist": 3.9,
+   "stillT": 14.7,
+   "stillTurnDeg": 0,
+   "stillMove": 0.12,
+   "snaps": 0,
+   "maxStep": 0.03,
+   "maxTurnStepDeg": 0,
+   "maxPitch": 26.9,
+   "steepT": 0,
+   "pitchPerMin": 0,
+   "yawPerMin": 0,
+   "joltsPerMin": 0,
+   "shakeT": 0.5,
+   "rules": {},
+   "worst": {
+    "acc": [
+     14.56,
+     620.87,
+     "mode:free",
+     "hero -45.0,2.2,46.8 hs 0.00",
+     "dp 0.000,-0.000,-0.022",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,-0.000,-0.022"
+    ],
+    "ang": [
+     0,
+     627.87,
+     "mode:free",
+     "hero -45.0,2.2,46.8 hs 0.00",
+     "dp 0.000,-0.000,0.000",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,-0.000,0.000"
+    ],
+    "step": [
+     0.03,
+     620.82,
+     "mode:free",
+     "hero -45.0,2.2,46.8 hs 1.50",
+     "dp 0.000,-0.000,-0.032",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.000,-0.000,-0.032"
+    ]
+   },
+   "score": 0.08
+  },
+  "notes": [
+   "{\"left\":0,\"dead\":false,\"hp\":10,\"t\":10.2}"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -45,
+    2.24,
+    46.78
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ },
+ {
+  "label": "free · street, Modern controls",
+  "stats": {
+   "frames": 3940,
+   "dur": 63.9,
+   "heroPath": 92.9,
+   "camPath": 85.6,
+   "camPerM": 0.92,
+   "turnDeg": 2.3,
+   "turnPerM": 0.03,
+   "rateP95": 0.1,
+   "rateMax": 2.7,
+   "angAccP95": 0.3,
+   "angAccMax": 37.4,
+   "accP95": 9.4,
+   "accMax": 91.9,
+   "revYaw": 0,
+   "revPitch": 0,
+   "revY": 6.6,
+   "revDist": 7.5,
+   "stillT": 0.8,
+   "stillTurnDeg": 0,
+   "stillMove": 0.25,
+   "snaps": 0,
+   "maxStep": 0.06,
+   "maxTurnStepDeg": 0.05,
+   "maxPitch": 28.7,
+   "steepT": 0,
+   "pitchPerMin": 2.2,
+   "yawPerMin": 0,
+   "joltsPerMin": 0.9,
+   "shakeT": 0.7,
+   "rules": {
+    "ground": {
+     "m": 0.44,
+     "top": 220,
+     "rev": 0.9
+    }
+   },
+   "worst": {
+    "acc": [
+     91.86,
+     694.78,
+     "mode:free keep:0.000 ground:-0.000",
+     "hero -48.3,2.6,-7.2 hs 11.84",
+     "dp 0.048,-0.007,0.031",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.048,-0.007,0.031"
+    ],
+    "ang": [
+     37.42,
+     637.18,
+     "mode:free keep:0.000 ground:0.002",
+     "hero -38.0,2.2,3.9 hs 1.21",
+     "dp -0.003,0.002,-0.009",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook -0.003,0.000,-0.009"
+    ],
+    "step": [
+     0.06,
+     694.78,
+     "mode:free keep:0.000 ground:-0.000",
+     "hero -48.3,2.6,-7.2 hs 11.84",
+     "dp 0.048,-0.007,0.031",
+     "dF 0.000,0.000,0.000",
+     "dlift 0.000 dpitch 0.0000 dyaw 0.0000 dlook 0.048,-0.007,0.031"
+    ]
+   },
+   "score": 3.99
+  },
+  "notes": [
+   "timeout",
+   "arrived",
+   "arrived",
+   "arrived",
+   "arrived"
+  ],
+  "end": {
+   "state": "play",
+   "room": "citadel",
+   "pos": [
+    -38.67,
+    2.2,
+    1.66
+   ],
+   "hp": 10,
+   "chapter": "well",
+   "obj": "Check the well◆ Take the magic ball from the cupboard"
+  }
+ }
+]

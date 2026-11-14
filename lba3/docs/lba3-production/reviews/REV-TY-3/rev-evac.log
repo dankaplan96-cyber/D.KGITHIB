@@ -1,0 +1,5 @@
+ISO  evacuation chapter set by flags (c1_water, c1_plan), story.applyFlags()
+stage: 2
+desk: {"r":"used","kind":"lhome","stage":2}
+desk lines: ["n_hero: Zoé's connections board. Green pins are on the project's heat, red ones still wait. Bug Street is green. The harbour row is all red.","n_hero: (The red pins are the houses missing from Vesk's plan. She saw that before anyone.)"]
+no errors

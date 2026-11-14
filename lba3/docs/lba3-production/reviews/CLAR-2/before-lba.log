@@ -1,0 +1,121 @@
+  [prologue/01-handoff] 2 text item(s), 67 chars: toast: "Check the well. Take the magic ball from the cupboard first." | weapon: "✊ Fists"
+  [prologue/02-cupboard] 2 text item(s), 55 chars: toast: "Got the magic ball and the holomap" | weapon: "✦ Magic Ball R: Fists"
+  [prologue/03-outside] 0 text item(s), 0 chars: 
+  [prologue/04-at-well] 2 text item(s), 19 chars: prompt: "W Inspect" | toast: "Game saved"
+  [prologue/05-key] 2 text item(s), 26 chars: prompt: "W Talk" | toast: "Got the well lid key"
+  [prologue/06-rope] 2 text item(s), 23 chars: prompt: "W Talk" | toast: "Got a rope ladder"
+ROUTE prologue: 34 HUD texts put up, 383 chars (prompt 26/131, toast 6/134, objective 2/118); dialogue 19 lines 1170 chars
+    2.5 prompt: Inspect
+    3.5 toast: Got the magic ball and the holomap
+    3.5 objective: Check the well
+    7.3 prompt: Talk
+    16.2 prompt: Inspect
+    16.6 prompt: Talk
+    29.3 toast: Game saved
+    30.0 prompt: Shop
+    30.6 prompt: Inspect
+    42.9 prompt: Talk
+    44.8 prompt: Inspect
+    47.8 prompt: Talk
+    49.7 prompt: Inspect
+    62.7 toast: The ground is shaking...
+    86.0 prompt: Talk
+    87.7 prompt: Inspect
+    90.1 prompt: Talk
+    91.0 prompt: Inspect
+    100.1 prompt: Inspect
+    161.0 objective: Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+    161.6 prompt: Inspect
+    163.1 prompt: Talk
+    165.4 toast: Got the well lid key
+    165.4 prompt: Talk
+    167.9 prompt: Talk
+    182.9 prompt: Talk
+    188.9 prompt: Talk
+    190.2 prompt: Talk
+    193.6 prompt: Talk
+    195.1 toast: Got a signed unloading permit
+    195.2 prompt: Talk
+    198.5 prompt: Talk
+    199.3 toast: Got a rope ladder
+    199.3 prompt: Talk
+  [street/01-square] 0 text item(s), 0 chars: 
+  [street/02-harbour] 1 text item(s), 6 chars: prompt: "W Talk"
+ROUTE street: 8 HUD texts put up, 41 chars (prompt 7/31, toast 1/10); dialogue 0 lines 0 chars
+    204.8 prompt: Talk
+    206.0 prompt: Talk
+    219.8 prompt: Talk
+    220.9 toast: Game saved
+    221.8 prompt: Talk
+    225.9 prompt: Inspect
+    226.9 prompt: Shop
+    243.1 prompt: Talk
+  [combat/01-cave] 1 text item(s), 21 chars: weapon: "✦ Magic Ball R: Fists"
+  [combat/02-fight] 1 text item(s), 21 chars: weapon: "✦ Magic Ball R: Fists"
+  [combat/03-after] 0 text item(s), 0 chars: 
+ROUTE combat: 28 HUD texts put up, 238 chars (prompt 25/130, toast 2/36, objective 1/72, float 3/6); dialogue 14 lines 813 chars
+    247.6 prompt: Open
+    257.9 prompt: Talk
+    259.1 prompt: Talk
+    259.3 toast: You overhear whispering...
+    260.4 prompt: Talk
+    262.3 prompt: Talk
+    264.5 toast: Game saved
+    264.7 prompt: Shop
+    265.6 prompt: Inspect
+    266.4 prompt: Talk
+    267.1 prompt: Inspect
+    271.2 prompt: Talk
+    272.7 prompt: Inspect
+    276.6 prompt: Talk
+    278.0 prompt: Inspect
+    291.3 prompt: Talk
+    293.2 prompt: Inspect
+    297.8 prompt: Talk
+    298.6 prompt: Inspect
+    332.7 prompt: Talk
+    335.1 prompt: Inspect
+    336.6 prompt: Talk
+    336.9 prompt: Inspect
+    339.7 prompt: Talk
+    341.9 prompt: Inspect
+    348.5 prompt: Talk
+    349.4 prompt: Inspect
+    391.2 objective: Find the source of the heat◆ Wake the three crystals with the magic ball
+  [chapter4/01-arrive] 1 text item(s), 6 chars: prompt: "W Talk"
+  [chapter4/02-tarra] 1 text item(s), 6 chars: prompt: "W Talk"
+  [chapter4/03-gust] 0 text item(s), 0 chars: 
+  [chapter4/04-leak] 0 text item(s), 0 chars: 
+ROUTE chapter4: 18 HUD texts put up, 321 chars (chapter 2/34, toast 2/45, objective 5/201, prompt 9/41); dialogue 30 lines 2664 chars
+    412.1 chapter: Chapter 3 Zeelich
+    417.9 toast: The evacuation plan was confiscated
+    418.2 objective: Find Baldino's workshop on the Esmer street
+    420.4 chapter: Chapter 4 The Dig
+    425.4 objective: Find the professor who found the crystals
+    425.4 prompt: Talk
+    433.1 prompt: Ferry
+    439.6 prompt: Talk
+    441.1 objective: Restart the wind-pump
+    441.1 prompt: Talk
+    444.7 prompt: Talk
+    446.7 prompt: Talk
+    448.2 objective: Restart the wind-pump◆ Find the gear that grinds
+    449.1 prompt: Talk
+    452.1 prompt: Listen
+    453.0 prompt: Listen
+    461.9 toast: Gear freed
+    463.6 objective: Restart the wind-pump◆ Stop the leak in the pipe
+  [core/01-fight] 2 text item(s), 113 chars: toast: "Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels." | weapon: "✦ Magic Ball R: Fists"
+  [core/02-stuck] 2 text item(s), 113 chars: toast: "Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels." | weapon: "✦ Magic Ball R: Fists"
+ROUTE core: 3 HUD texts put up, 136 chars (objective 2/44, toast 1/92); dialogue 4 lines 464 chars
+    466.3 objective: Reach the core
+    467.4 toast: Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.
+    467.4 objective: Convert the three pylons (0/3)
+
+SUMMARY (before, HUD lba)
+  prologue  put up  34 texts   383 chars | dialogue 19 lines | on screen (items/chars): 01-handoff 2/67 · 02-cupboard 2/55 · 03-outside 0/0 · 04-at-well 2/19 · 05-key 2/26 · 06-rope 2/23
+  street    put up   8 texts    41 chars | dialogue 0 lines | on screen (items/chars): 01-square 0/0 · 02-harbour 1/6
+  combat    put up  28 texts   238 chars | dialogue 14 lines | on screen (items/chars): 01-cave 1/21 · 02-fight 1/21 · 03-after 0/0
+  chapter4  put up  18 texts   321 chars | dialogue 30 lines | on screen (items/chars): 01-arrive 1/6 · 02-tarra 1/6 · 03-gust 0/0 · 04-leak 0/0
+  core      put up   3 texts   136 chars | dialogue 4 lines | on screen (items/chars): 01-fight 2/113 · 02-stuck 2/113
+no errors

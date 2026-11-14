@@ -1,0 +1,476 @@
+From abbe08a9dba678afeb4f5f8d33754575e54a1ff1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 09:54:25 +0000
+Subject: [PATCH 01/10] Campaign wave 8: the epilogue's kitchen, the tap turned
+ by his own hand
+
+After the dinner the player has the kitchen: Arthur goes to the sink to listen to
+the pipe, Twinsen turns the tap's handle himself (his hand on its knob), the water
+runs cold into Arthur's cup under the spout and the wall stays quiet; Arthur keeps
+the cup there just in case. Then a word with Zoe, and the end screen.
+
+New flags only (ep_v ep_tap ep_word). A save from before at the epilogue's start
+plays the dinner again (it loaded into a quiet house before); one past the dinner
+counts the step as done. The tap's handle sits on a short stem at the end of the
+pipe's run (the spout has not moved) so his hand reaches it. Fixtures base-16*
+(made on the build before) and new-16-kitchen, new-16-tap.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/interiors.js                    |  13 +-
+ lba3/src/game/story/epilogue.js               |  45 ++++-
+ lba3/src/game/story/hometap.js                | 167 ++++++++++++++++++
+ lba3/src/game/story/kit2.js                   |   2 +-
+ lba3/src/game/text/thread.js                  |  24 +++
+ .../fixtures/campaign/base-16-end.save.json   |   1 +
+ .../fixtures/campaign/base-16-free.save.json  |  22 +++
+ .../tests/fixtures/campaign/base-16.save.json |   1 +
+ .../campaign/new-16-kitchen.save.json         |   1 +
+ .../fixtures/campaign/new-16-tap.save.json    |   1 +
+ 10 files changed, 267 insertions(+), 10 deletions(-)
+ create mode 100644 lba3/tests/fixtures/campaign/base-16-end.save.json
+ create mode 100644 lba3/tests/fixtures/campaign/base-16-free.save.json
+ create mode 100644 lba3/tests/fixtures/campaign/base-16.save.json
+ create mode 100644 lba3/tests/fixtures/campaign/new-16-kitchen.save.json
+ create mode 100644 lba3/tests/fixtures/campaign/new-16-tap.save.json
+
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index f0e5b4e0..321d2fd9 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -455,11 +455,14 @@ function buildHouse(scene, physics) {
+   B.col(skX, skZ, skW / 2, 0.29, 0.9, { noStand: true });
+   k.add(P.disc(0.03, 10), MAT.iron(), bX, top - 0.099, skZ, 0, { rx: -Math.PI / 2 }); // drain
+   // the tap: a pipe out of the wall, a curved spout, a cross handle on a stem (animated)
+-  const brass = MAT.brass(), tapY = 1.3, spX = bX, spZ = skZ - 0.02;
+-  k.add(pipe([[spX, tapY, BZ + 0.01], [spX, tapY, BZ + 0.2], [spX, tapY - 0.1, BZ + 0.27]], 0.018, 0.04, 10), brass, 0, 0, 0);
++  // (CAMPAIGN-10, the epilogue: Twinsen turns this handle himself, his hand on its front knob. It stood 0.73 m over the
++  //  sink's back, 6 cm higher and 6 cm deeper than any hand of his reaches from the cupboard's front; it is on a short
++  //  stem at the end of the pipe's run now, the spout dropping from just past it. The spout itself has not moved)
++  const brass = MAT.brass(), tapY = 1.3, spX = bX, spZ = skZ - 0.02, stemZ = BZ + 0.21, crossY = tapY + 0.045;
++  k.add(pipe([[spX, tapY, BZ + 0.01], [spX, tapY, BZ + 0.25], [spX, tapY - 0.1, BZ + 0.27]], 0.018, 0.04, 10), brass, 0, 0, 0);
+   k.add(torus(0.03, 0.012, 6, 14), brass, spX, tapY, BZ + 0.03, 0, { rx: 0 });
+-  k.add(cyl(0.012, 0.012, 0.09, 8), brass, spX, tapY + 0.05, BZ + 0.15);
+-  const handle = k.pivot(spX, tapY + 0.1, BZ + 0.15, 0);
++  k.add(cyl(0.012, 0.012, 0.04, 8), brass, spX, tapY + 0.025, stemZ);
++  const handle = k.pivot(spX, crossY, stemZ, 0);
+   for (const r of [0, Math.PI / 2]) { const bar = new THREE.Mesh(cyl(0.008, 0.008, 0.13, 6), brass); bar.rotation.set(0, r, Math.PI / 2); handle.add(bar); }
+   for (let i = 0; i < 4; i++) { const knob = new THREE.Mesh(sphere(0.014, 8, 6), MAT.paint('#f2ecdc', 0.4)); knob.position.set(Math.cos(i * Math.PI / 2) * 0.065, 0, Math.sin(i * Math.PI / 2) * 0.065); handle.add(knob); }
+   // water: a thin stream under the spout (scaled while it runs) and a little steam (shown when it runs warm)
+@@ -491,6 +494,8 @@ function buildHouse(scene, physics) {
+     k.add(cyl(0.012, 0.012, 0.08, 6), MAT.wood('dark'), 0.25, 0.012, 0.13, 0.6, { rz: Math.PI / 2 });
+   });
+   R.kitchen = { handle, stream, spout: { ...B.world(spout.x, spout.z), y: spout.y }, basin: { ...B.world(bX, skZ), y: top - 0.1 }, tray: { ...B.world(skX + 0.3, skZ), y: top + 0.1 }, tapY,
++    // (CAMPAIGN-10: the handle's knob toward the room, where his hand takes it; the watering can in the basin, r its body)
++    knob: { ...B.world(spX, stemZ + 0.065), y: crossY }, can: { ...B.world(bX + 0.06, skZ + 0.05), r: 0.085 },
+     // (NO-AIR: the two pots she is filling, the tray's near row's east end: where her palms press the soil; y: the soil)
+     pots: [0.05, 0.15].map((px) => ({ ...B.world(skX + 0.3 + Math.cos(0.05) * px + Math.sin(0.05) * 0.07, skZ + 0.02 - Math.sin(0.05) * px + Math.cos(0.05) * 0.07), y: top + 0.105 })) };
+   // --- the cupboard (the magic ball is in here, like LBA2's opening)
+diff --git a/lba3/src/game/story/epilogue.js b/lba3/src/game/story/epilogue.js
+index f90ee738..28f02783 100644
+--- a/lba3/src/game/story/epilogue.js
++++ b/lba3/src/game/story/epilogue.js
+@@ -2,8 +2,11 @@
+ //
+ // Four days later, back on Citadel Island: dinner at home with Zoé and Arthur (the prologue's "be back for
+ // dinner"), then the end screen, and free roam where everyone in town has something new to say.
++// CAMPAIGN-10 (wave 8): between the dinner and the end screen, the kitchen is the player's: the tap turned by his own hand
++// runs cold and quiet into Arthur's cup, then a word with Zoé (story/hometap.js EpilogueTap, `this.tap`).
+ import { t } from '../i18n.js';
+ import { ChapterBase } from './base.js';
++import { EpilogueTap } from './hometap.js';
+ const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };   // (as network.js: the lamp room's door on the headland)
+ import '../text/ch3.js';
+ 
+@@ -12,6 +15,7 @@ const LINES = {
+ };
+ 
+ export class Epilogue extends ChapterBase {
++  constructor(story) { super(story); this.tap = new EpilogueTap(this); }   // (CAMPAIGN-10: the kitchen tap after the dinner, story/hometap.js)
+   on() { return this.reached(); }
+ 
+   // EPILOGUE-HOME (the campaign): four days on, everyone the later chapters moved is back where they live, and has a
+@@ -22,6 +26,7 @@ export class Epilogue extends ChapterBase {
+   // in the world at all. (Each spot is read from its own area: an area not built yet makes him wait for it, refreshCast.)
+   place(id) {
+     if (!this.on()) return undefined;
++    const tp = this.tap.place(id); if (tp !== undefined) return tp;   // (CAMPAIGN-10: Zoé and Arthur at the table, then Arthur at the sink)
+     const g = this.game, R = g.rooms, W = g.world;
+     const H = R.house?.npcSpots || {};
+     const def = () => { const n = this.npc(id); return n ? { x: n.def.x, z: n.def.z, a: n.def.angle ?? 0 } : undefined; };
+@@ -68,11 +73,21 @@ export class Epilogue extends ChapterBase {
+     //  until the next load)
+     this.story.chapters.find((c) => c.key === 'evacuation')?.showProps?.(false);
+     g.world.station?.setActive?.(true);
+-    g.enterRoom('house', null, true);
++    this.f.ep_v = 1;   // (CAMPAIGN-10: this game has the kitchen's step after the dinner)
++    this.resumeDinner = false;
++    // (at the table for dinner, not in the hall's doorway: the step's spot, the room's spawn if the house has none)
++    g.enterRoom('house', (R) => this.tap.heroSpot() || R.spawn, true);
++    this.tap.setKitchen();
+     g.audio.setMood?.('home');
+     this.story.refreshCast({ walk: true });
++    this.dinner();
++  }
++  // the dinner's lines; then the kitchen's step (CAMPAIGN-10), or straight to the end screen in a game without it
++  dinner() {
++    const g = this.game;
+     this.chain([['narrator', 'ep_narr'], ['zoe', 'ep_zoe_1'], ['hero', 'ep_tw_1'], ['arthur', 'ep_ar_1'], ['hero', 'ep_tw_2'], ['zoe', 'ep_zoe_2'], ['zoe', 'ep_zoe_3']], () => {
+       this.f.ep_dinner = true;
++      if (this.tap.on) { this.tap.afterDinner(); return; }
+       g.save(false);
+       this.showEnd();
+     });
+@@ -81,7 +96,14 @@ export class Epilogue extends ChapterBase {
+   // as the player chose. Hero.update shows it again each play frame, so until the dinner is over it is hidden again
+   // after that (update() below).
+   sheathe() { const m = this.game.hero.swordMesh; if (m) m.visible = false; }
+-  update() { if (this.on() && !this.f.ep_dinner) this.sheathe(); }
++  update(dt) {
++    const g = this.game;
++    if (this.on() && (!this.f.ep_dinner || this.tap.open)) this.sheathe();   // (still at the family's table: the kitchen's step too)
++    // (CAMPAIGN-10: a save from the epilogue's start, made before the dinner: the dinner again, in the house, once play is on.
++    //  Before, it loaded into a quiet house with "Dinner is waiting" and no end screen ever came)
++    if (this.resumeDinner && g.state === 'play' && !g.trans && !g.cutscene && g.room?.id === 'house') { this.resumeDinner = false; this.story.refreshCast(); this.dinner(); }
++    this.tap.update(dt);
++  }
+   showEnd() {
+     const g = this.game;
+     g.setState('ending');
+@@ -95,6 +117,7 @@ export class Epilogue extends ChapterBase {
+ 
+   talk(npc) {
+     if (!this.on()) return false;
++    if (this.tap.talk(npc)) return true;   // (CAMPAIGN-10)
+     // (VESK-CHOICE: pulled clear at the core, Vesk sends Baldino corrections from his cell)
+     if (npc.def.id === 'baldino' && this.f.c3_veskHelped) { this.chain([['baldino', 'ep_baldino_vesk']]); return true; }
+     const key = LINES[npc.def.id];
+@@ -102,7 +125,16 @@ export class Epilogue extends ChapterBase {
+     this.chain([[npc.def.id, key]]);
+     return true;
+   }
+-  applyFlags() { this.game.world.bunting?.setVisible(this.on()); if (this.on()) this.game.world.station?.setActive?.(true); } // (the bore runs as a shield: the heat posts glow again)
++  applyFlags() {
++    const f = this.f;
++    this.game.world.bunting?.setVisible(this.on()); if (this.on()) this.game.world.station?.setActive?.(true);   // (the bore runs as a shield: the heat posts glow again)
++    // (CAMPAIGN-10: a save at the epilogue from before the step, its dinner still ahead: the step is played. One past the
++    //  dinner has no ep_v: the step counts as done)
++    const ahead = this.on() && !f.ep_dinner && !f.ep_free;   // (ep_free with no dinner: a test's flags, past it all)
++    if (ahead) f.ep_v ||= 1;
++    this.resumeDinner = ahead;
++    this.tap.setKitchen();
++  }
+   // (Citadel's town doors, and the two rooms where someone waits with a word after the ending: Baldino's workshop on
+   //  Zeelich and Sefa's dome in the Hamalayi; their doors belonged to their chapters only, so Baldino stood at his bench
+   //  behind a door with no prompt. Their exits are the chapters' own: Story.exitTo looks back through them.)
+@@ -116,6 +148,7 @@ export class Epilogue extends ChapterBase {
+   }
+   // the lamp room after the ending: the microphone Zoé warned the island through, Arthur's chalk on the dial
+   interactables(consider, dist) {
++    if (this.on()) this.tap.interactables(consider, dist);   // (CAMPAIGN-10: the kitchen tap)
+     if (!this.on() || !this.f.ep_dinner || this.game.room?.id !== 'lighttop') return;
+     const mic = this.game.room.searches?.find((s) => s.id === 'mic');
+     if (mic) consider(dist(mic.x, mic.z), 0.9, { kind: 'epMic', label: 'p_look' });
+@@ -124,10 +157,12 @@ export class Epilogue extends ChapterBase {
+   //  broadcast back to the workshop)
+   exitTo(to) { return to === 'outdoor-lighthouse' ? { x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z + 2.2, a: 0 } : null; }
+   interact(it) {
++    if (this.tap.interact(it)) return true;
+     if (it.kind !== 'epMic') return false;
+     this.chain([['hero', 'ep_lighthouse']]);
+     return true;
+   }
+-  objective() { return this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
+-  journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }]; }
++  canExit(room) { return this.tap.canExit(room); }
++  objective() { return this.tap.objective() || this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
++  journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }, ...this.tap.journal()]; }
+ }
+diff --git a/lba3/src/game/story/hometap.js b/lba3/src/game/story/hometap.js
+index ce81a756..18c2faaf 100644
+--- a/lba3/src/game/story/hometap.js
++++ b/lba3/src/game/story/hometap.js
+@@ -330,3 +330,170 @@ export class HomeTap {
+   }
+ }
+ 
++// ================================================================ the epilogue: the tap again (CAMPAIGN-10)
++// The treatment's "playable aftermath" (CAMPAIGN-STRENGTHEN.md, wave 8): chapter 1's household problem (the dry tap,
++// Arthur's cup, the knocking in the kitchen wall) closes in Twinsen's own hands. After the dinner the player has the
++// kitchen: Arthur has gone to the sink to listen to the pipe (he counted its knocking in chapters 10 and 12); Twinsen
++// turns the tap's handle himself, the water runs cold into Arthur's cup under the spout, and the wall stays quiet. Arthur
++// keeps his cup there "just in case". Then a word with Zoé, and the end screen. Short; not a quest.
++//
++// Flags (new, saved): ep_v (a game that came to the epilogue with this step: set as the epilogue begins, or on loading a
++// save from before at the epilogue's start, whose dinner is ahead), ep_tap (the tap turned), ep_word (Zoé's word: the end
++// screen follows). A save from before past the dinner has no ep_v: the step counts as done, and the tap is only a tap.
++// Not a chapter: story/epilogue.js owns it (`this.tap`) and asks it first.
++const TAP_CLIP = 'touchWater';                       // (his hand at 1.34 m: the handle's cross, interiors.js buildHouse)
++const TAP_A = Math.PI + Math.atan2(0.43, 0.59);      // (turned so the hand, ahead and to his right, reaches straight to the wall)
++export class EpilogueTap {
++  constructor(ch) { this.ch = ch; this.game = ch.game; this.story = ch.story; this.later = []; this.turn = null; this.flow = 0; this.flowTo = 0; this.fill = 0; this.busy = false; }
++  get f() { return this.game.flags; }
++  get home() { return this.story.chapters[0].home; }
++  get P() { return this.home?.parts?.house; }
++  get R() { return this.game.regions?.built?.('house'); }
++  // the step's game: it came to the epilogue with it
++  get on() { return !!this.f.ep_v && this.ch.on(); }
++  // the kitchen's moment: after the dinner, until Zoé's word
++  get open() { return this.on && !!this.f.ep_dinner && !this.f.ep_word; }
++  // in the house after the dinner: the tap is his to turn (the step, or afterwards in free play)
++  get usable() { return this.ch.on() && !!this.f.ep_dinner && this.game.room?.id === 'house' && !!this.P; }
++
++  // ---------------------------------------------------------------- where things are
++  // his hand on the cross's knob toward the room (the clip's hand at its height), stood at the cupboard's front
++  touch() { const K = this.P.K; return touch(K.knob.x, K.knob.z, TAP_A, TAP_CLIP); }
++  // Arthur's cup under the spout, clear of the watering can (house frame); the stream leans the last centimetres into it
++  underAt() {
++    const P = this.P, K = P.K, o = P.o, sx = K.spout.x - o.x, sz = K.spout.z - o.z, cx = K.can.x - o.x, cz = K.can.z - o.z;
++    const d = Math.hypot(sx - cx, sz - cz) || 1, ux = (sx - cx) / d, uz = (sz - cz) / d, R0 = K.can.r + 0.07;
++    return { x: cx + ux * R0, y: K.basin.y + 0.02, z: cz + uz * R0 };
++  }
++  // (the people's places for the dinner and after it: at the table's north side; after it Arthur by the sink, listening)
++  spots() {
++    const R = this.R, T = R?.table, K = this.P?.K; if (!T || !K) return null;
++    const ar = { x: K.basin.x + 1.25, z: K.basin.z + 0.85 };   // (by the dresser: a body clear of where he stands at the tap)
++    return {
++      hero: { x: T.x, z: T.z - 0.8, a: 0 },
++      zoe: { x: T.x + 0.85, z: T.z - 0.7, a: 0 },
++      arthur: { x: T.x - 0.85, z: T.z - 0.75, a: 0 },
++      arthurSink: { ...ar, a: Math.atan2(K.knob.x - ar.x, K.knob.z - ar.z) },
++    };
++  }
++
++  // ---------------------------------------------------------------- the things
++  build() {
++    const P = this.P; if (!P || P.cupWater) return;
++    // the water in Arthur's cup (rises as the tap runs; the stream's own material: no new program)
++    const w = new THREE.Mesh(new THREE.CircleGeometry(0.054, 14), P.K.stream.material);
++    w.rotation.x = -Math.PI / 2; w.position.y = 0.012; w.visible = false; P.cup.add(w);
++    P.cupWater = w;
++  }
++  // the kitchen as the step has it: the cup under the spout (in the epilogue), full once the tap has run; the stream off
++  setKitchen() {
++    this.build();
++    const P = this.P, f = this.f; if (!P) return;
++    const K = P.K, here = this.ch.on();
++    this.turn = null; this.flow = this.flowTo = 0; this.later = []; this.busy = false;
++    K.handle.rotation.y = 0;
++    K.stream.visible = false; K.stream.scale.set(1, 1, 1); K.stream.rotation.set(0, 0, 0);
++    K.stream.position.set(K.spout.x - P.o.x, K.spout.y, K.spout.z - P.o.z);
++    if (!here) { P.cupWater.visible = false; return; }
++    const u = this.underAt(); P.cup.position.set(u.x, u.y, u.z); P.cup.rotation.set(0, 2.4, 0); P.carry = false; P.putT = null;
++    this.fill = f.ep_tap ? 1 : 0; this.setFill();
++  }
++  setFill() { const W = this.P?.cupWater; if (!W) return; W.visible = this.fill > 0.02; W.position.y = 0.012 + 0.1 * this.fill; }
++  // the stream from the spout into the cup (it leans the few centimetres from the spout's mouth to the cup's middle)
++  aim() {
++    const P = this.P, K = P.K, u = this.underAt(), sx = K.spout.x - P.o.x, sz = K.spout.z - P.o.z;
++    const len = K.spout.y - (u.y + 0.11), dx = (u.x - sx) * 0.55, dz = (u.z - sz) * 0.55;
++    K.stream.rotation.set(Math.atan2(-dz, len), 0, Math.atan2(dx, len));
++    const full = K.spout.y - K.basin.y; K.stream.scale.set(1, Math.max(0.2, len / full), 1);
++  }
++
++  // ---------------------------------------------------------------- the story's hooks (epilogue.js asks first)
++  place(id) {
++    if (!this.on || this.f.ep_word) return undefined;
++    const S = this.spots(); if (!S) return undefined;
++    const after = !!this.f.ep_dinner;
++    if (id === 'zoe') return { ...S.zoe, anim: after ? 'wipe' : null };
++    if (id === 'arthur') return after ? { ...S.arthurSink, anim: null } : { ...S.arthur, anim: null };
++    return undefined;
++  }
++  // where he sits down to dinner (at the table, not in the doorway)
++  heroSpot() { return this.spots()?.hero ?? null; }
++  // after the dinner's last line: the kitchen is the player's
++  afterDinner() {
++    const g = this.game, ch = this.ch;
++    this.story.refreshCast({ walk: true });   // (Arthur off to the sink, Zoé clearing the table)
++    ch.chain([['narrator', 'ep_narr_after'], ['arthur', 'ep_ar_ask'], ['zoe', 'ep_zoe_ask']], () => { g.updateObjective(); g.save(false); });
++  }
++  canExit(room) {
++    if (!this.open || room?.id !== 'house') return true;
++    this.ch.chain([['hero', this.f.ep_tap ? 'ep_leave_zoe' : 'ep_leave_tap']]);
++    return false;
++  }
++  objective() {
++    if (!this.open) return null;
++    return this.f.ep_tap ? this.ch.goal('ep_obj_zoe') : this.ch.goal('ep_obj_tap');
++  }
++  journal() { return this.on && this.f.ep_tap ? [{ key: 'ep_j_tap', done: true }] : []; }
++  interactables(consider, dist) {
++    if (!this.usable || this.busy) return;
++    const K = this.P.K;
++    consider(dist(K.knob.x, K.knob.z), 1.3, { kind: 'ep_tap', label: 'p_turn' });
++  }
++  interact(it) {
++    if (it.kind !== 'ep_tap') return false;
++    const g = this.game, f = this.f, h = g.hero, ch = this.ch, P = this.P, K = P.K, first = this.open && !f.ep_tap;
++    this.busy = true;
++    // his hand on the knob; the handle turns under it and the water comes, cold, into Arthur's cup; the wall stays quiet
++    handTo(h, this.touch(), () => {
++      g.audio.play('valve', P.spout);
++      this.turn = { from: K.handle.rotation.y, to: -1.5, t: 0, d: 0.45 };
++      this.after(0.35, () => { this.aim(); this.flowTo = 1; g.audio.play('waterRun', P.spout); });
++      for (let i = 1; i < 4; i++) this.after(0.35 + i * 0.7, () => { if (this.flowTo > 0) g.audio.play('waterRun', P.spout); });
++      const lines = first ? [['hero', 'ep_tw_cold'], ['arthur', 'ep_ar_quiet'], ['arthur', 'ep_ar_case'], ['hero', 'ep_tw_case'], ['arthur', 'ep_ar_case2']] : [['hero', 'ep_tap_again']];
++      this.after(first ? 2.2 : 1.4, () => ch.chain(lines, () => this.shut(first)));
++    });
++    return true;
++  }
++  // he shuts it again (his hand on the knob once more)
++  shut(first) {
++    const g = this.game, f = this.f, h = g.hero, P = this.P, K = P.K;
++    handTo(h, this.touch(), () => {
++      g.audio.play('valveShut', P.spout);
++      this.turn = { from: K.handle.rotation.y, to: 0, t: 0, d: 0.4 };
++      this.after(0.2, () => { this.flowTo = 0; });
++      this.after(0.6, () => {
++        this.busy = false;
++        if (first) { f.ep_tap = true; this.fill = 1; this.setFill(); g.updateObjective(); g.save(false); }
++      });
++    });
++  }
++  talk(npc) {
++    if (!this.open || this.game.room?.id !== 'house') return false;
++    const f = this.f, ch = this.ch, g = this.game, id = npc.def.id;
++    if (id === 'arthur') { ch.chain([['arthur', f.ep_tap ? 'ep_ar_after' : 'ep_ar_wait']]); return true; }
++    if (id !== 'zoe') return false;
++    if (!f.ep_tap) { ch.chain([['zoe', 'ep_zoe_tapfirst']]); return true; }
++    // the word, then the end screen
++    ch.chain([['zoe', 'ep_zoe_w1'], ['hero', 'ep_tw_w1'], ['zoe', 'ep_zoe_w2'], ['hero', 'ep_tw_w2'], ['zoe', 'ep_zoe_w3']], () => {
++      f.ep_word = true; g.save(false); ch.showEnd();
++    });
++    return true;
++  }
++
++  // ---------------------------------------------------------------- what moves
++  after(t, fn) { this.later.push({ t, fn }); }
++  update(dt) {
++    const g = this.game, P = this.P;
++    if (this.later.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter((l) => l.t <= 0); this.later = this.later.filter((l) => l.t > 0); for (const l of due) l.fn(); }
++    if (!P) return;
++    const K = P.K;
++    if (this.turn) { const T = this.turn; T.t += dt; const k = Math.min(1, T.t / T.d), e = k * k * (3 - 2 * k); K.handle.rotation.y = T.from + (T.to - T.from) * e; if (k >= 1) this.turn = null; }
++    if (this.flow !== this.flowTo) {
++      this.flow = this.flowTo > this.flow ? Math.min(this.flowTo, this.flow + dt / 0.25) : Math.max(this.flowTo, this.flow - dt / 0.2);
++      K.stream.visible = this.flow > 0.01; K.stream.scale.x = K.stream.scale.z = Math.max(0.05, this.flow);
++    }
++    if (this.flow > 0.5 && this.fill < 1) { this.fill = Math.min(1, this.fill + dt / 2.0); this.setFill(); }
++    if (this.flow > 0.5 && g.room === P.H && Math.random() < dt * 8) { P.cupWater.getWorldPosition(_v); g.particles.burst(_v.x, _v.y + 0.01, _v.z, '#cfe8ff', 1, 0.5); }
++  }
++}
++
+diff --git a/lba3/src/game/story/kit2.js b/lba3/src/game/story/kit2.js
+index de1117ad..74684e45 100644
+--- a/lba3/src/game/story/kit2.js
++++ b/lba3/src/game/story/kit2.js
+@@ -269,7 +269,7 @@ export class Kit2 extends ChapterBase {
+     const g = this.game, f = this.f, h = g.hero;
+     this.valveCool = Math.max(0, (this.valveCool || 0) - dt);
+     // Arthur calls out to his present when Twinsen comes home (once)
+-    if (this.set && this.setReady && !this.A.pocketset && !f.e2_setHint && g.state === 'play' && !g.trans && g.room?.id === 'house' && this.canUse()) {
++    if (this.set && this.setReady && !this.A.pocketset && !f.e2_setHint && g.state === 'play' && !g.trans && g.room?.id === 'house' && this.canUse() && !this.story.cur?.tap?.open) {   // (CAMPAIGN-10: not over the epilogue's tap: after it)
+       const ar = this.speaker('arthur');
+       if (ar?.present && h.distTo(ar) < 9) { f.e2_setHint = true; this.chain([['arthur', 'e2_ar_hint']]); }
+     }
+diff --git a/lba3/src/game/text/thread.js b/lba3/src/game/text/thread.js
+index ae2384b2..060d80c2 100644
+--- a/lba3/src/game/text/thread.js
++++ b/lba3/src/game/text/thread.js
+@@ -38,6 +38,30 @@ Object.assign(STR.en, {
+   prh_j_tap: 'The kitchen tap was dry, but water was knocking in the wall. The knocking ran out under the lane, toward the square.',
+   prh_j_growth: 'At the bottom of the well the water was warm, and the crystals on the masonry moved when a pump started above.',
+ 
++  // ------------------------------------------------------------ the epilogue: the tap again (CAMPAIGN-10, story/hometap.js EpilogueTap)
++  ep_narr_after: 'Dinner. Then the whole story, slowly.',
++  ep_ar_ask: 'Dad! Come and turn the tap. I want to hear the pipe.',
++  ep_zoe_ask: "He's had his ear on that pipe for four days. Go on.",
++  ep_obj_tap: 'Turn the kitchen tap. Arthur is listening',
++  ep_obj_zoe: 'Have a word with Zoé',
++  ep_tw_cold: '(Cold. And not one knock in the wall.)',
++  ep_ar_quiet: 'Nothing! Not three, not four. It just runs.',
++  ep_ar_case: 'My cup stays under it, though. Just in case.',
++  ep_tw_case: 'In case of what?',
++  ep_ar_case2: "In case it stops. Then I'll know first.",
++  ep_tap_again: '(Cold. Still quiet.)',
++  ep_ar_wait: "I'm listening, Dad. Go on!",
++  ep_ar_after: "Still nothing. I'm keeping my cup there anyway.",
++  ep_zoe_tapfirst: "The tap first. He won't let anyone else near it.",
++  ep_zoe_w1: 'Bram came by. The lane runs cold too. Hedda is washing everything she owns.',
++  ep_tw_w1: "Then it's done.",
++  ep_zoe_w2: 'Nearly. You told us everything, slowly. Except the guardian. You went very fast over the guardian.',
++  ep_tw_w2: 'It was a very fast guardian.',
++  ep_zoe_w3: 'Sit down. Start there.',
++  ep_leave_tap: '(Arthur is waiting by the tap.)',
++  ep_leave_zoe: '(Not yet. Zoé wants a word.)',
++  ep_j_tap: "The kitchen tap runs cold now, and the wall is quiet. Arthur's cup stays under it, just in case.",
++
+   // ------------------------------------------------------------ chapter 2: the wrong pipe
+   ct_tw_water: 'Steaming, but running. Zoé will want to see our tap.',
+   ct_obj_home: 'The square has water. Try the tap at home',
+diff --git a/lba3/tests/fixtures/campaign/base-16-end.save.json b/lba3/tests/fixtures/campaign/base-16-end.save.json
+new file mode 100644
+index 00000000..d32bcaae
+--- /dev/null
++++ b/lba3/tests/fixtures/campaign/base-16-end.save.json
+@@ -0,0 +1 @@
++{"cookies":[],"origins":[{"origin":"http://localhost:8920","localStorage":[{"name":"sunshard_settings_v1","value":"{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"voiceMode\":\"words\",\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"},{"name":"lba3.loadTimes","value":"{\"total\":11673,\"shaders\":57558,\"pace\":1.393076923076923,\"prep\":{\"paint\":633,\"programs\":154,\"textures\":26,\"geometry\":26684,\"geometryPart\":4445,\"shadowBatches\":409,\"layers\":5141,\"batches\":625,\"batchUpload\":145,\"startRoom\":6345,\"audioContext\":37,\"shadowPrograms\":367,\"firstDraws\":3896,\"firstFrame\":13102}}"},{"name":"lba3_save_v1","value":"{\"v\":5,\"room\":\"house\",\"hero\":{\"x\":1001.2,\"z\":9.9,\"hp\":5,\"mp\":0,\"magicLevel\":4,\"clovers\":4,\"coins\":19,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":true,\"hasPulse\":true,\"weapon\":\"sword\",\"prevWeapon\":\"ball\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":true,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":12,\"chapterKey\":\"home\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-40.4,-4.5],\"house\":[\"citadel\",-45.7,76.5],\"office\":[\"citadel\",-64.8,11.4],\"pumproom\":[\"citadel\",-46.7,65.8],\"control\":[\"citadel\",-26.3,-59.2],\"projoffice\":[\"citadel\",-44.5,-63.6],\"workshop\":[\"zeelich\",2390.7,19.1],\"ih_post_cabin0\":[\"desert\",3436.2,-27.1],\"butemple\":[\"desert\",3464.4,29.4],\"condA\":[\"desert\",3411,51.6],\"obsv\":[\"hamalayi\",4286.8,-65.5],\"upper\":[\"zeelich\",2374.8,-6.8],\"archive\":[\"zeelich\",2386.8,21.6],\"lighttop\":[\"citadel\",-106.9,95],\"c3shaft\":[\"citadel\",-23.7,-65.7]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"ct_dry\":true,\"ct_worker\":true,\"ct_roomIn\":true,\"ct_diagram\":true,\"ct_felt\":true,\"ct_seen\":true,\"ct_wrong\":1,\"ct_bypass\":true,\"ct_strip\":true,\"ct_plate\":true,\"ct_wback\":true,\"ct_home\":true,\"ct_tapShut\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"e2_setHint\":true,\"c1_ship\":true,\"zt_v\":1,\"c2_started\":true,\"c2_planTaken\":true,\"zt_seen\":true,\"zt_brel\":true,\"zt_kell\":true,\"zt_hook\":false,\"zt_bell\":true,\"zt_feed\":true,\"zt_ride\":true,\"zt_shove\":true,\"zt_water\":true,\"zt_kellThanks\":true,\"zt_irsa2\":true,\"zt_bench\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear1\":true,\"c4_joint\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_crack\":true,\"c4_bottom\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"ml_2\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true,\"c5_jar\":true,\"c5_water\":true,\"c5_shovel\":true,\"c5_dug\":true,\"c5_hallSeen\":true,\"c5_diagram\":true,\"c5_valves\":{\"1\":true,\"3\":true,\"4\":true},\"c5_routed\":true,\"c5_hangarSeen\":true,\"c5_gliderSeen\":true,\"c5_hatch\":true,\"c5_dallanOK\":true,\"c5_relief\":true,\"c5_vent\":true,\"c5_clover\":true,\"c5_radio\":true,\"c5_glider\":true,\"c5_done\":true,\"c6_started\":true,\"ps_v\":1,\"c6_bridge\":true,\"c6_lhar\":true,\"c6_yorna\":true,\"c6_needFuse\":true,\"c6_kiteAsk\":true,\"c6_kite\":true,\"c6_fuse\":true,\"c6_heat\":true,\"c6_thawed\":true,\"ps_lamps\":true,\"c6_liftReady\":true,\"c6_sword\":true,\"c6_rope\":true,\"ps_read\":true,\"c6_trip1\":true,\"ps_trip1\":true,\"c6_trip2\":true,\"ps_trip2\":true,\"c6_up\":true,\"ps_safe\":true,\"c6_done\":true,\"ob_v\":1,\"c7_started\":true,\"ob_snow\":true,\"c7_keeper\":true,\"c7_ice\":true,\"c7_mirrors\":{\"0\":\"B\",\"1\":\"B\",\"2\":\"A\",\"3\":\"A\"},\"c7_lit\":true,\"c7_sendell\":true,\"ml_3\":true,\"ob_follow\":true,\"ob_dir\":true,\"c7_scope\":true,\"c7_droneSeen\":true,\"c7_droneDown\":true,\"c7_disc0\":true,\"c7_disc2\":true,\"c7_disc3\":true,\"c7_vent\":true,\"c7_done\":true,\"c8_started\":true,\"ev_v\":1,\"ev_cart\":true,\"c8_home\":true,\"c8_gilbert\":true,\"c8_fort\":true,\"c8_depot\":true,\"c8_mira\":true,\"c8_pippa\":true,\"c8_zoeStart\":true,\"c8_farmer1\":true,\"c8_farmer2\":true,\"c8_farmer3\":true,\"c8_relay\":true,\"ev_s\":true,\"ev_r\":true,\"ev_sched\":true,\"ev_bram\":true,\"ev_hedda\":true,\"ev_landing\":true,\"c8_zoeDone\":true,\"ev_in\":true,\"ev_seen\":true,\"ev_kick\":1,\"ev_gate\":true,\"ev_board\":true,\"c8_vesk\":true,\"c8_done\":true,\"c9_started\":true,\"cn_v\":1,\"zl_bz\":true,\"zl_n_zl_grumm_council\":0,\"zl_n_zl_pel_council\":0,\"c9_form\":true,\"c9_nara\":true,\"c9_okuAsk\":true,\"c9_free_north\":true,\"c9_free_east\":true,\"c9_free_south\":true,\"c9_oku\":true,\"c9_clerk\":true,\"c9_heard\":true,\"cn_closed\":true,\"cn_kellAsk\":true,\"cn_kell\":true,\"c9_archSeen\":true,\"c9_coat\":true,\"c9_key\":true,\"cn_drawer\":true,\"cn_log\":true,\"c9_plans\":true,\"c9_dallan\":true,\"c9_vote\":true,\"cn_stop\":true,\"cn_isoGot\":true,\"cn_isoA\":true,\"cn_isoB\":true,\"cn_iso\":true,\"cn_lane\":true,\"c10_started\":true,\"c10_pulse\":true,\"a_jetHint\":true,\"nw_v\":1,\"nw_old\":true,\"c10_okuAsk\":true,\"c10_millBraked\":true,\"c10_mill\":true,\"nw_irsaTold\":true,\"nw_irsa\":true,\"nw_arthur\":true,\"c10_miraAsk\":true,\"nw_gauge\":true,\"c10_valveSet\":{\"0\":true,\"1\":true,\"2\":true},\"nw_wheel\":2,\"nw_mira\":true,\"c10_valves\":true,\"c10_zoeAsk\":true,\"c10_dials\":[2,0,1],\"nw_zoe\":true,\"c10_light\":true,\"c10_ilka\":true,\"nw_ilka\":true,\"c10_boreRelay\":true,\"c10_boreW2\":true,\"c10_guardDown\":true,\"c10_boreH2\":true,\"c10_bore\":true,\"c10_pim\":true,\"c10_mitesSeen\":true,\"c10_keeper\":true,\"c10_domeRelay\":true,\"c10_domeLit\":true,\"nw_yorna\":true,\"c10_dome\":true,\"nw_jointTold\":true,\"nw_joint\":true,\"ml_4\":true,\"c10_done\":true,\"c3_started\":true,\"sh_v\":1,\"sh_bank\":true,\"c3_deepSeen\":true,\"c3_diagram\":true,\"c3_valves\":{\"A\":true,\"C\":true},\"sh_knock\":true,\"c3_ladder\":true,\"sh_reply\":true,\"c3_cooled\":true,\"sh_held\":true,\"c3_gallerySeen\":true,\"c3_pillar0\":true,\"c3_pillar1\":true,\"c3_pillar2\":true,\"sh_shut\":true,\"c3_sendell\":true,\"co_v\":1,\"c3_fight\":true,\"c3_pylon2\":true,\"c3_pylon1\":true,\"c3_pylon0\":true,\"c3_overload\":true,\"c3_coil\":3,\"c3_bleed\":true,\"c3_turned\":true,\"c3_veskHelped\":true,\"co_go\":true,\"co_branch\":true,\"co_irsa\":true,\"co_vesk\":true,\"co_lock\":true,\"co_signal\":true,\"c3_done\":true,\"ep_dinner\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\",\"zgdog1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"pguard1\",\"dmite2\",\"dmite1\",\"ffguard1\",\"ffdrone1\",\"ffclone1\",\"ffdrone2\",\"imite2\",\"imite1\",\"imite0\",\"heavydrone\",\"cc2\",\"ccg2\",\"ndrone0\",\"ndrone1\",\"ndrone2\",\"nclone\",\"nsentry\",\"ncrawler\",\"nmite1\",\"nmite0\",\"c3drone\",\"c3mite0\",\"c3mite1\"],\"collected\":[\"sc-east\",\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[],\"loot\":[{\"k\":\"c10-bore-heart\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-flask\",\"t\":\"flask\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-heart2\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3436.77,\"y\":1.9,\"z\":-22.9}],\"at\":1794561963389,\"played\":5179}"}]}]}
+\ No newline at end of file
+diff --git a/lba3/tests/fixtures/campaign/base-16-free.save.json b/lba3/tests/fixtures/campaign/base-16-free.save.json
+new file mode 100644
+index 00000000..ef954d7d
+--- /dev/null
++++ b/lba3/tests/fixtures/campaign/base-16-free.save.json
+@@ -0,0 +1,22 @@
++{
++  "cookies": [],
++  "origins": [
++    {
++      "origin": "http://localhost:8920",
++      "localStorage": [
++        {
++          "name": "sunshard_settings_v1",
++          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"voiceMode\":\"words\",\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"
++        },
++        {
++          "name": "lba3.loadTimes",
++          "value": "{\"total\":7520,\"shaders\":54227,\"pace\":1.238653846153846,\"prep\":{\"paint\":190,\"programs\":109,\"textures\":46,\"geometry\":404,\"geometryPart\":65,\"shadowBatches\":381,\"layers\":19722,\"batches\":1043,\"batchUpload\":157,\"startRoom\":5114,\"audioContext\":16,\"shadowPrograms\":4220,\"firstDraws\":7426,\"firstFrame\":15404}}"
++        },
++        {
++          "name": "lba3_save_v1",
++          "value": "{\"v\":5,\"room\":null,\"hero\":{\"x\":-43.009476190476164,\"z\":77.2,\"hp\":5,\"mp\":0,\"magicLevel\":4,\"clovers\":4,\"coins\":19,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":true,\"hasPulse\":true,\"weapon\":\"sword\",\"prevWeapon\":\"ball\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":true,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":12,\"chapterKey\":\"home\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-40.4,-4.5],\"house\":[\"citadel\",-45.7,76.5],\"office\":[\"citadel\",-64.8,11.4],\"pumproom\":[\"citadel\",-46.7,65.8],\"control\":[\"citadel\",-26.3,-59.2],\"projoffice\":[\"citadel\",-44.5,-63.6],\"workshop\":[\"zeelich\",2390.7,19.1],\"ih_post_cabin0\":[\"desert\",3436.2,-27.1],\"butemple\":[\"desert\",3464.4,29.4],\"condA\":[\"desert\",3411,51.6],\"obsv\":[\"hamalayi\",4286.8,-65.5],\"upper\":[\"zeelich\",2374.8,-6.8],\"archive\":[\"zeelich\",2386.8,21.6],\"lighttop\":[\"citadel\",-106.9,95],\"c3shaft\":[\"citadel\",-23.7,-65.7]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"ct_dry\":true,\"ct_worker\":true,\"ct_roomIn\":true,\"ct_diagram\":true,\"ct_felt\":true,\"ct_seen\":true,\"ct_wrong\":1,\"ct_bypass\":true,\"ct_strip\":true,\"ct_plate\":true,\"ct_wback\":true,\"ct_home\":true,\"ct_tapShut\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"e2_setHint\":true,\"c1_ship\":true,\"zt_v\":1,\"c2_started\":true,\"c2_planTaken\":true,\"zt_seen\":true,\"zt_brel\":true,\"zt_kell\":true,\"zt_hook\":false,\"zt_bell\":true,\"zt_feed\":true,\"zt_ride\":true,\"zt_shove\":true,\"zt_water\":true,\"zt_kellThanks\":true,\"zt_irsa2\":true,\"zt_bench\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear1\":true,\"c4_joint\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_crack\":true,\"c4_bottom\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"ml_2\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true,\"c5_jar\":true,\"c5_water\":true,\"c5_shovel\":true,\"c5_dug\":true,\"c5_hallSeen\":true,\"c5_diagram\":true,\"c5_valves\":{\"1\":true,\"3\":true,\"4\":true},\"c5_routed\":true,\"c5_hangarSeen\":true,\"c5_gliderSeen\":true,\"c5_hatch\":true,\"c5_dallanOK\":true,\"c5_relief\":true,\"c5_vent\":true,\"c5_clover\":true,\"c5_radio\":true,\"c5_glider\":true,\"c5_done\":true,\"c6_started\":true,\"ps_v\":1,\"c6_bridge\":true,\"c6_lhar\":true,\"c6_yorna\":true,\"c6_needFuse\":true,\"c6_kiteAsk\":true,\"c6_kite\":true,\"c6_fuse\":true,\"c6_heat\":true,\"c6_thawed\":true,\"ps_lamps\":true,\"c6_liftReady\":true,\"c6_sword\":true,\"c6_rope\":true,\"ps_read\":true,\"c6_trip1\":true,\"ps_trip1\":true,\"c6_trip2\":true,\"ps_trip2\":true,\"c6_up\":true,\"ps_safe\":true,\"c6_done\":true,\"ob_v\":1,\"c7_started\":true,\"ob_snow\":true,\"c7_keeper\":true,\"c7_ice\":true,\"c7_mirrors\":{\"0\":\"B\",\"1\":\"B\",\"2\":\"A\",\"3\":\"A\"},\"c7_lit\":true,\"c7_sendell\":true,\"ml_3\":true,\"ob_follow\":true,\"ob_dir\":true,\"c7_scope\":true,\"c7_droneSeen\":true,\"c7_droneDown\":true,\"c7_disc0\":true,\"c7_disc2\":true,\"c7_disc3\":true,\"c7_vent\":true,\"c7_done\":true,\"c8_started\":true,\"ev_v\":1,\"ev_cart\":true,\"c8_home\":true,\"c8_gilbert\":true,\"c8_fort\":true,\"c8_depot\":true,\"c8_mira\":true,\"c8_pippa\":true,\"c8_zoeStart\":true,\"c8_farmer1\":true,\"c8_farmer2\":true,\"c8_farmer3\":true,\"c8_relay\":true,\"ev_s\":true,\"ev_r\":true,\"ev_sched\":true,\"ev_bram\":true,\"ev_hedda\":true,\"ev_landing\":true,\"c8_zoeDone\":true,\"ev_in\":true,\"ev_seen\":true,\"ev_kick\":1,\"ev_gate\":true,\"ev_board\":true,\"c8_vesk\":true,\"c8_done\":true,\"c9_started\":true,\"cn_v\":1,\"zl_bz\":true,\"zl_n_zl_grumm_council\":0,\"zl_n_zl_pel_council\":0,\"c9_form\":true,\"c9_nara\":true,\"c9_okuAsk\":true,\"c9_free_north\":true,\"c9_free_east\":true,\"c9_free_south\":true,\"c9_oku\":true,\"c9_clerk\":true,\"c9_heard\":true,\"cn_closed\":true,\"cn_kellAsk\":true,\"cn_kell\":true,\"c9_archSeen\":true,\"c9_coat\":true,\"c9_key\":true,\"cn_drawer\":true,\"cn_log\":true,\"c9_plans\":true,\"c9_dallan\":true,\"c9_vote\":true,\"cn_stop\":true,\"cn_isoGot\":true,\"cn_isoA\":true,\"cn_isoB\":true,\"cn_iso\":true,\"cn_lane\":true,\"c10_started\":true,\"c10_pulse\":true,\"a_jetHint\":true,\"nw_v\":1,\"nw_old\":true,\"c10_okuAsk\":true,\"c10_millBraked\":true,\"c10_mill\":true,\"nw_irsaTold\":true,\"nw_irsa\":true,\"nw_arthur\":true,\"c10_miraAsk\":true,\"nw_gauge\":true,\"c10_valveSet\":{\"0\":true,\"1\":true,\"2\":true},\"nw_wheel\":2,\"nw_mira\":true,\"c10_valves\":true,\"c10_zoeAsk\":true,\"c10_dials\":[2,0,1],\"nw_zoe\":true,\"c10_light\":true,\"c10_ilka\":true,\"nw_ilka\":true,\"c10_boreRelay\":true,\"c10_boreW2\":true,\"c10_guardDown\":true,\"c10_boreH2\":true,\"c10_bore\":true,\"c10_pim\":true,\"c10_mitesSeen\":true,\"c10_keeper\":true,\"c10_domeRelay\":true,\"c10_domeLit\":true,\"nw_yorna\":true,\"c10_dome\":true,\"nw_jointTold\":true,\"nw_joint\":true,\"ml_4\":true,\"c10_done\":true,\"c3_started\":true,\"sh_v\":1,\"sh_bank\":true,\"c3_deepSeen\":true,\"c3_diagram\":true,\"c3_valves\":{\"A\":true,\"C\":true},\"sh_knock\":true,\"c3_ladder\":true,\"sh_reply\":true,\"c3_cooled\":true,\"sh_held\":true,\"c3_gallerySeen\":true,\"c3_pillar0\":true,\"c3_pillar1\":true,\"c3_pillar2\":true,\"sh_shut\":true,\"c3_sendell\":true,\"co_v\":1,\"c3_fight\":true,\"c3_pylon2\":true,\"c3_pylon1\":true,\"c3_pylon0\":true,\"c3_overload\":true,\"c3_coil\":3,\"c3_bleed\":true,\"c3_turned\":true,\"c3_veskHelped\":true,\"co_go\":true,\"co_branch\":true,\"co_irsa\":true,\"co_vesk\":true,\"co_lock\":true,\"co_signal\":true,\"c3_done\":true,\"ep_dinner\":true,\"ep_free\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\",\"zgdog1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"pguard1\",\"dmite2\",\"dmite1\",\"ffguard1\",\"ffdrone1\",\"ffclone1\",\"ffdrone2\",\"imite2\",\"imite1\",\"imite0\",\"heavydrone\",\"cc2\",\"ccg2\",\"ndrone0\",\"ndrone1\",\"ndrone2\",\"nclone\",\"nsentry\",\"ncrawler\",\"nmite1\",\"nmite0\",\"c3drone\",\"c3mite0\",\"c3mite1\"],\"collected\":[\"sc-east\",\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[],\"loot\":[{\"k\":\"c10-bore-heart\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-flask\",\"t\":\"flask\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-heart2\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3436.77,\"y\":1.9,\"z\":-22.9}],\"at\":1794561974502,\"played\":5182}"
++        }
++      ]
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/lba3/tests/fixtures/campaign/base-16.save.json b/lba3/tests/fixtures/campaign/base-16.save.json
+new file mode 100644
+index 00000000..d22b818a
+--- /dev/null
++++ b/lba3/tests/fixtures/campaign/base-16.save.json
+@@ -0,0 +1 @@
++{"cookies":[],"origins":[{"origin":"http://localhost:8920","localStorage":[{"name":"sunshard_settings_v1","value":"{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"voiceMode\":\"words\",\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"},{"name":"lba3.loadTimes","value":"{\"total\":11673,\"shaders\":57558,\"pace\":1.393076923076923,\"prep\":{\"paint\":633,\"programs\":154,\"textures\":26,\"geometry\":26684,\"geometryPart\":4445,\"shadowBatches\":409,\"layers\":5141,\"batches\":625,\"batchUpload\":145,\"startRoom\":6345,\"audioContext\":37,\"shadowPrograms\":367,\"firstDraws\":3896,\"firstFrame\":13102}}"},{"name":"lba3_save_v1","value":"{\"v\":5,\"room\":\"house\",\"hero\":{\"x\":1001.2,\"z\":9.9,\"hp\":5,\"mp\":0,\"magicLevel\":4,\"clovers\":4,\"coins\":19,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":true,\"hasPulse\":true,\"weapon\":\"sword\",\"prevWeapon\":\"ball\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":true,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":12,\"chapterKey\":\"home\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-40.4,-4.5],\"house\":[\"citadel\",-45.7,76.5],\"office\":[\"citadel\",-64.8,11.4],\"pumproom\":[\"citadel\",-46.7,65.8],\"control\":[\"citadel\",-26.3,-59.2],\"projoffice\":[\"citadel\",-44.5,-63.6],\"workshop\":[\"zeelich\",2390.7,19.1],\"ih_post_cabin0\":[\"desert\",3436.2,-27.1],\"butemple\":[\"desert\",3464.4,29.4],\"condA\":[\"desert\",3411,51.6],\"obsv\":[\"hamalayi\",4286.8,-65.5],\"upper\":[\"zeelich\",2374.8,-6.8],\"archive\":[\"zeelich\",2386.8,21.6],\"lighttop\":[\"citadel\",-106.9,95],\"c3shaft\":[\"citadel\",-23.7,-65.7]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"ct_dry\":true,\"ct_worker\":true,\"ct_roomIn\":true,\"ct_diagram\":true,\"ct_felt\":true,\"ct_seen\":true,\"ct_wrong\":1,\"ct_bypass\":true,\"ct_strip\":true,\"ct_plate\":true,\"ct_wback\":true,\"ct_home\":true,\"ct_tapShut\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"e2_setHint\":true,\"c1_ship\":true,\"zt_v\":1,\"c2_started\":true,\"c2_planTaken\":true,\"zt_seen\":true,\"zt_brel\":true,\"zt_kell\":true,\"zt_hook\":false,\"zt_bell\":true,\"zt_feed\":true,\"zt_ride\":true,\"zt_shove\":true,\"zt_water\":true,\"zt_kellThanks\":true,\"zt_irsa2\":true,\"zt_bench\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear1\":true,\"c4_joint\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_crack\":true,\"c4_bottom\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"ml_2\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true,\"c5_jar\":true,\"c5_water\":true,\"c5_shovel\":true,\"c5_dug\":true,\"c5_hallSeen\":true,\"c5_diagram\":true,\"c5_valves\":{\"1\":true,\"3\":true,\"4\":true},\"c5_routed\":true,\"c5_hangarSeen\":true,\"c5_gliderSeen\":true,\"c5_hatch\":true,\"c5_dallanOK\":true,\"c5_relief\":true,\"c5_vent\":true,\"c5_clover\":true,\"c5_radio\":true,\"c5_glider\":true,\"c5_done\":true,\"c6_started\":true,\"ps_v\":1,\"c6_bridge\":true,\"c6_lhar\":true,\"c6_yorna\":true,\"c6_needFuse\":true,\"c6_kiteAsk\":true,\"c6_kite\":true,\"c6_fuse\":true,\"c6_heat\":true,\"c6_thawed\":true,\"ps_lamps\":true,\"c6_liftReady\":true,\"c6_sword\":true,\"c6_rope\":true,\"ps_read\":true,\"c6_trip1\":true,\"ps_trip1\":true,\"c6_trip2\":true,\"ps_trip2\":true,\"c6_up\":true,\"ps_safe\":true,\"c6_done\":true,\"ob_v\":1,\"c7_started\":true,\"ob_snow\":true,\"c7_keeper\":true,\"c7_ice\":true,\"c7_mirrors\":{\"0\":\"B\",\"1\":\"B\",\"2\":\"A\",\"3\":\"A\"},\"c7_lit\":true,\"c7_sendell\":true,\"ml_3\":true,\"ob_follow\":true,\"ob_dir\":true,\"c7_scope\":true,\"c7_droneSeen\":true,\"c7_droneDown\":true,\"c7_disc0\":true,\"c7_disc2\":true,\"c7_disc3\":true,\"c7_vent\":true,\"c7_done\":true,\"c8_started\":true,\"ev_v\":1,\"ev_cart\":true,\"c8_home\":true,\"c8_gilbert\":true,\"c8_fort\":true,\"c8_depot\":true,\"c8_mira\":true,\"c8_pippa\":true,\"c8_zoeStart\":true,\"c8_farmer1\":true,\"c8_farmer2\":true,\"c8_farmer3\":true,\"c8_relay\":true,\"ev_s\":true,\"ev_r\":true,\"ev_sched\":true,\"ev_bram\":true,\"ev_hedda\":true,\"ev_landing\":true,\"c8_zoeDone\":true,\"ev_in\":true,\"ev_seen\":true,\"ev_kick\":1,\"ev_gate\":true,\"ev_board\":true,\"c8_vesk\":true,\"c8_done\":true,\"c9_started\":true,\"cn_v\":1,\"zl_bz\":true,\"zl_n_zl_grumm_council\":0,\"zl_n_zl_pel_council\":0,\"c9_form\":true,\"c9_nara\":true,\"c9_okuAsk\":true,\"c9_free_north\":true,\"c9_free_east\":true,\"c9_free_south\":true,\"c9_oku\":true,\"c9_clerk\":true,\"c9_heard\":true,\"cn_closed\":true,\"cn_kellAsk\":true,\"cn_kell\":true,\"c9_archSeen\":true,\"c9_coat\":true,\"c9_key\":true,\"cn_drawer\":true,\"cn_log\":true,\"c9_plans\":true,\"c9_dallan\":true,\"c9_vote\":true,\"cn_stop\":true,\"cn_isoGot\":true,\"cn_isoA\":true,\"cn_isoB\":true,\"cn_iso\":true,\"cn_lane\":true,\"c10_started\":true,\"c10_pulse\":true,\"a_jetHint\":true,\"nw_v\":1,\"nw_old\":true,\"c10_okuAsk\":true,\"c10_millBraked\":true,\"c10_mill\":true,\"nw_irsaTold\":true,\"nw_irsa\":true,\"nw_arthur\":true,\"c10_miraAsk\":true,\"nw_gauge\":true,\"c10_valveSet\":{\"0\":true,\"1\":true,\"2\":true},\"nw_wheel\":2,\"nw_mira\":true,\"c10_valves\":true,\"c10_zoeAsk\":true,\"c10_dials\":[2,0,1],\"nw_zoe\":true,\"c10_light\":true,\"c10_ilka\":true,\"nw_ilka\":true,\"c10_boreRelay\":true,\"c10_boreW2\":true,\"c10_guardDown\":true,\"c10_boreH2\":true,\"c10_bore\":true,\"c10_pim\":true,\"c10_mitesSeen\":true,\"c10_keeper\":true,\"c10_domeRelay\":true,\"c10_domeLit\":true,\"nw_yorna\":true,\"c10_dome\":true,\"nw_jointTold\":true,\"nw_joint\":true,\"ml_4\":true,\"c10_done\":true,\"c3_started\":true,\"sh_v\":1,\"sh_bank\":true,\"c3_deepSeen\":true,\"c3_diagram\":true,\"c3_valves\":{\"A\":true,\"C\":true},\"sh_knock\":true,\"c3_ladder\":true,\"sh_reply\":true,\"c3_cooled\":true,\"sh_held\":true,\"c3_gallerySeen\":true,\"c3_pillar0\":true,\"c3_pillar1\":true,\"c3_pillar2\":true,\"sh_shut\":true,\"c3_sendell\":true,\"co_v\":1,\"c3_fight\":true,\"c3_pylon2\":true,\"c3_pylon1\":true,\"c3_pylon0\":true,\"c3_overload\":true,\"c3_coil\":3,\"c3_bleed\":true,\"c3_turned\":true,\"c3_veskHelped\":true,\"co_go\":true,\"co_branch\":true,\"co_irsa\":true,\"co_vesk\":true,\"co_lock\":true,\"co_signal\":true,\"c3_done\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\",\"zgdog1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"pguard1\",\"dmite2\",\"dmite1\",\"ffguard1\",\"ffdrone1\",\"ffclone1\",\"ffdrone2\",\"imite2\",\"imite1\",\"imite0\",\"heavydrone\",\"cc2\",\"ccg2\",\"ndrone0\",\"ndrone1\",\"ndrone2\",\"nclone\",\"nsentry\",\"ncrawler\",\"nmite1\",\"nmite0\",\"c3drone\",\"c3mite0\",\"c3mite1\"],\"collected\":[\"sc-east\",\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[],\"loot\":[{\"k\":\"c10-bore-heart\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-flask\",\"t\":\"flask\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-heart2\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3436.77,\"y\":1.9,\"z\":-22.9}],\"at\":1794561963101,\"played\":5173}"}]}]}
+\ No newline at end of file
+diff --git a/lba3/tests/fixtures/campaign/new-16-kitchen.save.json b/lba3/tests/fixtures/campaign/new-16-kitchen.save.json
+new file mode 100644
+index 00000000..202dacf9
+--- /dev/null
++++ b/lba3/tests/fixtures/campaign/new-16-kitchen.save.json
+@@ -0,0 +1 @@
++{"cookies":[],"origins":[{"origin":"http://localhost:8920","localStorage":[{"name":"sunshard_settings_v1","value":"{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"voiceMode\":\"words\",\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"},{"name":"lba3.loadTimes","value":"{\"total\":9363,\"shaders\":64969,\"pace\":1.1632692307692307,\"prep\":{\"paint\":2689,\"programs\":157,\"textures\":11,\"geometry\":24650,\"geometryPart\":4106,\"shadowBatches\":513,\"layers\":4899,\"batches\":796,\"batchUpload\":152,\"startRoom\":7375,\"audioContext\":43,\"shadowPrograms\":493,\"firstDraws\":7484,\"firstFrame\":15709}}"},{"name":"lba3_save_v1","value":"{\"v\":5,\"room\":\"house\",\"hero\":{\"x\":999.55,\"z\":-0.25,\"hp\":5,\"mp\":0,\"magicLevel\":4,\"clovers\":4,\"coins\":19,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":true,\"hasPulse\":true,\"weapon\":\"sword\",\"prevWeapon\":\"ball\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":true,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":12,\"chapterKey\":\"home\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-40.4,-4.5],\"house\":[\"citadel\",-45.7,76.5],\"office\":[\"citadel\",-64.8,11.4],\"pumproom\":[\"citadel\",-46.7,65.8],\"control\":[\"citadel\",-26.3,-59.2],\"projoffice\":[\"citadel\",-44.5,-63.6],\"workshop\":[\"zeelich\",2390.7,19.1],\"ih_post_cabin0\":[\"desert\",3436.2,-27.1],\"butemple\":[\"desert\",3464.4,29.4],\"condA\":[\"desert\",3411,51.6],\"obsv\":[\"hamalayi\",4286.8,-65.5],\"upper\":[\"zeelich\",2374.8,-6.8],\"archive\":[\"zeelich\",2386.8,21.6],\"lighttop\":[\"citadel\",-106.9,95],\"c3shaft\":[\"citadel\",-23.7,-65.7]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"ct_dry\":true,\"ct_worker\":true,\"ct_roomIn\":true,\"ct_diagram\":true,\"ct_felt\":true,\"ct_seen\":true,\"ct_wrong\":1,\"ct_bypass\":true,\"ct_strip\":true,\"ct_plate\":true,\"ct_wback\":true,\"ct_home\":true,\"ct_tapShut\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"e2_setHint\":true,\"c1_ship\":true,\"zt_v\":1,\"c2_started\":true,\"c2_planTaken\":true,\"zt_seen\":true,\"zt_brel\":true,\"zt_kell\":true,\"zt_hook\":false,\"zt_bell\":true,\"zt_feed\":true,\"zt_ride\":true,\"zt_shove\":true,\"zt_water\":true,\"zt_kellThanks\":true,\"zt_irsa2\":true,\"zt_bench\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear1\":true,\"c4_joint\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_crack\":true,\"c4_bottom\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"ml_2\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true,\"c5_jar\":true,\"c5_water\":true,\"c5_shovel\":true,\"c5_dug\":true,\"c5_hallSeen\":true,\"c5_diagram\":true,\"c5_valves\":{\"1\":true,\"3\":true,\"4\":true},\"c5_routed\":true,\"c5_hangarSeen\":true,\"c5_gliderSeen\":true,\"c5_hatch\":true,\"c5_dallanOK\":true,\"c5_relief\":true,\"c5_vent\":true,\"c5_clover\":true,\"c5_radio\":true,\"c5_glider\":true,\"c5_done\":true,\"c6_started\":true,\"ps_v\":1,\"c6_bridge\":true,\"c6_lhar\":true,\"c6_yorna\":true,\"c6_needFuse\":true,\"c6_kiteAsk\":true,\"c6_kite\":true,\"c6_fuse\":true,\"c6_heat\":true,\"c6_thawed\":true,\"ps_lamps\":true,\"c6_liftReady\":true,\"c6_sword\":true,\"c6_rope\":true,\"ps_read\":true,\"c6_trip1\":true,\"ps_trip1\":true,\"c6_trip2\":true,\"ps_trip2\":true,\"c6_up\":true,\"ps_safe\":true,\"c6_done\":true,\"ob_v\":1,\"c7_started\":true,\"ob_snow\":true,\"c7_keeper\":true,\"c7_ice\":true,\"c7_mirrors\":{\"0\":\"B\",\"1\":\"B\",\"2\":\"A\",\"3\":\"A\"},\"c7_lit\":true,\"c7_sendell\":true,\"ml_3\":true,\"ob_follow\":true,\"ob_dir\":true,\"c7_scope\":true,\"c7_droneSeen\":true,\"c7_droneDown\":true,\"c7_disc0\":true,\"c7_disc2\":true,\"c7_disc3\":true,\"c7_vent\":true,\"c7_done\":true,\"c8_started\":true,\"ev_v\":1,\"ev_cart\":true,\"c8_home\":true,\"c8_gilbert\":true,\"c8_fort\":true,\"c8_depot\":true,\"c8_mira\":true,\"c8_pippa\":true,\"c8_zoeStart\":true,\"c8_farmer1\":true,\"c8_farmer2\":true,\"c8_farmer3\":true,\"c8_relay\":true,\"ev_s\":true,\"ev_r\":true,\"ev_sched\":true,\"ev_bram\":true,\"ev_hedda\":true,\"ev_landing\":true,\"c8_zoeDone\":true,\"ev_in\":true,\"ev_seen\":true,\"ev_kick\":1,\"ev_gate\":true,\"ev_board\":true,\"c8_vesk\":true,\"c8_done\":true,\"c9_started\":true,\"cn_v\":1,\"zl_bz\":true,\"zl_n_zl_grumm_council\":0,\"zl_n_zl_pel_council\":0,\"c9_form\":true,\"c9_nara\":true,\"c9_okuAsk\":true,\"c9_free_north\":true,\"c9_free_east\":true,\"c9_free_south\":true,\"c9_oku\":true,\"c9_clerk\":true,\"c9_heard\":true,\"cn_closed\":true,\"cn_kellAsk\":true,\"cn_kell\":true,\"c9_archSeen\":true,\"c9_coat\":true,\"c9_key\":true,\"cn_drawer\":true,\"cn_log\":true,\"c9_plans\":true,\"c9_dallan\":true,\"c9_vote\":true,\"cn_stop\":true,\"cn_isoGot\":true,\"cn_isoA\":true,\"cn_isoB\":true,\"cn_iso\":true,\"cn_lane\":true,\"c10_started\":true,\"c10_pulse\":true,\"a_jetHint\":true,\"nw_v\":1,\"nw_old\":true,\"c10_okuAsk\":true,\"c10_millBraked\":true,\"c10_mill\":true,\"nw_irsaTold\":true,\"nw_irsa\":true,\"nw_arthur\":true,\"c10_miraAsk\":true,\"nw_gauge\":true,\"c10_valveSet\":{\"0\":true,\"1\":true,\"2\":true},\"nw_wheel\":2,\"nw_mira\":true,\"c10_valves\":true,\"c10_zoeAsk\":true,\"c10_dials\":[2,0,1],\"nw_zoe\":true,\"c10_light\":true,\"c10_ilka\":true,\"nw_ilka\":true,\"c10_boreRelay\":true,\"c10_boreW2\":true,\"c10_guardDown\":true,\"c10_boreH2\":true,\"c10_bore\":true,\"c10_pim\":true,\"c10_mitesSeen\":true,\"c10_keeper\":true,\"c10_domeRelay\":true,\"c10_domeLit\":true,\"nw_yorna\":true,\"c10_dome\":true,\"nw_jointTold\":true,\"nw_joint\":true,\"ml_4\":true,\"c10_done\":true,\"c3_started\":true,\"sh_v\":1,\"sh_bank\":true,\"c3_deepSeen\":true,\"c3_diagram\":true,\"c3_valves\":{\"A\":true,\"C\":true},\"sh_knock\":true,\"c3_ladder\":true,\"sh_reply\":true,\"c3_cooled\":true,\"sh_held\":true,\"c3_gallerySeen\":true,\"c3_pillar0\":true,\"c3_pillar1\":true,\"c3_pillar2\":true,\"sh_shut\":true,\"c3_sendell\":true,\"co_v\":1,\"c3_fight\":true,\"c3_pylon2\":true,\"c3_pylon1\":true,\"c3_pylon0\":true,\"c3_overload\":true,\"c3_coil\":3,\"c3_bleed\":true,\"c3_turned\":true,\"c3_veskHelped\":true,\"co_go\":true,\"co_branch\":true,\"co_irsa\":true,\"co_vesk\":true,\"co_lock\":true,\"co_signal\":true,\"c3_done\":true,\"ep_v\":1,\"ep_dinner\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\",\"zgdog1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"pguard1\",\"dmite2\",\"dmite1\",\"ffguard1\",\"ffdrone1\",\"ffclone1\",\"ffdrone2\",\"imite2\",\"imite1\",\"imite0\",\"heavydrone\",\"cc2\",\"ccg2\",\"ndrone0\",\"ndrone1\",\"ndrone2\",\"nclone\",\"nsentry\",\"ncrawler\",\"nmite1\",\"nmite0\",\"c3drone\",\"c3mite0\",\"c3mite1\"],\"collected\":[\"sc-east\",\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[],\"loot\":[{\"k\":\"c10-bore-heart\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-flask\",\"t\":\"flask\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-heart2\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3436.77,\"y\":1.9,\"z\":-22.9}],\"at\":1794563650753,\"played\":5180}"}]}]}
+\ No newline at end of file
+diff --git a/lba3/tests/fixtures/campaign/new-16-tap.save.json b/lba3/tests/fixtures/campaign/new-16-tap.save.json
+new file mode 100644
+index 00000000..d0901837
+--- /dev/null
++++ b/lba3/tests/fixtures/campaign/new-16-tap.save.json
+@@ -0,0 +1 @@
++{"cookies":[],"origins":[{"origin":"http://localhost:8920","localStorage":[{"name":"sunshard_settings_v1","value":"{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"voiceMode\":\"words\",\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"},{"name":"lba3.loadTimes","value":"{\"total\":9363,\"shaders\":64969,\"pace\":1.1632692307692307,\"prep\":{\"paint\":2689,\"programs\":157,\"textures\":11,\"geometry\":24650,\"geometryPart\":4106,\"shadowBatches\":513,\"layers\":4899,\"batches\":796,\"batchUpload\":152,\"startRoom\":7375,\"audioContext\":43,\"shadowPrograms\":493,\"firstDraws\":7484,\"firstFrame\":15709}}"},{"name":"lba3_save_v1","value":"{\"v\":5,\"room\":\"house\",\"hero\":{\"x\":997.7,\"z\":-2.494931510062241,\"hp\":5,\"mp\":0,\"magicLevel\":4,\"clovers\":4,\"coins\":19,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":true,\"hasPulse\":true,\"weapon\":\"sword\",\"prevWeapon\":\"ball\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":true,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":12,\"chapterKey\":\"home\",\"intro\":true,\"opening\":true,\"pr_v2\":1,\"ballHint\":true,\"pr_tap\":true,\"pr_cup\":true,\"pr_yard\":true,\"pr_zoeOut\":true,\"pr_lane\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":3,\"mapDoors\":{\"well\":[\"citadel\",-40.4,-4.5],\"house\":[\"citadel\",-45.7,76.5],\"office\":[\"citadel\",-64.8,11.4],\"pumproom\":[\"citadel\",-46.7,65.8],\"control\":[\"citadel\",-26.3,-59.2],\"projoffice\":[\"citadel\",-44.5,-63.6],\"workshop\":[\"zeelich\",2390.7,19.1],\"ih_post_cabin0\":[\"desert\",3436.2,-27.1],\"butemple\":[\"desert\",3464.4,29.4],\"condA\":[\"desert\",3411,51.6],\"obsv\":[\"hamalayi\",4286.8,-65.5],\"upper\":[\"zeelich\",2374.8,-6.8],\"archive\":[\"zeelich\",2386.8,21.6],\"lighttop\":[\"citadel\",-106.9,95],\"c3shaft\":[\"citadel\",-23.7,-65.7]},\"pr_pool\":true,\"pr_growth\":true,\"sendellHeard\":true,\"prologueDone\":true,\"ct_v\":1,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_depotWarned\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"ct_dry\":true,\"ct_worker\":true,\"ct_roomIn\":true,\"ct_diagram\":true,\"ct_felt\":true,\"ct_seen\":true,\"ct_wrong\":1,\"ct_bypass\":true,\"ct_strip\":true,\"ct_plate\":true,\"ct_wback\":true,\"ct_home\":true,\"ct_tapShut\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"e2_setHint\":true,\"c1_ship\":true,\"zt_v\":1,\"c2_started\":true,\"c2_planTaken\":true,\"zt_seen\":true,\"zt_brel\":true,\"zt_kell\":true,\"zt_hook\":false,\"zt_bell\":true,\"zt_feed\":true,\"zt_ride\":true,\"zt_shove\":true,\"zt_water\":true,\"zt_kellThanks\":true,\"zt_irsa2\":true,\"zt_bench\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear1\":true,\"c4_joint\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_crack\":true,\"c4_bottom\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"ml_2\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true,\"c5_jar\":true,\"c5_water\":true,\"c5_shovel\":true,\"c5_dug\":true,\"c5_hallSeen\":true,\"c5_diagram\":true,\"c5_valves\":{\"1\":true,\"3\":true,\"4\":true},\"c5_routed\":true,\"c5_hangarSeen\":true,\"c5_gliderSeen\":true,\"c5_hatch\":true,\"c5_dallanOK\":true,\"c5_relief\":true,\"c5_vent\":true,\"c5_clover\":true,\"c5_radio\":true,\"c5_glider\":true,\"c5_done\":true,\"c6_started\":true,\"ps_v\":1,\"c6_bridge\":true,\"c6_lhar\":true,\"c6_yorna\":true,\"c6_needFuse\":true,\"c6_kiteAsk\":true,\"c6_kite\":true,\"c6_fuse\":true,\"c6_heat\":true,\"c6_thawed\":true,\"ps_lamps\":true,\"c6_liftReady\":true,\"c6_sword\":true,\"c6_rope\":true,\"ps_read\":true,\"c6_trip1\":true,\"ps_trip1\":true,\"c6_trip2\":true,\"ps_trip2\":true,\"c6_up\":true,\"ps_safe\":true,\"c6_done\":true,\"ob_v\":1,\"c7_started\":true,\"ob_snow\":true,\"c7_keeper\":true,\"c7_ice\":true,\"c7_mirrors\":{\"0\":\"B\",\"1\":\"B\",\"2\":\"A\",\"3\":\"A\"},\"c7_lit\":true,\"c7_sendell\":true,\"ml_3\":true,\"ob_follow\":true,\"ob_dir\":true,\"c7_scope\":true,\"c7_droneSeen\":true,\"c7_droneDown\":true,\"c7_disc0\":true,\"c7_disc2\":true,\"c7_disc3\":true,\"c7_vent\":true,\"c7_done\":true,\"c8_started\":true,\"ev_v\":1,\"ev_cart\":true,\"c8_home\":true,\"c8_gilbert\":true,\"c8_fort\":true,\"c8_depot\":true,\"c8_mira\":true,\"c8_pippa\":true,\"c8_zoeStart\":true,\"c8_farmer1\":true,\"c8_farmer2\":true,\"c8_farmer3\":true,\"c8_relay\":true,\"ev_s\":true,\"ev_r\":true,\"ev_sched\":true,\"ev_bram\":true,\"ev_hedda\":true,\"ev_landing\":true,\"c8_zoeDone\":true,\"ev_in\":true,\"ev_seen\":true,\"ev_kick\":1,\"ev_gate\":true,\"ev_board\":true,\"c8_vesk\":true,\"c8_done\":true,\"c9_started\":true,\"cn_v\":1,\"zl_bz\":true,\"zl_n_zl_grumm_council\":0,\"zl_n_zl_pel_council\":0,\"c9_form\":true,\"c9_nara\":true,\"c9_okuAsk\":true,\"c9_free_north\":true,\"c9_free_east\":true,\"c9_free_south\":true,\"c9_oku\":true,\"c9_clerk\":true,\"c9_heard\":true,\"cn_closed\":true,\"cn_kellAsk\":true,\"cn_kell\":true,\"c9_archSeen\":true,\"c9_coat\":true,\"c9_key\":true,\"cn_drawer\":true,\"cn_log\":true,\"c9_plans\":true,\"c9_dallan\":true,\"c9_vote\":true,\"cn_stop\":true,\"cn_isoGot\":true,\"cn_isoA\":true,\"cn_isoB\":true,\"cn_iso\":true,\"cn_lane\":true,\"c10_started\":true,\"c10_pulse\":true,\"a_jetHint\":true,\"nw_v\":1,\"nw_old\":true,\"c10_okuAsk\":true,\"c10_millBraked\":true,\"c10_mill\":true,\"nw_irsaTold\":true,\"nw_irsa\":true,\"nw_arthur\":true,\"c10_miraAsk\":true,\"nw_gauge\":true,\"c10_valveSet\":{\"0\":true,\"1\":true,\"2\":true},\"nw_wheel\":2,\"nw_mira\":true,\"c10_valves\":true,\"c10_zoeAsk\":true,\"c10_dials\":[2,0,1],\"nw_zoe\":true,\"c10_light\":true,\"c10_ilka\":true,\"nw_ilka\":true,\"c10_boreRelay\":true,\"c10_boreW2\":true,\"c10_guardDown\":true,\"c10_boreH2\":true,\"c10_bore\":true,\"c10_pim\":true,\"c10_mitesSeen\":true,\"c10_keeper\":true,\"c10_domeRelay\":true,\"c10_domeLit\":true,\"nw_yorna\":true,\"c10_dome\":true,\"nw_jointTold\":true,\"nw_joint\":true,\"ml_4\":true,\"c10_done\":true,\"c3_started\":true,\"sh_v\":1,\"sh_bank\":true,\"c3_deepSeen\":true,\"c3_diagram\":true,\"c3_valves\":{\"A\":true,\"C\":true},\"sh_knock\":true,\"c3_ladder\":true,\"sh_reply\":true,\"c3_cooled\":true,\"sh_held\":true,\"c3_gallerySeen\":true,\"c3_pillar0\":true,\"c3_pillar1\":true,\"c3_pillar2\":true,\"sh_shut\":true,\"c3_sendell\":true,\"co_v\":1,\"c3_fight\":true,\"c3_pylon2\":true,\"c3_pylon1\":true,\"c3_pylon0\":true,\"c3_overload\":true,\"c3_coil\":3,\"c3_bleed\":true,\"c3_turned\":true,\"c3_veskHelped\":true,\"co_go\":true,\"co_branch\":true,\"co_irsa\":true,\"co_vesk\":true,\"co_lock\":true,\"co_signal\":true,\"c3_done\":true,\"ep_v\":1,\"ep_dinner\":true,\"ep_tap\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"guard1\",\"gdog1\",\"drone1\",\"drone2\",\"zgdog1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"pguard1\",\"dmite2\",\"dmite1\",\"ffguard1\",\"ffdrone1\",\"ffclone1\",\"ffdrone2\",\"imite2\",\"imite1\",\"imite0\",\"heavydrone\",\"cc2\",\"ccg2\",\"ndrone0\",\"ndrone1\",\"ndrone2\",\"nclone\",\"nsentry\",\"ncrawler\",\"nmite1\",\"nmite0\",\"c3drone\",\"c3mite0\",\"c3mite1\"],\"collected\":[\"sc-east\",\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[],\"loot\":[{\"k\":\"c10-bore-heart\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-flask\",\"t\":\"flask\",\"v\":1,\"w\":\"desert\",\"x\":3441.63,\"y\":1.9,\"z\":-12.97},{\"k\":\"c10-bore-heart2\",\"t\":\"heart\",\"v\":1,\"w\":\"desert\",\"x\":3436.77,\"y\":1.9,\"z\":-22.9}],\"at\":1794563653731,\"played\":5197}"}]}]}
+\ No newline at end of file
+-- 
+2.43.0
+

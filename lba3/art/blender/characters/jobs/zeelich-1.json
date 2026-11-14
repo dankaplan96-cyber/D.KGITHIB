@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "zeelich-1: Esmer candidates (ROBE-EDGE, BOOTS, ARMS)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export", "keeper", "oku", "xil", "nara", "clerk", "councilChair"] }]

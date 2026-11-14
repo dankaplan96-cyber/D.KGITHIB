@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "hands-36 (new): the Esmers and the tri-heads", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast3/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/export", "keeper", "oku", "xil", "nara", "clerk", "councilChair", "keeper_b", "oku_b", "ztri1", "ztri2"] }]

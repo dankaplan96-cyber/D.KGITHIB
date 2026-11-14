@@ -1,0 +1,565 @@
+# Performance stabilization milestone (from 30.10.2026)
+
+Feature and content work is paused: Twinsen's house layout, the folder rename lba2-remaster → lba3 (done 30.10) and new art.
+Only performance stabilization runs now. The main session coordinates the work.
+
+## Rules
+- **One framework.** Use the existing instruments: `src/engine/bench.js` (routes, breakdown, Auto as played), `perf.js`
+  (frame records, hitch attribution) and the probes under `docs/lba3-performance/*/probes/`. Extend them; never add a
+  competing one.
+- **At most two specialists at a time:** a CPU/runtime investigator and a GPU/rendering investigator. Ownership (below)
+  keeps their files from overlapping. The main session integrates their work in sequence.
+- **One bounded change at a time.** Compare it on the same route, state, camera and settings. Keep it only when the
+  evidence supports it.
+- **Rank** findings by measured ms and by implementation risk.
+- **No** new engine, no WebGPU and no broad rewrite.
+- **Honest reporting:**
+  - Separate high utilization from missed frame deadlines.
+  - A 60 fps average is not success: report p95/p99, the share of frames over the refresh, and stalls.
+  - Transition stalls are reported even when they happen behind the black screen.
+  - This container renders with SwiftShader. It gives exact counts (draws, programs, textures, geometries, allocations,
+    listeners) and relative CPU ms only. It never gives GPU time or fps for the user's machine.
+  - Acceptance on the target hardware (Vega 8 / Ryzen 5 3500U, the installed exe) stays **pending** until the local
+    session has measured it there.
+
+## Ownership
+| Area | CPU/runtime investigator | GPU/rendering investigator |
+|---|---|---|
+| main loop, transitions, rAF/timers/listeners (src/main.js loop and transition code) | ✔ | |
+| simulation: walkers.js, actors.js, enemies, physics.js, walknav.js, interaction lookup, camera clearance | ✔ | |
+| drawcull.js (far cull, anim rates), perf.js, bench.js (routes, options, report) | ✔ | |
+| renderer.js (passes, post, AA, shadow filter), shadowcache, shadowcull.js | | ✔ |
+| drawbatch.js, texarray.js, vegetation, terrain shader, water, particles, environment/lighting | | ✔ |
+| GPU-side benchmark variants | sends the lines to the CPU investigator, who owns bench.js | ✔ (in its own file, src/engine/benchgpu.js) |
+
+Neither specialist edits the other's files. A change that needs both goes to the coordinator.
+
+## Phase 0: reproduce on the current build (target machine, the local session)
+Measure on the installed exe of the newest build, freshly started, on battery and then plugged in:
+1. "Benchmark: Auto as played". This is the Follow-camera play path.
+2. "Benchmark", the full run: fixed resolution per preset, the benchmark camera, and the breakdown.
+3. As soon as the instrumentation from Phase 1 is in a build: the street and arrival routes with Follow and with the
+   benchmark camera; cold entry, repeated visits and 3 minutes of sustained play; resource counts before and after 5
+   region round trips.
+
+Save each run as `docs/lba3-performance/results/laptop-<version>-<what>-<battery|plugged>.txt`. The runner is
+`docs/lba3-performance/local/chrome-bench.mjs`. Use its Electron variant for the exe (Playwright `_electron.launch`
+with the installed exe).
+
+## Phase 1: instrumentation (CPU investigator: bench.js, perf.js)
+- **Cameras:** `game.bench.run({ camera: 'follow' | 'orbit' })` for both cameras. Default orbit, as today.
+- **Visit order:** `game.bench.visits({ routes, cycles })` measures cold entry, then repeated visits, then sustained play.
+- **Resources:** a snapshot before and after N region round trips: geometries, textures and programs on the GPU,
+  render targets, JS heap, listeners, timers and rAF callbacks, scene objects, updatables.
+- **CPU per frame by section:** sim (people, physics, AI, interaction, camera) and submit (main pass, shadow pass, post).
+- **GPU by group** (GPU investigator's list in benchgpu.js): no vegetation, no water, no particles, no characters, no
+  terrain detail, shadow casters only, and so on. Each is one variant on the same frozen state.
+
+## Decision (the user, 30.10)
+- **Target hardware.** The Vega 8 laptop is the minimum spec.
+- **Plugged in.** High holds a flat 60 on the street; done.
+- **On battery.** Medium at 45–55 fps on the street and arrival is accepted. We stop chasing 60 there.
+- **Still in scope:**
+  - the stalls a player sees in view: the first-street ~2 s stall, the frame after the black, and the start-screen
+    stutter (CPU investigator);
+  - whatever the GPU investigator's current round finds (edge-smoothing cost, the Follow camera's far view).
+  The milestone closes after those. Content work then resumes.
+- **System requirements.**
+  - Minimum: Vega 8 / Iris Xe class integrated GPU, 4-core CPU, 8 GB, 1366×768.
+  - Recommended: GTX 1050 / RX 560 or newer, 6 cores, 16 GB, 1080p.
+  - Only the minimum was measured; the recommended spec is an estimate.
+
+## Results
+### CPU/runtime investigator, round 2 (merged e06085f, 30.10)
+All numbers are exact counts or relative SwiftShader times; none is a laptop measurement.
+- **Start-screen stutter: cause found and fixed.**
+  - Cause: Citadel's draw batches are built after the loading step that uploads geometry, so the live title uploaded
+    the rest of the world as its camera circled.
+  - Before: the first title frame uploaded 19 geometries plus the first shadow draws (13,087 ms here), then 28 more
+    geometries and 9 textures arrived in title frames over 58 s.
+  - Fix: a new loading step, `batchUpload`, does an upload pass over all of Citadel and every material texture. The
+    title's first frame now runs under the loading screen. The live world behind the menu stays at full rate.
+  - After: the first title frame is 250 ms here, and 2 geometries arrive in the next 58 s. The 9 small town and harbour
+    textures still arrive in title frames; not chased.
+  - Pending: title frame times and time-to-menu on the laptop (`electron-bench.mjs startup`, cold and warm).
+- **The woman inside the bench: fixed.** An unseen person who sits down is now placed on the seat (solidnpc.mjs).
+- **First-street ~2.2 s stall and the heavy frame after the black: not reproduced here.**
+  - After the preset change nothing is left to upload, and in 8 s of the route nothing is uploaded in view.
+  - On arrival every upload happens in black frames.
+  - The hitch notes now say, for every frame over 100 ms, whether the main thread was busy (and which script) or the
+    time went to the GPU process or driver. They also say how many new textures are render targets.
+  - The next laptop full run decides between those causes.
+- **The title is the heaviest view in the game** (Medium 281–398 calls / 1.1–1.7 M triangles; High 372–589 /
+  1.7–2.0 M). If the laptop shows steady missed frames there rather than one-off spikes, that is GPU cost: the GPU
+  investigator's area.
+- **Also kept:**
+  - Follow-camera clearance allocations: 103 → 33 KB per frame.
+  - The interaction lookup skips people out of reach.
+  - The start trace.
+- **Logged:** I-20, Auto's title calibration never runs (kept on purpose under AUTO-2).
+
+### GPU/rendering investigator, HEADING-LOAD (31.10): the Follow camera's heavy street headings
+Exact counts and pixel A/Bs from SwiftShader (street route, Follow camera at Far, Auto at Medium, battery profile).
+No laptop GPU time yet. Data and probes: `HEADING-LOAD/results/summary.json`, `HEADING-LOAD/probes/`.
+- **What the heavy headings draw (225°, before).** 213 calls, 921k triangles in the main pass. Scenery 476k
+  (draw batches 295k), trees 169k, grass 113k, terrain 78k, people 61k. Grass covered 0.6 % of the pixels with
+  18 triangles per shown pixel. The tulip rows were island-wide instanced meshes: 56k triangles drawn at every heading,
+  none of them in view at 135°.
+- **Image-preserving changes (kept):**
+  - The grass, flower and tulip pools hold only the 9 m squares in the camera's frustum, refilled at the render.
+  - Static non-casting instanced decoration (the tulip rows) is culled the same way (`engine/viewinst.js`).
+  - The quay's and the original props' repeated props are merged with their quarter instead of one instanced mesh per
+    kind, so the draw and shadow batches cut them per cell.
+  - The cargo lift's static group is no longer `keep`. The boat, the ferry and the lift's moving parts are folded by
+    texture.
+  - Meshes hidden by the culls are shown for every shader compile, so no program waits for a first frame.
+- **Result, per heading (calls / triangles):** 225° 213/921k → 189/854k; 180° 192/810k → 166/675k;
+  270° 162/865k → 156/815k; 135° 117/584k → 103/430k; 0° 136/601k → 132/464k. Over a full Follow-camera turn the mean
+  is 590.6k → 482.8k triangles.
+- **Pixel A/B.**
+  - A 32-frame turn compares each game frame with the same frame unculled: 0 pixels differ.
+  - Base vs final build, without people or particles: 1–58 pixels differ at the harbour headings.
+  - At 45° and 135° only the statue and the flower dots differ, and they also differ between two runs of the base.
+- **Trade-offs priced, not applied** (screenshots and diffs in `HEADING-LOAD/results/tradeoffs.txt`):
+  - grass and flowers half as dense beyond 28 m (new switch): −16k triangles at 225°;
+  - grass and flowers to 30 m: −31k;
+  - trees detailed to 22 m: −11k.
+  Each changes 0.1–0.2 % of the pixels. They need the user's approval and the laptop's GPU ms.
+- **What remains at 225°.** Everything still drawn is in view: scenery 451k (the town and the quay 30–100 m away,
+  merged into large pieces), trees 169k, grass 71k. The gap to the light headings is content in view, not hidden work.
+  Closing it further means simpler distant geometry (far-prop and building LOD), which is a visible trade-off.
+- **Laptop:**
+  - `electron-bench.mjs full … battery follow`: the new GPU group lines.
+  - `electron-bench.mjs sweep … battery follow`: per heading, this build vs 0.43.0.
+
+### GPU/rendering investigator, HEADING-LOAD-2 (31.10): the other outdoor areas
+HEADING-LOAD's method in Zeelich (the arrival area), Desert Island, the Hamalayi and the two heaviest Zeelich islands
+(Otringal and Knartas, ranked by `q_rank.js`: mean 1222k and 471k triangles a frame; the Platform 347k, Mosquibee 237k,
+the rest 24–139k). Exact counts and pixel A/Bs from SwiftShader: each area entered at its arrival point, Follow camera
+at Far, Auto held at Medium, battery profile, 1366×768, Twinsen turned to 8 headings. No laptop GPU time.
+Data and probes: `HEADING-LOAD-2/results/` (`per-heading-before-after.txt`, `tradeoffs.txt`), `HEADING-LOAD-2/probes/`.
+- **What these areas drew that the view could not show (before).**
+  - The Zeelich islands' sculpted trees, bushes, plants and rocks were island-wide InstancedMeshes (zislands.js), so
+    three culls each only as a whole. Otringal drew 884k tree triangles at every heading, 55–300k of them in view;
+    Knartas 264–270k for 26–196k.
+  - Zeelich's puff trees, rocks, crates, grass and flowers: the same. 87–117k drawn, 11–117k in view.
+  - The desert's and the Hamalayi's terrain is drawn in quarters (PERF-CALLS: few calls). The desert drew 124k
+    triangles a frame on average for 43k in view; the Hamalayi 53k for 13k.
+  - Already culled before this round: the desert's rocks and the Hamalayi's pines (kit.js LodBatch). Neither area
+    has `keep` on static parts (the desert's palm crowns sway: rightly `keep`).
+- **Image-preserving changes (kept):**
+  - `kit.js cullInstances`: a region's static casting instances in one BatchedMesh per kind (LodBatch with no coarse
+    version). three tests each instance against the frustum of each pass (the view's camera, the sun's). The shadow
+    cache keeps them as static casters, as it does Citadel's trees. Used by the islands' trees, bushes, plants and
+    rocks, Zeelich's puff trees, rocks and crate bodies and brass, and the desert's shrubs.
+  - Zeelich's grass and flowers and the Hamalayi's backdrop peaks (no shadow) are culled per square by `viewinst.js`.
+    The see-through crate emblems stay as they were (a refill would move them in the blended order).
+  - `terrain.js squares`: a region's terrain tiles cut into 25-cell squares in one BatchedMesh. Each square is culled
+    on its own; one multi-draw replaces 2–4 calls. Same vertices, triangles, material and renderOrder. Citadel keeps
+    its 70-cell tiles.
+  - `benchgpu.js`: a region's own vegetation is named by its builder (`userData.gpuGroup`), so it counts as trees or
+    grass, not scenery. New variant: 'region instances not culled per instance (as before)'.
+- **Result: mean main-pass triangles over the 8 headings (calls).**
+
+  | Area | Triangles before → after | Calls before → after |
+  |---|---|---|
+  | Otringal | 1201.5k → 480.1k (−60 %) | 43.9 → 39.8 |
+  | Knartas | 466.1k → 283.0k (−39 %) | 42.5 → 41.1 |
+  | Desert | 213.6k → 142.6k (−33 %) | 34.6 → 31.6 |
+  | Zeelich | 310.5k → 247.9k (−20 %) | 79.5 → 76.6 |
+  | Hamalayi | 234.5k → 200.6k (−14 %) | 38.0 → 37.0 |
+
+  Heaviest heading per area: Otringal 225° 47/1266k → 42/538k; Knartas 45° 46/547k → 42/469k; desert 0°
+  61/319k → 55/261k; Zeelich 0° 141/409k → 136/409k (all in view) and 135° 53/259k → 49/169k; Hamalayi 45°
+  50/339k → 49/320k. Per heading and group: `results/per-heading-before-after.txt`. The shadow pass did not change
+  (1–14 calls, ≤ 8k triangles: the static casters are in the cache).
+  The other islands take the same builder (4 headings, `results/rank-islands-before-after.txt`): the Platform
+  347k → 219k, Mosquibee 236k → 189k, Celebration 106k → 69k, the rest −0 to −17 %.
+- **Pixel A/B.**
+  - Same frame, this build's batches against the InstancedMeshes rebuilt from them (`q_repr.js`): 0 px at every
+    heading in Zeelich, Otringal, Knartas and the desert.
+  - Same frame, the terrain's squares against its old tiles (`q_repr.js W_TERRAIN=1`): 0 px at every heading in the
+    desert, the Hamalayi, Otringal and Knartas.
+  - A 32-frame turn, each game frame against the same frame with the culls undone (`q_aturn.js`): 0 px in all five
+    areas.
+  - Base against this build, people and particles left out: the desert and the Hamalayi 0 px. Zeelich 0–250 px and
+    Knartas 0–35 px: inside the base's own run-to-run noise (two base runs differ by 0–2122 and 0–44 px). Otringal
+    0–27 px at one level (one pixel at 4). The base moves by 54–445 px there when its static shadow cache is redrawn;
+    this build moves 0 px (`results/cache-timing-otringal.txt`). The residue is acne on shallow ground under the base's
+    cache state (INFERRED from those runs).
+- **Trade-offs priced, not applied** (`results/tradeoffs.txt`; screenshots in the session scratchpad, chapter 3–12
+  areas, for the record only):
+  - the islands' trees coarse beyond 34 m, as Citadel's: Otringal −59k triangles a frame on average (0 to −111k by
+    heading), Knartas −19k. With the shadows as now, 0–6.7k px differ (≤ 0.64 %); with Citadel's coarse shadows too,
+    7.7–22k px (0.7–2.1 %);
+  - the Hamalayi's pines detailed to 22 m (an existing switch): −30k on average (0 to −56k), 0–18k px (≤ 1.7 %; the
+    pines on the ridge against the sky).
+- **Tests** (one at a time, this branch): drawcalls, perfbudget, display, chapter1, transitions, camfollow, worldfit,
+  travel, zislands, desert-life, solidnpc, opening PASS. zeelich-life fails 2 checks (Pelleck's lines in chapters 4–9).
+  The base fails the same 2 (`results/tests-summary.txt`), so they are not this round's.
+- **Files.** kit.js, terrain.js, zislands.js, zeelich.js, desert.js, hamalayi.js and benchgpu.js. None of bench.js,
+  perf.js, main.js, shadowcache.js or drawcull.js was edited.
+- **What remains.** What these areas still draw is in view:
+  - Zeelich's and the islands' towns (scenery 142–345k by heading, drawn in 48 m draw-batch cells);
+  - the Hamalayi's pines (32–169k);
+  - the desert's ground in view (11–120k).
+  Going further means simpler distant buildings or terrain, which is a visible trade-off. The laptop reference
+  (0.42.0, battery, Medium: arrival p50 GPU 16.5–17.4 ms; the Hamalayi 19.4 or 8.3 ms by view) predates this round.
+- **Laptop:**
+  - `electron-bench.mjs full … battery follow`: the arrival route and its GPU group lines.
+  - the hamalayi route, against 0.43.2.
+
+## Closing (the user, 31.10)
+"Let's stop with the benchmarks and get back to the game itself, once the relevant agents finish."
+- **Still finishing:** the two running agents, SHADE-COST (terrain and material shading on battery) and TITLE-LOAD (the title view, the loading screen freeze, arrival uploads after the black). They are merged after their tests.
+- **Then the milestone closes.** The laptop's last full runs (0.43.3):
+  - Plugged in: 60 everywhere at Medium; High 56–60, held by a ~56 Hz display pace, not by the game.
+  - Battery Medium: street 55, everything else 58–60 as played.
+- **One last benchmark** (the user, 31.10): once SHADE-COST and TITLE-LOAD are merged and built, the user runs one full benchmark on that build. After that, benchmarks only at later milestones. If the automatic laptop benchmark (`local/autobench.ps1`) is set up, its reports are read only to catch regressions.
+- **Content resumes** in the order of `lba3-production/WORKLIST.he.md`:
+  1. magic levels as in LBA2;
+  2. visual shops, inventory and coins;
+  3. faces, hands and the tunic (I-22);
+  4. Citadel's looks.
+### TITLE-LOAD (31.10): the title view's draws, the loading screen's long tasks, the frames after an arrival's black
+Exact counts and pixel A/Bs, relative ms, all from SwiftShader in this container (no GPU ms, no fps for the laptop).
+Title runs: the laptop's start (desktop app on battery, Auto's first start: Medium, 1366×768), 12 angles of the title's
+circle. Data and probes: `TITLE-LOAD/results/`, `TITLE-LOAD/probes/` (`run.mjs` + `q_title.js`, `startup.mjs`,
+`q_reveal2.js`, `titleruns.sh`, `runtests.sh`).
+- **The title view (main pass calls / triangles; per angle in `results/title-per-angle.txt`).**
+  - Mean over the circle 320.1 / 1182k → 271.9 / 1007k; the shadow pass 33 / 103k → 21 / 10k.
+  - Heaviest angles: 336° 372 / 1363k → 292 / 1009k; 6° 372 / 1361k → 294 / 1047k; 36° 363 / 1335k → 303 / 1109k.
+- **Image-preserving (kept):**
+  - *Fog-depth cull* (`drawcull.js` FOGCULL). Outdoors the background is the fog's colour, and three's linear fog
+    reaches it exactly at fog.far in view depth, so a draw wholly beyond it paints background pixels only. Left out
+    of the main pass for a perspective camera: draw batches, terrain tiles, instanced tiles and big plain meshes (box
+    test), the actors (FarCull), each instance of a BatchedMesh (its own culling given a far plane at fog.far). A
+    caster leaves the main pass only, through its layers (bit 30, which the sun's shadow camera also sees). Off for a
+    fog that is not the background's colour (interiors) and for no-fog materials. Same-frame A/B, 12 angles: 0 px.
+    Mean −16 calls / −76k; at the heavy angles −45 to −48 calls, −179k to −256k. (Setting camera.far to the fog's
+    end instead changed 600–2,900 px through depth precision: not used.)
+  - *Bodies never placed.* On the title the hero and 8 enemies have not been posed by play yet: their rigs stand at
+    the world's origin, on the sea in the middle of the view, behind the menu (Twinsen a 15 px speck between "Load
+    Game" and "New Game"; four drones of 23k triangles each under him, casting into the shadow map). Left out of
+    title frames (`FarCull.hideUnplaced`): −32 calls / −99k main, −12 / −93k shadow, at every angle. It removes that
+    speck: 66–110 px per angle (same-frame A/B). A stray figure fixed, not a trade-off.
+  - Checked, nothing to gain: the menu's buttons and the overlay gradient are see-through (0.6 black), so nothing
+    behind them can be dropped; the grass/flower pools and the per-instance culls already test the title camera's
+    frustum; nothing is drawn below the sea (the bodies above were on it).
+  - Base build against this one: 0.01–0.36 % of pixels per angle (the speck, plus people and particles whose state
+    differs between runs; a second base run to separate the two was not made).
+- **Visible options for the title only, all OFF** (URL switches for A/B; screenshots this build | option in
+  `results/shots/title-<option>-vs-after-t00000.jpg` and `-t073.3.jpg`; pixels in `results/title-options-pixels.txt`):
+
+  | option | mean calls / triangles (12 angles) | pixels changed |
+  |---|---|---|
+  | as now | 271.9 / 1007k | – |
+  | `?titlefar=150`: fog end 150 m on the title | 243.5 / 848k (angles 276°–66°: −40 to −67 calls, −160k to −376k) | 30–66 % (the island's far side fades) |
+  | `?titlelod=40`: trees/grass detail measured 40 m further out | 259.6 / 990k | 0.01–1.1 % |
+  | `?titler=95&titleh=36`: a closer, lower circle | 268.0 / 992k | 64–70 % (another framing; little saved) |
+
+  Only the fog end saves much, and it is a clear look change. The rest of the title's load is in view: the town and
+  the harbour 30–150 m away (draw batches ~480–600k), the trees, and 40 people 5–11 px tall (2–6k triangles each).
+- **Scene changes: the frames after the black** (the coordinator's laptop evidence: Low arrival, +40 / +31 geometries
+  in the first frames in view).
+  - Cause (reproduced, `results/reveal2-low-base.txt`): a scene change whose shader warm-up has nothing left to compile.
+    With KHR_parallel_shader_compile (the laptop) three's compileAsync resolves in the same task, so the hold was over
+    before the next frame: no settle frame, no readiness check. The first frame in view drew the area's first update:
+    Zeelich +48 geometries and 87 pieces leaving their draw batches; Citadel's first frame (its shadow cache) in view
+    too. Emulated here: the warm-up resolved at once, frames stepped as 60 Hz frames.
+  - Fix: the settle frames and their readiness check follow every swap, hold or not (no fixed delay); batch cells
+    remade in a black frame are uploaded in it (`uploadBatches`). After: 0 frames in view made a geometry
+    (`results/reveal2-low-after.txt`). Zeelich's pieces leave their batches in a black settle frame, the next frame
+    is quiet, then the fade.
+  - The swap's frame is split: the area's preparation runs a step per black frame (`prepSteps`, each timed in
+    `game.prepLog`, reported by the benchmark's preparation line): shadow batches, the texture layers the draw
+    batches read (≤ 30 ms slices), the draw batches, geometry in 4 parts, batch meshes, textures, shadow programs,
+    the shader warm-up. Draw batching stays. Zeelich cold here: one black frame of 65.4 s (draw batches 65.1 s) →
+    steps of 0–465 ms, except one texture-layer read of 65.8 s: SwiftShader rasterizes the area's painted canvases in
+    the GPU process and the first read-back waits for all of it (a GPU-process cost here, INFERRED).
+  - Zeelich, the desert and the Hamalayi are built in steps: their builders are generators, `regions.js` runs a step
+    per task with a painted frame between and logs each step's ms (15, 7 and 7 steps). Code that needs the area
+    meanwhile gets the rest at once. Not measured per step on the laptop yet.
+- **Loading screen** (the start; `results/startup-*.txt`). The loading art is a compositor animation: it stops when
+  the main thread or the GPU process is busy for long.
+  - Before, the long tasks here: the first frame 26.0 s, the batches step 15.1 s, the texture step 11.8 s, Citadel's
+    build steps 0.4–1.9 s; 45 painted frames from the first byte to the title.
+  - Now: textures in 30 ms slices; Citadel's texture layers in slices (≤ 0.4 s each: one canvas read-back); shadow
+    batches, draw batches (0.9 s) and the shadow programs (3 kinds a task) each their own task; the title's first
+    draws in 4 parts before its first frame; the largest anisotropy asked before any shader is sent. 91 painted frames.
+  - What remains long here is the GPU process. SwiftShader has no parallel compile, so the first call that waits for
+    the GPU takes the whole compile: 11.0 s (geometry), 13.6 s (first draws, part 1), 8.5 s (one shadow-program
+    chunk). On the laptop the 'programs' step waits for the parallel compile without blocking. Whether anything there
+    still blocks for long is for its start trace.
+  - Two runs each (the container's load changed between them: unchanged build steps went 8.9 → 15.1 s):
+    time to the title 66.8 / 156.4 s → 77.4 / 121.3 s, so no claim either way (NOT VERIFIED); the longest task
+    26.0 / 43.7 s → 13.6 / 19.3 s; painted frames on the loading screen 45 / 43 → 91 / 102; long tasks over 1 s
+    5 / 7 → 10 / 13 (more, shorter tasks: the slices).
+- **Tests** (here, this branch, one at a time): opening, display, menus, perfbudget (0 new programs on every route),
+  drawcalls, transitions, timing, chapter1, travel, zislands, autoquality-game, camfollow: all PASS
+  (`results/tests.txt`). The staged scene preparation runs only on the game's own loop: the tests' fixed stepping
+  keeps the old one-frame path, so it is covered by `q_reveal2.js`, not by these suites.
+  - Programs at the title: 83 both (31 standard, 14 depth, 14 basic, 12 shader, 5 merged, 7 other). Not cut: Auto's
+    bloom/FXAA pass programs stay (Auto can switch them on in play); a per-variant audit of the rest was not made.
+- **Not done:** Citadel's own build steps (world.js, 0.7–1.0 s each here) are not split (not this round's files).
+- **Laptop (pending):**
+  - `node electron-bench.mjs startup laptop-<version>-startup-battery.txt battery`, once with the bench profile deleted
+    (cold shader cache) and once kept (warm): the loading steps, the slices, the long frames.
+  - `node electron-bench.mjs full laptop-<version>-full-battery.txt battery follow`: the arrival route's frames after
+    the black and the scene changes' preparation line.
+
+### GPU/rendering investigator, SHADE-COST (31.10): the street's per-pixel material cost
+The laptop's full benchmark (0.43.3, Vega 8, Direct3D 11, battery, Medium, 1366×768, street breakdown, GPU p50):
+as is 16.51 ms; flat terrain material −3.4 ms (the largest single item); flat scenery material −2.3; no lamps −1.5;
+no edge smoothing −1.7. Everything below is SwiftShader: exact counts and pixels, never GPU ms. Data and probes:
+`SHADE-COST/results/`, `SHADE-COST/probes/` (views.js: the street at 3 headings with the benchmark's camera, Twinsen's
+house's surroundings at 2 with the Follow camera; Medium, battery profile, full resolution held).
+- **What the street's pixels run (MEASURED, counts).**
+  - The terrain covers 46–67 % of the street's pixels, each shaded once (it is drawn after the other opaque things).
+    Scenery: 0.53 shaded fragments a pixel for 0.37 covered (overdraw 1.45).
+  - Per fragment the terrain cost the laptop ~1.7× the scenery (3.4 ms / 497k fragments against 2.3 ms / 560k:
+    INFERRED from the laptop's lines and these counts). Both run three's full standard lighting (the sun's GGX and its
+    4-read hardware shadow, 2 lamps, the hemisphere light, fog); the terrain adds the splat.
+  - The splat's tile reads per terrain pixel: street 1.97–2.08, house surroundings 1.24–1.32. 58–60 % of the street's
+    terrain pixels are paving alone, where the grass was read and multiplied by 0. At most 2 tiles on 99 % of them.
+  - The 2 lamps (reach 11 m) reach nothing on 23–45 % of the street's lit pixels and one lamp on 28–59 %. At the house
+    neither lamp reaches 96–100 % of them.
+  - 2.7–26.8 % of the lit pixels face away from the sun (their shadow is multiplied by 0).
+  - Only 2.5–5.5 % of the street's terrain pixels are beyond 40 m (10.7 % at one house heading).
+- **Per terrain pixel, before → after** (street, paving pixel; hand count from the compiled battery program, INFERRED
+  estimate of scalar ALU): interpolated values 25 → 22; tile reads 2 → 1 (street mean 1.97–2.08 → 1.31–1.42); shadow
+  reads 4 (0 where turned from the sun); lamp set-ups 2 → 0.78–0.95 (street mean), 0–0.04 (house); branches 10 → 13;
+  ~300 → ~235 ALU (indirect specular −30, lamps −28, varyings −6).
+- **Changes kept (pixel A/B on the same frozen frame, `results/pixel-ab-still.txt`; in motion `results/pixel-ab-motion*.txt`):**
+  1. *Terrain: the grass read only where its colour is used* (terrain.js `grassSkip`). Root cause: the grass tile is
+     also the wobble of the paving's and soil's edges, so it was read on every pixel, also on paving alone. Now read
+     where its share is > 0 or an edge needs it. Still 0 px at all 5 views. benchgpu 'terrain grass read on every pixel
+     (as before)'.
+  2. *Terrain: the world normal from the view-space normal* (`nrmVarying` off). Root cause: a second normal varying
+     for the rock's triplanar weights only. Now rotated back from three's own `vNormal` (the 1997 look keeps the
+     varying). 0 px at 4 views, 1 px at 1 level at one. benchgpu 'terrain world normal as its own varying (as before)'.
+  3. *Lamps set up only where they can light* (renderer.js `scLampReaches`). Root cause: three computes every point
+     light's direction, distance, decay pow and cut-off on every lit pixel before finding its colour 0 beyond its
+     reach. A squared-distance test comes first. 0 px. benchgpu 'lamps set up on every lit pixel (as before)'.
+  4. *No indirect specular without an env map* (`lights_fragment_end`). Root cause: three runs the multiscattering
+     fit with three zero inputs. 0 px. benchgpu 'indirect specular without env map (as before)'.
+  5. *The sun's shadow read only where the surface faces the sun* (after GFX-LOOK's hardware-shadow patch). Root cause:
+     the shadow factor is multiplied by dot(N, L) = 0 on faces turned away; now an `if` skips its reads. 0 px.
+     benchgpu 'sun shadow read on surfaces turned from the sun (as before)'.
+  6. *Output pass: the pixel itself read by index at full resolution*. Root cause: after PERF-GPU 1 the one filtered
+     read left on every pixel was the pixel's own (a bilinear read of a 64-bit texel at its centre). 15–40 px at
+     1 level (still). benchgpu 'output pass own pixel filtered (as before)'.
+  7. *Output pass: two square roots for the edge test instead of five*. Root cause: only the darkest and brightest luma
+     matter for the test; the root keeps their order, so the five are compared squared and the four neighbours' roots
+     are taken on edge pixels only. 0 px. benchgpu 'output pass lumas rooted on every pixel (as before)'.
+  All seven together against all undone: the same frame 15–40 px at 1 level (the output pass's own pixel). In motion
+  (the benchmark's street, interior and combat routes, 24 frames each, every frame A/B in the same state): 8–36 px a
+  frame, max 5 / 2 / 1 levels, all from change 6 (an edge decision at the threshold flips); with change 6 left in, the
+  other six differ by 0 px in all 72 frames. None adds a shader program in play (the 1997 look and every switch compile
+  without errors: results/programs-retro.txt); the "as before" programs exist only inside a benchmark line's warm-up.
+- **Diagnostics for the laptop (never in play):** 'terrain reads as before PERF-GPU 3' (every tile, implicit
+  gradients: whether textureGrad is dearer than the reads it skips), 'terrain one grass read, no splat' (the splat's
+  share of the 3.4 ms), 'terrain unlit' (the lighting's share).
+- **Trade-offs priced, OFF** (screenshots: `SHADE-COST/results/tradeoffs/`, Citadel, chapter 1):
+  - terrain sun without specular: 25–65 % of the pixels change, max 97–125 levels (the paving and lawns duller);
+  - opaque front to back (the scenery's overdraw): 0–64 px change, max 48–200 levels (coincident faces).
+- **Candidates measured and not built:** top-2 layer blending (already ≤ 2 tiles on 99 % of the street's terrain
+  pixels); triplanar rock only on slopes (rock read on 1–9 % of terrain pixels, already gated); a far-distance baked
+  colour (2.5–5.5 % of terrain pixels beyond 40 m); packed detail/macro maps (the terrain has none); lower anisotropy
+  per layer (a visible change; the existing 'anisotropic filtering off' line prices the upper bound); per-vertex splat
+  ramps (they depend on a per-pixel texture wobble: not the same image). SwiftShader frame timing was tried as a
+  relative check and dropped: its run-to-run spread (1.4–2.1 ms for the same frame) is larger than any change.
+- **Tests** (one at a time, this branch): drawcalls, perfbudget (0 new programs on every route), display, chapter1,
+  transitions, camfollow, worldfit, well-town, travel, zislands, desert-life, opening, house and combat PASS.
+- **Files.** terrain.js, renderer.js, benchgpu.js. None of bench.js, perf.js, main.js, warmup.js, drawcull.js,
+  shadowcache.js, regions.js or drawbatch.js was edited.
+- **Laptop:** `electron-bench.mjs full … battery`: the street breakdown's new lines. Each "as before" line minus
+  'as is' is what that change saved. Whether D3D11's compiler keeps the new `if`s as branches decides changes 1, 3 and
+  5; the lines answer it.
+
+### FIRST-BUILD (31.10): the first frame of the house after New Game, a region's first visit (Test Lab findings 1 and 4)
+Branch `first-build` from 1d0c95d (TITLE-LOAD merged). All numbers are from SwiftShader in this container, under a heavy
+shared load (load average 10–31 on 4 cores): exact counts and relative CPU ms only, no GPU ms, no fps and no feel for the
+laptop. Frames are stepped as 60 Hz frames (one simulation step each, the game's own loop path). Probes and data:
+`FIRST-BUILD/probes/` (`run.mjs`, `q_newgame.js`, `q_regions.js`, `q_dbprof.js`, `q_dbab.js`, `pixdiff.py`, `probes.mjs`,
+`runtests.mjs`), `FIRST-BUILD/results/`.
+
+- **Finding 1, `title-to-play` (New Game → playable, `?nocine` as the Test Lab opens it; 30 title frames, a click on New
+  Game, 60 frames; Auto on battery = Medium, 1366×768).** MEASURED here, two runs each:
+
+  | | baseline (1d0c95d) | after |
+  |---|---|---|
+  | the click (title in view): audio + scene swap | 160 / 169 ms | 47 / 35 ms |
+  | first house frame (in view) | 54,917 / 70,136 ms | 187 / 93 ms |
+  | work recorded in it | draw batches built 54.6 / 69.2 s (their texture layers read inside), shadow batches 179 / 743 ms, shadow cache rebuilt (casters changed), +40 geometries | shadow cache built (the area changed), +5 geometries |
+  | frames 1–7 | 4–15 ms | 3–10 ms |
+
+  - Cause, as the laptop's frame recorded it: New Game swaps the house in at once (no black, `enterRoom(…, instant)`), and
+    its first frame built the house's shadow batches and draw batches, read their texture layers, uploaded and drew them
+    for the first time. Separately the click made the AudioContext (`audio.js init`: 385–446 ms of main thread in the
+    laptop's profile; the constructor opens the audio device).
+  - Change (`main.js prepare`, `drawbatch.js prepare`, `audio.js prepare`): on the loading screen, after Citadel's
+    batches, the room play starts in — the house, and the newest save's room for Continue — gets Citadel's preparation,
+    each part its own task with a painted frame between: shadow batches, texture layers (≤ 30 ms slices), draw batches,
+    one draw of the room into a scratch target (its uploads and first draws, `Game.drawArea`). Then the AudioContext is
+    made (suspended where the browser wants a gesture; `init()` on the first click or key resumes it and builds the graph
+    as before: same latencyHint 0.08, REVERB_SEC 0.25, `_glide` untouched). Nothing is moved behind a black hold.
+  - Image: the settled house frame after 61 frames, seeded: 0 pixels differ outside the two animated people (Twinsen,
+    Zoé), which also differ between two baseline runs (`results/house-pixels.txt`, `results/shots/`).
+  - Moved, not removed: the loading screen pays it. Here `startRoom` took 85.5 s in one run (its texture-layer slices:
+    longest 63.9 s, a canvas read-back waiting for SwiftShader's GPU process, as TITLE-LOAD saw for Zeelich) and the
+    AudioContext 0.4 s. On the laptop the same work was 372 + 104 ms of batches plus the first frame's uploads and the
+    AudioContext: about +0.5–1 s of loading (INFERRED from the laptop's frame record and profile, NOT VERIFIED).
+  - Both builds here also show one frame later in play (frame 23: 15 s base, 129 s after) with no job in it: three's
+    render waiting on SwiftShader's GPU process (render ms only; nothing built, compiled or uploaded). Not seen in the
+    laptop's run (its only long frame there was the 1.2 s one); not attributed here.
+- **Finding 4, `region-entry` (first visits to Zeelich, the desert, the Hamalayi from the street).** What is left on
+  HEAD, MEASURED here (`results/regions-base.txt`; its ms are SwiftShader's, GPU-process waits dominate them):
+  - The shadow cache is built **once** per arrival on HEAD (each first visit: 1 build; each return to Citadel: 1). The
+    0.43.3 laptop run's second rebuild does not occur here: TITLE-LOAD's preparation steps and settle frames run the
+    area's first updates (84 / 40 pieces leaving their shadow batches) before the cache is first drawn.
+  - The rest of a first visit, in order, all behind black: the region's build (2.0 / 2.7 / 1.9 s here, in 15 / 7 / 7
+    steps), its shadow batches (0.1–0.4 s), its texture layers (many slices), its draw batches (1.4 / 1.4 / 0.9 s), its
+    geometry, the shadow programs (+4 / 0 / 0) and the warm-up (+7 / +6 / +1 programs), then a held frame drawing the
+    shadow cache and the first draws.
+  - Change 1 (`drawbatch.js`): the draw batches' first build is cheaper with the same output: plane keys in a flat
+    number table (one key per plane, the neighbouring bin looked up), and the cell build reading plain attribute arrays
+    instead of a call per vertex. Same batches: `q_dbprof.js` hashes every cell's vertices, indices and draw order —
+    identical before and after for the house, Zeelich, the desert and the Hamalayi. Time, the baseline's file and this
+    one built alternately in one page, 8 each (`results/drawbatch-ab-interleaved.txt`), minimum (median) ms:
+    house 126.7 → 74.7 (283 → 210), Zeelich 198.7 → 114.9 (282 → 451: the load), desert 85.5 → 69.1 (183 → 130),
+    Hamalayi 152.2 → 92.8 (390 → 306). MEASURED here (relative CPU); on the laptop NOT VERIFIED (its Zeelich build was
+    1,031 ms on 0.43.3, texture layers included then).
+  - Change 2 (`main.js prepSteps`): on a first visit, where the driver compiles in parallel (KHR_parallel_shader_compile:
+    the laptop), the area's programs are started right after its lamps are chosen, so they compile while the layers,
+    batches and uploads run; the warm-up at the end stays and waits as before. SwiftShader has no such extension, so
+    here it is off; only its code path and program counts are checked (`game.earlyWarm = true`, `q_regions.js
+    W_EARLY=1`, `results/regions-after-earlywarm-forced.txt`): the early step makes 9 of Zeelich's 11 new programs, all 6
+    of the desert's, the Hamalayi's 1 (the other 2 are shadow-depth programs, made by the shadow-programs step as
+    before); the warm-up at the end then makes none; the same totals as the baseline (+11 / +6 / +1); every arrival
+    completes, one shadow cache build each. Its time saving is the laptop's to measure (NOT VERIFIED).
+  - **Not met: under 1.5 s of black per first visit.** The region's own build was 0.9 / 1.55 / 1.63 s on the laptop
+    (0.43.3) before any batch, upload or program: the target needs the region built before the scene change — ahead of
+    the trip, in small steps during play or on the travel card — which is the region builders' files (zeelich.js,
+    desert.js, hamalayi.js) and a prefetch policy: not attempted here. This round takes the draw-batch time saved out of
+    the black and, on the laptop, overlaps the compiles with the rest.
+- **Tests** (this branch, against a snapshot of it; `BOOT_TIMEOUT` / `BOOT_MS` raised for the loaded machine; `FIRST-BUILD/results/tests.txt`): opening, chapter1,
+  house, transitions, travel, zislands, drawcalls, perfbudget, display, menus, combat, containers, camfollow, timing:
+  all PASS. chapter1 and menus each needed a second run: chapter1's fixed 240 s wait for its second boot ran out on this
+  loaded machine, and one menus click waited over 30 s for the pause menu; both passed on the next run, unchanged. The
+  loading screen is longer here now (the house's texture layers are read there), so a suite with a fixed boot limit has
+  less margin on a slow software renderer.
+- **Laptop (pending),** baseline → candidate → baseline, 3 runs each, battery, then plugged in:
+  - `node engine/cli.mjs compare …` with `title-to-play`: no visible frame over 100 ms from New Game until playable, the
+    click on New Game included; and `cold-launch`: how much longer the loading screen now takes (the house's preparation
+    and the AudioContext moved there). Music must start on the title or the first click and must not crackle.
+  - `region-entry`: black per first visit (expected still over 1.5 s, see above) and the frames after it; one shadow
+    cache build per arrival.
+  - Continue from a save in the house and from one outdoors: the first frame after the loading screen.
+
+### CPU-WALK (31.10): the shown-world update and the draw batches' check on the street (Test Lab I-29)
+Branch `cpu-walk` from 50f6208 (FIRST-BUILD merged). SwiftShader in this container under a heavy shared load (load
+average 14–28 on 4 cores): exact counts, pixel comparisons and relative CPU ms only — no GPU ms, no fps, nothing about
+the laptop's feel. Street = the benchmark's street route, Follow camera at Far, Auto on battery (= Medium), 1366×768.
+Probes and data: `CPU-WALK/probes/` (`repl.mjs` keeps one booted page for many probe scripts; `run.mjs`), `CPU-WALK/results/`.
+
+- **What the laptop's profile pointed at (diagnose-2026-10-31):** `drawcull.js shownTree` ~2 ms a frame, `drawbatch.js
+  watch` ~0.6 ms. What they do here, MEASURED on HEAD (`q_census.js`, 240 frames): the update visits **1 829 objects a
+  frame** (189 recomposed, 467 world matrices recomputed: people's limbs and bodies); of the rest ~1 300 never change
+  (428 draw-batched pieces, 234 shadow-batch members, ~500 groups and meshes). The check reads **416 batched pieces** a
+  frame, each through geometry → attributes → position → version (none changed on the route).
+- **Change 1, frozen subtrees (`drawcull.js` shownTreeF, `Frozen`).** A child subtree in which nothing changed for 30
+  updates (no position / rotation / scale, parent, visibility or world matrix; no camera, audio or skinned body in it) is
+  frozen: its parent keeps a flat record of it (the objects in walk order, their vectors and a copy of their ten numbers,
+  their visibility, the drawables with where their subtrees end) and the walk no longer goes into it. Each update the
+  record is **checked**, not skipped: one flat loop compares every frozen object's visibility and ten numbers with the
+  copy and looks at three's `matrixWorldNeedsUpdate` (a `getWorldPosition` elsewhere recomposes every parent: that
+  matrix is recomputed and compared, as the walk's own check does). Anything different ends that child's range and the
+  walk goes into it in the same update, exactly as before; it freezes again after 30 quiet updates. Adding, removing or
+  attaching a child anywhere in a range ends it (Object3D.add / remove / attach wrapped: the only ways the game changes
+  the tree; three's `attach` bypasses `add`). The record also yields what the walk produced on the way: PERF-SUBMIT's
+  caster list (same objects, same order) and, for the draw batches, whether a piece's matrix and parents were checked
+  unchanged in this update (`__frzBy.okF`).
+  - **Why checked and not "marked dirty by its writers":** a `Vector3` has no change hook, 40k lines of game code move
+    things, and 73 call sites pass `.position` objects around (a held vector written later would mark nothing). A
+    missed writer would mean a stale matrix on screen. The flat check costs about half of a visit per frozen object (no
+    recursion, no stores, the vectors held directly) and depends on nobody's discipline: the visit is skipped, the
+    compare stays. This is why the saving is smaller than the Test Lab's estimate (below).
+  - **What stays dynamic, and why:** everything that changed in the last 30 updates — people, enemies, the hero
+    (animated every frame; skinned bodies and bones; FarCull's catch-up update of people left out of the view), doors,
+    lifts, boats, the mill, carried items, pickups, cinematic props (a range ends on the first change; nobody has to say
+    so); cameras and audio (their own matrix update); hidden subtrees (skipped as before, recomputed in full when shown);
+    anything under a parent whose own world matrix changed (forced, as before). `?nofreeze` / `MW.frozen = false` is
+    PERF-CPU's walk (the A/B switch); `MW.cached = false` is three's own update, as before.
+- **Change 2, the draw batches' check (`drawbatch.js` watch).** (a) A piece in a frozen range checked unchanged in this
+  update skips its parent-stamp and matrix tests (its matrix and its parents' visibility are as when last checked in
+  full); its material, geometry, shadow flags and look are still tested every frame. (b) Geometry versions are read only
+  after a batched piece's geometry or its position / index attribute was edited (`GEO.n`: BufferAttribute's `needsUpdate`
+  setter — the only way three moves a version — and BufferGeometry's setAttribute / deleteAttribute / setIndex, wrapped;
+  WeakSets of the batched geometries and attributes; no code of ours assigns `attributes` or `index` directly: searched).
+  (c) An area root that is itself frozen (a room with nobody under its group) keeps the fast path (without (c) the house
+  fell back to the slow check: 0.03 → 0.087 ms; with it 0.023 ms).
+- **Counts (MEASURED, `q_walkcheck.js`, 360 updates per route):** objects walked a frame / checked in frozen ranges:
+  street (Follow) 1 829 → **643 / 1 187** (once settled: 557 / 1 307), street (orbit) 1 816 → 521 / 1 296, house 596 →
+  115 / 481, combat 573 → 253 / 320, the Hamalayi 723 → 128 / 594, an arrival every 3 s 1 129 → 427 / 702, the house
+  door in and out every 2 s 994 → 337 / 657. Pieces looked at by the check: the same 416 on the street; their geometry
+  chains only after an edit.
+- **CPU (MEASURED here, relative; `q_cpu.js`: the game's own frames with the draws left out, old and new alternating in
+  blocks of 60 frames in one page, 10–12 blocks each; minimum of the block means — the medians swing up to 2× with the
+  machine's load; old = PERF-CPU's walk and every piece's versions read):**
+
+  | route | update old → new ms | check old → new ms | both |
+  |---|---|---|---|
+  | street, Follow | 0.53 → 0.373 | 0.17 → 0.117 | 0.70 → 0.49 (−30 %) |
+  | street, orbit | 0.627 → 0.465 | 0.225 → 0.108 | 0.85 → 0.57 (−33 %) |
+  | house | 0.157 → 0.092 | 0.032 → 0.023 | 0.19 → 0.115 (−39 %) |
+  | an arrival every 3 s | 0.303 → 0.300 | 0.107 → 0.07 | 0.41 → 0.37 (−10 %: each arrival ends the records) |
+
+  An update that finds nothing changed (`q_static.js`: the update run 20 more times inside a frame; three runs, minimum
+  of the block means): 286 / 308 / 407 µs with PERF-CPU's walk, 195 / 186 / 349 µs with the frozen one (1 760–1 890
+  objects visited → ~440–570 visited and ~1 340 checked). The update time left on the street is mostly the people:
+  ~560 objects that do change, recomposed as before. The records stay bounded: over 6 cycles of street, door, arrivals
+  and combat (`q_mem.js`) 17–31 records holding 870–1 900 entries, no growth (`results/records-plateau.txt`).
+- **Exactness (MEASURED):** `?walkcheck` (drawcull.js walkCheck; `WALKCHECK=1` does it for any suite through
+  tests/lib/boot.mjs, a mismatch being a console error that fails the suite) compares after every update every world
+  matrix reached through shown parents (and every attached skinned body's bind-matrix inverse) with three's formula from
+  scratch, the caster list with the walk's rule applied to the whole tree, and every piece still in a draw batch with the
+  slow check's full tests. Street (Follow; orbit; Medium → Low half way), house, combat, door in and out, arrivals in
+  every region, the Hamalayi, the 360° sweep, 360 updates each, first run in a fresh page: **2 857 816 world matrices,
+  3 240 caster lists (247 338 casters), 902 521 batched pieces — 0 different** (`results/walkcheck-new.txt`; PERF-CPU's walk
+  through the same check: 0, `results/walkcheck-old.txt`). The opening, transitions and travel suites ran with
+  WALKCHECK=1 and passed. Edits on frozen batched pieces (`q_geoedit.js`: position / index `needsUpdate`, position replaced
+  by setAttribute, moved 1 cm, hidden): each piece left its batch on the next frame; an untouched one stayed.
+- **Pixels (MEASURED, `q_pixels.js`):** the same game state drawn first with the frozen walk, then with PERF-CPU's walk
+  (even shots) or with three's own full update of every shown object (odd shots), the canvas compared: street, house,
+  combat, arrivals, the sweep, 8 shots each with the scenery frozen (331–1 347 objects in ranges): **0 pixels differ in
+  all 40** (`results/pixels.txt`). Only the first two draws of a state are compared: a third draw of the same state
+  differs from the first by itself in some views (5–244 px in the house and on the street, whichever walk draws it:
+  `results/pixels-thirddraw-control.txt`; per-draw state elsewhere, not attributed here — an earlier five-draw version
+  of the probe showed it as a difference, `results/pixels-five-draws.txt`).
+- **Found on the way, fixed (pre-existing, MEASURED):** the walk check's first run in a fresh page found 100 wrong world
+  matrices on the arrival route — one resident's left arm and hat, up to 0.8 m off, for 10+ frames — **with PERF-CPU's
+  walk as well** (`results/walkcheck-old-before-sitfix.txt`). `walkers.js sitShape()` measures a body's sit pose once per
+  body and size (root.updateMatrixWorld(true) in the sit pose, then the pose put back); the pose put back has the same
+  numbers as before, so the update, which recomputes only what changed, kept the parts' seated matrices until they next
+  moved. The rig's matrices are now recomposed after it is put back (one line). After it: 0 mismatches with either walk.
+- **Not done:** skipping frozen subtrees without checking them. It needs every writer of position / rotation / scale /
+  visibility on static scenery to report itself (or accessors on those vectors, which changes their shapes for all of
+  three's math); the walk check would catch a missed one only on the routes it runs. The frozen check left costs ~0.13
+  µs a frozen object here (INFERRED from the totals above).
+- **Laptop (pending), what to re-measure:** `node engine/cli.mjs diagnose` on battery, street, Follow camera, Auto: the
+  street's CPU sections (`submit other`: perf.js counts the culls, the world-matrix update and the draw batches' check
+  there, ~2.8–3 ms in the 0.43.3 run) and the JS hotspots
+  (`shownTreeF` and `poll` in drawcull.js, `watch` in drawbatch.js, self time; were ~2 ms and ~0.6 ms a frame in
+  `shownTree` / `watch`). Expected from the ratios here: the update ~−30 % and the check ~−35 %, i.e. **~0.6–0.9 ms a
+  frame less on the street, not the 2–2.5 ms the Test Lab estimated** (INFERRED: assumes the laptop's split between frozen
+  and moving objects matches this container's; NOT VERIFIED). A/B on the laptop: the benchmark's breakdown line
+  "CPU-WALK off (as before)" (bench.js), or `?nofreeze` (a suite: `NOFREEZE=1`).
+- **Tests** (this branch; `BOOT_TIMEOUT=900000`; `results/tests.txt`): opening (WALKCHECK=1), chapter1, house, transitions
+  (WALKCHECK=1), travel (WALKCHECK=1), zislands, drawcalls, perfbudget, combat, containers (and again with WALKCHECK=1 on
+  the final commit), camfollow, doorcull: **all PASS**; the walk check on the final commit, fresh page, all nine routes:
+  0 different (`results/walkcheck-final-code.txt`). travel's first run lost its page to the container's memory-cgroup OOM killer (dmesg; several agents' browsers
+  at ~1 GB each) and passed on the rerun. **occluders: FAIL, 1 check, not from this round:** "(b) the rise over a house is
+  eased …" finds no rise at all (pitch 26.4° → 26.4°); the same with the upstream version of the test (0dcec9a, LBA2's
+  camera pinned) and the same, number for number, with `NOFREEZE=1` (the walk and the check as before CPU-WALK). Its 36
+  visual checks pass. Left to the camera's owner.

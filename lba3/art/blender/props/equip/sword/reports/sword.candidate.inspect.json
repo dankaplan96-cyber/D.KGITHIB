@@ -1,0 +1,224 @@
+{
+  "file": "art/blender/props/equip/sword/work/sword.blend",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "sword:sword-blade.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.0835,
+        0.015,
+        0.72
+      ],
+      "mesh": {
+        "vertices": 429,
+        "faces": 143,
+        "triangles": 143,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:sword-blade"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "sword:sword-brass.01",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.244,
+        0.0647,
+        0.2569
+      ],
+      "mesh": {
+        "vertices": 780,
+        "faces": 260,
+        "triangles": 260,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:sword-brass"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "sword:sword-grip.02",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.045,
+        0.045,
+        0.145
+      ],
+      "mesh": {
+        "vertices": 336,
+        "faces": 112,
+        "triangles": 112,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:sword-grip"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "sword:sword-blade",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:sword-blade",
+        "recipe": null,
+        "color": "#f4f8fc",
+        "roughness": 0.28,
+        "metalness": 0.35,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    },
+    {
+      "name": "sword:sword-brass",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:sword-brass",
+        "recipe": null,
+        "color": "#e8b450",
+        "roughness": 0.32,
+        "metalness": 0.7,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    },
+    {
+      "name": "sword:sword-grip",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:sword-grip",
+        "recipe": null,
+        "color": "#4e2e1a",
+        "roughness": 0.8,
+        "metalness": 0,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    }
+  ],
+  "images": [],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 515,
+    "materials": 3,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.122,
+        0.0,
+        -0.0323
+      ],
+      "max": [
+        0.122,
+        0.9519,
+        0.0323
+      ],
+      "size": [
+        0.244,
+        0.9519,
+        0.0647
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "sword",
+    "units": "metres; +y up; the blade down, its tip on the floor; front (+z) = the flat",
+    "source": {
+      "kind": "code-built equipment",
+      "builder": "src/game/equiplook.js swordGeos / swordMats (EQUIP-1)"
+    },
+    "footprint": null,
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.122,
+        0,
+        -0.0323
+      ],
+      "max": [
+        0.122,
+        0.9519,
+        0.0323
+      ],
+      "size": [
+        0.244,
+        0.9519,
+        0.0647
+      ]
+    },
+    "triangles": 515
+  }
+}

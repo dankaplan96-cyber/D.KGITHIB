@@ -1,0 +1,87 @@
+start: {"state":"play","room":"citadel","pos":[-40.2,2.2,-5.6],"hp":10,"chapter":"project","obj":"Tell Zoé what happened in the well (home, Bug Street)","coins":4,"clovers":3,"owe":{},"lying":[]}
+enter house: {"r":"entered","stage":0}
+house desk: {"r":"used","kind":"lhome","at":[993.37,0,8.13]}
+house desk lines: ["n_hero: Zoé's board for the Water Office: a pin for every house waiting for the project's heat. Ours is near the top."]
+house meter: {"r":"used","kind":"lhome","at":[1003.34,0,10.32]}
+house meter lines: ["n_hero: The heat meter. Not connected yet. Zoé got us on the list."]
+house bench: {"r":"used","kind":"lhome","at":[987.9,0,2.14]}
+house bench lines: ["n_hero: Arthur's paddle boat, built to beat Lulu's. The plan says \"rudder needs pin (pliers?)\". So that's where my pliers went."]
+vis@bench (Twinsen at it): {"bench_top":"seen","boat":"seen","plans":"seen"}
+vis@bench (from the house door): {"bench_top":"off-screen","boat":"off-screen","plans":"off-screen"}
+exit house: {"r":"transition","from":"house","to":"citadel"}
+bram: "talked"
+bram lines: ["n_bram: Twinsen! Just the man. The project ran its pipe right past my pump, and the handle seized the day they dug.","n_bram: Mira says the pipe makes the pump pointless. The figures look fine, she says. Figures don't carry buckets.","n_hero: I'll have a look at it.","n_bram: Mind the valve pin. It rusted in when they dug."]
+pump no pliers: {"r":"used","need":true}
+pump lines: ["n_hero: The valve pin's rusted in. I need pliers. Mine have gone missing."]
+arthur: "talked"
+arthur lines: ["n_hero: Arthur, have you seen my pliers?","n_arthur: Your pliers? I... borrowed them. For the rudder pin.","n_hero: And where are they now?","n_arthur: In my boat box, by the pond. I was going to put them back. Today. Probably."]
+boat box: {"r":"used","pliers":true}
+box lines: ["n_hero: Paint, string, a spare sail... and my pliers. Arthur.","TOAST l_toast_pliers"]
+pin out (trough side): {"tg":"lpump:p_look","pin":true,"promptAfterPin":null,"at":[-41.18,2.32,66.13],"promptNorth":"npc:p_talk","promptNE":"npc:p_talk"}
+pin lines: ["n_hero: Pin's out. Now the handle."]
+prompt distance from the grip spot by approach: {"from N (lane)":{"r":"arrived","d":1.12,"behaviour":"normal"},"from S (lane)":{"r":"arrived","d":1.17,"behaviour":"normal"},"from W":{"r":"arrived","d":1.16,"behaviour":"normal"},"from E (trough side, round the plinth)":{"r":"arrived","d":1.17,"behaviour":"normal"},"from NE (Bram)":{"r":"arrived","d":1.16,"behaviour":"normal"}}
+stroke 1 (frames): {"from":1.16,"bones":["handL","handR","footL","footR"],"strokes":[0,1]}
+    {"t":0,"anim":"walk","aT":0.03,"pos":[-42.86,65.83],"dU":0.99,"hands":0.925,"handsY":-0.17,"feet":[[-42.74,2.42,65.79],[-42.89,2.49,65.99]]}
+    {"t":0.017,"anim":"walk","aT":0.05,"pos":[-42.9,65.76],"dU":0.91,"hands":0.856,"handsY":-0.18,"feet":[[-42.8,2.42,65.73],[-42.91,2.49,65.93]]}
+    {"t":0.033,"anim":"walk","aT":0.07,"pos":[-42.94,65.7],"dU":0.84,"hands":0.79,"handsY":-0.18,"feet":[[-42.86,2.42,65.66],[-42.93,2.49,65.86]]}
+    {"t":0.05,"anim":"walk","aT":0.08,"pos":[-42.98,65.64],"dU":0.76,"hands":0.725,"handsY":-0.18,"feet":[[-42.92,2.41,65.6],[-42.96,2.49,65.8]]}
+    {"t":0.067,"anim":"walk","aT":0.1,"pos":[-43.02,65.57],"dU":0.69,"hands":0.662,"handsY":-0.18,"feet":[[-42.97,2.41,65.54],[-42.99,2.49,65.74]]}
+    {"t":0.083,"anim":"walk","aT":0.12,"pos":[-43.06,65.51],"dU":0.61,"hands":0.603,"handsY":-0.18,"feet":[[-43.02,2.41,65.47],[-43.03,2.49,65.67]]}
+    {"t":0.1,"anim":"walk","aT":0.13,"pos":[-43.11,65.45],"dU":0.54,"hands":0.547,"handsY":-0.18,"feet":[[-43.07,2.41,65.41],[-43.06,2.49,65.61]]}
+    {"t":0.117,"anim":"walk","aT":0.15,"pos":[-43.15,65.39],"dU":0.46,"hands":0.497,"handsY":-0.19,"feet":[[-43.12,2.41,65.35],[-43.1,2.49,65.55]]}
+    {"t":0.133,"anim":"walk","aT":0.17,"pos":[-43.19,65.32],"dU":0.39,"hands":0.453,"handsY":-0.19,"feet":[[-43.16,2.41,65.29],[-43.14,2.49,65.49]]}
+    {"t":0.15,"anim":"walk","aT":0.18,"pos":[-43.23,65.26],"dU":0.31,"hands":0.419,"handsY":-0.19,"feet":[[-43.21,2.4,65.22],[-43.18,2.49,65.42]]}
+    {"t":0.167,"anim":"walk","aT":0.2,"pos":[-43.27,65.2],"dU":0.24,"hands":0.396,"handsY":-0.19,"feet":[[-43.25,2.4,65.16],[-43.22,2.48,65.36]]}
+    {"t":0.183,"anim":"walk","aT":0.22,"pos":[-43.31,65.14],"dU":0.16,"hands":0.386,"handsY":-0.19,"feet":[[-43.29,2.4,65.1],[-43.26,2.48,65.3]]}
+    {"t":0.2,"anim":"walk","aT":0.23,"pos":[-43.35,65.07],"dU":0.09,"hands":0.391,"handsY":-0.19,"feet":[[-43.34,2.4,65.03],[-43.3,2.48,65.24]]}
+    {"t":0.217,"anim":"walk","aT":0.25,"pos":[-43.39,65.01],"dU":0.01,"hands":0.409,"handsY":-0.2,"feet":[[-43.38,2.4,64.97],[-43.34,2.48,65.17]]}
+    {"t":0.233,"anim":"pump","aT":0,"pos":[-43.4,65],"dU":0,"hands":0.432,"handsY":-0.18,"feet":[[-43.42,2.4,64.91],[-43.38,2.48,65.11]]}
+    {"t":0.25,"anim":"pump","aT":0.02,"pos":[-43.4,65],"dU":0,"hands":0.238,"handsY":-0.12,"feet":[[-43.38,2.39,64.9],[-43.46,2.44,65.1]]}
+    {"t":0.267,"anim":"pump","aT":0.03,"pos":[-43.4,65],"dU":0,"hands":0.091,"handsY":-0.05,"feet":[[-43.35,2.38,64.9],[-43.52,2.42,65.1]]}
+    {"t":0.283,"anim":"pump","aT":0.05,"pos":[-43.4,65],"dU":0,"hands":0.021,"handsY":0.02,"feet":[[-43.33,2.37,64.9],[-43.57,2.41,65.1]]}
+    {"t":0.3,"anim":"pump","aT":0.07,"pos":[-43.4,65],"dU":0,"hands":0.086,"handsY":0.07,"feet":[[-43.31,2.37,64.9],[-43.61,2.41,65.1]]}
+    {"t":0.317,"anim":"pump","aT":0.08,"pos":[-43.4,65],"dU":0,"hands":0.129,"handsY":0.11,"feet":[[-43.3,2.37,64.9],[-43.64,2.41,65.1]]}
+    {"t":0.333,"anim":"pump","aT":0.1,"pos":[-43.4,65],"dU":0,"hands":0.153,"handsY":0.13,"feet":[[-43.29,2.36,64.9],[-43.66,2.4,65.1]]}
+    {"t":0.35,"anim":"pump","aT":0.12,"pos":[-43.4,65],"dU":0,"hands":0.163,"handsY":0.13,"feet":[[-43.29,2.36,64.9],[-43.68,2.4,65.1]]}
+    {"t":0.367,"anim":"pump","aT":0.13,"pos":[-43.4,65],"dU":0,"hands":0.162,"handsY":0.13,"feet":[[-43.29,2.36,64.9],[-43.7,2.4,65.1]]}
+    {"t":0.383,"anim":"pump","aT":0.15,"pos":[-43.4,65],"dU":0,"hands":0.154,"handsY":0.12,"feet":[[-43.29,2.35,64.9],[-43.71,2.4,65.1]]}
+    {"t":0.4,"anim":"pump","aT":0.17,"pos":[-43.4,65],"dU":0,"hands":0.139,"handsY":0.11,"feet":[[-43.29,2.35,64.9],[-43.72,2.4,65.1]]}
+    {"t":0.417,"anim":"pump","aT":0.18,"pos":[-43.4,65],"dU":0,"hands":0.122,"handsY":0.1,"feet":[[-43.29,2.35,64.9],[-43.73,2.4,65.1]]}
+    {"t":0.433,"anim":"pump","aT":0.2,"pos":[-43.4,65],"dU":0,"hands":0.102,"handsY":0.08,"feet":[[-43.29,2.35,64.9],[-43.73,2.4,65.1]]}
+    {"t":0.45,"anim":"pump","aT":0.22,"pos":[-43.4,65],"dU":0,"hands":0.081,"handsY":0.06,"feet":[[-43.3,2.34,64.9],[-43.74,2.4,65.1]]}
+    {"t":0.467,"anim":"pump","aT":0.23,"pos":[-43.4,65],"dU":0,"hands":0.06,"handsY":0.05,"feet":[[-43.3,2.34,64.9],[-43.74,2.4,65.1]]}
+    {"t":0.483,"anim":"pump","aT":0.25,"pos":[-43.4,65],"dU":0,"hands":0.04,"handsY":0.03,"feet":[[-43.3,2.34,64.9],[-43.75,2.4,65.1]]}
+    {"t":0.5,"anim":"pump","aT":0.27,"pos":[-43.4,65],"dU":0,"hands":0.021,"handsY":0.02,"feet":[[-43.3,2.34,64.9],[-43.75,2.4,65.1]]}
+    {"t":0.517,"anim":"pump","aT":0.28,"pos":[-43.4,65],"dU":0,"hands":0.005,"handsY":0,"feet":[[-43.3,2.34,64.9],[-43.75,2.4,65.1]]}
+    {"t":0.533,"anim":"pump","aT":0.3,"pos":[-43.4,65],"dU":0,"hands":0.009,"handsY":-0.01,"feet":[[-43.31,2.34,64.9],[-43.76,2.4,65.1]]}
+    {"t":0.55,"anim":"pump","aT":0.32,"pos":[-43.4,65],"dU":0,"hands":0.021,"handsY":-0.02,"feet":[[-43.31,2.34,64.9],[-43.76,2.4,65.1]]}
+    {"t":0.567,"anim":"pump","aT":0.33,"pos":[-43.4,65],"dU":0,"hands":0.029,"handsY":-0.03,"feet":[[-43.31,2.34,64.9],[-43.76,2.4,65.1]]}
+    {"t":0.583,"anim":"pump","aT":0.35,"pos":[-43.4,65],"dU":0,"hands":0.036,"handsY":-0.03,"feet":[[-43.31,2.34,64.9],[-43.76,2.4,65.1]]}
+after stroke 2 by capture: {"strokes":2,"pump":false}
+E mashed: {"s0":2,"mid":3,"presses":10,"end":3,"pump":true}
+pump lines: ["n_hero: There it goes. Cold and clear.","TOAST l_toast_pump"]
+pump runs: {"strokes":3,"pump":true,"running":true}
+lines: []
+bram thanks + clover by input: {"c0":3,"owed":1,"lying":0,"got":1,"oweAfter":0,"cloverPickupsAfterTalkAgain":1}
+bram lines: ["n_bram: Listen to that. Fifty years and it still sings. Pipes break, Twinsen. Pumps don't.","n_bram: Here. A four-leaf clover. I kept it for the day somebody listened.","TOAST toast_clover_found","n_bram: Saved the world twice and still answers the door. Good lad."]
+odile: "talked"
+odile lines: ["n_odile: Twinsen? The Twinsen? I pictured you taller. And with a cape.","n_hero: Just the tunic, I'm afraid.","n_odile: That crate stays here. The form says soup pot. Soup pots don't hum.","n_odile: Find out what it really is and I'll file it properly. Properly is the important word."]
+crate: {"r":"used","open":true}
+crate lines: ["n_hero: Not a pot. A brass drum with fins, warm to the touch. Nell would know what this is.","TOAST l_toast_coupler"]
+nell: "talked"
+nell lines: ["n_nell: That's a heat coupler! Mine, I bet. Xil was getting me one from Zeelich. My engine's been dead a month.","n_nell: Set it on the bench. Careful, couplers run hot until they settle. When it glows, cool it in the water barrel. Quick."]
+bench place: {"r":"used","cs":"bench"}
+bench lines: ["n_hero: It catches... the engine turns. And it's getting warm."]
+shop points: {"coupler":[-102.1,3.4694468168111947,33.199999999999996],"nell_head":[-103.8,3.420823130240807,34.449999999999996],"bench_top":[-102.55,3.339446816811195,33.15],"engine":[-104.55,2.990573235658501,34.449999999999996]}
+vis at the bench, heating (Twinsen at the bench): {"coupler":"seen","nell_head":"seen","bench_top":"seen","engine":"HIDDEN by BufferGeometry @-104.7,3.2,34.7"}
+vis at the bench, glowing: {"coupler":"seen","nell_head":"seen","bench_top":"seen","engine":"HIDDEN by BufferGeometry @-104.7,3.2,34.7"}
+take + barrel + bench: {"took":"hot","cooled":"cooled","done":"done","coupler":true}
+shop lines: ["TOAST l_toast_hot","n_hero: Hiss. It drinks the cold right in.","n_hero: Back on the bench. Warm, steady, humming.","n_nell: Hear that? She runs! Xil found me a good one.","TOAST l_toast_engine"]
+odile clears: {"r":"talked","cleared":true,"tag":"cleared"}
+odile lines: ["n_odile: A heat coupler, tested on the quay by a qualified... what are you, exactly?","n_hero: Twinsen.","n_odile: ...by a Twinsen. Machinery, imported, for Nell's Repairs. Papers cleared. Tell Xil his soup is ready.","TOAST l_toast_cleared"]
+crate after: "used"
+crate after lines: ["n_hero: Stamped CLEARED. The papers are done; Xil gets his crate back."]
+nell pays: {"r":"talked","c0":4,"paid":true,"owe":3,"lying":3}
+nell pay lines: ["n_nell: Papers cleared? Then she's mine. Here, part of what I owe Xil. He'd want you to have it. Don't spend it on sprockets."]
+kept /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/saves/ch2-owed.json
+no errors

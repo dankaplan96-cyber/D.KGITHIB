@@ -1,0 +1,14 @@
+toasts on Continue: ["Nell's payment: 3 kashes"]
+after Continue: {"state":"play","room":"citadel","pos":[-104.79,2.14,35.64],"hp":10,"chapter":"project","obj":"Tell Zoé what happened in the well (home, Bug Street)","coins":7,"clovers":4,"owe":{},"lying":[]}
+nell again (no second payment): {"c0":7,"c1":7,"coinsLying":0,"owe":0}
+nell lines: ["n_nell: She purrs now. Esmer engines purr, did you know?"]
+path points round the shop (bearing, r, x, z): [[30,6,-99.8,39.1],[45,6,-98.6,38.1],[60,8,-95.9,37.9],[330,6,-105.8,39.1]]
+vis from path 30deg 6m: {"at":{"r":"arrived","pos":[-100.09,2.3,39.09]},"v":{"coupler":"HIDDEN by BufferGeometry @-104.2,4.9,32.7","nell_head":"seen","bench_top":"seen"}}
+vis from path 330deg 6m: {"at":{"r":"arrived","pos":[-105.52,1.98,39.03]},"v":{"coupler":"HIDDEN by BufferGeometry @-104.3,4.9,32.7","nell_head":"HIDDEN by NPC:nell @-104.0,4.1,34.4","bench_top":"seen"}}
+garden walk: [["boat box","arrived"],["pond edge","arrived"],["bed 0 front","arrived"],["bed 1 front","arrived"]]
+collisions: {"pipeFromE":{"at":[-42.94,2.24,60.91],"pipeX":-43.5,"rise":0},"pipeFromW":{"at":[-44.06,2.33,69.24]},"jumpPipe":{"at":[-42.94,2.24,60.47],"crossed":false,"onPipe":false},"troughJump":{"at":[-39.7,2.3,64.98],"standingHigh":0.01},"signPost":{"at":[-42.94,2.32,66.99],"d":0.5},"barrierPost":{"at":[-109.22,1.81,36.09],"d":0.79},"laneNS":"arrived/arrived","crossWestAtGap":"arrived","crossBackNorth":{"r":"arrived","t":4.3}}
+pump vis from the north: {"at":{"r":"arrived","pos":[-42.38,2.25,57.83]},"v":{"grip":"seen","pump_top":"seen","trough":"seen","sign":"seen"}}
+pump vis from the south: {"at":{"r":"arrived","pos":[-42.75,2.31,72.23]},"v":{"grip":"seen","pump_top":"seen","trough":"seen","sign":"seen"}}
+pump vis from the north-near: {"at":{"r":"arrived","pos":[-42.71,2.25,61.67]},"v":{"grip":"seen","pump_top":"seen","trough":"seen","sign":"seen"}}
+trees near the pump: [[-40.1,71.1,0.9,3208],[-42.4,56.6,0.86,3208],[-48.4,61.7,1.02,1576],[-47.7,68.6,0.84,3188],[-36.7,70.9,1,3474],[-38,71.3,1,3474],[-40.5,70.5,1,3474],[-41.7,70.9,1,3474],[-41.8,72.6,1,3474],[-45.2,59.9,0.47,3188],[-44.4,72.7,1.08,4405],[-42.9,65.5,1,4405],[-44.4,72.7,1.08,618],[-42.9,65.5,1,618],[-37.7,61,0.99,4405],[-37.7,61,0.99,618],[-48.7,68,0.59,3188]]
+no errors
