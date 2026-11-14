@@ -4891,3 +4891,26 @@ kitchen, the dormitory, the front), each picture twice, as played and with every
   him, but added 38–154 draw calls along the walk (166 → 320 at the front) and changed the zone's LBA1 behaviour the
   asylum suite checks (the zone cut whole). Left as LBA1 does it; a question for the user and the cloud.
 - **The doors:** asked the user which doors read wrong (next).
+
+## HOME-CELLAR · the cellar worth going down to (CLOUD_ORDERS 42.1) · the desktop, 14.11.2026
+**Ready for the cloud: `requests/HOME-CELLAR.diff`** (`interiors.js` `buildCellar`, and two lines in `main.js`; `git apply
+--check` clean on both branches). Pictures (chapter 1, may go to the user): `docs/future/home/cellar-before-after.jpg`,
+`cellar-works-close.jpg`.
+- **His corner:** over the sideboard a cork board in a frame: a hand-drawn map of two islands with a red route and an X, three
+  snapshots in frames (a lighthouse, a sail, a moon), red pins; two brass cups kept on the bookcases; his old blue tunic on a
+  peg by the stairs. All drawn here (canvas and our shapes), nothing from the original files.
+- **The house's works** in the north-west corner: the water comes down from the house in a copper pipe past a meter and the
+  main stopcock (a red wheel, shut), to a tank with copper bands and a gauge (collider r 0.4). Art only. **For the cloud:**
+  the stopcock could be the other end of the opening's dry tap (a look line, or turning it as a later beat): your call.
+- **Training:** a mat between the dummy and the target. The target and the dummy are groups of their own now and **answer the
+  ball and the fist**: a damped rocking, `Game.impact` (the game's wood knock and burst); the ball leaves a scorch on the
+  target that fades over 3 s; both are `R.ballTargets` (never done: the thrown ball curves toward them here). No story flag.
+  **The two lines in `main.js`:** `meleeWorld` also asks `this.room?.meleeHit?.(…)` (a room had no way to answer a punch),
+  and a room's ball target may give its own `material`/`result` and receives the hit point (`t2.onHit(p)`; the others
+  ignore it, default `machine`/`switch` as before). Checked in Chrome: the ball on the target and the dummy, a punch on the
+  dummy, each rocks and settles.
+- **Kept:** the stairs, exits, entries, spawn, the window, both givers, `story/arsenal.js`'s nook and boards, `kit2`'s tin.
+- **Draw calls** (the room's camera): 21 → 26. Triangles 53.8k → 56.7k.
+- Tests (SwiftShader): prologue 31/31, chapter1 32/32, house, arsenal 34/34, interior-life 144/144, containers 41/41 PASS;
+  place-scan: the same 14 Knartas findings as origin, none in the cellar. **opening:** its checks passed, then a reload
+  timed out at 4 min (the machine busy); not re-run (the user: no need to run tests all the time): **run it when applying**.
