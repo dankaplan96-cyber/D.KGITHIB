@@ -22,7 +22,7 @@ mkdirSync(CAP, { recursive: true });
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch({ width: 1280, height: 720 });
 const ev = (f, a) => page.evaluate(f, a);
-const shot = async (n) => { await ev(() => { game.renderer.render(); }); await page.screenshot({ path: CAP + n + '.png' }); };
+const shot = async (n) => { await ev(() => { game.renderer.render(); }); await page.screenshot({ path: CAP + n + '.png', timeout: 180000 }); };
 const T = () => ev(() => ({ tip: game.tutorial.shown, text: document.querySelector('#tip.show')?.textContent ?? null, done: [...game.tutorial.done].sort(), gone: [...game.tutorial.gone].sort(), state: game.state, room: game.room?.id ?? 'out' }));
 const newGame = async () => {
   await page.click('[data-act="new"]');

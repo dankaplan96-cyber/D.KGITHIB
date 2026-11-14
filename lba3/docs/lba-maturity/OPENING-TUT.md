@@ -148,7 +148,46 @@ Removed: 2 (by construction: the cup and the overflow/trivet were one merged dra
 
 ## 6. Checks performed (Automated runtime only)
 
-See the table at the end of this file (filled in after the runs).
+Snapshot of the worktree served from `/dev/shm/t920` (python http.server), Chromium headless on SwiftShader, 1280×720
+or 960×540, one suite at a time (another worker's suites ran on the same machine: load average 8–10).
+
+`tests/opening-tutorial.mjs` (new, by input; 40 checks, PASS) covers the brief's point 13:
+
+| Brief's case | Where | Result |
+|---|---|---|
+| A new player following every hint (keyboard, Classic) | A1–A20 | PASS |
+| An experienced player acting before hints appear | B3 (Athletic and a jump before the pipe: no tip) | PASS |
+| Tips disabled from the beginning | B0–B1 (no tip, no key hint; ball, door, kettle all happen); B2 (on again: only what was not done) | PASS |
+| Leaving optional practice unfinished | B9 (the arc never held; on to the well: no yard tip in town) | PASS |
+| Keyboard, controller, remapped controls | A (Classic keys), B4 (ball rebound to G on the Controls screen: the tip says G), B5–B7 (a faked standard gamepad: Right stick, left stick, Y; Y throws) | PASS (the pad is faked through `navigator.getGamepads`: no real controller was used) |
+| Switching devices during a lesson | B5 (pad mid-tip), B8 (back to the keyboard: no pad label left) | PASS |
+| Saving and loading half way | A7 (save in the house after the ball, reload, Continue: lessons kept) | PASS |
+| Missing a jump or a throw repeatedly | A13 (into the pipe: stopped, no harm), A17 (three misses, each back in the hand in 2.3 s), A20 (at 0 magic a throw still hits and returns) | PASS |
+| Skipping dialogue | A3 (a press while a line types shows it all, the box says so); the film's hold-to-skip is `tests/opening.mjs` | PASS |
+| Entering and exiting the house during an active lesson | A16 (the ball tip hides inside, comes back outside, not dropped) | PASS |
+| Reaching the water investigation without optional lessons | B9 (the well inspected) | PASS |
+| Contextual tips in town | B10 (the kids, by input: Discreet, then Normal); B11 (the lid's tips, **reproduced with flags set**) | PASS |
+| Old saves (the cup's flags) | C1 (tap tried, cup not moved, no `tut`), C2 (cup moved, `pr_zoeOut`) | PASS |
+
+Other suites on this build:
+
+| Suite | Result |
+|---|---|
+| `opening.mjs` (the film played, skipped three ways, paused, Continue, a second new game, the first objective) | PASS (41) |
+| `prologue.mjs` | PASS |
+| `playthrough/01-prologue-surface` → `02-prologue-cave` (the bot, by input, from a new game into the cave) | PASS, PASS |
+| `chapter1.mjs` | PASS |
+| `campaign-hands.mjs` | the kitchen tap 5.0 cm, the garden standpipe 1.6 cm in the run, then its handle made a little larger and higher: 0.3 cm (re-measured alone, same method). The suite's one other FAIL is chapter 10's friends (Irsa's right hand 2.5 cm from her handle), outside this work |
+| `campaign-thread.mjs` C (saves from before) | C1–C20 PASS (C1: chapter 1 from before, in the well); stopped by the 40-minute limit in C21+ (chapters 10–12), unrelated |
+| `campaign-thread.mjs` A (chapter 2's home and pump room) | PASS (13) |
+| `no-air.mjs` STATES=0 (chapter 1's people) | PASS |
+| `save-migration.mjs`, `resume.mjs`, `containers.mjs`, `interior-life.mjs`, `world-consistency.mjs`, `voices.mjs` | PASS |
+| `uipass.mjs` | PASS (before and after the tips row moved) |
+| `menus.mjs` | FAIL on the first run (the Game page had six rows, and the suite's list of settings lacked `tips`): the row moved to the Controls page and the list updated; then PASS (a run between timed out on a 30 s click under load 13) |
+| `controls.mjs` | 3 FAIL: camera smoothness margins (`accP95` 12.5–14.3 against 12, `accMax` 25.1 against 25) in the square and at Hamalayi's wall. The camera and those places are untouched by this work; not reproduced on the base build (not run there) |
+
+Draw calls: none added (section 4). Text: every new line scanned for night, evening, tonight, sunset, dawn, dusk: none.
+
 
 ## 7. Limits and blockers
 
