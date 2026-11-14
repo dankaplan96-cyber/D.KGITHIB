@@ -4968,3 +4968,22 @@ after `HOME-CELLAR.diff` (both checked). Pictures (chapter 1): `docs/future/home
   `R.bath` adds `shower`. Colliders: tub, washbasin, toilet, the rail's post (the tray is stood on).
 - **Draw calls** (the house's camera): Arthur's room 67 → 74. Pictures: `docs/future/home/bath-before-after.jpg`, `bath-close.jpg`.
 - Not run (as before): the order's suites. **For the cloud: run them when applying, and walk in from Arthur's door.**
+
+## HOME-BATH, a room of its own: walls, a door, a glass shower (the user) · the desktop, 14.11.2026
+The user, of the last version: "there is no door, and it looks odd": low walls like a booth, the shower with its curtain,
+both a tub and a shower; the door "opens by itself". **`requests/HOME-BATH.diff` replaced again** (same corner of
+Arthur's room, 4.3 × 2.9 m; applies on origin alone and after HOME-CELLAR). Picture: `docs/future/home/bath-close.jpg`.
+- **Walls:** its north and west walls stand to 2.6 m (plaster inside over 1.15 m of tiles, the house's paper outside, a
+  wooden cap). They drop to the house's low 1.15 m only while he is in Arthur's room just north or west of it, where they
+  would stand between him and the camera (an updater on his place; the house's near walls are low the same way).
+- **The door:** a wooden leaf on a hinge in the north wall's doorway (x −5.5 to −4.7), swinging in as he comes within
+  1.5 m and closing behind him; no collider (open before he reaches it); its upper half goes with the walls.
+- **No tub:** a glass shower in the south-west corner (two glass sides in a brass frame, the way in at its north-east, a
+  tray and drain, the copper riser up the corner to its head, a red tap). Along the south wall a towel cupboard (folded
+  towels on it) and a laundry basket. Washbasin and mirror on the west wall, the toilet on the north wall facing the room,
+  towels on a rail, a mat (Arthur's rug's weave: no new texture). Colliders: the glass sides, washbasin, toilet, cupboard,
+  basket. `R.bath = { room, basin, shower, toilet, door }`.
+- **Draw calls** (the house's camera, steady frames, the same spots on origin and with it): inside 76 → 80, at its door
+  80 → 85, Arthur's room 71 → 77, the hall 81 → 91. The walls' upper group and the door leaf cast no shadow (they come and
+  go: kept out of the static shadow cache; with shadows the hall was 97).
+- Not run: the order's suites (**for the cloud when applying**), nor a walk through the door by the harness.
