@@ -4956,3 +4956,15 @@ after `HOME-CELLAR.diff` (both checked). Pictures (chapter 1): `docs/future/home
 - **Not run** (the user: no need to run tests all the time): the order's suites. **For the cloud: run `opening`,
   `prologue`, `chapter1`, `house`, `interior-life`, `place-scan` when applying**, and check the walk into it from
   Arthur's door. Checked: pictures from the play camera.
+
+## HOME-BATH, larger (the user: "too small") · the desktop, 14.11.2026
+**`requests/HOME-BATH.diff` replaced again** (same corner of Arthur's room; applies on origin alone and after HOME-CELLAR).
+- **Size:** 2.8 × 1.9 m → **4.3 × 2.9 m** (x −8.8 to −4.5, z 8.6 to the south wall). Arthur's rug and toy blocks move 0.8 m
+  north, clear of its wall; the plant from that corner to x −9.4. His bed, workbench, toy chest, desk and door stay.
+- **Inside:** a **shower** in the south-west corner (a white tray and drain, a copper riser up the corner to a brass head,
+  a red tap, a curtain on an L rail with its post, half drawn), the tub beside it along the south wall, the washbasin and
+  its mirror on the west wall, **the toilet on the north wall facing the room** (it was behind the hall's divider from the
+  camera), two towels on a rail, a bath mat, tiles. The doorway from Arthur's room as before (x −5.5 to −4.7).
+  `R.bath` adds `shower`. Colliders: tub, washbasin, toilet, the rail's post (the tray is stood on).
+- **Draw calls** (the house's camera): Arthur's room 67 → 74. Pictures: `docs/future/home/bath-before-after.jpg`, `bath-close.jpg`.
+- Not run (as before): the order's suites. **For the cloud: run them when applying, and walk in from Arthur's door.**
