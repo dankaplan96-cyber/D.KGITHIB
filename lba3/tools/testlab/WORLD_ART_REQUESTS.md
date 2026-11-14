@@ -4936,3 +4936,23 @@ that order on origin). Pictures (chapter 1): `docs/future/home/bath-in-cellar.jp
 - **Not run** (the user, 14.11: "no need to run tests all the time"): the order's `opening`, `prologue`, `chapter1`,
   `containers`, `place-scan`, house suites on the bath. **For the cloud: run them when applying.** Checked: the pictures
   from the play camera; the series applies.
+
+## HOME-BATH, replaced · the bathroom in the corner of Arthur's room, not the cellar (the user) · the desktop, 14.11.2026
+The user, on the cellar version: "I didn't like the bathroom downstairs, and it stands in the middle of the room: at least
+against the walls"; then, marking the corner on a picture: "in the corner here makes sense". **`requests/HOME-BATH.diff` is
+replaced** (same name; the cellar version is withdrawn, nothing of it is in the new diff). It applies on origin alone and
+after `HOME-CELLAR.diff` (both checked). Pictures (chapter 1): `docs/future/home/bath-before-after.jpg`, `bath-close.jpg`.
+- **Where:** the south-east corner of Arthur's room, x −7.3 to −4.5, z 9.6 to the south wall: against the house's south wall
+  and the hall's divider (by the stairwell). Only a plant stood there; it moves 2.7 m west. Clear of Arthur's bed,
+  workbench, toy chest, rug and desk, and of the hall's story spots (R.life).
+- **The room:** two low papered walls like the house's dividers (the camera sees in over them). **Its doorway** is in its
+  north wall (x −5.5 to −4.7), from Arthur's room, an opening as the house's inner doors are: nothing to wire. (On the
+  hall's side the stairwell leaves 0.8 m to the south wall: too narrow for a door there.)
+- **Inside:** tiles on the floor and to 1 m on the walls, a tub along the south wall (brass taps, a hand shower), a
+  washbasin with its mirror on the west wall (facing the camera), the toilet against the hall's divider, two towels on a
+  brass rail, a bath mat. Colliders: tub, washbasin, toilet. `R.bath = { room: 'house', basin, tub, toilet, door }` for the
+  taps the cloud makes say the water is off.
+- **Draw calls** (the house's camera, steady frames): Arthur's room 67 → 69, by the bathroom 80 → 82.
+- **Not run** (the user: no need to run tests all the time): the order's suites. **For the cloud: run `opening`,
+  `prologue`, `chapter1`, `house`, `interior-life`, `place-scan` when applying**, and check the walk into it from
+  Arthur's door. Checked: pictures from the play camera.
