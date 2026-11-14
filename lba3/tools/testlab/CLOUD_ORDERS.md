@@ -26,6 +26,10 @@ must not be crowded."** It binds every order, old and new, before anything else 
   play camera. A diff that adds more than it removes says why each addition is needed.
 - If a place already looks crowded, say so in the report and propose what to take away (don't wait to be asked).
 
+**And what must stay (the user, 14.11): "the main things from the first and second game: entrances to buildings,
+buildings are important; the rest it makes sense to change after 12 years."** The originals' main buildings stand
+where they stood, recognisable, with their ways in; the rest may change (the 13.11 twelve-years decision).
+
 ## Tonight's queue
 1. **ASYLUM-2** (answered in `WORLD_ART_REQUESTS.md`, "the cloud's answer"): build the two entrances as LBA1 had them,
    the Esmer workers' hostel dressing, Vesk's store behind it (crates stamped ZEELICH, the hidden humming crate, his
@@ -385,3 +389,23 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     from the play camera before/after, objects added/removed, draw calls before/after, run `opening`, `prologue`, `chapter1`,
     `containers`, `place-scan`, `house-*`/interior suites that cover the house. No text past chapter 2 in pictures sent to
     the user. Only the user can: play, listen, judge.
+
+43. **LANDMARKS-KEEP (the user, 14.11, P25): "the main things from the first and second game: entrances to buildings,
+    buildings are important; the rest it makes sense to change after 12 years."** After order 42. You have the originals'
+    data (read-only; nothing from it committed but numbers and descriptions) and DOORS-LBA2's decoded links.
+    1. **The list:** for every region the game revisits (Citadel, the Desert Island, Zeelich's places, the Hamalayi,
+       the other LBA1/LBA2 islands we have), the original's **main buildings** — the ones a player of LBA1/LBA2 would
+       remember (homes of the cast, shops, the tavern, the school, the museum, the temple, the lighthouse, the
+       harbour's halls, the asylum, the Water Office, the observatory and so on: your judgement from the originals,
+       not every shed) — and each one's ways in (door zones from the scenes). A table: region, building, original's
+       scene/zone, ours (`docs/lba-maturity/BUILDING_REGISTER.csv` row, `door-map.md`), **present / moved /
+       missing**, **recognisable from the play camera yes/no**, **its way in: works / shut with a reason told /
+       shut silently / missing**. Fill the 25 register rows marked "not assessed in 27a".
+    2. **Art fixes, one per request, as always:** a main building missing or not recognisable gets its shape back
+       (our geometry, by hand), its door where the original had it. No-clutter rule applies: bring back the building,
+       not a crowd around it.
+    3. **Ways in:** do not wire rooms yourself; list each "shut silently" or "missing" one in the report with the
+       original's door position, and the cloud's buildings-interiors worker will make them work (a room, or a shut
+       door with a line that says why).
+    Report the table in `WORLD_ART_REQUESTS.md` (`## LANDMARKS-KEEP`) with pictures of the misses; no pictures past
+    chapter 2's places to the user.
