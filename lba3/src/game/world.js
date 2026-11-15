@@ -129,6 +129,36 @@ function roundBoxDist(x, z, x0, z0, x1, z1, r) {
   const qx = Math.abs(x - (x0 + x1) / 2) - ((x1 - x0) / 2 - r), qz = Math.abs(z - (z0 + z1) / 2) - ((z1 - z0) / 2 - r);
   return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - r;
 }
+// MAP-ORIG (LBA2 from the play camera, docs/lba-maturity/MAP-ORIG.md): LBA2's town is a grid of straight paved streets,
+// about 3 m wide and flush with the brown earth, round rectangular blocks; ours read as fields crossed by dirt paths.
+// A first step, the ground's texture only (no height, collider, door or route changes): the streets of LBA2's grid
+// that run between our houses, traced from its town seen from above (lines of our frame, LAYOUT applied; the one by
+// the fields' path on that path's line, 3 m east of LBA2's), the promenade on the town's sea wall, and the harbour
+// wing's yard, paved in front of the long hall and Nell's as LBA2's harbour platform is. The square and its streets
+// (town.js STREETS) stay as they are. [x0, z0, x1, z1, width]
+const GRID_STREETS = [
+  [-58.9, 2.9, -58.9, 57.0, 3.0],    // the west street, from the street to the harbour south past the water office
+  [-60.4, 2.9, -51.4, 2.9, 3.0],     // its foot, east to the square's ring
+  [-63.4, 31.3, -30.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
+  [-45.6, 31.3, -45.6, 53.1, 3.0],   // south from it along the fields' path
+  [-60.4, 53.1, -44.1, 53.1, 3.0],   // the south cross street
+  [-73.5, -27.0, -73.5, 8.5, 2.6],   // the promenade on the sea wall, inside its rail
+];
+const HARBOUR_YARD = { x0: -104.5, z0: 30.4, x1: -75.5, z1: 40.5 };   // (only where the ground stands above the shore, h > 1.2)
+// the block the south streets close (between the west street, the fields' path and the two cross streets): LBA2's
+// blocks are a lawn inside a band of brown earth along the paving; inside its streets' edges [x0, z0, x1, z1]
+const TOWN_BLOCK = { x0: -57.4, z0: 32.8, x1: -47.1, z1: 51.6, band: 2.0 };
+const inTownGrid = (x, z) => x > -75 && x < -22 && z > 1 && z < 56;   // (the town south of the square, shore to shore)
+// 0..1: the block's earth band (1 on it, 0 on the lawn inside and outside the block)
+function townBlockEarth(x, z, n = 0) {
+  const B = TOWN_BLOCK, d = boxDist(x, z, B.x0, B.z0, B.x1, B.z1);
+  return d < 0.2 ? smoothstep(-B.band - 0.25, -B.band + 0.25, d + n * 0.15) : 0;
+}
+export function gridPaveDist(x, z) {
+  let d = boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1);
+  for (const [x0, z0, x1, z1, w] of GRID_STREETS) d = Math.min(d, distToSegment(x, z, x0, z0, x1, z1) - w / 2);
+  return d;   // (< 0 on the paving)
+}
 // signed distance (first-order) to an ellipse with semi-axes a (x) and b (z), negative inside
 function ellipseDist(x, z, cx, cz, a, b) {
   const dx = x - cx, dz = z - cz, k0 = Math.hypot(dx / a, dz / b), k1 = Math.hypot(dx / (a * a), dz / (b * b));
@@ -547,6 +577,9 @@ function islandSplat(x, z, h, slope, w) {
   }
   // the quay is paved
   if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - (QUAY.x1 - 1)) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
+  // MAP-ORIG: LBA2's straight town streets, the sea wall's promenade and the harbour wing's yard (GRID_STREETS)
+  if (h > 1.2) w[4] = Math.max(w[4], smoothstep(0.3, -0.25, gridPaveDist(x, z) + n * 0.2) * 3);
+  { const be = h > 1.2 ? townBlockEarth(x, z, n) : 0; if (be > 0) { w[3] = Math.max(w[3], be * 2.5); w[0] *= 1 - be * 0.95; } }
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
   if (fd < POI.fort.half) w[4] = 3;
   if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt
@@ -565,7 +598,7 @@ function wildGround(x, z, n = 0) {
   // 7–11 m and more from any house's walls; the soil may come closer (LBA2's houses stand in brown earth)
   let yd = 1e9;
   for (const hf of HOUSE_FLATS) { const dx = x - hf.x, dz = z - hf.z, lx = hf.c * dx - hf.s * dz, lz = hf.s * dx + hf.c * dz; yd = Math.min(yd, Math.hypot(Math.max(Math.abs(lx) - hf.hw, 0), Math.max(Math.abs(lz) - hf.hd, 0))); }
-  const rock = smoothstep(0.1, 0.2, b) * away * smoothstep(7, 11, yd);
+  const rock = smoothstep(0.1, 0.2, b) * away * smoothstep(7, 11, yd) * (inTownGrid(x, z) ? 0 : 1);   // (MAP-ORIG: no bare rock among LBA2's town streets)
   const soil = smoothstep(0.0, 0.1, a) * (1 - rock) * Math.max(away, 0.6);
   return [soil, rock];
 }
@@ -1029,6 +1062,7 @@ export function* buildWorldSteps(parentScene) {
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   clearLife(trees); clearLife(bushes);
+  for (const t of [...trees, ...bushes]) if (!t.gone && gridPaveDist(t.x, t.z) < 1.2) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving; filtered after the scatter, so no random draw moves)
   // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
   //  11 m, so the first steps out of a door are never into a bush. Filtered after the scatter: no random draw moves.)
   const doorLane = (x, z, pad) => W.houses.some((h) => {
@@ -1154,6 +1188,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
   for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
   for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
+  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || townBlockEarth(t.x, t.z) > 0.3)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
@@ -1252,7 +1287,7 @@ export function* buildWorldSteps(parentScene) {
     grp.add(beam);
     const light = new THREE.PointLight('#ffe9b0', 0, 40, 1.5);
     light.position.y = lampY; grp.add(light);
-    physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 20 });
+    physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 15 });   // (MAP-ORIG: the tower is 14.6 m to its finial)
     physics.add({ type: 'box', x: L.x, z: L.z + (LH_ANNEX.z0 + LH_ANNEX.z1) / 2 + 0.03, hw: LH_ANNEX.hw + 0.05, hd: (LH_ANNEX.z1 - LH_ANNEX.z0) / 2 + 0.03, rot: 0, top: g + LH_ANNEX.top });   // (CITADEL-85: the annex, whose front corners stand outside the cylinder)
     physics.add({ type: 'box', x: L.x, z: L.z + 3.05, hw: LH_STEP_W / 2, hd: 0.25 + 0.12, rot: 0, top: g + 0.15, stair: true });   // (the doorstep, lighthouse.js, to z 3.3)
     for (const S of LH_STEPS) physics.add({ type: 'box', x: L.x, z: L.z + (S.z0 + S.z1) / 2, hw: LH_STEP_W / 2, hd: (S.z1 - S.z0) / 2 + 0.12, rot: 0, top: g + S.top, stair: true });   // (the steps up to the door; +0.12: overlapping, no seam to drop through under groundAt's 5 cm shrink, as the rooms' stairs)

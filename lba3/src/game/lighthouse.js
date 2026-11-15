@@ -16,7 +16,8 @@ import { Batch, tm, pm, lathe, boxUV, tint, cached } from './kit.js';
 export const LH = {
   HW: 2.2, CH: 0.5,    // the shaft: half-width and the corners' cut (corner points 2.78 m from the axis)
   FOOT: 3.08,          // the footing's octagon, circumradius (inside the collider's 3.1)
-  H: 15.25,            // the gallery floor
+  H: 10.8,             // the gallery floor (MAP-ORIG: was 15.25; LBA2's tower, seen and measured from its island's objects, is a
+                       // 7.3 m shaft, a 3.3 m upper stage and a 4 m head: 14.6 m to the finial; ours was 19 m and read as a slim tower)
   DOOR_Y: 0.3,         // the sill, on the footing
   WHITE: '#f2f5ff', GREY: '#dcdde0', GREY_D: '#b4b6bc',   // (tints over the textures: the plaster's cream drawn to white, the dressed stone's warm grey to grey)
 };
@@ -118,7 +119,7 @@ export function buildLighthouse(grp, lampMat) {
 
   // ---- the shaft: white faces, grey quoins on the cut corners (the corner faces, and blocks proud of them in
   //      alternate courses, long and short, as LBA2's dressed corners)
-  const S0 = LH.DOOR_Y, S1 = 12.45;
+  const S0 = LH.DOOR_Y, S1 = 8.0;
   BC.add(white(octRing(HW, CH, S0, S1, 'main', 2.2)), plaster);
   BC.add(grey(octRing(HW, CH, S0, S1, 'corner', 1.8)), ashlar);
   // (a block on each cut corner every course, 6 cm proud; every other course a block on each main face beside it, so
@@ -139,7 +140,7 @@ export function buildLighthouse(grp, lampMat) {
   }
   // the string course over the white shaft, then the grey upper stage, corbelled out a little
   BC.add(grey(octRing(HW + 0.12, CH + 0.05, S1, S1 + 0.24, 'all', 1.8, true), '#ecebe6'), ashlar);
-  const U0 = S1 + 0.24, U1 = 14.75;
+  const U0 = S1 + 0.24, U1 = LH.H - 0.5;
   BC.add(grey(octRing(HW + 0.06, CH + 0.03, U0, U1, 'all', 1.8), '#d2d3d7'), ashlar);
 
   // ---- windows: small arched lights up the shaft, grey dressed frames round dark panes with a white cross (the door
@@ -153,8 +154,8 @@ export function buildLighthouse(grp, lampMat) {
     add(wd(bx(w - 0.04, 0.035, 0.03, 1), '#efe7d3'), wood, 0, h * 0.42, 0.04);
     add(grey(bx(w + 0.34, 0.07, 0.16, 1), '#e2e3e6'), ashlar, 0, -0.04, 0.06);   // the sill
   };
-  win(4.4, Math.PI / 2); win(6.9, -Math.PI / 2); win(9.2, Math.PI); win(9.8, 0); win(11.2, Math.PI / 2);
-  win(13.2, 0, 0.56, 1.0, HW + 0.06); win(13.2, Math.PI, 0.56, 1.0, HW + 0.06);   // (the upper stage's)
+  win(4.4, Math.PI / 2); win(5.9, -Math.PI / 2); win(5.2, Math.PI); win(6.5, 0);
+  win(U0 + 0.75, 0, 0.56, 1.0, HW + 0.06); win(U0 + 0.75, Math.PI, 0.56, 1.0, HW + 0.06);   // (the upper stage's)
 
   // ---- the gallery: a corbel course, the floor slab, an iron railing round its edge
   BC.add(grey(octRing(HW + 0.3, CH + 0.12, U1, U1 + 0.26, 'all', 1.8, true), '#e6e3dc'), ashlar);   // (its top inside the slab: no two faces in one plane)
@@ -173,7 +174,7 @@ export function buildLighthouse(grp, lampMat) {
 
   // ---- the lantern: an octagonal stone base, the glazing (the lamp's own material, glowing when lit) in a wooden
   //      frame of posts and rails, a cornice, the domed grey cap with a finial and a rod
-  const lampR = 1.18, glazeY0 = topY + 0.42, glazeH = 1.5;
+  const lampR = 1.18, glazeY0 = topY + 0.42, glazeH = 1.8;   // (MAP-ORIG: LBA2's head is big against its shaft)
   BC.add(grey(octRing(lampR + 0.14, (lampR + 0.14) * 0.586, topY - 0.02, glazeY0 + 0.02, 'all', 1.8, true), '#e6e3dc'), ashlar);
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(lampR, lampR, glazeH, 8).rotateY(Math.PI / 8), lampMat);
   lamp.position.y = glazeY0 + glazeH / 2; lamp.castShadow = false; grp.add(lamp);
