@@ -101,8 +101,9 @@ const HOUSES = [
     windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
   // (HARBOUR-ONE: wing2 in rubble, as LBA2's body 49 is (rubble walls under a plank roof) and as Doran's shed beside
   // it: the hall in ashlar under slate, the two smaller houses in rubble under boards, LBA2's harbour pair)
-  // (CITADEL-85: and its neighbour a brown barrel of boards, the arch over the door's end)
-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', barrel: { axis: 'z', rise: 0.26 }, shutters: '#c8452f', chimneyX: -0.25,
+  // (CITADEL-85 gave it a barrel too; MAP-ORIG, LBA2 seen from the play camera in lba2remake: only the long hall is vaulted,
+  // its neighbour has a hip roof of boards, the end slopes' boards fanned. A plank hip at LBA2's pitch, its edges in dark wood)
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', hip: { pitch: 0.55, coping: '#6b4a2e' }, pitch: 0.55, shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)

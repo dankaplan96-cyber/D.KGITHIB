@@ -328,7 +328,7 @@ const gl = await ev(() => { const G = game, B = G.world.busy, F = B.flocks[0], h
   G.exitRoom(st, true); P.settle();
   const p0 = [h.pos.x, h.pos.z]; P.holdFor(['ArrowUp'], 2.5); const walked = +Math.hypot(h.pos.x - p0[0], h.pos.z - p0[1]).toFixed(2), state = G.state;
   const went = F.birds.filter((x) => x.st !== 'sit'), up = went.length, l0 = went.map((x) => x.landed || 0); G.step(30);
-  const down = went.filter((x, i) => (x.landed || 0) <= l0[i]).length, dist = went.map((x) => +Math.hypot(x.p.x - h.pos.x, x.p.z - h.pos.z).toFixed(1));
+  const down = went.filter((x, i) => (x.landed || 0) <= l0[i]).length, dist = went.map((x) => { const q = x.p || x; return +Math.hypot(q.x - h.pos.x, q.z - h.pos.z).toFixed(1); });   // (MAP-ORIG: a bird off again on its own round at the end has no perch yet: its place)
   G.exitRoom({ x: G.world.life.boatBox.x, z: G.world.life.boatBox.z + 2, a: 0 }, true); P.settle();
   const m0 = F.body.instanceMatrix.version; G.step(5); return { up, down, dist, still: F.body.instanceMatrix.version === m0, walked, state, from: [st.x, st.z].map((u) => +u.toFixed(1)) }; });
 check('the harbour\'s gulls take off as he walks up to them and come down again within half a minute; far off they keep still (no work)', gl.up >= 1 && gl.down === 0 && gl.still, gl);
