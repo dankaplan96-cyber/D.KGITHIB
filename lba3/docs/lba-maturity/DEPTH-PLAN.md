@@ -645,6 +645,8 @@ save → Continue mid-way, and checks the "three chapters later" state by settin
 lasting change. The album (U-4) uses our own renders of our own earlier states of the places, never LBA1/LBA2 images.
 
 **U-1 built** (15.11.2026; `docs/lba-maturity/U1-LAST-FERRY.md`, `tests/last-ferry.mjs`; Automated runtime only).
+**U-2 built** (15.11.2026; `docs/lba-maturity/U2-ONE-MORE-PLACE.md`, `tests/one-more-place.mjs`; Automated runtime only;
+not paired: none of the remaining first-wave proposals is on Citadel or in the house).
 
 **Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
 proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
