@@ -335,6 +335,8 @@ Object.assign(STR.en, {
   pr_tim_after: 'Did you tell my mum?',
   pr_lulu_after: "I'm keeping the secret. Mostly.",
   pr_pippa: "Twinsen! I hear the well's broken. While you're here, I've got potions, magic flasks and clover leaves. Take a look?",
+  pr_pippa_again: 'Back already? Same potions, same flasks, same clover leaves. Same prices, sadly for you.',
+  pr_pippa_shop: "Potions, magic flasks, clover leaves. Whatever the island's worried about this week, I've got something for it.",
   pr_toast_tremor: 'The ground shakes',
   pr_cave_1: "The water's warm. Almost hot. And crystals? These weren't here before.",
   pr_cave_2: 'The magic ball is trembling in my pocket. Maybe it can wake those three dark crystals.',

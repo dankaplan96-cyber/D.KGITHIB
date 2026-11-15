@@ -483,10 +483,13 @@ export class Prologue extends ChapterBase {
     }
     return false;
   }
+  pippaKey() { return this.story.index > 0 ? 'pr_pippa_shop' : this.f.pr_pippaMet ? 'pr_pippa_again' : 'pr_pippa'; }
   // an NPC the current chapter has nothing special for
   baseTalk(npc) {
     const id = npc.def.id;
-    if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
+    // (DIALOGUE-EDIT: "I hear the well's broken" was her line in every chapter that has nothing of its own for her,
+    //  the network's Citadel included; now the well only in chapter 1, once, and a plain shop line after)
+    if (id === 'pippa') return this.chain([['pippa', this.pippaKey()]], () => { this.f.pr_pippaMet = true; this.game.openShop(); });
     // the Weather Wizard tops up Twinsen's magic, the healing wizard his life (LBA2's Ker'aooc "treats everybody")
     const h = this.game.hero;
     if (id === 'bersimon' && h.mp < h.mpMax) { h.mp = h.mpMax; this.game.audio.play('heal'); this.game.hud.toast('wz_toast_magic'); }
@@ -562,7 +565,7 @@ export class Prologue extends ChapterBase {
         f.kidsAsked = true;
         return c([['tim', 'pr_tim_1'], ['lulu', 'pr_lulu_1'], ['hero', 'pr_tw_kids']]);
       case 'pippa':
-        this.chain([['pippa', 'pr_pippa']], () => g.openShop());
+        this.chain([['pippa', this.pippaKey()]], () => { f.pr_pippaMet = true; g.openShop(); });
         return true;
     }
     return false;
