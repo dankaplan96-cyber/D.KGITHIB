@@ -5039,3 +5039,59 @@ The user, 15.11: the old laptop is sold and will not come back; what was asked o
 Intel UHD 630 instead (the minimum target; Chrome/the app set to the power-saving GPU). So **order 45 (TECH-ART-1) and
 27c** are no longer "whenever the laptop is at hand": they join the desktop's queue, numbers labelled "UHD 630". Please
 read "Vega 8" in `CLOUD_ORDERS.md` (orders 41.6, 44.3, 45) as the UHD 630 from now on.
+
+## LANDMARKS-KEEP · the originals' main buildings and their ways in, region by region (CLOUD_ORDERS 43) · the desktop, 15.11.2026
+Sources: DOORS-LBA2 (decoded scenes and doors, 8.11), `docs/lba-maturity/door-map.md`, `BUILDING_REGISTER.csv`, the
+27a rubrics; for LBA1 a published walkthrough (scene names only; no LBA1 picture on the desktop: **low confidence**).
+Ours: every Desert and Hamalayi house door from the play camera (chapter 5 by flags, 4–7 m before each door, Follow):
+`docs/future/landmarks/{desert,hamalayi}-sheet.jpg` (**chapter 4+/6: not for the user**). Ways in: the suites named in
+the register (`island-doors`, `hamalayi-life`, `wizards`, `chapter4`, `chapter5`, `door-sweep`), not re-run here.
+**The 25 register rows "not assessed in 27a" are filled** (`in_original`, marked LANDMARKS-KEEP).
+
+| Region | Original's main building (scene) | Ours | State | Recognisable (play camera) | Way in |
+|---|---|---|---|---|---|
+| Citadel | Twinsen's house (LBA1; LBA2 0, cellar 1) | `twinsen` | present (door 2.7 m S) | yes | works |
+| Citadel | The asylum (LBA1 s0) | the hostel | present | yes | works (two, SIDE-WELL) |
+| Citadel | Chez Luc, the tavern (LBA2 3, cellar 4; LBA1 tavern) | `south` | present | yes | works |
+| Citadel | The pharmacy (LBA2 22; LBA1) | `bug2` | present | yes | works |
+| Citadel | Mr Bazoo's (LBA2 14) | `museum` | present | yes | works |
+| Citadel | The harbour: ticket office, baggage claim, Nell's wing (LBA2 8, 5, 7; LBA1 port) | `baggage`, `bug`, `wing2` | present | yes | works |
+| Citadel | The neighbour's (LBA2 9) | `nbr` | present | yes | works (after the prologue) |
+| Citadel | The Water Office (LBA2 15) | `water` | present | yes | story (chapters 2, 8, 10, after the end) |
+| Citadel | **The school (LBA2 37)** | `stone`, Tibbo's house | present, another use | as a house | **shut with a reason** (its line) |
+| Citadel | Tralu's cave (LBA2 2) | plateau door | moved 9 m (no bank there) | yes | works |
+| Citadel | Bersimon's tent (LBA2 21) | `wtent` | moved 5 m (the glider field) | yes | works |
+| Citadel | The lighthouse | lighthouse | present | yes | story (chapters 3, 10) |
+| Citadel | The sewer's two lift hatches (LBA2 17) | street + terrace hatch | present (D2) | yes | works / story (`sw_bolt`) |
+| Citadel | FunFrock's passage (LBA2 51) | passage N/S | present | yes | shut with a reason (story) |
+| Citadel | The west islet's dome (LBA2 26) | — | **missing by the user's decision** (no dome) | — | — |
+| Desert | **The School of Magic: S28's tower, the grey stone face (LBA2 28 → 27 → 33)** | the School at the mask, 95 m W (the user, 26.10); S28's tower is the crew's bunkhouse | moved | the mask: yes | works (`wizards`) |
+| Desert | (same) S28's tower | the bunkhouse **with a stone face since DESERT-ART 2** | present, another use | **reads as the School: two faces on the island** | works (a bunkhouse) — **for the user, below** |
+| Desert | **The Temple of Bù: its door (49.7, −83.9) and the way down, a well/hatch (49.7, −67.5) (LBA2 10)** | the temple under the dig (64, 28) | moved (twelve years) | the dig: yes | works from chapter 4; **LBA2's well: missing** |
+| Desert | Kesh: the bar 39, Leone's 35, the shop 36, Baldino's 38, the ticket office 40 | five Kesh homes (Brosk, Lumi, Tarra, Safi, Hesk) | present as homes (two within 4–5 m) | yes (peach, parapet domes) | works |
+| Desert | The great hall by the School (body 48) | the hall in the School's pool | present | yes | works once `pp_lamp` |
+| Desert | S40's house | Bashir's home | present | yes | works |
+| Desert | The hacienda (24), the hut (113), the islet's door (183) | — | **missing by the user's DECLUTTER (3.11)** | — | — |
+| Zeelich hub | LBA2's Zeelich | a new city (the user, 7.11) | by decision | — | — |
+| Otringal | the bar (136), the hotel (81), the casino (135), the astroport (86, 85) | `otrbar`, `otrhotel` (at the casino's spot), the astroport | present; the casino's building is our hotel | yes | works; the astroport partly |
+| Celebration | the temple (93), the summit statue chain (185–192) | `celtemple`; the statue | present / chain not built | yes | temple works; **summit chain: missing** (register: no) |
+| Knartas | the zeppelin port and refinery (144, 140, 143) | — | **missing** (register: no) | — | — |
+| Mosquibee | the nest (106, upper exits 149) | the nest | partly | yes | partly |
+| The Platform | the elevator building, the church, the bank (123, 118, …) | the Building Company, the Wannies' chapel | partly | yes | partly |
+| Hamalayi (LBA1) | the factory compound (guarded, a gate opened by a card) | — (our heat station and lift instead) | **missing / changed** | — | — |
+| Hamalayi (LBA1) | the rabbit village, its way in under the Sacred Carrot | Lhar's five houses, the monastery | changed (our own region) | yes (sheet) | works (`hamalayi-life`) |
+| Hamalayi (LBA1) | the quayside with its guarded gate; Clear Water Lake | the glider landing; the vent basin | changed | yes | — |
+
+**What needs a decision (not built; the order says shape only for missing or unrecognisable main buildings):**
+1. **Desert, the two faces.** LBA2's School of Magic is the stone face at S28. Ours has the School at the mask (26.10)
+   and, since DESERT-ART 2 (mine, 13.11), a second stone face on S28's tower, which is the crew's bunkhouse: a player of
+   LBA2 walks to the face and finds bunks. Either take the face off the bunkhouse (back to a plain grey tower) or bring
+   the School back into S28's tower. **The user's call.** The desktop can do the first in one small diff.
+2. **Desert, the Temple of Bù's well.** LBA2's way down at (49.7, −67.5) is not in ours; ours goes down by the dig.
+   The cloud (story) decides whether LBA2's well comes back as a way in or as a shut well with a line.
+3. **Citadel's school (LBA2 37)** stands as Tibbo's house, shut with its line: the building is kept; its purpose is the
+   user's (DOORS-LBA2 14).
+4. **Missing by the originals' list but not decided away:** Knartas's zeppelin port and refinery; Celebration's summit
+   chain; LBA1's Hamalayi factory compound and the Sacred Carrot. All are past chapter 2 and big; listed for the cloud
+   and the user, nothing built. (The dome, the hacienda, the hut and the islet's door are gone by the user's own word.)
+- No ways in were wired (the order: the cloud's). No clutter added. Not run: the suites named above (unchanged code).
