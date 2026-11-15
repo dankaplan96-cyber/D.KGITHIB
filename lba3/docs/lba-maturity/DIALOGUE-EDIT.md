@@ -112,6 +112,18 @@ Status: **edited** (lines changed), **kept** (read in context, nothing needed), 
 5. **`c7_sendell_4`** ("When you reach the bottom of the world, you will see her. Not before.") stays a withheld answer by
    design (Sendell's truth comes in chapter 11); kept.
 
+## Missing dialogue states (found by reading prologue.js baseTalk)
+
+- **Fixed:** Pippa's chapter-1 greeting ("I hear the well's broken") was what she said in every later chapter without its
+  own line for her (`baseTalk`): now `pr_pippa_again` in chapter 1 and `pr_pippa_shop` from chapter 2 on.
+- **Written:** in a chapter with no line of its own for them, Citadel's Gilbert, Mira, Xil, Tim and Lulu (and Zoé and
+  Arthur at home outside their chapters' scenes) fell back to `idle_generic`, "Hello, Twinsen." (Zoé greeting her husband
+  back from the desert that way). New `idle_<id>_<chapter>` lines in `text/common.js` (40 lines: dig, steam, pass,
+  observatory, council, network, and the evacuation for Xil, Tim and Lulu, whom chapter 8 does not voice), each about
+  what that person would know then (the broadcast, the list, the heat posts, Mira's valve room). They are only heard if
+  the person is present in that chapter; where a chapter has its own line, that line still wins. Source only (no
+  chapter suite visits them).
+
 ## Dead or unreachable text (found by `--unused`)
 
 `pr_intro_1/2`, `pr_zoe_1..4`, `pr_tw_1`, `pr_ar_1/2`, `pr_doran_1` (the old opening before the film), `pr_zoe_next`
