@@ -247,7 +247,7 @@ export class Chapter1 extends ChapterBase {
         if (!f.c1_home) return c([['zoe', 'c1_zoe_home1'], ['hero', 'c1_tw_home1'], ['zoe', 'c1_zoe_home2a'], ['arthur', 'c1_ar_home1'], ['zoe', 'c1_zoe_home3'], ['arthur', 'c1_ar_home2']], () => { f.c1_home = true; g.updateObjective(); g.save(false); });
         return c([['zoe', f.c1_water ? 'c1_zoe_water' : 'c1_zoe_wait']]);
       case 'arthur':
-        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['radio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
+        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['radio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ...(f.dx_om_tuned ? [['arthur', 'om_ar_radio']] : []), ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
         return c([['arthur', f.c1_radio ? 'c1_ar_after' : 'c1_ar_idle']]);
       case 'vesk':
         if (!f.c1_task) {
