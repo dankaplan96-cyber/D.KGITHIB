@@ -1,7 +1,7 @@
 // Inventory + journal screen (I / J). SHOPS-ITEMS: as LBA2's inventory, a grid of slots, each showing the object's
 // own small 3D model (itemlook.js), the selected one turning, and larger beside its name and description; the
 // painted icons below stay as the fallback where WebGL is unavailable (and paint the paper items' faces). The journal
-// lists what happened so far, chapter by chapter. One panel, the game paused behind it.
+// lists what happened so far, chapter by chapter. One panel, two tabs (INVENTORY-CALM, below), the game paused behind it.
 import { t } from './i18n.js';
 import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { stage, lookOf, TURN } from './itemlook.js';
@@ -129,15 +129,57 @@ export function itemIcon(kind) {
   return (cache[kind] = c.toDataURL());
 }
 
+
+// INVENTORY-CALM (the user, 15.11: "crowded and ugly and not visual, and scrolling"): two tabs in one window.
+// Inventory: the selected item large and turning, a page of large slots (empty slots drawn as frames, as LBA2's grid),
+// under them its name and one short line; the rest of its text on demand (More). Kashes, clovers and crystals sit in
+// one small strip in the header. Journal: the current goal first, then one section at a time (the current chapter
+// open, the older ones and the side stories folded into a list). Nothing scrolls: a grid or a list that outgrows its
+// box is paged (‹ 1 / 2 ›).
+const ROWS_DEFAULT = 3;
+// the first sentence of a text, and the rest ("More"); a full stop inside a quotation does not end it
+export function splitLead(s) {
+  const re = /[.!?…](["'”’)]?)\s+/g;
+  let m;
+  while ((m = re.exec(s))) {
+    const end = m.index + 1 + m[1].length;
+    if (end < 12) continue;
+    if (((s.slice(0, end).match(/"/g) || []).length) % 2) continue;
+    return [s.slice(0, end), s.slice(end).trim()];
+  }
+  return [s, ''];
+}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// a list longer than its box: its children split into pages by their laid-out place; the page `want` shown
+function paginate(list, want) {
+  const kids = [...list.children];
+  kids.forEach((k) => k.classList.remove('off'));
+  const H = list.clientHeight;
+  if (!kids.length || list.scrollHeight <= H + 1) return { pages: 1, page: 0, of: kids.map(() => 0) };
+  let page = 0, top = kids[0].offsetTop;
+  const of = kids.map((k) => { if (k.offsetTop > top && k.offsetTop + k.offsetHeight - top > H + 0.5) { page++; top = k.offsetTop; } return page; });
+  const pages = page + 1, p = Math.max(0, Math.min(pages - 1, want | 0));
+  kids.forEach((k, i) => k.classList.toggle('off', of[i] !== p));
+  return { pages, page: p, of };
+}
+const CRYSTAL_SVG = '<svg viewBox="0 0 24 24"><path d="M12 2 L18 10 L14 22 L10 22 L6 10 Z" fill="#8fe8ff" stroke="#1f7aa8" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 4 L9.5 10 L12 19 Z" fill="#fff" opacity="0.6"/></svg>';
+
 export class Inventory {
   constructor(game) {
     this.game = game;
     this.el = document.querySelector('#inventory');
     this.open = false;
+    this.tab = 'items';    // 'items' | 'journal'
+    this.zone = 'grid';    // 'grid' | 'strip' (the counters in the header)
+    this.strip = 0;
+    this.more = false;     // the selected item's whole text shown
+    this.jsec = 0; this.jpage = 0; this.jpages = 1; this.spage = 0;
+    // (one click handler for the window, made once: rendering replaces the markup, never adds listeners)
+    this.el.addEventListener('click', (e) => this.click(e));
   }
-  // everything Twinsen carries, from the hero state and story flags
+  // everything Twinsen carries that has a slot, from the hero state and story flags (the counters: counters())
   items() {
-    const g = this.game, h = g.hero, f = g.flags;
+    const g = this.game, h = g.hero;
     const out = [];
     const add = (id, icon, n) => out.push({ id, icon, n });
     add('medallion', 'medallion');
@@ -159,70 +201,229 @@ export class Inventory {
     if (a.fork) add('fork', 'fork');   // (EQUIP-2b: E puts each in his hand)
     if (a.line) add('line', 'line');
     if (a.heatflask) add('heatflask', 'heatflask', a.heat > 0 ? `${Math.ceil(a.heat)}s` : null);
-    add('kashes', 'coin', h.coins);
-    add('clovers', 'clover', h.clovers);
-    const nc = g.crystalCount?.() || 0;
-    if (nc) add('crystals', 'crystal', nc);
     return out;
+  }
+  // the counters: one small strip, each still selectable for its name and line
+  counters() {
+    const g = this.game, h = g.hero, out = [{ id: 'kashes', icon: 'coin', n: h.coins | 0 }, { id: 'clovers', icon: 'clover', n: h.clovers | 0 }];
+    const nc = g.crystalCount?.() || 0;
+    if (nc) out.push({ id: 'crystals', icon: 'crystal', n: nc });
+    return out;
+  }
+  // the item the description and the large view are about
+  current() {
+    if (this.zone === 'strip') return this.counters()[this.strip] || null;
+    return this.items()[this.sel ?? 0] || null;
   }
   // the selected item when it is a gadget used from here (main.js: E uses it), else null
   usable() {
-    if (!this.open) return null;
+    if (!this.open || this.tab !== 'items' || this.zone !== 'grid') return null;
+    if (this.from === 'pause' && this.game.cine) return null;   // (opened from the pause menu over a cut-scene)
     const it = this.items()[this.sel ?? 0];
     return it && USE.has(it.id) ? it.id : null;
   }
-  show(on) {
+  // opened by the inventory key (J, where it is not the inventory's own first key, opens the journal), by the pause
+  // menu's Journal (from: 'pause': back to the pause menu when it shuts) or the touch button
+  show(on, { tab, from } = {}) {
     this.open = on;
-    this.closeReq = false;
+    this.closeReq = this.useReq = false;
     this.el.classList.toggle('hidden', !on);
-    if (on) this.render();
-    else stage.spin(null);   // (nothing turns once it is shut)
+    if (on) {
+      const I = this.game.input;
+      this.from = from || null;
+      this.tab = tab || (I?.lastDevice === 'kbd' && I.lastKey === 'KeyJ' && keyFor('inventory') !== 'KeyJ' ? 'journal' : 'items');
+      this.zone = 'grid'; this.more = false; this.jsec = 0; this.jpage = 0; this.spage = 0;
+      this.render();
+    } else stage.spin(null);   // (nothing turns once it is shut)
   }
+  setTab(tab) { if (tab !== this.tab) { this.tab = tab; this.jpage = 0; this.render(); } }
   // the controls line, in the keys the player uses (rebound keys by name) or the pad's buttons (CLAR-2)
   hint(K) {
     if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: `${PAD_LABELS.inventory} / ${PAD_LABELS.dodge}` });   // (View, or B as the menus' Back)
-    if (this.game.input?.lastDevice === 'touch') return t('inv_hint_touch');   // (UI-PASS: a tap selects, Close closes)
+    if (this.game.input?.lastDevice === 'touch') return t(this.tab === 'journal' ? 'inv_hint_touch_j' : 'inv_hint_touch');   // (UI-PASS: a tap selects, Close closes)
     const mv = ['up', 'left', 'down', 'right'].map(K), move = mv.every((s) => s.length === 1) ? mv.join('') : mv.join(' ');
     const close = [...new Set([K('inventory'), keyLabel(keyFor('pause'))])].join(' / ');
     return t('inv_hint_keys', { move, close });
+  }
+  // the key or button named on a control (nothing on touch: the control itself is tapped)
+  keyOf(a) {
+    const d = this.game.input?.lastDevice;
+    if (d === 'touch') return '';
+    if (d === 'pad') return { more: PAD_LABELS.ball, use: PAD_LABELS.action, tab: `${PAD_LABELS.swap} / ${PAD_LABELS.focus}` }[a];
+    return { more: keyLabel(keyFor('action')), use: this.game.hud?.key?.('interact') ?? keyLabel(keyFor('interact')), tab: 'Tab' }[a];
   }
   // a slot's picture: the item's own model, a still three-quarter view (painted icon without WebGL)
   pic(it) { return stage.thumb(this.look(it)) || itemIcon(it.icon); }
   // an item's look (itemlook.js); the ball's is in the colour of his level (EQUIP-1: ball, ball2..ball4)
   look(it) { return it.id === 'ball' && it.n > 1 ? 'ball' + Math.min(4, it.n) : lookOf(it.id, it.icon); }
+  // the grid's shape, as the stylesheet lays it out (columns by the screen's width, rows by its height)
+  shape() {
+    const P = this.el.querySelector('.inv-panel'), cs = P && getComputedStyle(P);
+    const cols = (cs && parseInt(cs.getPropertyValue('--cols'), 10)) || 5, rows = (cs && parseInt(cs.getPropertyValue('--rows'), 10)) || ROWS_DEFAULT;
+    return { cols, rows, page: cols * rows };
+  }
   render() {
     const g = this.game;
     const K = (a) => g.hud?.key?.(a) ?? keyLabel(keyFor(a));
     const items = this.items();
-    this.sel = Math.min(this.sel ?? 0, items.length - 1);
-    const count = (it) => it.n == null ? '' : `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : it.n}</em>`;
-    const grid = items.map((it, i) => `<button class="inv-item${i === this.sel ? ' sel' + (stage.live ? ' spinning' : '') : ''}" data-i="${i}" aria-label="${t('it_' + it.id)}"><img src="${this.pic(it)}" alt="">${i === this.sel ? '<canvas class="spin" width="128" height="128"></canvas>' : ''}${count(it)}</button>`).join('');
-    const sel = items[this.sel];
-    const desc = sel ? t('itd_' + sel.id, { k: K('ball'), e: K('interact') }) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') : '';
-    const use = sel && USE.has(sel.id) ? `<b class="inv-use">${t('inv_use', { k: K('interact') })}</b>` : '';
-    const journal = g.story.journal().map((c) => c.lines.length ? `<h3>${c.title}</h3><ul>${c.lines.map((l) => `<li class="${l.done ? 'done' : ''}">${t(l.key)}</li>`).join('')}</ul>` : '').join('');
-    this.el.innerHTML = `<div class="inv-panel lba-frame">
-      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div>
-        <div class="inv-detail">${sel ? `<div class="inv-big lba-frame"><canvas width="320" height="320"></canvas></div><div class="inv-text"><h3 class="inv-name">${t('it_' + sel.id)}${sel.n != null ? ` <span>${sel.id === 'ball' ? t('it_level', { n: sel.n }) : '× ' + sel.n}</span>` : ''}</h3><p class="inv-desc">${desc}</p>${use}</div>` : ''}</div></section>
-      <section class="inv-journal"><h2>${t('journal_title')}</h2><div class="inv-obj">${g.story.objective()}</div>${journal}</section>
-      <div class="inv-foot"><span class="inv-hint">${this.hint(K)}</span><button class="inv-close" type="button">${t('map_close_btn')}</button></div></div>`;
-    // (UI-PASS: a Close button for the mouse and touch, as the Holomap has; main.js closes it on its next frame)
-    this.el.querySelector('.inv-close').addEventListener('click', () => { this.closeReq = true; });
-    this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
-    // the selected item turns (LBA2: a turn in 4.1 s), in the large view and in its slot
-    if (sel) { const look = this.look(sel); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
-    else stage.spin(null);
+    this.sel = Math.max(0, Math.min(this.sel ?? 0, items.length - 1));
+    const ctrs = this.counters();
+    this.strip = Math.max(0, Math.min(this.strip, ctrs.length - 1));
+    const kb = (k) => (k ? ` <kbd>${esc(k)}</kbd>` : '');
+    const tabs = `<div class="inv-tabs" role="tablist">${['items', 'journal'].map((k) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${this.tab === k}">${t(k === 'items' ? 'inv_title' : 'journal_title')}</button>`).join('')}${kb(this.keyOf('tab'))}</div>`;
+    const icon = { coin: () => document.querySelector('#coins svg')?.outerHTML || '', clover: () => document.querySelector('#clovers svg')?.outerHTML || '', crystal: () => CRYSTAL_SVG };
+    const strip = `<div class="inv-strip">${ctrs.map((c, i) => `<button type="button" class="inv-ctr${this.tab === 'items' && this.zone === 'strip' && i === this.strip ? ' sel' : ''}" data-c="${i}" aria-label="${esc(t('it_' + c.id))}: ${c.n}">${icon[c.icon]()}<b>${c.n}</b></button>`).join('')}</div>`;
+    this.el.innerHTML = `<div class="inv-panel lba-frame" data-tab="${this.tab}" data-more="${this.more ? 1 : 0}" role="dialog" aria-label="${esc(t(this.tab === 'items' ? 'inv_title' : 'journal_title'))}">
+      <header class="inv-head">${tabs}${strip}</header>
+      <div class="inv-body">${this.tab === 'items' ? this.itemsHTML(K, kb) : this.journalHTML()}</div>
+      <footer class="inv-foot"><span class="inv-hint">${this.hint(K)}</span><button class="inv-close" type="button">${t('map_close_btn')}</button></footer></div>`;
+    if (this.tab === 'items') {
+      // a page of the grid: the slots of the selected item's page (the shape is known once the panel is laid out)
+      this.fillGrid(items);
+      const sel = this.current();
+      if (sel) { const look = this.look(sel); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
+      else stage.spin(null);
+      // More only where there is more to read: a second part, or a first sentence the box cuts short
+      const d = this.el.querySelector('.inv-desc'), m = this.el.querySelector('.inv-more');
+      if (d && m && !this.more && !d.querySelector('.rest') && d.scrollHeight <= d.clientHeight + 1) m.remove();
+    } else {
+      stage.spin(null);
+      this.pageJournal();
+    }
+  }
+  itemsHTML(K, kb) {
+    const g = this.game, sel = this.current();
+    let text = '';
+    if (sel) {
+      const full = t('itd_' + sel.id, { k: K('ball'), e: K('interact') }) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '');
+      const [lead, rest] = splitLead(full);
+      const amount = sel.n == null ? '' : ` <span>${sel.id === 'ball' ? t('it_level', { n: sel.n }) : typeof sel.n === 'number' ? '× ' + sel.n : esc(sel.n)}</span>`;
+      const acts = `<button type="button" class="inv-more" aria-expanded="${this.more}">${t(this.more ? 'inv_less' : 'inv_more')}${kb(this.keyOf('more'))}</button>`
+        + (this.zone === 'grid' && USE.has(sel.id) && !(this.from === 'pause' && g.cine) ? `<button type="button" class="inv-use">${t('inv_use_btn')}${kb(this.keyOf('use'))}</button>` : '');
+      text = `<div class="inv-text"><h3 class="inv-name">${t('it_' + sel.id)}${amount}</h3><p class="inv-desc${this.more ? ' open' : ''}"><span class="lead">${lead}</span>${rest ? `<span class="rest"> ${rest}</span>` : ''}</p></div><div class="inv-acts">${acts}</div>`;
+    }
+    return `<div class="inv-show"><div class="inv-big lba-frame"><canvas width="320" height="320"></canvas></div><div class="inv-gridbox"><div class="inv-grid"></div><div class="inv-pager"></div></div></div>
+      <div class="inv-info">${text}</div>`;
+  }
+  fillGrid(items) {
+    const { page } = this.shape();
+    const pages = Math.max(1, Math.ceil(items.length / page)), p = Math.floor(this.sel / page);
+    const count = (it) => it.n == null ? '' : `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : esc(it.n)}</em>`;
+    let html = '';
+    for (let k = 0; k < page; k++) {
+      const i = p * page + k, it = items[i];
+      if (!it) { html += '<span class="inv-free" aria-hidden="true"></span>'; continue; }
+      const on = this.zone === 'grid' && i === this.sel;
+      html += `<button type="button" class="inv-item${on ? ' sel' + (stage.live ? ' spinning' : '') : ''}" data-i="${i}" aria-label="${esc(t('it_' + it.id))}"${on ? ' aria-current="true"' : ''}><img src="${this.pic(it)}" alt="">${on ? '<canvas class="spin" width="128" height="128"></canvas>' : ''}${count(it)}</button>`;
+    }
+    this.el.querySelector('.inv-grid').innerHTML = html;
+    this.pager(this.el.querySelector('.inv-gridbox .inv-pager'), p, pages, 'grid');
+  }
+  // ‹ 2 / 3 › under a paged box (nothing when it fits on one page)
+  pager(el, p, pages, kind) {
+    if (!el) return;
+    el.classList.toggle('on', pages > 1);
+    el.innerHTML = pages > 1 ? `<button type="button" data-page="${kind}" data-d="-1" aria-label="${esc(t('inv_prev'))}"${p === 0 ? ' disabled' : ''}>‹</button><span>${p + 1} / ${pages}</span><button type="button" data-page="${kind}" data-d="1" aria-label="${esc(t('inv_next'))}"${p === pages - 1 ? ' disabled' : ''}>›</button>` : '';
+  }
+  // the journal's sections, the current chapter first, then the side stories, then the older chapters (latest first)
+  sections() {
+    const g = this.game, all = g.story.journal?.() ?? [], nCh = Math.min(all.length, (g.story.index ?? 0) + 1);
+    const ch = all.slice(0, nCh), side = all.slice(nCh);
+    return [...ch.slice(-1), ...side, ...ch.slice(0, -1).reverse()].filter((s) => s.lines?.length);
+  }
+  journalHTML() {
+    const g = this.game, obj = g.story.objective?.() || '', secs = this.sections();
+    this.jsec = Math.max(0, Math.min(this.jsec, secs.length - 1));
+    const s = secs[this.jsec];
+    const now = obj ? `<div class="inv-now"><small>${t('jr_now')}</small><div class="inv-obj">${obj}</div></div>` : '';
+    if (!secs.length) return `${now}<p class="inv-empty">${t('jr_empty')}</p>`;
+    const list = `<ol class="inv-secs">${secs.map((x, i) => `<li><button type="button" data-s="${i}" class="${i === this.jsec ? 'sel' : ''}"${i === this.jsec ? ' aria-current="true"' : ''}>${x.title}</button></li>`).join('')}</ol>`;
+    const lines = `<div class="inv-lines"><h3>${s.title}</h3><ul>${s.lines.map((l) => `<li class="${l.done ? 'done' : 'open'}">${t(l.key)}</li>`).join('')}</ul><div class="inv-pager"></div></div>`;
+    return `${now}<div class="inv-jbody"><div class="inv-secbox">${list}<div class="inv-pager"></div></div>${lines}</div>`;
+  }
+  pageJournal() {
+    const secs = this.el.querySelector('.inv-secs');
+    if (secs) {
+      // the section list's page is the one holding the selected section
+      const a = paginate(secs, 0);
+      this.spage = a.of[this.jsec] ?? 0;
+      this.spages = a.pages;
+      const b = a.pages > 1 ? paginate(secs, this.spage) : a;
+      this.secOf = a.of;
+      this.pager(this.el.querySelector('.inv-secbox .inv-pager'), b.page, b.pages, 'secs');
+    }
+    const ul = this.el.querySelector('.inv-lines ul');
+    if (ul) {
+      const r = paginate(ul, this.jpage);
+      this.jpage = r.page; this.jpages = r.pages;
+      this.pager(this.el.querySelector('.inv-lines .inv-pager'), r.page, r.pages, 'lines');
+    }
+  }
+  // the mouse and touch: tabs, slots, counters, sections, pages, More, Use, Close
+  click(e) {
+    const b = e.target.closest('button');
+    if (!b || b.disabled || !this.open) return;
+    if (b.classList.contains('inv-close')) { this.closeReq = true; return; }
+    if (b.dataset.tab) { this.setTab(b.dataset.tab); return; }
+    if (b.classList.contains('inv-use')) { this.useReq = true; return; }
+    if (b.classList.contains('inv-more')) { this.more = !this.more; this.render(); return; }
+    if (b.dataset.i != null) { this.sel = +b.dataset.i; this.zone = 'grid'; this.more = false; this.render(); return; }
+    if (b.dataset.c != null) { this.strip = +b.dataset.c; this.zone = 'strip'; this.more = false; this.tab = 'items'; this.render(); return; }
+    if (b.dataset.s != null) { this.jsec = +b.dataset.s; this.jpage = 0; this.render(); return; }
+    if (b.dataset.page) this.turnPage(b.dataset.page, +b.dataset.d);
+  }
+  turnPage(kind, d) {
+    if (kind === 'grid') {
+      const { page } = this.shape(), n = this.items().length, pages = Math.ceil(n / page), p = Math.floor(this.sel / page) + d;
+      if (p < 0 || p >= pages) return;
+      this.sel = Math.min(n - 1, p * page + (this.sel % page)); this.zone = 'grid'; this.more = false;
+    } else if (kind === 'lines') {
+      if (this.jpage + d < 0 || this.jpage + d >= (this.jpages || 1)) return;
+      this.jpage += d;
+    } else if (kind === 'secs') {
+      const i = (this.secOf || []).indexOf(this.spage + d);
+      if (i < 0) return;
+      this.jsec = i; this.jpage = 0;
+    }
+    this.render();
   }
   nav(input) {
-    const n = this.items().length;
+    const pad = input.lastDevice === 'pad', rtl = document.documentElement.dir === 'rtl';
+    // Tab, or LB / RB: the other tab (two tabs: either way is the other one)
+    if (input.pressed('cycle') || (pad && (input.pressed('swap') || input.pressed('focus')))) {
+      this.setTab(this.tab === 'items' ? 'journal' : 'items'); this.game.audio?.play('blip'); return;
+    }
+    const L = input.menu(rtl ? 'right' : 'left'), R = input.menu(rtl ? 'left' : 'right'), U = input.menu('up'), D = input.menu('down');
+    if (this.tab === 'journal') {
+      const n = this.sections().length, was = [this.jsec, this.jpage];
+      if (D && this.jsec < n - 1) { this.jsec++; this.jpage = 0; }
+      if (U && this.jsec > 0) { this.jsec--; this.jpage = 0; }
+      if (R && this.jpage < (this.jpages || 1) - 1) this.jpage++;
+      if (L && this.jpage > 0) this.jpage--;
+      if (was[0] !== this.jsec || was[1] !== this.jpage) { this.render(); this.game.audio?.play('blip'); }
+      return;
+    }
+    // More: the action key (Space), or the pad's Y (A too, on an item that is not used from here)
+    if ((!pad && input.pressed('action')) || (pad && (input.pressed('ball') || (input.pressed('action') && !this.usable())))) {
+      if (this.el.querySelector('.inv-more')) { this.more = !this.more; this.render(); this.game.audio?.play('blip'); }
+      return;
+    }
+    const n = this.items().length, nc = this.counters().length;
     this.sel ??= 0;
-    // (up and down move a row: the grid's own columns, which the screen's width sets: css .inv-grid)
-    const grid = this.el.querySelector('.inv-grid'), COLS = (grid && getComputedStyle(grid).gridTemplateColumns.split(' ').length) || 5;
-    const was = this.sel;
-    if (input.menu('right')) this.sel = (this.sel + 1) % n;
-    if (input.menu('left')) this.sel = (this.sel + n - 1) % n;
-    if (input.menu('down')) this.sel = Math.min(n - 1, this.sel + COLS);
-    if (input.menu('up')) this.sel = Math.max(0, this.sel - COLS);
-    if (this.sel !== was) { this.render(); this.game.audio?.play('blip'); }
+    const { cols } = this.shape();
+    const was = [this.zone, this.sel, this.strip];
+    if (this.zone === 'strip') {
+      if (R) this.strip = (this.strip + 1) % nc;
+      if (L) this.strip = (this.strip + nc - 1) % nc;
+      if (D) this.zone = 'grid';
+    } else {
+      // (left and right run through every item, page to page; up and down move a row; up from the first row reaches
+      //  the counters)
+      if (R) this.sel = (this.sel + 1) % n;
+      if (L) this.sel = (this.sel + n - 1) % n;
+      if (D) this.sel = Math.min(n - 1, this.sel + cols);
+      if (U) { if (this.sel - cols >= 0) this.sel -= cols; else if (nc) this.zone = 'strip'; }
+    }
+    if (was[0] !== this.zone || was[1] !== this.sel || was[2] !== this.strip) { this.more = false; this.render(); this.game.audio?.play('blip'); }
   }
 }

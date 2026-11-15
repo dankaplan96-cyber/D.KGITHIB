@@ -148,7 +148,7 @@ const i1 = await ev(() => {
   r.name = el.querySelector('.inv-name')?.textContent;
   const c = el.querySelector('.inv-big canvas'), a = inked(c).h; G.step(0.6); r.turned = inked(c).h !== a;
   P.tap('ArrowRight', 0.1); r.name2 = el.querySelector('.inv-name')?.textContent; r.sel2 = G.inventory.sel;
-  r.coin = el.querySelectorAll('.inv-item')[items.findIndex((i) => i.id === 'kashes')]?.querySelector('em')?.textContent;
+  r.coin = el.querySelector('.inv-strip .inv-ctr b')?.textContent;   // (INVENTORY-CALM: the counters left the grid for one strip)
   return r;
 });
 await shot('inventory');
@@ -165,7 +165,7 @@ const i2 = await ev(() => {
   return r;
 });
 check('I opens the inventory: a rendered model per slot, the selected turning in its slot and large, with its name', i1.state === 'inventory' && i1.n === i1.items.length && i1.rendered && i1.spin && i1.big > 0.05 && i1.turned && i1.name === 'Medallion', i1);
-check('the arrows move the selection (the name follows); the Kashes slot shows the count', i1.sel2 === 1 && i1.name2 !== i1.name && i1.coin === '12', i1);
+check('the arrows move the selection (the name follows); the counters strip shows the Kashes', i1.sel2 === 1 && i1.name2 !== i1.name && i1.coin === '12', i1);
 check('I closes it; the pad\'s View opens it (its line says View / B), B closes it, View closes it', i2.closed === 'play' && i2.padOpen === 'inventory' && /View \/ B: close/.test(i2.padHint) && i2.padB === 'play' && i2.padView === 'play', i2);
 check('rapid open/close ends shut and in play', i2.rapid === 'play' && i2.rapidHidden, i2);
 

@@ -1551,6 +1551,18 @@ class Game {
     if (s !== 'play') this.targeting?.hide();
     this.hud?.busy(s !== 'play');
   }
+  // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
+  // button selected again)
+  closeInventory() {
+    const from = this.inventory.from;
+    this.inventory.show(false);
+    if (from !== 'pause') { this.setState('play'); return; }
+    this.setState('pause');
+    this.showScreen('pause');
+    this.menuSel = Math.max(0, this.menuButtons().findIndex((b) => b.dataset.act === 'journal'));
+    this.focusMenu();
+    this.input.clearEdges?.();
+  }
   gameOver() {
     this.setState('gameover');
     this.hud.show(false);
@@ -1799,6 +1811,8 @@ class Game {
         if (this.dirty) this.reloadInto('new'); else this.startNew();
         break;
       case 'settings': case 'controls': this.openChild(a); break;
+      // INVENTORY-CALM: the pause menu's Journal: the inventory window on its Journal tab; it shuts back to this menu
+      case 'journal': if (this.state !== 'pause' || !this.hero) break; this.hideScreens(); this.setState('inventory'); this.inventory.show(true, { tab: 'journal', from: 'pause' }); this.input.clearEdges?.(); break;
       case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
       case 'back': this.closeChild(); break;
       case 'exitapp': window.desktop?.quit(); break; // (the desktop app only: desktop/preload.js)
@@ -2800,9 +2814,11 @@ class Game {
       case 'found': this.foundObj.update(dt, input); break;   // (the world waits; the camera holds: found.js)
       case 'inventory':
         this.inventory.nav(input); itemStage.tick(dt);
-        // E on a gadget uses it (LBA2: select it in the inventory); otherwise E closes, as before
-        if (input.pressed('interact') && this.inventory.usable()) { const id = this.inventory.usable(); this.inventory.show(false); this.setState('play'); this.gadgets.use(id); this.hud.stats(this.hero); this.save(false); }
-        else if (input.pressed('inventory') || input.menu('back') || input.pressed('interact') || this.inventory.closeReq) { this.inventory.show(false); this.setState('play'); }
+        // E on a gadget uses it (LBA2: select it in the inventory), as do Enter, the pad's A and its Use button;
+        // otherwise E closes, as before (INVENTORY-CALM: the pad's A used nothing: it gives 'action', not 'interact')
+        if ((input.pressed('interact') || input.pressed('m_ok') || (input.lastDevice === 'pad' && input.pressed('action')) || this.inventory.useReq) && this.inventory.usable()) { const id = this.inventory.usable(); this.inventory.show(false); this.setState('play'); this.gadgets.use(id); this.hud.stats(this.hero); this.save(false); }
+        else if (input.pressed('inventory') || input.menu('back') || input.pressed('interact') || this.inventory.closeReq) this.closeInventory();
+        else this.inventory.useReq = false;
         break;
       case 'map':
         if (this.hud.holomapUpdate(input, dt)) { this.hud.closeHolomap(); this.setState('play'); }
