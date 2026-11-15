@@ -5039,3 +5039,199 @@ The user, 15.11: the old laptop is sold and will not come back; what was asked o
 Intel UHD 630 instead (the minimum target; Chrome/the app set to the power-saving GPU). So **order 45 (TECH-ART-1) and
 27c** are no longer "whenever the laptop is at hand": they join the desktop's queue, numbers labelled "UHD 630". Please
 read "Vega 8" in `CLOUD_ORDERS.md` (orders 41.6, 44.3, 45) as the UHD 630 from now on.
+
+## LANDMARKS-KEEP · the originals' main buildings and their ways in, region by region (CLOUD_ORDERS 43) · the desktop, 15.11.2026
+Sources: DOORS-LBA2 (decoded scenes and doors, 8.11), `docs/lba-maturity/door-map.md`, `BUILDING_REGISTER.csv`, the
+27a rubrics; for LBA1 a published walkthrough (scene names only; no LBA1 picture on the desktop: **low confidence**).
+Ours: every Desert and Hamalayi house door from the play camera (chapter 5 by flags, 4–7 m before each door, Follow):
+`docs/future/landmarks/{desert,hamalayi}-sheet.jpg` (**chapter 4+/6: not for the user**). Ways in: the suites named in
+the register (`island-doors`, `hamalayi-life`, `wizards`, `chapter4`, `chapter5`, `door-sweep`), not re-run here.
+**The 25 register rows "not assessed in 27a" are filled** (`in_original`, marked LANDMARKS-KEEP).
+
+| Region | Original's main building (scene) | Ours | State | Recognisable (play camera) | Way in |
+|---|---|---|---|---|---|
+| Citadel | Twinsen's house (LBA1; LBA2 0, cellar 1) | `twinsen` | present (door 2.7 m S) | yes | works |
+| Citadel | The asylum (LBA1 s0) | the hostel | present | yes | works (two, SIDE-WELL) |
+| Citadel | Chez Luc, the tavern (LBA2 3, cellar 4; LBA1 tavern) | `south` | present | yes | works |
+| Citadel | The pharmacy (LBA2 22; LBA1) | `bug2` | present | yes | works |
+| Citadel | Mr Bazoo's (LBA2 14) | `museum` | present | yes | works |
+| Citadel | The harbour: ticket office, baggage claim, Nell's wing (LBA2 8, 5, 7; LBA1 port) | `baggage`, `bug`, `wing2` | present | yes | works |
+| Citadel | The neighbour's (LBA2 9) | `nbr` | present | yes | works (after the prologue) |
+| Citadel | The Water Office (LBA2 15) | `water` | present | yes | story (chapters 2, 8, 10, after the end) |
+| Citadel | **The school (LBA2 37)** | `stone`, Tibbo's house | present, another use | as a house | **shut with a reason** (its line) |
+| Citadel | Tralu's cave (LBA2 2) | plateau door | moved 9 m (no bank there) | yes | works |
+| Citadel | Bersimon's tent (LBA2 21) | `wtent` | moved 5 m (the glider field) | yes | works |
+| Citadel | The lighthouse | lighthouse | present | yes | story (chapters 3, 10) |
+| Citadel | The sewer's two lift hatches (LBA2 17) | street + terrace hatch | present (D2) | yes | works / story (`sw_bolt`) |
+| Citadel | FunFrock's passage (LBA2 51) | passage N/S | present | yes | shut with a reason (story) |
+| Citadel | The west islet's dome (LBA2 26) | — | **missing by the user's decision** (no dome) | — | — |
+| Desert | **The School of Magic: S28's tower, the grey stone face (LBA2 28 → 27 → 33)** | the School at the mask, 95 m W (the user, 26.10); S28's tower is the crew's bunkhouse | moved | the mask: yes | works (`wizards`) |
+| Desert | (same) S28's tower | the bunkhouse **with a stone face since DESERT-ART 2** | present, another use | **reads as the School: two faces on the island** | works (a bunkhouse) — **for the user, below** |
+| Desert | **The Temple of Bù: its door (49.7, −83.9) and the way down, a well/hatch (49.7, −67.5) (LBA2 10)** | the temple under the dig (64, 28) | moved (twelve years) | the dig: yes | works from chapter 4; **LBA2's well: missing** |
+| Desert | Kesh: the bar 39, Leone's 35, the shop 36, Baldino's 38, the ticket office 40 | five Kesh homes (Brosk, Lumi, Tarra, Safi, Hesk) | present as homes (two within 4–5 m) | yes (peach, parapet domes) | works |
+| Desert | The great hall by the School (body 48) | the hall in the School's pool | present | yes | works once `pp_lamp` |
+| Desert | S40's house | Bashir's home | present | yes | works |
+| Desert | The hacienda (24), the hut (113), the islet's door (183) | — | **missing by the user's DECLUTTER (3.11)** | — | — |
+| Zeelich hub | LBA2's Zeelich | a new city (the user, 7.11) | by decision | — | — |
+| Otringal | the bar (136), the hotel (81), the casino (135), the astroport (86, 85) | `otrbar`, `otrhotel` (at the casino's spot), the astroport | present; the casino's building is our hotel | yes | works; the astroport partly |
+| Celebration | the temple (93), the summit statue chain (185–192) | `celtemple`; the statue | present / chain not built | yes | temple works; **summit chain: missing** (register: no) |
+| Knartas | the zeppelin port and refinery (144, 140, 143) | — | **missing** (register: no) | — | — |
+| Mosquibee | the nest (106, upper exits 149) | the nest | partly | yes | partly |
+| The Platform | the elevator building, the church, the bank (123, 118, …) | the Building Company, the Wannies' chapel | partly | yes | partly |
+| Hamalayi (LBA1) | the factory compound (guarded, a gate opened by a card) | — (our heat station and lift instead) | **missing / changed** | — | — |
+| Hamalayi (LBA1) | the rabbit village, its way in under the Sacred Carrot | Lhar's five houses, the monastery | changed (our own region) | yes (sheet) | works (`hamalayi-life`) |
+| Hamalayi (LBA1) | the quayside with its guarded gate; Clear Water Lake | the glider landing; the vent basin | changed | yes | — |
+
+**What needs a decision (not built; the order says shape only for missing or unrecognisable main buildings):**
+1. **Desert, the two faces.** LBA2's School of Magic is the stone face at S28. Ours has the School at the mask (26.10)
+   and, since DESERT-ART 2 (mine, 13.11), a second stone face on S28's tower, which is the crew's bunkhouse: a player of
+   LBA2 walks to the face and finds bunks. Either take the face off the bunkhouse (back to a plain grey tower) or bring
+   the School back into S28's tower. **The user's call.** The desktop can do the first in one small diff.
+2. **Desert, the Temple of Bù's well.** LBA2's way down at (49.7, −67.5) is not in ours; ours goes down by the dig.
+   The cloud (story) decides whether LBA2's well comes back as a way in or as a shut well with a line.
+3. **Citadel's school (LBA2 37)** stands as Tibbo's house, shut with its line: the building is kept; its purpose is the
+   user's (DOORS-LBA2 14).
+4. **Missing by the originals' list but not decided away:** Knartas's zeppelin port and refinery; Celebration's summit
+   chain; LBA1's Hamalayi factory compound and the Sacred Carrot. All are past chapter 2 and big; listed for the cloud
+   and the user, nothing built. (The dome, the hacienda, the hut and the islet's door are gone by the user's own word.)
+- No ways in were wired (the order: the cloud's). No clutter added. Not run: the suites named above (unchanged code).
+
+## P30 · "characters pixelated in the house" on the desktop's GPUs: v86 against the tip (CLOUD_ORDERS 46.1) · the desktop, 15.11.2026
+New game, the house, Twinsen moved by the kitchen's basin, 15–30 s of real frames with `?perf`, fresh profile each run
+(first start: the governor's own choice). v86 = `f5526202` (a worktree), tip = `42313c97`. Screen: 1920×1080 at
+Windows scaling 125 % (devicePixelRatio 1.25).
+
+| Where it ran | Build | Quality (Auto chose) | Pixel ratio (auto ×) | MSAA | Bloom / shadows | Frame p50 / p95 | Draw calls |
+|---|---|---|---|---|---|---|---|
+| Chrome, GTX 1050 | v86 | High | 1.25 (×1) | 4 | 1 / soft | 17.7 / 18.2 ms (vsync) | 71 |
+| Chrome, GTX 1050 | tip | High | 1.25 (×1) | 4 | 1 / soft | 17.4 / 18.0 ms | 67 |
+| the app's Electron, UHD 630 | v86 | Medium | 1.25 (×1, all 30 s) | 2 | 0 / pcf | 16.7 / 33.3 ms | 65 |
+| the app's Electron, UHD 630 | tip | Medium | 1.25 (×1, all 30 s) | 2 | 0 / pcf | 16.7 / 16.9 ms | 60 |
+
+- **No drop:** the automatic resolution stays at ×1 indoors on both builds and both GPUs; MSAA is the same per GPU. The
+  tip is not heavier in the house (fewer calls; on the UHD its p95 is better).
+- **Crops** at the same spot, 2× nearest (`docs/future/p30/gtx-crop-pair.jpg`, `uhd-crop-pair.jpg`; left v86, right
+  the tip): the characters' edges are smoothed the same in both; no stair-stepping that one has and the other doesn't.
+  The output pass is unchanged between them as far as the pictures show.
+- **So the difference the user sees is probably not the build but where it runs:** on this desktop, a program that is
+  not set to "High performance" in Windows' graphics settings runs on the Intel UHD 630 (the screen is wired to it):
+  Auto then picks **Medium with MSAA 2 and no bloom**, against High with MSAA 4 on the GTX 1050. If the user plays in
+  the installed app (or a browser without the GPU preference), that is the step down. **Asked of the user (through the
+  cloud):** where they played (the app or the artifact in a browser), and Settings' quality line or the `?perf` overlay's
+  GPU line. If it says Intel: give the app "High performance" in Windows Settings → Display → Graphics (the user does
+  it: a system setting), or set Quality to High by hand.
+- **This machine's GPU choices** (read from real Windows, 15.11): only Chrome and the Test Lab's Electron are set to
+  "High performance"; **no LBA3 desktop app is installed** here. So if the user plays the artifact inside the Claude
+  app (or Edge), it runs on the Intel UHD 630 → Medium, MSAA 2: the likeliest cause. In Chrome it gets the GTX 1050.
+- Seen in passing: on the tip Zoé is not by the kitchen at the start (OPENING-TUT changed the opening); not checked.
+- No diff. Not run: suites (nothing changed). No Twinsen model work was in progress here (46.2 withdrawn): nothing to push.
+
+## TAVI-B · Tavi on farmerB_b (order 41.5, CAST-VARIANTS-1's leftover) · the desktop, 15.11.2026
+**`requests/TAVI-B.diff`** (`roomlife.js`: Tavi's `char` farmerB → farmerB_b; `characters.js`: the comment that said he
+keeps farmerB). `git apply --check` clean on `42313c97`. No model, skeleton or index change (farmerB_b is shipped).
+- **`interior-life`** (SwiftShader, both on `42313c97`): with it **143/144**; unchanged **143/144**, the same single
+  failure: zterminal, chapter 9, the council's guard Velo at his `velo_till` stop 0.8 s into his dwell, facing 1.48 rad
+  off (still turning). Not this change. The terminal talk to Ollo that failed on 11.11 passes now.
+- Not run: the other cast suites (`cast-rounds`, `story-journeys`): one look swap, no new model.
+
+## 27a re-score of the Hamalayi after wave 3 and PLACE-3 (order 41.4) · the desktop, 15.11.2026
+In `docs/lba-maturity/resemblance-hamalayi.md` (new section): **69 → 71** (landmarks +1: the monastery's and Lhar's
+doors lead in; inhabitants +1: the phases and owners at home). Still provisional and low confidence: no LBA1 picture on
+the desktop. Pictures (chapter 6+) stay on the desktop.
+
+## TECH-ART-1-VEGA8, run on the UHD 630 · the Zeelich landing A/B (CLOUD_ORDERS 45; the Vega 8 is sold) · the desktop, 15.11.2026
+**Where:** the desktop's **Intel UHD 630** (each run's ENV: `ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11)`),
+not a Vega 8. Chrome on this machine is pinned to the GTX 1050 by Windows, so the harness (a scratch copy of B's `tests\`,
+`techart-zeelich.mjs` unchanged) drove a bare Electron 43.7.9 window with `force_low_power_gpu` and device scale 1
+(`boot.mjs launch()` swapped; nothing in the repo changed). Plugged in (a desktop: no battery set), Windows power mode
+unchanged, nothing else running. A = `b38d29e4`, B = `16f96fa6` (the last TECH-ART-1 commit), served on 8971/8972.
+`LIVE=10 WARM=3 SECS=600`, A, B, A, B, A, B per quality. Raw logs: `docs/lba3-performance/HARDWARE/2026-11-15-uhd630-techart1/`.
+
+| Quality | View | Frame p50 / p95 (A → B, medians; A's p95 range) | CPU sim p95 A → B | CPU submit p95 A → B | Calls A → B | Triangles A → B |
+|---|---|---|---|---|---|---|
+| Low (0.85) | dock | 16.7 / 16.8 → 16.7 / 16.8 (16.8–16.8) | 2.6 → 2.4 | 3.6 → 3.4 | 123 → 123 | 366k → 367k |
+| Low | bridge | 16.7 / 16.8 → same | 3.2 → 3.3 | 4.0 → 3.9 | 147 → 148 | 353k → 355k |
+| Low | street | 16.7 / 16.8 → same | 4.0 → 3.9 | 3.9 → 3.6 | 154 → 155 | 399k → 401k |
+| Low | door | 16.7 / 16.8 → same | 2.2 → 2.3 | 3.0 → 3.2 | 113 → 114 | 258k → 260k |
+| Low | back | 16.7 / 16.8 → same | 2.4 → 1.9 | 3.2 → 2.6 | 80 → 80 | 227k → 228k |
+| Low | resident | 16.7 / 16.8 → same | 2.3 → 2.3 | 3.2 → 3.1 | 116 → 116 | 341k → 343k |
+| Medium (1.0) | dock | 16.7 / 16.8 → same | 4.4 → **5.7** | 6.2 → **7.4** | 147 → 147 | 415k → 417k |
+| Medium | bridge | 16.7 / 16.8 → same | 4.3 → 4.4 | 5.6 → 5.2 | 181 → 182 | 403k → 405k |
+| Medium | street | 16.7 / 16.8 → same | 5.3 → 5.3 | 5.5 → 5.7 | 187 → 188 | 451k → 452k |
+| Medium | door | 16.7 / 16.8 → same | 2.6 → 2.6 | 4.2 → 4.3 | 146 → 147 | 308k → 309k |
+| Medium | back | 16.7 / 16.8 → same | 2.3 → 2.3 | 3.1 → 3.2 | 109 → 109 | 277k → 278k |
+| Medium | resident | 16.7 / 16.8 → same | 2.6 → 2.6 | 5.4 → 5.4 | 146 → 146 | 392k → 394k |
+
+- **Frame time: no change.** Every view at both qualities holds the display's 60 Hz (p50 16.7, p95 16.8, max ≤ 17.0 ms) in
+  all twelve runs; the A runs agree exactly (not unstable). `gpuMs` is "Unavailable" here (Electron hides the timer query).
+- **The art:** +0–1 draw call and +1–2k triangles in the views with the workshop, as the cloud counted.
+- **The waste fix, confirmed:** carried-prop geometries made over the run **59 → 0**; street life 600 s `made` 59 → 0,
+  `carried` 59 → 0, **`liveGrowth` 18 → 0**; live geometries 3–6 fewer in B at every view.
+- **One CPU difference beyond A's spread:** Medium, **dock**: CPU submission p95 A 6.1–6.6 ms → B 7.0–7.9 ms, simulation
+  p95 A 3.9–5.0 → B 5.3–5.8 (p50s equal). It does not reach the frame (16.8 ms p95 both) and Low's dock goes the other
+  way (B lower). Its `LIVE` lines are in the logs (`medium-{A,B}{1,2,3}.log`, `LIVE dock`) for the cloud to look at.
+
+## 27c on the UHD 630 · v71 against the tip, the game's own benchmark (CLOUD_ORDERS 41.6; the Vega 8 is sold) · the desktop, 15.11.2026
+The desktop app's Electron 43.7.9 with `force_low_power_gpu` (the local launcher copy; GPU line in every report: **Intel UHD
+630**, nvidia-smi idle), fresh profile per run, New Game, `game.bench.run(['medium'], orbit)`, 1536×864 at dpr 1.25, plugged
+in. v71 = `87f2e034`, tip = `98705d63` (v92 plus the desktop's reports). Alternating v71, tip, v71, tip. Raw reports:
+`docs/lba3-performance/HARDWARE/2026-11-15-uhd630-27c/`.
+
+| Route (Medium, full resolution) | v71 fps (run 1 / 2) | tip fps (run 1 / 2) | GPU time p50, v71 → tip (ms) | Longest frame, v71 → tip |
+|---|---|---|---|---|
+| street | 60 / 60 | 60 / 60 | 12.2, 11.2 → 11.2, 12.4 | 17 → 17 |
+| interior | 51.0 / 50.2 | **48.0 / 49.8** | 17.1, 17.4 → 18.3, 17.6 | 34 → 34 |
+| combat | 59.9 / 59.9 | 59.9 / 59.9 | 7.8, 8.1 → 8.2, 8.3 | 33 → 33 |
+| transition | 56.6 / 56.0 | 54.9 / 55.7 | 17.0, 17.3 → 18.2, 17.5 | 33 → 34 |
+| arrival | 54.2 / 50.9 | 52.7 / 54.5 | 9.2, 9.2 → 9.6, 9.6 | 150, 167 → **200, 183** (all behind the black) |
+| hamalayi | 60 / 60 | 60 / 60 | 9.2, 9.2 → 9.7, 9.7 | 17 → 17 |
+
+- **Same within the noise:** street, combat, the Hamalayi (60 fps both); the arrival's fps (the two v71 runs differ by 3).
+- **A little heavier on the GPU:** the interior (−1.7 fps on the medians, GPU +0.6 ms; the route sits just over the
+  60 Hz budget on both, so a small GPU rise shows as fps) and the transition (−1 fps, GPU +0.5 ms); the Hamalayi's GPU
+  time +0.45 ms with no fps cost. The arrival's longest black-screen frame +30 ms (behind the black: not seen).
+- As played (automatic resolution) every route but the interior holds 58–60 on both; the interior ~51 → ~49.
+- **Not covered:** the new chapters' stations (chapters 6–12): the game's benchmark has no route there. The routes are
+  the benchmark's six. The UHD 630 still plays at Medium on its own; Auto keeps it there on these routes.
+
+## VOICE-HW · the voices on real hardware: box open → first sound (CLOUD_ORDERS 41.2; measure only) · the desktop, 15.11.2026
+Chrome and the app's Electron, both on the **GTX 1050** (i5-8300H), a new game, the game's own loop running. Each line
+through `game.say`, its timing read from the voice engine itself (`Babble._wordsLine/_exprLine/_words/_speak` wrapped from
+the page: the audio clock at the box's opening, at the line's scheduled start `T0`, and when the worker's render was
+taken up; nothing in the repo changed). The script and raw JSON: `docs/lba3-performance/HARDWARE/2026-11-15-voice-hw/`.
+**Since the order, the default is Expressive (VOICE-2, Piper banks); Words (P18, the blob worker) is no longer in
+Settings** but is still the engine's mode: all three measured, the kitchen's ten lines (Arthur, Twinsen, Zoé) and a
+Zeelich street talk (Nara, Baldino; four lines).
+
+| Mode | Where | Box open → first sound, median / max (ms) | Late worker answers | Worker render (median / max ms) |
+|---|---|---|---|---|
+| Expressive (default) | Chrome | kitchen 30 / 110 · street 101 / **350** | — (no worker) | — |
+| Expressive | Electron | kitchen 30 / 110 · street 110 / **350** | — | — |
+| Words (P18) | Chrome | kitchen 135 / 182 · street 97 / 172 | **1 of 14** (Arthur, the first line: render 42 ms) | 9 / 42 |
+| Words | Electron | kitchen 100 / 173 · street 133 / 180 | 0 of 14 | 12 / 37 |
+| Classic | Chrome | kitchen 30 / 190 · street 70 / 203 | — | — |
+| Classic | Electron | kitchen 30 / 190 · street 70 / 190 | — | — |
+
+- **Words:** the worker answered in time for 27 of 28 lines; the one late line was the very first (a cold render, 42
+  ms) and joined with the 20 ms fade as designed. Its first sound comes 85–180 ms after the box opens (the planned lead
+  for the render), slower to start than Expressive and Classic (30 ms when ready).
+- **Expressive:** 30 ms when the speaker's bank is loaded; a speaker's first line waits for the bank: 110 ms, and
+  **Baldino's first line on Zeelich 350 ms** in both browsers (his bank loaded on demand). Not a fault, but the one
+  noticeable delay: preloading the region's speakers' banks on arrival would remove it (the cloud's call; no diff).
+- **The main thread:** no long task (≥ 50 ms) while any line was rendering or starting, in either. The only long tasks
+  were Zeelich's region build (2.1–2.2 s, before the street talk, behind the transition) and its follow-ups.
+- **Caveat:** the kitchen lines were passed to `say` by their text keys (`op_ar_1`…), as the story passes them; if
+  `say` does not resolve keys there, those ten lines were spoken as short key strings (the street lines were full
+  sentences). The Words render times (≤ 18 ms on the street's full sentences) are the safer figure.
+- No diff (nothing faulty found).
+
+## FACE-OFF · the second stone face taken off the crew's bunkhouse (the user, LANDMARKS-KEEP item 1) · the desktop, 15.11.2026
+The user, 15.11, of LANDMARKS-KEEP's two faces on Desert Island: "Yes, take it off". **`requests/FACE-OFF.diff`**
+(`desertold.js` only; `git apply --check` clean on origin): S28's tower (the crew's bunkhouse) loses the face DESERT-ART 2
+carved on its west wall (brows, eye sockets, lids, cheeks, the bridge, the nose, the mouth and lips: 13 pieces); the wall
+gets the east wall's three slit windows instead (3 pieces). The grey stone, the crenellations, the door, its frame, the
+crew's board, the collider, `shut('s28')` and the fit stay. The only face on the island is now the School's mask.
+- **Objects:** −13, +3 (all in the island's static batch: no draw call either way; the nose's cached cone is still the
+  School mask's). Pictures, before above / after below (chapter 4: not for the user): `docs/future/landmarks/face-off-play.jpg`
+  (the play camera at the door), `face-off-wide.jpg` (from the west).
+- Not run: `island-doors`, `purposes`, `desert-life` (no collider, door or board moved): **for the cloud when applying**.
