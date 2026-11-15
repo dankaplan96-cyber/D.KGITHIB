@@ -5280,3 +5280,19 @@ forecourt, the bridge, the sign, the pillars and the `wizards` people are untouc
   committed). **Still unlike it:** LBA2's face is narrower at the chin and its rock is taller and streakier; ours is a
   rock outcrop on the sand rather than a deep gorge (a gorge would need the plaza's ground changed).
 - Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud when applying**.
+
+## SCHOOL-CANYON · the School at the closed end of a gorge (the user, 15.11: "yes, a deep canyon") · the desktop, 15.11.2026
+**`requests/SCHOOL-CANYON.diff`**, applies **after SCHOOL-LBA2b** (`git apply --check` clean on origin + LBA2b; not alone).
+`desertold.js` only, no ground changed (the plaza, the channel, the pool and their heights as they are):
+- **The south wall** turns east along the plaza's far side (z ≈ −83.6…−84.6, from the face's south arm to x −48.5),
+  12.6 m tall at the School falling to 5 m at its east end, two low rocks where it meets the sand. With the high terrace
+  behind the face and the pool and the hall to the north, the School stands at the closed end of a gorge that opens east
+  onto the island, as LBA2's sits at the end of its canyon.
+- **The north arm** runs on west into the island's high terrace (to x −93, 9.5 m there), so its end does not show.
+- **Kept clear** (probed on a 1.5 m grid, origin against this): the plaza (its south edge z −80.5; the wall's nearest
+  face ≈ −82.3), the pool's rim walk (unchanged; the old slab's three blocked cells there are free now), the bridge and
+  the forecourt; the sand south of the wall is reached round its east end.
+- **Objects:** 11 more rock stretches in the same material as LBA2b's (no draw call), each its collider and camera volume.
+- Pictures, origin left / with LBA2b + this right (chapter 4: not for the user): `docs/future/landmarks/school-canyon-{plaza,wide2,play}.jpg`.
+- **Not done (it would change the ground):** a gorge sunk below the plaza with the bridge over a deep drop, as in LBA2.
+- Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud**, with LBA2b.
