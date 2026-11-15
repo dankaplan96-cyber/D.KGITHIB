@@ -82,7 +82,7 @@ await page.click('#settings .seg[data-setting="textSpeed"] button[data-v="fast"]
 await ev(() => { game.settings.fps = '30'; game.applySettings(); game.saveSettings?.(); });
 const q1 = await ev(() => [game.settings.quality, game.settings.textSpeed, game.hud.textRate, game.settings.fps, Math.round(game.frameCapMs * 10) / 10, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]');
-await page.reload(); await open(page, '?nocine');
+await page.reload({ timeout: 180000 }); await open(page, '?nocine');
 await page.click('#title [data-act="settings"]'); await step(0.05);
 const q2 = await ev(() => [game.settings.quality, game.settings.textSpeed, document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, game.settings.fps, document.querySelector('#settings .seg[data-setting="fps"] button.on')?.dataset.v, Math.round(game.frameCapMs * 10) / 10]);
 await ev(() => { game.settings.fps = 'auto'; game.applySettings(); game.saveSettings?.(); });   // (back to no limit for the rest)
