@@ -51,7 +51,7 @@ Status: **edited** (lines changed), **kept** (read in context, nothing needed), 
 | 2 | the lane stays dry, the pump room | Zoé, Arthur, worker | **edited** Zoé's knock plan, Arthur's pump room line; the pump room's own lines **left to PLAYTEST-15** (P37/P39) | Source only |
 | 2 | the station tour, the gate, Zoé's search, the confrontation | Vesk, Zoé, guard | **edited** Vesk's tour opener and his two confrontation lines; Zoé's search kept | chapter1.mjs |
 | 2 | the radio, Doran, the ship | Arthur, Baldino, Zoé, Doran | **edited** Baldino's two radio lines | chapter1.mjs |
-| 2 | residents (`c1_*` idles, `rs_*_hot`, `rs_*_gone`) | Gilbert, Xil, Pippa, Mira, walkers | kept | Source only |
+| 2 | residents (`c1_*` idles, `rs_*_hot`, `rs_*_gone`) | Gilbert, Xil, Pippa, Mira, Doran, Tim, walkers | **edited (trigger)**: Doran "saw the ferry come in" before it had: new `c1_doran_due` on `!c1_arrived`; Tim's drone chased "a cat" (no cats on Twinsun since pass 1) -> Pico's Meca-Penguin; the rest kept | Source only |
 | 3 Zeelich | arrival, the dock guard, the cistern lift, Irsa | Doran, guard, Brel, Kell, Vesk (tube), Irsa | **edited** the guard exchange; the lift and Irsa kept | chapter2.mjs (pending) |
 | 3 | Baldino's first scene | Baldino, Twinsen | **edited (order)**: no answer to an unspoken report, no double "At last!" (new `zt_tw_bench`, chain reordered) | chapter2.mjs |
 | 3 | Nara, Oku, the mills, the cog | Nara, Oku | **edited** Oku's contradiction | chapter2.mjs |
@@ -89,6 +89,7 @@ Status: **edited** (lines changed), **kept** (read in context, nothing needed), 
 | Ch. 3, Baldino after Irsa's bench | Baldino: "The kick comes from below? Her bench says so? Ha! A year I've said it!" then "Twinsen! At last! Mind the… ah." | Baldino: "Twinsen! Mind the… ah. Never mind, I have another one." Twinsen: "Irsa's bench says it isn't her pump knocking. Something at the far end is pushing back up the pipe." Baldino: "From below! And her bench says so, not just me! Ha! A year I've said it!" | he answered a report nobody had given, and greeted twice |
 | Ch. 3, the dock guard on Zeelich | Twinsen: "Evidence. Your engineer's evacuation plan." Guard: "Project property. Confiscated…" | Twinsen: "Papers. Mine." Guard: "On project letterhead. Project property, then. Confiscated. You can file a complaint at the depot." | Twinsen would not announce it; the bureaucracy is the joke |
 | Ch. 12, Vesk beaten | "You've doomed two worlds to the cold, Twinsen. Remember that I warned you." / Twinsen: "The council can listen to your warnings. From a cell." | "Half heat, for two worlds, for good. You'll hear about it every winter, Twinsen." / "Tell the council. Their guards are on the way down." | a complaint that matches the end card's half heat; no theatrical curse |
+| Ch. 2, Doran at the harbour before the project ferry has arrived | "Saw the project ferry come in. No sails, no oars, and no respect for the sea." (heard before it came) | "The project ferry's due in today, round from Desert Island. On light, they say. I'll believe it when it ties up." (the old line after it has) | a line heard in the wrong state: fixed by its condition, both lines kept |
 | Ch. 5, Twinsen as the desert vent opens | "It's breathing. And Kesh is dry. In the good way." | "It's breathing. And the oasis is still water, not soup." | the old line said the opposite of what it meant |
 
 ## Story issues for a separate repair (flagged, not invented away)
@@ -105,8 +106,9 @@ Status: **edited** (lines changed), **kept** (read in context, nothing needed), 
    in chapter 2, but the Well chapter treats Gilbert as a neighbour arguing his bill with no family tie, and Twinsen calls
    him "Gilbert". If he is family, one line in chapter 1 should say so; if "Grandpa" is a child's title for an old
    neighbour, nothing needs to change. Left as it is (the user wrote "Grandpa Gilbert" in U-2).
-4. **`rs_lh_tam_1`** ("Pim lost his kite on the icefall. He's been staring at it all morning") is one of the numbered
-   lines with no state: it can be heard after the kite is freed. Needs a `_mon` state check or a different numbered line.
+4. **`rs_lh_tam_1`** ("Pim lost his kite on the icefall. He's been staring at it all morning") was one of the numbered
+   lines with no state, heard after the kite was freed. **Fixed by wording** (a line true in every phase): "Pim talks about
+   that kite of his more than his dinner…".
 5. **`c7_sendell_4`** ("When you reach the bottom of the world, you will see her. Not before.") stays a withheld answer by
    design (Sendell's truth comes in chapter 11); kept.
 

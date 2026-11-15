@@ -122,7 +122,7 @@ Object.assign(STR.en, {
   rs_lh_old_0: "Sit by the fire, lad. Your bones will thank you when they're as old as mine.",
   rs_lh_old_1: "The monastery was old when I was young. It'll outlast the lot of us.",
   rs_lh_tam_0: "Split the wood, carry the wood, burn the wood. Then do it again.",
-  rs_lh_tam_1: "Pim lost his kite on the icefall. He's been staring at it all morning.",
+  rs_lh_tam_1: "Pim talks about that kite of his more than his dinner. Yorna says it's his age. I say it's a good kite.",
   rs_lh_kid1_0: "I can run faster than Pema. Except when she's chasing me.",
   rs_lh_kid1_1: "Can you throw that ball really high? Higher than the flags?",
   rs_lh_kid2_0: "I'm not cold. I'm never cold. My nose is, a bit.",
