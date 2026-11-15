@@ -158,7 +158,8 @@ export class Evacuation extends ChapterBase {
       case 'xil': return { x: Q.x + 4.5, z: Q.z - 0.5, a: -Math.PI / 2 };
       case 'worker': return B ? { x: B.x1 - 3.0, z: B.z + 1.3, a: Math.PI / 2 } : { x: Q.x + 6.5, z: Q.z + 0.2, a: -Math.PI / 2 };
       case 'doran': case 'vesk': case 'hesk': return null;
-      case 'guard': return B ? { x: B.x1 + 1.6, z: B.z + 1.4, a: -Math.PI / 2 } : { x: Q.x - 0.5, z: Q.z, a: -Math.PI / 2 };
+      // (SPACEPORT-2: at the bridge's end beside the terminal's door, facing the queue: the deck past it is airside)
+      case 'guard': return B ? { x: B.x1 - 1.3, z: B.z + 1.45, a: -Math.PI / 2 } : { x: Q.x - 0.5, z: Q.z, a: -Math.PI / 2 };
     }
     return undefined;
   }

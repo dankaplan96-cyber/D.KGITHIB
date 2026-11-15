@@ -1443,7 +1443,7 @@ class Game {
     //  the room's own spawn instead; DECLUTTER: a save in a cut place lands at its region's spawn: migrateSave)
     if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (!s.respawn && this.onRoomFloor(R, at) ? at : { ...(R.spawn || at) }), true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
-    else this.exitRoom(at, true);
+    else this.exitRoom(this.world.spaceport?.saneSpot?.(at) ?? at, true);   // (SPACEPORT-2: not inside the terminal's walls)
     this.unwedge();
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
   }

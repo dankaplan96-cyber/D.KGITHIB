@@ -2,10 +2,12 @@
 // small structures a player reads as usable were empty or did nothing. Each now has a purpose (citadel-structures.md in
 // docs/lba-maturity lists them all, with the ones that already had one). Not a chapter: the director (index.js) asks it
 // after the chapter in progress, like the town's life. No story flags: what it says is read from the chapter.
-//   - the spaceport's TICKETS · INFO kiosk (spaceport.js): Corla, the port's information clerk, behind the counter in
+//   - the spaceport's TICKETS · INFO kiosk (spaceport.js; SPACEPORT-2: on the shore by the footbridge's foot, landside,
+//     no longer on the deck): Corla, the port's information clerk, behind the counter in
 //     every chapter. Her lines follow the port: grounded by the project (chapters 1–3), flying (4–7, 9–12, the
 //     epilogue), the evacuation (8: no seats, water and directions). While the spaceship flies she sells the seat
-//     herself: after her line, the spaceship's menu, as the counter inside the terminal does (story/islands.js).
+//     herself: after her line, the spaceship's menu, as the counter inside the terminal does (story/islands.js: out
+//     through the terminal's gate under the black, then the journey from the pad).
 //   - the two street notice boards (citydress.js): the town's notices for its state (the well dry, the heat, the
 //     shuttles, the evacuation, the return);
 //   - the two information stands (the square's town map, the spaceport's Zeelich map): read;
@@ -15,17 +17,20 @@
 //   - Doran's shed and the harbour master's shed (island.js): shut, each with its reason on a line of its own.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
-import { destinations, travelTo, TITLE } from '../travel.js';
+import { destinations, TITLE } from '../travel.js';
+import { PORT_KIOSK } from '../spaceport.js';
 import { portPhase } from '../roomlife.js';
 import '../text/stands.js';
 
-// the kiosk (spaceport.js: at (−10.4, 45.5), turned π, its hatch toward the walkway at z ≈ 40); Corla stands behind the
-// counter, 0.15 m into the booth from its middle, facing the hatch
-export const KIOSK = { x: -10.4, z: 45.5, clerk: { x: -10.4, z: 45.66, a: Math.PI } };
+// the kiosk (spaceport.js PORT_KIOSK: on the shore by the footbridge's foot, turned ry, its hatch toward the path);
+// Corla stands behind the counter, 0.16 m into the booth from its middle, facing the hatch
+const KC = { x: PORT_KIOSK.x - Math.sin(PORT_KIOSK.ry) * 0.16, z: PORT_KIOSK.z - Math.cos(PORT_KIOSK.ry) * 0.16, a: PORT_KIOSK.ry };
+export const KIOSK = { x: PORT_KIOSK.x, z: PORT_KIOSK.z, clerk: KC };
 // the deck's furniture with a purpose (spaceport.js) and the streets' (citydress.js: W.cityDress.items by name)
+// (SPACEPORT-2: the Zeelich map south of the terminal's gate, the fountain on its wall north of it)
 const PORT_THINGS = [
-  { kind: 'cs_info', key: 'cs_info_port', x: -7.7, z: 44.1, r: 1.5 },
-  { kind: 'cs_fount', x: -0.9, z: 32.2, r: 1.2 },
+  { kind: 'cs_info', key: 'cs_info_port', x: -5.6, z: 44.2, r: 1.5 },
+  { kind: 'cs_fount', x: -6.45, z: 37.4, r: 1.2 },
   { kind: 'cs_cart', key: 'cs_cart_port', x: 7.6, z: 28.6, r: 1.9 },
 ];
 const DRINK_EVERY = 20;   // s between two drinks that give life back
@@ -126,7 +131,7 @@ export class CitadelStands extends ChapterBase {
       if (!sells) return;
       const dests = destinations(g, from);
       g.audio.play('select');
-      g.openMenu(TITLE.ship, dests.map((d) => ({ key: d.point.name, id: d.point.id, point: d.point, note: '' })), (o) => travelTo(g, o.point, from));
+      g.openMenu(TITLE.ship, dests.map((d) => ({ key: d.point.name, id: d.point.id, point: d.point, note: '' })), (o) => this.story.isles.boardFromKiosk(from, o.point));
     });
     return true;
   }

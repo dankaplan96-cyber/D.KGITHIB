@@ -367,12 +367,14 @@ export const ROOMS = {
 };
 
 // ------------------------------------------------------------------ the spaceports (outdoors)
-// Citadel's: world coordinates (spaceport.js: the deck x −14…14, z 26…54; the walkway z 38.25…41.75 from the bridge to
-// the pad; the pad at (4.5, 41), its ring 5 m; the board at (−11.2, 36.2), read from (−10.6, 36.2); the benches at z 33.05
-// facing the pad; the kiosk at (−10.4, 45.5), its hatch to the walkway). `when`: 'grounded' (chapters 1–3, before
-// passenger flights run) or 'flying' (from chapter 4).
-const CB = [-11.2, -7.4], CBZ = 33.05;   // (the two benches' middles: spaceport.js; BENCHES-1, 0.3 m further apart, clear of the tub between them)
+// Citadel's: world coordinates (spaceport.js: the deck x −14…14, z 26…54, airside; SPACEPORT-2: the terminal stands on
+// its west end, x −14…−7, z 34…46, its gate at (−7, 40); the walkway z 38.25…41.75 from the gate to the pad; the pad at
+// (4.5, 41), its ring 5 m; the bench at (−4, 34.9) facing the pad; the fountain on the terminal's wall north of the gate,
+// the Zeelich map at (−5.6, 44.2) south of it). The bridge and the kiosk are landside: none of these people go there.
+// `when`: 'grounded' (chapters 1–3, before passenger flights run) or 'flying' (from chapter 4).
+const CB = [-4.0], CBZ = 34.9;   // (the bench's middle: spaceport.js; SPACEPORT-2: one bench, by the gate)
 const SB = (id, bx, side, dur, o = {}) => S(id, [bx + side * 0.45, CBZ + 0.95], [bx + side * 0.45, CBZ, 0, SEAT.portBench], dur, o);
+const MAP = { x: -5.6, z: 44.2 };   // (the Zeelich map's stand: read from its walkway side)
 const CITADEL_PORT = [
   { id: 'gurt', char: 'hesk', tint: '#dfe6fb', color: '#e0a060', speed: 0.9, start: 1, when: 'always', stops: [
     L('gurt_crates', 9.0, 30.4, 10.45, 28.75, 'put', [5, 8], { carry: 'crate' }),
@@ -384,23 +386,23 @@ const CITADEL_PORT = [
   //  stays out on the bench, watching the grounded ship)
   // (WC-4: and in the evacuation, not on the project's list: he waits where he always has)
   { id: 'dov', char: 'lharMan_b', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: ['grounded', 'evac'], stops: [
-    SB('dov_bench', CB[1], 1, [30, 45]),
-    L('dov_ship', -3.0, 35.8, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
-    L('dov_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['sigh'] }),
+    SB('dov_bench', CB[0], 1, [30, 45]),
+    L('dov_ship', -2.2, 37.0, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
+    L('dov_map', MAP.x + 0.5, MAP.z - 1.0, MAP.x, MAP.z, 'stand', [8, 12], { gest: ['sigh'] }),   // (SPACEPORT-2: the kiosk went landside)
   ] },
   { id: 'esren', char: 'keeper', tint: '#fff6ee', color: '#e8a8d0', speed: 0.8, start: 0, when: 'flying', stops: [
-    L('esren_board', -9.8, 35.0, -11.2, 36.2, 'stand', [12, 18]),
-    L('esren_ship', -6.8, 36.0, 4.5, 41, 'stand', [8, 12]),
-    L('esren_kiosk', -11.6, 43.0, 4.5, 41, 'stand', [8, 12]),
+    L('esren_map', MAP.x - 0.5, MAP.z - 1.0, MAP.x, MAP.z, 'stand', [12, 18]),     // (SPACEPORT-2: the board went onto the terminal's landside face)
+    L('esren_ship', -2.6, 44.6, 4.5, 41, 'stand', [8, 12]),
+    L('esren_rail', -6.0, 52.7, -6.0, 56, 'stand', [8, 12]),                       // (the sea from the deck's south rail)
   ] },
   // (WC-4: the family waits for a project ship in the evacuation too: on the list)
   { id: 'gunda', char: 'councilC', tint: '#ece8f0', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
-    SB('gunda_bench', CB[1], -1, [30, 45], { carry: 'case' }),
-    L('gunda_kid', -4.0, 36.0, -3.0, 36.4, 'stand', [16, 24], { pair: 'family', mate: 'bibi' }),
+    SB('gunda_bench', CB[0], -1, [30, 45], { carry: 'case' }),
+    L('gunda_kid', -1.0, 35.6, -0.1, 36.0, 'stand', [16, 24], { pair: 'family', mate: 'bibi' }),
   ] },
   { id: 'bibi', char: 'pim', tint: '#dfe9ff', color: '#a8c0ff', speed: 1.3, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
-    L('bibi_wait', -6.4, 34.6, -7.7, 33.05, 'stand', [14, 20]),
-    L('bibi_parent', -3.0, 36.4, -4.0, 36.0, 'stand', [16, 24], { pair: 'family', mate: 'gunda' }),
+    L('bibi_wait', -2.4, 34.3, CB[0], CBZ, 'stand', [14, 20]),
+    L('bibi_parent', -0.1, 36.0, -1.0, 35.6, 'stand', [16, 24], { pair: 'family', mate: 'gunda' }),
   ] },
 ];
 // Zeelich's: in the frame of travel.js ZPORT (the island's origin; the deck x −14…6, z 33…51 at 6 m; the bridge comes in
@@ -459,8 +461,9 @@ export function placeDefs(game) {
   }
   const sp = game.world?.spaceport;
   if (sp) {
-    const d = sp.deck, b = sp.bridge;
-    register(game, 'port_citadel', [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1, y: d.y }, { x0: b.x0, x1: b.x1, z0: b.z - b.hw, z1: b.z + b.hw, y: d.y }], []);
+    // (SPACEPORT-2: the deck only, airside: the terminal's walls keep the planner off its end; its gate a doorway)
+    const d = sp.deck, gt = sp.gate;
+    register(game, 'port_citadel', [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1, y: d.y }], gt ? [{ x: gt.x + 0.35, z: gt.z, r: 0.9 }] : []);
   }
   for (const p of CITADEL_PORT) add(p, 'port_citadel', sp ? p.stops.map((s) => ({ ...s, seat: s.seat ? { ...s.seat } : undefined })) : null, { outdoor: true });
   const Z = G?.built('zeelich'), zs = Z?.spaceport;

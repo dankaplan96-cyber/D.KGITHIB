@@ -32,6 +32,9 @@ const tour = () => ev(() => {
     for (let k = 0; k < 8 && !best; k++) {
       const b = a + k * Math.PI / 4, sx = it.x + Math.sin(b) * 3, sz = it.z + Math.cos(b) * 3;
       if (G.physics.blockedAt(sx, sz, G.physics.groundAt(sx, sz, 60) + 0.3, 0.4)) continue;
+      // (SPACEPORT-2: not from inside a door's trigger, nor across one: the deck's fountain stands by the terminal's gate)
+      if (G.story.doors().some((d) => !d.region && (Math.hypot(sx - d.x, sz - d.z) < d.r + 0.6 || Math.hypot((sx + it.x) / 2 - d.x, (sz + it.z) / 2 - d.z) < d.r + 0.4))) continue;
+      if (G.room) G.exitRoom({ x: sx, z: sz, a: 0 }, true, true);
       G.hero.pos.set(sx, G.physics.groundAt(sx, sz, 60), sz); G.hero.vy = 0; P.settle();
       P.go(it.x, it.z, { tol: Math.max(0.5, it.r - 0.5), maxT: 20, fight: false, stopWhen: () => P.target()?.kind === it.kind }); P.face(it.x, it.z);
       const tg = P.target();
@@ -48,10 +51,12 @@ const tour = () => ev(() => {
 const corla = (pick) => ev((pick) => {
   const G = game, n = P.npc('cs_corla');
   if (!n?.present) return { r: 'absent' };
-  const inKiosk = Math.hypot(n.pos.x + 10.4, n.pos.z - 45.5) < 0.6;
-  // from the walkway, before the hatch
-  G.hero.pos.set(-10.4, G.physics.groundAt(-10.4, 42.6, 60), 42.6); G.hero.angle = 0; P.settle();
-  P.go(-10.4, 44.1, { tol: 0.3, maxT: 10, fight: false }); P.face(n.pos.x, n.pos.z);
+  // (SPACEPORT-2: the kiosk stands on the shore by the footbridge's foot, its hatch toward the path: spaceport.js PORT_KIOSK)
+  const K = G.world.spaceport.kiosk, ux = Math.sin(K.ry), uz = Math.cos(K.ry);
+  const inKiosk = Math.hypot(n.pos.x - K.x, n.pos.z - K.z) < 0.6;
+  // from the path, before the hatch
+  G.hero.pos.set(K.x + ux * 2.9, G.physics.groundAt(K.x + ux * 2.9, K.z + uz * 2.9, 60), K.z + uz * 2.9); G.hero.angle = K.ry + Math.PI; P.settle();
+  P.go(K.x + ux * 1.4, K.z + uz * 1.4, { tol: 0.3, maxT: 10, fight: false }); P.face(n.pos.x, n.pos.z);
   const tg = P.target();
   P.tap('KeyE', 0.1);
   let lines = 0; while (G.state === 'dialog' && lines < 6) { P.tap('KeyE', 0.15); lines++; }
