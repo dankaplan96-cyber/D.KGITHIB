@@ -11,7 +11,7 @@ Object.assign(STR.en, {
   c5_hesk_1: "The old hall under the dunes, east of the camp road. Half buried. My grandfather worked there. He hated it.",
   c5_tarra_1: 'Then open it. Kesh has been thirsty long enough.',
   c5_dallan_1: 'Attention, Kesh. By order of the Joint Project, the ferry at the pier is requisitioned for the evacuation.',
-  c5_doran_1: "Requisitioned? That's MY ferry. Well. Baldino's. Well. The project's. Still mine to sail!",
+  c5_doran_1: "Requisitioned? That's MY ferry! Well. The project's. But I'm the one who sails it!",
   c5_dallan_2: 'The evacuation list is posted on the stall. Pick-up points: the research post. Project staff only.',
   c5_weaver_1: "Project staff only? There are sixty of us in Kesh!",
   c5_dallan_3: 'I follow the plan.',
@@ -47,7 +47,7 @@ Object.assign(STR.en, {
   c5_dallan_gate3: '...The gate is open. I didn\'t see you. Be quick, the pressure is higher than the reports say.',
   c5_relief_1: 'The wheel is stiff. One turn. Two. The ground starts to shake.',
   c5_vent_1: 'Geysers burst through the pad, then fall back. Far to the south, two white plumes rise from the dunes. The condensers are working.',
-  c5_tw_vent: "It's breathing. And Kesh is dry. In the good way.",
+  c5_tw_vent: "It's breathing. And the oasis is still water, not soup.",
 
   // the radio, and the way north
   c5_kesh_1: 'Kesh is celebrating. Tarra wants to see you.',
@@ -57,7 +57,7 @@ Object.assign(STR.en, {
   c5_zoe_radio1: "Twinsen? Ilka's map matches Grandpa's old charts. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
   c5_zoe_radio2: "The ice up there is melting from below. The villages are cut off. Nobody's on the project's list.",
   c5_tw_radio: "Then that's where I'm going. How's Arthur?",
-  c5_zoe_radio3: "Building a radio for every house on Bug Street. Go. And come back.",
+  c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",
   c5_dallan_k1: 'The ferry left without me. Project headquarters recalled it. I am not on the list either, it seems.',
   c5_ilka_k1: 'Welcome to Kesh, Dallan. The water is free.',
   c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it can glide, it can't climb. Launch it from the hangar roof into the wind and we'll reach the Hamalayi foothills.",

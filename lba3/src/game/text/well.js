@@ -7,7 +7,8 @@ Object.assign(STR.en, {
   // ---- Zoé, at the neighbours' door: their kettle
   pr_zoe_kettle: ['Same next door. Their tap ran warm, then stopped.', 'And look at their kettle. Furred with these since breakfast.'],
   pr_tw_kettle: '(Tiny crystals. Still warm.)',
-  pr_zoe_kettle2: "Mira's telling everyone it's Gilbert's old pipes. Show her these. Then the well.",
+  pr_zoe_kettle2: "Mira's at the well telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it.",
+  pr_zoe_kettle2b: "Then show her these. Pipes don't grow crystals.",
   pr_tw_miraNo: "Mira won't open the well. She says it's the pipes.",
   pr_zoe_kettle_wait: "Show Mira the crystals. Pipes don't grow those.",
   pr_toast_kettle: 'Kettle Crystals',
@@ -27,7 +28,7 @@ Object.assign(STR.en, {
   pr_mira_kick: 'That explains his pipes.',
   pr_well_stuck2: 'Still rusted shut. Gilbert would kick it.',
   pr_lid_padlock: '(Kicking a padlock. That only hurts my foot.)',
-  pr_lid_kicked: 'There. Twelve years of rust, one kick.',
+  pr_lid_kicked: 'There. Years of rust, one kick.',
   pr_gil_told: 'Told you.',
   pr_lid_ball: '(The ball just bounces off. It needs weight behind it.)',
   pr_nudge_kick: 'Aggressive ({b}), then {k} by the lid',

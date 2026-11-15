@@ -483,10 +483,13 @@ export class Prologue extends ChapterBase {
     }
     return false;
   }
+  pippaKey() { return this.story.index > 0 ? 'pr_pippa_shop' : this.f.pr_pippaMet ? 'pr_pippa_again' : 'pr_pippa'; }
   // an NPC the current chapter has nothing special for
   baseTalk(npc) {
     const id = npc.def.id;
-    if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
+    // (DIALOGUE-EDIT: "I hear the well's broken" was her line in every chapter that has nothing of its own for her,
+    //  the network's Citadel included; now the well only in chapter 1, once, and a plain shop line after)
+    if (id === 'pippa') return this.chain([['pippa', this.pippaKey()]], () => { this.f.pr_pippaMet = true; this.game.openShop(); });
     // the Weather Wizard tops up Twinsen's magic, the healing wizard his life (LBA2's Ker'aooc "treats everybody")
     const h = this.game.hero;
     if (id === 'bersimon' && h.mp < h.mpMax) { h.mp = h.mpMax; this.game.audio.play('heal'); this.game.hud.toast('wz_toast_magic'); }
@@ -507,7 +510,7 @@ export class Prologue extends ChapterBase {
         // next door: she has been round the neighbours' taps, and brings the proof Mira wants (CH1-LONGER)
         if (f.opening && !g.room && !f.key) {
           if (!f.pr_kettle) {
-            return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', 'pr_zoe_kettle2']], () => {
+            return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', f.pr_miraNo ? 'pr_zoe_kettle2b' : 'pr_zoe_kettle2']], () => {
               f.pr_kettle = true; f.zoeNext = true; g.updateObjective(); g.save(false); g.found('kettle', 'pr_toast_kettle');
             });
           }
@@ -517,7 +520,8 @@ export class Prologue extends ChapterBase {
       case 'arthur':
         if (f.prologueDone) return c([['arthur', 'pr_ar_after']]);
         // (asked again while Doran sleeps on Xil's permit, he knows how to wake him: he and Tim tried it)
-        return c([['arthur', f.metXil && !f.pr_bell && !f.stamp ? 'pr_ar_bell' : 'pr_ar_hint']]);
+        // (DIALOGUE-EDIT: the sneaking hint only once the kids have brushed him off; before, what Arthur saw; after, Tim told)
+        return c([['arthur', f.metXil && !f.pr_bell && !f.stamp ? 'pr_ar_bell' : f.timConfessed ? 'pr_ar_told' : f.kidsAsked ? 'pr_ar_hint' : 'pr_ar_early']]);
       case 'gilbert': case 'mira':
         if (!f.key) {
           // Mira opens the town well only for a fault at the spring: the kettle crystals show it is one
@@ -561,7 +565,7 @@ export class Prologue extends ChapterBase {
         f.kidsAsked = true;
         return c([['tim', 'pr_tim_1'], ['lulu', 'pr_lulu_1'], ['hero', 'pr_tw_kids']]);
       case 'pippa':
-        this.chain([['pippa', 'pr_pippa']], () => g.openShop());
+        this.chain([['pippa', this.pippaKey()]], () => { f.pr_pippaMet = true; g.openShop(); });
         return true;
     }
     return false;

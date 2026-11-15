@@ -248,7 +248,8 @@ export class Chapter2 extends ChapterBase {
         return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_2']]);
       case 'baldino':
         if (!f.c2_plan) {
-          return c([...(this.lift.on ? [['baldino', 'zt_bal_bench']] : []), ['baldino', 'c2_bal_1'], ['hero', 'c2_tw_bal1'], ['baldino', 'c2_bal_2'], ['baldino', 'c2_bal_3'], ['hero', 'c2_tw_bal2'], ['baldino', 'c2_bal_4'], ['baldino', 'c2_bal_5'], ['baldino', 'c2_bal_6'], ['baldino', 'c2_bal_7']], () => {
+          // (DIALOGUE-EDIT: his entrance gag first, then Twinsen tells him what the bench showed, then the revelation)
+          return c([['baldino', 'c2_bal_1'], ...(this.lift.on ? [['hero', 'zt_tw_bench'], ['baldino', 'zt_bal_bench']] : []), ['hero', 'c2_tw_bal1'], ['baldino', 'c2_bal_2'], ['baldino', 'c2_bal_3'], ['hero', 'c2_tw_bal2'], ['baldino', 'c2_bal_4'], ['baldino', 'c2_bal_5'], ['baldino', 'c2_bal_6'], ['baldino', 'c2_bal_7']], () => {
             f.c2_plan = true; g.updateObjective(); g.save(false);
           });
         }
