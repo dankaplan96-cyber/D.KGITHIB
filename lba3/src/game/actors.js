@@ -1412,6 +1412,7 @@ export class MagicBall {
     const g = this.game;
     if (kind === 'wall') {
       const c = at && g.physics.solidCollider?.(at.x, at.z, at.y, BALL_R);
+      this.wallHit = c || null;
       if (c?.mat) return c.mat;
       if (c?.seeThrough) return 'metal';
       if (c && (c.type === 'cyl' || c.block)) return 'wood';
@@ -1525,6 +1526,7 @@ export class MagicBall {
     this.hits = new Set();
     this.history = [];
     this.caught = false; this.homeSnd = false;   // (ACTION-SOUND-2: this throw's catch and way home, each heard once)
+    this.contacts = [];   // (U-3: what this throw has struck so far, in order — {kind: 'wall'|'ground', c: the wall's collider} — for a game that asks: story/offwall.js)
     this.mesh.visible = true;
     this.mesh.scale.setScalar(charged ? 1.3 : 1);
     this.setGlow(charged ? 4 : 2.2);
@@ -1797,6 +1799,7 @@ export class MagicBall {
     //  magic the one contact is a dull knock with no chirp: it comes straight back)
     const S = this.surface(kind, at);
     this.lastSurface = S;
+    this.contacts?.push({ kind, c: kind === 'wall' ? this.wallHit : null });
     const snd = !this.magic ? 'ballDud' : S === 'metal' ? 'bounceMetal' : S === 'wood' ? 'bounceWood' : kind === 'wall' ? 'bounceWall' : S === 'stone' ? 'bounceStone' : 'bounceGround';
     g.audio.play(snd, this.pos);
     g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);

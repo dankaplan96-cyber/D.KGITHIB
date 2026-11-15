@@ -3,8 +3,9 @@
 // prefixed dx_ (saved with the game; save format unchanged: an old save simply has none of them).
 //
 // COL-1 · Twelve singing crystals (src/game/crystals.js is the registry). Six lie in the world as before; six more are
-//   given by puzzles. Built now: ISL-1 (sc-jaspa) and HAM-1 (sc-waystone). DES-1, DES-2, HAM-3 and UND-1 have their slot
-//   (crystals.js, built: false) and giveCrystal() ready, but no quest gives them yet: they cannot be had.
+//   given by puzzles. Built now: ISL-1 (sc-jaspa), HAM-1 (sc-waystone) and U-3 (sc-trial, DES-2's slot: Tali's prize,
+//   story/offwall.js). DES-1, HAM-3 and UND-1 have their slot (crystals.js, built: false) and giveCrystal() ready, but no
+//   quest gives them yet: they cannot be had.
 //   A quest crystal is an owed reward (dx_owe_<id>) from the moment it is given until it is in his hand: a save in
 //   between loads with it handed over (applyFlags). All twelve (dx_crystals12, main.js collect): in the core fight
 //   (chapter 12) Sendell catches him once when his life would reach zero (catchFall, called by actors.js Hero.damage:
