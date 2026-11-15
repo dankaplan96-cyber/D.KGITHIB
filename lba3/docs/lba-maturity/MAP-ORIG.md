@@ -287,19 +287,40 @@ banner, a gate with F doors and two big vent pipes. It is close to our fort's gr
 4. **The harbour.** Should it become LBA2's paved platform with the L pier? That would fill our rounded basin, and the
    wooden pier and the ferry's berth would move.
 
+## Tests (Automated runtime only)
+
+Run one at a time, with one retry, on the served snapshot of this branch (port 8996), SwiftShader, on a loaded shared
+machine.
+
+| Suite | Result |
+|---|---|
+| chapter1 | PASS |
+| place-scan | PASS |
+| townlife | FAIL twice at the same spot, then **PASS** after a test fix. The harbour gulls' check read `x.p.x` for a bird that had taken off again on its own round, which has no perch yet. The removed yard trees changed the start direction and so the random sequence. The check now reads the bird's own place when it has no perch (`tests/townlife.mjs`) |
+| door-sweep | try 1: the page crashed (memory: one of my picture runs was going at the same time); try 2 **PASS** |
+| spaceport-2 | PASS |
+| opening-tutorial | PASS |
+| solidnpc | FAIL in both runs on the **known baseline**: the planter box at the spaceport bridge's foot has no collider. Try 2 also had a Sphero slide check (0.133 m past the centre) that passed in try 1: timing |
+| occluders (houses' roofs; wing2's changed) | PASS |
+
+**worldscore on this branch:** Citadel 82.3 (coast 90.8, height 80.0, landmarks 97.5, objects 48.9). It was 82.1 on
+12.11. The paving is ground texture, which worldscore does not count. Its objects part also asks for LBA2's fences
+(lattice and bollard runs: 5 → 0 in several town cells), the same as item 1 of "Left".
+
+**Not run:** the other suites (`walkers`, `camsteady`, `world-consistency`, `chapter2`). The streets change nothing
+physical, but the trees taken off the paving change which colliders exist in the town.
+
 ## Resume point
 
 - Done:
-  - the Citadel reference and our pictures;
-  - fixes 1–4, committed;
-  - the candidates for the user;
-  - the Desert reference pictures.
-- Next:
-  1. our Desert pictures (`ours.mjs` with `region: 'desert'` enters the room; the first try stood outside it);
-  2. the Hamalayi (LBA1 scenes 9, 15, 92) and Zeelich (Otringal) pairs;
-  3. the test results below;
-  4. a final run of the after pictures with the town-grid rock change (x to −22).
-
-## Tests (Automated runtime only)
-
-Pending: written as they finish.
+  - the Citadel reference pass and its pairs;
+  - fixes 1–4, committed and re-captured;
+  - the decision candidates;
+  - the Desert pairs;
+  - the LBA1 Citadel and Hamalayi references;
+  - the Zeelich (Otringal) reference;
+  - the suites above.
+- Next, if wanted:
+  1. our Otringal from the same cameras (`gen.py` needs Otringal's placement in our frame: `zislands.js`);
+  2. a second sea candidate that also lowers the sea shader's sky reflection;
+  3. the "Left" items, by owner.
