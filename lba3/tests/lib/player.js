@@ -189,6 +189,21 @@
     const h = hero();
     // a transition already under way (a Continue, a door just used): let it finish first
     for (let i = 0; i < 300 && G.trans; i++) G.step(DT);
+    // SPACEPORT-2: Citadel Spaceport's deck is airside, reached only through the terminal (spaceport.js): between the
+    // deck and the rest of Citadel he walks through it as a player does, in by its nearest door and out by the other
+    // (the gate may be shut from the hall: then he stays inside and the walk ends there)
+    const SP = !G.room && G.world?.spaceport;
+    if (SP?.airside && !P._portRoute && SP.airside(h.pos.x, h.pos.z) !== SP.airside(tx, tz)) {
+      const toAir = SP.airside(tx, tz);
+      P._portRoute = true;
+      try {
+        P.note(`go: through the spaceport's terminal (${toAir ? 'onto the deck' : 'off the deck'})`);
+        P.enter('terminal', { run });
+        const x = G.room?.id === 'terminal' && G.room.exits.find((q) => q.to === (toAir ? 'terminal-gate' : 'terminal-out'));
+        if (x) P.through(x.x, x.z, { run });
+      } finally { P._portRoute = false; }
+      if (G.room || G.state !== 'play' || SP.airside(h.pos.x, h.pos.z) !== toAir) { P.release(); return { r: G.state !== 'play' ? 'state:' + G.state : 'transition', t: 0 }; }
+    }
     if (run && h.behaviour !== 'athletic') P.tap('F2'); else if (!run && h.behaviour === 'athletic') P.tap('F1');
     let plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }), wi = 1, t = 0, replans = 0;
     // nothing leads there without a drop (he slid into a hollow): jump down, as a player would

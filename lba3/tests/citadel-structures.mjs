@@ -32,6 +32,9 @@ const tour = () => ev(() => {
     for (let k = 0; k < 8 && !best; k++) {
       const b = a + k * Math.PI / 4, sx = it.x + Math.sin(b) * 3, sz = it.z + Math.cos(b) * 3;
       if (G.physics.blockedAt(sx, sz, G.physics.groundAt(sx, sz, 60) + 0.3, 0.4)) continue;
+      // (SPACEPORT-2: not from inside a door's trigger, nor across one: the deck's fountain stands by the terminal's gate)
+      if (G.story.doors().some((d) => !d.region && (Math.hypot(sx - d.x, sz - d.z) < d.r + 0.6 || Math.hypot((sx + it.x) / 2 - d.x, (sz + it.z) / 2 - d.z) < d.r + 0.4))) continue;
+      if (G.room) G.exitRoom({ x: sx, z: sz, a: 0 }, true, true);
       G.hero.pos.set(sx, G.physics.groundAt(sx, sz, 60), sz); G.hero.vy = 0; P.settle();
       P.go(it.x, it.z, { tol: Math.max(0.5, it.r - 0.5), maxT: 20, fight: false, stopWhen: () => P.target()?.kind === it.kind }); P.face(it.x, it.z);
       const tg = P.target();

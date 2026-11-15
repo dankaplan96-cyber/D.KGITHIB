@@ -96,11 +96,13 @@ const c1 = await counter('terminal');
 check('chapter 2 (grounded): at the terminal\'s ticket counter Ama says the flights are grounded; no menu; the GROUNDED notice is up', c1.st !== 'shop' && c1.said.some((x) => /^n_ama: .*grounded/i.test(x)) && c1.notice === true, c1);
 const c1b = await (async () => { await ev(() => { game.flags.c1_ship = true; game.story.refreshCast(); }); const r = await counter('terminal'); await ev(() => { game.flags.c1_ship = false; game.story.refreshCast(); }); return r; })();
 check('chapter 2, Doran waiting with the project ship: Ama points Twinsen out through the gate to him', c1b.st !== 'shop' && c1b.said.some((x) => /^n_ama: .*Doran/.test(x)), c1b);
-const bd1 = await ev(() => { const H = TT.terminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
+// (SPACEPORT-2: from the counter the board is across the hall; someone seated near its spot may have the prompt as he
+//  arrives: a player steps aside and tries again, once)
+const bd1 = await ev(() => { const H = TT.terminal; let r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); if (r.target?.kind !== 'termBoard') { P.go(H.board.x + 1.5, H.board.z, { tol: 0.4, maxT: 10 }); r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); } return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
 check('the terminal\'s departures board reads', bd1.kind === 'termBoard' && bd1.lines >= 1, bd1);
 const g0 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); return { r: r.r, room: game.room?.id ?? 'citadel' }; });
 check('SPACEPORT-2, chapter 2 before Doran has the ship: the gate does not let him out (flights grounded)', g0.room === 'terminal', g0);
-await ev(() => { game.flags.c1_ship = true; game.story.refreshCast(); });
+await ev(() => { game.flags.c1_ship = true; game.story.refreshCast(); const c = game.room.center; P.go(c.x - 5, c.z - 2.5, { tol: 0.5, maxT: 15 }); });   // (a step off the gate first: a refused exit fires again only once he has left it)
 const g1 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const S = game.world.spaceport, h = game.hero; return { r: r.r, room: game.room?.id ?? 'citadel', airside: S.airside(h.pos.x, h.pos.z), d: +Math.hypot(h.pos.x - S.gate.x, h.pos.z - S.gate.z).toFixed(2), y: +(h.pos.y - S.deck.y).toFixed(2) }; });
 await ev(() => { game.flags.c1_ship = false; game.story.refreshCast(); });
 check('the terminal\'s gate (INPUT: walked through, Doran\'s ship waiting) leads out onto the deck before the gate, on the walkway to the pad', g1.room === 'citadel' && g1.airside && g1.d < 3.0 && Math.abs(g1.y) < 0.2, g1);
