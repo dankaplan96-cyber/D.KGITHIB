@@ -41,13 +41,13 @@ const STATICS_T = 0.1;                 // s: how often the list of the story's p
 const OTHERS_R = 6;                    // m: the residents a walker steers round are those this near (its reach is under 3.5 m)
 const hashId = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
-// a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
 // (P36, the user 15.11, with a picture of the square: "people still walk in slow motion". GAIT-CADENCE (v60) gave a slow
 //  walker short quick steps, but the rounds' own speeds stayed at 0.6-1.0 m/s, half Twinsen's 2.0: the whole square drifted
 //  at a crawl beside him. A resident strolls at 1.1-1.3 m/s now (a person's ordinary pace is 1.2-1.4), the order of the
 //  rounds kept (an elder still the slowest; 1.3 and over, the quick ones and the children, as they were); the walk's cycle
 //  follows its speed as before)
 export const strollPace = (s) => (s >= 1.3 ? s : s + (1.3 - s) * 0.75);
+// a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
 export const stageOk = (s, stage) => s.stage == null || (Array.isArray(s.stage) ? s.stage.includes(stage) : s.stage === stage);
 
 // ------------------------------------------------------------------ what a resident may carry
@@ -157,8 +157,9 @@ export class Walkers {
     this.dayT = ((g.time / DAY) % 1 + 1) % 1;
     const h = g.hero, R = g.room;
     this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor; this.hero.room = this.hero.inside ? R.id : null;
-    // (P36: where the camera is too — a story shot of the square while Twinsen stands at a valve 100 m off showed its people
-    //  stepped in the abstract state, a pose sliding along twice a second)
+    // (P36: where the camera is too — a story shot far from Twinsen, as the water's return shows the square while he is at a
+    //  valve, simulates who stands near the lens; a resident tiered by his distance alone could be stepped in the abstract
+    //  state there, a pose sliding along twice a second)
     this.cam.x = g.camera.position.x; this.cam.z = g.camera.position.z; this.cam.away = Math.hypot(this.cam.x - h.pos.x, this.cam.z - h.pos.z) > 25;
     // the town's state: 0 the well is dry, 1 the water is back (hot)
     const stage = this.stageNow();
