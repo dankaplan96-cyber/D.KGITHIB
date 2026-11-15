@@ -16,9 +16,11 @@ Zeelich's terminal island, from chapter 3 on (the old line is our own invention;
    chapter 3 also that the project grounded everything that flies ("A ferry floats. I checked the form."); the catch
    on the cable drum only lets go from its far side; bridge down first.
 2. **The winch house** (behind the gateway's south pillar; a door in its north wall). Inside: a brass plate
-   (1. BRIDGE DOWN 2. TRIP THE CATCH 3. RING OFF), the loading bridge's hand wheel, and a partition with one hole.
-   The bridge's counterweight hangs in front of the hole while the bridge is up (an interlock: you never free her
-   with the bridge up). Behind the partition: the drum, and the catch's red trip paddle facing the back wall.
+   (1. BRIDGE DOWN 2. TRIP THE CATCH 3. RING OFF) and a pale partition facing the door, with the loading bridge's
+   hand wheel on it and one hole with a lit rim. The bridge's counterweight hangs in front of the hole while the
+   bridge is up (an interlock: you never free her with the bridge up). Behind the partition, in a dark back room: the
+   drum low behind the hole, and behind it the catch's red trip paddle, facing the hole (see "Winch house
+   readability" below).
    - Wrong attempt: the ball thrown at the hole with the bridge up strikes the counterweight (a line, nothing lost).
    - The wheel (both hands on it, `pumpGrip`): the bridge comes down outside onto her deck, the counterweight rises.
    - The ball through the hole onto the paddle: the catch drops, the drum runs, the cable goes slack. Ossel:
@@ -116,8 +118,55 @@ island. Neither fits this quest naturally, so U-1 is built alone.
 
 ## Left for a human to judge
 
-- Whether the hole and the paddle read from the play camera inside the winch house (a tight room; the shell fades).
+- Whether the winch house now reads at a glance in motion (the stills below do; nobody has played it). The wheel is
+  behind Twinsen's back while he turns it; the drum hardly shows in the dark back room.
 - Whether the captain's loop is noticed as "on time" without a clock, and whether his humour lands.
 - The sailing film's camera and pace (30 s), and whether the faded superstructure on deck looks right.
 - The hashed fallback voices for Ossel and Wick (no voice of their own: `voice.js` was not touched).
 - Wick and Oshra stepping aboard at Mill Lane, and the ramp lifting/lowering at the West Pier, seen in motion.
+
+## Winch house readability (follow-up, 15.11.2026)
+
+**Automated runtime only** (headless Chromium, SwiftShader, 960×540, deviceScaleFactor 1, the default Follow camera).
+
+The problem: the Follow camera stands at Twinsen's back. The wheel sat on the west wall, so at the wheel the camera
+stood east of him and saw the partition edge-on. The partition was dark wood, the counterweight dark iron, the hole
+dark; the paddle sat at the far end of a 1.5 m deep back room, too high to be seen through the hole from above; and
+every wall faded, so the hole showed the street through glass-like walls.
+
+What changed (`src/game/skyferry.js` only; logic, flags, prompts and text untouched):
+- **One face.** Everything the puzzle needs is on the partition, which faces the door: the wheel (moved from the west
+  wall onto the partition, east of the hole), the counterweight in its frame, the hole. At the wheel and at the throw
+  spot Twinsen faces south, so the camera at his back sees that face; on the east side the camera also clears the
+  gateway's pillar. The hole moved 0.6 m west to make room.
+- **Contrast.** The partition is pale planks. The hole's rim is lit (a warm glow) and wider than the weight, so a lit
+  frame outlines the weight while it hangs there. The weight is painted blue-green: a solid block, not another dark
+  hole. The trip paddle is bright red-orange (slightly emissive) and faces the hole.
+- **A dark back.** Only the front room's walls and its half of the roof fade now. The back room's walls and roof stay
+  solid and are lined dark inside, so the hole shows shade, the drum's top in the sill, and the paddle.
+- **Depth.** The drum sits low, just behind the partition. The paddle is on a lever from the pawl, 0.85 m behind the
+  hole at 1.1 m: inside what the camera sees through the hole from above. The house keeps its footprint.
+- **Motion.** The wheel turns (a turn and a half) as the weight rises; the pawl tips the paddle back when tripped.
+- The brass plate is matt (it was metallic and read dark) and a little larger; its text is legible in `02-winch-house.jpg`.
+- Positions that follow the layout: the wheel's stand (in front of it, facing the partition), the throw spot (0.5 m
+  east of the hole, 0.55 m inside the door), the trip target. Both the story and `tests/last-ferry.mjs` read them from
+  `Z.skyferry`; neither file was changed.
+
+Objects: none added. The west wall's shaft stub went (the shaft goes into the partition now); the back wall's pawl
+bracket became the pivot post; the linings are the back walls' inner faces.
+
+Pictures (`captures/last-ferry/`): `02-winch-house-before.jpg` (the old build; top to bottom: at the wheel, at the
+throw spot with the bridge up, the same with it down). After: `02-winch-house-after-wheel.jpg` (turning, the weight
+half up), `02-winch-house-after-throw-bridge-up.jpg`, `02-winch-house-after-throw-bridge-down.jpg`, and
+`02-winch-house.jpg` (the test's own diagonal view, regenerated).
+
+| Suite (after the change; machine shared, load 6–12) | Result |
+|---|---|
+| `last-ferry` | PASS, 29 checks (1160 s); unchanged: positions come from `Z.skyferry` |
+| `place-scan` | PASS (Zeelich: the same 2 findings left by design, none in the winch house) |
+| `zeelich-doors` | PASS, 22 checks |
+| `zeelich-life` | PASS, 40 checks, on the final build. Flaky: several earlier runs failed 1 check (chapter 9: the bot's walk from Pelleck to Snuff ends in a door transition on the street at x −11, `P.talk` → `no-dialog:transition`, so Snuff's council line is never heard). **The build before this change failed the same way** in one probe run (same spot, same result) and passed two others: a flaky street walk, not the winch house. Not fixed (outside this task's files). |
+
+Still weak: the camera stands ~8 m back, so the house is small on screen. While he turns the wheel his body hides it
+(the weight rising beside him is what shows). At the throw spot his head still covers part of the hole (the paddle
+shows beside it). The drum hardly reads in the shade.
