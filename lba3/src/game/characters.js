@@ -46,8 +46,10 @@ export const LOOKS = {
     // "not like LBA2"); a pale gold medallion. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
     race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.3, // (LBA2: the hands hang clear of the robe, ±0.18 H)
-    tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
-    hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 0.96, skullW: 1.04, jaw: 0.9, chin: 0.9, cheeks: 0.3,
+    // TWINSEN-FIGURE (the user's figurine, 15.11): the poly model's tunic, sash, shoes, cord and hair colours (twinsen_poly.py
+    // COL under FIGURE), kept here too so the sculpt fallback and a recoloured dress (dressMap) start from the baked colours
+    tunic: '#2f86c2', tunicTrim: '#2f86c2', belt: '#7c4a2a', pants: '#2f86c2', shoes: '#4b3224', slippers: true, cord: '#6a4022', handBall: 0.075,
+    hair: '#4a2f17', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 0.96, skullW: 1.04, jaw: 0.9, chin: 0.9, cheeks: 0.3,
     eyeScale: 0.82, eyeOval: 0.5, eyeGap: 1.12, eyeUp: 0.03, eyes: '#1b4b67', eyeWhite: '#c8c0d4', noLid: true, noBrow: true, nose: 'ball', noseS: 0.72,
     mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
