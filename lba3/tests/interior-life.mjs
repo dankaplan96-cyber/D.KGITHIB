@@ -143,8 +143,8 @@ check('cost: in the tavern its people are simulated in full; with the hero on th
 // ---- Citadel Spaceport
 const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'dov'], flying: ['gurt', 'esren', 'gunda', 'bibi'], evac: ['gurt', 'dov', 'gunda', 'bibi'] }));   // (WC-4: the evacuation's deck: the mechanic, Dov, the family)
 const portCheck = async (label, key, extra, want, talk) => {
-  await ev(([key, extra]) => { setChapter(key, extra); const G = game; G.exitRoom({ x: -16, z: 40, a: Math.PI / 2 }, true, true); G.step(0.3); }, [key, extra]);
-  iso(`Citadel Spaceport, ${label}: the hero put on the deck by the bridge (exitRoom)`);
+  await ev(([key, extra]) => { setChapter(key, extra); const G = game; G.exitRoom({ x: -4.8, z: 40, a: Math.PI / 2 }, true, true); G.step(0.3); }, [key, extra]);
+  iso(`Citadel Spaceport, ${label}: the hero put on the deck before the terminal's gate (exitRoom; SPACEPORT-2: the deck is airside)`);
   const r = await ev(() => { const G = game; for (let i = 0; i < 60; i++) G.step(0.5);
     const S = G.world.spaceport, d = S.deck, b = S.board, fl = [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1 }, { x0: S.bridge.x0, x1: S.bridge.x1, z0: S.bridge.z - S.bridge.hw, z1: S.bridge.z + S.bridge.hw }];
     const a = auditSettled('port_citadel', fl);
@@ -157,7 +157,7 @@ const portCheck = async (label, key, extra, want, talk) => {
     const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`Citadel Spaceport, ${label}: each answers a talk (INPUT), the line fits the flights (${key})`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
-    await ev(() => { const G = game; G.exitRoom({ x: -12.5, z: 39.5, a: Math.PI / 2 + 0.3 }, true, true); for (let i = 0; i < 10; i++) G.step(0.5); });
+    await ev(() => { const G = game; G.exitRoom({ x: -4.5, z: 39.5, a: Math.PI / 2 + 0.3 }, true, true); for (let i = 0; i < 10; i++) G.step(0.5); });
     await shot('spaceport-' + key);
   }
   return r;
@@ -204,7 +204,7 @@ const TERM = [
 for (const [room, label, key, extra, want, notice] of TERM) {
   const r = await ev(async ([room, key, extra]) => {
     setChapter(key, extra); const G = game, out = {};
-    if (room === 'terminal') G.exitRoom({ x: -2.5, z: 35.5, a: Math.PI }, true, true);
+    if (room === 'terminal') G.exitRoom({ x: -18, z: 40, a: Math.PI / 2 }, true, true);   // (SPACEPORT-2: on the bridge before its landside door)
     else { G.regions.ensure('zeelich', 'test'); G.step(0.3); G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true, true); }
     G.step(0.3); out.enter = P.enter(room).r; out.room = G.room?.id;
     const mod = await import(room === 'terminal' ? '/src/game/terminal.js' : '/src/game/zterminal.js'), H = mod.TERMINAL || mod.ZTERMINAL;
@@ -223,7 +223,7 @@ for (const [room, label, key, extra, want, notice] of TERM) {
     out.logs = Object.fromEntries(people(room).map((q) => [q.def.id, q.log.filter((l) => / at |seated|chat over/.test(l)).length]));
     return out;
   }, [room, key, extra]);
-  iso(`${room}, ${label}: chapter set by its flags; the hero put on the deck before its door and walked in (INPUT: ${r.enter})`);
+  iso(`${room}, ${label}: chapter set by its flags; the hero put before its door (Citadel's: on the bridge) and walked in (INPUT: ${r.enter})`);
   check(`${room}, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, r.room === room && JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r);
   check(`${room}, ${label}: each on the hall's floor or the counter's platform, off the walls and the furniture, facing sensibly; nobody (and no stop) on the counter's or the board's spot, the door or the gate`, r.bad.length === 0 && r.clear.length === 0 && r.stopsClear.length === 0, { bad: r.bad, clear: r.clear, stopsClear: r.stopsClear });
   check(`${room}, ${label}: the notice ${notice ? `is up and reads ${notice === 'grounded' ? 'GROUNDED' : notice === 'list' ? 'the project\'s boarding by its list' : 'the council\'s order'}` : 'is down'} (the GROUNDED one ${notice === 'grounded' ? 'up' : 'down'})`, r.notice === notice && r.grounded === (notice === 'grounded'), { kind: r.notice, grounded: r.grounded });

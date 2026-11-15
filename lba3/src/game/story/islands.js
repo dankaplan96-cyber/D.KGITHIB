@@ -10,6 +10,13 @@
 // pad outside: Twinsen picks where to in the menu there, goes out through the gate onto the deck under the black, and
 // the ship's journey film starts from the pad as if he had boarded there. While passenger flights are grounded
 // (chapters 1–3: no spaceship route open yet) the clerk says so instead. The departures boards inside are read here too.
+//
+// SPACEPORT-2: Citadel's deck is airside, reached only through the terminal. Its gate lets him out of the hall onto the
+// deck whenever a ship flies from it (chapter 4 on: passengers; the evacuation: the project's ships by their list) and,
+// while passenger flights are grounded (chapters 1–3), only when the story has a ship for him (chapter 2: Doran with the
+// project's ship, the clerk sends him out through the gate: tm_pilot). Otherwise the port's guard at the gate (or, with
+// nobody there, the GROUNDED notice) says why: the reason the clerk and the notice already give. The way in from the
+// deck by the gate is always open (arrivals; a save on the deck), so he is never shut out there.
 import { buildTravel, destinations, travelTo, TITLE, LABEL } from '../travel.js';
 import { FILMS } from '../travelfilm.js';
 import { TERMINAL } from '../terminal.js';
@@ -28,6 +35,23 @@ const TERMINALS = {
 export class IslandShuttle {
   constructor(story) { this.story = story; this.game = story.game; buildTravel(this.game); }
   open() { return this.story.index >= this.story.chapters.findIndex((c) => c.key === 'dig'); }
+  // SPACEPORT-2: may he go out of Citadel's terminal by its gate now? (index.js canExit asks first)
+  gateOpen() {
+    const S = this.story;
+    if (portPhase(S) !== 'grounded') return true;
+    return !!this.game.flags.c1_ship && S.index <= 1;   // (chapter 2: the project's ship waits for him at the pad)
+  }
+  canExit(room, to) {
+    if (room?.id !== 'terminal' || to !== 'terminal-gate' || this.gateOpen()) return true;
+    this.game.audio.play('deny');
+    const guard = this.story.interiors.speaker('bern');
+    if (guard?.present && !guard.away) this.story.interiors.chain([['bern', 'tm_grounded']]);
+    else this.game.say('', [t('tm_gate_shut')]);
+    return false;
+  }
+  // the TICKETS · INFO kiosk on the shore sells the same seat: out through the terminal's gate under the black, then the
+  // journey from the pad, as the counter inside does (story/stands.js)
+  boardFromKiosk(from, to) { this.board(TERMINALS.terminal, from, to); }
   // the main pad of the region he is in (the spaceport's on Citadel, the shuttle's on Zeelich and the islands)
   pad() {
     const R = this.game.room;

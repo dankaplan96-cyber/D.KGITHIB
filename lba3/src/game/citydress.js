@@ -199,7 +199,9 @@ export function buildCityDressing(root, physics, W) {
   for (const z of [46.6, 49.4, 52.2]) place('bollard', (k) => P.bollard(k), -107.4, z, 0, FP.bollard, { minH: 1.5 });
   place('handcart-quay', (k) => P.handCart(k, { load: 'crates', seed: 9 }), -113.4, 46.0, 1.2, FP.cart);   // (I-3: it stood on the harbour master's shed's east side, now the shed's door side: parked by its north-east corner)
   // ---------------------------------------------------------------- the foot of the spaceport's bridge
-  bench(-34.6, 43.6, Math.PI / 2 + 0.3, '#7a52b0'); bin(-34.0, 45.1); tub(-33.6, 36.2, 41, '#e8c040'); planter(-36.0, 36.6, 0.1, 12);
+  // (SPACEPORT-2: the tub and the planter north of the path made way for the port's TICKETS · INFO kiosk, landside now:
+  //  spaceport.js PORT_KIOSK)
+  bench(-34.6, 43.6, Math.PI / 2 + 0.3, '#7a52b0'); bin(-34.0, 45.1);
 
   for (const k of kits.values()) k.flush();
   // (PERF-2: then across the kits' cells, the colours, roughness and textures of one kind folded together — merge.js

@@ -4,8 +4,13 @@
 // LBA2 had no port on Citadel: the model is LBA2's departure hall at Otringal (scene 78), about 80 % alike, in Twinsun
 // stone with Esmer touches. Our own geometry, from a study of the original's layout (numbers and descriptions only;
 // nothing copied). As the game's camera sees it:
-//   - the long back wall with a band of glass blocks under the cornice, the short left wall with the door from the
-//     deck at the front and the gate to the pad at the back between two security pillars with green screens
+//   - the long back wall with a band of glass blocks under the cornice, the short left wall with the gate to the pad at
+//     the back between two security pillars with green screens
+//   - SPACEPORT-2 (the user, 15.11: "you go in, through security, and then out to the area you fly from"): the door from
+//     the footbridge (landside) is in the near wall at the front right, cut away like the rest of that wall (as LBA2
+//     draws a door in a near wall, the house's front door: interiors.js), so the way through reads from the camera in
+//     its order: in at the front right, the ticket counter straight ahead, across the hall to the security pillars and
+//     the gate at the back left; arriving, the same way back. (It was on the left wall at the front, beside the gate.)
 //   - the ticket counter on a raised platform in the back right, two steps up, the clerk behind it, the port's name
 //     on two hanging signs above it, a luggage scale at its foot
 //   - the departures board on the left wall between the two doors, a lamp over it; the GROUNDED notice beside it
@@ -17,8 +22,11 @@
 // CONTRACT (world coordinates unless said)
 //   TERMINAL_AT                         where the room stands (regions.js)
 //   buildTerminalRoom(scene, physics) → { terminal }   (regions.js group 'terminal')
-//   terminalDoors() / terminalExit(to)  the terminal's blue door on the deck leads in; 'terminal-out' back out before
-//                                       it; 'terminal-gate' out to the pad (beside the shuttle's walkway)
+//   terminalDoors() / terminalExit(to)  the terminal's two doors outside (spaceport.js: its west face on the footbridge,
+//                                       its gate in the east face on the deck) lead in, the gate's to the gate's inside
+//                                       (R.entries.gate); 'terminal-out' back out on the bridge before the door;
+//                                       'terminal-gate' out onto the walkway to the pad before the gate (story/islands.js
+//                                       shuts it from the hall while passenger flights are grounded)
 //   TERMINAL (filled when the room is built):
 //     door {x,z}        the way in and out (the exit to the deck)
 //     gate {x,z}        the gate to the pad (the exit 'terminal-gate')
@@ -34,6 +42,7 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, chair, counter, pottedPlant, jar, luggageTrolley } from './props.js';
+import { TERMINAL_DOOR, TERMINAL_GATE } from './spaceport.js';
 
 export const TERMINAL_AT = { x: 8600, z: 0 };
 export const TERMINAL = {};
@@ -41,14 +50,14 @@ export const TERMINAL = {};
 //  pillar, the hero stuck there walking to the gate: it moves along the back wall between the second and third
 //  pilasters, its table before it; the gate's side of the hall is open floor)
 export const TERMINAL_PLAN = (() => {
-  const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2, BRDZ = -0.5;
+  const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORX = 4.6, GATEZ = -4.2, BRDZ = -0.5;   // (DOORX: the door in the near wall)
   const PX0 = 1.2, PX1 = W / 2 - 0.3, PZ1 = BZ + 3.4, PH = 0.36, CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;   // (the ticket platform, its counter)
   // (the café's counter; F-13 follow-up: 1.4 m off the back wall, not 1.2 — the aisle behind it was 0.88 m, narrower than
   //  Tavi (0.45 m each side): the walkers' planner found no way along it and sent him out round the hall from one end of
   //  the counter to the other, where he stuck on the café's chairs. Now 1.08 m. The round table and its chairs stay put)
   const KX = -1.9, KZ = BZ + 1.4;
   const ROWS = [-3.4, -1.2], ROWZ = -0.3, ROWN = 5, TX = KX - 2.0, TZ = BZ + 3.1;
-  return { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
+  return { W, D, H, LX, BZ, DOORX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
     counterW: 4.2, counterD: 0.62, cafeW: 2.4,
     printer: { x: CX - 0.8, z: CZ }, cabinet: { x: CX + 1.2, z: BZ + 0.55, w: 1.6, d: 0.45 },
     scale: { x: PX1 - 0.6, z: PZ1 + 0.95 }, notice: { x: LX + 0.04, z: BRDZ + 2.1 },
@@ -63,8 +72,8 @@ export const TERMINAL_PLAN = (() => {
   };
 })();
 
-// the terminal's blue door on the deck (spaceport.js: tcx + 3 on the block's south face, z = 31.6)
-const DOOR_OUT = { x: -2.5, z: 31.6 };
+// the terminal's two doors outside (spaceport.js TERMINAL_DOOR on its west face, TERMINAL_GATE on its east face)
+const DOOR_OUT = TERMINAL_DOOR, GATE_OUT = TERMINAL_GATE;
 
 const ORANGE = () => MAT.paint('#d8682a', 0.45), BLUE = () => MAT.paint('#2f6a9a', 0.5);
 
@@ -153,21 +162,39 @@ function luggageScale(k) {
 export function buildTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'terminal', TERMINAL_AT.x, TERMINAL_AT.z);
   const R = B.room, k = B.k;
-  const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
+  const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
   R.view = 12; R.follow = 0.6; R.music = 'island';   // (ORDER 19: a departure hall: the island's travel pieces go on inside)
   // (Twinsun's pale sandstone below a white plaster band, as the terminal outside; lit a little from within)
   const stone = M('tm_stone', () => { const t = TEX.stone('sand'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f2e8d8', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 }); m.userData.tile = 2; return m; });
   const cap = MAT.stone('sand', 1.2), floor = MAT.tiles('#d8d2c4', '#c8c0b0', '#5a7a9a', false, 5);
   B.shell({ floor, slab: MAT.rubble('grey'), body: stone, low: MAT.plaster('#f4efe2'), rail: BLUE(), cap, H, t: 0.5, dado: 1.1, rimH: 0.45, rimMat: cap, W, D,
-    left: [{ at: DOORZ, w: 1.5, h: 2.4, y0: 0, kind: 'door', frame: BLUE() }, { at: GATEZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: BLUE() }] });
+    rimGaps: [{ x: DOORX, w: 1.5 }],
+    left: [{ at: GATEZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: BLUE() }] });
   // the band of glass blocks under the back wall's cornice, lit from outside
   const blocks = MAT.map(blocksTex(), 0.4, { emissive: '#ffffff', emissiveMap: blocksTex(), emissiveIntensity: 0.55 });
   k.add(plane(W - 1.0, 1.0), blocks, 0, H - 1.0, BZ + 0.03);
   for (let x = LX + 0.5; x <= W / 2 - 0.4; x += 3.75) k.add(rbox(0.3, H - 0.4, 0.14, 0.05), cap, x, (H - 0.4) / 2, BZ + 0.07);
-  // the door from the deck and the gate to the pad
-  R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'terminal-out' });
+  // the door from the footbridge (the near wall's, cut away: blue jambs with rounded caps, a stone threshold and a step
+  // outside, daylight on the floor and in the doorway, so the way out reads from across the hall) and the gate to the pad
+  for (const sx of [-1, 1]) {
+    k.add(rbox(0.22, 0.66, 0.58, 0.04), BLUE(), DOORX + sx * 0.86, 0.33, D / 2 + 0.25);
+    k.add(rbox(0.28, 0.1, 0.64, 0.045), cap, DOORX + sx * 0.86, 0.7, D / 2 + 0.25);
+  }
+  k.add(rbox(1.5, 0.06, 0.56, 0.02), MAT.stone('sand', 1.0), DOORX, 0.02, D / 2 + 0.25);
+  k.add(rbox(1.7, 0.1, 0.5, 0.03), MAT.stone('sand', 1.0), DOORX, -0.06, D / 2 + 0.78);
+  const day = M('tm_dayTex', () => canvasTex(64, 128, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(255,240,214,0)'); g.addColorStop(0.5, 'rgba(255,240,214,0.4)'); g.addColorStop(1, 'rgba(255,244,222,1)');
+    x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'destination-in';
+    const s2 = x.createLinearGradient(0, 0, w, 0); s2.addColorStop(0, 'rgba(0,0,0,0)'); s2.addColorStop(0.18, 'rgba(0,0,0,1)'); s2.addColorStop(0.82, 'rgba(0,0,0,1)'); s2.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = s2; x.fillRect(0, 0, w, h);
+  }));
+  const dayM = (o) => M('tm_day' + o, () => new THREE.MeshBasicMaterial({ map: day, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  k.add(plane(1.4, 3.6), dayM(0.7), DOORX, 0.03, D / 2 - 1.8, 0, { rx: -Math.PI / 2 });
+  k.add(plane(1.5, 0.6), dayM(0.8), DOORX, 0.06, D / 2 + 0.25, 0, { rx: -Math.PI / 2 });
+  k.add(plane(1.4, 1.6), dayM(0.4), DOORX, 0.8, D / 2 + 0.24);
+  R.exits.push({ x: B.cx + DOORX, z: B.cz + D / 2 - 0.15, r: 0.8, to: 'terminal-out' });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + GATEZ, r: 0.8, to: 'terminal-gate' });
-  R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
+  R.spawn = { x: B.cx + DOORX, z: B.cz + D / 2 - 1.6, a: Math.PI };
   R.entries = { gate: { x: B.cx + LX + 1.6, z: B.cz + GATEZ, a: Math.PI / 2 } };
   for (const dz of [-1.15, 1.15]) B.put(LX + 0.6, GATEZ + dz, 0, (kk) => gatePillar(kk));
   k.add(plane(1.2, 0.35), MAT.map(signTex('GATE · PAD 1'), 0.6), LX + 0.03, 2.75, GATEZ, Math.PI / 2);
@@ -232,7 +259,7 @@ export function buildTerminalRoom(scene, physics) {
   B.light('#fff0d8', 6, 16, -2.0, 4.2, 0.5); B.light('#fff0d8', 5, 13, CX, 4.0, BZ + 2.5); B.light('#bfe6ff', 3, 12, 0, H - 1, BZ + 1); B.light('#ffd8a0', 2.5, 7, KX, 2.4, KZ + 1);
 
   Object.assign(TERMINAL, {
-    door: { x: B.cx + LX + 0.45, z: B.cz + DOORZ },
+    door: { x: B.cx + DOORX, z: B.cz + D / 2 - 0.15 },
     gate: { x: B.cx + LX + 0.45, z: B.cz + GATEZ },
     counter: { x: B.cx + CX, z: B.cz + CZ + 0.85, r: 1.0 },
     board: { x: B.cx + LX + 1.6, z: B.cz + BRDZ, r: 1.2 },
@@ -254,13 +281,18 @@ export function buildTerminalRoom(scene, physics) {
   return { terminal: B.finish() };
 }
 
-// the terminal's blue door on the deck leads in; coming out, Twinsen stands 1.2 m before it facing the deck; through the
-// gate he comes out on the pad's walkway beside the shuttle (spaceport.js PAD / landing)
+// SPACEPORT-2: the door on the terminal's west face (from the footbridge) leads in by the hall's door; the gate in its
+// east face (from the deck: arriving, or back from the pad) by the gate, to its inside (R.entries.gate). Coming out,
+// Twinsen stands 1.2 m before the one he came out of, facing away from it: on the bridge facing the shore, or on the
+// walkway to the pad facing the ship
 export function terminalDoors() {
-  return [{ house: 'spaceport', x: DOOR_OUT.x, z: DOOR_OUT.z + 0.35, r: 0.9, room: 'terminal' }];
+  return [
+    { house: 'spaceport', x: DOOR_OUT.x - 0.35, z: DOOR_OUT.z, r: 0.9, room: 'terminal' },
+    { house: 'spaceport', x: GATE_OUT.x + 0.35, z: GATE_OUT.z, r: 0.9, room: 'terminal', spawn: (R) => R.entries?.gate || R.spawn },
+  ];
 }
 export function terminalExit(to) {
-  if (to === 'terminal-out') return { x: DOOR_OUT.x, z: DOOR_OUT.z + 1.2, a: 0 };
-  if (to === 'terminal-gate') return { x: -1.7, z: 39.5, a: Math.PI / 2 };
+  if (to === 'terminal-out') return { x: DOOR_OUT.x - 1.2, z: DOOR_OUT.z, a: -Math.PI / 2 };
+  if (to === 'terminal-gate') return { x: GATE_OUT.x + 1.2, z: GATE_OUT.z, a: Math.PI / 2 };
   return null;
 }

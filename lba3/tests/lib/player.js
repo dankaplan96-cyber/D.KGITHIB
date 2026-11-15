@@ -310,7 +310,8 @@
       if (!e) return { r: 'no exit' };
       P.through(e.x, e.z, opts); if (P.here() === id) return { r: 'entered' };
     }
-    const d = G.story.doors().find((x) => x.room === id && (x.region || 'citadel') === P.here());
+    // (the nearest of the room's doors here: SPACEPORT-2, Citadel's terminal has two, the footbridge's and the deck's gate)
+    const d = G.story.doors().filter((x) => x.room === id && (x.region || 'citadel') === P.here()).sort((p, q) => Math.hypot(p.x - hero().pos.x, p.z - hero().pos.z) - Math.hypot(q.x - hero().pos.x, q.z - hero().pos.z))[0];
     if (!d) return { r: 'no door to ' + id + ' from ' + P.here() };
     let r = P.through(d.x, d.z, opts);
     // (a remark that opened on the way stopped the walk — chapter 1's "the garden pipe is knocking too" as he passes it —:

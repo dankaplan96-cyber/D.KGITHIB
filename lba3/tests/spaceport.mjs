@@ -1,5 +1,6 @@
 // Citadel Spaceport (src/game/spaceport.js) and its flights (src/game/story/islands.js): from the town he walks
-// over the footbridge onto the platform (INPUT); before chapter 4 the shuttle is grounded (a note, no menu); from
+// over the footbridge to the terminal's door (INPUT; SPACEPORT-2: the deck is airside, reached through the terminal:
+// tests/spaceport-2.mjs); before chapter 4 the shuttle is grounded (a note, no menu); from
 // chapter 4 it flies to Zeelich Spaceport only (CONNECT: Zeelich is another planet) and back from there; the
 // platform's edges hold (no walking off into the bay); the departures board reads. ISO (logged): the chapter is set
 // by its flags; he starts outdoors in the town.
@@ -10,25 +11,28 @@ const ev = (f, a) => page.evaluate(f, a);
 await open(page, '?nocine'); await menu(page, 'new');
 const setChapter = (key) => ev((key) => { const G = game, f = G.flags; P.settle(); Object.assign(f, { prologueDone: true, intro: true, chapterKey: key }); f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true; G.story.refreshCast(); }, key);
 
-// chapter 2 (the Joint Project): walk from the town square to the shuttle (INPUT)
+// chapter 2 (the Joint Project): walk from the town square over the bridge into the terminal (INPUT); on the deck (as
+// after a landing, or a save there: the gate is shut from the hall while flights are grounded) the shuttle's note
 await setChapter('project');
 const walk = await ev(() => {
   const G = game, h = G.hero, S = G.world.spaceport; G.exitRoom({ x: G.world.POI.village.x, z: G.world.POI.village.z, a: 0 }, true); P.settle();
+  const e = P.enter('terminal', { run: true }); const inHall = G.room?.id;
+  G.exitRoom({ x: S.landing.x, z: S.landing.z, a: S.landing.a }, true, true); P.settle();
   const ready = () => P.target()?.kind === 'portGrounded' || P.target()?.kind === 'isleShuttle';
   const r = P.go(S.pad.x, S.pad.z, { tol: 3.8, run: true, maxT: 180, stopWhen: ready }); P.face(S.pad.x, S.pad.z);
-  return { r: r.r, onDeck: h.pos.x > S.deck.x0 && Math.abs(h.pos.y - S.deck.y) < 0.2, y: +h.pos.y.toFixed(2), target: P.target()?.kind, trace: P.trace.slice(-4) };
+  return { enter: e.r, inHall, r: r.r, onDeck: S.airside(h.pos.x, h.pos.z) && Math.abs(h.pos.y - S.deck.y) < 0.2, y: +h.pos.y.toFixed(2), target: P.target()?.kind, trace: P.trace.slice(-4) };
 });
-check('from the town square he walks over the bridge onto the spaceport platform to the shuttle', walk.onDeck && walk.target === 'portGrounded', walk);
+check('from the town square he walks over the bridge into the terminal; on the deck he walks to the shuttle', walk.inHall === 'terminal' && walk.onDeck && walk.target === 'portGrounded', walk);
 const grounded = await ev(() => { const said = []; const sv = game.say; game.say = function (n, lines, ...a) { said.push(...lines); return sv.call(this, n, lines, ...a); };
   P.tap('KeyE', 0.1); game.say = sv; const st = game.state, txt = said.join(' '); P.settle(); return { st, grounded: /grounded/i.test(txt), menu: !document.querySelector('#shop')?.classList.contains('hidden') && document.querySelectorAll('#shop .item').length > 0 && st === 'shop' }; });
 check('before chapter 4: E at the shuttle reads the grounded notice, no flight menu', grounded.grounded && !grounded.menu, grounded);
-const board = await ev(() => { const B = game.world.spaceport.board; const r = P.use(B.x + 0.9, B.z, { near: 0.9 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
-check('the departures board reads', board.kind === 'sign' && board.lines >= 1, board);
+const board = await ev(() => { const B = game.world.spaceport.board; game.exitRoom({ x: -18, z: 40, a: Math.PI / 2 }, true, true); P.settle(); const r = P.use(B.read.x, B.read.z, { near: 0.9 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
+check('the departures board (on the terminal\'s landside face) reads from the bridge', board.kind === 'sign' && board.lines >= 1, board);
 
 // the platform holds: run at its edges in 8 directions (INPUT), never into the bay
 const edges = await ev(() => { const G = game, h = G.hero, S = G.world.spaceport; let low = 1e9, offDeck = 0;
   for (let k = 0; k < 8; k++) { h.pos.set(0, S.deck.y, 40); h.vy = 0; h.angle = k * Math.PI / 4; if (h.behaviour !== 'athletic') P.tap('F2');
-    for (let s = 0; s < 8 * 30; s++) { P.holdFor(['ArrowUp'], 1 / 30); if (h.pos.x > S.deck.x0 + 0.5) low = Math.min(low, h.pos.y); if (h.pos.x > S.deck.x0 + 0.1 && (h.pos.x > S.deck.x1 || h.pos.z < S.deck.z0 || h.pos.z > S.deck.z1)) offDeck++; if (G.state !== 'play') P.settle(); } }
+    for (let s = 0; s < 8 * 30; s++) { G.doorCool = 9; P.holdFor(['ArrowUp'], 1 / 30); if (h.pos.x > S.deck.x0 + 0.5) low = Math.min(low, h.pos.y); if (h.pos.x > S.deck.x0 + 0.1 && (h.pos.x > S.deck.x1 || h.pos.z < S.deck.z0 || h.pos.z > S.deck.z1)) offDeck++; if (G.state !== 'play') P.settle(); } }
   return { low: +low.toFixed(2), offDeck, deckY: S.deck.y }; });
 check('the platform\'s railings hold: running at every edge he stays on the deck', edges.low > edges.deckY - 0.2 && edges.offDeck === 0, edges);
 
@@ -62,7 +66,7 @@ check('no Zeelich island from Citadel: Otringal is not on the spaceport\'s menu'
 const T = await ev(async () => { const a = await import('/src/game/terminal.js'), b = await import('/src/game/zterminal.js'); window.TT = { terminal: a.TERMINAL, zterminal: b.ZTERMINAL }; return true; });
 void T;
 const toDoor = (room) => ev((room) => { const G = game;
-  if (room === 'terminal') G.exitRoom({ x: -2.5, z: 35.5, a: Math.PI }, true);
+  if (room === 'terminal') G.exitRoom({ x: -18, z: 40, a: Math.PI / 2 }, true);   // (SPACEPORT-2: on the bridge before its door)
   else { G.regions.ensure('zeelich', 'test'); G.step(0.3); const S = G.regions.built('zeelich').spaceport; G.enterRoom('zeelich', S.landing, true); }
   P.settle(); const e = P.enter(room); P.settle(); return { r: e.r, room: G.room?.id ?? 'citadel' }; }, room);
 // at the counter (INPUT): walk up, E; what is said, or the menu's items (the menu then picks `pick`, or is left)
@@ -94,8 +98,12 @@ const c1b = await (async () => { await ev(() => { game.flags.c1_ship = true; gam
 check('chapter 2, Doran waiting with the project ship: Ama points Twinsen out through the gate to him', c1b.st !== 'shop' && c1b.said.some((x) => /^n_ama: .*Doran/.test(x)), c1b);
 const bd1 = await ev(() => { const H = TT.terminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
 check('the terminal\'s departures board reads', bd1.kind === 'termBoard' && bd1.lines >= 1, bd1);
-const g1 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const S = game.world.spaceport, h = game.hero; return { r: r.r, room: game.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - S.landing.x, h.pos.z - S.landing.z).toFixed(2), y: +(h.pos.y - S.deck.y).toFixed(2) }; });
-check('the terminal\'s gate (INPUT: walked through) leads out onto the deck by the pad', g1.room === 'citadel' && g1.d < 1.5 && Math.abs(g1.y) < 0.2, g1);
+const g0 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); return { r: r.r, room: game.room?.id ?? 'citadel' }; });
+check('SPACEPORT-2, chapter 2 before Doran has the ship: the gate does not let him out (flights grounded)', g0.room === 'terminal', g0);
+await ev(() => { game.flags.c1_ship = true; game.story.refreshCast(); });
+const g1 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const S = game.world.spaceport, h = game.hero; return { r: r.r, room: game.room?.id ?? 'citadel', airside: S.airside(h.pos.x, h.pos.z), d: +Math.hypot(h.pos.x - S.gate.x, h.pos.z - S.gate.z).toFixed(2), y: +(h.pos.y - S.deck.y).toFixed(2) }; });
+await ev(() => { game.flags.c1_ship = false; game.story.refreshCast(); });
+check('the terminal\'s gate (INPUT: walked through, Doran\'s ship waiting) leads out onto the deck before the gate, on the walkway to the pad', g1.room === 'citadel' && g1.airside && g1.d < 3.0 && Math.abs(g1.y) < 0.2, g1);
 
 await setChapter('dig');
 await toDoor('terminal');
@@ -147,8 +155,8 @@ await toDoor('terminal');
 const q8 = await ev(() => { const G = game; for (let i = 0; i < 30; i++) G.step(0.5);
   const q = (G.roomWalkers?.res || []).filter((r) => r.def.room === 'terminal' && r.present && !r.away), inLine = q.filter((r) => /queue|_list|bern_call/.test(r.stop?.id || '') && r.st !== 'walk').map((r) => r.def.id);
   const H = TT.terminal, g = P.through(H.gate.x, H.gate.z); P.settle(); const S = G.world.spaceport, h = G.hero;
-  return { here: q.map((r) => r.def.id), inLine, gate: g.r, room: G.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - S.landing.x, h.pos.z - S.landing.z).toFixed(2), trace: P.trace?.slice(-3) }; });
-check('WC-4, chapter 8: Citadel\'s terminal has the queue for the project\'s ships (8 people, the guard with the list and the queue at their places); from the door he walks past them to the gate and out onto the deck by the pad (INPUT)', q8.here.length === 8 && q8.inLine.length >= 2 && q8.room === 'citadel' && q8.d < 1.5, q8);
+  return { here: q.map((r) => r.def.id), inLine, gate: g.r, room: G.room?.id ?? 'citadel', airside: S.airside(h.pos.x, h.pos.z), d: +Math.hypot(h.pos.x - S.gate.x, h.pos.z - S.gate.z).toFixed(2), trace: P.trace?.slice(-3) }; });
+check('WC-4, chapter 8: Citadel\'s terminal has the queue for the project\'s ships (8 people, the guard with the list and the queue at their places); from the door he walks past them to the gate and out onto the deck before it (INPUT)', q8.here.length === 8 && q8.inLine.length >= 2 && q8.room === 'citadel' && q8.airside && q8.d < 3.0, q8);
 await toDoor('terminal');
 const b8 = await boardSays('terminal');
 check('WC-4, chapter 8: the terminal\'s board reads the project\'s boarding by its list', b8.kind === 'termBoard' && /list/.test(b8.said), b8);

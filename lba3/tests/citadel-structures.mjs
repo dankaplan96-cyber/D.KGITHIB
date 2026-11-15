@@ -48,10 +48,12 @@ const tour = () => ev(() => {
 const corla = (pick) => ev((pick) => {
   const G = game, n = P.npc('cs_corla');
   if (!n?.present) return { r: 'absent' };
-  const inKiosk = Math.hypot(n.pos.x + 10.4, n.pos.z - 45.5) < 0.6;
-  // from the walkway, before the hatch
-  G.hero.pos.set(-10.4, G.physics.groundAt(-10.4, 42.6, 60), 42.6); G.hero.angle = 0; P.settle();
-  P.go(-10.4, 44.1, { tol: 0.3, maxT: 10, fight: false }); P.face(n.pos.x, n.pos.z);
+  // (SPACEPORT-2: the kiosk stands on the shore by the footbridge's foot, its hatch toward the path: spaceport.js PORT_KIOSK)
+  const K = G.world.spaceport.kiosk, ux = Math.sin(K.ry), uz = Math.cos(K.ry);
+  const inKiosk = Math.hypot(n.pos.x - K.x, n.pos.z - K.z) < 0.6;
+  // from the path, before the hatch
+  G.hero.pos.set(K.x + ux * 2.9, G.physics.groundAt(K.x + ux * 2.9, K.z + uz * 2.9, 60), K.z + uz * 2.9); G.hero.angle = K.ry + Math.PI; P.settle();
+  P.go(K.x + ux * 1.4, K.z + uz * 1.4, { tol: 0.3, maxT: 10, fight: false }); P.face(n.pos.x, n.pos.z);
   const tg = P.target();
   P.tap('KeyE', 0.1);
   let lines = 0; while (G.state === 'dialog' && lines < 6) { P.tap('KeyE', 0.15); lines++; }
