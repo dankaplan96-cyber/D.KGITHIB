@@ -1453,17 +1453,10 @@ export function addSilhouette(rig, color = '#40c8ff') {
   sil.bind(mesh.skeleton, mesh.bindMatrix);
   rig.silhouette = sil;
 }
-// TWINSEN-FIGURE (the user's figurine, 15.11): a candidate Twinsen, not yet approved; ?tw=figure loads it in place of the
-// shipped one (assets/poly/twinsen-figure.json, twinsen_poly.py's FIGURE build) with its baked tunic/sash/shoe colours
-// (or the Display setting "Twinsen model", read here at start: the models are loaded once)
-const TW_FIGURE = (typeof location !== 'undefined' && /[?&]tw=figure\b/.test(location.search))
-  || (() => { try { return JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.twModel === 'figure'; } catch { return false; } })();
 export async function preloadCharacters() {
   let names = ['twinsen'];
   try { const r = await fetch('assets/poly/index.json'); if (r.ok) names = await r.json(); } catch { /* twinsen only */ }
   await Promise.all(names.map(async (n) => {
-    const file = n === 'twinsen' && TW_FIGURE ? 'twinsen-figure' : n;
-    try { const r = await fetch(`assets/poly/${file}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
+    try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
-  if (TW_FIGURE) Object.assign(LOOKS.twinsen, { tunic: '#2f86c2', tunicTrim: '#2f86c2', belt: '#7c4a2a', pants: '#2f86c2', shoes: '#4b3224', cord: '#6a4022', hair: '#4a2f17' });
 }

@@ -95,7 +95,6 @@ Object.assign(STR.en, {
   set_h_lm_toggle: '{k} locks onto a target. Press it again to let go.', set_h_lm_hold: 'Stays locked onto a target while {k} is held.',
   set_h_q_hand: 'Kept as chosen. Lower runs faster on slower computers.',
   set_h_vis_2026: 'Full lighting and view distance.', set_h_vis_1997: 'Low resolution, near fog and hard camera cuts, as in 1997.',
-  set_h_tw: 'A trial Twinsen. Takes effect the next time the game starts.',
   set_h_hud_lba: 'Life, magic and kashes appear only when they change.', set_h_hud_modern: 'Life, magic, minimap, behaviours and weapon stay on screen.',
   set_h_wx_on: 'Outdoors, rain, wind and the light of the day change as you play.', set_h_wx_off: 'Clear skies and steady light.',
   set_h_music: 'Music volume.', set_h_sfx: 'Footsteps, blows, doors and other sounds.', set_h_voice: 'Character voices. Their words are always written on screen.',

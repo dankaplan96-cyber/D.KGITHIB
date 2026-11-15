@@ -212,7 +212,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'expressive', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', tips: 'on', twModel: 'current', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, voiceMode: 'expressive', textSpeed: 'normal', autoTalk: (typeof navigator !== 'undefined' && navigator.webdriver) ? 'off' : 'on', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', tips: 'on', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // (the user, 4.11: the camera's default distance is Medium; a stored Far from before this default moves once)
     if (!this.settings.camDistV2) { if (this.settings.camDist === 'far') this.settings.camDist = 'medium'; this.settings.camDistV2 = 1; store.set(SET_KEY, this.settings); }
@@ -2029,7 +2029,6 @@ class Game {
       aimAssist: () => t('set_h_aa'),
       lockMode: () => t('set_h_lm_' + (s.lockMode === 'hold' ? 'hold' : 'toggle'), { k: this.input.lastDevice === 'pad' || this.input.lastDevice === 'touch' ? this.hud.key('focus') : `${L('focus')} / right-click` }),
       visual: () => t('set_h_vis_' + (s.visual === '1997' ? '1997' : '2026')),
-      twModel: () => t('set_h_tw'),
       hud: () => t('set_h_hud_' + (s.hud === 'lba' ? 'lba' : 'modern')),
       weather: () => t('set_h_wx_' + (s.weather === 'off' ? 'off' : 'on')),
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),

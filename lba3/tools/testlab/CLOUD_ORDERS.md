@@ -492,3 +492,16 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
     3. **P40 (decided):** the user, with a picture of the original's square (blue globes round the statue): Citadel's square
        lamps are **blue**. CITADEL-85's gold globes were reverted in town.js (f589e7b1); don't bring gold back.
+47. **The user, 15.11 (evening session): "the local agent didn't do the School of Magic right from outside" (P41).** No
+    detail yet (the cloud asked for a picture). The School stands at the mask (desertold.js, `MASK`, the user's 26.10 place);
+    FACE-OFF (yours, applied by the cloud 15.11) took the second face off S28's tower. On the desktop, with LBA2's data
+    (numbers and descriptions only; nothing of it committed): compare our School's exterior with LBA2's School of Magic
+    from the play camera and from the plaza: the face's proportions, depth and colour, the eyes, where and how big the door
+    is, the rock wall it sits in, the terrace and plaza in front, the water channel and bridge. List every difference that
+    makes it read wrong, then fix the biggest ones in desertold.js (the door's position and the way in, colliders, the
+    `wizards` people and the story's uses kept). Before/after pictures from the play camera (chapter 4: the user may see
+    the School's outside, since the user raised it; nothing of the inside or the story). Send it as a request
+    (requests/SCHOOL-FACE.diff) and report as SCHOOL-FACE in WORLD_ART_REQUESTS.md. If FACE-OFF is what the user
+    means (the face belonged on the tower), say so in the report: the cloud will ask the user before reverting.
+    Also: **Twinsen stays the shipped model** (the user rejected TWINSEN-FIGURE: "our old Twinsen is better"); no Twinsen
+    model work.

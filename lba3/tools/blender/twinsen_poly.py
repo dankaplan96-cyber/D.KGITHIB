@@ -11,7 +11,7 @@
 # in the original: they are his sleeves. HERO-ARMS: below the armpit the sleeves are cut from the tunic's front and back,
 # which stay on the body, so a raised arm lifts a sleeve and not the whole tunic, I-22).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
-# TWINSEN-FIGURE (default; TW_FIGURE=0 builds the model before it byte for byte): the user's figurine replaces the cape,
+# TWINSEN-FIGURE (opt-in, TW_FIGURE=1; rejected by the user 15.11: "our old Twinsen is better"; the default build is the shipped model): the user's figurine replaces the cape,
 # the hair, the belt, the shoes and parts of the face: see FIGURE below and docs/lba-maturity/TWINSEN-FIGURE.md.
 import json, math, os, sys
 
@@ -47,7 +47,7 @@ COL = {
 # sleeves to the wrists, the hands out of them (not a cape over the arms); a large round gold medallion on a brown cord;
 # a brown sash; a long flared robe to the ankles that parts as he strides; dark brown rounded shoes. TW_FIGURE=0 builds
 # the model before it (TWINSEN-ORIG, with its own flags) byte for byte.
-FIGURE = os.environ.get('TW_FIGURE', '1') != '0'
+FIGURE = os.environ.get('TW_FIGURE', '0') == '1'   # (the user, 15.11: "our old Twinsen is better": off by default)
 if FIGURE:
     COL.update({
         'tunic': '#2f86c2', 'inner': '#173f63', 'belt': '#7c4a2a', 'shoe': '#4b3224', 'sole': '#2a1b13',
