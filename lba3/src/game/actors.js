@@ -583,7 +583,9 @@ export class Hero extends Actor {
     }
     for (const list of [g.world?.dogs, g.regions?.built?.('zeelich')?.dogs]) for (const d of list || []) {
       if (d.root && !d.root.visible) continue;
-      if (near(d.pos.x, d.pos.z, d.pos.y)) put(d.pos.x, d.pos.z, d.bodyR ?? d.radius, d, 'pet');
+      if (!near(d.pos.x, d.pos.z, d.pos.y)) continue;
+      if (d.circles) for (const [cx, cz, r] of d.circles()) put(cx, cz, r, d, 'pet');   // (P28: the poodle's long body, the head on its neck too)
+      else put(d.pos.x, d.pos.z, d.bodyR ?? d.radius, d, 'pet');
     }
     // SOLID-ENEMY: living enemies (their body: bodyR, per kind) at his height; a beaten one (alive is false from the
     // blow: death.js) is not solid

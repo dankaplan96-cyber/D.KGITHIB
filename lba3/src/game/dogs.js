@@ -282,6 +282,11 @@ export class Dog {
     this.pos = new THREE.Vector3(x, physics.groundAt(x, z), z);
     this.radius = 0.35; this.onGround = true;
     this.bodyR = this.friendly ? 0.35 : 0.5;   // (SOLID-NPC: its body, 0.42 H wide and 0.6 H long, that Twinsen can't walk into: Hero.keepApart)
+    // (P28, the user 15.11: "the dog inside Twinsen" — the poodle reaches from 0.35 m behind its centre to its snout 1.0 m
+    //  in front, its head at his chest's height on a long neck; one 0.35 m circle at the centre let it greet him with the
+    //  head and chest puff inside his body. Its body as circles along its length, front +z: the hips and chest, the head)
+    //  (Zeelich's dogs: a round body 1.2 m long from the fangs at +0.58 m to the rump, two circles along it)
+    this.shape = this.friendly ? [[0.05, 0.36], [0.7, 0.32]] : [[0.2, 0.42], [-0.2, 0.42]];
     this.a = Math.random() * Math.PI * 2;
     this.state = 'idle'; this.timer = 1 + Math.random() * 2; this.target = null;
     this.speed = 0; this.barkCool = 3 + Math.random() * 5;
@@ -298,6 +303,7 @@ export class Dog {
     if (this.path) {
       // run the training course, hopping the hurdles; stop and bark at Twinsen when he comes to the fence
       if (dh < 3.5 && this.barkCool < 4) { this.a = damp(this.a, this.a + angleDiff(this.a, Math.atan2(h.pos.x - this.pos.x, h.pos.z - this.pos.z)), 6, dt); anim = 'warn'; if (this.barkCool <= 0) this.bark(dh); }
+      else if (h && dh < 2.5 && this.gap(h, this.pos.x + Math.sin(this.a) * 0.6, this.pos.z + Math.cos(this.a) * 0.6) < 0.1) { anim = 'idle'; this.rig.wag = 0.5; }   // (P28: he stands on the course ahead: it waits instead of running through him)
       else {
         const v = 3.4;
         this.s = (this.s + v * dt) % this.len;
@@ -316,7 +322,7 @@ export class Dog {
         // the poodle comes up wagging; a guard dog holds its ground and barks
         const ta = Math.atan2(h.pos.x - this.pos.x, h.pos.z - this.pos.z);
         this.a = damp(this.a, this.a + angleDiff(this.a, ta), 6, dt);
-        if (this.friendly && dh > 1.7 && this.inArea(h.pos.x, h.pos.z, 1)) want = this.step(Math.sin(this.a), Math.cos(this.a), 2.2, dt);
+        if (this.friendly && dh > 1.7 && this.gap(h) > 0.25 && this.inArea(h.pos.x, h.pos.z, 1)) want = this.step(Math.sin(this.a), Math.cos(this.a), 2.2, dt);
         anim = this.friendly ? (want > 0.3 ? 'walk' : 'idle') : 'warn';
         this.rig.wag = this.friendly ? 1 : 0.05;
         if (this.barkCool <= 0) this.bark(dh);
@@ -344,6 +350,18 @@ export class Dog {
     this.place(hop, dt);
   }
 
+  // its body's circles in the world ([x, z, r], Hero.contacts), at (x, z) facing its angle
+  circles(x = this.pos.x, z = this.pos.z) {
+    const sx = Math.sin(this.a), sz = Math.cos(this.a);
+    return this.shape.map(([f, r]) => [x + sx * f, z + sz * f, r]);
+  }
+  // the clearance between Twinsen's body and its own (negative: they overlap)
+  gap(h, x = this.pos.x, z = this.pos.z) {
+    let m = Infinity;
+    for (const [cx, cz, r] of this.circles(x, z)) m = Math.min(m, Math.hypot(h.pos.x - cx, h.pos.z - cz) - h.radius - r);
+    return m;
+  }
+
   inArea(x, z, m = 0) { const A = this.area; return !A || (x > A.x0 - m && x < A.x1 + m && z > A.z0 - m && z < A.z1 + m); }
 
   // move through the physics (walls stop it), keep inside the area; returns the speed actually made
@@ -353,7 +371,7 @@ export class Dog {
     if (!this.inArea(this.pos.x, this.pos.z, 0.5)) { this.pos.x = x0; this.pos.z = z0; }
     // (never into Twinsen: a step that comes closer than his body and its own is not taken)
     const h = this.hero();
-    if (h) { const R = h.radius + this.bodyR, d1 = Math.hypot(h.pos.x - this.pos.x, h.pos.z - this.pos.z); if (d1 < R && d1 < Math.hypot(h.pos.x - x0, h.pos.z - z0)) { this.pos.x = x0; this.pos.z = z0; } }
+    if (h && this.gap(h) < 0 && this.gap(h) < this.gap(h, x0, z0)) { this.pos.x = x0; this.pos.z = z0; }
     return Math.hypot(this.pos.x - x0, this.pos.z - z0) / Math.max(dt, 1e-4);
   }
 

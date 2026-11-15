@@ -144,7 +144,7 @@ const flask = await ev(() => {
   h.mp = 1; C.walkTo(b.k);
   return { type: b.type, stays, mp: +h.mp.toFixed(1), max: h.mpMax, gone: !C.loot().some((p) => p.k === b.k) };
 });
-check('full magic: a flask stays; with magic spent he takes it', flask.type === 'flask' && flask.stays && flask.gone && flask.mp === flask.max, flask);
+check('full magic: a flask stays; with magic spent he takes it (a part of his magic back)', flask.type === 'flask' && flask.stays && flask.gone && flask.mp === Math.min(flask.max, 1 + Math.ceil(flask.max * 0.3)), flask);   // (P29: a found flask gives a part, not all)
 const coinFull = await ev(() => { const G = game, h = G.hero; h.hp = h.maxHp; h.mp = h.mpMax; h.coins = 0; C.standBy('c-path-crate'); C.hop(); const b = C.loot().find((p) => p.k.endsWith('c-path-crate')); G.step(3); return { type: b?.type, gained: h.coins, left: C.loot().some((p) => p.k === b?.k) }; });
 check('kashes are taken whatever his life and magic', coinFull.type === 'coin' && coinFull.gained > 0 && !coinFull.left, coinFull);
 
