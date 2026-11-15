@@ -100,7 +100,9 @@ export class PumpLine {
     if (!U || g.room !== R) return;
     consider(dist(U.diagram.x, U.diagram.z), 1.5, { kind: 'ct_diagram', label: 'p_read' });
     for (const k of ['upper', 'lower', 'copper']) consider(dist(U.feel[k].x, U.feel[k].z), 1.05, { kind: 'ct_feel', which: k, label: 'p_feel' });
-    if (!f.ct_bypass) for (const k of ['upper', 'lower']) consider(dist(U.cocks[k].x, U.cocks[k].z), 1.0, { kind: 'ct_cock', which: k, label: 'p_cock' });
+    // (P39: each cock its own prompt, naming its line as its tag does; ranked by its wheel, not by where the hand goes on
+    //  it — the hand is at the wheel's right, so from the lower's place the upper's hand point was as near as its own)
+    if (!f.ct_bypass) for (const k of ['upper', 'lower']) { const c = U.cocks[k], w = c.wheel || c; consider(dist(w.x, w.z), 1.0, { kind: 'ct_cock', which: k, label: k === 'upper' ? 'p_cock_sq' : 'p_cock_ho' }); }
     consider(dist(U.plate.x, U.plate.z), 1.0, { kind: 'ct_plate', label: 'p_plate' });
     if (!f.ct_strip) consider(dist(U.gauge.x, U.gauge.z), 1.0, { kind: 'ct_strip', label: f.ct_bypass ? 'p_strip' : 'p_look' });
   }
@@ -132,12 +134,16 @@ export class PumpLine {
         at(c, () => {
           g.audio.play('valve', c);
           if (it.which === 'upper') {
-            // the wrong line: the square's pipe roars; it is let go at once, and Zoé knocks once (nothing at the tap)
-            c.set(true); U.shake('upper', 0.9); g.audio.play('waterRun', U.upperAt);
+            // the wrong line: the square's pipe roars and shakes, the wheel kicks back shut with a clang, Zoé knocks once
+            // (nothing at the tap). P39 (the user: "I turned it several times and it did nothing"): the thought comes at once
+            // and the rest runs on the room's own timers under it (they ran only in play, after a 1.9 s wait)
+            c.set(true); U.shake('upper', 1.0); g.audio.play('waterRun', U.upperAt); g.audio.play('rattle', U.upperAt);
+            g.particles.burst(U.upperAt.x + 1.5, U.upperY ?? 2.35, U.upperAt.z + 0.15, '#b8a890', 6, 0.9);
             f.ct_wrong = (f.ct_wrong || 0) + 1;
-            this.after(0.9, () => { c.set(false); g.audio.play('valveShut', c); });
-            this.after(1.3, () => this.knocks(1));
-            this.pending = { t: 1.9, fn: () => ch.chain([['hero', 'ct_cock_wrong'], ['hero', 'ct_zoe_knock1']]) };
+            const later = U.after ? (t, fn) => U.after(t, fn) : (t, fn) => this.after(t, fn);
+            later(0.8, () => { c.set(false, true); g.audio.play('valveShut', c); g.audio.play('clunk', c); g.camRig.shake?.(0.06); });
+            later(1.15, () => this.knocks(1, later));
+            ch.chain([['hero', 'ct_cock_wrong'], ['hero', 'ct_zoe_knock1']]);
             return;
           }
           f.ct_bypass = true; f.ct_seen = true;
@@ -198,9 +204,9 @@ export class PumpLine {
   // ---------------------------------------------------------------- what moves
   after(t, fn) { (this.later ||= []).push({ t, fn }); }
   // Zoé's knocks on the lower pipe, from the kitchen: n of them, the pipe shaking with each
-  knocks(n) {
+  knocks(n, later = (t, fn) => this.after(t, fn)) {
     const g = this.game, U = this.R?.pump; if (!U) return;
-    for (let i = 0; i < n; i++) this.after(i * 0.32, () => { g.audio.play('pipeKnock', U.lowerAt); U.shake('lower', 0.25); g.particles.burst(U.lowerAt.x, 1.6, U.lowerAt.z + 0.1, '#b8a890', 3, 0.7); });
+    for (let i = 0; i < n; i++) later(i * 0.32, () => { g.audio.play('pipeKnock', U.lowerAt); U.shake('lower', 0.25); g.particles.burst(U.lowerAt.x, 1.6, U.lowerAt.z + 0.1, '#b8a890', 3, 0.7); });
   }
   update(dt) {
     const g = this.game, f = this.f, h = g.hero;

@@ -5,6 +5,8 @@ import { STR } from '../i18n.js';
 Object.assign(STR.en, {
   n_zl_kell: 'Kell', n_zl_brel: 'Brel', n_zl_irsa: 'Irsa', n_veskhorn: 'Vesk (speaking tube)',
   p_tap: 'Try', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
+  // (P39: the pump room's two cocks, each its own prompt naming its line, as its tag and the wall diagram name it)
+  p_cock_sq: "Open the square's line", p_cock_ho: "Open the houses' line",
   p_hook: 'Hook', p_bell: 'Ring', p_feed: 'Switch', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
 
   // ------------------------------------------------------------ chapter 1: home
@@ -37,7 +39,7 @@ Object.assign(STR.en, {
   ct_obj_room: 'The pump room: find the pipe that takes the water',
   ct_sub_diagram: 'The wall diagram',
   ct_sub_feel: 'Three pipes: which one is the new one?',
-  ct_sub_cock: 'Open the right line at the bypass',
+  ct_sub_cock: "Behind the brick pier: open the houses' line",
   ct_sub_strip: "The gauge's paper strip",
   ct_sub_plate: "The pump's maker's plate",
   ct_obj_street: 'The taps run. See the street',
@@ -59,11 +61,11 @@ Object.assign(STR.en, {
   ct_feel_upper: '(The upper pipe. Cold, and full. It runs to the square.)',
   ct_feel_lower: '(The lower pipe. Cold and empty. Something taps on it, far off. Zoé.)',
   ct_feel_copper: "(Copper, and new. Warm. It shivers under my hand: three beats, then nothing. This one isn't on the diagram.)",
-  ct_follow: '(It runs along the wall and on behind the brick pier.)',
-  ct_bypass_see: "(Here. The copper pipe is bolted onto the houses' line, and its cock is wide open. The lane's water goes down the new pipe.)",
+  ct_follow: '(It runs along the back wall, behind the brick pier, to the cocks there.)',
+  ct_bypass_see: "(Behind the pier: a cock on each old pipe, SQUARE and HOUSES. The copper pipe is bolted onto the houses' line under its cock, and that cock is shut. The lane's water goes down the new pipe.)",
   ct_gauge_early: '(The gauge twitches with the copper pipe. Three beats, a rest.)',
   ct_yard_runs: '(The garden tap runs. Cold.)',
-  ct_cock_wrong: '(The upper pipe roars. That is the square again.)',
+  ct_cock_wrong: "(The upper pipe roars and the cock kicks back shut. That's the square's line, and the square has its water.)",
   ct_zoe_knock1: '(One knock on the lower pipe. Zoé: nothing at the tap.)',
   ct_cock_right: '(The lower pipe fills. The copper one goes quiet.)',
   ct_zoe_knock2: '(Two knocks. Water!)',

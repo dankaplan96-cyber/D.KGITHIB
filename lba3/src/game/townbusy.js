@@ -24,6 +24,7 @@ import { dampAngle, clamp } from '../engine/math.js';
 import { Gulls, part, merge, M4, MATL } from './gulls.js';
 import { QUAY_PILE, stallDrop, PLAY } from './walkrounds.js';
 import { TownPlay } from './townplay.js';
+import { strollPace } from './walkers.js';
 import { HarbourLife } from './harbourlife.js';
 import { TownBits } from './townbits.js';
 
@@ -163,7 +164,7 @@ export class TownBusy {
     const evac = this.state === 'evac';
     for (const r of res) {
       if (r.def.id !== 'maro' && r.def.id !== 'tilde') continue;
-      r.speed = (r.def.speed || 1.05) * (evac ? 1.35 : 1);
+      r.speed = strollPace(r.def.speed || 1.05) * (evac ? 1.35 : 1);   // (P36: a person's pace, walkers.js strollPace)
     }
   }
 

@@ -358,6 +358,7 @@ export class Chapter1 extends ChapterBase {
     g.audio.play('rumble');
     g.camRig.shake(0.5);
     this.story.refreshCast();
+    g.walkers?.play?.wellJoy?.();   // (P36: a few of the square's people go to the well, glad of it: townplay.js)
     const done = () => { g.updateObjective(); g.save(false); };
     const shot = g.room ? null : this.waterShotFraming();
     if (!shot) { W.station?.setActive?.(true); this.chain([['narrator', 'c1_water_1'], ['hero', this.line.on ? 'ct_tw_water' : 'c1_tw_water']], done); return; }
@@ -375,6 +376,8 @@ export class Chapter1 extends ChapterBase {
     g.setState('cutscene');
     g.camRig.override = shot;
     g.camRig.snap();
+    // (P36: the square's people go on living through this shot of their square — a story scene stops them where they stand,
+    //  and here they stood frozen mid-stride for its 2.6 s, the picture the user called slow motion: walkers.js prep)
     g.cutscene = (dt) => {
       tt += dt;
       while (cues.length && tt >= cues[0][0]) cues.shift()[1]();
@@ -382,11 +385,12 @@ export class Chapter1 extends ChapterBase {
       const I = g.input;
       if (tt >= 2.6 || (tt >= 0.9 && (I.pressed('interact') || I.pressed('action') || I.pressed('click')))) {
         light();
-        g.cutscene = null;
+        g.cutscene = null; g.cutLive = null;
         g.setState('play');
         this.chain([['narrator', 'c1_water_1'], ['hero', this.line.on ? 'ct_tw_water' : 'c1_tw_water']], () => { back(); done(); }, (i) => { if (i === 1) back(); });
       }
     };
+    g.cutLive = g.cutscene;   // (this scene only: walkers.js compares it with the scene running)
   }
   // the square seen past the well toward Pippa's stall and its heat post (the town's houses behind)
   waterShotFraming() {
@@ -451,7 +455,11 @@ export class Chapter1 extends ChapterBase {
     const SETTLE = 1.3;
     let tt = 0, dock = null, prevYaw = null, puffT = 0, mistT = 0, walk = null, said = false, skip = false;
     // Vesk aboard: at the rail by the gangway, looking at the town
-    const RIDE = { x: 1.0, z: 1.05 };
+    // (P33, the user 15.11: "his character disappears while he comes with the ship" — he rode at local x 1.0, z 1.05: the
+    //  cabin's front corner (x -4.2..1.0, z ±1.5), half his body inside it, the rest in its shade, so from the pier the
+    //  ship's turn hid him behind it and at the berth he was a dark half-figure. Now at the starboard rail in front of
+    //  the cabin, 0.75 m clear of it and 0.45 m inside the rail, on the pier's side)
+    const RIDE = { x: 1.75, z: 1.5 };
     vesk.setPresent(true); vesk.controlled = true; vesk.forceAnim = null;
     const ride = (dt = 0) => { const p = world(RIDE.x, deckY, RIDE.z); vesk.pos.copy(p); vesk.angle = grp.rotation.y; vesk.rig.play('idle'); vesk.rig.update(dt, 0); vesk.sync(); };
     const shipAt = (t) => {
@@ -495,7 +503,7 @@ export class Chapter1 extends ChapterBase {
     };
     // Vesk's way down: deck → the rail's gap → down the gangway → onto the pier → his mark (his height eased along the gangway)
     const startWalk = () => {
-      const a = world(RIDE.x, deckY, RIDE.z), b = world(2.0, deckY, 1.3), c = world(2.0, deckY, 2.95), d = { x: c.x + 0.4, z: c.z + 0.6 };
+      const a = world(RIDE.x, deckY, RIDE.z), b = world(2.0, deckY, 1.6), c = world(2.0, deckY, 2.95), d = { x: c.x + 0.4, z: c.z + 0.6 };
       walk = { i: 1, gang: 2, pts: [{ x: a.x, z: a.z, y: a.y }, { x: b.x, z: b.z, y: b.y }, { x: c.x, z: c.z, y: ground(c.x, c.z) }, { x: d.x, z: d.z, y: ground(d.x, d.z) }, { x: mark.x, z: mark.z, y: ground(mark.x, mark.z) }] };
     };
     const stepWalk = (dt) => {
@@ -580,18 +588,20 @@ export class Chapter1 extends ChapterBase {
       // (P33, the user 15.11: "the ship's caption comes in after the character arrives" — the narrator's line about the
       //  ferry gliding in waited for the berth and Vesk's walk; it is now a subtitle while she glides in (narr), and the
       //  speech follows at the berth. Skipped before it was shown, it is said here as before)
-      const lines = narrated ? [['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']] : [['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']];
-      const o = narrated ? 1 : 0;
-      shot(narrated ? 'speech' : 'lead', skip ? 0.05 : narrated ? 0.9 : 0.35);
+      // (PLAYTEST-15: skipped while the subtitle had been up under 3 s, the line was gone unread: it is said in the chain then)
+      const heard = narrated && (!skip || tt - narrAt >= 3);
+      const lines = heard ? [['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']] : [['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']];
+      const o = heard ? 1 : 0;
+      shot(heard ? 'speech' : 'lead', skip ? 0.05 : heard ? 0.9 : 0.35);
       this.chain(lines, () => { beat?.release(1.4); g.updateObjective(); g.save(false); },
         (i) => { if (i + o === 1) shot('speech', 0.9); else if (i + o === 2) beat?.release(1.4); });
     };
     // the narrator's subtitle while the ferry glides in (the films' own subtitle line, #cine-sub)
-    let narrated = false, narrUp = false;
+    let narrated = false, narrUp = false, narrAt = 0;
     const narr = (on) => {
       const el = document.getElementById('cine-sub');
       if (!el) return;
-      if (on && !narrUp) { el.innerHTML = `<span>${t('c1_arrive_1')}</span>`; el.classList.add('show'); narrUp = true; narrated = true; }
+      if (on && !narrUp) { el.innerHTML = `<span>${t('c1_arrive_1')}</span>`; el.classList.add('show'); narrUp = true; narrated = true; narrAt = tt; }
       else if (!on && narrUp) { el.classList.remove('show'); narrUp = false; }
     };
     shot('sea', 0.6); shipAt(0); ride(); frame();

@@ -751,7 +751,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
       k.add(rbox(0.3, 0.6, 0.03, 0.01), red, -0.16, 0.7, 0.04);
       k.add(rbox(0.28, 0.5, 0.03, 0.01), blue, 0.16, 0.74, 0.04);
     });
-    k.at(-6.5, 0, 9.95, 0, () => P.rug(k, 1.2, 0.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));   // (Arthur's rug's own weave: no new texture)
+    // (P32, the user 15.11: "a problem in the shower with a rug, weirdly pixelated": the mat lay at 0.012 m, the tiles' own
+    //  height, and the two fought for every pixel. On the tiles, 12 mm up, as every rug lies on its floor)
+    k.at(-6.5, 0.012, 9.95, 0, () => P.rug(k, 1.2, 0.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));   // (Arthur's rug's own weave: no new texture)
     // the door, each frame
     const dw = B.world((DL + DR) / 2, Z0); let open = 0;
     R.updaters.push((dt) => {
