@@ -531,7 +531,7 @@ export function buildTown(scene, W) {
   // the original's (CITADEL-85), and the two lights in them warm to match (the same two lights, the same strength)
   const SQUARE_LAMPS = PROPS.lamps.slice(0, 4);
   for (const [i, [x, z]] of SQUARE_LAMPS.entries()) {
-    lamp(dress, x, H(x, z), z, true);
+    lamp(dress, x, H(x, z), z, false);   // (P40, the user 15.11, with a picture of the original's square: "blue" — CITADEL-85's gold globes back to blue, as every other lamp)
     if (i < 2) { const l = new THREE.PointLight('#ffd9a0', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
     physics.add({ type: 'cyl', x, z, r: 0.2, top: H(x, z) + 3, seeThrough: true });
   }
