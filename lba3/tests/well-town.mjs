@@ -101,7 +101,7 @@ check('Doran awake, no errand yet: "No boat, no business" (INPUT)', has(s, /No b
 r = await ev(() => P.talk('xil', { run: true })); s = await said();
 check('Xil: the permit (no bell line once it has rung) (INPUT)', (await ev(() => game.flags.metXil)) && !has(s, /bell/), s);
 r = await ev(() => P.talk('doran', { run: true })); s = await said();
-check('Doran stamps (INPUT)', (await ev(() => game.flags.stamp)) && has(s, /Stamp/), s);
+check('Doran stamps (INPUT)', (await ev(() => game.flags.stamp)) && has(s, /stamped/), s);
 { const j = await journal(); check('the journal drops the stamp line once Doran has stamped', !j.some((k) => k.startsWith('pr_j_doran')), j); }
 r = await ev(() => P.talk('xil', { run: true }));
 check('Xil: the rope ladder (INPUT)', await ev(() => !!game.flags.rope));
