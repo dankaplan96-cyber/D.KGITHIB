@@ -139,7 +139,7 @@ export class ShellThread {
     }
     if (this.act() && r === 'c3core') {
       const C = this.R('c3core');
-      if (!f.co_branch) consider(dist(C.branch.x, C.branch.z), 1.3, { kind: 'co_cock', label: 'p_cock' });
+      if (!f.co_branch) consider(dist(C.branch.x, C.branch.z), 1.3, { kind: 'co_cock', label: 'p_cock_co' });
       else if (f.co_vesk && !f.co_lock) consider(dist(C.lock.grip.x, C.lock.grip.z), 1.3, { kind: 'co_lock', label: 'p_lockbar' });
       else if (f.co_lock && !f.co_signal) consider(dist(C.coreKnocker.x, C.coreKnocker.z), 1.3, { kind: 'co_knock', label: 'p_knock' });
     }

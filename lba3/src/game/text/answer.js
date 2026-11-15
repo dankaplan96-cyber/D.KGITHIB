@@ -2,7 +2,7 @@
 import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
-  p_knock: 'Knock', p_cock: 'Turn', p_lockbar: 'Lift',
+  p_knock: 'Knock', p_cock_co: 'Turn', p_lockbar: 'Lift',   // (P39: its own key; p_cock is text/thread.js's 'Open')
 
   // chapter 11: the shaft's test receiver
   sh_bal_teach: "One more thing. The crew tested the pylons' receivers on a target by the bore. You can't hit it straight: stand on the brass plate and bounce the ball off the panel. The core has three of those, and the guardian won't wait while you practise.",
