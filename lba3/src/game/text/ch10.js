@@ -17,7 +17,7 @@ Object.assign(STR.en, {
   c10_bal_pulse2: "It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
   c10_toast_pulse: 'Pulse Tool: hold {k} to choose it',
   c10_bal_4: "The way is already here. Listen.",
-  c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship over to Citadel, and you'll find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind. She's a glider, not a rocket.",
+  c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind: she's a glider.",
   c10_bal_after: "Five relays, five friends. And Twinsen, the relays are delicate. Don't throw the ball at them.",
 
   c10_hesk_fly: 'Where to?',
@@ -55,7 +55,7 @@ Object.assign(STR.en, {
   c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
-  c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. There's a heart by your feet. Breathe, then take them one at a time.",
+  c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. Catch your breath, then take them one at a time.",
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
   c10_ilka_water: "You look like the desert chewed you up. Here, my canteen: the vent's water, clean and warm.",
   c10_toast_water: "Ilka's canteen: life restored",
@@ -90,7 +90,7 @@ Object.assign(STR.en, {
   c10_bal_p2: "Sending now. Five voices, one signal...",
   c10_shaft: 'Under the derrick, something enormous groans. The blast doors over the collar draw back, and below them the rest grind open, one after another, all the way down.',
   c10_bal_p3: "It worked. It actually worked! Every one of them held. Twinsen, Vesk is at the bottom of that shaft, with the only console that can turn the bore around. Go and change his mind.",
-  c10_tw_p2: "I'll bring him back, and the bore with him.",
+  c10_tw_p2: "I'll turn it around. And I'll bring Vesk up, if he lets me.",
 
   c10_obj_bal: 'Hear Baldino out',
   c10_obj_stations: "Set Baldino's relays at the five stations ({n}/5)",

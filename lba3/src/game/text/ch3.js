@@ -41,7 +41,7 @@ Object.assign(STR.en, {
   c3_bal_radio3: "Everyone is still at their station. Zoé has the lighthouse signal, Mira the valves, Oku the mills. You take the pylons.",
 
   // the core
-  c3_core_vesk1: "You came all this way. Look, Twinsen. Under the shell lies the greatest source of power two worlds have ever had. I'm finishing the bore, and it will be ours.",
+  c3_core_vesk1: "You came all this way. Then look, Twinsen: under that shell is more heat than both worlds have ever burned, and I found it. I'm finishing the bore.",
   c3_core_tw1: "She's alive, Vesk. Waking her this early cracks the whole shell. Baldino's network turns the bore into a shield. Stop.",
   c3_core_vesk2: "Thirty percent was never a mistake. It's who I chose. Zeelich's upper districts will never be cold again, and the rest will learn to live with less.",
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
@@ -54,7 +54,7 @@ Object.assign(STR.en, {
   c3_vesk_over1: "Three pylons. Clever. You think a sketch beats ten years of my work?",
   c3_tw_over: 'The cracks are closing, Vesk. Switch it to shield mode. It is over.',
   c3_vesk_over2: 'Over? I built this machine. Guardian, full overload. Burn the pylons down if you have to.',
-  c3_vesk_over3: "And if she wakes, she wakes for me.",
+  c3_vesk_over3: "If she wakes, better someone who understands her is at the console.",
   c3_ilka_hold: "Twinsen, the overload is pulling on every station! Dallan and I are opening the desert vent wide to bleed it off.",
   c3_pim_hold: "Sefa turned the dome right into the sun! The relay's burning like a lamp. We're holding!",
   c3_toast_coil: "Hit the glowing coil over Vesk's console with the ball",
@@ -68,8 +68,8 @@ Object.assign(STR.en, {
   c3_vesk_hit1: 'Stop that! Do you know what that coil cost?',
   c3_vesk_hit2: 'The readings... no. No, no, no!',
   c3_vesk_fall: '(The coil bursts. The console blows out in a shower of sparks, and Vesk is thrown against the rail.)',
-  c3_vesk_down: "You've doomed two worlds to the cold, Twinsen. Remember that I warned you.",
-  c3_tw_down: "The council can listen to your warnings. From a cell.",
+  c3_vesk_down: "Half heat, for two worlds, for good. You'll hear about it every winter, Twinsen.",
+  c3_tw_down: "Tell the council. Their guards are on the way down.",
   // VESK-CHOICE: the console sparks over him
   c3_choice_title: 'The console sparks over Vesk',
   c3_choice_help: 'Pull him clear',

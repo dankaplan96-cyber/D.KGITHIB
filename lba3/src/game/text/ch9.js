@@ -41,7 +41,7 @@ Object.assign(STR.en, {
   c9_councilC_1: "And when the project leaves, who heats Zeelich? The cold winds come up through the clouds every year. The project's heat posts are the first warm winter we've had.",
   c9_councilB_1: "Vesk tells us the bore is safe. He has charts. You have... a story about a fading spirit.",
   c9_chair_2: "We cannot order the project on a story, Twinsen. Bring us proof. Something the project itself wrote down.",
-  c9_bal_c1: "(whispering) The master plans. The project archive is in this very building, next door. If anything shows where the bore cuts the shell, it's in there.",
+  c9_bal_c1: "Psst! The master plans. The project archive is next door, in this very building. If anything shows where the bore cuts the shell, it's in there.",
   c9_tw_c2: "I'll bring you proof.",
   c9_chair_wait: 'The council waits on your proof.',
 
@@ -63,7 +63,7 @@ Object.assign(STR.en, {
   c9_councilC_2: "Not assessed is not the same as broken. Plans are not proof that the shell will crack.",
   c9_dallan_1: "Then here's the rest of it. Councillors.",
   c9_tw_d1: 'Dallan?',
-  c9_dallan_2: "Hesk flew me up from Kesh, and I came over on the next project ship. Nobody checks a foreman. Professor Ilka sent these: her rubbings of the seals at the dig, and her readings from the vents. The carvings are a map of the shell. The bore line goes through the thinnest part of it.",
+  c9_dallan_2: "Hesk flew me up from Kesh, and nobody checks a foreman on a project ship. Professor Ilka sent these: her rubbings of the dig's seals and her readings from the vents. The carvings map the shell, and the bore line runs through its thinnest part.",
   c9_dallan_3: "I was project security. I stood guard over that dig for a year. I'm telling you: the professor is right, and the project knew enough to stop asking.",
   c9_councilC_3: "...My cousin works on the bore. If it cracks the shell, he's at the bottom of it.",
   c9_chair_3: "The council has heard enough. By vote of this council: the Joint Project is ordered to reverse the bore.",
