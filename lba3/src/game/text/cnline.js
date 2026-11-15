@@ -66,7 +66,7 @@ Object.assign(STR.en, {
   cn_tw_vesk: "You knew both, and you cut one out of the log.",
   cn_bal_stop2: "He's right about one thing: the stop only reached the drill. The bore's own switch is at the bottom of the shaft, behind the blast doors, and they open to a code from every station at once.",
   cn_bal_stop3: "And the lane hangs on the platform's line. Come to my bench. I have something that holds a line steady. One line.",
-  cn_obj_bench: "Try Baldino's isolator on the Test Pair bench",
+  cn_obj_bench: "Try Baldino's isolator on the relays at his bench",
   cn_sub_a: 'On the first relay', cn_sub_b: 'On the second relay',
 
   // ---- the bench

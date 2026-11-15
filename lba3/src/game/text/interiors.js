@@ -26,7 +26,7 @@ Object.assign(STR.en, {
   rs_luc_gone: "Everyone saw that light over the old fortress. Nobody agrees what it was. Arguing is good for business.",
   rs_luc_evac: "Lists, ships, shouting. I'm locking the cellar and taking the good glasses. The rest can fend for themselves.",
   rs_luc_home: "Everyone's back, and everyone's thirsty. I've never been so glad to be tired.",
-  rs_luc_work: "Twelve years I've polished this glass. It's still not clean. I think it's the glass.",
+  rs_luc_work: "Years I've polished this glass. It's still not clean. I think it's the glass.",
   rs_luc_0: 'Chez Luc. Same sign, same stools. Older landlord.',
   rs_luc_1: 'The dock crews drink here now. Louder than the old crowd, but they tip in Zeelich coin.',
   rs_luc_2: "The cellar's full of Esmer crates these days. I can't read the labels. I serve them anyway.",
@@ -39,7 +39,7 @@ Object.assign(STR.en, {
   rs_hobb_1: "Zeelich crates are square. Ours are crate-shaped. You'd be surprised the difference.",
 
   rs_sanna_dry: 'The ferry carries water tanks now. Half the town wants a ride just to wash.',
-  rs_sanna_hot: "Hot taps and a ferry that runs on light. Twelve years ago you'd have called that magic.",
+  rs_sanna_hot: "Hot taps and a ferry that runs on light. When I was a girl you'd have called that magic.",
   rs_sanna_work: 'My one sit-down of the day. Ask me again in an hour.',
   rs_sanna_0: 'I work the ferry to Desert Island. Out with the first sun, back with the second.',
   rs_sanna_1: "No sails on the ferry any more. I miss the sails. The sails didn't need a manual.",
@@ -86,7 +86,7 @@ Object.assign(STR.en, {
   rs_pharmacist_dry: "People keep asking me for something for thirst. It's called water. I'm out of it too.",
   rs_pharmacist_hot: "Scalds this week, all from hot taps. Test the water first, Twinsen.",
   rs_pharmacist_work: "Measuring. If I talk, it's two spoons instead of one.",
-  rs_pharmacist_0: 'Same shelves, same jars. Twelve years older, both of us.',
+  rs_pharmacist_0: 'Same shelves, same jars. Both of us a little older.',
   rs_pharmacist_1: 'The amber jars are Mosquibee honey, from Zeelich. Good for a sore throat. And for toast.',
 
   // ---- the neighbours' house

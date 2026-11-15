@@ -117,7 +117,7 @@ Object.assign(STR.en, {
   ip_mb_tend1_1: 'The great hive is older than me. Older than Bzzra. Do not tell her I said so.',
   ip_mb_tend1_after: 'The bees made extra comb this week. They like good news too.',
   ip_mb_tend2_0: 'When the ground is wrong, the bees know first. Lately they buzz at the floor. Bzz.',
-  ip_mb_tend2_crisis: 'The bees buzz at the floor all day now. Something under Twinsun is not right.',
+  ip_mb_tend2_crisis: 'The bees buzz at the floor all day now. Bzzra says it is the news from Twinsun. The bees do not read the news.',
   ip_mb_tend2_after: 'The bees stopped buzzing at the floor. Whatever was wrong is quieter.',
   ip_mb_flier_0: 'Honey to the shuttle, crates to the stall. I fly cargo. I am very fast. Bzz.',
   ip_mb_flier_1: 'Twinsun people like our honey on bread. Esmers like it in tea. Wannies like it on everything.',
