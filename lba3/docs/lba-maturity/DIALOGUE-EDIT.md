@@ -39,7 +39,15 @@ four short sentences (kept where the scene earns it).
 | `tests/dialogue-scenes.mjs ch3` | PASS 3/3 | Baldino's reordered first scene after Irsa's bench; capture D4 |
 | `tests/opening.mjs` | PASS 41/41 | |
 | `tests/opening-tutorial.mjs` | PASS 40/40 | |
+| `tests/chapter1.mjs` (chapter 2) | PASS 32/32 | the first try crashed the page (renderer, memory); passed on the retry |
+| `tests/chapter2.mjs` (chapter 3) | PASS 21/21 | Baldino's chain without the strip (the reorder's other branch) |
+| `tests/well-town.mjs` | 31/32, then fixed | it read Doran's old "*Stamp.*": the assertion now reads "stamped" (intended wording change, commit 048ea0b5) |
+| `tests/voice-phrase.mjs` | PASS 64/64 | |
+| `tests/voices.mjs` | 26/27: "every named speaker has an own voice" misses `lf_ossel`, `lf_wick` | the user's U-1 ferry speakers (text/ferry.js, before this pass): not caused by this pass, which adds no speaker; for the voices owner |
 | `tests/prologue.mjs` | 1 FAIL: "the well's mites beaten with the ball" (4 of 4 left, random combat) | listed as known-flaky in status.md ("3 of 4, random, passed on the rerun"); every dialogue step before it passed (Zoé's kettle, Mira's key, the lid, Doran's bell and stamp, Xil's rope, the kids, the stones, the pool). A first run crashed the page (renderer, memory) |
+
+Also checked: every regex literal in `tests/*.mjs` against the 58 English strings this pass changed (old text from the base
+commit, new text from the worktree): the only assertion on old wording was well-town's `/Stamp/` (fixed above).
 
 ## Coverage
 
