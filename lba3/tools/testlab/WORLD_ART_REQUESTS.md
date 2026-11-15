@@ -5125,3 +5125,16 @@ Windows scaling 125 % (devicePixelRatio 1.25).
   app (or Edge), it runs on the Intel UHD 630 → Medium, MSAA 2: the likeliest cause. In Chrome it gets the GTX 1050.
 - Seen in passing: on the tip Zoé is not by the kitchen at the start (OPENING-TUT changed the opening); not checked.
 - No diff. Not run: suites (nothing changed). No Twinsen model work was in progress here (46.2 withdrawn): nothing to push.
+
+## TAVI-B · Tavi on farmerB_b (order 41.5, CAST-VARIANTS-1's leftover) · the desktop, 15.11.2026
+**`requests/TAVI-B.diff`** (`roomlife.js`: Tavi's `char` farmerB → farmerB_b; `characters.js`: the comment that said he
+keeps farmerB). `git apply --check` clean on `42313c97`. No model, skeleton or index change (farmerB_b is shipped).
+- **`interior-life`** (SwiftShader, both on `42313c97`): with it **143/144**; unchanged **143/144**, the same single
+  failure: zterminal, chapter 9, the council's guard Velo at his `velo_till` stop 0.8 s into his dwell, facing 1.48 rad
+  off (still turning). Not this change. The terminal talk to Ollo that failed on 11.11 passes now.
+- Not run: the other cast suites (`cast-rounds`, `story-journeys`): one look swap, no new model.
+
+## 27a re-score of the Hamalayi after wave 3 and PLACE-3 (order 41.4) · the desktop, 15.11.2026
+In `docs/lba-maturity/resemblance-hamalayi.md` (new section): **69 → 71** (landmarks +1: the monastery's and Lhar's
+doors lead in; inhabitants +1: the phases and owners at home). Still provisional and low confidence: no LBA1 picture on
+the desktop. Pictures (chapter 6+) stay on the desktop.
