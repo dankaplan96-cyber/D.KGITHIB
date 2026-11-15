@@ -154,7 +154,30 @@ renders every sound it heard offline with the game's engine (three takes each) a
 under big; and play()'s cost (median < 0.5 ms). `tests/action-sound.mjs` was extended for the new names (its bounce and
 rummage checks accept a sound by surface and by kind).
 
-Suite results: see the table at the end (filled from the runs).
+Suite results on this build (`de8a6ada`'s code; the before build `ccr-c1c2c4b9-dep6ed` = REF where a suite failed;
+machine load 12–18 on 4 cores, shared with other agents' runs):
+
+| Suite | This build | REF | Note |
+|---|---|---|---|
+| action-sound-2 (new) | **40/40 PASS** | — | |
+| action-sound | 21/21 PASS | — | extended for the new names |
+| ball-close | 6/6 PASS | — | |
+| anim-combat | 35/35 PASS | — | |
+| combat | 77/78 | 77/78, the same | "dodge distance at 30 and 60 fps" `{"d30":0,"d60":1.56}` on both (KNOWN-FAILING) |
+| items-ceremony | 20/20 PASS | — | |
+| containers | 41/41 PASS | — | |
+| arsenal | 34/34 PASS | — | |
+| equip2 | 30/30 PASS | — | |
+| equip2b | stops at check 1 | stops at the same check | Zeelich's canal set-up (`reading 'sign'`): not sound; Zeelich is TECH-ART-1's area |
+| audio | 6/6 PASS (4th run) | 6/6 PASS (1 run) | runs 1–3 here timed out on a Playwright click in the pause menu: the page drew no frames for ~30 s (requestAnimationFrame stalled; the main thread answered). A probe saw that stall on this build 3 times in 7 (once with only `audio.js` swapped into REF) and never on REF in 6, all at load 15–18; six alternating probes at load 13 were clean on both. No mechanism found (nothing in this pass runs while paused); left open, see "Not done here" |
+| voices | 27/27 PASS | — | |
+| voice-phrase | 62/64, then 63/64 | 63/64 | timing checks under load move between runs (REF: the Expressive start 9.3 ms > 5; here: Zoé's clip, then the Words worker timing); voice code untouched |
+| menus | stops at a reload | stops at the same reload | `page.reload` timeout under load on both |
+| opening | 41/41 PASS | — | |
+| opening-tutorial | 40/40 PASS | — | |
+| chapter1 | 32/32 PASS | — | |
+
+Logs: `/dev/shm/as2-<suite>-<tag>-<try>.log`, REF: `/dev/shm/as2-<suite>-base.log` (session only).
 
 ## Listening files (for the user; nobody here has heard them)
 
@@ -182,6 +205,9 @@ offline from the code (not recorded in a place). **Listening status: not listene
   ambient loops: unchanged (as action-sound.md lists).
 - The heavy charge reuses the ball's `chargeFull` chime (unchanged).
 - Equipping the ball has its own glint (`equipBall`), not covered by a test (the yard starts with the ball).
+- The pause-menu frame stall seen in `audio.mjs` under heavy load (table above): seen on this build only, never
+  reproduced at lower load on either build. If it recurs on a quiet machine, compare `src/engine/audio.js` at
+  `de8a6ada` against REF first (the stall was once seen with only that file swapped in).
 
 ## Files
 
