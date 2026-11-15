@@ -490,3 +490,5 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        tied hair, numbers and descriptions only). Previews from the play camera's height behind him, before/after; the
        usual pipeline (export, in-game load, the rig's animations, the face untouched). Send it as a request.
     Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
+    3. **P40 (decided):** the user, with a picture of the original's square (blue globes round the statue): Citadel's square
+       lamps are **blue**. CITADEL-85's gold globes were reverted in town.js (f589e7b1); don't bring gold back.
