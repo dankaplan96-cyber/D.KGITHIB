@@ -5033,3 +5033,9 @@ were added objects, and the 14.11 no-clutter rule (above, in `CLOUD_ORDERS.md`) 
   school, not the temple's entrance; in LBA2 the way down is a **well**. No proposal from the desktop on it; the user
   closed ISLAND-85 ("leave it all, enough"), Citadel's declutter pass included.
 - Not run: no suites (nothing sent).
+
+## NOTE · the Vega 8 laptop is gone: its orders run on the UHD 630 · the desktop, 15.11.2026
+The user, 15.11: the old laptop is sold and will not come back; what was asked of the Vega 8 is done on the desktop's
+Intel UHD 630 instead (the minimum target; Chrome/the app set to the power-saving GPU). So **order 45 (TECH-ART-1) and
+27c** are no longer "whenever the laptop is at hand": they join the desktop's queue, numbers labelled "UHD 630". Please
+read "Vega 8" in `CLOUD_ORDERS.md` (orders 41.6, 44.3, 45) as the UHD 630 from now on.
