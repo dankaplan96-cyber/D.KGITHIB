@@ -18,7 +18,7 @@ export const CRYSTAL_QUEST = {
   'sc-jaspa': { quest: 'ISL-1', region: 'isles', built: true },        // Old Jaspa's warm gems, Knartas (chapter 4 on)
   'sc-waystone': { quest: 'HAM-1', region: 'hamalayi', built: true },  // the pilgrims' waystone, the monastery terrace (chapter 6 on)
   'sc-figures': { quest: 'DES-1', region: 'desert', built: false },    // where the figures look (a buried survey cache)
-  'sc-trial': { quest: 'DES-2', region: 'desert', built: false },      // Rector Hougo's third rebound trial
+  'sc-trial': { quest: 'U-3', region: 'desert', built: true },         // Rector Hougo's prize for Tali's ball game, behind the School (U-3, which replaces DES-2: story/offwall.js)
   'sc-pack': { quest: 'HAM-3', region: 'hamalayi', built: false },     // Yorna's brother's pack in the glacier
   'sc-source': { quest: 'UND-1', region: 'underground', built: false },  // the source, the crystal galleries
 };
