@@ -5255,3 +5255,28 @@ said "yes, like LBA2". Ours had every part but read as a dark egg in front of a 
 - Pictures, before left / after right (chapter 4: not for the user): `docs/future/landmarks/school-lba2-wide.jpg`,
   `school-lba2-play.jpg` (the play camera at the bridge).
 - Not run: `wizards`, `desert-life`, `island-doors`, `chapter4` (the door and its spot unchanged): **for the cloud**.
+
+## SCHOOL-LBA2b · the School's face carved into a canyon wall, not stuck on a box (CLOUD_ORDERS 47, P41) · the desktop, 15.11.2026
+**`requests/SCHOOL-LBA2b.diff`** replaces SCHOOL-LBA2 (drop that one): `desertold.js` only, against origin
+(`git apply --check` clean). Kept from SCHOOL-LBA2: the pale lilac-grey mask, the swept-up pointed brows, the deep sockets
+with big rough orange eyes, the cheekbones, the nose and chin in the mask's colour. The door, its frame and star, the
+forecourt, the bridge, the sign, the pillars and the `wizards` people are untouched.
+- **The box and its battlements are gone.** The face sits in one continuous run of rock along the original's line:
+  from the face's north end it turns west along the pool's south side (to x −86), behind the face it runs north-south,
+  and south of it it runs on 13 m and falls away into the terrace, ending in two low rocks. Each stretch is a wide
+  faceted rock column, the Whispering Cliffs' own shape (`cliffs.js stoneColumnGeometry`: strata, ledges, worn tops)
+  with the cliffs' texture and vertex tones, the moss caps turned grey; neighbours overlap so it reads as one cliff.
+  The skyline is uneven: 13–14 m beside and behind the face (it rises over the face's 8.6 m), falling to 5.5 m at the
+  north arm's end and 3.6 m at the south arm's. (Tried and dropped: tall spires either side, which read as round
+  towers.)
+- **Walkable as before:** the pool's rim walk (z −66…−68.6) is exactly as free as on origin (probed on a 1 m grid round
+  the School, before and after); the forecourt and the bridge are not touched. The ground west of the wall stays
+  reachable round the south arm's end.
+- **Objects:** the old slab (1) → 24 rock columns plus shoulders and 2 end rocks in one material; colliders: the slab's
+  one box → one box per stretch (camera volumes, as the slab's was). Materials: mask, lava, cliff-rock (3) replace the
+  face's grey, cliff and eye (3): about the same draw calls (not measured).
+- Pictures, origin left / with it right (chapter 4: not for the user): `docs/future/landmarks/school-lba2b-{play,plaza,wide,wide2}.jpg`
+  (the play camera at the bridge, from the plaza, and two wide views). Checked beside the user's LBA2 picture (not
+  committed). **Still unlike it:** LBA2's face is narrower at the chin and its rock is taller and streakier; ours is a
+  rock outcrop on the sand rather than a deep gorge (a gorge would need the plaza's ground changed).
+- Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud when applying**.
