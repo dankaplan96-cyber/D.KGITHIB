@@ -6,11 +6,14 @@
 //   - the West Pier (zeelich.js PIER) keeps its rails and bollards. Its one-crate stack by the pier root became the
 //     SAILINGS BOARD (the replacement, not an addition). At the pier's rail gap: the LOADING BRIDGE (a hinged ramp, up
 //     until the winch house lowers it) under a small derrick post whose cord rings the landing BELL.
-//   - the WINCH HOUSE behind the gateway's south pillar (x −47.6…−44.6, z 6.9…11.4): a door in its north wall; inside,
-//     the bridge's hand wheel on the west wall; a partition with one hole (the port) across the house; the bridge's
-//     COUNTERWEIGHT hangs in front of the port while the bridge is up; behind the partition the CABLE DRUM, and at its
-//     east end the CATCH (a ratchet and pawl) whose trip paddle faces the back wall: only something through the port
-//     reaches it. The drum's cable runs out through the west wall to the ferry's bow.
+//   - the WINCH HOUSE behind the gateway's south pillar (x −47.6…−44.6, z 6.9…10.9): a door in its north wall; inside,
+//     one pale partition across the house faces the door, and everything the puzzle needs is on it or seen through it:
+//     the bridge's hand wheel (east), the port (a hole with a lit rim) and the bridge's COUNTERWEIGHT hanging in front
+//     of it while the bridge is up. Behind the partition, in a dark-lined back room: the CABLE DRUM low behind the hole,
+//     and behind the drum the CATCH (a ratchet and pawl at the drum's west end) whose red trip paddle sits on a lever
+//     right behind the hole: only something through the port reaches it. The drum's cable runs out through the west
+//     wall to the ferry's bow. (U1-WINCH-READ: laid out so the chase camera, standing at his back as he faces the
+//     wheel or the hole, sees the wheel, the weight, the hole and the paddle in one view.)
 //   - the ferry "Patience" (zeelich.js buildFerry, the model kept out of sight until now) at the WEST berth; the second
 //     berth off MILL LANE STEPS: a short timber stage off the south shore below the Cistern Rise, with one post that
 //     holds its sign and its bell. The ferry's deck: a telegraph (its handle starts a sailing) and Oshra's tea crate.
@@ -31,14 +34,14 @@ import { touch } from './story/reach.js';
 
 const Y0 = 6.0;
 export const LF = {
-  hut: { x0: -47.6, x1: -44.6, z0: 6.9, z1: 11.4, h: 2.9, t: 0.2 },
+  hut: { x0: -47.6, x1: -44.6, z0: 6.9, z1: 10.9, h: 2.9, t: 0.2 },
   door: { x: -45.8, hw: 0.55, h: 2.1 },
-  wheel: { x: -47.3, y: 1.12, z: 7.75, r: 0.34 },
+  wheel: { x: -45.12, y: 1.12, z: 8.78, r: 0.3 },      // (on the partition's face, east of the counterweight's frame: the camera at his back clears the gateway's pillar)
   part: { z: 9.0, t: 0.3 },
-  port: { x: -45.5, hw: 0.42, y0: 0.85, y1: 1.75 },   // (the ball, 0.14 m round, needs the room: a throw leaves the hand ~1.45 m up)
+  port: { x: -46.1, hw: 0.42, y0: 0.85, y1: 1.75 },   // (the ball, 0.14 m round, needs the room: a throw leaves the hand ~1.45 m up)
   weight: { w: 0.9, h: 0.95, d: 0.26, z: 8.7, down: 0.82, up: 1.85 },
-  drum: { x0: -46.95, x1: -45.68, z: 9.85, y: 0.78, r: 0.42 },
-  trip: { x: -45.5, y: 1.3, z: 10.75, r: 0.32 },
+  drum: { x0: -46.62, x1: -45.58, z: 9.4, y: 0.55, r: 0.3 },    // (low behind the hole: its top shows in the hole's sill)
+  trip: { x: -46.1, y: 1.1, z: 9.85, r: 0.32 },       // (the paddle: just behind the drum, in the hole's sight from the camera at his back)
   bridge: { x: -55.6, z: 2.15, w: 1.4, L: 2.45 },
   post: { x: -56.65, z: 1.9, h: 3.3 },
   cordW: { x: -56.4, z: 1.72 },
@@ -128,83 +131,102 @@ export function buildSkyFerry(game, Z) {
   const stat = new Kit(root);
   const H = LF.hut, D = LF.door;
   const wood = MAT.wood('dark'), pale = MAT.planks('honey'), brass = MAT.brass(), iron = MAT.iron();
-  const teal = MAT.paint('#2f7a84', 0.55), red = MAT.paint('#b0402a', 0.6);
+  const teal = MAT.paint('#2f7a84', 0.55);
   const rope = MAT.flat('#c8a878', 0.9);
 
-  // ---------------------------------------------------------------- the winch house (its shell fades while he is in it)
+  // ---------------------------------------------------------------- the winch house (its front shell fades while he is in it)
+  // U1-WINCH-READ: the front room's walls and the roof fade (the camera stands at his back, north of the house); the
+  // back room's walls and roof stay solid, dark inside, so the hole shows a dark room with the drum and the bright paddle
+  // in it, not the street through glass-like walls.
   const shellG = new THREE.Group(); root.add(shellG);
   const shell = new Kit(shellG); shell.recolor = false;
   const wallM = MAT.plaster('#e2d6cc').clone(), trimM = MAT.paint('#3a7a8a', 0.55).clone(), roofM = MAT.plates('#7a8a92', 1).clone();
   const shellMats = [wallM, trimM, roofM];
+  const backM = MAT.plaster('#e2d6cc'), backTrimM = MAT.paint('#3a7a8a', 0.55), lining = MAT.flat('#2a2420', 0.95);
   const cx = (H.x0 + H.x1) / 2, cz = (H.z0 + H.z1) / 2, w = H.x1 - H.x0, d = H.z1 - H.z0, t = H.t;
-  const wall = (x, z, ww, dd, y0 = 0, hh = H.h) => {
-    shell.add(rbox(ww, hh, dd, 0.03), wallM, x, Y0 + y0 + hh / 2, z);
+  const PT = LF.part, zs = PT.z + 0.04;   // (the partition's back face: the side walls split there)
+  const wall = (x, z, ww, dd, y0 = 0, hh = H.h, kit = shell, m = wallM) => {
+    kit.add(rbox(ww, hh, dd, 0.03), m, x, Y0 + y0 + hh / 2, z);
     col({ type: 'box', x, z, hw: ww / 2, hd: dd / 2, rot: 0, top: Y0 + y0 + hh, bottom: Y0 + y0 - 0.05, camSkip: true });
   };
-  wall(H.x0 + t / 2, cz, t, d);                        // west
-  wall(H.x1 - t / 2, cz, t, d);                        // east
-  wall(cx, H.z1 - t / 2, w - 2 * t, t);                // back (south)
+  for (const xw of [H.x0 + t / 2, H.x1 - t / 2]) {
+    wall(xw, (H.z0 + zs) / 2, t, zs - H.z0);                        // west / east, the front room's part (fades)
+    wall(xw, (zs + H.z1) / 2, t, H.z1 - zs, 0, H.h, stat, backM);    // west / east, the back room's part (stays)
+  }
+  wall(cx, H.z1 - t / 2, w - 2 * t, t, 0, H.h, stat, backM);        // back (south: stays)
+  // the back room's dark lining (its inner faces: what the hole shows behind the paddle)
+  const iw0 = H.x0 + t, iw1 = H.x1 - t, bz0 = zs, bz1 = H.z1 - t;
+  stat.add(rbox(iw1 - iw0, H.h - 0.02, 0.02, 0.005), lining, cx, Y0 + H.h / 2, bz1 - 0.011);
+  for (const x of [iw0 + 0.011, iw1 - 0.011]) stat.add(rbox(0.02, H.h - 0.02, bz1 - bz0, 0.005), lining, x, Y0 + H.h / 2, (bz0 + bz1) / 2);
   const dl = D.x - D.hw, dr = D.x + D.hw;
   wall((H.x0 + dl) / 2, H.z0 + t / 2, dl - H.x0, t);   // north, west of the door
   wall((dr + H.x1) / 2, H.z0 + t / 2, H.x1 - dr, t);   // north, east of the door
   shell.add(rbox(dr - dl + 0.02, H.h - D.h, t, 0.03), wallM, D.x, Y0 + D.h + (H.h - D.h) / 2, H.z0 + t / 2);   // (the lintel)
-  shell.add(rbox(w + 0.36, 0.14, d + 0.36, 0.04), roofM, cx, Y0 + H.h + 0.07, cz);
-  for (const [x, z, ww, dd] of [[cx, H.z0 - 0.01, w + 0.04, 0.05], [cx, H.z1 + 0.01, w + 0.04, 0.05]]) shell.add(rbox(ww, 0.16, dd, 0.02), trimM, x, Y0 + H.h - 0.12, z);
+  // the roof: over the front room it fades with the walls; over the back room it stays (the hole looks into shade)
+  { const zf = H.z0 - 0.18, zb = H.z1 + 0.18;
+    shell.add(rbox(w + 0.36, 0.14, zs - zf, 0.04), roofM, cx, Y0 + H.h + 0.07, (zf + zs) / 2);
+    stat.add(rbox(w + 0.36, 0.14, zb - zs, 0.04), MAT.plates('#7a8a92', 1), cx, Y0 + H.h + 0.07, (zs + zb) / 2); }
+  shell.add(rbox(w + 0.04, 0.16, 0.05, 0.02), trimM, cx, Y0 + H.h - 0.12, H.z0 - 0.01);
+  stat.add(rbox(w + 0.04, 0.16, 0.05, 0.02), backTrimM, cx, Y0 + H.h - 0.12, H.z1 + 0.01);
   for (const s of [-1, 1]) shell.add(rbox(0.1, D.h + 0.08, 0.26, 0.02), trimM, D.x + s * (D.hw + 0.03), Y0 + D.h / 2, H.z0 + t / 2);
   shell.add(rbox(dr - dl + 0.26, 0.12, 0.26, 0.02), trimM, D.x, Y0 + D.h + 0.06, H.z0 + t / 2);
   shell.flush();
   // the camera: as any house from outside; inside, it keeps its arm and the shell fades (story/ferry.js shellFade)
   roomOcc(Z, P.terrain).add({ kind: 'box', x: OX + cx, z: OZ + cz, hw: w / 2, hd: d / 2, y0: Y0 - 0.1, y1: Y0 + H.h + 0.2, walkUnder: { x0: OX + H.x0, x1: OX + H.x1, z0: OZ + H.z0 - 0.2, z1: OZ + H.z1 }, name: 'winch house' });
 
-  // the brass plate by the door, inside (the procedure)
+  // the brass plate by the door, inside (the procedure); matt, so it reads without a reflection to light it
   const PL = { x: H.x1 - t - 0.01, y: Y0 + 1.45, z: H.z0 + t + 0.55 };
-  { const tx = canvasTex(256, 160, (x, Wd, Hh) => { x.fillStyle = '#d8b060'; x.fillRect(0, 0, Wd, Hh); x.strokeStyle = '#6a4a1a'; x.lineWidth = 8; x.strokeRect(4, 4, Wd - 8, Hh - 8); x.fillStyle = '#3a2a10'; x.textAlign = 'left'; x.font = 'bold 26px serif'; ['1. BRIDGE DOWN', '2. TRIP THE CATCH', '3. RING OFF'].forEach((s, i) => x.fillText(s, 22, 48 + i * 40)); });
-    const m = new THREE.Mesh(plane(0.42, 0.26), MAT.map(tx, 0.4, { metalness: 0.5 })); m.position.set(PL.x, PL.y, PL.z); m.rotation.y = -Math.PI / 2; root.add(m); }
+  { const tx = canvasTex(256, 160, (x, Wd, Hh) => { x.fillStyle = '#e8c070'; x.fillRect(0, 0, Wd, Hh); x.strokeStyle = '#6a4a1a'; x.lineWidth = 8; x.strokeRect(4, 4, Wd - 8, Hh - 8); x.fillStyle = '#2a1a08'; x.textAlign = 'left'; x.font = 'bold 26px serif'; ['1. BRIDGE DOWN', '2. TRIP THE CATCH', '3. RING OFF'].forEach((s, i) => x.fillText(s, 22, 48 + i * 40)); });
+    const m = new THREE.Mesh(plane(0.5, 0.31), MAT.map(tx, 0.5)); m.position.set(PL.x, PL.y, PL.z); m.rotation.y = -Math.PI / 2; root.add(m); }
 
-  // the bridge's hand wheel on the west wall (it turns; its shaft goes out through the wall)
-  const WH = LF.wheel;
-  const wheel = new THREE.Group(); wheel.position.set(WH.x, Y0 + WH.y, WH.z); root.add(wheel);
-  { const k = new Kit(wheel); k.add(torus(WH.r, 0.035, 8, 24), iron, 0, 0, 0, Math.PI / 2);
-    for (let i = 0; i < 4; i++) k.add(rbox(0.04, WH.r * 2, 0.04, 0.01), iron, 0, 0, 0, 0, { rx: i * Math.PI / 4 });
-    k.add(cyl(0.07, 0.07, 0.12, 10), brass, -0.02, 0, 0, 0, { rz: Math.PI / 2 }); k.flush(); }
-  stat.add(cyl(0.04, 0.04, 0.32, 8), iron, H.x0 + 0.1, Y0 + WH.y, WH.z, 0, { rz: Math.PI / 2 });
-
-  // the partition across the house, with its one hole (the port)
-  const PT = LF.part, PO = LF.port, iw0 = H.x0 + t, iw1 = H.x1 - t;
+  // the partition across the house (pale planks: the iron weight, the wheel and the dark hole read against it)
+  const PO = LF.port;
   const part = (x0, x1, y0, y1) => {
-    stat.add(rbox(x1 - x0, y1 - y0, 0.08, 0.01), wood, (x0 + x1) / 2, Y0 + (y0 + y1) / 2, PT.z);
+    stat.add(rbox(x1 - x0, y1 - y0, 0.08, 0.01), pale, (x0 + x1) / 2, Y0 + (y0 + y1) / 2, PT.z);
     col({ type: 'box', x: (x0 + x1) / 2, z: PT.z, hw: (x1 - x0) / 2, hd: PT.t / 2, rot: 0, top: Y0 + y1, bottom: Y0 + y0, camSkip: true });
   };
   part(iw0, PO.x - PO.hw, 0, H.h); part(PO.x + PO.hw, iw1, 0, H.h);
   part(PO.x - PO.hw, PO.x + PO.hw, 0, PO.y0); part(PO.x - PO.hw, PO.x + PO.hw, PO.y1, H.h);
-  // the port's brass rim
-  for (const [x, y, ww, hh] of [[PO.x, PO.y0, PO.hw * 2 + 0.08, 0.04], [PO.x, PO.y1, PO.hw * 2 + 0.08, 0.04], [PO.x - PO.hw, (PO.y0 + PO.y1) / 2, 0.04, PO.y1 - PO.y0], [PO.x + PO.hw, (PO.y0 + PO.y1) / 2, 0.04, PO.y1 - PO.y0]])
-    stat.add(rbox(ww, hh, 0.1, 0.01), brass, x, Y0 + y, PT.z - 0.01);
+  // the port's rim, lit (a warm glow round the hole: it outlines the hole round the counterweight too)
+  const rimM = MAT.glow('#ffe2a0', '#ffb040', 0.9), RB = 0.07;
+  for (const [x, y, ww, hh] of [[PO.x, PO.y0 - RB / 2, PO.hw * 2 + RB * 2, RB], [PO.x, PO.y1 + RB / 2, PO.hw * 2 + RB * 2, RB], [PO.x - PO.hw - RB / 2, (PO.y0 + PO.y1) / 2, RB, PO.y1 - PO.y0], [PO.x + PO.hw + RB / 2, (PO.y0 + PO.y1) / 2, RB, PO.y1 - PO.y0]])
+    stat.add(rbox(ww, hh, 0.1, 0.01), rimM, x, Y0 + y, PT.z - 0.01);
+
+  // the bridge's hand wheel, on the partition east of the weight's frame (it turns as the weight goes up: setWeight)
+  const WH = LF.wheel;
+  const wheel = new THREE.Group(); wheel.position.set(WH.x, Y0 + WH.y, WH.z); root.add(wheel);
+  { const k = new Kit(wheel); k.add(torus(WH.r, 0.035, 8, 24), iron, 0, 0, 0);
+    for (let i = 0; i < 4; i++) k.add(rbox(0.04, WH.r * 2, 0.04, 0.01), iron, 0, 0, 0, 0, { rz: i * Math.PI / 4 });
+    k.add(cyl(0.07, 0.07, 0.12, 10), brass, 0, 0, 0.02, 0, { rx: Math.PI / 2 }); k.flush(); }
+  stat.add(cyl(0.04, 0.04, PT.z - WH.z, 8), iron, WH.x, Y0 + WH.y, (PT.z + WH.z) / 2, 0, { rx: Math.PI / 2 });   // (its shaft into the partition)
 
   // the counterweight in its frame, in front of the port: down (covering it) while the bridge is up
   const WG = LF.weight;
   for (const s of [-1, 1]) stat.add(rbox(0.05, H.h - 0.05, 0.05, 0.01), iron, PO.x + s * (WG.w / 2 + 0.05), Y0 + (H.h - 0.05) / 2, WG.z);
-  const weight = new THREE.Mesh(rbox(WG.w, WG.h, WG.d, 0.03), MAT.iron()); weight.castShadow = true; root.add(weight);
+  // (painted, so it reads as a solid block hanging in the lit frame, not as another dark hole)
+  const weight = new THREE.Mesh(rbox(WG.w, WG.h, WG.d, 0.03), MAT.paint('#5a8a94', 0.5)); weight.castShadow = true; root.add(weight);
   const chain = new THREE.Mesh(cyl(0.015, 0.015, 1, 5), iron); root.add(chain);
   const wcol = col({ type: 'box', x: PO.x, z: WG.z, hw: WG.w / 2, hd: WG.d / 2 + 0.06, rot: 0, top: Y0 + WG.down + WG.h, bottom: Y0 + WG.down, camSkip: true });
 
-  // the drum, the cable on it, and the catch at its east end; the trip paddle faces the back wall
+  // the drum low behind the hole, the cable on it; the ratchet at its west end, the catch's pawl over it
   const DR = LF.drum;
   const drum = new THREE.Group(); drum.position.set((DR.x0 + DR.x1) / 2, Y0 + DR.y, DR.z); root.add(drum);
   { const k = new Kit(drum), L = DR.x1 - DR.x0;
-    k.add(cyl(DR.r * 0.82, DR.r * 0.82, L - 0.1, 16), MAT.flat('#7a6a50', 0.95), 0, 0, 0, 0, { rz: Math.PI / 2 });   // (the cable, wound)
+    k.add(cyl(DR.r * 0.82, DR.r * 0.82, L - 0.1, 16), MAT.flat('#a08a66', 0.95), 0, 0, 0, 0, { rz: Math.PI / 2 });   // (the cable, wound)
     for (const s of [-1, 1]) k.add(cyl(DR.r, DR.r, 0.05, 18), iron, s * (L / 2 - 0.03), 0, 0, 0, { rz: Math.PI / 2 });
-    for (let i = 0; i < 6; i++) k.add(rbox(0.08, 0.06, 0.06, 0.01), iron, L / 2 + 0.04, Math.cos(i * 1.047) * (DR.r + 0.05), Math.sin(i * 1.047) * (DR.r + 0.05));   // (the ratchet's teeth)
+    for (let i = 0; i < 6; i++) k.add(rbox(0.08, 0.06, 0.06, 0.01), iron, -L / 2 - 0.04, Math.cos(i * 1.047) * (DR.r + 0.05), Math.sin(i * 1.047) * (DR.r + 0.05));   // (the ratchet's teeth)
     k.flush(); }
-  for (const x of [DR.x0 - 0.05, DR.x1 + 0.12]) stat.add(rbox(0.1, DR.y + 0.1, 0.18, 0.02), iron, x, Y0 + (DR.y + 0.1) / 2, DR.z);
+  for (const x of [DR.x0 - 0.16, DR.x1 + 0.05]) stat.add(rbox(0.1, DR.y + 0.1, 0.18, 0.02), iron, x, Y0 + (DR.y + 0.1) / 2, DR.z);
   col({ type: 'box', x: (DR.x0 + DR.x1) / 2, z: DR.z, hw: (DR.x1 - DR.x0) / 2 + 0.1, hd: DR.r, rot: 0, top: Y0 + DR.y + DR.r, bottom: Y0, camSkip: true });
-  // the pawl: an iron dog on a pivot block bracketed from the back wall, its red trip paddle toward the wall
-  const TR = LF.trip;
-  stat.add(rbox(0.12, 0.5, 0.42, 0.02), iron, TR.x, Y0 + 1.42, H.z1 - t - 0.21);
-  const pawl = new THREE.Group(); pawl.position.set(TR.x, Y0 + 1.42, DR.z + 0.62); root.add(pawl);
-  { const k = new Kit(pawl);
-    k.add(rbox(0.07, 0.07, 0.62, 0.01), iron, 0, -0.18, -0.24, 0, { rx: -0.55 });   // (the dog, down onto the teeth)
-    k.add(rbox(0.26, 0.2, 0.04, 0.01), red, 0, -0.12, 0.08);                         // (the trip paddle, facing the wall)
+  // the pawl: an iron dog on a pivot post behind the ratchet, down onto its teeth; from the pivot a lever runs east
+  // behind the drum to the red trip paddle, which faces the hole (bright against the dark lining)
+  const TR = LF.trip, PV = { x: DR.x0 - 0.04, y: TR.y, z: TR.z };
+  stat.add(rbox(0.1, PV.y - 0.04, 0.1, 0.02), iron, PV.x, Y0 + (PV.y - 0.04) / 2, PV.z + 0.1);
+  const pawl = new THREE.Group(); pawl.position.set(PV.x, Y0 + PV.y, PV.z); root.add(pawl);
+  { const k = new Kit(pawl), dy = DR.y + DR.r + 0.05 - PV.y, dz = DR.z - PV.z, dd = Math.hypot(dy, dz);
+    k.add(rbox(0.06, 0.06, dd, 0.01), iron, 0, dy / 2, dz / 2, 0, { rx: Math.atan2(-dy, dz) });   // (the dog, down onto the teeth)
+    k.add(rbox(TR.x - PV.x, 0.045, 0.045, 0.01), iron, (TR.x - PV.x) / 2, 0, 0);                  // (the lever)
+    k.add(rbox(0.36, 0.28, 0.05, 0.01), MAT.glow('#ff6a3a', '#d83a14', 0.75), TR.x - PV.x, 0, 0);    // (the trip paddle)
     k.add(cyl(0.05, 0.05, 0.14, 10), brass, 0, 0, 0, 0, { rz: Math.PI / 2 }); k.flush(); }
 
   // the drum's cable out through the west wall to the ferry's bow (taut while the catch holds)
@@ -310,13 +332,13 @@ export function buildSkyFerry(game, Z) {
   const api = {
     root, berth: LF.berth,
     hut: { ...W(H.x0, H.z0), x0: OX + H.x0, x1: OX + H.x1, z0: OZ + H.z0, z1: OZ + H.z1, door: W(D.x, H.z0 - 0.6) },
-    wheel: { ...W(WH.x, WH.z), y: Y0 + WH.y, a: -Math.PI / 2, stand: W(WH.x + 0.48, WH.z) },
+    wheel: { ...W(WH.x, WH.z), y: Y0 + WH.y, a: 0, stand: W(WH.x, WH.z - 0.48) },   // (facing the partition: the camera at his back sees the weight beside it)
     port: { ...W(PO.x, PT.z), y: Y0 + (PO.y0 + PO.y1) / 2 },
     trip: { ...W(TR.x, TR.z), y: Y0 + TR.y, r: TR.r },
     weight: { ...W(PO.x, WG.z - WG.d / 2 - 0.06), y: Y0 + WG.down + WG.h / 2 },   // (its face toward the door: the ball's mark is in front of its collider)
     plate: W(PL.x - 0.05, PL.z),
     drum: W((DR.x0 + DR.x1) / 2, DR.z),
-    throwSpot: { ...W(PO.x, H.z0 + 0.8), a: 0 },
+    throwSpot: { ...W(PO.x + 0.5, H.z0 + 0.55), a: 0 },   // (a little east of the hole and back from it: his head hides less of it from the camera at his back)
     cord: { west: touch(OX + LF.cordW.x, OZ + LF.cordW.z, 0, 'reach'), mill: touch(OX + LF.cordM.x, OZ + LF.cordM.z, -Math.PI / 2, 'reach') },
     board: { ...W(BD.x, BD.z + 0.9), read: W(BD.x, BD.z) },
     millBoard: W(MP.x, MP.z - 0.8),
@@ -348,9 +370,10 @@ export function buildSkyFerry(game, Z) {
       weight.position.set(PO.x, Y0 + y + WG.h / 2, WG.z);
       span(chain, [PO.x, Y0 + y + WG.h, WG.z], [PO.x, Y0 + H.h - 0.05, WG.z]);
       wcol.enabled = k < 0.5;
+      wheel.rotation.z = -k * Math.PI * 3;   // (the wheel turns as the weight comes up: a turn and a half)
       api.weightK = k;
     },
-    setCatch(free) { pawl.rotation.x = free ? -0.7 : 0; api.free = free; },
+    setCatch(free) { pawl.rotation.x = free ? 0.7 : 0; api.free = free; },   // (free: the dog lifts off the teeth, the paddle tips back)
     spinDrum(dt) { drum.rotation.x += dt * 9; },
     setCable(state) {
       cable.visible = state === 'taut';
