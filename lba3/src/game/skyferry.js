@@ -291,7 +291,7 @@ export function buildSkyFerry(game, Z) {
   const moorRopes = [];
   for (const [bx, fx] of [[-61.2, -4.5], [-54.0, 3.2]]) {
     const m = new THREE.Mesh(cyl(0.035, 0.035, 1, 5), rope); root.add(m); moorRopes.push(m);
-    const B = LF.berth.west; span(m, [bx, Y0 + 0.55, 1.9], [B.x + fx, Y0 + 0.4, B.z - 1.75]);
+    const B = LF.berth.west; span(m, [bx, Y0 + 0.5, 1.9 + 0.3], [B.x + fx, Y0 + 0.4, B.z - 1.75]);   // (from the bollard's rim, not through its head)
   }
   // the deck where one may walk, per berth: the foredeck (two boxes, the bow narrower), the cabin blocking
   const decks = {};
