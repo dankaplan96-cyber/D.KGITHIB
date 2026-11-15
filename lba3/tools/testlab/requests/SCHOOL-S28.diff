@@ -1,0 +1,121 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index 54b512ca..e2e6ad0a 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -31,8 +31,12 @@ import { rng, smoothstep } from '../engine/math.js';
+ 
+ // ------------------------------------------------------------------ the places (local metres, desert.js's frame)
+ // the School's mask (body 43): its centre, and the way it faces (east, +x: the hall and the plaza lie south and east of it)
+-export const SCHOOL_SITE = { x: -69.1, z: -72.7, ry: Math.PI / 2, w: 6.69, d: 3.34, h: 8.64 };
+-export const SCHOOL_DOOR = { x: -66.3, z: -72.7 };                 // where he stands to go in (on the forecourt before the chin)
++// (SCHOOL-S28, the user, 15.11: LBA2's School of Magic is the stone face at S28 (scene 28's door), in the hollow under
++//  the ridge that the original's heights make a canyon: high ground north, east and west, open to a valley south. The
++//  School moves there, facing south down the valley; the mask (body 43) by the pool stays, a mask without a door)
++export const SCHOOL_SITE = { x: 1.6, z: 3.5, ry: Math.PI, w: 6.69, d: 3.34, h: 8.64 };
++export const SCHOOL_DOOR = { x: 1.6, z: 0.9 };                     // where he stands to go in (on the hollow's floor before the chin)
++const MASK_SITE = { x: -69.1, z: -72.7, ry: Math.PI / 2, w: 6.69, d: 3.34, h: 8.64 };   // (the mask by the pool: the School's place until 15.11)
+ const HALL = { x: -67.8, z: -61.7, w: 10.19, d: 7.02, top: 6.69 };  // (body 48; its top 6.69 m over the pool's floor)
+ const POOL = { x0: -78.5, x1: -50.6, z0: -66.0, z1: -50.5 };       // the sunken pool (the original's 0 m hollow) the hall stands in; its rim walk runs round it
+ const COVE = { x0: 113.5, x1: 119.3, z0: -124.6, z1: -119.4 };        // the islet's cove, the original's 0.2 m floor before its door (kept out of the water)
+@@ -217,7 +221,7 @@ export function buildOldPlaces(C) {
+ 
+   // ================================================================ the School of Magic
+   {
+-    const S = SCHOOL_SITE, f = frame(S.x, S.z, S.ry);   // (local +z faces east: f(u, v): u along the face (north −), v out of it)
++    const S = MASK_SITE, f = frame(S.x, S.z, S.ry);   // (local +z faces east: f(u, v): u along the face (north −), v out of it)
+     const g = H(S.x, S.z), base = g - 0.4, top = g + S.h;
+     // the canyon wall the mask is set in: a slab of the terrace's rock behind the face, boulders at its ends and over it
+     { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 1.4, 2.6, 0.5, TILE.cliff), M.cliff, bx, base + (S.h + 1.4) / 2 - 0.2, bz, 0, S.ry, 0); camVol(col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 0.9, camSkip: true }), 'school rock wall'); }
+@@ -232,18 +236,13 @@ export function buildOldPlaces(C) {
+       { const [ex, ez] = f(s * 1.45, 0.85); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.85, ez, 0, S.ry, s * 0.28, 1.0, 0.55, 0.4); }
+     }
+     { const [nx, nz] = f(0, 1.1); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), M.grey, nx, g + 4.9, nz, -0.22, S.ry + Math.PI / 4, 0); }
+-    // the door in the chin: a stone frame, a dark reveal, a wooden leaf, a star over it; the forecourt slab before it
+-    const [dx, dz] = f(0, 1.36), doorY = g;
+-    B.add(bbox(1.6, 2.3, 0.4, 0.04, 1), M.dark, dx, doorY + 1.15, dz, 0, S.ry, 0);
+-    B.add(bbox(2.0, 0.26, 0.5, 0, 1), M.stone, dx, doorY + 2.42, dz, 0, S.ry, 0);
+-    for (const s of [-1, 1]) { const [jx, jz] = f(s * 0.92, 1.4); B.add(bbox(0.26, 2.4, 0.46, 0, 1), M.stone, jx, doorY + 1.2, jz, 0, S.ry, 0); }
+-    { const [lx, lz] = f(0, 1.5); B.add(bbox(1.5, 2.2, 0.08, 0, TILE.planks), M.darkWood, lx, doorY + 1.1, lz, 0, S.ry, 0); }
+-    { const [sx, sz] = f(0, 1.56); B.add(cached('w80d-star', () => new THREE.CircleGeometry(0.22, 5)), pm('#bff4ff', 0.4, { emissive: '#40a0d0', emissiveIntensity: 1.0 }), sx, doorY + 1.75, sz, 0, S.ry, 0); }
++    // (SCHOOL-S28: no door in this mask's chin now: the School's door is at S28; a plain stone chin. The forecourt, the
++    //  bridge and the plaza before it stay, the pool's own)
++    const g0 = g;
+     { const F = FORECOURT, cx = (F.x0 + F.x1) / 2, cz = (F.z0 + F.z1) / 2; B.add(bbox(F.x1 - F.x0, 1.3, F.z1 - F.z0, 0.04, 1.5), M.stone, cx, g - 0.62, cz); col({ type: 'box', x: cx, z: cz, hw: (F.x1 - F.x0) / 2, hd: (F.z1 - F.z0) / 2, top: g + 0.03 }); }
+     // the mask's body is solid; the forecourt is stood on
+     { const [cx, cz] = f(0, 0.3); camVol(col({ type: 'box', x: cx, z: cz, hw: S.w / 2 + 0.1, hd: 1.7, rot: S.ry, top: top, camSkip: true }), 'school face'); }
+-    fitAdd({ region: 'desert', name: 'the school mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -1.05, x1: 1.05, y0: 0, y1: 2.6 }] });
+-    C.schoolSpot = { x: dx, z: dz };
++    fitAdd({ region: 'desert', name: 'the pool mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [] });
+     // the white blocks (bodies 46) and the fallen cubes (45) on the terrace, the horned pillar (body 32) to the north
+     for (const [bx, bz] of [[-74.7, -72.4], [-78.2, -72.7]]) { const bg = H(bx, bz); B.add(bbox(2.95, 2.95, 3.93, 0.08, 1.5), M.white, bx, bg + 1.2, bz); B.add(bbox(3.15, 0.2, 4.13, 0.04, 1), M.stone, bx, bg + 2.75, bz); col({ type: 'box', x: bx, z: bz, hw: 1.5, hd: 2.0, top: bg + 2.85 }); }
+     for (const [bx, bz, ry] of [[-71.6, -75.6, 0.3], [-68.2, -77.0, 1.2], [-69.8, -78.7, 2.4]]) { const bg = H(bx, bz); B.add(bbox(1.67, 1.67, 1.67, 0.06, 1), M.stone, bx, bg + 0.7, bz, 0, ry, 0.08); col({ type: 'box', x: bx, z: bz, hw: 0.85, hd: 0.85, rot: ry, top: bg + 1.5 }); }
+@@ -263,7 +262,6 @@ export function buildOldPlaces(C) {
+     // the plaza: low tiled walls along its east edge, a palm, the signpost; two horned pillars flanking the bridge's foot
+     { const P = PLAZA; for (let z = P.z0 + 1.4; z < P.z1 - 1.0; z += 2.8) { const g2 = H(P.x1, z); B.add(bbox(0.3, 0.9, 2.6, 0.04, 1.5), M.stone, P.x1, g2 + 0.3, z); B.add(bbox(0.42, 0.1, 2.7, 0, 1), M.blue, P.x1, g2 + 0.78, z); col({ type: 'box', x: P.x1, z, hw: 0.2, hd: 1.3, top: g2 + 0.8, noStand: true, seeThrough: true }); } }
+     C.palm(-58.6, -77.4, 1.05, 0.7);
+-    C.signAt('SCHOOL OF MAGIC', -59.6, -70.2, Math.PI * 0.5, '#6a4a2a');   // (facing east, the way he comes along the rim walk)
+     hornedPillar(RILL.x1 + 2.2, S.z - 2.4, 0, 3.4); hornedPillar(RILL.x1 + 2.2, S.z + 2.4, 0, 3.4);
+     // a stone stair from the plaza (0.3) up to the rim walk (2.3) at the plaza's south-east corner
+     { const sx = -56.2, z0 = PLAZA.z1, top0 = H(sx, z0 + 2.6), bot = H(sx, z0 - 1.2), n = 5; for (let k = 0; k < n; k++) { const y = bot + (top0 - bot) * (k + 1) / n, zz = z0 - 0.3 + k * 0.5; B.add(bbox(2.4, y - bot + 0.4, 0.52, 0, 1), M.stone, sx, (y + bot - 0.4) / 2, zz); col({ type: 'box', x: sx, z: zz, hw: 1.2, hd: 0.26, top: y }); } }
+@@ -325,10 +323,10 @@ export function buildOldPlaces(C) {
+   hornedPillar(-43.0, -41.3, 0, 4.25);
+   C.palm(-46.9, -36.3, 1.1, 2.6);
+   { const g = H(-25.4, -45.7); B.add(bbox(2.4, 0.5, 1.2, 0.04, 1), M.plank, -25.4, g + 0.85, -45.7); for (const s of [-1, 1]) B.add(cyl(0.55, 0.55, 0.14, 12, 0), M.darkWood, -25.4 + s * 1.1, g + 0.55, -45.7 - 0.7, Math.PI / 2, 0, 0); B.add(cyl(0.05, 0.05, 2.6, 6), M.darkWood, -25.4, g + 0.75, -44.4, Math.PI / 2, 0, 0); col({ type: 'box', x: -25.4, z: -45.7, hw: 1.3, hd: 0.8, top: g + 1.1, noStand: true, seeThrough: true }); }
+-  // the tall building at S28 (body 52): a tower in its hollow under the ridge, its door to the west
++  // the crew's bunkhouse: a grey tower. (SCHOOL-S28: it stood in S28's hollow, where LBA2's School is; now on the
++  // valley's east side south of it, its door to the west onto the valley's floor, the way to the School)
+   {
+-    // (it stands on the hollow's floor; its north end runs into the ridge, whose top its roof reaches, as the original's does)
+-    const T = { x: 4.0, z: 1.3, w: 2.47, d: 7.19, h: 8.36 }, gy = H(T.x - T.w / 2 - 0.5, T.z - 1.5), low = gy - 0.6;
++    const T = { x: 4.7, z: -16.0, w: 2.47, d: 7.19, h: 8.36 }, gy = H(T.x - T.w / 2 - 0.5, T.z - 1.5), low = gy - 0.6;
+     // (DESERT-ART 2: the tower is the island's grey stone; it was stone under adobe. Its face is gone: FACE-OFF below)
+     B.add(bbox(T.w, gy + T.h * 0.55 - low, T.d, 0.1, TILE.stone), M.grey, T.x, (gy + T.h * 0.55 + low) / 2, T.z);
+     B.add(bbox(T.w - 0.2, T.h * 0.45, T.d - 0.2, 0.1, TILE.stone), M.grey, T.x, gy + T.h * 0.55 + T.h * 0.225, T.z);
+@@ -359,6 +357,47 @@ export function buildOldPlaces(C) {
+     }
+     fitAdd({ region: 'desert', name: 'tower s28', x: W(T.x, T.z).x, z: W(T.x, T.z).z, ry: 0, oy: gy, w: T.w, d: T.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6, openings: [{ side: 'left', kind: 'door', x0: -2.3, x1: -0.7, y0: 0, y1: 2.4 }] });
+   }
++  // ================================================================ the School of Magic (SCHOOL-S28)
++  // LBA2's School: a pale mask carved into the canyon's end, swept-up pointed brows, deep sockets with big rough orange
++  // eyes, a narrow chin with the door in it. Here the original's own heights are the canyon (the ridge behind it and on
++  // either side, the valley in front): the mask is set into the hollow's north wall, facing south down the valley
++  {
++    const S = SCHOOL_SITE, f = frame(S.x, S.z, S.ry), d0 = SCHOOL_DOOR, g = H(d0.x, d0.z), top = g + S.h;   // (f(u, v): u along the face, v out of it, south)
++    const mask = pm('#cdc6da', 0.7, { emissive: '#2e2a3a', emissiveIntensity: 0.55 });
++    const lava = new THREE.MeshStandardMaterial({ roughness: 0.95, emissive: new THREE.Color('#7a2406'), emissiveIntensity: 0.9,
++      map: ctex('w80d-lava', 64, 64, (x, Q) => { x.fillStyle = '#c4501c'; x.fillRect(0, 0, Q, Q); const r = rng(77); for (let i = 0; i < 260; i++) { x.fillStyle = ['#e07a2c', '#8e2e10', '#f0a040', '#a83a14'][i % 4]; const w = 2 + r() * 5; x.fillRect(r() * Q, r() * Q, w, w * (0.5 + r())); } }) });
++    const sph = () => cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14));
++    // (behind the mask, the ridge's rock filled in down to the hollow's floor, so no gap shows between face and slope)
++    { const [bx, bz] = f(0, -2.2), hh = S.h * 0.55; B.add(bbox(S.w + 1.6, hh, 2.8, 0.6, TILE.cliff), tm('cliff', { color: '#c4c0c8' }), bx, g - 0.4 + hh / 2, bz, 0, S.ry, 0); }   // (low: only the gap at the slope's foot, the ridge's own grey above)
++    { const [cx, cz] = f(0, -0.35); B.add(sph(), mask, cx, g + 4.3, cz, 0, S.ry, 0, S.w / 2 - 0.65, 4.0, 1.45); }
++    { const [cx, cz] = f(0, -0.15); B.add(sph(), mask, cx, g + 6.4, cz, 0, S.ry, 0, S.w / 2 + 0.15, 1.7, 1.3); }
++    { const [cx, cz] = f(0, 0.55); B.add(bbox(2.7, 3.0, 1.6, 0.45, 1), mask, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
++    for (const s2 of [-1, 1]) {
++      { const [bx, bz] = f(s2 * 1.95, 1.0); B.add(bbox(3.6, 0.75, 1.15, 0.25, 1), mask, bx, g + 6.75, bz, 0, S.ry - s2 * 0.18, s2 * 0.42); }
++      { const [tx, tz] = f(s2 * 3.75, 0.75); B.add(cached('w80d-tip', () => new THREE.ConeGeometry(0.42, 1.5, 6)), mask, tx, g + 7.75, tz, 0, S.ry, -s2 * 0.75); }
++      { const [ex, ez] = f(s2 * 1.5, 0.82); B.add(sph(), M.dark, ex, g + 5.75, ez, 0, S.ry, s2 * 0.5, 1.25, 0.72, 0.42); }
++      { const [ex, ez] = f(s2 * 1.5, 1.0); B.add(sph(), lava, ex, g + 5.75, ez, 0, S.ry, s2 * 0.5, 1.02, 0.52, 0.3); }
++      { const [kx, kz] = f(s2 * 1.75, 0.75); B.add(sph(), mask, kx, g + 3.9, kz, 0, S.ry, -s2 * 0.2, 0.9, 1.25, 0.55); }
++    }
++    { const [nx, nz] = f(0, 1.15); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), mask, nx, g + 4.85, nz, -0.22, S.ry + Math.PI / 4, 0); }
++    // the door in the chin: a stone frame, a dark reveal, a wooden leaf, the star over it; a worn step before it
++    const [dx, dz] = f(0, 1.36);
++    B.add(bbox(1.6, 2.3, 0.4, 0.04, 1), M.dark, dx, g + 1.15, dz, 0, S.ry, 0);
++    B.add(bbox(2.0, 0.26, 0.5, 0, 1), M.stone, dx, g + 2.42, dz, 0, S.ry, 0);
++    for (const s2 of [-1, 1]) { const [jx, jz] = f(s2 * 0.92, 1.4); B.add(bbox(0.26, 2.4, 0.46, 0, 1), M.stone, jx, g + 1.2, jz, 0, S.ry, 0); }
++    { const [lx, lz] = f(0, 1.5); B.add(bbox(1.5, 2.2, 0.08, 0, TILE.planks), M.darkWood, lx, g + 1.1, lz, 0, S.ry, 0); }
++    { const [sx, sz] = f(0, 1.56); B.add(cached('w80d-star', () => new THREE.CircleGeometry(0.22, 5)), pm('#bff4ff', 0.4, { emissive: '#40a0d0', emissiveIntensity: 1.0 }), sx, g + 1.75, sz, 0, S.ry, 0); }
++    { const [px, pz] = f(0, 2.1); B.add(bbox(2.6, 0.3, 1.4, 0.06, 1.5), M.stone, px, g + 0.02, pz, 0, S.ry, 0); col({ type: 'box', x: px, z: pz, hw: 1.3, hd: 0.7, rot: S.ry, top: g + 0.17 }); }
++    // LBA2's white blocks either side of the door, worn: twelve years of pupils sitting on them
++    for (const u of [-2.3, 2.3]) { const [bx, bz] = f(u, 2.4), bg = g;   // (on the hollow's floor, at the door's level)
++      B.add(bbox(1.0, 0.95, 1.9, 0.1, 1.5), M.white, bx, bg + 0.47, bz, 0, S.ry, 0); B.add(bbox(1.1, 0.12, 2.0, 0.04, 1), M.stone, bx, bg + 1.0, bz, 0, S.ry, 0); col({ type: 'box', x: bx, z: bz, hw: 0.5, hd: 0.95, rot: S.ry, top: bg + 1.05 }); }
++    // the mask's body is solid
++    { const [cx, cz] = f(0, 0.3); camVol(col({ type: 'box', x: cx, z: cz, hw: S.w / 2 + 0.1, hd: 1.7, rot: S.ry, top: top, camSkip: true }), 'school face'); }
++    fitAdd({ region: 'desert', name: 'the school mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -1.05, x1: 1.05, y0: 0, y1: 2.6 }] });
++    C.schoolSpot = { x: dx, z: dz };
++    // twelve years on: the School's board at the valley's mouth, where the way up from the coast comes in
++    C.signAt('SCHOOL OF MAGIC', -7.2, -21.0, Math.PI, '#6a4a2a');   // (on the valley's west side: the floor stays clear)
++  }
+   for (const [x, z] of [[-55.45, -73.9], [-58.1, -74.1]]) {   // (PLACE-3: the first 0.25 m east: it stood 9 cm in the planter's box)
+     const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }
+   // the two standing figures on the knolls west of the village (bodies 0 and 33), looking out over the beach

@@ -5313,3 +5313,32 @@ applies after **SCHOOL-LBA2b and SCHOOL-CANYON** (the chain `git apply --check` 
 - Objects: −2 large blocks +2 small blocks (+ their horns); colliders the same count. Pictures (chapter 4, not for the
   user): `docs/future/landmarks/school-lba2d-{play,wide}.jpg` (left: LBA2b+CANYON, right: with this).
 - Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud**, with the chain.
+
+## SCHOOL-S28 · the School of Magic moved into the original's canyon at S28 (the user, 15.11) · the desktop, 15.11.2026
+The user asked whether the desktop has the original's exact topography ("that's where you miss"). It does: Desert
+Island's ground is LBA2's height grid (`desert.js origH`). Probed round S28 (1.5 m grid): **a hollow at 0–1 m under the
+ridge, high ground 7–9 m north, east and west of it, open to a valley that runs south**: LBA2's School canyon, and the
+decoded links put the School's door (scene 28) there. Ours stood 95 m away at the decorative mask (body 43, the user's
+26.10 choice) on open ground, which is why SCHOOL-LBA2b/CANYON/LBA2d built a canyon by hand. The user chose "the first
+and the second": **move the School to S28's canyon, and withdraw those three.**
+- **Withdrawn: `requests/SCHOOL-LBA2b.diff`, `SCHOOL-CANYON.diff`, `SCHOOL-LBA2d.diff`** (do not apply; superseded).
+- **`requests/SCHOOL-S28.diff`** (`desertold.js` only; `git apply --check` clean on origin):
+  - `SCHOOL_SITE` / `SCHOOL_DOOR` move to S28's hollow: the mask set into the hollow's north wall, facing south down the
+    valley (local (1.6, 3.5), door spot (1.6, 0.9)). **`wizards.js` follows by itself** (it builds the School's door and
+    its way out from these two), and so do `R.school` and the map's School mark.
+  - The mask as LBA2's (from LBA2b/d, the user's picture): pale lilac-grey, V-shaped, swept-up pointed brows, deep
+    sockets with big rough orange eyes, cheekbones, the door in the chin with its frame and star, a worn step, LBA2's
+    white blocks either side (worn: twelve years). **The canyon is the original's own ground**: nothing built round it
+    but a low fill of rock behind the mask's foot.
+  - **The crew's bunkhouse** (the grey S28 tower, `shut('s28')`, its board `R.s28board`, `ih_s28` and Brann follow it) moves
+    down the valley's east side (local (4.7, −16)), its door west onto the valley floor.
+  - **The pool's mask** (the old site) stays as a mask without a door (its chin plain stone); the forecourt, bridge, plaza,
+    pillars, hall and pool unchanged; its fit renamed 'the pool mask'. The SCHOOL OF MAGIC board moves from the plaza to
+    the valley's mouth, on its west side.
+- **Checked:** by the harness (keys) from the valley's mouth (−1, −24) to the School's door and in: transition into
+  `school`, no page errors; the valley floor stays clear (the board and the bunkhouse on its sides). Pictures (chapter 4,
+  not for the user): `docs/future/landmarks/school-s28-{wide,valley-play,door-play,bunk-play}.jpg`.
+- **For the cloud (story, people):** `wizards` (the School's door and inside), `desert-life` (its `dl_school` look follows
+  `R.school`), `island-doors` and `purposes` (the bunkhouse's door and board moved), `chapter4`, `prologue` (magus,
+  keraooc read `R.school`), the map. Not run here. If the School's way in should stay shut in some chapters, that is the
+  story's as before.
