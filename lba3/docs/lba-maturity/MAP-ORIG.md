@@ -196,6 +196,25 @@ the terrain's own splat.
 
 The fewer calls come from the trees and grass taken off the paving.
 
+### Re-score of the districts these fixes touch
+
+These are provisional editorial scores, not reviewed by the user, using the rubric of `resemblance-citadel.md`. For the
+first time the reference is the original's own textures from a play-like camera, so architecture and palette
+confidence is **M–H**. Before that it was flat-colour renders.
+
+| District | Before | After | What moved |
+|---|---|---|---|
+| Harbour and harbour wing | 76 | **80** | architecture 15 → 17 (Nell's plank hip; the long hall's barrel was already right); palette 9 → 11 (the yard paved). Left: LBA2's paved platform and L pier, where we have a basin and a wooden pier; the bollard posts with teal rails |
+| Lower town south (the streets) | 78 | **80** | palette 10 → 12 (straight paved streets, earth round one block). Left: the other blocks still grass; lattice fences |
+| Lighthouse headland | 84 | **82** | architecture 17 → 18 (LBA2's proportions), but palette 12 → 9: the remake shows LBA2's tower dark grey-brown under a dark cap, and ours is white. **New evidence lowers the score; the curator's white came from flat colours** |
+| Town square, Twinsen's quarter, NW plateau | 78, 83, 73 | unchanged | — |
+
+**No Citadel district reaches 85 yet.** What would take each one there:
+- the harbour: the platform and the L pier;
+- the town: the full grid and earth in the blocks;
+- the lighthouse: its colour, once a real LBA2 screenshot confirms it;
+- Twinsen's quarter: the roof (the user's call).
+
 ### For the user's decision (pictures prepared, nothing changed)
 
 **The sea's colour.** `citadel-decide/sea_*.jpg`.
@@ -224,15 +243,40 @@ The fewer calls come from the trees and grass taken off the paving.
 ## Desert Island, the Hamalayi, Zeelich (later chapters: not for the user)
 
 These are pictures for the team. They are spoilers for chapter 4 and later: **do not show them to the user.**
-- Reference: `/dev/shm/mapcmp/desert/ref/` (d00 top, d01 oblique, d02 village, d03 village from above).
-- Ours: `/dev/shm/mapcmp/desert/ours/`.
 
-First findings (reference side only; our side is pending, see the resume point):
-- Kesh in LBA2 is a **grey stone town**: paved grey streets, flat grey stone houses (one under a gold dome), a paved
-  quay with a breakwater, two small striped lighthouses at the harbour mouth, a paved strip by the water. The earlier
-  curator's "peach boxes" come from flat palette colours. The remake's textures show grey stone and lilac-grey walls.
-- The island is mostly smooth sand dunes with grey rock outcrops. There is a winding white track in the east, the race
-  track in the south-west, and the oasis in the north-west (palms, cacti, a pool).
+Pairs (LBA2 | ours, the same camera):
+- Desert Island: `/dev/shm/mapcmp/desert-pairs/` (d00 top, d01 oblique, d03 Kesh from above; the play-camera shot d02 landed inside rock and the pump and was dropped). The
+  single pictures are in `desert/ref/` and `desert/ours/`.
+- LBA1, in its own isometric camera:
+  - Citadel, `lba1-sheets/lba1-citadel.jpg`: scenes 1 outside the citadel, 2 Lupin-Bourg, 3 the statue, 6 the
+    harbour. These are chapters 1–2 places and may be shown.
+  - The Hamalayi, `lba1-sheets/lba1-hamalayi.jpg`: 9 the landing place, 15 the rabbibunny village. Not for the user.
+  - The single pictures are in `lba1/`.
+- Zeelich, Otringal from above and oblique: `zeelich/ref/`. Our side was not taken.
+
+### Desert Island, ranked
+
+| # | Difference | Numbers | Decision or drift |
+|---|---|---|---|
+| 1 | **Kesh.** LBA2's Kesh is a compact grey stone town in a cliff-walled hollow: paved grey streets and a plaza with a fountain, flat-roofed grey stone houses, one under a gold ribbed dome, a paved strip along a stone quay. Ours is ochre adobe houses on open sand round a wind-pump and an oasis pool, among palms | The earlier "peach boxes" (`resemblance-desert.md`) came from flat palette colours; the textures are grey stone | drift in materials and ground; the oasis and the pump are twelve years |
+| 2 | **The tracks.** LBA2 has winding pale tracks over the dunes in the east and the walled race track in the south-west. Ours has straight brown dirt tracks and the dig's rings in the south-west | — | partly twelve years (the dig) |
+| 3 | **The sea.** As on Citadel | — | the user |
+| 4 | **The relief.** Same in kind on both: dunes and grey outcrops | coast IoU 0.98, height MAE 0.40 m (`WORLD_SIMILARITY.md`) | matches |
+| 5 | **The harbour.** On both, the L-shaped stone breakwater with two small striped lighthouses; ours adds a long wooden pier | — | twelve years |
+
+**For world-art (chapter 4):** grey stone paving and flat grey stone walls for Kesh's core (the plaza and the street to
+the quay), and the domed house. The pump and the oasis keep their places.
+
+### The Hamalayi (LBA1)
+
+LBA1's Hamalayi is snow-white terraces, ice cliffs and white snow-laden trees. Ours is our own region (the user,
+26.10), so it was not compared further.
+
+### LBA1's Citadel
+
+LBA1's town (scenes 2, 3, 6) agrees with LBA2's: paved stone streets, brown earth, tiered teal trees, stone quays and
+white picket fences. It supports Citadel item 1. LBA1's fortress front (scene 1) is a high grey brick wall with an FF
+banner, a gate with F doors and two big vent pipes. It is close to our fort's grey stone in kind.
 
 ## Open questions for the user
 
