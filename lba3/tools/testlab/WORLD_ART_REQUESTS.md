@@ -5138,3 +5138,35 @@ keeps farmerB). `git apply --check` clean on `42313c97`. No model, skeleton or i
 In `docs/lba-maturity/resemblance-hamalayi.md` (new section): **69 → 71** (landmarks +1: the monastery's and Lhar's
 doors lead in; inhabitants +1: the phases and owners at home). Still provisional and low confidence: no LBA1 picture on
 the desktop. Pictures (chapter 6+) stay on the desktop.
+
+## TECH-ART-1-VEGA8, run on the UHD 630 · the Zeelich landing A/B (CLOUD_ORDERS 45; the Vega 8 is sold) · the desktop, 15.11.2026
+**Where:** the desktop's **Intel UHD 630** (each run's ENV: `ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11)`),
+not a Vega 8. Chrome on this machine is pinned to the GTX 1050 by Windows, so the harness (a scratch copy of B's `tests\`,
+`techart-zeelich.mjs` unchanged) drove a bare Electron 43.7.9 window with `force_low_power_gpu` and device scale 1
+(`boot.mjs launch()` swapped; nothing in the repo changed). Plugged in (a desktop: no battery set), Windows power mode
+unchanged, nothing else running. A = `b38d29e4`, B = `16f96fa6` (the last TECH-ART-1 commit), served on 8971/8972.
+`LIVE=10 WARM=3 SECS=600`, A, B, A, B, A, B per quality. Raw logs: `docs/lba3-performance/HARDWARE/2026-11-15-uhd630-techart1/`.
+
+| Quality | View | Frame p50 / p95 (A → B, medians; A's p95 range) | CPU sim p95 A → B | CPU submit p95 A → B | Calls A → B | Triangles A → B |
+|---|---|---|---|---|---|---|
+| Low (0.85) | dock | 16.7 / 16.8 → 16.7 / 16.8 (16.8–16.8) | 2.6 → 2.4 | 3.6 → 3.4 | 123 → 123 | 366k → 367k |
+| Low | bridge | 16.7 / 16.8 → same | 3.2 → 3.3 | 4.0 → 3.9 | 147 → 148 | 353k → 355k |
+| Low | street | 16.7 / 16.8 → same | 4.0 → 3.9 | 3.9 → 3.6 | 154 → 155 | 399k → 401k |
+| Low | door | 16.7 / 16.8 → same | 2.2 → 2.3 | 3.0 → 3.2 | 113 → 114 | 258k → 260k |
+| Low | back | 16.7 / 16.8 → same | 2.4 → 1.9 | 3.2 → 2.6 | 80 → 80 | 227k → 228k |
+| Low | resident | 16.7 / 16.8 → same | 2.3 → 2.3 | 3.2 → 3.1 | 116 → 116 | 341k → 343k |
+| Medium (1.0) | dock | 16.7 / 16.8 → same | 4.4 → **5.7** | 6.2 → **7.4** | 147 → 147 | 415k → 417k |
+| Medium | bridge | 16.7 / 16.8 → same | 4.3 → 4.4 | 5.6 → 5.2 | 181 → 182 | 403k → 405k |
+| Medium | street | 16.7 / 16.8 → same | 5.3 → 5.3 | 5.5 → 5.7 | 187 → 188 | 451k → 452k |
+| Medium | door | 16.7 / 16.8 → same | 2.6 → 2.6 | 4.2 → 4.3 | 146 → 147 | 308k → 309k |
+| Medium | back | 16.7 / 16.8 → same | 2.3 → 2.3 | 3.1 → 3.2 | 109 → 109 | 277k → 278k |
+| Medium | resident | 16.7 / 16.8 → same | 2.6 → 2.6 | 5.4 → 5.4 | 146 → 146 | 392k → 394k |
+
+- **Frame time: no change.** Every view at both qualities holds the display's 60 Hz (p50 16.7, p95 16.8, max ≤ 17.0 ms) in
+  all twelve runs; the A runs agree exactly (not unstable). `gpuMs` is "Unavailable" here (Electron hides the timer query).
+- **The art:** +0–1 draw call and +1–2k triangles in the views with the workshop, as the cloud counted.
+- **The waste fix, confirmed:** carried-prop geometries made over the run **59 → 0**; street life 600 s `made` 59 → 0,
+  `carried` 59 → 0, **`liveGrowth` 18 → 0**; live geometries 3–6 fewer in B at every view.
+- **One CPU difference beyond A's spread:** Medium, **dock**: CPU submission p95 A 6.1–6.6 ms → B 7.0–7.9 ms, simulation
+  p95 A 3.9–5.0 → B 5.3–5.8 (p50s equal). It does not reach the frame (16.8 ms p95 both) and Low's dock goes the other
+  way (B lower). Its `LIVE` lines are in the logs (`medium-{A,B}{1,2,3}.log`, `LIVE dock`) for the cloud to look at.
