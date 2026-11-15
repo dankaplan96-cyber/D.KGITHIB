@@ -5224,3 +5224,14 @@ Zeelich street talk (Nara, Baldino; four lines).
   `say` does not resolve keys there, those ten lines were spoken as short key strings (the street lines were full
   sentences). The Words render times (≤ 18 ms on the street's full sentences) are the safer figure.
 - No diff (nothing faulty found).
+
+## FACE-OFF · the second stone face taken off the crew's bunkhouse (the user, LANDMARKS-KEEP item 1) · the desktop, 15.11.2026
+The user, 15.11, of LANDMARKS-KEEP's two faces on Desert Island: "Yes, take it off". **`requests/FACE-OFF.diff`**
+(`desertold.js` only; `git apply --check` clean on origin): S28's tower (the crew's bunkhouse) loses the face DESERT-ART 2
+carved on its west wall (brows, eye sockets, lids, cheeks, the bridge, the nose, the mouth and lips: 13 pieces); the wall
+gets the east wall's three slit windows instead (3 pieces). The grey stone, the crenellations, the door, its frame, the
+crew's board, the collider, `shut('s28')` and the fit stay. The only face on the island is now the School's mask.
+- **Objects:** −13, +3 (all in the island's static batch: no draw call either way; the nose's cached cone is still the
+  School mask's). Pictures, before above / after below (chapter 4: not for the user): `docs/future/landmarks/face-off-play.jpg`
+  (the play camera at the door), `face-off-wide.jpg` (from the west).
+- Not run: `island-doors`, `purposes`, `desert-life` (no collider, door or board moved): **for the cloud when applying**.
