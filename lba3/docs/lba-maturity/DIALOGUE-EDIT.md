@@ -36,7 +36,7 @@ four short sentences (kept where the scene earns it).
 |---|---|---|
 | `node tests/dialogue-check.mjs` | PASS at every commit | static |
 | `tests/dialogue-scenes.mjs` | PASS 8/8 | Arthur's three states, Zoé's two kettle branches, every line fits its box; captures D1-D3 |
-| `tests/dialogue-scenes.mjs ch3` | PASS 3/3 | Baldino's reordered first scene after Irsa's bench; capture D4 |
+| `tests/dialogue-scenes.mjs ch3` | PASS 3/3 (twice) | Baldino's reordered first scene after Irsa's bench; capture D4 shows his answer |
 | `tests/opening.mjs` | PASS 41/41 | |
 | `tests/opening-tutorial.mjs` | PASS 40/40 | |
 | `tests/chapter1.mjs` (chapter 2) | PASS 32/32 | the first try crashed the page (renderer, memory); passed on the retry |
@@ -44,7 +44,8 @@ four short sentences (kept where the scene earns it).
 | `tests/well-town.mjs` | 31/32, then fixed | it read Doran's old "*Stamp.*": the assertion now reads "stamped" (intended wording change, commit 048ea0b5) |
 | `tests/voice-phrase.mjs` | PASS 64/64 | |
 | `tests/voices.mjs` | 26/27: "every named speaker has an own voice" misses `lf_ossel`, `lf_wick` | the user's U-1 ferry speakers (text/ferry.js, before this pass): not caused by this pass, which adds no speaker; for the voices owner |
-| `tests/prologue.mjs` | 1 FAIL: "the well's mites beaten with the ball" (4 of 4 left, random combat) | listed as known-flaky in status.md ("3 of 4, random, passed on the rerun"); every dialogue step before it passed (Zoé's kettle, Mira's key, the lid, Doran's bell and stamp, Xil's rope, the kids, the stones, the pool). A first run crashed the page (renderer, memory) |
+| `tests/prologue.mjs` | edited build: 28/29 twice (plus one page crash); base commit on the same snapshot: 29/29 once | the one FAIL is "the well's mites beaten with the ball": all 4 mites killed, but Twinsen ends outside the well room (`room` null) after the test teleports him round them (`notWest` 10 of 10 throws). Every dialogue step passes (Zoé's kettle, Mira's key, the lid, Doran's bell and stamp, Xil's rope, the kids, the stones, the pool). status.md lists this check as random ("3 of 4, passed on the rerun"); the shorter and longer lines change how much game time the test's talk-through steps, so the mites stand elsewhere when the fight starts. Not a dialogue fault in the game, but this pass may make the test's placement fail more often: for the test's owner |
+| `tests/workshop.mjs` | every dialogue check PASS (Baldino's first talk "as before", the test pair, the looks); 1 FAIL "collision: … barrel stuck" | a walk to the barrel got stuck (movement, not text); the retry crashed the page. Not compared with the base |
 
 Also checked: every regex literal in `tests/*.mjs` against the 58 English strings this pass changed (old text from the base
 commit, new text from the worktree): the only assertion on old wording was well-town's `/Stamp/` (fixed above).
@@ -55,26 +56,26 @@ Status: **edited** (lines changed), **kept** (read in context, nothing needed), 
 
 | Chapter | Scene | Characters | Status | Evidence |
 |---|---|---|---|---|
-| 1 The Well | opening film (`op_*`) | resident, worker, Arthur, Twinsen, Zoé | kept | Source only + opening.mjs (pending) |
-| 1 | home: tap, Arthur at his boat, the cupboard, the door (`prh_*`, `pr_tw_ballfirst`, `pr_cupboard`) | Twinsen, Arthur | kept (tutorial tips literal; no key spoken) | prologue.mjs / opening-tutorial.mjs |
-| 1 | the yard: Zoé back from next door, the kettle crystals | Zoé, Twinsen | **edited**: where Mira is, what the proof does; no repeat after Twinsen already met Mira's refusal (`pr_zoe_kettle2b`, condition on `pr_miraNo`) | prologue.mjs |
-| 1 | Arthur indoors after the ball | Arthur | **edited (trigger)**: the sneaking hint (the optional's solution) only once the kids brushed Twinsen off; before, what he saw (`pr_ar_early`); after Tim confessed, `pr_ar_told` | Source only (+ prologue.mjs runs the chapter) |
-| 1 | the square: Gilbert and Mira's row, the lid key, the rusted lid | Gilbert, Mira, Twinsen | kept; `pr_lid_kicked` "Twelve years of rust" (caption nod) out | prologue.mjs |
-| 1 | the harbour: Xil, Doran, the bell | Xil, Doran, Arthur | **edited**: Xil's introduction shorter; Doran's "*Stamp.*" stage direction out of the subtitle | prologue.mjs |
-| 1 | the kids, the bay rocks | Tim, Lulu | kept | prologue.mjs |
+| 1 The Well | opening film (`op_*`) | resident, worker, Arthur, Twinsen, Zoé | kept | Automated runtime (opening.mjs 41/41) |
+| 1 | home: tap, Arthur at his boat, the cupboard, the door (`prh_*`, `pr_tw_ballfirst`, `pr_cupboard`) | Twinsen, Arthur | kept (tutorial tips literal; no key spoken) | Automated runtime (opening-tutorial.mjs 40/40, prologue.mjs) |
+| 1 | the yard: Zoé back from next door, the kettle crystals | Zoé, Twinsen | **edited**: where Mira is, what the proof does; no repeat after Twinsen already met Mira's refusal (`pr_zoe_kettle2b`, condition on `pr_miraNo`) | Automated runtime (dialogue-scenes.mjs both branches, captures D2-D3; prologue.mjs) |
+| 1 | Arthur indoors after the ball | Arthur | **edited (trigger)**: the sneaking hint (the optional's solution) only once the kids brushed Twinsen off; before, what he saw (`pr_ar_early`); after Tim confessed, `pr_ar_told` | Automated runtime (dialogue-scenes.mjs: all three states; capture D1) |
+| 1 | the square: Gilbert and Mira's row, the lid key, the rusted lid | Gilbert, Mira, Twinsen | kept; `pr_lid_kicked` "Twelve years of rust" (caption nod) out | Automated runtime (prologue.mjs, well-town.mjs) |
+| 1 | the harbour: Xil, Doran, the bell | Xil, Doran, Arthur | **edited**: Xil's introduction shorter; Doran's "*Stamp.*" stage direction out of the subtitle | Automated runtime (prologue.mjs, well-town.mjs) |
+| 1 | the kids, the bay rocks | Tim, Lulu | kept | Automated runtime (prologue.mjs, well-town.mjs) |
 | 1 | Pippa's shop | Pippa | kept (her opener repeats each visit: acceptable for a shop) | Source only |
-| 1 | the well's bottom, Sendell | Twinsen, Sendell | **edited**: "Crystals? Down a town well?"; his last thought leads into chapter 2 (who is pumping) | prologue.mjs |
+| 1 | the well's bottom, Sendell | Twinsen, Sendell | **edited**: "Crystals? Down a town well?"; his last thought leads into chapter 2 (who is pumping) | Automated runtime (prologue.mjs, well-town.mjs) |
 | 1 | after the prologue | Zoé, Arthur | **edited** Zoé's after-line | Source only |
-| 2 The Joint Project | the morning, home, Zoé on Sendell | Twinsen, Gilbert, Zoé, Arthur | **edited** | chapter1.mjs (pending) |
-| 2 | Vesk at the harbour, the valves, the depot | Vesk, Twinsen, Doran, Mira | **edited** (Vesk credible, the valves' directions kept) | chapter1.mjs |
+| 2 The Joint Project | the morning, home, Zoé on Sendell | Twinsen, Gilbert, Zoé, Arthur | **edited** | Automated runtime (chapter1.mjs 32/32) |
+| 2 | Vesk at the harbour, the valves, the depot | Vesk, Twinsen, Doran, Mira | **edited** (Vesk credible, the valves' directions kept) | Automated runtime (chapter1.mjs) |
 | 2 | the lane stays dry, the pump room | Zoé, Arthur, worker | **edited** Zoé's knock plan, Arthur's pump room line; the pump room's own lines **left to PLAYTEST-15** (P37/P39) | Source only |
-| 2 | the station tour, the gate, Zoé's search, the confrontation | Vesk, Zoé, guard | **edited** Vesk's tour opener and his two confrontation lines; Zoé's search kept | chapter1.mjs |
-| 2 | the radio, Doran, the ship | Arthur, Baldino, Zoé, Doran | **edited** Baldino's two radio lines | chapter1.mjs |
+| 2 | the station tour, the gate, Zoé's search, the confrontation | Vesk, Zoé, guard | **edited** Vesk's tour opener and his two confrontation lines; Zoé's search kept | Automated runtime (chapter1.mjs) |
+| 2 | the radio, Doran, the ship | Arthur, Baldino, Zoé, Doran | **edited** Baldino's two radio lines | Automated runtime (chapter1.mjs) |
 | 2 | residents (`c1_*` idles, `rs_*_hot`, `rs_*_gone`) | Gilbert, Xil, Pippa, Mira, Doran, Tim, walkers | **edited (trigger)**: Doran "saw the ferry come in" before it had: new `c1_doran_due` on `!c1_arrived`; Tim's drone chased "a cat" (no cats on Twinsun since pass 1) -> Pico's Meca-Penguin; the rest kept | Source only |
-| 3 Zeelich | arrival, the dock guard, the cistern lift, Irsa | Doran, guard, Brel, Kell, Vesk (tube), Irsa | **edited** the guard exchange; the lift and Irsa kept | chapter2.mjs (pending) |
-| 3 | Baldino's first scene | Baldino, Twinsen | **edited (order)**: no answer to an unspoken report, no double "At last!" (new `zt_tw_bench`, chain reordered) | chapter2.mjs |
-| 3 | Nara, Oku, the mills, the cog | Nara, Oku | **edited** Oku's contradiction | chapter2.mjs |
-| 3 | Zoé's broadcast, the platform, Vesk leaves, the seal | Zoé, Vesk, Baldino, Arthur, Doran | **edited** broadcast, Vesk's last lines, Twinsen's reaction | chapter2.mjs |
+| 3 Zeelich | arrival, the dock guard, the cistern lift, Irsa | Doran, guard, Brel, Kell, Vesk (tube), Irsa | **edited** the guard exchange; the lift and Irsa kept | Automated runtime (chapter2.mjs 21/21) |
+| 3 | Baldino's first scene | Baldino, Twinsen | **edited (order)**: no answer to an unspoken report, no double "At last!" (new `zt_tw_bench`, chain reordered) | Automated runtime (chapter2.mjs; dialogue-scenes.mjs ch3, capture D4) |
+| 3 | Nara, Oku, the mills, the cog | Nara, Oku | **edited** Oku's contradiction | Automated runtime (chapter2.mjs) |
+| 3 | Zoé's broadcast, the platform, Vesk leaves, the seal | Zoé, Vesk, Baldino, Arthur, Doran | **edited** broadcast, Vesk's last lines, Twinsen's reaction | Automated runtime (chapter2.mjs) |
 | 4 The Dig | Kesh, the pump, Tarra, Hesk, Ilka, the post, the dig, the temple, Dallan; the bore test (`dt_*`) | Sani, Brosk, Lumi, Tarra, Hesk, Ilka, Dallan, Vesk (wire) | kept | Source only |
 | 5 Steam and Sand | the plan, the requisition, the hall, the relief valve, the radio, the glider | Ilka, Hesk, Tarra, Dallan, Doran, Zoé | **edited** Doran (ferry not "Baldino's"), Twinsen's unclear "dry in the good way", Zoé's repeated sign-off | Source only |
 | 6 The Pass | landing, the gorge, Lhar, Pim's kite, the sword, the lift (`c6_*`, `ps_*`) | Hesk, Yorna, Pim, villagers | kept | Source only |
