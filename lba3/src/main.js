@@ -2241,6 +2241,10 @@ class Game {
     // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
     //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
     if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
+    // (and another person off to his side: in chapter 8 Safi, walking her round past Brosk's stall, stood 1.3 m straight
+    //  ahead of him and Brosk 1.0 m off at 58°; her walker's tie-break and the side penalty gave Brosk "Talk" and E spoke
+    //  to him (WORKPLAN d5). Only a clear difference counts: two people about as squarely ahead keep the ranking above)
+    if (faced && best?.kind === 'npc' && best !== faced && fa > aim(best.npc.pos.x, best.npc.pos.z) + 0.25) return faced;
     return best;
   }
 

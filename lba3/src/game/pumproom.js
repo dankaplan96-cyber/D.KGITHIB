@@ -192,7 +192,9 @@ export function buildPumpRoom(scene, physics) {
   // ---- CAMPAIGN-6 (story/laneline.js): the culvert under the lane's mouth drains up here. Its cast-iron pipe climbs out of a
   // grated sump in the floor and drops into the copper pipe from above; a cock of its own on the riser (the third pipe's
   // cock). Shut, the culvert keeps its water; open, the project's pull on the copper pipe draws it off toward the fortress.
-  const CV = { x: 1.9, z: PZ + 0.28, top: 1.36 }, SUMP = { x: 1.9, z: BZ + 1.12 };
+  // (GPU-V85 / WORKPLAN d6: at x 1.9 the brick pier stood between the room's camera and the cock, its handle and the man at
+  //  it; at x 1.0, beside the copper pipe's riser, the camera's line to the handle's end passes the pier's front)
+  const CV = { x: 1.0, z: PZ + 0.28, top: 1.36 }, SUMP = { x: 1.0, z: BZ + 1.12 };
   const ciron = MAT.paint('#3a3f45', 0.7);
   k.add(cyl(0.08, 0.08, CV.top, 10), ciron, CV.x, CV.top / 2, CV.z);
   k.add(sphere(0.1, 10, 8), ciron, CV.x, CV.top, CV.z);

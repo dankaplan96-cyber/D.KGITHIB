@@ -161,6 +161,9 @@ await ev((C6) => setChapter('evacuation', { ...C6, c8_started: true }), C6);
 await said();
 const ev8 = await ev(() => { const here = (id) => !!P.npc(id)?.present; return { kesh: ['safi', 'tamu', 'bashir'].map(here), school: ['sc_master', 'sc_pupa', 'oni'].map(here), safi: talkTo('safi') }; });
 const ev8L = await said();
+// (WORKPLAN d5: Safi walks her round past Brosk's stall; faced, she answers, and Brosk beside her still does when faced)
+const brosk8 = await ev(() => { const r = P.talk('dtrader'); return { r: r.r, to: r.to, speakers: r.speakers }; }); const brosk8L = await said();
+check('chapter 8: Brosk at his stall answers too, faced beside Safi\'s round (INPUT)', brosk8.r === 'talked' && brosk8.speakers?.includes('dtrader') && brosk8L.length > 0, { brosk8, brosk8L });
 const jorr = await ev(() => { const w = walkIn('ih_kesh_house2'); const t = talkTo('ih_jorr'); const o = walkOut(); return { ...w, t, out: o.to }; });
 const jorrL = await said();
 check('chapter 8, Citadel evacuating: Kesh\'s walkers and the School\'s people are still on Desert Island; Safi and Jorr talk of Citadel\'s news (INPUT)', ev8.kesh.every(Boolean) && ev8.school.every(Boolean) && ev8.safi === 'talked' && has(ev8L, /Citadel/) && jorr.room === 'ih_kesh_house2' && jorr.t === 'talked' && has(jorrL, /Citadel/), { ev8, ev8L, jorr, jorrL });
