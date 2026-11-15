@@ -1022,8 +1022,8 @@ export function* buildZeelichSteps(scene, physics) {
     // (PLACE-2: 0.6 m off the lamp at −56, not against its foot)
     B.add(cached('coil', () => compose([0, 1, 2, 3].map((k) => [new THREE.TorusGeometry(0.32 - k * 0.05, 0.045, 6, 18).rotateX(Math.PI / 2), 0, 0.05 + k * 0.07, 0]))), pm('#c8a878', 0.9), -54.9, Y0, -1.2);
     placeTag(null);
-    // cargo by the pier root
-    techCrates([[-51.6, -1.5, 2, 0.9], [-52.6, -1.6, 1, 0.8]]);
+    // cargo by the pier root (U-1: the single crate's place is the sky-ferry's sailings board now: skyferry.js)
+    techCrates([[-51.6, -1.5, 2, 0.9]]);
     // walkable deck
     col({ type: 'box', x: cxp, z: 0, hw: L / 2, hd: hw - 0.15, rot: 0, top: Y0, seeThrough: true });
     lamps.push([-62.8, -hw + 0.35], [-56.8, -hw + 0.35], [-51, hw - 0.35]);   // (PLACE-2: the middle one between two railing posts, not on the one at −56.0)
@@ -1133,19 +1133,27 @@ export function* buildZeelichSteps(scene, physics) {
     // bow lamp and gangway
     rod(FB, [4.5, deckY + 0.4, 0], [4.7, deckY + 2.4, 0], 0.06, brassM());
     FB.add(cached('glb', () => new THREE.SphereGeometry(0.13, 12, 8)), glowCyan(), 4.72, deckY + 2.5, 0);
-    FB.add(boxUV(bbox(1.0, 0.07, 1.6, 0.02, 1), TILE.planks), tm('planks', { color: '#d8c0a0' }), 2.0, deckY + 0.08, -2.3, 0.06);
+    // (U-1: her own plank gangway went; the pier's loading bridge and Mill Lane's stage reach her deck: skyferry.js)
     FB.build();
+    // (U-1: everything over her deck — cabin, wheelhouse, envelope, rigging — gets its own material, so it can fade while
+    //  Twinsen stands on her foredeck under it: the follow camera sits over the cabin there. Hull and deck stay as they are)
+    const keepM = [tm('teal', { vc: true, rough: 0.5, metal: 0.25 }), tm('deck', { color: '#d4c8dc', rough: 0.7, metal: 0.2 })];
+    const upper = [];
+    bob.traverse((o) => { if (o.isMesh && !keepM.includes(o.material)) { o.material = o.material.clone(); upper.push(o); } });
     // mooring ropes to the bollards (REVIEW-ZEELICH-ART d: in the ferry's own group, so they go with it: the story keeps
     //  the ferry away, and the ropes were left ending in the air beside the pier)
     const rope = pm('#c8a878', 0.9), rel = (p) => [p[0] - FERRY.x, p[1] - (Y0 - 1.05), p[2] - FERRY.z];
-    for (const [bx, fx] of [[-61.2, -4.5], [-54.0, 3.2]]) mesh(grp, tube([[bx, Y0 + 0.55, PIER.hw - 0.35], [(bx + FERRY.x + fx) / 2, Y0 + 0.1, (PIER.hw + FERRY.z - 1.7) / 2], [FERRY.x + fx, Y0 + 0.35, FERRY.z - 1.75]].map(rel), 0.035, 5, 1), rope);
+    const ropes = [];
+    for (const [bx, fx] of [[-61.2, -4.5], [-54.0, 3.2]]) ropes.push(mesh(grp, tube([[bx, Y0 + 0.55, PIER.hw - 0.35], [(bx + FERRY.x + fx) / 2, Y0 + 0.1, (PIER.hw + FERRY.z - 1.7) / 2], [FERRY.x + fx, Y0 + 0.35, FERRY.z - 1.75]].map(rel), 0.035, 5, 1), rope));
+    // (U-1: bobK, how much she bobs — moored with someone aboard, a little; spin, how fast her propellers turn)
+    const api = { group: grp, bob, ropes, upper, bobK: 1, spin: 9, ...W(FERRY.x, FERRY.z), setVisible(b) { grp.visible = b; } };
     updaters.push((dt, t) => {
       if (!grp.visible) return;
-      bob.position.y = Math.sin(t * 0.8) * 0.12;
-      bob.rotation.x = Math.sin(t * 0.6) * 0.02;
-      for (const p of props) p.rotation.x += dt * 9;
+      bob.position.y = Math.sin(t * 0.8) * 0.12 * api.bobK;
+      bob.rotation.x = Math.sin(t * 0.6) * 0.02 * api.bobK;
+      for (const p of props) p.rotation.x += dt * api.spin;
     });
-    return { group: grp, ...W(FERRY.x, FERRY.z), setVisible(b) { grp.visible = b; } };
+    return api;
   }
 
   // ================================================================ horseshoe gateway at the pier root
