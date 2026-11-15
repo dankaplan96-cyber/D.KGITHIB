@@ -6,7 +6,7 @@
 //   - the West Pier (zeelich.js PIER) keeps its rails and bollards. Its one-crate stack by the pier root became the
 //     SAILINGS BOARD (the replacement, not an addition). At the pier's rail gap: the LOADING BRIDGE (a hinged ramp, up
 //     until the winch house lowers it) under a small derrick post whose cord rings the landing BELL.
-//   - the WINCH HOUSE behind the gateway's south pillar (x −47.6…−44.6, z 6.9…10.9): a door in its north wall; inside,
+//   - the WINCH HOUSE behind the gateway's south pillar (x −47.6…−44.6, z 6.9…11.4): a door in its north wall; inside,
 //     one pale partition across the house faces the door, and everything the puzzle needs is on it or seen through it:
 //     the bridge's hand wheel (east), the port (a hole with a lit rim) and the bridge's COUNTERWEIGHT hanging in front
 //     of it while the bridge is up. Behind the partition, in a dark-lined back room: the CABLE DRUM low behind the hole,
@@ -34,7 +34,7 @@ import { touch } from './story/reach.js';
 
 const Y0 = 6.0;
 export const LF = {
-  hut: { x0: -47.6, x1: -44.6, z0: 6.9, z1: 10.9, h: 2.9, t: 0.2 },
+  hut: { x0: -47.6, x1: -44.6, z0: 6.9, z1: 11.4, h: 2.9, t: 0.2 },
   door: { x: -45.8, hw: 0.55, h: 2.1 },
   wheel: { x: -45.12, y: 1.12, z: 8.78, r: 0.3 },      // (on the partition's face, east of the counterweight's frame: the camera at his back clears the gateway's pillar)
   part: { z: 9.0, t: 0.3 },
