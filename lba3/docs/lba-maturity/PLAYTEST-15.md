@@ -135,9 +135,9 @@ from its own snapshot.
 | campaign-thread `ONLY=A` (the pump room, chapter 2) | A2-A7 PASS (the wrong cock, the right one, saves); A1 FAIL once: at the kitchen tap the prompt went to a person by the sink (Zoé, her round's sink stop) — base PASS in its run; see below |
 | prologue | FAIL "the well's mites beaten with the ball" (left the well room after the last mite) — **the same FAIL on base** |
 | interior-life | FAIL 1 (terminal: Ama at the forms cabinet sampled at y 0.36, "not on the floor", 1 s after arriving) — **base FAILs the same check** (zterminal: Velo sampled while turning, 0.8 s after arriving) |
-| townlife | 1 FAIL, mine and expected: "home again… at their usual pace" read Maro's pace under 1.2 m/s; strollPace makes it 1.24 (the evacuation's hurry is still checked over 1.3). The check is now under 1.3 (`tests/townlife.mjs`); the first run's page crashed (memory) and was retried; re-run of the updated test: see below |
+| townlife | 1 FAIL, mine and expected: "home again… at their usual pace" read Maro's pace under 1.2 m/s; strollPace makes it 1.24 (the evacuation's hurry is still checked over 1.3). The check is now under 1.3 (`tests/townlife.mjs`); every other check PASS (the first run's page crashed on memory and was retried). The updated test was NOT re-run (machine time) |
 | campaign-thread `ONLY=I` (chapter 8's culvert cock in the pump room) | I0–I8 all PASS (12 checks: the kicked-back turn, the turn in the rest, the gate, both saves); the page then crashed (memory) at the end of the run |
-| save-migration | see below |
+| save-migration | NOT COMPLETED: the first run's page crashed (memory) on its first save; the retry ran 80 min without a result and was stopped. This work changes no save format and saves nothing new (the gathering and the wheels' spin are not saved; the ferry and the pump room read the same flags) |
 | place-scan | NOT RUN (machine time) |
 | campaign-hands | page crashed (memory) after ~75 min, twice; NOT VERIFIED here — the pump room's hand contact on the new wheels is measured in playtest-15 instead (0.1 cm and 1.3 cm) |
 
