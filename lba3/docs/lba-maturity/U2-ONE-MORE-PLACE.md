@@ -122,7 +122,7 @@ SwiftShader, 960×540 (the new suite at deviceScaleFactor 1), one suite at a tim
 | `prologue` | PASS | |
 | `chapter1` (chapter 2 of the story) | PASS | Zoé's talks of the chapter are its own; the quest only speaks once the hot water runs |
 | `house` | PASS | |
-| `interior-life` | FAIL (1) | Zeelich terminal's Velo faces 1.48 rad at a dwell in chapter 9: the failure U-1's doc records on the build before it, outside this work; Zoé's household round at home (no wall, no furniture, a talk stops her, a scene wins) passes |
+| `interior-life` | FAIL (1) | Zeelich terminal's Velo faces 1.48 rad at a dwell in chapter 9: **the same single failure on the build before this change** (run against it: `362de899` with this work's two hooks taken out), outside this work; Zoé's household round at home (no wall, no furniture, a talk stops her, a scene wins) passes |
 | `place-scan` | PASS | the house area: 75 pieces, the one finding is the bathroom's towel rail (by design) |
 | `save-migration` | PASS | the first run failed on connection refused: the snapshot's web server had stopped (its time limit) mid-run; run again on a restarted server: PASS |
 
