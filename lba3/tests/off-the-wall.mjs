@@ -85,6 +85,7 @@ const helpers = () => ev(async () => {
   window.shoot = (want, beh) => { const A = aim(want, beh); if (!A) return { none: true, at: loc(game.hero.pos) }; const err = faceA(A.a); const r = throwF(); return { ...r, width: A.width, err, at: loc(game.hero.pos) }; };
   // INPUT: low on magic, he asks Tali (TALK): she tops it up (a player with an empty ball would)
   window.topUp = () => { const h = game.hero; if (h.mp >= 3) return null; const n = OW().tali(); const r = P.talk('ow_tali').r; return { r, mp: h.mp }; };
+  window.saidP = () => { const s = (window._said || []).slice(); if (window._said) window._said.length = 0; return s; };   // (the lines said, read inside the page)
   window.walkTo = (p, tol = 0.25) => { const w = Dl(p); return P.go(w.x, w.z, { tol, maxT: 120 }).r; };
   window.waitMoves = (maxT = 60) => { let t = 0; while ((OW().mv || OW().tb || OW().seq) && t < maxT) { if (game.state === 'dialog') P.settle(); else game.step(0.1); t += 0.1; } P.settle(); return +t.toFixed(1); };
   window.setChapter = (key, extra = {}) => {
@@ -134,7 +135,7 @@ check('INPUT: a straight throw at her bell before she has told him anything: it 
 const t0 = await ev(() => { const G = game, out = { clang: 0 }; const sv = G.audio.play.bind(G.audio); G.audio.play = (n, ...a) => { if (n === 'clang') out.clang++; return sv(n, ...a); };
   out.r = P.talk('ow_tali').r; out.wait = waitMoves(60); out.met = !!G.flags.dx_ow_met; G.audio.play = sv; out.tali = tali(); return out; });
 const t0l = await said();
-check('INPUT: Tali (TALK): her game and its one rule (never straight); she walks to her ring and shows it: her ball off the wall into the bell; "Stand in my ring and aim at my X"', t0.r === 'talked' && t0.met && t0.clang >= 1 && has(t0l, /one rule/) && has(t0l, /Never hit the bell straight/) && has(t0l, /aim at my X/) && has(t0l, /Everyone says that/), { t0, t0l });
+check('INPUT: Tali (TALK): her game and its one rule (never straight); she walks to her ring and shows it: her ball off the wall into the bell; "stand in my ring, aim at my X"', t0.r === 'talked' && t0.met && t0.clang >= 1 && has(t0l, /one rule/) && has(t0l, /Never hit the bell straight/) && has(t0l, /aim at my X/) && has(t0l, /Everyone says that/), { t0, t0l });
 
 // ---------------------------------------------------------------- game 1: off the wall
 const g1 = await ev(() => { walkTo(OWC.ring1, 0.2); const straight = shoot((o) => o.walls === 0); return { straight, ow: ow() }; });
@@ -186,8 +187,8 @@ const k1 = await ev(() => { walkTo({ x: -77.5, z: -80.5 }, 0.3); const toasts = 
   const reb = shoot((o) => o.walls >= 1); const str = shoot((o) => o.walls === 0); game.hud.toast = sv; return { reb, str, toasts, ow: ow() }; });
 await said();
 check('INPUT, the court: a ring off the wall counts under his name on her board (the toast); a straight one does not', k1.reb.rang >= 1 && k1.ow.dx_ow_rings === 1 && k1.toasts.includes('ow_toast_ring') && k1.toasts.includes('ow_toast_direct'), k1);
-const r0 = await ev(() => { const G = game, h = G.hero; walkTo({ x: -77.5, z: -82.5 }, 0.3); faceA(Math.PI); let n = 0; while (h.mp >= 1 && n++ < 20) throwF(); said();
-  const dud = throwF(); for (let i = 0; i < 20 && game.state === "play"; i++) game.step(0.1); P.settle(); const dl = said(); const r = P.talk('ow_tali').r; return { n, dud, dl, r, mp: h.mp, max: h.mpMax }; });
+const r0 = await ev(() => { const G = game, h = G.hero; walkTo({ x: -77.5, z: -82.5 }, 0.3); faceA(Math.PI); let n = 0; while (h.mp >= 1 && n++ < 20) throwF(); saidP();
+  const dud = throwF(); for (let i = 0; i < 20 && game.state === "play"; i++) game.step(0.1); P.settle(); const dl = saidP(); const r = P.talk('ow_tali').r; return { n, dud, dl, r, mp: h.mp, max: h.mpMax }; });
 const r0l = await said();
 check('INPUT: the ball emptied of magic by throws; a throw with none drops (no rebound) and Tali says so; talking to her tops it up (a pupil\'s first spell)', r0.dud.walls === 0 && r0.dl.some((l) => /out of magic/.test(l)) && r0.r === 'talked' && r0.mp === r0.max && has(r0l, /tired/), { r0, r0l });
 

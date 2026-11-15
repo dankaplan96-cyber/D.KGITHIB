@@ -15,7 +15,7 @@ Object.assign(STR.en, {
   // ---- the rule, and her demonstration
   ow_hi_1: "I made up a game. It's got one rule.",
   ow_hi_2: 'Never hit the bell straight. Off the wall first, then the bell. Watch.',
-  ow_hi_3: 'See? The wall does the hard part. Stand in my ring and aim at my X. Your magic ball is allowed.',
+  ow_hi_3: 'See? The wall does the hard part. Now you: stand in my ring, aim at my X, magic ball and all.',
   ow_tw_hi: 'One rule. I can manage one rule.',
   ow_hi_4: 'Everyone says that.',
   ow_hi_alone: "But you already know it. Off the wall, never straight. So, the real games.",
@@ -70,7 +70,7 @@ Object.assign(STR.en, {
   ow_later_home: "The ground's gone quiet. You can hear the bell from the School now.",
 
   // ---- her magic top-up; a throw with no magic
-  ow_refill: "Your ball's tired. Hold still... There. It's the first thing they teach us.",
+  ow_refill: "Your ball's tired. Hold still. There: the first thing they teach us.",
   ow_dud: "It just drops when it's out of magic. Come here, I'll fix that.",
   ow_noball: 'No ball, no game.',
   ow_busy: "Hang on, I'm moving things.",

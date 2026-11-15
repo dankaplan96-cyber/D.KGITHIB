@@ -255,6 +255,9 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Evidence → principle | sample 3, sample 4, P1, gives two scenery pieces a meaning (R11) |
 
 #### DES-2 · Rector Hougo's rebound trials (a skill game that teaches the finale)
+> **15.11.2026: not built on its own; folded into U-3 "Off the Wall"** (one rebound school, Tali's; its crystal slot
+> `sc-trial` is her prize: `U3-OFF-THE-WALL.md`, "DES-2's fate").
+
 | | |
 |---|---|
 | Where | the School of Magic's forecourt (Rector Hougo), the stone face's buttresses |
@@ -647,6 +650,10 @@ lasting change. The album (U-4) uses our own renders of our own earlier states o
 **U-1 built** (15.11.2026; `docs/lba-maturity/U1-LAST-FERRY.md`, `tests/last-ferry.mjs`; Automated runtime only).
 **U-2 built** (15.11.2026; `docs/lba-maturity/U2-ONE-MORE-PLACE.md`, `tests/one-more-place.mjs`; Automated runtime only;
 not paired: none of the remaining first-wave proposals is on Citadel or in the house).
+**U-3 built** (15.11.2026; `docs/lba-maturity/U3-OFF-THE-WALL.md`, `tests/off-the-wall.mjs`; Automated runtime only).
+DES-2 is folded into it and not built on its own: one rebound school, Tali's, behind the School of Magic; DES-2's
+crystal slot (`sc-trial`) is her prize (Rector Hougo's), so 9 of 12 crystals can be had in play. Not paired: DES-1 (the
+figures' cache) is on the same island but shares no file or place with the court; it stays for a later pass.
 
 **Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
 proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
