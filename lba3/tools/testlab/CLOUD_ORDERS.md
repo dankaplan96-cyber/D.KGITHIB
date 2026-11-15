@@ -482,7 +482,9 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        cellar, the tutorial's hints, the radio's glowing eye) and send a request; if the scale is 1 in both, compare
        crops at the same spot and look at the output pass (edgeAA, sharpen) — a 960-px crop of both is enough. Report
        as P30 in WORLD_ART_REQUESTS.md.
-    2. **P35, Twinsen's head from behind** (the user: "the bulge is weird"; a picture from behind and above: the hair
+    2. **(WITHDRAWN 15.11 — the cloud took it: TWINSEN-FIGURE. The user sent a figurine of Twinsen as the target and said
+       the local agent got stuck; stop any Twinsen model work and push what you have as wip/desktop/twinsen-* so the cloud
+       can read it.)** P35, Twinsen's head from behind (the user: "the bulge is weird"; a picture from behind and above: the hair
        knot on the back of his head reads as a lump). TWINSEN-LOOK's territory: in Blender, make the knot read as
        hair (shape, a tie, its size against the head, its join to the scalp) or reduce it, against LBA2's look (his
        tied hair, numbers and descriptions only). Previews from the play camera's height behind him, before/after; the
