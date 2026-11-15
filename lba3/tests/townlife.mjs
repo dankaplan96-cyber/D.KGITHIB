@@ -452,7 +452,9 @@ const homeT = await ev(() => { const G = game, W = G.walkers, B = G.world.busy, 
   const lines = G.story.citizens.linesFor(G.npcs.find((n) => n.def.id === 'pico'));
   return { state: B.state, stage: W.stage, back, tag: F.count.tag - c0, lines: lines.slice(0, 2), maroSpeed: +res.find((r) => r.def.id === 'maro').speed.toFixed(2) }; });
 const hHome = await hear({ c1_water: true });
-check('home again (epilogue): everyone is back on the streets at their usual pace, the children play tag again, and the talk is festive (a resident\'s word, the plaza\'s talk)', homeT.state === 'home' && homeT.stage === 1 && homeT.back.length === 0 && homeT.tag >= 1 && homeT.lines[0] === 'rs_pico_home' && homeT.maroSpeed < 1.2 && hHome.keys.length >= 2 && hHome.keys.every((s) => /^ro_home_/.test(s)), { homeT, hHome });
+// (P36, PLAYTEST-15: the residents' usual pace is a stroll of 1.1-1.3 m/s now, walkers.js strollPace; the evacuation's
+//  hurry is over 1.3, above)
+check('home again (epilogue): everyone is back on the streets at their usual pace, the children play tag again, and the talk is festive (a resident\'s word, the plaza\'s talk)', homeT.state === 'home' && homeT.stage === 1 && homeT.back.length === 0 && homeT.tag >= 1 && homeT.lines[0] === 'rs_pico_home' && homeT.maroSpeed < 1.3 && hHome.keys.length >= 2 && hHome.keys.every((s) => /^ro_home_/.test(s)), { homeT, hHome });
 // the council and the network (chapters 9, 10): the plaza's talk follows
 await setChapter('council', { c1_water: true });
 const hCouncil = await hear({ c1_water: true });
