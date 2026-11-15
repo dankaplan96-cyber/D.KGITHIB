@@ -507,7 +507,7 @@ export class Prologue extends ChapterBase {
         // next door: she has been round the neighbours' taps, and brings the proof Mira wants (CH1-LONGER)
         if (f.opening && !g.room && !f.key) {
           if (!f.pr_kettle) {
-            return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', 'pr_zoe_kettle2']], () => {
+            return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', f.pr_miraNo ? 'pr_zoe_kettle2b' : 'pr_zoe_kettle2']], () => {
               f.pr_kettle = true; f.zoeNext = true; g.updateObjective(); g.save(false); g.found('kettle', 'pr_toast_kettle');
             });
           }
@@ -517,7 +517,8 @@ export class Prologue extends ChapterBase {
       case 'arthur':
         if (f.prologueDone) return c([['arthur', 'pr_ar_after']]);
         // (asked again while Doran sleeps on Xil's permit, he knows how to wake him: he and Tim tried it)
-        return c([['arthur', f.metXil && !f.pr_bell && !f.stamp ? 'pr_ar_bell' : 'pr_ar_hint']]);
+        // (DIALOGUE-EDIT: the sneaking hint only once the kids have brushed him off; before, what Arthur saw; after, Tim told)
+        return c([['arthur', f.metXil && !f.pr_bell && !f.stamp ? 'pr_ar_bell' : f.timConfessed ? 'pr_ar_told' : f.kidsAsked ? 'pr_ar_hint' : 'pr_ar_early']]);
       case 'gilbert': case 'mira':
         if (!f.key) {
           // Mira opens the town well only for a fault at the spring: the kettle crystals show it is one
