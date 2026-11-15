@@ -11,6 +11,8 @@
 # in the original: they are his sleeves. HERO-ARMS: below the armpit the sleeves are cut from the tunic's front and back,
 # which stay on the body, so a raised arm lifts a sleeve and not the whole tunic, I-22).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
+# TWINSEN-FIGURE (default; TW_FIGURE=0 builds the model before it byte for byte): the user's figurine replaces the cape,
+# the hair, the belt, the shoes and parts of the face: see FIGURE below and docs/lba-maturity/TWINSEN-FIGURE.md.
 import json, math, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +38,23 @@ COL = {
     'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
     'cord': '#e8b04c', 'band': '#d8a83a', 'lidSkin': '#c29068', 'brow': '#4a3014', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#5c2622',
 }
+# TWINSEN-FIGURE (the user 15.11, a picture of a Twinsen figurine: "Better than what there is now? Can we try to get closer
+# to this?"; and earlier that day, from the play camera behind him, on LBA2's three balls of hair: "the bulge is weird").
+# The figure, described in numbers (it is the user's photo and is not in the repo): a tall topknot rising from the crown
+# through an orange-brown ring, its tail curving up and back to a point that hangs behind (≈ 0.55 of the head's height
+# above the crown); a strip of short hair down the back of the skull, the rest of the scalp bare; an elongated egg head
+# with big round eyes, a long round nose and small ears; a wide blue tunic with a high round collar and broad bell
+# sleeves to the wrists, the hands out of them (not a cape over the arms); a large round gold medallion on a brown cord;
+# a brown sash; a long flared robe to the ankles that parts as he strides; dark brown rounded shoes. TW_FIGURE=0 builds
+# the model before it (TWINSEN-ORIG, with its own flags) byte for byte.
+FIGURE = os.environ.get('TW_FIGURE', '1') != '0'
+if FIGURE:
+    COL.update({
+        'tunic': '#2f86c2', 'inner': '#173f63', 'belt': '#7c4a2a', 'shoe': '#4b3224', 'sole': '#2a1b13',
+        'hair': '#4a2f17', 'hairTuft': '#634224', 'ring': '#b05622',
+        'iris': '#3a86d2', 'pupil': '#10202e', 'white': '#f4f4f6',
+        'medal': '#c99a34', 'medalFace': '#e6c35a', 'medalLine': '#a87a26', 'cord': '#6a4022', 'brow': '#5a3a1e',
+    })
 HEAD_K = 1.0                      # the head at the original's measured size (≈0.156 H wide; it was drawn ×1.24 before)
 CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
 
@@ -64,6 +83,7 @@ class Part:
         # the look's armSpread, GAME_SPREAD), so the idle shape is kept exactly; `game`: the part is drawn in that pose
         self.reweight, self.game = reweight, game
         self.cls = None   # (HERO-ARMS: per vertex 'sleeve' / 'body' / 'shared', set by cut_sleeves)
+        self.vside = {}   # (TWINSEN-FIGURE: a robe slit's vertex → the side (+1 L, -1 R) whose leg alone carries it)
         self.v, self.f = [], []
 
     def add(self, verts, faces):
@@ -89,6 +109,9 @@ def ring(y, hw, zf, zb, n, p=0.75, x0=0.0):
         yy = y(t) if callable(y) else y
         pts.append((x0 + hw * sx, yy, zf * cz if cz >= 0 else -zb * cz))
     return pts
+
+
+ring_fn = ring   # (TWINSEN-FIGURE: the name `ring` is reused for a loop variable below)
 
 
 def oring(y, hw, zf, zb, n, p=0.9):
@@ -675,12 +698,19 @@ def tw_kx(y):
 
 # (the skull's arc: above SK_Y0 the 0.908 section scaled about its middle along a quarter ellipse to the apex at SK_C + SK_A)
 SK_Y0, SK_C, SK_A = 0.908, 0.89, 0.082
+# (TWINSEN-FIGURE: the figure's head is a longer egg: the skull's arc above the brow taller, FIG_SKA of H instead of 0.082;
+# the face below the brow, the width and the jaw unchanged)
+FIG_SKA = float(os.environ.get('TW_FIG_SKA', '0.092'))
+_SK_STEPS = (0.922, 0.935, 0.946, 0.955, 0.962, 0.967)
+if FIGURE:
+    _SK_STEPS = tuple(SK_Y0 + (y_ - SK_Y0) * (SK_C + FIG_SKA - SK_Y0) / (SK_C + SK_A - SK_Y0) for y_ in _SK_STEPS)
+    SK_A = FIG_SKA
 if ORIG:
     _h0 = dict(HEAD)[SK_Y0]
     _zc0 = (max(z for _, z in _h0) + min(z for _, z in _h0)) / 2
     _k0 = math.sqrt(1 - ((SK_Y0 - SK_C) / SK_A) ** 2)
     _ks = lambda y_: math.sqrt(max(0.0, 1 - ((y_ - SK_C) / SK_A) ** 2)) / _k0
-    HEAD_SRC = [r_ for r_ in HEAD if r_[0] <= SK_Y0] + [(y_, [(x * _ks(y_), _zc0 + (z - _zc0) * _ks(y_)) for x, z in _h0]) for y_ in (0.922, 0.935, 0.946, 0.955, 0.962, 0.967)]
+    HEAD_SRC = [r_ for r_ in HEAD if r_[0] <= SK_Y0] + [(y_, [(x * _ks(y_), _zc0 + (z - _zc0) * _ks(y_)) for x, z in _h0]) for y_ in _SK_STEPS]
 else:
     HEAD_SRC = HEAD
 
@@ -869,6 +899,319 @@ if TW_LOOK and LOOK_38:
     PARTS.append(band)
 
 
+# ------------------------------------------------------------------ TWINSEN-FIGURE: the body, sleeves and hair of the figure
+# (built after the parts above, which it replaces by name; the face's eyes, nose, mouth and the medallion follow below with
+# FIGURE's own numbers). All the new parts are drawn where the game shows them at rest (the arms at GAME_SPREAD) and stored
+# un-spread by their own weights, as the HERO-LOOK sleeves were (Part.game).
+FIG_CAP = os.environ.get('TW_FIG_CAP', '1') != '0'   # (the strip of short hair down the back of the skull)
+FIG_SLIT = os.environ.get('TW_FIG_SLIT', '1') != '0'  # (the robe split at the front and back from the hem to the shin)
+if FIGURE:
+    DROP = {'capeLip', 'cape', 'neckIn', 'belt', 'robe', 'robeLip', 'knot', 'hair', 'shoeL', 'shoeR', 'soleL', 'soleR',
+            'cuffL', 'cuffR', 'cuffHemL', 'cuffHemR', 'cuffInL', 'cuffInR'}
+    PARTS[:] = [p_ for p_ in PARTS if p_.name not in DROP]
+
+    def w_tunic(p):
+        # the tunic's body on the torso; round each armhole the cloth follows the upper arm a little (a third at most,
+        # from the armpit up), so a swung or raised arm draws the shoulder with it instead of leaving the sleeve's root bare
+        x, y, z = p
+        a = 0.34 * smooth(0.070, 0.112, abs(x)) * smooth(0.60, 0.68, y) * (1 - smooth(0.745, 0.765, y))
+        return {'torso': 1 - a, 'sh' + side(x): a} if a > 1e-4 else {'torso': 1.0}
+
+    # the tunic: a wide blouse from the hem (just over the sash) to the shoulders, which slope into a high round collar;
+    # (y, half-width, front, back, roundness) — the collar's rings are oring()s round the neck's own centre
+    TUNIC = [
+        (0.452, 0.131, 0.137, -0.101, 0.64),
+        (0.500, 0.122, 0.130, -0.095, 0.66),
+        (0.560, 0.112, 0.126, -0.089, 0.68),
+        (0.620, 0.113, 0.128, -0.083, 0.68),
+        (0.668, 0.113, 0.123, -0.073, 0.70),
+        (0.704, 0.108, 0.113, -0.059, 0.74),
+        (0.734, 0.097, 0.101, -0.038, 0.80),
+    ]
+    COLLAR = [
+        oring(0.752, 0.072, 0.095, -0.014, N, 0.86),
+        oring(0.763, 0.052, 0.093, 0.003, N, 0.95),
+        oring(0.778, 0.0470, 0.0935, 0.0060, N, 1.0),   # the collar's outer face, standing
+        oring(0.7925, 0.0450, 0.0920, 0.0085, N, 1.0),
+        oring(0.7975, 0.0412, 0.0890, 0.0118, N, 1.0),  # its rolled top
+        oring(0.7935, 0.0372, 0.0858, 0.0148, N, 1.0),  # its inner edge
+    ]
+    tunic = Part('tunic', 'tunic', w_tunic, angle=58, game=True)
+    loft(tunic, [ring_fn(y, hw, zf, zb, N, pw) for y, hw, zf, zb, pw in TUNIC] + COLLAR)
+    PARTS.append(tunic)
+    tlip = Part('tunicLip', 'inner', w_tunic, angle=70, game=True)   # (the hem's thickness: the cloth turned up inside)
+    loft(tlip, [ring_fn(0.478, 0.118, 0.124, -0.090, N, 0.66), ring_fn(0.452, 0.129, 0.135, -0.099, N, 0.64)])
+    PARTS.append(tlip)
+    cin_ = Part('collarIn', 'inner', lambda p: {'torso': 1.0}, angle=70)   # (the collar's dark inside, down into the body)
+    loft(cin_, [oring(0.7935, 0.0372, 0.0858, 0.0148, N, 1.0), oring(0.770, 0.0345, 0.0840, 0.0165, N, 1.0)])
+    PARTS.append(cin_)
+
+    # the sash: a broad brown band at the waist, just under the tunic's hem, a little proud of the robe
+    sash = Part('sash', 'belt', lambda p: {'torso': 1.0}, angle=60)
+    loft(sash, [ring_fn(0.414, 0.1125, 0.1295, -0.0855, N, 0.72), ring_fn(0.436, 0.1170, 0.1335, -0.0895, N, 0.72),
+                ring_fn(0.462, 0.1150, 0.1315, -0.0875, N, 0.72)])
+    PARTS.append(sash)
+
+    # the robe: long and flared to the ankles, its two halves on the legs as before (w_robe); split at the front and the
+    # back from the hem to the shin (FIG_SLIT), so a stride parts it over the leading leg instead of stretching a sheet
+    ROBE = [
+        (0.042, 0.181, 0.150, -0.150, 0.035),
+        (0.125, 0.168, 0.148, -0.137, 0.028),
+        (0.240, 0.148, 0.145, -0.118, 0.016),
+        (0.340, 0.127, 0.138, -0.099, 0.007),
+        (0.432, 0.110, 0.127, -0.083, 0.0),
+    ]
+    SLIT_RINGS = 2   # (the hem's and the shin's rings are split; the knee's ring and above are whole)
+
+    def slit(part, n, rings):
+        # the columns at the front (0) and back (n/2) centre, in the lowest `rings` rings: the right half's faces get
+        # copies of those vertices, and each side's copy is carried by its own leg alone (Part.vside)
+        copies = {}
+        for f in part.f:
+            col = f[0] % n
+            if not (n // 2 <= col < n):
+                continue
+            for k, i in enumerate(f):
+                if i < rings * n and i % n in (0, n // 2):
+                    if i not in copies:
+                        copies[i] = len(part.v)
+                        part.v.append(part.v[i])
+                    f[k] = copies[i]
+        for i, c in copies.items():
+            part.vside[i], part.vside[c] = 1, -1
+
+    robe2 = Part('robe', 'tunic', w_robe, angle=55)
+    loft(robe2, [folds(ring_fn(y, hw, zf, zb, N, 0.7), fa) if fa else ring_fn(y, hw, zf, zb, N, 0.75) for y, hw, zf, zb, fa in ROBE])
+    if FIG_SLIT:
+        slit(robe2, N, SLIT_RINGS)
+    PARTS.append(robe2)
+    rlip2 = Part('robeLip', 'inner', w_robe, angle=70)
+    loft(rlip2, [folds(ring_fn(0.074, 0.170, 0.137, -0.140, N, 0.7), 0.033), folds(ring_fn(0.042, 0.179, 0.148, -0.148, N, 0.7), 0.035)])
+    if FIG_SLIT:
+        slit(rlip2, N, 2)
+    PARTS.append(rlip2)
+
+    # the bell sleeves: from the shoulder (its root inside the tunic) along the arm as the game holds it at rest, widening
+    # from the elbow to a broad open bell at the wrist; the hand comes out of it. Rings: centre (x out, y, z), radius, u
+    # (0 the shoulder, 1 the elbow, 2 the bell's mouth: the weights pass from the upper arm to the forearm over the elbow)
+    BELL = [
+        ((0.072, 0.712, 0.000), 0.029, 0.00),
+        ((0.098, 0.676, 0.002), 0.041, 0.25),
+        ((0.126, 0.626, 0.004), 0.046, 0.60),
+        ((0.157, 0.562, 0.006), 0.048, 1.00),
+        ((0.181, 0.510, 0.009), 0.055, 1.40),
+        ((0.199, 0.468, 0.012), 0.065, 1.75),
+        ((0.207, 0.447, 0.013), 0.072, 2.00),
+    ]
+    BELL_M = 14
+
+    def bell_w(u, s):
+        return {'sh' + s: 1.0} if u <= 0.55 else {'sh' + s: (1.45 - u) / 0.9, 'el' + s: (u - 0.55) / 0.9} if u < 1.45 else {'el' + s: 1.0}
+
+    for sx in (1, -1):
+        s = side(sx)
+        BW = {}
+        key = lambda p: tuple(round(c, 6) for c in p)
+        cs = [Vector((sx * c[0], c[1], c[2])) for c, _, _ in BELL]
+
+        def frame(k):
+            a, b = cs[max(0, k - 1)], cs[min(len(cs) - 1, k + 1)]
+            d = (b - a).normalized()
+            return d, Vector((0, 0, 1)).cross(d).normalized(), Vector((0, 0, 1))
+
+        def bring(c, d, ax1, ax2, r, n=BELL_M):
+            return ell_ring(tuple(c), ax1, ax2, r, r, n)
+
+        slv = Part('sleeve' + s, 'tunic', lambda p, BW=BW: BW[tuple(round(c, 6) for c in p)], angle=62, game=True)
+        rings_ = []
+        for k, (c, r, u) in enumerate(BELL):
+            d, a1, a2 = frame(k)
+            rg = bring(cs[k], d, a1, a2, r)
+            for q in rg:
+                BW[key(q)] = bell_w(u, s)
+            rings_.append(rg)
+        loft_along(slv, rings_, cap0=False, cap1=False)
+        PARTS.append(slv)
+        # the bell's mouth: the cloth rolled under (out a little, round and back in by its thickness), then the dark
+        # inside up into the sleeve, closed there (the wrist runs through that lid)
+        d, a1, a2 = frame(len(BELL) - 1)
+        c0, r0 = cs[-1], BELL[-1][1]
+        hemr = Part('bellHem' + s, 'tunic', lambda p, BW=BW: BW[tuple(round(c, 6) for c in p)], angle=80, game=True)
+        hr = [bring(c0 + d * t, d, a1, a2, r0 * k) for t, k in ((0.0, 1.0), (0.0045, 1.045), (0.0075, 1.02), (0.0060, 0.955))]
+        for rg in hr:
+            for q in rg:
+                BW[key(q)] = {'el' + s: 1.0}
+        loft_along(hemr, hr, cap0=False, cap1=False)
+        PARTS.append(hemr)
+        bin_ = Part('bellIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70, game=True)
+        loft_along(bin_, [bring(c0 + d * 0.006, d, a1, a2, r0 * 0.955), bring(c0 - d * 0.016, d, a1, a2, r0 * 0.86),
+                          bring(c0 - d * 0.040, d, a1, a2, r0 * 0.62)], cap0=False, cap1=True)
+        PARTS.append(bin_)
+        # the wrist, from inside the sleeve to the hand (the forearm's bone; the hand's own turn starts at the fist)
+        wr = Part('wrist' + s, 'skin', lambda p, s=s: {'el' + s: 1.0}, angle=70, game=True)
+        tube(wr, tuple(c0 - d * 0.045), (sx * 0.2165, 0.425, 0.0145), 0.0175, 0.0165, 10, cap0=True, cap1=False)
+        PARTS.append(wr)
+
+        # the shoes: dark brown and rounded, a low closed shoe with a thick sole and a round toe (no lifted point)
+        fb = (lambda b: (lambda p: {b: 1.0}))('foot' + s)
+        cx = sx * 0.0775
+        secs = [(-0.052, 0.024, 0.031, 0.0), (-0.025, 0.029, 0.037, 0.0), (0.020, 0.030, 0.036, 0.0), (0.060, 0.028, 0.030, 0.0),
+                (0.088, 0.023, 0.023, 0.001), (0.104, 0.013, 0.015, 0.003)]
+        shoe = Part('shoe' + s, 'shoe', fb, angle=60)
+        loft_along(shoe, [[(cx + hw * math.copysign(abs(math.cos(2 * math.pi * i / 12)) ** 0.8, math.cos(2 * math.pi * i / 12)),
+                            0.006 + yo + (h * (0.5 + 0.5 * math.sin(2 * math.pi * i / 12))), z) for i in range(12)] for z, hw, h, yo in secs])
+        PARTS.append(shoe)
+        sole = Part('sole' + s, 'sole', fb, angle=30)
+        box_wedge(sole, cx - 0.029, cx + 0.029, -0.055, 0.100, 0.0, 0.0075, 0.0075)
+        PARTS.append(sole)
+
+    # ---- the hair: the figure's topknot. Gathered through a ring on the crown, it rises as one broad lock, swells, and
+    # its top turns back and falls to a point behind the head; shallow grooves and two browns run along it (strands), and
+    # it is lit like the head (LBA2's three unlit balls read as a dark lump from the play camera behind him: P35).
+    # Stations along its middle line (y, z, radius, u): u 0 on the head, 1 tail0, 2 tail2 (the follow-through bends it)
+    KNOT = [
+        (0.9705, 0.0405, 0.0190, 0.00),   # the root, sunk in the crown under the ring
+        (0.9860, 0.0390, 0.0228, 0.00),   # in the ring
+        (1.0000, 0.0370, 0.0315, 0.15),   # out of it, already wider than the ring: a lock, not a pipe
+        (1.0180, 0.0330, 0.0390, 0.35),
+        (1.0380, 0.0260, 0.0430, 0.55),   # the fullest
+        (1.0570, 0.0150, 0.0430, 0.75),
+        (1.0720, -0.0010, 0.0390, 0.95),  # the top, turning back
+        (1.0800, -0.0220, 0.0320, 1.15),
+        (1.0790, -0.0440, 0.0250, 1.35),
+        (1.0700, -0.0620, 0.0190, 1.55),  # falling behind
+        (1.0550, -0.0760, 0.0130, 1.75),
+        (1.0360, -0.0840, 0.0078, 1.90),
+    ]
+    KNOT_TIP = (1.0160, -0.0870)
+    # (drawn first as tall as the play scale allows, then brought down about its root to the figure's proportion: the knot
+    # about 0.6 of the head's height above the crown (it was 0.71: 2.34 m to its top, now 2.30 m), a little slimmer)
+    KNOT_KS, KNOT_KR = float(os.environ.get('TW_KNOT_KS', '0.84')), float(os.environ.get('TW_KNOT_KR', '0.96'))
+    _y0, _z0 = KNOT[0][0], KNOT[0][1]
+    KNOT = [(_y0 + (y - _y0) * KNOT_KS, _z0 + (z - _z0) * KNOT_KS, r * KNOT_KR, u) for y, z, r, u in KNOT]
+    KNOT_TIP = (_y0 + (KNOT_TIP[0] - _y0) * KNOT_KS, _z0 + (KNOT_TIP[1] - _z0) * KNOT_KS)
+    KNOT_M = 16
+    HAIR_COL = {}
+    hairp = Part('hair', 'hair', lambda p: w_hair(HAIR_U[tuple(round(c, 6) for c in p)]), angle=75,
+                 color=lambda p: HAIR_COL[tuple(round(c, 6) for c in p)])
+    P2 = [(y, z) for y, z, _, _ in KNOT] + [KNOT_TIP]
+    tg = []
+    for j in range(len(KNOT)):
+        a, b = P2[max(0, j - 1)], P2[j + 1]
+        L_ = math.hypot(b[0] - a[0], b[1] - a[1])
+        tg.append(((b[0] - a[0]) / L_, (b[1] - a[1]) / L_))
+    for _ in range(2):   # (the rings turn gradually round the bend at the top, so they never cross on its inside)
+        tg = [tg[0]] + [(lambda v: (v[0] / math.hypot(*v), v[1] / math.hypot(*v)))((tg[j - 1][0] + 2 * tg[j][0] + tg[min(j + 1, len(tg) - 1)][0],
+                                                                                   tg[j - 1][1] + 2 * tg[j][1] + tg[min(j + 1, len(tg) - 1)][1])) for j in range(1, len(tg))]
+    hv, hf, hu, hc = [], [], [], []
+    for j, ((cy, cz, r, u), (ty, tz)) in enumerate(zip(KNOT, tg)):
+        ny, nz = -tz, ty   # (the ring's in-plane direction toward the knot's front/top side)
+        for i in range(KNOT_M):
+            a = 2 * math.pi * i / KNOT_M
+            g = 1.0 + 0.07 * math.cos(8 * a) * smooth(0.0, 0.3, u)   # (eight shallow grooves, from the ring up)
+            rr = r * g
+            hv.append((rr * math.sin(a), cy + ny * rr * math.cos(a), cz + nz * rr * math.cos(a)))
+            hu.append(u)
+            hc.append('hairTuft' if (i % 2 == 0 and u > 0.05) else 'hair')
+    nr = len(KNOT)
+    for j in range(nr - 1):
+        for i in range(KNOT_M):
+            a, b = j * KNOT_M + i, j * KNOT_M + (i + 1) % KNOT_M
+            hf.append([a, b, b + KNOT_M, a + KNOT_M])
+    hv.append((0.0, KNOT[0][0] - 0.004, KNOT[0][1])); hu.append(0.0); hc.append('hair')
+    hv.append((0.0, KNOT_TIP[0], KNOT_TIP[1])); hu.append(2.0); hc.append('hair')
+    f0, f1 = len(hv) - 2, len(hv) - 1
+    hf += [[f0, (i + 1) % KNOT_M, i] for i in range(KNOT_M)]
+    o = (nr - 1) * KNOT_M
+    hf += [[f1, o + i, o + (i + 1) % KNOT_M] for i in range(KNOT_M)]
+    st0 = len(hairp.v)
+    hairp.add(hv, hf)
+    for p, u, c in zip(hairp.v[st0:], hu, hc):
+        HAIR_U[tuple(round(cc, 6) for cc in p)] = u
+        HAIR_COL[tuple(round(cc, 6) for cc in p)] = c
+
+    # the ring that gathers it on the crown: an orange-brown band with rounded edges round the knot's root, square to it
+    (ry, rz, _r, _u), (rty, rtz) = KNOT[1], tg[1]
+    RING = [(0.0222, -0.0072), (0.0262, -0.0092), (0.0296, -0.0062), (0.0306, 0.0000), (0.0296, 0.0062), (0.0262, 0.0092), (0.0222, 0.0072)]
+    RING_M = 16
+    rv, rf = [], []
+    for rr, h in RING:
+        for i in range(RING_M):
+            a = 2 * math.pi * i / RING_M
+            rv.append((rr * math.sin(a), ry + rty * h + (-rtz) * rr * math.cos(a), rz + rtz * h + rty * rr * math.cos(a)))
+    for j in range(len(RING) - 1):
+        for i in range(RING_M):
+            a, b = j * RING_M + i, j * RING_M + (i + 1) % RING_M
+            rf.append([a, b, b + RING_M, a + RING_M])
+    ringp = Part('hairRing', 'ring', lambda p: {'head': 1.0}, angle=70)
+    ringp.add(rv, rf)
+    PARTS.append(ringp)
+    PARTS.append(hairp)
+
+    # short hair down the back of the skull (the figure: a dark strip from the ring to the nape behind the ears, the
+    # forehead, temples and the sides bare): the head's own sections, from the back centre round each side to a hairline
+    # that comes forward toward the ring, 3.5 mm off the skin
+    def head_half(y):
+        for (y0, h0), (y1, h1) in zip(FINE, FINE[1:]):
+            if y0 <= y <= y1:
+                t = (y - y0) / (y1 - y0) if y1 > y0 else 0
+                a, b = resample(h0, 25), resample(h1, 25)
+                return [(pa[0] + (pb[0] - pa[0]) * t, pa[1] + (pb[1] - pa[1]) * t) for pa, pb in zip(a, b)]
+        return resample(FINE[-1][1], 25)
+
+    def along(half, s):
+        seg = [math.dist(half[i], half[i + 1]) for i in range(len(half) - 1)]
+        d, i = sum(seg) * s, 0
+        while i < len(seg) - 1 and d > seg[i]:
+            d -= seg[i]
+            i += 1
+        t = min(1.0, d / seg[i]) if seg[i] else 0
+        return (half[i][0] + (half[i + 1][0] - half[i][0]) * t, half[i][1] + (half[i + 1][1] - half[i][1]) * t)
+
+    if FIG_CAP:
+        cap = Part('hairCap', 'hair', lambda p: {'head': 1.0}, angle=80, big=True)
+        CAP = [(0.846, 0.80), (0.866, 0.76), (0.888, 0.72), (0.910, 0.68), (0.930, 0.63), (0.948, 0.58), (0.962, 0.52), (0.972, 0.46)]
+        CM = 6
+        crs = []
+        for y, se in CAP:
+            half = head_half(y)
+            zc = (max(z for _, z in half) + min(z for _, z in half)) / 2
+            pts = []
+            for sgn in (1, -1):
+                ks = range(CM + 1) if sgn > 0 else range(CM - 1, -1, -1)
+                for k in ks:
+                    x, z = along(half, se + (1 - se) * k / CM)
+                    pts.append((sgn * x, z))
+            # (the back centre is shared: the left side runs hairline → back, the right back → hairline)
+            row = []
+            for x, z in pts:
+                l = math.hypot(x, z - zc) or 1.0
+                row.append((x + x / l * 0.0035, y, z + (z - zc) / l * 0.0035))
+            crs.append(row)
+        nc = len(crs[0])
+        cv = [p for r in crs for p in r]
+        cf = [[j * nc + i + 1, j * nc + i, (j + 1) * nc + i, (j + 1) * nc + i + 1] for j in range(len(crs) - 1) for i in range(nc - 1)]
+        cap.add(cv, cf)
+        PARTS.append(cap)
+
+    # small ears, low on the sides of the head behind the cheeks (the figure's: a rounded shell, a third of the eye's
+    # height above and below the nose's root), each a flattened ball half sunk in the head
+    ears = Part('ears', 'skin', lambda p: {'head': 1.0}, angle=80, big=True)
+    for sx in (1, -1):
+        e0 = len(ears.v)
+        sphere(ears, (0.0, 0.0, 0.0), 1.0, 8, 5)
+        for i in range(e0, len(ears.v)):
+            x, y, z = ears.v[i]
+            # (local: x out from the head, y up, z front-back), then tilted back 12 degrees and placed
+            lx, ly, lz = x * 0.0068, y * 0.0165, z * 0.0105
+            c_, s_ = math.cos(math.radians(12)), math.sin(math.radians(12))
+            ly, lz = ly * c_ - lz * s_, ly * s_ + lz * c_
+            ears.v[i] = (sx * (0.0705 + lx), 0.873 + ly, 0.030 + lz)
+    PARTS.append(ears)
+
+    cape = tunic   # (the medallion and its cord are laid on the tunic and its collar below)
+
+
 # HERO-LOOK (I-23, the user 31.10: "the medallion is just a plain disc, not on a necklace as in the original"). LBA2's
 # Twinsen (BODY.HQR body 1) does wear it on a necklace: besides its polygons the body has 15 line primitives, which the
 # earlier measurements (polygons only) had missed. Measured there (units of 1238, converted to this frame's H by
@@ -888,6 +1231,9 @@ from mathutils.bvhtree import BVHTree
 CORD_W = 0.0034    # half-width of the cord (H): ~1.4 cm in the game, a pixel or two at the play camera like LBA2's line
 CORD_LIFT = 0.0035
 MED_C, MED_HW, MED_HH = (0.0, 0.632), 0.041, 0.036
+MED_N = 8
+if FIGURE:   # (the figure's: a large round gold medallion on a brown cord, its face ringed by an engraved line)
+    CORD_W, MED_C, MED_HW, MED_HH, MED_N = 0.0040, (0.0, 0.628), 0.046, 0.046, 16
 
 
 def bvh_of(*parts):
@@ -922,22 +1268,34 @@ mu = Vector((1, 0, 0)); mu = (mu - mn * mu.dot(mn)).normalized()
 mv = mn.cross(mu).normalized()
 if mv.y < 0:
     mv = -mv
-oct8 = lambda k, d: [tuple(mc3 + mn * d + mu * (math.sin(2 * math.pi * i / 8) * MED_HW * k) + mv * (math.cos(2 * math.pi * i / 8) * MED_HH * k)) for i in range(8)]
-med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
-v = oct8(1.0, 0.001) + oct8(1.0, 0.0075) + oct8(0.74, 0.0085)
-f = [[i, (i + 1) % 8, 8 + (i + 1) % 8, 8 + i] for i in range(8)] + [[8 + i, 8 + (i + 1) % 8, 16 + (i + 1) % 8, 16 + i] for i in range(8)]
+oct8 = lambda k, d: [tuple(mc3 + mn * d + mu * (math.sin(2 * math.pi * i / MED_N) * MED_HW * k) + mv * (math.cos(2 * math.pi * i / MED_N) * MED_HH * k)) for i in range(MED_N)]
+med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40 if not FIGURE else 50)
+M_ = MED_N
+v = oct8(1.0, 0.001) + oct8(1.0, 0.0075) + oct8(0.74 if not FIGURE else 0.80, 0.0085)
+f = [[i, (i + 1) % M_, M_ + (i + 1) % M_, M_ + i] for i in range(M_)] + [[M_ + i, M_ + (i + 1) % M_, 2 * M_ + (i + 1) % M_, 2 * M_ + i] for i in range(M_)]
 med.add(v, f)
 # the bead on its top the cord runs through: a short gold tube across the chest
 top = mc3 + mn * 0.006 + mv * (MED_HH + 0.004)
 tube(med, tuple(top - mu * 0.0075), tuple(top + mu * 0.0075), 0.0052, 0.0052, 6, cap0=True, cap1=True)
 PARTS.append(med)
 medf = Part('medalFace', 'medalFace', lambda p: {'torso': 1.0}, angle=40)
-medf.add(oct8(0.74, 0.0085) + [tuple(mc3 + mn * 0.0105)], [[i, (i + 1) % 8, 8] for i in range(8)])
+if not FIGURE:
+    medf.add(oct8(0.74, 0.0085) + [tuple(mc3 + mn * 0.0105)], [[i, (i + 1) % 8, 8] for i in range(8)])
+else:
+    # (a slightly domed face inside the rim, and on it an engraved ring (a darker line) round a raised boss)
+    medf.add(oct8(0.80, 0.0085) + oct8(0.56, 0.0098) + [tuple(mc3 + mn * 0.0112)], [[i, (i + 1) % M_, M_ + (i + 1) % M_, M_ + i] for i in range(M_)])
+    medf.f += [[M_ + i, M_ + (i + 1) % M_, 2 * M_] for i in range(M_)]
+    mline = Part('medalLine', 'medalLine', lambda p: {'torso': 1.0}, angle=180)
+    mline.add(oct8(0.62, 0.0101) + oct8(0.68, 0.0099), [[i, (i + 1) % M_, M_ + (i + 1) % M_, M_ + i] for i in range(M_)])
+    PARTS.append(mline)
 PARTS.append(medf)
 
 # the cord: one path from the bead up the right of the chest, round the back of the neck and down the left to the bead
 CORD_LEG = [(0.0035, 0.0), (0.016, 0.009), (0.031, 0.024), (0.040, 0.050), (0.046, 0.076), (0.043, 0.098)]  # (x, y above the bead)
 CORD_NECK_Y = 0.784
+if FIGURE:   # (round the foot of the standing collar, then in a V down the chest to the bead)
+    CORD_LEG = [(0.0035, 0.0), (0.016, 0.010), (0.030, 0.026), (0.040, 0.050), (0.047, 0.072), (0.050, 0.086)]
+    CORD_NECK_Y = 0.770
 leg_pts = [(x, top.y + dy) for x, dy in CORD_LEG]
 loop = [(0.040 * math.sin(math.radians(a)), 0.05 + 0.04 * math.cos(math.radians(a))) for a in (70, 95, 120, 150, 180)]   # (x, z) round the neck
 half = [(x, y, None) for x, y in leg_pts] + [(x, CORD_NECK_Y, z) for x, z in loop]
@@ -997,13 +1355,15 @@ PARTS.append(cord)
 # close-ups the fuller red lens read as lipstick) and up while he
 # speaks, in time with the voice's syllables (rig.js, voice.js). 16 triangles, one draw call.
 MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, MOUTH_REST = 0.842, 0.0215, 0.0110, 0.0075, 0.22
+if FIGURE:   # (the figure's wide friendly mouth: wider, its corners turned up a little more; a touch lower under the longer nose)
+    MOUTH_Y, MOUTH_HW, MOUTH_LIFT = 0.8395, 0.0262, 0.0090
 MOUTHS = [mouth_lens(0.0, MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, head_front, 9, 0.004)]   # (pivot, polygon, tilt)
 
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
 EYE_Y, EYE_LID = 0.896, 0.0036   # (HERO-LOOK: the eyes' height; how far above the eye's middle line the upper lid's edge comes)
 for sx in (1, -1):
-    cx, cy = sx * 0.037, EYE_Y
+    cx, cy = sx * (0.037 if not FIGURE else 0.0385), EYE_Y
     cz = head_front(cx, cy) + 0.003
     def on_face(dx, dy, lift=0.0):
         p = (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
@@ -1013,11 +1373,15 @@ for sx in (1, -1):
     # (fifth pass, the user 12.11: "the eyes are far too big and there are strange spots in them": back near the old size,
     # a touch rounder; the white lifted 0.8 mm off the face, so the curved face no longer shows through its flat edges)
     EW, EH = (0.0170, 0.0100) if TW_LOOK else (0.016, 0.0085)
+    if FIGURE:   # (the figure's eyes are round, not almonds: as wide as before, taller; a bigger, brighter iris)
+        EW, EH = 0.0172, 0.0138
     NW = 12 if TW_LOOK else 10
     WL = 0.0008 if TW_LOOK else 0.0
     white = [on_face(EW * math.cos(t), EH * math.sin(t), WL) for t in [2 * math.pi * k / NW for k in range(NW)]]
     ic = (sx * -0.002, 0.0)
     IR, PR = (0.0071, 0.0032) if TW_LOOK else (0.0068, 0.003)
+    if FIGURE:
+        IR, PR = 0.0082, 0.0037
     iris = [on_face(ic[0] + IR * math.cos(t), ic[1] + IR * math.sin(t), 0.0012 + WL) for t in [2 * math.pi * k / (14 if TW_LOOK else 10) for k in range(14 if TW_LOOK else 10)]]
     pupil = [on_face(ic[0] + PR * math.cos(t), ic[1] + PR * math.sin(t), 0.0022 + WL) for t in [2 * math.pi * k / (10 if TW_LOOK else 8) for k in range(10 if TW_LOOK else 8)]]
     piv = scale_about((cx, cy, cz), CHIN, HEAD_K)
@@ -1029,6 +1393,8 @@ for sx in (1, -1):
     us = [i / (LID - 1) * 2 - 1 for i in range(LID)]
     outer = lambda u: max(0.0, u * sx)
     LIDY = 0.0042 if TW_LOOK else EYE_LID   # (TWINSEN-LOOK-38: a heavy upper lid over the top of the round eye, as the cover's)
+    if FIGURE:   # (the figure's lids sit high on its big eyes: just over the iris's top)
+        LIDY = 0.0094
     edge = [(u * EW * 1.05, LIDY * (1 - u * u) ** 0.7 + 0.0007 * outer(u)) for u in us]
     top = [(u * EW * 1.1, EH * 1.07 * math.sqrt(max(0.0, 1 - u * u)) + 0.0006) for u in us]
     lid = [on_face(dx, dy, 0.0026) for dx, dy in edge] + [on_face(dx, dy, 0.0026) for dx, dy in reversed(top)]
@@ -1046,7 +1412,7 @@ for sx in (1, -1):
     for i in range(5):
         u = i / 4
         x = sx * (0.0205 + 0.034 * u)
-        yc = EYE_Y + (0.0182 if TW_LOOK else 0.0172) + 0.0042 * math.sin(math.pi * min(1.0, u * 1.15)) - 0.0012 * u   # (TWINSEN-LOOK-38: above the taller eye)
+        yc = EYE_Y + (0.0182 if TW_LOOK else 0.0172) + (0.0036 if FIGURE else 0.0) + 0.0042 * math.sin(math.pi * min(1.0, u * 1.15)) - 0.0012 * u   # (TWINSEN-LOOK-38: above the taller eye)
         h = 0.0031 * (1 - u) + 0.0013 * u
         st.append((x, yc, h))
     lo = [(x, y - h, head_front(x, y - h) + 0.0024) for x, y, h in st]
@@ -1068,7 +1434,13 @@ NOSE = [hf(0, 0.8785, -0.0012),                                   # 0 the bridge
         hf(0, 0.8555, 0.0022),                                    # 5 under the tip
         hf(0, 0.8648, 0.0082),                                    # 6 the tip
         hf(0.0047, 0.8628, 0.0062), hf(-0.0047, 0.8628, 0.0062)]   # 7, 8 the tip's sides
-if TW_LOOK:
+if FIGURE:
+    # (TWINSEN-FIGURE: the figure's long round nose: a soft bridge from between the eyes out and down to a round tip,
+    # 5 cm proud of the face at the play scale (the old small nose was 1.6 cm), pointing a little down)
+    ftip = (0.0, 0.8575, head_front(0.0, 0.8575) + 0.0150)
+    sphere(nose, ftip, 0.0105, 12, 8, 0.95)
+    tube(nose, (0.0, 0.8820, head_front(0.0, 0.8820) - 0.0030), (0.0, 0.8615, head_front(0.0, 0.8615) + 0.0105), 0.0068, 0.0090, 12, cap0=False, cap1=False, squash=0.80)
+elif TW_LOOK:
     # (TWINSEN-LOOK-38: a small rounded nose, as Zoé's: a ball squashed front to back on the snout, its back half sunk in the
     # face, and a short soft bridge into the brow; the tip 7 mm proud, a little lower and rounder than the pyramid's point)
     tip = (0.0, 0.8625, head_front(0.0, 0.8625) + 0.0012)
@@ -1197,7 +1569,7 @@ def corner_normals(verts, tris, angle):
 
 PART_TRIS = {}
 for part in PARTS:
-    W = [part.weights(p) for p in part.v]
+    W = [part.weights((part.vside[i] * 0.06, p[1], p[2]) if i in part.vside else p) for i, p in enumerate(part.v)]
     if part.cls is not None:   # (HERO-ARMS: LBA2's weights; beside the cut the body's copies fade to the torso)
         shown = [to_game(p, w) for p, w in zip(part.v, W)]
         for i, (q, c) in enumerate(zip(shown, part.cls)):
