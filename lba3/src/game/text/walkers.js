@@ -218,6 +218,11 @@ Object.assign(STR.en, {
   rp_tag_1: "Can't catch me!",
   rp_tag_2: "No fair! I wasn't ready!",
   rp_gulls: "Shoo! Ha, look at them go!",
+  // the well's water back (P36: a few neighbours round the well for a while: townplay.js wellJoy)
+  rp_well_0: "Water! Real water!",
+  rp_well_1: "It's warm, too. Feel that!",
+  rp_well_2: "The well's back! Ha!",
+  rp_well_3: "I'm fetching the big jug.",
   rf_catch_0: "Ha! Lunch.",
   rf_catch_1: "A little one. He'll grow.",
   rf_catch_2: "That's three. The gulls will want a word.",

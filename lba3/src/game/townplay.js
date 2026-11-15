@@ -9,12 +9,19 @@
 //           it cheers and watches them wheel
 //   swing   seated on a bench, a child swings its legs
 //   sweep   a broom at a doorstep: a few strokes either side, a puff of dust now and then
+//   joy     (P36, the user 15.11: "the water came back — they should go to the well and be happy") when chapter 1's water
+//           returns (story/chapter1.js waterReturns calls wellJoy), the nearest few of the square's people (four at most)
+//           leave what they are doing for a place round the well: they cheer as they get there, talk, cheer again now and
+//           then, and say a word if Twinsen is by. Once he has seen it a while (or after a few minutes without him) they go
+//           back to their rounds. The stop is put into each round for once and taken out as it is left (walkers.js leave);
+//           nothing is saved: a game loaded after that point has the square as it always is.
 // Nothing is saved; no flag. The props (the chalk grid, the broom) are one draw each, the broom shown only while in use.
 import * as THREE from 'three';
 import { dampAngle, clamp } from '../engine/math.js';
 import { part, merge, M4, MATL } from './gulls.js';
 
 const RUN = { runner: 2.3, chaser: 2.45 };
+const JOY = { max: 4, reach: 32, ring: 2.4, seen: 24, minAge: 30, maxAge: 160, lines: 4 };
 const _others = [], _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
 
 // ------------------------------------------------------------------ the hopscotch grid (rows of one or two squares)
@@ -46,7 +53,8 @@ export class TownPlay {
     this.game = game; this.busy = busy;
     this.games = new Map();          // pair → the game going on { it, pause, dir, until }
     this.noPlant = new Set();         // residents whose feet the rig lets go of while they hop
-    this.log = []; this.count = { tag: 0, swap: 0, hops: 0, gulls: 0, sweep: 0, swing: 0 };
+    this.log = []; this.count = { tag: 0, swap: 0, hops: 0, gulls: 0, sweep: 0, swing: 0, joy: 0, joyLines: 0 };
+    this.joy = null;
     this.hop = null;
     this.broom = new THREE.Mesh(broomGeo(), MATL); this.broom.name = 'broom'; this.broom.visible = false; this.broom.castShadow = true;
     this.broom.matrixAutoUpdate = true;
@@ -73,11 +81,13 @@ export class TownPlay {
       case 'gulls': return this.gullTick(r, dt, s);
       case 'swing': return this.swing(r, dt, s);
       case 'sweep': return this.sweep(r, dt, s);
+      case 'joy': return this.joyTick(r, dt, s);
     }
     return false;
   }
   // after every resident's frame (townbusy.js): feet given back to anyone who stopped hopping, the broom put away
-  update() {
+  update(dt = 0) {
+    this.joyUpdate(dt);
     for (const r of this.noPlant) if (!(r.stop?.play === 'hop' && r.st === 'dwell' && !r.engaged && r.present)) { r._hop = null; r.rig.plantIfFits(); this.noPlant.delete(r); }
     if (this.broomBy && !(this.broomBy.stop?.play === 'sweep' && this.broomBy.st === 'dwell' && !this.broomBy.engaged && this.broomBy.present && this.broomBy.tier === 0)) { this.broom.visible = false; this.broomBy = null; }
     for (const r of this.game.walkers?.res || []) {
@@ -263,6 +273,82 @@ export class TownPlay {
     } else r.animate('idle', dt, 0);
     if (r.tmr <= 0 && S.phase !== 'run') { if (r.rig.lookAt === r._gLook) r.rig.lookAt = null; r._gull = null; r.leave(); }
     return true;
+  }
+
+  // ---------------------------------------------------------------- the well's water back (P36)
+  // the nearest few of the square's people are given a stop round the well; returns how many
+  wellJoy() {
+    const g = this.game, W = g.walkers, wl = g.world?.well;
+    if (!W || W.indoor || !wl || this.joy) return 0;
+    const P = g.physics, nav = W.nav, y0 = P.groundAt(wl.x, wl.z);
+    const free = (r) => r.present && !r.away && !r.inside && !r.engaged && !r.sit && r.stops.length > 1 && r.stop && !r.stop.play && !r.stop.pair && !r.stop.door && (r.st === 'dwell' || r.st === 'walk' || r.st === 'plan');
+    const dW = (r) => Math.hypot(r.pos.x - wl.x, r.pos.z - wl.z);
+    const who = W.res.filter((r) => free(r) && dW(r) < JOY.reach).sort((a, b) => dW(a) - dW(b)).slice(0, JOY.max);
+    if (!who.length) return 0;
+    // places round the well: on walkable ground, clear of the story's people (Gilbert stands by it), of doorways, and of each other
+    const story = g.npcs.filter((n) => !n.ambient && n.present);
+    const spots = [];
+    for (let i = 0; i < 16 && spots.length < who.length; i++) {
+      const a = ((i * 7) % 16) / 16 * Math.PI * 2, x = wl.x + Math.sin(a) * JOY.ring, z = wl.z + Math.cos(a) * JOY.ring;
+      if (nav?.walkable && !nav.walkable(x, z)) continue;
+      if (P.overlapAt && P.overlapAt(x, z, y0 + 0.1, 0.35) > 0.02) continue;
+      if (story.some((n) => Math.hypot(n.pos.x - x, n.pos.z - z) < 1.5) || W.doorDist(x, z) < 0.8) continue;
+      if (spots.some((p) => Math.hypot(p.x - x, p.z - z) < 1.6)) continue;
+      spots.push({ x, z, a: Math.atan2(wl.x - x, wl.z - z) });
+    }
+    const J = this.joy = { t0: g.time, seen: 0, end: null, who: [], stops: [], said: 0, speaker: 0, spkT: 0 };
+    // (each walks to the nearest place still free)
+    const left = spots.slice();
+    for (const r of who) {
+      if (!left.length) break;
+      left.sort((p, q) => Math.hypot(p.x - r.pos.x, p.z - r.pos.z) - Math.hypot(q.x - r.pos.x, q.z - r.pos.z));
+      const sp = left.shift(), st = { id: 'joy_' + r.def.id, x: sp.x, z: sp.z, a: sp.a, dur: [600, 600], play: 'joy', _once: true, noStep: true };
+      if (r.st === 'dwell') { r.stops.splice(r.ri + 1, 0, st); r.tmr = Math.min(r.tmr, 0.3 + J.who.length * 0.7); }
+      else { r.stops.splice(r.ri, 0, st); r.planTo(st, null); }
+      J.who.push(r); J.stops.push(st);
+      r.note('the well: water!');
+    }
+    this.note(`wellJoy ${J.who.map((r) => r.def.id).join(',')}`);
+    return J.who.length;
+  }
+  // one of them at its place: faces the well, cheers as it gets there and now and then, talks or listens between
+  joyTick(r, dt, s) {
+    if (r.st !== 'dwell') return false;
+    const g = this.game, J = this.joy, wl = g.world.well, h = g.hero;
+    let S = r._joy;
+    if (!S || S.at !== s) S = r._joy = { at: s, t: 0, next: 0.3 + r.rnd() * 0.9, cheer: 0, n: 0 };
+    S.t += dt; r.tmr -= dt;
+    const dh = Math.hypot(h.pos.x - r.pos.x, h.pos.z - r.pos.z);
+    r.angle = dampAngle(r.angle, dh < 2.6 ? Math.atan2(h.pos.x - r.pos.x, h.pos.z - r.pos.z) : Math.atan2(wl.x - r.pos.x, wl.z - r.pos.z), 4, dt);
+    if (S.cheer > 0) S.cheer -= dt;
+    else if (S.t >= S.next && !J?.end) {
+      S.cheer = 1.6; S.next = S.t + 8 + r.rnd() * 6; S.n++; this.count.joy++;
+      // (a word, if he is near enough to hear it: each line once, one at a time)
+      if (J && J.said < JOY.lines) { const t0 = this._barkT; this.bark(r, 'rp_well_' + J.said); if (this._barkT !== t0) { J.said++; this.count.joyLines++; } }
+    }
+    const here = J ? J.who.filter((q) => q.st === 'dwell' && q._joy && q.stop === q._joy.at) : [];
+    const talker = here.length > 1 && here[J.speaker % here.length] === r;
+    r.animate(S.cheer > 0 ? 'cheer' : talker ? 'talk' : here.length > 1 ? 'listen' : 'idle', dt, 0);
+    if (S.cheer <= 0 && !talker && (r.gestT -= dt) <= 0) { r.rig.doGesture('nod'); r.gestT = 3 + r.rnd() * 3; }
+    if (r.tmr <= 0) { r._joy = null; r.leave(); }
+    return true;
+  }
+  // how long it lasts: until he has seen it a while, or a few minutes without him; then back to their rounds, one by one
+  joyUpdate(dt) {
+    const J = this.joy, g = this.game;
+    if (!J || J.done) return;
+    if ((J.spkT += dt) > 3.5) { J.spkT = 0; J.speaker++; }
+    const wl = g.world.well, h = g.hero, age = g.time - J.t0;
+    if (!J.end) {
+      if (!g.room && g.state === 'play' && Math.hypot(h.pos.x - wl.x, h.pos.z - wl.z) < 22) J.seen += dt;
+      if ((J.seen > JOY.seen && age > JOY.minAge) || age > JOY.maxAge) {
+        J.end = g.time; this.note('wellJoy over');
+        for (const st of J.stops) st.dur = [0.5, 2.5];   // (one still on its way stays a moment and goes)
+        J.who.forEach((r, i) => { if (J.stops.includes(r.stop) && r.st === 'dwell') r.tmr = Math.min(r.tmr, 0.6 + i * 1.3 + r.rnd()); });
+      }
+    }
+    // (over once nobody's round still holds a stop of it)
+    if (J.end && !J.who.some((r) => J.stops.some((st) => r.stops.includes(st)))) J.done = true;
   }
 
   // ---------------------------------------------------------------- legs swinging on a bench

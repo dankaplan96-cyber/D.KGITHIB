@@ -42,6 +42,12 @@ const OTHERS_R = 6;                    // m: the residents a walker steers round
 const hashId = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
+// (P36, the user 15.11, with a picture of the square: "people still walk in slow motion". GAIT-CADENCE (v60) gave a slow
+//  walker short quick steps, but the rounds' own speeds stayed at 0.6-1.0 m/s, half Twinsen's 2.0: the whole square drifted
+//  at a crawl beside him. A resident strolls at 1.1-1.3 m/s now (a person's ordinary pace is 1.2-1.4), the order of the
+//  rounds kept (an elder still the slowest; 1.3 and over, the quick ones and the children, as they were); the walk's cycle
+//  follows its speed as before)
+export const strollPace = (s) => (s >= 1.3 ? s : s + (1.3 - s) * 0.75);
 export const stageOk = (s, stage) => s.stage == null || (Array.isArray(s.stage) ? s.stage.includes(stage) : s.stage === stage);
 
 // ------------------------------------------------------------------ what a resident may carry
@@ -125,7 +131,7 @@ export class Walkers {
     this.pairs = new Map();
     this.stamp = -1; this.frozen = false; this.statics = [];
     this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3();
-    this.hero = { x: 0, z: 0, inside: false, room: null };
+    this.hero = { x: 0, z: 0, inside: false, room: null }; this.cam = { x: 0, z: 0 };
     this.dayT = 0;
     this.stage = this.stageNow(); this.pippa = null;
     this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
@@ -151,10 +157,13 @@ export class Walkers {
     this.dayT = ((g.time / DAY) % 1 + 1) % 1;
     const h = g.hero, R = g.room;
     this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor; this.hero.room = this.hero.inside ? R.id : null;
+    // (P36: where the camera is too — a story shot of the square while Twinsen stands at a valve 100 m off showed its people
+    //  stepped in the abstract state, a pose sliding along twice a second)
+    this.cam.x = g.camera.position.x; this.cam.z = g.camera.position.z; this.cam.away = Math.hypot(this.cam.x - h.pos.x, this.cam.z - h.pos.z) > 25;
     // the town's state: 0 the well is dry, 1 the water is back (hot)
     const stage = this.stageNow();
     if (stage !== this.stage) { this.stage = stage; this.stageChanged(); }
-    this.frozen = g.state === 'cutscene' || g.state === 'cinematic' || g.state === 'cinematicEnd' || !!g.reveal?.on;
+    this.frozen = (g.state === 'cutscene' && !(g.cutLive && g.cutLive === g.cutscene)) || g.state === 'cinematic' || g.state === 'cinematicEnd' || !!g.reveal?.on;
     // the camera's frustum (matrices as of the last drawn frame: a frame behind is fine for this)
     const cam = g.camera;
     cam.updateMatrixWorld();
@@ -218,7 +227,10 @@ export class Walkers {
   tierOf(r) {
     if (this.force != null) return this.force;   // (tests: simulate every resident in full, wherever the hero is)
     if (this.indoor && !r.def.outdoor) return r.def.room && r.def.room === this.hero.room ? 0 : 2;   // (INTERIOR-LIFE: the hero's room in full, the others abstract; a spaceport's people as the street's, below)
-    const dx = r.pos.x - this.hero.x, dz = r.pos.z - this.hero.z, d = Math.hypot(dx, dz);
+    const dx = r.pos.x - this.hero.x, dz = r.pos.z - this.hero.z, dH = Math.hypot(dx, dz);
+    // (P36: the nearer of Twinsen and the camera, outdoors: a cut-away shot sees what stands near the lens)
+    //  (only when the camera is away from him: the play camera's own few metres change nothing)
+    const d = this.hero.inside || !this.cam.away ? dH : Math.min(dH, Math.hypot(r.pos.x - this.cam.x, r.pos.z - this.cam.z));
     if (this.hero.inside || d > REDUCED_R + 40) return 2;
     if (d < CLOSE_R) return 0;
     // (WC-4: one 6–14 m off and out of the camera's view is stepped a third of the frames, with their time: nobody sees it,
@@ -257,7 +269,7 @@ export class Resident extends NPC {
     const W = def.indoor ? (game.roomWalkers ||= new Walkers(game, { indoor: true })) : (game.walkers ||= new Walkers(game));
     W.add(this);
     this.W = W;
-    this.speed = def.speed || 1.1;
+    this.speed = strollPace(def.speed || 1.1);
     const mesh = this.rig.mesh;
     if (def.tint && mesh?.material?.color) mesh.material.color.set(def.tint);
     if (def.scale) this.rig.root.scale.multiplyScalar(def.scale);
@@ -367,6 +379,8 @@ export class Resident extends NPC {
     if (s.carry !== undefined) this.carrySet(s.carry);
     const i = this.nextIndex(this.ri), nxt = this.stops[i];
     this.ri = i;
+    // (P36: a stop put in for once — the well's gathering, townplay.js wellJoy — is taken out of the round as it is left)
+    if (s._once) { const k = this.stops.indexOf(s); if (k >= 0 && this.stops.length > 1) { this.stops.splice(k, 1); if (this.ri > k) this.ri--; } }
     // (a leg from the stop's own slot is planned once for the whole session; from anywhere else it is planned afresh)
     const fromSlot = Math.hypot(s.x - this.pos.x, s.z - this.pos.z) < 1.0 && !s.slotless;
     this.planTo(nxt, fromSlot ? `${this.def.id}:${s.id}>${nxt.id}` : null);
