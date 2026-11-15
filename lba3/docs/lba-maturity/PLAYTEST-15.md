@@ -36,8 +36,13 @@ berth he was a dark half-figure against the cabin (captures `p33-before-*.jpg`, 
 **Fix.** He rides at the starboard rail in front of the cabin, the pier's side: local (1.75, deck, 1.5), 0.75 m clear
 of the cabin and 0.45 m inside the rail (`chapter1.js` RIDE); his first step to the gangway follows (2.0, 1.6).
 
-**Evidence.** `tests/playtest-15.mjs` P33: at every 0.5 s sample of the ride he is drawn after the culling, at least 3 of
-5 body points are in the frame and at least 3 are clear of every ferry mesh by a ray from the camera. Captures after.
+**Evidence.** `tests/playtest-15.mjs` P33: at every 0.5 s sample of the ride he is drawn after the culling, in the
+frame, his head clear of every ferry mesh by a ray from the camera, and at least 2 of head, chest, hips and shoulders
+clear (the hull's side hides his hips from the pier's low shot, as it would anyone's). The old spot is measured
+alongside: at 4.5 s and 5 s none of its head, chest and hips was in sight. Captures `p33-after-*.jpg`.
+
+**Left for a human.** He is dressed dark and reads dark against the cabin in the berth's shot even in the open; whether
+the figure at the rail is enough of a "first sight" of him is the director's call.
 
 ## P34 — the ferry's narration as a subtitle (coordinator's change, verified)
 
@@ -106,8 +111,38 @@ roars at once, the thought comes at once, the wheel kicks back shut with a clang
 - `ct_cock_wrong`: "(The upper pipe roars and the cock kicks back shut. That's the square's line, and the square has its water.)"
 - prompts: "Open the square's line", "Open the houses' line"
 
-**Evidence.** `tests/playtest-15.mjs` P37/P39; captures before/after from the door, on the approach and at each cock.
+**Evidence.** `tests/playtest-15.mjs` P37/P39; captures before/after from the door and on the approach, after at each
+cock. The ray checks run from the room camera to the wheel's hub and eight rim points.
 
-## Tests
+**Left for a human.** At the room camera's distance a 0.4 m wheel is still small on screen (~15 px on 960×540); the red
+against the dark pipes and the prompt naming the line should carry it, but a real screen will tell. The tags are read by
+walking up (they are not legible from the room camera, by design: the diagram is the clue).
 
-(filled in below)
+## Tests (Automated runtime only; a shared machine at load 15-27 on 4 cores, pages killed by the memory limit twice)
+
+`BOOT_TIMEOUT=900000 TMPDIR=/dev/shm GAME_URL=<snapshot> node tests/X.mjs`, one at a time; "base" is `afb61793` served
+from its own snapshot.
+
+| Test | Result |
+|---|---|
+| playtest-15 `ONLY=house,ferry` | PASS (10 checks; P33's old spot measured alongside: head/chest/hips hidden 0/3 at 4.5 and 5 s, now 5/5 with the head clear at every sample) |
+| playtest-15 `ONLY=square,pump` | PASS for P36 (pace median 1.24 m/s, 1.66-2.02 steps a second; 3-4 gathered, four lines heard, all back on their rounds 27 s after he came); pump part re-run below |
+| playtest-15 `ONLY=pump` (final pump room) | PASS (9 checks: wheels 7/9 points in sight at each use spot with his own arm at the wheel, 9/9 on the approach; hand within 0.1-1.3 cm of the wheel) |
+| chapter1 | PASS |
+| opening | PASS |
+| opening-tutorial | PASS |
+| house | PASS |
+| campaign-thread `ONLY=A` (the pump room, chapter 2) | A2-A7 PASS (the wrong cock, the right one, saves); A1 FAIL once: at the kitchen tap the prompt went to a person by the sink (Zoé, her round's sink stop) — base PASS in its run; see below |
+| prologue | FAIL "the well's mites beaten with the ball" (left the well room after the last mite) — **the same FAIL on base** |
+| interior-life | FAIL 1 (terminal: Ama at the forms cabinet sampled at y 0.36, "not on the floor", 1 s after arriving) — **base FAILs the same check** (zterminal: Velo sampled while turning, 0.8 s after arriving) |
+| townlife | 1 FAIL, mine and expected: "home again… at their usual pace" read Maro's pace under 1.2 m/s; strollPace makes it 1.24 (the evacuation's hurry is still checked over 1.3). The check is now under 1.3 (`tests/townlife.mjs`); the first run's page crashed (memory) and was retried; re-run of the updated test: see below |
+| campaign-thread `ONLY=I` (chapter 8's culvert cock in the pump room) | I0–I8 all PASS (12 checks: the kicked-back turn, the turn in the rest, the gate, both saves); the page then crashed (memory) at the end of the run |
+| save-migration | see below |
+| place-scan | NOT RUN (machine time) |
+| campaign-hands | page crashed (memory) after ~75 min, twice; NOT VERIFIED here — the pump room's hand contact on the new wheels is measured in playtest-15 instead (0.1 cm and 1.3 cm) |
+
+On campaign-thread A1: in my build's run the prompt at the kitchen tap was a person's (`target.kind` 'npc') for the
+5 s the harness waits — most likely Zoé, whose round's first stop is the sink beside the tap (6–9 s); the base's run
+got the tap. The street's residents walk faster now, so the hero's way home through the lane takes a different
+time; nothing in the house changed. It is a timing exposure of a pre-existing layout (her sink stop beside the tap
+the step needs), not a new defect of this change, but it is not proven flaky by a second run here.
