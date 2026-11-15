@@ -365,6 +365,9 @@ export const VOICES = {
   // --- the moles
   zmole1: { race: 'mole', seed: 701, f0: 128, k: 0.9, rate: 0.8, vib: [4.5, 18] },                                  // Old Grumm
   zmole2: { race: 'mole', seed: 702, f0: 270, k: 1.05, rate: 0.95, contour: 'arc' },                               // Mother Snuff
+  // (U-1 THE LAST FERRY's speakers: the ferry's captain (a Tri, Pelleck's model) and the deckhand (a mole); own seeds, set apart from ztri1/zmole1)
+  lf_ossel: { race: 'tri', seed: 1811, f0: 150, k: 1.0, rate: 0.95, contour: 'fall', range: 3, legato: 0.6 },
+  lf_wick: { race: 'mole', seed: 1812, f0: 150, k: 0.95, rate: 1.1, contour: 'bounce', range: 5, legato: 0.45 },
   // --- elves, gnomes and wizards
   joe: { race: 'elf', seed: 801, f0: 230, rate: 1.25, vib: [6, 20], legato: 0.7, range: 7, nasal: 0.5 },
   keraooc: { race: 'elf', seed: 802, f0: 175, k: 1.15, rate: 1.05, contour: 'sing', vib: [5.5, 22] },

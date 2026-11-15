@@ -506,3 +506,15 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     requests/SCHOOL-LBA2b.diff, report as SCHOOL-LBA2b. If the user tells you directly what is wrong, that wins.
     Also: **Twinsen stays the shipped model** (the user rejected TWINSEN-FIGURE: "our old Twinsen is better"); no Twinsen
     model work.
+48. **Night mode, 15.11 (the user: "night mode"): continue by the plan; the desktop's queue for tonight.**
+    1. **Twinsen: no model work** (the user rejected TWINSEN-FIGURE; the shipped model stays).
+    2. **The School of Magic:** the user told you "don't move anything" (ORIG-PLACES). Nothing more on it until the user
+       speaks; SCHOOL-S28 is not applied by the cloud.
+    3. **When the cloud publishes the next artifact (v93: the dialogue pass, FACE-OFF, the voices of the ferry's two
+       speakers, and whatever of PLAYTEST-15 / INVENTORY-CALM / U-3 lands):** on the GTX 1050 in Chrome, new game through
+       chapter 1 to the well and into chapter 2's harbour: frame time p50/p95 in the house, the square and the harbour
+       against v92, the dialogue boxes (no line cut or overflowing at 1920×1080 and 1280×720), the voice per line (box to
+       sound, Expressive). Report as V93-GPU in WORLD_ART_REQUESTS.md. Pictures of chapters 1–2 only may be shown to the user.
+    4. **place-scan on the real GPU** at the tip (the cloud's SwiftShader runs crash under memory load): the full run,
+       its numbers against PLACE-2's (135 rooms, ~7321 pieces, findings). Report as PLACE-SCAN-GPU.
+    Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
