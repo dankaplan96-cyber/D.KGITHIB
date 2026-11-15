@@ -5296,3 +5296,20 @@ forecourt, the bridge, the sign, the pillars and the `wizards` people are untouc
 - Pictures, origin left / with LBA2b + this right (chapter 4: not for the user): `docs/future/landmarks/school-canyon-{plaza,wide2,play}.jpg`.
 - **Not done (it would change the ground):** a gorge sunk below the plaza with the bridge over a deep drop, as in LBA2.
 - Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud**, with LBA2b.
+
+## SCHOOL-LBA2d · closer to LBA2's School, with the twelve years (the user, 15.11) · the desktop, 15.11.2026
+The user: "more like the second game, but with the logic that twelve years passed". **`requests/SCHOOL-LBA2d.diff`**,
+applies after **SCHOOL-LBA2b and SCHOOL-CANYON** (the chain `git apply --check` clean on origin); `desertold.js` only:
+- **The mask, as LBA2's:** narrower below the brow and at the chin (the broad brow stays): LBA2's V; the eyes and their
+  sockets slanted harder (its stern look).
+- **LBA2's white blocks** stood on the ledge either side of the door; ours (two 3 × 4 m blocks at the original's numbers)
+  were behind the face, now inside the canyon wall. **Moved, not added:** the same two, smaller (1.9 × 1 m, 1 m high,
+  little horns on their corners as LBA2's), on the forecourt's ends either side of the door, worn: twelve years of pupils
+  sitting on them. The way to the door between them is clear (probed: 4.2 m between them; the bridge is 2.6 m wide).
+- **The canyon's rock** greyer, with a little green, as LBA2's (the same material, its tint).
+- The north arm's last stretch 0.4 m further from the pool's rim walk (probed: the rim walk now as free as origin's or
+  freer).
+- **Twelve years, kept from before:** the SCHOOL OF MAGIC sign, the bridge's newer steps and the trough, the people.
+- Objects: −2 large blocks +2 small blocks (+ their horns); colliders the same count. Pictures (chapter 4, not for the
+  user): `docs/future/landmarks/school-lba2d-{play,wide}.jpg` (left: LBA2b+CANYON, right: with this).
+- Not run: `wizards`, `desert-life`, `island-doors`, `chapter4`: **for the cloud**, with the chain.
