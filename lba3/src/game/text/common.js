@@ -16,6 +16,8 @@ Object.assign(STR.he, {
   keep_exploring: 'להמשיך לטייל באי',
   gen_search_nothing: 'אין כאן כלום.',
   inv_title: 'חפצים', journal_title: 'יומן', inv_hint: 'I / J לסגירה · חצים לבחירה', it_level: 'רמה {n}',
+  inv_more: 'עוד', inv_less: 'פחות', inv_use_btn: 'שימוש', inv_prev: 'העמוד הקודם', inv_next: 'העמוד הבא',
+  inv_hint_touch_j: 'הקישו על פרק כדי לקרוא אותו.', jr_now: 'עכשיו', jr_empty: 'עוד לא נכתב כלום.',
   it_medallion: 'המדליון', itd_medallion: 'המדליון של סנדל. מאז שהבאר דיברה, הוא חמים למגע.',
   it_ball: 'כדור הקסם', itd_ball: 'נזרק בלחיצה על F. כל זריקה עולה נקודת קסם: עם קסם הוא קופץ ארבע פעמים, בלי קסם חוזר מיד. מביא בונוסים שהוא נוגע בהם ומעיר מנגנונים.',
   it_holomap: 'הולומפה', itd_holomap: 'מפה תלת־ממדית של האי (M). מקומות חשובים מסומנים בכוכב.',
@@ -122,6 +124,9 @@ Object.assign(STR.en, {
   inv_title: 'Inventory', journal_title: 'Journal', it_level: 'Level {n}',
   // the controls line follows the player's keys (or the pad's buttons): inventory.js
   inv_hint_keys: '{move}: select · {close}: close', inv_use: '{k}: use', inv_hint_touch: 'Tap an item to look at it.',
+  // INVENTORY-CALM: the window's two tabs, an item's whole text on demand, the journal led by the current goal
+  inv_more: 'More', inv_less: 'Less', inv_use_btn: 'Use', inv_prev: 'Previous page', inv_next: 'Next page',
+  inv_hint_touch_j: 'Tap a section to read it.', jr_now: 'Now', jr_empty: 'Nothing written yet.',
   it_medallion: 'Medallion', itd_medallion: "Sendell's medallion. It has felt warm ever since the well.",
   it_ball: 'Magic Ball', itd_ball: 'Throw it with {k}; hold to aim, release to throw. Each throw costs a magic point: with magic it bounces four times, without it comes straight back. It brings back bonuses it touches and activates mechanisms. Your behaviour changes how it flies.',
   it_holomap: 'Holomap', itd_holomap: 'A 3D map of the island. Stars mark important places.',

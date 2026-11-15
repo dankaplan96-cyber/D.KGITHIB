@@ -87,7 +87,7 @@ export class Input {
     addEventListener('keydown', (e) => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
       this.keys.add(e.code);
-      if (!e.repeat) this.taps.add(e.code);
+      if (!e.repeat) { this.taps.add(e.code); this.lastKey = e.code; }   // (lastKey: J opens the journal tab: inventory.js)
       this.lastDevice = 'kbd';
       if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'F2', 'F3', 'F4', 'AltLeft', 'AltRight'].includes(e.code)) e.preventDefault();
     });
