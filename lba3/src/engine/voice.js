@@ -368,6 +368,7 @@ export const VOICES = {
   // (U-1 THE LAST FERRY's speakers: the ferry's captain (a Tri, Pelleck's model) and the deckhand (a mole); own seeds, set apart from ztri1/zmole1)
   lf_ossel: { race: 'tri', seed: 1811, f0: 150, k: 1.0, rate: 0.95, contour: 'fall', range: 3, legato: 0.6 },
   lf_wick: { race: 'mole', seed: 1812, f0: 150, k: 0.95, rate: 1.1, contour: 'bounce', range: 5, legato: 0.45 },
+  ow_tali: { race: 'quetch', seed: 1813, kid: true, f0: 290, k: 1.22, rate: 1.2, contour: 'bounce', range: 6, legato: 0.5, swing: 0.2, sex: 'f' },   // (U-3: Tali, the School's pupil with the bell; set apart from Lulu's sing-song)
   // --- elves, gnomes and wizards
   joe: { race: 'elf', seed: 801, f0: 230, rate: 1.25, vib: [6, 20], legato: 0.7, range: 7, nasal: 0.5 },
   keraooc: { race: 'elf', seed: 802, f0: 175, k: 1.15, rate: 1.05, contour: 'sing', vib: [5.5, 22] },
