@@ -5170,3 +5170,26 @@ unchanged, nothing else running. A = `b38d29e4`, B = `16f96fa6` (the last TECH-A
 - **One CPU difference beyond A's spread:** Medium, **dock**: CPU submission p95 A 6.1–6.6 ms → B 7.0–7.9 ms, simulation
   p95 A 3.9–5.0 → B 5.3–5.8 (p50s equal). It does not reach the frame (16.8 ms p95 both) and Low's dock goes the other
   way (B lower). Its `LIVE` lines are in the logs (`medium-{A,B}{1,2,3}.log`, `LIVE dock`) for the cloud to look at.
+
+## 27c on the UHD 630 · v71 against the tip, the game's own benchmark (CLOUD_ORDERS 41.6; the Vega 8 is sold) · the desktop, 15.11.2026
+The desktop app's Electron 43.7.9 with `force_low_power_gpu` (the local launcher copy; GPU line in every report: **Intel UHD
+630**, nvidia-smi idle), fresh profile per run, New Game, `game.bench.run(['medium'], orbit)`, 1536×864 at dpr 1.25, plugged
+in. v71 = `87f2e034`, tip = `98705d63` (v92 plus the desktop's reports). Alternating v71, tip, v71, tip. Raw reports:
+`docs/lba3-performance/HARDWARE/2026-11-15-uhd630-27c/`.
+
+| Route (Medium, full resolution) | v71 fps (run 1 / 2) | tip fps (run 1 / 2) | GPU time p50, v71 → tip (ms) | Longest frame, v71 → tip |
+|---|---|---|---|---|
+| street | 60 / 60 | 60 / 60 | 12.2, 11.2 → 11.2, 12.4 | 17 → 17 |
+| interior | 51.0 / 50.2 | **48.0 / 49.8** | 17.1, 17.4 → 18.3, 17.6 | 34 → 34 |
+| combat | 59.9 / 59.9 | 59.9 / 59.9 | 7.8, 8.1 → 8.2, 8.3 | 33 → 33 |
+| transition | 56.6 / 56.0 | 54.9 / 55.7 | 17.0, 17.3 → 18.2, 17.5 | 33 → 34 |
+| arrival | 54.2 / 50.9 | 52.7 / 54.5 | 9.2, 9.2 → 9.6, 9.6 | 150, 167 → **200, 183** (all behind the black) |
+| hamalayi | 60 / 60 | 60 / 60 | 9.2, 9.2 → 9.7, 9.7 | 17 → 17 |
+
+- **Same within the noise:** street, combat, the Hamalayi (60 fps both); the arrival's fps (the two v71 runs differ by 3).
+- **A little heavier on the GPU:** the interior (−1.7 fps on the medians, GPU +0.6 ms; the route sits just over the
+  60 Hz budget on both, so a small GPU rise shows as fps) and the transition (−1 fps, GPU +0.5 ms); the Hamalayi's GPU
+  time +0.45 ms with no fps cost. The arrival's longest black-screen frame +30 ms (behind the black: not seen).
+- As played (automatic resolution) every route but the interior holds 58–60 on both; the interior ~51 → ~49.
+- **Not covered:** the new chapters' stations (chapters 6–12): the game's benchmark has no route there. The routes are
+  the benchmark's six. The UHD 630 still plays at Medium on its own; Auto keeps it there on these routes.
