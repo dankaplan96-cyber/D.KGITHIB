@@ -5095,3 +5095,30 @@ the register (`island-doors`, `hamalayi-life`, `wizards`, `chapter4`, `chapter5`
    chain; LBA1's Hamalayi factory compound and the Sacred Carrot. All are past chapter 2 and big; listed for the cloud
    and the user, nothing built. (The dome, the hacienda, the hut and the islet's door are gone by the user's own word.)
 - No ways in were wired (the order: the cloud's). No clutter added. Not run: the suites named above (unchanged code).
+
+## P30 · "characters pixelated in the house" on the desktop's GPUs: v86 against the tip (CLOUD_ORDERS 46.1) · the desktop, 15.11.2026
+New game, the house, Twinsen moved by the kitchen's basin, 15–30 s of real frames with `?perf`, fresh profile each run
+(first start: the governor's own choice). v86 = `f5526202` (a worktree), tip = `42313c97`. Screen: 1920×1080 at
+Windows scaling 125 % (devicePixelRatio 1.25).
+
+| Where it ran | Build | Quality (Auto chose) | Pixel ratio (auto ×) | MSAA | Bloom / shadows | Frame p50 / p95 | Draw calls |
+|---|---|---|---|---|---|---|---|
+| Chrome, GTX 1050 | v86 | High | 1.25 (×1) | 4 | 1 / soft | 17.7 / 18.2 ms (vsync) | 71 |
+| Chrome, GTX 1050 | tip | High | 1.25 (×1) | 4 | 1 / soft | 17.4 / 18.0 ms | 67 |
+| the app's Electron, UHD 630 | v86 | Medium | 1.25 (×1, all 30 s) | 2 | 0 / pcf | 16.7 / 33.3 ms | 65 |
+| the app's Electron, UHD 630 | tip | Medium | 1.25 (×1, all 30 s) | 2 | 0 / pcf | 16.7 / 16.9 ms | 60 |
+
+- **No drop:** the automatic resolution stays at ×1 indoors on both builds and both GPUs; MSAA is the same per GPU. The
+  tip is not heavier in the house (fewer calls; on the UHD its p95 is better).
+- **Crops** at the same spot, 2× nearest (`docs/future/p30/gtx-crop-pair.jpg`, `uhd-crop-pair.jpg`; left v86, right
+  the tip): the characters' edges are smoothed the same in both; no stair-stepping that one has and the other doesn't.
+  The output pass is unchanged between them as far as the pictures show.
+- **So the difference the user sees is probably not the build but where it runs:** on this desktop, a program that is
+  not set to "High performance" in Windows' graphics settings runs on the Intel UHD 630 (the screen is wired to it):
+  Auto then picks **Medium with MSAA 2 and no bloom**, against High with MSAA 4 on the GTX 1050. If the user plays in
+  the installed app (or a browser without the GPU preference), that is the step down. **Asked of the user (through the
+  cloud):** where they played (the app or the artifact in a browser), and Settings' quality line or the `?perf` overlay's
+  GPU line. If it says Intel: give the app "High performance" in Windows Settings → Display → Graphics (the user does
+  it: a system setting), or set Quality to High by hand.
+- Seen in passing: on the tip Zoé is not by the kitchen at the start (OPENING-TUT changed the opening); not checked.
+- No diff. Not run: suites (nothing changed). No Twinsen model work was in progress here (46.2 withdrawn): nothing to push.
