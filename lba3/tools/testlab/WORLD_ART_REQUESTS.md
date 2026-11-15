@@ -5120,5 +5120,8 @@ Windows scaling 125 % (devicePixelRatio 1.25).
   cloud):** where they played (the app or the artifact in a browser), and Settings' quality line or the `?perf` overlay's
   GPU line. If it says Intel: give the app "High performance" in Windows Settings → Display → Graphics (the user does
   it: a system setting), or set Quality to High by hand.
+- **This machine's GPU choices** (read from real Windows, 15.11): only Chrome and the Test Lab's Electron are set to
+  "High performance"; **no LBA3 desktop app is installed** here. So if the user plays the artifact inside the Claude
+  app (or Edge), it runs on the Intel UHD 630 → Medium, MSAA 2: the likeliest cause. In Chrome it gets the GTX 1050.
 - Seen in passing: on the tip Zoé is not by the kitchen at the start (OPENING-TUT changed the opening); not checked.
 - No diff. Not run: suites (nothing changed). No Twinsen model work was in progress here (46.2 withdrawn): nothing to push.
