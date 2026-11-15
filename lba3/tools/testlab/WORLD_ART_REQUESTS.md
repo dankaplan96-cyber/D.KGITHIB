@@ -5235,3 +5235,23 @@ crew's board, the collider, `shut('s28')` and the fit stay. The only face on the
   School mask's). Pictures, before above / after below (chapter 4: not for the user): `docs/future/landmarks/face-off-play.jpg`
   (the play camera at the door), `face-off-wide.jpg` (from the west).
 - Not run: `island-doors`, `purposes`, `desert-life` (no collider, door or board moved): **for the cloud when applying**.
+
+## SCHOOL-LBA2 · the School of Magic's face and canyon as LBA2's (the user, with LBA2's picture) · the desktop, 15.11.2026
+The user, 15.11, sent LBA2's School of Magic (the LBA Wiki's picture: a pale lilac-grey mask carved into a grey canyon,
+brows sweeping up into points, big rough orange eyes, the door in its chin, a stone bridge, the horned pillars) and
+said "yes, like LBA2". Ours had every part but read as a dark egg in front of a brown square slab on open sand.
+**`requests/SCHOOL-LBA2.diff`** (`desertold.js` only; `git apply --check` clean on origin, alone and after FACE-OFF):
+- **The mask:** pale lilac-grey, smooth, lit a little (it faces away from the sun); a wider brow over the egg; the brows
+  long and swept up past the face's edge into points; deep sockets with **big orange eyes** in a rough lava-like texture
+  (a 64-px canvas, `w80d-lava`); cheekbones; the nose and the chin in the mask's colour. The door, its frame, the star,
+  the forecourt, the bridge, the sign and the pillars are untouched.
+- **The canyon:** the brown slab is the island's grey rock now (cliff texture, grey-lilac), taller than the face, with a
+  broken crown; two rock flanks either side of the face, angled forward; the south end steps down into the terrace.
+- **Kept walkable:** the pool's rim walk past the north end is exactly as free as before (blocked cells at z −67/−67.5/
+  −68 identical before and after, probed); the flanks and steps stand behind the face's line, off the forecourt.
+- **Objects:** this one structure 10 → 24 pieces (no new props round it); colliders +4 (two flanks, two steps), the face's
+  and the wall's as before. Materials: three new (mask, rock, lava) replace the face's two (cliff, eye): about +1 draw
+  call where the School is in view (not measured).
+- Pictures, before left / after right (chapter 4: not for the user): `docs/future/landmarks/school-lba2-wide.jpg`,
+  `school-lba2-play.jpg` (the play camera at the bridge).
+- Not run: `wizards`, `desert-life`, `island-doors`, `chapter4` (the door and its spot unchanged): **for the cloud**.
