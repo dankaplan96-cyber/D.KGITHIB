@@ -116,7 +116,14 @@ export function buildPumpRoom(scene, physics) {
   B.ccol(LX + 1.5, -0.6, 0.22, 0.52, { noStand: true });
   for (const [x, z, ry] of [[LX + 0.6, 0.95, 0.1], [LX + 0.65, -3.2, 0.3]]) B.put(x, z, ry, (kk) => P.cargoCrate(kk, { color: '#6a5a44', w: 0.7, h: 0.6, d: 0.7 }));
   B.put(LX + 1.5, -3.3, -0.2, (kk) => P.barrel(kk, { pal: 'dark' }));
-  k.at(-3.0, 0, -0.6, 0, () => P.hangingLamp(k, 2.35, H, { shade: '#8a5a2a' }));
+  // (P37: the lamp as props.js hangingLamp draws it, its shade lit from within and casting no shadow: the room has no roof,
+  //  and the shade's shadow from above lay on the floor under it as a dark disc the user took for something there)
+  k.at(-3.0, 0, -0.6, 0, () => {
+    k.add(cyl(0.008, 0.008, H - 2.35 - 0.3, 4), MAT.iron(), 0, (H + 2.35 + 0.3) / 2, 0);
+    k.add(P.lathe([[0.001, 0.3], [0.04, 0.29], [0.06, 0.25], [0.24, 0.06], [0.28, 0.0], [0.27, -0.01], [0.23, 0.04], [0.05, 0.24], [0.001, 0.26]], 18), MAT.glow('#8a5a2a', '#3a2410', 0.6), 0, 2.35, 0);
+    k.add(P.lathe([[0.001, 0.3], [0.03, 0.3], [0.03, 0.36], [0.001, 0.36]], 8), MAT.brass(), 0, 2.35, 0);
+    k.add(sphere(0.09, 12, 8), MAT.glow('#fff4d8', '#ffd890', 2.4), 0, 2.41, 0);
+  });
   // (P37: the spare pipe lengths that lay by the front wall and the floor drain are gone: the user took the loose copper
   //  length and the grey disc for things to pick up or turn. The sump by the copper riser is the room's drain)
   k.add(torus(0.3, 0.04, 6, 16), MAT.paint('#4a3a2a', 0.8), LX + 0.1, 1.5, 0.9, Math.PI / 2);                 // a coil of hose on the wall
@@ -169,21 +176,21 @@ export function buildPumpRoom(scene, physics) {
     k.add(cyl(0.03, 0.03, 0.16, 8), brass, x, 1.2, PZ + 0.22, 0, { rx: Math.PI / 2 });                   // the stem
     const piv = new THREE.Group(); piv.position.set(x, 1.2, PZ + 0.31); B.group.add(piv);
     const red = MAT.paint('#c8302a', 0.4);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.024, 8, 22), red); rim.castShadow = true; piv.add(rim);
-    for (let i = 0; i < 3; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.025), red); sp.rotation.z = (i * Math.PI) / 3; piv.add(sp); }
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.03, 8, 24), red); rim.castShadow = true; piv.add(rim);
+    for (let i = 0; i < 3; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.035, 0.03), red); sp.rotation.z = (i * Math.PI) / 3; piv.add(sp); }
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.06, 10), iron); hub.rotation.x = Math.PI / 2; piv.add(hub);
     // the stamped tag on the pipe's leg under it, in the diagram's words
     k.add(rbox(0.36, 0.13, 0.02, 0.01), brass, x, 0.86, PZ + r + 0.012);
     k.add(plane(0.32, 0.1), MAT.map(signTex([tag], { bg: '#c9a94e', ink: '#2a1a10', w: 256, h: 80, size: 46 })), x, 0.86, PZ + r + 0.024);
     B.ccol(x, PZ, 0.2, 1.4, { noStand: true });
-    // (his hand on the wheel's rim at its right, at the hub's height)
+    // (his hand on the wheel's rim at its right, at the hub's height; the wheel 0.4 m across, to read from the room camera)
     const S = { a: 0, to: 0, k: 6 }; cockSpin.push([piv, S]);
     const hy = 1.2, hz = B.cz + PZ + 0.31;
-    return { ...touch(B.cx + x + 0.13, B.cz + PZ + 0.36, Math.PI, 'tinker'), tag, open: false, wheel: { x: B.cx + x, z: hz },
+    return { ...touch(B.cx + x + 0.17, B.cz + PZ + 0.36, Math.PI, 'tinker'), tag, open: false, wheel: { x: B.cx + x, z: hz },
       // shut: as it is; open: two turns round; `snap`: it springs back fast (the copper pipe's push)
       set(b, snap = false) { this.open = !!b; S.to = b ? -Math.PI * 4 : 0; S.k = snap ? 14 : 5; },
       // where the camera should see it: the hub and the wheel's top and right
-      look() { return { hub: { x: B.cx + x, y: hy, z: hz }, top: { x: B.cx + x, y: hy + 0.16, z: hz }, side: { x: B.cx + x + 0.16, y: hy, z: hz } }; } };
+      look() { return { hub: { x: B.cx + x, y: hy, z: hz }, top: { x: B.cx + x, y: hy + 0.2, z: hz }, side: { x: B.cx + x + 0.2, y: hy, z: hz } }; } };
   };
   const cocks = { upper: cock(CKX.upper, UP.y, old, UP.r, 'SQUARE'), lower: cock(CKX.lower, LO.y, old2, LO.r, 'HOUSES') };
   // the copper pipe's own way: up from its run into the lower leg under the cock (a bolted tee), and on to the pump
