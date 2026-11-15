@@ -30,6 +30,17 @@ at runtime such as `'c1_mk_' + id`).
 Result at each commit: PASS (about 4460 keys, 1280 spoken in conversations). Warnings: ~200 long lines, most of them
 four short sentences (kept where the scene earns it).
 
+## Tests (Automated runtime, headless Chromium on SwiftShader, snapshot on 127.0.0.1, a loaded shared machine)
+
+| Test | Result | Notes |
+|---|---|---|
+| `node tests/dialogue-check.mjs` | PASS at every commit | static |
+| `tests/dialogue-scenes.mjs` | PASS 8/8 | Arthur's three states, Zoé's two kettle branches, every line fits its box; captures D1-D3 |
+| `tests/dialogue-scenes.mjs ch3` | PASS 3/3 | Baldino's reordered first scene after Irsa's bench; capture D4 |
+| `tests/opening.mjs` | PASS 41/41 | |
+| `tests/opening-tutorial.mjs` | PASS 40/40 | |
+| `tests/prologue.mjs` | 1 FAIL: "the well's mites beaten with the ball" (4 of 4 left, random combat) | listed as known-flaky in status.md ("3 of 4, random, passed on the rerun"); every dialogue step before it passed (Zoé's kettle, Mira's key, the lid, Doran's bell and stamp, Xil's rope, the kids, the stones, the pool). A first run crashed the page (renderer, memory) |
+
 ## Coverage
 
 Status: **edited** (lines changed), **kept** (read in context, nothing needed), **flagged** (a problem wording can't fix).
