@@ -5370,3 +5370,5 @@ the slimmed spires (ISLES-BAR) and the lift tower and crane drawn by us at the o
 Nothing else is off. **Asked of the user now:** whether the latest word ("everything at its original place") overrides
 the decisions in bold, Kesh first; the story-tied ones (the statue and the well, the tent and the glider field, the
 temple's well) are the cloud's to plan if so.
+- **The user's answer (15.11): "don't move anything".** Kesh, the statue, the tent, Tralu's door, the temple and the rest
+  of the table above stay where they are; no ORIG-PLACES moves follow. SCHOOL-S28 (asked for before this) stands as sent.
