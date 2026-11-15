@@ -1,0 +1,87 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index 54b512ca..da99f325 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -26,6 +26,7 @@
+ import * as THREE from 'three';
+ import { tm, pm, ctex, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
+ import { fitAdd } from './worldfit.js';
++import { stoneColumnGeometry } from './cliffs.js';
+ import { roomOcc, occCollider } from './roomocc.js';
+ import { rng, smoothstep } from '../engine/math.js';
+ 
+@@ -219,19 +220,63 @@ export function buildOldPlaces(C) {
+   {
+     const S = SCHOOL_SITE, f = frame(S.x, S.z, S.ry);   // (local +z faces east: f(u, v): u along the face (north −), v out of it)
+     const g = H(S.x, S.z), base = g - 0.4, top = g + S.h;
+-    // the canyon wall the mask is set in: a slab of the terrace's rock behind the face, boulders at its ends and over it
+-    { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 1.4, 2.6, 0.5, TILE.cliff), M.cliff, bx, base + (S.h + 1.4) / 2 - 0.2, bz, 0, S.ry, 0); camVol(col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 0.9, camSkip: true }), 'school rock wall'); }
+-    // (the boulders at its ends: OLD_ROCKS, drawn by the island's rock tiles)
+-    // the face: a broad stone egg, its chin pushed forward
+-    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.grey, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
+-    { const [cx, cz] = f(0, 0.55); B.add(bbox(3.4, 3.0, 1.6, 0.45, 1), M.grey, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
+-    // the brows, slanting down to the nose; the eyes glowing in their sockets; the long nose
++    // (SCHOOL-LBA2, the user, 15.11, with LBA2's own picture: "yes, like LBA2": a pale lilac-grey mask carved into a grey
++    //  canyon, brows sweeping up into points, big rough orange eyes, the door in its chin. Before: a dark egg in front of a
++    //  brown square slab on the open sand. Kept: the place, the door, the forecourt, the bridge and every collider's role)
++    const mask = pm('#cdc6da', 0.7, { emissive: '#2e2a3a', emissiveIntensity: 0.55 });   // (lit a little: it faces away from the sun)
++    const lava = new THREE.MeshStandardMaterial({ roughness: 0.95, emissive: new THREE.Color('#7a2406'), emissiveIntensity: 0.9,
++      map: ctex('w80d-lava', 64, 64, (x, S) => { x.fillStyle = '#c4501c'; x.fillRect(0, 0, S, S); const r = rng(77); for (let i = 0; i < 260; i++) { x.fillStyle = ['#e07a2c', '#8e2e10', '#f0a040', '#a83a14'][i % 4]; const w = 2 + r() * 5; x.fillRect(r() * S, r() * S, w, w * (0.5 + r())); } }) });
++    // the canyon wall the mask is carved into (SCHOOL-LBA2b, order 47: "a face carved into a long canyon wall", no box,
++    // no battlements): one continuous run of rock along the original's line, the face in it. From the face's north end it
++    // turns west along the pool's south side (the rim walk, z > -68.6, stays clear), behind the face it runs north-south,
++    // and south of it it runs on and falls away into the terrace. Each stretch is a few slabs of the island's grey rock,
++    // turned and tilted a little, their tops at different heights (an uneven skyline), a cap block on most
++    {
++      const rr = rng(5151), segs = [];
++      const run = (pts, topA, topB) => {   // (pts: [x, z] local, along the wall; tops over the face's ground, from A to B)
++        let L = 0; const len = []; for (let i = 1; i < pts.length; i++) { len.push(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); L += len[i - 1]; }
++        let at = 0;
++        for (let i = 1; i < pts.length; i++) {
++          const [x0, z0] = pts[i - 1], [x1, z1] = pts[i], n = Math.max(1, Math.round(len[i - 1] / 2.5)), ry = Math.atan2(x1 - x0, z1 - z0) + Math.PI / 2;
++          for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, d = (at + t * len[i - 1]) / L; segs.push({ x: x0 + (x1 - x0) * t, z: z0 + (z1 - z0) * t, ry, w: len[i - 1] / n + 0.9, top: topA + (topB - topA) * d }); }
++          at += len[i - 1];
++        }
++      };
++      run([[-86.0, -70.9], [-78.0, -71.0], [-72.2, -70.7]], 5.5, 13.8);             // the north arm, west to the face
++      run([[-71.2, -70.3], [-71.2, -75.4]], 13.0, 13.0);                              // behind the face (its back)
++      run([[-71.4, -76.2], [-71.6, -82.0], [-72.4, -88.5]], 14.2, 3.6);               // the south arm, falling away
++      // (each stretch a faceted rock column, the Whispering Cliffs' own shape: strata, ledges, a worn top; drawn with the
++      //  cliffs' texture and vertex tones; the columns' moss caps turned to the rock's grey: no moss in the desert)
++      const colM = tm('cliff', { vc: true, rough: 0.95, emissive: '#2c2a32', ei: 0.6 });   // (lit a little, as the mask: the wall faces away from the sun)
++      const column = (seed, depth) => {
++        const geo = stoneColumnGeometry(seed, depth), n = geo.getAttribute('normal') || (geo.computeVertexNormals(), geo.getAttribute('normal')), c = geo.getAttribute('color');
++        if (c) for (let i = 0; i < c.count; i++) if (n.getY(i) > 0.7) { const t = 0.86 + ((i * 37) % 11) / 100; c.setXYZ(i, 0.78 * t, 0.75 * t, 0.8 * t); }
++        return geo;
++      };
++      let seed = 5200;
++      for (const q of segs) {
++        const by = H(q.x, q.z) - 0.6, top = g + q.top + (rr() - 0.5) * 1.8, h = Math.max(2.2, top - by), ry = q.ry + (rr() - 0.5) * 0.3, d = 2.6 + rr() * 0.8;
++        B.add(column(seed++, h + 0.6), colM, q.x, by + h, q.z, 0, ry, 0, q.w / 1.9, 1, d / 2.3);   // (wide and overlapping: one cliff, not a row of columns)
++        // (a lower shoulder in front of most: the wall's foot breaks forward and back, not one straight face)
++        if (h > 5 && rr() < 0.7) { const sh = h * (0.35 + rr() * 0.3), o = (rr() < 0.5 ? -1 : 1) * (0.9 + rr() * 0.5); B.add(column(seed++, sh + 0.6), colM, q.x + Math.cos(ry + Math.PI / 2) * 0, by + sh, q.z, 0, ry + rr(), 0, (q.w * 0.55) / 2.6, 1, (d * 0.7) / 2.6); }
++        camVol(col({ type: 'box', x: q.x, z: q.z, hw: q.w / 2, hd: d / 2, rot: ry, top: by + h + 0.5, camSkip: true }), 'school canyon wall');
++      }
++      // (the south arm's end: two boulders where the rock meets the terrace, so no slab's end shows)
++      for (const [x, z, sc] of [[-72.8, -90.3, 1.5], [-71.0, -89.0, 1.0]]) B.add(column(seed++, sc * 1.6 + 0.6), colM, x, H(x, z) + sc * 1.0, z, 0, sc * 2, 0, sc * 0.9, 1, sc * 0.8);
++    }
++    // the mask: a broad stone egg, a wider brow over it, its chin pushed forward
++    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
++    { const [cx, cz] = f(0, -0.15); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 6.4, cz, 0, S.ry, 0, S.w / 2 + 0.15, 1.7, 1.3); }
++    { const [cx, cz] = f(0, 0.55); B.add(bbox(3.4, 3.0, 1.6, 0.45, 1), mask, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
++    // the brows: long, sweeping up from the nose past the face's edge into points; the deep sockets; the big orange eyes
+     for (const s of [-1, 1]) {
+-      { const [bx, bz] = f(s * 1.5, 1.05); B.add(bbox(2.6, 0.7, 1.1, 0.2, 1), M.grey, bx, g + 6.55, bz, 0, S.ry - s * 0.22, s * 0.3); }
+-      { const [ex, ez] = f(s * 1.45, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.eye, ex, g + 5.85, ez, 0, S.ry, s * 0.28, 0.75, 0.34, 0.3); }
+-      { const [ex, ez] = f(s * 1.45, 0.85); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.85, ez, 0, S.ry, s * 0.28, 1.0, 0.55, 0.4); }
++      { const [bx, bz] = f(s * 1.95, 1.0); B.add(bbox(3.6, 0.75, 1.15, 0.25, 1), mask, bx, g + 6.75, bz, 0, S.ry - s * 0.18, s * 0.42); }
++      { const [tx, tz] = f(s * 3.75, 0.75); B.add(cached('w80d-tip', () => new THREE.ConeGeometry(0.42, 1.5, 6)), mask, tx, g + 7.75, tz, 0, S.ry, -s * 0.75); }
++      { const [ex, ez] = f(s * 1.5, 0.82); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.25, 0.72, 0.42); }
++      { const [ex, ez] = f(s * 1.5, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), lava, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.02, 0.52, 0.3); }
++      { const [kx, kz] = f(s * 1.75, 0.75); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, kx, g + 3.9, kz, 0, S.ry, -s * 0.2, 0.9, 1.25, 0.55); }   // a cheekbone
+     }
+-    { const [nx, nz] = f(0, 1.1); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), M.grey, nx, g + 4.9, nz, -0.22, S.ry + Math.PI / 4, 0); }
++    { const [nx, nz] = f(0, 1.15); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), mask, nx, g + 4.85, nz, -0.22, S.ry + Math.PI / 4, 0); }
+     // the door in the chin: a stone frame, a dark reveal, a wooden leaf, a star over it; the forecourt slab before it
+     const [dx, dz] = f(0, 1.36), doorY = g;
+     B.add(bbox(1.6, 2.3, 0.4, 0.04, 1), M.dark, dx, doorY + 1.15, dz, 0, S.ry, 0);
