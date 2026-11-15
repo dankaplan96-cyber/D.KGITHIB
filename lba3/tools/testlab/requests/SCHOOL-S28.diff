@@ -1,5 +1,5 @@
 diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
-index 54b512ca..e2e6ad0a 100644
+index 54b512ca..5655a040 100644
 --- a/lba3/src/game/desertold.js
 +++ b/lba3/src/game/desertold.js
 @@ -31,8 +31,12 @@ import { rng, smoothstep } from '../engine/math.js';
@@ -11,8 +11,8 @@ index 54b512ca..e2e6ad0a 100644
 +// (SCHOOL-S28, the user, 15.11: LBA2's School of Magic is the stone face at S28 (scene 28's door), in the hollow under
 +//  the ridge that the original's heights make a canyon: high ground north, east and west, open to a valley south. The
 +//  School moves there, facing south down the valley; the mask (body 43) by the pool stays, a mask without a door)
-+export const SCHOOL_SITE = { x: 1.6, z: 3.5, ry: Math.PI, w: 6.69, d: 3.34, h: 8.64 };
-+export const SCHOOL_DOOR = { x: 1.6, z: 0.9 };                     // where he stands to go in (on the hollow's floor before the chin)
++export const SCHOOL_SITE = { x: 4.1, z: 2.9, ry: Math.PI, w: 6.69, d: 3.34, h: 8.64 };
++export const SCHOOL_DOOR = { x: 4.1, z: -0.2 };                    // where he stands to go in: LBA2's own door zone for scene 28 (decoded)
 +const MASK_SITE = { x: -69.1, z: -72.7, ry: Math.PI / 2, w: 6.69, d: 3.34, h: 8.64 };   // (the mask by the pool: the School's place until 15.11)
  const HALL = { x: -67.8, z: -61.7, w: 10.19, d: 7.02, top: 6.69 };  // (body 48; its top 6.69 m over the pool's floor)
  const POOL = { x0: -78.5, x1: -50.6, z0: -66.0, z1: -50.5 };       // the sunken pool (the original's 0 m hollow) the hall stands in; its rim walk runs round it

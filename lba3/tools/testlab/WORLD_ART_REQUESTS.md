@@ -5324,7 +5324,8 @@ and the second": **move the School to S28's canyon, and withdraw those three.**
 - **Withdrawn: `requests/SCHOOL-LBA2b.diff`, `SCHOOL-CANYON.diff`, `SCHOOL-LBA2d.diff`** (do not apply; superseded).
 - **`requests/SCHOOL-S28.diff`** (`desertold.js` only; `git apply --check` clean on origin):
   - `SCHOOL_SITE` / `SCHOOL_DOOR` move to S28's hollow: the mask set into the hollow's north wall, facing south down the
-    valley (local (1.6, 3.5), door spot (1.6, 0.9)). **`wizards.js` follows by itself** (it builds the School's door and
+    valley (local (4.1, 2.9)); **the door spot is LBA2's own decoded door zone for scene 28, (4.1, −0.2)** (updated
+    15.11, the diff replaced). **`wizards.js` follows by itself** (it builds the School's door and
     its way out from these two), and so do `R.school` and the map's School mark.
   - The mask as LBA2's (from LBA2b/d, the user's picture): pale lilac-grey, V-shaped, swept-up pointed brows, deep
     sockets with big rough orange eyes, cheekbones, the door in the chin with its frame and star, a worn step, LBA2's
@@ -5342,3 +5343,30 @@ and the second": **move the School to S28's canyon, and withdraw those three.**
   `R.school`), `island-doors` and `purposes` (the bunkhouse's door and board moved), `chapter4`, `prologue` (magus,
   keraooc read `R.school`), the map. Not run here. If the School's way in should stay shut in some chapters, that is the
   story's as before.
+
+## ORIG-PLACES · everything at its original place: the audit (the user, 15.11) · the desktop, 15.11.2026
+The user: "across the whole game, everything should stand at its original place". Measured on `02ffd1e5`: every
+original exterior door decoded from LBA2 (`tools/worldscore/ref/{citadel,desert}.json` doors, in our frames) against our
+nearest door, and `tools/worldscore.mjs`'s landmark matching on every island. (Complements the cloud's P42 MAP-ORIG.)
+**At the original's place (within 0–3 m):** Citadel: Twinsen's house (2.7 m: the door; the interior would have to
+follow), the neighbour's, the tavern, Mr Bazoo's, the ticket office, Nell's, the pharmacy, the baggage claim, the
+fort passage's two doors (2.8, 3.6 m), the Water Office and the sewer's two hatches (D2, by the door map). Desert:
+house S40 (0.3 m), the School (now: SCHOOL-S28, on LBA2's door zone). The Zeelich isles' buildings (automatic, from
+LBA2's data); the "moved / missing" rows worldscore lists for Otringal's high town and the Lift Dock are its matcher's:
+the slimmed spires (ISLES-BAR) and the lift tower and crane drawn by us at the original's spots (±0.6 m).
+**Off the original's place, each for a reason on record:**
+| Where | Off by | Why (who decided) |
+|---|---|---|
+| Citadel, the statue of Twinsen and Zoé | 6.2 m N | the original's spot is the square's middle, where chapter 1's well stands (story) |
+| Citadel, Bersimon's tent | 6.2 m | the glider field's stop is at LBA2's spot (travel, story) |
+| Citadel, Tralu's cave door | 9.3 m | no bank at LBA2's spot: the depot's level yard (DOORS-LBA2 11) |
+| Citadel, the school (`stone`, Tibbo's) | 3.4 m | WORLD-FIX moved the house off the ramp |
+| Citadel, the west islet's dome | — | **the user: no dome** |
+| Desert, Kesh's five houses (the bar, Leone's, the shop, 38, the village) | 5.6–32 m S | **the user, 14.11 (ISLAND-85): don't move the village** |
+| Desert, the Temple of Bù's door and its well-hatch (LBA2 10, 127) | ~115 m (ours under the dig) | twelve years: the buried temple is our story |
+| Desert, the hacienda, the hut, the islet's door (LBA2 24, 113, 183) | — | **the user's DECLUTTER (3.11)** |
+| Zeelich's hub | — | **the user: a new city** |
+| The Hamalayi (LBA1's factory compound, the Sacred Carrot, the quay) | — | our own larger region (`WORLD_SIMILARITY.md`) |
+Nothing else is off. **Asked of the user now:** whether the latest word ("everything at its original place") overrides
+the decisions in bold, Kesh first; the story-tied ones (the statue and the well, the tent and the glider field, the
+temple's well) are the cloud's to plan if so.
