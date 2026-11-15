@@ -575,9 +575,23 @@ export class Chapter1 extends ChapterBase {
       g.setState('play');
       h.angle = Math.atan2(mark.x - h.pos.x, mark.z - h.pos.z);
       if (ov) g.camRig.override = null;
-      shot('lead', skip ? 0.05 : 0.35);
-      this.chain([['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']], () => { beat?.release(1.4); g.updateObjective(); g.save(false); },
-        (i) => { if (i === 1) shot('speech', 0.9); else if (i === 2) beat?.release(1.4); });
+      narr(false);
+      // (P33, the user 15.11: "the ship's caption comes in after the character arrives" — the narrator's line about the
+      //  ferry gliding in waited for the berth and Vesk's walk; it is now a subtitle while she glides in (narr), and the
+      //  speech follows at the berth. Skipped before it was shown, it is said here as before)
+      const lines = narrated ? [['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']] : [['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']];
+      const o = narrated ? 1 : 0;
+      shot(narrated ? 'speech' : 'lead', skip ? 0.05 : narrated ? 0.9 : 0.35);
+      this.chain(lines, () => { beat?.release(1.4); g.updateObjective(); g.save(false); },
+        (i) => { if (i + o === 1) shot('speech', 0.9); else if (i + o === 2) beat?.release(1.4); });
+    };
+    // the narrator's subtitle while the ferry glides in (the films' own subtitle line, #cine-sub)
+    let narrated = false, narrUp = false;
+    const narr = (on) => {
+      const el = document.getElementById('cine-sub');
+      if (!el) return;
+      if (on && !narrUp) { el.innerHTML = `<span>${t('c1_arrive_1')}</span>`; el.classList.add('show'); narrUp = true; narrated = true; }
+      else if (!on && narrUp) { el.classList.remove('show'); narrUp = false; }
     };
     shot('sea', 0.6); shipAt(0); ride(); frame();
     if (ov) g.camRig.snap();
@@ -586,6 +600,8 @@ export class Chapter1 extends ChapterBase {
       tt += dt;
       const I = g.input;
       if (!said && tt > 0.8 && (I.pressed('interact') || I.pressed('action'))) { skip = true; said = true; done(); return; }
+      if (!narrated && tt > 1.0) narr(true);
+      else if (narrUp && tt > 8.5) narr(false);
       if (dock == null) {
         const { yaw, v } = shipAt(tt);
         // a lean into the turn, from how fast the heading changes

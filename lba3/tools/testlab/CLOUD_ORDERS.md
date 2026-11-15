@@ -467,3 +467,24 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        CPU submission and GPU time apart. Expected, not claimed: no frame-time change from the art; the waste fix shows
        as no geometry growth over a long street session, not as a higher frame rate. If B is worse at p95 beyond the
        spread, name the view and send its `LIVE` lines: the cloud looks for the cause.
+
+46. **The user's playtest of 15.11, two items for the desktop (real GPU, Blender).** State: artifact **v91** plus the
+    cloud's fixes after it (P28 dogs, P29 flasks, P34 the ferry's narration). The user plays on the real machine now
+    (the Vega 8 laptop is sold: d2e1ab8b).
+    1. **P30, characters pixelated in the house** (the user: "inside the house the characters' pixels are very
+       pixelated compared with before"; a picture of Twinsen and Zoé by the kitchen, their edges stair-stepped). The
+       cloud measured Twinsen's house on SwiftShader, v86 (f5526202) against the tip: draw calls 68 → 64, triangles
+       ~228k → ~225k, resolution scale 1 and MSAA 4 in both: the house did not get heavier. So, on the desktop's GPU,
+       new game, the house, stand by the kitchen with `?perf`: record the overlay's pixel ratio and "auto ×" factor,
+       the quality preset the governor chose (AUTO-QUALITY), MSAA, and the frame time, for v86 and for the tip (the
+       artifact's previous versions or git worktrees at f5526202 and HEAD). If the auto resolution / the governor drops
+       the scale indoors on the tip and not on v86, find what costs the frames there (the bathroom's glass shower, the
+       cellar, the tutorial's hints, the radio's glowing eye) and send a request; if the scale is 1 in both, compare
+       crops at the same spot and look at the output pass (edgeAA, sharpen) — a 960-px crop of both is enough. Report
+       as P30 in WORLD_ART_REQUESTS.md.
+    2. **P35, Twinsen's head from behind** (the user: "the bulge is weird"; a picture from behind and above: the hair
+       knot on the back of his head reads as a lump). TWINSEN-LOOK's territory: in Blender, make the knot read as
+       hair (shape, a tie, its size against the head, its join to the scalp) or reduce it, against LBA2's look (his
+       tied hair, numbers and descriptions only). Previews from the play camera's height behind him, before/after; the
+       usual pipeline (export, in-game load, the rig's animations, the face untouched). Send it as a request.
+    Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
