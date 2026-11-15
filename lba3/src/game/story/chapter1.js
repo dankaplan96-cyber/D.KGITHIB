@@ -276,7 +276,8 @@ export class Chapter1 extends ChapterBase {
           this.walkOff('doran', [{ x: ps.x + 5.5, z: ps.z + 2.6 }, { x: -95.8, z: 37.4 }, { x: -82.0, z: 36.0 }, { x: -67.9, z: 29.6 }], 1.15);
           g.updateObjective(); g.save(false);
         });
-        return c([['doran', f.c1_valve_depot ? 'c1_doran_depot' : f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
+        // (DIALOGUE-EDIT: before the ferry has come in he can't have seen it: c1_doran_due)
+        return c([['doran', f.c1_valve_depot ? 'c1_doran_depot' : f.c1_task ? 'c1_doran_drones' : f.c1_arrived ? 'c1_doran_idle' : 'c1_doran_due']]);
       case 'xil': return c([['xil', f.c1_water ? 'c1_xil_2' : 'c1_xil_1']]);
       case 'pippa':
         this.chain([['pippa', f.c1_veskGone ? 'c1_pippa_2' : f.c1_water ? 'c1_pippa_heat' : 'c1_pippa_1']], () => g.openShop());
