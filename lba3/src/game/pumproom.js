@@ -189,8 +189,8 @@ export function buildPumpRoom(scene, physics) {
     return { ...touch(B.cx + x + 0.17, B.cz + PZ + 0.36, Math.PI, 'tinker'), tag, open: false, wheel: { x: B.cx + x, z: hz },
       // shut: as it is; open: two turns round; `snap`: it springs back fast (the copper pipe's push)
       set(b, snap = false) { this.open = !!b; S.to = b ? -Math.PI * 4 : 0; S.k = snap ? 14 : 5; },
-      // where the camera should see it: the hub and the wheel's top and right
-      look() { return { hub: { x: B.cx + x, y: hy, z: hz }, top: { x: B.cx + x, y: hy + 0.2, z: hz }, side: { x: B.cx + x + 0.2, y: hy, z: hz } }; } };
+      // where the camera should see it: the hub and eight points round the rim
+      look() { const o = { hub: { x: B.cx + x, y: hy, z: hz } }; for (let i = 0; i < 8; i++) o['rim' + i] = { x: B.cx + x + Math.cos(i * Math.PI / 4) * 0.2, y: hy + Math.sin(i * Math.PI / 4) * 0.2, z: hz }; return o; } };
   };
   const cocks = { upper: cock(CKX.upper, UP.y, old, UP.r, 'SQUARE'), lower: cock(CKX.lower, LO.y, old2, LO.r, 'HOUSES') };
   // the copper pipe's own way: up from its run into the lower leg under the cock (a bolted tee), and on to the pump
