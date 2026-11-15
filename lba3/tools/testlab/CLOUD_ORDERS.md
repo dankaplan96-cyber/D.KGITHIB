@@ -492,16 +492,17 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
     3. **P40 (decided):** the user, with a picture of the original's square (blue globes round the statue): Citadel's square
        lamps are **blue**. CITADEL-85's gold globes were reverted in town.js (f589e7b1); don't bring gold back.
-47. **The user, 15.11 (evening session): "the local agent didn't do the School of Magic right from outside" (P41).** No
-    detail yet (the cloud asked for a picture). The School stands at the mask (desertold.js, `MASK`, the user's 26.10 place);
-    FACE-OFF (yours, applied by the cloud 15.11) took the second face off S28's tower. On the desktop, with LBA2's data
-    (numbers and descriptions only; nothing of it committed): compare our School's exterior with LBA2's School of Magic
-    from the play camera and from the plaza: the face's proportions, depth and colour, the eyes, where and how big the door
-    is, the rock wall it sits in, the terrace and plaza in front, the water channel and bridge. List every difference that
-    makes it read wrong, then fix the biggest ones in desertold.js (the door's position and the way in, colliders, the
-    `wizards` people and the story's uses kept). Before/after pictures from the play camera (chapter 4: the user may see
-    the School's outside, since the user raised it; nothing of the inside or the story). Send it as a request
-    (requests/SCHOOL-FACE.diff) and report as SCHOOL-FACE in WORLD_ART_REQUESTS.md. If FACE-OFF is what the user
-    means (the face belonged on the tower), say so in the report: the cloud will ask the user before reverting.
+47. **The user, 15.11, right after SCHOOL-LBA2 was pushed: "the local agent didn't do the School of Magic right from
+    outside" (P41). SCHOOL-LBA2 is NOT applied** (the cloud holds it). What the cloud sees in school-lba2-wide.jpg (after):
+    a free-standing square block with a crenellated top, the face stuck on its front, the block alone on open sand, its
+    sides visible; the canyon around the island is elsewhere. LBA2's School (the picture the user gave you) is a face
+    **carved into a long canyon wall**: rock continues left and right of the face and behind it, the face sits in the
+    wall's line, not on a box; no battlements. Redo it against the user's picture: the face part of a continuous cliff
+    (join it to the island's grey ridge or build the canyon's walls out on both sides so no box edges show from the
+    plaza, the bridge or the play camera's usual angles), the top an uneven rock skyline, not merlons. Keep what was right
+    (the pale mask, swept brows, orange eyes, the door in the chin, the bridge, the pillars), the rim walk free, the door,
+    its spot, the colliders' way in and the `wizards` people. Before/after from the play camera at the bridge, from the
+    plaza and wide; put the user's LBA2 picture beside ours in your own check (not committed). Send as
+    requests/SCHOOL-LBA2b.diff, report as SCHOOL-LBA2b. If the user tells you directly what is wrong, that wins.
     Also: **Twinsen stays the shipped model** (the user rejected TWINSEN-FIGURE: "our old Twinsen is better"); no Twinsen
     model work.
