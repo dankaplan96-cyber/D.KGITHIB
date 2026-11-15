@@ -72,7 +72,7 @@ Object.assign(STR.en, {
   l_odile_after: [
     'Category: machinery. Sub-category: humming.',
     'Half of Zeelich\'s forms have one box for "pot". You\'d be amazed what fits in it.',
-    'The shuttles are lovely. The noise at shift change is not.',
+    'The project barge is lovely. The noise at shift change is not.',
     "The Zeelich crates go down to the Esmers' house once I've stamped them. Every last one.",
   ],
   l_crate_look: 'An Esmer crate, "SOUP POT (1)". It hums.',
@@ -82,7 +82,7 @@ Object.assign(STR.en, {
   l_crate_cleared: 'Stamped CLEARED. The papers are done; Xil gets his crate back.',
   l_toast_coupler: 'Heat coupler',
   l_nell_0: "Arthur's dad, right? He still owes me a sprocket.",
-  l_nell_1: 'Esmer engines are wonderful machines. Try getting a spare part for one, though. Three weeks, by shuttle.',
+  l_nell_1: 'Esmer engines are wonderful machines. Try getting a spare part for one, though. Three weeks, by ship.',
   l_nell_posts: 'Third heat post on the harbour row tripped this week. Readings jump when the ground hums. The project says it\'s the salt air.',
   l_nell_c1: "That's a heat coupler! Mine, I bet. Xil was getting me one from Zeelich. My engine's been dead a month.",
   l_nell_c2: 'Set it on the bench. Careful, couplers run hot until they settle. When it glows, cool it in the water barrel. Quick.',

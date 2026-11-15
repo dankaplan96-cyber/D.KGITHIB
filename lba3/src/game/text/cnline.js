@@ -13,13 +13,13 @@ Object.assign(STR.en, {
   cn_tw_order_b: "Mill Lane. Kell's lift brings their paper up. I'll ask him.",
   cn_order_again: '"Not to be admitted." Deliveries by the Mill Lane service landing. Ring for Kell.',
   cn_clerk_order: "Standing orders are the project's, not the council's. I only file them. ...Though I notice it says nothing about deliveries.",
-  cn_bal_order: "(whispering) His own handwriting, on our council's door. He's frightened of something in there.",
+  cn_bal_order: "Psst. His own handwriting, on our council's door. He's frightened of something in there.",
 
   // ---- Kell
   cn_kell_1: "The archive? I haul its paper up every week. Crates of it, and nobody has ever asked me what's in them.",
   cn_tw_kell: "Vesk's order is on the front door. Is there one on your landing?",
   cn_kell_2: "Not on my landing. The service door's at the top, by the cistern, and it opens on their back gallery. You got my cart up when nobody else would.",
-  cn_kell_2b: "Not on my landing. The service door's at the top, by the cistern, and it opens on their back gallery. Twelve years I've carried that paper. If something in it is cracking the island, somebody ought to read it.",
+  cn_kell_2b: "Not on my landing. The service door's at the top, by the cistern, and it opens on their back gallery. Ten years I've carried that paper. If something in it is cracking the island, somebody ought to read it.",
   cn_kell_3: "Step on the deck. I'm coming up with you. The key is on my belt and it stays there.",
   cn_kell_wait: 'Deck first. Step on when she is down.',
   cn_kell_door: "There. Up the steps inside, and you're on their gallery. The archivist does a round below it. He has the ears of a bat.",
