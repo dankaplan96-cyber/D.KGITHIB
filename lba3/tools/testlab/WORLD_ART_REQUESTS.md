@@ -5193,3 +5193,34 @@ in. v71 = `87f2e034`, tip = `98705d63` (v92 plus the desktop's reports). Alterna
 - As played (automatic resolution) every route but the interior holds 58–60 on both; the interior ~51 → ~49.
 - **Not covered:** the new chapters' stations (chapters 6–12): the game's benchmark has no route there. The routes are
   the benchmark's six. The UHD 630 still plays at Medium on its own; Auto keeps it there on these routes.
+
+## VOICE-HW · the voices on real hardware: box open → first sound (CLOUD_ORDERS 41.2; measure only) · the desktop, 15.11.2026
+Chrome and the app's Electron, both on the **GTX 1050** (i5-8300H), a new game, the game's own loop running. Each line
+through `game.say`, its timing read from the voice engine itself (`Babble._wordsLine/_exprLine/_words/_speak` wrapped from
+the page: the audio clock at the box's opening, at the line's scheduled start `T0`, and when the worker's render was
+taken up; nothing in the repo changed). The script and raw JSON: `docs/lba3-performance/HARDWARE/2026-11-15-voice-hw/`.
+**Since the order, the default is Expressive (VOICE-2, Piper banks); Words (P18, the blob worker) is no longer in
+Settings** but is still the engine's mode: all three measured, the kitchen's ten lines (Arthur, Twinsen, Zoé) and a
+Zeelich street talk (Nara, Baldino; four lines).
+
+| Mode | Where | Box open → first sound, median / max (ms) | Late worker answers | Worker render (median / max ms) |
+|---|---|---|---|---|
+| Expressive (default) | Chrome | kitchen 30 / 110 · street 101 / **350** | — (no worker) | — |
+| Expressive | Electron | kitchen 30 / 110 · street 110 / **350** | — | — |
+| Words (P18) | Chrome | kitchen 135 / 182 · street 97 / 172 | **1 of 14** (Arthur, the first line: render 42 ms) | 9 / 42 |
+| Words | Electron | kitchen 100 / 173 · street 133 / 180 | 0 of 14 | 12 / 37 |
+| Classic | Chrome | kitchen 30 / 190 · street 70 / 203 | — | — |
+| Classic | Electron | kitchen 30 / 190 · street 70 / 190 | — | — |
+
+- **Words:** the worker answered in time for 27 of 28 lines; the one late line was the very first (a cold render, 42
+  ms) and joined with the 20 ms fade as designed. Its first sound comes 85–180 ms after the box opens (the planned lead
+  for the render), slower to start than Expressive and Classic (30 ms when ready).
+- **Expressive:** 30 ms when the speaker's bank is loaded; a speaker's first line waits for the bank: 110 ms, and
+  **Baldino's first line on Zeelich 350 ms** in both browsers (his bank loaded on demand). Not a fault, but the one
+  noticeable delay: preloading the region's speakers' banks on arrival would remove it (the cloud's call; no diff).
+- **The main thread:** no long task (≥ 50 ms) while any line was rendering or starting, in either. The only long tasks
+  were Zeelich's region build (2.1–2.2 s, before the street talk, behind the transition) and its follow-ups.
+- **Caveat:** the kitchen lines were passed to `say` by their text keys (`op_ar_1`…), as the story passes them; if
+  `say` does not resolve keys there, those ten lines were spoken as short key strings (the street lines were full
+  sentences). The Words render times (≤ 18 ms on the street's full sentences) are the safer figure.
+- No diff (nothing faulty found).
