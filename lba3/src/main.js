@@ -162,6 +162,12 @@ export const REMOVED_ROOMS = { isle_cxislet: 'zeelich', isle_tralu: 'zeelich', b
 const ROOM_MUSIC = { house: 'home', cellar: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home', asylum: 'asylum' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
 const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+// ACTION-SOUND-2: the rummage a container makes, by its kind (containers.js) or, for the older givers, by its id
+const RUMMAGE = { bin: 'rummageBin', barrel: 'rummageBarrel', crate: 'rummageCrate', trunk: 'rummageCrate', wood: 'rummageCrate', cases: 'rummageCase', suitcases: 'rummageCase', trolley: 'rummageCase' };
+function rummageOf(gv) {
+  const k = gv.kind && gv.kind !== 'piece' ? gv.kind : /barrel/.test(gv.id) ? 'barrel' : /bin/.test(gv.id) ? 'bin' : /crate|chest|box|trunk/.test(gv.id) ? 'crate' : /case|bag/.test(gv.id) ? 'cases' : null;
+  return RUMMAGE[k] || 'rummage';
+}
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
@@ -2300,10 +2306,15 @@ class Game {
   // that one's loot key gets '#2', '#3'… (restoreLoot keeps one bonus per key).
   giverHop() {
     const gv = this.giverInReach();
-    if (!gv) return false;
+    if (!gv) {
+      // (ACTION-SOUND-2: a hop at a container already searched: a lighter rummage and a shrug, not the search itself)
+      const h = this.hero;
+      if (this.givers().some((q) => Math.hypot(h.pos.x - q.x, h.pos.z - q.z) <= q.r && Math.abs(h.pos.y - (q.y ?? h.pos.y)) <= 1.5)) this.audio.play('rummageEmpty');
+      return false;
+    }
     const key = this.giverKey(gv);
     this.searched.push(key);
-    this.audio.play('rummage');   // (ACTION-SOUND: the search itself; its bonus pops out with 'bonus')
+    this.audio.play(rummageOf(gv));   // (ACTION-SOUND: the search itself; its bonus pops out with 'bonus'. ACTION-SOUND-2: by what is searched)
     let lk = key;
     for (let i = 2; this.pickups.list.some((p) => p.loot === lk) || this.ball?.carry?.loot === lk; i++) lk = key + '#' + i;
     const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z, this.hero.pos.y + 1)) + (gv.top ?? 1);
@@ -2465,9 +2476,10 @@ class Game {
   }
 
   // contact feedback: a short burst, a material sound, a little shake
-  impact(x, y, z, material = 'flesh', result = 'hit', scale = 1) {
+  impact(x, y, z, material = 'flesh', result = 'hit', scale = 1, by = null) {
     const C = { flesh: '#ffe0b0', crystal: '#9ff4ff', machine: '#ffd27a', armor: '#ffffff', stone: '#d8ccb0', wood: '#c8904a', magic: '#ffe27a', none: '#a8b8c8' }[material] || '#ffffff';
-    const snd = result === 'blocked' ? 'clang' : result === 'immune' ? 'notReady' : { flesh: 'hitFlesh', crystal: 'hitCrystal', machine: 'hitMachine', armor: 'clang', stone: 'hitStone', wood: 'hitWood', magic: 'hit' }[material] || 'hit';
+    let snd = result === 'blocked' ? 'clang' : result === 'immune' ? 'notReady' : { flesh: 'hitFlesh', crystal: 'hitCrystal', machine: 'hitMachine', armor: 'clang', stone: 'hitStone', wood: 'hitWood', magic: 'hit' }[material] || 'hit';
+    if (snd === 'hitFlesh' && by === 'blade') snd = 'slashFlesh';   // (ACTION-SOUND-2: the sword's cut, a fist's thud)
     this.audio.play(snd, { x, z });   // (ACTION-SOUND: placed where it struck: quieter and to the side far off)
     this.particles.burst(x, y, z, C, Math.round((result === 'blocked' ? 10 : 8) * scale), result === 'blocked' ? 5 : 3.5);
     if (result !== 'immune') this.camRig.shake(result === 'blocked' ? 0.12 : 0.08 * scale);

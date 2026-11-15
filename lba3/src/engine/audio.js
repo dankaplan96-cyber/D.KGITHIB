@@ -58,7 +58,34 @@ const SND = {
   blip: { pri: 1, gap: 0.025, vary: FIXED }, select: { pri: 3, gap: 0.04, vary: FIXED }, mode: { gap: 0.05, vary: FIXED },
   deny: { pri: 3, gap: 0.15, vary: FIXED }, notReady: { gap: 0.12, vary: FIXED }, lockOn: { gap: 0.08, vary: FIXED }, equip: { gap: 0.08, vary: FIXED },
   tick: { pri: 1, gap: 0.02, vary: FIXED }, put: { vary: [0.03, 1] }, clunk: { gap: 0.04, vary: [0.03, 1] }, pipeKnock: { gap: 0.04, vary: [0.04, 1] },
+  // ACTION-SOUND-2: the ball by surface (the knock is the surface's, the rising chirp the ball's), into the sea, a throw
+  // and a contact without magic (no chirp: it comes straight back), its way home; the sword drawn and put away, a blade
+  // through flesh; a kick, the Wannie glove; what is taken in hand (the equip by kind); a tiptoe, hiding, a soft landing;
+  // low life; a container by kind, and one already searched; the weapons and tools (weapons.js, tools.js) and story
+  // machinery that asked for names nothing played. rr: round-robin takes (the noise's colour moves a step per take)
+  bounceStone: { group: 'bounce', gap: 0.05, vary: [0.02, 1], rr: 3 }, bounceWood: { group: 'bounce', gap: 0.05, vary: [0.02, 1], rr: 3 },
+  bounceMetal: { group: 'bounce', gap: 0.05, vary: [0.015, 1], rr: 3 }, ballSplash: { group: 'bounce', gap: 0.1, vary: [0.03, 1] },
+  ballDud: { group: 'bounce', gap: 0.05, vary: [0.03, 1], rr: 3 }, throwDud: { gap: 0.1, vary: [0.02, 0.8] }, ballReturn: { pri: 1, gap: 0.3, vary: [0.02, 0.5] },
+  swordDraw: { group: 'draw', gap: 0.15, vary: [0.01, 0.5] }, swordSheathe: { group: 'draw', gap: 0.15, vary: [0.01, 0.5] },
+  slashFlesh: { group: 'impact', gap: 0.04, vary: [0.03, 1], rr: 3 }, kick: { gap: 0.05, vary: [0.04, 1], rr: 3 },
+  gloveJab: { gap: 0.05, vary: [0.03, 1], rr: 3 }, gloveHeavy: { gap: 0.05, vary: [0.03, 1], rr: 2 },
+  equipBall: { group: 'equip', gap: 0.08, vary: FIXED }, equipFists: { group: 'equip', gap: 0.08, vary: [0.02, 0.5] }, equipGlove: { group: 'equip', gap: 0.08, vary: [0.02, 0.5] },
+  'step-sneak': { pri: 1, group: 'step', gap: 0.2, vary: [0.05, 1.5], rr: 3 }, hide: { gap: 0.5, vary: [0.03, 1] }, landSoft: { pri: 1, gap: 0.15, vary: [0.04, 1], rr: 3 },
+  lowLife: { pri: 3, gap: 3, vary: FIXED },
+  rummageBin: { group: 'rummage', gap: 0.2, vary: [0.04, 1], rr: 2 }, rummageBarrel: { group: 'rummage', gap: 0.2, vary: [0.04, 1], rr: 2 },
+  rummageCrate: { group: 'rummage', gap: 0.2, vary: [0.04, 1], rr: 2 }, rummageCase: { group: 'rummage', gap: 0.2, vary: [0.04, 1], rr: 2 },
+  rummageEmpty: { group: 'rummage', gap: 0.4, vary: [0.03, 0.8] },
+  wDart: { gap: 0.05, vary: [0.03, 1], rr: 3 }, wLaser: { gap: 0.05, vary: [0.015, 0.8] }, wLightning: { gap: 0.1, vary: [0.02, 0.8] },
+  tPip: { pri: 1, gap: 0.04, vary: FIXED }, tSqueal: { gap: 0.2, vary: FIXED }, tJet: { gap: 0.05, vary: [0.03, 1], rr: 3 }, tDry: { gap: 0.1, vary: FIXED },
+  tFill: { gap: 0.3, vary: FIXED }, tSteam: { gap: 0.2, vary: [0.03, 1] }, tRing: { gap: 0.3, vary: FIXED }, tCast: { gap: 0.1, vary: [0.03, 1] },
+  tReel: { gap: 0.2, vary: [0.02, 0.5] }, tTwang: { gap: 0.15, vary: [0.02, 0.5] }, tSlack: { gap: 0.1, vary: [0.03, 1] }, tBlast: { gap: 0.15, vary: [0.02, 0.8] },
+  tClick: { gap: 0.1, vary: FIXED }, tDraw: { gap: 0.3, vary: FIXED }, tFizz: { gap: 0.3, vary: FIXED },
+  steam: { gap: 0.3, vary: [0.03, 1] }, motor: { gap: 0.5, vary: [0.02, 0.5] }, winch: { gap: 0.4, vary: [0.02, 0.5] }, trickle: { gap: 0.4, vary: [0.03, 1] },
 };
+// (ACTION-SOUND-2: repeated sounds take more round-robin: the steps, the hits, the swings, the punches)
+for (const n of ['step', 'step-stone', 'step-grass', 'step-dirt', 'step-wood', 'step-metal', 'swing', 'punch', 'hitFlesh', 'hitStone', 'hitWood', 'hitMachine', 'bounceWall', 'bounceGround', 'land']) SND[n].rr = 3;
+for (const n of ['swingHeavy', 'hitCrystal', 'clang', 'dodge']) SND[n].rr = 2;
+const RR_F = [1, 1.11, 0.91];   // the noise filters' colour per round-robin take (tones keep their pitch: the signature stays)
 const VOICES_MAX = 16;   // effects sounding at once before a pri-2 one is skipped (pri 3 always plays)
 const VOICES_LOW = 10;   // … before a pri-1 one is (feet and ticks give way first)
 const SPACE = { near: 4, far: 0.1, pan: 0.6 };   // full within 4 m, then near/d; quieter than 0.1 (40 m) skipped; side ≤ 0.6
@@ -383,7 +410,7 @@ export class AudioEngine {
   }
 
   _burst({ dur = 0.1, vol = 0.3, type = 'lowpass', f = 1000, f1 = f, q = 1, at = 0, atk = 0.003 }) {
-    const ctx = this.ctx, pv = this._pv || 1, v = vol * (this._gv ?? 1);
+    const ctx = this.ctx, pv = (this._pv || 1) * (this._rrF || 1), v = vol * (this._gv ?? 1);
     if (!(v > 1e-5)) return;   // (a silent layer: nothing to make)
     const t = ctx.currentTime + at + (this._delay || 0);
     const n = ctx.createBufferSource(); n.buffer = this.noiseBuf;
@@ -495,7 +522,7 @@ export class AudioEngine {
   // leave it out). Returns true if it sounded. A second call for the same event (two contacts in one step, a sound a
   // frame asks for again) falls inside the sound's gap and is merged; a crowd of small sounds is thinned before an
   // important one is ever skipped (SND: pri). The counts are in sfxStats, the last takes in sfxRecent (tests).
-  play(name, at = null) {
+  play(name, at = null, opt = null) {
     if (!this.ctx || this.ctx.state !== 'running') return false;
     const m = SND[name] || DEF, ctx = this.ctx, pri = m.pri ?? DEF.pri;
     const S = (this.sfxStats ??= { played: 0, merged: 0, dropped: 0, far: 0 });
@@ -521,8 +548,11 @@ export class AudioEngine {
       chain = ctx.createStereoPanner(); chain.pan.value = sp.pan; chain.connect(this._in()); this._dest = chain;
     }
     this._end = 0; this._nodes = take.nodes; this._delay = m.yield ? 0.02 : 0;
+    // (ACTION-SOUND-2: round-robin: a sound with rr takes its next colour, never the same twice running)
+    if (m.rr) { const R = (this._rrN ??= new Map()), k = ((R.get(name) ?? -1) + 1) % m.rr; R.set(name, k); this._rrF = RR_F[k]; }
+    this._opt = opt;
     // (a sound that fails to build must never stop the game: it is skipped and named once)
-    try { this._synth(name); } catch (e) { if (!this._synthErr) { this._synthErr = true; console.warn('sound', name, e.message); } } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; }
+    try { this._synth(name); } catch (e) { if (!this._synthErr) { this._synthErr = true; console.warn('sound', name, e.message); } } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; this._rrF = 1; this._opt = null; }
     this._live.push(tc + this._end + 0.03);
     if (chain) setTimeout(() => chain.disconnect(), (this._end + 0.6) * 1000);
     S.played++;
@@ -614,6 +644,38 @@ export class AudioEngine {
       case 'ballGrab': this._tone({ type: 'triangle', f0: 990, f1: 1180, dur: 0.07, vol: 0.05 }); break;
       case 'recall': this._tone({ f0: 1400, f1: 700, dur: 0.18, vol: 0.06 }); break;
       case 'catch': this._burst({ dur: 0.035, vol: 0.09, f: 900, f1: 300 }); this._tone({ f0: 880, f1: 1320, dur: 0.09, vol: 0.07, at: 0.005 }); break;
+      // ACTION-SOUND-2: the bounce by surface. Every one keeps the ball's rising chirp (its signature); the knock under it
+      // is the surface's: stone hard and short, wood hollow, metal with a small ring, soft ground (bounceGround) dull
+      case 'bounceStone': this._knock({ f: 340, drop: 0.6, dur: 0.06, vol: 0.09, click: 2000, cv: 0.8 }); this._tone({ f0: 820, f1: 1260, dur: 0.065, vol: 0.065, at: 0.01 }); break;
+      case 'bounceWood': this._knock({ f: 235, drop: 0.7, dur: 0.11, vol: 0.11, click: 1100, cv: 0.6 }); this._tone({ type: 'triangle', f0: 470, f1: 430, dur: 0.07, vol: 0.025 }); this._tone({ f0: 760, f1: 1150, dur: 0.065, vol: 0.06, at: 0.012 }); break;
+      case 'bounceMetal': this._knock({ f: 300, drop: 0.75, dur: 0.07, vol: 0.08, click: 1800, cv: 0.6 }); this._tone({ type: 'triangle', f0: 1180, f1: 1165, dur: 0.24, vol: 0.022 }); this._tone({ type: 'triangle', f0: 1770, f1: 1750, dur: 0.15, vol: 0.01 }); this._tone({ f0: 800, f1: 1220, dur: 0.065, vol: 0.06, at: 0.01 }); break;
+      // into the sea: a plop and a bubble that rises (it comes home with no bounce)
+      case 'ballSplash': this._burst({ dur: 0.22, vol: 0.13, f: 1300, f1: 350 }); this._tone({ f0: 320, f1: 950, dur: 0.09, vol: 0.05, at: 0.02 }); this._tone({ f0: 520, f1: 1300, dur: 0.06, vol: 0.025, at: 0.13 }); break;
+      // without magic: the contact is a dull knock with no chirp, a little sag after it (it turns for home at once)
+      case 'ballDud': this._knock({ f: 180, drop: 0.55, dur: 0.07, vol: 0.085, click: 750, cv: 0.4 }); this._tone({ type: 'triangle', f0: 520, f1: 380, dur: 0.06, vol: 0.018, at: 0.03 }); break;
+      // a throw without magic: the air only, softer, and a short falling note instead of the bright pop
+      case 'throwDud': this._burst({ dur: 0.18, vol: 0.085, f: 480, f1: 1300, type: 'bandpass', q: 2.2 }); this._tone({ type: 'triangle', f0: 440, f1: 330, dur: 0.09, vol: 0.022, at: 0.02 }); break;
+      // on its way home by itself (the last bounce spent, a hit, out of range): a soft drawn-in breath, quiet (pri 1)
+      case 'ballReturn': this._burst({ dur: 0.2, vol: 0.045, f: 600, f1: 1500, type: 'bandpass', q: 2, atk: 0.09 }); this._tone({ f0: 990, f1: 1180, dur: 0.12, vol: 0.012, at: 0.06, atk: 0.05 }); break;
+      // ---- the sword taken out and put away: a blade sliding on its scabbard's mouth, a small ring / a clack at the end
+      case 'swordDraw': this._burst({ dur: 0.26, vol: 0.08, f: 1500, f1: 2600, type: 'bandpass', q: 5, atk: 0.03 }); this._tone({ type: 'triangle', f0: 1320, f1: 1310, dur: 0.28, vol: 0.035, at: 0.22 }); this._tone({ type: 'triangle', f0: 1980, f1: 1970, dur: 0.16, vol: 0.012, at: 0.22 }); break;
+      case 'swordSheathe': this._burst({ dur: 0.2, vol: 0.045, f: 2300, f1: 1300, type: 'bandpass', q: 5, atk: 0.02 }); this._knock({ f: 260, drop: 0.7, dur: 0.06, vol: 0.06, click: 1500, cv: 0.9, at: 0.19 }); break;
+      // a blade through flesh: the body's thud and a short dry 'shk' over it (a fist's blow is the thud alone)
+      case 'slashFlesh': this._synth('hitFlesh'); this._burst({ dur: 0.06, vol: 0.07, f: 2300, f1: 1300, type: 'bandpass', q: 2.5 }); break;
+      // ---- a kick (bigger and lower than a jab), the Wannie glove: leather and weight
+      case 'kick': this._burst({ dur: 0.13, vol: 0.15, f: 950, f1: 260, type: 'bandpass', q: 1.2 }); this._tone({ f0: 115, f1: 65, dur: 0.09, vol: 0.065 }); break;
+      case 'gloveJab': this._burst({ dur: 0.1, vol: 0.16, f: 900, f1: 240 }); this._tone({ f0: 125, f1: 70, dur: 0.08, vol: 0.07 }); this._burst({ dur: 0.05, vol: 0.03, f: 1400, f1: 900, type: 'bandpass', q: 3, at: 0.01 }); break;
+      case 'gloveHeavy': this._burst({ dur: 0.21, vol: 0.12, f: 480, f1: 1250, type: 'bandpass', q: 1.4 }); this._tone({ f0: 95, f1: 55, dur: 0.16, vol: 0.08, at: 0.06 }); break;
+      // ---- taken in hand: the ball (a glint), the fists (two knuckle taps), the glove (leather pulled on, a strap)
+      case 'equipBall': this._bell(1175, 0, 0.12, 0.03); this._bell(1568, 0.06, 0.16, 0.025); break;
+      case 'equipFists': this._knock({ f: 300, drop: 0.8, dur: 0.035, vol: 0.035, click: 1500, cv: 1 }); this._knock({ f: 280, drop: 0.8, dur: 0.04, vol: 0.04, click: 1300, cv: 1, at: 0.07 }); break;
+      case 'equipGlove': this._burst({ dur: 0.15, vol: 0.05, f: 950, f1: 600, type: 'bandpass', q: 1.5, atk: 0.02 }); this._knock({ f: 200, drop: 0.7, dur: 0.06, vol: 0.055, click: 1200, cv: 0.9, at: 0.14 }); break;
+      // ---- moves: a tiptoe (Discreet, far under a step), hiding (cloth drawn in), a light landing (a short jump)
+      case 'step-sneak': this._burst({ dur: 0.04, vol: 0.11, f: 420, f1: 160 }); break;
+      case 'hide': this._burst({ dur: 0.26, vol: 0.04, f: 1100, f1: 650, type: 'bandpass', q: 0.9, atk: 0.06 }); this._burst({ dur: 0.08, vol: 0.05, f: 300, f1: 140, at: 0.16 }); break;
+      case 'landSoft': this._burst({ dur: 0.06, vol: 0.19, f: 480, f1: 160 }); this._burst({ dur: 0.05, vol: 0.13, f: 420, f1: 150, at: 0.05 }); break;
+      // ---- low life: two soft low heartbeats and a low note under them, once as his life falls under a third
+      case 'lowLife': [0, 0.24].forEach((at, i) => this._knock({ f: 72 - i * 6, drop: 0.7, dur: 0.12, vol: 0.095 - i * 0.02, click: 300, cv: 0.2, at })); this._tone({ type: 'triangle', f0: 196, f1: 185, dur: 0.45, vol: 0.018, at: 0.02, atk: 0.06 }); break;
       // ---- hurt and death
       case 'hurt': this._burst({ dur: 0.1, vol: 0.18, f: 700, f1: 150 }); this._tone({ type: 'triangle', f0: 420, f1: 170, dur: 0.22, vol: 0.09 }); this._tone({ f0: 240, f1: 150, dur: 0.16, vol: 0.06 }); break;
       case 'die': this._tone({ type: 'triangle', f0: 300, f1: 45, dur: 0.7, vol: 0.11 }); this._burst({ dur: 0.5, vol: 0.18, f: 700, f1: 60 }); break;
@@ -641,6 +703,13 @@ export class AudioEngine {
       // ---- searching: a rummage (cause), then the outcome: something there (a little 'pop'), or nothing (two soft
       // falling notes, a shrug); rummage alone: a hop into a bin or planter (its bonus pops out with 'bonus')
       case 'rummage': [0, 0.07, 0.15].forEach((at, i) => this._knock({ f: 190 + i * 30, drop: 0.7, dur: 0.06, vol: 0.05, click: 1100, cv: 1, at })); this._burst({ dur: 0.2, vol: 0.03, f: 1800, f1: 1200, type: 'bandpass', q: 1, at: 0.02 }); break;
+      // ACTION-SOUND-2: the container's own: a litter bin's lid (a tin knock and a small ring), a barrel (hollow, low),
+      // a crate or trunk (wood), a suitcase (two latches, cloth); one already searched: a lighter rummage and the shrug
+      case 'rummageBin': [0, 0.09].forEach((at, i) => this._knock({ f: 360 - i * 30, drop: 0.8, dur: 0.05, vol: 0.05, click: 1600, cv: 1, at })); this._tone({ type: 'triangle', f0: 880, f1: 860, dur: 0.18, vol: 0.012, at: 0.01 }); this._burst({ dur: 0.18, vol: 0.03, f: 1700, f1: 1100, type: 'bandpass', q: 1, at: 0.12 }); break;
+      case 'rummageBarrel': [0, 0.11].forEach((at, i) => this._knock({ f: 140 + i * 15, drop: 0.65, dur: 0.11, vol: 0.06, click: 700, cv: 0.6, at })); this._burst({ dur: 0.18, vol: 0.028, f: 1500, f1: 1000, type: 'bandpass', q: 1, at: 0.06 }); break;
+      case 'rummageCrate': [0, 0.08, 0.15].forEach((at, i) => this._knock({ f: 230 + i * 20, drop: 0.7, dur: 0.07, vol: 0.055, click: 1100, cv: 0.9, at })); this._burst({ dur: 0.16, vol: 0.025, f: 1600, f1: 1000, type: 'bandpass', q: 1, at: 0.05 }); break;
+      case 'rummageCase': [0, 0.06].forEach((at) => this._knock({ f: 700, drop: 0.85, dur: 0.02, vol: 0.05, click: 2200, cv: 1.1, at })); this._burst({ dur: 0.22, vol: 0.07, f: 1300, f1: 800, type: 'bandpass', q: 0.9, at: 0.1, atk: 0.03 }); break;
+      case 'rummageEmpty': [0, 0.08].forEach((at, i) => this._knock({ f: 200 + i * 25, drop: 0.7, dur: 0.05, vol: 0.035, click: 1000, cv: 0.8, at })); this._tone({ f0: 392, dur: 0.1, vol: 0.022, at: 0.2, atk: 0.01 }); this._tone({ f0: 294, dur: 0.16, vol: 0.022, at: 0.31, atk: 0.01 }); break;
       case 'search': this._synth('rummage'); this._tone({ type: 'triangle', f0: 660, f1: 990, dur: 0.1, vol: 0.08, at: 0.26 }); this._bell(1319, 0.33, 0.25, 0.05); break;
       case 'searchEmpty': this._synth('rummage'); this._tone({ f0: 392, dur: 0.12, vol: 0.035, at: 0.27, atk: 0.01 }); this._tone({ f0: 294, dur: 0.2, vol: 0.035, at: 0.4, atk: 0.01 }); break;
       // ---- doors: walked through (a latch, the leaf on its hinges, the leaf shut behind), a heavy door or gate a
@@ -661,6 +730,32 @@ export class AudioEngine {
       case 'diveLock': [0, 0.3, 0.6].forEach((at) => { this._tone({ type: 'triangle', f0: 392, dur: 0.13, vol: 0.1, at }); this._tone({ type: 'triangle', f0: 294, dur: 0.13, vol: 0.1, at: at + 0.14 }); }); break;
       case 'diveDrop': this._tone({ f0: 1100, f1: 320, dur: 0.22, vol: 0.05 }); this._burst({ dur: 0.22, vol: 0.1, f: 1500, f1: 400, type: 'bandpass', q: 1.5 }); break;
       case 'diveImpact': this._burst({ dur: 0.6, vol: 0.32, f: 280, f1: 45 }); this._tone({ f0: 85, f1: 38, dur: 0.45, vol: 0.18 }); this._tone({ type: 'triangle', f0: 620, f1: 600, dur: 0.4, vol: 0.03, at: 0.02 }); break;
+      // ---- ACTION-SOUND-2: the weapons (weapons.js) and the tools (tools.js), played as every other effect (gaps, the
+      // count of voices, distance); the blowgun's dart, the laser (a triangle sweep, no saw edge), the lightning spell
+      // (its crack under 3 kHz, a triangle under it: no square)
+      case 'wDart': this._burst({ dur: 0.08, vol: 0.11, f: 2200, f1: 800, type: 'bandpass', q: 2 }); this._tone({ type: 'triangle', f0: 700, f1: 420, dur: 0.05, vol: 0.03 }); break;
+      case 'wLaser': this._tone({ type: 'triangle', f0: 1500, f1: 480, dur: 0.16, vol: 0.07 }); this._tone({ f0: 2100, f1: 1100, dur: 0.1, vol: 0.025 }); break;
+      case 'wLightning': this._burst({ dur: 0.32, vol: 0.22, f: 2800, f1: 500, type: 'bandpass', q: 0.8, atk: 0.008 }); this._tone({ type: 'triangle', f0: 140, f1: 60, dur: 0.3, vol: 0.08 }); this._burst({ dur: 0.04, vol: 0.08, f: 3000, f1: 1500, type: 'bandpass', q: 1.5, at: 0.08 }); break;
+      case 'tPip': { const k = Math.max(0, Math.min(1, this._opt?.k ?? 0)); this._tone({ f0: 820 + 900 * k, f1: 860 + 940 * k, dur: 0.07, vol: 0.018 + 0.03 * k }); break; }
+      case 'tSqueal': this._tone({ type: 'triangle', f0: 1800, f1: 3200, dur: 0.45, vol: 0.05 }); this._tone({ type: 'triangle', f0: 2400, f1: 1900, dur: 0.5, vol: 0.025, at: 0.05 }); this._burst({ dur: 0.4, vol: 0.04, f: 3200, f1: 2200, type: 'bandpass', q: 6 }); break;
+      case 'tJet': this._tone({ type: 'triangle', f0: 170, f1: 90, dur: 0.08, vol: 0.06 }); this._burst({ dur: 0.32, vol: 0.12, f: 2200, f1: 900, type: 'bandpass', q: 1.2, at: 0.03 }); break;
+      case 'tDry': this._tone({ type: 'triangle', f0: 170, f1: 120, dur: 0.07, vol: 0.05 }); this._burst({ dur: 0.08, vol: 0.04, f: 700, type: 'bandpass', q: 3, at: 0.05 }); break;
+      case 'tFill': for (let i = 0; i < 5; i++) this._tone({ f0: 210 + i * 30, f1: 320 + i * 35, dur: 0.09, vol: 0.05, at: i * 0.11 }); this._burst({ dur: 0.6, vol: 0.05, f: 900, f1: 500 }); break;
+      case 'tSteam': case 'steam': this._burst({ dur: 0.7, vol: 0.08, f: 3600, f1: 2200, type: 'bandpass', q: 0.7, atk: 0.04 }); break;
+      case 'tRing': this._tone({ type: 'triangle', f0: 2600, f1: 2400, dur: 0.04, vol: 0.03 }); this._tone({ f0: 1318, f1: 1312, dur: 1.4, vol: 0.045, at: 0.01 }); this._tone({ f0: 1976, f1: 1970, dur: 0.9, vol: 0.02, at: 0.01 }); break;
+      case 'tCast': this._burst({ dur: 0.18, vol: 0.07, f: 1800, f1: 600, type: 'bandpass', q: 2 }); this._tone({ type: 'triangle', f0: 320, f1: 180, dur: 0.07, vol: 0.04 }); break;
+      case 'tReel': for (let i = 0; i < 6; i++) this._tone({ type: 'triangle', f0: 900, f1: 860, dur: 0.02, vol: 0.03, at: i * 0.05 }); break;
+      case 'tTwang': this._tone({ type: 'triangle', f0: 150, f1: 110, dur: 0.3, vol: 0.05 }); this._tone({ f0: 300, f1: 220, dur: 0.25, vol: 0.02 }); break;
+      case 'tSlack': this._burst({ dur: 0.15, vol: 0.03, f: 500, f1: 500 }); break;
+      case 'tBlast': this._burst({ dur: 0.5, vol: 0.12, f: 900, f1: 200, q: 0.8 }); this._tone({ f0: 90, f1: 50, dur: 0.35, vol: 0.08 }); break;
+      case 'tClick': this._tone({ type: 'triangle', f0: 1200, f1: 1100, dur: 0.03, vol: 0.03 }); this._burst({ dur: 0.05, vol: 0.02, f: 2000, type: 'bandpass', q: 3, at: 0.02 }); break;
+      case 'tDraw': this._tone({ f0: 180, f1: 420, dur: 0.5, vol: 0.04 }); this._burst({ dur: 0.5, vol: 0.04, f: 1200, f1: 2400, type: 'bandpass', q: 1.5 }); break;
+      case 'tFizz': this._burst({ dur: 0.6, vol: 0.03, f: 3200, f1: 1800, type: 'bandpass', q: 0.7, atk: 0.04 }); break;
+      // story machinery that asked for these names (zeelift, netline, digtest, answer): nothing played before. Short
+      // one-shots (the running loops stay story loops): an electric motor's whirr, a winch's ratchet, a thin stream
+      case 'motor': this._tone({ type: 'sawtooth', f0: 55, f1: 68, dur: 1.1, vol: 0.035, atk: 0.15 }); this._burst({ dur: 1.1, vol: 0.04, f: 900, f1: 1300, type: 'bandpass', q: 4, atk: 0.15 }); break;
+      case 'winch': for (let i = 0; i < 8; i++) this._knock({ f: 520 - (i % 2) * 40, drop: 0.85, dur: 0.03, vol: 0.035, click: 2000, cv: 1, at: i * 0.11 }); this._tone({ type: 'sawtooth', f0: 70, f1: 62, dur: 0.9, vol: 0.025, atk: 0.1 }); break;
+      case 'trickle': for (let i = 0; i < 6; i++) this._tone({ f0: 900 + ((i * 397) % 500), f1: 1300 + ((i * 251) % 400), dur: 0.04, vol: 0.02, at: i * 0.09 }); this._burst({ dur: 0.7, vol: 0.05, f: 2200, f1: 1800, type: 'bandpass', q: 1.5, atk: 0.08 }); break;
       // ---- enemies and danger
       case 'alert': this._tone({ type: 'triangle', f0: 660, dur: 0.08, vol: 0.07 }); this._tone({ type: 'triangle', f0: 990, dur: 0.12, vol: 0.07, at: 0.09 }); break;
       case 'zap': this._tone({ type: 'triangle', f0: 1100, f1: 260, dur: 0.18, vol: 0.06 }); this._burst({ dur: 0.14, vol: 0.05, f: 2000, f1: 700, type: 'bandpass', q: 3 }); break;

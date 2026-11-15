@@ -59,15 +59,15 @@ export function dodgeDist(rel) {
 export const MOVES = {
   jab: { anim: 'punch', s: 0.07, a: 0.08, r: 0.17, reach: 1.35, arc: [0.5, -0.5], dmg: 1, poise: 1, step: 0.3, land: 0.5, sound: 'punch', mat: 'flesh' },
   jab2: { anim: 'punch2', s: 0.07, a: 0.08, r: 0.18, reach: 1.35, arc: [-0.5, 0.5], dmg: 1, poise: 1, step: 0.3, land: 0.5, sound: 'punch', mat: 'flesh' },
-  kick: { anim: 'kick', s: 0.13, a: 0.1, r: 0.3, reach: 1.7, arc: [0.35, -0.35], dmg: 2, poise: 2, step: 0.45, land: 0.5, sound: 'punch', mat: 'flesh' },
+  kick: { anim: 'kick', s: 0.13, a: 0.1, r: 0.3, reach: 1.7, arc: [0.35, -0.35], dmg: 2, poise: 2, step: 0.45, land: 0.5, sound: 'kick', mat: 'flesh' },   // (ACTION-SOUND-2: its own, not the jab's)
   slash1: { anim: 'slash1', s: 0.11, a: 0.1, r: 0.22, reach: 2.05, arc: [1.25, -1.15], dmg: 2, poise: 1, step: 0.45, sound: 'swing' },
   slash2: { anim: 'slash2', s: 0.1, a: 0.1, r: 0.24, reach: 2.05, arc: [-1.2, 1.2], dmg: 2, poise: 1, step: 0.4, sound: 'swing' },
   slash3: { anim: 'slash3', s: 0.19, a: 0.09, r: 0.4, reach: 2.25, arc: [0.3, -0.3], dmg: 3, poise: 3, step: 0.6, sound: 'swingHeavy', heavy: true },
   heavy: { anim: 'heavy', s: 0.1, a: 0.1, r: 0.5, reach: 2.35, arc: [0.35, -0.35], dmg: 4, poise: 4, step: 0.7, sound: 'swingHeavy', heavy: true, guardBreak: true },
   // the Wannie glove (weapons.js): two slower, heavy punches; knock: how hard an enemy is thrown back (m/s);
   // deflect: an enemy bolt in front goes back the way it came; glove: it breaks weak boards (story/arsenal.js)
-  glove1: { anim: 'punch', s: 0.13, a: 0.1, r: 0.28, reach: 1.6, arc: [0.5, -0.5], dmg: 2, poise: 3, step: 0.4, land: 0.5, sound: 'punch', mat: 'flesh', knock: 11, deflect: true, glove: true },
-  glove2: { anim: 'punch2', s: 0.16, a: 0.1, r: 0.42, reach: 1.7, arc: [-0.5, 0.5], dmg: 2, poise: 4, step: 0.5, land: 0.5, sound: 'swingHeavy', mat: 'flesh', knock: 14, deflect: true, glove: true, heavy: true, guardBreak: true },
+  glove1: { anim: 'punch', s: 0.13, a: 0.1, r: 0.28, reach: 1.6, arc: [0.5, -0.5], dmg: 2, poise: 3, step: 0.4, land: 0.5, sound: 'gloveJab', mat: 'flesh', knock: 11, deflect: true, glove: true },
+  glove2: { anim: 'punch2', s: 0.16, a: 0.1, r: 0.42, reach: 1.7, arc: [-0.5, 0.5], dmg: 2, poise: 4, step: 0.5, land: 0.5, sound: 'gloveHeavy', mat: 'flesh', knock: 14, deflect: true, glove: true, heavy: true, guardBreak: true },
 };
 export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'], glove: ['glove1', 'glove2'] };
 export const HEAVY_HOLD = 0.72; // s from the press, holding attack with the sword through the first strike → a heavy strike on release
@@ -336,8 +336,15 @@ export class HeroCombat {
     if (!this.has(w) || w === this.weapon) return;
     h.prevWeapon = this.weapon; h.weapon = w;
     this.combo = 0;
-    if (!silent) { this.g.audio.play('equip'); this.g.hud.weapon?.(h); }
+    if (!silent) { this.equipSound(h.prevWeapon, w); this.g.hud.weapon?.(h); }
     h.showSword?.(w === 'sword');
+  }
+  // ACTION-SOUND-2: what is taken in hand says what it is: the sword drawn (and put away when something else is taken), the
+  // ball's glint, the fists, the glove; the rest (the shooters, the tools) the common 'equip'. Using it is its own sound
+  equipSound(from, to) {
+    const A = this.g.audio, own = { sword: 'swordDraw', ball: 'equipBall', fists: 'equipFists', glove: 'equipGlove' }[to];
+    if (from === 'sword' && to !== 'sword') A.play('swordSheathe');
+    A.play(own || 'equip');
   }
   swap() { const h = this.hero, p = h.prevWeapon; if (p && this.has(p) && p !== this.weapon) this.equip(p); else { const o = this.owned().find((w) => w !== this.weapon); if (o) this.equip(o); else this.g.audio.play('deny'); } }
 
@@ -594,7 +601,7 @@ export class HeroCombat {
       const ey = e.pos.y + (e.hover ?? 0);
       const res = e.melee ? e.melee(D, h) : (e.damage(D.dmg, h.pos), 'hit');
       any = true;
-      g.impact(e.pos.x, ey + 0.6, e.pos.z, res === 'blocked' ? 'armor' : (e.material || 'flesh'), res);
+      g.impact(e.pos.x, ey + 0.6, e.pos.z, res === 'blocked' ? 'armor' : (e.material || 'flesh'), res, 1, D.mat === 'flesh' ? 'fist' : 'blade');   // (ACTION-SOUND-2: a blade through flesh is not a fist's thud)
       // the glove throws them back (after their own reaction, which set a softer knock-back)
       if (D.knock && res !== 'blocked' && e.kb) { const ka = h.angleTo(e); e.kb.set(Math.sin(ka) * D.knock, Math.cos(ka) * D.knock); }
       if (res === 'blocked') { h.kb.set(-Math.sin(h.angle) * 4, -Math.cos(h.angle) * 4); m.t = Math.max(m.t, D.s + D.a); }
@@ -645,7 +652,8 @@ export class HeroCombat {
         if (T.full && !full) g.hud.toast('toast_nomp');
         g.ball.preview?.(null);
         g.ball.launch(h, h.behaviour, h.magicLevel, { charged: full, aim: this.lastAim || aim, target: g.targeting?.throwTarget(this.lastAim || aim) });
-        g.audio.play(full ? 'throwHeavy' : 'throw');
+        // (ACTION-SOUND-2: a throw with no magic left is heard as one: the air only, a falling note; it will not bounce)
+        g.audio.play(full ? 'throwHeavy' : g.ball.magic ? 'throw' : 'throwDud');
       }
       return;
     }

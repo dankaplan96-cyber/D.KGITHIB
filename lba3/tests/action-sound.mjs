@@ -77,8 +77,8 @@ const picks = await ev(() => {
 });
 check('kashes drawn in one by one (a line of six ahead of him): one coin take per kash taken, none merged (at least 3 taken)', picks.askedCoins >= 3 && picks.coins === picks.askedCoins, picks);
 check('a heart: pickLife; a flask: pickMagic (not the refill triad, not each other)', picks.life.includes('pickLife') && !picks.life.includes('heal') && picks.magic.includes('pickMagic') && !picks.magic.includes('pickLife'), picks);
-check('a bin searched with a hop: the rummage, then the bonus popping out', !!picks.r1.id && picks.bin1.includes('rummage') && picks.bin1.includes('bonus'), { r1: picks.r1, bin1: picks.bin1 });
-check('the same bin hopped at again, now empty: no rummage (a plain jump)', !!picks.bin2 && !picks.bin2.includes('rummage'), picks.bin2);
+check('a bin searched with a hop: the rummage (its own kind\'s, ACTION-SOUND-2), then the bonus popping out', !!picks.r1.id && picks.bin1.some((n) => /^rummage(Bin|Barrel|Crate|Case)?$/.test(n)) && picks.bin1.includes('bonus'), { r1: picks.r1, bin1: picks.bin1 });
+check('the same bin hopped at again, now empty: no search rummage (ACTION-SOUND-2: the lighter rummageEmpty at most)', !!picks.bin2 && !picks.bin2.some((n) => /^rummage(Bin|Barrel|Crate|Case)?$/.test(n)), picks.bin2);
 
 // 3. the depot: the ball (ball-close.mjs's setup)
 const depot = await ev(() => {
@@ -120,8 +120,8 @@ const depot = await ev(() => {
 });
 const cnt = (arr, re) => (arr || []).filter((n) => re.test(n)).length;
 const F = depot.fence, E = depot.enemy;
-check('ball at a wall: each bounce sounds as a bounce (wall or ground), never as a hit; one per bounce event at most', !!F && F.thrown && cnt(F.played, /^bounce(Wall|Ground)$/) >= 1 && cnt(F.played, /^bounce(Wall|Ground)$/) <= cnt(F.evs, /^b:/) && !F.played.includes('ballHit'), F);
-check('ball at a wall: the wall bounce has its own sound (bounceWall), not the old shared one', !!F && F.evs.includes('b:wall') ? F.played.includes('bounceWall') && !F.played.includes('bounce') : true, F);
+check('ball at a wall: each bounce sounds as a bounce (by surface: ACTION-SOUND-2), never as a hit; one per bounce event at most', !!F && F.thrown && cnt(F.played, /^bounce\w+$|^ballDud$/) >= 1 && cnt(F.played, /^bounce\w+$|^ballDud$/) <= cnt(F.evs, /^b:/) && !F.played.includes('ballHit'), F);
+check('ball at a wall: the wall bounce has its own sound (a wall\'s: stone, metal or wood, ACTION-SOUND-2), not the old shared one', !!F && F.evs.includes('b:wall') ? cnt(F.played, /^bounce(Wall|Metal|Wood)$/) >= 1 && !F.played.includes('bounce') : true, F);
 check('ball at a wall: one catch when it comes home', !!F && F.home && cnt(F.played, /^catch$/) === 1, F);
 check('ball at the guard: its pling and the material, no bounce at the strike, never the bare "hit"', !!E && E.evs.includes('hit:enemy') && E.played.includes('ballHit') && cnt(E.played, /^hit(Flesh|Machine|Crystal|Stone|Wood)$|^clang$/) >= 1 && !E.played.includes('hit') && !cnt(E.played, /^bounce/), E);
 check('ball at the guard: one catch per throw', !!E && E.home && cnt(E.played, /^catch$/) === 1, E);

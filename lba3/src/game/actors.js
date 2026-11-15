@@ -240,7 +240,9 @@ export class Hero extends Actor {
     const maxSpeed = gait.fwd * (this.speedK || 1);
     const angle0 = this.angle;
     let wanted = 0, classicGround = false;
+    const wasHiding = this.hiding;
     this.hiding = beh === 'discreet' && input.down('action') && this.onGround && !wheel;
+    if (this.hiding && !wasHiding) g.audio.play('hide');   // (ACTION-SOUND-2: cloth drawn in, once as he crouches)
     let wx = 0, wz = 0, turning = 0;
     // one-shot actions (use, pick up, open door, knockdown/get-up) own the body
     if (this.actT > 0) {
@@ -391,6 +393,7 @@ export class Hero extends Actor {
         const s = clamp((0.3 + 0.8 * (fall - 0.3)) * run, 0.3, 1.2);
         if (fall > 0.2 || vf > 6) this.rig.land(s);
         if (vf > 6) { g.audio.play('land'); g.audio.play('step-' + (g.surfaceAt?.(this.pos) || 'stone')); }   // (ACTION-SOUND: the thud and the surface's grain)
+        else if (fall > 0.25) g.audio.play('landSoft');   // (ACTION-SOUND-2: a step down off a ledge: a light double tap, not silence)
         if (fall > 0.9 || vf > 6) g.particles.burst(this.pos.x, this.pos.y + 0.05, this.pos.z, '#b8a888', 8 + Math.round(6 * s), 1.2);
       }
       if (this.jumpBuf > 0 && beh === 'athletic' && !this.sliding) this.jump();
@@ -411,7 +414,8 @@ export class Hero extends Actor {
     if (this.onGround && this.speed > 0.5) {
       this.stepAcc += this.speed * dt;
       const stride = beh === 'athletic' ? 1.4 : 0.9;
-      if (this.stepAcc > stride) { this.stepAcc = 0; if (beh !== 'discreet') g.audio.play('step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
+      // (ACTION-SOUND-2: Discreet tiptoes: a soft pat far under a step, so sneaking is heard as sneaking, not as silence)
+      if (this.stepAcc > stride) { this.stepAcc = 0; g.audio.play(beh === 'discreet' ? 'step-sneak' : 'step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
     }
 
     // behaviour action (Space / A): jump (Athletic), talk (Normal); Aggressive attacks through the combat
@@ -839,7 +843,10 @@ export class Hero extends Actor {
     n *= g.combatDir?.diff.dmg ?? 1;
     n *= g.gadgets?.damageK() ?? 1;   // (the protection spell: gadgets.js)
     this.combat.reset();
+    const low = this.maxHp * 0.3, wasLow = this.hp <= low;
     this.hp -= n;
+    // (ACTION-SOUND-2: two low heartbeats as his life falls under a third, once per fall: the hearts' HUD shows then too)
+    if (!wasLow && this.hp <= low && this.hp > 0) g.audio.play('lowLife');
     this.invuln = 1.1;
     this.hurtT = 0.4;
     if (this.rig.anim === 'hurt') this.rig.actionT = 0;   // (a second blow restarts the reaction)
@@ -1368,7 +1375,7 @@ export class MagicBall {
     return false;
   }
   canRecall() { return this.state === 'fly' && this.life > 0.2; }
-  recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.game.audio.play('recall'); } }
+  recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.homeSnd = true; this.game.audio.play('recall'); } }
   // back in the pocket, now. `silent` only mutes the catch; what it carries is settled by `carry`:
   //  'credit' (a catch, a scene change): the bonus is Twinsen's, exactly once;
   //  'drop' (a load, a reset of the world): the bonus is let go where the ball is, nobody gets it.
@@ -1384,7 +1391,31 @@ export class MagicBall {
     this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
     this.track = false; this.span = TRAIL_SPAN; this.halo.visible = false; if (silent) this.sn = 0; // (a catch lets the trail drain; a reset clears it)
     this.preview(null);
-    if (!silent) this.game.audio.play('catch');
+    // (ACTION-SOUND-2: one catch per throw, whatever brings it home and however often: `caught` is the throw's own,
+    //  set again only by a new launch)
+    if (!silent && !this.caught) this.game.audio.play('catch');
+    this.caught = true;
+  }
+  // ACTION-SOUND-2: on its way home by itself (not called back, not carrying a bonus, which have their own sounds), once
+  // per throw, and only from further off than a catch a moment later would cover
+  homeCue() {
+    if (this.homeSnd || this.carry) return;
+    this.homeSnd = true;
+    const h = this.game.hero;
+    if (Math.hypot(this.pos.x - h.pos.x, this.pos.z - h.pos.z) > 3) this.game.audio.play('ballReturn', this.pos);
+  }
+  // ACTION-SOUND-2: what the ball struck, for its bounce: a wall's collider (a fence or railing is metal; a post, a trunk,
+  // a planter box wood; a metal room's walls metal; any other wall stone) or the ground under it (the footsteps' surface)
+  surface(kind, at) {
+    const g = this.game;
+    if (kind === 'wall') {
+      const c = at && g.physics.solidCollider?.(at.x, at.z, at.y, BALL_R);
+      if (c?.mat) return c.mat;
+      if (c?.seeThrough) return 'metal';
+      if (c && (c.type === 'cyl' || c.block)) return 'wood';
+      return g.surfaceAt?.(this.pos) === 'metal' && g.room ? 'metal' : 'stone';
+    }
+    return g.surfaceAt?.(this.pos) || 'grass';
   }
   // a scene change credits a carried bonus; a load or a world reset lets it go ('drop')
   reset(carry = 'credit') { this.toHand(true, carry); }
@@ -1491,6 +1522,7 @@ export class MagicBall {
     this.life = 0; this.retT = 0;
     this.hits = new Set();
     this.history = [];
+    this.caught = false; this.homeSnd = false;   // (ACTION-SOUND-2: this throw's catch and way home, each heard once)
     this.mesh.visible = true;
     this.mesh.scale.setScalar(charged ? 1.3 : 1);
     this.setGlow(charged ? 4 : 2.2);
@@ -1536,6 +1568,7 @@ export class MagicBall {
     this.shadow.visible = this.state === 'fly' || this.state === 'return' || this.state === 'impact';
     if (this.state === 'inhand') { this.followHand(); return; }
     if (this.state === 'idle' || this.state === 'held') return;
+    const was = this.state;
     if (this.reseat) {
       // the release frame: the ball leaves the hand as it is posed NOW (this frame's rig update has run) and has not
       // flown yet (it was released at the pose, not a frame earlier and then flown a whole frame on)
@@ -1577,6 +1610,7 @@ export class MagicBall {
       // home at ~10 m/s like the original's, speeding up so a far miss doesn't keep Twinsen waiting
       this.pos.addScaledVector(d.normalize(), Math.min(len, (10 + this.retT * 22) * dt));
     }
+    if (was !== 'return' && this.state === 'return') this.homeCue();
     this.mesh.position.copy(this.pos);
     placeBlobShadow(this.shadow, P, this.pos.x, this.pos.y, this.pos.z);
   }
@@ -1677,13 +1711,13 @@ export class MagicBall {
       const bx = P.solidAt(nx, this.pos.z, y, BALL_R), bz = P.solidAt(this.pos.x, nz, y, BALL_R);
       if (bx || !bz) this.vel.x *= -1;
       if (bz || !bx) this.vel.z *= -1;
-      this.bounce('wall');
+      this.bounce('wall', { x: nx, z: nz, y });
     } else { this.pos.x = nx; this.pos.z = nz; }
     this.pos.y += this.vel.y * h;
     const gi = P.groundInfo(this.pos.x, this.pos.z, this.pos.y + 0.3), gy = gi.h + 0.17;
     if (this.pos.y < gy) {
       // into the sea (open terrain at sea level; a room's floor at height 0 is a floor)
-      if (gy < 0.2 && !gi.brick && !this.game.room) { this.state = 'return'; this.retT = 0; return; }
+      if (gy < 0.2 && !gi.brick && !this.game.room) { this.state = 'return'; this.retT = 0; g.audio.play('ballSplash', this.pos); g.particles.burst(this.pos.x, gy, this.pos.z, '#cfe8ff', 6, 1.6); return; }
       this.pos.y = gy;
       this.vel.y = this.lift; // (the arc starts again from the behaviour's own Vy, as LBA2's BounceExtra does)
       this.bounce('ground');
@@ -1754,10 +1788,15 @@ export class MagicBall {
     this.vel.y += (wantVy - this.vel.y) * Math.min(1, dt * 5);
   }
 
-  bounce(kind) {
+  bounce(kind, at = null) {
     this.bounces--;
     const g = this.game;
-    g.audio.play(kind === 'ground' ? 'bounceGround' : 'bounceWall', this.pos);   // (one per bounce: two contacts in one step merge)
+    // (one per bounce: two contacts in one step merge. ACTION-SOUND-2: the surface's knock under the ball's chirp; with no
+    //  magic the one contact is a dull knock with no chirp: it comes straight back)
+    const S = this.surface(kind, at);
+    this.lastSurface = S;
+    const snd = !this.magic ? 'ballDud' : S === 'metal' ? 'bounceMetal' : S === 'wood' ? 'bounceWood' : kind === 'wall' ? 'bounceWall' : S === 'stone' ? 'bounceStone' : 'bounceGround';
+    g.audio.play(snd, this.pos);
     g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);
     this.flash(this.pos.x, this.pos.y, this.pos.z, 0.35, false);
     if (this.bounces < 0) { this.state = 'return'; this.retT = 0; }

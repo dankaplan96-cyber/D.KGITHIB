@@ -359,12 +359,7 @@ export class Weapons {
     this.updateHeld();
   }
   reset() { this.shots.clear(); for (const A of this.arcs) this.game.scene.remove(A.grp); this.arcs = []; }
-  // our own synthesised sounds (the engine's tone and noise voices)
-  sound(kind) {
-    const au = this.game.audio;
-    if (!au?.ctx || au.ctx.state !== 'running') return;
-    if (kind === 'dart') { au._burst({ dur: 0.08, vol: 0.12, f: 2600, f1: 900, type: 'bandpass', q: 2 }); au._tone({ type: 'triangle', f0: 700, f1: 420, dur: 0.05, vol: 0.03 }); }
-    if (kind === 'laser') { au._tone({ type: 'sawtooth', f0: 1900, f1: 520, dur: 0.16, vol: 0.05 }); au._tone({ type: 'sine', f0: 2600, f1: 1400, dur: 0.12, vol: 0.04 }); }
-    if (kind === 'lightning') { au._burst({ dur: 0.35, vol: 0.28, f: 4200, f1: 600, type: 'bandpass', q: 0.8 }); au._tone({ type: 'square', f0: 140, f1: 60, dur: 0.3, vol: 0.06 }); }
-  }
+  // our own synthesised sounds (the engine's tone and noise voices). ACTION-SOUND-2: played through AudioEngine.play as
+  // every other effect (its gaps, the count of voices, the round-robin, the stats the tests read); the voices are there
+  sound(kind) { this.game.audio?.play?.({ dart: 'wDart', laser: 'wLaser', lightning: 'wLightning' }[kind]); }
 }
