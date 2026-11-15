@@ -129,9 +129,49 @@ Bot route: chapter 4's start to the plaza 73 s, the plaza to the court 12 s. The
 200 words a minute), plus throws: about **8–15 min** for a first play that finds it, skill varying most (narrow windows
 of 4–9°). Not calibrated against anyone.
 
-## Tests
+## Tests (Automated runtime only)
 
-(filled in with the run's results)
+Snapshot of the worktree served from `/dev/shm/t994` (python http.server on 127.0.0.1; port 8997, as 8994 was already
+taken by another worker's server), headless Chromium on SwiftShader, 960×540, one suite at a time on a shared machine
+(load 17–27, four or five other suites running; the memory cgroup killed Chromium renderers every minute or two).
+
+| Suite | Result | Note |
+|---|---|---|
+| `off-the-wall` (new) | PASS (24) | see below. Earlier runs: six ended with "Target crashed" (the machine's memory cgroup killing renderers: dmesg) at different steps, none at a check; one ended on a test bug (a node-side helper called in the page: fixed); one FAILed the text check on two lines of four sentences (shortened); one lost its server (the 2 h limit) after all main checks passed |
+| `depth-1` | PASS (29) | the registry check updated: ISL-1, HAM-1 and U-3 built; DES-1, HAM-3, UND-1 unbuilt |
+| `desert-bar` | PASS (18) | |
+| `desert-life` | PASS (30) | first run: renderer killed (memory), rerun PASS |
+| `ball-close` | PASS (6) | |
+| `action-sound-2` | PASS (40) | the ball's bounce by surface: unchanged by the `contacts` record |
+| `place-scan` | PASS (3) | no finding on the court (desert: 17 findings, all elsewhere and by design); first run: renderer killed, rerun PASS |
+| `save-migration` | PASS (27) | slow under the load: the 90 min limit cut its first run at its last fixture; rerun with a 115 min limit: PASS |
+| `chapter1` | PASS (32) | smoke check |
+| `purposes` | not completed | the School's plaza people (an extra, not in the brief's list): two runs, the renderer killed both times (memory), the second after 12 checks passed and none failed, past its arrival on Desert Island in chapter 4 |
+
+`tests/off-the-wall.mjs` covers, by input (arrow keys, E, F, the pause menu; the bot turns on the spot to an angle it
+measured with `flight()`, then throws with F): chapter 4 on Desert Island by flags (ISO); Tali at her bell, the board
+lying, no `dx_ow_` state; the walk from the plaza to the court (12.2 game seconds); a straight throw before the rule
+("Not straight at my bell!"); her rule and demonstration (her ball rings the bell); game 1: a straight hit refused, a
+miss counted, the ring off the wall (window 5–6.5°) and the bell carried out; **Save & quit → Continue** mid-way (game 2
+kept); game 2: a rebound that touched the sand refused, a clean one from closer (window 7.5–8°), the board stood up;
+game 3 her way from her ring (window 3.5°: "That's my way!", Twinsen's question, "Show me"), then off the board (window
+9–10°): the surprise, the board carried into the court, the crystal tossed and picked up once; the court: board and bell
+carried to their next spots by him (E), a ring counted under his name, a straight one not; the ball emptied of magic by
+throws, a dud throw and her word on it, her top-up; **game 3 the other way** (a fresh state by flags): the board first,
+the surprise at once; **chapters 7, 10 and the epilogue** by flags: the court as he left it, her line for each, her own
+throw ringing the bell; the text scan (68 keys: English, no night, evening, tonight, sunset, dawn or dusk, no line over
+three sentences); **old saves** from before this change: `base-07-dig` (chapter 4 on the island), `new-13-desert`
+(chapter 10 on the island), `base-12` (chapter 9 on Zeelich): in play, no `dx_ow_` state made up, Tali at her bell, the
+game not started. Not run by input: Death → Retry (the court has no danger; a Retry reloads the autosave, whose flags
+the load rules above settle); Modern controls with the mouse (the suite throws in Classic, along his facing).
+
+Captures (`captures/off-the-wall/`, play camera, deviceScaleFactor 1, about 0.3 MB): 01 Tali and her court before the
+game (the ring, the bell, the red X, the board lying with her score); 02 a rebound in flight (game 1's winning throw just
+off the X, the bounce's flash on the wall, on its way to the bell); 03 the board moved into the court (TALI 31, JOSS 2,
+TWINSEN 1); 04 chapter 7: the court as he left it, his score, the court's toast. Looked at: the first bell was too small
+to read from the play camera (made 1.6× bigger); her white chalk X vanished on the whitewash (red chalk now); the lying
+board's chalk read sideways (turned to face the camera); the chalk was small (larger). The walls, the bell and where to
+stand (the ring) read in all four.
 
 ## Left for a human to judge
 
