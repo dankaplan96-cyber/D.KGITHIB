@@ -39,6 +39,7 @@ jobs:
           - os: ubuntu-latest
             target: linux
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: lba3/desktop
@@ -68,6 +69,9 @@ jobs:
 
   release:
     needs: build
+    # (a cancelled or failed leg — macOS runners sometimes never start — must not hold back the Windows installer: release
+    #  whatever was built)
+    if: ${{ always() && !cancelled() && needs.build.result != 'skipped' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
