@@ -32,7 +32,7 @@ export const SPOTS = {
 };
 export const SPOT_IDS = Object.keys(SPOTS);
 const ZEELICH_O = { x: 2400, z: 0 };
-const EAST_X = 37.6;   // (zeelich.js GATE.x 37.2: the shield gate onto the project's drill platform)
+const EAST_X = 35.5;   // (zeelich.js GATE.x 37.2: the shield gate onto the project's drill platform, and the platform: their batch starts at the gate)
 // Nara's flower house (zeelich.js HOUSES[2]: the octagonal hall), its door, the step before it
 export const NARA = { x: -11, front: -8.1, door: { x: -11, z: -7.35 } };
 // Ysel's camera on its tripod, west of the door between it and the lamp; she stands behind it, facing the street

@@ -655,6 +655,11 @@ DES-2 is folded into it and not built on its own: one rebound school, Tali's, be
 crystal slot (`sc-trial`) is her prize (Rector Hougo's), so 9 of 12 crystals can be had in play. Not paired: DES-1 (the
 figures' cache) is on the same island but shares no file or place with the court; it stays for a later pass.
 
+**U-4 built** (16.11.2026; `docs/lba-maturity/U4-TWELVE-YEARS-LATE.md`, `tests/twelve-years-late.mjs`; Automated runtime
+only). On Zeelich's street (no post office there: the council's post, Oma's board). The old pictures are rendered from the
+game at runtime (no image files): the card's, and Ysel's album at Clinic Row, the West Pier and Citadel's harbour. Not
+paired: ZEE-1 (the misrouted heat) shares the street but not the quest's files or people; it stays for a later pass.
+
 **Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
 proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
 is re-checked against rule 3 before it is built; one that only pays "a crystal" gets a lasting change or is dropped.
