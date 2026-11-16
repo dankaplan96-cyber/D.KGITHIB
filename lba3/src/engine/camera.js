@@ -203,6 +203,34 @@ const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
 // G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
 // CH_KEEP_EASE s instead of flattening in the frame, its look-at point drawn no nearer than CH_KEEP_K of the way
 const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
+// CAM-STEADY (tests/camsteady.mjs, the Follow camera's reversals of height, tilt and heading):
+//  - CH_IN_KEEP: the arm comes in toward the least arm wanted over the last CH_IN_KEEP s. The wanted arm read along a
+//    house flickers by metres frame to frame (5.6, 10.0, 7.5, 6.9 m), and the in-cut, which stops in a frame (CH_IN_A),
+//    went in, stopped, went in: with the ground's lift rising meanwhile the camera's height bobbed up and down within
+//    0.1-0.3 s. Out it goes only after CH_HOLD as before, so this only keeps the way in one smooth move.
+//  - CH_OVER_RATE_OUT: leaving over his head, the arm under it starts from the length shown, not from the shorter arm
+//    it held beneath (walking off a turn by Bug Street's pair it rose over his head and came back down within 0.6 s, the
+//    arm first in from 3.9 to 3.2 m and then out again); it comes down out of it over 1 / CH_OVER_RATE_OUT s (0.25 s before),
+//    and the arm under it lets out only CH_OVER_SETTLE s after it has: the camera came down and went straight back up;
+//    over his head, turning, a lower tilt waits CH_OVER_Q_HOLD s and a higher one CH_OVER_Q_UP s unless he is out of
+//    sight (turning on the spot by a house the least tilt that sees him changed with the heading for a frame or two,
+//    the camera bobbing by inches). CH_HIGH_HYST: the risen longer arm (CH_HIGH_*) is left for the low
+//    one only when that is this much longer than CH_WALK_KEEP (the two took turns as the low arm read 4.4 / 4.5 m).
+//  - CH_EL_MAX_DOOR: just out of a door, held at his back (CAM-DOORS) over the house's roof, the view looks down no
+//    steeper than this (CH_EL_MAX elsewhere), his chest still kept CH_EL_KEEP_DOOR inside the frame's foot: out of
+//    Twinsen's door it stood at 46° for 3.3 s. Held at his back, the door's rule lets go while he stands only when the
+//    view is pressed against what is behind him (over his head at MIN-VIEW's least, the spaceport's hull): from the
+//    roof-high view out of the house it swung 60° round him while he stood still.
+//  - CH_BACK_WAIT: a swing taken while he walked comes back while the chase turns the same way, or once the chase has
+//    stood still CH_SW_STILL s, or after CH_BACK_WAIT s at the most — no longer at once against the chase's own turn (the
+//    view went out one way and straight back the other: heading reversals over his own on the pier, the door route and
+//    the Modern street). A walk's swing out against the chase's turn waits until the chase turns slower than
+//    CH_WALK_OUT_V rad/s (0.5 before: walking round a house's corner the view swung out 50° one way while the chase still
+//    turned him the other).
+//  - CH_WALK_SEE: walking on ahead with his back blocked, no look round when his back is clear at the whole arm at
+//    either of these times on along his walk (_walkClears): he walks clear of it. CH_SW_PART: walking, a new swing the
+//    same way as the one under way and less than this short of it keeps the one it has.
+const CH_IN_KEEP = 0.25, CH_OVER_RATE_OUT = 2, CH_OVER_SETTLE = 0.3, CH_OVER_Q_HOLD = 0.5, CH_OVER_Q_UP = 0.15, CH_WALK_OUT_V = 0.2, CH_WALK_SEE = [0.5, 1.0], CH_SW_PART = 0.26, CH_HIGH_HYST = 1.0, CH_EL_MAX_DOOR = (43.5 * Math.PI) / 180, CH_BACK_WAIT = 1.0;
 const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96, CH_DIP_V = 1.0, CH_DIP_A = 5, CH_PREDIP = -0.25;
 // the candidates, cheapest first: [swing, rise, cost]; at the full arm and 0.8 of it every swing to CH_SW_MAX; shorter, a
 // coarser set to CH_SW_FAR (every other swing, a rise and the dips)
@@ -949,6 +977,18 @@ export class CameraRig {
     return Infinity;
   }
 
+  // CAM-STEADY: walking on as he walks now, is his back clear at the whole arm CH_WALK_SEE s on, either of them (the view
+  // at his back there seeing him, _chaseOK)?
+  _walkClears(C, T, yaw0, full, pq, heroV, dt) {
+    if (!C.pT) return false;
+    for (const s of CH_WALK_SEE) {
+      const k = s / dt, ox = (T.x - C.pT.x) * k, oz = (T.z - C.pT.z) * k;
+      const T2 = (C._wT ??= new THREE.Vector3()).set(T.x + ox, T.y, T.z + oz), H2 = (C._wH ??= new THREE.Vector3()).set(heroV.x + ox, heroV.y, heroV.z + oz);
+      if (this._chaseOK(T2, yaw0, full, pq(full, 0), H2) >= 0) return true;
+    }
+    return false;
+  }
+
   // CAM-CLEAR-2: the swing and the rise this frame (C.sw, C.rise toward their goals; see CH_SW_*). dyc: how far the
   // chase's own heading turned this frame (the whole view's turn stays within vmax)
   _chaseClear(dt, C, T, yaw0, full, pq, heroV, fresh, lock, dyc, vmax, backArm = null) {
@@ -978,7 +1018,9 @@ export class CameraRig {
       // round the old mill — it looks round that heading at once, before the turn draws the arm in: _chase waits for it)
       // (neither while he is still turning: round a heading that moves on each search it chose one way and then the
       // other — away from Tarra's door the view swung 40° out, back and 30° out the other way within the turn)
-      const deepGo = Math.abs(C.vyaw) < CH_TURN_V && ((deep && C.deepT >= ((C.want ?? full) <= CH_MIN_VIEW + 0.3 ? CH_WALK_T0 : CH_WALK_T)) || (b0 < 0 && Math.abs(angleDiff(C.yaw, yaw0)) > CH_TURN_SRCH));
+      // (CAM-STEADY: stepping back toward the view, MIN-VIEW's quicker look round waits as long as any other: off the pier's
+      // end the walk began with a step back, and the swing it chose came straight back as he walked on)
+      let deepGo = Math.abs(C.vyaw) < CH_TURN_V && ((deep && C.deepT >= ((C.want ?? full) <= CH_MIN_VIEW + 0.3 && !(walking && !ahead) ? CH_WALK_T0 : CH_WALK_T)) || (b0 < 0 && Math.abs(angleDiff(C.yaw, yaw0)) > CH_TURN_SRCH));
       // CAM-KEYWALK (the user on Follow, Medium: "the camera lost balance and is not behind Twinsen"): walking a steady way
       // with his back blocked at the whole arm, the view keeps to his back while that still gives CH_WALK_KEEP m or more of
       // arm that sees him (risen over the wall behind him included, armFor's `high`): no swing round him, and a swing
@@ -991,6 +1033,10 @@ export class CameraRig {
       C.kbG = keep0 ? CH_WALK_GRACE : Math.max(0, (C.kbG || 0) - dt);
       const backKeep = keep0 || (!!kr && C.kbG > 0 && C.kbT > 0);
       this.why.kb = kr ? kr[0] * (kr[1] ? 1 : -1) : 0;   // (tests/lib/camwalk.js traces it)
+      // (CAM-STEADY: walking, a turn toward a heading whose back still gives CH_WALK_KEEP m of arm that sees him is no
+      // reason to look round at once — the arm comes in a little there: with Modern controls each 45° step of the stick
+      // turned the chase, a 10° swing was taken and came back, and the view turned more often than he did)
+      if (deepGo && walking && !deep && !fresh && !lock && !C.door && backArm) { const r = kr ?? backArm(yaw0); if (r[1] && r[0] >= CH_WALK_KEEP) deepGo = false; }
       C.kbT = backKeep ? (C.kbT || 0) + dt : 0;
       if (base) C.srch = null;
       // (CAM-STAIRS: a swung view drawn in past CH_COOL_ARM of the arm while his back stands clear at the full arm goes
@@ -1017,6 +1063,12 @@ export class CameraRig {
         && (fresh || C.srch || !(C.swGoal || C.riseGoal) || !((C.clk ?? 0) - (C.swAt ?? -1e9) < CH_SW_MIN))) {
         // (a few candidates a frame — CH_SEARCH_N —, all at once for a new shot behind the fade; only those cheaper by
         // CH_K_KEEP than keeping the view it has)
+        // (CAM-STEADY: walking on ahead, away from what blocks his back, with no swing taken: when his back is clear at the
+        // whole arm half a second or a second on along his walk (CH_WALK_SEE), it does not look round — he walks clear of it, and the swing out and
+        // back added two turns of the view to his own: off the harbour pier's end, round the corner by Twinsen's house)
+        // (a search begun while he still turned on the spot, done once he walks so, is let go the same way)
+        if (!fresh && ahead && !C.swGoal && !C.riseGoal && this._walkClears(C, T, yaw0, full, pq, heroV, dt)) { C.searchT = CH_SEARCH_T; C.srch = null; }
+        else {
         if (fresh || !C.srch) {
           const keep = C.swGoal === 0 && C.riseGoal === 0 ? (b0 >= 0 ? b0 : Infinity) : fresh ? Infinity : this._chaseKeep(T, yaw0, C.swGoal, C.riseGoal, full, pq, heroV, ahead);
           C.srch = { fi: 0, ci: 0, maxSw: backKeep ? CH_WALK_SW : Infinity, walk: ahead, best: keep < Infinity ? { keep: true, cost: keep - CH_K_KEEP, k0: keep } : null };
@@ -1026,9 +1078,13 @@ export class CameraRig {
           C.srch = null;
           // (kept at the full arm, it looks again less often)
           C.searchT = b?.keep && b.k0 - Math.abs(C.swGoal) * CH_K_SW - Math.abs(C.riseGoal) * CH_K_RISE < 0.5 ? CH_SEARCH_T * 4 : CH_SEARCH_T;
+          // (CAM-STEADY: walking, a new swing the same way as the one under way and a little less of it keeps the one it
+          // has: 0.87 → 0.70 rad turned the view back 8° for nothing)
+          if (b && !b.keep && !fresh && walking && b.sw && Math.sign(b.sw) === Math.sign(C.sw) && Math.abs(b.sw) < Math.abs(C.sw) && Math.abs(C.sw) - Math.abs(b.sw) < CH_SW_PART) b.sw = C.sw;
           if (b && !b.keep) { C.swGoal = b.sw; C.riseGoal = b.rise; C.swCost = b.cost; C.walkSw = walking || deep; C.swAt = C.clk ?? 0; }
           else if (b) C.swCost = b.k0;
           else { C.swGoal = 0; C.riseGoal = 0; C.swCost = Infinity; }   // (nothing clear round him: at his back, the arm comes in)
+        }
         }
       }
     }
@@ -1053,8 +1109,11 @@ export class CameraRig {
       // no turn of his; and it goes out once the chase has all but settled — waiting for it to stand quite still held the
       // view at the school's wall 0.6 s more)
       if (C.swGoal === 0 && Math.abs(C.sw) < 0.01) C.walkSw = false;
-      const hold = back ? !cut && !settle && !C.walkSw && (!moving || (C.turnDir && Math.sign(e) !== C.turnDir))
-        : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL && !(C.walkSw && Math.abs(C.vyaw) < 0.5);
+      // (CAM-STEADY: a walk's swing too waits for the chase to stand still or turn its way, CH_BACK_WAIT s at the most)
+      const walkBack = C.walkSw && (C.stillT >= CH_SW_STILL || (C.backT || 0) >= CH_BACK_WAIT);
+      const hold = back ? !cut && !settle && !walkBack && (!(moving || C.walkSw) || (C.turnDir && Math.sign(e) !== C.turnDir))
+        : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL && !(C.walkSw && Math.abs(C.vyaw) < CH_WALK_OUT_V);
+      C.backT = back && hold ? (C.backT || 0) + dt : 0;
       // (CAM-ALLEY: standing with the view over his head — his back to a wall, in an alley — the swing out to a clear view
       // goes at CH_SW_V_OVER: at CH_SW_V a quarter turn took 1.6 s more over his head, pressed against the meter's wall)
       const over = (C.overK ?? 0) >= 1 && !moving && Math.abs(C.swGoal) > Math.abs(C.sw), vS = over ? CH_SW_V_OVER : CH_SW_V, aS = over ? CH_SW_A_OVER : CH_SW_A;
@@ -1119,7 +1178,7 @@ export class CameraRig {
       C.doorOutT = Math.max(0, (C.doorOutT || 0) - dt);
       // (CAM-WALKSWING: or, standing there, held over his head at MIN-VIEW's least CH_DOOR_STAY s: off the ship at the
       // spaceport, its hull at his back, the view stayed pressed against it for as long as he stood)
-      if (C.door && (C.door.t += dt) > CH_DOOR_T && (Math.hypot(hero.x - C.door.x, hero.z - C.door.z) > CH_DOOR_R || (C.door.t > CH_DOOR_STAY && ((C.want ?? Infinity) <= CH_MIN_VIEW + 0.05 || C.overK >= 1)))) C.door = null;
+      if (C.door && (C.door.t += dt) > CH_DOOR_T && (Math.hypot(hero.x - C.door.x, hero.z - C.door.z) > CH_DOOR_R || (C.door.t > CH_DOOR_STAY && ((C.want ?? Infinity) <= CH_MIN_VIEW + 0.05 || (C.overK >= 1 && (C.overArm ?? Infinity) <= CH_MIN_VIEW + 0.05))))) C.door = null;   // (CAM-STEADY: pressed at MIN-VIEW only, CH_EL_MAX_DOOR)
     }
     // the heading: his facing (a small steering correction inside CH_DEAD_YAW moves nothing) through the spring;
     // camera-relative controls pushed back (toward the camera) hold it
@@ -1209,7 +1268,8 @@ export class CameraRig {
       const far = cut >= CH_MIN_VIEW ? tiers(cut, CH_MIN_VIEW) : null;
       // (CAM-KEYWALK: a short one — under CH_WALK_KEEP — is taken only when the risen longer arm below has nothing a metre
       // longer: by the station yard's wall the two took turns frame by frame, the view pumping 3.2 → 6.4 → 3.2 m)
-      if (far?.[1] && (!high || far[0] >= CH_WALK_KEEP)) return far;
+      // (CAM-STEADY: held over his head on the risen arm, the low one takes over only CH_HIGH_HYST m past the bar)
+      if (far?.[1] && (!high || far[0] >= CH_WALK_KEEP + ((C.overK ?? 0) > 0 && C.overHigh ? CH_HIGH_HYST : 0))) return far;
       // CAM-KEYWALK: before over his head at MIN-VIEW, a longer arm risen over what stands behind him (a terrace's wall,
       // the hostel's portico): the longest of CH_HIGH_ARMS (within the arm) at the least of CH_HIGH_P that stands clear
       // and sees him. The terrace before the hostel is 7 m deep under the fort's wall: walking south from the door the arm
@@ -1260,6 +1320,7 @@ export class CameraRig {
       // (also where it will be CH_LEAD s on, turning and walking: a swing toward a wall, a walk past a corner start
       // drawing it in before the wall is between them)
       let [want, seen, tier, overQ, overArm] = armFor(yaw, T, true); const over = tier === 2;
+      if (over) C.overHigh = CH_HIGH_ARMS.includes(overArm);   // (CAM-STEADY: the risen longer arm, CH_HIGH_HYST)
       // (CAM-KEYWALK: what the look-ahead reads draws the arm in no shorter than MIN-VIEW's: turning on the spot by the
       // hostel's portico, a heading the turn was still on its way to read 1.6 m, and the arm came in to it at his shoulder
       // where the heading it stood at had 3.2 m over his head — 0.9-1.4 m, "zoomed in on Twinsen". The heading reached,
@@ -1269,6 +1330,13 @@ export class CameraRig {
       const own = want, ahead = (r) => (over ? own : Math.max(r[0], Math.min(own, CH_MIN_VIEW)));
       // (CAM-KEYWALK: over his head the arm lets out no faster than CH_OUT_V, as the arm itself: the risen arm's lengths
       // differ by metres — 3.2 to 6.5 —, and the eased change took them at 18 m/s; in, as before; and into it from the arm it had, not from the longer arm at once)
+      // (CAM-STEADY: over his head, turning, a lower tilt is taken once it has been wanted CH_OVER_Q_HOLD s; a higher one
+      // once wanted CH_OVER_Q_UP s, or at once when the camera where it stands does not see him)
+      if (over && !fresh && C.overK > 0 && C.overQ != null) {
+        C.oqLowT = overQ < C.overQ - 1e-3 && Math.abs(C.vyaw) > 0.3 ? (C.oqLowT || 0) + dt : 0;
+        C.oqHiT = overQ > C.overQ + 1e-3 ? (C.oqHiT || 0) + dt : 0;
+        if ((C.oqLowT > 0 && C.oqLowT < CH_OVER_Q_HOLD) || (C.oqHiT > 0 && C.oqHiT < CH_OVER_Q_UP && this._sees(cam.position, hero))) overQ = C.overQ;
+      } else C.oqLowT = C.oqHiT = 0;
       if (over) { C.overQ = fresh || !(C.overK > 0) ? overQ : damp(C.overQ, overQ, 6, dt); const oa0 = C.overArm ?? overArm, oa1 = fresh ? overArm : !(C.overK > 0) ? Math.min(overArm, C.arm ?? overArm) : damp(oa0, overArm, 6, dt); C.overArm = fresh || !(C.overK > 0) ? oa1 : Math.min(oa1, oa0 + CH_OUT_V * dt); }
       let wa = Infinity;   // (what the look-ahead reads: below)
       C.walkNow = false;
@@ -1341,22 +1409,34 @@ export class CameraRig {
       // step past a corner of the eaves doesn't bob it up and down)
       C.overT = over ? (C.overT || 0) + dt : 0;
       const goOver = over && (C.overT >= CH_OVER_T || C.overK > 0 || !this._sees(cam.position, hero));
-      C.overK = fresh ? (over ? 1 : 0) : clamp((C.overK || 0) + (goOver ? 1 : -1) * CH_OVER_RATE * dt, 0, 1);
-      if (fresh || C.arm == null) { C.arm = want; C.armV = 0; }
-      else if (want < C.arm - 0.005) {
+      // (CAM-STEADY: leaving, the arm under it starts from the length shown, and lets out only CH_OVER_SETTLE s after over
+      // his head is left: let out meanwhile, it took the camera out along the steep tilt as it left — up 1.2 m and back
+      // down within 0.25 s)
+      if (!fresh && !goOver && C.overK > 0 && C.arm != null && want > C.arm) C.arm = Math.min(want, Math.max(C.arm, lerp(C.arm, C.overArm ?? CH_OVER_ARM, smoothstep(0.4, 1, C.overK))));
+      if (!fresh && C.overK > 0) C.clearT = 0;
+      C.offT = fresh ? CH_OVER_SETTLE : C.overK > 0 ? 0 : (C.offT ?? CH_OVER_SETTLE) + dt;
+      C.overK = fresh ? (over ? 1 : 0) : clamp((C.overK || 0) + (goOver ? CH_OVER_RATE : -CH_OVER_RATE_OUT) * dt, 0, 1);
+      // (CAM-STEADY: in toward the least arm wanted over the last CH_IN_KEEP s, CH_IN_KEEP)
+      C.inT = Math.max(0, (C.inT || 0) - dt);
+      if (!fresh && C.arm != null && want < C.arm - 0.005) { C.inGoal = C.inT > 0 ? Math.min(C.inGoal, want) : want; C.inT = CH_IN_KEEP; }
+      const wIn = !fresh && C.inT > 0 && C.inGoal < want ? C.inGoal : want;
+      if (fresh || C.arm == null) { C.arm = want; C.armV = 0; C.inT = 0; }
+      else if (wIn < C.arm - 0.005) {
         // in: quickly (≤ CH_IN_V), eased in and out (CH_IN_A: it can always stop on the arm it wants, never past it)
         C.clearT = 0; C.quick = false;
         // (CAM-RECOVER: when the last two cuts in of more than a metre began)
-        if (!C.cutting && C.arm - want > 1) { C.cutting = true; C.cut0 = C.cut1; C.cut1 = C.clk; }
-        const vw = -Math.min(CH_IN_V, Math.sqrt(2 * CH_IN_A * (C.arm - want)));
+        if (!C.cutting && C.arm - wIn > 1) { C.cutting = true; C.cut0 = C.cut1; C.cut1 = C.clk; }
+        const vw = -Math.min(CH_IN_V, Math.sqrt(2 * CH_IN_A * (C.arm - wIn)));
         C.armV += clamp(vw - C.armV, -CH_IN_A * dt, CH_IN_A * dt);
-        C.arm = Math.max(want, C.arm + Math.min(0, C.armV) * dt);
-        if (C.arm === want) C.armV = 0;
-      } else if (want > C.arm + 0.05 && (C.clearT += dt) > (C.doorOutT > 0 ? 0 : C.quick ? CH_QUICK_HOLD : CH_HOLD)) {
+        C.arm = Math.max(wIn, C.arm + Math.min(0, C.armV) * dt);
+        if (C.arm === wIn) C.armV = 0;
+      } else if (want > C.arm + 0.05 && C.offT >= CH_OVER_SETTLE && (C.clearT += dt) > (C.doorOutT > 0 && Math.abs(C.vyaw) < 0.3 ? 0 : C.quick ? CH_QUICK_HOLD : CH_HOLD)) {
         // out: only once the way has stayed clear CH_HOLD s, slowly and eased (no pumping in and out past a corner)
         // (CAM-DOORS: just out of a door, drawn in over his shoulder at the doorstep, it trails out after him as fast as
         // the way behind him clears: CH_DOOR_OUT_*; it held 0.6 s and then crept out at 2.5 m/s, his back filling the view)
         // (CAM-RECOVER: far shorter than the whole arm it wants, clear all the way out to it: quicker, CH_QUICK_*)
+        // (CAM-STEADY: the door's trail-out waits as any other while he turns on the spot: out of Twinsen's door, turned
+        // toward the house, the arm went out and straight back in, the camera up and down within 0.3 s)
         const oV = C.doorOutT > 0 ? CH_DOOR_OUT_V : C.quick ? CH_QUICK_V : CH_OUT_V, oA = C.doorOutT > 0 ? CH_DOOR_OUT_A : C.quick ? CH_QUICK_A : CH_OUT_A;
         const e = want - C.arm, vw = Math.min(oV, Math.sqrt(1.6 * oA * e));
         C.armV += clamp(vw - C.armV, -oA * dt, oA * dt);
@@ -1368,7 +1448,9 @@ export class CameraRig {
       C.overSee = over && seen ? [overQ, overArm] : null;   // (CAM-OVERSIGHT: the over-his-head view that sees him, below)
     }
     // (over his head: the tilt first, then the arm — out of it the arm first: the way between never crosses the eaves)
-    const so = smoothstep(0, 0.6, C.overK), sa = smoothstep(0.4, 1, C.overK), arm = (this.dist = lerp(C.arm, C.overArm ?? CH_OVER_ARM, sa));
+    // (CAM-STEADY: from a longer arm than the one over his head — the risen arm, CH_HIGH_* — the tilt and the arm go
+    // together: tilt first at the long arm and then in, the camera rose a metre and dropped back within 0.3 s)
+    const together = !!C.overHigh && (C.arm ?? 0) > (C.overArm ?? CH_OVER_ARM) + 0.05, so = together ? smoothstep(0, 1, C.overK) : smoothstep(0, 0.6, C.overK), sa = together ? so : smoothstep(0.4, 1, C.overK), arm = (this.dist = lerp(C.arm, C.overArm ?? CH_OVER_ARM, sa));
     const pitch = (this.pitch = lerp(pq(C.arm), C.overQ ?? CH_OVER_P[0], so));
     if (!fresh) cam.fov = damp(cam.fov, CH_FOV, 3, dt);
     cam.updateProjectionMatrix();
@@ -1510,7 +1592,7 @@ export class CameraRig {
       const hh = Math.hypot(hero.x - c.x, hero.z - c.z), heroEl = Math.atan2(c.y - (hero.y + 1.0), Math.max(hh, 0.05));
       // (CAM-ROOFEDGE: just out of a door, over his head, his chest CH_EL_KEEP_DOOR inside the frame: out of the School's
       // and S28's doors he stood at the frame's foot, 0.85 of the way down, for the first 1.1-1.7 s)
-      const elMax = Math.max(CH_EL_MAX, heroEl - (cam.fov * Math.PI) / 360 + (C.door ? CH_EL_KEEP_DOOR : CH_EL_KEEP)), el = Math.atan2(dv, dh);
+      const elMax = Math.max(C.door ? CH_EL_MAX_DOOR : CH_EL_MAX, heroEl - (cam.fov * Math.PI) / 360 + (C.door ? CH_EL_KEEP_DOOR : CH_EL_KEEP)), el = Math.atan2(dv, dh);
       // (the cap itself eased: the camera passing close over him moves it, never the view in a frame)
       const want = Math.min(el, elMax);
       C.el = fresh || C.el == null ? want : damp(C.el, want, CH_EL_W, dt);
