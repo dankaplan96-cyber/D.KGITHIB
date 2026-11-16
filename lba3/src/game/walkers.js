@@ -270,7 +270,7 @@ export class Resident extends NPC {
     const W = def.indoor ? (game.roomWalkers ||= new Walkers(game, { indoor: true })) : (game.walkers ||= new Walkers(game));
     W.add(this);
     this.W = W;
-    this.speed = strollPace(def.speed || 1.1);
+    this.speed = def.indoor ? (def.speed || 1.1) : strollPace(def.speed || 1.1);   // (P36's pace outdoors; rooms keep their own: tight stops overshot at 1.2+ m/s, interior-life's Ama in the terminal's cabinet)
     const mesh = this.rig.mesh;
     if (def.tint && mesh?.material?.color) mesh.material.color.set(def.tint);
     if (def.scale) this.rig.root.scale.multiplyScalar(def.scale);
