@@ -5372,3 +5372,6 @@ the decisions in bold, Kesh first; the story-tied ones (the statue and the well,
 temple's well) are the cloud's to plan if so.
 - **The user's answer (15.11): "don't move anything".** Kesh, the statue, the tent, Tralu's door, the temple and the rest
   of the table above stay where they are; no ORIG-PLACES moves follow. SCHOOL-S28 (asked for before this) stands as sent.
+- **Correction for CLOUD_ORDERS 48.2 (the user, 15.11, after "don't move anything"): "the School: yes, move it".**
+  So `requests/SCHOOL-S28.diff` **is approved by the user** (the School to S28's canyon on LBA2's door zone); everything
+  else in the ORIG-PLACES table stays. SCHOOL-LBA2b / CANYON / LBA2d stay withdrawn.
