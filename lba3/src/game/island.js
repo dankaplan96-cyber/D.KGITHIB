@@ -663,7 +663,6 @@ function buildHarbour(W0, root, r) {
     BL.add(bbox(lx0 - x1, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (lx0 + x1) / 2, deck - 0.15, pz);
     Wl.physics.add({ type: 'box', x: (lx0 + x1) / 2, z: pz, hw: (lx0 - x1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
     const bollard = bollardGeo();
-    instances(g, bollard, post, armPosts);
     instances(pc, bollard, post, legPosts);
     for (const p of armPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: deck + 1.1, seeThrough: true });
     for (const p of legPosts) Wl.physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: deck + 1.1, seeThrough: true });
@@ -690,7 +689,7 @@ function buildHarbour(W0, root, r) {
       wallRun(B, qx1, P.zS - d.z, P.x1 - d.x, P.zS - d.z, P.h, [[-1, 99]], platPosts);
       wallRun(B, P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], platPosts);
       wallRun(B, P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], platPosts);
-      instances(g, bollard, post, platPosts);
+      instances(g, bollard, post, [...armPosts, ...platPosts]);   // (the arm's and the platform's posts: one draw)
       for (const p of platPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: P.h + 1.1, seeThrough: true });
       for (const [a, b] of B._rails || []) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: P.h + 1.05, seeThrough: true, noStand: true });
     }
