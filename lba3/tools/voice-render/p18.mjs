@@ -90,7 +90,7 @@ for (const [who, [id, lines]] of Object.entries(SPEAKERS)) {
 // ---------------------------------------------------------------- in the page: the plans (words vs classic length over the
 // game's whole English text), what the letters became, the cost of a render (main thread, and a worker's round trip)
 const texts = [];
-for (const f of readdirSync(join(LBA3, 'src/game/text'))) {
+for (const f of readdirSync(join(LBA3, 'src/game/text')).filter((x) => x.endsWith('.js'))) {   // (HE-TEXT: not the he/ folder)
   const s = readFileSync(join(LBA3, 'src/game/text', f), 'utf8');
   for (const m of s.matchAll(/\b[a-z][a-zA-Z0-9_]*:\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g)) {
     const t = (m[1] ?? m[2]).replace(/\\(.)/g, '$1');

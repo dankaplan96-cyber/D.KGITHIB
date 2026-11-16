@@ -21,7 +21,7 @@ const { check, done } = checker({ info: 'always' });
 // every speaker name key the game shows (n_*), from the English text
 // (VOICE-CAST-5: keys with an underscore too, n_ih_ossa: they were left out, and every one of them fell back unseen)
 const keys = new Set();
-for (const f of ['src/game/i18n.js', ...readdirSync(ROOT + 'src/game/text').map((x) => 'src/game/text/' + x)]) {
+for (const f of ['src/game/i18n.js', ...readdirSync(ROOT + 'src/game/text').filter((x) => x.endsWith('.js')).map((x) => 'src/game/text/' + x)]) {
   for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/\b(n_[a-zA-Z0-9_]+):/g)) keys.add(m[1]);
 }
 // VOICE-CAST-5: the people who talk in the same place, and the speakers added since the last voice pass
