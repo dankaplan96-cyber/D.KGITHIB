@@ -522,3 +522,9 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     pass, PLAYTEST-15, INVENTORY-CALM, U-3, U-4, MAP-ORIG's four Citadel fixes, FACE-OFF, the ferry's and Tali's voices.
     Order 48.3 (V93-GPU) can start. Also look at the new inventory window on the real screen (1920×1080): pictures readable,
     no scroll bars. camsteady's 12 failures are old (same on v92); a cloud worker has CAM-STEADY.
+49. **(16.11, 11:07 UTC) v94 is published** (artifact 1794827211-4ff4; stamp commit "Build stamp for artifact v94"): OPENING-TUT-2
+    (P31: the yard as Zoé's errand, step by step), CAM-STEADY (camera.js Follow), SCHOOL-S28 applied, TAVI-B, the indoor pace,
+    U-5. On the GTX 1050 in Chrome: (1) a new game through the yard's errand to the well — each step's goal line and key
+    hint readable at 1920×1080 and 1280×720, Zoé's call-back, the tick and chime; time it (a real first play, the user's
+    machine); (2) the Follow camera out of Twinsen's door and along the street (does it hold steady); (3) the School in
+    S28's canyon from the valley's mouth (pictures for the team only, chapter 4). Report as V94-GPU.
