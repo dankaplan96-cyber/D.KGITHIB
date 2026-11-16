@@ -386,6 +386,10 @@ function hipRoof(g, o, HP, tileMat, coping) {
   cap(Rg(-1), Rg(1));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) cap(E(sx, sz), Rg(ra > 0 ? sx : sz));
   // the occluder: a slab sloping across the shorter span, from the ridge to the eaves
+  // (CITADEL-ORIG-2: o.hip.occEnds: the slab runs only to halfway down the end slopes: a full-length slab at the crown's
+  //  height stood over the hips' ends, where the roof is low, and the camera behind a long hip-roofed house drew in for
+  //  nothing; the walls' own box still stands up to the eaves)
+  if (o.hip.occEnds) return { axis: A >= Bd ? 'x' : 'z', c: r, len: 2 * (Math.max(A, Bd) - r * 0.5), eaveY, crownY: top };
   return { axis: A >= Bd ? 'x' : 'z', c: r, len: 2 * Math.max(A, Bd), eaveY, crownY: top };
 }
 
