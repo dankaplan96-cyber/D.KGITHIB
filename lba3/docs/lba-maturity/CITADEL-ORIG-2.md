@@ -155,8 +155,9 @@ from the landing spot and north of where the door lets him out, **facing the pad
 
 ## Tests (Automated runtime only)
 
-Served from a snapshot of this branch (port 8988), SwiftShader, one browser at a time, on a shared machine. The final run
-is on the final code except where said.
+Served from a snapshot of this branch (port 8988), SwiftShader, one browser at a time, on a shared machine. The camera fix for Twinsen's roof and the ferry stop's return to the quay came after the first full run: camcitadel,
+occluders and travel were run again after them; the rest ran before (the occluder only moves the camera; the stop is a
+menu point).
 
 | Suite | Result |
 |---|---|
@@ -178,7 +179,7 @@ is on the final code except where said.
 | camcitadel | first FAIL: behind Twinsen's house the camera drew in (under 5 m for 4.3 s, 3 s allowed): the hip roof's camera slab ran full length at the crown's height over the hips' low ends. It now stops halfway down the end slopes (`architecture.js` hip `occEnds`, Twinsen's only); **PASS**. A version that also boxed the hips' lower half failed "the house alley" (70° off his back) and was dropped |
 | occluders | PASS (the houses' roofs, Twinsen's hip) |
 | solidnpc | FAIL on the **known baseline** only: the planter box at the spaceport bridge's foot has no collider |
-| save-migration | see below |
+| save-migration | PASS (47 min on this machine) |
 
 ## Pictures
 
