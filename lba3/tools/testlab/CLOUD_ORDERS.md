@@ -534,3 +534,30 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     compare crops of Twinsen and Zoé at the same spot (devicePixelRatio inside the frame, any CSS scaling of the canvas by
     the frame, the canvas' backing size against its CSS size). If the frame shrinks or scales the canvas, say how and
     propose the fix (the renderer's size from the canvas' real client size × dpr). Report as P30-FRAME.
+51. **The desktop's queue from 16.11 (the user: "give the local agent tasks").** State: artifact **v95** and the desktop
+    installer **desktop-build-680** (0.49.0, the same game). **The cloud is working on, don't touch:** Citadel's world
+    (`world.js`, `town.js`, the harbour, the sea shader: CITADEL-ORIG-2 — the turquoise sea, Twinsen's plank roof, the grid
+    past the square, LBA2's paved harbour and L pier, all approved by the user), and every text file (`src/game/text/*`,
+    `i18n.js`: HE-TEXT, the whole game in Hebrew). One at a time, each reported in WORLD_ART_REQUESTS.md, a diff in
+    `requests/` where code changes, pushed before the next:
+    1. **P30-APP:** install desktop-build-680 on this machine and open the house in chapter 1 (the kitchen) in the app, then
+       the same spot in the artifact in Chrome; the same crops of Twinsen and Zoé, `?perf`'s numbers in each (in the app:
+       the overlay's key). If the app is sharp and the artifact is not, find what in the browser path differs (the canvas'
+       backing size, MSAA, the auto scale). Your P30-FRAME proposal (a key for the perf overlay inside the artifact) — send
+       it as a small diff (`main.js` only, a key that does nothing else; not in the Classic controls' way). Report P30-APP.
+    2. **ORIG-SHOTS (reference only, nothing committed):** the original LBA2 runs on this machine (GOG). Take real in-game
+       screenshots of Citadel (sunny) at: the harbour, the square with the statue, Twinsen's house, the lighthouse, the
+       town's streets from the south, and Desert Island's Kesh. Keep them local (IP). Report in words and numbers only:
+       the in-game camera's angle and distance (estimate from the scene), the sea's colour (mean RGB of a sea crop), the
+       lighting (sun direction, shadow strength), the lighthouse's colour (MAP-ORIG could not tell from the remake if it
+       is white or dark stone), roof colours. The cloud uses them for CITADEL-ORIG-2's sea and the lighthouse. The user
+       may see Citadel's shots on this machine if they ask.
+    3. **CHAIN-01-14 on the real GPU:** `tests/playthrough/01…14` in order from a new game on this build (the yard's new
+       errand is in 01: `tests/lib/player.js` does it), one at a time; per segment PASS/FAIL, the game-clock time, and any
+       stall with where it happened. The cloud's machine is too loaded to run the whole chain. Report CHAIN-V95.
+    4. **KESH-ORIG (a candidate, chapter 4: pictures for the team only):** MAP-ORIG found LBA2's Kesh a compact grey stone
+       town (paved streets, a fountain plaza, grey flat-roofed houses, a gold-domed house, a stone quay) where ours is ochre
+       adobe on open sand. The user said "don't move anything" (ORIG-PLACES): so no building moves — materials, roofs,
+       paving and the plaza only. Send `requests/KESH-ORIG.diff` with before/after from the play camera and draw calls; the
+       cloud describes it to the user in words before applying.
+    Rules as always: no LBA1/LBA2 files or screenshots committed, results labelled by where they ran, the no-clutter rule.
