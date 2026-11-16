@@ -5460,3 +5460,48 @@ quality differs from the user's; **the frame's geometry does not depend on the G
   directly. Screenshots of the frame mostly time out while the game draws (the extension's capture), so no close-up crops
   from the user's Chrome; the user has a save in the artifact, so no new game was started there (not to touch it).
   **Same conclusion: claude.ai's frame does not shrink or scale the game's canvas.**
+
+## P30-APP · the desktop app (desktop-build-680) against the same build in Chrome, by the kitchen (CLOUD_ORDERS 51.1) · the desktop, 16.11.2026
+`LBA3-The-Awakening-0.49.0-win.zip` (the release's portable build, 197,263,925 bytes; the user approved the download)
+unpacked into the desktop's bench folder and run with its own profile (no user data touched). Chrome: v95 (`66dddf45`)
+served locally, maximized. Both on the **GTX 1050** (each reports it), new game, Twinsen by the kitchen's basin, 12 s
+of real frames, `?perf`. Raw numbers and a crop: `docs/lba3-performance/HARDWARE/2026-11-16-p30-app/`.
+| | the app (Electron 43.7.9) | Chrome |
+|---|---|---|
+| window (CSS) · dpr | 1536 × 864 · 1.25 | 1536 × 730 · 1.25 |
+| canvas backing | 1920 × 1080 (= CSS × 1.25) | 1920 × 912 (= CSS × 1.25) |
+| quality (Auto chose) · MSAA · bloom · shadows | High · 4 · on · soft | High · 4 · on · soft |
+| pixel ratio (auto ×) | 1.25 (×1) | 1.25 (×1) |
+| frame p50 / p95 · draw calls | 16.7 / 16.9 · 66 | 16.7 / 16.9 · 68 |
+- **The same:** the crops of Twinsen at the kitchen (`app-vs-chrome.jpg`, 2× nearest, chapter 1) are equally sharp; no
+  difference in backing size, MSAA or the automatic scale. With P30-FRAME (claude.ai's frame does not scale the canvas),
+  **no path on this machine makes the artifact in Chrome softer than the app.**
+- **The perf overlay inside the artifact already has a key: F9** (`main.js` ~1751: "F9 / ?perf: frame-time overlay"; F1–F4
+  are the behaviours). **No diff needed** — the user can press F9 inside the artifact (click into the game first) and send
+  a picture of the overlay when it looks pixelated: pixel ratio, auto ×, quality and the GPU are on it.
+
+## CHAIN-V95 · the playthrough chain 01–14 on the GTX 1050 (CLOUD_ORDERS 51.3) · the desktop, 16.11.2026
+v95 (`66dddf45`), `tests/lib/seg.mjs` per segment from a scratch copy of `tests\` with `launch()` on Chrome / the GTX 1050,
+ASSIST=1, each segment loading the last one's save. Logs and stats: `docs/lba3-performance/HARDWARE/2026-11-16-chain-v95/`.
+| Segment | Result | Game clock (play / dialogue / scenes, s) | Health lost | Wall |
+|---|---|---|---|---|
+| 01 prologue-surface (with the yard's new errand) | PASS | 285.6 / 23.6 / 20.6 | 0 | 165 s |
+| 02 prologue-cave | PASS | 86.6 / 3.9 / 6.4 | 0 | 30 s |
+| 03 project-a | PASS | 81.0 / 4.8 / 19.9 | 0 | 34 s |
+| 04 project-valves | PASS | 163.7 / 1.7 / 2.6 | 6 | 104 s |
+| **05 project-b** | **FAIL, twice** | stops after 8 s | — | 22–24 s |
+(Each log's only other FAIL is my server's missing favicon.ico, not the game.) **05 fails the same way both runs:** the
+step "his own tap: dry, knocking" (CAMPAIGN-2, at home after Zoé's talk) walks to the kitchen tap and **the prompt there
+is Zoé's** (`target {kind: npc, id: zoe, label: p_talk}`, Zoé at (997.0, −2.3), the tap's spout beside her): the use
+goes to her, `ct_tap` is never set, so the stream does not run. A player standing at the tap with Zoé beside it would
+meet the same (the "a person faced squarely takes the Talk prompt" rule, d5). **06–14 not run:** without 05's save
+the chain cannot go on. No stalls were logged in 01–04.
+
+## ORIG-SHOTS · the original LBA2 on this machine (CLOUD_ORDERS 51.2): not done · the desktop, 16.11.2026
+The user's LBA2 saves were backed up first (the whole `Saved Games\2point21\tlba2-classic`, 11 files) and **restored
+byte for byte** after (the new game had rewritten `current.lba`). Driving the GOG game (TLBA2C, [2.21]'s port) by
+synthetic keys from here works but is slow, and **a new game's Citadel is in the opening's storm**: dark sky and sea
+until the first chapter's quests are done, so the sunny Citadel the order asks for (the sea's colour, the lighthouse in
+daylight) is far into play. The user's own saves are on another island. Nothing measured from the original. Options:
+the user takes the shots in their own game (the desktop measures the numbers from their pictures), or the cloud keeps
+MAP-ORIG's remake-based reading.

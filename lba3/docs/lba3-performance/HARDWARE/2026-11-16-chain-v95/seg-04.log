@@ -1,0 +1,37 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-62.61,2.33,11] hp 10 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[4s +3s] orchard (ball over the cage): {"open":true,"fail":null} | citadel [-71.85,15.87,-56.62] hp 10 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":24.4,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":103,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[52s +48s] depot (fight the guards on the way): {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"tries":1,"open":true,"hp":4,"clovers":3,"fail":null} | citadel [-68.72,15.98,-70.53] hp 4 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":61.3,"dialog":1.1,"trans":0.3,"scene":0,"menu":0,"other":0,"lines":5,"words":45,"says":5,"walked":89,"hpLost":6,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[74s +21s] cliffs: the target: {"hit":true,"fail":null} | citadel [-65.82,9.67,-34.15] hp 4 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":37.2,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":88,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[77s +2s] cliffs: up the stones: {"reached":14,"of":14,"tries":14,"y":18.89,"fail":null} | citadel [-59.09,18.89,-35.62] hp 4 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":32.7,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":41,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[78s +1s] cliffs: the valve: {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"water":true,"fail":null} | citadel [-56.15,18.74,-36.65] hp 4 | The square has water. Try the tap at home
+  stats: {"play":8,"dialog":0.6,"trans":0,"scene":2.6,"menu":0,"other":0,"lines":2,"words":26,"says":2,"walked":4,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[138.9] go → (-66.5, -27.0) plan ok=true pts=1 left=0.16
+[140.5] go → (-64.4, -27.3) plan ok=true pts=1 left=0.24
+[141.8] go → (-63.5, -28.2) plan ok=true pts=1 left=0.18
+[143.3] go → (-64.5, -30.2) plan ok=false pts=1 left=0.38
+[145.8] stuck at (-64.4, -29.8): replan
+[149.9] go → (-63.8, -31.3) plan ok=true pts=1 left=0.1
+[151.3] go → (-61.6, -31.5) plan ok=true pts=1 left=0.21
+[152.8] go → (-61.5, -32.9) plan ok=true pts=1 left=0.2
+[154.1] go → (-62.3, -34.6) plan ok=true pts=1 left=0.14
+[155.9] go → (-60.5, -33.8) plan ok=true pts=1 left=0.09
+[157.4] go → (-55.2, -36.6) plan ok=true pts=2 left=0.71
+[158.8] go → (-55.2, -36.6) plan ok=false pts=2 left=0.94
+stats total: {"play":163.7,"dialog":1.7,"trans":0.3,"scene":2.6,"menu":0,"other":0,"lines":7,"words":71,"says":7,"walked":325,"hpLost":6,"deaths":0,"rooms":1,"chapter":"project","coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+kept save-04.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  1 FAIL, 0 optional
+  FAIL missing local file: the server responded with a status of 404 (Not Found) http://127.0.0.1:8976/favicon.ico
+visual:     6 capture(s) written for review, not judged here
+VERDICT: FAIL (1 resource)
+1 FAILED
