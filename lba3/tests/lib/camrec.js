@@ -78,13 +78,16 @@
     let heroPath = 0, camPath = 0, turn = 0, stillTurn = 0, stillMove = 0, stillT = 0, idleTurn = 0, idleMove = 0, idleT = 0, busyT = -1e9, dur = 0, snaps = 0, maxStep = 0, maxStepKeep = 0, maxStepOther = 0, maxTurnStep = 0, shakeT = 0, jolts = 0, yawTravel = 0, steepT = 0, maxPitch = 0, pitchTravel = 0;
     const rate = [], acc = [], angAcc = [], az = [], ha = [], ts = [], el = [], camY = [], dist = [], ruleSum = {}, ruleTop = {}, ruleSeries = {};
     for (const r of RULES) { ruleSum[r] = 0; ruleTop[r] = 0; ruleSeries[r] = [0]; }
-    let prevW = null, skip = 0; const worst = { acc: [0], ang: [0], step: [0] };
+    // (CAM-STEADY: where each scene's frames begin in the series below — a door, a load: the reversals are counted within a
+    // scene, not across the cut from Citadel's view to a room's fixed one and back, 40 m higher)
+    const segs = [0];
+    let prevW = null, skip = 0, brk = false; const worst = { acc: [0], ang: [0], step: [0] };
     const note = (k2, v, b) => { if (v > worst[k2][0]) worst[k2] = [+v.toFixed(2), +b.t.toFixed(2), Object.entries(b.why).filter(([, x]) => x && x !== true).map(([n, x]) => n + ':' + (typeof x === 'number' ? x.toFixed(3) : x)).join(' '), 'hero ' + b.h.map((x) => x.toFixed(1)).join(',') + ' hs ' + b.hs.toFixed(2),
       'dp ' + b.p.map((x, j) => (x - S[S.indexOf(b) - 1].p[j]).toFixed(3)).join(','), 'dF ' + (b.F && S[S.indexOf(b) - 1].F ? b.F.map((x, j) => (x - S[S.indexOf(b) - 1].F[j]).toFixed(3)).join(',') : '-'),
       'dlift ' + (b.lift - S[S.indexOf(b) - 1].lift).toFixed(3) + ' dpitch ' + (b.pitch - S[S.indexOf(b) - 1].pitch).toFixed(4) + ' dyaw ' + (b.yaw - S[S.indexOf(b) - 1].yaw).toFixed(4) + ' dlook ' + b.look.map((x, j) => (x - S[S.indexOf(b) - 1].look[j]).toFixed(3)).join(',')]; };
     for (let i = 1; i < S.length; i++) {
       const a = S[i - 1], b = S[i], dt = b.dt;
-      if (b.trans || b.why.snap || b.room !== a.room || b.st !== 'play' || a.st !== 'play') { skip = 60; prevW = null; continue; }
+      if (b.trans || b.why.snap || b.room !== a.room || b.st !== 'play' || a.st !== 'play') { skip = 60; prevW = null; brk = true; continue; }
       if (skip > 0) { skip--; continue; }
       // (a shake is feedback, not the camera's rules: its frames are left out — in builds before CAM-2 the tremor is in
       // the camera's position, from CAM-2 on the recording takes the pose under it, rig.base)
@@ -110,6 +113,8 @@
         { const v = Math.hypot(...[0, 1, 2].map((k2) => ((b.p[k2] - a.p[k2]) / dt - (a.p[k2] - c.p[k2]) / a.dt) / ((dt + a.dt) / 2))); acc.push(v); note('acc', v, b); if (v > 40) jolts++; }
       }
       { const pd = -Math.asin(Math.max(-1, Math.min(1, b.f[1]))) * deg, pa = -Math.asin(Math.max(-1, Math.min(1, a.f[1]))) * deg; maxPitch = Math.max(maxPitch, pd); if (pd > 50) steepT += dt; pitchTravel += Math.abs(pd - pa); let dz = Math.atan2(b.f[0], b.f[2]) - Math.atan2(a.f[0], a.f[2]); dz -= Math.round(dz / (2 * Math.PI)) * 2 * Math.PI; yawTravel += Math.abs(dz); }
+      if (brk && az.length) segs.push(az.length);
+      brk = false;
       az.push(Math.atan2(b.f[0], b.f[2])); ha.push(b.ha); ts.push(b.t); el.push(Math.asin(Math.max(-1, Math.min(1, b.f[1])))); camY.push(b.p[1]); dist.push(Math.hypot(b.p[0] - b.h[0], b.p[1] - b.h[1], b.p[2] - b.h[2]));
       // what moved it: each rule's contribution this frame (m, or rad for the turns × the distance: metres at the camera)
       const W = b.why, D = b.dist || 10, c = { follow: W.follow, box: W.box, swing: Math.abs(W.swing) * D, rise: Math.abs(W.rise) * D, lift: Math.abs(W.lift), keep: W.keep, dist: Math.abs(W.dist), auto: Math.abs(W.auto) * D, occ: Math.abs(W.occ), ground: Math.abs(W.ground) };
@@ -121,6 +126,8 @@
     }
     // unwrap the azimuth
     for (const A of [az, ha]) for (let i = 1; i < A.length; i++) { while (A[i] - A[i - 1] > Math.PI) A[i] -= 2 * Math.PI; while (A[i] - A[i - 1] < -Math.PI) A[i] += 2 * Math.PI; }
+    const segRev = (A, m) => segs.reduce((n, s0, k) => n + reversals(A.slice(s0, segs[k + 1] ?? A.length), m), 0);
+    const segJit = (A, m) => segs.reduce((n, s0, k) => { const e = segs[k + 1] ?? A.length; return n + jitter(A.slice(s0, e), ts.slice(s0, e), m); }, 0);
     const per = (n) => +((n / Math.max(dur, 1e-3)) * 60).toFixed(1);   // per minute
     const r1 = (x, d = 1) => +x.toFixed(d);
     Object.assign(out, {
@@ -131,9 +138,9 @@
       accP95: r1(q(acc, 0.95)), accMax: r1(q(acc, 1)),
       // oscillation: reversals of the view's heading (≥ 0.5°) and tilt (≥ 0.5°), of the camera's height (≥ 5 cm) and of
       // its distance from him (≥ 10 cm), per minute
-      revYaw: per(reversals(az, 0.5 / deg)), revHero: per(reversals(ha, 0.5 / deg)), revPitch: per(reversals(el, 0.5 / deg)), revY: per(reversals(camY, 0.05)), revDist: per(reversals(dist, 0.1)),
+      revYaw: per(segRev(az, 0.5 / deg)), revHero: per(segRev(ha, 0.5 / deg)), revPitch: per(segRev(el, 0.5 / deg)), revY: per(segRev(camY, 0.05)), revDist: per(segRev(dist, 0.1)),
       stillT: r1(stillT), stillTurnDeg: r1(stillTurn * deg, 2), stillMove: r1(stillMove, 2), idleT: r1(idleT), idleTurnDeg: r1(idleTurn * deg, 2), idleMove: r1(idleMove, 2),
-      jitterPitch: jitter(el, ts, 0.5 / deg), jitterY: jitter(camY, ts, 0.05),
+      jitterPitch: segJit(el, 0.5 / deg), jitterY: segJit(camY, 0.05), scenes: segs.length,
       snaps, maxStep: r1(maxStep, 2), maxStepKeep: r1(maxStepKeep, 2), maxStepOther: r1(maxStepOther, 2), maxTurnStepDeg: r1(maxTurnStep * deg, 2),
       // the view's tilt: the steepest it got (°), how long it looked down steeper than 50° (s), how far it tilted (°/min);
       // its heading's travel (°/min); jolts: frames accelerating the camera > 40 m/s², per minute; shake time left out (s)
