@@ -48,6 +48,7 @@ const MATTO_TINT = '#e8f0ff', TOLLI_TINT = '#fff2e0';   // (Tolli's own: deeplif
 const list = (s) => String(s || '').split(',').filter(Boolean);
 
 export class QuietChannel extends ChapterBase {
+  constructor(story) { super(story); this.reset(); }   // (the riser can knock before any save is loaded: a new game played on into chapter 11)
   get key() { return this.story.cur?.key; }
   get RG() { return this.game.regions; }
   able() { const b = this.game.hero.body; return !b || b === 'twinsen'; }
