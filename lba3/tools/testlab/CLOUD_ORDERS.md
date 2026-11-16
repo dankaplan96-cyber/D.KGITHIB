@@ -518,3 +518,7 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     4. **place-scan on the real GPU** at the tip (the cloud's SwiftShader runs crash under memory load): the full run,
        its numbers against PLACE-2's (135 rooms, ~7321 pieces, findings). Report as PLACE-SCAN-GPU.
     Rules as always: no LBA1/LBA2 files committed, results labelled by where they ran, the no-clutter rule.
+    **(16.11, 03:02 UTC) v93 is published** (artifact 1794798122-4052; stamp commit "Build stamp for artifact v93"): the dialogue
+    pass, PLAYTEST-15, INVENTORY-CALM, U-3, U-4, MAP-ORIG's four Citadel fixes, FACE-OFF, the ferry's and Tali's voices.
+    Order 48.3 (V93-GPU) can start. Also look at the new inventory window on the real screen (1920×1080): pictures readable,
+    no scroll bars. camsteady's 12 failures are old (same on v92); a cloud worker has CAM-STEADY.
