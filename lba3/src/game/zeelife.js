@@ -344,7 +344,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     col({ type: 'box', x: x + 1.95, z: PH.front + 0.65, hw: 0.45, hd: 0.35, rot: 0, top: Y0 + 0.35, seeThrough: true });
     scaffold = W(lx, PH.front + 1.4);
   }
-  L.build(); LF.build();
+  const nowParts = [...L.build(), ...LF.build()];   // (U-4: the twelve years' additions on one batch: hidden in Ysel's old pictures)
   // ---- Nara's cloud flowers, crated for Citadel by the shuttle pad (held while the shuttles are grounded)
   const FG = new THREE.Group(); group.add(FG);
   {
@@ -399,6 +399,10 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     pelleck: PH ? { ...W(PH.x + 1.6, PH.front + 1.65), a: Math.PI - 0.35 } : null,
     scaffold,
     flowers: { ...W(FLOWERS.x + 0.4, FLOWERS.z - 0.6), setVisible(b) { FG.visible = !!b; if (flowerCol) flowerCol.enabled = !!b; } },
+    // (U-4 Twelve Years Late, story/yearslate.js: what the street did not have twelve years ago — the heat feed, the posts,
+    //  the burrow's hatch, Mr Pelleck's scaffold and new tiles, the moving parts at the bakehouse, Nara's crates. Only
+    //  hidden for the one frame that renders an old picture, then shown again as they were)
+    now: [...nowParts, DG, FG],
   };
 }
 
