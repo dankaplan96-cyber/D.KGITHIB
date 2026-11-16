@@ -160,9 +160,9 @@ oneplace, offwall, yearslate, quietchannel).
   English in both languages.
 - 3D painted sign textures (props.js LABELS: SQUARE, LIGHTHOUSE …; the valve room's board) are world art: English in
   both languages.
-- An English key defined twice keeps "the later file wins" in Hebrew too: `it_rope` is "Rope Ladder" (common.js) and
-  "Rope" (ch4.js, later), so the chapter 1 rope ladder's inventory name reads "Rope"/"חבל" once ch4.js has loaded. A
-  pre-existing English collision, not changed here.
+- Chapter 4's coil of rope: the coordinator renamed it on main to `it_ropecoil` / `itd_ropecoil` (`it_rope` is now the
+  prologue's Rope Ladder only). text/he/ch4.js already uses the new keys; on this branch, before the merge, ch4.js's
+  English still says `it_rope`, so dialogue-check counts 2 of its keys without Hebrew. After the merge: 100 %.
 - Switching language mid-game re-renders the menus, HUD and objective at once; a text drawn once into a scene (a
   canvas sign) follows at the next build of that scene.
 - Not read in play by a Hebrew reader: the translation is source-reviewed; hebrew.mjs only shows it is on screen,
