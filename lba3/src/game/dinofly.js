@@ -18,6 +18,14 @@ Object.assign(STR.en, {
   df_rest: 'I know. The sea is too wide for your wings now. Rest. The ferry can carry us.',
   df_again: ['(The Dino-Fly opens one eye, rumbles, and goes back to sleep.)', '(He sniffs Twinsen\'s pockets for treats.)', '(He stretches one wing over Twinsen like an umbrella.)'],
 });
+// HE-TEXT: the Hebrew of these lines (the rest of the game's Hebrew is in text/he/; these few live with their English)
+Object.assign(STR.he, {
+  n_dinofly: 'הדינו־זבוב',
+  df_hi: 'היי, ידיד ותיק. שוב מנמנם בשמש?',
+  df_rumble: '(נהמה עמוקה ומאושרת. הוא דוחף את היד של טווינסן עם החוטם.)',
+  df_rest: 'אני יודע. הים רחב מדי בשביל הכנפיים שלך עכשיו. תנוח. המעבורת יכולה לשאת אותנו.',
+  df_again: ['(הדינו־זבוב פוקח עין אחת, נוהם, וחוזר לישון.)', '(הוא מרחרח את הכיסים של טווינסן בחיפוש אחרי פינוקים.)', '(הוא פורש כנף אחת מעל טווינסן כמו מטרייה.)'],
+});
 
 // the model loads once, when this module is first imported (long before the island is built)
 let DATA = null;

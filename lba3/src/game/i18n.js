@@ -134,7 +134,7 @@ spoken.miss = new Set();
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
   title_sub: 'An unofficial fan sequel to Little Big Adventure 2',
-  to_title: 'Main Menu',
+  to_title: 'Main Menu', quit_game: 'Quit Game',
   disclaimer: 'Non-commercial fan project, not affiliated with Adeline Software or [2.21]. The characters and world belong to their owners. Story, models, sound and music are original.',
   voice_credit: 'Character voices generated with Piper (offline) using the LibriTTS-R voice model (CC BY 4.0)',
   map_title: 'Holomap · Citadel Island',

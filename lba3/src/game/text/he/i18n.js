@@ -73,7 +73,7 @@ export const HE_I18N = {
   // LBA3: the title, and the prologue's lines kept in i18n.js
   logo_sub: 'ההתעוררות',
   title_sub: 'המשך מעריצים לא רשמי ל־Little Big Adventure 2',
-  to_title: 'לתפריט הראשי',
+  to_title: 'לתפריט הראשי', quit_game: 'יציאה מהמשחק',
   disclaimer: 'פרויקט מעריצים לא מסחרי, לא קשור ל־Adeline Software או ל־[2.21]. הדמויות והעולם שייכים לבעליהם. הסיפור, המודלים, הצלילים והמוזיקה מקוריים.',
   voice_credit: 'קולות הדמויות נוצרו ב־Piper (ללא רשת) עם מודל הקול LibriTTS-R (CC BY 4.0)',
   map_title: 'הולומפה · אי סיטדל',
