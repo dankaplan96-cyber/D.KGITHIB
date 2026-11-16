@@ -45,7 +45,7 @@ Mean sea colour seen from above (pixels with blue over red by 60+), the same cam
 - `src/game/town.js` HOUSES `twinsen`: `roof: 'planks', hip: { pitch: 0.5, coping: '#6b4a2e' }` in place of the thatch
   gable. Ridge 3.36 + 0.5 × 3.7 = **5.2 m** (LBA2's 5.2 m; ours was 6.2 m), along the long front, as LBA2's.
 - Kept: the door, the windows, the chimney (on the hip's slope), the rubble walls, the yard and its fence, the collider
-  (walls), the roof's occluder (the hip's slab, as Nell's), the interior (unchanged). Twinsen's bench, laundry and pots
+  (walls), the roof's camera occluder (the hip's slab, stopping halfway down the end slopes: camcitadel), the interior (unchanged). Twinsen's bench, laundry and pots
   stand where they did.
 - The opening film's frames that show the house (77 s, 80 s: Zoé leaving, the title over the house) were taken before
   and after: the roof reads as LBA2's.
@@ -100,7 +100,8 @@ west.
   the elbow, along the arm to his mark by the quay).
 - `story/prologue.js`: Xil, the project's crates at the pier's end.
 - `story/opening.js`: the aerial move's end, the lift's two shots, the worker's and the resident's spots and walks.
-- `travel.js`: the ferry's stop on the leg by her gangway (the board on the quay stays).
+- `travel.js`: the ferry's stop stays on the quay by its FERRY board, at the arm's root (on the leg the pier's people stood
+  in its prompt).
 - Not changed (on the quay, still right): Doran's spot and his fishing, the bell, the guard by the arm's root, Vesk's mark
   (on the arm's root), the gulls' perches, the evacuation's queue, the market, the townbusy points.
 - **The ferry's way in never crosses land**: sampled at 101 points × 8 hull points, the highest ground under her hull
@@ -117,43 +118,99 @@ pad** (a ship's arrival faces that way, and the gate reused it). Now he steps ou
 from the landing spot and north of where the door lets him out, **facing the pad and its ship**. `tests/spaceport.mjs`'s
 "within 1.5 m of the landing spot" still holds.
 
-## Draw calls (one frame, all passes; ours before → after)
+## Draw calls (one frame, all passes, the same camera; ours before → after)
 
-| View | Before | After |
-|---|---|---|
-| Citadel straight down | 886 | 890 |
-| Citadel oblique | 867 | 873 |
-| harbour straight down | 375 | 374 |
-| harbour oblique (south-west) | 636 | 649 |
-| harbour oblique (south-east) | 300 | 310 |
-| town straight down | 592 | 592 |
-| town oblique | 619 | 622 |
-| Twinsen's house (play camera) | 360 | 359 |
-| Twinsen's house from above | 468 | 461 |
-| the east street (play camera) | 430 | 420 |
-| the south cross street (play camera) | 284 | 294 |
-| the quay (play camera) | 211 | 218 |
+| View | Before | After | Triangles before → after |
+|---|---|---|---|
+| Citadel straight down | 886 | 910 | 2.129 M → 2.160 M |
+| Citadel oblique | 867 | 891 | 2.126 M → 2.158 M |
+| harbour straight down | 375 | 383 | 1.302 M → 1.322 M |
+| harbour oblique (south-west) | 636 | 657 | 1.925 M → 1.953 M |
+| harbour oblique (south-east) | 300 | 313 | 0.960 M → 0.973 M |
+| harbour from the west | 566 | 598 | 1.699 M → 1.756 M |
+| the platform | 316 | 326 | |
+| the pier from the platform | 274 | 288 | |
+| town straight down | 592 | 608 | |
+| town oblique | 619 | 640 | |
+| the east street (play camera) | 430 | 441 | 1.172 M → 1.233 M |
+| the south cross street (play camera) | 284 | 293 | |
+| the lawn strip and its fence | 352 | 378 | |
+| the south block | 455 | 473 | |
+| the middle block | 442 | 459 | |
+| Twinsen's house (play camera) | 360 | 377 | 0.900 M → 0.934 M |
+| Twinsen's house from above | 468 | 483 | |
+| the quay (play camera) | 211 | 219 | |
+| Desert Island straight down / oblique | 970 / 913 | 970 / 913 | the same |
+| the opening, 15 s (the lift) / 25 s / 77 s (the house) | 122 / 139 / 688 | 143 / 128 / 707 | |
 
-- The harbour's +10–13 come from the stone pier's walls, posts and rails in the leg's frame and the platform's new posts
-  (instanced; the arm's and the platform's posts share one draw after this table was taken). The wooden pier's planks and
-  piles (two instanced draws) are gone.
-- The street views move with the trees taken off the new paving and the fence.
-- Desert Island: the sea's material only changed (same draw).
+- **More draws: +1 % to +7 %** in the Citadel views (+8 to +32), a few thousand to 60 k more triangles. Measured, not
+  removed; each is a new material run in a 64 m merge cell, counted in each shadow pass too:
+  - the stone pier's and the platform's walls, coping, posts and rails (rubble, stone, the posts' instanced draws: the
+    arm's and the platform's share one, the leg's one; the wooden pier's two instanced draws are gone);
+  - Twinsen's hip roof (plank and dark-wood board materials in its cell, where the thatch was one);
+  - the lattice fence (two materials).
+- The sea adds none (its uniforms only), and Desert's sea none (its own map as the emissive map).
+- Not done: folding the new wall and post materials into the quay's own merge colours (`mergeStatic` recolor) more
+  tightly; a candidate if the budget needs it. No fps claim either way.
 
 ## Tests (Automated runtime only)
 
-Served from a snapshot of this branch (port 8988), SwiftShader, one browser at a time, on a shared machine.
+Served from a snapshot of this branch (port 8988), SwiftShader, one browser at a time, on a shared machine. The final run
+is on the final code except where said.
 
 | Suite | Result |
 |---|---|
-| chapter1 | PASS (32/32; "the ferry docks: Vesk arrives and is on the pier") |
+| chapter1 | PASS 32/32 ("the ferry docks: Vesk arrives and is on the pier"); the arrival also captured frame by frame (`arrival_*.jpg`): the ferry along the leg, Vesk down the gangway, up the leg, round the elbow to his mark |
+| chapter2 | PASS 21/21 |
+| opening | first FAIL: the resident walked into the leg's new rail by the gangway (the film walks him to 0.3 m from the pier's edge there). The leg's west face is open from the elbow past the gangway now; **PASS** |
+| opening-tutorial | PASS |
+| townlife | PASS |
+| walkers | PASS |
+| door-sweep | first FAIL (the lighthouse door in chapter 10; a game over on Zeelich's street): the harbour's straight cuts ran on south and sank the lighthouse's headland. Bounded (`HARBOUR_PLAT.zFar`); **PASS** |
+| place-scan | first FAIL on one known item that moved: the crane's cargo on the pier, its LEFT entry (`tests/place-scan.mjs`) now at the leg; **PASS** (no new piece out of place: the walls, posts, fence, roof) |
+| world-consistency | PASS |
+| spaceport-2 | PASS |
+| spaceport | PASS (Zeelich's gate: out within 1.5 m of the landing spot) |
+| travel | first: the Citadel ferry's stop, moved onto the leg, stood among the pier's people (their talk prompt took E). Back on the quay by its board; the 8 Twinsun legs and the ferry rides **PASS**. One FAIL left, **also on the base commit** (run there): chapter 2 → 3, "no sky-ferry at Zeelich's dock" (Zeelich's sky-ferry shows) — known, not this task's |
+| last-ferry | PASS |
+| one-more-place | PASS |
+| twelve-years-late | PASS (its album's harbour spot) |
+| camcitadel | first FAIL: behind Twinsen's house the camera drew in (under 5 m for 4.3 s, 3 s allowed): the hip roof's camera slab ran full length at the crown's height over the hips' low ends. It now stops halfway down the end slopes (`architecture.js` hip `occEnds`, Twinsen's only); **PASS**. A version that also boxed the hips' lower half failed "the house alley" (70° off his back) and was dropped |
+| occluders | PASS (the houses' roofs, Twinsen's hip) |
+| solidnpc | FAIL on the **known baseline** only: the planter box at the spaceport bridge's foot has no collider |
+| save-migration | see below |
 
 ## Pictures
 
-Ours only, committed: `captures/citadel-orig-2/` (Citadel, chapters 1–2: may be shown to the user).
-LBA2 | ours before | ours after sheets: `/dev/shm/cit2/sheets/` (not committed).
+All may be shown to the user (Citadel, chapters 1–2; the Zeelich spaceport is where chapter 2 starts).
 
-## Resume point
+Ours before | after, committed, `captures/citadel-orig-2/`:
+- the sea: `s_obl.jpg`, `s_top.jpg`, `desert_sea.jpg`;
+- the harbour: `h_top.jpg`, `h_obl.jpg`, `h_obl2.jpg`, `h_west.jpg`, `h_plat.jpg`, `h_pier.jpg`;
+- the chapter-1 arrival: `arrival_6.jpg`, `arrival_11.jpg`, `arrival_15.jpg`;
+- the streets: `t_top.jpg`, `t_obl.jpg`, `p_east.jpg`, `p_south.jpg`, `f_block.jpg`, `f_strip.jpg`, `f_mid.jpg`;
+- Twinsen's house: `p_house.jpg`, `p_house_hi.jpg`, `house_r.jpg`;
+- the opening film: `opening_9.jpg`, `opening_12_5.jpg`, `opening_15.jpg`, `opening_25.jpg`, `opening_77.jpg`, `opening_80.jpg`;
+- Zeelich's gate: `zeelich_gate.jpg`.
 
-- Tools: `/dev/shm/cit2/tools/` (ours.mjs copy, seatune.mjs, deserttune.mjs, probe.mjs, openframes.mjs, arrival.mjs);
-  references `/dev/shm/cit2/ref/`; before captures `/dev/shm/cit2/base*`, `open-before`, `arr-before`.
+LBA2 | ours before | ours after, the same views: `/dev/shm/cit2/sheets/` (not committed).
+
+## Left (toward the provisional 85)
+
+- The sea's red stays ~18 over LBA2's (the frame's chroma grade).
+- The harbour: our quay still stands where LBA2's L is (LBA2's arm and leg are our quay's footprint), so our L hangs
+  off its west face: the harbour reaches 7 m further west than LBA2's, where it reached 16.5 m. LBA2's platform-centre
+  planter with its tree and its paving over our hall's yard pattern are not built.
+- The streets: the north cross streets round the square's block (the climb's paving is in the way); our blocks still
+  carry more grass than LBA2's.
+- Twinsen's walls stay our pale rubble; LBA2's are darker.
+
+## Rerun
+
+```
+python3 -I tools/map-orig/gen.py tools/worldscore/ref/citadel.json spots.json /dev/shm/cit2/x citadel
+SUNNY=1 node tools/map-orig/remake.mjs lba2 49 /dev/shm/cit2/x-remake.json /dev/shm/cit2/ref
+LBA3=<snapshot> GAME_URL=http://localhost:8988/ node tools/map-orig/ours.mjs /dev/shm/cit2/x-ours.json <outdir>
+```
+The spot lists, the sea's tuning scripts (`seatune.mjs`, `deserttune.mjs`), the film and arrival frame scripts
+(`openframes.mjs`, `arrival.mjs`) and the sheet script are in `/dev/shm/cit2/` (not committed).
