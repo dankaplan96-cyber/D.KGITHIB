@@ -5454,3 +5454,9 @@ quality differs from the user's; **the frame's geometry does not depend on the G
   or Windows scaling on the user's screen. **Proposal (the cloud's, main.js):** let the `?perf` overlay be toggled by a
   key combination (e.g. Ctrl+Shift+P) or a Settings line, so the user can show pixel ratio / auto × / quality from
   inside the artifact and send a picture next time it happens. No diff from the desktop.
+- **P30-FRAME, again in the user's own Chrome (16.11, the Claude-in-Chrome extension, the GTX 1050):** the artifact page
+  in a maximized window: the iframe **1536 × 650.2 CSS at devicePixelRatio 1.25, no transform / zoom / scale** on it or
+  any ancestor, the page's zoom 1, visible. The title screen's picture inside the frame looks as it does served
+  directly. Screenshots of the frame mostly time out while the game draws (the extension's capture), so no close-up crops
+  from the user's Chrome; the user has a save in the artifact, so no new game was started there (not to touch it).
+  **Same conclusion: claude.ai's frame does not shrink or scale the game's canvas.**
