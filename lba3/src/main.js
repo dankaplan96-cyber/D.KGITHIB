@@ -2433,7 +2433,7 @@ class Game {
       if (it.arsenal) { this.story.arsenal.buy(it); this.save(false); return; }
       if (it.shop) { this.story.shops.buy(it); this.save(false); return; }
       if (it.id === 'potion') h.hp = h.maxHp;
-      if (it.id === 'flask') h.mp = h.mpMax;
+      if (it.id === 'flask') h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.5));   // (the user, 16.11: a bought flask fills part too — half the bar; a found one 30 %)
       if (it.id === 'clover') h.clovers++;
       this.audio.play('heal');
       this.save(false);

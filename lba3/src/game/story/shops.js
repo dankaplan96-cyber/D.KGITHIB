@@ -90,7 +90,8 @@ export class Shops extends ChapterBase {
     const g = this.game, h = g.hero, f = this.f;
     switch (it.id) {
       case 'potion': h.hp = h.maxHp; g.audio.play('heal'); break;
-      case 'flask': case 'tea': h.mp = h.mpMax; g.audio.play('heal'); break;
+      case 'flask': h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.5)); g.audio.play('heal'); break;   // (the user, 16.11: partial, half the bar)
+      case 'tea': h.mp = h.mpMax; g.audio.play('heal'); break;
       case 'clover': h.clovers = Math.min(9, h.clovers + 1); g.audio.play('heal'); break;
       case 'darts10': { const A = h.arms; A.darts = Math.min(ARMS.max.darts, A.darts + 10); g.audio.play('coin'); g.hud.toast('a_toast_darts', { n: 10 }); break; }
       case 'pcell': f.sh_pcell = true; g.audio.play('coin'); g.hud.toast('a_toast_got', { n: t('it_pcell') }); break;   // (a toast, as the other goods: no found box over the counter)

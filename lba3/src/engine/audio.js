@@ -90,6 +90,7 @@ const VOICES_MAX = 16;   // effects sounding at once before a pri-2 one is skipp
 const VOICES_LOW = 10;   // … before a pri-1 one is (feet and ticks give way first)
 const SPACE = { near: 4, far: 0.1, pan: 0.6 };   // full within 4 m, then near/d; quieter than 0.1 (40 m) skipped; side ≤ 0.6
 const COIN_RUN = [0, 2, 4, 5, 7];   // semitones: kashes taken in a run (play: _coinStep)
+const SFX_MAKEUP = 1.5;   // (the user, 16.11, after listening: "the sounds are good, a little too quiet": +3.5 dB on the effects bus, a limiter after it)
 const FX_DUCK = 0.63;   // the effects and ambience under a voice line (-4 dB), as the music steps back (duck)
 
 export class AudioEngine {
@@ -158,7 +159,12 @@ export class AudioEngine {
     this.fxDuck.connect(this.master);
     this.reverb.connect(revGain).connect(this.fxDuck);
     this.musicBus.connect(this.master);
-    for (const b of [this.sfxBus, this.ambBus]) b.connect(this.fxDuck);
+    // (the effects' limiter: SFX_MAKEUP's louder hits don't clip when several land at once)
+    this.sfxLim = ctx.createDynamicsCompressor();
+    this.sfxLim.threshold.value = -6; this.sfxLim.knee.value = 6; this.sfxLim.ratio.value = 12;
+    this.sfxLim.attack.value = 0.003; this.sfxLim.release.value = 0.15;
+    this.sfxBus.connect(this.sfxLim).connect(this.fxDuck);
+    this.ambBus.connect(this.fxDuck);
     // the voices (VOICE-MIX, the user: "too quiet against the music, even with the music turned down"): louder,
     // through a gentle compressor so loud syllables don't clip; the music ducks while someone speaks (duck)
     this.voiceComp = ctx.createDynamicsCompressor();
@@ -245,7 +251,7 @@ export class AudioEngine {
     const set = (p, v) => { if (first) { p.value = v; this._targets.set(p, v); } else this._glide(p, v, t, VOL_GLIDE); };
     set(this.master.gain, this.vol.master);
     set(this.musicBus.gain, this.vol.music); // (the ducking is a stage of its own in music.js: the slider never fights it)
-    set(this.sfxBus.gain, this.vol.sfx);
+    set(this.sfxBus.gain, this.vol.sfx * SFX_MAKEUP);
     set(this.ambBus.gain, this.vol.sfx * 0.6);
     set(this.voiceBus.gain, (this.vol.voice ?? 0.8) * VOICE_BOOST);
     this._volSet = true;
