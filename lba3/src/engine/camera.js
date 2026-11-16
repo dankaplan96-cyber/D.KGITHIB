@@ -212,10 +212,11 @@ const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
 //  - Over his head: leaving it, the arm under it starts from the length shown, not from the shorter arm it held beneath
 //    (walking off a turn by Bug Street's pair it rose over his head and came back down within 0.6 s, the arm first in
 //    from 3.9 to 3.2 m and then out again); from a longer low arm into the risen arm (CH_HIGH_*) tilt and arm move
-//    together (tilt first, the camera rose a metre and dropped back within 0.3 s); over his head, turning, a lower tilt waits CH_OVER_Q_HOLD s and a higher one CH_OVER_Q_UP s unless he is out of
-//    sight (turning on the spot by a house the least tilt that sees him changed with the heading for a frame or two,
-//    the camera bobbing by inches). CH_HIGH_HYST: the risen longer arm (CH_HIGH_*) is left for the low
-//    one only when that is this much longer than CH_WALK_KEEP (the two took turns as the low arm read 4.4 / 4.5 m).
+//    together (tilt first, the camera rose a metre and dropped back within 0.3 s); over his head, turning, a lower tilt
+//    waits CH_OVER_Q_HOLD s and a higher one CH_OVER_Q_UP s unless he is out of sight (turning on the spot by a house
+//    the least tilt that sees him changed with the heading for a frame or two, the camera bobbing by inches).
+//    CH_HIGH_HYST: the risen longer arm (CH_HIGH_*) is left for the low one only when that is this much longer than
+//    CH_WALK_KEEP (the two took turns as the low arm read 4.4 / 4.5 m).
 //  - CH_EL_MAX_DOOR: just out of a door, held at his back (CAM-DOORS) over the house's roof, the view looks down no
 //    steeper than this (CH_EL_MAX elsewhere), his chest still kept CH_EL_KEEP_DOOR inside the frame's foot: out of
 //    Twinsen's door it stood at 46° for 3.3 s. Held at his back, the door's rule lets go while he stands only when the
