@@ -1,0 +1,27 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-56.15,18.74,-36.65] hp 4 | The square has water. Try the tap at home
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[7s +6s] home: Zoé — the square is full, our tap is not: {"r":"talked","to":"zoe","state":"play","lines":8,"speakers":["zoe","hero","arthur"],"room":"house","fail":null} | house [998.38,0,-0.62] hp 2 | Find where the houses lost their water (the pump room on the lane)
+  stats: {"play":53.7,"dialog":1.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":4,"words":77,"says":4,"walked":141,"hpLost":2,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[8s +1s] his own tap: dry, knocking: {"r":"used","target":{"kind":"npc","id":"zoe","x":997.0495633198981,"z":-2.285917535838884,"label":"p_talk"},"state":"play","lines":2,"stream":false,"fail":"tap"} | house [997.75,0,-2.46] hp 2 | Find where the houses lost their water (the pump room on the lane)
+  stats: {"play":11.3,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":12,"says":1,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+  STOP: tap
+FAIL the segment ran every step to its end "his own tap: dry, knocking: tap"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[0.4] go → (-46.1, 77.2) plan ok=false pts=4 left=112.1
+[5.4] stuck at (-53.7, -34.6): replan
+[6.5] hurt 4→2 at (-53.7, 10.3, -32.5) near: nobody sliding
+[10.9] stuck at (-53.6, -32.0): replan
+[46.5] stuck at (-45.9, 66.3): replan
+[50.6] go: transition (citadel → citadel, trans true) at (-45.53, 76.56)
+[51.4] go → (997.7, -2.6) plan ok=true pts=5 left=0.67
+[56.0] go → (997.7, -3.2) plan ok=false pts=2 left=1.02
+stats total: {"play":65.1,"dialog":1.4,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":5,"words":89,"says":5,"walked":148,"hpLost":2,"deaths":0,"rooms":2,"chapter":"project","coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  1 FAIL, 0 optional
+  FAIL missing local file: the server responded with a status of 404 (Not Found) http://127.0.0.1:8976/favicon.ico
+visual:     3 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional, 1 resource)
+2 FAILED
