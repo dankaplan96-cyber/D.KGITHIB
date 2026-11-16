@@ -11,7 +11,7 @@
 // line and no night word (errors); English keys with no Hebrew are listed as a warning with a count (--he: per file;
 // --he-missing [file]: the keys).
 // Mechanical only: it cannot say whether a line reads well in its scene.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -32,7 +32,8 @@ for (const f of readdirSync(join(GAME, 'text')).sort()) {
   const pre = { ...STR.en }, preHe = { ...STR.he };
   await import(pathToFileURL(join(GAME, 'text', f)));
   enOf[f] = new Set(Object.keys(STR.en).filter((k) => !(k in pre) || pre[k] !== STR.en[k]));
-  heOf[f] = new Set(Object.keys(STR.he).filter((k) => !(k in preHe) || preHe[k] !== STR.he[k]));
+  const heSrc = existsSync(join(GAME, 'text/he', f)) ? readFileSync(join(GAME, 'text/he', f), 'utf8') : '';
+  heOf[f] = new Set(Object.keys(STR.he).filter((k) => !(k in preHe) || preHe[k] !== STR.he[k] || new RegExp(`(^|[\\s,{])${k}\\s*:`).test(heSrc)));
   for (const k of Object.keys(STR.en)) {
     if (!(k in owner)) owner[k] = f;
     else if (pre[k] !== undefined && pre[k] !== STR.en[k] && new RegExp(`(^|[\\s,{])${k}\\s*:`).test(src)) dup.push(`${k} (${owner[k]} → ${f})`);
