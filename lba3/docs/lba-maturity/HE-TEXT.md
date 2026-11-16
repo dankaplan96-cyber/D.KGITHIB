@@ -132,13 +132,21 @@ oneplace, offwall, yearslate, quietchannel).
 
 ## Tests
 
-- `node tests/dialogue-check.mjs [--he] [--he-missing [file]]` — the static checks above. PASS.
+- `node tests/dialogue-check.mjs [--he] [--he-missing [file]]` — the static checks above. PASS; Hebrew 4,730 / 4,730.
 - `tests/hebrew.mjs` (browser, Automated runtime only): the Language row by clicks, kept after a reload; the house's
   tip panel and Arthur's box in Hebrew, right to left, inside the screen; the cupboard; the yard's tip; Zoé's box at
   1280×720 and 1920×1080 (no spill); the rest of the yard (P.openingYard) with no dialogue overflow; every line shown in
-  Hebrew voiced from its English source (a spy on the voice's line); the objective, the pause menu's objective, the
-  inventory and journal in Hebrew (no scroll, no spill, both sizes); back to English. `SHOTS=1` writes
-  captures/hebrew/*.jpg (1920×1080).
+  Hebrew voiced from its English source (a spy on the voice's line: 8 lines, none voiced in Hebrew); the objective,
+  the pause menu's objective, the inventory and journal in Hebrew (no scroll, no spill, both sizes); back to English.
+  `SHOTS=1` writes captures/hebrew/*.jpg (1920×1080). **PASS (17/17).**
+- Run on a snapshot of the worktree (port 8987, swiftshader), one browser at a time: hebrew PASS · menus PASS (updated:
+  the Language row, Camera Shake under Advanced) · inventory-calm PASS (its own Hebrew section) · opening-tutorial PASS
+  · chapter1 PASS · voices PASS (after its file list skipped the new he/ folder) · voice-phrase: one timing check failed
+  in each of two runs, a different one each time (an Expressive line's start 6.8 ms against 5; the Words voice's first
+  sound 438 ms against 400), on a machine shared with other agents' suites; every functional check passed. English mode
+  does no extra work per line (spoken() returns at once). · save-migration: see the final report.
+- Pictures (chapter 1, 1920×1080): captures/hebrew/01-house-dialogue.jpg (Arthur), 02-yard-tip.jpg (the tip panel and
+  Zoé's call), 03-yard-zoe-dialogue.jpg, 04-inventory.jpg, 05-journal.jpg.
 
 ## Open points
 
