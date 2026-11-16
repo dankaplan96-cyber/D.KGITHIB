@@ -99,22 +99,36 @@ past tense; system tips and settings in the plural imperative (לחצו, בחר�
 on-screen prompts as nouns (דיבור, בדיקה, פתיחה). No night, evening, sunset or dawn words (לילה, ערב, שקיעה, זריחה,
 שחר, דמדומים): "back for dinner" is "בזמן לאוכל".
 
-## Examples (English → Hebrew)
+## Examples (English → Hebrew), one or two per voice
 
-- Twinsen: "Then give the water back." → "אז תחזירו את המים." · "The shell? What shell?" → "הקליפה? איזו קליפה?"
-- Zoé: "Don't worry. I raised Arthur. I know how to sneak." → "אל תדאג. גידלתי את ארתור. אני יודעת להתגנב."
-- Arthur: "I fixed the radio! Me! That counts as helping, right?" → "תיקנתי את הרדיו! אני! זה נחשב עזרה, נכון?"
-- Baldino: "No, no, no! Stop it halfway and the shell cracks on its own." → "לא, לא, לא! תעצור אותה באמצע, והקליפה תיסדק מעצמה."
-- Vesk: "I'm an engineer, Zoé. I calculate capacities. I don't make promises." → "אני מהנדס, זואי. אני מחשב קיבולות. אני לא מבטיח הבטחות."
-- Gilbert: "So I'm paying for an empty pipe?" → "אז אני משלם על צינור ריק?"
-- Mira: "This is the water office. I tell them: zone wet." → "זה משרד המים. אני אומרת להם: אזור רטוב."
-- A tip: "{k} Switch to Athletic: run and jump" → "{k} מעבר לאתלטי: ריצה וקפיצה"
+- Twinsen (warm, direct): "Then give the water back." → "אז תחזירו את המים." · "I'm coming home. Tell your mother. Tell everyone: nobody gets left behind." → "אני חוזר הביתה. תגיד לאמא. תגיד לכולם: אף אחד לא נשאר מאחור."
+- Zoé (clear, assured, dry): "Don't worry. I raised Arthur. I know how to sneak." → "אל תדאג. גידלתי את ארתור. אני יודעת להתגנב." · "Not bad for an old hero. Now, the well." → "לא רע בשביל גיבור ותיק. עכשיו, הבאר."
+- Arthur (lively): "I fixed the radio! Me! That counts as helping, right?" → "תיקנתי את הרדיו! אני! זה נחשב עזרה, נכון?" · "Knock, knock, knock. If it's a plumber, he's very small." → "טוק, טוק, טוק. אם זה שרברב, הוא קטן מאוד."
+- Baldino (excitable inventor): "No, no, no! Stop it halfway and the shell cracks on its own." → "לא, לא, לא! תעצור אותה באמצע, והקליפה תיסדק מעצמה." · "One isolator, one relay. Never two. I tried. Twice. The second time I lost an eyebrow." → "מבודד אחד, ממסר אחד. אף פעם לא שניים. ניסיתי. פעמיים. בפעם השנייה איבדתי גבה."
+- Vesk (measured, persuasive): "I'm an engineer, Zoé. I calculate capacities. I don't make promises." → "אני מהנדס, זואי. אני מחשב קיבולות. אני לא מבטיח הבטחות." · "A bypass left on the wrong setting. My fitters will hear of it." → "מעקף שהושאר על הכיוון הלא נכון. המתקינים שלי ישמעו על זה."
+- Sendell: "I cannot do this alone any more. You will have to help me, all of you." → "אני לא יכולה לעשות את זה לבד יותר. תצטרכו לעזור לי, כולכם."
+- Residents: Gilbert "So I'm paying for an empty pipe?" → "אז אני משלם על צינור ריק?" · Mira "This is the water office. I tell them: zone wet." → "זה משרד המים. אני אומרת להם: אזור רטוב." · Doran "Waiting is what harbours are for." → "בשביל זה יש נמלים, בשביל לחכות." · Mr Pelleck "I do not panic. I file." → "אני לא נכנס לפאניקה. אני מתייק."
+- UI: "{k} Switch to Athletic: run and jump" → "{k} מעבר לאתלטי: ריצה וקפיצה" · objective "Check the well" → "לבדוק את הבאר" · journal "Mira won't unlock the well for what she calls a pipe fault." → "מירה לא תפתח את הבאר בגלל מה שהיא קוראת לו תקלה בצנרת."
 
 ## Coverage (dialogue-check --he; keys translated / keys the English file sets)
 
-See the latest numbers with `node tests/dialogue-check.mjs --he`. Done so far (each file complete):
-i18n.js 260/260, opening, well, ch1 (chapter 2), ch2 (chapter 3), common, thread, world, map, magic, life, walkers,
-interiors, storylife, stands, shops, purposes, sewers, hostel, arsenal, kit2, kit2b, workshop.
+**4,730 of 4,730 keys in src/game/text/*.js (100 %)**, plus i18n.js's own table (261/261, in text/he/i18n.js) and the
+Dino-Fly's five lines (in dinofly.js beside their English). Per file: i18n.js 261/261 · answer 63/63 · arsenal 105/105 ·
+ch1 146/146 · ch10 97/97 · ch2 117/117 · ch3 128/128 · ch4 141/141 · ch5 76/76 · ch6 69/69 · ch7 54/54 · ch8 63/63 ·
+ch9 84/84 · cnline 92/92 · common 244/244 · deeplife 33/33 · depth 41/41 · desertlife 127/127 · digtest 72/72 ·
+ferry 97/97 · hamlife 71/71 · hostel 58/58 · ihomes 162/162 · interiors 188/188 · islandpeople 243/243 · islands 51/51 ·
+isleslife 93/93 · kesh 50/50 · kit2 37/37 · kit2b 59/59 · laneline 67/67 · life 89/89 · magic 20/20 · map 76/76 ·
+netline 57/57 · offwall 65/65 · oneplace 79/79 · opening 74/74 · passline 36/36 · purposes 63/63 · quietchannel 58/58 ·
+sewers 67/67 · shops 38/38 · stands 39/39 · storylife 130/130 · thread 165/165 · walkers 191/191 · well 55/55 ·
+workshop 48/48 · world 18/18 · yearslate 57/57 · zeelife 116/116. No Hebrew line carries a Latin word other than key
+names and brand names (a scan of STR.he).
+
+Order of work (commits): the architecture; chapters 1–2 (opening, well, ch1, common) and the RTL CSS with
+tests/hebrew.mjs; chapter 3 (ch2, thread, workshop) with the signs, holomap and magic; Citadel's people (walkers,
+interiors, life, storylife, stands, shops, purposes, sewers, hostel, arsenal, kit2, kit2b); Zeelich's street and islands;
+chapters 4–5 (ch4, digtest, depth, deeplife, desertlife, kesh, ch5); 6–8 (ch6, passline, hamlife, ch7, ch8, laneline);
+9–10 (ch9, cnline, ch10, netline, isleslife); 11–12 and the epilogue (ch3, answer); the side quests U-1…U-5 (ferry,
+oneplace, offwall, yearslate, quietchannel).
 
 ## Tests
 
@@ -131,14 +145,24 @@ interiors, storylife, stands, shops, purposes, sewers, hostel, arsenal, kit2, ki
 - Ker'aooc: the English text calls her "she" (purposes.js), the voice table lists her among the men (voice.js MEN).
   The Hebrew follows the text. A story/voice decision for the campaign director.
 - "קשים" vs "קאשים" for kashes; "אי סיטדל" vs "האי המצודה" (see the glossary): one replace each if the user prefers.
-- 3D painted sign textures stay English (world art).
-- Switching language mid-game re-renders the menus, HUD and objective at once; texts built once into a scene (a
-  sign's canvas, a holomap label already drawn) follow at the next build of that scene.
+- Settings: the Language row is first on the Game page; to keep every page at five rows before Advanced (the menus
+  test's rule), Camera Shake moved under a new Advanced fold on the Game page.
+- English left inside Hebrew on purpose: key and button names ("Space", "Shift", "LT"), brand names; a few hints the code
+  puts together with an English fragment (the lock hint's "/ right-click", the Auto quality hint's ", settling") stay
+  English in both languages.
+- 3D painted sign textures (props.js LABELS: SQUARE, LIGHTHOUSE …; the valve room's board) are world art: English in
+  both languages.
+- An English key defined twice keeps "the later file wins" in Hebrew too: `it_rope` is "Rope Ladder" (common.js) and
+  "Rope" (ch4.js, later), so the chapter 1 rope ladder's inventory name reads "Rope"/"חבל" once ch4.js has loaded. A
+  pre-existing English collision, not changed here.
+- Switching language mid-game re-renders the menus, HUD and objective at once; a text drawn once into a scene (a
+  canvas sign) follows at the next build of that scene.
+- Not read in play by a Hebrew reader: the translation is source-reviewed; hebrew.mjs only shows it is on screen,
+  laid out and voiced from the English.
 
 ## Resume point
 
-Run `node tests/dialogue-check.mjs --he` for the files still at 0. The order chosen: chapter 3's remaining
-(zeelife, islandpeople, islands, ihomes), chapter 4–5 (ch4, digtest, depth, deeplife, desertlife, kesh, ch5), 6–7
-(ch6, passline, hamlife, ch7), 8–10 (ch8, laneline, ch9, cnline, ch10, netline, isleslife), 11–12 and the epilogue
-(ch3, answer), the side quests U-1…U-5 (ferry, oneplace, offwall, yearslate, quietchannel). For each: read the English
-file with its comments, write `he/<file>.js` with the same keys in the same order, run dialogue-check, commit.
+The translation is complete by key count. What remains is review, not coverage: a native read of the Hebrew in play
+(chapters 3–12 and the side quests were checked from source and by dialogue-check only), the open points above, and
+keeping the standing rule. A new English line: write its Hebrew in the matching text/he/<file>.js the same day, run
+`node tests/dialogue-check.mjs --he`, and the Hebrew line count must stay 100 %.
