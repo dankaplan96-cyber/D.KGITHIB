@@ -5505,3 +5505,23 @@ until the first chapter's quests are done, so the sunny Citadel the order asks f
 daylight) is far into play. The user's own saves are on another island. Nothing measured from the original. Options:
 the user takes the shots in their own game (the desktop measures the numbers from their pictures), or the cloud keeps
 MAP-ORIG's remake-based reading.
+
+## KESH-ORIG · Kesh in LBA2's grey stone: walls, roofs, paving, the gold-domed house (CLOUD_ORDERS 51.4, a candidate) · the desktop, 16.11.2026
+**`requests/KESH-ORIG.diff`** (`desert.js` only; `git apply --check` clean on origin). **No building moved** (the user's
+"don't move anything"): the five houses keep their places, sizes, doors, stairs, shutters, awnings, parapet domes and
+rooftop jars; the wind-pump, the oasis, the stall, the palms and the people are untouched. MAP-ORIG's reading taken:
+LBA2's Kesh is grey stone (DESERT-ART 1's "peach" was the original's flat palette colour, its textures are stone).
+- **Walls:** grey stone (the stone texture), each house its own light shade (`tint` #d2cec6 … #e8e4dc); the flat roofs
+  grey stone. The parapet domes (the original's bodies 94–97) stay, in the walls' stone.
+- **The gold-domed house:** LBA2 has one house under a gold ribbed dome: ours on Tarra's house, the big one on the
+  plaza's north side: a stone drum, a gold half-dome with eight ribs and a finial on its roof's middle (clear of the
+  parapet domes and the jars). Its door, roof stair and everything below unchanged.
+- **Paving:** the plaza's core (radius ≈ 12–16 m round the plaza) and the street west to the quay (the first track's
+  stretch, x −94 … −54) in grey stone paving (the ground's paving texture, a grey tint); trodden dirt and grass kept off
+  it; the oasis lies outside it.
+- **Draw calls** (play camera, same spots, v95 → with it): plaza 232 → 230, plaza north 126 → 124, the street 248 → 244,
+  at Tarra's door 120 → 118 (the walls' five plaster materials became stone ones; the dome adds one gold); triangles
+  +1–4k. No page errors.
+- Pictures, v95 left / with it right (chapter 4: **the team only**; the cloud describes it to the user in words before
+  applying): `docs/future/landmarks/kesh-orig-{plaza,street,tarra,above}.jpg`.
+- Not run: `desert-life`, `island-doors`, `chapter4`, `kesh` suites (no collider, door or spot moved): **for the cloud**.
