@@ -319,10 +319,11 @@ function baseHeight(x, z) {
     const P = HARBOUR_PLAT;
     if (x > P.x0 - 1 && x < P.x2 + 1 && z > P.zS - 4.5 && z < P.zS + 1) h = lerp(h, P.h, smoothstep(P.x0 - 1, P.x0 + 0.5, x) * smoothstep(P.zS - 4.5, P.zS - 3, z));
     if (x > P.x1 - 0.6 && x < P.x2 + 1 && z > P.zS - 1 && z < P.zSE + 1) h = lerp(h, P.h, smoothstep(P.x2 + 1, P.x2 - 0.5, x));
-    const sea = (dw) => { const k = smoothstep(-0.3, 0.6, dw); if (k > 0) h = lerp(h, Math.min(h, -3.2), k); };
-    if (x > QUAY.x1 - 1 && x < P.x1 + 1 && z > P.zS - 1) sea(Math.min(x - QUAY.x1, P.x1 - x, z - P.zS));   // (the notch inside the L)
-    if (x >= P.x1 - 0.3 && x < P.x2 && z > P.zSE - 1) sea(z - P.zSE - (1 - smoothstep(P.x2, P.x2 - 1.5, x)) * 5);   // (before the trading house's ground)
-    if (x > QUAY.x0 + QUAY_R && x < QUAY.x1 + 0.6 && z > QUAY.z1 - 1) sea(z - QUAY.z1);                     // (before the quay's south face)
+    // (only near the walls: from P.zFar on south the ground is the island's own again — the bay, the lighthouse's headland)
+    const sea = (dw) => { dw -= smoothstep(P.zFar, P.zFar + 3, z) * 9; const k = smoothstep(-0.3, 0.6, dw); if (k > 0) h = lerp(h, Math.min(h, -3.2), k); };
+    if (x > QUAY.x1 - 1 && x < P.x1 + 1 && z > P.zS - 1 && z < P.zFar + 3) sea(Math.min(x - QUAY.x1, P.x1 - x, z - P.zS));   // (the notch inside the L)
+    if (x >= P.x1 - 0.3 && x < P.x2 && z > P.zSE - 1 && z < P.zFar + 3) sea(z - P.zSE - (1 - smoothstep(P.x2, P.x2 - 1.5, x)) * 5);   // (before the trading house's ground)
+    if (x > QUAY.x0 + QUAY_R && x < QUAY.x1 + 0.6 && z > QUAY.z1 - 1 && z < P.zFar + 3) sea(z - QUAY.z1);                     // (before the quay's south face)
   }
   // the Whispering Cliffs: a rock stack on the plateau's rim
   {

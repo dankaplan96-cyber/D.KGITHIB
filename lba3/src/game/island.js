@@ -47,7 +47,7 @@ export const QUAY_R = 2;
 // CITADEL-ORIG-2: LBA2's harbour platform, straight-walled (world coordinates): the yard's south face (z zS, from the
 // quay's east face to x1), the notch inside the L (the water between the quay and the trading house's ground), that
 // ground's west face (x1) and south face (zSE, to x2); level at h, paved (world.js shapes the ground, buildHarbour the walls)
-export const HARBOUR_PLAT = { x0: -105.5, x1: -91.3, x2: -79.0, zS: 44.0, zSE: 51.0, h: 2.3 };
+export const HARBOUR_PLAT = { x0: -105.5, x1: -91.3, x2: -79.0, zS: 44.0, zSE: 51.0, h: 2.3, zFar: 57.0 };   // (zFar: the cuts fade out south of it)
 export const PIER_L = { elbow: { x: -80, z: -4 }, a: Math.PI / 2 };
 export function pierOff(dx, dz) { const c = Math.cos(PIER_L.a), s = Math.sin(PIER_L.a); return { x: dx * c + dz * s, z: -dx * s + dz * c }; }
 export function pierW(xd, zd) {
@@ -657,7 +657,7 @@ function buildHarbour(W0, root, r) {
     // the leg (the turned frame pc: its design x runs south, its -z side is west), from the arm's south face to the tip:
     // its west face (the ferry's side: a gap at her gangway), the tip (a gap at the ladder), the east face (inner: no rail)
     const lx0 = E.x - pw / 2, gwx = QX - plen + 4.6 + 2.0;
-    wallRun(BL, lx0, pz - pw / 2, x1, pz - pw / 2, deck + 0.05, [[lx0 - gwx - 0.95, lx0 - gwx + 0.95]], legPosts);
+    wallRun(BL, lx0, pz - pw / 2, x1, pz - pw / 2, deck + 0.05, [[-1, lx0 - gwx + 0.95]], legPosts);   // (open from the elbow to past the gangway: the opening's resident walks to 0.3 m from the edge there)
     wallRun(BL, x1, pz - pw / 2, x1, pz + pw / 2, deck + 0.05, [[0.45, pw - 0.45]], legPosts);
     wallRun(BL, x1, pz + pw / 2, lx0, pz + pw / 2, deck + 0.05, [[-1, 99]], legPosts);
     BL.add(bbox(lx0 - x1, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (lx0 + x1) / 2, deck - 0.15, pz);
