@@ -144,7 +144,7 @@ const v1 = await ev(() => { const G = game, h = G.hero; h.mp = 0; h.coins = 40; 
 await shot('bazoo-evacuation');
 check('the evacuation: Mr Bazoo (TALK), packing, sells what he can\'t carry at half price', v1.r === 'talked' && v1.state === 'shop' && v1.title === "Mr Bazoo's: everything must go" && v1.said.some((l) => /Half price/.test(l)), v1);
 check('his stock, halved: flask 3, clover 11, three darts 2, Nitro-Meca-Penguin 2', JSON.stringify(v1.rows?.map((r) => [r.label, r.price])) === JSON.stringify([['Magic flask: half your magic back', 3], ['Clover leaf: extra life', 11], ['Three darts', 2], ['Nitro-Meca-Penguin', 2]]), v1.rows);
-const v2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins; const a = T.buyKeys('Magic flask'); const out = { a, spent: c0 - h.coins, mp: h.mp === h.mpMax }; T.leave(); return out; });
+const v2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins; const m0 = h.mp; const a = T.buyKeys('Magic flask'); const out = { a, spent: c0 - h.coins, mp: h.mp === Math.min(h.mpMax, m0 + Math.ceil(h.mpMax * 0.5)) }; T.leave(); return out; });
 check('bought in the sale: the flask for 3', v2.a === 'ok' && v2.spent === 3 && v2.mp, v2);
 const v3 = await ev(() => { const G = game, out = {};
   for (const [room, id] of [['pharmacy', 'pharmacist'], ['ticket', 'ines']]) {
