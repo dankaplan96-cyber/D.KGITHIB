@@ -5405,3 +5405,28 @@ served from the v93 worktree. **It ran through** (no crash; ~6 min). Log and rep
   posts every 1.2 m) run through **`pole` pieces** 4–5 cm (at (2251.8, 1785–1793), (2272.4, 1788–1793), (2233.9,
   1762–1783)): a post and a pole at the same spot. New since PLACE-2's run. Either skip a fence post where a pole stands
   or list them as left. The cloud's (zislands.js); no diff from the desktop.
+
+## V94-GPU · v94 on the GTX 1050: the yard's errand, the Follow camera, the School at S28 (CLOUD_ORDERS 49) · the desktop, 16.11.2026
+Chrome on the **GTX 1050** (ANGLE D3D11), v94 = `210e06c4` (a worktree), the repo's own suites run from a scratch copy of
+`tests\` with `launch()` on the real GPU (and the window's size by VW/VH/DPR); raw logs and sheets:
+`docs/lba3-performance/HARDWARE/2026-11-16-v94-gpu/`.
+1. **The yard's errand (OPENING-TUT-2), `opening-tutorial.mjs` by input:** **45 / 45 functional at 1280×720 and at
+   1920×1080** (the one "resource" fail both times is my local server's missing favicon.ico, not the game). Its 14
+   captures per size looked at (`tutorial-{1920,1280}-sheet.jpg`, chapter 1: may go to the user): every step's goal
+   line and key hint readable at both sizes — the house's goal, the cupboard, Zoé's call ("Twinsen! Over here."), the
+   call-back at the yard's edge, the inventory and the Kettle Crystals, the barrels, the pipe and the jump key, the yard
+   done ("Not bad for an old hero. Now, the well.") and the tick. One capture (the inventory step) catches its panel
+   mid fade-in (faint); the panel itself is solid once in. **Not done: timing a real first play** — scripted input is
+   not a first play; only the user can time it (as order 41 says).
+2. **The Follow camera** (`camfollow.mjs` and `camsteady.mjs` on the GPU, 1920×1080): camfollow **30 / 31** (fails:
+   "Follow, lock-on: Twinsen and the target both on screen every locked frame"); **camsteady 107 / 111** (v92 had 12 on
+   SwiftShader). Still failing: free · street, Modern (one jolt 1749 m/s² > 1600); follow · harbour pier (heading
+   reversals 12.1/min > his 8.6); follow and follow-medium · street, Modern (103.4 > 101.7/min, marginal). The route out
+   of Twinsen's door along the street passes in LBA follow and Follow with Classic controls.
+3. **The School in S28's canyon** (SCHOOL-S28 as applied): by the harness from the valley's mouth to the door and in:
+   transition into `school`, no page errors. Pictures (chapter 4, the team only): `docs/future/landmarks/school-s28-v94.jpg`
+   (the play camera in the valley, at the door, and wide). From the valley's floor the play camera shows the mask's
+   lower half and the door; the whole face reads from the canyon's mouth and from above.
+**P30-FRAME (order 50): not done yet.** The artifact page (claude.ai/artifact/…) asks to sign in: neither a fresh Chrome
+nor the app's browser pane is signed in, and the Claude-in-Chrome extension (the user's own Chrome) is not connected on
+the desktop now. Asked of the user.

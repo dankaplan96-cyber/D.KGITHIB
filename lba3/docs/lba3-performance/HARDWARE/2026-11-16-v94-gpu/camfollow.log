@@ -1,0 +1,40 @@
+PASS Settings → Camera offers three choices: Fixed (LBA2), Follow, Free; a new player starts on Follow (behind Twinsen: the user 31.10) {"cam":"follow","opts":[["lba","Fixed (LBA2)"],["follow","Follow"],["free","Free"]]}
+PASS a click on Follow chooses it (the camera follows) and stores it {"cam":"follow","rig":"follow","on":true,"stored":["sunshard_settings_v1"]}
+PASS the Hebrew label is "עוקבת" "עוקבת"
+PASS Settings → Camera distance offers Near, Medium, Far; Medium for a new player (the user, 4.11: 674f42e) (Hebrew "מרחק מצלמה") {"d":"medium","opts":[["near","Near"],["medium","Medium"],["far","Far"]],"heL":"מרחק מצלמה"}
+PASS found open ground for an 18 m run (Citadel, else Desert Island) {"room":null,"x":-112,"z":-76,"a":0,"d":13.8,"n":3}
+PASS LBA2 view (Fixed) unchanged: a run across the view never turns it {"turned":0,"mode":["lba"]}
+PASS Follow: standing, the view stays behind his back (within 15°) {"lba":{"turned":0,"mode":["lba"]},"standOff":0,"turn":{"turnedDuring":69.66,"lagMax":20.34,"maxStep":1.67,"within15At":0.07,"within3At":0.4,"overshoot":0,"standAfter":0.01,"modes":["follow","follow"]},"turn30":{"maxStep":5.63,"off":0.01},"run":{"maxOff":0.01,"turned":0.01}}
+PASS Follow, Classic: a turn on the spot turns the view with him (it turns ≥ 65° while he turns 90°, never more than 25° behind) {"turnedDuring":69.66,"lagMax":20.34,"maxStep":1.67,"within15At":0.07,"within3At":0.4,"overshoot":0,"standAfter":0.01,"modes":["follow","follow"]}
+PASS Follow: behind his back (within 15°) within 0.6 s of the turn, settled (within 3°) within 0.8 s, no overshoot (≤ 1°) {"turnedDuring":69.66,"lagMax":20.34,"maxStep":1.67,"within15At":0.07,"within3At":0.4,"overshoot":0,"standAfter":0.01,"modes":["follow","follow"]}
+PASS Follow: smooth — never more than 4.1° a frame at 60 fps, 10° at 30 fps (a 180° turn at 169°/s) {"turn":{"turnedDuring":69.66,"lagMax":20.34,"maxStep":1.67,"within15At":0.07,"within3At":0.4,"overshoot":0,"standAfter":0.01,"modes":["follow","follow"]},"turn30":{"maxStep":5.63,"off":0.01}}
+PASS Follow: on a straight run the view stays behind his back (within 5°) {"maxOff":0.01,"turned":0.01}
+PASS Follow, Classic: walking backwards (Down) never turns the view {"moved":4.42,"turned":0,"maxStep":0}
+PASS Follow, Modern: pushed back toward the camera, he runs at it and the view does not spin round (≤ 5°); he stays on screen {"moved":4.56,"turned":2.68,"facesCam":0,"onScreen":true}
+PASS Follow, Modern: then Up, the view comes round behind his back (within 15°), smoothly {"off":0.04,"maxStep":4,"turned":0.04}
+PASS Follow, Modern: Up goes where the view looks (within 8°), the view holds still (no loop: ≤ 3°) {"wayVsView":0,"turned":0}
+PASS Follow, Modern: a held side arrow keeps his way (≤ 10°) while the view comes round behind him (within 15°) {"wayDrift":1.4,"turned":90,"off":0,"maxStep":4}
+PASS Follow, Modern: let go and Up, he goes where the view now looks (within 15°) {"up":{"wayVsView":0,"turned":0},"side":{"wayDrift":1.4,"turned":90,"off":0,"maxStep":4},"upAfter":0}
+PASS Follow, lock-on: the view stands behind his shoulder on the line from the target (within 15°) {"locked":true,"offLine":12.8,"walk":{"both":false,"worst":{"a1":[-0.09,-0.96,0.5107537327070757],"b1":[0.05,0.28,0.8147657467728155],"arm":4.089999999999998,"pitch":0.88,"d":7.431457264642561},"lockedN":132,"offLine":15.9,"maxStep":0.63,"inside":"","d":10.5}}
+FAIL Follow, lock-on: Twinsen and the target both on screen every locked frame (≥ 2 s) while he moves; smooth (≤ 4.1° a frame) {"both":false,"worst":{"a1":[-0.09,-0.96,0.5107537327070757],"b1":[0.05,0.28,0.8147657467728155],"arm":4.089999999999998,"pitch":0.88,"d":7.431457264642561},"lockedN":132,"offLine":15.9,"maxStep":0.63,"inside":"","d":10.5}
+PASS Follow: the lock let go, the view comes back behind his back (within 15° in 1.5 s), smoothly {"off":0,"maxStep":4}
+PASS Camera distance: Medium stands further back and higher than Near, Far further and higher still; behind his back each time {"near":{"back":6.6,"up":3.73,"off":0,"look":20.6},"medium":{"back":7.99,"up":4.97,"off":0,"look":24.4},"far":{"back":9.43,"up":6.55,"off":0,"look":28.4}}
+PASS Follow: the camera-shake setting is respected (Off: no tremor; On: a tremor) {"off":0,"on":0.12}
+PASS found a wall with open ground in front of it on Citadel {"cands":22,"spots":10,"first":[{"x":-55.25,"z":-14.3,"a":1.5707963267948966,"wall":"box@-61.4,-14.3","top":5.4,"camSkip":true},{"x":-28.372594779818414,"z":-18.855686315202902,"a":0.05,"wall":"box@-28.6,-23.4","top":5.9,"camSkip":true},{"x":-64.25,"z":11,"a":1.5707963267948966,"wall":"box@-68.7,11.0","top":6,"camSkip":true}]}
+INFO wall spot {"x":-64.25,"z":11,"a":1.5707963267948966,"wall":"box@-68.7,11.0","top":6,"camSkip":true} skipped 2
+PASS Follow, a wall behind him: the arm drawn in (camera between him and the wall), or swung round him to a clear view at the full arm (CAM-CLEAR-2); outside everything, he is seen {"arm":3.2,"swung":false,"off":0,"inside":"","seen":true,"toHero":1.31}
+PASS Follow, walking away from the wall: let out slowly (≤ 2.6 m/s) while the wall limits it, then to the full arm eased (≤ 7.1 m/s); never inside anything, he is always seen {"inside":0,"unseen":0,"armEnd":8.7,"vOut":2.17,"vFast":4.33}
+PASS Follow, backing up to the wall: drawn in as he goes; never inside anything, he is always seen {"inside":0,"unseen":0,"armEnd":3.23,"armMin":3.2}
+PASS Follow, a full turn on the spot by the wall: never inside anything, he is always seen, smooth (≤ 4.1° a frame) {"inside":0,"unseen":0,"maxStep":2.83}
+PASS Follow at Far by the wall: drawn in at the wall (or swung round him to a clear view at the full arm, CAM-CLEAR-2), out to its longer arm away from it, never inside anything, he is always seen backing up {"start":{"arm":3.2,"swung":false,"off":0,"inside":"","seen":true,"toHero":1.31},"inside":0,"unseen":0,"full":10.71,"end":3.29}
+PASS Follow indoors: the iso view as before (it never turns) {"room":"house","modes":["iso"],"turned":0}
+PASS Follow and its distance (Far) are kept after a restart {"cam":"follow","rig":"follow","d":"far","arm":10.75}
+PASS an unknown stored camera falls back to LBA2 {"cam":"lba","rig":"lba"}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 30 passed, 1 failed
+errors:     none
+resources:  1 FAIL, 0 optional
+  FAIL missing local file: the server responded with a status of 404 (Not Found) http://127.0.0.1:8974/favicon.ico
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional, 1 resource)
+2 FAILED
