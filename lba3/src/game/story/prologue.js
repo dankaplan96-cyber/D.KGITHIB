@@ -13,6 +13,7 @@
 // Sendell speaks. Every step is a flag (saved); a save from before CH1-LONGER plays the steps it hasn't passed.
 import * as THREE from 'three';
 import { POI } from '../world.js';
+import { pierOff, pierAng } from '../island.js';
 import { t, STR } from '../i18n.js';
 const hasStr = (k) => STR.en[k] !== undefined;
 import { ChapterBase } from './base.js';
@@ -69,7 +70,7 @@ export class Prologue extends ChapterBase {
       { id: 'mira', name: 'n_mira', char: 'mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
       { id: 'pippa', name: 'n_pippa', char: 'pippa', color: '#ffb070', x: W.stall.x, z: W.stall.z, angle: W.stall.a, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },
       { id: 'doran', name: 'n_doran', char: 'doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'doze' },
-      { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 3.1, z: W.pierEnd.z - 0.65, angle: Math.PI / 2 + 0.3, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
+      { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + pierOff(3.1, -0.65).x, z: W.pierEnd.z + pierOff(3.1, -0.65).z, angle: pierAng(Math.PI / 2 + 0.3), look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
       { id: 'tim', name: 'n_tim', char: 'tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
       // Joe the Elf, Twinsen's old friend from LBA2, by the square (he only chats: baseTalk's idle_joe lines)
@@ -100,11 +101,13 @@ export class Prologue extends ChapterBase {
     const crate = new THREE.MeshStandardMaterial({ color: '#5a6a80', roughness: 0.5, metalness: 0.4 });
     const emblem = new THREE.MeshStandardMaterial({ color: '#7fe8ff', emissive: '#2ab0e0', emissiveIntensity: 1.5 });
     for (const [dx, dz, s] of [[0.9, 0.85, 1], [0.9, -0.55, 0.8], [1.9, 0.25, 0.9]]) { // (at the very end of the pier, clear of the project lift)
+      // (CITADEL-ORIG-2: the pier's end is the stone L's leg now, turned a quarter: pierOff turns the offsets with it)
+      const o = pierOff(dx, dz), f = pierOff(0, s / 2 + 0.01), x = e.x + o.x, z = e.z + o.z;
       const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), crate);
-      m.position.set(e.x + dx, e.y + s / 2, e.z + dz); m.castShadow = true; scene.add(m);
+      m.position.set(x, e.y + s / 2, z); m.rotation.y = pierAng(0); m.castShadow = true; scene.add(m);
       const em = new THREE.Mesh(new THREE.CircleGeometry(s * 0.25, 6), emblem);
-      em.position.set(e.x + dx, e.y + s / 2, e.z + dz + s / 2 + 0.01); scene.add(em);
-      W.physics.add({ type: 'box', x: e.x + dx, z: e.z + dz, hw: s / 2, hd: s / 2, rot: 0, top: e.y + s, seeThrough: true });
+      em.position.set(x + f.x, e.y + s / 2, z + f.z); em.rotation.y = pierAng(0); scene.add(em);
+      W.physics.add({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: pierAng(0), top: e.y + s, seeThrough: true });
     }
     // (the harbour master's shed that stood here, a box and a slab, is built with the harbour: island.js, I-3)
     this.buildLid(); this.buildBell(); this.buildBay();

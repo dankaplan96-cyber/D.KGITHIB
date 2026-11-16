@@ -53,7 +53,7 @@ export const lastOutdoorPos = () => lastPos;
 const ZPORT = { x0: -14, x1: 6, z0: 33, z1: 51, bridge: { x: -4, z0: 26.0, z1: 33, hw: 1.8 }, pad: { x: -4, z: 44 } };
 // (HARBOUR-ONE: the Citadel ferry board faces east, toward the quay and the way from town, where the play camera looks
 // from: facing the pier, only its blank back was ever seen; same place, same collider (an unturned box))
-const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
+const CIT = { ferry: { x: -125.6, z: 47.4, board: [-112.2, 40.6, Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
   glider: { x: -107, z: -64, plane: [-111.5, -62.5, 0.2], board: [-102.6, -61.4, -2.2], sock: [-103.5, -67.5], land: { x: -105.2, z: -64.6, a: -Math.PI / 2 } } };
 const DES = { ferry: { x: 3320.5, z: 4, board: [3323.4, 8.2, Math.PI], land: null }, glider: { x: 3340, z: -35, plane: [3342, -40, 0.3], board: [3334.4, -30.6, Math.PI * 0.8], sock: [3346.5, -31], land: { x: 3337.4, z: -33.2, a: Math.PI * 0.75 } } };
 

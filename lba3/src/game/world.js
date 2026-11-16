@@ -11,7 +11,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, bugFootDist, LAWN_FENCE, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG, OLD_PINK_DZ } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
+import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARBOUR_PLAT, plateauStairAt } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
@@ -148,7 +148,9 @@ const GRID_STREETS = [
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
   [-35.0, 3.6, -35.0, 31.3, 3.0],
 ];
-const HARBOUR_YARD = { x0: -104.5, z0: 30.4, x1: -75.5, z1: 40.5 };   // (only where the ground stands above the shore, h > 1.2)
+const HARBOUR_YARD = { x0: -104.5, z0: 30.4, x1: -75.5, z1: 44.0 };   // (only where the ground stands above the shore, h > 1.2; CITADEL-ORIG-2: on to the platform's south face)
+// CITADEL-ORIG-2: LBA2's harbour platform (island.js HARBOUR_PLAT), paved to its straight faces
+const HARBOUR_SE = { x0: -91.3, z0: 44.0, x1: -79.0, z1: 51.0 };
 // the block the south streets close (between the west street, the fields' path and the two cross streets): LBA2's
 // blocks are a lawn inside a band of brown earth along the paving; inside its streets' edges [x0, z0, x1, z1]
 const TOWN_BLOCK = { x0: -57.4, z0: 32.8, x1: -47.1, z1: 51.6, band: 2.0 };
@@ -167,7 +169,7 @@ function townBlockEarth(x, z, n = 0) {
   return e;
 }
 export function gridPaveDist(x, z) {
-  let d = boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1);
+  let d = Math.min(boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1), boxDist(x, z, HARBOUR_SE.x0, HARBOUR_SE.z0, HARBOUR_SE.x1, HARBOUR_SE.z1));
   for (const [x0, z0, x1, z1, w] of GRID_STREETS) d = Math.min(d, distToSegment(x, z, x0, z0, x1, z1) - w / 2);
   return d;   // (< 0 on the paving)
 }
@@ -311,6 +313,16 @@ function baseHeight(x, z) {
     h = lerp(h, QUAY.h, 1 - smoothstep(0, 3.5, dq));
     // the quay drops straight into the basin (the embankment wall hides the step; round the corners, too)
     if (x < QUAY.x0 + QUAY_R + 0.3 && db < 0.8) h = Math.min(h, lerp(-3.2, QUAY.h, smoothstep(0.6, -0.3, dq)));
+    // CITADEL-ORIG-2 (the user, 16.11: LBA2's paved harbour platform): straight-walled, as LBA2's, where our shore ran
+    // round in curves: the yard's strip and the trading house's ground stand level at the platform's height, and the
+    // water before their faces, and before the quay's south and east faces, is cut straight (the walls: island.js)
+    const P = HARBOUR_PLAT;
+    if (x > P.x0 - 1 && x < P.x2 + 1 && z > P.zS - 4.5 && z < P.zS + 1) h = lerp(h, P.h, smoothstep(P.x0 - 1, P.x0 + 0.5, x) * smoothstep(P.zS - 4.5, P.zS - 3, z));
+    if (x > P.x1 - 0.6 && x < P.x2 + 1 && z > P.zS - 1 && z < P.zSE + 1) h = lerp(h, P.h, smoothstep(P.x2 + 1, P.x2 - 0.5, x));
+    const sea = (dw) => { const k = smoothstep(-0.3, 0.6, dw); if (k > 0) h = lerp(h, Math.min(h, -3.2), k); };
+    if (x > QUAY.x1 - 1 && x < P.x1 + 1 && z > P.zS - 1) sea(Math.min(x - QUAY.x1, P.x1 - x, z - P.zS));   // (the notch inside the L)
+    if (x >= P.x1 - 0.3 && x < P.x2 && z > P.zSE - 1) sea(z - P.zSE - (1 - smoothstep(P.x2, P.x2 - 1.5, x)) * 5);   // (before the trading house's ground)
+    if (x > QUAY.x0 + QUAY_R && x < QUAY.x1 + 0.6 && z > QUAY.z1 - 1) sea(z - QUAY.z1);                     // (before the quay's south face)
   }
   // the Whispering Cliffs: a rock stack on the plateau's rim
   {
