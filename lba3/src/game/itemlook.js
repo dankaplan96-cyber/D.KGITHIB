@@ -96,6 +96,12 @@ const LOOKS = {
     for (let i = 0; i < 3; i++) put(g, new THREE.CylinderGeometry(0.012, 0.012, 0.2, 6), wood, 0, 0.05 + i * 0.035, 0, 0, i * 0.7, Math.PI / 2);
     return g;
   },
+  // (chapter 4's coil of rope for Hesk: the ladder's coil without its rungs)
+  ropecoil: () => {
+    const g = new THREE.Group(), rope = M('#b08850', { roughness: 0.95 });
+    for (let i = 0; i < 5; i++) put(g, new THREE.TorusGeometry(0.11 - i * 0.004, 0.016, 6, 24), rope, 0, -0.07 + i * 0.03, 0, Math.PI / 2);
+    return g;
+  },
   // Doran's unloading permit: a card with the harbour's stamp on it
   permit: () => paper('stamp', 0.3, 0.3, 0.02, '#f2e8cc'),
   pipemap: () => paper('map', 0.36, 0.36, 0.05, '#e8d8b0'),

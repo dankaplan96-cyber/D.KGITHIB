@@ -6,7 +6,8 @@
 //   - a t('key', {vars}) call whose placeholders and vars disagree ({n} in the text but no n given, or the reverse);
 //   - night words (night, evening, tonight, sunset, dawn, dusk) in any English string: two suns, no time of day;
 //   - a key binding spoken in a conversation line (<kbd>, "press", a key's name).
-// Warnings (printed, not failing): spoken lines over three sentences or over 230 characters, and keys defined twice.
+//   - an item's name or description (it_/itd_) defined twice with different texts (two items sharing an id).
+// Warnings (printed, not failing): spoken lines over three sentences or over 230 characters, and other keys defined twice.
 // Mechanical only: it cannot say whether a line reads well in its scene.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -103,7 +104,9 @@ for (const [k, m] of Object.entries(VOICE_META)) {
   const I = m && (Array.isArray(m) ? m : Array.isArray(m.i) ? m.i : null);
   if (I && typeof EN[k] === 'string' && I.length > sentences(EN[k]) + 1) warns.push(`voicemeta ${k}: ${I.length} intentions for ${sentences(EN[k])} sentence(s)`);
 }
-for (const d of dup) warns.push(`defined twice, the later file wins: ${d}`);
+// (an item's name or description defined twice is an error: two items sharing one id show the later file's text for
+//  both — the prologue's Rope Ladder read "Rope … for Hesk" until chapter 4's coil got its own id, ropecoil)
+for (const d of dup) (/^itd?_/.test(d) ? errors : warns).push(`defined twice, the later file wins: ${d}`);
 
 // --unused [regex]: keys no code names literally (dead text, or text reached by a built key: check by hand)
 const ui = process.argv.indexOf('--unused');

@@ -171,7 +171,7 @@ export class Dig extends ChapterBase {
     if (this.test.interact(it)) return true;
     switch (it.kind) {
       case 'c4rope':
-        f.c4_rope = true; D.rope.setVisible(false); g.found('rope', 'c4_toast_rope');
+        f.c4_rope = true; D.rope.setVisible(false); g.found('ropecoil', 'c4_toast_rope');
         this.chain([['hero', 'c4_rope_got']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c4desk':
@@ -501,7 +501,7 @@ export class Dig extends ChapterBase {
   }
   items() {
     const f = this.f, out = [];
-    if (f.c4_rope && !f.c4_rode) out.push({ id: 'rope', icon: 'rope' });
+    if (f.c4_rope && !f.c4_rode) out.push({ id: 'ropecoil', icon: 'rope' });   // (not 'rope': that id is the prologue's rope ladder, it_rope)
     if (f.c4_notebook && !f.c4_done) out.push({ id: 'notebook', icon: 'leaflet' });
     out.push(...this.test.items());   // (CAMPAIGN-4: the carbon of test 14, kept)
     return out;

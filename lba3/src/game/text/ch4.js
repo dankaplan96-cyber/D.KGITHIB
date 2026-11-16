@@ -141,6 +141,6 @@ Object.assign(STR.en, {
   c4_j_cold: "I struck a cold disc. It only thudded, and any seal I had opened ground shut.",
   c4_j_carving: "The carving in the Temple of Bù shows the shell with five vents that the project is closing by drawing all the heat under Citadel, which is why two discs were cold. Ilka says that if we open them, the shell can breathe.",
   c4_j_dallan: "Dallan admitted he knows the plan saves only thirty percent, but threw us out of the dig. Ilka says the vent under this island is his capped test bore, and we must open it without boiling Kesh.",
-  it_rope: 'Rope', itd_rope: 'A coil of good rope from the pier, for Hesk.',
+  it_ropecoil: 'Rope', itd_ropecoil: 'A coil of good rope from the pier, for Hesk.',   // (its own key: it_rope is the prologue's Rope Ladder, which this used to overwrite)
   it_notebook: "Ilka's notebook", itd_notebook: 'Survey drawings of the dig. The gate code: 4-1-7.',
 });
