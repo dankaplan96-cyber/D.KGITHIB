@@ -1,7 +1,7 @@
 // Kesh twelve years on (Desert Island): the cool room and its wind-catcher, Lumi's loom, Hesk's poles
 // (src/game/story/kesh.js). English only.
 import { STR } from '../i18n.js';
-import './he/kesh.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   k_title: 'Kesh',

@@ -1,6 +1,6 @@
 // Chapter 5 — "Steam and Sand" (Desert Island). English only.
 import { STR } from '../i18n.js';
-import './he/ch5.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_dig: 'Dig', p_fill: 'Fill', p_board: 'Board', p_relief: 'Open',

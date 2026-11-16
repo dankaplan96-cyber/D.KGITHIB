@@ -1,7 +1,7 @@
 // U-2 "One More Place" (the user's own side quest, docs/lba-maturity/DEPTH-PLAN.md; story/oneplace.js). English only.
 // No night, evening, tonight, sunset, dawn or dusk words: a meal here is just a meal.
 import { STR } from '../i18n.js';
-import './he/oneplace.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   om_title: 'One More Place',

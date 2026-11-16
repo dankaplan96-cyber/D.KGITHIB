@@ -1,7 +1,7 @@
 // Citadel twelve years on: the family's house, Bram's pump, the harbour's customs and Nell's shop
 // (src/game/story/life.js). English only.
 import { STR } from '../i18n.js';
-import './he/life.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   life_title: 'Around town',

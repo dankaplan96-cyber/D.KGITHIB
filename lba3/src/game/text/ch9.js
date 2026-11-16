@@ -1,6 +1,6 @@
 // Chapter 9 — "The Council" (Zeelich and its upper district). English only.
 import { STR } from '../i18n.js';
-import './he/ch9.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_clerk: 'Clerk Ottavo', n_chair: 'Councillor Amaru', n_councilB: 'Councillor Sela', n_councilC: 'Councillor Brum', n_archivist: 'Archivist',

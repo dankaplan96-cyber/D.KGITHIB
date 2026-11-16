@@ -1,7 +1,7 @@
 // PEOPLE-1: the people of Zeelich's islands (src/game/islandlife.js, src/game/story/islandpeople.js). English only.
 // A resident's lines: ip_<id>_<state> (ord, evac, council, net, home), ip_<id>_<phase> (ord, crisis, after), ip_<id>_0…3.
 import { STR } from '../i18n.js';
-import './he/islandpeople.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   ip_title: "Zeelich's islands",

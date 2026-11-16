@@ -2,7 +2,7 @@
 // cart that drives past the lane's shut water gate, the schedule read against the route, the lane's people at the landing,
 // the culvert's cock in the pump room, the boarding. English only (i18n.t falls back to it).
 import { STR } from '../i18n.js';
-import './he/laneline.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_ev_hedda: 'Hedda', n_ev_tobin: 'Tobin',

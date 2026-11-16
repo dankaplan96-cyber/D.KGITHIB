@@ -1,6 +1,6 @@
 // Chapter 4 — "The Dig" (Desert Island). English only.
 import { STR } from '../i18n.js';
-import './he/ch4.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_hesk: 'Hesk', n_tarra: 'Mother Tarra', n_ilka: 'Professor Ilka', n_dallan: 'Dallan', n_dkid: 'Sani', n_dtrader: 'Brosk', n_weaver: 'Lumi',

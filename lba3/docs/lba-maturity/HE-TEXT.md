@@ -1,7 +1,8 @@
 # HE-TEXT — the whole game in Hebrew, alongside the English
 
 **The standing rule: every new or changed English player line gets its Hebrew line the same day**, in the matching
-`src/game/text/he/<file>.js`. `node tests/dialogue-check.mjs` lists the English keys with no Hebrew (a warning with a
+`src/game/text/he/<file>.js`, **then `node tools/he-bundle.mjs`** (16.11: the game loads the Hebrew packed into one
+module, `src/game/he-text.js` — the artifact holds at most 512 files; dialogue-check fails while it is out of date). `node tests/dialogue-check.mjs` lists the English keys with no Hebrew (a warning with a
 count; `--he` per file, `--he-missing [file]` the keys) and fails on a Hebrew line whose placeholders, list length or
 markup differ from the English, on an empty Hebrew line and on a night word in Hebrew.
 

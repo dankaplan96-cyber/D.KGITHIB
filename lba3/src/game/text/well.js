@@ -2,7 +2,7 @@
 // Zoé's kettle crystals for Mira, the rusted lid, the harbour bell that wakes Doran, the warm stones on the bay rocks.
 // English only. (The chapter's older lines are in src/game/i18n.js and text/opening.js.)
 import { STR } from '../i18n.js';
-import './he/well.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- Zoé, at the neighbours' door: their kettle

@@ -1,7 +1,7 @@
 // DEPTH first wave (docs/lba-maturity/DEPTH-PLAN.md): the singing crystals' layer (COL-1), Old Jaspa's warm gems on
 // Knartas (ISL-1), the pilgrims' waystone on the monastery terrace (HAM-1). src/game/story/depth.js. English only.
 import { STR } from '../i18n.js';
-import './he/depth.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- COL-1: the singing crystals (the count's toast is common.js toast_crystal)

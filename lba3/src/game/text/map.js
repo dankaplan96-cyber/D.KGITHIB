@@ -1,7 +1,7 @@
 // The Holomap and the minimap (MAP-1, src/game/mapdraw.js, src/game/hud.js): place names, room names, the controls
 // line, the minimap setting. English only.
 import { STR } from '../i18n.js';
-import './he/map.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   map_close_btn: 'Close',

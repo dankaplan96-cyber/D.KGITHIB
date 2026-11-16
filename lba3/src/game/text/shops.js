@@ -2,7 +2,7 @@
 // INTERIOR-LIFE's and WORLD-LIFE's (text/interiors.js, text/walkers.js); these are what they say when they sell. The
 // ferry runs between Citadel and Desert Island; Zeelich is reached by spaceship.
 import { STR } from '../i18n.js';
-import './he/shops.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- the shops' titles

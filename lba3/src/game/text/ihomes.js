@@ -1,7 +1,7 @@
 // ISLE-HOMES: the rooms behind the houses' doors on Zeelich's islands and in Kesh (src/game/ihomes.js), their looks,
 // the doors kept shut and the keepers (src/game/story/ihomes.js). English only.
 import { STR } from '../i18n.js';
-import './he/ihomes.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- the doors kept shut, each with its reason (and a sign on the door)

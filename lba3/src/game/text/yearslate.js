@@ -1,7 +1,7 @@
 // U-4 "Twelve Years Late" (the user's own side quest, docs/lba-maturity/DEPTH-PLAN.md; story/yearslate.js). English only.
 // No night, evening, tonight, sunset, dawn, dusk or morning words: Zeelich has no time of day for them.
 import { STR } from '../i18n.js';
-import './he/yearslate.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   tyl_title: 'Twelve Years Late',

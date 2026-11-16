@@ -1,7 +1,7 @@
 // The campaign thread of chapters 6–7 (CAMPAIGN-TREATMENT, section 5 "Hamalayi — the road under the ice"): the pulse on
 // the rope lift's line, the trips started in the quiet, the upper brake; the telescope's fourth setting. English only.
 import { STR } from '../i18n.js';
-import './he/passline.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_lock: 'Lock', p_set: 'Set',

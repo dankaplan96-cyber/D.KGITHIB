@@ -7,6 +7,7 @@
 // THE STANDING RULE: every new or changed English player line gets its Hebrew line the same day, in the matching
 // he/ file. `node tests/dialogue-check.mjs` lists the English keys with no Hebrew (a warning, with a count) and fails on
 // a Hebrew line whose placeholders or list length differ from the English. Glossary: docs/lba-maturity/HE-TEXT.md.
+// The game loads the he/ files packed into src/game/he-text.js: after editing one, run `node tools/he-bundle.mjs`.
 // The voices always speak the English line (spoken() below): the gibberish is planned from the English words.
 
 import { HE_I18N } from './text/he/i18n.js';

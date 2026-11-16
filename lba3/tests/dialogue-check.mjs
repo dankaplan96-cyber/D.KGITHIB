@@ -153,6 +153,9 @@ for (const f of Object.keys(enOf)) {
   if (hm > 0 && (!hmWant || hmWant === f)) for (const k of ks) if (!own.has(k)) console.log(`  he-missing  ${k} [${f}]`);
 }
 const heMissing = heTot - heDone;
+// (the game loads the Hebrew packed into src/game/he-text.js by tools/he-bundle.mjs: it must match text/he/*.js)
+{ const { heBundle } = await import(pathToFileURL(join(ROOT, 'tools/he-bundle.mjs')));
+  if (readFileSync(join(GAME, 'he-text.js'), 'utf8') !== heBundle()) errors.push('src/game/he-text.js is out of date with text/he/*.js: run node tools/he-bundle.mjs'); }
 if (heMissing) warns.push(`HE-TEXT: ${heMissing} English key(s) in text/*.js have no Hebrew in text/he/ (the standing rule; --he-missing [file] lists them)`);
 
 // --unused [regex]: keys no code names literally (dead text, or text reached by a built key: check by hand)

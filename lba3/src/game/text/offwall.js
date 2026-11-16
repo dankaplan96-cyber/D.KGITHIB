@@ -1,7 +1,7 @@
 // U-3 "Off the Wall" (the user's own side quest, docs/lba-maturity/DEPTH-PLAN.md; story/offwall.js). English only.
 // No night, evening, tonight, sunset, dawn or dusk words: the court has no time of day.
 import { STR } from '../i18n.js';
-import './he/offwall.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   ow_title: 'Off the Wall',

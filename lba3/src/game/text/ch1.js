@@ -1,6 +1,6 @@
 // Chapter 1 — "The Joint Project": all texts (Hebrew + English).
 import { STR } from '../i18n.js';
-import './he/ch1.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_vesk: 'Vesk', n_worker: 'Worker', n_guard: 'Guard', n_dw_guard: 'Guard', n_radio: 'Radio', n_baldino: 'Baldino',

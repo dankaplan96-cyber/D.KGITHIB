@@ -2,7 +2,7 @@
 // the School's dormitory, Marl's dog yard on Zeelich, the kept old houses on Desert Island, Citadel's small pointers
 // (src/game/story/purposes.js, story/shops.js). English only.
 import { STR } from '../i18n.js';
-import './he/purposes.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   pp_title: 'Around the islands',

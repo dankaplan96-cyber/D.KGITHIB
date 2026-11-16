@@ -1,7 +1,7 @@
 // HAMALAYI-LIFE: the monastery's hall, Lhar's houses by the story's phase, their people at home, the region's things
 // that can be used (src/game/story/hamlife.js, src/game/hamrooms.js). English only.
 import { STR } from '../i18n.js';
-import './he/hamlife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- Brother Tenpa, who keeps the monks' hall

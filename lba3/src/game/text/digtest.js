@@ -1,7 +1,7 @@
 // The campaign thread of chapters 4–5 (CAMPAIGN-TREATMENT, section 4 "The excavation — a test with a cost"): the bore
 // test at the research post's stand, the heat line to Kesh's pump, the log sent with one trace. English only.
 import { STR } from '../i18n.js';
-import './he/digtest.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_veskwire: 'Vesk (on the wire)',

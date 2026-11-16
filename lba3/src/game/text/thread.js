@@ -1,7 +1,7 @@
 // The campaign thread of chapters 1–3 (CAMPAIGN-TREATMENT, sections 1–3): the kitchen tap and the yard's standpipe, the pump room
 // under the lane, Zeelich's cistern lift and Irsa's bench. English only (i18n.t falls back to it).
 import { STR } from '../i18n.js';
-import './he/thread.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_zl_kell: 'Kell', n_zl_brel: 'Brel', n_zl_irsa: 'Irsa', n_veskhorn: 'Vesk (speaking tube)',

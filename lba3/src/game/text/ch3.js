@@ -1,7 +1,7 @@
 // Chapters 11 and 12 — "The Shell" and "The Core" — and the epilogue. English only (the game ships in English; other languages
 // can add their own Object.assign(STR.<lang>, …) block with the same keys).
 import { STR } from '../i18n.js';
-import './he/ch3.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_balradio: 'Baldino (radio)', n_zoeradio: 'Zoé (radio)', n_miraradio: 'Mira (radio)', n_okuradio: 'Oku (radio)',

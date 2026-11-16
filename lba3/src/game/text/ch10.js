@@ -1,6 +1,6 @@
 // Chapter 10 — "Baldino's Network" (all five islands). English only.
 import { STR } from '../i18n.js';
-import './he/ch10.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_ilkaradio: 'Ilka (radio)', n_yornaradio: 'Yorna (radio)', n_heskradio: 'Hesk (radio)', n_pimradio: 'Pim (radio)',

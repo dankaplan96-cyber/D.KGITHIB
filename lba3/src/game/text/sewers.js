@@ -1,6 +1,6 @@
 // Under the Street: Citadel's old sewers (src/game/story/sewers.js). English only.
 import { STR } from '../i18n.js';
-import './he/sewers.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   sw_title: 'Under the street',

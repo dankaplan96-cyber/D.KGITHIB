@@ -1,6 +1,6 @@
 // Shared story texts: chapter titles, generic NPC lines, journal/inventory UI.
 import { STR } from '../i18n.js';
-import './he/common.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   chapter_n: 'Chapter {n}', menu_cancel: 'Cancel',
