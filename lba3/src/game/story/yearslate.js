@@ -313,7 +313,8 @@ export class TwelveYears extends ChapterBase {
   // ================================================================ the card, close up
   cardPicture() {
     if (this._cardPic) return this._cardPic;
-    if (!this.Z) return null;
+    if (!this.Z || (this._cardTries | 0) >= 3) return null;   // (a render that failed is not tried every frame)
+    this._cardTries = (this._cardTries | 0) + 1;
     this._cardPic = capture(this.game, 'row', { maxW: 640 });
     return this._cardPic;
   }
@@ -363,8 +364,9 @@ export class TwelveYears extends ChapterBase {
   }
   // the card in the corner while he carries it on the street (no arrow: the picture is the address)
   thumb(on) {
+    if (on === this._thumbOn) return;   // (per frame: only a change touches the page)
     let el = $('#tylthumb');
-    if (!on) { if (el) el.style.display = 'none'; return; }
+    if (!on) { this._thumbOn = false; if (el) el.style.display = 'none'; return; }
     const pic = this.cardPicture(); if (!pic) return;
     if (!el) {
       el = document.createElement('div'); el.id = 'tylthumb';
@@ -376,6 +378,7 @@ export class TwelveYears extends ChapterBase {
     const c = el.querySelector('canvas');
     if (c.width !== pic.width) { c.width = pic.width; c.height = pic.height; c.getContext('2d').drawImage(pic, 0, 0); }
     el.style.display = 'block';
+    this._thumbOn = true;
   }
 
   // ================================================================ the album where she stood
