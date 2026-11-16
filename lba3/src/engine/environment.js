@@ -30,7 +30,7 @@ void main(){
   #include <fog_vertex>
 }`;
 const WATER_FS = `
-uniform float uTime, uStorm, uFlash, uSize, uSegs; uniform vec2 uOrigin; uniform vec3 uSunDir, uDeep, uShallow, uSky; uniform sampler2D uHeight, uSea;
+uniform float uTime, uStorm, uFlash, uSize, uSegs, uShade, uRefl; uniform vec2 uOrigin; uniform vec3 uSunDir, uDeep, uShallow, uSky; uniform sampler2D uHeight, uSea;
 varying vec3 vWorld; varying vec3 vNormal;
 #include <fog_pars_fragment>
 float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
@@ -50,8 +50,13 @@ void main(){
   vec3 V = normalize(cameraPosition - vWorld);
   vec3 nrm = normalize(vNormal);
   float fres = pow(1.0 - max(dot(nrm, V), 0.0), 4.0);
-  vec3 col = mix(uShallow, uDeep, smoothstep(0.0, 6.0, depth)) * seaTex * 2.2;
-  col = mix(col, uSky, clamp(fres * 0.5, 0.0, 0.6));
+  vec3 tint = mix(uShallow, uDeep, smoothstep(0.0, 6.0, depth));
+  // CITADEL-ORIG-2 (the user, 16.11: LBA2's bright turquoise sea): on a clear day the painted texture gives only its
+  // light and shade (its luminance over the paint's own, so its crests and blotches stay) to the palette's colour; the
+  // blue texture times a blue palette had squared the blue into a deep royal blue. The storm keeps the old product.
+  vec3 clearCol = tint * mix(1.0, dot(seaTex, vec3(0.2126, 0.7152, 0.0722)) * 3.6, uShade);
+  vec3 col = mix(clearCol, tint * seaTex * 2.2, uStorm);
+  col = mix(col, uSky, clamp(fres * 0.5, 0.0, uRefl));
   vec3 L = normalize(uSunDir);
   float spec = pow(max(dot(reflect(-L, nrm), V), 0.0), 120.0) * (1.0 - uStorm) * 2.5;
   float foamN = n(vWorld.xz * 1.3 + uTime * 0.6);
@@ -129,7 +134,11 @@ const PAL = {
   // what lies in the sun's shadow is lit by these alone, and read warm grey-brown (the soil in a house's shadow was a
   // dark orange); LBA2's shadows are cool. The sun a shade warmer so the sunlit side keeps its colour. The sea a little
   // more cyan (LBA2's saturated cyan-blue rather than royal blue).
-  clear: { fog: C('#a8d2f2'), zenith: C('#4f8fd6'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#1a76b0'), shallow: C('#3fc8c6'), sky: C('#bfe0ff') },
+  // CITADEL-ORIG-2 (the user, 16.11: "excellent" to LBA2's bright turquoise sea on every Twinsun island): the clear sea
+  // #1a76b0 / #3fc8c6 under a #bfe0ff sky's reflection → #00aee4 / #28cce0 under a turquoise #a8e2f2, with the shader's
+  // new clear-day shading and less reflection (uRefl). Seen from above it averages (90, 167, 206) on screen, LBA2's
+  // (72, 167, 207) in lba2remake; ours was (58, 100, 176). (Its red cannot go lower: the frame's chroma grade, WA-13.)
+  clear: { fog: C('#a8d2f2'), zenith: C('#4f8fd6'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#00aee4'), shallow: C('#28cce0'), sky: C('#a8e2f2') },
   storm: { fog: C('#6f8094'), zenith: C('#4a586c'), clouds: C('#59667a'), sun: C('#b3c2dc'), hemiSky: C('#a9b8d0'), hemiGround: C('#4c5a46'), deep: C('#1a3f5c'), shallow: C('#2f7c86'), sky: C('#7d8ea2') },
 };
 
@@ -211,7 +220,7 @@ export class Environment {
 
     // Sea
     this.waterU = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
-      uTime: { value: 0 }, uStorm: { value: 1 }, uFlash: { value: 0 }, uWaveAmp: { value: 1 },
+      uTime: { value: 0 }, uStorm: { value: 1 }, uFlash: { value: 0 }, uWaveAmp: { value: 1 }, uShade: { value: 0.8 }, uRefl: { value: 0.6 },   // (CITADEL-ORIG-2: the clear sea's texture shading; the sky's reflection, at most)
       uSunDir: { value: this.sunDir },
       uDeep: { value: PAL.storm.deep.clone() }, uShallow: { value: PAL.storm.shallow.clone() }, uSky: { value: PAL.storm.sky.clone() },
       uHeight: { value: terrain.heightTexture }, uSize: { value: terrain.size }, uSegs: { value: terrain.segs }, uOrigin: { value: new THREE.Vector2(terrain.x0, terrain.z0) },
@@ -368,6 +377,7 @@ export class Environment {
     this.waterU.uStorm.value = s;
     this.waterU.uFlash.value = f;
     this.waterU.uSky.value.copy(this._pal('sky', s));
+    this.waterU.uRefl.value = lerp(0.3, 0.6, s);   // (CITADEL-ORIG-2: a clear sea reflects less of the sky; a storm's as before)
     this.waterU.uDeep.value.copy(this._pal('deep', s));
     this.waterU.uShallow.value.copy(this._pal('shallow', s));
     if (on) { this.waterU.uSky.value.multiply(W.skyTint); this.waterU.uDeep.value.multiply(W.seaTint); this.waterU.uShallow.value.multiply(W.seaTint); }

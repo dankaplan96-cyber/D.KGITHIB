@@ -530,7 +530,10 @@ export function* buildDesertSteps(scene, physics) {
   // --- the sea around it
   {
     const t = TX.sea.clone(); t.needsUpdate = true; t.repeat.set(70, 70); t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ map: t, color: '#7ac4e0', roughness: 0.25, metalness: 0.05 }));
+    // (CITADEL-ORIG-2, the user 16.11: LBA2's bright turquoise sea on every Twinsun island: #7ac4e0 lit only → a paler
+    //  tint lit, and the same texture glowing turquoise (its own map as the emissive map: no new texture, no new draw).
+    //  From above, (59, 108, 151) on screen → (95, 169, 204); LBA2's (72, 167, 207))
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ map: t, color: '#d0fff0', emissive: '#70b8b8', emissiveMap: t, roughness: 0.25, metalness: 0.05 }));
     sea.rotation.x = -Math.PI / 2; sea.position.y = SEA_Y; sea.receiveShadow = true; group.add(sea);
     updaters.push((dt, time) => { t.offset.set(time * 0.006, time * 0.004); });
   }

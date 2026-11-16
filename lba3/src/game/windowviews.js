@@ -141,7 +141,7 @@ const PAINT = {
     // the far island: blue-green mound, white tower
     ridge(x, 116, 11, '#5a9a8a', r, 118, 2.4);
     x.fillStyle = '#f0e8d4'; x.fillRect(196, 84, 7, 26); x.fillStyle = '#c4503a'; x.beginPath(); x.moveTo(194, 85); x.lineTo(199.5, 76); x.lineTo(205, 85); x.fill();
-    const g = x.createLinearGradient(0, 112, 0, 256); g.addColorStop(0, '#5ab6e4'); g.addColorStop(0.18, '#2f92d2'); g.addColorStop(1, '#17589e');
+    const g = x.createLinearGradient(0, 112, 0, 256); g.addColorStop(0, '#6ccce6'); g.addColorStop(0.18, '#2cb0e0'); g.addColorStop(1, '#1a86c0');   // (CITADEL-ORIG-2: LBA2's turquoise, as the sea outside)
     x.fillStyle = g; x.fillRect(0, 114, TILE, 142);
     x.fillStyle = 'rgba(255,248,220,0.28)'; x.fillRect(0, 114, TILE, 2);
     // the suns' glitter
@@ -162,7 +162,7 @@ const PAINT = {
     // far shore: tiny houses
     for (let i = 0; i < 9; i++) { const hx = 8 + i * 13 + r() * 5, hw = 7 + r() * 5; x.fillStyle = ['#f2e4c4', '#f0cdb4', '#e8d4a0'][i % 3]; x.fillRect(hx, 106, hw, 7); x.fillStyle = ['#c4503a', '#3b6fb0', '#d9753f'][(i * 2) % 3]; x.beginPath(); x.moveTo(hx - 1, 106); x.lineTo(hx + hw / 2, 100); x.lineTo(hx + hw + 1, 106); x.fill(); }
     haze(x, 90, 116, '#cfe6f6', 0.35);
-    const g = x.createLinearGradient(0, 112, 0, 256); g.addColorStop(0, '#62bce6'); g.addColorStop(0.2, '#2f92d2'); g.addColorStop(1, '#17589e');
+    const g = x.createLinearGradient(0, 112, 0, 256); g.addColorStop(0, '#70cee6'); g.addColorStop(0.2, '#2cb0e0'); g.addColorStop(1, '#1a86c0');
     x.fillStyle = g; x.fillRect(0, 114, TILE, 142);
     waves(x, 120, 200, r, 60);
     // the lighthouse on its rock
