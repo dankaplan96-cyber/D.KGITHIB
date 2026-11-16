@@ -522,7 +522,7 @@ body.hud-lba #weapon.show { opacity: 1; }
   text-align: center; font-size: clamp(1rem, 2.1vw, 1.3rem); line-height: 1.45; color: #fff; padding: 0.35em 0.9em; border-radius: 6px;
   background: rgba(8, 14, 22, 0.55); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); opacity: 0; transition: opacity 0.25s; }
 #cine-sub.show { opacity: 1; }
-#cine-sub b { font-weight: 700; margin-right: 0.35em; }
+#cine-sub b { font-weight: 700; margin-inline-end: 0.35em; }
 #cine-title { position: absolute; left: 0; right: 0; top: 14%; text-align: center; color: #fff6e4; opacity: 0;
   transition: opacity 1.4s ease; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
 #cine-title.show { opacity: 1; }
@@ -726,3 +726,16 @@ body.big-text #settings .set-desc { font-size: 16px !important; }
 
 /* the pointer hides while it is not in use (main.js) */
 body.no-cursor, body.no-cursor * { cursor: none !important; }
+
+/* HE-TEXT (the user, 16.11: the whole game in Hebrew too): right to left. The layout already uses the logical sides
+   (inset-inline, margin-inline) and the page's dir; here what Hebrew needs on top. Letter spacing pulls Hebrew letters
+   apart (it suits Latin capitals only). A key cap or a name in another script inside a Hebrew line is isolated, so the
+   punctuation round it stays put. A line of a box that is still English (a key with no Hebrew yet) keeps its own
+   direction: its paragraph is read by its first letter. */
+:root[dir=rtl] .inv-tabs button, :root[dir=rtl] .inv-now small, :root[dir=rtl] .set-tabs button, :root[dir=rtl] .set-fold,
+:root[dir=rtl] .slot-tag, :root[dir=rtl] #chapter small, :root[dir=rtl] #cine-title p, :root[dir=rtl] #cine-title h1,
+:root[dir=rtl] #load-title span, :root[dir=rtl] #bossbar, :root[dir=rtl] #holomap .title, :root[dir=rtl] #dialog .text,
+:root[dir=rtl] #loading-step { letter-spacing: normal; }
+:root[dir=rtl] kbd, :root[dir=rtl] bdi, :root[dir=rtl] #dialog .name, :root[dir=rtl] #cine-sub b { unicode-bidi: isolate; }
+:root[dir=rtl] #dialog .text, :root[dir=rtl] #cine-sub span, :root[dir=rtl] .inv-desc, :root[dir=rtl] .inv-lines li,
+:root[dir=rtl] .inv-obj, :root[dir=rtl] .toast, :root[dir=rtl] #found .found-name { unicode-bidi: plaintext; }
