@@ -286,7 +286,7 @@ export const ROOMS = {
         D('ama_print', TM.printer.x, TM.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),               // (the ticket printer)
         D('ama_forms', TM.cabinet.x, TM.cabinet.z + TM.cabinet.d / 2 + 0.5, Math.PI, 'reach', [6, 9]),   // (the cabinet of forms)
       ] },
-      { id: 'tavi', char: 'farmerB', tint: '#fff0e0', color: '#e8a878', speed: 0.85, start: 0, when: 'always', stops: [
+      { id: 'tavi', char: 'farmerB_b', tint: '#fff0e0', color: '#e8a878', speed: 0.85, start: 0, when: 'always', stops: [
         D('tavi_counter', TM.cafe.x, TM.cafe.z, TM.cafe.a, 'browse', [14, 20], { spot: 'cafe' }),     // (behind the café's counter)
         D('tavi_machine', TM.machine.x, TM.cafe.z, 0, 'reach', [6, 9], { gest: ['nod'] }),           // (the coffee machine)
         D('tavi_shelf', TM.shelf.x + 0.35, TM.cafe.z, Math.PI, 'reachHigh', [5, 8]),                // (the shelf of bottles behind)

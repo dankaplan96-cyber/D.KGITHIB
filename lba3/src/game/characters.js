@@ -340,7 +340,7 @@ export const LOOKS = {
   },
   farmerB_b: {
     // CAST-VARIANTS-1 (farmerB's shape variant): a Rabbibunny without the apron, patch pockets, both ears folded over (cast_poly.py
-    // CAST farmerB_b). Taken by Maro (maro, the plaza) and the counter's waiting man (up_wait); Tavi (the terminal's café),
+    // CAST farmerB_b). Taken by Maro (maro, the plaza) and the counter's waiting man (up_wait) and Tavi (the terminal's café; order 41.5);
     // Hedda, the dig's cook, Mira of the Hamalayi and the farm evacuees keep farmerB
     race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
     eyes: '#3a2a1a', height: 0.9,
