@@ -146,7 +146,7 @@ Other suites on this build:
 | `inventory-calm.mjs` | PASS (23) |
 | `dialogue-check.mjs` (static: keys, names, night words, no key names in spoken lines) | PASS |
 | `campaign-thread.mjs` part C (saves from before) | PASS (28 checks, 26.5 min, every part-C save from chapter 1 to the late chapters) |
-| `save-migration.mjs` | RESULT_S |
+| `save-migration.mjs` | PASS (27 checks, about 50 min this run; one expected error: the corrupt save it reads on purpose). A first run was cut at 35 min by this session's two-hour limit on the chain of suites, not by the suite |
 
 Pictures: `captures/opening-tut-2/` (from the last run of `opening-tutorial.mjs`, chapter 1 only): 01 the house's goal,
 02 by the cupboard, 03 Zoé calls in the yard, 04 called back at the edge, 05 the inventory's step, 06 the inventory on
