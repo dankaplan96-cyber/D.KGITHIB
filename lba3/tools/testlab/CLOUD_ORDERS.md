@@ -528,3 +528,9 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     hint readable at 1920×1080 and 1280×720, Zoé's call-back, the tick and chime; time it (a real first play, the user's
     machine); (2) the Follow camera out of Twinsen's door and along the street (does it hold steady); (3) the School in
     S28's canyon from the valley's mouth (pictures for the team only, chapter 4). Report as V94-GPU.
+50. **P30 again (the user, 16.11): "I play only the artifact, in Chrome".** So the Intel/app route of your P30 report does not
+    apply. On the GTX 1050 in Chrome: open the artifact on claude.ai (the user's way: the game inside claude.ai's frame) and
+    the same build served directly; in the house by the kitchen, read `?perf`'s pixel ratio, auto ×, MSAA, quality, and
+    compare crops of Twinsen and Zoé at the same spot (devicePixelRatio inside the frame, any CSS scaling of the canvas by
+    the frame, the canvas' backing size against its CSS size). If the frame shrinks or scales the canvas, say how and
+    propose the fix (the renderer's size from the canvas' real client size × dpr). Report as P30-FRAME.
