@@ -107,7 +107,17 @@ No-clutter count: the shaft's landing +1 (the riser with its header, gauge and c
 Snapshot of the worktree served from `/dev/shm/t989` (python http.server on 127.0.0.1:8989), headless Chromium on
 SwiftShader, 960×540, one suite at a time on a shared machine (load 6–8).
 
-RESULTS_TABLE
+| Suite | Result | Note |
+|---|---|---|
+| `quiet-channel` (new) | PASS (20) | on the final build (`86e85e46`) and on the build before it (`d12dd47c`): PASS 20 both; earlier runs: 1 FAIL (the test's own walk to the control room from (0,0) on Citadel ended in the sea: it starts at the collar now), 1 FAIL (one correction line had four sentences: rewritten) |
+| `chapter3` (chapters 11–12) | PASS (47) | final build; its first run **found a bug** (a new game played on into chapter 11 before any load: the riser's state was made only on a load, `this.kicks is not iterable`): fixed in `86e85e46` |
+| `under-bar` (the underground by phase) | PASS (15) | on `d12dd47c` (the fix after it only makes the state at construction; this suite loads by flags) |
+| `epilogue-home` | PASS (12) | final build |
+| `campaign-thread` N, O, P (chapters 11–12) | PASS (4, 8, 4) | final build, one part at a time |
+| `voices` | PASS (27) | `qc_matto` (seed 1815) has its own voice and signature; `n_qc_piperadio` / `n_qc_mattoradio` / `n_dp_tolliradio` resolve to Matto's and Tolli's voices, band-limited |
+| `place-scan` | PASS | `c3shaft` 2 findings, `control` 2 findings: both on its LEFT list (none at the riser or the horn) |
+| `dialogue-check` | PASS | node only: 197 warnings in the whole text (as before), none in a `qc_` key |
+| `save-migration` | PASS (27) | final build, run alone with a 115 min limit (about 41 min under the load) |
 
 `tests/quiet-channel.mjs` covers, by input (arrow keys through the harness's walk, E, the pause menu): chapter 11 by
 flags, down the collar; the riser before anything (no state, nothing in the journal); **his call read by sight** (the
