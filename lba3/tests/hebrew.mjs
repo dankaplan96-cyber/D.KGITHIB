@@ -21,7 +21,7 @@ if (SHOTS) mkdirSync(CAP, { recursive: true });
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch({ width: 1280, height: 720 });
 const ev = (f, a) => page.evaluate(f, a);
-const shot = async (n) => { if (!SHOTS) return; await ev(() => { game.renderer.render(); }); await page.screenshot({ path: CAP + n + '.jpg', type: 'jpeg', quality: 84, timeout: 180000 }); };
+const shot = async (n) => { if (!SHOTS) return; await page.waitForTimeout(300); await ev(() => { game.renderer.resize(); game.renderer.render(); }); await page.screenshot({ path: CAP + n + '.jpg', type: 'jpeg', quality: 84, timeout: 180000 }); };
 const HEB = /[֐-׿]/;
 
 // the layout checks: a box and its text inside the screen, nothing wider than its box
