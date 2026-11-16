@@ -189,6 +189,12 @@
     const h = hero();
     // a transition already under way (a Continue, a door just used): let it finish first
     for (let i = 0; i < 300 && G.trans; i++) G.step(DT);
+    // OPENING-TUT-2 (P31): chapter 1's yard is Zoé's errand first; a walk out of it does the errand, as a player who
+    // follows the steps does (P.yardFirst = false: a suite that tests the yard's edge itself)
+    if (P.yardFirst !== false && !P._yard && !G.room && G.story?.cur?.steps?.on && h.hasBall) {
+      const d = G.world.houses[0].door;
+      if (Math.hypot(tx - d.x, tz - d.z) > 13) P.openingYard();
+    }
     // SPACEPORT-2: Citadel Spaceport's deck is airside, reached only through the terminal (spaceport.js): between the
     // deck and the rest of Citadel he walks through it as a player does, in by its nearest door and out by the other
     // (the gate may be shut from the hall: then he stays inside and the walk ends there)
@@ -372,6 +378,36 @@
       }
       return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines, speakers: s.speakers, ...(skipped.length ? { skipped } : {}) };
     }
+  };
+  // OPENING-TUT-2 (P31): the yard's steps (src/game/story/openingsteps.js) by input, each the way the panel asks: talk to
+  // Zoé (E), the inventory (I, the key both control sets share) open and shut, the garden tap (E), the ball at the barrels
+  // (F), Athletic (F2) and a running jump over the project's pipe (Space). Returns the steps it did.
+  P.openingYard = () => {
+    const S = G.story?.cur?.steps;
+    if (!S?.on || P._yard || G.room) return [];
+    P._yard = true;
+    const did = [];
+    const found = () => { for (let i = 0; i < 40 && G.state !== 'play'; i++) { if (G.state === 'found') P.tap('KeyE', 0.2); P.settle(); } };
+    try {
+      for (let k = 0; k < 14 && S.on && !G.room; k++) {
+        const id = S.current();
+        if (!id) break;
+        did.push(id);
+        if (id === 'zoe') { P.talk('zoe'); found(); }
+        else if (id === 'inv') { P.tap('KeyI', 0.3); P.tap('KeyI', 0.3); P.settle(); }
+        else if (id === 'tap') { const Y = G.story.cur.home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); }
+        else if (id === 'barrels') { const B = G.story.cur.barrels(); if (hero().behaviour === 'athletic') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); G.step(2.0); P.settle(); }
+        else if (id === 'pipe') {
+          if (hero().behaviour !== 'athletic') P.tap('F2', 0.1);
+          P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6);
+          keys.add('ArrowUp'); G.step(0.45); P.tap('Space', 0.02); G.step(1.0); keys.delete('ArrowUp'); G.step(0.4);
+        } else break;
+        G.step(0.4); P.settle();
+      }
+      for (let i = 0; i < 20 && S.on; i++) G.step(0.1);   // (her last word; the way on is open)
+      P.note('openingYard: ' + did.join(' '));
+    } finally { P._yard = false; }
+    return did;
   };
   // walk into a door / exit trigger and wait for the new scene
   // (CAMPAIGN-1 had the house's door wait for the kitchen tap and Arthur's cup; OPENING-TUT, 14.11: the cup is gone and the

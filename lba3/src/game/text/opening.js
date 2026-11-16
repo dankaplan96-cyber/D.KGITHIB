@@ -57,6 +57,33 @@ Object.assign(STR.en, {
   tut_dlg_next: ' Next',
   tut_dlg_all: ' Show all',
 
+  // OPENING-TUT-2 (P31): the opening's steps (src/game/story/openingsteps.js). The goal line in the tip panel (always
+  // shown), the key under it (Show control tips), Zoé's word over her head as a step begins, her call from the yard
+  t2_goal_ball: 'Take your magic ball from the cupboard',
+  t2_goal_out: 'Go out to the yard',
+  t2_goal_zoe: 'Talk to Zoé',
+  t2_goal_inv: 'Look at the Kettle Crystals in your inventory',
+  t2_goal_tap: 'Try the garden tap',
+  t2_goal_barrels: 'Hit the barrels with the magic ball',
+  t2_goal_pipe: "Jump over the project's pipe",
+  t2_k_search: '{k} Search the cupboard',
+  t2_k_talk: '{k} Talk',
+  t2_k_try: '{k} Try the tap',
+  t2_k_jump: '{k} Jump · take a run at it',
+  t2_zoe_call: 'Twinsen! Over here.',
+  t2_ask_inv: 'Have a good look at those.',
+  t2_ask_tap: 'Is our tap knocking too? Try it.',
+  t2_ask_barrels: 'Arthur told Tim you can still hit those barrels. Can you?',
+  t2_ask_pipe: "And the project's pipe? You used to clear it at a run.",
+  t2_zoe_done: 'Not bad for an old hero. Now, the well.',
+  t2_zoe_close: 'Close enough. Go on, the well.',
+  t2_back_zoe: "Twinsen! Wait, I've news from next door.",
+  t2_back_inv: "Twinsen! You haven't even looked at those crystals.",
+  t2_back_tap: "Twinsen! Try our tap first. It's right here.",
+  t2_back_barrels: "Twinsen! The barrels. Arthur's counting on you.",
+  t2_back_pipe: 'Twinsen! The pipe first. Then the well.',
+  t2_back_again: "Where are you off to? I'm not finished with you.",
+
   // OPENING-TUT: Settings, Game: the tips on or off (index.html; main.js syncSettingsUI)
   tips_set: 'Show control tips', tips_on: 'On', tips_off: 'Off',
   set_h_tips_on: 'Short tips the first time a control is useful. The story is the same either way.',
