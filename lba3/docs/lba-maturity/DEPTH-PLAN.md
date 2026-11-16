@@ -660,6 +660,13 @@ only). On Zeelich's street (no post office there: the council's post, Oma's boar
 game at runtime (no image files): the card's, and Ysel's album at Clinic Row, the West Pier and Citadel's harbour. Not
 paired: ZEE-1 (the misrouted heat) shares the street but not the quest's files or people; it stays for a later pass.
 
+**U-5 built** (16.11.2026; `docs/lba-maturity/U5-QUIET-CHANNEL.md`, `tests/quiet-channel.mjs`; Automated runtime only;
+late game: its captures are for the team). At the bottom of the shaft (`c3shaft`, the safe first room of chapter 11): the
+riser knocks heavy, light, light and a rest (read on its gauge and lamp as well as heard); three valves answer it, then
+the brothers' knock backwards; Matto of Pump Two, Tolli's brother; the riser cock opens a channel to the station's control
+room (its horn, Tolli by it, a message by the story's stage); after the ending both brothers in the same room. Not paired:
+UND-1 (the source) is in the galleries and C11-1/C12-1 are main-path work; none shares the shaft's landing or its files.
+
 **Build order now:** U-1 → U-2 → U-3 (with DES-2 folded in) → U-4 → U-5, each paired with one remaining first-wave
 proposal where files don't collide (UND-1, ISL-3, ZEE-1, DES-1, HAM-2, HAM-3, C11-1, C12-1). Every first-wave proposal
 is re-checked against rule 3 before it is built; one that only pays "a crystal" gets a lasting change or is dropped.

@@ -370,6 +370,7 @@ export const VOICES = {
   lf_wick: { race: 'mole', seed: 1812, f0: 150, k: 0.95, rate: 1.1, contour: 'bounce', range: 5, legato: 0.45 },
   ow_tali: { race: 'quetch', seed: 1813, kid: true, f0: 290, k: 1.22, rate: 1.2, contour: 'bounce', range: 6, legato: 0.5, swing: 0.2, sex: 'f' },   // (U-3: Tali, the School's pupil with the bell; set apart from Lulu's sing-song)
   tyl_ysel: { race: 'esmer', seed: 1814, f0: 206, k: 1.04, rate: 0.78, contour: 'fall', range: 4, legato: 0.82, vib: [4.6, 22], tilt: 1.6, sex: 'f' },   // (U-4: Ysel, Nara's mother, the street's old photographer: slow, dry, warm)
+  qc_matto: { race: 'quetch', seed: 1815, f0: 128, k: 0.95, rate: 0.9, contour: 'arc', range: 4, legato: 0.62, tilt: 1.3, sex: 'm' },   // (U-5: Matto of Pump Two, Tolli's brother: lower and slower than him, warm; heard mostly through a pipe)
   // --- elves, gnomes and wizards
   joe: { race: 'elf', seed: 801, f0: 230, rate: 1.25, vib: [6, 20], legato: 0.7, range: 7, nasal: 0.5 },
   keraooc: { race: 'elf', seed: 802, f0: 175, k: 1.15, rate: 1.05, contour: 'sing', vib: [5.5, 22] },
@@ -382,7 +383,7 @@ export const VOICES = {
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
-const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
+const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda', qc_pipe: 'qc_matto' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (U-5: the voice in the pipe is Matto's)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
 // names that are not people (signs, notes, places): no voice
 // (cn_iso: chapter 9's isolator, a device's name on its prompt, not a speaker)
 const SILENT = new Set(['note', 'cn_iso', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
