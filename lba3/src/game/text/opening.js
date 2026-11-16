@@ -82,6 +82,7 @@ Object.assign(STR.en, {
   t2_back_tap: "Twinsen! Try our tap first. It's right here.",
   t2_back_barrels: "Twinsen! The barrels. Arthur's counting on you.",
   t2_back_pipe: 'Twinsen! The pipe first. Then the well.',
+  t2_back_again: "Where are you off to? I'm not finished with you.",
 
   // OPENING-TUT: Settings, Game: the tips on or off (index.html; main.js syncSettingsUI)
   tips_set: 'Show control tips', tips_on: 'On', tips_off: 'Off',

@@ -39,7 +39,7 @@ const TRIES = 3;           // jumps at the pipe before Zoé lets it go
 export class OpeningSteps {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.reset(); }
   reset() {
-    this.last = undefined; this.asked = new Set(); this.say = null; this.calls = 0;
+    this.last = undefined; this.asked = new Set(); this.say = null; this.calls = 0; this.callsFor = {};
     this.air = false; this.takeoff = 0; this.tries = 0; this.prevD = null; this.graceD = 0; this.back = null;
     this.hideBubble();
   }
@@ -170,9 +170,12 @@ export class OpeningSteps {
   // Zoé calls him back: her line (in the box, her voice), then he turns and walks a few steps back toward the door
   callBack(cur) {
     const g = this.game, ch = this.ch, h = g.hero, d = this.door();
+    // (her line names the step; every second call for the same step, a plainer one: the panel names it all along)
+    const n = this.callsFor?.[cur] || 0;
+    (this.callsFor ||= {})[cur] = n + 1;
     this.calls++;
     h.resetMotion?.();
-    ch.chain([['zoe', 't2_back_' + cur]], () => {
+    ch.chain([['zoe', n % 2 ? 't2_back_again' : 't2_back_' + cur]], () => {
       const dx = d.x - h.pos.x, dz = d.z - h.pos.z, dd = Math.hypot(dx, dz) || 1;
       this.back = { x: h.pos.x + (dx / dd) * BACK, z: h.pos.z + (dz / dd) * BACK, t: 0 };
       g.setState('cutscene');
