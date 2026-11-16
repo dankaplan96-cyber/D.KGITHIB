@@ -1,0 +1,189 @@
+{
+ "lines": [
+  {
+   "who": "n_arthur",
+   "line": "Dad! The mast fits!",
+   "openAt": 1.92,
+   "set": "expressive:kitchen",
+   "lineAt": 1.92,
+   "engine": "expressive",
+   "soundAt": 1.9926666666666666
+  },
+  {
+   "who": "n_hero",
+   "line": "Told you. Now the sail.",
+   "openAt": 4.88,
+   "set": "expressive:kitchen",
+   "lineAt": 4.88,
+   "engine": "expressive",
+   "soundAt": 4.91
+  },
+  {
+   "who": "n_zoe",
+   "line": "Twinsen. The tap's stopped again.",
+   "openAt": 8.24,
+   "set": "expressive:kitchen",
+   "lineAt": 8.32,
+   "engine": "expressive",
+   "soundAt": 8.35
+  },
+  {
+   "who": "n_hero",
+   "line": "I fixed that yesterday.",
+   "openAt": 11.2,
+   "set": "expressive:kitchen",
+   "lineAt": 11.2,
+   "engine": "expressive",
+   "soundAt": 11.229999999999999
+  },
+  {
+   "who": "n_zoe",
+   "line": "It worked yesterday.",
+   "openAt": 14.08,
+   "set": "expressive:kitchen",
+   "lineAt": 14.16,
+   "engine": "expressive",
+   "soundAt": 14.19
+  },
+  {
+   "who": "n_arthur",
+   "line": "The drill again. Lulu says they're diggi",
+   "openAt": 17.04,
+   "set": "expressive:kitchen",
+   "lineAt": 17.04,
+   "engine": "expressive",
+   "soundAt": 17.07
+  },
+  {
+   "who": "n_zoe",
+   "line": "That's warm. It's never warm.",
+   "openAt": 20,
+   "set": "expressive:kitchen",
+   "lineAt": 20,
+   "engine": "expressive",
+   "soundAt": 20.03
+  },
+  {
+   "who": "n_hero",
+   "line": "I'll check the well.",
+   "openAt": 22.88,
+   "set": "expressive:kitchen",
+   "lineAt": 22.88,
+   "engine": "expressive",
+   "soundAt": 22.91
+  },
+  {
+   "who": "n_zoe",
+   "line": "I'll ask next door.",
+   "openAt": 25.84,
+   "set": "expressive:kitchen",
+   "lineAt": 25.84,
+   "engine": "expressive",
+   "soundAt": 25.87
+  },
+  {
+   "who": "n_zoe",
+   "line": "Take your magic ball. Just in case.",
+   "openAt": 28.72,
+   "set": "expressive:kitchen",
+   "lineAt": 28.8,
+   "engine": "expressive",
+   "soundAt": 28.830000000000002
+  },
+  {
+   "who": "n_nara",
+   "line": "Twelve crates of cloud flowers, and not ",
+   "openAt": 35.36,
+   "set": "expressive:street",
+   "lineAt": 35.36,
+   "engine": "expressive",
+   "soundAt": 35.47
+  },
+  {
+   "who": "n_baldino",
+   "line": "The flue draws again! Did you hear it co",
+   "openAt": 38.24,
+   "set": "expressive:street",
+   "lineAt": 38.24,
+   "engine": "expressive",
+   "soundAt": 38.59
+  },
+  {
+   "who": "n_nara",
+   "line": "The project tags everything. Even my see",
+   "openAt": 41.2,
+   "set": "expressive:street",
+   "lineAt": 41.2,
+   "engine": "expressive",
+   "soundAt": 41.230000000000004
+  },
+  {
+   "who": "n_baldino",
+   "line": "Bring me the gauge, and mind the steam.",
+   "openAt": 44.16,
+   "set": "expressive:street",
+   "lineAt": 44.16,
+   "engine": "expressive",
+   "soundAt": 44.19
+  }
+ ],
+ "long": [
+  {
+   "at": 19656,
+   "ms": 218,
+   "during": false
+  },
+  {
+   "at": 20374,
+   "ms": 238,
+   "during": false
+  },
+  {
+   "at": 20726,
+   "ms": 131,
+   "during": false
+  },
+  {
+   "at": 20858,
+   "ms": 74,
+   "during": false
+  },
+  {
+   "at": 21356,
+   "ms": 141,
+   "during": false
+  },
+  {
+   "at": 21499,
+   "ms": 109,
+   "during": false
+  },
+  {
+   "at": 21627,
+   "ms": 107,
+   "during": false
+  },
+  {
+   "at": 21745,
+   "ms": 176,
+   "during": false
+  },
+  {
+   "at": 46256,
+   "ms": 2330,
+   "during": false
+  },
+  {
+   "at": 48589,
+   "ms": 150,
+   "during": false
+  },
+  {
+   "at": 48761,
+   "ms": 96,
+   "during": false
+  }
+ ],
+ "gpu": "NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11",
+ "cur": null
+}
