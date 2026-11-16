@@ -17,6 +17,7 @@
 // by spaceship.
 import * as THREE from 'three';
 import { POI } from '../world.js';
+import { pierOff, pierAng } from '../island.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { Watcher } from '../enemies.js';
@@ -39,11 +40,11 @@ export class Chapter1 extends ChapterBase {
   // ---------------------------------------------------------------- cast
   npcDefs() {
     const W = this.game.world;
-    const pe = W.pierEnd;
+    const pe = W.pierEnd, at = (dx, dz) => { const o = pierOff(dx, dz); return { x: pe.x + o.x, z: pe.z + o.z }; };   // (CITADEL-ORIG-2: along the stone pier's leg)
     return [
-      { id: 'vesk', name: 'n_vesk', char: 'vesk', color: '#c8a8ff', x: pe.x + 2, z: pe.z + 1, angle: Math.PI / 2 },
-      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', x: pe.x + 6.5, z: pe.z + 0.9, angle: -1.42, anim: 'use' },
-      { id: 'guard', name: 'n_guard', char: 'guard', color: '#9fe0d0', x: pe.x + 5, z: pe.z + 1.5, angle: Math.PI / 2 },
+      { id: 'vesk', name: 'n_vesk', char: 'vesk', color: '#c8a8ff', ...at(2, 1), angle: pierAng(Math.PI / 2) },
+      { id: 'worker', name: 'n_worker', char: 'worker', color: '#9fe0d0', ...at(6.5, 0.9), angle: pierAng(-1.42), anim: 'use' },
+      { id: 'guard', name: 'n_guard', char: 'guard', color: '#9fe0d0', ...at(5, 1.5), angle: pierAng(Math.PI / 2) },
     ];
   }
 
@@ -98,7 +99,7 @@ export class Chapter1 extends ChapterBase {
             let dx = k.x - m.x, dz = k.z - m.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
             return { x: k.x + dx * 0.46, z: k.z + dz * 0.46, a: Math.atan2(-dx, -dz), anim: 'use' };
           }
-          return { x: pe.x + 6.5, z: pe.z + 0.9, a: -1.42, anim: 'use' };
+          { const o = pierOff(6.5, 0.9); return { x: pe.x + o.x, z: pe.z + o.z, a: pierAng(-1.42), anim: 'use' }; }
         }
         return R.control?.npcSpots?.worker ?? { x: gateIn.x + 2, z: gateIn.z + 2, a: 0 };
       case 'guard':
@@ -442,7 +443,12 @@ export class Chapter1 extends ChapterBase {
     const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
     const world = (lx, ly, lz) => { grp.updateMatrixWorld(true); return grp.localToWorld(V3(lx, ly, lz)); };
     const ground = (x, z) => g.physics.groundAt(x, z);
-    const deckY = F.y ?? 1.73, pierY = ground(gang.x + 0.5, ps.z);
+    // (CITADEL-ORIG-2: the berth is along the stone pier's leg now, turned a quarter from the old plank pier's: an offset
+    //  written along the old pier, x toward its root, z across it toward the quay's side, is turned with it)
+    const G = (dx, dz) => { const o = pierOff(dx, dz); return { x: gang.x + o.x, z: gang.z + o.z }; };
+    const GV = (dx, y, dz) => { const q = G(dx, dz); return V3(q.x, y, q.z); };
+    const PE = (dx, y, dz) => { const o = pierOff(dx, dz); return V3(pe.x + o.x, y, pe.z + o.z); };
+    const deckY = F.y ?? 1.73, pierY = (() => { const q = G(0.5, 2.15); return ground(q.x, q.z); })();
     // the way in, in the harbour's frame (the ferry's bow is its local +x; it berths heading +x)
     const P = [[-46, -24], [-26, -23], [-15, 0.15], [0, 0]].map(([dx, dz]) => ({ x: base.x + dx, z: base.z + dz }));
     const bez = (u) => { const v = 1 - u, a = v * v * v, b = 3 * v * v * u, c = 3 * v * u * u, d = u * u * u; return { x: a * P[0].x + b * P[1].x + c * P[2].x + d * P[3].x, z: a * P[0].z + b * P[1].z + c * P[2].z + d * P[3].z }; };
@@ -503,8 +509,10 @@ export class Chapter1 extends ChapterBase {
     };
     // Vesk's way down: deck → the rail's gap → down the gangway → onto the pier → his mark (his height eased along the gangway)
     const startWalk = () => {
-      const a = world(RIDE.x, deckY, RIDE.z), b = world(2.0, deckY, 1.6), c = world(2.0, deckY, 2.95), d = { x: c.x + 0.4, z: c.z + 0.6 };
-      walk = { i: 1, gang: 2, pts: [{ x: a.x, z: a.z, y: a.y }, { x: b.x, z: b.z, y: b.y }, { x: c.x, z: c.z, y: ground(c.x, c.z) }, { x: d.x, z: d.z, y: ground(d.x, d.z) }, { x: mark.x, z: mark.z, y: ground(mark.x, mark.z) }] };
+      const a = world(RIDE.x, deckY, RIDE.z), b = world(2.0, deckY, 1.6), c = world(2.0, deckY, 2.95), od = pierOff(0.4, 0.6), d = { x: c.x + od.x, z: c.z + od.z };
+      // (CITADEL-ORIG-2: up the leg to the elbow, then along the arm to his mark by the quay)
+      const el = W.pierElbow ? [{ x: W.pierElbow.x + 0.3, z: W.pierElbow.z + 0.2, y: ground(W.pierElbow.x + 0.3, W.pierElbow.z + 0.2) }] : [];
+      walk = { i: 1, gang: 2, pts: [{ x: a.x, z: a.z, y: a.y }, { x: b.x, z: b.z, y: b.y }, { x: c.x, z: c.z, y: ground(c.x, c.z) }, { x: d.x, z: d.z, y: ground(d.x, d.z) }, ...el, { x: mark.x, z: mark.z, y: ground(mark.x, mark.z) }] };
     };
     const stepWalk = (dt) => {
       const SPD = 1.5, p = vesk.pos;
@@ -534,14 +542,14 @@ export class Chapter1 extends ChapterBase {
       for (const p of cands) if (!solidAt(g, p.x, p.y, p.z, 0.6) && h.pos.distanceTo(p) > 1.4 && free(p) && to.every((q) => g.physics.lineOfSight(p.x, p.y, p.z, q.x, q.y, q.z))) return p;
       return clear(cands[0], to[0]);
     };
-    const gTop = world(2.0, deckY + 1.6, 1.4), gFoot = V3(gang.x, pierY + 1.6, ps.z - 1.0);
+    const gTop = world(2.0, deckY + 1.6, 1.4), gFoot = GV(0, pierY + 1.6, 1.15);
     const S = {
       // out to sea from the pier's end: the ship coming in, Vesk a figure at its rail
-      sea: () => { const p = clear(V3(pe.x + 0.6, (pe.y ?? pierY) + 2.3, pe.z + 0.9), V3(pe.x - 4, 1, pe.z - 4)); return () => ({ pos: p, look: world(0.5, deckY + 1.2, 0), fov: 42 }); },
+      sea: () => { const p = clear(PE(0.6, (pe.y ?? pierY) + 2.3, 0.9), PE(-4, 1, -4)); return () => ({ pos: p, look: world(0.5, deckY + 1.2, 0), fov: 42 }); },
       // from the pier's root, low, down the pier: it slides alongside toward us and settles
-      side: () => { const p = clear(V3(gang.x + 9.2, pierY + 1.35, ps.z - 1.0), V3(gang.x, deckY, gang.z)); return () => ({ pos: p, look: world(1.8, deckY + 0.9, 0.6), fov: 46 }); },
+      side: () => { const p = clear(GV(9.2, pierY + 1.35, 1.15), V3(gang.x, deckY, gang.z)); return () => ({ pos: p, look: world(1.8, deckY + 0.9, 0.6), fov: 46 }); },
       // the reveal: low at the gangway's foot, looking up as he comes down it toward us
-      reveal: () => { const y = pierY + 0.55, p = pick([V3(gang.x + 2.4, y, ps.z - 1.3), V3(gang.x + 3.2, y, ps.z - 1.2), V3(gang.x - 3.0, y, ps.z + 0.3), V3(gang.x - 2.2, y, ps.z + 1.1)], [gTop, gFoot]); return () => ({ pos: p, look: vHead(1.45), fov: 40 }); },
+      reveal: () => { const y = pierY + 0.55, p = pick([GV(2.4, y, 0.85), GV(3.2, y, 0.95), GV(-3.0, y, 2.45), GV(-2.2, y, 3.25)], [gTop, gFoot]); return () => ({ pos: p, look: vHead(1.45), fov: 40 }); },
       // he walks into a medium shot at his mark (the lens stands past it, to the quay's side)
       lead: () => {
         const y = ground(mark.x, mark.z) + 1.55, M = V3(mark.x, y, mark.z), c = (k, s2) => V3(mark.x + dirM.x * k + dirM.z * s2, y, mark.z + dirM.z * k - dirM.x * s2);

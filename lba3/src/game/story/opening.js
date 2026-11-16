@@ -23,7 +23,7 @@ import { glowSprite } from '../interiors.js';
 import { MAT, Kit } from '../props.js';
 import { t } from '../i18n.js';
 import '../text/opening.js';
-import { SHIFT } from '../island.js';
+import { SHIFT, pierW, pierAng } from '../island.js';
 
 export const OPENING_LENGTH = 88.0;
 export const MUSIC_AT = 2.5;          // the cue starts after a moment of sea sound
@@ -33,6 +33,10 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const HS = SHIFT.harbour;
 const HV = (x, y, z) => V(x + HS.x, y, z + HS.z);
 const HP = (x, z) => ({ x: x + HS.x, z: z + HS.z });
+// CITADEL-ORIG-2: the lift, the barge and the pier's end stand on the stone L's leg now, turned a quarter about its elbow
+// (island.js PIER_L): the shots, spots and walks round them are written in the old design frame and turned with them
+const PV = (x, y, z) => { const q = pierW(x, z); return V(q.x, y, q.z); };
+const PP = (x, z) => pierW(x, z);
 const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 
 export function playOpening(story) {
@@ -43,7 +47,7 @@ export function playOpening(story) {
   const hx = (x, z) => ({ x: R.center.x + x, z: R.center.z + z });   // house-local → world
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
   const wv = (x, y, z) => V(WR.center.x + x, y, WR.center.z + z);   // well-cave-local → world
-  const harbourFocus = HV(-82, 1.8, -3);
+  const harbourFocus = PV(-82, 1.8, -3);
   // (the user, 5.11: "in the opening film Vesk's ship is already in the harbour, it isn't logical": the project's
   //  ferry brings him in chapter 2 — chapter1.js startArrival — so it is not at the pier in the opening; the barge
   //  and the lift are being unloaded)
@@ -95,9 +99,9 @@ export function playOpening(story) {
   const tw = actor(H), zo = actor(zoe), ar = actor(arthur);
   const worker = extra('worker'), resident = extra('farmerB');
   // (the worker stands a step off the lift column's base: at (-84.35, -3.05) his body was in it)
-  const wkSpot = HP(-84.25, -3.1), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
-  const crSpot = HP(-84.12, -3.66);   // (where the worker meets the crate: an arm's length from its near edge)
-  const resSpot2 = HP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
+  const wkSpot = PP(-84.25, -3.1), resSpot = PP(-83.3, -4.3), column = PP(-85.0, -2.75);
+  const crSpot = PP(-84.12, -3.66);   // (where the worker meets the crate: an arm's length from its near edge)
+  const resSpot2 = PP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
 
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
@@ -184,7 +188,7 @@ export function playOpening(story) {
     // without stopping: position and aim on one smooth curve, the speed continuous through 9 s.)
     shot(0, 13.0, () => aerial(cine.t), null),
     // 2 — the project's lift: the crate comes up off the barge; a resident asks the worker about the heat
-    shot(13.0, 19.6, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
+    shot(13.0, 19.6, P(PV(-79.7, 3.3, -1.75), PV(-85.1, 2.25, -3.05), 44), P(PV(-79.9, 3.2, -1.85), PV(-85.1, 2.4, -3.1), 44)),
     // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
     shot(19.6, 23.8, P(V(bore.x + 22, boreY + 9, bore.z + 12), V(bore.x, boreY + 5, bore.z), 46), P(V(bore.x + 18, boreY + 7.6, bore.z + 10), V(bore.x, boreY + 5.6, bore.z), 46)),
     // 4 — back at the pier, a little above head height: the lantern settles; "Just the drill."; the crate is set
@@ -192,7 +196,7 @@ export function playOpening(story) {
     // heads at the top edge, cut.)
     // (from the ferry's side of the pier, so the worker answers toward us and his bend to the crate reads; from the
     // town's side the resident hid him)
-    shot(23.8, 29.0, P(HV(-80.9, 3.85, 0.3), HV(-83.8, 2.8, -3.9), 44), P(HV(-81.1, 3.8, 0.1), HV(-83.8, 2.75, -4.0), 44)),
+    shot(23.8, 29.0, P(PV(-80.9, 3.85, 0.3), PV(-83.8, 2.8, -3.9), 44), P(PV(-81.1, 3.8, 0.1), PV(-83.8, 2.75, -4.0), 44)),
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
     // (Arthur's face: a three-quarter close-up as he shows the mast; then over his shoulder for his father's answer)
@@ -245,7 +249,7 @@ export function playOpening(story) {
   // the opening's aerial move (0-13 s): a Catmull-Rom curve through the three framings it used to stop at (high over
   // the island; high over the water by the pier, at 9 s; low over the quay at the lift, at 13 s), the camera's position
   // and aim alike; the time warp starts from rest, passes 9 s at speed and settles at 13 s (one curve, C1 throughout)
-  const AER = { pos: [HV(-34, 26, 58), HV(-50, 17, 38), HV(-72.5, 8.5, 4.0)], look: [HV(-2, 6, -38), HV(-30, 4, -42), HV(-83.4, 2.2, -3.2)] };
+  const AER = { pos: [HV(-34, 26, 58), HV(-50, 17, 38), PV(-72.5, 8.5, 4.0)], look: [HV(-2, 6, -38), HV(-30, 4, -42), PV(-83.4, 2.2, -3.2)] };
   const crPt = (Q, u) => {
     const i = u < 0.5 ? 0 : 1, s = Math.min(1, (u - 0.5 * i) / 0.5);
     const P1 = Q[i], P2 = Q[i + 1], P0 = i === 0 ? Q[0].clone().multiplyScalar(2).sub(Q[1]) : Q[0], P3 = i === 1 ? Q[2].clone().multiplyScalar(2).sub(Q[1]) : Q[2];
@@ -403,7 +407,7 @@ export function playOpening(story) {
   // the resident waits by the lift for his word with the worker, then goes on down the pier
   // (the worker steps to the crate's side of the pier, by its west face, while the resident is still there; the
   // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
-  walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.3)], 26.4, 1.2, 'idle', Math.PI);   // (NO-AIR: 0.3 m in from the pier's edge: his left foot ended over the water)
+  walk(resident, [resSpot2, PP(-83.0, -5.0), PP(-84.4, -5.3)], 26.4, 1.2, 'idle', pierAng(Math.PI));   // (NO-AIR: 0.3 m in from the pier's edge: his left foot ended over the water)
   walk(worker, [wkSpot, crSpot], 24.6, 1.0, 'idle', angleTo({ pos: crSpot }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 39.95, 1.0, 'idle', Math.PI, { acc: 0.25, dec: 0.3 });   // (there by 40.87; the turn to the tap runs into the reach)
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)

@@ -142,6 +142,10 @@ export function migrateSave(raw) {
     const hx = (s.hero.x ?? 0) - 4300, hz = s.hero.z ?? 0;
     if (s.room === 'hamalayi' && (Math.hypot(hx - 50, hz - 62) < 18 || Math.hypot(hx + 47, hz - 64) < 8)) s.respawn = true;
   }
+  // CITADEL-ORIG-2 (not a format change, idempotent): the plank pier west of the quay is LBA2's stone L now, its arm
+  // as long as the old pier's first 7 m; a save standing further out on the old pier (now open water, the leg turned
+  // south) comes back to the pier's elbow
+  if (!s.room && (s.hero.x ?? 0) < -127.2 && (s.hero.x ?? 0) > -137.5 && Math.abs((s.hero.z ?? 0) - 43) < 2.2) { s.hero.x = -125.5; s.hero.z = 43.0; }
   s.v = v;
   return s;
 }

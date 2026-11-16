@@ -18,7 +18,7 @@
 //   buildZTerminalOutside(group, physics, Y)   the pavilion on the deck: called by travel.js with Zeelich's group (its
 //                                       local frame: ZPORT's) and the deck's height
 //   zterminalDoors() / zterminalExit(to)   the pavilion's door leads in (region 'zeelich'); 'zterminal-out' back out
-//                                       before it; 'zterminal-gate' out to the pad's landing spot
+//                                       before it; 'zterminal-gate' out by the pavilion's west face, facing the pad
 //   ZTERMINAL (filled when the room is built): door, gate, counter {x,z,r}, board {x,z,r}, seats [{x,z,a}] (8),
 //     npcSpots {clerk, guard, porter}, arrivals {x,z,a} (where he steps in from the pad), notice {setVisible(b)}; WC-4:
 //     notice.setKind('grounded' | 'council' | null): in chapter 9 it carries the council's order (every departure
@@ -55,7 +55,14 @@ export const ZTERMINAL_PLAN = (() => {
 // the pavilion on the deck (Zeelich's local frame, travel.js ZPORT: the deck x −14…6, z 33…51, the bridge at x −4)
 const PAV = { x: 2.7, z: 36.3, w: 4.6, d: 4.2, h: 5.2, wallH: 3.4, ry: -Math.PI / 2, doorX: 0.8 };
 const DOOR = { x: PAV.x - PAV.d / 2, z: PAV.z + PAV.doorX };   // (its front faces −x, toward the bridge's end)
-const LANDING = { x: -4, z: 44 - 7.2, a: Math.PI };            // travel.js: the pad's landing spot
+// CITADEL-ORIG-2 (the user, 16.11: "make sure the second door leads in the direction it should be"): the gate is in the
+// hall's left wall at the back, the door in the same wall at the front; on the deck the pavilion's door faces west, so
+// the hall's left wall is the pavilion's west face and its back is north. Out through the gate he came out at the pad's
+// landing spot facing north, toward the bridge and the town (a ship's arrival faces that way), his back to the pad. Now
+// he steps out by the west face's north end, 1.3 m from the landing spot (north of where the door lets him out), facing
+// the pad and its ship, away from the hall.
+const PAD = { x: -4, z: 44 }, GATE_OUT = { x: -3.4, z: 35.6 };
+GATE_OUT.a = Math.atan2(PAD.x - GATE_OUT.x, PAD.z - GATE_OUT.z);
 
 const ORANGE = () => MAT.paint('#d8682a', 0.45), TURQ = () => MAT.paint('#2f8a9a', 0.45);
 const signTex = (text, sub, bg = '#2a1e34', ink = '#f0c040') => canvasTex(512, 160, (x, W, H) => {
@@ -226,6 +233,6 @@ export function zterminalDoors() {
 }
 export function zterminalExit(to) {
   if (to === 'zterminal-out') return { room: 'zeelich', x: ZEELICH.x + DOOR.x - 1.2, z: ZEELICH.z + DOOR.z, a: -Math.PI / 2 };
-  if (to === 'zterminal-gate') return { room: 'zeelich', x: ZEELICH.x + LANDING.x, z: ZEELICH.z + LANDING.z, a: LANDING.a };
+  if (to === 'zterminal-gate') return { room: 'zeelich', x: ZEELICH.x + GATE_OUT.x, z: ZEELICH.z + GATE_OUT.z, a: GATE_OUT.a };
   return null;
 }

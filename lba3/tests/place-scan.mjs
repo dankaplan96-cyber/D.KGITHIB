@@ -97,7 +97,7 @@ const LEFT = [
   ['citadel', 'wall', 'barrels', 'low (12 cm): a depot barrel against the yard\'s fence', [-74.8, -77.3]],
   ['citadel', 'float', 'custom', 'not a standing piece: the sewer hatch lever\'s quadrant on its post (sewers.js; the post is drawn outside the piece)'],
   ['citadel', 'float', 'flowerBox', 'low (6 cm): a window box under Twinsen\'s window', [-46.7, 82.1]],
-  ['citadel', 'walk', 'mkCrate', 'by design: cargo by the crane on the quay\'s deck (3.2 m wide)', [-128.69, 43.4]],
+  ['citadel', 'walk', 'mkCrate', 'by design: cargo by the crane on the stone pier\'s leg (3.2 m wide; CITADEL-ORIG-2: the lift turned onto the L\'s leg)', [-125.1, 46.19]],
   ['citadel', 'path', 'handcart', 'by design: the depot\'s staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)'],
   ['citadel', 'path', 'barrels', 'by design: the depot\'s staff yard behind the painted line; goods along its fence'],
   ['citadel', 'path', 'crateMesh', 'by design: the depot\'s breakable crates (W.crates: there to be broken)'],

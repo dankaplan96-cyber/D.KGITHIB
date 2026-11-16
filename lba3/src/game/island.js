@@ -37,6 +37,24 @@ export const HARBOUR = { ...HARBOUR0, quayX: HARBOUR0.quayX + SHIFT.harbour.x, z
 // HARBOUR-CUT: the quay's outer corners are rounded to this radius (m): world.js shapes the ground on it, buildHarbour
 // its wall, coping and rail
 export const QUAY_R = 2;
+// CITADEL-ORIG-2 (the user, 16.11: "excellent" to LBA2's paved harbour with the L pier): the wooden pier is now LBA2's
+// L-shaped stone pier. Its arm runs west from the quay's face as the old pier's first part did, to the elbow (design
+// x ELBOW.x); the leg turns south there, and everything that stood on the pier beyond the elbow — the lift, the barge,
+// the pier's end and its moorings, and the ferry's berth alongside — is turned with it, a quarter turn about the elbow
+// (three.js rotation.y = +π/2: the old pier's −x, out to sea, is +z, south; its north side is west). pierW() puts a
+// point of the old design frame where it stands now; pierOff() turns an offset written along the old pier (x toward its
+// root, z toward its south side); pierAng() a facing. The quay and what stands on it are where they were.
+// CITADEL-ORIG-2: LBA2's harbour platform, straight-walled (world coordinates): the yard's south face (z zS, from the
+// quay's east face to x1), the notch inside the L (the water between the quay and the trading house's ground), that
+// ground's west face (x1) and south face (zSE, to x2); level at h, paved (world.js shapes the ground, buildHarbour the walls)
+export const HARBOUR_PLAT = { x0: -105.5, x1: -91.3, x2: -79.0, zS: 44.0, zSE: 51.0, h: 2.3, zFar: 57.0 };   // (zFar: the cuts fade out south of it)
+export const PIER_L = { elbow: { x: -80, z: -4 }, a: Math.PI / 2 };
+export function pierOff(dx, dz) { const c = Math.cos(PIER_L.a), s = Math.sin(PIER_L.a); return { x: dx * c + dz * s, z: -dx * s + dz * c }; }
+export function pierW(xd, zd) {
+  const E = PIER_L.elbow, o = pierOff(xd - E.x, zd - E.z);
+  return { x: E.x + SHIFT.harbour.x + o.x, z: E.z + SHIFT.harbour.z + o.z };
+}
+export const pierAng = (a) => a + PIER_L.a;
 const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
 export const LIGHTHOUSE = { x: -107.5, z: 90.5, half: 2.35, cottage: { x: -98, z: 99, ry: -Math.PI / 2 - 0.2 } };
 const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
@@ -592,34 +610,92 @@ function buildHarbour(W0, root, r) {
     for (const [a, b] of runs) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: QH + 1.05, seeThrough: true, noStand: true });
   }
 
-  // --- plank pier on piles
+  // --- CITADEL-ORIG-2: LBA2's L-shaped stone pier (PIER_L): the arm west from the quay's face to the elbow, the leg
+  // south from there (built in the turned frame, pg/pc below), on battered rubble walls like the quay's, paved, its
+  // edges railed with the quay's white posts and teal rails. (The old plank pier's random draws are still drawn, so the
+  // quay's barrels, crates and tulips keep their jitter.)
+  const E = PIER_L.elbow, Wl = siteL(W0);
+  const pg = new THREE.Group(); pg.position.set(E.x, 0, E.z); pg.rotation.y = PIER_L.a; g.add(pg);
+  const pc = new THREE.Group(); pc.position.set(-E.x, 0, -E.z); pg.add(pc);
+  const BL = new Batch(pc);
   {
     const x0 = QX + 0.3, x1 = QX - plen;
-    const planks = [];
-    for (let x = x0; x > x1; x -= 0.3) planks.push({ x: x - 0.14, y: deck - 0.05, z: pz + (r() - 0.5) * 0.06, ry: (r() - 0.5) * 0.015, sx: 1, sy: 1, sz: 0.97 + r() * 0.06, color: new THREE.Color().setScalar(0.82 + r() * 0.3) });
-    instances(g, cached('plank', () => bbox(0.27, 0.09, pw, 0.015, TILE.planks)), tm('planks', { color: '#e8d2b8' }), planks);
+    for (let x = x0; x > x1; x -= 0.3) { r(); r(); r(); r(); }
+    for (let x = x0 - 0.4; x > x1 - 0.2; x -= 2.75) for (let s = 0; s < 2; s++) { r(); r(); r(); }
+    const rub = tm('rubble', { color: '#cfcac8' }), pave = tm('stone', { color: '#c8c2b8' }), cope = tm('stone', { color: '#e8e4dc' });
+    const teal = pm('#2a9a8a', 0.4, { metalness: 0.5 }), post = tm('concrete', { color: '#f4f2ee', rough: 0.75 });
+    const ax1 = E.x - pw / 2;   // (the arm's west end: the far side of the leg)
+    // a straight run of the quay's wall section in the frame of B2 (land on the run's right), its coping, its posts and
+    // rail (a post every ~3 m, 0.45 m in from the face; no rail across a gap [u0, u1], metres along the run)
+    const wallRun = (B2, ax, az, bx, bz, top, gaps, posts) => {
+      const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
+      const sh = new THREE.Shape();
+      sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, top - 0.18); sh.lineTo(0.18, top - 0.18); sh.lineTo(-0.2, -3.6);
+      B2.add(extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
+      B2.add(bbox(0.62, 0.22, len, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
+      const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, n = Math.max(1, Math.round(len / 3));
+      const us = []; for (let i = 0; i <= n; i++) us.push((len * i) / n);
+      for (const [u0, u1] of gaps) us.push(u0, u1);
+      us.sort((a, b) => a - b);
+      const inGap = (u) => gaps.some(([u0, u1]) => u > u0 + 1e-3 && u < u1 - 1e-3);
+      const pts = [];
+      for (const u of us) if (!inGap(u) && (!pts.length || u - pts[pts.length - 1].u > 0.3)) pts.push({ u, x: ax + (bx - ax) * u / len + ix, z: az + (bz - az) * u / len + iz });
+      for (const p of pts) posts.push({ x: p.x, y: top + 0.04, z: p.z, ry: 0 });
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1]; if (inGap((a.u + b.u) / 2)) continue;
+        B2.add(cyl(0.045, 0.045, Math.hypot(b.x - a.x, b.z - a.z), 8), teal, (a.x + b.x) / 2, top + 0.55, (a.z + b.z) / 2, Math.PI / 2, Math.atan2(b.x - a.x, b.z - a.z), 0);
+        (B2._rails ||= []).push([a, b]);
+      }
+    };
+    // the arm (the harbour's frame): its north face from the quay to its end, the end, its south face from the leg back
+    const armPosts = [], legPosts = [];
+    wallRun(B, QX, pz - pw / 2, ax1, pz - pw / 2, deck + 0.05, [], armPosts);
+    wallRun(B, ax1, pz - pw / 2, ax1, pz + pw / 2, deck + 0.05, [], armPosts);
+    wallRun(B, E.x + pw / 2, pz + pw / 2, QX, pz + pw / 2, deck + 0.05, [[-1, 99]], armPosts);   // (the L's inner faces have no rail, as LBA2's: the barge and the boat lie there)
+    B.add(bbox(QX - ax1 + 0.3, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (QX + 0.3 + ax1) / 2, deck - 0.15, pz);
+    physics.add({ type: 'box', x: (QX + 0.3 + ax1) / 2, z: pz, hw: (QX + 0.3 - ax1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
+    // the leg (the turned frame pc: its design x runs south, its -z side is west), from the arm's south face to the tip:
+    // its west face (the ferry's side: a gap at her gangway), the tip (a gap at the ladder), the east face (inner: no rail)
+    const lx0 = E.x - pw / 2, gwx = QX - plen + 4.6 + 2.0;
+    wallRun(BL, lx0, pz - pw / 2, x1, pz - pw / 2, deck + 0.05, [[-1, lx0 - gwx + 0.95]], legPosts);   // (open from the elbow to past the gangway: the opening's resident walks to 0.3 m from the edge there)
+    wallRun(BL, x1, pz - pw / 2, x1, pz + pw / 2, deck + 0.05, [[0.45, pw - 0.45]], legPosts);
+    wallRun(BL, x1, pz + pw / 2, lx0, pz + pw / 2, deck + 0.05, [[-1, 99]], legPosts);
+    BL.add(bbox(lx0 - x1, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (lx0 + x1) / 2, deck - 0.15, pz);
+    Wl.physics.add({ type: 'box', x: (lx0 + x1) / 2, z: pz, hw: (lx0 - x1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
+    const bollard = bollardGeo();
+    instances(pc, bollard, post, legPosts);
+    for (const p of armPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: deck + 1.1, seeThrough: true });
+    for (const p of legPosts) Wl.physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: deck + 1.1, seeThrough: true });
+    for (const [a, b] of B._rails || []) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: deck + 1.05, seeThrough: true, noStand: true });
+    B._rails = [];
+    for (const [a, b] of BL._rails || []) Wl.physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: deck + 1.05, seeThrough: true, noStand: true });
+    // mooring posts at the tip, a ladder down to the water (as the plank pier's end had)
     const wood = tm('wood', { color: '#8a6a4a' });
-    for (const zz of [-pw / 2 + 0.2, 0, pw / 2 - 0.2]) B.add(bbox(plen + 0.3, 0.22, 0.18, 0.02, TILE.wood).rotateY(Math.PI / 2), wood, (x0 + x1) / 2, deck - 0.21, pz + zz, 0, Math.PI / 2, 0);
-    const piles = [];
-    for (let x = x0 - 0.4; x > x1 - 0.2; x -= 2.75) {
-      B.add(bbox(0.2, 0.22, pw + 0.5, 0.02, TILE.wood), wood, x, deck - 0.42, pz);
-      for (const s of [-1, 1]) piles.push({ x: x + (r() - 0.5) * 0.05, y: deck - 0.3, z: pz + s * (pw / 2 + 0.05), ry: r() * 6, rz: (r() - 0.5) * 0.03 });
-      // diagonal bracing between the piles
-      B.add(bbox(0.08, 2.4, 0.12, 0.02, TILE.wood), wood, x, -0.4, pz, 0, 0, 0.9);
-    }
-    instances(g, cached('pile', () => { const p = cyl(0.15, 0.17, 4.6, 9, TILE.wood); p.translate(0, -2.3 + 0.35, 0); return p; }), tm('wood', { color: '#6a5038' }), piles);
-    // mooring posts with rope at the far end and a ladder down to the water
     for (const s of [-1, 1]) {
-      const mx = x1 + 0.5, mz = pz + s * (pw / 2 - 0.25);
-      B.add(cyl(0.12, 0.14, 0.75, 9, TILE.wood), wood, mx, deck + 0.37, mz);
-      B.add(new THREE.TorusGeometry(0.15, 0.04, 6, 14), pm('#c8b07a', 0.95), mx, deck + 0.42, mz, Math.PI / 2, 0, 0);
-      physics.add({ type: 'cyl', x: mx, z: mz, r: 0.18, top: deck + 0.75, seeThrough: true, noStand: true });
+      const mx = x1 + 0.6, mz = pz + s * (pw / 2 - 0.3);
+      BL.add(cyl(0.12, 0.14, 0.75, 9, TILE.wood), wood, mx, deck + 0.37, mz);
+      BL.add(new THREE.TorusGeometry(0.15, 0.04, 6, 14), pm('#c8b07a', 0.95), mx, deck + 0.42, mz, Math.PI / 2, 0, 0);
+      Wl.physics.add({ type: 'cyl', x: mx, z: mz, r: 0.18, top: deck + 0.75, seeThrough: true, noStand: true });
     }
-    for (const yy of [0.2, 0.6, 1.0, 1.4]) B.add(bbox(0.06, 0.06, 0.6, 0.01, 1), pm('#5a5a5a', 0.5, { metalness: 0.5 }), x1 - 0.02, yy - 0.2, pz + 0.6);
-    for (const s of [-1, 1]) B.add(bbox(0.06, 2.0, 0.06, 0.01, 1), pm('#5a5a5a', 0.5, { metalness: 0.5 }), x1 - 0.02, 0.6, pz + 0.6 + s * 0.3);
-    physics.add({ type: 'box', x: (x0 + x1) / 2, z: pz, hw: (x0 - x1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
+    for (const yy of [0.2, 0.6, 1.0, 1.4]) BL.add(bbox(0.06, 0.06, 0.6, 0.01, 1), pm('#5a5a5a', 0.5, { metalness: 0.5 }), x1 - 0.22, yy - 0.2, pz);
+    for (const s of [-1, 1]) BL.add(bbox(0.06, 2.0, 0.06, 0.01, 1), pm('#5a5a5a', 0.5, { metalness: 0.5 }), x1 - 0.22, 0.6, pz + s * 0.3);
+    // the platform's straight sea walls (HARBOUR_PLAT; in this frame: world − d): the quay's south and east faces, the
+    // yard's south face (LBA2's own posts and rails stand along it: citadel-layout.js PROPS), the trading house ground's
+    // west and south faces, railed
+    {
+      const P = HARBOUR_PLAT, qx1 = QX + 13, z1 = Z1, platPosts = [];
+      wallRun(B, QX + QUAY_R, z1, qx1, z1, QH, [[-1, 99]], platPosts);
+      wallRun(B, qx1, z1, qx1, P.zS - d.z, QH, [[-1, 99]], platPosts);
+      wallRun(B, qx1, P.zS - d.z, P.x1 - d.x, P.zS - d.z, P.h, [[-1, 99]], platPosts);
+      wallRun(B, P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], platPosts);
+      wallRun(B, P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], platPosts);
+      instances(g, bollard, post, [...armPosts, ...platPosts]);   // (the arm's and the platform's posts: one draw)
+      for (const p of platPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: P.h + 1.1, seeThrough: true });
+      for (const [a, b] of B._rails || []) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: P.h + 1.05, seeThrough: true, noStand: true });
+    }
     W.pierEnd = { x: x1 + 1.8, z: pz, y: deck };
     W.pierStart = { x: QX + 2.0, z: pz };
+    W.pierElbow = { x: E.x, z: pz };
   }
 
   // --- Doran's harbour shed: rubble walls, plank roof, a door that stays shut
@@ -662,20 +738,22 @@ function buildHarbour(W0, root, r) {
 
   // --- Doran's fishing boat and the project ferry
   {
+    // (CITADEL-ORIG-2: in the leg's turned frame, beyond the barge in the water between the leg and the quay, her bow
+    //  to the north, moored to a bitt on the leg's east edge)
     const boat = fishingBoat();
-    boat.position.set(QX - 6.4, 0.28, pz + pw / 2 + 1.7);
+    boat.position.set(-89.8, 0.28, -0.4);
     boat.rotation.y = 0.04;
-    g.add(boat);
+    pc.add(boat);
     const boatX = boat.position.x;
     W.boatSurge = 0; // (the opening pulls the boat against its mooring line)
     // (it rides 0.28 m higher than its hull's waterline: the sea's calm swell reaches ~0.2 m, and with the floor
     // boards at the waterline the water showed inside the boat as if it had sunk)
     const RIDE = 0.28;
     W.updaters.push((dt, tt) => { boat.position.x = boatX + W.boatSurge; boat.position.y = RIDE + Math.sin(tt * 1.3) * 0.06 * (0.6 + W.storm); boat.rotation.z = Math.sin(tt * 1.1) * 0.025 * (0.5 + W.storm * 2); });
-    physics.add({ type: 'box', x: boat.position.x, z: boat.position.z, hw: 2.8, hd: 1.05, rot: 0, top: 1.2, noStand: true });
+    Wl.physics.add({ type: 'box', x: boat.position.x, z: boat.position.z, hw: 2.8, hd: 1.05, rot: 0, top: 1.2, noStand: true });
     W.fishingBoat = boat;
 
-    const ferry = buildFerry(W, g, QX - plen + 4.6, pz - pw / 2 - 2.6);
+    const ferry = buildFerry(Wl, pc, QX - plen + 4.6, pz - pw / 2 - 2.6);   // (her berth along the leg's west face)
     W.ferry = ferry;
   }
 
@@ -703,9 +781,9 @@ function buildHarbour(W0, root, r) {
     W.harbour = { cargo, setCargo(on) { cargo.visible = on; cargoCols.forEach((c) => (c.enabled = on)); } };
     cargo.userData.keep = true;
   }
-  B.build();
-  cargoLift(W, g, r);
-  mooringLine(W, g);
+  B.build(); BL.build();
+  cargoLift(Wl, pc, r);
+  mooringLine(W, pc, -87.6, -2.55);
   // everything else on the quay is static: one mesh per material (≈335 → ≈60 draw calls with shadows)
   // (the boat and the ferry bob as a whole, so each is merged within its own group)
   W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
@@ -717,8 +795,10 @@ function buildHarbour(W0, root, r) {
   //  see-through materials, whose look is animated, stay as they are): 3 draws fewer on the street facing the quay)
   mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat, { recolor: true, retex: true }); mergeStatic(W.ferry.group, { recolor: true, retex: true });
   // to world coordinates: what the story and the tests read (the ferry's group stays in the harbour's frame)
-  movePt(d, W.pierEnd, W.pierStart, W.harbourShed, W.harbourShed.door, W.ferry, W.ferry.gangway);
-  const L = W.cargoLift; L.cratePierW = L.cratePier.clone().add(new THREE.Vector3(d.x, 0, d.z));
+  movePt(d, W.pierStart, W.harbourShed, W.harbourShed.door, W.pierElbow);
+  movePtL(W.pierEnd, W.ferry, W.ferry.gangway);   // (CITADEL-ORIG-2: the leg's turned frame)
+  W.ferry.heading = PIER_L.a;   // (her heading at the berth: north; the arrival turns her group in the leg's frame)
+  const L = W.cargoLift; g.updateMatrixWorld(true); L.cratePierW = pc.localToWorld(L.cratePier.clone());
 }
 
 // ------------------------------------------------------------------ the Joint Project's cargo lift
@@ -871,9 +951,9 @@ function cargoLift(W, parent, r) {
 }
 
 // Doran's boat is moored to the pier by a bow line that sags and pulls tight as the boat moves
-function mooringLine(W, parent) {
+function mooringLine(W, parent, bx = -77.7, bz = -2.5) {
   const boat = W.fishingBoat, deck = HARBOUR0.deck;
-  const bitt = new THREE.Vector3(-77.7, deck + 0.28, -2.5);
+  const bitt = new THREE.Vector3(bx, deck + 0.28, bz);
   mesh(parent, cyl(0.07, 0.09, 0.3, 8), pm('#2e3238', 0.45, { metalness: 0.6 }), bitt.x, deck + 0.15, bitt.z);
   const ropeMat = pm('#d8c8a0', 0.9);
   let rope = null;
@@ -1329,6 +1409,15 @@ function siteW(W, d) {
   });
 }
 const movePt = (d, ...pts) => { for (const p of pts) if (p) { p.x += d.x; p.z += d.z; } };
+// CITADEL-ORIG-2: the pier's turned part (PIER_L), as siteW: colliders and heights given in the old design frame
+function siteL(W) {
+  const P = new Proxy(W.physics, { get: (t, k) => (k === 'add' ? (c) => { const q = pierW(c.x, c.z); c.x = q.x; c.z = q.z; if (c.type === 'box') c.rot = (c.rot || 0) + PIER_L.a; return t.add(c); } : typeof t[k] === 'function' ? t[k].bind(t) : t[k]) });
+  return new Proxy(W, {
+    get: (t, k) => (k === 'H' ? (x, z) => { const q = pierW(x, z); return t.H(q.x, q.z); } : k === 'physics' ? P : t[k]),
+    set: (t, k, v) => { t[k] = v; return true; },
+  });
+}
+const movePtL = (...pts) => { for (const p of pts) if (p) { const q = pierW(p.x, p.z); p.x = q.x; p.z = q.z; } };
 
 // a scenery volume for the play camera (src/engine/occlude.js), in this site's design coordinates (siteW's shift);
 // the colliders given are marked camSkip: the camera reads this shape instead of their taller boxes
