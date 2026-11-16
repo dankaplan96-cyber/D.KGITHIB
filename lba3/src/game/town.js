@@ -314,6 +314,36 @@ function fence(root, H, a, b, r) {
   }
   mergeStatic(parent);
 }
+// CITADEL-ORIG-2: LBA2's lattice fence along a lawn (the town's south: town blocks, world.js TOWN_BLOCKS): dark grey
+// posts every ~2.2 m, a top and a foot rail, a diagonal lattice between them. One run, merged (one draw per material).
+export const LAWN_FENCE = [[-58.4, 56.1], [-47.6, 56.1]];   // (the long lawn strip's north edge, along the south cross street)
+function latticeFence(root, H, a, b) {
+  const parent = new THREE.Group(); root.add(parent);
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]), ang = Math.atan2(b[0] - a[0], b[1] - a[1]);
+  const ux = (b[0] - a[0]) / len, uz = (b[1] - a[1]) / len, h = 0.95, foot = 0.08;
+  const post = mat('#4c4a46', 0.7), lath = mat('#5c5a54', 0.85);
+  const at = (u) => [a[0] + ux * u, a[1] + uz * u];
+  const np = Math.max(1, Math.round(len / 2.2));
+  for (let i = 0; i <= np; i++) { const [x, z] = at(len * i / np); put(parent, new THREE.BoxGeometry(0.09, h + 0.18, 0.09), post, x, H(x, z) + (h + 0.18) / 2 - 0.04, z, ang); }
+  for (let i = 0; i < np; i++) {
+    const u0 = len * i / np + 0.05, u1 = len * (i + 1) / np - 0.05, w = u1 - u0, [cx, cz] = at((u0 + u1) / 2), y0 = H(cx, cz) + foot;
+    for (const hy of [0, h - foot]) put(parent, new THREE.BoxGeometry(w + 0.1, 0.06, 0.05), post, cx, y0 + hy, cz, ang + Math.PI / 2);
+    // the lattice: lines u ± v = c at 0.3 m, each clipped to the panel (u along it, v up it)
+    const H2 = h - foot;
+    for (const sg of [1, -1]) for (let c = -H2; c < w + H2; c += 0.3) {
+      const pts = [];
+      for (const v of [0, H2]) { const u = sg > 0 ? c + v : c + H2 - v; if (u >= 0 && u <= w) pts.push([u, v]); }
+      for (const u of [0, w]) { const v = sg > 0 ? u - c : c + H2 - u; if (v > 0 && v < H2) pts.push([u, v]); }
+      if (pts.length < 2) continue;
+      const [p0, p1] = pts, L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+      if (L < 0.05) continue;
+      const mu = u0 + (p0[0] + p1[0]) / 2, mv = (p0[1] + p1[1]) / 2, [mx, mz] = at(mu);
+      const bar = put(parent, new THREE.BoxGeometry(L, 0.025, 0.02), lath, mx, y0 + mv, mz, ang - Math.PI / 2);
+      bar.rotateZ(Math.atan2(p1[1] - p0[1], p1[0] - p0[0])); bar.castShadow = false;
+    }
+  }
+  mergeStatic(parent);
+}
 function stoneWall(parent, H, physics, a, b, h = 0.7) {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const ang = Math.atan2(b[0] - a[0], b[1] - a[1]);
@@ -560,6 +590,7 @@ export function buildTown(scene, W) {
     solid({ type: 'box', x: (a[0] + b[0]) / 2, z: (a[1] + b[1]) / 2, hw: len / 2 + 0.05, hd: 0.08, rot: Math.atan2(b[0] - a[0], b[1] - a[1]) + Math.PI / 2, top: y + 0.95 });
   }
   for (const [lx, lz] of [[-6.0, 4.6], [-6.0, -1.0]]) { const p = at('twinsen', lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.1, top: gy(p) + 2.2 }); }
+  { const [a, b] = LAWN_FENCE; latticeFence(scene, H, a, b); const len = Math.hypot(b[0] - a[0], b[1] - a[1]); solid({ type: 'box', x: (a[0] + b[0]) / 2, z: (a[1] + b[1]) / 2, hw: len / 2 + 0.06, hd: 0.08, rot: Math.atan2(b[0] - a[0], b[1] - a[1]) + Math.PI / 2, top: Math.min(H(a[0], a[1]), H(b[0], b[1])) + 1.1 }); }   // (CITADEL-ORIG-2)
   { const p = at('twinsen', -5.3, 0.3); solid({ type: 'box', x: p[0], z: p[1], hw: 0.62, hd: 0.2, rot: tw.ry + Math.PI / 2, top: gy(p) + 1.5 }); }
   const bp = at('twinsen', -2.3, 4.3);
   bench(dress, bp[0], gy(bp), bp[1], tw.ry);
