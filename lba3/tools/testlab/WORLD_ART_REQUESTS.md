@@ -5525,3 +5525,24 @@ LBA2's Kesh is grey stone (DESERT-ART 1's "peach" was the original's flat palett
 - Pictures, v95 left / with it right (chapter 4: **the team only**; the cloud describes it to the user in words before
   applying): `docs/future/landmarks/kesh-orig-{plaza,street,tarra,above}.jpg`.
 - Not run: `desert-life`, `island-doors`, `chapter4`, `kesh` suites (no collider, door or spot moved): **for the cloud**.
+
+## PERF-OWP-2 · the 30–40 ms frame half a second after the first Zeelich arrival (the performance brief, continued) · the desktop, 16.11.2026
+On the **UHD 630** (the app's Electron with `force_low_power_gpu`, Medium fixed, new game, the first arrival in Zeelich),
+v95 tip: in every run one frame **0.4–0.6 s after control** has 30–41 ms of game work (a visible 50–67 ms frame in about
+a third of the runs). The perf sections put it in `people`; timed per person, it is **two residents, Ilo and Kira, in
+the same frame** (10–16 ms each); a CPU profile (CDP, 100 µs) puts the time in `workhands.js touch()`: the first look at
+a new stop (`gather` walks the scene for the meshes in reach, `plan` rays the palms) — the area's people start their
+stops together after the arrival.
+**`requests/PERF-OWP-2.diff`** (`workhands.js` only; `git apply --check` clean on origin): **one fresh look a frame.** A
+second person who needs a new look in the same frame waits a frame (posed as it is, hands not yet on the thing) and
+looks the next; a look already made for that stop is used at once as before. Nothing else changes (what is found, when
+the hands go on, the stand-down when nothing is in reach).
+| Run (A/B interleaved) | sim max, base → fix | frame max, base → fix | Ilo and Kira, base → fix |
+|---|---|---|---|
+| 1 | 41.4 → 24.2 ms | 53.1 → 36.3 ms | the same frame (16 ms apart) → separate frames (41 ms apart) |
+| 2 | 35.4 → 22.5 ms | 66.7 → 50.1 ms | 13 → 28 ms apart |
+| 3 | 30.1 → 19.6 ms | 49.8 → 33.5 ms | 11 → 22 ms apart |
+Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's first look alone is still 10–16 ms
+(`gather` walks the whole visible scene); a spatial pre-filter there would cut it further — not done here.
+- Not run: `no-air` (the hands' contact; a second person's hands now arrive one frame later), `npc-hands`/`interior-life`:
+  **for the cloud when applying.**
