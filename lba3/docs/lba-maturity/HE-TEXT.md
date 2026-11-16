@@ -144,7 +144,7 @@ oneplace, offwall, yearslate, quietchannel).
   · chapter1 PASS · voices PASS (after its file list skipped the new he/ folder) · voice-phrase: one timing check failed
   in each of two runs, a different one each time (an Expressive line's start 6.8 ms against 5; the Words voice's first
   sound 438 ms against 400), on a machine shared with other agents' suites; every functional check passed. English mode
-  does no extra work per line (spoken() returns at once). · save-migration: see the final report.
+  does no extra work per line (spoken() returns at once). · save-migration PASS (27 checks, 62 min).
 - Pictures (chapter 1, 1920×1080): captures/hebrew/01-house-dialogue.jpg (Arthur), 02-yard-tip.jpg (the tip panel and
   Zoé's call), 03-yard-zoe-dialogue.jpg, 04-inventory.jpg, 05-journal.jpg.
 
