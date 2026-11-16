@@ -2,6 +2,7 @@
 // people in their homes and on their rounds talking through the whole story, the story's people between their chapters
 // (src/game/story/desertlife.js, story/ihomes.js, story/citizens.js). English only.
 import { STR } from '../i18n.js';
+import './he/desertlife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- boards and signs (dl_<id>_<state>: Kesh's state, story/kesh.js lifePhase; dl_<id> when the state has none)

@@ -1,6 +1,7 @@
 // Zeelich's street twelve years on: the watch house bakery, the heat posts, the burrow, the scaffold, and The Second
 // Bake (src/game/story/zeelife.js). English only.
 import { STR } from '../i18n.js';
+import './he/zeelife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   zl_title: 'Zeelich',

@@ -8,8 +8,11 @@
 //   - a key binding spoken in a conversation line (<kbd>, "press", a key's name).
 //   - an item's name or description (it_/itd_) defined twice with different texts (two items sharing an id).
 // Warnings (printed, not failing): spoken lines over three sentences or over 230 characters, and other keys defined twice.
+// HE-TEXT: the Hebrew (text/he/*.js) must keep each English line's placeholders, list length and markup, have no empty
+// line and no night word (errors); English keys with no Hebrew are listed as a warning with a count (--he: per file;
+// --he-missing [file]: the keys).
 // Mechanical only: it cannot say whether a line reads well in its scene.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -21,12 +24,17 @@ const { STR } = await import(pathToFileURL(join(GAME, 'i18n.js')));
 const owner = {};
 for (const k of Object.keys(STR.en)) owner[k] = 'i18n.js';
 const dup = [];
+// HE-TEXT: the keys each English file sets, and the keys its Hebrew file (text/he/<same name>, imported by it) sets
+const enOf = { 'i18n.js': new Set(Object.keys(STR.en)) }, heOf = { 'i18n.js': new Set(Object.keys(STR.he)) };
 for (const f of readdirSync(join(GAME, 'text')).sort()) {
   if (!f.endsWith('.js')) continue;
   const src = readFileSync(join(GAME, 'text', f), 'utf8');
   // keys defined twice inside Object.assign(STR.en, …) across files (a later file silently wins)
-  const pre = { ...STR.en };
+  const pre = { ...STR.en }, preHe = { ...STR.he };
   await import(pathToFileURL(join(GAME, 'text', f)));
+  enOf[f] = new Set(Object.keys(STR.en).filter((k) => !(k in pre) || pre[k] !== STR.en[k]));
+  const heSrc = existsSync(join(GAME, 'text/he', f)) ? readFileSync(join(GAME, 'text/he', f), 'utf8') : '';
+  heOf[f] = new Set(Object.keys(STR.he).filter((k) => !(k in preHe) || preHe[k] !== STR.he[k] || new RegExp(`(^|[\\s,{])${k}\\s*:`).test(heSrc)));
   for (const k of Object.keys(STR.en)) {
     if (!(k in owner)) owner[k] = f;
     else if (pre[k] !== undefined && pre[k] !== STR.en[k] && new RegExp(`(^|[\\s,{])${k}\\s*:`).test(src)) dup.push(`${k} (${owner[k]} → ${f})`);
@@ -108,6 +116,45 @@ for (const [k, m] of Object.entries(VOICE_META)) {
 //  both — the prologue's Rope Ladder read "Rope … for Hesk" until chapter 4's coil got its own id, ropecoil)
 for (const d of dup) (/^itd?_/.test(d) ? errors : warns).push(`defined twice, the later file wins: ${d}`);
 
+// ---------------------------------------------------------------- HE-TEXT: the Hebrew (text/he/*.js)
+// Errors: a Hebrew line whose placeholders, list length or markup differ from the English, an empty Hebrew line, a
+// night word in Hebrew (two suns: no evening, sunset, dawn). Warnings: Hebrew for a key with no English, and the
+// standing rule's list: English keys with no Hebrew (a count per file; --he-missing [file] lists them).
+const HE = STR.he;
+const ph = (v) => [...String(v).matchAll(/\{([a-z][a-z0-9]*)\}/gi)].map((x) => x[1]).sort().join(',');
+const tags = (v) => [...String(v).matchAll(/<\/?([a-z]+)\b/gi)].map((x) => x[1].toLowerCase()).sort().join(',');
+// (לילה, ערב, הלילה, שקיעה, זריחה, שחר, דמדומים and their forms, with the prefixes ו ה ב ל ש כ; not מערב, the west)
+const HE_NIGHT = /(^|[^\u05d0-\u05ea])[והבלשכ]{0,2}(לילה|לילות|ליל|ערב|ערבים|שקיעה|שקיעת|שקיעות|זריחה|זריחת|שחר|דמדומים|דמדומי)(?![\u05d0-\u05ea])/;
+const heErr = [];
+for (const [k, h] of Object.entries(HE)) {
+  if (!(k in EN)) { if (!heOf['i18n.js'].has(k)) warns.push(`Hebrew for a key with no English: ${k}`); continue; }
+  const e = EN[k];
+  if (Array.isArray(e) !== Array.isArray(h)) { heErr.push(`${k}: the English is ${Array.isArray(e) ? 'a list' : 'one line'}, the Hebrew ${Array.isArray(h) ? 'a list' : 'one line'}`); continue; }
+  if (Array.isArray(e) && e.length !== h.length) heErr.push(`${k}: ${e.length} English lines, ${h.length} Hebrew`);
+  const E = lines(e), Hl = lines(h);
+  for (let i = 0; i < Hl.length; i++) {
+    const x = Hl[i], y = E[i] ?? E.join(' ');
+    if (!x.trim()) heErr.push(`${k}: an empty Hebrew line`);
+    if (ph(x) !== ph(y)) heErr.push(`${k}: placeholders {${ph(x)}} in Hebrew, {${ph(y)}} in English`);
+    if (tags(x) !== tags(y)) heErr.push(`${k}: markup <${tags(x)}> in Hebrew, <${tags(y)}> in English`);
+    if (HE_NIGHT.test(x) && !/^set_|^vis_|_html$/.test(k)) heErr.push(`night word in the Hebrew of ${k}: "${x.match(HE_NIGHT)[0].trim()}"`);
+  }
+}
+for (const e of heErr) errors.push('Hebrew ' + e);
+const heRows = [];
+let heTot = 0, heDone = 0;
+const hm = process.argv.indexOf('--he-missing'), hmWant = hm > 0 && process.argv[hm + 1] && !process.argv[hm + 1].startsWith('--') ? process.argv[hm + 1] : null;
+for (const f of Object.keys(enOf)) {
+  const ks = [...enOf[f]];
+  const own = f === 'i18n.js' ? new Set(ks.filter((k) => k in HE)) : heOf[f] || new Set();   // (i18n.js keeps its own Hebrew table)
+  const done = ks.filter((k) => own.has(k)).length;
+  heTot += ks.length; heDone += done;
+  if (ks.length) heRows.push(`${f.padEnd(18)} ${String(done).padStart(4)} / ${String(ks.length).padEnd(4)}${done < ks.length ? '  (' + (ks.length - done) + ' to translate)' : ''}`);
+  if (hm > 0 && (!hmWant || hmWant === f)) for (const k of ks) if (!own.has(k)) console.log(`  he-missing  ${k} [${f}]`);
+}
+const heMissing = heTot - heDone;
+if (heMissing) warns.push(`HE-TEXT: ${heMissing} English key(s) in text/*.js have no Hebrew in text/he/ (the standing rule; --he-missing [file] lists them)`);
+
 // --unused [regex]: keys no code names literally (dead text, or text reached by a built key: check by hand)
 const ui = process.argv.indexOf('--unused');
 if (ui > 0) {
@@ -118,6 +165,9 @@ if (ui > 0) {
   console.log(`  ${out.length} unreferenced key(s)`);
 }
 console.log(`dialogue-check: ${Object.keys(EN).length} keys, ${spoken.size} spoken in conversations, ${used.size} named by code`);
+console.log(`dialogue-check: Hebrew (text/he/) ${heDone} of ${heTot} keys in text/*.js (${(100 * heDone / Math.max(1, heTot)).toFixed(1)}%)${heMissing ? `, ${heMissing} with no Hebrew yet` : ''}`);
+if (process.argv.includes('--he')) for (const r of heRows) console.log('  he  ' + r);
+else if (heMissing) console.log(`  HE-TEXT warning: ${heMissing} English key(s) with no Hebrew (run with --he for the count per file)`);
 if (list || warns.length < 40) for (const w of warns) console.log('  warn  ' + w);
 else console.log(`  ${warns.length} warnings (long lines, duplicates): run with --list to see them`);
 for (const e of errors) console.log('  FAIL  ' + e);

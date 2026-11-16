@@ -1,89 +1,19 @@
 // All player-facing text, Hebrew + English.
+//
+// HE-TEXT (the user, 16.11): the whole game is playable in Hebrew as well as English (Settings → Game → Language).
+// English is the default and the source of truth. The story and world text sits in src/game/text/<name>.js (STR.en);
+// its Hebrew in src/game/text/he/<name>.js (STR.he), imported by the English file, same keys, same placeholders, same
+// number of entries in a list. A key with no Hebrew shows the English (t() below).
+// THE STANDING RULE: every new or changed English player line gets its Hebrew line the same day, in the matching
+// he/ file. `node tests/dialogue-check.mjs` lists the English keys with no Hebrew (a warning, with a count) and fails on
+// a Hebrew line whose placeholders or list length differ from the English. Glossary: docs/lba-maturity/HE-TEXT.md.
+// The voices always speak the English line (spoken() below): the gibberish is planned from the English words.
+
+import { HE_I18N } from './text/he/i18n.js';
 
 export const STR = {
-  he: {
-    title_sub: 'רימאסטר מחווה ל־Little Big Adventure 2 (1997) · מהדורת 2026',
-    continue: 'המשך משחק', new_game: 'משחק חדש', overwrite_q: 'להתחיל משחק חדש?', overwrite_sub: 'השמירה האוטומטית תוחלף. משבצות השמירה נשארות.', overwrite_yes: 'משחק חדש', settings: 'הגדרות', controls: 'מקשים', back: 'חזרה',
-    resume: 'חזרה למשחק', save_quit: 'שמירה ויציאה לתפריט', paused: 'הפסקה',
-    load_game: 'טעינת משחק', save_game: 'שמירת משחק', slot_n: 'משבצת {n}', slot_auto: 'שמירה אוטומטית', slot_empty: 'ריקה', slot_latest: 'האחרונה', slot_delete: 'מחיקה', slot_bad: 'שמירה שלא ניתן לקרוא',
-    slot_overwrite_q: 'לשמור במקום משבצת {n}?', slot_overwrite_yes: 'שמירה במקומה', slot_delete_q: 'למחוק את משבצת {n}?', slot_delete_yes: 'מחיקה',
-    slot_saved: 'נשמר במשבצת {n}.', slot_deleted: 'משבצת {n} נמחקה.', slot_unreadable: 'לא ניתן לקרוא את השמירה הזו. היא הועברה הצידה.',
-    slot_full: 'אין מספיק מקום אחסון. שמרו במקום משבצת ישנה, או מחקו משבצות ב"טעינת משחק" במסך הפתיחה.', slot_fail: 'אי אפשר לשמור: אחסון הדפדפן לא זמין.',
-    nosave_scene: 'אי אפשר לשמור באמצע סצנה.', nosave_fight: 'אי אפשר לשמור באמצע קרב.', nosave_dead: 'אי אפשר לשמור עכשיו.', nosave_here: 'אי אפשר לשמור כאן.', nosave_wait: 'רגע, ואז אפשר לשמור.',
-    quit_full: 'האחסון מלא: המקום הזה לא נשמר. לחצו שוב על "שמירה ויציאה" כדי לצאת בכל זאת.',
-    language: 'שפה', auto_controls: 'שליטה לפי ההתקן', ac_on: 'אוטומטי', ac_off: 'כבוי', control_scheme: 'שיטת שליטה', ctrl_modern: 'מודרנית (יחסית למצלמה)', ctrl_classic: 'קלאסית 1997 (טנק)',
-    visual: 'מראה', vis_2026: 'LBA3 – תאורה מודרנית', vis_1997: '1997 – רזולוציה נמוכה, פיקסלים, ערפל קרוב',
-    quality: 'איכות גרפית', q_auto: 'אוטומטית', q_high: 'גבוהה', q_medium: 'בינונית', q_low: 'נמוכה',
-    camera: 'מצלמה', cam_lba: 'LBA2 – שוט קבוע שמתמרכז מחדש', cam_follow: 'עוקבת', cam_free: 'חופשית (עכבר / סטיק)', cam_dist: 'מרחק מצלמה', cd_near: 'קרוב', cd_medium: 'בינוני', cd_far: 'רחוק',
-    hud: 'ממשק', hud_lba: 'LBA2 – נקי, מופיע רק כשמשהו משתנה', hud_modern: 'מודרני – מפה, משימה וסרגלים קבועים',
-    music: 'מוזיקה', sfx: 'אפקטים',
-    rebind_title: 'שינוי מקשים', rebind_hint: 'לחץ על מקש כדי לשנות אותו · Esc לביטול', rebind_press: 'לחץ מקש…', rebind_reset: 'איפוס מקשים',
-    kb_up: 'קדימה', kb_down: 'אחורה', kb_left: 'שמאלה', kb_right: 'ימינה', kb_action: 'פעולת התנהגות', kb_interact: 'דיבור / שימוש', kb_ball: 'כדור קסם', kb_view: 'מצלמה קרובה/רחוקה', kb_recenter: 'מרכוז מצלמה', kb_map: 'הולומפה', kb_inventory: 'חפצים ויומן', kb_pause: 'הפסקה',
-    auto_talk: 'שיחה מתקדמת לבד', at_on: 'כן', at_off: 'לא (במקש)', text_speed: 'מהירות טקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
-    text_size: 'גודל כתוביות', tsz_normal: 'רגיל', tsz_large: 'גדול', tsz_xl: 'גדול מאוד',
-    shake_set: 'רעידות מצלמה', sh_on: 'מלאות', sh_reduced: 'מופחתות', sh_off: 'כבויות',
-    disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. כל המודלים, הצלילים והמוזיקה נוצרו מחדש בקוד.',
-    controls_html: `
-      <tr><td>WASD / חצים</td><td>תנועה</td></tr>
-      <tr><td>Ctrl (החזק) + ←/→ · 1 2 3 4 · Tab</td><td>תפריט ההתנהגויות: רגיל · אתלטי · אגרסיבי · דיסקרטי</td></tr>
-      <tr><td>רווח</td><td>פעולת ההתנהגות: (אתלטי) קפיצה · (אגרסיבי) אגרוף/בעיטה · (דיסקרטי) הסתתרות · (רגיל) דיבור/חיפוש</td></tr>
-      <tr><td>E</td><td>דיבור · פתיחה · חיפוש (בכל התנהגות – שיפור 2026)</td></tr>
-      <tr><td>Enter</td><td>מרכוז המצלמה מאחורי טווינסן (כמו במקור)</td></tr>
-      <tr><td>Q</td><td>מצלמה קרובה / רחוקה</td></tr>
-      <tr><td>F / קליק שמאלי</td><td>זריקת הכדור הקסום</td></tr>
-      <tr><td>גרירת עכבר · Z / C</td><td>סיבוב מצלמה (במצלמה חופשית)</td></tr>
-      <tr><td>M</td><td>הולומפה</td></tr>
-      <tr><td>I / J</td><td>חפצים ויומן</td></tr>
-      <tr><td>Esc / P</td><td>הפסקה</td></tr>
-      <tr><td>גיימפד</td><td>סטיק שמאלי תנועה · סטיק ימני מצלמה · חיצים (D-pad) ארבע ההתנהגויות: ↑ רגיל · → אתלטי · ↓ תוקפני · ← חשאי · A פעולה / דיבור · X התקפה · Y כדור · B התחמקות · View מלאי · LT הולומפ · RT בחירת נשק · LB החלפה · RB נעילה · R3 מטרה הבאה · Menu הפסקה</td></tr>`,
-    beh_normal: 'רגיל', beh_athletic: 'אתלטי', beh_aggressive: 'אגרסיבי', beh_discreet: 'דיסקרטי',
-    p_talk: 'דבר', p_search: 'חפש', p_rummage: 'חפש', p_read: 'קרא', p_open: 'פתח', p_shop: 'קנה', p_gate: 'שער',
-    obj_sage: 'מצא את חכם מזג־האוויר במגדלור שבצפון',
-    obj_shards: 'אסוף את שלושת שברי השמש ({n}/3)',
-    obj_s1: 'צוקי הלחישה במזרח', obj_s2: 'מחנה הזקיפים בדרום', obj_s3: 'המבצר העתיק – הסוהר קרל',
-    obj_return: 'חזור אל החכם במגדלור עם שלושת השברים',
-    obj_done: 'הסערה נשברה! חקור את האי בחופשיות',
-    toast_saved: 'המשחק נשמר', toast_save_full: 'האחסון מלא: השמירה האוטומטית נכשלה. מחקו משבצות ישנות ב"טעינת משחק".', toast_save_fail: 'אי אפשר לשמור: אחסון הדפדפן לא זמין.', toast_clover: 'עלה תלתן הציל אותך!', toast_shard: 'מצאת שבר שמש!',
-    toast_key: 'קיבלת את מפתח המבצר', toast_magic: 'רמת הקסם עלתה ל־{n}!',
-    toast_nomp: 'אין מספיק קסם – הכדור חלש', toast_coins: '+{n} מטבעות',
-    toast_clover_found: 'מצאת עלה תלתן!',
-    toast_alert: 'זוהית!', toast_gate_open: 'השער נפתח',
-    hint_jump: 'עבור למצב אתלטי (2) וקפוץ עם רווח',
-    boss_name: 'הסוהר קרל',
-    map_title: 'הולומפה · האי סולמיר', map_close: 'M / Esc לסגירה',
-    gameover: 'טווינסן נפל...', gameover_sub: 'אין יותר עלי תלתן.', retry: 'נסה שוב מהשמירה האוטומטית',
-    ending_title: 'השמש חוזרת לסולמיר',
-    ending_text: 'עדשת השמש בוערת שוב. הסערה נשברת, ולראשונה מזה ארבעים יום רואה האי את השמש.<br><br>תודה ששיחקת! מחווה ל־<b>Little Big Adventure 2</b> (Adeline Software, 1997).',
-    keep_exploring: 'המשך לחקור',
-    shop_title: 'הדוכן של פיפה', shop_buy: 'קנה', shop_leave: 'יציאה',
-    shop_potion: 'שיקוי לב – מילוי חיים', shop_flask: 'בקבוק קסם – חצי מהקסם', shop_clover: 'עלה תלתן – חיים נוספים',
-    shop_poor: 'אין לך מספיק מטבעות!', shop_max: 'כבר בשיא!',
-    intro: 'כבר ארבעים יום שסערה בולעת את האי סולמיר. עדשת השמש של המגדלור נופצה לשלושה שברים, והזקיפים האפורים משתלטים על האי...',
-    sign_village: 'נמל לומן · "הכפר הכי יבש באי" (כבר לא)',
-    sign_lighthouse: '↑ המגדלור הצפוני',
-    sign_cliffs: '→ צוקי הלחישה · זהירות: נפילה!',
-    sign_camp: '⚠ מחנה הזקיפים · הכניסה אסורה',
-    sign_fort: '→ המבצר העתיק',
-    gate_locked: 'השער נעול. המפתח של קרל אמור להיות אי־שם במחנה הזקיפים.',
-    n_sage: 'החכם מורו', n_pippa: 'פיפה הסוחרת', n_doran: 'דורן הדייג', n_nilo: 'נילו', n_hero: 'טווינסן',
-    d_sage_1: [
-      'טווינסן! תודה לרוחות שבאת. הזקיפים האפורים ניפצו את עדשת השמש, והסערה ניזונה מהחושך.',
-      'שלושה שברי שמש התפזרו: אחד על צוקי הלחישה ביער המזרחי, אחד נעול במחנה הזקיפים בדרום, ואת השלישי נושא הסוהר קרל בתוך המבצר העתיק.',
-      'השתמש בהתנהגויות שלך, ילד: אתלטי כדי לקפוץ, דיסקרטי כדי לחמוק מהשומרים, ואגרסיבי כשמילים לא עוזרות. ואל תשכח את הכדור הקסום שלך!',
-      'הבא לי את שלושת השברים והמגדלור יבער שוב.',
-    ],
-    d_sage_wait: ['יש לך {n} מתוך 3 שברים. הסערה מחכה, טווינסן.'],
-    d_sage_done: ['שלושת השברים! עמוד מאחור, ילד... הגיע הזמן להחזיר את השמש!'],
-    d_sage_after: ['תסתכל על השמיים, טווינסן. עשית את זה.'],
-    d_pippa: ['טריים מהיבשת! הסערה גרועה לעסקים, אבל לך תמיד יש לי משהו. רוצה להציץ?'],
-    d_doran: [
-      'הצוקים במזרח? יש שם מטרה עתיקה מאבן. סבא שלי אמר שפגיעה בה מעירה את אבני המדרך.',
-      'והזקיפים במחנה? הם לא רואים כלום אם מתגנבים מאחוריהם. דיסקרטי – זו המילה.',
-    ],
-    d_nilo: ['ידעת שאפשר לזרוק את הכדור תוך כדי ריצה? במצב אתלטי הוא עף הכי גבוה!', 'ובמצב אגרסיבי הוא עף ישר וחזק. וואו!'],
-    d_shard2: ['בתוך התיבה: שבר שמש... ומפתח כבד עם סמל המבצר!'],
-    d_boss: ['עוד ילד עם כדור? השבר הזה שלי. הסערה שלי!'],
-  },
+  // HE-TEXT: the Hebrew of this file's own English table is text/he/i18n.js (the story's: text/he/<file>.js)
+  he: { ...HE_I18N },
   en: {
     continue: 'Continue', new_game: 'New Game', overwrite_q: 'Start a new game?', overwrite_sub: 'The autosave will be replaced. Your save slots are kept.', overwrite_yes: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
     resume: 'Resume', save_quit: 'Save & Quit', paused: 'Paused',
@@ -158,112 +88,53 @@ export function t(key, vars) {
   return s;
 }
 
+// HE-TEXT: the English source of a line on screen. The dialogue box and the subtitles are given the text, not the key,
+// and the voices (engine/voice.js: the phrase chosen, its length, its delivery in text/voicemeta.js) are planned from
+// the English words, so a line sounds the same whatever language the box shows. Hebrew -> English, built from the
+// tables (a list's entries one by one; a line with placeholders by its pattern). Text that is no translation (English
+// already, a line put together from pieces) comes back as it is. spoken.miss: the lines not found (tests).
+let REV = null, REV_N = -1, REV_PAT = [];
+const revBuild = () => {
+  REV = new Map(); REV_PAT = [];
+  const he = STR.he, en = STR.en;
+  const put = (h, e) => {
+    if (typeof h !== 'string' || typeof e !== 'string' || !h) return;
+    if (!REV.has(h)) REV.set(h, e);
+    if (/\{[a-z][a-z0-9]*\}/i.test(h)) {
+      const names = [];
+      const src = h.split(/(\{[a-z][a-z0-9]*\})/i).map((p) => { const m = /^\{([a-z][a-z0-9]*)\}$/i.exec(p); if (m) { names.push(m[1]); return '([\\s\\S]*?)'; } return p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('');
+      REV_PAT.push({ re: new RegExp('^' + src + '$'), names, en: e });
+    }
+  };
+  for (const k of Object.keys(he)) {
+    const h = he[k], e = en[k];
+    if (Array.isArray(h)) h.forEach((x, i) => put(x, Array.isArray(e) ? (e[i] ?? e.join(' ')) : e));
+    else put(h, Array.isArray(e) ? e.join(' ') : e);
+  }
+  REV_N = Object.keys(he).length;
+};
+export function spoken(text) {
+  if (lang === 'en' || typeof text !== 'string' || !text) return text;
+  if (!REV) revBuild();
+  let e = REV.get(text);
+  if (e === undefined && Object.keys(STR.he).length !== REV_N) { revBuild(); e = REV.get(text); }   // (a text module loaded since)
+  if (e !== undefined) return e;
+  for (const P of REV_PAT) {
+    const m = P.re.exec(text);
+    if (m) { let s = P.en; P.names.forEach((n, i) => { s = s.replace(`{${n}}`, m[i + 1]); }); return s; }
+  }
+  if (/[\u0590-\u05ff]/.test(text)) spoken.miss.add(text);
+  return text;
+}
+spoken.miss = new Set();
+
 // ------------------------------------------------------------------
 // LBA3 – The Awakening: prologue texts (original fan story)
-Object.assign(STR.he, {
-  logo_sub: 'ההתעוררות',
-  title_sub: 'פרולוג, פרק 1 ופרק 2 · המשך מעריצים לא רשמי ל־Little Big Adventure 2',
-  to_title: 'לתפריט הראשי',
-  disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. הדמויות והעולם שייכים לבעליהם; הסיפור, המודלים, הצלילים והמוזיקה נוצרו מחדש.',
-  voice_credit: 'קולות הדמויות נוצרו ב־Piper (ללא רשת) עם מודל הקול LibriTTS-R ‏(CC BY 4.0)',
-  map_title: 'הולומפה · האי המצודה',
-  toast_coins: '+{n} קאשים',
-  shop_poor: 'אין לך מספיק קאשים!',
-  ending_title: 'LBA3 — ההתעוררות',
-  ending_text: 'סוף הפרולוג.<br><br>מישהו הגיע אליה — ומשהו מתחת לטווינסאן מתעורר מוקדם מדי.<br>ההמשך: וסק, המיזם המשותף, והמסע לזיליך.',
-  keep_exploring: 'חזרה אל פני השטח',
-  n_zoe: 'זואי', n_arthur: 'ארתור', n_gilbert: 'גילברט', n_mira: 'מירה ממשרד המים', n_xil: 'קסיל, סוחר אסמרי', n_doran: 'דורן, מנהל הנמל', n_tim: 'טים', n_lulu: 'לולו', n_sendell: 'סנדל',
-  p_well: 'באר', p_door: 'דלת',
-  sign_village: 'כיכר העיר · האי המצודה',
-  sign_lighthouse: '↑ המגדלור',
-  sign_cliffs: '→ צוקי הלחישה · זהירות: נפילה!',
-  sign_camp: 'מחנה הצבא של פאנפרוק — נטוש. לא לגעת בכלום.',
-  sign_fort: '→ המבצר הישן',
-  pr_intro_1: 'שתים־עשרה שנים חלפו מאז שטווינסן חזר מזיליך. טווינסאן וזיליך מקיימות קשרי מסחר ומחקר, אבל האמון ביניהן עדיין שביר.',
-  pr_intro_2: 'באי המצודה, טווינסן חי עם זואי ובנם ארתור. כולם מכירים אותו, ומדי פעם מבקשים ממנו לפתור בעיה שאינה מצדיקה אפילו להוציא את כדור הקסם מהארון...',
-  pr_zoe_1: 'טווינסן! הבאר בכיכר הפסיקה לתת מים. כל השכונה כבר עומדת שם ומתווכחת.',
-  pr_zoe_2: 'תוכל ללכת לבדוק מה קרה? אני חייבת לסיים כאן.',
-  pr_tw_1: 'באר סתומה? זה לא מצדיק אפילו להוציא את כדור הקסם מהארון.',
-  pr_zoe_3: 'אז תוציא אותו בכל זאת. בשבילי.',
-  pr_ar_1: 'אבא! אפשר לבוא?!',
-  pr_zoe_4: 'לא.',
-  pr_ar_2: 'אף פעם לא אפשר לבוא...',
-  pr_zoe_ball: 'טווינסן. הכדור. בארון.',
-  pr_zoe_go: 'לך כבר, הבאר לא תתקן את עצמה. ותחזור לארוחת ערב!',
-  pr_zoe_after: 'מים חמימים? גבישים? ...וסנדל? טווינסן, שב. אני מכינה תה. ואז תספר לי הכול.',
-  pr_ar_hint: 'אבא, אתה יודע שטים מספר ללולו את כל הסודות שלו? רק כשהוא חושב שאף אחד לא שומע. צריך להתגנב ממש בשקט.',
-  pr_ar_after: 'אבא, באמת דיברת עם סנדל?! אני מספר לכל הכיתה!',
-  pr_cupboard: ['בארון: כדור הקסם, ההולומפה... וקצת אבק. הרבה אבק.', 'טוב, שלום לך, ידיד ותיק.'],
-  pr_toast_ball: 'קיבלת את כדור הקסם ואת ההולומפה',
-  pr_well_locked: ['המכסה נעול במנעול של משרד המים.', 'מירה ממשרד המים עומדת ליד הבאר — ומתווכחת עם גילברט.'],
-  pr_well_rope: 'עמוק מדי בשביל לקפוץ. אני צריך חבל. אולי בנמל יש משהו.',
-  pr_well_go: 'מכסה פתוח, חבל קשור. בוא נראה מה סתם לנו את הבאר.',
-  pr_well_after: 'המים עדיין לא זורמים. מה שקורה שם למטה גדול יותר מסתימה.',
-  pr_locked: 'הבית של השכנים. הם לא בבית — כולם בכיכר, מתווכחים על הבאר.',
-  pr_chest: 'ארגז אספקה ישן של צבא פאנפרוק. בפנים: קצת קאשים חלודים. גם אחרי כל השנים, הפחד שהשאיר עדיין מרגיש כאן.',
-  pr_fort: 'המבצר הישן סגור. שלט: "סכנת התמוטטות — הכניסה אסורה".',
-  pr_gil_1: 'שילמתי את חשבון המים! אז איפה המים?!',
-  pr_mira_1: 'אדון גילברט, החשבון הוא על החיבור לרשת, לא על המים עצמם.',
-  pr_gil_2: 'אז אני משלם על צינור ריק?!',
-  pr_tw_well: 'אולי במקום להתווכח, פשוט נבדוק מה קרה לבאר?',
-  pr_mira_2: 'טווינסן! אם תמצא את התקלה, אבטל לו את החשבון החודש. הנה המפתח של מכסה הבאר.',
-  pr_gil_3: 'ושיבטלו לי גם את החודש שעבר.',
-  pr_gil_wait: 'אני עוד מחכה למים, טווינסן. ובינתיים — לחשבונית.',
-  pr_mira_wait: 'אם תצטרך עוד משהו ממשרד המים, אני כאן. לצערי.',
-  pr_toast_key: 'קיבלת את מפתח מכסה הבאר',
-  pr_xil_1: 'שלום, בן טווינסאן. אני קסיל, סוחר מזיליך. הציוד שלי הגיע בחללית של המיזם, ועכשיו הוא תקוע על הדוברה, כי מנהל הנמל לא חותם לי על האישור.',
-  pr_xil_2: 'שלוש פעמים ביקשתי. בפעם השלישית הוא נחר.',
-  pr_tw_xil: 'אדבר איתו.',
-  pr_xil_3: 'חותמת! סוף סוף. הציוד הזה מיועד למיזם האנרגיה המשותף של טווינסאן וזיליך — מקדחות, צינורות, חיישנים.',
-  pr_xil_4: 'קח את סולם החבלים הזה, טווינסן, כתודה. אתה נראה כמו מישהו שיורד הרבה לבורות.',
-  pr_xil_after: 'המיזם הזה עוד יציל את שני העולמות שלנו. כך אומר וסק, לפחות. וכשוסק אומר משהו — אנשים מקשיבים.',
-  pr_toast_rope: 'קיבלת סולם חבלים',
-  pr_doran_snore: 'חררררר... פִּפְּ... חררררר...',
-  pr_tw_snore: '(עדיף לא להעיר אותו בלי סיבה טובה.)',
-  pr_doran_1: 'חרר— מה? מי? אה, טווינסן!',
-  pr_tw_doran: 'הסוחר מזיליך מחכה לחותמת.',
-  pr_doran_2: 'הזיליכאי? הוא מחכה כבר שלושה ימים. זה מה שעושים בנמל — מחכים.',
-  pr_doran_3: 'טוב, טוב. בשבילך. *חוֹתֵם*. תגיד לו שהוא לא צריך להודות לי. שוב.',
-  pr_doran_after: 'הנמל פתוח. בערך.',
-  pr_toast_stamp: 'קיבלת אישור פריקה חתום',
-  pr_tim_1: 'לא זרקתי כלום לבאר! ...למה אתה שואל?',
-  pr_lulu_1: 'הוא לא זרק כלום! הוא סתם עומד פה!',
-  pr_tw_kids: '(הם מסתירים משהו. אולי אם אתקרב בשקט, במצב דיסקרטי...)',
-  pr_lulu_2: 'אבל מה זה היה?',
-  pr_tim_2a: 'אבן זוהרת! מצאתי אותה בחוף. היא הייתה חמה, וזמזמה כמו דבורה.',
-  pr_tim_2b: 'נבהלתי וזרקתי אותה לבאר. ואז המים נעצרו...',
-  pr_lulu_3: 'אמא שלך תהרוג אותך.',
-  pr_tw_tim: 'אבן זוהרת, חמה, שמזמזמת?',
-  pr_tim_3: '...שמעת?! אני מצטער! לא ידעתי שהיא תקלקל את הבאר!',
-  pr_tim_4: 'היו עוד כמה כאלה בחוף, לקחתי רק אחת. הנה, תיקח את התלתן שלי. רק אל תספר לאמא.',
-  pr_tw_tim2: '(גבישים חמים בחוף... זה לא נשמע כמו סתם אבן.)',
-  pr_tim_after: 'סיפרת לאמא?',
-  pr_lulu_after: 'אני שומרת את הסוד. כמעט.',
-  pr_pippa: 'טווינסן! שמעתי שהבאר מקולקלת. בינתיים יש לי שיקויים, בקבוקי קסם ותלתנים. רוצה להציץ?',
-  pr_toast_tremor: 'הקרקע רועדת...',
-  pr_cave_1: 'המים... חמימים. כמעט חמים. וזה — גבישים? אלה לא היו כאן קודם.',
-  pr_cave_2: 'כדור הקסם רוטט לי בכיס. שלושת הגבישים הכבויים האלה... אולי הכדור יעיר אותם.',
-  pr_toast_node: 'הגביש מתעורר!',
-  pr_tw_ball: 'הכדור... הוא נמשך לקיר!',
-  pr_sendell_1: 'טווינסן.',
-  pr_tw_sendell: 'סנדל? שנים לא שמעתי אותך...',
-  pr_sendell_2: 'טווינסן. מישהו הגיע אליה.',
-  pr_obj_ball: 'קח את כדור הקסם מהארון',
-  pr_obj_well: 'בדוק מה קרה לבאר בכיכר',
-  pr_obj_descend: 'רד לתוך הבאר',
-  pr_obj_key: 'מפתח המכסה (משרד המים)',
-  pr_obj_rope: 'חבל לירידה (הנמל)',
-  pr_obj_tim: 'רשות: מה טים זרק לבאר?',
-  pr_obj_cave: 'מצא את מקור החום בתחתית הבאר',
-  pr_obj_nodes: 'העֵר את שלושת הגבישים בכדור הקסם',
-  pr_obj_done: 'הפרולוג הושלם — ההמשך בקרוב',
-  pr_map_well: 'הבאר',
-});
 
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
   title_sub: 'An unofficial fan sequel to Little Big Adventure 2',
-  to_title: 'Main Menu',
+  to_title: 'Main Menu', quit_game: 'Quit Game',
   disclaimer: 'Non-commercial fan project, not affiliated with Adeline Software or [2.21]. The characters and world belong to their owners. Story, models, sound and music are original.',
   voice_credit: 'Character voices generated with Piper (offline) using the LibriTTS-R voice model (CC BY 4.0)',
   map_title: 'Holomap · Citadel Island',

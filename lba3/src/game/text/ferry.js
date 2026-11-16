@@ -1,6 +1,7 @@
 // U-1 "The Last Ferry" (the user's own side quest, docs/lba-maturity/DEPTH-PLAN.md; story/ferry.js). English only.
 // No night, evening, tonight, dawn or dusk words: the game has no time of day for them.
 import { STR } from '../i18n.js';
+import './he/ferry.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   lf_title: 'The Last Ferry',

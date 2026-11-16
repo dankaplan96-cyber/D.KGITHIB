@@ -1,5 +1,6 @@
 // MAGIC-LEVELS (src/game/story/magic.js): the moments that raise Twinsen's magic. English only.
 import { STR } from '../i18n.js';
+import './he/magic.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   ml_toast_up: 'Magic level {n}: the {ball} ball',

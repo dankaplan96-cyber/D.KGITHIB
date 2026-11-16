@@ -10,6 +10,7 @@
 // Luc, Mr Bazoo and the pharmacist are LBA2's own people of these places, twelve years older; nothing here says more
 // about them than that. The ferry runs between Citadel's harbour and Desert Island; Zeelich is reached by spaceship.
 import { STR } from '../i18n.js';
+import './he/interiors.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_luc: 'Luc', n_hobb: 'Hobb', n_sanna: 'Sanna', n_fenn: 'Old Fenn', n_kip: 'Kip',

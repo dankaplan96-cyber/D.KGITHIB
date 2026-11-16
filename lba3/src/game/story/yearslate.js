@@ -471,7 +471,10 @@ export class TwelveYears extends ChapterBase {
     out.push({ key: 'tyl_j_card', done: !!f.dx_tyl_found });
     if (f.dx_tyl_found) {
       out.push({ key: 'tyl_j_found', done: true });
-      STR.en.tyl_j_pages_n = t('tyl_j_pages', { n: this.seen().length, m: SPOT_IDS.length });   // (the journal reads plain keys)
+      // (the journal reads plain keys; HE-TEXT: each language's line from its own table, so switching language shows the right one)
+      const n = this.seen().length, m = SPOT_IDS.length, fill = (s) => s?.replace('{n}', n).replace('{m}', m);
+      STR.en.tyl_j_pages_n = fill(STR.en.tyl_j_pages);
+      if (STR.he.tyl_j_pages) STR.he.tyl_j_pages_n = fill(STR.he.tyl_j_pages);
       out.push({ key: 'tyl_j_pages_n', done: this.seen().length >= SPOT_IDS.length });
     }
     return out;

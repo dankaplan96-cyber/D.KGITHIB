@@ -1,5 +1,6 @@
 // Chapter 7 — "The Observatory" (the Hamalayi). English only.
 import { STR } from '../i18n.js';
+import './he/ch7.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_keeper: 'Sefa', n_arthurradio: 'Arthur (radio)',

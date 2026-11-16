@@ -1,5 +1,6 @@
 // Chapter 8 — "Evacuation" (Citadel Island, changed). English only.
 import { STR } from '../i18n.js';
+import './he/ch8.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_farmer1: 'Farmer Joss', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',

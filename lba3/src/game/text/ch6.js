@@ -1,5 +1,6 @@
 // Chapter 6 — "The Pass" (the Hamalayi). English only.
 import { STR } from '../i18n.js';
+import './he/ch6.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_yorna: 'Yorna', n_pim: 'Pim', n_lhar1: 'Tashi', n_lhar2: 'Dawa', n_lhar3: 'Old Norbu',

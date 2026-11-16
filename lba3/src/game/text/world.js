@@ -1,19 +1,6 @@
 // Sign texts and other world-dressing strings for Citadel Island (island.js).
 import { STR } from '../i18n.js';
-
-Object.assign(STR.he, {
-  w_sign_town: 'כיכר העיר · האי המצודה',
-  w_sign_harbour: '← הנמל · מעבורת לאי המדברי',
-  w_sign_quay: 'נמל האי המצודה · דוראן, דייג. לא לגעת ברשתות!',
-  w_sign_lighthouse: '↑ המגדלור',
-  w_sign_cliffs: '→ צוקי הלחישה · זהירות: נפילה!',
-  w_sign_depot: 'מחסן המיזם המשותף · הכניסה לעובדים בלבד',
-  w_sign_yard: 'שטח המיזם מעבר לקו הצהוב · לעובדים בלבד · בשמירה',
-  w_sign_station: '→ תחנת המיזם המשותף (במבצר הישן של פאנפרוק)',
-  w_sign_pipe: 'צינור המים של המיזם · לא לטפס!',
-  w_sign_orchard: 'הבוסתן הישן · המגוף נעול. אין כניסה.',
-  w_door_shut: 'נעול.',
-});
+import './he/world.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   w_sign_town: 'Town Square · Citadel Island',

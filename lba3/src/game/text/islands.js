@@ -1,6 +1,7 @@
 // Zeelich's other islands and travel between the regions (src/game/zislands.js, src/game/travel.js,
 // src/game/story/islands.js). English only.
 import { STR } from '../i18n.js';
+import './he/islands.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_shuttle: 'Board',
