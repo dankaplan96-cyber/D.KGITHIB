@@ -2158,7 +2158,8 @@ class Game {
     // otherwise"): a line done typing moves on after the time to read it (hud.js updateDialog); a key still skips. On by
     // default (off under automation, so the tests' timings stay as they were; they turn it on to check it)
     this.hud.autoTalk = s.autoTalk !== 'off';
-    document.body.classList.toggle('big-text', s.textSize === 'large');
+    document.body.classList.toggle('big-text', s.textSize === 'large' || s.textSize === 'xl');
+    document.body.classList.toggle('xl-text', s.textSize === 'xl');   // (the user, 16.11: "why is the text so small, make sizes")
     this.camRig.shakeScale = { on: 1, reduced: 0.35, off: 0 }[s.shake] ?? 1;
     this.audio.vol.music = s.music;
     this.audio.vol.sfx = s.sfx;

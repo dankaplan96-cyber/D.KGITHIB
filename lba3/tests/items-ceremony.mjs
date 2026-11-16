@@ -119,7 +119,7 @@ const s2 = await ev(async () => {
   r.sel0 = G.hud.shopSel; G.hud.shopSel = 0; G.hud.shopRender();
   P.tap('KeyE', 0.1); r.potion = { hp: h.hp === h.maxHp, coins: h.coins };
   P.tap('ArrowDown', 0.1); r.sel1 = look();
-  P.tap('KeyE', 0.1); r.flask = { mp: h.mp === h.mpMax, coins: h.coins };
+  P.tap('KeyE', 0.1); r.flask = { mp: h.mp === Math.min(h.mpMax, Math.ceil(h.mpMax * 0.5)), coins: h.coins };   // (the user, 16.11: a bought flask gives half the bar)
   P.tap('ArrowDown', 0.1); r.sel2 = look();
   P.tap('KeyE', 0.1); r.clover = { n: h.clovers - cl0, coins: h.coins };
   // not enough left for another clover: told in words, nothing bought
@@ -130,7 +130,7 @@ const s2 = await ev(async () => {
   P.tap('Escape', 0.1); r.closed = G.state; r.hidden = document.querySelector('#shop').classList.contains('hidden');
   return r;
 });
-check('buying by keys: the potion fills the life (6), the flask the magic (5), a clover (22)', s2.potion.hp && s2.potion.coins === 34 && s2.flask.mp && s2.flask.coins === 29 && s2.clover.n === 1 && s2.clover.coins === 7, s2);
+check('buying by keys: the potion fills the life (6), the flask half the magic (5), a clover (22)', s2.potion.hp && s2.potion.coins === 34 && s2.flask.mp && s2.flask.coins === 29 && s2.clover.n === 1 && s2.clover.coins === 7, s2);
 check('the arrows move the selection and the large view follows; Leave shows nothing', /flask/i.test(s2.sel1.name) && /Clover/.test(s2.sel2.name) && s2.leaveSel.name == null, s2);
 check('too few kashes: "You need N more kashes", nothing bought', /You need 15 more kashes/.test(s2.poor.why) && s2.poorAfter.n === 1 && s2.poorAfter.coins === 7, s2);
 check('the selected item turns; Esc leaves the stall', s2.turned && s2.closed === 'play' && s2.hidden, s2);

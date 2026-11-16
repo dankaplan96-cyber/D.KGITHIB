@@ -93,7 +93,14 @@ export class PumpLine {
     const g = this.game, f = this.f, K = this.kiosk, H = this.home?.parts?.house;
     if (!g.room && K && !f.c1_water) consider(dist(K.door.x, K.door.z), 1.5, { kind: 'ct_kiosk', label: 'p_door' });
     if (!this.on || !f.c1_water) return;
-    if (g.room?.id === 'house' && H && !f.c1_veskGone) consider(dist(H.tap.x, H.tap.z), 1.45, { kind: 'ct_tap', label: 'p_tap' });
+    if (g.room?.id === 'house' && H && !f.c1_veskGone) {
+      // (CHAIN-V95, the desktop 16.11: Zoé stands at the sink beside the tap, and "a person ahead wins" gave her the prompt:
+      //  E at the tap talked to her, the dry tap was never tried and segment 05 stopped. Faced squarely, the tap wins now;
+      //  turned to her, she still does)
+      const h = g.hero, dx = H.tap.x - h.pos.x, dz = H.tap.z - h.pos.z, d = Math.hypot(dx, dz);
+      const aim = d > 0.3 ? (dx * Math.sin(h.angle) + dz * Math.cos(h.angle)) / d : 1;
+      consider(dist(H.tap.x, H.tap.z) - (aim > 0.85 ? 0.5 : 0), 1.45, { kind: 'ct_tap', label: 'p_tap' });
+    }
     const Y = this.home?.parts?.yard;
     if (!g.room && Y && f.ct_bypass) consider(dist(Y.x, Y.z), 1.3, { kind: 'ct_yard', label: 'p_look' });
     const R = this.R, U = R?.pump;
