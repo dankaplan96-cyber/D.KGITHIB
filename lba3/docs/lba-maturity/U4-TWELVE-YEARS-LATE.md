@@ -30,9 +30,9 @@ Suggested for `docs/TWELVE_YEARS.md` (not edited here: not this task's file).
 ## What the player finds and does
 
 1. **The card.** On the council house's arcade, the pier east of the middle arch: a postcard and Oma's note,
-   UNDELIVERABLE. ANYONE? (Look at it, or ask Oma: it came back with the council's post, stamped NOT KNOWN by every
-   island for twelve years; Clinic Row went when the doctor moved up to Otringal.) **Take** (E): his right hand on it
-   (`reach`). The card close up: the picture on the left, its back on the right ("To the lady with the camera / Portraits,
+   UNDELIVERABLE. ANYONE? (Ask Oma: it came back with the council's post, stamped NOT KNOWN by every
+   island for twelve years; Clinic Row went when the doctor moved up to Otringal.) **Take** (E): Twinsen reads Oma's note, then his right hand
+   on the card (`reach`). The card close up: the picture on the left, its back on the right ("To the lady with the camera / Portraits,
    Clinic Row / Zeelich", Mara's three lines, the islands' stamps). E puts it away; Twinsen: "This street, twelve years
    ago … The picture will have to be the address."
 2. **The search.** While he carries it on the street, the card sits in the screen's corner (no arrow, no marker, no
@@ -122,7 +122,50 @@ No-clutter count: the council's arcade +1 (the card, later the new cards), Nara'
 
 ## Tests (Automated runtime only)
 
-(filled in below with the runs of this build)
+Snapshot of the worktree served from `/dev/shm/t993` (python http.server on 127.0.0.1:8993), headless Chromium on
+SwiftShader, 960×540, one suite at a time on a shared machine (load 8–12).
+
+| Suite | Result | Note |
+|---|---|---|
+| `twelve-years-late` (new) | PASS (21) | final build (`858f864b` + the Oku/Wenna answer); earlier runs: 1 FAIL (the hero's walk back from a door was cut by `life.js`, which drops a non-`indoor` steer in an area: fixed), 3 FAIL (gaps in 'play' inside the door scene: closed up), PASS 19 / 20 as checks were added |
+| `chapter2` (chapter 3 on Zeelich) | PASS | |
+| `zeelich-life` | PASS | the street's routes, the bakery, the posts |
+| `last-ferry` | PASS | |
+| `place-scan` | PASS | Zeelich: the same 2 findings as before this change (U-1's doc), none at the card, ramp or tripod |
+| `zeelich-doors` | PASS | |
+| `chapter1` | PASS | smoke check |
+| `voices` | PASS | `tyl_ysel` (seed 1814) |
+| `dialogue-check` | PASS | node-only (no VERDICT line): 197 warnings in the whole text, none in a `tyl_` key |
+| `save-migration` | see below | run alone with a 115 min limit |
+
+The regression suites ran on the snapshot before the last change (Wenna answering through Oku's door when her room is
+not built yet), which touches only `story/yearslate.js`'s answer; `twelve-years-late` ran on the final build.
+
+`tests/twelve-years-late.mjs` covers, by input (arrow keys through the harness's walk, E, Escape, the pause menu): chapter
+3 by flags; the card on its pin, the ramp, no tripod, no `dx_tyl_` state; Oma's word on the card (TALK); the card taken
+(Oma's note read, his `reach` on it), the close-up with a rendered picture (640×360, luminance sd > 12) and the back's
+address and stamps; the world given back after the render (the twelve years' pieces shown, the period pieces hidden, the
+people visible); the corner card; **wrong doors**: Pelleck's (the minaret), the bakehouse (Snuff: "This was the clinic"),
+Twinsen's first second look after two; never let in while knocking; **Save & quit → Continue** mid-way (the card, the two
+doors); a third wrong door (Oku's: Wenna through the door) and the second look; **the right door** (Lissa, Ysel's lines,
+the album, the toast); she goes back in, off the street; the journal; **the album** at Clinic Row (Then: picture over the
+view, caption; E: Now; E: Then; Escape: camera, hero and field of view back); the album at the West Pier (the ferry's board
+and bridge as they were after the render); the other way in (indoors, Lissa asked with the card); **chapters 9 and the
+epilogue** by flags (Ysel at her camera, the new cards, her line for that part); the text scan (English, no night words,
+no line over three sentences); **old saves** `new-05` (chapter 3, Zeelich) and `base-12` (chapter 9): in play, no `dx_tyl_`
+state, the card on its pin, no tripod. Not run by input: the album at Citadel's harbour (its picture was rendered in a
+staged probe from Citadel's quay: `captures/twelve-years-late/07-harbour-then-render.jpg`, `08-…-now-render.jpg`, made
+before the harbour's hidden area was widened to the crates west of the booth); Death → Retry (nothing here can hurt him;
+a Retry reloads the autosave, whose flags `applyFlags` settles); Modern controls.
+
+Captures (`captures/twelve-years-late/`, play camera or the album's view, deviceScaleFactor 1, 516 KB in all): 01 the card
+close up (its picture and back); 02 the card in the corner at the bakehouse door; 03 Clinic Row, Then; 04 the same, Now;
+05 chapter 9, Ysel at her camera by the flower house (the ramp at the door); 06 the West Pier, Then; 07/08 Citadel's
+harbour then/now (staged renders, see above). Looked at: the first PORTRAITS sign was too small (made larger), the first
+CLINIC sign sat flat on the bakehouse's front and could not be seen from Ysel's spot (now a bracket sign out over the
+street), the first pier picture stood inside the pier's clutter (moved to the pier's end), the drill tower showed through
+the gateway in the pier's old picture (the platform's batch is hidden now), the street's walkers stayed in the old pictures
+(every rig hidden now).
 
 ## Left for a human to judge
 

@@ -114,6 +114,11 @@ await saveQuit(); await reboot();
 const s0 = await ev(() => { game.step(0.5); return { room: game.room?.id, tyl: tyl(), board: board(), items: T().items(), thumb: document.querySelector('#tylthumb')?.style.display, ysel: ysel() }; });
 check('Continue: the card still in his hand (the corner card shown again, rendered anew), off the board; the two wrong doors remembered; nothing else made up', s0.room === 'zeelich' && s0.tyl.dx_tyl_card && s0.tyl.dx_tyl_knocked === 'pel,bak' && s0.tyl.dx_tyl_wrong === 2 && !s0.tyl.dx_tyl_found && !s0.board.card && s0.items[0]?.id === 'tyl_card' && s0.thumb === 'block', s0);
 
+const k3 = await ev(() => knockAt('zh_oku'));
+const k3l = await said();
+const k3t = await ev(() => tyl());
+check('INPUT: a third wrong door, Oku\'s: Wenna answers through it (the old mill is half the street away); Twinsen reads the clinic\'s place on the card ("up the street from the bakery, on the same side")', k3.tg?.door === 'oku' && k3.room === 'zeelich' && has(k3l, /half the street away/) && has(k3l, /up the street from the bakery/) && k3t.dx_tyl_wrong === 3 && k3t.dx_tyl_hint === 2, { k3, k3l, k3t });
+
 // ---------------------------------------------------------------- the right door
 const r0 = await ev(() => { const sv = game.hud.toast.bind(game.hud), toasts = []; game.hud.toast = (k, ...a) => { toasts.push(k); return sv(k, ...a); }; const k = knockAt('zh_nara'); game.hud.toast = sv; return { k, toasts, tyl: tyl(), items: T().items(), ysel: ysel(), idx: game.story.index }; });
 const r0l = await said();

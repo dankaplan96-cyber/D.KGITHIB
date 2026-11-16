@@ -216,11 +216,12 @@ export class TwelveYears extends ChapterBase {
     const first = !knocked.includes(k);
     if (first) { knocked.push(k); f.dx_tyl_knocked = knocked.join(','); f.dx_tyl_wrong = (f.dx_tyl_wrong | 0) + 1; }
     const [who, key, keyOut] = ANSWER[k];
-    const sp = this.npc(who), near = sp?.present && (how === 'face' || sp.distTo(this.game.hero) < 16 || who === 'zh_wenna');
+    const through = who === 'zh_wenna' && how === 'door';   // (Wenna answers from inside, her room built or not)
+    const sp = this.npc(who), near = through || (sp?.present && (how === 'face' || sp.distTo(this.game.hero) < 16));
     const lines = [near ? [who, key] : ['hero', keyOut]];
     const lvl = (f.dx_tyl_wrong | 0) >= 3 ? 2 : (f.dx_tyl_wrong | 0) >= 2 ? 1 : 0;
     if (lvl > (f.dx_tyl_hint | 0)) { f.dx_tyl_hint = lvl; lines.push(['hero', lvl === 1 ? 'tyl_hint_1' : 'tyl_hint_2']); }
-    this.say(lines, null, { through: who === 'zh_wenna' && how === 'door' });
+    this.say(lines, null, { through });
     return true;
   }
 
