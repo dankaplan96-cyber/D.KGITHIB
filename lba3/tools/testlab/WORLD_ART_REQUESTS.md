@@ -5430,3 +5430,27 @@ Chrome on the **GTX 1050** (ANGLE D3D11), v94 = `210e06c4` (a worktree), the rep
 **P30-FRAME (order 50): not done yet.** The artifact page (claude.ai/artifact/…) asks to sign in: neither a fresh Chrome
 nor the app's browser pane is signed in, and the Claude-in-Chrome extension (the user's own Chrome) is not connected on
 the desktop now. Asked of the user.
+
+## P30-FRAME · the game inside claude.ai's artifact frame against the same build served directly (CLOUD_ORDERS 50) · the desktop, 16.11.2026
+The user signed in to claude.ai in the desktop app's browser pane; the artifact (`claude.ai/artifact/EjPM…`, "Updated
+16.11.2026 16:36") and v94 served locally were opened **in the same pane, the same size**. **Where it ran:** the app's
+pane is the Claude app's own Chromium and draws on the **Intel UHD 630** (the user's Chrome draws on the GTX 1050), so
+quality differs from the user's; **the frame's geometry does not depend on the GPU.**
+- **The frame (claude.ai's page, measured on its DOM):** one iframe from `*.frame.claudeusercontent.com`, CSS size =
+  its box (736 × 589.6 in the pane, under the 40 px header), **no transform, zoom or scale on it or any ancestor**,
+  the page's zoom 1, devicePixelRatio 1.25 (the same as a direct page). Sandbox `allow-scripts allow-same-origin …`.
+  So **claude.ai does not shrink or scale the canvas**: the game inside gets its own window of the frame's size at the
+  screen's real dpr.
+- **The same build served directly, same pane size:** canvas backing 920 × 787 for CSS 736 × 630 = exactly × 1.25;
+  `?perf`: pixel ratio 1.25 (auto ×1), Medium (Auto on the Intel), MSAA 2. The renderer already sizes from the window's
+  client size × dpr, which is what the frame gives it.
+- **Inside the frame** could not be read directly (another origin; its URL opened alone redirects back to claude.ai),
+  so `?perf` can't be turned on there. Looked at instead: the playing picture in the artifact at the same moment of the
+  opening film is as sharp as the direct page's (screenshots compared in the pane). **Paused, the game dims and blurs
+  the scene behind the menu** (the pause screen), and the game **pauses itself when its tab or frame loses focus**:
+  a picture taken while paused looks soft, not pixelated.
+- **Not found: a frame cause.** Remaining ideas for the user's "pixelated": the Auto governor stepping the resolution
+  down in the house on the user's run (it never did in the desktop's runs, P30 on 15.11), or a different window size
+  or Windows scaling on the user's screen. **Proposal (the cloud's, main.js):** let the `?perf` overlay be toggled by a
+  key combination (e.g. Ctrl+Shift+P) or a Settings line, so the user can show pixel ratio / auto × / quality from
+  inside the artifact and send a picture next time it happens. No diff from the desktop.
