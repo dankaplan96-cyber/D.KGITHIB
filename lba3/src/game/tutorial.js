@@ -18,6 +18,11 @@
 // Lesson state machine (per lesson): locked → eligible (when() true) → shown (after SHOW_DELAY in view, the first eligible
 // one in ORDER, tips on) → done (its action) | gone (an optional tip shown for `max` seconds in all). A shown tip that
 // stops being eligible (he walks off, a dialogue opens) hides and can show again later, until it is done or gone.
+//
+// OPENING-TUT-2 (P31): in a game begun with the opening's steps (story/openingsteps.js), the steps take the panel in the
+// house and the yard until the yard is done: one goal line, always shown (Show control tips: Off hides only its keys),
+// the key for it below, a few dots for the yard's progress, and a tick when a step is done. The lessons above are still
+// observed meanwhile; after the yard they go on as before (the arc, the camera, out of magic, the town's).
 import { t } from './i18n.js';
 import { keyFor, keyLabel } from '../engine/input.js';
 import './text/opening.js';
@@ -32,6 +37,7 @@ const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // every lesson, in the order a tip is offered when several apply (one at a time). talk/use/advance/map have no panel of
 // their own: the game's own prompt ("E Talk"), the dialogue box's key hint and the toast at the cupboard teach them
 export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map'];
+const YARD = ['zoe', 'inv', 'tap', 'barrels', 'pipe'];   // (OPENING-TUT-2: the yard's steps, story/openingsteps.js)
 const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge']);
 
 let styled = false;
@@ -47,6 +53,10 @@ function addStyle() {
 body.hud-lba #tip { border-radius: 0; background: rgba(0, 0, 0, 0.72); border: 1px solid rgba(255, 255, 255, 0.85); }
 body.big-text #tip { font-size: 18px; }
 @media (pointer: coarse) and (max-width: 640px) { #tip { top: 168px; max-width: 60vw; font-size: 14px; } }
+#tip .tgoal { font-weight: 600; }
+#tip .tgoal .tdots { margin-inline-start: 8px; font-size: 11px; letter-spacing: 2px; opacity: 0.75; white-space: nowrap; }
+#tip .tkeys { margin-top: 3px; font-size: 14px; opacity: 0.92; }
+#tip .tgoal.ok { color: #9ff0a8; }
 #dialog .tutkey { position: absolute; bottom: 7px; inset-inline-end: 40px; font-size: 13px; opacity: 0.8; }
 #dialog .tutkey kbd { font-size: 12px; padding: 0 5px; min-width: 18px; }`;
   document.head.appendChild(st);
@@ -64,7 +74,7 @@ export class Tutorial {
     this.shownT = {}; this.eligT = {};
     this.cur = null; this.curT = 0; this.moved = 0; this.advances = 0;
     this.lastBeh = null; this.air = false; this.mp0 = null; this.losT = 0; this.los = false;
-    this.html = null;
+    this.html = null; this.stepId = null; this.okT = 0; this.okHtml = null;
   }
   snapshot() { return { v: 1, done: [...this.done], gone: [...this.gone] }; }
   // a save's lessons; a save from before the tips (no `tut`): all of them done, nothing pops up for a player under way
@@ -172,6 +182,11 @@ export class Tutorial {
       this.losT = LOS_EVERY;
       this.los = this.barrelsClear(h);
     }
+    // OPENING-TUT-2: the opening's steps have the panel while they run (a tick for a moment as one is done)
+    const sid = g.story?.cur?.steps?.panelStep?.() ?? null;
+    if (this.okT > 0) { this.okT -= dt; this.cur = null; this.stepId = 'ok'; this.show(this.okHtml); return; }
+    if (sid) { this.cur = null; this.stepId = sid; this.show(this.stepHtml(sid)); return; }
+    if (this.stepId) { this.stepId = null; this.hide(); }
     // the first lesson that applies, not done and not let go
     let want = null;
     if (at && !g.trans) for (const id of ORDER) {
@@ -219,7 +234,7 @@ export class Tutorial {
     const air = !!h.gravity && !h.onGround;
     if (air && !this.air) this.finish('jump');
     this.air = air;
-    if (I.pressed('inventory')) this.finish('inventory');
+    if (I.pressed('inventory')) { g.story?.cur?.steps?.onInventory?.(); this.finish('inventory'); }   // (OPENING-TUT-2: it opens on the kettle's crystals)
     if (I.pressed('map') && h.hasBall) this.finish('map');
     // the camera: turned by hand (Free) or sent behind him (LBA)
     if (g.settings.camera === 'free' && (I.padAxes[2] || I.padAxes[3] || I.down('camL') || I.down('camR') || I.mouse.rightDrag)) this.finish('camera');
@@ -251,7 +266,37 @@ export class Tutorial {
     this._on = false; this._el?.classList.remove('show');
   }
   // the text up now (tests)
-  get shown() { return this._on ? this.cur : null; }
+  get shown() { return this._on ? (this.stepId ? 'step:' + this.stepId : this.cur) : null; }
+
+  // ---------------------------------------------------------------- OPENING-TUT-2: the opening's steps in the panel
+  // the step's goal (always) and its key (tips on), in the device in use
+  stepHtml(id) {
+    const S = this.g.story?.cur?.steps, [n, of] = S?.progress?.() || [0, 0];
+    const dots = YARD.includes(id) ? `<span class="tdots">${'●'.repeat(n)}${'○'.repeat(of - n)}</span>` : '';
+    const keys = this.tips ? this.stepKeys(id) : '';
+    return `<div class="tgoal">${esc(t('t2_goal_' + id))}${dots}</div>${keys ? `<div class="tkeys">${keys}</div>` : ''}`;
+  }
+  stepKeys(id) {
+    const g = this.g, h = g.hero, K = (a) => this.key(a);
+    switch (id) {
+      case 'ball': {
+        if (!this.done.has('move')) return this.text('move');
+        const sp = g.room?.searches?.find((x) => x.id === 'cupboard');
+        return sp && Math.hypot(h.pos.x - sp.x, h.pos.z - sp.z) < 3.5 ? t('t2_k_search', { k: K('interact') }) : '';
+      }
+      case 'zoe': return t('t2_k_talk', { k: K('interact') });
+      case 'inv': return t('tut_inv', { k: K('inventory') });
+      case 'tap': return t('t2_k_try', { k: K('interact') });
+      case 'barrels': return this.text('ball');
+      case 'pipe': return h.behaviour !== 'athletic' ? this.text('athletic') : t('t2_k_jump', { k: K('action') });
+    }
+    return '';
+  }
+  // a step done: its goal with a tick, for a moment
+  stepOk(id) {
+    this.okHtml = `<div class="tgoal ok">✓ ${esc(t('t2_goal_' + id))}</div>`;
+    this.okT = 1.1;
+  }
 
   // ---------------------------------------------------------------- the dialogue box's key hint (main.js, each dialogue frame)
   // While a line types, the key shows it all at once; then the same key moves on. In the box's corner, beside its ▼,

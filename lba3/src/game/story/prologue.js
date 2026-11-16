@@ -21,6 +21,7 @@ import { lba1EnemyDefs } from '../lba1places.js';
 import { mergeStatic } from '../../engine/merge.js';
 import { revealBeat, solidAt } from './revealcam.js';
 import { HomeTap } from './hometap.js';
+import { OpeningSteps } from './openingsteps.js';
 import '../text/well.js';
 
 const V = POI.village;
@@ -40,13 +41,18 @@ const BAY_RISE = [0.95, 1.95, 2.95];   // over the highest sand round the first 
 const ZOE_YARD = { x: -42.6, z: 73.7 };
 // the two barrels against the house's north wall (town.js: the 'home-barrels' giver): the yard's practice target for the
 // magic ball (a generous one: both barrels, from the lid to the ground)
-const BARREL_R = 0.95, BARREL_Y = 0.55;
+// (OPENING-TUT-2: 0.95 → 1.25. The two barrels' colliders reach 0.85 m from their middle, and the ball is tested for a
+//  target from where it stands before each sub-step's move: from some spots on the path (P31's tests: x −45.0, z 73.2) it
+//  met the near barrel's collider while still 0.96-1.0 m from the middle and bounced off with no hit. Now a mandatory
+//  step, it registers wherever the ball touches either barrel)
+const BARREL_R = 1.25, BARREL_Y = 0.55;
 
 export class Prologue extends ChapterBase {
   constructor(story) {
     super(story);
     this.tremorT = 50;
     this.home = new HomeTap(this);   // CAMPAIGN-1: the kitchen tap, the knocking, the yard's standpipe, the pool and the growth (hometap.js)
+    this.steps = new OpeningSteps(this);   // OPENING-TUT-2 (P31): the yard as Zoé's errand, one step at a time (openingsteps.js)
   }
 
   // ---------------------------------------------------------------- actors
@@ -221,7 +227,9 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f;
     f.intro = true; f.opening = true;
     f.pr_v2 = 1;   // (CAMPAIGN-1: a game begun with the home thread, hometap.js)
+    f.pr_tut2 = 1;   // (OPENING-TUT-2: a game begun with the yard's steps, openingsteps.js; a save without it never sees them)
     this.home.reset();
+    this.steps.reset();
     if (!this.game.hero.hasBall) f.ballHint = true; // (Zoé said "Take your magic ball": the objective shows that step)
     this.opening = null;
     this.ferryAway();
@@ -288,6 +296,7 @@ export class Prologue extends ChapterBase {
     const s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`;
     if (f.prologueDone) return `<b>${t('pr_obj_done')}</b>`;
     if (!h.hasBall) return `<b>${t('pr_obj_well')}</b>` + (f.ballHint ? s(false, 'pr_obj_ball') : '');
+    { const st = this.steps.objective(); if (st) return `<b>${t('pr_obj_well')}</b><span class="s">◆ ${st}</span>`; }   // (OPENING-TUT-2: the yard's step first)
     if (f.inWell) return `<b>${t('pr_obj_cave')}</b>` + (f.nodes >= 3 ? '' : s(false, 'pr_obj_nodes'));
     if (!f.wellSeen) return `<b>${t('pr_obj_well')}</b>`;
     // the lid: its key (Mira wants proof first), then the rust; the rope (Xil, for Doran's stamp); Tim and his stones
@@ -301,6 +310,7 @@ export class Prologue extends ChapterBase {
     const gold = '#ffcf4a';
     const npc = (id) => g.npcs.find((n) => n.def.id === id);
     if (!g.hero.hasBall) return m;
+    if (this.steps.on) return this.steps.markers();   // (OPENING-TUT-2: the yard's step, not the well yet)
     if (!f.inWell && !f.prologueDone) m.push({ x: g.world.well.x, z: g.world.well.z, kind: 'star', color: gold, r: 8, edge: true, label: t('pr_map_well') });
     // (Mira wants proof first: Zoé has it, next door)
     if (f.wellSeen && !f.key) { const n = npc(f.pr_miraNo && !f.pr_kettle ? 'zoe' : 'mira'); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true, ...(n.def.id === 'zoe' ? { label: t('n_zoe') } : {}) }); }
@@ -507,6 +517,7 @@ export class Prologue extends ChapterBase {
     switch (id) {
       case 'zoe':
         if (f.prologueDone) return c([['zoe', 'pr_zoe_after']]);
+        if (this.steps.talk()) return true;   // (OPENING-TUT-2: asked again during the yard's steps: what she wants now)
         // next door: she has been round the neighbours' taps, and brings the proof Mira wants (CH1-LONGER)
         if (f.opening && !g.room && !f.key) {
           if (!f.pr_kettle) {
@@ -645,6 +656,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f;
     if (this.isCur()) this.ferryAway();   // (not at the pier at all before chapter 2: the opening film doesn't show it either)
     this.home.applyFlags();
+    this.steps.applyFlags();
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
     g.world.well?.setWater?.(!!f.c1_water || (this.story.index ?? 0) > 1);   // (WELL-DRY: dry until chapter 2's water returns)
     g.hero.hasKey = !!f.key;
@@ -907,6 +919,7 @@ export class Prologue extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero;
     this.home.update(dt);
+    this.steps.update(dt);
     if (this.barrierT > 0 && (this.barrierT -= dt) <= 0) this.openBarrier();
     // CH1-LONGER: the lid swinging up, the bell's swing and tolls, the stones' glow, a line held back a moment
     const L = this.lid, B = this.bell, S = this.stones;
