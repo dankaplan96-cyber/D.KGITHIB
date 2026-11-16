@@ -5375,3 +5375,33 @@ temple's well) are the cloud's to plan if so.
 - **Correction for CLOUD_ORDERS 48.2 (the user, 15.11, after "don't move anything"): "the School: yes, move it".**
   So `requests/SCHOOL-S28.diff` **is approved by the user** (the School to S28's canyon on LBA2's door zone); everything
   else in the ORIG-PLACES table stays. SCHOOL-LBA2b / CANYON / LBA2d stay withdrawn.
+
+## V93-GPU · v93 on the real GPU: frames, dialogue boxes, voices, the inventory (CLOUD_ORDERS 48.3) · the desktop, 16.11.2026
+Chrome on the **GTX 1050** (ANGLE D3D11), Quality Auto (it chose High), fresh profile per run. v92 = `46746162`, v93 =
+`dcd9b4aa` (worktrees). New game; the game's own loop, the hero standing, 3 s warm + 10 s measured at each spot. Raw:
+`docs/lba3-performance/HARDWARE/2026-11-16-v93-gpu/`.
+| Spot (1920×1080: 1536×864 at dpr 1.25) | v92 p50 / p95 / max (two runs) | v93 p50 / p95 / max (two runs) | Draw calls v92 → v93 |
+|---|---|---|---|
+| the house, by the kitchen | 16.7 / 16.8 / 17.4 · 16.7 / 16.8 / 16.8 | 16.7 / 16.8 / 16.9 · 16.7 / 16.9 / 17.0 | 66 → 66 |
+| the square | 16.7 / 16.8 / 16.9 · 16.7 / 16.8 / 17.0 | 16.7 / 16.9 / 16.9 · 16.7 / 16.8 / 16.9 | 193 → 193 |
+| the harbour (the wing's yard) | 16.7 / 16.8 / 16.8 · 16.7 / 16.8 / 16.9 | 16.7 / 16.8 / 16.8 · 16.7 / 16.8 / 16.9 | 286 → 282 |
+- **Frames:** the same; every spot holds the display's 60 Hz on both. At 1280×720 (dpr 1) v93 the same (p95 ≤ 16.9).
+- **Dialogue boxes:** every English line of `opening.js`, `ch1.js` and `ch2.js` (268 lines) shown whole in the box at
+  1920×1080 and at 1280×720: **none cut, none overflowing the box, the box inside the screen** (measured on the DOM:
+  the text's scroll size against its box, the box against the window, all characters shown).
+- **Voice per line (Expressive, the default), box open → first sound:** the kitchen conversation's ten lines (their
+  real texts this time) median 30 ms, max 110 (a speaker's first line, its bank loading); Zeelich's street talk: Nara
+  110 / 30, **Baldino's first line 350 ms** (his bank on demand, as on 15.11), then 30. No long task while a line starts.
+- **The inventory window** (the new one) at 1920×1080 and 1280×720: fits the screen, no element scrolls, the item's
+  picture and text readable (`v93-1920-inventory.jpg`, `v93-1280-inventory.jpg`: chapter 1, may be shown to the user).
+- No page errors in any run.
+
+## PLACE-SCAN-GPU · place-scan on the real GPU at v93 (CLOUD_ORDERS 48.4) · the desktop, 16.11.2026
+`tests/place-scan.mjs` from v93, run from a scratch copy with `launch()` on Chrome / the GTX 1050 (`--use-angle=d3d11`),
+served from the v93 worktree. **It ran through** (no crash; ~6 min). Log and report: `docs/lba3-performance/HARDWARE/2026-11-16-place-scan-gpu/`.
+- **135 rooms and areas, 7317 pieces** (PLACE-2: 135, 7225; the cloud's last ~7321), 5250 outdoors outside the Kit;
+  **147 findings, 133 on the LEFT list**. Verdict FAIL on one check: 14 findings not on the list.
+- **All 14 are one thing on Knartas:** the fence sections built from the original's fence bodies (`zislands.js` ~1992,
+  posts every 1.2 m) run through **`pole` pieces** 4–5 cm (at (2251.8, 1785–1793), (2272.4, 1788–1793), (2233.9,
+  1762–1783)): a post and a pole at the same spot. New since PLACE-2's run. Either skip a fence post where a pole stands
+  or list them as left. The cloud's (zislands.js); no diff from the desktop.
