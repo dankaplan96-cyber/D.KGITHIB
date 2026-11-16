@@ -5405,3 +5405,52 @@ served from the v93 worktree. **It ran through** (no crash; ~6 min). Log and rep
   posts every 1.2 m) run through **`pole` pieces** 4–5 cm (at (2251.8, 1785–1793), (2272.4, 1788–1793), (2233.9,
   1762–1783)): a post and a pole at the same spot. New since PLACE-2's run. Either skip a fence post where a pole stands
   or list them as left. The cloud's (zislands.js); no diff from the desktop.
+
+## V94-GPU · v94 on the GTX 1050: the yard's errand, the Follow camera, the School at S28 (CLOUD_ORDERS 49) · the desktop, 16.11.2026
+Chrome on the **GTX 1050** (ANGLE D3D11), v94 = `210e06c4` (a worktree), the repo's own suites run from a scratch copy of
+`tests\` with `launch()` on the real GPU (and the window's size by VW/VH/DPR); raw logs and sheets:
+`docs/lba3-performance/HARDWARE/2026-11-16-v94-gpu/`.
+1. **The yard's errand (OPENING-TUT-2), `opening-tutorial.mjs` by input:** **45 / 45 functional at 1280×720 and at
+   1920×1080** (the one "resource" fail both times is my local server's missing favicon.ico, not the game). Its 14
+   captures per size looked at (`tutorial-{1920,1280}-sheet.jpg`, chapter 1: may go to the user): every step's goal
+   line and key hint readable at both sizes — the house's goal, the cupboard, Zoé's call ("Twinsen! Over here."), the
+   call-back at the yard's edge, the inventory and the Kettle Crystals, the barrels, the pipe and the jump key, the yard
+   done ("Not bad for an old hero. Now, the well.") and the tick. One capture (the inventory step) catches its panel
+   mid fade-in (faint); the panel itself is solid once in. **Not done: timing a real first play** — scripted input is
+   not a first play; only the user can time it (as order 41 says).
+2. **The Follow camera** (`camfollow.mjs` and `camsteady.mjs` on the GPU, 1920×1080): camfollow **30 / 31** (fails:
+   "Follow, lock-on: Twinsen and the target both on screen every locked frame"); **camsteady 107 / 111** (v92 had 12 on
+   SwiftShader). Still failing: free · street, Modern (one jolt 1749 m/s² > 1600); follow · harbour pier (heading
+   reversals 12.1/min > his 8.6); follow and follow-medium · street, Modern (103.4 > 101.7/min, marginal). The route out
+   of Twinsen's door along the street passes in LBA follow and Follow with Classic controls.
+3. **The School in S28's canyon** (SCHOOL-S28 as applied): by the harness from the valley's mouth to the door and in:
+   transition into `school`, no page errors. Pictures (chapter 4, the team only): `docs/future/landmarks/school-s28-v94.jpg`
+   (the play camera in the valley, at the door, and wide). From the valley's floor the play camera shows the mask's
+   lower half and the door; the whole face reads from the canyon's mouth and from above.
+**P30-FRAME (order 50): not done yet.** The artifact page (claude.ai/artifact/…) asks to sign in: neither a fresh Chrome
+nor the app's browser pane is signed in, and the Claude-in-Chrome extension (the user's own Chrome) is not connected on
+the desktop now. Asked of the user.
+
+## P30-FRAME · the game inside claude.ai's artifact frame against the same build served directly (CLOUD_ORDERS 50) · the desktop, 16.11.2026
+The user signed in to claude.ai in the desktop app's browser pane; the artifact (`claude.ai/artifact/EjPM…`, "Updated
+16.11.2026 16:36") and v94 served locally were opened **in the same pane, the same size**. **Where it ran:** the app's
+pane is the Claude app's own Chromium and draws on the **Intel UHD 630** (the user's Chrome draws on the GTX 1050), so
+quality differs from the user's; **the frame's geometry does not depend on the GPU.**
+- **The frame (claude.ai's page, measured on its DOM):** one iframe from `*.frame.claudeusercontent.com`, CSS size =
+  its box (736 × 589.6 in the pane, under the 40 px header), **no transform, zoom or scale on it or any ancestor**,
+  the page's zoom 1, devicePixelRatio 1.25 (the same as a direct page). Sandbox `allow-scripts allow-same-origin …`.
+  So **claude.ai does not shrink or scale the canvas**: the game inside gets its own window of the frame's size at the
+  screen's real dpr.
+- **The same build served directly, same pane size:** canvas backing 920 × 787 for CSS 736 × 630 = exactly × 1.25;
+  `?perf`: pixel ratio 1.25 (auto ×1), Medium (Auto on the Intel), MSAA 2. The renderer already sizes from the window's
+  client size × dpr, which is what the frame gives it.
+- **Inside the frame** could not be read directly (another origin; its URL opened alone redirects back to claude.ai),
+  so `?perf` can't be turned on there. Looked at instead: the playing picture in the artifact at the same moment of the
+  opening film is as sharp as the direct page's (screenshots compared in the pane). **Paused, the game dims and blurs
+  the scene behind the menu** (the pause screen), and the game **pauses itself when its tab or frame loses focus**:
+  a picture taken while paused looks soft, not pixelated.
+- **Not found: a frame cause.** Remaining ideas for the user's "pixelated": the Auto governor stepping the resolution
+  down in the house on the user's run (it never did in the desktop's runs, P30 on 15.11), or a different window size
+  or Windows scaling on the user's screen. **Proposal (the cloud's, main.js):** let the `?perf` overlay be toggled by a
+  key combination (e.g. Ctrl+Shift+P) or a Settings line, so the user can show pixel ratio / auto × / quality from
+  inside the artifact and send a picture next time it happens. No diff from the desktop.
