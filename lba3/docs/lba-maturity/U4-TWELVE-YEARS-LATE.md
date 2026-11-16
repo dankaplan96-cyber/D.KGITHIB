@@ -127,7 +127,7 @@ SwiftShader, 960×540, one suite at a time on a shared machine (load 8–12).
 
 | Suite | Result | Note |
 |---|---|---|
-| `twelve-years-late` (new) | PASS (21) | final build (`858f864b` + the Oku/Wenna answer); earlier runs: 1 FAIL (the hero's walk back from a door was cut by `life.js`, which drops a non-`indoor` steer in an area: fixed), 3 FAIL (gaps in 'play' inside the door scene: closed up), PASS 19 / 20 as checks were added |
+| `twelve-years-late` (new) | PASS (21) | final build (`437dd437`), run twice (PASS 21 both); earlier runs: 1 FAIL (the hero's walk back from a door was cut by `life.js`, which drops a non-`indoor` steer in an area: fixed), 3 FAIL (gaps in 'play' inside the door scene: closed up), PASS 19 / 20 as checks were added |
 | `chapter2` (chapter 3 on Zeelich) | PASS | |
 | `zeelich-life` | PASS | the street's routes, the bakery, the posts |
 | `last-ferry` | PASS | |
@@ -136,7 +136,7 @@ SwiftShader, 960×540, one suite at a time on a shared machine (load 8–12).
 | `chapter1` | PASS | smoke check |
 | `voices` | PASS | `tyl_ysel` (seed 1814) |
 | `dialogue-check` | PASS | node-only (no VERDICT line): 197 warnings in the whole text, none in a `tyl_` key |
-| `save-migration` | see below | run alone with a 115 min limit |
+| `save-migration` | PASS (27) | run alone with a 115 min limit (about 50 min under the load) |
 
 The regression suites ran on the snapshot before the last change (Wenna answering through Oku's door when her room is
 not built yet), which touches only `story/yearslate.js`'s answer; `twelve-years-late` ran on the final build.
