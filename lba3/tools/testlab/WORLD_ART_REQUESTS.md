@@ -5546,3 +5546,8 @@ Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's 
 (`gather` walks the whole visible scene); a spatial pre-filter there would cut it further — not done here.
 - Not run: `no-air` (the hands' contact; a second person's hands now arrive one frame later), `npc-hands`/`interior-life`:
   **for the cloud when applying.**
+- **PERF-OWP-3 (tried, dropped, no diff):** a grid over the gathered triangles so each palm ray tests only the nearby
+  ones. Exactly the same answers (12,000 rays at 40 people's spots, 0 differences) and 35 % faster rays in isolation
+  (~740 triangles a look), but in the game on the UHD 630 the residents' first update was no faster (two A/B rounds,
+  3 pairs each: Ilo/Kira 10-16 ms base, 12-18 ms with it; building the grid each look costs what the rays save). The one
+  look's 10-16 ms stays; PERF-OWP-2 (one look a frame) is the fix.
