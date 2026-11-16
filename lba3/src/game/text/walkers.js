@@ -2,6 +2,7 @@
 // Each has a few short lines. The first one said depends on what they are doing; after that they cycle. `_dry`: before the
 // well has water again (chapter 1); `_work`: while they do their stop's work (sitting, carrying, tending).
 import { STR } from '../i18n.js';
+import './he/walkers.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_oda: 'Oda', n_brix: 'Old Brix', n_maro: 'Maro', n_tilde: 'Tilde', n_garrick: 'Garrick',

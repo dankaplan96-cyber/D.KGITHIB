@@ -1,5 +1,6 @@
 // EQUIP-2b: Ilka's singing fork, the Esmer line, the heat flask (src/game/tools.js, story/kit2b.js). English only.
 import { STR } from '../i18n.js';
+import './he/kit2b.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- names (HUD, wheel, inventory)

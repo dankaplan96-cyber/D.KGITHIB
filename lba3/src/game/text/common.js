@@ -1,37 +1,6 @@
 // Shared story texts: chapter titles, generic NPC lines, journal/inventory UI.
 import { STR } from '../i18n.js';
-
-Object.assign(STR.he, {
-  chapter_n: 'פרק {n}',
-  chapter_0: 'פרולוג · הבאר',
-  chapter_1: 'המיזם המשותף',
-  chapter_2: 'זיליך',
-  chapter_3: 'הקליפה',
-  chapter_4: 'אפילוג',
-  idle_generic: 'יום טוב, טווינסן.',
-  set_h_autoctrl_on: 'עם שלט: תנועה מודרנית ומצלמה חופשית. במקלדת: קלאסית (טנק) ומצלמה מאחורי טווינסן.', set_h_autoctrl_off: 'התנועה והמצלמה שבחרת נשארות.',
-  set_h_cam_follow: 'מאחורי הגב של טווינסן; מסתובבת איתו.', set_h_cd: 'כמה קרובה המצלמה: המצלמה העוקבת מאחוריו, והמבט בחדרים הגדולים.',
-  ending_title: 'סוף פרק 1 · המיזם המשותף',
-  ending_text: 'החללית של המיזם ממריאה מנמל החלל של המצודה, בדרך לזיליך.<br>בלדינו מחכה. וגם וסק.<br><br><b>פרק 2 · זיליך</b> בגרסה הבאה.',
-  keep_exploring: 'להמשיך לטייל באי',
-  gen_search_nothing: 'אין כאן כלום.',
-  inv_title: 'חפצים', journal_title: 'יומן', inv_hint: 'I / J לסגירה · חצים לבחירה', it_level: 'רמה {n}',
-  inv_more: 'עוד', inv_less: 'פחות', inv_use_btn: 'שימוש', inv_prev: 'העמוד הקודם', inv_next: 'העמוד הבא',
-  inv_hint_touch_j: 'הקישו על פרק כדי לקרוא אותו.', jr_now: 'עכשיו', jr_empty: 'עוד לא נכתב כלום.',
-  it_medallion: 'המדליון', itd_medallion: 'המדליון של סנדל. מאז שהבאר דיברה, הוא חמים למגע.',
-  it_ball: 'כדור הקסם', itd_ball: 'נזרק בלחיצה על F. כל זריקה עולה נקודת קסם: עם קסם הוא קופץ ארבע פעמים, בלי קסם חוזר מיד. מביא בונוסים שהוא נוגע בהם ומעיר מנגנונים.',
-  it_holomap: 'הולומפה', itd_holomap: 'מפה תלת־ממדית של האי (M). מקומות חשובים מסומנים בכוכב.',
-  it_kashes: 'קאשים', itd_kashes: 'המטבע של טווינסון. פיפה מוכרת בהם שיקויים, בקבוקי קסם ותלתנים.',
-  it_clovers: 'עלי תלתן', itd_clovers: 'כשהחיים נגמרים, עלה תלתן מקים אותך במקום.',
-  it_lidkey: 'מפתח המכסה', itd_lidkey: 'פותח את המכסה של באר הכיכר. קיבלת אותו ממשרד המים.',
-  it_stamp: 'חותמת הנמל', itd_stamp: 'אישור הפריקה של דורן, בשביל קסיל.',
-  it_rope: 'סולם חבלים', itd_rope: 'מתנה מקסיל. מספיק ארוך כדי לרדת לתחתית הבאר.',
-  it_pipemap: 'מפת הצנרת', itd_pipemap: 'מפת הצנרת של פאנפרוק, עם שלושת שסתומי העקיפה.',
-  it_leaflet: 'עלון פינוי', itd_leaflet: '"תרגיל פינוי. אזורים מורשים: A בלבד." ארתור מצא אותו בתיבת הדואר.',
-  it_evacplan: 'תוכנית הפינוי', itd_evacplan: 'התוכנית של וסק: רק 30% מהתושבים נכללים בה.',
-  pr_j_well: 'הבאר בכיכר הפסיקה לתת מים.', pr_j_key: 'מירה וגילברט נתנו לי את מפתח המכסה.', pr_j_rope: 'קסיל נתן לי סולם חבלים.',
-  pr_j_cave: 'בתחתית הבאר: מים חמימים, גבישים וקרציות גביש.', pr_j_sendell: 'סנדל דיבר אליי: "מישהו הגיע אליה."',
-});
+import './he/common.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   chapter_n: 'Chapter {n}', menu_cancel: 'Cancel',
@@ -87,6 +56,7 @@ Object.assign(STR.en, {
   set_h_aa_msaa: 'Cleaner edges, more work for the GPU.', set_h_aa_fxaa: 'A light filter, easier on the GPU.', set_h_aa_low: 'Low graphics always use Fast.',
   set_h_mm_hud: 'Shown when HUD is Always on.',
   // UI-PASS: a line for every row, shown under the panel for the selected one ({k}: the key in use)
+  set_h_lang: 'The text on screen: dialogue, objectives, the journal. The voices stay as they are.',
   set_h_df_gentle: 'Enemies hit half as hard, wind up slower and attack one at a time.', set_h_df_normal: 'Up to two enemies attack at once.', set_h_df_hard: 'Enemies hit harder and faster. Up to three attack at once.',
   set_h_ts: 'How fast lines type out in the dialogue box.',
   set_h_at_on: 'A finished line moves on once you have had time to read it. {k} skips ahead.', set_h_at_off: 'Each line waits for {k} or a click.',

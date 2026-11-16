@@ -3,6 +3,7 @@
 // for the area's state first (`_crew`, `_pack`: the dig's crew at work, packing up in chapter 5; `_lhar`, `_mon`: the
 // village before and after the lift), then the numbered ones in turn; `_work` while busy with the stop's work.
 import { STR } from '../i18n.js';
+import './he/storylife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- the project's crew between the research post and the dig (chapters 4 and 5)

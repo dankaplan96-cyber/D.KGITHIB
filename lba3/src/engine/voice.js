@@ -37,6 +37,7 @@
 import { VOWELS, CONS, MOUTH_OPEN, MOUTH_ROUND, planLine, hashStr, setVoiceMode as setPlanMode, voiceMode } from './voiceplan.js';
 import { renderLine, workerSource } from './voicesynth.js';
 import { metaFor } from '../game/text/voicemeta.js';
+import { spoken } from '../game/i18n.js';   // (HE-TEXT: a Hebrew line on screen is voiced from its English source)
 export { voiceMode };
 //
 // VOICE-2 (the user, 14.11: "the voices resemble English, but sound monotonous, robotic and excessively deep; they lack
@@ -556,6 +557,7 @@ function brighter(w) {
 }
 // the plan a speaker's line gets in the mode in use (cinematic.js voiceSeconds: how long the voice is heard)
 export function planVoiceLine(v, text, o = {}) {
+  text = spoken(text);   // (HE-TEXT: the English words, whatever the box shows)
   if (voiceMode() === 'expressive') {
     // (VOICE-2: the plan, its length that of the Expressive clips its clauses would play: their sound and the pauses)
     const meta = metaFor(text), p = planLine(v, text, { ...o, meta, mode: 'classic' }), b = exprBankOf(v);
@@ -814,7 +816,8 @@ export class Babble {
   // Returns true when this speaker has a voice (the plain typing blip is then not needed).
   chars(text, from, to) {
     if (!this.v) return false;
-    if (text !== this.text || from === 0) { this.text = text; this._line(text); }
+    // (HE-TEXT: the voice is planned from the line's English source; this.said: what was voiced, for the tests)
+    if (text !== this.text || from === 0) { this.text = text; this.said = spoken(text); this._line(this.said); }
     return true;
   }
   // called every frame while a line is up: a line waiting for its bank starts when the bank is ready, or synthesised

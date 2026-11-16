@@ -1,5 +1,6 @@
 // The opening scene (src/game/story/opening.js) and the first objective. English only.
 import { STR } from '../i18n.js';
+import './he/opening.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // where and when (a caption over the island)

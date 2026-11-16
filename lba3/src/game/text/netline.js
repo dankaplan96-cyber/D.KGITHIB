@@ -1,6 +1,7 @@
 // CAMPAIGN-8 (wave 6): chapter 10's friends at their stations, and the knocking that turns from three to four
 // (story/netline.js). English only.
 import { STR } from '../i18n.js';
+import './he/netline.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_unclip: 'Unclip the isolator', p_joint: 'Clip the isolator on the joint',

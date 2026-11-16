@@ -1,5 +1,6 @@
 // Baldino's workshop, years on: the test pair and the looks (src/game/story/workshop.js). English only.
 import { STR } from '../i18n.js';
+import './he/workshop.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   w_title: "Baldino's workshop",

@@ -1,5 +1,6 @@
 // CAMPAIGN-7 (wave 5): chapter 9's evidence and the stop that fails (story/cnline.js, story/zeelift.js KellThread). English only.
 import { STR } from '../i18n.js';
+import './he/cnline.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_service: 'Service door', p_compare: 'Lay the carbon on it', p_stop: 'Throw the stop', p_clip: 'Clip the isolator on',

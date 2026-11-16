@@ -3,6 +3,7 @@
 // Phases (story/hostel.js hostelPhase): v chapters 1–2 (the hostel lived in, the store guarded), u chapters 3–7 (the
 // store cleared, the workers uneasy), s chapter 8 (the hostel one of the shelters), l chapter 9 on and the epilogue.
 import { STR } from '../i18n.js';
+import './he/hostel.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   hs_title: 'The old asylum',

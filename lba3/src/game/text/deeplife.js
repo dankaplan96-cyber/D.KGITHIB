@@ -1,5 +1,6 @@
 // UNDER-BAR: the underground's things and people by phase (story/deeplife.js). English only.
 import { STR } from '../i18n.js';
+import './he/deeplife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_dp_guard: 'Guard Harl', n_dp_tolli: 'Tolli', n_dp_sala: 'Sala',

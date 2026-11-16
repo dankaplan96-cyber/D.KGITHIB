@@ -1,6 +1,7 @@
 // CITADEL-STANDS: Corla at the spaceport's kiosk, the street notice boards, the information stands, the fountains, the
 // carts and the two harbour sheds (src/game/story/stands.js). English only.
 import { STR } from '../i18n.js';
+import './he/stands.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   n_cs_corla: 'Corla',

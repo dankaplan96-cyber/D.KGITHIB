@@ -1,5 +1,6 @@
 // CAMPAIGN-9 (wave 7, story/answer.js): chapter 11's answer under the shell, chapter 12's last act. English only.
 import { STR } from '../i18n.js';
+import './he/answer.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   p_knock: 'Knock', p_cock_co: 'Turn', p_lockbar: 'Lift',   // (P39: its own key; p_cock is text/thread.js's 'Open')

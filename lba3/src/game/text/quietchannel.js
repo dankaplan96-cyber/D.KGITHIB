@@ -2,6 +2,7 @@
 // No night, evening, tonight, sunset, dawn, dusk or morning words: two suns, no time of day. Matto talks through a pipe
 // (a radio-filtered voice: n_qc_piperadio / n_qc_mattoradio), Tolli is the shield crew's Tolli (text/deeplife.js).
 import { STR } from '../i18n.js';
+import './he/quietchannel.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   qc_title: 'The Quiet Channel',

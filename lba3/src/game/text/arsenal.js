@@ -1,6 +1,7 @@
 // The arsenal: weapons and gadgets, the stalls that sell them and the people who give them (src/game/weapons.js,
 // gadgets.js, story/arsenal.js). English only. Item descriptions follow LBA2's where it had the item.
 import { STR } from '../i18n.js';
+import './he/arsenal.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   a_title: 'Odd jobs and gear',

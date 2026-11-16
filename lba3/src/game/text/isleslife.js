@@ -1,6 +1,7 @@
 // ISLES-BAR: Zeelich's islands at Citadel's level: the usable pieces' words and the people at home indoors
 // (src/game/story/isleslife.js). Keys: il_<kind>[_<state>|_<phase>], il_<person>[_<state>|_<phase>][_2]. English only.
 import { STR } from '../i18n.js';
+import './he/isleslife.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
   // ---- the shuttle departures board on every island (with chalked notes while an island's favour is open)

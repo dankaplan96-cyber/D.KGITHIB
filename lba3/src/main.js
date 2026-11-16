@@ -236,8 +236,10 @@ class Game {
     //  Words engine stays for the ?voicelab comparison only.)
     if (!['expressive', 'classic'].includes(this.settings.voiceMode)) this.settings.voiceMode = 'expressive';
     this.settings.voiceV = 3;
-    // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
-    this.settings.lang = 'en';
+    // HE-TEXT (the user, 16.11): Settings → Game → Language, English (the default) or Hebrew. A language saved before
+    // the choice came back (langV) was never chosen here (the game was English only, whatever was stored): English.
+    if (this.settings.langV !== 1 || !['en', 'he'].includes(this.settings.lang)) this.settings.lang = 'en';
+    this.settings.langV = 1;
     setLang(this.settings.lang);
 
     this.renderer = new Renderer($('#game'));
@@ -2033,6 +2035,7 @@ class Game {
       quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? ', settling' : '') }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
       // (UI-PASS: every row says what it does; the keys named are the ones in use)
+      lang: () => t('set_h_lang'),
       difficulty: () => t('set_h_df_' + s.difficulty),
       textSpeed: () => t('set_h_ts'),
       autoTalk: () => t('set_h_at_' + (s.autoTalk === 'off' ? 'off' : 'on'), { k: this.hud.key('interact') }),
