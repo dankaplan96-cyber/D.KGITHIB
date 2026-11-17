@@ -661,7 +661,7 @@ export class Chapter1 extends ChapterBase {
     const guard = this.npc('guard');
     if (R && guard) {
       guard.controlled = true;
-      this.watcher = new Watcher(g, guard, R.patrol, { range: 7.5, fov: 0.82, notice: 1.6, cool: 0.35, speed: 1.35, glance: true, onSpot: () => this.zoeSpotted() });   // (the user, 5.11: "too easy": was 6.5 m, 0.7 rad, no glances)
+      this.watcher = new Watcher(g, guard, R.patrol, { range: 7.0, fov: 0.78, notice: 1.15, cool: 0.5, speed: 1.25, glance: true, onSpot: () => this.zoeSpotted() });   // (the user, 5.11: "too easy": was 6.5 m, 0.7 rad, no glances; then 7.5 / 0.82 / notice 1.6 / cool 0.35 / 1.35; the user, 17.11: "a bit too hard, ease it": between the two, slower to notice, quicker to calm)
     }
     g.enterRoom('projoffice');
     g.updateObjective();
