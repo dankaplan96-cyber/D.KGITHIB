@@ -81,7 +81,7 @@ export class PumpLine {
     return null;
   }
   journal() { const f = this.f; return [{ key: 'ct_j_dry', done: !!f.ct_dry }, { key: 'ct_j_bypass', done: !!f.ct_bypass }, { key: 'ct_j_strip', done: !!(f.ct_strip && f.ct_plate) }].filter((l) => l.done && this.on); }
-  items() { const f = this.f; return f.ct_strip && !f.zt_bench ? [{ id: 'pstrip', icon: 'leaflet' }] : []; }
+  items() { const f = this.f; return f.ct_strip && !f.zt_bench ? [{ id: 'pstrip', icon: 'strip' }] : []; }
   canExit(room) {
     const f = this.f;
     if (room.id === 'pumproom' && this.on && f.ct_bypass && !this.done) { this.ch.chain([['hero', 'ct_need_strip']]); return false; }

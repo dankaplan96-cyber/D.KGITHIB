@@ -96,6 +96,20 @@ const LOOKS = {
     for (let i = 0; i < 3; i++) put(g, new THREE.CylinderGeometry(0.012, 0.012, 0.2, 6), wood, 0, 0.05 + i * 0.035, 0, 0, i * 0.7, Math.PI / 2);
     return g;
   },
+  // (a recorder's paper strip — the gauge strip, the carbon of Test 14: not the leaflet, the user, 16.11)
+  strip: () => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 256;
+    const x = c.getContext('2d'); x.fillStyle = '#efe8d2'; x.fillRect(0, 0, 64, 256);
+    x.strokeStyle = 'rgba(80,120,160,0.35)'; x.lineWidth = 1.5; for (let y = 8; y < 256; y += 14) { x.beginPath(); x.moveTo(0, y); x.lineTo(64, y); x.stroke(); }
+    x.strokeStyle = '#c42a2a'; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath(); x.moveTo(32, 0);
+    for (let k = 0; k < 2; k++) { const y0 = 30 + k * 120; x.lineTo(32, y0); for (let i = 0; i < 3; i++) { x.lineTo(50, y0 + 10 + i * 20); x.lineTo(22, y0 + 20 + i * 20); } x.lineTo(32, y0 + 70); }
+    x.lineTo(32, 256); x.stroke();
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const w = 0.1, h = 0.42, geo = new THREE.PlaneGeometry(w, h, 1, 12), p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) { const v = (p.getY(i) + h / 2) / h; p.setZ(i, v < 0.25 ? -0.05 * Math.pow((0.25 - v) / 0.25, 2) : 0); }   // (its end curled, as torn off the drum)
+    geo.computeVertexNormals();
+    const g = new THREE.Group(); put(g, geo, M('#ffffff', { map: tex, roughness: 0.9, side: THREE.DoubleSide })); return g;
+  },
   // (chapter 4's coil of rope for Hesk: the ladder's coil without its rungs)
   ropecoil: () => {
     const g = new THREE.Group(), rope = M('#b08850', { roughness: 0.95 });
@@ -263,7 +277,7 @@ const LOOKS = {
 };
 const TILT = { lance: 1.0, pocketset: -0.2, fork: 0.5, line: 0.7, heatflask: 0.3, ticket: -0.2, sword: 0.9, shovel: 0.8, pulse: 0.7, blowgun: 1.0, blowtron: 1.0, laser: 1.2, darts: 0.6, permit: -0.25, pipemap: -0.25, leaflet: -0.2, plan: -0.25, key: 0.5, pliers: 0.4 };
 // an item's look: its own when it has one, otherwise its painted icon's (inventory.js icon kinds)
-const BY_ID = { pstrip: 'leaflet', tstrip: 'leaflet', lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
+const BY_ID = { pstrip: 'strip', tstrip: 'strip', lidkey: 'key', okey: 'key', valvekey: 'key', stamp: 'permit', evacplan: 'plan', plans: 'plan', petition: 'permit', notebook: 'leaflet',
   kashes: 'coin', clovers: 'clover', crystals: 'crystal', kscreen: 'cloth', relay: 'cog', survey: 'pipemap', pcell: 'crystal' };
 const BY_ICON = { map: 'pipemap', stamp: 'permit', part: 'cog', crystal: 'crystal' };
 export function lookOf(id, icon) { return LOOKS[id] ? id : BY_ID[id] || BY_ICON[icon] || (LOOKS[icon] ? icon : 'cog'); }

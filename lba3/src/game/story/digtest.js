@@ -106,7 +106,7 @@ export class TestThread {
     if (this.open5 && f.dt_wire) return S.board;
     return null;
   }
-  items() { const f = this.f; return f.dt_strip && !f.cn_log ? [{ id: 'tstrip', icon: 'leaflet' }] : []; }
+  items() { const f = this.f; return f.dt_strip && !f.cn_log ? [{ id: 'tstrip', icon: 'strip' }] : []; }
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
