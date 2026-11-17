@@ -20,7 +20,9 @@ export const steps = [
     for (const k of ['upper', 'lower', 'copper']) { out[k] = P.use(U.feel[k].x, U.feel[k].z, { near: 0.9, kind: 'ct_feel' }).target?.kind; for (let i = 0; i < 40 && (h.steer || h.actT > 0); i++) game.step(0.25); P.settle(); }
     return { ...out, fail: game.flags.ct_felt ? null : 'ct_felt' };
   }],
-  ['behind the pier: the bypass', () => { const U = game.room.pump; P.go(U.cocks.upper.front.x, U.cocks.upper.front.z + 0.3, { tol: 0.5 }); game.step(0.6); P.settle(); return { seen: !!game.flags.ct_seen, fail: game.flags.ct_seen ? null : 'ct_seen' }; }],
+  // (AUDIT-FIX A-3: to the upper cock's front within 0.2 m — the remark comes once he is past the alcove line, 0.39 m before
+  //  that front: with 0.5 m the bot stopped 5 cm short every run since the pier moved, P37/P39)
+  ['behind the pier: the bypass', () => { const U = game.room.pump; P.go(U.cocks.upper.front.x, U.cocks.upper.front.z + 0.3, { tol: 0.2 }); game.step(0.6); P.settle(); return { seen: !!game.flags.ct_seen, x: +game.hero.pos.x.toFixed(2), fail: game.flags.ct_seen ? null : 'ct_seen' }; }],
   ['the wrong cock: the square again (one knock)', () => { const U = game.room.pump; const r = P.use(U.cocks.upper.x, U.cocks.upper.z, { near: 0.9, kind: 'ct_cock' }); game.step(3.4); P.settle(); return { ...r, wrong: game.flags.ct_wrong, open: U.cocks.upper.open, fail: game.flags.ct_wrong >= 1 && !game.flags.ct_bypass && !U.cocks.upper.open ? null : 'wrong cock' }; }],
   ["the right cock: the houses' line (two knocks)", () => { const U = game.room.pump; const r = P.use(U.cocks.lower.x, U.cocks.lower.z, { near: 0.9, kind: 'ct_cock' }); game.step(3.6); P.settle(); return { ...r, fail: game.flags.ct_bypass && U.cocks.lower.open ? null : 'bypass' }; }],
   ['the door waits for the strip and the plate', () => { const e = game.room.exits[0]; const r = P.through(e.x, e.z); P.settle(); return { ...r, room: game.room?.id, fail: game.room?.id === 'pumproom' ? null : 'left without the strip' }; }],
@@ -34,9 +36,12 @@ export const steps = [
   }],
   // ---- the station, as it was
   ['Vesk: the tour', () => ({ ...P.talk('vesk', { run: true }), fail: game.flags.c1_tour ? null : 'tour' })],
-  ['Zoé at the gate', () => { const r = P.talk('zoe', { run: true }); P.wait(1); P.settle(); return { ...r, room: game.room?.id, body: game.hero.body, fail: game.room?.id === 'projoffice' ? null : 'not in the office' }; }],
+  // (AUDIT-FIX A-3: these three steps are also played again after a Retry (retryFrom); once her part is over — the autosave
+  //  at its end is where a Retry lands — nothing of them is left to play: they say so instead of looking for the office)
+  ['Zoé at the gate', () => { if (game.flags.c1_zoeDone) return { skip: 'her part is over' }; const r = P.talk('zoe', { run: true }); P.wait(1); P.settle(); return { ...r, room: game.room?.id, body: game.hero.body, fail: game.room?.id === 'projoffice' ? null : 'not in the office' }; }],
   ['Zoé: the lockers (stealth)', () => {
     const G = game, w = G.story.cur.watcher, out = [];
+    if (G.flags.c1_zoeDone) return { skip: 'her part is over' };
     for (const id of ['locker2', 'locker1', 'locker3']) {
       if (G.flags.c1_plan) break;
       const L = G.room.searches.find((s) => s.id === id);
@@ -44,7 +49,9 @@ export const steps = [
     }
     return { plan: G.flags.c1_plan, tries: out, fail: G.flags.c1_plan ? null : 'no plan' };
   }, null, { retryFrom: 'Zoé at the gate' }],
-  ['Zoé: out', () => { const G = game, e = G.room.exits[0]; for (let k = 0; k < 4 && G.room?.id === 'projoffice'; k++) { P.sneakTo(e.x, e.z, G.story.cur.watcher, { tol: 0.6 }); P.through(e.x, e.z); P.settle(); } return { zoeDone: G.flags.c1_zoeDone, body: G.hero.body, fail: G.flags.c1_zoeDone ? null : 'zoe' }; }, null, { retryFrom: 'Zoé at the gate' }],
+  // (AUDIT-FIX A-3: the exit walked to only while she is still in the office: reaching it ends her part and the scene puts
+  //  Twinsen outdoors, where the office's coordinates are 1.3 km east — the bot walked off the east cliff four times)
+  ['Zoé: out', () => { const G = game, e = G.room?.id === 'projoffice' && G.room.exits[0]; for (let k = 0; k < 4 && G.room?.id === 'projoffice'; k++) { P.sneakTo(e.x, e.z, G.story.cur.watcher, { tol: 0.6 }); P.settle(); if (G.room?.id === 'projoffice') P.through(e.x, e.z); P.settle(); } return { zoeDone: G.flags.c1_zoeDone, body: G.hero.body, fail: G.flags.c1_zoeDone ? null : 'zoe' }; }, null, { retryFrom: 'Zoé at the gate' }],
   ['Vesk: the confrontation', () => { const r = P.talk('vesk'); P.settle(60); return { ...r, gone: game.flags.c1_veskGone, fail: game.flags.c1_veskGone ? null : 'vesk' }; }],
   ['home: Arthur\'s radio', () => { const d = game.world.houses[0].door; P.through(d.x, d.z, { run: true }); const r = P.talk('arthur'); const e = game.room.exits.find((x) => !x.room); P.through(e.x, e.z); return { ...r, radio: game.flags.c1_radio, fail: game.flags.c1_radio ? null : 'radio' }; }],
   ['Doran at the harbour', () => { const r = P.talk('doran', { run: true }); return { ...r, ship: game.flags.c1_ship, fail: game.flags.c1_ship ? null : 'doran' }; }],
