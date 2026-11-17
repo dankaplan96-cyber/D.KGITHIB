@@ -77,7 +77,7 @@ itself, read against the English and its scene's comments). No line was heard or
 | Quetch | קווץ' | |
 | Dino-Fly | הדינו־זבוב | |
 | Meca-Penguin | פינגווין מכני | |
-| Ker'aooc | קר'אווק | female in Hebrew (the English says "she"); see open points |
+| Ker'aooc | קר'אווק | male (the user, 17.11: "by the look": the bearded gnome wizard; he in English and Hebrew) |
 | Bersimon, Weather Wizard | ברסימון, קוסם מזג האוויר | |
 | Rector Hougo | הרקטור הוגו | |
 | School of Magic | בית הספר לקסם | |
@@ -151,7 +151,7 @@ oneplace, offwall, yearslate, quietchannel).
 
 ## Open points
 
-- Ker'aooc: the English text calls her "she" (purposes.js), the voice table lists her among the men (voice.js MEN).
+- Ker'aooc: **decided by the user, 17.11: male** ("go by the look"): the English and the Hebrew say he; the voice stays among the men.
   The Hebrew follows the text. A story/voice decision for the campaign director.
 - "קשים" vs "קאשים" for kashes; "אי סיטדל" vs "האי המצודה" (see the glossary): one replace each if the user prefers.
 - Settings: the Language row is first on the Game page; to keep every page at five rows before Advanced (the menus

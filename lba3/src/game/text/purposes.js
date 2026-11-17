@@ -29,7 +29,7 @@ Object.assign(STR.en, {
   pp_oni_nofork: "The scholars at the dig carry a fork that sings. That's a pure note, isn't it?",
   pp_oni_fork: "You have a singing fork? Strike it by the crystal. Please!",
   pp_oni_wait: "Still dark in there. A pure note, close to the crystal.",
-  pp_oni_thanks: "It's bright again! I'll tell Ker'aooc. She owes us pupils a favour, and now she owes you one.",
+  pp_oni_thanks: "It's bright again! I'll tell Ker'aooc. He owes us pupils a favour, and now he owes you one.",
   pp_oni_after: "We can read again. Joss is learning the wind spell properly. Hats everywhere are safe.",
   rs_oni_0: "The dormitory's ours. Nineteen beds and one snorer. I won't say who.",
   rs_oni_1: "Master says a crystal only sings for someone who listens first.",
@@ -44,7 +44,7 @@ Object.assign(STR.en, {
   pp_ker_thanks: "The pupils' friend! Sit. Your magic too, this time.",
   pp_note_10: '◆ 10',
   pp_j_lamp: "The pupils' study crystal at the School's dormitory has gone to sleep. Only a pure note wakes it.",
-  pp_j_ward: "Ker'aooc teaches her ward for half price now.",
+  pp_j_ward: "Ker'aooc teaches his ward for half price now.",
 
   // ---- Marl's dog yard on Zeelich
   pp_marl_1: "These are the project's guard dogs. Well, they will be. Right now they're mostly enthusiasm.",
