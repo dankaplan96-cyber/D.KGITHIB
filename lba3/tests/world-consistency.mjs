@@ -68,6 +68,8 @@ const TRANSITIONS = [
   ['throttle.js', 'end', 'film:playJourney', "chapter 10 → the network (14): Baldino's call reaches him at the fortress shelter: the ship's film from Citadel Spaceport to Zeelich's, then his workshop (network.js begin)"],
   ['throttle.js', 'startZoe', 'cut', "chapter 10 (EXP-1): the relay's last line at the fortress shelter, then Zoé in the project office at the station (Citadel, both): played as Zoé"],
   ['throttle.js', 'backToTwinsen', 'cut', "chapter 10 (EXP-1): Zoé reaches the fortress shelter with the B-7: Twinsen again beside the branch (the same spot)"],
+  ['ballastra.js', 'fly', 'film:playJourney', "chapter 11 (EXP-2): Doran's freighter: the ship's film from Citadel Spaceport to Float Harbor's pad on Ballastra"],
+  ['ballastra.js', 'end', 'film:playJourney', "chapter 11 → the network (14): the freighter home: the ship's film from Float Harbor's pad to Zeelich Spaceport, then Baldino's workshop (network.js begin); to chapter 12 on Ballastra: no journey"],
   ['throttle.js', 'downstairs', 'same', "chapter 10: Mira takes him down from the Water Office into FunFrock's valve room (a room of Citadel)"],
 ];
 {
