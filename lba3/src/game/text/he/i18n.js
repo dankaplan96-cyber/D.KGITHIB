@@ -14,6 +14,7 @@ export const HE_I18N = {
   exp_over_q: 'לשים את השמירה החדשה במשבצת {n}?', exp_written: 'פרק 10 נשמר במשבצת {n}. טענו אותו כדי לשחק.',
   nosave_scene: 'אי אפשר לשמור באמצע סצנה.', nosave_fight: 'אי אפשר לשמור באמצע קרב.', nosave_dead: 'אי אפשר לשמור עכשיו.', nosave_here: 'אי אפשר לשמור כאן.', nosave_wait: 'רגע אחד, ואז אפשר לשמור.',
   quit_full: 'האחסון מלא, אז המקום הזה לא נשמר. לחצו שוב על "שמירה ויציאה" כדי לצאת בכל זאת.',
+  sound_hint: '♪ לחיצה או מקש כלשהו מפעילים את הצליל',
   // settings
   language: 'שפה', auto_controls: 'שליטה לפי ההתקן', ac_on: 'אוטומטי', ac_off: 'כבוי', control_scheme: 'תנועה', ctrl_modern: 'מודרנית', ctrl_classic: 'קלאסית (LBA2)',
   visual: 'מראה', vis_2026: 'LBA3', vis_1997: 'רטרו 1997',

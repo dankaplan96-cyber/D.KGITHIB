@@ -695,6 +695,20 @@ class Game {
     $('#loading').classList.add('hidden');
     // the loading tune hands over to the game's music where the window may play sound unasked (the desktop app)
     if (window.loadMusicEnd?.(true)) this.audio.init();
+    else {
+      // (the user, 17.11: "the music should start at once, not after a click": a browser lets a page play sound only after
+      //  a click or a key in it, unless the browser allows it — try now; where it is held back, a small line on the title
+      //  says so and goes with the first key or click (audio.js's unlock starts the music then))
+      this.audio.init();
+      setTimeout(() => {
+        if (this.audio.ctx?.state === 'running' || document.getElementById('sound-hint')) return;
+        const d = document.createElement('div'); d.id = 'sound-hint'; d.textContent = t('sound_hint');
+        d.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;padding:6px 14px;background:rgba(0,0,0,0.55);color:#fff;font-size:15px;border:1px solid rgba(255,255,255,0.6);pointer-events:none';
+        document.body.appendChild(d);
+        const gone = () => { d.remove(); for (const e of ['pointerdown', 'keydown', 'touchstart']) removeEventListener(e, gone, true); };
+        for (const e of ['pointerdown', 'keydown', 'touchstart']) addEventListener(e, gone, true);
+      }, 400);
+    }
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
     else this.showScreen('title');

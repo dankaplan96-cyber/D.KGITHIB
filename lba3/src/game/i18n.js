@@ -27,6 +27,7 @@ export const STR = {
     exp_over_q: 'Put the new save in Slot {n}?', exp_written: 'Chapter 10 saved in Slot {n}. Load it to play.',
     nosave_scene: "You can't save during a story scene.", nosave_fight: "You can't save during a fight.", nosave_dead: "You can't save right now.", nosave_here: "You can't save here.", nosave_wait: 'Wait a moment, then save.',
     quit_full: "Storage is full, so this spot wasn't saved. Press Save & Quit again to quit anyway.",
+    sound_hint: '♪ Click or press any key for sound',
     language: 'Language', auto_controls: 'Controls by Device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'LBA3', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_auto: 'Auto', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
