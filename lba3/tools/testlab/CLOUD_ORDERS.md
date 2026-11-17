@@ -561,3 +561,17 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        paving and the plaza only. Send `requests/KESH-ORIG.diff` with before/after from the play camera and draw calls; the
        cloud describes it to the user in words before applying.
     Rules as always: no LBA1/LBA2 files or screenshots committed, results labelled by where they ran, the no-clutter rule.
+52. **Toward a ready game (the user, 17.11: "yes" to: a final audit in the cloud, the full chain on the desktop, the user
+    plays).** Build: **desktop-build-689** (0.49.0) = artifact **v96** (the whole game in Hebrew, CITADEL-ORIG-2: the turquoise
+    sea, Twinsen's plank roof, the stone L pier, the east street; the kitchen tap wins over Zoé when faced — CHAIN-V95's 05).
+    The cloud runs RELEASE-AUDIT-v96 now; don't touch `src/` while it runs (report only, requests in `requests/`).
+    1. **CHAIN-V96:** `tests/playthrough/01…14` in order on the GTX 1050 (Chrome), each loading the last one's save, as
+       CHAIN-V95. Per segment PASS/FAIL, game clock, health lost, stalls with where. If one fails, say whether it is the game
+       or the harness, and go on from the fixture save of the next chapter if there is one (tests/fixtures/campaign).
+    2. **V96-GPU, chapters 1–2 on the real screen:** the new sea, the L pier and the ferry's arrival (chapter 1), Twinsen's
+       roof, the east street; the Hebrew (Settings → Game → Language) in the yard, a dialogue box, the inventory and
+       journal at 1920×1080; Subtitle Size Extra large. Frame p50/p95 at the harbour and the square against v95. Pictures of
+       chapters 1–2 may go to the user.
+    3. When the user plays the installed build and reports, put each report in the playtest inbox (the cloud's status.md
+       rows come from the cloud; send them as notes in WORLD_ART_REQUESTS.md "USER-PLAY-689").
+    Rules as always: results labelled by where they ran, no LBA1/LBA2 files committed, the no-clutter rule.
