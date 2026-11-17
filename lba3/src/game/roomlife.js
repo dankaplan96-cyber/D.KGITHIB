@@ -404,7 +404,7 @@ const CITADEL_PORT = [
   { id: 'pema', char: 'worker_b', tint: '#f4ecdc', color: '#e8c070', speed: 0.9, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
     D('pema_panel', AP.fuel.stand.x, AP.fuel.stand.z, AP.fuel.stand.a, 'browse', [12, 18]),   // (the fuel cart's panel)
     D('pema_port', AP.port.stand.x, AP.port.stand.z, AP.port.stand.a, 'reach', [6, 9]),      // (the hose's coupling at the ship's port)
-    L('pema_hose', HOSE.x - 0.35, HOSE.z - 0.55, HOSE.x, HOSE.z, 'kneelWork', [5, 8]),       // (the hose on the deck: no kinks)
+    L('pema_hose', HOSE.x - 0.2, HOSE.z - 0.5, HOSE.x, HOSE.z, 'kneelWork', [5, 8]),       // (the hose on the deck: no kinks)
   ] },
   { id: 'kesa', char: 'lharWoman', tint: '#fff0f0', color: '#e8a8a8', speed: 0.85, start: 0, when: 'flying', stops: [
     L('kesa_line', AP.rope.x1 - 0.6, AP.rope.z - 0.6, PAD.x, AP.rope.z - 0.6, 'stand', [30, 45], { carry: 'case', gest: ['shrug'] }),   // (first at the rope)

@@ -251,14 +251,14 @@ export class Chapter1 extends ChapterBase {
   }
   signForm() {
     const g = this.game, f = this.f, h = g.hero, c = TERMINAL.counter;
-    if (this._signing) return;
-    this._signing = true;
+    if (this._signing != null && g.time - this._signing < 8) return;   // (one signing at a time; a cut-off one may be started again)
+    this._signing = g.time;
     g.audio.play('paper');
     this.chain([['ama', 'c1_ama_form1'], ['hero', 'c1_tw_form']], () => {
       // (the counter's top is 0.85 m in from where he stands to buy: terminal.js TERMINAL.counter)
       h.actAt(c.x, c.z - 0.85, 'use', 1.3, () => {
         g.audio.play('paper');
-        f.c1_form = true; this._signing = false;
+        f.c1_form = true; this._signing = null;
         g.audio.play('clunk');   // (Ama's stamp)
         g.updateObjective();
         this.chain([['ama', 'c1_ama_form2']], () => { g.updateObjective(); g.save(false); });

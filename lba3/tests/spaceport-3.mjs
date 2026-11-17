@@ -48,6 +48,10 @@ const saveQuitContinue = async () => {
   await menu(page, 'continue'); await ev(HELP);
 };
 
+// PHASE=a|b|c (or several, default all): 1–3, 4–6, 7 — each can run on its own (b sets up the errand's state itself),
+// for a loaded machine whose pages crash in long runs
+const ON = (k) => (process.env.PHASE || 'abc').includes(k);
+if (ON('a')) {
 // ---------------------------------------------------------------- 1. Doran's errand
 await setChapter('project', C1);
 const talk = await ev(() => { const G = game, f = G.flags, ps = G.world.pierStart; G.exitRoom({ x: ps.x + 1.5, z: ps.z + 4.5, a: Math.PI }, true, true); P.settle();
@@ -83,6 +87,12 @@ const mid = await ev(() => { const G = game, f = G.flags; for (let i = 0; i < 20
 check('P62, Save & quit → Continue mid-errand (in the hall, unsigned): the errand still stands (the objective names the counter) and Doran is already at the ship\'s fuel cart, not on his walk',
   mid.state === 'play' && mid.room === 'terminal' && mid.ship && mid.errand && !mid.form && /ticket counter/i.test(mid.obj || '') && mid.doran.present && !mid.doran.walking && mid.doran.atCart < 0.6, mid);
 
+}
+if (ON('b')) {
+if (!ON('a')) {   // (on its own: the errand given, he is in the hall)
+  await setChapter('project', { ...C1, c1_ship: true, c1_errand: true, c1_form: false });
+  await ev(() => { const G = game; G.exitRoom({ x: -22, z: 40, a: Math.PI / 2 }, true, true); P.settle(); P.enter('terminal'); P.settle(); });
+}
 // ---------------------------------------------------------------- 4. the counter: the form signed
 const sign = await ev(async () => { const G = game, f = G.flags, h = G.hero, TT = (await import('/src/game/terminal.js')).TERMINAL, out = {};
   const ready = () => P.target()?.kind === 'termCounter';
@@ -123,12 +133,14 @@ const board = await ev(() => { const G = game, S = G.world.spaceport;
   return { talk: d.r, ch0, chapter: G.flags.chapterKey, room: G.room?.id ?? 'citadel', state: G.state }; });
 check('P62, INPUT: a word with Doran at the cart takes them aboard: chapter 3 starts on Zeelich', board.talk === 'talked' && board.chapter === 'zeelich' && board.room === 'zeelich', board);
 
+}
+if (ON('c')) {
 // ---------------------------------------------------------------- 7. a second way in: an older save, the apron by chapter
 await ev(() => { P.settle(); });
 await setChapter('project', { ...C1, c1_ship: true, c1_errand: false, c1_form: false });   // (an older save: Doran's start code, no errand)
 const old = await ev(async () => { const G = game, S = G.world.spaceport; G.exitRoom({ x: -24, z: 40, a: Math.PI / 2 }, true, true); P.settle();
   const r = P.go(S.landing.x, S.landing.z, { tol: 0.8, maxT: 120 }); for (let i = 0; i < 10; i++) G.step(0.1);
-  return { go: r.r, side: side(), form: !!G.flags.c1_form, obj: document.querySelector('#objective')?.textContent, doran: doranAt() }; });
+  G.updateObjective(); return { go: r.r, side: side(), form: !!G.flags.c1_form, obj: document.querySelector('#objective')?.textContent, doran: doranAt() }; });
 check('P62, a second way in (a chapter-2 save from before the errand, from the bridge by input): the gate opens as before, no form asked, Doran at the fuel cart in view',
   old.side === 'deck' && !old.form && /spaceport/i.test(old.obj || '') && old.doran.present && old.doran.atCart < 0.6 && old.doran.inView, old);
 
@@ -138,7 +150,7 @@ const apron = async (key, extra) => { await setChapter(key, extra);
     const who = {}; for (const id of people) { const n = P.npc(id); if (!n?.present) continue; const x = n.pos.x, z = n.pos.z; who[id] = { deck: S.airside(x, z) && Math.abs(n.pos.y - S.deck.y) < 0.35, walls: x > T.x0 - 0.3 && x < T.x1 + 0.3 && z > T.z0 - 0.3 && z < T.z1 + 0.3 }; }
     const R = G.renderer.renderer; G.perf?.beginFrame?.(); G.frame(1 / 30, true); const calls = R.info.render.calls;
     return { work: S.work, who, calls }; }, [PEOPLE]); };
-const a1 = await apron('well', {});
+const a1 = await apron('well', { c1_ship: false, c1_errand: false, c1_form: false });
 const a2 = await apron('project', { ...C1, c1_ship: true, c1_errand: false, c1_form: false });
 const a4 = await apron('dig', {});
 const a8 = await apron('evacuation', {});
@@ -149,6 +161,7 @@ check('P64: flights running (chapter 4): the hose run out, Pema the fueller, Rhu
 check('P64: the evacuation: the hose run out for the project\'s ships, Pema and the crew at work, no travellers at the rope', a8.work === 'run' && a8.who.pema && a8.who.gurt && !a8.who.kesa && ok(a8), a8);
 check('P64: the deck\'s view (from the gate toward the pad) within the street\'s draw-call budget at the default quality (≤ 300) in every chapter tried', [a1, a2, a4, a8].every((a) => a.calls > 0 && a.calls <= 300), [a1, a2, a4, a8].map((a) => a.calls));
 
+}
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

@@ -58,7 +58,7 @@ export class IslandShuttle {
   // every frame (index.js update): it changes the port only on a change
   portLook() {
     const sp = this.game.world?.spaceport; if (!sp?.setWork) return;
-    sp.setWork(portPhase(this.story) !== 'grounded' || (this.game.flags.c1_ship && this.story.index <= 1) ? 'run' : 'idle');
+    sp.setWork(portPhase(this.story) !== 'grounded' || (this.game.flags.c1_ship && this.story.index === 1) ? 'run' : 'idle');
   }
   // the TICKETS · INFO kiosk on the shore sells the same seat: out through the terminal's gate under the black, then the
   // journey from the pad, as the counter inside does (story/stands.js)
