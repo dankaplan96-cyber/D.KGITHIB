@@ -246,11 +246,12 @@ export function crate(P, { s = 0.7, lx = 0, ly = 0, lz = 0, lry = 0, mark = null
 // 2–4 crates, the bottom ones side by side; one collider round them
 export function crateStack(P, { seed = 1, n = 3, marks = ['#3f6c9c', '#c6684c', null] } = {}) {
   const r = rng(seed * 97 + 3), s = 0.66 + r() * 0.12;
-  crate(P, { s, lx: -s * 0.53, lry: (r() - 0.5) * 0.15, mark: marks[0] });
-  if (n > 1) crate(P, { s, lx: s * 0.53, lry: (r() - 0.5) * 0.2, mark: marks[1] });
+  // (EXP-2, PLACE-1: a hand's gap between the two at the bottom and the one behind: turned a little, their corners met)
+  crate(P, { s, lx: -s * 0.57, lry: (r() - 0.5) * 0.15, mark: marks[0] });
+  if (n > 1) crate(P, { s, lx: s * 0.57, lry: (r() - 0.5) * 0.2, mark: marks[1] });
   if (n > 2) crate(P, { s: s * 0.86, lx: (r() - 0.5) * 0.3, ly: s * 0.9, lry: (r() - 0.5) * 0.5, mark: marks[2] });
-  if (n > 3) crate(P, { s: s * 0.8, lx: s * 0.3, lz: s * 0.98, lry: r() });
-  P.box(0, n > 3 ? s * 0.45 : 0, s + 0.05, n > 3 ? s * 1.0 : s * 0.55, n > 2 ? s * 1.7 : s * 0.9, { seeThrough: false });
+  if (n > 3) crate(P, { s: s * 0.8, lx: s * 0.3, lz: s * 1.12, lry: r() });
+  P.box(0, n > 3 ? s * 0.5 : 0, s * 1.1, n > 3 ? s * 1.05 : s * 0.55, n > 2 ? s * 1.7 : s * 0.9, { seeThrough: false });
   P.r = s + 0.4;
   return P;
 }
@@ -265,8 +266,8 @@ export function jarCrate(P, { seed = 2 } = {}) {
   return P;
 }
 // a filled sack, leaning
-export function sack(P, { lx = 0, lz = 0, lry = 0, color = '#d8c49a' } = {}) {
-  P.add(cached('blsack' + color, () => tint(lathe([[0, 0], [0.22, 0.02], [0.27, 0.16], [0.24, 0.4], [0.13, 0.52], [0.06, 0.58], [0.1, 0.63], [0, 0.64]], 9).scale(1, 1, 0.75), color)), BM.vc(), lx, 0, lz, 0.08, lry);
+export function sack(P, { lx = 0, lz = 0, ly = 0, lry = 0, color = '#d8c49a' } = {}) {
+  P.add(cached('blsack' + color, () => tint(lathe([[0, 0], [0.22, 0.02], [0.27, 0.16], [0.24, 0.4], [0.13, 0.52], [0.06, 0.58], [0.1, 0.63], [0, 0.64]], 9).scale(1, 1, 0.75), color)), BM.vc(), lx, ly, lz, 0.08, lry);
   return P;
 }
 // a heap of net with floats knotted in it
@@ -339,7 +340,8 @@ export function barrow(P) {
   P.add(cached('blbarrow', () => compose([[bbox(0.9, 0.08, 0.7, 0.02), 0, 0.42, 0], ...[-1, 1].map((s) => [bbox(0.9, 0.2, 0.05, 0.01), 0, 0.52, s * 0.34]), [bbox(0.05, 0.25, 0.7, 0.01), 0.45, 0.55, 0],
     ...[-1, 1].map((s) => [bbox(1.1, 0.05, 0.05, 0.01), -0.85, 0.5, s * 0.3, 0, 0, 0.18])])), BM.teal());
   for (const s of [-1, 1]) P.add(cached('blbwheel', () => compose([[cyl(0.26, 0.26, 0.06, 12).rotateX(Math.PI / 2)], [cyl(0.05, 0.05, 0.08, 6).rotateX(Math.PI / 2)]])), BM.post(), 0.1, 0.26, s * 0.42);
-  sack(P, { lx: 0.1, lz: -0.15, lry: 0.4 }); sack(P, { lx: -0.15, lz: 0.15, lry: -0.3, color: '#cbb488' });
+  // (EXP-2, PLACE-1: the sacks lie on the barrow's bed, not through it from the ground)
+  sack(P, { lx: 0.12, ly: 0.47, lz: -0.1, lry: 0.4 }); sack(P, { lx: -0.14, ly: 0.47, lz: 0.1, lry: -0.3, color: '#cbb488' });
   P.box(-0.2, 0, 0.75, 0.45, 0.9, { block: true }); P.r = 1.0;
   return P;
 }
