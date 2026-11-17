@@ -21,6 +21,13 @@ Labels: **Played** (a person), **Automated runtime** (a test drove it), **Source
 | Oren's presence and the Balance Works governor (orenpresence.js), his voice (voice.js seed 1004), his tone (audio.js) | live (chapter 10) | exp-throttle |
 | W-4 … W-12 | drafts only | `EXPANSION_WORLD_SPEC.md` |
 
+Measured cost of the merge for a player who never reaches the expansion (perfbudget, Medium, SwiftShader, two runs of
+the base `fb4443e7` and the merged tree back to back on the shared container; Automated runtime only): Citadel's street
+149 → 149 draw calls (p95 197 → 196/197, shadow 22 → 22), the interior route 60/61 → 60/61, shader programs 86 → 86;
+startup "total" 10.8 / 9.1 s → 9.9 / 9.4 s and page boot 80.9 / 84.3 s → 82.5 / 87.6 s (the container's noise is
+larger than the difference; a small parse cost of the Ballastra modules is not ruled out). Chapter 10's shelter
+branch: +12 main and +3 shadow draws where it stands (exp-throttle).
+
 ## 2. The order
 
 ```
