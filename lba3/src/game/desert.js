@@ -57,6 +57,14 @@ const DOCK = { x: -106, z: 4, deck: 2.0 };
 // (LAZY-REGIONS: where the ferry lands, known before the island is built: travel.js)
 export const DESERT_DOCK = { x: DESERT.x + DOCK.x - 2, z: DESERT.z + DOCK.z, a: Math.PI / 2 };
 const VILLAGE = { x: -50, z: 2, r: 19 };
+// (KESH-ORIG, MAP-ORIG: LBA2's Kesh has paved grey streets and a paved plaza, and a paved strip along the quay: the
+//  plaza's core and the street west to the quay (the first track's stretch), 0..1)
+function keshPave(x, z) {
+  const core = smoothstep(VILLAGE.r - 3, VILLAGE.r - 7, Math.hypot(x - VILLAGE.x, z - VILLAGE.z));
+  let street = 0;
+  if (x > -94 && x < -54) { const ax = -94, az = 4, bx = -58, bz = 3, t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); street = smoothstep(2.8, 1.8, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az))); }
+  return Math.max(core, street);
+}
 const OASIS = { x: -40, z: -15, r: 7.5 };
 const PUMP = { x: -30, z: -7 };
 const PUMP_JAM = 1;   // the wind-pump's jammed gear: the middle one (ADV-2)
@@ -86,13 +94,14 @@ const TRACKS = [
   // the land bridge and along the pool's east rim to the School of Magic (desertold.js)
   [[-46, -2], [-47, -26], [-45, -46], [-49, -58], [-49.5, -66.3], [-60, -67.3]],
 ];
-// (DESERT-ART 1, CURATOR-27a: the walls in LBA2's peach, each house its own shade of it; they were tan-ochre)
+// (KESH-ORIG, MAP-ORIG: LBA2's Kesh is grey stone (its textures; the "peach" of DESERT-ART 1 was the flat palette colour):
+//  `tint` is each house's own shade of grey stone now; the awnings and shutters keep their colours)
 const HOUSES = [
-  { x: -60, z: -8, w: 6.4, d: 5.2, h: 3.4, ry: 0.15, stair: 1, tint: '#ecb79c', awning: '#c84a3a' },
-  { x: -64, z: 10, w: 5.4, d: 5.0, h: 3.0, ry: Math.PI / 2 + 0.1, tint: '#f2c5aa' },
-  { x: -50, z: 16, w: 7.2, d: 5.4, h: 3.8, ry: Math.PI, stair: -1, tint: '#e6ab90', awning: '#2f7a9a', tarra: true },
-  { x: -36, z: 15, w: 5.0, d: 4.6, h: 3.0, ry: Math.PI - 0.2, tint: '#f4cfb6' },
-  { x: -54, z: -18, w: 5.6, d: 4.8, h: 3.2, ry: 0.5, tint: '#e9b094', awning: '#e8b84a' },
+  { x: -60, z: -8, w: 6.4, d: 5.2, h: 3.4, ry: 0.15, stair: 1, tint: '#dcd8d0', awning: '#c84a3a' },
+  { x: -64, z: 10, w: 5.4, d: 5.0, h: 3.0, ry: Math.PI / 2 + 0.1, tint: '#e4e0d8' },
+  { x: -50, z: 16, w: 7.2, d: 5.4, h: 3.8, ry: Math.PI, stair: -1, tint: '#d2cec6', awning: '#2f7a9a', tarra: true },
+  { x: -36, z: 15, w: 5.0, d: 4.6, h: 3.0, ry: Math.PI - 0.2, tint: '#e8e4dc' },
+  { x: -54, z: -18, w: 5.6, d: 4.8, h: 3.2, ry: 0.5, tint: '#d6d2c9', awning: '#e8b84a' },
 ];
 
 const rr = rng(4141);
@@ -285,7 +294,7 @@ const C = (h) => new THREE.Color(h);
 // (CLOUD_ORDERS 13: COL.rock tints the grey-violet cliff texture (TX.cliff, shared with Citadel's cliffs) to the
 //  original's pale warm stone grey, #8c8782 from above; '#e0a080' made it a reddish brown. A shade over white, in the
 //  linear values the vertex colours hold: the texture alone is darker than the original's stone under this light)
-const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: new THREE.Color().setRGB(1.06, 1.1, 0.94), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), pave: C('#e6dac6'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
+const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: new THREE.Color().setRGB(1.06, 1.1, 0.94), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), pave: C('#e6dac6'), keshPave: C('#b8b4ac'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
 // CLOUD_ORDERS 13 (WA-10's open point): grey rock outcrops. LBA2's Desert Island from above is about 20 % grey rock
 // ground (23.5 % grey with its paving and track), a pale stony grey (k-means #c1b6b1, #8d8682, #605c57), on the steep
 // faces (about 30 % of the ground steeper than 1.0) and spread over the high ground (15 % of the land under 2 m, 22 %
@@ -306,7 +315,7 @@ function dryRock(seed, lo = 0) {
 function rockAt(x, z, h, slope) {
   const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
   if (h < 0.6) return old;
-  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, pavedAt(x, z)));
+  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z))));
   if (clear <= 0) return old;
   // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
   const out = outcropNoise(x, z) + 0.3 * smoothstep(1, 8, h) + 0.45 * smoothstep(0.15, 0.7, slope) - 0.35 - 1.5 * (1 - clear);
@@ -329,6 +338,8 @@ function colorFn(x, z, h, slope, c) {
   if (rk > 0.3) c.lerp(COL.rock, smoothstep(0.3, 0.5, rk));   // (a short ramp: the texture's own edge is crisp, at ~0.45)
   const pv = pavedAt(x, z);
   if (pv > 0) c.lerp(COL.pave, pv * 0.85);   // (the School's plaza and rim walk, the compound's yard)
+  const kp = keshPave(x, z);
+  if (kp > 0) c.lerp(COL.keshPave, kp * 0.9);   // (KESH-ORIG: Kesh's grey stone paving)
   if (inPost(x, z)) c.copy(COL.pad);
   if (h < 0.5) c.lerp(COL.wet, smoothstep(0.5, -0.5, h));   // (wet sand only at the waterline: the original's beaches lie at 0.3 m)
 }
@@ -336,11 +347,11 @@ function splatFn(x, z, h, slope, w) {
   w[0] = 0; w[1] = 1; w[2] = 0; w[3] = 0; w[4] = 0;
   const rk = rockAt(x, z, h, slope);   // (CLOUD_ORDERS 13)
   w[2] = rk; w[1] = Math.max(0, 1 - rk);
-  const pv = pavedAt(x, z);
+  const pv = Math.max(pavedAt(x, z), keshPave(x, z));
   if (pv > 0) { w[4] = 2 * pv; w[1] *= 1 - pv; }
   const td = trackDist(x, z);
   if (td < 2.4) { const dr = 1 - keshDrift(x, z); w[3] = smoothstep(2.4, 1.2, td) * 1.6 * dr; w[1] *= 0.5 + 0.5 * (1 - dr); }   // (the drift covers the track)
-  if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r - 4) { w[3] += 0.8; }
+  if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r - 4) { w[3] += 0.8 * (1 - keshPave(x, z)); }   // (KESH-ORIG: paving, not trodden dirt, in the core)
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
   if (od > OASIS.r - 1 && od < OASIS.r + 4) w[0] = 0.7 * smoothstep(OASIS.r + 4, OASIS.r + 1, od);
   if (inPost(x, z)) { w[4] = 2; w[1] = 0; w[3] = 0; }
@@ -596,11 +607,11 @@ export function* buildDesertSteps(scene, physics) {
     const g = new THREE.Group(); const gy = H(hd.x, hd.z) - 0.3;
     g.position.set(hd.x, gy, hd.z); g.rotation.y = hd.ry; group.add(g);
     const HB = new Batch(g);
-    const wall = adobe(hd.tint);
+    const wall = tm('stone', { color: hd.tint, rough: 0.92 });   // (KESH-ORIG: grey stone, as LBA2's)
     HB.add(bbox(hd.w, hd.h + 0.3, hd.d, 0.22, 2.2), wall, 0, (hd.h + 0.3) / 2, 0);
     // parapet with soft rounded corners, and the roof slab inside it
     for (const [px, pz, pw, pd] of [[0, hd.d / 2 - 0.12, hd.w, 0.24], [0, -hd.d / 2 + 0.12, hd.w, 0.24], [hd.w / 2 - 0.12, 0, 0.24, hd.d], [-hd.w / 2 + 0.12, 0, 0.24, hd.d]]) HB.add(bbox(pw, 0.55, pd, 0.1, 2.2), wall, px, hd.h + 0.55, pz);
-    HB.add(bbox(hd.w - 0.4, 0.1, hd.d - 0.4, 0.02, 2), tm('plaster', { color: '#d8a878' }), 0, hd.h + 0.32, 0);
+    HB.add(bbox(hd.w - 0.4, 0.1, hd.d - 0.4, 0.02, 2), tm('stone', { color: '#bcb8b0' }), 0, hd.h + 0.32, 0);   // (the flat roof: grey stone)
     // (DESERT-ART 1, CURATOR-27a: LBA2's village houses carry low round domes on their parapets (bodies 94-97), not
     //  Pueblo roof beams: two on the front parapet, one on the back's far half (clear of the rooftop jars), in the wall's
     //  own plaster: no draw call added. Faceted, as the original's)
@@ -612,6 +623,14 @@ export function* buildDesertSteps(scene, physics) {
         HB.add(ring, wall, u, y + 0.05, dz, 0, 0, 0, 0.72, 0.1, 0.36);
         HB.add(dome, wall, u, y + 0.1, dz, 0, 0, 0, 0.62, 0.5, 0.34);
       }
+    }
+    // (KESH-ORIG: LBA2's Kesh has one house under a gold ribbed dome: the big house on the plaza's north side, Tarra's)
+    if (hd.tarra) {
+      const gold = pm('#d8a838', 0.35, { metalness: 0.7 }), R0 = 1.9, y0 = hd.h + 0.37;
+      HB.add(cyl(R0 + 0.12, R0 + 0.18, 0.5, 16, 1), wall, 0.4, y0 + 0.25, 0);   // the drum
+      HB.add(cached('kesh-gdome', () => new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)), gold, 0.4, y0 + 0.5, 0, 0, 0, 0, R0, R0 * 0.95, R0);
+      for (let k = 0; k < 8; k++) HB.add(cached('kesh-grib', () => new THREE.TorusGeometry(1, 0.035, 4, 12, Math.PI / 2)), gold, 0.4, y0 + 0.5, 0, 0, k * Math.PI / 4, Math.PI / 2, R0 + 0.03, R0 * 0.95 + 0.03, R0 + 0.03);
+      HB.add(cyl(0.06, 0.12, 0.6, 8, 0), gold, 0.4, y0 + 0.5 + R0 * 0.95 + 0.3, 0);   // the finial
     }
     // door: recessed, framed in wood, a plank leaf ajar
     HB.add(bbox(1.25, 2.15, 0.3, 0.04, 1), dark, 0.6, 1.08, hd.d / 2 - 0.05);
