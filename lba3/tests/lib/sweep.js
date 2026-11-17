@@ -76,7 +76,7 @@ function addMesh(o, A, stats) {
   const free = !!o.isInstancedMesh;   // (a scattered or repeated piece: its instances are placed by code, one by one)
   for (let ins = 0; ins < nInst; ins++) {
     M.copy(o.matrixWorld); if (o.isInstancedMesh) { o.getMatrixAt(ins, IM); M.multiply(IM); }
-    if (o.isInstancedMesh) { const sx = M.elements[0] ** 2 + M.elements[1] ** 2 + M.elements[2] ** 2; if (sx < 1e-10) continue; }   // (a hidden instance: scaled to nothing)
+    if (o.isInstancedMesh) { const sx = M.elements[0] ** 2 + M.elements[1] ** 2 + M.elements[2] ** 2; if (sx < 1e-4) continue; }   // (a hidden instance: scaled to nothing, or to 1e-4 as the scatter leaves a removed one)
     const det = M.determinant();
     if (o.isInstancedMesh && o.instanceColor) o.getColorAt(ins, ic); else ic.setRGB(1, 1, 1);
     const oi = objs.length;
@@ -412,7 +412,7 @@ SW.scan = async (area, opt = {}) => {
   for (const o of foliage) {
     for (let i = 0; i < o.count; i++) {
       o.getMatrixAt(i, mm); mm.premultiply(o.matrixWorld); pv.setFromMatrixPosition(mm);
-      if (mm.elements[0] ** 2 + mm.elements[1] ** 2 + mm.elements[2] ** 2 < 1e-10) continue;
+      if (mm.elements[0] ** 2 + mm.elements[1] ** 2 + mm.elements[2] ** 2 < 1e-4) continue;   // (removed: scaled to 1e-4)
       if (pv.x < A.x0 || pv.x > A.x1 || pv.z < A.z0 || pv.z > A.z1) continue;
       const { tg, T } = column(pv.x, pv.z, hits);
       // the first upward surface at or under its foot (+ 0.3 m)
