@@ -1216,6 +1216,12 @@ export function* buildWorldSteps(parentScene) {
   for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
   for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
+  // (OVERLAP-SWEEP: none where the ground is drawn as paving — the terrain's own cobble weight at the tuft's foot, the
+  //  nearest vertex of the grid as drawn; 289 tufts and flowers stood on painted cobbles. Filtered after the scatter)
+  { const F = terrain.mesh.userData.full, C2 = F?.attributes.splat2, Pp = F?.attributes.position;
+    if (C2 && Pp) { const n = Math.round(Math.sqrt(Pp.count)), ox = terrain.mesh.position.x, oz = terrain.mesh.position.z, x0 = Pp.getX(0) + ox, z0 = Pp.getZ(0) + oz, st = Pp.getX(1) - Pp.getX(0);
+      const cob = (x, z) => { const i = Math.round((x - x0) / st), j = Math.round((z - z0) / st); return i < 0 || j < 0 || i >= n || j >= n ? 0 : C2.getX(j * n + i); };
+      for (const t of [...grass, ...flowers]) if (!t.gone && cob(t.x, t.z) >= 0.5) { t.s = 1e-4; t.gone = true; } } }
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
   ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false, null, null, true));
