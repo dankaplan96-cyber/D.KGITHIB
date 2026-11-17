@@ -1913,6 +1913,25 @@ function buildStation(W0, root, r) {
     halo.position.set(BX, g + 1.4, BZ); halo.scale.set(5.5, 3.2, 1); grp.add(halo);
     const coreLight = new THREE.PointLight('#5ae8ff', 6, 12, 2); coreLight.position.set(BX, g + 1.2, BZ); grp.add(coreLight);
     anim.core = { coreMat, halo, coreLight };
+    // AUDIT-FIX (the user's P52, "it's hollow": the collar read as a drum with no top, its inside open to the camera): a
+    // steel grating over the shaft at the lip, a ring and bars every 0.3 m with the drill string's hole in the middle; the
+    // core's glow shows between the bars. (The collider was always whole: nobody walked in)
+    {
+      const gy = g + 0.28 + 1.1, R = 2.06, bars = [];
+      for (let u = -R + 0.25; u < R - 0.1; u += 0.3) {
+        const half = Math.sqrt(R * R - u * u);
+        for (const [a, b] of Math.abs(u) < 0.42 ? [[-half, -0.42], [0.42, half]] : [[-half, half]]) {
+          const len = b - a, mid = (a + b) / 2;
+          bars.push([len, u, mid]);
+        }
+      }
+      for (const [len, u, mid] of bars) {
+        B.add(bbox(0.05, 0.06, len, 0.01, 1), darkSteel(), BX + u, gy, BZ + mid);
+        B.add(bbox(len, 0.04, 0.04, 0.01, 1), darkSteel(), BX + mid, gy + 0.045, BZ + u);
+      }
+      B.add(cached('grateRing', () => new THREE.TorusGeometry(R, 0.05, 6, 48).rotateX(Math.PI / 2)), darkSteel(), BX, gy, BZ);
+      B.add(cached('grateHole', () => new THREE.TorusGeometry(0.42, 0.04, 6, 20).rotateX(Math.PI / 2)), darkSteel(), BX, gy + 0.02, BZ);
+    }
     // cross beams carrying the rotary table
     for (const ry of [0, Math.PI / 2]) B.add(boxUV(bbox(5.4, 0.22, 0.3, 0.03, 1), TILE.teal), tealM(), BX, g + 0.28 + 1.27, BZ, 0, ry, 0);
     B.add(lathe([[0, 0], [0.75, 0], [0.78, 0.06], [0.78, 0.18], [0.6, 0.24], [0.2, 0.26], [0, 0.26]], 24), brassM(), BX, g + 0.28 + 1.36, BZ);
