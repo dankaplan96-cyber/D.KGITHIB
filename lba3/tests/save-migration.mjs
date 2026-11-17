@@ -212,7 +212,7 @@ const cardN = await card();
 const n1 = await view();
 await ev(() => game.save(false));
 console.log('chapter-10 start loaded:', JSON.stringify({ n0, cardN, n1 }));
-check('loading the chapter-10 start: chapter 10 of the expanded campaign plays (Borrowed Time: Mira\'s call), chapter 11 (OG-2) comes after it', n0.key === 'throttle' && n1.key === 'throttle' && n1.chapter === 9 && n1.exp === 1 && !n1.base && n1.og && n1.next === 'survey', { n0: [n0.key, n0.room], n1: [n1.key, n1.chapter, n1.n, n1.og, n1.next], cardN });
+check('loading the chapter-10 start: chapter 10 of the expanded campaign plays (Borrowed Time: Mira\'s call); the network comes after it while the Ballastra chapters are not written (EXP-1)', n0.key === 'throttle' && n1.key === 'throttle' && n1.chapter === 9 && n1.exp === 1 && !n1.base && n1.og && n1.next === 'network', { n0: [n0.key, n0.room], n1: [n1.key, n1.chapter, n1.n, n1.og, n1.next], cardN });
 check('…nothing of the later chapters: no network flags, no pulse tool, no hop-pack, the magic still 3, kashes as saved (123: nothing paid for the later chapters)', n1.c10 === 0 && !n1.pulse && !n1.jet && n1.lv === 3 && n1.coins === 123 && n1.owed.length === 0, n1);
 check('…the journal has a page for chapter 10 ("10. Borrowed Time") and none for the three empty shells after it', n1.journal.includes('10. Borrowed Time') && !n1.journal.some((t) => /Under the Well|Ballastra|Balances/.test(t)) && n1.journal.includes('9. The Council'), n1.journal);
 
@@ -223,13 +223,13 @@ const k0 = await view();
 const k5 = await get(slotK(5)), kb = await get('lba3_slot_5_backup_v5');
 check('a v5 council save (before the vote) loads on the expanded campaign: chapter 9, position 8, the v5 kept untouched beside it', k0.key === 'council' && k0.chapter === 8 && k0.exp === 1 && !k0.base && k0.n === 9 && JSON.stringify(kb) === JSON.stringify(council5) && k5.v === 5, { k0: [k0.key, k0.chapter, k0.exp, k0.base, k0.state], backup: !!kb });
 check('…the next chapter in its campaign is chapter 10, Borrowed Time (OREN-GUARDIAN B)', k0.next === 'throttle', k0.next);
-// the vote (the council chamber's second hearing starts as he stands in it), then the next chapter
+// the vote (the council chamber's second hearing starts as he stands in it); chapter 9 goes on to the stop (tests/exp-throttle.mjs plays chapter 9's end into chapter 10)
 await settle(240);
 const kCard = await card();
 const k1 = await view();
 const auto = await get('lba3_save_v1');
 console.log('after the vote:', JSON.stringify({ k1, kCard }));
-check('the vote: the story goes on to chapter 10, Borrowed Time, its card shown; the autosave is format 6 in it', k1.key === 'throttle' && k1.chapter === 9 && k1.exp === 1 && /Chapter 10/.test(kCard) && auto?.v === 6 && auto.flags.chapterKey === 'throttle' && auto.flags.exp === 1, { k1: [k1.key, k1.chapter, k1.room, k1.state], kCard, auto: auto && [auto.v, auto.flags.chapterKey] });
+check('the vote: chapter 9 goes on (CAMPAIGN-7: the stop at the platform is ahead), still the expanded campaign; the autosave is format 6 in it', k1.key === 'council' && k1.chapter === 8 && k1.exp === 1 && auto?.v === 6 && auto.flags.chapterKey === 'council' && auto.flags.exp === 1 && auto.flags.c9_vote === true, { k1: [k1.key, k1.chapter, k1.room, k1.state], kCard, auto: auto && [auto.v, auto.flags.chapterKey] });
 
 // ---------------------------------------------------------------- the network save (the base game); no reward twice
 await title();

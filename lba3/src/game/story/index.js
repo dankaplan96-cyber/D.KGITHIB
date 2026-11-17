@@ -75,11 +75,11 @@ import '../text/common.js';
 // (flags.exp_base, main.js migrateSave) goes on as the base game: those four are not in its campaign and its chapters
 // keep their old numbers (BASE_NUMBER). Until a new chapter is written it is an empty shell (ChapterShell) that the
 // story passes straight through.
-export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'throttle', 'survey', 'ballastra', 'balances', 'network', 'shell', 'core', 'home'];
-export const EXP_KEYS = ['throttle', 'survey', 'ballastra', 'balances'];
+export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network', 'shell', 'core', 'home'];
+export const EXP_KEYS = ['throttle', 'ballastra', 'balances', 'survey'];   // (EXP-PLAN-2: the well's chapter is the way home from Ballastra)
 export const BASE_ORDER = ORDER.filter((k) => !EXP_KEYS.includes(k));
 // the numbers shown: the expanded campaign's, and the base game's (a save on exp_base)
-export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, throttle: 10, survey: 11, ballastra: 12, balances: 13, network: 14, shell: 15, core: 16 };
+export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, throttle: 10, ballastra: 11, balances: 12, survey: 13, network: 14, shell: 15, core: 16 };
 export const BASE_NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
 // the campaign a set of flags plays: the base game's on exp_base, otherwise the expanded one
 export const isBaseCampaign = (f) => !!f?.exp_base;
