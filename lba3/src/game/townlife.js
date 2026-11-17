@@ -306,7 +306,7 @@ export function buildTownLife(root, physics, W) {
     k.at(s.x, sy, s.z, SRY, () => {
       // (OVERLAP-SWEEP: a plank floor under the lean-to, 3 cm over the ground at its middle and down into the grass: the
       //  ground falls 19 cm under the bench's west end, whose legs and the west post stood over it with daylight under them)
-      k.add(rbox(2.75, 0.4, 3.24, 0.02), MAT.planks('honey'), 0.03, -0.17, 0);
+      k.add(rbox(2.75, 0.4, 3.24, 0.02), MAT.planks('grey'), 0.03, -0.17, 0);   // (the back wall's material: no new draw)
       k.add(rbox(0.15, 2.4, 3.2, 0.02), MAT.planks('grey'), 1.3, 1.2, 0);                           // back wall
       // (the roof, resting on the back wall and rising steeply toward the open front, is built below: its own mesh,
       // so it can fade)
