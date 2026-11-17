@@ -89,7 +89,7 @@ jobs:
             Desktop build of LBA3: The Awakening from commit ${{ github.sha }}.
 
             - **Windows:** `LBA3-The-Awakening-Setup-*.exe` (installer) or the `*-win.zip` (no install: extract and run `LBA3 The Awakening.exe`).
-            - **macOS:** the `.dmg`; the app is not signed, so the first time right-click the app and choose Open.
+            - **macOS:** the `.dmg`; the app is not signed: the first time macOS blocks it, open System Settings → Privacy & Security and choose "Open Anyway".
             - **Linux:** the `.AppImage`; make it executable and run it.
 
             The builds are not code-signed: Windows SmartScreen may warn ("More info" → "Run anyway").

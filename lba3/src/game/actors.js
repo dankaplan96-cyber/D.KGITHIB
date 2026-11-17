@@ -383,7 +383,9 @@ export class Hero extends Actor {
       // (a jump's landing looks and sounds as it did before the jump was lowered: `feel` is that jump's own speed)
       const v = -landed, vf = this.gravity ? v * (JUMP.feel / JUMP.vy) : v;
       this.gravity = null;
-      if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
+      // (RELEASE-AUDIT-v96 A-1: at 0 life damage() has already started the clover's knockdown, whose get-up refills him,
+      //  or his death: a second knockdown here replaced it and he got up at 0 life with a clover gone)
+      if (v > 13) { this.damage(2, null); if (this.hp > 0) this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
       else {
         // the knees take the landing by how far he fell (a jump's apex 1.14 m ≈ 0.97, the 0.96 it always had; a step off a ledge 0.3 m, a light touch; a long
         // drop, the full bend); a hard one lifts a small puff of dust (the soft smoke of Particles, not sparks)
