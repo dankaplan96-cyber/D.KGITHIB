@@ -15,14 +15,24 @@ export const steps = [
     return { chapter: game.flags.chapterKey, room: game.room?.id, nw: game.flags.nw_v ?? null }; }],
   ['Oku', () => { if (P.here() !== 'zeelich') P.enter('zeelich'); return { ...P.talk('oku', { run: true }), ask: game.flags.c10_okuAsk }; }],
   ['brake the old mill (ball)', () => { const G = game, m = G.rooms.zeelich.mills[0]; for (let k = 0; k < 6 && !G.flags.c10_millBraked; k++) { const a = k * 1.05; P.go(m.brake.x + Math.sin(a) * 6, m.brake.z + Math.cos(a) * 6, { tol: 1, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(m.brake.x, m.brake.z); P.settle(); } return { braked: G.flags.c10_millBraked, fail: G.flags.c10_millBraked ? null : 'brake' }; }],
+  ["Baldino at the mill's foot: the coil's tick", () => { const r = P.talk('baldino', { run: true }); return { ...r, plan: !!game.flags.og6_plan, fail: game.flags.og6_plan ? null : 'plan' }; }],
+  // (a player hears the tick and turns a bolt just after it: the step waits by the game's own clock)
+  ['three clamp bolts between ticks', () => {
+    const G = game, f = G.flags, C = G.story.cur.og6, F = C.frame(), out = [];
+    for (let k = 0; k < 8 && !f.og6_coilOut; k++) {
+      P.go(F.stand.x, F.stand.z, { tol: 0.25 }); P.face(F.face.x, F.face.z);
+      for (let j = 0; j < 400; j++) { const p = C.phase(); if (p >= 0.38 && p <= 0.45) break; G.step(1 / 60); }
+      P.tap('KeyE', 0.05); for (let i = 0; i < 12; i++) G.step(1 / 15);
+      out.push(f.og6_bolt | 0); if ((f.og6_bolt | 0) < 3) P.settle();
+    }
+    P.settle(); for (let i = 0; i < 30; i++) G.step(0.1); P.settle();
+    return { out, coilOut: !!f.og6_coilOut, fail: f.og6_coilOut ? null : 'bolts' };
+  }],
+  ['fit the dead coupling and the float', () => { const F = game.story.cur.og6.frame(); const r = P.use(F.face.x, F.face.z, { near: 0.9, kind: 'og6fit' }); P.settle(); return { r: r.r, fitted: !!game.flags.og6_fitted, fail: game.flags.og6_fitted ? null : 'fit' }; }],
   ['climb the old mill (jumps)', () => { const r = P.climbOldMill(); return { ...r, fail: r.top ? null : 'climb' }; }],
-  ['the mill relay', () => { const mt = game.rooms.zeelich.millTop; let r; for (let k = 0; k < 3 && !game.flags.c10_mill; k++) { r = P.use(mt.x, mt.z, { near: 1.2 }); P.settle(); } return { ...r, mill: game.flags.c10_mill, fail: game.flags.c10_mill ? null : 'mill relay' }; }],
-  // (off the gallery first, the way he came up: through the railing's gap and down the stair-stones one by one, then
-  // across the island. A plan from the gallery straight to the spaceport, 57 m off, found no way down and walked him
-  // into the railing)
-  ['down from the mill', () => { const G = game, h = G.hero, mt = G.rooms.zeelich.millTop, S = mt.stones, cx = mt.x, cz = mt.z - 3.3, a0 = Math.atan2(S[0].x - cx, S[0].z - cz) - 0.6;
-    // (the stones spiral down under the gallery's planks, so a walk 'to' a stone's spot stays up on the planks: hop
-    // down onto each in turn from the landing by the gap, as the climb hopped up)
+  ['the mill relay', () => { const mt = game.rooms.zeelich.millTop; let r; for (let k = 0; k < 3 && !game.flags.og6_relay; k++) { r = P.use(mt.x, mt.z, { near: 1.2 }); P.settle(); } return { ...r, relay: !!game.flags.og6_relay, fail: game.flags.og6_relay ? null : 'mill relay' }; }],
+  // (off the gallery the way he came up: through the railing's gap and down the stair-stones one by one)
+  ['down from the mill', () => { const G = game, h = G.hero, mt = G.rooms.zeelich.millTop, S = mt.stones;
     P.go(mt.landing.x, mt.landing.z, { tol: 0.4, maxT: 8, fight: false });
     const hops = [];
     for (let k = S.length - 1; k >= 0 && h.pos.y > S[0].y - 0.5; k--) if (h.pos.y > S[k].y + 0.3) hops.push(P.hopTo(S[k].x, S[k].z, S[k].y, { walk: false, brake: 1.2, pre: 0.05 }));
@@ -42,22 +52,25 @@ export const steps = [
   ['Ilka: the bore relay', () => { P.talk('ilka', { run: true }); const b = game.rooms.desert.bore; const r = P.use(b.x, b.z, { run: true }); NWAIT(); return { ...r, relay: game.flags.c10_boreRelay, ilka: game.flags.nw_ilka ?? null }; }],
   // (the bore's two waves — the drones one after another, then Vesk's guards and the sentry — fought by input, a heart picked
   // up between them; below 3 HP the bot stops and an ISO assist beats the rest — QA.md: a human-playtest item, like the
-  // Zeelich depot. The step reports the lowest HP of the fight and the HP at the break between the waves)
+  // Zeelich depot. The step reports the lowest HP of the fight and the HP at the break between the waves. The fight is
+  // over when the relay's band is to set: c10_lit_bore)
   ['the drones', () => {
     const G = game, h = G.hero, os = G.step.bind(G); let minHp = h.hp, breakHp = null; G.step = (dt) => { os(dt); minHp = Math.min(minHp, h.hp); if (breakHp == null && G.flags.c10_boreW2) breakHp = h.hp; };
+    const over = () => !!(G.flags.c10_bore || G.flags.c10_lit_bore);
     const out = { left: 0, dead: false, t: 0, assisted: 0, waves: [] };
     try {
-      for (let k = 0; k < 12 && !G.flags.c10_bore && !h.dead; k++) {
+      for (let k = 0; k < 12 && !over() && !h.dead; k++) {
         P.ignore?.clear?.();   // (a drone out on its patrol, a player goes after it again)
         const wave = G.flags.c10_boreW2 ? 2 : 1, r = P.fight({ maxT: 180, minHp: 2 }); out.t += r.t; out.left = r.left; out.dead = r.dead;
         out.waves.push({ wave, hp: h.hp });
         if (G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 30) && h.hp <= 2 && !h.dead) out.assisted += P.assistFight({});
         P.wait(0.6); P.settle(); P.grab(9);
-        if (!G.flags.c10_bore && !G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 30)) { P.wait(3); P.settle(); }   // (nothing in reach yet: the next of them is on its way)
+        if (!over() && !G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 30)) { P.wait(3); P.settle(); }   // (nothing in reach yet: the next of them is on its way)
       }
     } finally { G.step = os; }
     P.wait(1); P.settle();
-    return { ...out, hp: h.hp, minHp, breakHp, w2: !!G.flags.c10_boreW2, bore: G.flags.c10_bore, fail: G.flags.c10_bore ? null : 'bore' }; }],
+    return { ...out, hp: h.hp, minHp, breakHp, w2: !!G.flags.c10_boreW2, lit: !!G.flags.c10_lit_bore, fail: over() ? null : 'bore' }; }],
+  ['the bore band (Ilka reads the steam; the vent surges)', band, 'bore'],
   ['fly to the Hamalayi', () => { const r = P.flyTo(2); return { ...r, fail: r.room === 'hamalayi' ? null : 'glider' }; }],
   ['Pim (Yorna)', () => ({ ...P.talk('yorna', { run: true }), pim: game.flags.c10_pim })],
   ['the dome', () => { const G = game, f = G.flags, d = G.rooms.hamalayi.observatory.door;

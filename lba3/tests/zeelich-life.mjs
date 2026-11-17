@@ -275,8 +275,10 @@ const ml = await ev(() => {
 check('chapter 9, Mill Lane: before the stop the lift is up and the standpipe runs; after the stop the cart hangs half way, unfed, the tap dry (Kell\'s hand on his brake, Brel\'s empty jug); with the isolator on the feed the deck is up and the water runs again', ml.before.water && ml.before.deck > 3 && !ml.dry.water && !ml.dry.fed && ml.dry.cartK === 0 && ml.dry.deck > 1.5 && ml.dry.deck < 2.5 && ml.dry.kell === 'use' && ml.drySaid.some((l) => /Air/.test(l)) && ml.back.water && ml.back.fed && ml.back.deck > 3 && ml.backSaid.some((l) => /Full jug/.test(l)), ml);
 
 // ---- chapter 10: the network
-iso('chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)');
-await ev(() => { const f = game.flags; Object.assign(f, { c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_plans: true, c9_vote: true }); game.story.nextChapter(); P.settle(); });
+// (the base campaign's network, as tests/chapter10.mjs: the expanded campaign goes on to chapter 10 "Borrowed Time" after
+// the vote, and its network's street is OG-6's, tests/oren-coils.mjs)
+iso('chapter 9 done by flags (c9_vote); the base campaign (exp_base); story.nextChapter() into the network (as tests/chapter10.mjs)');
+await ev(() => { const f = game.flags; Object.assign(f, { c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_plans: true, c9_vote: true, exp_base: 1 }); delete f.exp; game.story.nextChapter(); P.settle(); });
 await said();
 const w1 = await ev(() => { const f = game.flags; if (game.room?.id === 'workshop') { const e = game.room.exits[0]; P.through(e.x, e.z); P.settle(); } P.talk('oku'); const ask = !!f.c10_okuAsk; P.talk('zmole2'); P.talk('zbee1'); P.talk('ztri1'); return { ch: f.chapterKey, room: game.room?.id, ask }; });
 const w1l = await said();

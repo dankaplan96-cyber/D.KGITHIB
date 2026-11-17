@@ -79,12 +79,15 @@ export class Evacuation extends ChapterBase {
     const hazard = tm('hazard'), iron = pm('#4a4c54', 0.5, { metalness: 0.5 });
     // the fence around the square (project barriers)
     const V = W.well;
+    // (OREN-GUARDIAN OG-2: each segment kept, so chapter 11 of the expanded campaign can make one of them the gate: survey.js)
+    this.fence = [];
     for (let i = 0; i < 12; i++) {
       const a = i / 12 * Math.PI * 2, x = V.x + Math.cos(a) * 5.6, z = V.z + Math.sin(a) * 5.6;
       const b = mesh(grp, bbox(2.7, 0.9, 0.18, 0.04, 0.6), hazard, x, H(x, z) + 0.75, z, -a + Math.PI / 2);
-      void b;
-      for (const s of [-1, 1]) mesh(grp, cyl(0.05, 0.05, 1.2, 6, 0), iron, x + Math.sin(a) * s * 1.2, H(x, z) + 0.6, z - Math.cos(a) * s * 1.2);
-      this.cols.push(P.add({ type: 'box', x, z, hw: 1.35, hd: 0.15, rot: -a + Math.PI / 2, top: H(x, z) + 1.2, noStand: true, seeThrough: true, enabled: false }));
+      const posts = [-1, 1].map((s) => mesh(grp, cyl(0.05, 0.05, 1.2, 6, 0), iron, x + Math.sin(a) * s * 1.2, H(x, z) + 0.6, z - Math.cos(a) * s * 1.2));
+      const col = P.add({ type: 'box', x, z, hw: 1.35, hd: 0.15, rot: -a + Math.PI / 2, top: H(x, z) + 1.2, noStand: true, seeThrough: true, enabled: false });
+      this.cols.push(col);
+      this.fence.push({ a, x, z, mesh: b, posts, col });
     }
     // the two shelters (FunFrock's): a headwall and a sliding steel door facing the way people come, in an earth mound;
     // the depot's door carries the hatch wheel the ball must hit. Their static parts, and the carts and bundles on the
@@ -378,8 +381,9 @@ export class Evacuation extends ChapterBase {
     //  when the shaft's lift brings him up in the station's yard (SHAFT-CITADEL), as they are when he comes up in play)
     // (CITADEL-3-9: and through chapter 9, the council, when the ship back from Zeelich is open: played on from chapter 8
     //  the fences, the dark heat posts and the open shelters were still there in chapter 9; a load in chapter 9 took them
-    //  away, and chapter 10 put them back)
-    const key = this.story.cur?.key, on = this.isCur() || key === 'council' || key === 'network';
+    //  away, and chapter 10 put them back) (and the expanded campaign's chapters before the network: the town still waits
+    //  in the shelters)
+    const key = this.story.cur?.key, on = this.isCur() || ['council', 'throttle', 'survey', 'ballastra', 'balances', 'network'].includes(key);
     this.showProps(on || key === 'shell' || key === 'core');
     if (!on) return;
     W.station?.setActive?.(false);

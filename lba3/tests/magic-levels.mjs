@@ -129,7 +129,7 @@ const again7 = await ev(() => { game.story.magic.grant(3); T.talkAll(); return T
 check('chapter 7: once only', again7.lv === 3 && ups(await toasts()) === 0, again7);
 
 // ---------------------------------------------------------------- chapter 10: the five stations (level 4)
-const c10 = await ev(() => { T.next('council'); return T.lv(); });
+const c10 = await ev(() => { T.next('balances'); return T.lv(); });   // (OREN-GUARDIAN: the expanded campaign's chapter 10 now plays; the last empty shell before the network)
 check('chapters 8 and 9 pass at level 3 (into chapter 10)', c10.ch === 'network' && c10.lv === 3, c10);
 await toasts(); await said();
 const code = await ev(() => {

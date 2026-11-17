@@ -93,9 +93,9 @@ is('the bench: the isolator on one relay, then the other; one at a time; the obj
   const G = game, f = G.flags; const r = T.door(G.rooms.zeelich.workshopDoor); T.run(4); const T2 = G.rooms.workshop.life.terminals;
   const at = (p) => { T.tp(p.front.x, p.front.z, p.a); T.tap('KeyE'); T.run(4); }; at(T2.A); const a = [!!f.cn_isoA, G.rooms.workshop.life.state.iso]; at(T2.B); T.run(2);
   return [r, !!f.cn_isoGot, a, !!f.cn_isoB, !!f.cn_iso, T.obj()]; }), (v) => v[0] === 'workshop' && v[1] && v[2][0] && v[2][1] === 'A' && v[3] && v[4] && /feed/i.test(v[5]));
-is('chapter 9 ends on Mill Lane: the isolator on Kell\'s feed, the lift and the water back; the next chapter (network)', await ev(() => {
+is('chapter 9 ends on Mill Lane: the isolator on Kell\'s feed, the lift and the water back; the next chapter (Borrowed Time in the expanded campaign, the network in the base one)', await ev(() => {
   const G = game, f = G.flags; T.out(); const L = G.rooms.zeelich.lift; T.tp(L.isoAt.front.x, L.isoAt.front.z, L.isoAt.a); T.tap('KeyE'); let water = false; for (let i = 0; i < 150 && f.chapterKey === 'council'; i++) { G.step(0.2); T.talkAll(); water ||= !!L.state.water; }
-  return [!!f.cn_lane, water, f.chapterKey]; }), (v) => v[0] && v[1] && v[2] === 'network');
+  return [!!f.cn_lane, water, f.chapterKey, game.story.inCampaign('throttle') ? 'throttle' : 'network']; }), (v) => v[0] && v[1] && v[2] === v[3]);
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

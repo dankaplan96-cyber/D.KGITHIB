@@ -10,6 +10,7 @@ Object.assign(STR.en, {
   fly_done: '(done)', fly_here: '(you are here)',
 
   c10_narr: "Baldino's workshop, hours later. Every bench is covered in wire.",
+  c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
   c10_bal_1: "Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
   c10_bal_2: "My relays: the test pair from my table, grown up. Each one hooks into a station's old machine and talks through it. When all five hear each other at once, the shaft's blast doors will hear them too.",
   c10_bal_3: "Now the limits. Each relay runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
