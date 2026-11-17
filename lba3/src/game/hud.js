@@ -10,8 +10,32 @@ import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
 import { stage, lookOf, TURN } from './itemlook.js';
 import { TOOL_IDS } from './tools.js';
+import './text/wswitch.js';   // (WEAPON-SWITCH: the pill's key hint)
 
 const $ = (s) => document.querySelector(s);
+// WEAPON-SWITCH / POCKET-SET: the weapon pill's strip and the pocket set's dial (their own rules, added once)
+let hudStyled = false;
+function addHudStyle() {
+  if (hudStyled || typeof document === 'undefined') return;
+  hudStyled = true;
+  const st = document.createElement('style');
+  st.textContent = `
+#weapon .strip { display: inline-flex; gap: 3px; align-items: center; padding-inline-end: 6px; margin-inline-end: 2px; border-inline-end: 1px solid rgba(255,255,255,0.25); }
+#weapon .strip i { font-style: normal; font-size: 13px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; opacity: 0.45; }
+#weapon .strip i svg { width: 14px; height: 14px; }
+#weapon .strip i.on { opacity: 1; background: rgba(255, 210, 58, 0.25); box-shadow: 0 0 0 1px #ffd23a; }
+#weapon .strip i.nx { opacity: 0.8; box-shadow: 0 0 0 1px rgba(255,255,255,0.55); }
+#weapon .alt { background: linear-gradient(90deg, rgba(255,210,58,0.35) calc(var(--hold, 0) * 100%), transparent 0); border-radius: 4px; padding: 0 3px; }
+#weapon .meter { display: inline-flex; align-items: center; gap: 4px; }
+#weapon .meter svg { display: block; }
+#weapon .meter .face { stroke: rgba(240, 230, 200, 0.35); }
+#weapon .meter .hot { stroke: rgba(255, 120, 70, 0.55); }
+#weapon .meter .ndl { stroke: #ff5a3a; }
+#weapon .meter circle { fill: #ffe8a0; }
+#weapon .meter.lit .face { stroke: rgba(255, 232, 160, 0.95); }
+#weapon .meter b { font-size: 12px; font-weight: 800; color: #ffe8a0; min-width: 4ch; }`;
+  document.head.appendChild(st);
+}
 
 // the Holomap's regions and planets (CONNECT, VP-9)
 const MODE_COLOR = { ferry: '#5ab0ff', glider: '#ffd860', shuttle: '#ff9ad0', ship: '#ffffff' };
@@ -70,6 +94,7 @@ export class HUD {
     const cl = $('#holomap .close'); cl.textContent = t('map_close_btn'); cl.title = `${keyLabel(keyFor('map'))} / ${keyLabel(keyFor('pause'))}`;
     const lg = $('#holomap .legend'); if (lg) lg.innerHTML = `<span class="lk star">★</span>${t('map_key_goal')} <span class="lk dia">◆</span>${t('map_key_travel')} <span class="lk door">▮</span>${t('map_key_door')}`;
     this._hintTxt = null;
+    this._alt = null; this._mTxt = null; this._strip = null;   // (WEAPON-SWITCH: the pill's key hint and names, in the new language / keys)
   }
 
   show(on) { this.el.classList.toggle('hidden', !on); }
@@ -127,10 +152,20 @@ export class HUD {
     let ae = el.querySelector('.ammo');
     if (!ae) { ae = document.createElement('span'); ae.className = 'ammo'; ae.style.cssText = 'font-weight:800;color:#ffe35a;font-size:13px;min-width:1ch'; el.querySelector('.name').after(ae); }
     if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
-    // the swap key and the last weapon: while the pill shows a change, not through a whole fight
-    const alt = (this.weaponShowT || 0) > 0 && h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
-    const altTxt = alt ? `${this.key('swap')}: ${t('wp_' + alt)}` : '';   // (UI-PASS: the swap key as in use: LB on a pad, ⇄ on touch)
+    // WEAPON-SWITCH: the swap key and what it gives next ("R ▸ Sword"; held: "R ▸ Magic Ball"), and the hold that goes
+    // back to the ball when that is not the next one anyway; in the key in use (LB on a pad, ⇄ on touch, a rebound key
+    // by its name). While the pill shows (a change, a fight, the key held, a tool that reads out), never through a
+    // whole walk. The strip: what he owns, in the cycle's order, the one in hand lit (a change, or the key held).
+    const held = this.swapHeld || 0, nx = c.nextOf(w), K = this.key('swap');
+    const showing = (this.weaponShowT || 0) > 0 || held > 0;
+    let altTxt = '';
+    if (nx && (showing || c.busy || g.targeting?.lock)) {
+      if (held > 0 && w !== 'ball') altTxt = t('ws_next', { k: K, w: t('wp_ball') });
+      else { altTxt = t('ws_next', { k: K, w: this.wpName(h, nx) }); if (w !== 'ball' && nx !== 'ball' && c.has('ball')) altTxt += ' · ' + t('ws_hold', { k: K, w: t('wp_ball') }); }
+    }
     if (this._alt !== altTxt) { this._alt = altTxt; el.querySelector('.alt').textContent = altTxt; }
+    this.weaponStrip(el, h, showing && !!nx);
+    if (el.style.getPropertyValue('--hold') !== (held > 0 ? held.toFixed(2) : '')) el.style.setProperty('--hold', held > 0 ? held.toFixed(2) : '');
     const r = el.querySelector('.ready');
     const ballOut = h.hasBall && !g.ball.ready;
     r.classList.toggle('out', w === 'ball' && ballOut);
@@ -143,8 +178,45 @@ export class HUD {
     r.style.display = w === 'ball' || w === 'pulse' || shoot || tool ? '' : 'none';
     this.weaponShowT = Math.max(0, (this.weaponShowT || 0) - 1 / 60);
     const engaged = c.busy || g.targeting?.lock || g.combat > 0.3;
-    el.classList.toggle('show', this.weaponShowT > 0 || !!engaged);
+    // POCKET-SET: the set held out reads out on the pill: its dial (nearness of a hidden hum), lit on each pip
+    const reads = this.pocketMeter(el, w === 'pocketset' ? g.gadgets?.tools : null);
+    el.classList.toggle('show', this.weaponShowT > 0 || !!engaged || held > 0 || reads);
     if (this.flashT > 0) { this.flashT -= 1 / 60; if (this.flashT <= 0) el.classList.remove('flash'); }
+  }
+  // WEAPON-SWITCH: the strip of what he owns in the cycle's order (combat.js CYCLE), the one in hand lit, the next one
+  // ringed; rebuilt only when what he owns or holds changes
+  weaponStrip(el, h, on) {
+    let st = el.querySelector('.strip');
+    if (!st) { addHudStyle(); st = document.createElement('span'); st.className = 'strip'; el.prepend(st); }
+    const c = h.combat, list = c.cycleList(), w = c.weapon, nx = c.nextOf(w), key = on ? list.join() + '|' + w + '|' + h.magicLevel : '';
+    if (this._strip === key) return;
+    this._strip = key;
+    st.style.display = on ? '' : 'none';
+    if (!on) return;
+    st.innerHTML = list.map((x) => `<i class="${x === w ? 'on' : x === nx ? 'nx' : ''}" title="${this.wpName(h, x)}">${this.wpIcon(h, x)}</i>`).join('');
+  }
+  // POCKET-SET: the pocket set's dial on the weapon pill while it is held out: the needle swings from rest (nothing
+  // that hums within POCKET.sense) to the far end (right on top of it), the face lights with each pip of the whistle —
+  // the same reading as the sound, for a player with the sound off. Returns whether it shows.
+  pocketMeter(el, T) {
+    let m = el.querySelector('.meter');
+    if (!T) { if (m && this._mOn) { this._mOn = false; m.style.display = 'none'; } return false; }
+    if (!m) {
+      addHudStyle();
+      m = document.createElement('span'); m.className = 'meter';
+      m.innerHTML = '<svg viewBox="0 0 48 28" width="48" height="28" aria-hidden="true"><path class="face" d="M4 25 A20 20 0 0 1 44 25" fill="none" stroke-width="5"/><path class="hot" d="M32.5 6.9 A20 20 0 0 1 44 25" fill="none" stroke-width="5"/><line class="ndl" x1="24" y1="25" x2="24" y2="8" stroke-width="2.4" stroke-linecap="round"/><circle cx="24" cy="25" r="2.6"/></svg><b></b>';
+      el.querySelector('.ready').after(m);
+    }
+    if (!this._mOn) { this._mOn = true; m.style.display = ''; }
+    const s = T.sense, k = s ? s.k : 0, g = this.game;
+    // (at rest it trembles a little, as the set's own needle does: listening, nothing yet)
+    const deg = Math.round(-70 + 140 * k + (s ? 0 : Math.sin((g.time || 0) * 7) * 3));
+    if (this._mDeg !== deg) { this._mDeg = deg; m.querySelector('.ndl').setAttribute('transform', `rotate(${deg} 24 25)`); }
+    const lit = !!s && (g.time || 0) - (T.pipAt ?? -9) < 0.12;
+    if (this._mLit !== lit) { this._mLit = lit; m.classList.toggle('lit', lit); }
+    const txt = s ? (s.d < 1.2 ? t('ps_here') : `${Math.max(1, Math.round(s.d))} m`) : t('ps_quiet');
+    if (this._mTxt !== txt) { this._mTxt = txt; m.lastChild.textContent = txt; m.setAttribute('aria-label', t('wp_pocketset') + ': ' + txt); }
+    return true;
   }
   // Baldino's hop-pack (jetpack.js): a slim charge gauge beside Twinsen while it is in use or refilling (blue; amber
   // when low; red and shaking when empty; a cross when it can't fire here). Out of play it steps aside (busy).
@@ -210,6 +282,7 @@ export class HUD {
         if (!dir) { const e8 = (Math.round(a / (Math.PI / 4)) + 8) % 8; dir = Object.keys(ANG).find((k) => !SMALL.has(k) && ANG[k] === e8 * 2); }
         if (h.combat.has(DIRS[dir]) && this.wselPick !== DIRS[dir]) { this.wselPick = DIRS[dir]; this.game.audio.play('blip'); }
       }
+      if (input.pressed?.('swap')) { const n = h.combat.nextOf(this.wselPick); if (n) { this.wselPick = n; this.game.audio.play('blip'); } }   // (WEAPON-SWITCH: the swap key steps it, in the cycle's order)
       if (input.wheelSteps) { const own = h.combat.owned(); const i = own.indexOf(this.wselPick); this.wselPick = own[(i + (input.wheelSteps > 0 ? 1 : own.length - 1)) % own.length]; }
       for (const s of el.querySelectorAll('.slot')) s.classList.toggle('sel', DIRS[s.dataset.dir] === this.wselPick);
       return null;

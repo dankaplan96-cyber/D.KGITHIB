@@ -24,7 +24,7 @@ export const HE_I18N = {
   music: 'מוזיקה', sfx: 'אפקטים', voice_vol: 'קולות',
   rebind_title: 'הגדרת מקשים', rebind_hint: 'בחרו פעולה ולחצו על מקש. Esc מבטל.', rebind_press: 'לחצו על מקש…', rebind_reset: 'חזרה לברירת המחדל',
   kb_up: 'קדימה', kb_down: 'אחורה', kb_left: 'שמאלה', kb_right: 'ימינה', kb_action: 'פעולה', kb_interact: 'דיבור / שימוש', kb_ball: 'זריקת הכדור / החזרתו',
-  kb_attack: 'התקפה', kb_dodge: 'התחמקות', kb_focus: 'נעילה על מטרה', kb_tswitch: 'החלפת מטרה', kb_swap: 'החלפת נשק', kb_weapons: 'גלגל הנשקים',
+  kb_attack: 'התקפה', kb_dodge: 'התחמקות', kb_focus: 'נעילה על מטרה', kb_tswitch: 'החלפת מטרה', kb_swap: 'הנשק הבא', kb_weapons: 'גלגל הנשקים',
   kb_view: 'מרחק מצלמה', kb_recenter: 'מרכוז המצלמה', kb_map: 'הולומפה', kb_inventory: 'חפצים', kb_pause: 'הפסקה',
   auto_talk: 'התקדמות הדיאלוג', at_on: 'אוטומטית', at_off: 'במקש', text_speed: 'מהירות הטקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
   text_size: 'גודל הכתוביות', tsz_normal: 'רגיל', tsz_large: 'גדול', tsz_xl: 'גדול מאוד',

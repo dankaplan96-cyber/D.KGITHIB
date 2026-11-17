@@ -26,6 +26,7 @@
 import { t } from './i18n.js';
 import { keyFor, keyLabel } from '../engine/input.js';
 import './text/opening.js';
+import './text/wswitch.js';   // (WEAPON-SWITCH / POCKET-SET: the two tips anywhere in the game)
 
 const SHOW_DELAY = 0.6;     // s eligible before the tip shows (a lesson met in passing, or done at once, never flashes up)
 const MIN_SHOW = 1.2;       // s a shown tip stays up through a flicker of its eligibility (not past its completion)
@@ -36,9 +37,14 @@ const ADVANCES = 3;         // manual dialogue advances before the box's key hin
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // every lesson, in the order a tip is offered when several apply (one at a time). talk/use/advance/map have no panel of
 // their own: the game's own prompt ("E Talk"), the dialogue box's key hint and the toast at the cupboard teach them
-export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map'];
+// WEAPON-SWITCH / POCKET-SET (17.11): two tips that apply anywhere in the game, not only chapter 1's opening (ANY):
+// 'pset' while Arthur's hidden radio valve is to find in the house (how to hold the set out, then how to read it and put
+// it away; done when it is found), 'wswitch' once he comes to own a third weapon in play (the swap key's tap and hold,
+// the wheel; done the first time he uses the swap key or the wheel with a choice to make)
+export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map', 'pset', 'wswitch'];
+const ANY = new Set(['pset', 'wswitch']);
 const YARD = ['zoe', 'inv', 'tap', 'barrels', 'pipe'];   // (OPENING-TUT-2: the yard's steps, story/openingsteps.js)
-const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge']);
+const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'pset', 'wswitch']);
 
 let styled = false;
 function addStyle() {
@@ -75,6 +81,7 @@ export class Tutorial {
     this.cur = null; this.curT = 0; this.moved = 0; this.advances = 0;
     this.lastBeh = null; this.air = false; this.mp0 = null; this.losT = 0; this.los = false;
     this.html = null; this.stepId = null; this.okT = 0; this.okHtml = null;
+    this.ownN = null; this.wsArmed = false;   // (WEAPON-SWITCH: how many weapons he owned last frame; a third one arrived in play)
   }
   snapshot() { return { v: 1, done: [...this.done], gone: [...this.gone] }; }
   // a save's lessons; a save from before the tips (no `tut`): all of them done, nothing pops up for a player under way
@@ -139,11 +146,14 @@ export class Tutorial {
       case 'kick': { const W = g.world.well; return at === 'town' && !!W && !!f.pr_lidStuck && !f.pr_lidOpen && Math.hypot(h.pos.x - W.x, h.pos.z - W.z) < 8; }
       // the first creature that comes for him, in the well's cave: the dodge (the ball he knows)
       case 'dodge': return at === 'cave' && g.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup') && h.distTo(e) < 7);
+      // (anywhere) Arthur's valve still to find, he in the house with the set (as himself), nothing on him
+      case 'pset': return !!f.e2_hide && !f.e2_tube && !!h.arms?.pocketset && g.room?.id === 'house' && h.body !== 'zoe' && h.body !== 'worker' && !g.story?.cur?.steps?.panelStep?.();
+      case 'wswitch': return this.wsArmed && (h.combat?.cycleList?.().length || 0) > 2;
     }
     return false;
   }
   // an optional tip's time on screen in all before it is let go (none: it stays while it applies)
-  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10, dodge: 10 }[id]; }
+  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10, dodge: 10, wswitch: 14 }[id]; }
   text(id) {
     const g = this.g, d = this.dev(), K = (a) => this.key(a);
     switch (id) {
@@ -167,6 +177,8 @@ export class Tutorial {
       case 'normal': return t('tut_normal', { k: this.mode(1) });
       case 'kick': return g.hero.behaviour === 'aggressive' ? t('tut_kick', { k: K('interact') }) : t('tut_aggressive', { k: this.mode(3) });
       case 'dodge': return t('tut_dodge', { k: K('dodge') });
+      case 'pset': return g.hero.combat?.weapon === 'pocketset' ? t('tut_pset_find', { e: K('interact'), k: K('swap') }) : t('tut_pset_hold', { k: K('swap') });
+      case 'wswitch': return d === 'touch' ? t('tut_wswitch_touch', { k: K('swap') }) : t('tut_wswitch', { k: K('swap'), w: K('weapons') });
     }
     return '';
   }
@@ -189,8 +201,9 @@ export class Tutorial {
     if (this.stepId) { this.stepId = null; this.hide(); }
     // the first lesson that applies, not done and not let go
     let want = null;
-    if (at && !g.trans) for (const id of ORDER) {
+    if (!g.trans) for (const id of ORDER) {
       if (!PANEL.has(id) || this.done.has(id) || this.gone.has(id)) continue;
+      if (!at && !ANY.has(id)) continue;
       if (!this.when(id, at)) { this.eligT[id] = 0; continue; }
       this.eligT[id] = (this.eligT[id] || 0) + dt;
       want = id; break;
@@ -244,6 +257,13 @@ export class Tutorial {
     if (g.flags.pr_lidOpen) this.finish('kick');
     if (this.mp0 != null && h.mp > this.mp0) this.finish('magic');
     this.mp0 = h.mp;
+    // WEAPON-SWITCH: a third weapon owned in play (not one a load brought) arms its tip; the swap key or the wheel with
+    // a choice to make completes it. POCKET-SET: the valve found completes its tip
+    const n = h.combat?.cycleList?.().length || 0;
+    if (this.ownN != null && n > this.ownN && n > 2) this.wsArmed = true;
+    this.ownN = n;
+    if (n > 1 && (I.pressed('swap') || I.pressed('weapons'))) this.finish('wswitch');
+    if (g.flags?.e2_tube) this.finish('pset');
   }
 
   // ---------------------------------------------------------------- the panel

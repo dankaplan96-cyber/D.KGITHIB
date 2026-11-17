@@ -35,7 +35,7 @@ export const STR = {
     hud: 'HUD', hud_lba: 'Minimal (LBA2)', hud_modern: 'Always on',
     music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',
     rebind_title: 'Key Bindings', rebind_hint: 'Click an action, then press a key. Esc cancels.', rebind_press: 'Press a key…', rebind_reset: 'Reset to Defaults',
-    kb_up: 'Forward', kb_down: 'Back', kb_left: 'Left', kb_right: 'Right', kb_action: 'Action', kb_interact: 'Talk / Use', kb_ball: 'Throw Ball / Recall', kb_attack: 'Attack', kb_dodge: 'Dodge', kb_focus: 'Focus Target', kb_tswitch: 'Switch Target', kb_swap: 'Swap Weapon', kb_weapons: 'Weapon Wheel', kb_view: 'Camera Distance', kb_recenter: 'Recenter Camera', kb_map: 'Holomap', kb_inventory: 'Inventory', kb_pause: 'Pause',
+    kb_up: 'Forward', kb_down: 'Back', kb_left: 'Left', kb_right: 'Right', kb_action: 'Action', kb_interact: 'Talk / Use', kb_ball: 'Throw Ball / Recall', kb_attack: 'Attack', kb_dodge: 'Dodge', kb_focus: 'Focus Target', kb_tswitch: 'Switch Target', kb_swap: 'Next Weapon', kb_weapons: 'Weapon Wheel', kb_view: 'Camera Distance', kb_recenter: 'Recenter Camera', kb_map: 'Holomap', kb_inventory: 'Inventory', kb_pause: 'Pause',
     auto_talk: 'Dialogue Advances', at_on: 'Automatically', at_off: 'On a Key', text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
     text_size: 'Subtitle Size', tsz_normal: 'Normal', tsz_large: 'Large', tsz_xl: 'Extra large',
     shake_set: 'Camera Shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
@@ -89,7 +89,7 @@ export const setLang = (l) => { lang = l; };
 export const getLang = () => lang;
 export function t(key, vars) {
   let s = STR[lang][key] ?? STR.en[key] ?? key;
-  if (vars && typeof s === 'string') for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, v);
+  if (vars && typeof s === 'string') for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(v);   // (every occurrence: WEAPON-SWITCH's tips name a key twice)
   return s;
 }
 
