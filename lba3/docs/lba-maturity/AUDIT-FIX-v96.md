@@ -143,7 +143,9 @@ expansion's network chapter later must bring those steps with it.
 | `chapter4` | — | **PASS 59/59** | two earlier runs ended without a verdict (a navigation aborted; the page crashed, the machine out of memory with another worker's browsers): no check failed in them |
 | `hebrew` | — | **PASS 17/17** | |
 | `dialogue-check` (Static) | — | **PASS** (4,866 of 4,866 Hebrew keys) | |
-| `opening-tutorial`, `townlife`, `place-scan` | — | OPENING_TOWN_PLACE | |
+| `opening-tutorial` | — | **Blocked** (no verdict in 3 runs: "Target crashed") | every check reached passed (13 of 45 in the longest run); the audit's v96 run: 45/45 |
+| `townlife` | — | **Blocked** (no verdict in 2 runs: the page crashed both times at the same reload, a Continue) | 28 of 64 passed before it, none failed; the audit's v96 run: 64/64 |
+| `place-scan` | — | **Blocked** (no verdict in 3 runs) | 3 checks passed in the longest run, none failed |
 
 Not run: `camclear` (asked for after a P57 change; none was made), the rest of the suite. Crashes: the machine ran
 three to four other browsers at once from about 13:00 UTC; several of this branch's runs ended with "Target crashed"
