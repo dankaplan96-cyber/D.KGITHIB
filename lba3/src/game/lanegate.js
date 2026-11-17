@@ -185,6 +185,7 @@ export function buildLaneGate(game) {
   k.add(atlasPlane(0.62, 0.155, 512, 0, 1024, 128), atlas, sp.x - 0.045, ytop + 1.72, sp.z, -Math.PI / 2);
   PH.add({ type: 'cyl', x: sp.x, z: sp.z, r: 0.08, top: ytop + 1.9, noStand: true, seeThrough: true });
   k.flush();
+  W.clearSmallUnder?.(root);   // (OVERLAP-SWEEP: 17 grass tufts grew through the lane's stones: the scatter ran before them)
   // the bundles the lane's people bring (shown while they wait)
   const bundles = new THREE.Group(); bundles.visible = false; root.add(bundles);
   { const B = new Batch(bundles); for (const [dx, dz, a] of [[0.1, -0.9, 0.4], [0.35, -0.2, 2.0], [0.0, 0.6, -0.7], [0.4, 1.15, 1.1]]) addBundle(B, LANDING.x + dx, ytop, LANDING.z + dz, a); B.build(); }

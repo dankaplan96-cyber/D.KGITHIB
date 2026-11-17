@@ -1007,6 +1007,43 @@ export function* buildWorldSteps(parentScene) {
   };
   W.setSmallView = (on) => { SMALL_VIEW.on = !!on; for (const P of W.smallPools) { if (P.im) P.im.frustumCulled = !SMALL_VIEW.on; P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.mask = t.userData.view.all; } fillPools(); };
   { const before = parentScene.onBeforeRender; parentScene.onBeforeRender = function (r, sc, camera, ...a) { before.call(this, r, sc, camera, ...a); W.viewPools(camera); }; }
+  // OVERLAP-SWEEP: the grass and wild flowers a later builder's paving, plates or kerbs stand over (the scatter ran before it
+  // was built): hidden once, as the scatter hides one (scaled to 1e-4), where an upward face of root's static meshes lies
+  // over the tuft's foot (up to 0.5 m: a slab, a plate, a kerb, a step) or less than 5 cm under it. Placement time only
+  // (a 1 m grid of root's upward faces).
+  W.clearSmallUnder = (root) => {
+    root.updateMatrixWorld(true);
+    const cells = new Map(), v = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), nn = new THREE.Vector3();
+    root.traverse((o) => {
+      if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry?.attributes.position) return;
+      const m = [o.material].flat()[0]; if (!m || m.transparent || m.visible === false) return;
+      const g = o.geometry, p = g.attributes.position, ix = g.index, n = ix ? ix.count : p.count;
+      for (let t = 0; t + 2 < n; t += 3) {
+        for (let k = 0; k < 3; k++) v[k].fromBufferAttribute(p, ix ? ix.getX(t + k) : t + k).applyMatrix4(o.matrixWorld);
+        nn.crossVectors(e1.subVectors(v[1], v[0]), e2.subVectors(v[2], v[0])); const L = nn.length(); if (L < 1e-9 || nn.y / L < 0.7) continue;
+        const T = [v[0].x, v[0].y, v[0].z, v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z];
+        for (let i = Math.floor(Math.min(T[0], T[3], T[6])); i <= Math.floor(Math.max(T[0], T[3], T[6])); i++) for (let j = Math.floor(Math.min(T[2], T[5], T[8])); j <= Math.floor(Math.max(T[2], T[5], T[8])); j++) { const key = i * 100003 + j; let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(T); }
+      }
+    });
+    if (!cells.size) return 0;
+    const under = (x, y, z) => { for (const T of cells.get(Math.floor(x) * 100003 + Math.floor(z)) || []) {
+      const d = (T[5] - T[8]) * (T[0] - T[6]) + (T[6] - T[3]) * (T[2] - T[8]); if (Math.abs(d) < 1e-12) continue;
+      const a = ((T[5] - T[8]) * (x - T[6]) + (T[6] - T[3]) * (z - T[8])) / d, b = ((T[8] - T[2]) * (x - T[6]) + (T[0] - T[6]) * (z - T[8])) / d, c = 1 - a - b;
+      if (a < 0 || b < 0 || c < 0) continue;
+      const ty = a * T[1] + b * T[4] + c * T[7]; if (ty > y - 0.05 && ty < y + 0.5) return true; } return false; };   // (a plate, a slab, a kerb: not a roof high over it)
+    const M = new THREE.Matrix4(), P0 = new THREE.Vector3(), S = new THREE.Vector3(1e-4, 1e-4, 1e-4); let hid = 0;
+    for (const P of W.smallPools) for (const t of P.tiles) {
+      let ch = false;
+      for (let i = 0; i < t.count; i++) {
+        t.getMatrixAt(i, M); const e = M.elements; if (e[0] * e[0] + e[1] * e[1] + e[2] * e[2] < 1e-4) continue;
+        P0.setFromMatrixPosition(M);
+        if (under(P0.x, P0.y, P0.z)) { M.scale(S); t.setMatrixAt(i, M); ch = true; hid++; }
+      }
+      if (ch) { t.instanceMatrix.needsUpdate = true; P.dirty = true; }
+    }
+    if (hid && W.smallPools.some((P) => P.im)) fillPools();   // (before the pools exist, their first fill takes the change)
+    return hid;
+  };
   // (WORLD-ART-6: LBA2's Citadel trees have broad, chunky crowns: round 3.2 m wide against our 2.7, tall 3.0 against 2.2,
   //  measured from the original's models; the crown (and trunk) widened across, the height kept)
   const CROWN = { round: 1.18, tall: 1.3, fruit: 1.15 };
