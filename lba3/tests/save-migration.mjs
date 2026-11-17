@@ -223,13 +223,13 @@ const k0 = await view();
 const k5 = await get(slotK(5)), kb = await get('lba3_slot_5_backup_v5');
 check('a v5 council save (before the vote) loads on the expanded campaign: chapter 9, position 8, the v5 kept untouched beside it', k0.key === 'council' && k0.chapter === 8 && k0.exp === 1 && !k0.base && k0.n === 9 && JSON.stringify(kb) === JSON.stringify(council5) && k5.v === 5, { k0: [k0.key, k0.chapter, k0.exp, k0.base, k0.state], backup: !!kb });
 check('…the next chapter in its campaign is chapter 10, Borrowed Time (OREN-GUARDIAN B)', k0.next === 'throttle', k0.next);
-// the vote (the council chamber's second hearing starts as he stands in it); chapter 9 goes on to the stop (tests/exp-throttle.mjs plays chapter 9's end into chapter 10)
+// the vote (the council chamber's second hearing starts as he stands in it), then the next chapter
 await settle(240);
 const kCard = await card();
 const k1 = await view();
 const auto = await get('lba3_save_v1');
 console.log('after the vote:', JSON.stringify({ k1, kCard }));
-check('the vote: chapter 9 goes on (CAMPAIGN-7: the stop at the platform is ahead), still the expanded campaign; the autosave is format 6 in it', k1.key === 'council' && k1.chapter === 8 && k1.exp === 1 && auto?.v === 6 && auto.flags.chapterKey === 'council' && auto.flags.exp === 1 && auto.flags.c9_vote === true, { k1: [k1.key, k1.chapter, k1.room, k1.state], kCard, auto: auto && [auto.v, auto.flags.chapterKey] });
+check('the vote (this hand-made save has no CAMPAIGN-7 thread: the chapter ends at the vote): the story goes on to chapter 10, Borrowed Time, its card shown; the autosave is format 6 in it (tests/exp-throttle.mjs plays the thread\'s end, the isolator on Kell\'s feed, into chapter 10)', k1.key === 'throttle' && k1.chapter === 9 && k1.exp === 1 && /Chapter 10/.test(kCard) && auto?.v === 6 && auto.flags.chapterKey === 'throttle' && auto.flags.exp === 1, { k1: [k1.key, k1.chapter, k1.room, k1.state], kCard, auto: auto && [auto.v, auto.flags.chapterKey] });
 
 // ---------------------------------------------------------------- the network save (the base game); no reward twice
 await title();
