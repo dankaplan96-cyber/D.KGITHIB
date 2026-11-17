@@ -187,7 +187,7 @@ const cost = await ev(() => {
   return { on, off };
 });
 console.log('at the shelter (branch shown / hidden):', JSON.stringify(cost));
-check('the cost at the shelter: at most 30 more draw calls (main + shadow) with the branch and the B-7 shown', (cost.on.main + cost.on.shadow) - (cost.off.main + cost.off.shadow) <= 30, cost);
+check('the cost at the shelter: at most 20 more draw calls (main + shadow) with the branch and the B-7 shown', (cost.on.main + cost.on.shadow) - (cost.off.main + cost.off.shadow) <= 20, cost);
 
 // ---------------------------------------------------------------- the base campaign never builds it
 await ev(() => { localStorage.setItem('lba3_save_v1', JSON.stringify({ v: 5, at: Date.now(), room: null, hero: { x: -36, z: -10, hp: 10, mp: 5, magicLevel: 3, clovers: 2, coins: 20, hasBall: true, behaviour: 'normal' }, flags: { prologueDone: true, intro: true, c9_vote: true, chapter: 9, chapterKey: 'network', c10_started: true }, killed: [], collected: [], searched: [], crates: [], loot: [] })); });

@@ -33,6 +33,7 @@ import { buildOrenPresence, buildGovernor, GOV_TOP } from '../orenpresence.js';
 import { shelterFrame } from './shelters.js';
 import { playJourney } from '../travelfilm.js';
 import { cyl, torus, MAT } from '../props.js';
+import { compose } from '../kit.js';
 import * as THREE from 'three';
 import '../text/throttle.js';
 
@@ -98,51 +99,43 @@ export class Throttle extends ChapterBase {
 
   // ---------------------------------------------------------------- props: the fortress shelter's branch and the B-7
   // Built once, the first time a save in the expanded campaign has reached this chapter (a base-game player never gets
-  // it): about a dozen small meshes on the kit's shared materials, a thin collider round the riser.
+  // it): 12 small merged meshes on the kit's shared materials (3 cast shadows), a thin collider round the riser.
   ensureBranch() {
     const g = this.game, root = g.world?.root;
     if (this.branch || !root || !this.inMine()) return this.branch;
     const P = FORT_F.at(RISER.f, RISER.s), gy = g.physics.groundAt(P.x, P.z);
     const grp = new THREE.Group(); grp.name = 'th_branch'; grp.position.set(P.x, gy, P.z); grp.rotation.y = FORT.ry; root.add(grp);
     const cu = MAT.copper(), ir = MAT.iron(), br = MAT.brass(), red = MAT.paint('#b8302a', 0.5);
-    const add = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0, parent = grp) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.castShadow = true; parent.add(m); return m; };
-    // the riser: up from a foot to the flange gap, on from it to an elbow into the wall
-    add(cyl(0.06, 0.06, 0.85, 10), cu, 0, 0.425, 0);
-    add(cyl(0.06, 0.06, 1.15, 10), cu, 0, 1.725, 0);
-    add(cyl(0.06, 0.06, 0.32, 10), cu, 0, 2.3, -0.16, Math.PI / 2);
-    for (const y of [0.85, 1.15]) add(cyl(0.13, 0.13, 0.04, 14), ir, 0, y, 0);
-    const joint = add(cyl(0.09, 0.09, 0.14, 10), MAT.paint('#6a5a48', 0.8), 0, 1.75, 0);
+    // (each part's pieces are merged per material: 12 meshes in all, 3 casting shadows; EXP-1 measured 47 draws before)
+    const mesh = (parent, mat, parts, shadow = false, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(compose(parts), mat); m.position.set(x, y, z); m.castShadow = shadow; parent.add(m); return m; };
+    // the riser (up from a foot to the flange gap, on to an elbow into the wall) and the washroom spout off its side
+    mesh(grp, cu, [[cyl(0.06, 0.06, 0.85, 10), 0, 0.425, 0], [cyl(0.06, 0.06, 1.15, 10), 0, 1.725, 0], [cyl(0.06, 0.06, 0.32, 10), 0, 2.3, -0.16, Math.PI / 2],
+      [cyl(0.035, 0.035, 0.42, 8), 0.21, 0.72, 0, 0, 0, Math.PI / 2], [cyl(0.035, 0.03, 0.12, 8), 0.42, 0.66, 0]], true);
+    // iron: the flanges, the wheel's stem, the old joint, the wire box's grille
+    mesh(grp, ir, [[cyl(0.13, 0.13, 0.04, 14), 0, 0.85, 0], [cyl(0.13, 0.13, 0.04, 14), 0, 1.15, 0], [cyl(0.025, 0.025, 0.12, 6), 0, 0.45, 0.06, Math.PI / 2],
+      [cyl(0.09, 0.09, 0.14, 10), 0, 1.75, 0], [new THREE.BoxGeometry(0.18, 0.12, 0.012), -0.55, 1.66, 0.035]]);
+    // the bucket under the spout; the project's wire box on the headwall (Vesk's voice comes out of it)
+    mesh(grp, MAT.paint('#8a9aa8', 0.5), [[cyl(0.16, 0.13, 0.3, 14, true), 0.42, 0.15, 0]], true);
+    mesh(grp, MAT.paint('#5a6a6e', 0.55), [[new THREE.BoxGeometry(0.26, 0.32, 0.1), -0.55, 1.6, -0.02]]);
+    // the gauge on the riser: its face, the green arc, the needle
+    mesh(grp, MAT.flat('#f0ead8', 0.6), [[cyl(0.085, 0.085, 0.03, 16), 0, 1.42, 0.07, Math.PI / 2]]);
+    mesh(grp, MAT.flat('#3aa04a', 0.6), [[torus(0.06, 0.008, 4, 10, Math.PI * 0.3), 0, 0, 0, 0, 0, Math.PI * 0.35]], false, 0, 1.42, 0.088);
+    const needle = new THREE.Group(); needle.position.set(0, 1.42, 0.092); grp.add(needle);
+    mesh(needle, MAT.flat('#2a2a2a', 0.6), [[cyl(0.006, 0.004, 0.065, 4), 0, 0.03, 0]]);
     // the feed wheel low on the riser, facing out
     const wheel = new THREE.Group(); wheel.position.set(0, 0.45, 0.12); grp.add(wheel);
-    add(torus(0.13, 0.016, 5, 16), red, 0, 0, 0, 0, 0, 0, wheel);
-    add(cyl(0.012, 0.012, 0.26, 5), red, 0, 0, 0, 0, 0, Math.PI / 2, wheel);
-    add(cyl(0.012, 0.012, 0.26, 5), red, 0, 0, 0, 0, 0, 0, wheel);
-    add(cyl(0.025, 0.025, 0.12, 6), ir, 0, 0.45, 0.06, Math.PI / 2);
-    // the gauge on the riser: its face, the green arc, the needle
-    const gauge = new THREE.Group(); gauge.position.set(0, 1.42, 0.07); grp.add(gauge);
-    add(cyl(0.085, 0.085, 0.03, 16), MAT.flat('#f0ead8', 0.6), 0, 0, 0, Math.PI / 2, 0, 0, gauge);
-    add(torus(0.06, 0.008, 4, 10, Math.PI * 0.3), MAT.flat('#3aa04a', 0.6), 0, 0, 0.018, 0, 0, Math.PI * 0.35, gauge);
-    const needle = new THREE.Group(); needle.position.z = 0.022; gauge.add(needle);
-    add(cyl(0.006, 0.004, 0.065, 4), MAT.flat('#2a2a2a', 0.6), 0, 0.03, 0, 0, 0, 0, needle);
-    // the washroom spout off the riser's side, and its bucket; the stream between them
-    add(cyl(0.035, 0.035, 0.42, 8), cu, 0.21, 0.72, 0, 0, 0, Math.PI / 2);
-    add(cyl(0.035, 0.03, 0.12, 8), cu, 0.42, 0.66, 0);
-    add(cyl(0.16, 0.13, 0.3, 14, true), MAT.paint('#8a9aa8', 0.5), 0.42, 0.15, 0);
-    const stream = add(cyl(0.016, 0.02, 0.36, 6), MAT.glass('#cfefff', 0.6), 0.42, 0.42, 0); stream.castShadow = false;
-    // the project's wire box on the headwall beside the riser (Vesk's voice comes out of it)
-    add(new THREE.BoxGeometry(0.26, 0.32, 0.1), MAT.paint('#5a6a6e', 0.55), -0.55, 1.6, -0.02);
-    add(new THREE.BoxGeometry(0.18, 0.12, 0.012), MAT.flat('#1e2224', 0.7), -0.55, 1.66, 0.035);
-    // the B-7: a brass body between the flanges, its band knob in front, the red hand lever on top
+    mesh(wheel, red, [[torus(0.13, 0.016, 5, 16)], [cyl(0.012, 0.012, 0.26, 5), 0, 0, 0, 0, 0, Math.PI / 2], [cyl(0.012, 0.012, 0.26, 5)]]);
+    // the stream into the bucket
+    const stream = mesh(grp, MAT.glass('#cfefff', 0.6), [[cyl(0.016, 0.02, 0.36, 6)]], false, 0.42, 0.42, 0);
+    // the B-7: a brass body between the flanges, its band knob in front (a pointer on it), the red hand lever on top
     const b7 = new THREE.Group(); b7.position.set(0, 1.0, 0); grp.add(b7);
-    add(cyl(0.11, 0.11, 0.26, 14), br, 0, 0, 0, 0, 0, 0, b7);
-    add(cyl(0.12, 0.12, 0.03, 14), MAT.flat('#d8c8a0', 0.4), 0, 0.06, 0, 0, 0, 0, b7);
+    mesh(b7, br, [[cyl(0.11, 0.11, 0.26, 14)], [cyl(0.12, 0.12, 0.03, 14), 0, 0.06, 0]], true);
     const knob = new THREE.Group(); knob.position.set(0, 0, 0.12); b7.add(knob);
-    add(cyl(0.045, 0.045, 0.05, 10), ir, 0, 0, 0, Math.PI / 2, 0, 0, knob);
-    add(new THREE.BoxGeometry(0.012, 0.05, 0.012), MAT.flat('#f0ead8', 0.5), 0, 0.022, 0.028, 0, 0, 0, knob);
+    mesh(knob, ir, [[cyl(0.045, 0.045, 0.05, 10), 0, 0, 0, Math.PI / 2], [new THREE.BoxGeometry(0.012, 0.05, 0.012), 0, 0.022, 0.028]]);
     const lever = new THREE.Group(); lever.position.set(0, 0.14, 0); b7.add(lever);
-    add(new THREE.BoxGeometry(0.03, 0.03, 0.3), red, 0, 0.02, 0.13, 0, 0, 0, lever);
+    mesh(lever, red, [[new THREE.BoxGeometry(0.03, 0.03, 0.3), 0, 0.02, 0.13]]);
     this.col = g.physics.add({ type: 'cyl', x: P.x, z: P.z, r: 0.16, top: 2.4, noStand: true });
-    this.branch = { grp, joint, wheel, needle, stream, b7, knob, lever, P, gy, need: 0, flow: 0, leverA: 0, sprayT: 0 };
+    this.branch = { grp, wheel, needle, stream, b7, knob, lever, P, gy, need: 0, flow: 0, leverA: 0, sprayT: 0 };
     this.showBranch();
     return this.branch;
   }
