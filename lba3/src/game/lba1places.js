@@ -767,7 +767,7 @@ export function buildLba1Asylum(scene, physics) {
     //  the north wall z 50, down to a step at y 4 between the cell's floor (3) and the corridor's (5))
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, {
       stone: 'cell', lamp: '#ffd9a8', lampI: 15, view: 24, sideGain: 3.6, topCol: '#f2e0c6', sideCol: '#e4e8f0',   // (WORLD-ART-7: warm cream floors, cooler walls; ASYLUM-2: a home now, warm lamps; order 20: LBA1's teal-grey brick, lighter)
-      gridZones: true, overhead: true, footing: { depth: 9, below: 1, rows: [[0, 0.85], [2.2, 0.32], [9, 0]] },   // (order 8: the store's edge, its walls carried down into the dark; ASYLUM-4: lit now, so faded sooner)
+      gridZones: true, overhead: true, overChunk: 64, footing: { depth: 9, below: 1, rows: [[0, 0.85], [2.2, 0.32], [9, 0]] },   // (order 8: the store's edge, its walls carried down into the dark; ASYLUM-4: lit now, so faded sooner)
       fittings: true, capStone: true,   // (ASYLUM-4: LBA1's pipes, hanging lamps and round tables drawn as such, not as cells; posts capped in their stone)
       // (order 20, against LBA1's own bricks: its walls teal-grey brick with brick caps, lighter than its dark
       //  flagstones; its walks and stairs teal grates; its maroon posts open lattice girders; its lattice windows; its

@@ -26,6 +26,26 @@ const helpers = () => ev(() => {
     at(x, y, z, t = 1.5) { const R = G.rooms.asylum, c = R.cell(x, y, z), h = G.hero; h.pos.set(c.x, G.physics.groundAt(c.x, c.z, c.y + 1.5), c.z); h.onGround = true; h.vy = 0; G.doorCool = 2; G.camRig.lba.init = false; for (let i = 0; i < t * 30; i++) G.step(1 / 30); return T.cell(); },
     cell() { const p = G.rooms.asylum.toCell(G.hero.pos.x, G.hero.pos.y, G.hero.pos.z); return [p.x, p.y, p.z].map((v) => +v.toFixed(1)); },
     lids() { const R = G.rooms.asylum; return R.lids.map((l) => ({ name: l.name ?? (l.over ? 'over' : 'zone' + l.zone), active: l.active, f: +l.f.toFixed(2) })); },
+    // (HOSTEL-CUT-2) the drawn cells cut now (R.cutAt, the shader's cut mirrored): those of the room he stands in, and
+    // the others — each with its distance (m) from the line between his chest and the camera; `far`: those of the
+    // others farther than `lim` from it (nothing far from him may go)
+    cutCells(lim = 3.6) {
+      const R = G.rooms.asylum, h = G.hero, cam = G.camera.position, L = R.layout;
+      const E = [h.pos.x, h.pos.y + 1, h.pos.z], V0 = [cam.x - E[0], cam.y - E[1], cam.z - E[2]], vl = Math.hypot(...V0), V = V0.map((v) => v / vl);
+      let own = 0, near = 0, far = 0, maxd = 0, mine = 0;
+      for (const r of R.lidRooms) if (r.active) mine |= 1 << r.bit;
+      for (const [k, runs] of Object.entries(L.cols)) {
+        const [x, z] = k.split(',').map(Number);
+        for (const [y0, len] of runs) for (let y = y0; y < y0 + len; y++) {
+          if (R.cutAt(x, y, z) < 0.5) continue;
+          if (R.roomBitsAt(x, y, z) & mine) { own++; continue; }
+          const c = R.cell(x + 0.5, y + 0.5, z + 0.5), d = [c.x - E[0], c.y - E[1], c.z - E[2]], t = d[0] * V[0] + d[1] * V[1] + d[2] * V[2];
+          const r = Math.hypot(d[0] - t * V[0], d[1] - t * V[1], d[2] - t * V[2]);
+          if (r > lim) far++; else near++; maxd = Math.max(maxd, r);
+        }
+      }
+      return { own, near, far, maxd: +maxd.toFixed(1) };
+    },
     // the share of his body's pixels that the silhouette pass draws (1: he is drawn only as the silhouette)
     ghost() {
       const read = () => { G.renderer.render(); const c = G.renderer.renderer.domElement, o = document.createElement('canvas'); o.width = c.width; o.height = c.height; const x = o.getContext('2d'); x.drawImage(c, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; };
@@ -112,7 +132,11 @@ const cut = await ev(() => {
   T.at(20, 5, 10, 2);   // the room under the slab (the original's grid zone 1): the user's view
   out.room1 = { lids: T.lids(), ghost: T.ghost() };
   const lidMeshes = (name) => R.lidMeshes.filter(({ lids }) => lids.some((i) => (R.lids[i].name ?? 'zone' + R.lids[i].zone) === name));
-  out.room1.hidden = lidMeshes('zone1').every(({ mesh }) => !mesh.visible);
+  // (HOSTEL-CUT-2: zone 1 holds two halls under the upper floor; the one he stands in (the dorm) is cut — its ceiling,
+  //  the upper floor over it —, the hall beside it stands, its ceiling and its camera-side wall)
+  const z1 = R.lids.find((l) => l.zone === 1 && !l.name && !l.over), roomOf = (x, z) => z1.rooms.find((r) => r.cols.has(`${x},${z}`));
+  Object.assign(out.room1, { rooms: z1.rooms.length, dorm: roomOf(20, 10)?.f, hall: roomOf(30, 10)?.f, dormCeil: R.cutAt(15, 13, 10), hallCeil: R.cutAt(30, 13, 10), hallWall: R.cutAt(30, 9, 19) });
+  out.room1.hidden = out.room1.rooms === 2 && out.room1.dorm < 0.02 && out.room1.hall > 0.98 && out.room1.dormCeil > 0.98 && out.room1.hallCeil < 0.02 && out.room1.hallWall < 0.02;
   out.room1.othersShown = lidMeshes('cellB').some(({ mesh }) => mesh.visible && mesh.material.opacity > 0.98) && lidMeshes('zone3').some(({ mesh }) => mesh.visible);
   // the fade: a step in, part way
   T.at(29.5, 5, 24, 2);
@@ -128,11 +152,45 @@ const cut = await ev(() => {
   T.at(8.5, 1, 49.5, 1.5); out.behind = T.ghost();
   return out;
 });
-check("in the room under the slab, its ceiling and near walls are cut away; the cell's and the next room's stay", cut.room1.hidden && cut.room1.othersShown && cut.room1.lids.find((l) => l.name === 'zone1')?.active, cut.room1);
+check("in the room under the slab, its ceiling and near walls are cut away; the cell's, the next room's and the hall beside it under the same zone stay (HOSTEL-CUT-2)", cut.room1.hidden && cut.room1.othersShown && cut.room1.lids.find((l) => l.name === 'zone1')?.active, cut.room1);
 check('in his cell, the beams and near walls over it are cut away, the room left behind has its ceiling back', cut.cellB.hidden && cut.cellB.shownAgain, cut.cellB);
 check('the cut fades (not a jump): two frames in, the lid is part way', cut.midFade > 0.05 && cut.midFade < 0.95, { midFade: cut.midFade });
 checkVisual('no ghost: under the cut-away ceiling he is drawn, not his silhouette (before: 100 % silhouette there)', cut.room1.ghost.r < 0.2 && cut.ghost3.r < 0.2 && cut.cellB.ghost.r < 0.2, { room1: cut.room1.ghost, room3: cut.ghost3, cell: cut.cellB.ghost });
 checkVisual('where a wall really hides him, the silhouette still shows', cut.behind.r > 0.5, cut.behind);
+// ---- 4b. HOSTEL-CUT-2 (the user, 17.11: "it still disappears, and that's not good"): only what hides him goes
+const c2 = await ev(() => {
+  const G = game, R = G.rooms.asylum, out = {};
+  const z1 = R.lids.find((l) => l.zone === 1 && !l.name && !l.over), roomOf = (x, z) => z1.rooms.find((r) => r.cols.has(`${x},${z}`));
+  // in the hall (the other half of the zone): the dorm's ceiling and the loft over it stand; the upper walk's things go
+  // with the hall's ceiling under them
+  T.at(30, 5, 10, 1.5);
+  out.hall = { dorm: roomOf(20, 10)?.f, hall: roomOf(30, 10)?.f, dormCeil: R.cutAt(15, 13, 10), hallCeil: R.cutAt(30, 13, 10), cells: T.cutCells(), ghost: T.ghost() };
+  // the stops of the user's walk where a lid stood between him and the camera: the upper walk by the laundry line (the
+  // user's picture: the walk's beams were cut 14 m away), behind the loft's windowed wall, the kitchen under the roof
+  // of the next room, the ward's corner by Vesk's office
+  for (const [name, x, y, z] of [['laundry', 4, 15, 18], ['loftWall', 11, 15, 12], ['loftWall2', 12, 15, 18], ['kitchen', 24, 5, 24], ['wardCorner', 34, 5, 16], ['sideWay', 10.5, 5, 39.8]]) {
+    T.at(x, y, z, 1.5); out[name] = { at: T.cell(), cells: T.cutCells(), ghost: T.ghost() };
+  }
+  // quick crossings of the doorway between the hall and the kitchen, then he stays in the kitchen: the hall stands again
+  for (let i = 0; i < 8; i++) { T.at(24.5, 5, 18.0, 0.07); T.at(24.5, 5, 20.2, 0.07); }
+  T.at(24.5, 5, 22, 1);
+  out.cross = { at: T.cell(), hall: roomOf(30, 10)?.f, dorm: roomOf(20, 10)?.f, zone0: R.lids.find((l) => l.zone === 0 && !l.name).active, cells: T.cutCells() };
+  // out of the asylum and back in: no hole nor room cut left from last time (the sight holes reset as the rooms)
+  T.at(11, 15, 12, 1);
+  out.before = { local: R.lids.filter((l) => l.local > 0.5).length };
+  G.exitRoom({ x: G.world.well.x + 5, z: G.world.well.z + 5 }, true, true); G.step(0.5);
+  G.enterRoom('asylum', null, true, true); G.frame(1 / 60, false);
+  out.back = { at: T.cell(), local: R.lids.filter((l) => l.local > 0.01).map((l) => l.name ?? l.i), rooms: R.lidRooms.filter((r) => r.f < 0.99).length, uniform: [...R.cutU.uCutRooms.value].filter((v) => v > 0).length };
+  return out;
+});
+check('HOSTEL-CUT-2: in the hall beside the dorm, the hall is cut and the dorm under the same zone stands (its ceiling, the loft); nothing else far from him is cut',
+  c2.hall.hall < 0.02 && c2.hall.dorm > 0.98 && c2.hall.dormCeil < 0.02 && c2.hall.hallCeil > 0.98 && c2.hall.cells.far === 0, c2.hall);
+check('HOSTEL-CUT-2: at the stops where a lid stands between him and the camera, the cut is a hole round his sight line (no cell cut farther than 3.6 m from it)',
+  ['laundry', 'loftWall', 'loftWall2', 'kitchen', 'wardCorner', 'sideWay'].every((k) => c2[k].cells.far === 0), Object.fromEntries(['laundry', 'loftWall', 'loftWall2', 'kitchen', 'wardCorner', 'sideWay'].map((k) => [k, c2[k]])));
+checkVisual('HOSTEL-CUT-2: behind the loft\'s windowed wall, in the kitchen under the next room\'s roof and at the ward\'s corner by Vesk\'s office he is drawn, not his silhouette (before: 1.0 and 0.58 behind the wall, 0.46 in the kitchen)',
+  ['loftWall', 'loftWall2', 'kitchen', 'wardCorner', 'hall'].every((k) => c2[k].ghost.r < 0.2), Object.fromEntries(['loftWall', 'loftWall2', 'kitchen', 'wardCorner', 'hall'].map((k) => [k, c2[k].ghost.r])));
+check('HOSTEL-CUT-2: quick crossings of the hall\'s doorway, then the kitchen: the hall stands again, the kitchen is cut, nothing far from him', c2.cross.hall > 0.98 && c2.cross.dorm > 0.98 && c2.cross.zone0 && c2.cross.cells.far === 0, c2.cross);
+check('HOSTEL-CUT-2: out and back in, no hole and no room cut is left from last time', c2.before.local > 0 && c2.back.local.length === 0 && c2.back.rooms <= 1 && c2.back.uniform <= 1, { before: c2.before, back: c2.back });
 await ev(() => T.at(20, 5, 10, 2)); await snap('asylum-room1');
 await ev(() => T.at(55, 3, 54, 2)); await snap('asylum-cell');
 

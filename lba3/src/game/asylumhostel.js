@@ -34,6 +34,7 @@ import * as THREE from 'three';
 import { Kit, MAT, rbox, plane, cyl, sphere, lathe, slab, canvasTex, pottedPlant, locker, rug, stove, dresser, table, bench, floorLamp, pot, kettle, plate,
   ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand, bookcase, jar, barrel } from './props.js';
 import { tileTex, cm, latticeM } from './props-esmer.js';
+import { cutPatch } from './lba1room.js';
 
 export const ASYLUM_FRONT = { x: -26.5, z: -50.58, a: 0 };   // (the fort's south wall, outer face at its foot; out = +z)
 
@@ -591,13 +592,22 @@ export function dressAsylum(R, physics) {
   }
   storeState.setCleared = (b) => { storeState.cleared = !!b; store.g.visible = !storeState.cleared; for (const c of store.cols) c.enabled = !storeState.cleared; };
 
-  // ---- the ward's lid carries what stands on its slab: the upper walk's things and the front doors fade with it
-  const wardLid = R.lids?.find((l) => !l.over && !l.name && l.zone === 1);
-  if (wardLid) R.updaters.push(() => { up.g.visible = wardLid.f > 0.5; });
-
   for (const k of kits) k.flush();
   const casts = new Set([MAT.wood('honey'), MAT.wood('dark'), MAT.wood('pale'), MAT.stone('grey', 1)]);
   for (const { group } of kits) for (const m of group.children) if (m.isMesh) m.castShadow = casts.has(m.material);
+
+  // ---- the ward's lid carries what stands on its slab: the upper walk's things and the front doors go with the slab
+  //      under them (HOSTEL-CUT-2: cut as that slab is, in the shader: with the hall's room when he is in the hall below,
+  //      and where the hole round his sight line takes the slab; not with the dorm's, whose cut leaves this slab standing)
+  const wardLid = R.lids?.find((l) => !l.over && !l.name && l.zone === 1);
+  if (wardLid && R.cutU) {
+    const n = new Map();
+    for (let x = 22; x <= 37; x++) for (let z = 5; z <= 17; z++) { const b = R.roomBitsAt(x, 13, z); if (b) n.set(b, (n.get(b) || 0) + 1); }
+    const bits = [...n].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0, own = new Map();
+    const cutOf = (m) => { if (!own.has(m)) own.set(m, cutPatch(m.clone(), R.cutU, { dither: true, bits })); return own.get(m); };
+    up.g.traverse((o) => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(cutOf) : cutOf(o.material); });
+    R.updaters.push(() => { for (const m of own.values()) m.userData.cutK.value = wardLid.local; });
+  }
 
   // ---- the people's places (the story's: R.npcSpots), at LBA1's actors where they fit (lba1: the original spot)
   const S = (x, yc, z, a, role, lba1, extra = {}) => { const w = W(x, z); return { x: w.x, y: Y(x, z, yc), z: w.z, a, role, lba1, ...extra }; };
