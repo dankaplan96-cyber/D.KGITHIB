@@ -382,6 +382,9 @@ export const VOICES = {
   sendell: { race: 'spirit', seed: 1001, f0: 410, manner: 'spacious', ask: 'high', vol: 0.72 },   // calm and spacious, clear even when quiet (no echo)
   drones: { race: 'robot', seed: 1002, f0: 300 },
   dinofly: { race: 'beast', seed: 1003, f0: 86 },
+  // OREN-GUARDIAN: Oren, Ballastra's keeper, speaking through a glazed part: low on his bowl tone's 98 Hz, level and
+  // slow, no vibrato (calm, plain, a number or a state; not Sendell's light)
+  oren: { race: 'spirit', seed: 1004, f0: 98, k: 0.86, contour: 'flat', range: 2, rate: 0.7, legato: 1.1, vib: [0, 0], breath: 0.12, bright: 2600, level: 0.7 },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
 const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda', qc_pipe: 'qc_matto' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (U-5: the voice in the pipe is Matto's)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)

@@ -75,7 +75,7 @@ export const steps = [
     for (let i = 0; i < 80 && !f.cn_log; i++) { G.step(0.1); P.settle(); }
     return { r: r.r, log: f.cn_log, plans: f.c9_plans, fail: f.c9_plans ? null : 'compare' }; }],
   ['back to the council: the vote', () => { const f = game.flags; P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30);
-    if (!f.cn_v) return { vote: f.c9_vote, chapter: f.chapterKey, fail: f.chapterKey === 'network' ? null : 'no chapter 10' };
+    if (!f.cn_v) return { vote: f.c9_vote, chapter: f.chapterKey, fail: f.chapterKey === (game.story.inCampaign('throttle') ? 'throttle' : 'network') ? null : 'no chapter 10' };
     return { vote: f.c9_vote, chapter: f.chapterKey, fail: f.c9_vote && f.chapterKey === 'council' ? null : 'vote' }; }],
   ['the platform: the guard, the stop', () => { const G = game, f = G.flags; if (!f.cn_v) return { skip: 'no thread' };
     P.exitTo('council-out'); P.exitTo('up-down'); const g = P.talk('guard', { run: true });
@@ -91,5 +91,5 @@ export const steps = [
     P.enter('zeelich'); const L = G.rooms.zeelich.lift; const r = P.use(L.isoAt.x, L.isoAt.z, { kind: 'cn_clip', near: 0.6, run: true });
     for (let i = 0; i < 300 && f.chapterKey === 'council'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
     P.settle(60); P.settle(30);
-    return { r: r.r, lane: f.cn_lane, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === 'network' ? null : 'no chapter 10' }; }],
+    return { r: r.r, lane: f.cn_lane, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === (game.story.inCampaign('throttle') ? 'throttle' : 'network') ? null : 'no chapter 10' }; }],
 ];

@@ -48,6 +48,7 @@ const TRANSITIONS = [
   ['evacuation.js', 'endZoe', 'same', "chapter 8: back to Twinsen at the station's control room, on Citadel"],
   ['evacuation.js', 'backToTwinsen', 'same', "chapter 8 (CAMPAIGN-6): Zoé's part over at the lane's landing, back to Twinsen beside her, on Citadel"],
   ['isleslife.js', 'ride', 'same', "ISLES-BAR: Mosquibee's honey hoist, the meadow to its ledge (the same island)"],
+  ['index.js', 'afterLoad', 'cut', 'a save standing in an empty shell chapter (not written yet) goes on to the next written one behind its card: the loader catching up, no story step reaches a shell (Story.nextIndex skips them)'],
   ['islands.js', 'board', 'film:travelTo', "a terminal's counter: out through the gate under the black, then the travel's journey film from the pad"],
   // (GLIDER-FILM, 5.11, split fly: fly plays the glider's film (storyJourney) and then calls flyTo, whose scene change
   //  this is; with the films off, or no parked glider at either end, flyTo's plain fade alone)
@@ -63,6 +64,11 @@ const TRANSITIONS = [
   ['prologue.js', 'endPrologue', 'same', "chapter 1 → 2: up from the well's cave into Citadel's square"],
   ['sewers.js', 'rideStep', 'same', "the sewer lifts under the lower town's street and the terrace (a room under Citadel)"],
   ['steam.js', 'board', 'film:storyJourney', "chapter 5 → 6: Hesk's glider from the dunes over the buried hall to the Hamalayi field (WC-1)"],
+  ['throttle.js', 'flyHome', 'film:playJourney', "chapter 10: Mira's call reaches him on Zeelich: the ship's film from Zeelich Spaceport to Citadel's (TRAVEL-1), then the landing there"],
+  ['throttle.js', 'end', 'film:playJourney', "chapter 10 → the network (14): Baldino's call reaches him at the fortress shelter: the ship's film from Citadel Spaceport to Zeelich's, then his workshop (network.js begin)"],
+  ['throttle.js', 'startZoe', 'cut', "chapter 10 (EXP-1): the relay's last line at the fortress shelter, then Zoé in the project office at the station (Citadel, both): played as Zoé"],
+  ['throttle.js', 'backToTwinsen', 'cut', "chapter 10 (EXP-1): Zoé reaches the fortress shelter with the B-7: Twinsen again beside the branch (the same spot)"],
+  ['throttle.js', 'downstairs', 'same', "chapter 10: Mira takes him down from the Water Office into FunFrock's valve room (a room of Citadel)"],
 ];
 {
   const dir = ROOT + 'src/game/story/', found = [];

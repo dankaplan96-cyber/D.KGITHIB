@@ -12,6 +12,7 @@
 // holds. The takeovers are waited out (T.wait); the lamp room is still played by input.
 // Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
 // had to be beaten through its own rule (an ISO assist, logged), the run ends CHAPTER 10 ASSISTED with exit code 2.
+// It plays the base campaign (exp_base): the expanded campaign's chapter 14 adds OG-6 at the mill (tests/oren-coils.mjs).
 import { launch, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
@@ -87,7 +88,7 @@ await ev(() => { T.useOn = (x, z) => { const G = game; T.tp(x, z); G.step(0.2); 
 
 is('chapter 10 (network) starts in Baldino\'s workshop, the relays objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 8, chapterKey: 'council', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
     c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true,
-    cn_v: 1, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true, cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true });   // (CAMPAIGN-7: chapter 9 ended with the isolator on Kell's feed box)
+    cn_v: 1, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true, cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true, exp_base: 1 }); delete G.flags.exp;   // (CAMPAIGN-7: chapter 9 ended with the isolator on Kell's feed box) (exp_base: the base campaign, the network straight after the council; the expanded campaign's chapter 10 has its own test, tests/exp-throttle.mjs)
   G.hero.hasBall = true; G.story.chapters.find((c) => c.key === 'council')?.thread?.applyFlags?.();   // (chapter 9's flags, put on as a load would: Mill Lane's lift up on the isolator)
   G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.flags.c10_started, T.obj()]; }), (v) => v[0] === 'network' && v[2] === true && v[3].length > 0);
 await shot('C10-00-workshop.png');

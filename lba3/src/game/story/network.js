@@ -190,7 +190,7 @@ export class Network extends ChapterBase {
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast({ walk: true });
     // (Twinsen got Baldino's test pair talking in chapter 3: he remembers it)
-    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ...(this.thread.on ? [['baldino', 'nw_bal_iso']] : []), ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
+    this.chain([['narrator', this.story.inCampaign('throttle') ? 'c10_narr_exp' : 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ...(this.thread.on ? [['baldino', 'nw_bal_iso']] : []), ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
       this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);

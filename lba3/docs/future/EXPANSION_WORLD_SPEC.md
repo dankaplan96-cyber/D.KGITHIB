@@ -96,8 +96,130 @@ everything after it, so build it to the final standard: handcrafted, readable, a
 **Pictures:** the play camera from the pad, the quay, the lift with the boat stuck, the lift balanced, the shed outside
 and inside, and Tessa's lookdev.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 3.11.2026, branch `exp-w1-place`; the place only — Tessa and the dockers are the
+character artist's, their stand spots are ready)
 
+*Files* (all new, `src/game/ballastra/`):
+- `harbor.js`: the region `ballastra` (its own lazy group at x 3 000, z −3 000, built in 12 steps), the layout, the lift,
+  the cranes, the walkway, the shortcut, the boat, the life props, the soft edge, the handle `BALLASTRA.harbor`.
+- `shed.js`: the room `bl_shed` (at x 3 800, z −3 000), the furnished interior.
+- `sea.js`: the shallow sea (a drawn bed, the game's kind of water in Ballastra's green-blue, foam in the shallows, the
+  arch mirrored in it) and the physics' deep water; `skyline.js`: the great arch, the district on stilts (scenery for
+  W-2), a second far arch; `look.js`: Ballastra's materials and small pieces; `build.js`: the small buildings (the
+  shed, the customs hut); `common.js`: `BALLASTRA` and `BALLASTRA_AT`.
+- `tests/ballastra-harbor.mjs`: the place's own probe (19 checks, below). Pictures: `docs/future/world/W-1/`.
+
+*The place* (three heights: floats 0.6 m, pad 1.4, quay, lift walls and walkway 2.2; the inner basin's water 1.7):
+- the pad (south-west): a stone platform with a glazed landing ring, the project's ship on it (the existing model);
+- the pontoon row to the cargo quay (stairs up), its middle section hinged in front of the lift's entrance;
+- the cargo quay: crane A over a moored barge, crane B by the lift with its latch, crates, jar crates, sacks, nets,
+  ballast pots, a barrow; the customs hut at the top of the stairs (cobalt glazed tiles, cream walls, a blue hip roof,
+  a hatch with a striped awning, a slate and a bell, a cargo balance beside it);
+- the lift: a stone chamber; a timber caisson with its own water and a stair on its east side; the gantry, three
+  wheels, chains (they scroll as they run), the counterweight in its shaft with painted bands (high, middle, low), the
+  winch (the crank; its handles turn), the level dial, the inner gate (opens for the boat), the outer gate; the
+  stranded working boat on the deck;
+- the hinged walkway over the lift's outer entrance (hinges and counterbalance on the quay), stairs down to the shed's
+  float; Tessa's shed (tiled dado, painted boards, a thick roof with eaves, the stove pipe, a hoist beam, her sign);
+  a gangway on to the district's edge, its gate shut (W-2 beyond); the shortcut's low piers and swing bridge.
+- The walkway is the only link between the quay side (pad, pontoons, quay) and the shed side (shed, district's edge)
+  until the shortcut opens: that is what the swung load cuts.
+- Life: gulls (gulls.js: 7 on 13 perches), washing, nets, herbs in pots and on rafts, lanterns (glazed, a warm glow,
+  no lights), skiffs, buoys and herb rafts on the swell (one shader, one draw), the mechanisms' sounds (the game's own:
+  grind, clunk, rope creak, clang, thump). Day light with a soft sea haze (fog 70–300 m); no weather or light cycle
+  (weather.js gives none to a place without its own); no night.
+
+*The lift's rule* (the world's, as ordered): `level = clamp(cw − 1 + (released ? 2 : 0), 0, 3)`, `cw` 0 high, 1 middle,
+2 low; level 0 low (the outer water), 1 halfway (stranded: the start, low and latched), 2 top (level with the basin),
+3 over (too high). The counterweight alone is too light for the boat's deck; crane B's load, swung onto its cradle,
+adds two steps. Balanced is only released + middle: the load seats on the counterweight, clear of the walkway;
+released any other way it rests on the walkway. The deck moves in about 1.5 s a step.
+
+*Handles* (`BALLASTRA.harbor`, world coordinates):
+- `rooms` ['ballastra', 'bl_shed'] · `spawns` {pad, shedDoorOut, shedIn, districtEdge} · `doors` {shedOut, shedIn,
+  shed.setLocked(b)} (the door works both ways by itself, as room exits) · `safe` (4 points).
+- `stands` {tessa_shed (in bl_shed, at the bench), tessa_quay (by the crank), tessa_lift (the east wall over the deck),
+  docker1 (by crane A), docker2 (by crane B's crates), customs (at the hatch), boatOwner (by the lift),
+  boatOwner_moored (an extra: where the boat moors)}.
+- `spots` {crank, liftLever, boat (follows the boat), shedBench} · `craneLatch` {x, y, z, r} (not a room ball target:
+  the story decides what a hit does).
+- `counterweight.set(pos, instant)`, `.pos` · `crane.release(instant)`, `crane.reset(instant)`, `.released` ·
+  `lift.level`, `.levelName`, `.y`, `.moving` · `walkway.blocked`, `.solid` · `balanced` · `boat.sailOut(instant)`,
+  `boat.reset(instant)` (an extra, so nothing stays out of reach), `.out`, `.free`, `.sailing` · `sailPath` ·
+  `shortcut.setOpen(b, instant)`, `.open`, `.swinging` · `onChange(fn)`.
+- Collision follows the state: the caisson's rims and stair at the deck's height; the load solid on the walkway while
+  it rests there; the bridge walkable where it points (shut: a dead end), off while it swings; the boat solid aboard.
+  The caisson's stair reaches the quay's height from any level: nobody is stranded on the deck.
+
+*Hooks* (shared files): `src/game/regions.js` only — the import, `REF.ballastra`, `AT.bl_shed`, `OUT_AT.ballastra` and
+one `add('ballastra', …)` line, each commented (registered like the other areas; the cloud owns registration and may
+move it).
+
+*Checks*:
+- `tests/ballastra-harbor.mjs` (SwiftShader) 19/19 PASS: the region builds lazily, > 600 m from every other area; every
+  handle present; every counterweight × crane state gives the rule's level, the deck's collision at its height, the
+  walkway blocked and solid exactly when released and not middle, one balanced case at the top; animated moves
+  ~1.5 s; everything resets; he walks the whole harbour by input (P.go: pad, pontoons, stairs, quay, crank, dial,
+  walkway, shed float, gangway, district's edge, the shortcut's far pier, and back); in and out of the shed and to its
+  bench; onto the deck at the top, ridden down, off by its stair at every level; the blocked walkway cuts the shed's
+  side off (no plan, no walk) and balancing reopens it; the shortcut shut links nothing, open (it swings ~4 s) he walks
+  it, it shuts again; the boat sails out (~10 s) and back; the soft edge eases him off the water; a second visit
+  builds nothing.
+- `tests/chapter1.mjs` 23/23 PASS and `tests/transitions.mjs` 6/6 PASS on this branch (SwiftShader; run locally with
+  the Playwright path changed for this laptop, not committed).
+
+*Numbers* (the laptop: Ryzen 5 3500U, Vega 8; the installed Chrome, fullscreen 1366×768, Medium, the follow camera at
+Far, the game's own benchmark window per route, all routes in one run; **plugged in only** — battery not measured this
+time; the display paced at 57.8 Hz, so every route reads ~57 fps and the GPU time is the comparison):
+
+| view | fps | frame p50 / p95 ms | GPU ms p50 / p95 | render submit CPU ms | draw calls (shadow) | triangles |
+|---|---|---|---|---|---|---|
+| Citadel street (the budget) | 56.3 | 17.6 / 18.3 | 10.72 / 16.39 | 8.0 | 127 (23) | 396k |
+| Twinsen's house (interior) | 56.5 | 17.7 / 18.3 | 9.26 / 12.74 | 2.7 | 51 (1) | 214k |
+| the pad | 56.7 | 17.6 / 18.2 | 8.77 / 11.41 | 1.9 | 28 (4) | 186k |
+| the quay | 56.5 | 17.7 / 18.3 | 9.25 / 10.79 | 2.2 | 50 (19) | 203k |
+| the lift | 56.9 | 17.5 / 18.2 | 9.05 / 11.04 | 2.4 | 97 (35) | 239k |
+| the shed (interior) | 57.6 | 17.2 / 18.1 | 8.51 / 9.19 | 1.5 | 24 (2) | 22k |
+
+Every view is under the street in GPU time, CPU submission, draw calls and triangles; no frame over 33 ms in any
+harbour route. First visit: 464 ms of build work in 12 steps, the longest 146 ms (the laptop, Chrome); 1.5–2.1 s on
+SwiftShader. The first entry compiles 2 shader programs (the water, the floating pieces): the pad route's warm-up had
+one 1.2 s frame — behind the arrival's black in play, but worth adding to the arrival's warm-up when the cloud wires
+the travel. New resources: about a dozen small canvas textures (≤ 512²) and a 256² height texture; no lights outdoors, 3 in the shed.
+
+*Pictures* (`docs/future/world/W-1/`, the play camera — Follow at Far — on the laptop's GPU, Medium): `W-1-01-pad`,
+`W-1-02-quay`, `W-1-03-lift-stuck`, `W-1-04-lift-balanced`, `W-1-05-shed-outside`, `W-1-06-shed-inside`,
+`W-1-07-district-edge`, `W-1-08-blocked-walkway`; and `W-1-09-skyline-free-camera` (the free camera, low). The play
+camera's frame ends a few degrees over the horizon, so from the harbour it shows the district and the arch's legs,
+and the arch in the water's mirror, never its span. Tessa's lookdev is the character artist's.
+
+*Left / not done:*
+- a travel route to Ballastra (`travel.js`, the cloud's): today he gets there only by `enterRoom('ballastra')`;
+  the people are not placed (the stand spots are ready; who stands where is the story's).
+- battery measurements; one run per view (the laptop: no fps chasing).
+- the arch's span is seen only in the water and from a story camera (`W-1-09`); the district is scenery (W-2).
+- the latch, the crank and the dial are spots: the story wires the inputs (the ball's hit, E at the crank).
+
+
+*Characters* (the character artist, branch `exp-w1-chars`, merged; no rig or shared-file change):
+- `tessa` (D9: compact mechanic, rolled sleeves, short teal apron with tools, a hammer at the hip, a headband, a forward
+  lean) and `docker1`–`docker3`: one canal-dweller body (D4: shoulder-high to Twinsen, 1.42–1.53 m against his 2.16,
+  round faces, fan ears on ear bones, broad feet) in three outfits, each with its own face, skin and height (an oilskin
+  smock and knit cap; a vest, shorts, a straw cone hat and a rope, bare feet; an older docker in a leather tabard with
+  a cargo hook). `blTrader` reuses `desertTrader`'s body.
+- Triangles: tessa 3 710, docker1 3 450, docker2 3 664, docker3 3 792 (the cast: mostly 2 400–3 500; Twinsen 3 078).
+  One vertex-coloured material, eye and mouth meshes, no textures, as the cast.
+- They play idle, talk, walk and work (tinker / pump / potting) on the existing rig, with foot planting, ear motion and
+  the talking mouth. Built by `tools/blender/ballastra_poly.py` (Blender is not on this laptop: stand-ins for
+  bpy/mathutils in `tools/blender/nobpy/` rebuild the existing cast's JSON the same).
+- Lookdev: `docs/future/world/W-1/W-1-tessa-lookdev.jpg`, `W-1-dockers-lookdev.jpg`, `W-1-cast-faces-indoor.jpg`,
+  `W-1-cast-pose-tests.jpg`, `W-1-cast-lba2-camera.jpg`, `W-1-cast-in-citadel-*.jpg`.
+- For the animator: a two-handed crank motion, a slower ear motion in talk, a heavier walk (`walkCycle` in the look).
+- **Accepted by the user (4.11.2026)**, with a note for later (not now): "everything looks similar except the colours;
+  there's no real uniqueness." Ballastra's own look (shapes, materials, building types, the canal dwellers' world)
+  needs a pass of its own before or with W-2 so it doesn't read as the other worlds recoloured.
+- **For the coordinator:** W-2 (the Arch District) can be ordered now (W-1 is accepted); the laptop builds it once
+  it is marked **Ordered**.
 ---
 
 ## W-2 … W-8 · Draft, the coordinator reviews
@@ -126,11 +248,23 @@ player re-latch crane B and retry, N1).
 
 ---
 
-## W-2 · The Arch District (Draft, the coordinator reviews)
+## W-2 · The Arch District · **Accepted** by the user (7.11.2026: "I approve the expansion"; "looks good so far", 6.11) · Ordered by the coordinator 5.11.2026 after W-1 was accepted 4.11
 
 The district under and on Ballastra's great arch, the skyline anchor already seen from the harbour. About 25–30 minutes
 of play across N3 and OP-5, with return visits in N6 and the postgame. Lived in, not a set: homes, a market, a meeting
 place, and the old pump machinery under the arch that explains the planet's history without a panel.
+
+**The coordinator's review (the user's note on W-1: "Ballastra lacks real uniqueness beyond its colours").** W-2 is
+where Ballastra must read as itself, not as a recoloured Zeelich or Citadel. Its one idea is **a city that lives by the
+water's level**, and every part of the district shows it in form, not paint:
+- things built to rise and fall: floats on chains, stilts with several doorstep heights, boats tied at two levels,
+  gangways on hinges, washing lines that run from the high floor, not the low one;
+- the record of the water everywhere: bands of old water lines on every wall, a painted level gauge on the arch's
+  pier (no words), shells and weed dried at the old marks, doorsteps worn at three heights;
+- the arch's silhouette and the pump machinery (glazed ceramic and bronze, D3) as the only big shapes; no domes or
+  towers borrowed from the base game's places; houses narrow and tall with their living floor on top.
+In the pictures, show the district at canal levels 0 and 1 side by side from the same play-camera spot: the change
+should be readable at a glance. Measure as W-1 (at or under the Citadel street on the laptop's GPU).
 
 **The place.** Its own lazy group, `bl_arches`, entered from W-1's `districtEdge` and the shortcut.
 - **The arch:** one great weathered stone arch (D3), its feet in the water, its underside hung with homes.
@@ -201,11 +335,137 @@ room.
 **Pictures:** the play camera at the market, the lower row at levels 0 and 1, the Speaking Steps, the chained gate,
 the bell tower, and Oren's and Mags's interiors.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 6.11.2026, branch `expansion/ballastra`; the place only — the residents are W-7's, their
+stand spots are ready; story, flags and travel are the cloud's)
+
+*Files* (new, `src/game/ballastra/`): `arches.js` (the region `bl_arches`, its own lazy group at x 3 000, z −3 800, built
+in 16 steps; the plan, the moving parts, the handle `BALLASTRA.arches`), `archhouses.js` (the district's pieces: the
+narrow tall house with its water record, `tideMarks` for stone faces, skiffs, market stalls, the gauge's paint),
+`archrooms.js` (`bl_oren` 3 800, `bl_mags` 3 900, `bl_pump` 4 000, all at z −3 800). Small additions in W-1's files:
+`common.js` (`BALLASTRA.arches`, the places' positions), `sea.js` (a place may give its own bed and bed colour),
+`skyline.js` (the arch's curve exported), `harbor.js` (`R.entries.bl_arches` = `districtEdge`; `exits.toArches` at the
+district gate, data for the story). `tests/ballastra-arches.mjs` (20 checks). Pictures: `docs/future/world/W-2/`.
+
+*The idea in form* (the coordinator's review): the lower canal is a walled basin whose water stands at 2.25 / 1.4 / 0.4 m
+(levels 0 flooded / 1 balanced / 2 low; the outer sea at 0), and everything on it rises and falls with it or stands
+clear of it, and keeps the record of where it has been:
+- the **market float** rides the level on four corner piles with bronze collars (deck 2.85 / 2.0 / aground at 1.05);
+  its two **hinged gangways** tilt with it (the one to the row is drawn up out of the water at level 0);
+- the **lower row**: eight narrow, tall houses (3.4–4.4 m wide, ~9 m to the ridge) on stilts, the wet floor below
+  (limewash or rubble stained a metre up, a salt line, two older marks with dried weed caught on them), the **living
+  floor on top**, jettied on brackets with a **gallery** (its door, herbs, the washing lines run from it, not from
+  below), a steep gable to the water with a glazed float-ball finial, **hoist beams** in every other gable (goods go
+  up, not in); **three doorstep heights** (the door's worn step 1.88, the walkway 1.75, the boat step 1.55 — a hand over
+  the balanced water); **boats tied at two heights** (rings at 2.6 and 1.65 on each mooring post; the painters go to
+  the high ring in a flood, the low one when balanced, slack in the mud when low; the boats lie aground at level 2);
+  shutters shut and washing in at a flood or when the row is away (`row.setHome`);
+- the **Speaking Steps**: a round platform at the quay's height (radial paving, a broken ring of stone seats, the
+  speaker's dais with a bronze ring) whose six tiers go down into the canal: 1 / 3 / 5 tiers are dry floors at
+  levels 0 / 1 / 2;
+- the **level gauge** painted on the west pier's foot (bands every half metre, three glazed tiles at the three levels,
+  no words), its bronze float riding the water in a slot; the salt line and old marks on every basin face;
+- the **big shapes**: the great arch (feet at x ±32, crest ~40 m; four homes hung under its span on chains) and the
+  old **beam pump** on the west pier (a glazed celadon cylinder, a 15 m bronze beam on a stone A-frame, its rod down
+  into the basin, the outflow mouth); no domes or towers from the base game; the flood bell is a squat stone tower.
+
+*The plan* (local metres; the hero comes in from the harbour in the south):
+- the **landing** (1.4) from the harbour's gate, steps up to the **south quay** (2.8, big pale flags): goods waiting
+  to go up to the living floors, the **notice board** (pictograms), the **jetty** north to the market's gangway;
+- the **west ledge** (2.8) along the pier: the **pump room's door** (bronze-framed arch), the gauge, a stair down at
+  its north end to the walkway (boarded at level 0);
+- the **lower row** along the basin's north side behind its **walkway** (1.75, on piles): Mags's house the third from
+  the west, Dunn's the fifth (older, rubble, sunk lower: its arched door at the boat step's height, the **silt heap**
+  in its pit); a **narrow stair** on brackets up the terrace's wall from the walkway's east end (two flights, a
+  landing at 4.4, rails; boarded at the landing at level 0);
+- the **upper terrace** (7.0, dressed stone, dry, older) on the arch's east shoulder: north part with **Oren's house**
+  (three storeys: stone, celadon tiles, painted boards; a glazed side-gabled roof) and an older cobalt-tiled
+  neighbour, the **cistern** with its bronze hand pump (the terrace drinks the sky, never the canal), a bench looking
+  away from the water; the south plaza with the **flood bell** and a third house; the **wide stair** (4 m, 19 treads)
+  down to the quay; the **gardens' gate** in the plaza's east parapet (W-3 beyond: closed).
+
+*The puzzle's parts*: `canal.setLevel` (about 5 s animated; the water, the float, the gangways, the floors, the boards,
+the gauge's float, the boats all follow it), `row.setHome`; Dunn's silt (3 stages, `silt.setHits`) and door (swings in,
+`dunnDoor.setOpen`); in `bl_pump` the spill gate (a timber gate in bronze grooves in a stone channel, the spindle, the
+hand-wheel, the **chain** round the wheel to a floor staple with a cobalt **seal plate**; the **pawl** on its ratchet
+high on the pier wall; `chain.cut`, `pawl.release`, `spillGate.setOpen` — the gate rises in ~3 s and stops being
+solid; the channel behind it is a dry stub he may step into); the bell (`untie`, `setHorn` ×3 — three ceramic horns
+stacked on a bronze mast over the belfry's roof, each turning to terrace / lower row / gardens — `setCam` one or two
+tones, `ring()`: the bell swings ~4.5 s and sounds through the game's synth; refused (null) while tied). Extras so
+nothing stays out of reach: `chain.reset`, `pawl.reset`, `bell.tie`.
+
+*Handles* (`BALLASTRA.arches`, world coordinates): as ordered — `rooms`, `spawns` (9), `exits` {toHarbor (active),
+toGardens (data: `bl_gardens` is not built yet)}, `doors` (orenOut/In, magsOut/In, pumpOut/In, active), `stands`
+(20), `spots` (11), `safe` (6), `ballTargets.spillPawl`, `swordTargets.spillChain / dunnSilt` {x, y, z, r}, the
+setters, `onChange(fn)`; plus `plan` (the build's numbers, for tests).
+
+*Collision*: the walkway, its boat steps and the west landing are floors only while dry (levels 1, 2); at level 0
+boards close the west stair's head and the narrow stair's landing, and the row's gangway is drawn up with the float's
+gap railed; the float and both gangways at the level's height (stair treads, ≤ 0.2 m a tread at level 2); the Steps'
+tiers are floors where dry; the silt heap solid until its third hit, Dunn's door until opened; the pump room's gate
+until open. The soft edge as in W-1 (anyone over water without a floor is eased back; a flood over the walkway puts
+him on dry stone).
+
+*Numbers* (**SwiftShader, headless, not the laptop's GPU** — the real-GPU playthrough had the machine tonight; draw calls
+and triangles per frame only, no fps or GPU ms; the game's default quality on this profile (High), 1280×720, the play
+camera; the Citadel street is the benchmark's own route setup, same run):
+
+| view | draw calls (shadow) | triangles |
+|---|---|---|
+| Citadel street (the budget; bench route at t 0 / t 3) | 215 (47) / 174 (49) | 899k / 749k |
+| W-1 the pad (for reference) | 45 (12) | 350k |
+| the landing from the harbour, level 0 | 109 (36) | 559k |
+| the south quay, level 0 / level 1 with the row home | 109 (36) / 108 (35) | 558k / 560k |
+| the market float, level 1 | 102 (37) | 537k |
+| the lower row's walkway, level 1 | 106 (37) | 561k |
+| the terrace by the bell / the terrace north | 45 (8) / 51 (13) | 443k / 453k |
+| the Speaking Steps, level 2 | 104 (35) | 559k |
+| the pump room / Oren's / Mags's (rooms) | 38 (2) / 29 (1) / 31 (2) | 42k / 33k / 24k |
+
+Every view is under the street in draw calls and triangles. The region is 143 meshes (merged per material: 70
+materials), 760k triangles in all (the arch's swept rock and the Steps' lathes are the biggest); 12 small canvas
+textures (≤ 512², one 64×512 gauge) and the sea's 256² height texture; no lights outdoors, 2–3 in each room. First
+build: 2.6–2.7 s on SwiftShader (16 steps when built by regions.js in steps), not measured on the laptop's GPU.
+
+*Checks*:
+- `tests/ballastra-arches.mjs` (SwiftShader) 20/20 PASS: lazy build, far from all areas, rooms known before built;
+  every handle; every stand spot clear floor; each level's water, floors (walkway, boat steps, float, gangways, the
+  Steps' tiers: 1/3/5), boards and look (washing, shutters, boats; aground at 2); the ~5 s animated fill with the float
+  riding it; he walks the whole district by input at level 1 (17 legs: landing, quay, notice board, jetty, gangway,
+  market, the row's gangway, walkway, Mags's door, a boat step, Dunn's door, the narrow stair, terrace, Oren's door,
+  bell rope, horn wheels, cam, wide stair, Steps, a dry tier, ledge, pump door, west stair); at level 0 the walkway has
+  no way in while market, terrace, bell, Steps and pump door are all reached; at level 2 market, walkway, Mags's door
+  and terrace; the three doors in and out; Dunn's silt and door; the spill gate, chain and pawl; the bell; the soft
+  edge (also a flood under his feet); the way back lands at the harbour's district edge; a second visit builds nothing.
+- `tests/ballastra-harbor.mjs`, `tests/chapter1.mjs`, `tests/transitions.mjs`: 19/19, 23/23 and 6/6 PASS on this branch, errors none (SwiftShader, run locally with the
+  Playwright path changed for this laptop, not committed). `drawcalls.mjs` and `perfbudget.mjs` do not cover Ballastra;
+  `overlaps.mjs` is not on this branch.
+
+*Pictures* (`docs/future/world/W-2/`, the play camera — Follow, Medium distance — **headless SwiftShader**, `testFreeze`,
+recentred, frames stepped by hand): `W-2-00-canal-level0-vs-level1` (the same spot on the jetty, side by side),
+`W-2-01/02/03-canal-level0/1/2`, `W-2-04-landing-from-harbour`, `W-2-05-market`, `W-2-06-lower-row`, `W-2-07-dunn-door`,
+`W-2-08-speaking-steps`, `W-2-09-gauge-ledge`, `W-2-10-terrace-bell`, `W-2-11-terrace-north`,
+`W-2-12-pump-room-chained-gate`, `W-2-13-oren-inside`, `W-2-14-mags-inside`.
+
+**Accepted by the user so far (6.11.2026):** "looks good so far" on the pictures (canal levels 0 and 1 side by side,
+the lower row, the market). The left items below stay open: the real-GPU numbers, the arch's span shot, and the
+level change at a distance.
+
+*Left / not done:*
+- no real-GPU numbers (fps, GPU ms, battery): the machine was busy; the SwiftShader counts above are the only measure.
+- the arch's span is not in any play-camera picture (its frame ends over the roofs, as in W-1); the free-camera
+  overview failed this time (the camera override left the view inside the row): to retake.
+- the level 0 / 1 change reads from the jetty (the float's height and the gangways, the walkway and boats, the Steps'
+  tiers, shutters and washing) but is not yet strong at a distance: a "fresh wet band" on the walls after the water
+  falls, and sandbags/boards at the doors in a flood, would make it read at a glance.
+- the W-1 skyline still shows its own older scenery district, not this layout; no travel into the district (the
+  story's: `BALLASTRA.harbor.exits.toArches` and `R.entries.bl_arches` are ready); the gardens' exit waits for W-3.
+- the bell's tones use the game synth's private `_tone` (with `clang` as the fallback); the horns, the cam and the
+  pull have no input wiring (the story's).
+- the residents are W-7's; Dunn's door opens onto a dark recess only (no room ordered).
 
 ---
 
-## W-3 · The Water Gardens (Draft, the coordinator reviews)
+## W-3 · The Water Gardens · **Accepted** by the user (9.11.2026: "Looks good", on the GPU pictures) · Ordered by the coordinator 7.11.2026 after the user approved the expansion so far: W-1 and W-2 accepted)
 
 Shared water made visible: cultivation rafts, channels, gauges, a kiln that lives on the same water, and the test
 installation where the prototype is proven (N2, N6; return visits in N3–N5 and the postgame).
@@ -255,7 +515,120 @@ people around it.
 **Pictures:** the play camera on the rafts (dry, green), the gauges, the tunnel's splitter, the kiln, and the rig
 empty and assembled.
 
-**Built:** _(the builder)_
+**Built:** (the World Builder, 8.–9.11.2026, branch `expansion/ballastra`; the place only: the residents are W-7's, their
+stand spots are ready; story, flags and travel are the cloud's)
+
+*Files* (new, `src/game/ballastra/`): `gardens.js` (the region `bl_gardens`, its own lazy group at x 3 000, z −4 600, built
+in 12 steps; the plan, the moving parts, the handle `BALLASTRA.gardens`), `gardenrooms.js` (`bl_tunnel` 3 800 and `bl_kiln`
+3 900, both at z −4 600). Small additions in my own files: `common.js` (`BALLASTRA.gardens`, the places' positions),
+`arches.js` (W-2's `exits.toGardens` is now an active exit: the terrace's east gate leads here). `tests/ballastra-gardens.mjs`
+(22 checks). Pictures: `docs/future/world/W-3/`.
+
+*The idea in form*: where the water goes is something you can see and follow. It comes in high on a nine-arched
+aqueduct from a rocky islet in the north into the splitter house; three ways leave it, each a channel you can walk beside:
+G1 (the gardens: a cut channel across the yard, a culvert under the north path, a glazed spout into the upper basin, then
+down through the weirs' notches), G2 (the kiln: a leat on its own wall the whole north side, ending in a timber trough
+over Corvin's wheel) and G3 (the overflow: west across the plaza and down a six-step spillway to the sea). The basins'
+walls keep the record (the green low line, the stain to the full line, the salt there, an older mark with weed); dry,
+the rafts sit on cracked mud with their walkways low and the gangways steep; green, everything floats a hand under the
+paths. Each part of the place does one thing: the plaza splits the water, the paths and gangways follow it, the kiln
+lives on it, the rig proves it.
+
+*The plan* (local metres, x east, z south; the hero comes in through the west gate from W-2's terrace):
+- heights: the sea 0; the upper level 6.4 (the west plaza, the splitter yard, the paths round the upper basin); the middle
+  4.8 (the middle basin's paths, the rig's platform); the lower 3.2 (the lower basin's paths, the east terrace). Basins
+  x −35…−7.5 / −5…20.5 / 23…47.5, z −7…16, full 5.7 / 4.1 / 2.5, beds 4.7 / 3.1 / 1.5; weirs between them (block, not
+  walked), stairs at their ends; the north path's bank (grass, reed clumps and shrubs) steps down with it behind dressed
+  retaining walls, the leat on its wall above it;
+- the west plaza: the gate (two glazed posts, a lintel, the stair up toward W-2 beyond), the splitter house (ashlar,
+  celadon tiles, a glazed hip roof, the aqueduct's mouth in its north wall, bronze-arched channel mouths east and west),
+  the **two gauges** side by side in front of it (glazed columns on stone bases: a scale board of bands — a celadon or
+  cobalt "enough" band, a red "low" band, no words — and a bronze float in a glass tube; celadon cap upper, cobalt cap
+  lower), the **tunnel's hatch** east of it (a stone kerb, the bronze leaf up, rails to hold), a bench, a barrow, herbs,
+  the growers' pergola with beans over it, seed trays and a bench;
+- each basin: 16 planted rafts (beans on poles, reeds, flowers), a long floating walkway north–south and a cross
+  walkway, lily pads; a hinged gangway at each end from the path's edge down to the walkway; mooring posts;
+- the rig's platform south of the middle basin; the east terrace with Corvin's workshop (lime and celadon-tiled dado, a
+  sign of two glazed floats over the door), its **water wheel on the west wall** in a railed pit, seen from the terrace,
+  the bottle kiln chimney beside it, his drying rack of glazed floats; the causeway's first stretch to the House of
+  Balances (W-4) behind a closed bronze gate at the terrace's south-east.
+
+*The water's parts*: `channels.show` (each channel's water and its falls fade in and out over ~1.5 s: the aqueduct;
+G1's channel, spout and the two weir cascades; the leat, the trough's fall onto the wheel and the tail race; the
+overflow's six spillway falls); `gauges.set` (the floats ride in ~1.5 s); `gate.set(1|2|3, 0|1|2)` (each gate's timber
+leaf rises in its frame — G1 at the gardens' channel's head by the house, G2 on the leat, G3 at the spillway's head — and
+the tunnel's board shows all three; G1's hand-wheel turns); G2's latch is on a post on the leat's far side over its wall,
+G3's on a stone pier in the sea north of the spillway (an iron rod to the gate's frame), both red-knobbed ball targets out
+of reach; `walkways.setLevel` (the three basins' water, the rafts, walkways and lily pads in ~4 s; the gangways tilt);
+`rafts.setState` (three plantings, one shown; the beds cracked when dry, wet mud otherwise); `kiln.setRunning` (the
+mouth's glow and its light in the workshop, the chimney's smoke); `wheel.setSpeed` (the wheel, the workshop's gear,
+potter's wheel and bellows; it only turns with the leat's water on it). In `bl_tunnel`: the old celadon main, the
+splitter board (three gates in bronze grooves, pictograms under them: sprouts, a flame, waves), G1's hand-wheel, the
+**seized bypass** (a loop of old iron pipe, its big valve wheel crusted with rust: `bypass.setFree` clears it and turns
+the wheel), the **unrecorded tap** (bright copper bodged onto the main with clamps and rag, off through the east wall
+toward the kiln, a brass tap, a trickle at the clamp while open: `tap.setOpen`). In `bl_kiln`: the water wheel's axle
+through the back wall into a big wooden gear, the belt to the potter's wheel, the crank to the bellows, the kiln (a stone
+dome bound with iron, its mouth glowing), racks of glazed floats, the glazing table.
+
+*The rig* (N6): a stone platform; three basins A, B, C sunk a step (floors 4.55, rims 5.0: wadeable, never deep), glazed
+inside, each with a bronze level mark, a float on a guide rod, a lamp on a post (off, green, amber, red), a range dial on a
+pedestal (three positions, a pointer) and a switch latch high on a post (a ball target); celadon troughs link A–B and B–C
+(`rig.spill` runs a sheet of water through one, ~2.5 s; only to a neighbour); the frame with five stone saddles
+(`rig.setPart`: the ceramic housing, the brass assembly, the core element, the glazed float, the timber frame), its tall
+back to the south so the parts face the path; the storm tank on the platform's west end, fed by a glazed pipe from the
+upper basin, its sluice leaf and chute into A (`rig.setSluice` opens and pours).
+
+*Handles* (`BALLASTRA.gardens`, world coordinates): as ordered — `rooms`, `spawns` (7), `exits` {toArches (active),
+toHouse (data: `bl_house` is W-4's)}, `doors` (tunnelOut/In, kilnOut/In, active), `stands` (15), `spots` (14), `safe`
+(9), `ballTargets` (5) {x, y, z, r}, the setters and getters, `onChange(fn)`; plus `plan` (the build's numbers, for
+tests). The start state is N2's: the aqueduct full, G1 shut and the gardens' channel dry, G2 open with the leat running the
+kiln, G3 shut, the tap open, the bypass seized, the basins dry and the rafts wilted, the kiln running, the rig empty.
+
+*Collision*: the walkways and the rafts ride the water (the rafts are planted: block, not stood on); the gangways'
+segments follow their tilt; the rig's basins are floors a step down; weirs, banks, the leat, gauges, the hatch's kerb,
+the trough, the wheel's pit rails, the causeway's gate block; the soft edge as in W-1/W-2 (anyone over open water is eased
+back to where he stood, or to the nearest safe spot).
+
+*Numbers*:
+- **SwiftShader, headless, 960×540, a fresh profile's settings, the play camera** (`ballastra-gardens.mjs`, draw
+  calls and triangles per frame, no fps): the rafts and gauges from the plaza 120 calls / 310k triangles; the upper basin
+  from the north path 126 / 356k; the test rig 62 / 140k; the east terrace and the wheel 60 / 192k; the tunnel 31 / 29k;
+  the kiln 31 / 29k — every view under the Citadel street's 215 / 900k (W-2's benchmark).
+- **The laptop's GPU** (AMD Radeon Vega 8, ANGLE D3D11, headless Chromium from the Test Lab's Playwright, 1280×720, DPR 1,
+  the game's quality on that profile: Medium, the game running unfrozen; frame interval from requestAnimationFrame over 180
+  frames; plugged in): the plaza by the gauges 92 calls / 236k, median 16.7 ms, p95 16.8; the upper basin from the north
+  path 107 / 296k, 16.7 / 33.3; the rig 59 / 91k, 16.7 / 16.7; the east terrace 39 / 126k, 16.7 / 33.3; the tunnel 18 /
+  19k, 16.7 / 16.7; the kiln 17 / 18k, 16.7 / 16.7. The interval is vsync-capped at 60 Hz: it says the frame kept up,
+  not the GPU's own time; a light check, not a benchmark, and no battery run.
+- The region is 160 meshes (54 materials), 315k triangles; the tunnel 58 meshes / 12.5k, the kiln 52 / 12.2k; small canvas
+  textures (≤ 512²) only; no lights outdoors, 3 in each room. First build 1.4 s on SwiftShader on a quiet machine (5.2 s
+  with a second browser running), not measured on the GPU.
+
+*Checks*: `tests/ballastra-gardens.mjs` (SwiftShader) 22/22 PASS: lazy build far from all areas (over 600 m: W-2's district is 800 m north), rooms
+known before built; every handle; every stand spot clear floor dry and full; the basins' water at each level, the
+walkways' floors on it, the rafts blocked, the gangways' tilt, the ~4 s animation; the rafts' three states; the channels'
+waters and falls; the gauges; the three gates outside and on the board; **he walks the gardens by input dry and full**
+(18 legs each: the gauges, the hatch, the north path, down a gangway onto the upper walkway and across, up to the south
+path, the stair, the rig's frame, into a shallow basin and out to its dial, the middle walkway and back up, the stairs,
+the lower walkway, the wheel, the kiln's door, the causeway's gate, the rig); through the hatch (to the tap, the bypass
+and G1's wheel) and the kiln's door and back; the tap and bypass; the kiln and its wheel; the rig; the soft edge; **the
+way from W-2's terrace gate in and back out**; a second visit builds nothing; the cost. The other expansion suites: see
+the W-3 report (`docs/future/world/W-3/W-3-REPORT.md`).
+
+*Pictures* (`docs/future/world/W-3/`, the play camera — Follow, Medium — **on the laptop's GPU**, headless, `testFreeze`,
+frames stepped by hand): `W-3-00-rafts-dry-vs-green` (the same spot side by side), `01/02` rafts dry and green, `03` the
+plaza from the gate, `04` the gauges and the splitter house, `05` on a green walkway, `06` a weir's cascade, `07/07b` the
+kiln and its water wheel, `08/09` the rig empty and assembled, `10` the tunnel's splitter board, `11` inside the kiln,
+`12` the north path, the bank and the leat.
+
+*Left / not done:*
+- the residents (W-7): none stand on the spots yet; the spec's "test rig with six people around it" view is measured
+  without them;
+- the kiln's exterior is a plain workshop with a sign; its interior is the bigger part of its character;
+- the gardens' gate on W-2's terrace leads straight here (an active exit); if the story wants it closed until N2, it
+  needs a flag on that exit (the cloud's);
+- the causeway to the House of Balances is scenery behind a closed gate until W-4;
+- sounds use the game's existing names (waterRun, grind, clunk, splash, gearClack); no new sounds.
 
 ---
 
@@ -534,6 +907,210 @@ budget.
 
 **Built:** _(the builder)_
 
+## W-9 … W-12 · Oren's Ballastra (Draft, the coordinator reviews; OREN-GUARDIAN, 2.11.2026)
+
+Written by the cloud's OREN-GUARDIAN session from `EXPANSION_PLAN.md` Revision R1 (the user's decisions of 2.11:
+Oren is Ballastra's guardian; his sleepers sleep in shelters by the terraces; same places and people, with the
+sleepers added). Same shared rules as W-2 … W-8 (own lazy group, pure setters with `instant`, the story owns the
+rules, `safe` spots, day only, measured views, pictures to `docs/future/world/<W-id>/`). Build after W-1 is accepted,
+in the coordinator's order. Cards: OG-3, WK-1 and EP-BL in R1.11 and R1.13.
+
+**Oren's look in the world.** Wherever a part is "Ballastra ware" (fired from the terrace clay), use one shared glaze:
+celadon (pale grey-green) with bronze rims, so a player learns to see what Oren can reach. Twinsun-made parts that
+replace it are brass, oak and leather. Oren himself is not a character model: he is a ring presence (`src/game/
+orenpresence.js`, built by the cloud, see R1.3). The large fixed Rings in W-12 are the builder's, in the same language.
+
+---
+
+## W-9 · The Low Terrace: Cradle Row, the keepers' garden, the Cradle Hall (Draft)
+
+The residential street beside the sleeping quarters. Three generations of keepers have lived here beside relatives
+who sleep. Lived in, close, a little cut off: about 15–20 minutes of play (OG-3, WK-1 steps 1–2, 6–8), and the
+aftermath's last stop.
+
+**The place.** Its own lazy group, `bl_terrace`, a shelf on the arch's flank above the Water Gardens (W-3), reached by
+the **terrace lift** from a lift foot on the gardens' upper edge.
+- **The terrace lift:** a counterweighted cage on two glazed-ceramic guide posts (Ballastra ware) and a bronze call-horn
+  at each end (the one Oren answers through). A notice board at the lift foot.
+- **Cradle Row:** one street of narrow keepers' houses (two storeys, tile and plaster, shutters, washing), Nan Odra's
+  tea stand (shut since the lift stopped; it reopens in the aftermath), Garrow's workshop front
+  (W-10's door), benches, potted herbs, cats.
+- **The keepers' garden:** a long terraced public garden kept across generations: **one small planted bed per
+  sleeper**, each with a glazed name tile; paths between; an old fountain that runs (or not, by state); seats.
+- **The Cradle Hall** (`bl_cradles`, interior): the sleeping quarters. A long vaulted hall of glazed cradles in rows
+  (about 60 visible; the rest implied beyond arches), each a lidded ceramic tub on a rail with a lamp and a number
+  plate (J-17 is Jory's). The shared **ring** (a pipe loop along the floor) joins them. Glazed windows from the street
+  look in. At the hall's end, the doors to the waking bay (W-12) and to the Cradle Control (W-12).
+- **Life (props; the story adds the people):** washing, a ladder against a gutter, children's chalk on the street, a
+  keepers' duty rota on a board, tools on hooks.
+
+**The puzzle's physical parts.**
+- The lift: three run states: `none`, `down` (visitors down, no way up), `both`.
+- The notice board: a stack of request slips that can show DEFERRED stamps (count set by the story).
+- Cradle lamps: per cradle `off|green|amber|red` (the story drives them; most green).
+- J-17's lid: shut / open; Jory's cradle on its rail can be rolled into the bay (W-12) and back.
+
+**Handles to export:** `BALLASTRA.terrace` from `src/game/ballastra/terrace.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_terrace` (outdoor), `bl_cradles`;
+  - `spawns`: `liftFoot` (at the gardens), `liftTop`, `cradlesIn`, `cradlesOut`, `garden`, `workshopOut`;
+  - `exits`: `toGardens` (via the lift ride), `toWorkshop` (W-10), `toBay`, `toControl` (W-12);
+  - doors both ways.
+- **Stand spots:** `wenna_board`, `wenna_lift`, `wenna_j17`, `jory_bench`, `jory_raft` (at W-3, the aftermath),
+  `garrow_shop`, `odra_garden`, `odra_lift` (aftermath), `sammo_lift`, `tib_street`, `keeper1`…`keeper4`.
+- **Interactive spots:** `noticeBoard`, `callHornFoot`, `callHornTop`, `liftCage`, `gardenBed_J17`, `cradleWindow`,
+  `j17`, `safe` (several).
+- **Methods:**
+  - `lift.setRun('none'|'down'|'both', instant)`, `lift.ride(dir)` (a short ride, then the story changes the scene);
+  - `board.setDeferred(n, instant)`;
+  - `cradle.setLamp(id, state)`, `cradle.setLid(id, open, instant)`, `cradle.roll(id, 'hall'|'bay', instant)`;
+  - `fountain.setRunning(b, instant)`, `street.setLife(level 0|1|2, instant)` (shutters, washing, chalk).
+- **Collision:** the cage is a platform; the garden's beds are low (step over not allowed: walk the paths); cradles
+  are solid.
+
+**Characters:** Wenna, Tib (W-7, already ordered), and for W-9: **Jory** (a young canal dweller, slight, hair grown
+long in sleep, a keeper's blanket over a sleeper's smock; after waking: a borrowed coat too big for him), **Garrow**
+(broad, leather apron, a keeper's bronze tag on a cord), **Nan Odra** (old, small, a shawl, a garden trowel),
+**Sammo** (a lanky teenager, a keeper's tag worn as a bracelet), two keeper residents (outfits on a shared body).
+
+**Budget and measures:** views of the street with the garden, the lift foot, the Cradle Hall down its length.
+**Pictures:** the street (closed and lived in), the garden, the hall, J-17 shut and open.
+**Built:** _(the builder)_
+
+---
+
+## W-10 · The keepers' workshop and the service passages (Draft)
+
+The terrace's only paid work, and the way into the places Oren keeps shut: the passages have no Ballastra ware in them,
+so nothing in them answers him (R1.4 rule 2). About 10 minutes (WK-1 step 2, the route of step 3).
+
+**The place.** Inside the `bl_terrace` group.
+- **`bl_kshop`** (interior): Garrow's workshop. Benches, cradle spares (lids, gaskets on pegs, a crate of glazed
+  heating elements), a forge corner, the keepers' tag board, a hatch in the floor to the passages.
+- **`bl_passages`** (interior): narrow brick service passages under the street and the Cradle Hall: pipes along the
+  walls (the ring's feed), knee-deep water in one stretch, ladders, three hatches:
+  1. up into the workshop;
+  2. up into the Register Room's back (W-11);
+  3. up into the waking bay (W-12).
+- **The flooded passage pump:** a float pump whose float is jammed high (a **ball latch** on its rod frees it), and a
+  wheel that runs it; the water falls from knee to ankle depth over a few seconds.
+
+**Handles to export:** `BALLASTRA.passages` from `src/game/ballastra/passages.js`.
+- **Rooms and spots:** `rooms`: `bl_kshop`, `bl_passages`; `spawns`: `shopIn`, `shopOut`, `passIn`, `toRegister`,
+  `toBay`; `exits`/doors and the three hatches both ways; `safe` spots.
+- **Stand spots:** `garrow_bench`, `garrow_hatch`, `sammo_pass`.
+- **Interactive spots:** `tagBoard`, `spares`, `pumpWheel`, `hatchRegister`, `hatchBay`.
+- **Ball target:** `pumpLatch`.
+- **Methods:** `pump.free(instant)`, `pump.setRunning(b, instant)`, `water.setLevel(0..1, instant)` (knee to ankle),
+  `hatch.setOpen(id, b, instant)`.
+- **Collision:** deep stretch (knee) walkable but slow; never deep enough to drown.
+
+**Budget and measures:** the workshop, the flooded stretch. **Pictures:** both, before and after the pump.
+**Built:** _(the builder)_
+
+---
+
+## W-11 · The Register Room, the restricted archive (Draft)
+
+Where the Cradles' paperwork has piled up for eighty years, behind a door Oren keeps shut. Quiet, dry, crowded,
+human: the place where the wrong is found in the sleepers' own handwriting. About 8 minutes (WK-1 step 3).
+
+**The place.** Inside the `bl_terrace` group: **`bl_register`** (interior), entered from the passages' hatch (the
+front door, onto Cradle Row, has a celadon actuator lock and stays shut: `frontDoor.setLocked`).
+- Shelves of register books floor to ceiling, two library ladders.
+- **The index drum:** a big rotating drum of cards (by sleeper number); turning it to J brings a card up.
+- **The terms cabinet:** small drawers, one per sleeper, with the signed terms card.
+- **The deferral ledger** on a lectern: one line per year per sleeper, stamped.
+- **The petitions box:** bundles of family petitions, tied, marked RECEIVED.
+- **The incident shelf:** the Bay 2 record, a slim bound report.
+- A window high up (light), dust in the beam (a baked shaft, no volumetrics).
+
+**Handles to export:** `BALLASTRA.register` from `src/game/ballastra/register.js`.
+- **Rooms and spots:** `rooms`: `bl_register`; `spawns`: `fromPassages`, `safe`.
+- **Interactive spots:** `drum`, `termsDrawer` (J-17), `ledger`, `petitions`, `bay2`, `frontDoor`.
+- **Methods:** `drum.turnTo(letter, instant)`, `drawer.setOpen(id, b, instant)`, `ledger.setOpen(b, instant)`,
+  `frontDoor.setLocked(b, instant)`.
+- No readable story text in the world; the story shows the card and the ledger as dialogue/inspect text.
+
+**Budget and measures:** one view. **Pictures:** the room, the drum, the drawer open.
+**Built:** _(the builder)_
+
+---
+
+## W-12 · The Cradle Control and the waking bay (Draft)
+
+The shelter control installation: Oren's fullest presence on Ballastra, and the bay where one sleeper can be woken
+safely by hand. About 20 minutes (WK-1 steps 4–7) and the aftermath's quiet glimpse.
+
+**The place.** Inside the `bl_terrace` group.
+- **`bl_control`** (interior): a round glazed chamber under a dome. At its centre the **Rings**: Oren's fixed presence,
+  four great celadon rings (about 4 m tall in all) slowly turning round a bronze bead (same language as R1.3; the
+  builder's model; it must read as Oren at a glance after seeing the small version). Round the wall: the **ring-pressure
+  board** (the shared ring's gauge and a lamp per cradle row), the hush horns (glazed mouths), the bay's control-side
+  valve (Oren locks it), the terrace lift's control wheel (celadon).
+- **`bl_bay`** (interior): the waking bay off the Cradle Hall. A rail spur brings one cradle in. Parts:
+  - **the isolating valve** (a hand wheel plus a **hand lever** that can be held: an NPC stand spot beside it);
+  - **the ring gauge** with the two neighbours' lamps beside it;
+  - **the seal**: an old swollen gasket at the isolation flange (sword target), and a seat where the spare fits;
+  - **the warmer**: a heating cabinet with an **element slot** (glazed element in; brass element swap);
+  - **the lid release** on the cradle's end;
+  - two **keeper automaton** alcoves (W-7's keepers, given cradle duty: the same bodies) and their path to the valve.
+
+**Handles to export:** `BALLASTRA.control` from `src/game/ballastra/control.js`.
+- **Rooms and spots:** `rooms`: `bl_control`, `bl_bay`; `spawns`: `controlIn`, `bayIn`, `bayFromPassages` (hatch),
+  `safe` spots; exits to the Cradle Hall (W-9) and the passages (W-10).
+- **Stand spots:** `wenna_lever`, `tessa_warmer`, `garrow_bay`, `sammo_bay`, `jory_wake` (sitting up), `keeperA`,
+  `keeperB` (alcoves), `odra_control` (aftermath).
+- **Interactive spots:** `rail` (crank), `isoWheel`, `isoLever`, `ringGauge`, `sealSeat`, `warmer`, `elementSlot`,
+  `lidRelease`, `boardRow` (look), `controlValve` (look).
+- **Sword target:** `seal`. **Ball targets:** none required (the keepers are enemies with their own hit rules).
+- **Methods:**
+  - `rings.setState('turning'|'attending'|'locked', instant)` (the Rings: turn, stop in line, lock with a clack);
+  - `ring.setGauge(0..1)`, `ring.setNeighbour(i, 'green'|'amber'|'red')`;
+  - `iso.set(open 0..1, instant)`, `iso.setHeld(b)` (the lever down while someone holds it);
+  - `seal.setState('swollen'|'cut'|'new', instant)`;
+  - `warmer.setElement('glazed'|'none'|'brass', instant)`, `warmer.setRunning(b)`, `warmer.setStage(0..3, instant)`;
+  - `cradle.setLid(open, instant)` (J-17 in the bay);
+  - `controlValve.setLocked(b, instant)`; `lift.setRun` mirrored from W-9.
+- **Keepers:** spawn points and a short path each from alcove to the valve; the story drives them (pushback rules).
+- **Collision:** the rail spur is solid except at its crank; the warmer and the cradle solid.
+
+**Budget and measures:** the control with the Rings turning, the bay with four people and two keepers.
+**Pictures:** the Rings, the board, the bay before and after the brass swap, J-17 open.
+**Built:** _(the builder)_
+
+---
+
+## W-6, W-7, W-8 additions (OREN-GUARDIAN)
+
+- **W-6 · the paired stone** (OG-7): in `uw_wound`, a crystal column (about 6 m) beside the bore's path, banded like the
+  layers but clear at its heart; it rings (`stone.ring()`: a brief brightening and a low note) on the story's drill
+  stroke, and stills (`stone.setStill(b, instant)`). Its base disappears into the bore's casing toward the core.
+- **W-7 · Halden** replaces the old "Oren (D9)" entry word for word (the designer's look is unchanged: taller, upper
+  district coat, keeps from the water). The **keepers** (automatons) gain cradle duty in W-12: same bodies.
+- **W-8a · the fence gate** (OG-2): the ch.-8 fence round Citadel's square gets one gate with a celadon actuator box and
+  a three-light counter (`fenceGate.setOpen(b, instant)`, `fenceGate.setCount(0..3)`), plus a small bell latch high on
+  its post (ball target, `fenceGate.bell`).
+- **W-8 · a shelter interior** (OG-5): one interior `shelter` used for both of FunFrock's shelters (bunks, the air
+  governor on its pipe with a celadon body, a hand lever at the door, a dead-coupling seat on the governor's pipe).
+  Handles: `governor.setHush(b)`, `governor.setCoupled(b, instant)`, `door.setLocked(b, instant)`, `bunks[0..n]`.
+- **W-8b · the core's rings** (FIN-1): a ring housing round Vesk's coil (the same Ballastra ware), each pylon's
+  governor with a hand lever and a lamp `off|celadon|amber`, and a map board of the stations
+  (`coil.setRings(b)`, `pylonGov(i).setState(...)`, `board.setStation(id, state)`).
+
 ## Hooks (shared files touched, by either side)
 
 _(file, line or function, why)_
+- `src/game/regions.js` (W-1, the World Builder): the import of `ballastra/harbor.js`, `REF.ballastra`, `AT.bl_shed`,
+  `OUT_AT.ballastra`, one `add('ballastra', ['ballastra', 'bl_shed'], …)` line: Float Harbor's lazy group (built in steps).
+- `src/game/regions.js` (W-2, the World Builder): the import of `ballastra/arches.js`, `REF.bl_arches`, `AT.bl_oren`,
+  `AT.bl_mags`, `AT.bl_pump`, `OUT_AT.bl_arches`, one `add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'], …)`
+  line: the Arch District's lazy group (built in steps), each commented.
+- `src/game/lba1places.js` `climbShelfWall` (EXP-MERGE-35, the World Builder): the shelf fill's block and collision box
+  across the foot landing's north edge run to the landing's line (`kz`), closing a pocket by the wall's north end that
+  pinned the hero (oren-square's walk from the fortress shelter); base code: also `tools/testlab/requests/EXP-MERGE-35-base.diff`.
+- `src/game/regions.js` (W-3, the World Builder): the import of `ballastra/gardens.js`, `REF.bl_gardens`, `AT.bl_tunnel`,
+  `AT.bl_kiln`, `OUT_AT.bl_gardens`, one `add('bl_gardens', ['bl_gardens', 'bl_tunnel', 'bl_kiln'], …)` line: the Water
+  Gardens' lazy group (built in steps), each commented.
+- `tests/world-consistency.mjs` `TRANSITIONS` (EXP-MERGE-35): the expanded campaign's `startTransition` calls classified
+  (coils.js, index.js afterLoad, survey.js, throttle.js); expansion branch only (on main those calls don't exist).

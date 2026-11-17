@@ -7,6 +7,7 @@ Object.assign(STR.he, {
   chapter_well: 'הבאר', chapter_project: 'המיזם המשותף', chapter_zeelich: 'זיליך', chapter_dig: 'החפירה',
   chapter_steam: 'קיטור וחול', chapter_pass: 'המעבר', chapter_observatory: 'המצפה', chapter_evacuation: 'פינוי',
   chapter_council: 'המועצה', chapter_network: 'הרשת של בלדינו', chapter_shell: 'הקליפה', chapter_core: 'הליבה', chapter_home: 'הביתה',
+  chapter_throttle: 'זמן שאול', chapter_survey: 'מתחת לבאר', chapter_ballastra: 'בלסטרה', chapter_balances: 'בית המאזניים',
   idle_generic: 'שלום, טווינסן.',
   // Joe the Elf (LBA2), still in town
   asy_register1: '(פנקס הרישום הישן של בית המשוגעים. העובדים שומרים אותו על המדף כמו שריד קדוש. בעמוד האחרון: "מטופל: טווינסן. אבחנה: חולם על אלה. תא 2." מישהו צייר שפם על החתימה של פאנפרוק.)',

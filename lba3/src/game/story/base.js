@@ -5,6 +5,7 @@ import { t } from '../i18n.js';
 
 export const SPEAKER_COLORS = {
   hero: '#8fc2ff', narrator: '#ffffff', sendell: '#bff4ff', zoe: '#ffb0d0', vesk: '#c8a8ff', baldino: '#ffd890', radio: '#a8ffb8',
+  oren: '#a8d8c0',   // (OREN-GUARDIAN: celadon, his glaze)
 };
 
 export class ChapterBase {
