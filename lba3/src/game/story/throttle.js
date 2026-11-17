@@ -20,8 +20,8 @@
 //      the B-7, open the feed, turn its band until the branch gauge's needle sits on green (too much: the old joint
 //      weeps; too little: a trickle). Oren tries the lever (the B-7 is Ballastra ware on the project's metal); a hand on
 //      it beats him. Gilbert takes the lever. Vesk on the project's wire: a station that can say no will say no; Zoé
-//      answers him. Baldino calls: the relays are built. The next chapter of the campaign begins (the network while the
-//      Ballastra chapters are not written: Story.nextIndex passes the empty ones).
+//      answers him. Baldino calls: the relays are built (EXP-2: with chapter 11 next, a relay only passes word along, the
+//      B-7 holds a station by hand: Zoé's return label, Ballastra, the council's freighter). The next chapter begins.
 //
 // Flags: og_ (OG-1: og_started, og_home, og_arrived, og_room, og_bleed 0-3, og_steady, og_thanks); th_ (EXP-1: th_zoeGo,
 // th_met, th_reg, th_cA, th_cC, th_cB 1|2, th_b7, th_zoeDone, th_feedShut, th_fitted, th_band 1-5, th_set, th_push,
