@@ -182,7 +182,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // instead (the search swings it along the foot first). Only when nothing round him is clear does the arm come in to
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
-const CH_SOFT_T = 0.6, CH_SOFT_GO = 1.0;   // (CAM-COVER: a round crown counts once he has stood this long, until he walks this far: _chase)
+const CH_SOFT_T = 1.0, CH_SOFT_GO = 1.0;   // (CAM-COVER: a round crown counts once he has stood this long, until he walks this far: _chase; AUDIT-FIX: 1.0 s, was 0.6 — with the crowns' shape as drawn, world.js SIGHT, a stand of 0.6 s at a corner by a tree had the arm lift over the crown and drop back as he walked on: camsteady's walk along the house walls)
 const CH_LOW_SEE = 0.25, CH_EL_KEEP_DOOR = (11 * Math.PI) / 180;   // (CAM-ROOFEDGE: the low point of him that nothing tall may hide, m over his feet: _sees; his chest inside the frame's foot just out of a door: _chase)
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
 const CH_HOLD_IDLE = 1.0, CH_SW_SETTLE = 0.3;
@@ -837,7 +837,9 @@ export class CameraRig {
         // camera kept its view and he showed as an outline through the leaves. A round tree's crown, high over its trunk,
         // is still seen under)
         // (CAM-COVER, release audit v75 F-8: a round tree's crown, sight.soft, only once he has stood a moment: _chase)
-        if (c.sight && (!c.sight.soft || this._softOn) && y > c.sight.y0 && y < c.sight.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.sight.r ** 2) return false;
+        // (AUDIT-FIX, RELEASE-AUDIT-v96 A-6: `bulb`, a round crown's leaf mass as drawn — round, flattened at its top and its
+        //  foot: (d / r)² + (h / half-height)⁴ < 1, h from the middle of y0..y1 — world.js SIGHT)
+        if (c.sight && (!c.sight.soft || this._softOn) && y > c.sight.y0 && y < c.sight.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.sight.r ** 2 * (c.sight.bulb ? 1 - ((2 * y - c.sight.y0 - c.sight.y1) / (c.sight.y1 - c.sight.y0)) ** 4 : 1)) return false;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }

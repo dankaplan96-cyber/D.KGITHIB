@@ -147,6 +147,7 @@ export class PumpLine {
             c.set(true); U.shake('upper', 1.0); g.audio.play('waterRun', U.upperAt); g.audio.play('rattle', U.upperAt);
             g.particles.burst(U.upperAt.x + 1.5, U.upperY ?? 2.35, U.upperAt.z + 0.15, '#b8a890', 6, 0.9);
             f.ct_wrong = (f.ct_wrong || 0) + 1;
+            f.ct_seen = true;   // (AUDIT-FIX: turned from short of the alcove line, the bypass has still been seen: the objective moves on)
             const later = U.after ? (t, fn) => U.after(t, fn) : (t, fn) => this.after(t, fn);
             later(0.8, () => { c.set(false, true); g.audio.play('valveShut', c); g.audio.play('clunk', c); g.camRig.shake?.(0.06); });
             later(1.15, () => this.knocks(1, later));

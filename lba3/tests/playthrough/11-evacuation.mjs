@@ -33,10 +33,20 @@ export const steps = [
   ['Zoé: to the landing → Twinsen', () => {
     const G = game, f = G.flags, L = G.world.laneGate;
     if (!f.ev_v) return { skip: 'no thread' };
-    P.go(L.landing.x + 1.6, L.landing.z + 0.4, { tol: 1.2, run: true, maxT: 120 });
+    // (AUDIT-FIX A-3: a walk that a door takes indoors — the neighbours' stood beside Hedda and Tobin, A-9 — walks out again
+    //  through the room's exit and on, as a player would; three tries)
+    const rooms = [];
+    for (let k = 0; k < 3; k++) {
+      if (G.room && !G.room.outdoor) { rooms.push(G.room.id); const e = G.room.exits.find((x) => !x.room) || G.room.exits[0]; P.through(e.x, e.z); P.settle(); }
+      P.go(L.landing.x + 1.6, L.landing.z + 0.4, { tol: 1.2, run: true, maxT: 120 });
+      for (let i = 0; i < 60 && G.trans; i++) G.step(0.1);
+      P.settle();
+      if (!G.room || G.room.outdoor) break;
+    }
+    if (rooms.length) P.note('to the landing: out again of ' + rooms.join(', '));
     let t = 0; while (!(f.c8_zoeDone && G.hero.body === 'twinsen' && G.state === 'play' && !G.trans) && t < 60) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); }
     P.settle();
-    return { done: !!f.c8_zoeDone, body: G.hero.body, waited: +t.toFixed(1), fail: f.c8_zoeDone && G.hero.body === 'twinsen' ? null : 'handover' };
+    return { ...(rooms.length ? { rooms } : {}), done: !!f.c8_zoeDone, body: G.hero.body, waited: +t.toFixed(1), fail: f.c8_zoeDone && G.hero.body === 'twinsen' ? null : 'handover' };
   }],
   // ---- as Twinsen: the pump room
   ['the pump room: the culvert pipe', () => {

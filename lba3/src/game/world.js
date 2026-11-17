@@ -148,7 +148,10 @@ const GRID_STREETS = [
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
   [-35.0, 3.6, -35.0, 31.3, 3.0],
 ];
-const HARBOUR_YARD = { x0: -104.5, z0: 30.4, x1: -75.5, z1: 44.0 };   // (only where the ground stands above the shore, h > 1.2; CITADEL-ORIG-2: on to the platform's south face)
+// (AUDIT-FIX, the user's P49: from the quay's east face, x0 QUAY.x1 − 0.5 — it began at −104.5 and the quay's paving stopped
+//  at −108, so between them, by the PIER signpost and the ferry's board, the old harbour path's dirt and the grass beside it
+//  showed on the paved quay in straight-edged patches)
+const HARBOUR_YARD = { x0: QUAY.x1 - 0.5, z0: 30.4, x1: -75.5, z1: 44.0 };   // (only where the ground stands above the shore, h > 1.2; CITADEL-ORIG-2: on to the platform's south face)
 // CITADEL-ORIG-2: LBA2's harbour platform (island.js HARBOUR_PLAT), paved to its straight faces
 const HARBOUR_SE = { x0: -91.3, z0: 44.0, x1: -79.0, z1: 51.0 };
 // the block the south streets close (between the west street, the fields' path and the two cross streets): LBA2's
@@ -601,7 +604,8 @@ function islandSplat(x, z, h, slope, w) {
     w[2] = Math.max(w[2], rock * 1.2);
   }
   // the quay is paved
-  if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - (QUAY.x1 - 1)) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
+  // (AUDIT-FIX, P49: to its east face, QUAY.x1, where the harbour yard's paving takes over; it stopped a metre short)
+  if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - QUAY.x1) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
   // MAP-ORIG: LBA2's straight town streets, the sea wall's promenade and the harbour wing's yard (GRID_STREETS)
   if (h > 1.2) w[4] = Math.max(w[4], smoothstep(0.3, -0.25, gridPaveDist(x, z) + n * 0.2) * 3);
   { const be = h > 1.2 ? townBlockEarth(x, z, n) : 0; if (be > 0) { w[3] = Math.max(w[3], be * 2.5); w[0] *= 1 - be * 0.95; } }
@@ -1168,10 +1172,15 @@ export function* buildWorldSteps(parentScene) {
   //  2.85 m, vegetation.js, its lobes 1.0 m out —: by the hopscotch a round crown filled the view between the camera and
   //  him, his outline showing, while the sight test read him as seen. A line under the crown still sees him. `soft`:
   //  counted once he has stood a moment, camera.js CH_SOFT_T)
-  const SIGHT = { tall: [0.62, 1.1, 5.6], pine: [0.85, 1.0, 4.6], round: [1.5, 1.95, 3.85], fruit: [1.5, 1.95, 3.85] };   // (core radius, from, to: m at scale 1)
+  // (AUDIT-FIX, RELEASE-AUDIT-v96 A-6/F-8: the round and fruit crowns' shape for the camera is the leaf mass as drawn,
+  //  `bulb`: measured on the crowns' meshes (every variant, both LODs), 1.75–1.9 m round from 2.3 to 3.5 m, 1.4 m at 2.0 m and
+  //  at 3.9 m, from 1.8 to 4.1 m (the instance stands 8 cm low): a round flattened at top and foot. The cylinder of 1.5 m from
+  //  1.95 m stood 0.3–0.4 m inside the leaves, so a camera with its arm's end in them read him as seen while the crown
+  //  filled the frame (camcover's crown spot, the cliff plateau's tree in chapter 2))
+  const SIGHT = { tall: [0.62, 1.1, 5.6], pine: [0.85, 1.0, 4.6], round: [1.9, 1.72, 4.02, true], fruit: [1.9, 1.72, 4.02, true] };   // (core radius, from, to: m at scale 1; bulb)
   for (const t of trees) if (!t.gone) {
     const S = SIGHT[t.kind];
-    physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s, soft: t.kind === 'round' || t.kind === 'fruit' } } : {}) });
+    physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s, soft: t.kind === 'round' || t.kind === 'fruit', bulb: !!S[3] } } : {}) });
   }
   for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
@@ -1438,7 +1447,7 @@ export function* buildWorldSteps(parentScene) {
     const part = (geo, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y + 0.6, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; disc.add(o); return o; };
     part(new THREE.CylinderGeometry(0.56, 0.56, 0.11, 28).rotateX(Math.PI / 2), mat('#c8a464'), 0, 0, 0);   // the straw butt
     const face = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.9 });
-    part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, 0.057); part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, -0.057, Math.PI);   // (painted both sides)
+    part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, 0.062); part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, -0.062, Math.PI);   // (painted both sides; AUDIT-FIX: 7 mm off the butt's faces, at 0.057 they flickered against them, worldfit)
     part(new THREE.TorusGeometry(0.575, 0.045, 8, 36), ringMat, 0, 0, 0);   // the hoop: its glow says hit or not
     part(new THREE.BoxGeometry(0.1, 0.2, 0.18), wood, 0, -0.62, 0);   // the bracket over the post's pin
     mergeStatic(disc, { recolor: true, retex: true });   // (the butt, the bracket and both faces: one draw; the hoop, whose glow changes, its own)
