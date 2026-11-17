@@ -17,6 +17,7 @@ Object.assign(STR.en, {
   n_mrbazoo: 'Mr Bazoo', n_pell: 'Mrs Pell', n_ines: 'Ines', n_rollo: 'Rollo', n_pharmacist: 'The Pharmacist',
   n_hedda: 'Hedda', n_wim: 'Wim', n_osk: 'Osk',
   n_ama: 'Ama', n_gurt: 'Gurt', n_bern: 'Port Guard', n_lomba: 'Mrs Lomba', n_dov: 'Dov',
+  n_rhun: 'Rhun', n_pema: 'Pema', n_kesa: 'Kesa', n_brin: 'Brin',   // (SPACEPORT-3: the apron's crew and two travellers)
   n_ressa: 'Old Ressa', n_ollo: 'Ollo', n_esren: 'Esren', n_gunda: 'Gunda', n_bibi: 'Bibi',
   n_velo: 'Velo', n_ennu: 'Ennu', n_oshra: 'Oshra', n_tavi: 'Tavi', n_pask: 'Pask',
   n_zt_guard: 'Council Guard', n_zt_guard2: 'Council Guard', n_rollo_q: 'Rollo', n_pell_q: 'Mrs Pell',   // (WC-4: the same two, in the evacuation's queue)
@@ -143,6 +144,22 @@ Object.assign(STR.en, {
   rs_dov_g1: "Ask the guard inside when we fly. He'll say 'not today'. He's been right every day so far.",
   rs_dov_e0: "Not on the list. I've waited on this bench so long, I'll wait here for the next one too.",
   rs_dov_e1: "I help with the bags. If I can't go, my arms can at least be useful.",
+
+  // (SPACEPORT-3: the apron's crew — Rhun the technician, Pema the fueller — and two travellers at the boarding rope)
+  rs_rhun_work: 'Seal, checked. Leg, checked. Me, needs a coffee.',
+  rs_rhun_g0: "Grounded ships get their checks too. The list doesn't read notices.",
+  rs_rhun_g1: "Forty-two points on the checklist. I'm on twelve. I've been on twelve since the notice went up.",
+  rs_rhun_f0: 'Every seal, every leg, every lamp, before every flight. Then I sign the bottom of the list.',
+  rs_rhun_f1: 'She flew in hot this morning. Esmer ships always come in hot. They like an entrance.',
+  rs_rhun_e0: 'No shortcuts on the list. Not today. Especially not today.',
+  rs_pema_work: 'Hose is live. Mind your feet.',
+  rs_pema_f0: 'Fuel for Zeelich and back, and a bit over. Pilots like a bit over.',
+  rs_pema_f1: "Esmer fuel smells of nothing at all. That's how you know it's the good stuff.",
+  rs_pema_e0: 'Fill, fly, fill, fly. Every project ship leaves this pad full.',
+  rs_kesa_f0: "They call us out to the ship once the hose is off. I'm first at the rope. I got here early.",
+  rs_kesa_f1: 'My first time up. Is it true the ground goes small?',
+  rs_brin_f0: 'Through the gate, wait at the rope, mind the hose. I read every sign on the way.',
+  rs_brin_f1: "Once the fuel lady waves, we board. She hasn't waved.",
 
   rs_tavi_work: 'Coffee, tea, or the Zeelich stuff that glows a bit. The glow is free.',
   rs_tavi_g0: 'No flights means nobody in a hurry. Best week for the café since it opened.',

@@ -78,6 +78,7 @@ import { NELLHOUSE_PLAN } from './nellhouse.js';
 import { BAGGAGE_PLAN } from './baggage.js';
 import { TERMINAL_PLAN } from './terminal.js';
 import { ZTERMINAL_PLAN } from './zterminal.js';
+import { APRON } from './spaceport.js';
 import { SCHOOL_ROOM, UPPER_ROOM } from './storylife.js';
 import { OTRBAR_ROOM, OTRHOTEL_ROOM } from './islandlife.js';
 import { workSpot, workStep, storySig, standsAt } from './workhands.js';
@@ -149,14 +150,15 @@ const tmSeat = (i) => TM.seats[i];   // (row 1's seats: the first ROWN)
 const ask = (id, dx, dur, o = {}) => L(id, TM.CX + dx, TM.PZ1 + 1.05, TM.CX + dx, TM.CZ, 'stand', dur, o);
 // the place to stand beside a chair (s: which side, d from its middle), to sit down from
 const beside = (c, s, d = 0.65) => [c.x + s * d * Math.cos(c.a), c.z - s * d * Math.sin(c.a)];
-// WC-4, the evacuation's queue in Citadel's terminal (its frame): the guard with the project's list 1.3 m into the hall
-// from the gate's way in (clear of it and of the gate's pillars: the way to the gate along the left wall stays 1.2 m
-// wide past him); the queue from him toward the seats, a metre apart (clear of the board's reading spot and of the
-// café's chairs); the one turned away at the café's end of the line
+// WC-4, the evacuation's queue in Citadel's terminal (its frame): the guard with the project's list at the gate's right a
+// step into the hall (SPACEPORT-3: the gate is in the back wall now, at its left end; the way to it down the hall's left
+// side stays 2.4 m wide past the queue); the queue from him toward the front, a metre apart (clear of the board's reading
+// spot and of the café's chairs); the one turned away by the gate's inner pillar, toward the café
 const TQ = (() => {
-  const list = { x: TM.LX + 2.5, z: TM.GATEZ + 0.9 };
-  const q = [{ x: TM.LX + 2.4, z: TM.GATEZ + 1.95 }, { x: TM.LX + 2.3, z: TM.GATEZ + 2.95 }, { x: TM.LX + 2.8, z: TM.GATEZ + 3.85 }];
-  const refused = { x: TM.LX + 3.7, z: TM.GATEZ + 0.2 };
+  const GX = TM.GATEX, BZ = TM.BZ;
+  const list = { x: GX + 1.5, z: BZ + 1.5 };
+  const q = [{ x: GX + 1.0, z: BZ + 2.5 }, { x: GX + 0.8, z: BZ + 3.5 }, { x: GX + 0.9, z: BZ + 4.5 }];
+  const refused = { x: GX + 2.4, z: BZ + 0.85 };
   // (a place in the queue, facing the one in front: the first faces the guard)
   const stop = (id, k, dur, o = {}) => { const a = k ? q[k - 1] : list; return L(id, q[k].x, q[k].z, a.x, a.z, 'stand', dur, { stage: EVAC, ...o }); };
   return { list, q, refused, stop };
@@ -373,14 +375,44 @@ export const ROOMS = {
 // the Zeelich map at (−5.6, 44.2) south of it). The bridge and the kiosk are landside: none of these people go there.
 // `when`: 'grounded' (chapters 1–3, before passenger flights run) or 'flying' (from chapter 4).
 const CB = [-4.0], CBZ = 34.9;   // (the bench's middle: spaceport.js; SPACEPORT-2: one bench, by the gate)
+const PAD = { x: 4.5, z: 41 };   // (the pad's middle: spaceport.js)
 const SB = (id, bx, side, dur, o = {}) => S(id, [bx + side * 0.45, CBZ + 0.95], [bx + side * 0.45, CBZ, 0, SEAT.portBench], dur, o);
 const MAP = { x: -5.6, z: 44.2 };   // (the Zeelich map's stand: read from its walkway side)
+// SPACEPORT-3 (the user, 17.11: "the spaceship pad part is very empty and sad"): the apron's crew, each at a job with
+// their hands on its things (spaceport.js APRON): Gurt loads the cargo (the stack on the cargo side → the loading pallet
+// by the ship's north side → the hold's side of the hull), Rhun the technician walks the ship's checks with the
+// checklist on the tool trolley (every chapter: grounded ships get checked too), Pema the fueller works the fuel cart,
+// the hose's coupling at the ship's port and the hose on the deck (while ships fly: the hose is run out then); two
+// travellers wait at the boarding line's rope by the walkway (while ships fly). In the grounded chapters the apron has
+// Gurt and Rhun at work and Dov on his bench (chapter 2: and Doran at the fuel cart, story/chapter1.js)
+const AP = APRON, front = (o, d) => ({ x: o.x + Math.sin(o.ry) * d, z: o.z + Math.cos(o.ry) * d, a: o.ry + Math.PI });   // (before a thing built facing +z, facing it)
+const TOOLS = front(AP.tools, 0.78), PALLET = { x: AP.pallet.x, z: AP.pallet.z + 1.15 }, HOSE = { x: 0.81, z: 42.53 };
 const CITADEL_PORT = [
   { id: 'gurt', char: 'hesk', tint: '#dfe6fb', color: '#e0a060', speed: 0.9, start: 1, when: 'always', stops: [
-    L('gurt_crates', 9.0, 30.4, 10.45, 28.75, 'put', [5, 8], { carry: 'crate' }),
-    L('gurt_trolley', 9.6, 35.4, 10.4, 34.4, 'put', [5, 7], { carry: null }),
+    L('gurt_crates', 9.0, 30.4, 10.45, 28.75, 'put', [5, 8], { carry: 'crate' }),          // (a crate off the cargo side's stack)
+    L('gurt_pallet', PALLET.x, PALLET.z, AP.pallet.x, AP.pallet.z, 'put', [5, 7], { carry: null }),   // (set on the loading pallet)
+    D('gurt_ship', AP.checks[2].x, AP.checks[2].z, AP.checks[2].a, 'reach', [6, 9]),        // (the hold's side of the hull)
+    L('gurt_trolley', 9.6, 35.4, 10.4, 34.4, 'put', [5, 7]),
     L('gurt_cargo', 11.0, 46.3, 12.6, 45.6, 'browse', [10, 14]),
-    L('gurt_ship', 9.6, 37.0, 4.5, 41, 'reach', [6, 9]),
+  ] },
+  { id: 'rhun', char: 'worker', tint: '#e8ecf4', color: '#c8d0e0', speed: 0.85, start: 0, when: 'always', stops: [
+    D('rhun_list', TOOLS.x, TOOLS.z, TOOLS.a, 'browse', [10, 14]),                            // (the checklist on the tool trolley)
+    D('rhun_hull', AP.checks[0].x, AP.checks[0].z, AP.checks[0].a, 'reach', [6, 9]),         // (a seal on the hull's south side)
+    D('rhun_list2', TOOLS.x, TOOLS.z, TOOLS.a, 'browse', [6, 9], { gest: ['nod'] }),          // (ticked off)
+    D('rhun_hull2', AP.checks[1].x, AP.checks[1].z, AP.checks[1].a, 'reach', [6, 9]),        // (and the south-east one)
+  ] },
+  { id: 'pema', char: 'worker_b', tint: '#f4ecdc', color: '#e8c070', speed: 0.9, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+    D('pema_panel', AP.fuel.stand.x, AP.fuel.stand.z, AP.fuel.stand.a, 'browse', [12, 18]),   // (the fuel cart's panel)
+    D('pema_port', AP.port.stand.x, AP.port.stand.z, AP.port.stand.a, 'reach', [6, 9]),      // (the hose's coupling at the ship's port)
+    L('pema_hose', HOSE.x - 0.35, HOSE.z - 0.55, HOSE.x, HOSE.z, 'kneelWork', [5, 8]),       // (the hose on the deck: no kinks)
+  ] },
+  { id: 'kesa', char: 'lharWoman', tint: '#fff0f0', color: '#e8a8a8', speed: 0.85, start: 0, when: 'flying', stops: [
+    L('kesa_line', AP.rope.x1 - 0.6, AP.rope.z - 0.6, PAD.x, AP.rope.z - 0.6, 'stand', [30, 45], { carry: 'case', gest: ['shrug'] }),   // (first at the rope)
+    L('kesa_rail', -2.5, 26.9, -2.5, 24, 'stand', [10, 14]),                                  // (the bay from the north rail)
+  ] },
+  { id: 'brin', char: 'farmerA_b', tint: '#eef2e0', color: '#c0d090', speed: 0.9, start: 0, when: 'flying', stops: [
+    L('brin_line', AP.rope.x1 - 1.6, AP.rope.z - 0.6, PAD.x, AP.rope.z - 0.6, 'stand', [30, 45], { carry: 'case', gest: ['sigh'] }),   // (behind her)
+    D('brin_fountain', -5.65, 37.4, -Math.PI / 2, 'reach', [5, 7]),                            // (a drink at the fountain on the terminal's wall)
   ] },
   // (SPACEPORT-1: the clerk, the port guard and Mrs Lomba went inside, to the terminal's counter, gate and seats; Dov
   //  stays out on the bench, watching the grounded ship)

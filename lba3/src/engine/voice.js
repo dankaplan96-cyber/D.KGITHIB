@@ -418,11 +418,12 @@ const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', '
   'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi',
   'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait', 'marl',
   'ot_ulla', 'ot_boss', 'ot_clerk', 'ot_guest', 'kn_nets', 'kn_mother', 'mb_bzzra', 'or_pick1', 'ce_dancer1', 'ce_lanterns', 'ug_carrier', 'pf_vill1', 'ow_oumi', 'ow_sketch',
+  'pema', 'kesa',
   'cs_corla', 'ih_liwa', 'zh_lissa', 'zh_wenna', 'zr_oma', 'hs_cook', 'ih_dela', 'ih_nima', 'ih_hanna']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
-  'luc', 'hobb', 'fenn', 'fosse', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
+  'luc', 'hobb', 'fenn', 'fosse', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask', 'rhun', 'brin',
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
   'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2', 'tibbo',
   'ot_tanek', 'ot_sweep', 'ot_porter', 'ot_keep', 'kn_quill', 'kn_fisher', 'or_pell', 'or_pick2', 'ce_steward', 'ce_dancer2', 'ld_op', 'ld_crane', 'ld_load1', 'ow_mason',

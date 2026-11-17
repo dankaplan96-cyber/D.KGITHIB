@@ -205,6 +205,8 @@
       try {
         P.note(`go: through the spaceport's terminal (${toAir ? 'onto the deck' : 'off the deck'})`);
         P.enter('terminal', { run });
+        // (SPACEPORT-3: chapter 2's flight form first, at the counter, as a player who follows the objective does)
+        if (toAir && G.room?.id === 'terminal' && G.story?.isles?.formWanted?.()) P.portForm();
         const x = G.room?.id === 'terminal' && G.room.exits.find((q) => q.to === (toAir ? 'terminal-gate' : 'terminal-out'));
         if (x) P.through(x.x, x.z, { run });
       } finally { P._portRoute = false; }
@@ -265,6 +267,23 @@
   };
 
   // turn on the spot to face a point (Classic: Left/Right)
+  // SPACEPORT-3: chapter 2's errand in Citadel Spaceport's terminal: to the ticket counter, E (its prompt, or Ama's), the
+  // talk read, the form signed (his 'use' at the counter, then her line); returns whether the form is signed
+  P.portForm = () => {
+    if (G.room?.id !== 'terminal') return false;
+    let c = null; G.story.isles.interactables((d, r, o) => { if (o.kind === 'termCounter') c = o.tm.H.counter; }, () => 0);
+    if (!c) return false;
+    const ready = () => { const k = P.target(); return k?.kind === 'termCounter' || k?.id === 'ama'; };
+    for (let k = 0; k < 3 && G.story.isles.formWanted(); k++) {
+      P.go(c.x, c.z, { tol: 0.35, maxT: 40, stopWhen: ready }); P.face(c.x, c.z - 1);
+      for (let i = 0; i < 12 && !ready(); i++) G.step(0.25);
+      if (!ready()) continue;
+      P.tap('KeyE', 0.1);
+      for (let i = 0; i < 8 && G.story.isles.formWanted(); i++) { P.settle(); G.step(0.4); }
+      P.settle();
+    }
+    return !G.story.isles.formWanted();
+  };
   P.face = (x, z, maxT = 4) => {
     const h = hero(); let t = 0;
     while (t < maxT) {
