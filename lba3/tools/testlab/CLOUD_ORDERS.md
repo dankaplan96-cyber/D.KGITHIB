@@ -575,3 +575,6 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     3. When the user plays the installed build and reports, put each report in the playtest inbox (the cloud's status.md
        rows come from the cloud; send them as notes in WORLD_ART_REQUESTS.md "USER-PLAY-689").
     Rules as always: results labelled by where they ran, no LBA1/LBA2 files committed, the no-clutter rule.
+53. **The user, 17.11: no downloadable builds for now, the artifact only.** Don't put [build] in a commit message and don't
+    run desktop.yml by hand until the user asks for an installer again. CHAIN-V96 / V96-GPU (order 52) stay: run them
+    against the artifact (Chrome) or the repo served locally.
