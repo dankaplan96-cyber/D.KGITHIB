@@ -163,7 +163,7 @@ function buildArchive(scene, physics) {
     const SX0 = GX0, SX1 = GX0 + 1.0, TR = 0.45;
     for (let i = 0; i < 7; i++) {
       const z0 = GZ1 + i * TR, top = GY - (i + 1) * 0.3;
-      k.add(rbox(SX1 - SX0, top, TR, 0.01), stone, (SX0 + SX1) / 2, top / 2, z0 + TR / 2);
+      k.add(rbox(SX1 - SX0, top - 0.01, TR, 0.01), stone, (SX0 + SX1) / 2, (top - 0.01) / 2, z0 + TR / 2);   // (OVERLAP-SWEEP: 1 cm under its plank tread's top: one plane with it, the seven treads fought it)
       k.add(rbox(SX1 - SX0 + 0.02, 0.04, TR + 0.02, 0.01), plank, (SX0 + SX1) / 2, top - 0.02, z0 + TR / 2);
       B.col((SX0 + SX1) / 2, (GZ1 - 0.15 + z0 + TR) / 2, (SX1 - SX0) / 2, (z0 + TR - GZ1 + 0.15) / 2, top, { stair: true });
     }
