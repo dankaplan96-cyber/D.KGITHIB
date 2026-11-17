@@ -159,8 +159,10 @@ export function buildSkyFerry(game, Z) {
   stat.add(rbox(iw1 - iw0, H.h - 0.02, 0.02, 0.005), lining, cx, Y0 + H.h / 2, bz1 - 0.011);
   for (const x of [iw0 + 0.011, iw1 - 0.011]) stat.add(rbox(0.02, H.h - 0.02, bz1 - bz0, 0.005), lining, x, Y0 + H.h / 2, (bz0 + bz1) / 2);
   const dl = D.x - D.hw, dr = D.x + D.hw;
-  wall((H.x0 + dl) / 2, H.z0 + t / 2, dl - H.x0, t);   // north, west of the door
-  wall((dr + H.x1) / 2, H.z0 + t / 2, H.x1 - dr, t);   // north, east of the door
+  // (AUDIT-FIX A-7: between the side walls, as the back wall is: run on to the corners they doubled the side walls' ends there
+  //  and the two faces flickered on the front and the sides, worldfit)
+  wall((H.x0 + t + dl) / 2, H.z0 + t / 2, dl - H.x0 - t, t);   // north, west of the door
+  wall((dr + H.x1 - t) / 2, H.z0 + t / 2, H.x1 - t - dr, t);   // north, east of the door
   shell.add(rbox(dr - dl + 0.02, H.h - D.h, t, 0.03), wallM, D.x, Y0 + D.h + (H.h - D.h) / 2, H.z0 + t / 2);   // (the lintel)
   // the roof: over the front room it fades with the walls; over the back room it stays (the hole looks into shade)
   { const zf = H.z0 - 0.18, zb = H.z1 + 0.18;
@@ -275,14 +277,14 @@ export function buildSkyFerry(game, Z) {
 
   // ---------------------------------------------------------------- Mill Lane Steps: the stage, its post, sign and bell
   const ST = LF.stage, sL = ST.z1 - ST.z0;
-  stat.add(rbox(ST.hw * 2, 0.16, sL, 0.02), pale, ST.x, Y0 - 0.08, (ST.z0 + ST.z1) / 2);
+  stat.add(rbox(ST.hw * 2, 0.16, sL, 0.02), pale, ST.x, Y0 - 0.07, (ST.z0 + ST.z1) / 2);   // (AUDIT-FIX: its deck 1 cm over the shore's paving it reaches over: level, they flickered)
   for (const s of [-1, 1]) {
     stat.add(rbox(0.14, 0.24, sL, 0.02), teal, ST.x + s * (ST.hw - 0.07), Y0 - 0.26, (ST.z0 + ST.z1) / 2);
     for (const z of [ST.z0 + 1.0, ST.z1 - 0.2]) { stat.add(rbox(0.07, 1.0, 0.07, 0.01), teal, ST.x + s * (ST.hw - 0.05), Y0 + 0.5, z); stat.add(rbox(0.12, 2.6, 0.12, 0.02), wood, ST.x + s * (ST.hw - 0.12), Y0 - 1.5, z); }
     stat.add(cyl(0.035, 0.035, sL - 1.2, 6), brass, ST.x + s * (ST.hw - 0.05), Y0 + 1.0, (ST.z0 + 1.0 + ST.z1 - 0.2) / 2, 0, { rx: Math.PI / 2 });
     col({ type: 'box', x: ST.x + s * (ST.hw - 0.05), z: (ST.z0 + 1.0 + ST.z1 - 0.2) / 2, hw: 0.06, hd: (sL - 1.2) / 2, rot: 0, top: Y0 + 1.05, noStand: true, seeThrough: true });
   }
-  col({ type: 'box', x: ST.x, z: (ST.z0 + ST.z1) / 2, hw: ST.hw, hd: sL / 2, rot: 0, top: Y0, seeThrough: true });
+  col({ type: 'box', x: ST.x, z: (ST.z0 + ST.z1) / 2, hw: ST.hw, hd: sL / 2, rot: 0, top: Y0 + 0.01, seeThrough: true });
   // the stage's post on the shore: its sign (facing the lane) and its bell
   const MP = { x: ST.x - ST.hw - 0.2, z: ST.z0 + 0.35 };
   stat.add(rbox(0.14, 3.0, 0.14, 0.02), wood, MP.x, Y0 + 1.5, MP.z);

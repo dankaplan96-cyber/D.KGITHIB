@@ -958,7 +958,8 @@ export function* buildZeelichSteps(scene, physics) {
     // ZSTYLE-2: the street's lighter borders, a pale kerb stone along both edges (under the plaza's paving where it crosses)
     {
       const N = street.slice(0, 6), Sd = street.slice(8);   // (the north edge west → east, the south edge east → west; not the gate's end)
-      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
+      // (AUDIT-FIX A-7: its outer edge 1 cm outside the street's: on the same line the two edges' faces flickered, worldfit)
+      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.map(([x, z]) => [x, z - s * 0.01]).concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
     }
     // a mosaic star in the plaza
     const star = []; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 3.2 : 5.6; star.push([PLAZA.x + Math.sin(a) * rr, PLAZA.z + Math.cos(a) * rr]); }
