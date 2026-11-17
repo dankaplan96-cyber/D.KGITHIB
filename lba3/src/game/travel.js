@@ -31,12 +31,15 @@ import { t } from './i18n.js';
 import { playJourney, FILMS } from './travelfilm.js';
 import './text/islands.js';
 import { doorOf, regionOf as homeRegionOf } from './ihomes.js';
+import { HARBOR_PAD } from './ballastra/harbor.js';
 
-export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)] };
-export const planetOf = (region) => (PLANETS.zeelich.includes(region) ? 'zeelich' : 'twinsun');
+// (EXP-2: Ballastra, the expansion's world: Float Harbor, the Arch District and the Water Gardens; by spaceship only)
+export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)], ballastra: ['ballastra', 'bl_arches', 'bl_gardens'] };
+export const planetOf = (region) => (PLANETS.zeelich.includes(region) ? 'zeelich' : PLANETS.ballastra.includes(region) ? 'ballastra' : 'twinsun');
 // interiors and the regions they open from (the rest of the interiors are on Citadel)
 const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', zterminal: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', school: 'desert', obsv: 'hamalayi' };
 INSIDE.ham_hall = 'hamalayi';   // (HAMALAYI-LIFE: the monastery's hall, hamrooms.js)
+Object.assign(INSIDE, { bl_shed: 'ballastra', bl_oren: 'bl_arches', bl_mags: 'bl_arches', bl_pump: 'bl_arches', bl_tunnel: 'bl_gardens', bl_kiln: 'bl_gardens' });   // (EXP-2: Ballastra's rooms)
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;
@@ -123,6 +126,8 @@ export function buildTravel(game) {
   { const F = HAMALAYI_FIELD; pt('hamalayi_glider', { region: 'hamalayi', mode: 'glider', x: F.glider.x, z: F.glider.z, r: 4.5, landing: { ...F.landing }, name: 'tr_hamalayi_field' }); }
   { const o = ZEELICH, p = ZPORT.pad; pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: o.x + p.x, z: o.z + p.z, r: 6.4, landing: { x: o.x + p.x, z: o.z + p.z - 7.2, a: Math.PI }, name: 'tr_zeelich_port' }); }
   later(pt('zeelich_shuttle', { region: 'zeelich', mode: 'shuttle', r: 5.0, name: 'isle_zeelich' }));
+  // (EXP-2: Float Harbor's pad on Ballastra, the freighter's stop; its region is built when he first lands there)
+  pt('ballastra_port', { region: 'ballastra', mode: 'ship', x: HARBOR_PAD.x, z: HARBOR_PAD.z, r: 6.4, landing: { ...HARBOR_PAD.landing }, name: 'tr_ballastra_port' });
   for (const n of ISLES) if (hasIsland(n)) later(pt('isle_' + n, { region: 'isle_' + n, mode: 'shuttle', r: 5.0, name: 'isle_' + n }));
   for (const id of ['desert', 'hamalayi', 'zeelich', ...ISLES.map((n) => 'isle_' + n)]) if (G.regions?.built(id)) travelRegion(G, id);
 
@@ -135,6 +140,10 @@ export function buildTravel(game) {
   edge('hamalayi_glider', 'citadel_glider', 'glider', reached('evacuation'));
   edge('desert_glider', 'citadel_glider', 'glider', reached('evacuation'));
   edge('citadel_port', 'zeelich_port', 'ship', reached('dig'));
+  // (EXP-2: Ballastra by spaceship, in the expanded campaign, once the story's freighter has landed there)
+  const ballastra = (s) => s.inCampaign('ballastra') && reached('ballastra')(s) && !!s.f.bl_arrived;
+  edge('citadel_port', 'ballastra_port', 'ship', ballastra);
+  edge('zeelich_port', 'ballastra_port', 'ship', ballastra);
   const shuttles = Object.values(points).filter((q) => q.mode === 'shuttle').map((q) => q.id);
   for (let i = 0; i < shuttles.length; i++) for (let j = i + 1; j < shuttles.length; j++) edge(shuttles[i], shuttles[j], 'shuttle', reached('dig'));
   void story;

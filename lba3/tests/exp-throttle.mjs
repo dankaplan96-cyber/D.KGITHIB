@@ -9,8 +9,8 @@
 //   turn the bottom crate, open it): the B-7 and Vesk's tag → Save → Continue as Zoé (her finds kept) → out and to the
 //   shelter → Twinsen again → the flange opened with the feed on sprays him back (the wrong attempt) → the feed shut,
 //   the B-7 fitted, the feed opened, the band turned to green → Oren swings the lever shut → a hand holds it → Gilbert
-//   takes it, Vesk on the wire, Baldino's call → the next chapter of the campaign (the network, chapter 14) in Baldino's
-//   workshop on Zeelich.
+//   takes it, Vesk on the wire, Baldino's call asks where the B-7 came from: Zoé's return label (Tessa's Float Repairs,
+//   Ballastra; EXP-2) → the next chapter of the campaign (chapter 11, Ballastra) at Citadel Spaceport by the freighter.
 // Also: the base campaign (a save that reached the network before the expansion) never builds the branch nor shows the
 // governor; the cost at the shelter (draw calls with the branch shown and hidden; SwiftShader: counts only).
 // Times are the bot's game time: a floor, not a first-time estimate.
@@ -172,10 +172,10 @@ const w5 = await timed(() => {
 console.log('the end:', JSON.stringify(w5));
 check('a hand on the lever: Oren lets go; Gilbert takes it ("A hand gets tired. I do not.")', w5.said.some((l) => /I do not push against a hand/.test(l)) && w5.said.some((l) => /A hand gets tired/.test(l)), w5.said);
 check('Vesk on the wire gives his reason (a station that can say no will say no); Zoé answers him', w5.said.some((l) => /will say no/.test(l)) && w5.said.some((l) => /turn their own water on/.test(l)), w5.said);
-check("Baldino's call ends chapter 10: the network begins (chapter 14 in this campaign) in Baldino's workshop", w5.key === 'network' && w5.n === 14 && w5.room === 'workshop' && w5.cards.some((c) => /Chapter 14 · Baldino's Network/.test(c)) && w5.said.some((l) => /Baldino's workshop again/.test(l)), { key: w5.key, n: w5.n, room: w5.room, cards: w5.cards });
+check("Baldino's call ends chapter 10: the B-7's return label (Tessa's Float Repairs, Ballastra); chapter 11 begins at Citadel Spaceport (EXP-2)", w5.key === 'ballastra' && w5.n === 11 && w5.room === 'citadel' && w5.cards.some((c) => /Chapter 11 · Ballastra/.test(c)) && w5.said.some((l) => /TESSA'S FLOAT REPAIRS/.test(l)), { key: w5.key, n: w5.n, room: w5.room, cards: w5.cards });
 const j = await ev(() => game.story.journal().find((c) => /Borrowed Time/.test(c.title))?.lines.map((l) => l.key));
 check('the journal keeps chapter 10\'s seven lines', Array.isArray(j) && j.length === 7, j);
-console.log(`chapter 10 bot game time, chapter 9's last step to chapter 14's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
+console.log(`chapter 10 bot game time, chapter 9's last step to chapter 11's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
 
 // ---------------------------------------------------------------- after: the shelter remembers; the cost
 const after = await ev(() => { const ch = T.th(); return { branch: !!ch.branch, b7: !!ch.branch?.b7.visible, lever: +(ch.branch?.leverA ?? -1).toFixed(2), on: ch.branch?.grp.visible }; });

@@ -57,6 +57,7 @@ import { Tutorial } from './game/tutorial.js';   // (OPENING-TUT: the control ti
 import { FoundObject } from './game/found.js';
 import { stage as itemStage } from './game/itemlook.js';
 import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/index.js';
+import { castReady, readyCast } from './game/story/ballastra.js';   // (EXP-2: the Ballastra cast's models, on demand)
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
 import { t, setLang, getLang } from './game/i18n.js';
@@ -1564,9 +1565,11 @@ class Game {
     let s = null; try { s = migrateSave(raw); } catch { s = null; }
     // LAZY-REGIONS: the areas the save stands in that are not built yet are built first, under the loading screen
     // (the newest save's are built at startup: Continue goes straight on; under the tests' fixed stepping: at once)
-    if (s && !this.testFreeze && !this._loadingAreas && this.regions.missing(this.saveAreas(s)).length) {
+    // (EXP-2: a save from chapter 11 on in the expanded campaign: the Ballastra cast's models too, story/ballastra.js)
+    const cast = !!s?.flags && !s.flags.exp_base && ORDER.indexOf(s.flags.chapterKey) >= ORDER.indexOf('ballastra') && !castReady();
+    if (s && !this.testFreeze && !this._loadingAreas && (this.regions.missing(this.saveAreas(s)).length || cast)) {
       this._loadingAreas = true;
-      this.buildAreas(this.saveAreas(s)).catch((e) => console.warn('area build failed', e))
+      Promise.all([this.buildAreas(this.saveAreas(s)), cast ? readyCast() : null]).catch((e) => console.warn('area build failed', e))
         .finally(() => { this.startContinue(key); this._loadingAreas = false; });
       return;
     }

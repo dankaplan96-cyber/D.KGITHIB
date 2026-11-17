@@ -16,10 +16,10 @@ const $ = (s) => document.querySelector(s);
 // the Holomap's regions and planets (CONNECT, VP-9)
 const MODE_COLOR = { ferry: '#5ab0ff', glider: '#ffd860', shuttle: '#ff9ad0', ship: '#ffffff' };
 // where each place sits on the planet's little globe (unit radius; Zeelich's islands round its spaceport island)
-const PLANET_POS = { citadel: [-0.38, 0.22], desert: [0.42, 0.42], hamalayi: [0.08, -0.56], zeelich: [0, 0] };
+const PLANET_POS = { citadel: [-0.38, 0.22], desert: [0.42, 0.42], hamalayi: [0.08, -0.56], zeelich: [0, 0], ballastra: [-0.2, 0.42], bl_arches: [0.05, -0.02], bl_gardens: [0.3, -0.42] };   // (EXP-2: Ballastra's three areas)
 PLANETS.zeelich.slice(1).forEach((id, i, a) => { const ang = (i / a.length) * Math.PI * 2 - Math.PI / 2; PLANET_POS[id] = [Math.cos(ang) * 0.66, Math.sin(ang) * 0.66]; });
-const REGION_NAME = (r) => ({ citadel: 'map_citadel', desert: 'map_desert', hamalayi: 'map_hamalayi', zeelich: 'isle_zeelich' }[r] || r);
-const SHORT_NAME = (r) => ({ citadel: 'map_citadel_s', desert: 'map_desert_s', hamalayi: 'map_hamalayi_s', zeelich: 'map_zeelich_s' }[r] || r);
+const REGION_NAME = (r) => ({ citadel: 'map_citadel', desert: 'map_desert', hamalayi: 'map_hamalayi', zeelich: 'isle_zeelich', ballastra: 'map_bl_harbor', bl_arches: 'map_bl_arches', bl_gardens: 'map_bl_gardens' }[r] || r);   // (EXP-2: Ballastra's areas)
+const SHORT_NAME = (r) => ({ citadel: 'map_citadel_s', desert: 'map_desert_s', hamalayi: 'map_hamalayi_s', zeelich: 'map_zeelich_s', ballastra: 'map_bl_harbor', bl_arches: 'map_bl_arches', bl_gardens: 'map_bl_gardens' }[r] || r);
 
 // CLAR-2 (the user: "still a lot of unnecessary text on screen"; LBA2 shows almost none). The objective panel comes up
 // for a few seconds when the goal changes, then steps aside; it stays in the pause menu, the Holomap and the journal.
@@ -866,6 +866,7 @@ export class HUD {
     // the open links
     const fs = Math.max(10, Math.round(S / 20));
     ctx.font = `600 ${fs}px Rubik, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    let shipN = 0;
     for (const r of T?.routes || []) {
       if (!r.gate(g.story)) continue;
       const A = T.points[r.a], Bp = T.points[r.b];
@@ -873,7 +874,8 @@ export class HUD {
         const here = planetOf(A.region) === planet ? A : Bp, p = at(here.region); if (!p) continue;
         ctx.strokeStyle = MODE_COLOR.ship; ctx.setLineDash([4, 4]); ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(S - 14, 16); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText(t(planet === 'zeelich' ? 'map_to_twinsun' : 'map_to_zeelich'), S - 8, 30); ctx.textAlign = 'center';
+        const other = planetOf((here === A ? Bp : A).region), ly = 30 + (shipN++) * (fs + 3);   // (EXP-2: one line a destination planet, under each other)
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText(t('map_to_' + other), S - 8, ly); ctx.textAlign = 'center';
         continue;
       }
       if (planetOf(A.region) !== planet) continue;
