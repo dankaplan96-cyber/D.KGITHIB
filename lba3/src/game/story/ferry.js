@@ -524,7 +524,8 @@ export class LastFerry extends ChapterBase {
       const gi = g.physics.groundInfo(h.pos.x, h.pos.z, h.pos.y + 0.3);
       if (!gi.brick && gi.h < WATER_FLOOR && h.onGround && this.nearFerry(h.pos)) {
         const L = S.landing[this.at];
-        h.pos.set(L.x, 6.0, L.z); h.vy = 0; h.angle = L.a; h.sync(); g.camRig.snap?.();
+        h.pos.set(L.x, Math.max(6.0, g.physics.groundAt(L.x, L.z, 6.6)), L.z); h.vy = 0; h.angle = L.a;   // (on the stage's deck, 5 cm over the shore: OVERLAP-SWEEP)
+        h.sync(); g.camRig.snap?.();
       }
     }
   }
