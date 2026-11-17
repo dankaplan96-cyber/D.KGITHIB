@@ -102,8 +102,11 @@ cells and half-faded over 1 m; looking through a hole into a thick slab its inne
   than 3.6 m from his sight line (counted from the CPU mirror `R.cutAt`); no silhouette behind the loft's wall, in the
   kitchen, at the hall's corner; quick crossings of the hall's doorway then the kitchen: the hall stands again; out and
   back in: no hole or room cut left. 18/18 PASS.
-- Regression set: see the final report of the task (lba1rooms, room-cutaway, occluders, camera-doors, interior-life,
-  chapter1, perfbudget).
+- Regression set (SwiftShader, one browser at a time): lba1rooms 8/8, room-cutaway 4/4, occluders 1/1, camera-doors 4/4,
+  chapter1 32/32, perfbudget 8/8 (interior route 58/61/77 calls at Low/Medium/High, budget 150) PASS. interior-life
+  143/144: the one failure is outside the hostel (Zeelich's terminal, chapter 9: a resident at his till facing 1.48 rad
+  off his stop in the 0.8 s after arriving); the rerun crashed the page for lack of memory on the shared machine, so it is
+  neither confirmed as a flake nor reproduced. Nothing in this change touches that area.
 
 Not covered: a play on the user's GPU (WebGL2 shader compiled on SwiftShader only); fast orbiting is not possible in the
 hostel (fixed room camera); hidden enemies under the other hall's ceiling stay hidden (the LBA way: another room).
