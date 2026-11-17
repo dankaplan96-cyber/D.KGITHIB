@@ -59,7 +59,7 @@ import { stage as itemStage } from './game/itemlook.js';
 import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/index.js';
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
-import { t, setLang, getLang } from './game/i18n.js';
+import { t, setLang, getLang, hintLine } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
 import { BUILT } from './build-stamp.js';
 
@@ -2170,7 +2170,8 @@ class Game {
     if (it?.classList.contains('set-tabs')) txt = t('set_h_tabs', { k: this.input.lastDevice === 'pad' ? 'LB / RB' : `${keyLabel(keyFor('cycle'))} / ← →` });
     else if (it?.classList.contains('set-fold')) txt = t('set_h_fold', { list: [...it.nextElementSibling.querySelectorAll('.set-label')].map((l) => l.textContent).join(', ') });
     else if (it?.dataset.hint) txt = H[it.dataset.hint]?.() ?? '';
-    if (el.textContent !== txt) el.textContent = txt;
+    // (HE-LTR: the tab bar's line is a key hint, "{keys}: turn the page": its keys before its words as in English)
+    if (el.textContent !== txt) { if (it?.classList.contains('set-tabs')) el.innerHTML = hintLine(txt); else el.textContent = txt; }
   }
 
   // The controls screen (UI-PASS): one list, an action's key beside what it does, from the keys in use (the movement
@@ -2235,7 +2236,9 @@ class Game {
     if (changed('lang') || changed('keys')) {
       setLang(s.lang);
       document.documentElement.lang = s.lang;
-      document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';
+      // HE-LTR (the user, 17.11: "in Hebrew the ONLY thing that should be RTL is the text"): the page stays left to
+      // right in every language (layout, order, arrows as in English); css/style.css's HE-LTR block turns the text
+      document.documentElement.dir = 'ltr';
       document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
       document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
       this.hud.refreshText();

@@ -143,7 +143,7 @@ body.big-text #holomap .foot, body.big-text #holomap .objective { font-size: 16p
 .logo-top { direction: ltr; }
 .logo-top { font-size: clamp(44px, 10vw, 104px); background: linear-gradient(180deg, #fff7d0, #ffcf4a 55%, #e07a10); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .logo-bottom { font-size: clamp(30px, 6.5vw, 66px); color: #e9f3ff; letter-spacing: 0.2em; margin-top: 4px; }
-:root[dir=rtl] .logo-bottom { letter-spacing: 0.02em; }
+:root[lang=he] .logo-bottom { letter-spacing: 0.02em; }
 .logo .sub { margin-top: 14px; color: var(--ink); font-size: clamp(13px, 2vw, 17px); opacity: 0.9; }
 .menu { display: flex; flex-direction: column; gap: 10px; min-width: min(320px, 100%); }
 .menu button, .langs button { padding: 13px 22px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.18); background: rgba(12, 24, 36, 0.8); color: var(--ink); cursor: pointer; transition: all 0.15s; }
@@ -738,15 +738,35 @@ body.big-text #settings .set-desc { font-size: 16px !important; }
 /* the pointer hides while it is not in use (main.js) */
 body.no-cursor, body.no-cursor * { cursor: none !important; }
 
-/* HE-TEXT (the user, 16.11: the whole game in Hebrew too): right to left. The layout already uses the logical sides
-   (inset-inline, margin-inline) and the page's dir; here what Hebrew needs on top. Letter spacing pulls Hebrew letters
-   apart (it suits Latin capitals only). A key cap or a name in another script inside a Hebrew line is isolated, so the
-   punctuation round it stays put. A line of a box that is still English (a key with no Hebrew yet) keeps its own
-   direction: its paragraph is read by its first letter. */
-:root[dir=rtl] .inv-tabs button, :root[dir=rtl] .inv-now small, :root[dir=rtl] .set-tabs button, :root[dir=rtl] .set-fold,
-:root[dir=rtl] .slot-tag, :root[dir=rtl] #chapter small, :root[dir=rtl] #cine-title p, :root[dir=rtl] #cine-title h1,
-:root[dir=rtl] #load-title span, :root[dir=rtl] #bossbar, :root[dir=rtl] #holomap .title, :root[dir=rtl] #dialog .text,
-:root[dir=rtl] #loading-step { letter-spacing: normal; }
-:root[dir=rtl] kbd, :root[dir=rtl] bdi, :root[dir=rtl] #dialog .name, :root[dir=rtl] #cine-sub b { unicode-bidi: isolate; }
-:root[dir=rtl] #dialog .text, :root[dir=rtl] #cine-sub span, :root[dir=rtl] .inv-desc, :root[dir=rtl] .inv-lines li,
-:root[dir=rtl] .inv-obj, :root[dir=rtl] .toast, :root[dir=rtl] #found .found-name { unicode-bidi: plaintext; }
+/* HE-TEXT (the user, 16.11: the whole game in Hebrew too) and HE-LTR (the user, 17.11: "in Hebrew the ONLY thing that
+   should be RTL is the text; everything else as in the English version"). The page stays dir="ltr" in Hebrew (main.js
+   applySettings): every box, its place, the order of tabs, slots, buttons and behaviours, the side of a name tag or a
+   close button, and what ← / → do are English's. Only the text turns: every element's paragraph takes its direction from
+   its own first letter (unicode-bidi: plaintext; the element's `direction` stays ltr, so its logical sides and a flex or
+   grid row keep English's order). A Hebrew paragraph so reads right to left and starts at the right edge of the same box
+   English starts at the left of (text-align: start follows the paragraph); a centred text stays centred; a line still in
+   English (a key with no Hebrew yet), a number or a key name stays left to right. An inline element (a key cap, a name
+   in bold, a <span>) is an isolate, so the punctuation round it stays put. Elements with their own dir (the language
+   buttons, i18n.js keyHints' key-led hints) keep it. Letter spacing pulls Hebrew letters apart (it suits Latin capitals
+   only). */
+:where(:root[lang=he]) :where(:not([dir])) { unicode-bidi: plaintext; }
+:root[lang=he] kbd { unicode-bidi: isolate; direction: ltr; }
+/* a speaker's name before the line (a story scene's subtitle): the name opens the Hebrew sentence, on its right */
+:root[lang=he] #cine-sub { direction: rtl; }
+/* a paragraph built of spans (a description's first sentence and the rest): the spans are part of its one paragraph */
+:root[lang=he] .inv-desc > span { unicode-bidi: normal; }
+/* a note's own mark (✓ done, ◆ to do) stays at the start of its words, as the tip's ✓ does: on the right of a Hebrew line */
+:root[lang=he] .inv-lines li { padding-inline: 0 20px; }
+/* the controls' fixed key cells ("hold Ctrl + ← / → · F1–F4"): a row of keys, left to right as in English (its Hebrew
+   word still reads right to left; ← / → are no letters and would turn round in a Hebrew paragraph) */
+:root[lang=he] #rebind .kfix { unicode-bidi: isolate; }
+:root[lang=he] .inv-lines li::before { inset-inline-start: auto; inset-inline-end: 2px; }
+/* a small part after the words (the tip's progress dots, an item's level or count): its gap on the words' side */
+:root[lang=he] #tip .tgoal .tdots { margin-inline: 0 8px; }
+:root[lang=he] .inv-name span { margin-inline: 0 4px; }
+/* the maps' painted words (hud.js draws them centred or at a fixed side): a canvas's text takes the canvas's direction */
+:root[lang=he] #minimap, :root[lang=he] #holomap canvas { direction: rtl; }
+:root[lang=he] .inv-tabs button, :root[lang=he] .inv-now small, :root[lang=he] .set-tabs button, :root[lang=he] .set-fold,
+:root[lang=he] .slot-tag, :root[lang=he] #chapter small, :root[lang=he] #cine-title p, :root[lang=he] #cine-title h1,
+:root[lang=he] #load-title span, :root[lang=he] #bossbar, :root[lang=he] #holomap .title, :root[lang=he] #dialog .text,
+:root[lang=he] #loading-step { letter-spacing: normal; }
