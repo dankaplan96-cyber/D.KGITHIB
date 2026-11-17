@@ -42,34 +42,52 @@ const BATCHES = [
 ];
 const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
 const CITADEL = { x0: -206, x1: 54, z0: -114, z1: 146 };
+const OUTDOOR = /^(citadel|zeelich|isle_.*|desert|hamalayi|ballastra|bl_arches|bl_gardens)$/;
 
 // ------------------------------------------------------------------ KNOWN: measured, looked at, left by design
 // [area, category, test (a RegExp on the finding's text) | null, near [x, z] | null, radius, why]
-const KNOWN = [];
+const ROCKS = /cliffRocks|plateauStones|smallPool|rimRock|rock|boulder|scree|pebble/i;
+const KNOWN = [
+  // rocks: set into the ground by design (a rock's foot is buried, its top shows: scatter in vegetation.js / world.js)
+  ['*', 'c', ROCKS, null, 0, 'by design: rocks are set into the ground (their foot buried), not standing pieces'],
+  ['*', 'd', ROCKS, null, 0, 'by design: a rock\'s flat facet under the ground beside its top: set into the ground'],
+  ['*', 'c', /gull|bird/i, null, 0, 'not a placed piece: birds perched or flying (they move between frames)'],
+  ['*', 'c', /foam|ripple/i, null, 0, 'by design: foam and ripples lie on the water\'s surface'],
+  ['*', 'c', /over [^|]*(cloud sea|water)/, null, 0, 'by design: piles and posts end in the cloud sea or the water (nothing under them is seen)'],
+  ['*', 'c', /bl_floating|marketFloat/, null, 0, 'by design: the Float Harbor\'s floating beds and market rafts ride on the water (Ballastra)'],
+];
 const knownOf = (area, cat, f) => KNOWN.find(([a, c, re, near, r]) => (a === area || a === '*') && c === cat && (!re || re.test(f.text)) && (!near || Math.hypot(f.x - near[0], f.z - near[1]) < (r || 1)));
 
 // ------------------------------------------------------------------ the findings of one area's scan
-const nm = (D, oi) => { const d = D[oi]; if (!d) return '?'; if (d.terrain) return 'the ground (terrain)'; return d.path.split('<').slice(0, 3).join('<') + (d.ins >= 0 ? '#' + d.ins : '') + (d.tex ? ' [' + d.tex + ']' : '') + (d.color ? ' #' + d.color : ''); };
+const nm = (D, oi) => { const d = D[oi]; if (!d) return '?'; if (d.terrain) return 'the ground (terrain)';
+  if (d.geo === 'PlaneGeometry' && d.box && d.box[3] - d.box[0] > 100) return 'the cloud sea (' + d.path.split('<')[0] + ')';
+  if (/water|river|sea\b|pond|lake|pool(?!<)/i.test(d.path) && !/smallPool/.test(d.path)) return 'the water (' + d.path.split('<').slice(0, 2).join('<') + ')'; return d.path.split('<').slice(0, 3).join('<') + (d.ins >= 0 ? '#' + d.ins : '') + (d.tex ? ' [' + d.tex + ']' : '') + (d.color ? ' #' + d.color : ''); };
 function findingsOf(r) {
   const F = [], a = r.id, D = r.D;
   for (const s of r.zf) {
-    if (s.gap > 0.003 || s.n < 4 || (s.la.hex === s.lb.hex && s.la.tex === s.lb.tex) || s.seen < 2) continue;
+    if (s.gap > 0.0015 || s.n < 4 || (s.la.hex === s.lb.hex && s.la.tex === s.lb.tex) || s.seen < 2) continue;
     F.push({ area: a, cat: 'b', kind: 'coplanar', x: s.x, z: s.z, y: s.y, size: s.m2 + ' m²', text: `${nm(D, s.A)} | ${nm(D, s.B)} within ${(s.gap * 1000).toFixed(1)} mm (${s.n} rays, ${s.seen} in sight)`, raw: s });
   }
   for (const s of r.interp) {
-    if (s.n < 3 || s.d < 0.05 || s.frac < 0.2 || s.v < 0.002) continue;
+    if (s.n < 3 || s.d < 0.08 || s.frac < 0.2 || s.v < 0.002) continue;
+    const la = D[s.A], lb = D[s.B]; if (la && lb && la.tex === lb.tex && la.color === lb.color) continue;   // (one look: they read as one solid, no seam)
     F.push({ area: a, cat: 'a', kind: 'through', x: s.x, z: s.z, y: s.y, size: `${Math.round(s.frac * 100)} % of it in, ${s.d} m deep`, text: `${nm(D, s.A)} | ${nm(D, s.B)} (${s.n} rays)`, raw: s });
   }
-  for (const s of r.floats) F.push({ area: a, cat: 'c', kind: 'floating', x: s.x, z: s.z, y: s.y, size: `${s.gap} m gap`, text: `${s.objs.map((o) => nm(D, o)).join(' + ')} (${s.parts} parts, box ${s.box.join(',')}) over ${s.sup >= 0 ? nm(D, s.sup) : 'nothing'}`, raw: s });
+  for (const s of r.floats) if (s.gap >= 0.03) F.push({ area: a, cat: 'c', kind: 'floating', x: s.x, z: s.z, y: s.y, size: `${s.gap} m gap`, text: `${s.objs.map((o) => nm(D, o)).join(' + ')} (${s.parts} parts, box ${s.box.join(',')}) over ${s.sup >= 0 ? nm(D, s.sup) : 'nothing'}`, raw: s });
   for (const s of r.sunk) F.push({ area: a, cat: 'c', kind: 'sunk', x: s.x, z: s.z, y: s.y, size: `${s.depth} m in`, text: `${nm(D, s.A)} (box ${s.box.join(',')})`, raw: s });
+  // ((d) needs a ground: the terrain, or Zeelich's island slab; Ballastra's districts stand on quays over the water, and a
+  //  quay is not the ground a cap or a step runs into)
+  const hasGround = r.census.terrains > 0 || a === 'zeelich';
   for (const s of r.buried) {
-    if (s.m2 < 0.12) continue;
+    if (s.m2 < 0.12 || !hasGround) continue;
     const paint = Object.entries(s.paint).sort((a, b) => b[1] - a[1])[0]?.[0];
     const onPaving = paint && /grass|dirt|sand/.test(paint) && s.box[4] - s.box[1] < 0.4;
     F.push({ area: a, cat: onPaving ? 'e' : 'd', kind: onPaving ? 'ground paint over paving' : 'into the ground', x: s.x, z: s.z, y: s.y, size: `${s.m2} m², ${s.depth} m deep`, text: `${nm(D, s.A)}: ${s.bur} rays under, ${s.flush} flush, ${s.exp} above (box ${s.box.join(',')})${paint ? ' painted ' + paint : ''}`, raw: s });
   }
   for (const s of r.plants) F.push({ area: a, cat: 'e', kind: 'plants on paving', x: s.at[0][0], z: s.at[0][2], y: s.at[0][1], size: `${s.n} plants`, text: `${s.kind} on ${s.on >= 0 ? nm(D, s.on) : '?'} ${s.look?.hex || ''}/${s.look?.tex || ''} (box ${s.box.join(',')})`, raw: s });
-  for (const s of r.decals) F.push({ area: a, cat: 'e', kind: 'decal on a part', x: s.x, z: s.z, y: s.y, size: s.size.join('×') + ' m', text: `${s.path} [${s.tex}] on ${nm(D, s.on)}`, raw: s });
+  // (decals: outdoors only, where a ground patch can lie on paving; indoors they are rugs, mats and labels on purpose.
+  //  A round one is a blob shadow under someone or a puddle, not a patch)
+  if (OUTDOOR.test(a)) for (const s of r.decals) if (!/^Circle/.test(s.path)) F.push({ area: a, cat: 'e', kind: 'decal on a part', x: s.x, z: s.z, y: s.y, size: s.size.join('×') + ' m', text: `${s.path} [${s.tex}] on ${nm(D, s.on)}`, raw: s });
   for (const f of F) { const k = knownOf(f.area, f.cat, f); f.known = k ? k[5] : null; }
   return F;
 }
@@ -106,7 +124,7 @@ async function runBatch(list) {
           const R = id === 'citadel' ? null : game.rooms[id];
           if (id !== 'citadel' && !R) return { missing: true };
           const outdoor = id === 'citadel' || !!R.outdoor;
-          return SW.scan(id === 'citadel' ? { bounds: B } : { room: id }, { step: outdoor ? 0.25 : 0.2 });
+          return SW.scan(id === 'citadel' ? { bounds: B } : { room: id }, { step: outdoor ? 0.25 : 0.2, slabGround: id === 'zeelich' });
         }, [id, CITADEL]);
       } catch (e) { console.log(`AREA ${id}: scan failed ${String(e).slice(0, 300)}`); if (/crash|closed/i.test(String(e))) throw e; continue; }
       if (r.missing) { console.log(`AREA ${id}: not in this build`); continue; }
@@ -127,20 +145,20 @@ async function runBatch(list) {
           i++;
         }
       }
+      await page.evaluate(() => SW.free());
     }
   } finally { await browser.close().catch(() => {}); }
 }
 if (!process.env.SKIP_RAYS) for (const b of BATCHES) {
   if (ONLY && !b.some((p) => ONLY.some((o) => new RegExp('^' + p.replace('*', '.*') + '$').test(o)))) continue;
-  try { await runBatch(b); }
-  catch (e) {
-    // (the machine under load: a crashed page is tried once more, the areas already kept are not scanned again; the
-    // crash stays a FAIL only if the second try fails too)
-    console.log('BATCH crashed, once more: ' + String(e).slice(0, 200)); process.env.RESUME = '1';
-    const n0 = report.fails.length; await runBatch(b);
-    const crashes = report.fails.filter((f, i) => i < n0 && f.kind === 'page crashed');
-    for (const c of crashes) { report.fails.splice(report.fails.indexOf(c), 1); report.notes.push('page crashed once, the batch tried again and finished: ' + c.text); }
+  // (the machine under load: a crashed page is tried again (twice), the areas already kept are not scanned again; the
+  // crash stays a FAIL only if the batch never finishes)
+  const resume = process.env.RESUME, n0 = report.fails.length;
+  for (let k = 0; k < 3; k++) {
+    try { await runBatch(b); if (k) { const crashes = report.fails.filter((f, i) => i >= n0 && f.kind === 'page crashed'); for (const c of crashes) { report.fails.splice(report.fails.indexOf(c), 1); report.notes.push('page crashed, the batch tried again and finished: ' + c.text); } } break; }
+    catch (e) { console.log(`BATCH crashed (try ${k + 1} of 3): ` + String(e).slice(0, 200)); process.env.RESUME = '1'; if (k === 2) check(`batch ${b[0]}… scanned`, false, String(e).slice(0, 200)); }
   }
+  if (resume === undefined) delete process.env.RESUME; else process.env.RESUME = resume;
 }
 
 // ------------------------------------------------------------------ the older scans (child runs)

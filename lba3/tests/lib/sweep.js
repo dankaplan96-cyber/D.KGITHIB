@@ -26,7 +26,7 @@
 const G = game;
 const SW = window.SW = {};
 let THREE = null;
-SW.init = async () => { THREE = await import('three'); try { const V = await import('./src/engine/viewinst.js'); V.setViewInst(false); } catch (e) { SW.viErr = String(e); } };
+SW.init = async () => { THREE = await import('three'); try { SW.blob = (await import('./src/engine/textures.js')).textures().blob; } catch (e) { SW.blob = null; } try { const V = await import('./src/engine/viewinst.js'); V.setViewInst(false); } catch (e) { SW.viErr = String(e); } };
 const effVisible = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
 const hasBone = (o) => { for (let p = o.parent; p; p = p.parent) if (p.isBone || p.isSkinnedMesh) return true; return false; };
 function pathOf(o) { const n = []; for (let p = o, k = 0; p && p !== G.scene && k < 6; p = p.parent, k++) n.push(p.name || (p.isMesh ? (p.geometry?.type || 'Mesh').replace('Geometry', '') : p.type)); return n.join('<'); }
@@ -231,16 +231,19 @@ SW.scan = async (area, opt = {}) => {
     if (o.isBatchedMesh) return skip('batchedmesh');
     const m0 = Array.isArray(o.material) ? o.material[0] : o.material;
     if (!o.isInstancedMesh) { bb.setFromObject(o); if (bb.max.x < A.x0 || bb.min.x > A.x1 || bb.max.z < A.z0 || bb.min.z > A.z1 || bb.max.y < A.y0 || bb.min.y > A.y1) return; }
-    if (m0?.alphaTest > 0 && o.isInstancedMesh) { foliage.push(o); return skip('foliage'); }
+    if (o.isInstancedMesh && (m0?.alphaTest > 0 || /smallPool|grass|flower|tulip|weed|clover|fern|daisy/i.test(pathOf(o)))) { if (o.name !== 'smallPool') foliage.push(o); return skip('foliage'); }
     if (o.name === 'blobBatch') return skip('blob');
-    if (!Array.isArray(o.material) && m0?.transparent && m0.depthWrite === false) { decals.push(o); return skip('decal'); }
+    if (!Array.isArray(o.material) && m0?.transparent && m0.depthWrite === false) { if (!(SW.blob && m0.map === SW.blob)) decals.push(o); return skip('decal'); }   // (a blob shadow under someone is not a decal)
     if (opt.skipName && opt.skipName.test(pathOf(o))) return skip('name');
-    if (/(^|<)(dog|gull|bird|cat|fish|bee|drone)/i.test(pathOf(o))) return skip('animal');
+    if (/(^|<)(dog|cat|fish|bee|drone)|gull|bird/i.test(pathOf(o))) return skip('animal');
     stats.meshes++;
     addMesh(o, A, stats);
   });
+  // (Citadel's grass, flowers and tulips: the pools hold only what is near Twinsen; their tiles hold every one)
+  if (!area.room && G.world?.smallPools) for (const P of G.world.smallPools) for (const t of P.tiles) foliage.push(t);
   // the ground where there is no terrain: a part wider than 25 m both ways, its top flat (an island's slab)
-  for (const S of solids) { const b = S.box; if (b[3] - b[0] > 25 && b[5] - b[2] > 25 && b[4] - b[1] < 8) S.ground = true; }
+  // (only where there is no terrain and the area says so: Zeelich's island slab; Ballastra's quays are not ground)
+  if (opt.slabGround) for (const S of solids) { const b = S.box; if (b[3] - b[0] > 25 && b[5] - b[2] > 25 && b[4] - b[1] < 8) S.ground = true; }
   clusterSolids();
   const t1 = performance.now();
 
@@ -259,8 +262,10 @@ SW.scan = async (area, opt = {}) => {
     let g = tg, gPart = -1;
     if (g == null) for (const h of hits) if (solids[h.si].ground && h.ny > 0) { if (g == null || h.y > g) { g = h.y; gPart = h.si; } }
     // (b) surfaces facing up, as drawn from above, top down; the terrain among them
+    const vis = hits.filter((h) => h.ny > 0.3 && rendered(SD[h.t], -h.ny));
+    // (d) the ground is seen on this ray only if nothing opaque lies over it (a house's roof, a porch, a deck)
+    let gSeen = g != null; if (gSeen) for (const h of vis) { if (h.y <= g + 0.003) break; if (!looks[h.lk].transparent) { gSeen = false; break; } }
     {
-      const vis = hits.filter((h) => h.ny > 0.3 && rendered(SD[h.t], -h.ny));
       if (tg != null) { let k = 0; while (k < vis.length && vis[k].y > tg) k++; vis.splice(k, 0, { y: tg, ny: 1, t: -1, si: -1, oi: T.oi, lk: T.look, terrain: true }); }
       let rank = 0;
       for (let k = 0; k < vis.length; k++) {
@@ -314,7 +319,7 @@ SW.scan = async (area, opt = {}) => {
           const sd = g - bot; const sc = sunkCl.get(S.cl);
           if (!sc) sunkCl.set(S.cl, { min: sd, n: 1, at: [x, bot, z], g }); else { sc.n++; if (sd < sc.min) { sc.min = sd; sc.at = [x, bot, z]; sc.g = g; } }
           // (d) its flat top against the ground
-          if (nyTop > 0.7) {
+          if (nyTop > 0.7 && gSeen) {
             let s = solidG.get(si); if (!s) solidG.set(si, s = { bur: 0, flush: 0, exp: 0, depth: 0, at: null, paint: {}, bx: [1e9, 1e9, -1e9, -1e9] });
             const d = g - top;
             if (d > 0.003 && d < 0.25) { s.bur++; if (d > s.depth) { s.depth = d; } s.at ??= [x, top, z]; s.bx[0] = Math.min(s.bx[0], x); s.bx[1] = Math.min(s.bx[1], z); s.bx[2] = Math.max(s.bx[2], x); s.bx[3] = Math.max(s.bx[3], z); if (T && d < 0.3) { const pt = terrainPaint(T, x, z); if (pt) s.paint[pt.top] = (s.paint[pt.top] || 0) + 1; } }
@@ -439,6 +444,9 @@ SW.scan = async (area, opt = {}) => {
   compCache.clear();
   return { area, A: { x0: r2(A.x0), x1: r2(A.x1), z0: r2(A.z0), z1: r2(A.z1) }, census, zf, interp, floats, sunk, buried, plants, decals: dec, D };
 };
+
+// the store let go (the next area starts afresh; a picture needs it kept)
+SW.free = () => { N = 0; CAP = 0; P = NRM = OB = LK = SD = SL = null; objs = []; bins = new Map(); terrains = []; solids = []; compCache.clear(); };
 
 // a picture of a finding { x, y, z, A, B, span }: from above at an angle, the camera kept under any ceiling; with
 // opt.zmap a second one with A painted red and B green. Returns JPEG data URLs (the last scan's objects).
