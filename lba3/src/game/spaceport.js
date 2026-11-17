@@ -65,7 +65,11 @@ const heading = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
 
 export function buildSpaceport(root, physics, W) {
   const g = new THREE.Group(); g.name = 'spaceport'; root.add(g);
-  const Y = Math.max(2.3, physics.groundAt(BRIDGE.x0, BRIDGE.z)) + 0.05;   // deck top: level with the shore
+  // deck top: level with the shore. (OVERLAP-SWEEP: from the highest ground under the bridge's shore end, not its middle
+  // point: the shore rises 15 cm across the bridge's width to the north, and 7 m² of its planks lay under the dirt there)
+  let gMax = physics.groundAt(BRIDGE.x0, BRIDGE.z);
+  for (let x = BRIDGE.x0; x <= BRIDGE.x0 + 5.5; x += 0.5) for (const dz of [-BRIDGE.hw, -BRIDGE.hw / 2, 0, BRIDGE.hw / 2, BRIDGE.hw]) gMax = Math.max(gMax, physics.terrain.heightAt(x, BRIDGE.z + dz));
+  const Y = Math.max(2.3, gMax) + 0.03;
   // the platform's structure (deck, stilts, railings, terminal, tower) and its furniture: one Kit each
   const k = new Kit(g), f = new Kit(g);
   const add = (geo, m, x, y, z, ry = 0, o) => k.add(geo, m, x, y, z, ry, o);
