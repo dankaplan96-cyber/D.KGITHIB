@@ -319,9 +319,11 @@ SW.scan = async (area, opt = {}) => {
           const sd = g - bot; const sc = sunkCl.get(S.cl);
           if (!sc) sunkCl.set(S.cl, { min: sd, n: 1, at: [x, bot, z], g }); else { sc.n++; if (sd < sc.min) { sc.min = sd; sc.at = [x, bot, z]; sc.g = g; } }
           // (d) its flat top against the ground
-          if (nyTop > 0.7 && gSeen) {
+          if (nyTop > 0.7) {
             let s = solidG.get(si); if (!s) solidG.set(si, s = { bur: 0, flush: 0, exp: 0, depth: 0, at: null, paint: {}, bx: [1e9, 1e9, -1e9, -1e9] });
             const d = g - top;
+            // (under or flush with the ground counts only where that ground is seen; above it always counts)
+            if (!gSeen && d > -0.003) continue;
             if (d > 0.003 && d < 0.25) { s.bur++; if (d > s.depth) { s.depth = d; } s.at ??= [x, top, z]; s.bx[0] = Math.min(s.bx[0], x); s.bx[1] = Math.min(s.bx[1], z); s.bx[2] = Math.max(s.bx[2], x); s.bx[3] = Math.max(s.bx[3], z); if (T && d < 0.3) { const pt = terrainPaint(T, x, z); if (pt) s.paint[pt.top] = (s.paint[pt.top] || 0) + 1; } }
             else if (Math.abs(d) <= 0.003) { s.flush++; s.at ??= [x, top, z]; s.bx[0] = Math.min(s.bx[0], x); s.bx[1] = Math.min(s.bx[1], z); s.bx[2] = Math.max(s.bx[2], x); s.bx[3] = Math.max(s.bx[3], z); }
             else if (d <= -0.003) s.exp++;
