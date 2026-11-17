@@ -222,7 +222,9 @@ body.hud-busy #touch { visibility: hidden; }
 .lba-frame::before { top: -4px; left: -4px; border-width: 3px 0 0 3px; }
 .lba-frame::after { bottom: -4px; right: -4px; border-width: 0 3px 3px 0; }
 
-#dialog { left: 8px; right: 8px; width: auto; transform: none; bottom: 8px; min-height: 26vh; max-width: none; border-radius: 0; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.9); padding: 18px 26px 26px; box-shadow: none; }
+/* (the user, 17.11, a picture: "narrow the text box to the middle, less big": centred, about three quarters of the width,
+   clear of the minimap and the behaviour icons in the corners) */
+#dialog { left: 50%; right: auto; width: min(1180px, max(620px, 70vw)); transform: translateX(-50%); bottom: 10px; min-height: 22vh; max-width: calc(100vw - 16px); border-radius: 0; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.9); padding: 18px 26px 26px; box-shadow: none; }
 /* (the user, 16.11: "why is the text so small — make sizes": Normal is larger, a third size Extra large; Hebrew's letters
    read smaller than Latin at the same px, so in Hebrew everything here is 10 % larger: --txs) */
 html[lang="he"] { --txs: 1.1; }
