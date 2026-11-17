@@ -229,12 +229,12 @@ From `tools/music/check.py`, on the MP3s decoded with ffmpeg (as Chrome decodes 
 | Track | Integrated loudness (loop body) | True peak (MP3) | Loudness range | Seam error / MP3 coding error | Seam click ratio |
 |---|---|---|---|---|---|
 | main_theme (MUSIC-LBA) | −16.9 LUFS | −2.0 dBTP | 4.8 LU | −26.9 / −22.1 dB | 0.85 |
-| home (MUSIC-LBA) | −18.5 | −5.8 | 8.0 | −29.8 / −20.9 | 0.51 |
+| home (MUSIC-LBA) | −18.5 | −5.8 | 8.0 | −31.7 / −21.1 | 0.49 |
 | village (MUSIC-LBA) | −17.5 | −3.7 | 3.8 | −36.0 / −20.5 | 0.13 |
 | island (MUSIC-LBA) | −17.4 | −3.0 | 4.9 | −29.6 / −22.0 | 0.27 |
 | well | −18.4 | −4.1 | 11.8 | −36.4 / −24.8 | 0.59 |
 | workshop | −17.3 | −3.1 | 13.8 | −50.2 / −24.5 | 0.10 |
-| zeelich (MUSIC-LBA) | −17.7 | −3.6 | 5.1 | −26.1 / −21.7 | 0.50 |
+| zeelich (MUSIC-LBA) | −17.7 | −3.7 | 5.0 | −26.3 / −20.9 | 0.47 |
 | facility | −17.1 | −1.9 | 17.6 | −26.0 / −19.8 | 0.24 |
 | facility_stealth | −18.8 | −4.6 | 13.1 | −38.8 / −25.5 | 0.31 |
 | combat (MUSIC-LBA) | −17.0 | −2.4 | 6.0 | −38.3 / −22.0 | 0.13 |

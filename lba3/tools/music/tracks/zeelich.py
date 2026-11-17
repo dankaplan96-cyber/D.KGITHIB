@@ -22,7 +22,7 @@ ZA = ("E5:q A5:q G#5:e F#5:e E5:e | D#5:q F#5:q B5:q. | C#6:e B5:e A5:q G#5:q E5
 ZA_CH = 'A | B/A | A | F#m7 | A | B/A | G#m7:h C#m7:q. | B'
 ZB = ("F#4:e G#4:e A4:e D5:q C#5:q | B4:q. G#4:q E4:q | F#4:e A4:e D5:e F#5:q E5:q | C#5:q. B4:q G#4:q |"
       "F#4:e G#4:e A4:e D5:q C#5:q | F#5:q. E5:q D5:q | C#5:e D5:e E5:e A5:q G#5:q | E5:q. r:q r:q")
-ZB_CH = 'F#m | E | D | C#m | F#m | D | A:h E:q. | E'
+ZB_CH = 'Dmaj7/F# | E | D | C#m | Dmaj7/F# | D | A:h E:q. | E'
 ZC = ("A4:e B4:e C#5:e F#5:q E5:e C#5:e | D#5:q. C#5:q B4:q | G#4:e A4:e B4:e E5:q D#5:e B4:e | C#5:q. r:q r:q |"
       "A4:e B4:e C#5:e F#5:q E5:e C#5:e | A5:q. G#5:q F#5:q | E5:e F#5:e G#5:e C#6:q B5:e G#5:e | A5:q. r:q r:q")
 ZC_CH = 'F#m7 | B | E | A | F#m7 | B/D# | E | A'

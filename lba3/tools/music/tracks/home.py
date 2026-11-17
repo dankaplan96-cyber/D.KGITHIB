@@ -45,7 +45,7 @@ def song():
     S.chords(19, 'F | Bb | Gm7 | Csus4 C | Dm | A/C# | Bb | A')
     S.chords(27, 'Bb | F/A | C7 | F | Dm | Gm | C7 | C7')
     S.chords(35, HOUSE_CH)
-    S.chords(51, 'Dm | Bb | Gm7 | A7 | Dm | Bb | Gm7 C7 | C7')
+    S.chords(51, 'Dm | Bb | Gm7 | A7 | Dm Bb | Dm | Gm7 C7 | C7')
     S.chords(59, 'F | Dm7 | Gm7 | C7 | F | Dm7 | Gm7 | C7')
 
     cl = S.part('clarinet', 'clarinet', stem='front', pan=56, vol=96, legato=True, dyn='mf')

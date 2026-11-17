@@ -562,7 +562,7 @@
    "loopStartSample": 504000,
    "loopEndSample": 5112000,
    "loopLength": 96.0,
-   "seamMaxDiff": 5.013999432975508e-06
+   "seamMaxDiff": 5.013214189528853e-06
   },
   "homecoming": {
    "file": "homecoming.mp3",
@@ -1464,7 +1464,7 @@
    "sampleRate": 48000,
    "duration": 93.4,
    "lufs": -17.0,
-   "truePeak": -3.15,
+   "truePeak": -3.18,
    "limiterGR": 0.0,
    "bytes": 1308384,
    "bars": [
@@ -1545,7 +1545,7 @@
    "loopStartSample": 672000,
    "loopEndSample": 4435200,
    "loopLength": 78.4,
-   "seamMaxDiff": 9.671097424264474e-05
+   "seamMaxDiff": 9.658096795217563e-05
   },
   "zeelich_b": {
    "file": "zeelich_b.mp3",

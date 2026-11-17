@@ -96,7 +96,7 @@ After (the same measure):
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | main_theme | 112 | 85.8 | 12 | 2.23 (1.10) | 4.2 (1.2) | 13.8 | 17.3 (0.2) | 3.20 | 40 | 1.15 | 7 (20) | 96 |
 | village | 156 (6/8) | 87.8 | 24 | 3.52 (1.91) | 4.0 (1.9) | 19.2 | 9.8 (0.1) | 2.56 | 54 | 0.93 | 2 (18) | 78 |
-| home | 120 | 96.0 | 19 | 2.43 (0.97) | 3.0 (1.5) | 10.9 | 5.5 (0.0) | 2.42 | 24 | 1.00 | 15 (20) | 81 |
+| home | 120 | 96.0 | 19 | 2.41 (0.97) | 3.0 (1.5) | 10.9 | 5.5 (0.0) | 2.42 | 24 | 1.02 | 15 (20) | 81 |
 | island | 120 | 88.0 | 22 | 2.40 (1.43) | 4.7 (1.4) | 20.4 | 16.6 (0.1) | 3.04 | 43 | 1.02 | 0 (13) | 69 |
 | combat | 144 | 79.9 | 28 | 2.99 (2.09) | 12.5 (3.1) | 18.8 | 19.7 (4.0) | 3.21 | 41 | 0.92 | 20 (13) | 35 |
 | zeelich | 150 (7/8) | 78.4 | 17 | 3.02 (2.10) | 4.7 (1.9) | 16.5 | 14.5 (9.8) | 2.83 | 48 | 1.02 | 8 (21) | 87 |
@@ -113,16 +113,21 @@ held horns and trombones were 3 dB over the trumpet in combat; the koto and the 
 bass, the pads and the counter-lines were lowered, and the koto, the harmonica, the xylophone and the steel drum
 raised. (With dry renders and no room, this is a proxy for balance. It is not listening.)
 
+**Harmony scan** (a scratch script, not committed): every melody note a beat or longer that sits a semitone from a
+tone of the chord under it. It found two real clashes, and both chords were rewritten. In Home's evening strain, a B
+flat was held over D minor; in Zeelich's B strain, the koto's D was held over F# minor (now Dmaj7/F#). The other hits
+are the intended colours: major sevenths, the lydian D#, 4-3 suspensions that resolve, and short anticipations.
+
 **Rendered files** (`tools/music/check.py`, the MP3 decoded with ffmpeg; loudness of the loop body):
 
 | Track | LUFS new (old) | true peak dBTP | seam error / MP3 coding error dB | click ratio | sub/low/mid/presence/air % |
 |---|---|---|---|---|---|
 | main_theme | −16.9 (−16.8) | −2.0 | −26.9 / −22.1 | 0.85 | 4/13/76/6/1 |
 | village | −17.5 (−17.4) | −3.7 | −36.0 / −20.5 | 0.13 | 9/17/63/10/1 |
-| home | −18.5 (−18.4) | −5.8 | −29.8 / −20.9 | 0.51 | 8/15/65/12/0 |
+| home | −18.5 (−18.4) | −5.8 | −31.7 / −21.1 | 0.49 | 8/15/65/12/0 |
 | island | −17.4 (−17.4) | −3.0 | −29.6 / −22.0 | 0.27 | 3/14/79/3/1 |
 | combat | −17.0 (−16.9) | −2.4 | −38.3 / −22.0 | 0.13 | 6/15/75/3/1 |
-| zeelich | −17.7 (−17.4) | −3.6 | −26.1 / −21.7 | 0.50 | 2/9/83/4/1 |
+| zeelich | −17.7 (−17.4) | −3.7 | −26.3 / −20.9 | 0.47 | 2/10/83/4/1 |
 | desert_isle | −18.1 (−18.0) | −4.6 | −34.3 / −20.9 | 0.67 | 5/12/68/14/1 |
 | mountain | −18.4 (−18.4) | −5.3 | −35.1 / −21.5 | 0.58 | 4/20/71/3/1 |
 
@@ -142,7 +147,9 @@ raised. (With dry renders and no room, this is a proxy for balance. It is not li
   play**.
 - **Decoded in headless Chromium**, as the game decodes, at 48 and 44.1 kHz: lengths exact (±1 sample at 44.1 kHz),
   peaks 0.51 to 0.80, a loop-seam step 0.08 to 0.87 times the local 99.5th-percentile step (below 1: no jump),
-  decode 170 to 530 ms each, off the main thread. Decoded size at 48 kHz: 35 to 41 MB. Before, the same eight
+  decode 170 to 530 ms each, off the main thread (the old files, same run: 200 to 520 ms; the title 192 ms, was
+  516). The largest sample step anywhere in a file rose from 0.09-0.21 to 0.20-0.28. These are percussion
+  attacks inside the music, not seams. Decoded size at 48 kHz: 35 to 41 MB. Before, the same eight
   pieces were 35 to 57 MB: the town −18 MB, the island −17, Zeelich −18, the title −9, combat +0.8. The files total
   11.35 MB, down from 13.82 MB (1.30 to 1.51 MB each); `assets/music` is 2.5 MB smaller. File count: unchanged
   (0 new files in the game).
