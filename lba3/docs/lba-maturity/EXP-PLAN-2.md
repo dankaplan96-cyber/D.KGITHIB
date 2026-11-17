@@ -34,7 +34,7 @@ branch: +12 main and +3 shadow draws where it stands (exp-throttle).
 ```
 9 council (main game: the vote, the stop, the isolator, Mill Lane)
 10 throttle   "Borrowed Time"           Citadel (from Mill Lane)          BUILT (EXP-1)
-11 ballastra  "Ballastra"               Float Harbor, Water Gardens, Arch District   next
+11 ballastra  "Ballastra"               Float Harbor, Water Gardens, Arch District   BUILT (EXP-2)
 12 balances   "The House of Balances"   the warehouse, the House, the test rig, the Low Terrace
 13 survey     "Under the Well"          home: Citadel's square and well   (OG-2 parked, re-verify)
 14 network    "Baldino's Network"       all regions (main game's wave 6, unchanged in the base campaign)
@@ -239,7 +239,7 @@ fight, no fetch without a person's reason, something new on return, inside the b
 ## 7. Order of work
 
 1. EXP-1 (this): merge, re-plan, chapter 10. **Done** (see the report; Automated runtime only).
-2. EXP-2: chapter 11 `ballastra` (travel stop and film, the cast's voices and on-demand models, N1–N3 on the built
+2. **Done (EXP-2, 17.11; Automated runtime only: exp-ballastra 33/33):** chapter 11 `ballastra` (travel stop and film, the cast's voices and on-demand models, N1–N3 on the built
    places, throttle's end variant). Its test by input, Hebrew the same day.
 3. EXP-3: W-4 (warehouse, House) with the laptop's art; then chapter 12 `balances` (N4–N6; WK-1 needs W-9/W-12).
 4. EXP-4: chapter 13 `survey`: un-park OG-2, re-verify on today's Citadel, the well's scene.
@@ -258,8 +258,15 @@ is incomplete.
 
 ## 9. Risks
 
-- The transitional campaign (10 → 14) meets Oren once and then not until the Ballastra chapters exist: acceptable only
-  while the expansion is in progress; the coordinator decides whether a build with chapter 10 goes to the user before 11.
-- The valve room twice in a row (10, then the network's station) until 11–13 exist.
+- The transitional campaign is now 10 → 11 → 14: Oren speaks in 10 and 11, then not until 12–13 exist; chapter 11 ends
+  with Tessa drawing a box nobody fits yet and Baldino calling him home to a network that never mentions regulators
+  (acceptable only while the expansion is in progress). Chapter 11's end goes straight on when 12 is written
+  (`Ballastra.end`: no film when the next chapter is `balances`); EXP-3 rewrites its last lines (`bl_ba_2`,
+  `bl_te_end4`, `bl_do_home`) for the way into the warehouse.
+- Chapter 11 sits at the top of the band (~27 min estimated, 12.5 min bot floor); N2's board is the longest thinking step.
+- Crane B's latch is inside the mast's collider: the ball reaches it only from the lift's side (a strike within 1.55 m
+  counts). Thrown from the quay's east side the ball bounces off the mast; the nudge after 60 s says where the latch
+  is. A laptop playtest should confirm it reads.
+- The Ballastra cast (4 models, 3.4 MB) loads on demand for every expanded save from chapter 11 on.
 - OG-2 was written against old Citadel; it may need more than a re-test.
 - W-4 and W-9–W-12 need art the laptop has not started.

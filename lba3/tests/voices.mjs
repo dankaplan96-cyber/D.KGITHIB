@@ -35,7 +35,9 @@ const PLACES = {
   pier: ['guard', 'vesk', 'worker', 'hero'],
   hostel: ['hs_foreman', 'hs_cook', 'hs_worker1', 'hs_worker2', 'hs_worker3', 'hs_worker4'],
   // EXP-2: Ballastra (chapter 11): the harbour, the Arch District and the Water Gardens
-  ballastra: ['tessa', 'bl_quill', 'bl_hobb', 'bl_ferro', 'bl_wenna', 'bl_corvin', 'bl_halden', 'bl_mags', 'bl_dunn', 'bl_sorrel', 'bl_brin', 'bl_ottie', 'bl_nuna', 'doran', 'hero'],
+  blHarbor: ['tessa', 'bl_quill', 'bl_hobb', 'bl_ferro', 'doran', 'hero'],
+  blArches: ['tessa', 'bl_quill', 'bl_halden', 'bl_mags', 'bl_dunn', 'bl_brin', 'bl_ottie', 'bl_nuna', 'hero'],
+  blGardens: ['bl_wenna', 'bl_corvin', 'bl_sorrel', 'hero'],
 };
 const NEW = ['cs_corla', 'ih_ossa', 'ih_liwa', 'ih_dobb', 'ih_brem', 'ih_gorrin', 'ih_tesk', 'zh_lissa', 'zh_wenna', 'zr_fennick', 'zr_rezz', 'zr_oma', 'dw_guard',
   'hs_foreman', 'hs_cook', 'hs_worker1', 'hs_worker2', 'hs_worker3', 'hs_worker4',

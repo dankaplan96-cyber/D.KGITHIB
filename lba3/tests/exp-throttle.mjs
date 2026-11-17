@@ -65,6 +65,7 @@ const reload = async () => { await open(page, '?nocine'); await helpers(); await
 const saveQuit = async () => {
   await ev(() => { P.tap('Escape'); game.step(0.1); });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 }).catch(async () => { await ev(() => game.act('quit')); });
+  await page.waitForEvent('load', { timeout: 20000 }).catch(() => {});   // (Quit's own reload lands first: a slow machine took longer than 1.5 s)
   await page.waitForTimeout(1500);
   await reload();
 };
