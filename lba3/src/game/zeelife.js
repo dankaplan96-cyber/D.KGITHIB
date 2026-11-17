@@ -248,7 +248,8 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
       for (let d = 0.6; d < len; d += 2) LF.add(cached('zlclamp', () => tint(new THREE.TorusGeometry(pipeR + 0.025, 0.022, 5, 10, Math.PI).rotateZ(0), '#4a4650')), C.VC, ax + (bx - ax) * d / len, Y0 + pipeR - 0.01, az + (bz - az) * d / len, 0, ry + Math.PI / 2, 0);
     }
     // fresh cobbles across the street (lighter than the old), two iron covers
-    LF.add(boxUV(bbox(1.1, 0.06, 7.3, 0.02, 1), 1.6), tm('cobble', { color: '#fff4ea', rough: 0.8 }), CROSS.x, Y0 + 0.028, 0);
+    // (OVERLAP-SWEEP: its top was 2 mm under the kerbs' (Y0 + 0.06) where it crosses them and fought them: now 1 cm over them)
+    LF.add(boxUV(bbox(1.1, 0.06, 7.3, 0.02, 1), 1.6), tm('cobble', { color: '#fff4ea', rough: 0.8 }), CROSS.x, Y0 + 0.04, 0);
     for (const z of [-2.2, 2.2]) LF.add(cached('zlcover', () => tint(cyl(0.38, 0.38, 0.03, 16), '#4a4650')), C.VC, CROSS.x, Y0 + 0.07, z);
     // the junction at the depot fence: a teal box with a valve wheel and the project's violet stripe
     L.add(tint(bbox(0.6, 0.7, 0.46, 0.04, 1), TEAL), C.MVC, CROSS.x + 0.1, Y0 + 0.35, 8.55);
