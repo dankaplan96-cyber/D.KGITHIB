@@ -183,7 +183,7 @@ export function migrateSave(raw) {
 // back on their feet; chapter 'throttle' in the expanded campaign, in the council chamber, the magic level the story
 // has given by the end of chapter 9; health, kashes and the other weapons and gadgets kept. Returns null when `raw`
 // isn't a save on exp_base.
-const EXP_START_DROP = /^(c10_|c3_|ep_|ur_|th_|sv_|bl_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js)
+const EXP_START_DROP = /^(c10_|nw_|c3_|sh_|co_|ep_|dp_|ur_|og_|og2_|th_|sv_|bl_|wk_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js; nw_, sh_, co_: the network's, the shell's and the last act's threads, CAMPAIGN-8/9; dp_: the epilogue's way down, UNDER-BAR)
 const EXP_START_REVIVE = /^(ndrone\d+|nclone|nguard|nsentry|ncrawler|nmite\d+|c3drone|c3mite\d+|guardian)$/;
 export const EXP_START_KEY = EXP_KEYS[0];
 export const COUNCIL_SPOT = { x: 4844, z: 4.5 };   // (the council chamber's spawn by its door: upper.js buildCouncil)
