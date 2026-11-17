@@ -32,13 +32,6 @@ const lib = (f) => fileURLToPath(new URL('./lib/' + f, import.meta.url));
 // Measured and left (docs/lba-maturity/PLACE-1.md has each with its priority): [room, kind, item, why, near [x, z]
 // in the room's frame (Citadel: the world)]
 const LEFT = [
-  // EXP-1 (17.11): the expansion's Ballastra places, merged but unreachable in play until chapter 11 is built
-  // (docs/lba-maturity/EXP-PLAN-2.md §7, EXP-2 fixes them with that chapter): the harbour's crate stacks into the quay's
-  // steps and each other, the sacks in the barrows, a herb pot in a lantern, a crate in the pump room's doorway
-  ['ballastra', 'inside', '*', 'EXP-2: the expansion\'s harbour, unreachable until chapter 11 (EXP-PLAN-2.md)'],
-  ['bl_arches', 'inside', 'herbPot', 'EXP-2: the expansion\'s Arch District, unreachable until chapter 11'],
-  ['bl_pump', 'door', 'crate', 'EXP-2: the expansion\'s pump room, unreachable until chapter 11'],
-  ['bl_gardens', 'inside', 'sack', 'EXP-2: the expansion\'s Water Gardens, unreachable until chapter 11'],
   ['house', 'float', 'custom', 'by design: the bathroom\'s towel rail on the wall (HOME-BATH, the desktop 14.11): towels hang', [-7.35, 8.79]],
   // by design: what the measure reads as wrong is meant
   ['tavern', 'back', 'jukebox', 'by design: LBA2\'s Chez Luc has it at the stair\'s foot (tavern.js); Kip\'s stop is at its front', [3.4, -1.35]],

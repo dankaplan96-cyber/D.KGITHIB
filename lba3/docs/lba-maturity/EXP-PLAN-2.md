@@ -14,7 +14,8 @@ Labels: **Played** (a person), **Automated runtime** (a test drove it), **Source
 |---|---|---|
 | Expanded campaign framework: `ORDER` with four keys between `council` and `network`, `EXP_KEYS`, `exp` / `exp_base`, display numbers by campaign, `ChapterShell` pass-through, save format 6, Load menu's "Expanded campaign: start at chapter 10" (`expandedStart`) | merged, live | save-migration (Automated runtime) |
 | Chapter 10 `throttle` "Borrowed Time" | **built** (EXP-1, §3.1) | `tests/exp-throttle.mjs`, playthrough 12b (Automated runtime) |
-| Chapters 11 `ballastra`, 12 `balances`, 13 `survey` | empty shells: the story passes straight through | `Story.nextIndex` |
+| Chapter 11 `ballastra` "Ballastra" | **built** (EXP-2, §3.2) | `tests/exp-ballastra.mjs` (Automated runtime) |
+| Chapters 12 `balances`, 13 `survey` | empty shells: the story passes straight through | `Story.nextIndex` |
 | W-1 Float Harbor + Tessa's shed, W-2 Arch District + 3 rooms, W-3 Water Gardens + tunnel + kiln | merged; built **on demand only** (regions.js groups `ballastra`, `bl_arches`, `bl_gardens`); unreachable in play (no chapter or travel stop goes there yet) | ballastra-harbor / -arches / -gardens (Automated runtime) |
 | The Ballastra cast's models (tessa, docker1–3: 3.4 MB) | not preloaded (`characters.js ONDEMAND_POLYS`, `loadPolys()` before a chapter builds them) | Source only |
 | OG-2 "The Fenced Square" (survey.js), OG-6 "Coils and Consent" (coils.js), NW-1 "Bands" (bands.js), their text and tests | **parked** in `tools/expansion-parked/` (not loaded): built against the old chapter 10, they doubled the main game's CAMPAIGN-8 takeovers; re-wired by §3.4 and §4 | — |
@@ -103,7 +104,7 @@ Starts where chapter 9 ends (Mill Lane, Zeelich). The player:
 - Open: in the transitional campaign (11–13 shells) it is followed directly by the network, so the valve room comes
   twice in a row (different mechanics); Oren is not mentioned again until the Ballastra chapters exist.
 
-### 3.2 `ballastra` — Ballastra (next; prefix `bl_`)
+### 3.2 `ballastra` — Ballastra (BUILT, EXP-2; prefix `bl_`; the plan as it was ordered, then as built)
 N1 Wrong Dock (W-1: counterweight and level; the crane latch by ball; the boat), N2 The Missing Water (W-3: the two
 gauges, the tunnel's unrecorded tap, share-don't-shut at the splitter: three gates, two set by ball across the channel),
 N3 The Uninvited Engineer (W-2: Halden's plan against the pump room's machine, Dunn's silted door by sword and kick, the
@@ -114,6 +115,64 @@ Needs: travel Citadel Spaceport ⇄ Ballastra pad (TRAVEL-1 film and cabin; trav
 campaign only); `loadPolys()` before the cast is built; voices for Tessa, the dockers, Quill, Halden, Mags, Dunn, Wenna,
 Corvin, Tib (voice.js, unique seeds); throttle's end-call variant for this chapter (Doran and the freighter); the B-7
 crate's return label line. World: W-1–W-3 built; W-9 (the Low Terrace's edge only) missing.
+
+**As built (EXP-2, 17.11; `story/ballastra.js`, `text/ballastra.js`, `text/he/ballastra.js`, `tests/exp-ballastra.mjs`).**
+Chapter 10's end changes in the expanded campaign when this chapter follows: Baldino on the radio says a relay only
+passes word along while the B-7 holds a station by hand; Zoé's return label (TESSA'S FLOAT REPAIRS · FLOAT HARBOR ·
+BALLASTRA) is read; Twinsen remembers Oren said Ballastra; the council's freighter, Doran flies it. The player:
+1. **Citadel Spaceport** (under the card): Doran by Vesk's idle freighter; Zoé and Arthur at home have a line each
+   (optional). Talking to Doran is the boarding: the ship's film from Citadel Spaceport to Float Harbor's pad (the travel
+   point `ballastra_port`, the planet's own backdrop and cabin colour). The cast's models are fetched here (loadPolys).
+2. **Float Harbor** (W-1): Quill hails him on the quay ("Visitors are weighed"), weighs him on the cargo balance (the
+   lift "has opinions about ballast"; optional humour that names the puzzle); the shed is locked, its chalk says AT THE
+   LIFT. Tessa at the lift: one job first. **N1**: the crank moves the counterweight a notch (low → middle → high →
+   middle …), the narrator reads the weight and the deck (high weight, low deck: Tessa: "backwards"); no notch alone
+   lifts the boat. Hobb: crane B's load onto the counterweight, its latch up the jib for the ball (the latch sits on the
+   mast: it is struck from the lift's side). The **wrong attempt**: struck with the weight high or low, the load lies on
+   the walkway (shut: the shed's side cut off) and the deck stops halfway or jams; the crank to the middle seats it.
+   Balanced: the boat sails, Ferro tosses 10 kashes, Hobb swings the pier bridge back, the district gate opens.
+   Tessa and the label: she mended the B-7 for Balance Works and was told it was rejected; forty stations — she does
+   not sign up for anyone's grand plan, but will build the box (a bounded job); it needs a glazed float (only Corvin's
+   kiln glazes them) and Halden's numbers. (Her shed's drawings, optional: "B-8: no glaze in the lever", R1.4 rule 2.)
+3. **The Arch District** (W-2, passed through): the lower row under water, Mags's hail; the terrace gate on.
+4. **N2 The Water Gardens** (W-3): Wenna; the two gauges read (full above, dry below). The tunnel: a copper tap bodged
+   onto the main takes everything into the kiln's leat before the splitter board. The **wrong attempt**: shut it with
+   the old bypass seized and nothing reaches the gardens or the kiln, it all goes over into the sea; Corvin comes down
+   the ladder ("I never asked where the steady came from"). The bypass gives to two blows (a kick in Aggressive, the
+   fists or the sword). The board then shares by its gates (shut / half / open): gate 1 (the gardens) by its wheel in
+   the tunnel; gates 2 (the kiln) and 3 (the sea) by their latches across the channel, by the ball (each blow drops the
+   leaf a notch; from shut it springs back open). Every change says where the water goes (dry / a trickle / steady /
+   strong / full). Shared only with the gardens open, the kiln half and the sea shut (gardens 2/3, kiln 1/3, the copper
+   tap shut): the basins rise, the rafts recover (green on a later visit), Wenna's clover. Corvin by his wheel: slower,
+   steady, he will glaze Tessa's float "off a recorded gate this time".
+5. **N3** (W-2): Halden (bl_oren, the upper terrace) gives a copy of his old plan, not the regulator's numbers ("in the
+   House of Balances; I don't go there"): a spill gate for the lower row drawn on it. The pump room: UPPER TERRACE ·
+   PRIORITY plates; the plan against the machine: the gate chained under the council's seal. The wheel is held (the
+   chain: "wants an edge"); the sword cuts it; the wheel then stops dead (a pawl high on the pier wall); the ball flips
+   the pawl; the wheel opens the gate and the canal falls to balanced. **Oren** speaks from the glazed pumps (his tone,
+   no prop): when the council would not open the gate they gave the row's young ones to him "to sleep, until the water
+   settled. … Three hundred and four. They are still safe." (the Cradles, set up for chapter 12 without W-9). Dunn's door
+   on the now-dry walkway: three blows on the silt, a kick; the lower row comes home (washing out, shutters open, the
+   market's people back at their doors). Mags: "One open gate doesn't make Halden a neighbour."
+6. **The Speaking Steps**: Tessa, Mags, Halden and Quill there; Tessa will draw the box; Doran's set: Baldino says
+   someone on Ballastra buys every Balance Works coil for the project and no regulators (`vm_2`); "Come home". Back over
+   the harbour to the freighter: Doran flies him home (the ship's film to Zeelich) and the next chapter begins (the
+   network, chapter 14, while 12–13 are not written; to chapter 12 when it is: the end stays on Ballastra).
+- The Low Terrace beat (OG-3's first look) is left for chapter 12 with W-9: the Arch District's notice board says the
+  Low Terrace lift runs down only, by the keepers' order (optional read), and Oren's lines name the sleepers.
+- People (all with lines by stage): Tessa, Quill, Hobb, Ferro, Wenna, Corvin, Halden, Mags, Dunn, Sorrel (a grower),
+  Brin and Ottie (the lower row: on the market float while flooded, at their doors after), Nuna (tea); Doran; Oren
+  (voice); Baldino (radio). Models: tessa, docker1–3 with DRESS-1's dresses (13 people on 4 bodies), on demand.
+- Voices: `tessa`, `bl_quill` … `bl_nuna` (voice.js, seeds 1901–1913, from the Quetch and Grobo families with phrase
+  banks); Doran's set is Doran's voice (`n_doranradio`).
+- Saves: every step is a flag (`bl_`, listed in the module's head); a load sets each place from them (the lift and
+  the crane, the shed's lock and the district gate, the gardens' tap, bypass, gates, channels, gauges, basins, rafts and
+  kiln, the canal, the chain, the pawl, the gate, the silt, Dunn's door, the row). Owed rewards settle on a load.
+  A save past this chapter keeps the places as they were left (the cast at their after-spots for a return visit).
+- Travel: `ballastra_port` (Float Harbor's pad) ⇄ Citadel Spaceport and ⇄ Zeelich Spaceport by spaceship, in the
+  expanded campaign once he has landed there; the holomap knows Ballastra's three areas.
+- Not done: W-9 and the Low Terrace; Tib; OP-5 (the Silent Bell: the bell's handles are unused); the regulator itself
+  (chapter 12, N5–N6).
 
 ### 3.3 `balances` — The House of Balances (prefix `bl_`, `wk_`)
 N4 Vesk's Shipment (W-4 part A, the warehouse: stealth with a warning, the standing order), N5 The Filling House (W-4

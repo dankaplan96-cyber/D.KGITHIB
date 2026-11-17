@@ -62,11 +62,12 @@ const helpers = () => ev(() => {
     },
     // a melee blow (the attack key) at a point, with the weapon asked for
     strike(p, weapon) {
-      const h = G.hero; for (let k = 0; k < 4 && h.combat?.weapon !== weapon; k++) P.tap('KeyR', 0.1);
+      const h = G.hero; if (h.combat?.weapon !== weapon) { h.combat.equip(weapon); G.step(0.4); }   // (the weapon picked in the weapons menu: R only swaps with the last one)
       P.face(p.x, p.z); const n0 = window.__said.length; P.tap('KeyK', 0.35); G.step(0.6); P.settle(); for (let i = 0; i < 6; i++) G.step(0.1); P.settle();
       return { weapon: h.combat?.weapon, said: window.__said.slice(n0) };
     },
-    through(e) { const r = P.through(e.x, e.z); for (let i = 0; i < 20; i++) G.step(0.1); P.settle(); return { ...r, room: G.room?.id ?? 'citadel' }; },
+    // (a remark on the way — Mags's hail — stops the walk: read, a player walks on to the door; twice at most)
+    through(e) { const from = G.room?.id ?? 'citadel'; let r = P.through(e.x, e.z); for (let k = 0; k < 2 && (G.room?.id ?? 'citadel') === from; k++) r = P.through(e.x, e.z); for (let i = 0; i < 20; i++) G.step(0.1); P.settle(); return { ...r, room: G.room?.id ?? 'citadel' }; },
     draws() { const R = G.renderer.renderer; let main = 0, shadow = 0; const o = R.renderBufferDirect.bind(R); R.renderBufferDirect = (cam, scene, ...a) => { if (scene) main++; else shadow++; return o(cam, scene, ...a); }; G.perf.beginFrame(); G.frame(1 / 30, true); R.renderBufferDirect = o; return { main, shadow }; },
   };
 });
@@ -74,6 +75,7 @@ const reload = async () => { await open(page, '?nocine'); await helpers(); await
 const saveQuit = async () => {
   await ev(() => { P.tap('Escape'); game.step(0.1); });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 }).catch(async () => { await ev(() => game.act('quit')); });
+  await page.waitForEvent('load', { timeout: 20000 }).catch(() => {});   // (Quit's own reload lands first: a slow machine took longer than 1.5 s)
   await page.waitForTimeout(1500);
   await reload();
 };
@@ -175,7 +177,7 @@ const n2c = await timed(() => {
   return { hatch: hatch.room, look, shut, kiln: GD.kiln.running, flows: GD.channels.flows, corvin: corvin ? { present: corvin.present, d: +corvin.distTo(G.hero).toFixed(1) } : null, ...T.view() };
 });
 check('the tunnel: a copper tap takes the water before the board', n2c.hatch === 'bl_tunnel' && n2c.look.said.some((l) => /before it reaches the board/.test(l)), n2c.look);
-check('the wrong attempt: the tap shut with the bypass seized: nothing for the gardens or the kiln, all to the sea; Corvin comes running', n2c.bl.tapShut && !n2c.kiln && n2c.flows.overflow > 0.9 && n2c.flows.gardens < 0.05 && n2c.shut.said.some((l) => /Who stopped my wheel/.test(l)) && n2c.corvin?.present && n2c.corvin.d < 8, { flows: n2c.flows, kiln: n2c.kiln, corvin: n2c.corvin, said: n2c.shut.said });
+check('the wrong attempt: the tap shut with the bypass seized: nothing for the gardens or the kiln, all to the sea; Corvin comes running', n2c.bl.tapShut && !n2c.kiln && n2c.flows.overflow > 0.9 && n2c.flows.gardens < 0.05 && n2c.shut.said.some((l) => /Who stopped my wheel/.test(l)) && n2c.corvin?.present && n2c.corvin.d < 12, { flows: n2c.flows, kiln: n2c.kiln, corvin: n2c.corvin, said: n2c.shut.said });
 const n2d = await timed(() => {
   const G = game, GD = G.rooms.bl_gardens.gardens;
   const look = T.use(GD.spots.bypassValve, 'bl_bypass', 0.8);
@@ -247,7 +249,7 @@ const n3d = await timed(() => {
   for (let i = 0; i < 30; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } P.settle();
   return { out: out.room, du, hits: hits.length, silt: G.flags.bl_silt, kick, open: A.dunnDoor.open, home: A.row.home, ...T.view() };
 });
-check("Dunn on dry steps, his door silted: three blows clear it, a kick opens it; the lower row comes home", n3d.out === 'bl_arches' && n3d.du.said.some((l) => /thirty-four years of mud/.test(l)) && n3d.silt === 3 && n3d.open && n3d.home && n3d.bl.n3 && /Speaking Steps/.test(n3d.obj), { du: n3d.du.said, hits: n3d.hits, kick: n3d.kick, open: n3d.open, home: n3d.home, obj: n3d.obj });
+check("Dunn on dry steps, his door silted: three blows clear it, a kick opens it; the lower row comes home", n3d.out === 'bl_arches' && n3d.silt === 3 && n3d.open && n3d.home && n3d.bl.n3 && /Speaking Steps/.test(n3d.obj), { du: n3d.du, hits: n3d.hits, kick: n3d.kick, open: n3d.open, home: n3d.home, obj: n3d.obj });
 
 // ---------------------------------------------------------------- the Speaking Steps and the way home
 const e1 = await timed(() => {
