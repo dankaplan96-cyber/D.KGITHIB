@@ -173,6 +173,14 @@ BALLASTRA) is read; Twinsen remembers Oren said Ballastra; the council's freight
   expanded campaign once he has landed there; the holomap knows Ballastra's three areas.
 - Not done: W-9 and the Low Terrace; Tib; OP-5 (the Silent Bell: the bell's handles are unused); the regulator itself
   (chapter 12, N5–N6).
+- Tests (17.11, SwiftShader on the shared container, Automated runtime only): exp-ballastra 33/33 (bot game time 749 s);
+  exp-throttle 28/28; ballastra-harbor 19/19, -arches 20/20, -gardens 22/22; place-scan PASS (EXP-1's 12 parked
+  findings: 9 fixed, the cargo net, the balance's pan and the barrow loads listed by design); voices 27/27;
+  chapter9 24/24; dialogue-check PASS (Hebrew 100 %); save-migration 47 checks passed, its last (a key this build
+  lacks) not reached (the page crashed twice on the loaded machine); world-consistency's static journeys PASS, its runtime
+  part, travel (PLANET-1 updated for Ballastra), chapter10 (14 checks passed) and perfbudget **not completed**: the
+  page crashed on each try (load 17–24 on 4 cores, 2–3 GB free). Citadel's cost: no geometry added to Citadel (a
+  travel point's data, the holomap's labels), not measured.
 
 ### 3.3 `balances` — The House of Balances (prefix `bl_`, `wk_`)
 N4 Vesk's Shipment (W-4 part A, the warehouse: stealth with a warning, the standing order), N5 The Filling House (W-4
