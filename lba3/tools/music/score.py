@@ -57,13 +57,22 @@ INSTR = {
     # (MUSIC-2) folk colours for the playlist pieces; present in MuseScore_General and MuseScore_General_HQ
     'accordion': (17, 21, True), 'fiddle': (17, 110, True), 'whistle': (17, 78, True), 'sitar': (0, 104, False),
     'shamisen': (0, 106, False), 'fretless': (0, 35, False), 'steelgtr': (0, 25, False),
+    # (MUSIC-LBA) brighter folk / GM colours and the standard kits (one kit per song: channel 10)
+    'harmonica': (17, 22, True), 'bandoneon': (17, 23, True), 'banjo': (0, 105, False), 'fingbass': (0, 33, False),
+    'agogo': (0, 113, False), 'woodblock': (0, 115, False), 'mtom': (0, 117, False), 'taikodrum': (0, 116, False),
+    'epiano': (0, 4, False), 'tinkerbell': (0, 112, False), 'jazzgtr': (0, 26, False), 'shenai': (17, 111, True),
+    'kit': (128, 0, False), 'roomkit': (128, 8, False), 'brushkit': (128, 40, False),
 }
 
 # Orchestra kit notes (MuseScore_General 128:48)
 KIT = {'bd': 36, 'bd2': 35, 'snare': 38, 'rim': 37, 'crash': 57, 'crash2': 59, 'tamb': 54, 'tri': 81, 'tri_m': 80,
        'wb_hi': 76, 'wb_lo': 77, 'shaker': 82, 'sleigh': 83, 'belltree': 84, 'taiko': 87, 'taiko_s': 86,
        'castanet': 39, 'clave': 75, 'cabasa': 69, 'splash': 55, 'hh': 27, 'hh_open': 29, 'sticks': 31,
-       'conga': 63, 'tumba': 64, 'bongo': 61, 'guiro': 73}
+       'conga': 63, 'tumba': 64, 'bongo': 61, 'guiro': 73,
+       # (MUSIC-LBA) General MIDI names for the standard kits
+       'kick': 36, 'side': 37, 'clap': 39, 'chh': 42, 'phh': 44, 'ohh': 46, 'ride': 51, 'cowbell': 56,
+       'maracas': 70, 'conga_m': 62, 'bongo_hi': 60, 'timb_hi': 65, 'timb_lo': 66, 'agogo_hi': 67, 'agogo_lo': 68,
+       'tom_flo': 41, 'tom_lo': 45, 'tom_mid': 47, 'tom_hi': 50, 'brush': 40}
 
 _NAMES = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
 
@@ -385,7 +394,7 @@ class Song:
 
     # -------------------------------------------------------------- parts
     def part(self, name, instr, **kw):
-        if instr == 'drums':
+        if instr == 'drums' or INSTR[instr][0] == 128:
             ch = 9
         else:
             ch = next(self._ch)
@@ -711,3 +720,45 @@ def hit(part, bar, name, beat=0.0, vel=80, dur=1.0):
     """One percussion stroke (orchestra kit name from KIT, or a pitch)."""
     p = KIT[name] if name in KIT else P(name)
     return part.note(part.song.pos(bar, beat), p, dur, vel)
+
+
+# ------------------------------------------------------------------ (MUSIC-LBA) grooves and comping
+def groove(part, bar0, bar1, pats, step=0.25, vel=0, skip=()):
+    """Percussion written as step patterns, one character per `step` beats, repeated bar after bar:
+    {'kick': 'x.....x.x.......', 'side': '....x.......x...'}; X accent, x stroke, o ghost, . rest.
+    A pattern longer than a bar runs over several bars ('|' and spaces are ignored). `skip`: bars left empty."""
+    S = part.song
+    for name, pat in pats.items():
+        cells = pat.replace('|', '').replace(' ', '')
+        p = KIT[name] if name in KIT else P(name)
+        k = 0
+        t = S.pos(bar0)
+        end = S.pos(bar1)
+        while t < end - 1e-6:
+            bar = int((t + 1e-6) // S.bar_beats) + 1
+            c = cells[k % len(cells)]
+            if c != '.' and bar not in skip:
+                acc = {'X': 16, 'x': 0, 'o': -18}[c]
+                part.note(t, p, step * 1.5, max(1, min(127, int(part.level(t) + vel + acc))))
+            k += 1
+            t += step
+
+
+def comp(part, bar0, bar1, hits, n=3, low=P('F3'), high=P('D5'), vel=0, prev=None, stacc=True):
+    """Chord comping following the harmony: `hits` = [(beat in the bar, length), ...] repeated every bar,
+    the chord voiced with closest motion (an off-beat accordion, a guitar strum, piano stabs)."""
+    S = part.song
+    part.mono = False
+    for bar in range(bar0, bar1):
+        for (bt, ln) in hits:
+            b = S.pos(bar, bt)
+            sym = S.chord_at(b)
+            if not sym or sym == 'N':
+                continue
+            v = voice(sym, prev, n, low, high)
+            prev = v
+            for p in v:
+                nt = part.note(b, p, ln, int(part.level(b) + vel), stacc=False)
+                nt._ten = not stacc
+                nt._stacc = False
+    return prev

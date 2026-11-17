@@ -31,6 +31,16 @@ Written out in `tools/music/themes.py`; every track either quotes or develops th
 | **Adventure** (exploration, travel, victories) | curious, optimistic, D major 4/4 | the long-short dotted step at the start of each bar, a leap up a fourth, a rising third; the answer climbs and cadences 3-2-1 | Main Theme, Island Exploration (main version), in E minor in Combat and the Finale's battle, bent into 7/8 lydian on Zeelich, in Bb in Baldino's Workshop, as a broad **waltz** in Homecoming, in major over the Entity cell in the Finale |
 | **The Entity & the project** | wonder → trouble → resolution | the cell D-A-B-G#: up a fifth, up a step, down a minor third onto the raised fourth; long-short-short-long | lydian *wonder* in the Main Theme and The Well; *troubled* (same cell over Dm6/Bb7, continuation bent a semitone) in Energy Facility, Revelation, Combat and the Finale; *resolved* (the G# finally rises to A) at the climax of the Finale and in Homecoming |
 
+## MUSIC-LBA (2026-11-17): livelier pieces, Twinsen's theme
+
+The user found the music "a bit too boring during the game" and asked for the style of LBA1 and LBA2. Eight pieces were
+rewritten in place (same files, same moods): the title, the town, Home, the island, combat, Zeelich, the Desert and the
+Hamalayi. They have faster tempos, a light groove (the GM standard and brush kits), basses that move, and hummable
+tunes in A/B forms of 78 to 96 s. A fourth theme, **Twinsen's** (`themes.TWIN_A`, `TWIN_B`, `TWIN_HOOK`: three rising
+notes, a leap, a fall), is stated by the title and quoted by each of the other seven pieces in its own colour. The
+analysis that led to this (per-piece numbers from `tools/music/analyse.py`), the pieces, the measurements and the A/B
+listening clips are in `docs/lba-maturity/MUSIC-LBA.md`. Nobody has listened to them.
+
 ## Tracks
 
 All tracks: status **draft** (rendered with the MuseScore_General GM soundfont, unverified by ear).
@@ -38,16 +48,16 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 
 | Track | Scene / mood names | Duration | Loop length | Key, meter | Files |
 |---|---|---|---|---|---|
-| Main Theme | title screen (`title`) | 2:06 | 1:32 (loop starts 33 s in, after the intro) | D, 4/4 | `assets/music/main_theme.mp3`, `art/music/masters/main_theme.flac`, `art/music/midi/main_theme.mid`, `tools/music/tracks/main_theme.py` |
-| Home | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses (`home`, `house`) | 2:03 | 1:52 | F, 3/4 | `home.*` |
-| Citadel Village | town, harbour, Chez Luc's tavern (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings: the water office, Bazoo's shop, the pharmacy, the ticket office, the baggage claim, the tavern's cellar (`office`) | 2:29 | 2:13 | G, 6/8 | `village.*` |
-| Island Exploration | Citadel island away from the village, Citadel Spaceport's terminal (`island`) | 2:26 | 2:13 | D, 4/4 | `island.*` |
+| Main Theme — Twinsen's Theme (MUSIC-LBA) | title screen (`title`) | 1:42 | 1:26 | D, 4/4, 112 | `assets/music/main_theme.mp3`, `art/music/masters/main_theme.flac`, `art/music/midi/main_theme.mid`, `tools/music/tracks/main_theme.py` |
+| Home (MUSIC-LBA) | Twinsen's house and its cellar, lighthouse lamp room, the neighbours' and Nell's houses (`home`, `house`) | 1:48 | 1:36 | F, 3/4 waltz, 120 | `home.*` |
+| Citadel Village (MUSIC-LBA) | town, harbour, Chez Luc's tavern (`citadel`, `calm`, `clear`, `village`, `harbour`); muffled inside town buildings: the water office, Bazoo's shop, the pharmacy, the ticket office, the baggage claim, the tavern's cellar (`office`) | 1:42 | 1:28 | G, 6/8 jig | `village.*` |
+| Island Exploration (MUSIC-LBA) | Citadel island away from the village, Citadel Spaceport's terminal (`island`) | 1:41 | 1:28 | C, 4/4, 120 | `island.*` |
 | The Well | the well cave; caves, sewers, temples and underground places (Tralu's cave, the Temple of Bù, the Temple of the Dark Monk, the shell), the Hamalayi's observatory; second piece of the Hamalayi playlist (`well`, `cave`, `storm`, `under`, `underworld`) | 2:26 | 2:11 | D lydian, 4/4 | `well.*` |
 | Baldino's Workshop | the workshop (`workshop`) | 2:01 | 1:48 | Bb, 4/4 | `workshop.*` |
-| Zeelich | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`, `zeelich_in`) | 2:20 | 2:06 | E lydian, 7/8 | `zeelich.*` |
+| Zeelich (MUSIC-LBA) | the Zeelich region and its interiors (Zeelich Spaceport's terminal, Otringal's bar and hotel, the council) (`zeelich`, `zeelich_in`) | 1:33 | 1:18 | A lydian, 7/8, 150 | `zeelich.*` |
 | Energy Facility | project station in the fort, control room (`station`, `control`, `facility`) | 1:55 | 1:43 | D minor, 4/4 | `facility.*` |
 | Energy Facility (stealth mix) | project office, Zoé sneaking (`stealth`) — same performance without brass, drums and synth bass; switches in sync with the full mix | 1:55 | 1:43 | | `facility_stealth.*` (no MIDI of its own) |
-| Danger | combat, entered automatically (`combat`) | 1:30 | 1:20 | E minor, 4/4 | `combat.*` |
+| Danger (MUSIC-LBA) | combat, entered automatically (`combat`) | 1:33 | 1:20 | E minor, 4/4, 144 | `combat.*` |
 | Revelation | story cue, one-shot (`audio.cue('revelation')`) | 1:17 | — | D, 4/4 | `revelation.*` |
 | Finale | chapter 3 finale / boss (`boss`, `finale`) | 1:49 | 1:36 | D minor → D, 4/4 | `finale.*` |
 | Homecoming | ending screens, credits (`ending`, `credits`, `homecoming`) | 2:49 | 2:31 | F, 3/4 | `homecoming.*` |
@@ -57,8 +67,8 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Cloud Gardens (MUSIC-2) | Zeelich (Esmer, the floating islands, its interiors), second piece of the `zeelich` playlist | 2:47 | — (one pass, ends) | A mixolydian, 4/4 | `zeelich_b.*` |
 | The Old Asylum (ORDER 19) | FunFrock's old asylum, the project hostel (`asylum`; without the render the mood plays the stealth mix, `MOODS.asylum.alt`) | 1:52 | 1:35 | B minor, 3/4 | `asylum.*` |
 | The School of Magic (MUSIC-BY-PLACE) | the School of Magic on Desert Island, its pupils' dormitory, Bersimon's tent (`school`; alt Home) | 1:49 | 1:36 | G (lydian colour), 4/4 | `school.*` |
-| The High Hamalayi (MUSIC-BY-PLACE) | the Hamalayi outdoors (first piece of its playlist), the monastery hall (`mountain`; alt The Well); muffled in Lhar's houses and the landing's hut (`hamalayi_in`) | 1:49 | 1:36 | A dorian, 4/4 | `mountain.*` |
-| Desert Island (MUSIC-BY-PLACE) | Desert Island outdoors (first piece of the `desert` playlist); muffled in Kesh's houses, the post's cabins, the crew's bunkhouse, Bashir's house (`desert_in`) | 1:44 | 1:30 | D mixolydian, 4/4 | `desert_isle.*` |
+| The High Hamalayi (MUSIC-LBA) | the Hamalayi outdoors (first piece of its playlist), the monastery hall (`mountain`; alt The Well); muffled in Lhar's houses and the landing's hut (`hamalayi_in`) | 1:48 | 1:34 | A dorian, 4/4, 92 | `mountain.*` |
+| Desert Island (MUSIC-LBA) | Desert Island outdoors (first piece of the `desert` playlist); muffled in Kesh's houses, the post's cabins, the crew's bunkhouse, Bashir's house (`desert_in`) | 1:45 | 1:32 | D mixolydian, 4/4, 104 | `desert_isle.*` |
 
 Each score file starts with a section plan (bars, instruments, what happens to the themes).
 
@@ -218,16 +228,16 @@ From `tools/music/check.py`, on the MP3s decoded with ffmpeg (as Chrome decodes 
 
 | Track | Integrated loudness (loop body) | True peak (MP3) | Loudness range | Seam error / MP3 coding error | Seam click ratio |
 |---|---|---|---|---|---|
-| main_theme | −16.8 LUFS | −1.6 dBTP | 16.1 LU | −28.1 / −22.5 dB | 0.63 |
-| home | −18.4 | −5.6 | 7.3 | −36.1 / −25.3 | 0.45 |
-| village | −17.4 | −3.2 | 13.0 | −26.3 / −23.2 | 0.44 |
-| island | −17.4 | −2.9 | 8.0 | −29.2 / −21.7 | 0.32 |
+| main_theme (MUSIC-LBA) | −16.9 LUFS | −2.0 dBTP | 4.8 LU | −26.9 / −22.1 dB | 0.85 |
+| home (MUSIC-LBA) | −18.5 | −5.8 | 8.0 | −29.8 / −20.9 | 0.51 |
+| village (MUSIC-LBA) | −17.5 | −3.7 | 3.8 | −36.0 / −20.5 | 0.13 |
+| island (MUSIC-LBA) | −17.4 | −3.0 | 4.9 | −29.6 / −22.0 | 0.27 |
 | well | −18.4 | −4.1 | 11.8 | −36.4 / −24.8 | 0.59 |
 | workshop | −17.3 | −3.1 | 13.8 | −50.2 / −24.5 | 0.10 |
-| zeelich | −17.4 | −2.7 | 5.3 | −39.4 / −22.2 | 0.61 |
+| zeelich (MUSIC-LBA) | −17.7 | −3.6 | 5.1 | −26.1 / −21.7 | 0.50 |
 | facility | −17.1 | −1.9 | 17.6 | −26.0 / −19.8 | 0.24 |
 | facility_stealth | −18.8 | −4.6 | 13.1 | −38.8 / −25.5 | 0.31 |
-| combat | −16.9 | −2.5 | 14.6 | −32.1 / −24.1 | 0.50 |
+| combat (MUSIC-LBA) | −17.0 | −2.4 | 6.0 | −38.3 / −22.0 | 0.13 |
 | revelation (one-shot) | −18.0 | −1.7 | 19.5 | — | — |
 | finale | −17.0 | −4.6 | 8.2 | −26.8 / −22.4 | 0.37 |
 | homecoming | −17.3 | −1.7 | 13.1 | −28.5 / −24.4 | 0.54 |
@@ -236,8 +246,8 @@ From `tools/music/check.py`, on the MP3s decoded with ffmpeg (as Chrome decodes 
 | zeelich_b (MUSIC-2, one pass) | −17.9 | −4.4 | 7.3 | — | — |
 | asylum (ORDER 19) | −18.8 | −5.5 | 11.3 | −34.2 / −24.5 | 0.71 |
 | school (MUSIC-BY-PLACE) | −18.4 | −4.7 | 5.1 | −34.5 / −25.2 | 0.56 |
-| mountain (MUSIC-BY-PLACE) | −18.4 | −5.6 | 4.8 | −36.9 / −25.6 | 0.43 |
-| desert_isle (MUSIC-BY-PLACE) | −18.0 | −5.2 | 5.9 | −29.7 / −23.8 | 0.47 |
+| mountain (MUSIC-LBA) | −18.4 | −5.3 | 3.3 | −35.1 / −21.5 | 0.58 |
+| desert_isle (MUSIC-LBA) | −18.1 | −4.6 | 5.3 | −34.3 / −20.9 | 0.67 |
 
 * Loudness targets: −17 LUFS (combat, main theme, finale −16.5; quiet beds home, well, revelation −18;
   stealth mix −18.5). All tracks are within −16.8…−18.8 LUFS integrated after MP3 encoding.

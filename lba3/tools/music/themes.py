@@ -48,6 +48,20 @@ ENT_A_RESOLVED = "D4:h A4:q B4:q | G#4:h A4:h | E4:h B4:q C#5:q | D5:w"
 ENT_CHORDS_RESOLVED = "D | E/D D | C#m7 | D"
 
 
+# ---------------------------------------------------------------- 4. TWINSEN (MUSIC-LBA; D major, 4/4)
+# Twinsen's own tune, stated by the title and quoted by the place pieces in their own colours.
+# Signature (the "hook"): three rising eighths, a leap up a fourth (or sixth) held for a dotted quarter, then a
+# quick fall: D E F# | B— A F#. The answer sequences the hook a step lower on the dominant (C# D E | A— G E);
+# the second half climbs to the high D. The B strain turns to B minor (a little wistful) and climbs back.
+TWIN_A = ("D5:e E5:e F#5:e B5:q. A5:e F#5:e | G5:q. F#5:e E5:q D5:q | C#5:e D5:e E5:e A5:q. G5:e E5:e | F#5:h. r:q |"
+          "D5:e E5:e F#5:e B5:q. A5:e F#5:e | D6:q. C#6:e B5:q A5:q | G5:e F#5:e E5:e B5:q. A5:e C#5:e | D5:h. r:q")
+TWIN_A_CH = "D | G | A7 | D | D | Bm G | Em A7 | D"
+TWIN_B = ("B4:q. C#5:e D5:q F#5:q | E5:q. D5:e C#5:h | D5:q. E5:e F#5:q B5:q | A5:h. r:e F#5:e |"
+          "G5:q. F#5:e E5:q D5:q | C#5:q. D5:e E5:q A5:q | B5:q. A5:e G5:q E5:q | E5:q. F#5:e E5:q A4:q")
+TWIN_B_CH = "Bm | Em F#7 | Bm G | A | G | A | Em7 | A7sus4 A7"
+TWIN_HOOK = "D5:e E5:e F#5:e B5:q. A5:e F#5:e"
+
+
 def shift(text, semis, prefer_flats=None):
     """Transpose every pitch in a token string by `semis` semitones."""
     names_s = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
