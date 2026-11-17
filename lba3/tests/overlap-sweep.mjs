@@ -64,6 +64,10 @@ const KNOWN = [
   ['citadel', 'c', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
   ['citadel', 'd', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
   ['citadel', 'c', /dressing/, [-27.2, -8.1], 1.5, 'looked at: the post stands on its feet on the ground; the feet are thinner than the rays\' spacing (the gap is to its board)'],
+  // LBA1's rooms are the original's brick cells drawn as open faces (lba1room.js): their upper storeys ('lid' meshes) and
+  // overhangs read as clusters over the floor below; place-scan does not measure them either
+  ['asylum', 'c', /lid:|Buffer<Group /, null, 0, 'not measurable: LBA1\'s brick cells drawn as open faces (lba1room.js); the upper storeys and overhangs are not standing pieces'],
+  ['asylum', 'b', /lid:/, null, 0, 'low (0.16 m², under 0.4 mm): two of LBA1\'s upper-storey faces in one plane, under the cut-away lids (lba1room.js)'],
   // the harbour's paving and what stands on it: the AUDIT-FIX worker's (world.js HARBOUR_*), not touched here
   ['citadel', 'c', /harbour/, [-110, 44], 20, 'AUDIT-FIX: on the harbour\'s paving, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
   ['citadel', 'd', /harbour/, [-105, 44], 22, 'AUDIT-FIX: the harbour\'s paving under the ground, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
@@ -85,7 +89,8 @@ function findingsOf(r) {
     const la = D[s.A], lb = D[s.B]; if (la && lb && la.tex === lb.tex && la.color === lb.color) continue;   // (one look: they read as one solid, no seam)
     F.push({ area: a, cat: 'a', kind: 'through', x: s.x, z: s.z, y: s.y, size: `${Math.round(s.frac * 100)} % of it in, ${s.d} m deep`, text: `${nm(D, s.A)} | ${nm(D, s.B)} (${s.n} rays)`, raw: s });
   }
-  for (const s of r.floats) if (s.gap >= 0.03) F.push({ area: a, cat: 'c', kind: 'floating', x: s.x, z: s.z, y: s.y, size: `${s.gap} m gap`, text: `${s.objs.map((o) => nm(D, o)).join(' + ')} (${s.parts} parts, box ${s.box.join(',')}) over ${s.sup >= 0 ? nm(D, s.sup) : 'nothing'}`, raw: s });
+  // (a cluster thinner than 10 cm one way across is a board, a rail, a frame or a plaque on a wall: held by the wall)
+  for (const s of r.floats) if (s.gap >= 0.03 && Math.min(s.box[3] - s.box[0], s.box[5] - s.box[2]) >= 0.1) F.push({ area: a, cat: 'c', kind: 'floating', x: s.x, z: s.z, y: s.y, size: `${s.gap} m gap`, text: `${s.objs.map((o) => nm(D, o)).join(' + ')} (${s.parts} parts, box ${s.box.join(',')}) over ${s.sup >= 0 ? nm(D, s.sup) : 'nothing'}`, raw: s });
   for (const s of r.sunk) F.push({ area: a, cat: 'c', kind: 'sunk', x: s.x, z: s.z, y: s.y, size: `${s.depth} m in`, text: `${nm(D, s.A)} (box ${s.box.join(',')})`, raw: s });
   // ((d) needs a ground: the terrain, or Zeelich's island slab; Ballastra's districts stand on quays over the water, and a
   //  quay is not the ground a cap or a step runs into)
