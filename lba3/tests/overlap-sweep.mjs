@@ -55,6 +55,18 @@ const KNOWN = [
   ['*', 'c', /foam|ripple/i, null, 0, 'by design: foam and ripples lie on the water\'s surface'],
   ['*', 'c', /over [^|]*(cloud sea|water)/, null, 0, 'by design: piles and posts end in the cloud sea or the water (nothing under them is seen)'],
   ['*', 'c', /bl_floating|marketFloat/, null, 0, 'by design: the Float Harbor\'s floating beds and market rafts ride on the water (Ballastra)'],
+  // Citadel (chapters 1–2): looked at (captures/overlap-sweep/) or measured and left
+  ['citadel', 'a', /asylum-front/, [-26.3, -51.4], 2.5, 'low: two merlons of the fort wall\'s crenellation stand inside the Workers\' Hostel front\'s roof, built against that wall (asylumhostel.js); the roof hides them'],
+  ['citadel', 'd', /old-door-passage/, null, 0, 'by design: the old passage\'s stone vault runs into the hillside (its way in)'],
+  ['citadel', 'd', /old-door-plateau-stair/, null, 0, 'by design: the old stair\'s top tread meets the plateau\'s slope'],
+  ['citadel', 'e', /sewerhatch/, null, 0, 'by design: the sewer hatch\'s frame is set flush in the terrace\'s ground'],
+  ['citadel', 'd', /statue/, [-44.7, -11.1], 2, 'low (9 cm): the statue\'s lowest step is set into the square\'s slope on its uphill side (looked at)'],
+  ['citadel', 'c', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
+  ['citadel', 'd', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
+  ['citadel', 'c', /dressing/, [-27.2, -8.1], 1.5, 'looked at: the post stands on its feet on the ground; the feet are thinner than the rays\' spacing (the gap is to its board)'],
+  // the harbour's paving and what stands on it: the AUDIT-FIX worker's (world.js HARBOUR_*), not touched here
+  ['citadel', 'c', /harbour/, [-110, 44], 20, 'AUDIT-FIX: on the harbour\'s paving, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
+  ['citadel', 'd', /harbour/, [-105, 44], 22, 'AUDIT-FIX: the harbour\'s paving under the ground, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
 ];
 const knownOf = (area, cat, f) => KNOWN.find(([a, c, re, near, r]) => (a === area || a === '*') && c === cat && (!re || re.test(f.text)) && (!near || Math.hypot(f.x - near[0], f.z - near[1]) < (r || 1)));
 
