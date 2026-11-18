@@ -100,6 +100,9 @@ same soundfont and chain as the rest (draft quality, as every track: docs/MUSIC.
 | **The High Hamalayi** (`mountain`) | the Hamalayi outdoors (first piece), the monastery hall, Lhar's houses (muffled) | A dorian, 4/4, 80 | pan flute, violins, horn, a unison choir chant, tubular bells, an A drone, a soft low drum | 1:49 (1:36) | −18.4 / −5.6 | −36.9 / −25.6, 0.43 | 1.53 MB |
 | **Desert Island** (`desert_isle`) | the Desert outdoors (first piece), Kesh's houses and the other Desert rooms (muffled) | D mixolydian, 4/4, 96 | oboe, fiddle, nylon and steel guitars, flute, horns, fretless bass, hand drums | 1:44 (1:30) | −18.0 / −5.2 | −29.7 / −23.8, 0.47 | 1.45 MB |
 
+- **MUSIC-LBA (17.11):** `desert_isle` and `mountain` were rewritten in place: same names, places and playlists, with
+  livelier pieces that quote Twinsen's theme. The figures in the table above are for the 9.11 renders. The new ones
+  are in `MUSIC-LBA.md`.
 - Themes: the School's spells are the project's own Entity cell (themes.py ENT_A, wonder form, in G lydian) — magic is
   Sendell's gift; its lesson tune, the mountain's tune and the Desert's tune are new. No melody, recording or
   arrangement of LBA1/LBA2 or of anything else was used or consulted.
