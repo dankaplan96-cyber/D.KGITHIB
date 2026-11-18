@@ -1,5 +1,9 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**18.11: v99 published (artifact 1795020976-8069): MUSIC-LBA (P56) and OVERLAP-SWEEP (P65, the user's Mill Lane landing
+and the sweep's fixes; its remainder listed in OVERLAP-SWEEP.md) merged — both stopped early by the spend limit, merged as
+committed; the music needs the user's ear (A/B clips in captures/music-lba/ if made). Next: the repair pass of 18.11.**
+
 **18.11: v98 published (artifact 1795019513-c498, 508 of 512 files).** Merged and in it: everything listed below under
 "Merged since v97", plus HE-LTR (P54), WEAPON-SWITCH (P60–P61), SPACEPORT-3 (P62–P64) and the 30 FPS option (P66).
 Still open from 17.11: OVERLAP-SWEEP (P65, branch worktree-agent-a85740641e227748f, unfinished) and MUSIC-LBA (P56, branch
