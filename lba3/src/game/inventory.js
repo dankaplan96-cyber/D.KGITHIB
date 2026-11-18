@@ -130,7 +130,8 @@ const DRAW = {
 // the painting of an icon kind onto a 72 x 72 context (the paper items' faces in itemlook.js)
 export function paintIcon(kind, x) { (DRAW[kind] || DRAW.part)(x); }
 const cache = {};
-const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack', 'pocketset', 'lance', 'fork', 'line', 'heatflask']);
+// (WEAPON-SWITCH: the weapons too, as LBA2 chose its weapon in the inventory: E takes it in hand)
+const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack', 'pocketset', 'lance', 'fork', 'line', 'heatflask', 'ball', 'glove', 'blowgun', 'blowtron', 'laser', 'lightning']);
 export function itemIcon(kind) {
   if (cache[kind]) return cache[kind];
   const [c, x] = ctx();

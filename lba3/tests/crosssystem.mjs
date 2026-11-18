@@ -44,12 +44,12 @@ const c3 = await ev(() => {
   P.tap('KeyF', 0.05); G.step(0.5); out.flying = G.ball.state;
   P.tap('KeyR', 0.1); out.weapon = h.combat.weapon;
   G.step(3); out.ball = G.ball.state; out.balls = G.scene.children.filter((o) => o === G.ball.mesh).length;
-  P.tap('KeyR', 0.1); out.back = h.combat.weapon;
+  P.holdFor(['KeyR'], 0.6); G.step(0.1); out.back = h.combat.weapon;   // (WEAPON-SWITCH: R held: back to the ball)
   P.tap('KeyF', 0.05); G.step(0.3); out.throwsAgain = G.ball.state; G.step(3);
   return out;
 });
-check('weapon swap (R: to the previous weapon) while the ball flies: the swap happens, the ball still comes home, one ball', c3.weapon !== 'ball' && ['inhand', 'idle'].includes(c3.ball) && c3.balls <= 1, c3);
-check('...swap back: the ball throws again', c3.back === 'ball' && ['fly', 'impact', 'return'].includes(c3.throwsAgain), c3);
+check('weapon swap (R: the next weapon) while the ball flies: the swap happens, the ball still comes home, one ball', c3.weapon !== 'ball' && ['inhand', 'idle'].includes(c3.ball) && c3.balls <= 1, c3);
+check('...R held: back to the ball, it throws again', c3.back === 'ball' && ['fly', 'impact', 'return'].includes(c3.throwsAgain), c3);
 
 // 4. into a room with the ball in flight, and straight back out
 const c4 = await ev(() => {

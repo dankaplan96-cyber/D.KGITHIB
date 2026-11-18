@@ -543,14 +543,14 @@
         const open = () => aimed.state === 'recover' || aimed.state === 'hurt' || aimed.state === 'chase' && aimed.coolT > 0.3;
         for (let w = 0; w < 4 / DT && aimed.alive && !open(); w++) { P.gstep(DT); t += DT; }
         P.go(aimed.pos.x, aimed.pos.z, { tol: 1.15, maxT: 3, fight: false }); P.face(aimed.pos.x, aimed.pos.z, 1);
-        if (h.combat?.weapon !== 'fists') P.tap('KeyR', 0.1);
+        for (let q = 0; q < 14 && h.combat?.weapon !== 'fists'; q++) P.tap('KeyR', 0.1);   // (WEAPON-SWITCH: R steps through what he owns)
         const hp1 = aimed.hp; for (let k = 0; k < 3 && aimed.alive; k++) { P.tap('KeyK', 0.05); P.gstep(0.28); }
         P.gstep(0.3); t += 1.3; P.note(`fight ${aimed.id}: fists (jab, jab, kick) hp ${hp1}→${aimed.hp} me ${h.hp}`);
         if (aimed.hp === hp1) { aimed._miss = (aimed._miss || 0) + 1; } else aimed._miss = 0;
         continue;
       }
       const close = melee || (h.hasSword && (e._miss || 0) >= 2);
-      if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); if (h.combat?.weapon !== 'sword') P.tap('KeyR', 0.1); }
+      if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); for (let q = 0; q < 14 && h.combat?.weapon !== 'sword'; q++) P.tap('KeyR', 0.1); }
       if (close) { P.tap('KeyK', 0.35); P.gstep(0.3); P.tap('KeyK', 0.35); t += 1.0; }
       else if ((aimed.armour || 0) >= 2 && h.mp >= 1) {
         // a charge can't be dodged out of: start it in the guard's opening, just after its shot (rifle lowered)
