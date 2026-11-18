@@ -172,8 +172,25 @@ re-encoded at 112 kbps, with a 0.3 s fade in and a 1.5 s fade out. `-A-old` is t
 | Desert Island | `desert_isle-A-old.mp3` | `desert_isle-B-new.mp3` |
 | The Hamalayi | `mountain-A-old.mp3` | `mountain-B-new.mp3` |
 
-## Tests
-See "Test results" below (filled in after the runs).
+## Tests (Automated runtime, headless Chromium with SwiftShader, port 8980; 17.11, 15:30 to 18:00)
+The machine was shared with other agents' browsers, and pages often crashed under memory pressure ("Target
+crashed"). Other agents' logs on the same machine show the same crashes. Each suite below was run until it gave a
+verdict, and where a run failed it was compared with the base build (the same code, with the old music files
+swapped into the served copy).
+
+| Suite | This pass | Base (old music), same machine | Reading |
+|---|---|---|---|
+| `tests/music.mjs` | **PASS 26/26**: playlists, phrase starts, silences, combat in a silence, equal-power crossfades on bar lines, the duck to 0.5 and back, never more than two voices | (not needed) | the music system works unchanged with the new files |
+| `tests/music-places.mjs` | **PASS 21/21** on the third run (the first two crashed: "Target crashed") | PASS 21/21 | each piece in its place, the alt fallback |
+| `tests/action-sound-2.mjs` | **PASS 40/40** | (not needed) | |
+| `tests/audio.mjs` | 3 of 6 checks reached. Then the click on Settings → Back timed out ("waiting for element to be visible, enabled and stable"), in three runs; two other runs crashed. One run also failed the sliders check on the effects bus (0.78 for 0.75). | 5/6: the same sliders check fails (effects bus 0.92 for 0.75), as recorded in music-by-place.md; one more run crashed | the sliders failure is the base's. The Back-button timeout is a UI click under load: `menus.mjs` on the base build times out on the same kind of click. **Not settled.** |
+| `tests/menus.mjs` | 20 checks pass, then a settings-button click times out (twice) | **the same failure at the same click**, 20 checks pass | not caused by this pass |
+| `tests/chapter1.mjs` | one full run: 8 pass, then "valve orchard (ball) opened false". The ball valve is thrown at from random angles (`Math.random` in the test), and every later failure follows from the shut valve. Other runs crashed. | crashed | not caused by the music. **No clean chapter-1 run on this machine.** |
+
+**Boot and loading.** The game fetches no music file at boot. The manifest is fetched when audio starts, and each
+track on demand (src/engine/music.js). The title's file is 1.43 MB (was 1.76 MB), and its decode measured 192 ms
+(was 516 ms in the same run). Every replaced piece decodes to the same size or less (above). So music loading
+cannot make boot slower. Boot time itself was not timed in this pass.
 
 ## Tools added and changed
 - `tools/music/analyse.py`: the musical numbers above, from the scores.
