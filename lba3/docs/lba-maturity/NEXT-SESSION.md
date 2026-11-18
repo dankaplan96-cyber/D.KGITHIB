@@ -1,5 +1,11 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**18.11 (evening): v100 published (artifact 1795025443-0d2c, 509 of 512 files)**: TUTOR-TARGETS (P67 ph. 2), HE-FONT
+(P68: Rubik's Hebrew, the minimap stays right), FACE-1 (P67 ph. 4: expressions, gaze), CHAR-FORM (P67 ph. 3: Twinsen's
+and Zoé's body form). Running on worker branches: CAVE-STAIR (P69, Tralu's cave and its stairs: the user — "a rock at the
+entrance, the stairs in the air, inside everything is weird") and FPS30 (P70, phase 5: FPS30-BRIEF.md). Merge each when
+it reports, then v101.
+
 **18.11 (later): TUTOR-TARGETS done** (REPAIR-PASS phase 2, TUTOR-TARGETS.md; tests/tutor-targets.mjs 14/14): the
 opening's things marked in the world (gold marker, edge arrow, where line, Zoé's reminder). Not yet published (v100 with
 the next batch). Next in REPAIR-PASS: CHAR-FORM + FACE (phases 3–4), then performance (phase 5).
