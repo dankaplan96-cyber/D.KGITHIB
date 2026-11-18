@@ -17,9 +17,10 @@ For every step of the opening (story/openingsteps.js) that has a thing to find:
 | barrels | the two barrels at the house's corner | Hit the **two** barrels **by the house** with the magic ball |
 | pipe | the copper pipe, at the stretch level with him | Jump over the **copper** pipe **along the lane** |
 
-- **Exact object**: a gold point-down marker bobs over the object itself, a pulsing ring at its foot. Drawn over
-  everything (the barrels are behind the house's corner from the door). `OpeningSteps.target()` names it;
-  `Tutorial.mark()` draws it.
+- **Exact object**: a gold point-down marker bobs over the object itself, a pulsing ring at its foot. Depth-tested
+  (drawn over everything, it sat on Twinsen's head when he stood between the camera and the tap and read as his hair);
+  it stands high over the small things (tap 2.35 m, barrels 2.3 m) to clear him, low over the pipe (1.15 m: the camera
+  looks down steeply there, a high marker landed beside him). `OpeningSteps.target()` names it; `Tutorial.mark()` draws it.
 - **Off the screen**: an arrow at the screen's edge pointing to it, with its name (Garden tap, Barrels…) —
   `Tutorial.arrow()`.
 - **Escalating hint**: after 15 s on a step the panel adds where the thing is in words ("A brass tap on a stone foot,
@@ -39,4 +40,11 @@ Nothing runs once the yard is done.
 `src/game/text/he/opening.js`, `src/game/he-text.js` (generated), `tests/tutor-targets.mjs`.
 
 ## Results (Automated runtime only)
-See below; captures in `captures/tutor-targets/`.
+`tests/tutor-targets.mjs`: **14/14 PASS** (18.11): the cupboard, the door, Zoé, no marker on the inventory step, the
+tap (goal and marker), the where line after 15 s, Zoé's reminder after 35 s, the barrels, the edge arrow with their
+name when off the screen, Tips Off, save and load mid-step, the pipe, the Hebrew, nothing left after the yard.
+Captures in `captures/tutor-targets/` (looked at: the marker over the wardrobe, over the tap past Twinsen's shoulder,
+over the barrels, at the pipe's end). The full opening-tutorial suite (25 min) was not rerun (the user: keep tests
+minimal); its text checks still match (the goals keep their old start: "Try the garden tap…").
+
+Open: a human's eye in play (is the gold marker clear enough, too strong?).

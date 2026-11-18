@@ -49,7 +49,7 @@ s = await M();
 check('T4 the inventory step: no marker (a key, not a place)', s.step === 'inv' && !s.vis && !s.arrow, s);
 await ev(() => { P.tap('KeyI', 0.3); P.tap('KeyI', 0.3); P.settle(); game.step(1.6); });
 s = await M();
-const tapAt = await ev(() => { const Y = game.story.cur.home.parts.yard; return [+Y.position.x.toFixed(1), +Y.position.z.toFixed(1)]; });
+const tapAt = await ev(() => { const Y = game.story.cur.home.parts.yard; return [+Y.x.toFixed(1), +Y.z.toFixed(1)]; });
 check('T5 the tap step: the goal says where ("by the front door"); the marker over the garden standpipe itself', s.step === 'tap' && /garden tap by the front door/.test(s.tip) && s.vis && s.name === 't2_n_tap' && near(s.at, tapAt, 0.1), s);
 await shot('02-yard-tap');
 // left undone: the where line, then Zoé's reminder (in play, the hint's clock)
@@ -59,7 +59,7 @@ check('T6 a step left 15 s: the panel adds where the tap is (brass, stone foot, 
 const said = await ev(() => { game.step(21); return game.story.cur.steps.saidLog || []; });
 check('T7 after 35 s: Zoé says which tap she means', said.includes('t2_hint_tap'), said);
 // the tap done; the barrels
-await ev(() => { const Y = game.story.cur.home.parts.yard; P.use(Y.position.x, Y.position.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(1.6); });
+await ev(() => { const Y = game.story.cur.home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(1.6); });
 s = await M();
 const bar = await ev(() => { const B = game.story.cur.barrels(); return [+B.x.toFixed(1), +B.z.toFixed(1)]; });
 check('T8 the barrels step: the goal names the two barrels by the house; the marker over them', s.step === 'barrels' && /two barrels by the house/.test(s.tip) && s.vis && s.name === 't2_n_barrels' && near(s.at, bar, 0.1), s);

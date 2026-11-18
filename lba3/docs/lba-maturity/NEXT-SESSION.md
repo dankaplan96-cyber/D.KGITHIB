@@ -1,5 +1,9 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**18.11 (later): TUTOR-TARGETS done** (REPAIR-PASS phase 2, TUTOR-TARGETS.md; tests/tutor-targets.mjs 14/14): the
+opening's things marked in the world (gold marker, edge arrow, where line, Zoé's reminder). Not yet published (v100 with
+the next batch). Next in REPAIR-PASS: CHAR-FORM + FACE (phases 3–4), then performance (phase 5).
+
 **18.11: v99 published (artifact 1795020976-8069): MUSIC-LBA (P56) and OVERLAP-SWEEP (P65, the user's Mill Lane landing
 and the sweep's fixes; its remainder listed in OVERLAP-SWEEP.md) merged — both stopped early by the spend limit, merged as
 committed; the music needs the user's ear (A/B clips in captures/music-lba/ if made). Next: the repair pass of 18.11.**

@@ -87,7 +87,7 @@ export class OpeningSteps {
     switch (id) {
       case 'ball': {
         if (R?.id !== 'house') { const e = R?.exits?.find((x) => x.room === 'house'); return e ? at(e.x, h.pos.y, e.z, 2.2, 0.6, 'out') : null; }
-        const c = R.cupboard; return c ? at(c.x, h.pos.y, c.z, c.h + 0.45, 0.8, 'ball') : null;
+        const c = R.cupboard; return c ? at(c.x, h.pos.y, c.z, c.h + 0.6, 0.8, 'ball') : null;
       }
       case 'out': {
         const e = R?.exits?.find((x) => (R.id === 'house' ? x.to === 'outdoor' : x.room === 'house'));
@@ -97,10 +97,10 @@ export class OpeningSteps {
     if (R) return null;
     switch (id) {
       case 'zoe': { const z = this.ch.npc('zoe'); return z?.present ? at(z.pos.x, z.pos.y, z.pos.z, 2.45, 0.6, 'zoe') : null; }
-      case 'tap': { const Y = this.ch.home.parts.yard; return Y ? at(Y.position.x, Y.position.y, Y.position.z, 1.55, 0.45, 'tap') : null; }
-      case 'barrels': { const T = this.ch.barrels?.(); return T ? at(T.x, T.y - 0.55, T.z, 1.6, 1.1, 'barrels') : null; }
+      case 'tap': { const Y = this.ch.home.parts.yard; return Y ? at(Y.x, Y.y, Y.z, 2.35, 0.45, 'tap') : null; }
+      case 'barrels': { const T = this.ch.barrels?.(); return T ? at(T.x, T.y - 0.55, T.z, 2.3, 1.1, 'barrels') : null; }
       // (the pipe is 6 m long: the marker stands on it level with him, so it points at the stretch he would jump)
-      case 'pipe': { const z = Math.min(PIPE.z1 - 0.4, Math.max(PIPE.z0 + 0.4, h.pos.z)), foot = g.physics.groundAt(PIPE.x + 1.6, z); return at(PIPE.x, foot, z, 1.35, 0.5, 'pipe'); }
+      case 'pipe': { const z = Math.min(PIPE.z1 - 0.4, Math.max(PIPE.z0 + 0.4, h.pos.z)), foot = g.physics.groundAt(PIPE.x + 1.6, z); return at(PIPE.x, foot, z, 1.15, 0.5, 'pipe'); }
     }
     return null;
   }

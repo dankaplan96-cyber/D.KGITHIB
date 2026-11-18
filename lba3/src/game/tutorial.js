@@ -26,7 +26,7 @@
 //
 // TUTOR-TARGETS (P67, the user, 18.11: "the tap", "the barrels" — the player couldn't identify the object): every step
 // with a thing to find points at it. A gold marker bobs over the exact object (the cupboard, the front door, Zoé, the
-// garden tap, the two barrels, the stretch of pipe level with him) with a ring at its foot, seen through walls; when it is
+// garden tap, the two barrels, the stretch of pipe level with him) with a ring at its foot, high over it; when it is
 // off the screen, an arrow at the screen's edge with the thing's name points the way. A step left undone grows its hint:
 // after HINT_WHERE s the panel adds where the thing is in words; after HINT_SAY s (and again each HINT_SAY) Zoé says it
 // over her head. Shown with Show control tips Off too (that hides only the keys): the steps can't be finished without
@@ -345,8 +345,7 @@ export class Tutorial {
 
   // ---------------------------------------------------------------- TUTOR-TARGETS: the marker over the step's thing
   // T: the target (openingsteps.js target()) or null. The marker: a gold point-down cone bobbing over it and a pulsing
-  // ring at its foot, both drawn over everything (it is behind the house's corner as often as not); off the screen, the
-  // edge arrow and the thing's name instead.
+  // ring at its foot; off the screen, the edge arrow and the thing's name instead.
   mark(T, dt) {
     this.markAt = T;
     const m = T ? this.markMesh() : this._mk;
@@ -368,11 +367,14 @@ export class Tutorial {
     if (this._mk) return this._mk;
     const sc = this.g.scene;
     if (!sc) return null;
-    const mat = (o) => new THREE.MeshBasicMaterial({ color: '#ffcf4a', transparent: true, depthTest: false, depthWrite: false, fog: false, toneMapped: false, ...o });
+    // (depth-tested: drawn over everything it sat on Twinsen's head when he stood between the camera and the tap, and
+    //  read as his hair; it stands high enough over the thing to clear him and the fences, and the edge arrow covers the
+    //  rest)
+    const mat = (o) => new THREE.MeshBasicMaterial({ color: '#ffcf4a', transparent: true, depthWrite: false, fog: false, toneMapped: false, ...o });
     const group = new THREE.Group(); group.name = 'tutTarget'; group.renderOrder = 990;
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 4), mat({ opacity: 0.95 }));
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.27, 0.56, 4), mat({ opacity: 1 }));
     cone.rotation.order = 'YXZ'; cone.geometry.rotateX(Math.PI);   // (point down)
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 32), mat({ side: THREE.DoubleSide }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 32), mat({ side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     ring.geometry.rotateX(-Math.PI / 2);
     for (const o of [cone, ring]) { o.renderOrder = 990; o.frustumCulled = false; group.add(o); }
     group.visible = false;
