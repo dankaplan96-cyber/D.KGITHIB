@@ -159,8 +159,10 @@ export function buildSkyFerry(game, Z) {
   stat.add(rbox(iw1 - iw0, H.h - 0.02, 0.02, 0.005), lining, cx, Y0 + H.h / 2, bz1 - 0.011);
   for (const x of [iw0 + 0.011, iw1 - 0.011]) stat.add(rbox(0.02, H.h - 0.02, bz1 - bz0, 0.005), lining, x, Y0 + H.h / 2, (bz0 + bz1) / 2);
   const dl = D.x - D.hw, dr = D.x + D.hw;
-  wall((H.x0 + dl) / 2, H.z0 + t / 2, dl - H.x0, t);   // north, west of the door
-  wall((dr + H.x1) / 2, H.z0 + t / 2, H.x1 - dr, t);   // north, east of the door
+  // (AUDIT-FIX A-7: between the side walls, as the back wall is: run on to the corners they doubled the side walls' ends there
+  //  and the two faces flickered on the front and the sides, worldfit)
+  wall((H.x0 + t + dl) / 2, H.z0 + t / 2, dl - H.x0 - t, t);   // north, west of the door
+  wall((dr + H.x1 - t) / 2, H.z0 + t / 2, H.x1 - t - dr, t);   // north, east of the door
   shell.add(rbox(dr - dl + 0.02, H.h - D.h, t, 0.03), wallM, D.x, Y0 + D.h + (H.h - D.h) / 2, H.z0 + t / 2);   // (the lintel)
   // the roof: over the front room it fades with the walls; over the back room it stays (the hole looks into shade)
   { const zf = H.z0 - 0.18, zb = H.z1 + 0.18;
