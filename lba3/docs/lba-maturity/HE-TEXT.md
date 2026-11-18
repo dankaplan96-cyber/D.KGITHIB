@@ -34,13 +34,11 @@ itself, read against the English and its scene's comments). No line was heard or
 - **The setting**: Settings → Game → Language (`settings.lang`, `en` | `he`, with a one-line hint). A language stored
   before this row existed (`langV` missing) loads as English: the game was English-only, whatever was stored. Changing
   it applies at once (applySettings: `<html lang dir>`, the `data-i18n` menus, the HUD, the objective).
-- **Right to left**: `<html dir="rtl">` in Hebrew; the layout already used logical sides (inset-inline, margin-inline,
-  text-align: start), so the dialogue box's name tag and arrow, the tip panel, the objective, the inventory and journal
-  mirror by themselves. css/style.css "HE-TEXT" block: no letter spacing on Hebrew (tabs, the journal's "Now", the
-  chapter card, the settings tabs and fold, title captions); key caps (`kbd`), `bdi`, the speaker's name and a
-  subtitle's speaker are bidi-isolated; the dialogue text, subtitles, item and journal lines, toasts and the found-box
-  name use `unicode-bidi: plaintext` so a line still in English (a fallback) keeps its own direction. `#cine-sub b`
-  uses margin-inline-end.
+- **Right to left**: superseded by HE-LTR (the user, 17.11: "In Hebrew, the ONLY thing that should be RTL is the
+  text; everything else as in the English version"), docs/lba-maturity/HE-LTR.md: the page stays `dir="ltr"` in
+  Hebrew; each text reads by its own first letter (css/style.css's HE-TEXT / HE-LTR block); key hints keep English's
+  arrangement (i18n.js keyHints / hintLine). No letter spacing on Hebrew (tabs, the journal's "Now", the chapter card,
+  the settings tabs and fold, title captions).
 - Not translated (by design or out of reach): the 3D painted signs on Citadel (props.js LABELS "SQUARE", "LIGHTHOUSE";
   the valve room's board) are textures in the world's art, English in both languages; developer views (voicelab).
 

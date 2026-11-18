@@ -5551,3 +5551,11 @@ Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's 
   (~740 triangles a look), but in the game on the UHD 630 the residents' first update was no faster (two A/B rounds,
   3 pairs each: Ilo/Kira 10-16 ms base, 12-18 ms with it; building the grid each look costs what the rays save). The one
   look's 10-16 ms stays; PERF-OWP-2 (one look a frame) is the fix.
+- **PERF-OWP-4 (tried, dropped, no diff): the first Zeelich arrival's black.** A CPU profile (CDP, UHD 630) of the scene
+  change shows 390 ms of `getImageData` (texarray.js `layerOf`: the painted canvases read back for the batches' texture
+  arrays, a GPU readback each). The painted textures' canvases made with `willReadFrequently` (textures.js, kit.js,
+  island.js, props.js) cut that to 170 ms, but **the black did not shorten** (3 interleaved pairs: cold black 2.23–2.80 s
+  base, 2.27–2.35 s with it; warm 0.28–0.35 s both): the saved time became idle time. The black is paced by the
+  transition itself (a prep step a black frame, the warm-up hold and the settle frames that keep the first frames in
+  view clean), not by this work. Shortening it would mean more prep a frame behind the black — a trade against the
+  in-view hitches those holds were made for; not done. The first arrival's ~2.3 s black (later visits ~0.3 s) stays.

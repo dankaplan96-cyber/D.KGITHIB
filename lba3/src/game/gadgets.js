@@ -96,6 +96,9 @@ export class Gadgets {
       case 'lantern': return this.toggleLantern();
       case 'jetpack': return this.jet.toggleWorn();
       case 'pocketset': case 'lance': case 'fork': case 'line': case 'heatflask': return this.hold(id);
+      // (WEAPON-SWITCH: a weapon chosen in the inventory, as in LBA2: taken in hand)
+      case 'ball': case 'glove': case 'blowgun': case 'laser': case 'lightning': return this.hold(id);
+      case 'blowtron': return this.hold('blowgun');
     }
     return false;
   }

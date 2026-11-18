@@ -578,3 +578,21 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
 53. **The user, 17.11: no downloadable builds for now, the artifact only.** Don't put [build] in a commit message and don't
     run desktop.yml by hand until the user asks for an installer again. CHAIN-V96 / V96-GPU (order 52) stay: run them
     against the artifact (Chrome) or the repo served locally.
+54. **PERF-1050-BATTERY (the user, 18.11: "the game does not sustain 60 FPS on the GTX 1050 laptop while on battery";
+    phases 1 and 5 of docs/lba-maturity/REPAIR-PASS-18-11.md — read it).** On THIS machine (the user's GTX 1050 laptop is the
+    target; the Vega 8 numbers are history). No downloadable builds are published now: build the desktop app locally from
+    the tip (lba3/desktop, `npm run dist:win` or run Electron from the repo) — and the artifact in Chrome as the second path.
+    1. Record: revision, CPU/GPU, the GPU the renderer actually uses (WEBGL_debug_renderer_info; Windows' per-app GPU
+       preference), resolution, devicePixelRatio, drawing-buffer size, effective render scale, the preset Auto chose,
+       MSAA/shadows/bloom, the frame limiter (Settings → Display → Frame rate: As the screen / 60 / 30 steady, new 18.11),
+       AC or battery and Windows' power mode/battery saver, and any clock/temperature telemetry (mark unavailable).
+    2. The route (the user's): new game → the house and the yard's tutorial → the square → the harbour → the station at the
+       fort; then a fight (the depot or the cliffs' mites); an indoor/outdoor transition; first entry to Zeelich, then a
+       second traversal. Per segment: average FPS, frame-time median/p95/p99, frames > 16.7/33.3/50 ms, the stalls and what
+       they were (shader compile, upload, GC, a CPU spike), draw calls/triangles, cold vs warm.
+    3. Runs: the same settings on AC and on battery, separate runs; High at the documented resolution; then Auto; then
+       "30 steady". Controlled comparisons for the bottleneck: render scale ×0.75, shadows off, bloom off, busy vs empty.
+    4. If a Windows/driver battery limit (e.g. the GPU parked, a 30 Hz cap, power saver) is shown, explain the evidence and
+       the setting — never change system power settings yourself.
+    Report as PERF-1050-BATTERY in WORLD_ART_REQUESTS.md with the raw logs in docs/lba3-performance/HARDWARE/. Fixes you can
+    prove go as requests/*.diff; the cloud applies them with its own performance worker.

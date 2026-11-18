@@ -4,16 +4,19 @@
 // LBA2 had no port on Citadel: the model is LBA2's departure hall at Otringal (scene 78), about 80 % alike, in Twinsun
 // stone with Esmer touches. Our own geometry, from a study of the original's layout (numbers and descriptions only;
 // nothing copied). As the game's camera sees it:
-//   - the long back wall with a band of glass blocks under the cornice, the short left wall with the gate to the pad at
-//     the back between two security pillars with green screens
+//   - the long back wall with a band of glass blocks under the cornice and the gate to the pad at its left end, between
+//     two security pillars with green screens (SPACEPORT-3, the user 17.11: "the door is drawn on the left, but outside it
+//     is at the back of the building". Outside the gate is in the face opposite the landside door: in the hall now too,
+//     in the back wall across the hall from the door in the near wall. It was in the left wall's back end)
 //   - SPACEPORT-2 (the user, 15.11: "you go in, through security, and then out to the area you fly from"): the door from
 //     the footbridge (landside) is in the near wall at the front right, cut away like the rest of that wall (as LBA2
 //     draws a door in a near wall, the house's front door: interiors.js), so the way through reads from the camera in
 //     its order: in at the front right, the ticket counter straight ahead, across the hall to the security pillars and
-//     the gate at the back left; arriving, the same way back. (It was on the left wall at the front, beside the gate.)
+//     the gate in the back wall at the left; arriving, the same way back. (It was on the left wall at the front, beside
+//     the gate.)
 //   - the ticket counter on a raised platform in the back right, two steps up, the clerk behind it, the port's name
 //     on two hanging signs above it, a luggage scale at its foot
-//   - the departures board on the left wall between the two doors, a lamp over it; the GROUNDED notice beside it
+//   - the departures board on the left wall, a lamp over it; the GROUNDED notice beside it
 //   - rows of orange waiting seats facing the board, planters with Esmer fountain plants, a luggage trolley
 //   - a small café corner at the back left: a counter with a coffee machine, stools, a round table
 // Twelve years on (ours): the port itself is new on Citadel; the Joint Project's notice grounds passenger flights in
@@ -50,14 +53,17 @@ export const TERMINAL = {};
 //  pillar, the hero stuck there walking to the gate: it moves along the back wall between the second and third
 //  pilasters, its table before it; the gate's side of the hall is open floor)
 export const TERMINAL_PLAN = (() => {
-  const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORX = 4.6, GATEZ = -4.2, BRDZ = -0.5;   // (DOORX: the door in the near wall)
+  // (DOORX: the door in the near wall; GATEX: the gate in the back wall, SPACEPORT-3. GATEZ: the gate's pillars' line, a
+  //  pace into the hall from the back wall: the readers of the plan that stood people by it, roomlife.js, read GX/GZ)
+  const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORX = 4.6, GATEX = -6.4, BRDZ = -0.5;
+  const GATEZ = BZ + 0.6;
   const PX0 = 1.2, PX1 = W / 2 - 0.3, PZ1 = BZ + 3.4, PH = 0.36, CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;   // (the ticket platform, its counter)
   // (the café's counter; F-13 follow-up: 1.4 m off the back wall, not 1.2 — the aisle behind it was 0.88 m, narrower than
   //  Tavi (0.45 m each side): the walkers' planner found no way along it and sent him out round the hall from one end of
   //  the counter to the other, where he stuck on the café's chairs. Now 1.08 m. The round table and its chairs stay put)
   const KX = -1.9, KZ = BZ + 1.4;
   const ROWS = [-3.4, -1.2], ROWZ = -0.3, ROWN = 5, TX = KX - 2.0, TZ = BZ + 3.1;
-  return { W, D, H, LX, BZ, DOORX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
+  return { W, D, H, LX, BZ, DOORX, GATEX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
     counterW: 4.2, counterD: 0.62, cafeW: 2.4,
     printer: { x: CX - 0.8, z: CZ }, cabinet: { x: CX + 1.2, z: BZ + 0.55, w: 1.6, d: 0.45 },
     scale: { x: PX1 - 0.6, z: PZ1 + 0.95 }, notice: { x: LX + 0.04, z: BRDZ + 2.1 },
@@ -68,7 +74,9 @@ export const TERMINAL_PLAN = (() => {
     machine: { x: KX - 0.7, z: KZ }, shelf: { x: KX, z: BZ + 0.15, w: 1.8 },
     stools: [-0.8, 0, 0.8].map((dx) => ({ x: KX + dx, z: KZ + 0.75 })),
     table: { x: TX, z: TZ }, chairs: [-1.2, 1.9].map((a) => ({ x: TX + Math.sin(a) * 0.75, z: TZ + Math.cos(a) * 0.75, a: a + Math.PI })),
-    clerk: { x: CX, z: CZ - 0.75, a: 0 }, guard: { x: LX + 1.5, z: GATEZ + 1.7, a: Math.PI / 2 }, cafe: { x: KX, z: KZ - 0.55, a: 0 },
+    // (the port guard by the gate, at its right a step into the hall, half turned toward the way in to it; the gate's way
+    //  from the hall runs down the left of the hall to it, 2.4 m wide past him)
+    clerk: { x: CX, z: CZ - 0.75, a: 0 }, guard: { x: GATEX + 1.6, z: BZ + 1.3, a: -Math.PI / 4 }, cafe: { x: KX, z: KZ - 0.55, a: 0 },
   };
 })();
 
@@ -162,14 +170,14 @@ function luggageScale(k) {
 export function buildTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'terminal', TERMINAL_AT.x, TERMINAL_AT.z);
   const R = B.room, k = B.k;
-  const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
+  const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORX, GATEX, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
   R.view = 12; R.follow = 0.6; R.music = 'island';   // (ORDER 19: a departure hall: the island's travel pieces go on inside)
   // (Twinsun's pale sandstone below a white plaster band, as the terminal outside; lit a little from within)
   const stone = M('tm_stone', () => { const t = TEX.stone('sand'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f2e8d8', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 }); m.userData.tile = 2; return m; });
   const cap = MAT.stone('sand', 1.2), floor = MAT.tiles('#d8d2c4', '#c8c0b0', '#5a7a9a', false, 5);
   B.shell({ floor, slab: MAT.rubble('grey'), body: stone, low: MAT.plaster('#f4efe2'), rail: BLUE(), cap, H, t: 0.5, dado: 1.1, rimH: 0.45, rimMat: cap, W, D,
     rimGaps: [{ x: DOORX, w: 1.5 }],
-    left: [{ at: GATEZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: BLUE() }] });
+    back: [{ at: GATEX, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: BLUE() }] });
   // the band of glass blocks under the back wall's cornice, lit from outside
   const blocks = MAT.map(blocksTex(), 0.4, { emissive: '#ffffff', emissiveMap: blocksTex(), emissiveIntensity: 0.55 });
   k.add(plane(W - 1.0, 1.0), blocks, 0, H - 1.0, BZ + 0.03);
@@ -193,11 +201,16 @@ export function buildTerminalRoom(scene, physics) {
   k.add(plane(1.5, 0.6), dayM(0.8), DOORX, 0.06, D / 2 + 0.25, 0, { rx: -Math.PI / 2 });
   k.add(plane(1.4, 1.6), dayM(0.4), DOORX, 0.8, D / 2 + 0.24);
   R.exits.push({ x: B.cx + DOORX, z: B.cz + D / 2 - 0.15, r: 0.8, to: 'terminal-out' });
-  R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + GATEZ, r: 0.8, to: 'terminal-gate' });
+  // the gate in the back wall (SPACEPORT-3): its trigger in the doorway, the way in from it a pace past the pillars facing
+  // into the hall; the pillars either side of the way through (their screens toward the hall and the gate); daylight
+  // from the deck in the doorway and on the floor before it, as at the door
+  R.exits.push({ x: B.cx + GATEX, z: B.cz + BZ + 0.45, r: 0.8, to: 'terminal-gate' });
   R.spawn = { x: B.cx + DOORX, z: B.cz + D / 2 - 1.6, a: Math.PI };
-  R.entries = { gate: { x: B.cx + LX + 1.6, z: B.cz + GATEZ, a: Math.PI / 2 } };
-  for (const dz of [-1.15, 1.15]) B.put(LX + 0.6, GATEZ + dz, 0, (kk) => gatePillar(kk));
-  k.add(plane(1.2, 0.35), MAT.map(signTex('GATE · PAD 1'), 0.6), LX + 0.03, 2.75, GATEZ, Math.PI / 2);
+  R.entries = { gate: { x: B.cx + GATEX, z: B.cz + BZ + 1.6, a: 0 } };
+  for (const dx of [-1.15, 1.15]) B.put(GATEX + dx, GATEZ, Math.PI / 2, (kk) => gatePillar(kk));
+  k.add(plane(1.2, 0.35), MAT.map(signTex('GATE · PAD 1'), 0.6), GATEX, 2.75, BZ + 0.03);
+  k.add(plane(1.5, 2.45), dayM(0.55), GATEX, 1.22, BZ - 0.42);
+  k.add(plane(1.3, 2.4), dayM(0.45), GATEX, 0.03, BZ + 1.2, 0, { rx: -Math.PI / 2 });
 
   // --- the ticket counter on its platform in the back right: two steps up, the counter across its front
   k.add(rbox(PX1 - PX0, PH, PZ1 - BZ - 0.3, 0.03), cap, (PX0 + PX1) / 2, PH / 2, (BZ + 0.3 + PZ1) / 2);
@@ -223,13 +236,13 @@ export function buildTerminalRoom(scene, physics) {
   B.put(P.scale.x, P.scale.z, 0, (kk) => luggageScale(kk));
   for (const x of [PX0 + 0.15, PX1 - 0.15]) { k.add(cyl(0.05, 0.06, 1.0, 8), BLUE(), x, PH + 0.5, PZ1 - 0.15); k.add(sphere(0.16, 12, 8), MAT.glow('#fff4d8', '#ffd890', 1.0), x, PH + 1.12, PZ1 - 0.15); }
 
-  // --- the departures board on the left wall between the doors, a lamp over it; the GROUNDED notice beside it
+  // --- the departures board on the left wall, a lamp over it; the GROUNDED notice beside it
   k.add(rbox(0.14, 1.7, 3.0, 0.03), MAT.paint('#2a2e36', 0.4), LX + 0.08, 2.35, BRDZ);
   k.add(plane(2.8, 1.5), MAT.map(boardTex(), 0.7, { emissive: '#ffffff', emissiveMap: boardTex(), emissiveIntensity: 0.35 }), LX + 0.16, 2.35, BRDZ, Math.PI / 2);
   k.add(cyl(0.18, 0.28, 0.24, 12, true), MAT.steel(), LX + 0.5, 3.55, BRDZ, 0, { rz: -0.9 });
   const notice = k.mesh(plane(0.62, 0.78), MAT.map(noticeTex(), 0.8), P.notice.x, 1.75, P.notice.z, Math.PI / 2);
   // (WC-4: the project's list on the hall's face of the gate's inner pillar, shown in the evacuation)
-  const sheet = k.mesh(plane(0.3, 0.45), MAT.map(listSheetTex(), 0.8), LX + 0.6, 1.4, GATEZ + 1.15 + 0.222, 0);
+  const sheet = k.mesh(plane(0.3, 0.45), MAT.map(listSheetTex(), 0.8), GATEX + 1.15, 1.4, GATEZ + 0.222, 0);
   sheet.visible = false;
   const noticeMat = { grounded: notice.material, list: null };
 
@@ -260,7 +273,7 @@ export function buildTerminalRoom(scene, physics) {
 
   Object.assign(TERMINAL, {
     door: { x: B.cx + DOORX, z: B.cz + D / 2 - 0.15 },
-    gate: { x: B.cx + LX + 0.45, z: B.cz + GATEZ },
+    gate: { x: B.cx + GATEX, z: B.cz + BZ + 0.45 },
     counter: { x: B.cx + CX, z: B.cz + CZ + 0.85, r: 1.0 },
     board: { x: B.cx + LX + 1.6, z: B.cz + BRDZ, r: 1.2 },
     seats,

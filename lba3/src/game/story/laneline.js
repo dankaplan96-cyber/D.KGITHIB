@@ -86,7 +86,10 @@ export class LaneThread {
     const nbr = W.houses?.find((h) => h.id === 'nbr');
     const out = nbr ? { x: Math.sin(nbr.ry), z: Math.cos(nbr.ry) } : { x: 1, z: 0 };
     const door = nbr?.door || { x: -31.1, z: 75.3 }, side = { x: -out.z, z: out.x };
-    const home = (s) => ({ x: door.x + out.x * 1.7 + side.x * s, z: door.z + out.z * 1.7 + side.z * s, a: Math.atan2(out.x, out.z) });   // (out of their door, facing the street)
+    // (out of their door, facing the street. AUDIT-FIX A-9: 2.3 m out and north of the door (the landing's side), off its approach — the
+    //  roomlife door-clear rule, the trigger's reach and a metre —: 1.7 m out on either side of it, whoever talked to them
+    //  stood 0.4 m from the door, and the walk on to the landing went in through it)
+    const home = (s) => ({ x: door.x + out.x * 2.3 + side.x * (s - 1.6), z: door.z + out.z * 2.3 + side.z * (s - 1.6), a: Math.atan2(out.x, out.z) });
     const B = W.spaceport?.bridge;
     const q = (dx, dz) => (B ? { x: B.x1 + dx, z: B.z + dz, a: Math.PI / 2 } : null);
     const ls = L?.landing.spots || [];

@@ -2,7 +2,7 @@
 // own small 3D model (itemlook.js), the selected one turning, and larger beside its name and description; the
 // painted icons below stay as the fallback where WebGL is unavailable (and paint the paper items' faces). The journal
 // lists what happened so far, chapter by chapter. One panel, two tabs (INVENTORY-CALM, below), the game paused behind it.
-import { t } from './i18n.js';
+import { t, keyHints, hintLine } from './i18n.js';
 import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { stage, lookOf, TURN } from './itemlook.js';
 
@@ -130,7 +130,8 @@ const DRAW = {
 // the painting of an icon kind onto a 72 x 72 context (the paper items' faces in itemlook.js)
 export function paintIcon(kind, x) { (DRAW[kind] || DRAW.part)(x); }
 const cache = {};
-const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack', 'pocketset', 'lance', 'fork', 'line', 'heatflask']);
+// (WEAPON-SWITCH: the weapons too, as LBA2 chose its weapon in the inventory: E takes it in hand)
+const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack', 'pocketset', 'lance', 'fork', 'line', 'heatflask', 'ball', 'glove', 'blowgun', 'blowtron', 'laser', 'lightning']);
 export function itemIcon(kind) {
   if (cache[kind]) return cache[kind];
   const [c, x] = ctx();
@@ -285,7 +286,7 @@ export class Inventory {
     this.el.innerHTML = `<div class="inv-panel lba-frame" data-tab="${this.tab}" data-more="${this.more ? 1 : 0}" role="dialog" aria-label="${esc(t(this.tab === 'items' ? 'inv_title' : 'journal_title'))}">
       <header class="inv-head">${tabs}${strip}</header>
       <div class="inv-body">${this.tab === 'items' ? this.itemsHTML(K, kb) : this.journalHTML()}</div>
-      <footer class="inv-foot"><span class="inv-hint">${this.hint(K)}</span><button class="inv-close" type="button">${t('map_close_btn')}</button></footer></div>`;
+      <footer class="inv-foot"><span class="inv-hint">${hintLine(this.hint(K))}</span><button class="inv-close" type="button">${t('map_close_btn')}</button></footer></div>`;
     if (this.tab === 'items') {
       // a page of the grid: the slots of the selected item's page (the shape is known once the panel is laid out)
       this.fillGrid(items);
@@ -307,8 +308,8 @@ export class Inventory {
       const full = t('itd_' + sel.id, { k: K('ball'), e: K('interact') }) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '');
       const [lead, rest] = splitLead(full);
       const amount = sel.n == null ? '' : ` <span>${sel.id === 'ball' ? t('it_level', { n: sel.n }) : typeof sel.n === 'number' ? '× ' + sel.n : esc(sel.n)}</span>`;
-      const acts = `<button type="button" class="inv-more" aria-expanded="${this.more}">${t(this.more ? 'inv_less' : 'inv_more')}${kb(this.keyOf('more'))}</button>`
-        + (this.zone === 'grid' && USE.has(sel.id) && !(this.from === 'pause' && g.cine) ? `<button type="button" class="inv-use">${t('inv_use_btn')}${kb(this.keyOf('use'))}</button>` : '');
+      const acts = `<button type="button" class="inv-more" aria-expanded="${this.more}">${keyHints(t(this.more ? 'inv_less' : 'inv_more') + kb(this.keyOf('more')))}</button>`
+        + (this.zone === 'grid' && USE.has(sel.id) && !(this.from === 'pause' && g.cine) ? `<button type="button" class="inv-use">${keyHints(t('inv_use_btn') + kb(this.keyOf('use')))}</button>` : '');
       text = `<div class="inv-text"><h3 class="inv-name">${t('it_' + sel.id)}${amount}</h3><p class="inv-desc${this.more ? ' open' : ''}"><span class="lead">${lead}</span>${rest ? `<span class="rest"> ${rest}</span>` : ''}</p></div><div class="inv-acts">${acts}</div>`;
     }
     return `<div class="inv-show"><div class="inv-big lba-frame"><canvas width="320" height="320"></canvas></div><div class="inv-gridbox"><div class="inv-grid"></div><div class="inv-pager"></div></div></div>
@@ -397,12 +398,12 @@ export class Inventory {
     this.render();
   }
   nav(input) {
-    const pad = input.lastDevice === 'pad', rtl = document.documentElement.dir === 'rtl';
+    const pad = input.lastDevice === 'pad';   // (HE-LTR: ← / → as in English in every language: the page is never mirrored)
     // Tab, or LB / RB: the other tab (two tabs: either way is the other one)
     if (input.pressed('cycle') || (pad && (input.pressed('swap') || input.pressed('focus')))) {
       this.setTab(this.tab === 'items' ? 'journal' : 'items'); this.game.audio?.play('blip'); return;
     }
-    const L = input.menu(rtl ? 'right' : 'left'), R = input.menu(rtl ? 'left' : 'right'), U = input.menu('up'), D = input.menu('down');
+    const L = input.menu('left'), R = input.menu('right'), U = input.menu('up'), D = input.menu('down');
     if (this.tab === 'journal') {
       const n = this.sections().length, was = [this.jsec, this.jpage];
       if (D && this.jsec < n - 1) { this.jsec++; this.jpage = 0; }

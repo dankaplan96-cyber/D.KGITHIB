@@ -25,6 +25,7 @@ import { crossByShip } from '../travelfilm.js';
 import { revealBeat, solidAt, twoShot } from './revealcam.js';
 import { DepotWatch } from './depotwatch.js';
 import { PumpLine } from './pumpline.js';
+import { TERMINAL } from '../terminal.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -115,8 +116,12 @@ export class Chapter1 extends ChapterBase {
       case 'arthur':
         return R.house.npcSpots.arthur;
       case 'doran': {
-        // agreed to fly the project's ship: he waits for Twinsen by its hatch at the spaceport
-        const sp = W.spaceport;
+        // agreed to fly the project's ship: he waits for Twinsen by it at the spaceport. SPACEPORT-3 (the user, 17.11: "the
+        // walk is just walking … and without the problem that I can't meet him there"): he works the fuel cart beside it,
+        // warming her up, both hands on its panel (spaceport.js APRON.fuel), in sight from the gate's way out: one place,
+        // whatever the order he is met in, after any load (place() is the only answer; nothing about it is saved)
+        const sp = W.spaceport, fs = sp?.apron?.fuel?.stand;
+        if (f.c1_ship && fs) return { x: fs.x, z: fs.z, a: fs.a, anim: 'tinker' };
         if (f.c1_ship && sp) return { x: sp.landing.x - 1.0, z: sp.landing.z + 2.6, a: -Math.PI / 2 };   // (by the walkway, clear of the pad)
         return this.isCur() ? { x: ps.x, z: ps.z + 2.2, a: Math.PI } : undefined;   // (at his harbour, as the prologue left him)
       }
@@ -233,6 +238,41 @@ export class Chapter1 extends ChapterBase {
     return false;
   }
 
+  // SPACEPORT-3 (P62): Doran's errand at Citadel Spaceport's terminal. At the ticket counter (its prompt, story/islands.js
+  // counter, or a word with Ama herself) she brings out the project flight's form; Twinsen signs it on the counter (his
+  // hands on it: the 'use' action toward the counter's top) and she stamps it. The port guard at the gate sends him to
+  // the counter without it and lets him through with it (islands.js canExit: the gate's own rule)
+  errandAt() { const f = this.f; return this.isCur() && f.c1_ship && f.c1_errand; }
+  portCounter(tm) {
+    if (tm.point !== 'citadel_port' || !this.errandAt()) return false;
+    if (this.f.c1_form) { this.chain([['ama', 'c1_ama_after']]); return true; }
+    this.signForm();
+    return true;
+  }
+  signForm() {
+    const g = this.game, f = this.f, h = g.hero, c = TERMINAL.counter;
+    if (this._signing != null && g.time - this._signing < 8) return;   // (one signing at a time; a cut-off one may be started again)
+    this._signing = g.time;
+    g.audio.play('paper');
+    this.chain([['ama', 'c1_ama_form1'], ['hero', 'c1_tw_form']], () => {
+      // (the counter's top is 0.85 m in from where he stands to buy: terminal.js TERMINAL.counter)
+      h.actAt(c.x, c.z - 0.85, 'use', 1.3, () => {
+        g.audio.play('paper');
+        f.c1_form = true; this._signing = null;
+        g.audio.play('clunk');   // (Ama's stamp)
+        g.updateObjective();
+        this.chain([['ama', 'c1_ama_form2']], () => { g.updateObjective(); g.save(false); });
+      }, 0.3);
+    });
+  }
+  talkFirst(npc) {
+    const id = npc.def.id;
+    if (!this.errandAt() || this.game.room?.id !== 'terminal') return false;
+    if (id === 'ama') { if (this.f.c1_form) this.chain([['ama', 'c1_ama_after']]); else this.signForm(); return true; }
+    if (id === 'bern') { this.chain([['bern', this.f.c1_form ? 'c1_bern_ok' : 'c1_bern_form']]); return true; }
+    return false;
+  }
+
   talk(npc) {
     const g = this.game, f = this.f;
     const id = npc.def.id;
@@ -271,8 +311,10 @@ export class Chapter1 extends ChapterBase {
         // at the harbour he agrees and goes ahead to the spaceport; there, by the ship, he takes Twinsen aboard
         if (f.c1_ship) return c([['doran', 'c1_doran_board']], () => this.toZeelich());
         // (STAGING-1: he sets off up the quay toward the town and the spaceport, and is at the ship once out of sight)
-        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => {
-          f.c1_ship = true;
+        // (SPACEPORT-3, P62: and sends Twinsen ahead of him on an errand that the flight needs: his own flight form, to
+        //  sign at the terminal's ticket counter; the gate lets nobody out to the pad without it: story/islands.js)
+        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2'], ['doran', 'c1_doran_form']], () => {
+          f.c1_ship = true; f.c1_errand = true;
           const ps = g.world.pierStart;
           this.walkOff('doran', [{ x: ps.x + 5.5, z: ps.z + 2.6 }, { x: -95.8, z: 37.4 }, { x: -82.0, z: 36.0 }, { x: -67.9, z: 29.6 }], 1.15);
           g.updateObjective(); g.save(false);
@@ -947,7 +989,7 @@ export class Chapter1 extends ChapterBase {
     const f = this.f, g = this.game;
     const valves = g.world.valves || [];
     if (!f.c1_started) return '';
-    if (f.c1_ship) return this.goal('c1_obj_ship');
+    if (f.c1_ship) return this.goal(f.c1_errand ? (f.c1_form ? 'c1_obj_board' : 'c1_obj_form') : 'c1_obj_ship');
     if (f.c1_radio) return this.goal('c1_obj_ferry');
     if (f.c1_veskGone) return this.goal('c1_obj_home');
     if (f.c1_zoeDone) return this.goal('c1_obj_confront');
@@ -979,7 +1021,9 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_water && !f.c1_tour) npcAt('vesk', 'n_vesk');
     if (f.c1_needZoe && !f.c1_zoeStart) npcAt('zoe', 'n_zoe');
     if (f.c1_veskGone && !f.c1_radio) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
-    if (f.c1_ship && W.spaceport) m.push({ x: W.spaceport.pad.x, z: W.spaceport.pad.z, kind: 'star', color: gold, r: 7, edge: true, label: t('n_doran') });
+    // (SPACEPORT-3: the errand first — the terminal's landside door, the counter inside it; then Doran by the ship)
+    if (f.c1_ship && f.c1_errand && !f.c1_form && W.spaceport) m.push({ x: W.spaceport.door.x - 0.6, z: W.spaceport.door.z, kind: 'star', color: gold, r: 7, edge: true, label: t('c1_mk_counter') });
+    else if (f.c1_ship && W.spaceport) { const d = this.npc('doran'), at = d?.present ? d.pos : W.spaceport.pad; m.push({ x: at.x, z: at.z, kind: 'star', color: gold, r: 7, edge: true, label: t('n_doran') }); }
     else if (f.c1_radio) npcAt('doran', 'n_doran');
     return m;
   }
@@ -988,6 +1032,7 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_map && !f.c1_water) out.push({ id: 'pipemap', icon: 'map' });
     if (f.c1_needZoe && !f.c1_plan) out.push({ id: 'leaflet', icon: 'leaflet' });
     if (f.c1_plan && (!f.c2_planTaken || f.c2_planBack)) out.push({ id: 'evacplan', icon: 'plan' }); // (confiscated on Zeelich until recovered)
+    if (f.c1_form && this.isCur()) out.push({ id: 'flightform', icon: 'permit' });   // (SPACEPORT-3: shown at the gate, handed over on board)
     out.push(...this.line.items());
     return out;
   }
@@ -1004,6 +1049,7 @@ export class Chapter1 extends ChapterBase {
       { key: 'c1_j_plan', done: !!f.c1_plan },
       { key: 'c1_j_vesk_gone', done: !!f.c1_veskGone },
       { key: 'c1_j_radio', done: !!f.c1_radio },
+      { key: 'c1_j_form', done: !!f.c1_form },
     ].filter((l) => l.done);
   }
 }

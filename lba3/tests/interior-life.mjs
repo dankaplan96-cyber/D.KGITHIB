@@ -80,7 +80,7 @@ const roomInfo = await ev(() => Object.fromEntries(Object.entries(RL.ROOMS).map(
 
 // ---- the cast: everyone listed, hidden until their place is built (nothing built for them)
 const cast = await ev(() => { const W = game.roomWalkers, G = game; return { n: W.res.length, ids: W.res.map((r) => r.def.id), pending: W.res.filter((r) => r.def.pending).map((r) => r.def.id), built: ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'].filter((id) => G.regions.built(id)), street: G.walkers.res.length, clash: W.res.filter((r) => G.npcs.some((n) => n !== r && n.def.id === r.def.id)).map((r) => r.def.id) }; });
-check('the rooms\' and the ports\' people are in the cast (40: the terminals\' 12 — WC-4\'s evacuation queue and council guards among them — and WC-3\'s School classroom and council antechamber 8, PEOPLE-1\'s Otringal bar and hotel 4), none sharing an id; those of places not built yet wait hidden (39); nothing was built for them; the street\'s residents are their own (47: WC-3\'s 24, DECLUTTER\'s Tibbo, Oni, Marl, Bashir and ZEELICH-LIFE\'s Fennick, Rezz, Oma among them; the islands\' people are made only when their island is built)', cast.n === 44 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 39 && cast.street === 47, { ...cast, ids: cast.ids.length, pending: cast.pending.length });
+check('the rooms\' and the ports\' people are in the cast (40: the terminals\' 12 — WC-4\'s evacuation queue and council guards among them — and WC-3\'s School classroom and council antechamber 8, PEOPLE-1\'s Otringal bar and hotel 4, SPACEPORT-3\'s apron crew and travellers 4), none sharing an id; those of places not built yet wait hidden (39); nothing was built for them; the street\'s residents are their own (47: WC-3\'s 24, DECLUTTER\'s Tibbo, Oni, Marl, Bashir and ZEELICH-LIFE\'s Fennick, Rezz, Oma among them; the islands\' people are made only when their island is built)', cast.n === 48 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 39 && cast.street === 47, { ...cast, ids: cast.ids.length, pending: cast.pending.length });
 const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t(r.def.name) === r.def.name).map((r) => r.def.id); });
 check('every one of them has a name', names.length === 0, names);
 
@@ -141,16 +141,20 @@ console.log(`MEASURE rooms' and ports' people (${cost.people}): hero in the tave
 check('cost: in the tavern its people are simulated in full; with the hero on the street no room\'s person is (they are stepped twice a second, abstract)', cost.inFull.length === 0 && cost.tavern.full > 0, cost);
 
 // ---- Citadel Spaceport
-const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'dov'], flying: ['gurt', 'esren', 'gunda', 'bibi'], evac: ['gurt', 'dov', 'gunda', 'bibi'] }));   // (WC-4: the evacuation's deck: the mechanic, Dov, the family)
+// (WC-4: the evacuation's deck: the mechanic, Dov, the family; SPACEPORT-3: the apron's crew — Gurt, Rhun the technician in
+//  every chapter, Pema the fueller while ships fly — and two travellers at the boarding rope while flights run)
+const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'rhun', 'dov'], flying: ['gurt', 'rhun', 'pema', 'kesa', 'brin', 'esren', 'gunda', 'bibi'], evac: ['gurt', 'rhun', 'pema', 'dov', 'gunda', 'bibi'] }));
+// (SPACEPORT-3: the crew works at the ship, in the pad's ring: only the others keep out of it)
+const CREW = ['gurt', 'rhun', 'pema'];
 const portCheck = async (label, key, extra, want, talk) => {
   await ev(([key, extra]) => { setChapter(key, extra); const G = game; G.exitRoom({ x: -4.8, z: 40, a: Math.PI / 2 }, true, true); G.step(0.3); }, [key, extra]);
   iso(`Citadel Spaceport, ${label}: the hero put on the deck before the terminal's gate (exitRoom; SPACEPORT-2: the deck is airside)`);
-  const r = await ev(() => { const G = game; for (let i = 0; i < 60; i++) G.step(0.5);
+  const r = await ev((crew) => { const G = game; for (let i = 0; i < 60; i++) G.step(0.5);
     const S = G.world.spaceport, d = S.deck, b = S.board, fl = [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1 }, { x0: S.bridge.x0, x1: S.bridge.x1, z0: S.bridge.z - S.bridge.hw, z1: S.bridge.z + S.bridge.hw }];
     const a = auditSettled('port_citadel', fl);
     // standing (not walking): off the walkway, the pad's ring, the board's reading spot
-    const clear = people('port_citadel').filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: q.pos.x < S.pad.x - 4 && Math.abs(q.pos.z - S.bridge.z) < 1.9, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 5.6, board: Math.hypot(q.pos.x - (b.x + 0.6), q.pos.z - b.z) < 1.0 })).filter((q) => q.walkway || q.ring || q.board);
-    return { here: people('port_citadel').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, stops: people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, x: s.x, z: s.z }))) }; });
+    const clear = people('port_citadel').filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: q.pos.x < S.pad.x - 4 && Math.abs(q.pos.z - S.bridge.z) < 1.9, ring: !crew.includes(q.def.id) && Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 5.6, board: Math.hypot(q.pos.x - (b.x + 0.6), q.pos.z - b.z) < 1.0 })).filter((q) => q.walkway || q.ring || q.board);
+    return { here: people('port_citadel').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, stops: people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, x: s.x, z: s.z }))) }; }, CREW);
   check(`Citadel Spaceport, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r.here);
   check(`Citadel Spaceport, ${label}: each on the deck, off the furniture, facing sensibly; nobody stands on the walkway, in the pad's ring or on the board's reading spot`, r.bad.length === 0 && r.clear.length === 0, { bad: r.bad, clear: r.clear });
   if (talk && want.length) {
@@ -162,8 +166,10 @@ const portCheck = async (label, key, extra, want, talk) => {
   }
   return r;
 };
-const stopsAll = await ev(() => { const S = game.world.spaceport, b = S.board; return people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, walkway: s.x < S.pad.x - 4 && Math.abs(s.z - S.bridge.z) < 1.9, ring: Math.hypot(s.x - S.pad.x, s.z - S.pad.z) < 5.6, board: Math.hypot(s.x - (b.x + 0.6), s.z - b.z) < 1.0, doran: Math.hypot(s.x - (S.landing.x - 1.0), s.z - (S.landing.z + 2.6)) < 1.6 }))).filter((s) => s.walkway || s.ring || s.board || s.doran); });
-check('Citadel Spaceport: no stop on the walkway, in the pad\'s ring, on the board\'s reading spot or where chapter 2 puts Doran by the hatch', stopsAll.length === 0, stopsAll);
+// (SPACEPORT-3: chapter 2 puts Doran at the fuel cart, spaceport.js APRON.fuel.stand: no stop there of anybody on the deck in
+//  the grounded chapters; the crew's stops at the ship are in the pad's ring by design)
+const stopsAll = await ev((crew) => { const S = game.world.spaceport, b = S.board, fs = S.apron.fuel.stand; return people('port_citadel').flatMap((q) => q.stops.map((s) => ({ id: s.id, walkway: s.x < S.pad.x - 4 && Math.abs(s.z - S.bridge.z) < 1.9, ring: !crew.includes(q.def.id) && Math.hypot(s.x - S.pad.x, s.z - S.pad.z) < 5.6, board: Math.hypot(s.x - (b.x + 0.6), s.z - b.z) < 1.0, doran: (RL.whenPhases(q.def.when) || RL.PORT_PHASES).includes('grounded') && Math.hypot(s.x - fs.x, s.z - fs.z) < 1.6 }))).filter((s) => s.walkway || s.ring || s.board || s.doran); }, CREW);
+check('Citadel Spaceport: no stop on the walkway, in the pad\'s ring (the crew\'s at the ship aside), on the board\'s reading spot or where chapter 2 puts Doran at the fuel cart', stopsAll.length === 0, stopsAll);
 await portCheck('chapter 1 (flights grounded)', 'well', {}, portSets.grounded, true);
 await portCheck('chapter 2', 'project', { c1_water: true }, portSets.grounded, false);
 await portCheck('chapter 4 (flights run)', 'dig', {}, portSets.flying, true);

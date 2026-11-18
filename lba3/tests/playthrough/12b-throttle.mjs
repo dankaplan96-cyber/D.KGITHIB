@@ -5,8 +5,13 @@
 // washroom, Zoé on the relay → played as Zoé: the project office's register, the crates, the B-7 → she walks it to the
 // shelter → Twinsen: the feed shut, the B-7 fitted, the feed opened, the band turned to green, the lever held as Oren
 // swings it → Gilbert, Vesk on the wire, Baldino's call → the network (segment 13).
-const TH = () => game.story.chapters.find((c) => c.key === 'throttle');
-const use = (p, kind) => { const r = P.use(p.x, p.z, { kind, near: 0.7 }); for (let i = 0; i < 12; i++) game.step(0.1); P.settle(); return r.r; };
+// (AUDIT-FIX A-3: the steps run in the page, page.evaluate sends each function alone: TH and use, module constants here,
+//  were not defined there — "TH is not defined" at the bleeds. They are set in the page by `setup`, which tests/lib/seg.mjs
+//  runs after the page loads and after a Retry)
+export const setup = () => {
+  window.TH = () => game.story.chapters.find((c) => c.key === 'throttle');
+  window.use = (p, kind) => { const r = P.use(p.x, p.z, { kind, near: 0.7 }); for (let i = 0; i < 12; i++) game.step(0.1); P.settle(); return r.r; };
+};
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: P.here(), fail: game.flags.chapterKey === 'throttle' ? null : 'not chapter 10' }; }],
   ['Mira at the Water Office: down to the valve room', () => { const r = P.talk('mira', { run: true }); for (let i = 0; i < 20; i++) game.step(0.1); P.settle(); return { ...r, room: P.here(), fail: game.flags.og_room ? null : 'valve room' }; }],

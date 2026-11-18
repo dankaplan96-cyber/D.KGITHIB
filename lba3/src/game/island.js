@@ -627,20 +627,27 @@ function buildHarbour(W0, root, r) {
     const ax1 = E.x - pw / 2;   // (the arm's west end: the far side of the leg)
     // a straight run of the quay's wall section in the frame of B2 (land on the run's right), its coping, its posts and
     // rail (a post every ~3 m, 0.45 m in from the face; no rail across a gap [u0, u1], metres along the run)
-    const wallRun = (B2, ax, az, bx, bz, top, gaps, posts) => {
+    // AUDIT-FIX (RELEASE-AUDIT-v96 A-7, A-11): `j`, the run's corners with the runs before and after it (convex, both on
+    // the land's side): 1, its start meets the run before it — its coping starts past that run's (the two copings, and the
+    // wall tops under them, overlapped in a 0.6 m square and flickered: worldfit's largest z-fighting on the new harbour),
+    // its wall top 6 mm lower, and the corner's post is the run before's; 2, its end meets the next run — its last post
+    // stands 0.45 m in, where the next run's first would (each stood on the other run's face line, half over the water).
+    // A gap's ends make posts only inside the run (the [-1, 99] of an unrailed run put a post a metre before its start
+    // and another 99 m along: the lone stone posts in the water by the leg's tip and the quay's south face, A-11)
+    const wallRun = (B2, ax, az, bx, bz, top, gaps, posts, j = 0) => {
       const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
-      const sh = new THREE.Shape();
-      sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, top - 0.18); sh.lineTo(0.18, top - 0.18); sh.lineTo(-0.2, -3.6);
+      const sh = new THREE.Shape(), wt = top - 0.18 - (j & 1 ? 0.006 : 0), c0 = j & 1 ? 0.62 : 0;
+      sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, wt); sh.lineTo(0.18, wt); sh.lineTo(-0.2, -3.6);
       B2.add(extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
-      B2.add(bbox(0.62, 0.22, len, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
-      const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, n = Math.max(1, Math.round(len / 3));
-      const us = []; for (let i = 0; i <= n; i++) us.push((len * i) / n);
-      for (const [u0, u1] of gaps) us.push(u0, u1);
+      B2.add(bbox(0.62, 0.22, len - c0, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3 + Math.sin(ry) * c0 / 2, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3 + Math.cos(ry) * c0 / 2, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
+      const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, uA = j & 1 ? 0.45 : 0, uB = j & 2 ? len - 0.45 : len, n = Math.max(1, Math.round((uB - uA) / 3));
+      const us = []; for (let i = 0; i <= n; i++) us.push(uA + ((uB - uA) * i) / n);
+      for (const [u0, u1] of gaps) for (const u of [u0, u1]) if (u > uA && u < uB) us.push(u);
       us.sort((a, b) => a - b);
       const inGap = (u) => gaps.some(([u0, u1]) => u > u0 + 1e-3 && u < u1 - 1e-3);
       const pts = [];
       for (const u of us) if (!inGap(u) && (!pts.length || u - pts[pts.length - 1].u > 0.3)) pts.push({ u, x: ax + (bx - ax) * u / len + ix, z: az + (bz - az) * u / len + iz });
-      for (const p of pts) posts.push({ x: p.x, y: top + 0.04, z: p.z, ry: 0 });
+      for (const p of pts) if (!(j & 1 && p.u === uA)) posts.push({ x: p.x, y: top + 0.04, z: p.z, ry: 0 });
       for (let i = 0; i < pts.length - 1; i++) {
         const a = pts[i], b = pts[i + 1]; if (inGap((a.u + b.u) / 2)) continue;
         B2.add(cyl(0.045, 0.045, Math.hypot(b.x - a.x, b.z - a.z), 8), teal, (a.x + b.x) / 2, top + 0.55, (a.z + b.z) / 2, Math.PI / 2, Math.atan2(b.x - a.x, b.z - a.z), 0);
@@ -649,18 +656,18 @@ function buildHarbour(W0, root, r) {
     };
     // the arm (the harbour's frame): its north face from the quay to its end, the end, its south face from the leg back
     const armPosts = [], legPosts = [];
-    wallRun(B, QX, pz - pw / 2, ax1, pz - pw / 2, deck + 0.05, [], armPosts);
-    wallRun(B, ax1, pz - pw / 2, ax1, pz + pw / 2, deck + 0.05, [], armPosts);
+    wallRun(B, QX, pz - pw / 2, ax1, pz - pw / 2, deck + 0.05, [], armPosts, 2);
+    wallRun(B, ax1, pz - pw / 2, ax1, pz + pw / 2, deck + 0.05, [], armPosts, 1);
     wallRun(B, E.x + pw / 2, pz + pw / 2, QX, pz + pw / 2, deck + 0.05, [[-1, 99]], armPosts);   // (the L's inner faces have no rail, as LBA2's: the barge and the boat lie there)
-    B.add(bbox(QX - ax1 + 0.3, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (QX + 0.3 + ax1) / 2, deck - 0.15, pz);
+    B.add(bbox(QX - ax1 + 0.1, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (QX + 0.5 + ax1) / 2, deck - 0.15, pz);   // (AUDIT-FIX: its west end 0.2 m in from the end wall's face, under the coping: it stood in that face)
     physics.add({ type: 'box', x: (QX + 0.3 + ax1) / 2, z: pz, hw: (QX + 0.3 - ax1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
     // the leg (the turned frame pc: its design x runs south, its -z side is west), from the arm's south face to the tip:
     // its west face (the ferry's side: a gap at her gangway), the tip (a gap at the ladder), the east face (inner: no rail)
     const lx0 = E.x - pw / 2, gwx = QX - plen + 4.6 + 2.0;
-    wallRun(BL, lx0, pz - pw / 2, x1, pz - pw / 2, deck + 0.05, [[-1, lx0 - gwx + 0.95]], legPosts);   // (open from the elbow to past the gangway: the opening's resident walks to 0.3 m from the edge there)
-    wallRun(BL, x1, pz - pw / 2, x1, pz + pw / 2, deck + 0.05, [[0.45, pw - 0.45]], legPosts);
-    wallRun(BL, x1, pz + pw / 2, lx0, pz + pw / 2, deck + 0.05, [[-1, 99]], legPosts);
-    BL.add(bbox(lx0 - x1, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (lx0 + x1) / 2, deck - 0.15, pz);
+    wallRun(BL, lx0, pz - pw / 2, x1, pz - pw / 2, deck + 0.05, [[-1, lx0 - gwx + 0.95]], legPosts, 2);   // (open from the elbow to past the gangway: the opening's resident walks to 0.3 m from the edge there)
+    wallRun(BL, x1, pz - pw / 2, x1, pz + pw / 2, deck + 0.05, [[0.45, pw - 0.45]], legPosts, 3);
+    wallRun(BL, x1, pz + pw / 2, lx0, pz + pw / 2, deck + 0.05, [[-1, 99]], legPosts, 1);
+    BL.add(bbox(lx0 - x1 - 0.2, 0.3, pw - 0.1, 0.02, TILE.stone), pave, (lx0 + x1 + 0.2) / 2, deck - 0.15, pz);   // (AUDIT-FIX: its tip 0.2 m in from the tip wall's face)
     Wl.physics.add({ type: 'box', x: (lx0 + x1) / 2, z: pz, hw: (lx0 - x1) / 2, hd: pw / 2, rot: 0, top: deck, seeThrough: true });
     const bollard = bollardGeo();
     instances(pc, bollard, post, legPosts);
@@ -685,10 +692,10 @@ function buildHarbour(W0, root, r) {
     {
       const P = HARBOUR_PLAT, qx1 = QX + 13, z1 = Z1, platPosts = [];
       wallRun(B, QX + QUAY_R, z1, qx1, z1, QH, [[-1, 99]], platPosts);
-      wallRun(B, qx1, z1, qx1, P.zS - d.z, QH, [[-1, 99]], platPosts);
+      wallRun(B, qx1, z1, qx1, P.zS - d.z, QH, [[-1, 99]], platPosts, 1);
       wallRun(B, qx1, P.zS - d.z, P.x1 - d.x, P.zS - d.z, P.h, [[-1, 99]], platPosts);
-      wallRun(B, P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], platPosts);
-      wallRun(B, P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], platPosts);
+      wallRun(B, P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], platPosts, 2);
+      wallRun(B, P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], platPosts, 1);
       instances(g, bollard, post, [...armPosts, ...platPosts]);   // (the arm's and the platform's posts: one draw)
       for (const p of platPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: P.h + 1.1, seeThrough: true });
       for (const [a, b] of B._rails || []) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: P.h + 1.05, seeThrough: true, noStand: true });
@@ -700,7 +707,9 @@ function buildHarbour(W0, root, r) {
 
   // --- Doran's harbour shed: rubble walls, plank roof, a door that stays shut
   {
-    const sx = -67.2, sz = 4.4, ry = Math.PI;
+    // (AUDIT-FIX A-7: 0.45 m north of where it stood: CITADEL-ORIG-2's straight cut before the quay's south face drops the
+    //  ground from 0.6 m behind its back wall, and its back stood 0.21 m over that slope)
+    const sx = -67.2, sz = 3.95, ry = Math.PI;
     // (WORLD-FIX: h 2.65, was 2.5: the door's surround ran into the eave beam)
     const shed = buildHouse({ w: 4.8, d: 3.6, h: 2.65, pitch: 0.5, overhang: 0.3, wall: 'rubble', tint: '#e8e4e8', roof: 'planks', door: { x: 1.1, arch: false }, doorColor: '#7a5a3a', shutters: '#2a8a7a', chimney: false, seed: 41,
       windows: [{ side: 'front', x: -1.0, y: 1.2, w: 0.7, h: 0.75 }, { side: 'right', x: 0, y: 1.25, w: 0.6, h: 0.6 }] });
@@ -1904,6 +1913,25 @@ function buildStation(W0, root, r) {
     halo.position.set(BX, g + 1.4, BZ); halo.scale.set(5.5, 3.2, 1); grp.add(halo);
     const coreLight = new THREE.PointLight('#5ae8ff', 6, 12, 2); coreLight.position.set(BX, g + 1.2, BZ); grp.add(coreLight);
     anim.core = { coreMat, halo, coreLight };
+    // AUDIT-FIX (the user's P52, "it's hollow": the collar read as a drum with no top, its inside open to the camera): a
+    // steel grating over the shaft at the lip, a ring and bars every 0.3 m with the drill string's hole in the middle; the
+    // core's glow shows between the bars. (The collider was always whole: nobody walked in)
+    {
+      const gy = g + 0.28 + 1.1, R = 2.06, bars = [];
+      for (let u = -R + 0.25; u < R - 0.1; u += 0.3) {
+        const half = Math.sqrt(R * R - u * u);
+        for (const [a, b] of Math.abs(u) < 0.42 ? [[-half, -0.42], [0.42, half]] : [[-half, half]]) {
+          const len = b - a, mid = (a + b) / 2;
+          bars.push([len, u, mid]);
+        }
+      }
+      for (const [len, u, mid] of bars) {
+        B.add(bbox(0.05, 0.06, len, 0.01, 1), darkSteel(), BX + u, gy, BZ + mid);
+        B.add(bbox(len, 0.04, 0.04, 0.01, 1), darkSteel(), BX + mid, gy + 0.045, BZ + u);
+      }
+      B.add(cached('grateRing', () => new THREE.TorusGeometry(R, 0.05, 6, 48).rotateX(Math.PI / 2)), darkSteel(), BX, gy, BZ);
+      B.add(cached('grateHole', () => new THREE.TorusGeometry(0.42, 0.04, 6, 20).rotateX(Math.PI / 2)), darkSteel(), BX, gy + 0.02, BZ);
+    }
     // cross beams carrying the rotary table
     for (const ry of [0, Math.PI / 2]) B.add(boxUV(bbox(5.4, 0.22, 0.3, 0.03, 1), TILE.teal), tealM(), BX, g + 0.28 + 1.27, BZ, 0, ry, 0);
     B.add(lathe([[0, 0], [0.75, 0], [0.78, 0.06], [0.78, 0.18], [0.6, 0.24], [0.2, 0.26], [0, 0.26]], 24), brassM(), BX, g + 0.28 + 1.36, BZ);

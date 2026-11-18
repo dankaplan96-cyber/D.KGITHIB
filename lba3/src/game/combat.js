@@ -79,6 +79,11 @@ export const WEAPON_INFO = {
   pocketset: { icon: '♫' }, lance: { icon: '≈' },   // (EQUIP-2a: tools.js)
   fork: { icon: 'Ψ' }, line: { icon: '⊸' }, heatflask: { icon: '♨' },   // (EQUIP-2b: tools.js)
 };
+// WEAPON-SWITCH (the user, 17.11: "switching from the ball is not comfortable"): the swap key's cycle (R, LB on a pad, ⇄ on
+// touch) goes through what he owns in this fixed order — the ball first, then the hands and the blades, the shooters,
+// Baldino's pulse tool, the tools last — and wraps round to the ball; held, the key goes straight back to the ball
+export const CYCLE = ['ball', 'fists', 'sword', 'glove', 'blowgun', 'laser', 'lightning', 'pulse', 'pocketset', 'lance', 'fork', 'line', 'heatflask'];
+export const SWAP_HOLD = 0.4;   // s the swap key is held for "back to the ball" (a shorter press is a tap: the next weapon)
 const MELEE = new Set(['fists', 'sword', 'glove']);
 const SHOOT = new Set(['blowgun', 'laser', 'lightning']);   // fired by weapons.js
 const TOOLS = new Set(['pocketset', 'lance', 'fork', 'line', 'heatflask']);   // worked by tools.js (EQUIP-2a, 2b)
@@ -345,6 +350,16 @@ export class HeroCombat {
     const A = this.g.audio, own = { sword: 'swordDraw', ball: 'equipBall', fists: 'equipFists', glove: 'equipGlove' }[to];
     if (from === 'sword' && to !== 'sword') A.play('swordSheathe');
     A.play(own || 'equip');
+  }
+  // WEAPON-SWITCH: what the swap key's cycle goes through (CYCLE order), the one after `w` (dir −1: before), a step of
+  // it, and back to the ball (already in hand: the pill shows it again, no sound of a change)
+  cycleList() { return CYCLE.filter((w) => this.has(w)); }
+  nextOf(w = this.weapon, dir = 1) { const L = this.cycleList(); if (L.length < 2) return null; const i = Math.max(0, L.indexOf(w)); return L[(i + (dir < 0 ? L.length - 1 : 1)) % L.length]; }
+  cycle(dir = 1) { const n = this.nextOf(this.weapon, dir); if (n) { this.equip(n); return n; } this.g.audio.play('deny'); return null; }
+  toBall() {
+    if (!this.has('ball')) { this.g.audio.play('deny'); return null; }
+    if (this.weapon !== 'ball') this.equip('ball'); else this.g.hud.weaponFlash?.();
+    return 'ball';
   }
   swap() { const h = this.hero, p = h.prevWeapon; if (p && this.has(p) && p !== this.weapon) this.equip(p); else { const o = this.owned().find((w) => w !== this.weapon); if (o) this.equip(o); else this.g.audio.play('deny'); } }
 

@@ -45,7 +45,7 @@ import { updateKitLod, enableBatching, LOD_BATCHES, KIT_LOD } from './game/kit.j
 import { ShadowCache } from './engine/shadowcache.js';
 import { Power } from './engine/power.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
-import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
+import { Targeting, CombatDirector, WEAPONS, SWAP_HOLD } from './game/combat.js';
 import { Weapons, freshArms } from './game/weapons.js';
 import { Gadgets } from './game/gadgets.js';
 import { createEnemy, Drone } from './game/enemies.js';
@@ -60,7 +60,7 @@ import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/i
 import { castReady, readyCast } from './game/story/ballastra.js';   // (EXP-2: the Ballastra cast's models, on demand)
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
-import { t, setLang, getLang } from './game/i18n.js';
+import { t, setLang, getLang, hintLine } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
 import { BUILT } from './build-stamp.js';
 
@@ -1635,7 +1635,7 @@ class Game {
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
-    if (s !== 'play') this.targeting?.hide();
+    if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
   }
   // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
@@ -2173,6 +2173,7 @@ class Game {
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
       voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'expressive')),
     };
+    hint.fps = () => t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto'));   // (the user, 18.11: a steady 30 FPS option)
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { const h = row.querySelector('.set-hint'); if (h) h.textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -2187,7 +2188,8 @@ class Game {
     if (it?.classList.contains('set-tabs')) txt = t('set_h_tabs', { k: this.input.lastDevice === 'pad' ? 'LB / RB' : `${keyLabel(keyFor('cycle'))} / ← →` });
     else if (it?.classList.contains('set-fold')) txt = t('set_h_fold', { list: [...it.nextElementSibling.querySelectorAll('.set-label')].map((l) => l.textContent).join(', ') });
     else if (it?.dataset.hint) txt = H[it.dataset.hint]?.() ?? '';
-    if (el.textContent !== txt) el.textContent = txt;
+    // (HE-LTR: the tab bar's line is a key hint, "{keys}: turn the page": its keys before its words as in English)
+    if (el.textContent !== txt) { if (it?.classList.contains('set-tabs')) el.innerHTML = hintLine(txt); else el.textContent = txt; }
   }
 
   // The controls screen (UI-PASS): one list, an action's key beside what it does, from the keys in use (the movement
@@ -2252,7 +2254,9 @@ class Game {
     if (changed('lang') || changed('keys')) {
       setLang(s.lang);
       document.documentElement.lang = s.lang;
-      document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';
+      // HE-LTR (the user, 17.11: "in Hebrew the ONLY thing that should be RTL is the text"): the page stays left to
+      // right in every language (layout, order, arrows as in English); css/style.css's HE-LTR block turns the text
+      document.documentElement.dir = 'ltr';
       document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
       document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
       this.hud.refreshText();
@@ -3069,11 +3073,20 @@ class Game {
     }
     this.behMenu.show(false);
     // weapon selector (hold X / RT): the world slows to a crawl while choosing
+    const frameDt = dt;
     if (input.down('weapons') && h.combat.owned().length > 1) {
       this.hud.weaponSelect(true, h, input);
       dt *= 0.12;
     } else if (this.hud.wselOpen) { const w = this.hud.weaponSelect(false, h, input); if (w) h.combat.equip(w); }
-    if (input.pressed('swap')) h.combat.swap();
+    // WEAPON-SWITCH: the swap key (R; LB on a pad; ⇄ on touch). A tap takes the next weapon he owns in a fixed order
+    // (combat.js CYCLE: the ball, the fists, the sword … the tools, round to the ball), on release; held SWAP_HOLD s, it
+    // goes straight back to the ball. With the wheel open it steps the wheel's choice instead (hud.weaponSelect).
+    if (this.hud.wselOpen) this._swapT = -1;
+    else if (input.down('swap')) {
+      if (input.pressed('swap')) this._swapT = 0;
+      else if (this._swapT >= 0 && (this._swapT += frameDt) >= SWAP_HOLD) { this._swapT = -1; h.combat.toBall(); }
+    } else if (this._swapT >= 0) { this._swapT = -1; h.combat.cycle(1); }
+    this.hud.swapHeld = this._swapT >= 0 ? Math.min(1, this._swapT / SWAP_HOLD) : 0;
     // focus / lock-on (toggle or hold, per settings) and switching targets
     const T = this.targeting, lockHold = this.settings.lockMode === 'hold';
     const aim = h.combat.lastAim || { x: Math.sin(h.angle), z: Math.cos(h.angle) };
