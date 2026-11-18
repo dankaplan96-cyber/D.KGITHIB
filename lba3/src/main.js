@@ -2173,6 +2173,7 @@ class Game {
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
       voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'expressive')),
     };
+    hint.fps = () => t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto'));   // (the user, 18.11: a steady 30 FPS option)
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { const h = row.querySelector('.set-hint'); if (h) h.textContent = hint[row.dataset.hint]?.() ?? ''; });
