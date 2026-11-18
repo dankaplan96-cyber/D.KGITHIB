@@ -1402,9 +1402,86 @@ vec3 outgoingLight = mix( 0.62, 1.0, lbaSun ) * lbaRamp(diffuseColor.rgb, invers
   }
 }
 const polyEyeMat = new LbaMaterial();
+// FACE-1 (P67 phase 4, the user 18.11: "the characters lack even basic facial expressions"): the brows that are part of
+// a model's body (Twinsen's and Zoé's: their own colour, on the head, just over the eyes) get three morph targets the rig
+// mixes for an expression (rig.js setFace): raised (curious, pleased), drawn down and in (determined, annoyed), the inner
+// ends up (concerned). Relative deltas on 48 vertices; every other vertex is zero. Sized by the brows' own span (Zoé's
+// head is smaller than his). A model without such brows still gets the eyes' and the mouth's part of an expression.
+const BROW_COLS = { twinsen: [0x4a3014, 0x5a3a1e], twinsen_fig: [0x5a3a1e], zoe: [0x5a3a22] };
+function addBrowMorphs(geo, P, name) {
+  const cols = BROW_COLS[name];
+  if (!cols || geo.morphAttributes.position || !P.eyes?.length) return;
+  const E = P.eyes[0].pivot, ex = Math.abs(E[0]), pos = P.pos, col = P.col, idx = [];
+  for (let i = 0, v = 0; i < pos.length; i += 3, v++) {
+    const c = (col[i] << 16) | (col[i + 1] << 8) | col[i + 2];
+    if (!cols.includes(c)) continue;
+    const dy = pos[i + 1] - E[1];
+    if (dy < 0.01 || dy > 0.09 || Math.abs(pos[i]) > ex + 0.08 || pos[i + 2] < E[2] - 0.07) continue;
+    idx.push(v);
+  }
+  if (idx.length < 6) return;
+  let lo = Infinity, hi = 0;
+  for (const v of idx) { const a = Math.abs(pos[v * 3]); lo = Math.min(lo, a); hi = Math.max(hi, a); }
+  const k = hi / 0.114, span = Math.max(1e-3, hi - lo), n = pos.length;
+  // the skin under the brows: the front-most surface of the face's own triangles (the most common colour round the
+  // brows) at a point (x, y); a moved brow keeps its height over it (moved down or in on a curved forehead it would
+  // sink into the skin, moved up it would float)
+  const cnt = new Map();
+  for (let i = 0; i < pos.length; i += 3) {
+    const dy = pos[i + 1] - E[1];
+    if (dy < -0.02 || dy > 0.12 || Math.abs(pos[i]) > ex + 0.1 || pos[i + 2] < E[2] - 0.1) continue;
+    const c = (col[i] << 16) | (col[i + 1] << 8) | col[i + 2];
+    if (!cols.includes(c)) cnt.set(c, (cnt.get(c) || 0) + 1);
+  }
+  const skinC = [...cnt].sort((a, b) => b[1] - a[1])[0]?.[0], tri = [];
+  for (let i = 0; i < pos.length; i += 9) {
+    if (((col[i] << 16) | (col[i + 1] << 8) | col[i + 2]) !== skinC) continue;
+    let ok = true;
+    for (let q = 0; q < 9; q += 3) { const dy = pos[i + q + 1] - E[1]; if (dy < -0.03 || dy > 0.14 || Math.abs(pos[i + q]) > ex + 0.12) ok = false; }
+    if (ok) tri.push(i);
+  }
+  const skinZ = (x, y) => {
+    let best = -Infinity;
+    for (const i of tri) {
+      const ax = pos[i], ay = pos[i + 1], bx = pos[i + 3], by = pos[i + 4], cx = pos[i + 6], cy = pos[i + 7];
+      const d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
+      if (Math.abs(d) < 1e-12) continue;
+      const w1 = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / d, w2 = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / d, w3 = 1 - w1 - w2;
+      if (w1 < -1e-4 || w2 < -1e-4 || w3 < -1e-4) continue;
+      best = Math.max(best, w1 * pos[i + 2] + w2 * pos[i + 5] + w3 * pos[i + 8]);
+    }
+    return best;
+  };
+  const up = new Float32Array(n), cross = new Float32Array(n), sad = new Float32Array(n);
+  const put = (A, i, dx, dy) => {
+    const x = pos[i], y = pos[i + 1], z = pos[i + 2], s0 = skinZ(x, y), s1 = skinZ(x + dx, y + dy);
+    A[i] = dx; A[i + 1] = dy; A[i + 2] = s0 > -Infinity && s1 > -Infinity ? s1 - s0 : 0;
+  };
+  for (const v of idx) {
+    const x = pos[v * 3], u = (Math.abs(x) - lo) / span, side = Math.sign(x) || 1, i = v * 3;
+    put(up, i, 0, 0.018 * k);
+    put(cross, i, -side * 0.006 * (1 - u) * k, (-0.012 * (1 - u) + 0.003 * u) * k);
+    put(sad, i, side * 0.002 * (1 - u) * k, (0.016 * (1 - u) - 0.004 * u) * k);
+  }
+  geo.morphAttributes.position = [up, cross, sad].map((a) => new THREE.Float32BufferAttribute(a, 3));
+  geo.morphTargetsRelative = true;
+  geo.userData.browMorphs = ['up', 'cross', 'sad'];
+}
+// FACE-1: the eye's iris and pupil (and a catch-light) for the gaze: the eye's colours that are bluer than red and not
+// near white or the lid's skin; their vertices move a little across the white (rig.js). [] when nothing qualifies.
+function irisOf(cols) {
+  const out = [];
+  for (let i = 0; i < cols.length; i += 3) {
+    const r = cols[i], g = cols[i + 1], b = cols[i + 2];
+    if (b > r + 8 && (r + g + b) / 3 < 200) out.push(i / 3);
+  }
+  return out;
+}
 function polyCharacter(L, def, P) {
   const gk = L.recolor ? L.poly + L.recolor.key : L.poly;
-  const { mesh, bones } = assemble(def, polyGeo[gk] ??= polyGeometry(def, P, L.recolor));
+  const pg = (polyGeo[gk] ??= polyGeometry(def, P, L.recolor));
+  addBrowMorphs(pg, P, L.poly);
+  const { mesh, bones } = assemble(def, pg);
   mesh.material = new LbaMaterial({ side: THREE.DoubleSide }); // (the cape and robe are open shells)
   const root = new THREE.Group();
   root.add(mesh);
@@ -1416,6 +1493,7 @@ function polyCharacter(L, def, P) {
   if (E2.length === 2 && E2[0].bone === E2[1].bone && E2[0].pivot[1] === E2[1].pivot[1] && E2[0].pivot[2] === E2[1].pivot[2]) {
     const cx = (E2[0].pivot[0] + E2[1].pivot[0]) / 2, pos = [], col = [];
     for (const e of E2) { const dx = e.pivot[0] - cx; for (let i = 0; i < e.pos.length; i += 3) pos.push(e.pos[i] + dx, e.pos[i + 1], e.pos[i + 2]); col.push(...e.col); }
+    var irisIdx = irisOf(col), eyeW = Math.max(...E2[0].pos.filter((_, i) => i % 3 === 0)) - Math.min(...E2[0].pos.filter((_, i) => i % 3 === 0));
     const g = new THREE.Group();
     g.position.set(cx - hp[0], E2[0].pivot[1] - hp[1], E2[0].pivot[2] - hp[2]);
     const geo = new THREE.BufferGeometry();
@@ -1424,6 +1502,7 @@ function polyCharacter(L, def, P) {
     geo.computeVertexNormals();
     g.add(new THREE.Mesh(geo, polyEyeMat));
     bones[E2[0].bone].add(g);
+    if (irisIdx.length && irisIdx.length < pos.length / 3) g.userData.iris = { idx: irisIdx, base: Float32Array.from(pos), w: eyeW };
     var eyes = [g];
   } else var eyes = P.eyes.map((e) => {
     const g = new THREE.Group();
@@ -1434,6 +1513,8 @@ function polyCharacter(L, def, P) {
     geo.computeVertexNormals();
     g.add(new THREE.Mesh(geo, polyEyeMat));
     bones[e.bone].add(g);
+    const ii = irisOf(e.col), xs = e.pos.filter((_, i) => i % 3 === 0);
+    if (ii.length && ii.length < e.pos.length / 3) g.userData.iris = { idx: ii, base: Float32Array.from(e.pos), w: Math.max(...xs) - Math.min(...xs) };
     return g;
   });
   const rig = finishRig(L, def, root, mesh, bones, eyes);
@@ -1450,7 +1531,8 @@ function polyCharacter(L, def, P) {
     geo.computeVertexNormals();
     g.add(new THREE.Mesh(geo, polyEyeMat));
     g.scale.y = m.rest;
-    g.userData = { rest: m.rest, drop: m.drop, tilt: m.tilt || 0, y0: g.position.y };
+    const mx = m.pos.filter((_, i) => i % 3 === 0);
+    g.userData = { rest: m.rest, drop: m.drop, tilt: m.tilt || 0, y0: g.position.y, base: Float32Array.from(m.pos), hw: (Math.max(...mx) - Math.min(...mx)) / 2 || 0.04 };   // (FACE-1: base, hw: the smile's bend)
     bones[m.bone].add(g);
     rig.mouth = g;
   }

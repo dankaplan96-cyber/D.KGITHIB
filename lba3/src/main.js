@@ -60,7 +60,9 @@ import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/i
 import { castReady, readyCast } from './game/story/ballastra.js';   // (EXP-2: the Ballastra cast's models, on demand)
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
-import { t, setLang, getLang, hintLine } from './game/i18n.js';
+import { t, setLang, getLang, hintLine, spoken } from './game/i18n.js';
+import { metaFor } from './game/text/voicemeta.js';   // (FACE-1: a line's intention, as its voice has it)
+import { intentOf } from './engine/voiceplan.js';
 import { roomName } from './game/mapdraw.js';
 import { BUILT } from './build-stamp.js';
 
@@ -2511,6 +2513,42 @@ class Game {
     this.speakerColor = color;
     this.audio.duck(true);
     this.hud.say(name, lines, () => { this.speaker = null; this.audio.duck(false); this.setState('play'); done?.(); }, color);
+  }
+
+  // FACE-1 (P67 phase 4, the user 18.11: "the characters lack even basic facial expressions"): each dialogue line sets
+  // the speaker's face from the line's intention — the same one its voice is delivered with (text/voicemeta.js: written
+  // for the scenes that matter; else read from the words, voiceplan.js intentOf) — and the others in the conversation
+  // answer it more softly and look at the speaker; the speaker looks at whoever is spoken to. A face holds a few seconds
+  // past its line, then eases back to neutral. Called by the dialogue box as each line begins (hud.js _line).
+  faceLine(text) {
+    const sp = this.speaker, R = sp?.rig;
+    if (!R?.setFace) return;
+    const en = spoken(text) || text, m = metaFor(en);
+    const RANK = ['neutral', 'curious', 'uncertain', 'pleased', 'relieved', 'concerned', 'urgent', 'determined', 'annoyed'];
+    let face = 'neutral', k = 1;
+    if (m) { for (let i = 0; i < 6; i++) { const n = m.name(i); if (n && RANK.indexOf(n) > RANK.indexOf(face)) face = n; } }
+    else {
+      const p = /(\.\.\.|…|[.!?]+)\s*$/.exec(en)?.[1] || '.';
+      face = { tell: 'neutral', ask: 'curious', unsure: 'uncertain', warm: 'pleased', worry: 'concerned', excl: 'determined', no: 'determined' }[intentOf(en, p)] || 'neutral';
+      k = 0.75;
+    }
+    R.setFace(face, k, 6);
+    // the others: everyone who has spoken, him, and the people turned toward this speaker
+    const others = new Set([this.hero, ...(this.talkers || [])]);
+    for (const n of this.npcs || []) if (n.listenTo === sp) others.add(n);
+    others.delete(sp);
+    const head = (a) => (a._faceV ||= new THREE.Vector3()).set(a.pos.x, a.pos.y + (a.rig.height || 1.9) * (a.rig.root.scale.y || 1) * 0.93, a.pos.z);
+    const echo = { pleased: ['pleased', 0.5], relieved: ['pleased', 0.5], concerned: ['concerned', 0.55], uncertain: ['uncertain', 0.4], annoyed: ['uncertain', 0.5], urgent: ['concerned', 0.4], determined: ['curious', 0.35], curious: ['curious', 0.3] }[face];
+    let near = null, nd = Infinity;
+    for (const o of others) {
+      if (!o?.rig?.setFace || !o.pos || !sp.pos) continue;
+      const d = o.pos.distanceTo(sp.pos);
+      if (d > 12) continue;
+      if (echo) o.rig.setFace(echo[0], echo[1], 6); else o.rig.setFace('neutral');
+      o.rig.gazeAt = head(sp); o.rig.gazeT = 6;
+      if (d < nd) { nd = d; near = o; }
+    }
+    if (near && sp.pos) { R.gazeAt = head(near); R.gazeT = 6; }
   }
 
   // who is talking: a small triangle pointing down at the speaker's head, in the speaker's colour (the name's colour in

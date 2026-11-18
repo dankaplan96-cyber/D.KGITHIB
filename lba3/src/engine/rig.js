@@ -12,6 +12,21 @@ import { textures } from './textures.js';
 import { plain, twinOf } from './merge.js';
 import { restoreJoints } from './handik.js';
 
+// FACE-1 (P67 phase 4): the expressions. up/cross/sad: the brows' three morphs (raised; drawn down and in; inner ends up);
+// lid: the eyes' opening (1 open; the blink is 0.12); smile: the mouth's corners (+ up, − down); wide: its width.
+// The brief's five — neutral, curious, concerned, pleased, determined/annoyed — and the voice's other intentions
+// (voicemeta.js) mapped onto them: uncertain (a softer concern), urgent (determined), relieved (pleased).
+export const FACES = {
+  neutral: { up: 0, cross: 0, sad: 0, lid: 1, smile: 0, wide: 1 },
+  curious: { up: 0.85, cross: 0, sad: 0, lid: 1.1, smile: 0.1, wide: 0.94 },
+  concerned: { up: 0.15, cross: 0, sad: 1, lid: 0.94, smile: -0.7, wide: 0.95 },
+  uncertain: { up: 0.35, cross: 0, sad: 0.55, lid: 1, smile: -0.3, wide: 0.95 },
+  pleased: { up: 0.3, cross: 0, sad: 0, lid: 0.84, smile: 1, wide: 1.1 },
+  determined: { up: 0, cross: 0.8, sad: 0, lid: 0.82, smile: -0.15, wide: 0.92 },
+  annoyed: { up: 0, cross: 1, sad: 0, lid: 0.74, smile: -0.55, wide: 0.9 },
+};
+FACES.urgent = FACES.determined; FACES.relieved = FACES.pleased;
+
 // ------------------------------------------------------------------ blob shadow
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
@@ -369,6 +384,9 @@ export class Rig {
     this.combatLook = null;   // the player's locked target: the head and chest turn to it (when nothing else is looked at)
     this.mouth = null;        // (FACES-HANDS) a poly model's talking mouth: a small mesh on the head (characters.js polyCharacter)
     this.mOpen = 0; this.mRound = 0; this.mTarget = 0; this.mTargetRound = 0;
+    // (FACE-1) the expression now (eased toward `faceTo`), how long it holds, where the eyes look (a world point or null)
+    this.face = { ...FACES.neutral }; this.faceTo = FACES.neutral; this.faceName = 'neutral'; this.faceHold = 0;
+    this.gazeAt = null; this.gazeT = 0; this.gx = 0; this.gy = 0; this.gxTo = 0; this.gyTo = 0; this.sacT = 1 + Math.random() * 2;
     // (ANIM-POLISH-3) the other characters' feet: plantLite plants the walk's stance foot, the stops and the turns on the spot through
     // the hero's own code (Rig._plant), in PLANT_LITE's actions, near the camera and in view (PLANT_VIEW)
     this.plantLite = false;
@@ -385,6 +403,69 @@ export class Rig {
   // FACES-HANDS: ask for the talking mouth this open (0 shut .. 1 wide) and this round (+ pursed, - spread) for this frame;
   // the voice's syllables drive it (voice.js driveMouth). A frame nobody asks, it eases shut.
   speakMouth(open, round = 0) { this.mTarget = open; this.mTargetRound = round; }
+  // FACE-1: an expression (FACES' names) at this strength (0..1) for `hold` seconds (Infinity: until asked again), then
+  // it eases back to neutral. The talking mouth is separate: it opens with the voice over whatever shape this gives it.
+  setFace(name, strength = 1, hold = Infinity) {
+    const F = FACES[name] || FACES.neutral, N = FACES.neutral;
+    this.faceName = FACES[name] ? name : 'neutral';
+    this.faceTo = strength >= 1 ? F : Object.fromEntries(Object.keys(N).map((k) => [k, N[k] + (F[k] - N[k]) * strength]));
+    this.faceHold = hold;
+  }
+
+  // FACE-1: the expression eased toward its target (about a third of a second), and back to neutral when its hold ends;
+  // the brows' morphs (a model with them: characters.js addBrowMorphs) follow
+  _faceStep(dt) {
+    if (this.faceHold !== Infinity && (this.faceHold -= dt) <= 0 && this.faceName !== 'neutral') this.setFace('neutral');
+    const F = this.face, T = this.faceTo, k = Math.min(1, dt * 7);
+    let moved = false;
+    for (const key in T) { const d = T[key] - F[key]; if (Math.abs(d) > 1e-4) { F[key] += d * k; moved = true; } }
+    const m = this.mesh, inf = m?.morphTargetInfluences;
+    if (inf && inf.length >= 3 && (moved || this._browSet !== true)) { inf[0] = F.up; inf[1] = F.cross; inf[2] = F.sad; this._browSet = true; }
+  }
+  // FACE-1: where the eyes look: at `gazeAt` (a world point: in a conversation, the one speaking or spoken to), else small
+  // glances now and then about straight ahead. Only the iris and pupil move, a fraction of the eye's width
+  _gazeStep(dt) {
+    const eyes = this.j.eyes;
+    if (!eyes?.length || !eyes[0].userData.iris) return;
+    if (this.gazeAt && (this.gazeT -= dt) <= 0) this.gazeAt = null;
+    if (this.gazeAt && this.j.head) {
+      const v = (this._gv ||= new THREE.Vector3()).copy(this.gazeAt);
+      this.j.head.worldToLocal(v);
+      const z = Math.max(0.25, v.z);
+      this.gxTo = Math.max(-1, Math.min(1, v.x / z * 1.6)); this.gyTo = Math.max(-1, Math.min(1, (v.y - 0.05) / z * 1.6));
+    } else if ((this.sacT -= dt) <= 0) {
+      this.sacT = 1.2 + Math.random() * 3;
+      const r = Math.random();
+      this.gxTo = r < 0.5 ? 0 : (Math.random() * 2 - 1) * 0.6; this.gyTo = r < 0.5 ? 0 : (Math.random() * 2 - 1) * 0.25;
+    }
+    const k = Math.min(1, dt * 18), gx0 = this.gx, gy0 = this.gy;
+    this.gx += (this.gxTo - this.gx) * k; this.gy += (this.gyTo - this.gy) * k;
+    if (Math.abs(this.gx - gx0) < 1e-4 && Math.abs(this.gy - gy0) < 1e-4 && this._gazeDone) return;
+    this._gazeDone = true;
+    for (const e of eyes) {
+      const I = e.userData.iris, mesh = e.children[0];
+      if (!I || !mesh) continue;
+      const P = mesh.geometry.attributes.position, a = P.array, dx = this.gx * I.w * 0.1, dy = this.gy * I.w * 0.05;
+      for (const i of I.idx) { a[i * 3] = I.base[i * 3] + dx; a[i * 3 + 1] = I.base[i * 3 + 1] + dy; }
+      P.needsUpdate = true;
+    }
+  }
+  // FACE-1: the mouth's shape under the expression: its corners turned up (a smile) or down, and a little wider or
+  // narrower; drawn into the mouth's own vertices, the bend divided by the mouth's current height so a talking mouth
+  // keeps the same curve. Rewritten only when the shape or the opening changes (48–96 vertices)
+  _mouthShape(mo) {
+    const u = mo.userData, F = this.face;
+    if (!u.base) return;
+    const sm = F.smile, sy = mo.scale.y || 1;
+    mo.scale.x = (1 - 0.2 * this.mRound * this.mOpen) * F.wide;
+    if (Math.abs(sm - (u.sm ?? 0)) < 2e-3 && Math.abs(sy - (u.sy ?? sy)) < 2e-3 && u.sm != null) return;
+    u.sm = sm; u.sy = sy;
+    const mesh = mo.children[0], P = mesh?.geometry.attributes.position;
+    if (!P) return;
+    const a = P.array, b = u.base, hw = u.hw, amp = hw * 0.28 * sm / sy;
+    for (let i = 0; i < a.length; i += 3) { const x = b[i] / hw; a[i + 1] = b[i + 1] + amp * x * x; }
+    P.needsUpdate = true;
+  }
 
   play(anim) {
     // (NO-AIR: a hand action with nothing there to do it on — `standFor`, set by the game's hands-on-things layer,
@@ -1592,7 +1673,10 @@ export class Rig {
     this.blinkT -= dt;
     const blink = this.blinkT < 0.12 || this.anim === 'doze' || this.anim === 'sleep';   // (asleep: the eyes shut)
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
-    for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
+    this._faceStep(dt);
+    const lid = this.face.lid;
+    for (const e of j.eyes) e.scale.y = blink ? 0.12 : lid;
+    this._gazeStep(dt);
 
     // the talking mouth (FACES-HANDS): a thin closed line at rest; open, it is taller, a touch narrower when pursed (o, u) and
     // wider when spread (i, e), and drops a little with the jaw. Eased, so a syllable is a soft open-and-close, not a flicker.
@@ -1606,6 +1690,7 @@ export class Rig {
       mo.position.y = u.y0 + u.drop * o; mo.rotation.x = u.tilt * o;
     }
     this.mTarget = 0; this.mTargetRound = 0;
+    if (mo) this._mouthShape(mo);
 
     // a Grobo's ears and trunk (Baldino; his clips 715/717/718 swing both): the ears turn on their roots — a slow
     // waft at rest (1.6 s), two flaps in each talk loop, a swing with every step — and the trunk sways from side to
