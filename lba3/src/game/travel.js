@@ -88,9 +88,16 @@ function windsock(parent, x, y, z) {
   return (dt, tm2) => { sock.rotation.y = 0.6 + Math.sin(tm2 * 0.3) * 0.35; cone.rotation.z = -0.15 + Math.sin(tm2 * 1.7) * 0.06; };
 }
 // a ring of painted stones marking a landing field
-function fieldRing(parent, x, y, z, r) {
+// (OVERLAP-SWEEP: gy, the ground in the parent's frame: each stone on the lowest ground under its corners, 2 cm into it; at
+//  one height for the ring they stood up to 18 cm over the plateau's slope and sank into it on the other side)
+function fieldRing(parent, x, y, z, r, gy = null) {
   const B = new Batch(parent), m = pm('#f4efe2', 0.85);
-  for (let k = 0; k < 14; k++) { const a = (k / 14) * Math.PI * 2; B.add(cached('tring', () => bbox(0.5, 0.18, 0.32, 0.06)), m, x + Math.sin(a) * r, y + 0.06, z + Math.cos(a) * r, 0, a); }
+  for (let k = 0; k < 14; k++) {
+    const a = (k / 14) * Math.PI * 2, sx = x + Math.sin(a) * r, sz = z + Math.cos(a) * r;
+    let sy = y + 0.06;
+    if (gy) { let lo = Infinity; for (const [u, v] of [[-0.25, -0.16], [0.25, -0.16], [-0.25, 0.16], [0.25, 0.16]]) lo = Math.min(lo, gy(sx + Math.cos(a) * u + Math.sin(a) * v, sz - Math.sin(a) * u + Math.cos(a) * v)); if (Number.isFinite(lo)) sy = lo + 0.07; }
+    B.add(cached('tring', () => bbox(0.5, 0.18, 0.32, 0.06)), m, sx, sy, sz, 0, a);
+  }
   B.build();
 }
 
@@ -114,7 +121,7 @@ export function buildTravel(game) {
     P.add({ type: 'box', x: g.board[0], z: g.board[1], hw: 1.1, hd: 0.15, rot: g.board[2], top: gy(g.board[0], g.board[1]) + 2.7, noStand: true });
     updaters.push(windsock(W.root, g.sock[0], gy(g.sock[0], g.sock[1]), g.sock[1]));
     P.add({ type: 'cyl', x: g.sock[0], z: g.sock[1], r: 0.15, top: gy(g.sock[0], g.sock[1]) + 4, noStand: true });
-    fieldRing(W.root, g.x, gy(g.x, g.z), g.z, 5.2);
+    fieldRing(W.root, g.x, gy(g.x, g.z), g.z, 5.2, (x, z) => P.terrain.heightAt(x, z));
   }
   // ---- the other regions' points (LAZY-REGIONS: the regions are built when first needed, src/game/regions.js). Each
   // point is here from the start, in the same order; what is known before its region is built is filled in now (the

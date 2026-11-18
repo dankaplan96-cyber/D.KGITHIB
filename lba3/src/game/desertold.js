@@ -264,7 +264,9 @@ export function buildOldPlaces(C) {
     C.palm(-58.6, -77.4, 1.05, 0.7);
     hornedPillar(RILL.x1 + 2.2, S.z - 2.4, 0, 3.4); hornedPillar(RILL.x1 + 2.2, S.z + 2.4, 0, 3.4);
     // a stone stair from the plaza (0.3) up to the rim walk (2.3) at the plaza's south-east corner
-    { const sx = -56.2, z0 = PLAZA.z1, top0 = H(sx, z0 + 2.6), bot = H(sx, z0 - 1.2), n = 5; for (let k = 0; k < n; k++) { const y = bot + (top0 - bot) * (k + 1) / n, zz = z0 - 0.3 + k * 0.5; B.add(bbox(2.4, y - bot + 0.4, 0.52, 0, 1), M.stone, sx, (y + bot - 0.4) / 2, zz); col({ type: 'box', x: sx, z: zz, hw: 1.2, hd: 0.26, top: y }); } }
+    // (OVERLAP-SWEEP: each step at least 2 cm over the highest sand under its tread, never lower than the one before: on the
+    //  slope's bulge the even rise left three treads up to 24 cm under the sand)
+    { const sx = -56.2, z0 = PLAZA.z1, top0 = H(sx, z0 + 2.6), bot = H(sx, z0 - 1.2), n = 5; let prev = bot; for (let k = 0; k < n; k++) { const zz = z0 - 0.3 + k * 0.5; let gm = -Infinity; for (const dx of [-1.15, 0, 1.15]) for (const dz of [-0.25, 0.25]) gm = Math.max(gm, H(sx + dx, zz + dz)); const y = prev = Math.max(prev, bot + (top0 - bot) * (k + 1) / n, gm + 0.02); B.add(bbox(2.4, y - bot + 0.4, 0.52, 0, 1), M.stone, sx, (y + bot - 0.4) / 2, zz); col({ type: 'box', x: sx, z: zz, hw: 1.2, hd: 0.26, top: y }); } }
 
     // ---- the great hall in the pool: a stepped plinth rising out of the water, stone walls, a crenellated roof, the
     //      Moorish arched doorway on the north side opening onto the rim walk (shut), slit windows, a corner stair turret

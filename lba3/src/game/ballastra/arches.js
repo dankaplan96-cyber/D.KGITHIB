@@ -180,7 +180,9 @@ export function* buildArchesSteps(scene, physics) {
   // the west pier at the arch's foot: dressed stone to 9 m, the rock rising out of it; a cornice; the pump room's door
   {
     const { x0, x1, z0, z1, top } = PIER, w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    B.add(sb(w, top + 2.4, d, 2.0), AM.ashlar(), cx, (top - 2.4) / 2, cz);
+    // (OVERLAP-SWEEP: the ashlar's top and the cornice's top were one plane, 321 m² of flicker from above: the ashlar now
+    //  stops 2 cm inside the cornice)
+    B.add(sb(w, top + 2.4 - 0.02, d, 2.0), AM.ashlar(), cx, (top - 0.02 - 2.4) / 2, cz);
     B.add(sb(w + 0.5, 0.4, d + 0.5, 1.2), BM.cap(), cx, top - 0.2, cz);
     B.add(sb(w + 0.24, 0.24, d + 0.24, 1.2), BM.cap(), cx, QY + 1.2, cz);
     for (const z of [z0 + 2, z1 - 2]) { B.add(sb(0.9, top - QY, 1.0, 1.6), AM.ashlar(), x1 + 0.3, QY + (top - QY) / 2, z); box(x1 - 0.2, z - 0.5, x1 + 0.75, z + 0.5, top, { block: true }); }   // (pilasters)

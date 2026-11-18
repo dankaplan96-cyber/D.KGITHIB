@@ -304,6 +304,9 @@ export function buildTownLife(root, physics, W) {
     const toW = (lx, lz) => ({ x: s.x + lz, z: s.z - lx });   // (the frame turned by SRY)
     let coupler, benchLamp;
     k.at(s.x, sy, s.z, SRY, () => {
+      // (OVERLAP-SWEEP: a plank floor under the lean-to, 3 cm over the ground at its middle and down into the grass: the
+      //  ground falls 19 cm under the bench's west end, whose legs and the west post stood over it with daylight under them)
+      k.add(rbox(2.75, 0.4, 3.24, 0.02), MAT.planks('grey'), 0.03, -0.17, 0);   // (the back wall's material: no new draw)
       k.add(rbox(0.15, 2.4, 3.2, 0.02), MAT.planks('grey'), 1.3, 1.2, 0);                           // back wall
       // (the roof, resting on the back wall and rising steeply toward the open front, is built below: its own mesh,
       // so it can fade)
@@ -362,6 +365,7 @@ export function buildTownLife(root, physics, W) {
     { const bw = toW(1.3, 0); box(bw.x, bw.z, 1.6, 0.12, sy + 2.4, { noStand: true }); }
     for (const pz of [-1.55, 1.55]) { const p = toW(-1.2, pz); physics.add({ type: 'cyl', x: p.x, z: p.z, r: 0.1, top: sy + 3.2, noStand: true }); }
     { const b = toW(0.85, 0); box(b.x, b.z, 1.1, 0.35, sy + 0.9, { noStand: true }); }
+    { const f = toW(0.03, 0); box(f.x, f.z, 1.62, 1.375, sy + 0.03, { seeThrough: true }); }   // (the floor: walked on)
     // the Esmer engine on its stand at the open west side: a drum, a fan toward the path that spins when it runs
     const ex = s.x - 1.75, ez = s.z + 0.55, ey = gy(ex, ez);
     k.add(rbox(0.5, 0.5, 0.7, 0.03), MAT.iron(), ex, ey + 0.25, ez);

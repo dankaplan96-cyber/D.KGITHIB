@@ -46,7 +46,7 @@ export const LF = {
   post: { x: -56.65, z: 1.9, h: 3.3 },
   cordW: { x: -56.4, z: 1.72 },
   board: { x: -52.6, z: -1.72 },
-  stage: { x: -20.4, z0: 27.6, z1: 31.55, hw: 1.0 },
+  stage: { x: -20.4, z0: 27.6, z1: 31.55, hw: 1.0, top: Y0 + 0.05, edge: [28.7, 28.94] },   // (edge: the shore's z under its west and east stringers)
   cordM: { x: -21.1, z: 27.95 },
   berth: { west: { x: -57.6, z: 6.0, rot: 0 }, mill: { x: -22.4, z: 33.0, rot: 0 } },
   deckTop: Y0 + 0.21,
@@ -277,14 +277,20 @@ export function buildSkyFerry(game, Z) {
 
   // ---------------------------------------------------------------- Mill Lane Steps: the stage, its post, sign and bell
   const ST = LF.stage, sL = ST.z1 - ST.z0;
-  stat.add(rbox(ST.hw * 2, 0.16, sL, 0.02), pale, ST.x, Y0 - 0.07, (ST.z0 + ST.z1) / 2);   // (AUDIT-FIX: its deck 1 cm over the shore's paving it reaches over: level, they flickered)
+  // (OVERLAP-SWEEP, the user's P65 picture: the deck's top lay in the island's own plane, Y0, so its shore end fought the
+  // ground for every pixel and its teal stringers ran on under the rock. Now the deck rests on the shore 5 cm proud of it;
+  // the stringers start at the island's edge (ST.edge: z of the smoothed outline under each, zeelich.js ISL) and the
+  // landward posts and legs stand just past the rock lip (it bulges 0.32 m out 0.3 m down), the rails between them)
+  const DT = ST.top, zIn = ST.edge[1] + 0.45, zOut = ST.z1 - 0.2;
+  stat.add(rbox(ST.hw * 2, 0.16, sL, 0.02), pale, ST.x, DT - 0.08, (ST.z0 + ST.z1) / 2);
   for (const s of [-1, 1]) {
-    stat.add(rbox(0.14, 0.24, sL, 0.02), teal, ST.x + s * (ST.hw - 0.07), Y0 - 0.26, (ST.z0 + ST.z1) / 2);
-    for (const z of [ST.z0 + 1.0, ST.z1 - 0.2]) { stat.add(rbox(0.07, 1.0, 0.07, 0.01), teal, ST.x + s * (ST.hw - 0.05), Y0 + 0.5, z); stat.add(rbox(0.12, 2.6, 0.12, 0.02), wood, ST.x + s * (ST.hw - 0.12), Y0 - 1.5, z); }
-    stat.add(cyl(0.035, 0.035, sL - 1.2, 6), brass, ST.x + s * (ST.hw - 0.05), Y0 + 1.0, (ST.z0 + 1.0 + ST.z1 - 0.2) / 2, 0, { rx: Math.PI / 2 });
-    col({ type: 'box', x: ST.x + s * (ST.hw - 0.05), z: (ST.z0 + 1.0 + ST.z1 - 0.2) / 2, hw: 0.06, hd: (sL - 1.2) / 2, rot: 0, top: Y0 + 1.05, noStand: true, seeThrough: true });
+    const e = ST.edge[s < 0 ? 0 : 1], sl = ST.z1 - e;
+    stat.add(rbox(0.14, 0.24, sl, 0.02), teal, ST.x + s * (ST.hw - 0.07), DT - 0.26, (e + ST.z1) / 2);
+    for (const z of [zIn, zOut]) { stat.add(rbox(0.07, 1.0, 0.07, 0.01), teal, ST.x + s * (ST.hw - 0.05), DT + 0.5, z); stat.add(rbox(0.12, 2.6, 0.12, 0.02), wood, ST.x + s * (ST.hw - 0.12), DT - 1.5, z); }
+    stat.add(cyl(0.035, 0.035, zOut - zIn, 6), brass, ST.x + s * (ST.hw - 0.05), DT + 1.0, (zIn + zOut) / 2, 0, { rx: Math.PI / 2 });
+    col({ type: 'box', x: ST.x + s * (ST.hw - 0.05), z: (zIn + zOut) / 2, hw: 0.06, hd: (zOut - zIn) / 2, rot: 0, top: DT + 1.05, noStand: true, seeThrough: true });
   }
-  col({ type: 'box', x: ST.x, z: (ST.z0 + ST.z1) / 2, hw: ST.hw, hd: sL / 2, rot: 0, top: Y0 + 0.01, seeThrough: true });
+  col({ type: 'box', x: ST.x, z: (ST.z0 + ST.z1) / 2, hw: ST.hw, hd: sL / 2, rot: 0, top: DT, seeThrough: true });
   // the stage's post on the shore: its sign (facing the lane) and its bell
   const MP = { x: ST.x - ST.hw - 0.2, z: ST.z0 + 0.35 };
   stat.add(rbox(0.14, 3.0, 0.14, 0.02), wood, MP.x, Y0 + 1.5, MP.z);

@@ -724,10 +724,12 @@ function climbKerbs(g, T) {
     let y = -Infinity; for (const [dz, dx] of [[0, 0], [0.28, 0.1], [0.28, -0.1], [-0.28, 0.1], [-0.28, -0.1]]) y = Math.max(y, T(x + dx, z + dz));
     pos.push([x, y, z, 0]);
   }
-  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.16, 0.56), rigMat('#b9b3a8', 0.9), pos.length);
+  // (OVERLAP-SWEEP: set on the highest ground under it, a 0.16 m kerb's low end stood 4–5 cm over the slope with daylight
+  //  under it: now 0.30 m deep, its top where it was, its foot down in the slope)
+  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.30, 0.56), rigMat('#b9b3a8', 0.9), pos.length);
   const o = new THREE.Object3D(), c = new THREE.Color();
   pos.forEach(([x, y, z, a], i) => {
-    o.position.set(x, y + 0.02, z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03, Math.sin(i * 2.3) * 0.02); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+    o.position.set(x, y - 0.05, z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03, Math.sin(i * 2.3) * 0.02); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
     im.setColorAt(i, c.setRGB(1, 1, 1).multiplyScalar(0.86 + ((i * 7919) % 13) / 13 * 0.18));
   });
   im.receiveShadow = true; im.castShadow = false; im.name = 'climb-kerbs';

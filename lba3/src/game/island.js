@@ -3143,6 +3143,7 @@ function buildOriginalProps(W, root, r) {
   tulipFlush(tacc);
   W.propsPlaced = n;
   PIECES--;
+  W.clearSmallUnder?.(grp);   // (OVERLAP-SWEEP: grass grew through the benches' and lanterns' plinths and the pickets' feet)
   mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static. PERF-IGPU; retex PERF-2; HEADING-LOAD: the lanterns, bollards, rails and pickets too)
 }
 

@@ -550,7 +550,7 @@ export function* buildBallastraSteps(scene, physics) {
   const bridge = new THREE.Group(); bridge.name = 'bl_swingBridge'; bridge.userData.keep = true; bridge.position.set(SC.piv.x, FL, SC.piv.z); group.add(bridge);
   {
     const bB = new Batch(bridge);
-    bB.add(bbox(2.4, 0.26, SC.len, 0.03, 2.2), BM.deck(), 0, -0.13, -SC.len / 2);
+    bB.add(bbox(2.4, 0.26, SC.len, 0.03, 2.2), BM.deck(), 0, -0.115, -SC.len / 2);   // (OVERLAP-SWEEP: 1.5 cm over the piers' decks it rests on: level with them it fought them)
     for (const s of [-1, 1]) bB.add(bbox(0.24, 0.5, SC.len, 0.03, 1.4), BM.post(), s * 1.25, -0.4, -SC.len / 2);
     for (const s of [-1, 1]) { for (let i = 0; i <= 4; i++) bB.add(cached('blbrp', () => bbox(0.1, 1.0, 0.1, 0.02, 1)), BM.post(), s * 1.15, 0.5, -0.3 - i * (SC.len - 0.6) / 4); bB.add(bbox(0.08, 0.1, SC.len - 0.4, 0.02, 1), BM.timber(), s * 1.15, 0.96, -SC.len / 2); }
     bB.add(cached('blbrturn', () => cyl(1.0, 1.0, 0.12, 18)), BM.bronze(), 0, 0.02, 0);
