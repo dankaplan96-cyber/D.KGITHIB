@@ -1,4 +1,11 @@
-# Next session — where we stand and what comes next (written 17.11.2026)
+# Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
+
+**18.11: v98 published (artifact 1795019513-c498, 508 of 512 files).** Merged and in it: everything listed below under
+"Merged since v97", plus HE-LTR (P54), WEAPON-SWITCH (P60–P61), SPACEPORT-3 (P62–P64) and the 30 FPS option (P66).
+Still open from 17.11: OVERLAP-SWEEP (P65, branch worktree-agent-a85740641e227748f, unfinished) and MUSIC-LBA (P56, branch
+worktree-agent-a801f1aa8c8b49a35, unfinished) — resume them by message (SendMessage) or read their branches. Then the
+repair pass of 18.11 (REPAIR-PASS-18-11.md; TUTOR-TARGETS paused on worktree-agent-a97564ea1b7a0bbe5). The user (18.11):
+low on credits — keep tests minimal; artifact only.
 
 The user, 17.11: "let's do all the fixes I wrote so far, I think the tokens are running out, and then a plan to continue".
 Read this first, then `status.md` (the playtest inbox P1–P65), `WORKPLAN-2026-11-09.md` and `tools/testlab/CLOUD_ORDERS.md`.
