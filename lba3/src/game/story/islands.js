@@ -36,18 +36,29 @@ export class IslandShuttle {
   constructor(story) { this.story = story; this.game = story.game; buildTravel(this.game); }
   open() { return this.story.index >= this.story.chapters.findIndex((c) => c.key === 'dig'); }
   // SPACEPORT-2: may he go out of Citadel's terminal by its gate now? (index.js canExit asks first)
+  // SPACEPORT-3: in chapter 2 the project's flight wants its form signed at the counter first (story/chapter1.js: Doran's
+  // errand, c1_errand; a save from before the errand had no form to sign: the gate opens for it as before)
   gateOpen() {
-    const S = this.story;
+    const S = this.story, f = this.game.flags;
     if (portPhase(S) !== 'grounded') return true;
-    return !!this.game.flags.c1_ship && S.index <= 1;   // (chapter 2: the project's ship waits for him at the pad)
+    return !!f.c1_ship && S.index <= 1 && (!f.c1_errand || !!f.c1_form);   // (chapter 2: the project's ship waits for him at the pad)
   }
+  // (chapter 2, Doran's errand, the form not signed yet: the guard sends him to the counter, not away)
+  formWanted() { const f = this.game.flags; return !!(f.c1_ship && f.c1_errand && !f.c1_form) && this.story.index <= 1; }
   canExit(room, to) {
     if (room?.id !== 'terminal' || to !== 'terminal-gate' || this.gateOpen()) return true;
     this.game.audio.play('deny');
-    const guard = this.story.interiors.speaker('bern');
-    if (guard?.present && !guard.away) this.story.interiors.chain([['bern', 'tm_grounded']]);
-    else this.game.say('', [t('tm_gate_shut')]);
+    const guard = this.story.interiors.speaker('bern'), form = this.formWanted();
+    if (guard?.present && !guard.away) this.story.interiors.chain([['bern', form ? 'c1_bern_form' : 'tm_grounded']]);
+    else this.game.say('', [t(form ? 'c1_gate_form' : 'tm_gate_shut')]);
     return false;
+  }
+  // SPACEPORT-3: the apron's working day, from the chapter (no save): a ship readied while flights run, and in chapter 2
+  // the project's ship Doran flies (the fuel hose run out to it); grounded otherwise (the nozzle hung on the cart). Called
+  // every frame (index.js update): it changes the port only on a change
+  portLook() {
+    const sp = this.game.world?.spaceport; if (!sp?.setWork) return;
+    sp.setWork(portPhase(this.story) !== 'grounded' || (this.game.flags.c1_ship && this.story.index === 1) ? 'run' : 'idle');
   }
   // the TICKETS · INFO kiosk on the shore sells the same seat: out through the terminal's gate under the black, then the
   // journey from the pad, as the counter inside does (story/stands.js)
@@ -103,6 +114,7 @@ export class IslandShuttle {
   // the ticket counter: the spaceship's menu from the pad outside; grounded, the clerk's word (or the notice's, with
   // nobody behind the counter)
   counter(tm) {
+    if (this.story.cur.portCounter?.(tm)) return true;   // (SPACEPORT-3: the chapter's own business at the counter first)
     const g = this.game, from = g.travel?.points[tm.point], dests = from ? destinations(g, from) : [];
     if (!dests.length) {
       g.audio.play('deny');

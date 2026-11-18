@@ -66,14 +66,14 @@ const way = await ev(async () => { const G = game, h = G.hero, S = G.world.space
   P.go(TT.counter.x, TT.counter.z, { tol: 0.35, maxT: 40, stopWhen: ready }); P.face(TT.counter.x, TT.counter.z - 1); for (let k = 0; k < 12 && !ready(); k++) G.step(0.25);
   out.counter = ready(); out.atCounter = [+(h.pos.x - c.x).toFixed(1), +(h.pos.z - c.z).toFixed(1)];
   if (out.counter) { P.tap('KeyE', 0.1); out.menu = G.state === 'shop' ? [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent) : G.state; document.querySelector('#shop .leave')?.click(); P.settle(); }
-  // on to the gate, through the security pillars (the hall's frame: the gate at the left wall's back, x −8, z −4.2)
+  // on to the gate, through the security pillars (the hall's frame: SPACEPORT-3, the gate in the back wall at x −6.4, z −6)
   const track = []; const sv = G.step.bind(G); let n = 0;
   G.step = (dt) => { sv(dt); if (n++ % 3 === 0 && G.room?.id === 'terminal') track.push([+(h.pos.x - c.x).toFixed(2), +(h.pos.z - c.z).toFixed(2)]); };
   const g = P.through(TT.gate.x, TT.gate.z); G.step = sv;
   out.gate = g.r; out.after = side(); out.at = { x: +h.pos.x.toFixed(2), z: +h.pos.z.toFixed(2), a: +h.angle.toFixed(2), fromGate: +Math.hypot(h.pos.x - S.gate.x, h.pos.z - S.gate.z).toFixed(2) };
-  // passed between the pillars (x ≈ −7.4 in the hall's frame, z −5.35…−3.05) and before that across the hall from the counter
-  out.pillars = track.some(([x, z]) => x < -6.8 && z > -5.2 && z < -3.2);
-  out.order = { counterX: out.atCounter[0], pillarsX: -7.4, doorX: +(TT.door.x - c.x).toFixed(1) };
+  // passed between the pillars (x −7.55 and −5.25 in the hall's frame, z −5.4) and before that across the hall from the counter
+  out.pillars = track.some(([x, z]) => Math.abs(x + 6.4) < 1.0 && z < -4.9);
+  out.order = { counterX: out.atCounter[0], pillarsX: -6.4, doorX: +(TT.door.x - c.x).toFixed(1) };
   // to the pad: its prompt (the spaceship's menu)
   const pr = () => P.target()?.kind === 'isleShuttle';
   P.go(S.pad.x, S.pad.z, { tol: 3.8, stopWhen: pr, maxT: 60 }); P.face(S.pad.x, S.pad.z); out.pad = P.target()?.kind;
