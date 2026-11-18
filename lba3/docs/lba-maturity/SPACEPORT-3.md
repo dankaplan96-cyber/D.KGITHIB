@@ -95,7 +95,26 @@ only one shown); the people are the most of the rise.
 
 ## Results
 
-(filled in below from the runs)
+Automated runtime only (headless Chromium, SwiftShader, a shared machine whose pages crashed out of memory in many
+runs; a crashed run is not counted, its retry is).
+
+| Suite | Result | Notes |
+|---|---|---|
+| tests/spaceport-3.mjs PHASE=a (17.11) | PASS 4/4 (twice) | the errand by input, the wrong move at the gate, P63's gate side, Save & quit → Continue mid-errand |
+| tests/spaceport-3.mjs PHASE=b (17.11) | 4/5, then the page crashed while building Zeelich on boarding | counter signing, out by the gate facing away, Doran at the cart in view, Save & quit → Continue on the deck; boarding: see the final run below |
+| tests/spaceport-3.mjs PHASE=c (17.11) | PASS 6/6 | an older chapter-2 save by the bridge; the apron in chapters 1, 2, 4 and the evacuation; draw calls ≤ 300 (measured 65–93 at the deck view before, 70 at chapter 1 after) |
+| tests/spaceport-3.mjs (whole, 18.11, after merging the base) | see the final report | |
+| tests/chapter1.mjs (18.11) | see the final report | |
+| tests/dialogue-check.mjs | PASS (Hebrew 100 %) | |
+
+Draw calls, one frame at the deck view, default quality (before: base fafc6b35): chapter 2 69 (south view 87), chapter 4
+75 (93), chapter 1 65. After: chapter 1 70; all four chapters tried ≤ 300 (the street's Medium budget).
+
+Not run (the coordinator stopped the rest for the user's credits): spaceport-2, spaceport, interior-life (adapted to
+the new crew), travel, chapter2, door-sweep, save-migration, hebrew. Pictures: the before set was taken on 17.11 but
+lost with the container's restart; no after set — `captures/spaceport-3/` is empty. To make them:
+`GAME_URL=… node shots.mjs before|after` (the script is described in this doc's history; positions: the deck from before
+the gate toward the pad and from the south, chapters 1, 2, 4; the hall; out of the gate).
 
 ## Files
 
