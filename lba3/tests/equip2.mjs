@@ -22,7 +22,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
 const SHOTS = process.env.EQ2_SHOTS || '/dev/shm/eq2-shots';
 fs.mkdirSync(SHOTS, { recursive: true });
-const snap = async (name) => { await ev(() => { game.renderer.render(); }); await page.waitForTimeout(600);   /* (the HUD's fades run in real time) */ await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 }); console.log('  shot ' + path.join(SHOTS, name + '.png')); };
+const snap = async (name) => { await ev(() => { game.renderer.render(); document.getAnimations().forEach((a) => a.finish()); }); await page.waitForTimeout(300);   /* (the HUD's fades run in real time: finished for the picture) */ await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 }); console.log('  shot ' + path.join(SHOTS, name + '.png')); };
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const helpers = () => ev(() => {
   window.T = {
