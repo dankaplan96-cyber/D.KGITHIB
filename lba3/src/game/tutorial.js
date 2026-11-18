@@ -23,7 +23,7 @@
 // house and the yard until the yard is done: one goal line, always shown (Show control tips: Off hides only its keys),
 // the key for it below, a few dots for the yard's progress, and a tick when a step is done. The lessons above are still
 // observed meanwhile; after the yard they go on as before (the arc, the camera, out of magic, the town's).
-import { t } from './i18n.js';
+import { t, keyHints } from './i18n.js';
 import { keyFor, keyLabel } from '../engine/input.js';
 import './text/opening.js';
 import './text/wswitch.js';   // (WEAPON-SWITCH / POCKET-SET: the two tips anywhere in the game)
@@ -330,7 +330,7 @@ export class Tutorial {
     addStyle();
     if (!k) { k = document.createElement('span'); k.className = 'tutkey'; D.el.appendChild(k); }
     const typing = D.full && D.shown < D.full.length;
-    const html = `${this.key('interact')}${t(typing ? 'tut_dlg_all' : 'tut_dlg_next')}`;
+    const html = keyHints(`${this.key('interact')}${t(typing ? 'tut_dlg_all' : 'tut_dlg_next')}`);
     if (k._h !== html) { k.innerHTML = html; k._h = html; }
   }
 }

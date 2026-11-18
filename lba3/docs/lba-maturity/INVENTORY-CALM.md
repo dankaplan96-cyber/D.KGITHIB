@@ -95,7 +95,7 @@ shared machine with a load average of 11–30.
 
 | Test | Result | Notes |
 |---|---|---|
-| `tests/inventory-calm.mjs` (new) | **PASS**, 23/23 | the sizes above (six windows × both tabs × More × big text); a picture per item; keyboard select, the counters' strip, More, use (the lantern, its Use button naming W in Classic), Tab, J (Modern); the journal's goal first and its sections; the pause route; the pad (View, LB/RB, Y, A, B); the mouse (tabs, slot, counter, More once after many openings, Close); rapid open/close; Hebrew RTL; a late-game page turn (18 items, ‹ 1 / 2 ›); an old format-3 save |
+| `tests/inventory-calm.mjs` (new) | **PASS**, 23/23 | the sizes above (six windows × both tabs × More × big text); a picture per item; keyboard select, the counters' strip, More, use (the lantern, its Use button naming W in Classic), Tab, J (Modern); the journal's goal first and its sections; the pause route; the pad (View, LB/RB, Y, A, B); the mouse (tabs, slot, counter, More once after many openings, Close); rapid open/close; Hebrew (since HE-LTR, 17.11: laid out as in English, → the next item, only the texts right to left); a late-game page turn (18 items, ‹ 1 / 2 ›); an old format-3 save |
 | `tests/items-ceremony.mjs` | **PASS** | one line changed: the Kashes count is read from the strip |
 | `tests/containers.mjs` | **PASS** (second run) | the first run's page crashed (memory; 3 GB free at the time) |
 | `tests/chapter1.mjs` | **PASS** | |
@@ -108,6 +108,6 @@ shared machine with a load average of 11–30.
 ## Open points
 - The LBA HUD still shows the life bar, clovers and Kashes at the top left while the window is open (it did before);
   the strip repeats the two counts. Hiding the HUD there is a HUD decision, left as it was.
-- Hebrew is hidden in Settings; its table lacks some older strings (Close, some chapter notes), shown in English in
-  RTL. Not changed here.
+- Hebrew: since HE-LTR (17.11, docs/lba-maturity/HE-LTR.md) the window is no longer mirrored in Hebrew: the same
+  layout and arrows as English, only its texts right to left.
 - Nothing was tried on a real gamepad or a real phone.

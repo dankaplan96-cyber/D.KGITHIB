@@ -18,6 +18,7 @@ export const STR = {
   en: {
     continue: 'Continue', new_game: 'New Game', overwrite_q: 'Start a new game?', overwrite_sub: 'The autosave will be replaced. Your save slots are kept.', overwrite_yes: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
     resume: 'Resume', save_quit: 'Save & Quit', paused: 'Paused',
+    cine_skip: 'Hold to skip',   // (a story scene's corner, beside its key)
     load_game: 'Load Game', save_game: 'Save Game', slot_n: 'Slot {n}', slot_auto: 'Autosave', slot_empty: 'Empty', slot_latest: 'Latest', slot_delete: 'Delete', slot_bad: "Can't be read",
     slot_overwrite_q: 'Overwrite Slot {n}?', slot_overwrite_yes: 'Overwrite', slot_delete_q: 'Delete Slot {n}?', slot_delete_yes: 'Delete',
     slot_saved: 'Saved in Slot {n}.', slot_deleted: 'Slot {n} deleted.', slot_unreadable: "That save couldn't be read. It was set aside.",
@@ -91,7 +92,60 @@ export const getLang = () => lang;
 export function t(key, vars) {
   let s = STR[lang][key] ?? STR.en[key] ?? key;
   if (vars && typeof s === 'string') for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(v);   // (every occurrence: WEAPON-SWITCH's tips name a key twice)
-  return s;
+  return lang === 'he' ? keyHints(s) : s;
+}
+
+// HE-LTR (the user, 17.11: "in Hebrew the ONLY thing that should be RTL is the text; everything else as in the English
+// version"). The page stays left to right in Hebrew and each text reads by its own first letter (css/style.css HE-LTR).
+// A hint made of key caps and words needs more: a Hebrew paragraph would put the key cap of "[E] Talk" on the right
+// and turn [←][→] round. keyHints(html), Hebrew only, on a string holding <kbd>s:
+//  - key caps side by side (with " / " or "+" between) become one left-to-right group: their order is English's;
+//  - a key-led hint ("{k} label", "{k}: label", several joined by " · ") is laid out as in English, the keys on the
+//    left, each label after its keys, the label itself read right to left (an isolate);
+//  - a label with one key after it ("More [Space]") likewise, the key on the right as in English;
+//  - a key inside a sentence ("Hold {k} to see where it lands") stays in the Hebrew sentence (read right to left).
+// English and strings without key caps come back untouched; a string already done is not done again.
+const KEYRUN = /<kbd\b[^>]*>[\s\S]*?<\/kbd>(?:\s*[/+]?\s*<kbd\b[^>]*>[\s\S]*?<\/kbd>)*/g;
+export function keyHints(html) {
+  if (lang !== 'he' || typeof html !== 'string' || !html.includes('<kbd') || html.includes('class="kg"')) return html;
+  const tok = []; let at = 0;
+  for (const m of html.matchAll(KEYRUN)) {
+    if (m.index > at) tok.push({ t: html.slice(at, m.index) });
+    tok.push({ k: `<span class="kg" dir="ltr">${m[0]}</span>` });
+    at = m.index + m[0].length;
+  }
+  if (at < html.length) tok.push({ t: html.slice(at) });
+  const words = (s) => (s.trim() ? `<span class="kt">${s.trim()}</span>` : '');
+  const lead = (s) => { const m = /^\s*[:：]?\s*/.exec(s)[0]; return [m.includes(':') ? ': ' : ' ', s.slice(m.length)]; };
+  const T = tok.filter((x) => x.k || x.t.trim());
+  if (T[0]?.k) {
+    const units = []; let cur = { keys: T[0].k, rest: '' };
+    for (const x of T.slice(1)) {
+      if (x.t) { cur.rest += x.t; continue; }
+      if (!cur.rest.trim()) cur.keys += ' ' + x.k;
+      else if (/·\s*$/.test(cur.rest)) { cur.rest = cur.rest.replace(/\s*·\s*$/, ''); units.push(cur); cur = { keys: x.k, rest: '' }; }
+      else cur.rest += x.k;
+    }
+    units.push(cur);
+    return `<span class="kl" dir="ltr">${units.map((u) => { const [sep, r] = lead(u.rest); return u.keys + (r.trim() ? sep + words(r) : ''); }).join(' · ')}</span>`;
+  }
+  if (T.length === 2 && T[0].t && T[1].k) {
+    const m = /\s*[:：]?\s*$/.exec(T[0].t)[0];
+    return `<span class="kl" dir="ltr">${words(T[0].t.slice(0, T[0].t.length - m.length))}${m.includes(':') ? ': ' : ' '}${T[1].k}</span>`;
+  }
+  return tok.map((x) => x.k || x.t).join('');
+}
+// HE-LTR: a controls line in plain text ("{keys}: label · {keys}: label", the inventory's and the holomap's), as HTML:
+// in Hebrew each unit's keys and label isolated and the units in English's order (the arrows ↑←↓→ are no letters and
+// would turn round in a Hebrew paragraph); in English the text, escaped.
+const escH = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+export function hintLine(s) {
+  const units = String(s).split(' · ');
+  if (lang !== 'he' || !units.some((u) => u.includes(': '))) return escH(s);
+  return `<span class="kl" dir="ltr">${units.map((u) => {
+    const i = u.indexOf(': ');
+    return i < 0 ? `<span class="kt">${escH(u)}</span>` : `<span class="kg" dir="ltr">${escH(u.slice(0, i))}</span>: <span class="kt">${escH(u.slice(i + 2))}</span>`;
+  }).join(' · ')}</span>`;
 }
 
 // HE-TEXT: the English source of a line on screen. The dialogue box and the subtitles are given the text, not the key,

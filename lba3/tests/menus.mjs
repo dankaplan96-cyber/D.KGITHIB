@@ -183,6 +183,22 @@ await page.keyboard.up('ControlLeft'); await step(0.1);
 check('Ctrl + Right switches the behaviour (Normal → Athletic)', beh === 'athletic', beh);
 await page.keyboard.press('F1'); await step(0.1);
 check('F1 picks Normal again', await ev(() => game.hero.behaviour === 'normal'));
+// HE-LTR (the user, 17.11: in Hebrew "switching between the modes is also reversed with the arrows"): in Hebrew the page
+// stays left to right and Ctrl + → / ← and the inventory's arrows do what they do in English
+await ev(() => { game.settings.lang = 'he'; game.applySettings(); game.step(0.1); });
+await page.keyboard.down('ControlLeft'); await step(0.1);
+await page.keyboard.press('ArrowRight'); await step(0.1);
+const behHe = await ev(() => { const B = [...document.querySelectorAll('#behmenu .bbox')], r = (b) => b.getBoundingClientRect().left; return { beh: game.hero.behaviour, on: B.findIndex((b) => b.classList.contains('on')), order: B.every((b, i) => !i || r(b) > r(B[i - 1])), dir: document.documentElement.dir }; });
+await page.keyboard.press('ArrowLeft'); await step(0.1);
+behHe.back = await ev(() => game.hero.behaviour);
+await page.keyboard.up('ControlLeft'); await step(0.1);
+await page.keyboard.press('KeyI'); await step(0.1);
+const invHe = await ev(() => { const I = game.inventory; I.sel = 0; I.zone = 'grid'; I.render(); return 0; });
+await page.keyboard.press('ArrowRight'); await step(0.1);
+behHe.inv = await ev(() => game.inventory.sel);
+await page.keyboard.press('KeyI'); await step(0.1);
+await ev(() => { game.settings.lang = 'en'; game.applySettings(); game.step(0.1); });
+check('Hebrew: the page left to right; Ctrl + → Normal → Athletic (the lit box the second from the left), ← back; → in the inventory the next item', behHe.dir === 'ltr' && behHe.beh === 'athletic' && behHe.on === 1 && behHe.order && behHe.back === 'normal' && behHe.inv === invHe + 1, behHe);
 
 // ---- holomap (H in Classic) needs the ball; opens and closes
 await page.keyboard.press('KeyH'); await step(0.1);

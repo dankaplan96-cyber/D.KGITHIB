@@ -12,7 +12,8 @@
 //   6. the pad: View opens, RB switches the tab, Y shows More, A uses a gadget, B closes
 //   7. the mouse: tabs, slots, More, Close; one handler (a click after many openings toggles More once)
 //   8. rapid open/close ends shut, nothing turning
-//   9. Hebrew (RTL): the window lays out inside the screen, the first tab on the right, ← moves to the next item
+//   9. Hebrew (HE-LTR): the window lays out inside the screen as in English (the first tab and slot on the left,
+//      → the next item), only its texts right to left
 //  10. a late-game load of items pages the grid (‹ 1 / 2 ›) instead of scrolling (not pictured)
 //  11. an old save (format 3, no arsenal) continues and the window opens
 // SHOTS=dir writes pictures (chapter 1 only).
@@ -214,25 +215,36 @@ const rp = await ev(async () => {
 });
 check('rapid open/close ends shut, in play, nothing turning', rp.state === 'play' && rp.hidden && rp.spins === 0, rp);
 
-// ---------------------------------------------------------------- 9. Hebrew, right to left
+// ---------------------------------------------------------------- 9. Hebrew: only the text right to left (HE-LTR)
 const rtl = await ev(async () => {
-  const { setLang } = await import('/src/game/i18n.js');
-  setLang('he'); document.documentElement.dir = 'rtl';
   const G = game, I = G.inventory, r = {};
+  G.settings.lang = 'he'; G.applySettings();
+  r.dir = document.documentElement.dir;
+  // which way a text's first line runs: its first letter at the line's right end (rtl) or its left (ltr)
+  const reads = (el) => {
+    if (!el) return null;
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), ch = [];
+    for (let n; (n = w.nextNode());) for (let i = 0; i < n.data.length; i++) { if (/\s/.test(n.data[i])) continue; const rg = document.createRange(); rg.setStart(n, i); rg.setEnd(n, i + 1); const b = rg.getBoundingClientRect(); if (b.width) ch.push(b); }
+    if (ch.length < 2) return null;
+    const f = ch[0], line = ch.filter((b) => Math.abs(b.top - f.top) < f.height / 2);
+    return f.right >= Math.max(...line.map((b) => b.right)) - 1 ? 'rtl' : f.left <= Math.min(...line.map((b) => b.left)) + 1 ? 'ltr' : 'mixed';
+  };
   TOPLAY(); P.tap('KeyI', 0.1); I.sel = 0; I.render();
   r.fit = FIT();
   const [a, b] = [...INV().querySelectorAll('.inv-tabs [data-tab]')].map((x) => x.getBoundingClientRect());
-  r.firstRight = a.left > b.left;
+  r.firstLeft = a.left < b.left;
   r.title = INV().querySelector('.inv-tabs [data-tab="items"]').textContent;
-  const s0 = I.sel; P.tap('ArrowLeft', 0.05); r.next = I.sel === s0 + 1;
+  r.name = reads(INV().querySelector('.inv-name'));
+  const s0 = I.sel; P.tap('ArrowRight', 0.05); r.next = I.sel === s0 + 1;
+  P.tap('ArrowLeft', 0.05); r.prev = I.sel === s0;
   const g0 = INV().querySelector('.inv-item[data-i="0"]').getBoundingClientRect(), g1 = INV().querySelector('.inv-item[data-i="1"]').getBoundingClientRect();
-  r.gridRtl = g1.left < g0.left;
-  I.setTab('journal'); r.fitJ = FIT();
+  r.gridLtr = g1.left > g0.left;
+  I.setTab('journal'); r.fitJ = FIT(); r.note = reads(INV().querySelector('.inv-lines li') || INV().querySelector('.inv-obj'));
   return r;
 });
-if (SHOTS) await page.screenshot({ path: `${SHOTS}/test-rtl-1200x700.jpg`, type: 'jpeg', quality: 80 });
-await ev(async () => { const { setLang } = await import('/src/game/i18n.js'); setLang('en'); document.documentElement.dir = 'ltr'; P.tap('KeyI', 0.1); });
-check('Hebrew (RTL): inside the screen, nothing scrolls; the first tab and the first slot on the right; ← is the next item', !rtl.fit.bad.length && rtl.fit.inside && !rtl.fitJ.bad.length && rtl.firstRight && rtl.gridRtl && rtl.next && rtl.title === 'חפצים', rtl);
+if (SHOTS) await page.screenshot({ path: `${SHOTS}/test-he-1200x700.jpg`, type: 'jpeg', quality: 80 });
+await ev(() => { game.settings.lang = 'en'; game.applySettings(); P.tap('KeyI', 0.1); });
+check('Hebrew (HE-LTR): inside the screen, nothing scrolls; the page left to right, the first tab and the first slot on the left as in English; → is the next item, ← the one before; the name and the notes read right to left', !rtl.fit.bad.length && rtl.fit.inside && !rtl.fitJ.bad.length && rtl.dir === 'ltr' && rtl.firstLeft && rtl.gridLtr && rtl.next && rtl.prev && rtl.title === 'חפצים' && rtl.name === 'rtl' && rtl.note === 'rtl', rtl);
 
 // ---------------------------------------------------------------- 10. many items: pages, not scroll bars (not pictured)
 const lg = await ev(() => {

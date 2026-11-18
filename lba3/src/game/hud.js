@@ -1,6 +1,6 @@
 // DOM-based HUD: stats, behaviour selector, prompts, toasts, dialogue,
 // shop, minimap and the full-screen Holomap.
-import { t, getLang } from './i18n.js';
+import { t, getLang, keyHints, hintLine } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { Color, Vector3 } from 'three';
 import { WEAPON_INFO } from './combat.js';
@@ -359,7 +359,7 @@ export class HUD {
     const now = this.game.time ?? 0;
     if (this._pFor !== text) { this._pFor = text; this._pSince = now; }
     if (now - this._pSince < PROMPT_DWELL || (this.game.hero?.speed || 0) > RUN_SPEED) { hide(); return; }
-    const html = `<kbd>${this.game.input.label('interact')}</kbd> ${text}`;
+    const html = keyHints(`<kbd>${this.game.input.label('interact')}</kbd> ${text}`);   // (HE-LTR: the key on the left in Hebrew too)
     if (html !== this._prompt) { this.promptEl.innerHTML = html; this._prompt = html; }
     this.promptEl.classList.add('show');
   }
@@ -421,7 +421,6 @@ export class HUD {
     D.el.style.setProperty('--spk-hi', '#' + c.clone().lerp(new Color('#ffffff'), 0.55).getHexString());
     D.el.style.setProperty('--spk-lo', '#' + c.clone().multiplyScalar(0.6).getHexString());
     D.el.classList.remove('hidden');
-    D.el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
     this.game.audio.babble?.start(nameKey);
     this._line();
   }
@@ -473,7 +472,6 @@ export class HUD {
   // selected one turns large beside the list with what it does and whether he can have it. The purse shows a Kash.
   openShop(items, onBuy, onClose, titleKey = 'shop_title') {
     const el = $('#shop');
-    el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
     el.classList.add('goods');
     this.shopForced = false;
     const coin = (cls = 'kc') => { const u = stage.thumb('coin', 64); return u ? `<img class="${cls}" src="${u}" alt="">` : '◆'; };
@@ -512,7 +510,6 @@ export class HUD {
   // opts.forced (UI-PASS): a choice that must be made — no Cancel button, and Back (Esc, B) does nothing
   openMenu(titleKey, items, onPick, onClose, opts = {}) {
     const el = $('#shop');
-    el.dir = 'ltr';
     el.classList.remove('goods');
     this.shopForced = !!opts.forced;
     const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
@@ -795,7 +792,7 @@ export class HUD {
     const L = (a) => keyLabel(keyFor(a)), dev = input.lastDevice;
     const move = ['up', 'left', 'down', 'right'].map(L), mv = move.every((s) => s.length === 1) ? move.join('') : move.join('/');
     const txt = dev === 'pad' ? t('map_hint_pad') : dev === 'touch' ? t('map_hint_touch') : t('map_hint_kbd', { move: mv, zoom: '+/−', centre: L('recenter'), whole: L('view'), close: `${L('map')}/${L('pause')}` });
-    if (txt !== this._hintTxt) { this._hintTxt = txt; $('#holomap .hint').textContent = txt; }
+    if (txt !== this._hintTxt) { this._hintTxt = txt; $('#holomap .hint').innerHTML = hintLine(txt); }   // (HE-LTR: each key beside its word, in English's order)
   }
 
   _drawHolo(w, B, time) {

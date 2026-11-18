@@ -6,6 +6,7 @@ export const HE_I18N = {
   continue: 'המשך', new_game: 'משחק חדש', overwrite_q: 'להתחיל משחק חדש?', overwrite_sub: 'השמירה האוטומטית תוחלף. משבצות השמירה נשארות.', overwrite_yes: 'משחק חדש',
   settings: 'הגדרות', controls: 'מקשים', back: 'חזרה',
   resume: 'חזרה למשחק', save_quit: 'שמירה ויציאה', paused: 'הפסקה',
+  cine_skip: 'החזקה לדילוג',
   load_game: 'טעינת משחק', save_game: 'שמירת משחק', slot_n: 'משבצת {n}', slot_auto: 'שמירה אוטומטית', slot_empty: 'ריקה', slot_latest: 'האחרונה', slot_delete: 'מחיקה', slot_bad: 'לא ניתן לקרוא',
   slot_overwrite_q: 'לשמור במקום משבצת {n}?', slot_overwrite_yes: 'לשמור במקומה', slot_delete_q: 'למחוק את משבצת {n}?', slot_delete_yes: 'מחיקה',
   slot_saved: 'נשמר במשבצת {n}.', slot_deleted: 'משבצת {n} נמחקה.', slot_unreadable: 'לא ניתן לקרוא את השמירה הזו. היא הועברה הצידה.',
