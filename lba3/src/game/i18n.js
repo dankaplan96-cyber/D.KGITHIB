@@ -31,6 +31,7 @@ export const STR = {
     language: 'Language', auto_controls: 'Controls by Device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'LBA3', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_auto: 'Auto', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
+    fps_label: 'Frame rate', fps_auto: 'As the screen', fps_60: '60', fps_30: '30 steady',
     camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_follow: 'Follow', cam_free: 'Free', cam_dist: 'Camera Distance', cd_near: 'Near', cd_medium: 'Medium', cd_far: 'Far',
     hud: 'HUD', hud_lba: 'Minimal (LBA2)', hud_modern: 'Always on',
     music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',

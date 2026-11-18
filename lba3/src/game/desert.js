@@ -372,6 +372,26 @@ function groundGrid() {
     const top = Math.max(h[k - 1], h[k + 1], h[k - n], h[k + n]), low = Math.min(h[k - 1], h[k + 1], h[k - n], h[k + n]);
     if (top - v > 3 && low < SEA) h[k] = -0.6;
   }
+  // AUDIT-FIX (RELEASE-AUDIT-v96, cosmetic): a small hollow below the water line that no low ground joins to the sea (one
+  // east of the survey's dune, by the dig, (79, 7)) showed the sea's flat sheet in the sand, cut straight along the grid:
+  // lifted to damp sand. (The sea, and the beaches and cliff feet by it: every point under 0.3 m joined to the map's edge,
+  // diagonals too; only pits of up to 80 points with their rims are lifted, none of the dig's or the oasis's ground)
+  {
+    const open = new Uint8Array(n * n), q2 = new Int32Array(n * n); let a0 = 0, a1 = 0;
+    const low = (k) => h[k] < 0.3;
+    for (let i = 0; i < n; i++) for (const k of [i, (n - 1) * n + i, i * n, i * n + n - 1]) if (!open[k] && low(k)) { open[k] = 1; q2[a1++] = k; }
+    const nb8 = (c, f) => { const ci = c % n, cj = (c - ci) / n; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ai = ci + di, aj = cj + dj; if ((di || dj) && ai >= 0 && aj >= 0 && ai < n && aj < n) f(aj * n + ai); } };
+    while (a0 < a1) nb8(q2[a0++], (a) => { if (!open[a] && low(a)) { open[a] = 1; q2[a1++] = a; } });
+    const done = new Uint8Array(n * n);
+    for (let k = 0; k < n * n; k++) {
+      if (h[k] >= SEA || open[k] || done[k]) continue;
+      const pit = [k]; done[k] = 1;
+      for (let p = 0; p < pit.length; p++) nb8(pit[p], (a) => { if (!done[a] && !open[a] && h[a] < 0.05) { done[a] = 1; pit.push(a); } });   // (and its wet rim under the sea's sheet)
+      const c = pit[0], cx = x0 + (c % n) * step, cz = x0 + ((c - (c % n)) / n) * step;
+      if (pit.length > 80 || Math.hypot(cx - DIG.x, cz - DIG.z) < DIG.r + 4 || Math.hypot(cx - OASIS.x, cz - OASIS.z) < OASIS.r + 4) continue;
+      for (const a of pit) h[a] = 0.05;
+    }
+  }
   // one flood from Kesh: a neighbour joins if it can walk back up to the point it was reached from; those that
   // can't wait until the flood has gone everywhere it can, then each still left out is lifted to just under that
   // point (a step of the ramp) and the flood goes on from it

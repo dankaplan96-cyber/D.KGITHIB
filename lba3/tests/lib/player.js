@@ -416,6 +416,14 @@
   P.through = (x, z, opts = {}) => {
     if (P.tapFirst !== false) P.homeTap();
     const from = G.room?.id ?? 'citadel';
+    // AUDIT-FIX (RELEASE-AUDIT-v96 A-3): a point inside a room he is not in (a room's exit, read before a scene put him
+    // outdoors) is not walked to: rooms are built far from the island, so the walk went straight across Citadel toward
+    // the room's coordinates and off the east cliff (segment 05, "Zoé: out"). A door into a room is P.enter's
+    if (!G.room?.id || G.room.outdoor) {
+      const sc = P.sceneOf(x, z), R = G.rooms?.[sc], c = G.regions?.centreOf?.(sc);
+      const interior = sc !== 'citadel' && (R ? !R.outdoor : !!c && !c.outdoor);
+      if (sc !== P.here() && interior) { P.note(`through: (${x.toFixed(1)}, ${z.toFixed(1)}) is inside ${sc}, not here (${from}): not walked`); return { r: 'elsewhere:' + sc, from, to: from }; }
+    }
     const r = P.go(x, z, { tol: 0.25, stopOnTrans: true, ...opts });
     let t = 0; while ((G.trans || (G.room?.id ?? 'citadel') === from) && t < 3) { G.step(0.1); t += 0.1; }
     P.settle();

@@ -72,10 +72,10 @@ check('chapter 6: the glider joins Desert Island and the Hamalayi; Citadel\'s fi
 
 // ---------------------------------------------------------------- PLANET-1: the story's crossings are spaceship flights
 // (the user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a spaceship")
-const routesPlanet = await ev(() => { const T = game.travel, pl = (id) => (T.points[id].region.startsWith('isle_') || T.points[id].region === 'zeelich' ? 'zeelich' : 'twinsun');
+const routesPlanet = await ev(() => { const T = game.travel, pl = (id) => (T.points[id].region.startsWith('isle_') || T.points[id].region === 'zeelich' ? 'zeelich' : T.points[id].region === 'ballastra' ? 'ballastra' : 'twinsun');   // (EXP-2: Ballastra, the expansion's world)
   return T.routes.map((r) => ({ a: r.a, b: r.b, mode: r.mode, pa: pl(r.a), pb: pl(r.b) })); });
-check('PLANET-1: every travel route that touches Zeelich is the spaceship (Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; no ferry, glider or boat route reaches Zeelich',
-  routesPlanet.every((r) => (r.pa !== r.pb ? r.mode === 'ship' : r.pa === 'zeelich' ? r.mode === 'shuttle' : ['ferry', 'glider'].includes(r.mode))) && routesPlanet.filter((r) => r.pa !== r.pb).length === 1, routesPlanet.filter((r) => r.pa !== r.pb || r.mode === 'ship'));
+check('PLANET-1: every travel route between planets is a spaceship (Citadel ⇄ Zeelich Spaceport; EXP-2: Float Harbor on Ballastra ⇄ both) and every one on Zeelich a shuttle; no ferry, glider or boat route reaches Zeelich or Ballastra',
+  routesPlanet.every((r) => (r.pa !== r.pb ? r.mode === 'ship' : r.pa === 'zeelich' ? r.mode === 'shuttle' : ['ferry', 'glider'].includes(r.mode))) && routesPlanet.filter((r) => r.pa !== r.pb).length === 3, routesPlanet.filter((r) => r.pa !== r.pb || r.mode === 'ship'));
 await ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines.map((l) => String(l).slice(0, 60))); return sv.call(this, n, lines, ...a); }; } });
 const said = () => ev(() => window._said.splice(0));
 // chapter 2 → 3 by input: Doran at the harbour agrees and goes ahead; the project's ship at Citadel Spaceport flies him over
