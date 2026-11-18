@@ -102,7 +102,7 @@ language itself nothing changes, only the language itself RTL".
   Arial…) beside Rubik's Latin, key caps and numbers. Rubik's own Hebrew is bundled now (`assets/fonts/rubik-hebrew.woff2`,
   the variable font: one file for every weight; OFL like the rest; from @fontsource-variable/rubik), declared in
   `assets/fonts/rubik.css` under the same family name with the Hebrew unicode-range: HTML text and the maps' canvases
-  (already `Rubik, …`) take it with no other change. The 1-year-late card (story/yearslate.js, a handwriting font with
+  (already `Rubik, …`) take it with no other change. The twelve-years-late card (story/yearslate.js, a handwriting font with
   no Hebrew) falls back to Rubik for Hebrew letters, its stamps are Rubik. World signs stay English art (HE-TEXT).
   Files: 508 of 512.
 - **Minimap**: `#minimap` was placed by `inset-inline-end`, and Hebrew gives the minimap itself `direction: rtl` (for its
