@@ -32,13 +32,15 @@ const lib = (f) => fileURLToPath(new URL('./lib/' + f, import.meta.url));
 // Measured and left (docs/lba-maturity/PLACE-1.md has each with its priority): [room, kind, item, why, near [x, z]
 // in the room's frame (Citadel: the world)]
 const LEFT = [
-  // EXP-1 (17.11): the expansion's Ballastra places, merged but unreachable in play until chapter 11 is built
-  // (docs/lba-maturity/EXP-PLAN-2.md §7, EXP-2 fixes them with that chapter): the harbour's crate stacks into the quay's
-  // steps and each other, the sacks in the barrows, a herb pot in a lantern, a crate in the pump room's doorway
-  ['ballastra', 'inside', '*', 'EXP-2: the expansion\'s harbour, unreachable until chapter 11 (EXP-PLAN-2.md)'],
-  ['bl_arches', 'inside', 'herbPot', 'EXP-2: the expansion\'s Arch District, unreachable until chapter 11'],
-  ['bl_pump', 'door', 'crate', 'EXP-2: the expansion\'s pump room, unreachable until chapter 11'],
-  ['bl_gardens', 'inside', 'sack', 'EXP-2: the expansion\'s Water Gardens, unreachable until chapter 11'],
+  // EXP-2 (17.11): the Ballastra harbour's two by design (the rest of EXP-1's twelve fixed: the crate stacks spaced, the
+  // sacks on the barrows' beds, the herb pot off the lantern, the pump room's crates out of the door's lane)
+  ['ballastra', 'inside', 'crate', 'by design: crane A\'s load, crates hung in a cargo net (harbor.js)', [21.1, 12.85]],
+  ['ballastra', 'inside', 'crate', 'by design: crane A\'s load, crates hung in a cargo net (harbor.js)', [21.45, 13.6]],
+  ['ballastra', 'inside', 'crate', 'by design (6 cm): a crate on the cargo balance\'s pan, under its hanger (harbor.js)', [11.4, 5.6]],
+  ['ballastra', 'inside', 'sack', 'by design: a hand barrow\'s load, the sack lying in its bed between its sides (look.js barrow)', [13.2, 1.6]],
+  ['ballastra', 'float', 'sack', 'not measurable: the sack lies on the barrow\'s bed, which is not recorded as ground (look.js barrow)', [13.2, 1.6]],
+  ['bl_gardens', 'inside', 'sack', 'by design: a hand barrow\'s load, the sack lying in its bed between its sides (look.js barrow)', [-50.8, -15.6]],
+  ['bl_gardens', 'float', 'sack', 'not measurable: the sack lies on the barrow\'s bed, which is not recorded as ground (look.js barrow)', [-50.8, -15.6]],
   ['house', 'float', 'custom', 'by design: the bathroom\'s towel rail on the wall (HOME-BATH, the desktop 14.11): towels hang', [-7.35, 8.79]],
   // by design: what the measure reads as wrong is meant
   ['tavern', 'back', 'jukebox', 'by design: LBA2\'s Chez Luc has it at the stair\'s foot (tavern.js); Kip\'s stop is at its front', [3.4, -1.35]],

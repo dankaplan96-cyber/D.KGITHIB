@@ -385,6 +385,21 @@ export const VOICES = {
   // OREN-GUARDIAN: Oren, Ballastra's keeper, speaking through a glazed part: low on his bowl tone's 98 Hz, level and
   // slow, no vibrato (calm, plain, a number or a state; not Sendell's light)
   oren: { race: 'spirit', seed: 1004, f0: 98, k: 0.86, contour: 'flat', range: 2, rate: 0.7, legato: 1.1, vib: [0, 0], breath: 0.12, bright: 2600, level: 0.7 },
+  // --- EXP-2: Ballastra's canal dwellers (chapter 11). Spoken from the families that have phrase banks (Quetch, Grobo),
+  // each set apart by pitch, pace and melody; a seed of their own
+  tessa: { race: 'quetch', seed: 1901, f0: 214, k: 1.1, rate: 0.97, contour: 'fall', range: 8, legato: 0.6, swing: 0.15, sex: 'f' },   // the mechanic: brisk, dry, falling
+  bl_quill: { race: 'grobo', seed: 1902, f0: 112, k: 0.84, rate: 0.97, contour: 'flat', range: 2, legato: 0.7, sex: 'm' },   // the harbourmaster: level, by the form
+  bl_hobb: { race: 'grobo', seed: 1903, f0: 118, k: 0.8, rate: 0.95, contour: 'arc', range: 6, swing: 0.25, sex: 'm' },   // the docker: heavy and cheerful
+  bl_ferro: { race: 'quetch', seed: 1904, f0: 136, k: 0.95, rate: 1.15, contour: 'bounce', range: 6, legato: 0.5, sex: 'm' },   // the boatman: quick, up and down
+  bl_wenna: { race: 'quetch', seed: 1905, f0: 226, k: 1.14, rate: 0.95, contour: 'arc', range: 5, breath: 0.1, legato: 0.57, sex: 'f' },   // the grower: warm, a little tired
+  bl_corvin: { race: 'grobo', seed: 1906, f0: 124, k: 0.86, rate: 1.1, contour: 'zigzag', range: 6, sex: 'm' },   // the kiln's owner: fussy, quick
+  bl_halden: { race: 'quetch', seed: 1907, f0: 112, k: 0.92, rate: 0.72, contour: 'fall', range: 3, legato: 0.85, tilt: 2.0, sex: 'm' },   // the old engineer: slow, dark
+  bl_mags: { race: 'quetch', seed: 1908, f0: 205, k: 1.08, rate: 1.0, contour: 'fall', range: 2, legato: 0.7, sex: 'f' },   // the lower row's: firm, clipped
+  bl_dunn: { race: 'grobo', seed: 1909, f0: 96, k: 0.78, rate: 0.87, range: 6, vib: [4.6, 24], legato: 0.75, sex: 'm' },   // old Dunn: low, a wobble
+  bl_sorrel: { race: 'quetch', seed: 1910, f0: 150, k: 0.98, rate: 1.0, contour: 'sing', range: 5, sex: 'm' },
+  bl_brin: { race: 'quetch', seed: 1911, f0: 142, k: 0.96, rate: 1.05, contour: 'arc', sex: 'm' },
+  bl_ottie: { race: 'quetch', seed: 1912, f0: 238, k: 1.18, rate: 1.1, contour: 'zigzag', range: 8, sex: 'f' },
+  bl_nuna: { race: 'grobo', seed: 1913, f0: 190, k: 0.92, rate: 1.3, contour: 'bounce', range: 4, legato: 0.87, sex: 'f' },
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
 const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda', qc_pipe: 'qc_matto' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (U-5: the voice in the pipe is Matto's)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)

@@ -694,7 +694,7 @@ export function* buildArchesSteps(scene, physics) {
     p.box(0, 0, 1.1, 0.2, 2.4, { block: true }); props(p);
   }
   // herbs on the terrace and at the row's doors; a bench on the terrace looking away from the water; cats on warm tiles
-  for (const [x, z, k, y] of [[22, -24, 1, TER], [22, -22.8, 0, TER], [28.5, -30.5, 3, TER], [29.4, -30.5, 1, TER], [36.6, -28, 2, TER], [-15.4, -30.3, 1, WALK_Y], [-11.3, -30.3, 0, WALK_Y], [10.6, -30.3, 3, WALK_Y], [15.4, -30.3, 1, WALK_Y]]) herbPot(P(x, y, z), { kind: k, s: 1.1 });
+  for (const [x, z, k, y] of [[22, -24, 1, TER], [22, -22.8, 0, TER], [28.5, -30.5, 3, TER], [29.4, -30.5, 1, TER], [36.6, -28, 2, TER], [-11.3, -30.3, 0, WALK_Y], [10.6, -30.3, 3, WALK_Y], [15.4, -30.3, 1, WALK_Y]]) herbPot(P(x, y, z), { kind: k, s: 1.1 });
   col({ type: 'box', x: 22, z: -23.4, hw: 0.35, hd: 1.0, top: TER + 0.4, block: true });
   { const p = P(38.6, TER, -24.0, -Math.PI / 2); p.add(cached('blbench', () => compose([[bbox(1.4, 0.07, 0.4, 0.02), 0, 0.45, 0], ...[-1, 1].map((s) => [bbox(0.08, 0.45, 0.36, 0.02), s * 0.6, 0.22, 0])])), BM.timber()); p.box(0, 0, 0.72, 0.22, 0.5, { block: true }); props(p); }
   // the terrace's cistern: rain off the old roofs kept in a stone tank, a bronze hand pump on its lid (the dry district

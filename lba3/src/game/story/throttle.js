@@ -20,8 +20,8 @@
 //      the B-7, open the feed, turn its band until the branch gauge's needle sits on green (too much: the old joint
 //      weeps; too little: a trickle). Oren tries the lever (the B-7 is Ballastra ware on the project's metal); a hand on
 //      it beats him. Gilbert takes the lever. Vesk on the project's wire: a station that can say no will say no; Zoé
-//      answers him. Baldino calls: the relays are built. The next chapter of the campaign begins (the network while the
-//      Ballastra chapters are not written: Story.nextIndex passes the empty ones).
+//      answers him. Baldino calls: the relays are built (EXP-2: with chapter 11 next, a relay only passes word along, the
+//      B-7 holds a station by hand: Zoé's return label, Ballastra, the council's freighter). The next chapter begins.
 //
 // Flags: og_ (OG-1: og_started, og_home, og_arrived, og_room, og_bleed 0-3, og_steady, og_thanks); th_ (EXP-1: th_zoeGo,
 // th_met, th_reg, th_cA, th_cC, th_cB 1|2, th_b7, th_zoeDone, th_feedShut, th_fitted, th_band 1-5, th_set, th_push,
@@ -35,6 +35,7 @@ import { playJourney } from '../travelfilm.js';
 import { cyl, torus, MAT } from '../props.js';
 import { compose } from '../kit.js';
 import * as THREE from 'three';
+import { readyCast } from './ballastra.js';   // (EXP-2: chapter 11's cast, fetched as chapter 10 ends)
 import '../text/throttle.js';
 
 const PERIOD = 3.2;                 // s between kicks
@@ -422,7 +423,14 @@ export class Throttle extends ChapterBase {
         g.audio.play('radio');
         this.chain([['veskwire', 'th_vesk_1'], ['hero', 'th_tw_v1'], ['veskwire', 'th_vesk_2'], ['zoe', 'th_zoe_v1'], ['veskwire', 'th_vesk_3']], () => {
           f.th_vesk = true; g.updateObjective(); g.save(false);
-          this.chain([['balradio', 'th_bal_end1'], ['hero', 'th_tw_end'], ['zoe', 'th_zoe_end']], () => {
+          // (EXP-2: with chapter 11 next, Baldino's call asks where the B-7 came from: the crate's return label, Ballastra,
+          //  the council's freighter; else, the network next, the relays are built and he comes)
+          const toBallastra = this.story.keyOf(this.story.nextIndex()) === 'ballastra';
+          if (toBallastra) readyCast();   // (the Ballastra cast's models, fetched ahead)
+          const lines = toBallastra
+            ? [['balradio', 'th_bal_exp1'], ['hero', 'th_tw_exp1'], ['zoe', 'th_zoe_exp1'], ['narrator', 'th_label'], ['hero', 'th_tw_exp2'], ['balradio', 'th_bal_exp2'], ['zoe', 'th_zoe_end']]
+            : [['balradio', 'th_bal_end1'], ['hero', 'th_tw_end'], ['zoe', 'th_zoe_end']];
+          this.chain(lines, () => {
             f.th_done = true; g.save(false);
             this.end();
           });

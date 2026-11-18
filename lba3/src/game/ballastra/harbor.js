@@ -57,6 +57,7 @@ import { BALLASTRA, BALLASTRA_AT } from './common.js';
 import { esmerShuttle } from '../shuttle.js';
 import { Gulls } from '../gulls.js';
 import { WATER_FLOOR } from '../../engine/physics.js';
+import { mergeStatic } from '../../engine/merge.js';
 
 export { BALLASTRA };
 export const HARBOR_AT = BALLASTRA_AT.ballastra;
@@ -78,6 +79,9 @@ const SHEDB = { x: -10.4, z: -1.35, w: 6, d: 4.9 };           // the shed
 const GANG = { x0: -11, x1: -8.5, z0: -25, z1: -6 };          // shed float → the district's edge
 const DIST = { x0: -31, x1: -6, z0: -36, z1: -27.4 };         // the district's edge
 const PAD = { x0: -34, x1: -18, z0: 10, z1: 26, cx: -26.5, cz: 18.6 };
+// (EXP-2: the pad as a travel stop, known before the region is built: travel.js ballastra_port; its landing is
+//  spawns.pad's spot)
+export const HARBOR_PAD = { x: HARBOR_AT.x + PAD.cx, z: HARBOR_AT.z + PAD.cz, landing: { x: HARBOR_AT.x + PAD.x1 - 2.4, z: HARBOR_AT.z + 14.6, a: Math.PI / 2 } };
 const ROW = { x0: -14.9, x1: 10, z0: 12.15, z1: 16 };          // the pontoon row
 const SC = { x0: -29.5, x1: -26.5, piv: { x: -28, z: -13.4 }, len: 7.2, s0: -12.0, n1: -20.4 };   // the shortcut
 const HUT = { x: 13.6, z: 8.9, s: 3.0 };                       // the customs hut
@@ -468,8 +472,9 @@ export function* buildBallastraSteps(scene, physics) {
   }
   // the ship on the pad (the project's ship, as at Citadel Spaceport), merged into the batch
   {
-    const sh = esmerShuttle({ landed: true, scale: 1.15 }); sh.position.set(PAD.cx, PD + 0.06, PAD.cz); sh.rotation.y = -0.6; sh.updateMatrixWorld(true);
-    sh.traverse((m) => { if (m.isMesh) B.addM(m.geometry, m.material, m.matrixWorld.clone()); });
+    // (EXP-2: its own group, a mesh per material, so the journey films can hide it while they fly its twin: travelfilm.js)
+    const sh = esmerShuttle({ landed: true, scale: 1.15 }); sh.position.set(PAD.cx, PD + 0.06, PAD.cz); sh.rotation.y = -0.6;
+    group.add(sh); mergeStatic(sh);
     col({ type: 'cyl', x: PAD.cx, z: PAD.cz, r: 3.6, top: PD + 4.6, noStand: true });
   }
   yield;

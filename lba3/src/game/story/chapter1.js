@@ -805,12 +805,13 @@ export class Chapter1 extends ChapterBase {
       if (beat && zoe?.present) { const memo = {}; beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: zoe.pos.x, y: zoe.pos.y + 1.1, z: zoe.pos.z }, { memo, ok, fov: 40, t }), 1.2); }
       this.chain([['zoe', 'c1_after_zoe'], ['hero', 'c1_after_tw']], () => {
         beat?.release(1.4);
-        // she sets off home: out through the yard and the gate, down the road
-        const G = W.gate;
-        const home = W.houses?.[0]?.door;
-        const far = home ? (() => { const dx = home.x - (G.x - 9), dz = home.z - G.z, l = Math.hypot(dx, dz) || 1, k = Math.min(l, 30) / l; return { x: G.x - 9 + dx * k, z: G.z + dz * k }; })() : null;
-        if (G) this.walkOff('zoe', [{ x: G.x + 3.2, z: G.z }, { x: G.x - 1.2, z: G.z }, { x: G.x - 9, z: G.z + 0.5 }, ...(far ? [far] : [])], 1.25);
+        // (the user, 17.11: "he says 'let's go home to think' — cut home instead of the walk; walking now means nothing":
+        //  the two of them are home after the black, in the house where Arthur waits with the radio; Zoé's walk off and
+        //  the long way back across town are gone)
+        if (this.walkers?.zoe) { this.walkers.zoe.n.controlled = false; delete this.walkers.zoe; }
         g.updateObjective(); g.save(false);
+        if (!g.room) g.enterRoom('house');
+        this.story.refreshCast();
       });
     };
   }

@@ -287,7 +287,8 @@ function buildPump(scene, physics) {
   // the channel behind the gate (dry stone, a step down): his to stand in once the gate is up
   B.col(GX, BZ - 0.2, GW / 2, 0.45, -0.05, { seeThrough: true });
   // crates of old spare parts, a lamp, a workbench where Tessa will lay out her tools
-  B.put(-4.9, 3.0, 0.2, (kk) => crate(kk, 0.6, { pal: 'grey' })); B.put(-4.2, 3.6, -0.3, (kk) => crate(kk, 0.5, { pal: 'grey' }));
+  // (EXP-2, PLACE-1: in the far corner by the bench, out of the lane in from the door)
+  B.put(5.1, 3.85, 0.2, (kk) => crate(kk, 0.6, { pal: 'grey' })); B.put(4.35, 4.0, -0.3, (kk) => crate(kk, 0.5, { pal: 'grey' }));
   B.put(4.6, 2.6, -Math.PI / 2, (kk) => { kk.add(rbox(1.8, 0.08, 0.7, 0.02), MAT.wood('dark'), 0, 0.82, 0); for (const sx of [-1, 1]) for (const sz of [-1, 1]) kk.add(rbox(0.08, 0.8, 0.08, 0.01), MAT.wood('honey'), sx * 0.82, 0.4, sz * 0.28); kk.add(torus(0.12, 0.03, 5, 12), bronze(), 0.3, 0.88, 0, 0, { rx: Math.PI / 2 }); kk.add(rbox(0.3, 0.05, 0.12, 0.01), MAT.steel(), -0.4, 0.88, 0.1, 0.3); return { hw: 0.92, hd: 0.38, top: 0.86 }; });
   B.put(4.6, -1.0, 0, (kk) => barrel(kk, { r: 0.34, pal: 'grey' }));
   // light: lamps on the walls (glazed), the daylight through the door

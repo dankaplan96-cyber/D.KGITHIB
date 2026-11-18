@@ -148,7 +148,10 @@ await ev(() => { T.talk('vesk'); for (let i = 0; i < 400 && game.state !== 'play
 is('the confrontation: Vesk leaves', await ev(() => [game.flags.c1_veskGone, T.npc('vesk').present]), (v) => v[0] === true && v[1] === false);
 await shot('C1-04-after.png');
 // home: Arthur's radio
-await ev(() => { const d = game.world.houses[0].door; T.door(d); T.talk('arthur'); const e = game.room.exits[0]; T.door(e); });
+// (the user, 17.11: after "Let's go home, Zoé" the scene cuts home — no walk across town)
+await ev(() => { for (let i = 0; i < 90 && (game.trans || game.room?.id !== 'house'); i++) { T.talkAll(); game.step(1 / 15); } });
+is('after "let\'s go home", the cut: Twinsen in the house, Zoé home too', await ev(() => [game.room?.id ?? 'out', T.npc('zoe')?.present ?? false]), (v) => v[0] === 'house' && v[1] === true);
+await ev(() => { if (game.room?.id !== 'house') { const d = game.world.houses[0].door; T.door(d); } T.talk('arthur'); const e = game.room.exits[0]; T.door(e); });
 is("Arthur's radio heard, an objective set", await ev(() => [game.flags.c1_radio, T.obj()]), (v) => v[0] === true && v[1].length > 0);
 // Doran at the harbour, then the project's ship at Citadel Spaceport (PLANET-1)
 await ev(() => { T.talk('doran'); game.step(1.5); });

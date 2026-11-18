@@ -37,7 +37,7 @@ const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const smooth = (x) => { x = clamp01(x); return x * x * (3 - 2 * x); };
 const outCubic = (x) => 1 - Math.pow(1 - clamp01(x), 3);
-const planetOf = (region) => (region === 'zeelich' || region.startsWith('isle_') ? 'zeelich' : 'twinsun');
+const planetOf = (region) => (region === 'zeelich' || region.startsWith('isle_') ? 'zeelich' : region === 'ballastra' || region.startsWith('bl_') ? 'ballastra' : 'twinsun');   // (EXP-2: Ballastra)
 
 // how long each part runs (seconds)
 export const LEN = {
@@ -315,13 +315,20 @@ function watchShot(g, C, land, mode, region, makeMotion, len) {
 function planetTexture(kind) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256;
   const x = c.getContext('2d');
-  let s = kind === 'zeelich' ? 11 : 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  let s = kind === 'zeelich' ? 11 : kind === 'ballastra' ? 23 : 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   if (kind === 'zeelich') {
     // a sea of clouds in violets and pinks, banded, with dark island specks
     x.fillStyle = '#6a4a9e'; x.fillRect(0, 0, 512, 256);
     for (let i = 0; i < 46; i++) { const y = r() * 256; x.fillStyle = r() < 0.5 ? 'rgba(240,176,216,0.35)' : 'rgba(176,140,230,0.35)'; x.fillRect(0, y, 512, 4 + r() * 14); }
     for (let i = 0; i < 70; i++) { x.fillStyle = 'rgba(255,220,240,0.25)'; x.beginPath(); x.ellipse(r() * 512, r() * 256, 10 + r() * 40, 3 + r() * 6, 0, 0, Math.PI * 2); x.fill(); }
     for (let i = 0; i < 18; i++) { x.fillStyle = 'rgba(60,40,70,0.7)'; x.beginPath(); x.arc(r() * 512, 60 + r() * 136, 1.5 + r() * 3, 0, Math.PI * 2); x.fill(); }
+  } else if (kind === 'ballastra') {
+    // (EXP-2) Ballastra: a shallow green-blue sea, its terraced isles as small celadon and ochre rings, thin cloud streaks
+    const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#d8f4ec'); g.addColorStop(0.15, '#3a9a8e'); g.addColorStop(0.5, '#2e8a86'); g.addColorStop(0.85, '#3a9a8e'); g.addColorStop(1, '#d8f4ec');
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    for (let i = 0; i < 60; i++) { x.fillStyle = 'rgba(120,200,180,0.35)'; x.beginPath(); x.ellipse(r() * 512, 30 + r() * 196, 8 + r() * 30, 3 + r() * 8, r() * 3, 0, Math.PI * 2); x.fill(); }
+    for (let i = 0; i < 26; i++) { const cx = r() * 512, cy = 50 + r() * 156, rr = 3 + r() * 7; x.strokeStyle = r() < 0.6 ? '#a8d8c0' : '#d8b070'; x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, rr, 0, Math.PI * 2); x.stroke(); x.fillStyle = '#c8a868'; x.beginPath(); x.arc(cx, cy, rr * 0.4, 0, Math.PI * 2); x.fill(); }
+    for (let i = 0; i < 90; i++) { x.fillStyle = 'rgba(255,255,255,0.3)'; x.fillRect(r() * 512, r() * 256, 20 + r() * 50, 1.5); }
   } else {
     // Twinsun: blue seas, green and sand islands, the cloud belt round the middle, white caps
     const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#e8f4ff'); g.addColorStop(0.12, '#2f78c8'); g.addColorStop(0.5, '#1f64b0'); g.addColorStop(0.88, '#2f78c8'); g.addColorStop(1, '#e8f4ff');
@@ -349,7 +356,7 @@ function buildSpace(fromK, toK) {
   const planet = (kind, r) => {
     const tex = planetTexture(kind);
     const p = mk(new THREE.SphereGeometry(r, 48, 24), new THREE.MeshStandardMaterial({ map: tex, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.35, roughness: 1, metalness: 0, fog: false }));
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(r * 1.035, 32, 16), new THREE.MeshBasicMaterial({ color: kind === 'zeelich' ? '#f0b8ff' : '#a8d8ff', transparent: true, opacity: 0.22, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(r * 1.035, 32, 16), new THREE.MeshBasicMaterial({ color: kind === 'zeelich' ? '#f0b8ff' : kind === 'ballastra' ? '#b8f0e0' : '#a8d8ff', transparent: true, opacity: 0.22, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     own.push(halo.geometry, halo.material); p.add(halo);
     return p;
   };
@@ -443,7 +450,7 @@ function departFilm(g, ride, next) {
     shots.push({ t0: tSpace, t1: tSpace + 1.2, from: () => { const O = sp(); return { pos: V(2.5, 6, -9).add(O), look: V().copy(space.ship.position).add(V(0, -3, 6)).add(O), fov: 55 }; } });
     shots.push({ t0: tSpace + 1.2, t1: length, from: () => { const O = sp(); return { pos: V(13, 3, 8).add(O), look: V().copy(space.ship.position).add(V(-2, 0, 6)).add(O), fov: 50 }; } });
     buildStage = () => {
-      cab = buildShipCabin({ view: { planet: planetOf(ride.to.region) === 'zeelich' ? '#b07ad8' : '#4f8fd6' } });
+      cab = buildShipCabin({ view: { planet: { zeelich: '#b07ad8', ballastra: '#3fa89a' }[planetOf(ride.to.region)] || '#4f8fd6' } });
       cab.group.position.copy(S); g.scene.add(cab.group); cab.group.visible = false;
       for (const ps of cab.passengers) {
         const rig = createCharacter(ps.look), at = ps.seat != null ? cab.seats[ps.seat] : ps.stand;
