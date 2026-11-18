@@ -36,6 +36,7 @@ node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outwa
 node tests/slidetraps.mjs      # SLIDE-RESCUE: a slide into a collider (rock, post, wall, the sea's edge) in Citadel, Desert Island and the Hamalayi resolves: no respawn, no life lost, he ends standing on standable ground; SHOW=1 lists every spot
 node tests/slidekeys.mjs       # SLIDE-RESCUE by keys: at steep spots in Citadel, Desert Island and the Hamalayi he walks onto the slope, holds Up against it, runs and jumps on it, lets go: no life lost, no respawn, standing within 1.5 s, Up moves him after, no walk/fall pose flicker; PER=<n> spots per region (default 4)
 node tests/music-places.mjs   # MUSIC-BY-PLACE: the School of Magic (and its dormitory, the wizard's tent), the Desert, Kesh's houses, the Hamalayi, the monastery hall, Lhar's houses each play their own piece on the audio clock (muffled where heard through walls); the alt fallback without the renders; the renders' loop points and loudness (not a listening test)
+node tests/char-form.mjs      # CHAR-FORM: Twinsen and Zoé in the yard (new game, the ball from the cupboard, out by input): the play camera standing, walking, running (Athletic), throwing, talking, and close-ups, for a person to judge; the models load with their bones, eyes and mouth; TAG=before|after, OUT=dir (default captures/char-form/game-<TAG>/)
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);
