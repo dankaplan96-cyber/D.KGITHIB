@@ -658,7 +658,7 @@ export class Tools {
     N.scale.setScalar(0.85 + best.k * 0.5);
     // the whistle: pips from about one a second at the edge to a near-steady tone on top of it
     this.pipT -= dt;
-    if (this.pipT <= 0) { this.pipT = 0.95 - 0.83 * best.k; this.stats.pips++; this.sound('pip', best.k); }
+    if (this.pipT <= 0) { this.pipT = 0.95 - 0.83 * best.k; this.stats.pips++; this.pipAt = g.time; this.sound('pip', best.k); }   // (pipAt: the HUD's dial lights with it)
   }
   // a scene change, a load: nothing in the air, nothing being pushed, the needle away (the cooldowns run on)
   reset() {

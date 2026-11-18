@@ -39,7 +39,7 @@ const layout = await ev(() => {
   for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
   return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
 });
-const KEYS = ['aimAssist', 'autoControls', 'autoTalk', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lang', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'tips', 'visual', 'voice', 'voiceMode', 'weather'];   // (OPENING-TUT: Show control tips, on the Controls page; HE-TEXT: Language, first on the Game page)
+const KEYS = ['aimAssist', 'autoControls', 'autoTalk', 'camDist', 'camera', 'controls', 'difficulty', 'fps', 'hud', 'lang', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'tips', 'visual', 'voice', 'voiceMode', 'weather'];   // (OPENING-TUT: Show control tips, on the Controls page; HE-TEXT: Language, first on the Game page)
 check('settings: every stored setting has its control (SETTINGS-FEW: Edges, Resolution and the frame-rate limit removed)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
 check('settings: four pages (Game, Controls, Display, Sound), at most 5 rows each before Advanced (Game: 5 since Dialogue Advances); opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 5) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
 // keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
@@ -183,6 +183,22 @@ await page.keyboard.up('ControlLeft'); await step(0.1);
 check('Ctrl + Right switches the behaviour (Normal → Athletic)', beh === 'athletic', beh);
 await page.keyboard.press('F1'); await step(0.1);
 check('F1 picks Normal again', await ev(() => game.hero.behaviour === 'normal'));
+// HE-LTR (the user, 17.11: in Hebrew "switching between the modes is also reversed with the arrows"): in Hebrew the page
+// stays left to right and Ctrl + → / ← and the inventory's arrows do what they do in English
+await ev(() => { game.settings.lang = 'he'; game.applySettings(); game.step(0.1); });
+await page.keyboard.down('ControlLeft'); await step(0.1);
+await page.keyboard.press('ArrowRight'); await step(0.1);
+const behHe = await ev(() => { const B = [...document.querySelectorAll('#behmenu .bbox')], r = (b) => b.getBoundingClientRect().left; return { beh: game.hero.behaviour, on: B.findIndex((b) => b.classList.contains('on')), order: B.every((b, i) => !i || r(b) > r(B[i - 1])), dir: document.documentElement.dir }; });
+await page.keyboard.press('ArrowLeft'); await step(0.1);
+behHe.back = await ev(() => game.hero.behaviour);
+await page.keyboard.up('ControlLeft'); await step(0.1);
+await page.keyboard.press('KeyI'); await step(0.1);
+const invHe = await ev(() => { const I = game.inventory; I.sel = 0; I.zone = 'grid'; I.render(); return 0; });
+await page.keyboard.press('ArrowRight'); await step(0.1);
+behHe.inv = await ev(() => game.inventory.sel);
+await page.keyboard.press('KeyI'); await step(0.1);
+await ev(() => { game.settings.lang = 'en'; game.applySettings(); game.step(0.1); });
+check('Hebrew: the page left to right; Ctrl + → Normal → Athletic (the lit box the second from the left), ← back; → in the inventory the next item', behHe.dir === 'ltr' && behHe.beh === 'athletic' && behHe.on === 1 && behHe.order && behHe.back === 'normal' && behHe.inv === invHe + 1, behHe);
 
 // ---- holomap (H in Classic) needs the ball; opens and closes
 await page.keyboard.press('KeyH'); await step(0.1);

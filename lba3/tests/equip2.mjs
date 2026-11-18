@@ -6,6 +6,11 @@
 // ISO (logged): chapter 1 is finished by flags (as tests/arsenal.mjs); The Old Pump is solved by its flags (its own
 // test is tests/townlife.mjs); the coupler is put on Nell's bench by its state (its own test too); the fights are in the
 // developer arena (never saved). Screenshots (two) go to EQ2_SHOTS (default /dev/shm/eq2-shots).
+// POCKET-SET (17.11, docs/lba-maturity/WEAPON-SWITCH.md): the hands-on moment at once — Arthur hid a radio valve in the
+// house; the tip names the key that holds the set out (R), R until it is in hand, the dial on the weapon pill rises as
+// he walks to his coat on the hall's stand (and lights with the pips: readable with the sound off), the needle at his feet points
+// there, E takes it (no reward), Arthur sends him to the cellar; hold R puts it away (meter gone). A third shot:
+// eq2-0-pocketset-meter.
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,7 +22,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
 const SHOTS = process.env.EQ2_SHOTS || '/dev/shm/eq2-shots';
 fs.mkdirSync(SHOTS, { recursive: true });
-const snap = async (name) => { await ev(() => { game.renderer.render(); }); await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 }); console.log('  shot ' + path.join(SHOTS, name + '.png')); };
+const snap = async (name) => { await ev(() => { game.renderer.render(); document.getAnimations().forEach((a) => a.finish()); }); await page.waitForTimeout(300);   /* (the HUD's fades run in real time: finished for the picture) */ await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 }); console.log('  shot ' + path.join(SHOTS, name + '.png')); };
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const helpers = () => ev(() => {
   window.T = {
@@ -51,9 +56,39 @@ const p1l = await said();
 check('home in chapter 2 (WALK through the door): the set lies on the rug in Arthur\'s toy corner; Arthur (when home) calls out to it', p1.room === 'house' && p1.propShown && (!p1.arthur || (p1.hint && p1l.some((l) => /made you something/.test(l)))), { p1, p1l });
 const p2 = await ev(() => { const G = game, S = G.story.kit2.set; const c0 = G.hero.clovers; const r = P.use(S.x, S.z, { kind: 'e2_set', near: 0.9 }); P.settle(); return { r: r.r, own: G.hero.arms.pocketset, prop: S.grp.visible, found: JSON.stringify(G.foundObj?.shown || []).includes('pocketset'), wheel: G.hero.combat.owned(), inv: G.inventory.items().map((i) => i.id), clovers: G.hero.clovers - c0 }; });
 const p2l = await said();
-check('the pocket set (WALK, E): Arthur explains it, or his note does; found box; on the wheel and in the inventory', p2.own && !p2.prop && p2.found && p2.wheel.includes('pocketset') && p2.inv.includes('pocketset') && p2l.some((l) => /cellar hums|HUMS IN THE CELLAR/i.test(l)), { p2, p2l });
+check('the pocket set (WALK, E): Arthur explains how to read it and that he hid a radio valve in the house (or his note does); found box; on the wheel and in the inventory', p2.own && !p2.prop && p2.found && p2.wheel.includes('pocketset') && p2.inv.includes('pocketset') && p2l.some((l) => /hid one of my old radio valves|HID A RADIO VALVE/i.test(l)) && p2l.some((l) => /faster it whistles|WHISTLES FASTER/i.test(l)) && !p2l.some((l) => /\b(press|key|button)\b/i.test(l)), { p2, p2l });
 const p3 = await ev(() => { const G = game; const r = P.use(G.story.kit2.set.x, G.story.kit2.set.z, { kind: 'e2_set', near: 0.9 }); P.settle(); return { r: r.r, tg: P.target()?.kind || null, own: G.hero.arms.pocketset }; });
 check('…taken once: no second prompt for it', p3.tg !== 'e2_set' && p3.own, p3);
+
+// ---- POCKET-SET: the hands-on moment, at once, in the house
+const h1 = await ev(() => { const G = game, h = G.hero; h.combat.equip('ball', true); P.settle(); G.step(1.2);
+  return { hide: !!G.flags.e2_hide, hums: G.story.kit2.hums().map((x) => x.id), tip: G.tutorial.shown, html: document.querySelector('#tip')?.textContent || '', weapon: h.combat.weapon, meter: !!document.querySelector('#weapon .meter') && document.querySelector('#weapon .meter').style.display !== 'none', journal: G.story.journal().flatMap((j) => j.lines).map((l) => l.key) }; });
+check('POCKET-SET: a radio valve hums in the house at once; the tip names the key that holds the set out (R) and the set; the journal names it once (e2_j_tube); no dial while it is not held', h1.hide && h1.hums.includes('tube') && h1.tip === 'pset' && /\bR\b/.test(h1.html) && /Pocket Set/.test(h1.html) && !h1.meter && h1.journal.includes('e2_j_tube') && !h1.journal.includes('e2_j_set2'), h1);
+const h2 = await ev(() => { const G = game, h = G.hero, TL = G.gadgets.tools, V = G.story.kit2.tube; let n = 0;
+  for (; n < 14 && h.combat.weapon !== 'pocketset'; n++) P.tap('KeyR', 0.15);
+  G.step(0.6);
+  const M = () => { const m = document.querySelector('#weapon .meter'); const r = m?.querySelector('.ndl')?.getAttribute('transform') || ''; return { shown: !!m && m.style.display !== 'none', deg: +(r.match(/rotate\((-?[\d.]+)/)?.[1] ?? NaN), txt: m?.querySelector('b')?.textContent || '', pill: document.querySelector('#weapon').classList.contains('show') }; };
+  const far = { d: +Math.hypot(V.x - h.pos.x, V.z - h.pos.z).toFixed(1), k: TL.sense ? +TL.sense.k.toFixed(2) : null, ...M() };
+  const tipHeld = document.querySelector('#tip')?.textContent || '';
+  P.go(V.x, V.z - 1.05, { tol: 0.35 }); P.face(V.x, V.z);
+  let lit = 0; const p0 = TL.stats.pips; for (let i = 0; i < 90; i++) { G.step(1 / 30); if (document.querySelector('#weapon .meter.lit')) lit++; }
+  const N = TL.needle, a = Math.atan2(N.position.x - h.pos.x, N.position.z - h.pos.z), want = Math.atan2(V.x - h.pos.x, V.z - h.pos.z);
+  const near = { d: +Math.hypot(V.x - h.pos.x, V.z - h.pos.z).toFixed(1), k: TL.sense ? +TL.sense.k.toFixed(2) : null, pips: TL.stats.pips - p0, lit, needle: N.visible, off: +Math.abs(Math.atan2(Math.sin(a - want), Math.cos(a - want))).toFixed(2), prompt: P.target()?.kind || null, ...M() };
+  return { presses: n, weapon: h.combat.weapon, far, near, tipHeld }; });
+check('…R until it is in hand (one or two presses from the ball); the tip turns to how to read it and put it away', h2.weapon === 'pocketset' && h2.presses >= 1 && h2.presses <= 3 && /needle/.test(h2.tipHeld) && /hold R/.test(h2.tipHeld), h2);
+check('…the dial on the weapon pill (it works with the sound off): shown while held; its needle swings higher and its reading falls (m) as he crosses the house to the coat on the hall\'s stand', h2.far.shown && h2.far.pill && h2.far.k != null && h2.near.shown && h2.near.k > h2.far.k + 0.4 && h2.near.deg > h2.far.deg + 40 && /m$/.test(h2.far.txt) && (h2.near.txt === 'here!' || parseInt(h2.near.txt) < parseInt(h2.far.txt)), h2);
+check('…the dial lights with each pip; the needle at his feet points to the coat; there it can be taken (E)', h2.near.lit >= 2 && h2.near.pips >= 3 && h2.near.needle && h2.near.off < 0.35 && h2.near.prompt === 'e2_tube', h2.near);
+await ev(() => { const G = game; G.camRig.recenter?.(); G.step(0.6); });
+await snap('eq2-0-pocketset-meter').catch(() => {});
+const h3 = await ev(() => { const G = game, h = G.hero, V = G.story.kit2.tube; const c0 = h.coins, k0 = h.clovers; const r = P.use(V.x, V.z, { kind: 'e2_tube', near: 1.0 }); P.settle(); G.step(0.3);
+  return { r: r.r, tube: !!G.flags.e2_tube, coins: h.coins - c0, clovers: h.clovers - k0, hums: G.story.kit2.hums().map((x) => x.id), sense: G.gadgets.tools.sense, tipDone: G.tutorial.done.has('pset'), tip: G.tutorial.shown, valve: G.story.kit2.tube.valve.visible,
+    journal: G.story.journal().flatMap((j) => j.lines).filter((l) => /^e2_j_(tube|set2?)$/.test(l.key)) }; });
+const h3l = await said();
+check('…taken (E): Arthur\'s valve, no reward; Arthur (or a second note) sends him to the cellar; the tip is done; the journal ticks it and adds the cellar', h3.tube && h3.coins === 0 && h3.clovers === 0 && !h3.hums.includes('tube') && !h3.sense && h3.tipDone && h3.tip !== 'pset' && !h3.valve && h3l.some((l) => /found it|ANOTHER NOTE|Another note/i.test(l)) && h3l.some((l) => /cellar/i.test(l)) && h3.journal.some((j) => j.key === 'e2_j_tube' && j.done) && h3.journal.some((j) => j.key === 'e2_j_set2' && !j.done), { h3, h3l });
+const h4 = await ev(() => { const G = game, h = G.hero, V = G.story.kit2.tube; P.go(V.x, V.z - 1.05, { tol: 0.35 }); P.face(V.x, V.z); G.step(0.3); const prompt = P.target()?.kind || null;
+  P.holdFor(['KeyR'], 0.6); G.step(0.3); const m = document.querySelector('#weapon .meter');
+  return { prompt, weapon: h.combat.weapon, meter: !!m && m.style.display !== 'none' }; });
+check('…no second valve; hold R puts the set away (back to the ball) and its dial goes', h4.prompt !== 'e2_tube' && h4.weapon === 'ball' && !h4.meter, h4);
 
 // ---- its lesson: the cellar
 const c1 = await ev(() => { const G = game, h = G.hero; G.regions.ensure('cellar', 'test'); P.enter('cellar'); P.settle(); const K = G.story.kit2.tin;
@@ -71,7 +106,7 @@ check('tuned: it whistles faster close to the hum than across the cellar, and th
 await ev(() => { const G = game, h = G.hero, K = G.story.kit2.tin; h.angle = Math.atan2(K.x - h.pos.x, K.z - h.pos.z) + 0.6; G.step(0.1); });
 await snap('eq2-1-pocketset-cellar').catch(() => {});
 const c3 = await ev(() => { const G = game, h = G.hero, K = G.story.kit2.tin; const k0 = h.clovers, c0 = h.coins; const r = P.use(K.x, K.z, { kind: 'e2_tin', near: 1.0 }); P.settle(); G.step(0.3);
-  return { r: r.r, tin: !!G.flags.e2_tin, clovers: h.clovers - k0, coins: h.coins - c0, sense: G.gadgets.tools.sense, needle: G.gadgets.tools.needle.visible, journal: G.story.journal().flatMap((j) => j.lines).filter((l) => l.key === 'e2_j_set') }; });
+  return { r: r.r, tin: !!G.flags.e2_tin, clovers: h.clovers - k0, coins: h.coins - c0, sense: G.gadgets.tools.sense, needle: G.gadgets.tools.needle.visible, journal: G.story.journal().flatMap((j) => j.lines).filter((l) => l.key === 'e2_j_set2') }; });
 const c3l = await said();
 check('…the tile lifted (E): Twinsen\'s old tin, a clover (once); the hum is gone, the journal line done', c3.tin && (c3.clovers === 1 || c3.coins === 10) && !c3.sense && !c3.needle && c3.journal[0]?.done && c3l.some((l) => /old hiding place/.test(l)), { c3, c3l });
 const c4 = await ev(() => { const G = game; const K = G.story.kit2.tin; P.go(K.x - 0.7, K.z, { tol: 0.35 }); P.face(K.x, K.z); G.step(0.2); return { prompt: P.target()?.kind || null }; });

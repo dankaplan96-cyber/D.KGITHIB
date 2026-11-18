@@ -12,6 +12,8 @@ await open(page, process.env.Q ?? '?nocine');
 await menu(page, process.env.MENU || (process.env.LOAD ? 'continue' : 'new'));
 // ASSIST=1: fights the bot is losing (2 HP left) are finished by an ISO assist, logged as 'ISO assist' (never INPUT evidence)
 if (process.env.ASSIST) await page.evaluate(() => { P.assist = true; });
+// a segment's own helpers in the page (its `setup`: the steps run there, each function sent alone), again after a Retry
+if (seg.setup) await page.evaluate(seg.setup);
 // the bot plays its fights as a player would (P.smart: dodges a close wind-up, takes a dropped heart or flask when it needs
 // one, kicks armour its ball can't hurt, walks round a fence its ball can't pass); OLDBOT=1: the bot of before (COMBAT-2)
 const SMART = !process.env.OLDBOT;
@@ -39,6 +41,7 @@ const retry = async () => {
   if (process.env.STATS) await page.addScriptTag({ path: STATS_JS });
   if (process.env.FIGHTLOG) await page.addScriptTag({ path: FIGHT_JS });
   await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a.assist; P.smart = a.smart; P.settle(); }, { assist: !!process.env.ASSIST, smart: SMART });
+  if (seg.setup) await page.evaluate(seg.setup);
 };
 let deaths = 0, shotN = 0;
 if (process.env.SHOTS) { (await import('node:fs')).mkdirSync(process.env.SHOTS, { recursive: true });

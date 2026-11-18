@@ -297,8 +297,16 @@ between the council and the network in the expanded campaign only (a save alread
 base game, numbered as before). Bot game time, chapter 9's last step to the network's start: **249 s** (exp-throttle,
 17.11, SwiftShader, Automated runtime only); first-play **estimate about 22 min** (the call and the ship 2, the Water
 Office and the valve room's bleeds 5, Oren 2.5, Zoé in the project office 6, the B-7 on the shelter's branch 4, the end
-2.5): inside the band. Chapters 11–13 (Ballastra, The House of Balances, Under the Well) are empty shells the story
-passes through; estimated 25, 27 and 20 min when built (EXP-PLAN-2.md §6). Not counted in the 277 minutes above.
+2.5): inside the band. Chapters 12–13 (The House of Balances, Under the Well) are empty shells the story passes through;
+estimated 27 and 20 min when built (EXP-PLAN-2.md §6). Not counted in the 277 minutes above.
+
+**Chapter 11 "Ballastra" (`ballastra`, EXP-2, 17.11; team-only detail in EXP-PLAN-2.md §3.2).** Bot game time, chapter
+10's last step to the network's start: **749 s** (12.5 min) (exp-ballastra, SwiftShader, Automated runtime only; the bot walks
+A* routes, reads every line at once, knows each answer and makes one wrong attempt per puzzle). First-play **estimate
+about 27 min** (the freighter 2, Float Harbor, Quill and the shed 1.5, the lift 5, Tessa 1.5, through the Arch
+District 1, the Water Gardens' gauges, tunnel and board 7, Corvin 1, Halden 2, the pump room 3.5, Dunn's door 1.5, the
+Speaking Steps and the freighter home 1.5): inside the 16.7–27.9 band, at its top; no fight, no padding walk (each walk
+crosses something that changed or someone with a line). Not counted in the 277 minutes above.
 
 The estimates add up to about **277 minutes (about 4.6 hours) of main route** (after wave 7) — an estimate. The rest of the 15 hours is
 meant to come from the later waves' steps, the optional content and the expansion (WORKPLAN-2026-11-09.md); none of it is

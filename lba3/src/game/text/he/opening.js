@@ -29,7 +29,7 @@ Object.assign(STR.he, {
 
   // OPENING-TUT: the yard's barrels, the magic ball's practice target
   pr_barrel_hit: '(עוד יש לי את זה.)',
-  pr_barrel_hit_ar: '(עוד יש לי את זה. שמישהו יספר לטים.)',
+  pr_barrel_hit_ar: '(עוד לא שכחתי. שמישהו יספר לטים.)',
 
   // OPENING-TUT: the control tips ({k}: the real key, as a <kbd>)
   tut_move: '{k} תנועה',
@@ -75,7 +75,7 @@ Object.assign(STR.he, {
   t2_ask_barrels: 'ארתור סיפר לטים שאתה עדיין פוגע בחביות האלה. נו?',
   t2_ask_pipe: 'והצינור של המיזם? פעם היית עובר אותו בריצה.',
   t2_zoe_done: 'לא רע בשביל גיבור ותיק. עכשיו, הבאר.',
-  t2_zoe_close: 'כמעט. קדימה, הבאר.',
+  t2_zoe_close: 'מספיק טוב. קדימה, לבאר.',
   t2_back_zoe: 'טווינסן! רגע, יש לי חדשות מהשכנים.',
   t2_back_inv: 'טווינסן! אפילו לא הסתכלת על הגבישים.',
   t2_back_tap: 'טווינסן! קודם תנסה את הברז שלנו. הוא ממש פה.',

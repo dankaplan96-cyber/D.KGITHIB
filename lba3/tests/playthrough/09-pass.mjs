@@ -23,7 +23,7 @@ export const steps = [
   ['the frozen rope (sword)', () => {
     const G = game, h = G.hero, R = G.story.cur.rope;
     P.go(R.x - 1.2, R.z, { tol: 0.5 }); P.face(R.x, R.z);
-    if (h.combat.weapon !== 'sword') P.tap('KeyR', 0.1);
+    for (let q = 0; q < 14 && h.combat.weapon !== 'sword'; q++) P.tap('KeyR', 0.1);   // (WEAPON-SWITCH: R steps through what he owns)
     for (let k = 0; k < 4 && !G.flags.c6_rope; k++) { P.tap('KeyK', 0.8); P.settle(); }
     return { sword: h.hasSword, weapon: h.combat.weapon, rope: G.flags.c6_rope, fail: G.flags.c6_rope ? null : 'rope' };
   }],

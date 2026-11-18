@@ -8,6 +8,12 @@
 //     Its lesson: "something hums in the cellar" — with the set in hand the cellar whistles and the needle leads to a
 //     loose tile in the south-east corner; under it Twinsen's old tin (a clover, or 10 kashes when he has nine; once).
 //     Nothing else shows the tile: without the set there is no prompt. In fights: the squeal (the depot's drones).
+//     POCKET-SET (the user, 17.11: "using Arthur's device is not clear"): its first use is at once, in the house. Giving
+//     it, Arthur says he hid one of his old radio valves in the house (or his note does); it hums in Twinsen's own coat
+//     on the stand by the front door, ~9 m from the rug, so the dial on the weapon pill (hud.js pocketMeter), the whistle and the
+//     needle at his feet all rise as he crosses the house. A tip (tutorial.js 'pset') names the key that holds it out
+//     and how to put it away. Held out at the coat: Take; Arthur cheers and sends him to the cellar (the tin above).
+//     No reward (it is Arthur's valve, back to him). A save from before this (no e2_hide) has no valve to find.
 //   Bram's pump lance (chapter 2 on, Bram's thanks after The Old Pump: life.js gives it after his clover; a save from
 //     before EQUIP-2a, thanks already said, gets it on the next talk). It comes full. Its lesson is at the lane: the
 //     trough fills it, and Bram's old stop-cock beside the project's heat pipe is too hot to touch — a jet cools it
@@ -27,6 +33,7 @@ import '../text/kit2.js';
 const SPOT = {
   set: { x: 3.5, z: 1.95, a: -0.5 },     // house-local: on the rug in Arthur's toy corner, between his boat and the radio's table
   tin: { x: 3.55, z: 3.45 },             // cellar-local: a loose floor tile in the south-east corner
+  tube: { x: 0.05, z: 11.05 },           // house-local: in Twinsen's coat on the hall's coat stand by the front door (interiors.js)
 };
 const VALVE_COOL = 25;   // s a jet keeps the stop-cock cool enough to turn
 const FILL_R = 1.15;     // m: near enough to water to fill the tank
@@ -50,6 +57,16 @@ export class Kit2 extends ChapterBase {
       const s = SPOT.set, grp = holder(R.house, s.x, 0.02, s.z, s.a);
       const m = pocketSetModel(); m.rotation.set(-Math.PI / 2 + 0.15, 0, 0); m.position.set(0, 0.035, 0.1); m.scale.setScalar(1.25); grp.add(m);
       this.set = { grp, ...world(grp) };
+    }
+    // ---- Arthur's radio valve, hidden in Twinsen's coat on the hall's stand (seen only for the moment it is found)
+    if (R.house && this.once('tube')) {
+      const s = SPOT.tube, grp = holder(R.house, s.x, 1.02, s.z - 0.2, 0.4);   // (at the coat's pocket, on its north side)
+      const v = new THREE.Group(); v.visible = false; grp.add(v);
+      const base = new THREE.Mesh(cyl(0.035, 0.04, 0.03, 10), MAT.flat('#2a2420', 0.6)); base.position.y = 0.015; v.add(base);
+      const glass = new THREE.Mesh(lathe([[0.001, 0], [0.03, 0], [0.032, 0.05], [0.026, 0.085], [0.012, 0.1], [0.001, 0.104]], 10), new THREE.MeshStandardMaterial({ color: '#d8eef0', roughness: 0.1, transparent: true, opacity: 0.55 }));
+      glass.position.y = 0.03; v.add(glass);
+      const fil = new THREE.Mesh(cyl(0.008, 0.008, 0.05, 6), new THREE.MeshStandardMaterial({ color: '#ffb060', emissive: '#ff8a30', emissiveIntensity: 2 })); fil.position.y = 0.07; v.add(fil);
+      this.tube = { grp, valve: v, ...world(grp) };
     }
     // ---- the cellar's loose tile, and Twinsen's old tin under it
     if (R.cellar && this.once('tin')) {
@@ -102,12 +119,14 @@ export class Kit2 extends ChapterBase {
   applyFlags() {
     const f = this.f, A = this.A;
     if (this.set) this.set.grp.visible = !A.pocketset;
+    if (this.tube && !this.tubeShown) this.tube.valve.visible = false;
     if (this.tin) { const got = !!f.e2_tin; this.tin.tile.position.set(got ? 0.42 : 0, got ? 0.03 : 0.022, got ? 0.12 : 0); this.tin.tile.rotation.y = got ? 0.7 : 0.05; this.tin.hole.visible = got; }
     if (this.valve) this.valve.water.visible = !!f.e2_valve;
   }
   // the things that hum, for the pocket set (tools.js listen): [{ id, room, x, y, z }]
   hums() {
     const out = [];
+    if (this.tube && this.f.e2_hide && !this.f.e2_tube) out.push({ id: 'tube', room: 'house', x: this.tube.x, y: this.tube.y, z: this.tube.z });
     if (this.tin && !this.f.e2_tin) out.push({ id: 'tin', room: 'cellar', x: this.tin.x, y: this.tin.y, z: this.tin.z });
     out.push(...(this.story.hostel?.hums() || []));   // (ASYLUM-2: the humming crate in Vesk's store, story/hostel.js)
     return out;
@@ -115,7 +134,8 @@ export class Kit2 extends ChapterBase {
   journal() {
     const f = this.f, A = this.A;
     return [
-      { key: 'e2_j_set', done: !!f.e2_tin, show: !!A.pocketset },
+      { key: 'e2_j_tube', done: !!f.e2_tube, show: !!A.pocketset && !!f.e2_hide },
+      { key: f.e2_hide ? 'e2_j_set2' : 'e2_j_set', done: !!f.e2_tin, show: !!A.pocketset && (!f.e2_hide || !!f.e2_tube) },
       { key: 'e2_j_valve', done: !!f.e2_valve, show: !!A.lance || !!f.e2_valveSeen },
     ].filter((l) => l.show).map(({ key, done }) => ({ key, done }));
   }
@@ -148,6 +168,7 @@ export class Kit2 extends ChapterBase {
     const g = this.game, f = this.f, A = this.A, here = this.roomId(), h = g.hero;
     if (!this.canUse()) return;
     if (here === 'house' && this.set && !A.pocketset && this.setReady) consider(dist(this.set.x, this.set.z), 1.15, { kind: 'e2_set', label: 'p_take' });
+    if (here === 'house' && this.tube && f.e2_hide && !f.e2_tube && A.pocketset && g.gadgets?.tools?.held() === 'pocketset') consider(dist(this.tube.x, this.tube.z), 1.3, { kind: 'e2_tube', label: 'p_take' });
     if (here === 'cellar' && this.tin && !f.e2_tin && A.pocketset && g.gadgets?.tools?.held() === 'pocketset') consider(dist(this.tin.x, this.tin.z), 1.3, { kind: 'e2_tin', label: 'p_lift' });
     if (here === 'desert' && A.lance && A.water < LANCE.tank) { const w = this.waterNear(); if (w) consider(Math.max(0.05, dist(w.x, w.z) - 0.8), 1.6, { kind: 'e2_fill', water: w, label: 'p_fill' }); }
     if (here !== 'citadel') return;
@@ -162,7 +183,21 @@ export class Kit2 extends ChapterBase {
       case 'e2_set': {
         const ar = this.speaker('arthur'), home = ar && ar.present && g.room?.id === 'house' && h.distTo(ar) < 9;
         if (home) { this.chain([['hero', 'e2_set_look'], ...this.setLines()], () => this.giveSet()); return true; }
-        return hero(['e2_set_look', 'e2_set_note'], () => this.giveSet());
+        return hero(['e2_set_look', 'e2_set_note2'], () => this.giveSet());
+      }
+      case 'e2_tube': {
+        if (f.e2_tube) return true;
+        const T = this.tube;
+        h.actAt(T.x, T.z, 'use', 0.7, () => {
+          if (f.e2_tube) return;
+          f.e2_tube = true; T.valve.visible = true; this.tubeShown = true;
+          g.audio.play('chest');
+          const ar = this.speaker('arthur'), home = ar?.present && g.room?.id === 'house';
+          const lines = home ? [['hero', 'e2_tube_lift'], ['arthur', 'e2_ar_tube1'], ['arthur', 'e2_ar_set3'], ['arthur', 'e2_ar_set4']]
+            : [['hero', 'e2_tube_lift'], ['hero', 'e2_tube_note']];
+          this.chain(lines, () => { T.valve.visible = false; this.tubeShown = false; g.updateObjective?.(); g.save(false); });
+        }, 0.3);
+        return true;
       }
       case 'e2_tin': {
         if (f.e2_tin) return true;
@@ -208,13 +243,16 @@ export class Kit2 extends ChapterBase {
     }
     return false;
   }
-  setLines() { return [['arthur', 'e2_ar_set1'], ['arthur', 'e2_ar_set2'], ['hero', 'e2_tw_set'], ['arthur', 'e2_ar_set3'], ['arthur', 'e2_ar_set4']]; }
+  // (POCKET-SET: how to read it, then a valve hidden in the house to try it on at once; the cellar and the squeal when it is found)
+  setLines() { return [['arthur', 'e2_ar_set1'], ['arthur', 'e2_ar_set2b'], ['hero', 'e2_tw_set'], ['arthur', 'e2_ar_hide']]; }
   giveSet() {
     const g = this.game, A = this.A;
     if (A.pocketset) return;
     A.pocketset = true; this.f.e2_setHint = true;
+    this.f.e2_hide = true;   // (POCKET-SET: Arthur's valve is hidden in the house to try it on)
     if (this.set) this.set.grp.visible = false;
-    g.found('pocketset', 'it_pocketset', () => g.hud.toast('e2_toast_sethow', { w: g.hud.key('weapons'), k: g.hud.key('attack') }));
+    // (the key that holds it out: the tip panel says it while the valve is to find (tutorial.js 'pset'); tips off: a toast)
+    g.found('pocketset', 'it_pocketset', () => { if (!g.tutorial?.tips) g.hud.toast('e2_toast_sethow', { r: g.hud.key('swap'), w: g.hud.key('weapons'), k: g.hud.key('attack') }); });
     g.hud.stats?.(g.hero);
     g.save(false);
   }
@@ -228,7 +266,7 @@ export class Kit2 extends ChapterBase {
     this.chain(lines, () => {
       if (A.lance) return;
       A.lance = true; A.water = LANCE.tank;
-      g.found('lance', 'it_lance', () => g.hud.toast('e2_toast_lancehow', { w: g.hud.key('weapons'), k: g.hud.key('attack') }));
+      g.found('lance', 'it_lance', () => g.hud.toast('e2_toast_lancehow', { r: g.hud.key('swap'), w: g.hud.key('weapons'), k: g.hud.key('attack') }));
       g.hud.stats?.(g.hero);
       g.save(false);
     });

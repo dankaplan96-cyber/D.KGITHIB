@@ -205,6 +205,8 @@
       try {
         P.note(`go: through the spaceport's terminal (${toAir ? 'onto the deck' : 'off the deck'})`);
         P.enter('terminal', { run });
+        // (SPACEPORT-3: chapter 2's flight form first, at the counter, as a player who follows the objective does)
+        if (toAir && G.room?.id === 'terminal' && G.story?.isles?.formWanted?.()) P.portForm();
         const x = G.room?.id === 'terminal' && G.room.exits.find((q) => q.to === (toAir ? 'terminal-gate' : 'terminal-out'));
         if (x) P.through(x.x, x.z, { run });
       } finally { P._portRoute = false; }
@@ -265,6 +267,23 @@
   };
 
   // turn on the spot to face a point (Classic: Left/Right)
+  // SPACEPORT-3: chapter 2's errand in Citadel Spaceport's terminal: to the ticket counter, E (its prompt, or Ama's), the
+  // talk read, the form signed (his 'use' at the counter, then her line); returns whether the form is signed
+  P.portForm = () => {
+    if (G.room?.id !== 'terminal') return false;
+    let c = null; G.story.isles.interactables((d, r, o) => { if (o.kind === 'termCounter') c = o.tm.H.counter; }, () => 0);
+    if (!c) return false;
+    const ready = () => { const k = P.target(); return k?.kind === 'termCounter' || k?.id === 'ama'; };
+    for (let k = 0; k < 3 && G.story.isles.formWanted(); k++) {
+      P.go(c.x, c.z, { tol: 0.35, maxT: 40, stopWhen: ready }); P.face(c.x, c.z - 1);
+      for (let i = 0; i < 12 && !ready(); i++) G.step(0.25);
+      if (!ready()) continue;
+      P.tap('KeyE', 0.1);
+      for (let i = 0; i < 8 && G.story.isles.formWanted(); i++) { P.settle(); G.step(0.4); }
+      P.settle();
+    }
+    return !G.story.isles.formWanted();
+  };
   P.face = (x, z, maxT = 4) => {
     const h = hero(); let t = 0;
     while (t < maxT) {
@@ -416,6 +435,14 @@
   P.through = (x, z, opts = {}) => {
     if (P.tapFirst !== false) P.homeTap();
     const from = G.room?.id ?? 'citadel';
+    // AUDIT-FIX (RELEASE-AUDIT-v96 A-3): a point inside a room he is not in (a room's exit, read before a scene put him
+    // outdoors) is not walked to: rooms are built far from the island, so the walk went straight across Citadel toward
+    // the room's coordinates and off the east cliff (segment 05, "Zoé: out"). A door into a room is P.enter's
+    if (!G.room?.id || G.room.outdoor) {
+      const sc = P.sceneOf(x, z), R = G.rooms?.[sc], c = G.regions?.centreOf?.(sc);
+      const interior = sc !== 'citadel' && (R ? !R.outdoor : !!c && !c.outdoor);
+      if (sc !== P.here() && interior) { P.note(`through: (${x.toFixed(1)}, ${z.toFixed(1)}) is inside ${sc}, not here (${from}): not walked`); return { r: 'elsewhere:' + sc, from, to: from }; }
+    }
     const r = P.go(x, z, { tol: 0.25, stopOnTrans: true, ...opts });
     let t = 0; while ((G.trans || (G.room?.id ?? 'citadel') === from) && t < 3) { G.step(0.1); t += 0.1; }
     P.settle();
@@ -535,14 +562,14 @@
         const open = () => aimed.state === 'recover' || aimed.state === 'hurt' || aimed.state === 'chase' && aimed.coolT > 0.3;
         for (let w = 0; w < 4 / DT && aimed.alive && !open(); w++) { P.gstep(DT); t += DT; }
         P.go(aimed.pos.x, aimed.pos.z, { tol: 1.15, maxT: 3, fight: false }); P.face(aimed.pos.x, aimed.pos.z, 1);
-        if (h.combat?.weapon !== 'fists') P.tap('KeyR', 0.1);
+        for (let q = 0; q < 14 && h.combat?.weapon !== 'fists'; q++) P.tap('KeyR', 0.1);   // (WEAPON-SWITCH: R steps through what he owns)
         const hp1 = aimed.hp; for (let k = 0; k < 3 && aimed.alive; k++) { P.tap('KeyK', 0.05); P.gstep(0.28); }
         P.gstep(0.3); t += 1.3; P.note(`fight ${aimed.id}: fists (jab, jab, kick) hp ${hp1}→${aimed.hp} me ${h.hp}`);
         if (aimed.hp === hp1) { aimed._miss = (aimed._miss || 0) + 1; } else aimed._miss = 0;
         continue;
       }
       const close = melee || (h.hasSword && (e._miss || 0) >= 2);
-      if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); if (h.combat?.weapon !== 'sword') P.tap('KeyR', 0.1); }
+      if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); for (let q = 0; q < 14 && h.combat?.weapon !== 'sword'; q++) P.tap('KeyR', 0.1); }
       if (close) { P.tap('KeyK', 0.35); P.gstep(0.3); P.tap('KeyK', 0.35); t += 1.0; }
       else if ((aimed.armour || 0) >= 2 && h.mp >= 1) {
         // a charge can't be dodged out of: start it in the guard's opening, just after its shot (rifle lowered)

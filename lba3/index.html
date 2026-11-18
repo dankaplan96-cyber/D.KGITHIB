@@ -65,7 +65,7 @@
       <button data-touch="map" aria-label="Holomap">⌖</button>
       <button data-touch="cycle" aria-label="Next behaviour">⟳</button>
       <button data-touch="inventory" aria-label="Inventory">▤</button>
-      <button data-touch="swap" aria-label="Swap weapon">⇄</button>
+      <button data-touch="swap" aria-label="Next weapon">⇄</button>
       <button data-touch="interact" aria-label="Talk / use">✋</button>
       <button data-touch="ball" aria-label="Magic ball">✦</button>
       <button data-touch="dodge" aria-label="Dodge">»</button>
@@ -180,6 +180,7 @@
       </section>
       <section class="set-page" data-page="display" role="tabpanel">
         <div class="set-row" data-hint="quality"><span class="set-label" data-i18n="quality"></span><div class="seg" data-setting="quality"><button data-v="auto" data-i18n="q_auto"></button><button data-v="low" data-i18n="q_low"></button><button data-v="medium" data-i18n="q_medium"></button><button data-v="high" data-i18n="q_high"></button></div><p class="set-hint"></p></div>
+        <div class="set-row" data-hint="fps"><span class="set-label" data-i18n="fps_label"></span><div class="seg" data-setting="fps"><button data-v="auto" data-i18n="fps_auto"></button><button data-v="60" data-i18n="fps_60"></button><button data-v="30" data-i18n="fps_30"></button></div><p class="set-hint"></p></div>
         <div class="set-row" data-hint="visual"><span class="set-label" data-i18n="visual"></span><div class="seg" data-setting="visual"><button data-v="2026" data-i18n="vis_2026"></button><button data-v="1997" data-i18n="vis_1997"></button></div><p class="set-hint"></p></div>
         <div class="set-row" data-hint="hud"><span class="set-label" data-i18n="hud"></span><div class="seg" data-setting="hud"><button data-v="lba" data-i18n="hud_lba"></button><button data-v="modern" data-i18n="hud_modern"></button></div><p class="set-hint"></p></div>
         <div class="set-row" data-hint="weather"><span class="set-label" data-i18n="weather_set"></span><div class="seg" data-setting="weather"><button data-v="on" data-i18n="wx_on"></button><button data-v="off" data-i18n="wx_off"></button></div><p class="set-hint"></p></div>
@@ -246,7 +247,7 @@
   <div id="cine" class="hidden">
     <div id="cine-title"><h1>LBA3</h1><p data-i18n="logo_sub">The Awakening</p></div>
     <div id="cine-sub"></div>
-    <div id="cine-skip"><span class="bar"></span><kbd>E</kbd> Hold to skip</div>
+    <div id="cine-skip"><span class="bar"></span><kbd>E</kbd> <span data-i18n="cine_skip">Hold to skip</span></div>
   </div>
   <div id="chapter"><small></small><h2></h2></div>
   <div id="fade"></div>
