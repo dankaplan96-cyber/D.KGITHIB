@@ -64,7 +64,7 @@ button { font-family: inherit; }
 .beh-discreet .ico { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='12' r='4.5' fill='%23f0c49b'/%3E%3Cpath d='M10 17 L18 19 L22 27 M18 19 L12 28 M14 18 L22 15' stroke='%232d6fdc' stroke-width='3.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M24 5 q3 3 0 6 M27 3 q5 5 0 10' stroke='%23b9c3cc' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
 
 /* (above the weapon pill, which sits in the bottom-right corner of the "Always on" HUD) */
-#minimap { position: absolute; bottom: 64px; inset-inline-end: 16px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+#minimap { position: absolute; bottom: 64px; right: 16px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
 #prompt { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%) translateY(10px); background: var(--panel); border: 1px solid var(--line); padding: 8px 16px; border-radius: 999px; font-weight: 500; opacity: 0; transition: all 0.15s; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
 #prompt.show { opacity: 1; transform: translateX(-50%); }
 kbd { display: inline-block; min-width: 24px; padding: 1px 7px; border-radius: 6px; background: var(--ink); color: #111; font-family: inherit; font-weight: 700; text-align: center; margin-inline-end: 6px; }
@@ -768,6 +768,8 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
 :root[lang=he] .inv-name span { margin-inline: 0 4px; }
 /* the maps' painted words (hud.js draws them centred or at a fixed side): a canvas's text takes the canvas's direction */
 :root[lang=he] #minimap, :root[lang=he] #holomap canvas { direction: rtl; }
+/* (HE-FONT, the user 18.11: the minimap moved to the left in Hebrew — its own direction: rtl turned its inset-inline-end
+   into a left; it is placed by `right` now, the same in both languages. Only the canvas's painted words follow rtl) */
 :root[lang=he] .inv-tabs button, :root[lang=he] .inv-now small, :root[lang=he] .set-tabs button, :root[lang=he] .set-fold,
 :root[lang=he] .slot-tag, :root[lang=he] #chapter small, :root[lang=he] #cine-title p, :root[lang=he] #cine-title h1,
 :root[lang=he] #load-title span, :root[lang=he] #bossbar, :root[lang=he] #holomap .title, :root[lang=he] #dialog .text,

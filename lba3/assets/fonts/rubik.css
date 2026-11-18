@@ -1,4 +1,15 @@
-/* Rubik (SIL Open Font License 1.1, see OFL.txt), bundled for the desktop app: latin and latin-ext only. */
+/* Rubik (SIL Open Font License 1.1, see OFL.txt), bundled: latin, latin-ext and hebrew. */
+/* hebrew (HE-FONT, the user 18.11: "in Hebrew, one uniform font"): Rubik's own Hebrew letters, the variable font (one
+   file for every weight, 300-900; @fontsource-variable/rubik), so Hebrew text is Rubik like the English beside it, not
+   the system's fallback font */
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url(rubik-hebrew.woff2) format('woff2-variations'), url(rubik-hebrew.woff2) format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
 /* latin-ext */
 @font-face {
   font-family: 'Rubik';

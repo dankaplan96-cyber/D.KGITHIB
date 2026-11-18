@@ -336,11 +336,11 @@ export class TwelveYears extends ChapterBase {
     front.style.cssText = 'background:#f4ead4;padding:1.1vw;box-shadow:0 6px 24px rgba(0,0,0,0.6);transform:rotate(-1.5deg);max-width:min(560px,52vw);';
     if (pic) { const c = document.createElement('canvas'); c.width = pic.width; c.height = pic.height; c.getContext('2d').drawImage(pic, 0, 0); c.style.cssText = 'display:block;width:100%;height:auto;'; c.className = 'tylpic'; front.appendChild(c); }
     const back = document.createElement('div');
-    back.style.cssText = 'background:#efe4c8;color:#3a2a20;padding:1.4vw 1.6vw;box-shadow:0 6px 24px rgba(0,0,0,0.6);transform:rotate(1.2deg);width:min(360px,34vw);font-family:"Comic Sans MS","Segoe Print",cursive,sans-serif;line-height:1.35;font-size:clamp(12px,1.35vw,17px);';
+    back.style.cssText = 'background:#efe4c8;color:#3a2a20;padding:1.4vw 1.6vw;box-shadow:0 6px 24px rgba(0,0,0,0.6);transform:rotate(1.2deg);width:min(360px,34vw);font-family:"Comic Sans MS","Segoe Print",Rubik,cursive,sans-serif;line-height:1.35;font-size:clamp(12px,1.35vw,17px);';
     const stamps = t('tyl_card_stamps');
     back.innerHTML = `<div class="tylto" style="border-bottom:1px solid #b8a07a;padding-bottom:0.6em;margin-bottom:0.6em">${t('tyl_card_to').split('|').map(esc).join('<br>')}</div>`
       + `<div class="tylmsg">${esc(t('tyl_card_msg'))}</div>`
-      + `<div style="margin-top:0.8em;display:flex;flex-wrap:wrap;gap:0.4em">${(Array.isArray(stamps) ? stamps : []).map((s, i) => `<span style="font-family:sans-serif;font-weight:bold;font-size:0.68em;color:${i ? '#8a2a2a' : '#2a4a7a'};border:2px solid currentColor;border-radius:${i ? 3 : 12}px;padding:1px 5px;transform:rotate(${(i % 2 ? 4 : -5) + i}deg);opacity:0.8">${esc(s)}</span>`).join('')}</div>`;
+      + `<div style="margin-top:0.8em;display:flex;flex-wrap:wrap;gap:0.4em">${(Array.isArray(stamps) ? stamps : []).map((s, i) => `<span style="font-family:Rubik,sans-serif;font-weight:bold;font-size:0.68em;color:${i ? '#8a2a2a' : '#2a4a7a'};border:2px solid currentColor;border-radius:${i ? 3 : 12}px;padding:1px 5px;transform:rotate(${(i % 2 ? 4 : -5) + i}deg);opacity:0.8">${esc(s)}</span>`).join('')}</div>`;
     const keys = document.createElement('div');
     keys.style.cssText = 'flex-basis:100%;text-align:center;color:#fff;opacity:0.85;text-shadow:0 1px 2px #000;';
     keys.innerHTML = t('tyl_card_keys', { e: `<kbd>${esc(g.input.label?.('interact') ?? 'E')}</kbd>` });
