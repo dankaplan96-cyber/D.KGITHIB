@@ -23,6 +23,16 @@
 // house and the yard until the yard is done: one goal line, always shown (Show control tips: Off hides only its keys),
 // the key for it below, a few dots for the yard's progress, and a tick when a step is done. The lessons above are still
 // observed meanwhile; after the yard they go on as before (the arc, the camera, out of magic, the town's).
+//
+// TUTOR-TARGETS (P67, the user, 18.11: "the tap", "the barrels" — the player couldn't identify the object): every step
+// with a thing to find points at it. A gold marker bobs over the exact object (the cupboard, the front door, Zoé, the
+// garden tap, the two barrels, the stretch of pipe level with him) with a ring at its foot, seen through walls; when it is
+// off the screen, an arrow at the screen's edge with the thing's name points the way. A step left undone grows its hint:
+// after HINT_WHERE s the panel adds where the thing is in words; after HINT_SAY s (and again each HINT_SAY) Zoé says it
+// over her head. Shown with Show control tips Off too (that hides only the keys): the steps can't be finished without
+// knowing what they mean. Nothing is saved: the step comes from the story's flags, the hint's clock starts again on a
+// load. Cost: one small mesh pair moved per frame, one projection; built on first use, removed with the steps.
+import * as THREE from 'three';
 import { t, keyHints } from './i18n.js';
 import { keyFor, keyLabel } from '../engine/input.js';
 import './text/opening.js';
@@ -32,6 +42,8 @@ const SHOW_DELAY = 0.6;     // s eligible before the tip shows (a lesson met in 
 const MIN_SHOW = 1.2;       // s a shown tip stays up through a flicker of its eligibility (not past its completion)
 const LOS_EVERY = 0.25;     // s between the barrels' line-of-sight tests
 const ADVANCES = 3;         // manual dialogue advances before the box's key hint goes
+const HINT_WHERE = 15;      // s on a step before the panel says where its thing is (TUTOR-TARGETS)
+const HINT_SAY = 35;        // s between Zoé's own reminders of what she means (TUTOR-TARGETS)
 // the project's copper heat pipe along the lane (x −43.5, z 66.0–72.1, 0.6 m high, too high to step over: lanegate.js
 // names it): the jump practice, over it in Athletic or walked round its end
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
@@ -63,6 +75,10 @@ body.big-text #tip { font-size: 18px; }
 #tip .tgoal .tdots { margin-inline-start: 8px; font-size: 11px; letter-spacing: 2px; opacity: 0.75; white-space: nowrap; }
 #tip .tkeys { margin-top: 3px; font-size: 14px; opacity: 0.92; }
 #tip .tgoal.ok { color: #9ff0a8; }
+#tip .twhere { margin-top: 3px; font-size: 14px; color: #ffe08a; }
+#tiparrow { position: absolute; transform: translate(-50%, -50%); display: none; pointer-events: none; color: #ffcf4a; font-weight: 700; font-size: 14px; text-shadow: 0 1px 3px #000, 0 0 2px #000; text-align: center; white-space: nowrap; }
+#tiparrow .ta { display: inline-block; font-size: 30px; line-height: 1; }
+body.hud-busy #tiparrow, body.found-on #tiparrow { visibility: hidden; }
 #dialog .tutkey { position: absolute; bottom: 7px; inset-inline-end: 40px; font-size: 13px; opacity: 0.8; }
 #dialog .tutkey kbd { font-size: 12px; padding: 0 5px; min-width: 18px; }`;
   document.head.appendChild(st);
@@ -82,6 +98,7 @@ export class Tutorial {
     this.lastBeh = null; this.air = false; this.mp0 = null; this.losT = 0; this.los = false;
     this.html = null; this.stepId = null; this.okT = 0; this.okHtml = null;
     this.ownN = null; this.wsArmed = false;   // (WEAPON-SWITCH: how many weapons he owned last frame; a third one arrived in play)
+    this.stepFor = null; this.stepT = 0; this.hintN = 0; this.markAt = null;   // (TUTOR-TARGETS: the step's clock, its marker)
   }
   snapshot() { return { v: 1, done: [...this.done], gone: [...this.gone] }; }
   // a save's lessons; a save from before the tips (no `tut`): all of them done, nothing pops up for a player under way
@@ -195,7 +212,14 @@ export class Tutorial {
       this.los = this.barrelsClear(h);
     }
     // OPENING-TUT-2: the opening's steps have the panel while they run (a tick for a moment as one is done)
-    const sid = g.story?.cur?.steps?.panelStep?.() ?? null;
+    const S = g.story?.cur?.steps, sid = S?.panelStep?.() ?? null;
+    this.mark(sid ? S.target?.() : null, dt);
+    if (sid !== this.stepFor) { this.stepFor = sid; this.stepT = 0; this.hintN = 0; }
+    if (sid) {
+      this.stepT += dt;
+      // (Zoé's reminder: only in the yard, where she stands; the zoe step's own is her call)
+      if (YARD.includes(sid) && this.stepT > HINT_SAY * (this.hintN + 1)) { this.hintN++; S.speak?.(sid === 'zoe' ? 't2_zoe_call' : 't2_hint_' + sid); }
+    }
     if (this.okT > 0) { this.okT -= dt; this.cur = null; this.stepId = 'ok'; this.show(this.okHtml); return; }
     if (sid) { this.cur = null; this.stepId = sid; this.show(this.stepHtml(sid)); return; }
     if (this.stepId) { this.stepId = null; this.hide(); }
@@ -294,7 +318,8 @@ export class Tutorial {
     const S = this.g.story?.cur?.steps, [n, of] = S?.progress?.() || [0, 0];
     const dots = YARD.includes(id) ? `<span class="tdots">${'●'.repeat(n)}${'○'.repeat(of - n)}</span>` : '';
     const keys = this.tips ? this.stepKeys(id) : '';
-    return `<div class="tgoal">${esc(t('t2_goal_' + id))}${dots}</div>${keys ? `<div class="tkeys">${keys}</div>` : ''}`;
+    const where = this.stepFor === id && this.stepT > HINT_WHERE ? `<div class="twhere">${esc(t('t2_where_' + id))}</div>` : '';
+    return `<div class="tgoal">${esc(t('t2_goal_' + id))}${dots}</div>${where}${keys ? `<div class="tkeys">${keys}</div>` : ''}`;
   }
   stepKeys(id) {
     const g = this.g, h = g.hero, K = (a) => this.key(a);
@@ -316,6 +341,72 @@ export class Tutorial {
   stepOk(id) {
     this.okHtml = `<div class="tgoal ok">✓ ${esc(t('t2_goal_' + id))}</div>`;
     this.okT = 1.1;
+  }
+
+  // ---------------------------------------------------------------- TUTOR-TARGETS: the marker over the step's thing
+  // T: the target (openingsteps.js target()) or null. The marker: a gold point-down cone bobbing over it and a pulsing
+  // ring at its foot, both drawn over everything (it is behind the house's corner as often as not); off the screen, the
+  // edge arrow and the thing's name instead.
+  mark(T, dt) {
+    this.markAt = T;
+    const m = T ? this.markMesh() : this._mk;
+    if (!m) return;
+    if (!T) { if (m.group.visible) m.group.visible = false; this.arrow(null); return; }
+    const k = (this._mkT = (this._mkT || 0) + dt);
+    const big = this.stepT > HINT_WHERE ? 1.3 : 1;   // (a step left long: a larger marker)
+    m.group.visible = true;
+    m.cone.position.set(T.x, T.y + Math.sin(k * 3.2) * 0.12, T.z);
+    m.cone.rotation.y = k * 1.6;
+    m.cone.scale.setScalar(big);
+    const p = (k * 0.8) % 1;
+    m.ring.position.set(T.x, T.foot + 0.04, T.z);
+    m.ring.scale.setScalar(T.r * (0.75 + p * 0.5) * big);
+    m.ring.material.opacity = 0.75 * (1 - p);
+    this.arrow(T);
+  }
+  markMesh() {
+    if (this._mk) return this._mk;
+    const sc = this.g.scene;
+    if (!sc) return null;
+    const mat = (o) => new THREE.MeshBasicMaterial({ color: '#ffcf4a', transparent: true, depthTest: false, depthWrite: false, fog: false, toneMapped: false, ...o });
+    const group = new THREE.Group(); group.name = 'tutTarget'; group.renderOrder = 990;
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 4), mat({ opacity: 0.95 }));
+    cone.rotation.order = 'YXZ'; cone.geometry.rotateX(Math.PI);   // (point down)
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 32), mat({ side: THREE.DoubleSide }));
+    ring.geometry.rotateX(-Math.PI / 2);
+    for (const o of [cone, ring]) { o.renderOrder = 990; o.frustumCulled = false; group.add(o); }
+    group.visible = false;
+    sc.add(group);
+    return (this._mk = { group, cone, ring });
+  }
+  // the arrow at the screen's edge toward a thing off the screen (or behind the camera), with its name
+  arrow(T) {
+    if (typeof document === 'undefined') return;
+    let el = this._ar;
+    if (!T) { if (el && el.style.display !== 'none') el.style.display = 'none'; this.arrowOn = false; return; }
+    const cam = this.g.camera;
+    if (!cam) return;
+    const v = (this._v ||= new THREE.Vector3()).set(T.x, T.y, T.z).project(cam);
+    let x = v.x, y = v.y;
+    const behind = v.z > 1;
+    if (behind) { x = -x; y = -y; }
+    if (!behind && Math.abs(x) < 0.94 && Math.abs(y) < 0.9) { if (el && el.style.display !== 'none') el.style.display = 'none'; this.arrowOn = false; return; }
+    if (!el) {
+      addStyle();
+      el = this._ar = document.createElement('div'); el.id = 'tiparrow';
+      el.innerHTML = '<span class="ta">➤</span><div class="tn"></div>';
+      (document.getElementById('floats') || document.body).appendChild(el);
+    }
+    const n = Math.max(Math.abs(x) / 0.88, Math.abs(y) / 0.8, 1e-3);   // (onto the edge's rectangle, inside the margins)
+    const ex = x / n, ey = y / n, W = innerWidth, H = innerHeight;
+    el.style.left = (((ex + 1) / 2) * W).toFixed(0) + 'px';
+    el.style.top = (((1 - ey) / 2) * H).toFixed(0) + 'px';
+    const a = Math.atan2(-y * H, x * W);
+    const ta = el.firstChild, nm = el.lastChild, label = t(T.name);
+    ta.style.transform = `rotate(${a.toFixed(2)}rad)`;
+    if (nm.textContent !== label) nm.textContent = label;
+    if (el.style.display !== 'block') el.style.display = 'block';
+    this.arrowOn = true;
   }
 
   // ---------------------------------------------------------------- the dialogue box's key hint (main.js, each dialogue frame)

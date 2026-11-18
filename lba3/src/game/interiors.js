@@ -497,6 +497,7 @@ function buildHouse(scene, physics) {
   const cupZ = -1.6;
   B.put(LX + 0.34, cupZ, Math.PI / 2, P.wardrobe, { w: 1.4, d: 0.62, h: 2.15 });
   R.searches.push({ id: 'cupboard', ...B.world(LX + 1.3, cupZ), r: 1.4 });
+  R.cupboard = { ...B.world(LX + 0.34, cupZ), h: 2.15 };   // (TUTOR-TARGETS: the wardrobe itself, where the step's marker stands)
 
   // the Dino-Fly painting over the sink, between the stove's shelf and the dresser (it hung behind the shelf's jars)
   k.at(-2.05, 1.97, BZ + 0.02, 0, () => P.frame(k, 0.78, 0.58, P.painting('dinofly')));

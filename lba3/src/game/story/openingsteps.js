@@ -76,6 +76,34 @@ export class OpeningSteps {
     if (g.room && !this.inHouse()) return null;
     return this.current();
   }
+  // TUTOR-TARGETS (P67, the user, 18.11: "the tap", "the barrels": the player couldn't tell which object was meant):
+  // the exact thing the current step means, where it is, for the marker over it and the arrow at the screen's edge
+  // (tutorial.js): { x, y (the marker's height), z, foot (the ground under it), r (its ring), name (a short label key) }.
+  // None for the inventory's step (it is a key, not a place) or where the thing is not in this scene.
+  target() {
+    const id = this.panelStep(), g = this.game, h = g.hero, R = g.room;
+    if (!id) return null;
+    const at = (x, foot, z, up, r, name) => ({ x, y: foot + up, z, foot, r, name: 't2_n_' + name });
+    switch (id) {
+      case 'ball': {
+        if (R?.id !== 'house') { const e = R?.exits?.find((x) => x.room === 'house'); return e ? at(e.x, h.pos.y, e.z, 2.2, 0.6, 'out') : null; }
+        const c = R.cupboard; return c ? at(c.x, h.pos.y, c.z, c.h + 0.45, 0.8, 'ball') : null;
+      }
+      case 'out': {
+        const e = R?.exits?.find((x) => (R.id === 'house' ? x.to === 'outdoor' : x.room === 'house'));
+        return e ? at(e.x, h.pos.y, e.z, 2.6, 0.7, 'out') : null;
+      }
+    }
+    if (R) return null;
+    switch (id) {
+      case 'zoe': { const z = this.ch.npc('zoe'); return z?.present ? at(z.pos.x, z.pos.y, z.pos.z, 2.45, 0.6, 'zoe') : null; }
+      case 'tap': { const Y = this.ch.home.parts.yard; return Y ? at(Y.position.x, Y.position.y, Y.position.z, 1.55, 0.45, 'tap') : null; }
+      case 'barrels': { const T = this.ch.barrels?.(); return T ? at(T.x, T.y - 0.55, T.z, 1.6, 1.1, 'barrels') : null; }
+      // (the pipe is 6 m long: the marker stands on it level with him, so it points at the stretch he would jump)
+      case 'pipe': { const z = Math.min(PIPE.z1 - 0.4, Math.max(PIPE.z0 + 0.4, h.pos.z)), foot = g.physics.groundAt(PIPE.x + 1.6, z); return at(PIPE.x, foot, z, 1.35, 0.5, 'pipe'); }
+    }
+    return null;
+  }
   // the yard's progress for the panel's dots: [done, of]
   progress() { return [YARD_STEPS.filter((id) => this.isDone(id)).length, YARD_STEPS.length]; }
 
