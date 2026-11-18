@@ -68,8 +68,9 @@ naming the wheel.
 
 - **A hands-on moment at once**: giving it, Arthur says how to read it, in his own words, and that he hid one of his
   old radio valves in the house ("Go on, find it!"); without Arthur, his note says the same. The valve hums in the
-  hall's big plant pot by the front door, ~9 m from the rug, so everything rises as he crosses the house. Held out
-  there: Take (E); a moment of the valve in the pot; Arthur cheers and sends him on to the cellar and tells him of the
+  pocket of Twinsen's own coat on the hall's stand by the front door (first placed in the hall's plant pot, but the
+  hall's corner holds three of the house's Look spots, which took the prompt), ~9 m from the rug, so everything rises as he crosses the house. Held out
+  there: Take (E); a moment of the valve at the coat; Arthur cheers and sends him on to the cellar and tells him of the
   squeal (or a second note does). No reward (it is Arthur's valve). Flags `e2_hide`, `e2_tube`; a save from before
   this has no valve to find.
 - **A tip** (`tutorial.js` lesson `pset`, in the house while the valve is to find): "R Hold out the Pocket Set (press
@@ -104,3 +105,26 @@ Every new or changed line in English and Hebrew (`src/game/text/kit2.js`, `wswit
   weapon they want; `tests/crosssystem.mjs` holds R to go back to the ball.
 
 Results and pictures: see the end of this file.
+
+## Results (Automated runtime only; SwiftShader, headless Chromium, a shared and often overloaded machine)
+
+After merging `ccr-c1c2c4b9-dep6ed` (AUDIT-FIX, chapter 11, Display → Frame rate):
+- `tests/weapon-switch.mjs`: **PASS** (18 of 18).
+- `tests/chapter1.mjs`: **PASS** (33 checks).
+- `tests/dialogue-check.mjs`: **PASS** (Hebrew 100 %).
+
+Before the merge (same code), runs often ended in a crashed page (the machine's memory, other agents' browsers);
+every check that ran passed except the known ones:
+- `tests/equip2.mjs`: all 26 checks up to the Save & quit step passed, including the 6 new hands-on checks. No run
+  got through the Save & quit → Continue step without a crash.
+- `tests/crosssystem.mjs`: 9 checks passed, including the two with R (cycle; hold back to the ball), then a crash.
+- `tests/jetpack.mjs`: 32 checks passed, no failure, then a crash.
+- `tests/controls.mjs`: the 3 known LBA-camera failures only, then a crash.
+- `tests/combat.mjs`: 77 passed, 1 failure (the known 30 fps dodge).
+- `tests/anim-combat.mjs`, `tests/inventory-calm.mjs`, `tests/hebrew.mjs`: **PASS**.
+- `tests/menus.mjs`: 12 checks passed, then a crash.
+The coordinator asked to stop there (the user's credits); none of these was rerun after the merge.
+
+Pictures (`lba3/captures/weapon-switch/`, chapter 2): `ws-1-tip.png` (the tip), `ws-2-hold-to-ball.png` (R held: the
+hint fills toward the ball), `ws-3-hebrew.png`, `ws-4-pill-strip.png` (the pill and the strip after two presses),
+`eq2-1-pocketset-cellar.png` (the Pocket Set's dial on the pill in the cellar, "here!").
