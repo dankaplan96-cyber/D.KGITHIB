@@ -23,7 +23,7 @@ Object.assign(STR.en, {
   nw_ar_1: "Dad? It's Arthur. I'm home, by the radio, like Mum said. The kitchen pipe is knocking again.",
   nw_ar_2: "Three, and a rest. Three, and a rest... and now there's four. Four, and a rest. A little one at the end. I counted it ten times.",
   nw_tw_ar: "Four? It was always three. In the kitchen, at the dig, in the pump room.",
-  nw_bal_ar: "Then I time the code to the rest after four. If the boy counted right.",
+  nw_bal_ar: "Then something down there has started answering. Three is the shell; that little fourth isn't. I'll time the code to the rest after four, if the boy counted right.",
   nw_tw_ar2: "Mira's gauges sit on the old mains. They'll know.",
   nw_ar_home: "Shh. I'm counting. ...Four, and a rest. Still four. Mum gave me the pipe and I'm keeping it.",
 

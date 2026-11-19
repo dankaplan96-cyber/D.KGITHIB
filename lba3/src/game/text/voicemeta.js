@@ -113,7 +113,7 @@ export const VOICE_META = {
   c3_tw_sendell2: 'annoyed', c3_sendell_3: ['concerned', 'concerned', 'concerned'], c3_tw_sendell3: ['neutral', 'neutral'], c3_sendell_4: ['neutral', 'concerned'],
   c3_sendell_crystals: ['neutral', 'pleased', 'urgent'], c3_bal_radio2: ['urgent', 'neutral', 'neutral'], c3_bal_radio3: ['pleased', 'neutral', 'neutral'],
   c3_core_vesk1: ['neutral', 'pleased', 'neutral'], c3_core_tw1: { i: ['urgent', 'concerned', 'neutral', 'urgent'], e: ['alive'] },
-  c3_core_vesk2: ['annoyed', 'annoyed', 'neutral'], c3_core_vesk3: ['annoyed', 'annoyed'], c3_vesk_over1: ['annoyed', 'annoyed', 'annoyed'],
+  c3_core_vesk2: ['annoyed', 'neutral', 'annoyed'], c3_core_vesk3: ['annoyed', 'annoyed'], c3_vesk_over1: ['annoyed', 'annoyed', 'annoyed'],
   c3_tw_over: ['urgent', 'urgent', 'neutral'], c3_vesk_over2: { i: ['annoyed', 'annoyed', 'urgent', 'urgent'], e: ['Over', 'built'] },
   c3_vesk_over3: { i: 'annoyed', e: 'understands' }, c3_vesk_coil: ['annoyed', 'urgent'], c3_vesk_hit1: ['urgent', 'annoyed'],
   c3_vesk_hit2: { i: ['concerned', 'urgent', 'urgent'], h: 1 }, c3_vesk_down: ['annoyed', 'annoyed'], c3_tw_down: ['neutral', 'neutral'],

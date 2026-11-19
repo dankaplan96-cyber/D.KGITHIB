@@ -63,6 +63,11 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 10 | Borrowed Time: Mira's call, the valve room, Oren, the shelter (`og_*`) | Mira, Oren, Gilbert, Tim, Lulu, Zoé, Arthur | **edited**: Twinsen reacts to the voice in the pipes ("Thank you, Oren. Whatever you are."); `og_oren_3` "On Ballastra, a long way from you" (the place's first mention says it is far); the four objectives lose their stray full stops | Source only |
 | 10 | the B-7: Zoé in the project office, the fitting, Vesk on the wire (`th_*`) | Zoé, guard, Gilbert, Oren, Vesk | **edited** `th_guard_1` (no longer contradicts Zoé's "By the door, this time": "The last visitor I had in here said she was looking for the washroom", the chapter-2 excuse); rest kept (Vesk's "A station that can say no…" protected) | Source only |
 | 11 | Ballastra (team-only): the freighter, Quill, the lift, Tessa, the gardens, Halden, the pump room, Dunn, the Steps (`bl_*`) | Tessa, Quill, Hobb, Ferro, Wenna, Corvin, Halden, Mags, Dunn, Oren, Doran, Baldino | **edited**: Twinsen reacts to Oren's 304 sleepers (new `bl_tw_or3`: "Their families are on that row, Oren. I'll be back for them."; the payoff is chapter 12's, S-4); "four days" and "thirty-four years" kept where they first land, cut from the repeats (`bl_te_done`, `bl_te_met`, `bl_fe_after`, `bl_du_1`, `bl_du_2`); the network's count "Five to start", not "Forty" (`bl_tw_s3`, `bl_te_s4`); Hobb's reminder in his voice | Source only |
+| 14 | the Network: Baldino's plan, the pulse tool (`c10_bal_*`) | Baldino | **edited**: "Five stations, five friends, one minute" first, then one picture a line (the relays talk through each station's machine; each runs on what is there; one minute, a friend by each); the "test pair" (an optional workshop toy) no longer assumed; the pulse tool in two short lines | Source only |
+| 14 | the stations (`c10_*`, `nw_*`) | Oku, Mira, Zoé, Arthur, Ilka, Dallan, Yorna, Pim, Sefa, Irsa | **edited**: `c10_ilka_w2` introduces "one of FunFrock's old clone soldiers… They take orders from nobody alive" (Twinsen's later "the clone" now has its antecedent, and they are not "Vesk's men"); `c10_dallan_1` "running this bore" (foreman); `c10_dallan_stand` "The council speaks for the project now" (true whether the council ordered a stop or a reversal); `nw_bal_ar` says what the fourth knock means ("Something down there has started answering. Three is the shell; that little fourth isn't."); `nw_ar_mic` "Station ready" from home kept (Zoé gave him the kitchen pipe: his station) | Source only |
+| 15 | the shaft, the machinery, Sendell (`c3_*`, `sh_*`) | Twinsen, Baldino, Sendell | **edited**: `c3_arrive_stop` (new): after the council's stop, "the bore is turning again: the council's stop never reached this console" (it "ground on" with no word after Twinsen stopped it); the knock language stated once and kept: `sh_two` "The three is the shell, as it's knocked since our kitchen tap. The two come from that damper. Something down here is answering it."; `sh_k3` "I knock three, like the shell, and she answers two."; `c7_sendell_4` "you will know her" (nothing at the bottom shows her: the promise is kept by her answer, not a sight) | Source only |
+| 16 | the core: Vesk, the pylons, the overload, the end (`c3_*`, `co_*`) | Vesk, Zoé, Mira, Oku, Ilka, Pim, Baldino, Irsa, Arthur, guard | **edited**: `c3_core_vesk2` keeps his logic ("It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all.") instead of a late turn to greed (journal `c3_j_core` with it); the signal's order is the network channel's, "Star, sun, wave" (`c3_pylon_1`, `co_zoe_sig`); the protected lines kept (`co_ar_two`, `co_vesk_guard`/`co_guard_2`) | Source only |
+| Epilogue | dinner, free roam (`ep_*`, `idle_*_home`) | family, everyone | **edited**: Kell and Irsa get closing lines (`zt_kell_home`, `zt_irsa_home`, new: the lane on its own switch; the strip taken down from over her bench); the dinner bookend's set-up now on the main path (`t2_zoe_done`); rest kept | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -160,6 +165,21 @@ was weighed in its scene. Section numbers are the report's.
 | 13 | "thirty-four years" ×5, "four days" ×6 | real | **fixed** (kept where each first lands) |
 | 13 | "Forty" vs five stations | real | **fixed** ("Five to start") |
 | 13 | `th_bal_end1` vs chapter 14 re-explaining | checked: the expanded campaign plays `th_bal_exp1` instead; chapter 14's opening is edited below |
+| 14 | `c10_bal_1`-`4` a lecture | real | **fixed** (shorter, one picture a line; "Five stations, five friends, one minute" leads) |
+| 14 | `c10_bal_2` the test pair | real (minor) | **fixed** (removed) |
+| 14 | Vesk's men or FunFrock's machines; "the clone" | real | **fixed** in `c10_ilka_w2` |
+| 14 | `nw_ar_2` four knocks, nobody says what it means | real | **fixed** in `nw_bal_ar` |
+| 14 | `nw_ar_mic` "Station ready" from the kitchen | kept: Zoé's line before it gives him the kitchen pipe as his job; the dial's chalk in the epilogue pays it off |
+| 15 | `c3_arrive` the bore "grinds on" after the stop | real | **fixed** (`c3_arrive_stop` when the stop was thrown) |
+| 15 | `co_tw_lane` Mill Lane's thread fragile | kept (the chapter-14 lane hand-off and the core's branch are the same thread, said by Irsa on the radio) |
+| 15 | knock language unreadable | real | **fixed** by stating it once (`sh_two`, `sh_k3`, `nw_bal_ar`); the rest of the lines keep that vocabulary |
+| 15 | `c3_core_vesk2` motive flips | real | **fixed** |
+| 15 | `c3_vesk_over1` "ten years" vs a new project | kept: Irsa's "ten years" on Zeelich agrees; the project is new on Citadel, not on Zeelich. S-6 lists a line saying so |
+| 15 | `c3_pylon_1` "Sun, wave, star" after the star moved first | real | **fixed** (and `co_zoe_sig`) |
+| 15 | `c3_sendell_2` the reveal in one line; `c7_sendell_4` "see her" | partly | **fixed** the promise ("know her"); a visual of the child would be new art (S-7) |
+| 15 | `ep_zoe_1` bookend never set up | real | **fixed** (`t2_zoe_done`, `t2_zoe_close`) |
+| 15 | `ep_end_text` "shield" without a picture | **fixed** upstream: chapter 3 now says what the shield is (the bore run backwards, pushing the heat back down) |
+| 15 | the epilogue misses Irsa, Kell, Ballastra | real | **fixed** for Irsa and Kell; Ballastra's closing belongs to its unwritten chapters (S-4) |
 
 
 ## Story contradictions for a separate repair
@@ -168,5 +188,5 @@ was weighed in its scene. Section numbers are the report's.
 
 ## Resume point
 
-Next: chapter 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: the optional side quests and residents (FRESH-EYES §15b, §16; DIALOGUE-EDIT remaining item 1); then the post-15.11 texts (wswitch, arsenal, kit2). Was: chapter 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).

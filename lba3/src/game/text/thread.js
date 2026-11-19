@@ -135,6 +135,9 @@ Object.assign(STR.en, {
   zt_cart_2: '(The cock open, and the cistern drinks it.)',
   zt_kell_done: 'Hear that? Taps. The whole of Mill Lane. Thank you, Twinsen. If you ever need this lift, it is yours.',
   zt_kell_after: 'She runs on the mill line now. If you ever need a lift, ask.',
+  // (DIALOGUE-2: the aftermath on Mill Lane, after the core)
+  zt_kell_home: 'She runs off the mills now, on a switch of her own. Irsa made them fit a proper one.',
+  zt_irsa_home: 'Baldino brought me the shield readings. No more three and a rest. I took the strip down from over my bench.',
   zt_kell_later: "The chief gave us the mill line that day. I don't know what to think of the rest.",
   zt_fall: '(A long way down. The stair is round the back.)',
   zt_irsa_1: 'Shut. No water, no bench. My test pump runs off the cistern, and the cistern is sitting half way up the lift.',

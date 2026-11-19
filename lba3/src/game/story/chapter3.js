@@ -91,7 +91,7 @@ export class Chapter3 extends ChapterBase {
     if (!this.R.c3shaft) return; // (rooms missing in this build)
     g.enterRoom('c3shaft', null, true);
     this.sh.begin();
-    this.chain([['narrator', 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1'], ...this.sh.arriveLines()], () => {
+    this.chain([['narrator', this.f.cn_stop ? 'c3_arrive_stop' : 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1'], ...this.sh.arriveLines()], () => {
       this.f.c3_started = true; g.updateObjective(); g.save(false);
     });
   }
