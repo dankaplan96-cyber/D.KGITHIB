@@ -9,7 +9,8 @@
   const DT = 1 / 30, SEQ = (window.SEQ || 'zeelich,desert,hamalayi,citadel').split(','), CYCLES = +(window.CYCLES || 2);
   if (window.FOLLOW) G.bench.setCamera('follow');
   if (window.BASE) G.stagedBatches = false;
-  if (window.SECS) G.bench.secOn?.();   // (ARRIVAL-STEPS, SECS=1: each drawn black frame's CPU by section)   // (ARRIVAL-STEPS: the batch builds in one step each, as before)
+  if (window.SECS) G.bench.secOn?.();
+  if (window.NOSETTLE) G.settleOn = false;   // (NOSETTLE=1: no settle step, the A/B; SECS=1: a slow frame's CPU by section)
   // (OFF=1: this task's changes switched off, the A/B baseline in the same build)
   if (window.OFF) { G.skelUp = false; G.shadowCache.initSpare = false; G.shadowCache.pool2 = false; G.revealReady = false; }
   const route = G.bench.routes().find((x) => x.id === 'street');
@@ -44,7 +45,7 @@
       if (b.sc > a.sc) d.push('cache full build'); if (b.sl > a.sl) d.push('cache slice'); if (b.p > a.p) d.push(`+${b.p - a.p} programs`); if (b.g !== a.g) d.push(`${b.g - a.g >= 0 ? '+' : ''}${b.g - a.g} geometries`);
       if (b.x !== a.x) d.push(`${b.x - a.x >= 0 ? '+' : ''}${b.x - a.x} textures${b.rt !== a.rt ? ` (${b.rt - a.rt} render targets)` : ''}`); if (b.dbl > a.dbl) d.push(`${b.dbl - a.dbl} pieces left draw batches`); if (b.scl > a.scl) d.push(`${b.scl - a.scl} pieces left shadow batches`);
       { const PL = G.prepLog || []; const st = PL.slice(pl0); if (st.length) d.push('STEP ' + st.map((e) => `${e.k} ${e.ms}${e.p ? ` (+${e.p} prog)` : ''}${e.u && e.u.ms >= 4 ? ` [unit ${e.u.label} ${e.u.ms}]` : ''}`).join(' + ')); }
-      if (window.SECS && f.sec && (f.calls ?? 0) > 0 && ms > 20) d.push('SEC ' + Object.entries(f.sec.ms || {}).filter(([, v]) => typeof v === 'number').sort((x, y) => y[1] - x[1]).slice(0, 4).map(([k, v]) => `${k} ${v.toFixed(0)}`).join(' · '));
+      if (window.SECS && f.sec && ms > 20) d.push('SEC ' + Object.entries(f.sec.ms || {}).filter(([, v]) => typeof v === 'number').sort((x, y) => y[1] - x[1]).slice(0, 4).map(([k, v]) => `${k} ${v.toFixed(0)}`).join(' · '));
       if (f.up) d.push(`uploads ${f.up} (${(f.upKB || 0).toFixed(0)} KB)`);
       if (!black && firsts.length) { const m = new Map(); for (const x of firsts) m.set(x, (m.get(x) || 0) + 1); d.push('FIRST IN VIEW: ' + [...m].map(([k2, n2]) => (n2 > 1 ? n2 + '× ' : '') + k2).join(' · ')); }
       else if (firsts.length) { const m = new Map(); for (const x of firsts) m.set(x, (m.get(x) || 0) + 1); d.push(`${firsts.length} first uploads by draws behind black: ` + [...m].slice(0, +(window.NF || 12)).map(([k2, n2]) => (n2 > 1 ? n2 + '× ' : '') + k2).join(' · ')); }

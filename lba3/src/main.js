@@ -1026,7 +1026,7 @@ class Game {
     // brought up to date first (nothing is drawn in the hold, so they were not), their cells rebuilt in slices — on the
     // first frame drawn, they left and their cells were rebuilt in that frame (46–67 pieces on the arrivals here). The
     // batch meshes this remade go up in the next step. (Their shadow batches: the next frame's own update.)
-    if (staged && this.drawBatch.enabled) {
+    if (staged && this.drawBatch.enabled && this.settleOn !== false) {   // (settleOn false: no settle — A/B)
       let first = true;
       sliceT('draw batches settle', () => {
         const t0 = performance.now();
