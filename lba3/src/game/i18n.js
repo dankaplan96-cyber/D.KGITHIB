@@ -193,6 +193,10 @@ spoken.miss = new Set();
 
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
+  // BOOT-FAIL (P73): the start failed (main.js startupFailed)
+  boot_fail_gfx: "The game couldn't start 3D graphics in this browser. Retry, or restart the browser.",
+  boot_fail: "The game couldn't start. Retry, or reload the page.",
+  boot_retry: 'Retry', boot_copy: 'Copy diagnostics', boot_copied: 'Copied',
   title_sub: 'An unofficial fan sequel to Little Big Adventure 2',
   to_title: 'Main Menu', quit_game: 'Quit Game',
   disclaimer: 'Non-commercial fan project, not affiliated with Adeline Software or [2.21]. The characters and world belong to their owners. Story, models, sound and music are original.',

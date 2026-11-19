@@ -312,7 +312,9 @@ class Game {
     this.settings.langV = 1;
     setLang(this.settings.lang);
 
-    this.renderer = new Renderer($('#game'));
+    // BOOT-FAIL (P73): a renderer that cannot start (no WebGL context) is named as such on the failure screen
+    if (FAIL_AT === 'renderer') throw Object.assign(new Error('Error creating WebGL context. (forced by ?failstart=renderer)'), { stage: 'renderer' });
+    try { this.renderer = new Renderer($('#game')); } catch (e) { throw Object.assign(e instanceof Error ? e : new Error(String(e)), { stage: 'renderer' }); }
     // (TITLE-LOAD: three asks the driver for the largest anisotropy (a call that waits for the GPU process) on the first
     //  texture that uses it, the loading screen's texture step, by then behind every shader sent early: the step's first
     //  texture waited for all of them (13 s here). Asked now, with nothing queued; three keeps the answer)
@@ -325,13 +327,14 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
     this.loadTimes = {};
     this.preparing = true;
-    this.ready = this.boot().catch((e) => { console.error('startup failed', e); loadingStep('The game could not start: ' + (e?.message || e)); throw e; });
+    this.ready = this.boot().catch((e) => { startupFailed(e, e?.stage || 'boot'); throw e; });
   }
 
   // LAZY-REGIONS: startup builds Citadel (the title's backdrop), Twinsen's house and the well (a new game's opening)
   // and the area the autosave stands in, in steps with a paint between them, so the loading bar moves with a real
   // label (src/game/regions.js; every other area is built the first time it is needed, behind a scene change's black).
   async boot() {
+    if (FAIL_AT === 'boot') throw Object.assign(new Error('forced by ?failstart=boot'), { stage: 'boot' });
     // startup cost per step (ms), for profiling: game.loadTimes
     const tm = performance.now(), L = this.loadTimes;
     const timed = (name, fn) => {
@@ -3276,7 +3279,45 @@ const REVEAL_MAX = 12, REVEAL_MS = 1500;
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
 function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
-const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
+const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e && !startupFailed.shown) e.textContent = text; };
+// BOOT-FAIL (P73, the user's review of an exported build: "when WebGL context creation failed, the screen stayed on
+// 'Building Citadel…'"): any failure along the start — the preloads, new Game() (its renderer first), boot() — replaces
+// the progress with a short, accurate message, a Retry and a Copy diagnostics (the technical details stay behind it).
+// A renderer failure says the browser could not start 3D graphics, never that the island is still being built. Retry
+// reloads the page (without the test flag): nothing half-started survives it — no second loop, input handler or audio.
+// Test hook: ?failstart=renderer | game | boot.
+const FAIL_AT = new URLSearchParams(location.search).get('failstart');
+function startupFailed(e, stage = e?.stage || 'start') {
+  console.error('startup failed (' + stage + ')', e);
+  if (startupFailed.shown || typeof document === 'undefined') return;
+  startupFailed.shown = true;
+  const gfx = stage === 'renderer' || /webgl|context/i.test(String(e?.message || ''));
+  const L = document.querySelector('#loading');
+  if (!L) return;
+  L.classList.remove('hidden'); L.style.display = '';
+  for (const id of ['#load-bar', '#loading-step']) { const x = L.querySelector(id); if (x) x.style.display = 'none'; }
+  let gl = 'unknown';
+  try { const c = document.createElement('canvas'); gl = c.getContext('webgl2') ? 'webgl2 ok' : c.getContext('webgl') ? 'webgl1 only' : 'no webgl'; } catch { gl = 'no webgl (threw)'; }
+  const diag = [`LBA3 startup failure · build ${BUILT}`, `stage: ${stage}`, `error: ${e?.message || e}`, `webgl now: ${gl}`,
+    `browser: ${navigator.userAgent}`, `window: ${innerWidth}×${innerHeight} @${devicePixelRatio}`, `time: ${new Date().toISOString()}`,
+    '', String(e?.stack || '')].join('\n');
+  const box = document.createElement('div');
+  box.id = 'boot-fail'; box.setAttribute('role', 'alert');
+  box.style.cssText = 'position:absolute;left:50%;bottom:12%;transform:translateX(-50%);max-width:min(560px,90vw);padding:18px 22px;background:rgba(6,12,20,0.92);border:1px solid rgba(255,255,255,0.4);border-radius:10px;color:#fff;text-align:center;z-index:20;font-size:16px;line-height:1.45';
+  const msg = document.createElement('p'); msg.style.margin = '0 0 14px';
+  msg.textContent = t(gfx ? 'boot_fail_gfx' : 'boot_fail');
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+  const btn = (key, fn) => { const b = document.createElement('button'); b.textContent = t(key); b.style.cssText = 'padding:8px 18px;font:inherit;font-weight:600;border-radius:8px;border:1px solid rgba(255,255,255,0.6);background:#1f3b57;color:#fff;cursor:pointer'; b.addEventListener('click', fn); row.appendChild(b); return b; };
+  btn('boot_retry', () => { const u = new URL(location.href); u.searchParams.delete('failstart'); location.replace(u.toString()); }).dataset.act = 'boot-retry';
+  const copy = btn('boot_copy', async () => {
+    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); }
+    catch { const ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); ta.select(); }
+  });
+  copy.dataset.act = 'boot-copy';
+  box.append(msg, row);
+  L.appendChild(box);
+  startupFailed.diag = diag;
+}
 // the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
 // computer's previous start) animated on the compositor, so it keeps moving while the main thread builds
 const LOADT_KEY = 'lba3.loadTimes';
@@ -3389,7 +3430,7 @@ if (/[?&]voicelab\b/.test(location.search)) import('./engine/voicelab.js').then(
 // (BAKE-URL, 19.11: the artifact serves the baked geometry as assets/bake.wasm — artifacts serve web media types only —
 //  and its page is index.html as it is, without artifact-page.py's LBA_BAKE_URL: bake.bin was a 404 there and every
 //  artifact start sculpted from scratch; now the second name is tried)
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false).then((ok) => ok || loadBake('assets/bake.wasm').catch(() => false)), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false).then((ok) => ok || loadBake('assets/bake.wasm').catch(() => false)), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); if (FAIL_AT === 'game') throw Object.assign(new Error('forced by ?failstart=game'), { stage: 'game' }); window.game = new Game(); }).catch((e) => startupFailed(e, e?.stage || 'game'));
 
 // the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the
 // keys or a pad, or after it rests 2.5 s; any mouse move brings it straight back (menus, aiming the ball)
