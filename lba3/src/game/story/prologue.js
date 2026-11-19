@@ -559,8 +559,11 @@ export class Prologue extends ChapterBase {
           });
         }
         // (only the bell wakes Doran: Xil saw it when the barge came in; once it has rung, that is moot)
-        if (f.metXil) return c([['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']])]);
-        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ['hero', 'pr_tw_xil']], () => { f.metXil = true; g.updateObjective(); g.save(false); });
+        // (DIALOGUE-2: once he has seen the well he asks for a rope, once: the objective names Xil's rope from then on)
+        const rope = f.wellSeen && !f.pr_xilRope ? [['hero', 'pr_tw_xil_rope'], ['xil', 'pr_xil_rope']] : [];
+        const asked = () => { if (rope.length) f.pr_xilRope = true; };
+        if (f.metXil) return c([['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ...rope], () => { asked(); g.save(false); });
+        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ...(rope.length ? rope : [['hero', 'pr_tw_xil']])], () => { f.metXil = true; asked(); g.updateObjective(); g.save(false); });
       case 'doran':
         if (f.stamp) return c([['doran', 'pr_doran_after']]);
         // asleep: nothing but the harbour bell wakes him (CH1-LONGER)

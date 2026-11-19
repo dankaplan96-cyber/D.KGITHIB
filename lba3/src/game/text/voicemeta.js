@@ -43,7 +43,7 @@ export const VOICE_META = {
   pr_xil_1: ['pleased', 'neutral', 'concerned'], pr_xil_2: ['annoyed', 'annoyed'], pr_tw_xil: 'neutral', pr_xil_3: ['relieved', 'pleased'],
   pr_xil_4: ['pleased', 'pleased'], pr_xil_after: ['neutral', 'uncertain'], pr_doran_1: ['curious', 'curious', 'pleased'], pr_tw_doran: 'neutral',
   pr_doran_2: ['curious', 'annoyed', 'annoyed'], pr_doran_3: ['annoyed', 'neutral', 'neutral', 'annoyed'], pr_doran_after: ['neutral', 'uncertain'],
-  pr_tim_1: { i: ['urgent', 'concerned'], p: [0, 0.35] }, pr_lulu_1: ['urgent', 'neutral'], pr_lulu_2: 'curious', pr_tim_2a: ['pleased', 'neutral', 'pleased'],
+  pr_tim_1: { i: ['urgent', 'concerned'], p: [0, 0.35] }, pr_lulu_1: ['urgent', 'neutral'], pr_lulu_2: 'curious', pr_tim_2a: ['pleased', 'neutral', 'pleased'], pr_tw_xil_rope: ['neutral', 'curious'], pr_xil_rope: ['pleased', 'neutral'],
   pr_tim_2b: ['concerned', 'concerned'], pr_lulu_3: 'concerned', pr_tw_tim: { i: 'curious', e: 'buzzes' }, pr_tim_3: ['urgent', 'concerned', 'concerned'],
   pr_tim_4: ['neutral', 'uncertain', 'pleased', 'concerned'], pr_tim_after: 'concerned', pr_lulu_after: ['pleased', 'uncertain'],
   pr_pippa: ['pleased', 'neutral', 'neutral', 'curious'], pr_cave_1: { i: ['concerned', 'concerned', 'curious', 'concerned'] },

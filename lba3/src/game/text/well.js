@@ -20,7 +20,7 @@ Object.assign(STR.en, {
   pr_gil_no: 'My pipes are fine! I kick them every morning.',
   pr_tw_kettle2: "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
   pr_mira_kettle: "Crystals? No, pipes don't grow those. That comes up from the spring.",
-  pr_mira_2b: "Fine. Find the fault and I'll waive his bill this month. Here's the key to the lid.",
+  pr_mira_2b: "All right, it's the well. Here's the key to the lid. Find the fault and I'll waive his bill this month.",
   pr_mira_wait0: "Show me it's the spring and not his pipes, and the lid is yours.",
 
   // ---- the lid: rusted to the rim (a kick, Aggressive)
@@ -37,6 +37,9 @@ Object.assign(STR.en, {
 
   // ---- the harbour: Doran sleeps through anything but the bell
   pr_xil_bell: 'Only the bell on that post wakes him. I saw it when the barge came in.',
+  // (DIALOGUE-2: the rope asked for, once he has seen the well: the objective names Xil's rope from then on)
+  pr_tw_xil_rope: 'I need a rope for the town well. Is there any on that barge?',
+  pr_xil_rope: 'Rope ladders, a whole crate. Wake that man, bring me my stamp, and one is yours.',
   pr_tw_snore2: '(He would sleep through a storm. Xil said the bell wakes him.)',
   pr_bell_look: ['The harbour bell. It rings when a boat comes in.', 'The bell rope is long gone, and it hangs out of reach.'],
   pr_doran_bell: 'Boat in! Ropes! Fenders! ...There is no boat.',

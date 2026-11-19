@@ -256,7 +256,7 @@ Object.assign(STR.en, {
   pr_lulu_1: "He didn't throw anything! He's just standing here!",
   pr_tw_kids: "(They're hiding something. If I sneak up quietly, I might hear what.)",
   pr_lulu_2: 'So what was it?',
-  pr_tim_2a: 'A glowing stone! I found it on the beach. It was warm and it buzzed like a bee.',
+  pr_tim_2a: 'A glowing stone! I found it on the bay rocks. It was warm and it buzzed like a bee.',
   pr_tim_2b: 'It scared me, so I threw it in the well. Then the water stopped...',
   pr_lulu_3: "Your mum's going to kill you.",
   pr_tw_tim: 'A warm, glowing stone that buzzes?',
