@@ -1,5 +1,10 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**19.11: STORY-FIX merged** (plan item 4; STORY-FIX.md, story-fix.mjs 15/15): Dallan/the dock guard, chapter 8's
+shelters vs the cart, Gilbert "Grandpa" (Arthur's name for him), the hostel cook and foreman, Kesh's after-vent lines.
+Open for the user: Vesk's "three days" in chapter 8 vs chapters 9–10; dl_carving's "second tick" (left). Not yet
+published (with PERF-ARRIVAL, then phase 6).
+
 **19.11: v102 published (artifact 1795068384-abbc)**: CAVE-LOOK (P69: Tralu's cave reads as a cave — rock walls, ledge,
 light pools). No worker running. Waiting on the user: the Frame Rates benchmark, play at 30 with F9, a look at the cave,
 faces and the tutorial's markers. Open from CAVE-LOOK: the floor busy/dark, the guard house olive under the key light.
