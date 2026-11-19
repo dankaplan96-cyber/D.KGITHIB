@@ -54,9 +54,16 @@ export function layerOf(t) {
   return i;
 }
 // the arrays that grew: a new texture each (sent to the GPU by TEXARRAY.init), every twin pointed at it
-export function flushArrays() {
+export function flushArrays() { for (const _ of flushArraysSteps()); }
+// (ARRIVAL-STEPS: the same, a generator: one array made and sent per step)
+export function* flushArraysSteps() {
   for (const A of ARR.values()) {
     if (!A.dirty) continue;
+    yield* flushOne(A);
+  }
+}
+function* flushOne(A) {
+  {
     A.dirty = false;
     const tex = new THREE.DataArrayTexture(A.data.slice(0, A.n * A.w * A.h * 4), A.w, A.h, A.n);
     tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.anisotropy = A.aniso;
@@ -66,6 +73,7 @@ export function flushArrays() {
     for (const u of A.users) u.value = tex;
     old?.dispose();
     TEXARRAY.init?.(tex);   // (sent to the GPU now — behind the black or the loading screen — not on the first frame drawn)
+    yield;
   }
 }
 export const arrays = () => [...ARR.values()].map((A) => ({ key: A.key, layers: A.n }));

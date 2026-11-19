@@ -26,6 +26,7 @@
 //    only changes with distance, so a turning camera never sees one late).
 import * as THREE from 'three';
 import { MW } from './drawcull.js';
+import { runFor } from './drawbatch.js';
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
@@ -74,10 +75,10 @@ class Area {
     const quiet = (o, C) => { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh && o.frustumCulled !== false && Number.isFinite(C.r)) this.quiet.push(C); };
     const list = [];
     root.traverse((o) => { if (o.isMesh && !o.userData.shadowProxy) list.push(o); });
-    yield;
+    yield 'scan';
     let k = 0;
     for (const o of list) {
-      if ((++k & 31) === 0) yield;
+      if ((++k & 31) === 0) yield 'pieces';
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) continue;
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true, next: -0.5, mwF: -1 };   // (next / mwF: PERF-CPU's distance detail; numbers from the start, so V8 keeps them unboxed)
@@ -90,10 +91,10 @@ class Area {
       this.assign(C);
       this.members.push(C);
       o.castShadow = false;
-      if (C.parts.size > 1 || C.parts.values().next().value) yield;   // (a large piece, cut triangle by triangle)
+      if (C.parts.size > 1 || C.parts.values().next().value) yield 'large piece';   // (a large piece, cut triangle by triangle)
     }
-    yield;
-    for (const cell of this.cells.values()) { this.build(cell); yield; }
+    yield 'pieces';
+    for (const cell of this.cells.values()) { this.build(cell); yield 'cell'; }
   }
   // PERF-BATTERY: the cells a piece's triangles go to. A piece up to half a cell across goes whole into the cell of its
   // centre (as before); a larger one triangle by triangle, each to the cell of its own centre. C.parts: cell id →
@@ -263,9 +264,7 @@ export class ShadowCull {
   }
   slice(root, ms = Infinity) {
     const A = this.pending?.get(root); if (!A) return false;
-    const t0 = performance.now();
-    let done = false;
-    while (!(done = A.gen.next().done) && performance.now() - t0 < ms);
+    const t0 = performance.now(), done = runFor(A.gen, ms, this).done;
     this.buildMs = (this.buildMs || 0) + performance.now() - t0;
     if (!done) return true;
     A.gen = null; this.pending.delete(root); this.areas.set(root, A); this.builds = (this.builds || 0) + 1;

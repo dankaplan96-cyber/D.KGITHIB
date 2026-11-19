@@ -986,7 +986,7 @@ class Game {
     // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
     // (stagedBatches false: each in one step, as before — the A/B switch)
     const staged = this.stagedBatches !== false;
-    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(), more = f(); put(k, t0, p0); return more; });
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); this.drawBatch.unit = this.shadowCull.unit = null; const more = f(); put(k, t0, p0); const u = this.drawBatch.unit || this.shadowCull.unit; if (u) log[log.length - 1].u = u; return more; });
     if (staged && this.shadowCull.stage(root)) {
       let lit = false;
       sliceT('shadow batches', () => {
@@ -1012,7 +1012,8 @@ class Game {
       S.push(() => { const t0 = performance.now(), p0 = P0(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; put('texture layers', t0, p0); return more; });   // (true: again next frame)
       if (staged) sliceT('draw batches', () => (this.drawBatch.stage(root) ? this.drawBatch.slice(root, PREP_SLICE_MS) : false));   // (ARRIVAL-STEPS: in slices)
       else stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
-    } else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
+    } else if (staged) sliceT('draw batches back', () => this.drawBatch.readmitSlice(root, PREP_SLICE_MS));   // (ARRIVAL-STEPS: in slices)
+    else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
     // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
     //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
     //  looked at it: the Follow camera's first sweep, 126 and 26 vertices)

@@ -42,7 +42,7 @@
       const d = []; if (b.dbn > a.dbn) d.push(`draw batches built ${(b.db - a.db).toFixed(0)} ms`); if (b.sbn > a.sbn) d.push(`shadow batches built ${(b.sb - a.sb).toFixed(0)} ms`);
       if (b.sc > a.sc) d.push('cache full build'); if (b.sl > a.sl) d.push('cache slice'); if (b.p > a.p) d.push(`+${b.p - a.p} programs`); if (b.g !== a.g) d.push(`${b.g - a.g >= 0 ? '+' : ''}${b.g - a.g} geometries`);
       if (b.x !== a.x) d.push(`${b.x - a.x >= 0 ? '+' : ''}${b.x - a.x} textures${b.rt !== a.rt ? ` (${b.rt - a.rt} render targets)` : ''}`); if (b.dbl > a.dbl) d.push(`${b.dbl - a.dbl} pieces left draw batches`); if (b.scl > a.scl) d.push(`${b.scl - a.scl} pieces left shadow batches`);
-      { const PL = G.prepLog || []; const st = PL.slice(pl0); if (st.length) d.push('STEP ' + st.map((e) => `${e.k} ${e.ms}`).join(' + ')); }
+      { const PL = G.prepLog || []; const st = PL.slice(pl0); if (st.length) d.push('STEP ' + st.map((e) => `${e.k} ${e.ms}${e.p ? ` (+${e.p} prog)` : ''}${e.u && e.u.ms >= 4 ? ` [unit ${e.u.label} ${e.u.ms}]` : ''}`).join(' + ')); }
       if (f.up) d.push(`uploads ${f.up} (${(f.upKB || 0).toFixed(0)} KB)`);
       if (!black && firsts.length) { const m = new Map(); for (const x of firsts) m.set(x, (m.get(x) || 0) + 1); d.push('FIRST IN VIEW: ' + [...m].map(([k2, n2]) => (n2 > 1 ? n2 + '× ' : '') + k2).join(' · ')); }
       else if (firsts.length) { const m = new Map(); for (const x of firsts) m.set(x, (m.get(x) || 0) + 1); d.push(`${firsts.length} first uploads by draws behind black: ` + [...m].slice(0, +(window.NF || 12)).map(([k2, n2]) => (n2 > 1 ? n2 + '× ' : '') + k2).join(' · ')); }
