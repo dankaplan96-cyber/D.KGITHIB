@@ -40,3 +40,12 @@ concerned, pleased, determined, annoyed) and the single shots beside it.
 
 Open: a human's eye in play (strong enough from the play camera? the brows are modest by design); brows for the rest
 of the cast.
+
+## FACE-1b (19.11): brows for the recurring cast
+The other models' brows are found by themselves (characters.js `autoBrowIdx`): the triangles round the brows joined into
+pieces by shared corners; the brows are a pair of small pieces, one each side, alike in size and colour, wholly in the
+band over the eyes (colour alone failed: many brows are the hair's colour). Found on 41 models — among them Arthur,
+Gilbert, Mira, Pippa, Tim, Lulu, Dallan, Vesk, Nell, Kira, Tessa, the workers, the Lhar, the dockers; not found (their
+expressions keep eyes, mouth and gaze): Doran, Xil, Nara, Oku, Baldino (goggles), Bram, Hesk, the keeper, the guards
+with brims, the clerks, the trees and bees (no brows to move). Checked: Arthur in close-up, concerned / annoyed move
+the brows on the skin (Automated runtime only).

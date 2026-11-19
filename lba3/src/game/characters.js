@@ -1408,16 +1408,63 @@ const polyEyeMat = new LbaMaterial();
 // ends up (concerned). Relative deltas on 48 vertices; every other vertex is zero. Sized by the brows' own span (Zoé's
 // head is smaller than his). A model without such brows still gets the eyes' and the mouth's part of an expression.
 const BROW_COLS = { twinsen: [0x4a3014, 0x5a3a1e], twinsen_fig: [0x5a3a1e], zoe: [0x5a3a22] };
+// FACE-1b (the brief: "then extend the proven approach to recurring characters"): the other models' brows found by
+// themselves. A model's brows are pieces of their own (cast_poly.py brow_strips: a strip over each eye), often in the
+// hair's colour, so colour alone can't tell them from a fringe: the triangles round the brows are joined into pieces by
+// shared corners, and the brows are a pair of small pieces (one each side, alike in size and colour) lying wholly in
+// the band just over the eyes. Returns their vertex indices, or [] (that model keeps the eyes', the mouth's and the
+// gaze's part of an expression).
+function autoBrowIdx(P) {
+  const E = P.eyes[0].pivot, ex = Math.abs(E[0]), pos = P.pos, col = P.col;
+  const eys = P.eyes[0].pos.filter((_, i) => i % 3 === 1), eTop = Math.max(...eys);
+  const inBand = (i) => { const dy = pos[i + 1] - E[1]; return dy >= Math.max(0.008, eTop * 0.5) && dy <= 0.095 && Math.abs(pos[i]) <= ex + 0.085 && pos[i + 2] >= E[2] - 0.075; };
+  const near = (i) => { const dy = pos[i + 1] - E[1]; return dy > -0.02 && dy < 0.13 && Math.abs(pos[i]) < ex + 0.12 && pos[i + 2] > E[2] - 0.1; };
+  const tris = [], parent = [], key = new Map();
+  const find = (t) => { while (parent[t] !== t) t = parent[t] = parent[parent[t]]; return t; };
+  for (let i = 0; i < pos.length; i += 9) if (near(i) || near(i + 3) || near(i + 6)) { parent.push(tris.length); tris.push(i); }
+  tris.forEach((i, t) => {
+    for (let q = 0; q < 9; q += 3) {
+      const k = `${Math.round(pos[i + q] * 2000)},${Math.round(pos[i + q + 1] * 2000)},${Math.round(pos[i + q + 2] * 2000)},${col[i + q]},${col[i + q + 1]},${col[i + q + 2]}`;
+      const o = key.get(k);
+      if (o === undefined) key.set(k, t); else { const ra = find(t), rb = find(o); if (ra !== rb) parent[ra] = rb; }
+    }
+  });
+  const comps = new Map();
+  tris.forEach((i, t) => { const r = find(t); let c = comps.get(r); if (!c) comps.set(r, (c = { tris: [], ok: true, x: 0 })); c.tris.push(i); });
+  const cand = [];
+  for (const c of comps.values()) {
+    if (c.tris.length < 2 || c.tris.length > 40) continue;
+    let ok = true, sx = 0, n = 0;
+    for (const i of c.tris) for (let q = 0; q < 9; q += 3) { if (!inBand(i + q)) ok = false; sx += pos[i + q]; n++; }
+    if (!ok) continue;
+    c.x = sx / n; c.col = (col[c.tris[0]] << 16) | (col[c.tris[0] + 1] << 8) | col[c.tris[0] + 2];
+    if (Math.abs(c.x) < ex * 0.3) continue;   // (one side, not across the middle)
+    cand.push(c);
+  }
+  for (const L of cand) for (const R of cand) {
+    if (L.x >= 0 || R.x <= 0 || L.col !== R.col || L.tris.length !== R.tris.length || Math.abs(L.x + R.x) > ex * 0.25) continue;
+    const idx = [];
+    for (const i of [...L.tris, ...R.tris]) idx.push(i / 3, i / 3 + 1, i / 3 + 2);
+    return { idx, col: L.col };
+  }
+  return null;
+}
 function addBrowMorphs(geo, P, name) {
-  const cols = BROW_COLS[name];
-  if (!cols || geo.morphAttributes.position || !P.eyes?.length) return;
-  const E = P.eyes[0].pivot, ex = Math.abs(E[0]), pos = P.pos, col = P.col, idx = [];
-  for (let i = 0, v = 0; i < pos.length; i += 3, v++) {
-    const c = (col[i] << 16) | (col[i + 1] << 8) | col[i + 2];
-    if (!cols.includes(c)) continue;
-    const dy = pos[i + 1] - E[1];
-    if (dy < 0.01 || dy > 0.09 || Math.abs(pos[i]) > ex + 0.08 || pos[i + 2] < E[2] - 0.07) continue;
-    idx.push(v);
+  if (geo.morphAttributes.position || P.eyes?.length !== 2) return;
+  const E = P.eyes[0].pivot, ex = Math.abs(E[0]), pos = P.pos, col = P.col;
+  let cols = BROW_COLS[name], idx = [];
+  if (cols) {
+    for (let i = 0, v = 0; i < pos.length; i += 3, v++) {
+      const c = (col[i] << 16) | (col[i + 1] << 8) | col[i + 2];
+      if (!cols.includes(c)) continue;
+      const dy = pos[i + 1] - E[1];
+      if (dy < 0.01 || dy > 0.09 || Math.abs(pos[i]) > ex + 0.08 || pos[i + 2] < E[2] - 0.07) continue;
+      idx.push(v);
+    }
+  } else {
+    const A = autoBrowIdx(P);
+    if (!A) return;
+    idx = A.idx; cols = [A.col];
   }
   if (idx.length < 6) return;
   let lo = Infinity, hi = 0;
