@@ -66,7 +66,7 @@ Object.assign(STR.en, {
   c1_conf_zoe2: "And everyone who isn't?",
   c1_conf_vesk3: "I'm an engineer, Zoé. I calculate capacities. I don't make promises. The choice was hard enough without you looking at me like that.",
   c1_conf_tw2: "You don't get to decide who lives. Stop the bore.",
-  c1_conf_vesk4: "Stopping now would crack it faster than drilling on. I've run the numbers, Twinsen. You haven't. Goodbye.",
+  c1_conf_vesk4: "Backing it out now would crack it faster than drilling on. I've run the numbers, Twinsen. You haven't. Goodbye.",
   c1_after_zoe: 'He just... vanished into the light.',
   c1_after_tw: "He's gone to Zeelich. Let's go home, Zoé. We need to think.",
   c1_beam_dead: 'The beam pad is dead. Vesk cut the link from his ship.',

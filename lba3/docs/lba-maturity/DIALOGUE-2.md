@@ -53,6 +53,13 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 7 | the observatory, the mirrors, the fourth setting (`c7_*`, `ob_*`) | Sefa, Yorna | **edited** `ob_keeper_wait` (Sefa's courtesy, not a two-beat order); rest kept | Source only |
 | 7 | Sendell in the dome | Twinsen, Sendell | **edited** `c7_tw_s1` "Is it true? Is the shell cracking?" (he was briefing a goddess on her own news); her answer begins "Yes." | Source only |
 | 7 | Arthur's call | Arthur, Twinsen | **edited** `c7_arthur_2` "Grandpa Gilbert's not on it" (Arthur's own name for him, as everywhere else) | Source only |
+| 8 | home, Gilbert's tunnels, Mira, Pippa, the shelters (`c8_*`) | Zoé, Arthur, Gilbert, Mira, Pippa | **edited** `c8_gil_3`: the fort's guards went down to the spaceport queue, "so nobody's on the gate" (chapter 3 left the station gate shut and guarded; Twinsen now walks in with a reason); `c8_tw_z2` no longer recaps the whole errand to Zoé | Source only |
+| 8 | the farms, the lighthouse | Zoé, Joss, Bryn, Grull | **edited** `c8_zoe_lh2` quieter (no exclamations announcing a plot point); rest kept | Source only |
+| 8 | Vesk on the control room's screen | Vesk, Twinsen, Zoé | **edited** `c8_vesk_1` names the vents (Desert Island, the Hamalayi), not "FunFrock's old vents" (they are older than FunFrock); `c8_tw_c2` "list or no list" | Source only |
+| 8 | the lane thread (`ev_*`, laneline.js) | Bram, Hedda, Tobin, Zoé | kept (STORY-FIX 2 settled the cart) | Source only |
+| 9 | Baldino, the petition, Nara, Oku, the clerk (`c9_*`) | Baldino, Nara, Oku, Ottavo | **edited** `c9_tw_n1`: what a crack does, said as the story knows it (what sleeps under it wakes too soon; nobody knows what that does to two worlds' heat), not "the cold comes in" | Source only |
+| 9 | the council, the archive, Kell's way in, Dallan (`c9_*`, `cn_*`) | Amaru, Sela, Brum, Dallan, Kell, archivist | **edited**: `c9_dallan_2` "Hesk flew me to Citadel" (a glider cannot reach Zeelich); `c9_dallan_3` "I ran that dig… its guards answered to me" (foreman, not security; STORY-FIX 1); `cn_tw_log` "I pulled the cutoff on that test" | Source only |
+| 9 | the council's stop (`cn_chair_stop`, `cn_bal_stop`) and Vesk's refusal in chapter 2 (`c1_conf_vesk4`) | Amaru, Baldino, Vesk | **edited** to hold the game's own rule: Vesk's danger is *backing the bore out* halfway ("Backing it out now would crack it faster"), Baldino's in chapter 3 is pulling it out; the chair says why the council orders a stop and not a reversal (a reversal needs the project's engineers; a stop needs only their vote); Baldino says the danger aloud ("Stopped, not reversed. Well. A drill held still is not a drill pulled out.") The rest of the conflict is a story item (S-1) | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -127,6 +134,17 @@ was weighed in its scene. Section numbers are the report's.
 | 9 | `c7_tw_s1` Twinsen briefing a goddess | real | **fixed** |
 | 9 | `ps_read_2` the kitchen's three knocks applied backwards | real | **fixed** at the source (`prh_tap_1` counts three) |
 | 9 | `c7_arthur_2` "Gilbert" from Arthur | real | **fixed** ("Grandpa Gilbert") |
+| 10 | the sealed, guarded fortress walked into in chapter 8 | real | **fixed** in `c8_gil_3` (the guards went to the spaceport queue) |
+| 10 | `c8_zoe_lh2` a plot point announced | real (minor) | **fixed** (quieter; the beat is lh3's "So when I broadcast, the council heard me") |
+| 10 | `c8_vesk_1` "FunFrock's old vents" | real | **fixed** |
+| 10 | `c8_tw_c2` boarding without the list | real (minor) | **fixed** ("list or no list"; chapter 9's arrival shows nobody checks) |
+| 10 | `c8_tw_z2` recap | real (minor) | **fixed** |
+| 11 | council orders the bore *stopped* against the rule | real, the biggest | **partly fixed by wording** (see coverage row); the rule itself (the bible's "Stopping the drill now would crack the shell anyway") and the finale's "grinds on" are S-1 |
+| 11 | `cn_tw_log` "I ran that test" | real (minor) | **fixed** |
+| 11 | `cn_order_1` Vesk's reasons on a public notice | kept: it is the clue, and it is Vesk (he writes his reasons down; the note in the cabinet says the same) |
+| 11 | `c9_tw_n1` "The cold comes in" | real | **fixed** |
+| 11 | `c9_dallan_2` Hesk's glider to Zeelich | real | **fixed** |
+| 11 | `c9_dallan_2/3` foreman or security | real | **fixed** |
 
 
 ## Story contradictions for a separate repair
@@ -135,5 +153,5 @@ was weighed in its scene. Section numbers are the report's.
 
 ## Resume point
 
-Next: chapter 8 "Evacuation" (`text/ch8.js`, `story/evacuation.js`, `laneline.js`; FRESH-EYES §10). Then chapters 9-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: chapter 10 "Borrowed Time" (`text/throttle.js`, `story/throttle.js`; FRESH-EYES §12), chapter 11 Ballastra (§13), 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).
