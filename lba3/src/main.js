@@ -382,6 +382,7 @@ class Game {
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.shadowCull.shadowsOn = () => this.renderer.renderer.shadowMap.enabled;   // (PERF-CPU: no caster tests without the shadow pass)
+    this.shadowCull.defer = () => !!(this.trans?.hold && this.trans.prep);   // (ARRIVAL-STEPS: an area's staged shadow batches wait for their steps behind the black)
     this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
     // (WEATHER-1: the rain lines and the motes compiled with the scene, not on the first rain; with the weather off, as before)
@@ -978,7 +979,21 @@ class Game {
     const stepT = (k, f) => S.push(() => { const t0 = performance.now(); f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); });
     // (FRAME-1: its geometry too, in the black, the shadow batches included: they are built on the area's first update,
     //  which used to come later, so a house's 4.5 MB of batches went up on the first frame shown)
-    stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
+    // ARRIVAL-STEPS: the shadow batches and the draw batches in slices of at most PREP_SLICE_MS a black frame (a slice
+    // ends after the piece or cell that crosses it), staged here so the frame's own update does not build them at once
+    // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
+    // (stagedBatches false: each in one step, as before — the A/B switch)
+    const staged = this.stagedBatches !== false;
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), more = f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); return more; });
+    if (staged && this.shadowCull.stage(root)) {
+      let lit = false;
+      sliceT('shadow batches', () => {
+        if (!lit) { lit = true; this.lightPool.update(this.hero.pos); }
+        const more = this.shadowCull.slice(root, PREP_SLICE_MS);
+        if (!more && this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);   // (its first update, as the one-step build had)
+        return more;
+      });
+    } else stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
     // FIRST-BUILD (Test Lab finding 4, region-entry: a first visit's 6–11 new programs were compiled at the end of the
     // preparation, the hold waiting for them): on a first visit the area's programs are started now, right after its
     // lamps are chosen, so where the driver compiles in parallel (KHR_parallel_shader_compile: the laptop) they compile
@@ -991,8 +1006,9 @@ class Game {
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
       const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
-      S.push(() => { const t0 = performance.now(); while (more && performance.now() - t0 < LAYER_SLICE_MS) more = !it.next().done; log.push({ area, k: 'texture layers', ms: Math.round(performance.now() - t0) }); return more; });   // (true: again next frame)
-      stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
+      S.push(() => { const t0 = performance.now(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; log.push({ area, k: 'texture layers', ms: Math.round(performance.now() - t0) }); return more; });   // (true: again next frame)
+      if (staged) sliceT('draw batches', () => (this.drawBatch.stage(root) ? this.drawBatch.slice(root, PREP_SLICE_MS) : false));   // (ARRIVAL-STEPS: in slices)
+      else stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
     } else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
     // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
     //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
@@ -3222,6 +3238,9 @@ const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.03; // (see Game.advance)
 // TITLE-LOAD: the longest slice of texture-layer reading (drawbatch.js warmLayers) in one task, behind the black or the
 // loading screen (ms; a slice ends at the first piece past it)
 const LAYER_SLICE_MS = 30;
+// ARRIVAL-STEPS: the longest slice of a scene change's batch builds (and texture layers) in one black frame (ms; a slice
+// ends after the piece or cell that crosses it). With the frame's own work it keeps a black frame near 1.5 refreshes here
+const PREP_SLICE_MS = 12;
 // TITLE-LOAD: the title screen's live view. As shipped: the camera 110 m out, 42 m up, the fog's end as in play, detail
 // levels from the camera. The other values are visible options for the title only, priced in docs/lba3-performance/
 // TITLE-LOAD (each OFF here): `far` a nearer fog end (m), `lodPush` detail levels measured from further out (m),

@@ -8,6 +8,7 @@
   const G = game, R = G.renderer.renderer, C = G.shadowCache, DB = G.drawBatch, SC = G.shadowCull;
   const DT = 1 / 30, SEQ = (window.SEQ || 'zeelich,desert,hamalayi,citadel').split(','), CYCLES = +(window.CYCLES || 2);
   if (window.FOLLOW) G.bench.setCamera('follow');
+  if (window.BASE) G.stagedBatches = false;   // (ARRIVAL-STEPS: the batch builds in one step each, as before)
   // (OFF=1: this task's changes switched off, the A/B baseline in the same build)
   if (window.OFF) { G.skelUp = false; G.shadowCache.initSpare = false; G.shadowCache.pool2 = false; G.revealReady = false; }
   const route = G.bench.routes().find((x) => x.id === 'street');
@@ -27,6 +28,9 @@
   const seen = new Set();
   for (let c = 0; c < CYCLES; c++) for (const id of SEQ) {
     const cold = !seen.has(id); seen.add(id);
+    // (ARRIVAL-STEPS, FLUSH=1: the browser's pending canvas work flushed before the visit — SwiftShader's first canvas
+    //  read-back waits for all of it, 3.5–180 s here, inside the texture-layers step; reported apart, as the probe's)
+    if (window.FLUSH) { const r = G.regions.built(id)?.group || G.world.root; let c = null; r.traverse((o) => { const m = o.material; if (!c && m && !Array.isArray(m) && m.map?.source?.data?.getContext) c = m.map.source.data; }); const t = performance.now(); try { c?.getContext('2d').getImageData(0, 0, 1, 1); } catch {} L.push(`(flush before ${id}: ${(performance.now() - t).toFixed(0)} ms)`); }
     if (id === 'citadel') G.exitRoom({ x: -42, z: 2, a: 0 }, false, true); else G.enterRoom(id, null, false, true);
     const rows = []; let after = -1, t0all = performance.now(), blackMs = 0, n = 0;
     while (n++ < 400) {
