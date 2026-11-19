@@ -18,3 +18,7 @@ playable paths and saves were verified, what remains unverified, any blocker.
 | 7 | **Verify readability and performance on the revised scenes**: capture Twinsen and Zoé idle, walking, throwing, talking from the gameplay camera; fix silhouette/joints/weights if still tubes (no global polygon increase); curiosity vs concern distinguishable at dialogue distance. The yard, busy Citadel streets, Zeelich arrival, Ballastra, the finale at 30 and 60, matched; p95/p99, visible stalls, first vs repeat visits. No GTX 1050 laptop here → exact local steps; never cloud or Vega 8 numbers as GTX 1050 | P79 | after 1–6 (with phase 6 of REPAIR-PASS, PERF-ARRIVAL, FPS30-SMOOTH) | queued |
 
 Resume: this table; each task's own doc when it starts.
+
+**19.11 (evening), the user: "But finish the previous tasks!!!"** — EXP-3 (task 2) paused (its WIP committed on its
+branch, resume point in its EXP-3.md); tasks 3–7 wait. First: PERF-ARRIVAL and FPS30-SMOOTH to the end, merged; REPAIR-PASS
+phase 6 (verify together); publish what is merged (STORY-FIX, DIALOGUE-2, FACE-1 gaps and brows, BOOT-FAIL) as v103.
