@@ -20,7 +20,7 @@ export const HE_I18N = {
   language: 'שפה', auto_controls: 'שליטה לפי ההתקן', ac_on: 'אוטומטי', ac_off: 'כבוי', control_scheme: 'תנועה', ctrl_modern: 'מודרנית', ctrl_classic: 'קלאסית (LBA2)',
   visual: 'מראה', vis_2026: 'LBA3', vis_1997: 'רטרו 1997',
   quality: 'גרפיקה', q_auto: 'אוטומטית', q_high: 'גבוהה', q_medium: 'בינונית', q_low: 'נמוכה',
-  fps_label: 'קצב תמונות', fps_auto: 'לפי המסך', fps_60: '60', fps_30: '30 קבוע',
+  fps_label: 'קצב פריימים', fps_auto: 'ללא הגבלה', fps_60: '60', fps_30: '30',
   camera: 'מצלמה', cam_lba: 'קבועה (LBA2)', cam_follow: 'עוקבת', cam_free: 'חופשית', cam_dist: 'מרחק מצלמה', cd_near: 'קרוב', cd_medium: 'בינוני', cd_far: 'רחוק',
   hud: 'ממשק', hud_lba: 'מינימלי (LBA2)', hud_modern: 'תמיד מוצג',
   music: 'מוזיקה', sfx: 'אפקטים', voice_vol: 'קולות',

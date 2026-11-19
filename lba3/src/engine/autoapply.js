@@ -25,7 +25,7 @@ export class AutoApply {
   constructor(game) {
     const G = (this.G = game);
     this.log = [];
-    this.gov = new Governor({ budget: () => Math.max(1000 / 60, G.frameCapMs || 0), onChange: (i) => this.changed(i), log: this.log });
+    this.gov = new Governor({ budget: () => Math.max(1000 / 60, G.frameCapMs || 0), upBudget: () => 1000 / 60, onChange: (i) => this.changed(i), log: this.log });
     const gpu = G.perf?.gpu || '', q = typeof location !== 'undefined' ? location.search : '';
     this.test = SOFT.test(gpu) && typeof navigator !== 'undefined' && navigator.webdriver && !/[?&]autoq/.test(q);
     this.gov.enabled = !this.test;
@@ -62,10 +62,24 @@ export class AutoApply {
     } else { this.gov.setProfile(E.p, `this machine's calibration (${E.at}), evaluated in play`, { commitNow: true, t }); this.source = 'cache: calibration'; }
     return true;
   }
-  // the cache's key: the GPU, the power source, the screen (and the processor's name in the desktop app)
+  // the cache's key: the GPU, the power source, the screen (and the processor's name in the desktop app); FPS30: and
+  // '|30fps' under a 30 fps limit (a profile settled on 33 ms frames is not one for 16.7; the keys without a limit or at
+  // 60 are as they always were, so their cached profiles stay)
   machineKey(battery = this.G.power?.onBattery === true) {
     const s = typeof screen !== 'undefined' ? `${screen.width}x${screen.height}@${devicePixelRatio}` : '?';
-    return machineKey({ gpu: this.G.perf?.gpu || '?', battery, screen: s, cpu: this.sys?.cpu || '' });
+    return machineKey({ gpu: this.G.perf?.gpu || '?', battery, screen: s, cpu: this.sys?.cpu || '' }) + (this.G.settings?.fps === '30' ? '|30fps' : '');
+  }
+  // FPS30: the frame-rate limit changed (Settings): Auto now works to the new budget — this machine's profile for it if one
+  // is cached, otherwise the profile in force, evaluated again. Like any change, a new profile waits for a commit point.
+  // (Auto never changes the frame rate itself.)
+  onBudget() {
+    const old = this.key; this.key = this.machineKey();
+    if (!this.on() || this.test || old === this.key) return;
+    const t = performance.now(), E = this.cache[this.key], fps = this.G.settings?.fps === '30' ? '30' : '60';
+    if (E && E.p >= 0 && E.p < N_PROFILES) { this.gov.p = E.p; this.gov.startEval(t, `frame-rate limit ${fps}: this machine's profile for it (${E.at})`); this.source = 'frame-rate change: cached'; this.changed(); }
+    else { this.gov.startEval(t, `frame-rate limit ${fps}: the profile in force, evaluated to the new budget`); this.source = 'frame-rate change'; }
+    this.gov.resetWin(t + 3000);
+    this.note({ kind: 'set', why: `frame-rate limit ${fps === '30' ? '30 (budget 33.3 ms)' : 'off or 60 (budget 16.7 ms)'}`, what: `${profileOf(this.gov.p).name} (evaluating)` });
   }
   on() { const s = this.G.settings; return !!s.qualityAuto && s.visual !== '1997'; }
   tier() { return describe(this.gov.knobs()).tier; }

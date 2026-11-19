@@ -596,3 +596,21 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        the setting — never change system power settings yourself.
     Report as PERF-1050-BATTERY in WORLD_ART_REQUESTS.md with the raw logs in docs/lba3-performance/HARDWARE/. Fixes you can
     prove go as requests/*.diff; the cloud applies them with its own performance worker.
+55. **FPS30-HW (the user, 19.11, v100 in Chrome: "the game does not lock to 30 fps when I choose it"; P70, docs/lba-maturity/FPS30.md).**
+    The cloud found and fixed two defects of the 30 limit by measurement on a synthetic display (rAF timestamps that jitter
+    over 1.5 ms gave 50/16.7 ms pairs; a frame a refresh late was followed by a 16.7 ms catch-up frame) — it could not see
+    the user's machine. On THIS machine (GTX 1050), in Chrome against the artifact or the repo served locally at the FPS30 tip:
+    1. Record: Chrome version, chrome://gpu (WebGL hardware-accelerated or not, the GPU in use — Windows' per-app GPU
+       preference), the display's refresh rate (Windows: Settings → Display → Advanced), window size, devicePixelRatio,
+       Windows' power mode and battery saver, Chrome's Energy Saver (chrome://settings/performance) on/off.
+    2. Pause → **Benchmark: Frame Rates** (new: street, interior, combat, arrival at Unlimited / 60 / 30, ~2.5 minutes), once
+       plugged in and once on battery, Quality as played (Auto) and once at Medium chosen by hand. Paste each report whole
+       (its "frame callbacks" line says whether Chrome's frame timestamps jitter; its 30 lines give the on-pace share, the
+       50/66.7 ms frames and the catch-ups; GPU/CPU ms per second compare the load at each limit).
+    3. Play 3 minutes at Frame Rate 30 with F9 on (the overlay's new line: limit · refresh · on pace %): the house, the
+       square running while turning the camera, a fight with ball throws, a door in and out. Note the lowest "on pace" seen
+       and anything that looks uneven; if possible a 240 fps phone video of the screen for 10 s at 30 and at 60.
+    4. Also on the same build, with Chrome's own FPS meter (DevTools → Rendering → Frame Rendering Stats) at 30: if it
+       shows ~60 while the game's F9 shows 30, say so (the compositor drawing HUD animations — not the game's frames).
+    Report as FPS30-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-gtx1050-fps30/. Never
+    change system power settings yourself.
