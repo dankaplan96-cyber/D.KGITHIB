@@ -2250,6 +2250,7 @@ class Game {
     // AUTO-QUALITY: a preset set directly while Auto is on (the benchmark's fixed runs, a test, a probe) is a preset by
     // hand from then on; Settings' Auto chip sets qualityAuto and the governor's tier
     if (this.settings.qualityAuto && this.autoQ && this.settings.quality !== this.autoQ.tier()) this.settings.qualityAuto = false;
+    { const f = String(this.settings.fps); this.settings.fps = f === '30' || f === '60' ? f : 'auto'; }   // (FPS30: 'auto' is Unlimited — the old "As the screen" / "Off"; anything else unknown too)
     const s = this.settings, was = this._applied || {}, now = { ...s, keys: JSON.stringify(s.keys || {}) };
     const changed = (k) => now[k] !== was[k];
     if (changed('keys') || changed('controls')) { setKeyScheme(s.controls); applyBindings(s.keys || {}); }
@@ -2271,7 +2272,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; this.autoQ?.onBudget?.(); }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);

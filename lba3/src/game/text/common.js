@@ -45,7 +45,7 @@ Object.assign(STR.en, {
   toast_crystal: 'Singing crystal ({n}/{max}). Max health up',
   res_label: 'Resolution', res_auto: 'Auto', res_full: 'Full',
   aa_label: 'Edges', aa_msaa: 'Smooth', aa_fxaa: 'Fast',
-  fps_label: 'Frame Rate Limit', fps_auto: 'Off', fps_60: '60', fps_30: '30',
+  fps_label: 'Frame Rate', fps_auto: 'Unlimited', fps_60: '60', fps_30: '30',
   // the settings screen (SETTINGS-UI): pages, the fold, and the one-line hints under a few rows
   set_game: 'Game', set_controls: 'Controls', set_display: 'Display', set_sound: 'Sound', set_advanced: 'Advanced',
   set_keys: 'Keys', set_keys_go: 'Change', voice_vol: 'Voices', rebind_hint: 'Pick an action, then press its new key. Esc cancels.',
@@ -68,7 +68,7 @@ Object.assign(STR.en, {
   set_h_aa: 'How far an attack turns toward a nearby enemy.',
   set_h_lm_toggle: '{k} locks onto a target. Press it again to let go.', set_h_lm_hold: 'Stays locked onto a target while {k} is held.',
   set_h_q_hand: 'Kept as chosen. Lower runs faster on slower computers.',
-  set_h_fps_auto: 'Draws as often as the screen allows.', set_h_fps_60: 'At most 60 frames a second.', set_h_fps_30: 'A steady 30 frames a second: even motion on a laptop on battery, cooler and quieter.',
+  set_h_fps_auto: 'Draws as often as the screen allows.', set_h_fps_60: 'At most 60 frames a second.', set_h_fps_30: 'An even 30 frames a second: less work for the computer (a laptop on battery runs cooler and quieter). The game runs at the same speed; motion is less fluid than at 60.',
   set_h_vis_2026: 'Full lighting and view distance.', set_h_vis_1997: 'Low resolution, near fog and hard camera cuts, as in 1997.',
   set_h_hud_lba: 'Life, magic and kashes appear only when they change.', set_h_hud_modern: 'Life, magic, minimap, behaviours and weapon stay on screen.',
   set_h_wx_on: 'Outdoors, rain, wind and the light of the day change as you play.', set_h_wx_off: 'Clear skies and steady light.',

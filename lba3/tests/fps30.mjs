@@ -208,6 +208,105 @@ if (ONLY.includes('C')) {
 }
 if (ONLY.match(/[ABC]/)) await synth(false);
 
+// ---------------------------------------------------------------- D. the simulation at 30 vs 60 (and 144, and an uneven 30)
+// game.advance(real) as the loop calls it, the draw stubbed; frame intervals: 1/60, 1/30, 1/144 and an uneven 30
+// (32.0 / 34.6 ms alternating, as a 30 limit on a jittery display gives)
+if (ONLY.includes('D')) {
+  const sim = await ev(() => {
+    const G = game, h = G.hero, I = G.input, S = SYN; S.stub = true; G.testFreeze = true;
+    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346] };
+    const reset = (beh = 'normal', a = 0) => {
+      h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0;
+      for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
+      G.resetCombat(); G.ball.reset?.(); G.state = 'play'; I.keys.clear(); I.taps.clear(); h.setBehaviour(beh); G.step(0.4);
+    };
+    const out = {};
+    for (const [k, iv] of Object.entries(seq)) {
+      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      const run = (sec, each) => { let t = 0; while (t < sec - 0.005) { t += adv(); each?.(t); } return t; };
+      const o = (out[k] = {});
+      // walking and running 1 s (Modern: W)
+      reset('normal'); let p0 = h.pos.clone(); I.keys.add('KeyW'); run(1.0); I.keys.delete('KeyW'); o.walk = +Math.hypot(h.pos.x - p0.x, h.pos.z - p0.z).toFixed(3);
+      reset('athletic'); p0 = h.pos.clone(); I.keys.add('KeyW'); run(1.0); I.keys.delete('KeyW'); o.run = +Math.hypot(h.pos.x - p0.x, h.pos.z - p0.z).toFixed(3);
+      // a standing jump (Athletic, Space): its apex and its time in the air
+      reset('athletic'); { const y0 = h.pos.y; let apex = y0, up = null, land = null; I.keys.add('Space'); I.taps.add('Space'); adv(); I.keys.delete('Space');
+        run(2.0, (t) => { if (!h.onGround && up == null) up = t; apex = Math.max(apex, h.pos.y); if (up != null && h.onGround && land == null) land = t; });
+        o.jumpApex = +(apex - y0).toFixed(3); o.jumpAir = land != null ? +(land - up).toFixed(3) : null; }
+      // a running jump: its length
+      reset('athletic'); { I.keys.add('KeyW'); run(1.0); const q = h.pos.clone(); I.keys.add('Space'); I.taps.add('Space'); let land = null, from = null;
+        run(2.0, () => { if (!h.onGround && !from) from = h.pos.clone(); if (from && h.onGround && !land) land = h.pos.clone(); }); I.keys.delete('Space'); I.keys.delete('KeyW');
+        o.runJump = land && from ? +Math.hypot(land.x - from.x, land.z - from.z).toFixed(2) : null; }
+      // a sword swing's duration
+      reset('normal'); h.combat.equip('sword', true); { I.keys.add('KeyK'); I.taps.add('KeyK'); let t = adv(); I.keys.delete('KeyK'); while (h.combat.busy && t < 3) t += adv(); o.swing = +t.toFixed(3); }
+      // the magic ball (F), thrown ahead: where it first touches down, and when
+      reset('normal', Math.PI / 2); h.mp = h.mpMax; h.magicLevel = 1; h.combat.equip('ball', true);
+      { const b = G.ball, x0 = h.pos.x, z0 = h.pos.z; let hit = null, rel = null; b.bounce = function (...a) { if (!hit) hit = { x: this.pos.x, z: this.pos.z, t: T }; return Object.getPrototypeOf(b).bounce.apply(this, a); };
+        let T = 0; I.keys.add('KeyF'); I.taps.add('KeyF'); T += adv(); I.keys.delete('KeyF');
+        while (!hit && T < 4) { T += adv(); if (b.state === 'fly' && rel == null) rel = T; }
+        delete b.bounce; o.ball = hit ? { dist: +Math.hypot(hit.x - x0, hit.z - z0).toFixed(2), rel: rel != null ? +rel.toFixed(3) : null, t: +(hit.t - (rel ?? 0)).toFixed(3) } : null; }
+    }
+    // the camera turned by the keys (Z) for 1 s, and by a pad's right stick at 0.6 for 1 s (aim sensitivity): outdoors on
+    // Citadel's square, the free camera (the arena's camera is fixed)
+    const cam0 = [G.settings.camera, G.settings.autoControls]; G.settings.camera = 'free'; G.settings.autoControls = 'off'; G.applySettings();
+    G.exitRoom({ x: -42, z: 2, a: 0 }, true, true); G.state = 'play'; G.step(0.5);
+    for (const [k, iv] of Object.entries(seq)) {
+      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      const run = (sec) => { let t = 0; while (t < sec - 0.005) t += adv(); };
+      I.keys.clear(); run(0.2); { const y0 = G.camRig.yaw; I.keys.add('KeyZ'); run(1.0); I.keys.delete('KeyZ'); out[k].camKeys = +(G.camRig.yaw - y0).toFixed(3); }
+      { const pad = { connected: true, axes: [0, 0, 0.6, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false })), mapping: 'standard' }, gp = navigator.getGamepads; navigator.getGamepads = () => [pad];
+        const y0 = G.camRig.yaw; run(1.0); navigator.getGamepads = gp; out[k].camPad = +(G.camRig.yaw - y0).toFixed(3); }
+      I.lastDevice = 'kbd';
+    }
+    G.settings.camera = cam0[0]; G.settings.autoControls = cam0[1]; G.applySettings();
+    S.stub = false; I.keys.clear(); return out;
+  });
+  result.sim = sim; log('simulation at 60 / 30 / 144 / uneven 30', sim);
+  const r60 = sim[60], rel = (a, b) => Math.abs(a - b) / Math.max(1e-6, Math.abs(b));
+  for (const k of ['30', '144', 'uneven30']) {
+    const x = sim[k];
+    check(`D ${k}: walking and running cover the ground they do at 60 (±3 %)`, rel(x.walk, r60.walk) < 0.03 && rel(x.run, r60.run) < 0.03, { at60: [r60.walk, r60.run], [k]: [x.walk, x.run] });
+    check(`D ${k}: a standing jump rises as high as at 60 (±2 cm) and stays as long in the air (± one frame)`, Math.abs(x.jumpApex - r60.jumpApex) <= 0.02 && Math.abs(x.jumpAir - r60.jumpAir) <= (k === '144' ? 1 / 60 : 0.035) + 1e-3, { at60: [r60.jumpApex, r60.jumpAir], [k]: [x.jumpApex, x.jumpAir] });
+    check(`D ${k}: a running jump is as long as at 60 (±5 %)`, x.runJump && rel(x.runJump, r60.runJump) < 0.05, { at60: r60.runJump, [k]: x.runJump });
+    check(`D ${k}: a sword swing lasts as long as at 60 (± one frame)`, Math.abs(x.swing - r60.swing) <= 0.035 + 1e-3, { at60: r60.swing, [k]: x.swing });
+    if (k !== '144') check(`D ${k}: the magic ball leaves the hand at the same moment (± one frame) and first lands where it does at 60 (±0.15 m)`, x.ball && r60.ball && Math.abs(x.ball.dist - r60.ball.dist) <= 0.15 && Math.abs(x.ball.rel - r60.ball.rel) <= 0.035 + 1e-3, { at60: r60.ball, [k]: x.ball });
+    check(`D ${k}: the camera turns as far in 1 s by the keys and by a pad's stick as at 60 (±3 %): the same aim sensitivity`, Math.abs(r60.camKeys) > 0.5 && Math.abs(r60.camPad) > 0.5 && rel(x.camKeys, r60.camKeys) < 0.03 && rel(x.camPad, r60.camPad) < 0.03, { at60: [r60.camKeys, r60.camPad], [k]: [x.camKeys, x.camPad] });
+  }
+}
+
+// ---------------------------------------------------------------- E. the settings and the frame budget
+if (ONLY.includes('E')) {
+  const e = await ev(async () => {
+    const G = game, out = {};
+    out.labels = [...document.querySelectorAll('#settings .seg[data-setting="fps"] button')].map((b) => [b.dataset.v, b.textContent.trim()]);
+    out.label = document.querySelector('#settings .set-row[data-hint="fps"] .set-label')?.textContent.trim();
+    // old saved values: '30', '60', 'auto' (the old "As the screen" / "Off"), numbers, junk
+    out.values = {};
+    for (const v of ['30', '60', 'auto', 30, 'off', undefined]) { G.settings.fps = v; G.applySettings(); out.values[String(v)] = [G.settings.fps, +(G.frameCapMs || 0).toFixed(2), +G.renderer.budgetMs.toFixed(2)]; }
+    // Auto's budget and its cache key per limit
+    const A = G.autoQ; G.settings.fps = '30'; G.applySettings(); out.auto30 = { budget: +A.gov.budget().toFixed(2), up: +A.gov.upBudget().toFixed(2), key: A.machineKey() };
+    G.settings.fps = '60'; G.applySettings(); out.auto60 = { budget: +A.gov.budget().toFixed(2), key: A.machineKey() };
+    G.settings.fps = 'auto'; G.applySettings(); out.autoOff = { budget: +A.gov.budget().toFixed(2), key: A.machineKey() };
+    // the governor fed 30 fps windows at Medium with room (GPU 10 ms, CPU 8 ms): under the 30 budget they are 'ok', not
+    // pressure, and no step up (High would fit 33.3 but not 16.7: the limit's saving is not spent)
+    const { Governor } = await import('./src/engine/autoquality.js');
+    const feed = (gov) => { gov.setProfile(1, 'test', { commitNow: true, t: 0 }); let t = 0, kinds = new Set(), steps = [];
+      for (let i = 0; i < 4000; i++) { t += 33.3; gov.gpu(t, 10); const r = gov.frame({ t, ms: 33.3, cpu: 8, play: true, scene: i < 2000 ? 'a' : 'b' }); if (gov.lastWindow) kinds.add(gov.lastWindow.kind); if (r?.kind === 'up' || r?.kind === 'down') steps.push(r.kind); }
+      return { kinds: [...kinds], steps, p: gov.p, phase: gov.phase }; };
+    out.gov30 = feed(new Governor({ budget: () => 1000 / 30, upBudget: () => 1000 / 60 }));
+    out.gov30spend = feed(new Governor({ budget: () => 1000 / 30 }));
+    // the automatic resolution and the AUTO-FIT watch read the limit's budget
+    G.settings.fps = '30'; G.applySettings(); out.fitBudget = G.renderer.budgetMs;
+    G.settings.fps = 'auto'; G.applySettings();
+    return out;
+  });
+  result.settings = e; log('settings', e);
+  check('E1 Settings → Display: "Frame Rate" with 30 / 60 / Unlimited, in that order', e.label === 'Frame Rate' && JSON.stringify(e.labels) === JSON.stringify([['30', '30'], ['60', '60'], ['auto', 'Unlimited']]), e);
+  check("E2 old saved values keep working: '30' → 33.3 ms, '60' → 16.7 ms, 'auto' (the old \"As the screen\") → no limit; a number 30 → '30'; anything else → Unlimited", JSON.stringify(e.values) === JSON.stringify({ 30: ['30', 33.33, 33.33], 60: ['60', 16.67, 16.67], auto: ['auto', 0, 16.67], off: ['auto', 0, 16.67], undefined: ['auto', 0, 16.67] }), e.values);
+  check('E3 Auto quality works to the chosen budget (33.3 ms at 30, 16.7 at 60 and Unlimited) and keeps a profile per limit (the 30 limit\'s own cache key; the others as before)', e.auto30.budget === 33.33 && e.auto60.budget === 16.67 && e.autoOff.budget === 16.67 && /\|30fps$/.test(e.auto30.key) && e.auto60.key === e.autoOff.key && !/30fps/.test(e.autoOff.key), e);
+  check('E4 Auto at the 30 limit: steady 33 ms frames are on budget (no pressure, no step down), and the time the limit saves is not spent on a heavier profile', e.gov30.kinds.every((k) => k === 'ok') && !e.gov30.steps.length && e.gov30.p === 1 && e.gov30spend.steps.includes('up'), e);
+  check('E5 the automatic resolution / AUTO-FIT budget at 30 is 33.3 ms', Math.abs(e.fitBudget - 33.33) < 0.01, e.fitBudget);
+}
+
 await page.screenshot({ path: '/dev/null' }).catch(() => {});
 console.log('RESULT ' + JSON.stringify(result));
 await browser.close();

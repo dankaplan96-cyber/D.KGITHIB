@@ -139,6 +139,9 @@ export class Governor {
   // (the game shows nothing yet); log: an array the decisions are pushed to
   constructor(opts = {}) {
     this.budget = opts.budget || (() => 1000 / 60);
+    // FPS30: the budget a step UP is judged against: 60 fps's even under a 30 fps limit, so the time a limit saves stays
+    // headroom (and battery) instead of going into a heavier profile; pressure and steps down use budget() as before
+    this.upBudget = opts.upBudget || this.budget;
     this.onChange = opts.onChange || (() => {});
     this.log = opts.log || [];
     this.p = 0; this.applied = 0; this.phase = 'evaluate'; this.enabled = true;
@@ -221,7 +224,7 @@ export class Governor {
   // would the profile above fit? (the model, from every window given: both sides ≤ UP_SHARE·B)
   roomAbove(ws) {
     if (this.applied <= 0 || !ws.length) return false;
-    const B = this.budget(), up = this.applied - 1;
+    const B = Math.min(this.budget(), this.upBudget()), up = this.applied - 1;
     return ws.every((w) => (w.kind === 'ok' || w.kind === 'paced') && w.cpu != null && (w.cpu * costAt(up, 'cpu')) / costAt(this.applied, 'cpu') <= UP_SHARE * B
       && (w.gpu == null ? w.p90 <= 1.03 * B && w.miss < 0.02 : (w.gpu * costAt(up, 'gpu')) / costAt(this.applied, 'gpu') <= UP_SHARE * B));
   }
