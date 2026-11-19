@@ -36,6 +36,8 @@ const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg
 // pool and the door is baked into their vertex colours (bake() below), so the battery profile's two lamps still show it
 const caveRock = () => rockMat('#c4bcb2');
 const caveFloor = () => M('tc_floorbake', () => { const m = new THREE.MeshStandardMaterial({ map: floorTex('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), color: '#eceae6', vertexColors: true, flatShading: true, roughness: 0.93 }); m.userData.tile = 4.5; return m; });   // (the shaft's floor texture, shared; flat shading on a flat floor changes nothing and keeps the rock's program)
+// the faceted rocks, 16 shapes (12 small ones) of the underground's cache: made once (~0.5 ms each), shared with it
+const rk = (sd, small = false) => (small ? rockGeo(sd % 12, { detail: 0 }) : rockGeo(sd % 16));
 const hash2 = (x, y, s) => { const h = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return h - Math.floor(h); };
 function vn2(x, y, s = 0) {
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
@@ -140,7 +142,7 @@ function candleStand(k) {
 // per-vertex projection read as a dark ring on the floor from the room's camera. CAVE-LOOK: the cave's own faceted rock)
 let BSEED = 0;
 function boulder(k, s = 1) {
-  k.add(rockGeo(3 + (BSEED++ % 9) * 4), caveRock(), 0, 0, 0, 0, { sx: 0.5 * s, sy: 0.42 * s, sz: 0.46 * s });
+  k.add(rk(3 + (BSEED++ % 9) * 4), caveRock(), 0, 0, 0, 0, { sx: 0.5 * s, sy: 0.42 * s, sz: 0.46 * s });
   return { r: 0.55 * s, top: 0.6 * s };
 }
 
@@ -300,7 +302,7 @@ export function buildTraluCaveRoom(scene, physics) {
           const reach = (foot ? 0.34 : top ? 0.85 : 0.6) * (0.75 + h(4) * 0.25), y = y0 + t * band * 0.94 - (t ? 0.25 : 0.02);
           if (!keep(s, y, sx * 1.25, y + sy * 1.5)) continue;
           const [x, , z] = to(s, y, reach - sz * 1.22);
-          k.add(rockGeo(Math.floor(h(5) * 40)), crock, x, y, z, (h(6) - 0.5) * 0.8 + (to === left ? Math.PI / 2 : 0), { sx, sy, sz });
+          k.add(rk(Math.floor(h(5) * 40)), crock, x, y, z, (h(6) - 0.5) * 0.8 + (to === left ? Math.PI / 2 : 0), { sx, sy, sz });
         }
       }
     };
@@ -315,8 +317,8 @@ export function buildTraluCaveRoom(scene, physics) {
     box(-RX - T - 1.1, -0.06, DZ0, -RX, 0, DZ1, cap);
     box(-RX - T - 1.1, 0, DZ0 - 0.3, -RX - T, DH + 0.3, DZ0); box(-RX - T - 1.1, 0, DZ1, -RX - T, DH + 0.3, DZ1 + 0.3); box(-RX - T - 1.1, DH, DZ0, -RX - T, DH + 0.3, DZ1);
     k.add(plane(1.6, DH), MAT.flat('#121416', 0.9), -RX - T - 1.05, DH / 2, DOORZ, Math.PI / 2);
-    for (const [z, sd] of [[DZ0 - 0.32, 5], [DZ1 + 0.32, 9]]) k.add(rockGeo(sd), crock, -RX - 0.12, 0, z, sd, { sx: 0.34, sy: 1.25, sz: 0.34 });
-    k.add(rockGeo(17), crock, -RX - 0.1, DH - 0.05, DOORZ, 0.4, { sx: 1.25, sy: 0.32, sz: 0.3 });
+    for (const [z, sd] of [[DZ0 - 0.32, 5], [DZ1 + 0.32, 9]]) k.add(rk(sd), crock, -RX - 0.12, 0, z, sd, { sx: 0.34, sy: 1.25, sz: 0.34 });
+    k.add(rk(17), crock, -RX - 0.1, DH - 0.05, DOORZ, 0.4, { sx: 1.25, sy: 0.32, sz: 0.3 });
     // the terrace: its front and east faces a rough rock ledge, flush at the top under the railing
     const ledge = (seed) => (s, y) => (0.07 + 0.34 * fbm(s * 0.7, y * 0.9, seed)) * (1 - 0.86 * smoothstep(TY - 0.6, TY, y));
     face({ s0: LX, s1: SX0 + 0.05, y0: 0, y1: TY + 0.012, ds: 0.5, dy: 0.45, lip: 0.08, out: ledge(21), to: (s, y, d) => [s, y, TZ1 + d], facing: [0, 1], seed: 21 });
@@ -324,11 +326,11 @@ export function buildTraluCaveRoom(scene, physics) {
     // the near rims: low rock with stones along them (the cut-away's edge)
     const rh = 0.5, rr = (sd) => { const h = hash2(sd, 1, 77); return h; };
     box(-RX - T, 0, RZ, RX + T, rh, RZ + T, cfloor); box(RX, 0, -RZ - T, RX + T, rh, RZ, cfloor);
-    for (let x = -RX - T + 0.4, i = 0; x < RX + T; x += 0.9 + rr(i) * 0.7, i++) k.add(rockGeo(i % 30, { detail: 0 }), crock, x, 0.05, RZ + T * 0.45, rr(i + 50) * 6, { sx: 0.45 + rr(i + 9) * 0.3, sy: 0.3 + rr(i + 19) * 0.25, sz: T * 0.62 });
-    for (let z = -RZ - T + 0.4, i = 0; z < RZ; z += 0.9 + rr(i + 3) * 0.7, i++) k.add(rockGeo((i + 7) % 30, { detail: 0 }), crock, RX + T * 0.45, 0.05, z, rr(i + 60) * 6, { sx: T * 0.62, sy: 0.3 + rr(i + 29) * 0.25, sz: 0.45 + rr(i + 39) * 0.3 });
+    for (let x = -RX - T + 0.4, i = 0; x < RX + T; x += 0.9 + rr(i) * 0.7, i++) k.add(rk(i, true), crock, x, 0.05, RZ + T * 0.45, rr(i + 50) * 6, { sx: 0.45 + rr(i + 9) * 0.3, sy: 0.3 + rr(i + 19) * 0.25, sz: T * 0.62 });
+    for (let z = -RZ - T + 0.4, i = 0; z < RZ; z += 0.9 + rr(i + 3) * 0.7, i++) k.add(rk(i + 7, true), crock, RX + T * 0.45, 0.05, z, rr(i + 60) * 6, { sx: T * 0.62, sy: 0.3 + rr(i + 29) * 0.25, sz: 0.45 + rr(i + 39) * 0.3 });
     // rock masses in the far corners and where the terrace meets the wall (the box's corners gone), and the rock's
     // rubble on the floor: stones and pebbles off the paths (no brick: small enough to walk over)
-    const mass = (x, y, z, sx, sy, sz, sd, ry = 0) => k.add(rockGeo(sd), crock, x, y, z, ry, { sx, sy, sz });
+    const mass = (x, y, z, sx, sy, sz, sd, ry = 0) => k.add(rk(sd), crock, x, y, z, ry, { sx, sy, sz });
     mass(-RX + 0.15, 0, TZ1 + 0.45, 0.75, 0.95, 0.7, 7, 0.6); B.ccol(-RX + 0.3, TZ1 + 0.4, 0.42, 1.2, { noStand: true });
     mass(-RX + 0.1, TY - 0.1, -RZ + 0.1, 0.8, 1.1, 0.8, 19, 0.3); mass(-RX + 0.05, TY + 1.5, -RZ + 0.05, 0.75, 1.0, 0.7, 23, 1.4); mass(-RX, TY + 2.7, -RZ, 0.85, 0.9, 0.85, 29, 2.2);
     B.ccol(-RX + 0.35, -RZ + 0.35, 0.55, H, { noStand: true });
@@ -346,7 +348,7 @@ export function buildTraluCaveRoom(scene, physics) {
       const z = edge && x > -RX + 1.7 ? -RZ + 0.35 + hash2(i, 5, 91) * 1.3 : -RZ + hash2(i, 6, 91) * D;
       if (clearOf.some(([a, b, c, d]) => x > a && x < b && z > c && z < d) || x > RX - 0.3 || z > RZ - 0.3) continue;
       const sz = 0.06 + hash2(i, 7, 91) ** 2 * (edge ? 0.26 : 0.14);
-      k.add(rockGeo(Math.floor(hash2(i, 8, 91) * 30), { detail: 0 }), crock, x, -0.01, z, hash2(i, 9, 91) * 6, { sx: sz * (1 + hash2(i, 10, 91)), sy: sz * 0.75, sz }); n++;
+      k.add(rk(Math.floor(hash2(i, 8, 91) * 30), true), crock, x, -0.01, z, hash2(i, 9, 91) * 6, { sx: sz * (1 + hash2(i, 10, 91)), sy: sz * 0.75, sz }); n++;
     }
     // bricks along the faces' feet (each a little over 0.3 m out of the wall: he stops at the rock, not inside it)
     const strip = (x0, z0, x1, z1, top) => B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, top, { noStand: true });
@@ -367,25 +369,29 @@ export function buildTraluCaveRoom(scene, physics) {
   for (const [x, z, y] of [[LX + 0.45, TZ1 - 0.35, TY], [SX0 - 0.35, TZ1 - 0.35, TY], [PX0 - 0.3, PZ0 - 0.3, 0], [PX1 + 0.3, PZ0 - 0.3, 0], [PX0 - 0.3, PZ1 + 0.3, 0]]) glow.push([x, y + 1.24, z, 4.8, 2.0, [0.36, 0.74, 1.0]]);
   for (const [x, z] of [[3.6 * F, -5.0 * F], [7.2 * F, -5.0 * F], [8.2 * F + 0.2, -6.2 * F + 0.15]]) glow.push([x, 1.4, z, 2.8, 0.5, [1.0, 0.72, 0.4]]);
   glow.push([LX + 0.3, 1.2, DOORZ, 3.0, 0.4, [1.0, 0.93, 0.8]]);
-  const bake = (x, y, z, onFloor) => {
-    const dl = Math.max(0, x - LX), db = Math.max(0, z - BZ), up = y > TY - 0.1 && x < TX1 + 0.2 && z < TZ1 + 0.2 ? TY : 0;
-    let m;
-    if (onFloor) m = (0.66 + 0.4 * smoothstep(0, 2.6, Math.min(dl, db))) * (0.9 + 0.28 * fbm(x * 0.21, z * 0.21, 3));
-    else m = (1.12 - 0.45 * smoothstep(up + 0.6, H + 0.6, y)) * (0.84 + 0.3 * fbm(x * 0.35 + z * 0.35, y * 0.5, 5)) * (0.78 + 0.22 * smoothstep(0, 1.2, y - up + Math.min(dl, db)));
-    const c = [m, m, m];
-    for (const [gx, gy, gz, r, kk, col] of glow) {
-      const d = Math.hypot(x - gx, (y - gy) * 0.6, z - gz); if (d >= r) continue;
-      const f = (1 - d / r) ** 1.5 * kk; c[0] += col[0] * f; c[1] += col[1] * f; c[2] += col[2] * f;
-    }
-    // the pool: its cold glow on the floor and kerb round it
-    const pd = Math.hypot(Math.max(PX0 - x, 0, x - PX1), Math.max(PZ0 - z, 0, z - PZ1));
-    if (pd < 2.6 && y < 1.5) { const f = (1 - pd / 2.6) ** 1.5 * 1.3; c[0] += 0.36 * f; c[1] += 0.8 * f; c[2] += 0.9 * f; }
-    return c;
-  };
+  // (straight over the arrays, one noise octave and the lamps' squared reach first: ~40 000 vertices, once per session)
+  const nG = glow.length, G = glow.flat(2);   // [x, y, z, r, k, cr, cg, cb] per lamp
   for (const o of B.group.children) {
     if (!o.isMesh || (o.material !== crock && o.material !== cfloor)) continue;
-    const P = o.geometry.attributes.position, C = o.geometry.attributes.color, fl = o.material !== crock;
-    for (let i = 0; i < P.count; i++) { const c = bake(P.getX(i), P.getY(i), P.getZ(i), fl); C.setXYZ(i, C.getX(i) * c[0], C.getY(i) * c[1], C.getZ(i) * c[2]); }
+    const P = o.geometry.attributes.position.array, C = o.geometry.attributes.color.array, onFloor = o.material !== crock;
+    for (let i = 0; i < P.length; i += 3) {
+      const x = P[i], y = P[i + 1], z = P[i + 2];
+      const dl = Math.max(0, x - LX), db = Math.max(0, z - BZ), up = y > TY - 0.1 && x < TX1 + 0.2 && z < TZ1 + 0.2 ? TY : 0;
+      const m = onFloor ? (0.66 + 0.4 * smoothstep(0, 2.6, Math.min(dl, db))) * (0.87 + 0.34 * vn2(x * 0.24, z * 0.24, 3))
+        : (1.12 - 0.45 * smoothstep(up + 0.6, H + 0.6, y)) * (0.82 + 0.34 * vn2(x * 0.4 + z * 0.4, y * 0.55, 5)) * (0.78 + 0.22 * smoothstep(0, 1.2, y - up + Math.min(dl, db)));
+      let r = m, g = m, b = m;
+      for (let q = 0; q < nG * 8; q += 8) {
+        const dx = x - G[q], dy = (y - G[q + 1]) * 0.6, dz = z - G[q + 2], d2 = dx * dx + dy * dy + dz * dz, R = G[q + 3];
+        if (d2 >= R * R) continue;
+        const f = (1 - Math.sqrt(d2) / R) ** 1.5 * G[q + 4]; r += G[q + 5] * f; g += G[q + 6] * f; b += G[q + 7] * f;
+      }
+      // the pool: its cold glow on the floor and kerb round it
+      if (y < 1.5) {
+        const pd = Math.hypot(Math.max(PX0 - x, 0, x - PX1), Math.max(PZ0 - z, 0, z - PZ1));
+        if (pd < 2.6) { const f = (1 - pd / 2.6) ** 1.5 * 1.3; r += 0.36 * f; g += 0.8 * f; b += 0.9 * f; }
+      }
+      C[i] *= r; C[i + 1] *= g; C[i + 2] *= b;
+    }
   }
   return { tralucave: R };
 }
