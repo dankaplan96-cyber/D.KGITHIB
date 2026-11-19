@@ -76,6 +76,9 @@ export class Input {
   constructor(canvas) {
     this.keys = new Set();
     this.taps = new Set(); // keys pressed since last frame (so quick taps on slow frames aren't lost)
+    // (FPS30: the same for a pad's buttons and the touch buttons: a press that began and ended between two frames — at
+    //  a 30 fps limit a frame is two refreshes — still counts once. Pads are read on the skipped refreshes too: poll())
+    this.padTaps = new Set(); this.padHeld = new Set(); this.touchTaps = new Set();
     this.now = new Set();
     this.prev = new Set();
     this.touch = { x: 0, y: 0, active: false, buttons: new Set() };
@@ -165,7 +168,7 @@ export class Input {
     stick.addEventListener('touchcancel', end);
     document.querySelectorAll('[data-touch]').forEach((b) => {
       const a = b.dataset.touch;
-      b.addEventListener('touchstart', (e) => { this.touch.buttons.add(a); this.lastDevice = 'touch'; e.preventDefault(); }, { passive: false });
+      b.addEventListener('touchstart', (e) => { this.touchDown(a); e.preventDefault(); }, { passive: false });
       b.addEventListener('touchend', () => this.touch.buttons.delete(a));
       b.addEventListener('touchcancel', () => this.touch.buttons.delete(a));
     });
@@ -184,6 +187,21 @@ export class Input {
     }, { passive: true });
   }
 
+  // a touch button goes down (kept for the next frame even if it is lifted before)
+  touchDown(a) { this.touch.buttons.add(a); this.touchTaps.add(a); this.lastDevice = 'touch'; }
+  // FPS30: between frames (a refresh the frame-rate limit skips): a pad button that went down since the last read is
+  // kept for the next frame, so a press shorter than a frame is not lost. Nothing else is read or changed.
+  poll() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let p = null; for (const x of pads) if (x && x.connected) { p = x; break; }
+    if (!p) return;
+    for (let i = 0; i < p.buttons.length; i++) {
+      const on = !!p.buttons[i]?.pressed;
+      if (on && !this.padHeld.has(i)) this.padTaps.add(i);
+      if (on) this.padHeld.add(i); else this.padHeld.delete(i);
+    }
+  }
+
   // Call once per frame before reading.
   update() {
     this.prev = this.now;
@@ -193,6 +211,8 @@ export class Input {
     this.rawTap = this.taps.size > 0;   // (any key at all this frame, bound or not: anyPressed)
     this.taps.clear();
     for (const b of this.touch.buttons) this.now.add(b);
+    for (const b of this.touchTaps) this.now.add(b);
+    this.touchTaps.clear();
     const M = this.mouse;
     // a tap shorter than one frame still counts (leftTap/rightTap remember it)
     if (M.left || M.leftTap) this.now.add('attack');
@@ -215,8 +235,9 @@ export class Input {
       const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
       this.padAxes = [0, 1, 2, 3].map((i) => dz(this.pad.axes[i] || 0));
       for (const [a, idx] of Object.entries(PADMAP)) {
-        if (idx.some((i) => this.pad.buttons[i]?.pressed)) { this.now.add(a); this.lastDevice = 'pad'; }
+        if (idx.some((i) => this.pad.buttons[i]?.pressed || this.padTaps.has(i))) { this.now.add(a); this.lastDevice = 'pad'; }
       }
+      this.padHeld.clear(); for (let i = 0; i < this.pad.buttons.length; i++) if (this.pad.buttons[i]?.pressed) this.padHeld.add(i);
       if (this.now.has('action') && this.lastDevice === 'pad') this.padAction = true;
       // R3: switch target when something is focused, otherwise recenter (the game decides; both are offered)
       if (this.now.has('r3')) { this.now.add('tswitch'); this.now.add('recenterPad'); }
@@ -226,6 +247,7 @@ export class Input {
       if (ay < -0.6) this.now.add('up'); if (ay > 0.6) this.now.add('down');
       if (this.padAxes.some((v) => v !== 0)) this.lastDevice = 'pad';
     }
+    this.padTaps.clear();
     this.padDirs = DIRS.filter((d) => this.now.has(d) && !kbd.includes(d));
     if (this.mouse.clicked) { this.now.add('click'); this.mouse.clicked = false; }
   }

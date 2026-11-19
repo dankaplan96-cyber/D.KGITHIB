@@ -2271,7 +2271,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._acc = 0; }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -2831,20 +2831,27 @@ class Game {
       this._lag = performance.now() - now;
       if (this.benchIdle) { this.benchIdle(now); this.last = now; requestAnimationFrame((t2) => this.loop(t2)); return; }
     }
-    // FRAME-1 / FRAME-2: frame-rate limit (Settings; off by default, off while benchmarking). A limit at or above the
-    // display's measured refresh does nothing: requestAnimationFrame sets the pace, so its jitter can never drop a
-    // frame (the user, 29.10). Below it, a time accumulator: each refresh adds its real interval, a frame is drawn once
-    // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
-    // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
-    // screen every other refresh is drawn, an even 33 ms.
+    // FRAME-1 / FRAME-2 / FPS30: frame-rate limit (Settings → Display → Frame Rate: 30 / 60 / Unlimited; Unlimited by
+    // default; off while benchmarking, except the benchmark's own frame-rate runs: benchCapMs). A limit at or above the
+    // display's measured refresh does nothing: requestAnimationFrame sets the pace (the user, 29.10). Below it, frames are
+    // due on a fixed grid of target times one limit apart (_due), and a refresh is drawn when it is the one nearest to its
+    // target (no more than half a refresh early): on a 60 Hz display every other refresh, 33.3 ms apart, however much the
+    // timestamps jitter (FPS30: the old accumulator allowed 1.5 ms, and a timestamp 1.6 ms early made the next frame
+    // wait a whole refresh — a 50 ms frame, then a 16.7 ms one to catch up: the user, 19.11, "it does not lock to 30").
+    // The grid keeps the average exact where the refresh is not a multiple of the limit (144 Hz: 34.7 ms, every fifth
+    // 27.8 ms). A frame drawn late — a missed refresh, a stall, a return from the background — starts a new grid from
+    // itself: the next frame is a whole limit later, never a catch-up frame a refresh after. A skipped refresh simulates
+    // and draws nothing; the input it brings waits (Input keeps taps; poll() latches a pad's buttons pressed meanwhile).
     if (this.background && !this.testFreeze && now - (this._bgCheck ?? 0) > 1000) { this._bgCheck = now; if (!document.hidden && document.hasFocus()) this.foreground(); }   // (BG-STUCK)
-    const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
+    const cap = this.benching ? (this.benchCapMs || 0) : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
     if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
-      this._acc = (this._acc ?? cap) + Math.max(0, d);
-      if (this._acc + LIMIT_TOL_MS < cap) { requestAnimationFrame((t2) => this.loop(t2)); return; }
-      const rem = this._acc - cap; this._acc = rem > cap / 2 ? 0 : rem;   // (signed: a frame drawn up to 1.5 ms early is paid back, so the average is the limit; a stall's late time is dropped: no burst)
-    } else this._acc = cap;   // (unlimited: the next limited frame is due at once)
+      const due = this._due || 0;
+      if (due && now < due - refresh / 2) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      let nx = (due || now) + cap;
+      if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
+      this._due = nx;
+    } else this._due = 0;   // (no limit: the next limited frame is due at once)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
@@ -2881,7 +2888,9 @@ class Game {
     // (a heap that shrank since the last frame: a garbage collection ran in the interval)
     const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
     const dt = Math.min(real, MAX_STEP * MAX_SUB);
-    const n = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6)), sub = dt / n;
+    // (FPS30: a frame up to 3 % over a step is one step: at the 30 limit the frame's timestamps jitter round 33.3 ms, and a
+    //  frame of 33.5 ms was simulated as two steps of 16.8, the next as one of 33.2 — every frame alike now)
+    const n = Math.max(1, Math.ceil(dt / MAX_STEP - STEP_TOL)), sub = dt / n;
     this.perf.beginFrame();
     this._renderMs = 0;
     this.benchTick?.(real);
@@ -3201,7 +3210,7 @@ class Game {
   }
 }
 
-const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.03; // (see Game.advance)
 // TITLE-LOAD: the longest slice of texture-layer reading (drawbatch.js warmLayers) in one task, behind the black or the
 // loading screen (ms; a slice ends at the first piece past it)
 const LAYER_SLICE_MS = 30;
@@ -3231,7 +3240,6 @@ async function sliced(list, fn, name) {
 // ROTATE-STALL: a scene change's reveal waits for readiness (Game.updateTransition) at most this many frames / ms
 const REVEAL_MAX = 12, REVEAL_MS = 1500;
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
-const LIMIT_TOL_MS = 1.5;   // (FRAME-2: the frame-rate limit's tolerance for requestAnimationFrame's jitter)
 function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
