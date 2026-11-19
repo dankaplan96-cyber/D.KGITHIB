@@ -36,3 +36,7 @@ reminder at most twice and not the same line (35 s, 90 s); phase 4: faces reset 
 face follows scene events (a fight → determined, under a quarter of his life → concerned) — faces.mjs 7/7. Still open:
 phase 5's rest (PERF-ARRIVAL running; AC vs battery on the user's machine), phase 6 (verify together, with FPS30-BRIEF
 §9's gameplay list at 30), brows for the other recurring characters (BROW_COLS per model).
+
+**19.11 10:45, the user's second benchmark**: **Intel UHD 620, plugged in** (HARDWARE/2026-11-19-intel-uhd620-mains/): the
+browser did not use the GTX 1050 this time (or another machine) — asked the user. Street 51 fps (GPU and CPU both over
+16.7 ms at DPR 2), Auto stepped to Low; shader warm-up 1013 ms in one step behind the black (sent to PERF-ARRIVAL).
