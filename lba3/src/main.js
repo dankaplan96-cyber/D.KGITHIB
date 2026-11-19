@@ -1267,6 +1267,7 @@ class Game {
       if (typeof spawn === 'function') spawn = spawn(R);
       if (this.room) this.room.group.visible = false;
       this.room = R;
+      this.resetFaces();   // (FACE-1: a scene change: faces neutral, gazes let go)
       this.regions.activate(id);
       R.group.visible = true;
       R.resetCut?.();   // (CUT-RESTORE: a room's cut-away, a porch's fade, start from where he lands: lba1room.js, zeelich.js)
@@ -1323,6 +1324,7 @@ class Game {
       this.regions.activate(null);
       if (R) { R.group.visible = false; R.lights.forEach((l) => { l.intensity = 0; }); }
       this.room = null;
+      this.resetFaces();   // (FACE-1: a scene change)
       this.world.root.visible = true;
       this.env.setRegion(null);
       this.env.setInterior(false);
@@ -1517,6 +1519,7 @@ class Game {
     this.brokenCrates = s.crates || [];
     this.played = Number.isFinite(s.played) ? s.played : null;
     this.tutorial.load(s.tut);   // (a save from before the tips has none: its lessons count as done)
+    this.resetFaces();   // (FACE-1: a load starts every face neutral, nobody's gaze held)
     this.applyCrystals();
     for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
@@ -2558,6 +2561,28 @@ class Game {
     if (near && sp.pos) { R.gazeAt = head(near); R.gazeT = 6; }
   }
 
+  // FACE-1: every face back to neutral at once (a load, a scene change), no gaze held
+  resetFaces() {
+    for (const a of [this.hero, ...(this.npcs || [])]) {
+      const R = a?.rig;
+      if (!R?.setFace) continue;
+      R.setFace('neutral'); R.gazeAt = null;
+      if (R.face) Object.assign(R.face, R.faceTo);
+    }
+  }
+  // FACE-1: scene events in play (not only dialogue): in a fight — his guard up or in Aggressive — he looks determined;
+  // at under a quarter of his life, concerned. Checked four times a second; each holds for a moment and eases back when
+  // the event is over. A dialogue line's face (faceLine) is left alone while it holds
+  heroFace(dt) {
+    const h = this.hero, R = h?.rig;
+    if (!R?.setFace || (this._hfT = (this._hfT || 0) - dt) > 0) return;
+    this._hfT = 0.25;
+    if (R.faceHold > 0.6 && R.faceHold !== Infinity) return;
+    const low = h.maxHp > 0 && h.hp / h.maxHp < 0.25;
+    if (R.guard || R.aggro) R.setFace('determined', 0.65, 0.6);
+    else if (low) R.setFace('concerned', 0.55, 0.6);
+  }
+
   // who is talking: a small triangle pointing down at the speaker's head, in the speaker's colour (the name's colour in
   // the dialogue box), the same size on screen at any camera distance (the user, 31.10: the big white "…" bubble went)
   makeBubble() {
@@ -3112,6 +3137,7 @@ class Game {
     if (this.foundObj.next()) return;   // (an object received during a dialogue or a scene: its box, now play is back)
     this.dirty = true;
     this.tutorial.update(dt);   // (OPENING-TUT: before the keys below act, so it sees the inventory's and the map's)
+    this.heroFace(dt);   // (FACE-1: his face from what is happening: a fight, low health)
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }

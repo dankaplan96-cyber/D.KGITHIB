@@ -67,5 +67,18 @@ const talk = await ev(() => {
 check('F4 a conversation sets the faces from its lines (some line not neutral) and the speaker looks at the other', talk.length >= 2 && talk.some((x) => x.face && x.face !== 'neutral') && talk.every((x) => x.gaze), talk);
 const after = await ev(() => { for (let i = 0; i < 40 && game.state !== 'play'; i++) { if (game.state === 'found') P.tap('KeyE', 0.2); P.settle(); } game.step(8); return { hero: game.hero.rig.faceName, zoe: P.npc('zoe').rig.faceName, gz: !!P.npc('zoe').rig.gazeAt }; });
 check('F5 after the conversation the faces ease back to neutral and the gaze is let go', after.hero === 'neutral' && after.zoe === 'neutral' && !after.gz, after);
+// scene events: in Aggressive he looks determined, at low health concerned; both ease back when it is over
+const ev2 = await ev(() => {
+  const h = game.hero, R = h.rig, out = {};
+  h.setBehaviour('aggressive'); game.step(0.6); out.aggro = R.faceName;
+  h.setBehaviour('normal'); game.step(4.0); out.after = R.faceName;
+  const hp0 = h.hp; h.hp = Math.max(1, Math.floor(h.maxHp * 0.15)); game.step(0.6); out.low = R.faceName;
+  h.hp = hp0; game.step(1.6); out.back = R.faceName;
+  return out;
+});
+check('F6 scene events: Aggressive → determined, low health → concerned, each back to neutral after', ev2.aggro === 'determined' && ev2.after === 'neutral' && ev2.low === 'concerned' && ev2.back === 'neutral', ev2);
+// a load mid-expression: every face neutral, no gaze held
+const ld = await ev(() => { const z = P.npc('zoe'); z.rig.setFace('annoyed'); z.rig.gazeAt = game.hero.pos.clone(); z.rig.gazeT = 60; game.hero.rig.setFace('pleased'); game.resetFaces(); return { z: z.rig.faceName, zl: +z.rig.face.cross.toFixed(2), h: game.hero.rig.faceName, gz: !!z.rig.gazeAt }; });
+check('F7 a load / scene change resets the faces (neutral at once, gaze let go)', ld.z === 'neutral' && ld.zl === 0 && ld.h === 'neutral' && !ld.gz, ld);
 await browser.close();
 done();

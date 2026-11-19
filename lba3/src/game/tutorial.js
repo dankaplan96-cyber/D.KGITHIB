@@ -43,7 +43,8 @@ const MIN_SHOW = 1.2;       // s a shown tip stays up through a flicker of its e
 const LOS_EVERY = 0.25;     // s between the barrels' line-of-sight tests
 const ADVANCES = 3;         // manual dialogue advances before the box's key hint goes
 const HINT_WHERE = 15;      // s on a step before the panel says where its thing is (TUTOR-TARGETS)
-const HINT_SAY = 35;        // s between Zoé's own reminders of what she means (TUTOR-TARGETS)
+const HINT_SAY = 35;        // s before Zoé's own reminder of what she means (TUTOR-TARGETS)
+const HINT_SAY2 = 90;       // s before her second and last (her step's first ask again, not the same line)
 // the project's copper heat pipe along the lane (x −43.5, z 66.0–72.1, 0.6 m high, too high to step over: lanegate.js
 // names it): the jump practice, over it in Athletic or walked round its end
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
@@ -218,7 +219,9 @@ export class Tutorial {
     if (sid) {
       this.stepT += dt;
       // (Zoé's reminder: only in the yard, where she stands; the zoe step's own is her call)
-      if (YARD.includes(sid) && this.stepT > HINT_SAY * (this.hintN + 1)) { this.hintN++; S.speak?.(sid === 'zoe' ? 't2_zoe_call' : 't2_hint_' + sid); }
+      // (twice at most — at HINT_SAY and at HINT_SAY2 — never the same line on a loop: the panel's where line and the
+      //  marker stay all along; P67's brief: "do not repeat the same hint continuously")
+      if (YARD.includes(sid) && this.hintN < 2 && this.stepT > (this.hintN ? HINT_SAY2 : HINT_SAY)) { this.hintN++; S.speak?.(sid === 'zoe' ? 't2_zoe_call' : this.hintN === 1 ? 't2_hint_' + sid : 't2_ask_' + sid); }
     }
     if (this.okT > 0) { this.okT -= dt; this.cur = null; this.stepId = 'ok'; this.show(this.okHtml); return; }
     if (sid) { this.cur = null; this.stepId = sid; this.show(this.stepHtml(sid)); return; }

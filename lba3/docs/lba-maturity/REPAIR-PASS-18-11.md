@@ -30,3 +30,9 @@ Resume: read the table, each worker's doc, and NEXT-SESSION.md.
 Running: PERF-ARRIVAL (phase 5's rest: the arrival's stalls behind the black, Auto's first guess on a GTX 1050, the
 street's CPU; PERFORMANCE_REPORT.md) and, in parallel, STORY-FIX (NEXT-SESSION plan item 4). Then phase 6 (verify
 together).
+
+**19.11 (later), against the brief clause by clause:** phase 1's record written (REPAIR-PASS-BASELINE.md); phase 2: Zoé's
+reminder at most twice and not the same line (35 s, 90 s); phase 4: faces reset on a load and a scene change, and his
+face follows scene events (a fight → determined, under a quarter of his life → concerned) — faces.mjs 7/7. Still open:
+phase 5's rest (PERF-ARRIVAL running; AC vs battery on the user's machine), phase 6 (verify together, with FPS30-BRIEF
+§9's gameplay list at 30), brows for the other recurring characters (BROW_COLS per model).
