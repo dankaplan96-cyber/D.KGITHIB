@@ -604,6 +604,28 @@ class Area {
     if (left) { for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; } (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out); }
     return left;
   }
+  // ARRIVAL-STEPS: watch()'s full check (its slow path: nothing taken from a frame's shown-world update) behind a scene
+  // change's black, after the world matrices were brought up to date: a piece the area's first moments moved (a mill's
+  // sail, a boat, a door) leaves its batch there, its cells rebuilt one per step, instead of on the first frame drawn
+  // (the arrivals here: 46–67 pieces left on that frame, its cells rebuilt in it). A generator (Area.settling); a frame
+  // drawn before it is done finishes it first (DrawBatch.update).
+  *settle() {
+    const root = this.root, up = (p) => { for (let x = p; x && x !== root; x = x.parent) if (!x.visible) return false; return true; };
+    let left = 0;
+    for (const M of this.members) {
+      if (M.out) continue;
+      const o = M.o, g = o.geometry;
+      if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookOf(o.material) === M.look)) { M.okF = -1; continue; }
+      this.release(M); left++;
+    }
+    yield;
+    if (left) {
+      for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; yield; } if (!any) break; }
+      (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out);
+    }
+    return left;
+  }
   // CPU-WALK `?walkcheck`: every piece still in a batch after watch() checked in full, with nothing taken from the
   // shown-world update (the slow path's tests: its world matrix, every parent shown, its material, geometry, flags and look)
   verify(K) {
@@ -666,6 +688,7 @@ export class DrawBatch {
     let A = this.areas.get(root);
     if (!A && this.pending?.has(root)) { this.slice(root); A = this.areas.get(root); }   // (ARRIVAL-STEPS: a staged build a drawn frame needs now: finished)
     if (!A) { A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
+    if (A.settling) { const it = A.settling; A.settling = null; let r; while (!(r = it.next()).done); this.left += r.value || 0; }   // (ARRIVAL-STEPS: a settle a drawn frame overtook)
     this.left += A.watch();
     if (MW.check) A.verify(MW.check);
     return A;
@@ -681,6 +704,17 @@ export class DrawBatch {
     const P = (this.pending ??= new Map());
     if (!P.has(root)) { const t0 = performance.now(), A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact, true); A.ms = performance.now() - t0; this.buildMs = (this.buildMs || 0) + A.ms; P.set(root, A); }
     return true;
+  }
+  // ARRIVAL-STEPS: the area's settle (Area.settle) in slices of `ms`; true while more is left
+  settleSlice(root, ms = Infinity) {
+    const A = this.areas.get(root); if (!A || !this.enabled) return false;
+    A.settling ??= A.settle();
+    const t0 = performance.now();
+    let r;
+    while (!(r = A.settling.next()).done && performance.now() - t0 < ms);
+    if (!r.done) return true;
+    A.settling = null; if (r.value) { this.left += r.value; this.settled = (this.settled || 0) + r.value; }
+    return false;
   }
   slice(root, ms = Infinity) {
     const A = this.pending?.get(root); if (!A) return false;

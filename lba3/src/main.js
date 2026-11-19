@@ -976,7 +976,9 @@ class Game {
   prepSteps(T) {
     const R = this.renderer.renderer, root = this.room?.group || this.world.root, S = [];
     const log = (this.prepLog ??= []), area = this.room?.id || 'citadel';
-    const stepT = (k, f) => S.push(() => { const t0 = performance.now(); f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); });
+    // (ARRIVAL-STEPS: each entry also counts the shader programs the step made — p — and is numbered — i)
+    const P0 = () => R.info.programs?.length ?? 0, put = (k, t0, p0) => { log.push({ area, k, ms: Math.round(performance.now() - t0), p: P0() - p0, i: (this._prepN = (this._prepN || 0) + 1) }); if (log.length > 300) log.shift(); };
+    const stepT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); f(); put(k, t0, p0); });
     // (FRAME-1: its geometry too, in the black, the shadow batches included: they are built on the area's first update,
     //  which used to come later, so a house's 4.5 MB of batches went up on the first frame shown)
     // ARRIVAL-STEPS: the shadow batches and the draw batches in slices of at most PREP_SLICE_MS a black frame (a slice
@@ -984,7 +986,7 @@ class Game {
     // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
     // (stagedBatches false: each in one step, as before — the A/B switch)
     const staged = this.stagedBatches !== false;
-    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), more = f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); return more; });
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(), more = f(); put(k, t0, p0); return more; });
     if (staged && this.shadowCull.stage(root)) {
       let lit = false;
       sliceT('shadow batches', () => {
@@ -1007,7 +1009,7 @@ class Game {
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
       const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
-      S.push(() => { const t0 = performance.now(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; log.push({ area, k: 'texture layers', ms: Math.round(performance.now() - t0) }); return more; });   // (true: again next frame)
+      S.push(() => { const t0 = performance.now(), p0 = P0(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; put('texture layers', t0, p0); return more; });   // (true: again next frame)
       if (staged) sliceT('draw batches', () => (this.drawBatch.stage(root) ? this.drawBatch.slice(root, PREP_SLICE_MS) : false));   // (ARRIVAL-STEPS: in slices)
       else stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
     } else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
@@ -1019,6 +1021,11 @@ class Game {
     { let kids = null;
       for (let c = 0; c < GEO_PARTS; c++) stepT('geometry', () => { if (this._uploaded?.has(root)) return; kids ??= [...root.children]; this.uploadGeometry(root, new Set(kids.slice(Math.floor((c * kids.length) / GEO_PARTS), Math.floor(((c + 1) * kids.length) / GEO_PARTS)))); });
       stepT('geometry', () => this.uploadGeometry(root)); }
+    // ARRIVAL-STEPS: the pieces the hold's frames moved (a mill, a boat) leave their draw batches here, the world matrices
+    // brought up to date first (nothing is drawn in the hold, so they were not), their cells rebuilt in slices — on the
+    // first frame drawn, they left and their cells were rebuilt in that frame (46–67 pieces on the arrivals here). The
+    // batch meshes this remade go up in the next step. (Their shadow batches: the next frame's own update.)
+    if (staged && this.drawBatch.enabled) { let first = true; sliceT('draw batches settle', () => { if (first) { first = false; root.updateMatrixWorld(true); } return this.drawBatch.settleSlice(root, PREP_SLICE_MS); }); }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
