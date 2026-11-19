@@ -1,5 +1,9 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**19.11: v102 published (artifact 1795068384-abbc)**: CAVE-LOOK (P69: Tralu's cave reads as a cave — rock walls, ledge,
+light pools). No worker running. Waiting on the user: the Frame Rates benchmark, play at 30 with F9, a look at the cave,
+faces and the tutorial's markers. Open from CAVE-LOOK: the floor busy/dark, the guard house olive under the key light.
+
 **19.11: v101 published (artifact 1795066979-494f, 509 files)**: FPS30 (P70: the 30 cap holds — a grid of due times,
 Frame Rate 30/60/Unlimited, Auto on the chosen budget, Pause → Benchmark: Frame Rates), CAVE-STAIR (P69: the rock, the
 stairs, the landing, the cave's defects), BAKE-URL (the artifact now loads its baked geometry, bake.wasm). Waiting: the
