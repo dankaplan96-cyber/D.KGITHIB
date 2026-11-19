@@ -3360,7 +3360,10 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 const noBake = new URLSearchParams(location.search).has('nobake');
 // VOICE-2: the developer-only voice audition view (?voicelab; src/engine/voicelab.js), loaded only with the flag
 if (/[?&]voicelab\b/.test(location.search)) import('./engine/voicelab.js').then((m) => m.openVoiceLab()).catch((e) => console.warn('voicelab', e));
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
+// (BAKE-URL, 19.11: the artifact serves the baked geometry as assets/bake.wasm — artifacts serve web media types only —
+//  and its page is index.html as it is, without artifact-page.py's LBA_BAKE_URL: bake.bin was a 404 there and every
+//  artifact start sculpted from scratch; now the second name is tried)
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false).then((ok) => ok || loadBake('assets/bake.wasm').catch(() => false)), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
 
 // the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the
 // keys or a pad, or after it rests 2.5 s; any mouse move brings it straight back (menus, aiming the ball)
