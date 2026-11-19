@@ -1029,10 +1029,10 @@ class Game {
     if (staged && this.drawBatch.enabled) {
       let first = true;
       sliceT('draw batches settle', () => {
-        if (first) { first = false; root.updateMatrixWorld(true); }
-        const more = this.drawBatch.settleSlice(root, PREP_SLICE_MS);
-        if (!more && this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);   // (the shadow batches' own check, on the same matrices)
-        return more;
+        const t0 = performance.now();
+        if (first && this.drawBatch.settleSlice(root, PREP_SLICE_MS)) return true;
+        first = false;   // (then the shadow batches' own settle, in the time left and the next frames)
+        return this.shadowCull.settleSlice(root, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)));
       });
     }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)

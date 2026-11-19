@@ -217,6 +217,22 @@ class Area {
     }
     for (const cell of this.cells.values()) if (cell.dirty) this.build(cell);
   }
+  // ARRIVAL-STEPS: watch(true) behind a scene change's black, in steps: every batched piece's world matrix brought up to
+  // date (nothing is drawn in the hold, so the frame's update has not), a piece the hold's frames moved leaves its batch,
+  // its cells rebuilt a part at a time — not on the first frame drawn
+  *settle() {
+    let k = 0;
+    for (const C of this.members) {
+      if (!C || C.solo) continue;
+      if ((++k & 63) === 0) yield 'check';
+      C.o.updateWorldMatrix(true, false);
+      if (C.o.matrixWorld.equals(C.mat) && shownIn(C.o, this.root) && C.o.parent) continue;
+      C.solo = true; C.o.castShadow = true; this.left = (this.left || 0) + 1;
+      for (const cell of C.cells) { cell.dirty = true; cell.list.splice(cell.list.indexOf(C), 1); }
+      this.solo.push(C);
+    }
+    for (const cell of this.cells.values()) if (cell.dirty) { yield* this.buildSteps(cell); yield 'cell'; }
+  }
   restore() {
     const on = (o) => { if (!o.userData.drawBatched) o.layers.enable(0); };   // (a draw batch's piece stays out of the main pass)
     for (const C of this.members) { if (!C.solo) C.o.castShadow = true; on(C.o); }
@@ -276,6 +292,15 @@ export class ShadowCull {
     A.gen = null; this.pending.delete(root); this.areas.set(root, A); this.builds = (this.builds || 0) + 1;
     return false;
   }
+  // ARRIVAL-STEPS: the area's settle (Area.settle) in slices of `ms`; true while more is left. A frame's update finishes
+  // one it overtakes
+  settleSlice(root, ms = Infinity) {
+    const A = this.areas.get(root); if (!A || !this.enabled) return false;
+    A.settling ??= A.settle();
+    if (!runFor(A.settling, ms, this).done) return true;
+    A.settling = null;
+    return false;
+  }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; if (this.pending) { for (const A of this.pending.values()) A.restore(); this.pending.clear(); } }
   // (PERF-CPU: pieces that left a shadow batch so far, for the scene change's settle frames: Game.updateTransition)
@@ -285,6 +310,7 @@ export class ShadowCull {
     let A = this.areas.get(root);
     if (!A && this.pending?.has(root)) { if (this.defer?.()) { this.hide(); this.area = null; return; } this.slice(root); A = this.areas.get(root); }   // (ARRIVAL-STEPS: staged)
     if (!A) { A = this.build(root); this.areas.set(root, A); }
+    if (A.settling) { if (this.defer?.()) { this.hide(); this.area = null; return; } const it = A.settling; A.settling = null; while (!it.next().done); }   // (ARRIVAL-STEPS: a settle in its steps behind the black waits for them; one a drawn frame overtakes is finished)
     this.area = A;
     this.hide();
     // PERF-CPU: without the sun's shadow pass (Low, Auto's no-shadow profiles) what only decides who casts — the pieces

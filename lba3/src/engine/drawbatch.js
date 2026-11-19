@@ -558,6 +558,7 @@ class Area {
         index[io] = map[a] + vo; index[io + 1] = map[C.flip ? c : b] + vo; index[io + 2] = map[C.flip ? b : c] + vo; io += 3;
       }
     }
+    if (nv > 4096) yield 'cell part';   // (the bounds of a large batch: a step of their own)
     const geo = new THREE.BufferGeometry();
     for (const n of names) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
     geo.setIndex(new THREE.BufferAttribute(index, 1));
@@ -620,10 +621,12 @@ class Area {
   // drawn before it is done finishes it first (DrawBatch.update).
   *settle() {
     const root = this.root, up = (p) => { for (let x = p; x && x !== root; x = x.parent) if (!x.visible) return false; return true; };
-    let left = 0;
+    let left = 0, k = 0;
     for (const M of this.members) {
       if (M.out) continue;
       const o = M.o, g = o.geometry;
+      if ((++k & 63) === 0) yield 'check';
+      o.updateWorldMatrix(true, false);   // (its world matrix as the next frame's update will make it; nothing is drawn in the hold)
       if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
         && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookOf(o.material) === M.look)) { M.okF = -1; continue; }
       this.release(M); left++;
