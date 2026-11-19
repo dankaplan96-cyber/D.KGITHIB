@@ -42,7 +42,8 @@ await ev(() => {
 
 // start the synthetic display: the loop's next real callback is held, then driven from t0
 async function synth(on) {
-  await ev((on) => { SYN.on = on; SYN.Q.length = 0; }, on);
+  // (off: the loop's held callback goes back to the browser's own clock)
+  await ev((on) => { const q = SYN.Q.splice(0); SYN.on = on; if (!on) for (const cb of q) SYN.raf0(cb); }, on);
   if (on) await page.waitForFunction(() => SYN.Q.length > 0, null, { timeout: 20000 });
 }
 // run `ms` of display time at `hz` from SYN.t; jitter: ± ms on each timestamp; each(i, t) may return a delay (ms) for a late callback
