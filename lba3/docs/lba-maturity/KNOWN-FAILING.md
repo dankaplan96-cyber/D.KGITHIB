@@ -41,3 +41,8 @@ well-house lift checks: 32/32), `sewers-ways` (two out-of-door spots: 34/34).
 `gap-scan` (never run in full: it builds every region a few groups to a page and walks each held slot by input; owner:
 the coordinator, on a quiet machine, `BATCH=8`), `door-sweep`, `room-cutaway`, `npc-feet`, `walkers`, `wizards`, `shops`,
 `chapter2`–`chapter10` (but `chapter1` and `chapter4`: AUDIT-FIX). Their last known state is RELEASE-AUDIT-v75's.
+
+## tests/jumpreach.mjs — "Zeelich's old mill" (found 19.11)
+Up the mill's 7 stair-stones to the gallery by jumps: the bot is stuck at 12.56 m on the hop onto the gallery (heights
+7.09 … 11.47, 12.56, 12.56, then falls back). **Fails identically on v99 (ba62aa2c)** and on today's build with the old
+or new physics.js (FPS30): not caused by v100/v101's work. Open: the gallery's lip vs the last stone (a world fix).
