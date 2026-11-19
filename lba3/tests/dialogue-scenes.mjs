@@ -67,10 +67,16 @@ await ev(() => { Object.assign(game.flags, { kidsAsked: false, timConfessed: fal
 await ev(() => { const G = game, e = G.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); G.step(1.6); T.tp(e.x, e.z, Math.PI); G.step(1.2); T.talkAll(); });
 { const v = await ev(() => [game.state, game.room?.id ?? 'outdoor']); check('out in the yard, in play', v[0] === 'play' && v[1] === 'outdoor', v); }
 await scene("Zoé's kettle crystals, Mira not yet met: where Mira is and what the proof does", 'zoe',
-  [/n_zoe: Same next door/, /n_zoe: And look at their kettle/, /n_hero: \(Tiny crystals/, /n_zoe: Mira's at the well telling everyone .* she'll have to open it/], 'D2-zoe-kettle.jpg', 3);
+  [/n_zoe: Same next door/, /n_zoe: And look at their kettle/, /n_hero: \(Tiny crystals/, /n_zoe: Mira's got the well padlocked, and she's telling everyone .* she'll have to open it/], 'D2-zoe-kettle.jpg', 3);
 await ev(() => { Object.assign(game.flags, { pr_kettle: false, zoeNext: false, pr_miraNo: true }); });
 await scene("... after Mira's refusal: Twinsen tells her, and she doesn't tell it back", 'zoe',
   [/n_hero: Mira won't open the well/, /n_zoe: Same next door/, /n_zoe: And look at their kettle/, /n_hero: \(Tiny crystals/, /n_zoe: Then show her these\. Pipes don't grow crystals\./], 'D3-zoe-kettle-b.jpg', 4);
+
+// ---------------------------------------------------------------- chapter 1, the harbour: Xil (DIALOGUE-2: the rope asked for once the well is seen)
+await ev(() => { Object.assign(game.flags, { pr_yardOk: true, wellSeen: true, metXil: false, pr_bell: false, pr_xilRope: false }); T.near('xil'); game.step(0.6); T.talkAll(); window.__said = []; });
+await scene('Xil, the well seen: Twinsen asks for a rope and Xil names the deal', 'xil',
+  [/n_xil: Greetings/, /n_xil: I asked him three times/, /n_xil: Only the bell/, /n_hero: I need a rope for the town well/, /n_xil: Rope ladders, a whole crate/], 'D5-xil-rope.jpg', 4);
+await scene('... asked again: the deal is not asked twice', 'xil', [/n_xil: I asked him three times/, /n_xil: Only the bell/]);
 
 }
 if (only3) {
@@ -79,7 +85,7 @@ await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueD
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); Object.assign(G.flags, { zt_v: 1, zt_bench: true, zt_bal: true }); G.step(0.3);
   const Z = G.rooms.zeelich; if (G.rooms.workshop) { T.tp(Z.workshopDoor.x, Z.workshopDoor.z + 0.01); G.step(1.5); T.talkAll(); } });
 await scene("Baldino after Irsa's bench: his entrance, Twinsen's report, then his answer (one greeting)", 'baldino',
-  [/n_baldino: Twinsen! Mind the/, /n_hero: Irsa's bench says/, /n_baldino: From below!/, /n_hero: Baldino, Vesk says/, /n_baldino: Look at the globe/, /n_baldino: Vesk's bore/, /n_hero: Then we stop the drill/, /n_baldino: No, no, no/, /n_baldino: That's why I built/, /n_baldino: The shield draws/, /n_baldino: One more thing/], 'D4-baldino.jpg', 2);
+  [/n_baldino: Twinsen! Mind the/, /n_hero: Irsa's bench says/, /n_baldino: From below!/, /n_hero: Baldino, Vesk says/, /n_baldino: Look at the globe/, /n_baldino: Vesk's bore/, /n_hero: Then we stop the drill/, /n_baldino: No! Pull it out halfway/, /n_baldino: So I built an override key/, /n_baldino: The shield runs off/, /n_baldino: Zoé's waiting at the Citadel lighthouse/], 'D4-baldino.jpg', 2);
 
 }
 const over = await ev(() => window.__over);
