@@ -203,7 +203,8 @@ ironic echo of the opening's "Vesk promised".
   never told apart. *Direction:* name them once: the ferry (sea), Vesk's ship (in orbit), the project shuttle (at the
   spaceport).
 - `c1_doran_ferry1` — "The passenger flights are grounded, but a project ship still flies." — **[minor]** Grounded
-  why? An unexplained aside that raises a question nobody answers.
+  why? On the main path the question is never answered; only the optional Last Ferry quest says "The project grounded
+  everything that flies" (`lf_ossel_grounded`). Doran could say it here.
 - `c1_baldino_2` — "I've sent Doran its start code." — **[minor]** Why Doran, a sleepy harbour master who has never
   been shown flying anything? His own line ("Doran can sail anything that floats, and up there everything floats") is
   funny but doesn't explain how Baldino knows him.
@@ -552,6 +553,33 @@ for dinner. Just not that one." / "Yes, yes, and no." is warm and earned.
   `idle_keeper_home` "The stars have gone quiet. That is how I know she sleeps." is good too.
 - Missing from the epilogue: Oren, Tessa, Ballastra, the 304 sleepers, Irsa, Kell. **[major in the expanded
   campaign]** The Mill Lane people carried the finale and get no closing line.
+
+## 15b. Optional side quests (oneplace.js, offwall.js, yearslate.js, ferry.js, quietchannel.js, depth.js)
+
+**These are some of the best-written parts of the game.** Each one is small, has a clear human want, and resolves.
+They also reach the theme (who gets left out) without a lecture.
+
+- **One More Place** (`om_`): Zoé's fourth chair for Old Brix, the radio's "green eye", "Now it sounds like a house."
+  Warm and specific. `om_m_council_1` "They put me in the old fortress for two days. It was warmer than my room." /
+  "You weren't on their list." / "Nobody my age was." does more for the evacuation theme than several main-plot
+  scenes. **[minor]** `om_m_council_4` "Grandpa Gilbert" again (see 4.3). And `om_zoe_2` says Brix "lived next door",
+  which sits oddly with chapter 1's next-door neighbours (the kettle). Were those the new tenants? A word would help.
+- **Off the Wall** (`ow_`): Tali is a well-drawn kid ("Nobody said the board was a wall. Nobody said it wasn't."),
+  and the escalation through three games teaches the bank shot that the finale needs. Keep.
+- **Twelve Years Late** (`tyl_`): the undeliverable postcard ("Every island stamped it NOT KNOWN") is a lovely premise.
+  **[minor]** `tyl_j_found` says Ysel is "Nara's mother", but no line of dialogue says so (Lissa calls her "Gran", and
+  Ysel calls Nara by name: "Nara grows her flowers under my skylights now"). Put the relationship in Ysel's or Lissa's
+  mouth.
+- **The Last Ferry** (`lf_`): Captain Ossel ("They closed the line. Nobody closed the captain." / "Until the timetable
+  said otherwise. It never did.") is one of the most memorable minor characters. `lf_ossel_grounded` and
+  `lf_first_ossel2` also explain the grounding that chapter 2 leaves hanging (`c1_doran_ferry1`). That explanation
+  belongs in the main path too, since most players won't do this quest.
+- **The Quiet Channel** (`qc_`): the brothers' knock code and "Nobody tells you how good a door is." are good. It also
+  teaches "answer a knock backwards" before the finale's knock puzzle. **[minor]** The thread adds a fourth knock
+  rhythm ("one heavy, two light") to the three, four and two of the main story. For a player already lost in the
+  counts (section 15), it's one more pattern to keep apart.
+- **Depth / Jaspa / the waystone** (`dx_`): clear, small, fair puzzles. `dx_jaspa_1` ("The project only takes cold
+  stones… they fine me for it") is a neat sideways look at the project. Fine.
 
 ## 16. Across the whole game
 
