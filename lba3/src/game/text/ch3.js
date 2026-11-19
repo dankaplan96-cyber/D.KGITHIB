@@ -9,6 +9,8 @@ Object.assign(STR.en, {
 
   // the shaft
   c3_arrive: 'The lift stops at the bottom of the shaft. Overhead, the bore grinds on.',
+  // (DIALOGUE-2: in a game where the council's stop was thrown, the drill is turning again: Vesk restarted it below)
+  c3_arrive_stop: "The lift stops at the bottom of the shaft. Overhead, the bore is turning again: the council's stop never reached this console.",
   c3_tw_arrive: "Vesk's lift. Empty. He's gone on ahead.",
   c3_bal_radio1: "Twinsen? Can you hear me? The bore's machinery must be close. If Vesk speeds up the drill, the cooling is the first thing he'll touch.",
 
@@ -44,10 +46,10 @@ Object.assign(STR.en, {
   // the core
   c3_core_vesk1: "You came all this way. Then look, Twinsen: under that shell is more heat than both worlds have ever burned, and I found it. I'm finishing the bore.",
   c3_core_tw1: "She's alive, Vesk. Waking her this early cracks the whole shell. Baldino's network turns the bore into a shield. Stop.",
-  c3_core_vesk2: "Thirty percent was never a mistake. It's who I chose. Zeelich's upper districts will never be cold again, and the rest will learn to live with less.",
+  c3_core_vesk2: "Thirty percent was never a mistake. It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all.",
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
   c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',
-  c3_pylon_1: 'Signal is out. Sun, wave, star. Just like last time!',
+  c3_pylon_1: "Signal is out. Star, sun, wave, on Baldino's channel!",
   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
   c3_pylon_3: 'All three mills at full sail. Listen to that wind!',
   c3_toast_pylon: 'Pylon converted ({n}/3)',
@@ -96,7 +98,7 @@ Object.assign(STR.en, {
   c3_j_cool: "I worked the engine-room valves to cool the heat exchanger, and the shutter the heat had jammed let go.",
   c3_j_gallery: "The galleries are full of the well's crystals, grown as big as houses. I woke three pillars, and stones rose into a path.",
   c3_j_sendell: "Sendell said a child of this world sleeps under the shell, not ready to wake, and the drill has cracked it. Stopping the drill won't close the cracks, so she told me to turn the bore into a shield while she holds on.",
-  c3_j_core: "At the core Vesk said the thirty percent was never a mistake: he chose who to save, and he meant to take the power under the shell. He set a guardian on me.",
+  c3_j_core: "At the core Vesk said the thirty percent was never a mistake: it was everyone he could carry, and he meant to finish the bore. He set a guardian on me.",
   c3_j_pylons: "I converted the three pylons around the core, powered from above by Zoé's signal, Mira's valves and Oku's mills.",
   c3_j_vesk: "Vesk ordered a full overload, so I broke the coil over his console with the ball. I switched the bore to shield mode: the field held, Sendell said the child sleeps again, and the council's guards came down for Vesk.",
 

@@ -134,7 +134,7 @@ Object.assign(STR.en, {
   ih_s28: "The dig crew's bunks, made the project's way: blanket square, boots in a row. One bunk is never made.",
   ih_hall: "The pupils' dormitory. Bunks, a shelf of spellbooks, and the crystal's light coming through the door.",
   ih_shut_storm: 'Voices inside: the gate guard and a mug of something, waiting out the storm. Not this door.',
-  ih_post_cabin0_dry: "The foreman's desk. Forms in piles, a radio, and Dallan's memo: 'Test bore pressure rising. Keep drilling.'",
+  ih_post_cabin0_dry: "The foreman's desk. Forms in piles, a radio, and Dallan's memo: 'Test bore pressure rising. Run test 14, then cap it.'",
   ih_post_cabin0_wet: "The foreman's desk. Forms in piles, a radio, and Dallan's memo: 'Test bore pressure rising. Keep drilling.'",
   ih_post_cabin0_after: 'The foreman\'s desk, cleared. The evacuation list is gone. Someone has drawn a palm on the blotter.',
 });

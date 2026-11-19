@@ -143,7 +143,7 @@ export class Chapter1 extends ChapterBase {
     g.audio.endCue();
     g.audio.setMood('calm');
     this.line.begin();
-    this.chain([['hero', 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => { this.f.c1_started = true; g.updateObjective(); g.save(false); });
+    this.chain([['hero', this.f.pr_v2 ? 'c1_tw_morning_pump' : 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => { this.f.c1_started = true; g.updateObjective(); g.save(false); });
   }
 
   doors() {
@@ -283,10 +283,10 @@ export class Chapter1 extends ChapterBase {
     switch (id) {
       case 'zoe':
         if (f.c1_needZoe && !f.c1_zoeStart) return c([['zoe', 'c1_zoe_gate1'], ['hero', 'c1_tw_gate'], ['zoe', 'c1_zoe_gate2'], ['zoe', 'c1_zoe_gate3']], () => this.startZoe());
-        if (f.c1_radio) return c([['zoe', 'c1_zoe_go']]);
+        if (f.c1_radio) return c([['zoe', f.c1_ship ? 'c1_zoe_go' : 'c1_zoe_go0']]);   // (DIALOGUE-2: Doran is at the harbour until he has been told)
         if (f.c1_veskGone) return c([['zoe', 'c1_zoe_home2']]);
         if (!f.c1_home) return c([['zoe', 'c1_zoe_home1'], ['hero', 'c1_tw_home1'], ['zoe', 'c1_zoe_home2a'], ['arthur', 'c1_ar_home1'], ['zoe', 'c1_zoe_home3'], ['arthur', 'c1_ar_home2']], () => { f.c1_home = true; g.updateObjective(); g.save(false); });
-        return c([['zoe', f.c1_water ? 'c1_zoe_water' : 'c1_zoe_wait']]);
+        return c([['zoe', f.c1_water ? (this.line.on ? 'c1_zoe_water2' : 'c1_zoe_water') : 'c1_zoe_wait']]);   // (DIALOGUE-2: after the pump room, not the well's first gurgle)
       case 'arthur':
         if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['radio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ...(f.dx_om_tuned ? [['arthur', 'om_ar_radio']] : []), ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
         return c([['arthur', f.c1_radio ? 'c1_ar_after' : 'c1_ar_idle']]);

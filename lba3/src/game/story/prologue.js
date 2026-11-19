@@ -559,8 +559,11 @@ export class Prologue extends ChapterBase {
           });
         }
         // (only the bell wakes Doran: Xil saw it when the barge came in; once it has rung, that is moot)
-        if (f.metXil) return c([['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']])]);
-        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ['hero', 'pr_tw_xil']], () => { f.metXil = true; g.updateObjective(); g.save(false); });
+        // (DIALOGUE-2: once he has seen the well he asks for a rope, once: the objective names Xil's rope from then on)
+        const rope = f.wellSeen && !f.pr_xilRope ? [['hero', 'pr_tw_xil_rope'], ['xil', 'pr_xil_rope']] : [];
+        const asked = () => { if (rope.length) f.pr_xilRope = true; };
+        if (f.metXil) return c([['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ...rope], () => { asked(); g.save(false); });
+        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ...(rope.length ? rope : [['hero', 'pr_tw_xil']])], () => { f.metXil = true; asked(); g.updateObjective(); g.save(false); });
       case 'doran':
         if (f.stamp) return c([['doran', 'pr_doran_after']]);
         // asleep: nothing but the harbour bell wakes him (CH1-LONGER)
@@ -877,9 +880,10 @@ export class Prologue extends ChapterBase {
       this.spoke = true;
       g.cutscene = null;
       // (each line its shot; while Sendell speaks the vein swells and motes of light rise off it: sendellGlow)
-      // (CAMPAIGN-1: his last thought is the reason to stay on Citadel: the pump's next cycle)
-      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2'], ...(this.f.pr_v2 ? [['hero', 'prh_tw_cycle']] : [])], () => this.endPrologue(),
-        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close', 'face'][i], i === 0 ? 0.6 : 0.3); });
+      // (CAMPAIGN-1's last thought, the pump's next cycle, opens chapter 2 now (c1_tw_morning_pump): DIALOGUE-2 / FRESH-EYES,
+      //  the chapter ends on Sendell's words, not on a pump)
+      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue(),
+        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close'][i], i === 0 ? 0.6 : 0.3); });
     }
   }
   // the vein while Sendell speaks: brighter, breathing with the words, a few motes of light drifting up off it (the

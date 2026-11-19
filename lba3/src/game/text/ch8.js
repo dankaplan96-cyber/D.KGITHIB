@@ -21,7 +21,7 @@ Object.assign(STR.en, {
   c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
   c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',
   c8_gil_2: "Know them? I dug them! Well, I carried the buckets. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
-  c8_gil_3: "The fortress one opens from inside the yard, by the old cistern. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
+  c8_gil_3: "The fortress one opens from inside the yard, by the old cistern. Its guards went down to the spaceport queue this morning, so nobody's on the gate. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
   c8_gil_after: "Down the tunnels, everyone! Bring blankets. Bring cake, if you have cake.",
 
   c8_mira_1: 'Twinsen. The project says the water office is "non-essential". I have been non-essential for two days.',
@@ -38,20 +38,20 @@ Object.assign(STR.en, {
   c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach by hand.)',
   c8_shelter_depot: 'The bunker door rolls open. Inside: benches, old lamps, and dust. It will do.',
 
-  c8_tw_z2: "The shelters are open, Zoé. Gilbert's leading the town down. Mira's got water to them, Pippa's sending supplies.",
+  c8_tw_z2: "The shelters are open, Zoé, and the town's going down. Gilbert's leading them.",
   c8_zoe_5: "Then it's my turn. The hill farms. Joss, Bryn and Grull won't leave their animals for anyone but me.",
   c8_f1_1: "Zoé? At this hour? ...The cliffs? With the goats? ...All right, all right. For you.",
   c8_f2_1: "The project said to wait for instructions. You're the instructions? Good. Children, coats!",
   c8_f3_1: "Grull doesn't leave the farm. Grull... Grull will make an exception. Only because you asked.",
   c8_zoe_lh: "Everyone's at the lighthouse. Let me check the old transmitter while I'm here.",
-  c8_zoe_lh2: "...That's odd. The dial memory still holds the last channel: Zeelich. The council chamber! The project uses this lighthouse as a relay to Zeelich's council!",
+  c8_zoe_lh2: "...That's odd. The dial memory still holds its last channel: Zeelich's council chamber. This lighthouse is the project's relay to the council.",
   c8_zoe_lh3: "So when I broadcast, the council heard me. They know. They just haven't decided anything.",
 
   c8_control_1: 'The control room. The screens flicker, and a face appears: Vesk, far below.',
-  c8_vesk_1: "This is Vesk, to all stations. Somebody has been opening FunFrock's old vents. The pressure is falling, and it changes nothing: every watt goes to the bore. Full depth in three days. Listed personnel, keep boarding. That is all.",
+  c8_vesk_1: "This is Vesk, to all stations. Somebody has been opening the old vents, on Desert Island and under the Hamalayi. The pressure is falling, and it changes nothing: every watt goes to the bore. Full depth in three days. Listed personnel, keep boarding. That is all.",
   c8_tw_c1: "He knows the vents are open. So he drills faster. Three days.",
   c8_zoe_radio: "Twinsen, I heard. The lighthouse relays to Zeelich's council. If they order the bore reversed, the project has to obey. Go and make them listen. I'll keep everyone safe here.",
-  c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one.",
+  c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one, list or no list.",
 
   c8_obj_home: 'Go home to Zoé',
   c8_obj_shelters: 'Get the town to safety',

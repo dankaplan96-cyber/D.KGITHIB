@@ -26,7 +26,7 @@ Object.assign(STR.en, {
 
   rs_tilde_dry: "Don't ask me about water. Ask me about gossip. I have plenty.",
   rs_tilde_0: "Maro talks and I nod. It works for us.",
-  rs_tilde_1: "Pippa should name a price and stick to it. I told her so. Twice.",
+  rs_tilde_1: "Pippa should name a price and stick to it. I told her so. She charged me for the advice.",
   rs_tilde_work: "Not now, dear. Maro's getting to the good part.",
 
   rs_garrick_dry: "I'm watering with what the harbour tap gives me. The tulips don't complain. Much.",
