@@ -17,7 +17,7 @@ Object.assign(STR.en, {
   c1_tw_home1: 'Warm water, crystals growing out of the walls, and mites. Then Sendell spoke to me. She said someone has reached "her".',
   c1_zoe_home2a: "Sendell? After twelve years? Then this is no blocked pipe. And the project's chief engineer lands at the harbour today: Vesk.",
   c1_ar_home1: 'Dad! Can I come see the ferry? They say it sails without sails. On light!',
-  c1_zoe_home3: "Arthur, you promised to fix Grandpa's radio. Twinsen, go to the harbour. If anyone knows where the island's water is going, it's Vesk.",
+  c1_zoe_home3: "Arthur, you promised to fix Grandpa Gilbert's radio. Twinsen, go to the harbour. If anyone knows where the island's water is going, it's Vesk.",
   c1_ar_home2: 'Fixing, fixing... I never get to see anything interesting.',
   c1_zoe_wait: 'Whatever Vesk tells you about the water, watch his face.',
   c1_zoe_water: "I heard the well gurgle! And the project's heat post by our door just lit up. Hot baths without hauling firewood. I could almost like this Vesk.",

@@ -55,7 +55,7 @@ Object.assign(STR.en, {
   c5_tarra_2: 'You gave us water twice. Take this. It is for luck, and you will need it.',
   c5_toast_clover: 'Clover leaf',
   c5_ilka_radio: 'Twinsen! Zoé is on my radio. I sent her the carving.',
-  c5_zoe_radio1: "Twinsen? Ilka's map matches Grandpa's old charts. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
+  c5_zoe_radio1: "Twinsen? Ilka's map matches Gilbert's old charts. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
   c5_zoe_radio2: "The ice up there is melting from below. The villages are cut off. Nobody's on the project's list.",
   c5_tw_radio: "Then that's where I'm going. How's Arthur?",
   c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",

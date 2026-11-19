@@ -123,7 +123,7 @@ Object.assign(STR.en, {
 Object.assign(STR.en, {
   idle_zoe_dig: "Half the island stops me in the street since the broadcast. The other half crosses it. Did you find your professor?",
   idle_zoe_steam: "Mira has me copying out who isn't on the project's list. My handwriting is better. Hers is faster.",
-  idle_zoe_pass: "Take the thick scarf. Grandpa's charts say the Hamalayi wind goes straight through wool.",
+  idle_zoe_pass: "Take the thick scarf. Gilbert's old charts say the Hamalayi wind goes straight through wool.",
   idle_zoe_observatory: "Arthur keeps the radio on his pillow in case you call. I've stopped telling him off for it.",
   idle_zoe_council: "The council heard every word and formed a committee? Then go and stand in front of the committee.",
   idle_arthur_dig: "Is Desert Island really all sand? Bring me some. Not a lot. A jar.",

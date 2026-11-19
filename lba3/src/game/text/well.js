@@ -30,7 +30,7 @@ Object.assign(STR.en, {
   pr_well_stuck2: 'Still rusted shut. Gilbert would kick it.',
   pr_lid_padlock: '(Kicking a padlock. That only hurts my foot.)',
   pr_lid_kicked: 'There. Years of rust, one kick.',
-  pr_gil_told: 'Told you.',
+  pr_gil_told: 'Told you. Same kick I taught Arthur.',
   pr_lid_ball: '(The ball just bounces off. It needs weight behind it.)',
   pr_nudge_kick: 'Aggressive ({b}), then {k} by the lid',
   p_kick: 'Kick',
