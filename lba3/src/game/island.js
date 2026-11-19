@@ -2983,29 +2983,32 @@ const plateauLocal = (x, z) => { const o = OLD_DOORS.plateau, c = Math.cos(o.ry)
 export function plateauStairAt(x, z, m = 0, y = -Infinity) {
   const S = PLATEAU_STAIR, [lx, lz] = plateauLocal(x, z);
   if (lx > S.lx0 - 0.2 - m && lx < S.lx1 + 0.3 + m && Math.abs(lz - S.lz) < S.w / 2 + 0.35 + m) return true;
-  return y > OLD_DOORS.plateau.y - 0.3 && lx > -1.75 && lx < S.lx0 + 0.2 && lz > -0.15 && lz < 2.35;
+  if (y > OLD_DOORS.plateau.y - 0.3 && lx > -1.75 && lx < S.lx0 + 0.2 && lz > -1.0 && lz < 2.35) return true;
+  // (and one against the north parapet standing over its coping, which hid him on the flight from the slope below)
+  const yl = OLD_DOORS.plateau.y - 0.02, line = yl + Math.max(0, Math.min(1, (lx - S.lx0) / (S.lx1 - S.lx0))) * (S.top - yl);
+  return lx > -1.75 && lx < S.lx1 && lz >= S.lz + S.w / 2 + 0.35 && lz < 3.3 && y > line + 0.5;
 }
 // CAVE-STAIR (P69, the user: "the stairs are in the air and not connected properly"): the ground under the flight. The
 // bank south of it rose over the treads' south third (up to 0.3 m: grass through the steps, and he walked on the
-// slope over them) and over the landing's back by the door; the plateau dipped 0.5 m just past the top, and fell 0.6 m
+// slope over them: the trap filler's fill, the island's own ground there being the sea cliff) and over the landing's back by the door; the plateau dipped 0.5 m just past the top, and fell 0.6 m
 // off the top's north half (a ledge he stuck at). Here (world.js islandHeight) the ground under the landing and the
 // flight lies 0.3 m under their line, and behind the south kerb (the terrain's next row of points, 0.15 m behind it)
-// at most 0.2 m over it; past the top an apron level with the top tread, 1.5 m deep, easing back to the land by 1.5 m.
+// at most 0.1 m over it; past the top an apron 2 cm under the top tread, 1.5 m deep, easing back to the land by 1.5 m.
 // The stair is laid on its own line (the sill and the top fixed where the ground first set them), so the cut moves
-// no step. (off: the ground as it stood, world.js scatterGround's view for the rocks and the scatter)
+// no step. (world.js buildHeightGrid: on the terrain's points, after its trap filler; scatterGround keeps the old ones)
 export const PLATEAU_STAIR_BOX = [-88.9, -85.3, -79.1, -80.9];
-export function plateauStairGround(x, z, h, off = false) {
+export function plateauStairGround(x, z, h) {
   const B = PLATEAU_STAIR_BOX;
-  if (off || x < B[0] || x > B[2] || z < B[1] || z > B[3]) return h;
+  if (x < B[0] || x > B[2] || z < B[1] || z > B[3]) return h;
   const S = PLATEAU_STAIR, [lx, lz] = plateauLocal(x, z), yl = OLD_DOORS.plateau.y - 0.02, hw = S.w / 2;
   if (lx > S.lx1 - 0.1) {
     const ex = Math.max(S.lx1 - lx, lx - (S.lx1 + 1.5)), ez = Math.abs(lz - S.lz) - hw, d = ex > 0 && ez > 0 ? Math.hypot(ex, ez) : Math.max(ex, ez);
-    if (d < 1.5) h += (S.top - h) * (1 - smoothstep(0, 1.5, d));
+    if (d < 1.5) h += (S.top - 0.02 - h) * (1 - smoothstep(0, 1.5, d));   // (2 cm under the top tread)
   }
   if (lx > -1.5 && lx < S.lx1 - 0.02) {   // (the terrain's points: the column past the top, 1.4 cm out, is the apron's)
     const line = lx <= S.lx0 ? yl : yl + Math.min(1, (lx - S.lx0) / (S.lx1 - S.lx0)) * (S.top - yl);
     if (lz > -0.25 && lz < 2.1) h = Math.min(h, line - 0.3);
-    else if (lz > -0.75 && lz <= -0.25) h = Math.min(h, line + 0.2);
+    else if (lz > -0.75 && lz <= -0.25) h = Math.min(h, line + 0.1);
   }
   return h;
 }
@@ -3025,7 +3028,8 @@ function plateauStair(W, root, o) {
     let lo = Infinity, gc = -Infinity, gb = -Infinity;
     for (let t = a; t <= b + 1e-6; t += run / 2) {
       for (const lz of [oS - 0.15, S.lz - hw, S.lz, S.lz + hw, oN + 0.15]) lo = Math.min(lo, gAt(t, lz));
-      gc = Math.max(gc, gAt(t, S.lz)); gb = Math.max(gb, gAt(t, oS - 0.15));
+      if (t < S.lx1 - 0.01) gc = Math.max(gc, gAt(t, S.lz));   // (not the apron past the top, level with the top tread)
+      gb = Math.max(gb, gAt(t, oS - 0.15));
     }
     const top = Math.min(prev + 0.3, Math.max(yl + (i + 1) * rise, gc + 0.03)), bot = Math.min(lo, prev) - 0.4;
     prev = top;
@@ -3034,7 +3038,9 @@ function plateauStair(W, root, o) {
     // under the steps above it to the top (no seam between two: physics.js reads a brick 5 cm in from its edges), the
     // first one's from 15 cm back over the landing
     const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), trimM, px, (top + bot) / 2, pz, 0, o.ry, 0);
-    { const c0 = i ? a : a - 0.15, [cx, cz] = f((c0 + S.lx1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (S.lx1 - c0) / 2, hd: hw, rot: o.ry, top }); }
+    // (CAVE-STAIR: and 0.3 m on over the apron past the top, 2 cm under the top tread: the terrain's slope from the
+    //  cut under the last tread up to the apron, one point to the next, stopped him at the tread's edge)
+    { const c0 = i ? a : a - 0.15, c1 = S.lx1 + 0.3, [cx, cz] = f((c0 + c1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (c1 - c0) / 2, hd: hw, rot: o.ry, top }); }
   }
   // the cheeks: each one dressed wall the stair's length, its coping a straight line along the flight (the wall sheared
   // to it, its ends plumb), down below the slope; the north one 0.45 m over the nosings at least, the south one 12 cm

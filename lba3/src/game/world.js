@@ -417,11 +417,9 @@ function houseFlats(x, z, h) {
   }
   return h;
 }
-let STAIR_OFF = false;   // (CAVE-STAIR: scatterGround's view, the ground as it stood)
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
-  // (CAVE-STAIR: and the ground under the plateau's stair, island.js plateauStairGround)
-  return plateauStairGround(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight))), STAIR_OFF);
+  return waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)));
 }
 
 // REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
@@ -683,16 +681,7 @@ function scatterGround(T) {
     }
   }
   // (CAVE-STAIR: and the ground under the plateau's stair as it stood before it was cut to the flight's line)
-  {
-    const [x0, z0, x1, z1] = PLATEAU_STAIR_BOX;
-    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
-      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
-      if (pre.has(k)) continue;
-      STAIR_OFF = true; const before = islandHeight(x, z); STAIR_OFF = false;
-      const d = before - islandHeight(x, z);
-      if (d !== 0) pre.set(k, T.heights[k] + d);
-    }
-  }
+  for (const [k, v] of STAIR_PRE) if (!pre.has(k)) pre.set(k, v);
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
   const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, PLATEAU_STAIR_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
@@ -711,6 +700,7 @@ function scatterGround(T) {
 }
 
 // ---------- the terrain grid, checked for soft-locks ----------
+let STAIR_PRE = new Map();   // (CAVE-STAIR: the grid's points under the plateau's stair before the cut: index → height)
 const TERRAIN_SIZE = 260, TERRAIN_SEGS = 280;
 export function buildHeightGrid(size, segs) {
   const n = segs + 1, half = size / 2, step = size / segs, X0 = ISLAND.cx - half, Z0 = ISLAND.cz - half;
@@ -724,6 +714,17 @@ export function buildHeightGrid(size, segs) {
     if (w > 0 && h[a] < f.h) h[a] += (f.h - h[a]) * w;
   }
   const trapped = fixTraps(h, n, X0, Z0, step);
+  // CAVE-STAIR: the ground under the plateau's stair cut to the flight's line (island.js plateauStairGround), after the
+  // trap filler: the island's own ground there is the sea cliff (6–9 m), and what lay over the treads was the filler's
+  // fill stepping down from the bank (0.79 m a point); cut before it, the filler only filled it again. The points as
+  // they stood are kept for scatterGround (no random draw moves)
+  STAIR_PRE = new Map();
+  {
+    const [x0, z0, x1, z1] = PLATEAU_STAIR_BOX;
+    for (let j = 0; j < n; j++) { const z = Z0 + j * step; if (z < z0 || z > z1) continue;
+      for (let i = 0; i < n; i++) { const x = X0 + i * step; if (x < x0 || x > x1) continue;
+        const a = j * n + i, v = plateauStairGround(x, z, h[a]); if (v !== h[a]) { STAIR_PRE.set(a, h[a]); h[a] = v; } } }
+  }
   // blurred copy for the concavity tint
   const blur = new Float32Array(n * n);
   const R = 2;
