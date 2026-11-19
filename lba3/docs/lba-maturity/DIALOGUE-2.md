@@ -47,6 +47,12 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 4 | Ilka's camp | Ilka, Twinsen | **edited**: `c4_ilka_2` reacts to Baldino's name ("He still writes to me. In capitals."); `c4_ilka_4` says what the Temple of Bù is ("the old god's house") | Source only |
 | 4 | the post's memo, the bore test (`dt_*`) | Dallan, Vesk (wire), Twinsen | **edited**: the memo ("Run test 14, then cap it", also on the cabin's desk `ih_post_cabin0_dry`) no longer says "Keep drilling" against Dallan's "stays capped"; Dallan's two reminders in his voice (`dt_dallan_wait`, `_wait2`); the test scene kept | Source only |
 | 4 | the dig, the seals, the carving, Dallan | Ilka, Dallan, Twinsen | **edited**: `c4_tw_d1` (he has the plan back: "You've seen Vesk's evacuation plan, Dallan."); the vent: `c4_ilka_end`, `c4_j_dallan`, `c5_ilka_1` say the vent "comes up under" the capped test bore (one thing, the shell's vent; the bore sits on it), not that the vent *is* the bore | Source only |
+| 5 | the plan, the requisition, the hall, the relief valve (`c5_*`, `dt_w5_*`) | Ilka, Hesk, Tarra, Dallan, Doran, Brosk, Vesk (wire) | **edited** `c5_trader_wait` (Brosk, not a three-beat objective); the gate exchange plays once (`digtest.js` replaces `steam.js`'s in new games: the near-duplicate `dt_tw_gate2`/`c5_tw_gate1` is never heard twice); rest kept | Source only |
+| 5 | the radio, the glider | Ilka, Zoé, Hesk, Dallan | **edited** `c5_ilka_radio` ("I've told her about the carving", not sent a carving by radio); `c5_hesk_k1` "if the wind likes us"; `c5_zoe_radio1` "Gilbert's charts" kept (STORY-FIX's decision) | Source only |
+| 6 | the landing, the gorge, Lhar, Pim, the sword, the lift, the line (`c6_*`, `ps_*`) | Hesk, Yorna, Pim, Tashi, Dawa, Norbu | kept (`ps_read_2`'s "the kitchen wall knocked like that" now has its three in `prh_tap_1`) | Source only |
+| 7 | the observatory, the mirrors, the fourth setting (`c7_*`, `ob_*`) | Sefa, Yorna | **edited** `ob_keeper_wait` (Sefa's courtesy, not a two-beat order); rest kept | Source only |
+| 7 | Sendell in the dome | Twinsen, Sendell | **edited** `c7_tw_s1` "Is it true? Is the shell cracking?" (he was briefing a goddess on her own news); her answer begins "Yes." | Source only |
+| 7 | Arthur's call | Arthur, Twinsen | **edited** `c7_arthur_2` "Grandpa Gilbert's not on it" (Arthur's own name for him, as everywhere else) | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -111,6 +117,16 @@ was weighed in its scene. Section numbers are the report's.
 | 7 | `c4_ilka_4` Bù, Temple-Park unexplained | real (minor) | **fixed** ("the old god's house") |
 | 7 | `c4_tw_d1` reads as if he lost the plan | real | **fixed** |
 | 7 | `c4_arrive` / `c5_doran_1` Doran's ferry | kept: chapter 4's arrival has him take over the project's ferry, and chapter 5's "I'm the one who sails it!" follows from that |
+| 8 | `c5_trader_1` a fetch inside a fetch | kept (Brosk's "Business is business" is the scene); his reminder rewritten |
+| 8 | `c5_zoe_radio1` Gilbert's charts never set up | kept: STORY-FIX chose the wording; a set-up line is S-8 |
+| 8 | `c5_ilka_radio` a carving sent by radio | real | **fixed** |
+| 8 | `c5_hesk_k1` glider to the mountains | real (minor) | **fixed** ("if the wind likes us") |
+| 8 | Doran leaves the story after chapter 5 | kept: noted for the campaign (S-6) |
+| 8 | `dt_tw_gate2` duplicates `c5_tw_gate1` | checked: only one of the two chains plays in a game |
+| 9 | `c7_sendell_4` "you will see her" never paid off | real | see chapter 12 below |
+| 9 | `c7_tw_s1` Twinsen briefing a goddess | real | **fixed** |
+| 9 | `ps_read_2` the kitchen's three knocks applied backwards | real | **fixed** at the source (`prh_tap_1` counts three) |
+| 9 | `c7_arthur_2` "Gilbert" from Arthur | real | **fixed** ("Grandpa Gilbert") |
 
 
 ## Story contradictions for a separate repair
@@ -119,5 +135,5 @@ was weighed in its scene. Section numbers are the report's.
 
 ## Resume point
 
-Next: chapter 5 "Steam and Sand" (`text/ch5.js`, `story/steam.js`, `digtest.js` `dt_w5_*`; FRESH-EYES §8). Then chapters 6-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: chapter 8 "Evacuation" (`text/ch8.js`, `story/evacuation.js`, `laneline.js`; FRESH-EYES §10). Then chapters 9-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).
