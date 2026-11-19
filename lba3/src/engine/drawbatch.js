@@ -283,7 +283,7 @@ class Area {
     for (const _ of flushArraysSteps()) yield 'array';   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn; ARRIVAL-STEPS: one a step)
     P.arrays = performance.now() - tq;
     tq = performance.now();
-    for (const C of this.cells.values()) { this.build(C); yield 'cell'; }
+    for (const C of this.cells.values()) { yield* this.buildSteps(C); yield 'cell'; }
     P.build = performance.now() - tq;   // (staged: the phases' times include the frames between their slices)
   }
   // PERF-CALLS: the order kept only where it can show. Opaque draws are depth-tested, so the order of two draws changes
@@ -470,7 +470,10 @@ class Area {
     }
     for (const [C, L] of lists) { M.parts.set(C.id, Int32Array.from(L)); M.cells.push(C); C.list.push(M); }
   }
-  build(C) {
+  build(C) { const it = this.buildSteps(C); while (!it.next().done); }
+  // (ARRIVAL-STEPS: a cell's build as a generator — a step after every ~4 000 vertices merged — for the staged builds:
+  //  one of Zeelich's cells took 77 ms here. The cell has no mesh until its last step; nothing is drawn meanwhile)
+  *buildSteps(C) {
     if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
     C.dirty = false; this._meshes = null;
     if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2 && !keepOne(C))) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
@@ -484,6 +487,7 @@ class Area {
     //  where two pieces' faces coincide exactly the later one shows: a batch's triangles keep that order. `ord`: the
     //  id of the material the piece was drawn with before: its 2D twin, or its own)
     const LIST = fold?.arr ? [...C.list].sort((a, b) => a.fold.ord - b.fold.ord) : C.list;
+    let acc = 0;
     for (const M of LIST) {
       const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
       if (T === undefined) continue;
@@ -491,12 +495,14 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [], IA = I ? I.array : null;
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = IA ? IA[T[k] * 3 + j] : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+      if ((acc += T.length) > 4096) { acc = 0; yield 'cell part'; }
     }
     const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
     let io = 0;
     for (const { M, T, map, from, vo } of parts) {
       const g = M.geo, I = g.index, IA = I ? I.array : null, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
+      if ((acc += nf) > 4096) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
@@ -620,7 +626,7 @@ class Area {
     }
     yield 'check';
     if (left) {
-      for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; yield 'cell'; } if (!any) break; }
+      for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { yield* this.buildSteps(C); any = true; yield 'cell'; } if (!any) break; }
       (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out);
     }
     return left;
@@ -662,7 +668,7 @@ class Area {
       this.members.push(M);
     }
     yield 'rejoin';
-    for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; yield 'cell'; } if (!any) break; }
+    for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { yield* this.buildSteps(C); any = true; yield 'cell'; } if (!any) break; }
     // (a piece whose cell is still too empty without the others is drawn on its own again, kept for the next time)
     for (const M of this.members) if (M.out) this.outs.push(M);
     this.members = this.members.filter((M) => !M.out);

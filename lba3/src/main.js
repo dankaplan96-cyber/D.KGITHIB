@@ -1026,7 +1026,15 @@ class Game {
     // brought up to date first (nothing is drawn in the hold, so they were not), their cells rebuilt in slices — on the
     // first frame drawn, they left and their cells were rebuilt in that frame (46–67 pieces on the arrivals here). The
     // batch meshes this remade go up in the next step. (Their shadow batches: the next frame's own update.)
-    if (staged && this.drawBatch.enabled) { let first = true; sliceT('draw batches settle', () => { if (first) { first = false; root.updateMatrixWorld(true); } return this.drawBatch.settleSlice(root, PREP_SLICE_MS); }); }
+    if (staged && this.drawBatch.enabled) {
+      let first = true;
+      sliceT('draw batches settle', () => {
+        if (first) { first = false; root.updateMatrixWorld(true); }
+        const more = this.drawBatch.settleSlice(root, PREP_SLICE_MS);
+        if (!more && this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);   // (the shadow batches' own check, on the same matrices)
+        return more;
+      });
+    }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
@@ -1109,6 +1117,8 @@ class Game {
     if (!root || this.testFreeze || !this.drawBatch?.enabled) return 0;
     const fresh = new Set();
     for (const m of this.drawBatch.meshes(root)) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
+    // (ARRIVAL-STEPS: and the shadow batches rebuilt since — pieces the hold's frames moved left them — not on the first frame)
+    if (this.stagedBatches !== false) for (const m of this.shadowCull.areas.get(root)?.proxies || []) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
     if (!fresh.size) return 0;
     return this.uploadGeometry(root, fresh, true);
   }

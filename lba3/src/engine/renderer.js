@@ -663,21 +663,31 @@ export class Renderer {
   *precompileParts(split = [], scene = this.scene, camera = this.camera) {
     const R = this.renderer, mats = new Set(), parts = [];
     this.applyResize();
-    const one = (o) => ({ traverse: (cb) => cb(o), traverseVisible() {} }), sub = (o) => ({ traverse: (cb) => o.traverse(cb), traverseVisible() {} });
-    parts.push(one(scene));
+    // (the scene's lights walked once — three's compile walks the whole shown scene for them on every call, which made
+    //  the parts cost 3× the single call here; the same lights in the same order: the same light state and programs)
+    const lights = []; scene.traverseVisible((o) => { if (o.isLight) lights.push(o); });
+    const target = Object.create(scene); target.traverseVisible = (cb) => { for (const l of lights) cb(l); };
+    // (parts of up to partObjects objects: neighbouring subtrees taken together, one compile call each)
+    const most = this.partObjects || 400, count = (o) => { let n = 0; o.traverse(() => { n++; }); return n; };
+    let cur = [], n = 0;
+    const flush = () => { if (cur.length) { const L = cur; parts.push({ traverse: (cb) => { for (const [o, deep] of L) if (deep) o.traverse(cb); else cb(o); }, traverseVisible() {} }); } cur = []; n = 0; };
+    const add = (o, deep) => { const k = deep ? count(o) : 1; if (n && n + k > most) flush(); cur.push([o, deep]); n += k; };
+    add(scene, false);
     for (const k of scene.children) {
-      if (split.includes(k)) { parts.push(one(k)); for (const c of k.children) parts.push(sub(c)); }
-      else parts.push(sub(k));
+      if (split.includes(k)) { add(k, false); for (const c of k.children) add(c, true); }
+      else add(k, true);
     }
+    flush();
+    yield 'parts';
     const ex = scene === this.scene ? this.warmExtra?.() : null, vis = this._warmVis ??= [];
     for (const P of parts) {
       const prev = R.getRenderTarget();
       R.setRenderTarget(this.composer.renderTarget1);
       if (ex) for (let i = 0; i < ex.length; i++) { vis[i] = ex[i].visible; ex[i].visible = true; }
-      try { for (const m of R.compile(P, camera, scene)) mats.add(m); }
+      try { for (const m of R.compile(P, camera, target)) mats.add(m); }
       catch (e) { console.warn('precompile part', e); }
       finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
-      yield;
+      yield 'compile';
     }
     return mats;
   }
