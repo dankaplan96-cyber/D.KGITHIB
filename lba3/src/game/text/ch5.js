@@ -44,7 +44,7 @@ Object.assign(STR.en, {
   c5_dallan_gate1: 'Twinsen. I suppose you want me to look the other way.',
   c5_tw_gate1: "I want you to look at the gauges. Open the relief valve slowly, and the steam goes through FunFrock's condensers instead of under Kesh.",
   c5_dallan_gate2: 'My orders say the bore stays capped, and Kesh is not on the list.',
-  c5_tw_gate2: 'Your orders say sixty people stay behind. You knew that on Zeelich.',
+  c5_tw_gate2: "Your orders say sixty people stay behind. 'Thirty percent. I know.' Your words, at the dig.",
   c5_dallan_gate3: '...The gate is open. I didn\'t see you. Be quick, the pressure is higher than the reports say.',
   c5_relief_1: 'The wheel is stiff. One turn. Two. The ground starts to shake.',
   c5_vent_1: 'Geysers burst through the pad, then fall back. Far to the south, two white plumes rise from the dunes. The condensers are working.',

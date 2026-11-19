@@ -91,8 +91,9 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Place:** a dry island of mesas and wind; a village around a dying oasis; the project's research post at an
   old excavation; FunFrock-era ruins half buried in sand.
 - **People:** Professor Ilka (Rabbibunny geologist, found the first crystals, sacked by the project for asking
-  questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (the
-  guard who confiscated the plan on Zeelich, now running the post: follows rules, hard but not cruel).
+  questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (project
+  security who has guarded the dig for a year and runs the post: follows rules, hard but not cruel; he is not the
+  unnamed guard who took the plan on Zeelich, though he wears the same uniform — STORY-FIX 19.11).
 - **Does:** gets the oasis pump running again (ADV-2: Brosk blames the test bore's tremors, Sani hears from the roof
   that two gears clack and one grinds; at the tower a gust shows which, the ball knocks it loose, and the pipe joint
   the tremors shook apart is pushed home), then rides Hesk's sand-yacht; enters the dig's gate code himself (the
