@@ -16,7 +16,7 @@ Object.assign(STR.en, {
   // ---- the foreman (his office, by the old clone statues)
   hs_foreman_v: [
     "Twinsen! The Twinsen? Ordo, foreman. Forty of my people sleep here between shifts. Mind the rope round your old cell, they're proud of it.",
-    "The store below is the project's. Mr Vesk's own men keep it. Pipe fittings, they tell me. Nobody of mine goes down there.",
+    "The store below is the project's. The chief engineer's own men keep it. Pipe fittings, they tell me. Nobody of mine goes down there.",
     "The Council sealed this place before any of us came. The diggers broke in, the project needed beds, and here we are.",
   ],
   hs_foreman_u: [
