@@ -1001,7 +1001,8 @@ class Game {
     // materials) and waits for all of it, as before. Without that extension three compiles them when first used: the
     // same work as before, at the end. (earlyWarm: true always, false never — A/B and probes; unset: where the extension is)
     if (!this.drawBatch.has(root) && R.compileAsync && (this.earlyWarm === true || (this.earlyWarm !== false && R.extensions?.has?.('KHR_parallel_shader_compile')))) {
-      stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
+      if (staged) { let W = null; sliceT('shader warm-up (early)', () => { W ??= this.renderer.precompileParts([root]); const t0 = performance.now(); let r; while (!(r = W.next()).done && performance.now() - t0 < PREP_SLICE_MS); return !r.done; }); }   // (ARRIVAL-STEPS: in parts; nothing waits for it)
+      else stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
     }
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
@@ -1027,15 +1028,26 @@ class Game {
     // its program, ~70–130 ms of main-thread time on SwiftShader's CPU even when nothing is left to compile: on the
     // user's laptop the transition stalls (up to 200 ms) at every door. A state already warmed, with no program made
     // since (anything new compiled anywhere starts it over), needs nothing.
-    stepT('shader warm-up', () => {
-      this.lightPool.update(this.hero.pos);
-      const lights = {};
-      this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
-      const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
-      const warmed = (this._warmed ??= new Map());
-      if (warmed.get(key) === R.info.programs.length) return;
-      T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); this.uploadExtras(root, true); });
-    });
+    // ARRIVAL-STEPS: in parts of at most PREP_SLICE_MS a black frame (renderer.precompileParts: the same programs), then
+    // the wait for the driver as before
+    let W = null, wkey = null;
+    const warm = () => {
+      const t0 = performance.now(), warmed = (this._warmed ??= new Map());
+      if (!W) {
+        this.lightPool.update(this.hero.pos);
+        const lights = {};
+        this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
+        wkey = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
+        if (warmed.get(wkey) === R.info.programs.length) return false;
+        if (!staged) { T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); }); return false; }
+        W = this.renderer.precompileParts([root]);
+      }
+      let r; while (!(r = W.next()).done && performance.now() - t0 < PREP_SLICE_MS);
+      if (!r.done) return true;
+      T.prepWait = this.renderer.whenReady(r.value).catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); });
+      return false;
+    };
+    sliceT('shader warm-up', warm);
     return S;
   }
   // TITLE-LOAD: the next step of the area's preparation (updateTransition's hold: one per black frame). After the last,
