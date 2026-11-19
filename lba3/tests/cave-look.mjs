@@ -67,5 +67,17 @@ for (const [name, x, z, a] of SPOTS) {
   await ev(() => game.renderer.render());
   await page.screenshot({ path: `${SHOTS}/${PREFIX}-${name}.jpg`, type: 'jpeg', quality: 85 });
 }
+// the rock's new bricks (the faces' feet, the corner masses, the buttresses) leave the floor walkable: from the door to
+// each part of the lower floor by the harness's walk (P.go, held keys), and along the left wall past the buttress
+const walks = await ev(() => {
+  const R = game.room, out = {};
+  for (const [name, x, z] of [['stair-foot', -2.6, 3.2], ['along-left-wall', -12.4, -1.6], ['alcove', -0.6, -8.2], ['guardhouse', 8.1, -5.4], ['pool-front', 7.0, 9.4], ['front-right', 12.6, 9.6]]) {
+    const h = game.hero; h.pos.set(R.spawn.x, 0, R.spawn.z); h.resetMotion(); h.vy = 0; h.onGround = true;
+    for (let i = 0; i < 10; i++) game.frame(1 / 60, false);
+    out[name] = P.go(R.center.x + x, R.center.z + z, { tol: 0.5, maxT: 25 }).r;
+  }
+  return out;
+});
+check('the lower floor is walkable from the door past the new rock (harness walk)', Object.values(walks).every((r) => r === 'arrived'), walks);
 done();
 await browser.close();

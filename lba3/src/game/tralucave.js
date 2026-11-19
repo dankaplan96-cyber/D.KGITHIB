@@ -23,8 +23,8 @@ import { smoothstep } from '../engine/math.js';
 export const TRALUCAVE_AT = { x: 8400, z: 0 };
 
 const std = (map, color, rough, tile, glow = 0) => { const m = new THREE.MeshStandardMaterial({ map, color, roughness: rough, ...(glow ? { emissive: '#ffffff', emissiveMap: map, emissiveIntensity: glow } : {}) }); m.userData.tile = tile; return m; };
-const blockM = () => M('tc_block', () => std(TEX.stone('grey'), '#b8b4aa', 0.9, 2, 0.3));
-const capM = () => M('tc_cap', () => std(TEX.stone('grey'), '#c8c2b6', 0.9, 1.2, 0.22));
+const blockM = () => M('tc_block', () => std(TEX.stone('grey'), '#b8b4aa', 0.9, 2, 0.14));   // (CAVE-LOOK: less of its own glow, lit by the room's key light now)
+const capM = () => M('tc_cap', () => std(TEX.stone('grey'), '#c8c2b6', 0.9, 1.2, 0.12));
 const waterM = () => M('tc_water', () => { const m = new THREE.MeshStandardMaterial({ color: '#8ccfd8', emissive: '#4e9aa0', emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.05, transparent: true, opacity: 0.88 }); m.userData.noShadow = true; return m; });
 const boneM = () => M('tc_bone', () => new THREE.MeshStandardMaterial({ color: '#e6d4b8', roughness: 0.7, emissive: '#5a4c3c', emissiveIntensity: 0.6 })), tipM = () => MAT.paint('#5a3a2c', 0.6), rustM = () => MAT.paint('#6e4532', 0.85);
 const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg', () => new THREE.MeshStandardMaterial({ color: '#5aa0c8', roughness: 0.3, emissive: '#1e4a66', emissiveIntensity: 0.6 }));
@@ -334,6 +334,12 @@ export function buildTraluCaveRoom(scene, physics) {
     B.ccol(-RX + 0.35, -RZ + 0.35, 0.55, H, { noStand: true });
     mass(TX1 + 0.1, 0, -RZ + 0.15, 0.7, 1.1, 0.65, 13, 0.9); mass(TX1, 1.4, -RZ + 0.05, 0.6, 1.0, 0.6, 31, 2.0);
     B.ccol(TX1 + 0.35, -RZ + 0.35, 0.4, H, { noStand: true });
+    // two buttresses of rock out of the walls (the straight wall lines broken): off the left wall over the boulder between
+    // the terrace and the door, off the back wall on the terrace beside the stair's head; a brick round each
+    mass(-RX + 0.1, 0, 1.75, 0.95, 1.35, 0.85, 37, 0.2); mass(-RX, 1.6, 1.4, 0.8, 1.2, 0.75, 41, 1.1); mass(-RX + 0.05, 0, 3.0, 0.6, 0.8, 0.6, 43, 2.3);
+    B.ccol(-RX + 0.55, 1.95, 0.75, H, { noStand: true });
+    mass(-2.75, TY - 0.1, -RZ + 0.1, 0.8, 1.2, 0.85, 47, 0.5); mass(-2.6, TY + 1.4, -RZ, 0.7, 1.1, 0.7, 53, 1.7);
+    B.ccol(-2.75, -RZ + 0.5, 0.65, H, { noStand: true });
     const clearOf = [[SX0 - 0.4, SX1 + 0.4, TZ1 - 0.2, TZ1 + N * run + 0.8], [PX0 - 0.8, PX1 + 0.8, PZ0 - 0.8, PZ1 + 0.8], [HX0 - 0.4, RX + 1, -RZ - 1, HZ1 + 0.9], [-RX - 1, -RX + 2.6, DOORZ - 1.3, DOORZ + 1.3], [LX - 1, TX1 + 0.4, -RZ - 1, TZ1 + 0.4]];
     for (let i = 0, n = 0; i < 160 && n < 46; i++) {
       const edge = hash2(i, 1, 91) < 0.55, x = edge ? (hash2(i, 2, 91) < 0.5 ? -RX + 0.35 + hash2(i, 3, 91) * 1.3 : -RX + hash2(i, 4, 91) * W) : -RX + hash2(i, 4, 91) * W;
