@@ -30,6 +30,10 @@ const waterM = () => M('tc_water', () => { const m = new THREE.MeshStandardMater
 const boneM = () => M('tc_bone', () => new THREE.MeshStandardMaterial({ color: '#e6d4b8', roughness: 0.7, emissive: '#5a4c3c', emissiveIntensity: 0.6 })), tipM = () => MAT.paint('#5a3a2c', 0.6), rustM = () => MAT.paint('#6e4532', 0.85);
 const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg', () => new THREE.MeshStandardMaterial({ color: '#5aa0c8', roughness: 0.3, emissive: '#1e4a66', emissiveIntensity: 0.6 }));
 
+// a flat patch of floor whose texture runs at its material's own scale (CAVE-STAIR: props.js plane() keeps its 0..1 UVs,
+// so the terrace's rock, 16 m², wore one stretched copy of the texture, its pebbles half a metre long, and each paved
+// patch had flags of its own size; this one is tiled by the material's metres like the room's floor)
+const patch = (w, d) => new THREE.PlaneGeometry(w, d);
 // a cluster of pale spiked stalagmites, dark at the tips
 function spikes(k, n = 5, s = 1) {
   for (let i = 0; i < n; i++) {
@@ -64,9 +68,12 @@ function candleStand(k) {
   candle(k, 0, 1.33, 0);
   return { r: 0.18, top: 1.5 };
 }
-// a boulder against a wall's foot
+// a boulder against a wall's foot (CAVE-STAIR: a faceted stone, each face its own flat projection of the rock; on a
+// round sphere the material's per-vertex projection broke at every turn, and from the room's camera above its top
+// read as a dark ring on the floor)
+let BOULDER = null;
 function boulder(k, s = 1) {
-  k.add(sphere(0.5, 9, 7), rockM(), 0, 0.25 * s, 0, 0, { sx: 1.3 * s, sy: 0.75 * s, sz: s });
+  k.add(BOULDER ||= new THREE.DodecahedronGeometry(0.5, 0), rockM(), 0, 0.25 * s, 0, 0, { sx: 1.3 * s, sy: 0.75 * s, sz: s });
   return { r: 0.55 * s, top: 0.6 * s };
 }
 
@@ -85,12 +92,12 @@ export function buildTraluCaveRoom(scene, physics) {
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
   // the worn paved patches in the rock floor (the original's darker brick)
-  for (const [x, z, w, d] of [[-3.0, 3.6, 4.2, 2.6], [1.0, 1.4, 3.0, 1.6], [-4.6, 5.8, 2.0, 1.2]]) k.add(plane(w * F, d * F), paveM(), x * F, 0.006, z * F, 0, { rx: -Math.PI / 2 });
+  for (const [x, z, w, d] of [[-3.0, 3.6, 4.2, 2.6], [1.0, 1.4, 3.0, 1.6], [-4.6, 5.8, 2.0, 1.2]]) k.add(patch(w * F, d * F), paveM(), x * F, 0.006, z * F, 0, { rx: -Math.PI / 2 });
   // --- the rock terrace at the back left, 1.6 m up, its face rough rock with boulders at its foot
   const TY = 1.8, TX1 = -1.0 * F, TZ1 = -1.6 * F;
   k.add(rbox(TX1 - LX, TY, TZ1 - BZ, 0.06), rock, (LX + TX1) / 2, TY / 2, (BZ + TZ1) / 2);
-  k.add(plane(TX1 - LX - 0.1, TZ1 - BZ - 0.1), floorM(), (LX + TX1) / 2, TY + 0.004, (BZ + TZ1) / 2, 0, { rx: -Math.PI / 2 });
-  k.add(plane(3.6 * F, 2.4 * F), paveM(), -5.0 * F, TY + 0.008, -3.4 * F, 0, { rx: -Math.PI / 2 });
+  k.add(patch(TX1 - LX - 0.1, TZ1 - BZ - 0.1), floorM(), (LX + TX1) / 2, TY + 0.004, (BZ + TZ1) / 2, 0, { rx: -Math.PI / 2 });
+  k.add(patch(3.6 * F, 2.4 * F), paveM(), -5.0 * F, TY + 0.008, -3.4 * F, 0, { rx: -Math.PI / 2 });
   B.col((LX + TX1) / 2, (BZ + TZ1) / 2, (TX1 - LX) / 2, (TZ1 - BZ) / 2, TY);
   for (const [x, z, s] of [[-8.0, -1.3, 0.8], [-6.4, -1.25, 0.6], [-4.6, -1.3, 0.7]]) B.put(x * F, TZ1 + 0.3, x, (kk) => boulder(kk, s));
   // the stair down at its right end, from the terrace's edge toward the front
@@ -100,6 +107,11 @@ export function buildTraluCaveRoom(scene, physics) {
     k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.02), block, (SX0 + SX1) / 2, (top - 0.02) / 2, z);   // (OVERLAP-1: 2 cm inside its tread, not level with the tread's top: the two flickered)
     k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
     B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
+    // CAVE-STAIR: its open east side is the steps' own stone, a wall from the floor: a stair collider never pushes
+    // (physics.js: the ground under the feet decides), so from the lower floor he walked into the flight's side at
+    // floor level and stood inside it. A thin brick along each step's side, its exact run, as high as its tread (none
+    // reaches over the next step: on the flight he never meets one more than a step over his feet)
+    B.col(SX1 - 0.05, z, 0.05, run / 2, top, { noStand: true });
   }
   // rusted railings: along the terrace's edge (open over the stair), down its right side, and down the stair
   const rail = rustM();
