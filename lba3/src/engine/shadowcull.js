@@ -94,7 +94,7 @@ class Area {
       if (C.parts.size > 1 || C.parts.values().next().value) yield 'large piece';   // (a large piece, cut triangle by triangle)
     }
     yield 'pieces';
-    for (const cell of this.cells.values()) { this.build(cell); yield 'cell'; }
+    for (const cell of this.cells.values()) { yield* this.buildSteps(cell); yield 'cell'; }
   }
   // PERF-BATTERY: the cells a piece's triangles go to. A piece up to half a cell across goes whole into the cell of its
   // centre (as before); a larger one triangle by triangle, each to the cell of its own centre. C.parts: cell id →
@@ -126,7 +126,10 @@ class Area {
     }
     for (const [cell, L] of lists) { C.parts.set(cell.id, Int32Array.from(L)); C.cells.push(cell); cell.list.push(C); }
   }
-  build(cell) {
+  build(cell) { const it = this.buildSteps(cell); while (!it.next().done); }
+  // (ARRIVAL-STEPS: a cell's build as a generator — a step after every ~4 000 vertices — for the staged build: one of the
+  //  desert's cells took 36 ms here. The cell has no batch until its last step; nothing is drawn meanwhile)
+  *buildSteps(cell) {
     if (cell.mesh) { cell.mesh.geometry.dispose(); this.root.remove(cell.mesh); this.proxies.splice(this.proxies.indexOf(cell.mesh), 1); cell.mesh = null; }
     cell.dirty = false;
     if (!cell.list.length) return;
@@ -140,6 +143,7 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [];
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ C, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+      if (T.length > 4096) yield 'cell part';
     }
     if (!ni) return;
     const pos = new Float32Array(nv * 3), idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
@@ -162,8 +166,10 @@ class Area {
       if (!Number.isFinite(X + Y + Z)) { X = 0; Y = 0; Z = 0; }
       pos[k * 3] = X; pos[k * 3 + 1] = Y; pos[k * 3 + 2] = Z;
     };
+    let acc = 0;
     for (const { C, T, map, from, vo } of parts) {
       const g = C.o.geometry, I = g.index, P = g.attributes.position;
+      if ((acc += from ? from.length : P.count) > 4096) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
       const raw = !P.normalized && !P.isInterleavedBufferAttribute && P.itemSize === 3 ? P.array : null;
