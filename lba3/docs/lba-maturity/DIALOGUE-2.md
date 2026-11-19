@@ -43,6 +43,10 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 3 | arrival, the dock guard, the lift (`zt_*`) | Twinsen, guard, Kell | **edited**: `c2_tw_arrive`/`zt_tw_arrive` "Doran says" (Baldino never said where his workshop is); `c2_tw_dock2` "(The depot. Good to know.)"; Kell's three reminders no longer repeat the objective in three beats (`zt_kell_wait*`: his arm on the brake, who holds it if he throws the switch); the rest kept | Source only |
 | 3 | Vesk leaves, the sealed shaft | Baldino, Arthur, Zoé, Doran | **edited**: `c2_ship_bal2` gives the reason to wait (his ship is twice as fast; the console hears the bore's channel); `c2_ar_sealed` "Grandpa's radio picks up the project's channel now" (sets up how Arthur hears it); `c2_doran_sealed` "nobody's thought to change my codes" (one line for the heroes riding the project's ship and ferry) | Source only |
 | 3 | Nara, Oku, the mills, the lighthouse, Vesk on the platform | Nara, Oku, Zoé, Vesk | kept | Source only |
+| 4 | Kesh, the pump, Tarra, Hesk (`c4_*`) | Sani, Brosk, Lumi, Tarra, Hesk | kept, except `c4_hesk_wait` ("No rope, no ride. There's a coil on the pier, stranger.": the three-beat reminder in his voice) | Source only |
+| 4 | Ilka's camp | Ilka, Twinsen | **edited**: `c4_ilka_2` reacts to Baldino's name ("He still writes to me. In capitals."); `c4_ilka_4` says what the Temple of Bù is ("the old god's house") | Source only |
+| 4 | the post's memo, the bore test (`dt_*`) | Dallan, Vesk (wire), Twinsen | **edited**: the memo ("Run test 14, then cap it", also on the cabin's desk `ih_post_cabin0_dry`) no longer says "Keep drilling" against Dallan's "stays capped"; Dallan's two reminders in his voice (`dt_dallan_wait`, `_wait2`); the test scene kept | Source only |
+| 4 | the dig, the seals, the carving, Dallan | Ilka, Dallan, Twinsen | **edited**: `c4_tw_d1` (he has the plan back: "You've seen Vesk's evacuation plan, Dallan."); the vent: `c4_ilka_end`, `c4_j_dallan`, `c5_ilka_1` say the vent "comes up under" the capped test bore (one thing, the shell's vent; the bore sits on it), not that the vent *is* the bore | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -101,6 +105,12 @@ was weighed in its scene. Section numbers are the report's.
 | 6 | `c2_ar_sealed` Arthur on the project's channel | real | **fixed** |
 | 6 | the heroes ride the project's ship/ferry/freighter | real, recurring | **fixed** once in `c2_doran_sealed` ("nobody's thought to change my codes"); later uses checked in their chapters |
 | 6 | three mechanisms in one chapter (shield, key, network code) | story pacing | kept; listed as S-2 with the concepts |
+| 7 | `c4_dallan_note` "Keep drilling" vs `c4_dallan_2` "stays capped" | real | **fixed** (the memo: run test 14, then cap it) |
+| 7 | "vents" three things (`c4_ilka_c1`, `c4_ilka_end`, `c8_vesk_1`) | real | **fixed** in chapter 4/5 wording (the vent comes up under the bore); `c8_vesk_1` in chapter 8 |
+| 7 | `c4_tw_ilka1` Ilka doesn't react to Baldino | real (minor) | **fixed** |
+| 7 | `c4_ilka_4` Bù, Temple-Park unexplained | real (minor) | **fixed** ("the old god's house") |
+| 7 | `c4_tw_d1` reads as if he lost the plan | real | **fixed** |
+| 7 | `c4_arrive` / `c5_doran_1` Doran's ferry | kept: chapter 4's arrival has him take over the project's ferry, and chapter 5's "I'm the one who sails it!" follows from that |
 
 
 ## Story contradictions for a separate repair
@@ -109,5 +119,5 @@ was weighed in its scene. Section numbers are the report's.
 
 ## Resume point
 
-Next: chapter 4 "The Dig" (`text/ch4.js`, `story/dig.js`, `digtest.js`; FRESH-EYES §7). Then chapters 5-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: chapter 5 "Steam and Sand" (`text/ch5.js`, `story/steam.js`, `digtest.js` `dt_w5_*`; FRESH-EYES §8). Then chapters 6-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).
