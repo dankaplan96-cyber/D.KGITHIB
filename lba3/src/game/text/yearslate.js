@@ -44,7 +44,7 @@ Object.assign(STR.en, {
   tyl_ysel_1: 'My card. The glass house, the old mill, the clinic at the end. Where did you find it?',
   tyl_tw_found: 'On the council\'s board. It\'s been round every island for twelve years.',
   tyl_ysel_2: '"The kettle\'s on." Mara and Jory. They came up for his arm and went home with a picture.',
-  tyl_ysel_3: 'This was my studio. Nara grows her flowers under my skylights now. Better use of the light, she says.',
+  tyl_ysel_3: "This was my studio. My daughter Nara grows her flowers under my skylights now. Better use of the light, she says.",
   tyl_ysel_4: 'Here. My album. I stood in the same spots for years.',
   tyl_ysel_5: 'Stand where I stood and open it. You\'ll see what changed. Nobody has to tell you.',
   tyl_tw_album: 'I\'ll be careful with it.',

@@ -73,7 +73,7 @@ Object.assign(STR.en, {
   // ---- Baldino's hop-pack (EQ-1, src/game/jetpack.js)
   it_jetpack: 'Hop-Pack', it_worn: 'worn',
   itd_jetpack: 'Baldino\'s hop-pack. In Athletic mode, jump and hold the jump: it lifts you about one storey for a few seconds. It needs ground close below and open sky above, and refills on solid ground.',
-  a_jet_hint: 'One more thing. My hop-pack, on the peg by the door: take it. Hesk flies you between islands. That gets you up the last storey.',
+  a_jet_hint: "One more thing. My hop-pack, on the peg by the door: take it. Hesk gets you between islands; this gets you up the last storey.",
   a_jet_look: 'Baldino\'s hop-pack. Copper, brass, and an antenna that doesn\'t seem to do anything.',
   a_jet_b1: 'It pushes against the ground, so it needs ground under it. Over a drop it just gives up.',
   a_jet_b2: 'One storey up, a few seconds of push, then it wants solid ground to recharge. Under a roof it won\'t light at all.',

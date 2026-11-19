@@ -88,7 +88,7 @@ Object.assign(STR.en, {
 
   rs_zc_guard_0: "The council is in session. Or about to be. Or just was. Ask the clerk.",
   rs_zc_clerk_0: "Every form has a form that comes before it. That's how you know it's a real form.",
-  rs_zc_clerk_1: "The council reads everything. Slowly. Twice.",
+  rs_zc_clerk_1: "The council reads everything. Slowly, and with a ruler.",
   rs_zc_courier_0: "Ship to council, council to the dock, dock to the ship. My feet know the way better than I do.",
   rs_zc_courier_work: "Urgent papers. Well, they were urgent this morning.",
   rs_zc_petit_0: "I came from Twinsun about a stamp. That was a while ago. I've made friends.",

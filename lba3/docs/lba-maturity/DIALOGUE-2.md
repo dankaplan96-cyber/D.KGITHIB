@@ -15,6 +15,15 @@ quoted. The character guide (STORY_BIBLE.md, the brief's voices) was used.
 English line has its Hebrew in `text/he/` (then `node tools/he-bundle.mjs`); voicemeta entries keep one intention per
 sentence; `node tests/dialogue-check.mjs` PASS at every commit.
 
+## Tests (Automated runtime: headless Chromium on SwiftShader, this worktree served on 127.0.0.1:8317, a shared machine)
+
+| Test | Result | Notes |
+|---|---|---|
+| `node tests/dialogue-check.mjs` | PASS at every commit (Hebrew 100 %) | static: keys, speakers, placeholders, voicemeta accents |
+| `tests/dialogue-scenes.mjs` | PASS 10/10 | updated for this pass: Zoé's padlock line, and a new pair of scenes for Xil's rope (first meeting with the well seen: the ask and the deal; asked again: no second ask); every line fits its box; capture D5 |
+| `tests/dialogue-scenes.mjs ch3` | PASS 3/3 | Baldino's rewritten revelation chain in order, every line fits its box |
+| `tests/prologue.mjs` | 23 checks PASS, then FAIL "the well's mites beaten with the ball" twice (all 4 mites killed, Twinsen outside the well room after the test's teleports), which ends the run | the same check DIALOGUE-EDIT and status.md list as random (the test's placement, not text); every dialogue step before it passed (the kettle, Mira's key, the lid, the bell, the stamp, Xil's rope with the new branch, the kids, the stones). The Sendell scene after it was not reached in game: source only |
+
 ## Coverage
 
 Status: **edited** (lines or a line's condition changed), **kept** (read in its scene, nothing needed), **flagged**.
@@ -68,6 +77,13 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 15 | the shaft, the machinery, Sendell (`c3_*`, `sh_*`) | Twinsen, Baldino, Sendell | **edited**: `c3_arrive_stop` (new): after the council's stop, "the bore is turning again: the council's stop never reached this console" (it "ground on" with no word after Twinsen stopped it); the knock language stated once and kept: `sh_two` "The three is the shell, as it's knocked since our kitchen tap. The two come from that damper. Something down here is answering it."; `sh_k3` "I knock three, like the shell, and she answers two."; `c7_sendell_4` "you will know her" (nothing at the bottom shows her: the promise is kept by her answer, not a sight) | Source only |
 | 16 | the core: Vesk, the pylons, the overload, the end (`c3_*`, `co_*`) | Vesk, Zoé, Mira, Oku, Ilka, Pim, Baldino, Irsa, Arthur, guard | **edited**: `c3_core_vesk2` keeps his logic ("It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all.") instead of a late turn to greed (journal `c3_j_core` with it); the signal's order is the network channel's, "Star, sun, wave" (`c3_pylon_1`, `co_zoe_sig`); the protected lines kept (`co_ar_two`, `co_vesk_guard`/`co_guard_2`) | Source only |
 | Epilogue | dinner, free roam (`ep_*`, `idle_*_home`) | family, everyone | **edited**: Kell and Irsa get closing lines (`zt_kell_home`, `zt_irsa_home`, new: the lane on its own switch; the strip taken down from over her bench); the dinner bookend's set-up now on the main path (`t2_zoe_done`); rest kept | Source only |
+| Side | One More Place, Off the Wall, Twelve Years Late, The Last Ferry, The Quiet Channel, Depth (`om_`, `ow_`, `tyl_`, `lf_`, `qc_`, `dx_`) | Brix, Tali, Ysel, Lissa, Ossel, the brothers, Jaspa | **edited** `tyl_ysel_3` "My daughter Nara" (the journal said so; no line did); rest kept (`om_m_council_4` "Grandpa Gilbert" is Arthur's line; `om_zoe_2` "lived next door, until he moved up the lane" explains the new neighbours) | Source only |
+| Residents | walkers, story places, interiors (`rs_*`) | Tilde, the Zeelich clerk, Gunda | **edited** three of the nine "...Twice." endings (`rs_tilde_1`, `rs_zc_clerk_1`, `rs_gunda_work`); the rest kept where the count is the speaker's own (Arthur, Tobin, Bram, Baldino's eyebrow) | Source only |
+| Residents | `deeplife`, `sewers`, `hostel`, `kesh` conditions (DIALOGUE-EDIT item 1) | crews under the shell, Fosse, Bersimon, the hostel, Kesh | read: deeplife's lines go by its explicit phases (shell / core / home), sewers' by their own flags; hostel and Kesh were fixed by STORY-FIX 4; nothing heard in the wrong state found | Source only |
+| Post-15.11 | the opening's steps and markers (`t2_*`, TUTOR-TARGETS) | Zoé | **edited** (chapter 1 above); `t2_where_*`, `t2_n_*`, `t2_goal_*` kept (literal, no keys spoken) | Source only |
+| Post-15.11 | weapon switching (`ws_*`, `tut_wswitch*`, `tut_pset_*`), the pocket set and the lance (`e2_*`) | Arthur, Bram | kept (tips literal; Arthur explaining his own invention is his character) | Source only |
+| Post-15.11 | the arsenal (`a_*`) | Nara, Hougo, Bersimon, Ker'aooc, Baldino, Arthur | **edited** `a_jet_hint` (Baldino's comparison read backwards: "Hesk gets you between islands; this gets you up the last storey"); rest kept | Source only |
+| Post-15.11 | SPACEPORT-3 (`c1_doran_form`, `c1_ama_*`, `c1_bern_*`, `c1_gate_form`) | Doran, Ama, Bern | kept (one exchange each; the user's own request) | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -81,6 +97,10 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | Ch. 2, Vesk at the harbour, sending Twinsen to the valves | "…And mind the depot: drones, a guard and his dog, and nobody has told them about you. Stay out of sight." | "…My crews are all on the bore, and you know this island better than they do. The depot's watch may not have heard of you yet: use my name, and keep clear of the dog." | why he sends Twinsen; the guard's "Nobody told me" becomes Vesk's slip, not the writer's |
 | Ch. 3, Baldino's revelation | "Twinsun sits inside a shell, like a nut. Beneath the shell sleeps the being Sendell watches over." … "It has to be reversed" | "Deep under Twinsun there's a shell, like an egg's, and something sleeps inside it." … "Run it backwards instead: push the heat back down, and the bore becomes a patch." | the game's central idea as one picture |
 | Ch. 3, Arthur on the radio | "Dad? It's Arthur, on the project's channel." | "Dad? It's Arthur. Grandpa's radio picks up the project's channel now." | how a boy in a kitchen hears the project |
+| Ch. 9, the council orders a stop (a game with the thread) | "The council has heard enough. By vote of this council, the Joint Project's bore is to be stopped." Baldino: "I'll meet you at the platform. I want to see those needles with my own eyes." | "...A reversal needs the project's own engineers; a stop needs only our vote. By vote of this council..." Baldino: "Stopped, not reversed. Well. A drill held still is not a drill pulled out. I'll meet you at the platform, and I'll watch those needles very closely." | the game's own rule said aloud where it is tested |
+| Ch. 14, Arthur's count reaches Baldino | "Then I time the code to the rest after four. If the boy counted right." | "Then something down there has started answering. Three is the shell; that little fourth isn't. I'll time the code to the rest after four, if the boy counted right." | what the change in the knocking means, once |
+| Ch. 16, Vesk at the core | "Thirty percent was never a mistake. It's who I chose. Zeelich's upper districts will never be cold again, and the rest will learn to live with less." | "Thirty percent was never a mistake. It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all." | the pragmatist of chapters 3, 9 and 10, not a late turn to greed |
+| Ch. 10, the guard at the project office; Zoé is back "by the door, this time" | "You again. Last time you came in by that door too, and I never saw you." | "Evacuation committee, is it? The last visitor I had in here said she was looking for the washroom." | no contradiction, and chapter 2's excuse comes back |
 
 ## FRESH-EYES findings and what was done
 
@@ -180,13 +200,39 @@ was weighed in its scene. Section numbers are the report's.
 | 15 | `ep_zoe_1` bookend never set up | real | **fixed** (`t2_zoe_done`, `t2_zoe_close`) |
 | 15 | `ep_end_text` "shield" without a picture | **fixed** upstream: chapter 3 now says what the shield is (the bore run backwards, pushing the heat back down) |
 | 15 | the epilogue misses Irsa, Kell, Ballastra | real | **fixed** for Irsa and Kell; Ballastra's closing belongs to its unwritten chapters (S-4) |
+| 15b | `om_m_council_4` "Grandpa Gilbert"; `om_zoe_2` "lived next door" | kept: Arthur's name for him (STORY-FIX); Brix "moved up the lane", so the kettle's neighbours are newer |
+| 15b | `tyl_j_found` Ysel is Nara's mother, said by no one | real | **fixed** (`tyl_ysel_3`) |
+| 15b | `lf_ossel_grounded` explains the grounding only in a side quest | real | **fixed** on the main path (`c1_doran_ferry1`) |
+| 15b | the Quiet Channel's fourth rhythm | kept: it is the side quest's own code (a knock answered backwards), and the main path now names its counts plainly |
+| 16 | one clipped voice for the side cast | real | **fixed** in the reminders where it was worst (Kell x3, Hesk, Dallan x2, Brosk, Sefa, Hobb); Tessa keeps hers (her character); Irsa and the Esmer keep their uncontracted speech (Zeelich's register) |
+| 16 | repeated tics ("Twice." x9, "four days" x6, "thirty-four years" x5) | real | **fixed** (kept where each lands first or belongs to the speaker) |
+| 16 | Twinsen narrates the screen | partly: many brackets are his reactions ("Somebody eats lunch down here") | kept where they react; recaps cut where he told people what they knew (`c8_tw_z2`, `c7_tw_s1`) |
+| 16 | Mira's report gag, Gilbert's refund | works | kept, no new uses |
+| 16 | lore for newcomers (Sendell, FunFrock, the Esmer, clones) | real | **fixed** where it bites: Sendell at her first word, the clones at their first appearance, Bu's temple at the dig; an opening caption is S-7 |
+| 16 | cast size in chapter 1 | partly | the plot names now come with their job (Mira's padlock, Xil's rope); ambient residents kept |
 
 
 ## Story contradictions for a separate repair
 
-(none new so far)
+For the campaign director / narrative owner. Wording was changed where it helped (listed above); none was invented away.
+
+| # | Contradiction (keys) | What the wording now does | Proposed repair |
+|---|---|---|---|
+| S-1 | **The bore's rule vs the council's stop.** STORY_BIBLE: "Stopping the drill now would crack the shell anyway"; the thread's council orders a stop (`cn_chair_stop`), Twinsen throws it (`cn_stop_1`); the core's `co_lock_ok` winds the drill down again; `c3_sendell_3` "Stopping it will not close the cracks" | Vesk's danger is now *backing out* (`c1_conf_vesk4`), Baldino's *pulling out halfway* (`c2_bal_4`); the chair says why a stop and not a reversal; Baldino worries aloud; chapter 15 says the bore was restarted below (`c3_arrive_stop`) | Decide the rule once: a stop holds the drill (survivable for days, the shell still strained), backing out cracks it, only reversal heals. Update the bible's sentence; then `c3_sendell_3` and `cn_bal_stop2` can say "held, not healed" |
+| S-2 | **Three mechanisms in chapter 3** (the shield, the override key, the network code), a fourth in chapter 14 (relays) | each now has one picture (`c2_bal_4`, `c10_bal_1-3`) | a journal "what we know" page per chapter, or fold the override key into the shield |
+| S-3 | **The three-day deadline** (`c8_vesk_1`, `c8_tw_c1`, `c9_tw_arrive`, `c9_tw_b1`) is dropped after chapter 9; chapters 10-11 spend days away | none | after the stop, say the clock moved ("The stop bought us some days."), or keep the deadline only in the base campaign |
+| S-4 | **Ballastra's open threads** (team-only): Oren's 304 sleepers (`bl_or_2/3`), the House of Balances and the coils (`bl_te_end2`, `bl_ba_1`), Tessa's box (`bl_te_end4`), what Oren is | Twinsen now reacts and promises to come back (`bl_tw_or3`) | chapters 12-13 (EXP-PLAN-2 3.3-3.4) pay them off; until then consider cutting the number (keep "the young ones sleep") |
+| S-5 | **Chapter cards 11 -> 14** (story/index.js `NUMBER`) while 12-13 are shells | not dialogue | number the cards from the chapters that play in this build |
+| S-6 | **The project's vehicles** (the ferry, Vesk's ship and beam pad, the project ship, the freighter) never told apart, and the heroes ride them; Doran gone after chapter 5; the project's age (new on Citadel, "ten years" on Zeelich: `c3_vesk_over1`, `zt_irsa_later`) | one line covers the riding (`c2_doran_sealed`); "ten years" is consistent on Zeelich | one naming line in chapter 2 ("his ship's up in orbit; the ferry's for the islands"); one line that Zeelich's half of the project is ten years old |
+| S-7 | **Newcomer lore**: Sendell, FunFrock, the Esmer, Bu, the clones; the child under the shell is never seen | named at first use where it matters (`pr_tw_sendell`, `c4_ilka_4`, `c10_ilka_w2`); Sendell's promise is now "you will know her" | a two-line caption over the film (the old `pr_intro_1/2` cut down); a visual of the child at the core if art allows |
+| S-8 | **Gilbert's charts** (`c5_zoe_radio1`): why the man with the water bill has survey charts | kept (STORY-FIX's wording) | one line in chapter 2 or 8 (he carried the buckets for FunFrock's tunnels: the charts could be from then) |
+| S-9 | **Vesk's valves errand** (`c1_vesk_3/4`) | now his choice and his slip (crews on the bore; "use my name", which the watch ignores) | fine as is unless the director wants Vesk's motive (keep Twinsen busy) said by someone later |
 
 ## Resume point
 
-Next: the optional side quests and residents (FRESH-EYES §15b, §16; DIALOGUE-EDIT remaining item 1); then the post-15.11 texts (wswitch, arsenal, kit2). Was: chapter 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
-the post-15.11 texts (wswitch, arsenal, kit2, ballastra).
+Done: every chapter 1-16 in order, the epilogue, the side quests, the residents' conditions and the post-15.11 texts
+(source only, except the scenes in the test table). If another pass continues: (1) S-1 to S-9 with the campaign director;
+(2) in-game checks not run here: `tests/opening-tutorial.mjs` (the tap step's new line), `tests/chapter9.mjs` with the
+council thread, `tests/chapter11.mjs` (`c3_arrive_stop`), `tests/exp-ballastra.mjs` (`bl_tw_or3` added to Oren's chain),
+`tests/prologue.mjs` past the well's mites (the Sendell chain is one line shorter); (3) residents not re-read line by line
+this pass: `zeelife`, `ihomes`, `islandpeople`, `isleslife`, `hamlife`, `desertlife` (read in pass 1).
