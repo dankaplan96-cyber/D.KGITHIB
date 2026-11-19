@@ -654,40 +654,39 @@ export class Renderer {
     try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
     return p;
   }
-  // ARRIVAL-STEPS: precompile() in parts, a generator: each next() compiles one part of the scene — one of its children,
-  // or for a group in `split` (the area on show) one of that group's children — and the generator's value at the end is
-  // every material compiled (whenReady waits for them, as compileAsync does). three's compile(part, camera, scene) with
-  // the part as a stand-in that walks its subtree and adds no lights of its own: the scene's lights, fog, shadows and
-  // target as precompile() has them, so the same programs, made over several black frames instead of in one (the
-  // user's GTX 1050: shader warm-up steps up to 110 ms). Every object of the scene is walked once, as in precompile().
+  // ARRIVAL-STEPS: precompile() in parts, a generator: each next() is one call of three's compile on a run of the scene's
+  // objects, and the generator's value at the end is every material compiled (whenReady waits for them, as compileAsync
+  // does). The objects in three's own walk order; the scene's lights walked once (three's compile walks the whole shown
+  // scene for them on every call) and given to every call in the same order: the same light state, fog, shadows and
+  // target as precompile() has them, so the same programs, made over several black frames instead of in one.
+  // A run is up to partObjects (400) objects, but an object whose material three has never compiled is a run of its
+  // own, and after a call that made a program the runs are one object until one makes none again: a new program can
+  // take long to make (the user's Intel UHD 620: one warm-up step of 1 013 ms; the GTX 1050: up to 110 ms), so a step —
+  // which ends after the call that crosses its time — holds at most one new program's compile wherever that is slow.
+  // (`split` is kept for the callers; every object is walked once, as in precompile())
   *precompileParts(split = [], scene = this.scene, camera = this.camera) {
-    const R = this.renderer, mats = new Set(), parts = [];
+    const R = this.renderer, mats = new Set(), Pr = R.properties;
     this.applyResize();
-    // (the scene's lights walked once — three's compile walks the whole shown scene for them on every call, which made
-    //  the parts cost 3× the single call here; the same lights in the same order: the same light state and programs)
     const lights = []; scene.traverseVisible((o) => { if (o.isLight) lights.push(o); });
     const target = Object.create(scene); target.traverseVisible = (cb) => { for (const l of lights) cb(l); };
-    // (parts of up to partObjects objects: neighbouring subtrees taken together, one compile call each)
-    const most = this.partObjects || 400, count = (o) => { let n = 0; o.traverse(() => { n++; }); return n; };
-    let cur = [], n = 0;
-    const flush = () => { if (cur.length) { const L = cur; parts.push({ traverse: (cb) => { for (const [o, deep] of L) if (deep) o.traverse(cb); else cb(o); }, traverseVisible() {} }); } cur = []; n = 0; };
-    const add = (o, deep) => { const k = deep ? count(o) : 1; if (n && n + k > most) flush(); cur.push([o, deep]); n += k; };
-    add(scene, false);
-    for (const k of scene.children) {
-      if (split.includes(k)) { add(k, false); for (const c of k.children) add(c, true); }
-      else add(k, true);
-    }
-    flush();
+    const list = [];
+    scene.traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.material) list.push(o); });
     yield 'parts';
+    const most = this.partObjects || 400, fresh = (o) => { const m = o.material; if (Array.isArray(m)) { for (const x of m) if (!Pr.get(x).programs) return true; return false; } return !Pr.get(m).programs; };
     const ex = scene === this.scene ? this.warmExtra?.() : null, vis = this._warmVis ??= [];
-    for (const P of parts) {
-      const prev = R.getRenderTarget();
+    let i = 0, run = most;
+    while (i < list.length) {
+      const part = [];
+      while (i < list.length && part.length < run) { const o = list[i], f = fresh(o); if (f && part.length) break; part.push(o); i++; if (f) break; }
+      const prev = R.getRenderTarget(), p0 = R.info.programs?.length ?? 0;
       R.setRenderTarget(this.composer.renderTarget1);
-      if (ex) for (let i = 0; i < ex.length; i++) { vis[i] = ex[i].visible; ex[i].visible = true; }
-      try { for (const m of R.compile(P, camera, target)) mats.add(m); }
+      if (ex) for (let k = 0; k < ex.length; k++) { vis[k] = ex[k].visible; ex[k].visible = true; }
+      try { for (const m of R.compile({ traverse: (cb) => { for (const o of part) cb(o); }, traverseVisible() {} }, camera, target)) mats.add(m); }
       catch (e) { console.warn('precompile part', e); }
-      finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
-      yield 'compile';
+      finally { R.setRenderTarget(prev); if (ex) for (let k = 0; k < ex.length; k++) ex[k].visible = vis[k]; }
+      const made = (R.info.programs?.length ?? 0) - p0;
+      run = made > 0 ? 1 : Math.min(most, run * 4);
+      yield made > 0 ? 'program' : 'compile';
     }
     return mats;
   }

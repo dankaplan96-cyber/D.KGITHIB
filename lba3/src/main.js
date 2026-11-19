@@ -18,7 +18,7 @@ import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } fro
 import { BLOBS, PLANT_VIEW } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
-import { DrawBatch, warmLayers } from './engine/drawbatch.js';
+import { DrawBatch, warmLayers, runFor } from './engine/drawbatch.js';
 import { TEXARRAY } from './engine/texarray.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -986,7 +986,7 @@ class Game {
     // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
     // (stagedBatches false: each in one step, as before — the A/B switch)
     const staged = this.stagedBatches !== false;
-    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); this.drawBatch.unit = this.shadowCull.unit = null; const more = f(); put(k, t0, p0); const u = this.drawBatch.unit || this.shadowCull.unit; if (u) log[log.length - 1].u = u; return more; });
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); this.drawBatch.unit = this.shadowCull.unit = this._prepUnit = null; const more = f(); put(k, t0, p0); const u = this._prepUnit?.unit || this.drawBatch.unit || this.shadowCull.unit; if (u) log[log.length - 1].u = u; return more; });
     if (staged && this.shadowCull.stage(root)) {
       let lit = false;
       sliceT('shadow batches', () => {
@@ -1003,7 +1003,7 @@ class Game {
     // materials) and waits for all of it, as before. Without that extension three compiles them when first used: the
     // same work as before, at the end. (earlyWarm: true always, false never — A/B and probes; unset: where the extension is)
     if (!this.drawBatch.has(root) && R.compileAsync && (this.earlyWarm === true || (this.earlyWarm !== false && R.extensions?.has?.('KHR_parallel_shader_compile')))) {
-      if (staged) { let W = null; sliceT('shader warm-up (early)', () => { W ??= this.renderer.precompileParts([root]); const t0 = performance.now(); let r; while (!(r = W.next()).done && performance.now() - t0 < PREP_SLICE_MS); return !r.done; }); }   // (ARRIVAL-STEPS: in parts; nothing waits for it)
+      if (staged) { let W = null; sliceT('shader warm-up (early)', () => { W ??= this.renderer.precompileParts([root]); const U = (this._prepUnit = {}); return !runFor(W, PREP_SLICE_MS, U).done; }); }   // (ARRIVAL-STEPS: in parts; nothing waits for it)
       else stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
     }
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
@@ -1058,7 +1058,7 @@ class Game {
         if (!staged) { T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); }); return false; }
         W = this.renderer.precompileParts([root]);
       }
-      let r; while (!(r = W.next()).done && performance.now() - t0 < PREP_SLICE_MS);
+      const r = runFor(W, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)), (this._prepUnit = {}));
       if (!r.done) return true;
       T.prepWait = this.renderer.whenReady(r.value).catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); });
       return false;
