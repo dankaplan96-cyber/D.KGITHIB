@@ -1,5 +1,10 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**19.11: v101 published (artifact 1795066979-494f, 509 files)**: FPS30 (P70: the 30 cap holds — a grid of due times,
+Frame Rate 30/60/Unlimited, Auto on the chosen budget, Pause → Benchmark: Frame Rates), CAVE-STAIR (P69: the rock, the
+stairs, the landing, the cave's defects), BAKE-URL (the artifact now loads its baked geometry, bake.wasm). Waiting: the
+user's Frame Rates benchmark (plugged in / battery) and play at 30 with F9; CAVE-LOOK (the cave's interior) running.
+
 **18.11 (evening): v100 published (artifact 1795025443-0d2c, 509 of 512 files)**: TUTOR-TARGETS (P67 ph. 2), HE-FONT
 (P68: Rubik's Hebrew, the minimap stays right), FACE-1 (P67 ph. 4: expressions, gaze), CHAR-FORM (P67 ph. 3: Twinsen's
 and Zoé's body form). Running on worker branches: CAVE-STAIR (P69, Tralu's cave and its stairs: the user — "a rock at the
