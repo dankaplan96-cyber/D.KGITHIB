@@ -1930,6 +1930,12 @@ class Game {
         this.hideScreens();
         this.bench.runAuto().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
         break;
+      // FPS30: the same routes at Unlimited, 60 and 30 (engine/bench.js runPacing)
+      case 'benchfps':
+        if (this.cine) break;
+        this.hideScreens();
+        this.bench.runPacing().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
+        break;
       case 'benchcopy': navigator.clipboard?.writeText($('#bench-out').value).then(() => this.hud.toast('bench_copied'), () => {}); break;
       // (RETRY, the user 8.11: "Retry goes back to the last autosave with full health")
       case 'retry': if (store.get(SAVE_KEY)) { try { sessionStorage.setItem(RETRY_KEY, '1'); } catch { /* */ } this.reloadInto('continue'); } else this.reloadInto('new'); break;
@@ -2830,6 +2836,7 @@ class Game {
     // tell the display's own pace from the game's (engine/bench.js idleProbe). The time is not simulated.
     if (this.benching) {
       this._lag = performance.now() - now;
+      if (this._benchRaf && d > 0) this._benchRaf.push(d);   // (FPS30: every callback's interval, for the frame-rate benchmark's timestamp jitter)
       if (this.benchIdle) { this.benchIdle(now); this.last = now; requestAnimationFrame((t2) => this.loop(t2)); return; }
     }
     // FRAME-1 / FRAME-2 / FPS30: frame-rate limit (Settings → Display → Frame Rate: 30 / 60 / Unlimited; Unlimited by

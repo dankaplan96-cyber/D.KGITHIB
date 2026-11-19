@@ -127,8 +127,19 @@ export class Perf {
       + `sim ${s.simMs.p50} ms · render (CPU) ${s.renderMs.p50} ms · steps ${s.steps.mean}/${s.steps.max}\n`
       + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
       + `pixel ratio ${(this.game?.renderer?.pixelRatio?.() ?? this.r?.getPixelRatio?.())?.toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.effScale()})` : ''} · ${this.game?.settings?.quality ?? ''}\n`
-      + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
+      + paceLine(this) + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
   }
+}
+
+// FPS30: the overlay's pacing line — the frame-rate limit (or the refresh), and the share of the last 120 drawn intervals
+// within ±12 % of it: "limit 30 · on pace 99 % (33.3 ms ±4) · ≥1.5× 0"
+function paceLine(P) {
+  const G = P.game; if (!G) return '';
+  const b = P.buf.length < N ? P.buf.slice(-120) : [...P.buf.slice(P.i), ...P.buf.slice(0, P.i)].slice(-120), F = b.filter((f) => !f.black);
+  if (!F.length) return '';
+  const R = G.refreshMs?.() || 1000 / 60, L = G.frameCapMs || 0, pace = L && L > R + 1 ? L : R;
+  const on = F.filter((f) => Math.abs(f.ms - pace) <= 0.12 * pace).length, slow = F.filter((f) => f.ms >= 1.5 * pace).length;
+  return `limit ${L ? Math.round(1000 / L) : 'off'} · refresh ${(1000 / R).toFixed(0)} Hz · on pace ${Math.round((100 * on) / F.length)} % (${pace.toFixed(1)} ms ±${(0.12 * pace).toFixed(0)}) · ≥1.5× ${slow}\n`;
 }
 
 // RENDER-INV: the GPU's execution time of each frame's render (all passes), from EXT_disjoint_timer_query_webgl2

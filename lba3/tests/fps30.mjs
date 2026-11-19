@@ -307,6 +307,30 @@ if (ONLY.includes('E')) {
   check('E5 the automatic resolution / AUTO-FIT budget at 30 is 33.3 ms', Math.abs(e.fitBudget - 33.33) < 0.01, e.fitBudget);
 }
 
+// ---------------------------------------------------------------- F. this browser's own requestAnimationFrame, the draw stubbed
+// (headless Chromium's frame clock, not a display: the drawn intervals with the real loop and real callbacks; then the
+// in-game Frame Rate Benchmark, shortened, on the same stub — its report's lines, and its 30 run on pace)
+if (ONLY.includes('F')) {
+  const f = await ev(async () => {
+    const G = game, S = SYN, out = {}; S.stub = true; G.testFreeze = false; G.devArena(); G.state = 'play';
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    for (const v of ['auto', '60', '30']) {
+      G.settings.fps = v; G.applySettings(); await wait(1200); S.drawn.length = 0; await wait(4000);
+      const d = S.drawn, iv = d.slice(1).map((x, k) => x - d[k]).sort((a, b) => a - b), pc = (p) => +iv[Math.min(iv.length - 1, Math.floor(p * iv.length))].toFixed(1);
+      out[v] = { slow: iv.filter((x) => x >= 1.5 * (G.refreshMs() || 16.7) * (v === '30' ? 2 : 1)).length, n: iv.length, fps: +(1000 * iv.length / (d[d.length - 1] - d[0])).toFixed(1), p50: pc(0.5), p95: pc(0.95), p99: pc(0.99), refresh: +(G.refreshMs() || 0).toFixed(2) };
+    }
+    G.settings.fps = 'auto'; G.applySettings();
+    const txt = await G.bench.runPacing({ routes: ['street'], limits: [0, 30], measure: 3 });
+    out.report = txt.split('\n').filter((l) => /^\s+street|^\s+(Unlimited|30)\s|^frame callbacks/.test(l));
+    out.restored = { benching: G.benching, cap: G.benchCapMs, fps: G.settings.fps };
+    S.stub = false; G.testFreeze = true;
+    return out;
+  });
+  result.realRaf = f; log("headless Chromium's rAF, draw stubbed: Unlimited / 60 / 30, and the benchmark's lines", f);
+  check('F1 the real loop on this browser\'s frame clock at 30: ~30 drawn frames a second, the median interval two refreshes, under 5 % of intervals 1.5× that or more (this shared machine has its own stalls: see Unlimited)', f['30'].refresh > 15 && f['30'].refresh < 18 && Math.abs(f['30'].fps - 30) < 1.5 && Math.abs(f['30'].p50 - 2 * f['30'].refresh) < 1 && f['30'].slow <= 0.05 * f['30'].n, f);
+  check('F2 the Frame Rate Benchmark runs the route at Unlimited and at 30 and reports each, then puts everything back', f.report.length >= 4 && f.report.some((l) => /street\s+30\s/.test(l)) && f.report.some((l) => /street\s+Unlimited/.test(l)) && !f.restored.benching && !f.restored.cap && f.restored.fps === 'auto', f);
+}
+
 await page.screenshot({ path: '/dev/null' }).catch(() => {});
 console.log('RESULT ' + JSON.stringify(result));
 await browser.close();

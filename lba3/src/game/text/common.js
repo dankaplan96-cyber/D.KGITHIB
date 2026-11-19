@@ -89,7 +89,7 @@ Object.assign(STR.en, {
   ct_attack: 'Attack (hold: charge, or a heavy sword strike)', ct_focus: 'Focus on a target', ct_next: 'Next target',
   ct_swap: 'Next weapon (hold: back to the Magic Ball)', ct_pause: 'Pause menu',
   ct_pad: 'Gamepad', ct_pad_text: 'Left stick: move · right stick: camera · D-pad: the four behaviours (↑ Normal, → Athletic, ↓ Aggressive, ← Discreet) · A: action / talk · X: attack · Y: ball · B: dodge · View: inventory · LT: holomap · RT: weapon wheel · LB: next weapon (hold: the ball) · RB: focus · R3: next target · L3: camera distance · Menu: pause',
-  bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
+  bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_fps: 'Benchmark: Frame Rates', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
   crystal_first: '(It hums, like the crystals in the well. A splinter of something much bigger.)',
   crystal_all: '(Now they hum together, one note: the same one I heard when Sendell spoke.)',
   it_crystals: 'Singing Crystals', itd_crystals: 'Splinters that hum like the crystals in the well. Each one makes me a little tougher.',
