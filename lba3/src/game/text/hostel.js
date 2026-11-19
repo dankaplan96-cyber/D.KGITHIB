@@ -44,7 +44,7 @@ Object.assign(STR.en, {
     "Children first, then the old ones, then you. There is enough. I make there be enough.",
   ],
   hs_cook_l: [
-    "When this is all done I'm cooking for the whole town. You'll come. Bring your boy, the one with the radio.",
+    "Soon I cook for the whole town. A feast, not shelter soup. You'll come. Bring your boy, the one with the radio.",
   ],
   hs_cook_heal: 'Here. Eat it all. Hero or no hero, nobody leaves my kitchen hungry.',
   hs_cook_full: "You've eaten already. Come back when you look tired.",
