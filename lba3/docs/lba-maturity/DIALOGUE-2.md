@@ -60,6 +60,9 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 9 | Baldino, the petition, Nara, Oku, the clerk (`c9_*`) | Baldino, Nara, Oku, Ottavo | **edited** `c9_tw_n1`: what a crack does, said as the story knows it (what sleeps under it wakes too soon; nobody knows what that does to two worlds' heat), not "the cold comes in" | Source only |
 | 9 | the council, the archive, Kell's way in, Dallan (`c9_*`, `cn_*`) | Amaru, Sela, Brum, Dallan, Kell, archivist | **edited**: `c9_dallan_2` "Hesk flew me to Citadel" (a glider cannot reach Zeelich); `c9_dallan_3` "I ran that dig… its guards answered to me" (foreman, not security; STORY-FIX 1); `cn_tw_log` "I pulled the cutoff on that test" | Source only |
 | 9 | the council's stop (`cn_chair_stop`, `cn_bal_stop`) and Vesk's refusal in chapter 2 (`c1_conf_vesk4`) | Amaru, Baldino, Vesk | **edited** to hold the game's own rule: Vesk's danger is *backing the bore out* halfway ("Backing it out now would crack it faster"), Baldino's in chapter 3 is pulling it out; the chair says why the council orders a stop and not a reversal (a reversal needs the project's engineers; a stop needs only their vote); Baldino says the danger aloud ("Stopped, not reversed. Well. A drill held still is not a drill pulled out.") The rest of the conflict is a story item (S-1) | Source only |
+| 10 | Borrowed Time: Mira's call, the valve room, Oren, the shelter (`og_*`) | Mira, Oren, Gilbert, Tim, Lulu, Zoé, Arthur | **edited**: Twinsen reacts to the voice in the pipes ("Thank you, Oren. Whatever you are."); `og_oren_3` "On Ballastra, a long way from you" (the place's first mention says it is far); the four objectives lose their stray full stops | Source only |
+| 10 | the B-7: Zoé in the project office, the fitting, Vesk on the wire (`th_*`) | Zoé, guard, Gilbert, Oren, Vesk | **edited** `th_guard_1` (no longer contradicts Zoé's "By the door, this time": "The last visitor I had in here said she was looking for the washroom", the chapter-2 excuse); rest kept (Vesk's "A station that can say no…" protected) | Source only |
+| 11 | Ballastra (team-only): the freighter, Quill, the lift, Tessa, the gardens, Halden, the pump room, Dunn, the Steps (`bl_*`) | Tessa, Quill, Hobb, Ferro, Wenna, Corvin, Halden, Mags, Dunn, Oren, Doran, Baldino | **edited**: Twinsen reacts to Oren's 304 sleepers (new `bl_tw_or3`: "Their families are on that row, Oren. I'll be back for them."; the payoff is chapter 12's, S-4); "four days" and "thirty-four years" kept where they first land, cut from the repeats (`bl_te_done`, `bl_te_met`, `bl_fe_after`, `bl_du_1`, `bl_du_2`); the network's count "Five to start", not "Forty" (`bl_tw_s3`, `bl_te_s4`); Hobb's reminder in his voice | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -145,6 +148,18 @@ was weighed in its scene. Section numbers are the report's.
 | 11 | `c9_tw_n1` "The cold comes in" | real | **fixed** |
 | 11 | `c9_dallan_2` Hesk's glider to Zeelich | real | **fixed** |
 | 11 | `c9_dallan_2/3` foreman or security | real | **fixed** |
+| 12 | `og_mira_office2` "since the stop" | follows chapter 9 (now argued there) | kept |
+| 12 | Oren and Ballastra never introduced; nobody asks what he is | real | **fixed** by reaction (`og_tw_o3`, `og_oren_3`); what Oren *is* is the expansion's (S-4) |
+| 12 | `th_zoe_r2` vs `th_guard_1` | real | **fixed** |
+| 12 | plumbing jargon in the objectives | kept: the objectives name the parts the prompts name (band, feed, flanges); literal on purpose |
+| 12 | the three-day deadline dropped | real, story | S-3 |
+| 13 | `bl_or_2/3` 304 children, no reaction | real | **fixed** (a reaction and a promise); the payoff is S-4 |
+| 13 | House of Balances, coils, Tessa's box never paid off | real, story (chapters 12-13 unwritten) | S-4 |
+| 13 | chapter cards 11 → 14 | real, story/UI (`story/index.js` NUMBER) | S-5 (not dialogue; not changed here) |
+| 13 | `bl_doran_1` how is Doran here | kept: he flies the council's freighter from Citadel; his chapter-8 absence is S-6 |
+| 13 | "thirty-four years" ×5, "four days" ×6 | real | **fixed** (kept where each first lands) |
+| 13 | "Forty" vs five stations | real | **fixed** ("Five to start") |
+| 13 | `th_bal_end1` vs chapter 14 re-explaining | checked: the expanded campaign plays `th_bal_exp1` instead; chapter 14's opening is edited below |
 
 
 ## Story contradictions for a separate repair
@@ -153,5 +168,5 @@ was weighed in its scene. Section numbers are the report's.
 
 ## Resume point
 
-Next: chapter 10 "Borrowed Time" (`text/throttle.js`, `story/throttle.js`; FRESH-EYES §12), chapter 11 Ballastra (§13), 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: chapter 14 the Network (`ch10.js`, `netline.js`; §14), 15-16 (`ch3.js`, `answer.js`; §15) and the epilogue, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).

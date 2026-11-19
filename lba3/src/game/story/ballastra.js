@@ -461,7 +461,7 @@ export class Ballastra extends ChapterBase {
     g.updateObjective(); g.save(false);
     this.chain([['narrator', 'bl_spill_open']], () => {
       g.audio.play('orenTone');
-      this.chain([['oren', 'bl_or_1'], ['hero', 'bl_tw_or1'], ['oren', 'bl_or_2'], ['hero', 'bl_tw_or2'], ['oren', 'bl_or_3']], () => {
+      this.chain([['oren', 'bl_or_1'], ['hero', 'bl_tw_or1'], ['oren', 'bl_or_2'], ['hero', 'bl_tw_or2'], ['oren', 'bl_or_3'], ['hero', 'bl_tw_or3']], () => {
         this.story.refreshCast(); g.updateObjective(); g.save(false);
       });
     });
