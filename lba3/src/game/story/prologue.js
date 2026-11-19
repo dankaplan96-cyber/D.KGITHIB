@@ -880,9 +880,10 @@ export class Prologue extends ChapterBase {
       this.spoke = true;
       g.cutscene = null;
       // (each line its shot; while Sendell speaks the vein swells and motes of light rise off it: sendellGlow)
-      // (CAMPAIGN-1: his last thought is the reason to stay on Citadel: the pump's next cycle)
-      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2'], ...(this.f.pr_v2 ? [['hero', 'prh_tw_cycle']] : [])], () => this.endPrologue(),
-        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close', 'face'][i], i === 0 ? 0.6 : 0.3); });
+      // (CAMPAIGN-1's last thought, the pump's next cycle, opens chapter 2 now (c1_tw_morning_pump): DIALOGUE-2 / FRESH-EYES,
+      //  the chapter ends on Sendell's words, not on a pump)
+      this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue(),
+        (i, id) => { this.glow.on = id === 'sendell'; this.shot?.(['face', 'vein', 'face', 'close'][i], i === 0 ? 0.6 : 0.3); });
     }
   }
   // the vein while Sendell speaks: brighter, breathing with the words, a few motes of light drifting up off it (the

@@ -30,6 +30,15 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 | 1 | the kids | Tim, Lulu | **edited** `pr_tim_2a`: Tim found the stone "on the beach", two lines later "up on the big rocks at the bay": now the bay rocks in both | Source only |
 | 1 | the well's bottom, Sendell | Twinsen, Sendell | kept | Source only |
 | 1 | after the prologue (`pr_zoe_after`, `pr_ar_after`) | Zoé, Arthur | unreachable: `endPrologue` goes straight to chapter 2's transition; left in place | Source only |
+| 1 | FRESH-EYES pass over chapter 1 | Twinsen, Zoé, Mira, Tim, Sendell | **edited**: `op_tw_2` "the square's well" (the film's link from the tap to the well); `prh_tap_1` "Stopped again… three times, then nothing" (the film showed it run; plants the three knocks later lines call back to); `pr_zoe_kettle2` says Mira has the well padlocked; `pr_locked` "They've gone to the square" (Zoé had just been next door); `pr_mira_no` a reason that survives a look at the dry well (wells go low in a dry month, his pipes leak, no unlocking on a rumour); `pr_tw_tim2` spoken to Tim: "One stone doesn't stop a well" (the red herring cleared); `pr_tw_sendell` says who Sendell is; `pr_obj_done` "Chapter complete" (not "Prologue"); `t2_zoe_done`/`t2_zoe_close` "And be back for dinner" (the epilogue's bookend now set up on the main path) | Source only |
+| 1→2 | the chapter's last word | Twinsen | **edited (order)**: the pump thought (`prh_tw_cycle`) no longer follows Sendell's "Someone has reached her."; it opens chapter 2's morning instead (`c1_tw_morning_pump`, for games with the well's v2 scene; older saves keep `c1_tw_morning`) | Source only |
+| 2 | the morning, home | Twinsen, Gilbert, Zoé, Arthur | **edited** `c1_zoe_home1` ("didn't come up till morning": he spent the night below and nobody remarked on it) | Source only |
+| 2 | Vesk at the harbour | Vesk, Twinsen | **edited** `c1_vesk_4`: why Twinsen and not his crews (all on the bore; he knows the island), and "use my name" with the depot's watch, which the watch then ignores ("Nobody told me") until the station radios: the contrivance becomes Vesk's slip | Source only |
+| 2 | the pump room thread (`ct_*`) | Twinsen, Zoé, Arthur, worker | **edited**: `ct_obj_home` "Go home and talk to Zoé" (the step completes on her, not on the tap); `ct_obj_street` "Back home to Zoé" (its marker is the house); `ct_feel_upper` says the heat comes up in the well itself (the square's pipe is cold, its well steams); the rest kept (DIALOGUE-EDIT item 3: read in the scene after P37/P39; the cocks' prompts name their lines, the subs follow the room's order) | Source only |
+| 2 | Zoé at home after the water (`c1_zoe_water`) | Zoé | **edited (branch)**: after the pump room she had already said "It runs! Cold, too": new `c1_zoe_water2` ("Cold water from our tap, heat from his post… Ask him about that pipe anyway.") on games with the thread | Source only |
+| 2 | the station tour, the gate | Vesk, Twinsen, Zoé | **edited** `c1_tw_tour1` (no "But" against a line that was not an argument); `c1_zoe_gate1` the leaflet's "Marked streets only" (zone A was never paid off; the plan picks up some streets) | Source only |
+| 2 | after the radio | Zoé, Doran | **edited (branch)** `c1_zoe_go0` "Find Doran at the harbour" until Doran has been told (she put him at the spaceport while he stood at the harbour); `c1_doran_ferry1` says who grounded the flights; `c1_doran_drones` "Slow is the one thing I can teach you" | Source only |
+| 2 | the spaceport (SPACEPORT-3: Ama, Bern, the gate card) and the port people (`rs_ama_*`, `rs_bern_*`, `rs_velo_*`…) | Ama, Bern, Gurt, Lomba, Velo, Pask, Ennu, Oshra | kept (DIALOGUE-EDIT item 2: each line's phase read against `portPhase`; `tm_pilot` is reached only before the errand existed, the counter's own business comes first) | Source only |
 
 ## Before / after (a selection, in context)
 
@@ -50,9 +59,5 @@ Status: **edited** (lines or a line's condition changed), **kept** (read in its 
 
 ## Resume point
 
-Next: chapter 2 "The Joint Project" (`text/ch1.js`, `story/chapter1.js`, the pump room `text/thread.js` +
-`story/pumpline.js`). Found, not yet written: `ct_obj_home` asks to "try the tap" but the step completes on talking to
-Zoé; `ct_obj_street` "See the street" while its marker is the house; `c1_zoe_water` ("I heard the well gurgle!") heard
-after the whole pump-room thread; `c1_zoe_go` ("Doran is getting the ship ready at the spaceport") heard before Doran has
-been told at the harbour. Then chapters 3-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
+Next: chapter 3 "Zeelich" (`text/ch2.js`, `story/chapter2.js`, `zeelift.js`; FRESH-EYES §6). Then chapters 4-12 in order, the epilogue, then residents (DIALOGUE-EDIT remaining items 1-2),
 the post-15.11 texts (wswitch, arsenal, kit2, ballastra).

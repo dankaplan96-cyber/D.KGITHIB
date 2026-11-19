@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   // ---- Zoé, at the neighbours' door: their kettle
   pr_zoe_kettle: ['Same next door. Their tap ran warm, then stopped.', 'And look at their kettle. Furred with these since breakfast.'],
   pr_tw_kettle: '(Tiny crystals. Still warm.)',
-  pr_zoe_kettle2: "Mira's at the well telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it.",
+  pr_zoe_kettle2: "Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it.",
   pr_zoe_kettle2b: "Then show her these. Pipes don't grow crystals.",
   pr_tw_miraNo: "Mira won't open the well. She says it's the pipes.",
   pr_zoe_kettle_wait: "Show Mira the crystals. Pipes don't grow those.",
@@ -16,7 +16,7 @@ Object.assign(STR.en, {
   it_kettle: 'Kettle Crystals', itd_kettle: "From next door's kettle, furred since breakfast. Still warm.",
 
   // ---- Mira and Gilbert: the key only for a fault at the spring
-  pr_mira_no: "It isn't the well, Twinsen. It's the old pipes on his street. I don't unlock the town well for a pipe fault.",
+  pr_mira_no: "Wells go low in a dry month, Twinsen, and his street's pipes leak. I don't unlock the town well on a rumour.",
   pr_gil_no: 'My pipes are fine! I kick them every morning.',
   pr_tw_kettle2: "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
   pr_mira_kettle: "Crystals? No, pipes don't grow those. That comes up from the spring.",
