@@ -56,7 +56,7 @@ const tiled = (t, rx = 1, ry = 1) => { t.wrapS = t.wrapT = THREE.RepeatWrapping;
 const stdM = (o, tile = 0, extra = {}) => { const m = new THREE.MeshStandardMaterial({ roughness: 0.85, ...o }); m.userData.tile = tile; Object.assign(m.userData, extra); return m; };
 
 // --- faceted rock (LBA2 cave rock: flat facets, stratified paint, a flat base sitting on the floor)
-function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}) {
+export function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}) {
   return cached(`rk${seed}|${detail}|${rough}|${flat}|${freq}`, () => {
     const g = new THREE.IcosahedronGeometry(1, detail);
     const p = g.attributes.position, v = new THREE.Vector3();
@@ -78,7 +78,7 @@ function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}
     return g;
   });
 }
-const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) => {
+export const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) => {
   const r = rng(31);
   x.fillStyle = '#8c857f'; x.fillRect(0, 0, W, H);
   // strata: soft bands of lighter and darker rock, slightly wavy
@@ -92,9 +92,9 @@ const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) =
   for (let i = 0; i < 26; i++) { const px = r() * W, py = r() * H; x.strokeStyle = 'rgba(25,25,35,0.45)'; x.lineWidth = 1 + r(); x.beginPath(); x.moveTo(px, py); let cx = px, cy = py; for (let j = 0; j < 5; j++) { cx += (r() - 0.5) * 24; cy += r() * 14; x.lineTo(cx, cy); } x.stroke(); }
   for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.5 ? 'rgba(220,225,240,0.25)' : 'rgba(20,20,30,0.3)'; x.fillRect(r() * W, r() * H, 1.5, 1.5); }
 })));
-const rockMat = (color = '#8a90a4') => M('ugrock' + color, () => stdM({ map: rockTex(), color, vertexColors: true, roughness: 0.93, flatShading: true }, 2.2));
+export const rockMat = (color = '#8a90a4') => M('ugrock' + color, () => stdM({ map: rockTex(), color, vertexColors: true, roughness: 0.93, flatShading: true }, 2.2));
 // natural cave floor: pale-dark rock with soft patches, cracks and grit (1 tile = 4 m)
-const floorTex = (base, alt, key) => M('ugfloortex' + key, () => tiled(canvasTex(512, 512, (x, W, H) => {
+export const floorTex = (base, alt, key) => M('ugfloortex' + key, () => tiled(canvasTex(512, 512, (x, W, H) => {
   const r = rng(key.length * 13 + 5);
   x.fillStyle = base; x.fillRect(0, 0, W, H);
   for (let i = 0; i < 60; i++) {
