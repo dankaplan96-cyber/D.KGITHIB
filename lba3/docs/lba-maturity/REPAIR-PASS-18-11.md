@@ -25,3 +25,8 @@ publish v98 and finish the five jobs of 17.11 (HE-LTR, WEAPON-SWITCH, SPACEPORT-
 was started and paused (its branch worktree-agent-a97564ea1b7a0bbe5 has its first commits) — resume it after them.
 
 Resume: read the table, each worker's doc, and NEXT-SESSION.md.
+
+**19.11:** phases 2, 3, 4 merged and published (v100); FPS30 (phase 5's frame-rate part) and the cave (P69) in v101/v102.
+Running: PERF-ARRIVAL (phase 5's rest: the arrival's stalls behind the black, Auto's first guess on a GTX 1050, the
+street's CPU; PERFORMANCE_REPORT.md) and, in parallel, STORY-FIX (NEXT-SESSION plan item 4). Then phase 6 (verify
+together).
