@@ -6,6 +6,9 @@ Object.assign(STR.en, {
   // where and when (a caption over the island)
   op_cap_place: 'Citadel Island, Twinsun',
   op_cap_time: "Twelve years after Twinsen's last adventure",
+  // (P83 / S-7: the originals in two lines, for a newcomer)
+  op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop the tyrant FunFrock.",
+  op_cap_lore_sub: 'FunFrock is dead. His clones never got the message.',
   // the harbour: the Joint Project's lift
   n_resident: 'Resident',
   op_res_1: 'When does the harbour row get the heat?',

@@ -4325,6 +4325,8 @@ Object.assign(STR.he, {
   // where and when (a caption over the island)
   op_cap_place: 'אי סיטדל, טווינסאן',
   op_cap_time: 'שתים־עשרה שנה אחרי ההרפתקה האחרונה של טווינסן',
+  op_cap_lore: 'סנדל, האלה של טווינסאן, בחרה בטווינסן לעצור את העריץ פאנפרוק.',
+  op_cap_lore_sub: 'פאנפרוק מת. לשיבוטים שלו אף אחד לא סיפר.',
   // the harbour: the Joint Project's lift
   n_resident: 'תושב',
   op_res_1: 'מתי שורת הנמל מקבלת את החימום?',
