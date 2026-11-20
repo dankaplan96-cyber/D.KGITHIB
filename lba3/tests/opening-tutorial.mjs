@@ -158,7 +158,9 @@ const yardT = await ev((a) => +(game.time - a).toFixed(1), t0);
 check('A17 (timing, the bot) the house and the yard by the steps, two skip attempts and the optional Arthur and tap included: under 4 minutes of game time', yardT < 240, { seconds: yardT });
 // in and out of the house: the step shows inside as "go out", outside again as it was (reproduced with a fresh step: the
 // arc, the yard's one optional lesson left, is checked instead here: in the house no yard tip)
-const arc = await ev(() => { P.go(-45.3, 73.0, { tol: 0.4 }); game.step(1.4); const tip = game.tutorial.shown; const B = game.story.cur.barrels(); P.face(B.x, B.z); game.input.keys.add(TT.code('ball')); game.step(0.8); const dots = game.ball.dots.some((d) => d.visible) || game.ball.landMark.visible; game.input.keys.delete(TT.code('ball')); game.step(2.4); P.settle(); return { tip, dots, done: game.tutorial.done.has('arc') }; });
+// (TUT-MYSTERY: with no skip attempts before it, the walk back passes the lane's pipe for the first time here: its
+//  remark, prh_lane, is read as a player would, then on to the barrels)
+const arc = await ev(() => { P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(1.4); const tip = game.tutorial.shown; const B = game.story.cur.barrels(); P.face(B.x, B.z); game.input.keys.add(TT.code('ball')); game.step(0.8); const dots = game.ball.dots.some((d) => d.visible) || game.ball.landMark.visible; game.input.keys.delete(TT.code('ball')); game.step(2.4); P.settle(); return { tip, dots, done: game.tutorial.done.has('arc') }; });
 check('A18 after the yard, the optional arc tip by the barrels; holding the ball key shows the landing (learned on the hold)', arc.tip === 'arc' && arc.dots && arc.done, arc);
 const free = await ev(() => TT.skip());
 check('A19 the yard done: the way to the well is open (no call), the well reached', free.zoe === 0 && free.maxD > 30 && free.wellSeen === false && free.r !== 'stuck', free);
@@ -184,7 +186,7 @@ const off = await ev(() => {
   const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(1.6); watch('tap');
   P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); const B = game.story.cur.barrels(); P.face(B.x, B.z); P.tap(TT.code('ball'), 0.05); game.step(2.0); P.settle(); game.step(1.6); watch('barrels');
   P.tap(TT.code('b2'), 0.2); P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(2.0); watch('pipe');
-  return { seen, sk, flags: ['pr_kettle', 'pr_yard', 'pr_barrel', 'pr_pipe', 'pr_yardOk'].map((k) => !!game.flags[k]) };
+  return { seen, flags: ['pr_kettle', 'pr_yard', 'pr_barrel', 'pr_pipe', 'pr_yardOk'].map((k) => !!game.flags[k]) };
 });
 const goals = off.seen.filter((x) => x[0] !== 'pipe').map((x) => x[1]);
 check('B1 tips off: the goal line stays at every step, with no key in it, and no dialogue key hint', off.seen.every((x) => !x[2] && !x[3]) && goals.every((g) => g.length > 0) && /Talk to Zoé/.test(off.seen[3][1]) && /Kettle Crystals/.test(off.seen[4][1]), off.seen);
