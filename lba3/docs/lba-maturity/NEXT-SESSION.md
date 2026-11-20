@@ -1,5 +1,10 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**20.11: v104 published (artifact 1795169723-2ded, 510 files)**: REVIEW-TASKS 2–6 (EXP-3 chapters 12–13, VESK, TUT-MYSTERY,
+MILLS, MIDDLE-VARIETY), P81 (all four scenes, campaign pass, revisits), JOINTS-BLENDER steps 1–4 (the local agent).
+Next: THE FULL TEST (FULL-TEST.md: REPAIR-PASS phase 6 + P79), then PUZZLES (P80). The local agent continues
+JOINTS-BLENDER (sword, landing, walk-to-stop, pickup).
+
 **20.11: v103 published (artifact 1795160743-bd29, 509 files)**: STORY-FIX, DIALOGUE-2 (with FRESH-EYES), FACE-1 gaps
 and brows for 41 characters, BOOT-FAIL (P73), FPS30-SMOOTH (P70: footsteps, two 60 Hz steps at the 30 limit, blur off),
 PERF-ARRIVAL (P67 phase 5: arrival preparation in slices). Next: REPAIR-PASS phase 6 = the one full test at the end (the
