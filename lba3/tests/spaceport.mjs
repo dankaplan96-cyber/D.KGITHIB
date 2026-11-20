@@ -114,7 +114,7 @@ check('chapter 4: the terminal\'s counter sells the spaceship (menu: Zeelich Spa
 const n2 = await near('zeelich');
 check('… beside Zeelich\'s pad, at its landing spot', n2.d < 1.0, n2);
 const in2 = await toDoor('zterminal');
-check('Zeelich Spaceport\'s pavilion door leads into its terminal (INPUT)', in2.room === 'zterminal', in2);
+check('Zeelich Spaceport\'s terminal door (from the bridge) leads into its hall (INPUT)', in2.room === 'zterminal', in2);
 const bd2 = await ev(() => { const H = TT.zterminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
 check('Zeelich\'s terminal board reads', bd2.kind === 'termBoard' && bd2.lines >= 1, bd2);
 const c3 = await counter('zterminal', 'Twinsun');
@@ -128,7 +128,7 @@ const fl = await ev((n0) => { const G = game; for (let i = 0; i < 400 && (G.stat
 const n4 = await near('zeelich');
 check('with the films on: from the counter he goes out through the gate, the ship\'s departure film plays from Citadel\'s pad (take-off, cabin, space) and its arrival on Zeelich; he stands at the landing spot', fl.log.includes('depart ship citadel_port>zeelich_port') && fl.log.includes('arrive ship citadel_port>zeelich_port') && fl.room === 'zeelich' && n4.d < 1.0 && n4.state === 'play', { c4, fl, n4 });
 const g2 = await ev(() => { const G = game; P.enter('zterminal'); const H = TT.zterminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const l = G.regions.built('zeelich').spaceport.landing, h = G.hero; return { r: r.r, room: G.room?.id, d: +Math.hypot(h.pos.x - l.x, h.pos.z - l.z).toFixed(2) }; });
-check('Zeelich\'s terminal gate (INPUT) leads out onto the deck at the pad\'s landing spot', g2.room === 'zeelich' && g2.d < 1.5, g2);
+check('Zeelich\'s terminal gate (INPUT) leads out onto the deck by the pad\'s landing spot', g2.room === 'zeelich' && g2.d < 1.5, g2);
 
 // the films on, the other way: from Zeelich's counter out through its gate, the film from Zeelich's pad, home to Citadel
 const film2 = await ev(() => { const G = game; P.enter('zterminal'); G.travel.films.on = true; return G.travel.films.log.length; });
@@ -145,7 +145,7 @@ const o1 = await outDoor('terminal');
 check('out of Citadel\'s terminal by its door: on the deck before it, and he stays out', o1.at === 'citadel' && o1.after === 'citadel' && o1.fromDoor > o1.doorR, o1);
 await ev(() => { const G = game; G.regions.ensure('zeelich', 'test'); G.step(0.3); G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true); P.settle(); });
 const o2 = await outDoor('zterminal');
-check('out of Zeelich\'s terminal by its door: on the deck before the pavilion, and he stays out', o2.at === 'zeelich' && o2.after === 'zeelich' && o2.fromDoor > o2.doorR, o2);
+check('out of Zeelich\'s terminal by its door: on the bridge before it (P83), and he stays out', o2.at === 'zeelich' && o2.after === 'zeelich' && o2.fromDoor > o2.doorR, o2);
 
 // ---- WC-4, the evacuation (chapter 8): the queue for the project's ships in Citadel's terminal. From the door he walks
 // through the hall to the gate past the queue and out onto the deck (INPUT); the board reads the project's boarding.

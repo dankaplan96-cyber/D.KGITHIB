@@ -28,7 +28,8 @@ const setChapter = (key, extra = {}) => ev(([key, extra]) => { const G = game, f
 // put him ~8 m from a travel point (ISO), in its region
 const near = (pid) => ev((pid) => {
   const G = game, p = G.travel.points[pid], L = p.landing || p;
-  const a = Math.atan2(L.x - p.x, L.z - p.z), d = Math.min(8, Math.hypot(L.x - p.x, L.z - p.z) + 3), x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d;
+  const a = Math.atan2(L.x - p.x, L.z - p.z), d = Math.min(pid === 'zeelich_port' ? 6.2 : 8, Math.hypot(L.x - p.x, L.z - p.z) + 3),   // (P83: Zeelich's deck ends 8 m from its pad at the terminal's gate)
+    x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d;
   if (p.region === 'citadel') G.exitRoom({ x, z, a: a + Math.PI }, true); else G.enterRoom(p.region, { x, z, a: a + Math.PI }, true);
   P.settle(); return { region: p.region, at: [x, z] };
 }, pid);
