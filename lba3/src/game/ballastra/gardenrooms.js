@@ -14,13 +14,18 @@
 //   buildGardenRooms(scene, physics) → { rooms: { bl_tunnel, bl_kiln }, tunnel: { setGates({1, 2, 3} 0..2),
 //     setTap(open, instant), setBypass(free, instant) }, kiln: { setRunning(b), turn(speed 0..1, dt) } }
 //   GROOMS (filled when built): tunnel { spawn, door, tap, bypass, gate1 {x, z, r} }, kiln { spawn, door, corvin {x, z, a} }
+//   bl_house   (EXP-3, chapter 12) the House of Balances' front hall over the causeway: the counter under the great
+//              balance beam, the order book on its stand, the test bench (a Balance Works coil, a knock lever, a needle,
+//              an empty regulator saddle with its test card), the project's crates, the brass SOLD cabinet.
+//   house: { knock() (the hammer strikes, the needle leaps and settles), setHeld(b) (the crates chalked HELD),
+//     setCabinet(open, instant) } · GROOMS.house { spawn, door, fennick {x, z, a}, book, bench, crates, cabinet {x, z, r} }
 //   Each room's R.exits[0] is its way back to 'bl_gardens' (the region's R.entries puts him by the hatch or the door).
 import * as THREE from 'three';
 import { RoomBuilder } from '../interiors.js';
 import { MAT, M, rbox, plane, cyl, sphere, lathe, torus, canvasTex, crate, barrel } from '../props.js';
 import { BALLASTRA_AT } from './common.js';
 
-export const GROOMS = { tunnel: {}, kiln: {} };
+export const GROOMS = { tunnel: {}, kiln: {}, house: {} };
 
 const flat = (c, r = 0.6) => MAT.flat(c, r);
 const celadon = () => MAT.flat('#9cc8b4', 0.3, { metalness: 0.05 });
@@ -226,7 +231,111 @@ function buildKiln(scene, physics) {
   return { R: B.finish(), ctl };
 }
 
+// ------------------------------------------------------------------ the House of Balances (EXP-3, chapter 12)
+const cardTex = () => M('bl_houseCardT', () => canvasTex(128, 160, (x, w, h) => {
+  x.fillStyle = '#efe4c8'; x.fillRect(0, 0, w, h); x.strokeStyle = '#5a3a14'; x.lineWidth = 4; x.strokeRect(4, 4, w - 8, h - 8);
+  x.fillStyle = '#2a1e10'; x.font = 'bold 22px sans-serif'; x.textAlign = 'center'; x.fillText('B-7', w / 2, 34);
+  for (let i = 0; i < 5; i++) x.fillRect(18, 52 + i * 14, w - 36 - (i % 2) * 20, 3);
+  x.save(); x.translate(w / 2, 134); x.rotate(-0.15); x.strokeStyle = '#2f7a3a'; x.fillStyle = '#2f7a3a'; x.lineWidth = 3; x.strokeRect(-46, -16, 92, 26); x.font = 'bold 20px sans-serif'; x.fillText('PASSED', 0, 4); x.restore();
+}));
+const bookTex = () => M('bl_houseBookT', () => canvasTex(256, 160, (x, w, h) => {
+  x.fillStyle = '#efe4c8'; x.fillRect(0, 0, w, h); x.fillStyle = '#6a4a2a'; x.fillRect(w / 2 - 2, 0, 4, h);
+  x.fillStyle = '#2a1e10'; for (let s = 0; s < 2; s++) for (let i = 0; i < 9; i++) x.fillRect(12 + s * (w / 2), 16 + i * 15, w / 2 - 28 - ((i * 7) % 3) * 12, 3);
+  x.fillStyle = '#a02a20'; x.fillRect(w / 2 + 14, 120, 80, 4);
+}));
+const heldTex = () => M('bl_houseHeldT', () => canvasTex(128, 64, (x, w) => { x.fillStyle = '#3a3430'; x.fillRect(0, 0, w, 64); x.fillStyle = '#f2ece0'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.fillText('HELD', w / 2, 44); }));
+function buildHouse(scene, physics) {
+  const { x: CX, z: CZ } = BALLASTRA_AT.bl_house, Wd = 13, D = 8, H = 4.6, DOOR_Z = 2.2;
+  const B = new RoomBuilder(scene, physics, 'bl_house', CX, CZ), R = B.room, k = B.k;
+  R.view = 12.5; R.follow = 0.3; R.music = 'workshop'; R.surface = 'stone';
+  B.shell({ W: Wd, D, H, t: 0.45, floor: MAT.tiles('#d8cdb4', '#c8bca2', '#7a6a50', false, 6), slab: MAT.stone('sand'), body: MAT.plaster('#e8dcc4'), low: MAT.tiles('#9cc8b4', '#8abcaa', '#4f6e64', false, 6), dado: 1.1,
+    rail: bronze(), cap: MAT.stone('sand', 1), rimH: 0.5, rimMat: MAT.stone('sand'), beam: MAT.wood('dark'), posts: MAT.stone('sand', 1), postsAt: (L) => [L * 0.33, L * 0.66],
+    left: [{ at: DOOR_Z, w: 1.5, h: 2.6, y0: 0, kind: 'door', frame: bronze(), sill: MAT.stone('slate', 1) }] });
+  R.exits.push({ ...B.world(-Wd / 2 + 0.3, DOOR_Z), r: 0.6, room: 'bl_gardens' });
+  R.spawn = { ...B.world(-Wd / 2 + 1.4, DOOR_Z), a: Math.PI / 2 };
+  R.entries = { bl_gardens: R.spawn };
+  const BZ = -D / 2;
+  // the counter, and the great balance over it (the House's sign): a post, a beam, two pans on chains
+  const CT = { x: 1.0, z: BZ + 1.7 };
+  k.add(rbox(4.2, 1.05, 0.8, 0.03), MAT.wood('dark'), CT.x, 0.52, CT.z); k.add(rbox(4.4, 0.08, 0.95, 0.02), MAT.stone('slate', 1), CT.x, 1.08, CT.z);
+  B.col(CT.x, CT.z, 2.2, 0.45, 1.1, { block: true });
+  k.add(cyl(0.08, 0.1, 2.6, 8), bronze(), CT.x, 2.4, BZ + 0.5);
+  k.add(rbox(3.6, 0.12, 0.12, 0.02), bronze(), CT.x, 3.7, BZ + 0.5);
+  for (const s of [-1, 1]) { k.add(cyl(0.01, 0.01, 0.9, 4), MAT.iron(), CT.x + s * 1.7, 3.25, BZ + 0.5); k.add(lathe([[0.001, 0], [0.42, 0.02], [0.45, 0.1], [0.001, 0.06]], 14), bronze(), CT.x + s * 1.7, 2.75, BZ + 0.5); }
+  k.add(lathe([[0.001, 0], [0.14, 0], [0.001, 0.3]], 8), bronze(), CT.x, 3.82, BZ + 0.5);
+  for (let i = 0; i < 3; i++) k.add(rbox(0.5, 0.08, 0.36, 0.01), MAT.cloth(['#6a3a2a', '#2a4a5a', '#5a5a2a'][i], '#2a1e14'), CT.x - 1.4 + i * 0.1, 1.16 + i * 0.08, CT.z + 0.05, i * 0.1);
+  k.add(lathe([[0.001, 0], [0.09, 0], [0.07, 0.08], [0.001, 0.12]], 10), bronze(), CT.x + 1.2, 1.12, CT.z + 0.2);
+  // the order book on its slanted stand (right of the counter)
+  const BK = { x: 4.4, z: BZ + 2.3 };
+  k.add(rbox(0.12, 1.0, 0.12, 0.01), MAT.wood('dark'), BK.x, 0.5, BK.z);
+  k.add(rbox(0.7, 0.06, 0.5, 0.01), MAT.wood('dark'), BK.x, 1.05, BK.z, 0, { rx: 0.45 });
+  k.add(plane(0.62, 0.4), MAT.map(bookTex(), 0.8), BK.x, 1.1, BK.z + 0.01, 0, { rx: -Math.PI / 2 + 0.45 });
+  B.col(BK.x, BK.z, 0.35, 0.3, 1.1, { block: true });
+  // the test bench (left): a coil on its stand, the needle's dial, the knock lever and its hammer, the empty saddle and card
+  const TB = { x: -3.7, z: BZ + 1.3 };
+  k.add(rbox(2.8, 0.08, 0.9, 0.02), MAT.wood('honey'), TB.x, 0.92, TB.z); for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.08, 0.9, 0.08, 0.01), MAT.wood('dark'), TB.x + sx * 1.3, 0.45, TB.z + sz * 0.38);
+  B.col(TB.x, TB.z, 1.45, 0.5, 1.0, { block: true });
+  k.add(cyl(0.05, 0.05, 2.6, 8), MAT.copper(), TB.x, 1.06, TB.z - 0.2, 0, { rz: Math.PI / 2 });   // (the bench's pipe)
+  k.add(lathe([[0.001, 0], [0.2, 0], [0.22, 0.08], [0.2, 0.45], [0.12, 0.5], [0.001, 0.5]], 14), celadon(), TB.x - 0.7, 1.0, TB.z - 0.2);
+  for (const y of [1.12, 1.3]) k.add(torus(0.215, 0.025, 4, 14), bronze(), TB.x - 0.7, y, TB.z - 0.2, 0, { rx: Math.PI / 2 });
+  k.add(cyl(0.2, 0.2, 0.05, 18), MAT.flat('#efe4c8', 0.6), TB.x + 0.1, 1.45, TB.z - 0.12, 0, { rx: Math.PI / 2 });
+  k.add(cyl(0.012, 0.012, 0.45, 4), MAT.iron(), TB.x + 0.1, 1.2, TB.z - 0.15);
+  k.add(rbox(0.05, 0.03, 0.01, 0.002), MAT.paint('#3a9a4a', 0.4), TB.x + 0.1, 1.62, TB.z - 0.09);   // (green, at the top of the dial)
+  const needle = k.pivot(TB.x + 0.1, 1.45, TB.z - 0.085, 0);
+  { const n = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.17, 0.01), MAT.paint('#c8443a', 0.4)); n.position.y = 0.075; needle.add(n); }
+  k.add(rbox(0.12, 0.3, 0.12, 0.01), MAT.iron(), TB.x + 0.75, 1.1, TB.z - 0.2);
+  const hammer = k.pivot(TB.x + 0.75, 1.25, TB.z + 0.05, 0);
+  { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.55), MAT.iron()); arm.position.z = 0.22; hammer.add(arm); const hd = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.12), MAT.steel()); hd.position.set(0, -0.02, -0.06); hammer.add(hd); const kn = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), MAT.paint('#c8443a', 0.4)); kn.position.z = 0.5; hammer.add(kn); }
+  k.add(rbox(0.5, 0.1, 0.36, 0.02), MAT.stone('sand', 1), TB.x + 1.2, 1.0, TB.z + 0.12);   // (the empty saddle)
+  k.add(plane(0.2, 0.25), MAT.map(cardTex(), 0.7), TB.x + 1.2, 1.2, TB.z - 0.04);
+  k.add(cyl(0.006, 0.006, 0.15, 4), MAT.iron(), TB.x + 1.2, 1.38, TB.z - 0.045);
+  // the project's crates (right front), a sign that goes up when the shipment is held
+  B.put(4.9, 1.6, 0.1, (kk) => crate(kk, 0.8, { pal: 'pale' })); B.put(5.0, 2.6, -0.2, (kk) => crate(kk, 0.7, { pal: 'pale' })); B.put(4.0, 2.1, 0.3, (kk) => crate(kk, 0.6, { pal: 'grey' }));
+  const held = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.3), MAT.map(heldTex(), 0.8)); held.position.set(4.9, 0.55, 2.02); held.visible = false; R.group.add(held);
+  // the SOLD cabinet on the back wall (right): brass doors that open
+  const CB = { x: 3.4, z: BZ + 0.3 };
+  k.add(rbox(1.4, 2.4, 0.5, 0.02), MAT.wood('dark'), CB.x, 1.2, CB.z);
+  for (let i = 0; i < 4; i++) k.add(rbox(1.2, 0.04, 0.4, 0.01), MAT.wood('honey'), CB.x, 0.5 + i * 0.5, CB.z + 0.06);
+  for (let i = 0; i < 6; i++) k.add(rbox(0.12, 0.34, 0.3, 0.01), MAT.cloth('#c8b894', '#a89474'), CB.x - 0.45 + i * 0.18, 1.2, CB.z + 0.08, 0.05 * i);
+  const doors = [-1, 1].map((s) => { const p = k.pivot(CB.x + s * 0.68, 1.25, CB.z + 0.27, 0); const m = new THREE.Mesh(new THREE.BoxGeometry(0.66, 2.1, 0.04), bronze()); m.position.x = -s * 0.33; p.add(m); return { p, s }; });
+  B.col(CB.x, CB.z, 0.72, 0.28, 2.4, { block: true });
+  // shelves of coils on the left wall, boxed (the House's trade)
+  B.put(-Wd / 2 + 0.3, -0.6, Math.PI / 2, (kk) => {
+    for (const s of [-1, 1]) kk.add(rbox(0.06, 2.2, 0.4, 0.01), MAT.wood('dark'), s * 1.1, 1.1, 0);
+    for (const y of [0.4, 1.1, 1.8]) { kk.add(rbox(2.24, 0.05, 0.42, 0.01), MAT.wood('honey'), 0, y, 0); for (let i = 0; i < 4; i++) kk.add(lathe([[0.001, 0], [0.13, 0], [0.13, 0.32], [0.001, 0.32]], 10), celadon(), -0.8 + i * 0.52, y + 0.03, 0); }
+    return { hw: 1.15, hd: 0.22, top: 2.2 };
+  });
+  for (const [x, z] of [[-3.0, BZ + 0.12], [3.0, BZ + 0.12]]) k.add(sphere(0.13, 10, 8), MAT.glow('#fff2cc', '#ffc070', 1.4), x, 3.2, z);
+  B.light('#ffe2b0', 5.5, 12, -2.6, 3.4, 0.3);
+  B.light('#fff0d8', 4.5, 11, 2.8, 3.2, -0.8);
+  // state
+  const S = { kt: 0, nd: 0, open: 0, openTo: 0 };
+  const place = () => { hammer.rotation.x = -Math.sin(Math.min(1, S.kt) * Math.PI) * 0.9; needle.rotation.z = -S.nd; doors.forEach(({ p, s }) => { p.rotation.y = s * S.open * 1.6; }); };
+  R.updaters.push((dt) => {
+    let ch = false;
+    if (S.kt > 0) { S.kt = Math.max(0, S.kt - dt * 2.2); ch = true; }
+    // (the needle: thrown by the knock, then back on green at once, held as if by a hand)
+    const want = S.kt > 0.55 ? 1.3 : 0; if (Math.abs(S.nd - want) > 1e-3) { S.nd += (want - S.nd) * Math.min(1, dt * (want ? 18 : 4)); ch = true; }
+    if (S.open !== S.openTo) { S.open = S.openTo > S.open ? Math.min(1, S.open + dt) : Math.max(0, S.open - dt); ch = true; }
+    if (ch) place();
+  });
+  const ctl = {
+    knock() { S.kt = 1; const G = globalThis.game; if (G?.room === R) G.audio?.play?.('clang'); },
+    setHeld(b) { held.visible = !!b; },
+    setCabinet(open, instant) { S.openTo = open ? 1 : 0; if (instant) S.open = S.openTo; place(); },
+  };
+  place();
+  Object.assign(GROOMS.house, {
+    door: B.world(-Wd / 2 + 0.3, DOOR_Z), spawn: R.spawn,
+    fennick: { ...B.world(CT.x, BZ + 0.85), a: 0 },
+    book: { ...B.world(BK.x, BK.z + 0.75), r: 0.8 }, bench: { ...B.world(TB.x + 0.4, TB.z + 1.0), r: 0.9 },
+    crates: { ...B.world(4.3, 3.1), r: 0.9 }, cabinet: { ...B.world(CB.x, CB.z + 1.0), r: 0.8 },
+  });
+  R.npcSpots = { fennick: GROOMS.house.fennick };
+  return { R: B.finish(), ctl };
+}
+
 export function buildGardenRooms(scene, physics) {
-  const t = buildTunnel(scene, physics), k = buildKiln(scene, physics);
-  return { rooms: { bl_tunnel: t.R, bl_kiln: k.R }, tunnel: t.ctl, kiln: k.ctl };
+  const t = buildTunnel(scene, physics), k = buildKiln(scene, physics), h = buildHouse(scene, physics);
+  return { rooms: { bl_tunnel: t.R, bl_kiln: k.R, bl_house: h.R }, tunnel: t.ctl, kiln: k.ctl, house: h.ctl };
 }
