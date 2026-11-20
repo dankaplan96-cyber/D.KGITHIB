@@ -79,6 +79,7 @@ If a worker's branch exists without a report (the session ended), read its last 
 - The user's own play of the whole game (none yet) and their ear on the music (MUSIC-LBA's clips).
 
 ## The plan to continue (in order)
+0. **Queued by the user (20.11), not to be forgotten: PUZZLES-BRIEF.md (P80)** — after REVIEW-TASKS-19-11 and the full test.
 1. **Finish the five jobs above, test together, publish v98** (artifact only).
 2. **Expansion**: EXP-3 = W-4 (the harbour warehouse, the House of Balances) and chapter 12 `balances` (EXP-PLAN-2.md §3,
    resume points in its report); then chapter 13 `survey` (the way home, the parked OG-2); then the network's expansion
