@@ -16,7 +16,7 @@ Object.assign(STR.en, {
   c4_kid_pump: "I hear the pump from my roof. Every gust it goes clack, clack, grrrk. Two gears clack. One grinds.",
   c4_kid_pump2: "Not a clacky one! Watch them when the wind pulls. The grinding one doesn't turn. It spits sand.",
   c4_kid_leak: 'Now it goes thump, thump, and then splash. On the ground, not in the oasis.',
-  c4_kid_2: 'The pump is working! I can hear it from my roof!',
+  c4_kid_2: "The pump's working! I'm meant to be filling Mum's jars. I'm testing the water first.",
   c4_trader_1: "Water costs more than anything I sell. The pump seized when the project's test bore started shaking the ground.",
   c4_trader_1b: "Kick it, hit it, it won't help. It's the ground. Tell the project to stop shaking it.",
   c4_trader_leak: "Water all over the sand? The shaking knocked that pipe loose too. I'd bet my dates on it.",
@@ -33,7 +33,7 @@ Object.assign(STR.en, {
   c4_tarra_3: 'Water. Real water, in the oasis. All right. You are not with the project.',
   c4_tarra_4: 'The one you want is Ilka. She dug up the glowing stones, told the project they were dangerous, and they threw her out. She lives in a tent under the north mesa.',
   c4_tarra_5: 'Hesk can take you on his sand-yacht. He owes me a favour. Several.',
-  c4_tarra_idle: 'The children are swimming in the oasis. I had forgotten that sound.',
+  c4_tarra_idle: 'Hear that? Sani, splashing in the oasis. I had forgotten that sound.',
 
   // the wind-pump (ADV-2: the fault is found by listening and watching a gust)
   c4_listen_1: 'The wheel tugs at every gust and stops dead. Clack, clack... and something grinds.',

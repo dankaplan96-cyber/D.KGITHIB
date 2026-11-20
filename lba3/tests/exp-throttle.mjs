@@ -105,7 +105,7 @@ await saveQuit();
 const r1 = await ev(() => T.view());
 check('Save & quit → Continue mid-hammer: the valve room, chapter 10, the bleed kept, the hammer running', r1.key === 'throttle' && r1.room === 'valves' && r1.og[3] === 1 && r1.hammer === true && r1.state === 'play', r1);
 const b23 = await timed(() => { T.wheel(2, 'kick'); T.wheel(3, 'kick'); for (let i = 0; i < 60; i++) game.step(0.05); P.settle(); return { ...T.view(), wheel4: game.rooms.valves.valves[3].open, said: window.__said.slice(-20) }; });
-check('the third bleed: Oren speaks through the governor (Ballastra; the kicks strike an old stone there; the shelters counted by weight)', b23.og[4] && b23.said.some((l) => /On Ballastra\. Something under your town strikes an old stone/.test(l)) && b23.said.some((l) => /Sixty-one people/.test(l)), b23.said);
+check('the third bleed: Oren speaks through the governor (Ballastra; the kicks strike an old stone there; the shelters counted by weight)', b23.og[4] && b23.said.some((l) => /On Ballastra, a long way from you\. Something under your town strikes an old stone/.test(l)) && b23.said.some((l) => /Sixty-one people/.test(l)), b23.said);
 check('wheel IV turns itself back ("Green holds"); the needles on green; the plate named (Balance Works)', b23.wheel4 === false && Math.abs(b23.needle - 2) < 0.15 && b23.said.some((l) => /Balance Works, Ballastra/.test(l)), { wheel4: b23.wheel4, needle: b23.needle });
 
 // ---------------------------------------------------------------- the shelter → Zoé
@@ -116,7 +116,7 @@ const s3 = await timed(() => {
 });
 console.log('the shelter → Zoé:', JSON.stringify(s3));
 check("Gilbert thanks him and Oren; the washroom stays shut; Zoé on the relay knows Balance Works from the project's register", s3.og[5] && s3.said.some((l) => /Oren, if you can hear this/.test(l)) && s3.said.some((l) => /delivery register/.test(l)), s3.said);
-check('played as Zoé in the project office; the guard who never saw her; the objective is the register', s3.body === 'zoe' && s3.room === 'projoffice' && s3.th.zoeGo && s3.said.some((l) => /never saw you/.test(l)) && /register/.test(s3.obj), { body: s3.body, room: s3.room, obj: s3.obj });
+check('played as Zoé in the project office; the guard who never saw her; the objective is the register', s3.body === 'zoe' && s3.room === 'projoffice' && s3.th.zoeGo && s3.said.some((l) => /looking for the washroom/.test(l)) && /register/.test(s3.obj), { body: s3.body, room: s3.room, obj: s3.obj });
 
 const z1 = await timed(() => {
   const ch = T.th(), reg = ch.officeAt([-5.55, -3.3]);
@@ -175,7 +175,7 @@ check('a hand on the lever: Oren lets go; Gilbert takes it ("A hand gets tired. 
 check('Vesk on the wire gives his reason (a station that can say no will say no); Zoé answers him', w5.said.some((l) => /will say no/.test(l)) && w5.said.some((l) => /turn their own water on/.test(l)), w5.said);
 check("Baldino's call ends chapter 10: the B-7's return label (Tessa's Float Repairs, Ballastra); chapter 11 begins at Citadel Spaceport (EXP-2)", w5.key === 'ballastra' && w5.n === 11 && w5.room === 'citadel' && w5.cards.some((c) => /Chapter 11 · Ballastra/.test(c)) && w5.said.some((l) => /TESSA'S FLOAT REPAIRS/.test(l)), { key: w5.key, n: w5.n, room: w5.room, cards: w5.cards });
 const j = await ev(() => game.story.journal().find((c) => /Borrowed Time/.test(c.title))?.lines.map((l) => l.key));
-check('the journal keeps chapter 10\'s seven lines', Array.isArray(j) && j.length === 7, j);
+check('the journal keeps chapter 10\'s seven lines, headed by its "What we know" (P83 S-2)', Array.isArray(j) && j.length === 8 && j[0] === 'know_throttle', j);
 console.log(`chapter 10 bot game time, chapter 9's last step to chapter 11's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
 
 // ---------------------------------------------------------------- after: the shelter remembers; the cost

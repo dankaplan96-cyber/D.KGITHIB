@@ -95,7 +95,7 @@ Object.assign(STR.en, {
   c1_map_after: "FunFrock's pipeline map. Nothing left on it to open.",
   c1_toast_valve: 'Valve opened ({n}/3)',
   c1_water_1: "In the square, the well fills with steaming water and the project's heat posts light up.",
-  c1_tw_water: 'The station gate is open too. Time to see Vesk.',
+  c1_tw_water: 'Water, and steaming hot. Vesk can explain that at his station.',
   c1_tw_control: 'The control room. The needles jump every time the ground shakes.',
 
   c1_worker_1: 'Unload, unload. Crates of "sensitive equipment". Don\'t ask what\'s inside.',
@@ -111,6 +111,8 @@ Object.assign(STR.en, {
   c1_doran_depot: 'The depot watch went marching up to the station, drones and all. Vesk must have whistled.',
   c1_doran_ferry1: "Baldino? The mad inventor? He radioed me the start code for the project's ship. The project's grounded the passenger flights, but its own ships still fly.",
   c1_tw_ferry: 'Can you fly it to Zeelich?',
+  // (P83 / S-6: the vehicles told apart)
+  c1_doran_ships: "Not the ferry, mind: she only does the islands. Vesk's own ship sits up where his beam goes. Ours is the one the project keeps at the port.",
   c1_doran_ferry2: 'Doran can sail anything that floats, and up there everything floats. Meet me at the spaceport, Twinsen.',
   c1_doran_board: 'Hatch is open. Climb aboard, Twinsen. And hold on to your hat.',
   // SPACEPORT-3 (P62): Doran's errand, the flight form at the terminal's ticket counter

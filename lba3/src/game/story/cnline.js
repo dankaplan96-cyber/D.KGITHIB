@@ -258,7 +258,7 @@ export class CouncilThread {
           beat?.release(0.6);
           f.cn_stop = true;
           this.kell.push(); this.story.refreshCast();
-          ch.chain([['veskwire', 'cn_vesk_1'], ['veskwire', 'cn_vesk_2'], ['hero', 'cn_tw_vesk'], [bal, 'cn_bal_stop2'], [bal, 'cn_bal_stop3']], () => {
+          ch.chain([['veskwire', 'cn_vesk_1'], ['veskwire', 'cn_vesk_2'], ['hero', 'cn_tw_vesk'], [bal, 'cn_bal_stop2'], ['hero', 'cn_tw_days'], [bal, 'cn_bal_stop3']], () => {
             this.busy = false;
             this.story.refreshCast({ walk: true });   // (Baldino goes back to his bench)
             g.updateObjective(); g.save(false);

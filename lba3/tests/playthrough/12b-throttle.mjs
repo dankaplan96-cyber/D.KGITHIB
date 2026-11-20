@@ -48,12 +48,13 @@ export const steps = [
     for (let k = 0; k < 6 && !f.th_set; k++) out.push(use(ch.front(), 'thband'));
     return { out, band: f.th_band, set: !!f.th_set, fail: f.th_set ? null : 'band' };
   }],
-  ['Oren swings the lever; a hand holds it → the network', () => {
+  ['Oren swings the lever; a hand holds it → the next chapter (the expanded campaign: Ballastra, EXP-2; the base game: the network)', () => {
     const G = game, f = G.flags, ch = TH();
     for (let i = 0; i < 80 && !f.th_push; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } P.settle();
     use(ch.front(), 'thhold');
     for (let i = 0; i < 600 && f.chapterKey === 'throttle'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
     P.settle(60); P.settle(30);
-    return { lever: !!f.th_lever, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === 'network' ? null : 'no network' };
+    const next = G.story.inCampaign('ballastra') ? 'ballastra' : 'network';   // (FULL-TEST 20.11: chapters 11-13 are written now; segment 13 starts from the base campaign's fixture)
+    return { lever: !!f.th_lever, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === next ? null : 'not on to ' + next };
   }],
 ];

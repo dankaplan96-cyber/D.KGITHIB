@@ -6,6 +6,7 @@ import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };   // (as network.js: the lamp room's door on the headland)
 import '../text/ch3.js';
+import { sleepersScene } from './balances.js';   // (EXP-3: the Cradle Hall before the end card, the expanded campaign)
 
 const LINES = {
   gilbert: 'ep_gilbert', mira: 'ep_mira', doran: 'ep_doran', pippa: 'ep_pippa', tim: 'ep_tim', lulu: 'ep_lulu', xil: 'ep_xil', arthur: 'ep_arthur', zoe: 'ep_zoe_idle',
@@ -74,7 +75,7 @@ export class Epilogue extends ChapterBase {
     this.chain([['narrator', 'ep_narr'], ['zoe', 'ep_zoe_1'], ['hero', 'ep_tw_1'], ['arthur', 'ep_ar_1'], ['hero', 'ep_tw_2'], ['zoe', 'ep_zoe_2'], ['zoe', 'ep_zoe_3']], () => {
       this.f.ep_dinner = true;
       g.save(false);
-      this.showEnd();
+      if (!sleepersScene(this, () => this.showEnd())) this.showEnd();
     });
   }
   // The sword in his hand is only drawn (Hero.showSword); the equipped weapon is left alone, so free play has it back

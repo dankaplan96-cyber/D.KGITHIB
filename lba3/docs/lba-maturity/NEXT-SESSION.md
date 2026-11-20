@@ -1,5 +1,12 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**20.11 evening: v105 published (artifact 1795204218-822c, 510 files)**: FULL-TEST done (FULL-TEST.md: every suite and the chain 01→14 green or known); fixed: Sefa's empty dome after chapter 13 (balances.js cast), Pema and the ship's Board prompt, Copy diagnostics; P83's story decisions 1–6 (the bore's rule, "What we know" in the journal, the stop's days, the vehicles, the opening caption, Gilbert's charts). Next in order: P80 puzzles, then P83 9–10 (the School with Tali's court, Zeelich Spaceport), FACE-2 proposed. Local agent: orders 57 JOINTS-BLENDER, 58 POLISH-SWEEP, 59 HIDDEN-TRIS-HW.
+
+**20.11: v104 published (artifact 1795169723-2ded, 510 files)**: REVIEW-TASKS 2–6 (EXP-3 chapters 12–13, VESK, TUT-MYSTERY,
+MILLS, MIDDLE-VARIETY), P81 (all four scenes, campaign pass, revisits), JOINTS-BLENDER steps 1–4 (the local agent).
+Next: THE FULL TEST (FULL-TEST.md: REPAIR-PASS phase 6 + P79), then PUZZLES (P80). The local agent continues
+JOINTS-BLENDER (sword, landing, walk-to-stop, pickup).
+
 **20.11: v103 published (artifact 1795160743-bd29, 509 files)**: STORY-FIX, DIALOGUE-2 (with FRESH-EYES), FACE-1 gaps
 and brows for 41 characters, BOOT-FAIL (P73), FPS30-SMOOTH (P70: footsteps, two 60 Hz steps at the 30 limit, blur off),
 PERF-ARRIVAL (P67 phase 5: arrival preparation in slices). Next: REPAIR-PASS phase 6 = the one full test at the end (the

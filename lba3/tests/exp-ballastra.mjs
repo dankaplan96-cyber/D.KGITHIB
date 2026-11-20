@@ -13,7 +13,7 @@
 //   it was) → the kiln's and the sea's latches by the ball: shared → Wenna, Corvin's float → Halden's plan → the pump
 //   room: the wheel (chained), the chain by the sword, the wheel (the pawl), the pawl by the ball, the gate: the canal
 //   falls; Oren → Dunn's door: three blows, a kick → the Speaking Steps: Tessa, Baldino on Doran's set (every coil, no
-//   regulators) → the freighter → the next chapter (the network, chapter 14) in Baldino's workshop.
+//   regulators) → the next chapter (EXP-3: chapter 12, the House of Balances, on Ballastra; tests/exp-balances.mjs).
 // Also: the cast's models load on demand; the travel menu offers Ballastra once he has landed; the cost at the harbour.
 // Times are the bot's game time: a floor, not a first-time estimate.
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -125,7 +125,8 @@ const n1a = await timed(() => {
   const te = T.talk('tessa');
   return { q, sign, te, ...T.view() };
 });
-check("Quill weighs visitors (the lift has opinions about ballast); the shed's door: AT THE LIFT", n1a.q.said.some((l) => /opinions about ballast/.test(l)) && n1a.sign.said.some((l) => /AT THE LIFT/.test(l)), { q: n1a.q.said, sign: n1a.sign });
+// (P81 scene 3, 20.11: Quill's weighing now ends on the jammed lift and the wrong sums, not "opinions about ballast")
+check("Quill weighs visitors (the lift jammed, somebody's sums wrong); the shed's door: AT THE LIFT", n1a.q.said.some((l) => /Visitors are weighed/.test(l)) && n1a.q.said.some((l) => /lift has been jammed/.test(l)) && n1a.sign.said.some((l) => /AT THE LIFT/.test(l)), { q: n1a.q.said, sign: n1a.sign });
 check("Tessa at the lift: one job, free Ferro's boat; the objective's three steps", n1a.bl.tessa1 && n1a.te.said.some((l) => /One job/.test(l)) && /Free Ferro's boat/.test(n1a.obj), { te: n1a.te.said, obj: n1a.obj });
 const n1b = await timed(() => {
   const G = game, H = G.rooms.ballastra.harbor;
@@ -258,22 +259,20 @@ const e1 = await timed(() => {
   const te = T.talk('tessa');
   return { te, ...T.view(), steps: ['bl_mags', 'bl_halden', 'bl_quill'].map((id) => { const n = P.npc(id); return [id, !!n?.present, n ? +Math.hypot(n.pos.x - G.hero.pos.x, n.pos.z - G.hero.pos.z).toFixed(1) : null]; }) };
 });
-check("the Speaking Steps: Tessa will draw the box; Baldino on Doran's set: every Balance Works coil bought for the project, no regulators (vm_2)", e1.bl.endTalk && e1.vm2 === 1 && e1.te.said.some((l) => /Every coil, and not one regulator/.test(l)) && /Back to Doran's freighter/.test(e1.obj), { said: e1.te.said, obj: e1.obj, steps: e1.steps });
+check("the Speaking Steps: Tessa will draw the box; Baldino on Doran's set: every Balance Works coil bought for the project, no regulators (vm_2)", e1.bl.endTalk && e1.vm2 === 1 && e1.te.said.some((l) => /Every coil, and not one regulator/.test(l)), { said: e1.te.said, obj: e1.obj, steps: e1.steps });
 const travel = await ev(() => { const G = game, T2 = G.travel, p = T2.points.ballastra_port; return { routes: T2.routes.filter((r) => r.b === 'ballastra_port' && r.gate(G.story)).map((r) => r.a) }; });
 check('the travel menu offers Ballastra by spaceship from Citadel and Zeelich once he has landed there', travel.routes.includes('citadel_port') && travel.routes.includes('zeelich_port'), travel);
+// (EXP-3: chapter 12 follows on Ballastra at once: no walk back to the freighter; tests/exp-balances.mjs plays on from here)
 const e2 = await timed(() => {
-  const G = game, A = G.rooms.bl_arches.arches;
-  const back = T.through(A.exits.toHarbor);
-  const H = G.rooms.ballastra.harbor;
-  const d = T.talk('doran');
+  const G = game;
   for (let i = 0; i < 400 && G.flags.chapterKey === 'ballastra'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
   P.settle(); for (let i = 0; i < 30; i++) G.step(0.1); P.settle();
-  return { back: back.room, d, ...T.view(), said: window.__said.slice(-8) };
+  return { ...T.view(), said: window.__said.slice(-8) };
 });
 console.log('the end:', JSON.stringify(e2).slice(0, 1200));
-check("back over the harbour to the freighter: Doran flies him home, and the next chapter begins (the network, chapter 14) in Baldino's workshop", e2.back === 'ballastra' && e2.key === 'network' && e2.n === 14 && e2.room === 'workshop' && e2.cards.some((c) => /Chapter 14 · Baldino's Network/.test(c)), { back: e2.back, key: e2.key, n: e2.n, room: e2.room, cards: e2.cards });
+check('the next chapter begins on Ballastra: chapter 12 "The House of Balances"', e2.key === 'balances' && e2.n === 12 && e2.cards.some((c) => /Chapter 12 · The House of Balances/.test(c)), { key: e2.key, n: e2.n, room: e2.room, cards: e2.cards });
 const j = await ev(() => game.story.journal().find((c) => /^11\. Ballastra/.test(c.title))?.lines.map((l) => l.key));
-check("the journal keeps chapter 11's eight lines", Array.isArray(j) && j.length === 8, j);
+check("the journal keeps chapter 11's eight lines, headed by its \"What we know\" (P83 S-2)", Array.isArray(j) && j.length === 9 && j[0] === 'know_ballastra', j);
 console.log(`chapter 11 bot game time, chapter 10's last step to chapter 14's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
 
 // ---------------------------------------------------------------- the cost at the harbour (SwiftShader: counts only)

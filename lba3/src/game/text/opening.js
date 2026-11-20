@@ -6,6 +6,9 @@ Object.assign(STR.en, {
   // where and when (a caption over the island)
   op_cap_place: 'Citadel Island, Twinsun',
   op_cap_time: "Twelve years after Twinsen's last adventure",
+  // (P83 / S-7: the originals in two lines, for a newcomer)
+  op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop the tyrant FunFrock.",
+  op_cap_lore_sub: 'FunFrock is dead. His clones never got the message.',
   // the harbour: the Joint Project's lift
   n_resident: 'Resident',
   op_res_1: 'When does the harbour row get the heat?',
@@ -65,8 +68,8 @@ Object.assign(STR.en, {
   t2_goal_zoe: 'Talk to Zoé',
   t2_goal_inv: 'Look at the Kettle Crystals in your inventory',
   t2_goal_tap: 'Try the garden tap by the front door',
-  t2_goal_barrels: 'Hit the two barrels by the house with the magic ball',
-  t2_goal_pipe: 'Jump over the copper pipe along the lane',
+  t2_goal_barrels: 'Knock the barrel by the house aside with the magic ball',
+  t2_goal_pipe: 'Jump the copper pipe on your way out, or walk round it',
   t2_k_search: '{k} Search the cupboard',
   t2_k_talk: '{k} Talk',
   t2_k_try: '{k} Try the tap',
@@ -74,10 +77,13 @@ Object.assign(STR.en, {
   t2_zoe_call: 'Twinsen! Over here.',
   t2_ask_inv: 'Have a good look at those.',
   t2_ask_tap: "Try the garden tap. If that's dry too, it isn't just our kitchen.",
-  t2_ask_barrels: "Arthur bet Tim you can still hit those barrels. Don't make him lose.",
-  t2_ask_pipe: "And the project's pipe. You used to clear fences twice that high at a run.",
-  t2_zoe_done: "Not bad for an old hero. Now, the well. And be back for dinner.",
-  t2_zoe_close: "Close enough. Go on, the well. And be back for dinner.",
+  t2_ask_barrels: "Behind the barrels? That's the joint you fixed yesterday. Knock one aside with your ball.",
+  t2_ask_pipe: "Over the project's pipe is quicker. You used to clear fences twice that high.",
+  t2_zoe_done: "Not bad for an old hero. And be back for dinner.",
+  t2_zoe_close: "Close enough. And be back for dinner.",
+  // TUT-MYSTERY: her one call as he leaves the yard with steps open (over her head, or at the screen's edge)
+  t2_call_kettle: "Twinsen! Take the kettle, Mira won't open the well on our word! And be back for dinner!",
+  t2_call_go: 'Twinsen! Show Mira those crystals. And be back for dinner!',
   t2_back_zoe: "Twinsen! Wait, I've news from next door.",
   t2_back_inv: "Twinsen! You haven't even looked at those crystals.",
   t2_back_tap: "Twinsen! The garden tap first. It's right here.",
@@ -92,11 +98,11 @@ Object.assign(STR.en, {
   t2_where_zoe: 'Zoé is in the yard, by the garden tap',
   t2_where_inv: 'Open your inventory: the crystals are already picked out',
   t2_where_tap: 'A brass tap on a stone foot, a bucket under it, a few steps from the door',
-  t2_where_barrels: "Two wooden barrels at the house's corner, beside the front door",
+  t2_where_barrels: "The near barrel at the house's corner. The pipe goes into the wall behind it",
   t2_where_pipe: 'The long copper pipe beside the lane, just past the yard',
   t2_hint_inv: 'The crystals, Twinsen. Open your things and look.',
   t2_hint_tap: 'The brass tap, right here by me. The one with the bucket.',
-  t2_hint_barrels: 'The two barrels by our door. Throw the ball at them.',
+  t2_hint_barrels: 'The barrel by the wall, Twinsen. A good knock with the ball.',
   t2_hint_pipe: 'The copper pipe along the lane. Take a run and jump.',
 
   // OPENING-TUT: Settings, Game: the tips on or off (index.html; main.js syncSettingsUI)

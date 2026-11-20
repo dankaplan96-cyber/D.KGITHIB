@@ -16,7 +16,8 @@ Object.assign(STR.en, {
 
   // the deep installation
   c3_deep_in: "The drill's engine room. And a maintenance drone on patrol.",
-  c3_diagram: 'A cooling diagram. Valves A and C feed the heat exchanger. B runs to a drain, crossed out in red.',
+  // (PUZZLES P-C: where the pipes run, not how to set them; the exchanger's sight glasses answer)
+  c3_diagram: 'A cooling diagram. Two feeds run into the heat exchanger, one from the floor and one from the catwalk. A third pipe runs out of it, to a drain.',
   c3_diagram_tw: '(The shutter is jammed by the heat. Cool the exchanger and it should open.)',
   c3_diagram_high: '(Valve C is up on the catwalk. There has to be a way up.)',
   c3_toast_valve_open: 'Valve {v} open',
@@ -36,7 +37,7 @@ Object.assign(STR.en, {
   c3_tw_sendell1: 'Sendell. Who is "her"? What is under the shell?',
   c3_sendell_2: 'A child of this world. She is not ready to wake, and the drill has cracked her shell.',
   c3_tw_sendell2: 'Then we stop the drill.',
-  c3_sendell_3: 'Stopping it will not close the cracks. I have held them alone for weeks. I cannot hold them much longer.',
+  c3_sendell_3: 'A stop only holds the cracks; it does not close them. I have held them alone for weeks. I cannot hold them much longer.',
   c3_tw_sendell3: 'Baldino says the bore can be turned around. Into a shield.',
   c3_sendell_4: 'Then turn it. I will hold on as long as I can.',
   c3_sendell_crystals: 'You carry six of her splinters. They sang to you, so she knows you. Go.',
@@ -54,16 +55,21 @@ Object.assign(STR.en, {
   c3_pylon_3: 'All three mills at full sail. Listen to that wind!',
   c3_toast_pylon: 'Pylon converted ({n}/3)',
   c3_exit_block: 'Not now. The pylons first.',
-  c3_vesk_over1: "Three pylons. Clever. You think a sketch beats ten years of my work?",
-  c3_tw_over: 'The cracks are closing, Vesk. Switch it to shield mode. It is over.',
-  c3_vesk_over2: 'Over? I built this machine. Guardian, full overload. Burn the pylons down if you have to.',
-  c3_vesk_over3: "If she wakes, better someone who understands her is at the console.",
+  // (VESK, REVIEW-TASKS task 3: the overload from the same belief as the list: the shield works, and he reads it; once the
+  //  field sets, the stations have a say in the bore, and he will not let a frightened town hold the line. The B-7 line
+  //  only where chapter 10 was played: he knew it worked and hid it)
+  c3_vesk_over1: 'Three pylons. My bore, hanging on a lighthouse, a water office and a windmill.',
+  c3_tw_over: 'And the cracks are closing. Look at your own needles.',
+  c3_vesk_over_read: 'I can read a needle.',
+  c3_vesk_over_b7: 'I can read a needle. I knew the B-7 worked too. I wrote it on the tag.',
+  c3_vesk_over2: 'Once that field sets, every hand up there gets a say in my bore. The first hard winter, one of them lets go, and the shell goes with it.',
+  c3_vesk_over3: 'Guardian, full overload! Burn those pylons out!',
   c3_ilka_hold: "Twinsen, the overload is pulling on every station! Dallan and I are opening the desert vent wide to bleed it off.",
   c3_pim_hold: "Sefa turned the dome right into the sun! The relay's burning like a lamp. We're holding!",
   c3_toast_coil: "Hit the glowing coil over Vesk's console with the ball",
   c3_ilka_bleed: "It's still building on your side! The bore has a bleed line to the vents: open its valve on the deck ring and we'll take the surge out.",
   c3_ilka_bled: "There it goes! The vent's roaring like a geyser. Keep that line open!",
-  c3_vesk_coil: "You're draining it into the sand? Then I'll take what's left myself!",
+  c3_vesk_coil: "Into the sand? Then what's left comes to this console. Somebody has to hold it.",
   c3_toast_bleed: "Hit the guardian as it climbs, or step out of its dive, then turn the red bleed valve on the deck ring",
   c3_toast_slam: "Get out of the red ring before it drops. Stuck in the deck, it can't stop you",
   c3_toast_overload: "The ball glances off it now. Hit it as it climbs, or while it's stuck in the deck",
@@ -97,9 +103,12 @@ Object.assign(STR.en, {
   c3_j_shaft: "I rode the lift from our station down to the bottom of the shaft. Vesk's lift was empty: he had gone on ahead.",
   c3_j_cool: "I worked the engine-room valves to cool the heat exchanger, and the shutter the heat had jammed let go.",
   c3_j_gallery: "The galleries are full of the well's crystals, grown as big as houses. I woke three pillars, and stones rose into a path.",
-  c3_j_sendell: "Sendell said a child of this world sleeps under the shell, not ready to wake, and the drill has cracked it. Stopping the drill won't close the cracks, so she told me to turn the bore into a shield while she holds on.",
+  c3_j_sendell: "Sendell said a child of this world sleeps under the shell, not ready to wake, and the drill has cracked it. A stop only holds the cracks, it won't close them, so she told me to turn the bore into a shield while she holds on.",
   c3_j_core: "At the core Vesk said the thirty percent was never a mistake: it was everyone he could carry, and he meant to finish the bore. He set a guardian on me.",
   c3_j_pylons: "I converted the three pylons around the core, powered from above by Zoé's signal, Mira's valves and Oku's mills.",
+  c3_j_over: "Vesk could read the needles: the cracks were closing. He overloaded the guardian anyway, to burn the pylons out before the field set. I opened the bore's bleed valve and broke the coil over his console, and it threw him against the rail.",
+  c3_j_help: 'I pulled him clear of the sparks. He told me to watch the second coolant loop.',
+  c3_j_left: "I left him where he fell, for the council's guards.",
   c3_j_vesk: "Vesk ordered a full overload, so I broke the coil over his console with the ball. I switched the bore to shield mode: the field held, Sendell said the child sleeps again, and the council's guards came down for Vesk.",
 
   // epilogue

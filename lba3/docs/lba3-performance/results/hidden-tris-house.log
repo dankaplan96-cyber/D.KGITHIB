@@ -1,0 +1,202 @@
+[95s] setup {"cam":"follow","dist":"medium","controls":"classic","state":"play","q":"medium","dpr":1,"canvas":[1280,720]}
+[95s] A: as shipped, batches on
+[164s] A done 20 views
+[164s] B: batches off
+[164s] batch meshes left 0
+PASS the camera stands where it stood with the batches on (same placement, within 5 cm) []
+[166s] ID: building the soup
+[166s] moving (not judged) {"list":[{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":4194},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":5044},{"name":"Mesh","site":"polyCharacter@characters.js","tris":108},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"SkinnedMesh","site":"addSilhouette@characters.js","tris":5044}],"perView":14482}
+[166s] soup {"nan":0,"tris":212739,"objs":146,"chunks":["1|0|0","0|2|0","1|2|0","0|0|0","0|0|-2,-2"],"bmEntries":0}
+[195s] id pass 0 spawn@0 {"newSeen":36199}
+[201s] id pass 8 b@0 {"newSeen":14525}
+[206s] id pass 16 d@0 {"newSeen":0}
+[207s] analysis
+[208s] totals {"tris":212739,"seen":52964,"batched":0,"dbl":303,"dblBackSeen":94,"dblSeen":136,"byClass":[0,45980,3998,51544,39267,15622,3364]}
+[208s] trim {"mode":"geo","geos":53,"removed":49976,"skipped":0,"total":211571,"bmDegenerate":0}
+[208s] C: cut geo batches on
+[239s] D: pictures geo
+[286s] cut geo {"C":{"calls":55,"tris":176407,"shCalls":1.6,"shTris":29454,"ms":772.3},"diff":{"maxShare":0.0002907986111111111,"avgShare":0.00015690104166666663,"maxPx":268}}
+[286s] trim {"mode":"all","geos":95,"removed":159042,"skipped":0,"total":211571,"bmDegenerate":0}
+[286s] C: cut all batches on
+[323s] D: pictures all
+[369s] cut all {"C":{"calls":53.9,"tris":67303,"shCalls":1.6,"shTris":29454,"ms":859.9},"diff":{"maxShare":0.0035188802083333335,"avgShare":0.0028852539062500003,"maxPx":3243}}
+[369s] E: originals, batches on
+[421s] summary {
+ "A": {
+  "calls": 55.9,
+  "tris": 226401,
+  "shCalls": 1.9,
+  "shTris": 39892,
+  "ms": 1109.5
+ },
+ "B": {
+  "calls": 111.5,
+  "tris": 214696,
+  "shCalls": 1.8,
+  "shTris": 31315,
+  "ms": null
+ },
+ "E": {
+  "calls": 55,
+  "tris": 225530,
+  "shCalls": 1.6,
+  "shTris": 29454,
+  "ms": 1121.4
+ },
+ "cuts": {
+  "geo": {
+   "C": {
+    "calls": 55,
+    "tris": 176407,
+    "shCalls": 1.6,
+    "shTris": 29454,
+    "ms": 772.3
+   },
+   "diff": {
+    "maxShare": 0.0002907986111111111,
+    "avgShare": 0.00015690104166666663,
+    "maxPx": 268
+   },
+   "trim": {
+    "mode": "geo",
+    "geos": 53,
+    "removed": 49976,
+    "skipped": 0,
+    "total": 211571,
+    "bmDegenerate": 0
+   }
+  },
+  "all": {
+   "C": {
+    "calls": 53.9,
+    "tris": 67303,
+    "shCalls": 1.6,
+    "shTris": 29454,
+    "ms": 859.9
+   },
+   "diff": {
+    "maxShare": 0.0035188802083333335,
+    "avgShare": 0.0028852539062500003,
+    "maxPx": 3243
+   },
+   "trim": {
+    "mode": "all",
+    "geos": 95,
+    "removed": 159042,
+    "skipped": 0,
+    "total": 211571,
+    "bmDegenerate": 0
+   }
+  }
+ },
+ "perView": {
+  "tris": 200214,
+  "hid": 148208,
+  "share": 0.7401,
+  "draws": 104.6,
+  "hidDraws": 11.2,
+  "dbl": 303,
+  "dblBackInF": 140,
+  "byClass": [
+   [
+    "buried",
+    0
+   ],
+   [
+    "under/inside a solid",
+    35513
+   ],
+   [
+    "bottom on the ground",
+    3990
+   ],
+   [
+    "never front-facing",
+    50949
+   ],
+   [
+    "outside every view",
+    39005
+   ],
+   [
+    "tiny",
+    15397
+   ],
+   [
+    "occluded",
+    3354
+   ]
+  ],
+  "pxAll": 2464344,
+  "pxByClass": [
+   [
+    "buried",
+    0
+   ],
+   [
+    "under/inside a solid",
+    65934
+   ],
+   [
+    "bottom on the ground",
+    2
+   ],
+   [
+    "never front-facing",
+    0
+   ],
+   [
+    "outside every view",
+    0
+   ],
+   [
+    "tiny",
+    2896
+   ],
+   [
+    "occluded",
+    224821
+   ]
+  ]
+ }
+}
+[421s] top sources
+   kit:custom RoomBuilder.shell@interiors.js hidden/view 36846 of 44974 [0,2253,724,8403,23675,1413,404]
+   kit:bed hidden/view 20820 of 29585 [0,12792,20,2852,4562,447,147]
+   kit:chair hidden/view 12983 of 20006 [0,0,72,7778,3312,1683,138]
+   kit:bookcase hidden/view 11610 of 11940 [0,19501,144,225,1894,148,37]
+   kit:pottedPlant hidden/view 10206 of 13596 [0,0,96,6606,0,2902,602]
+   mesh:[MeshStandardMaterial] hidden/view 9445 of 15128 [0,1173,227,5705,261,1637,705]
+   kit:dresser hidden/view 4498 of 7218 [0,1718,194,1734,0,656,196]
+   kit:desk hidden/view 3943 of 4699 [0,266,244,1084,1994,308,47]
+   kit:chest hidden/view 3760 of 4424 [0,377,218,1210,909,852,194]
+   kit:crate hidden/view 3392 of 4103 [0,95,344,1657,0,1114,182]
+   kit:plushDino hidden/view 3132 of 5029 [0,0,528,1626,0,978,0]
+   kit:coatStand hidden/view 2835 of 3816 [0,1994,6,714,0,106,15]
+   kit:armchair hidden/view 2334 of 3177 [0,1298,48,542,394,36,16]
+   kit:stove hidden/view 2260 of 3756 [0,628,22,1365,0,194,51]
+   kit:nightstand hidden/view 1866 of 2850 [0,328,68,1135,19,286,30]
+   kit:workbench hidden/view 1724 of 2308 [0,1211,0,384,0,113,16]
+   kit:custom buildHouse@interiors.js hidden/view 1564 of 2375 [0,247,2,957,0,324,34]
+   kit:custom buildHouseWings@interiors.js hidden/view 1366 of 2228 [0,233,34,821,78,171,29]
+   kit:sideTable hidden/view 1348 of 2272 [0,907,0,239,151,45,6]
+   kit:frame hidden/view 1288 of 2002 [0,0,0,1000,0,267,21]
+   kit:toyBlocks hidden/view 1278 of 1680 [0,0,216,624,0,288,150]
+   kit:table hidden/view 1213 of 1604 [0,0,0,943,0,200,70]
+   kit:wallShelf hidden/view 1022 of 1274 [0,0,0,549,250,216,42]
+   kit:custom dressHomeLife@homelife.js hidden/view 963 of 1105 [0,0,0,150,808,12,1]
+   kit:wardrobe hidden/view 824 of 1288 [0,474,20,290,0,29,11]
+   kit:custom in wardrobe wardrobe@props.js hidden/view 601 of 1012 [0,0,36,466,0,77,22]
+   kit:toyBoat hidden/view 582 of 863 [0,0,115,368,0,98,1]
+   kit:rug hidden/view 560 of 593 [0,3,534,13,0,10,0]
+   kit:floorLamp hidden/view 544 of 544 [0,480,0,0,448,0,0]
+   kit:deskLamp hidden/view 513 of 842 [0,0,0,368,0,150,0]
+PASS cut "geo": the pictures as they were (≤ 1 % of pixels differ in every view; slivers under the id pass's samples) {"maxShare":0.0002907986111111111,"avgShare":0.00015690104166666663,"maxPx":268}
+PASS cut "all": the pictures as they were (≤ 1 % of pixels differ in every view; slivers under the id pass's samples) {"maxShare":0.0035188802083333335,"avgShare":0.0028852539062500003,"maxPx":3243}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 3 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     2 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

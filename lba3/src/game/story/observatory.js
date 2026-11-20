@@ -5,9 +5,11 @@
 // (the ball breaks the ice) and the fourth mirror carries that beam (CHAPTER-BALANCE, flag c7_ice). Sendell speaks plainly for
 // the first time: she has been holding the shell with her own light and is fading — she cannot do it alone.
 // The dome's big mirror throws the light onto the glacier and melts the ice over the vent; a heavy project
-// drone guards it. The old stone seal is carved like the dig's: of five discs round its rim the three warm ones steam,
-// and the ball wakes them (CHAPTER-BALANCE: chapter 4's warm seals applied anew, flags c7_disc0/2/3). With the drone
-// down and the three awake, the seal turns and the vent breathes. Arthur calls: the
+// drone guards it. The old stone seal is carved like the dig's, five discs round its rim over the vent's channels
+// (PUZZLES P-B, which replaced CHAPTER-BALANCE's "wake the three warm discs": chapter 4's decision again): three steam,
+// breathing already; two are choked under ice. The ice breaks to the ball or a blow (flags c7_free1, c7_free4); a ball
+// on a breathing one only rings. With the drone down and all five breathing, the seal turns and the vent breathes.
+// Arthur calls: the
 // project is evacuating Citadel by its list. Hesk has the glider ready on the monastery slope. → chapter 8.
 import { ChapterBase } from './base.js';
 import '../text/ch7.js';
@@ -106,12 +108,13 @@ export class Observatory extends ChapterBase {
         this.chain([['narrator', 'c7_scope'], ['keeper', 'c7_keeper_5']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c7vent':
-        // (the seal turns only with its three warm discs awake)
-        if (this.discsLit() < 3) { f.c7_sealSeen = true; this.chain([['hero', this.discsLit() ? 'c7_seal_more' : 'c7_seal_stuck']], () => g.updateObjective()); return true; }
+        // (PUZZLES P-B: the seal turns only with all five of its channels breathing)
+        if (this.breathing() < 5) { f.c7_sealSeen = true; this.chain([['hero', this.breathing() > 3 ? 'c7_seal_more' : 'c7_seal_stuck']], () => g.updateObjective()); return true; }
         h.act('use', 1.0, () => {
           f.c7_vent = true; this.M.vent.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
           this.story.refreshCast({ walk: true });
-          this.chain([['hero', 'c7_vent_seal'], ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['radio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
+          // (P81: the seal described once: a player who has already looked at it hears only the narration of its turning)
+          this.chain([...(f.c7_sealSeen ? [] : [['hero', 'c7_vent_seal']]), ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['heskradio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
         }, 0.6);
         return true;
     }
@@ -127,17 +130,45 @@ export class Observatory extends ChapterBase {
     if (res.lit) { this.lightCrystal(); return; }
     this.chain([['narrator', 'c7_ice']], () => { g.updateObjective(); g.save(false); });
   }
-  discsLit() { return (this.M?.ventDiscs || []).filter((d) => d.warm && d.lit).length; }
-  // a ball on one of the seal's discs (hamalayi.js R.ventDiscs): a warm one wakes, a cold one only rings
+  // PUZZLES P-B: how many of the seal's five channels breathe (three warm ones always; a choked one once its ice is off)
+  breathing() { return (this.M?.ventDiscs || []).filter((d) => d.breathing).length; }
+  // the ice over a choked disc broken (its ball target, hamalayi.js R.ventDiscs, or a blow: meleeHit): it breathes
   hitDisc(i) {
-    const g = this.game, f = this.f, D = this.M?.ventDiscs?.[i];
-    if (!this.isCur() || !D || D.lit || f.c7_vent) return;
-    if (!D.warm) { g.audio.play('clang'); g.hud.toast('c7_toast_cold'); return; }
-    D.setLit(true); f['c7_disc' + i] = true;
-    g.audio.play('shard'); g.particles.burst(D.x, D.y + 0.3, D.z, '#ffb060', 16, 2.5);
-    const n = this.discsLit();
-    if (n >= 3) { g.camRig.shake(0.2); this.chain([['hero', 'c7_seal_free']], () => { g.updateObjective(); g.save(false); }); }
-    else { g.hud.toast('c7_toast_disc', { n }); g.save(false); }
+    const g = this.game, f = this.f, M = this.M, D = M?.ventDiscs?.[i];
+    if (!this.isCur() || !D || D.breathing || f.c7_vent || !M.vent.melted) return;
+    D.setFree(true); f['c7_free' + i] = true; this.discAt = g.time;
+    g.audio.play('shard'); g.particles.burst(D.x, D.y + 0.4, D.z, '#e8f6ff', 18, 3); M.ventPuff?.(i, 3);
+    const n = this.breathing();
+    if (n >= 5) { g.camRig.shake(0.25); g.audio.play('rumble'); this.chain([['hero', 'c7_seal_free']], () => { g.updateObjective(); g.save(false); }); }
+    else { g.hud.toast('c7_toast_free', { n }); g.updateObjective(); g.save(false); }
+  }
+  // a ball on a breathing disc (chapter 4's rule: "wake the steaming ones"): it rings, puffs, and he says so once
+  ballHit(p) {
+    const g = this.game, f = this.f, M = this.M;
+    if (!this.isCur() || this.room() !== 'hamalayi' || !M?.ventDiscs || !M.vent.melted || M.vent.open || f.c7_vent) return false;
+    const D = M.ventDiscs.find((d) => d.warm && Math.hypot(p.x - d.x, p.y - d.y, p.z - d.z) < 0.8);
+    if (!D) return false;
+    g.audio.play('clang'); M.ventPuff?.(D.i, 1.2); this.discAt = g.time;
+    if (!this.warmSaid) { this.warmSaid = true; this.chain([['hero', 'c7_warm_hit']]); }
+    else g.hud.toast('c7_toast_warm');
+    return true;
+  }
+  // (the breathing ones are things a ball thrown at them curves to, so a throw at one gets its answer: the ring)
+  ballTargets() {
+    const f = this.f, M = this.M;
+    if (!this.isCur() || this.room() !== 'hamalayi' || !M?.ventDiscs || !M.vent.melted || M.vent.open || f.c7_vent) return [];
+    return M.ventDiscs.filter((d) => d.warm).map((d) => ({ x: d.x, y: d.y, z: d.z }));
+  }
+  // a blow (fist, kick, sword) on a choked disc's ice breaks it too: it is ice on the ground
+  meleeHit(o) {
+    const M = this.M;
+    if (!this.isCur() || this.room() !== 'hamalayi' || !M?.ventDiscs || !M.vent.melted || M.vent.open || this.f.c7_vent) return false;
+    for (const D of M.ventDiscs) {
+      if (D.breathing || o.hitSet.has(D) || !o.inArc(D.x, D.z, 0.7)) continue;
+      o.hitSet.add(D); this.game.impact(D.x, D.y + 0.2, D.z, 'crystal', 'break'); this.hitDisc(D.i);
+      return true;
+    }
+    return false;
   }
   lightCrystal(silent = false) {
     const g = this.game, f = this.f;
@@ -173,8 +204,9 @@ export class Observatory extends ChapterBase {
         if (!f.c7_keeper) return c([['keeper', 'c7_keeper_1'], ['hero', 'c7_tw_k1'], ['keeper', 'c7_keeper_2'], ['keeper', 'c7_keeper_3'], ['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun'], ['hero', 'c7_mirror_hint']], () => { f.c7_keeper = true; g.updateObjective(); g.save(false); });
         if (f.c7_sendell && !f.c7_scope) return c([['keeper', 'c7_keeper_4']]);
         if (!f.c7_lit) return c([['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun']]);
-        return c([['keeper', f.c7_scope ? 'c7_keeper_5' : 'c7_keeper_3']]);
-      case 'yorna': return c([['yorna', 'c7_yorna_1']]);
+        // (P81: after the vent his "Hurry… something flying down there" was stale: the steam, and where Hesk waits)
+        return c([['keeper', f.c7_vent ? 'c7_keeper_after' : f.c7_scope ? 'c7_keeper_5' : 'c7_keeper_3']]);
+      case 'yorna': return c([['yorna', f.c7_vent ? 'c7_yorna_after' : 'c7_yorna_1']]);
       case 'hesk': if (f.c7_vent) { this.leave(); return true; } return false;
     }
     return false;
@@ -218,6 +250,10 @@ export class Observatory extends ChapterBase {
       f.c7_droneSeen = true; this.chain([['hero', 'c7_drone_in']]);
     }
     if (f.c7_vent && !f.c7_done && g.state === 'play' && this.room() === 'hamalayi' && Math.hypot(h.pos.x - M.monastery.gate.x, h.pos.z - M.monastery.gate.z) < 4) this.leave();
+    // (PUZZLES P-B: the seal tried, a while with nothing struck: first the two that don't steam, later the ice; HINTS-LESS)
+    const stuck = this.room() === 'hamalayi' && !!f.c7_sealSeen && !f.c7_vent && this.breathing() < 5 && g.time - (this.discAt ?? -1e9) > 20;
+    this.nudge(dt, 'c7_steam', stuck, 45, 'c7_nudge_steam');
+    this.nudge(dt, 'c7_ice', stuck, 90, 'c7_nudge_ice');
   }
   applyFlags() {
     const f = this.f, RG = this.game.regions;
@@ -237,8 +273,10 @@ export class Observatory extends ChapterBase {
     RG.whenBuilt('hamalayi', (M) => {
       if (f.c7_scope) M.vent.melt(true);
       if (f.c7_vent) M.vent.setOpen(true);
-      // (a save from before the discs, the vent open: all three awake)
-      for (const D of M.ventDiscs || []) D.setLit(D.warm && !!(f['c7_disc' + D.i] || f.c7_vent));
+      // (PUZZLES P-B: a choked disc freed stays free; the vent open: all free. A save from the build before, whose three
+      //  warm discs were all woken, had the seal ready to turn: it comes back so, both caps gone)
+      const oldReady = !!(f.c7_disc0 && f.c7_disc2 && f.c7_disc3);
+      for (const D of M.ventDiscs || []) if (!D.warm) D.setFree(!!(f['c7_free' + D.i] || f.c7_vent || oldReady));
     });
   }
   // GUIDE: the dome, the vent, the monastery's gate on the Hamalayi's map (base.js star)
@@ -253,7 +291,7 @@ export class Observatory extends ChapterBase {
     const f = this.f, r = this.room();
     if (!f.c7_started) return '';
     if (f.c7_vent) return this.goal('c7_obj_home');
-    if (f.c7_droneDown && f.c7_sealSeen && this.discsLit() < 3) return this.goal('c7_obj_discs', { n: this.discsLit() });
+    if (f.c7_droneDown && f.c7_sealSeen && this.breathing() < 5) return this.goal('c7_obj_free', { n: this.breathing() });
     if (f.c7_droneDown) return this.goal('c7_obj_vent');
     if (f.c7_scope) return this.goal('c7_obj_drone');
     { const po = this.ps.objective7(); if (po) return po; }   // (CAMPAIGN-5: the fourth setting)

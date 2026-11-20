@@ -734,7 +734,7 @@ export function* buildGardensSteps(scene, physics) {
   yield;
 
   // ================================================================ the rooms (gardenrooms.js)
-  const GR = buildGardenRooms(scene, physics), rooms = GR.rooms, tunnelCtl = GR.tunnel, kilnCtl = GR.kiln;
+  const GR = buildGardenRooms(scene, physics), rooms = GR.rooms, tunnelCtl = GR.tunnel, kilnCtl = GR.kiln, houseCtl = GR.house;
   yield;
 
   // ================================================================ the region's room object
@@ -818,7 +818,7 @@ export function* buildGardensSteps(scene, physics) {
     spills.forEach((m, i) => { m.visible = S.spill[i] > 0; });
   };
   const H = {
-    rooms: ['bl_gardens', 'bl_tunnel', 'bl_kiln'],
+    rooms: ['bl_gardens', 'bl_tunnel', 'bl_kiln', 'bl_house'], house: houseCtl,   // (EXP-3: the House of Balances' hall, gardenrooms.js)
     spawns, exits,
     doors: { ...doorsOut, tunnelIn: { ...rooms.bl_tunnel.exits[0] }, kilnIn: { ...rooms.bl_kiln.exits[0] } },
     stands: {
@@ -871,7 +871,7 @@ export function* buildGardensSteps(scene, physics) {
     plan: { UP, MID, LOW, BAS, BZ0, BZ1, DYKES, NP, SP, STAIRS, PLAZA, HOUSE, G1C, G3C, LEAT, AQ, EAST, KILN, WHEEL, PIT, CHIM, RIG, RB, RIG_FLOOR, RIG_FULL, FRAME, TANK, GATE_W, GATE2, GATE3, RAFT_DX, RAFT_Z, RAFT, WALK, GANG, HATCH, GAUGE: GAUGE.map((g) => ({ x: g.x, z: g.z })) },
   };
   R.gardens = H; R.npcSpots = H.stands; BALLASTRA.gardens = H;
-  for (const id of ['bl_tunnel', 'bl_kiln']) rooms[id].gardens = H;
+  for (const id of ['bl_tunnel', 'bl_kiln', 'bl_house']) rooms[id].gardens = H;
 
   // ---- per frame
   const _v = new THREE.Vector3();

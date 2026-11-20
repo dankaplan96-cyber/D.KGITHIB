@@ -140,7 +140,12 @@ export class Steam extends ChapterBase {
           g.audio.play(v.open ? 'valve' : 'valveShut');
           g.hud.toast('c5_toast_valve', { v: v.id, state: t5(v.open ? 'c5_open' : 'c5_shut') });
           this.updateGauges();
-          if (v.id === 2 && v.open) { g.audio.play('deny'); this.chain([['hero', 'c5_valve_aquifer']]); return; }
+          this.turnedAt = g.time;   // (PUZZLES P-A: a player trying things is never nudged)
+          // (PUZZLES P-A: what the needles show, said where it is news. The aquifer only reacts with steam in the manifold:
+          //  2 opened with 1 shut does nothing yet; 1 opened onto an open 2 boils it)
+          const st = f.c5_valves, flow = !!st[1];
+          if (flow && st[2] && (v.id === 2 || v.id === 1) && v.open) { g.audio.play('deny'); this.chain([['hero', 'c5_valve_aquifer']]); return; }
+          if (v.id === 1 && v.open && (!st[3] || !st[4]) && !f.c5_press) { f.c5_press = true; this.chain([['hero', 'c5_press']]); }
           this.checkRouting();
         }, 0.45);
         return true;
@@ -153,15 +158,21 @@ export class Steam extends ChapterBase {
     }
     return false;
   }
+  // PUZZLES P-A: each gauge over its own branch (2: the aquifer, 3 and 4: the condensers). With steam in at 1, a shut
+  // condenser branch has nowhere to send it: its needle in the red, fluttering, its wheel shuddering and puffing; an open
+  // one settles in the green. The aquifer's needle stays low unless 2 is open (then it is boiling: red).
   updateGauges() {
     const st = this.f.c5_valves || {}, A = this.A;
-    const flow = st[1] ? 1 : 0;
-    A.gauges.set([flow * (st[3] ? 0.35 : 0.9), flow * (st[4] ? 0.35 : 0.9), flow * (st[2] ? 1.0 : 0.15)]);
+    if (!A) return;
+    const flow = st[1] ? 1 : 0, routed = !!this.f.c5_routed;
+    const aq = flow * (st[2] ? 1.0 : 0.1), c3 = flow * (st[3] ? 0.35 : 0.95), c4 = flow * (st[4] ? 0.35 : 0.95);
+    A.gauges.set([aq, c3, c4], [aq > 0.5, c3 > 0.5, c4 > 0.5]);
+    for (const v of A.valves) v.setShaking?.(!routed && !!flow && (v.id === 2 ? !!st[2] : (v.id === 3 || v.id === 4) && !st[v.id]));
   }
   checkRouting() {
     const g = this.game, f = this.f, st = f.c5_valves || {};
     if (f.c5_routed || !Object.entries(GOOD).every(([k, want]) => !!st[k] === want)) return;
-    f.c5_routed = true;
+    f.c5_routed = true; this.updateGauges();   // (every needle still in the green, nothing shaking)
     this.A.hangarDoor.open();
     for (const c of this.Bh.condensers) c.setSteam(0.4);
     g.audio.play('rumble'); g.camRig.shake(0.2);
@@ -242,7 +253,9 @@ export class Steam extends ChapterBase {
         return c([['tarra', f.c5_vent ? 'c4_tarra_idle' : 'c5_tarra_1']]);
       case 'ilka':
         if (f.c5_vent && !f.c5_radio) { this.radio(); return true; }
-        return c([['ilka', f.c5_routed ? 'c5_ilka_2' : 'c5_ilka_1']]);
+        // (P81: asked again, the step in hand — the condensers' plan until the steam is routed, then the relief valve; her
+        //  danger line, c5_ilka_1, came after the routing before and is said in the chapter's opening)
+        return c([['ilka', f.c5_vent ? 'c5_ilka_after' : f.c5_routed ? 'c5_ilka_relief' : 'c5_ilka_2']]);
       case 'hesk':
         if (f.c5_radio && !f.c5_glider) return c([['hesk', 'c5_hesk_k1'], ['hesk', 'c5_hesk_k2']], () => { f.c5_glider = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false); });
         if (f.c5_glider) return c([['hesk', 'c5_hesk_k2']]);
@@ -262,6 +275,12 @@ export class Steam extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (this.isCur()) this.test.update(dt);
+    // (PUZZLES P-A: stuck in the hall with nothing turned for a while: first the needles, later the route; HINTS-LESS)
+    if (this.isCur()) {
+      const stuck = this.room() === 'condA' && !f.c5_routed && g.time - (this.turnedAt ?? -1e9) > 20;
+      this.nudge(dt, 'c5_gauges', stuck, 45, 'c5_nudge_gauges');
+      this.nudge(dt, 'c5_route', stuck && !!f.c5_diagram, 100, 'c5_nudge_route');
+    }
     if (!this.isCur() || !D) return;
     // the geysers after the relief valve opens: get clear of the post
     if (f.c5_relief && !f.c5_vent && g.state === 'play') {
@@ -352,7 +371,7 @@ export class Steam extends ChapterBase {
     });
     RG.whenBuilt('condA', (A) => {   // (the condenser's two halls are built together)
       for (const v of A.valves) { const o = !!f.c5_valves?.[v.id]; v.setOpen(o); }
-      this.updateGauges();
+      this.updateGauges();   // (and the shaking of a shut branch, PUZZLES P-A)
       if (f.c5_routed) { A.hangarDoor.open(); for (const c of this.Bh.condensers) c.setSteam(0.4); }
       if (f.c5_hatch) this.openHatch(true);
       if (f.c5_vent) for (const c of this.Bh?.condensers || []) c.setSteam(1);

@@ -27,6 +27,7 @@ import { DepotWatch } from './depotwatch.js';
 import { PumpLine } from './pumpline.js';
 import { TERMINAL } from '../terminal.js';
 import '../text/ch1.js';
+const SHIP_HULL = 3.0;   // (the ship's hull radius on the spaceport's pad, spaceport.js hullAt)
 
 const V = POI.village;
 
@@ -186,7 +187,7 @@ export class Chapter1 extends ChapterBase {
       // the project's ship on the spaceport's pad, once Doran has its start code (same spot and reach as the
       // pad's grounded notice: the chapter's interaction wins the tie, story/islands.js)
       const sp = W.spaceport;
-      if (sp && f.c1_ship) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c1ship', label: 'p_board' });
+      if (sp && f.c1_ship) consider(dist(sp.pad.x, sp.pad.z) - SHIP_HULL, 5.0 - SHIP_HULL, { kind: 'c1ship', label: 'p_board' });   // (FULL-TEST: ranked by the distance to the hull, not its centre — Pema at the hose no longer takes the prompt from the ship he walks up to)
     } else if (g.room.id === 'projoffice') {
       for (const s of g.room.searches || []) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'locker', spot: s, label: 'p_search' });
     } else if (g.room.id === 'office') {
@@ -288,7 +289,7 @@ export class Chapter1 extends ChapterBase {
         if (!f.c1_home) return c([['zoe', 'c1_zoe_home1'], ['hero', 'c1_tw_home1'], ['zoe', 'c1_zoe_home2a'], ['arthur', 'c1_ar_home1'], ['zoe', 'c1_zoe_home3'], ['arthur', 'c1_ar_home2']], () => { f.c1_home = true; g.updateObjective(); g.save(false); });
         return c([['zoe', f.c1_water ? (this.line.on ? 'c1_zoe_water2' : 'c1_zoe_water') : 'c1_zoe_wait']]);   // (DIALOGUE-2: after the pump room, not the well's first gurgle)
       case 'arthur':
-        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['radio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['radio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['radio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ...(f.dx_om_tuned ? [['arthur', 'om_ar_radio']] : []), ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
+        if (f.c1_veskGone && !f.c1_radio) return c([['arthur', 'c1_ar_radio1'], ['balradio', 'c1_baldino_1'], ['hero', 'c1_tw_radio'], ['balradio', 'c1_baldino_2'], ...(strip ? [['hero', 'ct_tw_radio'], ['balradio', 'ct_bal_radio']] : []), ['arthur', 'c1_ar_radio2'], ...(f.dx_om_tuned ? [['arthur', 'om_ar_radio']] : []), ['zoe', 'c1_zoe_radio']], () => { f.c1_radio = true; g.updateObjective(); g.save(false); });
         return c([['arthur', f.c1_radio ? 'c1_ar_after' : 'c1_ar_idle']]);
       case 'vesk':
         if (!f.c1_task) {
@@ -313,7 +314,8 @@ export class Chapter1 extends ChapterBase {
         // (STAGING-1: he sets off up the quay toward the town and the spaceport, and is at the ship once out of sight)
         // (SPACEPORT-3, P62: and sends Twinsen ahead of him on an errand that the flight needs: his own flight form, to
         //  sign at the terminal's ticket counter; the gate lets nobody out to the pad without it: story/islands.js)
-        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2'], ['doran', 'c1_doran_form']], () => {
+        // (Pass 3: Doran tells the ships apart before Twinsen asks about "it", so his answer answers the question)
+        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['doran', 'c1_doran_ships'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2'], ['doran', 'c1_doran_form']], () => {
           f.c1_ship = true; f.c1_errand = true;
           const ps = g.world.pierStart;
           this.walkOff('doran', [{ x: ps.x + 5.5, z: ps.z + 2.6 }, { x: -95.8, z: 37.4 }, { x: -82.0, z: 36.0 }, { x: -67.9, z: 29.6 }], 1.15);

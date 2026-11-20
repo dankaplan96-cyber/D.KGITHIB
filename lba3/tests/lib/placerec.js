@@ -11,6 +11,7 @@
     R.next = null;
     let parent = null; for (let i = R.stack.length - 1; i >= 0; i--) if (R.stack[i].kit === kit) { parent = R.stack[i]; break; }
     const f = { kit, M: kit.top.clone(), inv: null, src: src.slice(0, 260), box: [1e9, 1e9, 1e9, -1e9, -1e9, -1e9], n: 0, parent, i: R.frames.length, parts: [] };
+    if (R.kitSites && R.callers) f.site = R.site(R.callers());   // (HIDDEN-TRIS: where the piece was placed, for a piece drawn by an inline arrow)
     R.stack.push(f); R.frames.push(f);
     return f;
   };

@@ -9,6 +9,8 @@ Object.assign(STR.en, {
   c5_narr: 'Later, in Kesh.',
   c5_ilka_1: "The vent comes up under the test bore. If we open it fast, the steam goes down into the aquifer and boils the oasis.",
   c5_ilka_2: 'FunFrock built condensers here to cool his own steam engines. If they still work, we can send the steam through them and let it out slowly.',
+  c5_ilka_relief: "The condensers are ready. Now the relief valve at the post, slowly. Dallan's on the gate, and he has read my reports, whatever he says.",   // (P81)
+  c5_ilka_after: "The vent is breathing and the oasis is cold. I'm writing it all down before somebody tells me it never happened.",   // (P81)
   c5_hesk_1: "The old hall under the dunes, east of the camp road. Half buried. My grandfather worked there. He hated it.",
   c5_tarra_1: 'Then open it. Kesh has been thirsty long enough.',
   c5_dallan_1: 'Attention, Kesh. By order of the Joint Project, the ferry at the pier is requisitioned for the evacuation.',
@@ -31,7 +33,11 @@ Object.assign(STR.en, {
 
   // the valve hall
   c5_hall_in: 'FunFrock\'s condenser hall. And his old security drones are still awake.',
-  c5_diagram: 'A diagram: 1 from the bore, open. 2 is a bypass to the aquifer, shut. 3 and 4 feed the condensers, open.',
+  // (PUZZLES P-A: where each branch goes, not how to set it: the needles over the valves answer)
+  c5_diagram: "The manifold's diagram. Steam comes in from the bore at 1. Branch 2 goes down to the aquifer; 3 and 4 go up to the condensers.",
+  c5_press: "The steam's in, and the shut branches are shaking. It has nowhere to go.",
+  c5_nudge_gauges: 'The needle over each valve shows what its branch is doing.',
+  c5_nudge_route: 'In from the bore, up to the condensers. Never down to the aquifer.',
   c5_toast_valve: 'Valve {v}: {state}',
   c5_open: 'open', c5_shut: 'shut',
   c5_valve_aquifer: 'The aquifer gauge jumps into the red. Not that one.',
@@ -55,7 +61,7 @@ Object.assign(STR.en, {
   c5_tarra_2: 'You gave us water twice. Take this. It is for luck, and you will need it.',
   c5_toast_clover: 'Clover leaf',
   c5_ilka_radio: "Twinsen! Zoé is on my radio. I've told her about the carving.",
-  c5_zoe_radio1: "Twinsen? Ilka's map matches Gilbert's old charts. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
+  c5_zoe_radio1: "Twinsen? Ilka's map matches Gilbert's old charts, from his FunFrock days. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
   c5_zoe_radio2: "The ice up there is melting from below. The villages are cut off. Nobody's on the project's list.",
   c5_tw_radio: "Then that's where I'm going. How's Arthur?",
   c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",

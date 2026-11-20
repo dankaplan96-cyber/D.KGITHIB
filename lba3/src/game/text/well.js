@@ -6,7 +6,7 @@ import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing 
 
 Object.assign(STR.en, {
   // ---- Zoé, at the neighbours' door: their kettle
-  pr_zoe_kettle: ['Same next door. Their tap ran warm, then stopped.', 'And look at their kettle. Furred with these since breakfast.'],
+  pr_zoe_kettle: ['Same next door. Their tap ran warm, knocked three times, and stopped.', 'And look at their kettle. Furred with these since breakfast.'],
   pr_tw_kettle: '(Tiny crystals. Still warm.)',
   pr_zoe_kettle2: "Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it.",
   pr_zoe_kettle2b: "Then show her these. Pipes don't grow crystals.",

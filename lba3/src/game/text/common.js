@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   // (EXP-PLAN §2.1: the expanded campaign's four chapters between the council and the network)
-  chapter_throttle: 'Borrowed Time', chapter_survey: 'Under the Well', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
+  chapter_throttle: 'Borrowed Time', chapter_survey: 'The Cradles', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
   asy_register1: '(The asylum\'s old register. The workers keep it on the shelf like a relic. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',
@@ -115,6 +115,26 @@ Object.assign(STR.en, {
   it_evacplan: 'Evacuation Plan', itd_evacplan: "Vesk's plan. It covers only 30% of the people.",
   pr_j_well: 'The well in the square has run dry.', pr_j_key: 'Mira gave me the key to the well lid.', pr_j_rope: 'Xil gave me a rope ladder.',
   pr_j_cave: 'At the bottom of the well: warm water, crystals and crystal mites.', pr_j_sendell: 'Sendell spoke to me: "Someone has reached her."',
+  // P83 / S-2: "What we know", one line at the top of each chapter's journal page: the mechanism that chapter showed,
+  // once it has shown it (story/index.js KNOW). No spoilers past the chapter.
+  know_well: 'What we know: something deep under Citadel is warming the water, and humming crystals grow where it is warm. Sendell says someone has reached "her".',
+  know_project: 'What we know: the project\'s bore took our water to get at the planet\'s heat, and the bypass valves gave it back hot. Its sensors show a "shell" under the bore, and its ships carry three people in ten.',
+  know_zeelich: "What we know: Vesk's bore is drilling into a shell under Twinsun; backed out halfway it cracks it, run backwards it patches it. He steers it from his platform on Zeelich, behind a shield the three mills feed, and Baldino's override key opens it once they are braked.",
+  know_zeelich_done: "What we know: Vesk's bore is drilling into a shell under Twinsun; backed out halfway it cracks it, run backwards it patches it. The shaft at our station is sealed from below, and only a code sent by every project station at once opens it.",
+  know_dig: 'What we know: the shell breathes out its heat through five vents. The project is closing them by drawing all the heat to Citadel; open them, and the shell can breathe.',
+  know_steam: "What we know: the desert vent comes up under Dallan's capped test bore. Opened fast, its steam would boil the oasis, so FunFrock's old condensers take it instead.",
+  know_pass: 'What we know: the same heat reaches the Hamalayi, and the ice is melting from below. The second vent is under it, near the old Observatory.',
+  know_observatory: 'What we know: Sendell has been holding the shell together alone, with her own light, and she is fading. Each vent we open eases the quakes for a while.',
+  know_evacuation: "What we know: Vesk is sending every watt to the bore: full depth in three days. Only Zeelich's council can overrule him, and Zoé's lighthouse transmitter reaches their chamber.",
+  know_council: "What we know: a stop holds the drill and buys us some days, but it heals nothing, and the knocking goes on. Only the bore's own switch, at the bottom of the shaft, can run it backwards, and its blast doors open to a code from every station at once.",
+  know_council_b: "What we know: only the console at the bottom of the shaft can switch the bore. The shaft's doors open only to a code from every project station at once.",
+  know_throttle: 'What we know: since the stop nothing evens out the kicks, but Oren, the voice in the Balance Works governors, can hold water still. The B-7 lets a station refuse the control room, as long as a hand stays on its lever.',
+  know_ballastra: "What we know: Oren keeps Ballastra's water, and the lower row's young ones sleep in his keeping. Someone here buys every Balance Works coil for the project and none of the regulators the network needs.",
+  know_balances: "What we know: Vesk's standing order buys the coils and none of the regulators, though the House's own bench passed the B-7. Tessa's B-8 has a plain brass lever that Oren can't hold, so each band is set by hand, from its neighbour's need.",
+  know_survey: 'What we know: Oren keeps the 304 sleepers warm. One wakes when the family asks: the keepers shut the ring, Oren warms, and hands take turns on the lever for an hour.',
+  know_network: "What we know: five relays, each run on what its station has, must hold one signal together for a minute to open the shaft's blast doors. Each needs a friend standing by it.",
+  know_shell: 'What we know: a child of this world sleeps under the shell, not ready to wake. A stop only holds her cracks; the bore turned into a shield closes them.',
+  know_core: "What we know: three pylons around the core turn the bore into a shield, each powered from above: Zoé's signal, Mira's valves and Oku's mills.",
 });
 
 // DIALOGUE-EDIT: Citadel's people in the chapters that have no line of their own for them (prologue.js baseTalk reads

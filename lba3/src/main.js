@@ -186,7 +186,7 @@ export function migrateSave(raw) {
 // back on their feet; chapter 'throttle' in the expanded campaign, in the council chamber, the magic level the story
 // has given by the end of chapter 9; health, kashes and the other weapons and gadgets kept. Returns null when `raw`
 // isn't a save on exp_base.
-const EXP_START_DROP = /^(c10_|nw_|c3_|sh_|co_|ep_|dp_|ur_|og_|og2_|th_|sv_|bl_|wk_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js; nw_, sh_, co_: the network's, the shell's and the last act's threads, CAMPAIGN-8/9; dp_: the epilogue's way down, UNDER-BAR)
+const EXP_START_DROP = /^(c10_|nw_|c3_|sh_|co_|ep_|dp_|ur_|og_|og2_|th_|sv_|bl_|bh_|wk_|nwb_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js; nw_, sh_, co_: the network's, the shell's and the last act's threads, CAMPAIGN-8/9; dp_: the epilogue's way down, UNDER-BAR)
 const EXP_START_REVIVE = /^(ndrone\d+|nclone|nguard|nsentry|ncrawler|nmite\d+|c3drone|c3mite\d+|guardian)$/;
 export const EXP_START_KEY = EXP_KEYS[0];
 export const COUNCIL_SPOT = { x: 4844, z: 4.5 };   // (the council chamber's spawn by its door: upper.js buildCouncil)
@@ -3363,9 +3363,13 @@ function startupFailed(e, stage = e?.stage || 'start') {
   const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
   const btn = (key, fn) => { const b = document.createElement('button'); b.textContent = t(key); b.style.cssText = 'padding:8px 18px;font:inherit;font-weight:600;border-radius:8px;border:1px solid rgba(255,255,255,0.6);background:#1f3b57;color:#fff;cursor:pointer'; b.addEventListener('click', fn); row.appendChild(b); return b; };
   btn('boot_retry', () => { const u = new URL(location.href); u.searchParams.delete('failstart'); location.replace(u.toString()); }).dataset.act = 'boot-retry';
+  // the details always shown in a box to select (FULL-TEST 20.11: the clipboard's promise can hang without an answer, and
+  // the click then showed nothing); copied as well where the browser allows it
   const copy = btn('boot_copy', async () => {
-    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); }
-    catch { const ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); ta.select(); }
+    let ta = box.querySelector('textarea');
+    if (!ta) { ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); }
+    ta.select();
+    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); } catch { /* the box is there to select */ }
   });
   copy.dataset.act = 'boot-copy';
   box.append(msg, row);

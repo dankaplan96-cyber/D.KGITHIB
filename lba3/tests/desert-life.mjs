@@ -143,7 +143,9 @@ iso('order B: the k_ flags cleared (a fresh story), the cowl back to its storm p
 await ev(() => { const f = game.flags; for (const k of Object.keys(f)) if (k.startsWith('k_')) delete f[k]; game.story.applyFlags(); game.step(0.5); });
 const c1 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags;
   const sani = P.npc('dkid'), K = game.rooms.desert;
-  const back = { dir: C.dir, sani: +Math.hypot(sani.pos.x - K.npcSpots.kid.x, sani.pos.z - K.npcSpots.kid.z).toFixed(2) };
+  // (P81: with the pump running Sani's own place is at the oasis's rim, not his roof spot: dig.js saniAtOasis)
+  const home = game.story.chapters.find((c) => c.key === 'dig').saniAtOasis(K.oasis);
+  const back = { dir: C.dir, sani: +Math.hypot(sani.pos.x - home.x, sani.pos.z - home.z).toFixed(2) };
   P.talk('weaver'); const screen = !!f.k_screen;
   P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); const fit = !!f.k_fit, d0 = f.k_dir ?? 2;
   return { back, screen, fit, d0 }; });
