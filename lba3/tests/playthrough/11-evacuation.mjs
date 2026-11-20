@@ -1,5 +1,5 @@
 // Chapter 8 (Evacuation, Citadel): home to Zoé, Gilbert's tunnels, the fortress shelter's lever, the depot bunker's
-// wheel (ball), Mira's water, Pippa's supplies, Zoé's run to the hill farms, the relay at the lighthouse, the
+// wheel (ball; the door sticks on a bar inside, and Lulu slips in to lift it), Mira's water, Pippa's supplies, Zoé's run to the hill farms, the relay at the lighthouse, the
 // control room, a project ship from Citadel Spaceport to Zeelich (PLANET-1).
 // CAMPAIGN-6 (story/laneline.js; a game with the thread, ev_v): the list cart seen at the lane's shut water gate on
 // arriving; as Zoé, after the relay, the schedule and the route read on the lighthouse path's board, Bram and Hedda (with
@@ -13,7 +13,9 @@ export const steps = [
   ['home: Zoé', () => { const d = game.world.houses[0].door; P.enter('house', { run: true }); const r = P.talk('zoe'); return { ...r, home: game.flags.c8_home, fail: game.flags.c8_home ? null : 'home' }; }],
   ['Gilbert', () => ({ ...P.talk('gilbert', { run: true }), g: game.flags.c8_gilbert, fail: game.flags.c8_gilbert ? null : 'gilbert' })],
   ['the fortress lever', () => { const r = P.use(-33, -70, { run: true }); P.wait(1); P.settle(); return { ...r, fort: game.flags.c8_fort, fail: game.flags.c8_fort ? null : 'lever' }; }],
-  ['the depot wheel (ball)', () => { const G = game, w = G.story.cur.wheelSpot; for (let k = 0; k < 8 && !G.flags.c8_depot; k++) { const a = k * 0.8; P.go(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(w.x, w.z); P.settle(); } return { depot: G.flags.c8_depot, fail: G.flags.c8_depot ? null : 'depot' }; }],
+  ['the depot wheel (ball): the door sticks on its bar', () => { const G = game, w = G.story.cur.wheelSpot; for (let k = 0; k < 8 && !G.flags.c8_gap; k++) { const a = k * 0.8; P.go(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(w.x, w.z); P.settle(); } return { gap: G.flags.c8_gap, fail: G.flags.c8_gap ? null : 'depot wheel' }; }],
+  // (MIDDLE-VARIETY: Lulu is the small one: asked on the quay she runs to the door; there she slips in and lifts the bar)
+  ['the depot: Lulu lifts the bar', () => { const G = game; for (let k = 0; k < 2 && !G.flags.c8_depot; k++) { P.talk('lulu', { run: true }); P.wait(2); P.settle(); } P.wait(4); P.settle(); return { kids: !!G.flags.c8_kids, depot: G.flags.c8_depot, fail: G.flags.c8_depot ? null : 'depot' }; }],
   // (she is at her desk in the Water Office: the game places her there when he walks in, not before — in, then talk)
   ['Mira (Water Office)', () => ({ ...(P.npc('mira')?.present ? {} : { door: P.enter('office', { run: true }).r }), ...P.talk('mira', { run: true }), mira: game.flags.c8_mira, fail: game.flags.c8_mira ? null : 'mira' })],
   ['Pippa', () => { if (P.here() !== 'citadel') P.enter('citadel'); const r = P.talk('pippa', { run: true }); P.settle(); if (game.state === 'shop') P.tap('Escape', 0.2); P.settle(); return { ...r, pippa: game.flags.c8_pippa, fail: game.flags.c8_pippa ? null : 'pippa' }; }],

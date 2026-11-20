@@ -52,3 +52,48 @@ Read from `story/dig.js`, `digtest.js`, `steam.js`, `pass.js`, `passline.js`, `o
 What the best moments share (the user's standard): the desert pump (listen, for Sani's village), Pim's kite (for a
 child, for the fuse), the council (evidence, for the council's doubt). Each asks for something other than "turn it",
 for someone with a reason to care.
+
+## 2. What changed: chapter 8, the depot bunker
+
+**Before.** Gilbert names the two shelters. The fort: fight the squad, pull the lever, the door opens. The depot: one
+throw at the red wheel, the door opens. Then "tell Zoé". Two "find the thing, work it, it opens" beats back to back,
+and the second asked nothing.
+
+**Now.** The throw still turns the wheel (Gilbert's clue, the ball's job), but the door rolls only a hand's width and
+sticks: through the gap a bar has dropped across it on the inside. Too narrow for Twinsen. Tim and Lulu, whom Pippa
+sends with her cart ("they owe me for the stone business"), are the right size. Lulu is the small one. She slips through
+and lifts the bar, and the door rolls open with her standing in it ("There's benches! And a spider. He can stay.").
+
+- **Discovery, obstacle, consequence**: the bar seen through the gap; a door too narrow for him; the shelter opened
+  by the children who wanted to make up for the stone, and the bunker seen inside.
+- **Visual question and answer**: the leaf visibly stops a hand's width open (the existing door, posed part way; the
+  lamp stays amber); the answer is Lulu at the gap, then the leaf rolling back. No new prop, light or particle.
+- **One new rule**: someone else's size gets in where his doesn't (social access). The ball part is chapter 1's.
+- **Feedback for a reasonable wrong try**: a second throw, or a tug at the door, makes the leaf jerk against the bar
+  (a short jolt of the door and wheel, a clunk, the toast "Stuck on the bar inside" or his line "too narrow for me.
+  Someone small could slip through").
+- **Hints**: the objective's line becomes "Someone small could slip in and lift the bar"; after 45 s stuck there, the
+  existing nudge says "Tim and Lulu could fit through that gap." (once; never while the squeeze is under way).
+- **Either order**: Pippa first, so the children are already at the door with her cart; talking to Tim or Lulu there:
+  "Who fits through a gap that size?" / "Not me. I'm the strong one." / "I'm the small one. Back in a second." Wheel
+  first, so the children are on the quay; asking them there sends them running to the door (the conversation:
+  "...the gap's too narrow for me." / "Too narrow? Not for me. I'm the small one." / "And I'm the strong one. Come on,
+  Lulu!"); at the door Lulu goes in. A walk left behind out of view while he waits at the door is picked up round a
+  corner near it (`kidsCatchUp`): nobody pops in front of him, and nobody stays stuck on the quay.
+- **Voice**: Tim's "I'm the strong one" is his existing idle line (`idle_tim_evacuation`); Lulu "steers", so she goes.
+  Eight new spoken lines, all short; Hebrew for each; voicemeta entries for each.
+
+State card:
+```
+c8_gilbert ──ball at the wheel──▶ c8_gap (door ajar, saved)
+   c8_gap + (c8_pippa | c8_kids) ──talk to Tim/Lulu at the door──▶ squeeze (not saved; a load starts it again)
+   c8_gap + neither ──talk to Tim/Lulu on the quay──▶ c8_kids (saved) → they go to the door
+   squeeze ──Lulu at the gap (or 7 s)──▶ c8_depot (door open, Lulu in the doorway, saved)
+```
+Old saves: `c8_depot` without `c8_gap` keeps the open door and the journal's old line (`c8_j_shelters`); a save with
+Gilbert asked and no `c8_gap` starts at the wheel, as before. The journal line for the new path is `c8_j_shelters2`.
+
+Files: `src/game/story/evacuation.js`, `src/game/story/shelters.js` (the door's `ajar`, `jolt`, a target position for
+`tick`), `src/game/text/ch8.js`, `src/game/text/he/ch8.js`, `src/game/text/voicemeta.js`, `src/game/he-text.js`
+(bundle); tests `tests/middle-variety.mjs` (new), `tests/chapter8.mjs` and `tests/playthrough/11-evacuation.mjs` (the
+depot step now ends with Lulu). No new shipped files.

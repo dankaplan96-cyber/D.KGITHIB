@@ -139,6 +139,9 @@ export const VOICE_META = {
   c8_gil_2: ['pleased', 'pleased', 'uncertain', 'neutral'], c8_gil_after: ['urgent', 'pleased', 'pleased'], c8_mira_1: ['neutral', 'annoyed', 'annoyed'],
   c8_tw_m1: ['urgent', 'neutral'], c8_mira_2: ['pleased', 'neutral'], c8_mira_after: ['pleased', 'pleased', 'pleased'], c8_zoe_5: ['neutral', 'neutral', 'neutral'],
   c8_zoe_lh3: ['concerned', 'concerned', 'annoyed'], c8_tw_c1: ['concerned', 'concerned', 'concerned'], c8_tw_c2: ['neutral', 'neutral', 'neutral'],
+  c8_gap: ['neutral', 'curious'], c8_gap_more: ['annoyed', 'neutral', 'curious'], c8_tw_kids: ['neutral', 'concerned'],
+  c8_lulu_q: ['curious', 'pleased', 'pleased'], c8_tim_q: ['pleased', 'urgent'], c8_tw_bar: ['neutral', 'curious'],
+  c8_tim_bar: ['neutral', 'pleased'], c8_lulu_bar: ['pleased', 'neutral'], c8_lulu_in: ['pleased', 'curious', 'pleased'],
   c9_tw_arrive: ['concerned', 'neutral', 'neutral'], c9_tw_b1: ['concerned', 'neutral', 'curious'], c9_bal_3: ['neutral', 'neutral', 'uncertain', 'pleased'],
   c9_tw_c2: 'neutral', c9_bal_c3: { i: ['pleased', 'pleased', 'urgent'], e: ['network'] }, c9_tw_c3: 'pleased',
   c9_oku_r1: { i: ['neutral', 'neutral'], e: [null, 'afternoon'] }, c9_oku_r2: ['pleased', 'neutral'],   // (MILLS)
