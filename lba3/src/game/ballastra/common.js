@@ -7,6 +7,6 @@
 export const BALLASTRA = { harbor: null, arches: null, gardens: null };
 // where Ballastra's places stand in the world: far from every other region (Citadel at 0, the rooms along z = 0 up to
 // x 8 800, the Zeelich islands along z = 1 800). Each place is its own lazy group.
-export const BALLASTRA_AT = { ballastra: { x: 3000, z: -3000 }, bl_shed: { x: 3800, z: -3000 },
+export const BALLASTRA_AT = { ballastra: { x: 3000, z: -3000 }, bl_shed: { x: 3800, z: -3000 }, bl_house: { x: 4000, z: -4600 }, bl_cradles: { x: 4100, z: -3800 },   // (bl_house, bl_cradles: EXP-3)
   bl_arches: { x: 3000, z: -3800 }, bl_oren: { x: 3800, z: -3800 }, bl_mags: { x: 3900, z: -3800 }, bl_pump: { x: 4000, z: -3800 },
   bl_gardens: { x: 3000, z: -4600 }, bl_tunnel: { x: 3800, z: -4600 }, bl_kiln: { x: 3900, z: -4600 } };

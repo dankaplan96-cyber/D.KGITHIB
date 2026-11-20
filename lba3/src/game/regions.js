@@ -76,7 +76,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], sewerglobe: [5960, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0], terminal: [8600, 0], zterminal: [8800, 0], otrbar: [9000, 0], otrhotel: [9400, 0], celtemple: [9600, 0], ...Object.fromEntries(Object.entries(ZHOME_AT).map(([k, v]) => [k, [v.x, v.z]])), ...Object.fromEntries(Object.entries(IHOME_AT).map(([k, v]) => [k, [v.x, v.z]])),
   bl_shed: [3800, -3000],   // (EXPANSION W-1's room)
   bl_oren: [3800, -3800], bl_mags: [3900, -3800], bl_pump: [4000, -3800],   // (bl_oren, bl_mags, bl_pump: EXPANSION W-2's rooms)
-  bl_tunnel: [3800, -4600], bl_kiln: [3900, -4600] };   // (bl_tunnel, bl_kiln: EXPANSION W-3's rooms)
+  bl_tunnel: [3800, -4600], bl_kiln: [3900, -4600], bl_house: [4000, -4600], bl_cradles: [4100, -3800] };   // (bl_house, bl_cradles: EXP-3)   // (bl_tunnel, bl_kiln: EXPANSION W-3's rooms)
 for (const [k, v] of Object.entries(HAM_AT)) AT[k] = [v.x, v.z];   // (HAMALAYI-LIFE)
 AT.pumproom = [PUMPROOM_AT.x, PUMPROOM_AT.z];   // (CAMPAIGN-2: the lane's pump room)
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000], bl_arches: [3000, -3800], bl_gardens: [3000, -4600] };   // (ballastra, bl_arches, bl_gardens: EXPANSION W-1..W-3)
@@ -100,6 +100,7 @@ export const CHAPTER_AREAS = {
   evacuation: [],
   council: ['zeelich', 'upper', 'workshop'],
   throttle: ['office', 'valves', 'projoffice'],   // (EXP-1: the Water Office, FunFrock's valve room, the project office)
+  balances: ['bl_arches', 'bl_gardens'], survey: ['bl_arches', 'bl_gardens'],   // (EXP-3: chapters 12-13, on Ballastra)
   network: ['zeelich', 'desert', 'hamalayi', 'valves', 'lighttop', 'obsv', 'workshop'],
   home: ['house'],
 };
@@ -142,8 +143,8 @@ function groupDefs() {
   for (const id of IHOME_IDS) add(id, [id], buildIHome(id));   // (ISLE-HOMES: the islands' and Kesh's houses inside, ihomes.js: a group each)
   for (const id of HAM_ROOMS) add(id, [id], buildHamRoom(id));   // (HAMALAYI-LIFE: the monastery's hall inside, hamrooms.js)
   add('ballastra', ['ballastra', 'bl_shed'], buildBallastra, buildBallastraSteps);   // (EXPANSION W-1: Float Harbor and Tessa's shed, src/game/ballastra/)
-  add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'], buildArches, buildArchesSteps);   // (EXPANSION W-2: the Arch District and its three rooms, src/game/ballastra/)
-  add('bl_gardens', ['bl_gardens', 'bl_tunnel', 'bl_kiln'], buildGardens, buildGardensSteps);   // (EXPANSION W-3: the Water Gardens, the service tunnel and Corvin's kiln, src/game/ballastra/)
+  add('bl_arches', ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump', 'bl_cradles'], buildArches, buildArchesSteps);   // (EXP-3: + the Cradle Hall)   // (EXPANSION W-2: the Arch District and its three rooms, src/game/ballastra/)
+  add('bl_gardens', ['bl_gardens', 'bl_tunnel', 'bl_kiln', 'bl_house'], buildGardens, buildGardensSteps);   // (EXP-3: + the House of Balances)   // (EXPANSION W-3: the Water Gardens, the service tunnel and Corvin's kiln, src/game/ballastra/)
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)

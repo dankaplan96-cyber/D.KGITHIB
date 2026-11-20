@@ -17,6 +17,7 @@ import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
 import { SHAFT_TOP } from '../island.js';
 import { storyJourney } from '../travelfilm.js';
 import { NetThread } from './netline.js';
+import { NetB8 } from './balances.js';   // (EXP-3: Tessa's B-8 on the valve room's relay, the expanded campaign only)
 import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
@@ -41,6 +42,7 @@ const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', c
 export class Network extends ChapterBase {
   // CAMPAIGN-8 (wave 6): the friends seen taking their stations over, the knocking turned to four (story/netline.js)
   get thread() { return (this.story._nw ||= new NetThread(this)); }
+  get b8() { return (this.story._b8 ||= new NetB8(this)); }
   codeBoxAt() { return CODE_BOX; }
   get R() { return this.game.rooms; }
   get Z() { return this.R.zeelich; }
@@ -190,7 +192,7 @@ export class Network extends ChapterBase {
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast({ walk: true });
     // (Twinsen got Baldino's test pair talking in chapter 3: he remembers it)
-    this.chain([['narrator', this.story.inCampaign('throttle') ? 'c10_narr_exp' : 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ...(this.thread.on ? [['baldino', 'nw_bal_iso']] : []), ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
+    this.chain([['narrator', this.story.inCampaign('throttle') ? 'c10_narr_exp' : 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ...(this.thread.on ? [['baldino', 'nw_bal_iso']] : []), ...(this.b8.has() ? [['baldino', 'nwb_bal']] : []), ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
       this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
@@ -270,6 +272,7 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f, r = this.room(), h = g.hero;
     if (!this.isCur() || !f.c10_started || this.thread.busy) return;
     this.thread.interactables(consider, dist);
+    this.b8.interactables(consider, dist);
     if (r === 'zeelich') {
       const mt = this.Z.millTop;
       if (f.c10_millBraked && !f.c10_mill && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.8, { kind: 'c10mill', label: 'p_relay' });
@@ -290,6 +293,7 @@ export class Network extends ChapterBase {
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, T = this.thread;
     if (T.interact(it)) return true;
+    if (this.b8.interact(it)) return true;
     switch (it.kind) {
       case 'c10mill':
         h.act('use', 1.0, () => {
@@ -304,10 +308,9 @@ export class Network extends ChapterBase {
           v.setOpen(!v.open); (f.c10_valveSet ||= {})[v.i] = v.open; g.audio.play(v.open ? 'valve' : 'valveShut'); T.lastValve = v.i;
           const lv = this.gaugeLevels(); this.R.valves.gauges.set(lv);
           if (lv.every((x) => x === 2)) {
-            this.lightRelay('valves'); g.audio.play('shard');
-            // (CAMPAIGN-8: he holds the wheel he turned last, and Mira takes it as he lets go)
-            if (T.on && T.f.nw_mira !== 'past') { T.busy = true; T.after(0.4, () => T.valvesDone(() => this.stationDone('valves'))); }
-            else this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
+            // (EXP-3: Oren trims the relay's share first; Tessa's B-8 set, the station goes on as below: NetB8)
+            if (this.b8.on()) this.b8.trim(() => this.valvesGreen());
+            else this.valvesGreen();
           }
         }, 0.3);
         return true;
@@ -354,6 +357,14 @@ export class Network extends ChapterBase {
       case 'c10console': this.sendCode(); return true;
     }
     return false;
+  }
+  // the valve room's three gauges green: the relay lights; Mira takes the wheel he holds (or says so)
+  valvesGreen() {
+    const g = this.game, T = this.thread;
+    this.lightRelay('valves'); g.audio.play('shard');
+    // (CAMPAIGN-8: he holds the wheel he turned last, and Mira takes it as he lets go)
+    if (T.on && T.f.nw_mira !== 'past') { T.busy = true; T.after(0.4, () => T.valvesDone(() => this.stationDone('valves'))); }
+    else this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
   }
   gaugeLevels() {
     const st = this.f.c10_valveSet || {}, out = [0, 0, 0];
@@ -563,6 +574,7 @@ export class Network extends ChapterBase {
     // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c10_pulse || this.story.index > this.pos) this.game.hero.hasPulse = true;
     this.thread.applyFlags();
+    this.b8.applyFlags();
     this.showProps();
     if (!on) return;
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
@@ -592,7 +604,7 @@ export class Network extends ChapterBase {
     { const to = this.thread.objective(); if (to) return to; }
     const n = this.done();
     if (n >= 5) return this.goal('c10_obj_platform');
-    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.thread.subIrsa() + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, this.thread.line('c10_sub_light')) + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
+    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, 'c10_sub_mill') + this.thread.subIrsa() + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.b8.sub() + this.sub(!!f.c10_light, this.thread.line('c10_sub_light')) + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '');
   }
   items() {
     if (!this.reached() || !this.f.c10_started) return [];

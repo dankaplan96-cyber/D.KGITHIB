@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   // (EXP-PLAN §2.1: the expanded campaign's four chapters between the council and the network)
-  chapter_throttle: 'Borrowed Time', chapter_survey: 'Under the Well', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
+  chapter_throttle: 'Borrowed Time', chapter_survey: 'The Cradles', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
   asy_register1: '(The asylum\'s old register. The workers keep it on the shelf like a relic. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',

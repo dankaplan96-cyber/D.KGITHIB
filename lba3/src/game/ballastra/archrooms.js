@@ -19,6 +19,12 @@
 //     setPawl(released, instant), setGate(open, instant), gateMoving() } }
 //   ROOMS (filled when built): oren { spawn, door, table, plan }, mags { spawn, door, host }, pump { spawn, door, tessa,
 //     plates, machine, wheel, chain {x, y, z, r}, pawl {x, y, z, r} }
+//   bl_cradles (EXP-3, chapter 13) the Cradle Hall under the keepers' house beside the flood bell: rows of glazed
+//            cradles, J-17 at the front with its warming lever and its ring stop, the keepers' desk and ledger, the Bay 2
+//            plaque, the requests board by the door, and the Rings (Oren's presence, large) at the far end.
+//   cradles: { setLid(i, 0..1, instant) (i: 'j17' or a back-row index 0…6), setWarm(0..1) (J-17's glow), setLever(0..1),
+//     setRing(shut), setLamp(i, 'green'|'amber'|'off') (J-16, J-18: 0, 1), rings (the presence's API) }
+//   ROOMS.cradles { spawn, door, card, ledger, plaque, board, ring, lever, rings, garrow, odra, jory, wait, hands [] }
 //   Each room's R.exits[0] is its door back to 'bl_arches' (the region's R.entries puts him outside it); the gate's
 //   collider is solid until the gate is open.
 import * as THREE from 'three';
@@ -26,8 +32,9 @@ import { RoomBuilder } from '../interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, crate, barrel, jar, kettle, table, chair } from '../props.js';
 import { BALLASTRA_AT } from './common.js';
 import { chainGeo } from './look.js';
+import { buildOrenPresence } from '../orenpresence.js';
 
-export const ROOMS = { oren: {}, mags: {}, pump: {} };
+export const ROOMS = { oren: {}, mags: {}, pump: {}, cradles: {} };
 
 const flat = (c, r = 0.6) => MAT.flat(c, r);
 const celadon = () => MAT.flat('#9cc8b4', 0.3, { metalness: 0.05 });
@@ -323,7 +330,104 @@ function buildPump(scene, physics) {
   return { R: B.finish(), ctl };
 }
 
+// ------------------------------------------------------------------ the Cradle Hall (EXP-3, chapter 13)
+const plaqueTex = () => M('bl_bay2T', () => canvasTex(192, 128, (x, w, h) => {
+  x.fillStyle = '#b07a3a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#5a3a14'; x.lineWidth = 5; x.strokeRect(5, 5, w - 10, h - 10);
+  x.fillStyle = '#3a2410'; x.font = 'bold 22px sans-serif'; x.textAlign = 'center'; x.fillText('BAY 2', w / 2, 34);
+  for (let i = 0; i < 4; i++) x.fillRect(22, 52 + i * 16, w - 44 - (i % 2) * 24, 4);
+}));
+const boardTex = () => M('bl_reqBoardT', () => canvasTex(192, 192, (x, w, h) => {
+  x.fillStyle = '#6a4a2a'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8dcc0';
+  for (let i = 0; i < 9; i++) { const c = i % 3, r = Math.floor(i / 3); x.save(); x.translate(18 + c * 58, 16 + r * 58); x.rotate((i % 2 ? 1 : -1) * 0.05); x.fillRect(0, 0, 46, 44); x.fillStyle = '#2a1e10'; x.fillRect(6, 10, 34, 3); x.fillRect(6, 20, 26, 3); x.fillStyle = '#a02a20'; x.fillRect(6, 32, 30, 5); x.fillStyle = '#e8dcc0'; x.restore(); }
+}));
+function buildCradles(scene, physics) {
+  const { x: CX, z: CZ } = BALLASTRA_AT.bl_cradles, Wd = 17, D = 9.5, H = 5.0, DOOR_Z = 2.8;
+  const B = new RoomBuilder(scene, physics, 'bl_cradles', CX, CZ), R = B.room, k = B.k;
+  R.view = 13.5; R.follow = 0.35; R.music = 'workshop'; R.surface = 'stone';
+  B.shell({ W: Wd, D, H, t: 0.5, floor: MAT.tiles('#c8c4b4', '#b8b4a2', '#6a685a', false, 6), slab: MAT.stone('sand'), body: MAT.plaster('#e2e6dc'), low: MAT.tiles('#9cc8b4', '#8abcaa', '#4f6e64', false, 6), dado: 1.2,
+    rail: bronze(), cap: MAT.stone('sand', 1), rimH: 0.5, rimMat: MAT.stone('sand'), beam: MAT.stone('sand', 1), posts: MAT.stone('sand', 1), postsAt: (L) => [L * 0.25, L * 0.5, L * 0.75],
+    left: [{ at: DOOR_Z, w: 1.4, h: 2.5, y0: 0, kind: 'door', frame: celadonDeep(), sill: MAT.stone('slate', 1) }] });
+  R.exits.push({ ...B.world(-Wd / 2 + 0.3, DOOR_Z), r: 0.6, room: 'bl_arches' });
+  R.spawn = { ...B.world(-Wd / 2 + 1.4, DOOR_Z), a: Math.PI / 2 };
+  R.entries = { bl_arches: R.spawn };
+  const BZ = -D / 2;
+  const lampM = { off: flat('#5a5650', 0.6), green: MAT.glow('#8ee08a', '#3cc04a', 1.2), amber: MAT.glow('#ffd070', '#ffa020', 1.4) };
+  // a cradle: a plinth, a glazed body, a glazed lid on a hinge along its back edge, a name plate, a lamp
+  const lids = [], lamps = [];
+  const cradle = (x, z, ry = 0) => {
+    k.push(x, 0, z, ry);
+    k.add(rbox(2.2, 0.4, 1.0, 0.05), MAT.stone('sand', 1), 0, 0.2, 0);
+    k.add(rbox(2.0, 0.42, 0.86, 0.18), celadonDeep(), 0, 0.6, 0);
+    k.add(rbox(0.3, 0.12, 0.02, 0.01), bronze(), 0.7, 0.55, 0.44);
+    k.pop?.();
+    const hinge = k.pivot(x, 0.82, z - 0.42 * Math.cos(ry), ry);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.26, 0.86), celadon()); lid.position.set(0, 0.1, 0.42); lid.castShadow = true; hinge.add(lid);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), lampM.green); lamp.position.set(x - 0.85, 0.75, z + 0.45); R.group.add(lamp);
+    B.col(x, z, 1.1, 0.5, 1.0, { block: true });
+    return { hinge, lamp };
+  };
+  const back = []; for (let i = 0; i < 7; i++) back.push(cradle(-6.4 + i * 2.15, BZ + 1.2));
+  const j16 = cradle(-2.6, 0.6), j17 = cradle(0, 0.6), j18 = cradle(2.6, 0.6);
+  // J-17's warmth: a glow strip on its side (cold grey → warm amber)
+  const warmM = new THREE.MeshStandardMaterial({ color: '#7a8a84', emissive: '#ff9a40', emissiveIntensity: 0, roughness: 0.5 });
+  const warm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.02), warmM); warm.position.set(0, 0.5, 1.04); R.group.add(warm);
+  // the warming lever at J-17's foot (glazed: Oren's hush runs through it), the ring stop (a bronze slide) at its head
+  k.add(rbox(0.22, 0.9, 0.22, 0.02), celadonDeep(), 1.45, 0.45, 1.25);
+  const lever = k.pivot(1.45, 0.92, 1.25, 0);
+  { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06), celadon()); arm.position.y = 0.3; lever.add(arm); const kn = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), bronze()); kn.position.y = 0.62; lever.add(kn); }
+  B.col(1.45, 1.25, 0.18, 0.18, 1.2, { block: true });
+  k.add(rbox(0.7, 0.08, 0.3, 0.02), MAT.stone('slate', 1), -1.45, 0.04, 1.3);
+  const ringStop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.24), bronze()); ringStop.position.set(-1.6, 0.12, 1.3); R.group.add(ringStop);
+  // the floor ring: a glazed channel joining the front cradles (Bay 2's mistake was leaving it open)
+  k.add(rbox(7.2, 0.03, 0.18, 0.01), celadonDeep(), 0, 0.015, 1.3);
+  // the keepers' desk and ledger (left front), the Bay 2 plaque (back wall, left), the requests board (by the door)
+  k.add(rbox(1.6, 0.08, 0.8, 0.02), MAT.wood('dark'), -6.6, 0.82, 0.2); for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.08, 0.8, 0.08, 0.01), MAT.wood('dark'), -6.6 + sx * 0.7, 0.4, 0.2 + sz * 0.32);
+  k.add(rbox(0.6, 0.1, 0.42, 0.01), MAT.cloth('#2a4a5a', '#1a2a34'), -6.5, 0.91, 0.2, 0.15);
+  B.col(-6.6, 0.2, 0.85, 0.45, 0.9, { block: true });
+  k.add(plane(0.9, 0.6), MAT.map(plaqueTex(), 0.4, { metalness: 0.5 }), -7.6, 1.9, BZ + 0.03);
+  k.add(plane(1.1, 1.1), MAT.map(boardTex(), 0.8), -Wd / 2 + 0.03, 1.7, DOOR_Z - 1.6, Math.PI / 2);
+  // the Rings: Oren's presence, large, on a glazed plinth at the hall's east end (the keepers' "Cradle Control")
+  k.add(cyl(0.9, 1.0, 0.6, 18), celadonDeep(), 7.2, 0.3, -0.6);
+  const rings = buildOrenPresence(); rings.group.position.set(7.2, 0.62, -0.6); rings.group.scale.setScalar(2.4); R.group.add(rings.group); rings.set(1); rings.setMode('turning');
+  B.ccol(7.2, -0.6, 1.0, 2.2, { block: true });
+  for (const [x, z] of [[-4.5, BZ + 0.12], [0, BZ + 0.12], [4.5, BZ + 0.12]]) k.add(sphere(0.12, 10, 8), MAT.glow('#fff2dc', '#ffcf90', 1.1), x, 3.4, z);
+  B.light('#ffe6c0', 4.5, 13, -3.0, 3.6, 0.5);
+  B.light('#e6f2ea', 4.0, 12, 3.6, 3.6, -0.5);
+  // state
+  const S = { lid: { j17: 0 }, lidTo: { j17: 0 }, lever: 0, leverTo: 0 };
+  for (let i = 0; i < 7; i++) { S.lid[i] = 0; S.lidTo[i] = 0; }
+  const hingeOf = (i) => (i === 'j17' ? j17.hinge : back[i]?.hinge);
+  const place = () => { for (const i of Object.keys(S.lid)) { const h = hingeOf(i === 'j17' ? i : +i); if (h) h.rotation.x = -S.lid[i] * 1.25; } lever.rotation.x = -S.lever * 0.9; };
+  R.updaters.push((dt) => {
+    let ch = false;
+    for (const i of Object.keys(S.lid)) if (S.lid[i] !== S.lidTo[i]) { const d = S.lidTo[i] - S.lid[i]; S.lid[i] += Math.sign(d) * Math.min(Math.abs(d), dt / 2.0); ch = true; }
+    if (S.lever !== S.leverTo) { const d = S.leverTo - S.lever; S.lever += Math.sign(d) * Math.min(Math.abs(d), dt * 3); ch = true; }
+    if (ch) place();
+    const G = globalThis.game;
+    if (G?.room === R) rings.update(dt, Math.atan2(G.hero.pos.x - (CX + 7.2), G.hero.pos.z - (CZ - 0.6)));
+  });
+  const ctl = {
+    rings,
+    setLid(i, v, instant) { S.lidTo[i] = v; if (instant) S.lid[i] = v; place(); },
+    setWarm(v) { warmM.emissiveIntensity = Math.max(0, Math.min(1, v)) * 1.6; warmM.color.set(v > 0.05 ? '#d8a060' : '#7a8a84'); },
+    setLever(v, instant) { S.leverTo = v; if (instant) S.lever = v; place(); },
+    setRing(shut) { ringStop.position.x = shut ? -1.25 : -1.6; },
+    setLamp(i, c) { const l = [j16, j18][i]?.lamp; if (l) l.material = lampM[c] || lampM.off; },
+  };
+  place();
+  const W = (x, z, a) => ({ ...B.world(x, z), ...(a != null ? { a } : {}) });
+  Object.assign(ROOMS.cradles, {
+    door: B.world(-Wd / 2 + 0.3, DOOR_Z), spawn: R.spawn,
+    card: { ...W(0.6, 1.5), r: 0.7 }, ledger: { ...W(-6.6, 1.05), r: 0.9 }, plaque: { ...W(-7.4, BZ + 0.95), r: 0.9 }, board: { ...W(-Wd / 2 + 0.8, DOOR_Z - 1.6), r: 0.9 },
+    ring: { ...W(-1.45, 1.85), r: 0.7 }, lever: { ...W(1.45, 1.85), r: 0.7 }, rings: { ...W(6.0, 0.5), r: 1.4 },
+    hold: W(1.45, 1.75, Math.PI), garrow: W(-5.6, 1.1, -Math.PI / 2), odra: W(-3.9, BZ + 2.4, 0.4), jory: W(0.2, 1.9, Math.PI * 0.85), wenna: W(-0.9, 2.1, Math.PI * 0.9), wait: W(2.6, 2.5, -Math.PI * 0.7),
+    hands: [W(3.4, 2.6, -Math.PI / 2), W(4.4, 2.9, -Math.PI / 2), W(5.4, 2.4, -Math.PI / 2), W(4.0, 3.6, -Math.PI * 0.8), W(5.2, 3.5, -Math.PI * 0.8), W(3.0, 3.6, -Math.PI * 0.8)],
+  });
+  R.npcSpots = { garrow: ROOMS.cradles.garrow };
+  return { R: B.finish(), ctl };
+}
+
 export function buildArchRooms(scene, physics) {
-  const oren = buildOren(scene, physics), mags = buildMags(scene, physics), pump = buildPump(scene, physics);
-  return { rooms: { bl_oren: oren, bl_mags: mags, bl_pump: pump.R }, pump: pump.ctl };
+  const oren = buildOren(scene, physics), mags = buildMags(scene, physics), pump = buildPump(scene, physics), cr = buildCradles(scene, physics);
+  return { rooms: { bl_oren: oren, bl_mags: mags, bl_pump: pump.R, bl_cradles: cr.R }, pump: pump.ctl, cradles: cr.ctl };
 }
