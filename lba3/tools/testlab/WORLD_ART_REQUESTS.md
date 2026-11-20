@@ -5643,3 +5643,22 @@ No deaths, no Retry, no page or console errors in any segment.
   (164–169 Vesk shots in the 300 s, health kept), a bot gap worth closing.
 - So on the branch the playthrough runs as on v103: JOINTS-BLENDER changes no gameplay. The models, the hop's plant and
   the robe's run cycle are ready to merge when the cloud's audit allows (`joints-blender`, 5 commits over `b94ab3d9`).
+
+## V103-HE · chapters 1–2 on the real screen, in Hebrew (CLOUD_ORDERS 52.2, without the frame timings) · the desktop, 20.11.2026
+v103 (`d1e0ec7f`) served locally, Chrome on this Acer's GTX 1050, **1920×1080, Hebrew, Subtitle Size Extra large**
+(set in the settings before the new game). Evidence: `docs/lba3-performance/HARDWARE/2026-11-20-v103-he/`
+(`v103-he-ch1-2.jpg`: the title, a dialogue box, the inventory, the journal, the harbour's L pier, Twinsen's roof, the
+east street, the yard).
+- **Played in Hebrew:** `tests/playthrough/01–06` (the prologue, chapter 1 with the ferry's arrival, chapter 2's
+  arrival on Zeelich) at 1920×1080 in Hebrew: **all six PASS**, no page or console errors, 98 pictures after the steps.
+- **Every line in the box:** the opening, the well, chapter 1, chapter 2 and the ferry's lines in Hebrew (470) shown one by
+  one in the dialogue box at Extra large: **none cut, overflowing or off the screen; none falling back to English.** The
+  text is right-aligned and reads right to left (font 50.6 px). The longest (`c2_j_bal`, 323 characters) fills a box 633
+  px high, 59 % of the screen: it is shown whole, but it is a lot at once (those `c2_j_*` lines are the journal's).
+- **The places:** the turquoise sea and the stone L pier at the harbour, the board hip roof on Twinsen's house, the east
+  street from the square's ring: as CITADEL-ORIG-2 describes, nothing broken or missing seen.
+- **Small notes (no change made):** the street sign by Twinsen's yard reads "Bug St" in English in the Hebrew game; the
+  speaker's name tag sits at the box's left corner and the tutorial's prompt at the screen's left, where a right-to-left
+  reader starts on the right (a choice for the cloud, not a defect).
+- **Not done here:** frame p50/p95 at the harbour and the square against v95 — with the measurements, last in the queue
+  (the user's order).

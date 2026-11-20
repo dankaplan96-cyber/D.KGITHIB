@@ -1,0 +1,49 @@
+[0s +0s] intro: {"state":"play","lines":0,"speakers":[]} | house [1001.55,0,-1.75] hp 10 | לבדוק את הבאר◆ לקחת את כדור הקסם מהארון
+[2s +1s] the door: the ball first: {"r":"state:dialog","from":"house","to":"house","room":"house","fail":null} | house [1001.09,0,10.68] hp 10 | לבדוק את הבאר◆ לקחת את כדור הקסם מהארון
+[4s +2s] the kitchen tap: dry, the pipe knocks: {"r":"used","target":{"kind":"h_tap","id":"p_tap","label":"p_tap"},"state":"play","lines":4,"tap":true,"fail":null} | house [997.48,0,-2.4] hp 10 | לבדוק את הבאר◆ לקחת את כדור הקסם מהארון
+[5s +0s] cupboard: {"r":"used","target":{"kind":"roomsearch","id":"p_search","label":"p_search"},"state":"play","lines":4,"ball":true,"fail":null} | house [997.1,0,-1.99] hp 10 | לבדוק את הבאר◆ לצאת לחצר
+[8s +2s] out of the house: {"r":"transition","from":"house","to":"citadel","fail":null} | citadel [-42.98,2.34,77.2] hp 10 | לבדוק את הבאר◆ לדבר עם זואי
+[25s +15s] the yard: the garden pipe, by hand: {"r":"used","target":{"kind":"h_yard","id":"p_tap","label":"p_tap"},"state":"play","lines":2,"yard":true,"fail":null} | citadel [-43.29,2.33,75.12] hp 10 | לבדוק את הבאר◆ לדבר עם זואי
+[29s +3s] the yard: Zoé's errand, step by step: {"did":["zoe","inv","barrels","pipe"],"kettle":true,"pipe":1,"fail":null} | citadel [-40.69,2.53,70.03] hp 10 | לבדוק את הבאר
+[31s +1s] the lane: the pump room is shut, its pipe knocks: {"r":"used","target":{"kind":"h_kiosk","id":"p_door","label":"p_door"},"state":"play","lines":2,"lane":true,"room":"citadel","fail":null} | citadel [-47.05,2.28,65.76] hp 10 | לבדוק את הבאר
+[64s +32s] look at the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4,"fail":null} | citadel [-40.66,2.2,-4.98] hp 10 | לרדת לתוך הבאר◆ מפתח המכסה (משרד המים)◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[66s +1s] Gilbert and Mira: the crystals, the key: {"r":"talked","to":"gilbert","state":"play","lines":14,"speakers":["gilbert","mira","hero"],"fail":null} | citadel [-40.32,2.2,-4.22] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[97s +30s] the lid: rusted to the rim: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | citadel [-43.55,2.2,-3.44] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[127s +29s] the lid: a kick (Aggressive): {"r":"used","target":{"kind":"well","id":"p_kick","label":"p_kick"},"state":"play","lines":0,"label":"p_kick","open":true,"fail":null} | citadel [-40.68,2.2,-4.99] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[132s +4s] Xil: {"r":"talked","to":"xil","state":"play","lines":10,"speakers":["xil","hero"],"fail":null} | citadel [-125.57,1.75,47.47] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (קסיל צריך את החותמת של דורן)◆ רשות: מה טים זרק לבאר?
+[134s +1s] Doran asleep: {"r":"talked","to":"doran","state":"play","lines":4,"speakers":["doran","hero"],"fail":null} | citadel [-119.44,1.84,44.24] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (קסיל צריך את החותמת של דורן)◆ רשות: מה טים זרק לבאר?
+[149s +15s] the harbour bell: looked at: {"r":"used","target":{"kind":"bell","id":"p_look","label":"p_look"},"state":"play","lines":4,"fail":null} | citadel [-119.2,1.84,42.1] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (קסיל צריך את החותמת של דורן)◆ רשות: מה טים זרק לבאר?
+[152s +2s] the bell: the magic ball rings it, Doran stamps: {"bell":true,"stamp":true,"fail":null} | citadel [-115.77,1.8,45.08] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[153s +1s] Xil: the rope: {"r":"talked","to":"xil","state":"play","lines":4,"speakers":["xil"],"fail":null} | citadel [-125.52,1.75,47.39] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[157s +3s] Tim and Lulu: {"r":"talked","to":"tim","state":"play","lines":6,"speakers":["tim","lulu","hero"]} | citadel [-49.98,2.2,5.52] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[158s +0s] overhear (Discreet): {"overheard":true,"fail":null} | citadel [-49.98,2.2,5.52] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?
+[159s +0s] Tim confesses: {"r":"talked","to":"tim","state":"play","lines":8,"speakers":["hero","tim"],"fail":null} | citadel [-49.98,2.2,5.52] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[160s +1s] the clover Tim gives back: {"found":true,"clovers":[2,2]} | citadel [-49.04,2.2,3.23] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[164s +3s] the bay rocks: looked at: {"r":"used","target":{"kind":"rocks","id":"p_look","label":"p_look"},"state":"play","lines":2,"fail":null} | citadel [-65.43,1.27,95.15] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[166s +2s] the bay rocks: up (Athletic): {"ys":[2.08,3.08,4.08],"tops":[2.08,3.08,4.08],"fail":null} | citadel [-69.7,4.08,97.95] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[168s +0s] the warm stones: {"r":"used","target":{"kind":"stones","id":"p_take","label":"p_take"},"state":"play","lines":4,"coins":[0,10],"fail":null} | citadel [-70.14,4.08,98.38] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[171s +3s] down off the rocks: {"y":1.69,"fail":null} | citadel [-65,1.69,95.53] hp 10 | לרדת לתוך הבאר◆ לפתוח את המכסה החלוד◆ חבל (הנמל)◆ רשות: מה טים זרק לבאר?◆ רשות: האבנים החמות על סלעי המפרץ
+[204s +32s] down the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | well [1093.4,0,3.3] hp 10 | למצוא את מקור החום◆ להעיר את שלושת הגבישים הכהים
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[231.5] go → (-68.6, 97.1) plan ok=true pts=2 left=0.24
+[235.5] go → (-70.4, 98.5) plan ok=true pts=2 left=0.3
+[235.5] go → (-70.4, 98.5) plan ok=true pts=2 left=0.3
+[240.3] go → (-68.9, 97.4) plan ok=false pts=3 left=1.04
+[245.3] stuck at (-69.7, 98.0): replan
+[248.7] go → (-67.4, 96.2) plan ok=false pts=3 left=0.87
+[253.8] stuck at (-68.0, 96.2): replan
+[254.5] go → (-64.8, 95.0) plan ok=false pts=3 left=1.76
+[259.5] stuck at (-66.5, 95.5): replan
+[265.0] stuck at (-65.9, 96.0): replan
+[267.2] go → (-42.0, -4.0) plan ok=false pts=13 left=1.62
+[289.4] go → (-42.0, -4.0) plan ok=false pts=4 left=1.64
+kept save-01.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     26 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
