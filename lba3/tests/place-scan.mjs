@@ -53,6 +53,10 @@ const LEFT = [
   ['c3shaft', 'float', 'rockWallRun', 'not a piece: the shaft\'s rock wall, rising from the shaft\'s floor 6 m down', [9.05, -5.36]],
   ['asylum', 'float', 'custom', 'not measured: LBA1\'s floors are cells (lba1room.js), not recorded parts: the boiler and the stove grate stand on them'],
   ['otrbar', 'float', 'railing', 'not measured: the gallery\'s railing stands on the gallery\'s edge, its floor not under its middle', [-8.23, -2.95]],
+  // POLISH-SWEEP (the desktop, 20.11; docs/lba-maturity/POLISH-SWEEP.md): looked at in the game camera and left
+  ['citadel', 'inside', 'decorate', "by design: the house's supply joint (TUT-MYSTERY, hometap.js) hidden behind the near barrel until the ball knocks it aside", [-47.98, 74.95]],
+  ['citadel', 'sunk', 'custom', "not seen: Nell's lean-to's posts run 40 cm down through the quay's paving (the roof and the bench stand right)", [-102.8, 33.87]],
+  ['isle_knartas', 'inside', 'buildIsland0', "by design (4-5 cm): the jar yard's fence rails set into their posts (zislands.js buildIsland0)"],
   // low: a few centimetres, seen only up close
   ['citadel', 'inside', 'workbench', 'low (6 cm): Nell\'s tapered landing leg on the bench, its thick end touching the top', [-102.8, 33.17]],
   ['office', 'inside', 'pottedPlant', 'low (6 cm): the plant behind the open door\'s leaf (a stealth room: left alone)', [3.6, -3.07]],
