@@ -69,7 +69,37 @@ player gets it; each frame's preparation step and its longest unit). Baseline = 
 
 ## 3. Before / after (Automated runtime only, SwiftShader; Medium; cold = first visit in play, the areas pre-built as the benchmark does)
 
-RESULTS_TABLE
+Probe `ARRIVAL-STEPS/probes/q_arrival.js` (summarised by `probes/summary.py`), each run Zeelich → Desert Island → the
+Hamalayi → Citadel twice (cold, then repeat). Baseline `results/base2-medium.txt` (`game.stagedBatches = false`, same
+build); candidate `results/cand5-medium.txt` (final code; `cand3`/`cand4` are earlier states, kept for the noise). "Longest
+step" leaves out the texture-layers read-back stall (§1.5) and steps that compiled a program; "longest black frame"
+leaves out that stall too. The first frame drawn is still black (the reveal waits for it: ROTATE-STALL).
+
+| Visit | longest preparation step, base → cand | longest black frame | black frames > 50 ms | black frames (count, ms of work) | first frame drawn (black) |
+|---|---|---|---|---|---|
+| Zeelich, cold | draw batches **336** (shadow batches 123 in the swap frame) → geometry 56, draw batches 39, shadow batches 16 | 338 → 77 | 3 → 2 | 42, 859 → 72, 1 025 | 157 (67 pieces leave batches) → 77 (0) |
+| Desert Island, cold | shadow batches 105 (swap frame), draw batches 77 → geometry 30, shadow 17, draw 13 | 108 → 50 | 4 → 0 | 32, 419 → 52, 473 | 74 (46 leave) → 50 (0) |
+| the Hamalayi, cold | draw batches **155**, shadow 71 → draw batches 75 (one unit: overlapRuns' placing), geometry 26 | 157 → 76 | 2 → 1 | 32, 388 → 52, 651 | 34 → 42 |
+| Citadel, return | geometry 48, warm-up 35, rejoin 31 → geometry 30, rejoin 21, warm-up 17 | 53 → 250 * | 1 → 2 * | 32, 242 → 32, 894 * | 37 → 250 * (12 leave in both) |
+| Zeelich, repeat | warm-up 39 → warm-up 26 | 39 † → 32 | 1 † → 0 | 31 → 32 | 14 854 † → 13 |
+| Desert / Hamalayi, repeat | ≤ 11 → ≤ 19 | 7 / 11 → 10 / 19 | 0 → 0 | 15–16 frames each | 7 / 11 → 10 / 15 |
+| Citadel, repeat | rejoin 45 → rejoin 19 | 45 → 29 (cand4) | 0 → 0 | 15 → 19 | 11 → 27 |
+
+\* Citadel's first drawn frame: 12 pieces of the station change look on that frame in every variant (their cells rebuilt
+in it: "submit other" 96 ms baseline, 24 without the settle, 149–213 with it, single samples each) and SwiftShader's
+shadow-cache draw; the separate A/B (`results/citadel-ab-*.txt`, without the canvas flush) was swamped by 13–54 s
+software-raster stalls in that frame. Inconclusive here; the settle is kept for what it measurably removed on Zeelich and
+Desert Island (67 and 46 pieces leaving their batches on the first frame → 0) and `game.settleOn = false` turns it off for
+a hardware A/B. † a SwiftShader raster stall in the baseline's frame.
+
+In words: every batch build now comes in slices of 12–20 ms with a few units of 25–75 ms left (a texture array's upload
+30 ms, one large piece's place in overlapRuns 69 ms, a geometry upload part 30–56 ms on SwiftShader's GPU side); the
+shader warm-up steps are 13–26 ms (they were one step of 34–43 ms with a new program, and a new program is now alone in
+its call). The black lasts longer: ~20–30 more black frames on a cold arrival (the same work spread over more frames,
+plus ~10 % overhead), a few more on a repeat. Repeat visits stay short (16–32 black frames). The tests' check
+(`tests/arrival-steps.mjs`, cold Zeelich, Desert Island and the tavern): every batch / settle / rejoin / warm-up slice
+≤ 40 ms (longest 32 ms), nothing built or leaving a batch in the first 30 frames in view, staged batches identical to
+one-step batches.
 
 ## 4. Auto's first guess (goal 2) — no change, on the evidence
 
@@ -89,7 +119,15 @@ CPU pressure — as designed.
 
 ## 5. The street's CPU (goal 3)
 
-STREET_SECTION
+Not changed. The user's numbers: GTX 1050 battery CPU work p95 17.5 ms (submit main 4, other sim 2.4, people 1.6,
+submit other 1.9); UHD 620 plugged in p95 22.3 ms (submit main 5.8, submit other 2.9, people 1.7, other sim 2.3). A CPU
+profile of the street route here (`results/street-profile-medium.txt`, 240 frames, Medium) is 92 % `uniformMatrix4fv` —
+SwiftShader executing the draws (skinned bodies' bone matrices) on the CPU, not the game's JavaScript — and the game's
+own functions are each under 0.1 % (shadowcull update, the shown-world walk, the minimap's build); the heap grew by
+~0 KB a frame between collections. Earlier work (PERF-CPU, CPU-WALK, PERF-SUBMIT) already took the per-frame walks,
+allocations and caster lists; nothing cheap and clearly measurable was left that SwiftShader can show. "Submit main" is
+three's own draw submission (≈ draw calls × per-call cost): what lowers it is fewer calls (Low's profile, which Auto
+chose on the UHD 620 on measured CPU pressure) — a hardware measurement, not a guess from here.
 
 ## 6. What the user's hardware must confirm
 
@@ -102,4 +140,17 @@ STREET_SECTION
 
 ## 7. Remaining limits
 
-LIMITS
+- **No hardware number.** Whether the GTX 1050's arrival black frames now stay under ~50 ms, and the UHD 620's warm-up
+  step under its 1 013 ms, needs §6. A program the driver compiles synchronously still costs its full time in one step
+  (it is now alone in it); where `KHR_parallel_shader_compile` exists three only starts it and `whenReady` polls.
+- Units left over the slice: a texture array's creation and upload (one per array, 20–31 ms here), one large piece's
+  place in overlapRuns (up to 69 ms), a geometry upload part (uploadGeometry by quarters of the area's children: 30–56 ms
+  here, 121 ms on the UHD 620 — the next candidate to cut finer, by object count, if the hardware line shows it).
+- The texture layers' first canvas read-back (§1.5): one read, unsplittable; its hardware cost is unknown.
+- Citadel's return: 12 station pieces change look on the first frame drawn (cells rebuilt in that still-black frame) in
+  every variant; not addressed.
+- The black screen lasts longer on a cold arrival (the same work over more frames); the probe counts 52–72 black frames
+  where there were 32–42 (at 60 fps ~0.3–0.5 s more). Nothing was moved before the benchmark; no visual was dropped.
+- The 34 ms frame 5.6 s after an arrival (18.11) was not reproduced here (SwiftShader's frames in view after an arrival
+  are dominated by its own raster stalls); the report's hitch line on hardware will name its work.
+- Auto's first guess unchanged (§4) until a High run on battery exists.
