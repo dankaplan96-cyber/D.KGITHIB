@@ -12,10 +12,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
-from mathutils import Vector  # noqa: E402
+from mathutils import Vector  # noqa: E402  (JOINTS-BLENDER: arm_sleeve)
 from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, refine, ring, smooth, sphere, strip, strip_tris, trunk_loft, trunk_weights, tube  # noqa: E402
 
-args = [a for a in sys.argv[1:] if not a.endswith('.py')]
+args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [a for a in sys.argv[1:] if not a.endswith('.py')]   # (JOINTS-BLENDER: also run inside Blender, its own args before '--')
 SKEL, OUTDIR = args[0], args[1]
 ONLY = args[2:]
 ALL = json.load(open(SKEL))
@@ -363,6 +363,61 @@ def grobo_trunk(headY, hipsY, shY, neckY, kneeY, belly, slim=1.0):
     p4 = (yT + 0.07, max(front(yT + 0.07) + rad[4] + GAP, p3[1] - 0.02))
     p5 = (yT - 0.01, p4[1] + 0.05)
     return [(round(y, 4), round(z, 4), round(r, 4)) for (y, z), r in zip((p0, p1, p2, p3, p4, p5), rad)]
+
+
+# JOINTS-BLENDER (the user 20.11: "arms … read as connected tubes"; they named the shoulder/elbow and the joins): the
+# sleeve was two tubes — the upper arm on a blend, the forearm a rigid tube on the elbow's bone starting at the joint — so a
+# bent elbow showed two tubes meeting at a corner. One shell now from the shoulder to the wrist along the bones, its rings
+# placed for a form (the upper arm tapering to a slimmer elbow, the forearm swelling below it and widening to the cuff),
+# three rings through the elbow with the weight passing from the upper arm's bone to the forearm's over them, so the bend
+# rounds instead of creasing. JOINTS_OLD=1 builds the two tubes as before.
+JOINTS_OLD = bool(os.environ.get('JOINTS_OLD'))
+ARM_RINGS = [   # (u: 0 the shoulder, 1 the elbow, 2 the wrist; radius × the arm's ra (× the forearm's own factor past the elbow))
+    # (the shoulder: the sleeve starts in a dome up into the body instead of a separate ball over its end)
+    (-0.16, 0.45), (-0.11, 0.8), (-0.05, 0.98),
+    (0.0, 1.05), (0.4, 1.03), (0.75, 0.99), (0.9, 0.96), (1.0, 0.95), (1.12, 0.97), (1.35, 1.02), (1.7, 1.05), (2.0, 1.08),
+]
+
+
+def arm_sleeve(part, S, E, W, ra, fore_k=(1.0, 1.0), n=10, u_max=2.0):
+    """One sleeve from S (shoulder) through E (elbow) to W (wrist): rings along the two segments, framed by parallel
+    transport so they don't twist at the elbow; vertex weights by u (sh up to 0.8, el from 1.2, blended between)."""
+    S, E, W = Vector(S), Vector(E), Vector(W)
+    pts = []
+    for u, k in ARM_RINGS:
+        if u > u_max:
+            break
+        if u <= 1.0:
+            c = S + (E - S) * u
+            r = ra * k
+        else:
+            t = u - 1.0
+            c = E.lerp(W, t)
+            r = ra * k * (fore_k[0] + (fore_k[1] - fore_k[0]) * t)
+        pts.append((u, c, r))
+    W_ = {}
+    rings, prev_u = [], None
+    for i, (u, c, r) in enumerate(pts):
+        a = pts[max(0, i - 1)][1]; b = pts[min(len(pts) - 1, i + 1)][1]
+        d = (b - a).normalized()
+        if prev_u is None:
+            up = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
+            ux = d.cross(up).normalized()
+        else:
+            ux = (prev_u - d * prev_u.dot(d)).normalized()   # (parallel transport: no twist round the bend)
+        wz = d.cross(ux).normalized()
+        prev_u = ux
+        rr = []
+        wt = {'sh': 1.0} if u <= 0.8 else {'el': 1.0} if u >= 1.2 else {'sh': (1.2 - u) / 0.4, 'el': (u - 0.8) / 0.4}
+        for q in range(n):
+            th = 2 * math.pi * q / n
+            v = tuple(c + ux * (math.cos(th) * r) + wz * (math.sin(th) * r))
+            rr.append(v); W_[tuple(round(x, 6) for x in v)] = wt
+        rings.append(rr)
+    if (Vector(rings[0][1]) - S).cross(Vector(rings[0][0]) - S).dot((E - S).normalized()) > 0:
+        rings = [list(reversed(r_)) for r_ in rings]
+    loft(part, rings, cap_bottom=True, cap_top=u_max < 2.0)
+    return W_
 
 
 def build(name):
@@ -777,25 +832,42 @@ def build(name):
         ra = (0.08 if grobo else 0.066) * slim * (0.92 if kid else 1) * limb
         sleeve = skin if gown else tunic
         rolled = bool(L.get('rolled') or cp.get('rolled')) and not gown   # (sleeves rolled to the elbow: the bare forearm, a roll of cloth)
-        up = b.P('upper' + s, sleeve, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
+        ONE = not JOINTS_OLD   # (JOINTS-BLENDER: one sleeve; rolled: to just past the elbow, under the roll)
+        ROLL_ = bool(L.get('rolled') or cp.get('rolled')) and not gown
+        AW = {}
+        up = b.P('upper' + s, sleeve, (lambda p, s=s, AW=AW: {k + s: v for k, v in AW.get(tuple(round(x, 6) for x in p), {'sh': 1.0}).items()}) if ONE else (lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}), 50)
         sdrop = cp.get('shoulderDrop', 0.0)   # (G1-ART: the sleeve's top and the shoulder ball lowered onto the tunic's slope: a round shoulder, not a post at the corner)
         # (ARTHUR-LOOK, the user 12.11: "the shoulders are strange": the sleeve's flat top stood above the tunic as a square
         # pad. Now the sleeve starts inside a round shoulder ball of its own width, the ball's top just over the tunic's
         # shoulder line, so the cloth runs from the neck over a round shoulder into the sleeve)
         SB_ = (sh[0] - sx * 0.025, sh[1] - 0.02, sh[2]) if aT else None
-        if aT:
+        wrist = lerp(el, hd, 0.82)
+        if ONE:
+            AW.update(arm_sleeve(up, SB_ if aT else (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, wrist, ra,
+                                 fore_k=(0.85, 0.8) if gown else (1.0, 1.0), u_max=1.12 if ROLL_ else 2.0))
+        elif aT:
             tube(up, SB_, el, ra * 1.04, ra, 10)
         else:
             tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, ra * 1.05, ra, 8)
-        wrist = lerp(el, hd, 0.82)
         if rolled:
             # the forearm bare and slim to the wrist; the sleeve rolled up in a band just below the elbow (it keeps
             # the elbow's crease covered: the roll is on the forearm's bone, the upper sleeve meets it)
             # (it runs on to the hand bone, under the ball hand: a bare forearm stopping at the sleeve's wrist left a
             # gap before the ball that showed in the opening's close-ups)
-            tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, ra * (0.78 if aT else 0.72), ra * (0.58 if aT else 0.56), 10 if aT else 8)
+            if ONE:   # (JOINTS-BLENDER: the bare forearm shaped — a swell just below the elbow, narrowing to a flatter wrist)
+                f0 = ra * (0.78 if aT else 0.72)
+                fr = [(0.12, 1.0), (0.3, 1.06), (0.5, 0.98), (0.75, 0.86), (1.0, 0.76)]
+                fe = b.P('fore' + s, skin, 'el' + s, 50)
+                E_, H_ = Vector(el), Vector(hd)
+                d_ = (H_ - E_).normalized(); up_ = Vector((0, 0, 1)) if abs(d_.z) < 0.9 else Vector((1, 0, 0)); ux_ = d_.cross(up_).normalized(); wz_ = d_.cross(ux_).normalized()
+                rg_ = [[tuple(E_.lerp(H_, t) + ux_ * (math.cos(2 * math.pi * q / 10) * f0 * k) + wz_ * (math.sin(2 * math.pi * q / 10) * f0 * k * (0.85 if t > 0.6 else 1.0))) for q in range(10)] for t, k in fr]
+                if (Vector(rg_[0][1]) - E_).cross(Vector(rg_[0][0]) - E_).dot(d_) > 0:
+                    rg_ = [list(reversed(r_)) for r_ in rg_]
+                loft(fe, rg_, cap_bottom=True, cap_top=True)
+            else:
+                tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, ra * (0.78 if aT else 0.72), ra * (0.58 if aT else 0.56), 10 if aT else 8)
             tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, -0.02), lerp(el, hd, 0.2), ra * 1.1, ra * 1.04, 10 if aT else 8)
-        else:
+        elif not ONE:
             tube(b.P('fore' + s, sleeve, 'el' + s, 50), el, wrist, ra * (0.85 if gown else 1), ra * (0.8 if gown else 1.08), 8)  # (sleeves widen a little toward the cuff)
         if not gown and not rolled:
             tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
@@ -812,8 +884,10 @@ def build(name):
             # hangs under the cuff with the coat showing between; a rolled sleeve's bare forearm already runs into the ball)
             w0 = lerp(el, hd, 0.74)
             tube(b.P('wrist' + s, cp.get('glove') or skin, 'hand' + s, 60), w0, hc_, hr * 0.52, hr * 0.6, 8)
-        # the shoulder: flush with the sleeve, where it meets the body
-        if aT:
+        # the shoulder: flush with the sleeve, where it meets the body (JOINTS-BLENDER: the one sleeve's dome instead)
+        if ONE:
+            pass
+        elif aT:
             sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), SB_, ra * 1.04, 12, 8, (1.0, 1.0, 1.0), exact=True)
         else:
             sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01 - sdrop, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
