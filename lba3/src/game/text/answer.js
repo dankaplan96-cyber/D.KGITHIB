@@ -52,7 +52,7 @@ Object.assign(STR.en, {
   co_irsa_1: 'It is going up. Kell is running a full cart to the cistern, and my hand is off the switch.',
   co_vesk_up_helped: "You pulled me out of that. And now Kell's cart goes up without my line.",
   co_vesk_why: "I cut that log so the lane wouldn't go dry. It doesn't need me.",
-  co_vesk_up_left: "Don't look at me like that. I heard her. Kell's cart, going up without my line.",
+  co_vesk_up_left: "Don't look at me like that. I heard Irsa. Kell's cart, going up without my line.",
   co_vesk_key: "There. My key's out. Lift the bar after her two knocks, in the quiet, or it slams back.",
   co_tw_key: 'Thank you.',
   co_lock_ok: "It's off. The drill's winding down... and she's still knocking.",
