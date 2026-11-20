@@ -113,7 +113,11 @@ export class Balances extends BlChapter {
   }
   band(i) { const b = this.f['bh_band' + i]; return b >= 0 && b <= 2 ? b : 1; }
   regionBuilt(ids) { if (ids.includes('bl_gardens')) this.sync(true); }
-  applyFlags() { this.run = null; this.waits = []; this.leaving = false; if (this.inMine()) this.sync(true); }
+  applyFlags() {
+    this.run = null; this.waits = []; this.leaving = false;
+    if (this.inMine() && this.f.bh_started) this.f.bh_go = true;   // (a save made under the card, before Tessa's first lines ended: she is at the rig)
+    if (this.inMine()) this.sync(true);
+  }
 
   begin() {
     const g = this.game, f = this.f;
@@ -191,7 +195,7 @@ export class Balances extends BlChapter {
     switch (id) {
       case 'bl_fennick': return this.talkFennick();
       case 'tessa':
-        if (!f.bh_go) return c([['tessa', 'bh_te_3']]);
+        if (!f.bh_go) return c([['tessa', 'bh_te_3']], () => { f.bh_go = true; this.story.refreshCast({ walk: true }); after(); });
         if (!f.bh_fig) return c([['tessa', f.bh_book || f.bh_bench ? 'bh_te_wait2' : 'bh_te_wait']]);
         if (!f.bh_rig1) return this.firstRun();
         if (this.run) return c([['tessa', 'bh_te_watch']]);
