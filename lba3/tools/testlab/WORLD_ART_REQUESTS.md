@@ -5575,8 +5575,16 @@ for this order. Done so far (details in `docs/lba-maturity/JOINTS-BLENDER.md` on
 - **JOINTS-BLENDER 3** (`531f2ce6`): Zoé's hip join centred on the joint (her sit lost the notch at the front of the
   hip; triangles unchanged); Baldino's arms as the cast's (+104 triangles); Twinsen's wrist checked — the game never
   turns the hand's bone, so cuff and fist can't part; left with the wing sleeve.
-- Next: the knees and legs on the cast, then the sword swing, landing, walk-to-stop, pickup and planted feet; the full
-  test at the end. Not merged into the cloud's branch.
+- **JOINTS-BLENDER 4** (`40c6bfb2`): the cast's legs one shell through a rounded knee (23 models, +1.8 % triangles);
+  the shells' end caps take their nearest ring's weight (a cap's middle point stayed on the first bone: a spike at a
+  bent elbow or ankle). 189/189 NPCs load their model.
+- **JOINTS-BLENDER 5** (`0c47fcd8`, rig.js): measured per frame on flat ground — the sword combo, walk, stop, pickup and
+  the standing jump already held their feet (≤ 0.7 cm), unchanged. Fixed: the Normal mode's hop (Space) put the soles
+  6 cm into the ground and slid them 31 cm (now planted as the jump's crouch: 1.2 cm, ≤ 4.6 cm); the robe's run slid the
+  standing foot forward at 0.72 m/s (its cycle now matches its shorter stride, `ROBE_RUN_CYC` 0.82: 0.27 m/s, the same
+  speed). `tests/anim-polish.mjs` 55/55 on the branch.
+- Left: the full test on the branch (the playthrough chain), then the frame time (measurements last). Not merged into
+  the cloud's branch; for the cloud to apply when its audit allows.
 
 ## CHAIN-V103 · the playthrough chain 01–14 on v103 (CLOUD_ORDERS 52.1) · the desktop, 20.11.2026
 v103 (`d1e0ec7f`), `tests/lib/seg.mjs` per segment from a scratch copy of v103's `tests\`, served by a node static server
