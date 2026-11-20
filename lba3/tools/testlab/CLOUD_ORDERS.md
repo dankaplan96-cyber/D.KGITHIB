@@ -733,3 +733,44 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     - Measure frame time in one populated street before and after, naming the machine. No visible change may cost
       performance.
     - Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
+
+59. **HIDDEN-TRIS-HW (the user, 20.11, to the local agent; status.md P85): "check whether there are hidden triangles in a
+    small part of the game, to see whether it weighs on the game."** Triangles drawn that a player can never see, from any
+    reachable spot:
+    - under the terrain or floor;
+    - inside walls, rocks or other solids;
+    - the hidden halves of overlapping props;
+    - bottoms of things resting on the ground;
+    - back sides drawn because a material is double-sided;
+    - backs of buildings against a cliff;
+    - far props at full detail.
+
+    The cloud has a worker finding the hidden set in software (no real GPU there). It will write
+    `docs/lba3-performance/HIDDEN-TRIS.md` (method, the list of sources, a SwiftShader-only estimate). Your part is
+    **the real cost on a real GPU**, which the cloud cannot measure:
+    1. **Area:** Citadel round Twinsen's house (the yard, the lane, the square with the well); then one busy area of your
+       choice (Zeelich's street or Kesh).
+    2. **Find the hidden set.** If HIDDEN-TRIS.md is merged, use its method and list. If not yet, find it yourself with
+       an ID render: each piece in its own colour, from many reachable camera spots and headings, read back; pieces or
+       triangles never seen are hidden. Count double-sided backs separately.
+    3. **Measure on this machine's GPU:**
+       - with the hidden set drawn, and with it removed (hidden or skipped in its batches), at the same camera points;
+       - frame time p50/p95, GPU time if available, triangles and draw calls (`renderer.info`);
+       - at Medium and High, plugged in.
+       Name the machine and GPU. Never write a GTX 1050 or UHD 620 number unless measured on that machine.
+    4. **Verdict, with numbers:** does it weigh on the game? How much of the frame does it cost? The cheapest fix if it
+       is worth it, for example:
+       - drop buried faces at build time;
+       - single-sided materials where double isn't needed;
+       - trim bottoms;
+       - a per-area "never visible" list.
+       Implement only a fix with a clear measured win and no visible change.
+
+    **Deliver:**
+    - Work on a branch from `ccr-c1c2c4b9-dep6ed`, pushed as `hidden-tris-hw`.
+    - A section "Real GPU" in `docs/lba3-performance/HIDDEN-TRIS.md` (create the file if the cloud's isn't merged yet),
+      with the numbers table and the verdict.
+    - Say HIDDEN-TRIS-HW in WORLD_ART_REQUESTS.md when you start and when you are done.
+
+    **Order with the other jobs:** do this before POLISH-SWEEP (58), because it is short; JOINTS-BLENDER (57) as it stands.
+    Never commit LBA1/LBA2 files. Test lightly.
