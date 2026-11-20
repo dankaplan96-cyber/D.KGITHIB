@@ -89,7 +89,7 @@ if (!ONLY || ONLY === 'A') {
   await start('new-04');
   is('A0 the save: chapter 2, the water back, the thread on, the objective sends him home, no door at the station yet',
     await ev(() => { const f = game.flags, L = game.story.cur.line; return [f.chapterKey, !!f.c1_water, L.on, L.open, game.story.doors().some((d) => d.room === 'control'), document.querySelector('#objective').textContent]; }),
-    (v) => v[0] === 'project' && v[1] && v[2] && v[3] && v[4] === false && /tap/i.test(v[5]));
+    (v) => v[0] === 'project' && v[1] && v[2] && v[3] && v[4] === false && /home/i.test(v[5]) && /Zo/.test(v[5]));   // (DIALOGUE-2: "Go home and talk to Zoé")
   is('A1 home: Zoé (the square is full, our tap is not); his own hand on the tap: dry', await ev(() => {
     const r = P.talk('zoe', { run: true }); const H = game.story.chapters[0].home.parts.house, h = game.hero;
     const t = P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'ct_tap' }); for (let i = 0; i < 40 && (h.steer || h.actT > 0); i++) game.step(0.25); P.settle();
