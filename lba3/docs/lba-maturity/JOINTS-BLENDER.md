@@ -40,6 +40,28 @@ hand on the sleeve's end), **on everyone**: Twinsen, Zoé and Arthur, the Grobos
 - `cast_poly.py` also takes its arguments after `--` now, so it runs inside Blender
   (`blender -b --python tools/blender/cast_poly.py -- art/characters/skeletons.json <out> [names]`).
 
+## Zoé, Twinsen's wrist, Baldino (JOINTS-BLENDER 3)
+- **Zoé's arms** are already one shell from the armhole to the wrist (CHAR-FORM's 17 sections, the elbow's weight spread
+  over 0.42–0.6); in the poses (elbow, overhead, reach; front/side/back) the shoulder, elbow and armhole trim hold. The
+  hand is its own piece on the hand's bone, but **the game never turns the hand's bone** (rig.js sets no `hand.rotation`;
+  the bone follows the forearm), so the hand cannot part from the wrist in motion; nothing changed there.
+- **Zoé's hip** (the sit, rig.js `slump`: the thighs to −1.4; the 1757 jump to −1.33): the trouser leg passed from the
+  hips' bone to the thigh's 7 cm under the hip joint (FORM_HIP 0.48–0.395 H; the joint at 0.472 H), so in a sit the top of
+  the leg lagged and the thigh bent a second time under the joint, a notch at the front of the hip under the top's hem.
+  Now centred on the joint (0.505–0.44 H), and the top's hem lies on the thighs more in front (0.88) than behind (0.6;
+  it was 0.65 all round). `captures/joints-blender/zoe-sit-before-after.jpg` (left before; top side, bottom front).
+  Triangles 8,346 → 8,346; bones, eyes and mouths unchanged. `JOINTS_OLD=1` rebuilds the shipped model byte for byte.
+- **Twinsen's cuff–wrist–fist:** the cuff, its hem and inside are on the forearm's bone, the fist on the hand's, which
+  moves with the forearm (above): the join can't open in motion, and at rest the fist comes out of the flared cuff as in
+  LBA2. Left as it is, with the wing sleeve (the user's decision).
+- **Baldino** (`baldino_poly.py`, his own generator; the cast's change didn't reach him): the green sleeve was a tube with
+  a ball on its top and the grey forearm a second tube from 3 cm inside it. Now as the cast's: one sleeve from a dome
+  inside the shoulder through a rounded elbow (the weight passing over the bend), ending just past the elbow, and the
+  forearm shaped from under it (a swell below the elbow, narrowing to LBA2's thin wrist). Triangles 6,173 → 6,277;
+  bones, eyes, mouths and the trunk unchanged. `captures/joints-blender/baldino-arm-before-after.jpg` (elbow bent, then
+  at rest; before, after). `JOINTS_OLD=1`: byte for byte as before.
+- `zoe_poly.py` and `baldino_poly.py` take their arguments after `--` too (they failed inside Blender before).
+
 ## Next
-Zoé (her own generator, `zoe_poly.py`: the armhole trim and the hand's join), Twinsen's cuff–wrist–fist join, Baldino;
-then the sword swing, landing, walk-to-stop and pickup with the same joints; the full test at the end.
+The knees and the legs' joints on the cast; then the sword swing, the landing, walk-to-stop and the pickup with the same
+joints, planted feet; the full test at the end, and the frame time last (the user: measurements at the end).

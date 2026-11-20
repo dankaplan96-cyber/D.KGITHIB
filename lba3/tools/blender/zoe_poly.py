@@ -29,7 +29,7 @@ from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
 from lbapoly import Builder, box, catmull, lerp, lip_band, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
 
-args = [a for a in sys.argv[1:] if not a.endswith('.py')]
+args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [a for a in sys.argv[1:] if not a.endswith('.py')]   # (inside Blender: the arguments after --)
 SKEL, OUT = args[0], args[1]
 BLEND = args[2] if len(args) > 2 else None
 if os.path.isdir(OUT) or not OUT.endswith('.json'):
@@ -122,6 +122,12 @@ FORM_LEG = [(0.47, 0.055, 0.074, -0.076), (0.44, 0.059, 0.080, -0.084), (0.41, 0
             (0.095, 0.042, 0.048, -0.058), (0.068, 0.0385, 0.044, -0.054), (0.05, 0.039, 0.045, -0.056)]
 FORM_KNEE_W = 0.075    # (m above and below the knee over which the leg passes from the thigh's bone to the shin's)
 FORM_HIP = (0.48, 0.395)   # (H: the trouser leg passes from the hips to the thigh's bone between these)
+# JOINTS-BLENDER (CLOUD_ORDERS 57): the hip's join. The pass above was centred 7 cm under the hip joint (0.472 H), so in a
+# sit (slump: the thighs at -1.4) the top of the trouser leg lagged half behind the thigh and the leg bent a second time
+# below the joint, a balloon in front. Centred on the joint now, over 13 cm; JOINTS_OLD=1 builds the model as before.
+JOINTS = not os.environ.get('JOINTS_OLD')
+if JOINTS:
+    FORM_HIP = (0.505, 0.44)
 # the shoes: long and pointed, z −0.054 … +0.107, ±0.038 wide; sections (z, half-width, height)
 ZOE_SHOE = [(-0.054, 0.03, 0.05), (-0.02, 0.036, 0.06), (0.03, 0.036, 0.05), (0.07, 0.026, 0.032), (0.107, 0.006, 0.01)]
 
@@ -283,6 +289,9 @@ def w_body(p):
         # and the middle on both, so in a stride it swings over the leading thigh as cloth does instead of the trouser
         # leg's top pushing out through it
         k = FORM_HEM_K * smooth(0.47 * ZH, 0.404 * ZH, y)
+        if JOINTS:
+            # (JOINTS-BLENDER: the hem's front lies on the thighs (in a sit, on her lap), its back hangs more from the hips)
+            k = (FORM_HEM_BACK + (FORM_HEM_FRONT - FORM_HEM_BACK) * smooth(-0.04, 0.05, z)) * smooth(0.47 * ZH, 0.404 * ZH, y)
         if k > 0:
             l = smooth(-0.05, 0.05, x)
             w = {b_: v * (1 - k) for b_, v in w.items()}
@@ -291,6 +300,7 @@ def w_body(p):
 
 
 FORM_HEM_K = 0.65
+FORM_HEM_FRONT, FORM_HEM_BACK = 0.88, 0.6   # (JOINTS-BLENDER)
 
 
 def sec(y):
