@@ -65,6 +65,32 @@ export class HomeTap {
       // the pump room's door on the lane (src/game/pumproom.js): shut in this chapter; its pipe knocks
       P.kiosk = W.pumpKiosk || buildPumpKiosk(g);
     }
+    if (!P.joint && W?.homeBarrel) {
+      // TUT-MYSTERY: the house's supply joint behind the near barrel at the house's corner (town.js W.homeBarrel), the one
+      // Twinsen mended yesterday: a short run of pipe along the wall's foot from the lane side, a coupling, a crust of
+      // pale crystals on it, the ground dark and wet round the barrel's foot (seen before the barrel moves: something
+      // leaks there), a drop that falls from the coupling. Knocked aside by the ball, the barrel shows it
+      const B = W.homeBarrel, jx = B.x, jz = B.z + 0.47, jy = B.y;
+      const grp = new THREE.Group(); grp.position.set(jx, jy, jz); grp.userData.keep = true; W.root.add(grp);
+      const lead = new THREE.MeshStandardMaterial({ color: '#7d7f84', roughness: 0.45, metalness: 0.7 });
+      const fur = new THREE.MeshStandardMaterial({ color: '#e6f4f2', roughness: 0.6 });
+      const add = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); grp.add(o); return o; };
+      add(new THREE.CylinderGeometry(0.035, 0.035, 1.3, 8), lead, 0.62, 0.14, 0, 0, Math.PI / 2);     // (along the wall's foot, from the lane side)
+      add(new THREE.CylinderGeometry(0.035, 0.035, 0.32, 8), lead, -0.06, 0.28, 0);                   // (up into the wall)
+      add(new THREE.CylinderGeometry(0.068, 0.068, 0.17, 10), brass, 0.02, 0.14, 0, 0, Math.PI / 2);  // the coupling (his repair: bright brass)
+      for (let i = 0; i < 9; i++) { const c = add(new THREE.OctahedronGeometry(0.024 + (i % 3) * 0.008, 0), fur, -0.05 + (i % 5) * 0.035, 0.13 + ((i * 3) % 4) * 0.022 - 0.03, -0.055 + ((i * 7) % 3) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
+      mergeStatic(grp, { recolor: false });
+      // the wet ground: a dark, shiny patch round the barrel's foot (a little shows past the barrel before it moves)
+      const wet = new THREE.Mesh(new THREE.CircleGeometry(0.62, 18), new THREE.MeshStandardMaterial({ color: '#3a2c20', roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      wet.rotation.x = -Math.PI / 2; wet.scale.set(1.15, 0.9, 1); wet.position.set(jx + 0.05, g.physics.groundAt(jx, jz - 0.35) + 0.015, jz - 0.35); wet.userData.keep = true; W.root.add(wet);
+      const drop = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 5), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.05 }));
+      drop.position.set(jx + 0.02, jy + 0.08, jz - 0.06); drop.visible = false; drop.userData.keep = true; W.root.add(drop);
+      // the near barrel: where it stands, and where the ball's knock leaves it (a metre out from the wall, north)
+      P.joint = { grp, wet, drop, x: jx, y: jy, z: jz, dropT: 0 };
+      P.barrel = { B, x0: B.x, z0: B.z, x1: B.x - 0.05, z1: B.z - 1.0, t: null, rock: null, wait: 0, amp: 1, aside: false };
+      // (its motion is the world's (every state): a rock or the knock plays on under a line in the dialogue box)
+      W.updaters.push((dt) => this.barrelTick(dt));
+    }
     const H = g.regions?.built?.('house');
     if (!P.house && H?.kitchen && H.group) {
       const K = H.kitchen, o = H.group.position, BZ = K.spout.z - o.z - 0.27, bx = K.spout.x - o.x;
@@ -120,6 +146,9 @@ export class HomeTap {
     if (this.on && g.room?.id === 'house' && P) consider(dist(P.tap.x, P.tap.z), 1.45, { kind: 'h_tap', label: 'p_tap' });
     // the garden standpipe: his hand on it (from the path; not from the other side of the lane's pipe)
     if (this.on && !g.room && Y && Math.abs(g.hero.pos.y - Y.y) < 0.6) consider(dist(Y.x, Y.z), 1.5, { kind: 'h_yard', label: 'p_tap' });
+    // (TUT-MYSTERY: the near barrel, until the ball has knocked it aside: a shove by hand is a reasonable try)
+    const Rb = this.parts.barrel;
+    if (this.on && !g.room && Rb && !Rb.aside) consider(dist(Rb.x0, Rb.z0), 1.35, { kind: 'h_barrel', label: 'p_look' });
     const C = this.parts.cave;
     if (this.on && C && g.room === C.R) {
       consider(dist(C.pool.x, C.pool.z), 1.6, { kind: 'h_pool', label: 'p_feel' });
@@ -143,13 +172,22 @@ export class HomeTap {
         return true;
       case 'h_yard': {
         // his hand on the garden standpipe's handle: dry, and it knocks too; the sound runs on under the lane
-        const Y = this.parts.yard;
+        // (TUT-MYSTERY: and the knock answers from behind the near barrel at the house's corner, where the supply goes
+        //  into the wall: the barrel rocks on its foot and Zoé turns to look at it. Once the joint is found, the old line)
+        const Y = this.parts.yard, R = this.parts.barrel, lead = R && !R.aside && this.on;
         handTo(h, Y.hand, () => {
           this.rattle('yard');
-          ch.chain([['hero', f.pr_yard ? 'prh_yard_2' : 'prh_yard']], () => { if (!f.pr_yard) { f.pr_yard = true; g.updateObjective(); g.save(false); } });
+          // (the barrel's rock is the world's own animation (W.updaters), so it plays under his line in the box)
+          if (lead) { this.rockBarrel(1, 0.45); this.lookAtBarrel(); }
+          ch.chain([['hero', f.pr_yard ? 'prh_yard_2' : lead ? 'prh_yard_b' : 'prh_yard']], () => { if (!f.pr_yard) { f.pr_yard = true; g.updateObjective(); g.save(false); } });
         });
         return true;
       }
+      case 'h_barrel':
+        // (TUT-MYSTERY: a reasonable wrong try, a shove by hand: it rocks and settles back; he says what would move it)
+        this.rockBarrel(0.6);
+        ch.chain([['hero', 'prh_barrel_try']]);
+        return true;
       case 'h_pool': {
         // he bends to the basin from where he came to it, turned so that his hand (not his chest) is over the water
         const a0 = Math.atan2(C.pool.x - h.pos.x, C.pool.z - h.pos.z), d = POOL.r + 0.44;
@@ -195,6 +233,70 @@ export class HomeTap {
     const at = which === 'kiosk' ? T.pipe : T;
     for (let i = 0; i < 3; i++) (this.later ||= []).push({ t: i * 0.22, fn: () => { g.audio.play('pipeKnock', at); g.particles.burst(at.x, (at.y ?? T.y) + 0.9, at.z, '#b8a890', 3, 0.8); } });
   }
+  // ---------------------------------------------------------------- TUT-MYSTERY: the near barrel and the joint behind it
+  // the barrel rocks on its foot (the knock behind it answering the garden tap; or a shove by hand), after `wait` s
+  rockBarrel(amp = 1, wait = 0) { const R = this.parts.barrel; if (!R || R.aside || R.t != null) return; R.rock = 0; R.wait = wait; R.amp = amp; R.heard = false; }
+  // Zoé turns to look at it for a few seconds (as she would at a knock from there)
+  lookAtBarrel() {
+    const R = this.parts.barrel, z = this.ch.npc('zoe');
+    if (!R || !z?.present || this.game.room) return;
+    this.lookObj = { pos: { x: R.x0, y: R.B.y, z: R.z0 } }; this.lookT = 3.2;
+    z.listenTo = this.lookObj;
+  }
+  // the ball's knock (or a kick): the barrel shuffles a metre out from the wall on its rim; the joint shows
+  knockBarrel(animate = true) {
+    const R = this.parts.barrel;
+    if (!R || R.aside) return false;
+    R.aside = true; R.rock = null;
+    const c = R.B.c; c.x = R.x1; c.z = R.z1; this.game.physics.update(c);
+    if (animate) R.t = 0; else this.setBarrel(true);
+    return true;
+  }
+  // its place without animation: aside (the joint found, chapter 1) or where it always stood
+  setBarrel(aside) {
+    const R = this.parts.barrel;
+    if (!R) return;
+    R.aside = aside; R.t = null; R.rock = null;
+    const g = R.B.grp, c = R.B.c;
+    g.position.set(aside ? R.x1 : R.x0, R.B.y, aside ? R.z1 : R.z0); g.rotation.set(0, R.B.ry, R.B.rz);
+    c.x = aside ? R.x1 : R.x0; c.z = aside ? R.z1 : R.z0; this.game.physics.update(c);
+  }
+  barrelTick(dt) {
+    const R = this.parts.barrel, J = this.parts.joint, g = this.game;
+    if (!R) return;
+    const G = R.B.grp, rz = R.B.rz;
+    if (R.rock != null) {
+      if (R.wait > 0) R.wait -= dt;
+      else {
+        if (!R.heard) { R.heard = true; g.audio.play('pipeKnock', { x: R.x0, z: R.z0 }); }
+        R.rock += dt;
+        const k = Math.max(0, 1 - R.rock / 1.1), a = R.amp * k;
+        G.rotation.z = rz + Math.sin(R.rock * 26) * 0.07 * a; G.rotation.x = Math.sin(R.rock * 21 + 0.7) * 0.04 * a;
+        G.position.y = R.B.y + Math.abs(Math.sin(R.rock * 26)) * 0.025 * a;
+        if (k <= 0) { R.rock = null; G.rotation.set(0, R.B.ry, rz); G.position.y = R.B.y; }
+      }
+    }
+    if (R.t != null) {
+      R.t += dt;
+      const k = Math.min(1, R.t / 0.95), e = k * k * (3 - 2 * k), w = Math.sin(k * Math.PI * 3), d = 1 - k;
+      G.position.set(R.x0 + (R.x1 - R.x0) * e, R.B.y + Math.abs(w) * 0.06 * d, R.z0 + (R.z1 - R.z0) * e);
+      G.rotation.set(Math.sin(k * Math.PI * 3 + 1) * 0.14 * d, R.B.ry + e * 0.9, rz + w * 0.2 * d);
+      if (k >= 1) { R.t = null; G.position.set(R.x1, R.B.y, R.z1); G.rotation.set(0, R.B.ry + 0.9, rz); }
+    }
+    if (this.lookT > 0 && (this.lookT -= dt) <= 0) { const z = this.ch.npc('zoe'); if (z && z.listenTo === this.lookObj) z.listenTo = null; this.lookObj = null; }
+    // the joint weeps while chapter 1's water is off: a drop from the coupling every second or so (near him only)
+    if (J) {
+      const on = this.on && !g.room;
+      if (J.wet.visible !== on) J.wet.visible = on;
+      const h = g.hero;
+      if (!on || Math.hypot(h.pos.x - J.x, h.pos.z - J.z) > 25) { if (J.drop.visible) J.drop.visible = false; return; }
+      J.dropT = (J.dropT + dt) % 1.15;
+      const f = J.dropT / 0.4;
+      J.drop.visible = f < 1;
+      if (f < 1) J.drop.position.y = J.y + 0.08 - f * f * 0.07;
+    }
+  }
+
   // the pump starts above the cave: a hum and a thump through the rock, the growth leaning toward it
   pumpStarts() {
     const g = this.game, f = this.f, C = this.parts.cave, ch = this.ch;
@@ -250,6 +352,9 @@ export class HomeTap {
     this.build();
     const C = this.parts.cave; if (C) { C.pump = null; this.setGrowth(f.pr_growth || !f.pr_v2 ? 1 : 0); }
     if (this.parts.house) this.parts.house.shake = 0;
+    // (TUT-MYSTERY: the near barrel aside once the joint is found, in chapter 1; put back afterwards)
+    this.setBarrel(!!f.pr_barrel && this.on);
+    this.lookObj = null; this.lookT = 0;
   }
 }
 

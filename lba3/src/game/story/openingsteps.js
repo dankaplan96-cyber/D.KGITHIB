@@ -1,7 +1,7 @@
 // OPENING-TUT-2 (P31, the user, 15.11.2026: "there wasn't really a tutorial of the first stage; I just took the ball and
 // went outside"). P22's tips were all optional and timed out, so a player who walked from the cupboard to the well saw
 // one tip in the house and none in the yard (measured: OPENING-TUT-2.md). Now the yard is a short errand for Zoé, one
-// step at a time, each needing one of the basic skills, and she calls him back if he heads off before it is done.
+// step at a time, each needing one of the basic skills (TUT-MYSTERY: since 20.11 clues on the way, never a gate: below).
 //
 //   house   ball     Take your magic ball from the cupboard      walk, use with the hand   (the door waits for it, as before)
 //           out      Go out to the yard                          (the door)
@@ -14,7 +14,7 @@
 // The current step is the first not done, so anything done early counts and is skipped. Each step: one goal line in the
 // tip panel (tutorial.js; always shown, Settings, Show control tips only hides its keys), a short line from Zoé over her
 // head as it begins, a tick and a chime as it is done. The yard's edge: 15 m from the front door (the lane's water gate
-// is 16.7 m up the lane): crossed before the last step, Zoé calls him (a line in the box, her voice) and he turns and walks
+// is 16.7 m up the lane): crossed before the last step, Zoé called him (until TUT-MYSTERY; now one call and he goes on) and he turned and walked
 // back a few steps. Not a wall: a person in the story with something to ask. An expert finishes the yard in well under
 // two minutes; nothing waits on a timer, nothing can be failed (a pipe not cleared in three tries is "close enough").
 //
@@ -22,15 +22,26 @@
 // enough), pr_yardOk (the yard done: the edge is open, the well's objective and star come back). A save without pr_tut2
 // (every save from before this build) never sees a step or a call. A save with pr_tut2 that is somehow already past the
 // yard's edge is let go (pr_yardOk), never pulled back.
+//
+// TUT-MYSTERY (REVIEW-TASKS-19-11 task 4, the user, 19.11: the opening tutorial as part of the water mystery; with
+// PUZZLES item 1 and P81 scene 4, 20.11): the yard's steps are clues on the way to the well, not a gate.
+//   - no call back and no walk back: crossing the yard's edge with steps open lets the yard go (pr_yardOk) and Zoé
+//     calls once, over her head (pinned to the screen's edge with her name when she is out of view), with what matters
+//     on the main route: the kettle if he has not taken it (Mira wants proof), else "show Mira the crystals". Control
+//     stays with the player all along. Nothing is granted for a step left undone.
+//   - the tap (hometap.js): dry, and the knock answers from behind the near barrel at the house's corner (it rocks, Zoé
+//     turns to look); the ball (prologue.js revealJoint) knocks that barrel aside: the joint he mended yesterday held,
+//     but it weeps warm water and is furred like the kettle. A kick does it too; a shove by hand gets a word, not a beep.
+//   - the pipe: over it is the straight line from the yard north; walked round, the step ends as he leaves the yard.
+//   - the map's star and the world's marker on the same thing as the panel: none on the inventory's step (a key, not a
+//     place) and none on the door's (the marker on the door is enough); the barrels' on the near barrel.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
-import { dampAngle, angleDiff } from '../../engine/math.js';
 import '../text/opening.js';
 
 export const STEPS = ['ball', 'out', 'zoe', 'inv', 'tap', 'barrels', 'pipe'];
 export const YARD_STEPS = ['zoe', 'inv', 'tap', 'barrels', 'pipe'];
 const LEASH = 15;          // m from the front door: the yard's edge while a yard step is open
-const BACK = 3.2;          // m he walks back in when called
 // the project's copper heat pipe along the lane's east side (tutorial.js PIPE, lanegate.js): 0.6 m high
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1 };
 const HOME = new Set(['house', 'cellar']);
@@ -39,8 +50,8 @@ const TRIES = 3;           // jumps at the pipe before Zoé lets it go
 export class OpeningSteps {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.reset(); }
   reset() {
-    this.last = undefined; this.asked = new Set(); this.say = null; this.calls = 0; this.callsFor = {};
-    this.air = false; this.takeoff = 0; this.tries = 0; this.prevD = null; this.graceD = 0; this.back = null;
+    this.last = undefined; this.asked = new Set(); this.say = null; this.left = null;
+    this.air = false; this.takeoff = 0; this.tries = 0; this.prevD = null;
     this.hideBubble();
   }
   get f() { return this.game.flags; }
@@ -98,7 +109,8 @@ export class OpeningSteps {
     switch (id) {
       case 'zoe': { const z = this.ch.npc('zoe'); return z?.present ? at(z.pos.x, z.pos.y, z.pos.z, 2.45, 0.6, 'zoe') : null; }
       case 'tap': { const Y = this.ch.home.parts.yard; return Y ? at(Y.x, Y.y, Y.z, 2.35, 0.45, 'tap') : null; }
-      case 'barrels': { const T = this.ch.barrels?.(); return T ? at(T.x, T.y - 0.55, T.z, 2.3, 1.1, 'barrels') : null; }
+      // (TUT-MYSTERY: over the near barrel, the one in front of the joint; the hit still counts on either)
+      case 'barrels': { const B = this.ch.home.parts.barrel, T = this.ch.barrels?.(); if (B && !B.aside) return at(B.x0, B.B.y, B.z0, 2.1, 0.6, 'barrels'); return T ? at(T.x, T.y - 0.55, T.z, 2.3, 1.1, 'barrels') : null; }
       // (the pipe is 6 m long: the marker stands on it level with him, so it points at the stretch he would jump)
       case 'pipe': { const z = Math.min(PIPE.z1 - 0.4, Math.max(PIPE.z0 + 0.4, h.pos.z)), foot = g.physics.groundAt(PIPE.x + 1.6, z); return at(PIPE.x, foot, z, 1.15, 0.5, 'pipe'); }
     }
@@ -112,11 +124,13 @@ export class OpeningSteps {
   objective() { const id = this.current(); return id ? t('t2_goal_' + id) : null; }
   // the minimap's and holomap's star: the step's place, not the well yet
   markers() {
-    const id = this.current(), g = this.game, Y = this.ch.home.parts.yard, T = this.ch.barrels?.();
+    const id = this.current(), g = this.game, Y = this.ch.home.parts.yard, B = this.ch.home.parts.barrel, T = B ? { x: B.x0, z: B.z0 } : this.ch.barrels?.();
     const star = (x, z, label) => ({ x, z, kind: 'star', color: '#ffcf4a', r: 4, edge: true, ...(label ? { label } : {}) });
     const z = this.ch.npc('zoe');
     switch (id) {
-      case 'out': case 'zoe': case 'inv': return z?.present ? [star(z.pos.x, z.pos.z, t('n_zoe'))] : [];
+      // (TUT-MYSTERY: the star where the panel's action is: on Zoé while she is the step; none for the door (its marker
+      //  is in the house) or the inventory (a key: the star over Zoé sent players back to her))
+      case 'zoe': return z?.present ? [star(z.pos.x, z.pos.z, t('n_zoe'))] : [];
       case 'tap': return Y ? [star(Y.x, Y.z)] : [];
       case 'barrels': return T ? [star(T.x, T.z)] : [];
       case 'pipe': return [star(PIPE.x, (PIPE.z0 + PIPE.z1) / 2)];
@@ -164,10 +178,20 @@ export class OpeningSteps {
     // all five done: her last word, the well's objective and its star come back, the edge opens
     if (!cur && this.yardDone() && !g.room) { this.finish(); return; }
     if (this.say && (this.say.t -= dt) <= 0) { const k = this.say.key; this.say = null; this.speak(k); }
-    // the yard's edge: Zoé calls him back (again only if he goes on further than where her last call left him: a walk
-    // back that something blocked never turns into a string of calls)
-    if (d != null && !g.trans && !h.steer && h.onGround && cur && YARD_STEPS.includes(cur) && d > Math.max(LEASH, this.graceD + 1)) this.callBack(cur);
-    else if (d != null && d < LEASH - 0.5) this.graceD = 0;
+    // the yard's edge, walked across with a yard step open (TUT-MYSTERY: no call back, no walk back): the yard lets go,
+    // Zoé calls once with what matters next, and he goes on
+    if (d != null && !g.trans && cur && YARD_STEPS.includes(cur) && d > LEASH) this.leave(cur);
+  }
+  // he heads off before the yard is done: her one call (over her head, or at the screen's edge with her name when she
+  // is out of view), the well's objective and star back. Nothing is granted for what he skipped
+  leave(cur) {
+    const g = this.game, f = this.f;
+    f.pr_yardOk = true;
+    this.say = null;
+    this.left = cur;
+    this.speak(f.pr_kettle ? 't2_call_go' : 't2_call_kettle', 5.5, true);
+    g.updateObjective();
+    g.save(false);
   }
   finish() {
     const g = this.game, f = this.f;
@@ -195,51 +219,13 @@ export class OpeningSteps {
     this.air = air;
   }
 
-  // Zoé calls him back: her line (in the box, her voice), then he turns and walks a few steps back toward the door
-  callBack(cur) {
-    const g = this.game, ch = this.ch, h = g.hero, d = this.door();
-    // (her line names the step; every second call for the same step, a plainer one: the panel names it all along)
-    const n = this.callsFor?.[cur] || 0;
-    (this.callsFor ||= {})[cur] = n + 1;
-    this.calls++;
-    h.resetMotion?.();
-    ch.chain([['zoe', n % 2 ? 't2_back_again' : 't2_back_' + cur]], () => {
-      const dx = d.x - h.pos.x, dz = d.z - h.pos.z, dd = Math.hypot(dx, dz) || 1;
-      this.back = { x: h.pos.x + (dx / dd) * BACK, z: h.pos.z + (dz / dd) * BACK, t: 0 };
-      g.setState('cutscene');
-      g.cutscene = (dt2) => this.walkBack(dt2);
-    });
-  }
-  walkBack(dt) {
-    const g = this.game, h = g.hero, S = this.back, P = g.physics;
-    if (!S) { this.endBack(); return; }
-    S.t += dt;
-    const dx = S.x - h.pos.x, dz = S.z - h.pos.z, d = Math.hypot(dx, dz), want = Math.atan2(dx, dz);
-    h.angle = dampAngle(h.angle, want, 9, dt);
-    const facing = Math.abs(angleDiff(h.angle, want)) < 0.6;
-    let sp = 0;
-    if (d > 0.12 && S.t < 3.5) {
-      if (facing) { sp = Math.min(2.2, d * 4 + 0.6); const k = Math.min(d, sp * dt) / d; P.move(h, dx * k, dz * k); }
-      P.fall(h, dt);
-      h.rig.play(sp > 0.1 ? 'walk' : 'idle'); h.rig.update(dt, sp); h.sync();
-      return;
-    }
-    this.endBack();
-  }
-  endBack() {
-    const g = this.game;
-    this.back = null;
-    this.graceD = this.fromDoor();
-    g.hero.resetMotion?.();
-    if (g.state === 'cutscene') { g.cutscene = null; g.setState('play'); }
-  }
-
   // ---------------------------------------------------------------- Zoé's word over her head (one element, in play only)
-  speak(key, dur) {
+  // (far: a call across the yard — when she is out of view the words stand at the screen's edge toward her, her name first)
+  speak(key, dur, far = false) {
     const z = this.ch.npc('zoe');
     if (!z?.present || typeof document === 'undefined') return;
     const text = t(key);
-    this.bub = { n: z, t: dur ?? Math.min(4.2, 1.4 + text.length * 0.045), key };
+    this.bub = { n: z, t: dur ?? Math.min(4.2, 1.4 + text.length * 0.045), key, far, text, pinned: null };
     const el = this.bubEl();
     el.textContent = text;
     el.style.borderRadius = document.body.classList.contains('hud-lba') ? '0' : '9px';
@@ -269,9 +255,16 @@ export class OpeningSteps {
     if (n._zbTop == null) { const b = new THREE.Box3().setFromObject(n.rig.root); n._zbTop = Math.max(1.2, b.max.y - n.pos.y); }
     const v = (this._v ||= new THREE.Vector3()).set(n.pos.x, n.pos.y + n._zbTop + 0.25, n.pos.z).project(g.camera);
     const el = this._el;
-    if (v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) { el.style.display = 'none'; return; }
-    el.style.left = ((v.x + 1) / 2 * innerWidth).toFixed(0) + 'px';
-    el.style.top = ((1 - v.y) / 2 * innerHeight).toFixed(0) + 'px';
+    const off = v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05;
+    if (off && !B.far) { el.style.display = 'none'; return; }
+    let x = v.x, y = v.y;
+    if (off) {   // (pinned inside the screen's edge, toward her)
+      if (v.z > 1) { x = -x; y = -y; }
+      const n2 = Math.max(Math.abs(x) / 0.8, Math.abs(y) / 0.72, 1e-3); x /= n2; y /= n2;
+    }
+    if (B.pinned !== off) { B.pinned = off; el.textContent = off ? t('n_zoe') + ': ' + B.text : B.text; el.style.transform = off ? 'translate(-50%, -50%)' : 'translate(-50%, -100%)'; }
+    el.style.left = ((x + 1) / 2 * innerWidth).toFixed(0) + 'px';
+    el.style.top = ((1 - y) / 2 * innerHeight).toFixed(0) + 'px';
     el.style.opacity = String(Math.min(1, B.t / 0.3));
     if (el.style.display !== 'block') el.style.display = 'block';
   }
