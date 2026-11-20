@@ -3,6 +3,8 @@
 //       not how to set it; each gauge sits over the branch it reads; steam let in with nowhere to go shakes the shut
 //       branches and flutters their needles; one branch open settles its own needle (progress); the aquifer branch
 //       opened with steam on sends its needle into the red; a save halfway keeps the valves and the shaking.
+//   c15 chapter 15, the cooling machinery (story/chapter3.js, underground.js): the diagram shows where the pipes run, the
+//       drain no longer crossed out; B opened is the wrong try (his line, the drain's glow, the sight glasses amber).
 //   c7  chapter 7, the vent's seal (story/observatory.js, hamalayi.js): three of the five discs steam already, two are
 //       capped with ice; a ball at a steaming one only rings (said once); the ice broken (ball, or a blow) lets that
 //       one breathe; with all five breathing the seal turns; a save halfway keeps what was freed.
@@ -129,6 +131,29 @@ if (PARTS.includes('c7')) {
   is('c7: the seal turns: the vent breathes', await ev(() => { const V = game.rooms.hamalayi.vent; P.use(V.x + 3.2, V.z, { near: 1.2, kind: 'c7vent' }); game.step(2); P.settle(); return [!!game.flags.c7_vent, T.obj()]; }), (v) => v[0] && v[1].length > 0);
   await ev(() => { const V = game.rooms.hamalayi.vent; P.go(V.x + 5.5, V.z + 5.5, { tol: 0.5 }); P.face(V.x, V.z); game.step(1.5); });
   await shot('c7-open');
+  }
+}
+
+// ================================================================ c15: the cooling machinery
+if (PARTS.includes('c15')) {
+  await boot('new');
+  is('c15: chapter 15, the deep installation', await ev(() => { const G = game; P.settle(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
+    G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle();
+    Object.assign(G.flags, { c2_plan: true, c2_planBack: true, c2_okuOK: true, c2_cog: true, c2_cyl: true, c2_mills: true, c2_signal: true });
+    G.story.cur.toShell?.(); G.step(1.5); P.settle(); G.step(0.5); P.settle();
+    for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); P.settle(); }
+    const e = G.room.exits.find((x) => x.to === 'c3-deep'); T.tp(e.x, e.z, 0, e.y ?? G.hero.pos.y + 0.5); G.step(1.6); P.settle();
+    for (const en of G.enemies) if (en.alive && en.group === 'c3deep') { for (let k = 0; k < 12 && en.alive; k++) { (en.take || en.damage).call(en, 3, G.hero.pos); G.step(0.1); } }
+    G.step(2); P.settle(); return [G.story.cur.key, G.room?.id]; }), (v) => v[0] === 'shell' && v[1] === 'c3deep');
+  await ev(() => { const D = game.room.diagram; P.go(D.x + 2.2, D.z + 0.6, { tol: 0.5 }); P.face(D.x, D.z); game.step(0.6); });
+  await shot('c15-diagram');
+  if (!BEFORE) {
+    is('c15: the diagram (input): where the pipes run, no answer crossed out', await ev(() => { const D = game.room.diagram, n = window.SAID.length; P.use(D.x, D.z, { kind: 'c3diagram' }); P.settle(); return T.said(n)[0] || ''; }),
+      (v) => /drain/i.test(v) && /catwalk/i.test(v) && !/crossed|A and C/i.test(v));
+    is('c15: a wrong try: B (the drain) opened: his line; not cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'), n = window.SAID.length; P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); game.step(1); P.settle(); return [v.open, !!game.flags.c3_cooled, T.said(n)]; }),
+      (v) => v[0] && !v[1] && v[2].some((s) => /drain/i.test(s)));
+    await ev(() => { game.step(1.5); });
+    await shot('c15-drain-open');
   }
 }
 

@@ -691,7 +691,8 @@ const flowTex = () => M('ugflow', () => tiled(canvasTex(256, 64, (x, W, H) => {
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   for (let i = 0; i < 9; i++) { const px = (i / 9) * W + (i % 3) * 7, gg = x.createLinearGradient(px, 0, px + 26, 0); gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.6, 'rgba(230,255,255,0.9)'); gg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gg; x.fillRect(px, H * 0.25, 26, H * 0.5); }
 }), 1, 1));
-// the cooling circuit as painted on the wall plate (the clue: A and C feed the exchanger, B dumps to the drain)
+// the cooling circuit as painted on the wall plate: where each pipe runs (A and C into the exchanger, B out of it to the
+// drain). PUZZLES P-C: no longer the drain crossed out in red: the sight glasses and the drain's glow answer it
 const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   x.fillStyle = '#e8e0c8'; x.fillRect(0, 0, W, H);
   const r = rng(5);
@@ -724,10 +725,8 @@ const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   valve(90, 360, 'A', true); valve(190, 110, 'C'); valve(590, 420, 'B');
   x.fillStyle = '#4a4a50'; x.font = "bold 20px 'Arial Narrow', Arial, sans-serif";
   x.fillText('FLOOR', 40, 470); x.fillText('CATWALK', 150, 160); x.fillText('DRAIN', 690, 486);
-  // the drain, crossed out in red
+  // the drain
   x.strokeStyle = '#4a4a50'; x.lineWidth = 4; x.beginPath(); x.arc(660, 470, 22, 0, 7); x.stroke();
-  x.strokeStyle = '#d02a20'; x.lineWidth = 12; x.lineCap = 'round';
-  x.beginPath(); x.moveTo(612, 380); x.lineTo(708, 476); x.moveTo(708, 380); x.lineTo(612, 476); x.stroke();
 }));
 // distant passage painted behind a doorway (rock tunnel, a glow at its end)
 const passageView = (glow, key) => M('ugpass' + key, () => { const t = canvasTex(256, 256, (x, W, H) => {

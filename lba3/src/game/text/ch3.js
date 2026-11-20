@@ -16,7 +16,8 @@ Object.assign(STR.en, {
 
   // the deep installation
   c3_deep_in: "The drill's engine room. And a maintenance drone on patrol.",
-  c3_diagram: 'A cooling diagram. Valves A and C feed the heat exchanger. B runs to a drain, crossed out in red.',
+  // (PUZZLES P-C: where the pipes run, not how to set them; the exchanger's sight glasses answer)
+  c3_diagram: 'A cooling diagram. Two feeds run into the heat exchanger, one from the floor and one from the catwalk. A third pipe runs out of it, to a drain.',
   c3_diagram_tw: '(The shutter is jammed by the heat. Cool the exchanger and it should open.)',
   c3_diagram_high: '(Valve C is up on the catwalk. There has to be a way up.)',
   c3_toast_valve_open: 'Valve {v} open',
