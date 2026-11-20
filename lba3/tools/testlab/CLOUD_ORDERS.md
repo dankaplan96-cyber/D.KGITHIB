@@ -687,3 +687,49 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     middle-chapter quests) — stay out of those; rig.js and characters.js are yours for this order (tell the cloud in
     WORLD_ART_REQUESTS.md as JOINTS-BLENDER when you start and when done). Never commit LBA1/LBA2 files. Test lightly
     (the user: minimal tests while working; one full test at the end).
+
+58. **POLISH-SWEEP (the user, 20.11, to the local agent; status.md P84): "verify that everything is in its place, there are no
+    problems with where things are positioned, and everything looks polished."** Play the whole game world with the real GPU
+    and the normal gameplay camera, find every placement defect a player would notice, fix it, and prove each fix in a
+    matched before/after capture.
+    **What counts as a defect** (in order of how much a player notices it):
+    - Objects floating above the ground or floor, sunk into it, or half inside a wall, rock, fence or another object.
+    - People (NPCs) standing inside walls, furniture, doors or each other; people whose feet are not on the ground;
+      people facing a wall while they talk; a working person whose hands are far from what they work on.
+    - Doors, gates and exits whose frame, landing or step does not meet the ground or the path; stairs, ramps and
+      bridges not joined to what they lead to (the cave in upper Citadel was this kind: "the stairs in the air, not
+      connected").
+    - Gaps or seams in the terrain, cliffs, paths, walls and roofs (light showing through, a visible hole or step).
+    - Overlapping surfaces that flicker (z-fighting), stretched or misaligned textures, signs or posters floating off
+      their wall.
+    - Things that block the way or the camera in an unpolished way: a crate in a doorway, a prop on a path, a lamp post
+      through a roof.
+    - Inconsistencies between visits: a thing that moves or disappears between chapters without a story reason.
+    **How:**
+    1. Interiors first: run `tests/place-scan.mjs` (it builds every room and judges inside/wall/float/sunk/back/facing/
+       door/adrift; see its head). Then look at each room yourself in the game camera, because the scan only knows boxes.
+    2. Outdoors: walk each region along its paths and around its buildings: Citadel (upper and lower, the harbour, the
+       lighthouse, the spaceport), Zeelich (the street, the mills, Mill Lane, the council), Desert Island (Kesh, the bore),
+       the Hamalayi (Lhar, the monastery, the observatory), Ballastra. Write a small outdoor scan like place-scan
+       (props and NPCs against the ground height and colliders) if that finds faster than eyes.
+    3. The chapters change the world: check each region in at least one early and one late chapter, using the saves
+       in `tests/fixtures/campaign/`.
+    4. For each defect: record it with a capture (game camera), its cause, and fix it at its source (the region or room
+       builder, the NPC's spot or round, the prop's offset). Do not hide a defect by moving the camera. Keep old saves
+       loading.
+    **Leave out:**
+    - The School of Magic's exterior and Tali's court: P41, the user approved moving them together, to be done separately.
+    - Zeelich Spaceport's layout: P26, to get Citadel's terminal layout, separately.
+    - The cloud is editing story text, `src/main.js`, `src/game/story/balances.js` and the campaign tests; stay out of
+      those.
+    - `rig.js` and `characters.js` belong to JOINTS-BLENDER (order 57). If both orders are yours, do them one after the
+      other.
+    **Deliver:**
+    - Work on a branch from `ccr-c1c2c4b9-dep6ed`, pushed as `polish-sweep`.
+    - Matched before/after captures in `captures/polish-sweep/` (same camera, same spot).
+    - A report `docs/lba-maturity/POLISH-SWEEP.md`: a table of each defect, where, its cause and the fix, plus what
+      was checked and found fine.
+    - Say POLISH-SWEEP in WORLD_ART_REQUESTS.md when you start and when you are done.
+    - Measure frame time in one populated street before and after, naming the machine. No visible change may cost
+      performance.
+    - Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
