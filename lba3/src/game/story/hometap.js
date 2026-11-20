@@ -77,11 +77,11 @@ export class HomeTap {
       const add = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); grp.add(o); return o; };
       add(new THREE.CylinderGeometry(0.035, 0.035, 1.3, 8), lead, 0.62, 0.14, 0, 0, Math.PI / 2);     // (along the wall's foot, from the lane side)
       add(new THREE.CylinderGeometry(0.035, 0.035, 0.32, 8), lead, -0.06, 0.28, 0);                   // (up into the wall)
-      add(new THREE.CylinderGeometry(0.068, 0.068, 0.17, 10), brass, 0.02, 0.14, 0, 0, Math.PI / 2);  // the coupling (his repair: bright brass)
-      for (let i = 0; i < 9; i++) { const c = add(new THREE.OctahedronGeometry(0.024 + (i % 3) * 0.008, 0), fur, -0.05 + (i % 5) * 0.035, 0.13 + ((i * 3) % 4) * 0.022 - 0.03, -0.055 + ((i * 7) % 3) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
+      add(new THREE.CylinderGeometry(0.09, 0.09, 0.24, 12), brass, 0.02, 0.14, 0, 0, Math.PI / 2);  // the coupling (his repair: bright brass)
+      for (let i = 0; i < 14; i++) { const c = add(new THREE.OctahedronGeometry(0.03 + (i % 3) * 0.012, 0), fur, -0.1 + (i % 6) * 0.04, 0.12 + ((i * 3) % 5) * 0.03 - 0.02, -0.075 + ((i * 7) % 4) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
       mergeStatic(grp, { recolor: false });
       // the wet ground: a dark, shiny patch round the barrel's foot (a little shows past the barrel before it moves)
-      const wet = new THREE.Mesh(new THREE.CircleGeometry(0.62, 18), new THREE.MeshStandardMaterial({ color: '#3a2c20', roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      const wet = new THREE.Mesh(new THREE.CircleGeometry(0.62, 18), new THREE.MeshStandardMaterial({ color: '#2a1e14', roughness: 0.1, metalness: 0.15, transparent: true, opacity: 0.85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
       wet.rotation.x = -Math.PI / 2; wet.scale.set(1.15, 0.9, 1); wet.position.set(jx + 0.05, g.physics.groundAt(jx, jz - 0.35) + 0.015, jz - 0.35); wet.userData.keep = true; W.root.add(wet);
       const drop = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 5), new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.05 }));
       drop.position.set(jx + 0.02, jy + 0.08, jz - 0.06); drop.visible = false; drop.userData.keep = true; W.root.add(drop);
@@ -271,8 +271,8 @@ export class HomeTap {
         if (!R.heard) { R.heard = true; g.audio.play('pipeKnock', { x: R.x0, z: R.z0 }); }
         R.rock += dt;
         const k = Math.max(0, 1 - R.rock / 1.1), a = R.amp * k;
-        G.rotation.z = rz + Math.sin(R.rock * 26) * 0.07 * a; G.rotation.x = Math.sin(R.rock * 21 + 0.7) * 0.04 * a;
-        G.position.y = R.B.y + Math.abs(Math.sin(R.rock * 26)) * 0.025 * a;
+        G.rotation.z = rz + Math.sin(R.rock * 22) * 0.12 * a; G.rotation.x = Math.sin(R.rock * 17 + 0.7) * 0.06 * a;
+        G.position.y = R.B.y + Math.abs(Math.sin(R.rock * 22)) * 0.04 * a;
         if (k <= 0) { R.rock = null; G.rotation.set(0, R.B.ry, rz); G.position.y = R.B.y; }
       }
     }
