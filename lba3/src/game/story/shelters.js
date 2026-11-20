@@ -194,7 +194,7 @@ export function buildShelter(o) {
 
   // ---- state
   const S = {
-    k, door, wheel: spin, col, gy, ry, x, z, opened: false, p: 0, dir: 0,
+    k, door, wheel: spin, col, gy, ry, x, z, opened: false, p: 0, dir: 0, to: 0, jolting: 0,
     at: shelterFrame(x, z, ry).at,
     pose(p) {
       door.position.x = DOOR_X + 1.85 * smooth(p);
@@ -206,14 +206,24 @@ export function buildShelter(o) {
     open(instant = false) {
       if (S.opened) return;
       S.opened = true;
-      if (instant) { S.p = 1; S.pose(1); S.dir = 0; } else S.dir = 1;
+      S.goTo(1, instant);
     },
+    // MIDDLE-VARIETY: slid only part way (a hand's width) and stuck there: the depot's, on the bar dropped inside
+    ajar(p, instant = false) { if (!S.opened) S.goTo(p, instant); },
+    goTo(p, instant) {
+      S.to = p; S.jolting = 0;
+      if (instant) { S.p = p; S.pose(p); S.dir = 0; } else S.dir = Math.sign(p - S.p);
+    },
+    // a shove against what holds it: the leaf jerks a few centimetres and drops back (the wheel with it)
+    jolt() { if (!S.dir) S.jolting = 0.3; },
     tick(dt) {
+      if (S.jolting > 0) { S.jolting = Math.max(0, S.jolting - dt); S.pose(S.p + 0.05 * Math.sin((S.jolting / 0.3) * Math.PI)); }
       if (!S.dir) return;
-      S.p = Math.min(1, S.p + dt / 1.6); S.pose(S.p);
-      if (S.p >= 1) S.dir = 0;
+      S.p += S.dir * dt / 1.6;
+      if ((S.dir > 0 && S.p >= S.to) || (S.dir < 0 && S.p <= S.to)) { S.p = S.to; S.dir = 0; }
+      S.pose(S.p);
     },
-    close() { S.opened = false; S.p = 0; S.dir = 0; S.pose(0); },
+    close() { S.opened = false; S.p = 0; S.to = 0; S.dir = 0; S.jolting = 0; S.pose(0); },
   };
   S.pose(0);
   return S;

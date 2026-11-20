@@ -1,6 +1,6 @@
 // Chapter 8 playthrough (Citadel, evacuated): jump to the end of chapter 7 → the landing above the
 // lighthouse → home (Zoé's plan) → Gilbert (the tunnels) → the cistern lever in the station yard → the depot
-// bunker's hatch wheel (ball) → Mira (water, the valve-room key) → Pippa (supplies) → Zoé's run to the three
+// bunker's hatch wheel (ball; the door sticks on a bar inside, Lulu slips in and lifts it) → Mira (water, the valve-room key) → Pippa (supplies) → Zoé's run to the three
 // hill farms and the lighthouse relay → Vesk on the control-room screen → a project ship → the next chapter.
 // CAMPAIGN-6 (story/laneline.js): the list cart seen at the lane's shut water gate on arriving; after the relay, still as
 // Zoé, the schedule and the route on the lighthouse path's board, Bram, Hedda and Tobin brought to the landing; as Twinsen,
@@ -61,7 +61,7 @@ is('back outside', await ev(() => T.out()), (v) => v === 'out');
 await shot('C8-01-square.png');
 is('Gilbert: the shelters', await ev(() => { T.talk('gilbert'); return [game.flags.c8_gilbert, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 is("the fortress shelter's lever", await ev(() => { T.useAt(-33, -70); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }), (v) => v[0] === true);
-is("the depot bunker's wheel hit by the ball", await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_depot; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_depot; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } return [thrown ? 'thrown' : 'forced', G.flags.c8_depot]; }), (v) => (v[0] === 'thrown' || v[0] === 'forced') && v[1] === true);
+is("the depot bunker's wheel hit by the ball: the door sticks on its bar; Lulu, asked on the quay, slips in and lifts it (MIDDLE-VARIETY)", await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_gap; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_gap; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } const shut = !G.flags.c8_depot; T.talk('lulu'); G.step(2); T.talkAll(); T.talk('lulu'); for (let i = 0; i < 100 && !G.flags.c8_depot; i++) G.step(0.1); T.talkAll(); return [thrown ? 'thrown' : 'forced', G.flags.c8_gap, shut, !!G.flags.c8_kids, G.flags.c8_depot]; }), (v) => (v[0] === 'thrown' || v[0] === 'forced') && v[1] === true && v[2] && v[3] && v[4] === true);
 await shot('C8-02-bunker.png');
 is('Mira in the Water Office: water', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); const back = T.out(); return [r, game.flags.c8_mira, back]; }), (v) => v[0] === 'office' && v[1] === true && v[2] === 'out');
 is('Pippa: supplies, an objective set', await ev(() => { T.talk('pippa'); return [game.flags.c8_pippa, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
