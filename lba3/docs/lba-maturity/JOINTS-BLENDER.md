@@ -78,6 +78,56 @@ hand on the sleeve's end), **on everyone**: Twinsen, Zoé and Arthur, the Grobos
   there without these changes too. `JOINTS_OLD=1` still rebuilds the models as before JOINTS-BLENDER (checked: Arthur,
   Baldino byte for byte).
 
+## The motions and the planted feet (JOINTS-BLENDER 5, rig.js)
+Measured on the hero at 60 Hz on flat ground (Citadel's wooden quay by Gate 1, x 0, z 30), each sole's ankle against
+the ground every frame (rest 0.100 m over it): how deep it goes and how far it slides while it stands
+(`docs/lba3-performance/HARDWARE/2026-11-20-joints-motion/`: `motions.mjs`, `slides-before/after.json`).
+| Motion | Before | After |
+|---|---|---|
+| sword combo (slash 1-2-3) | no sink, slide ≤ 0.6 cm | the same (not changed) |
+| walk, stop, pickup | no sink, ≤ 0.7 cm | the same (not changed) |
+| standing jump (Athletic) | no sink, 0 cm | the same |
+| **Normal mode's hop** (Space, LBA2's anim 17) | **soles 6.2 cm into the ground, 17 frames; slid 31 cm** | 1.2 cm, 2 frames; ≤ 4.6 cm |
+| **the run** (Athletic, 4.96 m/s) | **the standing foot slid forward at 0.72 m/s** (5-17 cm a contact) | 0.27 m/s (≤ 10.7 cm, in the run-up's acceleration) |
+| landing a running jump | 2.4 cm sink, 17 cm slide | 1.4 cm, ≤ 10.7 cm |
+- **The hop:** it was not in the planted actions (PLANT): its crouch and squat are LBA2's keys and pushed the feet through
+  the ground with the plant let go. In PLANT now, as the jump's crouch: the feet stand where they are, the knees bend to
+  reach them, and the pose's hop lifts them off and puts them down as before. The keys and the timing are unchanged.
+- **The run:** a robe's run (Twinsen, `robeLegs`) swings the thighs × 0.75 so the robe isn't stretched flat, but its cycle
+  stayed LBA2's 1.94 body heights, longer than the shorter stride: the foot under him moved back slower than he moved
+  forward. The cycle is now 0.82 × that (`ROBE_RUN_CYC`, the best of 0.75–0.9 measured): 22 % more steps a second at
+  the same speed. Speed, collision and the jump are unchanged; footsteps follow the cycle (more a second).
+- **The sword, walk-to-stop and the pickup** already held their feet (ANIM-POLISH-2/3); with the new arms and legs the
+  joints hold in them (`captures/joints-blender/`). Not changed.
+- `tests/anim-polish.mjs` on this branch (turns, walking, stops, landings at 30/60/120 fps, melee timing, the sneak,
+  stairs): **55 passed, 0 failed** (`animpolish-after.log`). Seen once and not from these changes (the walk's code is
+  untouched): a walk's first three frames slid one foot 3.9 cm, by which foot the walk started on.
+- `captures/joints-blender/hop-and-run-landing-before-after.jpg` (top before, bottom after: the hop's crouch, squat and
+  stand; a running jump's landing).
+
+## Zoé's reach toward the tap; Arthur's turn; a Grobo's trunk (JOINTS-BLENDER 6)
+- **Zoé's reach** (rig.js `reach` / `tapTurn`, the opening's tap): every joint moved on one curve over 0.35 s, so the
+  arm swung up straight from the shoulder like a lever. Now the gaze leads (0.2 s), the chest leans after it, the shoulder
+  lifts the arm with the elbow folded in, and the forearm opens toward the tap last (from 0.13 s); the free hand eases
+  back a little. The reaching hand's end pose is unchanged, reached 0.03 s later, so it meets the tap where it did.
+  `captures/joints-blender/zoe-reach-before-after.jpg` (top before, bottom after; 0.04 / 0.10 / 0.16 / 0.22 / 0.30 /
+  0.45 s, a side 3/4 view).
+- **Arthur's quick turn toward a parent and a Grobo's trunk:** read in rig.js, not changed: a character turning where it
+  stands already leads with the head, the chest following and the pelvis last (ANIM-POLISH-3, from its own turn rate),
+  and Arthur's stride comes from his own skeleton's legs (the walk's stride is the leg's length × the swing). The Grobos'
+  trunk (TRUNK-1) swings as one curve, each segment after the one above, ±22–27° at the tip, and is held from swinging
+  back into the belly. Not filmed in motion here.
+
 ## Next
-The sword swing, the landing, walk-to-stop and the pickup with the same joints, planted feet; the full test at the end,
-and the frame time last (the user: measurements at the end).
+The battery half of the measurements (the user unplugs).
+
+## Zoé's shoulder (JOINTS-BLENDER 7; the user, 21.11, playing: "Zoé's shoulder is strange")
+- **Seen:** in play, close in a conversation, her shoulder read as a pad or a cuff set on the arm. In Blender (Workbench,
+  the parts' colours, `captures/joints-blender/zoe-shoulder-before-after.jpg`): the armhole's green band (ZOE-LOOK-38)
+  was a ring round the top of the arm, outside the dress, over the arm's top section, which stood out past the shoulder's
+  line; raised (forward or out to the side), the arm's top was a flat disc beside the neck.
+- **Fixed in `zoe_poly.py`:** the arm's top is a hemisphere over the joint, the upper arm's own 4.7 cm round, so the
+  shoulder keeps its round shape at any angle; at rest it rounds off under the strap's edge. The band round the arm is
+  gone: the dress's own green edge along the strap is the armhole's trim. Triangles 8,346 → 8,410; bones, eyes and
+  mouths unchanged. `ZOE_SHOULDER_OLD=1` rebuilds the previous model byte for byte.
+- Rows of the picture: before / after at rest, before / after with the arm raised forward (front 3/4, close, side).

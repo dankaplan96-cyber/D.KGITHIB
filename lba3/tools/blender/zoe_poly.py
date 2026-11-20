@@ -483,6 +483,19 @@ FORM_ARM = [
     (0.63, 0.041, 0.042, 0.0045, 0.0005), (0.72, 0.037, 0.039, 0.003, 0.0), (0.82, 0.030, 0.034, 0.001, 0.0),
     (0.92, 0.023, 0.029, 0.0, 0.0), (1.0, 0.0195, 0.026, 0.0, 0.0),
 ]
+# ZOE-SHOULDER (the user, 21.11, her shoulder in play: "Zoé's shoulder is strange"): the arm's top stood out past the
+# shoulder's line (its top section 3 cm round, 1-2 cm outside the body's side) with the armhole's green band wrapped round
+# it, so the shoulder read as a cuff or a pad set on the arm. Now the arm's top sections tuck in under the shoulder's
+# slope (shifted in toward the body, the top one narrower), so the shoulder's line runs on into the arm, and the band
+# round the arm is gone: the dress's own green edge along the strap is the armhole's trim. ZOE_SHOULDER_OLD=1: as before.
+SHOULDER_NEW = not os.environ.get('ZOE_SHOULDER_OLD')
+# the top: a hemisphere over the joint, the upper arm's own 4.7 cm round (u, half-width, half-depth, out, forward): the
+# shoulder keeps its round shape at any angle of the arm (raised, the old top showed as a flat disc beside the neck),
+# and at rest it rounds off under the strap's edge
+SHOULDER_TOP = [tuple(float(x) for x in r.split(':')) for r in os.environ.get('ZOE_SH_TOP',
+    '-0.0695:0.008:0.008:0:0|-0.064:0.02:0.02:0:0|-0.054:0.03:0.03:0:0|-0.04:0.038:0.038:0:0|-0.022:0.044:0.044:0:0|0.0:0.047:0.047:0:0').split('|')]
+if FORM and SHOULDER_NEW:
+    FORM_ARM = SHOULDER_TOP + FORM_ARM[2:]
 if FORM:
     ARM = FORM_ARM
 ARMHOLE = (-0.06, 0.0)           # (ZOE-LOOK-38: the armhole trim along the arm, u)
@@ -614,7 +627,7 @@ for s_, sx in (('L', 1), ('R', -1)):
     for row in ARM:
         u, ra, rd = row[:3]
         c = along(u)
-        d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
+        d = (along(min(1.0, u + 0.06)) - along(max(min(-0.06, ARM[0][0]), u - 0.06))).normalized()
         across = Vector((d.y, -d.x, 0.0)).normalized()
         dep = d.cross(across).normalized()
         if dep.z < 0:
@@ -639,7 +652,7 @@ for s_, sx in (('L', 1), ('R', -1)):
         # weights, so it rides the shoulder like a cap sleeve's edge), and a green bangle on the wrist (on the forearm)
         def arm_frame(u):
             c = along(u)
-            d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
+            d = (along(min(1.0, u + 0.06)) - along(max(min(-0.06, ARM[0][0]), u - 0.06))).normalized()
             across = Vector((d.y, -d.x, 0.0)).normalized()
             dep = d.cross(across).normalized()
             if dep.z < 0:
@@ -673,7 +686,8 @@ for s_, sx in (('L', 1), ('R', -1)):
             cen = sum((Vector(part.v[i]) for i in f0), Vector()) / len(f0)
             if (b_ - a_).cross(c_ - a_).dot(cen - arm_frame((u0 + u1) / 2)[0]) < 0:
                 part.f = part.f[:k0] + [list(reversed(f)) for f in part.f[k0:]]
-        band(b.P('armtrim' + s_, COL['trim'], w_arm, 50), ARMHOLE[0], ARMHOLE[1], 0.0032, au=AU)
+        if not SHOULDER_NEW:
+            band(b.P('armtrim' + s_, COL['trim'], w_arm, 50), ARMHOLE[0], ARMHOLE[1], 0.0032, au=AU)
         band(b.P('bangle' + s_, COL['trim'], 'el' + s_, 60), BANGLE[0], BANGLE[1], BANGLE[2], 12)
     el, hd = tuple(E0), tuple(H0)
     build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx, b.P('fingers' + s_, COL['skinLine'], 'hand' + s_, 30))
