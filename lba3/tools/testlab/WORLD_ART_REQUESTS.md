@@ -5717,3 +5717,9 @@ On branch **`polish-sweep`** (from `c93b324e`). Order: interiors with `tests/pla
 regions outdoors, early and late chapters from the fixtures. Staying out of the story text, `src/main.js`,
 `story/balances.js`, the campaign tests, rig.js and characters.js; the School of Magic's exterior, Tali's court and
 Zeelich Spaceport's layout left out. Fixes at their source, each with a matched before/after.
+- **POLISH-SWEEP · done** (branch `polish-sweep`, `91c32920`; `docs/lba-maturity/POLISH-SWEEP.md`):
+  - **No placement defect a player would notice; nothing in the game changed** (no `src/` file touched; frame time therefore as in GTX1050-AC).
+  - `tests/place-scan.mjs` on `c93b324e`: 146 places, 7,936 pieces. Of 158 findings, 142 were already left and 16 were new. The 16 were looked at in the game camera: the house's supply joint behind its barrel (TUT-MYSTERY), Nell's lean-to's posts under the quay's paving, and Knartas' fence rails in their posts. All three are by design or unseen, and are added to the list with their reasons. Now **PASS**.
+  - A people scan (new `npcscan.mjs`): every place at four story points (new game, base-06, base-11, base-15), 504–989 people each. It checks feet against the ground, bodies inside colliders, overlaps, and people facing a wall. About 15 candidates came up, each photographed from the front and at the feet. All are people at their work (Corla behind her booth's counter, Oda at a stall, the beekeepers, the mason, the crane operator), a slope under a picker, or a fault of the scan (Tamu and Rollo measured from another room of their group).
+  - The 253 game-camera pictures of the v103 playthrough (every region and chapter) as contact sheets: nothing seen out of place.
+  - Not done: a free-camera walk of a grid in each region. The game shows only the world round Twinsen and sets its camera each frame, so those pictures were empty. Details of a few pixels are below a contact sheet.
