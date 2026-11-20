@@ -27,6 +27,7 @@ import { DepotWatch } from './depotwatch.js';
 import { PumpLine } from './pumpline.js';
 import { TERMINAL } from '../terminal.js';
 import '../text/ch1.js';
+const SHIP_HULL = 3.0;   // (the ship's hull radius on the spaceport's pad, spaceport.js hullAt)
 
 const V = POI.village;
 
@@ -186,7 +187,7 @@ export class Chapter1 extends ChapterBase {
       // the project's ship on the spaceport's pad, once Doran has its start code (same spot and reach as the
       // pad's grounded notice: the chapter's interaction wins the tie, story/islands.js)
       const sp = W.spaceport;
-      if (sp && f.c1_ship) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c1ship', label: 'p_board' });
+      if (sp && f.c1_ship) consider(dist(sp.pad.x, sp.pad.z) - SHIP_HULL, 5.0 - SHIP_HULL, { kind: 'c1ship', label: 'p_board' });   // (FULL-TEST: ranked by the distance to the hull, not its centre — Pema at the hose no longer takes the prompt from the ship he walks up to)
     } else if (g.room.id === 'projoffice') {
       for (const s of g.room.searches || []) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'locker', spot: s, label: 'p_search' });
     } else if (g.room.id === 'office') {

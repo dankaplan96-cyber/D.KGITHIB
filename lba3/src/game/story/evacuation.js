@@ -16,6 +16,7 @@ import '../text/ch8.js';
 import { buildShelter, centreForWheel, shelterFrame, addCart, addBundle, addBale } from './shelters.js';
 import { crossByShip } from '../travelfilm.js';
 import { LaneThread } from './laneline.js';
+const SHIP_HULL = 3.0;   // (the ship's hull radius on the spaceport's pad, spaceport.js hullAt)
 
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
@@ -213,7 +214,7 @@ export class Evacuation extends ChapterBase {
     if (f.c8_gilbert && !f.c8_depot && !this.squeeze) { const p = DEPOT_F.at(1.9, 0); consider(dist(p.x, p.z), 2.2, { kind: 'c8hatch', label: f.c8_gap ? 'p_look' : 'p_shelter' }); }
     // a project ship on the spaceport's pad (same spot and reach as the pad's travel menu: the chapter wins the tie)
     const sp = this.W.spaceport;
-    if (f.c8_relay && f.c8_vesk && sp) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c8ship', label: 'p_board' });
+    if (f.c8_relay && f.c8_vesk && sp) consider(dist(sp.pad.x, sp.pad.z) - SHIP_HULL, 5.0 - SHIP_HULL, { kind: 'c8ship', label: 'p_board' });   // (FULL-TEST: ranked by the distance to the hull, not its centre — Pema at the hose no longer takes the prompt from the ship he walks up to)
     void g;
   }
   interact(it) {
