@@ -668,6 +668,9 @@ if (!ONLY || ONLY === 'J' || ONLY === 'C') {
 // ------------------------------------------------------------------ K: chapter 9's thread (CAMPAIGN-7)
 if (!ONLY || ONLY === 'K') {
   await start('new-12-heard');
+  // (the base campaign's chapter 10 is the network: this save is from before format 6, which now sends a council save on
+  //  into the expanded campaign's "Borrowed Time" (main.js v5→v6); the section is about the base game's lane → network)
+  await ev(() => { game.flags.exp_base = 1; delete game.flags.exp; });
   is('K0 the save: chapter 9 after the hearing, in the chamber; the archive\'s door read: shut by the order; Kell asked: the deck comes down for them', await ev(() => {
     const G = game, f = G.flags; P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const closed = f.cn_closed;
     P.exitTo('up-down'); const r = P.talk('zl_kell', { run: true }); for (let i = 0; i < 60 && G.story._cn.kell.busy; i++) G.step(0.1);
