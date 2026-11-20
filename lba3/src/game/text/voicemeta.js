@@ -167,6 +167,10 @@ export const VOICE_META = {
   c8_zoe_wait: ['neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real'] },
   c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
   c5_ilka_relief: ['neutral', 'concerned', 'neutral'], c5_ilka_after: ['pleased', 'annoyed'],
+  // (P81 scene 3: Float Harbor — Quill's weights, Ferro's catch)
+  bl_qu_2: { i: ['neutral', 'concerned', 'annoyed'], e: [null, 'sums', 'mine'] }, bl_qu_n1: ['pleased', 'neutral'], bl_tw_t1: ['curious', 'neutral'],
+  bl_fe_1: { i: ['annoyed', 'neutral', 'concerned'], e: [null, null, 'ice'] }, bl_fe_wait: ['concerned', 'neutral'], bl_fe_after: ['relieved', 'pleased'],
+  bl_te_h3: ['neutral', 'annoyed'],
   c4_kid_2: ['pleased', 'neutral', 'pleased'], c4_tarra_idle: { i: ['curious', 'pleased', 'pleased'], p: [0, 0.3, 0.35] },
   // ---------------------------------------------------------------- EXP-3: the House of Balances, the Cradles (bh_, wk_, nwb_, ep_bl_)
   bl_ba_2x: ['urgent', 'urgent', 'concerned'], bl_te_end4x: ['neutral', 'annoyed', 'annoyed'],

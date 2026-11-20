@@ -559,7 +559,9 @@ export class Ballastra extends ChapterBase {
       case 'zoe': return f.bl_arrived ? false : c([['zoe', 'bl_zoe_home']]);
       case 'arthur': return f.bl_arrived ? false : c([['arthur', 'bl_ar_home']]);
       case 'bl_quill':
-        if (!f.bl_quWeighed) return c([['bl_quill', 'bl_qu_1'], ['narrator', 'bl_qu_weigh'], ['bl_quill', 'bl_qu_2'], ['hero', 'bl_tw_q1'], ['bl_quill', 'bl_qu_3']], () => { f.bl_quWeighed = f.bl_quHail = true; g.updateObjective(); g.save(false); });
+        // (P81: the way to Tessa only while he still looks for her: "She's been at the lift four days" after he found her
+        //  there was out of date)
+        if (!f.bl_quWeighed) return c([['bl_quill', 'bl_qu_1'], ['narrator', 'bl_qu_weigh'], ['bl_quill', 'bl_qu_2'], ...(f.bl_tessa1 ? [] : [['hero', 'bl_tw_q1'], ['bl_quill', 'bl_qu_3']])], () => { f.bl_quWeighed = f.bl_quHail = true; g.updateObjective(); g.save(false); });
         return c([['bl_quill', f.bl_n3 ? 'bl_qu_end' : f.bl_n1 ? 'bl_qu_n1' : 'bl_qu_wait']]);
       case 'tessa': return this.talkTessa();
       case 'bl_ferro': return c([['bl_ferro', f.bl_n1 ? 'bl_fe_after' : 'bl_fe_wait']]);
