@@ -5729,3 +5729,28 @@ Zeelich Spaceport's layout left out. Fixes at their source, each with a matched 
   - Triangles 8,346 → 8,410. `ZOE_SHOULDER_OLD=1` rebuilds the old model byte for byte.
   - Picture: `captures/joints-blender/zoe-shoulder-before-after.jpg`.
   - JOINTS-BLENDER 5–7 wait for the merge.
+
+## GTX1050-BATTERY · the battery half (CLOUD_ORDERS 54, 55.2, 56.2–56.4) · the desktop, 20–21.11.2026
+**Where:** v104 (`22a4b7c8`) served locally; the same Chrome 158, window 1536×864 @1.25, as GTX1050-AC. On battery from
+99 % (Win32_Battery status 1), the Windows plan Balanced; the four runs one after another, the battery 99 → 43 %. No setting
+changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery/`.
+- **The finding: on battery the display's pace falls, not the game's work.** The first two runs (frame rates, 99 → 90 %)
+  measured the refresh at 59.9 Hz and the routes held 60 (street, interior, combat 100 % on pace at 60, GPU 8–11 ms). In
+  the full benchmark (90 → 68 %) the page measured **38.6 Hz on the title screen before anything heavy**, and the
+  benchmark's own "nothing drawn" probe **41.0 Hz**: every preset, Low included, ran at 40–42 fps with frames of 24.4–24.8 ms
+  while the GPU worked 10–12 ms of them. In the last run (68 → 43 %) the pace came back to 59.9 Hz at the start and was
+  47.8–49 Hz with nothing drawn by its end. **40 and 48 Hz are the lower rates of a laptop panel's refresh-rate switching
+  on battery** (Intel's display power saving: the panel here is driven by the UHD 630, Optimus). This is the most likely
+  cause of the user's "no 60 FPS on battery" on this machine; it is set in Intel's graphics control panel (Power → Display
+  Refresh Rate Switching / Panel Self-Refresh on battery) — not checked or changed here (the user's setting).
+- **FPS30 on battery (55.2):** Auto chose Medium; at 30: street 99 %, interior 100 %, combat 92 % on pace (Medium by hand:
+  98 % over the routes); 60: 90–91 % (165–175 frames ≥ 1.5× pace, nearly all on the arrival route). **The arrival route at
+  30 is not locked on battery:** its first drawn intervals alternate 16.7 / 33.3 ms (as if the limit's grid lost its phase
+  through the scene changes) — 93 % "on pace" by the report's ±12 % rule but visibly uneven. For the cloud to look at
+  (`bat-benchfps-auto.txt`, "arrival at 30").
+- **ARRIVAL-STEPS on battery (56.2, 56.4):** behind the black, shader warm-up 59 / **28** / 782 ms (count / longest /
+  total), batch meshes 20 / 18–20 / 58–67, textures 20 / 14–18 / 158–161, the rest ≤ 6 ms: the warm-up and two kinds go
+  over the 12 ms slice on battery (on AC: 16 / 6 / 3 ms). Fixed **High** on battery (56.4): 42.8 / 41.1 / 40.8 fps on the
+  street, interior and combat at the battery profile's ×0.85 — the same ~41 fps cap as Low and Medium in that window, so
+  it says nothing about High's own cost on battery; Auto's first guess on battery (Medium) can't be judged from these
+  runs while the pace is capped.
