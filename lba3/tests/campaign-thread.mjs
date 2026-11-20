@@ -923,7 +923,7 @@ if (!ONLY || ONLY === 'O') {
     const G = game, f = G.flags; const st = [G.room?.id, !!G.room?.seal?.shut]; const j = G.story.journal().find((c) => /Shell/.test(c.title));
     const e = G.room.exits.find((x) => x.to === 'c3-core'); P.through(e.x, e.z, { fight: false }); for (let i = 0; i < 80 && f.chapterKey !== 'core'; i++) G.step(0.1); P.settle();
     return [...st, j?.lines.length, f.chapterKey];
-  }), (v) => v[0] === 'c3sendell' && v[1] && v[2] === 7 && v[3] === 'core');
+  }), (v) => v[0] === 'c3sendell' && v[1] && v[2] === 8 && v[3] === 'core');   // (P83 S-2: the chapter's "What we know" line heads the page)
   await browser.close();
 }
 
