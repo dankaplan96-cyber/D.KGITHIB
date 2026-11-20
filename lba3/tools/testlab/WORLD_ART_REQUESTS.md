@@ -5662,3 +5662,34 @@ east street, the yard).
   reader starts on the right (a choice for the cloud, not a defect).
 - **Not done here:** frame p50/p95 at the harbour and the square against v95 — with the measurements, last in the queue
   (the user's order).
+
+## GTX1050-AC · the measurements on mains (CLOUD_ORDERS 52.2, 55, 56, 57's frame time; 54's battery half pending) · the desktop, 20.11.2026
+**Where:** v104 (`22a4b7c8`) served locally; Chrome 158.0.8127.36 (Playwright's channel, a fresh profile), WebGL on
+**ANGLE D3D11, NVIDIA GeForce GTX 1050** (as the page reports it); window 1536×864, devicePixelRatio 1.25 (this laptop's
+1920×1080 panel at 125 %); Windows reports the panel at 60 Hz; power plan Balanced, on AC (Win32_Battery status 2, 95–100 %).
+The Windows 11 power-mode slider and Chrome's Energy Saver were not read (a fresh profile: Chrome's default, on at 20 %
+battery). Raw reports: `docs/lba3-performance/HARDWARE/2026-11-20-gtx1050-ac/`.
+- **FPS30-HW (55.2), Benchmark: Frame Rates, AC:** Auto (picked **High**) and Medium chosen by hand — at **30: 100 % on
+  pace on every route** (street, interior, combat, arrival; drawn intervals 33.1–33.6 ms), no ≥1.5× frame, no catch-up;
+  at 60 and Unlimited 100 % on pace (one 150 ms frame in combat at Unlimited). Frame callbacks: 8131 timestamps, distance
+  from a whole refresh p50 0.10 / p95 0.20 / max 0.80 ms — Chrome's timestamps do not jitter here. GPU ms per second at
+  30 about half of 60's (221 against 444 at Auto). 55.3 (F9 play, a phone video) and 55.4 (DevTools' meter) need hands
+  on the machine: not done.
+- **ARRIVAL-STEPS-HW (56), AC, Benchmark (Auto):** "scene changes' preparation behind the black": shader warm-up 40 / 16 /
+  315 ms (count / longest / total), textures 22 / 3 / 52, batch meshes 22 / 6 / 21, draw batches settle 22 / 1 / 12, draw
+  batches back 21 / 1 / 8, geometry 130 / 0 / 0, shadow batches 21 / 0 / 0 — **every step under 12 ms but the shader
+  warm-up's 16 ms**. Arrival behind the black at Low: 67 and 50 ms frames (geometry upload); in view after an arrival:
+  none over 33 ms at Medium; at High one 245 ms at 2.8 s (main thread 252 ms) and, as played, two over 33 (350, 369 ms).
+  Medium holds 60 fps on every route fixed and as played. The battery half (56.2–56.4) waits for the user to unplug.
+- **52.2, the harbour and the square, v103 against v95** (the game's own loop, High by Auto, 3 s warm + 10 s, twice each,
+  interleaved): identical — frame p50 16.7 / p95 16.9 / max 17 ms at both spots in both builds; draw calls square 191
+  against 193, harbour 286 against 282.
+- **57's frame time (JOINTS-BLENDER), the populated street, `b94ab3d9` against `joints-blender` (`0c47fcd8`), two rounds:**
+  Medium GPU p50 8.4–9.0 → 7.8–7.9 ms, render submit CPU 5.0–5.6 → 3.6–4.2 ms, calls 137 → 143–148; High GPU 8.5–8.8 →
+  7.5–7.6 ms. **No cost** (within the rounds' spread).
+- **A finding: Chrome's pace fell to ~57 Hz mid-session.** The first runs measured the refresh at 59.9–60.2 Hz; from the
+  full benchmark's High routes on, every frame was 17.4–17.7 ms (57 fps) with the GPU at 6–9 ms, and the benchmark's own
+  "with nothing drawn" probe gave 56.8 Hz; later runs measured 56.5–56.8 Hz on the title screen before anything heavy,
+  while Windows still reports the panel at 60 Hz. The same 17.4–17.7 ms pace as the user's laptop-build228 report
+  (PERF-HIGH). Not the game's work; its cause (Chrome's frame scheduling, the Intel/NVIDIA hybrid output on this Optimus
+  laptop, or a panel power feature) is not established — no settings were changed.
