@@ -107,6 +107,9 @@ export const VOICE_META = {
   c2_after_bal: ['neutral', 'urgent', 'urgent'], c2_ar_sealed: ['curious', 'pleased', 'neutral', 'concerned'], c2_zoe_sealed: ['concerned', 'concerned'],
   c2_tw_sealed0: 'annoyed', c2_bal_sealed1: ['neutral', 'concerned', 'uncertain'], c2_tw_sealed: { i: 'annoyed', e: 'wait' },
   c2_bal_sealed2: ['annoyed', 'neutral', 'neutral'], c2_doran_sealed: ['curious', 'neutral', 'pleased'],
+  // (MILLS: the brakes' cost and the mills let go)
+  c2_oku_dry1: ['annoyed', 'concerned'], c2_oku_dry2: ['neutral', 'concerned'], c2_oku_free: { i: ['neutral', 'annoyed', 'annoyed'], e: [null, 'still'] },
+  c2_oku_back: ['relieved', 'neutral', 'pleased'], c2_tw_free: ['neutral', 'pleased'],
   // ---------------------------------------------------------------- chapter 3, under the shell (c3_)
   c3_tw_arrive: ['concerned', 'concerned', 'concerned'], c3_bal_radio1: ['curious', 'concerned', 'urgent'], c3_sendell_1: 'neutral',
   c3_tw_sendell1: { i: ['curious', 'curious', 'curious'], e: [null, 'her', 'under'] }, c3_sendell_2: ['neutral', 'concerned'],
@@ -138,6 +141,7 @@ export const VOICE_META = {
   c8_zoe_lh3: ['concerned', 'concerned', 'annoyed'], c8_tw_c1: ['concerned', 'concerned', 'concerned'], c8_tw_c2: ['neutral', 'neutral', 'neutral'],
   c9_tw_arrive: ['concerned', 'neutral', 'neutral'], c9_tw_b1: ['concerned', 'neutral', 'curious'], c9_bal_3: ['neutral', 'neutral', 'uncertain', 'pleased'],
   c9_tw_c2: 'neutral', c9_bal_c3: { i: ['pleased', 'pleased', 'urgent'], e: ['network'] }, c9_tw_c3: 'pleased',
+  c9_oku_r1: { i: ['neutral', 'neutral'], e: [null, 'afternoon'] }, c9_oku_r2: ['pleased', 'neutral'],   // (MILLS)
   dt_vesk_0: 'neutral', dt_vesk_1: ['neutral', 'neutral', 'neutral'], dt_vesk_2: ['annoyed', 'annoyed'], dt_tw_again: ['neutral', 'concerned'],
   dt_vesk_3: ['annoyed', 'annoyed'], dt_vesk_4: { i: ['annoyed', 'annoyed'], h: 1 }, dt_tw_gate1: ['annoyed', 'neutral', 'annoyed'],
   dp_vesk_fight: ['annoyed', 'annoyed'], dp_vesk_over: { i: 'urgent', e: 'console' },

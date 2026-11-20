@@ -30,6 +30,9 @@ Object.assign(STR.en, {
   c9_oku_stamp: 'Oku takes a heavy old stamp from his sash. A mill wheel, worn almost smooth.',
   c9_oku_after: "The council chamber has good benches and bad acoustics. Speak up.",
   c9_mill_free: 'The brake springs loose, and the sails creak back into motion.',
+  // (MILLS: the brakes came off in chapter 3, the day they went on: council.js early)
+  c9_oku_r1: 'You braked my mills and let them go the same day. The east terraces carried buckets for one afternoon, not a week.',
+  c9_oku_r2: 'One afternoon I can forgive. Give me that petition.',
 
   c9_clerk_none: "Petitions only. Form 12-B, two stamps from citizens of standing. Next!",
   c9_clerk_half: "One stamp. Form 12-B requires two. I don't make the rules. I file them.",
@@ -83,6 +86,8 @@ Object.assign(STR.en, {
   c9_sub_key: "The BORE cabinet's key (the archivist's desk)",
   c9_obj_back: 'Bring the plans to the council',
   c9_j_petition: "Baldino said nothing happens on Zeelich without a form. He gave me a blank petition: it needs two citizens' stamps, then the clerk.",
+  c9_j_oku: 'Oku would not stamp while his mills stood braked: the east terraces had gone a week without water. I knocked the brakes loose, and he stamped.',
+  c9_j_oku_r: 'Oku remembered that I let his mills go the day I braked them, and stamped the petition.',
   c9_j_heard: "I told the council the bore will crack the shell. Afraid of losing the project's heat, they would not act on a story and asked for proof the project wrote down.",
   c9_j_plans: "In the project archive I found the bore's master plans: it goes straight through the shell, and the margin reads \"Integrity: not assessed.\"",
   c9_j_vote: "After Dallan brought Ilka's rubbings and readings, the council ordered the bore reversed. Only the console at the bottom can switch it, and the shaft's doors open only on a code from every project station at once.",
