@@ -130,3 +130,46 @@ problem: the "in the rest" timing motif (#40, #48, #66, #72) is one rule in new 
 
 Chapters skipped by normal progression: none in the expanded campaign (chapters 12–13 are written since EXP-3). A base
 campaign save (`exp_base`) skips 10–13 by design.
+
+## 2. Plan: the puzzles picked
+
+Picked by the size of the problem, earliest first. The opening's tap and barrels (#3–5) are **kept**: TUT-MYSTERY
+reworked them on 20.11 (the knock behind the barrel, the joint revealed, out-of-order counted), tutor-targets 26/26
+checked the marker, star and panel on the right object at each step from the follow camera; nothing found to change.
+The pipe jump stays a known note (not a real shortcut; that needs the yard's geometry). Chapter 8's depot (#46) was
+MIDDLE-VARIETY's.
+
+### P-A · Chapter 5, the condenser hall (#33)
+- **Before.** The diagram prints the answer (green dots on 1, 3, 4, a red one on 2) and his line reads it out ("1 …
+  open. 2 … shut. 3 and 4 … open"). Nothing to work out. Worse, the three gauges sit over valves 2, 3 and 4 but read
+  line 3, line 4 and the aquifer: a player watching the needle over the valve he turned sees the wrong one move. Opening
+  valve 2 with no steam in says "the aquifer gauge jumps into the red" while its needle stays at zero. The diagram names
+  a "valve 5" that is not there.
+- **After.** The diagram shows **where each branch goes** (in from the bore at 1; 2 down to the aquifer; 3 and 4 up to
+  the condensers), no settings; his line says the same. Each gauge reads **the branch under it** (2: aquifer, 3, 4:
+  condensers). Steam let in at 1 with a branch shut: that branch's wheel shudders, its needle flutters in the red, a puff
+  of steam at its wheel, a hiss; his line once, "nowhere to go". A branch opened: its needle drops into the green and
+  goes still (progress, one branch at a time). 2 opened with steam on: its needle into the red, his line; with no steam
+  in: nothing, as it should be. The puzzle is then a deduction from the plan (the condensers, never the aquifer) checked
+  by watching the needles, or found by watching alone: a player who skips the diagram can still solve it. Two nudges
+  (HINTS-LESS, after 45 and 100 s stuck with nothing turned): the needles, then the route.
+- **Why.** The brief's "visual question and visible answer" and "a reasonable wrong try gets useful feedback"; it stops
+  being chapter 2's diagram read again. Same place, flags (`c5_valves`, `c5_diagram`, `c5_routed`), drones and door.
+
+### P-B · Chapter 7, the vent's seal (#44)
+- **Before.** Chapter 4's temple door again: five discs, three steam, wake those three with the ball (a cold one rings).
+- **After.** Two familiar rules combined with a new question. The three steaming discs are **breathing already**; the
+  other two are **capped with ice** (a clear lump on each, no steam). The seal is frozen fast until all five breathe.
+  A player who applies chapter 4's rule and hits a steaming disc gets a ring, a harder puff and, once, his line ("That
+  one's breathing already"). The ice breaks to the ball (this chapter's frozen slit taught it) **or to a blow** (fist,
+  sword, kick: it is ice on the ground): steam jets from the freed disc, the count shows n/5. With five, the seal shifts
+  and turns. Nudges after 45 / 90 s stuck: the two not steaming, then the ice.
+- **Why.** The same prop with a different decision (what is wrong with these two, not which ones to wake), and chapter
+  7's own lesson (ice breaks). New flags `c7_free1`, `c7_free4`; the old `c7_disc0/2/3` still read (a save with all three
+  old discs awake comes back with the seal free, so nobody redoes it).
+
+### P-C · Chapter 15, the cooling machinery (#68) — if time allows; else phase 2
+- **Before.** The wall diagram says "A and C feed the exchanger, B to a drain" (chapter 5's hall, again, the drain for
+  the aquifer).
+- **Proposed.** The brief's own candidate for a later installation: a learned mechanism with a new question. Keep the
+  diagram's routes, take the settings off, and make the exchanger's gauge and the drain's sump the visible answer.
