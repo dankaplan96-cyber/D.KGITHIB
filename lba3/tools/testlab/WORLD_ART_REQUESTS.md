@@ -5559,3 +5559,13 @@ Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's 
   transition itself (a prep step a black frame, the warm-up hold and the settle frames that keep the first frames in
   view clean), not by this work. Shortening it would mean more prep a frame behind the black — a trade against the
   in-view hitches those holds were made for; not done. The first arrival's ~2.3 s black (later visits ~0.3 s) stays.
+
+## JOINTS-BLENDER · started (CLOUD_ORDERS 57) · the desktop, 20.11.2026
+On branch **`joints-blender`** (from `ccr-c1c2c4b9-dep6ed` b94ab3d9; pushed): rig.js and characters.js are the desktop's
+for this order. Done so far (details in `docs/lba-maturity/JOINTS-BLENDER.md` on that branch):
+- Twinsen traced (generator → `assets/poly/twinsen.json`, Blender 5.3 round trip byte-identical); diagnosed by poses
+  set on the rig and by the throw: the arm lives in the cape's side, LBA2's wing sleeve (WA-16).
+- **The user, 20.11: keep LBA2's wing sleeve; fix the motion; the joint work goes to the characters whose limbs show.**
+- `rig.js THROW`: the back leg loads in the wind-up; a key at 0.135 s where the chest, the pelvis and the free arm lead
+  and the throwing arm lags — release frame unchanged (0.16 s). Before/after in `captures/joints-blender/`.
+- Next: Zoé, Arthur, a Grobo in Blender. Not merged into the cloud's branch; tests at the end.
