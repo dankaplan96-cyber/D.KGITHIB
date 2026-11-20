@@ -12,6 +12,10 @@
   const up = rig.update.bind(rig);
   rig.update = (dt, focus, heroAngle, moving, input) => {
     up(dt, focus, heroAngle, moving, input);
+    // (FPS30-SMOOTH: CR.fps30s — 30 drawn frames a second over 60 Hz simulation steps: the step between two drawn frames
+    //  is simulated and not recorded; the drawn one is recorded with the whole frame's time)
+    if (CR.hold) { CR.acc = (CR.acc || 0) + dt; return; }
+    dt += CR.acc || 0; CR.acc = 0;
     if (!CR.on || rig.cine) return;
     cam.updateMatrixWorld();
     const e = cam.matrixWorld.elements, h = G.hero, w = rig.why || {};
@@ -31,6 +35,7 @@
   G.step = (seconds) => {
     if (CR.rate === 60 && !CR.jankEvery) return step0(seconds, 1 / 60);
     G._transBudget = null;
+    if (CR.rate === '30s') { for (let t = 0; t < seconds - 1e-9; t += 1 / 30) { CR.hold = true; try { G.frame(1 / 60, false); } finally { CR.hold = false; } G.frame(1 / 60, false); } return; }
     for (let t = 0; t < seconds - 1e-9;) {
       const real = CR.jankEvery && ++k % CR.jankEvery === 0 ? 0.1 : 1 / CR.rate;
       const n = Math.max(1, Math.ceil(real / (1 / 30) - 1e-6));
@@ -39,6 +44,7 @@
     }
   };
   CR.fps = (r) => { CR.rate = r; CR.jankEvery = 0; };
+  CR.fps30s = () => { CR.rate = '30s'; CR.jankEvery = 0; };
   CR.jank = (every = 15) => { CR.rate = 60; CR.jankEvery = every; };
   CR.start = (label) => { CR.label = label; CR.F = []; CR.on = true; };
   CR.stop = (opts) => { CR.on = false; return { label: CR.label, stats: CR.stats(CR.F, opts), trace: CR.trace(CR.F) }; };

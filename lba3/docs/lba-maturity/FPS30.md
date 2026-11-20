@@ -137,3 +137,98 @@ The procedure (the artifact in Chrome, ~5 minutes):
 
 Resume point: the user's / the desktop's Frame Rates reports → if 30 is on pace there, P70 is done for pacing; then the
 recommended setting is written from their numbers (GPU/CPU ms per second at each limit, on battery and plugged in).
+
+---
+
+# FPS30-SMOOTH — the second brief (19–20.11; FPS30-SMOOTH-BRIEF.md)
+
+Every number below: **Automated runtime only (SwiftShader)**, headless Chromium in the cloud, the game's own loop and
+simulation; no GPU, no display, no GTX 1050 number. The user asked (20.11) to keep tests to a minimum: one run of
+`tests/fps30.mjs` confirms this round; the full regression set comes at the end with everything else.
+
+## §2 delivery (from FPS30, unchanged)
+The grid scheduler (§1–2 above): even 33.3 ms on a 60 Hz rAF clock with ±1.8 ms jitter, no catch-up frame after a missed
+refresh, no burst after a stall or the background. Not repeated here.
+
+## §6 animation events crossed between updates: exactly once
+How they fire: by state and flags, not by "this frame's time equals X" — the sword's swing sound once per move
+(`m.swung`), its hits along the arc swept since the last step (`prevArc`), the ball's release on the frame its pose lets go
+(`reseat`), its catch once (`toHand`), a jump's sound at the take-off, its landing at the frame he touches down. One was
+rate-dependent: **footsteps** were counted by distance and the distance past the stride was dropped at each step (more
+ground per step the longer the frame). Now the remainder carries over (a stall still sounds one step, not a burst:
+`actors.js`). `tests/fps30.mjs` G counts the events in the same moves at 60 / 30 / 144 / an uneven 30 / the 30 limit:
+footsteps (10 s walking, 10 s running), three jumps and landings, a three-press sword combo on an arena enemy (swings and
+hits), three ball throws (throws, releases, catches) — the same counts at every rate (60: 17 + 11 steps, 3 / 3 jumps and
+landings, 3 swings 3 hits, 3 throws 3 releases 6 catch sounds).
+
+## §5 the camera at 30, and §4 the step: one 33 ms step or two of 16.7 (decided by measurement)
+`tests/camsteady.mjs` (its 10 routes walked by input, every camera update recorded) on the Follow camera (the default) at
+60, at 30 with one 33 ms step (what FPS30 shipped) and at 30 drawn over 60 Hz steps (new rate `30s` in `tests/lib/camrec.js`:
+the step between two drawn frames is simulated and not recorded). Per minute of play, reversals of the view's heading
+(revYaw), tilt (revPitch) and height (revY, ≥ 5 cm), and tilt/height reversals within 0.5 s of the last (jitter: a bob or
+shudder):
+
+| route (Follow) | 60 | 30, one 33 ms step | 30, two 16.7 ms steps |
+|---|---|---|---|
+| street, Modern controls (running and turning, diagonals) | revY 12.9 · jitterY 4 · revPitch 7.8 | revY **16.5** · jitterY **7** · revPitch 9.6 | revY 7.7 · jitterY 3 · revPitch 6.0 |
+| same, Medium distance | revY 9.5 · jitterY 3 · revPitch 6.0 | revY **19.7** · jitterY **12** · revPitch **11.1** | revY 9.4 · jitterY 4 · revPitch 6.0 |
+| harbour pier | revYaw 12.1 · revY 8.6 | 11.9 · 5.9 | 11.7 · 8.4 |
+| along house walls (camera collision, corners) | revY 9.9 · jitterY 4 | 10.3 · 4 | 9.8 · 3 |
+| through a door in and out | revY 15.4 | 14.6 | 16.3 |
+| standing, turning on the spot (orbiting a still character) | revYaw 11.4 | 11.7 | 10.4 |
+| combat (four mites) | revYaw 16.7 | 17.3 | 15.2 |
+| near the cliffs, street and square | as at 60 | as at 60 | as at 60 |
+
+What it was: where the camera's arm meets a wall or an eave (the trace's `occ` and `keep` rules), one 33 ms step swings
+it twice as far into the obstacle before the rule answers, so the correction comes in larger, alternating pieces (traced:
+7.74 → 7.50 → 7.87 → 7.55 m in four frames on the street). The camera's damping itself is time-based everywhere (no
+per-frame factor found); the difference is the collision rules' sampling rate. **Decision: under the 30 limit the game
+simulates in 60 Hz steps, two per drawn frame** (`main.js advance`: the step between two drawn frames is an inner one —
+no detail levels, lamps or shadow culling — and draws nothing). The camera then measures as at 60 (the table's last
+column). Cost (step probe, the street, render stubbed; this machine's CPU, not the laptop's): the simulation per drawn
+frame **1.4–1.7 ms with one step, 2.4–3.3 ms with two** — the simulation's CPU per second is then 60's, while the render
+submission and the GPU still do half of 60's work. Gameplay is identical either way (fps30 D: the jump, walk, run, sword,
+ball and camera turn at the 30 limit match 60). The 30 limit's frame-time tolerance became 10 % of a step (`STEP_TOL`: a
+jittered 30 fps frame is always two steps). Without the limit (Unlimited / 60 on a slow machine) a long frame is still
+split into steps of at most 1/30 s, as before.
+
+## §7 stalls apart from arrivals
+Arrivals, batch builds and the shader warm-up are PERF-ARRIVAL's (not touched). The others, from the evidence there is:
+door transitions — the user's GTX 1050 battery benchmark's transition route (a house door in and out every 2 s): 0 frames
+over 33 ms, p99 16.9 ms; combat — one 67 ms frame in 6 s with 7 ms of the game's work before it (a GC or the browser, the
+benchmark's hitch list); saving — the pause screen's save thumbnail is already a bounded, off-thread job (main.js: a
+createImageBitmap and a worker, given up above THUMB_MS); inventory — opens a DOM panel and the item stage. No new
+cheap, bounded fix was evident in the code and the user asked not to run more measuring suites now; the Frame Rates
+benchmark's hitch list (every frame over 33 ms with what ran in it) is where a stall in these shows on the user's machine.
+
+## §8 motion smoothing (the optional blur): built, measured on paper, left OFF
+A camera-turn blur inside the existing output pass (no new pass, no new target, `renderer.js`): the previous drawn frame's
+view rotation and lens reproject each pixel's ray (the motion of the far scenery, which judders when the camera turns at
+30), five taps along it (tent weights 0.3 / 0.2 / 0.15), a shutter of 0.35 of the frame's motion, at most 1.2 % of the
+picture's width; faded out in up to three screen ellipses (Twinsen, the tutorial's marker), none while the aim's dots show,
+none below 1.5 px of blur (the camera barely moved: no taps run) or over a 0.35 rad turn (a cut). The UI is DOM and never
+blurred. Cost when on and turning: 4 extra filtered reads a pixel in a pass that already reads every pixel — about 8 M
+reads at 1920×1080 (the GTX 1050), 10 M at the UHD 620's 2560×1012 (DPR 2); when off or still, a uniform branch (nothing).
+**It stays off and has no setting yet**: it was not verified in pictures (the cloud's camera probe did not drive a turn in
+the recorded frames), its GPU time is unmeasured on real hardware, and the brief puts it last. Turning it on is
+`game.renderer.motion.want = true` (for a test); a Settings switch (English + Hebrew) is the next step only after captures
+and a GPU timing on the user's machines.
+
+## Final summary (the brief's acceptance)
+- Even ~33.3 ms on a stable 60 Hz display: yes on the synthetic display and on this browser's own clock (rendered-frame
+  intervals from rAF timestamps, not display presentation). **Unverified on the GTX 1050** — the user's Frame Rates
+  benchmark (pause → Benchmark: Frame Rates) gives the answer, plugged in and on battery.
+- No recurring missed deadlines in representative play: unmeasured on hardware (same benchmark; its "≥1.5× pace" column).
+- Short inputs: keys, mouse clicks, pad buttons and touch taps between drawn frames each count once (fps30 C).
+- Gameplay speed: unchanged (fps30 D, timing.mjs).
+- Camera: at the 30 limit it now behaves as at 60 (60 Hz steps; the table above).
+- Animation events: exactly once at every rate (fps30 G).
+- Visual quality: unchanged (no resolution or scenery cut; the blur is off).
+- 60 / Unlimited: unchanged (one step of up to 1/30 s per frame as before; the 60 Hz steps apply under the 30 limit only).
+- Remaining bottlenecks: the arrival's batch builds behind the black (PERF-ARRIVAL), the street's CPU work on the UHD 620
+  (p95 22 ms at 60: at 30 it has room), the GTX 1050's on-hardware pacing — all need the user's reports.
+
+Tests this round (lean, as the user asked): `tests/fps30.mjs` whole, 49 of 54 — the 5 failures were part G's walking in
+the whole run (an earlier part's pad had switched the key scheme; G now sets Modern keys itself), then `ONLY=DG` 32/32.
+`tests/camsteady.mjs` (Follow and LBA at 60/30; Follow at 30s) for the table above: its known failures as in
+KNOWN-FAILING.md. The full regression set is for the end of the pass.

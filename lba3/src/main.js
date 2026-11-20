@@ -2921,9 +2921,14 @@ class Game {
     // (a heap that shrank since the last frame: a garbage collection ran in the interval)
     const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
     const dt = Math.min(real, MAX_STEP * MAX_SUB);
-    // (FPS30: a frame up to 3 % over a step is one step: at the 30 limit the frame's timestamps jitter round 33.3 ms, and a
-    //  frame of 33.5 ms was simulated as two steps of 16.8, the next as one of 33.2 — every frame alike now)
-    const n = Math.max(1, Math.ceil(dt / MAX_STEP - STEP_TOL)), sub = dt / n;
+    // (FPS30: a frame up to 10 % over a whole number of steps keeps that number: at the 30 limit the frame's timestamps
+    //  jitter round 33.3 ms, and a frame of 33.5 ms was simulated as two steps of 16.8, the next as one of 33.2 — alike now)
+    // (FPS30-SMOOTH §4: under the 30 limit the frame is simulated in 60 Hz steps — two steps a drawn frame — so the camera's
+    //  collision and arm rules run at the rate they were tuned at: with one 33 ms step its height reversed twice as often on
+    //  the busiest street route (camsteady, FPS30.md). The step between two drawn frames is an inner one (`_inner`: no
+    //  detail levels, lights or shadow culling). game.simStep overrides it (the A/B))
+    const capNow = this.benching ? this.benchCapMs : this.background ? 0 : this.frameCapMs;
+    const st = this.simStep || (capNow > 20 ? 1 / 60 : MAX_STEP), n = Math.max(1, Math.ceil(dt / st - STEP_TOL)), sub = dt / n;
     this.perf.beginFrame();
     this._renderMs = 0;
     this.benchTick?.(real);
@@ -3244,7 +3249,7 @@ class Game {
   }
 }
 
-const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.03; // (see Game.advance)
+const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.1; // (see Game.advance)
 // TITLE-LOAD: the longest slice of texture-layer reading (drawbatch.js warmLayers) in one task, behind the black or the
 // loading screen (ms; a slice ends at the first piece past it)
 const LAYER_SLICE_MS = 30;

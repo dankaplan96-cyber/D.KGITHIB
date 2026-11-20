@@ -109,7 +109,7 @@ if (ONLY.includes('A')) {
   const after = st.iv.slice(st.iv.findIndex((x) => x > 300) + 1);
   result.stall = { long: Math.max(...st.iv), after: after.slice(0, 8), steps: st.steps, lostS: st.lostS };
   log('30, a 400 ms stall', result.stall);
-  check('A4 after a 400 ms stall at 30: the drawn frames go on at 33 ms (no burst), and the simulation is not handed more than 4 × 1/30 s', after.length >= 10 && after.every((x) => x > 30 && x < 36) && result.stall.steps <= 4 && result.stall.lostS > 0.25, result.stall);
+  check('A4 after a 400 ms stall at 30: the drawn frames go on at 33 ms (no burst), and the simulation is not handed more than 4 × 1/30 s (8 of its 60 Hz steps)', after.length >= 10 && after.every((x) => x > 30 && x < 36) && result.stall.steps <= 8 && result.stall.lostS > 0.25, result.stall);
   // A5. 120 Hz: 30 = every 4th refresh, 60 = every 2nd
   await warm(120); await setFps('30');
   r = await drive({ hz: 120, ms: 3000, jitter: 0.6 }); result.hz120_30 = summ(r.iv);
@@ -217,7 +217,8 @@ if (ONLY.match(/[ABC]/)) await synth(false);
 if (ONLY.includes('D')) {
   const sim = await ev(() => {
     const G = game, h = G.hero, I = G.input, S = SYN; S.stub = true; G.testFreeze = true;
-    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346] };
+    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346], '30cap': [1 / 30] };
+    const fps0 = G.settings.fps, cap = (k) => { const v = k === '30cap' ? '30' : 'auto'; if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
     const reset = (beh = 'normal', a = 0) => {
       h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0;
       for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
@@ -225,7 +226,7 @@ if (ONLY.includes('D')) {
     };
     const out = {};
     for (const [k, iv] of Object.entries(seq)) {
-      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
       const run = (sec, each) => { let t = 0; while (t < sec - 0.005) { t += adv(); each?.(t); } return t; };
       const o = (out[k] = {});
       // walking and running 1 s (Modern: W)
@@ -253,7 +254,7 @@ if (ONLY.includes('D')) {
     const cam0 = [G.settings.camera, G.settings.autoControls]; G.settings.camera = 'free'; G.settings.autoControls = 'off'; G.applySettings();
     G.exitRoom({ x: -42, z: 2, a: 0 }, true, true); G.state = 'play'; G.step(0.5);
     for (const [k, iv] of Object.entries(seq)) {
-      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
       const run = (sec) => { let t = 0; while (t < sec - 0.005) t += adv(); };
       I.keys.clear(); run(0.2); { const y0 = G.camRig.yaw; I.keys.add('KeyZ'); run(1.0); I.keys.delete('KeyZ'); out[k].camKeys = +(G.camRig.yaw - y0).toFixed(3); }
       { const pad = { connected: true, axes: [0, 0, 0.6, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false })), mapping: 'standard' }, gp = navigator.getGamepads; navigator.getGamepads = () => [pad];
@@ -261,11 +262,11 @@ if (ONLY.includes('D')) {
       I.lastDevice = 'kbd';
     }
     G.settings.camera = cam0[0]; G.settings.autoControls = cam0[1]; G.applySettings();
-    S.stub = false; I.keys.clear(); return out;
+    G.settings.fps = fps0; G.applySettings(); S.stub = false; I.keys.clear(); return out;
   });
   result.sim = sim; log('simulation at 60 / 30 / 144 / uneven 30', sim);
   const r60 = sim[60], rel = (a, b) => Math.abs(a - b) / Math.max(1e-6, Math.abs(b));
-  for (const k of ['30', '144', 'uneven30']) {
+  for (const k of ['30', '144', 'uneven30', '30cap']) {
     const x = sim[k];
     check(`D ${k}: walking and running cover the ground they do at 60 (±3 %)`, rel(x.walk, r60.walk) < 0.03 && rel(x.run, r60.run) < 0.03, { at60: [r60.walk, r60.run], [k]: [x.walk, x.run] });
     check(`D ${k}: a standing jump rises as high as at 60 (±2 cm) and stays as long in the air (± one frame)`, Math.abs(x.jumpApex - r60.jumpApex) <= 0.02 && Math.abs(x.jumpAir - r60.jumpAir) <= (k === '144' ? 1 / 60 : 0.035) + 1e-3, { at60: [r60.jumpApex, r60.jumpAir], [k]: [x.jumpApex, x.jumpAir] });
@@ -314,10 +315,13 @@ if (ONLY.includes('E')) {
 if (ONLY.includes('G')) {
   const g = await ev(() => {
     const G = game, h = G.hero, I = G.input, S = SYN; S.stub = true; G.testFreeze = true;
-    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346] };
+    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346], '30cap': [1 / 30] };
+    const fps0 = G.settings.fps, cap = (k) => { const v = k === '30cap' ? '30' : 'auto'; if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
     const heard = new Map(), a0 = G.audio.play.bind(G.audio);
     G.audio.play = (n, ...r) => { heard.set(n, (heard.get(n) || 0) + 1); return a0(n, ...r); };
     const count = (re) => [...heard].filter(([k]) => re.test(k)).reduce((a, [, v]) => a + v, 0);
+    // (Modern keys, the device switch off: an earlier part's pad may have switched the scheme)
+    const ctl0 = [G.settings.controls, G.settings.autoControls]; G.settings.controls = 'modern'; G.settings.autoControls = 'off'; G.applySettings(); I.lastDevice = 'kbd';
     G.devArena(); G.state = 'play';
     const reset = (beh = 'normal', a = 0) => {
       h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0; h.stepAcc = 0;
@@ -326,7 +330,7 @@ if (ONLY.includes('G')) {
     };
     const out = {};
     for (const [k, iv] of Object.entries(seq)) {
-      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
       const run = (sec) => { let t = 0; while (t < sec - 0.005) t += adv(); return t; };
       const o = (out[k] = {});
       // footsteps: 10 s of walking, 10 s of running (into the arena's open floor) — steps per metre
@@ -345,12 +349,13 @@ if (ONLY.includes('G')) {
       { let rel = 0; const b = G.ball, st0 = { s: b.state }; for (let j = 0; j < 3; j++) { I.keys.add('KeyF'); I.taps.add('KeyF'); adv(); I.keys.delete('KeyF'); let t = 0, was = b.state; while (t < 4 && !(b.state === 'inhand' && t > 0.5)) { t += adv(); if (b.state === 'fly' && was !== 'fly') rel++; was = b.state; } }
         o.ball = { throws: count(/^throw/), released: rel, catches: count(/^catch$|^ballReturn$/) }; }
     }
-    G.audio.play = a0; S.stub = false; I.keys.clear(); return out;
+    G.settings.controls = ctl0[0]; G.settings.autoControls = ctl0[1];
+    G.settings.fps = fps0; G.applySettings(); G.audio.play = a0; S.stub = false; I.keys.clear(); return out;
   });
   result.events = g; log('animation events at 60 / 30 / 144 / uneven 30', g);
   const r60 = g[60];
   check('G0 at 60: the events happen (steps, 3 jumps and landings, 3 swings with hits, 3 throws released and caught)', r60.walk.steps > 4 && r60.run.steps > 6 && r60.jump.jump === 3 && r60.jump.land === 3 && r60.sword.swings === 3 && (!r60.sword.enemy || r60.sword.hits === 3) && r60.ball.throws === 3 && r60.ball.released === 3 && r60.ball.catches >= 3, r60);
-  for (const k of ['30', '144', 'uneven30']) {
+  for (const k of ['30', '144', 'uneven30', '30cap']) {
     const x = g[k];
     check(`G ${k}: footsteps per metre as at 60 (±4 %)`, Math.abs(x.walk.perM / r60.walk.perM - 1) <= 0.04 && Math.abs(x.run.perM / r60.run.perM - 1) <= 0.04, { at60: [r60.walk, r60.run], [k]: [x.walk, x.run] });
     check(`G ${k}: every jump, landing, swing, hit, throw, release and catch exactly once, as at 60`, JSON.stringify([x.jump, x.sword, x.ball]) === JSON.stringify([r60.jump, r60.sword, r60.ball]), { at60: [r60.jump, r60.sword, r60.ball], [k]: [x.jump, x.sword, x.ball] });
