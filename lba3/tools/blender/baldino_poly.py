@@ -272,11 +272,15 @@ def sleeve_shell(part, S, E, H, n=10):
         pts.append((S + (E - S) * u if u <= 1.0 else E.lerp(H, u - 1.0), r)); us.append(u)
     rings = _wind(_frames(pts, n), S, E)
     W_ = {}
-    for u, rr in zip(us, rings):
-        wt = {'sh': 1.0} if u <= 0.8 else {'el': 1.0} if u >= 1.2 else {'sh': (1.2 - u) / 0.4, 'el': (u - 0.8) / 0.4}
+    wts = [{'sh': 1.0} if u <= 0.8 else {'el': 1.0} if u >= 1.2 else {'sh': (1.2 - u) / 0.4, 'el': (u - 0.8) / 0.4} for u in us]
+    for wt, rr in zip(wts, rings):
         for v in rr:
             W_[tuple(round(x, 6) for x in v)] = wt
     loft(part, rings, cap_bottom=True, cap_top=True)
+    for v in part.v:   # (the caps' middle points: the nearest ring centre's weight, so the end past the elbow bends with it)
+        k = tuple(round(x, 6) for x in v)
+        if k not in W_:
+            W_[k] = min(zip((c for c, r in pts), wts), key=lambda cw: (Vector(v) - cw[0]).length)[1]
     return W_
 
 

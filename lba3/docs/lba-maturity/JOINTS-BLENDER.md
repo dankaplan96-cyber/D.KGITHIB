@@ -62,6 +62,22 @@ hand on the sleeve's end), **on everyone**: Twinsen, Zoé and Arthur, the Grobos
   at rest; before, after). `JOINTS_OLD=1`: byte for byte as before.
 - `zoe_poly.py` and `baldino_poly.py` take their arguments after `--` too (they failed inside Blender before).
 
+## The cast's legs, one shell; the caps' weights (JOINTS-BLENDER 4)
+- **Legs** (`cast_poly.py leg_shell`): a leg whose thigh and shin both show (a gown's leg panels; trousers under a hem
+  above the knee) was the thigh's tube on a blend and the shin's rigid tube on the knee's bone, meeting at the joint
+  (a seam ring at rest, a corner when bent). Now one shell from inside the hem through a slimmer, rounded knee (the
+  weight passing from the hip's bone to the knee's over u 0.85–1.15) to a calf swell and the ankle inside the shoe; a
+  shin alone under a long coat stays as it was. Arthur keeps his knee ball inside it (his kneel at the boat is 2.3 rad).
+  23 models changed, the cast's triangles 212,027 → 215,787 (+1.8 %, none over +6.8 %).
+  `captures/joints-blender/arthur-knee-before-after.jpg` (crouch, then sit; before, after).
+- **A fix to JOINTS-BLENDER 2 and 3:** a shell's end cap has a middle point that no ring holds, and it took the first
+  bone's weight; at the elbow's end of a rolled sleeve (Arthur, the workers) and of Baldino's sleeve, and at the ankle's
+  end of the new legs, that point stayed behind when the joint bent — a spike (seen at the ankles in the first build of
+  the legs). The caps' middle points now take the nearest ring's weight (`_cap_weights`).
+- In the game: 189 of 189 NPCs load their model (skinned, no fallback to the sculpt); the two 404s in the console are
+  there without these changes too. `JOINTS_OLD=1` still rebuilds the models as before JOINTS-BLENDER (checked: Arthur,
+  Baldino byte for byte).
+
 ## Next
-The knees and the legs' joints on the cast; then the sword swing, the landing, walk-to-stop and the pickup with the same
-joints, planted feet; the full test at the end, and the frame time last (the user: measurements at the end).
+The sword swing, the landing, walk-to-stop and the pickup with the same joints, planted feet; the full test at the end,
+and the frame time last (the user: measurements at the end).

@@ -417,6 +417,47 @@ def arm_sleeve(part, S, E, W, ra, fore_k=(1.0, 1.0), n=10, u_max=2.0):
     if (Vector(rings[0][1]) - S).cross(Vector(rings[0][0]) - S).dot((E - S).normalized()) > 0:
         rings = [list(reversed(r_)) for r_ in rings]
     loft(part, rings, cap_bottom=True, cap_top=u_max < 2.0)
+    _cap_weights(part, W_, [(c, {'sh': 1.0} if u <= 0.8 else {'el': 1.0} if u >= 1.2 else {'sh': (1.2 - u) / 0.4, 'el': (u - 0.8) / 0.4}) for u, c, r in pts])
+    return W_
+
+
+def _cap_weights(part, W_, centres):
+    """the caps' middle points (loft adds them, no ring holds them): the weight of the nearest ring's centre, so a cap
+    at the knee's or the elbow's side moves with its bone instead of staying on the other one (a spike when bent)"""
+    for v in part.v:
+        k = tuple(round(x, 6) for x in v)
+        if k not in W_:
+            W_[k] = min(centres, key=lambda cw: (Vector(v) - cw[0]).length)[1]
+
+
+def leg_shell(part, T, K, A, rt, rk, ra, n=10, calf=1.08):
+    """JOINTS-BLENDER: one trouser leg from T (the thigh's top, inside the hem) through K (the knee) to A (the ankle, inside
+    the shoe): the thigh tapering to a slimmer knee, the calf swelling below it and narrowing to the ankle; rings framed by
+    parallel transport, weights by u (the hip's bone to 0.85, the knee's from 1.15, blended over the bend)."""
+    T, K, A = Vector(T), Vector(K), Vector(A)
+    RINGS = [(0.0, rt), (0.45, rt + (rk - rt) * 0.55), (0.8, rk * 1.02), (1.0, rk), (1.15, rk * 1.02), (1.35, rk * calf),
+             (1.65, rk * (calf + 1.0) / 2 * 0.98), (2.0, ra)]
+    pts = [((T + (K - T) * u) if u <= 1.0 else K.lerp(A, u - 1.0), r, u) for u, r in RINGS]
+    W_, rings, prev = {}, [], None
+    for i, (c, r, u) in enumerate(pts):
+        a = pts[max(0, i - 1)][0]; b_ = pts[min(len(pts) - 1, i + 1)][0]
+        d = (b_ - a).normalized()
+        if prev is None:
+            up = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
+            ux = d.cross(up).normalized()
+        else:
+            ux = (prev - d * prev.dot(d)).normalized()
+        wz = d.cross(ux).normalized()
+        prev = ux
+        wt = {'hip': 1.0} if u <= 0.85 else {'knee': 1.0} if u >= 1.15 else {'hip': (1.15 - u) / 0.3, 'knee': (u - 0.85) / 0.3}
+        rr = [tuple(c + ux * (math.cos(2 * math.pi * q / n) * r) + wz * (math.sin(2 * math.pi * q / n) * r)) for q in range(n)]
+        for v in rr:
+            W_[tuple(round(x, 6) for x in v)] = wt
+        rings.append(rr)
+    if (Vector(rings[0][1]) - T).cross(Vector(rings[0][0]) - T).dot((K - T).normalized()) > 0:
+        rings = [list(reversed(r_)) for r_ in rings]
+    loft(part, rings, cap_bottom=True, cap_top=True)
+    _cap_weights(part, W_, [(c, {'hip': 1.0} if u <= 0.85 else {'knee': 1.0} if u >= 1.15 else {'hip': (1.15 - u) / 0.3, 'knee': (u - 0.85) / 0.3}) for c, r, u in pts])
     return W_
 
 
@@ -787,7 +828,21 @@ def build(name):
     for s, sx in (('L', 1), ('R', -1)):
         hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
         r1, r2 = (0.085 if grobo else 0.06) * slim * limb, (0.075 if grobo else 0.05) * slim * limb
-        if gown:
+        # JOINTS-BLENDER (the user 20.11: the tubes at the joints, on everyone): a leg whose thigh and shin both show (a
+        # gown's leg panels, trousers under a hem above the knee) is one shell through a rounded knee instead of the
+        # thigh's tube and the shin's rigid tube meeting at the joint; JOINTS_OLD=1 builds the two tubes as before
+        LEG1 = not JOINTS_OLD and (gown or (not grobo and hemY > kn[1] - 0.12 and (hemY > ft[1] + 0.08 if cold else hemY > 0.085)))
+        if LEG1:
+            LW = {}
+            lp = b.P('thigh' + s, tunic if gown else pants, lambda p, s=s, LW=LW: {k + s: v for k, v in LW.get(tuple(round(x, 6) for x in p), {'hip': 1.0}).items()}, 50)
+            if gown:
+                LW.update(leg_shell(lp, (hp[0], hp[1] - 0.04, hp[2]), kn, (ft[0], ft[1] + 0.02 if cold else 0.045, ft[2]), 0.122, 0.1, 0.075, calf=1.0))
+            else:
+                LW.update(leg_shell(lp, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, (ft[0], shinY(ft), ft[2]), r1, r2 * (1.08 if aT else 1.03),
+                                    r2 * (1.0 if aT else 0.9), n=10))
+        if LEG1:
+            pass
+        elif gown:
             # (each leg of the outfit: from the hips, tapering to the ankle, like the original's leg panels)
             thigh = b.P('thigh' + s, tunic, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
             tube(thigh, (hp[0], hp[1] - 0.04, hp[2]), kn, 0.122, 0.1, 10)
@@ -798,7 +853,8 @@ def build(name):
             thigh = b.P('thigh' + s, pants, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
             tube(thigh, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, r1, r2 * 1.05, 8)
         if (hemY > ft[1] + 0.08 if cold else hemY > 0.085) and not gown and not grobo:  # (a mid-length coat still shows the shins; CONNECT-1: any hem above the shoe)
-            tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], shinY(ft), ft[2]), r2 * (1.12 if aT else 1.05), r2 * (1.0 if aT else 0.9), 10 if aT else 8)
+            if not LEG1:
+                tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], shinY(ft), ft[2]), r2 * (1.12 if aT else 1.05), r2 * (1.0 if aT else 0.9), 10 if aT else 8)
             if aT:   # (ARTHUR-LOOK: the trousers' hem turned up into a cuff over the shoe's top)
                 tube(b.P('trouserCuff' + s, shade(pants, 0.86), 'knee' + s, 40), (ft[0], 0.13, ft[2]), (ft[0], 0.085, ft[2]), r2 * 1.12, r2 * 1.12, 10)
             if teen and hemY > kn[1] - 0.12:
