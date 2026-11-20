@@ -125,6 +125,9 @@ if (PARTS.includes('c7')) {
   await ev(() => { game.save(false); });
   await boot('continue');
   is('c7: save → Continue halfway: the freed disc still breathes, the other still capped', await ev(() => { const G = game; G.step(0.5); P.settle(); const M = G.rooms.hamalayi; return M.ventDiscs.map((d) => !!d.breathing); }), (v) => v[1] && !v[4] && v.filter(Boolean).length === 4);
+  is('c7: an older save (the build before: its three warm discs all woken, the seal not turned) loads with the seal free', await ev(() => { const G = game, f = G.flags, M = G.rooms.hamalayi;
+    delete f.c7_free1; Object.assign(f, { c7_disc0: true, c7_disc2: true, c7_disc3: true }); G.story.applyFlags(); G.step(0.1); const old = M.ventDiscs.filter((d) => d.breathing).length;
+    f.c7_free1 = true; delete f.c7_disc0; delete f.c7_disc2; delete f.c7_disc3; G.story.applyFlags(); G.step(0.1); return [old, M.ventDiscs.filter((d) => d.breathing).length]; }), (v) => v[0] === 5 && v[1] === 4);
   is('c7: the last cap broken by a blow (input: the fist / sword): all five breathe, his line', await ev(() => { const G = game, M = G.rooms.hamalayi, V = M.vent, D = M.ventDiscs[4], a = Math.atan2(D.x - V.x, D.z - V.z), n = window.SAID.length;
     for (let k = 0; k < 6 && !D.breathing; k++) { P.go(D.x + Math.sin(a) * 1.0, D.z + Math.cos(a) * 1.0, { tol: 0.3 }); P.face(D.x, D.z); G.hero.hp = G.hero.maxHp; P.tap('KeyK', 0.6); P.settle(); }
     return { all: M.ventDiscs.every((d) => d.breathing), said: T.said(n) }; }), (v) => v.all && v.said.some((s) => /turn/i.test(s)));

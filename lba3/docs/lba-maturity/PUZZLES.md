@@ -168,8 +168,74 @@ MIDDLE-VARIETY's.
   7's own lesson (ice breaks). New flags `c7_free1`, `c7_free4`; the old `c7_disc0/2/3` still read (a save with all three
   old discs awake comes back with the seal free, so nobody redoes it).
 
-### P-C · Chapter 15, the cooling machinery (#68) — if time allows; else phase 2
-- **Before.** The wall diagram says "A and C feed the exchanger, B to a drain" (chapter 5's hall, again, the drain for
-  the aquifer).
-- **Proposed.** The brief's own candidate for a later installation: a learned mechanism with a new question. Keep the
-  diagram's routes, take the settings off, and make the exchanger's gauge and the drain's sump the visible answer.
+### P-C · Chapter 15, the cooling machinery (#68): the first half done, the new question left for phase 2
+- **Before.** The wall diagram says "A and C feed the exchanger, B to a drain", the drain crossed out in red, and his
+  line reads it out: chapter 5's hall again, the drain for the aquifer.
+- **After (done).** The diagram shows where the pipes run (two feeds in, one from the floor and one from the catwalk;
+  a third out to the drain), the red cross gone; his line says the same. The room already had the visible answer and it
+  is now the thing to watch: the exchanger's sight glasses (red with no feed, amber with one or with the drain open,
+  cyan with both feeds and the drain shut), the drain's glow when B runs, his line on B.
+- **Left (phase 2).** The brief's candidate for a later installation, a learned mechanism with a new question (keep one
+  branch running while another stops), would replace the decision itself; this pass only took the printed answer away.
+
+## 3. What changed, chapter by chapter, and what was tested
+
+All **Automated runtime only** (headless Chromium on SwiftShader, 1280×720 / 960×540, one browser at a time; the
+worktree served by `python3 -m http.server 8197`). Nobody has played any of it. "By input" means the hero walked, used,
+threw and struck through `tests/lib/player.js`; the chapter itself was reached through the story's flags (staged).
+
+| Ch | Puzzle | What the player now notices or decides | Files |
+|---|---|---|---|
+| 1 | the tap and the barrels (#3–5) | kept (TUT-MYSTERY's rework; nothing found to change) | — |
+| 5 | the condenser hall (#33) | the diagram shows the routes; each needle sits over its own branch; steam let in at 1 shakes, puffs and flutters the shut branches; each one opened settles (progress); 2 boils the aquifer only with steam in; two nudges (45 s, 100 s with nothing turned) | `condenser.js`, `story/steam.js`, `text/ch5.js`, `text/he/ch5.js`, `text/voicemeta.js` |
+| 7 | the vent's seal (#44) | three discs steam (breathing), two are capped with ice; chapter 4's rule (hit the steaming ones) rings and says so once; the ice breaks to the ball or a blow; n/5 counted; the seal turns at five; two nudges (45, 90 s) | `hamalayi.js`, `story/observatory.js`, `text/ch7.js`, `text/he/ch7.js`, `text/voicemeta.js` |
+| 15 | the cooling machinery (#68) | the diagram shows the routes, no crossed-out drain; the sight glasses and the drain's glow answer | `underground.js`, `text/ch3.js`, `text/he/ch3.js` |
+
+Flags: nothing renamed. New: `c5_press` (his "nowhere to go" said once), `c7_free1`, `c7_free4`. Old `c7_disc0/2/3`
+still read: all three set (the old seal ready) loads with both caps gone. `src/game/he-text.js` regenerated
+(`node tools/he-bundle.mjs`). No new shipped file; no light, render pass or texture added (an ice lump mesh per choked
+disc, two small materials; the steam puffs use the existing particle bursts and plumes).
+
+### Tests run (in this order; each after its puzzle's change)
+
+| Test | Result | Notes |
+|---|---|---|
+| `node tests/dialogue-check.mjs` | **PASS** (Hebrew 100 %) | after each text change |
+| `PART=c5 node tests/puzzles.mjs` (new) | **15/15** | by input: the diagram's line; 2 first does nothing; 1 → his line, both condenser needles red and fluttering, 3 and 4 shudder; 3 → its needle green and still, 4 still red; the wrong try (2 with steam) → red, his line; **save → Continue halfway**: valves, shaking, needles back; 4 → routed, door open, all still |
+| `tests/chapter5.mjs` | **23/23** | unchanged (its valves 1, 3, 4 still route) |
+| `tests/playthrough/08-steam.mjs` from `base-07` | **PASS** every step | by input, ASSIST=1, to chapter 6 |
+| `PART=c7 node tests/puzzles.mjs` | **8/8**, then **9/9** with the old-save check | by input: the seal pressed (frozen, three steaming, two under ice, 3/5); the wrong try (a ball at a steaming disc: his line, nothing frees); the ball breaks one cap (4/5); **save → Continue halfway** (still 4/5); the last cap by a punch (KeyK): five, his line; the seal turns. Staged: an older save's three woken discs → all five breathe |
+| `tests/chapter7.mjs` | **20/20** | **check changed on purpose**: "a cold disc only rings; the three warm discs woken" → "a steaming disc only rings; the two iced discs freed" |
+| `tests/playthrough/10-observatory.mjs` from `base-10` | **PASS** every step | **step changed on purpose** ("the seal's iced discs (ball)": two throws, first try each), to chapter 8 |
+| `PART=c15 node tests/puzzles.mjs` | **3/3** | the diagram's line (routes, no "crossed"), B opened: his line, not cooled |
+| `tests/chapter3.mjs` | **47/47** | unchanged |
+| `tests/playthrough/14-shell.mjs` from `base-14` | **PASS** every step | to the epilogue and Keep Exploring |
+| `PART=c5,c7,c15 node tests/puzzles.mjs` | **27/27**, no errors | the three together, last |
+
+Captures (the follow / room camera, looked at): `captures/puzzles/before-c5-valve1-pressure.jpg` /
+`after-c5-valve1-pressure.jpg` (the puffs at the shut branches 3 and 4) / `after-c5-routed.jpg`;
+`before-c7-seal.jpg` / `after-c7-seal.jpg` (three steaming and glowing, two ice lumps) / `after-c7-open.jpg`;
+`before-c15-diagram.jpg` / `after-c15-diagram.jpg` / `after-c15-drain-open.jpg` (the drain's glow, the amber glasses).
+
+**Not verified**: a person's play; how the hall's needles read at the room camera (they are small: the flutter, the
+wheels' judder and the puffs carry the question; the needle angles themselves are hard to read in the capture); muted
+play was not run (each answer is also movement or steam); 30/60 FPS not run (no timing window was added or changed; the
+nudges count game time); the other suites (campaign-thread, save-migration, the chain) were not run, by the rule of
+minimal tests.
+
+## 4. Phase 2 (left)
+
+1. **Chapter 15, a new question** (P-C's second half): the brief's "keep one branch running while another stops; both
+   consequences visible from the controls", so the shell's cooling is no longer chapter 5's decision.
+2. **Chapter 5, one step further** if play finds the hall trivial: drop the routes from his line and let the room's
+   pipes (2's riser goes down into the floor, 3's and 4's up the wall) and the needles carry it.
+3. **Chapter 14's callbacks** (#62, #64): chapter-balance's proposal (the hop-pack as a choice up the old mill).
+4. **The minor "find and hit" beats** (#34 the hangar hatch, #37 the tree, #45 the fort lever): each could get a reason
+   to look (a person, a sound) where it costs nothing; low priority, they work as pacing.
+5. **#53 Borrowed Time's inverted rule** (open while it kicks): a person should say whether the kick-back reads.
+6. **#20 the cistern lift**: six single presses in a row; a person's verdict first.
+7. A native speaker's look at the new Hebrew lines; a person's play of the three changed puzzles.
+
+## Resumable checkpoint
+Branch `worktree-agent-aea3471dc98cb8cc5` from `ccr-c1c2c4b9-dep6ed` at `89d3735d`. Done: the audit (90 puzzles), the
+plan, P-A, P-B and P-C's first half, each committed with its tests. Next, if continued: phase 2 item 1.
