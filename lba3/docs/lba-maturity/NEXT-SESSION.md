@@ -39,6 +39,7 @@ The user, 17.11: "let's do all the fixes I wrote so far, I think the tokens are 
 Read this first, then `status.md` (the playtest inbox P1–P65), `WORKPLAN-2026-11-09.md` and `tools/testlab/CLOUD_ORDERS.md`.
 
 ## Standing rules (unchanged)
+- **The user, 20.11: keep tests to a minimum while working; one full test of everything at the end.**
 - Replies to the user in Hebrew (their app may show them translated: if they paste English back, that is why).
 - The artifact only: **no downloadable/desktop builds** until the user asks (no `[build]` in commit messages).
 - Every user report or wish → a P-row in status.md the same day; the user is told where it went.
