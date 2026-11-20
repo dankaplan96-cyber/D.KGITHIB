@@ -9,6 +9,8 @@ Object.assign(STR.en, {
   c5_narr: 'Later, in Kesh.',
   c5_ilka_1: "The vent comes up under the test bore. If we open it fast, the steam goes down into the aquifer and boils the oasis.",
   c5_ilka_2: 'FunFrock built condensers here to cool his own steam engines. If they still work, we can send the steam through them and let it out slowly.',
+  c5_ilka_relief: "The condensers are ready. Now the relief valve at the post, slowly. Dallan's on the gate, and he has read my reports, whatever he says.",   // (P81)
+  c5_ilka_after: "The vent is breathing and the oasis is cold. I'm writing it all down before somebody tells me it never happened.",   // (P81)
   c5_hesk_1: "The old hall under the dunes, east of the camp road. Half buried. My grandfather worked there. He hated it.",
   c5_tarra_1: 'Then open it. Kesh has been thirsty long enough.',
   c5_dallan_1: 'Attention, Kesh. By order of the Joint Project, the ferry at the pier is requisitioned for the evacuation.',

@@ -241,7 +241,7 @@ export class Chapter2 extends ChapterBase {
       case 'c2mic': {
         const d = this.dials || [1, 2, 0];
         if (d.every((v, i) => v === SOLUTION[i])) this.broadcast();
-        else { g.audio.play('deny'); this.chain([['zoe', 'c2_mic_wrong'], ['radio', 'c2_radio_wrong']]); }
+        else { g.audio.play('deny'); this.chain([['zoe', 'c2_mic_wrong'], ['balradio', 'c2_radio_wrong']]); }
         return true;
       }
     }
@@ -557,7 +557,7 @@ export class Chapter2 extends ChapterBase {
   }
   onEnterRoom(id) {
     const f = this.f;
-    if (id === 'lighttop' && f.c2_zoeStart && !f.c2_broadcast) this.chain([['zoe', 'c2_zoe_in'], ['radio', 'c2_radio_freq']]);
+    if (id === 'lighttop' && f.c2_zoeStart && !f.c2_broadcast) this.chain([['zoe', 'c2_zoe_in'], ['balradio', 'c2_radio_freq']]);
   }
   applyFlags() {
     const f = this.f, RG = this.game.regions;

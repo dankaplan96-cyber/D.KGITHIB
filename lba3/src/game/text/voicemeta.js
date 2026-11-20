@@ -88,7 +88,7 @@ export const VOICE_META = {
   c1_well_dry: ['concerned', 'concerned'], c1_well_hot: ['relieved', 'concerned', 'concerned'], c1_valve_bars: ['annoyed', 'annoyed', 'pleased'],
   c1_gate_task: ['annoyed', 'neutral'], c1_mira_map: ['neutral', 'concerned', 'neutral'], c1_mira_office: ['pleased', 'annoyed', 'annoyed'],
   c1_mira_after: ['neutral', 'curious'], c1_mira_water: ['pleased', 'annoyed'], c1_mira_gone: ['annoyed', 'annoyed', 'annoyed'],
-  c1_tw_water: ['pleased', 'neutral'], c1_tw_control: ['neutral', 'concerned'], c1_worker_1: ['neutral', 'neutral', 'annoyed'], c1_worker_2: ['concerned', 'uncertain'],
+  c1_tw_water: ['concerned', 'neutral'], c1_tw_control: ['neutral', 'concerned'], c1_worker_1: ['neutral', 'neutral', 'annoyed'], c1_worker_2: ['concerned', 'uncertain'],
   c1_guard_1: 'neutral', c1_guard_2: ['neutral', 'uncertain'], c1_gil_idle: ['pleased', 'pleased'], c1_gil_task: ['curious', 'neutral', 'annoyed'],
   c1_gil_water: ['relieved', 'pleased', 'pleased', 'neutral'], c1_doran_idle: 'annoyed', c1_doran_drones: ['curious', 'neutral', 'neutral', 'concerned', 'pleased'],
   c1_doran_depot: ['neutral', 'uncertain'], c1_doran_ferry1: ['curious', 'curious', 'neutral', 'neutral'], c1_tw_ferry: { i: 'curious', e: 'fly' },
@@ -163,6 +163,11 @@ export const VOICE_META = {
   nw_zoe_hold: ['annoyed', 'pleased'], nw_zoe_right: ['relieved', 'pleased'], c10_ar_close: ['urgent', 'pleased'], c10_ar_right: ['relieved', 'pleased'],
   c10_ar_mic: { i: ['curious', 'curious', 'neutral', 'pleased'] }, c10_zoe_3: ['pleased', 'neutral', 'pleased'], c10_bal_p3: ['relieved', 'pleased', 'pleased', 'urgent'],
   c10_tw_p1: 'concerned', c10_tw_p2: 'neutral', c10_bal_p2: { i: ['neutral', 'uncertain'] },
+  // ---------------------------------------------------------------- P81: the campaign pass and the revisits
+  c8_zoe_wait: ['neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real'] },
+  c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
+  c5_ilka_relief: ['neutral', 'concerned', 'neutral'], c5_ilka_after: ['pleased', 'annoyed'],
+  c4_kid_2: ['pleased', 'neutral', 'pleased'], c4_tarra_idle: { i: ['curious', 'pleased', 'pleased'], p: [0, 0.3, 0.35] },
 };
 
 // the brief's intentions -> the plan's (voiceplan.js clauses: tell, ask, excl, no, worry, warm, unsure)

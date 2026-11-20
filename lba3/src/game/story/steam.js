@@ -242,7 +242,9 @@ export class Steam extends ChapterBase {
         return c([['tarra', f.c5_vent ? 'c4_tarra_idle' : 'c5_tarra_1']]);
       case 'ilka':
         if (f.c5_vent && !f.c5_radio) { this.radio(); return true; }
-        return c([['ilka', f.c5_routed ? 'c5_ilka_2' : 'c5_ilka_1']]);
+        // (P81: asked again, the step in hand — the condensers' plan until the steam is routed, then the relief valve; her
+        //  danger line, c5_ilka_1, came after the routing before and is said in the chapter's opening)
+        return c([['ilka', f.c5_vent ? 'c5_ilka_after' : f.c5_routed ? 'c5_ilka_relief' : 'c5_ilka_2']]);
       case 'hesk':
         if (f.c5_radio && !f.c5_glider) return c([['hesk', 'c5_hesk_k1'], ['hesk', 'c5_hesk_k2']], () => { f.c5_glider = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false); });
         if (f.c5_glider) return c([['hesk', 'c5_hesk_k2']]);

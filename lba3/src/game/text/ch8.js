@@ -17,6 +17,10 @@ Object.assign(STR.en, {
   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
   c8_zoe_4: "This time, somebody should. And ask Mira and Pippa for help. They'll want to be asked.",
+  // (P81: the repeats)
+  c8_zoe_wait: "Gilbert knows the tunnels. Mira has the water, Pippa the supplies. Ask all three: they'll want to be asked.",
+  c8_zoe_done: "They're all up here, goats included, and I'm keeping count. Go on. I'll hear you on the relay.",
+  c8_ar_after: "So Grandpa's tunnels are real! I'm packing for the shelter: my radio, a torch, and a spare torch.",
 
   c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
   c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',

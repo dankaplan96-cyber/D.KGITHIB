@@ -111,7 +111,8 @@ export class Observatory extends ChapterBase {
         h.act('use', 1.0, () => {
           f.c7_vent = true; this.M.vent.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
           this.story.refreshCast({ walk: true });
-          this.chain([['hero', 'c7_vent_seal'], ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['radio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
+          // (P81: the seal described once: a player who has already looked at it hears only the narration of its turning)
+          this.chain([...(f.c7_sealSeen ? [] : [['hero', 'c7_vent_seal']]), ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['heskradio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
         }, 0.6);
         return true;
     }
@@ -173,8 +174,9 @@ export class Observatory extends ChapterBase {
         if (!f.c7_keeper) return c([['keeper', 'c7_keeper_1'], ['hero', 'c7_tw_k1'], ['keeper', 'c7_keeper_2'], ['keeper', 'c7_keeper_3'], ['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun'], ['hero', 'c7_mirror_hint']], () => { f.c7_keeper = true; g.updateObjective(); g.save(false); });
         if (f.c7_sendell && !f.c7_scope) return c([['keeper', 'c7_keeper_4']]);
         if (!f.c7_lit) return c([['keeper', f.c7_ice ? 'c7_keeper_sun_open' : 'c7_keeper_sun']]);
-        return c([['keeper', f.c7_scope ? 'c7_keeper_5' : 'c7_keeper_3']]);
-      case 'yorna': return c([['yorna', 'c7_yorna_1']]);
+        // (P81: after the vent his "Hurry… something flying down there" was stale: the steam, and where Hesk waits)
+        return c([['keeper', f.c7_vent ? 'c7_keeper_after' : f.c7_scope ? 'c7_keeper_5' : 'c7_keeper_3']]);
+      case 'yorna': return c([['yorna', f.c7_vent ? 'c7_yorna_after' : 'c7_yorna_1']]);
       case 'hesk': if (f.c7_vent) { this.leave(); return true; } return false;
     }
     return false;

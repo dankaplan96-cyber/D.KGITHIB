@@ -8,6 +8,9 @@ Object.assign(STR.en, {
 
   c7_narr: 'Morning at the monastery. The ridge path climbs into the clouds.',
   c7_yorna_1: 'Up the ridge, then to the dome. Sefa will be at his telescope. He always is.',
+  // (P81: after the vent)
+  c7_yorna_after: 'Hesk is waiting at the gate with that glider. Go home to your own people. Lhar will manage here.',
+  c7_keeper_after: 'Steam over the glacier, and the stars have stopped fussing. Your friend with the glider is down at the monastery.',
   c7_keeper_1: 'A visitor. The stars said one would come with a ball and too many questions.',
   c7_tw_k1: "I'm looking for the vent under the glacier. And for Sendell.",
   c7_keeper_2: 'Then you have come to the right dome. This was her shrine before it was my observatory. When the light reaches her crystal, she listens.',

@@ -109,7 +109,9 @@ export class Dig extends ChapterBase {
         return S.dallan;
       }
       case 'guard': return this.stormy ? null : S.guard;
-      case 'dkid': return this.story.kesh?.saniSpot() || S.kid;   // (in the cool room's doorway once it draws: kesh.js)
+      // (in the cool room's doorway once it draws: kesh.js; P81: once the pump runs, down at the oasis's rim, hands in the
+      //  water — what Tarra hears, and the village's first change a returning player sees)
+      case 'dkid': return this.story.kesh?.saniSpot() || (f.c4_pump && D.oasis ? this.saniAtOasis(D.oasis) : S.kid);
       case 'dtrader': return S.trader;
       case 'weaver': return S.weaver;
       // (0.85 m in from the pier's rope rail at dock.z + 1.75: at + 1.4 his body stood through the rail)
@@ -117,6 +119,13 @@ export class Dig extends ChapterBase {
       // everyone else stays where the earlier chapters left them
     }
     return undefined;
+  }
+
+  // Sani at the full oasis: on its north rim, facing the water, the full pond (r + 0.8) under his hands (touchWater reaches
+  // 0.6 m out). North, between the rounds' oasis stops (walkrounds.js: Safi's 3.4 m west, Tamu's 3.5 m east): toward his
+  // own spot he took Safi's place and the two were pushed apart, 0.7 m short of it (tests/p81-revisits.mjs)
+  saniAtOasis(O) {
+    return { x: O.x, z: O.z + O.r + 1.1, a: Math.PI, anim: 'touchWater' };
   }
 
   // ---------------------------------------------------------------- arrival
@@ -314,6 +323,7 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f, D = this.D;
     f.c4_joint = true; f.c4_pump = true; D.pump.setState('running');
     g.audio.play('clunk'); g.audio.play('waterRun'); g.audio.play('rumble');
+    this.story.refreshCast({ walk: true });   // (P81: Sani goes down to the water: dkid's place)
     this.chain([['narrator', 'c4_pump_runs']], () => { g.updateObjective(); g.save(false); });
   }
   // a gust at the jammed pump: sand and a few sparks from the held gear; the clacks and the grind within earshot

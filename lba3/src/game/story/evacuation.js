@@ -195,7 +195,7 @@ export class Evacuation extends ChapterBase {
     this.showProps(true);
     this.story.refreshCast({ walk: true });
     this.ev.begin();   // (CAMPAIGN-6: a game that reaches chapter 8 now has the lane ahead)
-    this.chain([['narrator', 'c8_narr'], ['radio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => {
+    this.chain([['narrator', 'c8_narr'], ['heskradio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => {
       this.f.c8_started = true; g.updateObjective(); g.save(false);
       // (CAMPAIGN-6: from the plateau he sees the project's cart come down to the lane's shut gate and turn away)
       if (this.ev.on && !this.f.ev_cart) this.ev.pass(() => this.chain([['hero', 'ev_cart_1']], () => g.save(false)));
@@ -314,8 +314,10 @@ export class Evacuation extends ChapterBase {
         if (!f.c8_home) return c([['zoe', 'c8_zoe_1'], ['arthur', 'c8_ar_1'], ['zoe', 'c8_zoe_2'], ['hero', 'c8_tw_z1'], ['zoe', 'c8_zoe_3'], ['arthur', 'c8_ar_2'], ['zoe', 'c8_zoe_4'],
           ...(this.ev.on && f.ev_cart ? [['hero', 'ev_tw_cart'], ['zoe', 'ev_zoe_cart']] : [])], () => { f.c8_home = true; this.progress(); });   // (CAMPAIGN-6: the cart he saw)
         if (this.townDone() && !f.c8_zoeStart) return c([['hero', 'c8_tw_z2'], ['zoe', 'c8_zoe_5']], () => this.startZoe());
-        return c([['zoe', 'c8_zoe_4']]);
-      case 'arthur': return c([['arthur', 'c8_ar_2']]);
+        // (P81: asked again: who to ask, on its own — c8_zoe_4 answered Arthur's line in the first talk; at the lighthouse
+        //  once her part is done, her own business there)
+        return c([['zoe', f.c8_zoeDone ? 'c8_zoe_done' : 'c8_zoe_wait']]);
+      case 'arthur': return c([['arthur', f.c8_gilbert ? 'c8_ar_after' : 'c8_ar_2']]);   // (P81: once Gilbert has told)
       case 'gilbert':
         if (f.c8_home && !f.c8_gilbert) return c([['gilbert', 'c8_gil_1'], ['hero', 'c8_tw_g1'], ['gilbert', 'c8_gil_2'], ['gilbert', 'c8_gil_3']], () => { f.c8_gilbert = true; this.story.refreshCast({ walk: true }); this.progress(); });
         return c([['gilbert', f.c8_gilbert ? 'c8_gil_after' : 'c8_gil_1']]);
