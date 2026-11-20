@@ -1,0 +1,331 @@
+[
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt0",
+  "tris": 6776,
+  "inst": 7,
+  "buried": 31,
+  "share": 0.005
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt1",
+  "tris": 978,
+  "inst": 7,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt2",
+  "tris": 6412,
+  "inst": 2,
+  "buried": 125,
+  "share": 0.019
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt3",
+  "tris": 900,
+  "inst": 2,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt4",
+  "tris": 6788,
+  "inst": 12,
+  "buried": 13,
+  "share": 0.002
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt5",
+  "tris": 964,
+  "inst": 12,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt6",
+  "tris": 6792,
+  "inst": 1,
+  "buried": 166,
+  "share": 0.024
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt7",
+  "tris": 978,
+  "inst": 1,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt8",
+  "tris": 6420,
+  "inst": 2,
+  "buried": 91,
+  "share": 0.014
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt9",
+  "tris": 904,
+  "inst": 2,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt10",
+  "tris": 4214,
+  "inst": 6,
+  "buried": 46,
+  "share": 0.011
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt11",
+  "tris": 552,
+  "inst": 6,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt12",
+  "tris": 4098,
+  "inst": 6,
+  "buried": 15,
+  "share": 0.004
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt13",
+  "tris": 562,
+  "inst": 6,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt14",
+  "tris": 8824,
+  "inst": 8,
+  "buried": 32,
+  "share": 0.004
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt15",
+  "tris": 1262,
+  "inst": 8,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt16",
+  "tris": 8824,
+  "inst": 8,
+  "buried": 32,
+  "share": 0.004
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt17",
+  "tris": 1262,
+  "inst": 8,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt18",
+  "tris": 3772,
+  "inst": 5,
+  "buried": 155,
+  "share": 0.041
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt19",
+  "tris": 890,
+  "inst": 5,
+  "buried": 22,
+  "share": 0.025
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt20",
+  "tris": 3732,
+  "inst": 6,
+  "buried": 225,
+  "share": 0.06
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt21",
+  "tris": 894,
+  "inst": 6,
+  "buried": 36,
+  "share": 0.04
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt22",
+  "tris": 3208,
+  "inst": 25,
+  "buried": 40,
+  "share": 0.012
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt23",
+  "tris": 436,
+  "inst": 25,
+  "buried": 1,
+  "share": 0.002
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt24",
+  "tris": 3112,
+  "inst": 26,
+  "buried": 135,
+  "share": 0.043
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt25",
+  "tris": 446,
+  "inst": 26,
+  "buried": 21,
+  "share": 0.047
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt26",
+  "tris": 3152,
+  "inst": 28,
+  "buried": 88,
+  "share": 0.028
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt27",
+  "tris": 438,
+  "inst": 28,
+  "buried": 12,
+  "share": 0.027
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt0",
+  "tris": 6136,
+  "inst": 25,
+  "buried": 1302,
+  "share": 0.212
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt1",
+  "tris": 872,
+  "inst": 25,
+  "buried": 144,
+  "share": 0.165
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt2",
+  "tris": 6372,
+  "inst": 23,
+  "buried": 253,
+  "share": 0.04
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt3",
+  "tris": 932,
+  "inst": 23,
+  "buried": 29,
+  "share": 0.031
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt4",
+  "tris": 5776,
+  "inst": 26,
+  "buried": 325,
+  "share": 0.056
+ },
+ {
+  "label": "lodBatch:MeshStandardMaterial:sculpt5",
+  "tris": 828,
+  "inst": 26,
+  "buried": 26,
+  "share": 0.031
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 48,
+  "inst": 360,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 60,
+  "inst": 346,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 72,
+  "inst": 367,
+  "buried": 0,
+  "share": 0
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 232,
+  "inst": 36,
+  "buried": 4,
+  "share": 0.017
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 232,
+  "inst": 32,
+  "buried": 4,
+  "share": 0.017
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 232,
+  "inst": 36,
+  "buried": 4,
+  "share": 0.017
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 232,
+  "inst": 34,
+  "buried": 2,
+  "share": 0.009
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 232,
+  "inst": 35,
+  "buried": 4,
+  "share": 0.017
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 103,
+  "inst": 174,
+  "buried": 10,
+  "share": 0.097
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 103,
+  "inst": 136,
+  "buried": 5,
+  "share": 0.049
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 103,
+  "inst": 181,
+  "buried": 8,
+  "share": 0.078
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 103,
+  "inst": 123,
+  "buried": 10,
+  "share": 0.097
+ },
+ {
+  "label": "smallPool:MeshStandardMaterial",
+  "tris": 103,
+  "inst": 92,
+  "buried": 10,
+  "share": 0.097
+ }
+]

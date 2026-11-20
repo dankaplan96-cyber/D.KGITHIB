@@ -21,6 +21,10 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   One exception, logged: the Zeelich depot fight (2 drones, an armour-2 Grobo guard, a dog, entered with 6/10 HP)
   — the bot can't win it; below 3 HP it stops and an ISO assist beats the rest (QA.md).
 
+- HIDDEN-TRIS (P85, 20.11): hidden triangles around Twinsen's house measured (docs/lba3-performance/HIDDEN-TRIS.md):
+  60 % of the walk's submitted triangles never seen, ~20 % never visible from anywhere; ≲ 1 ms on the laptop (INFERRED);
+  no game change. Next only with the laptop's interior GPU ms: the house shell per room, furniture inside furniture.
+
 ## Unfinished
 - Playthrough chapters 4–12 + epilogue (07–14): running/next (see QA.md "Story and progression").
 - Final run of the whole automated suite on the final state; QA.md results table refresh.

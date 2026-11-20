@@ -1,0 +1,208 @@
+[94s] setup {"cam":"follow","dist":"medium","controls":"classic","state":"play","q":"medium","dpr":1,"canvas":[1280,720]}
+[94s] A: as shipped, batches on
+[555s] A done 72 views
+[555s] B: batches off
+[556s] batch meshes left 0
+PASS the camera stands where it stood with the batches on (same placement, within 5 cm) []
+[587s] ID: building the soup
+[590s] moving (not judged) {"list":[{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3106},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":5044},{"name":"Mesh","site":"polyCharacter@characters.js","tris":108},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"new Environment@environment.js","tris":528},{"name":"Mesh","site":"new Environment@environment.js","tris":21632},{"name":"SkinnedMesh","site":"addSilhouette@characters.js","tris":5044},{"name":"Mesh","site":"new Cat@townbits.js","tris":244},{"name":"Mesh","site":"buildWorldSteps@world.js","tris":24},{"name":"Mesh","site":"new Cat@townbits.js","tris":60},{"name":"Mesh","site":"new Cat@townbits.js","tris":354},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3968},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2836},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":66},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":66},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":66},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"part@world.js","tris":576},{"name":"dogParts","site":"mergeParts@dogs.js","tris":296},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2684},{"name":"Mesh","site":"share@walkers.js","tris":20},{"name":"Mesh","site":"share@walkers.js","tris":120},{"name":"Mesh","site":"share@walkers.js","tris":40},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3004},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3272},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3806},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":4242},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3874},{"name":"Mesh","site":"share@walkers.js","tris":12},{"name":"Mesh","site":"share@walkers.js","tris":12},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3004},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2770},{"name":"Mesh","site":"Pickups.spawn@actors.js","tris":24},{"name":"Mesh","site":"","tris":40},{"name":"Mesh","site":"","tris":24},{"name":"Mesh","site":"","tris":100},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"merged","site":"","tris":384},{"name":"merged","site":"","tris":420},{"name":"merged","site":"","tris":9746},{"name":"merged","site":"","tris":24},{"name":"merged","site":"","tris":700},{"name":"merged","site":"","tris":96},{"name":"merged","site":"","tris":280},{"name":"merged","site":"","tris":280},{"name":"Mesh","site":"fishingBoat@island.js","tris":1936},{"name":"Mesh","site":"Pickups.spawn@actors.js","tris":24},{"name":"Mesh","site":"Pickups.spawn@actors.js","tris":24},{"name":"merged","site":"","tris":6},{"name":"Mesh","site":"buildModel@dinofly.js","tris":8},{"name":"Mesh","site":"buildModel@dinofly.js","tris":8},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2648},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2682},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3064},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":1928},{"name":"dogParts","site":"mergeParts@dogs.js","tris":436},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":3874},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":64},{"name":"Mesh","site":"polyCharacter@characters.js","tris":32},{"name":"dogParts","site":"mergeParts@dogs.js","tris":100},{"name":"dogParts","site":"mergeParts@dogs.js","tris":100},{"name":"dogParts","site":"mergeParts@dogs.js","tris":100},{"name":"dogParts","site":"mergeParts@dogs.js","tris":100},{"name":"Mesh","site":"share@walkers.js","tris":80},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Sprite","site":"","tris":2},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"Mesh","site":"polyCharacter@characters.js","tris":16},{"name":"dogParts","site":"mergeParts@dogs.js","tris":100},{"name":"SkinnedMesh","site":"polyCharacter@characters.js","tris":2804},{"name":"Mesh","site":"","tris":12},{"name":"Mesh","site":"","tris":12}],"perView":55537}
+[590s] soup {"nan":504,"tris":1773502,"objs":5484,"chunks":["1|0|0","1|2|0","0|0|-2,-2","0|0|0","0|2|0","0|2|-2,0"],"bmEntries":309}
+[788s] id pass 0 yard-door@0 {"newSeen":16041}
+[804s] id pass 8 garden@0 {"newSeen":2274}
+[818s] id pass 16 lane-1@0 {"newSeen":6262}
+[832s] id pass 24 lane-2@0 {"newSeen":6872}
+[845s] id pass 32 lane-4@0 {"newSeen":7501}
+[857s] id pass 40 lane-6@0 {"newSeen":5499}
+[871s] id pass 48 lane-8@0 {"newSeen":4059}
+[884s] id pass 56 south-lane-2@0 {"newSeen":8383}
+[896s] id pass 64 square-west@0 {"newSeen":8833}
+[906s] analysis
+[910s] totals {"tris":1773502,"seen":611283,"batched":783346,"dbl":105028,"dblBackSeen":23080,"dblSeen":31865,"byClass":[341766,74377,43472,213230,82745,295645,110984]}
+[910s] trim {"mode":"geo","geos":324,"removed":98671,"skipped":1,"total":641329,"bmDegenerate":10011}
+[910s] C: cut geo batches on
+[1323s] D: pictures geo
+[1749s] cut geo {"C":{"calls":136.1,"tris":561116,"shCalls":32.1,"shTris":100779,"ms":2783.1},"diff":{"maxShare":0.0015581597222222223,"avgShare":0.0002167124807098766,"maxPx":1436}}
+[1749s] trim {"mode":"all","geos":420,"removed":436474,"skipped":1,"total":641329,"bmDegenerate":29641}
+[1750s] C: cut all batches on
+[2096s] D: pictures all
+[2425s] cut all {"C":{"calls":131.3,"tris":408395,"shCalls":31.6,"shTris":88091,"ms":2279.6},"diff":{"maxShare":0.003388671875,"avgShare":0.0006840307918595679,"maxPx":3123}}
+[2426s] E: originals, batches on
+[2905s] summary {
+ "A": {
+  "calls": 139,
+  "tris": 605180,
+  "shCalls": 31.9,
+  "shTris": 110382,
+  "ms": 2890.7
+ },
+ "B": {
+  "calls": 208.2,
+  "tris": 595804,
+  "shCalls": 32.6,
+  "shTris": 107921,
+  "ms": null
+ },
+ "E": {
+  "calls": 136.3,
+  "tris": 606894,
+  "shCalls": 31.5,
+  "shTris": 97616,
+  "ms": 3014.6
+ },
+ "cuts": {
+  "geo": {
+   "C": {
+    "calls": 136.1,
+    "tris": 561116,
+    "shCalls": 32.1,
+    "shTris": 100779,
+    "ms": 2783.1
+   },
+   "diff": {
+    "maxShare": 0.0015581597222222223,
+    "avgShare": 0.0002167124807098766,
+    "maxPx": 1436
+   },
+   "trim": {
+    "mode": "geo",
+    "geos": 324,
+    "removed": 98671,
+    "skipped": 1,
+    "total": 641329,
+    "bmDegenerate": 10011
+   }
+  },
+  "all": {
+   "C": {
+    "calls": 131.3,
+    "tris": 408395,
+    "shCalls": 31.6,
+    "shTris": 88091,
+    "ms": 2279.6
+   },
+   "diff": {
+    "maxShare": 0.003388671875,
+    "avgShare": 0.0006840307918595679,
+    "maxPx": 3123
+   },
+   "trim": {
+    "mode": "all",
+    "geos": 420,
+    "removed": 436474,
+    "skipped": 1,
+    "total": 641329,
+    "bmDegenerate": 29641
+   }
+  }
+ },
+ "perView": {
+  "tris": 524745,
+  "hid": 314322,
+  "share": 0.5996,
+  "draws": 166.8,
+  "hidDraws": 11.8,
+  "dbl": 25917,
+  "dblBackInF": 7595,
+  "byClass": [
+   [
+    "buried",
+    62550
+   ],
+   [
+    "under/inside a solid",
+    27108
+   ],
+   [
+    "bottom on the ground",
+    14667
+   ],
+   [
+    "never front-facing",
+    57160
+   ],
+   [
+    "outside every view",
+    14097
+   ],
+   [
+    "tiny",
+    96038
+   ],
+   [
+    "occluded",
+    42700
+   ]
+  ],
+  "pxAll": 4881992,
+  "pxByClass": [
+   [
+    "buried",
+    104798
+   ],
+   [
+    "under/inside a solid",
+    320819
+   ],
+   [
+    "bottom on the ground",
+    486
+   ],
+   [
+    "never front-facing",
+    0
+   ],
+   [
+    "outside every view",
+    0
+   ],
+   [
+    "tiny",
+    2120
+   ],
+   [
+    "occluded",
+    413531
+   ]
+  ]
+ }
+}
+[2905s] top sources
+   fillPools@world.js hidden/view 34701 of 54076 [38528,6485,1816,9803,4786,71601,14477]
+   Terrain._build@terrain.js hidden/view 30141 of 54989 [0,3205,0,12516,8906,1068,44175]
+   kit:fn place@citydress.js hidden/view 26001 of 49454 [162,637,2454,7383,0,15589,3724]
+   kit:custom buildCitadelContainers@containers.js hidden/view 17561 of 25244 [80,0,2338,4305,0,11011,1971]
+   lodBatch:MeshStandardMaterial:sculpt2(6372 tris) hidden/view 14922 of 19559 [73388,3551,265,5343,0,13535,3272]
+   lodBatch:MeshStandardMaterial:sculpt0(6136 tris) hidden/view 13732 of 17556 [72280,3173,0,7324,0,9273,1879]
+   merged:piecesOf@island.js hidden/view 12990 of 18365 [3258,366,3409,9862,0,21965,1935]
+   instances@island.js hidden/view 12935 of 27879 [0,538,5354,15264,0,22596,1807]
+   merged:buildHouse@architecture.js hidden/view 12626 of 21492 [268,12509,72,2021,92,675,845]
+   kit:custom buildSpaceport@spaceport.js hidden/view 11980 of 18262 [4,4925,1338,5169,0,9215,526]
+   lodBatch:MeshStandardMaterial:sculpt4(5776 tris) hidden/view 11806 of 17328 [58712,0,572,6825,0,7943,2703]
+   mesh:[MeshStandardMaterial] hidden/view 10037 of 13905 [3871,4856,2081,8303,8866,10857,1286]
+   buildCliffRocks@cliffs.js hidden/view 8710 of 10146 [4244,11,283,1997,613,77,1485]
+   batch:drawPipe@island.js hidden/view 7741 of 8217 [5653,27,430,4575,11134,3843,157]
+   merged:pot@town.js hidden/view 7402 of 18629 [0,0,232,1929,0,4587,966]
+   mesh:merged[MeshStandardMaterial] hidden/view 5702 of 7361 [0,148,1369,2347,15,4878,517]
+   kit:crate hidden/view 4018 of 4379 [0,2142,118,1157,0,3732,57]
+   lodBatch:MeshStandardMaterial:sculpt26(3152 tris) hidden/view 3757 of 8668 [9671,0,3204,8149,0,4008,1512]
+   lodBatch:MeshStandardMaterial:sculpt3(932 tris) hidden/view 3522 of 3948 [15582,938,89,3275,0,2509,498]
+   lodBatch:MeshStandardMaterial:sculpt24(3112 tris) hidden/view 3264 of 9293 [7988,60,3114,5269,0,2552,2357]
+   lodBatch:MeshStandardMaterial:sculpt1(872 tris) hidden/view 3029 of 3512 [13849,967,33,2353,517,1410,394]
+   batch:Place.add@props-esmer.js hidden/view 2973 of 3245 [0,139,930,1401,0,7958,757]
+   crateMesh@island.js hidden/view 2959 of 3405 [282,0,1280,1836,0,5922,1084]
+   batch:member@island.js hidden/view 2934 of 3101 [1257,0,112,1805,4891,1381,22]
+   lodBatch:MeshStandardMaterial:sculpt22(3208 tris) hidden/view 2647 of 6683 [6224,0,3098,5743,0,4570,1267]
+   lodBatch:MeshStandardMaterial:sculpt5(828 tris) hidden/view 2525 of 2944 [11987,854,169,2904,1019,2415,890]
+   kit:pv hidden/view 2491 of 4488 [27,60,236,1782,0,3332,109]
+   lodBatch:MeshStandardMaterial:sculpt4(6788 tris) hidden/view 2426 of 12445 [1008,1042,31,8030,0,2007,631]
+   merged:flowerBox@architecture.js hidden/view 2207 of 4471 [0,0,0,884,0,1440,664]
+   batch:pipeRun@island.js hidden/view 1910 of 1954 [230,562,85,387,4607,310,27]
+PASS cut "geo": the pictures as they were (≤ 1 % of pixels differ in every view; slivers under the id pass's samples) {"maxShare":0.0015581597222222223,"avgShare":0.0002167124807098766,"maxPx":1436}
+PASS cut "all": the pictures as they were (≤ 1 % of pixels differ in every view; slivers under the id pass's samples) {"maxShare":0.003388671875,"avgShare":0.0006840307918595679,"maxPx":3123}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 3 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     6 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
