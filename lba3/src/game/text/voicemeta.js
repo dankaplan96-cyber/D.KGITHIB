@@ -104,11 +104,13 @@ export const VOICE_META = {
   c2_bal_built: ['pleased', 'pleased', 'uncertain', 'neutral', 'pleased'], c2_bal_after: ['neutral', 'concerned'],
   c2_zoe_in: { i: ['neutral', 'neutral', 'uncertain'], e: [null, null, 'order'] }, c2_zoe_broadcast: ['neutral', 'concerned', 'urgent', 'urgent'],
   c2_zoe_after: ['relieved', 'pleased', 'concerned'], c2_zoe_notyet: 'annoyed',
-  c2_vesk_1: { i: ['neutral', 'neutral', 'curious'], e: [null, 'Baldino', 'you'] }, c2_tw_vesk1: { i: ['annoyed', 'annoyed'], e: [null, 'thirty'] },
-  c2_vesk_2: { i: ['annoyed', 'neutral', 'concerned', 'neutral'], e: ['everyone'] }, c2_bal_vesk: { i: ['urgent', 'urgent'], e: ['IS'] },
-  c2_vesk_3: ['annoyed', 'neutral', 'neutral'], c2_tw_vesk2: 'annoyed', c2_vesk_4: ['neutral', 'concerned'],
-  c2_after_tw: { i: ['urgent', 'concerned'], e: ['ship'] }, c2_ship_bal: ['neutral', 'neutral'], c2_ship_bal2: ['urgent', 'neutral', 'uncertain'],
-  c2_after_bal: ['neutral', 'urgent', 'urgent'], c2_ar_sealed: ['curious', 'pleased', 'neutral', 'concerned'], c2_zoe_sealed: ['concerned', 'concerned'],
+  c2_vesk_1: { i: ['neutral', 'neutral', 'curious'], e: [null, 'Baldino', 'you'] }, c2_tw_vesk1: { i: ['neutral', 'neutral', 'concerned'], e: [null, 'upper', 'docks'] },
+  // (P81 / VESK: his answer is calm, a sum he has done; the readings with a beat before them)
+  c2_vesk_2: { i: ['neutral', 'neutral'], e: ['three', 'hospital'] }, c2_vesk_2b: { i: ['neutral', 'concerned', 'neutral'], e: ['readings', 'own', 'first'], p: [0.3, 0, 0] },
+  c2_bal_vesk: { i: ['urgent', 'urgent'], e: ['IS'] }, c2_tw_vesk_drill: { i: 'neutral', e: 'IS' },
+  c2_vesk_3: { i: ['annoyed', 'neutral'], e: ['number', 'finish'] }, c2_vesk_3b: { i: ['annoyed', 'neutral'], e: ['number', 'finish'] }, c2_tw_vesk2: 'annoyed', c2_vesk_4: ['neutral', 'concerned'],
+  c2_ship_bal2: ['urgent', 'neutral', 'uncertain'],
+  c2_after_bal: ['neutral', 'urgent', 'urgent'], c2_after_bal_r: ['neutral', 'urgent', 'urgent'], c2_ar_sealed: ['curious', 'pleased', 'neutral', 'concerned'], c2_zoe_sealed: ['concerned', 'concerned'],
   c2_tw_sealed0: 'annoyed', c2_bal_sealed1: ['neutral', 'concerned', 'uncertain'], c2_tw_sealed: { i: 'annoyed', e: 'wait' },
   c2_bal_sealed2: ['annoyed', 'neutral', 'neutral'], c2_doran_sealed: ['curious', 'neutral', 'pleased'],
   // (MILLS: the brakes' cost and the mills let go)
