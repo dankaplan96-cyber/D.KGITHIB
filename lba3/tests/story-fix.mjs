@@ -57,7 +57,8 @@ const r = await ev(async () => {
 console.log(JSON.stringify(r, null, 1));
 
 const E = r.en, H = r.he;
-check('Dallan: Twinsen names project security on Zeelich, not Dallan\'s guards', /^Project security took/.test(E.c4_tw_d1) && /אבטחת המיזם/.test(H.c4_tw_d1), [E.c4_tw_d1, H.c4_tw_d1]);
+// (DIALOGUE-2, 19.11 `8048a735`: the line now puts it on Vesk's plan; what this check guards is unchanged — Dallan's guards are not blamed)
+check('Dallan: Twinsen puts it on Vesk (his evacuation plan), not on Dallan\'s guards', /Vesk/.test(E.c4_tw_d1) && !/guard/i.test(E.c4_tw_d1) && /וסק/.test(H.c4_tw_d1) && !/שומר/.test(H.c4_tw_d1), [E.c4_tw_d1, H.c4_tw_d1]);
 check('Dallan: the gate line quotes what he said at the dig, not "on Zeelich"', /Your words, at the dig/.test(E.c5_tw_gate2) && !/Zeelich/.test(E.c5_tw_gate2) && /בחפירה/.test(H.c5_tw_gate2), [E.c5_tw_gate2, H.c5_tw_gate2]);
 check('Chapter 8: Zoé says why the lane takes the list cart (they are on the list)', /on the list/.test(E.ev_z_go) && /ברשימה/.test(H.ev_z_go), [E.ev_z_go, H.ev_z_go]);
 check('Chapter 8: the journal says where the cart went and who the shelters are for', /ships' queue on the bridge/.test(E.ev_j_board) && /shelters/.test(E.ev_j_board) && /המקלטים/.test(H.ev_j_board), [E.ev_j_board]);
