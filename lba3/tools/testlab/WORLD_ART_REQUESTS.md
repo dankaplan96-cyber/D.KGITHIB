@@ -5693,3 +5693,8 @@ battery). Raw reports: `docs/lba3-performance/HARDWARE/2026-11-20-gtx1050-ac/`.
   while Windows still reports the panel at 60 Hz. The same 17.4–17.7 ms pace as the user's laptop-build228 report
   (PERF-HIGH). Not the game's work; its cause (Chrome's frame scheduling, the Intel/NVIDIA hybrid output on this Optimus
   laptop, or a panel power feature) is not established — no settings were changed.
+- **JOINTS-BLENDER 5–6 for the cloud to merge** (`joints-blender` at `72c4d5c6`; 1–4 are merged): 5 = the Normal hop's
+  plant and the robe's run cycle (rig.js, anim-polish 55/55); 6 = Zoé's reach toward the tap (rig.js `reach`/`tapTurn`:
+  the gaze leads, the shoulder lifts with the elbow folded, the forearm opens last; the hand's end pose unchanged; picture
+  `captures/joints-blender/zoe-reach-before-after.jpg`). Arthur's turn and the Grobos' trunk read in rig.js (ANIM-POLISH-3's
+  head-led turn, TRUNK-1): not changed.
