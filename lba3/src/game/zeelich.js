@@ -10,6 +10,7 @@
 //   R.councilDoor {x,z}       the arcade house's door: the council house and its cloud lift (rooms 'upper', 'council', 'archive')
 //   R.mills [{id, x, z, brake:{x,y,z}, spinning, setSpinning(b)}]  three wind-mills, a ball target (brake) each
 //   R.millTop {x,y,z}         the cog on top of the old mill (reached by jumping up its stair-stones)
+//   R.fountain {x,y,z,running} the plaza fountain: runs while all three mills turn (MILLS: story/chapter2.js)
 //   R.depot {x, z, patrol:[[x,z],...], locker:{x,z}}  the project depot (drones patrol it), locker holds the code cylinder
 //   R.platform {x, z, gate:{x,z}, console:{x,z}, shield:{on, setOn(b)}, pad:{x,z}, lift:{lower(cb)}}
 //   R.cloudY                  height of the cloud sea
@@ -1576,7 +1577,20 @@ export function* buildZeelichSteps(scene, physics) {
     // falling water: a thin translucent bell
     const bell = mesh(group, cached('wbell', () => lathe([[0.95, 0], [0.97, -0.3], [1.05, -0.8], [1.15, -1.18]], 16)), pm('#e0f8ff', 0.1, { transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false, emissive: '#80c0e0', emissiveIntensity: 0.3 }), x, Y0 + 1.73, z, 0, { cast: false });
     bell.castShadow = false;
-    updaters.push((dt, t) => { water.material.map.offset.set(t * 0.03, t * 0.02); });
+    // MILLS (task 5): the fountain's pump is on the mills' line, with the pumps up to the east terraces: it runs while all
+    // three mills turn. A brake on any of them and its water stops falling (the bell drains up into the bowl) and the
+    // basin goes still; the sails turning again bring it back. Read from the mills each frame, whoever braked them.
+    let flow = 1, rip = 0;
+    R.fountain = { ...W(x, z), y: Y0, get running() { return flow > 0.5; } };
+    updaters.push((dt) => {
+      const on = !R.mills || R.mills.every((m) => m.spinning);
+      flow = on ? Math.min(1, flow + dt * 0.9) : Math.max(0, flow - dt * 0.6);
+      rip += dt * (0.15 + 0.85 * flow);
+      water.material.map.offset.set(rip * 0.03, rip * 0.02);
+      const v = flow > 0.03, sy = +(0.08 + 0.92 * flow).toFixed(3);
+      if (bell.visible !== v) bell.visible = v;
+      if (bell.scale.y !== sy) bell.scale.y = sy;
+    });
     col({ type: 'cyl', x, z, r: 2.05, top: Y0 + 0.72 });
     // market stall: timber frame, striped canopy, counter of fruit, jars and a rug
     placeTag('stall');

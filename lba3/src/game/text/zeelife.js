@@ -142,6 +142,11 @@ Object.assign(STR.en, {
     'The project put new sails on my mills. Paid for them, too. Then you braked them.',
     'Snuff bakes with the project\'s heat. Her grandmother baked with charcoal and complained less.',
   ],
+  // (MILLS: the brakes came off in chapter 3, the day they went on)
+  zl_oku_back: [
+    'The project put new sails on my mills. You braked them, and let them go the same day. Most people only manage the first.',
+    'Snuff bakes with the project\'s heat. Her grandmother baked with charcoal and complained less.',
+  ],
 
   // ---- ZEELICH-DOORS: inside the street's houses (src/game/zhomes.js)
   n_zh_lissa: 'Lissa', n_zh_wenna: 'Wenna',

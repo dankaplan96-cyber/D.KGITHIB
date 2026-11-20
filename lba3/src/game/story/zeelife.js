@@ -326,13 +326,17 @@ export class ZeelichLife extends ChapterBase {
         return true;
       }
       case 'zh_lissa': return one('zh_lissa', 'zh_lissa_' + (ph === 'post' ? 'pre' : ph));
-      case 'zh_wenna': return one('zh_wenna', 'zh_wenna_' + (ph === 'pre' && this.story.chapters[this.idx('zeelich')]?.millsBraked?.() ? 'braked' : ph === 'post' ? 'braked' : ph));
+      case 'zh_wenna': {   // (MILLS: the braked mills while they stand; once Twinsen has let them go, the street as before)
+        const ch3 = this.story.chapters[this.idx('zeelich')], braked = ch3?.millsBraked?.() > 0, back = !!ch3?.millsBack?.();
+        return one('zh_wenna', 'zh_wenna_' + ((ph === 'pre' || ph === 'post') && back ? 'pre' : ph === 'pre' && braked ? 'braked' : ph === 'post' ? 'braked' : ph));
+      }
       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
       // Nara and Oku when no chapter needs them (chapters 4–8 and after the network; after the ending they have their
       // own word about it: story/epilogue.js EPILOGUE-HOME)
       case 'nara': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('nara', 'zl_nara') : false;
-      case 'oku': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('oku', 'zl_oku') : false;
+      // (MILLS: Oku remembers whether the brakes came off the same day: chapter2.js millsBack)
+      case 'oku': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('oku', this.story.chapters[this.idx('zeelich')]?.millsBack?.() ? 'zl_oku_back' : 'zl_oku') : false;
     }
     return false;
   }

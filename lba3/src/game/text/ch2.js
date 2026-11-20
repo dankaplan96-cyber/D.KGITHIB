@@ -18,7 +18,11 @@ Object.assign(STR.en, {
   c2_oku_1: "Before the project, these mills only ground flour. Now they power the platform's shield. Zeelich's wind, working for a drill.",
   c2_oku_2: 'Three mills, three brakes. When I was a boy we stopped them with a stone. You have a ball.',
   c2_oku_mill: 'The old mill? Nobody has climbed it since the storm. The steps are still there, but they need young legs.',
-  c2_oku_after: 'The wind has calmed. Listen. That is how it should sound.',
+  // (MILLS: the brakes' cost, when they may come off, and the mills let go: story/chapter2.js)
+  c2_oku_dry1: 'There goes the fountain. It runs off my mills, and so do the pumps up to the east terraces.',
+  c2_oku_dry2: 'Get your shield open, then knock the brakes loose again. Until then the terraces carry their water by hand.',
+  c2_oku_free: "Your shield's down. So why are my mills still standing? The terraces are carrying buckets.",
+  c2_oku_back: "There: three mills turning, and the fountain with them. You braked them and you let them go. I'll remember both.",
 
   c2_bal_1: 'Twinsen! Mind the... ah. Never mind, I have another one.',
   c2_tw_bal1: 'Baldino, Vesk says the project brings heat and light. What is it really doing?',
@@ -41,6 +45,7 @@ Object.assign(STR.en, {
   c2_toast_cyl: 'Code Cylinder',
   c2_toast_key: 'Override Key',
   c2_toast_mill: 'Mill braked ({n}/3)',
+  c2_toast_free: 'Mill released ({n}/3)',
 
   c2_zoe_in: 'The lighthouse. Baldino said three dials, then the microphone. What was the order again?',
   c2_radio_freq: 'Zoé, can you hear me? The dials: first what wakes us, then what the sea does, then what twinkles. Then speak, slowly and clearly!',
@@ -58,6 +63,7 @@ Object.assign(STR.en, {
   c2_console_nokey: 'The console needs an override key. Baldino is building one.',
   c2_console_nobrakes: 'The key fits, but the shield is too strong. All three mills must be braked.',
   c2_shield_down: 'The shield flickers... and goes out!',
+  c2_tw_free: "(The key holds the shield open now. Oku's mills can turn again.)",
   c2_guard_block: "No entry. The shield is on, and I'm not moving.",
   c2_guard_after: "I'm... I'm just the guard. The engineer is inside.",
 
@@ -92,6 +98,7 @@ Object.assign(STR.en, {
   c2_j_back: "I recovered the plan from the depot. Oku read it and let me climb his old mill.",
   c2_sub_cyl: 'The code cylinder (the depot)',
   c2_sub_mills: 'Brake the three mills ({n}/3)',
+  c2_sub_free: 'Optional: let the mills turn again ({n}/3)',
   c2_obj_build: 'Bring both parts to Baldino',
   c2_obj_zoe: 'Zoé: broadcast the warning from the lighthouse',
   c2_obj_mills: 'Brake the three mills ({n}/3)',
@@ -112,7 +119,9 @@ Object.assign(STR.en, {
   c2_j_parts: "I took the cog from the old mill and the code cylinder from the project depot's locker.",
   c2_j_key: "Baldino built the override key from the two parts, then called Zoé to the radio.",
   c2_j_zoe: "Zoé broadcast from the Citadel lighthouse that the evacuation plan leaves most people out, and told them to head for high ground.",
+  c2_j_dry: 'Braking the mills stopped the plaza fountain and the pumps up to the east terraces. Oku said to let them go once the shield was open.',
   c2_j_shield: "I braked all three mills, and the override key switched off the platform shield.",
+  c2_j_free: "With the shield down, I knocked the brakes loose again. The fountain ran, and Oku said he'd remember.",
   c2_j_vesk: "Vesk would not stop: the shell was cracking anyway, he said, and his thirty percent was everyone who could be saved. He took the lift down to his ship and flew home to Twinsun, and Baldino gave me the conversion plans.",
   c2_j_sealed: "Hours later the platform console showed the shaft at our station sealed from below. Arthur heard Vesk's ship land in the old fort, and Zoé saw it. Only a code from every project station at once opens those doors, so Baldino sent me to Desert Island to learn what the shell is.",
   it_cog: 'Cog', itd_cog: "From the top of Zeelich's old mill. Part of the override key.",
