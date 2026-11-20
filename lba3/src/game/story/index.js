@@ -35,6 +35,7 @@ import { Council } from './council.js';
 import { Network } from './network.js';
 import { Throttle } from './throttle.js';   // (EXP-1: chapter 10 of the expanded campaign, "Borrowed Time")
 import { Ballastra } from './ballastra.js';   // (EXP-2: chapter 11 of the expanded campaign, "Ballastra")
+import { Balances, Cradles } from './balances.js';   // (EXP-3: chapters 12-13 of the expanded campaign, the House of Balances and the Cradles)
 import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
 import { TownLife } from './life.js';
@@ -102,7 +103,7 @@ const _sv = new THREE.Vector3(), _sm = new THREE.Matrix4(), _sf = new THREE.Frus
 export class Story {
   constructor(game) {
     this.game = game;
-    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, throttle: Throttle, survey: ChapterShell, ballastra: Ballastra, balances: ChapterShell, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
+    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, throttle: Throttle, survey: Cradles, ballastra: Ballastra, balances: Balances, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.depot = this.chapters.find((c) => c.key === 'project')?.watch;   // P9: the depot's watch, in every chapter it is there (story/depotwatch.js)
     this.isles = new IslandShuttle(this);
@@ -399,7 +400,7 @@ export class Story {
   talk(npc) { if (!this.ferry.talkFirst(npc) && !this.oneplace.talkFirst(npc) && !this.offwall.talkFirst(npc) && !this.tyl.talkFirst(npc) && !this.qc.talkFirst(npc) && !this.depth.talkFirst(npc)) this.talkRest(npc); }
   // (the talk chain without depth.js: depth.js's hooks add their lines after a person's own, Depth.after; a chapter's own
   //  talkFirst, where it has one, before the town's stories: CAMPAIGN-6's lane in chapter 8)
-  talkRest(npc) { if (this.cur.talkFirst?.(npc) || this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return true; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); return true; }
+  talkRest(npc) { if (this.cur.talkFirst?.(npc) || this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return true; if (!this.cur.talk(npc) && !this.chapters.find((c) => c.key === 'survey')?.talkLater?.(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); return true; }   // (EXP-3: Ballastra's people on a return visit)
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }

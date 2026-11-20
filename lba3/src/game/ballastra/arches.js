@@ -740,7 +740,7 @@ export function* buildArchesSteps(scene, physics) {
   yield;
 
   // ================================================================ the rooms (archrooms.js)
-  const AR = buildArchRooms(scene, physics), rooms = AR.rooms, pumpCtl = AR.pump;
+  const AR = buildArchRooms(scene, physics), rooms = AR.rooms, pumpCtl = AR.pump, cradlesCtl = AR.cradles;
   yield;
 
   // ================================================================ the region's room object
@@ -760,11 +760,14 @@ export function* buildArchesSteps(scene, physics) {
   const exits = {
     toHarbor: { ...W(-8, LAND.z1 - 0.6), r: 1.0, room: 'ballastra' },
     toGardens: { ...W(GATE_E.x + 0.6, GATE_E.z), r: 0.8, room: 'bl_gardens' },
+    // (EXP-3: the keepers' house on the south plaza, its door facing the bell: the stair down to the Cradle Hall; data
+    //  until the story opens it)
+    toCradles: { ...W(38.2 - 1.85, 11.8), r: 0.6, room: 'bl_cradles' },
   };
   const R = {
     id: 'bl_arches', outdoor: true, sky: false, group, center: new THREE.Vector3(ox, 0, oz), lights: [], exits: [exits.toHarbor, exits.toGardens, doorsOut.orenOut, doorsOut.magsOut, doorsOut.pumpOut],   // (toGardens: W-3)
     searches: [], ballTargets: [], givers: [], updaters, music: 'harbour', env, spawn: spawns.fromHarbor,
-    entries: { ballastra: spawns.fromHarbor, bl_oren: spawns.orenOut, bl_mags: spawns.magsOut, bl_pump: spawns.pumpOut, bl_gardens: spawns.fromGardens },
+    entries: { ballastra: spawns.fromHarbor, bl_oren: spawns.orenOut, bl_mags: spawns.magsOut, bl_pump: spawns.pumpOut, bl_gardens: spawns.fromGardens, bl_cradles: W(38.2 - 3.0, 11.8, -Math.PI / 2) },
     sounds: [{ kind: 'water', ...W(-6, -16), r: 30, vol: 0.35 }, { kind: 'water', ...W(0, 22), r: 24, vol: 0.4 }],
     safe: [W(-8, 9), W(8, 9), W(-22, -8), W(30, 0), W(30, -26), W(-8, 21)],
     colliders: statics,
@@ -819,7 +822,7 @@ export function* buildArchesSteps(scene, physics) {
   };
   const hornYaw = (dir) => HORN_DIRS[dir];
   const H = {
-    rooms: ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump'],
+    rooms: ['bl_arches', 'bl_oren', 'bl_mags', 'bl_pump', 'bl_cradles'], cradles: cradlesCtl,   // (EXP-3: the Cradle Hall, archrooms.js)
     spawns,
     exits,
     doors: { ...doorsOut, orenIn: { ...rooms.bl_oren.exits[0] }, magsIn: { ...rooms.bl_mags.exits[0] }, pumpIn: { ...rooms.bl_pump.exits[0] } },
@@ -880,7 +883,7 @@ export function* buildArchesSteps(scene, physics) {
   };
   function wrapA(a) { return Math.atan2(Math.sin(a), Math.cos(a)); }
   R.arches = H; R.npcSpots = H.stands; BALLASTRA.arches = H;
-  for (const id of ['bl_oren', 'bl_mags', 'bl_pump']) rooms[id].arches = H;
+  for (const id of ['bl_oren', 'bl_mags', 'bl_pump', 'bl_cradles']) rooms[id].arches = H;
 
   // ---- the bell's voice: one or two tones (the game's synth, the sound of a bronze bell: a low partial and a hum)
   const bellTone = (at) => {

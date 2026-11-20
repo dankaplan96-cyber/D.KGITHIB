@@ -168,6 +168,25 @@ export const VOICE_META = {
   c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
   c5_ilka_relief: ['neutral', 'concerned', 'neutral'], c5_ilka_after: ['pleased', 'annoyed'],
   c4_kid_2: ['pleased', 'neutral', 'pleased'], c4_tarra_idle: { i: ['curious', 'pleased', 'pleased'], p: [0, 0.3, 0.35] },
+  // ---------------------------------------------------------------- EXP-3: the House of Balances, the Cradles (bh_, wk_, nwb_, ep_bl_)
+  bl_ba_2x: ['urgent', 'urgent', 'concerned'], bl_te_end4x: ['neutral', 'annoyed', 'annoyed'],
+  bh_te_2: ['neutral', 'annoyed', 'neutral'], bh_te_wait2: ['annoyed', 'neutral'],
+  bh_fe_1: 'pleased', bh_fe_2: { i: ['neutral', 'neutral', 'annoyed'], e: [null, null, 'sold'] }, bh_fe_3: ['neutral', 'neutral', 'pleased'],
+  bh_tw_d1: 'annoyed', bh_fe_d1: ['neutral', 'neutral', 'neutral'], bh_fe_d2: ['neutral', 'concerned'], bh_fe_d3: { i: ['neutral', 'neutral', 'annoyed'], e: ['hand', null, null] },
+  bh_tw_t1: ['neutral', 'concerned'], bh_fe_t1: 'neutral', bh_fe_t2: { i: 'uncertain', h: 1 }, bh_fe_t3: { i: ['concerned', 'neutral', 'neutral'], p: [0.4] },
+  bh_fe_t4: ['neutral', 'neutral', 'pleased'], bh_fe_t5: ['neutral', 'pleased', 'annoyed'],
+  bh_or_hold: { i: 'neutral', e: 'I' }, bh_or_hold2: ['neutral', 'neutral'], bh_tw_or: ['concerned', 'concerned'],
+  bh_we_r1: ['curious', 'annoyed'], bh_or_steady: ['neutral', 'pleased'], bh_te_r2: { i: ['annoyed', 'annoyed'], e: ['right', 'him'] },
+  bh_te_rep: { i: ['pleased', 'neutral'], b: 1 }, bh_te_again: ['neutral', 'neutral'], bh_ma_rep: ['neutral', 'pleased'],
+  wk_we_1: { i: ['concerned', 'concerned'], e: [null, 'brother'] }, wk_we_2: ['neutral', 'neutral', 'neutral', 'annoyed'], wk_we_4: ['annoyed', 'neutral'],
+  wk_ga_1: ['neutral', 'neutral'], wk_ga_2: ['neutral', 'concerned'], wk_or_1: 'neutral', wk_we_5: { i: ['concerned', 'annoyed'], e: [null, 'me'] },
+  wk_or_3: ['neutral', 'neutral', 'neutral'], wk_or_4: ['neutral', 'neutral', 'neutral'], wk_ga_ring: ['neutral', 'neutral', 'neutral', 'annoyed'],
+  wk_od_solo: 'uncertain', wk_tw_solo: 'neutral', wk_or_tired: ['neutral', 'neutral', 'neutral'], wk_od_why: ['concerned', 'concerned'],
+  wk_we_bell: { i: ['annoyed', 'neutral', 'pleased'], e: [null, null, 'ours'] }, wk_ma_bell: ['neutral', 'curious'], wk_ma_hands: ['pleased', 'urgent', 'urgent', 'urgent', 'pleased'],
+  wk_jo_1: { i: ['uncertain', 'pleased'], h: 1 }, wk_we_6: 'pleased', wk_jo_2: 'annoyed', wk_we_7: { i: ['neutral', 'concerned'], b: 1 },
+  wk_or_5: ['neutral', 'neutral'], wk_or_6: { i: 'neutral', h: 1 }, wk_ma_ours: ['neutral', 'pleased'], wk_od_mine: ['neutral', 'concerned', 'neutral', 'pleased'],
+  nwb_or_trim: ['neutral', 'neutral'], nwb_mi_trim: ['annoyed', 'annoyed', 'concerned'], nwb_or_brass: { i: 'uncertain', h: 1 }, nwb_mi_mine: ['pleased', 'pleased'],
+  ep_bl_jory: ['pleased', 'annoyed'], ep_bl_odra: ['neutral', 'neutral', 'pleased'], ep_bl_oren: ['neutral', 'neutral', 'neutral'],
 };
 
 // the brief's intentions -> the plan's (voiceplan.js clauses: tell, ask, excl, no, worry, warm, unsure)
