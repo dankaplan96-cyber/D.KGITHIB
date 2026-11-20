@@ -176,6 +176,7 @@ export const VOICE_META = {
   c8_zoe_wait: ['neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real'] },
   c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
   c5_press: ['neutral', 'concerned'],   // (PUZZLES P-A)
+  c7_seal_stuck: ['neutral', 'curious'], c7_seal_more: ['neutral', 'neutral'], c7_seal_free: ['pleased', 'pleased'], c7_warm_hit: ['neutral', 'neutral'],   // (PUZZLES P-B)
   c5_ilka_relief: ['neutral', 'concerned', 'neutral'], c5_ilka_after: ['pleased', 'annoyed'],
   // (P81 scene 3: Float Harbor — Quill's weights, Ferro's catch)
   bl_qu_2: { i: ['neutral', 'concerned', 'annoyed'], e: [null, 'sums', 'mine'] }, bl_qu_n1: ['pleased', 'neutral'], bl_tw_t1: ['curious', 'neutral'],

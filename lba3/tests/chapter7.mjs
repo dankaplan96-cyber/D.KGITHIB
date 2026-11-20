@@ -83,12 +83,14 @@ is('the heavy drone destroyed by the ball', await ev(() => { const G = game, h =
 await shot('C7-02-vent.png');
 // CHAPTER-BALANCE: the seal is carved like the dig's; it turns only with its three warm (steaming) discs woken by the ball
 is('the seal will not turn yet: the discs named, the objective counts them', await ev(() => { const V = game.rooms.hamalayi.vent; T.useAt(V.x + 2.8, V.z); game.step(1); T.talkAll(); return [game.flags.c7_vent, game.flags.c7_sealSeen, T.obj()]; }), (v) => !v[0] && v[1] === true && /disc/i.test(v[2]));
-is('a cold disc only rings; the three warm discs woken by thrown balls', await ev(() => { const G = game, M = G.rooms.hamalayi, V = M.vent, h = G.hero;
+// (PUZZLES P-B, 20.11: changed on purpose. The three steaming discs breathe already, a ball there only rings; the two
+//  choked under ice are freed by the ball, and the seal turns with all five breathing)
+is('a steaming disc only rings; the two iced discs freed by thrown balls', await ev(() => { const G = game, M = G.rooms.hamalayi, V = M.vent, h = G.hero;
   const throwAt = (D) => { const a = Math.atan2(D.x - V.x, D.z - V.z); T.tp(D.x + Math.sin(a) * 3.2, D.z + Math.cos(a) * 3.2); h.angle = Math.atan2(D.x - h.pos.x, D.z - h.pos.z); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.6); T.talkAll(); };
-  const cold = M.ventDiscs.find((d) => !d.warm); throwAt(cold);
-  const res = { cold: cold.lit, warm: [] };
-  for (const D of M.ventDiscs.filter((d) => d.warm)) { for (let k = 0; k < 3 && !D.lit; k++) throwAt(D); res.warm.push(D.lit); }
-  res.flags = [0, 2, 3].map((i) => !!G.flags['c7_disc' + i]); return res; }), (v) => v.cold === false && v.warm.length === 3 && v.warm.every(Boolean) && v.flags.every(Boolean));
+  const warm = M.ventDiscs.find((d) => d.warm); throwAt(warm);
+  const res = { breathing0: M.ventDiscs.filter((d) => d.breathing).length, iced: [] };
+  for (const D of M.ventDiscs.filter((d) => !d.warm)) { for (let k = 0; k < 3 && !D.free; k++) throwAt(D); res.iced.push(D.free); }
+  res.flags = [1, 4].map((i) => !!G.flags['c7_free' + i]); return res; }), (v) => v.breathing0 === 3 && v.iced.length === 2 && v.iced.every(Boolean) && v.flags.every(Boolean));
 is('the glacier vent opened, an objective set', await ev(() => { const V = game.rooms.hamalayi.vent; T.useAt(V.x + 2.8, V.z); game.step(2); T.talkAll(); return [game.flags.c7_vent, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 is('the vent open: the mountain goes still (the line\'s pulse off)', await ev(() => game.rooms.hamalayi.line.active), (v) => v === false);
 is('chapter 7 ends: the next chapter (evacuation)', await ev(() => { const G = game, g = G.rooms.hamalayi.monastery.gate; T.tp(g.x, g.z + 1); G.step(0.5); T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c7_done, G.flags.chapterKey, G.room?.id]; }), (v) => v[0] === true && v[1] === 'evacuation');
