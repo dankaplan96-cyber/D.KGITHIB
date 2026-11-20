@@ -84,7 +84,7 @@ if (PARTS.includes('c5')) {
     const g = A.gauges.read(); return { g, routed: !!game.flags.c5_routed, shaking: A.valves.map((x) => !!x.shaking) }; }), (v) => v.g.vals[1] < 0.5 && !v.g.flutter[1] && v.g.vals[2] > 0.85 && v.g.flutter[2] && !v.routed && v.shaking[3] && !v.shaking[2]);
   is('c5: a wrong try: valve 2 with the steam on: the aquifer needle in the red, his line; not routed', await valve(2), (v) => v.open && v.said.some((s) => /aquifer/i.test(s)));
   is('c5: (the aquifer gauge reads it)', await gauges(), (v) => v.vals[0] > 0.85 && v.flutter[0]);
-  is('c5: valve 2 shut again', await valve(2), (v) => !v.open && !game?.flags?.c5_routed);
+  is('c5: valve 2 shut again', await valve(2), (v) => !v.open);
   // save halfway (1 and 3 open), Continue
   await ev(() => { game.save(false); });
   await boot('continue');

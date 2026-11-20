@@ -33,7 +33,11 @@ Object.assign(STR.en, {
 
   // the valve hall
   c5_hall_in: 'FunFrock\'s condenser hall. And his old security drones are still awake.',
-  c5_diagram: 'A diagram: 1 from the bore, open. 2 is a bypass to the aquifer, shut. 3 and 4 feed the condensers, open.',
+  // (PUZZLES P-A: where each branch goes, not how to set it: the needles over the valves answer)
+  c5_diagram: "The manifold's diagram. Steam comes in from the bore at 1. Branch 2 goes down to the aquifer; 3 and 4 go up to the condensers.",
+  c5_press: "The steam's in, and the shut branches are shaking. It has nowhere to go.",
+  c5_nudge_gauges: 'The needle over each valve shows what its branch is doing.',
+  c5_nudge_route: 'In from the bore, up to the condensers. Never down to the aquifer.',
   c5_toast_valve: 'Valve {v}: {state}',
   c5_open: 'open', c5_shut: 'shut',
   c5_valve_aquifer: 'The aquifer gauge jumps into the red. Not that one.',
