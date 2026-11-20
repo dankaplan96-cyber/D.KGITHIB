@@ -96,10 +96,17 @@ In words: every batch build now comes in slices of 12–20 ms with a few units o
 30 ms, one large piece's place in overlapRuns 69 ms, a geometry upload part 30–56 ms on SwiftShader's GPU side); the
 shader warm-up steps are 13–26 ms (they were one step of 34–43 ms with a new program, and a new program is now alone in
 its call). The black lasts longer: ~20–30 more black frames on a cold arrival (the same work spread over more frames,
-plus ~10 % overhead), a few more on a repeat. Repeat visits stay short (16–32 black frames). The tests' check
-(`tests/arrival-steps.mjs`, cold Zeelich, Desert Island and the tavern): every batch / settle / rejoin / warm-up slice
-≤ 40 ms (longest 32 ms), nothing built or leaving a batch in the first 30 frames in view, staged batches identical to
-one-step batches.
+plus ~10 % overhead), a few more on a repeat. Repeat visits stay short (16–32 black frames).
+
+The test (`tests/arrival-steps.mjs`: staged batches identical to one-step batches; cold Zeelich, Desert Island and the
+tavern frame by frame: every batch / settle / rejoin / warm-up slice ≤ 40 ms, nothing built or leaving a batch in the
+first 30 frames in view): **12/12 at 39127059** (`results/test-arrival-steps.txt`, longest slice 32 ms). At the final code:
+Zeelich and Desert Island pass every check (`results/test-arrival-steps-final.txt`, longest 36 ms); the tavern's run there
+timed out on the frame count while its area was still being built under the arrival card (a test defect: the build is a
+task a paint, real time — fixed, the loop now waits for it); its own short re-run (`results/test-arrival-steps-tavern.txt`,
+`AREAS=room`) came through but **failed the slice check: shadow batches 325 and 58 ms, draw batches 63 ms**, on a machine
+then running ~2.5× slower than the first run (part A's same Desert Island slices: longest 19 → 48 ms). The 325 ms unit was
+not isolated (the prepLog's `u` field names it; not re-run by the user's request for minimal tests): **open**.
 
 ## 4. Auto's first guess (goal 2) — no change, on the evidence
 

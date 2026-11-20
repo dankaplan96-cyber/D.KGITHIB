@@ -58,14 +58,17 @@ await ev(() => {
 });
 await ev((l) => { window.LIMIT = l; }, SLICE_LIMIT);
 const room = await ev(() => ['tavern', 'pharmacy', 'school', 'library', 'bakery'].find((id) => game.regions.has(id) && !game.regions.built(id)) || ['tavern', 'pharmacy', 'school'].find((id) => game.regions.has(id)));
-for (const id of ['zeelich', 'desert', room]) {
+for (const id of (process.env.AREAS ? process.env.AREAS.replace('room', room).split(',') : ['zeelich', 'desert', room])) {   // (AREAS=room: the interior only)
   const r = await ev(async (id) => {
     const G = game, DB = G.drawBatch, SC = G.shadowCull, yieldNow = () => new Promise((res) => setTimeout(res, 0));
     const i1 = G._prepN || 0;
     G.enterRoom(id, null, false, true);
     let frames = 0, black = 0, inView = [], seenView = 0;
     const jobs = () => ({ dbn: DB.builds || 0, sbn: SC.builds || 0, left: DB.left || 0, scl: SC.left });
+    let waited = 0;
     while (frames++ < 600) {
+      // (an area not built yet is built under its arrival card, a task a paint: the real clock's time, not frames)
+      if (G.trans?.building && waited < 240000) { frames--; await new Promise((res) => setTimeout(res, 50)); waited += 50; continue; }
       const a = jobs(); window.STEP(); const b = jobs();
       const op = G._fadeOp ?? 0, isBlack = op >= 0.999 || !!G.trans?.hold;
       if (isBlack) black++;
