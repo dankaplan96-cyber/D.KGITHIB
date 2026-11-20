@@ -5711,3 +5711,9 @@ the file is new — put the cloud's own above it when its worker's lands) and th
   Draw calls unchanged.
 - **Verdict: they do not weigh on this GPU; no fix made or proposed** (the user, 20.11: the game's quality and look must
   not change). Not measured: the characters' double-sided models (115 K of 120 K skinned triangles), far props apart.
+
+## POLISH-SWEEP · started (CLOUD_ORDERS 58) · the desktop, 20.11.2026
+On branch **`polish-sweep`** (from `c93b324e`). Order: interiors with `tests/place-scan.mjs` and the game camera, then the
+regions outdoors, early and late chapters from the fixtures. Staying out of the story text, `src/main.js`,
+`story/balances.js`, the campaign tests, rig.js and characters.js; the School of Magic's exterior, Tali's court and
+Zeelich Spaceport's layout left out. Fixes at their source, each with a matched before/after.
