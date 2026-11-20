@@ -5568,7 +5568,15 @@ for this order. Done so far (details in `docs/lba-maturity/JOINTS-BLENDER.md` on
 - **The user, 20.11: keep LBA2's wing sleeve; fix the motion; the joint work goes to the characters whose limbs show.**
 - `rig.js THROW`: the back leg loads in the wind-up; a key at 0.135 s where the chest, the pelvis and the free arm lead
   and the throwing arm lags — release frame unchanged (0.16 s). Before/after in `captures/joints-blender/`.
-- Next: Zoé, Arthur, a Grobo in Blender. Not merged into the cloud's branch; tests at the end.
+- **JOINTS-BLENDER 2** (`7c3e80e9`): the cast's arms (`cast_poly.py`, 70 models, Arthur and the Grobos/Rabbibunnies
+  included) one shell from a dome in the shoulder through a rounded elbow to the wrist — no shoulder ball, no two tubes
+  meeting at the elbow; rolled sleeves end just past the elbow over a shaped forearm. +2.7 % triangles; every NPC loads
+  its model (no fallback). `JOINTS_OLD=1` rebuilds the shipped models byte for byte.
+- **JOINTS-BLENDER 3** (`531f2ce6`): Zoé's hip join centred on the joint (her sit lost the notch at the front of the
+  hip; triangles unchanged); Baldino's arms as the cast's (+104 triangles); Twinsen's wrist checked — the game never
+  turns the hand's bone, so cuff and fist can't part; left with the wing sleeve.
+- Next: the knees and legs on the cast, then the sword swing, landing, walk-to-stop, pickup and planted feet; the full
+  test at the end. Not merged into the cloud's branch.
 
 ## CHAIN-V103 · the playthrough chain 01–14 on v103 (CLOUD_ORDERS 52.1) · the desktop, 20.11.2026
 v103 (`d1e0ec7f`), `tests/lib/seg.mjs` per segment from a scratch copy of v103's `tests\`, served by a node static server
