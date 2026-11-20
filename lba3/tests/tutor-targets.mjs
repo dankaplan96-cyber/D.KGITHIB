@@ -174,7 +174,7 @@ await cont(); await helpers();
 s = await M();
 const r3b = await ev(() => TM.barrel());
 check('R3.2 knocked, saved, loaded: the barrel stays aside (its collider too), the pipe step', s.step === 'pipe' && r3b.aside && Math.abs(r3b.at[1] - (r3b.z0 - 1.0)) < 0.05 && Math.abs(r3b.col[1] - r3b.at[1]) < 0.01, { s, r3b });
-const r3c = await ev(() => { TM.listen(); P.go(-41.5, 71.5, { tol: 0.8 }); const r = P.go(-41.5, 52, { tol: 1.0 }); P.settle(); game.step(0.5); return { r: r.r, d: TM.fromDoor(), pipe: game.flags.pr_pipe || 0, ok: !!game.flags.pr_yardOk, cut: window.__cut, saidLog: game.story.cur.steps.saidLog || [], step: game.story.cur.steps.current() }; });
+const r3c = await ev(() => { TM.listen(); P.go(-41.5, 71.5, { tol: 0.8 }); let r; for (let k = 0; k < 4; k++) { r = P.go(-41.5, 52, { tol: 1.0 }); P.settle(); if (r.r !== 'state:dialog') break; } game.step(0.5); /* (the lane's knock, if his way goes by it: read, walk on) */ return { r: r.r, d: TM.fromDoor(), pipe: game.flags.pr_pipe || 0, ok: !!game.flags.pr_yardOk, cut: window.__cut, saidLog: game.story.cur.steps.saidLog || [], step: game.story.cur.steps.current() }; });
 check('R3.3 the pipe walked round (no jump): he goes on, the yard let go with one call (show Mira the crystals), no cutscene, no pipe flag granted', r3c.d > 20 && r3c.ok && r3c.cut === 0 && r3c.saidLog.includes('t2_call_go') && r3c.pipe === 0 && !r3c.step, r3c);
 // a save as the build before TUT-MYSTERY wrote it: the steps' flags mid-yard, the barrels already hit (no barrel state saved)
 await ev(() => {

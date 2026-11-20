@@ -738,7 +738,8 @@ export class Prologue extends ChapterBase {
   // TUT-MYSTERY (REVIEW-TASKS task 4, PUZZLES item 1): the barrels hit (or kicked) the first time. In a game with the
   // home thread (hometap.js) the near barrel shuffles aside and shows the supply joint Twinsen mended yesterday: it held,
   // but it weeps warm water and is furred like the kettle — the fault comes up the line from the square. Zoé, if she is
-  // by, concedes the film's "It worked yesterday." Saves from before the thread: the old single line
+  // by, concedes the film's "It worked yesterday." — last, so his lines are read with the joint in view (he turns to
+  // whoever speaks, and the camera with him). Saves from before the thread: the old single line
   revealJoint(how) {
     const g = this.game, f = this.f, h = g.hero;
     f.pr_barrel = true;
@@ -746,7 +747,7 @@ export class Prologue extends ChapterBase {
     const first = how === 'ball' ? [['hero', f.pr_arTrick ? 'pr_barrel_hit_ar' : 'pr_barrel_hit']] : [];
     if (!moved) { if (first.length) this.pending = { t: 0.5, fn: () => this.chain(first, () => g.save(false)) }; return; }
     const zoe = this.speaker('zoe'), near = zoe?.present && zoe.distTo(h) < 12;
-    this.pending = { t: 1.1, fn: () => this.chain([...first, ['hero', 'prh_joint_1'], ...(near ? [['zoe', 'prh_joint_zoe']] : []), ['hero', 'prh_joint_2']], () => { g.updateObjective(); g.save(false); }) };
+    this.pending = { t: 1.1, fn: () => this.chain([...first, ['hero', 'prh_joint_1'], ['hero', 'prh_joint_2'], ...(near ? [['zoe', 'prh_joint_zoe']] : [])], () => { g.updateObjective(); g.save(false); }) };
   }
   // the bell is a target the ball's aim curves toward, from the quay (it hangs out of reach); so are the yard's barrels
   // (the normal aim assist: Settings, Aim assist; offered only with a clear line to them, as every target)

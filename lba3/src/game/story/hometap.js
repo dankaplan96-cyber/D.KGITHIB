@@ -76,7 +76,7 @@ export class HomeTap {
       const fur = new THREE.MeshStandardMaterial({ color: '#e6f4f2', roughness: 0.6 });
       const add = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); grp.add(o); return o; };
       add(new THREE.CylinderGeometry(0.035, 0.035, 1.3, 8), lead, 0.62, 0.14, 0, 0, Math.PI / 2);     // (along the wall's foot, from the lane side)
-      add(new THREE.CylinderGeometry(0.035, 0.035, 0.32, 8), lead, -0.06, 0.28, 0);                   // (up into the wall)
+      add(new THREE.CylinderGeometry(0.035, 0.035, 0.26, 8), lead, -0.05, 0.14, 0.1, Math.PI / 2);   // (an elbow into the wall)
       add(new THREE.CylinderGeometry(0.09, 0.09, 0.24, 12), brass, 0.02, 0.14, 0, 0, Math.PI / 2);  // the coupling (his repair: bright brass)
       for (let i = 0; i < 14; i++) { const c = add(new THREE.OctahedronGeometry(0.03 + (i % 3) * 0.012, 0), fur, -0.1 + (i % 6) * 0.04, 0.12 + ((i * 3) % 5) * 0.03 - 0.02, -0.075 + ((i * 7) % 4) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
       mergeStatic(grp, { recolor: false });
