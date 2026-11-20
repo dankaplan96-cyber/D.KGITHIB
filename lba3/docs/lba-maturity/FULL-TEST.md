@@ -14,7 +14,13 @@ The user (20.11): minimal tests while working, ONE full test of everything at th
 (kept current as the run goes)
 
 - Batch 1 (opening-tutorial → chapter10): done, all PASS after three test updates (`0e5a89aa`).
-- Batch 2 (middle-variety → arrival-steps, the rest of the priority list but char-form) running; then the chain 01 → 14
+- **Stopped at handback (20.11 ~12:20)** in batch 2 after exp-ballastra; batch 2's runner may still be going in the
+  background (its results append to `tests/out/ft/results.tsv`). To resume: re-run `exp-ballastra`, `exp-balances`, then
+  from `exp-throttle` on: exp-throttle epilogue-home campaign-thread campaign-hands save-migration dialogue-scenes
+  dialogue-check desert-life faces fps30 boot-fail cave-stair p81-revisits story-fix menus hebrew controls timing
+  anim-combat jumpreach arrival-steps char-form. Keep the server up with `tests/out/ft/serve.sh` (a background job's
+  2 h limit killed it once). NOT DONE: the chain, P79's captures and perf runs, the rest of tests/*.mjs.
+- Batch 2 (middle-variety → arrival-steps, the rest of the priority list but char-form); then the chain 01 → 14
   (`tests/out/ft/chain.sh`), then P79 (`tests/char-form.mjs` with OUT=captures/full-test/char-form, `tests/p79-faces.mjs`,
   `tests/p79-perf.mjs`), then the rest of `tests/*.mjs`.
 
@@ -38,6 +44,11 @@ behaviour a recent task changed on purpose — the test updated; **(c)** a real 
 | chapter8 | first FAIL (8, cascade) → **PASS** | 20/20 | 1.4 min | (b) the depot step (MIDDLE-VARIETY's edit, never run): Lulu was asked at the door while he stood by her on the way (>15 m from the door: Tim's "Come on, Lulu!" again, by design); (d) the boarding step stood him on SPACEPORT-3's Pema (fuel cart, west of the pad): her Talk prompt, not the ship's | test: he waits at the door until the children are there; steps round the pad until the prompt is the ship's (`0e5a89aa`) |
 | chapter9 | **PASS** | 24/24 | 1.5 min | — | |
 | chapter10 | **PASS** | 30/30 | 2 min | — | |
+| middle-variety | **PASS** | 19/19 | 4.5 min | — | |
+| mills | **PASS** | 19/19 | 5 min | — | |
+| vesk | **PASS** | 12/12 | 7.5 min | — | |
+| exp-ballastra | FAIL → test updated, **re-run pending** | 32/33 | 6 min | (b) "Quill weighs visitors (the lift has opinions about ballast)": P81 scene 3 (`d56daf8f`) rewrote `bl_qu_2` ("The lift has been jammed four days, and somebody's sums are wrong") | test reads "Visitors are weighed" + "lift has been jammed" (committed with this table); EXP-3's edited end check PASSED |
+| exp-balances | running at handback (30 checks passed, 0 failed when last read); the game server was down ~4 min near its end (12:13–12:17, the background job's 2 h limit): **re-run it** | | | | |
 
 ## 2. The campaign chain (tests/playthrough 01 → 14)
 

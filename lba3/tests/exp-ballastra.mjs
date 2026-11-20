@@ -125,7 +125,8 @@ const n1a = await timed(() => {
   const te = T.talk('tessa');
   return { q, sign, te, ...T.view() };
 });
-check("Quill weighs visitors (the lift has opinions about ballast); the shed's door: AT THE LIFT", n1a.q.said.some((l) => /opinions about ballast/.test(l)) && n1a.sign.said.some((l) => /AT THE LIFT/.test(l)), { q: n1a.q.said, sign: n1a.sign });
+// (P81 scene 3, 20.11: Quill's weighing now ends on the jammed lift and the wrong sums, not "opinions about ballast")
+check("Quill weighs visitors (the lift jammed, somebody's sums wrong); the shed's door: AT THE LIFT", n1a.q.said.some((l) => /Visitors are weighed/.test(l)) && n1a.q.said.some((l) => /lift has been jammed/.test(l)) && n1a.sign.said.some((l) => /AT THE LIFT/.test(l)), { q: n1a.q.said, sign: n1a.sign });
 check("Tessa at the lift: one job, free Ferro's boat; the objective's three steps", n1a.bl.tessa1 && n1a.te.said.some((l) => /One job/.test(l)) && /Free Ferro's boat/.test(n1a.obj), { te: n1a.te.said, obj: n1a.obj });
 const n1b = await timed(() => {
   const G = game, H = G.rooms.ballastra.harbor;
