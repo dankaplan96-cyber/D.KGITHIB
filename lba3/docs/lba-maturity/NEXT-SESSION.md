@@ -1,5 +1,11 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**20.11: v103 published (artifact 1795160743-bd29, 509 files)**: STORY-FIX, DIALOGUE-2 (with FRESH-EYES), FACE-1 gaps
+and brows for 41 characters, BOOT-FAIL (P73), FPS30-SMOOTH (P70: footsteps, two 60 Hz steps at the 30 limit, blur off),
+PERF-ARRIVAL (P67 phase 5: arrival preparation in slices). Next: REPAIR-PASS phase 6 = the one full test at the end (the
+user, 20.11: minimal tests while working); then the paused REVIEW-TASKS 2–7 (EXP-3.md has task 2's design). Waiting on
+the user: Frame Rates benchmark (GTX 1050, AC and battery), the story issues S-1…S-9 (DIALOGUE-2.md).
+
 **19.11: STORY-FIX merged** (plan item 4; STORY-FIX.md, story-fix.mjs 15/15): Dallan/the dock guard, chapter 8's
 shelters vs the cart, Gilbert "Grandpa" (Arthur's name for him), the hostel cook and foreman, Kesh's after-vent lines.
 Open for the user: Vesk's "three days" in chapter 8 vs chapters 9–10; dl_carving's "second tick" (left). Not yet
