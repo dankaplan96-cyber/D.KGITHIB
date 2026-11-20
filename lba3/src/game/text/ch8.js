@@ -24,7 +24,7 @@ Object.assign(STR.en, {
 
   c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
   c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',
-  c8_gil_2: "Know them? I dug them! Well, I carried the buckets. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
+  c8_gil_2: "Know them? I dug them! Well, I carried the buckets, and I kept the surveyors' charts. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
   c8_gil_3: "The fortress one opens from inside the yard, by the old cistern. Its guards went down to the spaceport queue this morning, so nobody's on the gate. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
   c8_gil_after: "Down the tunnels, everyone! Bring blankets. Bring cake, if you have cake.",
 
