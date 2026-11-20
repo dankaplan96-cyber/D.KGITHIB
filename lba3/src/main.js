@@ -18,7 +18,7 @@ import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } fro
 import { BLOBS, PLANT_VIEW } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
-import { DrawBatch, warmLayers } from './engine/drawbatch.js';
+import { DrawBatch, warmLayers, runFor } from './engine/drawbatch.js';
 import { TEXARRAY } from './engine/texarray.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -385,6 +385,7 @@ class Game {
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.shadowCull.shadowsOn = () => this.renderer.renderer.shadowMap.enabled;   // (PERF-CPU: no caster tests without the shadow pass)
+    this.shadowCull.defer = () => !!(this.trans?.hold && this.trans.prep);   // (ARRIVAL-STEPS: an area's staged shadow batches wait for their steps behind the black)
     this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
     // (WEATHER-1: the rain lines and the motes compiled with the scene, not on the first rain; with the weather off, as before)
@@ -978,10 +979,26 @@ class Game {
   prepSteps(T) {
     const R = this.renderer.renderer, root = this.room?.group || this.world.root, S = [];
     const log = (this.prepLog ??= []), area = this.room?.id || 'citadel';
-    const stepT = (k, f) => S.push(() => { const t0 = performance.now(); f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); });
+    // (ARRIVAL-STEPS: each entry also counts the shader programs the step made — p — and is numbered — i)
+    const P0 = () => R.info.programs?.length ?? 0, put = (k, t0, p0) => { log.push({ area, k, ms: Math.round(performance.now() - t0), p: P0() - p0, i: (this._prepN = (this._prepN || 0) + 1) }); if (log.length > 300) log.shift(); };
+    const stepT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); f(); put(k, t0, p0); });
     // (FRAME-1: its geometry too, in the black, the shadow batches included: they are built on the area's first update,
     //  which used to come later, so a house's 4.5 MB of batches went up on the first frame shown)
-    stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
+    // ARRIVAL-STEPS: the shadow batches and the draw batches in slices of at most PREP_SLICE_MS a black frame (a slice
+    // ends after the piece or cell that crosses it), staged here so the frame's own update does not build them at once
+    // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
+    // (stagedBatches false: each in one step, as before — the A/B switch)
+    const staged = this.stagedBatches !== false;
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); this.drawBatch.unit = this.shadowCull.unit = this._prepUnit = null; const more = f(); put(k, t0, p0); const u = this._prepUnit?.unit || this.drawBatch.unit || this.shadowCull.unit; if (u) log[log.length - 1].u = u; return more; });
+    if (staged && this.shadowCull.stage(root)) {
+      let lit = false;
+      sliceT('shadow batches', () => {
+        if (!lit) { lit = true; this.lightPool.update(this.hero.pos); }
+        const more = this.shadowCull.slice(root, PREP_SLICE_MS);
+        if (!more && this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);   // (its first update, as the one-step build had)
+        return more;
+      });
+    } else stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
     // FIRST-BUILD (Test Lab finding 4, region-entry: a first visit's 6–11 new programs were compiled at the end of the
     // preparation, the hold waiting for them): on a first visit the area's programs are started now, right after its
     // lamps are chosen, so where the driver compiles in parallel (KHR_parallel_shader_compile: the laptop) they compile
@@ -989,14 +1006,17 @@ class Game {
     // materials) and waits for all of it, as before. Without that extension three compiles them when first used: the
     // same work as before, at the end. (earlyWarm: true always, false never — A/B and probes; unset: where the extension is)
     if (!this.drawBatch.has(root) && R.compileAsync && (this.earlyWarm === true || (this.earlyWarm !== false && R.extensions?.has?.('KHR_parallel_shader_compile')))) {
-      stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
+      if (staged) { let W = null; sliceT('shader warm-up (early)', () => { W ??= this.renderer.precompileParts([root]); const U = (this._prepUnit = {}); return !runFor(W, PREP_SLICE_MS, U).done; }); }   // (ARRIVAL-STEPS: in parts; nothing waits for it)
+      else stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
     }
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
       const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
-      S.push(() => { const t0 = performance.now(); while (more && performance.now() - t0 < LAYER_SLICE_MS) more = !it.next().done; log.push({ area, k: 'texture layers', ms: Math.round(performance.now() - t0) }); return more; });   // (true: again next frame)
-      stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
-    } else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
+      S.push(() => { const t0 = performance.now(), p0 = P0(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; put('texture layers', t0, p0); return more; });   // (true: again next frame)
+      if (staged) sliceT('draw batches', () => (this.drawBatch.stage(root) ? this.drawBatch.slice(root, PREP_SLICE_MS) : false));   // (ARRIVAL-STEPS: in slices)
+      else stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
+    } else if (staged) sliceT('draw batches back', () => this.drawBatch.readmitSlice(root, PREP_SLICE_MS));   // (ARRIVAL-STEPS: in slices)
+    else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
     // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
     //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
     //  looked at it: the Follow camera's first sweep, 126 and 26 vertices)
@@ -1005,6 +1025,19 @@ class Game {
     { let kids = null;
       for (let c = 0; c < GEO_PARTS; c++) stepT('geometry', () => { if (this._uploaded?.has(root)) return; kids ??= [...root.children]; this.uploadGeometry(root, new Set(kids.slice(Math.floor((c * kids.length) / GEO_PARTS), Math.floor(((c + 1) * kids.length) / GEO_PARTS)))); });
       stepT('geometry', () => this.uploadGeometry(root)); }
+    // ARRIVAL-STEPS: the pieces the hold's frames moved (a mill, a boat) leave their draw batches here, the world matrices
+    // brought up to date first (nothing is drawn in the hold, so they were not), their cells rebuilt in slices — on the
+    // first frame drawn, they left and their cells were rebuilt in that frame (46–67 pieces on the arrivals here). The
+    // batch meshes this remade go up in the next step. (Their shadow batches: the next frame's own update.)
+    if (staged && this.drawBatch.enabled && this.settleOn !== false) {   // (settleOn false: no settle — A/B)
+      let first = true;
+      sliceT('draw batches settle', () => {
+        const t0 = performance.now();
+        if (first && this.drawBatch.settleSlice(root, PREP_SLICE_MS)) return true;
+        first = false;   // (then the shadow batches' own settle, in the time left and the next frames)
+        return this.shadowCull.settleSlice(root, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)));
+      });
+    }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
@@ -1014,15 +1047,26 @@ class Game {
     // its program, ~70–130 ms of main-thread time on SwiftShader's CPU even when nothing is left to compile: on the
     // user's laptop the transition stalls (up to 200 ms) at every door. A state already warmed, with no program made
     // since (anything new compiled anywhere starts it over), needs nothing.
-    stepT('shader warm-up', () => {
-      this.lightPool.update(this.hero.pos);
-      const lights = {};
-      this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
-      const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
-      const warmed = (this._warmed ??= new Map());
-      if (warmed.get(key) === R.info.programs.length) return;
-      T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); this.uploadExtras(root, true); });
-    });
+    // ARRIVAL-STEPS: in parts of at most PREP_SLICE_MS a black frame (renderer.precompileParts: the same programs), then
+    // the wait for the driver as before
+    let W = null, wkey = null;
+    const warm = () => {
+      const t0 = performance.now(), warmed = (this._warmed ??= new Map());
+      if (!W) {
+        this.lightPool.update(this.hero.pos);
+        const lights = {};
+        this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
+        wkey = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
+        if (warmed.get(wkey) === R.info.programs.length) return false;
+        if (!staged) { T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); }); return false; }
+        W = this.renderer.precompileParts([root]);
+      }
+      const r = runFor(W, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)), (this._prepUnit = {}));
+      if (!r.done) return true;
+      T.prepWait = this.renderer.whenReady(r.value).catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); });
+      return false;
+    };
+    sliceT('shader warm-up', warm);
     return S;
   }
   // TITLE-LOAD: the next step of the area's preparation (updateTransition's hold: one per black frame). After the last,
@@ -1076,6 +1120,8 @@ class Game {
     if (!root || this.testFreeze || !this.drawBatch?.enabled) return 0;
     const fresh = new Set();
     for (const m of this.drawBatch.meshes(root)) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
+    // (ARRIVAL-STEPS: and the shadow batches rebuilt since — pieces the hold's frames moved left them — not on the first frame)
+    if (this.stagedBatches !== false) for (const m of this.shadowCull.areas.get(root)?.proxies || []) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
     if (!fresh.size) return 0;
     return this.uploadGeometry(root, fresh, true);
   }
@@ -3256,6 +3302,9 @@ const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.1; // (see Game.advance)
 // TITLE-LOAD: the longest slice of texture-layer reading (drawbatch.js warmLayers) in one task, behind the black or the
 // loading screen (ms; a slice ends at the first piece past it)
 const LAYER_SLICE_MS = 30;
+// ARRIVAL-STEPS: the longest slice of a scene change's batch builds (and texture layers) in one black frame (ms; a slice
+// ends after the piece or cell that crosses it). With the frame's own work it keeps a black frame near 1.5 refreshes here
+const PREP_SLICE_MS = 12;
 // TITLE-LOAD: the title screen's live view. As shipped: the camera 110 m out, 42 m up, the fog's end as in play, detail
 // levels from the camera. The other values are visible options for the title only, priced in docs/lba3-performance/
 // TITLE-LOAD (each OFF here): `far` a nearer fog end (m), `lodPush` detail levels measured from further out (m),

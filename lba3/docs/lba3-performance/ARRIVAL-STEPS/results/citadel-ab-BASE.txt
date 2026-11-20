@@ -1,0 +1,94 @@
+ROTATE-STALL arrival · medium · battery false · camera free · zeelich → citadel × 1
+zeelich (cold): 113 frames, 100014 ms in all, 98918 ms of it with the screen black
+    0    15 ms view  op 0.10 calls 184 uploads 26 (51 KB)
+    1     7 ms view  op 0.19 calls 184 uploads 26 (51 KB)
+    2     6 ms view  op 0.29 calls 184 uploads 26 (51 KB)
+    3    11 ms view  op 0.38 calls 184 uploads 26 (51 KB)
+    4     5 ms view  op 0.48 calls 184 uploads 26 (51 KB)
+    5     7 ms view  op 0.57 calls 184 uploads 26 (51 KB)
+    6    15 ms view  op 0.67 calls 184 uploads 26 (51 KB)
+    7     5 ms view  op 0.76 calls 184 uploads 26 (51 KB)
+    8     4 ms view  op 0.86 calls 184 uploads 26 (51 KB)
+    9     4 ms view  op 0.95 calls 184 uploads 26 (51 KB)
+   10   136 ms BLACK op 1.00 calls 0 hold shadow batches built 130 ms, SEC other sim 134 · camera 2 · physics 0
+   11     2 ms BLACK op 1.00 calls 0 hold STEP shadow batches 0
+   12 98007 ms BLACK op 1.00 calls 0 hold 71 pieces left shadow batches, STEP texture layers 97979, SEC other sim 98007 · camera 0 · physics 0
+   13    32 ms BLACK op 1.00 calls 0 hold STEP texture layers 30, SEC other sim 31 · camera 0 · physics 0
+   14    19 ms BLACK op 1.00 calls 0 hold STEP texture layers 18
+   15   305 ms BLACK op 1.00 calls 0 hold draw batches built 300 ms, +1 textures, STEP draw batches 302, SEC other sim 305 · camera 0 · physics 0, uploads 4 (24576 KB), 4 first uploads by draws behind black: tex 512x512 outside a draw · tex 256x256 outside a draw · tex 128x128 outside a draw · tex 64x64 outside a draw
+   16     3 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   17    38 ms BLACK op 1.00 calls 0 hold +93 geometries, STEP geometry 36, SEC other sim 38 · camera 0 · submit shadow 0 · physics 0, uploads 329 (7484 KB)
+   18     8 ms BLACK op 1.00 calls 0 hold +18 geometries, STEP geometry 7, uploads 57 (591 KB)
+   19    10 ms BLACK op 1.00 calls 0 hold +56 geometries, STEP geometry 8, uploads 174 (4091 KB)
+   20    17 ms BLACK op 1.00 calls 0 hold +95 geometries, STEP geometry 14, uploads 475 (42739 KB)
+   21    12 ms BLACK op 1.00 calls 0 hold STEP geometry 8, uploads 1 (22 KB)
+   22     4 ms BLACK op 1.00 calls 0 hold STEP batch meshes 1
+   23     9 ms BLACK op 1.00 calls 0 hold +77 textures, STEP textures 8, uploads 79 (12541 KB), 77 first uploads by draws behind black: 3× tex 512x512 outside a draw · 16× tex 128x128 outside a draw · 3× tex 64x64 outside a draw · 7× tex 256x256 outside a draw · 2× tex 512x384 outside a draw · 2× tex 256x160 outside a draw · 2× tex 256x128 outside a draw · tex 256x96 outside a draw · tex 128x160 outside a draw · 3× tex 128x64 outside a draw · tex 256x80 outside a draw · tex 512x256 outside a draw
+   24     3 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   25    57 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 55 (+1 prog), SEC other sim 56 · camera 1 · physics 0
+   26     2 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     1 ms BLACK op 1.00 calls 0 hold 
+   32     1 ms BLACK op 1.00 calls 0 hold 
+   33     1 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     1 ms BLACK op 1.00 calls 0 hold 
+   38     1 ms BLACK op 1.00 calls 0 hold 
+   39     1 ms BLACK op 1.00 calls 0 hold 
+   40   227 ms BLACK op 1.00 calls 209 cache full build, +12 geometries, 67 pieces left draw batches, SEC submit other 154 · submit main 56 · other sim 9 · submit shadow 7, uploads 295 (15627 KB), 68 first uploads by draws behind black: 2× left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.7,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2389.6,12.7,11.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2389.3,12.7,11.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f0c8c0 emissive 000000 · left draw batch: Mesh:zeelich at 2376.0,6.5,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2376.0,7.8,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2393.7,19.6,-16.9 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.0,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,11.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   41    18 ms BLACK op 1.00 calls 174 uploads 15 (39 KB)
+   42     8 ms view  op 0.90 calls 174 uploads 15 (39 KB)
+   43     7 ms view  op 0.81 calls 174 uploads 15 (39 KB)
+   44     7 ms view  op 0.71 calls 174 uploads 15 (39 KB)
+   45     9 ms view  op 0.62 calls 174 uploads 15 (39 KB)
+   46     7 ms view  op 0.52 calls 174 uploads 15 (39 KB)
+   47    16 ms view  op 0.43 calls 174 uploads 15 (39 KB)
+   48     5 ms view  op 0.33 calls 174 uploads 15 (39 KB)
+   49     4 ms view  op 0.24 calls 174 uploads 15 (39 KB)
+   50     5 ms view  op 0.14 calls 174 uploads 15 (39 KB)
+citadel (cold): 102 frames, 105820 ms in all, 26301 ms of it with the screen black
+    0     6 ms view  op 0.10 calls 175 uploads 18 (78 KB)
+    1     7 ms view  op 0.19 calls 175 uploads 18 (78 KB)
+    2     7 ms view  op 0.29 calls 175 uploads 18 (78 KB)
+    3     6 ms view  op 0.38 calls 175 uploads 18 (78 KB)
+    4     6 ms view  op 0.48 calls 175 uploads 18 (78 KB)
+    5     7 ms view  op 0.57 calls 175 uploads 18 (78 KB)
+    6 49585 ms view  op 0.67 calls 175 SEC submit main 49582 · submit other 1 · other sim 1 · camera 0, uploads 18 (78 KB)
+    7  1805 ms view  op 0.76 calls 175 SEC submit main 1802 · submit other 1 · other sim 1 · physics 0, uploads 18 (78 KB)
+    8   327 ms view  op 0.86 calls 175 SEC submit main 311 · other sim 12 · submit other 4 · camera 0, uploads 18 (78 KB)
+    9     9 ms view  op 0.95 calls 175 uploads 18 (78 KB)
+   10     3 ms BLACK op 1.00 calls 0 hold 
+   11     2 ms BLACK op 1.00 calls 0 hold STEP shadow batches 0
+   12    32 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches back 30, SEC other sim 32 · camera 0 · physics 0
+   13     1 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   14   142 ms BLACK op 1.00 calls 0 hold +1 geometries, STEP geometry 136, SEC other sim 141 · camera 0 · submit shadow 0 · physics 0, uploads 28 (382 KB)
+   15    12 ms BLACK op 1.00 calls 0 hold STEP geometry 11, uploads 6 (39 KB)
+   16     7 ms BLACK op 1.00 calls 0 hold +27 geometries, STEP geometry 6, uploads 37 (1377 KB)
+   17     8 ms BLACK op 1.00 calls 0 hold +42 geometries, STEP geometry 5, uploads 57 (5891 KB)
+   18     7 ms BLACK op 1.00 calls 0 hold STEP geometry 6, uploads 4 (39 KB)
+   19     5 ms BLACK op 1.00 calls 0 hold STEP batch meshes 4, uploads 3 (39 KB)
+   20     8 ms BLACK op 1.00 calls 0 hold STEP textures 7, uploads 2 (1 KB)
+   21     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   22   125 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 123 (+1 prog), SEC other sim 124 · physics 0 · camera 0
+   23     3 ms BLACK op 1.00 calls 0 hold 
+   24     1 ms BLACK op 1.00 calls 0 hold 
+   25     1 ms BLACK op 1.00 calls 0 hold 
+   26     1 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30 25940 ms BLACK op 1.00 calls 271 cache full build, -1 geometries, 12 pieces left draw batches, SEC submit main 25815 · submit other 96 · other sim 16 · submit shadow 12, uploads 90 (5660 KB), 13 first uploads by draws behind black: left draw batch: Mesh:station at -24.5,18.8,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -24.5,24.6,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color f0c040 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -76.0,0.0,-101.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · 2× left draw batch: Mesh:harbour-zeelich at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   31    20 ms view  op 0.90 calls 224 uploads 30 (96 KB)
+   32    20 ms view  op 0.81 calls 224 uploads 30 (96 KB)
+   33    12 ms view  op 0.71 calls 224 uploads 30 (96 KB)
+   34     9 ms view  op 0.62 calls 224 uploads 30 (96 KB)
+   35    13 ms view  op 0.52 calls 224 uploads 30 (96 KB)
+   36     7 ms view  op 0.43 calls 224 uploads 30 (96 KB)
+   37     9 ms view  op 0.33 calls 224 uploads 30 (96 KB)
+   38    10 ms view  op 0.24 calls 224 uploads 30 (96 KB)
+   39    13 ms view  op 0.14 calls 223 uploads 30 (96 KB)

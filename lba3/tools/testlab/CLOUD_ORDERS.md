@@ -614,3 +614,22 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        shows ~60 while the game's F9 shows 30, say so (the compositor drawing HUD animations — not the game's frames).
     Report as FPS30-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-gtx1050-fps30/. Never
     change system power settings yourself.
+56. **ARRIVAL-STEPS-HW (REPAIR-PASS-18-11 phase 5; docs/lba3-performance/PERFORMANCE_REPORT.md).** The cloud cut a scene
+    change's preparation behind the black (shadow batches, draw batches, their settle and return, the shader warm-ups) into
+    slices of at most 12 ms a black frame (a slice ends after the piece, cell part or program that crosses it; the warm-up
+    compiles a never-compiled material on its own). Measured on SwiftShader only. On THIS machine, in Chrome against the
+    artifact or the repo served at the ARRIVAL-STEPS tip:
+    1. Record the GPU Chrome actually uses (chrome://gpu; the user's 19.11 run reported the Intel UHD 620, 18.11's the
+       GTX 1050 — say which, and Windows' per-app GPU preference), power (AC / battery), window, devicePixelRatio.
+    2. Pause → **Benchmark** (Quality Auto as played): on the GTX 1050 on battery, and on the UHD 620 if Chrome uses it. Paste
+       each report whole: its "scene changes' preparation behind the black" line gives each step kind's count / longest /
+       total ms (shadow batches, texture layers, draw batches, draw batches settle, draw batches back, geometry, shader
+       warm-up); the arrival route's frames over 33 ms behind the black; any frame over 33 ms in view in the first 6 s
+       after an arrival (18.11: one of 34 ms at 5.6 s).
+    3. Pause → **Benchmark: Frame Rates**, once on battery: whether the arrival's black frames stay near one or two
+       refreshes at 60 and at 30.
+    4. A fixed **High** benchmark on battery on the GTX 1050 (Pause → Benchmark, Quality High chosen by hand): the evidence
+       Auto's first guess needs (today battery → Medium; the cost model, from the Vega 8, puts High's GPU time at ~1.8×
+       Medium's; the GTX 1050's plugged-in runs of 10.11 measured ~1×).
+    Report as ARRIVAL-STEPS-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-arrival-steps/.
+    Never change system power or GPU settings yourself.

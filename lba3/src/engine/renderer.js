@@ -718,6 +718,50 @@ export class Renderer {
     try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
     return p;
   }
+  // ARRIVAL-STEPS: precompile() in parts, a generator: each next() is one call of three's compile on a run of the scene's
+  // objects, and the generator's value at the end is every material compiled (whenReady waits for them, as compileAsync
+  // does). The objects in three's own walk order; the scene's lights walked once (three's compile walks the whole shown
+  // scene for them on every call) and given to every call in the same order: the same light state, fog, shadows and
+  // target as precompile() has them, so the same programs, made over several black frames instead of in one.
+  // A run is up to partObjects (400) objects, but an object whose material three has never compiled is a run of its
+  // own, and after a call that made a program the runs are one object until one makes none again: a new program can
+  // take long to make (the user's Intel UHD 620: one warm-up step of 1 013 ms; the GTX 1050: up to 110 ms), so a step —
+  // which ends after the call that crosses its time — holds at most one new program's compile wherever that is slow.
+  // (`split` is kept for the callers; every object is walked once, as in precompile())
+  *precompileParts(split = [], scene = this.scene, camera = this.camera) {
+    const R = this.renderer, mats = new Set(), Pr = R.properties;
+    this.applyResize();
+    const lights = []; scene.traverseVisible((o) => { if (o.isLight) lights.push(o); });
+    const target = Object.create(scene); target.traverseVisible = (cb) => { for (const l of lights) cb(l); };
+    const list = [];
+    scene.traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.material) list.push(o); });
+    yield 'parts';
+    const most = this.partObjects || 400, fresh = (o) => { const m = o.material; if (Array.isArray(m)) { for (const x of m) if (!Pr.get(x).programs) return true; return false; } return !Pr.get(m).programs; };
+    const ex = scene === this.scene ? this.warmExtra?.() : null, vis = this._warmVis ??= [];
+    let i = 0, run = most;
+    while (i < list.length) {
+      const part = [];
+      while (i < list.length && part.length < run) { const o = list[i], f = fresh(o); if (f && part.length) break; part.push(o); i++; if (f) break; }
+      const prev = R.getRenderTarget(), p0 = R.info.programs?.length ?? 0;
+      R.setRenderTarget(this.composer.renderTarget1);
+      if (ex) for (let k = 0; k < ex.length; k++) { vis[k] = ex[k].visible; ex[k].visible = true; }
+      try { for (const m of R.compile({ traverse: (cb) => { for (const o of part) cb(o); }, traverseVisible() {} }, camera, target)) mats.add(m); }
+      catch (e) { console.warn('precompile part', e); }
+      finally { R.setRenderTarget(prev); if (ex) for (let k = 0; k < ex.length; k++) ex[k].visible = vis[k]; }
+      const made = (R.info.programs?.length ?? 0) - p0;
+      run = made > 0 ? 1 : Math.min(most, run * 4);
+      yield made > 0 ? 'program' : 'compile';
+    }
+    return mats;
+  }
+  // (resolves when every program of `mats` is ready: three's compileAsync's own wait)
+  whenReady(mats) {
+    const R = this.renderer, P = R.properties, par = !!R.extensions?.has?.('KHR_parallel_shader_compile');
+    return new Promise((res) => {
+      const check = () => { for (const m of mats) { const p = P.get(m).currentProgram; if (!p || p.isReady()) mats.delete(m); } if (!mats.size) res(); else setTimeout(check, 10); };
+      if (par) check(); else setTimeout(check, 10);
+    });
+  }
 
   // Automatic resolution, fed the displayed frame time (ms). Every 90 frames: a 90th percentile over 1.2× the frame
   // budget (20 ms at 60 fps: the budget missed) lowers the internal resolution a step; one under 1.05× (17.5 ms:
