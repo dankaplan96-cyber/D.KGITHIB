@@ -68,17 +68,22 @@ Object.assign(STR.en, {
   c2_guard_after: "I'm... I'm just the guard. The engineer is inside.",
 
   c2_vesk_1: 'Twinsen. I knew Baldino would send you. And that broadcast from the Citadel lighthouse, was that you as well?',
-  c2_tw_vesk1: 'People deserve to know, Vesk. All of them, not just your thirty percent.',
-  c2_vesk_2: "My thirty percent is everyone who can be saved! I've seen the readings. The shell is cracking on its own. I'm just getting there first.",
-  c2_bal_vesk: 'Vesk, your drill IS the crack! Let us reverse it and turn it into a shield.',
-  c2_vesk_3: "You're a dreamer, Baldino, and there's no time for experiments. My ship is waiting under the deck. I'm going home to finish the bore myself.",
+  // (P81 / VESK: Twinsen asks about the people the plan leaves out; Vesk's answer is one he believes. The drill's argument
+  //  is Baldino's when he is on the platform, Twinsen's in his words when he isn't. The camera shows the escape: no
+  //  line describes it)
+  c2_tw_vesk1: "That was Zoé. Your plan picks up Zeelich's upper districts. What about the people down by the docks?",
+  c2_vesk_2: "The ships lift three in ten. I took the districts with the hospital and the pumps, so there's something left to come back to.",
+  c2_vesk_2b: "I've seen the readings. The shell is cracking on its own. I'm just getting there first.",
+  c2_bal_vesk: 'Vesk, your drill IS the crack! Let us run it backwards and turn it into a shield.',
+  c2_tw_vesk_drill: 'Baldino says your drill IS the crack, and it can be run backwards into a shield.',
+  c2_vesk_3: "You've said so for a year, Baldino, without one number I can check. I'm going home to finish the bore.",
+  c2_vesk_3b: "Baldino has said so for a year, without one number I can check. I'm going home to finish the bore.",
   c2_tw_vesk2: "Then we'll follow you.",
   c2_vesk_4: 'Follow, then. If you can find a way down.',
-  c2_after_tw: "His ship! He's flying home, to the bore.",
-  c2_ship_bal: "To your station, then. The shaft through the shell starts under that derrick in the old fort.",
-  c2_ship_bal2: "Don't run after him yet. His ship is twice as fast as Doran's, and this console still hears the bore's channel. Let it tell us what he does when he lands.",
+  c2_ship_bal2: "Don't run after him yet. His ship is twice as fast as Doran's, and the platform's console still hears the bore's channel. Let it tell us what he does when he lands.",
   c2_berth: "(The lift only goes down to the berth under the deck. It's empty. He's gone.)",
   c2_after_bal: "Take these: the conversion plans. And remember, don't break it. Reverse it!",
+  c2_after_bal_r: "My conversion plans are on the bench for you. And remember, don't break it. Reverse it!",
 
   c2_obj_find: "Find Baldino's workshop",
   c2_obj_parts: 'Collect the parts for the override key',
@@ -122,7 +127,7 @@ Object.assign(STR.en, {
   c2_j_dry: 'Braking the mills stopped the plaza fountain and the pumps up to the east terraces. Oku said to let them go once the shield was open.',
   c2_j_shield: "I braked all three mills, and the override key switched off the platform shield.",
   c2_j_free: "With the shield down, I knocked the brakes loose again. The fountain ran, and Oku said he'd remember.",
-  c2_j_vesk: "Vesk would not stop: the shell was cracking anyway, he said, and his thirty percent was everyone who could be saved. He took the lift down to his ship and flew home to Twinsun, and Baldino gave me the conversion plans.",
+  c2_j_vesk: "I asked Vesk about the people his plan leaves out. The ships lift three in ten, he said, so he took the districts with the hospital and the pumps; the shell was cracking anyway. He went down to his ship and flew home to finish the bore, and Baldino gave me the conversion plans.",
   c2_j_sealed: "Hours later the platform console showed the shaft at our station sealed from below. Arthur heard Vesk's ship land in the old fort, and Zoé saw it. Only a code from every project station at once opens those doors, so Baldino sent me to Desert Island to learn what the shell is.",
   it_cog: 'Cog', itd_cog: "From the top of Zeelich's old mill. Part of the override key.",
   it_cyl: 'Code Cylinder', itd_cyl: 'From the project depot\'s locker. "Platform access. Do not remove."',

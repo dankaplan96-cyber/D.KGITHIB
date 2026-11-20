@@ -282,9 +282,11 @@ export class Chapter2 extends ChapterBase {
       case 'guard': return c([['guard', f.c2_shield ? 'c2_guard_after' : 'c2_guard_block']]);
       case 'vesk':
         if (f.c2_shield && !f.c2_veskDown) {
-          const lines = [['vesk', 'c2_vesk_1'], ['hero', 'c2_tw_vesk1'], ['vesk', 'c2_vesk_2']];
-          if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_vesk']);
-          lines.push(['vesk', 'c2_vesk_3'], ['hero', 'c2_tw_vesk2'], ['vesk', 'c2_vesk_4']);
+          // (P81 / VESK: the people left off the plan, his answer, the readings; the drill's argument from Baldino when he
+          //  is on the platform, else from Twinsen in his words, and Vesk answers whichever was said)
+          const bal = !!this.npc('baldino')?.present;
+          const lines = [['vesk', 'c2_vesk_1'], ['hero', 'c2_tw_vesk1'], ['vesk', 'c2_vesk_2'], ['vesk', 'c2_vesk_2b'],
+            bal ? ['baldino', 'c2_bal_vesk'] : ['hero', 'c2_tw_vesk_drill'], ['vesk', bal ? 'c2_vesk_3' : 'c2_vesk_3b'], ['hero', 'c2_tw_vesk2'], ['vesk', 'c2_vesk_4']];
           const beat = this.veskBeat();   // (REVEAL-CAMS: a close two-shot while he speaks, then the low view of the descent; null with ?nocine and in the tests)
           return c(lines, () => this.veskDescends(beat));
         }
@@ -481,8 +483,9 @@ export class Chapter2 extends ChapterBase {
         const s = this.ship, h = g.hero;   // (he turns to watch it go)
         if (s) { const p = s.getWorldPosition(new THREE.Vector3()); h.angle = Math.atan2(p.x - h.pos.x, p.z - h.pos.z); }
         g.setState('play');
-        const bal = this.npc('baldino')?.present ? 'baldino' : 'balradio';
-        this.chain([['hero', 'c2_after_tw'], [bal, 'c2_ship_bal'], [bal, 'c2_after_bal'], [bal, 'c2_ship_bal2']], () => { g.updateObjective(); g.save(false); });
+        // (P81: the camera has shown the pad and the ship: nobody narrates it. Baldino says why they wait, then the plans)
+        const here = !!this.npc('baldino')?.present, bal = here ? 'baldino' : 'balradio';
+        this.chain([[bal, 'c2_ship_bal2'], [bal, here ? 'c2_after_bal' : 'c2_after_bal_r']], () => { g.updateObjective(); g.save(false); });
       }
     };
   }

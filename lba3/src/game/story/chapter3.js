@@ -269,7 +269,8 @@ export class Chapter3 extends ChapterBase {
     // (CHAPTER-BALANCE: the surge needs a way out on his side as well: the bleed valve first, then Vesk's coil. A reload
     //  after the valve was turned comes back to the coil: c3_bleed is kept)
     const bled = !!f.c3_bleed;
-    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3'], ['ilkaradio', 'c3_ilka_hold'], ...(bled ? [] : [['ilkaradio', 'c3_ilka_bleed']]), ['pimradio', 'c3_pim_hold']], () => {
+    // (VESK: he reads the needles and refuses them; where chapter 10 was played he names the B-7 he hid: th_vesk)
+    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', f.th_vesk ? 'c3_vesk_over_b7' : 'c3_vesk_over_read'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3'], ['ilkaradio', 'c3_ilka_hold'], ...(bled ? [] : [['ilkaradio', 'c3_ilka_bleed']]), ['pimradio', 'c3_pim_hold']], () => {
       if (bled) this.ensureCoil();
       const gd = this.guardian;
       if (gd) { gd.setLevel?.(4); gd.state = 'chase'; gd.stateT = 0; gd.coolT = 1.5; }
@@ -518,7 +519,10 @@ export class Chapter3 extends ChapterBase {
     const lines = this.part === 2 ? [
       { key: 'c3_j_core', done: !!f.c3_fight || !!f.c3_overload || !!f.c3_turned },
       { key: 'c3_j_pylons', done: this.pylons() >= 3 },
-      ...one('co_j_lane'), ...one('co_j_vesk'), ...one('co_j_signal'),
+      // (VESK: the overload and what he did with Vesk, in the order it happened; the choice is saved with the last act)
+      { key: 'c3_j_over', done: !!f.co_v && !!f.c3_turned },
+      { key: f.c3_veskHelped ? 'c3_j_help' : 'c3_j_left', done: !!f.co_v && !!f.c3_turned && typeof f.c3_veskHelped === 'boolean' },
+      ...one('co_j_lane'), ...one('co_j_vesk'), ...one('co_j_vesk_helped'), ...one('co_j_signal'),
       { key: f.co_v ? 'co_j_end' : 'c3_j_vesk', done: !!f.c3_done },
     ] : [
       { key: 'c3_j_shaft', done: !!f.c3_started },
