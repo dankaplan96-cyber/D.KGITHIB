@@ -3363,9 +3363,13 @@ function startupFailed(e, stage = e?.stage || 'start') {
   const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
   const btn = (key, fn) => { const b = document.createElement('button'); b.textContent = t(key); b.style.cssText = 'padding:8px 18px;font:inherit;font-weight:600;border-radius:8px;border:1px solid rgba(255,255,255,0.6);background:#1f3b57;color:#fff;cursor:pointer'; b.addEventListener('click', fn); row.appendChild(b); return b; };
   btn('boot_retry', () => { const u = new URL(location.href); u.searchParams.delete('failstart'); location.replace(u.toString()); }).dataset.act = 'boot-retry';
+  // the details always shown in a box to select (FULL-TEST 20.11: the clipboard's promise can hang without an answer, and
+  // the click then showed nothing); copied as well where the browser allows it
   const copy = btn('boot_copy', async () => {
-    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); }
-    catch { const ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); ta.select(); }
+    let ta = box.querySelector('textarea');
+    if (!ta) { ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); }
+    ta.select();
+    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); } catch { /* the box is there to select */ }
   });
   copy.dataset.act = 'boot-copy';
   box.append(msg, row);
