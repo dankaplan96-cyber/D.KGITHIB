@@ -52,6 +52,8 @@ behaviour a recent task changed on purpose — the test updated; **(c)** a real 
 | fps30 | **PASS** | 54/54 | 3 min | — | |
 | boot-fail | FAIL → **PASS** | 5/5 | 3 min | **(c)** Copy diagnostics: the clipboard's promise can hang without an answer and the click then showed nothing | `e960269e`: the details always shown in a box to select, copied as well where allowed |
 | cave-stair | screenshot timeout under load → **PASS** alone | 21/21 | 5 min | (d) the machine's load | |
+| p81-revisits | **PASS** | 7/7 | 8 min | — | |
+| story-fix | FAIL → **PASS** | 15/15 | 1.5 min | (b) the Dallan check read STORY-FIX's old wording; DIALOGUE-2 (`8048a735`) puts it on Vesk's plan — the check now guards the point (Dallan's guards not blamed) | test updated |
 | menus | **PASS** | 40/40 | 4 min | — | |
 | hebrew | **PASS** | 24/24 | 9.5 min | — | |
 | controls | FAIL | 89/92 | 4.5 min | **(a)** the three camera "no lurch" checks, the same numbers as KNOWN-FAILING.md | |
