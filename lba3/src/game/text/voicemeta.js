@@ -91,7 +91,7 @@ export const VOICE_META = {
   c1_tw_water: ['concerned', 'neutral'], c1_tw_control: ['neutral', 'concerned'], c1_worker_1: ['neutral', 'neutral', 'annoyed'], c1_worker_2: ['concerned', 'uncertain'],
   c1_guard_1: 'neutral', c1_guard_2: ['neutral', 'uncertain'], c1_gil_idle: ['pleased', 'pleased'], c1_gil_task: ['curious', 'neutral', 'annoyed'],
   c1_gil_water: ['relieved', 'pleased', 'pleased', 'neutral'], c1_doran_idle: 'annoyed', c1_doran_drones: ['curious', 'neutral', 'neutral', 'concerned', 'pleased'],
-  c1_doran_depot: ['neutral', 'uncertain'], c1_doran_ferry1: ['curious', 'curious', 'neutral', 'neutral'], c1_tw_ferry: { i: 'curious', e: 'fly' },
+  c1_doran_depot: ['neutral', 'uncertain'], c1_doran_ferry1: ['curious', 'curious', 'neutral', 'neutral'], c1_tw_ferry: { i: 'curious', e: 'fly' }, c1_doran_ships: { i: ['neutral', 'neutral', 'pleased'], e: ['ferry', 'own', null] },
   c1_doran_ferry2: ['pleased', 'neutral'], c1_doran_board: ['neutral', 'pleased'], c1_xil_1: ['annoyed', 'annoyed'], c1_xil_2: ['pleased', 'pleased'],
   c1_pippa_1: ['neutral', 'curious'], c1_pippa_heat: ['neutral', 'pleased', 'pleased', 'curious'], c1_pippa_2: ['concerned', 'neutral'],
   c1_tim: ['urgent', 'curious', 'pleased'], c1_tim_heat: ['pleased', 'pleased'], c1_lulu_heat: ['neutral', 'neutral', 'annoyed'], c1_lulu: ['concerned', 'neutral', 'pleased'],

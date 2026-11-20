@@ -303,6 +303,10 @@ goal. Important scenes are played, not narrated.
 - Twinsun ⇄ Zeelich only by spaceship (Citadel Spaceport ⇄ Zeelich Spaceport). The project's ferry runs on light
   on Twinsun's seas (Citadel ⇄ Desert Island); Doran can sail it, and fly the project's ship; Baldino sent him the
   start code.
+- The project's vehicles (P83): the ferry on light runs between Twinsun's islands only; Vesk's own ship waits above
+  Citadel, reached by the beam pad at the station; the project keeps a ship at Citadel Spaceport, which Doran flies
+  (Doran tells them apart in chapter 2, `c1_doran_ships`). The Joint Project has run on Zeelich for ten years (its
+  mills, pumps and platform); its Citadel half (the bore, the ferry, the heat posts) is new (Nara, `c2_nara_2`).
 - The evacuation plan: Citadel town centre and Zeelich upper districts; ship capacity 30%.
 - Zoé's lighthouse dials: sun, wave, star.
 - The platform shield is fed by Zeelich's three mills; the override key = old mill cog + project code cylinder.
