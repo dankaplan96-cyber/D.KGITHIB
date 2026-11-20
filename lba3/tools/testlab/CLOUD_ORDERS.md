@@ -633,3 +633,57 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        Medium's; the GTX 1050's plugged-in runs of 10.11 measured ~1×).
     Report as ARRIVAL-STEPS-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-arrival-steps/.
     Never change system power or GPU settings yourself.
+57. **JOINTS-BLENDER (the user, 20.11, to the local agent; status.md P82).** "Use the locally installed Blender to improve
+    character joints and animation. Edit the actual character assets, export them through the project's pipeline, and
+    integrate them into the playable game. The player's complaint is specific: arms and legs still read as connected tubes.
+    The goal is a character who feels like one body in motion while retaining the stylized proportions and charm of LBA2.
+    Start with Twinsen's magic-ball throw; once that works, apply the lessons to Zoé and the rest of the cast."
+    **What the cloud already knows (read before starting):**
+    - The game displays `assets/poly/<name>.json` (characters.js `polyCharacter`: unindexed skinned triangles, bones by
+      name, `eyes`/`mouths` entries), built by the generators in `tools/blender/`: `twinsen_poly.py`, `zoe_poly.py`,
+      `cast_poly.py` (the rest of the cast, present), `baldino_poly.py` (the Grobo), `lbapoly.py` (shared). A look with no
+      JSON falls back to the procedural sculpt (characters.js `buildCharacter`, engine/sculpt.js) — check none of the four
+      falls back. **The user plays the artifact in Chrome** (no desktop build is shipped); verify there, or the repo served.
+    - CHAR-FORM (cloud, 18.11, docs/lba-maturity/CHAR-FORM.md) already reshaped Twinsen and Zoé in the generators (flags
+      `TW_FORM`, `ZOE_FORM`, on; `=0` rebuilds the previous model byte for byte): Twinsen's shoulder line, cape folds, robe
+      over hips/knees, shins; Zoé's trousers, knees, hem, arms. The user still sees tubes — start from the result in game,
+      not from that doc's claims.
+    - **The animation is procedural**: the poses and timing (walk, run, throw, sword, landing, pickup, talk) are code in
+      `src/engine/rig.js` (Rig.update, the action poses), not Blender clips; the ball's release is a gameplay event in
+      `src/game/combat.js` / `actors.js` (released at ~0.18 s, FPS30.md: the same at 30 and 60). Performance changes
+      (the throw's three moments: weight set and hand drawn back; torso and shoulder lead into release; follow-through and
+      settle) are made there, keeping input response and the release frame where the ball visibly leaves the hand.
+    - Faces (FACE-1.md): keep the `eyes`/`mouths` entries and their pivots; the brows are found at runtime as a pair of
+      small separate pieces over the eyes (characters.js `autoBrowIdx`) — keep each brow its own piece, alike left and
+      right, or that character loses its brow expressions.
+    **The brief, in its order:** (1) find the models the game displays — trace Twinsen, Zoé, Arthur and one non-human
+    resident (a Grobo) from spawn to mesh, skeleton and animator; edit the authoritative source (the generator), or a
+    reproducible import/edit/export path verified by an unchanged round trip first; keep bone names, attachment points,
+    facial data and bindings. (2) Diagnose Twinsen with one repeatable shot: the throw from the normal gameplay camera and a
+    closer three-quarter view (wind-up, release, follow-through), a bent elbow, a crouch, one full stride; for each defect
+    find its cause first — cylindrical at rest → reshape (distinct widths and profiles for upper arm, elbow, forearm,
+    wrist); good at rest but collapsing when bent → joint pivot, mesh round the bend, weights; hand/boot separating →
+    attachment and overlap through the motion (keep rigid pieces rigid); joints hold but motion mechanical → timing and
+    poses, not geometry. (3) Repair in Blender: the shoulder first (torso → shoulder → sleeve: no dent, gap or peg when the
+    arm lifts; keep the tunic and broad sleeves); elbows and knees with enough geometry round the bend (inside compresses,
+    outside keeps its shape), weights painted locally and checked in real poses front/side/rear, belt, shoes and equipment
+    holding their shape; wrist and ankle (hand out of the cuff, leg into the shoe at every angle); the neck turning to speak,
+    the hips crouching; move vertices before raising the budget; a helper bone or corrective shape only for a specific
+    defect still visible in game and only if the runtime supports it. (4) Performance: the throw's three moments (above);
+    the same joints in a sword swing, a jump landing, walk-to-stop and a pickup; planted feet against a fixed ground point —
+    fix sliding without changing speed or collision. Zoé: a real conversation and her reach toward the tap (shoulder, gaze,
+    wrist, sleeve together); Arthur: a quick turn toward a parent and his shorter stride; a Grobo: the trunk against the
+    chest walking and turning. Keep each body's proportions; shared fixes where the defect is shared, not the same motion
+    on every body. (5) Prove it in the game: rebuild the assets, run the game, matched before/after clips (same camera,
+    action, lighting, speed) including the normal gameplay distance; confirm the updated asset loads (no silent fallback);
+    the throw and landing at 30 and 60 FPS; equipment, faces, ground contact and transitions intact; compare triangles,
+    skinned vertices, bones, materials, draw calls; frame time in the same populated street before/after, naming the
+    machine (no Vega 8 / GTX 1050 claim unless measured there).
+    **Deliver**: the edited generators (or the editable Blender source), the rebuilt `assets/poly/*.json`, rig.js changes,
+    matched clips in `captures/joints-blender/`, and a short report `docs/lba-maturity/JOINTS-BLENDER.md` (which joints
+    were fixed, what was verified in play). Continue through every character without waiting for review of each.
+    **Coordination**: work on a branch from `ccr-c1c2c4b9-dep6ed`, push it as `joints-blender` (not to the cloud's branch);
+    cloud workers are meanwhile editing story files (ballastra, network, epilogue, openingsteps, tutorial, prologue,
+    middle-chapter quests) — stay out of those; rig.js and characters.js are yours for this order (tell the cloud in
+    WORLD_ART_REQUESTS.md as JOINTS-BLENDER when you start and when done). Never commit LBA1/LBA2 files. Test lightly
+    (the user: minimal tests while working; one full test at the end).
