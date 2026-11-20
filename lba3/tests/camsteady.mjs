@@ -14,7 +14,7 @@
 //   idleTurnDeg / idleMove         the view turning / moving once he has stood a second without turning
 //   pitchPerMin / yawPerMin        how far the view tilted / turned (° a minute); joltsPerMin: frames > 40 m/s²
 // A shake's tremor is feedback, not the camera's rules: its frames are left out (shakeT). RECORD=<dir> writes every
-// route's stats and trace as JSON; ONLY=<route name substring>, MODES=lba,free, RATES=60,30,jank (jank: 60 fps with a
+// route's stats and trace as JSON; ONLY=<route name substring>, MODES=lba,free, RATES=60,30,30s,jank (30s: 30 drawn frames over 60 Hz simulation steps, FPS30-SMOOTH; jank: 60 fps with a
 // 0.1 s frame every 15th, split the way Game.advance splits it). The same routes run against an older build (its
 // GAME_URL) give the "before" (no rule breakdown there). Budgets: BUDGET below (QA.md "CAM-2").
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -159,7 +159,7 @@ for (const mode of MODES) for (const [name, body] of ROUTES) for (const dist of 
   for (const rate of (process.env.RATES || '60').split(',')) {
     const label = `${mode}${dist && dist !== 'far' ? ' (' + dist + ')' : ''} · ${name}${rate !== '60' ? ' · ' + rate : ''}`;
     const r = await page.evaluate(({ mode, body, label, rate, dist }) => {
-      const G = game; R.mode(mode, dist || 'far'); if (rate === 'jank') CR.jank(15); else CR.fps(+rate);
+      const G = game; R.mode(mode, dist || 'far'); if (rate === 'jank') CR.jank(15); else if (rate === '30s') CR.fps30s(); else CR.fps(+rate);
       CR.start(label);
       let notes;
       try { notes = new Function('R', 'P', 'G', body)(R, P, G); } catch (e) { notes = ['error: ' + e.message]; }

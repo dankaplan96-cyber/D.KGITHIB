@@ -13,6 +13,8 @@
 //   E. the settings: Frame Rate 30 / 60 / Unlimited (old values kept), the frame budget the automatic resolution, Auto
 //      quality and the AUTO-FIT watch use; Auto keyed by the budget
 //   F. the real requestAnimationFrame of this headless browser, the draw stubbed: the drawn intervals at 30 and 60
+//   G. animation events crossed between updates, exactly once at 30 / 60 / 144 / uneven 30 (FPS30-SMOOTH §6): footsteps per
+//      metre, a sword combo's swing sounds and hits, ball throws, releases and catches, jumps and landings
 //   ONLY=AB (letters) runs those parts only. The numbers of the scheduler before FPS30 (same test, same harness) are in
 //   docs/lba-maturity/FPS30.md.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
@@ -22,7 +24,7 @@ const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 watch(page);
 const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });
-const ONLY = (process.env.ONLY || 'ABCDEF').toUpperCase();
+const ONLY = (process.env.ONLY || 'ABCDEFG').toUpperCase();
 
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
@@ -107,7 +109,7 @@ if (ONLY.includes('A')) {
   const after = st.iv.slice(st.iv.findIndex((x) => x > 300) + 1);
   result.stall = { long: Math.max(...st.iv), after: after.slice(0, 8), steps: st.steps, lostS: st.lostS };
   log('30, a 400 ms stall', result.stall);
-  check('A4 after a 400 ms stall at 30: the drawn frames go on at 33 ms (no burst), and the simulation is not handed more than 4 × 1/30 s', after.length >= 10 && after.every((x) => x > 30 && x < 36) && result.stall.steps <= 4 && result.stall.lostS > 0.25, result.stall);
+  check('A4 after a 400 ms stall at 30: the drawn frames go on at 33 ms (no burst), and the simulation is not handed more than 4 × 1/30 s (8 of its 60 Hz steps)', after.length >= 10 && after.every((x) => x > 30 && x < 36) && result.stall.steps <= 8 && result.stall.lostS > 0.25, result.stall);
   // A5. 120 Hz: 30 = every 4th refresh, 60 = every 2nd
   await warm(120); await setFps('30');
   r = await drive({ hz: 120, ms: 3000, jitter: 0.6 }); result.hz120_30 = summ(r.iv);
@@ -215,7 +217,8 @@ if (ONLY.match(/[ABC]/)) await synth(false);
 if (ONLY.includes('D')) {
   const sim = await ev(() => {
     const G = game, h = G.hero, I = G.input, S = SYN; S.stub = true; G.testFreeze = true;
-    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346] };
+    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346], '30cap': [1 / 30] };
+    const fps0 = G.settings.fps, cap = (k) => { const v = k === '30cap' ? '30' : 'auto'; if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
     const reset = (beh = 'normal', a = 0) => {
       h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0;
       for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
@@ -223,7 +226,7 @@ if (ONLY.includes('D')) {
     };
     const out = {};
     for (const [k, iv] of Object.entries(seq)) {
-      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
       const run = (sec, each) => { let t = 0; while (t < sec - 0.005) { t += adv(); each?.(t); } return t; };
       const o = (out[k] = {});
       // walking and running 1 s (Modern: W)
@@ -251,7 +254,7 @@ if (ONLY.includes('D')) {
     const cam0 = [G.settings.camera, G.settings.autoControls]; G.settings.camera = 'free'; G.settings.autoControls = 'off'; G.applySettings();
     G.exitRoom({ x: -42, z: 2, a: 0 }, true, true); G.state = 'play'; G.step(0.5);
     for (const [k, iv] of Object.entries(seq)) {
-      let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
       const run = (sec) => { let t = 0; while (t < sec - 0.005) t += adv(); };
       I.keys.clear(); run(0.2); { const y0 = G.camRig.yaw; I.keys.add('KeyZ'); run(1.0); I.keys.delete('KeyZ'); out[k].camKeys = +(G.camRig.yaw - y0).toFixed(3); }
       { const pad = { connected: true, axes: [0, 0, 0.6, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false })), mapping: 'standard' }, gp = navigator.getGamepads; navigator.getGamepads = () => [pad];
@@ -259,11 +262,11 @@ if (ONLY.includes('D')) {
       I.lastDevice = 'kbd';
     }
     G.settings.camera = cam0[0]; G.settings.autoControls = cam0[1]; G.applySettings();
-    S.stub = false; I.keys.clear(); return out;
+    G.settings.fps = fps0; G.applySettings(); S.stub = false; I.keys.clear(); return out;
   });
   result.sim = sim; log('simulation at 60 / 30 / 144 / uneven 30', sim);
   const r60 = sim[60], rel = (a, b) => Math.abs(a - b) / Math.max(1e-6, Math.abs(b));
-  for (const k of ['30', '144', 'uneven30']) {
+  for (const k of ['30', '144', 'uneven30', '30cap']) {
     const x = sim[k];
     check(`D ${k}: walking and running cover the ground they do at 60 (±3 %)`, rel(x.walk, r60.walk) < 0.03 && rel(x.run, r60.run) < 0.03, { at60: [r60.walk, r60.run], [k]: [x.walk, x.run] });
     check(`D ${k}: a standing jump rises as high as at 60 (±2 cm) and stays as long in the air (± one frame)`, Math.abs(x.jumpApex - r60.jumpApex) <= 0.02 && Math.abs(x.jumpAir - r60.jumpAir) <= (k === '144' ? 1 / 60 : 0.035) + 1e-3, { at60: [r60.jumpApex, r60.jumpAir], [k]: [x.jumpApex, x.jumpAir] });
@@ -306,6 +309,57 @@ if (ONLY.includes('E')) {
   check('E3 Auto quality works to the chosen budget (33.3 ms at 30, 16.7 at 60 and Unlimited) and keeps a profile per limit (the 30 limit\'s own cache key; the others as before)', e.auto30.budget === 33.33 && e.auto60.budget === 16.67 && e.autoOff.budget === 16.67 && /\|30fps$/.test(e.auto30.key) && e.auto60.key === e.autoOff.key && !/30fps/.test(e.autoOff.key), e);
   check('E4 Auto at the 30 limit: steady 33 ms frames are on budget (no pressure, no step down), and the time the limit saves is not spent on a heavier profile', e.gov30.kinds.every((k) => k === 'ok') && !e.gov30.steps.length && e.gov30.p === 1 && e.gov30spend.steps.includes('up'), e);
   check('E5 the automatic resolution / AUTO-FIT budget at 30 is 33.3 ms', Math.abs(e.fitBudget - 33.33) < 0.01, e.fitBudget);
+}
+
+// ---------------------------------------------------------------- G. animation events, exactly once (FPS30-SMOOTH §6)
+if (ONLY.includes('G')) {
+  const g = await ev(() => {
+    const G = game, h = G.hero, I = G.input, S = SYN; S.stub = true; G.testFreeze = true;
+    const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346], '30cap': [1 / 30] };
+    const fps0 = G.settings.fps, cap = (k) => { const v = k === '30cap' ? '30' : 'auto'; if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
+    const heard = new Map(), a0 = G.audio.play.bind(G.audio);
+    G.audio.play = (n, ...r) => { heard.set(n, (heard.get(n) || 0) + 1); return a0(n, ...r); };
+    const count = (re) => [...heard].filter(([k]) => re.test(k)).reduce((a, [, v]) => a + v, 0);
+    // (Modern keys, the device switch off: an earlier part's pad may have switched the scheme)
+    const ctl0 = [G.settings.controls, G.settings.autoControls]; G.settings.controls = 'modern'; G.settings.autoControls = 'off'; G.applySettings(); I.lastDevice = 'kbd';
+    G.devArena(); G.state = 'play';
+    const reset = (beh = 'normal', a = 0) => {
+      h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0; h.stepAcc = 0;
+      for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
+      G.resetCombat(); G.ball.reset?.(); G.state = 'play'; I.keys.clear(); I.taps.clear(); h.setBehaviour(beh); G.step(0.4); heard.clear();
+    };
+    const out = {};
+    for (const [k, iv] of Object.entries(seq)) {
+      cap(k); let i = 0; const adv = () => { const r = iv[i++ % iv.length]; G.advance(r); return r; };
+      const run = (sec) => { let t = 0; while (t < sec - 0.005) t += adv(); return t; };
+      const o = (out[k] = {});
+      // footsteps: 10 s of walking, 10 s of running (into the arena's open floor) — steps per metre
+      for (const [beh, key] of [['normal', 'walk'], ['athletic', 'run']]) { reset(beh); const p0 = h.pos.clone(); I.keys.add('KeyW'); run(10); I.keys.delete('KeyW'); const d = Math.hypot(h.pos.x - p0.x, h.pos.z - p0.z); o[key] = { steps: count(/^step/), m: +d.toFixed(2), perM: +(count(/^step/) / d).toFixed(3) }; }
+      // three jumps in place: jump and landing sounds
+      reset('athletic'); for (let j = 0; j < 3; j++) { I.keys.add('Space'); I.taps.add('Space'); adv(); I.keys.delete('Space'); run(1.2); } o.jump = { jump: count(/^jump$/), land: count(/^land$|^landSoft$/) };
+      // a sword combo (three presses) against an arena enemy in front: swing sounds and hits
+      reset('normal', 0); h.combat.equip('sword', true);
+      { const e = G.enemies.find((x) => x.id?.startsWith('a_') && !x.boss); let hits = 0;
+        if (e) { e.setPresent(true); e.hp = e.maxHp = 99; e.pos.set(h.pos.x, h.pos.y, h.pos.z + 1.6); e.state = 'idle'; e.stun = 9; const d0 = e.damage.bind(e); e.damage = (...a) => { hits++; return d0(...a); }; }
+        for (let j = 0; j < 3; j++) { I.keys.add('KeyK'); I.taps.add('KeyK'); adv(); I.keys.delete('KeyK'); run(0.28); }
+        run(1.2); if (e) { delete e.damage; e.setPresent(false); }
+        o.sword = { swings: count(/^swing/), hits, enemy: !!e }; }
+      // three ball throws (F), each caught back: throws, releases, catches
+      reset('normal', Math.PI / 2); h.mp = h.mpMax; h.combat.equip('ball', true);
+      { let rel = 0; const b = G.ball, st0 = { s: b.state }; for (let j = 0; j < 3; j++) { I.keys.add('KeyF'); I.taps.add('KeyF'); adv(); I.keys.delete('KeyF'); let t = 0, was = b.state; while (t < 4 && !(b.state === 'inhand' && t > 0.5)) { t += adv(); if (b.state === 'fly' && was !== 'fly') rel++; was = b.state; } }
+        o.ball = { throws: count(/^throw/), released: rel, catches: count(/^catch$|^ballReturn$/) }; }
+    }
+    G.settings.controls = ctl0[0]; G.settings.autoControls = ctl0[1];
+    G.settings.fps = fps0; G.applySettings(); G.audio.play = a0; S.stub = false; I.keys.clear(); return out;
+  });
+  result.events = g; log('animation events at 60 / 30 / 144 / uneven 30', g);
+  const r60 = g[60];
+  check('G0 at 60: the events happen (steps, 3 jumps and landings, 3 swings with hits, 3 throws released and caught)', r60.walk.steps > 4 && r60.run.steps > 6 && r60.jump.jump === 3 && r60.jump.land === 3 && r60.sword.swings === 3 && (!r60.sword.enemy || r60.sword.hits === 3) && r60.ball.throws === 3 && r60.ball.released === 3 && r60.ball.catches >= 3, r60);
+  for (const k of ['30', '144', 'uneven30', '30cap']) {
+    const x = g[k];
+    check(`G ${k}: footsteps per metre as at 60 (±4 %)`, Math.abs(x.walk.perM / r60.walk.perM - 1) <= 0.04 && Math.abs(x.run.perM / r60.run.perM - 1) <= 0.04, { at60: [r60.walk, r60.run], [k]: [x.walk, x.run] });
+    check(`G ${k}: every jump, landing, swing, hit, throw, release and catch exactly once, as at 60`, JSON.stringify([x.jump, x.sword, x.ball]) === JSON.stringify([r60.jump, r60.sword, r60.ball]), { at60: [r60.jump, r60.sword, r60.ball], [k]: [x.jump, x.sword, x.ball] });
+  }
 }
 
 // ---------------------------------------------------------------- F. this browser's own requestAnimationFrame, the draw stubbed

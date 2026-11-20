@@ -417,7 +417,9 @@ export class Hero extends Actor {
       this.stepAcc += this.speed * dt;
       const stride = beh === 'athletic' ? 1.4 : 0.9;
       // (ACTION-SOUND-2: Discreet tiptoes: a soft pat far under a step, so sneaking is heard as sneaking, not as silence)
-      if (this.stepAcc > stride) { this.stepAcc = 0; g.audio.play(beh === 'discreet' ? 'step-sneak' : 'step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
+      // (FPS30-SMOOTH: the distance past the stride carries into the next step — reset to 0 it was lost, a step per
+      //  ~2 % more ground at 30 than at 144; a stall's long frame still sounds one step, not a burst)
+      if (this.stepAcc > stride) { this.stepAcc = Math.min(this.stepAcc - stride, stride * 0.5); g.audio.play(beh === 'discreet' ? 'step-sneak' : 'step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
     }
 
     // behaviour action (Space / A): jump (Athletic), talk (Normal); Aggressive attacks through the combat
