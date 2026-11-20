@@ -55,7 +55,9 @@ const helpers = () => ev(() => {
     said() { return (window.__said || []).map((x) => x[1]); },
     fromDoor() { const d = game.world.houses[0].door, p = game.hero.pos; return +Math.hypot(p.x - d.x, p.z - d.z).toFixed(1); },
     barrel() { const R = game.story.cur.home.parts.barrel; return { aside: R.aside, at: [+R.B.grp.position.x.toFixed(2), +R.B.grp.position.z.toFixed(2)], col: [+R.B.c.x.toFixed(2), +R.B.c.z.toFixed(2)], x0: R.x0, z0: R.z0 }; },
-    throwAtBarrels() { const B = game.story.cur.barrels(); if (game.hero.behaviour === 'athletic') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); for (let i = 0; i < 40 && game.state === 'play'; i++) game.step(0.1); P.settle(); game.step(1.0); },
+    // the throw from the path, until his first line is up (the barrel moved, the joint in view)
+    throwStart() { const B = game.story.cur.barrels(); if (game.hero.behaviour === 'athletic') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); for (let i = 0; i < 40 && game.state === 'play'; i++) game.step(0.1); game.step(0.5); },
+    throwAtBarrels() { TM.throwStart(); P.settle(); game.step(1.0); },
     // walk to the well as a player does: a remark on the way (the lane's knock) is read, and he walks on
     toWell(stopWhen) { const W = game.world.well; let r; for (let k = 0; k < 4; k++) { r = P.go(W.x, W.z, { tol: 2.5, maxT: 200, stopWhen }); P.settle(); if (r.r !== 'state:dialog') break; } return r; },
   };
@@ -121,11 +123,11 @@ await ev(() => { game.settings.tips = 'on'; });
 const shove = await ev(() => { const R = game.story.cur.home.parts.barrel; const r = P.use(R.x0, R.z0, { near: 1.0, kind: 'h_barrel' }); const line = game.hud.dialog?.full || ''; P.settle(); return { r: r?.r, line, aside: R.aside, step: game.story.cur.steps.current() }; });
 check('R1.13 a shove by hand: a useful word (the ball might move it), the barrel stays, the step stays', /knock with the ball/.test(shove.line) && !shove.aside && shove.step === 'barrels', shove);
 // the ball: the barrel shuffles aside, the joint shows
-await ev(() => { TM.listen(); TM.throwAtBarrels(); });
+await ev(() => { TM.listen(); TM.throwStart(); });
+await shot('04-joint-shown');   // (the follow camera as his first line comes up: the barrel aside, the joint and the wet ground at the corner)
+await ev(() => { P.settle(); game.step(1.0); });
 const knock = await ev(() => ({ b: TM.barrel(), said: TM.said(), f: !!game.flags.pr_barrel, step: game.story.cur.steps.current() }));
 check('R1.14 the ball hits: the barrel is knocked a metre aside (its collider with it); his lines: the joint from yesterday held, warm, furred like the kettle; Zoé concedes; the trail leads to the square', knock.f && knock.b.aside && knock.b.at[1] < knock.b.z0 - 0.8 && Math.abs(knock.b.col[1] - knock.b.at[1]) < 0.01 && knock.said.some((x) => /joint from yesterday/.test(x)) && knock.said.some((x) => /fix worked/.test(x)) && knock.said.some((x) => /starts at the well/.test(x)), knock);
-await ev(() => { const J = game.story.cur.home.parts.joint; P.go(-45.6, 72.6, { tol: 0.4 }); P.settle(); P.face(J.x, J.z); game.step(1.2); });
-await shot('04-joint-shown');
 s = await M();
 check('R1.15 the pipe step: the marker on the copper pipe level with him and the star on the pipe', s.step === 'pipe' && s.vis && s.name === 't2_n_pipe' && Math.abs(s.at[0] + 43.5) < 0.1 && s.stars.length === 1 && Math.abs(s.stars[0][0] + 43.5) < 0.1, s);
 await shot('05-pipe-step');
