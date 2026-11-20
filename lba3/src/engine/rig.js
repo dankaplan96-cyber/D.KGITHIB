@@ -580,9 +580,13 @@ export class Rig {
       }
     } else if (a === 'reach' || a === 'tapTurn') {
       // reach out to a tap or a handle at chest height; tapTurn twists it (forearm rolls back and forth)
-      const k = ease(t / 0.35);
-      p.hipsY = 0.95 + b; p.torsoX = 0.1 * k; p.headX = 0.12 * k;
-      T.armR = -1.35 * k; T.elR = -0.55 * k; T.armL = 0.04; T.elL = -0.25;
+      // (JOINTS-BLENDER, order 57: Zoé's reach toward the tap. Every joint went on one curve over 0.35 s, the arm swinging up
+      // stiff as a lever. Now the eyes go first, the chest leans after them, the shoulder lifts the arm with the elbow folded
+      // in, and the forearm opens toward the tap last; the free hand eases back a little. The end pose is the one it was,
+      // reached 0.03 s later, so the hand meets the tap where it did)
+      const k = ease(t / 0.35), kh = ease(t / 0.2), kt = ease((t - 0.04) / 0.3), ka = ease((t - 0.05) / 0.3), ke = ease((t - 0.13) / 0.25);
+      p.hipsY = 0.95 + b; p.torsoX = 0.1 * kt; p.headX = 0.12 * kh;
+      T.armR = -1.35 * ka; T.elR = -0.55 * ke - 0.6 * Math.max(0, ka - ke); T.armL = 0.04 + 0.1 * kt; T.elL = -0.25 - 0.1 * kt;
       T.legL = -0.12 * k; T.legR = 0.08 * k; T.kneeL = 0.08; T.kneeR = 0.05;
       if (a === 'tapTurn') { const w = Math.sin(t * 9); T.elR += w * 0.12; p.torsoY = -0.06 * k + w * 0.02; }
     } else if (a === 'touchWater') {

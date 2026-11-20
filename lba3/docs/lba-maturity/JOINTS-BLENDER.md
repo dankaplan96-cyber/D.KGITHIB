@@ -105,5 +105,18 @@ the ground every frame (rest 0.100 m over it): how deep it goes and how far it s
 - `captures/joints-blender/hop-and-run-landing-before-after.jpg` (top before, bottom after: the hop's crouch, squat and
   stand; a running jump's landing).
 
+## Zoé's reach toward the tap; Arthur's turn; a Grobo's trunk (JOINTS-BLENDER 6)
+- **Zoé's reach** (rig.js `reach` / `tapTurn`, the opening's tap): every joint moved on one curve over 0.35 s, so the
+  arm swung up straight from the shoulder like a lever. Now the gaze leads (0.2 s), the chest leans after it, the shoulder
+  lifts the arm with the elbow folded in, and the forearm opens toward the tap last (from 0.13 s); the free hand eases
+  back a little. The reaching hand's end pose is unchanged, reached 0.03 s later, so it meets the tap where it did.
+  `captures/joints-blender/zoe-reach-before-after.jpg` (top before, bottom after; 0.04 / 0.10 / 0.16 / 0.22 / 0.30 /
+  0.45 s, a side 3/4 view).
+- **Arthur's quick turn toward a parent and a Grobo's trunk:** read in rig.js, not changed: a character turning where it
+  stands already leads with the head, the chest following and the pelvis last (ANIM-POLISH-3, from its own turn rate),
+  and Arthur's stride comes from his own skeleton's legs (the walk's stride is the leg's length × the swing). The Grobos'
+  trunk (TRUNK-1) swings as one curve, each segment after the one above, ±22–27° at the tip, and is held from swinging
+  back into the belly. Not filmed in motion here.
+
 ## Next
-The full test at the end; the frame time last (the user: measurements at the end).
+The battery half of the measurements (the user unplugs).
