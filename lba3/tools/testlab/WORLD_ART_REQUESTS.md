@@ -5698,3 +5698,16 @@ battery). Raw reports: `docs/lba3-performance/HARDWARE/2026-11-20-gtx1050-ac/`.
   the gaze leads, the shoulder lifts with the elbow folded, the forearm opens last; the hand's end pose unchanged; picture
   `captures/joints-blender/zoe-reach-before-after.jpg`). Arthur's turn and the Grobos' trunk read in rig.js (ANIM-POLISH-3's
   head-led turn, TRUNK-1): not changed.
+
+## HIDDEN-TRIS-HW · the hidden triangles' cost on a real GPU (CLOUD_ORDERS 59) · started and done · the desktop, 20.11.2026
+Branch **`hidden-tris-hw`** (`9e848b26`, from `329c0689`): `docs/lba3-performance/HIDDEN-TRIS.md` (a "Real GPU" section;
+the file is new — put the cloud's own above it when its worker's lands) and the raw data in
+`docs/lba3-performance/HARDWARE/2026-11-20-hidden-tris-hw/`. GTX 1050 (ANGLE D3D11), Chrome, 1536×864 @1.25, on AC.
+- ID render from every walkable spot (4 m grid, 8 headings, the follow camera and a higher view): round Twinsen's
+  house, the lane and the square **63 %** of the area's triangles are never seen (419 K of 663 K); Zeelich's street
+  **47 %** (74 K of 156 K).
+- The same 8 camera points per area drawn with and without them (A/B ×3, Medium and High, the game's GPU timer): the
+  triangles drawn a frame fall 13–18 %, **the GPU time moves −0.21 to +0.10 ms** — inside the spread between two runs.
+  Draw calls unchanged.
+- **Verdict: they do not weigh on this GPU; no fix made or proposed** (the user, 20.11: the game's quality and look must
+  not change). Not measured: the characters' double-sided models (115 K of 120 K skinned triangles), far props apart.
