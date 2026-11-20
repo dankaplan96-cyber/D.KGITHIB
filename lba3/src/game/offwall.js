@@ -1,9 +1,10 @@
 // U-3 "Off the Wall" (the user's own side quest; docs/lba-maturity/U3-OFF-THE-WALL.md): Tali's ball court, the few
 // things it adds to Desert Island (story/offwall.js runs the game and shows each piece by the story's state).
 //
-// The court is the sandy terrace behind the School of Magic (desertold.js): the island's ground there is flat at 1.3 m
-// from the School's rock wall west to the slope, and its south side is the two white blocks (desertold.js, the bodies
-// 46 on the mask's terrace): a whitewashed wall 2.85 m high, the pupils' yard wall. Nothing there is moved; the court adds
+// The court is the pupils' yard on the School of Magic's back terrace, behind S28's ridge (desertold.js COURT, P83: it
+// moved with the School; it stood behind the pool mask until 20.11): the island's ground is held level there, a rock
+// closes its east side, and its south side is two white blocks (as the bodies 46 on the pool mask's terrace): a
+// whitewashed wall 2.85 m high, the pupils' yard wall. The court adds
 //   - the bell: a school hand-bell hanging from the arm of a wooden post on a flat stone foot; it is what the ball must
 //     ring. Its post stops a walker, never the ball (the whole stand rings: story/offwall.js's hit test is a tall
 //     cylinder round the bell, so a ball skipping along the sand rings it too);
@@ -32,23 +33,31 @@
 //     boardCol, bellCol       their colliders (world)
 import * as THREE from 'three';
 import { Kit, MAT, rbox, cyl, sphere, lathe, plane, canvasTex } from './props.js';
+import { COURT } from './desertold.js';
 
 // ------------------------------------------------------------------ the court (desert.js's local frame, metres)
+// (P83, the user, 20.11: the court moved with the School to its back terrace at S28 (desertold.js COURT: its walls are
+//  built there as they stood). The numbers below are the court as it was built behind the pool mask, each moved by
+//  COURT's (dx, dz): nothing turned, so every throw, window and spot is the same)
+const at = (x, z, o = {}) => ({ x: +(x + COURT.dx).toFixed(3), z: +(z + COURT.dz).toFixed(3), ...o });
+const atX = (x) => +(x + COURT.dx).toFixed(3), atZ = (z) => +(z + COURT.dz).toFixed(3);
 export const OWC = {
-  g: 1.3,                                          // the terrace's ground
-  wall: { east: { x0: -76.2, x1: -73.2, z: -74.4 }, west: { x0: -79.7, x1: -76.7, z: -74.7 } },   // the blocks' north faces
-  court: { x0: -80.4, x1: -72.6, z0: -84.4, z1: -74.8 },                                           // where his throws count
-  tali: { x: -73.4, z: -81.2 },                    // where she stands (by the boulder at the School's back, out of the throws)
-  ring1: { x: -78.6, z: -80.2 },                   // her ring (the first game, her demonstration)
-  ring3: { x: -76.5, z: -80.0 },                   // her ring for the last game ("only one way from here")
-  chalkX: { x: -75.65, y: 1.0 },                   // her X on the east block's face, over the ground
-  bell: { c1: { x: -74.6, z: -76.4 }, c2: { x: -75.6, z: -78.2 }, c3: { x: -78.4, z: -76.2 } },
-  board: { store: { x: -78.9, z: -82.9, rot: Math.PI, down: true }, c3: { x: -77.2, z: -75.8, rot: Math.PI / 2 } },
+  g: COURT.g,                                      // the terrace's ground
+  wall: { east: { x0: atX(-76.2), x1: atX(-73.2), z: atZ(-74.4) }, west: { x0: atX(-79.7), x1: atX(-76.7), z: atZ(-74.7) } },   // the blocks' north faces
+  court: { x0: atX(-80.4), x1: atX(-72.6), z0: atZ(-84.4), z1: atZ(-74.8) },                                                   // where his throws count
+  tali: at(-73.4, -81.2),                          // where she stands (by the boulder at the court's corner, out of the throws)
+  face: at(-75.6, -75.5),                          // (the bell's corner of the court: she faces it at home)
+  ring1: at(-78.6, -80.2),                         // her ring (the first game, her demonstration)
+  ring3: at(-76.5, -80.0),                         // her ring for the last game ("only one way from here")
+  chalkX: { x: atX(-75.65), y: 1.0 },              // her X on the east block's face, over the ground
+  bell: { c1: at(-74.6, -76.4), c2: at(-75.6, -78.2), c3: at(-78.4, -76.2) },
+  board: { store: at(-78.9, -82.9, { rot: Math.PI, down: true }), c3: at(-77.2, -75.8, { rot: Math.PI / 2 }) },
   // the practice court's spots (after the quest): the board's three, the bell's three; every pairing leaves a metre clear
-  pBoard: [{ x: -76.4, z: -79.6, rot: 0 }, { x: -77.2, z: -75.8, rot: Math.PI / 2 }, { x: -74.4, z: -78.4, rot: Math.PI / 2 }],
-  pBell: [{ x: -78.4, z: -76.2 }, { x: -74.6, z: -76.4 }, { x: -75.6, z: -78.2 }],
+  pBoard: [at(-76.4, -79.6, { rot: 0 }), at(-77.2, -75.8, { rot: Math.PI / 2 }), at(-74.4, -78.4, { rot: Math.PI / 2 })],
+  pBell: [at(-78.4, -76.2), at(-74.6, -76.4), at(-75.6, -78.2)],
   BOARD: { w: 2.0, h0: 0.45, h1: 1.75, t: 0.06 },  // the slate's width, its bottom and top over the ground, thickness
   POST: 0.35,                                      // the post stands this far east of the bell
+  shift: { x: COURT.dx, z: COURT.dz },             // (from the old court's numbers: the tests' and the docs' frame)
 };
 
 // ------------------------------------------------------------------ the magic ball's flight (actors.js MagicBall, Normal)
