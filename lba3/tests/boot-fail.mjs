@@ -27,8 +27,8 @@ const cp = await ev(() => ({ label: document.querySelector('[data-act="boot-copy
 check('C: Copy diagnostics gives the details (stage, error, browser) — copied, or shown in a box to select', cp.label === 'Copied' || /stage: renderer/.test(cp.box), cp);
 // Retry: a normal start, one game, one canvas, the title
 await page.click('[data-act="boot-retry"]');
-await page.waitForFunction(() => window.game && game.state === 'title', null, { timeout: 600000 });
-const ok = await ev(() => ({ url: location.search, canvases: document.querySelectorAll('canvas#game, #game canvas').length, fail: !!document.querySelector('#boot-fail'), state: game.state }));
-check('R: Retry starts the game normally (no test flag, the title, no failure screen, one game canvas)', !/failstart/.test(ok.url) && ok.state === 'title' && !ok.fail && ok.canvases <= 1, ok);
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 600000 });
+const ok = await ev(() => ({ url: location.search, canvases: document.querySelectorAll('canvas#game, #game canvas').length, fail: !!document.querySelector('#boot-fail'), state: game.state, title: !document.querySelector('#title')?.classList.contains('hidden') }));
+check('R: Retry starts the game normally (no test flag, the title, no failure screen, one game canvas)', !/failstart/.test(ok.url) && ok.title && !ok.fail && ok.canvases <= 1, ok);
 await browser.close();
 done();
