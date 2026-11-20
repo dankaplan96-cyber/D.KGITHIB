@@ -5723,3 +5723,9 @@ Zeelich Spaceport's layout left out. Fixes at their source, each with a matched 
   - A people scan (new `npcscan.mjs`): every place at four story points (new game, base-06, base-11, base-15), 504–989 people each. It checks feet against the ground, bodies inside colliders, overlaps, and people facing a wall. About 15 candidates came up, each photographed from the front and at the feet. All are people at their work (Corla behind her booth's counter, Oda at a stall, the beekeepers, the mason, the crane operator), a slope under a picker, or a fault of the scan (Tamu and Rollo measured from another room of their group).
   - The 253 game-camera pictures of the v103 playthrough (every region and chapter) as contact sheets: nothing seen out of place.
   - Not done: a free-camera walk of a grid in each region. The game shows only the world round Twinsen and sets its camera each frame, so those pictures were empty. Details of a few pixels are below a contact sheet.
+- **JOINTS-BLENDER 7, Zoé's shoulder** (the user, 21.11, playing: "Zoé's shoulder is strange"; `joints-blender` at `4c8715d7`, which also merges the cloud's tip `e3266123`). In `zoe_poly.py`:
+  - The arm's top is now a hemisphere over the joint. The old flat-topped arm stood out past the shoulder with the green armhole band wrapped round it, and raised it showed a flat disc.
+  - The band round the arm is gone; the dress's strap edge keeps its green.
+  - Triangles 8,346 → 8,410. `ZOE_SHOULDER_OLD=1` rebuilds the old model byte for byte.
+  - Picture: `captures/joints-blender/zoe-shoulder-before-after.jpg`.
+  - JOINTS-BLENDER 5–7 wait for the merge.
