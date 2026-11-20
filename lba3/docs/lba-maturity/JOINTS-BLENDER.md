@@ -120,3 +120,14 @@ the ground every frame (rest 0.100 m over it): how deep it goes and how far it s
 
 ## Next
 The battery half of the measurements (the user unplugs).
+
+## Zoé's shoulder (JOINTS-BLENDER 7; the user, 21.11, playing: "Zoé's shoulder is strange")
+- **Seen:** in play, close in a conversation, her shoulder read as a pad or a cuff set on the arm. In Blender (Workbench,
+  the parts' colours, `captures/joints-blender/zoe-shoulder-before-after.jpg`): the armhole's green band (ZOE-LOOK-38)
+  was a ring round the top of the arm, outside the dress, over the arm's top section, which stood out past the shoulder's
+  line; raised (forward or out to the side), the arm's top was a flat disc beside the neck.
+- **Fixed in `zoe_poly.py`:** the arm's top is a hemisphere over the joint, the upper arm's own 4.7 cm round, so the
+  shoulder keeps its round shape at any angle; at rest it rounds off under the strap's edge. The band round the arm is
+  gone: the dress's own green edge along the strap is the armhole's trim. Triangles 8,346 → 8,410; bones, eyes and
+  mouths unchanged. `ZOE_SHOULDER_OLD=1` rebuilds the previous model byte for byte.
+- Rows of the picture: before / after at rest, before / after with the arm raised forward (front 3/4, close, side).
