@@ -236,3 +236,70 @@ Done: every chapter 1-16 in order, the epilogue, the side quests, the residents'
 council thread, `tests/chapter11.mjs` (`c3_arrive_stop`), `tests/exp-ballastra.mjs` (`bl_tw_or3` added to Oren's chain),
 `tests/prologue.mjs` past the well's mites (the Sendell chain is one line shorter); (3) residents not re-read line by line
 this pass: `zeelife`, `ihomes`, `islandpeople`, `isleslife`, `hamlife`, `desertlife` (read in pass 1).
+
+## Pass 3 (20.11): text after DIALOGUE-2
+
+Scope: the text no dialogue editor had seen. EXP-3's chapters 12-13 (`bh_`, `wk_`, `nwb_`, `ep_bl_`, chapter 11's new end
+`bl_ba_2x`/`bl_te_end4x`), the P83 lines (S-1 to S-8: `know_*`, `cn_tw_days`, `c1_doran_ships`, `c2_nara_2`,
+`op_cap_lore`/`_sub`, `c8_gil_2`, `c3_sendell_3`, `cn_bal_stop2`, `co_lock_ok`), and the P80 puzzle lines (`c5_diagram`,
+`c5_press`, `c5_nudge_*`, `c7_seal_*`, `c7_warm_hit`, `c7_nudge_*`, `c3_diagram`). Each exchange read with the code that
+plays it (`story/balances.js` chains, conditions and repeats; `chapter1.js`, `cnline.js`, `answer.js`, `steam.js`,
+`observatory.js`, `chapter3.js`, `story/index.js` KNOW). **Source only**: nothing played or listened to; no browser test
+run (the shared machine). About 290 strings read (some 230 spoken or narrated lines), 31 changed, one chain reordered.
+Every changed line has its Hebrew; `node tools/he-bundle.mjs`; `node tests/dialogue-check.mjs` PASS (Hebrew 100 %).
+
+| Key | Before | After | Why |
+|---|---|---|---|
+| `bl_te_end4x` | "Then it's the House of Balances. Fennick will say it's all in order. It always is." | "Then it's the House. Fennick runs its counter, and he'll tell you it's all in order. It always is." | Fennick named with no introduction; the House already named two lines up |
+| `bl_ba_2x` | "The relays are up here, but…" | "The relays are ready, but…" | "up here" from a man on Zeelich |
+| `bh_tw_1` | "Halden said they were in the House of Balances." | "Where do I find this House?" | Tessa had just said it twice; Twinsen now asks what he needs, and `bh_te_2` answers it |
+| `bh_tw_d2` | "And the lower row?" | "A regulator could have kept the lower row dry." | Fennick's reply (the council used regulators' levers against the row) answered a question nobody asked |
+| `bh_fe_t5`, `bh_fe_after` | "…the next shipment stays on the quay…" / "The project's crates are on the quay with HELD on them." | "…those crates stay where they are…" / "Those crates stay where they are, with HELD on every lid." | the crates stand in the House's own hall (`gardenrooms.js`), chalked HELD in view |
+| `bh_ha_1` | "The House? I don't go there. Halden's numbers, sold by the crate." | "You've been to the House, then. My numbers, sold by the crate with the coils. Did they at least keep a copy?" | Halden spoke of himself in the third person and repeated his chapter-11 refusal |
+| `bh_te_rep2`, `bh_te_rep3` | "…A bounded job." / "A box can't be everywhere. People can. Two days, and Corvin's kiln." | "…I'll start now." / "Then find five somebodies. I only build the boxes." | "a bounded job" a third time; an aphorism stating the theme; "two days" against chapter 13, where the five are crated within the hour |
+| `bh_j_bench` | "…Its coils hold steady because Oren holds them." | "…Its needle settles as if a hand had caught it." | the entry is written at the first knock; Oren speaks only at the second (`bh_oren`) |
+| `wk_we_1`, `wk_tw_1` | "You said you'd come back for them. One of them is my brother." / "Your brother is one of the three hundred and four?" | "Mags says Oren told you about the sleepers. One of them is my brother." / "I told Oren I'd come back for them. What's your brother's name?" | Wenna was not in the pump room; the promise is now Twinsen's own, and her "Jory." answers his question |
+| `wk_ma_rota` | "And not on his beat. Between them. We all heard the man." | "And pass it between Oren's strokes, not on one. Anyone who grew up by the pumps can hear him push." | nobody had said it; the handover clue is now spoken once, by someone who would know |
+| `wk_t_20/40/60` | "(Twenty minutes.)" "(Forty minutes.)" "(Nearly there.)" | "(Fifteen minutes.)" "(Half an hour.)" "(Forty-five minutes. Nearly there.)" | the toasts fire at 25, 50 and 75 % of the hour (`stepRota`) |
+| `wk_tw_who` | "Then who decides, from now on?" | "So who says when, next time?" | plainer; Nan Odra's rule answers it |
+| `wk_we_wait` | "Jory's in there. Thirty-four years, and I'm in the same room." | "He's under that lid, a few steps away. I'm not leaving this room until it opens." | "thirty-four years" five times in the chapter |
+| `wk_te_wait` | "…your hall needs you more…" | "…Wenna needs you more…" | it is not his hall |
+| `wk_jo_after` | "My sister has a son. He's teaching me to walk on the rafts…" | "Wen says I've got a nephew. I went to sleep with a sister of nine." | heard minutes after he wakes, in the hall; the rafts lesson moves to the return visit (`wk_jo_later`) |
+| `wk_ga_after` | "Three more families asked this morning. I've never written ASKED in that book before." | "Three more families have asked already. I wrote them down, and for once I didn't write DEFERRED after." | said right after the waking; the ledger has said ASKS 24 times |
+| `wk_we_later`, `wk_jo_later`, `wk_ga_later` | "…asleep for thirty-four years. Which, fair." / "…made up the thirty-four years." / "Two more woke last week." | "He eats like he's making up for every dinner he slept through. I let him." / the rafts lesson and the water / "…since you were last here." | internet slang; the repeated number; a return visit can be days later |
+| `wk_j_hall` | "…Nan Odra's mother has slept there since the Flood." | "…Garrow, the keepers' foreman, lets no visitors in, but Oren let us look." | written at the door, before anyone mentions her mother |
+| `know_balances` | "Tessa's B-8 sets each basin from its neighbour's need, and it holds." | "Tessa's B-8 has a plain brass lever that Oren can't hold, so each band is set by hand, from its neighbour's need." | the B-8 sets nothing; people do |
+| `co_lock_ok` | "…and she's still knocking: held, not healed." | "…and she's still knocking. So stopping it was the easy part." | a rule label in Twinsen's mouth; his reaction carries it |
+| `cn_bal_stop2` | "…The shell is held, not healed. …" | "…It keeps the cracks from growing; it doesn't close them. …" | the same label; Baldino says what the stop does |
+| `c5_zoe_radio1` | "Ilka's map matches Gilbert's old charts." | "Ilka's map matches Gilbert's old charts, from his FunFrock days." | S-8's set-up (`c8_gil_2`) comes three chapters after the charts are first used; now the first use says where they come from (`story-fix.mjs`'s "Gilbert's old charts" kept) |
+| `c7_seal_stuck`, `c7_nudge_steam` | "…three are steaming, two are under ice." / "Two of the discs aren't steaming." | "…and only three of them are steaming." / "Look closer at the two discs that aren't steaming." | the P80 rule: the ice is in the world (a lump on each), his first look no longer names it; the 90 s nudge still does |
+| `c1_doran_ships` (order) | Twinsen "Can you fly it to Zeelich?", then Doran "Not the ferry, mind…" | Doran tells the ships apart right after `c1_doran_ferry1`, then Twinsen asks | the answer followed a question it did not answer (`chapter1.js`; same lines, same count) |
+
+Read and kept: Fennick's refusal, defence and turn (`bh_fe_*`, the morally grey "I'd sell him the coils again"); the bench
+and the book; the rig and the three needs (every wrong-band line reachable says which way); the Cradle Hall's door,
+card, ledger, plaque, Oren's refusal ("Now you are keeping him from me"), the solo attempt, the bell, the waking ("Wen?
+You got old." / "You got lazy."), Nan Odra's choice; the network's B-8 (`nwb_*`); the Cradle Hall cutaway (`ep_bl_*`);
+`know_*` (each shown only once its chapter showed the mechanism: `story/index.js` KNOW checked against the flags);
+`cn_tw_days`, `c2_nara_2`, `op_cap_lore`/`_sub`, `c8_gil_2`, `c3_sendell_3`; `c5_diagram`, `c5_press`, the c5 nudges,
+`c7_seal_more`/`_free`, `c7_warm_hit`, `c3_diagram` (each shows where things go, not the setting).
+
+Voice metadata: new entries for `bh_tw_1`, `bh_ha_1`, `bh_te_rep3`, `wk_tw_1`, `wk_ma_rota`, `wk_jo_after`, `wk_we_wait`,
+`co_lock_ok`, `cn_bal_stop2`; the existing entries of the changed lines keep their sentence counts (`bl_ba_2x`,
+`bl_te_end4x`, `bh_fe_t5`, `wk_we_1`, `c7_seal_stuck`). No recorded clip (the voices are made from the text).
+
+Tests whose expected wording changed (updated, **not run** here): `tests/exp-balances.mjs` (three checks: "Fennick runs
+its counter", "crates stay where they are", "I'll start now"), `tests/puzzles.mjs` (c7: his line counts three steaming
+and does not say "ice"). To run in the next full round: `exp-balances`, `PART=c7 puzzles`, `chapter7`, `vesk` (reads
+`co_lock_ok` by key only), `story-fix`, a chapter-2 run through Doran's harbour talk (the reordered chain).
+
+Unreachable or wrong-state lines found, not changed: `bh_rw_0_hi` and `bh_rw_2_lo` (A's need is the top band, C's the
+bottom: no band is above or below them; commented); `bh_te_five` (`bh_done` is set in the frame `bh_test` is); `bh_do_wait`
+(Doran is hidden in chapters 12-13: `council.js` returns null for him and `ballastra.js` places him only in chapter 11);
+Halden's later line `bl_ha_steps` ("I came down to look at it") is heard at his own table in chapters 12-13.
+
+Story items for the campaign director (not changed): (a) chapter 13 follows chapter 12 "at once", and Tessa crates five
+B-8s within the hour of the waking: the time is compressed, now without a stated "two days"; (b) Oren took "the lower
+row's young ones", yet Nan Odra's mother sleeps there and would wake to a daughter older than she was: a young mother,
+or Oren's word is loose; (c) the epilogue's cutaway says three lids stand open while Jory says "Eleven of us awake now"
+(`sync` opens three cradles of the seven built); (d) `c2_nara_3` "Baldino?" answers a question Twinsen never asks
+(older text, outside this pass).

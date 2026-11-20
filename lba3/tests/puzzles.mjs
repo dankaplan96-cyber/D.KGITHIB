@@ -113,8 +113,9 @@ if (PARTS.includes('c7')) {
   await shot('c7-seal');
   if (!BEFORE) {
   const n1 = await ev(() => window.SAID.length);
-  is('c7: the seal pressed (input): frozen fast; three discs steaming, two under ice; the objective counts five', await ev(() => { const V = game.rooms.hamalayi.vent; P.use(V.x + 3.2, V.z, { near: 1.2, kind: 'c7vent' }); P.settle(); return [!!game.flags.c7_vent, T.said(0).slice(-1)[0] || '', T.obj()]; }),
-    (v) => !v[0] && /ice/i.test(v[1]) && /5/.test(v[2]));
+  // (DIALOGUE-2 pass 3: his line says only three steam; the ice on the other two is left to the eye, then the nudges)
+  is('c7: the seal pressed (input): frozen fast; his line counts three steaming and leaves the ice unsaid; the objective counts five', await ev(() => { const V = game.rooms.hamalayi.vent; P.use(V.x + 3.2, V.z, { near: 1.2, kind: 'c7vent' }); P.settle(); return [!!game.flags.c7_vent, T.said(0).slice(-1)[0] || '', T.obj()]; }),
+    (v) => !v[0] && /three of them are steaming/i.test(v[1]) && !/\bice\b/i.test(v[1]) && /5/.test(v[2]));
   void n1;
   const throwAt = (i) => ev((i) => { const G = game, M = G.rooms.hamalayi, V = M.vent, D = M.ventDiscs[i], a = Math.atan2(D.x - V.x, D.z - V.z), n = window.SAID.length, t0 = window.TOASTS.length;
     P.go(D.x + Math.sin(a) * 3.4, D.z + Math.cos(a) * 3.4, { tol: 0.5 }); G.hero.hp = G.hero.maxHp; P.tap('Digit1'); P.throwAt(D.x, D.z); P.settle();

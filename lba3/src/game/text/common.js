@@ -130,7 +130,7 @@ Object.assign(STR.en, {
   know_council_b: "What we know: only the console at the bottom of the shaft can switch the bore. The shaft's doors open only to a code from every project station at once.",
   know_throttle: 'What we know: since the stop nothing evens out the kicks, but Oren, the voice in the Balance Works governors, can hold water still. The B-7 lets a station refuse the control room, as long as a hand stays on its lever.',
   know_ballastra: "What we know: Oren keeps Ballastra's water, and the lower row's young ones sleep in his keeping. Someone here buys every Balance Works coil for the project and none of the regulators the network needs.",
-  know_balances: "What we know: Vesk's standing order buys the coils and none of the regulators, though the House's own bench passed the B-7. Tessa's B-8 sets each basin from its neighbour's need, and it holds.",
+  know_balances: "What we know: Vesk's standing order buys the coils and none of the regulators, though the House's own bench passed the B-7. Tessa's B-8 has a plain brass lever that Oren can't hold, so each band is set by hand, from its neighbour's need.",
   know_survey: 'What we know: Oren keeps the 304 sleepers warm. One wakes when the family asks: the keepers shut the ring, Oren warms, and hands take turns on the lever for an hour.',
   know_network: "What we know: five relays, each run on what its station has, must hold one signal together for a minute to open the shaft's blast doors. Each needs a friend standing by it.",
   know_shell: 'What we know: a child of this world sleeps under the shell, not ready to wake. A stop only holds her cracks; the bore turned into a shield closes them.',

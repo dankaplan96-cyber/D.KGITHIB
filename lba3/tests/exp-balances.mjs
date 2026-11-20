@@ -68,7 +68,7 @@ const a0 = await timed(() => {
   return { te: te.said, ...T.view(), said: window.__said.slice(-10), bh: T.flags('bh_') };
 });
 console.log('11 → 12:', JSON.stringify(a0).slice(0, 1500));
-check("chapter 11's end points at the House: Baldino wants the regulators found, Tessa names the House of Balances and Fennick; no walk back to the freighter", a0.te.some((l) => /without regulators they only shout/.test(l)) && a0.te.some((l) => /Fennick will say/.test(l)), a0.te);
+check("chapter 11's end points at the House: Baldino wants the regulators found, Tessa names the House of Balances and Fennick; no walk back to the freighter", a0.te.some((l) => /without regulators they only shout/.test(l)) && a0.te.some((l) => /Fennick runs its counter/.test(l)), a0.te);
 check('chapter 12 "The House of Balances" follows at once, numbered 12; Tessa sends him over the causeway', a0.key === 'balances' && a0.n === 12 && a0.cards.some((c) => /Chapter 12 · The House of Balances/.test(c)) && a0.said.some((l) => /causeway/.test(l)) && a0.bh.bh_go, { key: a0.key, cards: a0.cards, bh: a0.bh });
 
 // handoff 1: Save & quit, Continue
@@ -103,7 +103,7 @@ console.log('the investigation:', JSON.stringify(h2).slice(0, 2000));
 check('the order book: every coil, no regulators; the B-7 bought with every copy, "failed buyer\'s test"', h2.b.some((l) => /NO REGULATORS/.test(l)) && h2.b.some((l) => /FAILED BUYER'S TEST/.test(l)), h2.b);
 check('Fennick defends the arrangement (forty kiln families; levers once used to shut the lower row out)', h2.d.some((l) => /forty kiln families/.test(l)) && h2.d.some((l) => /shut out/.test(l)), h2.d);
 check('the bench, played: the needle settles as if held; the card: PASSED; Oren: "I am holding it"', h2.k1.some((l) => /PASSED/.test(l)) && h2.k2.some((l) => /I am holding it/.test(l)), { k1: h2.k1, k2: h2.k2 });
-check("the House's records against each other: Fennick turns, gives the test copy and holds the shipment", h2.bh.bh_fig && h2.turn.some((l) => /He told us it failed/.test(l)) && h2.turn.some((l) => /stays on the quay/.test(l)) && h2.items.includes('bh_figures'), { turn: h2.turn, items: h2.items });
+check("the House's records against each other: Fennick turns, gives the test copy and holds the shipment", h2.bh.bh_fig && h2.turn.some((l) => /He told us it failed/.test(l)) && h2.turn.some((l) => /crates stay where they are/.test(l)) && h2.items.includes('bh_figures'), { turn: h2.turn, items: h2.items });
 
 // ---------------------------------------------------------------- the rig: run 1 (Oren holds it), the bands, run 2
 const r1 = await timed(() => {
@@ -134,7 +134,7 @@ const r2 = await timed(() => {
 });
 console.log('run 2 → 13:', JSON.stringify(r2).slice(0, 2200));
 check('a wrong band shows itself and the rig resets (C set high: the row under)', r2.wrong.some((l) => /doorsteps under/.test(l)) && r2.wrong.some((l) => /Draining/.test(l)), r2.wrong);
-check('the right bands hold twice ("It repeats"); Tessa will build five', r2.bh.bh_test && r2.said.some((l) => /It repeats/.test(l)) && r2.said.some((l) => /Two days/.test(l)), r2.said.slice(-14));
+check('the right bands hold twice ("It repeats"); Tessa will build five', r2.bh.bh_test && r2.said.some((l) => /It repeats/.test(l)) && r2.said.some((l) => /I'll start now/.test(l)), r2.said.slice(-14));
 check('chapter 13 "The Cradles" follows on Ballastra, numbered 13; Wenna face to face: her brother is one of the 304', r2.key === 'survey' && r2.n === 13 && r2.cards.some((c) => /Chapter 13 · The Cradles/.test(c)) && r2.said.some((l) => /One of them is my brother/.test(l)) && r2.wk.wk_started, { key: r2.key, cards: r2.cards, wk: r2.wk });
 
 // handoff 2

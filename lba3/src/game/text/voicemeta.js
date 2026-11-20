@@ -202,6 +202,12 @@ export const VOICE_META = {
   wk_or_5: ['neutral', 'neutral'], wk_or_6: { i: 'neutral', h: 1 }, wk_ma_ours: ['neutral', 'pleased'], wk_od_mine: ['neutral', 'concerned', 'neutral', 'pleased'],
   nwb_or_trim: ['neutral', 'neutral'], nwb_mi_trim: ['annoyed', 'annoyed', 'concerned'], nwb_or_brass: { i: 'uncertain', h: 1 }, nwb_mi_mine: ['pleased', 'pleased'],
   ep_bl_jory: ['pleased', 'annoyed'], ep_bl_odra: ['neutral', 'neutral', 'pleased'], ep_bl_oren: ['neutral', 'neutral', 'neutral'],
+  // (DIALOGUE-2 pass 3, 20.11: the lines changed after EXP-3 and P83)
+  bh_tw_1: 'curious', bh_ha_1: ['neutral', 'annoyed', 'curious'], bh_te_rep3: ['neutral', 'annoyed'],
+  wk_tw_1: { i: ['neutral', 'curious'], e: ['back', 'name'] }, wk_ma_rota: { i: ['neutral', 'neutral'], e: ['between', 'push'] },
+  wk_jo_after: { i: ['pleased', 'uncertain'], e: ['nephew', 'nine'] }, wk_we_wait: ['concerned', 'annoyed'],
+  co_lock_ok: { i: ['relieved', 'neutral', 'concerned', 'neutral'], e: [null, null, 'knocking', 'easy'] },
+  cn_bal_stop2: { i: ['neutral', 'concerned', 'neutral'], e: ['drill', 'close', 'once'] },
 };
 
 // the brief's intentions -> the plan's (voiceplan.js clauses: tell, ask, excl, no, worry, warm, unsure)
