@@ -175,7 +175,7 @@ check('a hand on the lever: Oren lets go; Gilbert takes it ("A hand gets tired. 
 check('Vesk on the wire gives his reason (a station that can say no will say no); Zoé answers him', w5.said.some((l) => /will say no/.test(l)) && w5.said.some((l) => /turn their own water on/.test(l)), w5.said);
 check("Baldino's call ends chapter 10: the B-7's return label (Tessa's Float Repairs, Ballastra); chapter 11 begins at Citadel Spaceport (EXP-2)", w5.key === 'ballastra' && w5.n === 11 && w5.room === 'citadel' && w5.cards.some((c) => /Chapter 11 · Ballastra/.test(c)) && w5.said.some((l) => /TESSA'S FLOAT REPAIRS/.test(l)), { key: w5.key, n: w5.n, room: w5.room, cards: w5.cards });
 const j = await ev(() => game.story.journal().find((c) => /Borrowed Time/.test(c.title))?.lines.map((l) => l.key));
-check('the journal keeps chapter 10\'s seven lines', Array.isArray(j) && j.length === 7, j);
+check('the journal keeps chapter 10\'s seven lines, headed by its "What we know" (P83 S-2)', Array.isArray(j) && j.length === 8 && j[0] === 'know_throttle', j);
 console.log(`chapter 10 bot game time, chapter 9's last step to chapter 11's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
 
 // ---------------------------------------------------------------- after: the shelter remembers; the cost

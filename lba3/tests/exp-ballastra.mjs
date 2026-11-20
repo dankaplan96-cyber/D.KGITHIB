@@ -272,7 +272,7 @@ const e2 = await timed(() => {
 console.log('the end:', JSON.stringify(e2).slice(0, 1200));
 check('the next chapter begins on Ballastra: chapter 12 "The House of Balances"', e2.key === 'balances' && e2.n === 12 && e2.cards.some((c) => /Chapter 12 · The House of Balances/.test(c)), { key: e2.key, n: e2.n, room: e2.room, cards: e2.cards });
 const j = await ev(() => game.story.journal().find((c) => /^11\. Ballastra/.test(c.title))?.lines.map((l) => l.key));
-check("the journal keeps chapter 11's eight lines", Array.isArray(j) && j.length === 8, j);
+check("the journal keeps chapter 11's eight lines, headed by its \"What we know\" (P83 S-2)", Array.isArray(j) && j.length === 9 && j[0] === 'know_ballastra', j);
 console.log(`chapter 11 bot game time, chapter 10's last step to chapter 14's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once)`);
 
 // ---------------------------------------------------------------- the cost at the harbour (SwiftShader: counts only)
