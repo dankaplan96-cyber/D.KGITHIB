@@ -92,10 +92,12 @@ A base-campaign save (`exp_base`) never has these chapters, the B-8 or the cutaw
 (12's start, 13's start, 14's start), the valve room's B-8, the epilogue's cutaway, and a legacy `exp_base` save:
 first run 29 PASS / 3 FAIL, all three the test's own timing (a capture taken before its lines were said; the briefing
 read after the reload cleared the log; the epilogue's scene waits on a promise the synchronous loop never let run):
-fixed in the test. Second run: see the result line below. `node tests/dialogue-check.mjs`: PASS, Hebrew 5458/5458
+fixed in the test. Second run: 13 PASS, then the Continue button's 30 s wait timed out under load 13–15 from other
+workers (the wait is now 180 s). **Third run: 30 / 30 PASS, no page errors** (after the last fix: a save under chapter
+12's card no longer leaves Tessa at the Steps). `node tests/dialogue-check.mjs`: PASS, Hebrew 5458/5458
 (100 %); new warnings are only sentence counts on documents (book, card, plaque, ledger) and four spoken lines of 4
 sentences under 140 characters. Shipped files 509.
-Bot game time, chapter 11's last talk to the network's valve station done: **704 s (11.7 min)** — a floor (A* routes,
+Bot game time, chapter 11's last talk to the network's valve station done: **704 s (11.7 min)**, 597 s in the third run — a floor (A* routes,
 every line read at once, the bot knows every answer), not a first-play time. First-play estimate (estimate, not
 measured): chapter 12 about 20 min, chapter 13 about 22 min, the B-8 step about 2 min.
 Not run (by the user's instruction): `exp-ballastra` (its end check was edited to the new ending, unverified),

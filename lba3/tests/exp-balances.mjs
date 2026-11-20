@@ -35,7 +35,7 @@ const helpers = () => ev(() => {
     flags: (p) => Object.fromEntries(Object.entries(G.flags).filter(([k]) => k.startsWith(p))),
   };
 });
-const reload = async () => { await open(page, '?nocine'); await helpers(); await page.click('#btn-continue'); await ev(() => { game.step(0.05); P.settle(); for (let i = 0; i < 10; i++) game.step(0.1); P.settle(); }); };
+const reload = async () => { await open(page, '?nocine'); await helpers(); await page.click('#btn-continue', { timeout: 180000 }); await ev(() => { game.step(0.05); P.settle(); for (let i = 0; i < 10; i++) game.step(0.1); P.settle(); }); };
 const saveQuit = async () => {
   await ev(() => { P.tap('Escape'); game.step(0.1); });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 }).catch(async () => { await ev(() => game.act('quit')); });
