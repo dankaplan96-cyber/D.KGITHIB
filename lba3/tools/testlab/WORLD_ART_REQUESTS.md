@@ -5569,3 +5569,37 @@ for this order. Done so far (details in `docs/lba-maturity/JOINTS-BLENDER.md` on
 - `rig.js THROW`: the back leg loads in the wind-up; a key at 0.135 s where the chest, the pelvis and the free arm lead
   and the throwing arm lags — release frame unchanged (0.16 s). Before/after in `captures/joints-blender/`.
 - Next: Zoé, Arthur, a Grobo in Blender. Not merged into the cloud's branch; tests at the end.
+
+## CHAIN-V103 · the playthrough chain 01–14 on v103 (CLOUD_ORDERS 52.1) · the desktop, 20.11.2026
+v103 (`d1e0ec7f`), `tests/lib/seg.mjs` per segment from a scratch copy of v103's `tests\`, served by a node static server
+on 127.0.0.1:8977, Chrome headed on this Acer (GTX 1050 / UHD 630), ASSIST=1, each segment loading the last one's save.
+Logs, stats and the runner: `docs/lba3-performance/HARDWARE/2026-11-20-chain-v103/`.
+| Segment | Result | Game clock (play / dialogue / scenes, s) | Health lost | Wall |
+|---|---|---|---|---|
+| 01 prologue-surface | PASS | 321.1 / 23.9 / 20.6 | 0 | 141 s |
+| 02 prologue-cave | PASS | 115.1 / 3.6 / 6.4 | 0 | 34 s |
+| 03 project-a | PASS | 81.2 / 4.8 / 19.5 | 0 | 36 s |
+| 04 project-valves | PASS | 229.9 / 1.7 / 2.6 | 8 | 214 s |
+| 05 project-b | PASS | 456.1 / 32.3 / 15.0 | 2 | 87 s |
+| 06 zeelich | PASS | 434.8 / 25.2 / 29.1 | 14 | 393 s |
+| 07 dig | PASS | 232.5 / 23.1 / 30.9 | 2 | 80 s |
+| 08 steam | PASS | 280.5 / 14.5 / 10.6 | 1 | 57 s |
+| 09 pass | PASS | 243.2 / 13.9 / 48.1 | 1 | 95 s |
+| 10 observatory | PASS | 195.6 / 17.5 / 19.1 | 0 | 50 s |
+| 11 evacuation | PASS | 464.1 / 19.6 / 29.2 | 3 | 114 s |
+| 12 council | PASS | 332.6 / 31.2 / 18.7 | 0 | 244 s |
+| **12b throttle** | **FAIL (the test, not the game)** | 148.5 / 21.7 / 3.8 | 0 | 27 s |
+| 13 network (from the fixture `base-13`) | PASS | 655.1 / 27.8 / 10.6 | 10 | 490 s |
+| 14 shell (from 13's save) | PASS (the epilogue, Keep Exploring) | 312.7 / 35.4 / 7.7 | 11 | 44 s |
+No deaths and no Retry anywhere; no stalls logged; errors none in every verdict.
+- **12b:** every step passes up to the last; "Oren swings the lever; a hand holds it → the network" expects
+  `chapterKey === 'network'` and gets **`ballastra`** (objective "Board Doran's freighter at Citadel Spaceport"). That is
+  v103's order: `story/index.js ORDER` puts EXP-2's chapters after the throttle (`throttle, ballastra, balances, survey,
+  network`), and throttle.js goes on to Ballastra. **The segment is older than EXP-2** (its header still says "→ the
+  network (segment 13)"): for the cloud, 12b's last check should accept `ballastra`, and the chain has **no segment for
+  ballastra / balances / survey** (EXP-2's chapters 11–13) — they were not played here. 13 ran from the fixture
+  `base-13` (chapter `network`), so the chain jumped over them.
+- 13's first try failed with the harness (my runner rewrote the fixture's origin from `localhost:8123`; the fixtures
+  carry `localhost:8920`/`8921`, so the save never reached the page and Continue stayed hidden). Rewritten for any port
+  and rerun: PASS. Not the game.
+- Wall times are this machine's, for reference only (not a frame-time measurement; those are last in the queue).

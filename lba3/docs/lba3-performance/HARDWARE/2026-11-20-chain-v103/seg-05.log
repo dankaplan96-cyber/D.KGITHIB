@@ -1,0 +1,70 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-54.5,18.81,-36.5] hp 4 | The square has water. Go home and talk to Zoé
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[9s +8s] home: Zoé — the square is full, our tap is not: {"r":"talked","to":"zoe","state":"play","lines":8,"speakers":["zoe","hero","arthur"],"room":"house","fail":null} | house [998.1,0,-0.67] hp 2 | Find where the houses lost their water (the pump room on the lane)
+  stats: {"play":109.7,"dialog":1.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":4,"words":77,"says":4,"walked":310,"hpLost":2,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[11s +2s] his own tap: dry, knocking: {"r":"used","target":{"kind":"ct_tap","id":"p_tap","label":"p_tap"},"state":"play","lines":2,"stream":false,"fail":null} | house [997.75,0,-2.46] hp 2 | Find where the houses lost their water (the pump room on the lane)
+  stats: {"play":15.5,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":12,"says":1,"walked":10,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[13s +1s] the lane: the worker has opened two pipes: {"r":"talked","to":"worker","state":"play","lines":6,"speakers":["worker","hero"],"fail":null} | citadel [-45.93,2.33,68.62] hp 2 | Find where the houses lost their water (the pump room on the lane)
+  stats: {"play":12.2,"dialog":0.8,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":3,"words":42,"says":3,"walked":23,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[21s +8s] down into the pump room: {"r":"transition","from":"citadel","to":"pumproom","room":"pumproom","fail":null} | pumproom [9696.3,0,602.3] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+  stats: {"play":2.5,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":16,"says":1,"walked":4,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[22s +0s] the wall diagram: two pipes: {"r":"used","target":{"kind":"ct_diagram","id":"p_read","label":"p_read"},"state":"play","lines":2,"fail":null} | pumproom [9696.75,0,596.65] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+  stats: {"play":7.9,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":21,"says":1,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[23s +1s] three pipes felt: the copper one shivers: {"upper":"ct_feel","lower":"ct_feel","copper":"ct_feel","fail":null} | pumproom [9700.28,0,597.07] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+  stats: {"play":25.3,"dialog":0.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":66,"says":4,"walked":8,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[23s +0s] behind the pier: the bypass: {"seen":true,"x":9703.7,"fail":null} | pumproom [9703.7,0,597.79] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+  stats: {"play":2.9,"dialog":0.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":37,"says":1,"walked":3,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[24s +0s] the wrong cock: the square again (one knock): {"r":"used","target":{"kind":"ct_cock","id":"p_cock_sq","label":"p_cock_sq"},"state":"play","lines":4,"wrong":1,"open":false,"fail":null} | pumproom [9704.04,0,597.33] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+  stats: {"play":6.7,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":31,"says":2,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[24s +0s] the right cock: the houses' line (two knocks): {"r":"used","target":{"kind":"ct_cock","id":"p_cock_ho","label":"p_cock_ho"},"state":"play","lines":0,"fail":null} | pumproom [9704.79,0,597.33] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+  stats: {"play":8.3,"dialog":3.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":40,"says":3,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[24s +0s] the door waits for the strip and the plate: {"r":"state:dialog","from":"pumproom","to":"pumproom","room":"pumproom","fail":null} | pumproom [9695.53,0,601.84] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+  stats: {"play":6.5,"dialog":3.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":8,"says":1,"walked":11,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[25s +1s] the gauge's strip: {"r":"used","target":{"kind":"ct_strip","id":"p_strip","label":"p_strip"},"state":"play","lines":2,"fail":null} | pumproom [9704.35,0,601.84] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+  stats: {"play":15.2,"dialog":0.2,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":1,"words":19,"says":1,"walked":9,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[25s +0s] the pump's plate: Irsa's Pump Works, Zeelich: {"r":"used","target":{"kind":"ct_plate","id":"p_plate","label":"p_plate"},"state":"play","lines":2,"done":true,"fail":null} | pumproom [9704.16,0,601.85] hp 2 | The taps run. Back home to Zoé
+  stats: {"play":6.5,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":20,"says":1,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[34s +9s] up: the garden tap runs: {"r":"used","target":{"kind":"ct_yard","id":"p_look","label":"p_look"},"state":"play","lines":2,"runs":true,"fail":null} | citadel [-43.53,2.33,75.21] hp 2 | The taps run. Back home to Zoé
+  stats: {"play":15.6,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":5,"says":1,"walked":19,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[36s +2s] home: the tap Arthur left open runs cold under his hand: {"r":"talked","to":"zoe","state":"play","lines":4,"speakers":["zoe","arthur"],"ran":true,"felt":true,"fail":null} | house [997.75,0,-2.46] hp 2 | Visit Vesk at the old fortress
+  stats: {"play":19.9,"dialog":1.1,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":4,"words":43,"says":4,"walked":23,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[43s +6s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":18,"speakers":["vesk","hero"],"fail":null} | control [1400.36,0,-1.05] hp 2 | Meet Zoé at the station gate
+  stats: {"play":43.2,"dialog":2.9,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":10,"words":199,"says":10,"walked":186,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[44s +1s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"speakers":["zoe","hero"],"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 2 | Zoé: find the plan without being seen
+  stats: {"play":7.6,"dialog":1.1,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":5,"words":89,"says":5,"walked":23,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[45s +1s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.15,0,-3.68] hp 2 | Zoé: get out with the plan
+  stats: {"play":23,"dialog":0.8,"trans":0,"scene":3.5,"menu":0,"other":0,"lines":3,"words":47,"says":3,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[47s +1s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [-25.08,15.88,-60.2] hp 2 | Confront Vesk at the beam pad
+  stats: {"play":19.6,"dialog":0.5,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":2,"words":18,"says":2,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[47s +0s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"speakers":["zoe","vesk","hero"],"gone":true,"fail":null} | house [1001.2,0,9.9] hp 2 | Go home. Arthur is calling you
+  stats: {"play":0.3,"dialog":2.9,"trans":0.7,"scene":4.3,"menu":0,"other":0,"lines":10,"words":138,"says":10,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[54s +6s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":18,"speakers":["arthur","?","hero","zoe"],"radio":true,"fail":null} | citadel [-42.98,2.34,77.2] hp 2 | Talk to Doran at the harbour
+  stats: {"play":48.2,"dialog":2.7,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":9,"words":160,"says":9,"walked":47,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[56s +2s] Doran at the harbour: {"r":"talked","to":"doran","state":"play","lines":8,"speakers":["doran","hero"],"ship":true,"fail":null} | citadel [-116.39,1.8,44.37] hp 2 | Sign the flight form at the spaceport's ticket counter
+  stats: {"play":20,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":78,"says":4,"walked":88,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[59s +3s] the project's ship at the spaceport → Zeelich: {"r":"used","target":{"kind":"c1ship","id":"p_board","label":"p_board"},"state":"play","lines":16,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 11 | Find Irsa's pump works (ask at the dock)
+  stats: {"play":39.4,"dialog":6.8,"trans":2.1,"scene":3.8,"menu":0,"other":0,"lines":12,"words":167,"says":12,"walked":131,"hpLost":0,"deaths":0,"rooms":2,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[440.8] go: transition (house → house, trans true) at (1001.08, 10.66)
+[441.6] go → (-118.0, 45.2) plan ok=true pts=9 left=0.73
+[462.7] go: through the spaceport's terminal (onto the deck)
+[462.7] go → (-14.3, 40.0) plan ok=true pts=10 left=0.05
+[486.5] go → (-14.3, 40.0) plan ok=true pts=2 left=0.29
+[489.4] go: transition (citadel → citadel, trans true) at (-15.17, 39.89)
+[490.3] go → (8604.5, -2.4) plan ok=true pts=2 left=0.16
+[495.0] go → (8593.6, -5.5) plan ok=true pts=7 left=0.24
+[500.0] stuck at (8598.7, -5.6): replan
+[505.5] go: transition (terminal → terminal, trans true) at (8593.69, -4.82)
+[506.3] go → (0.3, 41.0) plan ok=true pts=2 left=0.34
+[507.4] go → (0.3, 41.0) plan ok=true pts=2 left=0.25
+stats total: {"play":456.1,"dialog":32.3,"trans":11.2,"scene":15,"menu":0,"other":0,"lines":83,"words":1333,"says":83,"walked":913,"hpLost":2,"deaths":0,"rooms":7,"chapter":"zeelich","coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+kept save-05.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     23 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
