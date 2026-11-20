@@ -47,6 +47,11 @@ const STROKE = 3.6, TONE = 0.9;         // Oren's hush pulses: he pushes on the 
 const GRIP = 9, WARM_RATE = 100 / 34;   // s a hand holds before it tires; warmth per second while held (an hour, told short)
 const HANDS = ['hero', 'bl_wenna', 'bl_mags', 'bl_dunn', 'bl_brin', 'bl_ottie', 'bl_nuna', 'bl_garrow'];
 const ROW = ['bl_mags', 'bl_dunn', 'bl_brin', 'bl_ottie', 'bl_nuna'];
+// each chapter's own cast: place() reads Ballastra's areas only for them (FULL-TEST: a read for anyone else counted as
+// "his spot is in an area not built yet" (LAZY-REGIONS, Story.refreshCast), and after chapter 13 every person no later
+// chapter placed waited hidden for Ballastra — Sefa's dome stood empty in the epilogue)
+const CAST_BH = new Set(['tessa', 'bl_fennick', 'bl_wenna', 'bl_corvin', 'bl_mags', 'bl_halden']);
+const CAST_WK = new Set(['tessa', 'bl_fennick', 'bl_garrow', 'bl_odra', 'bl_jory', 'bl_wenna', ...ROW]);
 const LATER = { bl_quill: 'bl_qu_end', bl_hobb: 'bl_ho_after', bl_ferro: 'bl_fe_after', bl_halden: 'bl_ha_steps', bl_corvin: 'bl_co_after', bl_mags: 'bl_ma_after',
   bl_dunn: 'bl_du_after', bl_sorrel: 'bl_so_2', bl_brin: 'bl_br_2', bl_ottie: 'bl_ot_2', bl_nuna: 'bl_nu_2', bl_wenna: 'bl_we_after' };
 
@@ -86,7 +91,7 @@ class BlChapter extends ChapterBase {
 export class Balances extends BlChapter {
   place(id) {
     const f = this.f;
-    if (!this.isCur() || !this.inMine()) return undefined;
+    if (!CAST_BH.has(id) || !this.isCur() || !this.inMine()) return undefined;
     const GD = this.GD, A = this.A, hs = this.house(), at = (p, extra) => (p ? { x: p.x, z: p.z, a: p.a ?? 0, ...extra } : undefined);
     const test = f.bh_fig && !f.bh_test, rw = GD?.stands;
     switch (id) {
@@ -326,7 +331,7 @@ export class Balances extends BlChapter {
 export class Cradles extends BlChapter {
   place(id) {
     const f = this.f;
-    if (!this.inMine()) return undefined;
+    if (!CAST_WK.has(id) || !this.inMine()) return undefined;
     const cur = this.isCur(), A = this.A, hl = this.hall(), GD = this.GD, hs = this.house();
     const at = (p, extra) => (p ? { x: p.x, z: p.z, a: p.a ?? 0, ...extra } : undefined);
     // after the chapter (a return visit, the epilogue): Fennick at his counter, the keepers in the hall, Jory with Wenna
