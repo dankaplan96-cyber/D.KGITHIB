@@ -304,6 +304,9 @@ export class Evacuation extends ChapterBase {
     if ((id === 'tim' || id === 'lulu') && f.c8_gap && !f.c8_depot) {
       if (this.squeeze) return true;
       if (!this.kidsAtDepot()) return c([['hero', 'c8_tw_kids'], ['lulu', 'c8_lulu_q'], ['tim', 'c8_tim_q']], () => { f.c8_kids = true; this.story.refreshCast({ walk: true }); this.progress(); });
+      // (caught up with on their way from the quay, away from the door: they run on ahead)
+      const h = g.hero;
+      if (Math.hypot(h.pos.x - DEPOT_C.x, h.pos.z - DEPOT_C.z) > 15) return c([['tim', 'c8_tim_q']]);
       return c(f.c8_kids ? [['lulu', 'c8_lulu_bar']] : [['hero', 'c8_tw_bar'], ['tim', 'c8_tim_bar'], ['lulu', 'c8_lulu_bar']], () => this.startSqueeze());
     }
     switch (id) {

@@ -97,3 +97,86 @@ Files: `src/game/story/evacuation.js`, `src/game/story/shelters.js` (the door's 
 `tick`), `src/game/text/ch8.js`, `src/game/text/he/ch8.js`, `src/game/text/voicemeta.js`, `src/game/he-text.js`
 (bundle); tests `tests/middle-variety.mjs` (new), `tests/chapter8.mjs` and `tests/playthrough/11-evacuation.mjs` (the
 depot step now ends with Lulu). No new shipped files.
+- Talking to the children while they are still on their way from the quay, more than 15 m from the door, gets Tim's
+  "And I'm the strong one. Come on, Lulu!" again. Lulu only goes in when Twinsen is at the door to see it.
+
+## 3. Verified
+
+**Automated runtime, input-driven** (the hero walks, throws and talks through `tests/lib/player.js`; chapter 8 and
+Gilbert reached through the story's flags):
+`GAME_URL=http://127.0.0.1:<port>/ node tests/middle-variety.mjs` gave **19/19 PASS** (SwiftShader, 20.11).
+- A, wheel first: inspecting the shut door says the wheel is too high and nothing changes. A real throw leaves the door
+  at 0.25 of its travel, not open, and plays his line about the gap and the bar. The objective changes to "Someone
+  small…". **Wrong try**: a second throw jerks the door, shows the toast, and the door stays at 0.25. Looking at the
+  gap plays "too narrow for me". **Save → Continue halfway**: the door is still ajar and not open, and the children are
+  on the quay. Asking Lulu on the quay sets `c8_kids`; he walks back and the children are at the door. Lulu goes in;
+  the door opens fully with her in the doorway, and the lines play. The journal shows `c8_j_shelters2`. **Save →
+  Continue** afterwards: the door is open and Lulu is in the doorway.
+- B, Pippa first: the children are already at the door. Throw, then talk to Tim: the three lines play and the door
+  opens.
+- C, an older save with the depot open and no `c8_gap`: the door is open, the journal has the old line, and there is
+  no target.
+- `node tests/dialogue-check.mjs` PASS (5,238 Hebrew keys of 5,238). `node tools/he-bundle.mjs` was rerun.
+
+**Automated runtime, the chain's segment by input**: `tests/playthrough/11-evacuation.mjs` from the chapter's start
+save (`tests/fixtures/campaign/base-11.save.json`, its origin rewritten to the local port), `STATS=…`: **PASS, every
+step**, chapter 8 → chapter 9.
+
+`tests/chapter8.mjs` was edited (its depot step now ends with Lulu) but **not run** this session. Under the rule of
+minimal tests, it is left for the full test at the end.
+
+**Not verified**: no person has played it. No capture of the stuck door from the play camera has been looked at (the
+door at 0.25 is a 0.29 m gap at the leaf's left end; the follow camera's view of it has not been checked). The 30 FPS
+setting has not been checked: there is no timing window here, and the squeeze waits on Lulu's arrival, not a clock.
+
+## 4. Routes timed (bot, Automated runtime only; a floor, not a person's time)
+
+Chapter 8, segment 11, this build, game seconds of free play per step:
+
+| Step | free play s | walked m |
+|---|---|---|
+| the depot wheel: the door sticks | 41.5 | 88 |
+| the depot: Lulu lifts the bar (the wheel first, so **the quay and back**) | 96.5 | 393 |
+| whole chapter 8 | 620.5 (dialogue 23.4, scenes 38) | 1,773 |
+
+The old depot step was one throw. The bot played the slowest order (wheel first, then the quay and back): about
++95 s. A player who asks Pippa first finds the children already at the door. Pippa's ask is on the same list, the
+cart goes to the depot, and the detour disappears. That is the honest cost: **the wheel-first order adds one trip to
+the quay**, past the square the player crosses anyway for Mira and Pippa. The chapter's last bot figure
+(476 s, 12.11, chapter-balance.md) was measured on another build and route, so the difference is not attributed to
+this change. Estimate by chapter-balance's formula for the new beat: about +2 to 3 min of first play in the wheel-first
+order, about +1 min with Pippa first (**estimate**). Chapter 8 stays in the review band's upper half.
+
+## 5. Each chapter: discovery, obstacle, consequence (as built now, code-only)
+
+| Ch | Discovery | Obstacle | Consequence the player sees |
+|---|---|---|---|
+| 4 | the ground kicks in threes after the drill stops; the carving's vents | the sandstorm's post; the drill's red | the carbon (used again in 5 and 9); the shell's map |
+| 5 | Kesh is off the list; the log sent with one trace | the pressurised bore; Dallan at the gate | the plumes from the condensers, the oasis whole, Dallan stays in Kesh |
+| 6 | the lift's line kicks like the kitchen wall | the frozen winch; the kicks | Lhar up, the brake holding for the last of them |
+| 7 | Sendell is fading; the telescope points to Citadel | the iced slit; the drone | the vent breathes, the mountain stops shaking |
+| 8 | the cart turns away at the lane; on paper vs on the road | the shut float gate; **the depot's bar** | the shelters open (Lulu inside); the lane rides the cart |
+| 9 | Vesk cut the ground trace | the order on the archive's door | the stop thrown and the kicks go on; Mill Lane's water back |
+
+No chapter here ends before its own idea pays off. Chapter 4's idea (the vent under the test bore) pays off in chapter
+5 by design. Each chapter's consequence is visible in the world, not only in the journal.
+
+## 6. What remains (for the coordinator)
+
+- **Chapter 5, the condenser hall** (the second repeat in section 1): the diagram states the answer ("1 open, 2 shut,
+  3 and 4 open"), and a valve follows it. Not changed this session. A proposal that keeps the place and the people: take
+  the answer off the diagram (it shows the pipes, not the settings), and have Hesk's grandfather's memory ("never the
+  one to the right of the door: it boiled the goats' trough") point at the wrong valve. The existing gauges are the
+  visible answer: the aquifer needle in the red. It is still a valve board, so it is a smaller gain than chapter 8's.
+  Alternatively make the relief valve the different beat: open it slowly while watching the plumes rise ("Open it
+  slowly" is already Twinsen's line).
+- **Chapter 7's seal** repeats chapter 4's warm discs (added for length). A different decision would use chapter 7's
+  own rule (the light): not designed this session.
+- **The wheel-first detour** (section 4): if play shows it as a chore, the children could wait at the square (between
+  the quay and the depot) instead of on the quay.
+- The camera's view of the hand's-width gap, and the full test (chapter8.mjs, campaign-thread, the chain) at the end.
+
+## Resumable checkpoint
+Branch `middle-variety` (from `ccr-c1c2c4b9-dep6ed` 2c4da955). Done: the working list; chapter 8's depot (code, text EN/HE,
+voicemeta, tests, segment 11 by input). Next, if continued: section 6's chapter-5 proposal, then a capture of the gap
+from the play camera.
