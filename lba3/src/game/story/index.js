@@ -97,6 +97,27 @@ export class ChapterShell extends ChapterBase {
 // the order saves before format 3 used (flags.chapter was a position in this list)
 export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 
+// P83 / S-2: each chapter's "What we know" key, from its flags and whether the chapter is behind us (past)
+const knowAt = (shown, key) => (f, past) => ((past || shown(f)) ? key : null);
+const KNOW = {
+  well: knowAt((f) => f.sendellHeard, 'know_well'),
+  project: knowAt((f) => f.c1_plan, 'know_project'),
+  zeelich: (f, past) => (past || f.c2_done ? 'know_zeelich_done' : f.c2_plan ? 'know_zeelich' : null),
+  dig: knowAt((f) => f.c4_carving, 'know_dig'),
+  steam: knowAt((f) => f.c5_planned, 'know_steam'),
+  pass: knowAt((f) => f.c6_yorna, 'know_pass'),
+  observatory: knowAt((f) => f.c7_sendell, 'know_observatory'),
+  evacuation: knowAt((f) => f.c8_vesk, 'know_evacuation'),
+  council: (f, past) => (f.cn_v ? (past || f.cn_stop ? 'know_council' : null) : (past || f.c9_vote ? 'know_council_b' : null)),
+  throttle: knowAt((f) => f.th_lever, 'know_throttle'),
+  ballastra: knowAt((f) => f.bl_endTalk, 'know_ballastra'),
+  balances: knowAt((f) => f.bh_test, 'know_balances'),
+  survey: knowAt((f) => f.wk_awake, 'know_survey'),
+  network: knowAt((f) => f.c10_started, 'know_network'),
+  shell: knowAt((f) => f.c3_sendell, 'know_shell'),
+  core: knowAt((f) => f.c3_fight || f.c3_overload || f.c3_turned || f.c3_done, 'know_core'),
+};
+
 const MOVE_FAR = 150;   // (VISIBLE-MOVES: m; a longer move is a cut)
 const _sv = new THREE.Vector3(), _sm = new THREE.Matrix4(), _sf = new THREE.Frustum(), _ss = new THREE.Sphere();
 
@@ -340,9 +361,15 @@ export class Story {
     this._way = { key, star };
     return star;
   }
+  // P83 / S-2: a chapter's "What we know" line (text/common.js know_*), at the top of its page once the chapter has shown
+  // its mechanism; a chapter behind us always has it
+  knows(c) {
+    const k = KNOW[c.key]?.(this.f, this.chapters.indexOf(c) < this.index);
+    return k ? [{ key: k, done: true }] : [];
+  }
   journal() {
     // (an empty shell, and a chapter not in this save's campaign, have no page)
-    const out = this.chapters.slice(0, this.index + 1).filter((c) => !c.passThrough && this.inCampaign(c.key)).map((c) => { const n = this.number(c.key); return { title: (n ? n + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }; });
+    const out = this.chapters.slice(0, this.index + 1).filter((c) => !c.passThrough && this.inCampaign(c.key)).map((c) => { const n = this.number(c.key); return { title: (n ? n + '. ' : '') + t('chapter_' + c.key), lines: [...this.knows(c), ...c.journal()] }; });
     const life = this.life.journal();
     if (life.length) out.push({ title: t('life_title'), lines: life });
     const ws = this.workshop.journal();

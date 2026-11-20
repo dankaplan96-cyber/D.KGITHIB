@@ -314,7 +314,7 @@ export class Chapter1 extends ChapterBase {
         // (STAGING-1: he sets off up the quay toward the town and the spaceport, and is at the ship once out of sight)
         // (SPACEPORT-3, P62: and sends Twinsen ahead of him on an errand that the flight needs: his own flight form, to
         //  sign at the terminal's ticket counter; the gate lets nobody out to the pad without it: story/islands.js)
-        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2'], ['doran', 'c1_doran_form']], () => {
+        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ships'], ['doran', 'c1_doran_ferry2'], ['doran', 'c1_doran_form']], () => {
           f.c1_ship = true; f.c1_errand = true;
           const ps = g.world.pierStart;
           this.walkOff('doran', [{ x: ps.x + 5.5, z: ps.z + 2.6 }, { x: -95.8, z: 37.4 }, { x: -82.0, z: 36.0 }, { x: -67.9, z: 29.6 }], 1.15);

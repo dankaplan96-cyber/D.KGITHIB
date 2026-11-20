@@ -55,7 +55,7 @@ Object.assign(STR.en, {
   co_vesk_up_left: "Don't look at me like that. I heard Irsa. Kell's cart, going up without my line.",
   co_vesk_key: "There. My key's out. Lift the bar after her two knocks, in the quiet, or it slams back.",
   co_tw_key: 'Thank you.',
-  co_lock_ok: "It's off. The drill's winding down... and she's still knocking.",
+  co_lock_ok: "It's off. The drill's winding down... and she's still knocking: held, not healed.",
   co_lock_slam: 'Her two slammed it back. Like the joint up top: after her answer, not after the three.',
   co_lock_knock: 'The knock slammed it back. Lift it in the rest after her two.',
   co_toast_slam: 'Slammed back: lift it in the rest after her two',

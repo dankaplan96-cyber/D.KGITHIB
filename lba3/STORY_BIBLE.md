@@ -11,7 +11,8 @@ the ferry and Hesk's glider work on Twinsun only, the Esmer shuttles between Zee
 light, a ferry that runs on light around Twinsun, jobs on Zeelich). It is also cracking the shell around a being Sendell
 protects ("her"), which is waking too early. Vesk, the project's chief engineer and the story's villain, learns
 what lies under the shell and wants its power for the project: he hides the danger and plans a selective
-evacuation (the thirty percent he chose) instead of stopping. Stopping the drill now would crack the shell anyway.
+evacuation (the thirty percent he chose) instead of stopping. The bore's rule (decided 20.11, P83): a stop holds the drill, and the shell
+survives it for days but stays strained; backing the drill out halfway cracks it; only running the bore in reverse heals it.
 The solution: turn the project's own installations into a stabilising shield, using parts and people the
 player already knows.
 
@@ -75,7 +76,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 ### 3 — Zeelich ✅ (ending changes)
 - **Wants:** reach Baldino, stop Vesk. **The other side:** Zeelich lives on the project. **Setback:** the plan
   is confiscated by a project guard who meets the ship on Zeelich Spaceport, recovered in the depot. **Revelation (Baldino):** the shell
-  around Twinsun; Vesk's bore at Citadel's station is drilling through it, stopping halfway cracks it, and Vesk steers
+  around Twinsun; Vesk's bore at Citadel's station is drilling through it, backing it out halfway cracks it (a stop only holds it), and Vesk steers
   the whole bore from his platform on Zeelich. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
 - **Ending (SHAFT-CITADEL, the user's decision of 2.11.2026: the planets are joined by spaceship only):** the shield
   drops; Vesk will not listen, takes the platform's lift down to his ship's berth under the deck and **flies home to
@@ -302,6 +303,10 @@ goal. Important scenes are played, not narrated.
 - Twinsun ⇄ Zeelich only by spaceship (Citadel Spaceport ⇄ Zeelich Spaceport). The project's ferry runs on light
   on Twinsun's seas (Citadel ⇄ Desert Island); Doran can sail it, and fly the project's ship; Baldino sent him the
   start code.
+- The project's vehicles (P83): the ferry on light runs between Twinsun's islands only; Vesk's own ship waits above
+  Citadel, reached by the beam pad at the station; the project keeps a ship at Citadel Spaceport, which Doran flies
+  (Doran tells them apart in chapter 2, `c1_doran_ships`). The Joint Project has run on Zeelich for ten years (its
+  mills, pumps and platform); its Citadel half (the bore, the ferry, the heat posts) is new (Nara, `c2_nara_2`).
 - The evacuation plan: Citadel town centre and Zeelich upper districts; ship capacity 30%.
 - Zoé's lighthouse dials: sun, wave, star.
 - The platform shield is fed by Zeelich's three mills; the override key = old mill cog + project code cylinder.
