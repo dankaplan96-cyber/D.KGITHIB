@@ -78,6 +78,32 @@ hand on the sleeve's end), **on everyone**: Twinsen, Zoé and Arthur, the Grobos
   there without these changes too. `JOINTS_OLD=1` still rebuilds the models as before JOINTS-BLENDER (checked: Arthur,
   Baldino byte for byte).
 
+## The motions and the planted feet (JOINTS-BLENDER 5, rig.js)
+Measured on the hero at 60 Hz on flat ground (Citadel's wooden quay by Gate 1, x 0, z 30), each sole's ankle against
+the ground every frame (rest 0.100 m over it): how deep it goes and how far it slides while it stands
+(`docs/lba3-performance/HARDWARE/2026-11-20-joints-motion/`: `motions.mjs`, `slides-before/after.json`).
+| Motion | Before | After |
+|---|---|---|
+| sword combo (slash 1-2-3) | no sink, slide ≤ 0.6 cm | the same (not changed) |
+| walk, stop, pickup | no sink, ≤ 0.7 cm | the same (not changed) |
+| standing jump (Athletic) | no sink, 0 cm | the same |
+| **Normal mode's hop** (Space, LBA2's anim 17) | **soles 6.2 cm into the ground, 17 frames; slid 31 cm** | 1.2 cm, 2 frames; ≤ 4.6 cm |
+| **the run** (Athletic, 4.96 m/s) | **the standing foot slid forward at 0.72 m/s** (5-17 cm a contact) | 0.27 m/s (≤ 10.7 cm, in the run-up's acceleration) |
+| landing a running jump | 2.4 cm sink, 17 cm slide | 1.4 cm, ≤ 10.7 cm |
+- **The hop:** it was not in the planted actions (PLANT): its crouch and squat are LBA2's keys and pushed the feet through
+  the ground with the plant let go. In PLANT now, as the jump's crouch: the feet stand where they are, the knees bend to
+  reach them, and the pose's hop lifts them off and puts them down as before. The keys and the timing are unchanged.
+- **The run:** a robe's run (Twinsen, `robeLegs`) swings the thighs × 0.75 so the robe isn't stretched flat, but its cycle
+  stayed LBA2's 1.94 body heights, longer than the shorter stride: the foot under him moved back slower than he moved
+  forward. The cycle is now 0.82 × that (`ROBE_RUN_CYC`, the best of 0.75–0.9 measured): 22 % more steps a second at
+  the same speed. Speed, collision and the jump are unchanged; footsteps follow the cycle (more a second).
+- **The sword, walk-to-stop and the pickup** already held their feet (ANIM-POLISH-2/3); with the new arms and legs the
+  joints hold in them (`captures/joints-blender/`). Not changed.
+- `tests/anim-polish.mjs` on this branch (turns, walking, stops, landings at 30/60/120 fps, melee timing, the sneak,
+  stairs): **55 passed, 0 failed** (`animpolish-after.log`). Seen once and not from these changes (the walk's code is
+  untouched): a walk's first three frames slid one foot 3.9 cm, by which foot the walk started on.
+- `captures/joints-blender/hop-and-run-landing-before-after.jpg` (top before, bottom after: the hop's crouch, squat and
+  stand; a running jump's landing).
+
 ## Next
-The sword swing, the landing, walk-to-stop and the pickup with the same joints, planted feet; the full test at the end,
-and the frame time last (the user: measurements at the end).
+The full test at the end; the frame time last (the user: measurements at the end).

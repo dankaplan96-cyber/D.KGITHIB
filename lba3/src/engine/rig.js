@@ -53,7 +53,7 @@ const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach',
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
-const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search', 'jumpPrep']);   // (ANIM-POLISH-2: the jump's crouch too: its soles slid and sank 4 cm)
+const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search', 'jumpPrep', 'action']);   // (ANIM-POLISH-2: the jump's crouch too: its soles slid and sank 4 cm; JOINTS-BLENDER: the Normal mode's hop too, LBA2's anim 17: its crouch and squat put the soles 6 cm into the ground and slid them up to 31 cm)
 // (ANIM-POLISH-3) the other characters' planted actions (plantLite: the townsfolk, the story's people, Vesk's guards): standing,
 // talking, listening, turning on the spot, searching and the guards' aim; their walk holds the stance foot too. Their strikes,
 // hit reactions, story poses and everything else keep their own legs, as before
@@ -1113,7 +1113,10 @@ export class Rig {
         // LBA2's athletic run, from its six key poses (1.94 body heights per cycle): the body leans well into
         // it, the knee drives high in front, the heel kicks up behind on the pass, the arms pump bent
         const H = this.hipsRest * this.root.scale.y / 0.46;
-        this.phase += (speed * dt / (1.94 * H)) * Math.PI * 2 - dph;
+        // (JOINTS-BLENDER: a robe's run swings the thighs × 0.75 (below), so its stride is shorter than LBA2's 1.94 H; at that cycle
+        // the standing foot slid forward along the ground at ~0.7 m/s of his 5 (measured, the hero). The cycle is the shorter
+        // stride's, ROBE_RUN_CYC × 1.94 H: more steps a second at the same speed, the foot keeping its place)
+        this.phase += (speed * dt / (1.94 * H * (this.robeLegs ? (this.robeRunCyc ?? ROBE_RUN_CYC) : 1))) * Math.PI * 2 - dph;
         const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
         const R = RUN_KEYS;
         T.legL = key(R.thigh, p); T.kneeL = key(R.knee, p); T.footL = key(R.foot, p);
@@ -2033,6 +2036,7 @@ const WALK_KEYS = {
 };
 // The athletic run, six keys per cycle starting at this leg's knee drive (thighs absolute: LBA2 tilts the pelvis
 // 11-36° forward and the legs with it); arms relative to the torso; the lean is the pelvis plus the torso.
+const ROBE_RUN_CYC = 0.82;   // (JOINTS-BLENDER: measured on the hero at 4.96 m/s, the standing foot's slide 0.72 → 0.27 m/s; 0.75-0.9 tried)
 const RUN_KEYS = {
   thigh: [-62 * D, -33 * D, 23 * D, 33 * D, -12 * D, -58 * D],
   knee: [8 * D, 2 * D, 4 * D, 47 * D, 102 * D, 90 * D],
