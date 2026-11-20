@@ -130,7 +130,7 @@ const cap = await ev(() => {
     G.settings.fps = fps; G.applySettings();
     const got = []; let now = 1000, skippedTapKept = null;
     G.advance = (real) => got.push(+(real * 1000).toFixed(2));
-    G.last = now; G._rafT = undefined; G._vsync = 0; G._due = 0; G.testFreeze = false;
+    G.last = now; G._rafT = undefined; G._vsync = 0; G._due = 0; G._rafBuf = null; G._refresh = 0; G.testFreeze = false;   // (a new display: the measured refresh starts over, FPS30-SMOOTH's median of 32)
     for (let i = 0; i < n; i++) {
       now += i === hitchAt ? 120 : 1000 / hz;
       const before = got.length, tap = i >= 50 && skippedTapKept === null;
