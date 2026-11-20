@@ -630,6 +630,9 @@ export class Prologue extends ChapterBase {
   // weapon in hand (Aggressive's action strikes with what is equipped: the ball by default, which only bounces off)
   meleeHit(o) {
     const g = this.game, f = this.f, L = this.lid, h = g.hero;
+    // (TUT-MYSTERY: a kick or a punch at the near barrel moves it too: a player who tries it is not sent to the ball)
+    const Rb = this.home.parts.barrel;
+    if (!g.room && Rb && !Rb.aside && !f.pr_barrel && this.home.on && !o.hitSet.has(Rb) && o.inArc(Rb.x0, Rb.z0, 0.9)) { o.hitSet.add(Rb); g.audio.play('pipeKnock', { x: Rb.x0, z: Rb.z0 }); this.revealJoint('kick'); return true; }
     if (g.room || !L || f.prologueDone || f.inWell || f.pr_lidOpen || o.hitSet.has(L)) return false;
     if (Math.abs(h.pos.y - g.physics.groundAt(L.x, L.z)) > 1.2 || !o.inArc(L.x, L.z, 1.1)) return false;
     o.hitSet.add(L);
@@ -721,7 +724,7 @@ export class Prologue extends ChapterBase {
         g.audio.play('pipeKnock', T); g.particles.burst(T.x, T.y + 0.45, T.z, '#c8a070', 10, 1.6);
         T.hits = (T.hits || 0) + 1;
         g.tutorial?.event('target');
-        if (!f.pr_barrel) { f.pr_barrel = true; this.pending = { t: 0.5, fn: () => this.chain([['hero', f.pr_arTrick ? 'pr_barrel_hit_ar' : 'pr_barrel_hit']]) }; }
+        if (!f.pr_barrel) this.revealJoint('ball');
         return true;
       }
       return false;
@@ -731,6 +734,20 @@ export class Prologue extends ChapterBase {
       if (!tg.node.lit && Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) < tg.r) { this.lightNode(tg.node); return true; }
     }
     return false;
+  }
+  // TUT-MYSTERY (REVIEW-TASKS task 4, PUZZLES item 1): the barrels hit (or kicked) the first time. In a game with the
+  // home thread (hometap.js) the near barrel shuffles aside and shows the supply joint Twinsen mended yesterday: it held,
+  // but it weeps warm water and is furred like the kettle — the fault comes up the line from the square. Zoé, if she is
+  // by, concedes the film's "It worked yesterday." — last, so his lines are read with the joint in view (he turns to
+  // whoever speaks, and the camera with him). Saves from before the thread: the old single line
+  revealJoint(how) {
+    const g = this.game, f = this.f, h = g.hero;
+    f.pr_barrel = true;
+    const moved = this.home.on && this.home.knockBarrel(true);
+    const first = how === 'ball' ? [['hero', f.pr_arTrick ? 'pr_barrel_hit_ar' : 'pr_barrel_hit']] : [];
+    if (!moved) { if (first.length) this.pending = { t: 0.5, fn: () => this.chain(first, () => g.save(false)) }; return; }
+    const zoe = this.speaker('zoe'), near = zoe?.present && zoe.distTo(h) < 12;
+    this.pending = { t: 1.1, fn: () => this.chain([...first, ['hero', 'prh_joint_1'], ['hero', 'prh_joint_2'], ...(near ? [['zoe', 'prh_joint_zoe']] : [])], () => { g.updateObjective(); g.save(false); }) };
   }
   // the bell is a target the ball's aim curves toward, from the quay (it hangs out of reach); so are the yard's barrels
   // (the normal aim assist: Settings, Aim assist; offered only with a clear line to them, as every target)

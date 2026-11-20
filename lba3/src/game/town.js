@@ -602,7 +602,12 @@ export function buildTown(scene, W) {
   const rd = at('twinsen', -0.2, 3.78);
   radio(dress, rd[0], tw.g + 1.2, rd[1], tw.ry);
   for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(dress, p[0], gy(p), p[1], f, r); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.24, top: gy(p) + 0.7 }); }
-  for (const [lx, lz] of [[5.3, 2.4], [5.4, 1.5]]) { const p = at('twinsen', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  // (TUT-MYSTERY: the near one, in front of the house's water joint, is its own group, kept out of the merge: chapter 1's
+  //  magic ball knocks it aside to show the joint, story/hometap.js. Same look, same random draws as before)
+  for (const [lx, lz, own] of [[5.3, 2.4, true], [5.4, 1.5, false]]) {
+    const p = at('twinsen', lx, lz), b = barrel(own ? scene : dress, p[0], gy(p), p[1], r), c = physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true });
+    if (own) { b.userData.keep = true; mergeStatic(b, { recolor: false }); W.homeBarrel = { grp: b, x: p[0], y: gy(p), z: p[1], ry: b.rotation.y, rz: b.rotation.z, c }; }
+  }
   { const p = at('twinsen', 5.35, 1.95); W.givers.push({ id: 'home-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money', 'life', 'magic'], n: 2 }); }
   const sg = at('twinsen', 4.6, 6.0);
   sign(dress, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');

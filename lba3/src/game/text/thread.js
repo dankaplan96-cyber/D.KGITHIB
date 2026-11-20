@@ -21,6 +21,12 @@ Object.assign(STR.en, {
   ct_ar_shut: "I'm shutting it! I'm shutting it.",
   prh_yard: '(The garden pipe is dry too, and knocking. It runs under the lane, toward the square.)',
   prh_yard_2: '(Dry. Knocking.)',
+  // TUT-MYSTERY: the garden tap's knock answered from behind the near barrel; a shove at the barrel; the joint behind it
+  prh_yard_b: '(Dry too. And something knocks back behind the barrels, where the pipe goes into the wall.)',
+  prh_barrel_try: "(Full of rainwater. It won't shift by hand. A good knock with the ball might move it.)",
+  prh_joint_1: "(My joint from yesterday. It held. But it's weeping warm water, and it's furred like their kettle.)",
+  prh_joint_zoe: "So your fix worked. It's the water, then.",
+  prh_joint_2: '(Warm water, coming up the line from the square. Whatever this is starts at the well.)',
   prh_lane: "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)",
   prh_lane0: "(Knocking, here, where the project's pipe goes into the ground. Like the kitchen wall.)",
   prh_cave_in: "Crystals? Down a town well?",

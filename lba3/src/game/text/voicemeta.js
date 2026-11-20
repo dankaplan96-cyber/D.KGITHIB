@@ -29,7 +29,11 @@ export const VOICE_META = {
   pr_zoe_after: { i: ['curious', 'neutral', 'pleased'], b: 0 }, pr_ar_hint: 'neutral', pr_ar_early: ['neutral', 'neutral', 'pleased'], pr_ar_told: ['curious', 'neutral'], pr_ar_after: ['curious', 'pleased'],
   prh_zoe_1: { i: ['concerned', 'neutral', 'concerned'], e: [null, 'listen', 'knocking'] }, prh_zoe_2: ['uncertain', 'neutral', 'neutral'],
   prh_zoe_3: ['neutral', 'neutral', 'neutral'], prh_ar_1: 'pleased', prh_ar_2: ['uncertain', 'annoyed'], prh_ar_boat: ['pleased', 'neutral', 'pleased'],
-  prh_cave_in: ['curious', 'concerned'], prh_pool_1: ['concerned', 'concerned'],
+  prh_cave_in: ['curious', 'concerned'],
+  // (TUT-MYSTERY: the yard's knock and the joint; Zoé's report from next door, P81)
+  prh_yard_b: { i: ['neutral', 'curious'], e: [null, 'barrels'] }, prh_barrel_try: ['neutral', 'annoyed', 'curious'],
+  prh_joint_1: { i: ['curious', 'pleased', 'concerned'], e: [null, 'held', 'warm'], p: [0, 0.25, 0.3] }, prh_joint_zoe: { i: ['pleased', 'concerned'], e: ['worked', 'water'] },
+  prh_joint_2: { i: ['concerned', 'neutral'], e: ['square', 'well'] }, pr_zoe_kettle: 'concerned', prh_pool_1: ['concerned', 'concerned'],
   pr_tw_kettle: 'concerned', pr_zoe_kettle2: ['neutral', 'neutral'], pr_zoe_kettle2b: ['neutral', 'annoyed'], pr_tw_miraNo: ['annoyed', 'neutral'], pr_zoe_kettle_wait: ['neutral', 'annoyed'],
   pr_mira_no: { i: ['neutral', 'annoyed'], e: ['leak', 'rumour'] }, pr_gil_no: ['annoyed', 'pleased'],
   pr_tw_kettle2: ['neutral', 'annoyed'], pr_mira_kettle: { i: ['curious', 'uncertain', 'neutral'], h: 0 }, pr_mira_2b: ['annoyed', 'neutral', 'neutral'],

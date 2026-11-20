@@ -5,14 +5,14 @@
 // read, except where a check says "reproduced" (a save written for the check).
 //   A  a new player following the steps, keyboard (Classic, the default): the house (walk, the cupboard; Arthur's talk
 //      and the dialogue's key hint; the kitchen tap; the door waits for the ball) · save half way and load · the yard:
-//      Zoé calls · a player who tries to skip is called back at the yard's edge, every step · Talk to Zoé · the inventory ·
+//      Zoé calls · (TUT-MYSTERY: the skip and Zoé's one call: tests/tutor-targets.mjs R2) · Talk to Zoé · the inventory ·
 //      the garden tap · the barrels (misses first) · Athletic and the jump over the project's pipe (a missed run first) ·
 //      the yard done: the well's way open · in and out of the house mid-step · the optional arc after · out of magic
-//   B  Show control tips off from the start: the goal lines stay, no key, every step by its key, the edge holds · tips on
+//   B  Show control tips off from the start: the goal lines stay, no key, every step by its key · tips on
 //      again · an experienced player doing the yard out of order · three missed jumps: "close enough" · a remapped key ·
 //      a faked gamepad (the step's keys in pad terms, the camera tip after the yard) · on to the well and the town's tips
 //   C  saves: from the cup's days and from P22's build (no steps, free to leave, no tip) · this build's save mid-yard
-//      (the steps resume, the edge holds) · this build's save beyond the edge (let go, never pulled back)
+//      (the steps resume; leaving lets the yard go with one call) · this build's save beyond the edge (let go, never pulled back)
 // Prints PASS/FAIL per check (R7-VERDICTS). Captures: captures/opening-tut-2/*.jpg (looked at by hand, not judged here).
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import { mkdirSync } from 'node:fs';
@@ -120,10 +120,8 @@ const out = await ev(() => { const r = TT.out(); game.step(1.0); const z = P.npc
 check('A8 out of the door: Zoé a few steps off, in view, calls him over (her word over her head)', out.to === 'citadel' && out.zoe < 7 && out.zoeIn && out.said.includes('t2_zoe_call') && out.bark === 'block', out);
 check('A8 the panel: Talk to Zoé, with the talk key; the map\'s star on her, not on the well', out.tip === 'step:zoe' && out.text.includes('Talk to Zoé') && out.text.includes(await ev(() => TT.labels('interact'))) && out.stars.length === 1 && out.stars[0][2] === 'Zoé', out);
 await shot('03-yard-zoe-calls');
-// a player who tries to skip: straight for the well
-let sk = await ev(() => TT.skip());
-check('A9 a player who heads for the well first: Zoé calls him back at the yard\'s edge (her line), he walks back in; never past ~16 m', sk.zoe >= 1 && sk.said.some((x) => /news from next door/.test(x)) && sk.maxD < 16.5 && sk.endD < 14 && sk.room === 'out' && !sk.wellSeen && sk.state === 'play', sk);
-await shot('04-yard-called-back');
+// (A9, a player who heads for the well first: TUT-MYSTERY, 20.11 — no call back any more; leaving ends the yard's steps
+//  with one call from Zoé: tests/tutor-targets.mjs route R2. Not here: it would end the steps this part goes through)
 const zoe = await ev(() => { const r = P.talk('zoe'); TT.settleFound(); game.step(0.3); const ok = TT.tip(); game.step(1.4); return { kettle: !!game.flags.pr_kettle, ok, tip: game.tutorial.shown, text: TT.tip(), item: game.story.cur.items().some((i) => i.id === 'kettle') }; });
 check('A10 Talk to Zoé by its key: their kettle, the crystals found; a tick, then: Look at the Kettle Crystals in your inventory, with its key', zoe.kettle && zoe.item && /✓ Talk to Zoé/.test(zoe.ok) && zoe.tip === 'step:inv' && zoe.text.includes(await ev(() => TT.labels('inventory'))), zoe);
 await shot('05-yard-inventory-step');
@@ -132,8 +130,6 @@ check('A11 the inventory opens on its key, on the Kettle Crystals she asked abou
 await shot('06-inventory-kettle');
 const inv2 = await ev(() => { P.tap(TT.code('inventory'), 0.3); game.step(1.6); game.step(1.0); return { st: game.state, tip: game.tutorial.shown, text: TT.tip(), said: TT.said() }; });
 check('A11 closed: the next goal, Try the garden tap, with its key; Zoé asks', inv2.st === 'play' && inv2.tip === 'step:tap' && /Try the garden tap/.test(inv2.text) && inv2.said.includes('t2_ask_tap'), inv2);
-sk = await ev(() => TT.skip());
-check('A12 heads off again: called back with the step she wants ("Try our tap first")', sk.said.some((x) => /tap first/.test(x)) && sk.maxD < 16.5 && sk.room === 'out' && !sk.wellSeen, sk);
 const ytap = await ev(() => { const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(2.6); return { yard: !!game.flags.pr_yard, tip: game.tutorial.shown, text: TT.tip(), said: TT.said() }; });
 check('A13 the garden tap by its key: dry, knocking; then: Hit the barrels with the magic ball, in its key; Zoé\'s dare', ytap.yard && ytap.tip === 'step:barrels' && ytap.text.includes(await ev(() => TT.labels('ball'))) && ytap.said.includes('t2_ask_barrels'), ytap);
 await ev(() => { P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(0.6); });
@@ -183,7 +179,6 @@ const off = await ev(() => {
   P.talk('arthur'); watch('arthur');
   const sp = game.room.searches.find((x) => x.id === 'cupboard'); P.use(sp.x, sp.z); TT.settleFound(); game.step(1); watch('ball');
   TT.out(); game.step(1); watch('out');
-  const sk = TT.skip(); watch('skip');
   P.talk('zoe'); TT.settleFound(); game.step(1.6); watch('zoe');
   P.tap(TT.code('inventory'), 0.3); P.tap(TT.code('inventory'), 0.3); game.step(1.6); watch('inv');
   const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(1.6); watch('tap');
@@ -192,8 +187,8 @@ const off = await ev(() => {
   return { seen, sk, flags: ['pr_kettle', 'pr_yard', 'pr_barrel', 'pr_pipe', 'pr_yardOk'].map((k) => !!game.flags[k]) };
 });
 const goals = off.seen.filter((x) => x[0] !== 'pipe').map((x) => x[1]);
-check('B1 tips off: the goal line stays at every step, with no key in it, and no dialogue key hint', off.seen.every((x) => !x[2] && !x[3]) && goals.every((g) => g.length > 0) && /Talk to Zoé/.test(off.seen[3][1]) && /Kettle Crystals/.test(off.seen[5][1]), off.seen);
-check('B1 tips off: the yard\'s edge still holds, and every step completes by its key (kettle, tap, barrels, pipe; the yard done)', off.sk.zoe >= 1 && off.sk.maxD < 16.5 && off.flags.every(Boolean), { sk: off.sk, flags: off.flags });
+check('B1 tips off: the goal line stays at every step, with no key in it, and no dialogue key hint', off.seen.every((x) => !x[2] && !x[3]) && goals.every((g) => g.length > 0) && /Talk to Zoé/.test(off.seen[3][1]) && /Kettle Crystals/.test(off.seen[4][1]), off.seen);
+check('B1 tips off: every step completes by its key (kettle, tap, barrels, pipe; the yard done)', off.flags.every(Boolean), { flags: off.flags });
 await shot('11-tips-off');
 // tips on again (from pause): only the steps' keys come back; nothing else asked (a fresh game for the panel's keys)
 await ev(() => { game.settings.tips = 'on'; game.applySettings?.(); game.step(1.0); });
@@ -299,7 +294,8 @@ await ev(() => {
 await cont();
 const c2 = await ev(() => { game.step(1.0); const tip = game.tutorial.shown; const sk = TT.skip(); return { state: game.state, tip, steps: !!game.story.cur.steps.on, sk }; });
 check('C2 a save from P22\'s build in the yard (no pr_tut2): plays on as before: no step, no call, free to leave', c2.state === 'play' && !/^step:/.test(c2.tip || '') && !c2.steps && c2.sk.zoe === 0 && c2.sk.maxD > 30, c2);
-// C3 this build's save mid-yard (the kettle and the inventory done): Continue resumes at the tap; the edge holds
+// C3 this build's save mid-yard (the kettle and the inventory done): Continue resumes at the tap; leaving lets the yard
+// go with Zoé's one call (TUT-MYSTERY: no call back)
 await ev(() => {
   const s0 = game.snapshot(); s0.tut = { v: 1, done: ['move', 'inventory', 'talk', 'use', 'advance'], gone: [] };
   for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen']) delete s0.flags[k];
@@ -309,7 +305,7 @@ await ev(() => {
 });
 await cont();
 const c3 = await ev(() => { game.step(1.0); const tip = game.tutorial.shown, text = TT.tip(); const sk = TT.skip(); return { tip, text, sk }; });
-check('C3 this build\'s save mid-yard: the steps resume where they were (Try the garden tap); the edge holds', c3.tip === 'step:tap' && c3.sk.zoe >= 1 && c3.sk.maxD < 16.5, c3);
+check('C3 this build\'s save mid-yard: the steps resume where they were (Try the garden tap); leaving: one call, no walk back', c3.tip === 'step:tap' && c3.sk.maxD > 30 && c3.sk.zoe === 0 && (await ev(() => game.story.cur.steps.saidLog || [])).includes('t2_call_go') && (await ev(() => !!game.flags.pr_yardOk)), c3);
 // C4 this build's save somehow past the yard's edge (in the square): let go, never pulled back
 await ev(() => {
   const s0 = game.snapshot();
