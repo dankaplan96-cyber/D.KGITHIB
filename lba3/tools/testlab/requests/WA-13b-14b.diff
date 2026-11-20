@@ -1,0 +1,85 @@
+diff --git a/lba3/src/game/hamalayi.js b/lba3/src/game/hamalayi.js
+index c336540..5d7539e 100644
+--- a/lba3/src/game/hamalayi.js
++++ b/lba3/src/game/hamalayi.js
+@@ -136,7 +136,7 @@ function heightFn(x, z) {
+ }
+ 
+ const C = (c) => new THREE.Color(c);
+-const COL = { snow: C('#ffffff'), snowShade: C('#e4ecf8'), rock: C('#d8c8b8'), rockDark: C('#b8a898'), trail: C('#b8a088'), ice: C('#bcdcf0') };
++const COL = { snow: C('#ffffff'), snowShade: C('#e0ecf3'), rock: C('#d8c8b8'), rockDark: C('#b8a898'), trail: C('#b8a088'), ice: C('#bcdcf0') };
+ // (HAMALAYI-POLISH: GRID holds the heights the terrain was built from; its rock weight is the steep vertices grown by a
+ // cell and blurred, so the snow/rock split falls on flat ground instead of in a comb of one-cell teeth: hamalayi-finish.js)
+ let GRID = null;
+@@ -166,12 +166,12 @@ function splatFn(x, z, h, slope, w) {
+ // powder snow: soft drifts and a sparkle of blue-white grains
+ const snowTex = () => ctex('hsnow', 256, 256, (x, S) => {
+   const r = rng(23);
+-  x.fillStyle = '#f2f6fc'; x.fillRect(0, 0, S, S);
++  x.fillStyle = '#f0f7fb'; x.fillRect(0, 0, S, S);
+   for (let i = 0; i < 60; i++) {
+     const cx = r() * S, cy = r() * S, rad = 20 + r() * 50;
+-    for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { const g = x.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, rad); g.addColorStop(0, r() < 0.5 ? 'rgba(210,222,240,0.35)' : 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(230,238,250,0)'); x.fillStyle = g; x.fillRect(cx + ox - rad, cy + oy - rad, rad * 2, rad * 2); }
++    for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { const g = x.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, rad); g.addColorStop(0, r() < 0.5 ? 'rgba(205,225,236,0.35)' : 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(228,240,247,0)'); x.fillStyle = g; x.fillRect(cx + ox - rad, cy + oy - rad, rad * 2, rad * 2); }
+   }
+-  for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(170,190,220,0.35)' : 'rgba(255,255,255,0.9)'; x.fillRect(r() * S, r() * S, 1.5, 1.5); }
++  for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(165,195,213,0.35)' : 'rgba(255,255,255,0.9)'; x.fillRect(r() * S, r() * S, 1.5, 1.5); }
+ });
+ const flagTex = () => ctex('hflags', 128, 32, (x, W, H) => { const cols = ['#d8302a', '#e8c030', '#2f8a3a', '#2a6ad8', '#f4f4f4']; for (let i = 0; i < 5; i++) { x.fillStyle = cols[i]; x.fillRect(i * W / 5 + 2, 0, W / 5 - 4, H); } }, true);
+ 
+@@ -194,9 +194,9 @@ export function* buildHamalayiSteps(scene, physics) {
+     fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
+   const H = (x, z) => terrain.heightAt(x, z);
+   const R = {
+-    id: 'hamalayi', outdoor: true, grade: 0.9, gradeTint: [0.95, 1.0, 1.05],   // (WA-13 follow-up: LBA1's icy cyan, not grey)
++    id: 'hamalayi', outdoor: true, grade: 1.0, gradeTint: null,   // (WA-13 follow-up: LBA1's icy cyan, not grey)
+     group, lights: [], exits: [], searches: [], ballTargets: [], updaters, music: 'hamalayi',
+-    env: { fog: '#dfe8f2', sun: '#fff6ec', hemiSky: '#eef2ff', hemiGround: '#c0bccc', sunI: 2.6, hemiI: 1.6, fogRange: [70, 250] },
++    env: { fog: '#dfe8f2', sun: '#fff6ec', hemiSky: '#eef5fd', hemiGround: '#bcc2cb', sunI: 2.6, hemiI: 1.6, fogRange: [70, 250] },
+     terrain,
+   };
+   R.env.fogColor = new THREE.Color(R.env.fog);
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index f50d525..2f2ec2b 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -51,7 +51,7 @@ export function buildLba1Asylum(scene, physics) {
+   const A = LBA1_AT, out = {};
+   if (hasLba1Room('asylum')) {
+     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, { stone: 'grey', lamp: '#e8f0ff', view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0' });   // (WORLD-ART-7: warm cream floors, cooler walls)
+-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
++    R.grade = 0.32;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+     // the low stair-well (the original's exit to the yard) leads out; you come in at its top
+     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
+     R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
+@@ -68,7 +68,7 @@ export function buildLba1Temple(scene, physics) {
+   const A = LBA1_AT, out = {};
+   if (hasLba1Room('bumaze')) {
+     const R = out.bumaze = buildLba1Room(scene, physics, 'bumaze', 'bumaze', A.bumaze.x, A.bumaze.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 9, view: 16, noCut: true, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
+-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
++    R.grade = 0.32;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+     R.cave = true; R.music = 'cave';
+     const back = R.cell(14, 1, 19.0), goal = R.cell(14, 1, 11);
+     R.exits.push({ x: back.x, z: back.z, r: 0.9, room: 'butemple' });
+@@ -77,7 +77,7 @@ export function buildLba1Temple(scene, physics) {
+   }
+   if (hasLba1Room('buhalls')) {
+     const R = out.buhalls = buildLba1Room(scene, physics, 'buhalls', 'buhalls', A.buhalls.x, A.buhalls.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 12, view: 24, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
+-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
++    R.grade = 0.32;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+     R.cave = true; R.music = 'cave';
+     const st = R.cell(3, 17, 3.2), far = R.cell(61, 17, 1.4), give = R.cell(61, 17, 4);
+     R.spawn = { x: st.x, z: st.z, a: 0 };
+diff --git a/lba3/src/game/sewers.js b/lba3/src/game/sewers.js
+index 881b211..d9485d9 100644
+--- a/lba3/src/game/sewers.js
++++ b/lba3/src/game/sewers.js
+@@ -50,7 +50,7 @@ const deadM = () => MAT.flat('#4a5458', 0.35);
+ const waterM = () => M('sw_water', () => {
+   // (the game's sea texture, tinted the original's pale cyan; its own copy so it can drift on its own)
+   const t = textures().sea.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+-  const m = new THREE.MeshStandardMaterial({ map: t, color: '#eaeee4', emissive: '#649494', emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.05 });
++  const m = new THREE.MeshStandardMaterial({ map: t, color: '#e2f6e6', emissive: '#5e9c92', emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.05 });
+   m.userData.noShadow = true;
+   return m;
+ });

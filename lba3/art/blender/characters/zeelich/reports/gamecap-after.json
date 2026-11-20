@@ -1,0 +1,235 @@
+{
+ "keeper": {
+  "look": "keeper",
+  "body": "keeper",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 971304
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967672
+   },
+   "heroCalls": 4,
+   "heroTris": 3632
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3632,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "oku": {
+  "look": "oku",
+  "body": "oku",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 973038
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968646
+   },
+   "heroCalls": 4,
+   "heroTris": 4392
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4392,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "xil": {
+  "look": "xil",
+  "body": "xil",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 191,
+    "triangles": 972362
+   },
+   "withoutHero": {
+    "calls": 187,
+    "triangles": 968730
+   },
+   "heroCalls": 4,
+   "heroTris": 3632
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3632,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "nara": {
+  "look": "nara",
+  "body": "nara",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 972444
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968810
+   },
+   "heroCalls": 4,
+   "heroTris": 3634
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3634,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "clerk": {
+  "look": "clerk",
+  "body": "clerk",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 187,
+    "triangles": 972164
+   },
+   "withoutHero": {
+    "calls": 183,
+    "triangles": 968468
+   },
+   "heroCalls": 4,
+   "heroTris": 3696
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3696,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "councilChair": {
+  "look": "councilChair",
+  "body": "councilChair",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 183,
+    "triangles": 966838
+   },
+   "withoutHero": {
+    "calls": 179,
+    "triangles": 962446
+   },
+   "heroCalls": 4,
+   "heroTris": 4392
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4392,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 12
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T02:41:26.977Z",
+ "candidates": {
+  "CAND_clerk": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/clerk.json",
+  "CAND_councilChair": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/councilChair.json",
+  "CAND_keeper": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/keeper.json",
+  "CAND_nara": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/nara.json",
+  "CAND_oku": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/oku.json",
+  "CAND_xil": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/xil.json"
+ }
+}

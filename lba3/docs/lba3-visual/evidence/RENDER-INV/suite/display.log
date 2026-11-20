@@ -1,0 +1,17 @@
+PASS 1920×1080: the canvas fills the window 
+PASS 1920×1080: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1920×1080: the pause menu fits 
+PASS 1280×720: the canvas fills the window 
+PASS 1280×720: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1280×720: the pause menu fits 
+PASS 1024×768: the canvas fills the window 
+PASS 1024×768: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 1024×768: the pause menu fits 
+PASS 800×600: the canvas fills the window 
+PASS 800×600: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 800×600: the pause menu fits 
+PASS 640×360: the canvas fills the window 
+PASS 640×360: HUD inside the window, no clipped text (in play and in dialogue) 
+PASS 640×360: the pause menu fits 
+no errors
+ALL PASSED

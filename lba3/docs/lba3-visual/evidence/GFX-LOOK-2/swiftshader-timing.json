@@ -1,0 +1,25 @@
+{
+ "conditions": "SwiftShader (headless Chromium, --use-angle=swiftshader), 1366x768, the benchmark's street route and the house interior (src/engine/bench.js routes, their own camera), Quality Medium by hand, automatic resolution off (factor 1); 'battery' = game.setBattery(true) on Medium. 6 warm-up frames, then timed frames: 'total' = G.frame(1/30, render) to gl.finish (1-pixel readPixels), 'submit' = the CPU part (G.frame returning). The machine was shared with other agents' runs: per-frame noise is +-30 %. Software rendering: relative only, never the laptop's fps. base = 8b89e90 (0.40.0 + morning check), cand = GFX-LOOK-2 (392b85d + re-bake 93b79cb).",
+ "counts_exact": {
+  "medium street": { "base": { "calls": 162, "mainDraws": 139.4, "shadowDraws": 23, "triangles": 600313, "programs": 155, "textures": 196 }, "cand": { "calls": 156, "mainDraws": 139.4, "shadowDraws": 17, "triangles": 599869, "programs": 155, "textures": 196 }, "cand ?oldsun": { "calls": 162, "shadowDraws": 23, "triangles": 600313 } },
+  "medium interior": { "base": { "calls": 43, "mainDraws": 44.1, "shadowDraws": 0, "triangles": 214110, "programs": 155, "textures": 198 }, "cand": { "calls": 43, "mainDraws": 44.1, "shadowDraws": 0, "triangles": 214110, "programs": 155, "textures": 198 } },
+  "battery street": { "base": { "calls": 161, "mainDraws": 139.1, "shadowDraws": 23, "triangles": 608465, "programs": 227, "textures": 199 }, "cand": { "calls": 155, "mainDraws": 139.1, "shadowDraws": 17, "triangles": 608021, "programs": 227, "textures": 199 } },
+  "battery interior": { "base": { "calls": 43, "triangles": 214110, "programs": 227, "textures": 200 }, "cand": { "calls": 43, "triangles": 214110, "programs": 227, "textures": 200 } },
+  "note": "the 6 fewer shadow draws on the street come from the new sun direction (shadowcull.js sweeps each caster's shadow away from the sun; ?oldsun gives back 23); the 444 fewer triangles are those shadow draws"
+ },
+ "sequential_runs_ms_total_median_of_8_frames": {
+  "medium street": { "base": [4960.5, 3247.8, 3196.6], "cand": [4686.1, 3425.4, 4673.2], "cand ?oldsun": [4413.0] },
+  "medium interior": { "base": [2096.6, 1671.7, 1571.2], "cand": [2332.6, 1611.2, 2088.5], "cand ?oldsun": [2300.6] },
+  "battery street": { "base": [2637.2, 1935.4, 2645.2], "cand": [2872.0, 2049.7, 2671.9], "cand ?oldsun": [2984.5] },
+  "battery interior": { "base": [1183.5, 799.7, 1242.4], "cand": [1126.1, 794.3, 1218.8], "cand ?oldsun": [1294.2] },
+  "reading": "the interior's shaders and geometry are the same in both builds (only the fill light's colour differs), yet its medians differ by up to 25 % between runs: the machine's load. Sequential runs cannot resolve the change."
+ },
+ "interleaved_frame_by_frame_ratio_cand_over_base": {
+  "method": "one browser, two pages (base and candidate); each timed frame of one is followed by the same frame of the other; median of 10 per-frame ratios; run twice with the pages' order swapped",
+  "medium street": [1.03, 0.967],
+  "medium interior": [0.96, 0.987],
+  "battery street": [1.003, 1.065],
+  "battery interior": [1.197, 1.018],
+  "reading": "geometric means 1.00 / 0.97 / 1.03 / 1.10 (the last on an interior whose shaders did not change: noise). No difference SwiftShader can resolve. The one per-pixel change is in the terrain's splat shader: ~12 ALU operations for the paving's and the rock's re-split, no new texture read (the rock and grass samples it uses were already read)."
+ }
+}

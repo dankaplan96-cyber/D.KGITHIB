@@ -1,0 +1,181 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 5aab5aad..0e7801ad 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -280,6 +280,13 @@ export const LOOKS = {
+     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
+     eyes: '#d8b040', glasses: true, height: 1.0,
+   },
++  clerk_b: {
++    // CAST-VARIANTS-1 (clerk's shape variant): a broader Esmer in a wrapped headcloth and a belted robe, no spectacles
++    // (cast_poly.py CAST clerk_b). Taken by Otringal's keeper (ot_keep), Aven (aven) and Dobb (ih_dobb); the council clerks,
++    // Corla and Otringal's clerk keep clerk
++    race: 'esmer', outfit: 'robe', hem: 0.08, stoop: 0.03, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
++    eyes: '#d8b040', hat: '#5a4a8a', height: 1.02,
++  },
+   archivist: {
+     // the project's archivist: a wary Quetch in a long grey-teal coat with brass buttons
+     race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
+@@ -290,6 +297,20 @@ export const LOOKS = {
+     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
+     hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#e8d090', height: 0.97, neck: 0.08,
+   },
++  farmerA_b: {
++    // CAST-VARIANTS-1 (order 28 queue 7, farmerA's shape variant): a heavier Quetch hand, bare-headed (the tuft shows), a
++    // longer smock with the sleeves down, a swept moustache (cast_poly.py CAST farmerA_b). Taken by Rod (dg_rod, the dig),
++    // Tam (lh_tam, the Hamalayi) and Wim (wim); Jorr, Garrick, Tibbo and the farm evacuees keep farmerA
++    race: 'quetch', outfit: 'tunic', hem: 0.45, belly: 0.14, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
++    hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', moustache: true, height: 0.99, neck: 0.08,
++  },
++  farmerB_b: {
++    // CAST-VARIANTS-1 (farmerB's shape variant): a Rabbibunny without the apron, patch pockets, both ears folded over (cast_poly.py
++    // CAST farmerB_b). Taken by Maro (maro, the plaza) and the counter's waiting man (up_wait); Tavi (the terminal's café),
++    // Hedda, the dig's cook, Mira of the Hamalayi and the farm evacuees keep farmerB
++    race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
++    eyes: '#3a2a1a', height: 0.9,
++  },
+   farmerB: {
+     race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
+     eyes: '#3a2a1a', apron: '#f4ecd8', height: 0.88,
+@@ -388,7 +409,9 @@ export const LOOKS = {
+     hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tail', nose: 'button', eyes: '#2a1a10', hat: '#d8b860', height: 0.62, neck: 0.08,
+   },
+   desertTrader: {
+-    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
++    // (GROBO-GREY, the user 11.11: "why are there green elephants, it makes no sense": the skin was a sage green-grey
++    //  (#9aa898), and Brix's green tint on top made a green elephant in Citadel's village; a Grobo is grey, as in LBA2)
++    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#a6a2a8', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
+     eyes: '#2a2a2a', hat: '#e8d8b0', height: 1.02,
+   },
+   weaver: {
+diff --git a/lba3/src/game/ihomes.js b/lba3/src/game/ihomes.js
+index 9b7dc2a5..632714c1 100644
+--- a/lba3/src/game/ihomes.js
++++ b/lba3/src/game/ihomes.js
+@@ -127,7 +127,7 @@ export const IHOME_AT = Object.fromEntries(IHOME_IDS.map((r, i) => [r, { x: 1040
+ export const KEEPERS = {
+   ih_ossa: { room: roomOf('otringal-63--45'), char: 'ztri1', color: '#c8b0f0' },
+   ih_liwa: { room: roomOf('otringal-6--24'), char: 'nara', color: '#f0c0a8' },
+-  ih_dobb: { room: roomOf('otringal-4--11'), char: 'clerk', color: '#a8c0e0' },
++  ih_dobb: { room: roomOf('otringal-4--11'), char: 'clerk_b', color: '#a8c0e0' },
+   ih_brem: { room: roomOf('otringal--2-56'), char: 'oku', color: '#e0c890' },
+   ih_gorrin: { room: roomOf('knartas-33--14'), char: 'keeper', color: '#e0a870' },
+   ih_tesk: { room: roomOf('platform-27--31'), char: 'zmole1', color: '#b8c8a0' },
+diff --git a/lba3/src/game/islandlife.js b/lba3/src/game/islandlife.js
+index 6f4a5439..4f961848 100644
+--- a/lba3/src/game/islandlife.js
++++ b/lba3/src/game/islandlife.js
+@@ -328,7 +328,7 @@ const RD = (id, x, z, a, act, dur, o = {}) => ({ id, x, z, a, act, dur, ...o });
+ export const OTRBAR_ROOM = {
+   floors: [{ x0: -9.7, x1: -1.5, z0: -6.9, z1: -3.1, y: 0.6 }, { x0: -9.7, x1: 9.7, z0: -6.7, z1: 6.7, y: 0 }],   // (the raised floor first: a point is on the first floor that holds it)
+   people: [
+-    { id: 'ot_keep', char: 'clerk', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
++    { id: 'ot_keep', char: 'clerk_b', tint: '#eafff2', color: '#a8e0c0', speed: 0.8, start: 0, stays: true, when: ROOM_WHEN, stops: [
+       RD('bk_counter', -5.6, 3.5, 0, 'browse', [14, 20], { gest: ['nod'] }), RD('bk_urns', -3.9, 3.5, 0, 'put', [6, 9]),
+     ] },
+     { id: 'ot_boss', char: 'councilChair', tint: '#ffe6ea', color: '#f0a0b0', speed: 0.7, start: 0, stays: true, when: ROOM_WHEN, stops: [
+diff --git a/lba3/src/game/roomlife.js b/lba3/src/game/roomlife.js
+index 74e4c4b5..bfaeb40e 100644
+--- a/lba3/src/game/roomlife.js
++++ b/lba3/src/game/roomlife.js
+@@ -253,7 +253,7 @@ export const ROOMS = {
+   nellhouse: {
+     floors: [hall(NL)],
+     people: [
+-      { id: 'wim', char: 'farmerA', tint: '#e6f0de', color: '#b8d890', speed: 1.0, start: 0, stops: [
++      { id: 'wim', char: 'farmerA_b', tint: '#e6f0de', color: '#b8d890', speed: 1.0, start: 0, stops: [
+         // (the spot is Nell's, before her workbench: Wim works there facing the bench)
+         L('wim_bench', NL.spot.x, NL.spot.z, NL.bench.x, NL.bench.z, 'browse', [16, 24], { spot: 'nell' }),   // (the Esmer engine on the bench)
+         L('wim_parts', NL.parts.x - 0.1, NL.parts.z - 0.75, NL.parts.x, NL.parts.z, 'put', [5, 7], { carry: 'crate' }),   // (the crate of spare parts)
+@@ -392,7 +392,7 @@ const CITADEL_PORT = [
+     L('esren_kiosk', -11.6, 43.0, 4.5, 41, 'stand', [8, 12]),
+   ] },
+   // (WC-4: the family waits for a project ship in the evacuation too: on the list)
+-  { id: 'gunda', char: 'councilC', tint: '#e6eee4', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
++  { id: 'gunda', char: 'councilC', tint: '#ece8f0', color: '#b8c890', speed: 0.8, start: 0, when: ['flying', 'council', 'after', 'evac'], stops: [
+     SB('gunda_bench', CB[1], -1, [30, 45], { carry: 'case' }),
+     L('gunda_kid', -4.0, 36.0, -3.0, 36.4, 'stand', [16, 24], { pair: 'family', mate: 'bibi' }),
+   ] },
+diff --git a/lba3/src/game/storylife.js b/lba3/src/game/storylife.js
+index 815d74ec..57d7cde6 100644
+--- a/lba3/src/game/storylife.js
++++ b/lba3/src/game/storylife.js
+@@ -89,7 +89,7 @@ const DESERT_PEOPLE = [
+       L('surv_notes', TB.x - 0.6, TB.z + 1.0, TB.x - 0.6, TB.z, 'browse', [8, 12]),
+     ] } },
+   // his staff man: the far rim east, the rim west (by the dig's gate, well off it), back for a word
+-  { id: 'dg_rod', char: 'farmerA', tint: '#e6eeff', speed: 1.05, color: '#a8c0f0', start: 0, area: 'desert', phase: crew(false), rounds: {
++  { id: 'dg_rod', char: 'farmerA_b', tint: '#e6eeff', speed: 1.05, color: '#a8c0f0', start: 0, area: 'desert', phase: crew(false), rounds: {
+     crew: [
+       L('rod_east', 75.6, 12.4, TP.x, TP.z, 'stand', [8, 12]),
+       L('rod_chat', 62.6, 5.8, 61.2, 6.2, 'stand', [16, 22], { pair: 'survey', mate: 'dg_surv' }),
+@@ -274,7 +274,7 @@ const HAMALAYI_PEOPLE = [
+       L('old_rack', 50.0, -33.4, MC.rack.x, MC.rack.z, 'stand', [8, 12]),
+     ] } },
+   // Tam: wood from the north woodpile to the fire, a look at the south woodpile; up there, the sledge unloaded by the gate
+-  { id: 'lh_tam', char: 'farmerA', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
++  { id: 'lh_tam', char: 'farmerA_b', tint: '#eaffea', speed: 1.0, color: '#b0d890', start: 1, area: 'hamalayi', phase: village('c6_trip2'), rounds: {
+     lhar: [
+       L('tam_wood', -17.4, -4.4, -15.8, -4.4, 'put', [4, 6], { carry: 'crate' }),
+       L('tam_fire', -5.2, 17.8, -4, 17.2, 'put', [4, 6], { carry: null }),
+@@ -460,7 +460,7 @@ export const UPPER_ROOM = {
+       D('uk_lift', -5.9, 1.6, PI / 2, 'stand', [4, 6], { carry: 'case' }),
+       L('uk_counter', -1.2, 0.6, 1.0, 0.6, 'put', [5, 7], { carry: null }),     // (the case handed over at the counter's end, on the clerk's side: clear of the benches)
+     ] },
+-    { id: 'up_wait', char: 'farmerB', tint: '#fff0f4', color: '#f0b8c8', speed: 0.8, start: 0, when: upper, stops: [
++    { id: 'up_wait', char: 'farmerB_b', tint: '#fff0f4', color: '#f0b8c8', speed: 0.8, start: 0, when: upper, stops: [
+       { id: 'uw_bench', x: -3.0, z: 1.75, a: PI, act: 'stand', seat: { x: -3.0, z: 2.6, a: PI, spec: BENCH_SEAT }, dur: [40, 60] },
+       D('uw_board', -6.15, -1.7, -PI / 2, 'stand', [6, 9], { gest: ['sigh'] }),
+     ] },
+diff --git a/lba3/src/game/walkrounds.js b/lba3/src/game/walkrounds.js
+index 895b6544..17709014 100644
+--- a/lba3/src/game/walkrounds.js
++++ b/lba3/src/game/walkrounds.js
+@@ -104,7 +104,7 @@ export function citadelRoster(game) {
+       bench('oda_bench', -49, -7.4, [18, 28]),
+     ]) },
+     // the old man: benches along the lane, the well, a long look at the pump
+-    { id: 'brix', char: 'desertTrader', tint: '#d8f0d0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
++    { id: 'brix', char: 'desertTrader', tint: '#e8e4f0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
+       bench('brix_benchE', -35.8, 2.6, [28, 44]),
+       look('brix_warm', -33.25, 1.25, -33.25, 0.35, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit; POLISH-14 b: by the shop's wall north of the door now, he stands on its far side from the door, town.js)
+       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
+@@ -113,7 +113,7 @@ export function citadelRoster(game) {
+       bench('brix_lane2', -43.3, 43.4, [24, 36]),
+     ]) },
+     // two neighbours who meet between the plaza's benches and talk
+-    { id: 'maro', char: 'farmerB', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
++    { id: 'maro', char: 'farmerB_b', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
+       home('maro_home', -46.1, 27.2, [10, 16], { stage: [0, 1], carry: null }),
+       look('maro_meet', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [26, 36], { pair: 'plaza', mate: 'tilde', stage: [0, 1] }),
+       bench('maro_bench', -53.3, 34.4, [16, 24], { stage: [0, 1] }),
+@@ -237,7 +237,7 @@ export function zeelichRoster(game) {
+       bench('ilo_bench', -31, 2.2, [20, 30]),
+     ]) },
+     // an Esmer man: the boulevard's benches and what he looks at from each
+-    { id: 'aven', char: 'clerk', tint: '#ffffff', speed: 0.95, start: 0, color: '#a0d8d0', stops: ok([
++    { id: 'aven', char: 'clerk_b', tint: '#ffffff', speed: 0.95, start: 0, color: '#a0d8d0', stops: ok([
+       bench('aven_b1', -31, -4.6, [22, 34]),
+       look('aven_gate', -44.5, -1.6, -52, 0, [6, 10]),
+       look('aven_mill', -4.0, -3.0, -2, -20, [8, 12]),
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index d88e9b9e..92ff3afa 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -62,6 +62,8 @@ CAST = {
+     'lulu': dict(browS=0.7, browTilt=0.2, mouthW=1.0, mouthLift=1.6, lip='#b04058', lashes=True, bow=True, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hemH=0.06),
+     'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a', gogglesGlass=True),
+     'farmerA': dict(browS=1.3, browTilt=-0.1, mouthW=1.2, mouthLift=1.3, rolled=True, pockets=True, pocketY=0.06, noseS=1.1),
++    'farmerA_b': dict(browS=1.6, browTilt=-0.2, mouthW=1.1, mouthLift=0.6, pockets=True, pocketY=0.1, noseS=1.15, moustacheSwept=True),   # (CAST-VARIANTS-1: bare-headed, heavier, a longer smock, sleeves down, a moustache)
++    'farmerB_b': dict(browS=1.0, browTilt=0.3, cheekS=1.1, mouthLift=1.0, earBend=(1.1, 0.95), earLen=0.92, earInCol='#e8a8a0', pockets=True, pocketY=0.08),   # (CAST-VARIANTS-1: no apron, patch pockets, both ears folded over: lop ears)
+     'farmerB': dict(browS=1.2, browTilt=0.1, cheekS=1.25, mouthLift=1.2, earBend=(0.35, 0.0), earSpread=1.0, earInCol='#e8a8a0'),
+     'farmerC': dict(hatStyle='straw', mouthLift=1.3, browS=1.4, earS=0.95),
+     'farmerC_b': dict(mouthLift=1.0, browS=1.6, browTilt=-0.15, earS=1.0),   # (CAST-POLISH-DESERT: bare-headed, lighter)
+@@ -102,6 +104,7 @@ CAST = {
+     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
+     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
+     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
++    'clerk_b': dict(browS=1.4, browTilt=0.1, mouthLift=0.6, noseS=1.0, headcloth=True, beltBand=True),   # (CAST-VARIANTS-1: a broader Esmer in a headcloth and a belted robe, no spectacles)
+     'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05, glassesRim=True),   # (GLASSES-CLERK)
+     'councilChair': dict(browS=1.7, browTilt=-0.3, mouthLift=-0.3, noseS=1.1),
+     # (CAST-POLISH-ZEELICH-2, order 24: the shape variants of the most shared Esmer models)

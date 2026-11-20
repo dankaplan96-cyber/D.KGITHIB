@@ -1,0 +1,264 @@
+diff --git a/lba3/src/game/island.js b/lba3/src/game/island.js
+index f010536d..3a2b34b4 100644
+--- a/lba3/src/game/island.js
++++ b/lba3/src/game/island.js
+@@ -2768,9 +2768,69 @@ function cellarHatch(W, root, id, o) {
+   shutDoor(W, id, o.x, g, o.z, o.ry, 1.0);
+ }
+ 
++// REVIEW-CITADEL-ART (d): the way between the plateau's door (Tralu's cave) and the plateau. Its landing stands on the
++// north face over the sea, 0.9–1.7 m over the slope on the west and the north, and the one way back up was a gap on
++// the west no one read as a way. A flight of steps west from the landing's west edge up the slope to where it meets
++// the ground below the plateau's rim; dressed cheeks each side, their copings straight along the flight: on the north (the slope falls
++// to the sea cliff) a parapet 0.45 m over them, on the south (the bank stands at or over them) a retaining kerb. In the
++// door's frame (frame(): lx along the face, + to the west here; lz out of the face): from lx0 to lx1, centred on lz, w wide.
++export const PLATEAU_STAIR = { lx0: 1.3, lx1: 5.5, lz: 0.85, w: 1.8, n: 12 };   // (1.8 m between the cheeks: his body is 0.9 m across)
++// the stair's corridor in world coordinates (the cliff rocks there go: world.js dropRocks)
++export function plateauStairAt(x, z, m = 0) {
++  const o = OLD_DOORS.plateau, S = PLATEAU_STAIR, c = Math.cos(o.ry), s = Math.sin(o.ry), dx = x - o.x, dz = z - o.z;
++  const lx = c * dx - s * dz, lz = s * dx + c * dz;
++  return lx > S.lx0 - 0.2 - m && lx < S.lx1 + 0.3 + m && Math.abs(lz - S.lz) < S.w / 2 + 0.35 + m;
++}
++function plateauStair(W, root, o) {
++  const P = W.physics, T = W.H, S = PLATEAU_STAIR, grp = new THREE.Group(); grp.name = 'old-door-plateau-stair'; root.add(grp);
++  const B = new Batch(grp);
++  const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
++  const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
++  const yl = T(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1 - 0.02;   // (the landing's top: tunnelMouth's sill − 2 cm)
++  const run = (S.lx1 - S.lx0) / S.n, hw = S.w / 2, oN = S.lz + hw + 0.15, oS = S.lz - hw - 0.15;
++  const gAt = (lx, lz) => T(...f(lx, lz));
++  const yEnd = gAt(S.lx1, S.lz), rise = (yEnd - yl) / S.n;
++  let prev = yl;
++  const steps = [];
++  for (let i = 0; i < S.n; i++) {
++    const a = S.lx0 + i * run, b = a + run, m = (a + b) / 2;
++    let lo = Infinity, gc = -Infinity, gb = -Infinity;
++    for (let t = a; t <= b + 1e-6; t += run / 2) {
++      for (const lz of [oS - 0.15, S.lz - hw, S.lz, S.lz + hw, oN + 0.15]) lo = Math.min(lo, gAt(t, lz));
++      gc = Math.max(gc, gAt(t, S.lz)); gb = Math.max(gb, gAt(t, oS - 0.15));
++    }
++    const top = Math.min(prev + 0.3, Math.max(yl + (i + 1) * rise, gc + 0.03)), bot = Math.min(lo, prev) - 0.4;
++    prev = top;
++    steps.push({ m, top, bot, gb });
++    // the step (one stone from below the ground, 2 cm into each cheek: no face shared with it); its collider runs on
++    // under the steps above it to the top (no seam between two: physics.js reads a brick 5 cm in from its edges), the
++    // first one's from 15 cm back over the landing
++    const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), trimM, px, (top + bot) / 2, pz, 0, o.ry, 0);
++    { const c0 = i ? a : a - 0.15, [cx, cz] = f((c0 + S.lx1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (S.lx1 - c0) / 2, hd: hw, rot: o.ry, top }); }
++  }
++  // the cheeks: each one dressed wall the stair's length, its coping a straight line along the flight (the wall sheared
++  // to it, its ends plumb), down below the slope; the north one 0.45 m over the nosings at least, the south one 12 cm
++  // over them or 8 cm over the bank behind it; their colliders step with the treads
++  const L = S.lx1 - S.lx0, lm = (S.lx0 + S.lx1) / 2, s0 = steps[0], sN = steps[S.n - 1], k = (sN.top - s0.top) / (sN.m - s0.m);
++  const line = (lx) => s0.top + (lx - s0.m) * k;
++  const cheek = (lz, need) => {
++    let up = -Infinity, D = 0;
++    for (const st of steps) up = Math.max(up, need(st) - line(st.m));
++    for (const st of steps) D = Math.max(D, line(st.m) + up - st.bot);
++    const ym = line(lm) + up, [px, pz] = f(lm, lz), sh = (g) => g.clone().applyMatrix4(new THREE.Matrix4().makeShear(k, 0, 0, 0, 0, 0));
++    B.add(sh(bbox(L + 0.02, D + 0.3, 0.3, 0.03, 1)), stoneM, px, ym - (D + 0.3) / 2, pz, 0, o.ry, 0);
++    B.add(sh(bbox(L + 0.06, 0.08, 0.38, 0.02, 1)), trimM, px, ym + 0.04, pz, 0, o.ry, 0);
++    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, seeThrough: true }); }
++  };
++  cheek(oN, (st) => st.top + 0.45);
++  cheek(oS, (st) => Math.max(st.top + 0.12, st.gb + 0.08));
++  B.build();
++}
++
+ function buildOldPlaces(W, root) {
+   buildWestIslet(W, root);
+   tunnelMouth(W, root, 'plateau', OLD_DOORS.plateau);
++  plateauStair(W, root, OLD_DOORS.plateau);
+   tunnelMouth(W, root, 'passageN', OLD_DOORS.passageN);
+   cellarHatch(W, root, 'passageS', OLD_DOORS.passageS);
+ }
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index 762a3bd6..a626ae04 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -471,7 +471,27 @@ function climbTerraceFill(k, M, physics, T, yt) {
+   //  terrace he dropped into it, slid, could not climb out and was taken back by the fall's respawn, a life lost. Closed
+   //  at the height of the terrace's edge above it)
+   { const sN = S1 + ASYLUM_STEPS.w, [cx, cz] = F.at(sN + 0.9, 0), yn = Math.min(yt, Math.max(T(...F.at(sN + 1.5, -1.0)), T(...F.at(sN + 1.5, 1.0))));
+-    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn }); }
++    physics.add({ type: 'box', x: cx, z: cz, hw: HW + 0.1, hd: 0.55, rot: F.a, top: yn });
++    // (REVIEW-CITADEL-ART a: and drawn, so it no longer reads as a dark crevice under the edge: a block of the walls'
++    //  masonry at that height, as the collider, from the landing's north wall (its coping 6 cm under it) across the
++    //  wall's width, the west face in line with the landing's west wall; then one step up, 0.32 m, out north to where
++    //  the terrace's bank reaches it: from the block the bank rose 1.27 in 1 (steeper than he walks: he slid back down
++    //  it), so the step takes him up onto the terrace and on to the north fill beside it)
++    const cw = ASYLUM_STEPS.cheek, o0 = -HW - cw, o1 = HW, s0 = sN + cw - 0.03, s1 = sN + 1.4;   // (3 cm into the wall: no face shared with it)
++    const y2 = Math.min(yt, yn + 0.32), across = (s) => { let lo = Infinity; for (let o = o0; o <= o1 + 1e-6; o += 0.25) lo = Math.min(lo, T(...F.at(s, o))); return lo; };
++    let s2 = s1 + 0.3; while (s2 < s1 + 2.0 && across(s2) < y2 - 0.03) s2 += 0.05;
++    let gl = Infinity; for (let s = s0; s <= s2 + 1e-6; s += 0.25) gl = Math.min(gl, across(s));
++    const bot = gl - 0.4;
++    // (extruded as the fills beside it are, so its top's stone runs on from theirs)
++    const slab = (sa, sb, top) => {
++      const pts = [F.at(sa, o0), F.at(sa, o1), F.at(sb, o1), F.at(sb, o0)];
++      const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z))), { depth: top - bot, bevelEnabled: false });
++      geo.rotateX(-Math.PI / 2); geo.translate(0, bot, 0);
++      k.add(geo, M.wall, 0, 0, 0);
++    };
++    slab(s0, s1 + 0.03, yn); slab(s1, s2, y2);   // (the lower one 3 cm on under the step: no face shared)
++    // (its collider from 7 cm back over the block's: physics.js reads a brick 5 cm in from its edges, so no seam between)
++    { const sa = s1 - 0.07, sb = s2 + 0.02, [qx, qz] = F.at((sa + sb) / 2, (o0 + o1) / 2); physics.add({ type: 'box', x: qx, z: qz, hw: (o1 - o0) / 2, hd: (sb - sa) / 2, rot: F.a, top: y2 }); } }
+ }
+ // CLOUD_ORDERS 21 (the cloud's camera agent, 6.11: past the east flight's top step, x −28.99, the forecourt's ground lay
+ // 0.5–0.9 m lower and steep for ~1 m: Twinsen slid against the step and stuck, and actors.js respawnFromFall took him
+diff --git a/lba3/src/game/town.js b/lba3/src/game/town.js
+index e3cae9ff..bc4b8d31 100644
+--- a/lba3/src/game/town.js
++++ b/lba3/src/game/town.js
+@@ -35,6 +35,24 @@ export function streetDist(x, z) {
+   return best; // < 0 inside a street
+ }
+ 
++// REVIEW-CITADEL-ART (b): Bug Street's foot paved to its pair's doors (the pharmacy, 'bug2', and the baggage claim,
++// 'bug'): the wedge between Bug Street, the street down to the harbour and the two house fronts was a dirt pocket,
++// and the two streets' kerbs and the square's ring met in a stepped, overlapping knot by the bench. One paved forecourt
++// (x, z; under the house fronts on the west), its one open edge a kerb from Bug Street's north kerb to the north house's
++// front, north of its door (BUG_FOOT_KERB); no kerb inside it
++const BUG_FOOT = [[-57.7, -15.02], [-52.3, -13.93], [-46.81, -10.1], [-46.5, -6.0], [-50, -5.2], [-57, -4.4], [-59.7, -4.3], [-59.7, -11.0], [-57.7, -11.0]];
++const BUG_FOOT_KERB = [[-52.28, -14.05], [-57.25, -15.05]];
++// signed distance to the forecourt (< 0 inside)
++export function bugFootDist(x, z) {
++  let d = 1e9, inside = false;
++  for (let i = 0, j = BUG_FOOT.length - 1; i < BUG_FOOT.length; j = i++) {
++    const [xa, za] = BUG_FOOT[i], [xb, zb] = BUG_FOOT[j];
++    if ((za > z) !== (zb > z) && x < ((xb - xa) * (z - za)) / (zb - za) + xa) inside = !inside;
++    d = Math.min(d, distToSegment(x, z, xa, za, xb, zb));
++  }
++  return inside ? -d : d;
++}
++
+ // Twinsen's corner sits on a small rise above the square
+ const RISE = { x: -51, z: -14.5, r: 10, h: 0.75 };
+ export function townHeight(x, z, h) {
+@@ -401,6 +419,7 @@ function curbs(parent, H) {
+         const x = a[0] + (b[0] - a[0]) * t + nx * w * side, z = a[1] + (b[1] - a[1]) * t + nz * w * side;
+         if (Math.hypot(x - V.x, z - V.z) < 9.9) continue; // inside the square
+         if (streetDist(x, z) < -0.05) continue;          // inside another street
++        if (bugFootDist(x, z) < 0) continue;             // inside Bug Street's foot (REVIEW-CITADEL-ART b)
+         pos.push([x, H(x, z), z, ang]);
+       }
+     }
+@@ -408,9 +427,12 @@ function curbs(parent, H) {
+   // a ring of curb stones around the square, open where the streets leave it
+   for (let a = 0; a < Math.PI * 2; a += 0.55 / 9.4) {
+     const x = V.x + Math.sin(a) * 9.4, z = V.z + Math.cos(a) * 9.4;
+-    if (streetDist(x, z) < 0.15) continue;
++    if (streetDist(x, z) < 0.15 || bugFootDist(x, z) < 0) continue;
+     pos.push([x, H(x, z), z, a + Math.PI / 2]);
+   }
++  // Bug Street's foot: its north kerb on to the north house's front
++  { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
++    for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; pos.push([x, H(x, z), z, ang]); } }
+   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
+   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
+   const o = new THREE.Object3D(), c = new THREE.Color();
+diff --git a/lba3/src/game/tralucave.js b/lba3/src/game/tralucave.js
+index dc7444ba..34f333c5 100644
+--- a/lba3/src/game/tralucave.js
++++ b/lba3/src/game/tralucave.js
+@@ -16,7 +16,7 @@
+ import * as THREE from 'three';
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, table, bench, barrel, plate, jar, candle } from './props.js';
+-import { OLD_DOORS } from './island.js';
++import { OLD_DOORS, PLATEAU_STAIR } from './island.js';
+ 
+ export const TRALUCAVE_AT = { x: 8400, z: 0 };
+ 
+@@ -171,12 +171,15 @@ export function buildTraluCaveRoom(scene, physics) {
+   return { tralucave: B.finish() };
+ }
+ 
+-// the plateau's door leads in; coming out, Twinsen stands 1.2 m before it, facing away
++// the plateau's door leads in; coming out, Twinsen stands on the landing before it, 1 m from the door's spot, facing
++// along the steps up to the plateau (REVIEW-CITADEL-ART d, island.js PLATEAU_STAIR: he faced the sea from the ledge's
++// edge). The door's frame: lx along the face (toward the steps), lz out of it
+ const PD = OLD_DOORS.plateau;
+ export function traluCaveDoors() {
+   return [{ house: 'plateau', x: PD.x + Math.sin(PD.ry) * 0.35, z: PD.z + Math.cos(PD.ry) * 0.35, r: 0.9, room: 'tralucave' }];
+ }
+ export function traluCaveExit(to) {
+   if (to !== 'tralucave-out') return null;
+-  return { x: PD.x + Math.sin(PD.ry) * 1.6, z: PD.z + Math.cos(PD.ry) * 1.6, a: PD.ry };
++  const c = Math.cos(PD.ry), s = Math.sin(PD.ry), lx = 0.95, lz = PLATEAU_STAIR.lz;   // (on the steps' axis)
++  return { x: PD.x + c * lx + s * lz, z: PD.z - s * lx + c * lz, a: Math.atan2(c, -s) };
+ }
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index bf9b5fbd..e94956d8 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -9,9 +9,9 @@ import { ZoneSystem } from '../engine/scripts.js';
+ import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
+ import { mat } from '../engine/rig.js';
+ import { textures } from '../engine/textures.js';
+-import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
++import { buildTown, townHeight, streetDist, bugFootDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
+ import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
+-import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
++import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, plateauStairAt } from './island.js';
+ import { buildDinoFly } from './dinofly.js';
+ import { buildLighthouse, LH_STEPS, LH_STEP_W } from './lighthouse.js';
+ import { buildStatue } from './statue.js';
+@@ -360,7 +360,19 @@ function houseFlats(x, z, h) {
+ }
+ export function islandHeight(x, z) {
+   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
+-  return climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight));
++  return waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)));
++}
++
++// REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
++// ran 2 m past the office's front, so its rock face stood as a heap of blocks in the front yard, left of the door. Its
++// east face is cut back to the office's front line (the face's foot on it, KNOLL_FOOT, 2.2 m up per metre back); the
++// shelf itself, its south face and its top stay. The scatter and the cliff rocks decide on the ground as it stood
++// (scatterGround, KNOLL_OFF: no random draw moves); the rocks of the old face are shaped on the new one.
++const KNOLL_BOX = [-68.6, 15.2, -62.5, 21.4], KNOLL_FOOT = -66.2, KNOLL_Y = 2.45;
++let KNOLL_OFF = false;
++function waterKnoll(x, z, h) {
++  if (KNOLL_OFF || x < KNOLL_BOX[0] || x > KNOLL_BOX[2] || z < KNOLL_BOX[1] || z > KNOLL_BOX[3]) return h;
++  return Math.min(h, KNOLL_Y + Math.max(0, KNOLL_FOOT - x) * 2.2);
+ }
+ 
+ // CLIMB-2 (the user's photo, 5.11: the cobbles folded into a pit beside the retaining wall): the paved ramp up to the
+@@ -518,7 +530,7 @@ function islandSplat(x, z, h, slope, w) {
+   }
+   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
+   w[4] = smoothstep(9.9, 9.0, vd) * 3; // the square, edged by a curb ring (town.js)
+-  if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, streetDist(x, z) + n * 0.25) * 3);
++  if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, Math.min(streetDist(x, z), bugFootDist(x, z)) + n * 0.25) * 3);   // (REVIEW-CITADEL-ART b: and Bug Street's foot)
+   // CLIMB-1: the way up to the fort's terrace, paved as the streets (lba1places.js climbPaveDist)
+   w[4] = Math.max(w[4], smoothstep(0.3, -0.25, climbPaveDist(x, z) + n * 0.2) * 3);
+   // in town the ground between the streets is brown soil with lawns (Citadel Island)
+@@ -594,8 +606,19 @@ function scatterGround(T) {
+       if (d !== 0) pre.set(k, T.heights[k] + d);
+     }
+   }
++  // (REVIEW-CITADEL-ART c: and the water office's knoll as it stood before its east face was cut back)
++  {
++    const [x0, z0, x1, z1] = KNOLL_BOX;
++    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
++      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
++      if (pre.has(k)) continue;
++      KNOLL_OFF = true; const before = islandHeight(x, z); KNOLL_OFF = false;
++      const d = before - islandHeight(x, z);
++      if (d !== 0) pre.set(k, T.heights[k] + d);
++    }
++  }
+   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
+-  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
++  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+   const heightAt = (x, z) => {
+     if (!near(x, z, 2)) return T.heightAt(x, z);
+     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
+@@ -723,6 +746,7 @@ export function* buildWorldSteps(parentScene) {
+   });
+   climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
+   dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
++  dropRocks(W_cliffs.mesh, (x, z) => plateauStairAt(x, z), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js)
+   const W = {
+     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
+     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,

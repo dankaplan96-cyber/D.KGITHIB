@@ -1,0 +1,53 @@
+PASS A1 control at once in the house; one panel: the goal (the magic ball, the cupboard) and the walk keys (Classic: walk and turn) {"tip":"step:ball","text":"Take your magic ball from the cupboard↑ Walk · ←→ Turn","done":[],"state":"play","room":"house"}
+PASS A1 the panel clear of the screen middle (Twinsen), the dialogue and the prompt {"l":16,"t":288,"r":356,"b":379,"mid":true}
+PASS A2 a short walk: the walk keys go, the goal stays {"tip":"step:ball","text":"Take your magic ball from the cupboardW Search the cupboard","done":["move"],"state":"play","room":"house"}
+PASS A3 Arthur (optional): "Talk" facing him in reach, not with his back to him {"away":"","facing":"W Talk","typing":true,"k1":"W Show all","whole":true,"k2":"W Next","key":"W"}
+PASS A3 the dialogue box teaches its key: "Show all" while a line types (and it does), then "Next" {"away":"","facing":"W Talk","typing":true,"k1":"W Show all","whole":true,"k2":"W Next","key":"W"}
+PASS A4 the kitchen tap by hand (optional): dry, the knocking, Arthur heard it all morning {"lines":4,"tap":true}
+PASS A5 the door before the ball: his line, still in the house {"room":"house","ball":false}
+PASS A6 by the cupboard: the panel names the key for it ("Search the cupboard") "Take your magic ball from the cupboardW Search the cupboard"
+PASS A6 the cupboard gives the ball; the next goal: out to the yard (no inventory tip in the house) {"ball":true,"tip":"step:out","text":"Go out to the yard"}
+PASS A7 saved half way and loaded: in the house with the ball, the same goal, Move still learned {"tip":"step:out","text":"Go out to the yard","done":["advance","move","talk","use"],"state":"play","room":"house"}
+PASS A8 out of the door: Zoé a few steps off, in view, calls him over (her word over her head) {"to":"citadel","zoe":3.5,"zoeIn":true,"tip":"step:zoe","text":"Talk to Zoé○○○○○W Talk","said":["t2_zoe_call"],"bark":"block","stars":[[-42.6,73.7,"Zoé"]]}
+PASS A8 the panel: Talk to Zoé, with the talk key; the map's star on her, not on the well {"to":"citadel","zoe":3.5,"zoeIn":true,"tip":"step:zoe","text":"Talk to Zoé○○○○○W Talk","said":["t2_zoe_call"],"bark":"block","stars":[[-42.6,73.7,"Zoé"]]}
+PASS A9 a player who heads for the well first: Zoé calls him back at the yard's edge (her line), he walks back in; never past ~16 m {"r":"state:dialog","maxD":15,"endD":11.9,"said":["(Knocking, here, where the project's pipe goes into the ground. Like the kitchen wall.)","Twinsen! Wait, I've news from next door."],"zoe":1,"room":"out","state":"play","wellSeen":false}
+PASS A10 Talk to Zoé by its key: their kettle, the crystals found; a tick, then: Look at the Kettle Crystals in your inventory, with its key {"kettle":true,"ok":"✓ Talk to Zoé","tip":"step:inv","text":"Look at the Kettle Crystals in your inventory●○○○○Shift Open Inventory","item":true}
+PASS A11 the inventory opens on its key, on the Kettle Crystals she asked about (the footer says how to close) {"st":"inventory","foot":"↑←↓→: select · Shift / Esc: close","sel":"kettle"}
+PASS A11 closed: the next goal, Try the garden tap, with its key; Zoé asks {"st":"play","tip":"step:tap","text":"Try the garden tap●●○○○W Try the tap","said":["t2_zoe_call","t2_ask_inv","t2_ask_tap"]}
+PASS A12 heads off again: called back with the step she wants ("Try our tap first") {"r":"state:dialog","maxD":15,"endD":11.9,"said":["Twinsen! Try our tap first. It's right here.","Where are you off to? I'm not finished with you."],"zoe":2,"room":"out","state":"play","wellSeen":false}
+PASS A13 the garden tap by its key: dry, knocking; then: Hit the barrels with the magic ball, in its key; Zoé's dare {"yard":true,"tip":"step:barrels","text":"Hit the barrels with the magic ball●●●○○Face the barrels. Alt Throw the magic ball","said":["t2_zoe_call","t2_ask_inv","t2_ask_tap","t2_ask_barrels"]}
+PASS A14 two throws away from the barrels: back in his hand each time within 3.5 s, nothing hit, the step stays {"times":[2.47,2.47],"hit":false,"tip":"step:barrels"}
+PASS A14 facing them, one throw: a hit (flash, knock, his word), a tick; then: Jump over the project's pipe, Switch to Athletic in its key {"hit":true,"ok":"✓ Hit the barrels with the magic ball","ball":"idle","tip":"step:pipe","text":"Jump over the project's pipe●●●●○F2 Switch to Athletic: run and jump","said":["t2_zoe_call","t2_ask_inv","t2_ask_tap","t2_ask_barrels","t2_ask_pipe"]}
+PASS A15 walking into the pipe in Normal: stopped on his side, no harm, the step stays {"x":-44.06,"hp":10,"hp0":10,"pipe":false}
+PASS A16 switched to Athletic by its key: the panel's key moves on to the jump {"beh":"athletic","text":"Jump over the project's pipe●●●●○Space Jump · take a run at it"}
+PASS A17 the running jump clears the pipe: a tick, Zoé's last word; the yard is done {"x":-41.32,"pipe":1,"ok":"✓ Jump over the project's pipe","yardOk":true,"said":["t2_zoe_call","t2_ask_inv","t2_ask_tap","t2_ask_barrels","t2_ask_pipe","t2_zoe_done"],"tip":"arc","obj":"Check the well","stars":[[-42,-4,"The well"]],"well":[-42,-4]}
+PASS A17 the objective is the well again, and the map's star is on it {"x":-41.32,"pipe":1,"ok":"✓ Jump over the project's pipe","yardOk":true,"said":["t2_zoe_call","t2_ask_inv","t2_ask_tap","t2_ask_barrels","t2_ask_pipe","t2_zoe_done"],"tip":"arc","obj":"Check the well","stars":[[-42,-4,"The well"]],"well":[-42,-4]}
+PASS A17 (timing, the bot) the house and the yard by the steps, two skip attempts and the optional Arthur and tap included: under 4 minutes of game time {"seconds":85.8}
+PASS A18 after the yard, the optional arc tip by the barrels; holding the ball key shows the landing (learned on the hold) {"tip":"arc","dots":true,"done":true}
+PASS A19 the yard done: the way to the well is open (no call), the well reached {"r":"timeout","maxD":82.8,"endD":82.7,"said":[],"zoe":0,"room":"out","state":"play","wellSeen":false}
+PASS A19 the well inspected (the story goes on) {"seen":true}
+PASS B0 Settings has "Show control tips"; Off is kept "off"
+PASS B1 tips off: the goal line stays at every step, with no key in it, and no dialogue key hint [["house","Take your magic ball from the cupboard",false,false],["arthur","Take your magic ball from the cupboard",false,false],["ball","Go out to the yard",false,false],["out","Talk to Zoé○○○○○",false,false],["skip","Talk to Zoé○○○○○",false,false],["zoe","Look at the Kettle Crystals in your inventory●○○○○",false,false],["inv","Try the garden tap●●○○○",false,false],["tap","Hit the barrels with the magic ball●●●○○",false,false],["barrels","Jump over the project's pipe●●●●○",false,false],["pipe","",false,false]]
+PASS B1 tips off: the yard's edge still holds, and every step completes by its key (kettle, tap, barrels, pipe; the yard done) {"sk":{"r":"state:dialog","maxD":15,"endD":11.9,"said":["(Knocking, here, where the project's pipe goes into the ground. Like the kitchen wall.)","Twinsen! Wait, I've news from next door."],"zoe":1,"room":"out","state":"play","wellSeen":false},"flags":[true,true,true,true,true]}
+PASS B2 an experienced player out of order (the barrels and the pipe first): those count; after Zoé and the inventory only the tap is left {"barrel":true,"pipe":1,"mid":"step:zoe","afterZoe":"step:inv","afterInv":"step:tap","said":["t2_zoe_call","t2_ask_inv","t2_ask_tap"]}
+PASS B3 three standing jumps at the pipe that don't clear it: "Close enough"; the yard done {"tries":[[0,-45.05],[0,-45.05],[2,-45.05]],"pipe":2,"yardOk":true,"said":["t2_zoe_call","t2_ask_tap","t2_ask_barrels","t2_ask_pipe","t2_zoe_close"]}
+PASS B4 a remapped key: the barrels' step names the new key at once {"key":"G","text":"Hit the barrels with the magic ball●●●○○Face the barrels. G Throw the magic ball","tip":"step:barrels"}
+PASS B5 a gamepad mid-step: the step's key in the pad's terms (left stick, Y) {"dev":"pad","tip":"step:barrels","text":"Hit the barrels with the magic ball●●●○○Aim at the barrels with the left stick. Y Throw the magic ball","cam":"free"}
+PASS B6 the pad's Y throws and hits: the next step in the pad's terms (Athletic on the D-pad) {"thrown":true,"hit":true,"ball":"idle","tip":"step:pipe","text":"Jump over the project's pipe●●●●○D-pad → Switch to Athletic: run and jump"}
+PASS B7 back to the keyboard mid-step: no pad button left in the panel {"dev":"kbd","text":"Jump over the project's pipe●●●●○F2 Switch to Athletic: run and jump"}
+PASS B8 the pipe by keys: the yard done {"ok":true}
+PASS B9 on to the well: no yard step or tip in town, the well inspected {"r":"arrived","tips":[],"seen":true}
+PASS B10 the kids brush him off: Switch to Discreet; overheard, then Back to Normal; both learned {"t1":"F4 Switch to Discreet: sneak up quietly","t2":"F1 Back to Normal","overheard":true,"done":["discreet","normal"]}
+PASS B11 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then the kick's key {"t1":"F3 Switch to Aggressive: kick and punch","t2":"W Kick the lid"}
+PASS C1 a save from the cup's days (no tutorial state, no steps): no tip, no step; ball, door; free to walk to the well (no call) {"tip":null,"ball":true,"to":"citadel","zoe":69.1,"tipOut":null,"sk":{"r":"timeout","maxD":72.6,"endD":72.7,"said":["(Knocking, here, where the project's pipe goes into the ground. Like the kitchen wall.)"],"zoe":0,"room":"out","state":"play","wellSeen":false},"steps":false}
+PASS C2 a save from P22's build in the yard (no pr_tut2): plays on as before: no step, no call, free to leave {"state":"play","tip":"ball","steps":false,"sk":{"r":"timeout","maxD":81.7,"endD":80.9,"said":[],"zoe":0,"room":"out","state":"play","wellSeen":false}}
+PASS C3 this build's save mid-yard: the steps resume where they were (Try the garden tap); the edge holds {"tip":"step:tap","text":"Try the garden tap●●○○○W Try the tap","sk":{"r":"state:dialog","maxD":15,"endD":11.9,"said":["Twinsen! Try our tap first. It's right here.","Where are you off to? I'm not finished with you."],"zoe":2,"room":"out","state":"play","wellSeen":false}}
+PASS C4 this build's save past the yard's edge: let go (the yard counts as done), no call, no step {"d":78.6,"d2":84.4,"yardOk":true,"state":"play","tip":null,"said":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 45 passed, 0 failed
+errors:     none
+resources:  1 FAIL, 0 optional
+  FAIL missing local file: the server responded with a status of 404 (Not Found) http://127.0.0.1:8974/favicon.ico
+visual:     14 capture(s) written for review, not judged here
+VERDICT: FAIL (1 resource)
+1 FAILED

@@ -1,0 +1,25 @@
+LBA3 benchmark (full) · build 0.41.0 (build 277) · 2026-10-30 12:20 · the user's Vega 8 laptop, installed desktop app, ON BATTERY
+(the user ran it by hand; plus three photos of the in-game overlay on the street, 30.10:)
+  plugged in, High, Follow camera: 60 fps, frame p50 16.7 / p95 16.8 / max 16.8 · sim 3.2 · render CPU 7.4 · 223 calls · 1325k tris
+  on battery, High:               27.6 fps, p50 33.4 / p95 50 · sim 6.2 · render CPU 11.6 · 210 calls · 1300k tris
+  on battery, Auto (Medium):      37.3 fps, p50 33.3 / p95 33.6 · sim 5 · render CPU 10.9 · 151 calls · 883k tris
+
+summary · fps fixed (benchmark orbit camera) / as played · ON BATTERY
+             low                 medium              high
+  street     38.7* / 57.3        46.1 / 48.4         31.7 / 48
+  interior   60 / 60             59.8 / 60           48 / 54.2
+  combat     54.7 / 53.2         54.5 / 55           54.7 / 54.4
+  transition 59.3 / 59.8         53.8 / 56           41 / 46
+  arrival    39.9* / 52.7        44.3 / 46           36 / 32.7
+  hamalayi   59.5 / 60           44.4 / 54.7         42.4 / 46.2
+  * Low street: one 2183 ms frame at 2.2 s (first route, cold; "+3 geometries, +1 textures" the frame after) — the first-visit stall is still there.
+    Low arrival: 583 / 567 ms behind black (draw batches 336 / 366 ms) then 184 / 167 ms IN VIEW (+12/+13 textures) — the frame after the black still heavy.
+
+MEDIUM STREET BREAKDOWN (battery), GPU p50: as is 19.08 · output plain at 90 % (no edge smoothing, no sharpen) 16.00 (50 fps) ·
+  no edge smoothing 17.34 · res ×0.9 sharpened 17.64 · no shadows 17.22 · no lamps 17.42 · shadow map kept 17.69 · res ×0.6 14.61 (55 fps) ·
+  PERF-SUBMIT off 19.03 (no GPU/CPU difference) · battery profile off 22.79
+READING
+- Plugged in, High holds a flat 60 on the street (Follow camera). On battery the street is GPU-bound at every preset (Medium 17–19 ms).
+- The Follow camera at Far sees far more than the benchmark camera: Auto/Medium on the street 151 calls / 883k tris vs the fixed route's 120 / 545k —
+  the play view is heavier than what the benchmark's fixed route measures.
+- Edge smoothing in the output pass costs ~1.7–3 ms on battery here (round 1 estimated a few tenths): the biggest single invisible-ish lever.

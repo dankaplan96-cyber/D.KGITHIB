@@ -1,0 +1,327 @@
+[
+ {
+  "op": "import",
+  "name": "ball: baseline into a .blend",
+  "input": "art/blender/props/equip/ball/source/ball.baseline.polyprop.json",
+  "blend": "art/blender/props/equip/ball/work/ball.baseline.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "ball: baseline report",
+  "input": "art/blender/props/equip/ball/source/ball.baseline.polyprop.json",
+  "output": "art/blender/props/equip/ball/reports/baseline.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "ball: baseline checks",
+  "input": "art/blender/props/equip/ball/work/ball.baseline.blend",
+  "output": "art/blender/props/equip/ball/reports/baseline.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.15,
+   "maxSize": 0.4,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "ball: baseline views",
+  "input": "art/blender/props/equip/ball/work/ball.baseline.blend",
+  "output": "art/blender/props/equip/ball/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.4
+  }
+ },
+ {
+  "op": "import",
+  "name": "ball: candidate into the working .blend",
+  "input": "art/blender/props/equip/ball/export/ball.candidate.polyprop.json",
+  "blend": "art/blender/props/equip/ball/work/ball.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "ball: candidate report",
+  "input": "art/blender/props/equip/ball/work/ball.blend",
+  "output": "art/blender/props/equip/ball/reports/ball.candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "ball: candidate checks",
+  "input": "art/blender/props/equip/ball/work/ball.blend",
+  "output": "art/blender/props/equip/ball/reports/ball.candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.15,
+   "maxSize": 0.4,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "ball: candidate views",
+  "input": "art/blender/props/equip/ball/work/ball.blend",
+  "output": "art/blender/props/equip/ball/previews/ball-candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.4
+  }
+ },
+ {
+  "op": "export",
+  "name": "ball: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/equip/ball/work/ball.blend",
+  "output": "art/blender/props/equip/ball/export/ball.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "ball2: candidate into the working .blend",
+  "input": "art/blender/props/equip/ball/export/ball2.candidate.polyprop.json",
+  "blend": "art/blender/props/equip/ball/work/ball2.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "ball2: candidate report",
+  "input": "art/blender/props/equip/ball/work/ball2.blend",
+  "output": "art/blender/props/equip/ball/reports/ball2.candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "ball2: candidate checks",
+  "input": "art/blender/props/equip/ball/work/ball2.blend",
+  "output": "art/blender/props/equip/ball/reports/ball2.candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.15,
+   "maxSize": 0.4,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "ball2: candidate views",
+  "input": "art/blender/props/equip/ball/work/ball2.blend",
+  "output": "art/blender/props/equip/ball/previews/ball2-candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.4
+  }
+ },
+ {
+  "op": "export",
+  "name": "ball2: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/equip/ball/work/ball2.blend",
+  "output": "art/blender/props/equip/ball/export/ball2.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "ball3: candidate into the working .blend",
+  "input": "art/blender/props/equip/ball/export/ball3.candidate.polyprop.json",
+  "blend": "art/blender/props/equip/ball/work/ball3.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "ball3: candidate report",
+  "input": "art/blender/props/equip/ball/work/ball3.blend",
+  "output": "art/blender/props/equip/ball/reports/ball3.candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "ball3: candidate checks",
+  "input": "art/blender/props/equip/ball/work/ball3.blend",
+  "output": "art/blender/props/equip/ball/reports/ball3.candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.15,
+   "maxSize": 0.4,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "ball3: candidate views",
+  "input": "art/blender/props/equip/ball/work/ball3.blend",
+  "output": "art/blender/props/equip/ball/previews/ball3-candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.4
+  }
+ },
+ {
+  "op": "export",
+  "name": "ball3: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/equip/ball/work/ball3.blend",
+  "output": "art/blender/props/equip/ball/export/ball3.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "ball4: candidate into the working .blend",
+  "input": "art/blender/props/equip/ball/export/ball4.candidate.polyprop.json",
+  "blend": "art/blender/props/equip/ball/work/ball4.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "ball4: candidate report",
+  "input": "art/blender/props/equip/ball/work/ball4.blend",
+  "output": "art/blender/props/equip/ball/reports/ball4.candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "ball4: candidate checks",
+  "input": "art/blender/props/equip/ball/work/ball4.blend",
+  "output": "art/blender/props/equip/ball/reports/ball4.candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 1,
+   "maxTriangles": 800,
+   "minSize": 0.15,
+   "maxSize": 0.4,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "ball4: candidate views",
+  "input": "art/blender/props/equip/ball/work/ball4.blend",
+  "output": "art/blender/props/equip/ball/previews/ball4-candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 0.4
+  }
+ },
+ {
+  "op": "export",
+  "name": "ball4: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/equip/ball/work/ball4.blend",
+  "output": "art/blender/props/equip/ball/export/ball4.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ },
+ {
+  "op": "import",
+  "name": "sword: baseline into a .blend",
+  "input": "art/blender/props/equip/sword/source/sword.baseline.polyprop.json",
+  "blend": "art/blender/props/equip/sword/work/sword.baseline.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "sword: baseline report",
+  "input": "art/blender/props/equip/sword/source/sword.baseline.polyprop.json",
+  "output": "art/blender/props/equip/sword/reports/baseline.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "sword: baseline checks",
+  "input": "art/blender/props/equip/sword/work/sword.baseline.blend",
+  "output": "art/blender/props/equip/sword/reports/baseline.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 3,
+   "maxTriangles": 800,
+   "minSize": 0.5,
+   "maxSize": 1.2,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "sword: baseline views",
+  "input": "art/blender/props/equip/sword/work/sword.baseline.blend",
+  "output": "art/blender/props/equip/sword/previews/baseline",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 1.15
+  }
+ },
+ {
+  "op": "import",
+  "name": "sword: candidate into the working .blend",
+  "input": "art/blender/props/equip/sword/export/sword.candidate.polyprop.json",
+  "blend": "art/blender/props/equip/sword/work/sword.blend"
+ },
+ {
+  "op": "inspect",
+  "name": "sword: candidate report",
+  "input": "art/blender/props/equip/sword/work/sword.blend",
+  "output": "art/blender/props/equip/sword/reports/sword.candidate.inspect.json"
+ },
+ {
+  "op": "validate",
+  "name": "sword: candidate checks",
+  "input": "art/blender/props/equip/sword/work/sword.blend",
+  "output": "art/blender/props/equip/sword/reports/sword.candidate.validate.json",
+  "options": {
+   "target": "polyprop",
+   "maxMaterials": 3,
+   "maxTriangles": 800,
+   "minSize": 0.5,
+   "maxSize": 1.2,
+   "groundedAtZero": true
+  }
+ },
+ {
+  "op": "preview",
+  "name": "sword: candidate views",
+  "input": "art/blender/props/equip/sword/work/sword.blend",
+  "output": "art/blender/props/equip/sword/previews/sword-candidate",
+  "options": {
+   "resolution": 384,
+   "modes": [
+    "neutral",
+    "textured"
+   ],
+   "orthoScale": 1.15
+  }
+ },
+ {
+  "op": "export",
+  "name": "sword: candidate back out of Blender (round trip)",
+  "input": "art/blender/props/equip/sword/work/sword.blend",
+  "output": "art/blender/props/equip/sword/export/sword.roundtrip.polyprop.json",
+  "options": {
+   "format": "polyprop"
+  }
+ }
+]

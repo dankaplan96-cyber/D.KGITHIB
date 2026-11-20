@@ -1,0 +1,148 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index 9209ca0a..02ea4c6d 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -24,7 +24,7 @@
+ // match them to the original's landmarks (tools/worldscore/landmarks.json). All geometry goes into the island's one
+ // draw batch per material (desert.js B), so the island's draw calls grow only by the few new materials.
+ import * as THREE from 'three';
+-import { tm, pm, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
++import { tm, pm, ctex, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
+ import { fitAdd } from './worldfit.js';
+ import { roomOcc, occCollider } from './roomocc.js';
+ import { rng, smoothstep } from '../engine/math.js';
+@@ -104,7 +104,11 @@ export function buildOldPlaces(C) {
+     stone: tm('stone', { color: '#d6c9b2' }), grey: tm('stone', { color: '#dedae2' }), cliff: tm('cliff', { color: '#c9b096' }),
+     white: tm('plaster', { color: '#f2eee4' }), blue: pm('#2a62a8', 0.45), orange: pm('#e07a2a', 0.6),
+     eye: pm('#ff5a1a', 0.3, { emissive: '#d82a00', emissiveIntensity: 1.4 }),
++    // (DESERT-ART 2, CURATOR-27a: the island's old landmarks in LBA2's colours: the peach is S40's own wall (one material,
++    //  no draw call added), the figures' teal caps and red / green bands, the gateway's chequered beam)
++    peach: tm('plasterWall', { color: '#eab496', rough: 0.95 }), teal: pm('#3f7e8a', 0.55), red: pm('#c4584a', 0.8), green: pm('#6b8656', 0.8),
+   };
++  M.checker = new THREE.MeshStandardMaterial({ roughness: 0.7, map: ctex('w80d-checker', 64, 64, (x, S) => { x.fillStyle = '#f2efe6'; x.fillRect(0, 0, S, S); x.fillStyle = '#1e1d1c'; x.fillRect(0, 0, S / 2, S / 2); x.fillRect(S / 2, S / 2, S / 2, S / 2); }) });
+   const r = rng(4949);
+   // (DESERT-BAR: with its sill, the door's own face, so a door that leads in (S28, the hall: ihomes.js) has its room's way
+   //  in and out)
+@@ -153,25 +157,31 @@ export function buildOldPlaces(C) {
+     return { gy, at };
+   };
+ 
+-  // ---------------------------------------------------------------- a standing stone figure (robed, hooded, a staff)
+-  const stoneFigure = (x, z, ry, h, mat = M.stone) => {
+-    const f = frame(x, z, ry), fg = H(x, z), ph = Math.min(0.9, h * 0.17), k = (h - ph) / 3.5;
+-    B.add(bbox(1.3 * k + 0.4, ph + 0.5, 1.3 * k + 0.4, 0.06, 1), M.grey, x, fg + (ph - 0.5) / 2, z, 0, ry, 0);
+-    B.add(bbox(1.3 * k + 0.55, 0.14, 1.3 * k + 0.55, 0.04, 1), M.grey, x, fg + ph - 0.05, z, 0, ry, 0);
+-    const y0 = fg + ph + 0.02;
+-    B.add(lathe([[0, 0], [0.7, 0], [0.72, 0.12], [0.6, 0.7], [0.46, 1.45], [0.5, 1.95], [0.58, 2.28], [0.4, 2.5], [0.15, 2.6], [0, 2.62]], 14, TILE.stone), mat, x, y0, z, 0, ry, 0, k, k, 0.72 * k);
+-    B.add(cached('w80d-head', () => new THREE.SphereGeometry(0.25, 10, 8)), mat, x, y0 + 2.84 * k, z, 0, 0, 0, k);
+-    { const [hx, hz] = f(0, -0.06 * k); B.add(lathe([[0.36, 0], [0.37, 0.2], [0.31, 0.44], [0.18, 0.7], [0.06, 0.92], [0, 0.97]], 10, TILE.stone), M.grey, hx, y0 + 2.58 * k, hz, 0, ry, 0, k); }
+-    { const [fx, fz] = f(0, 0.255 * k); B.add(cached('w80d-face', () => new THREE.CircleGeometry(0.17, 10).scale(1, 1.25, 1)), M.dark, fx, y0 + 2.86 * k, fz, 0, ry, 0, k); }
+-    const [sx, sz] = f(-0.58 * k, 0.18 * k);
+-    B.add(cyl(0.045 * k, 0.05 * k, 3.42 * k, 6), M.darkWood, sx, y0 + 1.69 * k, sz);
+-    B.add(cached('w80d-staff', () => new THREE.OctahedronGeometry(0.13, 0)), M.grey, sx, y0 + 3.48 * k, sz, 0, 0, 0, k);
+-    const [ax, az] = f(-0.42 * k, 0.12 * k), [hx, hz] = f(-0.55 * k, 0.2 * k);
+-    B.add(tube([[ax, y0 + 2.28 * k, az], [(ax + hx) / 2 - 0.02, y0 + 1.95 * k, (az + hz) / 2], [hx, y0 + 1.72 * k, hz]], 0.13 * k, 6, TILE.stone), mat);
+-    { const [a1x, a1z] = f(0.5 * k, 0.05 * k), [a2x, a2z] = f(0.42 * k, 0.32 * k), [a3x, a3z] = f(-0.05 * k, 0.38 * k); B.add(tube([[a1x, y0 + 2.25 * k, a1z], [a2x, y0 + 1.8 * k, a2z], [a3x, y0 + 1.82 * k, a3z]], 0.12 * k, 6, TILE.stone), mat); }
++  // ---------------------------------------------------------------- a standing figure (bodies 0 and 33)
++  // (DESERT-ART 2: LBA2's figures are peach columns: a shaft narrowing to a waist, flaring to a drum, a coloured band
++  //  (body 0 red, body 33 green) and a pointed teal cap, eight-sided as the original's; they were dark hooded statues.
++  //  The collider and the spot are the statues' own)
++  const domeFigure = (x, z, ry, h, band) => {
++    const fg = H(x, z), ph = Math.min(0.9, h * 0.17), k = (h - ph) / 3.5, q = h / 5.18;
++    B.add(cached('w80d-fig-shaft', () => lathe([[0, -0.4], [0.86, -0.4], [0.84, 0], [0.67, 2.73], [1.05, 3.12], [1.13, 3.27], [1.13, 3.7], [0, 3.7]], 8, 0)), M.peach, x, fg, z, 0, ry, 0, q);
++    B.add(cached('w80d-fig-band', () => new THREE.CylinderGeometry(1.15, 1.15, 0.7, 8).translate(0, 4.04, 0)), band, x, fg, z, 0, ry, 0, q);
++    B.add(cached('w80d-fig-cap', () => lathe([[0, 0], [1.17, 0], [0.98, 0.33], [0.58, 0.64], [0, 0.8]], 8, 0).translate(0, 4.38, 0)), M.teal, x, fg, z, 0, ry, 0, q);
+     col({ type: 'box', x, z, hw: 0.65 * k + 0.2, hd: 0.65 * k + 0.2, rot: ry, top: fg + h });
+     figure(x, z);
+   };
++  // a ball-topped peach pillar (bodies 80 and 81): a slender square shaft, a buttress at its foot, an iron ball on top
++  // (DESERT-ART 2: they were horned stone pillars; the collider is the horned pillar's own)
++  const ballPillar = (x, z, ry, h) => {
++    const fg = H(x, z), w = 0.3 + h * 0.12, f = frame(x, z, ry), top = fg + h - 0.55;
++    B.add(bbox(0.62, 0.3, 0.72, 0.04, 1), M.grey, x, fg + 0.05, z, 0, ry, 0);
++    B.add(bbox(0.46, top - fg + 0.3, 0.56, 0.06, 1), M.peach, x, (top + fg - 0.3) / 2, z, 0, ry, 0);
++    { const sh = new THREE.Shape(); sh.moveTo(0.22, 0); sh.lineTo(0.62, 0); sh.lineTo(0.62, 0.95); sh.lineTo(0.22, 1.65); sh.closePath();
++      const [bx, bz] = f(0.17, 0); B.add(cached('w80d-buttress', () => extrude(sh, 0.34, 1)), M.peach, bx, fg - 0.05, bz, 0, ry - Math.PI / 2, 0); }
++    { const [kx, kz] = f(0, -0.36); B.add(bbox(0.2, 0.16, 0.22, 0.02, 1), M.darkWood, kx, top - 0.35, kz, 0, ry, 0); }
++    B.add(cached('w80d-ball', () => new THREE.SphereGeometry(0.3, 7, 5)), M.iron, x, top + 0.27, z);
++    B.add(cached('w80d-spike', () => new THREE.ConeGeometry(0.06, 0.24, 5)), M.iron, x, top + 0.64, z);
++    col({ type: 'cyl', x, z, r: w / 2 + 0.15, top: fg + h, seeThrough: true });
++  };
+   // a horned stone pillar: a tapered square shaft, a capital, two horns curving out (the reference's horned pillars)
+   const hornedPillar = (x, z, ry, h) => {
+     const fg = H(x, z), w = 0.3 + h * 0.12;
+@@ -319,14 +329,32 @@ export function buildOldPlaces(C) {
+   {
+     // (it stands on the hollow's floor; its north end runs into the ridge, whose top its roof reaches, as the original's does)
+     const T = { x: 4.0, z: 1.3, w: 2.47, d: 7.19, h: 8.36 }, gy = H(T.x - T.w / 2 - 0.5, T.z - 1.5), low = gy - 0.6;
+-    B.add(bbox(T.w, gy + T.h * 0.55 - low, T.d, 0.1, TILE.stone), M.stone, T.x, (gy + T.h * 0.55 + low) / 2, T.z);
+-    B.add(bbox(T.w - 0.2, T.h * 0.45, T.d - 0.2, 0.1, TILE.stone), M.adobe('#e2a878'), T.x, gy + T.h * 0.55 + T.h * 0.225, T.z);
+-    B.add(bbox(T.w + 0.2, 0.25, T.d + 0.2, 0.04, 1), M.stone, T.x, gy + T.h * 0.55 + 0.05, T.z);
++    // (DESERT-ART 2: LBA2's S28 (body 52) is a giant grey stone face: the tower is the island's grey stone now, its west
++    //  wall carved as a face over the door (below); it was stone under adobe)
++    B.add(bbox(T.w, gy + T.h * 0.55 - low, T.d, 0.1, TILE.stone), M.grey, T.x, (gy + T.h * 0.55 + low) / 2, T.z);
++    B.add(bbox(T.w - 0.2, T.h * 0.45, T.d - 0.2, 0.1, TILE.stone), M.grey, T.x, gy + T.h * 0.55 + T.h * 0.225, T.z);
++    B.add(bbox(T.w + 0.2, 0.25, T.d + 0.2, 0.04, 1), M.grey, T.x, gy + T.h * 0.55 + 0.05, T.z);
+     for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { B.add(bbox(0.5, 0.6, 0.3, 0.04, 1), M.stone, T.x + s * (T.w / 2 - 0.2), gy + T.h + 0.1, T.z - T.d / 2 + 0.6 + i * (T.d - 1.2) / 3); }
+     for (const s of [-1, 1]) B.add(bbox(0.5, 0.6, 0.3, 0.04, 1), M.stone, T.x, gy + T.h + 0.1, T.z + s * (T.d / 2 - 0.2));
+     B.add(bbox(T.w - 0.5, 0.1, T.d - 0.5, 0, 2), M.roof, T.x, gy + T.h - 0.15, T.z);
+-    for (const zz of [-2.2, 0, 2.2]) for (const s of [-1, 1]) B.add(bbox(0.08, 1.1, 0.3, 0, 1), M.dark, T.x + s * (T.w / 2 + 0.01), gy + T.h * 0.55 + 1.9, T.z + zz);
+-    for (const zz of [-1.6, 1.6]) B.add(bbox(0.08, 0.8, 0.5, 0, 1), M.dark, T.x - T.w / 2 - 0.01, gy + 2.6, T.z + zz);
++    for (const zz of [-2.2, 0, 2.2]) B.add(bbox(0.08, 1.1, 0.3, 0, 1), M.dark, T.x + T.w / 2 + 0.01, gy + T.h * 0.55 + 1.9, T.z + zz);   // (the east wall's; the west's are the face's eyes)
++    // the face on the west wall (looking west, over the door): V-set brows, dark eye sockets with heavy lids, cheeks,
++    // a long nose, a dark mouth between two lips; the door below in its chin. All above the door's head (2.4 m), within
++    // the wall's length; the collider is the tower's own
++    {
++      const xw = T.x - T.w / 2, zc = T.z - 0.4, out = (v) => xw - v;   // (u along the wall, +z north; v out of it, west)
++      for (const s of [-1, 1]) {
++        B.add(bbox(0.55, 0.62, 2.9, 0.12, 1), M.grey, out(0.2), gy + 6.95, zc + s * 1.42, -s * 0.3, 0, 0);       // a brow, its inner end low
++        B.add(bbox(0.06, 0.95, 1.6, 0.02, 1), M.dark, out(0.03), gy + 6.02, zc + s * 1.42);                      // the eye socket
++        B.add(bbox(0.42, 0.24, 1.7, 0.08, 1), M.grey, out(0.16), gy + 5.46, zc + s * 1.42);                      // the lower lid
++        B.add(bbox(0.36, 1.5, 1.35, 0.15, 1), M.grey, out(0.1), gy + 4.35, zc + s * 1.75);                       // a cheek
++      }
++      B.add(bbox(0.45, 0.6, 0.7, 0.1, 1), M.grey, out(0.2), gy + 6.45, zc);                                       // the bridge between the brows
++      B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), M.grey, out(0.38), gy + 4.75, zc, -0.22, -Math.PI / 2 + Math.PI / 4, 0);
++      B.add(bbox(0.06, 0.26, 2.2, 0.02, 1), M.dark, out(0.03), gy + 3.3, zc);                                     // the mouth
++      B.add(bbox(0.3, 0.2, 2.6, 0.08, 1), M.grey, out(0.13), gy + 3.54, zc);                                      // the upper lip
++      B.add(bbox(0.26, 0.2, 2.2, 0.08, 1), M.grey, out(0.11), gy + 3.04, zc);                                     // the lower lip
++    }
+     B.add(bbox(0.3, 2.1, 1.2, 0, 1), M.dark, T.x - T.w / 2 + 0.1, gy + 1.05, T.z - 1.5);
+     B.add(bbox(0.08, 2.0, 1.1, 0, TILE.planks), M.darkWood, T.x - T.w / 2 - 0.02, gy + 1.0, T.z - 1.5);
+     B.add(bbox(0.3, 0.26, 1.6, 0, 1), M.grey, T.x - T.w / 2 - 0.05, gy + 2.22, T.z - 1.5);
+@@ -348,13 +376,13 @@ export function buildOldPlaces(C) {
+   for (const [x, z] of [[-55.45, -73.9], [-58.1, -74.1]]) {   // (PLACE-3: the first 0.25 m east: it stood 9 cm in the planter's box)
+     const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }
+   // the two standing figures on the knolls west of the village (bodies 0 and 33), looking out over the beach
+-  stoneFigure(-117.8, -31.9, Math.PI / 2, 5.18, M.grey);
+-  stoneFigure(-83.3, -31.9, Math.PI * 0.75, 5.18, M.grey);
++  domeFigure(-117.8, -31.9, Math.PI / 2, 5.18, M.red);
++  domeFigure(-83.3, -31.9, Math.PI * 0.75, 5.18, M.green);
+ 
+   // ================================================================ north of the post: the twin pillars and the old corral
+   {
+-    const fg0 = hornedPillar(55.7, -54.1, Math.PI / 2, 5.15); void fg0;
+-    hornedPillar(51.4, -54.5, Math.PI / 2, 5.15);
++    ballPillar(55.7, -54.1, Math.PI / 2, 5.15);
++    ballPillar(51.4, -54.5, Math.PI / 2, 5.15);
+     figure(55.7, -54.1); figure(51.4, -54.5);
+     for (const [x, z, ry] of [[55.3, -52.6, 0], [54.0, -51.4, Math.PI / 2], [51.8, -51.6, Math.PI / 2]]) lowWall(x, z, 2.12, ry, 1.4, M.stone);
+     // the fences (bodies 78) on the original's lines: along z (turn 0/180) and along x (90/270), the gate (84) left open
+@@ -378,14 +406,14 @@ export function buildOldPlaces(C) {
+     const ph = 7.0, g = Math.max(H(cx + uz * 4.5, cz - ux * 4.5), H(cx - uz * 4.5, cz + ux * 4.5));
+     for (const s of [-1, 1]) {
+       const px = cx - uz * s * 4.5, pz = cz + ux * s * 4.5, pg = H(px, pz);
+-      B.add(bbox(1.1, ph + 0.4 + (g - pg), 1.1, 0.06, TILE.stone), M.stone, px, pg - 0.4 + (ph + 0.4 + (g - pg)) / 2, pz, 0, ry, 0);
++      B.add(bbox(1.1, ph + 0.4 + (g - pg), 1.1, 0.06, TILE.stone), M.peach, px, pg - 0.4 + (ph + 0.4 + (g - pg)) / 2, pz, 0, ry, 0);   // (DESERT-ART 2: peach posts)
+       B.add(bbox(1.4, 0.3, 1.4, 0.04, 1), M.grey, px, pg + 0.1, pz, 0, ry, 0);
+       B.add(bbox(1.35, 0.4, 1.35, 0.04, 1), M.grey, px, g + ph - 0.2, pz, 0, ry, 0);
+       col({ type: 'box', x: px, z: pz, hw: 0.6, hd: 0.6, rot: ry, top: g + ph + 1.4 });
+     }
+-    B.add(bbox(8.99 + 1.4, 1.42, 0.6, 0.05, TILE.stone), M.stone, cx, g + ph + 0.71, cz, 0, ry + Math.PI / 2, 0);
+-    B.add(bbox(8.99 + 1.8, 0.3, 0.9, 0.04, 1), M.grey, cx, g + ph + 1.52, cz, 0, ry + Math.PI / 2, 0);
+-    for (let k = -3; k <= 3; k++) B.add(cached('w80d-star8', () => new THREE.CircleGeometry(0.42, 8)), M.grey, cx - uz * 0 + ux * k * 1.3, g + ph + 0.7, cz + uz * k * 1.3, 0, ry + Math.PI / 2, 0);
++    // (DESERT-ART 2: LBA2's beam is chequered black and white, two squares deep (body 64); it was plain stone under a
++    //  grey cap with seven discs)
++    B.add(bbox(8.99 + 1.4, 1.42, 0.6, 0.12, 1.42), M.checker, cx, g + ph + 0.71, cz, 0, ry + Math.PI / 2, 0);
+     R.gateway = W(cx, cz);
+   }
+ 

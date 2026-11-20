@@ -1,0 +1,33 @@
+[0.4] go → (2406.9, -7.9) plan ok=true pts=6 left=0.76
+[12.3] go → (2367.1, 8.3) plan ok=true pts=4 left=0.5
+[22.1] go → (2361.0, -5.9) plan ok=true pts=2 left=0.69
+[26.2] go → (2389.5, 8.3) plan ok=true pts=4 left=0.16
+[33.4] go: transition (zeelich → zeelich, trans true) at (2388.73, 7.95)
+[34.2] go → (1498.6, -2.3) plan ok=true pts=2 left=0.94
+[40.5] go → (1502.8, -3.0) plan ok=false pts=2 left=0.32
+[43.2] go: transition (workshop → workshop, trans true) at (1502.23, -2.57)
+[44.1] go → (2365.5, -3.2) plan ok=true pts=4 left=0.75
+[50.4] go → (2376.0, 7.0) plan ok=true pts=2 left=0.56
+[54.9] go → (2398.0, -10.9) plan ok=true pts=4 left=0.41
+[64.5] go → (2422.7, -8.8) plan ok=true pts=3 left=0.42
+[72.1] stuck at (2407.0, -8.8): replan
+[80.7] go → (2397.5, 24.7) plan ok=true pts=5 left=0.37
+[94.1] go → (2402.7, 21.7) plan ok=true pts=2 left=0.57
+[99.0] go → (2376.0, 7.0) plan ok=true pts=5 left=0.61
+[107.5] go → (2374.5, -7.7) plan ok=true pts=4 left=0.21
+[111.6] go: transition (zeelich → zeelich, trans true) at (2374.80, -6.79)
+[112.5] go → (4801.0, 0.6) plan ok=true pts=2 left=0.94
+[114.7] go → (4796.5, -4.5) plan ok=true pts=2 left=0.2
+[118.4] go: transition (upper → upper, trans true) at (4797.08, -4.08)
+[122.0] go → (4842.5, 4.5) plan ok=true pts=2 left=0.1
+[124.0] go: transition (council → council, trans true) at (4843.30, 4.54)
+[124.8] go → (4803.5, -4.5) plan ok=true pts=2 left=0.24
+[129.0] go: transition (upper → upper, trans true) at (4802.76, -4.36)
+[130.3] go → (4893.8, 1.6) plan ok=true pts=2 left=0.45
+[131.7] go → (4893.8, 1.6) plan ok=true pts=2 left=0.28
+[186.3] go → (4904.9, -4.5) plan ok=true pts=5 left=0.14
+[190.2] go → (4904.9, -4.5) plan ok=true pts=2 left=0.06
+[194.9] go → (4892.5, 4.0) plan ok=true pts=4 left=0.22
+[204.6] go: transition (archive → archive, trans true) at (4892.91, 3.37)
+[205.4] go → (4796.5, -4.5) plan ok=true pts=2 left=0.24
+[209.6] go: transition (upper → upper, trans true) at (4797.24, -4.36)

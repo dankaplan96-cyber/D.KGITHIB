@@ -1,0 +1,7 @@
+sq cols 111 doors 11 signs 9 npcs 51 spots 5
+hb cols 104 doors 11 signs 9 npcs 51 spots 5
+br cols 108 doors 11 signs 9 npcs 51 spots 5
+ln cols 99 doors 11 signs 9 npcs 51 spots 5
+dk cols 71 doors 11 signs 9 npcs 51 spots 5
+dress [{"placed":51,"kinds":{"bin":13,"signpost":4,"board-notices":2,"infostand":1,"tub":18,"bench":4,"fountain":1,"planter":2,"handcart":1,"board-ferry":1,"bollard":3,"handcart-quay":1},"skipped":["tub (-34.0, -2.8): street"]},{"world":3638,"spaceport":386,"townlife":69,"citydress":75,"interiors":1456,"zeelich":1944,"underground":583,"desert":529,"condenser":28,"temple":34,"wizards":38,"lba1":604,"hamalayi":286,"obsroom":17,"upper":400,"valves":57,"arena":5,"islands":677,"actors":396,"total":11381,"shaders":68995}]
+no errors

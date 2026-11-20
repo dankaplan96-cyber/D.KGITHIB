@@ -1,0 +1,122 @@
+{
+  "file": "art/blender/props/equip/ball/work/ball4.blend",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "ball4:568ac7.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.2378,
+        0.238,
+        0.24
+      ],
+      "mesh": {
+        "vertices": 1188,
+        "faces": 396,
+        "triangles": 396,
+        "uv_layers": [],
+        "color_attributes": [
+          "Col"
+        ],
+        "materials": [
+          "ball4:568ac7"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "ball4:568ac7",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "ball4:568ac7",
+        "recipe": null,
+        "color": "#d4d4d4",
+        "roughness": 0.35,
+        "metalness": 0,
+        "map": null,
+        "vertexColors": true,
+        "tile": 0
+      }
+    }
+  ],
+  "images": [],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 1,
+    "meshes": 1,
+    "triangles": 396,
+    "materials": 1,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.1189,
+        0.0,
+        -0.119
+      ],
+      "max": [
+        0.1189,
+        0.24,
+        0.119
+      ],
+      "size": [
+        0.2378,
+        0.24,
+        0.238
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "ball4",
+    "units": "metres; +y up; on the floor; front (+z) = toward the camera",
+    "source": {
+      "kind": "code-built equipment",
+      "builder": "src/game/equiplook.js ballGeo(4)"
+    },
+    "footprint": null,
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.1189,
+        0,
+        -0.119
+      ],
+      "max": [
+        0.1189,
+        0.24,
+        0.119
+      ],
+      "size": [
+        0.2378,
+        0.24,
+        0.238
+      ]
+    },
+    "triangles": 396
+  }
+}

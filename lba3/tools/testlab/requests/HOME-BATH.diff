@@ -1,0 +1,109 @@
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index f0e5b4e0..e8d346e4 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -649,9 +649,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
+   k.at(adX + 0.5, 0.78, adZ - 0.02, -0.4, () => P.toyBoat(k));
+   B.put(HX0 + 0.42, 9.3, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
+   B.giver('arthurchest', HX0 + 0.42, 9.3, ['money'], 15, { r: 1.2, top: 0.6 });
+-  k.at(-8.8, 0, 8.1, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
+-  k.at(-8.4, 0, 8.4, 0.4, () => P.toyBlocks(k));
+-  k.at(-5.1, 0, HZ1 - 0.6, 0, () => P.pottedPlant(k, { s: 0.9 }));
++  k.at(-8.8, 0, 7.3, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
++  k.at(-8.4, 0, 7.6, 0.4, () => P.toyBlocks(k));
++  k.at(-9.4, 0, HZ1 - 0.6, 0, () => P.pottedPlant(k, { s: 0.9 }));   // (HOME-BATH: it stood where the bathroom is)
+   B.giver('arthurbed', HX0 + 1.0, abZ, ['life'], 1, { r: 1.4, top: 0.6 });
+   B.light('#ffe0b0', 6, 9, -9.0, 2.3, 7.5);
+   // the parents' bedroom (the original's, north-west): x HX0..LX, z HZ0..-BZ. The double bed's headboard against the
+@@ -677,6 +677,91 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
+   B.giver('readchair', HX0 + 0.85, 0.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
+   k.at(-11.2, 0, 0.6, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
+   B.light('#ffe0b0', 4, 7, -9.0, 2.3, 0.0);
++  // ---- HOME-BATH (CLOUD_ORDERS 42; the user: "why don't they have a toilet and a shower"; of the versions before: "at least
++  //      against the walls", "in the corner here makes sense", "too small", "there is no door, and it looks odd: low walls
++  //      like a booth, the shower with its curtain, both a tub and a shower"): the house's bathroom in the south-east
++  //      corner of Arthur's room, 4.3 × 2.9 m, against the house's south wall and the hall's divider (a plant stood
++  //      there; his rug and blocks 0.8 m north for it; the hall's own south-east corner holds the story's R.life spots).
++  //      Its walls low like the house's dividers (the user, of a 2.6 m version: "half height is better, like the rest of
++  //      the game"). Its door, from Arthur's room, a leaf as high as the walls, opens by itself as he comes to it and
++  //      closes behind him (no collider: it is open before he reaches it). Inside: tiles, a glass shower in the south-west corner, the
++  //      washbasin and its mirror on the west wall, the toilet on the north wall, a towel cupboard and a laundry basket on
++  //      the south wall, towels on a rail, a mat. Taps art only (the opening's water is off): R.bath gives their places.
++  {
++    const X0 = -8.8, X1 = LX, Z0 = 8.6, ZS = HZ1 - 0.2, DL = -5.525, DR = -4.675;
++    const woodD = MAT.wood('dark'), paperM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond');
++    const div = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: paperM, cap: woodD, rail: woodD, low: MAT.wainscot('honey'), dado: 0.9, doors });
++    div(X0, Z0, X1, Z0, [{ at: DL + 0.425 - X0, w: DR - DL }]);   // the north wall, its doorway at x −5.5 to −4.7
++    div(X0, Z0, X0, HZ1);                                          // the west wall
++    const tileM = MAT.tiles('#e9e2d2', '#d8cdb6', '#8a7a62', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
++    const ix0 = X0 + 0.11, ix1 = X1 - 0.11, iz0 = Z0 + 0.11;
++    k.add(plane(ix1 - ix0, ZS - iz0), tileM, (ix0 + ix1) / 2, 0.012, (iz0 + ZS) / 2, 0, { rx: -Math.PI / 2 });
++    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.002, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
++    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.002, 0);
++    // the door: a wooden leaf as high as the walls, on a hinge at the doorway's east side, swinging in
++    const pivot = new THREE.Group(); pivot.position.set(DR, 0, Z0); B.group.add(pivot);
++    const leafLo = new THREE.Mesh(rbox(DR - DL - 0.04, 1.15, 0.05, 0.01), MAT.planks('honey')); leafLo.position.set(-(DR - DL) / 2, 0.575, 0); pivot.add(leafLo);
++    leafLo.castShadow = false; leafLo.receiveShadow = true;   // (it moves: no shadow cache rebuilds)
++    // the glass shower in the south-west corner: a tray, two glass sides in a brass frame, the riser up the corner to its head
++    { const SW = 1.0, SX = ix0 + SW / 2, SZ = ZS - SW / 2, glass = MAT.glass('#cfeaf2', 0.28), cu = MAT.copper();
++      k.add(rbox(SW, 0.08, SW, 0.03), white, SX, 0.04, SZ);
++      k.add(P.disc(0.04, 10), MAT.iron(), SX, 0.082, SZ, 0, { rx: -Math.PI / 2 });
++      k.add(plane(SW - 0.35, 1.9), glass, ix0 + (SW - 0.35) / 2, 1.03, ZS - SW);                               // its north side, the way in at its east end
++      k.add(plane(SW, 1.9), glass, ix0 + SW, 1.03, ZS - SW / 2, Math.PI / 2);                                   // its east side
++      for (const [x, z, l, ry2] of [[ix0 + (SW - 0.35) / 2, ZS - SW, SW - 0.35, 0], [ix0 + SW, ZS - SW / 2, SW, Math.PI / 2]]) k.add(rbox(l, 0.03, 0.03, 0), brass, x, 1.98, z, ry2);
++      for (const [x, z] of [[ix0 + SW, ZS - SW], [ix0 + SW - 0.35, ZS - SW]]) k.add(cyl(0.015, 0.015, 1.98, 6), brass, x, 0.99, z);
++      k.add(cyl(0.02, 0.02, 2.05, 8), cu, ix0 + 0.06, 1.03, ZS - 0.06);
++      k.add(cyl(0.015, 0.015, 0.36, 8), cu, ix0 + 0.18, 2.03, ZS - 0.18, Math.PI / 4, { rz: Math.PI / 2 });
++      k.add(cyl(0.09, 0.05, 0.05, 14), brass, ix0 + 0.32, 1.98, ZS - 0.32);
++      k.add(torus(0.04, 0.012, 6, 12), MAT.paint('#c0302a', 0.45), ix0 + 0.06, 1.05, ZS - 0.12, 0, { rx: Math.PI / 2 });   // its tap
++      B.col(ix0 + (SW - 0.35) / 2, ZS - SW, (SW - 0.35) / 2, 0.03, 2.0, { noStand: true, seeThrough: true });
++      B.col(ix0 + SW, ZS - SW / 2, 0.03, SW / 2, 2.0, { noStand: true, seeThrough: true }); }
++    // the washbasin on a cupboard against the west wall, facing in, its mirror on the wall over it
++    k.at(ix0 + 0.25, 0, 9.5, Math.PI / 2, () => {
++      k.add(rbox(0.82, 0.78, 0.44, 0.02), MAT.wood('honey'), 0, 0.39, 0);
++      k.add(lathe([[0.001, 0], [0.18, 0.0], [0.24, 0.08], [0.26, 0.11], [0.001, 0.11]], 16), white, 0, 0.78, 0.02, 0, { sz: 0.8 });
++      k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
++      k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
++      k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);                                        // the mirror's stand
++      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
++    });
++    B.col(ix0 + 0.25, 9.5, 0.24, 0.42, 0.9, { noStand: true });
++    // the toilet against the north wall, facing into the room: its pan, a wooden seat, the lid up, the cistern
++    k.at(-6.15, 0, iz0 + 0.3, 0, () => {
++      k.add(lathe([[0.001, 0], [0.13, 0], [0.12, 0.2], [0.19, 0.36], [0.2, 0.4], [0.001, 0.4]], 14), white, 0, 0, 0.05, 0, { sz: 1.3 });
++      k.add(torus(0.17, 0.03, 6, 16), woodD, 0, 0.42, 0.07, 0, { rx: Math.PI / 2, sz: 1.25 });
++      k.add(rbox(0.36, 0.42, 0.04, 0.02), woodD, 0, 0.62, -0.18, 0, { rx: -0.12 });
++      k.add(rbox(0.42, 0.34, 0.18, 0.03), white, 0, 0.82, -0.25);
++      k.add(cyl(0.012, 0.012, 0.14, 6), brass, 0.12, 1.02, -0.24);
++    });
++    B.ccol(-6.15, iz0 + 0.32, 0.28, 0.8, { noStand: true });
++    // the towel cupboard and the laundry basket on the south wall; towels on a rail on the north wall; a mat
++    const red = MAT.cloth('#e0503a', '#c83e2c'), blue = MAT.cloth('#3b78d8', '#2f62b0');
++    k.at(-6.9, 0, ZS - 0.22, Math.PI, () => {
++      k.add(rbox(0.9, 0.86, 0.42, 0.02), MAT.wood('honey'), 0, 0.43, 0);
++      for (const s2 of [-1, 1]) k.add(sphere(0.02, 6, 5), brass, s2 * 0.08, 0.6, 0.22);
++      [[red, 0.88], [blue, 0.93], [red, 0.98]].forEach(([m, y]) => k.add(rbox(0.36, 0.05, 0.28, 0.02), m, -0.18, y, 0));   // (the towels' two cloths)
++    });
++    B.col(-6.9, ZS - 0.22, 0.45, 0.21, 0.9, { noStand: true });
++    k.add(lathe([[0.001, 0], [0.2, 0], [0.22, 0.45], [0.23, 0.48], [0.001, 0.48]], 12), MAT.wood('honey'), -5.95, 0, ZS - 0.25);   // the laundry basket
++    k.add(sphere(0.12, 8, 6), blue, -5.95, 0.47, ZS - 0.25, 0, { sy: 0.5 });
++    B.ccol(-5.95, ZS - 0.25, 0.23, 0.5, { noStand: true });
++    k.at(-7.35, 0, iz0 + 0.05, 0, () => {
++      k.add(cyl(0.015, 0.015, 0.7, 8), brass, 0, 0.98, 0.02, 0, { rz: Math.PI / 2 });
++      k.add(rbox(0.3, 0.6, 0.03, 0.01), red, -0.16, 0.7, 0.04);
++      k.add(rbox(0.28, 0.5, 0.03, 0.01), blue, 0.16, 0.74, 0.04);
++    });
++    k.at(-6.5, 0, 9.95, 0, () => P.rug(k, 1.2, 0.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));   // (Arthur's rug's own weave: no new texture)
++    // the door, each frame
++    const dw = B.world((DL + DR) / 2, Z0); let open = 0;
++    R.updaters.push((dt) => {
++      const h = globalThis.game?.hero; if (!h) return;
++            const near = Math.hypot(h.pos.x - dw.x, h.pos.z - dw.z) < 1.5;
++      open += ((near ? 1 : 0) - open) * Math.min(1, dt * 6);
++      pivot.rotation.y = (Math.PI / 2) * open;
++    });
++    R.bath = { room: 'house', basin: B.world(ix0 + 0.7, 9.5), shower: B.world(ix0 + 1.2, ZS - 0.5), toilet: B.world(-6.15, iz0 + 0.8), door: dw };
++  }
+   // the hall: x LX..HX1, z -BZ..HZ1 — armchairs round a rug, the family portrait, the stairs down
+   k.at(-0.8, 0, 6.3, 0, () => P.rug(k, 3.2, 2.4, ['#2a4a7a', '#a8382a', '#e9c46a', '#f2ead6', '#1a2a3a'], 5));
+   B.put(-1.9, 5.6, Math.PI / 2 + 0.35, P.armchair, {});

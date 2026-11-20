@@ -1,0 +1,389 @@
+{
+  "file": "art/blender/characters/zeelich2/work/keeper_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.6496, 2.1114, 0.6441], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0040"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "1321"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: keeper_b_belt -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_bootL -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_bootL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_bootR -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_bootR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_bootTopL -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_bootTopL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_bootTopR -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_bootTopR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_brows -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_buckle -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_capsule0 -> keeper_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_capsule0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_capsule1 -> keeper_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_capsule1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_capsule2 -> keeper_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_capsule2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_capsule3 -> keeper_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_capsule3",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_capsule4 -> keeper_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_capsule4",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_cuffL -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_cuffR -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_ear -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_ear.001 -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_foreL -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_foreR -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_handL -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_handR -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_helmet -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_helmet",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_helmetPeak -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_helmetPeak",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_helmetRim -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_helmetRim",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_nose -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_shinL -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_shinR -> keeper_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_thighL -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_thighR -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_upperL -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: keeper_b_upperR -> keeper_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: keeper_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature keeper_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 40,
+    "meshes": 39,
+    "triangles": 2224,
+    "materials": 16,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.3248,
+        0.004,
+        -0.2556
+      ],
+      "max": [
+        0.3248,
+        2.1154,
+        0.3885
+      ],
+      "size": [
+        0.6496,
+        2.1114,
+        0.6441
+      ]
+    }
+  },
+  "passed": true
+}

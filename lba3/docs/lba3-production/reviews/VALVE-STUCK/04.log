@@ -1,0 +1,29 @@
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-63.61,2.35,11] hp 10 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[7s +7s] orchard (ball over the cage): {"open":true,"fail":null} | citadel [-71.81,13.89,-56.7] hp 10 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[191s +184s] depot (fight the guards on the way): {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"hp":10,"clovers":2,"fail":null} | citadel [-68.07,14,-70.64] hp 10 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[194s +3s] cliffs: the target: {"hit":true,"fail":null} | citadel [-63.18,5.63,-32.28] hp 10 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[254s +60s] cliffs: up the stones: {"reached":13,"of":13,"tries":29,"y":16.65,"fail":null} | citadel [-59.67,16.65,-34.98] hp 10 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[291s +37s] cliffs: the valve: {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"water":true,"fail":null} | citadel [-54.5,16.82,-36.77] hp 10 | Visit Vesk at the old fortress
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[349.7] stuck at (-54.5, -36.4): replan
+[357.7] stuck at (-55.9, -36.7): replan
+[365.6] stuck at (-54.5, -36.7): replan
+[373.6] stuck at (-56.2, -36.7): replan
+[381.5] stuck at (-54.4, -36.4): replan
+[388.4] go → (-55.2, -36.6) plan ok=false pts=1 left=0.96
+[390.9] stuck at (-56.2, -36.5): replan
+[396.4] stuck at (-55.9, -36.7): replan
+[404.4] stuck at (-54.5, -36.6): replan
+[407.3] stuck at (-54.2, -36.7): replan
+[410.2] stuck at (-54.5, -36.8): replan
+[415.6] stuck at (-54.4, -36.7): replan
+kept /dev/shm/vs/04-project-valves.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

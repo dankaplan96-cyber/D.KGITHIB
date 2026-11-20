@@ -1,0 +1,91 @@
+{
+  "file": "evidence/region-entry-stall-9.json",
+  "frame": {
+    "t": 56771.1,
+    "ms": 1633.2,
+    "real": 1.6332000000000044,
+    "sim": 9.599999994039536,
+    "render": 10.200000017881393,
+    "black": true,
+    "calls": 139,
+    "tris": 462608,
+    "shadowCalls": 18,
+    "draws": 146,
+    "up": 20,
+    "upKB": 75.328125,
+    "lag": 0,
+    "why": "frame before: work 23 ms",
+    "lamps": 2
+  },
+  "at": {
+    "t": 56790.8,
+    "state": "play",
+    "screen": null,
+    "room": "citadel",
+    "trans": true,
+    "cine": false,
+    "pos": [
+      -46,
+      2.2,
+      2
+    ],
+    "angle": 1.571,
+    "hp": 10,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 4.712,
+      "pitch": 0.46
+    },
+    "chapter": "well",
+    "objective": "<b>Check the well</b><span class=\"s \">◆ Take the magic ball from the cupboard</span>"
+  },
+  "counters": {
+    "geometries": 1302,
+    "textures": 339,
+    "programs": 100,
+    "heapMB": 662.3,
+    "drawBatchBuilds": 4,
+    "drawBatchMs": 3558,
+    "shadowBatchBuilds": 4,
+    "shadowCache": {
+      "full": 11,
+      "sliced": 0,
+      "swaps": 0,
+      "drops": 8
+    },
+    "regionsBuilt": 5,
+    "uploads": 11,
+    "jobs": {
+      "p": 100,
+      "g": 1302,
+      "x": 339,
+      "sc": 11,
+      "scd": 8,
+      "db": 3558.0000000298023,
+      "dbn": 4,
+      "sb": 700.2999999821186,
+      "sbn": 4,
+      "up": 11,
+      "aq": 3,
+      "h": 694461949,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/region-entry-stall-9.jpg",
+  "loaf": [
+    {
+      "t": 55081.6,
+      "ms": 1669.4,
+      "blocking": 1611.7,
+      "scripts": [
+        {
+          "ms": 1636.7,
+          "fn": "",
+          "src": "",
+          "invoker": "TimerHandler:setTimeout"
+        }
+      ]
+    }
+  ]
+}

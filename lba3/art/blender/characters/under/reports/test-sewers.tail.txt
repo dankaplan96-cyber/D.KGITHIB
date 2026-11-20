@@ -1,0 +1,25 @@
+PASS and a clover, picked up {"n":1,"owed":0,"clovers":3,"cl0":2}
+PASS the barrel gives kashes (a hop by it, as any container) {"n":{"r":"rummaged","id":"sw_vbarrel","taken":0,"hp":10},"coins":3}
+PASS out of the treasure room: back in the hall at the gate (INPUT) {"r":{"r":"entered"},"w":{"room":"sewer","pos":[5788.34,0,0],"chapter":"well"}}
+PASS the street lift's lever: padlocked, no way up yet (INPUT) {"r":{"r":"used","target":{"kind":"swworks","id":"p_sw_up","label":"p_sw_up"},"state":"play","lines":2},"s":["Padlocked. This lift won't take me up."]}
+PASS Fosse: a quiet day; his padlock off the lift (INPUT) {"r":{"r":"talked","to":"fosse","state":"play","lines":4},"s":["Listen. Nothing. Twelve years, and now a quiet day.","Padlock's off the lift for you now. Up it and you're in the lower town. Don't tell the project."]}
+PASS up the north-east shaft: back on Citadel standing on the deck in the street hatch as it rises the last stretch (INPUT) {"r":{"g":"transition","k":20},"L":{"open":true,"deck":0.88,"ride":"up","state":"cutscene","room":"citadel","cut":true,"cam":false,"off":0,"dy":-0.87,"onDeck":true,"ground":-0.87,"sil":false}}
+PASS at the top: play again, standing in the street, the lid still lifted, the deck flush {"r":{"state":"play","lines":0,"speakers":[]},"L":{"open":true,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and free to walk off it (INPUT) {"g":"arrived","room":"citadel","d":2.11,"state":"play"}
+PASS home: Arthur asked about the map ("Lulu held the torch"); the map goes back to him (INPUT) {"r":{"r":"talked","to":"arthur","state":"play","lines":12},"s":["I found your map. Under the street.","You went down the drain? Does Mum know?","Does she know you did?","...We went before the new pipe. Lulu held the torch. Then the gate stuck and we couldn't get back in.","It's open again. Next time, take me. I could use someone who knows the way.","Deal. You hold the torch."]}
+PASS Save → Continue: the story kept (the grate shut, as a loaded game finds it) {"r":{"f":{"sw_hatch":true,"sw_pinkIn":true,"sw_valve":true,"sw_chest":true,"sw_fosse":true,"sw_works":true,"sw_arthur":true},"open":false,"items":[]},"before":{"sw_hatch":true,"sw_pinkIn":true,"sw_valve":true,"sw_chest":true,"sw_fosse":true,"sw_works":true,"sw_arthur":true}}
+PASS lifted again without a word, ridden down; below, the gate still up (INPUT) {"r":{"room":"sewer","gate":true},"s":[],"deck2":{"t":{"kind":"swdown","id":"p_sw_down","label":"p_sw_down"},"prompt":"W Go down"},"press2":{"steps":64,"state":"cutscene","snd":["liftWinch"]}}
+PASS back up the north-east shaft onto the deck (INPUT) {"open":true,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}
+PASS a load in the middle of the ride: nothing of it stays (play, on the lane, the camera its own, the grate shut) {"mid":{"open":true,"deck":0.45,"ride":"down","state":"cutscene","room":"citadel","cut":true,"cam":true,"off":0,"dy":-0.44,"onDeck":true,"ground":-0.44,"sil":false},"L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS a load during the ride's fade: back on the lane at the save, playing (the scene change it began does nothing) {"fade":{"trans":true,"state":"cutscene"},"L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and the lift still takes him down (no softlock) (INPUT) {"room":"sewer","state":"play"}
+PASS death on the deck → Retry: playing on the lane, the grate shut, no ride {"died":"gameover","L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and down again after the Retry (INPUT) {"room":"sewer","state":"play"}
+PASS an old save (no sw_ flags): it loads, the grate shut, the chapter as it was {"room":"citadel","open":false,"doors":false,"chapter":"well","state":"play","prompt":"swhatch"}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 32 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

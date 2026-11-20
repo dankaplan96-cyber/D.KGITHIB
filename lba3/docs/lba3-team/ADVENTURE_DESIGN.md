@@ -1,0 +1,219 @@
+# Adventure design: what LBA1/LBA2 do, and what we changed (ADV-1)
+
+Task ADV-1 (adventure-design researcher). A short evidence pass that leads to one implemented sequence:
+chapter 4's dig (Desert Island). This note is the record; QA evidence is in tests/chapter4.mjs.
+
+## Sources used, and gaps
+
+- **LBA2 text** (the user's TEXT.HQR, English banks, read with the scratchpad parser `lba2data/text.py`):
+  bank 6 = Citadel Island, bank 10 = Desert Island. Cited below as `L2 b<bank> #<line> (id <text id>)`.
+- **LBA1 text** (the user's LBA1 TEXT.HQR, `lba1data/TEXT_a.HQR`, same layout without LBA2's leading byte):
+  bank 4 = inventory, 6 = Citadel, 8 = Principal Island, 10 = White Leaf Desert. Cited `L1 b<bank> #<line>`.
+- Earlier project notes: docs/LBA1_CATALOGUE.md, docs/LBA2_SOURCE_NOTES.md (engine source, behaviour only).
+- **Not used, so not claimed:** the scene life/track scripts (SCENE.HQR in both games) were not decoded: we have
+  no decompiler for the life-script opcodes here. Every dependency below comes from what characters *say*, not
+  from script conditions. No gameplay footage, manual or interview was consulted. No playable original was run.
+  So: what a line says is **observed** (O); how it shapes play is **interpretation** (I). Nothing here measures
+  whether players enjoyed it.
+
+## Sample (both games)
+
+| # | Kind | Evidence (O) | Interpretation (I) and confidence |
+|---|---|---|---|
+| 1 | LBA1 early local exploration | Escape: "what if I try to get the guard's attention?" (L1 b6 #8). Two people teach that posters can be read by walking up to them (#14, #32). The ferry wants a ticket (#35); the warehouse keeper: "4 crates … cannot seem to arrange on the 4 crosses painted on the ground. I would gladly give a ferry ticket" (#37); failure "The 4 crates are not on the 4 crosses, try again!" (#67); reward (#44). | An ordinary blocker (a ticket) is solved by an ordinary favour. The goal state is visible in the room (painted crosses), failure is stated, retry is free. Rules are taught by townsfolk, not a tutorial. High. |
+| 2 | LBA1 character-driven | The drunk: "I'll help you if you buy me a drink. Ask the waiter" (b6 #16; price #50–51). The tavern saved: "help yourself" to the cellar (#182). | Information is traded for small, human wants; help changes what a place offers later. Medium. |
+| 3 | LBA1 environmental | "FunFrock installed busts … The ones that don't have a pedestal are placed on ancient seals" (b8 #218); Gawley's Horn "For use on the Seals of Sendell" (b4 #30); an architect complains that "a mad man is attacking different sites also marked with this same symbol" (b6 #47). LBA2 recalls it: "This bust makes an excellent target" (L2 b6 #19). | **A rule the player learns by observation and then applies anywhere**: a visible feature (a bust without a pedestal) marks the solution. The world reacts with humour to the player's acts. High. |
+| 4 | LBA1 multi-step regional | The desert's old man wants to "grow flowers in the desert", and trades the Legend for the Book of Bù in the sand-buried temple, "through one of the ventilation shafts still visible just behind me" (b10 #3). The book then lets Twinsen "read runes and talk to animals" (b4 #32); animals answer ("Good day, horse." / "Hii, hi! Bbbrrrff!", b10 #24, #26). The flute "can … make flowers grow in the desert" (b4 #46). | The clue points at a visible landmark. The reward is a new verb that changes later play. Whether the flute is ever used for the old man's wish isn't confirmed from text alone. Medium. |
+| 5 | LBA2 ordinary problem → adventure | The Dino-Fly is hurt in the storm (L2 b6 #2, #4); "go see the healing wizard on Desert Island" (#88); the healer is away, "try the School of Magic" (L2 b10 #121); then the missing wizards (#565), the Esmers. | A small domestic problem drives the first hours and leads naturally into the larger plot. High. |
+| 6 | LBA2 discovery through conversation | The School's whereabouts come in fragments from many people: "in the desert", "The entrance is in a cemetery to scare off strangers" (#123), "when I was young, it was said to be in the cemetery" (#209), "a forlorn garden on the rocky hillside" (#222, #258), drunk and joking voices among them (#183). Three tests "in any order you wish" (#144). The balsam "only grows in rocky, hard to reach areas" (#176), from someone else than the one who asks for it (#160). | Hints are spread across people, partly unreliable, often funny; the player triangulates. Local freedom (any order) inside a fixed goal. High for the structure, medium for its clarity to a newcomer. |
+| 7 | LBA2 character quest with consequence | The bowler's back (#202) → treated (#261) → "all you had to do was treat my back for me to win all the games" (#270), and his opponent: "I keep losing since you helped my little friend … Nice move Sherlock!" (#197). The balsam slope: "you've enabled new plants to grow" (#168). | A small kindness has a visible, slightly comic consequence for someone else. High. |
+| 8 | LBA2 familiar place with new meaning; tone turn | The Temple of Bù is now "Temple-Park", a tourist site with tickets (#10, #270), families sneaking in (#254, #266), "that Temple of B really packs 'em in!" (#55). "The Esmers have volunteered to do the work in the lowest basement" (#262, #251). The Esmers buy everyone drinks (#90, #99) … then "The aliens have finally shown their true faces" (#130, #225). The museum holds LBA1's tunic and the clerk "never recognizes me … he always charges me admission" (L2 b6 #103). | The first game's sacred place returns as a mundane, funny place, and that is where the danger hides. Friendly visitors show real benefits before the turn, and people's lines change after it. High. |
+
+**Principles we take from this (interpretations):**
+P1 teach a rule by showing it, then let the player apply it (busts on seals, painted crosses). P2 failure says what
+happened and costs only a retry. P3 a recurring person helps more when asked again, in character. P4 a puzzle's
+oddity can be the story's evidence (the turn is found, not told). P5 humour and small wants sit next to danger.
+
+## The current sequel: chapter 4, measured route (before)
+
+Route from tests/chapter4.mjs (baseline run, c0264c8): Tarra → three seized gears (ball) → Tarra → Hesk → rope →
+yacht → Ilka → wait for a storm → notebook → gate code (auto-entered) → down → three discs (ball) → temple →
+the carving read out by Ilka → Dallan → chapter 5.
+
+| Gap (O = in code/text) | Type |
+|---|---|
+| Two "hit three things with the ball" sets in one chapter (gears, seals), each told outright: "(…A good hit with the ball should knock the sand out of them.)", "(Three stone discs … The ball, then.)" (text/ch4.js) | design defect: nothing to observe or infer |
+| The chapter's turn (vents closing) is only *told* in the temple; nothing the player did bears on it | design defect |
+| Ilka gives the rule "crystals grow where heat leaks from deep down", then it is never used | missed setup |
+| Ilka vanishes from the route between her camp and the temple | missing implementation |
+| Opening the first disc lit all three: their glow shared one cached material (desert.js, `pm` cache) | bug (code reading) |
+| The storm wait (up to ~45 s) and the auto-entered gate code | friction; left for later |
+
+## The change (implemented)
+
+**Original evidence → principle → gap → adaptation → acceptance**
+
+- Sample 3 (busts on seals), 1 (painted crosses) → P1, P2 → the seals are told, not learned → **five discs** round
+  the temple door, like the five vents in the carving over it. Only the three with heat behind them open the
+  door: pale crystals crust them and dust drifts up off them. Two are cold and bare. A cold disc gives a dull thud
+  and grinds every open disc shut again (first time a line, after that a toast). → by input: warm opens, cold resets,
+  objective adds "A cold disc shuts the others".
+- Sample 4 (clue at a visible landmark), Ilka's own line → P1 → the rule is safe to see first: **a crack beside the
+  last ramp**, crusted with the same crystals and breathing warm air; Twinsen remarks on it on the way down
+  ("Just as Ilka said: they grow where the heat gets out"), then sees the discs ("Pick marks on every one: the
+  diggers struck them all, and the door never moved" — why brute force failed the project). The carving over the
+  door can be inspected (five vents puffing like a kettle). → by input: crack line before the discs line.
+- Sample 6/7 (useful recurring people) → P3 → **Ilka waits at the dig rim** once she has her notebook back. Asked:
+  before going down "go on down"; at the discs "Bù's builders never did anything without a reason … crystals grow
+  where the heat gets out"; after a cold disc "Strike the ones the crystals cover. Leave the bare ones." The hint grows
+  only after a mistake. → by input after a cold disc.
+- Sample 8 (the turn found in the world) → P4 → in the temple, after Ilka says the vents are closing, Twinsen:
+  "That's why two of the discs out there were cold." The puzzle's oddity is the first evidence of Vesk's project's
+  cost. → line checked.
+- Journal: Ilka's rule, the crack, the discs, what a cold disc does (facts he has seen, never "hit 1, 3, 5").
+- The discs answer the ball only once he has reached the bottom and seen them (the first test run showed a ball
+  thrown at a crystal mite on the terraces striking a cold disc before Twinsen had met any: a line about a "cold
+  disc" out of nowhere).
+  A disc counts only when struck on its face (from the floor's side), so a ball grazing past from behind does not
+  reset anything. The HUD count now follows each disc (before, it stayed at 0/3 until the door opened).
+- Recovery: every disc and the cold count are saved; a reset saves; Save & quit → Continue and death → Retry restore
+  open discs, glow and ball targets. Old saves keep working (warm discs keep the ids `c4_seal0–2`; the cold ones are
+  separate targets, so tests/playthrough/07 still plays). The glow material is now per disc.
+
+Files: src/game/story/dig.js, src/game/text/ch4.js, src/game/desert.js (the dig's bottom only: five discs, crystal
+batch, one point cloud of dust motes, the crack), tests/chapter4.mjs, tests/playthrough/07-dig.mjs (its seals step:
+warm targets from the face side, passes repeat after a stray cold hit).
+
+## Tested vs judged
+
+- Tested: tests/chapter4.mjs, 18 checks, by input with the player harness from the open gate (Ilka at the rim, the
+  crack line before the discs line, the carving over the door, warm opens, cold resets with line then toast, Ilka's
+  stronger hint, Save & quit → Continue with two open, death → Retry with one open, door, journal, the temple line,
+  chapter 5). The steps before the gate still use the older teleport helpers (ISO). Also chapter5, desert-life,
+  stability, and playthrough segment 07 from the chapter-4 start save (REV-TY-4/save-06.json, origin rewritten).
+  Result on the tree merged with 0.31.0 (1ee0ef4): chapter4 18/18, chapter5 to chapter 6, desert-life 30/30,
+  stability 16/16, segment 07 to chapter 5 with no stops, no page errors. Earlier failures were boot timeouts on a
+  page reload while the shared machine ran at load 30+, and two test-side counts disturbed by mite fights (fixed).
+- **Not tested:** a first-time player. The test is played by an agent who knows the solution, so whether the
+  crystals read as "warm" and whether the crack → discs link is noticed are design judgments awaiting a fresh
+  player. GPU look (software rendering only), sound by ear.
+
+## Next useful adaptation (done in ADV-2, below)
+
+Chapter 4's opening half: the wind-pump's three gears repeat the ball-on-three-targets pattern and are told outright.
+Following sample 1/6: let the pump's fault be found (Brosk: the test bore's tremors; Sani on the roof hears which
+gear grinds), so the player observes which part is jammed instead of being told "hit the gears". And give the gate
+code a use (the notebook's survey sketch matched to the keypad's worn keys) rather than auto-entry.
+
+## ADV-2: chapter 4's first half (the wind-pump and the dig's keypad)
+
+Same sources and limits as above (text banks only; no scene scripts decoded, no footage, no playable original).
+Added samples, cited as before:
+
+| # | Evidence (O) | Interpretation (I) and confidence |
+|---|---|---|
+| 9 | LBA1 desert: "Did you know that there are strange noises coming from that symbol on the rocks?" (L1 b10 #28, id 66). LBA2: the ferryman is called "with this song. Listen to me and don't forget." (L2 b18 #52, id 550) | A person points the player at a *sound* at a place; the player goes there and finds out. The rule comes from a person, the proof from the place. Medium. |
+| 10 | LBA2: a notice gives "new password … operation GREEN MOON" (L2 b10 #65, id 117); the moon base asks "give your password" (b12 #15, id 501), answered "Right code." / "Wrong code." (#16–17); parallel strings sit beside it: "Code Operation GREEN MOON", "Code Operation Dark Monk", "Operation Moon.", "Code 36AX 95." (b12 #3–6) | A code read in one place is *used* at its checkpoint, chosen among plausible answers, and a wrong one is stated. That those strings are a choice menu is inferred from their form, not from a decoded script: medium. |
+| 11 | LBA1: the keypad "allows access to a room filled with Meca-Penguins" (L1 b4 #53, id 124), from someone who got it "by accident" (b12 #110, id 211) | A code has one concrete use the player needs, and arrives with a joke. High for the use, low for how it played. |
+
+**Before (O, tests/chapter4.mjs at 40946f8):** Tarra: "Three gears up the tower, all seized with sand", then Twinsen's own
+hint "(…A good hit with the ball should knock the sand out of them.)"; three identical ball hits and a 0/3 count. Brosk's
+tremor line led nowhere. At the dig, "Enter Code" auto-entered 4-1-7 once the notebook was carried.
+
+**Evidence → principle → gap → adaptation → acceptance** (acceptance: tests/chapter4.mjs, by INPUT)
+
+- 9 + sample 6 (hints from several people) → P1, P3 → the fault was told → **Sani hears it from the roof** ("clack, clack,
+  grrrk. Two gears clack. One grinds"), never which one; **Tarra** sends him to Brosk and Sani. **At the tower each gust
+  shows it** (every 3.4 s): the wheel swings and is pulled back, the two sound gears rock and clack, the jammed one (the
+  middle one) holds, shudders and spits sand and a few sparks with a grinding scrape; close up, sand is caked in its
+  teeth. **Listen** at the tower brings the next gust at once (no waiting). The gears are now a gearbox in a row across
+  the tower's west face (where Kesh and the play camera look from), 1.7 m up and 1.35 m apart: measured, a thrown ball
+  only reaches ~2 m by the tower, so the first version's gears at 3.6 m and 5 m were never really struck (its test fell
+  back to a "forced" hit), and the ball's aim goes by direction, so neighbours must be well apart (now each marked gear
+  is reached within 0.01–0.08 m from 3.6–5.2 m away, its neighbours 1.35 m off). The water tank moved to the tower's
+  south-east and one palm in front of the gearbox was left out, both of which stood in that line. → no solution in
+  Tarra's, Sani's or Brosk's lines; in a gust the sound gears turn > 0.15 rad, the jammed one < 0.05 rad and shakes;
+  the sand/grind cue is called.
+- Sample 1 (failure stated, retry free) → P2 → **a wrong guess**: a sound gear rings and swings back ("Not that one", then a
+  toast); nothing resets. **Sani's hint grows** after a mistake ("The grinding one doesn't turn. It spits sand").
+- Samples 6 (partly unreliable voices) and 7 (a comic consequence) → P5 → Brosk's tremor theory had no use → **Brosk is
+  half right**: "Kick it, hit it, it won't help. It's the ground." The ground did shake something loose: once the gear
+  turns, the water sprays out of **a pipe joint** short of the pond (a second, different verb: push it home). Brosk then
+  takes the credit ("I said it was the shaking"). The bore's harm to Kesh is seen before chapter 5 asks about it.
+- 10, 11 → P1 → the code was auto-entered → **the keypad**: three keys worn shiny (1, 4, 7; seen before the notebook and
+  kept in the journal); with the notebook, a choice of the three orders of those keys; a wrong order buzzes and flashes
+  red ("Wrong order. Ilka's notebook has it", then a toast); 4 · 1 · 7 lifts the barrier.
+- Any order: the pump can be fixed before Tarra asks ("You are the one who started our pump? Before anyone asked you?"),
+  and she goes straight to Ilka.
+- Recovery: c4_gear1 (the jammed gear: the same flag as before), c4_joint, c4_gearMiss, c4_brosk, c4_sani, c4_listened,
+  c4_worn, c4_codeTries are saved; Continue restores jammed, spraying or running. Old saves (format 3): c4_pump → running;
+  c4_gear1 without c4_pump → spraying; the old c4_gear0/2 no longer count; a notebook with the gate shut → the keypad.
+- Journal: Brosk's theory, Sani's clack-clack-grrrk, that a sound gear swings back, the spraying joint, the worn keys, the
+  notebook's last page, that a wrong order buzzes (what he has heard or seen, never "the middle gear" or "4-1-7").
+
+**Tested vs judged.** Tested by input, by an agent who knows the solution (tests/chapter4.mjs). Not tested: whether a
+first-time player notices the jammed gear in a gust from the play camera (palm fronds by the oasis cover part of the tower
+from some spots), whether a choice of three orders feels like a keypad, and the sounds by ear. Design judgments awaiting a
+fresh player.
+
+**Next useful adaptation:** the research post (the storm wait of up to ~45 s, still teleport-tested): let the storm's
+approach be read (Hesk's flags stream harder, the drones' lamps dim) and give the player something to do while it comes.
+
+## ADV-3 (CH1-LONGER): chapter 1, The Well, made longer
+
+The user (our only player): "chapter 1 is too fast, it feels like 5 minutes of play". Goal: about 15–20 minutes for a
+first-time player, with play rather than walks or text. Same sources and limits as ADV-1/2 (text banks only; no scene
+scripts decoded, no footage, no playable original). Added samples, all from LBA2's Citadel bank (L2 b6):
+
+| # | Evidence (O) | Interpretation (I) and confidence |
+|---|---|---|
+| 12 | The opening errand: "rush to the downtown pharmacy and find a cure for the Dino-Fly!" (#153, id 0); the pharmacist: "I have nothing for your Dino-Fly, but the client said she could help you" (#212, id 253); the client: "Here's the deal. I will tell you how to treat your Dino-Fly, if you would bring back my umbrella" (#283, id 254) | One ordinary problem passes from person to person; each wants something small and believable before helping. High. |
+| 13 | Zoé brings news herself: "I met that nice lady who works for Ker'aooc ... You should go see him" (#162, id 951) | The family takes part in the errand, not only sends him. Medium (one line). |
+| 14 | Residents teach verbs in passing: "it's possible to search the garbage cans, the vases and the closets" (#208, id 65); "did you notice that you could jump while you are running?" (#271, id 426); "you can jump over the rocks if you are trapped" (#286, id 249) | A rule is taught by a person, then the world uses it. High for the pattern. |
+| 15 | Access through a person: the Weather Wizard can't get up the lighthouse because "the lighthouse was closed and I can't find the keeper anywhere" (#143, id 26); "You need a ticket to board the ferry" (#219, id 413) | A shut place opens through someone's situation, not a switch. High. |
+
+**Before (O, tests/playthrough/01–02 at a53cfe5, served from a clean export):** the chapter's play was two talk chains
+(Gilbert/Mira → key; Xil → Doran → Xil → rope), one optional Discreet overhear, then the cave (mites, three crystals with
+the ball). The first ball use was in the cave; Aggressive and Athletic were never asked for. Bot game time: surface
+143 s, cave 124 s; about 33 lines of dialogue on the surface. Human estimate: 9–10 min with the 85 s opening.
+The journal showed the next unfinished step in the past tense ("Mira gave me the key" before she had: the chapter-1
+twin of AUDIT-CH12 #3).
+
+**Evidence → principle → gap → adaptation → acceptance** (acceptance: tests/well-town.mjs, tests/prologue.mjs,
+tests/playthrough/01, by INPUT)
+
+- 12, 13 → P3, P5 → the key was handed over on the first line → **Mira refuses** to unlock the town well "for a pipe
+  fault" in Gilbert's street. **Zoé**, who went next door in the opening, has been round the neighbours' taps: their
+  kettle "furred with these overnight", warm crystals. Shown them, Mira: "Pipes don't grow those. That comes up from the
+  spring." Either order works (Zoé first: one conversation; Mira first: her refusal, then Zoé's marker). → the key only
+  with the crystals; the objective "Lid key: Mira wants proof"; Zoé hears of the refusal.
+- 14, P1 → Aggressive was never used before the mites → **the lid is rusted to the rim**. Gilbert: "Give it a good kick.
+  That's how I fix everything" (Mira: "That explains his pipes"). In Aggressive the well's prompt becomes **Kick** (E), as
+  LBA's behaviours change what Twinsen does to the world; the ball "just bounces off. It needs weight behind it". A nudge
+  after ~30 s near it names Aggressive and the key. (Aggressive's own action strikes with the equipped weapon, the ball by
+  default, so the kick is the prompt; the fists or the glove also open it.)
+- 15, P1 → the first ball use was the cave → **Doran sleeps through anything but the harbour bell**, which hangs out of
+  reach on a post at the pier's mouth, its rope long gone. Xil: "Only the bell on that post wakes him." Arthur, asked at
+  home: "Ring the harbour bell. He jumps up every time. Tim and I checked. Twice." The ball rings it (the aim curves to
+  it); Doran: "Boat in! Ropes! Fenders! ...There is no boat." Before Xil's errand he only grumbles; after it, the stamp
+  at once. The safe first use of the ball on a raised target; the cave's crystals vary it.
+- 14 + Tim's existing confession → P1 (the jump taught before chapter 2's cliff stones) → Tim's "more on the beach" led
+  nowhere → **three rocks at the bay** (by the path to the lighthouse), each about a jump higher than the last; looking at
+  the first: "Too high to climb. Not too high to jump." and the jump's keys. On top: warm stones that "hum like a bee in
+  a jar" and 10 kashes (two of Pippa's flasks: magic for the cave's crystals). Optional; the cave remembers it ("Like the
+  stones on the bay rocks. Only here they grow out of the walls.").
+- The journal shows each line once it is true; an open line reads as a need.
+
+Recovery: every step is a flag (pr_kettle, pr_row, pr_miraNo, pr_lidStuck, pr_lidOpen, pr_bellSeen, pr_bell, pr_deep,
+pr_stones), saved at once; Save → Continue restores the lid (padlocked / rusted / open), Doran asleep or awake, the bell's
+target and the stones. No save format change: a save from before CH1-LONGER plays the steps it has not passed (holding
+the key it still finds the lid rusted; with Doran's stamp, Doran is awake and the bell no target; in the cave or later,
+the lid is open).
+
+**After (O):** bot game time: surface 411 s, cave 82 s (the cave is unchanged; the bot's crystal throws vary run to run);
+about 58 lines on the surface. **Human estimate (a design judgment, not measured):** opening 1.5 min, house 0.7, Zoé and
+Mira 2.5, the lid 1.5, the harbour (Xil, Doran, the bell) 3, Tim 2, the bay rocks 3 (optional), the cave 3: about 16–19
+minutes, 13–16 without the opening.
+
+**Not tested:** a first-time player. Whether the kick is found without the nudge, whether the bell reads as something to
+throw at, and whether the bay rocks are noticed from Tim's line are judgments awaiting the user's play.

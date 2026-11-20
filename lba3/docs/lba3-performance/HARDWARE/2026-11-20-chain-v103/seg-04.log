@@ -1,0 +1,37 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-62.61,2.33,11] hp 10 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[4s +3s] orchard (ball over the cage): {"open":true,"fail":null} | citadel [-71.85,15.87,-56.62] hp 10 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":24.4,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":103,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+  [103.8] ISO assist: 1 enemies beaten (drone1)
+[152s +147s] depot (fight the guards on the way): {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"tries":1,"open":true,"hp":2,"clovers":3,"fail":null} | citadel [-68.06,15.98,-70.64] hp 2 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":115.1,"dialog":1.1,"trans":0.3,"scene":0,"menu":0,"other":0,"lines":5,"words":45,"says":5,"walked":104,"hpLost":8,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[187s +35s] cliffs: the target: {"hit":true,"fail":null} | citadel [-65.38,9.5,-34.36] hp 2 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":49.8,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":92,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[189s +2s] cliffs: up the stones: {"reached":14,"of":14,"tries":14,"y":18.89,"fail":null} | citadel [-59.19,18.89,-35.78] hp 2 | Open the three bypass valves◆ The depot at the old camp (guarded yard)◆ The orchard (behind bars)◆ The Whispering Cliffs
+  stats: {"play":32.3,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":39,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[190s +1s] cliffs: the valve: {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"water":true,"fail":null} | citadel [-54.5,18.81,-36.5] hp 2 | The square has water. Go home and talk to Zoé
+  stats: {"play":8.2,"dialog":0.6,"trans":0,"scene":2.6,"menu":0,"other":0,"lines":2,"words":26,"says":2,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[205.7] go → (-66.5, -27.0) plan ok=true pts=1 left=0.09
+[207.3] go → (-64.4, -27.3) plan ok=true pts=1 left=0.23
+[208.6] go → (-63.5, -28.2) plan ok=true pts=1 left=0.1
+[210.1] go → (-64.5, -30.2) plan ok=false pts=1 left=0.35
+[212.6] stuck at (-64.4, -29.8): replan
+[215.9] go → (-63.8, -31.3) plan ok=true pts=1 left=0.16
+[217.4] go → (-61.6, -31.5) plan ok=true pts=1 left=0.23
+[218.9] go → (-61.5, -32.9) plan ok=true pts=1 left=0.24
+[220.2] go → (-62.3, -34.6) plan ok=true pts=1 left=0.1
+[222.0] go → (-60.5, -33.8) plan ok=true pts=1 left=0.21
+[223.5] go → (-55.2, -36.6) plan ok=false pts=2 left=0.79
+[225.0] go → (-55.2, -36.6) plan ok=false pts=4 left=0.69
+stats total: {"play":229.9,"dialog":1.7,"trans":0.3,"scene":2.6,"menu":0,"other":0,"lines":7,"words":71,"says":7,"walked":344,"hpLost":8,"deaths":0,"rooms":1,"chapter":"project","coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+kept save-04.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     6 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

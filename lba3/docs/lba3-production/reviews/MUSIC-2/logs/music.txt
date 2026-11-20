@@ -1,0 +1,33 @@
+PASS every track in the manifest is a shipped file (tools/game-files.mjs) []
+PASS every playlist piece is in the manifest []
+PASS Citadel town, the island and Zeelich have two pieces or more {"citadel":2,"island":2,"zeelich":2,"desert":2,"hamalayi":1}
+PASS every track has its bar lines (manifest bars, for phrase starts and bar-line crossfades) []
+PASS out of the house the music is an outdoor playlist (the open island around the house, or the town) {"base":"island","list":"island","outdoor":true,"place":"island"}
+PASS a playlist piece plays in town {"piece":"village_b","voices":[{"track":"village_b","gain":0.911,"pos":29.6,"stopping":false,"list":"citadel","endsIn":146.44}]}
+PASS it starts at a phrase start (bar 1 or the first bar of an 8-bar phrase) {"at":27.7,"phraseStarts":[0,9.232,27.696,46.16,64.624,83.088,101.552,120.016,138.48,156.944]}
+PASS it is played once to its end (end scheduled at the end of the piece) {"endsIn":146.44,"left":146.43200000000002}
+PASS arrivals start at different phrases (8 draws) [6.672,60.048,33.36,20.016,60.048,60.048,33.36,46.704]
+PASS after a piece outdoors: a silence (nothing wanted, no voice but the one fading out) {"gapIn":8,"voices":[{"track":"village_b","gain":0.936,"pos":29.7,"stopping":true,"list":"citadel","endsIn":null}]}
+PASS the piece fades out completely (over its last bars) []
+PASS after the silence the other piece of the playlist plays {"before":"village_b","nextUp":{"track":"village","log":["stop village_b fade 6s","loaded village","loaded combat","play village @0.0s fade 0.25s"]}}
+PASS …from its first bar ["stop village_b fade 6s","loaded village","loaded combat","play village @0.0s fade 0.25s"]
+PASS and then the first one again (the playlist rotates) {"before":"village_b","second":"village","third":"village_b"}
+PASS in a silence, a fight still brings the combat music {"combat":true,"voices":[{"track":"village_b","gain":0.116,"pos":1.12,"stopping":true,"list":"citadel","endsIn":null},{"track":"combat","gain":0,"pos":0,"stopping":false,"list":null,"endsIn":null}]}
+PASS after the fight the silence goes on (no piece forced in) {"gapIn":35.38,"target":null}
+PASS a Zeelich interior plays the Zeelich playlist, indoors {"mood":"zeelich","list":"zeelich","outdoor":false,"place":"interior"}
+PASS indoors, the end of a piece leaves no silence (no gap pending) {"gapIn":null,"was":"zeelich","target":"zeelich_b"}
+PASS …the next piece follows at once (after the old one's last bars) {"was":"zeelich","next":"zeelich_b"}
+PASS a change of place crossfades: both tracks sound together for a while {"n":32,"fadeT":2.4}
+PASS …with equal power (sum of squared gains stays near 1) {"min":0.8935449999999999,"max":1.057121}
+PASS …starting within one bar of the request (it waits for the old track's bar line) {"fadeT":2.4}
+PASS …and the old track was on a bar line when it began to fade {"track":"island","wait":1.66,"offBar":0.008}
+PASS dialogue ducks the music to 0.5 and it comes back to 1; the music bus stays at the slider value {"before":1,"down":0.5,"up":1,"bus":0.550000011920929,"vol":0.55,"voice":1.7599999904632568,"voiceVol":0.8,"ctx":"running","gs":"play"}
+PASS the voice bus is the voice slider x2.2 (VOICE-MIX) {"before":1,"down":0.5,"up":1,"bus":0.550000011920929,"vol":0.55,"voice":1.7599999904632568,"voiceVol":0.8,"ctx":"running","gs":"play"}
+PASS never more than two music voices alive at once during the whole run {"maxVoices":2}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 26 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

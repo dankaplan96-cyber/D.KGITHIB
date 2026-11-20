@@ -1,0 +1,96 @@
+{
+  "file": "evidence/title-to-play-stall-1.json",
+  "frame": {
+    "t": 19932.9,
+    "ms": 533.3,
+    "real": 0.5332999999999992,
+    "sim": 19.099999994039536,
+    "render": 26.400000005960464,
+    "black": false,
+    "calls": 341,
+    "tris": 1186654,
+    "shadowCalls": 33,
+    "draws": 486,
+    "up": 31,
+    "upKB": 135.3515625,
+    "lag": 0,
+    "why": "frame before: work 36 ms",
+    "lamps": 0
+  },
+  "at": {
+    "t": 19978.3,
+    "state": "loading",
+    "screen": "title",
+    "room": "citadel",
+    "trans": false,
+    "cine": false,
+    "pos": [
+      -38,
+      2.2,
+      4
+    ],
+    "angle": 0,
+    "hp": 10,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 2.67,
+      "pitch": 0.42
+    },
+    "chapter": null,
+    "objective": "<b>Check the well</b>"
+  },
+  "counters": {
+    "geometries": 1007,
+    "textures": 234,
+    "programs": 83,
+    "heapMB": 404.7,
+    "drawBatchBuilds": 1,
+    "drawBatchMs": 1469,
+    "shadowBatchBuilds": 1,
+    "shadowCache": {
+      "full": 3,
+      "sliced": 0,
+      "swaps": 0,
+      "drops": 2
+    },
+    "regionsBuilt": 2,
+    "uploads": 8,
+    "jobs": {
+      "p": 83,
+      "g": 1007,
+      "x": 234,
+      "sc": 3,
+      "scd": 2,
+      "db": 1469,
+      "dbn": 1,
+      "sb": 317.7999999821186,
+      "sbn": 1,
+      "up": 8,
+      "aq": 1,
+      "h": 424359057,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/title-to-play-stall-1.jpg",
+  "loaf": [
+    {
+      "t": 19342.1,
+      "ms": 567,
+      "blocking": 0,
+      "scripts": []
+    },
+    {
+      "t": 19910.4,
+      "ms": 68.8,
+      "blocking": 0,
+      "scripts": []
+    },
+    {
+      "t": 19980,
+      "ms": 60.2,
+      "blocking": 0,
+      "scripts": []
+    }
+  ]
+}

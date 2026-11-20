@@ -1,0 +1,24 @@
+{
+ "toasts": [],
+ "loaded": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -106.48,
+   1.89,
+   36.3
+  ],
+  "hp": 9,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "coins": 4,
+  "clovers": 3,
+  "owe": {},
+  "lying": []
+ },
+ "flags": {
+  "l_nellMet": true,
+  "l_nellKnows": true,
+  "l_nellPaid": true
+ }
+}

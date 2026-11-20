@@ -1,0 +1,20 @@
+[0s +0s] after Continue: where, which body: {"room":"workshop","zoeStart":false,"key":true,"obj":"Open the platform shield at the console by the gate"} | workshop [1502.75,0,-1.95] hp 9 | Open the platform shield at the console by the gate
+[1s +1s] talk to Baldino (story needs him): {"r":"no-dialog:arrived","room":"lighttop","body":"zoe","fail":null} | lighttop [1601.41,0,-0.16] hp 9 | Zoé: broadcast the warning from the lighthouse
+[2s +1s] Zoé: the dials (sun, wave, star) and the microphone: {"dials":[0,1,2],"broadcast":true,"body":"twinsen","room":"workshop","fail":null} | workshop [1502.75,0,-1.95] hp 9 | Open the platform shield at the console by the gate
+[409s +407s] the platform shield: {"r":"used","target":{"kind":"c2console","id":"p_console","label":"p_console"},"state":"play","lines":2,"shield":true,"fail":null} | zeelich [2435.83,6,-4.46] hp 9 | Stop Vesk on the platform
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[90.9] stuck at (2434.0, -4.3): replan
+[98.8] stuck at (2435.8, -4.5): replan
+[101.7] stuck at (2435.9, -4.3): replan
+[104.6] stuck at (2435.9, -4.2): replan
+[112.6] stuck at (2434.2, -3.7): replan
+[121.5] go → (2434.9, -4.3) plan ok=false pts=1 left=0.9
+[124.0] stuck at (2435.8, -4.4): replan
+[129.5] stuck at (2435.8, -4.4): replan
+[137.5] stuck at (2433.9, -4.0): replan
+[145.4] stuck at (2435.7, -4.5): replan
+[153.4] stuck at (2434.0, -4.0): replan
+[161.3] stuck at (2435.9, -4.4): replan
+kept docs/lba3-production/reviews/REV-TY-2/save-shield.json
+no errors

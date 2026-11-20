@@ -1,0 +1,18 @@
+[
+  { "op": "script", "name": "twinsen CUFF-HEM: candidate", "script": "tools/blender/twinsen_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/twinsen/export/twinsen.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/twinsen/work/twinsen_poly.blend"] },
+  { "op": "validate", "name": "twinsen candidate checks", "input": "art/blender/characters/twinsen/work/twinsen_poly.blend", "output": "art/blender/characters/twinsen/reports/candidate.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 3900, "groundedAtZero": true } },
+  { "op": "preview", "name": "twinsen baseline views", "input": "art/blender/characters/twinsen/source/twinsen.rebuilt.blend", "output": "art/blender/characters/twinsen/previews/before",
+    "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.6 } },
+  { "op": "preview", "name": "twinsen candidate views", "input": "art/blender/characters/twinsen/work/twinsen_poly.blend", "output": "art/blender/characters/twinsen/previews/after",
+    "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.6 } },
+  { "op": "script", "name": "zoe NECKLACE-ZOE: candidate", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/export/zoe.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/work/zoe_poly.blend"] },
+  { "op": "validate", "name": "zoe candidate checks", "input": "art/blender/characters/zoe/work/zoe_poly.blend", "output": "art/blender/characters/zoe/reports/candidate.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 6900, "groundedAtZero": true } },
+  { "op": "preview", "name": "zoe baseline views", "input": "art/blender/characters/zoe/source/zoe.rebuilt.blend", "output": "art/blender/characters/zoe/previews/before",
+    "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.5 } },
+  { "op": "preview", "name": "zoe candidate views", "input": "art/blender/characters/zoe/work/zoe_poly.blend", "output": "art/blender/characters/zoe/previews/after",
+    "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.5 } }
+]

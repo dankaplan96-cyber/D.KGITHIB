@@ -1,0 +1,397 @@
+{
+ "start": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -40.2,
+   2.2,
+   -5.6
+  ],
+  "hp": 10,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "items": [],
+  "coins": 4,
+  "clovers": 3,
+  "l": {}
+ },
+ "nell first": {
+  "r": "talked",
+  "to": "nell",
+  "state": "play",
+  "lines": 4
+ },
+ "nell first lines": [
+  "n_nell: Arthur's dad, right? He still owes me a sprocket.",
+  "n_nell: Esmer engines are wonderful machines. Try getting a spare part for one, though. Three weeks, by shuttle."
+ ],
+ "crate before odile": {
+  "r": "used",
+  "open": false
+ },
+ "crate before odile lines": [
+  "n_hero: An Esmer crate, \"SOUP POT (1)\". It hums.",
+  "n_hero: (Better ask at the customs booth first.)"
+ ],
+ "odile": {
+  "r": "talked",
+  "to": "odile",
+  "state": "play",
+  "lines": 8
+ },
+ "odile lines": [
+  "n_odile: Twinsen? The Twinsen? I pictured you taller. And with a cape.",
+  "n_hero: Just the tunic, I'm afraid.",
+  "n_odile: That crate stays here. The form says soup pot. Soup pots don't hum.",
+  "n_odile: Find out what it really is and I'll file it properly. Properly is the important word."
+ ],
+ "crate open": {
+  "r": "used",
+  "open": true,
+  "cs": "hand",
+  "items": [
+   "coupler"
+  ],
+  "tag": "open"
+ },
+ "crate open lines": [
+  "n_hero: Not a pot. A brass drum with fins, warm to the touch. Nell would know what this is.",
+  "TOAST l_toast_coupler"
+ ],
+ "odile while carrying": {
+  "r": "talked",
+  "to": "odile",
+  "state": "play",
+  "lines": 2
+ },
+ "odile carrying lines": [
+  "n_odile: A brass drum with fins. Kitchenware? Heating? Show me it does something and I'll pick a category."
+ ],
+ "nell with coupler": {
+  "r": "talked",
+  "to": "nell",
+  "state": "play",
+  "lines": 4
+ },
+ "nell coupler lines": [
+  "n_nell: Where did you get that? That's a heat coupler! My engine's been dead a month waiting for one.",
+  "n_nell: Set it on the bench. Careful, couplers run hot until they settle. When it glows, cool it in the water barrel. Quick."
+ ],
+ "bench place": {
+  "r": "used",
+  "cs": "bench",
+  "heat": 0.031249999999999997
+ },
+ "bench place lines": [
+  "n_hero: It catches... the engine turns. And it's getting warm."
+ ],
+ "take too early": {
+  "cs": "bench",
+  "heat": 0.192
+ },
+ "take too early lines": [
+  "n_hero: It's warming up. Not glowing yet."
+ ],
+ "pause during heat": {
+  "s1": "pause",
+  "s2": "play",
+  "h0": 0.192,
+  "h1": 0.192,
+  "cs": "bench"
+ },
+ "glow": {
+  "t": 1.6,
+  "heat": 0.47,
+  "cs": "bench"
+ },
+ "glow lines": [
+  "TOAST l_toast_hot"
+ ],
+ "hold too long": {
+  "took": "hot",
+  "after": "tripped",
+  "hp": [
+   10,
+   9
+  ],
+  "visible": true
+ },
+ "hold too long lines": [
+  "TOAST l_toast_dropped"
+ ],
+ "restart": {
+  "c0": "bench",
+  "took": "hot",
+  "toBarrel": 3.88,
+  "cs": "cooled",
+  "items": [
+   "coupler"
+  ]
+ },
+ "restart lines": [
+  "n_hero: It catches... the engine turns. And it's getting warm.",
+  "TOAST l_toast_hot",
+  "n_hero: Hiss. It drinks the cold right in."
+ ],
+ "continue (cooled)": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -107.38,
+   1.83,
+   38.97
+  ],
+  "hp": 9,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "cs": "cooled",
+  "items": [
+   "coupler"
+  ],
+  "coins": 4,
+  "clovers": 3,
+  "l": {
+   "l_nellMet": true,
+   "l_odileMet": true,
+   "l_crateAsk": true,
+   "l_crateOpen": true,
+   "l_cs": "cooled",
+   "l_nellKnows": true
+  }
+ },
+ "bench settle": {
+  "cs": "done",
+  "coupler": true
+ },
+ "bench settle lines": [
+  "n_hero: Back on the bench. Warm, steady, humming.",
+  "n_nell: Hear that? She runs! I'll tell Xil it was his idea.",
+  "TOAST l_toast_engine"
+ ],
+ "nell before clearing": {
+  "r": "talked",
+  "paid": false,
+  "coins": 0
+ },
+ "nell before clearing lines": [
+  "n_nell: She purrs now. Esmer engines purr, did you know?"
+ ],
+ "odile clears": {
+  "r": "talked",
+  "cleared": true,
+  "tag": "cleared",
+  "barrier": 1.2
+ },
+ "odile clears lines": [
+  "n_odile: A heat coupler, tested on the quay by a qualified... what are you, exactly?",
+  "n_hero: Twinsen.",
+  "n_odile: ...by a Twinsen. Machinery, imported. Cleared. Tell Xil his soup is ready.",
+  "TOAST l_toast_cleared"
+ ],
+ "nell pays": {
+  "coins": [
+   4,
+   7
+  ],
+  "spawned": 0,
+  "left": 0
+ },
+ "nell pays lines": [
+  "n_nell: Xil left a finder's fee. Don't spend it on sprockets."
+ ],
+ "nell again": {
+  "spawned": 0
+ },
+ "nell again lines": [
+  "n_nell: If the project's couplers run like this one, they'll need a lot of water."
+ ],
+ "bram": {
+  "r": "talked",
+  "to": "bram",
+  "state": "play",
+  "lines": 8
+ },
+ "bram lines": [
+  "n_bram: Twinsen! Just the man. The project ran its pipe right past my pump, and the handle seized the day they dug.",
+  "n_bram: Mira says the pipe makes the pump pointless. The figures look fine, she says. Figures don't carry buckets.",
+  "n_hero: I'll have a look at it.",
+  "n_bram: Mind the valve pin. It rusted in when they dug."
+ ],
+ "pump no pliers": {
+  "need": true,
+  "journal": [
+   {
+    "key": "l_j_pump0",
+    "done": false
+   },
+   {
+    "key": "l_j_pliers",
+    "done": false
+   },
+   {
+    "key": "l_j_crate0",
+    "done": true
+   },
+   {
+    "key": "l_j_crate1",
+    "done": true
+   },
+   {
+    "key": "l_j_crate2",
+    "done": true
+   }
+  ]
+ },
+ "pump no pliers lines": [
+  "n_hero: The valve pin's rusted in. I need pliers. Mine have gone missing."
+ ],
+ "boat box": {
+  "pliers": true,
+  "items": [
+   "pliers"
+  ]
+ },
+ "boat box lines": [
+  "n_hero: Paint, string, a spare sail... and my pliers. Arthur.",
+  "TOAST l_toast_pliers"
+ ],
+ "pump fix": {
+  "pin": true,
+  "presses": 4,
+  "strokes": 3,
+  "pump": true,
+  "running": true,
+  "items": []
+ },
+ "pump fix lines": [
+  "n_hero: Pin's out. Now the handle.",
+  "n_hero: There it goes. Cold and clear.",
+  "TOAST l_toast_pump"
+ ],
+ "arthur after pliers found": {
+  "r": "talked",
+  "to": "arthur",
+  "state": "play",
+  "lines": 2
+ },
+ "arthur lines": [
+  "n_arthur: Grandpa's radio is full of dust. What does this button do? Ow!"
+ ],
+ "bram thanks": {
+  "spawned": 0,
+  "clovers": [
+   3,
+   4
+  ],
+  "left": 0
+ },
+ "bram thanks lines": [
+  "n_bram: Listen to that. Fifty years and it still sings. Pipes break, Twinsen. Pumps don't.",
+  "n_bram: Here. A four-leaf clover. I kept it for the day somebody listened.",
+  "TOAST toast_clover_found"
+ ],
+ "bram again x3": [
+  0,
+  0,
+  0
+ ],
+ "bram again lines": [
+  "n_bram: Saved the world twice and still answers the door. Good lad.",
+  "n_bram: Half the lane fills its kettle here again. Don't tell Mira.",
+  "n_bram: The new pipe is warm. Too warm, if you ask me. Nobody does."
+ ],
+ "drink": {
+  "hp": [
+   5,
+   8,
+   10
+  ],
+  "max": 10,
+  "note": "ISO: hp lowered to test the heal"
+ },
+ "drink lines": [
+  "n_hero: Cold. Proper well water.",
+  "n_hero: Cold. Proper well water."
+ ],
+ "journal": {
+  "title": "Around town",
+  "lines": [
+   {
+    "key": "l_j_pump0",
+    "done": true
+   },
+   {
+    "key": "l_j_pliers",
+    "done": true
+   },
+   {
+    "key": "l_j_crate0",
+    "done": true
+   },
+   {
+    "key": "l_j_crate1",
+    "done": true
+   },
+   {
+    "key": "l_j_crate2",
+    "done": true
+   }
+  ]
+ },
+ "continue (done)": {
+  "pump": true,
+  "crate": "cleared",
+  "cs": "done",
+  "coupler": true,
+  "barrier": 1.2,
+  "items": [],
+  "coins": 7,
+  "clovers": 4
+ },
+ "after reload: talk bram/nell/odile": {
+  "loose": 0
+ },
+ "after reload lines": [
+  "n_bram: Saved the world twice and still answers the door. Good lad.",
+  "n_nell: Arthur came by. He wanted to know if a paddle boat could use a coupler. I said no. He said \"yet\".",
+  "n_odile: Category: machinery. Sub-category: humming."
+ ],
+ "end": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -39.82,
+   2.31,
+   67.73
+  ],
+  "hp": 10,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "cs": "done",
+  "items": [],
+  "coins": 7,
+  "clovers": 4,
+  "l": {
+   "l_nellMet": true,
+   "l_odileMet": true,
+   "l_crateAsk": true,
+   "l_crateOpen": true,
+   "l_cs": "done",
+   "l_nellKnows": true,
+   "l_coupler": true,
+   "l_n_l_nell_after": 2,
+   "l_cleared": true,
+   "l_nellPaid": true,
+   "l_pumpAsk": true,
+   "l_needPliers": true,
+   "l_pliers": true,
+   "l_pin": true,
+   "l_strokes": 3,
+   "l_pump": true,
+   "l_bramThanks": true,
+   "l_n_l_bram_after": 0,
+   "l_n_l_odile_after": 0
+  }
+ },
+ "errors": []
+}

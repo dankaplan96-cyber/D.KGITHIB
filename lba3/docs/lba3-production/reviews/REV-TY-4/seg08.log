@@ -1,0 +1,37 @@
+[0s +0s] continue: {"chapter":"steam","room":"desert"} | desert [3351.5,5,1.5] hp 8 | Get into FunFrock's condenser hall
+[1s +1s] Brosk: the jar: {"r":"talked","to":"dtrader","state":"play","lines":2,"jar":true,"fail":null} | desert [3350.53,5,-3.25] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+[2s +1s] water from the oasis: {"r":"used","target":{"kind":"c5fill","id":"p_fill","label":"p_fill"},"state":"play","lines":2,"water":true,"fail":null} | desert [3369.03,4.34,-12.55] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+[3s +1s] Brosk: the shovel: {"r":"talked","to":"dtrader","state":"play","lines":2,"shovel":true,"fail":null} | desert [3353.22,5,-3.73] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+[4s +2s] dig out the door: {"r":"used","target":{"kind":"c5drift","id":"p_dig","label":"p_dig"},"state":"play","lines":2,"dug":true,"fail":null} | desert [3411.34,5,52.69] hp 8 | Route the steam through the condensers◆ Read the diagram
+[5s +0s] into the hall: {"r":"transition","from":"desert","to":"condA","fail":null} | condA [3694.4,0,-3] hp 8 | Route the steam through the condensers◆ Read the diagram
+[11s +6s] the diagram: {"r":"used","target":{"kind":"c5diagram","id":"p_read","label":"p_read"},"state":"play","lines":2,"diagram":true,"fail":null} | condA [3693.9,0,1.5] hp 8 | Route the steam through the condensers◆ Read the diagram
+[11s +0s] the old trooper: {"left":0,"dead":false,"hp":8,"t":0,"trooper":false} | condA [3693.9,0,1.5] hp 8 | Route the steam through the condensers◆ Read the diagram
+[12s +1s] the valves 1, 3, 4: {"valves":{"1":true,"3":true,"4":true},"routed":true,"fail":null} | condA [3703.21,0,-1.18] hp 8 | Open the test bore's relief valve at the post
+[13s +1s] the hangar: {"r":"transition","from":"condA","to":"condB"} | condB [3753,0,0] hp 8 | Open the test bore's relief valve at the post
+[13s +0s] the glider: {"r":"used","target":{"kind":"c5glider","id":"p_look","label":"p_look"},"state":"play","lines":2,"seen":true} | condB [3762.08,0,4.98] hp 8 | Open the test bore's relief valve at the post
+[15s +1s] the hatch (ball): {"hatch":true,"fail":null} | condB [3767.75,0,-3.03] hp 8 | Open the test bore's relief valve at the post
+[16s +1s] back out: {"r":"transition","from":"condA","to":"desert"} | desert [3412,5,54.36] hp 8 | Open the test bore's relief valve at the post
+[18s +2s] Dallan: {"r":"talked","to":"dallan","state":"play","lines":10,"ok":true,"fail":null} | desert [3423.91,5,-17.51] hp 8 | Open the test bore's relief valve at the post
+[18s +0s] the relief valve: {"r":"used","target":{"kind":"c5relief","id":"p_relief","label":"p_relief"},"state":"play","lines":2,"relief":true,"fail":null} | desert [3439.65,5.35,-17.93] hp 8 | Get out of the post!
+[19s +1s] out before the vent: {"vent":true,"hp":8,"fail":null} | desert [3419.28,5.61,-20.8] hp 8 | Go back to Kesh
+[20s +1s] Tarra: {"r":"talked","to":"tarra","state":"play","lines":16,"radio":true} | desert [3352.18,5,10.88] hp 8 | Ask Hesk about a way north
+[21s +1s] Hesk: the glider: {"r":"talked","to":"hesk","state":"play","lines":4,"glider":true,"fail":null} | desert [3373.3,4.74,12.59] hp 8 | Meet Hesk in the hangar
+[23s +2s] to the hangar: {"r":"transition","from":"condA","to":"condB"} | condB [3753.76,0,0] hp 8 | Meet Hesk in the hangar
+[24s +1s] board → chapter 6: {"r":"boarded from 0","target":{"kind":"c5board","id":"p_board","label":"p_board"},"chapter":"pass","room":"hamalayi","fail":null} | hamalayi [4304,2.82,86] hp 8 | Cross the gorge
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[162.0] go → (3440.1, -17.8) plan ok=true pts=3 left=0.6
+[165.6] go → (3440.1, -17.8) plan ok=true pts=2 left=0.08
+[165.9] go → (3440.1, -17.8) plan ok=true pts=2 left=0.16
+[165.9] go → (3440.1, -17.8) plan ok=true pts=2 left=0.16
+[167.0] go → (3418.0, -21.0) plan ok=true pts=3 left=0.89
+[181.4] go → (3351.0, 11.5) plan ok=true pts=6 left=0.74
+[198.6] go → (3374.5, 13.2) plan ok=true pts=3 left=0.79
+[205.0] go → (3412.0, 51.6) plan ok=true pts=5 left=0.22
+[216.2] go: transition (desert → desert, trans true) at (3411.06, 51.80)
+[217.1] go → (3705.2, -4.5) plan ok=true pts=2 left=0.05
+[222.3] go: transition (condA → condA, trans true) at (3704.54, -4.35)
+[223.1] go → (3762.5, 6.2) plan ok=true pts=3 left=0.21
+kept docs/lba3-production/reviews/REV-TY-4/save-08.json
+no errors
+rc 0

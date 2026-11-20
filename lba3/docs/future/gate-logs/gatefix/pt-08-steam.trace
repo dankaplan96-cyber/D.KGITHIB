@@ -1,0 +1,50 @@
+[0.4] go → (3352.0, -3.4) plan ok=true pts=5 left=0.91
+[6.9] go → (3369.1, -13.0) plan ok=true pts=3 left=0.61
+[11.4] go → (3369.1, -13.0) plan ok=true pts=2 left=0.14
+[12.7] go → (3352.0, -3.4) plan ok=true pts=3 left=0.93
+[21.6] go → (3412.0, 52.8) plan ok=true pts=6 left=0.65
+[38.7] go → (3412.0, 52.8) plan ok=true pts=2 left=0.31
+[41.9] go → (3412.0, 51.6) plan ok=true pts=2 left=0.3
+[42.4] go: transition (desert → desert, trans true) at (3411.56, 52.49)
+[43.5] go → (3693.5, 1.6) plan ok=false pts=2 left=4.6
+[48.6] stuck at (3693.5, -3.0): replan
+[57.8] threat: fight
+[59.3] fight ffdrone1 d=5.4 st=chase aim=it e@3702.1,0.0,1.5 me@3707.0,0.0,-2.1 ball=idle hp 3→1 me 10 mp 9.344166666666668
+[60.5] fight ffdrone1 d=6.0 st=dead aim=it e@3702.0,0.0,1.6 me@3707.0,0.0,-2.1 ball=idle hp 1→-1 me 10 mp 8.752500000000003
+[60.5] go → (3699.8, 1.3) plan ok=true pts=5 left=3.5
+[61.3] hurt 10→9 at (3706.6, 0.0, -1.4) near: ffguard1:aim,ffclone1:recover 
+[63.3] dodge a bolt
+[65.2] dodge a bolt
+[66.1] fight ffclone1 d=3.9 st=chase aim=it e@3703.6,0.0,-0.3 me@3707.1,0.0,-2.6 ball=return hp 5→2 me 8 mp 9.326666666666668
+[74.5] fight ffclone1 d=4.2 st=dead aim=none e@3703.9,0.0,-1.0 me@3707.1,0.0,-2.6 ball=idle hp 2→-1 me 8 mp 9.326666666666668
+[74.5] fight → {"left":0,"dead":false,"hp":8,"t":15.8}
+[82.3] go → (3693.5, 1.6) plan ok=true pts=2 left=0.21
+[83.6] go → (3695.8, -1.2) plan ok=true pts=2 left=0.4
+[86.0] go → (3695.8, -1.2) plan ok=true pts=2 left=0.25
+[88.6] go → (3701.0, -1.2) plan ok=true pts=2 left=0.41
+[91.3] go → (3701.0, -1.2) plan ok=true pts=2 left=0.18
+[93.7] go → (3703.6, -1.2) plan ok=true pts=2 left=0.59
+[94.8] go → (3703.6, -1.2) plan ok=true pts=2 left=0.11
+[97.0] go → (3705.2, -4.5) plan ok=false pts=2 left=3.38
+[102.0] stuck at (3705.2, -1.2): replan
+[106.1] go: transition (condA → condA, trans true) at (3705.70, -4.09)
+[107.2] go → (3762.5, 4.8) plan ok=true pts=3 left=0.5
+[112.2] go → (3762.5, 4.8) plan ok=true pts=2 left=0.3
+[113.9] go → (3768.4, -3.0) plan ok=true pts=5 left=0.34
+[128.6] go → (3751.5, 0.0) plan ok=true pts=2 left=0.28
+[137.3] go: transition (condB → condB, trans true) at (3752.23, -0.19)
+[138.1] go → (3694.4, -4.4) plan ok=true pts=2 left=0.2
+[144.1] go: transition (condA → condA, trans true) at (3695.02, -4.00)
+[144.9] go → (3424.2, -18.8) plan ok=true pts=7 left=0.79
+[163.1] go → (3440.1, -17.8) plan ok=true pts=4 left=0.64
+[167.2] go → (3440.1, -17.8) plan ok=false pts=2 left=0.35
+[168.6] go → (3418.0, -21.0) plan ok=true pts=3 left=0.52
+[183.1] go → (3351.0, 11.5) plan ok=true pts=8 left=0.61
+[193.2] stuck at (3388.0, -12.9): replan
+[196.2] stuck at (3388.0, -12.9): replan
+[219.5] go → (3374.5, 13.2) plan ok=true pts=3 left=0.93
+[225.8] go → (3412.0, 51.6) plan ok=true pts=6 left=0.17
+[237.7] go: transition (desert → desert, trans true) at (3411.06, 51.75)
+[238.6] go → (3705.2, -4.5) plan ok=true pts=2 left=0.05
+[244.6] go: transition (condA → condA, trans true) at (3704.54, -4.36)
+[245.4] go → (3762.5, 6.2) plan ok=true pts=3 left=0.21

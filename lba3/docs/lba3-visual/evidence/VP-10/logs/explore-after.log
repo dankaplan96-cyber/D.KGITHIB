@@ -1,0 +1,12 @@
+customs {"pos":[-107,1.85,37],"cam":{"pitch":48.4,"rigPitch":40.2,"dist":14.9,"y":13,"yaw":1.94},"seen":{"seen":99,"full":102,"pct":97},"who":{"blocked":0,"n":9,"by":{}}}
+deck-wait {"pos":[-6.5,2.35,36.5],"cam":{"pitch":43.8,"rigPitch":34.6,"dist":14.36,"y":12.29,"yaw":3.14},"seen":{"seen":115,"full":116,"pct":99},"who":{"blocked":0,"n":9,"by":{}}}
+deck-wait-n {"pos":[-6.6,2.35,33.76],"cam":{"pitch":62.8,"rigPitch":58.2,"dist":16.16,"y":16.72,"yaw":3.14},"seen":{"seen":62,"full":75,"pct":83},"who":{"blocked":0,"n":9,"by":{}}}
+spaceport {"pos":[-1.7,2.35,39.5],"cam":{"pitch":36.6,"rigPitch":26.4,"dist":13.4,"y":10.34,"yaw":1.57},"seen":{"seen":135,"full":135,"pct":100},"who":{"blocked":0,"n":9,"by":{}}}
+harbour-lane {"pos":[-80,2.23,37],"cam":{"pitch":36.6,"rigPitch":26.4,"dist":13.4,"y":10.22,"yaw":1.64},"seen":{"seen":136,"full":137,"pct":99},"who":{"blocked":0,"n":9,"by":{}}}
+behind-bug {"pos":[-58.16,2.35,-21.35],"cam":{"pitch":79.2,"rigPitch":78.1,"dist":16.69,"y":18.74,"yaw":6.53},"seen":{"seen":34,"full":46,"pct":74},"who":{"blocked":0,"n":9,"by":{}}}
+behind-stone {"pos":[-31.33,2.99,-28.76],"cam":{"pitch":75.5,"rigPitch":73.2,"dist":16.63,"y":19.09,"yaw":6.33},"seen":{"seen":21,"full":58,"pct":36},"who":{"blocked":6,"n":9,"by":{"merged<merged>":{"at":[-31.2,7.6,-27.8],"box":[-36.2,5.3,-28,-27.2,8,-21.2],"mat":"#ffffff"}}}}
+behind-south {"pos":[-48.2,2.35,18.6],"cam":{"pitch":79.5,"rigPitch":78.4,"dist":16.69,"y":18.76,"yaw":6.28},"seen":{"seen":37,"full":51,"pct":73},"who":{"blocked":1,"n":9,"by":{"?<>":{"at":[-48.2,8.4,19.7],"box":[-48.3,8.2,19.7,-48.1,8.4,26.9],"mat":"#d8c0b0"}}}}
+behind-shop {"pos":[-25.6,3.16,0.5],"cam":{"pitch":75.7,"rigPitch":74,"dist":16.64,"y":19.28,"yaw":4.71},"seen":{"seen":38,"full":51,"pct":75},"who":{"blocked":1,"n":9,"by":{"?<>":{"at":[-26.7,7.9,0.5],"box":[-33.3,7.6,0.4,-26.7,7.9,0.6],"mat":"#d8c0b0"}}}}
+behind-pink {"pos":[-28.5,2.35,20.5],"cam":{"pitch":77,"rigPitch":75.5,"dist":16.66,"y":18.58,"yaw":6.28},"seen":{"seen":45,"full":55,"pct":82},"who":{"blocked":1,"n":9,"by":{"?<>":{"at":[-28.5,7.3,21.6],"box":[-28.6,7,21.6,-28.4,7.3,27.6],"mat":"#d8c0b0"}}}}
+behind-twinsen {"pos":[-55.9,2.35,79.8],"cam":{"pitch":80,"rigPitch":79,"dist":16.7,"y":18.8,"yaw":7.85},"seen":{"seen":37,"full":49,"pct":76},"who":{"blocked":0,"n":9,"by":{}}}
+no page errors

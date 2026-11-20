@@ -1,0 +1,14 @@
+PASS chapter 2: no travel menu anywhere (the spaceport's shuttle reads the grounded notice; ferry, gliders, Zeelich's pads closed) 
+PASS chapter 4: the ferry runs (Citadel → Desert Island only); every glider field is closed 
+PASS chapter 5: the project has taken the ferry: no ferry menu on Desert Island's pier 
+PASS chapter 6: the glider joins Desert Island and the Hamalayi; Citadel's field still closed 
+PASS Twinsun: Citadel ⇄ Desert Island ⇄ the Hamalayi, every region from every other by ferry or glider, by input (8 legs) 
+PASS Twinsun's ferry and glider menus name only Twinsun places (no Zeelich, no spaceship) 
+PASS Citadel Spaceport's menu lists only Zeelich Spaceport; the spaceship lands him on Zeelich's spaceport deck 
+PASS on Zeelich he walks from the spaceport deck over the footbridge to the shuttle pad; its menu: the spaceport island (here) and the 11 islands, nothing of Twinsun 
+PASS every Zeelich place reached by shuttle, pad to pad (11 islands), and back to the spaceport island; no Twinsun stop on any menu 
+PASS Zeelich Spaceport's menu lists only Twinsun: Citadel Spaceport 
+PASS the spaceship flies back: Zeelich Spaceport → Citadel Spaceport, on the deck in play 
+PASS the Holomap shows the planet he is on (Twinsun: Citadel, Desert Island, the Hamalayi; Zeelich: its spaceport island and islands) with his dot on the map 
+no errors
+ALL PASSED

@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:9201",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"follow\",\"autoControls\":\"on\",\"camDist\":\"medium\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"fps\":\"auto\",\"aa\":\"msaa\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"autoTalk\":\"off\",\"textSize\":\"normal\",\"shake\":\"on\",\"weather\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"minimap\":\"north\",\"camDistV2\":1,\"keys\":{},\"v\":2,\"qualityAuto\":true,\"qualityChosenByHand\":false,\"qv\":4}"
+        },
+        {
+          "name": "lba3.loadTimes",
+          "value": "{\"total\":18375,\"shaders\":114696,\"pace\":3.2176923076923076,\"prep\":{\"paint\":419,\"programs\":88,\"textures\":13,\"geometry\":909,\"geometryPart\":149,\"shadowBatches\":1439,\"layers\":51236,\"batches\":1874,\"batchUpload\":875,\"startRoom\":16618,\"audioContext\":3,\"shadowPrograms\":7255,\"firstDraws\":12649,\"firstFrame\":21321}}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":5,\"room\":\"well\",\"hero\":{\"x\":1093.4,\"z\":3.3,\"hp\":10,\"mp\":7,\"magicLevel\":1,\"clovers\":2,\"coins\":10,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\",\"arms\":{\"blowgun\":false,\"blowtron\":false,\"laser\":false,\"glove\":false,\"lightning\":false,\"protect\":false,\"conch\":false,\"lantern\":false,\"lanternOn\":false,\"jetpack\":false,\"jetpackOn\":false,\"pocketset\":false,\"lance\":false,\"fork\":false,\"line\":false,\"heatflask\":false,\"darts\":0,\"charge\":0,\"penguins\":0,\"water\":0,\"heat\":0}},\"flags\":{\"chapter\":0,\"chapterKey\":\"well\",\"intro\":true,\"opening\":true,\"ballHint\":true,\"wellSeen\":true,\"pr_row\":true,\"pr_miraNo\":true,\"pr_kettle\":true,\"zoeNext\":true,\"tremorSeen\":true,\"key\":true,\"pr_lidStuck\":true,\"pr_lidOpen\":true,\"metXil\":true,\"pr_bellSeen\":true,\"pr_bell\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"pr_stones\":true,\"inWell\":true,\"nodes\":0,\"mapDoors\":{\"well\":[\"citadel\",-40.7,-5.1]}},\"killed\":[],\"collected\":[],\"searched\":[\"cupboard\"],\"crates\":[],\"loot\":[],\"at\":1794385733318,\"played\":281}"
+        }
+      ]
+    }
+  ]
+}

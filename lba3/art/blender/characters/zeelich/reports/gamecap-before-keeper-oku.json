@@ -1,0 +1,80 @@
+{
+ "keeper": {
+  "look": "keeper",
+  "body": "keeper",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 970760
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967672
+   },
+   "heroCalls": 4,
+   "heroTris": 3088
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3088,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "oku": {
+  "look": "oku",
+  "body": "oku",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 234,
+    "triangles": 1085560
+   },
+   "withoutHero": {
+    "calls": 230,
+    "triangles": 1081712
+   },
+   "heroCalls": 4,
+   "heroTris": 3848
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3848,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T02:26:12.101Z",
+ "candidates": {}
+}

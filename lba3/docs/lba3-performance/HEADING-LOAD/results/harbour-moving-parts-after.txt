@@ -1,0 +1,32 @@
+heading 5: 31 main-pass draws under the harbour's moving parts
+boat: Mesh merged [merged-vctrm #ffffff map vc] cast true · 384 tris
+boat: Mesh merged [merged-vctrm #ffffff map vc] cast false · 420 tris
+ferry: Mesh merged [merged-vcrm #ffffff vc] cast false · 640 tris
+lift: Mesh merged [merged-vcrm #ffffff vc] cast false · 560 tris
+boat: Mesh merged [merged-vcrm #ffffff vc] cast false · 24 tris
+boat: Mesh merged [merged-vcrm #ffffff vc] cast false · 9746 tris
+lift: Mesh merged [merged-vcrm #ffffff vc] cast false · 96 tris
+lift: Mesh merged [merged-vcrm #ffffff vc] cast false · 840 tris
+boat: Mesh [MeshStandardMaterial #ffffff map vc] cast true · 1936 tris
+ferry: Mesh [MeshStandardMaterial #c8c4d4 map] cast true · 196 tris
+ferry: Mesh merged [MeshStandardMaterial #a8f0ff] cast false · 128 tris
+ferry: Mesh merged [MeshStandardMaterial #9ff4ff] cast false · 336 tris
+ferry: Mesh [MeshStandardMaterial #ffffff map] cast false · 140 tris
+ferry: Mesh [MeshStandardMaterial #d8c0a0 map] cast false · 140 tris
+cargo: Mesh [MeshStandardMaterial #ffffff map] cast true · 560 tris
+cargo: Mesh [MeshStandardMaterial #ffffff map] cast true · 5600 tris
+lift: Mesh [MeshStandardMaterial #c89a68 map] cast false · 140 tris
+lift: Mesh [MeshStandardMaterial #c89a68 map] cast false · 140 tris
+boat: Mesh merged [merged-vctrm #ffffff map vc] cast true · 280 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast true · 280 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast false · 1128 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast true · 2700 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast true · 280 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast true · 392 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast false · 2880 tris
+ferry: Mesh merged [merged-vctrm #ffffff map vc] cast true · 280 tris
+lift: Mesh [MeshStandardMaterial #4a5a68] cast false · 20 tris
+ferry: Mesh merged [MeshStandardMaterial #9ff0ff map] cast false · 12 tris
+cargo: Mesh [MeshStandardMaterial #9ff0ff map] cast false · 6 tris
+lift: Mesh merged [MeshStandardMaterial #9ff0ff map] cast false · 6 tris
+lift: Mesh merged [MeshStandardMaterial #9ff0ff map] cast false · 4 tris

@@ -1,0 +1,150 @@
+diff --git a/lba3/tools/blender/twinsen_poly.py b/lba3/tools/blender/twinsen_poly.py
+index 7f37c6df..46ccf8aa 100644
+--- a/lba3/tools/blender/twinsen_poly.py
++++ b/lba3/tools/blender/twinsen_poly.py
+@@ -642,7 +642,12 @@ head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=(110 if not os.enviro
+ # centre line), 15 points a half (28 round the head, was 20) and two blended sections between each measured pair: the
+ # LBA2 wedge keeps its proportions but loses its facets
+ TW_LOOK = not os.environ.get('TW_LOOK_OLD')
+-
++# TWINSEN-ORIG (the user 12.11, after TWINSEN-LOOK-38 and many tries; the user's pick, marked on the sheet: "this was the
++# best, but without the band"): the head smoothed as TWINSEN-LOOK-38 did (Chaikin, 15 points a half) on LBA2's measured
++# sections, not stretched and not narrowed; above the brow one smooth arc to a round apex (no bump, no flat lid); the hair
++# LBA2's own three balls, flat shaded; no band. TW_LOOK_38=1 builds the look TWINSEN-LOOK-38 shipped
++LOOK_38 = bool(os.environ.get('TW_LOOK_38'))
++ORIG = TW_LOOK and not LOOK_38
+ 
+ def chaikin(half, it=2):
+     for _ in range(it):
+@@ -661,14 +666,26 @@ FINE = []
+ # the chin, the full width from the cheekbones up), so the face narrows to a rounded chin instead of the LBA2 wedge's flat
+ # underside)
+ def tw_y(y):
+-    return y if (not TW_LOOK or y <= 0.9) else 0.9 + (y - 0.9) * 1.25
++    return y if (not LOOK_38 or y <= 0.9) else 0.9 + (y - 0.9) * 1.25
+ 
+ 
+ def tw_kx(y):
+-    return 1.0 if not TW_LOOK else 0.88 + 0.12 * smooth(0.822, 0.88, y)
++    return 0.88 + 0.12 * smooth(0.822, 0.88, y) if LOOK_38 else 1.0
++
+ 
++# (the skull's arc: above SK_Y0 the 0.908 section scaled about its middle along a quarter ellipse to the apex at SK_C + SK_A)
++SK_Y0, SK_C, SK_A = 0.908, 0.89, 0.082
++if ORIG:
++    _h0 = dict(HEAD)[SK_Y0]
++    _zc0 = (max(z for _, z in _h0) + min(z for _, z in _h0)) / 2
++    _k0 = math.sqrt(1 - ((SK_Y0 - SK_C) / SK_A) ** 2)
++    _ks = lambda y_: math.sqrt(max(0.0, 1 - ((y_ - SK_C) / SK_A) ** 2)) / _k0
++    HEAD_SRC = [r_ for r_ in HEAD if r_[0] <= SK_Y0] + [(y_, [(x * _ks(y_), _zc0 + (z - _zc0) * _ks(y_)) for x, z in _h0]) for y_ in (0.922, 0.935, 0.946, 0.955, 0.962, 0.967)]
++else:
++    HEAD_SRC = HEAD
+ 
+-HEADS = [(tw_y(y), [(x * tw_kx(y), z) for x, z in chaikin(h, 3)]) for y, h in HEAD] if TW_LOOK else HEAD
++
++HEADS = [(tw_y(y), [(x * tw_kx(y), z) for x, z in chaikin(h, 3)]) for y, h in HEAD_SRC] if TW_LOOK else HEAD
+ for (y0, h0), (y1, h1) in zip(HEADS, HEADS[1:]):
+     a, b = resample(h0, 25), resample(h1, 25)
+     FINE.append((y0, h0))
+@@ -676,7 +693,9 @@ for (y0, h0), (y1, h1) in zip(HEADS, HEADS[1:]):
+         FINE.append((y0 + (y1 - y0) * t, [(pa[0] + (pb[0] - pa[0]) * t, pa[1] + (pb[1] - pa[1]) * t) for pa, pb in zip(a, b)]))
+ FINE.append(HEADS[-1])
+ CROWN_TOP = (0, tw_y(0.956), 0.035)
+-if TW_LOOK:
++if ORIG:   # (the arc closes on its apex)
++    CROWN_TOP = (0, SK_C + SK_A, _zc0)
++elif TW_LOOK:
+     # (TWINSEN-LOOK-38: the crown domed instead of a flat lid: four more rings above the top section, drawn in toward its
+     # middle on a quarter circle, 2.2 % H higher at the top, so the egg closes round under the knot)
+     yt, ht = FINE[-1]
+@@ -740,6 +759,9 @@ if not os.environ.get('TW_LOOK_OLD'):
+     # long arc, thicker, its tip low behind the head)
+     _ct = CROWN_TOP
+     HAIR = ((_ct[1] - 0.006, _ct[2] - 0.030, 0.0330), (_ct[1] + 0.062, _ct[2] - 0.060, 0.0350), (_ct[1] + 0.070, _ct[2] - 0.150, 0.0260))
++    if not LOOK_38:
++        # (TWINSEN-ORIG: LBA2's own three balls at their measured places and sizes)
++        HAIR = ((0.951, -0.052, 0.0494), (0.925, -0.103, 0.0355), (0.890, -0.118, 0.0247))
+ HAIR_FILL = 0.7          # how much of the waist between two balls is filled (0: the balls' union, 1: their hull)
+ HAIR_M = 12              # points per ring
+ HAIR_DOWN = (0.0, -1.0, 0.0)
+@@ -798,39 +820,46 @@ HAIR_U = {}
+ hair = Part('hair', 'hair', lambda p: w_hair(HAIR_U[tuple(round(c, 6) for c in p)]), big=True,
+             normal=HAIR_DOWN, color=lambda p: 'hair' if HAIR_U[tuple(round(c, 6) for c in p)] < 0.55 else 'hairTuft')
+ stations, front, tip = hair_sweep()
+-if not os.environ.get('TW_LOOK_OLD'):
++if TW_LOOK and LOOK_38:
+     # (TWINSEN-LOOK-38, fifth pass, the user 12.11: "the band is in the middle of the hair, it must be at the hair's
+     # base": the band at the skin, and the hair below it drawn in to 85 % of the band's own section, so no hair shows
+     # between the band and the scalp; the knot starts at the band)
+     BAND_ST = min((st_ for st_ in stations if st_[3] >= -0.3), key=lambda st_: abs(st_[0][0] - (CROWN_TOP[1] - 0.002)))
+     stations = [(c_, d_, min(r_, BAND_ST[2] * 0.85) if u_ < BAND_ST[3] else r_, u_) for c_, d_, r_, u_ in stations]
+-hv, hf, us = [], [], []
+-for (cy, cz), (ty, tz), r, u in stations:
+-    # ring in the plane across the sweep: x across, n = the sweep's normal in the mid-plane
+-    ny, nz = -tz, ty
+-    for i in range(HAIR_M):
+-        a = 2 * math.pi * i / HAIR_M
+-        hv.append((r * math.sin(a), cy + ny * r * math.cos(a), cz + nz * r * math.cos(a)))
+-        us.append(u)
+-n_r = len(stations)
+-for j in range(n_r - 1):
+-    for i in range(HAIR_M):
+-        a, b = j * HAIR_M + i, j * HAIR_M + (i + 1) % HAIR_M
+-        hf.append([a, b, b + HAIR_M, a + HAIR_M])
+-hv.append((0.0, front[0], front[1])); us.append(stations[0][3] - 0.0001)
+-hv.append((0.0, tip[0], tip[1])); us.append(2.6)
+-f0, f1 = len(hv) - 2, len(hv) - 1
+-hf += [[f0, (i + 1) % HAIR_M, i] for i in range(HAIR_M)]
+-o = (n_r - 1) * HAIR_M
+-hf += [[f1, o + i, o + (i + 1) % HAIR_M] for i in range(HAIR_M)]
+-start = len(hair.v)
+-hair.add(hv, hf)
+-for p, u in zip(hair.v[start:], us):
+-    HAIR_U[tuple(round(c, 6) for c in p)] = u
++if ORIG:   # (each ball whole: the crown ball on the head, the tuft's two on the tail bones)
++    for (y_, z_, r_), u_ in zip(HAIR, (0.0, 1.0, 2.0)):
++        st0 = len(hair.v)
++        sphere(hair, (0.0, y_, z_), r_, 14, 9)
++        for p in hair.v[st0:]:
++            HAIR_U[tuple(round(c, 6) for c in p)] = u_
++else:
++    hv, hf, us = [], [], []
++    for (cy, cz), (ty, tz), r, u in stations:
++        # ring in the plane across the sweep: x across, n = the sweep's normal in the mid-plane
++        ny, nz = -tz, ty
++        for i in range(HAIR_M):
++            a = 2 * math.pi * i / HAIR_M
++            hv.append((r * math.sin(a), cy + ny * r * math.cos(a), cz + nz * r * math.cos(a)))
++            us.append(u)
++    n_r = len(stations)
++    for j in range(n_r - 1):
++        for i in range(HAIR_M):
++            a, b = j * HAIR_M + i, j * HAIR_M + (i + 1) % HAIR_M
++            hf.append([a, b, b + HAIR_M, a + HAIR_M])
++    hv.append((0.0, front[0], front[1])); us.append(stations[0][3] - 0.0001)
++    hv.append((0.0, tip[0], tip[1])); us.append(2.6)
++    f0, f1 = len(hv) - 2, len(hv) - 1
++    hf += [[f0, (i + 1) % HAIR_M, i] for i in range(HAIR_M)]
++    o = (n_r - 1) * HAIR_M
++    hf += [[f1, o + i, o + (i + 1) % HAIR_M] for i in range(HAIR_M)]
++    start = len(hair.v)
++    hair.add(hv, hf)
++    for p, u in zip(hair.v[start:], us):
++        HAIR_U[tuple(round(c, 6) for c in p)] = u
+ PARTS.append(hair)
+-if not os.environ.get('TW_LOOK_OLD'):
++if TW_LOOK and LOOK_38:
+     # (TWINSEN-LOOK-38: the knot's band, a short thick ring round the hair where the knot leaves the crown, weighted as the
+-    # hair is there, so the follow-through carries it)
++    # hair is there, so the follow-through carries it; TWINSEN-ORIG has none, as LBA2)
+     # (the band where the knot leaves the scalp: the station nearest a point 9 mm above the crown's skin)
+     bc = BAND_ST   # (fourth pass: at the skin itself, half sunk)
+     ub = bc[3]
+@@ -839,6 +868,7 @@ if not os.environ.get('TW_LOOK_OLD'):
+     tube(band, (0.0, cy - ty * 0.018, cz - tz * 0.018), (0.0, cy + ty * 0.008, cz + tz * 0.008), r * 1.10, r * 1.06, 14, cap0=True)   # (reaching down into the scalp at the back)
+     PARTS.append(band)
+ 
++
+ # HERO-LOOK (I-23, the user 31.10: "the medallion is just a plain disc, not on a necklace as in the original"). LBA2's
+ # Twinsen (BODY.HQR body 1) does wear it on a necklace: besides its polygons the body has 15 line primitives, which the
+ # earlier measurements (polygons only) had missed. Measured there (units of 1238, converted to this frame's H by

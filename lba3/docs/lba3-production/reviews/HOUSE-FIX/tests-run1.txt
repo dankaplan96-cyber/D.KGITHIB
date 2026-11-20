@@ -1,0 +1,9 @@
+prologue exit=0 117s VERDICT: PASS
+givers exit=0 54s VERDICT: PASS
+containers exit=0 222s VERDICT: PASS
+zoe-resume exit=0 170s VERDICT: PASS
+chapter1 exit=0 119s VERDICT: PASS
+worldfit exit=1 25s VERDICT: FAIL (1 functional)
+camclear exit=0 474s VERDICT: PASS
+stability exit=0 77s VERDICT: PASS
+perfbudget exit=0 520s VERDICT: PASS

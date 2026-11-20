@@ -1,0 +1,462 @@
+{
+ "lines": [
+  {
+   "who": "n_arthur",
+   "line": "op_ar_1",
+   "openAt": 1.6,
+   "set": "expressive:kitchen",
+   "lineAt": 1.68,
+   "engine": "expressive",
+   "soundAt": 1.71
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_0",
+   "openAt": 4.56,
+   "set": "expressive:kitchen",
+   "lineAt": 4.56,
+   "engine": "expressive",
+   "soundAt": 4.59
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_1",
+   "openAt": 7.456,
+   "set": "expressive:kitchen",
+   "lineAt": 7.52,
+   "engine": "expressive",
+   "soundAt": 7.55
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_1",
+   "openAt": 10.4,
+   "set": "expressive:kitchen",
+   "lineAt": 10.4,
+   "engine": "expressive",
+   "soundAt": 10.43
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_2",
+   "openAt": 13.36,
+   "set": "expressive:kitchen",
+   "lineAt": 13.36,
+   "engine": "expressive",
+   "soundAt": 13.389999999999999
+  },
+  {
+   "who": "n_arthur",
+   "line": "op_ar_2",
+   "openAt": 16.24,
+   "set": "expressive:kitchen",
+   "lineAt": 16.24,
+   "engine": "expressive",
+   "soundAt": 16.27
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_3",
+   "openAt": 19.2,
+   "set": "expressive:kitchen",
+   "lineAt": 19.2,
+   "engine": "expressive",
+   "soundAt": 19.23
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_2",
+   "openAt": 22.08,
+   "set": "expressive:kitchen",
+   "lineAt": 22.122666666666667,
+   "engine": "expressive",
+   "soundAt": 22.160666666666668
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_4",
+   "openAt": 25.04,
+   "set": "expressive:kitchen",
+   "lineAt": 25.04,
+   "engine": "expressive",
+   "soundAt": 25.07
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_5",
+   "openAt": 27.92,
+   "set": "expressive:kitchen",
+   "lineAt": 27.92,
+   "engine": "expressive",
+   "soundAt": 27.950000000000003
+  },
+  {
+   "who": "n_nara",
+   "line": "Twelve crates of cloud flowers, and not ",
+   "openAt": 34.48,
+   "set": "expressive:street",
+   "lineAt": 34.48,
+   "engine": "expressive",
+   "soundAt": 34.59
+  },
+  {
+   "who": "n_baldino",
+   "line": "The flue draws again! Did you hear it co",
+   "openAt": 37.36,
+   "set": "expressive:street",
+   "lineAt": 37.36266666666667,
+   "engine": "expressive",
+   "soundAt": 37.71
+  },
+  {
+   "who": "n_nara",
+   "line": "The project tags everything. Even my see",
+   "openAt": 40.32,
+   "set": "expressive:street",
+   "lineAt": 40.32,
+   "engine": "expressive",
+   "soundAt": 40.35
+  },
+  {
+   "who": "n_baldino",
+   "line": "Bring me the gauge, and mind the steam.",
+   "openAt": 43.218666666666664,
+   "set": "expressive:street",
+   "lineAt": 43.28,
+   "engine": "expressive",
+   "soundAt": 43.31
+  },
+  {
+   "who": "n_arthur",
+   "line": "op_ar_1",
+   "openAt": 47.68,
+   "set": "words:kitchen",
+   "lineAt": 47.68,
+   "engine": "words",
+   "T0": 47.76383851792009,
+   "answeredAt": 47.84,
+   "late": true,
+   "rendered": true,
+   "renderMs": 42.29999998211861,
+   "soundAt": 47.84
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_0",
+   "openAt": 50.61066666666667,
+   "set": "words:kitchen",
+   "lineAt": 50.64,
+   "engine": "words",
+   "T0": 50.73887547001788,
+   "answeredAt": 50.64,
+   "late": false,
+   "rendered": true,
+   "renderMs": 23,
+   "soundAt": 50.73887547001788
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_1",
+   "openAt": 53.52,
+   "set": "words:kitchen",
+   "lineAt": 53.536,
+   "engine": "words",
+   "T0": 53.66151184975834,
+   "answeredAt": 53.6,
+   "late": false,
+   "rendered": true,
+   "renderMs": 17.099999994039536,
+   "soundAt": 53.66151184975834
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_1",
+   "openAt": 56.48,
+   "set": "words:kitchen",
+   "lineAt": 56.48,
+   "engine": "words",
+   "T0": 56.57701355533353,
+   "answeredAt": 56.48,
+   "late": false,
+   "rendered": true,
+   "renderMs": 9.099999994039536,
+   "soundAt": 56.57701355533353
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_2",
+   "openAt": 59.36,
+   "set": "words:kitchen",
+   "lineAt": 59.44,
+   "engine": "words",
+   "T0": 59.54195360874112,
+   "answeredAt": 59.44,
+   "late": false,
+   "rendered": true,
+   "renderMs": 9.700000017881393,
+   "soundAt": 59.54195360874112
+  },
+  {
+   "who": "n_arthur",
+   "line": "op_ar_2",
+   "openAt": 62.32,
+   "set": "words:kitchen",
+   "lineAt": 62.32,
+   "engine": "words",
+   "T0": 62.410235515158526,
+   "answeredAt": 62.32,
+   "late": false,
+   "rendered": true,
+   "renderMs": 5.4000000059604645,
+   "soundAt": 62.410235515158526
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_3",
+   "openAt": 65.208,
+   "set": "words:kitchen",
+   "lineAt": 65.28,
+   "engine": "words",
+   "T0": 65.37258177929691,
+   "answeredAt": 65.28,
+   "late": false,
+   "rendered": true,
+   "renderMs": 9.099999994039536,
+   "soundAt": 65.37258177929691
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_2",
+   "openAt": 68.16,
+   "set": "words:kitchen",
+   "lineAt": 68.16,
+   "engine": "words",
+   "T0": 68.24419047643374,
+   "answeredAt": 68.16,
+   "late": false,
+   "rendered": true,
+   "renderMs": 5.5,
+   "soundAt": 68.24419047643374
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_4",
+   "openAt": 71.12,
+   "set": "words:kitchen",
+   "lineAt": 71.12,
+   "engine": "words",
+   "T0": 71.2072979978331,
+   "answeredAt": 71.12,
+   "late": false,
+   "rendered": true,
+   "renderMs": 7.200000017881393,
+   "soundAt": 71.2072979978331
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_5",
+   "openAt": 74,
+   "set": "words:kitchen",
+   "lineAt": 74.08,
+   "engine": "words",
+   "T0": 74.1655923280015,
+   "answeredAt": 74.08,
+   "late": false,
+   "rendered": true,
+   "renderMs": 7.100000023841858,
+   "soundAt": 74.1655923280015
+  },
+  {
+   "who": "n_nara",
+   "line": "Twelve crates of cloud flowers, and not ",
+   "openAt": 80,
+   "set": "words:street",
+   "lineAt": 80,
+   "engine": "words",
+   "T0": 80.09734461152134,
+   "answeredAt": 80,
+   "late": false,
+   "rendered": true,
+   "renderMs": 13.900000005960464,
+   "soundAt": 80.09734461152134
+  },
+  {
+   "who": "n_baldino",
+   "line": "The flue draws again! Did you hear it co",
+   "openAt": 82.88,
+   "set": "words:street",
+   "lineAt": 82.96,
+   "engine": "words",
+   "T0": 83.05233289680072,
+   "answeredAt": 82.96,
+   "late": false,
+   "rendered": true,
+   "renderMs": 16.599999994039536,
+   "soundAt": 83.05233289680072
+  },
+  {
+   "who": "n_nara",
+   "line": "The project tags everything. Even my see",
+   "openAt": 85.84,
+   "set": "words:street",
+   "lineAt": 85.84,
+   "engine": "words",
+   "T0": 85.93741303129224,
+   "answeredAt": 85.92,
+   "late": false,
+   "rendered": true,
+   "renderMs": 18,
+   "soundAt": 85.93741303129224
+  },
+  {
+   "who": "n_baldino",
+   "line": "Bring me the gauge, and mind the steam.",
+   "openAt": 88.8,
+   "set": "words:street",
+   "lineAt": 88.8,
+   "engine": "words",
+   "T0": 88.88953430606463,
+   "answeredAt": 88.8,
+   "late": false,
+   "rendered": true,
+   "renderMs": 10.5,
+   "soundAt": 88.88953430606463
+  },
+  {
+   "who": "n_arthur",
+   "line": "op_ar_1",
+   "openAt": 93.2,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 93.39
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_0",
+   "openAt": 96.16,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 96.19
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_1",
+   "openAt": 99.04,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 99.15
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_1",
+   "openAt": 102,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 102.03
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_2",
+   "openAt": 104.96,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 104.99
+  },
+  {
+   "who": "n_arthur",
+   "line": "op_ar_2",
+   "openAt": 107.84,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 107.95
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_3",
+   "openAt": 110.8,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 110.83
+  },
+  {
+   "who": "n_hero",
+   "line": "op_tw_2",
+   "openAt": 113.76,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 113.79
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_4",
+   "openAt": 116.64,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 116.75
+  },
+  {
+   "who": "n_zoe",
+   "line": "op_zoe_5",
+   "openAt": 119.6,
+   "set": "classic:kitchen",
+   "engine": "classic",
+   "soundAt": 119.63
+  },
+  {
+   "who": "n_nara",
+   "line": "Twelve crates of cloud flowers, and not ",
+   "openAt": 125.52,
+   "set": "classic:street",
+   "engine": "classic",
+   "soundAt": 125.63
+  },
+  {
+   "who": "n_baldino",
+   "line": "The flue draws again! Did you hear it co",
+   "openAt": 128.45866666666666,
+   "set": "classic:street",
+   "engine": "classic",
+   "soundAt": 128.662
+  },
+  {
+   "who": "n_nara",
+   "line": "The project tags everything. Even my see",
+   "openAt": 131.36,
+   "set": "classic:street",
+   "engine": "classic",
+   "soundAt": 131.39000000000001
+  },
+  {
+   "who": "n_baldino",
+   "line": "Bring me the gauge, and mind the steam.",
+   "openAt": 134.32,
+   "set": "classic:street",
+   "engine": "classic",
+   "soundAt": 134.35
+  }
+ ],
+ "long": [
+  {
+   "at": 42480,
+   "ms": 2110,
+   "during": false
+  },
+  {
+   "at": 44593,
+   "ms": 145,
+   "during": false
+  },
+  {
+   "at": 44757,
+   "ms": 87,
+   "during": false
+  },
+  {
+   "at": 57202,
+   "ms": 50,
+   "during": false
+  }
+ ],
+ "gpu": "NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11",
+ "cur": null
+}

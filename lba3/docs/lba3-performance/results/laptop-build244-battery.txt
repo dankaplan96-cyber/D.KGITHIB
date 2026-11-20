@@ -1,0 +1,23 @@
+LBA3: The Awakening benchmark · build 0.35.0 (build 244) · 2026-10-28 19:59 (the user's Vega 8 laptop), ON BATTERY, no driver/OS settings changed
+battery profile applied (Medium/High: 5-read shadow filter, MSAA off, auto resolution to ×0.5, 2 lamps)
+
+summary · fps fixed / as played
+             low            medium         high
+  street     56.3 / 58      50.7 / 55.7    33.3 / 42.3
+  interior   60 / 59.7      60 / 56        50 / 55.9
+  combat     57.8 / 55.5    55.5 / 49.4    40.9 / 51.9
+  transition 60 / 59.5      55.8 / 50.2    45.2 / 52.5
+  arrival    44.6 / 51.4    45.3 / 49.9    37.2 / 40.3
+  hamalayi   59.8 / 60      56 / 43.6      43.6 / 57.2
+Against build 228 on battery (fixed): Medium street 49.7 → 50.7, arrival 46.7 → 45.3, transition 52.5 → 55.8; Low street 54 → 56.3.
+Targets (the user): Medium 60 on battery; High 60 plugged in (High on battery is not a target).
+
+CPU ON BATTERY: the CPU probe swings 6.1–17.8 ms (plugged 5.7–10.2): the processor runs at roughly half speed for much of the run.
+Medium street fixed: game CPU work p50 14.8 ms (sim 4.1 + submit 10.7) and GPU 15.94 ms — both near the 16.7 ms frame, 18 % of frames missed.
+  breakdown (fps / GPU ms / game CPU ms): as is 50 / 15.68 / 15.5 · res ×0.6 55.7 / 12.52 / 16.7 · no lamps 54.2 / 14.49 / 15.0 ·
+  no shadows 50.5 / 13.57 / 14.2 · draw batches off 44.1 · shadow cache off 46.3 · battery profile off 35 / 24.26
+  → Medium on battery needs BOTH less CPU per frame (~15 → ≤ 11 ms) and less GPU (~15.7 → ≤ 12 ms); neither alone is enough.
+Arrival (all presets): game CPU 15–18 ms, 316–379 calls; 18–25 % of frames missed at Low/Medium.
+High street on battery: GPU 26 ms, of it the uncached 4096 shadow map 7.7 ms (2048: 4.77); bloom ~3.9 ms.
+The display/OS ~56.5 plateau also appears on battery (nothing drawn 17.6–23 ms in those runs), and as-played Medium hamalayi
+ran at 24.8 ms frames with nothing-drawn 17.7: pacing outside the game again.

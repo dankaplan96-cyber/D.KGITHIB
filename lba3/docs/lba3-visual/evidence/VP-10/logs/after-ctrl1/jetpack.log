@@ -1,0 +1,54 @@
+ISO  chapters 1–9 finished by their flags (as tests/chapter10.mjs): chapter 10 begins in Baldino's workshop
+PASS before chapter 10 the pack is not Baldino's to give (the peg offers nothing) 
+PASS chapter 10: after his briefing Baldino points out the hop-pack on its peg (one line, once) 
+PASS the peg's prompt is Take; E: Baldino explains its limits (ground under it, one storey, open sky) and gives it 
+PASS it is worn at once: on his back, gone from the peg; a toast says how to use it; the save already has it 
+PASS the inventory lists the Hop-Pack, "worn", with how to use it and its limits 
+PASS no second pack: the peg offers nothing once it is taken 
+PASS indoors (the workshop) it never lights: a plain jump (≤ 1.85 m), a "needs open sky" toast 
+PASS out on Zeelich's street; Baldino's test step stands on the green behind the workshop 
+PASS the sign at its foot (Read): "No ladder. That is the test." 
+PASS the inventory takes the pack off (E) and puts it back on (E) 
+PASS without the pack, an Athletic running jump does not reach the deck (2.35 m up) 
+PASS with the pack (F2, run, Space held): he lifts off, lands on the deck 
+PASS the pack's flight: lit once the jump stops rising (not at once), the gauge shown, the "jet" pose 
+PASS the tin on the deck (Take): a clover and 10 kashes, once 
+PASS the journal: the pack and the test step, both done 
+PASS one storey: hovering in place he rises at most 2.5 m above the ground he took off from 
+PASS fuel: about 2.2 s of thrust from full, then it sputters out and he comes down 
+PASS the refill: by itself on firm ground, full again in under 2 s (no item, nothing to buy) 
+PASS in Normal mode Space is the action (a hop, a talk): the pack never lights 
+PASS the island's edge: flying at the cloud sea he stops at the brink (never over the clouds, no fall, no damage) 
+PASS a roof: flying at a house wall (3.8 m) he can't get on top; he comes back down beside it 
+PASS a fence: the depot's fence (2.4 m) stops him (his feet must clear its top); he never gets inside 
+PASS a ceiling (ISO: a test slab 3.9 m up on the green): the pack stops rising under it (head ≤ its underside), never through 
+  outdoor overhangs with room to stand under them (the engine's own): 0 []
+PASS a door: over the workshop's doorstep in the air nothing happens; landed on it, the door takes him in 
+PASS later use (chapter 10, Oku's mill): the pack skips every other stair-stone — up in 4 hops instead of 7 
+PASS the story gate holds: on top with the mill unbraked there is no relay to set (the brake still comes first) 
+PASS a fall (9 m): without the pack it hurts 
+PASS the cushion: with Space held he lands softly from the same fall — no damage 
+PASS dialogue mid-flight: the flame goes out at once (no flame frozen on screen), no thrust while it shows 
+PASS …and after it, a key still held does not relight it (a fresh press is needed): he comes down 
+PASS pause mid-flight: everything holds still, the flame is out; resumed, the held key does nothing; a new press relights it 
+PASS a scene change mid-flight: he arrives standing, the pack out 
+PASS a hit mid-flight puts the pack out (he is knocked down out of the air) 
+PASS as Zoé: no pack shown, it never lights; back as Twinsen it is there again 
+PASS saved in the air: Continue puts him on the ground (his last safe spot), not mid-air 
+PASS …with the pack owned and worn, full, the tin still taken (no second reward), kashes kept 
+PASS after Continue the tin and the peg stay empty 
+PASS death mid-flight: the pack goes out at once, he falls to the ground, the game-over screen comes 
+PASS Retry: back from the last save, standing, the pack still worn and full 
+PASS deep water (Citadel's pier end): the pack never carries him over the sea; he lands back on the pier 
+PASS a cliff (the Hamalayi lift's): one storey and no more — he can't climb it; the lift stays the way up 
+  region edges tried (gain = highest point above the foot; end = where he came to rest): [{"id":"hamalayi","d":0,"gain":2.42,"end":0.03,"lit":133,"overSea":0},{"id":"hamalayi","d":1,"gain":2.43,"end":-0.23,"lit":133,"overSea":0},{"id":"hamalayi","d":2,"gain":2.42,"end":-0.16,"lit":133,"overSea":0},{"id":"hamalayi","d":3,"gain":2.42,"end":-0.07,"lit":133,"overSea":0},{"id":"hamalayi","d":4,"gain":2.43,"end":0.23,"lit":133,"overSea":0},{"id":"hamalayi","d":5,"gain":2.51,"end":0.86,"lit":133,"overSea":0},{"id":"hamalayi","d":6,"gain":2.53,"end":0,"lit":110,"overSea":0},{"id":"hamalayi","d":7,"gain":2.42,"end":0.22,"lit":133,"overSea":0}]
+PASS the regions' edges (Hamalayi peaks, Desert mesas): at every cliff found, at most one storey up and he ends back down (never over the top) 
+PASS underground (chapter 11's galleries): no sky, no flight 
+PASS a save that would load him over the cloud sea: he is put on the island (the region's spawn), standing 
+PASS a save from before the pack (no jetpack fields) loads: no pack, back on its peg, nothing shown on his back 
+PASS 30 vs 60 steps a second: the same height (±0.1 m) and both land on the deck 
+PASS at 30 steps a second the fence still holds (no tunnelling) 
+  cost (SwiftShader, this machine): draw calls / triangles with the pack worn, without it, and lit in flight; its meshes and triangles; the pack's own code per lit frame (ms); the whole frame's simulation standing vs. flying (median of 3 × 120 frames, ms) {"worn":{"calls":838,"tris":716550},"off":{"calls":826,"tris":714990},"lit":{"calls":840,"tris":716566},"meshes":11,"tris":1100,"stand":1.969,"fly":2.286,"standRuns":[1.853,1.969,2.117],"flyRuns":[1.673,2.286,2.726],"packMsPerLitFrame":0.1825,"litFrames":291,"particles":700}
+PASS cost: the worn pack adds at most 30 draw calls, the lit flames and puffs at most 6 more; its own code costs under 0.3 ms a lit frame 
+no errors
+ALL PASSED

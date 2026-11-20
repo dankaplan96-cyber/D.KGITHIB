@@ -1,0 +1,384 @@
+{
+  "file": "art/blender/characters/citadel3/work/guard.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7317, 1.82, 1.1334], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "267"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: guard_belt -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_brows -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_coat -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_cuffL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_cuffR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_ear -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_ear.001 -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_earIn -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_earIn.001 -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_epaulette -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_epaulette",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_epaulette.001 -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_epaulette.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_foreL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_foreR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_handL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_handR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_head -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_helmet -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_helmet",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_helmRim -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_helmRim",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_neck -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shinL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shinR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shoeL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shoeR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shoulderL -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_shoulderR -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_trousers -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_trunk -> guardRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_upperL -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_upperR -> guardRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: guard_visor -> guardRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: guard_visor",
+      "status": "pass",
+      "detail": "0"
+    }
+  ],
+  "totals": {
+    "objects": 41,
+    "meshes": 40,
+    "triangles": 3718,
+    "materials": 14,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8659,
+        -0.012,
+        -0.3829
+      ],
+      "max": [
+        0.8659,
+        1.808,
+        0.7506
+      ],
+      "size": [
+        1.7317,
+        1.82,
+        1.1334
+      ]
+    }
+  },
+  "passed": true
+}

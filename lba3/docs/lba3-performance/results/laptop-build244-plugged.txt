@@ -1,0 +1,26 @@
+LBA3: The Awakening benchmark · build 0.35.0 (build 244) · 2026-10-28 19:46 (the user's Vega 8 laptop, pasted in chat), PLUGGED IN
+display (OS): 60 Hz, 1366x768, fullscreen; gpu_compositing / rasterization / webgl enabled
+
+summary · fps fixed / as played
+             low            medium         high
+  street     36.5 / 60      60 / 60        55.8 / 55.8
+  interior   60 / 60        60 / 60        56.3 / 56.3
+  combat     59 / 59.8      60 / 57.1      56.6 / 56.5
+  transition 60 / 60        60 / 56.8      56.4 / 56.1
+  arrival    53 / 59.8      58.7 / 55.8    51.8 / 53.2
+  hamalayi   60 / 60        60 / 56.8      56.3 / 56
+
+THE ~56.5 PLATEAU IS THE DISPLAY / OS, NOT THE GAME (settled): in every plateau run the "nothing drawn" probe (no simulation, no
+drawing) also came at ~18 ms; in the 60 fps runs it came at 16.7 ms. It switches on and off during the run (e.g. High street: 55.8
+in the fixed run at 17.8 ms, 59 fps at the end of the run in the breakdown with nothing-drawn 16.7). Candidates on the laptop: AMD
+Radeon Chill (caps the frame rate when there is no input — a benchmark has none), Vari-Bright / FreeSync / a Windows dynamic
+refresh or power mode. The CPU probe also varies 5.7–10.2 ms (clock changes), but plateau runs occur at 6.6 too.
+
+WHEN THE PACE IS 60 (High street, breakdown "as is"): 59 fps · GPU 12.69 ms [scene 10.52 · shadow 2.15] · submit 11.7 · game CPU 15.4 ms · 216 calls
+  High street breakdown (GPU ms / game CPU ms): shadow 2048 12.31 / 15.4 · no shadows 9.58 / 12.9 · MSAA 2× 11.88 / 15.5 ·
+  no bloom 9.33 / 13.7 (bloom ≈ 3.4 ms GPU) · Medium's vegetation 12.66 / 15.7 · res ×0.6 9.57 / 14.5 · no lamps 11.24 / 15.4
+  → High street sits at the edge: game CPU ~15.4 ms of 16.7.
+High arrival: 51.8 fixed — CPU-bound: game CPU 16.5 ms, submit 13.2, 379 calls (shadow 21), 15 frames > 33 ms.
+COLD STALLS: Low street (first route of the run) one 2750 ms frame at 2.8 s + 183 ms (first visit build of Citadel's batches);
+arrival 150–200 ms frames on every preset (half behind black).
+Medium: 60 everywhere in the fixed runs; as-played dips are the plateau above.

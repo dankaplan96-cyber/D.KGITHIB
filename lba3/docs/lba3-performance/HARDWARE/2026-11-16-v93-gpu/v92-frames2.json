@@ -1,0 +1,38 @@
+{
+ "tag": "v92-frames2",
+ "size": [
+  "1536",
+  "864",
+  "1.25"
+ ],
+ "env": {
+  "gpu": "NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11",
+  "quality": "high",
+  "auto": true
+ },
+ "house": {
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 16.8,
+  "calls": 66,
+  "tris": 433799,
+  "room": "house"
+ },
+ "square": {
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 17,
+  "calls": 193,
+  "tris": 814201,
+  "room": "outdoor"
+ },
+ "harbour": {
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 16.9,
+  "calls": 286,
+  "tris": 1442044,
+  "room": "outdoor"
+ },
+ "errs": []
+}

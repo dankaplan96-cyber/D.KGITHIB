@@ -1,0 +1,96 @@
+diff --git a/lba3/src/game/harbourzeelich.js b/lba3/src/game/harbourzeelich.js
+new file mode 100644
+index 0000000..48f44ae
+--- /dev/null
++++ b/lba3/src/game/harbourzeelich.js
+@@ -0,0 +1,52 @@
++// WA-15b (the user's decision D2 of 28.10, EXPANSION_ART_DECISIONS.md: "here and there a newer building on the
++// promenade/waterfront that looks more like Zeelich"; on the first pictures, 1.11: "what do these buildings give? they
++// feel disconnected" → one building with a purpose): the Esmer trading house on Citadel's harbour front, where the
++// Zeelich goods landed on the quay go after Odile's customs. On the shore south of the harbour path, between the quay
++// and the baggage claim (in LBA2: the open harbour square before the ticket office), not in the old core.
++// Zeelich's own building language (LBA2's Otringal: a band of blue tiles at the foot, pale plaster, an eight-sided pale
++// turquoise dome with a gold band and finial), drawn by props-esmer.js esmerBuilding with the islands' own materials;
++// at its door Zeelich cargo crates, a plain crate pair, glazed jars, a lamp and the Zeelich flag. One batch (a draw call
++// per material). Every route, door, container and story spot stays clear (the laptop's Test Lab probe, WA-15b).
++//
++// CONTRACT
++//   ZH                          the building: { id, x, z, ry, w, d, h, wallH } (+z of its own frame is its front)
++//   zhClear(x, z, pad)          true inside its footprint and the goods before its door, grown by pad: trees, bushes,
++//                               grass and flowers are filtered out there after the scatter (world.js)
++//   buildHarbourZeelich(scene, physics, H)   the building, the goods at its door, their colliders
++import * as THREE from 'three';
++import { tm, Batch } from './kit.js';
++import { Place, esmerBuilding, cm, crateStack, jars, lamp, flagPole } from './props-esmer.js';
++import { domeTex } from './zeelich.js';
++
++export const ZH = [{ id: 'zh-trading', x: -83.5, z: 47.2, ry: Math.PI, w: 5.6, d: 4.8, h: 6.4, wallH: 3.7 }];
++// (the goods at the door stand within 3.6 m in front of the house: its clear zone reaches that far toward the path)
++const FRONT = 3.6;
++export function zhClear(x, z, pad = 0) {
++  return ZH.some((b) => {
++    const dx = x - b.x, dz = z - b.z, c = Math.cos(b.ry), s = Math.sin(b.ry);
++    const lx = c * dx - s * dz, lz = s * dx + c * dz;   // (into the building's own frame: Place.pt inverted)
++    return Math.abs(lx) < b.w / 2 + 1.0 + pad && lz > -b.d / 2 - pad && lz < b.d / 2 + FRONT + pad;
++  });
++}
++
++export function buildHarbourZeelich(scene, physics, H) {
++  const group = new THREE.Group(); group.name = 'harbour-zeelich'; scene.add(group);
++  const B = new Batch(group);
++  // the islands' own materials (zislands.js): Otringal's pale plaster and the turquoise dome
++  const wall = tm('plasterWall', { color: '#fbf0f0', rough: 0.95 });
++  const dome = cm(domeTex('#2f8a9a', '#a8e8ee'), { rough: 0.4 });
++  for (const b of ZH) {
++    const y = Math.min(H(b.x - b.w / 2, b.z - b.d / 2), H(b.x + b.w / 2, b.z - b.d / 2), H(b.x - b.w / 2, b.z + b.d / 2), H(b.x + b.w / 2, b.z + b.d / 2));
++    const P = new Place(B, b.x, y, b.z, b.ry);
++    esmerBuilding(P, { w: b.w, d: b.d, h: b.h, wallH: b.wallH, wall, domeM: dome, trim: '#2f8a9a', accent: '#e8b84a', seed: 41, role: 'store', awning: ['#2f8a9a', '#f8eee4'] });
++    physics.add({ type: 'box', x: b.x, z: b.z, hw: b.w / 2 - 0.05, hd: b.d / 2 - 0.05, rot: b.ry, top: y + b.h, noStand: true });
++    // the goods at its door (building-local: +z is the front, toward the path): Zeelich cargo crates fresh off the quay,
++    // a plain crate pair, glazed jars, a lamp, the Zeelich flag at the corner; their colliders as the islands add them
++    const at = (lx, lz) => { const [x, z] = P.pt(lx, lz); return new Place(B, x, H(x, z), z, b.ry); };
++    const goods = [crateStack(at(-2.4, b.d / 2 + 0.9), { seed: 3, kind: 'cargo', n: 4 }), crateStack(at(-3.1, b.d / 2 + 2.0), { seed: 5, kind: 'wood', n: 2 }),
++      jars(at(2.1, b.d / 2 + 0.7), { n: 4, seed: 2 }), lamp(at(-3.2, -0.8)), flagPole(at(3.3, -1.6), { h: 5.2, colors: ['#2f8a9a', '#f0c040', '#f4eee0'] })];
++    for (const Q of goods) for (const c of Q.cols) physics.add(c);
++  }
++  B.build();
++  return group;
++}
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index b32ec6d..333fd3e 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -20,6 +20,7 @@ import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
+ import { culledToo } from '../engine/viewinst.js';
+ import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
+ import { lifeClear } from './townlife.js';
++import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
+ 
+ // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
+ // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
+@@ -877,6 +878,9 @@ export function* buildWorldSteps(parentScene) {
+   // islet's raised rock face)
+   for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55) || keepClearNew(t.x, t.z, 0.5))) { t.s = 1e-4; t.gone = true; }
+   for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55) || keepClearNew(b.x, b.z, 0.3))) { b.s = 1e-4; b.gone = true; }
++  // (WA-15: none where the harbour front's Zeelich buildings stand)
++  for (const t of trees) if (!t.gone && zhClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
++  for (const b of bushes) if (!b.gone && zhClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+   yield 'tree spots';
+   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
+   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
+@@ -927,6 +931,7 @@ export function* buildWorldSteps(parentScene) {
+   // random draws and everything placed after them stay as they were — skipping inside the loop moved the town's props)
+   for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
+   clearLife(grass); clearLife(flowers);
++  for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
+   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
+   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
+   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
+@@ -1002,6 +1007,7 @@ export function* buildWorldSteps(parentScene) {
+   W.signs = [];
+   W.pathDist = pathDist;
+   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
++  { const n0 = scene.children.length; buildHarbourZeelich(scene, physics, H); tagSrc(scene, n0, 'harbourzeelich'); }   // (WA-15)
+ 
+   yield 'island';
+   // ---------- lighthouse ----------

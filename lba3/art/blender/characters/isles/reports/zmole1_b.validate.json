@@ -1,0 +1,679 @@
+{
+  "file": "art/blender/characters/isles/work/zmole1_b.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.1662, 1.9498, 1.3196], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0040"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "374"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: zmole1_b_bib -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_bib",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_brow -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_brow",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_brow.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_brow.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_clawL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_clawL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_clawR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_clawR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_collar -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_collar",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_cuffL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_cuffR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_ear -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_ear.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_earIn -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_earIn.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_eye -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_eye",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_eye.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_eye.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_footL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_footL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_footR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_footR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_foreL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_foreR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_glint -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_glint",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_glint.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_glint.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_handL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_handR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_hat -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_hatBand -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_hatBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_hatPeak -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_hatPeak",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_lamp -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_lamp",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_lampGlass -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_lampGlass",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_lid -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_lid",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_lid.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_lid.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_lip -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_lip",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_nose -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_pocket -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_pocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_pupil -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_pupil",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_pupil.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_pupil.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_robe0 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_robe0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_robe1 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_robe1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_robe2 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_robe2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_shinL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_shinR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_skull -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_skull",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_snout -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_snout",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_strap -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_strap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_strap.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_strap.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_thighL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_thighR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeL.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeL.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeL.002 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeL.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeR.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeR.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_toeR.002 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_toeR.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_upperL -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_upperR -> zmole1_bRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker.001 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker.002 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker.003 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker.003",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker.004 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker.004",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zmole1_b_whisker.005 -> zmole1_bRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zmole1_b_whisker.005",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature zmole1_bRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 62,
+    "meshes": 61,
+    "triangles": 3042,
+    "materials": 21,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.5831,
+        0.004,
+        -0.3089
+      ],
+      "max": [
+        0.5831,
+        1.9538,
+        1.0107
+      ],
+      "size": [
+        1.1662,
+        1.9498,
+        1.3196
+      ]
+    }
+  },
+  "passed": true
+}

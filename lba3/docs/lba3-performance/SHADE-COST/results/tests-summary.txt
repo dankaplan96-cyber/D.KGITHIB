@@ -1,0 +1,14 @@
+drawcalls exit 0 VERDICT: PASS
+perfbudget exit 0 VERDICT: PASS
+display exit 0 VERDICT: PASS
+chapter1 exit 0 VERDICT: PASS
+transitions exit 0 VERDICT: PASS
+camfollow exit 0 VERDICT: PASS
+worldfit exit 0 VERDICT: PASS
+well-town exit 0 VERDICT: PASS
+travel exit 0 VERDICT: PASS
+zislands exit 0 VERDICT: PASS
+desert-life exit 0 VERDICT: PASS
+opening exit 0 VERDICT: PASS
+house exit 0 VERDICT: PASS
+combat exit 0 VERDICT: PASS

@@ -1,0 +1,31 @@
+=== 03-project-a start 2026-11-01T16:49:59Z LOAD=/dev/shm/gate1/saves/02-prologue-cave.json ASSIST= SRC=/dev/shm/gate1/lba3/tests/playthrough/03-project-a.mjs
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-40.2,2.2,-5.6] hp 11 | Go home and tell Zoé
+[6s +6s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":12,"fail":null} | house [998.03,0,-1.14] hp 11 | Meet Vesk at the harbour
+[7s +1s] out: {"r":"transition","from":"house","to":"citadel"} | citadel [-43.98,2.34,77.2] hp 11 | Meet Vesk at the harbour
+[12s +5s] harbour: the ferry docks: {"arrived":true,"fail":null} | citadel [-102.5,2.28,41.62] hp 11 | Meet Vesk at the harbour
+[14s +2s] Vesk: the task: {"r":"talked","to":"vesk","state":"play","lines":12,"fail":null} | citadel [-118.98,1.84,44.09] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+[19s +5s] Water Office: pipe map: {"map":true,"fail":null} | citadel [-63.58,2.35,11] hp 11 | Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the 
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[19.7] go: transition (citadel → citadel, trans true) at (-45.57, 76.53)
+[20.6] go → (997.7, -2.6) plan ok=true pts=5 left=0.66
+[29.0] go → (1001.2, 11.3) plan ok=false pts=5 left=0.49
+[36.5] go: transition (house → house, trans true) at (1001.30, 10.66)
+[37.4] go → (-112.0, 45.0) plan ok=true pts=7 left=0.84
+[67.2] go → (-120.5, 44.2) plan ok=true pts=3 left=0.82
+[77.7] go → (-65.5, 11.0) plan ok=true pts=10 left=0.21
+[94.5] go: transition (citadel → citadel, trans true) at (-64.76, 11.23)
+[95.7] go → (1197.0, -1.1) plan ok=true pts=2 left=0.47
+[98.1] go → (1197.0, -1.1) plan ok=true pts=2 left=0.12
+[102.8] go → (1202.7, -3.0) plan ok=true pts=3 left=0.08
+[106.1] go: transition (office → office, trans true) at (1202.22, -2.48)
+kept /dev/shm/gate1/saves/03-project-a.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 03-project-a end rc=0 wall=299s 2026-11-01T16:54:58Z

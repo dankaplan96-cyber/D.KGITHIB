@@ -1,0 +1,53 @@
+ran in: the desktop app's Electron (Chrome/150.0.7871.250 Electron/43.7.9; test lab copy, Playwright), source checkout C:/Users/danka/dev/D.KGITHIB/lba3 (desktop/copy-game.mjs) via the local low-power launcher copy C:/Users/danka/dev/lba3-bench/desktop-uhd (force_low_power_gpu) · game.version 0.49.0
+profile: C:\Users\danka\dev\lba3-bench\electron-profile-1794493847233 (fresh: APPDATA pointed at C:/Users/danka/dev/lba3-bench/electron-profile-1794493847233) · window 1536x864 @ dpr 1.25 · KHR_parallel_shader_compile yes
+GPU (the game's canvas): ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11)
+nvidia-smi (util, memory, temp): 0 %, 11 MiB, 55 before · 1 %, 11 MiB, 54 after
+settings at start: quality medium, Quality Auto on
+mode auto · started 2026-11-12T14:30:47.321Z · benchmark took 2.2 min
+
+LBA3: The Awakening benchmark — Quality Auto as played · build 0.49.0 · 2026-11-12 14:35
+GPU (as reported by the browser): Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11 · power: plugged in · window 1536×864 · devicePixelRatio 1.25 · frame-rate limit off
+display (as the OS reports it): 60 Hz · 1536x864 · fullscreen
+processor (as the OS reports it): Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz · 8 logical cores · 15.8 GB memory
+camera: orbit (the benchmark's free orbit)
+benchmark preparation before the first route (not measured; each step its own task, ms): arena 22 · zeelich 611 (16 steps, longest 116) · desert 946 (7 steps, longest 662) · hamalayi 657 (7 steps, longest 334) · shadow programs 311 · 3103 ms in all
+  scene changes' preparation behind the black (a step per black frame; count / longest / total ms): shadow batches 19 / 0 / 0 · draw batches back 16 / 51 / 109 · geometry 114 / 76 / 334 · batch meshes 19 / 0 / 0 · textures 19 / 5 / 58 · shadow programs 19 / 0 / 0 · shader warm-up 19 / 525 / 760 · shader warm-up (early) 3 / 55 / 162 · texture layers 4 / 30 / 64 · draw batches 3 / 228 / 447
+Auto at the start: Medium (gpu undefined · cpu undefined; guess) · GPU timer: yes
+
+route        fps   frame p50 / p95 / p99 / max ms   >33 / >50 / >100 (behind black)   GPU p50 / p95   CPU work p50 / p95   state at start -> end
+  street        60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   11.22 / 11.88   7.9 / 10.2   Medium -> Medium
+      frames at each state: Medium 100 % · calls 99 (shadow 19) · triangles 269k · CPU probe 5.5 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.4 (p95 0.6) ms · uploads a frame p50 12 (19 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 1 / 1.05 (176) · hero 0.6 / 0.62 (1) · enemies 0.3 / 0.33 (39) · physics 0.6 / 0.58 (269.5) · interact 0.2 / 0.17 (1) · camera 0 / 0.01 (2) · other sim 1.2 / 1.21 (0) · submit other 1.1 / 1.22 (1) · submit main 2 / 2.08 (1) · submit shadow 0.8 / 0.86 (2) · submit post 0.1 / 0.07 (1)
+  interior    46.8   16.7 / 33.3 / 33.5 / 33.6   18 / 0 / 0 (0)   19.05 / 23.23   3 / 4.2   Medium -> Medium
+      frames at each state: Medium 100 % · calls 122 (shadow 3) · triangles 273k · CPU probe 5.1 ms · pacing: on the refresh 72 % · 17.2–20 ms 0 % · longer 28 % · callback late p50 8.3 (p95 15.9) ms · uploads a frame p50 6 (15 KB)
+      every frame over 33 ms: 34@0.1s [frame before: work 3 ms] 34@0.1s [frame before: work 3 ms] 34@0.4s [frame before: work 3 ms] 34@1.8s [frame before: work 3 ms] 33@1.9s [frame before: work 3 ms] 34@4.0s [frame before: work 6 ms] 33@6.0s [frame before: work 3 ms] 33@7.6s [frame before: work 3 ms] 34@8.1s [frame before: work 3 ms] 34@11.8s [frame before: work 3 ms] 34@13.0s [frame before: work 3 ms] 34@13.1s [frame before: work 4 ms] … +6
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.17 (184.5) · hero 0.2 / 0.21 (1) · enemies 0 / 0.04 (32.5) · physics 0.1 / 0.11 (81.7) · interact 0 / 0.04 (1) · camera 0 / 0 (2.1) · other sim 0.5 / 0.52 (0) · submit other 0.4 / 0.44 (1) · submit main 1.4 / 1.43 (1) · submit shadow 0.2 / 0.16 (2) · submit post 0 / 0.05 (1)
+  combat      59.8   16.7 / 16.8 / 16.9 / 83.2   1 / 1 / 0 (0)   8.75 / 8.99   3.2 / 5   Medium -> Medium
+      frames at each state: Medium 100 % · calls 80 (shadow 1) · triangles 68k · CPU probe 5.3 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.4) ms · uploads a frame p50 10 (54 KB)
+      every frame over 33 ms: 83@2.4s [frame before: work 4 ms]
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.21 (176.3) · hero 0.3 / 0.28 (1) · enemies 0.3 / 0.29 (40.1) · physics 0.2 / 0.28 (370.8) · interact 0.1 / 0.05 (1) · camera 0 / 0 (2) · other sim 0.6 / 0.64 (0) · submit other 0.4 / 0.45 (1) · submit main 1 / 1.06 (1) · submit shadow 0.1 / 0.13 (2) · submit post 0.1 / 0.06 (1)
+  transition    60   16.7 / 16.8 / 16.9 / 33.3   0 / 0 / 0 (0)   10.35 / 11.68   3.7 / 5.8   Medium -> Low
+      frames at each state: Low 100 % · calls 97 (shadow 0) · triangles 199k · CPU probe 5.1 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.5) ms · uploads a frame p50 6 (15 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0 / 0.21 (91.8) · hero 0.2 / 0.25 (0.5) · enemies 0 / 0.11 (20.3) · physics 0.1 / 0.15 (94.5) · interact 0 / 0.04 (0.5) · camera 0 / 0.01 (2) · other sim 0.7 / 0.83 (0) · submit other 1 / 0.89 (0.9) · submit main 1.4 / 1.3 (0.9) · submit shadow 0 / 0.01 (1.8) · submit post 0 / 0.04 (0.9)
+  arrival     58.1   16.7 / 16.8 / 33.3 / 150   10 / 8 / 2 (10)   10.33 / 10.92   4.2 / 9.2   Low -> Low
+      frames at each state: Low 100 % · calls 23 (shadow 0) · triangles 49k · CPU probe 5 ms · pacing: on the refresh 99 % · 17.2–20 ms 0 % · longer 1 % · callback late p50 0.3 (p95 0.5) ms · uploads a frame p50 11 (54 KB)
+      every frame over 33 ms: 67@0.5s black [frame before: work 76 ms, shadow batches built 72 ms] 50@0.6s black [frame before: work 56 ms] 117@0.7s black [frame before: work 109 ms, draw batches built 88 ms, +0 geometries, +1 textures on the GPU] {main thread 56 ms | main thread 109 ms} 50@0.7s black [frame before: work 49 ms, +21 geometries, +0 textures on the GPU, geometry upload] 50@0.9s black [frame before: work 58 ms] 67@3.5s black [frame before: work 76 ms, shadow batches built 73 ms] 50@3.6s black [frame before: work 55 ms] 150@3.7s black [frame before: work 146 ms, draw batches built 130 ms, +0 geometries, +2 textures on the GPU] {main thread 55 ms | main thread 147 ms | main thread 87 ms} 83@3.8s black [frame before: work 86 ms, +18 geometries, +0 textures on the GPU, geometry upload] 50@3.9s black [frame before: work 56 ms]
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.28 (118.1) · hero 0.2 / 0.25 (0.7) · enemies 0.1 / 0.11 (24.7) · physics 0.1 / 0.18 (132.9) · interact 0.1 / 0.08 (0.7) · camera 0 / 0.01 (2) · other sim 1.2 / 2.55 (0) · submit other 0.8 / 1 (0.9) · submit main 0.7 / 0.82 (0.9) · submit shadow 0 / 0.01 (1.9) · submit post 0 / 0.04 (0.9)
+  hamalayi      60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   10.52 / 10.59   2.7 / 3.4   Low -> Low
+      frames at each state: Low 100 % · calls 22 (shadow 0) · triangles 47k · CPU probe 5.1 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.4) ms · uploads a frame p50 8 (16 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.16 (176) · hero 0.2 / 0.24 (1) · enemies 0.1 / 0.08 (35) · physics 0.1 / 0.12 (82.4) · interact 0.1 / 0.09 (1) · camera 0 / 0.01 (2) · other sim 0.7 / 0.68 (0) · submit other 0.8 / 0.82 (1) · submit main 0.5 / 0.55 (1) · submit shadow 0 / 0.01 (2) · submit post 0 / 0.04 (1)
+
+draw batches: 7 area builds, 1766 ms in all · pieces in batches now 1434, left and drawn on their own 206, rejoined at scene changes 23 · shadow batches: 7 area builds, 500 ms
+
+Auto's decisions during the run (s since the page opened · what · why -> the state after):
+      171.6 s · down: Medium → Low (at the next scene change or menu) — evaluation: GPU pressure: 52.2 fps over 9 s · frame p90 ≤ 33.4 ms · CPU p90 ≤ 10.7 ms · GPU p90 ≤ 23.9 ms · missed 15 % → Medium (→ Low at the next scene change or menu)
+      210.7 s · commit: Medium → Low — scene change → Low
+
+Auto now: Low
+  runs: Low: resolution 85 %, FXAA, no bloom, no shadows, 2 lamps, Low's grass, full-rate animation, full far detail
+  start: guess · nothing cached for this machine · key Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11|mains|1536x864@1.25|Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz
+  last window: ok · 60 fps · frame p90 16.7 ms · CPU p90 2.9 ms · GPU p90 10.6 ms · missed 0 %
+
+Frame time includes the GPU (the browser waits for it); "CPU work" is the game's own simulation + render submission per frame; "GPU" the GPU's own time (timer query, every other frame).
+
+no page errors

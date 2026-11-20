@@ -1,0 +1,90 @@
+{
+  "file": "evidence/door-house-exit-stall-1.json",
+  "frame": {
+    "t": 25288.7,
+    "ms": 133.2,
+    "real": 0.13320000000000073,
+    "sim": 11.400000005960464,
+    "render": 0,
+    "black": true,
+    "calls": 0,
+    "tris": 0,
+    "shadowCalls": 0,
+    "draws": 0,
+    "up": 0,
+    "upKB": 0,
+    "lag": 0,
+    "why": "frame before: work 134 ms, 1 shader program compiled, +3 geometries, +0 textures on the GPU, geometry upload",
+    "lamps": 1
+  },
+  "at": {
+    "t": 25300,
+    "state": "play",
+    "screen": null,
+    "room": "citadel",
+    "trans": true,
+    "cine": false,
+    "pos": [
+      -44.75,
+      2.34,
+      77.2
+    ],
+    "angle": 1.571,
+    "hp": 10,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 3.927,
+      "pitch": 0.46
+    },
+    "chapter": "well",
+    "objective": "<b>Check the well</b>"
+  },
+  "counters": {
+    "geometries": 1058,
+    "textures": 234,
+    "programs": 84,
+    "heapMB": 446.1,
+    "drawBatchBuilds": 2,
+    "drawBatchMs": 1888,
+    "shadowBatchBuilds": 2,
+    "shadowCache": {
+      "full": 5,
+      "sliced": 4,
+      "swaps": 1,
+      "drops": 3
+    },
+    "regionsBuilt": 2,
+    "uploads": 9,
+    "jobs": {
+      "p": 84,
+      "g": 1058,
+      "x": 234,
+      "sc": 5,
+      "scd": 3,
+      "db": 1888.2999999523163,
+      "dbn": 2,
+      "sb": 374.19999998807907,
+      "sbn": 2,
+      "up": 9,
+      "aq": 2,
+      "h": 467724162,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/door-house-exit-stall-1.jpg",
+  "loaf": [
+    {
+      "t": 25142.3,
+      "ms": 142.7,
+      "blocking": 85.3,
+      "scripts": []
+    },
+    {
+      "t": 25306.5,
+      "ms": 64,
+      "blocking": 12,
+      "scripts": []
+    }
+  ]
+}

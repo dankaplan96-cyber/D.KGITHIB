@@ -1,0 +1,4 @@
+start: {"room":"desert","ch":"steam","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":false,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":15,"hp":"8/11","pos":[3351.5,5,1.5],"lying":[],"state":"play"}
+walk: {"r":"arrived","ferryTaken":true}
+vis board: {"board":"VISIBLE 18.0 m, ndc -0.12,0.21"}
+no errors

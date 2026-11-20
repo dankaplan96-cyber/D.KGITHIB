@@ -1,0 +1,99 @@
+{
+  "file": "art/blender/props/equip/ball/work/ball4.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.2378, 0.24, 0.238], allowed largest side 0.15..0.4 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "material slots <= 1 (one draw call each in the game)",
+      "status": "pass",
+      "detail": "1: ball4:568ac7"
+    },
+    {
+      "check": "materials carry a game recipe (lba3_material)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "triangles <= 800",
+      "status": "pass",
+      "detail": "396"
+    }
+  ],
+  "totals": {
+    "objects": 1,
+    "meshes": 1,
+    "triangles": 396,
+    "materials": 1,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.1189,
+        0.0,
+        -0.119
+      ],
+      "max": [
+        0.1189,
+        0.24,
+        0.119
+      ],
+      "size": [
+        0.2378,
+        0.24,
+        0.238
+      ]
+    }
+  },
+  "passed": true
+}

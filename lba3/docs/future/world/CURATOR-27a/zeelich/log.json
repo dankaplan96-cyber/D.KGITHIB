@@ -1,0 +1,1448 @@
+{
+ "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "url": "http://127.0.0.1:59753/",
+ "chapter": "dig",
+ "shots": [
+  {
+   "name": "z_term_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2395.157085197315,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    -4.84,
+    6,
+    4.97
+   ],
+   "cam": [
+    -4.8,
+    11,
+    -3
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_plaza_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2376,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    -24,
+    6.72,
+    0
+   ],
+   "cam": [
+    -24,
+    11.7,
+    -8
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_street_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2400,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    0,
+    6,
+    -2
+   ],
+   "cam": [
+    0,
+    11,
+    -10
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_gate_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2442,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    42,
+    6.42,
+    0
+   ],
+   "cam": [
+    42,
+    11.4,
+    -8
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_port_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2398.1075022810383,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    0,
+    6,
+    38
+   ],
+   "cam": [
+    -1.9,
+    11.3,
+    32.7
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_arrive_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2401.3241137232435,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    0,
+    6,
+    38
+   ],
+   "cam": [
+    1.3,
+    11,
+    45.6
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_street_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2399.989525694508,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    -8,
+    6,
+    0
+   ],
+   "cam": [
+    0,
+    11,
+    0
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_plaza_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2393.989525694508,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    -14,
+    6,
+    1
+   ],
+   "cam": [
+    -6,
+    11,
+    1
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_pier_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2362.989525694508,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    -45,
+    6,
+    0
+   ],
+   "cam": [
+    -37,
+    11,
+    0
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_term_mill_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2411.535529573053,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zeelich",
+   "hero": [
+    8,
+    6,
+    -8
+   ],
+   "cam": [
+    11.5,
+    11,
+    -0.8
+   ],
+   "off": [
+    2400,
+    0
+   ]
+  },
+  {
+   "name": "z_otr_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1900,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    0,
+    12.71,
+    0
+   ],
+   "cam": [
+    0,
+    17.7,
+    -8
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_harb_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1861.03,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    -38.97,
+    4.03,
+    0
+   ],
+   "cam": [
+    -39,
+    9,
+    -8
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_plaza_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1895,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    -5,
+    12.71,
+    -15
+   ],
+   "cam": [
+    -5,
+    17.7,
+    -23
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_high_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1954.778492059096,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    54,
+    28.43,
+    -55
+   ],
+   "cam": [
+    54.8,
+    33,
+    -55.5
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_south_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1920,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    20,
+    5.18,
+    37.27
+   ],
+   "cam": [
+    20,
+    12.4,
+    29.3
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_arrive_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1907.992533977346,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    4,
+    12.71,
+    22
+   ],
+   "cam": [
+    8,
+    18.7,
+    24.2
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_plaza_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1897.9872754545668,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    -2,
+    12.71,
+    -8
+   ],
+   "cam": [
+    -2,
+    17.7,
+    0
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_harb_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1873.9895256945076,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    -34,
+    6.52,
+    4
+   ],
+   "cam": [
+    -26,
+    14.3,
+    4
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_otr_high_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     1949.8574418448015,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_otringal",
+   "hero": [
+    49.87,
+    28.42,
+    -48.71
+   ],
+   "cam": [
+    49.9,
+    33.4,
+    -40.7
+   ],
+   "off": [
+    1900,
+    1800
+   ]
+  },
+  {
+   "name": "z_kna_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2214.347369915908,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_knartas",
+   "hero": [
+    -15.65,
+    2.59,
+    -37.95
+   ],
+   "cam": [
+    -15.7,
+    7.6,
+    -45.9
+   ],
+   "off": [
+    2230,
+    1800
+   ]
+  },
+  {
+   "name": "z_kna_vil_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2255,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_knartas",
+   "hero": [
+    25,
+    2.97,
+    25
+   ],
+   "cam": [
+    25,
+    7.9,
+    17
+   ],
+   "off": [
+    2230,
+    1800
+   ]
+  },
+  {
+   "name": "z_kna_harb_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2255,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_knartas",
+   "hero": [
+    25,
+    2.97,
+    25
+   ],
+   "cam": [
+    25,
+    7.9,
+    17
+   ],
+   "off": [
+    2230,
+    1800
+   ]
+  },
+  {
+   "name": "z_kna_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2249.8151292636567,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_knartas",
+   "hero": [
+    20,
+    2.99,
+    21.13
+   ],
+   "cam": [
+    19.8,
+    7.6,
+    20.8
+   ],
+   "off": [
+    2230,
+    1800
+   ]
+  },
+  {
+   "name": "z_mos_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2583.5430632870043,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_mosquibee",
+   "hero": [
+    23.54,
+    21.32,
+    -30.38
+   ],
+   "cam": [
+    23.5,
+    26.3,
+    -38.1
+   ],
+   "off": [
+    2560,
+    1800
+   ]
+  },
+  {
+   "name": "z_mos_hive_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2590.756666666669,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_mosquibee",
+   "hero": [
+    30.76,
+    1.4,
+    15
+   ],
+   "cam": [
+    30.8,
+    6.6,
+    7
+   ],
+   "off": [
+    2560,
+    1800
+   ]
+  },
+  {
+   "name": "z_mos_up_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2532,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_mosquibee",
+   "hero": [
+    -28,
+    18.64,
+    28
+   ],
+   "cam": [
+    -28,
+    23.6,
+    20
+   ],
+   "off": [
+    2560,
+    1800
+   ]
+  },
+  {
+   "name": "z_mos_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2571.277043814059,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_mosquibee",
+   "hero": [
+    18,
+    17.4,
+    10
+   ],
+   "cam": [
+    11.3,
+    22.4,
+    5.7
+   ],
+   "off": [
+    2560,
+    1800
+   ]
+  },
+  {
+   "name": "z_cel_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2888.471187830916,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_celebration",
+   "hero": [
+    -1.53,
+    9.53,
+    -0.42
+   ],
+   "cam": [
+    -1.5,
+    14.5,
+    -8.4
+   ],
+   "off": [
+    2890,
+    1800
+   ]
+  },
+  {
+   "name": "z_cel_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2885,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_celebration",
+   "hero": [
+    -5,
+    9.71,
+    2
+   ],
+   "cam": [
+    -5,
+    14.7,
+    -6
+   ],
+   "off": [
+    2890,
+    1800
+   ]
+  },
+  {
+   "name": "z_cel_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     2897.897459417662,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_celebration",
+   "hero": [
+    6,
+    9.75,
+    6
+   ],
+   "cam": [
+    7.9,
+    13.2,
+    7.6
+   ],
+   "off": [
+    2890,
+    1800
+   ]
+  },
+  {
+   "name": "z_und_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3184.535073906799,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_undergas",
+   "hero": [
+    -35.46,
+    21.32,
+    -28.98
+   ],
+   "cam": [
+    -35.5,
+    26.3,
+    -37
+   ],
+   "off": [
+    3220,
+    1800
+   ]
+  },
+  {
+   "name": "z_und_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3225,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_undergas",
+   "hero": [
+    5,
+    13.53,
+    -30
+   ],
+   "cam": [
+    5,
+    18.5,
+    -38
+   ],
+   "off": [
+    3220,
+    1800
+   ]
+  },
+  {
+   "name": "z_und_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3219.9872754545668,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_undergas",
+   "hero": [
+    0,
+    15.92,
+    -20
+   ],
+   "cam": [
+    0,
+    20.9,
+    -12
+   ],
+   "off": [
+    3220,
+    1800
+   ]
+  },
+  {
+   "name": "z_pla_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3907.711485988491,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_platform",
+   "hero": [
+    27.71,
+    4.45,
+    -45.96
+   ],
+   "cam": [
+    27.7,
+    9.4,
+    -53.9
+   ],
+   "off": [
+    3880,
+    1800
+   ]
+  },
+  {
+   "name": "z_pla_tower_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3907,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_platform",
+   "hero": [
+    27,
+    18.42,
+    -34
+   ],
+   "cam": [
+    27,
+    23,
+    -34.4
+   ],
+   "off": [
+    3880,
+    1800
+   ]
+  },
+  {
+   "name": "z_pla_vil_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3917.730873739103,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_platform",
+   "hero": [
+    36.06,
+    4.97,
+    19.79
+   ],
+   "cam": [
+    37.7,
+    10.1,
+    18.4
+   ],
+   "off": [
+    3880,
+    1800
+   ]
+  },
+  {
+   "name": "z_pla_f",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     3906.9872897224845,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_platform",
+   "hero": [
+    27,
+    3.87,
+    -19.93
+   ],
+   "cam": [
+    27,
+    8.8,
+    -11.9
+   ],
+   "off": [
+    3880,
+    1800
+   ]
+  },
+  {
+   "name": "z_lift_top",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     4210,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_liftdock",
+   "hero": [
+    0,
+    6.74,
+    5
+   ],
+   "cam": [
+    0,
+    11.7,
+    -3
+   ],
+   "off": [
+    4210,
+    1800
+   ]
+  },
+  {
+   "name": "z_lift_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     4215,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_liftdock",
+   "hero": [
+    5,
+    6.32,
+    7.73
+   ],
+   "cam": [
+    5,
+    11.3,
+    -0.3
+   ],
+   "off": [
+    4210,
+    1800
+   ]
+  },
+  {
+   "name": "z_orch_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     4872.3,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_orchard",
+   "hero": [
+    2.3,
+    10.05,
+    0
+   ],
+   "cam": [
+    2.3,
+    15,
+    -8
+   ],
+   "off": [
+    4870,
+    1800
+   ]
+  },
+  {
+   "name": "z_oldw_iso",
+   "dbg": {
+    "trans": false,
+    "iso": false,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     5196.2881688110165,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "isle_oldwatch",
+   "hero": [
+    -3.71,
+    5.53,
+    -11.7
+   ],
+   "cam": [
+    -3.7,
+    10.5,
+    -19.7
+   ],
+   "off": [
+    5200,
+    1800
+   ]
+  },
+  {
+   "name": "z_r_zterminal",
+   "dbg": {
+    "trans": false,
+    "iso": true,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     8848.672157076788,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "zterminal",
+   "hero": [
+    8792.4,
+    0,
+    3.6
+   ],
+   "cam": [
+    8848.7,
+    50.1,
+    55.4
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "z_r_otrbar",
+   "dbg": {
+    "trans": false,
+    "iso": true,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     9048.072157076787,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "otrbar",
+   "hero": [
+    8991.4,
+    0,
+    1.8
+   ],
+   "cam": [
+    9048.1,
+    50.1,
+    54.3
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "z_r_otrhotel",
+   "dbg": {
+    "trans": false,
+    "iso": true,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     9445.072157076787,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "otrhotel",
+   "hero": [
+    9390.4,
+    0,
+    5.2
+   ],
+   "cam": [
+    9445.1,
+    50.1,
+    57.7
+   ],
+   "off": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "z_r_celtemple",
+   "dbg": {
+    "trans": false,
+    "iso": true,
+    "mode": "follow",
+    "view": 0,
+    "cut": false,
+    "camSet": "follow",
+    "rc": true,
+    "cams": [
+     9648.732157076787,
+     null
+    ]
+   },
+   "state": "play",
+   "room": "celtemple",
+   "hero": [
+    9592.5,
+    0,
+    4.4
+   ],
+   "cam": [
+    9648.7,
+    50.1,
+    55.9
+   ],
+   "off": [
+    0,
+    0
+   ]
+  }
+ ],
+ "errs": []
+}

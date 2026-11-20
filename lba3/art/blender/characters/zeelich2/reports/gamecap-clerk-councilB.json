@@ -1,0 +1,80 @@
+{
+ "clerk": {
+  "look": "clerk",
+  "body": "clerk",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 971652
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967672
+   },
+   "heroCalls": 4,
+   "heroTris": 3980
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3980,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "councilB": {
+  "look": "councilB",
+  "body": "councilB",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 974692
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968646
+   },
+   "heroCalls": 4,
+   "heroTris": 6046
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 6046,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T05:32:19.712Z",
+ "candidates": {}
+}

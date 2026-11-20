@@ -1,0 +1,6 @@
+[
+  { "op": "validate", "name": "zoe candidate checks (final necklace)", "input": "art/blender/characters/zoe/work/zoe_poly.blend", "output": "art/blender/characters/zoe/reports/candidate.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 6900, "groundedAtZero": true } },
+  { "op": "preview", "name": "zoe candidate views (final necklace)", "input": "art/blender/characters/zoe/work/zoe_poly.blend", "output": "art/blender/characters/zoe/previews/after",
+    "options": { "resolution": 640, "modes": ["neutral"], "orthoScale": 2.5 } }
+]

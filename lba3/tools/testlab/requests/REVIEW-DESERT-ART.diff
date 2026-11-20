@@ -1,0 +1,120 @@
+diff --git a/lba3/src/game/condenser.js b/lba3/src/game/condenser.js
+index e1b32b83..fe01c12c 100644
+--- a/lba3/src/game/condenser.js
++++ b/lba3/src/game/condenser.js
+@@ -148,9 +148,13 @@ function buildHangar(scene, physics) {
+   G(rbox(2.6, 0.08, 0.8, 0.02), body, 0, 1.6, 2.4);
+   G(rbox(0.08, 1.0, 0.8, 0.02), trim, 0, 2.0, 2.5);
+   for (const s of [-1, 1]) { G(rbox(0.08, 0.08, 3.4, 0.02), MAT.iron(), s * 0.55, 0.25, 0); G(rbox(0.06, 0.8, 0.06, 0.01), MAT.iron(), s * 0.55, 0.65, -1); G(rbox(0.06, 0.8, 0.06, 0.01), MAT.iron(), s * 0.55, 0.65, 1); }
+-  const tarp = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 6.2, 8, 6), MAT.cloth('#7a6a4a', '#5a4a34'));
+-  { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 2.3 - Math.abs(y) * 0.55 - Math.abs(x) * 0.08 + Math.sin(x * 2 + y) * 0.06); } tarp.geometry.computeVertexNormals(); }
+-  tarp.rotation.x = -Math.PI / 2; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
++  // (REVIEW-DESERT-ART c: the tarp 9 × 5 m over the wing, the cabin and the nose, tied up off the floor — the tail out
++  //  behind it, where he stands to look and to board (R.glider); at 10.5 × 6.2 m drooping to the floor it hung past the
++  //  floor's rim and its edge cut through his legs there. Its frame: z = TZ − the plane's y, the glider's own z)
++  const TZ = -0.9;   // (and flat over the wing out to its tips, then down)
++  const tarp = new THREE.Mesh(new THREE.PlaneGeometry(9, 5, 9, 6), MAT.cloth('#7a6a4a', '#5a4a34'));
++  { const p = tarp.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), lz = TZ - p.getY(i); p.setZ(i, 2.36 - Math.max(0, lz - 0.5) * 0.5 - Math.max(0, -1.1 - lz) * 0.22 - Math.max(0, Math.abs(x) - 4.0) * 0.6 + Math.sin(x * 2 + lz) * 0.04); } tarp.geometry.computeVertexNormals(); }
++  tarp.rotation.x = -Math.PI / 2; tarp.position.z = TZ; tarp.material.side = THREE.DoubleSide; gl.add(tarp);
+   B.col(2.5, 2.8, 4.8, 1.6, 2.4, { noStand: true, rot: -0.3 });
+   // (the fuselage's nose and its tail with the tailplane reach past the wing's box: their own, so nobody stands in them;
+   //  the glider's frame turned −0.3: a point (x, z) in it lies at (2.5 + 0.955x − 0.296z, 2.8 + 0.296x + 0.955z))
+diff --git a/lba3/src/game/desert.js b/lba3/src/game/desert.js
+index 523244e6..8ce5c5b8 100644
+--- a/lba3/src/game/desert.js
++++ b/lba3/src/game/desert.js
+@@ -562,13 +562,16 @@ export function* buildDesertSteps(scene, physics) {
+     R.rope = { ...W(DOCK.x + 6, DOCK.z - 1.2), setVisible(b) { coil.visible = !!b; } };
+   }
+   // the project ferry tied up at the pier (a simple hull; the full ferry model lives on Citadel)
+-  const ferry = new THREE.Group(); ferry.position.set(DOCK.x - 6, SEA_Y, DOCK.z - 4.2); group.add(ferry);
++  // (REVIEW-DESERT-ART b: the hull closed by its deck, sitting in the water; the cabin on the deck; the glowing disc
++  //  under the hull gone — the hull was an open bowl seen as a white sliver under a floating box)
++  const ferry = new THREE.Group(); ferry.position.set(DOCK.x - 6, SEA_Y - 0.5, DOCK.z - 4.2); group.add(ferry);
+   {
+     const FB = new Batch(ferry);
+-    FB.add(lathe([[0.01, 0], [1.4, 0.15], [1.7, 0.9], [1.75, 1.6]], 20, 1), pm('#e8eef2', 0.4), 0, 0, 0, 0, 0, 0, 3.6, 1, 1);
+-    FB.add(bbox(6.2, 1.3, 2.2, 0.15, 1), teal, 0, 2.2, 0);
+-    FB.add(bbox(5.8, 0.12, 2.6, 0.04, 1), pm('#2a3a44', 0.5), 0, 2.9, 0);
+-    FB.add(cyl(0.9, 0.9, 0.3, 24, 0), pm('#9ff4ff', 0.3, { emissive: '#35d8ff', emissiveIntensity: 1.5 }), 0, 0.05, 0);
++    FB.add(lathe([[0.01, 0], [1.4, 0.15], [1.7, 0.9], [1.75, 1.6], [1.6, 1.66], [0.01, 1.66]], 20, 1), pm('#e8eef2', 0.4), 0, 0, 0, 0, 0, 0, 3.6, 1, 1);
++    FB.add(cyl(1.62, 1.62, 0.06, 20, 1), plank, 0, 1.69, 0, 0, 0, 0, 3.55, 1, 1);   // the deck
++    FB.add(cyl(1.78, 1.76, 0.16, 20, 1), teal, 0, 1.55, 0, 0, 0, 0, 3.6, 1, 1);     // the rubbing strake round the sheer
++    FB.add(bbox(6.2, 1.3, 2.2, 0.15, 1), teal, 0, 2.37, 0);
++    FB.add(bbox(5.8, 0.12, 2.6, 0.04, 1), pm('#2a3a44', 0.5), 0, 3.07, 0);
+     FB.build();
+   }
+   R.ferry = { group: ferry, setVisible(b) { ferry.visible = !!b; } };
+@@ -721,6 +724,15 @@ export function* buildDesertSteps(scene, physics) {
+     PB.build();
+     col({ type: 'box', x: PUMP.x, z: PUMP.z, hw: b, hd: b, top: pumpGy + 9, noStand: true, seeThrough: true });
+     col({ type: 'cyl', x: tk.x, z: tk.z, r: 1.3, top: pumpGy + 5.2, noStand: true, seeThrough: true });
++    // (REVIEW-DESERT-ART e: the pipe where it runs low enough to walk into — from about 2 m up on its way down from the
++    //  tank, through the joint, to the basin — is solid, a thin rail: he was walked through it at the joint. Under its
++    //  high end by the tank he still passes; the joint stays at hand height to push home)
++    {
++      const jy = H(PIPE_J.x, PIPE_J.z), ax = tk.x - 0.6, az = tk.z - 0.6, t = 0.55;
++      const seg = (x0, z0, x1, z1, top) => col({ type: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: Math.hypot(x1 - x0, z1 - z0) / 2, hd: 0.12, rot: Math.atan2(-(z1 - z0), x1 - x0), top, noStand: true, seeThrough: true });
++      seg(ax + (PIPE_J.x - ax) * t, az + (PIPE_J.z - az) * t, PIPE_J.x, PIPE_J.z, jy + 2.0);
++      seg(PIPE_J.x, PIPE_J.z, PIPE_J.x + (OASIS.x + 5 - PIPE_J.x) * 0.7, PIPE_J.z + (OASIS.z + 4 - PIPE_J.z) * 0.7, jy + 1.0);
++    }
+     // the wheel: 14 sheet-metal sails on a ring
+     wheel.position.set(PUMP.x - 0.6, pumpGy + h + 0.15, PUMP.z); wheel.rotation.y = Math.PI / 2; group.add(wheel);
+     const WB = new Batch(wheel);
+@@ -1530,8 +1542,11 @@ export function* buildDesertSteps(scene, physics) {
+   // a wooden signpost: the board on two posts, facing ry
+   const signAt = (text, x, z, ry, bg) => {
+     const y = H(x, z), c = Math.cos(ry), s = Math.sin(ry);
+-    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex(text, bg, 384), roughness: 0.8, side: THREE.DoubleSide }));
+-    sg.scale.set(2.4, 0.6, 1); sg.position.set(x, y + 1.55, z); sg.rotation.y = ry; group.add(sg);
++    // (REVIEW-DESERT-ART a: a board with a painted face on each side, each reading the right way round; one
++    //  double-sided face read mirrored from behind, from the bridge and on the way out)
++    const sm = new THREE.MeshStandardMaterial({ map: signTex(text, bg, 384), roughness: 0.8 });
++    B.add(bbox(2.46, 0.66, 0.06, 0.01, 1), darkWood, x, y + 1.55, z, 0, ry, 0);
++    for (const k of [1, -1]) { const sg = new THREE.Mesh(emq(), sm); sg.scale.set(2.4, 0.6, 1); sg.position.set(x + s * 0.035 * k, y + 1.55, z + c * 0.035 * k); sg.rotation.y = ry + (k < 0 ? Math.PI : 0); group.add(sg); }
+     for (const k of [-1.25, 1.25]) rod(B, [x + c * k, y, z - s * k], [x + c * k, y + 1.95, z - s * k], 0.05, darkWood);
+     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
+   };
+diff --git a/lba3/src/game/wizards.js b/lba3/src/game/wizards.js
+index 0b32500c..65905920 100644
+--- a/lba3/src/game/wizards.js
++++ b/lba3/src/game/wizards.js
+@@ -191,7 +191,9 @@ function buildSchoolRoom(scene, physics) {
+   const stone = M('sc_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#dcdad6', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
+   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.2), iron = MAT.iron();
+   const flags = MAT.tiles('#8e8c88', '#827f7a', '#3a3a3c', false, 3), checks = MAT.tiles('#a29f9a', '#6f6d6a', '#3a3a3c', true, 4);
+-  const rockM = MAT.rubble('grey');
++  // (REVIEW-DESERT-ART g: the heaps' stones matte and faceted in the island's own rock tones, three of them; the rubble
++  //  texture on smooth balls read as piles of shiny black boulders)
++  const rockM = ['#9a8f80', '#8a8072', '#a89c8a'].map((c) => MAT.flat(c, 0.97, { flatShading: true }));
+   const glass = MAT.map(latticeTex(), 0.3, { emissive: '#3fb8a8', emissiveIntensity: 0.8, emissiveMap: latticeTex() });
+   const DOORX = (X(56) + X(61)) / 2, DOORW = X(61) - X(56);
+   const WINS = [35, 39, 43, 47, 51, 55, 59];
+@@ -204,8 +206,10 @@ function buildSchoolRoom(scene, physics) {
+     k.add(new THREE.TorusGeometry(0.76, 0.08, 5, 16, Math.PI), cap, X(lx), 7.6, -D / 2 + 0.05);
+   }
+   // a solid of cells [lx0, lx1) × [lz0, lz1) up to top, its top paved
++  // (REVIEW-DESERT-ART d: a side against the room's left, right or back wall runs 0.3 m into the wall, so its face is
++  //  not in the wall's own plane, where the two textures fought)
+   const block = (lx0, lz0, lx1, lz1, top, face, pave, extra = {}) => {
+-    const x0 = X(lx0), x1 = X(lx1), z0 = Z(lz0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
++    const x0 = X(lx0) - (lx0 === 22 ? 0.3 : 0), x1 = X(lx1) + (lx1 === 63 ? 0.3 : 0), z0 = Z(lz0) - (lz0 === 3 ? 0.3 : 0), z1 = Z(lz1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+     k.add(rbox(x1 - x0, top, z1 - z0, 0.03), face, cx, top / 2, cz);
+     if (pave) k.add(rbox(x1 - x0 - 0.04, 0.02, z1 - z0 - 0.04, 0.005), pave, cx, top + 0.005, cz);
+     return B.col(cx, cz, (x1 - x0) / 2 + 0.06, (z1 - z0) / 2 + 0.06, top, extra);   // (6 cm over each edge: abutting blocks shrink 5 cm each under groundAt and left a 10 cm seam to fall into)
+@@ -217,13 +221,13 @@ function buildSchoolRoom(scene, physics) {
+     const n = Math.max(2, Math.round((x1 - x0) * (z1 - z0) / 0.9));
+     for (let i = 0; i < n; i++) {
+       const x = x0 + 0.25 + rnd() * (x1 - x0 - 0.5), z = z0 + 0.25 + rnd() * (z1 - z0 - 0.5), h = (top - y0) * (0.7 + rnd() * 0.4), w = 0.5 + rnd() * 0.5;
+-      k.add(sphere(0.5, 9, 7), rockM, x, y0 + h * 0.45, z, rnd() * 3, { sx: w * 1.4, sy: h, sz: w * 1.2 });
++      k.add(sphere(0.5, 9, 7), rockM[i % 3], x, y0 + h * 0.45, z, rnd() * 3, { sx: w * 1.4, sy: h, sz: w * 1.2 });
+     }
+     B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, top, { noStand: true });
+   };
+ 
+   // --- the classroom, 2.2 m up in the back left corner; the pit of rock in front of it (out of reach)
+-  block(22, 3, 40, 18, CL, rough, checks);
++  block(29, 3, 40, 18, CL, rough, checks);   // (from the dais's side on: under the dais its faces lay in the dais's own)
+   B.col((X(22) + X(40)) / 2, Z(18) + 0.04, (X(40) - X(22)) / 2, 0.05, CL + 1.1, { seeThrough: true, noStand: true });   // (its open edge: no fall into the pit)
+   k.add(rbox(X(42) - X(22), 0.04, Z(42) - Z(18), 0.01), MAT.rubble('slate'), (X(22) + X(42)) / 2, 0.02, (Z(18) + Z(42)) / 2);
+   rocks(22, 18, 42, 42, 0, 1.3, 3);
