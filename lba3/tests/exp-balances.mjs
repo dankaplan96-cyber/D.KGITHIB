@@ -261,4 +261,5 @@ check('…and its epilogue reaches the original end card with no Cradle Hall and
 
 console.log(`bot game time, chapter 11's last talk to chapter 14's first station: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor, not a first-play estimate)`);
 
+await browser.close();   // (FULL-TEST: without it node stayed alive after the verdict, twice, until killed)
 done();
