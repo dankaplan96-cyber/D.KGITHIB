@@ -164,7 +164,7 @@ export const VOICE_META = {
   co_vesk_key: { i: ['neutral', 'neutral', 'neutral'], e: [null, 'out', 'two'] }, co_tw_key: 'neutral',
   co_bal_end: { i: ['relieved', 'pleased', 'neutral'] }, co_vesk_guard: ['annoyed', 'annoyed'], co_ar_two: { i: ['urgent', 'urgent', 'urgent', 'urgent', 'pleased'] },
   co_zoe_sig: ['pleased', 'neutral', 'neutral'], cn_vesk_1: ['neutral', 'neutral', 'neutral', 'annoyed'], cn_vesk_2: ['annoyed', 'annoyed', 'annoyed'],
-  cn_tw_vesk: { i: 'annoyed', e: 'cut' }, cn_bal_iso2: ['neutral', 'neutral', 'pleased', 'uncertain', 'concerned'],
+  cn_tw_vesk: { i: 'annoyed', e: 'cut' }, cn_tw_days: { i: ['neutral', 'neutral'], e: [null, 'days'] }, cn_bal_iso2: ['neutral', 'neutral', 'pleased', 'uncertain', 'concerned'],
   zt_vesk_1: ['neutral', 'neutral', 'neutral'], zt_vesk_2: ['curious', 'neutral', 'neutral', 'neutral'], zt_bal_bench: ['urgent', 'pleased', 'pleased', 'pleased'], zt_tw_bench: ['neutral', 'concerned'],
   l_tw_pliers: 'curious', l_ar_pliers1: { i: ['uncertain', 'uncertain', 'neutral'], h: 1 }, l_tw_pliers2: { i: 'curious', e: 'now' }, l_ar_pliers2: ['neutral', 'uncertain', 'uncertain', 'uncertain'],
   e2_ar_hint: ['urgent', 'pleased', 'neutral'], e2_tw_set: 'curious', e2_ar_set3: ['concerned', 'concerned', 'urgent'], e2_ar_set4: ['pleased', 'pleased'],
