@@ -1,0 +1,144 @@
+ROTATE-STALL arrival · medium · battery false · camera free · zeelich → citadel × 1
+zeelich (cold): 153 frames, 263867 ms in all, 184096 ms of it with the screen black
+    0    42 ms view  op 0.10 calls 184 SEC submit main 18 · submit other 8 · submit post 7 · submit shadow 5, uploads 26 (51 KB)
+    1    25 ms view  op 0.19 calls 184 SEC submit main 10 · other sim 7 · submit other 5 · submit shadow 3, uploads 26 (51 KB)
+    2    26 ms view  op 0.29 calls 184 SEC submit main 20 · submit other 3 · other sim 2 · submit shadow 0, uploads 26 (51 KB)
+    3    12 ms view  op 0.38 calls 184 uploads 26 (51 KB)
+    4     8 ms view  op 0.48 calls 184 uploads 26 (51 KB)
+    5    12 ms view  op 0.57 calls 184 uploads 26 (51 KB)
+    6    13 ms view  op 0.67 calls 184 uploads 26 (51 KB)
+    7    10 ms view  op 0.76 calls 184 uploads 26 (51 KB)
+    8     8 ms view  op 0.86 calls 184 uploads 26 (51 KB)
+    9    11 ms view  op 0.95 calls 184 uploads 26 (51 KB)
+   10     4 ms BLACK op 1.00 calls 0 hold 
+   11    14 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   12    21 ms BLACK op 1.00 calls 0 hold STEP shadow batches 18 [unit large piece 10.3], SEC other sim 18 · camera 0 · physics 0
+   13    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit pieces 4.2]
+   14    16 ms BLACK op 1.00 calls 0 hold STEP shadow batches 14 [unit cell 8.1]
+   15    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit cell 6.1]
+   16    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12
+   17    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   18    17 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   19    14 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13 [unit cell 5.2]
+   20     6 ms BLACK op 1.00 calls 0 hold shadow batches built 1 ms, STEP shadow batches 2
+   21 182920 ms BLACK op 1.00 calls 0 hold 71 pieces left shadow batches, STEP texture layers 182814, SEC other sim 182910 · physics 0 · camera 0
+   22    59 ms BLACK op 1.00 calls 0 hold STEP texture layers 58, SEC other sim 59 · camera 0 · physics 0
+   23    33 ms BLACK op 1.00 calls 0 hold STEP texture layers 12, SEC other sim 33 · camera 0 · physics 0
+   24    23 ms BLACK op 1.00 calls 0 hold STEP texture layers 15, SEC other sim 16 · camera 0 · physics 0
+   25    13 ms BLACK op 1.00 calls 0 hold STEP texture layers 12
+   26    13 ms BLACK op 1.00 calls 0 hold STEP texture layers 12
+   27     4 ms BLACK op 1.00 calls 0 hold STEP texture layers 0
+   28    17 ms BLACK op 1.00 calls 0 hold STEP draw batches 16 [unit scan 6.1]
+   29    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit parts 9.9]
+   30    17 ms BLACK op 1.00 calls 0 hold STEP draw batches 16 [unit parts 6]
+   31    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit parts 7.3]
+   32    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit parts 6.5]
+   33    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit place 6]
+   34    26 ms BLACK op 1.00 calls 0 hold STEP draw batches 25 [unit array 16.2], SEC other sim 25 · camera 0 · physics 0, uploads 1 (12288 KB), 1 first uploads by draws behind black: tex 512x512 outside a draw
+   35    41 ms BLACK op 1.00 calls 0 hold STEP draw batches 40 [unit array 40], SEC other sim 41 · camera 0 · physics 0, uploads 1 (9984 KB), 1 first uploads by draws behind black: tex 256x256 outside a draw
+   36    13 ms BLACK op 1.00 calls 0 hold +1 textures, STEP draw batches 12 [unit cell 4.4], uploads 2 (2304 KB), 2 first uploads by draws behind black: tex 128x128 outside a draw · tex 64x64 outside a draw
+   37    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit cell part 10.2]
+   38    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 12
+   39    21 ms BLACK op 1.00 calls 0 hold STEP draw batches 20 [unit cell 12.3], SEC other sim 21 · camera 0 · physics 0
+   40    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit cell part 5.7]
+   41    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 14 [unit cell part 9.4]
+   42    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 14 [unit cell part 9.1]
+   43    27 ms BLACK op 1.00 calls 0 hold STEP draw batches 19 [unit cell part 8.5], SEC other sim 27 · camera 0 · physics 0
+   44    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell 5]
+   45    17 ms BLACK op 1.00 calls 0 hold STEP draw batches 17 [unit cell 10.3]
+   46    19 ms BLACK op 1.00 calls 0 hold STEP draw batches 18 [unit cell 8.6]
+   47    20 ms BLACK op 1.00 calls 0 hold STEP draw batches 16 [unit cell part 4.9], SEC other sim 20 · camera 0 · physics 0
+   48    18 ms BLACK op 1.00 calls 0 hold STEP draw batches 16 [unit cell 5.5]
+   49     5 ms BLACK op 1.00 calls 0 hold draw batches built 2 ms, STEP draw batches 2
+   50     3 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   51    53 ms BLACK op 1.00 calls 0 hold +93 geometries, STEP geometry 49, SEC other sim 50 · physics 0 · submit shadow 0 · camera 0, uploads 329 (7484 KB)
+   52    14 ms BLACK op 1.00 calls 0 hold +20 geometries, STEP geometry 13, uploads 63 (599 KB)
+   53    17 ms BLACK op 1.00 calls 0 hold +57 geometries, STEP geometry 11, uploads 175 (4091 KB)
+   54    27 ms BLACK op 1.00 calls 0 hold +95 geometries, STEP geometry 26, SEC other sim 26 · camera 0 · submit shadow 0 · physics 0, uploads 481 (42742 KB)
+   55     9 ms BLACK op 1.00 calls 0 hold STEP geometry 8, uploads 1 (22 KB)
+   56    16 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 13 [unit cell part 7.7], 68 first uploads by draws behind black: 2× left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.7,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2389.6,12.7,11.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2389.2,12.7,11.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f0c8c0 emissive 000000 · left draw batch: Mesh:zeelich at 2376.0,6.5,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2376.0,7.8,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2393.7,19.6,-16.9 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.0,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,11.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   57    19 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 18 [unit cell part 9.6]
+   58    17 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 15 [unit cell part 5.2]
+   59    15 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 14 [unit cell 7.6]
+   60    14 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 13
+   61    14 ms BLACK op 1.00 calls 0 hold -3 geometries, STEP draw batches settle 13 [unit cell part 4], 1 first uploads by draws behind black: left draw batch: Mesh:zeelich at 2388.0,6.0,12.2 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   62    14 ms BLACK op 1.00 calls 0 hold -7 geometries, STEP draw batches settle 13 [unit cell 4.4]
+   63    10 ms BLACK op 1.00 calls 0 hold +8 geometries, 68 pieces left draw batches, STEP draw batches settle 1, uploads 70 (11874 KB)
+   64     1 ms BLACK op 1.00 calls 0 hold STEP batch meshes 0
+   65     9 ms BLACK op 1.00 calls 0 hold +77 textures, STEP textures 8, uploads 79 (12541 KB), 77 first uploads by draws behind black: 3× tex 512x512 outside a draw · 16× tex 128x128 outside a draw · 3× tex 64x64 outside a draw · 7× tex 256x256 outside a draw · 2× tex 512x384 outside a draw · 2× tex 256x160 outside a draw · 2× tex 256x128 outside a draw · tex 256x96 outside a draw · tex 128x160 outside a draw · 3× tex 128x64 outside a draw · tex 256x80 outside a draw · tex 512x256 outside a draw
+   66     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   67    14 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14 [unit compile 6]
+   68    20 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 15 (+1 prog) [unit compile 4.1]
+   69    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 15 [unit compile 10.8]
+   70    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 13 [unit compile 6.2]
+   71    16 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 15 [unit compile 13.8]
+   72    33 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 32 [unit compile 32], SEC other sim 32 · camera 0 · physics 0
+   73     4 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 3
+   74     1 ms BLACK op 1.00 calls 0 hold 
+   75     1 ms BLACK op 1.00 calls 0 hold 
+   76     1 ms BLACK op 1.00 calls 0 hold 
+   77     1 ms BLACK op 1.00 calls 0 hold 
+   78     1 ms BLACK op 1.00 calls 0 hold 
+   79     7 ms BLACK op 1.00 calls 0 hold 
+   80   119 ms BLACK op 1.00 calls 211 cache full build, +16 geometries, SEC submit main 48 · submit other 38 · submit shadow 33 · other sim 0, uploads 225 (3753 KB)
+   81    13 ms BLACK op 1.00 calls 173 uploads 15 (39 KB)
+   82    19 ms view  op 0.90 calls 173 uploads 15 (39 KB)
+   83    19 ms view  op 0.81 calls 172 uploads 15 (39 KB)
+   84    23 ms view  op 0.71 calls 172 SEC submit main 13 · other sim 7 · submit other 3 · camera 0, uploads 15 (39 KB)
+   85    10 ms view  op 0.62 calls 172 uploads 15 (39 KB)
+   86     4 ms view  op 0.52 calls 172 uploads 15 (39 KB)
+   87     8 ms view  op 0.43 calls 172 uploads 15 (39 KB)
+   88    11 ms view  op 0.33 calls 172 uploads 15 (39 KB)
+   89     6 ms view  op 0.24 calls 172 uploads 15 (39 KB)
+   90    17 ms view  op 0.14 calls 172 uploads 15 (39 KB)
+citadel (cold): 112 frames, 66507 ms in all, 13730 ms of it with the screen black
+    0    10 ms view  op 0.10 calls 175 uploads 18 (78 KB)
+    1     8 ms view  op 0.19 calls 175 uploads 18 (78 KB)
+    2     9 ms view  op 0.29 calls 175 uploads 18 (78 KB)
+    3  1724 ms view  op 0.38 calls 175 SEC submit main 1723 · submit other 1 · other sim 0 · physics 0, uploads 18 (78 KB)
+    4     5 ms view  op 0.48 calls 175 uploads 18 (78 KB)
+    5     4 ms view  op 0.57 calls 175 uploads 18 (78 KB)
+    6     5 ms view  op 0.67 calls 175 uploads 18 (78 KB)
+    7     3 ms view  op 0.76 calls 175 uploads 18 (78 KB)
+    8     7 ms view  op 0.86 calls 175 uploads 18 (78 KB)
+    9    14 ms view  op 0.95 calls 175 uploads 18 (78 KB)
+   10     2 ms BLACK op 1.00 calls 0 hold 
+   11     1 ms BLACK op 1.00 calls 0 hold STEP shadow batches 0
+   12    18 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches back 17 [unit cell part 12.2]
+   13    21 ms BLACK op 1.00 calls 0 hold STEP draw batches back 20 [unit cell part 15.7], SEC other sim 20 · camera 0 · physics 0
+   14    10 ms BLACK op 1.00 calls 0 hold STEP draw batches back 3
+   15     1 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   16     8 ms BLACK op 1.00 calls 0 hold +1 geometries, STEP geometry 7, uploads 28 (382 KB)
+   17     6 ms BLACK op 1.00 calls 0 hold STEP geometry 5, uploads 6 (39 KB)
+   18     5 ms BLACK op 1.00 calls 0 hold +27 geometries, STEP geometry 4, uploads 37 (1377 KB)
+   19     5 ms BLACK op 1.00 calls 0 hold +42 geometries, STEP geometry 5, uploads 57 (5891 KB)
+   20     6 ms BLACK op 1.00 calls 0 hold STEP geometry 4, uploads 4 (39 KB)
+   21     2 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 1
+   22     5 ms BLACK op 1.00 calls 0 hold STEP batch meshes 3, uploads 3 (39 KB)
+   23     4 ms BLACK op 1.00 calls 0 hold STEP textures 3, uploads 2 (1 KB)
+   24     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   25    32 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 31 [unit compile 21.1], SEC other sim 32 · camera 0 · physics 0
+   26    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 15 [unit compile 9]
+   27    14 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 14 (+1 prog) [unit program 9.6]
+   28    60 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 23 [unit compile 11.8], SEC other sim 60 · physics 0 · camera 0
+   29     7 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 7
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     1 ms BLACK op 1.00 calls 0 hold 
+   32     0 ms BLACK op 1.00 calls 0 hold 
+   33     3 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     1 ms BLACK op 1.00 calls 0 hold 
+   38     1 ms BLACK op 1.00 calls 0 hold 
+   39     1 ms BLACK op 1.00 calls 0 hold 
+   40 13500 ms BLACK op 1.00 calls 270 cache full build, -1 geometries, 12 pieces left draw batches, SEC submit main 13309 · submit other 149 · other sim 41 · submit shadow 1, uploads 90 (5660 KB), 13 first uploads by draws behind black: left draw batch: Mesh:station at -24.5,18.8,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -24.5,24.6,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color f0c040 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -76.0,0.0,-101.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · 2× left draw batch: Mesh:harbour-zeelich at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   41    32 ms view  op 0.90 calls 223 SEC submit main 12 · submit other 11 · submit shadow 8 · other sim 1, uploads 27 (57 KB)
+   42    26 ms view  op 0.81 calls 223 SEC submit main 22 · submit other 2 · other sim 2 · submit shadow 1, uploads 27 (57 KB)
+   43    22 ms view  op 0.71 calls 223 SEC submit main 17 · other sim 2 · submit other 2 · submit shadow 0, uploads 27 (57 KB)
+   44    15 ms view  op 0.62 calls 223 uploads 27 (57 KB)
+   45    21 ms view  op 0.52 calls 223 SEC submit other 18 · submit main 2 · other sim 0 · submit shadow 0, uploads 27 (57 KB)
+   46    21 ms view  op 0.43 calls 223 SEC submit main 19 · submit other 1 · other sim 1 · camera 0, uploads 27 (57 KB)
+   47    29 ms view  op 0.33 calls 223 SEC submit shadow 25 · submit main 2 · submit other 1 · other sim 1, uploads 27 (57 KB)
+   48    43 ms view  op 0.24 calls 223 SEC submit main 21 · other sim 10 · submit shadow 9 · submit other 2, uploads 27 (57 KB)
+   49    29 ms view  op 0.14 calls 223 SEC submit other 17 · submit main 11 · other sim 1 · submit shadow 0, uploads 27 (57 KB)
