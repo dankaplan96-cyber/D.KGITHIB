@@ -5619,3 +5619,27 @@ No deaths and no Retry anywhere; no stalls logged; errors none in every verdict.
   carry `localhost:8920`/`8921`, so the save never reached the page and Continue stayed hidden). Rewritten for any port
   and rerun: PASS. Not the game.
 - Wall times are this machine's, for reference only (not a frame-time measurement; those are last in the queue).
+
+## CHAIN-JOINTS · the playthrough chain on the `joints-blender` branch (CLOUD_ORDERS 57, its full test) · the desktop, 20.11.2026
+`joints-blender` at `0c47fcd8` (= `b94ab3d9` with MILLS, + JOINTS-BLENDER 1–5), the same scratch tests and Chrome on
+this Acer's GTX 1050 as CHAIN-V103. Logs: `docs/lba3-performance/HARDWARE/2026-11-20-chain-joints/`.
+| Segment | Result | Against CHAIN-V103 |
+|---|---|---|
+| 01–04 | PASS | the same (health lost 0 / 1 / 0 / 8) |
+| 05 project-b | **FAIL from this run's own save-04; PASS from v103's save-04** | not the joints, below |
+| 06–12 | PASS | the same; ISO assists in 04, 06 (as v103) and 08 (3 drones/guards beaten) |
+| 12b throttle | FAIL (`ballastra`, not `network`) | the same: the segment predates EXP-2 (CHAIN-V103) |
+| 13 network (fixture `base-13`), 14 shell (13's save) | PASS, to the epilogue | the same; the pylons by ISO assist once (below) |
+No deaths, no Retry, no page or console errors in any segment.
+- **05:** "home: Zoé" → `cannot reach house: failed:transition`, he ends in the **pump room**. 04 left him 1.6 m from
+  where v103's run did ((−56.15, −36.65) against (−54.5, −36.5)), and from there `P.talk('zoe', {run: true})`'s way home
+  runs through the pump room's door. Cross-checked: this run's save-04 fails the same way on the branch (×2), on its
+  base `b94ab3d9` without JOINTS-BLENDER (×2) and **on v103 itself**; v103's save-04 passes on the branch. **For the
+  cloud:** the bot's route home from the lane's west end crosses the pump-room door's trigger (a player running the same
+  line would drop into the pump room too — worth a look at that door's trigger or the route).
+- **14's pylons:** the bot's `coreFight('pylons')` ran into its 300 s cap with two pylons and the ISO assist turned the
+  third. Repeated from the same save-13, three times each: the branch 1/3 stuck, `b94ab3d9` 0/3, **v103 2/3** — chance
+  in the bot, not this branch. **For the cloud:** the pylon fight stalls the bot about half the time on v103 too
+  (164–169 Vesk shots in the 300 s, health kept), a bot gap worth closing.
+- So on the branch the playthrough runs as on v103: JOINTS-BLENDER changes no gameplay. The models, the hop's plant and
+  the robe's run cycle are ready to merge when the cloud's audit allows (`joints-blender`, 5 commits over `b94ab3d9`).

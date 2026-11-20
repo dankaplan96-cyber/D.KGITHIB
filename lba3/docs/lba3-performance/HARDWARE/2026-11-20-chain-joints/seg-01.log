@@ -1,0 +1,76 @@
+[0s +0s] intro: {"state":"play","lines":0,"speakers":[]} | house [1001.55,0,-1.75] hp 10 | Check the well◆ Take the magic ball from the cupboard
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[1s +1s] the door: the ball first: {"r":"state:dialog","from":"house","to":"house","room":"house","fail":null} | house [1001.09,0,10.68] hp 10 | Check the well◆ Take the magic ball from the cupboard
+  stats: {"play":7.4,"dialog":3.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":11,"says":1,"walked":13,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[2s +1s] the kitchen tap: dry, the pipe knocks: {"r":"used","target":{"kind":"h_tap","id":"p_tap","label":"p_tap"},"state":"play","lines":4,"tap":true,"fail":null} | house [997.48,0,-2.4] hp 10 | Check the well◆ Take the magic ball from the cupboard
+  stats: {"play":15.2,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":27,"says":2,"walked":14,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[3s +0s] cupboard: {"r":"used","target":{"kind":"roomsearch","id":"p_search","label":"p_search"},"state":"play","lines":4,"ball":true,"fail":null} | house [997.1,0,-1.99] hp 10 | Check the well◆ Go out to the yard
+  stats: {"play":2.3,"dialog":0.5,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":2,"words":14,"says":1,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[4s +1s] out of the house: {"r":"transition","from":"house","to":"citadel","fail":null} | citadel [-42.98,2.34,77.2] hp 10 | Check the well◆ Talk to Zoé
+  stats: {"play":7.9,"dialog":0,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":14,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[13s +8s] the yard: the garden pipe, by hand: {"r":"used","target":{"kind":"h_yard","id":"p_tap","label":"p_tap"},"state":"play","lines":2,"yard":true,"fail":null} | citadel [-43.29,2.33,75.12] hp 10 | Check the well◆ Talk to Zoé
+  stats: {"play":5.5,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":16,"says":1,"walked":3,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[15s +2s] the yard: Zoé's errand, step by step: {"did":["zoe","inv","barrels","pipe"],"kettle":true,"pipe":1,"fail":null} | citadel [-40.69,2.53,70.03] hp 10 | Check the well
+  stats: {"play":12.3,"dialog":2.4,"trans":0,"scene":3.5,"menu":0.3,"other":0,"lines":5,"words":48,"says":4,"walked":12,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[16s +1s] the lane: the pump room is shut, its pipe knocks: {"r":"used","target":{"kind":"h_kiosk","id":"p_door","label":"p_door"},"state":"play","lines":2,"lane":true,"room":"citadel","fail":null} | citadel [-47.05,2.28,65.76] hp 10 | Check the well
+  stats: {"play":5.4,"dialog":1.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":33,"says":2,"walked":10,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[33s +17s] look at the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4,"fail":null} | citadel [-40.66,2.2,-4.98] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":20.7,"dialog":0.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":21,"says":1,"walked":73,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[34s +1s] Gilbert and Mira: the crystals, the key: {"r":"talked","to":"gilbert","state":"play","lines":14,"speakers":["gilbert","mira","hero"],"fail":null} | citadel [-40.32,2.2,-4.22] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":1,"dialog":2.1,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":7,"words":77,"says":7,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[50s +16s] the lid: rusted to the rim: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | citadel [-43.55,2.2,-3.44] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":6,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":28,"says":3,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[66s +16s] the lid: a kick (Aggressive): {"r":"used","target":{"kind":"well","id":"p_kick","label":"p_kick"},"state":"play","lines":0,"label":"p_kick","open":true,"fail":null} | citadel [-40.68,2.2,-4.99] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":6.1,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":13,"says":2,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[69s +3s] Xil: {"r":"talked","to":"xil","state":"play","lines":10,"speakers":["xil","hero"],"fail":null} | citadel [-125.57,1.75,47.47] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+  stats: {"play":24.9,"dialog":1.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":80,"says":5,"walked":108,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[70s +0s] Doran asleep: {"r":"talked","to":"doran","state":"play","lines":4,"speakers":["doran","hero"],"fail":null} | citadel [-119.44,1.84,44.24] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+  stats: {"play":3.6,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":15,"says":2,"walked":8,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[78s +8s] the harbour bell: looked at: {"r":"used","target":{"kind":"bell","id":"p_look","label":"p_look"},"state":"play","lines":4,"fail":null} | citadel [-119.2,1.84,42.1] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+  stats: {"play":2.5,"dialog":0.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":22,"says":1,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[79s +1s] the bell: the magic ball rings it, Doran stamps: {"bell":true,"stamp":true,"fail":null} | citadel [-115.77,1.8,45.08] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":6.6,"dialog":2.5,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":4,"words":49,"says":4,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[80s +1s] Xil: the rope: {"r":"talked","to":"xil","state":"play","lines":4,"speakers":["xil"],"fail":null} | citadel [-125.52,1.75,47.39] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":3.4,"dialog":0.6,"trans":0,"scene":3.5,"menu":0,"other":0,"lines":2,"words":33,"says":2,"walked":12,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[82s +2s] Tim and Lulu: {"r":"talked","to":"tim","state":"play","lines":6,"speakers":["tim","lulu","hero"]} | citadel [-49.98,2.2,5.52] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":20.4,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":28,"says":3,"walked":90,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[82s +0s] overhear (Discreet): {"overheard":true,"fail":null} | citadel [-49.98,2.2,5.52] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+  stats: {"play":0.5,"dialog":1.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":43,"says":4,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[82s +0s] Tim confesses: {"r":"talked","to":"tim","state":"play","lines":8,"speakers":["hero","tim"],"fail":null} | citadel [-49.98,2.2,5.52] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":0.4,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":57,"says":4,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[82s +0s] the clover Tim gives back: {"found":true,"clovers":[2,2]} | citadel [-48.55,2.2,4.76] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":1.6,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[84s +2s] the bay rocks: looked at: {"r":"used","target":{"kind":"rocks","id":"p_look","label":"p_look"},"state":"play","lines":2,"fail":null} | citadel [-65.37,1.3,95.17] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":21.7,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":9,"says":1,"walked":94,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[85s +1s] the bay rocks: up (Athletic): {"ys":[2.08,3.08,4.08],"tops":[2.08,3.08,4.08],"fail":null} | citadel [-69.66,4.08,97.95] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":19.8,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":13,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":0,"hpNow":10,"cloversNow":2,"revives":0}
+[86s +0s] the warm stones: {"r":"used","target":{"kind":"stones","id":"p_take","label":"p_take"},"state":"play","lines":4,"coins":[0,10],"fail":null} | citadel [-70.2,4.08,98.25] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":0.8,"dialog":0.6,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":2,"words":24,"says":1,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":10,"hpNow":10,"cloversNow":2,"revives":0}
+[87s +1s] down off the rocks: {"y":1.3,"fail":null} | citadel [-65.38,1.3,95.13] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+  stats: {"play":18.6,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":8,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":10,"hpNow":10,"cloversNow":2,"revives":0}
+[104s +17s] down the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | well [1093.4,0,3.3] hp 10 | Find the source of the heat◆ Wake the three dark crystals
+  stats: {"play":26.4,"dialog":0.7,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":4,"words":45,"says":4,"walked":106,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":10,"hpNow":10,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[228.5] go → (-68.6, 97.1) plan ok=true pts=2 left=0.26
+[233.5] stuck at (-68.9, 97.2): replan
+[236.3] go → (-70.4, 98.5) plan ok=true pts=2 left=0.17
+[236.3] go → (-70.4, 98.5) plan ok=true pts=2 left=0.17
+[241.2] go → (-68.9, 97.4) plan ok=false pts=3 left=1.03
+[246.2] stuck at (-69.0, 98.1): replan
+[247.3] go → (-67.4, 96.2) plan ok=false pts=3 left=0.91
+[252.3] stuck at (-67.6, 96.7): replan
+[252.7] go → (-64.8, 95.0) plan ok=false pts=3 left=1.65
+[257.8] stuck at (-66.0, 95.5): replan
+[259.8] go → (-42.0, -4.0) plan ok=false pts=12 left=1.62
+[281.8] go → (-42.0, -4.0) plan ok=false pts=3 left=1.61
+stats total: {"play":241.1,"dialog":23.9,"trans":1.4,"scene":20.6,"menu":0.3,"other":0,"lines":61,"words":693,"says":55,"walked":598,"hpLost":0,"deaths":0,"rooms":3,"chapter":"well","coinsNow":10,"hpNow":10,"cloversNow":3,"revives":0}
+kept save-01.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     26 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

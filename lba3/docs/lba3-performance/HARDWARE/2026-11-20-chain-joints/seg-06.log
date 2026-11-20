@@ -1,0 +1,67 @@
+[0s +0s] continue (arrival): {"started":true,"taken":true} | zeelich [2396,6,36.8] hp 11 | Find Irsa's pump works (ask at the dock)
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[2s +1s] Brel at the bridge: the way to the brass wheel: {"r":"talked","to":"zl_brel","state":"play","lines":4,"speakers":["zl_brel"],"skipped":[{"speakers":["hero"],"lines":2}],"markers":0,"fail":null} | zeelich [2391.34,6,24.97] hp 11 | Find Irsa's pump works (ask at the dock)
+  stats: {"play":5.6,"dialog":0.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":73,"says":3,"walked":14,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[4s +1s] the lane: the lift stopped half way, Kell at the brake: {"r":"talked","to":"zl_kell","state":"play","lines":8,"speakers":["zl_kell","hero"],"seen":true,"fail":null} | zeelich [2392.6,6,22.65] hp 11 | The water cart is stuck on the cistern lift◆ Hook the cart's chain from the upper landing◆ Ring the landing bell for Kel
+  stats: {"play":5.5,"dialog":1.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":71,"says":4,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[24s +20s] up the stair: the chain let down onto the cart: {"up":"arrived","y":0,"r":"used","target":{"kind":"zt_hook","id":"p_hook","label":"p_hook"},"state":"play","lines":2,"fail":null} | zeelich [2388.21,9.6,23.82] hp 11 | The water cart is stuck on the cistern lift◆ Hook the cart's chain from the upper landing◆ Ring the landing bell for Kel
+  stats: {"play":15.4,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":13,"says":1,"walked":19,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[43s +19s] the landing bell: Kell clears the lane, Vesk gives the mill line: {"r":"used","target":{"kind":"zt_bell","id":"p_bell","label":"p_bell"},"state":"play","lines":0,"fail":null} | zeelich [2388.25,9.6,21.02] hp 11 | The water cart is stuck on the cistern lift◆ Hook the cart's chain from the upper landing◆ Ring the landing bell for Kel
+  stats: {"play":6.3,"dialog":1.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":79,"says":5,"walked":3,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[65s +21s] down: the feed switch, the deck comes down: {"r":"used","target":{"kind":"zt_feed","id":"p_feed","label":"p_feed"},"state":"play","lines":4,"low":0,"fail":null} | zeelich [2390.48,6,19.15] hp 11 | The water cart is stuck on the cistern lift◆ Hook the cart's chain from the upper landing◆ Ring the landing bell for Kel
+  stats: {"play":21.3,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":26,"says":2,"walked":24,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[84s +18s] the ride up with the cart: {"r":"used","target":{"kind":"zt_ride","id":"p_ride","label":"p_ride"},"state":"play","lines":2,"y":0,"fail":null} | zeelich [2391.07,9.6,23.22] hp 11 | The water cart is stuck on the cistern lift◆ Hook the cart's chain from the upper landing◆ Ring the landing bell for Kel
+  stats: {"play":6.9,"dialog":0.2,"trans":0,"scene":4.6,"menu":0,"other":0,"lines":1,"words":9,"says":1,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[86s +2s] the cart shoved to the filler, its cock opened: the cistern fills: {"r":"used","target":{"kind":"zt_cart","id":"p_cart","label":"p_cart"},"state":"play","lines":2,"k":1,"water":true,"fail":null} | zeelich [2386.08,9.6,23.87] hp 11 | Irsa's bench: test the strip
+  stats: {"play":13.8,"dialog":0.7,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":37,"says":3,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[230s +144s] Irsa's bench: the dial set to the strip, the crank: {"r":"talked","to":"zl_irsa","state":"play","lines":4,"speakers":["zl_irsa"],"dial":2,"fail":null} | zeelich [2380.56,6,23.6] hp 11 | Tell Baldino what the bench showed
+  stats: {"play":37.5,"dialog":2,"trans":0,"scene":0,"menu":0,"other":0,"lines":8,"words":153,"says":8,"walked":31,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+[232s +1s] Baldino's workshop: {"r":"workshop","t":"talked","plan":true,"fail":null} | zeelich [2387.4,6,7.05] hp 11 | Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/
+  stats: {"play":10.9,"dialog":3.3,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":11,"words":229,"says":11,"walked":26,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":11,"cloversNow":3,"revives":0}
+  [177.5] ISO assist: 4 enemies beaten (zdrone1,zdrone2,zguard1,zgdog1)
+[242s +10s] depot fight (input; ISO assist below 3 HP): {"left":4,"dead":false,"hp":2,"t":27.5,"assisted":4} | zeelich [2407.64,6,5.88] hp 2 | Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/
+  stats: {"play":37.6,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":87,"hpLost":9,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+[243s +1s] depot locker (drones, a guard, a dog): {"r":"used","target":{"kind":"c2locker","id":"p_search","label":"p_search"},"state":"play","lines":4,"cyl":true,"back":true,"hp":8,"fail":null} | zeelich [2415.18,6,23.27] hp 8 | Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/
+  stats: {"play":6.7,"dialog":0.5,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":2,"words":20,"says":2,"walked":20,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[246s +2s] Oku sees the plan: {"r":"talked","to":"oku","state":"play","lines":4,"speakers":["hero","oku"],"ok":true,"fail":null} | zeelich [2377.73,6,6.75] hp 8 | Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/
+  stats: {"play":11.7,"dialog":0.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":31,"says":2,"walked":48,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[253s +7s] climb the old mill (jumps): {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2395.03,14.75,-21.27] hp 8 | Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/
+  stats: {"play":63.5,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":58,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[254s +1s] the cog, top of the old mill: {"r":"used","target":{"kind":"c2cog","id":"p_climb","label":"p_climb"},"state":"play","lines":2,"y":14.8,"top":14.75,"cog":true,"fail":null} | zeelich [2397.49,14.75,-16.71] hp 12 | Bring both parts to Baldino◆ Brake the three mills (0/3)
+  stats: {"play":5.8,"dialog":0.1,"trans":0,"scene":3.5,"menu":0,"other":0,"lines":1,"words":8,"says":1,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":12,"cloversNow":3,"revives":0}
+[258s +4s] brake the three mills (ball): {"mills":[["north",true],["east",true],["south",true]],"fail":null} | zeelich [2402.14,6,21.7] hp 10 | Bring both parts to Baldino◆ Brake the three mills (3/3)
+  stats: {"play":34.7,"dialog":4.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":56,"says":5,"walked":89,"hpLost":2,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[259s +1s] Baldino builds the key → Zoé: {"r":"talked","to":"baldino","state":"play","lines":8,"speakers":["baldino","zoe","?"],"key":true,"room":"lighttop","body":"zoe","fail":null} | lighttop [1601.41,0,-0.16] hp 10 | Zoé: broadcast the warning from the lighthouse
+  stats: {"play":8,"dialog":0.7,"trans":1.4,"scene":3.4,"menu":0,"other":0,"lines":4,"words":69,"says":4,"walked":22,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[260s +0s] Zoé: the dials (sun, wave, star) and the microphone: {"dials":[0,1,2],"broadcast":true,"body":"twinsen","room":"workshop","fail":null} | workshop [1502.75,0,-1.95] hp 10 | Open the platform shield
+  stats: {"play":10.2,"dialog":2.3,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":8,"words":84,"says":8,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[295s +35s] the platform shield: {"r":"used","target":{"kind":"c2console","id":"p_console","label":"p_console"},"state":"play","lines":4,"shield":true,"fail":null} | zeelich [2435.69,6,-4.62] hp 10 | Stop Vesk on the platform◆ Optional: let the mills turn again (0/3)
+  stats: {"play":19.8,"dialog":0.5,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":2,"words":18,"says":2,"walked":53,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[297s +1s] Vesk goes down: {"r":"talked","to":"vesk","state":"play","lines":22,"speakers":["vesk","hero","baldino"],"down":true,"fail":null} | zeelich [2444.85,6.42,-3.88] hp 10 | Check the bore's channel at the platform console◆ Optional: let the mills turn again (0/3)
+  stats: {"play":4,"dialog":3.2,"trans":0,"scene":10.4,"menu":0,"other":0,"lines":11,"words":179,"says":11,"walked":12,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[336s +39s] the console: the shaft sealed → chapter 4: {"r":"used","target":{"kind":"c2shaft","id":"p_console","label":"p_console"},"state":"play","lines":24,"chapter":"dig","room":"desert","fail":null} | desert [3292,2,4] hp 10 | Find the professor who found the crystals
+  stats: {"play":10.4,"dialog":3.6,"trans":0.7,"scene":3.8,"menu":0,"other":0,"lines":12,"words":229,"says":12,"walked":12,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[332.6] go → (1600.1, -1.5) plan ok=true pts=2 left=0.01
+[333.4] go → (1600.1, -1.5) plan ok=true pts=1 left=0.35
+[333.4] go → (1600.1, -1.5) plan ok=true pts=2 left=0.16
+[334.0] go → (1598.5, -0.6) plan ok=true pts=2 left=0.09
+[335.7] go → (1598.5, -0.6) plan ok=true pts=2 left=0.09
+[338.9] go → (1502.8, -3.0) plan ok=true pts=2 left=0.3
+[340.8] go: transition (workshop → workshop, trans true) at (1502.78, -2.32)
+[341.6] go → (2434.9, -4.3) plan ok=false pts=4 left=0.89
+[352.6] go → (2434.9, -4.3) plan ok=false pts=5 left=0.83
+[359.9] go → (2446.5, -4.5) plan ok=true pts=5 left=0.86
+[377.6] go → (2434.9, -4.3) plan ok=false pts=5 left=0.84
+[381.8] go → (2434.9, -4.3) plan ok=false pts=3 left=0.86
+stats total: {"play":335.7,"dialog":26.1,"trans":4.9,"scene":29.1,"menu":0,"other":0,"lines":85,"words":1384,"says":85,"walked":548,"hpLost":11,"deaths":0,"rooms":4,"chapter":"dig","coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+kept save-06.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     21 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

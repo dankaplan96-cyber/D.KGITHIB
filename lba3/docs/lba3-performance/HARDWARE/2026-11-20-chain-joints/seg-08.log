@@ -1,0 +1,71 @@
+[0s +0s] continue: {"chapter":"steam","room":"desert"} | desert [3351.5,5,1.5] hp 8 | Get into FunFrock's condenser hall
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[1s +1s] Brosk: the jar: {"r":"talked","to":"dtrader","state":"play","lines":2,"speakers":["dtrader"],"jar":true,"fail":null} | desert [3349.99,5,-2.57] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+  stats: {"play":2.6,"dialog":0.3,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":1,"words":17,"says":1,"walked":4,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[3s +1s] water from the oasis: {"r":"used","target":{"kind":"c5fill","id":"p_fill","label":"p_fill"},"state":"play","lines":2,"water":true,"fail":null} | desert [3369.57,4.47,-12.98] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+  stats: {"play":8.4,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":8,"says":1,"walked":31,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[4s +1s] Brosk: the shovel: {"r":"talked","to":"dtrader","state":"play","lines":2,"speakers":["dtrader"],"shovel":true,"fail":null} | desert [3353.59,5,-3.91] hp 8 | Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk
+  stats: {"play":7.7,"dialog":0.3,"trans":0,"scene":3.5,"menu":0,"other":0,"lines":1,"words":14,"says":1,"walked":25,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[5s +1s] dig out the door: {"r":"used","target":{"kind":"c5drift","id":"p_dig","label":"p_dig"},"state":"play","lines":2,"dug":true,"fail":null} | desert [3411.45,1.6,52.57] hp 8 | Route the steam through the condensers◆ Read the diagram
+  stats: {"play":20.1,"dialog":0.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":13,"says":1,"walked":81,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[5s +0s] into the hall: {"r":"transition","from":"desert","to":"condA","fail":null} | condA [3694.4,0,-3] hp 8 | Route the steam through the condensers◆ Read the diagram
+  stats: {"play":1.1,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":11,"says":1,"walked":1,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+  [82.4] ISO assist: 3 enemies beaten (ffdrone2,ffguard1,ffclone1)
+[7s +2s] the diagram: {"r":"used","target":{"kind":"c5diagram","id":"p_read","label":"p_read"},"state":"play","lines":2,"diagram":true,"fail":null} | condA [3693.95,0,1.73] hp 8 | Route the steam through the condensers◆ Read the diagram
+  stats: {"play":40.4,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":22,"says":1,"walked":40,"hpLost":6,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[8s +0s] the old trooper: {"left":0,"dead":false,"hp":8,"t":0,"trooper":false} | condA [3693.95,0,1.73] hp 8 | Route the steam through the condensers◆ Read the diagram
+  stats: {"play":0,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[8s +0s] the valves 1, 3, 4: {"valves":{"1":true,"3":true,"4":true},"routed":true,"fail":null} | condA [3703.17,0,-1.21] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":12.7,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":14,"says":1,"walked":11,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[9s +1s] the hangar: {"r":"transition","from":"condA","to":"condB"} | condB [3753,0,0] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":9.4,"dialog":0.1,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":10,"says":1,"walked":8,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[10s +1s] the glider: {"r":"used","target":{"kind":"c5glider","id":"p_look","label":"p_look"},"state":"play","lines":2,"seen":true} | condB [3761.91,0,6.07] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":11.1,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":16,"says":1,"walked":11,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[10s +0s] the hatch (ball): {"hatch":true,"fail":null} | condB [3767.75,0,-2.73] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":13,"dialog":1.4,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":8,"says":1,"walked":20,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[11s +0s] back out: {"r":"transition","from":"condA","to":"desert"} | desert [3412,1.6,54.37] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":14.9,"dialog":0,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":26,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[12s +1s] the stand: Vesk on the wire: {"r":"arrived","wire":true,"fail":null} | desert [3418.14,2.37,-17.87] hp 8 | Throw the heat line over to Kesh
+  stats: {"play":16.4,"dialog":1.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":69,"says":5,"walked":74,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[21s +8s] the heat line over to Kesh: {"r":"used","target":{"kind":"dt_heat","id":"p_heat","label":"p_heat"},"state":"play","lines":10,"divert":true,"sent":true,"hot":true,"fail":null} | desert [3422.65,1.76,-26.08] hp 8 | Read what Dallan sent to Citadel
+  stats: {"play":14.1,"dialog":1.4,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":42,"says":5,"walked":11,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[21s +0s] the log on the tape: {"r":"used","target":{"kind":"dt_board","id":"p_read","label":"p_read"},"state":"play","lines":2,"log":true,"fail":null} | desert [3422.67,1.78,-25.59] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":0.6,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":25,"says":1,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[21s +0s] Dallan: {"r":"talked","to":"dallan","state":"play","lines":14,"speakers":["dallan","hero"],"ok":true,"fail":null} | desert [3422.58,1.83,-24.28] hp 8 | Open the test bore's relief valve at the post
+  stats: {"play":1.2,"dialog":2.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":7,"words":108,"says":7,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[22s +1s] the relief valve: {"r":"used","target":{"kind":"c5relief","id":"p_relief","label":"p_relief"},"state":"play","lines":2,"relief":true,"fail":null} | desert [3439.65,1.6,-17.94] hp 8 | Get out of the post!
+  stats: {"play":5.6,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":12,"says":1,"walked":20,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[23s +1s] out before the vent: {"vent":true,"hp":8,"fail":null} | desert [3419.09,2.22,-20.79] hp 8 | Go back to Kesh
+  stats: {"play":14,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":33,"says":2,"walked":21,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":3,"revives":0}
+[26s +2s] Tarra: {"r":"talked","to":"tarra","state":"play","lines":18,"speakers":["tarra","ilka","?","hero","dallan"],"skipped":[{"speakers":["hero","dkid"],"lines":4}],"radio":true} | desert [3352.67,5,10.97] hp 8 | Ask Hesk about a way north
+  stats: {"play":28.1,"dialog":3.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":11,"words":158,"says":11,"walked":94,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":4,"revives":0}
+[27s +1s] Hesk: the glider: {"r":"talked","to":"hesk","state":"play","lines":4,"speakers":["hesk"],"glider":true,"fail":null} | desert [3373.48,4.72,12.77] hp 8 | Meet Hesk in the hangar
+  stats: {"play":14.6,"dialog":0.6,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":2,"words":48,"says":2,"walked":23,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":8,"cloversNow":4,"revives":0}
+[28s +1s] to the hangar: {"r":"transition","from":"condA","to":"condB"} | condB [3753.77,0,0] hp 8 | Meet Hesk in the hangar
+  stats: {"play":18.5,"dialog":0,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":66,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":8,"cloversNow":4,"revives":0}
+[30s +2s] board → chapter 6: {"r":"boarded from 0","target":{"kind":"c5board","id":"p_board","label":"p_board"},"chapter":"pass","room":"hamalayi","fail":null} | hamalayi [4304,2.82,86] hp 8 | Cross the gorge
+  stats: {"play":17.5,"dialog":1.4,"trans":0.7,"scene":3.7,"menu":0,"other":0,"lines":5,"words":87,"says":5,"walked":11,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":8,"cloversNow":4,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[243.8] go → (3373.7, 11.1) plan ok=true pts=3 left=0.7
+[247.1] go: transition (desert → desert, trans true) at (3363.65, 11.41)
+[247.9] go → (3373.7, 11.1) plan ok=false pts=3 left=7592.16
+[252.9] stuck at (10898.3, -999.9): replan
+[253.3] go: transition (ih_kesh_house3 → ih_kesh_house3, trans true) at (10898.31, -999.85)
+[254.8] go → (3374.5, 13.2) plan ok=true pts=2 left=0.57
+[260.5] go → (3412.0, 51.6) plan ok=true pts=5 left=0.12
+[272.6] go: transition (desert → desert, trans true) at (3411.04, 51.66)
+[273.5] go → (3705.2, -4.5) plan ok=true pts=2 left=0.05
+[279.5] go: transition (condA → condA, trans true) at (3704.54, -4.36)
+[280.3] go → (3762.5, 6.2) plan ok=false pts=3 left=0.76
+[290.4] stuck at (3761.8, 6.0): replan
+stats total: {"play":272.1,"dialog":14.5,"trans":6.3,"scene":10.6,"menu":0,"other":0,"lines":49,"words":715,"says":49,"walked":580,"hpLost":6,"deaths":0,"rooms":5,"chapter":"pass","coinsNow":12,"hpNow":8,"cloversNow":4,"revives":0}
+kept save-08.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     23 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
