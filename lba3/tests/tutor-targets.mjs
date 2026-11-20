@@ -99,7 +99,7 @@ const tap = await ev(() => {
   P.go(Y.hand.front.x, Y.hand.front.z, { tol: 0.3 }); P.settle(); P.face(Y.x, Y.z);
   const tg = P.target()?.kind; P.tap('KeyW', 0.05);
   for (let i = 0; i < 60 && game.state === 'play'; i++) game.step(0.05);
-  const line = document.querySelector('#dialog')?.textContent || '';
+  const line = game.hud.dialog?.full || document.querySelector('#dialog')?.textContent || '';   // (the whole line: the box types it)
   let rock = 0, look = false; for (let i = 0; i < 14; i++) { game.step(0.1); rock = Math.max(rock, Math.abs(R.B.grp.rotation.z - R.B.rz)); look ||= !!z.listenTo && Math.abs(z.listenTo.pos.x - R.x0) < 0.01; }
   return { tg, state: game.state, line, rock: +rock.toFixed(3), look };
 });
@@ -118,7 +118,7 @@ s = await M();
 check('R1.12 Show control tips Off: the goal line and the marker stay (only the keys go)', s.vis && /barrel by the house/.test(s.tip) && !(await ev(() => !!document.querySelector('#tip.show kbd'))), s);
 await ev(() => { game.settings.tips = 'on'; });
 // a reasonable wrong try: a shove by hand
-const shove = await ev(() => { const R = game.story.cur.home.parts.barrel; const r = P.use(R.x0, R.z0, { near: 1.0, kind: 'h_barrel' }); const line = document.querySelector('#dialog')?.textContent || ''; P.settle(); return { r: r?.r, line, aside: R.aside, step: game.story.cur.steps.current() }; });
+const shove = await ev(() => { const R = game.story.cur.home.parts.barrel; const r = P.use(R.x0, R.z0, { near: 1.0, kind: 'h_barrel' }); const line = game.hud.dialog?.full || ''; P.settle(); return { r: r?.r, line, aside: R.aside, step: game.story.cur.steps.current() }; });
 check('R1.13 a shove by hand: a useful word (the ball might move it), the barrel stays, the step stays', /knock with the ball/.test(shove.line) && !shove.aside && shove.step === 'barrels', shove);
 // the ball: the barrel shuffles aside, the joint shows
 await ev(() => { TM.listen(); TM.throwAtBarrels(); });
