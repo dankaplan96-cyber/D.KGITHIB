@@ -5764,3 +5764,20 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   arrival's longest black frame 167–183 → 150 ms at Medium (183–217 → 183 at High), its black 2.32 → 2.00 s at Medium;
   the cold tavern 67–100 → 67 ms at Medium; the return to Citadel and every warm visit ≤ 17 ms in both. No code change.
 - **FACE-2-HW (60.2) · started.**
+- **FACE-2-HW (60.2) · done** — branch `face-2-hw` (`241abffc`), `captures/face-2-hw/` (`sheet.jpg`: Zoé's lines, his
+  reverse shot, her curious and concerned frames, Ume, Tilde, Maro, Corla; `heads-curious-concerned.jpg`; every line's
+  frame and the tests' logs). v113, the GTX 1050 in Chrome (ANGLE D3D11), 1280×720, plugged in. `tests/face-2.mjs`
+  **9/9** and `tests/face-2-tour.mjs` **5/5** on the real GPU (Bram's walk cut off by a story line, as on SwiftShader).
+  - **Cuts:** the yard talk (4 lines, 2 changes of speaker) cuts twice, at each change, after the hold; between them the
+    view glides (at most 0.18 m a frame); never inside anything solid. Calm, as meant.
+  - **Faces:** Zoé 132–133 px, face 32° from the lens; Twinsen's reverse shot 135 px, three-quarter (52°); Ume 124 px
+    (49°), Tilde 134 px (72°, near profile: she keeps facing Maro), Maro 128 px (34°). Over-the-shoulder shots: his
+    head and shoulder take a third of the frame with Ume and Maro, but no face is covered.
+  - **Covered: Corla at the ticket booth** — her face is not seen at all: the shot stands on the booth's side and the
+    booth hides her (`tour/cs_corla-line0-cs_corla.jpg`). A shot from her hatch's side is the only one that shows her.
+    For the cloud (camera.js is yours today).
+  - **The head posture reads** in the head crops (curious: his chin up, her eyes up; concerned: both heads down, the
+    mouths down); at the full frame it is subtle on Zoé, clearer on him.
+  - The Bug St. signpost's board stands in the foreground at the frame's left in the yard talk (known, FACE-2 "Open").
+  - No clip recorded: the frames per line and the tests' traces stand for the cuts. No code change.
+- **P58 (60.3) · started.**
