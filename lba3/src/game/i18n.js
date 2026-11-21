@@ -91,8 +91,34 @@ export const setLang = (l) => { lang = l; };
 export const getLang = () => lang;
 export function t(key, vars) {
   let s = STR[lang][key] ?? STR.en[key] ?? key;
+  if (lang === 'he' && typeof s === 'string' && HEB.test(s)) return keyHints(bidiHe(s, vars));
   if (vars && typeof s === 'string') for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(v);   // (every occurrence: WEAPON-SWITCH's tips name a key twice)
   return lang === 'he' ? keyHints(s) : s;
+}
+// UI-P92 (the owner, P92: key names and codes like "B-7" inside a Hebrew line in their own order; only the text right to
+// left). A Hebrew line in plain text (a toast, a dialogue line, a journal note) with no key caps of its own:
+//  - a key name put into it ("D-pad →", "Left Click", "←") is a left-to-right isolate (U+2066 … U+2069): its
+//    words and arrow keep their order wherever they stand in the sentence (bare, "→" took the sentence's side and
+//    "D-pad →" read "→ D-pad");
+//  - a line led by a key name ("{k}: …", "{e} …") keeps its left-to-right paragraph, the key on the left as in English
+//    (HE-LTR's rule for key-led hints: a mark U+200E, since the isolate alone would make the Hebrew lead);
+//  - a sentence that opens with a code ("B-7 אחד. …", "(J-17. …") is a right-to-left paragraph (a mark U+200F): by its
+//    first letter it read left to right, the code on the left and its full stop at the wrong end.
+// A line holding <kbd> is keyHints' (below); English is untouched. spoken() takes the marks off again.
+const HEB = /[֐-׿]/, LAT = /[A-Za-z]/, STRONG = /[A-Za-z֐-׿]/;
+const LRI = '⁦', PDI = '⁩', LRM = '‎', RLM = '‏';
+function bidiHe(s, vars) {
+  const parts = s.split(/(\{[A-Za-z0-9_]+\})/), val = (p) => { const m = /^\{([A-Za-z0-9_]+)\}$/.exec(p); return m && vars && Object.hasOwn(vars, m[1]) ? String(vars[m[1]]) : null; };
+  let lead = '';
+  for (const p of parts) {
+    const v = val(p), c = STRONG.exec((v ?? p).replace(/<[^>]*>/g, ''));
+    if (c) { lead = HEB.test(c[0]) ? '' : v != null ? 'key' : 'code'; break; }
+  }
+  const out = parts.map((p) => { const v = val(p); return v == null ? p : (!v.includes('<') && LAT.test(v) && !HEB.test(v)) || /^[←↑→↓]/.test(v) ? LRI + v + PDI : v; }).join('');
+  if (out.includes('<kbd')) return parts.map((p) => val(p) ?? p).join('');   // (key caps: keyHints lays them out)
+  if (lead === 'key') return LRM + out;
+  if (lead === 'code' && /[.!?)'"׳״]\s*$/.test(s)) return RLM + out;
+  return out;
 }
 
 // HE-LTR (the user, 17.11: "in Hebrew the ONLY thing that should be RTL is the text; everything else as in the English
@@ -175,6 +201,7 @@ const revBuild = () => {
 };
 export function spoken(text) {
   if (lang === 'en' || typeof text !== 'string' || !text) return text;
+  text = text.replace(/[‎‏⁦-⁩]/g, '');   // (UI-P92: t()'s direction marks and isolates)
   if (!REV) revBuild();
   let e = REV.get(text);
   if (e === undefined && Object.keys(STR.he).length !== REV_N) { revBuild(); e = REV.get(text); }   // (a text module loaded since)

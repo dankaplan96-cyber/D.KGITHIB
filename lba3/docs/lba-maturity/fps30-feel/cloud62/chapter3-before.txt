@@ -1,0 +1,56 @@
+PASS chapter 15 (shell; 11 on the base campaign) starts in the shaft, in play, an objective set [14,true,"c3shaft","play","Find the bore's machinery◆ Try the crew's test receiver (bounce the ball)"]
+PASS up the lift: out in the station's yard on Citadel, beside the bore's collar, the blast doors open ["out",null,3.3,false,"c3down","play"]
+PASS the collar takes him back down the shaft ["c3shaft","shell"]
+PASS the shaft: the crew's test receiver hit by a bank shot from its plate (Baldino says so) {"a":1.57,"lit":true,"bank":true}
+PASS down to the deep installation "c3deep"
+PASS the machinery: steam out of all four vents over the catwalk; near the stair the damper answers the shell's three with two, the east end goes quiet ["false,false,false,false",true,"false,false,true,true"]
+PASS the cooling diagram read [true,"Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk"]
+PASS the drain (B) found open, the drive turning, nothing cooled [true,null,false]
+PASS valve A opened (not cooled yet) [true,null]
+PASS the ladder's ball switch hit, the ladder down ["thrown",true]
+PASS on the catwalk, a step into the west end's steam burns and pushes him back [1,3]
+PASS the knocker: three knocks are answered with two (nothing changes); two knocks: four slow, the west end goes quiet [null,"false,false,true,true",true,"true,true,true,true"]
+PASS valve C on the catwalk with the drain open: the drive starves (said), not cooled [true,null,true,true,0.12]
+PASS the drain (B) shut: the loop closes, cooled, the drive back up to speed [false,true,false,1]
+PASS the machinery cooled, an objective set [true,"Go deeper"]
+PASS at the shutter: it comes down and her crystal holds it open; on to the crystal galleries (still in the doorway once the line is read) [true,"c3gallery"]
+PASS the first two pillars hit ["thrown","thrown"]
+PASS the third heart faces the far side: from the middle stone's plate (it lines him up), the throw comes off the survey mirror onto it {"a":1.57,"up":true,"done":true,"node":true}
+PASS the stones raised, an objective set [true,true,true,"Cross the crystal galleries"]
+PASS save → Continue: the shell progress survives, back in the galleries [true,"[true,true,true,true,true]","c3gallery",14,"Cross the crystal galleries"]
+PASS on to Sendell "c3sendell"
+PASS the arch he came in by grows shut behind him first; then Sendell's words (why), the checkpoint, the core objective [true,true,true,true,"Reach the core"]
+PASS the way back is shut (her crystal across the arch) "c3sendell"
+PASS Sendell's door: chapter 12 (The Core) begins under its own title card, in the core room {"j0":["1. The Well","2. The Joint Project","3. Zeelich","4. The Dig","5. Steam and Sand","6. The Pass","7. The Observatory","8. Evacuation","9. The Council","10. Borrowed Time","11. Ballastra","12. The House of Balances","13. The Cradles","14. Baldino's Network","15. The Shell","Odd jobs and gear"],"key":"core","chapter":15,"card":"Chapter 16The Core","room":"c3core","state":"cutscene"}
+PASS in the core: the fight starts, an objective set ["c3core",true,"Convert the three pylons (0/3)"]
+PASS the journal keeps both chapters: 15 The Shell (11 on the base campaign; What we know, its four lines and the thread's three: the answer, the held shutter, the shut arch) and 16 The Core (12 on the base campaign; What we know and its first line, the fight begun; the pylons are still the objective) [["15. The Shell",8],["16. The Core",2]]
+PASS the guardian is there and alive [true,"chase",true]
+PASS the core can't be left during the fight "c3core"
+PASS the three pylons converted ["bank shot","bank shot","bank shot"]
+PASS each plate's first bank shot, thrown from its centre, hits its pylon [true,true,true]
+PASS the overload: no coil yet, the objective names the bleed valve [true,false,"Open the bore's bleed valve",true]
+PASS overloaded, a ball at it while it hovers glances off (no stun): the dive is the way in {"s0":"chase","stunned":false}
+PASS the overloaded guardian dives: its ring follows him and locks where he is; standing in it costs 2 and knocks him down; then it is stuck in the deck ~3 s and fires nothing {"how":"stand","rose":true,"hp0":10,"lockedOnHim":true,"lost":2,"knocked":true,"out":0.24,"stuck":3.02,"fired":0}
+PASS walking straight out once the ring stops (input): just clear, no harm {"how":"walk","rose":true,"hp0":10,"lockedOnHim":true,"lost":0,"knocked":false,"out":2.14,"stuck":3.02,"fired":0}
+PASS the dodge (X) once the ring stops: clear, no harm {"how":"dodge","rose":true,"hp0":10,"lockedOnHim":true,"lost":0,"knocked":false,"out":2.02,"stuck":3.02,"fired":0}
+PASS a ball at it while it climbs knocks it out of the dive (stunned) {"how":"ball","rose":true,"hp0":10,"after":"stunned"}
+PASS the bleed valve turned (its prompt, E): Ilka takes the surge, Vesk raises the coil, an objective set {"bleed":true,"open":true,"coil":true,"obj":"Break Vesk's overload coil (0/3)"}
+PASS Vesk's coil broken [["thrown"],3,true]
+PASS the last act begins: the objective names Mill Lane's branch, the guardian is gone [true,true,true,false]
+PASS the cock turned in a knock kicks back null
+PASS the cock turned in the rest: Mill Lane on the mills, Irsa holding, Vesk walks to his lock and turns his own key [true,true,true,true]
+PASS the lock's bar lifted in the gap before her two is slammed back; lifted after them it stays up, the drill winds down [null,true,0]
+PASS two knocks on the main: the signal, the shield, the guard; the chapter ends [true,true,"home"]
+PASS the chapter ends: the epilogue (after chapter 16, home; 12 on the base campaign) reached [true,true,16,"house","ending","home"]
+PASS the epilogue's dinner, then the end screen [16,true,"ending","The End"]
+PASS the end screen offers buttons (Keep Exploring) ["Keep Exploring","Main Menu"]
+PASS Keep Exploring: in play, free roam, an objective set ["play",true,"See how everyone is doing"]
+PASS free roam: talking to Gilbert ends back in play "play"
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 48 passed, 0 failed
+errors:     none
+resources:  1 FAIL, 0 optional
+  FAIL missing local file: the server responded with a status of 404 (File not found) http://localhost:8127/favicon.ico
+visual:     8 capture(s) written for review, not judged here
+VERDICT: FAIL (1 resource)
+1 FAILED

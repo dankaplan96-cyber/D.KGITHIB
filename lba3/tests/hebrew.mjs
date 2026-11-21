@@ -138,7 +138,7 @@ const ar = await ev(() => {
   const D = document.querySelector('#dialog'), N = D.querySelector('.name');
   return { prompt, promptKeyLeft: pk != null && pt != null && pk < pt, state: game.state, name: N?.textContent, text: D.querySelector('.text')?.textContent, reads: HE.reads('#dialog .text'), tagLeft: N.getBoundingClientRect().left < D.getBoundingClientRect().left + D.getBoundingClientRect().width / 3, dir: getComputedStyle(D).direction, fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text') };
 });
-check('Arthur in the house: the prompt "דיבור" with its key on the left (English\'s order)', /דיבור/.test(ar.prompt) && ar.promptKeyLeft, ar);
+check('Arthur in the house: the prompt "לדבר" with its key on the left (English\'s order)', /לדבר/.test(ar.prompt) && ar.promptKeyLeft, ar);
 check('Arthur: a Hebrew box, his name ארתור on the name tag where English has it (left), the line read right to left, inside the screen', ar.state === 'dialog' && ar.name === 'ארתור' && HEB.test(ar.text || '') && ar.reads === 'rtl' && ar.tagLeft && ar.dir === 'ltr' && ar.fit.ok && ar.textFit.ok, ar);
 if (SHOTS) await big(() => shot(PRE ? '01-dialogue' : '01-house-dialogue'));
 const cup = await ev(() => {
@@ -149,7 +149,7 @@ const cup = await ev(() => {
   P.use(sp.x, sp.z); HE.settleFound();
   return { near, ball: game.hero.hasBall, voiced: (window.__voiced || []).map((x) => x.shown) };
 });
-check('by the cupboard: "חיפוש בארון" with the key; the ball taken, his lines in Hebrew', /חיפוש בארון/.test(cup.near) && cup.ball && cup.voiced.some((x) => /ידיד ותיק/.test(x)), cup);
+check('by the cupboard: "לחפש בארון" with the key; the ball taken, his lines in Hebrew', /לחפש בארון/.test(cup.near) && cup.ball && cup.voiced.some((x) => /ידיד ותיק/.test(x)), cup);
 await ev(() => { HE.settleFound(); game.step(1.0); });
 const out = await ev(() => { const e = game.room.exits.find((x) => x.to === 'outdoor'); P.settle(); P.through(e.x, e.z); game.step(1.0); const tip = document.querySelector('#tip.show'); return { room: game.room?.id ?? 'out', tip: HE.tip(), fit: HE.fit('#tip.show'), goal: HE.reads('#tip .tgoal'), left: tip ? tip.getBoundingClientRect().right < innerWidth / 2 : null }; });
 check('out in the yard: the tip panel (left, as in English) says, in Hebrew read right to left, to talk to Zoé', out.room === 'out' && /לדבר עם זואי/.test(out.tip) && out.fit.ok && out.goal === 'rtl' && out.left, out);
@@ -163,7 +163,7 @@ const zoe = await ev(() => {
   P.tap('KeyE', 0.05); game.step(3.0);
   return { prompt, state: game.state, name: document.querySelector('#dialog .name')?.textContent, text: document.querySelector('#dialog .text')?.textContent, reads: HE.reads('#dialog .text'), fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text') };
 });
-check('Zoé: "דיבור" in the prompt; her conversation in Hebrew, her name זואי, the line read right to left', /דיבור/.test(zoe.prompt) && zoe.state === 'dialog' && zoe.name === 'זואי' && HEB.test(zoe.text || '') && zoe.reads === 'rtl', zoe);
+check('Zoé: "לדבר" in the prompt; her conversation in Hebrew, her name זואי, the line read right to left', /לדבר/.test(zoe.prompt) && zoe.state === 'dialog' && zoe.name === 'זואי' && HEB.test(zoe.text || '') && zoe.reads === 'rtl', zoe);
 check('Zoé\'s box at 1280×720: nothing spills (the text no wider than its box, the box inside the screen)', zoe.fit.ok && zoe.textFit.ok, { box: zoe.fit, text: zoe.textFit });
 await page.setViewportSize({ width: 1920, height: 1080 });
 const zoeBig = await ev(() => { game.step(0.1); return { fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text'), reads: HE.reads('#dialog .text') }; });

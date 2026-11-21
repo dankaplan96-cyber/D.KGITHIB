@@ -1,0 +1,14 @@
+[36s] benchmark started: benchfps
+[46s] {"room":"out","q":"medium","fps":"auto","heap":783,"pos":[-43,-9],"st":"play","sc":null}
+[56s] {"room":"out","q":"medium","fps":"auto","heap":799,"pos":[-40,-8],"st":"play","sc":null}
+[66s] {"room":"out","q":"medium","fps":"auto","heap":805,"pos":[-36,-8],"st":"play","sc":null}
+[76s] {"room":"house","q":"medium","fps":"auto","heap":812,"pos":[998,8],"st":"play","sc":null}
+[86s] {"room":"house","q":"medium","fps":"auto","heap":831,"pos":[1001,7],"st":"play","sc":null}
+[96s] {"room":"house","q":"medium","fps":"auto","heap":828,"pos":[1002,4],"st":"play","sc":null}
+[106s] {"room":"arena","q":"medium","fps":"auto","heap":849,"pos":[6190,8],"st":"play","sc":null}
+[116s] {"room":"arena","q":"medium","fps":"auto","heap":848,"pos":[6190,8],"st":"play","sc":null}
+[126s] {"room":"arena","q":"medium","fps":"auto","heap":859,"pos":[6191,5],"st":"play","sc":null}
+[136s] {"room":"arena","q":"medium","fps":"auto","heap":840,"pos":[6188,12],"st":"play","sc":null}
+[146s] {"room":"hamalayi","q":"medium","fps":"auto","heap":987,"pos":[4304,86],"st":"play","sc":null}
+[156s] {"room":"out","q":"medium","fps":"auto","heap":1107,"pos":[-42,2],"st":"play","sc":null}
+[166s] {"room":"out","q":"medium","fps":"auto","heap":1111,"pos":[-42,2],"st":"play","sc":null}

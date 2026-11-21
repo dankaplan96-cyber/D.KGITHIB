@@ -70,6 +70,10 @@ const TRANSITIONS = [
   ['throttle.js', 'backToTwinsen', 'cut', "chapter 10 (EXP-1): Zoé reaches the fortress shelter with the B-7: Twinsen again beside the branch (the same spot)"],
   ['ballastra.js', 'fly', 'film:playJourney', "chapter 11 (EXP-2): Doran's freighter: the ship's film from Citadel Spaceport to Float Harbor's pad on Ballastra"],
   ['ballastra.js', 'end', 'film:playJourney', "chapter 11 → the network (14): the freighter home: the ship's film from Float Harbor's pad to Zeelich Spaceport, then Baldino's workshop (network.js begin); to chapter 12 on Ballastra: no journey"],
+  ['balances.js', 'update', 'same', "chapter 12 → 13 (EXP-3): the House of Balances → the Cradles, both on Ballastra"],
+  ['balances.js', 'end', 'film:playJourney', "chapter 13 → the network (14): the freighter home: the ship's film from Ballastra's port to Zeelich Spaceport, then Baldino's workshop (network.js begin); with no port to fly from (where() false), the plain change"],
+  ['balances.js', 'sleepersScene', 'cut', "the epilogue (EXP-3): before the credits, the story cuts to the Cradle Hall four days on (a cut in time and place, not a journey)"],
+  ['balances.js', 'sleepersScene', 'cut', 'the epilogue (EXP-3): from the Cradle Hall back to the kitchen at home (the cut back)'],
   ['throttle.js', 'downstairs', 'same', "chapter 10: Mira takes him down from the Water Office into FunFrock's valve room (a room of Citadel)"],
 ];
 {
@@ -78,7 +82,11 @@ const TRANSITIONS = [
     const L = fs.readFileSync(dir + f, 'utf8').split('\n');
     // (a class's methods start two spaces in: each call belongs to the method it is in; the method's code is its text)
     const meth = [];
-    L.forEach((line, i) => { const m = line.match(/^ {2}(?:async\s+)?([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/); if (m && !/^(if|for|while|switch|catch)$/.test(m[1])) meth.push({ fn: m[1], from: i }); });
+    // (and a top-level function, at the line's start, is its own: a call in it is not the last class method's)
+    L.forEach((line, i) => {
+      const m = line.match(/^ {2}(?:async\s+)?([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/) || line.match(/^(?:export\s+)?(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/);
+      if (m && !/^(if|for|while|switch|catch)$/.test(m[1])) meth.push({ fn: m[1], from: i });
+    });
     meth.forEach((m, k) => { m.to = meth[k + 1]?.from ?? L.length; });
     const code = (m) => L.slice(m.from, m.to).filter((x) => !/^\s*\/\//.test(x)).join('\n');
     L.forEach((line, i) => {

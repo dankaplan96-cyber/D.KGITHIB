@@ -153,11 +153,16 @@ const CASES = [
   { name: 'ch5 the condensers: the hatch switch', setup: START({ prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true }) + `; game.enterRoom('condB', null, true); game.step(0.5); T.talkAll()`,
     targets: [['hatch switch', `game.rooms.condB.ballTargets.find((t) => t.hatch)`, `() => game.flags.c5_hatch`, { r: 3.5 }]] },
   { name: 'ch6 the Hamalayi: the dead tree, the kite', setup: START({ prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true }) + `; game.flags.c6_started = true; if (game.room?.id !== 'hamalayi') game.enterRoom('hamalayi', null, true); game.step(0.5); T.talkAll()`,
-    targets: [['the dead tree (falls across the gorge)', `game.rooms.hamalayi.ballTargets.find((t) => t.tree)`, `() => game.flags.c6_bridge`, { r: 4 }],
+    // (PUZZLES phase 2: the tree rocks on its old prop and settles back; the ball on the prop knocks it out, and the tree
+    //  falls across: two events, pass.js ballHit)
+    targets: [['the dead tree (rocks on its prop)', `game.rooms.hamalayi.ballTargets.find((t) => t.tree)`, `() => game.flags.c6_rocked`, { r: 4 }],
+      ['the prop (knocked out: the tree falls across the gorge)', `game.rooms.hamalayi.ballTargets.find((t) => t.prop)`, `() => game.flags.c6_bridge`, { r: 4 }],
       ['the kite', `(game.flags.c6_needFuse = true, game.flags.c6_kiteAsk = true, game.rooms.hamalayi.ballTargets.find((t) => t.kite))`, `() => game.flags.c6_kite`, { r: 4 }]] },
   { name: 'ch7 the observatory', none: true },
   { name: 'ch8 Citadel evacuated: the bunker hatch wheel', setup: START({ prologueDone: true, intro: true, chapter: 6, chapterKey: 'observatory', c1_water: true, c1_done: true, c7_started: true, c7_vent: true, c7_done: true }) + `; game.flags.c8_home = true; game.flags.c8_gilbert = true; if (game.room) { const w = game.story.cur.wheelSpot; game.exitRoom({ x: w.x - 4, z: w.z }, true); } game.step(0.5); T.talkAll()`,
-    targets: [['hatch wheel', `game.story.cur.wheelSpot`, `() => game.flags.c8_depot`, { r: 4 }]] },
+    // (MIDDLE-VARIETY: the ball turns the wheel and the door rolls a hand's width and sticks (c8_gap); Lulu's squeeze
+    //  through it opens the depot afterwards, evacuation.js ballHit)
+    targets: [['hatch wheel', `game.story.cur.wheelSpot`, `() => game.flags.c8_gap`, { r: 4 }]] },
   { name: 'ch9 Zeelich, the council: a mill freed', setup: START({ prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true }) + `; game.flags.c9_form = true; game.flags.c9_okuAsk = true; if (game.room?.id !== 'zeelich') game.enterRoom('zeelich', null, true); game.step(0.5); T.talkAll()`,
     targets: [['mill brake', `game.rooms.zeelich.mills.find((m) => !game.flags['c9_free_' + m.id]).brake`, `() => game.rooms.zeelich.mills.some((m) => game.flags['c9_free_' + m.id])`]] },
   { name: 'ch10 the network: the north mill braked', setup: START({ prologueDone: true, intro: true, chapter: 12, chapterKey: 'survey', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,

@@ -11,13 +11,23 @@
 // queues it.
 // Under the automated tests on a software renderer the governor is off and Auto is High (as the tests always ran);
 // `?autoq` in the URL turns it on there too.
-import { START_FLOOR, Governor, Calibration, describe, knobsAt, profileOf, spell, TIER_AT, machineKey, CACHE_KEY, N_PROFILES, nextProfile, UP_TRY_BLOCK } from './autoquality.js';
+import { START_FLOOR, Governor, Calibration, describe, knobsAt, profileOf, spell, machineKey, CACHE_KEY, CACHE_KEY_V4, migrateCache, N_PROFILES, nextProfile, UP_TRY_BLOCK } from './autoquality.js';
 import { gpuQuality } from './perf.js';
 import { cellFor } from './shadowcull.js';
 import { warmPassPrograms } from './warmup.js';
 
 const SOFT = /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i;
-const load = () => { try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; } catch { return {}; } };
+// (P95: v5 entries carry their profile's id; a v4 cache — High · Medium · Low by index — is moved over once, by id, so a
+//  machine's settled profile survives the update; an unreadable entry is dropped, never trusted)
+const load = () => {
+  try {
+    const v5 = localStorage.getItem(CACHE_KEY);
+    if (v5 != null) return migrateCache(JSON.parse(v5));
+    const c = migrateCache(JSON.parse(localStorage.getItem(CACHE_KEY_V4) || '{}'), true);
+    if (Object.keys(c).length) localStorage.setItem(CACHE_KEY, JSON.stringify(c));
+    return c;
+  } catch { return {}; }
+};
 const save = (c) => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(c)); } catch { /* (private mode) */ } };
 const STORE_EVERY = 60000;   // (the held session's margin, written to the cache this often)
 
@@ -25,7 +35,10 @@ export class AutoApply {
   constructor(game) {
     const G = (this.G = game);
     this.log = [];
-    this.gov = new Governor({ budget: () => Math.max(1000 / 60, G.frameCapMs || 0), upBudget: () => 1000 / 60, onChange: (i) => this.changed(i), log: this.log });
+    // (P95: refresh — the display's measured refresh, for the 30 limit's "ready by the next refresh" rule; skip — on
+    //  battery the battery profile already takes MSAA and lamps from every profile, so Medium-lean adds nothing there)
+    this.gov = new Governor({ budget: () => Math.max(1000 / 60, G.frameCapMs || 0), upBudget: () => 1000 / 60, refresh: () => G.refreshMs?.() || null,
+      skip: (p) => profileOf(p).id === 'lean' && !!(G.renderer?.battery && G.renderer?.batteryCuts), onChange: (i) => this.changed(i), log: this.log });
     const gpu = G.perf?.gpu || '', q = typeof location !== 'undefined' ? location.search : '';
     this.test = SOFT.test(gpu) && typeof navigator !== 'undefined' && navigator.webdriver && !/[?&]autoq/.test(q);
     this.gov.enabled = !this.test;
@@ -45,7 +58,8 @@ export class AutoApply {
       let p0 = bat || low ? 1 : 0, why = `first start ${bat ? 'on battery: Medium' : low ? 'plugged in: Medium (an integrated GPU)' : 'plugged in: High'} (the GPU's name suggests ${pick})`;
       if (other) { p0 = Math.min(START_FLOOR, nextProfile(other.p, bat ? -1 : +1)); why = `first start ${bat ? 'on battery' : 'plugged in'}: this machine's ${bat ? 'plugged-in' : 'battery'} profile, one ${bat ? 'lower' : 'higher'}`; }
       this.gov.setProfile(p0, why + '; measured on the title screen, then evaluated in play', { commitNow: true, t: 0 });
-      this.cal = new Calibration({ p0, budget: () => Math.max(1000 / 60, G.frameCapMs || 0) });
+      // (P95: the title is judged on 60's budget under a 30 limit too: a frame must still be ready by the next refresh)
+      this.cal = new Calibration({ p0, budget: () => 1000 / 60 });
       this.source = 'guess';
     }
     const T = G.perf?.gpuTimer;
@@ -56,7 +70,8 @@ export class AutoApply {
   fromCache(E, t) {
     if (!E || !(E.p >= 0 && E.p < N_PROFILES)) return false;
     if (E.src === 'settled') {
-      if (E.margin && E.p > 0 && !(E.noTry > 0)) { this.gov.setProfile(E.p - 1, `this machine's settled ${profileOf(E.p).name} (${E.at}) had room to spare: trying ${profileOf(E.p - 1).name}`, { commitNow: true, t, trial: true }); this.source = 'cache: trying one higher'; }
+      const up = this.gov.above(E.p);
+      if (E.margin && up != null && !(E.noTry > 0)) { this.gov.setProfile(up, `this machine's settled ${profileOf(E.p).name} (${E.at}) had room to spare: trying ${profileOf(up).name}`, { commitNow: true, t, trial: true }); this.source = 'cache: trying one higher'; }
       else { this.gov.setProfile(E.p, `this machine's settled profile (${E.at})`, { phase: 'hold', commitNow: true, t }); this.source = 'cache: settled'; }
       if (E.noTry > 0) { E.noTry--; this.cache[this.key] = E; save(this.cache); }
     } else { this.gov.setProfile(E.p, `this machine's calibration (${E.at}), evaluated in play`, { commitNow: true, t }); this.source = 'cache: calibration'; }
@@ -137,7 +152,7 @@ export class AutoApply {
     const play = (G.state === 'play' || G.state === 'dialog') && !G.trans && !G.gfxHold && !G.preparing && !G.background && !G._shownBlack
       && !(typeof document !== 'undefined' && document.hidden) && !G.testFreeze && (!G.benching || G.benchAutoQ);
     const r = this.gov.frame({ t: now, ms, cpu: work, play, scene: G.room?.id || 'citadel' });
-    if (r?.kind === 'settled' && !G.benching) this.settled();
+    if ((r?.kind === 'settled' || (r?.revert && this.gov.phase === 'hold')) && !G.benching) this.settled();   // (P95: a step back in hold is the session's profile now)
     // the held session's margin, for the next start (written now and then)
     if (this.gov.phase === 'hold' && !G.benching && now - this.storedAt > STORE_EVERY && this.gov.margin() !== !!this.cache[this.key]?.margin) this.store('settled');
   }
@@ -168,7 +183,8 @@ export class AutoApply {
     if (!this.on() || this.test || old === this.key) return;
     const t = performance.now();
     if (!this.fromCache(this.cache[this.key], t)) {
-      const p = Math.min(Math.max(START_FLOOR, this.gov.applied), nextProfile(this.gov.applied, bat ? -1 : +1));   // (AUTO-FLOOR: a guess never below Medium; already lower stays)
+      let p = Math.min(Math.max(START_FLOOR, this.gov.applied), nextProfile(this.gov.applied, bat ? -1 : +1));   // (AUTO-FLOOR: a guess never below Medium; already lower stays)
+      if (this.gov.skip(p)) p = this.gov.above(p) ?? p;   // (P95: Medium-lean adds nothing on battery: the sharper neighbour)
       this.gov.setProfile(p, `${bat ? 'on battery: one profile lower' : 'plugged in: one profile higher'} (nothing settled for this power source yet), evaluated`, { commitNow: true, t });
       this.source = 'power change';
     }
@@ -179,7 +195,8 @@ export class AutoApply {
   store(src, E = {}) {
     this.cache = load();
     const prev = this.cache[this.key] || {};
-    this.cache[this.key] = { p: E.p ?? this.gov.applied, src, margin: src === 'settled' ? this.gov.margin() : false, noTry: E.noTry ?? prev.noTry ?? 0, at: new Date().toISOString().slice(0, 16).replace('T', ' ') };
+    const p = E.p ?? this.gov.applied;
+    this.cache[this.key] = { p, id: profileOf(p).id, src, margin: src === 'settled' ? this.gov.margin() : false, noTry: E.noTry ?? prev.noTry ?? 0, at: new Date().toISOString().slice(0, 16).replace('T', ' ') };
     this.storedAt = typeof performance !== 'undefined' ? performance.now() : 0;
     save(this.cache);
   }
@@ -195,7 +212,8 @@ export class AutoApply {
     out.push(`quality: ${this.on() ? `Auto — ${S.label}${S.pending.length ? ` (→ ${profileOf(S.p).name} at the next scene change or menu)` : ''} · ${S.phase === 'hold' ? 'held' : `evaluating (${S.eval?.s ?? 0} s, ${S.eval?.scenes ?? 0} scene${S.eval?.scenes === 1 ? '' : 's'})`}` : `${this.G.settings.quality} (chosen by hand${this.G.settings.qualityChosenByHand ? '' : '?'})`} · governor ${this.test ? 'off (automated test)' : this.gov.enabled ? 'on' : 'off'} · GPU timer in play: ${S.gpuTimer ? 'yes' : 'no'}`);
     out.push(`  runs: ${spell(S.applied)}`);
     out.push(`  start: ${this.source}${S.cached ? ` · cached for this machine (${S.cached.src}${S.cached.margin ? ', room to spare' : ''}, ${S.cached.at}): ${profileOf(S.cached.p).name}` : ' · nothing cached for this machine'}${this.calResult ? ` · title calibration: GPU p90 ${this.calResult.gpuMs ?? 'n/a'} ms, CPU p90 ${this.calResult.cpuMs} ms, frame p50 ${this.calResult.frameMs} ms (at ${profileOf(this.calResult.p0).name}) → ${profileOf(this.calResult.p).name}` : ''} · key ${this.key}`);
-    if (S.last) out.push(`  last window: ${S.last.kind} · ${S.last.fps} fps · frame p90 ${S.last.p90} ms · CPU p90 ${S.last.cpu ?? '?'} ms · GPU p90 ${S.last.gpu ?? 'n/a'} ms · missed ${Math.round(100 * S.last.miss)} %`);
+    if (S.last) out.push(`  last window: ${S.last.kind}${S.last.late ? ' (on time, but past the next refresh: shown late under the limit)' : ''} · ${S.last.fps} fps · frame p90 ${S.last.p90} ms · CPU p90 ${S.last.cpu ?? '?'} ms · GPU p90 ${S.last.gpu ?? 'n/a'} ms · missed ${Math.round(100 * S.last.miss)} %`);
+    if (S.noHelp && Object.keys(S.noHelp).length) out.push(`  no further step down this session for ${Object.entries(S.noHelp).map(([k, p]) => `${k.toUpperCase()} pressure below ${profileOf(p).name}`).join(', ')} (a step down there bought nothing: P95)`);
     return out;
   }
 }

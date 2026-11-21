@@ -5,7 +5,7 @@ import { STR } from '../../i18n.js';
 Object.assign(STR.he, {
   ow_title: 'מהקיר',
   n_ow_tali: 'טלי',
-  p_move: 'הזזה',
+  p_move: 'להזיז',
 
   // ---- before she has told him the rule
   ow_pre_direct: 'היי! לא ישר על הפעמון שלי!',

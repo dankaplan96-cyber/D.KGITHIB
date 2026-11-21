@@ -8,10 +8,10 @@ Object.assign(STR.he, {
   n_qc_mattoradio: 'מאטו (בצינור)',
   n_qc_matto: 'מאטו',
   n_dp_tolliradio: 'טולי (בצינור)',
-  p_qc_big: 'טריקת השסתום הגדול',
-  p_qc_mid: 'טריקת השסתום האמצעי',
-  p_qc_small: 'טריקת השסתום הקטן',
-  p_qc_riser: 'פתיחת הצינור העולה',
+  p_qc_big: 'לטרוק את השסתום הגדול',
+  p_qc_mid: 'לטרוק את השסתום האמצעי',
+  p_qc_small: 'לטרוק את השסתום הקטן',
+  p_qc_riser: 'לפתוח את הצינור העולה',
 
   // ---- the riser at the bottom of the shaft
   qc_listen_1: '(זו לא האדמה. מישהו דופק על הצינור הזה ביד: אחת כבדה, שתיים קלות, ואז הפסקה.)',

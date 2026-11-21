@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   om_title: 'עוד מקום אחד',
-  p_tune: 'כוונון', p_sit: 'ישיבה',
+  p_tune: 'לכוונן', p_sit: 'לשבת',
 
   // ---- the fourth chair
   om_chair_0: '(כיסא רביעי ליד השולחן, עם כרית ירוקה ישנה. זואי הוציאה אותו.)',

@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   pp_title: 'ברחבי האיים',
-  p_knock: 'דפיקה',
+  p_knock: 'לדפוק',
   n_tibbo: 'טיבו', n_marl: 'מרל, מאלפת הכלבים', n_oni: 'אוני',
 
   // ---- Tibbo's Fix and Fill

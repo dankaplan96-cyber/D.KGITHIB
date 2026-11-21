@@ -3,10 +3,10 @@
 import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
-  p_shuttle: 'עלייה',
-  p_ship: 'עלייה',
-  p_ferry: 'עלייה',
-  p_glider: 'טיסה',
+  p_shuttle: 'לעלות',
+  p_ship: 'לעלות',
+  p_ferry: 'לעלות',
+  p_glider: 'לטוס',
   isle_title: 'מעבורת אסמרית: לאן?',
   tr_title_ship: 'חללית: לאן?',
   tr_title_ferry: 'מעבורת: לאן?',
@@ -47,7 +47,7 @@ Object.assign(STR.he, {
   port_board: 'נמל החלל של סיטדל · יציאות: נמל החלל של זיליך, בחללית. לאיים של זיליך, מחליפים שם למעבורת אסמרית.',
   port_grounded: 'פתק על הפתח של הספינה: "כל טיסות הנוסעים מקורקעות בפקודת המיזם המשותף. לצוותי המיזם בלבד."',
   // SPACEPORT-1: the terminals' counters and boards
-  p_tickets: 'כרטיסים',
+  p_tickets: 'לקנות כרטיסים',
   room_terminal: 'נמל החלל של סיטדל', room_zterminal: 'נמל החלל של זיליך',
   tm_grounded: 'אין טיסות נוסעים, אני חוששת. המיזם המשותף קירקע אותן. רק ספינות של המיזם, עד שיגידו אחרת.',
   tm_gate_shut: 'השער סגור. מקורקע: טיסות הנוסעים הושעו בידי המיזם המשותף.',

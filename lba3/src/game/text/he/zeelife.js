@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   zl_title: 'זיליך',
-  p_shove: 'דחיפה', p_roll: 'לקחת לחמנייה',
+  p_shove: 'לדחוף', p_roll: 'לקחת לחמנייה',
   zl_toast_owed: 'התשלום של סנאף: {n} קאשים',
 
   // ---- looks

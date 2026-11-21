@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   w_title: 'בית המלאכה של בלדינו',
-  p_switch_on: 'הדלקה', p_switch_off: 'כיבוי', p_tap_open: 'פתיחת הברז', p_tap_close: 'סגירת הברז', p_crank: 'סיבוב הידית',
+  p_switch_on: 'להדליק', p_switch_off: 'לכבות', p_tap_open: 'לפתוח את הברז', p_tap_close: 'לסגור את הברז', p_crank: 'לסובב את הידית',
 
   // ---- Baldino brings it up (chapter 3)
   w_bal_ask1: 'כל עוד אתה כאן. זוג הניסוי שלי, על השולחן הארוך. שני ממסרים: אחד מדבר, השני מקשיב.',

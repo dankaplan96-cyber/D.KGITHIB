@@ -3,7 +3,7 @@
 import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
-  p_dig: 'חפירה', p_fill: 'מילוי', p_board: 'עלייה', p_relief: 'פתיחה',
+  p_dig: 'לחפור', p_fill: 'למלא', p_board: 'לעלות', p_relief: 'לפתוח',
 
   // later in Kesh: the plan, then the setback
   c5_narr: 'מאוחר יותר, בקש.',

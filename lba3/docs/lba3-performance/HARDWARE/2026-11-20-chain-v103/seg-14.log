@@ -1,0 +1,70 @@
+[0s +0s] continue: {"chapter":"shell","room":"c3shaft","sh":1} | c3shaft [1797.9,0,-1.5] hp 12 | Find the bore's machinery◆ Try the crew's test receiver (bounce the ball)
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[1s +0s] the test receiver (a bank shot from the plate): {"throws":1,"lit":true,"bank":true,"fail":null} | c3shaft [1802.6,0,1.2] hp 12 | Find the bore's machinery◆ Try the crew's test receiver (bounce the ball)
+  stats: {"play":5.1,"dialog":1.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":21,"says":1,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[2s +1s] down to the machinery: {"r":"transition","from":"c3shaft","to":"c3deep"} | c3deep [1890.92,0,4.14] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+  stats: {"play":7.2,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":10,"says":1,"walked":7,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[2s +0s] the cooling diagram: {"r":"used","target":{"kind":"c3diagram","id":"p_read","label":"p_read"},"state":"play","lines":6,"diagram":true,"fail":null} | c3deep [1890.17,0,2.68] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+  stats: {"play":2,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":48,"says":3,"walked":2,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[3s +0s] valve A: {"open":true} | c3deep [1890.04,0,-1.96] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+  stats: {"play":3.9,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[3s +0s] the ball switch (ladder): {"done":true,"ladder":true,"fail":null} | c3deep [1892.95,0,-3.72] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk◆ Get past the steam on the catwalk to valve C
+  stats: {"play":4.2,"dialog":2.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":59,"says":4,"walked":3,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[4s +1s] her answer, the knocker, valve C on the catwalk: {"waited":0,"knocks":2,"knock":true,"reply":true,"hp":12,"open":true,"y":3,"cooled":true,"fail":null} | c3deep [1891.73,3,-6.93] hp 12 | Go deeper
+  stats: {"play":27.1,"dialog":0.7,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":30,"says":3,"walked":19,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[5s +1s] the galleries (the shutter held): {"r":"transition","from":"c3deep","to":"c3gallery","held":true,"room":"c3gallery","fail":null} | c3gallery [1988.87,3,4.06] hp 12 | Cross the crystal galleries
+  stats: {"play":14.6,"dialog":4,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":3,"words":45,"says":3,"walked":19,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[5s +0s] the supply crates (near shelf): {"r":"not hurt","hp":12} | c3gallery [1988.87,3,4.06] hp 12 | Cross the crystal galleries
+  stats: {"play":0,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[7s +2s] two pillars (ball): {"out":[true,true],"fail":null} | c3gallery [2000.18,-0.3,-8.76] hp 10 | Cross the crystal galleries
+  stats: {"play":34.8,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":21,"says":1,"walked":22,"hpLost":2,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":10,"cloversNow":4,"revives":0}
+[9s +2s] across the stepping stones (the third heart off the mirror): {"tries":[[2.98,2.98,2.98,{"throws":1,"lit":true},2.98,2.98,3]],"throws":1,"third":true,"iso":false,"x":2005.5,"fail":null} | c3gallery [2005.54,3,-1.97] hp 8 | Cross the crystal galleries
+  stats: {"play":67.5,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":9,"says":1,"walked":57,"hpLost":2,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":8,"cloversNow":4,"revives":0}
+[10s +0s] the supply crates (far shelf): {"r":"skipped (optional)","hp":8} | c3gallery [2005.54,3,-1.97] hp 8 | Cross the crystal galleries
+  stats: {"play":0,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":8,"cloversNow":4,"revives":0}
+[10s +0s] Sendell (the arch shut behind him): {"shut":true,"sendell":true,"hp":12,"fail":null} | c3sendell [2096.39,0,1.17] hp 12 | Reach the core
+  stats: {"play":10.3,"dialog":4.1,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":14,"words":193,"says":14,"walked":16,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":18,"hpNow":12,"cloversNow":4,"revives":0}
+[11s +0s] the core → chapter 12: {"chapter":"core","fight":true,"room":"c3core","fail":null} | c3core [2205.8,0.3,-7.35] hp 12 | Convert the three pylons (0/3)
+  stats: {"play":5.1,"dialog":1.2,"trans":0.7,"scene":3.8,"menu":0,"other":0,"lines":4,"words":76,"says":4,"walked":7,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":18,"hpNow":12,"cloversNow":4,"revives":0}
+[13s +2s] the pylons from their plates: {"stunThrows":11,"stuns":5,"shots":5,"hurt":5,"t":23.2,"pylons":3,"iso":0,"fail":null} | c3core [2197.35,0.3,3.81] hp 7 | Open the bore's bleed valve
+  stats: {"play":50.4,"dialog":3.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":10,"words":150,"says":10,"walked":53,"hpLost":5,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":7,"cloversNow":4,"revives":0}
+[13s +0s] the bleed valve: {"stunThrows":4,"stuns":2,"shots":1,"hurt":1,"t":5.5,"bleed":true,"coil":true,"fail":null} | c3core [2205.73,0.3,4.8] hp 6 | Break Vesk's overload coil (0/3)
+  stats: {"play":13.6,"dialog":2.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":25,"says":2,"walked":15,"hpLost":1,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":6,"cloversNow":4,"revives":0}
+[14s +1s] Vesk's overload coil: {"stunThrows":6,"stuns":3,"shots":3,"hurt":1,"t":9.1,"coil":3,"turned":true,"fail":null} | c3core [2203.95,0.3,-0.96] hp 5 | Break Vesk's overload coil (2/3)
+  stats: {"play":19.3,"dialog":3.9,"trans":0,"scene":0,"menu":0.1,"other":0,"lines":5,"words":58,"says":5,"walked":22,"hpLost":1,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[14s +0s] Vesk's choice: {"choice":"The console sparks over Vesk","answers":["Pull him clear","Leave him for the council's guards"],"helped":true,"go":true,"obj":"Turn Mill Lane's branch over to the mills","fail":null} | c3core [2203.95,0.3,-0.96] hp 5 | Turn Mill Lane's branch over to the mills
+  stats: {"play":0.3,"dialog":1,"trans":0,"scene":0,"menu":0.3,"other":0,"lines":3,"words":50,"says":3,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[17s +2s] Mill Lane's branch (the cock in the rest): {"tries":["kicked","turned"],"branch":true,"irsa":true,"vesk":true,"fail":null} | c3core [2207.83,0.3,1.06] hp 5 | Lift the central lock's bar
+  stats: {"play":27.3,"dialog":4.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":8,"words":74,"says":8,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[17s +0s] the central lock (after her two): {"tries":["up"],"lock":true,"fail":null} | c3core [2203.86,0.3,0.13] hp 5 | Signal Zoé: knock twice on the main
+  stats: {"play":5.8,"dialog":0.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":10,"says":1,"walked":4,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[18s +1s] the signal to Zoé (two knocks): {"signal":true,"fail":null} | house [1001.2,0,9.9] hp 5 | Go home. Dinner is waiting
+  stats: {"play":13.5,"dialog":4.1,"trans":0.7,"scene":3.9,"menu":0,"other":0,"lines":14,"words":164,"says":14,"walked":5,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[19s +0s] the epilogue: {"state":"ending","choice":null,"answers":null,"helped":true,"title":"The End","fail":null} | house [1001.2,0,9.9] hp 5 | Go home. Dinner is waiting
+  stats: {"play":0,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+[19s +0s] Keep Exploring: {"state":"play","free":true,"obj":"See how everyone is doing"} | house [1001.2,0,9.9] hp 5 | See how everyone is doing
+  stats: {"play":0.6,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[293.3] go → (2201.5, 0.3) plan ok=true pts=1 left=0.23
+[293.7] go → (2204.7, -1.5) plan ok=true pts=2 left=0.28
+[297.8] core fight (coil): {"stunThrows":6,"stuns":3,"shots":3,"hurt":1,"t":9.1}
+[299.5] go → (2208.5, 1.5) plan ok=false pts=3 left=0.92
+[302.4] go → (2208.5, 1.5) plan ok=false pts=2 left=0.73
+[309.9] go → (2208.0, 1.1) plan ok=true pts=1 left=0.15
+[312.4] stuck at (2207.8, 1.0): replan
+[317.9] stuck at (2207.7, 1.0): replan
+[331.1] go → (2204.5, 0.3) plan ok=true pts=3 left=0.43
+[333.1] go → (2204.5, 0.3) plan ok=true pts=3 left=0.27
+[337.1] go → (2208.2, 0.7) plan ok=true pts=3 left=0.42
+[339.7] go → (2208.2, 0.7) plan ok=false pts=2 left=0.41
+stats total: {"play":312.7,"dialog":35.4,"trans":3.5,"scene":7.7,"menu":0.4,"other":0,"lines":78,"words":1043,"says":78,"walked":269,"hpLost":11,"deaths":0,"rooms":6,"chapter":"home","coinsNow":18,"hpNow":5,"cloversNow":4,"revives":0}
+kept save-14.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     23 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

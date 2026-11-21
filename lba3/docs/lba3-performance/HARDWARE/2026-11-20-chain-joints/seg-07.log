@@ -1,0 +1,62 @@
+[0s +0s] continue (Desert Island): {"room":"desert","chapter":"dig"} | desert [3292,2,4] hp 10 | Find the professor who found the crystals
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[2s +1s] Mother Tarra: {"r":"talked","to":"tarra","state":"play","lines":8,"speakers":["tarra","hero"],"task":true,"fail":null} | desert [3349.5,5,10.67] hp 10 | Restart the wind-pump
+  stats: {"play":12.7,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":70,"says":4,"walked":59,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[3s +1s] the pump's jammed gear (ball, from the west where its face looks): {"gears":[true],"state":"leak","fail":null} | desert [3364.38,4.28,-7.06] hp 10 | Restart the wind-pump◆ Stop the leak in the pipe
+  stats: {"play":7.8,"dialog":1.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":34,"says":2,"walked":23,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[7s +4s] the pipe joint pushed home: {"r":"used","target":{"kind":"c4joint","id":"p_push","label":"p_push"},"state":"play","lines":2,"pump":true,"fail":null} | desert [3367.82,4.11,-11.07] hp 10 | Talk to Mother Tarra
+  stats: {"play":4.6,"dialog":0.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":13,"says":1,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[8s +1s] Tarra trusts him: {"r":"talked","to":"tarra","state":"play","lines":6,"speakers":["tarra"],"trust":true,"fail":null} | desert [3351.57,5,9.93] hp 10 | Find Ilka's camp under the north mesa◆ Hesk can take you on his sand-yacht
+  stats: {"play":6.7,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":59,"says":3,"walked":27,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[8s +0s] Hesk: {"r":"talked","to":"hesk","state":"play","lines":4,"speakers":["hesk"],"ask":true} | desert [3372.93,4.77,12.59] hp 10 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+  stats: {"play":5.4,"dialog":0.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":33,"says":2,"walked":22,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[10s +1s] the rope from the pier: {"r":"used","target":{"kind":"c4rope","id":"p_rope","label":"p_rope"},"state":"play","lines":2,"rope":true,"fail":null} | desert [3300.4,2,2.98] hp 10 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+  stats: {"play":16.8,"dialog":0.3,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":1,"words":8,"says":1,"walked":74,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[11s +1s] the sand-yacht to the camp: {"r":"talked","to":"hesk","state":"play","lines":2,"speakers":["hesk"],"yacht":"camp","fail":null} | desert [3391.11,3,-41.59] hp 10 | Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier
+  stats: {"play":16.3,"dialog":0.3,"trans":0,"scene":5,"menu":0,"other":0,"lines":1,"words":11,"says":1,"walked":74,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[11s +0s] Ilka: {"r":"talked","to":"ilka","state":"play","lines":14,"speakers":["ilka","hero"],"ilka":true,"fail":null} | desert [3391.26,3,-41.73] hp 10 | Get Ilka's notebook from the research post◆ Go in during a sandstorm
+  stats: {"play":0.5,"dialog":2.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":7,"words":162,"says":7,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":10,"cloversNow":3,"revives":0}
+[26s +15s] the notebook (in a sandstorm): {"waited":0,"stormy":false,"enter":"entered","r":"used","target":{"kind":"ihlook","id":"p_look","label":"p_look"},"state":"play","lines":4,"out":"desert","notebook":true,"fail":null} | desert [3436.6,1.6,-25.76] hp 8 | Open the dig and reach the bottom
+  stats: {"play":64.1,"dialog":0.5,"trans":1.4,"scene":3.4,"menu":0,"other":0,"lines":2,"words":37,"says":2,"walked":108,"hpLost":2,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[27s +0s] out of the post: Dallan at the test stand: {"r":"arrived","hail":true,"fail":null} | desert [3428.32,1.6,-21.55] hp 8 | Help Dallan with the bore test◆ Pull the cutoff when the drill needle touches red
+  stats: {"play":2.7,"dialog":1.4,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":65,"says":5,"walked":9,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[32s +5s] the test: the cutoff on the red, the ground kicks after the stop: {"r":"used","target":{"kind":"npc","id":"dallan","x":3422.8,"z":-23.4,"label":"p_talk"},"state":"play","lines":10,"kicks":6,"second":true,"fail":null} | desert [3422.65,1.8,-25.12] hp 8 | Run the test again◆ Lever up: the drill runs◆ Cut at the red
+  stats: {"play":12,"dialog":1.4,"trans":0,"scene":6,"menu":0,"other":0,"lines":5,"words":60,"says":5,"walked":9,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[37s +5s] again: lever up, the bit down to the red, cut: {"waited":4.5,"kicks":6,"again":true,"early":0,"fail":null} | desert [3422.65,1.8,-25.12] hp 8 | Tear off the carbon
+  stats: {"play":10.7,"dialog":1.9,"trans":0,"scene":5.9,"menu":0,"other":0,"lines":7,"words":74,"says":7,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[41s +4s] the carbon torn off: {"r":"used","target":{"kind":"dt_strip","id":"p_tear","label":"p_tear"},"state":"play","lines":4,"strip":true,"item":true,"fail":null} | desert [3422.39,1.8,-25.54] hp 8 | Open the dig and reach the bottom
+  stats: {"play":3.1,"dialog":0.5,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":2,"words":23,"says":2,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[43s +1s] the dig's gate (the keypad): {"r":"used","target":{"kind":"c4gate","id":"p_code","label":"p_code"},"state":"shop","lines":0,"menu":"picked","open":true,"fail":null} | desert [3446.57,5.01,19.87] hp 8 | Go down to the temple's door
+  stats: {"play":13.5,"dialog":0.4,"trans":0,"scene":0,"menu":0.1,"other":0,"lines":1,"words":6,"says":1,"walked":53,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[44s +1s] down to the bottom: {"r":"state:dialog","y":0.2,"bottom":0.1999999999999993,"fail":null} | desert [3460.35,0.2,23.81] hp 8 | Open the temple door's seals (0/3)
+  stats: {"play":22.5,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":63,"says":3,"walked":21,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[47s +2s] the warm seals (ball): {"seals":[true,true,true],"passes":1,"cold":0,"fail":null} | desert [3464.35,0.2,27.47] hp 8 | Enter the Temple of Bù
+  stats: {"play":27.5,"dialog":1.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":31,"says":2,"walked":12,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[50s +3s] into the temple: {"r":"transition","from":"desert","to":"butemple","seen":true,"fail":null} | butemple [3821.5,0,-4.8] hp 8 | Read the great carving in the temple
+  stats: {"play":2.2,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":26,"says":1,"walked":2,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+[51s +1s] the great carving → chapter 5: {"r":"used","target":{"kind":"c4carve","id":"p_carving","label":"p_carving"},"state":"play","lines":48,"carving":true,"chapter":"steam","fail":null} | desert [3351.5,5,1.5] hp 8 | Get into FunFrock's condenser hall
+  stats: {"play":10.6,"dialog":7.1,"trans":0.7,"scene":3.8,"menu":0,"other":0,"lines":24,"words":377,"says":24,"walked":14,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[250.5] stuck at (3460.5, 23.7): replan
+[258.0] go → (3463.9, 26.8) plan ok=true pts=2 left=0.27
+[263.0] go → (3463.9, 27.2) plan ok=true pts=2 left=0.22
+[265.8] go → (3464.7, 27.7) plan ok=true pts=2 left=0.12
+[271.6] go → (3464.3, 30.7) plan ok=false pts=2 left=0.42
+[273.5] go: transition (desert → desert, trans true) at (3464.42, 29.44)
+[274.6] go → (3835.6, -4.6) plan ok=true pts=2 left=0.54
+[280.4] threat: fight
+[282.2] fight tmite1 d=5.3 st=dead aim=none e@3834.2,0.0,-0.2 me@3831.6,0.3,-4.5 ball=idle hp 2→0 me 8 mp 9
+[282.2] grab: 0 pickups, hp 8
+[282.2] fight → {"left":0,"dead":false,"hp":8,"t":1.2}
+[284.0] go → (3835.6, -4.6) plan ok=true pts=2 left=0.16
+stats total: {"play":239.8,"dialog":23.1,"trans":2.8,"scene":30.9,"menu":0.1,"other":0,"lines":73,"words":1152,"says":73,"walked":514,"hpLost":2,"deaths":0,"rooms":3,"chapter":"steam","coinsNow":11,"hpNow":8,"cloversNow":3,"revives":0}
+kept save-07.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     19 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

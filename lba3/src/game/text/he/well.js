@@ -31,7 +31,7 @@ Object.assign(STR.he, {
   pr_gil_told: 'אמרתי לך. אותה בעיטה שלימדתי את ארתור.',
   pr_lid_ball: '(הכדור פשוט ניתר ממנו. צריך כאן משקל.)',
   pr_nudge_kick: 'אגרסיבי ({b}), ואז {k} ליד המכסה',
-  p_kick: 'בעיטה',
+  p_kick: 'לבעוט',
 
   // ---- the harbour: Doran sleeps through anything but the bell
   pr_tw_xil_rope: 'אני צריך חבל לבאר של העיר. יש משהו כזה על הדוברה?',

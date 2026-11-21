@@ -5,7 +5,7 @@ import { STR } from '../../i18n.js';
 Object.assign(STR.he, {
   life_title: 'ברחבי העיר',
   n_bram: 'בראם', n_odile: 'השוטרת אודיל', n_nell: 'נל',
-  p_drink: 'שתייה', p_take: 'לקיחה', p_place: 'הנחה', p_cool: 'קירור', p_pump: 'שאיבה',
+  p_drink: 'לשתות', p_take: 'לקחת', p_place: 'להניח', p_cool: 'לקרר', p_pump: 'לשאוב',
   it_pliers: 'צבת', itd_pliers: 'הצבת של טווינסן, חזרה מתיבת הסירה של ארתור. קצת צבועה.',
   it_coupler: 'מצמד חום', itd_coupler: 'מצמד החום האסמרי שקסיל הזמין בשביל נל. הוא מתחמם עד שהוא מתייצב.',
   // a reward that was still lying on the ground when the game was saved: given on loading

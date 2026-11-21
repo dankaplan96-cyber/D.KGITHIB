@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_balradio: 'בלדינו (רדיו)', n_zoeradio: 'זואי (רדיו)', n_miraradio: 'מירה (רדיו)', n_okuradio: 'אוקו (רדיו)',
-  p_up: 'עלייה', p_down: 'ירידה',
+  p_up: 'לעלות', p_down: 'לרדת',
 
   // the shaft
   c3_arrive: 'המעלית נעצרת בתחתית הפיר. מעל, הקידוח ממשיך לטחון.',

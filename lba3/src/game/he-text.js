@@ -7,7 +7,7 @@ import { STR } from './i18n.js';
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_knock: 'דפיקה', p_cock_co: 'סיבוב', p_lockbar: 'הרמה',
+  p_knock: 'לדפוק', p_cock_co: 'לסובב', p_lockbar: 'להרים',
 
   // chapter 11: the shaft's test receiver
   sh_bal_teach: 'עוד דבר, ליד הקידוח. תעמוד על לוח הנחושת. תקפיץ את הכדור מהלוח: במטרה הזאת אי אפשר לפגוע ישר.',
@@ -108,7 +108,7 @@ Object.assign(STR.he, {
   a_shop_zeelich: 'הדוכן של נרה',
   a_sh_blowgun: 'רובה נשיפה, עם שישה חצים', a_sh_darts: 'שלושה חצים', a_sh_penguin: 'פינגווין מכני־ניטרו', a_sh_lantern: 'פנס נחושת',
   a_sh_laser: 'אקדח לייזר אסמרי, עם תא גביש', a_sh_cell: 'תא גביש: חמש יריות לייזר', a_sh_blowtron: 'בלואוטרון (עבודת מוסקיבים)',
-  p_trade: 'מסחר', p_take: 'לקיחה', p_look2: 'הסתכלות',
+  p_trade: 'לסחור', p_take: 'לקחת', p_look2: 'להסתכל',
 
   // ---- Nara's case on Zeelich's street
   a_nara_1: 'סחורה אסמרית. האקדח הזה ירד משולחן העבודה של חצר המעבורות: הוא עובד על תא גביש, או על הקסם שלך אם אין ברירה.',
@@ -415,7 +415,7 @@ Object.assign(STR.he, {
   bl_ba_2x: 'הממסרים מוכנים, אבל בלי וסתים הם רק צועקים. תגלה מי מכר, ותביא את הנתונים. טסה לא יכולה לבנות בעיניים עצומות.',
   bl_te_end4x: 'אז זה הבית. פניק מנהל שם את הדלפק, והוא יגיד לך שהכול בסדר. זה תמיד בסדר.',
   n_bl_fennick: 'פניק', n_bl_garrow: 'גארו', n_bl_odra: 'נאן אודרה', n_bl_jory: "ג'ורי",
-  p_next: 'היד הבאה',
+  p_next: 'לעבור ליד הבאה',
   bl_mk_out: 'יציאה',
 
   bh_te_1: 'המצוף שלי בתנור של קורווין. עכשיו חסרים לי רק הנתונים.',
@@ -649,7 +649,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_vesk: 'וסק', n_worker: 'עובד', n_guard: 'שומר', n_dw_guard: 'שומר', n_radio: 'רדיו', n_baldino: 'בלדינו',
-  p_valve: 'סיבוב', p_look: 'בדיקה',
+  p_valve: 'לסובב', p_look: 'לבדוק',
 
   c1_arrive_1: 'המעבורת של המיזם גולשת לתוך הנמל בלי קול. בלי מפרשים, בלי משוטים, רק זוהר כחול מתחת לגוף הספינה.',
   c1_vesk_speech: 'תושבי אי סיטדל! שמי וסק. המיזם המשותף מביא לכם חום, אור ומים. נו, המים יחזרו בקרוב. אני מבטיח.',
@@ -823,7 +823,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_ilkaradio: 'אילקה (רדיו)', n_yornaradio: 'יורנה (רדיו)', n_heskradio: 'הסק (רדיו)', n_pimradio: 'פים (רדיו)',
-  p_relay: 'הצבת ממסר', p_fly: 'טיסה', p_station: 'שימוש',
+  p_relay: 'להציב ממסר', p_fly: 'לטוס', p_station: 'להשתמש',
   fly_title: 'הדאון של הסק: לאן?',
   fly_citadel: 'אי סיטדל', fly_desert: 'האי המדברי', fly_hamalayi: 'ההמלאיה',
   fly_done: '(בוצע)', fly_here: '(אתה כאן)',
@@ -937,7 +937,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_nara: 'נרה', n_oku: 'אוקו',
-  p_climb: 'הרמה', p_brake: 'בלימה', p_console: 'שימוש', p_dial: 'סיבוב', p_mic: 'שידור', p_bench: 'הרכבה', p_shaft: 'ירידה',
+  p_climb: 'להרים', p_brake: 'לבלום', p_console: 'להשתמש', p_dial: 'לסובב', p_mic: 'לשדר', p_bench: 'להרכיב', p_shaft: 'לרדת',
 
   c2_arrive: 'שעות אחרי שעזבה את טווינסאן, הספינה נוחתת בזיליך. השמיים כאן ורודים, והאיים צפים על ים של צמר גפן.',
   c2_doran_1: 'עד כאן אני, טווינסן. אשמור את הספינה חמה ליד משטח הנחיתה. אם וסק ישאל, לא ראית אותי.',
@@ -1069,7 +1069,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_balradio: 'בלדינו (רדיו)', n_zoeradio: 'זואי (רדיו)', n_miraradio: 'מירה (רדיו)', n_okuradio: 'אוקו (רדיו)',
-  p_up: 'עלייה', p_down: 'ירידה',
+  p_up: 'לעלות', p_down: 'לרדת',
 
   // the shaft
   c3_arrive: 'המעלית נעצרת בתחתית הפיר. מעל, הקידוח ממשיך לטחון.',
@@ -1223,7 +1223,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_hesk: 'הסק', n_tarra: 'אמא טארה', n_ilka: 'הפרופסורית אילקה', n_dallan: 'דאלן', n_dkid: 'סאני', n_dtrader: 'ברוסק', n_weaver: 'לומי',
-  p_rope: 'הרמה', p_desk: 'חיפוש', p_code: 'הקשת קוד', p_carving: 'בדיקה', p_ride: 'נסיעה', p_listen: 'הקשבה', p_push: 'דחיפה',
+  p_rope: 'להרים', p_desk: 'לחפש', p_code: 'להקיש קוד', p_carving: 'לבדוק', p_ride: 'לנסוע', p_listen: 'להקשיב', p_push: 'לדחוף',
 
   // arrival
   c4_arrive: 'בחזרה בטווינסאן, דורן מחליף את הספינה במעבורת של המיזם. יומיים דרומה מסיטדל, היא גולשת אל המים הרדודים של האי המדברי.',
@@ -1370,7 +1370,7 @@ Object.assign(STR.he, {
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_dig: 'חפירה', p_fill: 'מילוי', p_board: 'עלייה', p_relief: 'פתיחה',
+  p_dig: 'לחפור', p_fill: 'למלא', p_board: 'לעלות', p_relief: 'לפתוח',
 
   // later in Kesh: the plan, then the setback
   c5_narr: 'מאוחר יותר, בקש.',
@@ -1466,7 +1466,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_yorna: 'יורנה', n_pim: 'פים', n_lhar1: 'טאשי', n_lhar2: 'דאווה', n_lhar3: 'נורבו הזקן',
-  p_winch: 'כננת', p_crank: 'סיבוב הידית', p_heat: 'הפעלה',
+  p_winch: 'להפעיל את הכננת', p_crank: 'לסובב את הידית', p_heat: 'להפעיל',
 
   c6_narr: 'הדאון של פאנפרוק נוחת בכוח בשלג של מרגלות ההמלאיה. הוא לא יטוס שוב בלי גבעה לזנק ממנה.',
   c6_hesk_1: 'אמרתי שהוא דואה. לא אמרתי שהוא נוחת. אני אשאר איתו ואחפור אותו החוצה. אתה תמצא את הפתח הזה.',
@@ -1543,7 +1543,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_keeper: 'ספה', n_arthurradio: 'ארתור (רדיו)',
-  p_mirror: 'סיבוב', p_scope: 'הסתכלות', p_vent: 'פתיחה',
+  p_mirror: 'לסובב', p_scope: 'להסתכל', p_vent: 'לפתוח',
 
   c7_narr: 'בוקר במנזר. שביל הרכס מטפס אל תוך העננים.',
   c7_yorna_1: 'במעלה הרכס, ואז אל הכיפה. ספה יהיה ליד הטלסקופ שלו. הוא תמיד שם.',
@@ -1611,7 +1611,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_farmer1: 'האיכר ג\'וס', n_farmer2: 'אמא ברין', n_farmer3: 'גרול',
-  p_lever: 'משיכה', p_shelter: 'בדיקה',
+  p_lever: 'למשוך', p_shelter: 'לבדוק',
 
   c8_narr: 'הדאון מחליק מעל הצוקים ונוחת על הרמה שמעל העיר. למטה, סיטדל היא כבר לא האי שטווינסן עזב.',
   c8_hesk_1: 'ספינות של המיזם בנמל החלל שלכם, ותור לאורך כל הגשר. אני לוקח את הדאון בחזרה דרומה לפני שייקחו גם אותו. בהצלחה, טווינסן.',
@@ -1707,7 +1707,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_clerk: 'הפקיד אוטבו', n_chair: 'חבר המועצה אמארו', n_councilB: 'חברת המועצה סלה', n_councilC: 'חבר המועצה ברום', n_archivist: 'הארכיונאי',
-  p_cabinet: 'חיפוש', p_coat: 'לקיחה', p_counter: 'הגשה',
+  p_cabinet: 'לחפש', p_coat: 'לקחת', p_counter: 'להגיש',
   chapter_council: 'המועצה',
 
   c9_narr: 'ספינת המיזם נוחתת בנמל החלל של זיליך במשב של ענן ורוד. הנוסעים שלה ממהרים לכיוון הפלטפורמה של המיזם. אף אחד לא מסתכל פעמיים על עוד נוסע.',
@@ -1802,7 +1802,7 @@ Object.assign(STR.he, {
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_service: 'דלת השירות', p_compare: 'להניח עליו את ההעתק', p_stop: 'הפעלת העצירה', p_clip: 'חיבור המבודד',
+  p_service: 'לעבור בדלת השירות', p_compare: 'להניח עליו את ההעתק', p_stop: 'להפעיל את העצירה', p_clip: 'לחבר את המבודד',
   n_cn_iso: 'מבודד',
 
   // ---- the archive's door: Vesk's standing order
@@ -1962,7 +1962,7 @@ Object.assign(STR.he, {
   set_h_autoctrl_on: 'גיימפד: תנועה מודרנית ומצלמה חופשית. מקלדת: תנועה קלאסית ומצלמה עוקבת.', set_h_autoctrl_off: 'התנועה והמצלמה שבחרתם נשארות.',
   set_h_cam_lba: 'שוטים קבועים עוקבים אחרי טווינסן, כמו ב־LBA2.', set_h_cam_follow: 'מאחורי הגב של טווינסן; מסתובבת איתו.', set_h_cd: 'כמה קרובה המצלמה: המצלמה העוקבת מאחוריו, והמבט בחדרים הגדולים.', set_h_cam_free: 'מסובבים בגרירה ימנית, בסטיק הימני או ב־{l} / {r}.',
   set_h_q_battery: 'על סוללה: עיבוד חסכוני.',
-  set_h_q_auto: 'אוטומטית ({s}): נבחרת למחשב הזה ולמקור החשמל בדקה הראשונה בערך של המשחק, כדי לשמור על 55–60 פריימים בשנייה, ונשארת.',
+  set_h_q_auto: 'אוטומטית ({s}): נבחרת למחשב הזה ולמקור החשמל בדקה הראשונה בערך של המשחק, כדי לשמור על {f} פריימים בשנייה, ונשארת.',
   set_h_res_auto: 'מורידה את הרזולוציה כדי לשמור על קצב הפריימים.', set_h_res_full: 'תמיד הרזולוציה המלאה.',
   set_h_aa_msaa: 'קצוות נקיים יותר, יותר עבודה למעבד הגרפי.', set_h_aa_fxaa: 'מסנן קל, קל יותר למעבד הגרפי.', set_h_aa_low: 'גרפיקה נמוכה משתמשת תמיד ב"מהירים".',
   set_h_mm_hud: 'מוצגת כשהממשק "תמיד מוצג".',
@@ -2337,7 +2337,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_veskwire: 'וסק (על הקו)',
-  p_cutoff: 'ניתוק', p_runup: 'הפעלה', p_heat: 'העברה', p_tear: 'תלישה',
+  p_cutoff: 'לנתק', p_runup: 'להפעיל', p_heat: 'להעביר', p_tear: 'לתלוש',
 
   // ------------------------------------------------------------ chapter 4: the test
   dt_board_pre: '(שתי חוגות. מקדחה: העומס של הקידוח, המחוג על סימן אדום. קרקע: עמדת האזנה מתחת למשטח. רשם מצייר את שתיהן.)',
@@ -2419,7 +2419,7 @@ Object.assign(STR.he, {
 Object.assign(STR.he, {
   lf_title: 'המעבורת האחרונה',
   n_lf_ossel: 'רב החובל אוסל', n_lf_wick: 'וויק',
-  p_sail: 'הפלגה', p_turn: 'סיבוב', p_bell: 'צלצול',
+  p_sail: 'להפליג', p_turn: 'לסובב', p_bell: 'לצלצל',
 
   // ---- the sailings board on the West Pier
   lf_board_closed: 'מעבורת השמיים "סבלנות". המזח המערבי - סמטת הטחנה. הפלגות לפי הפעמון. מודבק לרוחבו: הקו סגור. המעבורות האסמריות משרתות את כל התחנות.',
@@ -2632,7 +2632,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   hs_title: 'בית המשוגעים הישן',
-  p_hs_open: 'פתיחה', p_hs_read: 'קריאה', p_hs_unlock: 'פתיחת המנעול',
+  p_hs_open: 'לפתוח', p_hs_read: 'לקרוא', p_hs_unlock: 'לפתוח את המנעול',
   n_hs_foreman: 'מנהל העבודה אורדו', n_hs_cook: 'מאמא פופה', n_hs_worker1: 'זיזי', n_hs_worker2: 'טלם', n_hs_worker3: 'גורו', n_hs_worker4: 'קסו הזקן', n_hs_sleeper: 'וויקס',
   it_hs_key: 'המפתח של וסק', itd_hs_key: 'מפתח נחושת על תווית סגולה: "ו. · משרד". הוא היה מתחת לקש של ארגז מזמזם.',
   hs_j_crate: 'למצוא מה מזמזם במחסן שמתחת להוסטל',
@@ -3368,10 +3368,10 @@ Object.assign(STR.he, {
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_shuttle: 'עלייה',
-  p_ship: 'עלייה',
-  p_ferry: 'עלייה',
-  p_glider: 'טיסה',
+  p_shuttle: 'לעלות',
+  p_ship: 'לעלות',
+  p_ferry: 'לעלות',
+  p_glider: 'לטוס',
   isle_title: 'מעבורת אסמרית: לאן?',
   tr_title_ship: 'חללית: לאן?',
   tr_title_ferry: 'מעבורת: לאן?',
@@ -3412,7 +3412,7 @@ Object.assign(STR.he, {
   port_board: 'נמל החלל של סיטדל · יציאות: נמל החלל של זיליך, בחללית. לאיים של זיליך, מחליפים שם למעבורת אסמרית.',
   port_grounded: 'פתק על הפתח של הספינה: "כל טיסות הנוסעים מקורקעות בפקודת המיזם המשותף. לצוותי המיזם בלבד."',
   // SPACEPORT-1: the terminals' counters and boards
-  p_tickets: 'כרטיסים',
+  p_tickets: 'לקנות כרטיסים',
   room_terminal: 'נמל החלל של סיטדל', room_zterminal: 'נמל החלל של זיליך',
   tm_grounded: 'אין טיסות נוסעים, אני חוששת. המיזם המשותף קירקע אותן. רק ספינות של המיזם, עד שיגידו אחרת.',
   tm_gate_shut: 'השער סגור. מקורקע: טיסות הנוסעים הושעו בידי המיזם המשותף.',
@@ -3543,7 +3543,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   k_title: 'קש',
-  p_turn: 'סיבוב', p_fit: 'התקנה',
+  p_turn: 'לסובב', p_fit: 'להתקין',
   it_kscreen: 'הרשת של לומי', itd_kscreen: 'רשת חול שלומי ארגה בשביל לוכד הרוח של החדר הקריר. בפסים, כמובן.',
   k_toast_screen: 'הרשת של לומי',
   k_toast_owed: 'התשלום של ברוסק: {n} קאשים',
@@ -3635,7 +3635,7 @@ Object.assign(STR.he, {
   wp_pocketset: 'ערכת הכיס', wp_lance: 'רומח המשאבה',
   it_pocketset: 'ערכת הכיס של ארתור', itd_pocketset: 'מחזיקים אותה קדימה כדי למצוא דברים נסתרים שמזמזמים בטווח 12 מ\': השריקה מואצת, השעון עולה, ומחוג ליד הרגליים מראה את הכיוון. התקפה: צפצוף שמבלבל את רחפני המיזם ל־3 שניות.',
   it_lance: 'רומח המשאבה של בראם', itd_lance: 'משאבת היד הרזרבית של בראם על מכל. התקפה: סילון מים. הוא מקרר מה שחם מדי לגעת בו והודף אויב 3 מ\' אחורה; קרדיות גביש קופאות ל־2 שניות. הוא לא פוגע באף אחד. 8 סילונים במכל: ממלאים בכל מים (שוקת, באר, חבית, הים).',
-  p_fill: 'מילוי', p_turn: 'סיבוב', p_lift: 'הרמה',
+  p_fill: 'למלא', p_turn: 'לסובב', p_lift: 'להרים',
   // ---- the pocket set
   e2_ar_hint: 'אבא! הכנתי לך משהו. זה על השטיח ליד הרדיו שלי!',
   e2_set_look: 'קופסת עץ קטנה עם חוגה, מחוג אדום ואנטנת חוט. היא שורקת חלש מאוד.',
@@ -3687,7 +3687,7 @@ Object.assign(STR.he, {
   it_fork: 'המזלג השר של אילקה', itd_fork: 'הכלי של החפירה למציאת גבישים. התקפה: מקישים בו. גביש חם בטווח מצלצל: קרום נסדק, גביש ישן מתעורר וזוהר, גלגל גבישים תקוע מסתובב. קרדיות גביש וזוחלים בטווח 6 מ\' מתנודדים ל־1.5 שניות; המגן בעל תאי הגביש של זקיף נופל למכה אחת. 5 שניות עד שהוא משתתק. רק על גבישים.',
   it_line: 'חבל אסמרי', itd_line: 'חוט דביק של חבלן אסמרי על סליל יד. התקפה: זורקים אותו, עד 14 מ\'. טבעת חבל מושכת אותך מעל פער או אל מדף; דבר משוחרר מגיע אליך; אויב קל נגרר פנימה; המגן של זקיף נמשך הצידה. הוא נאחז רק בטבעות, בדברים משוחררים ובאויבים קלים.',
   it_heatflask: 'בקבוק חום', itd_heatflask: 'השרטוט של בלדינו, הנפחות של טאשי, תא חום של המיזם בפנים. {e} ליד עמוד חום, פתח קיטור או אש שואב את החום שלהם. התקפה: משחררים אותו קדימה. הוא מפשיר וממיס, ושורף אויבים בטווח 2.5 מ\' ב־2 (יצורי קרח 4). מטען אחד; החום דועך תוך 90 שניות.',
-  p_draw: 'שאיבת חום',
+  p_draw: 'לשאוב חום',
   a_sh_line: 'חבל אסמרי: חוט דביק על סליל יד',
   // ---- the singing fork (chapter 4)
   e2b_ilka_f1: 'החזרת לי את המחברת. אז אתה יכול לקבל גם את זה.',
@@ -3748,7 +3748,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_ev_hedda: 'הדה', n_ev_tobin: 'טובין',
-  p_sched: 'קריאת לוח הזמנים', p_route: 'קריאת המסלול',
+  p_sched: 'לקרוא את לוח הזמנים', p_route: 'לקרוא את המסלול',
 
   // ------------------------------------------------------------ the arrival: the cart at the shut gate
   ev_cart_1: '(מכאן למעלה אני רואה את הסמטה שלנו. העגלה של המיזם ירדה עד השער שלה, מצאה אותו סגור, ופנתה לשדות. כל המושבים ריקים.)',
@@ -3835,7 +3835,7 @@ Object.assign(STR.he, {
 Object.assign(STR.he, {
   life_title: 'ברחבי העיר',
   n_bram: 'בראם', n_odile: 'השוטרת אודיל', n_nell: 'נל',
-  p_drink: 'שתייה', p_take: 'לקיחה', p_place: 'הנחה', p_cool: 'קירור', p_pump: 'שאיבה',
+  p_drink: 'לשתות', p_take: 'לקחת', p_place: 'להניח', p_cool: 'לקרר', p_pump: 'לשאוב',
   it_pliers: 'צבת', itd_pliers: 'הצבת של טווינסן, חזרה מתיבת הסירה של ארתור. קצת צבועה.',
   it_coupler: 'מצמד חום', itd_coupler: 'מצמד החום האסמרי שקסיל הזמין בשביל נל. הוא מתחמם עד שהוא מתייצב.',
   // a reward that was still lying on the ground when the game was saved: given on loading
@@ -4068,7 +4068,7 @@ Object.assign(STR.he, {
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_unclip: 'ניתוק המבודד', p_joint: 'חיבור המבודד למפרק',
+  p_unclip: 'לנתק את המבודד', p_joint: 'לחבר את המבודד למפרק',
   n_zl_irsaradio: 'אירסה (רדיו)',
 
   // ---- the workshop: Baldino wants his isolator back
@@ -4150,7 +4150,7 @@ Object.assign(STR.he, {
 Object.assign(STR.he, {
   ow_title: 'מהקיר',
   n_ow_tali: 'טלי',
-  p_move: 'הזזה',
+  p_move: 'להזיז',
 
   // ---- before she has told him the rule
   ow_pre_direct: 'היי! לא ישר על הפעמון שלי!',
@@ -4245,7 +4245,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   om_title: 'עוד מקום אחד',
-  p_tune: 'כוונון', p_sit: 'ישיבה',
+  p_tune: 'לכוונן', p_sit: 'לשבת',
 
   // ---- the fourth chair
   om_chair_0: '(כיסא רביעי ליד השולחן, עם כרית ירוקה ישנה. זואי הוציאה אותו.)',
@@ -4410,10 +4410,10 @@ Object.assign(STR.he, {
   t2_goal_tap: 'לנסות את הברז בגינה ליד הדלת',
   t2_goal_barrels: 'להזיז את החבית ליד הבית במכה של כדור הקסם',
   t2_goal_pipe: 'לקפוץ מעל צינור הנחושת בדרך החוצה, או להקיף אותו',
-  t2_k_search: '{k} חיפוש בארון',
-  t2_k_talk: '{k} דיבור',
-  t2_k_try: '{k} ניסיון בברז',
-  t2_k_jump: '{k} קפיצה · עם תנופה',
+  t2_k_search: '{k} לחפש בארון',
+  t2_k_talk: '{k} לדבר',
+  t2_k_try: '{k} לפתוח את הברז',
+  t2_k_jump: '{k} לקפוץ · עם תנופה',
   t2_zoe_call: 'טווינסן! כאן.',
   t2_ask_inv: 'תסתכל עליהם טוב.',
   t2_ask_tap: 'תנסה את ברז הגינה. אם גם הוא יבש, זה לא רק המטבח שלנו.',
@@ -4454,7 +4454,7 @@ Object.assign(STR.he, {
 // entries in a list. A key missing here shows the English.
 
 Object.assign(STR.he, {
-  p_lock: 'נעילה', p_set: 'כיוון',
+  p_lock: 'לנעול', p_set: 'לכוון',
 
   // ------------------------------------------------------------ chapter 6: the line
   ps_lamps: '(המנורות על מסילות המעלית מתנדנדות ומהבהבות: שלוש קפיצות, ואז שקט. הכבל קופץ איתן.)',
@@ -4502,7 +4502,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   pp_title: 'ברחבי האיים',
-  p_knock: 'דפיקה',
+  p_knock: 'לדפוק',
   n_tibbo: 'טיבו', n_marl: 'מרל, מאלפת הכלבים', n_oni: 'אוני',
 
   // ---- Tibbo's Fix and Fill
@@ -4582,10 +4582,10 @@ Object.assign(STR.he, {
   n_qc_mattoradio: 'מאטו (בצינור)',
   n_qc_matto: 'מאטו',
   n_dp_tolliradio: 'טולי (בצינור)',
-  p_qc_big: 'טריקת השסתום הגדול',
-  p_qc_mid: 'טריקת השסתום האמצעי',
-  p_qc_small: 'טריקת השסתום הקטן',
-  p_qc_riser: 'פתיחת הצינור העולה',
+  p_qc_big: 'לטרוק את השסתום הגדול',
+  p_qc_mid: 'לטרוק את השסתום האמצעי',
+  p_qc_small: 'לטרוק את השסתום הקטן',
+  p_qc_riser: 'לפתוח את הצינור העולה',
 
   // ---- the riser at the bottom of the shaft
   qc_listen_1: '(זו לא האדמה. מישהו דופק על הצינור הזה ביד: אחת כבדה, שתיים קלות, ואז הפסקה.)',
@@ -4659,12 +4659,12 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   sw_title: 'מתחת לרחוב',
-  p_sw_lift: 'הרמה', p_sw_ease: 'סגירה עדינה', p_sw_down: 'ירידה', p_sw_up: 'עלייה',
+  p_sw_lift: 'להרים', p_sw_ease: 'לסגור בעדינות', p_sw_down: 'לרדת', p_sw_up: 'לעלות',
   it_sw_map: 'המפה של ארתור', itd_sw_map: 'מצוירת בצבעי פנדה: הרחוב, הפתח, סולם, X גדול. "א + ל. הכניסה אסורה. (לא את, לולו.)"',
   sw_toast_owed: 'התלתן מהתיבה הישנה: בכיס שלך',
   sw_toast_owed2: 'התלתן מהמערה: בכיס שלך',
   n_fosse: 'פוס',
-  p_sw_bolt: 'שחרור התפס', p_sw_unlock: 'פתיחת המנעול', p_sw_shut: 'סגירה',
+  p_sw_bolt: 'לשחרר את התפס', p_sw_unlock: 'לפתוח את המנעול', p_sw_shut: 'לסגור',
   it_sw_key: 'המפתח של ברסימון', itd_sw_key: 'מפתח נחושת קטן עם כוכב בראש. לחדר הקטן שמתחת לעיר.',
 
   // ---- the street hatch
@@ -4986,9 +4986,10 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_zl_kell: 'קל', n_zl_brel: 'ברל', n_zl_irsa: 'אירסה', n_veskhorn: 'וסק (צינור דיבור)',
-  p_tap: 'ניסיון', p_feel: 'מגע', p_listen: 'הקשבה', p_cock: 'פתיחה', p_strip: 'תלישה', p_plate: 'קריאה',
-  p_cock_sq: 'פתיחת הקו של הכיכר', p_cock_ho: 'פתיחת הקו של הבתים',
-  p_hook: 'לחבר שרשרת', p_bell: 'צלצול', p_zt_bell: 'לצלצל בפעמון', p_feed: 'להפעיל מנוע', p_ride: 'עלייה', p_cart: 'דחיפה', p_dial: 'סיבוב', p_crank: 'סיבוב הידית', p_enter: 'כניסה', p_draw: 'מילוי',
+  p_tap: 'לפתוח את הברז', p_feel: 'לגעת', p_listen: 'להקשיב', p_cock: 'לפתוח', p_strip: 'לתלוש', p_plate: 'לקרוא',
+  p_cock_sq: 'לפתוח את הקו של הכיכר', p_cock_ho: 'לפתוח את הקו של הבתים',
+  p_feel_up: 'לגעת בצינור העליון', p_feel_lo: 'לגעת בצינור התחתון', p_feel_cu: 'לגעת בצינור הנחושת',
+  p_hook: 'לחבר שרשרת', p_bell: 'לצלצל', p_zt_bell: 'לצלצל בפעמון', p_feed: 'להפעיל מנוע', p_ride: 'לעלות', p_cart: 'לדחוף', p_dial: 'לסובב', p_crank: 'לסובב את הידית', p_enter: 'להיכנס', p_draw: 'למלא',
 
   // ------------------------------------------------------------ chapter 1: home
   prh_ar_boat: 'התורן מחזיק! טים אומר שסירה צריכה מים. אני אומר שקודם היא צריכה מפרש.',
@@ -5157,7 +5158,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_oren: 'אורן',
-  p_governor: 'בדיקה', p_hold: 'החזקה',
+  p_governor: 'לבדוק', p_hold: 'להחזיק',
 
   og_mira_call1: 'טווינסן? זאת מירה, על הממסר של המגדלור של זואי. קווי המים מתחת לעיר דופקים.',
   og_mira_call2: 'כל מכה הולכת ישר למקלטים. גילברט אומר שהמחברים הישנים דולפים.',
@@ -5539,7 +5540,7 @@ Object.assign(STR.he, {
   pr_gil_told: 'אמרתי לך. אותה בעיטה שלימדתי את ארתור.',
   pr_lid_ball: '(הכדור פשוט ניתר ממנו. צריך כאן משקל.)',
   pr_nudge_kick: 'אגרסיבי ({b}), ואז {k} ליד המכסה',
-  p_kick: 'בעיטה',
+  p_kick: 'לבעוט',
 
   // ---- the harbour: Doran sleeps through anything but the bell
   pr_tw_xil_rope: 'אני צריך חבל לבאר של העיר. יש משהו כזה על הדוברה?',
@@ -5585,7 +5586,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   w_title: 'בית המלאכה של בלדינו',
-  p_switch_on: 'הדלקה', p_switch_off: 'כיבוי', p_tap_open: 'פתיחת הברז', p_tap_close: 'סגירת הברז', p_crank: 'סיבוב הידית',
+  p_switch_on: 'להדליק', p_switch_off: 'לכבות', p_tap_open: 'לפתוח את הברז', p_tap_close: 'לסגור את הברז', p_crank: 'לסובב את הידית',
 
   // ---- Baldino brings it up (chapter 3)
   w_bal_ask1: 'כל עוד אתה כאן. זוג הניסוי שלי, על השולחן הארוך. שני ממסרים: אחד מדבר, השני מקשיב.',
@@ -5687,7 +5688,7 @@ Object.assign(STR.he, {
 Object.assign(STR.he, {
   tyl_title: 'שתים־עשרה שנה באיחור',
   n_tyl_ysel: 'יסל',
-  p_tyl_album: 'פתיחת האלבום',
+  p_tyl_album: 'לפתוח את האלבום',
   it_tyl_card: 'גלויה ישנה',
   itd_tyl_card: 'תמונה של הרחוב של זיליך, בת שתים־עשרה שנה. ממוענת ל"גברת עם המצלמה, דיוקנאות, שורת המרפאה". בלי שם, ואין שורה כזאת.',
   it_tyl_album: 'האלבום של יסל',
@@ -5764,7 +5765,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   zl_title: 'זיליך',
-  p_shove: 'דחיפה', p_roll: 'לקחת לחמנייה',
+  p_shove: 'לדחוף', p_roll: 'לקחת לחמנייה',
   zl_toast_owed: 'התשלום של סנאף: {n} קאשים',
 
   // ---- looks

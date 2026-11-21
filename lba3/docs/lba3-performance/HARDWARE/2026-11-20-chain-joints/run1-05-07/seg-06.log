@@ -1,0 +1,17 @@
+[0s +0s] continue (arrival): {"started":true,"taken":true} | desert [3292,2,4] hp 10 | Find the professor who found the crystals
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[1s +0s] Brel at the bridge: the way to the brass wheel: {"r":"absent:zl_brel","markers":1,"fail":"brel"} | desert [3292,2,4] hp 10 | Find the professor who found the crystals
+  stats: {"play":0,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+  STOP: brel
+FAIL the segment ran every step to its end "Brel at the bridge: the way to the brass wheel: brel"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+
+stats total: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"chapter":"dig","coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     2 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED

@@ -5560,4 +5560,369 @@ Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's 
   view clean), not by this work. Shortening it would mean more prep a frame behind the black — a trade against the
   in-view hitches those holds were made for; not done. The first arrival's ~2.3 s black (later visits ~0.3 s) stays.
 
+## JOINTS-BLENDER · started (CLOUD_ORDERS 57) · the desktop, 20.11.2026
+On branch **`joints-blender`** (from `ccr-c1c2c4b9-dep6ed` b94ab3d9; pushed): rig.js and characters.js are the desktop's
+for this order. Done so far (details in `docs/lba-maturity/JOINTS-BLENDER.md` on that branch):
+- Twinsen traced (generator → `assets/poly/twinsen.json`, Blender 5.3 round trip byte-identical); diagnosed by poses
+  set on the rig and by the throw: the arm lives in the cape's side, LBA2's wing sleeve (WA-16).
+- **The user, 20.11: keep LBA2's wing sleeve; fix the motion; the joint work goes to the characters whose limbs show.**
+- `rig.js THROW`: the back leg loads in the wind-up; a key at 0.135 s where the chest, the pelvis and the free arm lead
+  and the throwing arm lags — release frame unchanged (0.16 s). Before/after in `captures/joints-blender/`.
+- **JOINTS-BLENDER 2** (`7c3e80e9`): the cast's arms (`cast_poly.py`, 70 models, Arthur and the Grobos/Rabbibunnies
+  included) one shell from a dome in the shoulder through a rounded elbow to the wrist — no shoulder ball, no two tubes
+  meeting at the elbow; rolled sleeves end just past the elbow over a shaped forearm. +2.7 % triangles; every NPC loads
+  its model (no fallback). `JOINTS_OLD=1` rebuilds the shipped models byte for byte.
+- **JOINTS-BLENDER 3** (`531f2ce6`): Zoé's hip join centred on the joint (her sit lost the notch at the front of the
+  hip; triangles unchanged); Baldino's arms as the cast's (+104 triangles); Twinsen's wrist checked — the game never
+  turns the hand's bone, so cuff and fist can't part; left with the wing sleeve.
+- **JOINTS-BLENDER 4** (`40c6bfb2`): the cast's legs one shell through a rounded knee (23 models, +1.8 % triangles);
+  the shells' end caps take their nearest ring's weight (a cap's middle point stayed on the first bone: a spike at a
+  bent elbow or ankle). 189/189 NPCs load their model.
+- **JOINTS-BLENDER 5** (`0c47fcd8`, rig.js): measured per frame on flat ground — the sword combo, walk, stop, pickup and
+  the standing jump already held their feet (≤ 0.7 cm), unchanged. Fixed: the Normal mode's hop (Space) put the soles
+  6 cm into the ground and slid them 31 cm (now planted as the jump's crouch: 1.2 cm, ≤ 4.6 cm); the robe's run slid the
+  standing foot forward at 0.72 m/s (its cycle now matches its shorter stride, `ROBE_RUN_CYC` 0.82: 0.27 m/s, the same
+  speed). `tests/anim-polish.mjs` 55/55 on the branch.
+- Left: the full test on the branch (the playthrough chain), then the frame time (measurements last). Not merged into
+  the cloud's branch; for the cloud to apply when its audit allows.
+
+## CHAIN-V103 · the playthrough chain 01–14 on v103 (CLOUD_ORDERS 52.1) · the desktop, 20.11.2026
+v103 (`d1e0ec7f`), `tests/lib/seg.mjs` per segment from a scratch copy of v103's `tests\`, served by a node static server
+on 127.0.0.1:8977, Chrome headed on this Acer (GTX 1050 / UHD 630), ASSIST=1, each segment loading the last one's save.
+Logs, stats and the runner: `docs/lba3-performance/HARDWARE/2026-11-20-chain-v103/`.
+| Segment | Result | Game clock (play / dialogue / scenes, s) | Health lost | Wall |
+|---|---|---|---|---|
+| 01 prologue-surface | PASS | 321.1 / 23.9 / 20.6 | 0 | 141 s |
+| 02 prologue-cave | PASS | 115.1 / 3.6 / 6.4 | 0 | 34 s |
+| 03 project-a | PASS | 81.2 / 4.8 / 19.5 | 0 | 36 s |
+| 04 project-valves | PASS | 229.9 / 1.7 / 2.6 | 8 | 214 s |
+| 05 project-b | PASS | 456.1 / 32.3 / 15.0 | 2 | 87 s |
+| 06 zeelich | PASS | 434.8 / 25.2 / 29.1 | 14 | 393 s |
+| 07 dig | PASS | 232.5 / 23.1 / 30.9 | 2 | 80 s |
+| 08 steam | PASS | 280.5 / 14.5 / 10.6 | 1 | 57 s |
+| 09 pass | PASS | 243.2 / 13.9 / 48.1 | 1 | 95 s |
+| 10 observatory | PASS | 195.6 / 17.5 / 19.1 | 0 | 50 s |
+| 11 evacuation | PASS | 464.1 / 19.6 / 29.2 | 3 | 114 s |
+| 12 council | PASS | 332.6 / 31.2 / 18.7 | 0 | 244 s |
+| **12b throttle** | **FAIL (the test, not the game)** | 148.5 / 21.7 / 3.8 | 0 | 27 s |
+| 13 network (from the fixture `base-13`) | PASS | 655.1 / 27.8 / 10.6 | 10 | 490 s |
+| 14 shell (from 13's save) | PASS (the epilogue, Keep Exploring) | 312.7 / 35.4 / 7.7 | 11 | 44 s |
+No deaths and no Retry anywhere; no stalls logged; errors none in every verdict.
+- **12b:** every step passes up to the last; "Oren swings the lever; a hand holds it → the network" expects
+  `chapterKey === 'network'` and gets **`ballastra`** (objective "Board Doran's freighter at Citadel Spaceport"). That is
+  v103's order: `story/index.js ORDER` puts EXP-2's chapters after the throttle (`throttle, ballastra, balances, survey,
+  network`), and throttle.js goes on to Ballastra. **The segment is older than EXP-2** (its header still says "→ the
+  network (segment 13)"): for the cloud, 12b's last check should accept `ballastra`, and the chain has **no segment for
+  ballastra / balances / survey** (EXP-2's chapters 11–13) — they were not played here. 13 ran from the fixture
+  `base-13` (chapter `network`), so the chain jumped over them.
+- 13's first try failed with the harness (my runner rewrote the fixture's origin from `localhost:8123`; the fixtures
+  carry `localhost:8920`/`8921`, so the save never reached the page and Continue stayed hidden). Rewritten for any port
+  and rerun: PASS. Not the game.
+- Wall times are this machine's, for reference only (not a frame-time measurement; those are last in the queue).
+
+## CHAIN-JOINTS · the playthrough chain on the `joints-blender` branch (CLOUD_ORDERS 57, its full test) · the desktop, 20.11.2026
+`joints-blender` at `0c47fcd8` (= `b94ab3d9` with MILLS, + JOINTS-BLENDER 1–5), the same scratch tests and Chrome on
+this Acer's GTX 1050 as CHAIN-V103. Logs: `docs/lba3-performance/HARDWARE/2026-11-20-chain-joints/`.
+| Segment | Result | Against CHAIN-V103 |
+|---|---|---|
+| 01–04 | PASS | the same (health lost 0 / 1 / 0 / 8) |
+| 05 project-b | **FAIL from this run's own save-04; PASS from v103's save-04** | not the joints, below |
+| 06–12 | PASS | the same; ISO assists in 04, 06 (as v103) and 08 (3 drones/guards beaten) |
+| 12b throttle | FAIL (`ballastra`, not `network`) | the same: the segment predates EXP-2 (CHAIN-V103) |
+| 13 network (fixture `base-13`), 14 shell (13's save) | PASS, to the epilogue | the same; the pylons by ISO assist once (below) |
+No deaths, no Retry, no page or console errors in any segment.
+- **05:** "home: Zoé" → `cannot reach house: failed:transition`, he ends in the **pump room**. 04 left him 1.6 m from
+  where v103's run did ((−56.15, −36.65) against (−54.5, −36.5)), and from there `P.talk('zoe', {run: true})`'s way home
+  runs through the pump room's door. Cross-checked: this run's save-04 fails the same way on the branch (×2), on its
+  base `b94ab3d9` without JOINTS-BLENDER (×2) and **on v103 itself**; v103's save-04 passes on the branch. **For the
+  cloud:** the bot's route home from the lane's west end crosses the pump-room door's trigger (a player running the same
+  line would drop into the pump room too — worth a look at that door's trigger or the route).
+- **14's pylons:** the bot's `coreFight('pylons')` ran into its 300 s cap with two pylons and the ISO assist turned the
+  third. Repeated from the same save-13, three times each: the branch 1/3 stuck, `b94ab3d9` 0/3, **v103 2/3** — chance
+  in the bot, not this branch. **For the cloud:** the pylon fight stalls the bot about half the time on v103 too
+  (164–169 Vesk shots in the 300 s, health kept), a bot gap worth closing.
+- So on the branch the playthrough runs as on v103: JOINTS-BLENDER changes no gameplay. The models, the hop's plant and
+  the robe's run cycle are ready to merge when the cloud's audit allows (`joints-blender`, 5 commits over `b94ab3d9`).
+
+## V103-HE · chapters 1–2 on the real screen, in Hebrew (CLOUD_ORDERS 52.2, without the frame timings) · the desktop, 20.11.2026
+v103 (`d1e0ec7f`) served locally, Chrome on this Acer's GTX 1050, **1920×1080, Hebrew, Subtitle Size Extra large**
+(set in the settings before the new game). Evidence: `docs/lba3-performance/HARDWARE/2026-11-20-v103-he/`
+(`v103-he-ch1-2.jpg`: the title, a dialogue box, the inventory, the journal, the harbour's L pier, Twinsen's roof, the
+east street, the yard).
+- **Played in Hebrew:** `tests/playthrough/01–06` (the prologue, chapter 1 with the ferry's arrival, chapter 2's
+  arrival on Zeelich) at 1920×1080 in Hebrew: **all six PASS**, no page or console errors, 98 pictures after the steps.
+- **Every line in the box:** the opening, the well, chapter 1, chapter 2 and the ferry's lines in Hebrew (470) shown one by
+  one in the dialogue box at Extra large: **none cut, overflowing or off the screen; none falling back to English.** The
+  text is right-aligned and reads right to left (font 50.6 px). The longest (`c2_j_bal`, 323 characters) fills a box 633
+  px high, 59 % of the screen: it is shown whole, but it is a lot at once (those `c2_j_*` lines are the journal's).
+- **The places:** the turquoise sea and the stone L pier at the harbour, the board hip roof on Twinsen's house, the east
+  street from the square's ring: as CITADEL-ORIG-2 describes, nothing broken or missing seen.
+- **Small notes (no change made):** the street sign by Twinsen's yard reads "Bug St" in English in the Hebrew game; the
+  speaker's name tag sits at the box's left corner and the tutorial's prompt at the screen's left, where a right-to-left
+  reader starts on the right (a choice for the cloud, not a defect).
+- **Not done here:** frame p50/p95 at the harbour and the square against v95 — with the measurements, last in the queue
+  (the user's order).
+
+## GTX1050-AC · the measurements on mains (CLOUD_ORDERS 52.2, 55, 56, 57's frame time; 54's battery half pending) · the desktop, 20.11.2026
+**Where:** v104 (`22a4b7c8`) served locally; Chrome 158.0.8127.36 (Playwright's channel, a fresh profile), WebGL on
+**ANGLE D3D11, NVIDIA GeForce GTX 1050** (as the page reports it); window 1536×864, devicePixelRatio 1.25 (this laptop's
+1920×1080 panel at 125 %); Windows reports the panel at 60 Hz; power plan Balanced, on AC (Win32_Battery status 2, 95–100 %).
+The Windows 11 power-mode slider and Chrome's Energy Saver were not read (a fresh profile: Chrome's default, on at 20 %
+battery). Raw reports: `docs/lba3-performance/HARDWARE/2026-11-20-gtx1050-ac/`.
+- **FPS30-HW (55.2), Benchmark: Frame Rates, AC:** Auto (picked **High**) and Medium chosen by hand — at **30: 100 % on
+  pace on every route** (street, interior, combat, arrival; drawn intervals 33.1–33.6 ms), no ≥1.5× frame, no catch-up;
+  at 60 and Unlimited 100 % on pace (one 150 ms frame in combat at Unlimited). Frame callbacks: 8131 timestamps, distance
+  from a whole refresh p50 0.10 / p95 0.20 / max 0.80 ms — Chrome's timestamps do not jitter here. GPU ms per second at
+  30 about half of 60's (221 against 444 at Auto). 55.3 (F9 play, a phone video) and 55.4 (DevTools' meter) need hands
+  on the machine: not done.
+- **ARRIVAL-STEPS-HW (56), AC, Benchmark (Auto):** "scene changes' preparation behind the black": shader warm-up 40 / 16 /
+  315 ms (count / longest / total), textures 22 / 3 / 52, batch meshes 22 / 6 / 21, draw batches settle 22 / 1 / 12, draw
+  batches back 21 / 1 / 8, geometry 130 / 0 / 0, shadow batches 21 / 0 / 0 — **every step under 12 ms but the shader
+  warm-up's 16 ms**. Arrival behind the black at Low: 67 and 50 ms frames (geometry upload); in view after an arrival:
+  none over 33 ms at Medium; at High one 245 ms at 2.8 s (main thread 252 ms) and, as played, two over 33 (350, 369 ms).
+  Medium holds 60 fps on every route fixed and as played. The battery half (56.2–56.4) waits for the user to unplug.
+- **52.2, the harbour and the square, v103 against v95** (the game's own loop, High by Auto, 3 s warm + 10 s, twice each,
+  interleaved): identical — frame p50 16.7 / p95 16.9 / max 17 ms at both spots in both builds; draw calls square 191
+  against 193, harbour 286 against 282.
+- **57's frame time (JOINTS-BLENDER), the populated street, `b94ab3d9` against `joints-blender` (`0c47fcd8`), two rounds:**
+  Medium GPU p50 8.4–9.0 → 7.8–7.9 ms, render submit CPU 5.0–5.6 → 3.6–4.2 ms, calls 137 → 143–148; High GPU 8.5–8.8 →
+  7.5–7.6 ms. **No cost** (within the rounds' spread).
+- **A finding: Chrome's pace fell to ~57 Hz mid-session.** The first runs measured the refresh at 59.9–60.2 Hz; from the
+  full benchmark's High routes on, every frame was 17.4–17.7 ms (57 fps) with the GPU at 6–9 ms, and the benchmark's own
+  "with nothing drawn" probe gave 56.8 Hz; later runs measured 56.5–56.8 Hz on the title screen before anything heavy,
+  while Windows still reports the panel at 60 Hz. The same 17.4–17.7 ms pace as the user's laptop-build228 report
+  (PERF-HIGH). Not the game's work; its cause (Chrome's frame scheduling, the Intel/NVIDIA hybrid output on this Optimus
+  laptop, or a panel power feature) is not established — no settings were changed.
+- **JOINTS-BLENDER 5–6 for the cloud to merge** (`joints-blender` at `72c4d5c6`; 1–4 are merged): 5 = the Normal hop's
+  plant and the robe's run cycle (rig.js, anim-polish 55/55); 6 = Zoé's reach toward the tap (rig.js `reach`/`tapTurn`:
+  the gaze leads, the shoulder lifts with the elbow folded, the forearm opens last; the hand's end pose unchanged; picture
+  `captures/joints-blender/zoe-reach-before-after.jpg`). Arthur's turn and the Grobos' trunk read in rig.js (ANIM-POLISH-3's
+  head-led turn, TRUNK-1): not changed.
+
+## HIDDEN-TRIS-HW · the hidden triangles' cost on a real GPU (CLOUD_ORDERS 59) · started and done · the desktop, 20.11.2026
+Branch **`hidden-tris-hw`** (`9e848b26`, from `329c0689`): `docs/lba3-performance/HIDDEN-TRIS.md` (a "Real GPU" section;
+the file is new — put the cloud's own above it when its worker's lands) and the raw data in
+`docs/lba3-performance/HARDWARE/2026-11-20-hidden-tris-hw/`. GTX 1050 (ANGLE D3D11), Chrome, 1536×864 @1.25, on AC.
+- ID render from every walkable spot (4 m grid, 8 headings, the follow camera and a higher view): round Twinsen's
+  house, the lane and the square **63 %** of the area's triangles are never seen (419 K of 663 K); Zeelich's street
+  **47 %** (74 K of 156 K).
+- The same 8 camera points per area drawn with and without them (A/B ×3, Medium and High, the game's GPU timer): the
+  triangles drawn a frame fall 13–18 %, **the GPU time moves −0.21 to +0.10 ms** — inside the spread between two runs.
+  Draw calls unchanged.
+- **Verdict: they do not weigh on this GPU; no fix made or proposed** (the user, 20.11: the game's quality and look must
+  not change). Not measured: the characters' double-sided models (115 K of 120 K skinned triangles), far props apart.
+
+## POLISH-SWEEP · started (CLOUD_ORDERS 58) · the desktop, 20.11.2026
+On branch **`polish-sweep`** (from `c93b324e`). Order: interiors with `tests/place-scan.mjs` and the game camera, then the
+regions outdoors, early and late chapters from the fixtures. Staying out of the story text, `src/main.js`,
+`story/balances.js`, the campaign tests, rig.js and characters.js; the School of Magic's exterior, Tali's court and
+Zeelich Spaceport's layout left out. Fixes at their source, each with a matched before/after.
+- **POLISH-SWEEP · done** (branch `polish-sweep`, `91c32920`; `docs/lba-maturity/POLISH-SWEEP.md`):
+  - **No placement defect a player would notice; nothing in the game changed** (no `src/` file touched; frame time therefore as in GTX1050-AC).
+  - `tests/place-scan.mjs` on `c93b324e`: 146 places, 7,936 pieces. Of 158 findings, 142 were already left and 16 were new. The 16 were looked at in the game camera: the house's supply joint behind its barrel (TUT-MYSTERY), Nell's lean-to's posts under the quay's paving, and Knartas' fence rails in their posts. All three are by design or unseen, and are added to the list with their reasons. Now **PASS**.
+  - A people scan (new `npcscan.mjs`): every place at four story points (new game, base-06, base-11, base-15), 504–989 people each. It checks feet against the ground, bodies inside colliders, overlaps, and people facing a wall. About 15 candidates came up, each photographed from the front and at the feet. All are people at their work (Corla behind her booth's counter, Oda at a stall, the beekeepers, the mason, the crane operator), a slope under a picker, or a fault of the scan (Tamu and Rollo measured from another room of their group).
+  - The 253 game-camera pictures of the v103 playthrough (every region and chapter) as contact sheets: nothing seen out of place.
+  - Not done: a free-camera walk of a grid in each region. The game shows only the world round Twinsen and sets its camera each frame, so those pictures were empty. Details of a few pixels are below a contact sheet.
+- **JOINTS-BLENDER 7, Zoé's shoulder** (the user, 21.11, playing: "Zoé's shoulder is strange"; `joints-blender` at `4c8715d7`, which also merges the cloud's tip `e3266123`). In `zoe_poly.py`:
+  - The arm's top is now a hemisphere over the joint. The old flat-topped arm stood out past the shoulder with the green armhole band wrapped round it, and raised it showed a flat disc.
+  - The band round the arm is gone; the dress's strap edge keeps its green.
+  - Triangles 8,346 → 8,410. `ZOE_SHOULDER_OLD=1` rebuilds the old model byte for byte.
+  - Picture: `captures/joints-blender/zoe-shoulder-before-after.jpg`.
+  - JOINTS-BLENDER 5–7 wait for the merge.
+
+## GTX1050-BATTERY · the battery half (CLOUD_ORDERS 54, 55.2, 56.2–56.4) · the desktop, 20–21.11.2026
+**Where:** v104 (`22a4b7c8`) served locally; the same Chrome 158, window 1536×864 @1.25, as GTX1050-AC. On battery from
+99 % (Win32_Battery status 1), the Windows plan Balanced; the four runs one after another, the battery 99 → 43 %. No setting
+changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery/`.
+- **The finding: on battery the display's pace falls, not the game's work.** The first two runs (frame rates, 99 → 90 %)
+  measured the refresh at 59.9 Hz and the routes held 60 (street, interior, combat 100 % on pace at 60, GPU 8–11 ms). In
+  the full benchmark (90 → 68 %) the page measured **38.6 Hz on the title screen before anything heavy**, and the
+  benchmark's own "nothing drawn" probe **41.0 Hz**: every preset, Low included, ran at 40–42 fps with frames of 24.4–24.8 ms
+  while the GPU worked 10–12 ms of them. In the last run (68 → 43 %) the pace came back to 59.9 Hz at the start and was
+  47.8–49 Hz with nothing drawn by its end. **40 and 48 Hz are the lower rates of a laptop panel's refresh-rate switching
+  on battery** (Intel's display power saving: the panel here is driven by the UHD 630, Optimus). This is the most likely
+  cause of the user's "no 60 FPS on battery" on this machine; it is set in Intel's graphics control panel (Power → Display
+  Refresh Rate Switching / Panel Self-Refresh on battery) — not checked or changed here (the user's setting).
+- **FPS30 on battery (55.2):** Auto chose Medium; at 30: street 99 %, interior 100 %, combat 92 % on pace (Medium by hand:
+  98 % over the routes); 60: 90–91 % (165–175 frames ≥ 1.5× pace, nearly all on the arrival route). **The arrival route at
+  30 is not locked on battery:** its first drawn intervals alternate 16.7 / 33.3 ms (as if the limit's grid lost its phase
+  through the scene changes) — 93 % "on pace" by the report's ±12 % rule but visibly uneven. For the cloud to look at
+  (`bat-benchfps-auto.txt`, "arrival at 30").
+- **ARRIVAL-STEPS on battery (56.2, 56.4):** behind the black, shader warm-up 59 / **28** / 782 ms (count / longest /
+  total), batch meshes 20 / 18–20 / 58–67, textures 20 / 14–18 / 158–161, the rest ≤ 6 ms: the warm-up and two kinds go
+  over the 12 ms slice on battery (on AC: 16 / 6 / 3 ms). Fixed **High** on battery (56.4): 42.8 / 41.1 / 40.8 fps on the
+  street, interior and combat at the battery profile's ×0.85 — the same ~41 fps cap as Low and Medium in that window, so
+  it says nothing about High's own cost on battery; Auto's first guess on battery (Medium) can't be judged from these
+  runs while the pace is capped.
+
+## Orders 60 · the queue of 21.11, in the cloud's order (the user chose it) · the desktop
+- **ARRIVAL-HW (60.1) · started and done** — branch `arrival-hw` (`11ae8e1d`): a "Real GPU" section in
+  `docs/lba3-performance/PERF_ARRIVAL.md`, the probe `ARRIVAL-2/probes/arrhw.mjs` (the game's own loop in real time, every
+  frame from rAF, black from `#fade`), raw data in `ARRIVAL-2/results/real-gpu-gtx1050/`. GTX 1050, Chrome, 1536×864
+  @1.25, plugged in; v109 `a4e1fb45` against v113, Medium and High, 3 interleaved rounds. **Every long frame is behind
+  the black; none in view in v113** (p95 16.8–16.9 ms in the 6 s after the fade, no frame over 33 ms). The cold Zeelich
+  arrival's longest black frame 167–183 → 150 ms at Medium (183–217 → 183 at High), its black 2.32 → 2.00 s at Medium;
+  the cold tavern 67–100 → 67 ms at Medium; the return to Citadel and every warm visit ≤ 17 ms in both. No code change.
+- **FACE-2-HW (60.2) · started.**
+- **FACE-2-HW (60.2) · done** — branch `face-2-hw` (`241abffc`), `captures/face-2-hw/` (`sheet.jpg`: Zoé's lines, his
+  reverse shot, her curious and concerned frames, Ume, Tilde, Maro, Corla; `heads-curious-concerned.jpg`; every line's
+  frame and the tests' logs). v113, the GTX 1050 in Chrome (ANGLE D3D11), 1280×720, plugged in. `tests/face-2.mjs`
+  **9/9** and `tests/face-2-tour.mjs` **5/5** on the real GPU (Bram's walk cut off by a story line, as on SwiftShader).
+  - **Cuts:** the yard talk (4 lines, 2 changes of speaker) cuts twice, at each change, after the hold; between them the
+    view glides (at most 0.18 m a frame); never inside anything solid. Calm, as meant.
+  - **Faces:** Zoé 132–133 px, face 32° from the lens; Twinsen's reverse shot 135 px, three-quarter (52°); Ume 124 px
+    (49°), Tilde 134 px (72°, near profile: she keeps facing Maro), Maro 128 px (34°). Over-the-shoulder shots: his
+    head and shoulder take a third of the frame with Ume and Maro, but no face is covered.
+  - **Covered: Corla at the ticket booth** — her face is not seen at all: the shot stands on the booth's side and the
+    booth hides her (`tour/cs_corla-line0-cs_corla.jpg`). A shot from her hatch's side is the only one that shows her.
+    For the cloud (camera.js is yours today).
+  - **The head posture reads** in the head crops (curious: his chin up, her eyes up; concerned: both heads down, the
+    mouths down); at the full frame it is subtle on Zoé, clearer on him.
+  - The Bug St. signpost's board stands in the foreground at the frame's left in the yard talk (known, FACE-2 "Open").
+  - No clip recorded: the frames per line and the tests' traces stand for the cuts. No code change.
+- **P58 (60.3) · started.**
+
+## USER-PLAY · the user's report, 21.11 (order 52.3's inbox)
+- **"30 fps isn't even and doesn't look good"** (the user, 21.11, in Hebrew; played on **another computer** — not this
+  GTX 1050 laptop and not the phone; the build was presumably the artifact of the day, v113). What the desktop has on it:
+  on this laptop plugged in, Benchmark: Frame Rates locked 30 at 100 % on pace on every route (GTX1050-AC); on battery
+  street/interior/combat stayed 92–100 % but **the arrival route at 30 alternated 16.7 / 33.3 ms intervals**
+  (GTX1050-BATTERY, `bat-benchfps-auto.txt` "arrival at 30") — an uneven 30 of the kind the user describes. That
+  computer's own report (Pause → Benchmark: Frame Rates, and F9's "on pace" line at 30) is what would show which.
+- **The user's own Benchmark: Frame Rates, 21.11 11:53** (pasted to the desktop agent; saved verbatim as
+  `docs/lba3-performance/HARDWARE/2026-11-21-user-benchfps/user-benchfps-gtx1050-battery.txt`).
+  - **Where:** build 0.49.0. **Not the "other computer"** — it is this GTX 1050 laptop: on battery, window 1536×819 at devicePixelRatio 1.25, **frame-rate limit off (60)**, so it says nothing about 30. Chrome used the GTX 1050 (D3D11) even on battery. Auto started at Medium (a guess, nothing cached) and held Medium the whole run (evaluation passed: 59.8 fps, missed 0 %).
+  - **Even:** street, transition, hamalayi and nearly all of the interior sit on every refresh (100 % on the refresh, p99 16.8–16.9 ms, GPU p95 11.7–14.8 ms).
+  - **Two single hitches a player may see:**
+    - combat: one 50 ms frame at 13.9 s, the frame before it 46 ms of CPU work (a first-time cost? a throw or an enemy's first appearance);
+    - interior: one 50 ms frame at 10.0 s with only 11 ms of work before it (not the game's CPU: the browser or the GPU).
+  - **Arrival:** four long frames (67/67/50/100 ms), all behind the black (geometry upload; the shadow cache rebuilt on the last).
+  - **Still wanted for "30 isn't even":** the same report from the other computer, with the limit at 30.
+- **P58-HW (60.3) · done** — branch `p58-hw` (`b7e3b75e`), `src/game/island.js` only. GTX 1050, Chrome, 1280×720, v113.
+  - **How it was found:**
+    - Twinsen walked by input (`P.go`, stepped at 1/60) round both huts (clockwise and back), between them, behind them, along their fronts and round the yard.
+    - Note: the station's design coordinates are shifted by `SHIFT.station` (−76, −101); the huts stand at (−32.8, −55.5) and (−25.7, −55.4).
+    - The walk ran in Follow and in Fixed (LBA2). Every frame, two rays went from the camera to his chest and head against the drawn opaque world; both blocked counts as hidden. A run of 0.4 s or more is a finding, with a picture remade from the recorded camera.
+    - Script and data: `docs/lba3-performance/HARDWARE/2026-11-21-p58-hw/`; pictures in `captures/p58-hw/before|after/`.
+  - **The cause, at the main spot:** the station's big main and the pump's riser (the teal flanged pipe) gave the camera no shape. The huts and the fort walls do (`addOccluder`); the main did not. A shot therefore stood behind the pipe with him only as his outline:
+    - in the corner between the main's drop, the barrels and the fort wall (about (−37.6, −59.8)): up to 4.3 s in Follow;
+    - along the main and the riser in Fixed: up to 16 s.
+  - **The fix:** their shapes are registered as the huts' are (the bridge over the gate lane, the drop, the riser and its run west). The camera now rises over them by LBA2's rule, and the bridge is passed through while he walks under it.
+  - **Before → after** (`captures/p58-hw/pipe-corner-before-after.jpg`):
+
+    | Mode | Hidden frames | The pipe corner's longest |
+    |---|---|---|
+    | Follow | 2,030 → 698 of ~18,200 | 4.3 → 1.0 s |
+    | Fixed | 4,756 → 2,087 | 16 → 5.6 s (thin trestle legs now; he is mostly seen) |
+
+  - **Left, for the cloud (camera.js is yours today):**
+    - the Follow camera pressed against a hut's roof at the control hut's east side (−22.4, −54.0) and at the office's west corner (−35.8, −58.3), up to 1 s;
+    - the fort wall's west corner (−40, −63.8; known, up to 1.4 s);
+    - the east fort wall (−18.3, −53.7; 1.3 s);
+    - in Fixed, a shot that does not re-centre while he stands behind the control hut, (−21.1, −53.7), 8.2 s.
+
+    Each has its picture in `captures/p58-hw/after/`.
+  - **Not run:** camsteady and camcitadel (the cloud's full test). The walk is the only check run.
+- **JOINTS-BLENDER (60.4):** the sword, the landing, walk-to-stop and the pickup were measured on 20.11 (JOINTS-BLENDER 5, merged as part of `4c8715d7`'s history):
+  - the sword, walk, stop, pickup and the standing jump already hold their feet (≤ 0.7 cm), unchanged;
+  - the Normal hop and the robe's run were fixed;
+  - Zoé's reach (6) and her shoulder (7) since.
+
+  Nothing open on order 57 on the desktop's side.
+
+## FPS30-PRESENT (60.0) · the presented frames at 30 and 60 · the desktop, 21.11 — plugged in done; battery in progress
+**Where:**
+- GTX 1050 (Chrome's WebGL: ANGLE D3D11 on the NVIDIA, as the page reports it; the Intel UHD 630 drives the panel).
+- Windows reports the panel at 60 Hz.
+- Chrome 158 (Playwright's channel, a fresh profile: Energy Saver at Chrome's default, on at 20 % battery).
+- Window 1536×864 at devicePixelRatio 1.25.
+- v113 (`f9aa0309`'s build) and **v114** (`4450455b`, P88), each served directly; Quality Auto (it picked High).
+- **Not done:** inside claude.ai's frame. That needs the user's signed-in browser.
+
+**Method (`docs/lba-maturity/fps30-present/fps30present.mjs`):**
+- 20 s of play: 12 s running a circle on the square (Up + Left held, the Follow camera turning with him), then the house through the game's own transition.
+- Recorded: a CDP trace (`devtools.timeline` and `disabled-by-default-devtools.timeline.frame`, plus cc/viz/gpu), every rAF timestamp in the page, the F9 overlay's pacing line each second, and the game's GPU timer.
+- Presented frames are PipelineReporter's states: PRESENTED_ALL/PARTIAL against DROPPED; NO_UPDATE_DESIRED is a refresh with nothing new, as 30 means. Their begin times' intervals are counted in refreshes.
+- Per run: `fps30-present/{ac,bat}-<build>-<fps>-<k>.json`. The traces, trimmed to the frame events, are in `fps30-present/traces-frames.zip`.
+
+**Plugged in, 2 rounds each:**
+
+| Build · limit | rAF interval p50 / p95 | Game frames (20 s) | Presented / dropped | Presented intervals p50 / p95 / p99 | Intervals of 3+ refreshes (≥ 50 ms) | GPU ms p50 | F9 |
+|---|---|---|---|---|---|---|---|
+| v113 · 30 | 16.7 / 16.8 | 598–599 | 628–630 / 2–4 | 33.3 / 33.5 / **50** | **8 and 6** (+ 1 longer) | 6.7–9.4 | on pace 100 % |
+| v114 · 30 | 16.7 / 16.8–16.9 | 598–600 | 629–632 / 3–6 | 33.3 / 33.5 / **33.5–33.6** | **0 and 0** (1 longer each) | 6.7–9.7 | on pace 100 % |
+| v113 · 60 | 16.7 / 16.8 | 1196 | 1935–1937 / 0 | 16.6 / 16.8 / 16.9 | 0 | 6.0 | on pace 100 % |
+| v114 · 60 | 16.7 / 16.9 | 1196–1197 | 1936 / 0 | 16.5–16.6 / 16.8 / 16.9 | 0 | 6.1 | on pace 100 % |
+
+**Plugged in, the answer:**
+- rAF is an even 16.7 ms, and at 30 the game draws every second refresh in both builds.
+- In **v113**, about 7 frames in 20 s are **presented a refresh late** (50 ms on screen). Main-thread work was at most 27–30 ms and GPU p95 10–14 ms, so these are not slow frames: they are the 30 limit's choice of refresh.
+- **v114 (P88) removes them** on this machine: p99 33.6 ms. The other one-refresh intervals (~70 in 20 s) are compositor-only presents between game frames (the F9 text, the HUD), not new game pictures.
+
+**On battery (first run, v113 · 30, 96–99 %):**
+- rAF p50 16.7 but **p95 33.4** (callbacks a refresh late themselves).
+- **980 presented, 381 dropped**, and the presented intervals spread over 1–6 refreshes: p95 33.5, **p99 66.7**.
+- **The F9 line still read "on pace 100 %"** — the overlay measures the game's draw intervals, not presentation, so on battery it does not see the jumps the user describes.
+- The rest of the battery set (v114 at 30, both at 60, Benchmark: Frame Rates) is running; it will follow in this section.
+- Earlier on this machine (GTX1050-BATTERY): on battery the panel's pace drops to 41–48 Hz at times — the likely root of an uneven 30 there.
+- **FPS30-PRESENT, the battery half (done, 98 → 76 %, the plan Balanced; the panel at 60 Hz this time):**
+
+  | Build · limit | Quality (Auto) | rAF p50 / p95 | Game frames (20 s) | Presented / dropped | Presented p50 / p95 / p99 | Intervals ≥ 3 refreshes | GPU p50 / p95 | F9 |
+  |---|---|---|---|---|---|---|---|---|
+  | v113 · 30 | Medium | 16.7 / **33.4** | 605 | 980 / 381 | 16.7 / 33.5 / **66.7** | **36** | 7.9 / 18.7 | on pace 100 % |
+  | **v114 · 30** | Medium | 16.7 / **16.8** | 578 | 891 / 331 | 16.7 / 33.4 / **49.8** | **9** | 7.5 / 14.7 | on pace 95 %, ≥1.5× 6 |
+  | v113 · 60 | Low | 16.7 / 49.7 | 887 | 1732 / 289 | 16.6 / 33.3 / 83.3 | 44 | 9.2 / 16.4 | on pace 100 % |
+  | v114 · 60 | Low | 16.7 / 33.4 | 952 | 1859 / 202 | 16.5 / 33.3 / 66.6 | 22 | 9.1 / 15.6 | on pace 99 % |
+
+  - **v114 helps on battery too:** at 30 the jumps of 50 ms or more fall from 36 to 9 in 20 s, rAF is even again, and F9 now shows the slips (95 %, 6). Not gone: some remain.
+  - The remaining drops come with the CPU slowed on battery: Benchmark: Frame Rates (v114, battery, `bat-v114-benchfps.txt`) shows CPU work 516–752 ms per second against 191–360 plugged in, and 727 missed callbacks.
+  - At 30 in that benchmark: street 33.3 with an occasional 50 ms, interior, combat and **the arrival now even at 33.3**. On v104 the arrival alternated 16.7 / 33.3.
+  - At 60 on battery, Auto dropped to Low and still missed refreshes (p99 66–83 ms).
+  - On battery with the panel at 40–48 Hz (GTX1050-BATTERY) an even 30 cannot be shown at all: there 25 ms or 20.8 ms refreshes. Proposed for the cloud: a 30 limit that follows the measured refresh (20 or 40 at 40 Hz, 24 or 48 at 48 Hz), and F9's line counting presented frames, not only drawn ones.
+  - Traces: `fps30-present/traces-frames-battery.zip`.
 - **21.11 (cloud coordinator): SMOOTH-1 merged** on `ccr-c1c2c4b9-dep6ed` (commit 7faa6fe6's merge). Order 61 SMOOTH-HW can run now: base = the commit before that merge, after = the merge. `tests/smooth-routes.mjs`, procedure in `docs/lba3-performance/SMOOTH-1.md` §7. Order 62 FPS30-FEEL: take its "before" now; "after" when "P94 merged" appears here.
+- **21.11 evening (the desktop, to the coordinator):** synced: `ccr-c1c2c4b9-dep6ed` at `a333b00d` merged into
+  `ccr-adf00ea7-37ebl3` (this file conflicted only because the cloud's copy lacked the desktop's sections; both kept).
+  - **60.0 FPS30-PRESENT is done, both halves** — see the "FPS30-PRESENT (60.0)" section above (`a6f9b763` plugged in,
+    `2591c048` battery). In short: v114 removes the late presents plugged in; on battery the ≥ 50 ms jumps at 30 fall
+    36 → 9 in 20 s, the rest come with the CPU slowed on battery. Not done: the run inside claude.ai's frame.
+  - **USER-PLAY:** the user's own Benchmark: Frame Rates (11:53) is recorded above; it was this GTX 1050 at 60, not the
+    other computer, so the "30 isn't even" report from that computer is still wanted.
+  - **Next on the desktop:** the queue as written (62 FPS30-FEEL "before" → 61 SMOOTH-HW → 63 DEPOT-CLIP → JOINTS);
+    the user picks the order on this side, a line here when each starts.
+
+- **21.11 (cloud coordinator), to the desktop:** merged your 19404bc4 (and arrival-hw, face-2-hw, p58-hw) into
+  `ccr-c1c2c4b9-dep6ed`; P58's station occluders go out in v118. Your FPS30-PRESENT battery finding (late rAF callbacks
+  on battery) is with the cloud P94 worker. Queue as you wrote: 62 FPS30-FEEL "before" (use the current
+  `ccr-c1c2c4b9-dep6ed` head; it has the depot's ball-release fix at 30) → 61 → 63 DEPOT-CLIP → JOINTS. "P94 merged" will
+  appear here for 62's "after". (A direct message from the cloud to your session was refused: this file stays the channel.)
+
+- **21.11 (cloud coordinator): P95 merged** (Auto: `src/engine/autoquality.js`, `autoapply.js`; published as v119). Order 64
+  AUTO-HW: "before" = the commit before "Merge branch 'worktree-agent-a22cbbf029a651730'", "after" = that merge; the exact
+  console procedure (clear the cache, read Auto's decisions, force a profile) is in `docs/lba3-performance/AUTO-P95.md`.
+
+- **21.11 night (cloud coordinator): P94 merged** (30 FPS feel: `MagicBall.preview`/`aimPoint` in actors.js, the Follow camera's
+  heading held while the ball is aimed by the mouse, `tests/fps30-feel.mjs`). Order 62 FPS30-FEEL: "after" = this merge
+  (published v121); the laptop commands are in `docs/lba-maturity/FPS30.md` §8 (`RATE=real` / `real60`).
+- **62 FPS30-FEEL "before" · done** (the desktop, 21.11 evening) — branch **`fps30-feel`** (`0fc43944`, from `a333b00d`),
+  `docs/lba-maturity/FPS30.md` §8, runner and runs in `docs/lba-maturity/fps30-feel/`.
+  - Where: the desktop app's Electron (the packaged build of `a333b00d`) on the GTX 1050; Medium, Follow, Citadel street. T1–T3 3 runs each at 30, and T3 at 60; battery first, then plugged in.
+  - At 30, images on screen every 33.3 ms (p99 33.5), each shown in its own frame. One 50 ms interval in 18 runs (T3, battery).
+  - T1 and T2 have no motion spikes. T3 (lock-on, strafe, aim) has 4–14 camera and view spikes per run at a stable frame time, at 30 and at 60 alike: that is P94's ground.
+  - On battery the CPU work doubles (15–17 ms vs 7 ms), still within 33 ms.
+  - Not done: the 60 FPS film, the mouse and controller, and the bank shot at 60 (with the "after").
+  - Next: 61 SMOOTH-HW (the user's order: 62 then 61); 62 "after" when "P94 merged" appears here.
+- **61 SMOOTH-HW · plugged-in half done** (the desktop, 21.11 night) — branch **`smooth-hw`** (`2d20b6d3`, from
+  `a333b00d`), SMOOTH-1.md §8 with tables, runs' summaries and tools in `docs/lba3-performance/smooth-hw/`.
+  - Before `05c32d81` vs after `18f607cf`, headed Chrome 158 on the GTX 1050, plugged in, Medium and High at 60 and 30.
+  - **At 60, equal within the spread.** Combat after takes about 1.4 ms more CPU at Medium. No interval over 50 ms. GPU 4–10 ms, so no resolution or edge trade was needed.
+  - **New, important for "30 isn't even":** for most of the evening the frame clock ran at 57 Hz (17.5 ms; cause not found). In that state, at 30, **the browser stops calling rAF for ~400 ms, 2–14 times a pass**. That held in both builds, and in Chrome and the desktop app's Electron alike. At 60 it doesn't happen.
+  - **A 1 px change every refresh removes it entirely** (diagnosis only). Proposed: give the skipped refreshes something to present, then measure.
+  - FPS30.md §8 on `fps30-feel` got an addendum: 62's even "before" was in the 60 Hz state.
+  - Left: the battery half (needs the user to unplug) and the clips.
+
+- **21.11 night (cloud coordinator), to the desktop:** your SMOOTH-HW plugged-in half is merged. Your proposal is in as
+  **P96 (v122)**: `main.js` `_keepAlive` changes an invisible 1 px mark on every refresh the 30 limit skips, and the
+  refresh-count tolerance is 0.08 → 0.12 (at 57 Hz, 30 = 1.90 refreshes now counts 2 instead of the grid's 1-in-8 early
+  frames). Please confirm in the 57 Hz state: 30 FPS, T1–T3 (`tests/fps30-feel.mjs` RATE=real) and SMOOTH-HW's street
+  route, ≥ 45 ms intervals and early frames, v121 vs v122. F9 counting presented frames: not done yet (noted).
